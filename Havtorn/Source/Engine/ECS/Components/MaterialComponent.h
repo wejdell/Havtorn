@@ -5,13 +5,12 @@
 
 namespace Havtorn
 {
-	struct SCameraComponent : public SComponent
+	struct SMaterialComponent : public SComponent
 	{
-		SCameraComponent(Ref<SEntity> entity, EComponentType type)
+		SMaterialComponent(Ref<SEntity> entity, EComponentType type)
 			: SComponent(std::move(entity), type)
 		{}
 
-		SMatrix ViewMatrix;
-		SMatrix ProjectionMatrix;
+		std::vector<U16> MaterialReferences;
 	};
 }
