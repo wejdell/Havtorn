@@ -8,6 +8,7 @@ namespace Havtorn
 	std::mutex CThreadManager::RenderMutex;
 	std::condition_variable CThreadManager::RenderCondition;
 	ERenderThreadStatus CThreadManager::RenderThreadStatus = ERenderThreadStatus::ReadyToRender;
+	bool CThreadManager::RunRenderThread = true;
 
 	CThreadManager::CThreadManager()
 		: NumberOfThreads(static_cast<U8>(std::thread::hardware_concurrency() - 1))
@@ -35,7 +36,7 @@ namespace Havtorn
 
 	void CThreadManager::WaitAndPerformJobs()
 	{
-		while (true)
+		while (!Terminate)
 		{
 			// Code blocks used to unlock mutex when lock variables go out of scope - RAII
 			{
@@ -45,11 +46,15 @@ namespace Havtorn
 				{
 					return !JobQueue.empty() || Terminate;
 				});
-				Job = JobQueue.front();
-				JobQueue.pop();
+
+				if (!JobQueue.empty())
+				{
+					Job = JobQueue.front();
+					JobQueue.pop();
+					Job();
+				}
 			}
 
-			Job();
 		}
 	}
 
@@ -63,6 +68,7 @@ namespace Havtorn
 		Condition.notify_one();
 	}
 
+	//#include <iostream>
 	void CThreadManager::Shutdown()
 	{
 		{
@@ -79,6 +85,10 @@ namespace Havtorn
 		}
 
 		JobThreads.clear();
+		
+		RunRenderThread = false;
+		RenderThread.join();
+
 		IsTerminated = true; // use this flag in destructor, if not set, call shutdown() 
 	}
 }

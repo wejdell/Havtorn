@@ -28,7 +28,8 @@ namespace ImGui
 		bool* Open() { return &IsEnabled; }
 
 	protected:
-		Havtorn::Ref<Havtorn::CEditorManager> Manager;
+		// TODO.AG: Test WeakPtr 
+		/*Havtorn::Ref<Havtorn::CEditorManager>*/Havtorn::CEditorManager* Manager;
 
 	private:
 		const char* DisplayName;

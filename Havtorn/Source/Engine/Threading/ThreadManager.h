@@ -36,6 +36,9 @@ namespace Havtorn
 		static ERenderThreadStatus RenderThreadStatus;
 
 	private:
+		friend class CRenderManager;
+		static bool RunRenderThread;
+		
 		std::vector<std::thread> JobThreads;
 		std::queue<std::function<void()>> JobQueue;
 		std::thread RenderThread;
