@@ -7,7 +7,7 @@ namespace Havtorn
 {
 	class CRenderManager;
 
-	class CLightSystem final : public CSystem 
+	class CLightSystem final : public ISystem 
 	{
 	public:
 		CLightSystem(CRenderManager* renderManager);

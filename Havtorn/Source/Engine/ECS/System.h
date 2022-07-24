@@ -6,11 +6,11 @@ namespace Havtorn
 {
 	class CScene;
 
-	class CSystem
+	class ISystem
 	{
 	public:
-		CSystem() = default;
-		virtual ~CSystem() = default;
+		ISystem() = default;
+		virtual ~ISystem() = default;
 
 		virtual void Update(CScene* scene) = 0;
 	};

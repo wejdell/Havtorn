@@ -174,8 +174,8 @@ namespace Havtorn
 			SVector4 Direction;
 			SVector4 DirectionNormal1;
 			SVector4 DirectionNormal2;
-			F32 OuterAngle;
-			F32 InnerAngle;
+			F32 OuterAngle = 0.0f;
+			F32 InnerAngle = 0.0f;
 			SVector2<F32> Padding;
 		} SpotLightBufferData;
 		HV_ASSERT_BUFFER(SSpotLightBufferData)
@@ -188,10 +188,18 @@ namespace Havtorn
 			SVector2<F32> ShadowmapResolution;
 			SVector2<F32> ShadowAtlasResolution;
 			SVector2<F32> ShadowmapStartingUV;
-			F32 ShadowTestTolerance;
-			F32 Padding;
+			F32 ShadowTestTolerance = 0.0f;
+			F32 Padding = -1.0f;
 		} ShadowmapBufferData;
 		HV_ASSERT_BUFFER(SShadowmapBufferData)
+
+		struct SVolumetricLightBufferData
+		{
+			F32 NumberOfSamplesReciprocal = (1.0f / 16.0f);
+			F32 LightPower = 500000.0f;
+			F32 ScatteringProbability = 0.0001f;
+			F32 HenyeyGreensteinGValue = 0.0f;
+		} VolumetricLightBufferData;
 
 	private:
 		CGraphicsFramework* Framework;
@@ -202,6 +210,7 @@ namespace Havtorn
 		ID3D11Buffer* PointLightBuffer;
 		ID3D11Buffer* SpotLightBuffer;
 		ID3D11Buffer* ShadowmapBuffer;
+		ID3D11Buffer* VolumetricLightBuffer;
 		CRenderStateManager RenderStateManager;
 		//CForwardRenderer ForwardRenderer;
 		//CDeferredRenderer myDeferredRenderer;
@@ -230,11 +239,11 @@ namespace Havtorn
 		//CFullscreenTexture myVignetteTexture;
 		//CFullscreenTexture myVignetteOverlayTexture;
 		//CFullscreenTexture myDeferredLightingTexture;
-		//CFullscreenTexture myVolumetricAccumulationBuffer;
-		//CFullscreenTexture myVolumetricBlurTexture;
+		CFullscreenTexture VolumetricAccumulationBuffer;
+		CFullscreenTexture VolumetricBlurTexture;
 		CFullscreenTexture SSAOBuffer;
 		CFullscreenTexture SSAOBlurTexture;
-		//CFullscreenTexture myDownsampledDepth;
+		CFullscreenTexture DownsampledDepth;
 		CFullscreenTexture TonemappedTexture;
 		CFullscreenTexture AntiAliasedTexture;
 		CGBuffer GBuffer;

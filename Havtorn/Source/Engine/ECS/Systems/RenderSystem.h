@@ -7,7 +7,7 @@ namespace Havtorn
 {
 	class CRenderManager;
 
-	class CRenderSystem final : public CSystem
+	class CRenderSystem final : public ISystem
 	{
 	public:
 		CRenderSystem(CRenderManager* renderManager);

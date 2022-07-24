@@ -45,7 +45,7 @@ float SampleShadowPos(float4 projectionPos, float2 startingUV, float2 mapResolut
     uvCoords *= (mapResolution / atlasResolution);
     uvCoords += startingUV;
 
-    // Out of Bounds check
+    //// Out of Bounds check
     float oob = 1.0f;
     if (projectionPos.x > 1.0f || projectionPos.x < -1.0f || projectionPos.y > 1.0f || projectionPos.y < -1.0f)
     {
@@ -91,4 +91,10 @@ float3 ShadowFactor(float3 worldPosition, float3 lightPosition, float4x4 lightVi
     }
     total /= 9.0f;
     return total;
+}
+
+float3 ShadowFactor(float3 viewPos, float4x4 lightProjectionMatrix, Texture2D shadowDepthTexture, sampler shadowSampler, float2 shadowmapResolution, float2 shadowAtlasResolution, float2 shadowmapStartingUV, float shadowTestTolerance)
+{
+    float4 projectionPos = mul(lightProjectionMatrix, float4(viewPos.x, viewPos.y, viewPos.z, 1.0f));
+    return SampleShadowPos(projectionPos, shadowmapStartingUV, shadowmapResolution, shadowAtlasResolution, shadowDepthTexture, shadowSampler, shadowTestTolerance);
 }

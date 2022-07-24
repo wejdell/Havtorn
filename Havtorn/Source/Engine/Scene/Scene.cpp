@@ -33,10 +33,11 @@ namespace Havtorn
 		AddTransformComponentToEntity(directionalLightEntity);
 
 		auto directionalLight = AddDirectionalLightComponentToEntity(directionalLightEntity);
-		directionalLight->Direction = { -1.0f, 1.0f, -1.0f, 0.0f };
+		directionalLight->Direction = { 1.0f, 1.0f, -1.0f, 0.0f };
 		directionalLight->Color = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };
 		directionalLight->ShadowmapView.ShadowmapViewportIndex = 0;
-		directionalLight->ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLight->ShadowViewSize.X, directionalLight->ShadowViewSize.Y, -8.0f, 8.0f);
+		directionalLight->ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLight->ShadowViewSize.X, directionalLight->ShadowViewSize.Y, directionalLight->ShadowNearAndFarPlane.X, directionalLight->ShadowNearAndFarPlane.Y);
+		directionalLight->IsVolumetric = true;
 
 		InitDemoScene(renderManager);
 

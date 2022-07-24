@@ -6,7 +6,7 @@
 
 namespace Havtorn 
 {
-	class CCameraSystem final : public CSystem {
+	class CCameraSystem final : public ISystem {
 	public:
 		CCameraSystem();
 		~CCameraSystem() override;

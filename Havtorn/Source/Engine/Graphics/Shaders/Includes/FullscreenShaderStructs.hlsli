@@ -8,7 +8,7 @@ struct VertexInput
 struct VertexToPixel
 {
 	float4 myPosition : SV_POSITION;
-	float2 myUV : TEXCOORD;
+	float2 myUV : UV;
 };
 
 struct PixelOutput
