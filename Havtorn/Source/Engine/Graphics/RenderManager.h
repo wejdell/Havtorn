@@ -2,20 +2,11 @@
 
 #pragma once
 #include "hvpch.h"
-//#include "ForwardRenderer.h"
-//#include "DeferredRenderer.h"
-//#include "LightRenderer.h"
 #include "GraphicsFramework.h"
 #include "Renderers/FullscreenRenderer.h"
 #include "FullscreenTexture.h"
 #include "FullscreenTextureFactory.h"
-//#include "ParticleRenderer.h"
-//#include "VFXRenderer.h"
 #include "RenderStateManager.h"
-//#include "SpriteRenderer.h"
-//#include "TextRenderer.h"
-//#include "ShadowRenderer.h"
-//#include "DecalRenderer.h"
 #include "GBuffer.h"
 #include "GraphicsEnums.h"
 #include <queue>
@@ -44,6 +35,34 @@ namespace Havtorn
 	{
 		Pos3Nor3Tan3Bit3UV2,
 		Pos4
+	};
+
+	enum class EVertexShaders
+	{
+		Fullscreen = 0,
+		StaticMesh = 1,
+		PointAndSpotLight = 2,
+		EditorPreview = 3,
+	};
+
+	enum class EPixelShaders
+	{
+		GBuffer = 0,
+		DeferredDirectional = 1,
+		DeferredPoint = 2,
+		DeferredSpot = 3,
+		EditorPreview = 4,
+	};
+
+	enum class ESamplers
+	{
+		DefaultWrap = 0,
+		DefaultBorder = 1,
+	};
+
+	enum class ETopologies
+	{
+		TriangleList = 0,
 	};
 
 	class CGraphicsFramework;
