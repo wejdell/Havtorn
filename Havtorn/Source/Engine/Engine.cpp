@@ -99,7 +99,7 @@ namespace Havtorn
 		Instance = nullptr;
 	}
 
-	bool CEngine::Init(CWindowHandler::SWindowData& windowData)
+	bool CEngine::Init(const CWindowHandler::SWindowData& windowData)
 	{
 		ENGINE_ERROR_BOOL_MESSAGE(WindowHandler->Init(windowData), "Window Handler could not be initialized.");
 		WindowHandler->SetInternalResolution();

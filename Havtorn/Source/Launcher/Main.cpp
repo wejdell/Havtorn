@@ -3,6 +3,8 @@
 #include <Havtorn.h>
 #include <iostream>
 
+#include "Application/Application.h"
+
 #ifdef HV_PLATFORM_WINDOWS
 
 #pragma region Console
@@ -47,10 +49,14 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
 	GLog::Init();
 
-	auto application = CreateApplication();
+	CEngineProcess* engineProcess = new CEngineProcess(100, 100, 1280, 720);
+
+	auto application = new CApplication();
+	application->AddProcess(engineProcess);
 	application->Run();
 	delete application;
 
+	SetForegroundWindow(GetConsoleWindow());
 	HV_LOG_WARN("Engine shutdown!");
 
 	system("pause");

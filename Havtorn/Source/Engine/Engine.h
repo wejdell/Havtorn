@@ -59,7 +59,7 @@ namespace Havtorn
 	public:
 		CEngine();
 		~CEngine();
-		bool Init(CWindowHandler::SWindowData& windowData);
+		bool Init(const CWindowHandler::SWindowData& windowData);
 		float BeginFrame();
 		void Update();
 		void RenderFrame();

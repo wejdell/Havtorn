@@ -262,7 +262,7 @@ namespace Havtorn
 
 	void CRenderManager::Render()
 	{
-		while (true)
+		while(CThreadManager::RunRenderThread)
 		{
 			std::unique_lock<std::mutex> uniqueLock(CThreadManager::RenderMutex);
 			CThreadManager::RenderCondition.wait(uniqueLock, [] 
