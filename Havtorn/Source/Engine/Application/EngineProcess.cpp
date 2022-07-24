@@ -19,7 +19,7 @@ namespace Havtorn
 	
 	CEngineProcess::~CEngineProcess()
 	{
-		delete Engine;
+		SAFE_DELETE(Engine);
 	}
 	
 	bool CEngineProcess::Init()
