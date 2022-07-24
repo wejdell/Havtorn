@@ -117,9 +117,9 @@ namespace Havtorn
 		InitRenderTextures(windowHandler);
 
 		// Load default resources
-		const std::string vsData = AddShader("Shaders/DeferredModel_VS.cso", EShaderType::Vertex);
+		AddShader("Shaders/FullscreenVertexShader_VS.cso", EShaderType::Vertex);
+		const std::string vsData = AddShader("Shaders/DeferredStaticMesh_VS.cso", EShaderType::Vertex);
 		AddInputLayout(vsData, EInputLayoutType::Pos3Nor3Tan3Bit3UV2);
-		AddShader("Shaders/DeferredVertexShader_VS.cso", EShaderType::Vertex);
 
 		AddShader("Shaders/GBuffer_PS.cso", EShaderType::Pixel);
 		AddShader("Shaders/DeferredLightEnvironment_PS.cso", EShaderType::Pixel);
@@ -235,7 +235,7 @@ namespace Havtorn
 	{
 		AddVertexBuffer<SPositionVertex>(PointLightCube);
 		AddIndexBuffer(PointLightCubeIndices);
-
+		
 		AddMeshVertexStride(sizeof(SPositionVertex));
 		AddMeshVertexOffset(0);
 
@@ -527,12 +527,12 @@ namespace Havtorn
 					Context->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
 					Context->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
 
-					Context->VSSetShader(VertexShaders[1], nullptr, 0);
+					Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Fullscreen)], nullptr, 0);
 					Context->GSSetShader(nullptr, nullptr, 0);
-					Context->PSSetShader(PixelShaders[1], nullptr, 0);
+					Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::DeferredDirectional)], nullptr, 0);
 
-					Context->PSSetSamplers(0, 1, &Samplers[0]);
-					Context->PSSetSamplers(1, 1, &Samplers[1]);
+					Context->PSSetSamplers(0, 1, &Samplers[static_cast<U8>(ESamplers::DefaultWrap)]);
+					Context->PSSetSamplers(1, 1, &Samplers[static_cast<U8>(ESamplers::DefaultBorder)]);
 
 					Context->Draw(3, 0);
 					CRenderManager::NumberOfDrawCallsThisFrame++;
@@ -577,16 +577,16 @@ namespace Havtorn
 					BindBuffer(ShadowmapBuffer, shadowmapBufferData, "Shadowmap Buffer");
 					Context->PSSetConstantBuffers(5, 1, &ShadowmapBuffer);
 
-					Context->IASetPrimitiveTopology(Topologies[0]);
-					Context->IASetInputLayout(InputLayouts[1]);
+					Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
+					Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
 					Context->IASetVertexBuffers(0, 1, &VertexBuffers[0], &MeshVertexStrides[0], &MeshVertexOffsets[0]);
 					Context->IASetIndexBuffer(IndexBuffers[0], DXGI_FORMAT_R32_UINT, 0);
 
-					Context->VSSetShader(VertexShaders[2], nullptr, 0);
-					Context->PSSetShader(PixelShaders[2], nullptr, 0);
+					Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::PointAndSpotLight)], nullptr, 0);
+					Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::DeferredPoint)], nullptr, 0);
 
-					Context->PSSetSamplers(0, 1, &Samplers[0]);
-					Context->PSSetSamplers(1, 1, &Samplers[1]);
+					Context->PSSetSamplers(0, 1, &Samplers[static_cast<U8>(ESamplers::DefaultWrap)]);
+					Context->PSSetSamplers(1, 1, &Samplers[static_cast<U8>(ESamplers::DefaultBorder)]);
 
 					Context->DrawIndexed(36, 0, 0);
 					CRenderManager::NumberOfDrawCallsThisFrame++;
@@ -640,17 +640,17 @@ namespace Havtorn
 					BindBuffer(ShadowmapBuffer, shadowmapBufferData, "Shadowmap Buffer");
 					Context->PSSetConstantBuffers(5, 1, &ShadowmapBuffer);
 
-					Context->IASetPrimitiveTopology(Topologies[0]);
-					Context->IASetInputLayout(InputLayouts[1]);
+					Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
+					Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
 					Context->IASetVertexBuffers(0, 1, &VertexBuffers[0], &MeshVertexStrides[0], &MeshVertexOffsets[0]);
 					Context->IASetIndexBuffer(IndexBuffers[0], DXGI_FORMAT_R32_UINT, 0);
 
 					// Use Point Light Vertex Shader
-					Context->VSSetShader(VertexShaders[2], nullptr, 0);
-					Context->PSSetShader(PixelShaders[3], nullptr, 0);
+					Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::PointAndSpotLight)], nullptr, 0);
+					Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::DeferredSpot)], nullptr, 0);
 
-					Context->PSSetSamplers(0, 1, &Samplers[0]);
-					Context->PSSetSamplers(1, 1, &Samplers[1]);
+					Context->PSSetSamplers(0, 1, &Samplers[static_cast<U8>(ESamplers::DefaultWrap)]);
+					Context->PSSetSamplers(1, 1, &Samplers[static_cast<U8>(ESamplers::DefaultBorder)]);
 
 					Context->DrawIndexed(36, 0, 0);
 					CRenderManager::NumberOfDrawCallsThisFrame++;
@@ -720,12 +720,12 @@ namespace Havtorn
 					Context->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
 					Context->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
 
-					Context->VSSetShader(VertexShaders[1], nullptr, 0);
+					Context->VSSetShader(VertexShaders[static_cast<U16>(EVertexShaders::Fullscreen)], nullptr, 0);
 					Context->GSSetShader(nullptr, nullptr, 0);
 					Context->PSSetShader(PixelShaders.back(), nullptr, 0);
 
-					Context->PSSetSamplers(0, 1, &Samplers[0]);
-					Context->PSSetSamplers(1, 1, &Samplers[1]);
+					Context->PSSetSamplers(0, 1, &Samplers[static_cast<U8>(ESamplers::DefaultWrap)]);
+					Context->PSSetSamplers(1, 1, &Samplers[static_cast<U8>(ESamplers::DefaultBorder)]);
 
 					Context->Draw(3, 0);
 					CRenderManager::NumberOfDrawCallsThisFrame++;
@@ -1370,6 +1370,11 @@ namespace Havtorn
 		}
 
 		// Geometry
+		outStaticMeshComponent->VertexShaderIndex = static_cast<U8>(EVertexShaders::StaticMesh);
+		outStaticMeshComponent->PixelShaderIndex = static_cast<U8>(EPixelShaders::GBuffer);
+		outStaticMeshComponent->InputLayoutIndex = static_cast<U8>(EInputLayoutType::Pos3Nor3Tan3Bit3UV2);
+		outStaticMeshComponent->SamplerIndex = static_cast<U8>(ESamplers::DefaultWrap);
+		outStaticMeshComponent->TopologyIndex = static_cast<U8>(ETopologies::TriangleList);
 		outStaticMeshComponent->DrawCallData = asset.DrawCallData;
 	}
 
@@ -1491,8 +1496,8 @@ namespace Havtorn
 		Context->IASetPrimitiveTopology(Topologies[staticMeshComp->TopologyIndex]);
 		Context->IASetInputLayout(InputLayouts[staticMeshComp->InputLayoutIndex]);
 
-		Context->VSSetShader(VertexShaders[3], nullptr, 0);
-		Context->PSSetShader(PixelShaders[4], nullptr, 0);
+		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::EditorPreview)], nullptr, 0);
+		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::EditorPreview)], nullptr, 0);
 
 		ID3D11SamplerState* sampler = Samplers[staticMeshComp->SamplerIndex];
 		Context->PSSetSamplers(0, 1, &sampler);
