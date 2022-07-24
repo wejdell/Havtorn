@@ -12,7 +12,7 @@
 namespace Havtorn
 {
 	CLightSystem::CLightSystem(CRenderManager* renderManager)
-		: CSystem()
+		: ISystem()
 		, RenderManager(renderManager)
 	{}
 
@@ -59,32 +59,8 @@ namespace Havtorn
 		const SVector shadowDirection = { directionalLightComp->Direction.X, directionalLightComp->Direction.Y, directionalLightComp->Direction.Z };
 		directionalLightComp->ShadowmapView.ShadowViewMatrix = SMatrix::LookAtLH(position, position - shadowDirection, SVector::Up);
 
-		static F32 counter2 = 0.001f;
 		const auto& pointLightComp = scene->GetPointLightComponents()[0];
-		if (GetAsyncKeyState('O'))
-			counter2 -= CTimer::Dt();
-		if (GetAsyncKeyState('L'))
-			counter2 += CTimer::Dt();
-
-		SVector4 move = SVector4::Zero;
-		F32 moveSpeed = 2.0f;
-		if (GetAsyncKeyState('Y'))
-			move += moveSpeed * SVector4::Forward * CTimer::Dt();
-		if (GetAsyncKeyState('G'))
-			move += moveSpeed * SVector4::Left * CTimer::Dt();
-		if (GetAsyncKeyState('H'))
-			move += moveSpeed * SVector4::Backward * CTimer::Dt();
-		if (GetAsyncKeyState('J'))
-			move += moveSpeed * SVector4::Right * CTimer::Dt();
-		if (GetAsyncKeyState('I'))
-			move += moveSpeed * SVector4::Up * CTimer::Dt();
-		if (GetAsyncKeyState('K'))
-			move += moveSpeed * SVector4::Down * CTimer::Dt();
-
-
-		transformComponents[pointLightComp->Entity->GetComponentIndex(EComponentType::TransformComponent)]->Transform.Translate(move);
 		SVector4 constantPosition = transformComponents[pointLightComp->Entity->GetComponentIndex(EComponentType::TransformComponent)]->Transform.GetMatrix().Translation4();
-
 		const SMatrix constantProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.01f, pointLightComp->Range);
 
 		// Forward
@@ -128,5 +104,7 @@ namespace Havtorn
 		view6.ShadowmapViewportIndex = 6;
 		view6.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Down).ToVector3(), SVector::Forward);
 		view6.ShadowProjectionMatrix = constantProjectionMatrix;
+
+		// TODO.NR: Update SpotLight shadowmaps as well
 	}
 }

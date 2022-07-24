@@ -11,7 +11,7 @@
 namespace Havtorn
 {
 	CCameraSystem::CCameraSystem()
-		: CSystem()
+		: ISystem()
 	{
 		CEngine::GetInstance()->GetInput()->GetAxisDelegate(EInputAxisEvent::Up).AddMember(this, &CCameraSystem::HandleAxisInput);
 		CEngine::GetInstance()->GetInput()->GetAxisDelegate(EInputAxisEvent::Right).AddMember(this, &CCameraSystem::HandleAxisInput);

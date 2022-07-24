@@ -1,7 +1,6 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #pragma once
-//#include <initializer_list>
 #include "ECS/Component.h"
 
 namespace Havtorn
@@ -23,6 +22,9 @@ namespace Havtorn
 		DeferredLightingDirectional,
 		DeferredLightingPoint,
 		DeferredLightingSpot,
+		VolumetricLightingDirectional,
+		VolumetricLightingPoint,
+		VolumetricLightingSpot,
 		ForwardTransparency,
 		OutlineMask,
 		Outline

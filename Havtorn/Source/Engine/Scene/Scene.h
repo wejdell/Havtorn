@@ -19,7 +19,7 @@ namespace Havtorn
 	struct SPointLightComponent;
 	struct SSpotLightComponent;
 
-	class CSystem;
+	class ISystem;
 	class CRenderManager;
 
 	class CScene final
@@ -61,6 +61,6 @@ namespace Havtorn
 		std::vector<Ref<SDirectionalLightComponent>> DirectionalLightComponents;
 		COMPONENT_VECTOR_DECLARATION(PointLightComponent)
 		std::vector<Ref<SSpotLightComponent>> SpotLightComponents;
-		std::vector<Ptr<CSystem>> Systems;
+		std::vector<Ptr<ISystem>> Systems;
 	};
 }

@@ -16,5 +16,13 @@ namespace Havtorn
 		SVector4 Direction = SVector4::Up;
 		SVector4 Color = SVector4(1.0f, 1.0f, 1.0f, 1.0f);
 		SVector2<F32> ShadowViewSize = { 8.0f, 8.0f };
+		SVector2<F32> ShadowNearAndFarPlane = { -8.0f, 8.0f };
+		
+		// TODO.NR: Put into VolumetricLightComponent
+		bool IsVolumetric = false;
+		F32 NumberOfSamples = 16.0f;
+		F32 LightPower = 500000.0f;
+		F32 ScatteringProbability = 0.0001f;
+		F32 HenyeyGreensteinGValue = 0.0f;
 	};
 }

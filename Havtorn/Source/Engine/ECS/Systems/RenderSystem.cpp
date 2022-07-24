@@ -10,7 +10,7 @@
 namespace Havtorn
 {
 	CRenderSystem::CRenderSystem(CRenderManager* renderManager)
-		: CSystem()
+		: ISystem()
 		, RenderManager(renderManager)
 	{
 	}
@@ -116,6 +116,15 @@ namespace Havtorn
 			components[static_cast<U8>(EComponentType::DirectionalLightComponent)] = directionalLightComponents[0];
 			SRenderCommand command(components, ERenderCommandType::DeferredLightingDirectional);
 			RenderManager->PushRenderCommand(command);
+
+			if (directionalLightComponents[0]->IsVolumetric)
+			{
+				const I64 cameraTransformCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
+				components[static_cast<U8>(EComponentType::TransformComponent)] = transformComponents[cameraTransformCompIndex];
+				components[static_cast<U8>(EComponentType::CameraComponent)] = cameraComponents[0];
+				SRenderCommand volumetricCommand(components, ERenderCommandType::VolumetricLightingDirectional);
+				RenderManager->PushRenderCommand(volumetricCommand);
+			}
 		}
 
 		if (!pointLightComponents.empty())
@@ -128,6 +137,12 @@ namespace Havtorn
 			components[static_cast<U8>(EComponentType::PointLightComponent)] = pointLightComponents[0];
 			SRenderCommand command(components, ERenderCommandType::DeferredLightingPoint);
 			RenderManager->PushRenderCommand(command);
+
+			//if (directionalLightComponents[0]->IsVolumetric)
+			//{
+			//	SRenderCommand command(components, ERenderCommandType::VolumetricLightingDirectional);
+			//	RenderManager->PushRenderCommand(command);
+			//}
 		}
 
 		if (!spotLightComponents.empty())
@@ -140,6 +155,12 @@ namespace Havtorn
 			components[static_cast<U8>(EComponentType::SpotLightComponent)] = spotLightComponents[0];
 			SRenderCommand command(components, ERenderCommandType::DeferredLightingSpot);
 			RenderManager->PushRenderCommand(command);
+
+			//if (directionalLightComponents[0]->IsVolumetric)
+			//{
+			//	SRenderCommand command(components, ERenderCommandType::VolumetricLightingDirectional);
+			//	RenderManager->PushRenderCommand(command);
+			//}
 		}
 	}
 }

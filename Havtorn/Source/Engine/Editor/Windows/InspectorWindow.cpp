@@ -234,6 +234,13 @@ namespace ImGui
 			directionalLightComp->Direction = { dirData[0], dirData[1], dirData[2], 0.0f };
 
 			ImGui::DragFloat("Intensity", &directionalLightComp->Color.W, SlideSpeed);
+
+			ImGui::Checkbox("Is Volumetric", &directionalLightComp->IsVolumetric);
+			ImGui::DragFloat("Number Of Samples", &directionalLightComp->NumberOfSamples, SlideSpeed, 4.0f);
+			directionalLightComp->NumberOfSamples = max(directionalLightComp->NumberOfSamples, 4.0f);
+			ImGui::DragFloat("Light Power", &directionalLightComp->LightPower, SlideSpeed * 10000.0f, 0.0f);
+			ImGui::DragFloat("Scattering Probability", &directionalLightComp->ScatteringProbability, SlideSpeed * 0.1f, 0.0f, 1.0f, "%.4f", ImGuiSliderFlags_Logarithmic);
+			ImGui::DragFloat("Henyey-Greenstein G", &directionalLightComp->HenyeyGreensteinGValue);
 		}
 	}
 
