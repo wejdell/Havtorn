@@ -117,14 +117,14 @@ namespace Havtorn
 			SRenderCommand command(components, ERenderCommandType::DeferredLightingDirectional);
 			RenderManager->PushRenderCommand(command);
 
-			if (directionalLightComponents[0]->IsVolumetric)
-			{
-				const I64 cameraTransformCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
-				components[static_cast<U8>(EComponentType::TransformComponent)] = transformComponents[cameraTransformCompIndex];
-				components[static_cast<U8>(EComponentType::CameraComponent)] = cameraComponents[0];
-				SRenderCommand volumetricCommand(components, ERenderCommandType::VolumetricLightingDirectional);
-				RenderManager->PushRenderCommand(volumetricCommand);
-			}
+			//if (directionalLightComponents[0]->IsVolumetric)
+			//{
+			//	const I64 cameraTransformCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
+			//	components[static_cast<U8>(EComponentType::TransformComponent)] = transformComponents[cameraTransformCompIndex];
+			//	components[static_cast<U8>(EComponentType::CameraComponent)] = cameraComponents[0];
+			//	SRenderCommand volumetricCommand(components, ERenderCommandType::VolumetricLightingDirectional);
+			//	RenderManager->PushRenderCommand(volumetricCommand);
+			//}
 		}
 
 		if (!pointLightComponents.empty())

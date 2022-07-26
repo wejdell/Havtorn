@@ -707,10 +707,10 @@ namespace Havtorn
 					Context->PSSetConstantBuffers(5, 1, &ShadowmapBuffer);
 
 					// Volumetric buffer
-					VolumetricLightBufferData.NumberOfSamplesReciprocal = (1.0f / directionalLightComp->NumberOfSamples);
-					VolumetricLightBufferData.LightPower = directionalLightComp->LightPower;
-					VolumetricLightBufferData.ScatteringProbability = directionalLightComp->ScatteringProbability;
-					VolumetricLightBufferData.HenyeyGreensteinGValue = directionalLightComp->HenyeyGreensteinGValue;
+					//VolumetricLightBufferData.NumberOfSamplesReciprocal = (1.0f / directionalLightComp->NumberOfSamples);
+					//VolumetricLightBufferData.LightPower = directionalLightComp->LightPower;
+					//VolumetricLightBufferData.ScatteringProbability = directionalLightComp->ScatteringProbability;
+					//VolumetricLightBufferData.HenyeyGreensteinGValue = directionalLightComp->HenyeyGreensteinGValue;
 
 					BindBuffer(VolumetricLightBuffer, VolumetricLightBufferData, "Volumetric Light Buffer");
 					Context->PSSetConstantBuffers(4, 1, &VolumetricLightBuffer);

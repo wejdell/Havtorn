@@ -13,6 +13,7 @@ namespace Havtorn
 		DirectionalLightComponent,
 		PointLightComponent,
 		SpotLightComponent,
+		VolumetricLightComponent,
 		Count
 	};
 }
