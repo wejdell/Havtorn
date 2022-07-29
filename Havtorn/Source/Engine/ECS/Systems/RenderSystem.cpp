@@ -168,17 +168,19 @@ namespace Havtorn
 			SRenderCommand command(components, ERenderCommandType::DeferredLightingSpot);
 			RenderManager->PushRenderCommand(command);
 
-			//if (directionalLightComponents[0]->IsVolumetric)
-			//{
-			//	SRenderCommand command(components, ERenderCommandType::VolumetricLightingDirectional);
-			//	RenderManager->PushRenderCommand(command);
-			//}
-		}
+			if (spotLightComponents[0]->Entity->HasComponent(EComponentType::VolumetricLightComponent))
+			{
+				const I64 volumetricCompIndex = spotLightComponents[0]->Entity->GetComponentIndex(EComponentType::VolumetricLightComponent);
+				auto& volumetricLightComp = volumetricLightComponents[volumetricCompIndex];
 
-		//{
-		//	SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::VolumetricDepthCopyPass);
-		//	RenderManager->PushRenderCommand(command);
-		//}
+				if (volumetricLightComp->IsActive)
+				{
+					components[static_cast<U8>(EComponentType::VolumetricLightComponent)] = volumetricLightComp;
+					SRenderCommand volumetricCommand(components, ERenderCommandType::VolumetricLightingSpot);
+					RenderManager->PushRenderCommand(volumetricCommand);
+				}
+			}
+		}
 
 		{
 			SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::VolumetricBufferBlurPass);

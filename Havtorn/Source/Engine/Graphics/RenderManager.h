@@ -53,8 +53,8 @@ namespace Havtorn
 		DeferredSpot = 3,
 		VolumetricDirectional = 4,
 		VolumetricPoint = 5,
-		//VolumetricSpot = 6,
-		EditorPreview = 6,
+		VolumetricSpot = 6,
+		EditorPreview = 7,
 	};
 
 	enum class ESamplers

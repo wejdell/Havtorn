@@ -1,6 +1,6 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
-#include "Includes/PointLightShaderStructs.hlsli"
+#include "Includes/SpotLightShaderStructs.hlsli"
 #include "Includes/VolumetricLightShaderStructs.hlsli"
 #include "Includes/MathHelpers.hlsli"
 #include "Includes/ShadowSampling.hlsli"
@@ -29,24 +29,21 @@ float4 PixelShader_WorldPosition(float2 uv)
     float x = uv.x * 2.0f - 1;
     float y = (1 - uv.y) * 2.0f - 1;
     float4 projectedPos = float4(x, y, z, 1.0f);
-    float4 viewSpacePos = mul(pointLightToCameraFromProjection, projectedPos);
+    float4 viewSpacePos = mul(spotLightToCameraFromProjection, projectedPos);
     viewSpacePos /= viewSpacePos.w;
-    float4 worldPos = mul(pointLightToWorldFromCamera, viewSpacePos);
+    float4 worldPos = mul(spotLightToWorldFromCamera, viewSpacePos);
 
     worldPos.a = 1.0f;
     return worldPos;
 }
 
-void ExecuteRaymarching(inout float3 rayPositionLightVS, float3 invViewDirLightVS, inout float3 rayPositionWorld, float3 invViewDirWorld, float stepSize, float l, inout float3 VLI/*, SShadowmapViewData viewData*/)
+void ExecuteRaymarching(inout float3 rayPositionLightVS, float3 invViewDirLightVS, inout float3 rayPositionWorld, float3 invViewDirWorld, float stepSize, float l, inout float3 VLI, SShadowmapViewData viewData)
 {
     rayPositionLightVS.xyz += stepSize * invViewDirLightVS.xyz;
 
     // March in world space in parallel
     rayPositionWorld += stepSize * invViewDirWorld;
     //..
-    
-    int shadowmapViewIndex = GetShadowmapViewIndex(rayPositionWorld.xyz, pointLightPositionAndRange.xyz);
-    SShadowmapViewData viewData = ShadowmapViewData[shadowmapViewIndex];
     
     float3 visibilityTerm = 1.0f - ShadowFactor(rayPositionWorld, viewData.ShadowmapPosition.xyz, viewData.ToShadowMapView, viewData.ToShadowMapProjection, shadowDepthTexture, shadowSampler, viewData.ShadowmapResolution, viewData.ShadowAtlasResolution, viewData.ShadowmapStartingUV, viewData.ShadowTestTolerance).xxx;
     
@@ -58,15 +55,22 @@ void ExecuteRaymarching(inout float3 rayPositionLightVS, float3 invViewDirLightV
     float3 intens = scatteringProbability * (visibilityTerm * (lightPower * 0.25 * PI_RCP) * dRcp * dRcp) * exp(-d * scatteringProbability) * exp(-l * scatteringProbability) * stepSize;
     
     // World space attenuation
-    float3 toLight = pointLightPositionAndRange.xyz - rayPositionWorld.xyz;
+    float3 toLight = spotLightPositionAndRange.xyz - rayPositionWorld.xyz;
     float lightDistance = length(toLight);
     toLight = normalize(toLight);
-    float linearAttenuation = lightDistance / pointLightPositionAndRange.w;
+    float linearAttenuation = lightDistance / spotLightPositionAndRange.w;
     linearAttenuation = 1.0f - linearAttenuation;
     linearAttenuation = saturate(linearAttenuation);
     float physicalAttenuation = saturate(1.0f / (lightDistance * lightDistance));
-    //float lambert = saturate(dot(normal, toLight));
-    float attenuation = /*lambert **/linearAttenuation * physicalAttenuation;
+    
+    const float3 lightDirection = normalize(-spotLightDirection.xyz);
+    const float theta = dot(normalize(toLight), lightDirection);
+    const float cutOff = cos(radians(spotLightInnerAngle));
+    const float outerCutOff = cos(radians(spotLightOuterAngle));
+    const float epsilon = cutOff - outerCutOff;
+    const float angleAttenuation = clamp(((theta - outerCutOff) / epsilon), 0.0f, 1.0f);
+    
+    float attenuation = linearAttenuation * physicalAttenuation * angleAttenuation;
     
     // ... and add it to the total contribution of the ray
     VLI += intens * attenuation;
@@ -74,19 +78,19 @@ void ExecuteRaymarching(inout float3 rayPositionLightVS, float3 invViewDirLightV
 
 // !RAYMARCHING
 
-PointLightPixelOutput main(PointLightVertexToPixel input)
+SpotLightPixelOutput main(SpotLightVertexToPixel input)
 {
-    PointLightPixelOutput output;
+    SpotLightPixelOutput output;
     
-    float raymarchDistanceLimit = 2.0f * pointLightPositionAndRange.w;
+    float raymarchDistanceLimit = 2.0f * spotLightPositionAndRange.w;
      
     // Texture Depth
     float2 screenUV = (input.myUV.xy / input.myUV.z) * 0.5f + 0.5f;
     const float textureDepth = depthTexture.Sample(defaultSampler, screenUV).r;
    
     // World Pos Depth
-    float4 viewSpacePos = mul(pointLightToCamera, input.myWorldPosition);
-    float4 projectedPos = mul(pointLightToProjection, viewSpacePos);
+    float4 viewSpacePos = mul(spotLightToCamera, input.myWorldPosition);
+    float4 projectedPos = mul(spotLightToProjectionFromCamera, viewSpacePos);
     projectedPos /= projectedPos.w;
     const float worldPosDepth = projectedPos.z;
    
@@ -100,16 +104,16 @@ PointLightPixelOutput main(PointLightVertexToPixel input)
         float x = screenUV.x * 2.0f - 1;
         float y = (1 - screenUV.y) * 2.0f - 1;
         const float4 projectedPos = float4(x, y, z, 1.0f);
-        float4 viewSpacePos = mul(pointLightToCameraFromProjection, projectedPos);
+        float4 viewSpacePos = mul(spotLightToCameraFromProjection, projectedPos);
         viewSpacePos /= viewSpacePos.w;
-        worldPosition = mul(pointLightToWorldFromCamera, viewSpacePos);
+        worldPosition = mul(spotLightToWorldFromCamera, viewSpacePos);
 
         worldPosition.a = 1.0f;
     }
     
-    float4 camPos = pointLightCameraPosition;
+    float4 camPos = spotLightCameraPosition;
     
-    int shadowmapViewIndex = GetShadowmapViewIndex(worldPosition.xyz, pointLightPositionAndRange.xyz);
+    int shadowmapViewIndex = GetShadowmapViewIndex(worldPosition.xyz, spotLightPositionAndRange.xyz);
     SShadowmapViewData viewData = ShadowmapViewData[shadowmapViewIndex];
     
     // For marching in world space in parallel
@@ -149,10 +153,10 @@ PointLightPixelOutput main(PointLightVertexToPixel input)
     [loop]
     for (float l = raymarchDistance; l > stepSize; l -= stepSize)
     {
-        ExecuteRaymarching(rayPositionLightVS, invViewDirLightVS.xyz, rayPositionWorld, invViewDirWorld, stepSize, l, VLI/*, viewData*/);
+        ExecuteRaymarching(rayPositionLightVS, invViewDirLightVS.xyz, rayPositionWorld, invViewDirWorld, stepSize, l, VLI, viewData);
     }
     
-    output.myColor.rgb = pointLightColorAndIntensity.rgb * VLI;
+    output.myColor.rgb = spotLightColorAndIntensity.rgb * VLI;
     output.myColor.a = 1.0f;
     return output;
 }
