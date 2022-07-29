@@ -18,6 +18,7 @@ namespace Havtorn
 	struct SDirectionalLightComponent;
 	struct SPointLightComponent;
 	struct SSpotLightComponent;
+	struct SVolumetricLightComponent;
 
 	class ISystem;
 	class CRenderManager;
@@ -40,6 +41,7 @@ namespace Havtorn
 		std::vector<Ref<SDirectionalLightComponent>>& GetDirectionalLightComponents() { return DirectionalLightComponents; }
 		COMPONENT_VECTOR_GETTER(PointLightComponent)
 		std::vector<Ref<SSpotLightComponent>>& GetSpotLightComponents() { return SpotLightComponents; }
+		COMPONENT_VECTOR_GETTER(VolumetricLightComponent)
 
 		std::vector<Ref<SEntity>>& GetEntities() { return Entities; }
 
@@ -51,6 +53,7 @@ namespace Havtorn
 		COMPONENT_ADDER_DECLARATION(DirectionalLightComponent)
 		COMPONENT_ADDER_DECLARATION(PointLightComponent)
 		COMPONENT_ADDER_DECLARATION(SpotLightComponent)
+		COMPONENT_ADDER_DECLARATION(VolumetricLightComponent)
 
 	private:
 		std::vector<Ref<SEntity>> Entities;
@@ -61,6 +64,7 @@ namespace Havtorn
 		std::vector<Ref<SDirectionalLightComponent>> DirectionalLightComponents;
 		COMPONENT_VECTOR_DECLARATION(PointLightComponent)
 		std::vector<Ref<SSpotLightComponent>> SpotLightComponents;
+		COMPONENT_VECTOR_DECLARATION(VolumetricLightComponent)
 		std::vector<Ptr<ISystem>> Systems;
 	};
 }
