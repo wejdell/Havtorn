@@ -22,7 +22,6 @@ namespace Havtorn
 		DeferredLightingDirectional,
 		DeferredLightingPoint,
 		DeferredLightingSpot,
-		VolumetricDepthCopyPass,
 		VolumetricLightingDirectional,
 		VolumetricLightingPoint,
 		VolumetricLightingSpot,

@@ -41,15 +41,18 @@ float4 PixelShader_WorldPosition(float2 uv)
     return worldPos;
 }
 
-void ExecuteRaymarching(inout float3 rayPositionLightVS, float3 invViewDirLightVS, float stepSize, float l, inout float3 VLI, SShadowmapViewData viewData)
+void ExecuteRaymarching(inout float3 rayPositionLightVS, float3 invViewDirLightVS, inout float3 rayPositionWorld, float3 invViewDirWorld, float stepSize, float l, inout float3 VLI, SShadowmapViewData viewData)
 {
     rayPositionLightVS.xyz += stepSize * invViewDirLightVS.xyz;
     
-    float3 visibilityTerm = ShadowFactor(rayPositionLightVS.xyz, viewData.ToShadowMapProjection, shadowDepthTexture, shadowSampler, viewData.ShadowmapResolution, viewData.ShadowAtlasResolution, viewData.ShadowmapStartingUV, viewData.ShadowTestTolerance).xxx;
-    //float3 visibilityTerm = 1.0f;
+    // March in world space in parallel
+    rayPositionWorld += stepSize * invViewDirWorld;
+    //..
+    
+    float3 visibilityTerm = 1.0f - ShadowFactor(rayPositionWorld, viewData.ShadowmapPosition.xyz, viewData.ToShadowMapView, viewData.ToShadowMapProjection, shadowDepthTexture, shadowSampler, viewData.ShadowmapResolution, viewData.ShadowAtlasResolution, viewData.ShadowmapStartingUV, viewData.ShadowTestTolerance).xxx;
     
     // Distance to the current position on the ray in light view-space
-    float d = length(rayPositionLightVS.xyz) /*20.0f*/;
+    float d = length(rayPositionLightVS.xyz);
     float dRcp = rcp(d); // reciprocal
     
     // Calculate the final light contribution for the sample on the ray...
@@ -74,6 +77,10 @@ PixelOutput main(VertexToPixel input)
     float4 camPos = cameraPosition;
     
     SShadowmapViewData viewData = ShadowmapViewData[0];
+    
+    // For marching in world space in parallel
+    float3 rayPositionWorld = worldPosition.xyz;
+    float3 invViewDirWorld = normalize(camPos - worldPosition).xyz;
     
     worldPosition.xyz -= viewData.ShadowmapPosition.xyz;
     float4 positionLightVS = mul(viewData.ToShadowMapView, worldPosition);
@@ -108,7 +115,7 @@ PixelOutput main(VertexToPixel input)
     [loop]
     for (float l = raymarchDistance; l > 2.0f * stepSize; l -= stepSize)
     {
-        ExecuteRaymarching(rayPositionLightVS, invViewDirLightVS.xyz, stepSize, l, VLI, viewData);
+        ExecuteRaymarching(rayPositionLightVS, invViewDirLightVS.xyz, rayPositionWorld, invViewDirWorld, stepSize, l, VLI, viewData);
     }
     
     //float fogDensity = scatteringProbability;

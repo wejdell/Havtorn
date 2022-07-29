@@ -133,6 +133,7 @@ namespace Havtorn
 
 		AddShader("Shaders/DeferredLightDirectionalVolumetric_PS.cso", EShaderType::Pixel);
 		AddShader("Shaders/DeferredLightPointVolumetric_PS.cso", EShaderType::Pixel);
+		AddShader("Shaders/DeferredLightSpotVolumetric_PS.cso", EShaderType::Pixel);
 
 		InitEditorResources();
 		LoadDemoSceneResources();
@@ -611,6 +612,7 @@ namespace Havtorn
 					const auto spotLightComp = currentCommand.GetComponent(SpotLightComponent);
 					const auto transformComponent = currentCommand.GetComponent(TransformComponent);
 					SVector position = transformComponent->Transform.GetMatrix().Translation();
+
 					PointLightBufferData.ToWorldFromObject = transformComponent->Transform.GetMatrix();
 					PointLightBufferData.ColorAndIntensity = spotLightComp->ColorAndIntensity;
 					PointLightBufferData.PositionAndRange = { position.X, position.Y, position.Z, spotLightComp->Range };
@@ -661,18 +663,8 @@ namespace Havtorn
 				}
 				break;
 
-				//case ERenderCommandType::VolumetricDepthCopyPass:
-				//{
-				//	// Depth Copy
-				//	DepthCopy.SetAsActiveTarget();
-				//	IntermediateDepth.SetAsResourceOnSlot(0);
-				//	FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);	
-				//}
-				//break;
-
 				case ERenderCommandType::VolumetricLightingDirectional:
 				{					
-					// Volumetric Lighting
 					VolumetricAccumulationBuffer.SetAsActiveTarget();
 					RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
 					RenderStateManager.SetRasterizerState(CRenderStateManager::ERasterizerStates::Default);
@@ -688,6 +680,15 @@ namespace Havtorn
 					BindBuffer(DirectionalLightBuffer, DirectionalLightBufferData, "Light Buffer");
 					Context->PSSetConstantBuffers(1, 1, &DirectionalLightBuffer);
 
+					// Volumetric buffer
+					VolumetricLightBufferData.NumberOfSamplesReciprocal = (1.0f / volumetricLightComp->NumberOfSamples);
+					VolumetricLightBufferData.LightPower = volumetricLightComp->LightPower;
+					VolumetricLightBufferData.ScatteringProbability = volumetricLightComp->ScatteringProbability;
+					VolumetricLightBufferData.HenyeyGreensteinGValue = volumetricLightComp->HenyeyGreensteinGValue;
+
+					BindBuffer(VolumetricLightBuffer, VolumetricLightBufferData, "Volumetric Light Buffer");
+					Context->PSSetConstantBuffers(4, 1, &VolumetricLightBuffer);
+
 					// Shadowbuffer
 					ShadowmapBufferData.ToShadowmapView = directionalLightComp->ShadowmapView.ShadowViewMatrix;
 					ShadowmapBufferData.ToShadowmapProjection = directionalLightComp->ShadowmapView.ShadowProjectionMatrix;
@@ -701,15 +702,6 @@ namespace Havtorn
 
 					BindBuffer(ShadowmapBuffer, ShadowmapBufferData, "Shadowmap Buffer");
 					Context->PSSetConstantBuffers(5, 1, &ShadowmapBuffer);
-
-					// Volumetric buffer
-					VolumetricLightBufferData.NumberOfSamplesReciprocal = (1.0f / volumetricLightComp->NumberOfSamples);
-					VolumetricLightBufferData.LightPower = volumetricLightComp->LightPower;
-					VolumetricLightBufferData.ScatteringProbability = volumetricLightComp->ScatteringProbability;
-					VolumetricLightBufferData.HenyeyGreensteinGValue = volumetricLightComp->HenyeyGreensteinGValue;
-
-					BindBuffer(VolumetricLightBuffer, VolumetricLightBufferData, "Volumetric Light Buffer");
-					Context->PSSetConstantBuffers(4, 1, &VolumetricLightBuffer);
 
 					Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 					Context->IASetInputLayout(nullptr);
@@ -732,7 +724,6 @@ namespace Havtorn
 
 				case ERenderCommandType::VolumetricLightingPoint:
 				{
-					// Volumetric Lighting
 					VolumetricAccumulationBuffer.SetAsActiveTarget();
 					RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
 					RenderStateManager.SetRasterizerState(CRenderStateManager::ERasterizerStates::NoFaceCulling);
@@ -786,6 +777,81 @@ namespace Havtorn
 
 					Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::PointAndSpotLight)], nullptr, 0);
 					Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::VolumetricPoint)], nullptr, 0);
+
+					Context->PSSetSamplers(0, 1, &Samplers[static_cast<U8>(ESamplers::DefaultWrap)]);
+					Context->PSSetSamplers(1, 1, &Samplers[static_cast<U8>(ESamplers::DefaultBorder)]);
+
+					Context->DrawIndexed(36, 0, 0);
+					CRenderManager::NumberOfDrawCallsThisFrame++;
+					RenderStateManager.SetRasterizerState(CRenderStateManager::ERasterizerStates::Default);
+
+					ShouldBlurVolumetricBuffer = true;
+				}
+				break;
+
+				case ERenderCommandType::VolumetricLightingSpot:
+				{
+					VolumetricAccumulationBuffer.SetAsActiveTarget();
+					RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
+					RenderStateManager.SetRasterizerState(CRenderStateManager::ERasterizerStates::NoFaceCulling);
+					IntermediateDepth.SetAsResourceOnSlot(21);
+					ShadowAtlasDepth.SetAsResourceOnSlot(22);
+
+					const auto transformComp = currentCommand.GetComponent(TransformComponent);
+					const auto spotLightComp = currentCommand.GetComponent(SpotLightComponent);
+					const auto volumetricLightComp = currentCommand.GetComponent(VolumetricLightComponent);
+
+					// Light Buffer
+					SVector position = transformComp->Transform.GetMatrix().Translation();
+					PointLightBufferData.ToWorldFromObject = transformComp->Transform.GetMatrix();
+					PointLightBufferData.ColorAndIntensity = spotLightComp->ColorAndIntensity;
+					PointLightBufferData.PositionAndRange = { position.X, position.Y, position.Z, spotLightComp->Range };
+
+					BindBuffer(PointLightBuffer, PointLightBufferData, "Spotlight Vertex Shader Buffer");
+					Context->VSSetConstantBuffers(3, 1, &PointLightBuffer);
+
+					SpotLightBufferData.ColorAndIntensity = spotLightComp->ColorAndIntensity;
+					SpotLightBufferData.PositionAndRange = { position.X, position.Y, position.Z, spotLightComp->Range };
+					SpotLightBufferData.Direction = spotLightComp->Direction;
+					SpotLightBufferData.DirectionNormal1 = spotLightComp->DirectionNormal1;
+					SpotLightBufferData.DirectionNormal2 = spotLightComp->DirectionNormal2;
+					SpotLightBufferData.OuterAngle = spotLightComp->OuterAngle;
+					SpotLightBufferData.InnerAngle = spotLightComp->InnerAngle;
+
+					BindBuffer(SpotLightBuffer, SpotLightBufferData, "Spotlight Pixel Shader Buffer");
+					Context->PSSetConstantBuffers(3, 1, &SpotLightBuffer);
+
+					// Volumetric buffer
+					VolumetricLightBufferData.NumberOfSamplesReciprocal = (1.0f / volumetricLightComp->NumberOfSamples);
+					VolumetricLightBufferData.LightPower = volumetricLightComp->LightPower;
+					VolumetricLightBufferData.ScatteringProbability = volumetricLightComp->ScatteringProbability;
+					VolumetricLightBufferData.HenyeyGreensteinGValue = volumetricLightComp->HenyeyGreensteinGValue;
+
+					BindBuffer(VolumetricLightBuffer, VolumetricLightBufferData, "Volumetric Light Buffer");
+					Context->PSSetConstantBuffers(4, 1, &VolumetricLightBuffer);
+
+					// Shadow Buffer
+					SShadowmapBufferData shadowmapBufferData;
+					shadowmapBufferData.ToShadowmapView = spotLightComp->ShadowmapView.ShadowViewMatrix;
+					shadowmapBufferData.ToShadowmapProjection = spotLightComp->ShadowmapView.ShadowProjectionMatrix;
+					shadowmapBufferData.ShadowmapPosition = spotLightComp->ShadowmapView.ShadowPosition;
+
+					const auto& viewport = Viewports[spotLightComp->ShadowmapView.ShadowmapViewportIndex];
+					shadowmapBufferData.ShadowmapResolution = { viewport.Width, viewport.Height };
+					shadowmapBufferData.ShadowAtlasResolution = ShadowAtlasResolution;
+					shadowmapBufferData.ShadowmapStartingUV = { viewport.TopLeftX / ShadowAtlasResolution.X, viewport.TopLeftY / ShadowAtlasResolution.Y };
+					shadowmapBufferData.ShadowTestTolerance = 0.00001f;
+
+					BindBuffer(ShadowmapBuffer, shadowmapBufferData, "Shadowmap Buffer");
+					Context->PSSetConstantBuffers(5, 1, &ShadowmapBuffer);
+
+					Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
+					Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
+					Context->IASetVertexBuffers(0, 1, &VertexBuffers[0], &MeshVertexStrides[0], &MeshVertexOffsets[0]);
+					Context->IASetIndexBuffer(IndexBuffers[0], DXGI_FORMAT_R32_UINT, 0);
+
+					Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::PointAndSpotLight)], nullptr, 0);
+					Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::VolumetricSpot)], nullptr, 0);
 
 					Context->PSSetSamplers(0, 1, &Samplers[static_cast<U8>(ESamplers::DefaultWrap)]);
 					Context->PSSetSamplers(1, 1, &Samplers[static_cast<U8>(ESamplers::DefaultBorder)]);
