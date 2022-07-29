@@ -37,7 +37,9 @@ namespace Havtorn
 		directionalLight->Color = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };
 		directionalLight->ShadowmapView.ShadowmapViewportIndex = 0;
 		directionalLight->ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLight->ShadowViewSize.X, directionalLight->ShadowViewSize.Y, directionalLight->ShadowNearAndFarPlane.X, directionalLight->ShadowNearAndFarPlane.Y);
-		//directionalLight->IsVolumetric = true;
+		
+		auto volumetricLight = AddVolumetricLightComponentToEntity(directionalLightEntity);
+		//volumetricLight->IsActive = true;
 
 		InitDemoScene(renderManager);
 
@@ -63,6 +65,9 @@ namespace Havtorn
 		auto pointLightComp = AddPointLightComponentToEntity(pointLightEntity);
 		pointLightComp->ColorAndIntensity = { 0.0f, 1.0f, 1.0f, 10.0f };
 		pointLightComp->Range = 1.0f;
+
+		auto volumetricLight = AddVolumetricLightComponentToEntity(pointLightEntity);
+		volumetricLight->IsActive = true;
 
 		const SMatrix constantProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, pointLightComp->Range);
 		const SVector4 constantPosition = pointLightTransform->Transform.GetMatrix().Translation4();
@@ -255,4 +260,5 @@ namespace Havtorn
 	COMPONENT_ADDER_DEFINITION(DirectionalLightComponent)
 	COMPONENT_ADDER_DEFINITION(PointLightComponent)
 	COMPONENT_ADDER_DEFINITION(SpotLightComponent)
+	COMPONENT_ADDER_DEFINITION(VolumetricLightComponent)
 }

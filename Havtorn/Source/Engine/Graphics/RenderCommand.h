@@ -22,9 +22,11 @@ namespace Havtorn
 		DeferredLightingDirectional,
 		DeferredLightingPoint,
 		DeferredLightingSpot,
+		VolumetricDepthCopyPass,
 		VolumetricLightingDirectional,
 		VolumetricLightingPoint,
 		VolumetricLightingSpot,
+		VolumetricBufferBlurPass,
 		ForwardTransparency,
 		OutlineMask,
 		Outline

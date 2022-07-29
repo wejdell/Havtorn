@@ -45,7 +45,7 @@ float SampleShadowPos(float4 projectionPos, float2 startingUV, float2 mapResolut
     uvCoords *= (mapResolution / atlasResolution);
     uvCoords += startingUV;
 
-    //// Out of Bounds check
+    // Out of Bounds check
     float oob = 1.0f;
     if (projectionPos.x > 1.0f || projectionPos.x < -1.0f || projectionPos.y > 1.0f || projectionPos.y < -1.0f)
     {

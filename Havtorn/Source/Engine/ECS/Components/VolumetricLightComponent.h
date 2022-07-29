@@ -11,7 +11,7 @@ namespace Havtorn
 			: SComponent(std::move(entity), type)
 		{}
 
-		bool IsVolumetric = false;
+		bool IsActive = false;
 		F32 NumberOfSamples = 16.0f;
 		F32 LightPower = 500000.0f;
 		F32 ScatteringProbability = 0.0001f;

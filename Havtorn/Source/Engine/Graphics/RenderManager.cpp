@@ -130,10 +130,12 @@ namespace Havtorn
 
 		InitPointLightResources();
 		InitSpotLightResources();
-		InitEditorResources();
-		LoadDemoSceneResources();
 
 		AddShader("Shaders/DeferredLightDirectionalVolumetric_PS.cso", EShaderType::Pixel);
+		AddShader("Shaders/DeferredLightPointVolumetric_PS.cso", EShaderType::Pixel);
+
+		InitEditorResources();
+		LoadDemoSceneResources();
 
 		return true;
 	}
@@ -268,6 +270,7 @@ namespace Havtorn
 			CThreadManager::RenderCondition.wait(uniqueLock, [] 
 				{ return CThreadManager::RenderThreadStatus == ERenderThreadStatus::ReadyToRender; });
 
+			ShouldBlurVolumetricBuffer = false;
 			CRenderManager::NumberOfDrawCallsThisFrame = 0;
 			RenderStateManager.SetAllDefault();
 
@@ -658,13 +661,17 @@ namespace Havtorn
 				}
 				break;
 
+				//case ERenderCommandType::VolumetricDepthCopyPass:
+				//{
+				//	// Depth Copy
+				//	DepthCopy.SetAsActiveTarget();
+				//	IntermediateDepth.SetAsResourceOnSlot(0);
+				//	FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);	
+				//}
+				//break;
+
 				case ERenderCommandType::VolumetricLightingDirectional:
-				{
-					//// Depth Copy
-					//DepthCopy.SetAsActiveTarget();
-					//IntermediateDepth.SetAsResourceOnSlot(0);
-					//FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
-					
+				{					
 					// Volumetric Lighting
 					VolumetricAccumulationBuffer.SetAsActiveTarget();
 					RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
@@ -672,19 +679,8 @@ namespace Havtorn
 					IntermediateDepth.SetAsResourceOnSlot(21);
 					ShadowAtlasDepth.SetAsResourceOnSlot(22);
 				
-					const auto cameraTransformComp = currentCommand.GetComponent(TransformComponent);
-					const auto cameraComp = currentCommand.GetComponent(CameraComponent);
 					const auto directionalLightComp = currentCommand.GetComponent(DirectionalLightComponent);
-
-					FrameBufferData.ToCameraFromWorld = cameraTransformComp->Transform.GetMatrix().FastInverse();
-					FrameBufferData.ToWorldFromCamera = cameraTransformComp->Transform.GetMatrix();
-					FrameBufferData.ToProjectionFromCamera = cameraComp->ProjectionMatrix;
-					FrameBufferData.ToCameraFromProjection = cameraComp->ProjectionMatrix.Inverse();
-					FrameBufferData.CameraPosition = cameraTransformComp->Transform.GetMatrix().Translation4();
-					BindBuffer(FrameBuffer, FrameBufferData, "Frame Buffer");
-
-					Context->VSSetConstantBuffers(0, 1, &FrameBuffer);
-					Context->PSSetConstantBuffers(0, 1, &FrameBuffer);
+					const auto volumetricLightComp = currentCommand.GetComponent(VolumetricLightComponent);
 
 					// Lightbuffer
 					DirectionalLightBufferData.DirectionalLightDirection = directionalLightComp->Direction;
@@ -707,10 +703,10 @@ namespace Havtorn
 					Context->PSSetConstantBuffers(5, 1, &ShadowmapBuffer);
 
 					// Volumetric buffer
-					//VolumetricLightBufferData.NumberOfSamplesReciprocal = (1.0f / directionalLightComp->NumberOfSamples);
-					//VolumetricLightBufferData.LightPower = directionalLightComp->LightPower;
-					//VolumetricLightBufferData.ScatteringProbability = directionalLightComp->ScatteringProbability;
-					//VolumetricLightBufferData.HenyeyGreensteinGValue = directionalLightComp->HenyeyGreensteinGValue;
+					VolumetricLightBufferData.NumberOfSamplesReciprocal = (1.0f / volumetricLightComp->NumberOfSamples);
+					VolumetricLightBufferData.LightPower = volumetricLightComp->LightPower;
+					VolumetricLightBufferData.ScatteringProbability = volumetricLightComp->ScatteringProbability;
+					VolumetricLightBufferData.HenyeyGreensteinGValue = volumetricLightComp->HenyeyGreensteinGValue;
 
 					BindBuffer(VolumetricLightBuffer, VolumetricLightBufferData, "Volumetric Light Buffer");
 					Context->PSSetConstantBuffers(4, 1, &VolumetricLightBuffer);
@@ -722,7 +718,7 @@ namespace Havtorn
 
 					Context->VSSetShader(VertexShaders[static_cast<U16>(EVertexShaders::Fullscreen)], nullptr, 0);
 					Context->GSSetShader(nullptr, nullptr, 0);
-					Context->PSSetShader(PixelShaders.back(), nullptr, 0);
+					Context->PSSetShader(PixelShaders[static_cast<U16>(EPixelShaders::VolumetricDirectional)], nullptr, 0);
 
 					Context->PSSetSamplers(0, 1, &Samplers[static_cast<U8>(ESamplers::DefaultWrap)]);
 					Context->PSSetSamplers(1, 1, &Samplers[static_cast<U8>(ESamplers::DefaultBorder)]);
@@ -730,45 +726,122 @@ namespace Havtorn
 					Context->Draw(3, 0);
 					CRenderManager::NumberOfDrawCallsThisFrame++;
 
+					ShouldBlurVolumetricBuffer = true;
+				}
+				break;
+
+				case ERenderCommandType::VolumetricLightingPoint:
+				{
+					// Volumetric Lighting
+					VolumetricAccumulationBuffer.SetAsActiveTarget();
+					RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
+					RenderStateManager.SetRasterizerState(CRenderStateManager::ERasterizerStates::NoFaceCulling);
+					IntermediateDepth.SetAsResourceOnSlot(21);
+					ShadowAtlasDepth.SetAsResourceOnSlot(22);
+
+					const auto transformComp = currentCommand.GetComponent(TransformComponent);
+					const auto pointLightComp = currentCommand.GetComponent(PointLightComponent);
+					const auto volumetricLightComp = currentCommand.GetComponent(VolumetricLightComponent);
+
+					// Light Buffer
+					SVector position = transformComp->Transform.GetMatrix().Translation();
+					PointLightBufferData.ToWorldFromObject = transformComp->Transform.GetMatrix();
+					PointLightBufferData.ColorAndIntensity = pointLightComp->ColorAndIntensity;
+					PointLightBufferData.PositionAndRange = { position.X, position.Y, position.Z, pointLightComp->Range };
+					BindBuffer(PointLightBuffer, PointLightBufferData, "Point Light Buffer");
+					Context->VSSetConstantBuffers(3, 1, &PointLightBuffer);
+					Context->PSSetConstantBuffers(3, 1, &PointLightBuffer);
+
+					// Volumetric buffer
+					VolumetricLightBufferData.NumberOfSamplesReciprocal = (1.0f / volumetricLightComp->NumberOfSamples);
+					VolumetricLightBufferData.LightPower = volumetricLightComp->LightPower;
+					VolumetricLightBufferData.ScatteringProbability = volumetricLightComp->ScatteringProbability;
+					VolumetricLightBufferData.HenyeyGreensteinGValue = volumetricLightComp->HenyeyGreensteinGValue;
+
+					BindBuffer(VolumetricLightBuffer, VolumetricLightBufferData, "Volumetric Light Buffer");
+					Context->PSSetConstantBuffers(4, 1, &VolumetricLightBuffer);
+
+					// Shadow Buffer
+					SShadowmapBufferData shadowmapBufferData[6];
+					for (U8 shadowmapViewIndex = 0; shadowmapViewIndex < 6; shadowmapViewIndex++)
+					{
+						shadowmapBufferData[shadowmapViewIndex].ToShadowmapView = pointLightComp->ShadowmapViews[shadowmapViewIndex].ShadowViewMatrix;
+						shadowmapBufferData[shadowmapViewIndex].ToShadowmapProjection = pointLightComp->ShadowmapViews[shadowmapViewIndex].ShadowProjectionMatrix;
+						shadowmapBufferData[shadowmapViewIndex].ShadowmapPosition = pointLightComp->ShadowmapViews[shadowmapViewIndex].ShadowPosition;
+
+						const auto& viewport = Viewports[pointLightComp->ShadowmapViews[shadowmapViewIndex].ShadowmapViewportIndex];
+						shadowmapBufferData[shadowmapViewIndex].ShadowmapResolution = { viewport.Width, viewport.Height };
+						shadowmapBufferData[shadowmapViewIndex].ShadowAtlasResolution = ShadowAtlasResolution;
+						shadowmapBufferData[shadowmapViewIndex].ShadowmapStartingUV = { viewport.TopLeftX / ShadowAtlasResolution.X, viewport.TopLeftY / ShadowAtlasResolution.Y };
+						shadowmapBufferData[shadowmapViewIndex].ShadowTestTolerance = 0.00001f;
+					}
+
+					BindBuffer(ShadowmapBuffer, shadowmapBufferData, "Shadowmap Buffer");
+					Context->PSSetConstantBuffers(5, 1, &ShadowmapBuffer);
+
+					Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
+					Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
+					Context->IASetVertexBuffers(0, 1, &VertexBuffers[0], &MeshVertexStrides[0], &MeshVertexOffsets[0]);
+					Context->IASetIndexBuffer(IndexBuffers[0], DXGI_FORMAT_R32_UINT, 0);
+
+					Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::PointAndSpotLight)], nullptr, 0);
+					Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::VolumetricPoint)], nullptr, 0);
+
+					Context->PSSetSamplers(0, 1, &Samplers[static_cast<U8>(ESamplers::DefaultWrap)]);
+					Context->PSSetSamplers(1, 1, &Samplers[static_cast<U8>(ESamplers::DefaultBorder)]);
+
+					Context->DrawIndexed(36, 0, 0);
+					CRenderManager::NumberOfDrawCallsThisFrame++;
+					RenderStateManager.SetRasterizerState(CRenderStateManager::ERasterizerStates::Default);
+
+					ShouldBlurVolumetricBuffer = true;
+				}
+				break;
+
+				case ERenderCommandType::VolumetricBufferBlurPass:
+				{
+					if (!ShouldBlurVolumetricBuffer)
+						break;
+
 					// Downsampling and Blur
 					RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::Disable);
 					DownsampledDepth.SetAsActiveTarget();
 					IntermediateDepth.SetAsResourceOnSlot(0);
 					FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::DownsampleDepth);
-					
+
 					// Blur
 					VolumetricBlurTexture.SetAsActiveTarget();
 					VolumetricAccumulationBuffer.SetAsResourceOnSlot(0);
 					FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralHorizontal);
-					
+
 					VolumetricAccumulationBuffer.SetAsActiveTarget();
 					VolumetricBlurTexture.SetAsResourceOnSlot(0);
 					FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralVertical);
-					
+
 					VolumetricBlurTexture.SetAsActiveTarget();
 					VolumetricAccumulationBuffer.SetAsResourceOnSlot(0);
 					FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralHorizontal);
-					
+
 					VolumetricAccumulationBuffer.SetAsActiveTarget();
 					VolumetricBlurTexture.SetAsResourceOnSlot(0);
 					FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralVertical);
-					
+
 					VolumetricBlurTexture.SetAsActiveTarget();
 					VolumetricAccumulationBuffer.SetAsResourceOnSlot(0);
 					FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralHorizontal);
-					
+
 					VolumetricAccumulationBuffer.SetAsActiveTarget();
 					VolumetricBlurTexture.SetAsResourceOnSlot(0);
 					FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralVertical);
-					
+
 					VolumetricBlurTexture.SetAsActiveTarget();
 					VolumetricAccumulationBuffer.SetAsResourceOnSlot(0);
 					FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralHorizontal);
-					
+
 					VolumetricAccumulationBuffer.SetAsActiveTarget();
 					VolumetricBlurTexture.SetAsResourceOnSlot(0);
 					FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralVertical);
-					
+
 					// Upsampling
 					RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
 					RenderedScene.SetAsActiveTarget();
@@ -807,16 +880,16 @@ namespace Havtorn
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::GammaCorrection);
 
 			// Draw debug shadow atlas
-			D3D11_VIEWPORT viewport;
-			viewport.TopLeftX = 0.0f;
-			viewport.TopLeftY = 0.0f;
-			viewport.Width = 256.0f;
-			viewport.Height = 256.0f;
-			viewport.MinDepth = 0.0f;
-			viewport.MaxDepth = 1.0f;
-			Context->RSSetViewports(1, &viewport);
-			ShadowAtlasDepth.SetAsResourceOnSlot(0);
-			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
+			//D3D11_VIEWPORT viewport;
+			//viewport.TopLeftX = 0.0f;
+			//viewport.TopLeftY = 0.0f;
+			//viewport.Width = 256.0f;
+			//viewport.Height = 256.0f;
+			//viewport.MinDepth = 0.0f;
+			//viewport.MaxDepth = 1.0f;
+			//Context->RSSetViewports(1, &viewport);
+			//ShadowAtlasDepth.SetAsResourceOnSlot(0);
+			//FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
 
 			// RenderedScene should be complete as that is the texture we send to the viewport
 			Backbuffer.SetAsActiveTarget();

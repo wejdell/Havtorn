@@ -17,3 +17,4 @@
 #include "ECS/Components/DirectionalLightComponent.h"
 #include "ECS/Components/PointLightComponent.h"
 #include "ECS/Components/SpotLightComponent.h"
+#include "ECS/Components/VolumetricLightComponent.h"

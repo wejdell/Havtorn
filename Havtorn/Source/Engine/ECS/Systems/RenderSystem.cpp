@@ -24,6 +24,7 @@ namespace Havtorn
 		const auto& directionalLightComponents = scene->GetDirectionalLightComponents();
 		const auto& pointLightComponents = scene->GetPointLightComponents();
 		const auto& spotLightComponents = scene->GetSpotLightComponents();
+		const auto& volumetricLightComponents = scene->GetVolumetricLightComponents();
 
 		if (!cameraComponents.empty())
 		{
@@ -117,14 +118,18 @@ namespace Havtorn
 			SRenderCommand command(components, ERenderCommandType::DeferredLightingDirectional);
 			RenderManager->PushRenderCommand(command);
 
-			//if (directionalLightComponents[0]->IsVolumetric)
-			//{
-			//	const I64 cameraTransformCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
-			//	components[static_cast<U8>(EComponentType::TransformComponent)] = transformComponents[cameraTransformCompIndex];
-			//	components[static_cast<U8>(EComponentType::CameraComponent)] = cameraComponents[0];
-			//	SRenderCommand volumetricCommand(components, ERenderCommandType::VolumetricLightingDirectional);
-			//	RenderManager->PushRenderCommand(volumetricCommand);
-			//}
+			if (directionalLightComponents[0]->Entity->HasComponent(EComponentType::VolumetricLightComponent))
+			{
+				const I64 volumetricCompIndex = directionalLightComponents[0]->Entity->GetComponentIndex(EComponentType::VolumetricLightComponent);
+				auto& volumetricLightComp = volumetricLightComponents[volumetricCompIndex];
+
+				if (volumetricLightComp->IsActive)
+				{
+					components[static_cast<U8>(EComponentType::VolumetricLightComponent)] = volumetricLightComp;
+					SRenderCommand volumetricCommand(components, ERenderCommandType::VolumetricLightingDirectional);
+					RenderManager->PushRenderCommand(volumetricCommand);
+				}
+			}
 		}
 
 		if (!pointLightComponents.empty())
@@ -138,11 +143,18 @@ namespace Havtorn
 			SRenderCommand command(components, ERenderCommandType::DeferredLightingPoint);
 			RenderManager->PushRenderCommand(command);
 
-			//if (directionalLightComponents[0]->IsVolumetric)
-			//{
-			//	SRenderCommand command(components, ERenderCommandType::VolumetricLightingDirectional);
-			//	RenderManager->PushRenderCommand(command);
-			//}
+			if (pointLightComponents[0]->Entity->HasComponent(EComponentType::VolumetricLightComponent))
+			{
+				const I64 volumetricCompIndex = pointLightComponents[0]->Entity->GetComponentIndex(EComponentType::VolumetricLightComponent);
+				auto& volumetricLightComp = volumetricLightComponents[volumetricCompIndex];
+
+				if (volumetricLightComp->IsActive)
+				{
+					components[static_cast<U8>(EComponentType::VolumetricLightComponent)] = volumetricLightComp;
+					SRenderCommand volumetricCommand(components, ERenderCommandType::VolumetricLightingPoint);
+					RenderManager->PushRenderCommand(volumetricCommand);
+				}
+			}
 		}
 
 		if (!spotLightComponents.empty())
@@ -161,6 +173,16 @@ namespace Havtorn
 			//	SRenderCommand command(components, ERenderCommandType::VolumetricLightingDirectional);
 			//	RenderManager->PushRenderCommand(command);
 			//}
+		}
+
+		//{
+		//	SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::VolumetricDepthCopyPass);
+		//	RenderManager->PushRenderCommand(command);
+		//}
+
+		{
+			SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::VolumetricBufferBlurPass);
+			RenderManager->PushRenderCommand(command);
 		}
 	}
 }

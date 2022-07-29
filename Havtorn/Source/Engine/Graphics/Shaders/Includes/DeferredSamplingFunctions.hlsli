@@ -22,13 +22,11 @@ float4 PixelShader_WorldPosition(float2 uv)
     return worldPos;
 }
 
-// Confirmed to work
 float PixelShader_DepthFromWorldPosition(float4 worldPos)
 {
     float4 viewSpacePos = mul(ToCameraSpace, worldPos);
     float4 projectedPos = mul(ToProjectionSpace, viewSpacePos);
-    
-    // This seems to be correct?
+
     projectedPos /= projectedPos.w;
     
     float2 uvCoords = projectedPos.xy;

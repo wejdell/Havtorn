@@ -51,7 +51,10 @@ namespace Havtorn
 		DeferredDirectional = 1,
 		DeferredPoint = 2,
 		DeferredSpot = 3,
-		EditorPreview = 4,
+		VolumetricDirectional = 4,
+		VolumetricPoint = 5,
+		//VolumetricSpot = 6,
+		EditorPreview = 6,
 	};
 
 	enum class ESamplers
@@ -280,6 +283,7 @@ namespace Havtorn
 		bool DoFullRender;
 		bool UseAntiAliasing;
 		bool UseBrokenScreenPass;
+		bool ShouldBlurVolumetricBuffer = false;
 
 		//std::vector<std::string> MaterialNames;
 		//std::vector<ID3D11ShaderResourceView*> Textures;

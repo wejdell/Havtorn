@@ -91,6 +91,12 @@ namespace ImGui
 					InspectSpotLightComponent(selection->GetComponentIndex(EComponentType::SpotLightComponent));
 					ImGui::Dummy({ DummySize.X, DummySize.Y });
 				}
+
+				if (selection->HasComponent(EComponentType::VolumetricLightComponent))
+				{
+					InspectVolumetricLightComponent(selection->GetComponentIndex(EComponentType::VolumetricLightComponent));
+					ImGui::Dummy({ DummySize.X, DummySize.Y });
+				}
 			}
 		}
 		ImGui::End();
@@ -234,13 +240,6 @@ namespace ImGui
 			directionalLightComp->Direction = { dirData[0], dirData[1], dirData[2], 0.0f };
 
 			ImGui::DragFloat("Intensity", &directionalLightComp->Color.W, SlideSpeed);
-
-			//ImGui::Checkbox("Is Volumetric", &directionalLightComp->IsVolumetric);
-			//ImGui::DragFloat("Number Of Samples", &directionalLightComp->NumberOfSamples, SlideSpeed, 4.0f);
-			//directionalLightComp->NumberOfSamples = max(directionalLightComp->NumberOfSamples, 4.0f);
-			//ImGui::DragFloat("Light Power", &directionalLightComp->LightPower, SlideSpeed * 10000.0f, 0.0f);
-			//ImGui::DragFloat("Scattering Probability", &directionalLightComp->ScatteringProbability, SlideSpeed * 0.1f, 0.0f, 1.0f, "%.4f", ImGuiSliderFlags_Logarithmic);
-			//ImGui::DragFloat("Henyey-Greenstein G", &directionalLightComp->HenyeyGreensteinGValue);
 		}
 	}
 
@@ -277,6 +276,21 @@ namespace ImGui
 			ImGui::DragFloat("Range", &spotLightComp->Range, SlideSpeed, 0.1f, 100.0f);
 			ImGui::DragFloat("Outer Angle", &spotLightComp->OuterAngle, SlideSpeed, spotLightComp->InnerAngle, 180.0f);
 			ImGui::DragFloat("InnerAngle", &spotLightComp->InnerAngle, SlideSpeed, 0.0f, spotLightComp->OuterAngle - 0.01f);
+		}
+	}
+
+	void CInspectorWindow::InspectVolumetricLightComponent(Havtorn::I64 volumetricLightComponentIndex)
+	{
+		if (ImGui::CollapsingHeader("Volumetric Light", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			auto& volumetricLightComp = Scene->GetVolumetricLightComponents()[volumetricLightComponentIndex];
+
+			ImGui::Checkbox("Is Active", &volumetricLightComp->IsActive);
+			ImGui::DragFloat("Number Of Samples", &volumetricLightComp->NumberOfSamples, SlideSpeed, 4.0f);
+			volumetricLightComp->NumberOfSamples = max(volumetricLightComp->NumberOfSamples, 4.0f);
+			ImGui::DragFloat("Light Power", &volumetricLightComp->LightPower, SlideSpeed * 10000.0f, 0.0f);
+			ImGui::DragFloat("Scattering Probability", &volumetricLightComp->ScatteringProbability, SlideSpeed * 0.1f, 0.0f, 1.0f, "%.4f", ImGuiSliderFlags_Logarithmic);
+			ImGui::DragFloat("Henyey-Greenstein G", &volumetricLightComp->HenyeyGreensteinGValue);
 		}
 	}
 }
