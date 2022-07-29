@@ -17,6 +17,7 @@
 #include "Graphics/TextureBank.h"
 #ifdef _DEBUG
 #include "Editor/EditorManager.h"
+#include "../ImGui/imgui.h"
 #endif
 //#include "WindowHandler.h"
 //#include "DirectXFramework.h"
@@ -75,6 +76,8 @@ namespace Havtorn
 		RenderManager = new CRenderManager();
 #ifdef _DEBUG
 		EditorManager = new CEditorManager();
+		//ImGui::SetCurrentContext();// Req: set for DLL export of ImGui
+		//ImGui::SetAllocatorFunctions();
 #endif
 		InputMapper = new CInputMapper();
 		Scene = new CScene();

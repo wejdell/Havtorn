@@ -11,6 +11,8 @@ engineProj = "Engine"
 engineSource = "Source/" .. engineProj .. "/"
 editorProj = "Editor"
 editorSource = "Source/" .. editorProj .. "/"
+imGuiProj = "ImGui"
+imGuiSource = "Source/" .. imGuiProj .. "/"
 
 project "Engine"
 	location ("Source/" .. engineProj)
@@ -49,13 +51,19 @@ project "Engine"
 		"External/FastNoise2/include",
 		"External/rapidjson",
 		"External/imgui",
-		"External/DirectXTex"
+		"External/DirectXTex",
+		"Source/ImGui"
 	}
 
 	libdirs 
 	{
 		"Lib/",
 		"External/Lib"
+	}
+
+	links
+	{
+		"ImGui"
 	}
 
 	floatingpoint "Fast"
@@ -146,10 +154,6 @@ project "Editor"
 	warnings "Extra"
 	flags { "FatalWarnings", "ShadowedVariables", "MultiProcessorCompile" }
 
-	--pchheader "hvpch.h"
-	--pchsource ("Source/" .. editorProj .. "/hvpch.cpp")
-	--forceincludes { "hvpch.h" }
-
 	files 
 	{
 		"Source/%{prj.name}/**.h",
@@ -166,12 +170,14 @@ project "Editor"
 		"Source/%{prj.name}",
 		"External/rapidjson",
 		"External/imgui",
-		"Source/Engine"
+		"Source/Engine",
+		"Source/ImGui"
 	}
 
 	links
 	{
-		"Engine"
+		"Engine",
+		"ImGui"
 	}
 
 	libdirs {  }
@@ -215,6 +221,77 @@ project "Editor"
 		optimize "On"
 		flags { "LinkTimeOptimization" }
 		
+project "ImGui"
+	location ("Source/" .. imGuiProj)
+	kind "StaticLib"
+	language "C++"
+	cppdialect "C++20"
+	architecture "x86_64"
+
+	targetname "%{prj.name}_%{cfg.buildcfg}"
+
+	targetdir ("Bin/" .. outputdir .. "/%{prj.name}") 
+	objdir ("Temp/" .. outputdir .. "/%{prj.name}") 
+
+	warnings "Extra"
+	flags { "FatalWarnings", "ShadowedVariables", "MultiProcessorCompile" }
+
+	files 
+	{
+		"Source/%{prj.name}/**.h",
+		"Source/%{prj.name}/**.cpp",
+		
+		vpaths 
+		{
+			["*"] = "Source/"
+		}
+	}
+
+	includedirs
+	{
+		"Source/%{prj.name}",
+		"External/imgui"
+	}
+
+	floatingpoint "Fast"
+	debugdir "Bin/"
+
+	filter "system:Windows"
+		staticruntime "On"
+		systemversion "latest"
+		vectorextensions "SSE4.1"
+
+		defines 
+		{
+			"HV_PLATFORM_WINDOWS",
+			"HV_BUILD_DLL"
+		}
+
+		postbuildcommands
+		{
+			"{COPY} %{cfg.buildtarget.relpath} ../../Bin/"
+		}
+
+	filter "configurations:Debug"
+		defines "HV_DEBUG"
+		buildoptions "/MDd"
+		staticruntime "off"
+		runtime "Debug"
+		symbols "On"
+
+		defines 
+		{
+			"HV_ENABLE_ASSERTS"
+		}
+
+	filter "configurations:Release"
+		defines "HV_RELEASE"
+		buildoptions "/MD"
+		staticruntime "off"
+		runtime "Release"
+		optimize "On"
+		flags { "LinkTimeOptimization" }
+
 project "Launcher"
 	location "Source/Launcher"
 	kind "WindowedApp"
@@ -244,14 +321,16 @@ project "Launcher"
 	includedirs
 	{
 		"Source/%{prj.name}",
+		"Source/ImGui",
 		"Source/Editor",
 		"Source/Engine"
 	}
 
 	links
 	{
+		"Engine",
 		"Editor",
-		"Engine"
+		"ImGui",
 	}
 
 	floatingpoint "Fast"

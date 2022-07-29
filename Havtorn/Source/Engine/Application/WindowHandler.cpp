@@ -7,7 +7,7 @@
 #include "Input/Input.h"
 //#include "JsonReader.h"
 #ifdef _DEBUG
-    #include "Editor/Core/imgui_impl_win32.h"
+    #include "Core/imgui_impl_win32.h"
 #endif
 //#include "PostMaster.h"
 

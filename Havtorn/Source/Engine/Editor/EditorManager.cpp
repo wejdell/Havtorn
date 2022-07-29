@@ -3,9 +3,9 @@
 #include "hvpch.h"
 #include "EditorManager.h"
 
-#include "Editor/Core/imgui.h"
-#include "Editor/Core/imgui_impl_win32.h"
-#include "Editor/Core/imgui_impl_dx11.h"
+#include "Core/imgui.h"
+#include "Core/imgui_impl_win32.h"
+#include "Core/imgui_impl_dx11.h"
 
 #include <psapi.h>
 
