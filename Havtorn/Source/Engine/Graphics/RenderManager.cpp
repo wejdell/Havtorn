@@ -726,7 +726,7 @@ namespace Havtorn
 				{
 					VolumetricAccumulationBuffer.SetAsActiveTarget();
 					RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
-					RenderStateManager.SetRasterizerState(CRenderStateManager::ERasterizerStates::NoFaceCulling);
+					RenderStateManager.SetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
 					IntermediateDepth.SetAsResourceOnSlot(21);
 					ShadowAtlasDepth.SetAsResourceOnSlot(22);
 
@@ -793,7 +793,7 @@ namespace Havtorn
 				{
 					VolumetricAccumulationBuffer.SetAsActiveTarget();
 					RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
-					RenderStateManager.SetRasterizerState(CRenderStateManager::ERasterizerStates::NoFaceCulling);
+					RenderStateManager.SetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
 					IntermediateDepth.SetAsResourceOnSlot(21);
 					ShadowAtlasDepth.SetAsResourceOnSlot(22);
 

@@ -113,8 +113,7 @@ SpotLightPixelOutput main(SpotLightVertexToPixel input)
     
     float4 camPos = spotLightCameraPosition;
     
-    int shadowmapViewIndex = GetShadowmapViewIndex(worldPosition.xyz, spotLightPositionAndRange.xyz);
-    SShadowmapViewData viewData = ShadowmapViewData[shadowmapViewIndex];
+    SShadowmapViewData viewData = ShadowmapViewData[0];
     
     // For marching in world space in parallel
     float3 rayPositionWorld = worldPosition.xyz;
