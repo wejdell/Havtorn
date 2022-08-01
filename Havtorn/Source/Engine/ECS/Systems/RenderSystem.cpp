@@ -25,6 +25,7 @@ namespace Havtorn
 		const auto& pointLightComponents = scene->GetPointLightComponents();
 		const auto& spotLightComponents = scene->GetSpotLightComponents();
 		const auto& volumetricLightComponents = scene->GetVolumetricLightComponents();
+		const auto& decalComponents = scene->GetDecalComponents();
 
 		if (!cameraComponents.empty())
 		{
@@ -53,16 +54,6 @@ namespace Havtorn
 
 			const I64 materialCompIndex = staticMeshComponent->Entity->GetComponentIndex(EComponentType::MaterialComponent);
 			auto& materialComp = materialComponents[materialCompIndex];
-
-			const F32 dt = CTimer::Dt();
-			if (CInput::GetInstance()->IsKeyPressed('J'))
-				transformComp->Transform.Rotate({ UMath::DegToRad(90.0f) * dt, 0.0f, 0.0f });
-			if (CInput::GetInstance()->IsKeyPressed('K'))
-				transformComp->Transform.Rotate({ 0.0f, UMath::DegToRad(90.0f) * dt, 0.0f });
-			if (CInput::GetInstance()->IsKeyPressed('L'))
-				transformComp->Transform.Rotate({ 0.0f, 0.0f, UMath::DegToRad(90.0f) * dt });
-
-			//transformComp->Transform.Orbit({ 0.0f, 0.0f, 0.0f }, SMatrix::CreateRotationAroundY(UMath::DegToRad(90.0f) * dt));
 
 			if (!directionalLightComponents.empty())
 			{
@@ -99,6 +90,26 @@ namespace Havtorn
 			components[static_cast<U8>(EComponentType::StaticMeshComponent)] = staticMeshComponent;
 			components[static_cast<U8>(EComponentType::MaterialComponent)] = materialComp;
 			SRenderCommand command(components, ERenderCommandType::GBufferData);
+			RenderManager->PushRenderCommand(command);
+		}
+
+		{
+			SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::DecalDepthCopy);
+			RenderManager->PushRenderCommand(command);
+		}
+
+		for (auto& decalComponent : decalComponents)
+		{
+			if (!decalComponent->Entity->HasComponent(EComponentType::TransformComponent))
+				continue;
+
+			const I64 transformCompIndex = decalComponent->Entity->GetComponentIndex(EComponentType::TransformComponent);
+			auto& transformComp = transformComponents[transformCompIndex];
+
+			std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
+			components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
+			components[static_cast<U8>(EComponentType::DecalComponent)] = decalComponent;
+			SRenderCommand command(components, ERenderCommandType::DeferredDecal);
 			RenderManager->PushRenderCommand(command);
 		}
 

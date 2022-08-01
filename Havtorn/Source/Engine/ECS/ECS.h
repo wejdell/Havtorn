@@ -14,6 +14,7 @@ namespace Havtorn
 		PointLightComponent,
 		SpotLightComponent,
 		VolumetricLightComponent,
+		DecalComponent,
 		Count
 	};
 }

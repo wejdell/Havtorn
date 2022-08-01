@@ -3,7 +3,6 @@
 #include "Scene.h"
 
 #include "ECS/ECSInclude.h"
-#include "ECS/Components/DirectionalLightComponent.h"
 #include "Graphics/RenderManager.h"
 
 namespace Havtorn
@@ -142,6 +141,20 @@ namespace Havtorn
 		spotlightComp->ShadowmapView.ShadowProjectionMatrix = spotlightProjection;
 		// === !Spotlight ===
 
+		// === Decal ===
+		auto decal = CreateEntity("Decal");
+
+		auto& decalTransform = AddTransformComponentToEntity(decal)->Transform;
+		decalTransform.GetMatrix().Translation({ 0.45f, 1.60f, 0.85f });
+
+		auto decalComp = AddDecalComponentToEntity(decal);
+
+		renderManager->LoadDecalComponent({"T_noscare_AL_c", "T_noscare_AL_m", "T_noscare_AL_n"}, decalComp.get());
+		decalComp->ShouldRenderAlbedo = true;
+		decalComp->ShouldRenderMaterial = true;
+		decalComp->ShouldRenderNormal = true;
+		// === !Decal ===
+
 		const std::string modelPath1 = "Assets/Tests/En_P_PendulumClock.hva";
 		const std::vector<std::string> materialNames1 = { "T_PendulumClock", "Checkboard_128x128" };
 		const std::string modelPath2 = "Assets/Tests/En_P_Bed.hva";
@@ -264,4 +277,5 @@ namespace Havtorn
 	COMPONENT_ADDER_DEFINITION(PointLightComponent)
 	COMPONENT_ADDER_DEFINITION(SpotLightComponent)
 	COMPONENT_ADDER_DEFINITION(VolumetricLightComponent)
+	COMPONENT_ADDER_DEFINITION(DecalComponent)
 }

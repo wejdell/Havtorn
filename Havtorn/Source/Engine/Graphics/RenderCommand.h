@@ -17,6 +17,7 @@ namespace Havtorn
 		CameraDataStorage,
 		GBufferData,
 		GBufferDataInstanced,
+		DecalDepthCopy,
 		DeferredDecal,
 		PreLightingPass,
 		DeferredLightingDirectional,

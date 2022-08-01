@@ -28,6 +28,9 @@ namespace ImGui
 		void InspectPointLightComponent(Havtorn::I64 pointLightComponentIndex);
 		void InspectSpotLightComponent(Havtorn::I64 spotLightComponentIndex);
 		void InspectVolumetricLightComponent(Havtorn::I64 volumetricLightComponentIndex);
+		void InspectDecalComponent(Havtorn::I64 decalComponentIndex);
+
+		void OpenSelectTextureAssetModal(std::vector<Havtorn::U16>& textureList);
 
 	private:
 		Havtorn::CScene* Scene = nullptr;

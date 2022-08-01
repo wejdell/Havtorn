@@ -97,6 +97,12 @@ namespace ImGui
 					InspectVolumetricLightComponent(selection->GetComponentIndex(EComponentType::VolumetricLightComponent));
 					ImGui::Dummy({ DummySize.X, DummySize.Y });
 				}
+
+				if (selection->HasComponent(EComponentType::DecalComponent))
+				{
+					InspectDecalComponent(selection->GetComponentIndex(EComponentType::DecalComponent));
+					ImGui::Dummy({ DummySize.X, DummySize.Y });
+				}
 			}
 		}
 		ImGui::End();
@@ -181,44 +187,8 @@ namespace ImGui
 					ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 				}
 			}
-		}
-
-		if (ImGui::BeginPopupModal("Select Texture Asset", NULL, ImGuiWindowFlags_AlwaysAutoResize))
-		{
-			F32 thumbnailPadding = 4.0f;
-			F32 cellWidth = TexturePreviewSize.X * 0.75f + thumbnailPadding;
-			F32 panelWidth = 256.0f;
-			Havtorn::I32 columnCount = static_cast<Havtorn::I32>(panelWidth / cellWidth);
-			Havtorn::U32 id = 0;
-
-			if (ImGui::BeginTable("NewTextureAssetTable", columnCount))
-			{
-				for (auto& entry : std::filesystem::directory_iterator("Assets/Textures"))
-				{
-					if (entry.is_directory())
-						continue;
-
-					auto& assetRep = Manager->GetAssetRepFromDirEntry(entry);
-
-					ImGui::TableNextColumn();
-					ImGui::PushID(id++);
-
-					if (ImGui::ImageButton(assetRep->TextureRef, { TexturePreviewSize.X * 0.75f, TexturePreviewSize.Y * 0.75f }))
-					{
-						materialComp->MaterialReferences[MaterialRefToChangeIndex] = static_cast<Havtorn::U16>(Havtorn::CEngine::GetInstance()->GetTextureBank()->GetTextureIndex(entry.path().string()));
-						ImGui::CloseCurrentPopup();
-					}
-
-					ImGui::Text(assetRep->Name.c_str());
-					ImGui::PopID();
-				}
-
-				ImGui::EndTable();
-			}
-
-			if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) { ImGui::CloseCurrentPopup(); }
-
-			ImGui::EndPopup();
+		
+			OpenSelectTextureAssetModal(materialComp->MaterialReferences);
 		}
 	}
 
@@ -291,6 +261,94 @@ namespace ImGui
 			ImGui::DragFloat("Light Power", &volumetricLightComp->LightPower, SlideSpeed * 10000.0f, 0.0f);
 			ImGui::DragFloat("Scattering Probability", &volumetricLightComp->ScatteringProbability, SlideSpeed * 0.1f, 0.0f, 1.0f, "%.4f", ImGuiSliderFlags_Logarithmic);
 			ImGui::DragFloat("Henyey-Greenstein G", &volumetricLightComp->HenyeyGreensteinGValue);
+		}
+	}
+
+	void CInspectorWindow::InspectDecalComponent(Havtorn::I64 decalComponentIndex)
+	{
+		if (ImGui::CollapsingHeader("Decal", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			auto& decalComp = Scene->GetDecalComponents()[decalComponentIndex];
+
+			ImGui::Checkbox("Render Albedo", &decalComp->ShouldRenderAlbedo);
+			ImGui::Checkbox("Render Material", &decalComp->ShouldRenderMaterial);
+			ImGui::Checkbox("Render Normal", &decalComp->ShouldRenderNormal);
+
+			auto renderManager = Manager->GetRenderManager();
+
+			Havtorn::EMaterialConfiguration materialConfig = renderManager->GetMaterialConfiguration();
+
+			for (Havtorn::U16 materialIndex = 0; materialIndex < decalComp->TextureReferences.size(); materialIndex++)
+			{
+				switch (materialConfig)
+				{
+				case Havtorn::EMaterialConfiguration::AlbedoMaterialNormal_Packed:
+				{
+					if (materialIndex % 3 == 0)
+						ImGui::Text("Albedo");
+
+					if (materialIndex % 3 == 1)
+						ImGui::Text("Material");
+
+					if (materialIndex % 3 == 2)
+						ImGui::Text("Normal");
+				}
+				break;
+				default:
+					break;
+				}
+
+				Havtorn::U16 ref = decalComp->TextureReferences[materialIndex];
+				if (ImGui::ImageButton((void*)Havtorn::CEngine::GetInstance()->GetTextureBank()->GetTexture(ref), { TexturePreviewSize.X, TexturePreviewSize.Y }))
+				{
+					MaterialRefToChangeIndex = materialIndex;
+					ImGui::OpenPopup("Select Texture Asset");
+					ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+				}
+			}
+
+			OpenSelectTextureAssetModal(decalComp->TextureReferences);
+		}
+	}
+
+	void CInspectorWindow::OpenSelectTextureAssetModal(std::vector<Havtorn::U16>& textureList)
+	{
+		if (ImGui::BeginPopupModal("Select Texture Asset", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			F32 thumbnailPadding = 4.0f;
+			F32 cellWidth = TexturePreviewSize.X * 0.75f + thumbnailPadding;
+			F32 panelWidth = 256.0f;
+			Havtorn::I32 columnCount = static_cast<Havtorn::I32>(panelWidth / cellWidth);
+			Havtorn::U32 id = 0;
+
+			if (ImGui::BeginTable("NewTextureAssetTable", columnCount))
+			{
+				for (auto& entry : std::filesystem::directory_iterator("Assets/Textures"))
+				{
+					if (entry.is_directory())
+						continue;
+
+					auto& assetRep = Manager->GetAssetRepFromDirEntry(entry);
+
+					ImGui::TableNextColumn();
+					ImGui::PushID(id++);
+
+					if (ImGui::ImageButton(assetRep->TextureRef, { TexturePreviewSize.X * 0.75f, TexturePreviewSize.Y * 0.75f }))
+					{
+						textureList[MaterialRefToChangeIndex] = static_cast<Havtorn::U16>(Havtorn::CEngine::GetInstance()->GetTextureBank()->GetTextureIndex(entry.path().string()));
+						ImGui::CloseCurrentPopup();
+					}
+
+					ImGui::Text(assetRep->Name.c_str());
+					ImGui::PopID();
+				}
+
+				ImGui::EndTable();
+			}
+
+			if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) { ImGui::CloseCurrentPopup(); }
+
+			ImGui::EndPopup();
 		}
 	}
 }
