@@ -18,3 +18,4 @@
 #include "ECS/Components/PointLightComponent.h"
 #include "ECS/Components/SpotLightComponent.h"
 #include "ECS/Components/VolumetricLightComponent.h"
+#include "ECS/Components/DecalComponent.h"

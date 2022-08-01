@@ -4,23 +4,9 @@
 #include "RenderManager.h"
 #include "GraphicsUtilities.h"
 #include "RenderCommand.h"
-//#include "Scene.h"
-//#include "LineInstance.h"
-//#include "ModelFactory.h"
-//#include "GameObject.h"
-//#include "TransformComponent.h"
-//#include "CameraComponent.h"
-//#include "ModelComponent.h"
-//#include "InstancedModelComponent.h"
-//#include "MainSingleton.h"
-//#include "PopupTextService.h"
-//#include "DialogueSystem.h"
-//#include "Canvas.h"
 
 #include "Engine.h"
 
-//#include "BoxLightComponent.h"
-//#include "BoxLight.h"
 #include "ECS/ECSInclude.h"
 #include "GraphicsStructs.h"
 #include "GeometryPrimitives.h"
@@ -40,17 +26,19 @@
 
 namespace Havtorn
 {
-	unsigned int CRenderManager::NumberOfDrawCallsThisFrame = 0;
+	U32 CRenderManager::NumberOfDrawCallsThisFrame = 0;
 
 	CRenderManager::CRenderManager()
 		: Framework(nullptr)
 	    , Context(nullptr)
 	    , FrameBuffer(nullptr)
 	    , ObjectBuffer(nullptr)
+		, DecalBuffer(nullptr)
 	    , DirectionalLightBuffer(nullptr)
 		, PointLightBuffer(nullptr)
 		, SpotLightBuffer(nullptr)
 		, ShadowmapBuffer(nullptr)
+		, VolumetricLightBuffer(nullptr)
 	    , PushToCommands(&RenderCommandsA)
 	    , PopFromCommands(&RenderCommandsB)
 	    , ClearColor(0.5f, 0.5f, 0.5f, 1.0f)
@@ -82,6 +70,9 @@ namespace Havtorn
 		bufferDescription.ByteWidth = sizeof(SObjectBufferData);
 		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &ObjectBuffer), "Object Buffer could not be created.");
 
+		bufferDescription.ByteWidth = sizeof(SDecalBufferData);
+		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DecalBuffer), "Decal Buffer could not be created.");
+
 		bufferDescription.ByteWidth = sizeof(SDirectionalLightBufferData);
 		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DirectionalLightBuffer), "Directional Light Buffer could not be created.");
 
@@ -97,9 +88,6 @@ namespace Havtorn
 		bufferDescription.ByteWidth = sizeof(SVolumetricLightBufferData);
 		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &VolumetricLightBuffer), "Volumetric Light Buffer could not be created.");
 
-		//ENGINE_ERROR_BOOL_MESSAGE(ForwardRenderer.Init(aFramework), "Failed to Init Forward Renderer.");
-		//ENGINE_ERROR_BOOL_MESSAGE(myLightRenderer.Init(aFramework), "Failed to Init Light Renderer.");
-		//ENGINE_ERROR_BOOL_MESSAGE(myDeferredRenderer.Init(aFramework, &CMainSingleton::MaterialHandler()), "Failed to Init Deferred Renderer.");
 		ENGINE_ERROR_BOOL_MESSAGE(FullscreenRenderer.Init(framework), "Failed to Init Fullscreen Renderer.");
 		ENGINE_ERROR_BOOL_MESSAGE(FullscreenTextureFactory.Init(framework), "Failed to Init Fullscreen Texture Factory.");
 		//ENGINE_ERROR_BOOL_MESSAGE(myParticleRenderer.Init(aFramework), "Failed to Init Particle Renderer.");
@@ -122,12 +110,18 @@ namespace Havtorn
 		AddInputLayout(vsData, EInputLayoutType::Pos3Nor3Tan3Bit3UV2);
 
 		AddShader("Shaders/GBuffer_PS.cso", EShaderType::Pixel);
-		AddShader("Shaders/DeferredLightEnvironment_PS.cso", EShaderType::Pixel);
 
 		AddSampler(ESamplerType::Wrap);
 		AddSampler(ESamplerType::Border);
 		AddTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+		InitDecalResources();
+		
+		AddMeshVertexStride(sizeof(SStaticMeshVertex));
+		AddMeshVertexOffset(0);
+
+		AddShader("Shaders/DeferredLightEnvironment_PS.cso", EShaderType::Pixel);
+		
 		InitPointLightResources();
 		InitSpotLightResources();
 
@@ -159,7 +153,6 @@ namespace Havtorn
 		RenderedScene = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
 		IntermediateDepth = FullscreenTextureFactory.CreateDepth(windowHandler->GetResolution(), DXGI_FORMAT_R24G8_TYPELESS);
 
-		//DefaultCubemap = CEngine::GetInstance()->GetMaterialHandler()->RequestCubemap("CubemapTheVisit");
 		DefaultCubemap = CEngine::GetInstance()->GetTextureBank()->GetTexture("Assets/Textures/Cubemaps/CubemapTheVisit.hva");
 
 		ShadowAtlasResolution = {8192.0f, 8192.0f};
@@ -234,13 +227,24 @@ namespace Havtorn
 		}
 	}
 
+	void CRenderManager::InitDecalResources()
+	{
+		AddVertexBuffer<SStaticMeshVertex>(DecalProjector);
+		AddIndexBuffer(DecalProjectorIndices);
+
+		AddShader("Shaders/Decal_VS.cso", EShaderType::Vertex);
+
+		AddShader("Shaders/Decal_Albedo_PS.cso", EShaderType::Pixel);
+		AddShader("Shaders/Decal_Material_PS.cso", EShaderType::Pixel);
+		AddShader("Shaders/Decal_Normal_PS.cso", EShaderType::Pixel);
+	}
+
 	void CRenderManager::InitPointLightResources()
 	{
 		AddVertexBuffer<SPositionVertex>(PointLightCube);
 		AddIndexBuffer(PointLightCubeIndices);
 		
 		AddMeshVertexStride(sizeof(SPositionVertex));
-		AddMeshVertexOffset(0);
 
 		const std::string vsData = AddShader("Shaders/PointLight_VS.cso", EShaderType::Vertex);
 		AddInputLayout(vsData, EInputLayoutType::Pos4);
@@ -471,6 +475,72 @@ namespace Havtorn
 				}
 				break;
 
+				case ERenderCommandType::DecalDepthCopy:
+				{
+					DepthCopy.SetAsActiveTarget();
+					IntermediateDepth.SetAsResourceOnSlot(0);
+					FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
+				}
+				break;
+
+				case ERenderCommandType::DeferredDecal:
+				{
+					RenderStateManager.SetDepthStencilState(CRenderStateManager::EDepthStencilStates::OnlyRead);
+					RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
+					GBuffer.SetAsActiveTarget(&IntermediateDepth);
+					DepthCopy.SetAsResourceOnSlot(21);
+
+					const auto transformComp = currentCommand.GetComponent(TransformComponent);
+					const auto decalComp = currentCommand.GetComponent(DecalComponent);
+
+					DecalBufferData.ToWorld = transformComp->Transform.GetMatrix();
+					DecalBufferData.ToObjectSpace = transformComp->Transform.GetMatrix().Inverse();
+
+					BindBuffer(DecalBuffer, DecalBufferData, "Decal Buffer");
+
+					Context->VSSetConstantBuffers(1, 1, &DecalBuffer);
+					Context->PSSetConstantBuffers(1, 1, &DecalBuffer);
+
+					Context->IASetPrimitiveTopology(Topologies[0]);
+					Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos3Nor3Tan3Bit3UV2)]);
+					Context->IASetVertexBuffers(0, 1, &VertexBuffers[0], &MeshVertexStrides[0], &MeshVertexOffsets[0]);
+					Context->IASetIndexBuffer(IndexBuffers[0], DXGI_FORMAT_R32_UINT, 0);
+
+					Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Decal)], nullptr, 0);
+
+					auto sampler = Samplers[static_cast<U8>(ESamplers::DefaultWrap)];
+					Context->PSSetSamplers(0, 1, &sampler);
+
+					auto textureBank = CEngine::GetInstance()->GetTextureBank();
+					if (decalComp->ShouldRenderAlbedo)
+					{
+						auto shaderResource = textureBank->GetTexture(decalComp->TextureReferences[0]);
+						Context->PSSetShaderResources(5, 1, &shaderResource);
+						Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::DecalAlbedo)], nullptr, 0);
+						Context->DrawIndexed(36, 0, 0);
+						CRenderManager::NumberOfDrawCallsThisFrame++;
+					}
+
+					if (decalComp->ShouldRenderMaterial)
+					{
+						auto shaderResource = textureBank->GetTexture(decalComp->TextureReferences[1]);
+						Context->PSSetShaderResources(6, 1, &shaderResource);
+						Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::DecalMaterial)], nullptr, 0);
+						Context->DrawIndexed(36, 0, 0);
+						CRenderManager::NumberOfDrawCallsThisFrame++;
+					}
+
+					if (decalComp->ShouldRenderNormal)
+					{
+						auto shaderResource = textureBank->GetTexture(decalComp->TextureReferences[2]);
+						Context->PSSetShaderResources(7, 1, &shaderResource);
+						Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::DecalNormal)], nullptr, 0);
+						Context->DrawIndexed(36, 0, 0);
+						CRenderManager::NumberOfDrawCallsThisFrame++;
+					}
+				}
+				break;
+
 				case ERenderCommandType::PreLightingPass:
 				{
 					// === SSAO ===
@@ -484,6 +554,11 @@ namespace Havtorn
 					SSAOBuffer.SetAsResourceOnSlot(0);
 					FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::SSAOBlur);
 					// === !SSAO ===
+
+					Context->PSSetSamplers(0, 1, &Samplers[static_cast<U8>(ESamplers::DefaultWrap)]);
+					Context->PSSetSamplers(1, 1, &Samplers[static_cast<U8>(ESamplers::DefaultBorder)]);
+
+					Context->GSSetShader(nullptr, nullptr, 0);
 				}
 				break;
 
@@ -532,11 +607,7 @@ namespace Havtorn
 					Context->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
 
 					Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Fullscreen)], nullptr, 0);
-					Context->GSSetShader(nullptr, nullptr, 0);
 					Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::DeferredDirectional)], nullptr, 0);
-
-					Context->PSSetSamplers(0, 1, &Samplers[static_cast<U8>(ESamplers::DefaultWrap)]);
-					Context->PSSetSamplers(1, 1, &Samplers[static_cast<U8>(ESamplers::DefaultBorder)]);
 
 					Context->Draw(3, 0);
 					CRenderManager::NumberOfDrawCallsThisFrame++;
@@ -583,14 +654,11 @@ namespace Havtorn
 
 					Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
 					Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
-					Context->IASetVertexBuffers(0, 1, &VertexBuffers[0], &MeshVertexStrides[0], &MeshVertexOffsets[0]);
-					Context->IASetIndexBuffer(IndexBuffers[0], DXGI_FORMAT_R32_UINT, 0);
+					Context->IASetVertexBuffers(0, 1, &VertexBuffers[1], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
+					Context->IASetIndexBuffer(IndexBuffers[1], DXGI_FORMAT_R32_UINT, 0);
 
 					Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::PointAndSpotLight)], nullptr, 0);
 					Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::DeferredPoint)], nullptr, 0);
-
-					Context->PSSetSamplers(0, 1, &Samplers[static_cast<U8>(ESamplers::DefaultWrap)]);
-					Context->PSSetSamplers(1, 1, &Samplers[static_cast<U8>(ESamplers::DefaultBorder)]);
 
 					Context->DrawIndexed(36, 0, 0);
 					CRenderManager::NumberOfDrawCallsThisFrame++;
@@ -647,15 +715,12 @@ namespace Havtorn
 
 					Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
 					Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
-					Context->IASetVertexBuffers(0, 1, &VertexBuffers[0], &MeshVertexStrides[0], &MeshVertexOffsets[0]);
-					Context->IASetIndexBuffer(IndexBuffers[0], DXGI_FORMAT_R32_UINT, 0);
+					Context->IASetVertexBuffers(0, 1, &VertexBuffers[1], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
+					Context->IASetIndexBuffer(IndexBuffers[1], DXGI_FORMAT_R32_UINT, 0);
 
 					// Use Point Light Vertex Shader
 					Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::PointAndSpotLight)], nullptr, 0);
 					Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::DeferredSpot)], nullptr, 0);
-
-					Context->PSSetSamplers(0, 1, &Samplers[static_cast<U8>(ESamplers::DefaultWrap)]);
-					Context->PSSetSamplers(1, 1, &Samplers[static_cast<U8>(ESamplers::DefaultBorder)]);
 
 					Context->DrawIndexed(36, 0, 0);
 					CRenderManager::NumberOfDrawCallsThisFrame++;
@@ -703,17 +768,13 @@ namespace Havtorn
 					BindBuffer(ShadowmapBuffer, ShadowmapBufferData, "Shadowmap Buffer");
 					Context->PSSetConstantBuffers(5, 1, &ShadowmapBuffer);
 
-					Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+					Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
 					Context->IASetInputLayout(nullptr);
 					Context->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
 					Context->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
 
 					Context->VSSetShader(VertexShaders[static_cast<U16>(EVertexShaders::Fullscreen)], nullptr, 0);
-					Context->GSSetShader(nullptr, nullptr, 0);
 					Context->PSSetShader(PixelShaders[static_cast<U16>(EPixelShaders::VolumetricDirectional)], nullptr, 0);
-
-					Context->PSSetSamplers(0, 1, &Samplers[static_cast<U8>(ESamplers::DefaultWrap)]);
-					Context->PSSetSamplers(1, 1, &Samplers[static_cast<U8>(ESamplers::DefaultBorder)]);
 
 					Context->Draw(3, 0);
 					CRenderManager::NumberOfDrawCallsThisFrame++;
@@ -772,14 +833,11 @@ namespace Havtorn
 
 					Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
 					Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
-					Context->IASetVertexBuffers(0, 1, &VertexBuffers[0], &MeshVertexStrides[0], &MeshVertexOffsets[0]);
-					Context->IASetIndexBuffer(IndexBuffers[0], DXGI_FORMAT_R32_UINT, 0);
+					Context->IASetVertexBuffers(0, 1, &VertexBuffers[1], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
+					Context->IASetIndexBuffer(IndexBuffers[1], DXGI_FORMAT_R32_UINT, 0);
 
 					Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::PointAndSpotLight)], nullptr, 0);
 					Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::VolumetricPoint)], nullptr, 0);
-
-					Context->PSSetSamplers(0, 1, &Samplers[static_cast<U8>(ESamplers::DefaultWrap)]);
-					Context->PSSetSamplers(1, 1, &Samplers[static_cast<U8>(ESamplers::DefaultBorder)]);
 
 					Context->DrawIndexed(36, 0, 0);
 					CRenderManager::NumberOfDrawCallsThisFrame++;
@@ -847,14 +905,11 @@ namespace Havtorn
 
 					Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
 					Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
-					Context->IASetVertexBuffers(0, 1, &VertexBuffers[0], &MeshVertexStrides[0], &MeshVertexOffsets[0]);
-					Context->IASetIndexBuffer(IndexBuffers[0], DXGI_FORMAT_R32_UINT, 0);
+					Context->IASetVertexBuffers(0, 1, &VertexBuffers[1], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
+					Context->IASetIndexBuffer(IndexBuffers[1], DXGI_FORMAT_R32_UINT, 0);
 
 					Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::PointAndSpotLight)], nullptr, 0);
 					Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::VolumetricSpot)], nullptr, 0);
-
-					Context->PSSetSamplers(0, 1, &Samplers[static_cast<U8>(ESamplers::DefaultWrap)]);
-					Context->PSSetSamplers(1, 1, &Samplers[static_cast<U8>(ESamplers::DefaultBorder)]);
 
 					Context->DrawIndexed(36, 0, 0);
 					CRenderManager::NumberOfDrawCallsThisFrame++;
@@ -1371,68 +1426,6 @@ namespace Havtorn
 		{
 		case EAssetType::StaticMesh:
 			{
-				//SStaticMeshVertex vertices[24] =
-				//{
-				//	// X      Y      Z        nX, nY, nZ    tX, tY, tZ,    bX, bY, bZ,    UV	
-				//	{ -0.5f, -0.5f, -0.5f,   -1,  0,  0,    0,  0,  1,     0,  1,  0,     0, 0 }, // 0
-				//	{  0.5f, -0.5f, -0.5f,    1,  0,  0,    0,  0, -1,     0,  1,  0,     1, 0 }, // 1
-				//	{ -0.5f,  0.5f, -0.5f,   -1,  0,  0,    0,  0,  1,     0,  1,  0,     0, 1 }, // 2
-				//	{  0.5f,  0.5f, -0.5f,    1,  0,  0,    0,  0, -1,     0,  1,  0,     1, 1 }, // 3
-				//	{ -0.5f, -0.5f,  0.5f,   -1,  0,  0,    0,  0,  1,     0,  1,  0,     0, 0 }, // 4
-				//	{  0.5f, -0.5f,  0.5f,    1,  0,  0,    0,  0, -1,     0,  1,  0,     1, 0 }, // 5
-				//	{ -0.5f,  0.5f,  0.5f,   -1,  0,  0,    0,  0,  1,     0,  1,  0,     0, 1 }, // 6
-				//	{  0.5f,  0.5f,  0.5f,    1,  0,  0,    0,  0, -1,     0,  1,  0,     1, 1 }, // 7
-				//	// X      Y      Z        nX, nY, nZ    nX, nY, nZ,    nX, nY, nZ,    UV	  
-				//	{ -0.5f, -0.5f, -0.5f,    0, -1,  0,    1,  0,  0,     0,  0,  1,     0, 0 }, // 8  // 0
-				//	{  0.5f, -0.5f, -0.5f,    0, -1,  0,    1,  0,  0,     0,  0,  1,     1, 0 }, // 9	// 1
-				//	{ -0.5f,  0.5f, -0.5f,    0,  1,  0,   -1,  0,  0,     0,  0,  1,     0, 0 }, // 10	// 2
-				//	{  0.5f,  0.5f, -0.5f,    0,  1,  0,   -1,  0,  0,     0,  0,  1,     1, 0 }, // 11	// 3
-				//	{ -0.5f, -0.5f,  0.5f,    0, -1,  0,    1,  0,  0,     0,  0,  1,     0, 1 }, // 12	// 4
-				//	{  0.5f, -0.5f,  0.5f,    0, -1,  0,    1,  0,  0,     0,  0,  1,     0, 1 }, // 13	// 5
-				//	{ -0.5f,  0.5f,  0.5f,    0,  1,  0,   -1,  0,  0,     0,  0,  1,     1, 1 }, // 14	// 6
-				//	{  0.5f,  0.5f,  0.5f,    0,  1,  0,   -1,  0,  0,     0,  0,  1,     1, 1 }, // 15	// 7
-				//	// X      Y      Z        nX, nY, nZ    nX, nY, nZ,    nX, nY, nZ,    UV	  
-				//	{ -0.5f, -0.5f, -0.5f,    0,  0, -1,   -1,  0,  0,     0,  1,  0,     0, 0 }, // 16 // 0
-				//	{  0.5f, -0.5f, -0.5f,    0,  0, -1,   -1,  0,  0,     0,  1,  0,     0, 0 }, // 17	// 1
-				//	{ -0.5f,  0.5f, -0.5f,    0,  0, -1,   -1,  0,  0,     0,  1,  0,     1, 0 }, // 18	// 2
-				//	{  0.5f,  0.5f, -0.5f,    0,  0, -1,   -1,  0,  0,     0,  1,  0,     1, 0 }, // 19	// 3
-				//	{ -0.5f, -0.5f,  0.5f,    0,  0,  1,    1,  0,  0,     0,  1,  0,     0, 1 }, // 20	// 4
-				//	{  0.5f, -0.5f,  0.5f,    0,  0,  1,    1,  0,  0,     0,  1,  0,     1, 1 }, // 21	// 5
-				//	{ -0.5f,  0.5f,  0.5f,    0,  0,  1,    1,  0,  0,     0,  1,  0,     0, 1 }, // 22	// 6
-				//	{  0.5f,  0.5f,  0.5f,    0,  0,  1,    1,  0,  0,     0,  1,  0,     1, 1 }  // 23	// 7
-				//};
-				//U32 indices[36] =
-				//{
-				//	0,4,2,
-				//	4,6,2,
-				//	1,3,5,
-				//	3,7,5,
-				//	8,9,12,
-				//	9,13,12,
-				//	10,14,11,
-				//	14,15,11,
-				//	16,18,17,
-				//	18,19,17,
-				//	20,21,22,
-				//	21,23,22
-				//};
-
-				//SStaticModelFileHeader asset;
-				//asset.AssetType = EAssetType::StaticMesh;
-				//asset.Name = "PrimitiveCube";
-				//asset.NameLength = static_cast<U32>(asset.Name.length());
-				//asset.Meshes.emplace_back();
-				//asset.Meshes.back().NumberOfVertices = 24;
-				//asset.Meshes.back().Vertices.assign(vertices, vertices + 24);
-				//asset.Meshes.back().NumberOfIndices = 36;
-				//asset.Meshes.back().Indices.assign(indices, indices + 36);
-
-				//const auto data = new char[asset.GetSize()];
-
-				//asset.Serialize(data);
-				//CEngine::GetInstance()->GetFileSystem()->Serialize(fileName, &data[0], asset.GetSize());
-				//delete[] data;
-
 				CModelImporter::ImportFBX(fileName);
 			}
 			break;
@@ -1496,8 +1489,8 @@ namespace Havtorn
 			{
 				asset.DrawCallData[i].VertexBufferIndex = AddVertexBuffer(assetFile.Meshes[i].Vertices);
 				asset.DrawCallData[i].IndexBufferIndex = AddIndexBuffer(assetFile.Meshes[i].Indices);
-				asset.DrawCallData[i].VertexStrideIndex = AddMeshVertexStride(static_cast<U32>(sizeof(SStaticMeshVertex)));
-				asset.DrawCallData[i].VertexOffsetIndex = AddMeshVertexOffset(0);
+				asset.DrawCallData[i].VertexStrideIndex = /*AddMeshVertexStride(static_cast<U32>(sizeof(SStaticMeshVertex)))*/0;
+				asset.DrawCallData[i].VertexOffsetIndex = /*AddMeshVertexOffset(0)*/0;
 			}
 
 			LoadedStaticMeshes.emplace(fileName, asset);
@@ -1529,15 +1522,16 @@ namespace Havtorn
 		}
 	}
 
-	//ID3D11ShaderResourceView* CRenderManager::GetTexture(I64 textureIndex) const
-	//{
-	//	return Textures[textureIndex];
-	//}
+	void CRenderManager::LoadDecalComponent(const std::vector<std::string>& textureNames, SDecalComponent* outDecalComponent)
+	{
+		outDecalComponent->TextureReferences.clear();
+		auto textureBank = CEngine::GetInstance()->GetTextureBank();
 
-	//const std::vector<ID3D11ShaderResourceView*>& CRenderManager::GetTextures() const
-	//{
-	//	return Textures;
-	//}
+		for (const std::string& textureName: textureNames)
+		{
+			outDecalComponent->TextureReferences.emplace_back(static_cast<U16>(textureBank->GetTextureIndex("Assets/Textures/" + textureName + ".hva")));
+		}
+	}
 
 	EMaterialConfiguration CRenderManager::GetMaterialConfiguration() const
 	{
@@ -1690,21 +1684,6 @@ namespace Havtorn
 	{
 		std::swap(PushToCommands, PopFromCommands);
 	}
-
-	//void CRenderManager::SetBrokenScreen(bool aShouldSetBrokenScreen)
-	//{
-	//	UseBrokenScreenPass = aShouldSetBrokenScreen;
-	//}
-
-	//const CFullscreenRenderer::SPostProcessingBufferData& CRenderManager::GetPostProcessingBufferData() const
-	//{
-	//	return myFullscreenRenderer.myPostProcessingBufferData;
-	//}
-
-	//void CRenderManager::SetPostProcessingBufferData(const CFullscreenRenderer::SPostProcessingBufferData& someBufferData)
-	//{
-	//	myFullscreenRenderer.myPostProcessingBufferData = someBufferData;
-	//}
 
 	void CRenderManager::Clear(SVector4 /*clearColor*/)
 	{
