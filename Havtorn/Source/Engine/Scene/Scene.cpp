@@ -163,6 +163,8 @@ namespace Havtorn
 		const std::vector<std::string> materialNames2 = { "T_Bed", "T_Bedsheet" };
 		const std::string modelPath3 = "Assets/Tests/Quad.hva";
 		const std::vector<std::string> materialNames3 = { "T_Quad" };
+		const std::string modelPath4 = "Assets/Tests/En_P_WallLamp.hva";
+		const std::vector<std::string> materialNames4 = { "T_Quad", "T_Emissive", "T_Headlamp" };
 
 		// === Pendulum ===
 		auto pendulum = CreateEntity("Clock");
@@ -183,6 +185,17 @@ namespace Havtorn
 		renderManager->LoadStaticMeshComponent(modelPath2, AddStaticMeshComponentToEntity(bed).get());
 		renderManager->LoadMaterialComponent(materialNames2, AddMaterialComponentToEntity(bed).get());
 		// === !Bed ===
+
+		// === Lamp ===
+		auto lamp = CreateEntity("Lamp");
+
+		auto& transform4 = AddTransformComponentToEntity(lamp)->Transform;
+		transform4.GetMatrix().Translation({ -1.0f, 1.4f, -0.75f });
+		transform4.Rotate({ 0.0f, UMath::DegToRad(90.0f), 0.0f });
+
+		renderManager->LoadStaticMeshComponent(modelPath4, AddStaticMeshComponentToEntity(lamp).get());
+		renderManager->LoadMaterialComponent(materialNames4, AddMaterialComponentToEntity(lamp).get());
+		// === !Lamp ===
 
 		// === Floor ===
 		std::vector<SVector> translations;
