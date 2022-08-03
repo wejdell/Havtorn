@@ -295,8 +295,6 @@ namespace Havtorn
 		ID3D11ShaderResourceView* DefaultAlbedoTexture = nullptr;
 		ID3D11ShaderResourceView* DefaultNormalTexture = nullptr;
 		ID3D11ShaderResourceView* DefaultMaterialTexture = nullptr;
-
-		ID3D11ShaderResourceView* DefaultCubemap = nullptr;
 		
 		EMaterialConfiguration MaterialConfiguration = EMaterialConfiguration::AlbedoMaterialNormal_Packed;
 		U8 TexturesPerMaterial = 3;

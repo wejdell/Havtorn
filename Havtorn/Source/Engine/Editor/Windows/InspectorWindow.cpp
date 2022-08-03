@@ -194,7 +194,7 @@ namespace ImGui
 				}
 			}
 		
-			OpenSelectTextureAssetModal(materialComp->MaterialReferences);
+			OpenSelectTextureAssetModal(materialComp->MaterialReferences[MaterialRefToChangeIndex]);
 		}
 	}
 
@@ -333,48 +333,7 @@ namespace ImGui
 				}
 			}
 
-			OpenSelectTextureAssetModal(decalComp->TextureReferences);
-		}
-	}
-
-	void CInspectorWindow::OpenSelectTextureAssetModal(std::vector<Havtorn::U16>& textureList)
-	{
-		if (ImGui::BeginPopupModal("Select Texture Asset", NULL, ImGuiWindowFlags_AlwaysAutoResize))
-		{
-			F32 thumbnailPadding = 4.0f;
-			F32 cellWidth = TexturePreviewSize.X * 0.75f + thumbnailPadding;
-			F32 panelWidth = 256.0f;
-			Havtorn::I32 columnCount = static_cast<Havtorn::I32>(panelWidth / cellWidth);
-			Havtorn::U32 id = 0;
-
-			if (ImGui::BeginTable("NewTextureAssetTable", columnCount))
-			{
-				for (auto& entry : std::filesystem::directory_iterator("Assets/Textures"))
-				{
-					if (entry.is_directory())
-						continue;
-
-					auto& assetRep = Manager->GetAssetRepFromDirEntry(entry);
-
-					ImGui::TableNextColumn();
-					ImGui::PushID(id++);
-
-					if (ImGui::ImageButton(assetRep->TextureRef, { TexturePreviewSize.X * 0.75f, TexturePreviewSize.Y * 0.75f }))
-					{
-						textureList[MaterialRefToChangeIndex] = static_cast<Havtorn::U16>(Havtorn::CEngine::GetInstance()->GetTextureBank()->GetTextureIndex(entry.path().string()));
-						ImGui::CloseCurrentPopup();
-					}
-
-					ImGui::Text(assetRep->Name.c_str());
-					ImGui::PopID();
-				}
-
-				ImGui::EndTable();
-			}
-
-			if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) { ImGui::CloseCurrentPopup(); }
-
-			ImGui::EndPopup();
+			OpenSelectTextureAssetModal(decalComp->TextureReferences[MaterialRefToChangeIndex]);
 		}
 	}
 

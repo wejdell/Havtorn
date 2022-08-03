@@ -147,8 +147,6 @@ namespace Havtorn
 		RenderedScene = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
 		IntermediateDepth = FullscreenTextureFactory.CreateDepth(windowHandler->GetResolution(), DXGI_FORMAT_R24G8_TYPELESS);
 
-		DefaultCubemap = CEngine::GetInstance()->GetTextureBank()->GetTexture("Assets/Textures/Cubemaps/CubemapTheVisit.hva");
-
 		ShadowAtlasResolution = {8192.0f, 8192.0f};
 		InitShadowmapAtlas(ShadowAtlasResolution);
 
