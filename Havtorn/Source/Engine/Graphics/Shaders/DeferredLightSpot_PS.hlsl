@@ -1,7 +1,7 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #include "Includes/DeferredSamplingFunctions.hlsli"
-#include "Includes/DeferredPBRFunctions.hlsli"
+#include "Includes/PBRDirectLighting.hlsli"
 #include "Includes/MathHelpers.hlsli"
 #include "Includes/SpotLightShaderStructs.hlsli"
 #include "Includes/ShadowSampling.hlsli"

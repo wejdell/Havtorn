@@ -113,7 +113,7 @@ namespace Havtorn
 		AddMeshVertexStride(sizeof(SStaticMeshVertex));
 		AddMeshVertexOffset(0);
 
-		AddShader("Shaders/DeferredLightEnvironment_PS.cso", EShaderType::Pixel);
+		AddShader("Shaders/DeferredLightDirectionalAndEnvironment_PS.cso", EShaderType::Pixel);
 		
 		InitPointLightResources();
 		InitSpotLightResources();
@@ -153,6 +153,12 @@ namespace Havtorn
 		DownsampledDepth = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 2.0f, DXGI_FORMAT_R32_FLOAT);
 
 		IntermediateTexture = FullscreenTextureFactory.CreateTexture(ShadowAtlasResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+
+		HalfSizeTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 2.0f, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		QuarterSizeTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 4.0f, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		BlurTexture1 = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
+		BlurTexture2 = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
+		VignetteTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
 
 		VolumetricAccumulationBuffer = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 2.0f, DXGI_FORMAT_R16G16B16A16_FLOAT);
 		VolumetricBlurTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 2.0f, DXGI_FORMAT_R16G16B16A16_FLOAT);
@@ -908,52 +914,7 @@ namespace Havtorn
 					if (!ShouldBlurVolumetricBuffer)
 						break;
 
-					// Downsampling and Blur
-					RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::Disable);
-					DownsampledDepth.SetAsActiveTarget();
-					IntermediateDepth.SetAsResourceOnSlot(0);
-					FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::DownsampleDepth);
-
-					// Blur
-					VolumetricBlurTexture.SetAsActiveTarget();
-					VolumetricAccumulationBuffer.SetAsResourceOnSlot(0);
-					FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralHorizontal);
-
-					VolumetricAccumulationBuffer.SetAsActiveTarget();
-					VolumetricBlurTexture.SetAsResourceOnSlot(0);
-					FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralVertical);
-
-					VolumetricBlurTexture.SetAsActiveTarget();
-					VolumetricAccumulationBuffer.SetAsResourceOnSlot(0);
-					FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralHorizontal);
-
-					VolumetricAccumulationBuffer.SetAsActiveTarget();
-					VolumetricBlurTexture.SetAsResourceOnSlot(0);
-					FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralVertical);
-
-					VolumetricBlurTexture.SetAsActiveTarget();
-					VolumetricAccumulationBuffer.SetAsResourceOnSlot(0);
-					FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralHorizontal);
-
-					VolumetricAccumulationBuffer.SetAsActiveTarget();
-					VolumetricBlurTexture.SetAsResourceOnSlot(0);
-					FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralVertical);
-
-					VolumetricBlurTexture.SetAsActiveTarget();
-					VolumetricAccumulationBuffer.SetAsResourceOnSlot(0);
-					FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralHorizontal);
-
-					VolumetricAccumulationBuffer.SetAsActiveTarget();
-					VolumetricBlurTexture.SetAsResourceOnSlot(0);
-					FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralVertical);
-
-					// Upsampling
-					RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
-					RenderedScene.SetAsActiveTarget();
-					VolumetricAccumulationBuffer.SetAsResourceOnSlot(0);
-					DownsampledDepth.SetAsResourceOnSlot(1);
-					IntermediateDepth.SetAsResourceOnSlot(2);
-					FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::DepthAwareUpsampling);
+					VolumetricBlur();
 				}
 				break;
 
@@ -967,7 +928,7 @@ namespace Havtorn
 			RenderStateManager.SetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
 	
 			// Bloom
-			//RenderBloom();
+			RenderBloom();
 
 			// Tonemapping
 			TonemappedTexture.SetAsActiveTarget();
@@ -1697,6 +1658,104 @@ namespace Havtorn
 		{
 			RenderPassIndex = 0;
 		}
+	}
+
+	void CRenderManager::VolumetricBlur()
+	{
+		// Downsampling and Blur
+		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::Disable);
+		DownsampledDepth.SetAsActiveTarget();
+		IntermediateDepth.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::DownsampleDepth);
+
+		// Blur
+		VolumetricBlurTexture.SetAsActiveTarget();
+		VolumetricAccumulationBuffer.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralHorizontal);
+
+		VolumetricAccumulationBuffer.SetAsActiveTarget();
+		VolumetricBlurTexture.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralVertical);
+
+		VolumetricBlurTexture.SetAsActiveTarget();
+		VolumetricAccumulationBuffer.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralHorizontal);
+
+		VolumetricAccumulationBuffer.SetAsActiveTarget();
+		VolumetricBlurTexture.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralVertical);
+
+		VolumetricBlurTexture.SetAsActiveTarget();
+		VolumetricAccumulationBuffer.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralHorizontal);
+
+		VolumetricAccumulationBuffer.SetAsActiveTarget();
+		VolumetricBlurTexture.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralVertical);
+
+		VolumetricBlurTexture.SetAsActiveTarget();
+		VolumetricAccumulationBuffer.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralHorizontal);
+
+		VolumetricAccumulationBuffer.SetAsActiveTarget();
+		VolumetricBlurTexture.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralVertical);
+
+		// Upsampling
+		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
+		RenderedScene.SetAsActiveTarget();
+		VolumetricAccumulationBuffer.SetAsResourceOnSlot(0);
+		DownsampledDepth.SetAsResourceOnSlot(1);
+		IntermediateDepth.SetAsResourceOnSlot(2);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::DepthAwareUpsampling);
+	}
+
+	void CRenderManager::RenderBloom()
+	{
+		HalfSizeTexture.SetAsActiveTarget();
+		RenderedScene.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+
+		QuarterSizeTexture.SetAsActiveTarget();
+		HalfSizeTexture.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+
+		BlurTexture1.SetAsActiveTarget();
+		QuarterSizeTexture.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+
+		BlurTexture2.SetAsActiveTarget();
+		BlurTexture1.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::GaussianHorizontal);
+
+		BlurTexture1.SetAsActiveTarget();
+		BlurTexture2.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::GaussianVertical);
+
+		BlurTexture2.SetAsActiveTarget();
+		BlurTexture1.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::GaussianHorizontal);
+
+		BlurTexture1.SetAsActiveTarget();
+		BlurTexture2.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::GaussianVertical);
+
+		QuarterSizeTexture.SetAsActiveTarget();
+		BlurTexture1.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+
+		HalfSizeTexture.SetAsActiveTarget();
+		QuarterSizeTexture.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+
+		VignetteTexture.SetAsActiveTarget();
+		RenderedScene.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+
+		RenderedScene.SetAsActiveTarget();
+		VignetteTexture.SetAsResourceOnSlot(0);
+		HalfSizeTexture.SetAsResourceOnSlot(1);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Bloom);
 	}
 
 	U16 CRenderManager::AddIndexBuffer(const std::vector<U32>& indices)

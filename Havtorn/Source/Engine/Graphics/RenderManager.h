@@ -132,6 +132,9 @@ namespace Havtorn
 	private:
 		void ToggleRenderPass(bool shouldToggleForwards = true);
 
+		void VolumetricBlur();
+		void RenderBloom();
+
 	private:
 		template<typename T>
 		U16 AddVertexBuffer(const std::vector<T>& vertices);
@@ -255,6 +258,12 @@ namespace Havtorn
 		CFullscreenTexture ShadowAtlasDepth;
 		CFullscreenTexture DepthCopy;
 
+		CFullscreenTexture HalfSizeTexture;
+		CFullscreenTexture QuarterSizeTexture;
+		CFullscreenTexture BlurTexture1;
+		CFullscreenTexture BlurTexture2;
+		CFullscreenTexture VignetteTexture;
+
 		CFullscreenTexture VolumetricAccumulationBuffer;
 		CFullscreenTexture VolumetricBlurTexture;
 		CFullscreenTexture SSAOBuffer;
@@ -263,7 +272,7 @@ namespace Havtorn
 		CFullscreenTexture TonemappedTexture;
 		CFullscreenTexture AntiAliasedTexture;
 		CGBuffer GBuffer;
-		//CGBuffer myGBufferCopy;
+
 		CRenderCommandHeap RenderCommandsA;
 		CRenderCommandHeap RenderCommandsB;
 
