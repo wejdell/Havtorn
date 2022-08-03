@@ -134,6 +134,7 @@ namespace Havtorn
 
 		void VolumetricBlur();
 		void RenderBloom();
+		void DebugShadowAtlas();
 
 	private:
 		template<typename T>
