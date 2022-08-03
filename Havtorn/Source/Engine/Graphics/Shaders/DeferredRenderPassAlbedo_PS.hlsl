@@ -1,7 +1,7 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
-#include "Includes/PBRDeferredAmbiance.hlsli"
-//#include "Includes/DeferredPBRFunctions.hlsli"
+#include "Includes/DeferredSamplingFunctions.hlsli"
+#include "Includes/MathHelpers.hlsli"
 
 PixelOutput main(VertexToPixel input)
 {

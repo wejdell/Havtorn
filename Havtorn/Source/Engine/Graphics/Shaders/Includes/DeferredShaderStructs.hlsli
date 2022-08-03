@@ -145,7 +145,7 @@ cbuffer EmissiveBuffer : register(b7)
 // Cubemap used for environment light shading
 TextureCube environmentTexture : register(t0);
 
-// GBuffer Textures: textures stored in the GBuffer, contains data for models. Used for environment and point light calculations
+// GBuffer Textures: textures stored in the GBuffer, contains data for models. Used for lighting calculations
 Texture2D albedoTextureGBuffer        : register(t1);
 Texture2D normalTextureGBuffer        : register(t2);
 Texture2D vertexNormalTextureGBuffer  : register(t3);

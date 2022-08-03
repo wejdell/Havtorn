@@ -1,7 +1,7 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
-#include "Includes/PBRDeferredAmbiance.hlsli"
-#include "Includes/DeferredPBRFunctions.hlsli"
+#include "Includes/PBRAmbientLighting.hlsli"
+#include "Includes/PBRDirectLighting.hlsli"
 #include "Includes/ShadowSampling.hlsli"
 
 PixelOutput main(VertexToPixel input)
@@ -33,7 +33,7 @@ PixelOutput main(VertexToPixel input)
     SShadowmapViewData shadowData = ShadowmapViewData[0];
     
     const float3 shadowFactor = ShadowFactor(worldPosition, shadowData.ShadowmapPosition.xyz, shadowData.ToShadowMapView, shadowData.ToShadowMapProjection, shadowDepthTexture, shadowSampler, shadowData.ShadowmapResolution, shadowData.ShadowAtlasResolution, shadowData.ShadowmapStartingUV, shadowData.ShadowTestTolerance);
-    const float3 ambiance = EvaluateAmbiance(environmentTexture, normal, vertexNormal, toEye, perceptualRoughness, metalness, albedo, ambientOcclusion, diffuseColor, specularColor);
+    const float3 ambiance = EvaluateAmbience(environmentTexture, normal, vertexNormal, toEye, perceptualRoughness, metalness, albedo, ambientOcclusion, diffuseColor, specularColor);
     const float3 directionalLight = EvaluateDirectionalLight(diffuseColor, specularColor, normal, perceptualRoughness, DirectionalLightColor.rgb * DirectionalLightColor.a, ToDirectionalLight.xyz, toEye.xyz);
     
     const float3 emissive = albedo * emissiveData;
