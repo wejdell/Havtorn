@@ -21,6 +21,7 @@ namespace Havtorn
 		const auto& transformComponents = scene->GetTransformComponents();
 		const auto& cameraComponents = scene->GetCameraComponents();
 		const auto& materialComponents = scene->GetMaterialComponents();
+		const auto& environmentLightComponents = scene->GetEnvironmentLightComponents();
 		const auto& directionalLightComponents = scene->GetDirectionalLightComponents();
 		const auto& pointLightComponents = scene->GetPointLightComponents();
 		const auto& spotLightComponents = scene->GetSpotLightComponents();
@@ -125,6 +126,7 @@ namespace Havtorn
 
 			std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
 			components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
+			components[static_cast<U8>(EComponentType::EnvironmentLightComponent)] = environmentLightComponents[0];
 			components[static_cast<U8>(EComponentType::DirectionalLightComponent)] = directionalLightComponents[0];
 			SRenderCommand command(components, ERenderCommandType::DeferredLightingDirectional);
 			RenderManager->PushRenderCommand(command);

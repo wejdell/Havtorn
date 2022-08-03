@@ -24,6 +24,7 @@ namespace ImGui
 		void InspectStaticMeshComponent(Havtorn::I64 staticMeshComponentIndex);
 		void InspectCameraComponent(Havtorn::I64 cameraComponentIndex);
 		void InspectMaterialComponent(Havtorn::I64 materialComponentIndex);
+		void InspectEnvironmentLightComponent(Havtorn::I64 environmentLightComponentIndex);
 		void InspectDirectionalLightComponent(Havtorn::I64 directionalLightComponentIndex);
 		void InspectPointLightComponent(Havtorn::I64 pointLightComponentIndex);
 		void InspectSpotLightComponent(Havtorn::I64 spotLightComponentIndex);
@@ -31,6 +32,7 @@ namespace ImGui
 		void InspectDecalComponent(Havtorn::I64 decalComponentIndex);
 
 		void OpenSelectTextureAssetModal(std::vector<Havtorn::U16>& textureList);
+		void OpenSelectTextureAssetModal(Havtorn::U16& textureRefToChange);
 
 	private:
 		Havtorn::CScene* Scene = nullptr;

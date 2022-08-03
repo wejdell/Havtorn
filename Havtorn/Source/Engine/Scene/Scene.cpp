@@ -27,10 +27,12 @@ namespace Havtorn
 		camera->ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
 		camera->ViewMatrix = SMatrix::LookAtLH(SVector::Zero, SVector::Forward, SVector::Up);
 
+		auto environmentLightEntity = CreateEntity("Environment Light");
+		AddTransformComponentToEntity(environmentLightEntity);
+		renderManager->LoadEnvironmentLightComponent("CubemapTheVisit", AddEnvironmentLightComponentToEntity(environmentLightEntity).get());
+
 		auto directionalLightEntity = CreateEntity("Directional Light");
-
 		AddTransformComponentToEntity(directionalLightEntity);
-
 		auto directionalLight = AddDirectionalLightComponentToEntity(directionalLightEntity);
 		directionalLight->Direction = { 1.0f, 1.0f, -1.0f, 0.0f };
 		directionalLight->Color = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };
@@ -273,6 +275,7 @@ namespace Havtorn
 	COMPONENT_ADDER_DEFINITION(StaticMeshComponent)
 	COMPONENT_ADDER_DEFINITION(CameraComponent)
 	COMPONENT_ADDER_DEFINITION(MaterialComponent)
+	COMPONENT_ADDER_DEFINITION(EnvironmentLightComponent)
 	COMPONENT_ADDER_DEFINITION(DirectionalLightComponent)
 	COMPONENT_ADDER_DEFINITION(PointLightComponent)
 	COMPONENT_ADDER_DEFINITION(SpotLightComponent)

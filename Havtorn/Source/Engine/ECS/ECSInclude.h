@@ -14,6 +14,7 @@
 #include "ECS/Components/StaticMeshComponent.h"
 #include "ECS/Components/CameraComponent.h"
 #include "ECS/Components/MaterialComponent.h"
+#include "ECS/Components/EnvironmentLightComponent.h"
 #include "ECS/Components/DirectionalLightComponent.h"
 #include "ECS/Components/PointLightComponent.h"
 #include "ECS/Components/SpotLightComponent.h"

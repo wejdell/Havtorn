@@ -74,6 +74,12 @@ namespace ImGui
 					ImGui::Dummy({ DummySize.X, DummySize.Y });
 				}
 
+				if (selection->HasComponent(EComponentType::EnvironmentLightComponent))
+				{
+					InspectEnvironmentLightComponent(selection->GetComponentIndex(EComponentType::EnvironmentLightComponent));
+					ImGui::Dummy({ DummySize.X, DummySize.Y });
+				}
+
 				if (selection->HasComponent(EComponentType::DirectionalLightComponent))
 				{
 					InspectDirectionalLightComponent(selection->GetComponentIndex(EComponentType::DirectionalLightComponent));
@@ -189,6 +195,26 @@ namespace ImGui
 			}
 		
 			OpenSelectTextureAssetModal(materialComp->MaterialReferences);
+		}
+	}
+
+	void CInspectorWindow::InspectEnvironmentLightComponent(Havtorn::I64 environmentLightComponentIndex)
+	{
+		if (ImGui::CollapsingHeader("Environment Light", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			auto& environmentLightComp = Scene->GetEnvironmentLightComponents()[environmentLightComponentIndex];
+
+			Havtorn::U16 ref = environmentLightComp->AmbientCubemapReference;
+			
+			ImGui::Text("Ambient Static Cubemap");
+			if (ImGui::ImageButton((void*)Havtorn::CEngine::GetInstance()->GetTextureBank()->GetTexture(ref), { TexturePreviewSize.X, TexturePreviewSize.Y }))
+			{
+				MaterialRefToChangeIndex = ref;
+				ImGui::OpenPopup("Select Texture Asset");
+				ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+			}
+
+			OpenSelectTextureAssetModal(environmentLightComp->AmbientCubemapReference);
 		}
 	}
 
@@ -336,6 +362,47 @@ namespace ImGui
 					if (ImGui::ImageButton(assetRep->TextureRef, { TexturePreviewSize.X * 0.75f, TexturePreviewSize.Y * 0.75f }))
 					{
 						textureList[MaterialRefToChangeIndex] = static_cast<Havtorn::U16>(Havtorn::CEngine::GetInstance()->GetTextureBank()->GetTextureIndex(entry.path().string()));
+						ImGui::CloseCurrentPopup();
+					}
+
+					ImGui::Text(assetRep->Name.c_str());
+					ImGui::PopID();
+				}
+
+				ImGui::EndTable();
+			}
+
+			if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) { ImGui::CloseCurrentPopup(); }
+
+			ImGui::EndPopup();
+		}
+	}
+
+	void CInspectorWindow::OpenSelectTextureAssetModal(Havtorn::U16& textureRefToChange)
+	{
+		if (ImGui::BeginPopupModal("Select Texture Asset", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			F32 thumbnailPadding = 4.0f;
+			F32 cellWidth = TexturePreviewSize.X * 0.75f + thumbnailPadding;
+			F32 panelWidth = 256.0f;
+			Havtorn::I32 columnCount = static_cast<Havtorn::I32>(panelWidth / cellWidth);
+			Havtorn::U32 id = 0;
+
+			if (ImGui::BeginTable("NewTextureAssetTable", columnCount))
+			{
+				for (auto& entry : std::filesystem::recursive_directory_iterator("Assets/Textures"))
+				{
+					if (entry.is_directory())
+						continue;
+
+					auto& assetRep = Manager->GetAssetRepFromDirEntry(entry);
+
+					ImGui::TableNextColumn();
+					ImGui::PushID(id++);
+
+					if (ImGui::ImageButton(assetRep->TextureRef, { TexturePreviewSize.X * 0.75f, TexturePreviewSize.Y * 0.75f }))
+					{
+						textureRefToChange = static_cast<Havtorn::U16>(Havtorn::CEngine::GetInstance()->GetTextureBank()->GetTextureIndex(entry.path().string()));
 						ImGui::CloseCurrentPopup();
 					}
 

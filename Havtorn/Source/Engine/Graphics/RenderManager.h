@@ -78,6 +78,7 @@ namespace Havtorn
 	struct SStaticMeshComponent;
 	struct SMaterialComponent;
 	struct SDecalComponent;
+	struct SEnvironmentLightComponent;
 
 	struct SRenderCommandComparer
 	{
@@ -101,6 +102,7 @@ namespace Havtorn
 		void LoadStaticMeshComponent(const std::string& fileName, SStaticMeshComponent* outStaticMeshComponent);
 		void LoadMaterialComponent(const std::vector<std::string>& materialNames, SMaterialComponent* outMaterialComponent);
 		void LoadDecalComponent(const std::vector<std::string>& textureNames, SDecalComponent* outDecalComponent);
+		void LoadEnvironmentLightComponent(const std::string& ambientCubemapTextureName, SEnvironmentLightComponent* outEnvironmentLightComponent);
 
 		EMaterialConfiguration GetMaterialConfiguration() const;
 		SVector2<F32> GetShadowAtlasResolution() const;
