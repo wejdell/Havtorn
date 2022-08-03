@@ -236,6 +236,14 @@ namespace Havtorn
 			F32 ScatteringProbability = 0.0001f;
 			F32 HenyeyGreensteinGValue = 0.0f;
 		} VolumetricLightBufferData;
+		HV_ASSERT_BUFFER(SVolumetricLightBufferData)
+
+		struct SEmissiveBufferData
+		{
+			F32 EmissiveStrength = 1.0f;
+			SVector Padding;
+		} EmissiveBufferData;
+		HV_ASSERT_BUFFER(SEmissiveBufferData)
 
 	private:
 		CGraphicsFramework* Framework;
@@ -248,6 +256,7 @@ namespace Havtorn
 		ID3D11Buffer* SpotLightBuffer;
 		ID3D11Buffer* ShadowmapBuffer;
 		ID3D11Buffer* VolumetricLightBuffer;
+		ID3D11Buffer* EmissiveBuffer;
 		CRenderStateManager RenderStateManager;
 		CFullscreenRenderer FullscreenRenderer;
 

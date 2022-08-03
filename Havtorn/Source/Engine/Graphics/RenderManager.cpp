@@ -87,6 +87,9 @@ namespace Havtorn
 		bufferDescription.ByteWidth = sizeof(SVolumetricLightBufferData);
 		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &VolumetricLightBuffer), "Volumetric Light Buffer could not be created.");
 
+		bufferDescription.ByteWidth = sizeof(SEmissiveBufferData);
+		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &EmissiveBuffer), "Emissive Buffer could not be created.");
+
 		ENGINE_ERROR_BOOL_MESSAGE(FullscreenRenderer.Init(framework), "Failed to Init Fullscreen Renderer.");
 		ENGINE_ERROR_BOOL_MESSAGE(FullscreenTextureFactory.Init(framework), "Failed to Init Fullscreen Texture Factory.");
 		ENGINE_ERROR_BOOL_MESSAGE(RenderStateManager.Init(framework), "Failed to Init Render State Manager.");
@@ -587,9 +590,9 @@ namespace Havtorn
 					Context->PSSetConstantBuffers(5, 1, &ShadowmapBuffer);
 
 					// Emissive Post Processing 
-					//EmissiveBufferData.EmissiveStrength = GetPostProcessingBufferData().EmissiveStrength;
-					//BindBuffer(EmissiveBuffer, EmissiveBufferData, "Emissive Buffer");
-					//Context->PSSetConstantBuffers(5, 1, &EmissiveBuffer);
+					EmissiveBufferData.EmissiveStrength = FullscreenRenderer.PostProcessingBufferData.EmissiveStrength;
+					BindBuffer(EmissiveBuffer, EmissiveBufferData, "Emissive Buffer");
+					Context->PSSetConstantBuffers(7, 1, &EmissiveBuffer);
 
 					Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 					Context->IASetInputLayout(nullptr);
@@ -945,7 +948,7 @@ namespace Havtorn
 			AntiAliasedTexture.SetAsResourceOnSlot(0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::GammaCorrection);
 
-			DebugShadowAtlas();
+			//DebugShadowAtlas();
 
 			// RenderedScene should be complete as that is the texture we send to the viewport
 			Backbuffer.SetAsActiveTarget();
