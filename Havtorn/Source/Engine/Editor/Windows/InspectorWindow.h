@@ -31,7 +31,6 @@ namespace ImGui
 		void InspectVolumetricLightComponent(Havtorn::I64 volumetricLightComponentIndex);
 		void InspectDecalComponent(Havtorn::I64 decalComponentIndex);
 
-		void OpenSelectTextureAssetModal(std::vector<Havtorn::U16>& textureList);
 		void OpenSelectTextureAssetModal(Havtorn::U16& textureRefToChange);
 
 	private:
