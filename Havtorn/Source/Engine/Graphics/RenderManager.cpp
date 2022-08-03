@@ -17,7 +17,6 @@
 
 #include "FileSystem/FileSystem.h"
 #include "Threading/ThreadManager.h"
-#include "MaterialHandler.h"
 #include "TextureBank.h"
 
 #include "ModelImporter.h"

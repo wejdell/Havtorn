@@ -13,7 +13,6 @@
 #include "Application/WindowHandler.h"
 #include "Threading/ThreadManager.h"
 #include "Graphics/GraphicsFramework.h"
-#include "Graphics/MaterialHandler.h"
 #include "Graphics/TextureBank.h"
 #ifdef _DEBUG
 #include "Editor/EditorManager.h"
@@ -71,7 +70,6 @@ namespace Havtorn
 		WindowHandler = new CWindowHandler();
 		ThreadManager = new CThreadManager();
 		Framework = new CGraphicsFramework();
-		MaterialHandler = new CMaterialHandler();
 		TextureBank = new CTextureBank();
 		RenderManager = new CRenderManager();
 #ifdef _DEBUG
@@ -93,7 +91,6 @@ namespace Havtorn
 		SAFE_DELETE(ThreadManager);
 		SAFE_DELETE(RenderManager);
 		SAFE_DELETE(TextureBank);
-		SAFE_DELETE(MaterialHandler);
 		SAFE_DELETE(Framework);
 		SAFE_DELETE(WindowHandler);
 		SAFE_DELETE(Timer);
@@ -107,7 +104,6 @@ namespace Havtorn
 		ENGINE_ERROR_BOOL_MESSAGE(WindowHandler->Init(windowData), "Window Handler could not be initialized.");
 		WindowHandler->SetInternalResolution();
 		ENGINE_ERROR_BOOL_MESSAGE(Framework->Init(WindowHandler), "Framework could not be initialized.");
-		ENGINE_ERROR_BOOL_MESSAGE(MaterialHandler->Init(Framework), "MaterialHandler could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(TextureBank->Init(Framework), "TextureBank could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(RenderManager->Init(Framework, WindowHandler), "RenderManager could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(ThreadManager->Init(RenderManager), "Thread Manager could not be initialized.");
@@ -211,11 +207,6 @@ namespace Havtorn
 	CFileSystem* CEngine::GetFileSystem()
 	{
 		return FileSystem;
-	}
-
-	CMaterialHandler* CEngine::GetMaterialHandler()
-	{
-		return MaterialHandler;
 	}
 
 	CTextureBank* CEngine::GetTextureBank()
