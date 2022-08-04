@@ -7,23 +7,21 @@
 namespace Havtorn
 {
     CRenderStateManager::CRenderStateManager()
-    {
-        Context = nullptr;
-        myBlendStates = {};
-        myDepthStencilStates = {};
-        myRasterizerStates = {};
-        mySamplerStates = {};
-    }
+        : Context(nullptr)
+        , BlendStates({})
+        , RasterizerStates({})
+        , SamplerStates({})
+    {}
 
     CRenderStateManager::~CRenderStateManager()
     {
         Context = nullptr;
     }
 
-    bool CRenderStateManager::Init(CGraphicsFramework* aFramework)
+    bool CRenderStateManager::Init(CGraphicsFramework* framework)
     {
-        Context = aFramework->GetContext();
-        ID3D11Device* device = aFramework->GetDevice();
+        Context = framework->GetContext();
+        ID3D11Device* device = framework->GetDevice();
 
         ENGINE_ERROR_BOOL_MESSAGE(Context, "Could not bind context.");
         ENGINE_ERROR_BOOL_MESSAGE(device, "Device is null.");
@@ -36,34 +34,34 @@ namespace Havtorn
         return true;
     }
 
-    void CRenderStateManager::SetBlendState(EBlendStates aBlendState)
+    void CRenderStateManager::SetBlendState(EBlendStates blendState)
     {
-        std::array<float, 4> blendFactors = { 0.5f, 0.5f, 0.5f, 0.5f };
-        Context->OMSetBlendState(myBlendStates[(size_t)aBlendState], blendFactors.data(), 0xFFFFFFFFu);
+        std::array<F32, 4> blendFactors = { 0.5f, 0.5f, 0.5f, 0.5f };
+        Context->OMSetBlendState(BlendStates[(U64)blendState], blendFactors.data(), 0xFFFFFFFFu);
     }
 
-    void CRenderStateManager::SetDepthStencilState(EDepthStencilStates aDepthStencilState, UINT aStencilRef)
+    void CRenderStateManager::SetDepthStencilState(EDepthStencilStates depthStencilState, UINT stencilRef)
     {
-        Context->OMSetDepthStencilState(myDepthStencilStates[(size_t)aDepthStencilState], aStencilRef);
+        Context->OMSetDepthStencilState(DepthStencilStates[(U64)depthStencilState], stencilRef);
     }
 
-    void CRenderStateManager::SetRasterizerState(ERasterizerStates aRasterizerState)
+    void CRenderStateManager::SetRasterizerState(ERasterizerStates rasterizerState)
     {
-        Context->RSSetState(myRasterizerStates[(size_t)aRasterizerState]);
+        Context->RSSetState(RasterizerStates[(size_t)rasterizerState]);
     }
 
-    void CRenderStateManager::SetSamplerState(ESamplerStates aSamplerState)
+    void CRenderStateManager::SetSamplerState(ESamplerStates samplerState)
     {
-        Context->VSSetSamplers(0, 1, &mySamplerStates[(size_t)aSamplerState]);
-        Context->PSSetSamplers(0, 1, &mySamplerStates[(size_t)aSamplerState]);
+        Context->VSSetSamplers(0, 1, &SamplerStates[(U64)samplerState]);
+        Context->PSSetSamplers(0, 1, &SamplerStates[(U64)samplerState]);
     }
 
-    void CRenderStateManager::SetAllStates(EBlendStates aBlendState, EDepthStencilStates aDepthStencilState, ERasterizerStates aRasterizerState, ESamplerStates aSamplerState)
+    void CRenderStateManager::SetAllStates(EBlendStates blendState, EDepthStencilStates depthStencilState, ERasterizerStates rasterizerState, ESamplerStates samplerState)
     {
-        SetBlendState(aBlendState);
-        SetDepthStencilState(aDepthStencilState);
-        SetRasterizerState(aRasterizerState);
-        SetSamplerState(aSamplerState);
+        SetBlendState(blendState);
+        SetDepthStencilState(depthStencilState);
+        SetRasterizerState(rasterizerState);
+        SetSamplerState(samplerState);
     }
 
     void CRenderStateManager::SetAllDefault()
@@ -76,28 +74,28 @@ namespace Havtorn
 
     void CRenderStateManager::Release()
     {
-        for (unsigned int i = 0; i < static_cast<unsigned int>(EBlendStates::Count); ++i)
+        for (U8 i = 0; i < static_cast<U8>(EBlendStates::Count); ++i)
         {
-            myBlendStates[i]->Release();
+            BlendStates[i]->Release();
         }
 
-        for (unsigned int i = 0; i < static_cast<unsigned int>(EDepthStencilStates::Count); ++i)
+        for (U8 i = 0; i < static_cast<U8>(EDepthStencilStates::Count); ++i)
         {
-            myDepthStencilStates[i]->Release();
+            DepthStencilStates[i]->Release();
         }
 
-        for (unsigned int i = 0; i < static_cast<unsigned int>(ERasterizerStates::Count); ++i)
+        for (U8 i = 0; i < static_cast<U8>(ERasterizerStates::Count); ++i)
         {
-            myRasterizerStates[i]->Release();
+            RasterizerStates[i]->Release();
         }
 
-        for (unsigned int i = 0; i < static_cast<unsigned int>(ESamplerStates::Count); ++i)
+        for (U8 i = 0; i < static_cast<U8>(ESamplerStates::Count); ++i)
         {
-            mySamplerStates[i]->Release();
+            SamplerStates[i]->Release();
         }
     }
 
-    bool CRenderStateManager::CreateBlendStates(ID3D11Device* aDevice)
+    bool CRenderStateManager::CreateBlendStates(ID3D11Device* device)
     {
         D3D11_BLEND_DESC alphaBlendDesc = { 0 };
         alphaBlendDesc.RenderTarget[0].BlendEnable = true;
@@ -134,23 +132,23 @@ namespace Havtorn
         }
 
         ID3D11BlendState* alphaBlendState;
-        ENGINE_HR_MESSAGE(aDevice->CreateBlendState(&alphaBlendDesc, &alphaBlendState), "Alpha Blend State could not be created.");
+        ENGINE_HR_MESSAGE(device->CreateBlendState(&alphaBlendDesc, &alphaBlendState), "Alpha Blend State could not be created.");
 
         ID3D11BlendState* additiveBlendState;
-        ENGINE_HR_MESSAGE(aDevice->CreateBlendState(&additiveBlendDesc, &additiveBlendState), "Additive Blend State could not be created");
+        ENGINE_HR_MESSAGE(device->CreateBlendState(&additiveBlendDesc, &additiveBlendState), "Additive Blend State could not be created");
 
         ID3D11BlendState* gbufferBlendState;
-        ENGINE_HR_MESSAGE(aDevice->CreateBlendState(&gbufferBlendDesc, &gbufferBlendState), "GBuffer Alpha Blend State could not be created");
+        ENGINE_HR_MESSAGE(device->CreateBlendState(&gbufferBlendDesc, &gbufferBlendState), "GBuffer Alpha Blend State could not be created");
 
-        myBlendStates[(size_t)EBlendStates::Disable] = nullptr;
-        myBlendStates[(size_t)EBlendStates::AlphaBlend] = alphaBlendState;
-        myBlendStates[(size_t)EBlendStates::AdditiveBlend] = additiveBlendState;
-        myBlendStates[(size_t)EBlendStates::GBufferAlphaBlend] = gbufferBlendState;
+        BlendStates[(U64)EBlendStates::Disable] = nullptr;
+        BlendStates[(U64)EBlendStates::AlphaBlend] = alphaBlendState;
+        BlendStates[(U64)EBlendStates::AdditiveBlend] = additiveBlendState;
+        BlendStates[(U64)EBlendStates::GBufferAlphaBlend] = gbufferBlendState;
 
         return true;
     }
 
-    bool CRenderStateManager::CreateDepthStencilStates(ID3D11Device* aDevice)
+    bool CRenderStateManager::CreateDepthStencilStates(ID3D11Device* device)
     {
         D3D11_DEPTH_STENCIL_DESC onlyreadDepthDesc = { 0 };
         onlyreadDepthDesc.DepthEnable = true;
@@ -187,27 +185,27 @@ namespace Havtorn
         depthFirstDesc.StencilEnable = FALSE;
 
         ID3D11DepthStencilState* onlyreadDepthStencilState;
-        ENGINE_HR_MESSAGE(aDevice->CreateDepthStencilState(&onlyreadDepthDesc, &onlyreadDepthStencilState), "OnlyRead Depth Stencil State could not be created.");
+        ENGINE_HR_MESSAGE(device->CreateDepthStencilState(&onlyreadDepthDesc, &onlyreadDepthStencilState), "OnlyRead Depth Stencil State could not be created.");
 
         ID3D11DepthStencilState* writeDepthStencilState;
-        ENGINE_HR_MESSAGE(aDevice->CreateDepthStencilState(&stencilWriteDesc, &writeDepthStencilState), "Write Stencil State could not be created.");
+        ENGINE_HR_MESSAGE(device->CreateDepthStencilState(&stencilWriteDesc, &writeDepthStencilState), "Write Stencil State could not be created.");
 
         ID3D11DepthStencilState* maskDepthStencilState;
-        ENGINE_HR_MESSAGE(aDevice->CreateDepthStencilState(&stencilMaskDesc, &maskDepthStencilState), "Mask Stencil State could not be created.");
+        ENGINE_HR_MESSAGE(device->CreateDepthStencilState(&stencilMaskDesc, &maskDepthStencilState), "Mask Stencil State could not be created.");
 
         ID3D11DepthStencilState* depthFirstStencilState;
-        ENGINE_HR_MESSAGE(aDevice->CreateDepthStencilState(&depthFirstDesc, &depthFirstStencilState), "Depth First Stencil State could not be created.");
+        ENGINE_HR_MESSAGE(device->CreateDepthStencilState(&depthFirstDesc, &depthFirstStencilState), "Depth First Stencil State could not be created.");
 
-        myDepthStencilStates[(size_t)EDepthStencilStates::Default] = nullptr;
-        myDepthStencilStates[(size_t)EDepthStencilStates::OnlyRead] = onlyreadDepthStencilState;
-        myDepthStencilStates[(size_t)EDepthStencilStates::StencilWrite] = writeDepthStencilState;
-        myDepthStencilStates[(size_t)EDepthStencilStates::StencilMask] = maskDepthStencilState;
-        myDepthStencilStates[(size_t)EDepthStencilStates::DepthFirst] = depthFirstStencilState;
+        DepthStencilStates[(U64)EDepthStencilStates::Default] = nullptr;
+        DepthStencilStates[(U64)EDepthStencilStates::OnlyRead] = onlyreadDepthStencilState;
+        DepthStencilStates[(U64)EDepthStencilStates::StencilWrite] = writeDepthStencilState;
+        DepthStencilStates[(U64)EDepthStencilStates::StencilMask] = maskDepthStencilState;
+        DepthStencilStates[(U64)EDepthStencilStates::DepthFirst] = depthFirstStencilState;
 
         return true;
     }
 
-    bool CRenderStateManager::CreateRasterizerStates(ID3D11Device* aDevice)
+    bool CRenderStateManager::CreateRasterizerStates(ID3D11Device* device)
     {
         D3D11_RASTERIZER_DESC wireframeRasterizerDesc = {};
         wireframeRasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
@@ -225,23 +223,23 @@ namespace Havtorn
         noCullDesc.DepthClipEnable = true;
 
         ID3D11RasterizerState* wireframeRasterizerState;
-        ENGINE_HR_MESSAGE(aDevice->CreateRasterizerState(&wireframeRasterizerDesc, &wireframeRasterizerState), "Wireframe Rasterizer State could not be created.");
+        ENGINE_HR_MESSAGE(device->CreateRasterizerState(&wireframeRasterizerDesc, &wireframeRasterizerState), "Wireframe Rasterizer State could not be created.");
 
         ID3D11RasterizerState* frontFaceState;
-        ENGINE_HR_MESSAGE(aDevice->CreateRasterizerState(&frontFaceDesc, &frontFaceState), "Front face Rasterizer State could not be created.");
+        ENGINE_HR_MESSAGE(device->CreateRasterizerState(&frontFaceDesc, &frontFaceState), "Front face Rasterizer State could not be created.");
 
         ID3D11RasterizerState* noCullState;
-        ENGINE_HR_MESSAGE(aDevice->CreateRasterizerState(&noCullDesc, &noCullState), "No Face culling Rasterizer State could not be created.");
+        ENGINE_HR_MESSAGE(device->CreateRasterizerState(&noCullDesc, &noCullState), "No Face culling Rasterizer State could not be created.");
 
-        myRasterizerStates[(size_t)ERasterizerStates::Default] = nullptr;
-        myRasterizerStates[(size_t)ERasterizerStates::Wireframe] = wireframeRasterizerState;
-        myRasterizerStates[(size_t)ERasterizerStates::FrontFaceCulling] = frontFaceState;
-        myRasterizerStates[(size_t)ERasterizerStates::NoFaceCulling] = noCullState;
+        RasterizerStates[(U64)ERasterizerStates::Default] = nullptr;
+        RasterizerStates[(U64)ERasterizerStates::Wireframe] = wireframeRasterizerState;
+        RasterizerStates[(U64)ERasterizerStates::FrontFaceCulling] = frontFaceState;
+        RasterizerStates[(U64)ERasterizerStates::NoFaceCulling] = noCullState;
 
         return true;
     }
 
-    bool CRenderStateManager::CreateSamplerStates(ID3D11Device* aDevice)
+    bool CRenderStateManager::CreateSamplerStates(ID3D11Device* device)
     {
         D3D11_SAMPLER_DESC pointSamplerDesc = {};
         pointSamplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_POINT;
@@ -262,14 +260,14 @@ namespace Havtorn
         wrapSamplerDesc.MaxLOD = FLT_MAX;
 
         ID3D11SamplerState* pointSamplerState;
-        ENGINE_HR_MESSAGE(aDevice->CreateSamplerState(&pointSamplerDesc, &pointSamplerState), "Point Sampler could not be created.");
+        ENGINE_HR_MESSAGE(device->CreateSamplerState(&pointSamplerDesc, &pointSamplerState), "Point Sampler could not be created.");
 
         ID3D11SamplerState* wrapSamplerState;
-        ENGINE_HR_MESSAGE(aDevice->CreateSamplerState(&wrapSamplerDesc, &wrapSamplerState), "Wrap Sampler could not be created.");
+        ENGINE_HR_MESSAGE(device->CreateSamplerState(&wrapSamplerDesc, &wrapSamplerState), "Wrap Sampler could not be created.");
 
-        mySamplerStates[(size_t)ESamplerStates::Trilinear] = nullptr;
-        mySamplerStates[(size_t)ESamplerStates::Point] = pointSamplerState;
-        mySamplerStates[(size_t)ESamplerStates::Wrap] = wrapSamplerState;
+        SamplerStates[(U64)ESamplerStates::Trilinear] = nullptr;
+        SamplerStates[(U64)ESamplerStates::Point] = pointSamplerState;
+        SamplerStates[(U64)ESamplerStates::Wrap] = wrapSamplerState;
 
         return true;
     }

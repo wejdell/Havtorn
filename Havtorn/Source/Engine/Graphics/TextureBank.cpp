@@ -27,16 +27,16 @@ namespace Havtorn
 		return Indices[fileName];
 	}
 
-	ID3D11ShaderResourceView* CTextureBank::GetTexture(const std::string& fileName)
-	{
-		U32 index = GetTextureIndex(fileName);
-		return Textures[index];
-	}
-
 	ID3D11ShaderResourceView* CTextureBank::GetTexture(U32 index)
 	{
 		// NR: Assume Textures[index] exists, otherwise we just crash here, which is fine. 
 		// Might be unnecessarily expensive to check error popups here.
+		return Textures[index];
+	}
+
+	ID3D11ShaderResourceView* CTextureBank::GetTexture(const std::string& fileName)
+	{
+		U32 index = GetTextureIndex(fileName);
 		return Textures[index];
 	}
 

@@ -18,8 +18,8 @@ namespace Havtorn
 
 	public:
 		U32 GetTextureIndex(const std::string& fileName);
-		ID3D11ShaderResourceView* GetTexture(const std::string& fileName);
 		ID3D11ShaderResourceView* GetTexture(U32 index);
+		ID3D11ShaderResourceView* GetTexture(const std::string& fileName);
 
 		const std::vector<ID3D11ShaderResourceView*>& GetTextures();
 

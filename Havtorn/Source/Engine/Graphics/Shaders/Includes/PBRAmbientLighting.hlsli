@@ -89,8 +89,8 @@ float3 EvaluateAmbience(TextureCube lysBurleyCube, float3 vN, float3 orgNormal, 
 
 	const float l = BurleyToMip(perceptualRoughness, numMips, RdotNsat);
 
-	const float3 specRad = lysBurleyCube.SampleLevel(defaultSampler, vR, l).xyz;
-	const float3 diffRad = lysBurleyCube.SampleLevel(defaultSampler, vN, (float) (nrBrdfMips - 1)).xyz;
+    const float3 specRad = lysBurleyCube.SampleLevel(defaultSampler, vR, l).xyz;
+    const float3 diffRad = lysBurleyCube.SampleLevel(defaultSampler, vN, (float) (nrBrdfMips - 1)).xyz;
 
 	const float fT = 1.0 - RdotNsat;
     float fT5 = fT * fT;

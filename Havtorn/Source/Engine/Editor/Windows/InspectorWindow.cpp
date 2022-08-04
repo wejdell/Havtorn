@@ -194,6 +194,7 @@ namespace ImGui
 				}
 			}
 		
+			MaterialRefToChangeIndex = min(static_cast<Havtorn::U16>(materialComp->MaterialReferences.size()), MaterialRefToChangeIndex);
 			OpenSelectTextureAssetModal(materialComp->MaterialReferences[MaterialRefToChangeIndex]);
 		}
 	}
@@ -209,7 +210,6 @@ namespace ImGui
 			ImGui::Text("Ambient Static Cubemap");
 			if (ImGui::ImageButton((void*)Havtorn::CEngine::GetInstance()->GetTextureBank()->GetTexture(ref), { TexturePreviewSize.X, TexturePreviewSize.Y }))
 			{
-				MaterialRefToChangeIndex = ref;
 				ImGui::OpenPopup("Select Texture Asset");
 				ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 			}
