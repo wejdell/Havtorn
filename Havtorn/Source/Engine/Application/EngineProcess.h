@@ -21,7 +21,7 @@ namespace Havtorn
 		void EndFrame()override;
 
 	private:
-		class CEngine* Engine = nullptr;
+		class GEngine* Engine = nullptr;
 
 		U16 WindowPositionX = 100;
 		U16 WindowPositionY = 100;

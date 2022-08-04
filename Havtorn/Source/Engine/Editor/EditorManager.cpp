@@ -329,7 +329,7 @@ namespace Havtorn
 	{
 		EditorLayout = SEditorLayout();
 
-		const Havtorn::SVector2<F32> resolution = CEngine::GetInstance()->GetWindowHandler()->GetResolution();
+		const Havtorn::SVector2<F32> resolution = GEngine::GetWindowHandler()->GetResolution();
 
 		constexpr F32 viewportAspectRatioInv = (9.0f / 16.0f);
 		const F32 viewportPaddingX = ViewportPadding;
@@ -386,10 +386,10 @@ namespace Havtorn
 				continue;
 
 			std::string fileName = entry.path().string();
-			const U64 fileSize = CEngine::GetInstance()->GetFileSystem()->GetFileSize(fileName);
+			const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(fileName);
 			char* data = new char[fileSize];
 
-			CEngine::GetInstance()->GetFileSystem()->Deserialize(fileName, data, static_cast<U32>(fileSize));
+			GEngine::GetFileSystem()->Deserialize(fileName, data, static_cast<U32>(fileSize));
 
 			SEditorAssetRepresentation rep;
 
@@ -471,7 +471,7 @@ namespace Havtorn
 	std::string CEditorManager::GetFrameRate() const
 	{
 		std::string frameRateString = "Framerate: ";
-		const U16 frameRate = static_cast<U16>(CTimer::AverageFrameRate());
+		const U16 frameRate = static_cast<U16>(GTimer::AverageFrameRate());
 		frameRateString.append(std::to_string(frameRate));
 		return frameRateString;
 	}

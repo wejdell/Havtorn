@@ -8,7 +8,7 @@ namespace Havtorn
 {
 	class CWindowHandler
 	{
-		friend class CEngine;
+		friend class GEngine;
 
 	public:
 		struct SWindowData
@@ -21,9 +21,12 @@ namespace Havtorn
 
 		static LRESULT CALLBACK WinProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam);
 
+	private:
 		CWindowHandler();
 		~CWindowHandler();
-
+		bool Init(CWindowHandler::SWindowData windowData);
+	
+	public:
 		const HWND GetWindowHandle() const;
 		SVector2<F32> GetCenterPosition();
 		SVector2<F32> GetResolution();
@@ -38,7 +41,6 @@ namespace Havtorn
 		void ShowAndUnlockCursor(const bool& isInEditorMode = true);
 
 	private:
-		bool Init(CWindowHandler::SWindowData windowData);
 		void SetInternalResolution();
 		void SetResolution(SVector2<F32> resolution);
 

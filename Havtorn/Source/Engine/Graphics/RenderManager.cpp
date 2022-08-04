@@ -443,7 +443,7 @@ namespace Havtorn
 					ID3D11SamplerState* sampler = Samplers[staticMeshComp->SamplerIndex];
 					Context->PSSetSamplers(0, 1, &sampler);
 
-					auto textureBank = CEngine::GetInstance()->GetTextureBank();
+					auto textureBank = GEngine::GetTextureBank();
 					for (U8 drawCallIndex = 0; drawCallIndex < static_cast<U8>(staticMeshComp->DrawCallData.size()); drawCallIndex++)
 					{
 						// Load Textures
@@ -501,7 +501,7 @@ namespace Havtorn
 					auto sampler = Samplers[static_cast<U8>(ESamplers::DefaultWrap)];
 					Context->PSSetSamplers(0, 1, &sampler);
 
-					auto textureBank = CEngine::GetInstance()->GetTextureBank();
+					auto textureBank = GEngine::GetTextureBank();
 					if (decalComp->ShouldRenderAlbedo)
 					{
 						auto shaderResource = textureBank->GetTexture(decalComp->TextureReferences[0]);
@@ -567,7 +567,7 @@ namespace Havtorn
 					const auto environmentLightComp = currentCommand.GetComponent(EnvironmentLightComponent);
 					const auto directionalLightComp = currentCommand.GetComponent(DirectionalLightComponent);
 
-					auto cubemapTexture = CEngine::GetInstance()->GetTextureBank()->GetTexture(environmentLightComp->AmbientCubemapReference);
+					auto cubemapTexture = GEngine::GetTextureBank()->GetTexture(environmentLightComp->AmbientCubemapReference);
 					Context->PSSetShaderResources(0, 1, &cubemapTexture);
 
 					// Update lightbufferdata and fill lightbuffer
@@ -1062,7 +1062,7 @@ namespace Havtorn
 		//		// Sprites
 		//		CMainSingleton::PopupTextService().EmplaceSprites(sprites);
 		//		CMainSingleton::DialogueSystem().EmplaceSprites(sprites);
-		//		CEngine::GetInstance()->GetActiveScene().MainCamera()->EmplaceSprites(animatedUIFrames);
+		//		CEngine::GetActiveScene().MainCamera()->EmplaceSprites(animatedUIFrames);
 		//		mySpriteRenderer.Render(sprites);
 		//		mySpriteRenderer.Render(animatedUIElements);
 		//		mySpriteRenderer.Render(animatedUIFrames);
@@ -1078,9 +1078,9 @@ namespace Havtorn
 	void CRenderManager::Release()
 	{
 		Clear(ClearColor);
-		CEngine::GetInstance()->Framework->GetContext()->OMSetRenderTargets(0, 0, 0);
-		CEngine::GetInstance()->Framework->GetContext()->OMGetDepthStencilState(0, 0);
-		CEngine::GetInstance()->Framework->GetContext()->ClearState();
+		GEngine::GetInstance()->Framework->GetContext()->OMSetRenderTargets(0, 0, 0);
+		GEngine::GetInstance()->Framework->GetContext()->OMGetDepthStencilState(0, 0);
+		GEngine::GetInstance()->Framework->GetContext()->ClearState();
 
 		//Backbuffer.ReleaseTexture();
 		//myIntermediateTexture.ReleaseTexture();
@@ -1120,7 +1120,7 @@ namespace Havtorn
 		case EAssetType::Texture:
 			{
 				std::string textureFileData;
-				CEngine::GetInstance()->GetFileSystem()->Deserialize(fileName, textureFileData);
+				GEngine::GetFileSystem()->Deserialize(fileName, textureFileData);
 
 				ETextureFormat format = {};
 				if (const std::string extension = fileName.substr(fileName.size() - 4); extension == ".dds")
@@ -1140,7 +1140,7 @@ namespace Havtorn
 				const auto data = new char[asset.GetSize()];
 
 				asset.Serialize(data);
-				CEngine::GetInstance()->GetFileSystem()->Serialize(asset.MaterialName + ".hva", &data[0], asset.GetSize());
+				GEngine::GetFileSystem()->Serialize(asset.MaterialName + ".hva", &data[0], asset.GetSize());
 				
 				delete[] data;
 			}
@@ -1164,10 +1164,10 @@ namespace Havtorn
 		if (!LoadedStaticMeshes.contains(fileName))
 		{
 			// Asset Loading
-			const U64 fileSize = CEngine::GetInstance()->GetFileSystem()->GetFileSize(fileName);
+			const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(fileName);
 			char* data = new char[fileSize];
 
-			CEngine::GetInstance()->GetFileSystem()->Deserialize(fileName, data, static_cast<U32>(fileSize));
+			GEngine::GetFileSystem()->Deserialize(fileName, data, static_cast<U32>(fileSize));
 
 			SStaticModelFileHeader assetFile;
 			assetFile.Deserialize(data);
@@ -1213,7 +1213,7 @@ namespace Havtorn
 	void CRenderManager::LoadDecalComponent(const std::vector<std::string>& textureNames, SDecalComponent* outDecalComponent)
 	{
 		outDecalComponent->TextureReferences.clear();
-		auto textureBank = CEngine::GetInstance()->GetTextureBank();
+		auto textureBank = GEngine::GetTextureBank();
 
 		for (const std::string& textureName: textureNames)
 		{
@@ -1223,7 +1223,7 @@ namespace Havtorn
 
 	void CRenderManager::LoadEnvironmentLightComponent(const std::string& ambientCubemapTextureName, SEnvironmentLightComponent* outEnvironmentLightComponent)
 	{
-		auto textureBank = CEngine::GetInstance()->GetTextureBank();
+		auto textureBank = GEngine::GetTextureBank();
 		outEnvironmentLightComponent->AmbientCubemapReference = static_cast<U16>(textureBank->GetTextureIndex("Assets/Textures/Cubemaps/" + ambientCubemapTextureName + ".hva"));
 	}
 
@@ -1352,10 +1352,10 @@ namespace Havtorn
 	void* CRenderManager::GetTextureAssetTexture(const std::string& fileName)
 	{
 		// Asset Loading
-		const U64 fileSize = CEngine::GetInstance()->GetFileSystem()->GetFileSize(fileName);
+		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(fileName);
 		char* data = new char[fileSize];
 
-		CEngine::GetInstance()->GetFileSystem()->Deserialize(fileName, data, static_cast<U32>(fileSize));
+		GEngine::GetFileSystem()->Deserialize(fileName, data, static_cast<U32>(fileSize));
 
 		STextureFileHeader assetFile;
 		assetFile.Deserialize(data);
@@ -1660,7 +1660,7 @@ namespace Havtorn
 		case EMaterialConfiguration::AlbedoMaterialNormal_Packed:
 		{
 			const std::string texturesFolder = "Assets/Textures/";
-			auto textureBank = CEngine::GetInstance()->GetTextureBank();
+			auto textureBank = GEngine::GetTextureBank();
 
 			references.emplace_back(static_cast<U16>(textureBank->GetTextureIndex(texturesFolder + materialName + "_c.hva")));
 			references.emplace_back(static_cast<U16>(textureBank->GetTextureIndex(texturesFolder + materialName + "_m.hva")));
