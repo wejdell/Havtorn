@@ -179,7 +179,7 @@ namespace Havtorn
 		newFileName.append(".hva");
 		const auto fileData = new char[fileHeader.GetSize()];
 		fileHeader.Serialize(fileData);
-		CEngine::GetInstance()->GetFileSystem()->Serialize(newFileName, &fileData[0], fileHeader.GetSize());
+		GEngine::GetFileSystem()->Serialize(newFileName, &fileData[0], fileHeader.GetSize());
 
 		//	bool hasPositions = false;
 		//	bool hasNormals = false;
@@ -350,6 +350,5 @@ namespace Havtorn
 
 
 		//model->myGlobalInverseTransform = ConvertToEngineMatrix44(scene->mRootNode->mTransformation);
-
 	}
 }

@@ -272,7 +272,7 @@ namespace Havtorn
 			static_cast<F32>(p.x),
 			static_cast<F32>(p.y)
 		};
-		const SVector2<F32> center = CEngine::GetInstance()->GetWindowHandler()->GetCenterPosition();
+		const SVector2<F32> center = GEngine::GetWindowHandler()->GetCenterPosition();
 		//SetCursorPos(static_cast<I32>(center.X), static_cast<I32>(center.Y));
 		const SVector2<F32> axisRaw = currentPos - center;
 		return axisRaw;
@@ -382,13 +382,13 @@ namespace Havtorn
 	{
 		if (!HorizontalPressed) 
 		{
-			if (Horizontal >= (0.0f + CTimer::FixedDt())) 
+			if (Horizontal >= (0.0f + GTimer::FixedDt())) 
 			{
-				Horizontal -= CTimer::FixedDt();
+				Horizontal -= GTimer::FixedDt();
 			}
-			else if (Horizontal <= (0.0f - CTimer::FixedDt())) 
+			else if (Horizontal <= (0.0f - GTimer::FixedDt())) 
 			{
-				Horizontal += CTimer::FixedDt();
+				Horizontal += GTimer::FixedDt();
 			}
 			else 
 			{
@@ -397,13 +397,13 @@ namespace Havtorn
 		}
 		if (VerticalPressed == false) 
 		{
-			if (Vertical >= (0.0f + CTimer::FixedDt())) 
+			if (Vertical >= (0.0f + GTimer::FixedDt())) 
 			{
-				Vertical -= CTimer::FixedDt();
+				Vertical -= GTimer::FixedDt();
 			}
-			else if (Vertical <= (0.0f - CTimer::FixedDt())) 
+			else if (Vertical <= (0.0f - GTimer::FixedDt())) 
 			{
-				Vertical += CTimer::FixedDt();
+				Vertical += GTimer::FixedDt();
 			}
 			else {
 				Vertical = 0.0f;
@@ -431,7 +431,7 @@ namespace Havtorn
 			if (IsKeyDown('A')) 
 			{
 				HorizontalPressed = true;
-				Horizontal += CTimer::FixedDt(); // For falloff/deceleration
+				Horizontal += GTimer::FixedDt(); // For falloff/deceleration
 				if (Horizontal >= 1.0f)
 				{
 					Horizontal = 1.0f;
@@ -440,7 +440,7 @@ namespace Havtorn
 			if (IsKeyDown('D')) 
 			{
 				HorizontalPressed = true;
-				Horizontal -= CTimer::FixedDt(); // For falloff/deceleration
+				Horizontal -= GTimer::FixedDt(); // For falloff/deceleration
 				if (Horizontal <= -1.0f)
 				{
 					Horizontal = -1.0f;
@@ -454,7 +454,7 @@ namespace Havtorn
 			if (IsKeyDown('W')) 
 			{
 				VerticalPressed = true;
-				Vertical += CTimer::FixedDt(); // For falloff/deceleration
+				Vertical += GTimer::FixedDt(); // For falloff/deceleration
 				if (Vertical >= 1.0f) 
 				{
 					Vertical = 1.0f;
@@ -463,7 +463,7 @@ namespace Havtorn
 			if (IsKeyDown('S')) 
 			{
 				VerticalPressed = true;
-				Vertical -= CTimer::FixedDt(); // For falloff/deceleration
+				Vertical -= GTimer::FixedDt(); // For falloff/deceleration
 				if (Vertical <= -1.0f)
 				{
 					Vertical = -1.0f;

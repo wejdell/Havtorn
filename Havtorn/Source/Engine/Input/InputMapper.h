@@ -9,7 +9,9 @@ namespace Havtorn
 
 	class CInputMapper
 	{
-	public:
+		friend class GEngine;
+
+	private:
 		CInputMapper();
 		~CInputMapper() = default;
 		CInputMapper(const CInputMapper&) = delete;
@@ -18,6 +20,8 @@ namespace Havtorn
 		CInputMapper operator=(CInputMapper&&) = delete;
 
 		bool Init();
+	
+	public:
 		void Update();
 
 		[[nodiscard]] CMulticastDelegate<const SInputActionPayload>& GetActionDelegate(EInputActionEvent event);

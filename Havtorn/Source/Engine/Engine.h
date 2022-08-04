@@ -4,143 +4,84 @@
 #include "hvpch.h"
 
 #include "Application/WindowHandler.h"
-#include "Graphics/GraphicsFramework.h"
-//#include "FullscreenRenderer.h"
 
 namespace Havtorn
 {
 	class CWindowHandler;
 	class CThreadManager;
-	class CDirextXFramework;
-	class CTimer;
+	class CGraphicsFramework;
+	class GTimer;
 	class CEditorManager;
-	class CModelFactory;
-	class CCameraFactory;
-	class CLightFactory;
 	class CScene;
 	class CRenderManager;
 	class CParticleEmitterFactory;
 	class CSpriteFactory;
 	class CTextFactory;
-	class CDecalFactory;
 	class CInputMapper;
-	class CDebug;
-	class CMainSingleton;
-	class CForwardRenderer;
 	class CVFXMeshFactory;
 	class CLineFactory;
 	class CAudioManager;
-	class CAudioChannel;
 	class CPhysXWrapper;
 	class CSceneFactory;
-	class CGameObject;
 	class CFileSystem;
 	class CTextureBank;
 
-	namespace PostMaster 
+	class GEngine
 	{
-		struct SAudioSourceInitData;
-	}
-
-	class CEngine
-	{
-		friend class CForwardRenderer;
-		friend class CModelFactory;
 		friend class CVFXMeshFactory;
-		friend class CLightFactory;
 		friend class CRenderManager;
 		friend class CLineFactory;
-		friend class CDecalFactory;
-		friend class CMaterialHandler;
 		friend class CTextureBank;
 		friend class CSceneFactory;
 
 	public:
-		CEngine();
-		~CEngine();
+		GEngine();
+		~GEngine();
 		bool Init(const CWindowHandler::SWindowData& windowData);
 		float BeginFrame();
 		void Update();
 		void RenderFrame();
 		void EndFrame();
-		CWindowHandler* GetWindowHandler();
-		CFileSystem* GetFileSystem();
-		CTextureBank* GetTextureBank();
+
+	private:
+		static GEngine* GetInstance();
+	public:
+		static CWindowHandler* GetWindowHandler();
+		static CFileSystem* GetFileSystem();
+		static CTextureBank* GetTextureBank();
+		static CInputMapper* GetInput();
+
 		void InitWindowsImaging();
 		void CrashWithScreenShot(std::wstring& subPath);
 
 		void SetResolution(SVector2<F32> resolution);
 
-		static CEngine* GetInstance();
-
-		CInputMapper* GetInput() const;
-		//const CStateStack::EState AddScene(const CStateStack::EState aState, CScene* aScene);
-		//void SetActiveScene(const CStateStack::EState aState);
-		CScene& GetActiveScene();
-		//inline const bool IsActiveScene(const CStateStack::EState& aState);
-		//void UpdateScene(const CStateStack::EState& aState);
-		//CPhysXWrapper& GetPhysx() { return *PhysxWrapper; }
-		//CAudioChannel* RequestAudioSource(const PostMaster::SAudioSourceInitData& aData);
-
-		const bool IsInGameScene() const;
-
-		//void ModelViewerSetScene(CScene* aScene);
-		//void PopBackScene();
-		//void SetActiveScene(CScene* aScene);
-
-		//unsigned int ScenesSize();
-
-		void SetRenderScene(const bool renderSceneActive) { RenderSceneActive = renderSceneActive; }
-		//void RemoveScene(CStateStack::EState aState);
-		void ClearModelFactory();
-
 		void ShowCursor(const bool& isInEditorMode = true);
 		void HideCursor(const bool& isInEditorMode = false);
 
-		//void SetBrokenScreen(bool aShouldSetBrokenScreen);
-		//const CFullscreenRenderer::SPostProcessingBufferData& GetPostProcessingBufferData() const;
-		//void SetPostProcessingBufferData(const CFullscreenRenderer::SPostProcessingBufferData& someBufferData);
-
-		void SetAudioListener(CGameObject* gameObject);
-
-		void SetIsMenu(bool menuIsOpen);
-
 	private:
-		static CEngine* Instance;
+		static GEngine* Instance;
 
-		CFileSystem* FileSystem;
-		CWindowHandler* WindowHandler;
-		CThreadManager* ThreadManager;
-		CGraphicsFramework* Framework;
-		CTextureBank* TextureBank;
+		CFileSystem* FileSystem = nullptr;
+		CWindowHandler* WindowHandler = nullptr;
+		CThreadManager* ThreadManager = nullptr;
+		CGraphicsFramework* Framework = nullptr;
+		CTextureBank* TextureBank = nullptr;
 #ifdef _DEBUG
-		CEditorManager* EditorManager;
+		CEditorManager* EditorManager = nullptr;
 #endif
-		CRenderManager* RenderManager;
-		CTimer* Timer;
-		CInputMapper* InputMapper;
-		//CDebug* Debug;
+		CRenderManager* RenderManager = nullptr;
+		GTimer* Timer = nullptr;
+		CInputMapper* InputMapper = nullptr;
+
+		CScene* Scene = nullptr;
+
 		//CPhysXWrapper* PhysxWrapper;
-
-		//unsigned int myActiveScene;
-		//CStateStack::EState myActiveState;
-		CScene* Scene;
-		//std::vector<CScene*> myScenes;
-		//std::unordered_map<CStateStack::EState, CScene*> mySceneMap;
-
-		//CModelFactory* ModelFactory;
-		//CCameraFactory* CameraFactory;
-		//CLightFactory* LightFactory;
 		//CParticleEmitterFactory* ParticleFactory;
 		//CVFXMeshFactory* VFXFactory;
 		//CLineFactory* LineFactory;
 		//CSpriteFactory* SpriteFactory;
 		//CTextFactory* TextFactory;
-		//CDecalFactory* DecalFactory;
-		//CMainSingleton* MainSingleton;
 		//CAudioManager* AudioManager;
-		//CSceneFactory* SceneFactory;
-
-		bool RenderSceneActive = false;
 	};
 }

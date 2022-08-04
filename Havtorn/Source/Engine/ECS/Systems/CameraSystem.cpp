@@ -13,11 +13,11 @@ namespace Havtorn
 	CCameraSystem::CCameraSystem()
 		: ISystem()
 	{
-		CEngine::GetInstance()->GetInput()->GetAxisDelegate(EInputAxisEvent::Up).AddMember(this, &CCameraSystem::HandleAxisInput);
-		CEngine::GetInstance()->GetInput()->GetAxisDelegate(EInputAxisEvent::Right).AddMember(this, &CCameraSystem::HandleAxisInput);
-		CEngine::GetInstance()->GetInput()->GetAxisDelegate(EInputAxisEvent::Forward).AddMember(this, &CCameraSystem::HandleAxisInput);
-		CEngine::GetInstance()->GetInput()->GetAxisDelegate(EInputAxisEvent::Pitch).AddMember(this, &CCameraSystem::HandleAxisInput);
-		CEngine::GetInstance()->GetInput()->GetAxisDelegate(EInputAxisEvent::Yaw).AddMember(this, &CCameraSystem::HandleAxisInput);
+		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Up).AddMember(this, &CCameraSystem::HandleAxisInput);
+		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Right).AddMember(this, &CCameraSystem::HandleAxisInput);
+		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Forward).AddMember(this, &CCameraSystem::HandleAxisInput);
+		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Pitch).AddMember(this, &CCameraSystem::HandleAxisInput);
+		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Yaw).AddMember(this, &CCameraSystem::HandleAxisInput);
 	}
 
 	CCameraSystem::~CCameraSystem()
@@ -34,7 +34,7 @@ namespace Havtorn
 		const I64 transformCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
 		auto& transformComp = transformComponents[transformCompIndex];
 
-		const F32 dt = CTimer::Dt();
+		const F32 dt = GTimer::Dt();
 		transformComp->Transform.Translate(CameraMoveInput * dt);
 		transformComp->Transform.Rotate(CameraRotateInput * dt);
 

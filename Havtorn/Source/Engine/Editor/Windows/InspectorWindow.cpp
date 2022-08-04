@@ -186,7 +186,7 @@ namespace ImGui
 				}
 
 				Havtorn::U16 ref = materialComp->MaterialReferences[materialIndex];
-				if (ImGui::ImageButton((void*)Havtorn::CEngine::GetInstance()->GetTextureBank()->GetTexture(ref), { TexturePreviewSize.X, TexturePreviewSize.Y }))
+				if (ImGui::ImageButton((void*)Havtorn::GEngine::GetTextureBank()->GetTexture(ref), { TexturePreviewSize.X, TexturePreviewSize.Y }))
 				{
 					MaterialRefToChangeIndex = materialIndex;
 					ImGui::OpenPopup("Select Texture Asset");
@@ -208,7 +208,7 @@ namespace ImGui
 			Havtorn::U16 ref = environmentLightComp->AmbientCubemapReference;
 			
 			ImGui::Text("Ambient Static Cubemap");
-			if (ImGui::ImageButton((void*)Havtorn::CEngine::GetInstance()->GetTextureBank()->GetTexture(ref), { TexturePreviewSize.X, TexturePreviewSize.Y }))
+			if (ImGui::ImageButton((void*)Havtorn::GEngine::GetTextureBank()->GetTexture(ref), { TexturePreviewSize.X, TexturePreviewSize.Y }))
 			{
 				ImGui::OpenPopup("Select Texture Asset");
 				ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
@@ -325,7 +325,7 @@ namespace ImGui
 				}
 
 				Havtorn::U16 ref = decalComp->TextureReferences[materialIndex];
-				if (ImGui::ImageButton((void*)Havtorn::CEngine::GetInstance()->GetTextureBank()->GetTexture(ref), { TexturePreviewSize.X, TexturePreviewSize.Y }))
+				if (ImGui::ImageButton((void*)Havtorn::GEngine::GetTextureBank()->GetTexture(ref), { TexturePreviewSize.X, TexturePreviewSize.Y }))
 				{
 					MaterialRefToChangeIndex = materialIndex;
 					ImGui::OpenPopup("Select Texture Asset");
@@ -361,7 +361,7 @@ namespace ImGui
 
 					if (ImGui::ImageButton(assetRep->TextureRef, { TexturePreviewSize.X * 0.75f, TexturePreviewSize.Y * 0.75f }))
 					{
-						textureRefToChange = static_cast<Havtorn::U16>(Havtorn::CEngine::GetInstance()->GetTextureBank()->GetTextureIndex(entry.path().string()));
+						textureRefToChange = static_cast<Havtorn::U16>(Havtorn::GEngine::GetTextureBank()->GetTextureIndex(entry.path().string()));
 						ImGui::CloseCurrentPopup();
 					}
 

@@ -57,10 +57,13 @@ namespace Havtorn
 
 	class CFileSystem
 	{
-	public:
+		friend class GEngine;
+
+	private:
 		CFileSystem();
 		~CFileSystem() = default;
 
+	public:
 		static bool DoesFileExist(const std::string& fileName);
 
 		void OpenFile(const std::string& fileName, EFileMode mode);
@@ -73,6 +76,7 @@ namespace Havtorn
 
 		std::filesystem::recursive_directory_iterator GetDirectoryIterator(const std::string& root);
 		void IterateThroughFiles(const std::string& root);
+
 	private:
 		std::ifstream InputStream;
 		std::ofstream OutputStream;
