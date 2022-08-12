@@ -45,7 +45,7 @@ namespace Havtorn
 		ID3D11ShaderResourceView* shaderResource;
 		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateShaderResourceView(texture, nullptr, &shaderResource), "Could not create Fullscreen Shader Resource View.");
 
-		returnTexture.myShaderResource = shaderResource;
+		returnTexture.ShaderResource = shaderResource;
 		return returnTexture;
 	}
 
@@ -64,16 +64,9 @@ namespace Havtorn
 
 		CFullscreenTexture returnTexture;
 		returnTexture.Context = Framework->GetContext();
-		returnTexture.myTexture = texture;
-		returnTexture.myRenderTarget = renderTarget;
+		returnTexture.Texture = texture;
+		returnTexture.RenderTarget = renderTarget;
 		returnTexture.Viewport = viewport;
-
-		// Temporary test for EditorManager viewport shenanigans - Nico 28/12-2021
-		//ID3D11ShaderResourceView* shaderResource;
-		//ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateShaderResourceView(returnTexture.myTexture, nullptr, &shaderResource), "Could not create Fullscreen Shader Resource View.");
-
-		//returnTexture.myShaderResource = shaderResource;
-		// Temporary test for EditorManager viewport shenanigans - Nico 28/12-2021
 
 		return returnTexture;
 	}
@@ -101,7 +94,7 @@ namespace Havtorn
 
 		ID3D11ShaderResourceView* shaderResource = UGraphicsUtils::GetShaderResourceView(Framework->GetDevice(), filePath);
 
-		returnTexture.myShaderResource = shaderResource;
+		returnTexture.ShaderResource = shaderResource;
 		return returnTexture;
 	}
 
@@ -160,9 +153,9 @@ namespace Havtorn
 
 		CFullscreenTexture returnDepth;
 		returnDepth.Context = Framework->GetContext();
-		returnDepth.myTexture = depthStencilBuffer;
-		returnDepth.myDepth = depthStencilView;
-		returnDepth.myShaderResource = shaderResource;
+		returnDepth.Texture = depthStencilBuffer;
+		returnDepth.Depth = depthStencilView;
+		returnDepth.ShaderResource = shaderResource;
 		returnDepth.Viewport = viewport;
 		return returnDepth;
 	}
@@ -185,9 +178,9 @@ namespace Havtorn
 		for (UINT i = 0; i < static_cast<size_t>(CGBuffer::EGBufferTextures::Count); ++i) 
 		{
 			CFullscreenTexture texture = CreateTexture(size, textureFormats[i]);
-			textures[i] = texture.myTexture;
-			renderTargets[i] = texture.myRenderTarget;
-			shaderResources[i] = texture.myShaderResource;
+			textures[i] = texture.Texture;
+			renderTargets[i] = texture.RenderTarget;
+			shaderResources[i] = texture.ShaderResource;
 		}
 		D3D11_VIEWPORT* viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, size.X, size.Y, 0.0f, 1.0f });
 

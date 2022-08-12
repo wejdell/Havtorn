@@ -21,9 +21,12 @@ namespace Havtorn
 		const auto& transformComponents = scene->GetTransformComponents();
 		const auto& cameraComponents = scene->GetCameraComponents();
 		const auto& materialComponents = scene->GetMaterialComponents();
+		const auto& environmentLightComponents = scene->GetEnvironmentLightComponents();
 		const auto& directionalLightComponents = scene->GetDirectionalLightComponents();
 		const auto& pointLightComponents = scene->GetPointLightComponents();
 		const auto& spotLightComponents = scene->GetSpotLightComponents();
+		const auto& volumetricLightComponents = scene->GetVolumetricLightComponents();
+		const auto& decalComponents = scene->GetDecalComponents();
 
 		if (!cameraComponents.empty())
 		{
@@ -52,16 +55,6 @@ namespace Havtorn
 
 			const I64 materialCompIndex = staticMeshComponent->Entity->GetComponentIndex(EComponentType::MaterialComponent);
 			auto& materialComp = materialComponents[materialCompIndex];
-
-			const F32 dt = CTimer::Dt();
-			if (CInput::GetInstance()->IsKeyPressed('J'))
-				transformComp->Transform.Rotate({ UMath::DegToRad(90.0f) * dt, 0.0f, 0.0f });
-			if (CInput::GetInstance()->IsKeyPressed('K'))
-				transformComp->Transform.Rotate({ 0.0f, UMath::DegToRad(90.0f) * dt, 0.0f });
-			if (CInput::GetInstance()->IsKeyPressed('L'))
-				transformComp->Transform.Rotate({ 0.0f, 0.0f, UMath::DegToRad(90.0f) * dt });
-
-			//transformComp->Transform.Orbit({ 0.0f, 0.0f, 0.0f }, SMatrix::CreateRotationAroundY(UMath::DegToRad(90.0f) * dt));
 
 			if (!directionalLightComponents.empty())
 			{
@@ -102,6 +95,26 @@ namespace Havtorn
 		}
 
 		{
+			SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::DecalDepthCopy);
+			RenderManager->PushRenderCommand(command);
+		}
+
+		for (auto& decalComponent : decalComponents)
+		{
+			if (!decalComponent->Entity->HasComponent(EComponentType::TransformComponent))
+				continue;
+
+			const I64 transformCompIndex = decalComponent->Entity->GetComponentIndex(EComponentType::TransformComponent);
+			auto& transformComp = transformComponents[transformCompIndex];
+
+			std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
+			components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
+			components[static_cast<U8>(EComponentType::DecalComponent)] = decalComponent;
+			SRenderCommand command(components, ERenderCommandType::DeferredDecal);
+			RenderManager->PushRenderCommand(command);
+		}
+
+		{
 			SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::PreLightingPass);
 			RenderManager->PushRenderCommand(command);
 		}
@@ -113,18 +126,23 @@ namespace Havtorn
 
 			std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
 			components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
+			components[static_cast<U8>(EComponentType::EnvironmentLightComponent)] = environmentLightComponents[0];
 			components[static_cast<U8>(EComponentType::DirectionalLightComponent)] = directionalLightComponents[0];
 			SRenderCommand command(components, ERenderCommandType::DeferredLightingDirectional);
 			RenderManager->PushRenderCommand(command);
 
-			//if (directionalLightComponents[0]->IsVolumetric)
-			//{
-			//	const I64 cameraTransformCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
-			//	components[static_cast<U8>(EComponentType::TransformComponent)] = transformComponents[cameraTransformCompIndex];
-			//	components[static_cast<U8>(EComponentType::CameraComponent)] = cameraComponents[0];
-			//	SRenderCommand volumetricCommand(components, ERenderCommandType::VolumetricLightingDirectional);
-			//	RenderManager->PushRenderCommand(volumetricCommand);
-			//}
+			if (directionalLightComponents[0]->Entity->HasComponent(EComponentType::VolumetricLightComponent))
+			{
+				const I64 volumetricCompIndex = directionalLightComponents[0]->Entity->GetComponentIndex(EComponentType::VolumetricLightComponent);
+				auto& volumetricLightComp = volumetricLightComponents[volumetricCompIndex];
+
+				if (volumetricLightComp->IsActive)
+				{
+					components[static_cast<U8>(EComponentType::VolumetricLightComponent)] = volumetricLightComp;
+					SRenderCommand volumetricCommand(components, ERenderCommandType::VolumetricLightingDirectional);
+					RenderManager->PushRenderCommand(volumetricCommand);
+				}
+			}
 		}
 
 		if (!pointLightComponents.empty())
@@ -138,11 +156,18 @@ namespace Havtorn
 			SRenderCommand command(components, ERenderCommandType::DeferredLightingPoint);
 			RenderManager->PushRenderCommand(command);
 
-			//if (directionalLightComponents[0]->IsVolumetric)
-			//{
-			//	SRenderCommand command(components, ERenderCommandType::VolumetricLightingDirectional);
-			//	RenderManager->PushRenderCommand(command);
-			//}
+			if (pointLightComponents[0]->Entity->HasComponent(EComponentType::VolumetricLightComponent))
+			{
+				const I64 volumetricCompIndex = pointLightComponents[0]->Entity->GetComponentIndex(EComponentType::VolumetricLightComponent);
+				auto& volumetricLightComp = volumetricLightComponents[volumetricCompIndex];
+
+				if (volumetricLightComp->IsActive)
+				{
+					components[static_cast<U8>(EComponentType::VolumetricLightComponent)] = volumetricLightComp;
+					SRenderCommand volumetricCommand(components, ERenderCommandType::VolumetricLightingPoint);
+					RenderManager->PushRenderCommand(volumetricCommand);
+				}
+			}
 		}
 
 		if (!spotLightComponents.empty())
@@ -156,11 +181,23 @@ namespace Havtorn
 			SRenderCommand command(components, ERenderCommandType::DeferredLightingSpot);
 			RenderManager->PushRenderCommand(command);
 
-			//if (directionalLightComponents[0]->IsVolumetric)
-			//{
-			//	SRenderCommand command(components, ERenderCommandType::VolumetricLightingDirectional);
-			//	RenderManager->PushRenderCommand(command);
-			//}
+			if (spotLightComponents[0]->Entity->HasComponent(EComponentType::VolumetricLightComponent))
+			{
+				const I64 volumetricCompIndex = spotLightComponents[0]->Entity->GetComponentIndex(EComponentType::VolumetricLightComponent);
+				auto& volumetricLightComp = volumetricLightComponents[volumetricCompIndex];
+
+				if (volumetricLightComp->IsActive)
+				{
+					components[static_cast<U8>(EComponentType::VolumetricLightComponent)] = volumetricLightComp;
+					SRenderCommand volumetricCommand(components, ERenderCommandType::VolumetricLightingSpot);
+					RenderManager->PushRenderCommand(volumetricCommand);
+				}
+			}
+		}
+
+		{
+			SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::VolumetricBufferBlurPass);
+			RenderManager->PushRenderCommand(command);
 		}
 	}
 }

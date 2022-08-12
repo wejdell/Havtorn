@@ -57,7 +57,9 @@ namespace Havtorn
 
 	class CFileSystem
 	{
-	public:
+		friend class GEngine;
+
+	private:
 		CFileSystem();
 		~CFileSystem() = default;
 

@@ -4,16 +4,11 @@
 #include <wincodec.h>
 #include <document.h>
 
-//#include <ScreenGrab.h>
-//#include <DialogueSystem.h>
-//#include <PopupTextService.h>
-
 #include "Engine.h"
 #include "FileSystem/FileSystem.h"
 #include "Application/WindowHandler.h"
 #include "Threading/ThreadManager.h"
 #include "Graphics/GraphicsFramework.h"
-#include "Graphics/MaterialHandler.h"
 #include "Graphics/TextureBank.h"
 
 //#include "WindowHandler.h"
@@ -21,59 +16,42 @@
 //#include "ForwardRenderer.h"
 #include "Scene/Scene.h"
 #include "ECS/ECSInclude.h"
-//#include "Camera.h"
-//#include "EnvironmentLight.h"
-//#include "LightFactory.h"
-//#include "CameraComponent.h"
 
-//#include "ModelFactory.h"
-//#include "CameraFactory.h"
 //#include "ParticleEmitterFactory.h"
 //#include "TextFactory.h"
 //#include "VFXMeshFactory.h"
 //#include "LineFactory.h"
 //#include "SpriteFactory.h"
-//#include "DecalFactory.h"
-//
+
 #include "Graphics/RenderManager.h"
 
 //#include "AudioManager.h"
 #include "Input/InputMapper.h"
-//
-//#include "Debug.h"
-//#include "DL_Debug.h"
-//
+
 #include "Timer.h"
-//#include "MainSingleton.h"
-//#include "MaterialHandler.h"
-//#include "StateStack.h"
+
 //#include "PhysXWrapper.h"
-//#include "SceneManager.h"
-//
-//
-//#include "GameObject.h"
 
 namespace Havtorn
 {
-	CEngine* CEngine::Instance = nullptr;
+	GEngine* GEngine::Instance = nullptr;
 
-	CEngine::CEngine() : RenderSceneActive(true)
+	GEngine::GEngine()
 	{
 		Instance = this;
 
 		FileSystem = new CFileSystem();
-		Timer = new CTimer();
+		Timer = new GTimer();
 		WindowHandler = new CWindowHandler();
 		ThreadManager = new CThreadManager();
 		Framework = new CGraphicsFramework();
-		MaterialHandler = new CMaterialHandler();
 		TextureBank = new CTextureBank();
 		RenderManager = new CRenderManager();
 		InputMapper = new CInputMapper();
 		Scene = new CScene();
 	}
 
-	CEngine::~CEngine()
+	GEngine::~GEngine()
 	{
 		SAFE_DELETE(Scene);
 		SAFE_DELETE(InputMapper);
@@ -83,7 +61,6 @@ namespace Havtorn
 		SAFE_DELETE(ThreadManager);
 		SAFE_DELETE(RenderManager);
 		SAFE_DELETE(TextureBank);
-		SAFE_DELETE(MaterialHandler);
 		SAFE_DELETE(Framework);
 		SAFE_DELETE(WindowHandler);
 		SAFE_DELETE(Timer);
@@ -92,12 +69,11 @@ namespace Havtorn
 		Instance = nullptr;
 	}
 
-	bool CEngine::Init(const CWindowHandler::SWindowData& windowData)
+	bool GEngine::Init(const CWindowHandler::SWindowData& windowData)
 	{
 		ENGINE_ERROR_BOOL_MESSAGE(WindowHandler->Init(windowData), "Window Handler could not be initialized.");
 		WindowHandler->SetInternalResolution();
 		ENGINE_ERROR_BOOL_MESSAGE(Framework->Init(WindowHandler), "Framework could not be initialized.");
-		ENGINE_ERROR_BOOL_MESSAGE(MaterialHandler->Init(Framework), "MaterialHandler could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(TextureBank->Init(Framework), "TextureBank could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(RenderManager->Init(Framework, WindowHandler), "RenderManager could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(ThreadManager->Init(RenderManager), "Thread Manager could not be initialized.");
@@ -113,18 +89,14 @@ namespace Havtorn
 		//ENGINE_ERROR_BOOL_MESSAGE(LineFactory->Init(Framework), "Line Factory could not be initialized.");
 		//ENGINE_ERROR_BOOL_MESSAGE(SpriteFactory->Init(Framework), "Sprite Factory could not be initialized.");
 		//ENGINE_ERROR_BOOL_MESSAGE(TextFactory->Init(Framework), "Text Factory could not be initialized.");
-		//ENGINE_ERROR_BOOL_MESSAGE(DecalFactory->Init(Framework), "Decal Factory could not be initialized.");
-		//ENGINE_ERROR_BOOL_MESSAGE(InputMapper->Init(), "InputMapper could not be initialized.");
 
-		//ENGINE_ERROR_BOOL_MESSAGE(CMainSingleton::PopupTextService().Init(), "Popup Text Service could not be initialized.");
-		//ENGINE_ERROR_BOOL_MESSAGE(CMainSingleton::DialogueSystem().Init(), "Dialogue System could not be initialized.");
 		//ENGINE_ERROR_BOOL_MESSAGE(PhysxWrapper->Init(), "PhysX could not be initialized.");
 		InitWindowsImaging();
 
 		return true;
 	}
 
-	float CEngine::BeginFrame()
+	float GEngine::BeginFrame()
 	{
 #ifdef _DEBUG
 
@@ -136,26 +108,25 @@ namespace Havtorn
 		//EditorManager->BeginFrame();
 #endif
 
-		return CTimer::Mark();
+		return GTimer::Mark();
 	}
 
-	void CEngine::Update()
+	void GEngine::Update()
 	{
 		//if (mySceneMap.find(myActiveState) != mySceneMap.end())
 		//{
-		//	if (CTimer::FixedTimeStep() == true)
+		//	if (GTimer::FixedTimeStep() == true)
 		//	{
-		//		PhysxWrapper->Simulate(); //<-- Anropas i samma intervall som Fixed "är"
+		//		PhysxWrapper->Simulate(); //<-- Anropas i samma intervall som Fixed "ï¿½r"
 		//		mySceneMap[myActiveState]->FixedUpdate();
 		//	}
 		//	mySceneMap[myActiveState]->Update();
 		//}
+
 		InputMapper->Update();
 		Scene->Update();
 
 		//AudioManager->Update();
-		//CMainSingleton::DialogueSystem().Update();
-		//Debug->Update();
 		//CSceneFactory::Get()->Update(); //Used for loading Scenes on a seperate Thread!
 	
 		std::unique_lock<std::mutex> uniqueLock(CThreadManager::RenderMutex);
@@ -165,7 +136,7 @@ namespace Havtorn
 			});
 	}
 
-	void CEngine::RenderFrame()
+	void GEngine::RenderFrame()
 	{
 		if (!RenderSceneActive)
 			return;
@@ -177,7 +148,7 @@ namespace Havtorn
 #endif
 	}
 
-	void CEngine::EndFrame()
+	void GEngine::EndFrame()
 	{
 
 #ifdef _DEBUG
@@ -200,24 +171,24 @@ namespace Havtorn
 		CThreadManager::RenderCondition.notify_one();
 	}
 
-	CWindowHandler* CEngine::GetWindowHandler()
+	GEngine* GEngine::GetInstance()
 	{
-		return WindowHandler;
+		return Instance;
 	}
 
-	CFileSystem* CEngine::GetFileSystem()
+	CWindowHandler* GEngine::GetWindowHandler()
 	{
-		return FileSystem;
+		return Instance->WindowHandler;
 	}
 
-	CMaterialHandler* CEngine::GetMaterialHandler()
+	CFileSystem* GEngine::GetFileSystem()
 	{
-		return MaterialHandler;
+		return Instance->FileSystem;
 	}
 
-	CTextureBank* CEngine::GetTextureBank()
+	CTextureBank* GEngine::GetTextureBank()
 	{
-		return TextureBank;
+		return Instance->TextureBank;
 	}
 
 	CThreadManager* CEngine::GetThreadManager()
@@ -225,7 +196,12 @@ namespace Havtorn
 		return ThreadManager;
 	}
 
-	void CEngine::InitWindowsImaging()
+	CInputMapper* GEngine::GetInput()
+	{
+		return Instance->InputMapper;
+	}
+
+	void GEngine::InitWindowsImaging()
 	{
 #if (_WIN32_WINNT >= 0x0A00 /*_WIN32_WINNT_WIN10*/)
 		Microsoft::WRL::Wrappers::RoInitializeWrapper initialize(RO_INIT_MULTITHREADED);
@@ -242,7 +218,7 @@ namespace Havtorn
 #include <DbgHelp.h>
 #include <strsafe.h>
 
-	void CEngine::CrashWithScreenShot(std::wstring& /*subPath*/)
+	void GEngine::CrashWithScreenShot(std::wstring& /*subPath*/)
 	{
 		//DL_Debug::CDebug::GetInstance()->CopyToCrashFolder(aSubPath);
 
@@ -258,171 +234,19 @@ namespace Havtorn
 		//CoUninitialize();
 	}
 
-	void CEngine::SetResolution(SVector2<F32> resolution)
+	void GEngine::SetResolution(SVector2<F32> resolution)
 	{
 		WindowHandler->SetResolution(resolution);
 		RenderManager->Release();
 		RenderManager->ReInit(Framework, WindowHandler);
-		//mySceneMap[CStateStack::EState::InGame]->ReInitCanvas(ASSETPATH("Assets/Graphics/UI/JSON/UI_MainMenu.json"));
-		//mySceneMap[CStateStack::EState::PauseMenu]->ReInitCanvas(ASSETPATH("Assets/Graphics/UI/JSON/UI_PauseMenu.json"));
 	}
 
-	CEngine* CEngine::GetInstance()
-	{
-		return Instance;
-	}
-
-	CInputMapper* CEngine::GetInput() const
-	{
-		return InputMapper;
-	}
-
-	//const CStateStack::EState CEngine::AddScene(const CStateStack::EState aState, CScene* aScene)
-	//{
-
-	//	auto it = mySceneMap.find(aState);
-	//	if (it != mySceneMap.end())
-	//	{
-	//		delete it->second;
-	//		it->second = nullptr;
-	//		mySceneMap.erase(it);
-	//	}
-	//	mySceneMap[aState] = aScene;
-
-	//	return aState;
-	//}
-
-	//void CEngine::SetActiveScene(const CStateStack::EState aState)
-	//{
-	//	//ENGINE_BOOL_POPUP(mySceneMap[aState], "The Scene you tried to Get was nullptr!");
-	//	myActiveState = aState;
-	//	if (mySceneMap.find(myActiveState) == mySceneMap.end())
-	//	{
-	//		AddScene(myActiveState, CSceneManager::CreateEmpty());
-	//	}
-
-	//	CTimer::Mark();
-	//	//mySceneMap[myActiveState]->Awake();// Unused
-	//	mySceneMap[myActiveState]->Start();
-	//}
-
-	//CScene& CEngine::GetActiveScene()
-	//{
-	//	//ENGINE_BOOL_POPUP(mySceneMap[myActiveState], "The Scene you tried to Get was nullptr!");
-	//	return *mySceneMap[myActiveState];
-	//}
-
-	//const bool CEngine::IsActiveScene(const CStateStack::EState& aState)
-	//{
-	//	return myActiveState == aState;
-	//}
-
-	//void CEngine::UpdateScene(const CStateStack::EState& aState)
-	//{
-	//	// Added by Aki as a test :P - Works, may be undesirable. // 2021 04 14
-
-	//	assert(mySceneMap.find(aState) != mySceneMap.end() && "No CScene exists!");
-	//	assert(mySceneMap[aState] != nullptr && "No CScene exists!");
-
-	//	if (mySceneMap.find(aState) == mySceneMap.end())
-	//		return;
-	//	if (!mySceneMap[aState])
-	//		return;
-
-	//	CScene& scene = *mySceneMap[aState];
-	//	scene.Update();
-	//}
-
-	//CAudioChannel* CEngine::RequestAudioSource(const PostMaster::SAudioSourceInitData& aData)
-	//{
-	//	return AudioManager->AddSource(aData);
-	//}
-
-	//const bool CEngine::IsInGameScene() const
-	//{
-	//	return myActiveState == CStateStack::EState::InGame;
-	//}
-
-	//void CEngine::ModelViewerSetScene(CScene* aScene)
-	//{
-	//	myActiveState = CStateStack::EState::InGame;
-	//	mySceneMap[myActiveState] = aScene;
-	//}
-
-	//void CEngine::RemoveScene(CStateStack::EState aState)
-	//{
-	//	if (mySceneMap.find(aState) == mySceneMap.end())
-	//		return;
-
-	//	CMainSingleton::PostMaster().Unsubscribe(EMessageType::ComponentAdded, mySceneMap.at(aState));
-	//	delete mySceneMap.at(aState);
-	//	mySceneMap.at(aState) = nullptr;
-	//	mySceneMap.erase(aState);
-	//}
-
-	void CEngine::ClearModelFactory()
-	{
-		//ModelFactory->ClearFactory();
-	}
-
-	void CEngine::ShowCursor(const bool& isInEditorMode)
+	void GEngine::ShowCursor(const bool& isInEditorMode)
 	{
 		WindowHandler->ShowAndUnlockCursor(isInEditorMode);
 	}
-	void CEngine::HideCursor(const bool& isInEditorMode)
+	void GEngine::HideCursor(const bool& isInEditorMode)
 	{
 		WindowHandler->HideAndLockCursor(isInEditorMode);
 	}
-
-	//void CEngine::CheckIfMenuState(const CStateStack::EState& aState)
-	//{
-	//	bool isInMenu = true;
-	//	switch (aState)
-	//	{
-	//	case CStateStack::EState::BootUp:
-	//		isInMenu = false;
-	//		break;
-
-	//	case CStateStack::EState::InGame:
-	//		isInMenu = false;
-	//		break;
-
-	//	case CStateStack::EState::MainMenu:
-	//		isInMenu = true;
-	//		break;
-
-	//	case CStateStack::EState::PauseMenu:
-	//		isInMenu = true;
-	//		break;
-
-	//	default:break;
-	//	}
-	//	WindowHandler->GameIsInMenu(isInMenu);
-	//}
-
-	//void CEngine::SetBrokenScreen(bool aShouldSetBrokenScreen)
-	//{
-	//	RenderManager->SetBrokenScreen(aShouldSetBrokenScreen);
-	//}
-
-	//const CFullscreenRenderer::SPostProcessingBufferData& CEngine::GetPostProcessingBufferData() const
-	//{
-	//	return RenderManager->GetPostProcessingBufferData();
-	//}
-
-	//void CEngine::SetPostProcessingBufferData(const CFullscreenRenderer::SPostProcessingBufferData& someBufferData)
-	//{
-	//	RenderManager->SetPostProcessingBufferData(someBufferData);
-	//}
-
-	//void CEngine::SetAudioListener(CGameObject* aGameObject)
-	//{
-	//	AudioManager->SetListener(aGameObject);
-	//}
-
-	//void CEngine::SetIsMenu(bool aMenuIsOpen)
-	//{
-	//	WindowHandler->GameIsInMenu(aMenuIsOpen);
-	//}
-
 }

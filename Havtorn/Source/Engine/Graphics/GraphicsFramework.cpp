@@ -37,9 +37,7 @@ namespace Havtorn
 	bool CGraphicsFramework::Init(Havtorn::CWindowHandler* windowHandler)
 	{
 		if (!windowHandler)
-		{
 			return false;
-		}
 
 		D3D11_CREATE_DEVICE_FLAG createFlag = static_cast<D3D11_CREATE_DEVICE_FLAG>(0);
 #if _DEBUG

@@ -436,15 +436,4 @@ namespace Havtorn
 		CMulticastDelegate<const SInputAxisPayload> Delegate;
 		std::vector<SInputAxis> Axes;
 	};
-
-	class IInputObserver
-	{
-	public:
-		IInputObserver() = default;
-		virtual ~IInputObserver() = default;
-		IInputObserver(const IInputObserver&) = delete;
-		IInputObserver(const IInputObserver&&) = delete;
-
-		virtual void ReceiveEvent(const EInputActionEvent& event) = 0;
-	};
 }

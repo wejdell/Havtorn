@@ -3,21 +3,24 @@
 #include "Includes/PointLightShaderStructs.hlsli"
 #include "Includes/VolumetricLightShaderStructs.hlsli"
 #include "Includes/MathHelpers.hlsli"
-
-//#define NUM_SAMPLES 128
-//#define NUM_SAMPLES_RCP 0.0078125
-
-//// RAYMARCHING
-//#define TAU 0.0001
-//#define PHI 1000000.0
-
-//#define PI_RCP 0.31830988618379067153776752674503
+#include "Includes/ShadowSampling.hlsli"
 
 sampler defaultSampler : register(s0);
-//sampler shadowSampler : register(s1);
-Texture2D normalTextureGBuffer : register(t2);
-//Texture2D depthTexture : register(t21);
-//Texture2D shadowDepthTexture : register(t22);
+
+cbuffer ShadowmapBuffer : register(b5)
+{
+    struct SShadowmapViewData
+    {
+        float4x4 ToShadowMapView;
+        float4x4 ToShadowMapProjection;
+        float4 ShadowmapPosition;
+        float2 ShadowmapResolution;
+        float2 ShadowAtlasResolution;
+        float2 ShadowmapStartingUV;
+        float ShadowTestTolerance;
+        float Padding;
+    } ShadowmapViewData[6];
+}
 
 float4 PixelShader_WorldPosition(float2 uv)
 {
@@ -34,50 +37,7 @@ float4 PixelShader_WorldPosition(float2 uv)
     return worldPos;
 }
 
-float3 GBuffer_Normal(float2 uv)
-{
-    float3 normal = normalTextureGBuffer.Sample(defaultSampler, uv).rgb;
-    return normal;
-}
-
-//float3 SampleShadowPos(float3 projectionPos)
-//{
-//    float2 uvCoords = projectionPos.xy;
-//    uvCoords *= float2(0.5f, -0.5f);
-//    uvCoords += float2(0.5f, 0.5f);
-
-//    float nonLinearDepth = shadowDepthTexture.Sample(shadowSampler, uvCoords).r;
-//    float oob = 1.0f;
-//    if (projectionPos.x > 1.0f || projectionPos.x < -1.0f || projectionPos.y > 1.0f || projectionPos.y < -1.0f)
-//    {
-//        oob = 0.0f;
-//    }
-
-//    float a = nonLinearDepth * oob;
-//    float b = projectionPos.z;
-//    b = invLerp(-0.5f, 0.5f, b) * oob;
-
-//    b *= oob;
-
-//    //return 1.0f;
-    
-//    if (b - a < 0.001f)
-//    {
-//        return 1.0f;
-//    }
-//    else
-//    {
-//        return 0.0f;
-//    }
-//}
-
-//float3 ShadowFactor(float3 viewPos)
-//{
-//    float4 projectionPos = mul(toDirectionalLightProjection, viewPos);
-//    return SampleShadowPos(projectionPos.xyz);
-//}
-
-void ExecuteRaymarching(inout float3 rayPositionLightVS, float3 invViewDirLightVS, inout float3 rayPositionWorld, float3 invViewDirWorld, float stepSize, float l, inout float3 VLI)
+void ExecuteRaymarching(inout float3 rayPositionLightVS, float3 invViewDirLightVS, inout float3 rayPositionWorld, float3 invViewDirWorld, float stepSize, float l, inout float3 VLI/*, SShadowmapViewData viewData*/)
 {
     rayPositionLightVS.xyz += stepSize * invViewDirLightVS.xyz;
 
@@ -85,14 +45,17 @@ void ExecuteRaymarching(inout float3 rayPositionLightVS, float3 invViewDirLightV
     rayPositionWorld += stepSize * invViewDirWorld;
     //..
     
-    float3 shadowTerm = /*ShadowFactor(rayPositionLightVS.xyz).xxx*/1.0f;
+    int shadowmapViewIndex = GetShadowmapViewIndex(rayPositionWorld.xyz, pointLightPositionAndRange.xyz);
+    SShadowmapViewData viewData = ShadowmapViewData[shadowmapViewIndex];
+    
+    float3 visibilityTerm = 1.0f - ShadowFactor(rayPositionWorld, viewData.ShadowmapPosition.xyz, viewData.ToShadowMapView, viewData.ToShadowMapProjection, shadowDepthTexture, shadowSampler, viewData.ShadowmapResolution, viewData.ShadowAtlasResolution, viewData.ShadowmapStartingUV, viewData.ShadowTestTolerance).xxx;
     
     // Distance to the current position on the ray in light view-space
     float d = length(rayPositionLightVS.xyz);
     float dRcp = rcp(d); // reciprocal
     
     // Calculate the final light contribution for the sample on the ray...
-    float3 intens = scatteringProbability * (shadowTerm * (lightPower * 0.25 * PI_RCP) * dRcp * dRcp) * exp(-d * scatteringProbability) * exp(-l * scatteringProbability) * stepSize;
+    float3 intens = scatteringProbability * (visibilityTerm * (lightPower * 0.25 * PI_RCP) * dRcp * dRcp) * exp(-d * scatteringProbability) * exp(-l * scatteringProbability) * stepSize;
     
     // World space attenuation
     float3 toLight = pointLightPositionAndRange.xyz - rayPositionWorld.xyz;
@@ -116,24 +79,48 @@ PointLightPixelOutput main(PointLightVertexToPixel input)
     PointLightPixelOutput output;
     
     float raymarchDistanceLimit = 2.0f * pointLightPositionAndRange.w;
+     
+    // Texture Depth
+    float2 screenUV = (input.myUV.xy / input.myUV.z) * 0.5f + 0.5f;
+    const float textureDepth = depthTexture.Sample(defaultSampler, screenUV).r;
+   
+    // World Pos Depth
+    float4 viewSpacePos = mul(pointLightToCamera, input.myWorldPosition);
+    float4 projectedPos = mul(pointLightToProjection, viewSpacePos);
+    projectedPos /= projectedPos.w;
+    const float worldPosDepth = projectedPos.z;
+   
+    // World pos from light geometry
+    float4 worldPosition = input.myWorldPosition;
     
-    // ...
-    //float2 screenUV = (input.myUV.xy / input.myUV.z) * 0.5f + 0.5f;
-    float3 worldPosition = input.myWorldPosition.xyz /*PixelShader_WorldPosition(screenUV).rgb*/;
-    float3 camPos = pointLightCameraPosition.xyz;
+    if (textureDepth < worldPosDepth)
+    {
+        // World pos from texture depth
+        float z = textureDepth;
+        float x = screenUV.x * 2.0f - 1;
+        float y = (1 - screenUV.y) * 2.0f - 1;
+        const float4 projectedPos = float4(x, y, z, 1.0f);
+        float4 viewSpacePos = mul(pointLightToCameraFromProjection, projectedPos);
+        viewSpacePos /= viewSpacePos.w;
+        worldPosition = mul(pointLightToWorldFromCamera, viewSpacePos);
+
+        worldPosition.a = 1.0f;
+    }
+    
+    float4 camPos = pointLightCameraPosition;
+    
+    int shadowmapViewIndex = GetShadowmapViewIndex(worldPosition.xyz, pointLightPositionAndRange.xyz);
+    SShadowmapViewData viewData = ShadowmapViewData[shadowmapViewIndex];
     
     // For marching in world space in parallel
-    float3 rayPositionWorld = worldPosition;
-    float3 invViewDirWorld = normalize(camPos - worldPosition);
-    // ..
+    float3 rayPositionWorld = worldPosition.xyz;
+    float3 invViewDirWorld = normalize(camPos - worldPosition).xyz;
     
-    float3 lightPos = pointLightTransform._41_42_43;
-    worldPosition -= lightPos.xyz;
-    float3x3 transform = float3x3(1.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f); // Fix point light view /cubemap for shadowmapping
-    float3 positionLightVS = mul(/*pointLightToView*/transform, worldPosition);
+    worldPosition.xyz -= viewData.ShadowmapPosition.xyz;
+    float4 positionLightVS = mul(viewData.ToShadowMapView, worldPosition);
    
-    camPos -= lightPos.xyz;
-    float3 cameraPositionLightVS = mul(/*pointLightToView*/transform, camPos);
+    camPos.xyz -= viewData.ShadowmapPosition.xyz;
+    float4 cameraPositionLightVS = mul(viewData.ToShadowMapView, camPos);
     
     // Reduce noisyness by truncating the starting position
     //float raymarchDistance = trunc(clamp(length(cameraPositionLightVS.xyz - positionLightVS.xyz), 0.0f, raymarchDistanceLimit));
@@ -162,10 +149,10 @@ PointLightPixelOutput main(PointLightVertexToPixel input)
     [loop]
     for (float l = raymarchDistance; l > stepSize; l -= stepSize)
     {
-        ExecuteRaymarching(rayPositionLightVS, invViewDirLightVS.xyz, rayPositionWorld, invViewDirWorld, stepSize, l, VLI);
+        ExecuteRaymarching(rayPositionLightVS, invViewDirLightVS.xyz, rayPositionWorld, invViewDirWorld, stepSize, l, VLI/*, viewData*/);
     }
     
-    output.myColor.rgb = pointLightColorAndIntensity.rgb /** pointLightColorAndIntensity.a*/ * VLI;
+    output.myColor.rgb = pointLightColorAndIntensity.rgb * VLI;
     output.myColor.a = 1.0f;
     return output;
 }

@@ -6,86 +6,89 @@
 
 namespace Havtorn
 {
-	CFullscreenTexture::CFullscreenTexture() : Context(nullptr), myTexture(nullptr), myRenderTarget(nullptr), myShaderResource(nullptr), Viewport(nullptr) {}
+	CFullscreenTexture::CFullscreenTexture() : Context(nullptr), Texture(nullptr), RenderTarget(nullptr), ShaderResource(nullptr), Viewport(nullptr) {}
 
 	CFullscreenTexture::~CFullscreenTexture() {}
 
-	void CFullscreenTexture::ClearTexture(SVector4 aClearColor) 
+	void CFullscreenTexture::ClearTexture(SVector4 clearColor) 
 	{
-		Context->ClearRenderTargetView(myRenderTarget, &aClearColor.X);
+		Context->ClearRenderTargetView(RenderTarget, &clearColor.X);
 	}
 
-	void CFullscreenTexture::ClearDepth(float /*aClearDepth*/, unsigned int /*aClearStencil*/) 
+	void CFullscreenTexture::ClearDepth(F32 /*clearDepth*/, U32 /*clearStencil*/) 
 	{
-		Context->ClearDepthStencilView(myDepth, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+		Context->ClearDepthStencilView(Depth, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	}
 
-	void CFullscreenTexture::SetAsActiveTarget(CFullscreenTexture* aDepth) 
+	void CFullscreenTexture::SetAsActiveTarget(CFullscreenTexture* depth) 
 	{
-		if (aDepth) {
-			Context->OMSetRenderTargets(1, &myRenderTarget, aDepth->myDepth);
-		}
-		else {
-			Context->OMSetRenderTargets(1, &myRenderTarget, nullptr);
-		}
+		if (depth) 
+			Context->OMSetRenderTargets(1, &RenderTarget, depth->Depth);
+		
+		else 
+			Context->OMSetRenderTargets(1, &RenderTarget, nullptr);
+		
 		Context->RSSetViewports(1, Viewport);
 	}
 
 	void CFullscreenTexture::SetAsDepthTarget()
 	{
-		Context->OMSetRenderTargets(0, NULL, myDepth);
+		Context->OMSetRenderTargets(0, NULL, Depth);
 		Context->RSSetViewports(1, Viewport);
 	}
 
-	void CFullscreenTexture::SetAsDepthTarget(CFullscreenTexture* anIntermediateRenderTarget)
+	void CFullscreenTexture::SetAsDepthTarget(CFullscreenTexture* intermediateRenderTarget)
 	{
-		Context->OMSetRenderTargets(1, &anIntermediateRenderTarget->myRenderTarget, myDepth);
+		Context->OMSetRenderTargets(1, &intermediateRenderTarget->RenderTarget, Depth);
 		Context->RSSetViewports(1, Viewport);
 	}
 
-	void CFullscreenTexture::SetAsResourceOnSlot(unsigned int aSlot) 
+	void CFullscreenTexture::SetAsResourceOnSlot(U16 aSlot) 
 	{
-		Context->PSSetShaderResources(aSlot, 1, &myShaderResource);
+		Context->PSSetShaderResources(aSlot, 1, &ShaderResource);
 	}
 
 	void CFullscreenTexture::ReleaseTexture()
 	{
 		Context = nullptr;
-		myTexture->Release();
-		myTexture = nullptr;
-		myRenderTarget->Release();
-		myRenderTarget = nullptr;
-		if (myShaderResource)
+		Texture->Release();
+		Texture = nullptr;
+		RenderTarget->Release();
+		RenderTarget = nullptr;
+		
+		if (ShaderResource)
 		{
-			myShaderResource->Release();
-			myShaderResource = nullptr;
+			ShaderResource->Release();
+			ShaderResource = nullptr;
 		}
-		delete Viewport;
-		Viewport = nullptr;
+
+		SAFE_DELETE(Viewport);
 	}
 
 	void CFullscreenTexture::ReleaseDepth()
 	{
 		Context = nullptr;
-		myTexture->Release();
-		myTexture = nullptr;
-		myDepth->Release();
-		myDepth = nullptr;
-		if (myShaderResource)
+		Texture->Release();
+		Texture = nullptr;
+		Depth->Release();
+		Depth = nullptr;
+		
+		if (ShaderResource)
 		{
-			myShaderResource->Release();
-			myShaderResource = nullptr;
+			ShaderResource->Release();
+			ShaderResource = nullptr;
 		}
-		delete Viewport;
-		Viewport = nullptr;
+
+		SAFE_DELETE(Viewport);
 	}
 
 	ID3D11Texture2D* const CFullscreenTexture::GetTexture() const
 	{
-		return myTexture;
+		return Texture;
 	}
+
 	ID3D11ShaderResourceView* const CFullscreenTexture::GetShaderResourceView() const
 	{
-		return myShaderResource;
+		return ShaderResource;
 	}
 }

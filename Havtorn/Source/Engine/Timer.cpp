@@ -5,9 +5,9 @@
 
 namespace Havtorn
 {
-	CTimer* CTimer::Instance = nullptr;
+	GTimer* GTimer::Instance = nullptr;
 	
-	CTimer::CTimer()
+	GTimer::GTimer()
 	{
 		Instance = this;
 		Last = std::chrono::steady_clock::now();
@@ -24,44 +24,44 @@ namespace Havtorn
 		FrameTimesLoaded = 0;
 	}
 
-	CTimer::~CTimer()
+	GTimer::~GTimer()
 	{
 		Instance = nullptr;
 	}
 
 	//Total duration in seconds since start
-	float CTimer::Time()
+	float GTimer::Time()
 	{
 		return Instance->TotalTime();
 	}
 
 	//Delta time in seconds between the last two frames
-	float CTimer::Dt()
+	float GTimer::Dt()
 	{
 		return Instance->DeltaTime;
 	}
 
-	float CTimer::FixedDt()
+	float GTimer::FixedDt()
 	{
 		return Instance->FixedTimeInterval;
 	}
 
-	F32 CTimer::AverageFrameRate()
+	F32 GTimer::AverageFrameRate()
 	{
 		return (1.0f / Instance->AverageFrameTime);
 	}
 
-	float CTimer::Mark()
+	float GTimer::Mark()
 	{
 		return Instance->NewFrame();
 	}
 
-	bool CTimer::FixedTimeStep()
+	bool GTimer::FixedTimeStep()
 	{
 		return Instance->FixedTime >= Instance->FixedTimeInterval;
 	}
 
-	float CTimer::NewFrame()
+	float GTimer::NewFrame()
 	{
 		const auto old = Last;
 		Last = std::chrono::steady_clock::now();
@@ -91,7 +91,7 @@ namespace Havtorn
 		return DeltaTime;
 	}
 
-	float CTimer::TotalTime() const
+	float GTimer::TotalTime() const
 	{
 		return std::chrono::duration<float>(std::chrono::steady_clock::now() - First).count();
 	}

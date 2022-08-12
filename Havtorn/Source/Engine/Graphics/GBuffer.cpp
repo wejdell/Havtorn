@@ -35,7 +35,7 @@ namespace Havtorn
 
 	void CGBuffer::SetAsActiveTarget(CFullscreenTexture* depth)
 	{
-		auto depthStencilView = depth ? depth->myDepth : nullptr;
+		auto depthStencilView = depth ? depth->Depth : nullptr;
 		Context->OMSetRenderTargets(static_cast<U64>(EGBufferTextures::Count), &RenderTargets[0], depthStencilView);
 		Context->RSSetViewports(1, Viewport);
 	}
@@ -64,7 +64,6 @@ namespace Havtorn
 			ShaderResources[i] = nullptr;
 		}
 
-		delete Viewport;
-		Viewport = nullptr;
+		SAFE_DELETE(Viewport);
 	}
 }

@@ -17,6 +17,7 @@ namespace Havtorn
 		CameraDataStorage,
 		GBufferData,
 		GBufferDataInstanced,
+		DecalDepthCopy,
 		DeferredDecal,
 		PreLightingPass,
 		DeferredLightingDirectional,
@@ -25,6 +26,7 @@ namespace Havtorn
 		VolumetricLightingDirectional,
 		VolumetricLightingPoint,
 		VolumetricLightingSpot,
+		VolumetricBufferBlurPass,
 		ForwardTransparency,
 		OutlineMask,
 		Outline

@@ -17,12 +17,12 @@ namespace Havtorn
 	public:
 		CFullscreenTexture();
 		~CFullscreenTexture();
-		void ClearTexture(SVector4 aClearColor = { 0.0f, 0.0f, 0.0f, 0.0f });
-		void ClearDepth(float aClearDepth = 1.0f, unsigned int aClearStencil = 0);
-		void SetAsActiveTarget(CFullscreenTexture* aDepth = nullptr);
+		void ClearTexture(SVector4 clearColor = { 0.0f, 0.0f, 0.0f, 0.0f });
+		void ClearDepth(F32 clearDepth = 1.0f, U32 clearStencil = 0);
+		void SetAsActiveTarget(CFullscreenTexture* depth = nullptr);
 		void SetAsDepthTarget();
-		void SetAsDepthTarget(CFullscreenTexture* anIntermediateRenderTarget);
-		void SetAsResourceOnSlot(unsigned int aSlot);
+		void SetAsDepthTarget(CFullscreenTexture* intermediateRenderTarget);
+		void SetAsResourceOnSlot(U16 slot);
 		void ReleaseTexture();
 		void ReleaseDepth();
 		
@@ -34,14 +34,14 @@ namespace Havtorn
 
 	private:
 		ID3D11DeviceContext* Context;
-		ID3D11Texture2D* myTexture;
+		ID3D11Texture2D* Texture;
 
 		union {
-			ID3D11RenderTargetView* myRenderTarget;
-			ID3D11DepthStencilView* myDepth;
+			ID3D11RenderTargetView* RenderTarget;
+			ID3D11DepthStencilView* Depth;
 		};
 
-		ID3D11ShaderResourceView* myShaderResource;
+		ID3D11ShaderResourceView* ShaderResource;
 		D3D11_VIEWPORT* Viewport;
 	};
 }

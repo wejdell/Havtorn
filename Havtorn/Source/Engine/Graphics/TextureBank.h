@@ -10,11 +10,12 @@ namespace Havtorn
 
 	class CTextureBank
 	{
-		friend class CEngine;
+		friend class GEngine;
 
 	private:
 		CTextureBank() = default;
 		~CTextureBank();
+		bool Init(const CGraphicsFramework* framework);
 
 	public:
 		HAVTORN_API U32 GetTextureIndex(const std::string& fileName);
@@ -22,9 +23,6 @@ namespace Havtorn
 		HAVTORN_API ID3D11ShaderResourceView* GetTexture(U32 index);
 
 		HAVTORN_API const std::vector<ID3D11ShaderResourceView*>& GetTextures();
-
-	protected:
-		bool Init(const CGraphicsFramework* framework);
 
 	private:
 		void AddTexture(const std::string& fileName);

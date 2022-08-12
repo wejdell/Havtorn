@@ -30,7 +30,7 @@ namespace Havtorn
 		windowData.Width = WindowWidth;
 		windowData.Height = WindowHeight;
 
-		Engine = new CEngine();
+		Engine = new GEngine();
 		return Engine->Init(windowData);
 	}
 

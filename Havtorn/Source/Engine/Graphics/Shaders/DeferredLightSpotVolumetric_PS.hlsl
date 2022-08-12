@@ -1,15 +1,11 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
-#include "Includes/FullscreenShaderStructs.hlsli"
+#include "Includes/SpotLightShaderStructs.hlsli"
 #include "Includes/VolumetricLightShaderStructs.hlsli"
 #include "Includes/MathHelpers.hlsli"
 #include "Includes/ShadowSampling.hlsli"
 
-cbuffer LightBuffer : register(b1)
-{
-    float4 toDirectionalLight;
-    float4 directionalLightColor;
-}
+sampler defaultSampler : register(s0);
 
 cbuffer ShadowmapBuffer : register(b5)
 {
@@ -33,9 +29,9 @@ float4 PixelShader_WorldPosition(float2 uv)
     float x = uv.x * 2.0f - 1;
     float y = (1 - uv.y) * 2.0f - 1;
     float4 projectedPos = float4(x, y, z, 1.0f);
-    float4 viewSpacePos = mul(toCameraFromProjection, projectedPos);
+    float4 viewSpacePos = mul(spotLightToCameraFromProjection, projectedPos);
     viewSpacePos /= viewSpacePos.w;
-    float4 worldPos = mul(toWorldFromCamera, viewSpacePos);
+    float4 worldPos = mul(spotLightToWorldFromCamera, viewSpacePos);
 
     worldPos.a = 1.0f;
     return worldPos;
@@ -44,7 +40,7 @@ float4 PixelShader_WorldPosition(float2 uv)
 void ExecuteRaymarching(inout float3 rayPositionLightVS, float3 invViewDirLightVS, inout float3 rayPositionWorld, float3 invViewDirWorld, float stepSize, float l, inout float3 VLI, SShadowmapViewData viewData)
 {
     rayPositionLightVS.xyz += stepSize * invViewDirLightVS.xyz;
-    
+
     // March in world space in parallel
     rayPositionWorld += stepSize * invViewDirWorld;
     //..
@@ -56,25 +52,66 @@ void ExecuteRaymarching(inout float3 rayPositionLightVS, float3 invViewDirLightV
     float dRcp = rcp(d); // reciprocal
     
     // Calculate the final light contribution for the sample on the ray...
-    float phase = 0.25f * PI_RCP;
-    //float projection = dot(invViewDirLightVS, -toDirectionalLight.xyz);
-    //phase = PhaseFunctionHenyeyGreenstein(projection, henyeyGreensteinGValue);
-    float3 intens = scatteringProbability * (visibilityTerm * (lightPower * phase) * dRcp * dRcp) * exp(-d * scatteringProbability) * exp(-l * scatteringProbability) * stepSize;
+    float3 intens = scatteringProbability * (visibilityTerm * (lightPower * 0.25 * PI_RCP) * dRcp * dRcp) * exp(-d * scatteringProbability) * exp(-l * scatteringProbability) * stepSize;
+    
+    // World space attenuation
+    float3 toLight = spotLightPositionAndRange.xyz - rayPositionWorld.xyz;
+    float lightDistance = length(toLight);
+    toLight = normalize(toLight);
+    float linearAttenuation = lightDistance / spotLightPositionAndRange.w;
+    linearAttenuation = 1.0f - linearAttenuation;
+    linearAttenuation = saturate(linearAttenuation);
+    float physicalAttenuation = saturate(1.0f / (lightDistance * lightDistance));
+    
+    const float3 lightDirection = normalize(-spotLightDirection.xyz);
+    const float theta = dot(normalize(toLight), lightDirection);
+    const float cutOff = cos(radians(spotLightInnerAngle));
+    const float outerCutOff = cos(radians(spotLightOuterAngle));
+    const float epsilon = cutOff - outerCutOff;
+    const float angleAttenuation = clamp(((theta - outerCutOff) / epsilon), 0.0f, 1.0f);
+    
+    float attenuation = linearAttenuation * physicalAttenuation * angleAttenuation;
     
     // ... and add it to the total contribution of the ray
-    VLI += intens;
+    VLI += intens * attenuation;
 }
 
 // !RAYMARCHING
 
-PixelOutput main(VertexToPixel input)
+SpotLightPixelOutput main(SpotLightVertexToPixel input)
 {
-    PixelOutput output;
+    SpotLightPixelOutput output;
     
-    float raymarchDistanceLimit = 99999.0f;
+    float raymarchDistanceLimit = 2.0f * spotLightPositionAndRange.w;
+     
+    // Texture Depth
+    float2 screenUV = (input.myUV.xy / input.myUV.z) * 0.5f + 0.5f;
+    const float textureDepth = depthTexture.Sample(defaultSampler, screenUV).r;
+   
+    // World Pos Depth
+    float4 viewSpacePos = mul(spotLightToCamera, input.myWorldPosition);
+    float4 projectedPos = mul(spotLightToProjectionFromCamera, viewSpacePos);
+    projectedPos /= projectedPos.w;
+    const float worldPosDepth = projectedPos.z;
+   
+    // World pos from light geometry
+    float4 worldPosition = input.myWorldPosition;
     
-    float4 worldPosition = PixelShader_WorldPosition(input.myUV);
-    float4 camPos = cameraPosition;
+    if (textureDepth < worldPosDepth)
+    {
+        // World pos from texture depth
+        float z = textureDepth;
+        float x = screenUV.x * 2.0f - 1;
+        float y = (1 - screenUV.y) * 2.0f - 1;
+        const float4 projectedPos = float4(x, y, z, 1.0f);
+        float4 viewSpacePos = mul(spotLightToCameraFromProjection, projectedPos);
+        viewSpacePos /= viewSpacePos.w;
+        worldPosition = mul(spotLightToWorldFromCamera, viewSpacePos);
+
+        worldPosition.a = 1.0f;
+    }
+    
+    float4 camPos = spotLightCameraPosition;
     
     SShadowmapViewData viewData = ShadowmapViewData[0];
     
@@ -91,7 +128,7 @@ PixelOutput main(VertexToPixel input)
     // Reduce noisyness by truncating the starting position
     //float raymarchDistance = trunc(clamp(length(cameraPositionLightVS.xyz - positionLightVS.xyz), 0.0f, raymarchDistanceLimit));
     float4 invViewDirLightVS = float4(normalize(cameraPositionLightVS.xyz - positionLightVS.xyz), 0.0f);
-    float raymarchDistance = /*trunc(*/clamp(length(cameraPositionLightVS.xyz - positionLightVS.xyz), 0.0f, raymarchDistanceLimit) /*)*/;
+    float raymarchDistance = clamp(length(cameraPositionLightVS.xyz - positionLightVS.xyz), 0.0f, raymarchDistanceLimit);
     
     // Calculate the size of each step
     float stepSize = raymarchDistance * numberOfSamplesReciprocal;
@@ -105,7 +142,7 @@ PixelOutput main(VertexToPixel input)
 #else
     float rayStartOffset = (interleavedPos.y * INTERLEAVED_GRID_SIZE + interleavedPos.x) * (stepSize * INTERLEAVED_GRID_SIZE_SQR_RCP);
 #endif // USE_RANDOM_RAY_SAMPLES
-    
+ 
     float3 rayPositionLightVS = rayStartOffset * invViewDirLightVS.xyz + positionLightVS.xyz;
     
     // The total light contribution accumulated along the ray
@@ -113,18 +150,12 @@ PixelOutput main(VertexToPixel input)
     
     // Start ray marching
     [loop]
-    for (float l = raymarchDistance; l > 2.0f * stepSize; l -= stepSize)
+    for (float l = raymarchDistance; l > stepSize; l -= stepSize)
     {
         ExecuteRaymarching(rayPositionLightVS, invViewDirLightVS.xyz, rayPositionWorld, invViewDirWorld, stepSize, l, VLI, viewData);
     }
     
-    //float fogDensity = scatteringProbability;
-    
-    //float depth = depthTexture.Sample(defaultSampler, input.myUV).r;
-    //depth = (depth - 0.95f) / 0.05f;
-    //float3 VLI = exp(depth/* * fogDensity*/);
-    
-    output.myColor.rgb = directionalLightColor.rgb * VLI;
+    output.myColor.rgb = spotLightColorAndIntensity.rgb * VLI;
     output.myColor.a = 1.0f;
     return output;
 }

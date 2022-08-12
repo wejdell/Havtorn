@@ -15,9 +15,12 @@ namespace Havtorn
 	struct SStaticMeshComponent;
 	struct SCameraComponent;
 	struct SMaterialComponent;
+	struct SEnvironmentLightComponent;
 	struct SDirectionalLightComponent;
 	struct SPointLightComponent;
 	struct SSpotLightComponent;
+	struct SVolumetricLightComponent;
+	struct SDecalComponent;
 
 	class ISystem;
 	class CRenderManager;
@@ -37,9 +40,12 @@ namespace Havtorn
 		std::vector<Ref<SStaticMeshComponent>>& GetStaticMeshComponents() { return StaticMeshComponents; }
 		std::vector<Ref<SCameraComponent>>& GetCameraComponents() { return CameraComponents; }
 		COMPONENT_VECTOR_GETTER(MaterialComponent)
+		COMPONENT_VECTOR_GETTER(EnvironmentLightComponent)
 		std::vector<Ref<SDirectionalLightComponent>>& GetDirectionalLightComponents() { return DirectionalLightComponents; }
 		COMPONENT_VECTOR_GETTER(PointLightComponent)
 		std::vector<Ref<SSpotLightComponent>>& GetSpotLightComponents() { return SpotLightComponents; }
+		COMPONENT_VECTOR_GETTER(VolumetricLightComponent)
+		COMPONENT_VECTOR_GETTER(DecalComponent)
 
 		std::vector<Ref<SEntity>>& GetEntities() { return Entities; }
 
@@ -48,9 +54,12 @@ namespace Havtorn
 		COMPONENT_ADDER_DECLARATION(StaticMeshComponent)
 		COMPONENT_ADDER_DECLARATION(CameraComponent)
 		COMPONENT_ADDER_DECLARATION(MaterialComponent)
+		COMPONENT_ADDER_DECLARATION(EnvironmentLightComponent)
 		COMPONENT_ADDER_DECLARATION(DirectionalLightComponent)
 		COMPONENT_ADDER_DECLARATION(PointLightComponent)
 		COMPONENT_ADDER_DECLARATION(SpotLightComponent)
+		COMPONENT_ADDER_DECLARATION(VolumetricLightComponent)
+		COMPONENT_ADDER_DECLARATION(DecalComponent)
 
 	private:
 		std::vector<Ref<SEntity>> Entities;
@@ -58,9 +67,12 @@ namespace Havtorn
 		std::vector<Ref<SStaticMeshComponent>> StaticMeshComponents;
 		std::vector<Ref<SCameraComponent>> CameraComponents;
 		COMPONENT_VECTOR_DECLARATION(MaterialComponent)
+		COMPONENT_VECTOR_DECLARATION(EnvironmentLightComponent)
 		std::vector<Ref<SDirectionalLightComponent>> DirectionalLightComponents;
 		COMPONENT_VECTOR_DECLARATION(PointLightComponent)
 		std::vector<Ref<SSpotLightComponent>> SpotLightComponents;
+		COMPONENT_VECTOR_DECLARATION(VolumetricLightComponent)
+		COMPONENT_VECTOR_DECLARATION(DecalComponent)
 		std::vector<Ptr<ISystem>> Systems;
 	};
 }
