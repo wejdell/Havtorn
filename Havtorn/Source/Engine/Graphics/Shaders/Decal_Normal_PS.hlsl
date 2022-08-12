@@ -1,3 +1,5 @@
+// Copyright 2022 Team Havtorn. All Rights Reserved.
+
 #include "Includes/DecalShaderStructs.hlsli"
 
 float4 PixelShader_Normal(float2 uv)

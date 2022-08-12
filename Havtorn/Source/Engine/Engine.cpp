@@ -98,16 +98,6 @@ namespace Havtorn
 
 	float GEngine::BeginFrame()
 	{
-#ifdef _DEBUG
-
-		// Very Expensive, maybe not do this
-		//std::string fpsString = "Havtorn Editor | FPS: ";
-		//fpsString.append(std::to_string(static_cast<I16>(CTimer::AverageFrameRate())));
-		//WindowHandler->SetWindowTitle(fpsString);
-
-		//EditorManager->BeginFrame();
-#endif
-
 		return GTimer::Mark();
 	}
 
@@ -138,42 +128,21 @@ namespace Havtorn
 
 	void GEngine::RenderFrame()
 	{
-		if (!RenderSceneActive)
-			return;
-
 		//ThreadManager->PushJob(std::bind(&CRenderManager::Render, RenderManager));
 		//RenderManager->Render();
-#ifdef _DEBUG
-		//EditorManager->Render();
-#endif
+
 	}
 
 	void GEngine::EndFrame()
 	{
 
-#ifdef _DEBUG
-		//EditorManager->EndFrame();
-		//ImGui::Render();
-		//ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
-#endif
-
 		RenderManager->SwapRenderCommandBuffers();
 		Framework->EndFrame();
 
-
-		//CThreadManager::RenderCondition.wait(uniqueLock, []
-		//	{
-		//		return CThreadManager::RenderThreadStatus == ERenderThreadStatus::PostRender;
-		//	});
 		std::unique_lock<std::mutex> uniqueLock(CThreadManager::RenderMutex);
 		CThreadManager::RenderThreadStatus = ERenderThreadStatus::ReadyToRender;
 		uniqueLock.unlock();
 		CThreadManager::RenderCondition.notify_one();
-	}
-
-	GEngine* GEngine::GetInstance()
-	{
-		return Instance;
 	}
 
 	CWindowHandler* GEngine::GetWindowHandler()
@@ -191,9 +160,9 @@ namespace Havtorn
 		return Instance->TextureBank;
 	}
 
-	CThreadManager* CEngine::GetThreadManager()
+	CThreadManager* GEngine::GetThreadManager()
 	{
-		return ThreadManager;
+		return Instance->ThreadManager;
 	}
 
 	CInputMapper* GEngine::GetInput()
@@ -249,4 +218,5 @@ namespace Havtorn
 	{
 		WindowHandler->HideAndLockCursor(isInEditorMode);
 	}
+
 }

@@ -193,7 +193,8 @@ namespace ImGui
 				}
 			}
 		
-			MaterialRefToChangeIndex = min(static_cast<Havtorn::U16>(materialComp->MaterialReferences.size()), MaterialRefToChangeIndex);
+			// TODO.Anyone: Replace std::min with Havtorn's min.
+			MaterialRefToChangeIndex = std::min(static_cast<Havtorn::U16>(materialComp->MaterialReferences.size()), MaterialRefToChangeIndex);
 			OpenSelectTextureAssetModal(materialComp->MaterialReferences[MaterialRefToChangeIndex]);
 		}
 	}
@@ -282,7 +283,8 @@ namespace ImGui
 
 			ImGui::Checkbox("Is Active", &volumetricLightComp->IsActive);
 			ImGui::DragFloat("Number Of Samples", &volumetricLightComp->NumberOfSamples, SlideSpeed, 4.0f);
-			volumetricLightComp->NumberOfSamples = max(volumetricLightComp->NumberOfSamples, 4.0f);
+			// Todo.Anyone: Replace std::min with Havtorn's max.
+			volumetricLightComp->NumberOfSamples = std::max(volumetricLightComp->NumberOfSamples, 4.0f);
 			ImGui::DragFloat("Light Power", &volumetricLightComp->LightPower, SlideSpeed * 10000.0f, 0.0f);
 			ImGui::DragFloat("Scattering Probability", &volumetricLightComp->ScatteringProbability, SlideSpeed * 0.1f, 0.0f, 1.0f, "%.4f", ImGuiSliderFlags_Logarithmic);
 			ImGui::DragFloat("Henyey-Greenstein G", &volumetricLightComp->HenyeyGreensteinGValue);

@@ -45,16 +45,12 @@ namespace Havtorn
 		void RenderFrame();
 		void EndFrame();
 		
-		HAVTORN_API CWindowHandler* GetWindowHandler();
-		HAVTORN_API CFileSystem* GetFileSystem();
-		HAVTORN_API CMaterialHandler* GetMaterialHandler();
-		HAVTORN_API CTextureBank* GetTextureBank();
-		HAVTORN_API CThreadManager* GetThreadManager();
+		static HAVTORN_API CWindowHandler* GetWindowHandler();
+		static HAVTORN_API CFileSystem* GetFileSystem();
+		static HAVTORN_API CTextureBank* GetTextureBank();
+		static HAVTORN_API CThreadManager* GetThreadManager();
 		
 	public:
-		static CWindowHandler* GetWindowHandler();
-		static CFileSystem* GetFileSystem();
-		static CTextureBank* GetTextureBank();
 		static CInputMapper* GetInput();
 
 		void InitWindowsImaging();
@@ -66,7 +62,7 @@ namespace Havtorn
 		void HideCursor(const bool& isInEditorMode = false);
 
 	private:
-		static GEngine* Instance;
+		static HAVTORN_API GEngine* Instance;
 
 		CFileSystem* FileSystem = nullptr;
 		CWindowHandler* WindowHandler = nullptr;
