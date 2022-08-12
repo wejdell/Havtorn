@@ -7,5 +7,5 @@
 #include "Core/WindowsInclude.h"
 #include "Core/Core.h"
 #include "Core/EngineTypes.h"
-#include "Application/EngineProcess.h"
 #include "Log.h"
+#include "Engine.h"

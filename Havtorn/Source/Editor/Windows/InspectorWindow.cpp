@@ -1,12 +1,11 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
-#include "hvpch.h"
 #include "InspectorWindow.h"
 #include <imgui.h>
 
 #include "ECS/ECSInclude.h"
 #include "Engine.h"
-#include "Editor/EditorManager.h"
+#include "EditorManager.h"
 #include "Graphics/RenderManager.h"
 #include "Graphics/TextureBank.h"
 #include "Scene/Scene.h"

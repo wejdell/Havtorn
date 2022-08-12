@@ -1,0 +1,26 @@
+// Copyright 2022 Team Havtorn. All Rights Reserved.
+
+#pragma once
+
+#include <../Launcher/Application/Process.h>
+
+namespace Havtorn
+{
+	class _declspec(dllexport) CEditorProcess : public IProcess
+	{
+	public:
+		CEditorProcess();
+		~CEditorProcess() override;
+
+		bool Init() override;
+
+		void BeginFrame() override;
+		void PreUpdate() override;
+		void Update() override;
+		void PostUpdate() override;
+		void EndFrame()override;
+
+	private:
+		class CEditorManager* EditorManager = nullptr;
+	};
+}

@@ -12,10 +12,10 @@ namespace Havtorn
 	class CTimer 
 	{
 	public:
-		static F32 Time();
-		static F32 Dt();
-		static F32 FixedDt();
-		static F32 AverageFrameRate();
+		HAVTORN_API static F32 Time();
+		HAVTORN_API static F32 Dt();
+		HAVTORN_API static F32 FixedDt();
+		HAVTORN_API static F32 AverageFrameRate();
 
 		CTimer();
 		~CTimer();

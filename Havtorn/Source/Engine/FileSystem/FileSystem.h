@@ -61,18 +61,18 @@ namespace Havtorn
 		CFileSystem();
 		~CFileSystem() = default;
 
-		static bool DoesFileExist(const std::string& fileName);
+		static HAVTORN_API bool DoesFileExist(const std::string& fileName);
 
-		void OpenFile(const std::string& fileName, EFileMode mode);
-		void CloseFile(EFileMode mode);
+		void HAVTORN_API OpenFile(const std::string& fileName, EFileMode mode);
+		void HAVTORN_API CloseFile(EFileMode mode);
 
-		void Serialize(const std::string& fileName, const char* data, U32 size);
-		void Deserialize(const std::string& fileName, char* data, U32 size);
-		void Deserialize(const std::string& fileName, std::string& outData);
-		U64 GetFileSize(const std::string& fileName) const;
+		void HAVTORN_API Serialize(const std::string& fileName, const char* data, U32 size);
+		void HAVTORN_API Deserialize(const std::string& fileName, char* data, U32 size);
+		void HAVTORN_API Deserialize(const std::string& fileName, std::string& outData);
+		U64 HAVTORN_API GetFileSize(const std::string& fileName) const;
 
 		std::filesystem::recursive_directory_iterator GetDirectoryIterator(const std::string& root);
-		void IterateThroughFiles(const std::string& root);
+		void HAVTORN_API IterateThroughFiles(const std::string& root);
 	private:
 		std::ifstream InputStream;
 		std::ofstream OutputStream;

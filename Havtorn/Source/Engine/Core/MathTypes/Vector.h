@@ -717,11 +717,11 @@ namespace Havtorn
 #define VECTOR_COMPARISON_EPSILON 1.e-4f
 #define VECTOR_NORMALIZED_EPSILON 1.e-1f
 
-	struct SVector4
+	struct HAVTORN_API SVector4
 	{
 		F32 X, Y, Z, W;
 
-		static const SVector4 Zero;
+		 static const SVector4 Zero;
 
 		static const SVector4 Right;
 		static const SVector4 Up;
@@ -969,7 +969,7 @@ namespace Havtorn
 
 	inline F32 SVector4::SizeSquared() const
 	{
-		return this->SizeSquared();
+		return this->LengthSquared();
 	}
 
 	inline F32 SVector4::Length2D() const

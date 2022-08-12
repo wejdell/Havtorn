@@ -1,8 +1,6 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include "hvpch.h"
-
 #include "Application/WindowHandler.h"
 #include "Graphics/GraphicsFramework.h"
 //#include "FullscreenRenderer.h"
@@ -13,7 +11,6 @@ namespace Havtorn
 	class CThreadManager;
 	class CDirextXFramework;
 	class CTimer;
-	class CEditorManager;
 	class CModelFactory;
 	class CCameraFactory;
 	class CLightFactory;
@@ -55,6 +52,7 @@ namespace Havtorn
 		friend class CMaterialHandler;
 		friend class CTextureBank;
 		friend class CSceneFactory;
+		friend class CEditorProcess;
 
 	public:
 		CEngine();
@@ -64,16 +62,19 @@ namespace Havtorn
 		void Update();
 		void RenderFrame();
 		void EndFrame();
-		CWindowHandler* GetWindowHandler();
-		CFileSystem* GetFileSystem();
-		CMaterialHandler* GetMaterialHandler();
-		CTextureBank* GetTextureBank();
+		
+		HAVTORN_API CWindowHandler* GetWindowHandler();
+		HAVTORN_API CFileSystem* GetFileSystem();
+		HAVTORN_API CMaterialHandler* GetMaterialHandler();
+		HAVTORN_API CTextureBank* GetTextureBank();
+		HAVTORN_API CThreadManager* GetThreadManager();
+		
 		void InitWindowsImaging();
 		void CrashWithScreenShot(std::wstring& subPath);
 
 		void SetResolution(SVector2<F32> resolution);
 
-		static CEngine* GetInstance();
+		static HAVTORN_API CEngine* GetInstance();
 
 		CInputMapper* GetInput() const;
 		//const CStateStack::EState AddScene(const CStateStack::EState aState, CScene* aScene);
@@ -117,9 +118,6 @@ namespace Havtorn
 		//CForwardRenderer* ForwardRenderer;
 		CMaterialHandler* MaterialHandler;
 		CTextureBank* TextureBank;
-#ifdef _DEBUG
-		CEditorManager* EditorManager;
-#endif
 		CRenderManager* RenderManager;
 		CTimer* Timer;
 		CInputMapper* InputMapper;

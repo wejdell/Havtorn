@@ -1,30 +1,36 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
-#include "hvpch.h"
 #include "EditorManager.h"
 
 #include "Core/imgui.h"
 #include "Core/imgui_impl_win32.h"
 #include "Core/imgui_impl_dx11.h"
 
+#include <windows.h>
 #include <psapi.h>
 
 #include "Engine.h"
 #include "FileSystem/FileSystem.h"
 #include "Application/WindowHandler.h"
-//#include "Scene.h"
-//#include "SceneManager.h"
+
 #include "Graphics/GraphicsFramework.h"
 #include "Graphics/RenderManager.h"
 #include "ECS/ECSInclude.h"
-//#include "JsonReader.h"
+
 #include "EditorResourceManager.h"
 #include "EditorWindows.h"
 #include "EditorToggleables.h"
-//#include "PostMaster.h"
 
+IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
-//#pragma comment(lib, "psapi.lib")
+LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+	if (ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam))
+	{
+		return true;
+	}
+	return false;
+}
 
 namespace Havtorn
 {
@@ -43,6 +49,12 @@ namespace Havtorn
 
 	bool CEditorManager::Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager, CScene* scene)
 	{
+		// AG.20220812: On the msdn page for SetWindowsHookEx/ SetWindowsHookExA there are is a list of definitions/options for the first parameter.
+		//				Can add keyboard hooks at a later point.
+		HINSTANCE hInstance = GetModuleHandle(nullptr);
+		SetWindowsHookEx(WH_CALLWNDPROC, (HOOKPROC)WndProc, hInstance, GetCurrentThreadId());
+		SetWindowsHookEx(WH_MOUSE, (HOOKPROC)WndProc, hInstance, GetCurrentThreadId());
+
 		ImGui::DebugCheckVersionAndDataLayout("1.86 WIP", sizeof(ImGuiIO), sizeof(ImGuiStyle), sizeof(ImVec2), sizeof(ImVec4), sizeof(ImDrawVert), sizeof(unsigned int));
 		ImGui::CreateContext();
 		SetEditorTheme(EEditorColorTheme::HavtornDark, EEditorStyleTheme::Havtorn);
@@ -107,12 +119,13 @@ namespace Havtorn
 			window->OnInspectorGUI();
 
 		DebugWindow();
+
+		ImGui::Render();
+		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 	}
 
 	void CEditorManager::EndFrame()
 	{
-		ImGui::Render();
-		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 	}
 
 	void CEditorManager::DebugWindow()

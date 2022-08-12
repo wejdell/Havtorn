@@ -89,20 +89,20 @@ namespace Havtorn
 
 		void Release();
 
-		void ConvertToHVA(const std::string& fileName, EAssetType assetType);
-		void LoadStaticMeshComponent(const std::string& fileName, SStaticMeshComponent* outStaticMeshComponent);
-		void LoadMaterialComponent(const std::vector<std::string>& materialNames, SMaterialComponent* outMaterialComponent);
+		HAVTORN_API void ConvertToHVA(const std::string& fileName, EAssetType assetType);
+		HAVTORN_API void LoadStaticMeshComponent(const std::string& fileName, SStaticMeshComponent* outStaticMeshComponent);
+		HAVTORN_API void LoadMaterialComponent(const std::vector<std::string>& materialNames, SMaterialComponent* outMaterialComponent);
 
 		//ID3D11ShaderResourceView* GetTexture(I64 textureIndex) const;
 		//const std::vector<ID3D11ShaderResourceView*>& GetTextures() const;
-		EMaterialConfiguration GetMaterialConfiguration() const;
-		SVector2<F32> GetShadowAtlasResolution() const;
+		HAVTORN_API EMaterialConfiguration GetMaterialConfiguration() const;
+		HAVTORN_API SVector2<F32> GetShadowAtlasResolution() const;
 
-		void* RenderStaticMeshAssetTexture(const std::string& fileName);
-		void* GetTextureAssetTexture(const std::string& fileName);
+		HAVTORN_API void* RenderStaticMeshAssetTexture(const std::string& fileName);
+		HAVTORN_API void* GetTextureAssetTexture(const std::string& fileName);
 
 	public:
-		[[nodiscard]] const CFullscreenTexture& GetRenderedSceneTexture() const;
+		[[nodiscard]] HAVTORN_API const CFullscreenTexture& GetRenderedSceneTexture() const;
 		void PushRenderCommand(SRenderCommand& command);
 		void SwapRenderCommandBuffers();
 		//void SetBrokenScreen(bool aShouldSetBrokenScreen);
@@ -111,7 +111,7 @@ namespace Havtorn
 		//void SetPostProcessingBufferData(const CFullscreenRenderer::SPostProcessingBufferData& someBufferData);
 
 	public:
-		static U32 NumberOfDrawCallsThisFrame;
+		HAVTORN_API static U32 NumberOfDrawCallsThisFrame;
 
 	private:
 		void Clear(SVector4 clearColor);

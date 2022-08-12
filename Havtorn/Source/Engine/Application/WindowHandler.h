@@ -19,23 +19,23 @@ namespace Havtorn
 			U16 Height = 720;
 		};
 
-		static LRESULT CALLBACK WinProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam);
+		HAVTORN_API static LRESULT CALLBACK WinProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam);
 
 		CWindowHandler();
 		~CWindowHandler();
 
-		const HWND GetWindowHandle() const;
+		HAVTORN_API const HWND GetWindowHandle() const;
 		SVector2<F32> GetCenterPosition();
-		SVector2<F32> GetResolution();
+		HAVTORN_API SVector2<F32> GetResolution();
 		const float GetResolutionScale() const;
 		void SetWindowTitle(const std::string& title);
 
 		const bool CursorLocked() const;
-		void LockCursor(bool shouldLock);
-		void HidLockCursor(bool shouldLock);
+		HAVTORN_API void LockCursor(bool shouldLock);
+		HAVTORN_API void HidLockCursor(bool shouldLock);
 
-		void HideAndLockCursor(const bool& isInEditorMode = false);
-		void ShowAndUnlockCursor(const bool& isInEditorMode = true);
+		HAVTORN_API void HideAndLockCursor(const bool& isInEditorMode = false);
+		HAVTORN_API void ShowAndUnlockCursor(const bool& isInEditorMode = true);
 
 	private:
 		bool Init(CWindowHandler::SWindowData windowData);

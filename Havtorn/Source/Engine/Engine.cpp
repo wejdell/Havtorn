@@ -15,10 +15,7 @@
 #include "Graphics/GraphicsFramework.h"
 #include "Graphics/MaterialHandler.h"
 #include "Graphics/TextureBank.h"
-#ifdef _DEBUG
-#include "Editor/EditorManager.h"
-#include "../ImGui/imgui.h"
-#endif
+
 //#include "WindowHandler.h"
 //#include "DirectXFramework.h"
 //#include "ForwardRenderer.h"
@@ -39,9 +36,7 @@
 //#include "DecalFactory.h"
 //
 #include "Graphics/RenderManager.h"
-//
-//#include "EditorManager.h"
-//
+
 //#include "AudioManager.h"
 #include "Input/InputMapper.h"
 //
@@ -74,11 +69,6 @@ namespace Havtorn
 		MaterialHandler = new CMaterialHandler();
 		TextureBank = new CTextureBank();
 		RenderManager = new CRenderManager();
-#ifdef _DEBUG
-		EditorManager = new CEditorManager();
-		//ImGui::SetCurrentContext();// Req: set for DLL export of ImGui
-		//ImGui::SetAllocatorFunctions();
-#endif
 		InputMapper = new CInputMapper();
 		Scene = new CScene();
 	}
@@ -88,7 +78,7 @@ namespace Havtorn
 		SAFE_DELETE(Scene);
 		SAFE_DELETE(InputMapper);
 #ifdef _DEBUG
-		SAFE_DELETE(EditorManager);
+		//SAFE_DELETE(EditorManager);
 #endif
 		SAFE_DELETE(ThreadManager);
 		SAFE_DELETE(RenderManager);
@@ -113,10 +103,6 @@ namespace Havtorn
 		ENGINE_ERROR_BOOL_MESSAGE(ThreadManager->Init(RenderManager), "Thread Manager could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(InputMapper->Init(), "Input Mapper could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(Scene->Init(RenderManager), "Scene could not be initialized.");
-
-#ifdef _DEBUG
-		ENGINE_ERROR_BOOL_MESSAGE(EditorManager->Init(Framework, WindowHandler, RenderManager, Scene), "EditorManager could not be initialized.");
-#endif
 
 		//ENGINE_ERROR_BOOL_MESSAGE(ModelFactory->Init(Framework), "Model Factory could not be initiliazed.");
 		//ENGINE_ERROR_BOOL_MESSAGE(CameraFactory->Init(WindowHandler), "Camera Factory could not be initialized.");
@@ -147,7 +133,7 @@ namespace Havtorn
 		//fpsString.append(std::to_string(static_cast<I16>(CTimer::AverageFrameRate())));
 		//WindowHandler->SetWindowTitle(fpsString);
 
-		EditorManager->BeginFrame();
+		//EditorManager->BeginFrame();
 #endif
 
 		return CTimer::Mark();
@@ -171,6 +157,12 @@ namespace Havtorn
 		//CMainSingleton::DialogueSystem().Update();
 		//Debug->Update();
 		//CSceneFactory::Get()->Update(); //Used for loading Scenes on a seperate Thread!
+	
+		std::unique_lock<std::mutex> uniqueLock(CThreadManager::RenderMutex);
+		CThreadManager::RenderCondition.wait(uniqueLock, []
+			{
+				return CThreadManager::RenderThreadStatus == ERenderThreadStatus::PostRender;
+			});
 	}
 
 	void CEngine::RenderFrame()
@@ -178,26 +170,31 @@ namespace Havtorn
 		if (!RenderSceneActive)
 			return;
 
-		//ThreadManager->PushJob(std::bind(&CRenderMa nager::Render, RenderManager));
+		//ThreadManager->PushJob(std::bind(&CRenderManager::Render, RenderManager));
 		//RenderManager->Render();
 #ifdef _DEBUG
-		EditorManager->Render();
+		//EditorManager->Render();
 #endif
 	}
 
 	void CEngine::EndFrame()
 	{
-		std::unique_lock<std::mutex> uniqueLock(CThreadManager::RenderMutex);
-		CThreadManager::RenderCondition.wait(uniqueLock, []
-			{return CThreadManager::RenderThreadStatus == ERenderThreadStatus::PostRender; });
 
 #ifdef _DEBUG
-		EditorManager->EndFrame();
+		//EditorManager->EndFrame();
+		//ImGui::Render();
+		//ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 #endif
 
 		RenderManager->SwapRenderCommandBuffers();
 		Framework->EndFrame();
 
+
+		//CThreadManager::RenderCondition.wait(uniqueLock, []
+		//	{
+		//		return CThreadManager::RenderThreadStatus == ERenderThreadStatus::PostRender;
+		//	});
+		std::unique_lock<std::mutex> uniqueLock(CThreadManager::RenderMutex);
 		CThreadManager::RenderThreadStatus = ERenderThreadStatus::ReadyToRender;
 		uniqueLock.unlock();
 		CThreadManager::RenderCondition.notify_one();
@@ -221,6 +218,11 @@ namespace Havtorn
 	CTextureBank* CEngine::GetTextureBank()
 	{
 		return TextureBank;
+	}
+
+	CThreadManager* CEngine::GetThreadManager()
+	{
+		return ThreadManager;
 	}
 
 	void CEngine::InitWindowsImaging()

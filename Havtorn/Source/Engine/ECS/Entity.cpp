@@ -5,7 +5,7 @@
 
 namespace Havtorn
 {
-	SEntity::SEntity(U64 id, std::string name)
+	SEntity::SEntity(U64 id, const std::string& name)
 		: ID(id)
 		, Name(name)
 	{

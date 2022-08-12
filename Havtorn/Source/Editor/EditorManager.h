@@ -1,6 +1,8 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #pragma once
+#include "Havtorn.h"
+
 #include <filesystem>
 
 struct ID3D11Device;
@@ -73,14 +75,14 @@ namespace Havtorn
 	class CEditorManager
 	{
 	public:
-		CEditorManager();
-		~CEditorManager();
+		__declspec(dllexport) CEditorManager();
+		__declspec(dllexport) ~CEditorManager();
 
-		bool Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager, CScene* scene);
-		void BeginFrame();
-		void Render();
-		void EndFrame();
-		void DebugWindow();
+		bool __declspec(dllexport) Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager, CScene* scene);
+		void __declspec(dllexport) BeginFrame();
+		void __declspec(dllexport) Render();
+		void __declspec(dllexport) EndFrame();
+		void __declspec(dllexport) DebugWindow();
 
 	public:
 		void SetSelectedEntity(Ref<SEntity> entity);
