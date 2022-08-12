@@ -98,19 +98,11 @@ cbuffer PointLightBuffer : register(b3)
 
 cbuffer SpotLightBuffer : register(b4)
 {
-    //float4x4 SpotLightToWorld;
-    //float4x4 SpotLightToView;
-    //float4x4 SpotLightToProjection;
     float4 SpotLightColorAndIntensity;
     float4 SpotLightPositionAndRange;
     float4 SpotLightDirection;
     float4 SpotLightDirectionNormal1;
     float4 SpotLightDirectionNormal2;
-    //float4 UpLeftCorner;
-    //float4 UpRightCorner;
-    //float4 DownLeftCorner;
-    //float4 DownRightCorner;
-    //float2 InnerOuterAngle;
     float OuterAngle;
     float InnerAngle;
     float2 SpotLightPadding;
@@ -145,7 +137,7 @@ cbuffer EmissiveBuffer : register(b7)
 // Cubemap used for environment light shading
 TextureCube environmentTexture : register(t0);
 
-// GBuffer Textures: textures stored in the GBuffer, contains data for models. Used for environment and point light calculations
+// GBuffer Textures: textures stored in the GBuffer, contains data for models. Used for lighting calculations
 Texture2D albedoTextureGBuffer        : register(t1);
 Texture2D normalTextureGBuffer        : register(t2);
 Texture2D vertexNormalTextureGBuffer  : register(t3);

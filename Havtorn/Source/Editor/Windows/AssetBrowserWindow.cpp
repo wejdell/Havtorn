@@ -13,7 +13,7 @@ namespace ImGui
 
 	CAssetBrowserWindow::CAssetBrowserWindow(const char* name, Havtorn::CEditorManager* manager)
 		: CWindow(name, manager)
-		, FileSystem(Havtorn::CEngine::GetInstance()->GetFileSystem())
+		, FileSystem(Havtorn::GEngine::GetFileSystem())
 	{
 		CurrentDirectory = std::filesystem::path(DefaultAssetPath);
 	}

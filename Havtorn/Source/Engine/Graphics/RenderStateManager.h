@@ -48,28 +48,28 @@ namespace Havtorn
 		CRenderStateManager();
 		~CRenderStateManager();
 
-		bool Init(class CGraphicsFramework* aFramework);
+		bool Init(class CGraphicsFramework* framework);
 
-		void SetBlendState(EBlendStates aBlendstate);
-		void SetDepthStencilState(EDepthStencilStates aDepthStencilState, UINT aStencilRef = 0);
-		void SetRasterizerState(ERasterizerStates aRasterizerState);
-		void SetSamplerState(ESamplerStates aSamplerState);
-		void SetAllStates(EBlendStates aBlendState, EDepthStencilStates aDepthStencilState, ERasterizerStates aRasterizerState, ESamplerStates aSamplerState);
+		void SetBlendState(EBlendStates blendstate);
+		void SetDepthStencilState(EDepthStencilStates depthStencilState, U32 stencilRef = 0);
+		void SetRasterizerState(ERasterizerStates rasterizerState);
+		void SetSamplerState(ESamplerStates samplerState);
+		void SetAllStates(EBlendStates blendState, EDepthStencilStates depthStencilState, ERasterizerStates rasterizerState, ESamplerStates samplerState);
 		void SetAllDefault();
 
 		void Release();
 
 	private:
-		bool CreateBlendStates(ID3D11Device* aDevice);
-		bool CreateDepthStencilStates(ID3D11Device* aDevice);
-		bool CreateRasterizerStates(ID3D11Device* aDevice);
-		bool CreateSamplerStates(ID3D11Device* aDevice);
+		bool CreateBlendStates(ID3D11Device* device);
+		bool CreateDepthStencilStates(ID3D11Device* device);
+		bool CreateRasterizerStates(ID3D11Device* device);
+		bool CreateSamplerStates(ID3D11Device* device);
 
 	private:
 		ID3D11DeviceContext* Context;
-		std::array<ID3D11BlendState*, (size_t)EBlendStates::Count> myBlendStates;
-		std::array<ID3D11DepthStencilState*, (size_t)EDepthStencilStates::Count> myDepthStencilStates;
-		std::array<ID3D11RasterizerState*, (size_t)ERasterizerStates::Count> myRasterizerStates;
-		std::array<ID3D11SamplerState*, (size_t)ESamplerStates::Count> mySamplerStates;
+		std::array<ID3D11BlendState*, (U64)EBlendStates::Count> BlendStates;
+		std::array<ID3D11DepthStencilState*, (U64)EDepthStencilStates::Count> DepthStencilStates;
+		std::array<ID3D11RasterizerState*, (U64)ERasterizerStates::Count> RasterizerStates;
+		std::array<ID3D11SamplerState*, (U64)ESamplerStates::Count> SamplerStates;
 	};
 }

@@ -6,10 +6,9 @@
 
 namespace Havtorn
 {
-
 #define NO_FRAMES_TO_AVERAGE 100
 
-	class CTimer 
+	class GTimer 
 	{
 	public:
 		HAVTORN_API static F32 Time();
@@ -17,8 +16,8 @@ namespace Havtorn
 		HAVTORN_API static F32 FixedDt();
 		HAVTORN_API static F32 AverageFrameRate();
 
-		CTimer();
-		~CTimer();
+		GTimer();
+		~GTimer();
 
 		static F32 Mark();
 
@@ -29,7 +28,7 @@ namespace Havtorn
 		float TotalTime() const;
 
 	private:
-		static CTimer* Instance;
+		static GTimer* Instance;
 		std::chrono::steady_clock::time_point First;
 		std::chrono::steady_clock::time_point Last;
 		

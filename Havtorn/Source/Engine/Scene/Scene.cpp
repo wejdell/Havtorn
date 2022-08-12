@@ -3,7 +3,6 @@
 #include "Scene.h"
 
 #include "ECS/ECSInclude.h"
-#include "ECS/Components/DirectionalLightComponent.h"
 #include "Graphics/RenderManager.h"
 
 namespace Havtorn
@@ -28,16 +27,20 @@ namespace Havtorn
 		camera->ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
 		camera->ViewMatrix = SMatrix::LookAtLH(SVector::Zero, SVector::Forward, SVector::Up);
 
+		auto environmentLightEntity = CreateEntity("Environment Light");
+		AddTransformComponentToEntity(environmentLightEntity);
+		renderManager->LoadEnvironmentLightComponent("CubemapTheVisit", AddEnvironmentLightComponentToEntity(environmentLightEntity).get());
+
 		auto directionalLightEntity = CreateEntity("Directional Light");
-
 		AddTransformComponentToEntity(directionalLightEntity);
-
 		auto directionalLight = AddDirectionalLightComponentToEntity(directionalLightEntity);
 		directionalLight->Direction = { 1.0f, 1.0f, -1.0f, 0.0f };
 		directionalLight->Color = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };
 		directionalLight->ShadowmapView.ShadowmapViewportIndex = 0;
 		directionalLight->ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLight->ShadowViewSize.X, directionalLight->ShadowViewSize.Y, directionalLight->ShadowNearAndFarPlane.X, directionalLight->ShadowNearAndFarPlane.Y);
-		//directionalLight->IsVolumetric = true;
+		
+		auto volumetricLight = AddVolumetricLightComponentToEntity(directionalLightEntity);
+		//volumetricLight->IsActive = true;
 
 		InitDemoScene(renderManager);
 
@@ -63,6 +66,9 @@ namespace Havtorn
 		auto pointLightComp = AddPointLightComponentToEntity(pointLightEntity);
 		pointLightComp->ColorAndIntensity = { 0.0f, 1.0f, 1.0f, 10.0f };
 		pointLightComp->Range = 1.0f;
+
+		auto volumetricPointLight = AddVolumetricLightComponentToEntity(pointLightEntity);
+		//volumetricPointLight->IsActive = true;
 
 		const SMatrix constantProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, pointLightComp->Range);
 		const SVector4 constantPosition = pointLightTransform->Transform.GetMatrix().Translation4();
@@ -125,6 +131,9 @@ namespace Havtorn
 		spotlightComp->InnerAngle = 5.0f;
 		spotlightComp->Range = 3.0f;
 
+		auto volumetricSpotLight = AddVolumetricLightComponentToEntity(spotlight);
+		//volumetricSpotLight->IsActive = true;
+
 		const SMatrix spotlightProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, spotlightComp->Range);
 		const SVector4 spotlightPosition = TransformComponents.back()->Transform.GetMatrix().Translation4();
 
@@ -134,12 +143,28 @@ namespace Havtorn
 		spotlightComp->ShadowmapView.ShadowProjectionMatrix = spotlightProjection;
 		// === !Spotlight ===
 
+		// === Decal ===
+		auto decal = CreateEntity("Decal");
+
+		auto& decalTransform = AddTransformComponentToEntity(decal)->Transform;
+		decalTransform.GetMatrix().Translation({ 0.45f, 1.60f, 0.85f });
+
+		auto decalComp = AddDecalComponentToEntity(decal);
+
+		renderManager->LoadDecalComponent({"T_noscare_AL_c", "T_noscare_AL_m", "T_noscare_AL_n"}, decalComp.get());
+		decalComp->ShouldRenderAlbedo = true;
+		decalComp->ShouldRenderMaterial = true;
+		decalComp->ShouldRenderNormal = true;
+		// === !Decal ===
+
 		const std::string modelPath1 = "Assets/Tests/En_P_PendulumClock.hva";
 		const std::vector<std::string> materialNames1 = { "T_PendulumClock", "Checkboard_128x128" };
 		const std::string modelPath2 = "Assets/Tests/En_P_Bed.hva";
 		const std::vector<std::string> materialNames2 = { "T_Bed", "T_Bedsheet" };
 		const std::string modelPath3 = "Assets/Tests/Quad.hva";
 		const std::vector<std::string> materialNames3 = { "T_Quad" };
+		const std::string modelPath4 = "Assets/Tests/En_P_WallLamp.hva";
+		const std::vector<std::string> materialNames4 = { "T_Quad", "T_Emissive", "T_Headlamp" };
 
 		// === Pendulum ===
 		auto pendulum = CreateEntity("Clock");
@@ -160,6 +185,17 @@ namespace Havtorn
 		renderManager->LoadStaticMeshComponent(modelPath2, AddStaticMeshComponentToEntity(bed).get());
 		renderManager->LoadMaterialComponent(materialNames2, AddMaterialComponentToEntity(bed).get());
 		// === !Bed ===
+
+		// === Lamp ===
+		auto lamp = CreateEntity("Lamp");
+
+		auto& transform4 = AddTransformComponentToEntity(lamp)->Transform;
+		transform4.GetMatrix().Translation({ -1.0f, 1.4f, -0.75f });
+		transform4.Rotate({ 0.0f, UMath::DegToRad(90.0f), 0.0f });
+
+		renderManager->LoadStaticMeshComponent(modelPath4, AddStaticMeshComponentToEntity(lamp).get());
+		renderManager->LoadMaterialComponent(materialNames4, AddMaterialComponentToEntity(lamp).get());
+		// === !Lamp ===
 
 		// === Floor ===
 		std::vector<SVector> translations;
@@ -252,7 +288,10 @@ namespace Havtorn
 	COMPONENT_ADDER_DEFINITION(StaticMeshComponent)
 	COMPONENT_ADDER_DEFINITION(CameraComponent)
 	COMPONENT_ADDER_DEFINITION(MaterialComponent)
+	COMPONENT_ADDER_DEFINITION(EnvironmentLightComponent)
 	COMPONENT_ADDER_DEFINITION(DirectionalLightComponent)
 	COMPONENT_ADDER_DEFINITION(PointLightComponent)
 	COMPONENT_ADDER_DEFINITION(SpotLightComponent)
+	COMPONENT_ADDER_DEFINITION(VolumetricLightComponent)
+	COMPONENT_ADDER_DEFINITION(DecalComponent)
 }

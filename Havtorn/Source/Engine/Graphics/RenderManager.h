@@ -41,17 +41,24 @@ namespace Havtorn
 	{
 		Fullscreen = 0,
 		StaticMesh = 1,
-		PointAndSpotLight = 2,
-		EditorPreview = 3,
+		Decal = 2,
+		PointAndSpotLight = 3,
+		EditorPreview = 4,
 	};
 
 	enum class EPixelShaders
 	{
 		GBuffer = 0,
-		DeferredDirectional = 1,
-		DeferredPoint = 2,
-		DeferredSpot = 3,
-		EditorPreview = 4,
+		DecalAlbedo = 1,
+		DecalMaterial = 2,
+		DecalNormal = 3,
+		DeferredDirectional = 4,
+		DeferredPoint = 5,
+		DeferredSpot = 6,
+		VolumetricDirectional = 7,
+		VolumetricPoint = 8,
+		VolumetricSpot = 9,
+		EditorPreview = 10,
 	};
 
 	enum class ESamplers
@@ -70,6 +77,8 @@ namespace Havtorn
 	struct SRenderCommand;
 	struct SStaticMeshComponent;
 	struct SMaterialComponent;
+	struct SDecalComponent;
+	struct SEnvironmentLightComponent;
 
 	struct SRenderCommandComparer
 	{
@@ -97,6 +106,9 @@ namespace Havtorn
 		//const std::vector<ID3D11ShaderResourceView*>& GetTextures() const;
 		HAVTORN_API EMaterialConfiguration GetMaterialConfiguration() const;
 		HAVTORN_API SVector2<F32> GetShadowAtlasResolution() const;
+		
+		void LoadDecalComponent(const std::vector<std::string>& textureNames, SDecalComponent* outDecalComponent);
+		void LoadEnvironmentLightComponent(const std::string& ambientCubemapTextureName, SEnvironmentLightComponent* outEnvironmentLightComponent);
 
 		HAVTORN_API void* RenderStaticMeshAssetTexture(const std::string& fileName);
 		HAVTORN_API void* GetTextureAssetTexture(const std::string& fileName);
@@ -105,10 +117,6 @@ namespace Havtorn
 		[[nodiscard]] HAVTORN_API const CFullscreenTexture& GetRenderedSceneTexture() const;
 		void PushRenderCommand(SRenderCommand& command);
 		void SwapRenderCommandBuffers();
-		//void SetBrokenScreen(bool aShouldSetBrokenScreen);
-
-		//const CFullscreenRenderer::SPostProcessingBufferData& GetPostProcessingBufferData() const;
-		//void SetPostProcessingBufferData(const CFullscreenRenderer::SPostProcessingBufferData& someBufferData);
 
 	public:
 		HAVTORN_API static U32 NumberOfDrawCallsThisFrame;
@@ -118,6 +126,7 @@ namespace Havtorn
 		void InitRenderTextures(CWindowHandler* windowHandler);
 		void InitShadowmapAtlas(SVector2<F32> atlasResolution);
 		void InitShadowmapLOD(SVector2<F32> topLeftCoordinate, const SVector2<F32>& widthAndHeight, const SVector2<F32>& depth, const SVector2<F32>& atlasResolution, U16 mapsInLod, U16 startIndex);
+		void InitDecalResources();
 		void InitPointLightResources();
 		void InitSpotLightResources();
 		void InitEditorResources();
@@ -125,6 +134,10 @@ namespace Havtorn
 
 	private:
 		void ToggleRenderPass(bool shouldToggleForwards = true);
+
+		void VolumetricBlur();
+		void RenderBloom();
+		void DebugShadowAtlas();
 
 	private:
 		template<typename T>
@@ -170,6 +183,13 @@ namespace Havtorn
 			SMatrix ToWorldFromObject;
 		} ObjectBufferData;
 		HV_ASSERT_BUFFER(SObjectBufferData)
+
+		struct SDecalBufferData
+		{
+			SMatrix ToWorld;
+			SMatrix ToObjectSpace;
+		} DecalBufferData;
+		HV_ASSERT_BUFFER(SDecalBufferData)
 
 		struct SDirectionalLightBufferData
 		{
@@ -219,28 +239,29 @@ namespace Havtorn
 			F32 ScatteringProbability = 0.0001f;
 			F32 HenyeyGreensteinGValue = 0.0f;
 		} VolumetricLightBufferData;
+		HV_ASSERT_BUFFER(SVolumetricLightBufferData)
+
+		struct SEmissiveBufferData
+		{
+			F32 EmissiveStrength = 1.0f;
+			SVector Padding;
+		} EmissiveBufferData;
+		HV_ASSERT_BUFFER(SEmissiveBufferData)
 
 	private:
 		CGraphicsFramework* Framework;
 		ID3D11DeviceContext* Context;
 		ID3D11Buffer* FrameBuffer;
 		ID3D11Buffer* ObjectBuffer;
+		ID3D11Buffer* DecalBuffer;
 		ID3D11Buffer* DirectionalLightBuffer;
 		ID3D11Buffer* PointLightBuffer;
 		ID3D11Buffer* SpotLightBuffer;
 		ID3D11Buffer* ShadowmapBuffer;
 		ID3D11Buffer* VolumetricLightBuffer;
+		ID3D11Buffer* EmissiveBuffer;
 		CRenderStateManager RenderStateManager;
-		//CForwardRenderer ForwardRenderer;
-		//CDeferredRenderer myDeferredRenderer;
-		//CLightRenderer myLightRenderer;
 		CFullscreenRenderer FullscreenRenderer;
-		//CParticleRenderer myParticleRenderer;
-		//CVFXRenderer myVFXRenderer;
-		//CSpriteRenderer mySpriteRenderer;
-		//CTextRenderer myTextRenderer;
-		//CShadowRenderer myShadowRenderer;
-		//CDecalRenderer myDecalRenderer;
 
 		CFullscreenTextureFactory FullscreenTextureFactory;
 		CFullscreenTexture RenderedScene;
@@ -248,16 +269,14 @@ namespace Havtorn
 		CFullscreenTexture IntermediateTexture;
 		CFullscreenTexture IntermediateDepth;
 		CFullscreenTexture ShadowAtlasDepth;
-		//CFullscreenTexture myBoxLightShadowDepth;
 		CFullscreenTexture DepthCopy;
-		//CFullscreenTexture myLuminanceTexture;
-		//CFullscreenTexture myHalfSizeTexture;
-		//CFullscreenTexture myQuarterSizeTexture;
-		//CFullscreenTexture myBlurTexture1;
-		//CFullscreenTexture myBlurTexture2;
-		//CFullscreenTexture myVignetteTexture;
-		//CFullscreenTexture myVignetteOverlayTexture;
-		//CFullscreenTexture myDeferredLightingTexture;
+
+		CFullscreenTexture HalfSizeTexture;
+		CFullscreenTexture QuarterSizeTexture;
+		CFullscreenTexture BlurTexture1;
+		CFullscreenTexture BlurTexture2;
+		CFullscreenTexture VignetteTexture;
+
 		CFullscreenTexture VolumetricAccumulationBuffer;
 		CFullscreenTexture VolumetricBlurTexture;
 		CFullscreenTexture SSAOBuffer;
@@ -266,7 +285,7 @@ namespace Havtorn
 		CFullscreenTexture TonemappedTexture;
 		CFullscreenTexture AntiAliasedTexture;
 		CGBuffer GBuffer;
-		//CGBuffer myGBufferCopy;
+
 		CRenderCommandHeap RenderCommandsA;
 		CRenderCommandHeap RenderCommandsB;
 
@@ -280,9 +299,8 @@ namespace Havtorn
 		bool DoFullRender;
 		bool UseAntiAliasing;
 		bool UseBrokenScreenPass;
+		bool ShouldBlurVolumetricBuffer = false;
 
-		//std::vector<std::string> MaterialNames;
-		//std::vector<ID3D11ShaderResourceView*> Textures;
 		std::vector<ID3D11VertexShader*> VertexShaders;
 		std::vector<ID3D11PixelShader*> PixelShaders;
 		std::vector<ID3D11SamplerState*> Samplers;
@@ -299,8 +317,6 @@ namespace Havtorn
 		ID3D11ShaderResourceView* DefaultAlbedoTexture = nullptr;
 		ID3D11ShaderResourceView* DefaultNormalTexture = nullptr;
 		ID3D11ShaderResourceView* DefaultMaterialTexture = nullptr;
-
-		ID3D11ShaderResourceView* DefaultCubemap = nullptr;
 		
 		EMaterialConfiguration MaterialConfiguration = EMaterialConfiguration::AlbedoMaterialNormal_Packed;
 		U8 TexturesPerMaterial = 3;

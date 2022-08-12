@@ -10,10 +10,12 @@ namespace Havtorn
 		StaticMeshComponent,
 		CameraComponent,
 		MaterialComponent,
+		EnvironmentLightComponent,
 		DirectionalLightComponent,
 		PointLightComponent,
 		SpotLightComponent,
 		VolumetricLightComponent,
+		DecalComponent,
 		Count
 	};
 }
