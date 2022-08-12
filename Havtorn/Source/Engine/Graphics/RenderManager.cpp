@@ -1078,9 +1078,9 @@ namespace Havtorn
 	void CRenderManager::Release()
 	{
 		Clear(ClearColor);
-		GEngine::GetInstance()->Framework->GetContext()->OMSetRenderTargets(0, 0, 0);
-		GEngine::GetInstance()->Framework->GetContext()->OMGetDepthStencilState(0, 0);
-		GEngine::GetInstance()->Framework->GetContext()->ClearState();
+		GEngine::Instance->Framework->GetContext()->OMSetRenderTargets(0, 0, 0);
+		GEngine::Instance->Framework->GetContext()->OMGetDepthStencilState(0, 0);
+		GEngine::Instance->Framework->GetContext()->ClearState();
 
 		//Backbuffer.ReleaseTexture();
 		//myIntermediateTexture.ReleaseTexture();

@@ -59,10 +59,7 @@ namespace Havtorn
 	{
 		friend class GEngine;
 
-	private:
-		CFileSystem();
-		~CFileSystem() = default;
-
+	public:
 		static HAVTORN_API bool DoesFileExist(const std::string& fileName);
 
 		void HAVTORN_API OpenFile(const std::string& fileName, EFileMode mode);
@@ -73,8 +70,14 @@ namespace Havtorn
 		void HAVTORN_API Deserialize(const std::string& fileName, std::string& outData);
 		U64 HAVTORN_API GetFileSize(const std::string& fileName) const;
 
-		std::filesystem::recursive_directory_iterator GetDirectoryIterator(const std::string& root);
 		void HAVTORN_API IterateThroughFiles(const std::string& root);
+
+	private:
+		CFileSystem();
+		~CFileSystem() = default;
+
+		std::filesystem::recursive_directory_iterator GetDirectoryIterator(const std::string& root);
+
 	private:
 		std::ifstream InputStream;
 		std::ofstream OutputStream;

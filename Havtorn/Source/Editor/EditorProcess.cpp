@@ -22,7 +22,7 @@ namespace Havtorn
 	{
 		EditorManager = new CEditorManager();
 
-		auto havtornEngine = CEngine::GetInstance();
+		auto havtornEngine = GEngine::Instance;
 		if (havtornEngine == nullptr)
 		{
 			assert(havtornEngine != nullptr);

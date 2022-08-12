@@ -40,10 +40,10 @@ namespace Havtorn
 
 		HRESULT CreateShaderResourceView(ID3D11Device* device, const std::string& filePath, ID3D11ShaderResourceView** outShaderResourceView)
 		{
-			const U64 fileSize = CEngine::GetInstance()->GetFileSystem()->GetFileSize(filePath);
+			const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
 			char* data = new char[fileSize];
 
-			CEngine::GetInstance()->GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));
+			GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));
 
 			STextureFileHeader assetFile;
 			assetFile.Deserialize(data);
