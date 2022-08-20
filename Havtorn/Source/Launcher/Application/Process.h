@@ -1,10 +1,10 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
-#include <Core/Core.h>
+#pragma once
 
 namespace Havtorn
 {
-	class HAVTORN_API IProcess
+	class _declspec(dllexport) IProcess
 	{
 	public:
 		IProcess() = default;

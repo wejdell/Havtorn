@@ -1,15 +1,15 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include "Editor/EditorToggleable.h"
+#include "EditorToggleable.h"
 
 namespace ImGui
 {
-	class CHelpMenu : public CToggleable
+	class CEditMenu : public CToggleable
 	{
 	public:
-		CHelpMenu(const char* aName, Havtorn::CEditorManager* manager);
-		~CHelpMenu() override;
+		CEditMenu(const char* aName, Havtorn::CEditorManager* manager);
+		~CEditMenu() override;
 		void OnEnable() override;
 		void OnInspectorGUI() override;
 		void OnDisable() override;

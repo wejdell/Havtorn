@@ -6,7 +6,7 @@
 
 namespace Havtorn
 {
-	Ref<GLog> GLog::Logger;
+	HAVTORN_API Ref<GLog> GLog::Logger;
 
 	void GLog::Init()
 	{

@@ -170,6 +170,7 @@ project "Editor"
 		"Source/%{prj.name}",
 		"External/rapidjson",
 		"External/imgui",
+		"External/DirectXTex",
 		"Source/Engine",
 		"Source/ImGui"
 	}
@@ -180,7 +181,11 @@ project "Editor"
 		"ImGui"
 	}
 
-	libdirs {  }
+	libdirs 
+	{ 
+		"Lib/",
+		"External/Lib"
+	}
 
 	floatingpoint "Fast"
 	debugdir "Bin/"
@@ -192,8 +197,7 @@ project "Editor"
 
 		defines 
 		{
-			"HV_PLATFORM_WINDOWS",
-			"HV_BUILD_DLL"
+			"HV_PLATFORM_WINDOWS"
 		}
 
 		postbuildcommands

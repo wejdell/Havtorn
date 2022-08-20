@@ -1,12 +1,13 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
-#include "hvpch.h"
 #include "HierarchyWindow.h"
 #include <imgui.h>
-#include "Editor/EditorManager.h"
+#include "EditorManager.h"
 
 #include "Scene/Scene.h"
 #include "ECS/Entity.h"
+#include "Core/MathTypes/EngineMath.h"
+#include "Core/CoreTypes.h"
 
 namespace ImGui
 {

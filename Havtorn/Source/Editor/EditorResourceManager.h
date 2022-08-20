@@ -2,6 +2,11 @@
 
 #pragma once
 
+#include <vector>
+#include <string>	
+
+#include "Havtorn.h"
+
 struct ID3D11ShaderResourceView;
 
 namespace Havtorn

@@ -4,6 +4,9 @@
 #include "Graphics/GraphicsUtilities.h"
 #include "Graphics/RenderManager.h"
 
+//#include <DirectXTex/DirectXTex.h>
+//#pragma comment(lib, "d3d11.lib")
+
 namespace Havtorn
 {
 	ID3D11ShaderResourceView* Havtorn::CEditorResourceManager::GetEditorTexture(EEditorTexture texture) const

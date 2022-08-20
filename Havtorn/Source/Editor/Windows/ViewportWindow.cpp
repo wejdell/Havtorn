@@ -1,10 +1,9 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
-#include "hvpch.h"
 #include "ViewportWindow.h"
 #include <imgui.h>
-#include "Editor/EditorManager.h"
-#include "Editor/EditorResourceManager.h"
+#include "EditorManager.h"
+#include "EditorResourceManager.h"
 #include "Graphics/RenderManager.h"
 #include "Graphics/FullscreenTexture.h"
 

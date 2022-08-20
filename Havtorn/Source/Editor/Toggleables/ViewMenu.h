@@ -1,7 +1,7 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include "Editor/EditorToggleable.h"
+#include "EditorToggleable.h"
 
 namespace ImGui
 {

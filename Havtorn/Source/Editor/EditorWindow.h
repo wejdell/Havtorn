@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "Havtorn.h"
+
 namespace Havtorn
 {
 	class CEditorManager;

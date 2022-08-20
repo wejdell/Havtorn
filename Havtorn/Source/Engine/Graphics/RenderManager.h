@@ -98,28 +98,27 @@ namespace Havtorn
 
 		void Release();
 
-		void ConvertToHVA(const std::string& filePath, EAssetType assetType);
-		void LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent);
-		void LoadMaterialComponent(const std::vector<std::string>& materialNames, SMaterialComponent* outMaterialComponent);
+		HAVTORN_API void ConvertToHVA(const std::string& filePath, EAssetType assetType);
+		HAVTORN_API void LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent);
+		HAVTORN_API void LoadMaterialComponent(const std::vector<std::string>& materialNames, SMaterialComponent* outMaterialComponent);
+		// NR: Note that we use the file *name* instead of the full path here, we assume that it already exists in the registry.
+		HAVTORN_API bool TryLoadStaticMeshComponent(const std::string& fileName, SStaticMeshComponent* outStaticMeshComponent) const;
+
+		HAVTORN_API EMaterialConfiguration GetMaterialConfiguration() const;
+		HAVTORN_API SVector2<F32> GetShadowAtlasResolution() const;
+		
 		void LoadDecalComponent(const std::vector<std::string>& textureNames, SDecalComponent* outDecalComponent);
 		void LoadEnvironmentLightComponent(const std::string& ambientCubemapTextureName, SEnvironmentLightComponent* outEnvironmentLightComponent);
 
-		EMaterialConfiguration GetMaterialConfiguration() const;
-		SVector2<F32> GetShadowAtlasResolution() const;
-
-		// NR: Note that we use the file *name* instead of the full path here, we assume that it already exists in the registry.
-		bool TryLoadStaticMeshComponent(const std::string& fileName, SStaticMeshComponent* outStaticMeshComponent) const;
-
-		void* RenderStaticMeshAssetTexture(const std::string& filePath);
-		void* GetTextureAssetTexture(const std::string& filePath);
-
+		HAVTORN_API void* RenderStaticMeshAssetTexture(const std::string& fileName);
+		HAVTORN_API void* GetTextureAssetTexture(const std::string& fileName);
 	public:
-		[[nodiscard]] const CFullscreenTexture& GetRenderedSceneTexture() const;
+		[[nodiscard]] HAVTORN_API const CFullscreenTexture& GetRenderedSceneTexture() const;
 		void PushRenderCommand(SRenderCommand& command);
 		void SwapRenderCommandBuffers();
 
 	public:
-		static U32 NumberOfDrawCallsThisFrame;
+		HAVTORN_API static U32 NumberOfDrawCallsThisFrame;
 
 	private:
 		void Clear(SVector4 clearColor);

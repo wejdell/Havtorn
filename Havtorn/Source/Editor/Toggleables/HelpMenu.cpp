@@ -1,9 +1,8 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
-#include "hvpch.h"
 #include "HelpMenu.h"
 #include <imgui.h>
-#include "Editor/EditorManager.h"
+#include "EditorManager.h"
 
 namespace ImGui
 {

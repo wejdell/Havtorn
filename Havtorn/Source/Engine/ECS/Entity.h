@@ -2,13 +2,21 @@
 
 #pragma once
 
+#include "Core/Core.h"
+#include "ECS/ECS.h"
+#include "Core/HavtornString.h"
+
+#include <array>
+
 namespace Havtorn
 {
-	struct SEntity
-	{
-		explicit SEntity(U64 id, std::string name);
+    
 
-		const std::string Name = "";
+	struct HAVTORN_API SEntity
+	{
+		explicit SEntity(U64 id, const std::string& name);
+
+        const CHavtornString Name;
 		const U64 ID = 0;
 
 		void AddComponent(EComponentType type, U64 arrayIndex) const;

@@ -5,29 +5,13 @@
 #include "WindowHandler.h"
 
 #include "Input/Input.h"
-//#include "JsonReader.h"
-#ifdef _DEBUG
-    #include "Core/imgui_impl_win32.h"
-#endif
-//#include "PostMaster.h"
-
-#ifdef _DEBUG
-IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-#endif // DEBUG
 
 namespace Havtorn
 {
     LRESULT CWindowHandler::WinProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam)
     {
         static CWindowHandler* windowHandler = nullptr;
-        CREATESTRUCT* createStruct;
-
-#ifdef _DEBUG
-        if (ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam))
-        {
-            return true;
-        }
-#endif
+        CREATESTRUCT* createStruct;    
 
         switch (uMsg)
         {
@@ -37,7 +21,7 @@ namespace Havtorn
             PostQuitMessage(0);
             return 0;
 
-        case WM_CREATE:
+        case WM_CREATE: 
             createStruct = reinterpret_cast<CREATESTRUCT*>(lParam);
             windowHandler = reinterpret_cast<CWindowHandler*>(createStruct->lpCreateParams);
             break;
@@ -249,7 +233,6 @@ namespace Havtorn
             while (::ShowCursor(FALSE) >= 0);
 
             SVector2<F32> center = GetCenterPosition();
-            SetCursorPos(static_cast<I16>(center.X), static_cast<I16>(center.Y));
         }
         else {
             while (::ShowCursor(TRUE) < 0);
