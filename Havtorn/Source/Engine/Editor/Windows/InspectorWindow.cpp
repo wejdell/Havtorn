@@ -130,12 +130,25 @@ namespace ImGui
 		}
 	}
 
-	void CInspectorWindow::InspectStaticMeshComponent(Havtorn::I64 /*staticMeshComponentIndex*/)
+	void CInspectorWindow::InspectStaticMeshComponent(Havtorn::I64 staticMeshComponentIndex)
 	{
+		Havtorn::Ref<Havtorn::SStaticMeshComponent> staticMesh = nullptr;
+
 		if (ImGui::CollapsingHeader("Static Mesh", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			//auto& staticMesh = Scene->GetStaticMeshComponents()[staticMeshComponentIndex];
+			staticMesh = Scene->GetStaticMeshComponents()[staticMeshComponentIndex];
+			Havtorn::SEditorAssetRepresentation* assetRep = Manager->GetAssetRepFromName(staticMesh->Name).get();
+
+			if (ImGui::ImageButton(assetRep->TextureRef, { TexturePreviewSize.X, TexturePreviewSize.Y }))
+			{
+				ImGui::OpenPopup("Select Mesh Asset");
+				ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+			}
+			ImGui::Text(assetRep->Name.c_str());
+			ImGui::TextDisabled("Number Of Materials: %i", staticMesh->NumberOfMaterials);
 		}
+		
+		OpenSelectMeshAssetModal(staticMesh.get());
 	}
 
 	void CInspectorWindow::InspectCameraComponent(Havtorn::I64 cameraComponentIndex)
@@ -194,7 +207,7 @@ namespace ImGui
 				}
 			}
 		
-			MaterialRefToChangeIndex = min(static_cast<Havtorn::U16>(materialComp->MaterialReferences.size()), MaterialRefToChangeIndex);
+			MaterialRefToChangeIndex = Havtorn::UMath::Min(static_cast<Havtorn::U16>(materialComp->MaterialReferences.size()), MaterialRefToChangeIndex);
 			OpenSelectTextureAssetModal(materialComp->MaterialReferences[MaterialRefToChangeIndex]);
 		}
 	}
@@ -334,6 +347,93 @@ namespace ImGui
 			}
 
 			OpenSelectTextureAssetModal(decalComp->TextureReferences[MaterialRefToChangeIndex]);
+		}
+	}
+
+	void CInspectorWindow::OpenSelectMeshAssetModal(Havtorn::SStaticMeshComponent* meshAssetToChange)
+	{
+		if (ImGui::BeginPopupModal("Select Mesh Asset", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			F32 thumbnailPadding = 4.0f;
+			F32 cellWidth = TexturePreviewSize.X * 0.75f + thumbnailPadding;
+			F32 panelWidth = 256.0f;
+			Havtorn::I32 columnCount = static_cast<Havtorn::I32>(panelWidth / cellWidth);
+			Havtorn::U32 id = 0;
+
+			if (ImGui::BeginTable("NewMeshAssetTable", columnCount))
+			{
+				/* TODO.NR: See if one can make a general folder structure exploration function,
+				* return true and an assetRep if a directory is double clicked. Maybe multiple 
+				* versions with slight variations. Want to be able to go to any directory. 
+				* Alternative might be GetDoubleClickedAssetRep(startingDirectory), use return 
+				* value as an optional.
+				*/
+				for (auto& entry : std::filesystem::recursive_directory_iterator("Assets/Tests"))
+				{
+					if (entry.is_directory())
+						continue;
+
+					auto& assetRep = Manager->GetAssetRepFromDirEntry(entry);
+
+					ImGui::TableNextColumn();
+					ImGui::PushID(id++);
+
+					if (ImGui::ImageButton(assetRep->TextureRef, { TexturePreviewSize.X * 0.75f, TexturePreviewSize.Y * 0.75f }))
+					{
+						Manager->GetRenderManager()->TryLoadStaticMeshComponent(assetRep->Name, meshAssetToChange);
+
+						if (meshAssetToChange->Entity->HasComponent(EComponentType::MaterialComponent))
+						{
+							auto& materialComp = Scene->GetMaterialComponents()[meshAssetToChange->Entity->GetComponentIndex(EComponentType::MaterialComponent)];
+							Havtorn::EMaterialConfiguration materialConfig = Manager->GetRenderManager()->GetMaterialConfiguration();
+							Havtorn::U8 texturesPerMaterial = 0;
+							switch (materialConfig)
+							{
+							case Havtorn::EMaterialConfiguration::AlbedoMaterialNormal_Packed:
+								texturesPerMaterial = 3;
+								break;
+							default:
+								break;
+							}
+
+							Havtorn::U8 materialReferencesByMesh = meshAssetToChange->NumberOfMaterials * texturesPerMaterial;
+							Havtorn::I8 referenceDifference = materialReferencesByMesh - static_cast<Havtorn::U8>(materialComp->MaterialReferences.size());
+
+							// NR: Add texture references to correspond with mesh
+							if (referenceDifference > 0)
+							{
+								for (Havtorn::U8 i = 0; i < referenceDifference; i++)
+								{
+									materialComp->MaterialReferences.push_back(1);
+								}
+							}
+							// NR: Remove texture references to correspond with mesh
+							else if (referenceDifference < 0)
+							{
+								for (Havtorn::U8 i = 0; i < referenceDifference * -1.0f; i++)
+								{
+									materialComp->MaterialReferences.pop_back();
+								}
+							}
+							// NR: Do nothing
+							else
+							{ 
+							}
+						}
+
+						ImGui::CloseCurrentPopup();
+					}
+
+					ImGui::Text(assetRep->Name.c_str());
+					ImGui::PopID();
+				}
+
+				ImGui::EndTable();
+			}
+
+			if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) { ImGui::CloseCurrentPopup(); }
+
+			ImGui::EndPopup();
 		}
 	}
 

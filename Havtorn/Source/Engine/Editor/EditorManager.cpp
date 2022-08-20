@@ -157,6 +157,18 @@ namespace Havtorn
 		return AssetRepresentations[0];
 	}
 
+	const Ptr<SEditorAssetRepresentation>& CEditorManager::GetAssetRepFromName(const std::string& assetName)
+	{
+		for (const auto& rep : AssetRepresentations)
+		{
+			if (assetName == rep->Name)
+				return rep;
+		}
+
+		// NR: Return empty rep
+		return AssetRepresentations[0];
+	}
+
 	const Ptr<SEditorAssetRepresentation>& CEditorManager::GetAssetRepFromImageRef(void* imageRef)
 	{
 		for (const auto& rep : AssetRepresentations)
@@ -358,7 +370,38 @@ namespace Havtorn
 		// NR: Fill first slot with a null entry
 		AssetRepresentations.emplace_back(std::make_unique<SEditorAssetRepresentation>());
 
-		// Preprocess - Import non-.hva files to .hva
+		PreProcessAssets();
+
+		for (const auto& entry : std::filesystem::recursive_directory_iterator(std::filesystem::path("Assets")))
+		{
+			if (entry.is_directory())
+				continue;
+
+			std::string fileName = entry.path().string();
+			const U64 fileSize =  UMath::Max(GEngine::GetFileSystem()->GetFileSize(fileName), sizeof(EAssetType));
+			char* data = new char[fileSize];
+
+			GEngine::GetFileSystem()->Deserialize(fileName, data, static_cast<U32>(fileSize));
+
+			SEditorAssetRepresentation rep;
+
+			const U32 size = sizeof(EAssetType);
+			memcpy(&rep.AssetType, &data[0], size);
+
+			rep.DirectoryEntry = entry;
+			rep.Name = entry.path().filename().string();
+			rep.Name = rep.Name.substr(0, rep.Name.length() - 4);
+			rep.TextureRef = ResourceManager->RenderAssetTexure(rep.AssetType, fileName);
+
+			AssetRepresentations.emplace_back(std::make_unique<SEditorAssetRepresentation>(rep));
+
+			delete[] data;
+		}
+	}
+
+	void CEditorManager::PreProcessAssets()
+	{
+		// Import non-.hva files to .hva
 		for (const auto& entry : std::filesystem::recursive_directory_iterator(std::filesystem::path("Assets")))
 		{
 			if (entry.path().extension() == ".hva" || entry.is_directory())
@@ -376,33 +419,10 @@ namespace Havtorn
 				assetType = EAssetType::StaticMesh;
 			else if (extension == ".dds" || extension == ".tga")
 				assetType = EAssetType::Texture;
-
-			ResourceManager->ConvertToHVA(fileName, assetType);
-		}
-
-		for (const auto& entry : std::filesystem::recursive_directory_iterator(std::filesystem::path("Assets")))
-		{
-			if (entry.is_directory())
+			else
 				continue;
 
-			std::string fileName = entry.path().string();
-			const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(fileName);
-			char* data = new char[fileSize];
-
-			GEngine::GetFileSystem()->Deserialize(fileName, data, static_cast<U32>(fileSize));
-
-			SEditorAssetRepresentation rep;
-
-			const U32 size = sizeof(EAssetType);
-			memcpy(&rep.AssetType, &data[0], size);
-
-			rep.DirectoryEntry = entry;
-			rep.Name = entry.path().filename().string();
-			rep.TextureRef = ResourceManager->RenderAssetTexure(rep.AssetType, fileName);
-
-			AssetRepresentations.emplace_back(std::make_unique<SEditorAssetRepresentation>(rep));
-
-			delete[] data;
+			ResourceManager->ConvertToHVA(fileName, assetType);
 		}
 	}
 

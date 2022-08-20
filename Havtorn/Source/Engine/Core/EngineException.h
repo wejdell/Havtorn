@@ -6,23 +6,22 @@
 #include <string>
 #include <comdef.h>
 
-#define ENGINE_HR_ERROR_MESSAGE(hr, ...)	{ Havtorn::EngineException::EngineErrorMessage(hr, __LINE__, __FUNCTION__, __FILE__, ##__VA_ARGS__);  }
+#define ENGINE_HR_ERROR_MESSAGE(hr, ...)	{ Havtorn::GEngineException::EngineErrorMessage(hr, __LINE__, __FUNCTION__, __FILE__, ##__VA_ARGS__);  }
 #define ENGINE_HR(hr)						{ HRESULT hresult = hr; if (FAILED(hresult))	{ ENGINE_HR_ERROR_MESSAGE(hresult, ""); }}
 #define ENGINE_HR_BOOL(hr)					{ HRESULT hresult = hr; if (FAILED(hresult))	{ ENGINE_HR_ERROR_MESSAGE(hresult, ""); return 0;}}
 #define ENGINE_HR_MESSAGE(hr, ...)			{ HRESULT hresult = hr; if (FAILED(hresult))	{ ENGINE_HR_ERROR_MESSAGE(hresult, ##__VA_ARGS__); }}
 #define ENGINE_HR_BOOL_MESSAGE(hr, ...)		{ HRESULT hresult = hr; if (FAILED(hresult))	{ ENGINE_HR_ERROR_MESSAGE(hresult, ##__VA_ARGS__); return 0;}}
 
-#define ENGINE_ERROR_MESSAGE(...)				{ Havtorn::EngineException::EngineErrorMessage(__LINE__, __FUNCTION__, __FILE__, ##__VA_ARGS__);  }
+#define ENGINE_ERROR_MESSAGE(...)				{ Havtorn::GEngineException::EngineErrorMessage(__LINE__, __FUNCTION__, __FILE__, ##__VA_ARGS__);  }
 #define ENGINE_ERROR_BOOL(result)				{ if (!result)	{ ENGINE_ERROR_MESSAGE(""); return 0;}}
 #define ENGINE_ERROR_BOOL_MESSAGE(result, ...)	{ if (!result)	{ ENGINE_ERROR_MESSAGE(##__VA_ARGS__); return 0;}}
 #define ENGINE_BOOL_POPUP(result, ...)			{ if (!result)  { ENGINE_ERROR_MESSAGE(##__VA_ARGS__); }}
 
 namespace Havtorn
 {
-	class EngineException
+	class GEngineException
 	{
 	public:
-
 		static void EngineErrorMessage(HRESULT result, const int line, const char* function, const char* file, const char* formattedMessage, ...)
 		{
 			_com_error err(result);

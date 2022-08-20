@@ -14,6 +14,8 @@ namespace Havtorn
 
 		// Asset Data
 		std::vector<SDrawCallData> DrawCallData;
+		std::string Name = "";
+		U8 NumberOfMaterials = 0;
 
 		// Render Data
 		U8 VertexShaderIndex = 0;

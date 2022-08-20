@@ -98,8 +98,8 @@ namespace Havtorn
 
 		void Release();
 
-		void ConvertToHVA(const std::string& fileName, EAssetType assetType);
-		void LoadStaticMeshComponent(const std::string& fileName, SStaticMeshComponent* outStaticMeshComponent);
+		void ConvertToHVA(const std::string& filePath, EAssetType assetType);
+		void LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent);
 		void LoadMaterialComponent(const std::vector<std::string>& materialNames, SMaterialComponent* outMaterialComponent);
 		void LoadDecalComponent(const std::vector<std::string>& textureNames, SDecalComponent* outDecalComponent);
 		void LoadEnvironmentLightComponent(const std::string& ambientCubemapTextureName, SEnvironmentLightComponent* outEnvironmentLightComponent);
@@ -107,8 +107,11 @@ namespace Havtorn
 		EMaterialConfiguration GetMaterialConfiguration() const;
 		SVector2<F32> GetShadowAtlasResolution() const;
 
-		void* RenderStaticMeshAssetTexture(const std::string& fileName);
-		void* GetTextureAssetTexture(const std::string& fileName);
+		// NR: Note that we use the file *name* instead of the full path here, we assume that it already exists in the registry.
+		bool TryLoadStaticMeshComponent(const std::string& fileName, SStaticMeshComponent* outStaticMeshComponent) const;
+
+		void* RenderStaticMeshAssetTexture(const std::string& filePath);
+		void* GetTextureAssetTexture(const std::string& filePath);
 
 	public:
 		[[nodiscard]] const CFullscreenTexture& GetRenderedSceneTexture() const;
