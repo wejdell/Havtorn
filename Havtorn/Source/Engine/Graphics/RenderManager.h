@@ -112,6 +112,7 @@ namespace Havtorn
 
 		HAVTORN_API void* RenderStaticMeshAssetTexture(const std::string& fileName);
 		HAVTORN_API void* GetTextureAssetTexture(const std::string& fileName);
+
 	public:
 		[[nodiscard]] HAVTORN_API const CFullscreenTexture& GetRenderedSceneTexture() const;
 		void PushRenderCommand(SRenderCommand& command);
