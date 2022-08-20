@@ -10,11 +10,10 @@
 #include "Threading/ThreadManager.h"
 #include "Graphics/GraphicsFramework.h"
 #include "Graphics/TextureBank.h"
-#ifdef _DEBUG
-#include "Editor/EditorManager.h"
-#include "../ImGui/imgui.h"
-#endif
 
+//#include "WindowHandler.h"
+//#include "DirectXFramework.h"
+//#include "ForwardRenderer.h"
 #include "Scene/Scene.h"
 #include "ECS/ECSInclude.h"
 
@@ -48,11 +47,6 @@ namespace Havtorn
 		Framework = new CGraphicsFramework();
 		TextureBank = new CTextureBank();
 		RenderManager = new CRenderManager();
-#ifdef _DEBUG
-		EditorManager = new CEditorManager();
-		//ImGui::SetCurrentContext();// Req: set for DLL export of ImGui
-		//ImGui::SetAllocatorFunctions();
-#endif
 		InputMapper = new CInputMapper();
 		Scene = new CScene();
 	}
@@ -62,7 +56,7 @@ namespace Havtorn
 		SAFE_DELETE(Scene);
 		SAFE_DELETE(InputMapper);
 #ifdef _DEBUG
-		SAFE_DELETE(EditorManager);
+		//SAFE_DELETE(EditorManager);
 #endif
 		SAFE_DELETE(ThreadManager);
 		SAFE_DELETE(RenderManager);
@@ -86,10 +80,10 @@ namespace Havtorn
 		ENGINE_ERROR_BOOL_MESSAGE(InputMapper->Init(), "Input Mapper could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(Scene->Init(RenderManager), "Scene could not be initialized.");
 
-#ifdef _DEBUG
-		ENGINE_ERROR_BOOL_MESSAGE(EditorManager->Init(Framework, WindowHandler, RenderManager, Scene), "EditorManager could not be initialized.");
-#endif
-
+		//ENGINE_ERROR_BOOL_MESSAGE(ModelFactory->Init(Framework), "Model Factory could not be initiliazed.");
+		//ENGINE_ERROR_BOOL_MESSAGE(CameraFactory->Init(WindowHandler), "Camera Factory could not be initialized.");
+		//ENGINE_ERROR_BOOL_MESSAGE(CMainSingleton::MaterialHandler().Init(Framework), "Material Handler could not be initialized.");
+		//ENGINE_ERROR_BOOL_MESSAGE(LightFactory->Init(*this), "Light Factory could not be initialized.");
 		//ENGINE_ERROR_BOOL_MESSAGE(ParticleFactory->Init(Framework), "Particle Factory could not be initialized.");
 		//ENGINE_ERROR_BOOL_MESSAGE(VFXFactory->Init(Framework), "VFX Factory could not be initialized.");
 		//ENGINE_ERROR_BOOL_MESSAGE(LineFactory->Init(Framework), "Line Factory could not be initialized.");
@@ -104,10 +98,6 @@ namespace Havtorn
 
 	float GEngine::BeginFrame()
 	{
-#ifdef _DEBUG
-		EditorManager->BeginFrame();
-#endif
-
 		return GTimer::Mark();
 	}
 
@@ -117,7 +107,7 @@ namespace Havtorn
 		//{
 		//	if (GTimer::FixedTimeStep() == true)
 		//	{
-		//		PhysxWrapper->Simulate(); //<-- Anropas i samma intervall som Fixed "är"
+		//		PhysxWrapper->Simulate(); //<-- Anropas i samma intervall som Fixed "ï¿½r"
 		//		mySceneMap[myActiveState]->FixedUpdate();
 		//	}
 		//	mySceneMap[myActiveState]->Update();
@@ -128,36 +118,31 @@ namespace Havtorn
 
 		//AudioManager->Update();
 		//CSceneFactory::Get()->Update(); //Used for loading Scenes on a seperate Thread!
+	
+		std::unique_lock<std::mutex> uniqueLock(CThreadManager::RenderMutex);
+		CThreadManager::RenderCondition.wait(uniqueLock, []
+			{
+				return CThreadManager::RenderThreadStatus == ERenderThreadStatus::PostRender;
+			});
 	}
 
 	void GEngine::RenderFrame()
 	{
-#ifdef _DEBUG
-		EditorManager->Render();
-#endif
+		//ThreadManager->PushJob(std::bind(&CRenderManager::Render, RenderManager));
+		//RenderManager->Render();
+
 	}
 
 	void GEngine::EndFrame()
 	{
-		std::unique_lock<std::mutex> uniqueLock(CThreadManager::RenderMutex);
-		CThreadManager::RenderCondition.wait(uniqueLock, []
-			{return CThreadManager::RenderThreadStatus == ERenderThreadStatus::PostRender; });
-
-#ifdef _DEBUG
-		EditorManager->EndFrame();
-#endif
 
 		RenderManager->SwapRenderCommandBuffers();
 		Framework->EndFrame();
 
+		std::unique_lock<std::mutex> uniqueLock(CThreadManager::RenderMutex);
 		CThreadManager::RenderThreadStatus = ERenderThreadStatus::ReadyToRender;
 		uniqueLock.unlock();
 		CThreadManager::RenderCondition.notify_one();
-	}
-
-	GEngine* GEngine::GetInstance()
-	{
-		return Instance;
 	}
 
 	CWindowHandler* GEngine::GetWindowHandler()
@@ -173,6 +158,11 @@ namespace Havtorn
 	CTextureBank* GEngine::GetTextureBank()
 	{
 		return Instance->TextureBank;
+	}
+
+	CThreadManager* GEngine::GetThreadManager()
+	{
+		return Instance->ThreadManager;
 	}
 
 	CInputMapper* GEngine::GetInput()
@@ -228,4 +218,5 @@ namespace Havtorn
 	{
 		WindowHandler->HideAndLockCursor(isInEditorMode);
 	}
+
 }

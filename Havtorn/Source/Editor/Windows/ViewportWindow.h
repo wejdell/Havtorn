@@ -1,7 +1,7 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include "Editor/EditorWindow.h"
+#include "EditorWindow.h"
 
 struct ID3D11Texture2D;
 

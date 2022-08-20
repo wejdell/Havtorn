@@ -1,17 +1,18 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include "hvpch.h"
-
 #include "Application/WindowHandler.h"
 
 namespace Havtorn
 {
 	class CWindowHandler;
 	class CThreadManager;
+	class CDirextXFramework;
+	class CModelFactory;
+	class CCameraFactory;
+	class CLightFactory;
 	class CGraphicsFramework;
 	class GTimer;
-	class CEditorManager;
 	class CScene;
 	class CRenderManager;
 	class CParticleEmitterFactory;
@@ -33,6 +34,7 @@ namespace Havtorn
 		friend class CLineFactory;
 		friend class CTextureBank;
 		friend class CSceneFactory;
+		friend class CEditorProcess;
 
 	public:
 		GEngine();
@@ -42,13 +44,13 @@ namespace Havtorn
 		void Update();
 		void RenderFrame();
 		void EndFrame();
-
-	private:
-		static GEngine* GetInstance();
+		
+		static HAVTORN_API CWindowHandler* GetWindowHandler();
+		static HAVTORN_API CFileSystem* GetFileSystem();
+		static HAVTORN_API CTextureBank* GetTextureBank();
+		static HAVTORN_API CThreadManager* GetThreadManager();
+		
 	public:
-		static CWindowHandler* GetWindowHandler();
-		static CFileSystem* GetFileSystem();
-		static CTextureBank* GetTextureBank();
 		static CInputMapper* GetInput();
 
 		void InitWindowsImaging();
@@ -60,16 +62,13 @@ namespace Havtorn
 		void HideCursor(const bool& isInEditorMode = false);
 
 	private:
-		static GEngine* Instance;
+		static HAVTORN_API GEngine* Instance;
 
 		CFileSystem* FileSystem = nullptr;
 		CWindowHandler* WindowHandler = nullptr;
 		CThreadManager* ThreadManager = nullptr;
 		CGraphicsFramework* Framework = nullptr;
 		CTextureBank* TextureBank = nullptr;
-#ifdef _DEBUG
-		CEditorManager* EditorManager = nullptr;
-#endif
 		CRenderManager* RenderManager = nullptr;
 		GTimer* Timer = nullptr;
 		CInputMapper* InputMapper = nullptr;

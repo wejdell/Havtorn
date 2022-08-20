@@ -1,12 +1,11 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
-#include "hvpch.h"
 #include "InspectorWindow.h"
 #include <imgui.h>
 
 #include "ECS/ECSInclude.h"
 #include "Engine.h"
-#include "Editor/EditorManager.h"
+#include "EditorManager.h"
 #include "Graphics/RenderManager.h"
 #include "Graphics/TextureBank.h"
 #include "Scene/Scene.h"
@@ -296,7 +295,8 @@ namespace ImGui
 
 			ImGui::Checkbox("Is Active", &volumetricLightComp->IsActive);
 			ImGui::DragFloat("Number Of Samples", &volumetricLightComp->NumberOfSamples, SlideSpeed, 4.0f);
-			volumetricLightComp->NumberOfSamples = max(volumetricLightComp->NumberOfSamples, 4.0f);
+			// Todo.Anyone: Replace std::min with Havtorn's max.
+			volumetricLightComp->NumberOfSamples = std::max(volumetricLightComp->NumberOfSamples, 4.0f);
 			ImGui::DragFloat("Light Power", &volumetricLightComp->LightPower, SlideSpeed * 10000.0f, 0.0f);
 			ImGui::DragFloat("Scattering Probability", &volumetricLightComp->ScatteringProbability, SlideSpeed * 0.1f, 0.0f, 1.0f, "%.4f", ImGuiSliderFlags_Logarithmic);
 			ImGui::DragFloat("Henyey-Greenstein G", &volumetricLightComp->HenyeyGreensteinGValue);
