@@ -22,16 +22,16 @@
 
 namespace Havtorn
 {
-	void CModelImporter::ImportFBX(const std::string& fileName)
+	void CModelImporter::ImportFBX(const std::string& filePath)
 	{
-		if (!CFileSystem::DoesFileExist(fileName))
+		if (!CFileSystem::DoesFileExist(filePath))
 			return;
 
-		const aiScene* assimpScene = aiImportFile(fileName.c_str(), aiProcessPreset_TargetRealtime_Fast | aiProcess_ConvertToLeftHanded);
+		const aiScene* assimpScene = aiImportFile(filePath.c_str(), aiProcessPreset_TargetRealtime_Fast | aiProcess_ConvertToLeftHanded);
 
 		if (!assimpScene)
 		{
-			HV_LOG_ERROR("ModelImporter failed to import %s!", fileName.c_str());
+			HV_LOG_ERROR("ModelImporter failed to import %s!", filePath.c_str());
 			return;
 		}
 
@@ -129,6 +129,8 @@ namespace Havtorn
 				fileHeaderMesh.Indices.insert(fileHeaderMesh.Indices.end(), std::make_move_iterator(&fbxMesh->mFaces[i].mIndices[0]), std::make_move_iterator(&fbxMesh->mFaces[i].mIndices[fbxMesh->mFaces[i].mNumIndices]));
 			}
 
+			// Material Count
+			fileHeader.NumberOfMaterials = static_cast<U8>(assimpScene->mNumMaterials);
 
 			// Bone stuff
 			//std::vector<VertexBoneData> collectedBoneData;
@@ -175,7 +177,7 @@ namespace Havtorn
 			//	}
 		}
 
-		std::string newFileName = fileName.substr(0, fileName.length() - 4);
+		std::string newFileName = filePath.substr(0, filePath.length() - 4);
 		newFileName.append(".hva");
 		const auto fileData = new char[fileHeader.GetSize()];
 		fileHeader.Serialize(fileData);

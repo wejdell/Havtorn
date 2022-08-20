@@ -59,6 +59,7 @@ namespace Havtorn
 		EAssetType AssetType = EAssetType::StaticMesh;
 		U32 NameLength = 0;
 		std::string Name;
+		U8 NumberOfMaterials = 0;
 		U32 NumberOfMeshes = 0;
 		std::vector<SStaticMesh> Meshes;
 
@@ -72,6 +73,7 @@ namespace Havtorn
 		U32 size = sizeof(EAssetType);
 		size += sizeof(U32);
 		size += sizeof(char) * NameLength;
+		size += sizeof(U8);
 		size += sizeof(U32);
 
 		for (auto& mesh : Meshes)
@@ -90,6 +92,7 @@ namespace Havtorn
 	{
 		U32 pointerPosition = 0;
 		pointerPosition += SerializeSimple(AssetType, toData, pointerPosition);
+		pointerPosition += SerializeSimple(NumberOfMaterials, toData, pointerPosition);
 		pointerPosition += SerializeSimple(NumberOfMeshes, toData, pointerPosition);
 
 		for (auto& mesh : Meshes)
@@ -107,6 +110,7 @@ namespace Havtorn
 	{
 		U32 pointerPosition = 0;
 		pointerPosition += DeserializeSimple(AssetType, fromData, pointerPosition);
+		pointerPosition += DeserializeSimple(NumberOfMaterials, fromData, pointerPosition);
 		pointerPosition += DeserializeSimple(NumberOfMeshes, fromData, pointerPosition);
 
 		Meshes.reserve(NumberOfMeshes);

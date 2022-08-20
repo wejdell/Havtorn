@@ -15,6 +15,7 @@ namespace Havtorn
 		explicit SStaticMeshAsset(const SStaticModelFileHeader assetFileData)
 			: AssetType(assetFileData.AssetType)
 			, Name(assetFileData.Name)
+			, NumberOfMaterials(assetFileData.NumberOfMaterials)
 		{
 			for (auto& mesh : assetFileData.Meshes)
 			{
@@ -24,8 +25,9 @@ namespace Havtorn
 		}
 
 		EAssetType AssetType = EAssetType::StaticMesh;
-		std::string Name;
-		std::vector<SDrawCallData> DrawCallData;
+		std::string Name = "";
+		U8 NumberOfMaterials = 0;
+		std::vector<SDrawCallData> DrawCallData = {};
 	};
 
 	struct STextureAsset

@@ -87,6 +87,7 @@ namespace Havtorn
 		Ref<SEntity> GetSelectedEntity() const;
 
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry);
+		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromName(const std::string& assetName);
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromImageRef(void* imageRef);
 
 		void SetEditorTheme(EEditorColorTheme colorTheme = EEditorColorTheme::HavtornDark, EEditorStyleTheme styleTheme = EEditorStyleTheme::Havtorn);
@@ -106,6 +107,7 @@ namespace Havtorn
 	private:
 		void InitEditorLayout(); 
 		void InitAssetRepresentations();
+		void PreProcessAssets();
 
 		void SetEditorColorProfile(const SEditorColorProfile& colorProfile);
 

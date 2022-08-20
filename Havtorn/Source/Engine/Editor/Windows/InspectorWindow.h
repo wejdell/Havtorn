@@ -6,6 +6,7 @@
 namespace Havtorn
 {
 	class CScene;
+	struct SStaticMeshComponent;
 }
 
 namespace ImGui
@@ -31,6 +32,7 @@ namespace ImGui
 		void InspectVolumetricLightComponent(Havtorn::I64 volumetricLightComponentIndex);
 		void InspectDecalComponent(Havtorn::I64 decalComponentIndex);
 
+		void OpenSelectMeshAssetModal(Havtorn::SStaticMeshComponent* meshAssetToChange);
 		void OpenSelectTextureAssetModal(Havtorn::U16& textureRefToChange);
 
 	private:

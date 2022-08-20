@@ -47,6 +47,12 @@ namespace Havtorn
 		static inline bool NearlyEqual(F32 a, F32 b, F32 tolerance = KINDA_SMALL_NUMBER);
 
 		template<typename T>
+		static inline T Max(T x, T y);
+
+		template<typename T>
+		static inline T Min(T x, T y);
+
+		template<typename T>
 		static inline T Abs(T x);
 
 		template<typename T>
@@ -148,6 +154,18 @@ namespace Havtorn
 	inline T UMath::Clamp(T x, T minValue, T maxValue)
 	{
 		return x < minValue ? minValue : x < maxValue ? x : maxValue;
+	}
+
+	template<typename T>
+	inline T UMath::Max(T x, T y)
+	{
+		return y < x ? x : y;
+	}
+
+	template<typename T>
+	inline T UMath::Min(T x, T y)
+	{
+		return y < x ? y : x;
 	}
 
 	template<typename T>

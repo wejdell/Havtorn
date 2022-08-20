@@ -3,6 +3,7 @@
 #include "hvpch.h"
 #include "RenderManager.h"
 #include "GraphicsUtilities.h"
+#include "Core/GeneralUtilities.h"
 #include "RenderCommand.h"
 
 #include "Engine.h"
@@ -255,6 +256,11 @@ namespace Havtorn
 
 	void CRenderManager::LoadDemoSceneResources()
 	{
+		CModelImporter::ImportFBX("FBX/Cube_1.fbx");
+		CModelImporter::ImportFBX("FBX/En_P_Bed.fbx");
+		CModelImporter::ImportFBX("FBX/En_P_PendulumClock.fbx");
+		CModelImporter::ImportFBX("FBX/En_P_WallLamp.fbx");
+		CModelImporter::ImportFBX("FBX/Quad.fbx");
 	}
 
 	void CRenderManager::Render()
@@ -1108,32 +1114,32 @@ namespace Havtorn
 		//myGBufferCopy.ReleaseResources();
 	}
 
-	void CRenderManager::ConvertToHVA(const std::string& fileName, EAssetType assetType)
+	void CRenderManager::ConvertToHVA(const std::string& filePath, EAssetType assetType)
 	{
 		switch (assetType)
 		{
 		case EAssetType::StaticMesh:
 			{
-				CModelImporter::ImportFBX(fileName);
+				CModelImporter::ImportFBX(filePath);
 			}
 			break;
 		case EAssetType::Texture:
 			{
 				std::string textureFileData;
-				GEngine::GetFileSystem()->Deserialize(fileName, textureFileData);
+				GEngine::GetFileSystem()->Deserialize(filePath, textureFileData);
 
 				ETextureFormat format = {};
-				if (const std::string extension = fileName.substr(fileName.size() - 4); extension == ".dds")
+				if (const std::string extension = filePath.substr(filePath.size() - 4); extension == ".dds")
 					format = ETextureFormat::DDS;
 				else if (extension == ".tga")
 					format = ETextureFormat::TGA;
 
 				STextureFileHeader asset;
 				asset.AssetType = EAssetType::Texture;
-				asset.MaterialName = fileName.substr(0, fileName.find_last_of("."));
+				asset.MaterialName = filePath.substr(0, filePath.find_last_of("."));
 				asset.MaterialNameLength = static_cast<U32>(asset.MaterialName.length());
 				asset.OriginalFormat = format;
-				asset.Suffix = fileName[fileName.find_last_of(".") - 1];
+				asset.Suffix = filePath[filePath.find_last_of(".") - 1];
 				asset.DataSize = static_cast<U32>(textureFileData.length() * sizeof(char));
 				asset.Data = std::move(textureFileData);
 
@@ -1158,16 +1164,16 @@ namespace Havtorn
 		}
 	}
 
-	void CRenderManager::LoadStaticMeshComponent(const std::string& fileName, SStaticMeshComponent* outStaticMeshComponent)
+	void CRenderManager::LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent)
 	{
 		SStaticMeshAsset asset;
-		if (!LoadedStaticMeshes.contains(fileName))
+		if (!LoadedStaticMeshes.contains(filePath))
 		{
 			// Asset Loading
-			const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(fileName);
+			const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
 			char* data = new char[fileSize];
 
-			GEngine::GetFileSystem()->Deserialize(fileName, data, static_cast<U32>(fileSize));
+			GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));
 
 			SStaticModelFileHeader assetFile;
 			assetFile.Deserialize(data);
@@ -1181,13 +1187,17 @@ namespace Havtorn
 				asset.DrawCallData[i].VertexOffsetIndex = /*AddMeshVertexOffset(0)*/0;
 			}
 
-			LoadedStaticMeshes.emplace(fileName, asset);
+			// NR: Mesh name will be much easier to handle
+			LoadedStaticMeshes.emplace(UGeneralUtils::ExtractFileNameFromPath(filePath), asset);
 			delete[] data;
 		}
 		else
 		{
-			asset = LoadedStaticMeshes.at(fileName);
+			asset = LoadedStaticMeshes.at(filePath);
 		}
+
+		outStaticMeshComponent->Name = UGeneralUtils::ExtractFileNameFromPath(filePath);
+		outStaticMeshComponent->NumberOfMaterials = asset.NumberOfMaterials;
 
 		// Geometry
 		outStaticMeshComponent->VertexShaderIndex = static_cast<U8>(EVertexShaders::StaticMesh);
@@ -1237,7 +1247,30 @@ namespace Havtorn
 		return ShadowAtlasResolution;
 	}
 
-	void* CRenderManager::RenderStaticMeshAssetTexture(const std::string& fileName)
+	bool CRenderManager::TryLoadStaticMeshComponent(const std::string& fileName, SStaticMeshComponent* outStaticMeshComponent) const
+	{
+		SStaticMeshAsset asset;
+
+		if (!LoadedStaticMeshes.contains(fileName))
+			return false;
+		else
+			asset = LoadedStaticMeshes.at(fileName);
+
+		outStaticMeshComponent->Name = fileName;
+		outStaticMeshComponent->NumberOfMaterials = asset.NumberOfMaterials;
+
+		// Geometry
+		outStaticMeshComponent->VertexShaderIndex = static_cast<U8>(EVertexShaders::StaticMesh);
+		outStaticMeshComponent->PixelShaderIndex = static_cast<U8>(EPixelShaders::GBuffer);
+		outStaticMeshComponent->InputLayoutIndex = static_cast<U8>(EInputLayoutType::Pos3Nor3Tan3Bit3UV2);
+		outStaticMeshComponent->SamplerIndex = static_cast<U8>(ESamplers::DefaultWrap);
+		outStaticMeshComponent->TopologyIndex = static_cast<U8>(ETopologies::TriangleList);
+		outStaticMeshComponent->DrawCallData = asset.DrawCallData;
+
+		return true;
+	}
+
+	void* CRenderManager::RenderStaticMeshAssetTexture(const std::string& filePath)
 	{
 		D3D11_TEXTURE2D_DESC textureDesc = { 0 };
 		textureDesc.Width = static_cast<U16>(256.0f);
@@ -1317,7 +1350,7 @@ namespace Havtorn
 
 		Ref<SEntity> tempEntity = std::make_shared<SEntity>(0, "Temp");
 		SStaticMeshComponent* staticMeshComp = new SStaticMeshComponent(tempEntity, EComponentType::StaticMeshComponent);
-		LoadStaticMeshComponent(fileName, staticMeshComp);
+		LoadStaticMeshComponent(filePath, staticMeshComp);
 
 		Context->VSSetConstantBuffers(1, 1, &ObjectBuffer);
 		Context->IASetPrimitiveTopology(Topologies[staticMeshComp->TopologyIndex]);
@@ -1349,13 +1382,13 @@ namespace Havtorn
 		return std::move((void*)shaderResource);
 	}
 
-	void* CRenderManager::GetTextureAssetTexture(const std::string& fileName)
+	void* CRenderManager::GetTextureAssetTexture(const std::string& filePath)
 	{
 		// Asset Loading
-		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(fileName);
+		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
 		char* data = new char[fileSize];
 
-		GEngine::GetFileSystem()->Deserialize(fileName, data, static_cast<U32>(fileSize));
+		GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));
 
 		STextureFileHeader assetFile;
 		assetFile.Deserialize(data);
