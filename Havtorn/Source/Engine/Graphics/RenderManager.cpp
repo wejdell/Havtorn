@@ -457,7 +457,8 @@ namespace Havtorn
 						resourceViewPointers.resize(TexturesPerMaterial);
 						for (U8 textureIndex = 0, pointerTracker = 0; textureIndex < TexturesPerMaterial; textureIndex++, pointerTracker++)
 						{
-							resourceViewPointers[pointerTracker] = textureBank->GetTexture(materialComp->MaterialReferences[textureIndex + drawCallIndex * TexturesPerMaterial]);
+							U8 materialIndex = UMath::Min(drawCallIndex, static_cast<U8>(staticMeshComp->NumberOfMaterials - 1));
+							resourceViewPointers[pointerTracker] = textureBank->GetTexture(materialComp->MaterialReferences[textureIndex + materialIndex * TexturesPerMaterial]);
 						}
 						Context->PSSetShaderResources(5, TexturesPerMaterial, resourceViewPointers.data());
 

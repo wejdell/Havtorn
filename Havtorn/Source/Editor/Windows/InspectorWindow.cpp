@@ -346,6 +346,7 @@ namespace ImGui
 				}
 			}
 
+			MaterialRefToChangeIndex = Havtorn::UMath::Min(MaterialRefToChangeIndex, static_cast<Havtorn::U16>(decalComp->TextureReferences.size() - 1));
 			OpenSelectTextureAssetModal(decalComp->TextureReferences[MaterialRefToChangeIndex]);
 		}
 	}

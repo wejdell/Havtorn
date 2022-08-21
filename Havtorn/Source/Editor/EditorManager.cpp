@@ -54,6 +54,8 @@ namespace Havtorn
 		HINSTANCE hInstance = GetModuleHandle(nullptr);
 		SetWindowsHookEx(WH_CALLWNDPROC, (HOOKPROC)WndProc, hInstance, GetCurrentThreadId());
 		SetWindowsHookEx(WH_MOUSE, (HOOKPROC)WndProc, hInstance, GetCurrentThreadId());
+		SetWindowsHookEx(WH_MOUSE_LL, (HOOKPROC)WndProc, hInstance, GetCurrentThreadId());
+		SetWindowsHookEx(WH_KEYBOARD, (HOOKPROC)WndProc, hInstance, GetCurrentThreadId());
 
 		ImGui::DebugCheckVersionAndDataLayout("1.86 WIP", sizeof(ImGuiIO), sizeof(ImGuiStyle), sizeof(ImVec2), sizeof(ImVec4), sizeof(ImDrawVert), sizeof(unsigned int));
 		ImGui::CreateContext();
