@@ -237,8 +237,7 @@ project "ImGui"
 	targetdir ("Bin/" .. outputdir .. "/%{prj.name}") 
 	objdir ("Temp/" .. outputdir .. "/%{prj.name}") 
 
-	warnings "Extra"
-	flags { "FatalWarnings", "ShadowedVariables", "MultiProcessorCompile" }
+	flags { "ShadowedVariables", "MultiProcessorCompile" }
 
 	files 
 	{
