@@ -1,7 +1,7 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #include "InspectorWindow.h"
-#include <imgui.h>
+//#include <imgui.h>
 
 #include "ECS/ECSInclude.h"
 #include "Engine.h"

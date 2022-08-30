@@ -16,6 +16,7 @@ namespace Havtorn
 	CEditorProcess::~CEditorProcess()
 	{
 		SAFE_DELETE(EditorManager);
+		HV_LOG_WARN("Editor shutdown!");
 	}
 
 	bool CEditorProcess::Init()

@@ -4,6 +4,12 @@
 
 #include "Core/WindowsInclude.h"
 
+#include <Core/imgui.h>
+
+//struct ImGuiContext;
+//typedef void*	  (*ImGuiMemAllocFunc)(size_t sz, void* user_data);               // Function signature for ImGui::SetAllocatorFunctions()
+//typedef void    (*ImGuiMemFreeFunc)(void* ptr, void* user_data);                // Function signature for ImGui::SetAllocatorFunctions()
+
 namespace Havtorn
 {
 	class CWindowHandler
@@ -29,6 +35,9 @@ namespace Havtorn
 	private:
 		CWindowHandler();
 		~CWindowHandler();
+
+		HAVTORN_API ImGuiContext* GetImGuiContext() const;
+		HAVTORN_API void GetImGuiAllocatorFunctions(ImGuiMemAllocFunc* allocFunc, ImGuiMemFreeFunc* freeFunc, void** userData) const;
 
 		HAVTORN_API const HWND GetWindowHandle() const;
 		bool Init(SWindowData someWindowData);

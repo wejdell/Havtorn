@@ -6,12 +6,20 @@
 
 #include "Input/Input.h"
 
+//#include <Core/imgui.h>
+#include <Core/imgui_impl_win32.h>
+#include <Core/imgui_impl_dx11.h>
+
+IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+
 namespace Havtorn
 {
     LRESULT CWindowHandler::WinProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam)
     {
         static CWindowHandler* windowHandler = nullptr;
         CREATESTRUCT* createStruct;    
+
+        ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam);
 
         switch (uMsg)
         {
@@ -78,6 +86,10 @@ namespace Havtorn
 
     CWindowHandler::~CWindowHandler()
     {
+        ImGui_ImplWin32_Shutdown();
+        ImGui_ImplDX11_Shutdown();
+        ImGui::DestroyContext();
+
         LockCursor(false);
         CursorIsLocked = false;
         WindowIsInEditingMode = false;
@@ -185,6 +197,9 @@ namespace Havtorn
         //SetMenuInfo(hMenu, &mi);
 
         Resolution = new SVector2<F32>();
+
+        ImGui::CreateContext();
+
         return true;
     }
 
@@ -208,6 +223,16 @@ namespace Havtorn
     SVector2<F32> CWindowHandler::GetResolution()
     {
         return *Resolution;
+    }
+
+    HAVTORN_API ImGuiContext* CWindowHandler::GetImGuiContext() const
+    {
+        return ImGui::GetCurrentContext();
+    }
+
+    void CWindowHandler::GetImGuiAllocatorFunctions(ImGuiMemAllocFunc* allocFunc, ImGuiMemFreeFunc* freeFunc, void** userData) const
+    {
+        ImGui::GetAllocatorFunctions(allocFunc, freeFunc, userData);
     }
 
     void CWindowHandler::SetResolution(SVector2<F32> resolution)

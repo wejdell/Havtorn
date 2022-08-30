@@ -5,7 +5,6 @@
 
 #include <windowsx.h>
 
-#include "imgui.h"
 #include "Engine.h"
 
 #include <ranges>
