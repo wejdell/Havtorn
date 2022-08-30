@@ -62,7 +62,6 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	delete application;
 
 	SetForegroundWindow(GetConsoleWindow());
-	HV_LOG_WARN("Engine shutdown!");
 
 	system("pause");
 

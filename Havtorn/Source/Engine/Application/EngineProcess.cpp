@@ -20,6 +20,7 @@ namespace Havtorn
 	CEngineProcess::~CEngineProcess()
 	{
 		SAFE_DELETE(Engine);
+		HV_LOG_WARN("Engine shutdown!");
 	}
 	
 	bool CEngineProcess::Init()

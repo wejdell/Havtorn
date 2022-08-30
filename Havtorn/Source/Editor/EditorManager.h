@@ -56,12 +56,12 @@ namespace Havtorn
 
 	struct SEditorColorProfile
 	{
-		SVector4 BackgroundBase = SVector4::Zero;
-		SVector4 BackgroundMid = SVector4::Zero;
-		SVector4 ElementBackground = SVector4::Zero;
-		SVector4 ElementHovered = SVector4::Zero;
-		SVector4 ElementActive = SVector4::Zero;
-		SVector4 ElementHighlight = SVector4::Zero;
+		SVector4 BackgroundBase		= SVector4::Zero;
+		SVector4 BackgroundMid		= SVector4::Zero;
+		SVector4 ElementBackground	= SVector4::Zero;
+		SVector4 ElementHovered		= SVector4::Zero;
+		SVector4 ElementActive		= SVector4::Zero;
+		SVector4 ElementHighlight	= SVector4::Zero;
 	};
 
 	struct SEditorAssetRepresentation

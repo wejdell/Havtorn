@@ -256,11 +256,6 @@ namespace Havtorn
 
 	void CRenderManager::LoadDemoSceneResources()
 	{
-		CModelImporter::ImportFBX("FBX/Cube_1.fbx");
-		CModelImporter::ImportFBX("FBX/En_P_Bed.fbx");
-		CModelImporter::ImportFBX("FBX/En_P_PendulumClock.fbx");
-		CModelImporter::ImportFBX("FBX/En_P_WallLamp.fbx");
-		CModelImporter::ImportFBX("FBX/Quad.fbx");
 	}
 
 	void CRenderManager::Render()

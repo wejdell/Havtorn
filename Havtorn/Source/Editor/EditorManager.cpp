@@ -2,9 +2,9 @@
 
 #include "EditorManager.h"
 
-#include "Core/imgui.h"
-#include "Core/imgui_impl_win32.h"
-#include "Core/imgui_impl_dx11.h"
+#include <Core/imgui.h>
+#include <Core/imgui_impl_win32.h>
+#include <Core/imgui_impl_dx11.h>
 
 #include <windows.h>
 #include <psapi.h>
@@ -21,49 +21,31 @@
 #include "EditorWindows.h"
 #include "EditorToggleables.h"
 
-IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-LRESULT CALLBACK WndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-	if (ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam))
-	{
-		return true;
-	}
-	return false;
-}
+#include <Application/ImGuiDLLSetup.h>
 
 namespace Havtorn
 {
 	CEditorManager::CEditorManager()
 	{
+
 	}
 
 	CEditorManager::~CEditorManager()
 	{
 		RenderManager = nullptr;
 		SAFE_DELETE(ResourceManager);
-		ImGui_ImplWin32_Shutdown();
-		ImGui_ImplDX11_Shutdown();
-		ImGui::DestroyContext();
+
 	}
 
 	bool CEditorManager::Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager, CScene* scene)
 	{
-		// AG.20220812: On the msdn page for SetWindowsHookEx/ SetWindowsHookExA there are is a list of definitions/options for the first parameter.
-		//				Can add keyboard hooks at a later point.
-		HINSTANCE hInstance = GetModuleHandle(nullptr);
-		SetWindowsHookEx(WH_CALLWNDPROC, (HOOKPROC)WndProc, hInstance, GetCurrentThreadId());
-		SetWindowsHookEx(WH_MOUSE, (HOOKPROC)WndProc, hInstance, GetCurrentThreadId());
-		SetWindowsHookEx(WH_MOUSE_LL, (HOOKPROC)WndProc, hInstance, GetCurrentThreadId());
-		SetWindowsHookEx(WH_KEYBOARD, (HOOKPROC)WndProc, hInstance, GetCurrentThreadId());
+		CROSS_DLL_IMGUI_SETUP(windowHandler);
 
 		ImGui::DebugCheckVersionAndDataLayout("1.86 WIP", sizeof(ImGuiIO), sizeof(ImGuiStyle), sizeof(ImVec2), sizeof(ImVec4), sizeof(ImDrawVert), sizeof(unsigned int));
-		ImGui::CreateContext();
-		SetEditorTheme(EEditorColorTheme::HavtornDark, EEditorStyleTheme::Havtorn);
-		//ImGui::GetIO().Fonts->AddFontFromFileTTF("C:\\Windows\\Fonts\\verdana.ttf", 14.0f);
-		ImGui::GetIO().Fonts->AddFontFromFileTTF("../External/imgui/misc/fonts/Roboto-Medium.ttf", 15.0f);
-		ImGui::CreateContext();
 
+		SetEditorTheme(EEditorColorTheme::HavtornDark, EEditorStyleTheme::Havtorn);
+		ImGui::GetIO().Fonts->AddFontFromFileTTF("../External/imgui/misc/fonts/Roboto-Medium.ttf", 15.0f);
+		
 		MenuElements.emplace_back(std::make_unique<ImGui::CFileMenu>("File", this));
 		MenuElements.emplace_back(std::make_unique<ImGui::CEditMenu>("Edit", this));
 		MenuElements.emplace_back(std::make_unique<ImGui::CViewMenu>("View", this));
