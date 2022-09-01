@@ -2,9 +2,10 @@
 
 #include "EditorManager.h"
 
-#include <Core/imgui.h>
-#include <Core/imgui_impl_win32.h>
-#include <Core/imgui_impl_dx11.h>
+#include "Core/imgui.h"
+#include "Core/imgui_impl_win32.h"
+#include "Core/imgui_impl_dx11.h"
+#include "Core/ImGuizmo/ImGuizmo.h"
 
 #include <windows.h>
 #include <psapi.h>
@@ -12,6 +13,8 @@
 #include "Engine.h"
 #include "FileSystem/FileSystem.h"
 #include "Application/WindowHandler.h"
+#include "Input/InputMapper.h"
+#include "Input/InputTypes.h"
 
 #include "Graphics/GraphicsFramework.h"
 #include "Graphics/RenderManager.h"
@@ -27,19 +30,22 @@ namespace Havtorn
 {
 	CEditorManager::CEditorManager()
 	{
-
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::TranslateTransform).AddMember(this, &CEditorManager::SetTransformGizmo);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::RotateTransform).AddMember(this, &CEditorManager::SetTransformGizmo);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ScaleTransform).AddMember(this, &CEditorManager::SetTransformGizmo);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ToggleFreeCam).AddMember(this, &CEditorManager::ToggleFreeCam);
 	}
 
 	CEditorManager::~CEditorManager()
 	{
 		RenderManager = nullptr;
 		SAFE_DELETE(ResourceManager);
-
 	}
 
 	bool CEditorManager::Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager, CScene* scene)
 	{
 		CROSS_DLL_IMGUI_SETUP(windowHandler);
+		ImGuizmo::SetImGuiContext(ImGui::GetCurrentContext());
 
 		ImGui::DebugCheckVersionAndDataLayout("1.86 WIP", sizeof(ImGuiIO), sizeof(ImGuiStyle), sizeof(ImVec2), sizeof(ImVec4), sizeof(ImDrawVert), sizeof(unsigned int));
 
@@ -80,9 +86,11 @@ namespace Havtorn
 
 	void CEditorManager::BeginFrame()
 	{
+		// TODO.AG: Move to Engine
 		ImGui_ImplDX11_NewFrame();
 		ImGui_ImplWin32_NewFrame();
 		ImGui::NewFrame();
+		ImGuizmo::BeginFrame();
 	}
 
 	void CEditorManager::Render()
@@ -314,6 +322,11 @@ namespace Havtorn
 		InitEditorLayout();
 	}
 
+	ImGui::CViewportWindow* CEditorManager::GetViewportWindow() const
+	{
+		return reinterpret_cast<ImGui::CViewportWindow*>(Windows[0].get());
+	}
+
 	const CRenderManager* CEditorManager::GetRenderManager() const
 	{
 		return RenderManager;
@@ -483,6 +496,39 @@ namespace Havtorn
 		colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
 		colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
 		colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
+	}
+
+	void CEditorManager::SetTransformGizmo(const SInputActionPayload payload)
+	{
+		switch (payload.Event)
+		{
+		case EInputActionEvent::TranslateTransform:
+			CurrentGizmo = ETransformGizmo::Translate;
+			break;
+		case EInputActionEvent::RotateTransform:
+			CurrentGizmo = ETransformGizmo::Rotate;
+			break;
+		case EInputActionEvent::ScaleTransform:
+			CurrentGizmo = ETransformGizmo::Scale;
+			break;
+		default:
+			break;
+		}
+	}
+
+	void CEditorManager::ToggleFreeCam(const SInputActionPayload payload)
+	{
+		IsFreeCamActive = payload.IsHeld;
+	}
+
+	ETransformGizmo CEditorManager::GetCurrentGizmo() const
+	{
+		return CurrentGizmo;
+	}
+
+	bool CEditorManager::GetIsFreeCamActive() const
+	{
+		return IsFreeCamActive;
 	}
 
 	std::string CEditorManager::GetFrameRate() const

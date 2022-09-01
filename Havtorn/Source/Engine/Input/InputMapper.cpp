@@ -30,6 +30,18 @@ namespace Havtorn
 		const SInputAxis yawAxis = { EInputAxis::Key, EInputKey::Left, EInputKey::Right, EInputContext::Editor };
 		MapEvent(EInputAxisEvent::Yaw, yawAxis);
 
+		const SInputAction translateTransform = { EInputKey::KeyW, EInputContext::Editor };
+		MapEvent(EInputActionEvent::TranslateTransform, translateTransform);
+
+		const SInputAction rotateTransform = { EInputKey::KeyE, EInputContext::Editor };
+		MapEvent(EInputActionEvent::RotateTransform, rotateTransform);
+
+		const SInputAction scaleTransform = { EInputKey::KeyR, EInputContext::Editor };
+		MapEvent(EInputActionEvent::ScaleTransform, scaleTransform);
+
+		const SInputAction toggleFreeCam = { EInputKey::Mouse2, EInputContext::Editor };
+		MapEvent(EInputActionEvent::ToggleFreeCam, toggleFreeCam);
+
 		return true;
 	}
 
@@ -80,13 +92,14 @@ namespace Havtorn
 		const auto& modifiers = Input->GetKeyInputModifiers().to_ulong();
 		const auto& context = static_cast<U32>(CurrentInputContext);
 
-		for (const auto& param : Input->GetKeyInputBuffer())
+		for (auto& param : Input->GetKeyInputBuffer())
 		{
-			for (auto& val : BoundActionEvents | std::views::values)
+			for (auto& val : BoundActionEvents)
 			{
-				if (val.Has(static_cast<EInputKey>(param.first), context, modifiers))
+				if (val.second.Has(static_cast<EInputKey>(param.first), context, modifiers))
 				{
-					val.Delegate.Broadcast(param.second);
+					param.second.Event = val.first;
+					val.second.Delegate.Broadcast(param.second);
 				}
 			}
 

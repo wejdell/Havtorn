@@ -222,7 +222,7 @@ namespace Havtorn
 		}
 	}
 
-	const std::map<WPARAM, SInputActionPayload>& CInput::GetKeyInputBuffer() const
+	std::map<WPARAM, SInputActionPayload>& CInput::GetKeyInputBuffer()
 	{
 		return KeyInputBuffer;
 	}

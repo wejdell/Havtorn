@@ -373,7 +373,7 @@ private:
 
 //A handle to a delegate used for a multicast delegate
 //Static ID so that every handle is unique
-class DelegateHandle
+class HAVTORN_API DelegateHandle
 {
 public:
 	constexpr DelegateHandle() noexcept

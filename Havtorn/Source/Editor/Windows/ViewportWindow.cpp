@@ -66,8 +66,17 @@ namespace ImGui
 
 				Havtorn::F32 width = static_cast<Havtorn::F32>(vMax.x - vMin.x);
 				Havtorn::F32 height = static_cast<Havtorn::F32>(vMax.y - vMin.y - ViewportMenuHeight - 4.0f);
+
+				ImVec2 windowPos = ImVec2(mainViewport->WorkPos.x + layout.ViewportPosition.X, mainViewport->WorkPos.y + layout.ViewportPosition.Y);
+				windowPos.y += ViewportMenuHeight - 4.0f;
+				RenderedScenePosition.X = windowPos.x;
+				RenderedScenePosition.Y = windowPos.y;
+				RenderedSceneDimensions = { width, height };
+
 				ImGui::Image((void*)RenderedSceneTextureReference->GetShaderResourceView(), ImVec2(width, height));
 			}
+		
+			CurrentDrawList = ImGui::GetWindowDrawList();
 		}
 
 		ImGui::PopStyleVar();
@@ -77,5 +86,20 @@ namespace ImGui
 
 	void CViewportWindow::OnDisable()
 	{
+	}
+	
+	const Havtorn::SVector2<Havtorn::F32> CViewportWindow::GetRenderedSceneDimensions() const
+	{
+		return RenderedSceneDimensions;
+	}
+	
+	const Havtorn::SVector2<Havtorn::F32> CViewportWindow::GetRenderedScenePosition() const
+	{
+		return RenderedScenePosition;
+	}
+	
+	ImDrawList* CViewportWindow::GetCurrentDrawList() const
+	{
+		return CurrentDrawList;
 	}
 }

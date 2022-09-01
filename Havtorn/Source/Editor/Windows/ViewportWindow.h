@@ -21,8 +21,16 @@ namespace ImGui
 		void OnInspectorGUI() override;
 		void OnDisable() override;
 
+		const Havtorn::SVector2<Havtorn::F32> GetRenderedSceneDimensions() const;
+		const Havtorn::SVector2<Havtorn::F32> GetRenderedScenePosition() const;
+
+		ImDrawList* GetCurrentDrawList() const;
+
 	private:
 		const Havtorn::CFullscreenTexture* RenderedSceneTextureReference;
+		ImDrawList* CurrentDrawList = nullptr;
 		Havtorn::F32 ViewportMenuHeight = 16.0f;
+		Havtorn::SVector2<Havtorn::F32> RenderedSceneDimensions = Havtorn::SVector2<Havtorn::F32>::Zero;
+		Havtorn::SVector2<Havtorn::F32> RenderedScenePosition = Havtorn::SVector2<Havtorn::F32>::Zero;
 	};
 }

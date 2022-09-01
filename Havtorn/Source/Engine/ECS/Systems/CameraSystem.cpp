@@ -18,6 +18,7 @@ namespace Havtorn
 		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Forward).AddMember(this, &CCameraSystem::HandleAxisInput);
 		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Pitch).AddMember(this, &CCameraSystem::HandleAxisInput);
 		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Yaw).AddMember(this, &CCameraSystem::HandleAxisInput);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ToggleFreeCam).AddMember(this, &CCameraSystem::ToggleFreeCam);
 	}
 
 	CCameraSystem::~CCameraSystem()
@@ -31,12 +32,15 @@ namespace Havtorn
 		if (cameraComponents.empty())
 			return;
 
-		const I64 transformCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
-		auto& transformComp = transformComponents[transformCompIndex];
+		if (IsFreeCamActive)
+		{
+			const I64 transformCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
+			auto& transformComp = transformComponents[transformCompIndex];
 
-		const F32 dt = GTimer::Dt();
-		transformComp->Transform.Translate(CameraMoveInput * dt);
-		transformComp->Transform.Rotate(CameraRotateInput * dt);
+			const F32 dt = GTimer::Dt();
+			transformComp->Transform.Translate(CameraMoveInput * dt);
+			transformComp->Transform.Rotate(CameraRotateInput * dt);
+		}
 
 		CameraMoveInput = SVector::Zero;
 		CameraRotateInput = SVector::Zero;
@@ -64,5 +68,10 @@ namespace Havtorn
 			default: 
 				return;
 		}
+	}
+	
+	void CCameraSystem::ToggleFreeCam(const SInputActionPayload payload)
+	{
+		IsFreeCamActive = payload.IsHeld;
 	}
 }

@@ -19,9 +19,9 @@ namespace Havtorn
 
 		// Setup entities (create components)
 		auto transform = AddTransformComponentToEntity(cameraEntity);
-		transform->Transform.GetMatrix().Translation({ 2.0f, 1.0f, -3.0f });
-		transform->Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
-		transform->Transform.Translate(SVector::Right * 0.25f);
+		//transform->Transform.GetMatrix().Translation({ 2.0f, 1.0f, -3.0f });
+		//transform->Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
+		//transform->Transform.Translate(SVector::Right * 0.25f);
 
 		auto camera = AddCameraComponentToEntity(cameraEntity);
 		camera->ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
@@ -57,226 +57,227 @@ namespace Havtorn
 
 	void CScene::InitDemoScene(CRenderManager* renderManager)
 	{
-		// === Point light ===
-		auto pointLightEntity = CreateEntity("Point Light");
+		//// === Point light ===
+		//auto pointLightEntity = CreateEntity("Point Light");
 
-		auto pointLightTransform = AddTransformComponentToEntity(pointLightEntity);
-		pointLightTransform->Transform.GetMatrix().Translation({ 1.25f, 0.35f, -1.65f });
+		//auto pointLightTransform = AddTransformComponentToEntity(pointLightEntity);
+		//pointLightTransform->Transform.GetMatrix().Translation({ 1.25f, 0.35f, -1.65f });
 
-		auto pointLightComp = AddPointLightComponentToEntity(pointLightEntity);
-		pointLightComp->ColorAndIntensity = { 0.0f, 1.0f, 1.0f, 10.0f };
-		pointLightComp->Range = 1.0f;
+		//auto pointLightComp = AddPointLightComponentToEntity(pointLightEntity);
+		//pointLightComp->ColorAndIntensity = { 0.0f, 1.0f, 1.0f, 10.0f };
+		//pointLightComp->Range = 1.0f;
 
-		auto volumetricPointLight = AddVolumetricLightComponentToEntity(pointLightEntity);
-		//volumetricPointLight->IsActive = true;
+		//auto volumetricPointLight = AddVolumetricLightComponentToEntity(pointLightEntity);
+		////volumetricPointLight->IsActive = true;
 
-		const SMatrix constantProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, pointLightComp->Range);
-		const SVector4 constantPosition = pointLightTransform->Transform.GetMatrix().Translation4();
+		//const SMatrix constantProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, pointLightComp->Range);
+		//const SVector4 constantPosition = pointLightTransform->Transform.GetMatrix().Translation4();
 
-		// Forward
-		SShadowmapViewData& view1 = pointLightComp->ShadowmapViews[0];
-		view1.ShadowPosition = constantPosition;
-		view1.ShadowmapViewportIndex = 1;
-		view1.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Forward).ToVector3(), SVector::Up);
-		view1.ShadowProjectionMatrix = constantProjectionMatrix;
+		//// Forward
+		//SShadowmapViewData& view1 = pointLightComp->ShadowmapViews[0];
+		//view1.ShadowPosition = constantPosition;
+		//view1.ShadowmapViewportIndex = 1;
+		//view1.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Forward).ToVector3(), SVector::Up);
+		//view1.ShadowProjectionMatrix = constantProjectionMatrix;
 
-		// Right
-		SShadowmapViewData& view2 = pointLightComp->ShadowmapViews[1];
-		view2.ShadowPosition = constantPosition;
-		view2.ShadowmapViewportIndex = 2;
-		view2.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Right).ToVector3(), SVector::Up);
-		view2.ShadowProjectionMatrix = constantProjectionMatrix;
+		//// Right
+		//SShadowmapViewData& view2 = pointLightComp->ShadowmapViews[1];
+		//view2.ShadowPosition = constantPosition;
+		//view2.ShadowmapViewportIndex = 2;
+		//view2.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Right).ToVector3(), SVector::Up);
+		//view2.ShadowProjectionMatrix = constantProjectionMatrix;
 
-		// Backward
-		SShadowmapViewData& view3 = pointLightComp->ShadowmapViews[2];
-		view3.ShadowPosition = constantPosition;
-		view3.ShadowmapViewportIndex = 3;
-		view3.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Backward).ToVector3(), SVector::Up);
-		view3.ShadowProjectionMatrix = constantProjectionMatrix;
+		//// Backward
+		//SShadowmapViewData& view3 = pointLightComp->ShadowmapViews[2];
+		//view3.ShadowPosition = constantPosition;
+		//view3.ShadowmapViewportIndex = 3;
+		//view3.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Backward).ToVector3(), SVector::Up);
+		//view3.ShadowProjectionMatrix = constantProjectionMatrix;
 
-		// Left
-		SShadowmapViewData& view4 = pointLightComp->ShadowmapViews[3];
-		view4.ShadowPosition = constantPosition;
-		view4.ShadowmapViewportIndex = 4;
-		view4.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Left).ToVector3(), SVector::Up);
-		view4.ShadowProjectionMatrix = constantProjectionMatrix;
+		//// Left
+		//SShadowmapViewData& view4 = pointLightComp->ShadowmapViews[3];
+		//view4.ShadowPosition = constantPosition;
+		//view4.ShadowmapViewportIndex = 4;
+		//view4.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Left).ToVector3(), SVector::Up);
+		//view4.ShadowProjectionMatrix = constantProjectionMatrix;
 
-		// Up
-		SShadowmapViewData& view5 = pointLightComp->ShadowmapViews[4];
-		view5.ShadowPosition = constantPosition;
-		view5.ShadowmapViewportIndex = 5;
-		view5.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Up).ToVector3(), SVector::Backward);
-		view5.ShadowProjectionMatrix = constantProjectionMatrix;
+		//// Up
+		//SShadowmapViewData& view5 = pointLightComp->ShadowmapViews[4];
+		//view5.ShadowPosition = constantPosition;
+		//view5.ShadowmapViewportIndex = 5;
+		//view5.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Up).ToVector3(), SVector::Backward);
+		//view5.ShadowProjectionMatrix = constantProjectionMatrix;
 
-		// Down
-		SShadowmapViewData& view6 = pointLightComp->ShadowmapViews[5];
-		view6.ShadowPosition = constantPosition;
-		view6.ShadowmapViewportIndex = 6;
-		view6.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Down).ToVector3(), SVector::Forward);
-		view6.ShadowProjectionMatrix = constantProjectionMatrix;
-		// === !Point light ===
+		//// Down
+		//SShadowmapViewData& view6 = pointLightComp->ShadowmapViews[5];
+		//view6.ShadowPosition = constantPosition;
+		//view6.ShadowmapViewportIndex = 6;
+		//view6.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Down).ToVector3(), SVector::Forward);
+		//view6.ShadowProjectionMatrix = constantProjectionMatrix;
+		//// === !Point light ===
 
-		// === Spotlight ===
-		auto spotlight = CreateEntity("SpotLight");
+		//// === Spotlight ===
+		//auto spotlight = CreateEntity("SpotLight");
 
-		auto& spotlightTransform = AddTransformComponentToEntity(spotlight)->Transform;
-		spotlightTransform.Translate({ 1.5f, 0.5f, -1.0f });
+		//auto& spotlightTransform = AddTransformComponentToEntity(spotlight)->Transform;
+		//spotlightTransform.Translate({ 1.5f, 0.5f, -1.0f });
 
-		auto spotlightComp = AddSpotLightComponentToEntity(spotlight);
-		spotlightComp->Direction = SVector4::Forward;
-		spotlightComp->DirectionNormal1 = SVector4::Right;
-		spotlightComp->DirectionNormal2 = SVector4::Up;
-		spotlightComp->ColorAndIntensity = { 0.0f, 1.0f, 0.0f, 5.0f };
-		spotlightComp->OuterAngle = 25.0f;
-		spotlightComp->InnerAngle = 5.0f;
-		spotlightComp->Range = 3.0f;
+		//auto spotlightComp = AddSpotLightComponentToEntity(spotlight);
+		//spotlightComp->Direction = SVector4::Forward;
+		//spotlightComp->DirectionNormal1 = SVector4::Right;
+		//spotlightComp->DirectionNormal2 = SVector4::Up;
+		//spotlightComp->ColorAndIntensity = { 0.0f, 1.0f, 0.0f, 5.0f };
+		//spotlightComp->OuterAngle = 25.0f;
+		//spotlightComp->InnerAngle = 5.0f;
+		//spotlightComp->Range = 3.0f;
 
-		auto volumetricSpotLight = AddVolumetricLightComponentToEntity(spotlight);
-		//volumetricSpotLight->IsActive = true;
+		//auto volumetricSpotLight = AddVolumetricLightComponentToEntity(spotlight);
+		////volumetricSpotLight->IsActive = true;
 
-		const SMatrix spotlightProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, spotlightComp->Range);
-		const SVector4 spotlightPosition = TransformComponents.back()->Transform.GetMatrix().Translation4();
+		//const SMatrix spotlightProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, spotlightComp->Range);
+		//const SVector4 spotlightPosition = TransformComponents.back()->Transform.GetMatrix().Translation4();
 
-		spotlightComp->ShadowmapView.ShadowPosition = spotlightPosition;
-		spotlightComp->ShadowmapView.ShadowmapViewportIndex = 7;
-		spotlightComp->ShadowmapView.ShadowViewMatrix = SMatrix::LookAtLH(spotlightPosition.ToVector3(), (spotlightPosition + spotlightComp->Direction).ToVector3(), spotlightComp->DirectionNormal2.ToVector3());
-		spotlightComp->ShadowmapView.ShadowProjectionMatrix = spotlightProjection;
-		// === !Spotlight ===
+		//spotlightComp->ShadowmapView.ShadowPosition = spotlightPosition;
+		//spotlightComp->ShadowmapView.ShadowmapViewportIndex = 7;
+		//spotlightComp->ShadowmapView.ShadowViewMatrix = SMatrix::LookAtLH(spotlightPosition.ToVector3(), (spotlightPosition + spotlightComp->Direction).ToVector3(), spotlightComp->DirectionNormal2.ToVector3());
+		//spotlightComp->ShadowmapView.ShadowProjectionMatrix = spotlightProjection;
+		//// === !Spotlight ===
 
-		// === Decal ===
-		auto decal = CreateEntity("Decal");
+		//// === Decal ===
+		//auto decal = CreateEntity("Decal");
 
-		auto& decalTransform = AddTransformComponentToEntity(decal)->Transform;
-		decalTransform.GetMatrix().Translation({ 0.45f, 1.60f, 0.85f });
+		//auto& decalTransform = AddTransformComponentToEntity(decal)->Transform;
+		//decalTransform.GetMatrix().Translation({ 0.45f, 1.60f, 0.85f });
 
-		auto decalComp = AddDecalComponentToEntity(decal);
+		//auto decalComp = AddDecalComponentToEntity(decal);
 
-		renderManager->LoadDecalComponent({"T_noscare_AL_c", "T_noscare_AL_m", "T_noscare_AL_n"}, decalComp.get());
-		decalComp->ShouldRenderAlbedo = true;
-		decalComp->ShouldRenderMaterial = true;
-		decalComp->ShouldRenderNormal = true;
-		// === !Decal ===
+		//renderManager->LoadDecalComponent({"T_noscare_AL_c", "T_noscare_AL_m", "T_noscare_AL_n"}, decalComp.get());
+		//decalComp->ShouldRenderAlbedo = true;
+		//decalComp->ShouldRenderMaterial = true;
+		//decalComp->ShouldRenderNormal = true;
+		//// === !Decal ===
 
 		const std::string modelPath1 = "Assets/Tests/En_P_PendulumClock.hva";
 		const std::vector<std::string> materialNames1 = { "T_PendulumClock", "Checkboard_128x128" };
-		const std::string modelPath2 = "Assets/Tests/En_P_Bed.hva";
-		const std::vector<std::string> materialNames2 = { "T_Bed", "T_Bedsheet" };
-		const std::string modelPath3 = "Assets/Tests/Quad.hva";
-		const std::vector<std::string> materialNames3 = { "T_Quad" };
-		const std::string modelPath4 = "Assets/Tests/En_P_WallLamp.hva";
-		const std::vector<std::string> materialNames4 = { "T_Quad", "T_Emissive", "T_Headlamp" };
+		//const std::string modelPath2 = "Assets/Tests/En_P_Bed.hva";
+		//const std::vector<std::string> materialNames2 = { "T_Bed", "T_Bedsheet" };
+		//const std::string modelPath3 = "Assets/Tests/Quad.hva";
+		//const std::vector<std::string> materialNames3 = { "T_Quad" };
+		//const std::string modelPath4 = "Assets/Tests/En_P_WallLamp.hva";
+		//const std::vector<std::string> materialNames4 = { "T_Quad", "T_Emissive", "T_Headlamp" };
 
 		// === Pendulum ===
 		auto pendulum = CreateEntity("Clock");
 
 		auto& transform1 = AddTransformComponentToEntity(pendulum)->Transform;
-		transform1.GetMatrix().Translation({1.75f, 0.0f, 0.25f});
+		//transform1.GetMatrix().Translation({1.75f, 0.0f, 0.25f});
+		transform1.GetMatrix().Translation({0.0f, 0.0f, 1.0f});
 
 		renderManager->LoadStaticMeshComponent(modelPath1, AddStaticMeshComponentToEntity(pendulum).get());
 		renderManager->LoadMaterialComponent(materialNames1, AddMaterialComponentToEntity(pendulum).get());
 		// === !Pendulum ===
 
-		// === Bed ===
-		auto bed = CreateEntity("Bed");
+		//// === Bed ===
+		//auto bed = CreateEntity("Bed");
 
-		auto& transform2 = AddTransformComponentToEntity(bed)->Transform;
-		transform2.GetMatrix().Translation({ 0.25f, 0.0f, 0.25f });
+		//auto& transform2 = AddTransformComponentToEntity(bed)->Transform;
+		//transform2.GetMatrix().Translation({ 0.25f, 0.0f, 0.25f });
 
-		renderManager->LoadStaticMeshComponent(modelPath2, AddStaticMeshComponentToEntity(bed).get());
-		renderManager->LoadMaterialComponent(materialNames2, AddMaterialComponentToEntity(bed).get());
-		// === !Bed ===
+		//renderManager->LoadStaticMeshComponent(modelPath2, AddStaticMeshComponentToEntity(bed).get());
+		//renderManager->LoadMaterialComponent(materialNames2, AddMaterialComponentToEntity(bed).get());
+		//// === !Bed ===
 
-		// === Lamp ===
-		auto lamp = CreateEntity("Lamp");
+		//// === Lamp ===
+		//auto lamp = CreateEntity("Lamp");
 
-		auto& transform4 = AddTransformComponentToEntity(lamp)->Transform;
-		transform4.GetMatrix().Translation({ -1.0f, 1.4f, -0.75f });
-		transform4.Rotate({ 0.0f, UMath::DegToRad(90.0f), 0.0f });
+		//auto& transform4 = AddTransformComponentToEntity(lamp)->Transform;
+		//transform4.GetMatrix().Translation({ -1.0f, 1.4f, -0.75f });
+		//transform4.Rotate({ 0.0f, UMath::DegToRad(90.0f), 0.0f });
 
-		renderManager->LoadStaticMeshComponent(modelPath4, AddStaticMeshComponentToEntity(lamp).get());
-		renderManager->LoadMaterialComponent(materialNames4, AddMaterialComponentToEntity(lamp).get());
-		// === !Lamp ===
+		//renderManager->LoadStaticMeshComponent(modelPath4, AddStaticMeshComponentToEntity(lamp).get());
+		//renderManager->LoadMaterialComponent(materialNames4, AddMaterialComponentToEntity(lamp).get());
+		//// === !Lamp ===
 
-		// === Floor ===
-		std::vector<SVector> translations;
-		translations.emplace_back(-1.0f, 0.0f, -2.0f);
-		translations.emplace_back(0.0f, 0.0f, -2.0f);
-		translations.emplace_back(1.0f, 0.0f, -2.0f);
-		translations.emplace_back(2.0f, 0.0f, -2.0f);
-		translations.emplace_back(-1.0f, 0.0f, -1.0f);
-		translations.emplace_back(0.0f, 0.0f, -1.0f);
-		translations.emplace_back(1.0f, 0.0f, -1.0f);
-		translations.emplace_back(2.0f, 0.0f, -1.0f);
-		translations.emplace_back(-1.0f, 0.0f, 0.0f);
-		translations.emplace_back(0.0f, 0.0f, 0.0f);
-		translations.emplace_back(1.0f, 0.0f, 0.0f);
-		translations.emplace_back(2.0f, 0.0f, 0.0f);
+		//// === Floor ===
+		//std::vector<SVector> translations;
+		//translations.emplace_back(-1.0f, 0.0f, -2.0f);
+		//translations.emplace_back(0.0f, 0.0f, -2.0f);
+		//translations.emplace_back(1.0f, 0.0f, -2.0f);
+		//translations.emplace_back(2.0f, 0.0f, -2.0f);
+		//translations.emplace_back(-1.0f, 0.0f, -1.0f);
+		//translations.emplace_back(0.0f, 0.0f, -1.0f);
+		//translations.emplace_back(1.0f, 0.0f, -1.0f);
+		//translations.emplace_back(2.0f, 0.0f, -1.0f);
+		//translations.emplace_back(-1.0f, 0.0f, 0.0f);
+		//translations.emplace_back(0.0f, 0.0f, 0.0f);
+		//translations.emplace_back(1.0f, 0.0f, 0.0f);
+		//translations.emplace_back(2.0f, 0.0f, 0.0f);
 
-		for (U8 i = 0; i < 12; ++i)
-		{
-			auto floor = CreateEntity("Floor");
+		//for (U8 i = 0; i < 12; ++i)
+		//{
+		//	auto floor = CreateEntity("Floor");
 
-			auto& transform3 = AddTransformComponentToEntity(floor)->Transform;
-			transform3.GetMatrix().Translation(translations[i]);
-			transform3.GetMatrix().SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)));
+		//	auto& transform3 = AddTransformComponentToEntity(floor)->Transform;
+		//	transform3.GetMatrix().Translation(translations[i]);
+		//	transform3.GetMatrix().SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)));
 
-			renderManager->LoadStaticMeshComponent(modelPath3, AddStaticMeshComponentToEntity(floor).get());
-			renderManager->LoadMaterialComponent(materialNames3, AddMaterialComponentToEntity(floor).get());
-		}
-		// === !Floor ===
+		//	renderManager->LoadStaticMeshComponent(modelPath3, AddStaticMeshComponentToEntity(floor).get());
+		//	renderManager->LoadMaterialComponent(materialNames3, AddMaterialComponentToEntity(floor).get());
+		//}
+		//// === !Floor ===
 
-		// === Wall ===
-		translations.clear();
-		translations.emplace_back(-1.0f, 0.5f, 0.5f);
-		translations.emplace_back(0.0f, 0.5f, 0.5f);
-		translations.emplace_back(1.0f, 0.5f, 0.5f);
-		translations.emplace_back(2.0f, 0.5f, 0.5f);
-		translations.emplace_back(-1.0f, 1.5f, 0.5f);
-		translations.emplace_back(0.0f, 1.5f, 0.5f);
-		translations.emplace_back(1.0f, 1.5f, 0.5f);
-		translations.emplace_back(2.0f, 1.5f, 0.5f);
-		translations.emplace_back(-1.0f, 2.5f, 0.5f);
-		translations.emplace_back(0.0f, 2.5f, 0.5f);
-		translations.emplace_back(1.0f, 2.5f, 0.5f);
-		translations.emplace_back(2.0f, 2.5f, 0.5f);
+		//// === Wall ===
+		//translations.clear();
+		//translations.emplace_back(-1.0f, 0.5f, 0.5f);
+		//translations.emplace_back(0.0f, 0.5f, 0.5f);
+		//translations.emplace_back(1.0f, 0.5f, 0.5f);
+		//translations.emplace_back(2.0f, 0.5f, 0.5f);
+		//translations.emplace_back(-1.0f, 1.5f, 0.5f);
+		//translations.emplace_back(0.0f, 1.5f, 0.5f);
+		//translations.emplace_back(1.0f, 1.5f, 0.5f);
+		//translations.emplace_back(2.0f, 1.5f, 0.5f);
+		//translations.emplace_back(-1.0f, 2.5f, 0.5f);
+		//translations.emplace_back(0.0f, 2.5f, 0.5f);
+		//translations.emplace_back(1.0f, 2.5f, 0.5f);
+		//translations.emplace_back(2.0f, 2.5f, 0.5f);
 
-		for (U8 i = 0; i < 12; ++i)
-		{
-			auto floor = CreateEntity("Wall");
+		//for (U8 i = 0; i < 12; ++i)
+		//{
+		//	auto floor = CreateEntity("Wall");
 
-			auto& transform3 = AddTransformComponentToEntity(floor)->Transform;
-			transform3.GetMatrix().Translation(translations[i]);
-			transform3.GetMatrix().SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundX(UMath::DegToRad(-90.0f)));
+		//	auto& transform3 = AddTransformComponentToEntity(floor)->Transform;
+		//	transform3.GetMatrix().Translation(translations[i]);
+		//	transform3.GetMatrix().SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundX(UMath::DegToRad(-90.0f)));
 
-			renderManager->LoadStaticMeshComponent(modelPath3, AddStaticMeshComponentToEntity(floor).get());
-			renderManager->LoadMaterialComponent(materialNames3, AddMaterialComponentToEntity(floor).get());
-		}
-		// === !Wall ===
+		//	renderManager->LoadStaticMeshComponent(modelPath3, AddStaticMeshComponentToEntity(floor).get());
+		//	renderManager->LoadMaterialComponent(materialNames3, AddMaterialComponentToEntity(floor).get());
+		//}
+		//// === !Wall ===
 
-		// === Other Wall ===
-		translations.clear();
-		translations.emplace_back(-1.0f, 0.5f, -2.5f);
-		translations.emplace_back(-1.0f, 0.5f, -1.5f);
-		translations.emplace_back(-1.0f, 0.5f, -0.5f);
-		translations.emplace_back(-1.0f, 1.5f, -2.5f);
-		translations.emplace_back(-1.0f, 1.5f, -1.5f);
-		translations.emplace_back(-1.0f, 1.5f, -0.5f);
-		translations.emplace_back(-1.0f, 2.5f, -2.5f);
-		translations.emplace_back(-1.0f, 2.5f, -1.5f);
-		translations.emplace_back(-1.0f, 2.5f, -0.5f);
+		//// === Other Wall ===
+		//translations.clear();
+		//translations.emplace_back(-1.0f, 0.5f, -2.5f);
+		//translations.emplace_back(-1.0f, 0.5f, -1.5f);
+		//translations.emplace_back(-1.0f, 0.5f, -0.5f);
+		//translations.emplace_back(-1.0f, 1.5f, -2.5f);
+		//translations.emplace_back(-1.0f, 1.5f, -1.5f);
+		//translations.emplace_back(-1.0f, 1.5f, -0.5f);
+		//translations.emplace_back(-1.0f, 2.5f, -2.5f);
+		//translations.emplace_back(-1.0f, 2.5f, -1.5f);
+		//translations.emplace_back(-1.0f, 2.5f, -0.5f);
 
-		for (U8 i = 0; i < 9; ++i)
-		{
-			auto floor = CreateEntity("Wall");
+		//for (U8 i = 0; i < 9; ++i)
+		//{
+		//	auto floor = CreateEntity("Wall");
 
-			auto& transform3 = AddTransformComponentToEntity(floor)->Transform;
-			transform3.GetMatrix().Translation(translations[i]);
-			transform3.GetMatrix().SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundX(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundY(UMath::DegToRad(-90.0f)));
-			
-			renderManager->LoadStaticMeshComponent(modelPath3, AddStaticMeshComponentToEntity(floor).get());
-			renderManager->LoadMaterialComponent(materialNames3, AddMaterialComponentToEntity(floor).get());
-		}
-		// === !Other Wall ===
+		//	auto& transform3 = AddTransformComponentToEntity(floor)->Transform;
+		//	transform3.GetMatrix().Translation(translations[i]);
+		//	transform3.GetMatrix().SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundX(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundY(UMath::DegToRad(-90.0f)));
+		//	
+		//	renderManager->LoadStaticMeshComponent(modelPath3, AddStaticMeshComponentToEntity(floor).get());
+		//	renderManager->LoadMaterialComponent(materialNames3, AddMaterialComponentToEntity(floor).get());
+		//}
+		//// === !Other Wall ===
 	}
 
 	Ref<SEntity> CScene::CreateEntity(const std::string& name)

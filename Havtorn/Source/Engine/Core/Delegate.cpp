@@ -2,4 +2,4 @@
 
 #include "Delegate.h"
 
-unsigned int DelegateHandle::CURRENT_ID = 0;
+HAVTORN_API unsigned int DelegateHandle::CURRENT_ID = 0;
