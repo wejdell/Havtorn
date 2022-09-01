@@ -44,6 +44,9 @@ namespace Havtorn
 		// Based on XMMatrixInverse
 		inline SMatrix Inverse() const;
 		
+		inline SMatrix GetRHViewMatrix() const;
+		inline SMatrix GetRHProjectionMatrix() const;
+
 		inline SMatrix GetRotationMatrix() const;
 		inline void SetRotation(SMatrix matrix);
 		inline SMatrix GetTranslationMatrix() const;
@@ -618,6 +621,26 @@ namespace Havtorn
 		result.Row(1, R.Row(1) * reciprocal);
 		result.Row(2, R.Row(2) * reciprocal);
 		result.Row(3, R.Row(3) * reciprocal);
+		return result;
+	}
+
+	inline SMatrix SMatrix::GetRHViewMatrix() const
+	{
+		SMatrix result = *this;
+		//result.Right(-1.0f * Right());
+		result.Forward(-1.0f * Forward());
+		SVector translation = result.Translation();
+		result.Translation(SVector(translation.X, translation.Y, -translation.Z));
+		//result.Column(0, -1.0f * result.Column(0));
+
+		return result;
+	}
+
+	inline SMatrix SMatrix::GetRHProjectionMatrix() const
+	{
+		SMatrix result = *this;
+		result(2, 2) *= -1.0f;
+		result(3, 2) *= -1.0f;
 		return result;
 	}
 

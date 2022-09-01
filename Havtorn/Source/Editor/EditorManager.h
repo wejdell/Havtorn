@@ -2,6 +2,7 @@
 
 #pragma once
 #include "Havtorn.h"
+#include "Input/InputTypes.h"
 
 #include <filesystem>
 
@@ -15,6 +16,7 @@ namespace ImGui
 {
 	class CWindow;
 	class CToggleable;
+	class CViewportWindow;
 }
 
 namespace Havtorn
@@ -40,6 +42,14 @@ namespace Havtorn
 		Default,
 		Havtorn,
 		Count
+	};
+
+	// NR: Wrapper for ImGuizmo operations
+	enum class ETransformGizmo
+	{
+		Translate = 7,
+		Rotate = 120,
+		Scale = 896
 	};
 
 	struct SEditorLayout
@@ -97,9 +107,14 @@ namespace Havtorn
 		ImVec4 GetEditorColorThemeRepColor(const EEditorColorTheme colorTheme);
 		[[nodiscard]] const SEditorLayout& GetEditorLayout() const;
 
-		[[nodiscard]]  F32 GetViewportPadding() const;
+		[[nodiscard]] ETransformGizmo GetCurrentGizmo() const;
+		[[nodiscard]] bool GetIsFreeCamActive() const;
+
+		[[nodiscard]] F32 GetViewportPadding() const;
 		void SetViewportPadding(const F32 padding);
 	
+		ImGui::CViewportWindow* GetViewportWindow() const;
+
 		[[nodiscard]] const CRenderManager* GetRenderManager() const;
 		[[nodiscard]] const CEditorResourceManager* GetResourceManager() const;
 
@@ -112,6 +127,9 @@ namespace Havtorn
 		void PreProcessAssets();
 
 		void SetEditorColorProfile(const SEditorColorProfile& colorProfile);
+		void SetTransformGizmo(const SInputActionPayload payload);
+
+		void ToggleFreeCam(const SInputActionPayload payload);
 
 		[[nodiscard]] std::string GetFrameRate() const;
 		[[nodiscard]] std::string GetSystemMemory() const;
@@ -131,9 +149,12 @@ namespace Havtorn
 		SEditorLayout EditorLayout;
 		SEditorColorProfile EditorColorProfile;
 
+		ETransformGizmo CurrentGizmo = ETransformGizmo::Translate;
+
 		F32 ViewportPadding = 0.2f;
 		bool IsEnabled = true;
 		bool IsDebugInfoOpen = true;
 		bool IsDemoOpen = false;
+		bool IsFreeCamActive = false;
 	};
 }

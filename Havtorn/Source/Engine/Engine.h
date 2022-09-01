@@ -49,10 +49,9 @@ namespace Havtorn
 		static HAVTORN_API CFileSystem* GetFileSystem();
 		static HAVTORN_API CTextureBank* GetTextureBank();
 		static HAVTORN_API CThreadManager* GetThreadManager();
+		static HAVTORN_API CInputMapper* GetInput();
 		
 	public:
-		static CInputMapper* GetInput();
-
 		void InitWindowsImaging();
 		void CrashWithScreenShot(std::wstring& subPath);
 

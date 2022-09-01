@@ -2,6 +2,7 @@
 
 #pragma once
 #include "InputTypes.h"
+#include <map>
 
 namespace Havtorn
 {
@@ -24,8 +25,8 @@ namespace Havtorn
 	public:
 		void Update();
 
-		[[nodiscard]] CMulticastDelegate<const SInputActionPayload>& GetActionDelegate(EInputActionEvent event);
-		[[nodiscard]] CMulticastDelegate<const SInputAxisPayload>& GetAxisDelegate(EInputAxisEvent event);
+		[[nodiscard]] HAVTORN_API CMulticastDelegate<const SInputActionPayload>& GetActionDelegate(EInputActionEvent event);
+		[[nodiscard]] HAVTORN_API CMulticastDelegate<const SInputAxisPayload>& GetAxisDelegate(EInputAxisEvent event);
 
 		void SetInputContext(EInputContext context);
 

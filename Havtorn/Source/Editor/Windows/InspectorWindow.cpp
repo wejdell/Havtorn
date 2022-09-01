@@ -1,7 +1,7 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #include "InspectorWindow.h"
-//#include <imgui.h>
+#include "Core/ImGuizmo/ImGuizmo.h"
 
 #include "ECS/ECSInclude.h"
 #include "Engine.h"
@@ -9,6 +9,8 @@
 #include "Graphics/RenderManager.h"
 #include "Graphics/TextureBank.h"
 #include "Scene/Scene.h"
+
+#include "Windows/ViewportWindow.h"
 
 namespace ImGui
 {
@@ -121,11 +123,30 @@ namespace ImGui
 	{
 		if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			auto& transformMatrix = Scene->GetTransformComponents()[transformComponentIndex]->Transform.GetMatrix();
-			const SVector position = transformMatrix.Translation();
-			Havtorn::F32 data[3] = { position.X, position.Y, position.Z };
-			ImGui::DragFloat3("Position", data, SlideSpeed);
-			transformMatrix.Translation({ data[0], data[1], data[2] });
+			Havtorn::SMatrix& transformMatrix = Scene->GetTransformComponents()[transformComponentIndex]->Transform.GetMatrix();
+
+			F32 matrixTranslation[3], matrixRotation[3], matrixScale[3];
+			ImGuizmo::DecomposeMatrixToComponents(transformMatrix.data, matrixTranslation, matrixRotation, matrixScale);
+			ImGui::DragFloat3("Position", matrixTranslation, SlideSpeed);
+			ImGui::DragFloat3("Rotation", matrixRotation, SlideSpeed);
+			ImGui::DragFloat3("Scale", matrixScale, SlideSpeed);
+			ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, transformMatrix.data);
+
+			if (Manager->GetIsFreeCamActive())
+				return;
+
+			CViewportWindow* viewportWindow = Manager->GetViewportWindow();
+			SVector2<F32> viewPortWindowDimensions = viewportWindow->GetRenderedSceneDimensions();
+			SVector2<F32> viewPortWindowPosition = viewportWindow->GetRenderedScenePosition();
+
+			ImGuizmo::SetDrawlist(viewportWindow->GetCurrentDrawList());
+			ImGuizmo::SetRect(viewPortWindowPosition.X, viewPortWindowPosition.Y, viewPortWindowDimensions.X, viewPortWindowDimensions.Y);
+
+			auto& cameraComp = Scene->GetCameraComponents()[0];
+			auto& cameraTransformComp = Scene->GetTransformComponents()[cameraComp->Entity->GetComponentIndex(EComponentType::TransformComponent)];
+			Havtorn::SMatrix inverseView = cameraTransformComp->Transform.GetMatrix().Inverse();
+
+			ImGuizmo::Manipulate(inverseView.data, cameraComp->ProjectionMatrix.data, static_cast<ImGuizmo::OPERATION>(Manager->GetCurrentGizmo()), ImGuizmo::LOCAL, transformMatrix.data);
 		}
 	}
 

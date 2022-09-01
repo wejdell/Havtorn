@@ -132,9 +132,10 @@ namespace Havtorn
 	enum class EInputActionEvent
 	{
 		None,
-		CenterCamera,
-		ResetCamera,
-		TeleportCamera,
+		TranslateTransform,
+		RotateTransform,
+		ScaleTransform,
+		ToggleFreeCam,
 		Count
 	};
 
@@ -154,6 +155,7 @@ namespace Havtorn
 
 	struct SInputActionPayload
 	{
+		EInputActionEvent Event = EInputActionEvent::Count;
 		EInputKey Key = EInputKey::None;
 		bool IsPressed = false;
 		bool IsHeld = false;

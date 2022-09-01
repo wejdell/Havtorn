@@ -9,9 +9,13 @@
 
 namespace Havtorn
 {
+	class CInputMapper;
+
 	class CInput
 	{
 	public:
+		friend CInputMapper;
+
 		static CInput* GetInstance();
 
 		enum class EMouseButton
@@ -34,7 +38,6 @@ namespace Havtorn
 		bool UpdateEvents(UINT message, WPARAM wParam, LPARAM lParam);
 		void UpdateState();
 
-		[[nodiscard]] const std::map<WPARAM, SInputActionPayload>& GetKeyInputBuffer() const;
 		[[nodiscard]] const std::bitset<3>& GetKeyInputModifiers() const;
 
 		static SVector2<F32> GetAxisRaw();
@@ -60,6 +63,8 @@ namespace Havtorn
 		static void SetMouseScreenPosition(U16 x, U16 y);
 
 	private:
+		[[nodiscard]] std::map<WPARAM, SInputActionPayload>& GetKeyInputBuffer();
+
 		void HandleKeyDown(const WPARAM& wParam);
 		void HandleKeyUp(const WPARAM& wParam);
 		void UpdateAxisUsingFallOff();
