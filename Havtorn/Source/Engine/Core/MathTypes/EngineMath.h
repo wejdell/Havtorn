@@ -48,6 +48,9 @@ namespace Havtorn
 		static inline bool NearlyEqual(F32 a, F32 b, F32 tolerance = KINDA_SMALL_NUMBER);
 
 		template<typename T>
+		static inline T Exp(T x);
+
+		template<typename T>
 		static inline T Max(T x, T y);
 
 		template<typename T>
@@ -74,6 +77,9 @@ namespace Havtorn
 		static inline T DegToRad(T angleInDegrees);
 		template<typename T>
 		static inline T RadToDeg(T angleInRadians);
+
+		template<typename T>
+		static inline T WrapAngle(T angleInDegrees);
 
 		/* From XM Math Misc - XMScalarSinCos */
 		static inline void MapFov(F32& outSinValue, F32& outCosValue, F32 halfYFovAngle);
@@ -158,6 +164,12 @@ namespace Havtorn
 	}
 
 	template<typename T>
+	inline T UMath::Exp(T x)
+	{
+		return std::exp(x);
+	}
+
+	template<typename T>
 	inline T UMath::Max(T x, T y)
 	{
 		return y < x ? x : y;
@@ -216,6 +228,12 @@ namespace Havtorn
 	inline T UMath::RadToDeg(T angleInRadians)
 	{
 		return angleInRadians * RADIANS_TO_DEGREES;
+	}
+
+	template<typename T>
+	inline T UMath::WrapAngle(T angle)
+	{
+		return fmodf(angle, Tau);
 	}
 
 	inline bool UMath::NearlyEqual(F32 a, F32 b, F32 tolerance)

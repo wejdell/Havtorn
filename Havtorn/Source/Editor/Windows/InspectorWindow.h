@@ -24,6 +24,7 @@ namespace ImGui
 		void InspectTransformComponent(Havtorn::I64 transformComponentIndex);
 		void InspectStaticMeshComponent(Havtorn::I64 staticMeshComponentIndex);
 		void InspectCameraComponent(Havtorn::I64 cameraComponentIndex);
+		void InspectCameraControllerComponent(Havtorn::I64 cameraControllerComponentIndex);
 		void InspectMaterialComponent(Havtorn::I64 materialComponentIndex);
 		void InspectEnvironmentLightComponent(Havtorn::I64 environmentLightComponentIndex);
 		void InspectDirectionalLightComponent(Havtorn::I64 directionalLightComponentIndex);

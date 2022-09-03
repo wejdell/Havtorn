@@ -69,6 +69,12 @@ namespace ImGui
 					ImGui::Dummy({ DummySize.X, DummySize.Y });
 				}
 
+				if (selection->HasComponent(EComponentType::CameraControllerComponent))
+				{
+					InspectCameraControllerComponent(selection->GetComponentIndex(EComponentType::CameraControllerComponent));
+					ImGui::Dummy({ DummySize.X, DummySize.Y });
+				}
+
 				if (selection->HasComponent(EComponentType::MaterialComponent))
 				{
 					InspectMaterialComponent(selection->GetComponentIndex(EComponentType::MaterialComponent));
@@ -182,6 +188,17 @@ namespace ImGui
 			ImGui::DragFloat("Far Clip Plane", &cameraComp->FarClip, SlideSpeed, cameraComp->NearClip + 1.0f, 10000.0f);
 
 			cameraComp->ProjectionMatrix = Havtorn::SMatrix::PerspectiveFovLH(Havtorn::UMath::DegToRad(cameraComp->FOV), cameraComp->AspectRatio, cameraComp->NearClip, cameraComp->FarClip);
+		}
+	}
+
+	void CInspectorWindow::InspectCameraControllerComponent(Havtorn::I64 cameraControllerComponentIndex)
+	{
+		if (ImGui::CollapsingHeader("Camera Controller", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
+		{
+			auto& cameraControllerComp = Scene->GetCameraControllerComponents()[cameraControllerComponentIndex];
+			ImGui::DragFloat("Max Move Speed", &cameraControllerComp->MaxMoveSpeed, SlideSpeed, 0.1f, 10.0f);
+			ImGui::DragFloat("Rotation Speed", &cameraControllerComp->RotationSpeed, SlideSpeed, 0.1f, 5.0f);
+			ImGui::DragFloat("Acceleration Duration", &cameraControllerComp->AccelerationDuration, SlideSpeed * 0.1f, 0.1f, 5.0f);
 		}
 	}
 

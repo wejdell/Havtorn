@@ -16,6 +16,9 @@ namespace Havtorn
 		void ToggleFreeCam(const SInputActionPayload payload);
 
 	private:
+		void ResetInput();
+
+	private:
 		SVector CameraMoveInput = SVector::Zero;
 		SVector CameraRotateInput = SVector::Zero;
 

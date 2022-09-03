@@ -74,6 +74,8 @@ namespace Havtorn
 		inline F32 Size2D() const;
 		inline F32 SizeSquared2D() const;
 
+		inline bool IsNearlyZero(F32 tolerance = VECTOR_NORMALIZED_EPSILON) const;
+
 		inline void Normalize();
 		inline SVector GetNormalized() const;
 		inline bool IsNormalized() const;
@@ -276,6 +278,11 @@ namespace Havtorn
 	inline F32 SVector::SizeSquared2D() const
 	{
 		return this->LengthSquared2D();
+	}
+
+	inline bool SVector::IsNearlyZero(F32 tolerance) const
+	{
+		return UMath::IsWithin(this->LengthSquared(), -tolerance, tolerance);
 	}
 
 	inline void SVector::Normalize()
