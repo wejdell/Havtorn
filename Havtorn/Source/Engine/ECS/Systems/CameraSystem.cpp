@@ -48,7 +48,8 @@ namespace Havtorn
 		{
 			// Decelerate
 			controllerComp->CurrentAccelerationFactor = UMath::Clamp(controllerComp->CurrentAccelerationFactor - (1.0f / controllerComp->AccelerationDuration) * dt);
-			transformComp->Transform.Translate(controllerComp->AccelerationDirection * controllerComp->CurrentAccelerationFactor * controllerComp->MaxMoveSpeed * dt);
+			F32 easedFactor = UMath::EaseInOutCubic(controllerComp->CurrentAccelerationFactor);
+			transformComp->Transform.Translate(controllerComp->AccelerationDirection * easedFactor * controllerComp->MaxMoveSpeed * dt);
 
 			ResetInput();
 			return;
@@ -64,7 +65,8 @@ namespace Havtorn
 		{
 			// Decelerate
 			controllerComp->CurrentAccelerationFactor = UMath::Clamp(controllerComp->CurrentAccelerationFactor - (1.0f / controllerComp->AccelerationDuration) * dt);
-			transformComp->Transform.Translate(controllerComp->AccelerationDirection * controllerComp->CurrentAccelerationFactor * controllerComp->MaxMoveSpeed * dt);
+			F32 easedFactor = UMath::EaseInOutCubic(controllerComp->CurrentAccelerationFactor);
+			transformComp->Transform.Translate(controllerComp->AccelerationDirection * easedFactor * controllerComp->MaxMoveSpeed * dt);
 
 			ResetInput();
 			return;
@@ -72,12 +74,14 @@ namespace Havtorn
 
 		// Jerk
 		if (controllerComp->AccelerationDirection != CameraMoveInput.GetNormalized())
-			controllerComp->CurrentAccelerationFactor = UMath::Min(controllerComp->CurrentAccelerationFactor, 0.2f);
+			controllerComp->CurrentAccelerationFactor = UMath::Min(controllerComp->CurrentAccelerationFactor, 0.4f);
 		 
 		// Accelerate
 		controllerComp->CurrentAccelerationFactor = UMath::Clamp(controllerComp->CurrentAccelerationFactor + (1.0f / controllerComp->AccelerationDuration) * dt);
 		controllerComp->AccelerationDirection = CameraMoveInput.GetNormalized();	
-		transformComp->Transform.Translate(controllerComp->AccelerationDirection * controllerComp->CurrentAccelerationFactor * controllerComp->MaxMoveSpeed * dt);
+		
+		F32 easedFactor = UMath::EaseInOutCubic(controllerComp->CurrentAccelerationFactor);
+		transformComp->Transform.Translate(controllerComp->AccelerationDirection * easedFactor * controllerComp->MaxMoveSpeed * dt);
 
 		ResetInput();
 	}
