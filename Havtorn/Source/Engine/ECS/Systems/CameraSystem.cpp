@@ -74,7 +74,7 @@ namespace Havtorn
 
 		// Jerk
 		if (controllerComp->AccelerationDirection != CameraMoveInput.GetNormalized())
-			controllerComp->CurrentAccelerationFactor = UMath::Min(controllerComp->CurrentAccelerationFactor, 0.4f);
+			controllerComp->CurrentAccelerationFactor = UMath::Min(controllerComp->CurrentAccelerationFactor, 0.5f);
 		 
 		// Accelerate
 		controllerComp->CurrentAccelerationFactor = UMath::Clamp(controllerComp->CurrentAccelerationFactor + (1.0f / controllerComp->AccelerationDuration) * dt);
