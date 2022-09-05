@@ -15,6 +15,7 @@ namespace Havtorn
 	struct SVector
 	{
 		// TODO.NR: Make union so you can access xyz as F32[3]
+		// TODO.NR: Add [] operator
 
 		F32 X, Y, Z;
 

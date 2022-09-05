@@ -149,10 +149,10 @@ namespace Havtorn
 		const auto v2 = SVector4(r1.Y, r2.X, r1.Y, r2.X);
 
 		SMatrix matrix;
-		matrix.Row(0) = SVector4(v0.X, v1.X, v1.Y, v0.W);
-		matrix.Row(1) = SVector4(v1.Z, v0.Y, v1.W, v0.W);
-		matrix.Row(2) = SVector4(v2.X, v2.Y, v0.Z, v0.W);
-		matrix.Row(3) = SVector4(0.0f, 0.0f, 0.0f, 1.0f);
+		matrix.GetRow(0) = SVector4(v0.X, v1.X, v1.Y, v0.W);
+		matrix.GetRow(1) = SVector4(v1.Z, v0.Y, v1.W, v0.W);
+		matrix.GetRow(2) = SVector4(v2.X, v2.Y, v0.Z, v0.W);
+		matrix.GetRow(3) = SVector4(0.0f, 0.0f, 0.0f, 1.0f);
 		return matrix;
 	}
 }
