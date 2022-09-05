@@ -16,7 +16,7 @@ namespace Havtorn
 	// Left-handed row-major
 	struct SMatrix 
 	{	
-		union { __declspec(align(16)) F32 M[4][4]; F32 data[16]; };
+		union { __declspec(align(16)) F32 M[4][4]; F32 data[16];  };
 
 		static const SMatrix Identity;
 		static const SMatrix Zero;
@@ -48,10 +48,16 @@ namespace Havtorn
 		inline SMatrix GetRHProjectionMatrix() const;
 
 		inline SMatrix GetRotationMatrix() const;
+		inline SVector GetEuler() const;
 		inline void SetRotation(SMatrix matrix);
 		inline void SetRotation(SVector eulerAngles);
 		inline SMatrix GetTranslationMatrix() const;
 		inline F32 GetRotationMatrixTrace() const;
+		inline SMatrix GetScalingMatrix() const;
+		inline SVector GetScale() const;
+		inline void SetScale(SVector scale);
+		inline void SetScale(F32 xScale, F32 yScale, F32 zScale);
+		inline void SetScale(F32 scale);
 
 		inline SMatrix operator+(const SMatrix& matrix);
 		inline SMatrix& operator+=(const SMatrix& matrix);
@@ -66,28 +72,30 @@ namespace Havtorn
 		inline friend SVector4 operator*(SMatrix matrix, SVector4 vector);
 		inline friend SVector4 operator*(SVector4 vector, SMatrix matrix);
 
-		inline SVector4 Row(U8 index) const;
-		inline SVector4 Column(U8 index) const;
-		inline void Row(U8 index, const SVector4& vector);
-		inline void Column(U8 index, const SVector4& vector);
+		inline SVector4 GetRow(U8 index) const;
+		inline SVector4 GetColumn(U8 index) const;
+		inline void SetRow(U8 index, const SVector4& vector);
+		inline void SetColumn(U8 index, const SVector4& vector);
 
-		inline SVector Up() const;
-		inline SVector Down() const;
-		inline SVector Right() const;
-		inline SVector Left() const;
-		inline SVector Forward() const;
-		inline SVector Backward() const;
-		inline SVector Translation() const;
-		inline SVector4 Translation4() const;
+		inline SVector GetUp() const;
+		inline SVector GetDown() const;
+		inline SVector GetRight() const;
+		inline SVector GetLeft() const;
+		inline SVector GetForward() const;
+		inline SVector GetBackward() const;
+		inline SVector GetTranslation() const;
+		inline SVector4 GetTranslation4() const;
 
-		inline void Up(const SVector& v);
-		inline void Down(const SVector& v);
-		inline void Right(const SVector& v);
-		inline void Left(const SVector& v);
-		inline void Forward(const SVector& v);
-		inline void Backward(const SVector& v);
-		inline void Translation(const SVector& v);
-		inline void Translation(const SVector4& v);
+		inline void SetUp(const SVector& v);
+		inline void SetDown(const SVector& v);
+		inline void SetRight(const SVector& v);
+		inline void SetLeft(const SVector& v);
+		inline void SetForward(const SVector& v);
+		inline void SetBackward(const SVector& v);
+		inline void SetTranslation(const SVector& v);
+		inline void SetTranslation(const SVector4& v);
+
+		inline void OrthoNormalize();
 
 		inline bool operator==(const SMatrix& matrix) const;
 
@@ -170,46 +178,24 @@ namespace Havtorn
 
 	inline SMatrix SMatrix::CreateRotationAroundAxis(F32 angleInRadians, SVector axis)
 	{
-		//F32 cosTerm = UMath::Cos(angleInRadians);
-		//F32 sinTerm = UMath::Sin(angleInRadians);
-		//F32 oneMinusCos = 1.0f - cosTerm;
-		//F32 x2 = axis.X * axis.X;
-		//F32 y2 = axis.Y * axis.Y;
-		//F32 z2 = axis.Z * axis.Z;
-		//F32 xy = axis.X * axis.Y;
-		//F32 xz = axis.X * axis.Z;
-		//F32 yz = axis.Y * axis.Z;
-
-		//SMatrix matrix;
-		//matrix(0, 0) = cosTerm + (x2 * oneMinusCos);
-		//matrix(0, 1) = (xy * oneMinusCos) - (axis.Z * sinTerm);
-		//matrix(0, 2) = (xz * oneMinusCos) + (axis.Y * sinTerm);
-		//matrix(1, 0) = (xy * oneMinusCos) + (axis.Z * sinTerm);
-		//matrix(1, 1) = cosTerm + (y2 * oneMinusCos);
-		//matrix(1, 2) = (yz * oneMinusCos) - (axis.X * sinTerm);
-		//matrix(2, 0) = (xz * oneMinusCos) - (axis.Y * sinTerm);
-		//matrix(2, 1) = (yz * oneMinusCos) + (axis.X * sinTerm);
-		//matrix(2, 2) = cosTerm + (z2 * oneMinusCos);
-		//return matrix;
-
 		F32 lengthSq = axis.LengthSquared();
 		if (lengthSq < FLT_EPSILON)
 			return SMatrix();
 		
 		SVector n = axis * (1.f / sqrtf(lengthSq));
-		F32 s = sinf(angleInRadians);
-		F32 c = cosf(angleInRadians);
-		F32 k = 1.f - c;
+		F32 cosTerm = UMath::Cos(angleInRadians);
+		F32 sinTerm = UMath::Sin(angleInRadians);
+		F32 oneMinusCos = 1.0f - cosTerm;
 
-		F32 xx = n.X * n.X * k + c;
-		F32 yy = n.Y * n.Y * k + c;
-		F32 zz = n.Z * n.Z * k + c;
-		F32 xy = n.X * n.Y * k;
-		F32 yz = n.Y * n.Z * k;
-		F32 zx = n.Z * n.X * k;
-		F32 xs = n.X * s;
-		F32 ys = n.Y * s;
-		F32 zs = n.Z * s;
+		F32 xx = n.X * n.X * oneMinusCos + cosTerm;
+		F32 yy = n.Y * n.Y * oneMinusCos + cosTerm;
+		F32 zz = n.Z * n.Z * oneMinusCos + cosTerm;
+		F32 xy = n.X * n.Y * oneMinusCos;
+		F32 yz = n.Y * n.Z * oneMinusCos;
+		F32 zx = n.Z * n.X * oneMinusCos;
+		F32 xs = n.X * sinTerm;
+		F32 ys = n.Y * sinTerm;
+		F32 zs = n.Z * sinTerm;
 
 		SMatrix matrix;
 		matrix(0, 0) = xx;
@@ -235,8 +221,22 @@ namespace Havtorn
 	SMatrix SMatrix::GetRotationMatrix() const
 	{
 		SMatrix rotationMatrix = *this;
-		rotationMatrix.Translation(SVector::Zero);
+		rotationMatrix.OrthoNormalize();
+		rotationMatrix.SetTranslation(SVector::Zero);
 		return rotationMatrix;
+	}
+
+	inline SVector SMatrix::GetEuler() const
+	{
+		SMatrix rotationMatrix = *this;
+		rotationMatrix.OrthoNormalize();
+		
+		SVector euler;
+		euler.X = UMath::RadToDeg(atan2f(M[1][2], M[2][2]));
+		euler.Y = UMath::RadToDeg(atan2f(-M[0][2], sqrtf(M[1][2] * M[1][2] + M[2][2] * M[2][2])));
+		euler.Z = UMath::RadToDeg(atan2f(M[0][1], M[0][0]));
+		
+		return euler;
 	}
 
 	inline void SMatrix::SetRotation(SMatrix matrix)
@@ -259,13 +259,53 @@ namespace Havtorn
 	SMatrix SMatrix::GetTranslationMatrix() const
 	{
 		SMatrix translationMatrix = SMatrix();
-		translationMatrix.Translation(this->Translation());
+		translationMatrix.SetTranslation(this->GetTranslation());
 		return translationMatrix;
 	}
 
 	inline F32 SMatrix::GetRotationMatrixTrace() const
 	{
 		return M[0][0] + M[1][1] + M[2][2];
+	}
+
+	inline SMatrix SMatrix::GetScalingMatrix() const
+	{
+		SMatrix scalingMatrix = SMatrix();
+		scalingMatrix(0, 0) = GetRight().Length();
+		scalingMatrix(1, 1) = GetUp().Length();
+		scalingMatrix(2, 2) = GetForward().Length();
+		return scalingMatrix;
+	}
+
+	inline SVector SMatrix::GetScale() const
+	{
+		SVector scale;
+		scale.X = GetRight().Length();
+		scale.Y = GetUp().Length();
+		scale.Z = GetForward().Length();
+		return scale;
+	}
+
+	inline void SMatrix::SetScale(SVector scale)
+	{
+		F32 validScale[3];
+		validScale[0] = scale.X < FLT_EPSILON ? 0.001f : scale.X;
+		validScale[1] = scale.Y < FLT_EPSILON ? 0.001f : scale.Y;
+		validScale[2] = scale.Z < FLT_EPSILON ? 0.001f : scale.Z;
+
+		M[0][0] = validScale[0];
+		M[1][1] = validScale[1];
+		M[2][2] = validScale[2];
+	}
+
+	inline void SMatrix::SetScale(F32 xScale, F32 yScale, F32 zScale)
+	{
+		SetScale({ xScale, yScale, zScale });
+	}
+
+	inline void SMatrix::SetScale(F32 scale)
+	{
+		SetScale({ scale, scale, scale });
 	}
 
 	SMatrix SMatrix::operator+(const SMatrix& matrix)
@@ -423,17 +463,17 @@ namespace Havtorn
 		return equal;
 	}
 
-	SVector4 SMatrix::Row(U8 index) const
+	SVector4 SMatrix::GetRow(U8 index) const
 	{
 		return SVector4(M[index][0], M[index][1], M[index][2], M[index][3]);
 	}
 
-	SVector4 SMatrix::Column(U8 index) const
+	SVector4 SMatrix::GetColumn(U8 index) const
 	{
 		return SVector4(M[0][index], M[1][index], M[2][index], M[3][index]);
 	}
 
-	inline void SMatrix::Row(U8 index, const SVector4& vector)
+	inline void SMatrix::SetRow(U8 index, const SVector4& vector)
 	{
 		M[index][0] = vector.X;
 		M[index][1] = vector.Y;
@@ -441,7 +481,7 @@ namespace Havtorn
 		M[index][3] = vector.W;
 	}
 
-	inline void SMatrix::Column(U8 index, const SVector4& vector)
+	inline void SMatrix::SetColumn(U8 index, const SVector4& vector)
 	{
 		M[0][index] = vector.X;
 		M[1][index] = vector.Y;
@@ -449,101 +489,108 @@ namespace Havtorn
 		M[3][index] = vector.W;
 	}
 
-	inline SVector SMatrix::Up() const
+	inline SVector SMatrix::GetUp() const
 	{
 		return SVector(M[1][0], M[1][1], M[1][2]);
 	}
 
-	inline SVector SMatrix::Down() const
+	inline SVector SMatrix::GetDown() const
 	{
 		return SVector(-M[1][0], -M[1][1], -M[1][2]);
 	}
 
-	inline SVector SMatrix::Right() const
+	inline SVector SMatrix::GetRight() const
 	{
 		return SVector(M[0][0], M[0][1], M[0][2]);
 	}
 
-	inline SVector SMatrix::Left() const
+	inline SVector SMatrix::GetLeft() const
 	{
 		return SVector(-M[0][0], -M[0][1], -M[0][2]);
 	}
 
-	inline SVector SMatrix::Forward() const
+	inline SVector SMatrix::GetForward() const
 	{
 		return SVector(M[2][0], M[2][1], M[2][2]);
 	}
 
-	inline SVector SMatrix::Backward() const
+	inline SVector SMatrix::GetBackward() const
 	{
 		return SVector(-M[2][0], -M[2][1], -M[2][2]);
 	}
 
-	inline SVector SMatrix::Translation() const
+	inline SVector SMatrix::GetTranslation() const
 	{
 		return SVector(M[3][0], M[3][1], M[3][2]);
 	}
 
-	inline SVector4 SMatrix::Translation4() const
+	inline SVector4 SMatrix::GetTranslation4() const
 	{
-		return Row(3);
+		return GetRow(3);
 	}
 
-	inline void SMatrix::Up(const SVector& v)
+	inline void SMatrix::SetUp(const SVector& v)
 	{
 		M[1][0] = v.X;
 		M[1][1] = v.Y;
 		M[1][2] = v.Z;
 	}
 
-	inline void SMatrix::Down(const SVector& v)
+	inline void SMatrix::SetDown(const SVector& v)
 	{
 		M[1][0] = -v.X;
 		M[1][1] = -v.Y;
 		M[1][2] = -v.Z;
 	}
 
-	inline void SMatrix::Right(const SVector& v)
+	inline void SMatrix::SetRight(const SVector& v)
 	{
 		M[0][0] = v.X;
 		M[0][1] = v.Y;
 		M[0][2] = v.Z;
 	}
 
-	inline void SMatrix::Left(const SVector& v)
+	inline void SMatrix::SetLeft(const SVector& v)
 	{
 		M[0][0] = -v.X;
 		M[0][1] = -v.Y;
 		M[0][2] = -v.Z;
 	}
 
-	inline void SMatrix::Forward(const SVector& v)
+	inline void SMatrix::SetForward(const SVector& v)
 	{
 		M[2][0] = v.X;
 		M[2][1] = v.Y;
 		M[2][2] = v.Z;
 	}
 
-	inline void SMatrix::Backward(const SVector& v)
+	inline void SMatrix::SetBackward(const SVector& v)
 	{
 		M[2][0] = -v.X;
 		M[2][1] = -v.Y;
 		M[2][2] = -v.Z;
 	}
 
-	inline void SMatrix::Translation(const SVector& v)
+	inline void SMatrix::SetTranslation(const SVector& v)
 	{
 		M[3][0] = v.X;
 		M[3][1] = v.Y;
 		M[3][2] = v.Z;
 	}
 
-	inline void SMatrix::Translation(const SVector4& v)
+	inline void SMatrix::SetTranslation(const SVector4& v)
 	{
 		M[3][0] = v.X;
 		M[3][1] = v.Y;
 		M[3][2] = v.Z;
 		M[3][3] = v.W;
+	}
+
+	inline void SMatrix::OrthoNormalize()
+	{
+		SetRight(GetRight().GetNormalized());
+		SetUp(GetUp().GetNormalized());
+		SetForward(GetForward().GetNormalized());
 	}
 
 	// Static function for creating a transpose of a matrix.
@@ -564,14 +611,14 @@ namespace Havtorn
 	inline SMatrix SMatrix::FastInverse() const
 	{
 		SMatrix rotation = Transpose(this->GetRotationMatrix());
-		SVector4 translation = SVector4(this->Translation(), 1.0f);
+		SVector4 translation = SVector4(this->GetTranslation(), 1.0f);
 		translation *= -1.0f;
 		translation.W *= -1.0f;
 		translation = translation * rotation;
 
 		SMatrix result;
 		result.SetRotation(rotation);
-		result.Translation(translation);
+		result.SetTranslation(translation);
 		return result;
 	}
 
@@ -580,10 +627,10 @@ namespace Havtorn
 		SMatrix matrixTranspose = Transpose(*this);
 
 		SVector4 V0[4], V1[4];
-		SVector4 row0 = matrixTranspose.Row(0);
-		SVector4 row1 = matrixTranspose.Row(1);
-		SVector4 row2 = matrixTranspose.Row(2);
-		SVector4 row3 = matrixTranspose.Row(3);
+		SVector4 row0 = matrixTranspose.GetRow(0);
+		SVector4 row1 = matrixTranspose.GetRow(1);
+		SVector4 row2 = matrixTranspose.GetRow(2);
+		SVector4 row3 = matrixTranspose.GetRow(3);
 
 		V0[0] = SVector4(row2.X, row2.X, row2.Y, row2.Y);
 		V1[0] = SVector4(row3.Z, row3.W, row3.Z, row3.W);
@@ -654,19 +701,19 @@ namespace Havtorn
 		C6 = C6 - (V0[3] * V1[3]);
 
 		SMatrix R;
-		R.Row(0, { C0.X, C1.Y, C0.Z, C1.W });
-		R.Row(1, { C2.X, C3.Y, C2.Z, C3.W });
-		R.Row(2, { C4.X, C5.Y, C4.Z, C5.W });
-		R.Row(3, { C6.X, C7.Y, C6.Z, C7.W });
+		R.SetRow(0, { C0.X, C1.Y, C0.Z, C1.W });
+		R.SetRow(1, { C2.X, C3.Y, C2.Z, C3.W });
+		R.SetRow(2, { C4.X, C5.Y, C4.Z, C5.W });
+		R.SetRow(3, { C6.X, C7.Y, C6.Z, C7.W });
 
-		F32 determinant = R.Row(0).Dot(matrixTranspose.Row(0));
+		F32 determinant = R.GetRow(0).Dot(matrixTranspose.GetRow(0));
 		SVector4 reciprocal = SVector4(SVector(1.0f / determinant), 1.0f / determinant);
 
 		SMatrix result;
-		result.Row(0, R.Row(0) * reciprocal);
-		result.Row(1, R.Row(1) * reciprocal);
-		result.Row(2, R.Row(2) * reciprocal);
-		result.Row(3, R.Row(3) * reciprocal);
+		result.SetRow(0, R.GetRow(0) * reciprocal);
+		result.SetRow(1, R.GetRow(1) * reciprocal);
+		result.SetRow(2, R.GetRow(2) * reciprocal);
+		result.SetRow(3, R.GetRow(3) * reciprocal);
 		return result;
 	}
 
@@ -674,10 +721,10 @@ namespace Havtorn
 	{
 		SMatrix result = *this;
 		//result.Right(-1.0f * Right());
-		result.Forward(-1.0f * Forward());
-		SVector translation = result.Translation();
-		result.Translation(SVector(translation.X, translation.Y, -translation.Z));
-		//result.Column(0, -1.0f * result.Column(0));
+		result.SetForward(-1.0f * GetForward());
+		SVector translation = result.GetTranslation();
+		result.SetTranslation(SVector(translation.X, translation.Y, -translation.Z));
+		//result.SetColumn(0, -1.0f * result.SetColumn(0));
 
 		return result;
 	}
@@ -712,9 +759,9 @@ namespace Havtorn
 		F32 d2 = r2.Dot(negEyePosition);
 
 		SMatrix M;
-		M.Right({ r0.X, r0.Y, r0.Z });
-		M.Up({ r1.X, r1.Y, r1.Z });
-		M.Forward({ r2.X, r2.Y, r2.Z });
+		M.SetRight({ r0.X, r0.Y, r0.Z });
+		M.SetUp({ r1.X, r1.Y, r1.Z });
+		M.SetForward({ r2.X, r2.Y, r2.Z });
 		M(0, 3) = d0;
 		M(1, 3) = d1;
 		M(2, 3) = d2;

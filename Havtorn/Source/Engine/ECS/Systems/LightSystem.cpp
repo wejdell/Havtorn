@@ -30,7 +30,7 @@ namespace Havtorn
 		const I64 transformCompIndex = mainCameraComp->Entity->GetComponentIndex(EComponentType::TransformComponent);
 		auto& transformComp = transformComponents[transformCompIndex];
 
-		directionalLightComp->ShadowmapView.ShadowPosition = transformComp->Transform.GetMatrix().Translation4();
+		directionalLightComp->ShadowmapView.ShadowPosition = transformComp->Transform.GetMatrix().GetTranslation4();
 		directionalLightComp->ShadowmapView.ShadowPosition.Y = 4.0f;
 
 		// Round to pixel positions
@@ -42,17 +42,17 @@ namespace Havtorn
 		const F32 l = sqrt(directionalLightComp->Direction.Z * directionalLightComp->Direction.Z + directionalLightComp->Direction.X * directionalLightComp->Direction.X);
 		const F32 radiansX = atan2(directionalLightComp->Direction.Y, l);
 		shadowTransform *= SMatrix::CreateRotationAroundY(radiansY);
-		shadowTransform *= SMatrix::CreateRotationFromAxisAngle(shadowTransform.Right(), radiansX);
+		shadowTransform *= SMatrix::CreateRotationFromAxisAngle(shadowTransform.GetRight(), radiansX);
 
-		F32 rightStep = position.Dot(shadowTransform.Right());
-		position -= rightStep * shadowTransform.Right();
+		F32 rightStep = position.Dot(shadowTransform.GetRight());
+		position -= rightStep * shadowTransform.GetRight();
 		rightStep = floor(rightStep / unitsPerPixel.X) * unitsPerPixel.X;
-		position += rightStep * shadowTransform.Right();
+		position += rightStep * shadowTransform.GetRight();
 
-		F32 upStep = position.Dot(shadowTransform.Up());
-		position -= upStep * shadowTransform.Up();
+		F32 upStep = position.Dot(shadowTransform.GetUp());
+		position -= upStep * shadowTransform.GetUp();
 		upStep = floor(upStep / unitsPerPixel.Y) * unitsPerPixel.Y;
-		position += upStep * shadowTransform.Up();
+		position += upStep * shadowTransform.GetUp();
 
 		directionalLightComp->ShadowmapView.ShadowPosition = SVector4(position.X, position.Y, position.Z, 1.0f);
 
@@ -63,7 +63,7 @@ namespace Havtorn
 			return;
 
 		const auto& pointLightComp = scene->GetPointLightComponents()[0];
-		SVector4 constantPosition = transformComponents[pointLightComp->Entity->GetComponentIndex(EComponentType::TransformComponent)]->Transform.GetMatrix().Translation4();
+		SVector4 constantPosition = transformComponents[pointLightComp->Entity->GetComponentIndex(EComponentType::TransformComponent)]->Transform.GetMatrix().GetTranslation4();
 		const SMatrix constantProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.01f, pointLightComp->Range);
 
 		// Forward

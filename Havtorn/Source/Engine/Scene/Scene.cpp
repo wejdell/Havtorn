@@ -19,7 +19,7 @@ namespace Havtorn
 
 		// Setup entities (create components)
 		auto transform = AddTransformComponentToEntity(cameraEntity);
-		transform->Transform.GetMatrix().Translation({ 2.0f, 1.0f, -3.0f });
+		transform->Transform.GetMatrix().SetTranslation({ 2.0f, 1.0f, -3.0f });
 		transform->Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
 		transform->Transform.Translate(SVector::Right * 0.25f);
 
@@ -64,7 +64,7 @@ namespace Havtorn
 		auto pointLightEntity = CreateEntity("Point Light");
 
 		auto pointLightTransform = AddTransformComponentToEntity(pointLightEntity);
-		pointLightTransform->Transform.GetMatrix().Translation({ 1.25f, 0.35f, -1.65f });
+		pointLightTransform->Transform.GetMatrix().SetTranslation({ 1.25f, 0.35f, -1.65f });
 
 		auto pointLightComp = AddPointLightComponentToEntity(pointLightEntity);
 		pointLightComp->ColorAndIntensity = { 0.0f, 1.0f, 1.0f, 10.0f };
@@ -74,7 +74,7 @@ namespace Havtorn
 		//volumetricPointLight->IsActive = true;
 
 		const SMatrix constantProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, pointLightComp->Range);
-		const SVector4 constantPosition = pointLightTransform->Transform.GetMatrix().Translation4();
+		const SVector4 constantPosition = pointLightTransform->Transform.GetMatrix().GetTranslation4();
 
 		// Forward
 		SShadowmapViewData& view1 = pointLightComp->ShadowmapViews[0];
@@ -138,7 +138,7 @@ namespace Havtorn
 		//volumetricSpotLight->IsActive = true;
 
 		const SMatrix spotlightProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, spotlightComp->Range);
-		const SVector4 spotlightPosition = TransformComponents.back()->Transform.GetMatrix().Translation4();
+		const SVector4 spotlightPosition = TransformComponents.back()->Transform.GetMatrix().GetTranslation4();
 
 		spotlightComp->ShadowmapView.ShadowPosition = spotlightPosition;
 		spotlightComp->ShadowmapView.ShadowmapViewportIndex = 7;
@@ -150,7 +150,7 @@ namespace Havtorn
 		auto decal = CreateEntity("Decal");
 
 		auto& decalTransform = AddTransformComponentToEntity(decal)->Transform;
-		decalTransform.GetMatrix().Translation({ 0.45f, 1.60f, 0.85f });
+		decalTransform.GetMatrix().SetTranslation({ 0.45f, 1.60f, 0.85f });
 
 		auto decalComp = AddDecalComponentToEntity(decal);
 
@@ -173,7 +173,7 @@ namespace Havtorn
 		auto pendulum = CreateEntity("Clock");
 
 		auto& transform1 = AddTransformComponentToEntity(pendulum)->Transform;
-		transform1.GetMatrix().Translation({1.75f, 0.0f, 0.25f});
+		transform1.GetMatrix().SetTranslation({1.75f, 0.0f, 0.25f});
 		//transform1.GetMatrix().Translation({0.0f, 0.0f, 1.0f});
 
 		renderManager->LoadStaticMeshComponent(modelPath1, AddStaticMeshComponentToEntity(pendulum).get());
@@ -184,7 +184,7 @@ namespace Havtorn
 		auto bed = CreateEntity("Bed");
 
 		auto& transform2 = AddTransformComponentToEntity(bed)->Transform;
-		transform2.GetMatrix().Translation({ 0.25f, 0.0f, 0.25f });
+		transform2.GetMatrix().SetTranslation({ 0.25f, 0.0f, 0.25f });
 
 		renderManager->LoadStaticMeshComponent(modelPath2, AddStaticMeshComponentToEntity(bed).get());
 		renderManager->LoadMaterialComponent(materialNames2, AddMaterialComponentToEntity(bed).get());
@@ -194,7 +194,7 @@ namespace Havtorn
 		auto lamp = CreateEntity("Lamp");
 
 		auto& transform4 = AddTransformComponentToEntity(lamp)->Transform;
-		transform4.GetMatrix().Translation({ -1.0f, 1.4f, -0.75f });
+		transform4.GetMatrix().SetTranslation({ -1.0f, 1.4f, -0.75f });
 		transform4.Rotate({ 0.0f, UMath::DegToRad(90.0f), 0.0f });
 
 		renderManager->LoadStaticMeshComponent(modelPath4, AddStaticMeshComponentToEntity(lamp).get());
@@ -221,7 +221,7 @@ namespace Havtorn
 			auto floor = CreateEntity("Floor");
 
 			auto& transform3 = AddTransformComponentToEntity(floor)->Transform;
-			transform3.GetMatrix().Translation(translations[i]);
+			transform3.GetMatrix().SetTranslation(translations[i]);
 			transform3.GetMatrix().SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)));
 
 			renderManager->LoadStaticMeshComponent(modelPath3, AddStaticMeshComponentToEntity(floor).get());
@@ -249,7 +249,7 @@ namespace Havtorn
 			auto floor = CreateEntity("Wall");
 
 			auto& transform3 = AddTransformComponentToEntity(floor)->Transform;
-			transform3.GetMatrix().Translation(translations[i]);
+			transform3.GetMatrix().SetTranslation(translations[i]);
 			transform3.GetMatrix().SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundX(UMath::DegToRad(-90.0f)));
 
 			renderManager->LoadStaticMeshComponent(modelPath3, AddStaticMeshComponentToEntity(floor).get());
@@ -274,7 +274,7 @@ namespace Havtorn
 			auto floor = CreateEntity("Wall");
 
 			auto& transform3 = AddTransformComponentToEntity(floor)->Transform;
-			transform3.GetMatrix().Translation(translations[i]);
+			transform3.GetMatrix().SetTranslation(translations[i]);
 			transform3.GetMatrix().SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundX(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundY(UMath::DegToRad(-90.0f)));
 			
 			renderManager->LoadStaticMeshComponent(modelPath3, AddStaticMeshComponentToEntity(floor).get());

@@ -59,6 +59,8 @@ namespace Havtorn
 		template<typename T>
 		static inline T Abs(T x);
 
+		static inline F32 FAbs(F32 x);
+
 		template<typename T>
 		static inline T Lerp(T a, T b, T t);
 		template<typename T>
@@ -239,6 +241,11 @@ namespace Havtorn
 	inline bool UMath::NearlyEqual(F32 a, F32 b, F32 tolerance)
 	{
 		return UMath::Abs(a - b) < tolerance;
+	}
+
+	inline F32 UMath::FAbs(F32 x)
+	{
+		return fabsf(x);
 	}
 
 	inline void UMath::MapFov(F32& outSinValue, F32& outCosValue, F32 halfYFovAngle)

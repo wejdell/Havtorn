@@ -417,7 +417,7 @@ namespace Havtorn
 					FrameBufferData.ToWorldFromCamera = transformComp->Transform.GetMatrix();
 					FrameBufferData.ToProjectionFromCamera = cameraComp->ProjectionMatrix;
 					FrameBufferData.ToCameraFromProjection = cameraComp->ProjectionMatrix.Inverse();
-					FrameBufferData.CameraPosition = transformComp->Transform.GetMatrix().Translation4();
+					FrameBufferData.CameraPosition = transformComp->Transform.GetMatrix().GetTranslation4();
 					BindBuffer(FrameBuffer, FrameBufferData, "Frame Buffer");
 
 					Context->VSSetConstantBuffers(0, 1, &FrameBuffer);
@@ -622,7 +622,7 @@ namespace Havtorn
 					// Update lightbufferdata and fill lightbuffer
 					const auto pointLightComp = currentCommand.GetComponent(PointLightComponent);
 					const auto transformComponent = currentCommand.GetComponent(TransformComponent);
-					SVector position = transformComponent->Transform.GetMatrix().Translation();
+					SVector position = transformComponent->Transform.GetMatrix().GetTranslation();
 					PointLightBufferData.ToWorldFromObject = transformComponent->Transform.GetMatrix();
 					PointLightBufferData.ColorAndIntensity = pointLightComp->ColorAndIntensity;
 					PointLightBufferData.PositionAndRange = { position.X, position.Y, position.Z, pointLightComp->Range };
@@ -674,7 +674,7 @@ namespace Havtorn
 					// Update lightbufferdata and fill lightbuffer
 					const auto spotLightComp = currentCommand.GetComponent(SpotLightComponent);
 					const auto transformComponent = currentCommand.GetComponent(TransformComponent);
-					SVector position = transformComponent->Transform.GetMatrix().Translation();
+					SVector position = transformComponent->Transform.GetMatrix().GetTranslation();
 
 					PointLightBufferData.ToWorldFromObject = transformComponent->Transform.GetMatrix();
 					PointLightBufferData.ColorAndIntensity = spotLightComp->ColorAndIntensity;
@@ -791,7 +791,7 @@ namespace Havtorn
 					const auto volumetricLightComp = currentCommand.GetComponent(VolumetricLightComponent);
 
 					// Light Buffer
-					SVector position = transformComp->Transform.GetMatrix().Translation();
+					SVector position = transformComp->Transform.GetMatrix().GetTranslation();
 					PointLightBufferData.ToWorldFromObject = transformComp->Transform.GetMatrix();
 					PointLightBufferData.ColorAndIntensity = pointLightComp->ColorAndIntensity;
 					PointLightBufferData.PositionAndRange = { position.X, position.Y, position.Z, pointLightComp->Range };
@@ -855,7 +855,7 @@ namespace Havtorn
 					const auto volumetricLightComp = currentCommand.GetComponent(VolumetricLightComponent);
 
 					// Light Buffer
-					SVector position = transformComp->Transform.GetMatrix().Translation();
+					SVector position = transformComp->Transform.GetMatrix().GetTranslation();
 					PointLightBufferData.ToWorldFromObject = transformComp->Transform.GetMatrix();
 					PointLightBufferData.ColorAndIntensity = spotLightComp->ColorAndIntensity;
 					PointLightBufferData.PositionAndRange = { position.X, position.Y, position.Z, spotLightComp->Range };
@@ -1335,7 +1335,7 @@ namespace Havtorn
 		FrameBufferData.ToWorldFromCamera = camTransform.GetMatrix();
 		FrameBufferData.ToProjectionFromCamera = camProjection;
 		FrameBufferData.ToCameraFromProjection = camProjection.Inverse();
-		FrameBufferData.CameraPosition = camTransform.GetMatrix().Translation4();
+		FrameBufferData.CameraPosition = camTransform.GetMatrix().GetTranslation4();
 		BindBuffer(FrameBuffer, FrameBufferData, "Frame Buffer");
 
 		Context->VSSetConstantBuffers(0, 1, &FrameBuffer);
