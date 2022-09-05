@@ -59,12 +59,9 @@ namespace Havtorn
 		Children.clear();
 	}
 
-	// TODO.NR: Fix this
 	inline void STransform::Rotate(const SMatrix& rotationMatrix)
 	{
-		SMatrix copy = rotationMatrix;
-		copy *= LocalMatrix.GetRotationMatrix();
-		LocalMatrix.SetRotation(LocalMatrix.GetRotationMatrix() * copy);
+		LocalMatrix *= rotationMatrix;
 	}
 
 	inline void STransform::Rotate(const SVector& eulerAngles)
@@ -75,22 +72,12 @@ namespace Havtorn
 		const SMatrix rightRotation = SMatrix::CreateRotationAroundAxis(eulerAngles.X, LocalMatrix.Right());
 		const SMatrix upRotation = SMatrix::CreateRotationAroundAxis(eulerAngles.Y, LocalMatrix.Up());
 		const SMatrix forwardRotation = SMatrix::CreateRotationAroundAxis(eulerAngles.Z, LocalMatrix.Forward());
-		//const SMatrix rightRotation = SMatrix::CreateRotationAroundAxis(eulerAngles.X, SVector::Right);
-		//const SMatrix upRotation = SMatrix::CreateRotationAroundAxis(eulerAngles.Y, SVector::Up);
-		//const SMatrix forwardRotation = SMatrix::CreateRotationAroundAxis(eulerAngles.Z, SVector::Forward);
+
 		SMatrix finalRotation = LocalMatrix.GetRotationMatrix();
 		finalRotation *= rightRotation;
 		finalRotation *= upRotation;
 		finalRotation *= forwardRotation;
 		LocalMatrix.SetRotation(finalRotation);
-
-		//matrix_t rot[3];
-		//for (int i = 0; i < 3; i++)
-		//{
-		//	rot[i].RotationAxis(directionUnary[i], rotation[i] * DEG2RAD);
-		//}
-
-		//mat = rot[0] * rot[1] * rot[2];
 	}
 
 	inline void STransform::Translate(const SVector& v)

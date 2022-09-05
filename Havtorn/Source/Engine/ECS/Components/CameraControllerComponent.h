@@ -5,6 +5,14 @@
 
 namespace Havtorn
 {
+	enum class ECameraControllerType
+	{
+		FreeCam,
+		FirstPerson,
+		ThirdPerson,
+		Cinematic
+	};
+
 	struct SCameraControllerComponent : public SComponent
 	{
 		SCameraControllerComponent(Ref<SEntity> entity, EComponentType type)
@@ -19,5 +27,7 @@ namespace Havtorn
 		F32 CurrentPitch = 0.0f;
 		F32 CurrentYaw = 0.0f;
 		F32 CurrentAccelerationFactor = 0.0f;
+
+		ECameraControllerType ControllerType = ECameraControllerType::FreeCam;
 	};
 }
