@@ -49,6 +49,7 @@ namespace Havtorn
 
 		inline SMatrix GetRotationMatrix() const;
 		inline void SetRotation(SMatrix matrix);
+		inline void SetRotation(SVector eulerAngles);
 		inline SMatrix GetTranslationMatrix() const;
 		inline F32 GetRotationMatrixTrace() const;
 
@@ -169,26 +170,65 @@ namespace Havtorn
 
 	inline SMatrix SMatrix::CreateRotationAroundAxis(F32 angleInRadians, SVector axis)
 	{
-		F32 cosTerm = UMath::Cos(angleInRadians);
-		F32 sinTerm = UMath::Sin(angleInRadians);
-		F32 oneMinusCos = 1.0f - cosTerm;
-		F32 x2 = axis.X * axis.X;
-		F32 y2 = axis.Y * axis.Y;
-		F32 z2 = axis.Z * axis.Z;
-		F32 xy = axis.X * axis.Y;
-		F32 xz = axis.X * axis.Z;
-		F32 yz = axis.Y * axis.Z;
+		//F32 cosTerm = UMath::Cos(angleInRadians);
+		//F32 sinTerm = UMath::Sin(angleInRadians);
+		//F32 oneMinusCos = 1.0f - cosTerm;
+		//F32 x2 = axis.X * axis.X;
+		//F32 y2 = axis.Y * axis.Y;
+		//F32 z2 = axis.Z * axis.Z;
+		//F32 xy = axis.X * axis.Y;
+		//F32 xz = axis.X * axis.Z;
+		//F32 yz = axis.Y * axis.Z;
+
+		//SMatrix matrix;
+		//matrix(0, 0) = cosTerm + (x2 * oneMinusCos);
+		//matrix(0, 1) = (xy * oneMinusCos) - (axis.Z * sinTerm);
+		//matrix(0, 2) = (xz * oneMinusCos) + (axis.Y * sinTerm);
+		//matrix(1, 0) = (xy * oneMinusCos) + (axis.Z * sinTerm);
+		//matrix(1, 1) = cosTerm + (y2 * oneMinusCos);
+		//matrix(1, 2) = (yz * oneMinusCos) - (axis.X * sinTerm);
+		//matrix(2, 0) = (xz * oneMinusCos) - (axis.Y * sinTerm);
+		//matrix(2, 1) = (yz * oneMinusCos) + (axis.X * sinTerm);
+		//matrix(2, 2) = cosTerm + (z2 * oneMinusCos);
+		//return matrix;
+
+		F32 lengthSq = axis.LengthSquared();
+		if (lengthSq < FLT_EPSILON)
+			return SMatrix();
+		
+		SVector n = axis * (1.f / sqrtf(lengthSq));
+		F32 s = sinf(angleInRadians);
+		F32 c = cosf(angleInRadians);
+		F32 k = 1.f - c;
+
+		F32 xx = n.X * n.X * k + c;
+		F32 yy = n.Y * n.Y * k + c;
+		F32 zz = n.Z * n.Z * k + c;
+		F32 xy = n.X * n.Y * k;
+		F32 yz = n.Y * n.Z * k;
+		F32 zx = n.Z * n.X * k;
+		F32 xs = n.X * s;
+		F32 ys = n.Y * s;
+		F32 zs = n.Z * s;
 
 		SMatrix matrix;
-		matrix(0, 0) = cosTerm + (x2 * oneMinusCos);
-		matrix(0, 1) = (xy * oneMinusCos) - (axis.Z * sinTerm);
-		matrix(0, 2) = (xz * oneMinusCos) + (axis.Y * sinTerm);
-		matrix(1, 0) = (xy * oneMinusCos) + (axis.Z * sinTerm);
-		matrix(1, 1) = cosTerm + (y2 * oneMinusCos);
-		matrix(1, 2) = (yz * oneMinusCos) - (axis.X * sinTerm);
-		matrix(2, 0) = (xz * oneMinusCos) - (axis.Y * sinTerm);
-		matrix(2, 1) = (yz * oneMinusCos) + (axis.X * sinTerm);
-		matrix(2, 2) = cosTerm + (z2 * oneMinusCos);
+		matrix(0, 0) = xx;
+		matrix(0, 1) = xy - zs;
+		matrix(0, 2) = zx + ys;
+		matrix(0, 3) = 0.f;
+		matrix(1, 0) = xy + zs;
+		matrix(1, 1) = yy;
+		matrix(1, 2) = yz - xs;
+		matrix(1, 3) = 0.f;
+		matrix(2, 0) = zx - ys;
+		matrix(2, 1) = yz + xs;
+		matrix(2, 2) = zz;
+		matrix(2, 3) = 0.f;
+		matrix(3, 0) = 0.f;
+		matrix(3, 1) = 0.f;
+		matrix(3, 2) = 0.f;
+		matrix(3, 3) = 1.f;
+
 		return matrix;
 	}
 
@@ -208,6 +248,12 @@ namespace Havtorn
 				M[row][column] = matrix(row, column);
 			}
 		}
+	}
+
+	inline void SMatrix::SetRotation(SVector eulerAngles)
+	{
+		SMatrix rotationMatrix = SMatrix::CreateRotationFromEuler(eulerAngles.X, eulerAngles.Y, eulerAngles.Z);
+		SetRotation(rotationMatrix);
 	}
 
 	SMatrix SMatrix::GetTranslationMatrix() const

@@ -24,11 +24,11 @@ namespace Havtorn
 		const SInputAxis upAxis = { EInputAxis::Key, EInputKey::KeyQ, EInputKey::KeyE, EInputContext::Editor };
 		MapEvent(EInputAxisEvent::Up, upAxis);
 
-		const SInputAxis pitchAxis = { EInputAxis::Key, EInputKey::Up, EInputKey::Down, EInputContext::Editor };
-		MapEvent(EInputAxisEvent::Pitch, pitchAxis);
+		const SInputAxis mouseHorizontal = { EInputAxis::MouseHorizontal, EInputContext::Editor };
+		MapEvent(EInputAxisEvent::MouseHorizontal, mouseHorizontal);
 
-		const SInputAxis yawAxis = { EInputAxis::Key, EInputKey::Left, EInputKey::Right, EInputContext::Editor };
-		MapEvent(EInputAxisEvent::Yaw, yawAxis);
+		const SInputAxis mouseVertical = { EInputAxis::MouseVertical, EInputContext::Editor };
+		MapEvent(EInputAxisEvent::MouseVertical, mouseVertical);
 
 		const SInputAction translateTransform = { EInputKey::KeyW, EInputContext::Editor };
 		MapEvent(EInputActionEvent::TranslateTransform, translateTransform);

@@ -14,6 +14,7 @@ namespace Havtorn
 	struct STransformComponent;
 	struct SStaticMeshComponent;
 	struct SCameraComponent;
+	struct SCameraControllerComponent;
 	struct SMaterialComponent;
 	struct SEnvironmentLightComponent;
 	struct SDirectionalLightComponent;
@@ -39,6 +40,7 @@ namespace Havtorn
 		std::vector<Ref<STransformComponent>>& GetTransformComponents() { return TransformComponents; }
 		std::vector<Ref<SStaticMeshComponent>>& GetStaticMeshComponents() { return StaticMeshComponents; }
 		std::vector<Ref<SCameraComponent>>& GetCameraComponents() { return CameraComponents; }
+		COMPONENT_VECTOR_GETTER(CameraControllerComponent)
 		COMPONENT_VECTOR_GETTER(MaterialComponent)
 		COMPONENT_VECTOR_GETTER(EnvironmentLightComponent)
 		std::vector<Ref<SDirectionalLightComponent>>& GetDirectionalLightComponents() { return DirectionalLightComponents; }
@@ -53,6 +55,7 @@ namespace Havtorn
 		COMPONENT_ADDER_DECLARATION(TransformComponent)
 		COMPONENT_ADDER_DECLARATION(StaticMeshComponent)
 		COMPONENT_ADDER_DECLARATION(CameraComponent)
+		COMPONENT_ADDER_DECLARATION(CameraControllerComponent)
 		COMPONENT_ADDER_DECLARATION(MaterialComponent)
 		COMPONENT_ADDER_DECLARATION(EnvironmentLightComponent)
 		COMPONENT_ADDER_DECLARATION(DirectionalLightComponent)
@@ -66,6 +69,7 @@ namespace Havtorn
 		std::vector<Ref<STransformComponent>> TransformComponents;
 		std::vector<Ref<SStaticMeshComponent>> StaticMeshComponents;
 		std::vector<Ref<SCameraComponent>> CameraComponents;
+		COMPONENT_VECTOR_DECLARATION(CameraControllerComponent)
 		COMPONENT_VECTOR_DECLARATION(MaterialComponent)
 		COMPONENT_VECTOR_DECLARATION(EnvironmentLightComponent)
 		std::vector<Ref<SDirectionalLightComponent>> DirectionalLightComponents;

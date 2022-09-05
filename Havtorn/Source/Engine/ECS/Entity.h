@@ -10,8 +10,6 @@
 
 namespace Havtorn
 {
-    
-
 	struct HAVTORN_API SEntity
 	{
 		explicit SEntity(U64 id, const std::string& name);
