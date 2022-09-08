@@ -26,8 +26,6 @@
 
 #include <Application/ImGuiDLLSetup.h>
 
-
-
 namespace Havtorn
 {
 	// Unused, left for future reference.
@@ -230,7 +228,7 @@ namespace Havtorn
 	void CEditorManager::CreateAssetRep(const std::filesystem::path& path)
 	{
 		std::filesystem::directory_entry entry(path);
-		HV_ASSERT(!entry.is_directory(), "You are trying to create assetrep but you're creating a new folder. Person, Sir, Madame");
+		HV_ASSERT(!entry.is_directory(), "You are trying to create SEditorAssetRepresentation but you're creating a new folder.");
 
 		std::string fileName = path.string();
 		const U64 fileSize = UMath::Max(GEngine::GetFileSystem()->GetFileSize(fileName), sizeof(EAssetType));

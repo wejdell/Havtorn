@@ -12,8 +12,6 @@ struct ID3D11DeviceContext;
 struct ImFontAtlas;
 struct ImVec4;
 
-
-
 namespace ImGui 
 {
 	class CWindow;
