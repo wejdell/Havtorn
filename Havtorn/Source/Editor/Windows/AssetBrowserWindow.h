@@ -21,6 +21,8 @@ namespace ImGui
 		void OnDisable() override;
 
 	private:
+		void OnDragDropFiles(std::vector<std::string> filePaths);
+
 		Havtorn::SVector2<Havtorn::F32> ThumbnailSize = { 64.0f, 64.0f };
 		Havtorn::CFileSystem* FileSystem = nullptr;
 		const std::string DefaultAssetPath = "Assets";

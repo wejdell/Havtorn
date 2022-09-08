@@ -45,10 +45,20 @@ namespace Havtorn
 		return nullptr;
 	}
 
-	void CEditorResourceManager::ConvertToHVA(const std::string fileName, EAssetType assetType)
+	void CEditorResourceManager::ConvertToHVA(const std::string& fileName, const std::string& destination, EAssetType assetType) const
 	{
-		RenderManager->ConvertToHVA(fileName, assetType);
+		RenderManager->ConvertToHVA(fileName, destination, assetType);
 	}
+
+	//void CEditorResourceManager::ConvertToHVA(const std::string& fileName, const std::string& destination, const EAssetType assetType) const
+	//{
+	//	//do the thing
+	//	//fileName		= C/pics/insano.tga 
+	//	//destination	= Assets/Textures/insano.tga 
+
+
+	//	//call convertToHVA
+	//}
 
 	std::string CEditorResourceManager::GetFileName(EEditorTexture texture)
 	{
