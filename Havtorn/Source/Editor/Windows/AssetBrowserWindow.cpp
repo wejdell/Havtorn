@@ -6,6 +6,7 @@
 #include "EditorResourceManager.h"
 #include "Engine.h"
 #include "FileSystem/FileSystem.h"
+#include "Graphics/RenderManager.h"
 
 namespace ImGui
 {
@@ -15,11 +16,12 @@ namespace ImGui
 		: CWindow(name, manager)
 		, FileSystem(Havtorn::GEngine::GetFileSystem())
 	{
-		CurrentDirectory = std::filesystem::path(DefaultAssetPath);
+		CurrentDirectory = std::filesystem::path(DefaultAssetPath);		
+		Havtorn::GEngine::GetWindowHandler()->OnDragDropAccepted.AddMember(this, &CAssetBrowserWindow::OnDragDropFiles);
 	}
 
 	CAssetBrowserWindow::~CAssetBrowserWindow()
-	{
+	{		
 	}
 
 	void CAssetBrowserWindow::OnEnable()
@@ -97,9 +99,29 @@ namespace ImGui
 			}
 		}
 		ImGui::End();
+
+
 	}
 
 	void CAssetBrowserWindow::OnDisable()
 	{
+	}
+
+	/*
+	Folder Structure Navigation
+		Open Modal Popup where you can navigate choose where to save thingy or something
+
+	Save new file dialoguehtrt
+
+	<applause.h>
+	*/
+	void CAssetBrowserWindow::OnDragDropFiles(const std::vector<std::string> filePaths)
+	{
+		std::string filePath = filePaths[0]; //temporarily the first filepath out of potentially many 0 to test
+		
+		//Copies file from original path and creates a HVA File in Assets/ (depending on where the AssetBrowser window is currently at)
+		std::string hvaFilePath = Manager->GetRenderManager()->ConvertToHVA(filePath, CurrentDirectory.string(), Havtorn::EAssetType::Texture); 
+
+		Manager->CreateAssetRep(hvaFilePath); //Creates a SEditorAssetRepresentation and adds it to the AssetRepresentations
 	}
 }

@@ -35,7 +35,8 @@ namespace Havtorn
 
 		void* RenderAssetTexure(EAssetType assetType, const std::string& fileName);
 
-		void ConvertToHVA(const std::string fileName, EAssetType assetType);
+		//void ConvertToHVA(const std::string fileName, EAssetType assetType);
+		void ConvertToHVA(const std::string& fileName, const std::string& destination, const EAssetType assetType) const;
 
 	private:
 		std::string GetFileName(EEditorTexture texture);

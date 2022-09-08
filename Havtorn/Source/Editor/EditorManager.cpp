@@ -26,8 +26,18 @@
 
 #include <Application/ImGuiDLLSetup.h>
 
+
+
 namespace Havtorn
 {
+	// Unused, left for future reference.
+	//LRESULT EditorWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+	//{
+	//	hwnd; uMsg; wParam; lParam;
+	//	return 0;
+	//	//return CallNextHookEx(NULL, uMsg, wParam, lParam);// This should be done if you want to it proper.
+	//}
+
 	CEditorManager::CEditorManager()
 	{
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::TranslateTransform).AddMember(this, &CEditorManager::SetTransformGizmo);
@@ -40,10 +50,41 @@ namespace Havtorn
 	{
 		RenderManager = nullptr;
 		SAFE_DELETE(ResourceManager);
+
+		// Make sure to Unhook used Hooks // Unused, left for future reference.
+		//UnhookWindowsHookEx(WindowProcHook);
+		//UnhookWindowsHookEx(MouseHook);
+		//UnhookWindowsHookEx(MouseLLHook);
+		//UnhookWindowsHookEx(KeyboardHook);
 	}
+
+	static HINSTANCE hinstDLL;
 
 	bool CEditorManager::Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager, CScene* scene)
 	{
+		// Unused, left for future reference.
+			// AG.20220812: On the msdn page for SetWindowsHookEx/ SetWindowsHookExA there are is a list of definitions/options for the first parameter.
+			//				SetWindowsHookExA is for 64bit. Hook should match target applications 'bitness'. 
+			//
+			//				WH_CALLWNDPROCRET:		Message to receive window calls after main window.
+			//				WH_CALLWNDPROC:			Message to receive window calls before main window. (used)
+			//				WH_MOUSE:				Mouse input. Received before main window. (used)
+			//				WH_MOUSE_LL:			Low Level Mouse input. Received before main window. (used)
+			//				WH_KEYBOARD:			Keyboard input. Received before main window. (used)
+
+			// Can hook into several messages at once. Use only the ones we need.
+			//HINSTANCE hInstance = GetModuleHandle(nullptr);
+			//DWORD currentThreadId = GetCurrentThreadId();
+
+			//WindowProcHook = SetWindowsHookExA(WH_CALLWNDPROC, (HOOKPROC)WndProc, hInstance, currentThreadId);
+			//MouseHook = SetWindowsHookExA(WH_MOUSE, (HOOKPROC)WndProc, hInstance, currentThreadId);
+			//MouseLLHook = SetWindowsHookExA(WH_MOUSE_LL, (HOOKPROC)WndProc, hInstance, currentThreadId);// Seems to give nothing we need.
+			//KeyboardHook = SetWindowsHookExA(WH_KEYBOARD, (HOOKPROC)WndProc, hInstance, currentThreadId);
+		// !Unused, left for future reference.
+
+		DragAcceptFiles(windowHandler->WindowHandle, TRUE);
+		//DragAcceptFiles(WindowHandle, FALSE);// Call this if DragDrop is to be disabled, e.g when pressing Play. Not needed now.
+
 		CROSS_DLL_IMGUI_SETUP(windowHandler);
 		ImGuizmo::SetImGuiContext(ImGui::GetCurrentContext());
 
@@ -184,6 +225,32 @@ namespace Havtorn
 
 		// NR: Return empty rep
 		return AssetRepresentations[0];
+	}
+
+	void CEditorManager::CreateAssetRep(const std::filesystem::path& path)
+	{
+		std::filesystem::directory_entry entry(path);
+		HV_ASSERT(!entry.is_directory(), "You are trying to create assetrep but you're creating a new folder. Person, Sir, Madame");
+
+		std::string fileName = path.string();
+		const U64 fileSize = UMath::Max(GEngine::GetFileSystem()->GetFileSize(fileName), sizeof(EAssetType));
+		char* data = new char[fileSize];
+
+		GEngine::GetFileSystem()->Deserialize(fileName, data, static_cast<U32>(fileSize));
+
+		SEditorAssetRepresentation rep;
+
+		const U32 size = sizeof(EAssetType);
+		memcpy(&rep.AssetType, &data[0], size);
+
+		rep.DirectoryEntry = entry;
+		rep.Name = entry.path().filename().string();
+		rep.Name = rep.Name.substr(0, rep.Name.length() - 4);
+		rep.TextureRef = ResourceManager->RenderAssetTexure(rep.AssetType, fileName);
+
+		AssetRepresentations.emplace_back(std::make_unique<SEditorAssetRepresentation>(rep));
+
+		delete[] data;
 	}
 
 	void CEditorManager::SetEditorTheme(EEditorColorTheme colorTheme, EEditorStyleTheme styleTheme)
@@ -387,31 +454,15 @@ namespace Havtorn
 			if (entry.is_directory())
 				continue;
 
-			std::string fileName = entry.path().string();
-			const U64 fileSize =  UMath::Max(GEngine::GetFileSystem()->GetFileSize(fileName), sizeof(EAssetType));
-			char* data = new char[fileSize];
+			CreateAssetRep(entry.path());
 
-			GEngine::GetFileSystem()->Deserialize(fileName, data, static_cast<U32>(fileSize));
 
-			SEditorAssetRepresentation rep;
-
-			const U32 size = sizeof(EAssetType);
-			memcpy(&rep.AssetType, &data[0], size);
-
-			rep.DirectoryEntry = entry;
-			rep.Name = entry.path().filename().string();
-			rep.Name = rep.Name.substr(0, rep.Name.length() - 4);
-			rep.TextureRef = ResourceManager->RenderAssetTexure(rep.AssetType, fileName);
-
-			AssetRepresentations.emplace_back(std::make_unique<SEditorAssetRepresentation>(rep));
-
-			delete[] data;
 		}
 	}
 
 	void CEditorManager::PreProcessAssets()
-	{
-		// Import non-.hva files to .hva
+	{	
+		//Import non-.hva files to .hva
 		for (const auto& entry : std::filesystem::recursive_directory_iterator(std::filesystem::path("Assets")))
 		{
 			if (entry.path().extension() == ".hva" || entry.is_directory())
@@ -432,7 +483,7 @@ namespace Havtorn
 			else
 				continue;
 
-			ResourceManager->ConvertToHVA(fileName, assetType);
+			ResourceManager->ConvertToHVA(fileName, fileName.substr(0, fileName.find_last_of('/')), assetType);
 		}
 	}
 

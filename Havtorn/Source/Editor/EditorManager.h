@@ -12,6 +12,8 @@ struct ID3D11DeviceContext;
 struct ImFontAtlas;
 struct ImVec4;
 
+
+
 namespace ImGui 
 {
 	class CWindow;
@@ -102,6 +104,8 @@ namespace Havtorn
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromName(const std::string& assetName);
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromImageRef(void* imageRef);
 
+		void CreateAssetRep(const std::filesystem::path& destinationPath);
+
 		void SetEditorTheme(EEditorColorTheme colorTheme = EEditorColorTheme::HavtornDark, EEditorStyleTheme styleTheme = EEditorStyleTheme::Havtorn);
 		std::string GetEditorColorThemeName(const EEditorColorTheme colorTheme);
 		ImVec4 GetEditorColorThemeRepColor(const EEditorColorTheme colorTheme);
@@ -156,5 +160,12 @@ namespace Havtorn
 		bool IsDebugInfoOpen = true;
 		bool IsDemoOpen = false;
 		bool IsFreeCamActive = false;
+
+	private:
+		// Use only the ones we need // Unused, left for future reference.
+		//HHOOK WindowProcHook = nullptr;
+		//HHOOK MouseHook = nullptr;
+		//HHOOK MouseLLHook = nullptr;
+		//HHOOK KeyboardHook = nullptr;
 	};
 }
