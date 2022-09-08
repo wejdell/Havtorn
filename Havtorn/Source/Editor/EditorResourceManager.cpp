@@ -50,16 +50,6 @@ namespace Havtorn
 		RenderManager->ConvertToHVA(fileName, destination, assetType);
 	}
 
-	//void CEditorResourceManager::ConvertToHVA(const std::string& fileName, const std::string& destination, const EAssetType assetType) const
-	//{
-	//	//do the thing
-	//	//fileName		= C/pics/insano.tga 
-	//	//destination	= Assets/Textures/insano.tga 
-
-
-	//	//call convertToHVA
-	//}
-
 	std::string CEditorResourceManager::GetFileName(EEditorTexture texture)
 	{
 		std::string extension = ".dds";
