@@ -5,8 +5,8 @@
 #include "WindowHandler.h"
 
 #include "Input/Input.h"
+#include <iostream>
 
-//#include <Core/imgui.h>
 #include <Core/imgui_impl_win32.h>
 #include <Core/imgui_impl_dx11.h>
 
@@ -35,7 +35,7 @@ namespace Havtorn
             break;
 
         case WM_KILLFOCUS:
-            windowHandler->LockCursor(false); // If we use this here the WindowIsInEditingMode bool will be preserved
+ //           windowHandler->LockCursor(false); // If we use this here the WindowIsInEditingMode bool will be preserved
             break;
 
         case WM_SETFOCUS:
@@ -68,6 +68,48 @@ namespace Havtorn
         case WM_SYSCHAR:
             return true;
 
+        case WM_DROPFILES:
+        {
+#pragma region Extract FilePaths
+
+            // Here we cast the wParam as a HDROP handle to pass into the next functions
+            HDROP hDrop = (HDROP)wParam;
+
+            // DragQueryFile() takes a LPWSTR for the name so we need a TCHAR string
+            // This functions has a couple functionalities.  If you pass in 0xFFFFFFFF in
+            // the second parameter then it returns the count of how many filers were drag
+            // and dropped.  Otherwise, the function fills in the szName string array with
+            // the current file being queried.
+            TCHAR szName[MAX_PATH];
+            int count = DragQueryFile(hDrop, 0xFFFFFFFF, szName, MAX_PATH);
+            // Here we go through all the files that were drag and dropped then display them
+            std::vector<std::string> dragDropFilePaths;
+            for (int i = 0; i < count; i++)
+            {
+                // Grab the name of the file associated with index "i" in the list of files dropped.
+                // Be sure you know that the name is attached to the FULL path of the file.
+                DragQueryFile(hDrop, i, szName, MAX_PATH);
+                char file[MAX_PATH];
+                for (int index = 0; index < MAX_PATH; index++)
+                    file[index] = static_cast<char>(szName[index]);
+
+                dragDropFilePaths.push_back(std::string(file));
+            }
+            // Finally, we destroy the HDROP handle so the extra memory
+            // allocated by the application is released.
+            DragFinish(hDrop);
+
+            for (auto& path : dragDropFilePaths)
+            {
+                HV_LOG_INFO(path.c_str());
+            }
+
+#pragma endregion
+            windowHandler->OnDragDropAccepted.Broadcast(dragDropFilePaths);
+            return 0;
+        }break;
+
+
         default:
             CInput::GetInstance()->UpdateEvents(uMsg, wParam, lParam);
             break;
@@ -81,8 +123,8 @@ namespace Havtorn
         return DefWindowProc(hwnd, uMsg, wParam, lParam);
     }
 
-    CWindowHandler::CWindowHandler() 
-    {}
+    CWindowHandler::CWindowHandler()
+    {} 
 
     CWindowHandler::~CWindowHandler()
     {
