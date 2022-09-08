@@ -5,7 +5,6 @@
 #include "WindowHandler.h"
 
 #include "Input/Input.h"
-#include <iostream>
 
 #include <Core/imgui_impl_win32.h>
 #include <Core/imgui_impl_dx11.h>
