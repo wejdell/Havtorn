@@ -84,11 +84,11 @@ namespace Havtorn
             int count = DragQueryFile(hDrop, 0xFFFFFFFF, szName, MAX_PATH);
             // Here we go through all the files that were drag and dropped then display them
             std::vector<std::string> dragDropFilePaths;
-            for (I64 i = 0; i < count; i++)
+            for (U64 i = 0; i < count; i++)
             {
                 // Grab the name of the file associated with index "i" in the list of files dropped.
                 // Be sure you know that the name is attached to the FULL path of the file.
-                DragQueryFile(hDrop, i, szName, MAX_PATH);
+                DragQueryFile(hDrop, static_cast<UINT>(i), szName, MAX_PATH);
                 char file[MAX_PATH];
                 for (I64 index = 0; index < MAX_PATH; index++)
                     file[index] = static_cast<char>(szName[index]);
