@@ -7,10 +7,6 @@
 #include <Core/imgui.h>
 #include <Core/HavtornDelegate.h>
 
-//struct ImGuiContext;
-//typedef void*	  (*ImGuiMemAllocFunc)(size_t sz, void* user_data);               // Function signature for ImGui::SetAllocatorFunctions()
-//typedef void    (*ImGuiMemFreeFunc)(void* ptr, void* user_data);                // Function signature for ImGui::SetAllocatorFunctions()
-
 namespace Havtorn
 {
 	class CWindowHandler
