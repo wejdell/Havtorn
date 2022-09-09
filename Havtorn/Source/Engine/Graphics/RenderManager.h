@@ -98,7 +98,7 @@ namespace Havtorn
 
 		void Release();
 
-		HAVTORN_API void ConvertToHVA(const std::string& filePath, EAssetType assetType);
+		HAVTORN_API std::string ConvertToHVA(const std::string& filePath, const std::string& destination, EAssetType assetType) const;
 		HAVTORN_API void LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent);
 		HAVTORN_API void LoadMaterialComponent(const std::vector<std::string>& materialNames, SMaterialComponent* outMaterialComponent);
 		// NR: Note that we use the file *name* instead of the full path here, we assume that it already exists in the registry.

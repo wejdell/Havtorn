@@ -1110,13 +1110,14 @@ namespace Havtorn
 		//myGBufferCopy.ReleaseResources();
 	}
 
-	void CRenderManager::ConvertToHVA(const std::string& filePath, EAssetType assetType)
+	std::string CRenderManager::ConvertToHVA(const std::string& filePath, const std::string& destination, EAssetType assetType) const
 	{
+		std::string hvaPath;
 		switch (assetType)
 		{
 		case EAssetType::StaticMesh:
 			{
-				CModelImporter::ImportFBX(filePath);
+				hvaPath = CModelImporter::ImportFBX(filePath);
 			}
 			break;
 		case EAssetType::Texture:
@@ -1132,7 +1133,8 @@ namespace Havtorn
 
 				STextureFileHeader asset;
 				asset.AssetType = EAssetType::Texture;
-				asset.MaterialName = filePath.substr(0, filePath.find_last_of("."));
+
+				asset.MaterialName = destination + filePath.substr(filePath.find_last_of('\\'), filePath.find_first_of('.') - filePath.find_last_of('\\'));// destination.substr(0, destination.find_last_of("."));
 				asset.MaterialNameLength = static_cast<U32>(asset.MaterialName.length());
 				asset.OriginalFormat = format;
 				asset.Suffix = filePath[filePath.find_last_of(".") - 1];
@@ -1143,8 +1145,9 @@ namespace Havtorn
 
 				asset.Serialize(data);
 				GEngine::GetFileSystem()->Serialize(asset.MaterialName + ".hva", &data[0], asset.GetSize());
-				
 				delete[] data;
+
+				hvaPath = asset.MaterialName + ".hva";
 			}
 			break;
 		case EAssetType::SkeletalMesh: 
@@ -1158,6 +1161,8 @@ namespace Havtorn
 		case EAssetType::VisualFX: 
 			break;
 		}
+
+		return hvaPath;
 	}
 
 	void CRenderManager::LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent)

@@ -22,17 +22,17 @@
 
 namespace Havtorn
 {
-	void CModelImporter::ImportFBX(const std::string& filePath)
+	std::string CModelImporter::ImportFBX(const std::string& filePath)
 	{
 		if (!CFileSystem::DoesFileExist(filePath))
-			return;
+			return "ERROR: File Does Not Exist";
 
 		const aiScene* assimpScene = aiImportFile(filePath.c_str(), aiProcessPreset_TargetRealtime_Fast | aiProcess_ConvertToLeftHanded);
 
 		if (!assimpScene)
 		{
 			HV_LOG_ERROR("ModelImporter failed to import %s!", filePath.c_str());
-			return;
+			return "ERROR: Failed to import.";
 		}
 
 		const aiMesh* fbxMesh = assimpScene->mMeshes[0];
@@ -118,7 +118,7 @@ namespace Havtorn
 					}
 					break;
 				default:
-					return;
+					return "ERROR: Can't find EAssetType.";
 				}
 			}
 
@@ -182,6 +182,10 @@ namespace Havtorn
 		const auto fileData = new char[fileHeader.GetSize()];
 		fileHeader.Serialize(fileData);
 		GEngine::GetFileSystem()->Serialize(newFileName, &fileData[0], fileHeader.GetSize());
+
+		return newFileName;
+	}
+}
 
 		//	bool hasPositions = false;
 		//	bool hasNormals = false;
@@ -352,5 +356,3 @@ namespace Havtorn
 
 
 		//model->myGlobalInverseTransform = ConvertToEngineMatrix44(scene->mRootNode->mTransformation);
-	}
-}

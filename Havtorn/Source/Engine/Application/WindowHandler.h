@@ -5,10 +5,7 @@
 #include "Core/WindowsInclude.h"
 
 #include <Core/imgui.h>
-
-//struct ImGuiContext;
-//typedef void*	  (*ImGuiMemAllocFunc)(size_t sz, void* user_data);               // Function signature for ImGui::SetAllocatorFunctions()
-//typedef void    (*ImGuiMemFreeFunc)(void* ptr, void* user_data);                // Function signature for ImGui::SetAllocatorFunctions()
+#include <Core/HavtornDelegate.h>
 
 namespace Havtorn
 {
@@ -31,6 +28,9 @@ namespace Havtorn
 		HAVTORN_API SVector2<F32> GetResolution();
 		SVector2<F32> GetCenterPosition();
 		const float GetResolutionScale() const;
+
+	public:
+		CMulticastDelegate<std::vector<std::string>> OnDragDropAccepted;
 
 	private:
 		CWindowHandler();
@@ -56,6 +56,7 @@ namespace Havtorn
 		void SetResolution(SVector2<F32> resolution);
 
 	private:
+
 		CWindowHandler::SWindowData WindowData = {};
 		HWND WindowHandle = 0;
 		SVector2<F32>* Resolution = nullptr;

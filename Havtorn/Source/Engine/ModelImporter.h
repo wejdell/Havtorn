@@ -16,7 +16,7 @@ namespace Havtorn
 	class CModelImporter
 	{
 	public:
-		static void ImportFBX(const std::string& filePath);
+		static std::string ImportFBX(const std::string& filePath);
 
 	private:
 	};
