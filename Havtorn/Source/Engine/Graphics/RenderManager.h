@@ -163,7 +163,7 @@ namespace Havtorn
 
 	private:
 		template<class T>
-		void BindBuffer(ID3D11Buffer* buffer, T& bufferData, std::string bufferType)
+		void BindBuffer(ID3D11Buffer* buffer, T& bufferData, const std::string& bufferType)
 		{
 			D3D11_MAPPED_SUBRESOURCE localBufferData;
 			ZeroMemory(&localBufferData, sizeof(D3D11_MAPPED_SUBRESOURCE));
@@ -175,7 +175,7 @@ namespace Havtorn
 		}
 
 		template<class T>
-		void BindBuffer(ID3D11Buffer* buffer, const std::vector<T>& bufferData, std::string bufferType)
+		void BindBuffer(ID3D11Buffer* buffer, const std::vector<T>& bufferData, const std::string& bufferType)
 		{
 			D3D11_MAPPED_SUBRESOURCE localBufferData;
 			ZeroMemory(&localBufferData, sizeof(D3D11_MAPPED_SUBRESOURCE));
