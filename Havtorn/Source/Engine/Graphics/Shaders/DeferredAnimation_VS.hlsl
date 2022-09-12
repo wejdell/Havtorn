@@ -2,22 +2,19 @@
 
 #include "Includes/DeferredShaderStructs.hlsli"
 
-VertexModelToPixel main(VertexModelInput input)
+VertexModelToPixel main(SkeletalMeshVertexInput input)
 {
     VertexModelToPixel returnValue;
-     
-    //returnValue.myPosition = input.myPosition;
 
     float4 vWeights = input.BoneWeight;
     uint4 vBones = uint4((uint) input.BoneID.x, (uint) input.BoneID.y, (uint) input.BoneID.z, (uint) input.BoneID.w);
-    //returnValue.myPosition = mul(returnValue.myPosition, toWorld);
     
     float4 skinnedPos = 0;
 
     /// Bone 0
     uint iBone = vBones.x;
     float fWeight = vWeights.x;
-    const float4 pos = input.Position;
+    const float4 pos = float4(input.Position.xyz, 1.0f);
     skinnedPos += fWeight * mul(pos, Bones[iBone]);
     
     /// Bone 1
@@ -38,9 +35,8 @@ VertexModelToPixel main(VertexModelInput input)
     input.Position.x = skinnedPos.x;
     input.Position.y = skinnedPos.y;
     input.Position.z = skinnedPos.z;
-    input.Position.w = skinnedPos.w;
 
-    const float4 vertexObjectPos = input.Position.xyzw;
+    const float4 vertexObjectPos = float4(input.Position.xyz, 1.0f);
     const float4 vertexWorldPos = mul(toWorld, vertexObjectPos);
     const float4 vertexViewPos = mul(ToCameraSpace, vertexWorldPos);
     const float4 vertexProjectionPos = mul(ToProjectionSpace, vertexViewPos);

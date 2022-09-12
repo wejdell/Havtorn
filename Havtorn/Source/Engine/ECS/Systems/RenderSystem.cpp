@@ -28,6 +28,8 @@ namespace Havtorn
 		const auto& volumetricLightComponents = scene->GetVolumetricLightComponents();
 		const auto& decalComponents = scene->GetDecalComponents();
 
+		RenderManager->ClearSystemStaticMeshInstanceTransforms();
+
 		if (!cameraComponents.empty())
 		{
 			const I64 transformCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
@@ -56,42 +58,47 @@ namespace Havtorn
 			const I64 materialCompIndex = staticMeshComponent->Entity->GetComponentIndex(EComponentType::MaterialComponent);
 			auto& materialComp = materialComponents[materialCompIndex];
 
-			if (!directionalLightComponents.empty())
-			{
+			if (!RenderManager->IsStaticMeshInInstancedRenderList(staticMeshComponent->Name)) // if static, if instanced
+			{		
+				if (!directionalLightComponents.empty())
+				{
+					std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
+					components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
+					components[static_cast<U8>(EComponentType::StaticMeshComponent)] = staticMeshComponent;
+					components[static_cast<U8>(EComponentType::DirectionalLightComponent)] = directionalLightComponents[0];
+					SRenderCommand command(components, ERenderCommandType::ShadowAtlasPrePassDirectional);
+					RenderManager->PushRenderCommand(command);
+				}
+
+				if (!pointLightComponents.empty())
+				{
+					std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
+					components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
+					components[static_cast<U8>(EComponentType::StaticMeshComponent)] = staticMeshComponent;
+					components[static_cast<U8>(EComponentType::PointLightComponent)] = pointLightComponents[0];
+					SRenderCommand command(components, ERenderCommandType::ShadowAtlasPrePassPoint);
+					RenderManager->PushRenderCommand(command);
+				}
+
+				if (!spotLightComponents.empty())
+				{
+					std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
+					components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
+					components[static_cast<U8>(EComponentType::StaticMeshComponent)] = staticMeshComponent;
+					components[static_cast<U8>(EComponentType::SpotLightComponent)] = spotLightComponents[0];
+					SRenderCommand command(components, ERenderCommandType::ShadowAtlasPrePassSpot);
+					RenderManager->PushRenderCommand(command);
+				}
+
 				std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
 				components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
 				components[static_cast<U8>(EComponentType::StaticMeshComponent)] = staticMeshComponent;
-				components[static_cast<U8>(EComponentType::DirectionalLightComponent)] = directionalLightComponents[0];
-				SRenderCommand command(components, ERenderCommandType::ShadowAtlasPrePassDirectional);
+				components[static_cast<U8>(EComponentType::MaterialComponent)] = materialComp;
+				SRenderCommand command(components, ERenderCommandType::GBufferDataInstanced);
 				RenderManager->PushRenderCommand(command);
 			}
 
-			if (!pointLightComponents.empty())
-			{
-				std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
-				components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
-				components[static_cast<U8>(EComponentType::StaticMeshComponent)] = staticMeshComponent;
-				components[static_cast<U8>(EComponentType::PointLightComponent)] = pointLightComponents[0];
-				SRenderCommand command(components, ERenderCommandType::ShadowAtlasPrePassPoint);
-				RenderManager->PushRenderCommand(command);
-			}
-
-			if (!spotLightComponents.empty())
-			{
-				std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
-				components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
-				components[static_cast<U8>(EComponentType::StaticMeshComponent)] = staticMeshComponent;
-				components[static_cast<U8>(EComponentType::SpotLightComponent)] = spotLightComponents[0];
-				SRenderCommand command(components, ERenderCommandType::ShadowAtlasPrePassSpot);
-				RenderManager->PushRenderCommand(command);
-			}
-
-			std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
-			components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
-			components[static_cast<U8>(EComponentType::StaticMeshComponent)] = staticMeshComponent;
-			components[static_cast<U8>(EComponentType::MaterialComponent)] = materialComp;
-			SRenderCommand command(components, ERenderCommandType::GBufferData);
-			RenderManager->PushRenderCommand(command);
+			RenderManager->AddStaticMeshToInstancedRenderList(staticMeshComponent->Name, transformComp->Transform.GetMatrix());
 		}
 
 		{
