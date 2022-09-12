@@ -14,16 +14,37 @@ struct StaticMeshVertexInput
     float2 UV           : UV;
 };
 
-struct VertexModelInput
+struct StaticInstancedMeshVertexInput
 {
-    float4 Position   : POSITION;
-    float4 Normal     : NORMAL;
-    float4 Tangent    : TANGENT;
-    float4 Bitangent  : BITANGENT;
-    float2 UV         : UV;
-    float4 BoneID     : BONEID;
-    float4 BoneWeight : BONEWEIGHT;
-    column_major float4x4 Transform : INSTANCETRANSFORM;
+    float3 Position     : POSITION;
+    float3 Normal       : NORMAL;
+    float3 Tangent      : TANGENT;
+    float3 Bitangent : BINORMAL;
+    float2 UV           : UV;
+    float4x4 Transform  : INSTANCETRANSFORM; // maybe needs columnmajor
+};
+
+struct SkeletalMeshVertexInput
+{
+    float3 Position     : POSITION;
+    float3 Normal       : NORMAL;
+    float3 Tangent      : TANGENT;
+    float3 Bitangent : BINORMAL;
+    float2 UV           : UV;
+    float4 BoneID       : BONEID;
+    float4 BoneWeight   : BONEWEIGHT;
+};
+
+struct SkeletalInstancedMeshVertexInput
+{
+    float3 Position     : POSITION;
+    float3 Normal       : NORMAL;
+    float3 Tangent      : TANGENT;
+    float3 Bitangent : BINORMAL;
+    float2 UV           : UV;
+    float4 BoneID       : BONEID;
+    float4 BoneWeight   : BONEWEIGHT;
+    float4x4 Transform  : INSTANCETRANSFORM;
 };
 
 struct VertexPaintedModelInput
@@ -31,7 +52,7 @@ struct VertexPaintedModelInput
     float4 Position   : POSITION;
     float4 Normal     : NORMAL;
     float4 Tangent    : TANGENT;
-    float4 Binormal   : BINORMAL;
+    float4 Binormal : BINORMAL;
     float2 UV         : UV;
     float3 Color      : COLOR;
 };
@@ -48,7 +69,7 @@ struct VertexModelToPixel
     float4 WorldPosition  : WORLD_POSITION;
     float4 Normal         : NORMAL;
     float4 Tangent        : TANGENT;
-    float4 Bitangent      : BITANGENT;
+    float4 Bitangent : BINORMAL;
     float2 UV             : UV;
 };
 
@@ -58,7 +79,7 @@ struct VertexPaintModelToPixel
     float4 WorldPosition    : WORLDPOSITION;
     float4 Normal           : NORMAL;
     float4 Tangent          : TANGENT;
-    float4 Binormal         : BINORMAL;
+    float4 Binormal : BINORMAL;
     float2 UV               : UV;
     float3 Color            : COLOR;
 };

@@ -135,8 +135,8 @@ namespace Havtorn
 
 	void GEngine::EndFrame()
 	{
-
 		RenderManager->SwapRenderCommandBuffers();
+		RenderManager->SwapStaticMeshInstancedRenderLists();
 		Framework->EndFrame();
 
 		std::unique_lock<std::mutex> uniqueLock(CThreadManager::RenderMutex);

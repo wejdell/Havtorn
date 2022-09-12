@@ -19,9 +19,9 @@ namespace Havtorn
 			: SComponent(std::move(entity), type)
 		{}
 
-		F32 MaxMoveSpeed = 1.5f;
+		F32 MaxMoveSpeed = 3.0f;
 		F32 RotationSpeed = 0.5f;
-		F32 AccelerationDuration = 0.35f;
+		F32 AccelerationDuration = 0.2f;
 
 		SVector AccelerationDirection = SVector::Zero;
 		F32 CurrentPitch = 0.0f;

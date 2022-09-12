@@ -34,6 +34,7 @@ namespace Havtorn
 	enum class EInputLayoutType
 	{
 		Pos3Nor3Tan3Bit3UV2,
+		Pos3Nor3Tan3Bit3UV2Trans,
 		Pos4
 	};
 
@@ -41,9 +42,10 @@ namespace Havtorn
 	{
 		Fullscreen = 0,
 		StaticMesh = 1,
-		Decal = 2,
-		PointAndSpotLight = 3,
-		EditorPreview = 4,
+		StaticMeshInstanced = 2,
+		Decal = 3,
+		PointAndSpotLight = 4,
+		EditorPreview = 5,
 	};
 
 	enum class EPixelShaders
@@ -113,6 +115,11 @@ namespace Havtorn
 		HAVTORN_API void* RenderStaticMeshAssetTexture(const std::string& fileName);
 		HAVTORN_API void* GetTextureAssetTexture(const std::string& fileName);
 
+		bool IsStaticMeshInInstancedRenderList(const std::string& meshName);
+		void AddStaticMeshToInstancedRenderList(const std::string& meshName, const SMatrix& transformMatrix);
+		void SwapStaticMeshInstancedRenderLists();
+		void ClearSystemStaticMeshInstanceTransforms();
+
 	public:
 		[[nodiscard]] HAVTORN_API const CFullscreenTexture& GetRenderedSceneTexture() const;
 		void PushRenderCommand(SRenderCommand& command);
@@ -164,6 +171,18 @@ namespace Havtorn
 			ENGINE_HR_MESSAGE(Context->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &localBufferData), errorMessage.c_str());
 
 			memcpy(localBufferData.pData, &bufferData, sizeof(T));
+			Context->Unmap(buffer, 0);
+		}
+
+		template<class T>
+		void BindBuffer(ID3D11Buffer* buffer, const std::vector<T>& bufferData, std::string bufferType)
+		{
+			D3D11_MAPPED_SUBRESOURCE localBufferData;
+			ZeroMemory(&localBufferData, sizeof(D3D11_MAPPED_SUBRESOURCE));
+			const std::string errorMessage = bufferType + " could not be bound.";
+			ENGINE_HR_MESSAGE(Context->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &localBufferData), errorMessage.c_str());
+
+			memcpy(localBufferData.pData, &bufferData[0], sizeof(T) * bufferData.size());
 			Context->Unmap(buffer, 0);
 		}
 
@@ -311,8 +330,13 @@ namespace Havtorn
 		std::vector<D3D11_VIEWPORT> Viewports;
 		std::vector<U32> MeshVertexStrides;
 		std::vector<U32> MeshVertexOffsets;
+		ID3D11Buffer* InstancedTransformBuffer;
 
+		// TODO.NR: Add GUIDs to things like this
 		std::unordered_map<std::string, SStaticMeshAsset> LoadedStaticMeshes;
+		// NR: These are used as a way of cross-thread resource management
+		std::unordered_map<std::string, std::vector<SMatrix>> SystemStaticMeshInstanceTransforms;
+		std::unordered_map<std::string, std::vector<SMatrix>> RendererStaticMeshInstanceTransforms;
 
 		ID3D11ShaderResourceView* DefaultAlbedoTexture = nullptr;
 		ID3D11ShaderResourceView* DefaultNormalTexture = nullptr;
@@ -322,6 +346,8 @@ namespace Havtorn
 		U8 TexturesPerMaterial = 3;
 
 		SVector2<F32> ShadowAtlasResolution = SVector2<F32>::Zero;
+
+		U16 InstancedMeshNumberLimit = 200;
 	};
 
 	template <typename T>
