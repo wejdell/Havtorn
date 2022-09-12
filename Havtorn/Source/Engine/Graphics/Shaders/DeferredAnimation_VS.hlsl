@@ -5,12 +5,9 @@
 VertexModelToPixel main(SkeletalMeshVertexInput input)
 {
     VertexModelToPixel returnValue;
-     
-    //returnValue.myPosition = input.myPosition;
 
     float4 vWeights = input.BoneWeight;
     uint4 vBones = uint4((uint) input.BoneID.x, (uint) input.BoneID.y, (uint) input.BoneID.z, (uint) input.BoneID.w);
-    //returnValue.myPosition = mul(returnValue.myPosition, toWorld);
     
     float4 skinnedPos = 0;
 
@@ -38,7 +35,6 @@ VertexModelToPixel main(SkeletalMeshVertexInput input)
     input.Position.x = skinnedPos.x;
     input.Position.y = skinnedPos.y;
     input.Position.z = skinnedPos.z;
-    //input.Position.w = skinnedPos.w;
 
     const float4 vertexObjectPos = float4(input.Position.xyz, 1.0f);
     const float4 vertexWorldPos = mul(toWorld, vertexObjectPos);
