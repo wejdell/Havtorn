@@ -19,7 +19,7 @@ struct StaticInstancedMeshVertexInput
     float3 Position     : POSITION;
     float3 Normal       : NORMAL;
     float3 Tangent      : TANGENT;
-    float3 Bitangent : BINORMAL;
+    float3 Bitangent    : BINORMAL;
     float2 UV           : UV;
     float4x4 Transform  : INSTANCETRANSFORM; // maybe needs columnmajor
 };
