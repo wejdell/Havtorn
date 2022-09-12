@@ -91,6 +91,17 @@ namespace Havtorn
 		bufferDescription.ByteWidth = sizeof(SEmissiveBufferData);
 		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &EmissiveBuffer), "Emissive Buffer could not be created.");
 
+		//Instance Buffer
+		D3D11_BUFFER_DESC instanceBufferDesc;
+		instanceBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+		instanceBufferDesc.ByteWidth = sizeof(SMatrix) * InstancedMeshNumberLimit;
+		instanceBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		instanceBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		instanceBufferDesc.MiscFlags = 0;
+		instanceBufferDesc.StructureByteStride = 0;
+
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&instanceBufferDesc, nullptr, &InstancedTransformBuffer), "Instanced Transform Buffer could not be created.");
+
 		ENGINE_ERROR_BOOL_MESSAGE(FullscreenRenderer.Init(framework), "Failed to Init Fullscreen Renderer.");
 		ENGINE_ERROR_BOOL_MESSAGE(FullscreenTextureFactory.Init(framework), "Failed to Init Fullscreen Texture Factory.");
 		ENGINE_ERROR_BOOL_MESSAGE(RenderStateManager.Init(framework), "Failed to Init Render State Manager.");
@@ -103,8 +114,10 @@ namespace Havtorn
 
 		// Load default resources
 		AddShader("Shaders/FullscreenVertexShader_VS.cso", EShaderType::Vertex);
-		const std::string vsData = AddShader("Shaders/DeferredStaticMesh_VS.cso", EShaderType::Vertex);
+		std::string vsData = AddShader("Shaders/DeferredStaticMesh_VS.cso", EShaderType::Vertex);
 		AddInputLayout(vsData, EInputLayoutType::Pos3Nor3Tan3Bit3UV2);
+		vsData = AddShader("Shaders/DeferredInstancedMesh_VS.cso", EShaderType::Vertex);
+		AddInputLayout(vsData, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans);
 
 		AddShader("Shaders/GBuffer_PS.cso", EShaderType::Pixel);
 
@@ -300,29 +313,35 @@ namespace Havtorn
 					FrameBufferData.ToCameraFromProjection = directionalLightComp->ShadowmapView.ShadowProjectionMatrix.Inverse();
 					FrameBufferData.CameraPosition = directionalLightComp->ShadowmapView.ShadowPosition;
 					BindBuffer(FrameBuffer, FrameBufferData, "Frame Buffer");
+					Context->RSSetViewports(1, &Viewports[directionalLightComp->ShadowmapView.ShadowmapViewportIndex]);
+
+					// =============
 
 					ObjectBufferData.ToWorldFromObject = transformComp->Transform.GetMatrix();
 					BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
 
-					Context->VSSetConstantBuffers(0, 1, &FrameBuffer);
+					const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceTransforms[staticMeshComp->Name];
+					BindBuffer(InstancedTransformBuffer, matrices, "Instanced Transform Buffer");
+
 					Context->VSSetConstantBuffers(1, 1, &ObjectBuffer);
 					Context->IASetPrimitiveTopology(Topologies[staticMeshComp->TopologyIndex]);
-					Context->IASetInputLayout(InputLayouts[staticMeshComp->InputLayoutIndex]);
+					Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans)]);
 
-					Context->VSSetShader(VertexShaders[staticMeshComp->VertexShaderIndex], nullptr, 0);
+					Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::StaticMeshInstanced)], nullptr, 0);
 					Context->PSSetShader(nullptr, nullptr, 0);
-
-					Context->RSSetViewports(1, &Viewports[directionalLightComp->ShadowmapView.ShadowmapViewportIndex]);
 
 					for (U8 drawCallIndex = 0; drawCallIndex < static_cast<U8>(staticMeshComp->DrawCallData.size()); drawCallIndex++)
 					{
 						const SDrawCallData& drawData = staticMeshComp->DrawCallData[drawCallIndex];
-						ID3D11Buffer* vertexBuffer = VertexBuffers[drawData.VertexBufferIndex];
-						Context->IASetVertexBuffers(0, 1, &vertexBuffer, &MeshVertexStrides[drawData.VertexStrideIndex], &MeshVertexOffsets[drawData.VertexStrideIndex]);
+						ID3D11Buffer* bufferPointers[2] = { VertexBuffers[drawData.VertexBufferIndex], InstancedTransformBuffer };
+						const U32 strides[2] = { MeshVertexStrides[drawData.VertexStrideIndex], sizeof(SMatrix) };
+						const U32 offsets[2] = { MeshVertexOffsets[drawData.VertexOffsetIndex], 0 };
+						Context->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
 						Context->IASetIndexBuffer(IndexBuffers[drawData.IndexBufferIndex], DXGI_FORMAT_R32_UINT, 0);
-						Context->DrawIndexed(drawData.IndexCount, 0, 0);
+						Context->DrawIndexedInstanced(drawData.IndexCount, static_cast<U32>(matrices.size()), 0, 0, 0);
 						CRenderManager::NumberOfDrawCallsThisFrame++;
 					}
+
 				}
 				break;
 
@@ -332,14 +351,18 @@ namespace Havtorn
 					const auto staticMeshComp = currentCommand.GetComponent(StaticMeshComponent);
 					const auto pointLightComp = currentCommand.GetComponent(PointLightComponent);
 
+					// TODO.NR: Not needed for instanced rendering?
 					ObjectBufferData.ToWorldFromObject = transformComp->Transform.GetMatrix();
 					BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
 
+					const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceTransforms[staticMeshComp->Name];
+					BindBuffer(InstancedTransformBuffer, matrices, "Instanced Transform Buffer");
+
 					Context->VSSetConstantBuffers(1, 1, &ObjectBuffer);
 					Context->IASetPrimitiveTopology(Topologies[staticMeshComp->TopologyIndex]);
-					Context->IASetInputLayout(InputLayouts[staticMeshComp->InputLayoutIndex]);
+					Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans)]);
 
-					Context->VSSetShader(VertexShaders[staticMeshComp->VertexShaderIndex], nullptr, 0);
+					Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::StaticMeshInstanced)], nullptr, 0);
 					Context->PSSetShader(nullptr, nullptr, 0);
 
 					for (const auto& shadowmapView : pointLightComp->ShadowmapViews)
@@ -355,13 +378,17 @@ namespace Havtorn
 
 						Context->RSSetViewports(1, &Viewports[shadowmapView.ShadowmapViewportIndex]);
 
+						// =============
+
 						for (U8 drawCallIndex = 0; drawCallIndex < static_cast<U8>(staticMeshComp->DrawCallData.size()); drawCallIndex++)
 						{
 							const SDrawCallData& drawData = staticMeshComp->DrawCallData[drawCallIndex];
-							ID3D11Buffer* vertexBuffer = VertexBuffers[drawData.VertexBufferIndex];
-							Context->IASetVertexBuffers(0, 1, &vertexBuffer, &MeshVertexStrides[drawData.VertexStrideIndex], &MeshVertexOffsets[drawData.VertexStrideIndex]);
+							ID3D11Buffer* bufferPointers[2] = { VertexBuffers[drawData.VertexBufferIndex], InstancedTransformBuffer };
+							const U32 strides[2] = { MeshVertexStrides[drawData.VertexStrideIndex], sizeof(SMatrix) };
+							const U32 offsets[2] = { MeshVertexOffsets[drawData.VertexOffsetIndex], 0 };
+							Context->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
 							Context->IASetIndexBuffer(IndexBuffers[drawData.IndexBufferIndex], DXGI_FORMAT_R32_UINT, 0);
-							Context->DrawIndexed(drawData.IndexCount, 0, 0);
+							Context->DrawIndexedInstanced(drawData.IndexCount, static_cast<U32>(matrices.size()), 0, 0, 0);
 							CRenderManager::NumberOfDrawCallsThisFrame++;
 						}
 					}
@@ -385,22 +412,29 @@ namespace Havtorn
 					BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
 
 					Context->VSSetConstantBuffers(0, 1, &FrameBuffer);
+					Context->RSSetViewports(1, &Viewports[spotLightComp->ShadowmapView.ShadowmapViewportIndex]);
+				
+					// =============
+					
+					const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceTransforms[staticMeshComp->Name];
+					BindBuffer(InstancedTransformBuffer, matrices, "Instanced Transform Buffer");
+
 					Context->VSSetConstantBuffers(1, 1, &ObjectBuffer);
 					Context->IASetPrimitiveTopology(Topologies[staticMeshComp->TopologyIndex]);
-					Context->IASetInputLayout(InputLayouts[staticMeshComp->InputLayoutIndex]);
+					Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans)]);
 
-					Context->VSSetShader(VertexShaders[staticMeshComp->VertexShaderIndex], nullptr, 0);
+					Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::StaticMeshInstanced)], nullptr, 0);
 					Context->PSSetShader(nullptr, nullptr, 0);
-
-					Context->RSSetViewports(1, &Viewports[spotLightComp->ShadowmapView.ShadowmapViewportIndex]);
 
 					for (U8 drawCallIndex = 0; drawCallIndex < static_cast<U8>(staticMeshComp->DrawCallData.size()); drawCallIndex++)
 					{
 						const SDrawCallData& drawData = staticMeshComp->DrawCallData[drawCallIndex];
-						ID3D11Buffer* vertexBuffer = VertexBuffers[drawData.VertexBufferIndex];
-						Context->IASetVertexBuffers(0, 1, &vertexBuffer, &MeshVertexStrides[drawData.VertexStrideIndex], &MeshVertexOffsets[drawData.VertexStrideIndex]);
+						ID3D11Buffer* bufferPointers[2] = { VertexBuffers[drawData.VertexBufferIndex], InstancedTransformBuffer };
+						const U32 strides[2] = { MeshVertexStrides[drawData.VertexStrideIndex], sizeof(SMatrix) };
+						const U32 offsets[2] = { MeshVertexOffsets[drawData.VertexOffsetIndex], 0 };
+						Context->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
 						Context->IASetIndexBuffer(IndexBuffers[drawData.IndexBufferIndex], DXGI_FORMAT_R32_UINT, 0);
-						Context->DrawIndexed(drawData.IndexCount, 0, 0);
+						Context->DrawIndexedInstanced(drawData.IndexCount, static_cast<U32>(matrices.size()), 0, 0, 0);
 						CRenderManager::NumberOfDrawCallsThisFrame++;
 					}
 				}
@@ -459,9 +493,56 @@ namespace Havtorn
 
 						const SDrawCallData& drawData = staticMeshComp->DrawCallData[drawCallIndex];
 						ID3D11Buffer* vertexBuffer = VertexBuffers[drawData.VertexBufferIndex];
-						Context->IASetVertexBuffers(0, 1, &vertexBuffer, &MeshVertexStrides[drawData.VertexStrideIndex], &MeshVertexOffsets[drawData.VertexStrideIndex]);
+						Context->IASetVertexBuffers(0, 1, &vertexBuffer, &MeshVertexStrides[drawData.VertexStrideIndex], &MeshVertexOffsets[drawData.VertexOffsetIndex]);
 						Context->IASetIndexBuffer(IndexBuffers[drawData.IndexBufferIndex], DXGI_FORMAT_R32_UINT, 0);
 						Context->DrawIndexed(drawData.IndexCount, 0, 0);
+						CRenderManager::NumberOfDrawCallsThisFrame++;
+					}
+				}
+				break;
+
+				case ERenderCommandType::GBufferDataInstanced:
+				{
+					const auto transformComp = currentCommand.GetComponent(TransformComponent);
+					const auto staticMeshComp = currentCommand.GetComponent(StaticMeshComponent);
+					const auto materialComp = currentCommand.GetComponent(MaterialComponent);
+
+					ObjectBufferData.ToWorldFromObject = transformComp->Transform.GetMatrix();
+					BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
+					
+					const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceTransforms[staticMeshComp->Name];
+					BindBuffer(InstancedTransformBuffer, matrices, "Instanced Transform Buffer");
+
+					Context->VSSetConstantBuffers(1, 1, &ObjectBuffer);
+					Context->IASetPrimitiveTopology(Topologies[staticMeshComp->TopologyIndex]);
+					Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans)]);
+
+					Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::StaticMeshInstanced)], nullptr, 0);
+					Context->PSSetShader(PixelShaders[staticMeshComp->PixelShaderIndex], nullptr, 0);
+
+					ID3D11SamplerState* sampler = Samplers[staticMeshComp->SamplerIndex];
+					Context->PSSetSamplers(0, 1, &sampler);
+
+					auto textureBank = GEngine::GetTextureBank();
+					for (U8 drawCallIndex = 0; drawCallIndex < static_cast<U8>(staticMeshComp->DrawCallData.size()); drawCallIndex++)
+					{
+						// Load Textures
+						std::vector<ID3D11ShaderResourceView*> resourceViewPointers;
+						resourceViewPointers.resize(TexturesPerMaterial);
+						for (U8 textureIndex = 0, pointerTracker = 0; textureIndex < TexturesPerMaterial; textureIndex++, pointerTracker++)
+						{
+							U8 materialIndex = UMath::Min(drawCallIndex, static_cast<U8>(staticMeshComp->NumberOfMaterials - 1));
+							resourceViewPointers[pointerTracker] = textureBank->GetTexture(materialComp->MaterialReferences[textureIndex + materialIndex * TexturesPerMaterial]);
+						}
+						Context->PSSetShaderResources(5, TexturesPerMaterial, resourceViewPointers.data());
+
+						const SDrawCallData& drawData = staticMeshComp->DrawCallData[drawCallIndex];
+						ID3D11Buffer* bufferPointers[2] = { VertexBuffers[drawData.VertexBufferIndex], InstancedTransformBuffer };
+						const U32 strides[2] = { MeshVertexStrides[drawData.VertexStrideIndex], sizeof(SMatrix) };
+						const U32 offsets[2] = { MeshVertexOffsets[drawData.VertexOffsetIndex], 0 };
+						Context->IASetVertexBuffers(0, 2, bufferPointers, strides, offsets);
+						Context->IASetIndexBuffer(IndexBuffers[drawData.IndexBufferIndex], DXGI_FORMAT_R32_UINT, 0);
+						Context->DrawIndexedInstanced(drawData.IndexCount, static_cast<U32>(matrices.size()), 0, 0, 0);
 						CRenderManager::NumberOfDrawCallsThisFrame++;
 					}
 				}
@@ -957,6 +1038,8 @@ namespace Havtorn
 			RenderedScene.SetAsResourceOnSlot(0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 
+			//StaticMeshInstanceTransforms.clear();
+
 			CThreadManager::RenderThreadStatus = ERenderThreadStatus::PostRender;
 			uniqueLock.unlock();
 			CThreadManager::RenderCondition.notify_one();
@@ -1393,6 +1476,29 @@ namespace Havtorn
 		return asset.ShaderResourceView;
 	}
 
+	bool CRenderManager::IsStaticMeshInInstancedRenderList(const std::string& meshName)
+	{
+		return SystemStaticMeshInstanceTransforms.contains(meshName);
+	}
+
+	void CRenderManager::AddStaticMeshToInstancedRenderList(const std::string& meshName, const SMatrix& transformMatrix)
+	{
+		if (!SystemStaticMeshInstanceTransforms.contains(meshName))
+			SystemStaticMeshInstanceTransforms.emplace(meshName, std::vector<SMatrix>());
+
+		SystemStaticMeshInstanceTransforms[meshName].emplace_back(transformMatrix);
+	}
+
+	void CRenderManager::SwapStaticMeshInstancedRenderLists()
+	{
+		std::swap(SystemStaticMeshInstanceTransforms, RendererStaticMeshInstanceTransforms);
+	}
+
+	void CRenderManager::ClearSystemStaticMeshInstanceTransforms()
+	{
+		return SystemStaticMeshInstanceTransforms.clear();
+	}
+
 	const CFullscreenTexture& CRenderManager::GetRenderedSceneTexture() const
 	{
 		return RenderedScene;
@@ -1612,8 +1718,23 @@ namespace Havtorn
 				{"POSITION"	,	0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
 				{"NORMAL"   ,   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
 				{"TANGENT"  ,   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-				{"BINORMAL" ,   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+				{"BINORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
 				{"UV"		,   0, DXGI_FORMAT_R32G32_FLOAT,	0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
+			};
+			break;
+
+		case EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans:
+			layout =
+			{
+				{"POSITION"	,	0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+				{"NORMAL"   ,   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+				{"TANGENT"  ,   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+				{"BINORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+				{"UV"		,   0, DXGI_FORMAT_R32G32_FLOAT,	0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+				{"INSTANCETRANSFORM",	0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+				{"INSTANCETRANSFORM",	1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+				{"INSTANCETRANSFORM",	2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+				{"INSTANCETRANSFORM",	3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1}
 			};
 			break;
 

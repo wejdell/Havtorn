@@ -48,8 +48,7 @@ namespace Havtorn
 		{
 			// Decelerate
 			controllerComp->CurrentAccelerationFactor = UMath::Clamp(controllerComp->CurrentAccelerationFactor - (1.0f / controllerComp->AccelerationDuration) * dt);
-			F32 easedFactor = UMath::EaseInOutCubic(controllerComp->CurrentAccelerationFactor);
-			transformComp->Transform.Translate(controllerComp->AccelerationDirection * easedFactor * controllerComp->MaxMoveSpeed * dt);
+			transformComp->Transform.Translate(controllerComp->AccelerationDirection * controllerComp->CurrentAccelerationFactor * controllerComp->MaxMoveSpeed * dt);
 
 			ResetInput();
 			return;
@@ -65,8 +64,7 @@ namespace Havtorn
 		{
 			// Decelerate
 			controllerComp->CurrentAccelerationFactor = UMath::Clamp(controllerComp->CurrentAccelerationFactor - (1.0f / controllerComp->AccelerationDuration) * dt);
-			F32 easedFactor = UMath::EaseInOutCubic(controllerComp->CurrentAccelerationFactor);
-			transformComp->Transform.Translate(controllerComp->AccelerationDirection * easedFactor * controllerComp->MaxMoveSpeed * dt);
+			transformComp->Transform.Translate(controllerComp->AccelerationDirection * controllerComp->CurrentAccelerationFactor * controllerComp->MaxMoveSpeed * dt);
 
 			ResetInput();
 			return;
@@ -80,8 +78,7 @@ namespace Havtorn
 		controllerComp->CurrentAccelerationFactor = UMath::Clamp(controllerComp->CurrentAccelerationFactor + (1.0f / controllerComp->AccelerationDuration) * dt);
 		controllerComp->AccelerationDirection = CameraMoveInput.GetNormalized();	
 		
-		F32 easedFactor = UMath::EaseInOutCubic(controllerComp->CurrentAccelerationFactor);
-		transformComp->Transform.Translate(controllerComp->AccelerationDirection * easedFactor * controllerComp->MaxMoveSpeed * dt);
+		transformComp->Transform.Translate(controllerComp->AccelerationDirection * controllerComp->CurrentAccelerationFactor * controllerComp->MaxMoveSpeed * dt);
 
 		ResetInput();
 	}

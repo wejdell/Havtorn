@@ -21,7 +21,7 @@ namespace Havtorn
 		const SInputAxis rightAxis = { EInputAxis::Key, EInputKey::KeyD, EInputKey::KeyA, EInputContext::Editor };
 		MapEvent(EInputAxisEvent::Right, rightAxis);
 
-		const SInputAxis upAxis = { EInputAxis::Key, EInputKey::KeyQ, EInputKey::KeyE, EInputContext::Editor };
+		const SInputAxis upAxis = { EInputAxis::Key, EInputKey::KeyE, EInputKey::KeyQ, EInputContext::Editor };
 		MapEvent(EInputAxisEvent::Up, upAxis);
 
 		const SInputAxis mouseHorizontal = { EInputAxis::MouseHorizontal, EInputContext::Editor };

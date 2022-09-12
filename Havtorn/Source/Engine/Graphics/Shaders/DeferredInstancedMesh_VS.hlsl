@@ -2,11 +2,11 @@
 
 #include "Includes/DeferredShaderStructs.hlsli"
 
-VertexModelToPixel main(VertexModelInput input)
+VertexModelToPixel main(StaticInstancedMeshVertexInput input)
 {
     VertexModelToPixel returnValue;
 
-    const float4 vertexObjectPos      = input.Position.xyzw;
+    const float4 vertexObjectPos      = float4(input.Position.xyz, 1.0f);
     const float4 vertexWorldPos       = mul(input.Transform, vertexObjectPos);
     const float4 vertexViewPos        = mul(ToCameraSpace, vertexWorldPos);
     const float4 vertexProjectionPos  = mul(ToProjectionSpace, vertexViewPos);
