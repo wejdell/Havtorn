@@ -30,3 +30,6 @@
 #define BIT(x) (1 << x)
 #define CACHE_LINE 32
 #define CACHE_ALIGN __declspec(align(CACHE_LINE))
+
+#define ZERO_MEM(a) memset(a, 0, sizeof(a))
+#define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))

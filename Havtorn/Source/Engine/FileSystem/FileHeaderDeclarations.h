@@ -6,6 +6,8 @@
 
 namespace Havtorn
 {
+#pragma region Serialize Template
+
 	template<typename T>
 	U32 SerializeSimple(const T& source, char* destination, U32 bufferPosition)
 	{
@@ -54,7 +56,11 @@ namespace Havtorn
 		return size;
 	}
 
-	struct SStaticModelFileHeader
+#pragma endregion
+
+#pragma region Static Mesh
+
+	struct SStaticMeshFileHeader
 	{
 		EAssetType AssetType = EAssetType::StaticMesh;
 		U32 NameLength = 0;
@@ -68,7 +74,7 @@ namespace Havtorn
 		void Deserialize(const char* fromData);
 	};
 
-	inline U32 SStaticModelFileHeader::GetSize() const
+	inline U32 SStaticMeshFileHeader::GetSize() const
 	{
 		U32 size = sizeof(EAssetType);
 		size += sizeof(U32);
@@ -88,7 +94,7 @@ namespace Havtorn
 		return size;
 	}
 
-	inline void SStaticModelFileHeader::Serialize(char* toData) const
+	inline void SStaticMeshFileHeader::Serialize(char* toData) const
 	{
 		U32 pointerPosition = 0;
 		pointerPosition += SerializeSimple(AssetType, toData, pointerPosition);
@@ -106,7 +112,7 @@ namespace Havtorn
 		}
 	}
 
-	inline void SStaticModelFileHeader::Deserialize(const char* fromData)
+	inline void SStaticMeshFileHeader::Deserialize(const char* fromData)
 	{
 		U32 pointerPosition = 0;
 		pointerPosition += DeserializeSimple(AssetType, fromData, pointerPosition);
@@ -125,6 +131,86 @@ namespace Havtorn
 			pointerPosition += DeserializeVector(Meshes.back().Indices, fromData, Meshes.back().NumberOfIndices, pointerPosition);
 		}
 	}
+
+#pragma endregion
+
+#pragma region Skeletal Mesh
+
+	struct SSkeletalMeshFileHeader
+	{
+		EAssetType AssetType = EAssetType::SkeletalMesh;
+		U32 NameLength = 0;
+		std::string Name;
+		U8 NumberOfMaterials = 0;
+		U32 NumberOfMeshes = 0;
+		std::vector<SSkeletalMesh> Meshes;
+
+		[[nodiscard]] U32 GetSize() const;
+		void Serialize(char* toData) const;
+		void Deserialize(const char* fromData);
+	};
+
+	inline U32 SSkeletalMeshFileHeader::GetSize() const
+	{
+		U32 size = sizeof(EAssetType);
+		size += sizeof(U32);
+		size += sizeof(char) * NameLength;
+		size += sizeof(U8);
+		size += sizeof(U32);
+
+		for (auto& mesh : Meshes)
+		{
+			size += sizeof(U32);
+			size += sizeof(char) * mesh.NameLength;
+			size += sizeof(U32);
+			size += sizeof(SSkeletalMeshVertex) * mesh.NumberOfVertices;
+			size += sizeof(U32);
+			size += sizeof(U32) * mesh.NumberOfIndices;
+		}
+		return size;
+	}
+
+	inline void SSkeletalMeshFileHeader::Serialize(char* toData) const
+	{
+		U32 pointerPosition = 0;
+		pointerPosition += SerializeSimple(AssetType, toData, pointerPosition);
+		pointerPosition += SerializeSimple(NumberOfMaterials, toData, pointerPosition);
+		pointerPosition += SerializeSimple(NumberOfMeshes, toData, pointerPosition);
+
+		for (auto& mesh : Meshes)
+		{
+			pointerPosition += SerializeSimple(mesh.NameLength, toData, pointerPosition);
+			pointerPosition += SerializeString(mesh.Name, toData, pointerPosition);
+			pointerPosition += SerializeSimple(mesh.NumberOfVertices, toData, pointerPosition);
+			pointerPosition += SerializeVector(mesh.Vertices, toData, pointerPosition);
+			pointerPosition += SerializeSimple(mesh.NumberOfIndices, toData, pointerPosition);
+			pointerPosition += SerializeVector(mesh.Indices, toData, pointerPosition);
+		}
+	}
+
+	inline void SSkeletalMeshFileHeader::Deserialize(const char* fromData)
+	{
+		U32 pointerPosition = 0;
+		pointerPosition += DeserializeSimple(AssetType, fromData, pointerPosition);
+		pointerPosition += DeserializeSimple(NumberOfMaterials, fromData, pointerPosition);
+		pointerPosition += DeserializeSimple(NumberOfMeshes, fromData, pointerPosition);
+
+		Meshes.reserve(NumberOfMeshes);
+		for (U16 i = 0; i < NumberOfMeshes; i++)
+		{
+			Meshes.emplace_back();
+			pointerPosition += DeserializeSimple(Meshes.back().NameLength, fromData, pointerPosition);
+			pointerPosition += DeserializeString(Meshes.back().Name, fromData, Meshes.back().NameLength, pointerPosition);
+			pointerPosition += DeserializeSimple(Meshes.back().NumberOfVertices, fromData, pointerPosition);
+			pointerPosition += DeserializeVector(Meshes.back().Vertices, fromData, Meshes.back().NumberOfVertices, pointerPosition);
+			pointerPosition += DeserializeSimple(Meshes.back().NumberOfIndices, fromData, pointerPosition);
+			pointerPosition += DeserializeVector(Meshes.back().Indices, fromData, Meshes.back().NumberOfIndices, pointerPosition);
+		}
+	}
+
+#pragma endregion
+
+#pragma region Texture File
 
 	struct STextureFileHeader
 	{
@@ -181,4 +267,6 @@ namespace Havtorn
 		pointerPosition += DeserializeSimple(DataSize, fromData, pointerPosition);
 		DeserializeString(Data, fromData, DataSize, pointerPosition);
 	}
+
+#pragma endregion
 }

@@ -22,6 +22,16 @@
 
 namespace Havtorn
 {
+	SMatrix ConvertToSMatrix(const aiMatrix4x4& AssimpMatrix)
+	{
+		SMatrix mat;
+		mat(0, 0) = AssimpMatrix.a1; mat(0, 1) = AssimpMatrix.a2; mat(0, 2) = AssimpMatrix.a3; mat(0, 3) = AssimpMatrix.a4;
+		mat(1, 0) = AssimpMatrix.b1; mat(1, 1) = AssimpMatrix.b2; mat(1, 2) = AssimpMatrix.b3; mat(1, 3) = AssimpMatrix.b4;
+		mat(2, 0) = AssimpMatrix.c1; mat(2, 1) = AssimpMatrix.c2; mat(2, 2) = AssimpMatrix.c3; mat(2, 3) = AssimpMatrix.c4;
+		mat(3, 0) = AssimpMatrix.d1; mat(3, 1) = AssimpMatrix.d2; mat(3, 2) = AssimpMatrix.d3; mat(3, 3) = AssimpMatrix.d4;
+		return mat;
+	}
+
 	std::string CModelImporter::ImportFBX(const std::string& filePath)
 	{
 		if (!CFileSystem::DoesFileExist(filePath))
@@ -37,19 +47,23 @@ namespace Havtorn
 
 		const aiMesh* fbxMesh = assimpScene->mMeshes[0];
 
-		const bool hasPositions = fbxMesh->HasPositions();
-		const bool hasNormals = fbxMesh->HasNormals();
-		const bool hasTangents = fbxMesh->HasTangentsAndBitangents();
-		const bool hasTextures = fbxMesh->HasTextureCoords(0);
-		//const bool hasBones = fbxMesh->HasBones();
-		const bool hasBones = false;
+		const bool hasPositions = fbxMesh->HasPositions(); 
+		const bool hasNormals	= fbxMesh->HasNormals();
+		const bool hasTangents	= fbxMesh->HasTangentsAndBitangents();
+		const bool hasTextures	= fbxMesh->HasTextureCoords(0);
+		const bool hasBones		= fbxMesh->HasBones();
+		//const bool hasBones		= false;
 
-		SStaticModelFileHeader fileHeader;
+		SStaticMeshFileHeader fileHeader;
 		if (hasPositions && hasNormals && hasTangents && hasTextures && !hasBones)
 		{
 			fileHeader.AssetType = EAssetType::StaticMesh;
 		}
-		
+		else if (hasPositions && hasNormals && hasTangents && hasTextures && hasBones)
+		{
+			fileHeader.AssetType = EAssetType::SkeletalMesh;
+		}
+
 		fileHeader.NameLength = assimpScene->mName.length;
 		fileHeader.Name = assimpScene->mName.C_Str();
 		fileHeader.NumberOfMeshes = assimpScene->mNumMeshes;
@@ -69,6 +83,44 @@ namespace Havtorn
 			auto& fileHeaderMesh = fileHeader.Meshes[n];
 			fbxMesh = assimpScene->mMeshes[n];
 			//model->myMaterialIndices.push_back(fbxMesh->mMaterialIndex);
+
+			// Bones 
+			std::vector<SVertexBoneData> boneData;
+			if (hasBones)
+			{
+				boneData.resize(fbxMesh->mNumVertices);
+
+				unsigned int BoneIndex = 0;
+				for (unsigned int i = 0; i < fbxMesh->mNumBones; i++)
+				{
+					// TODO.AS/AG: Variable names, and more.
+					SJointInfo jointInfo(fbxMesh->mBones[i]->mName.data);
+					if (aLoaderMesh->myModel->myBoneNameToIndex.find(jointInfo.JointName.c_str()) == aLoaderMesh->myModel->myBoneNameToIndex.end())// If BoneName is at the end of list, I.E does not exist in list
+					{
+						BoneIndex = aLoaderMesh->myModel->myNumBones;
+						aLoaderMesh->myModel->myNumBones++;
+						BoneInfo bi;
+						aLoaderMesh->myModel->myBoneInfo.emplace_back(bi);
+
+
+						SMatrix NodeTransformation = ConvertToSMatrix(fbxMesh->mBones[i]->mOffsetMatrix);// Convert InverseBind pose to Engine Matrix
+
+						aLoaderMesh->myModel->myBoneInfo[BoneIndex].BoneOffset = NodeTransformation;
+						aLoaderMesh->myModel->myBoneNameToIndex[jointInfo.JointName.c_str()] = BoneIndex;
+					}
+					else
+					{
+						BoneIndex = aLoaderMesh->myModel->myBoneNameToIndex[jointInfo.JointName.c_str()];
+					}
+
+					for (unsigned int j = 0; j < fbxMesh->mBones[i]->mNumWeights; j++)
+					{
+						unsigned int VertexID = fbxMesh->mBones[i]->mWeights[j].mVertexId;
+						float Weight = fbxMesh->mBones[i]->mWeights[j].mWeight;
+						boneData[VertexID].AddBoneData(BoneIndex, Weight);
+					}
+				}
+			}
 
 			// Vertices
 			constexpr F32 scaleModifier = 0.01f;
@@ -109,7 +161,46 @@ namespace Havtorn
 					break;
 				case EAssetType::SkeletalMesh:
 					{
-						
+						SSkeletalMeshVertex newVertex;
+
+						aiVector3D& pos = fbxMesh->mVertices[i];
+						pos *= scaleModifier;
+						newVertex.StaticMeshVertex.x = pos.x;
+						newVertex.StaticMeshVertex.y = pos.y;
+						newVertex.StaticMeshVertex.z = pos.z;
+
+						const aiVector3D& norm = fbxMesh->mNormals[i];
+						newVertex.StaticMeshVertex.nx = norm.x;
+						newVertex.StaticMeshVertex.ny = norm.y;
+						newVertex.StaticMeshVertex.nz = norm.z;
+
+						const aiVector3D& tangent = fbxMesh->mTangents[i];
+						newVertex.StaticMeshVertex.tx = tangent.x;
+						newVertex.StaticMeshVertex.ty = tangent.y;
+						newVertex.StaticMeshVertex.tz = tangent.z;
+
+						const aiVector3D& biTangent = fbxMesh->mBitangents[i];
+						newVertex.StaticMeshVertex.bx = biTangent.x;
+						newVertex.StaticMeshVertex.by = biTangent.y;
+						newVertex.StaticMeshVertex.bz = biTangent.z;
+
+						newVertex.StaticMeshVertex.u = fbxMesh->mTextureCoords[0][i].x;
+						newVertex.StaticMeshVertex.v = fbxMesh->mTextureCoords[0][i].y;
+
+						auto bones = fbxMesh->mBones;
+						bones[0]->
+						//VertexBoneData& boneData = collectedBoneData[i];
+						newVertex.ID0 = boneData.IDs[0];
+						newVertex.ID1 = boneData.IDs[1];
+						newVertex.ID2 = boneData.IDs[2];
+						newVertex.ID3 = boneData.IDs[3];
+
+						newVertex.Weight0 = boneData.Weights[0];
+						newVertex.Weight1 = boneData.Weights[1];
+						newVertex.Weight2 = boneData.Weights[2];
+						newVertex.Weight3 = boneData.Weights[3];
+
+						fileHeaderMesh.Vertices.emplace_back(newVertex);
 					}
 					break;
 				case EAssetType::Animation:

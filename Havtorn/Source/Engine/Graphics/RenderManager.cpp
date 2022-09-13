@@ -1259,7 +1259,7 @@ namespace Havtorn
 
 			GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));
 
-			SStaticModelFileHeader assetFile;
+			SStaticMeshFileHeader assetFile;
 			assetFile.Deserialize(data);
 			asset = SStaticMeshAsset(assetFile);
 
