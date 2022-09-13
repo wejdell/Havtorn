@@ -60,7 +60,7 @@ namespace Havtorn
 		inline void SetScale(F32 xScale, F32 yScale, F32 zScale);
 		inline void SetScale(F32 scale);
 
-// TODO.NR: Make [] operator overload.  
+		// TODO.NR: Make [] operator overload.  
 		inline SMatrix operator+(const SMatrix& matrix);
 		inline SMatrix& operator+=(const SMatrix& matrix);
 		inline SMatrix operator-(const SMatrix& matrix);
