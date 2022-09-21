@@ -27,6 +27,11 @@ namespace Havtorn
 	class CFileSystem;
 	class CTextureBank;
 
+	namespace Debug
+	{
+		class GDebugDrawer;
+	}
+
 	class GEngine
 	{
 		friend class CVFXMeshFactory;
@@ -71,6 +76,7 @@ namespace Havtorn
 		CRenderManager* RenderManager = nullptr;
 		GTimer* Timer = nullptr;
 		CInputMapper* InputMapper = nullptr;
+		Debug::GDebugDrawer* DebugDrawer = nullptr;
 
 		CScene* Scene = nullptr;
 

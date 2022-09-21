@@ -30,6 +30,8 @@
 
 #include "Timer.h"
 
+#include "Debug/DebugDrawer.h"
+
 //#include "PhysXWrapper.h"
 
 namespace Havtorn
@@ -49,6 +51,7 @@ namespace Havtorn
 		RenderManager = new CRenderManager();
 		InputMapper = new CInputMapper();
 		Scene = new CScene();
+		DebugDrawer = new Debug::GDebugDrawer();
 	}
 
 	GEngine::~GEngine()
@@ -65,6 +68,8 @@ namespace Havtorn
 		SAFE_DELETE(WindowHandler);
 		SAFE_DELETE(Timer);
 		SAFE_DELETE(FileSystem);
+
+		SAFE_DELETE(DebugDrawer);
 
 		Instance = nullptr;
 	}
