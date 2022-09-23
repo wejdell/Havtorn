@@ -3,6 +3,8 @@
 #pragma once
 #include "Debug/DebugShape.h"
 
+// TODO.AG Use a Define to use instead of just _DEBUG.
+// AG: Game Engine Architecture 2nd Ed. Jason Gregory suggests a debug drawing utility tool should tie its drawn shapes to a scene. Unreal uses a similar structure with UWorld being passed as a parameter.
 namespace Havtorn
 {
 	namespace Debug
@@ -10,8 +12,8 @@ namespace Havtorn
 		class GDebugDrawer
 		{
 			friend class GEngine;
-			friend class CDebugUtilitySystem;
-		
+			friend class CRenderSystem;
+
 		public:
 			static constexpr U16 MAX_DEBUG_SHAPES = 10000;
 			static U16 DEBUG_SHAPES_COUNT;
@@ -24,7 +26,7 @@ namespace Havtorn
 		private:
 			static bool InstanceExists();
 			static F32 LifeTimeForShape(const bool singleFrame, const F32 requestedLifeTime);
-			static std::vector<const SDebugShape*> AddToRendering();
+			static std::vector<const SDebugShape*> GetShapesToRender();
 
 			void SortShapes();
 			

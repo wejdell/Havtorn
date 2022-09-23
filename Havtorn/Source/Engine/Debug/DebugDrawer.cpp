@@ -56,7 +56,7 @@ namespace Havtorn
 #endif
 		}
 
-		std::vector<const SDebugShape*> GDebugDrawer::AddToRendering()
+		std::vector<const SDebugShape*> GDebugDrawer::GetShapesToRender()
 		{
 #ifdef _DEBUG
 			std::vector<const SDebugShape*> shapesToRender;

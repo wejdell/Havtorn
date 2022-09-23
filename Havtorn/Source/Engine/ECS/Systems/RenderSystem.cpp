@@ -6,6 +6,7 @@
 #include "Graphics/RenderManager.h"
 #include "Graphics/RenderCommand.h"
 #include "Input/Input.h"
+#include "Debug/DebugDrawer.h"
 
 namespace Havtorn
 {
@@ -27,7 +28,10 @@ namespace Havtorn
 		const auto& spotLightComponents = scene->GetSpotLightComponents();
 		const auto& volumetricLightComponents = scene->GetVolumetricLightComponents();
 		const auto& decalComponents = scene->GetDecalComponents();
-
+#ifdef _DEBUG
+		const auto& debugShapes = Debug::GDebugDrawer::GetShapesToRender();
+		debugShapes;
+#endif
 		RenderManager->ClearSystemStaticMeshInstanceTransforms();
 
 		if (!cameraComponents.empty())

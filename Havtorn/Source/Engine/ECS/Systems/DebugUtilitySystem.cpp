@@ -22,10 +22,10 @@ namespace Havtorn
 #endif
 	}
 
-	void CDebugUtilitySystem::CheckDebugShapesForRendering(CScene* scene)
+	void CDebugUtilitySystem::CheckDebugShapesForRendering(CScene* /*scene*/)
 	{
 #ifdef _DEBUG
-		scene->AddDebugShapes(Debug::GDebugDrawer::AddToRendering());
+		//scene->AddDebugShapes(Debug::GDebugDrawer::AddToRendering());
 #endif
 	}
 
