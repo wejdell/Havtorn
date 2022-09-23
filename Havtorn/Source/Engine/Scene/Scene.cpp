@@ -11,6 +11,7 @@ namespace Havtorn
 	{
 		// Setup systems
 		Systems.emplace_back(std::make_unique<CCameraSystem>());
+		Systems.emplace_back(std::make_unique<CNodeSystem>(this, renderManager));
 		Systems.emplace_back(std::make_unique<CLightSystem>(renderManager));
 		Systems.emplace_back(std::make_unique<CRenderSystem>(renderManager));
 
@@ -281,6 +282,19 @@ namespace Havtorn
 			renderManager->LoadMaterialComponent(materialNames3, AddMaterialComponentToEntity(floor).get());
 		}
 		// === !Other Wall ===
+
+		auto scene = this;
+		auto cube = scene->CreateEntity("Cubert");
+
+		auto& transformCube = scene->AddTransformComponentToEntity(cube)->Transform;
+		transformCube.GetMatrix().SetTranslation({ 0.25f, 2.0f, 0.25f });
+		transformCube.GetMatrix().SetScale({ 0.25f, 0.25f, 0.25f });
+
+		renderManager->LoadStaticMeshComponent("Assets/Tests/Cube_1.hva", scene->AddStaticMeshComponentToEntity(cube).get());
+		renderManager->LoadMaterialComponent({"Checkboard_128x128"}, scene->AddMaterialComponentToEntity(cube).get());
+
+		scene->AddNodeComponentToEntity(cube);
+
 	}
 
 	Ref<SEntity> CScene::CreateEntity(const std::string& name)
@@ -299,4 +313,5 @@ namespace Havtorn
 	COMPONENT_ADDER_DEFINITION(SpotLightComponent)
 	COMPONENT_ADDER_DEFINITION(VolumetricLightComponent)
 	COMPONENT_ADDER_DEFINITION(DecalComponent)
+	COMPONENT_ADDER_DEFINITION(NodeComponent)
 }

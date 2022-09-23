@@ -85,42 +85,42 @@ namespace Havtorn
 			//model->myMaterialIndices.push_back(fbxMesh->mMaterialIndex);
 
 			// Bones 
-			std::vector<SVertexBoneData> boneData;
-			if (hasBones)
-			{
-				boneData.resize(fbxMesh->mNumVertices);
-
-				unsigned int BoneIndex = 0;
-				for (unsigned int i = 0; i < fbxMesh->mNumBones; i++)
-				{
-					// TODO.AS/AG: Variable names, and more.
-					SJointInfo jointInfo(fbxMesh->mBones[i]->mName.data);
-					if (aLoaderMesh->myModel->myBoneNameToIndex.find(jointInfo.JointName.c_str()) == aLoaderMesh->myModel->myBoneNameToIndex.end())// If BoneName is at the end of list, I.E does not exist in list
-					{
-						BoneIndex = aLoaderMesh->myModel->myNumBones;
-						aLoaderMesh->myModel->myNumBones++;
-						BoneInfo bi;
-						aLoaderMesh->myModel->myBoneInfo.emplace_back(bi);
-
-
-						SMatrix NodeTransformation = ConvertToSMatrix(fbxMesh->mBones[i]->mOffsetMatrix);// Convert InverseBind pose to Engine Matrix
-
-						aLoaderMesh->myModel->myBoneInfo[BoneIndex].BoneOffset = NodeTransformation;
-						aLoaderMesh->myModel->myBoneNameToIndex[jointInfo.JointName.c_str()] = BoneIndex;
-					}
-					else
-					{
-						BoneIndex = aLoaderMesh->myModel->myBoneNameToIndex[jointInfo.JointName.c_str()];
-					}
-
-					for (unsigned int j = 0; j < fbxMesh->mBones[i]->mNumWeights; j++)
-					{
-						unsigned int VertexID = fbxMesh->mBones[i]->mWeights[j].mVertexId;
-						float Weight = fbxMesh->mBones[i]->mWeights[j].mWeight;
-						boneData[VertexID].AddBoneData(BoneIndex, Weight);
-					}
-				}
-			}
+			//std::vector<SVertexBoneData> boneData;
+			//if (hasBones)
+			//{
+			//	boneData.resize(fbxMesh->mNumVertices);
+			//
+			//	unsigned int BoneIndex = 0;
+			//	for (unsigned int i = 0; i < fbxMesh->mNumBones; i++)
+			//	{
+			//		// TODO.AS/AG: Variable names, and more.
+			//		SJointInfo jointInfo(fbxMesh->mBones[i]->mName.data);
+			//		if (aLoaderMesh->myModel->myBoneNameToIndex.find(jointInfo.JointName.c_str()) == aLoaderMesh->myModel->myBoneNameToIndex.end())// If BoneName is at the end of list, I.E does not exist in list
+			//		{
+			//			BoneIndex = aLoaderMesh->myModel->myNumBones;
+			//			aLoaderMesh->myModel->myNumBones++;
+			//			BoneInfo bi;
+			//			aLoaderMesh->myModel->myBoneInfo.emplace_back(bi);
+			//
+			//
+			//			SMatrix NodeTransformation = ConvertToSMatrix(fbxMesh->mBones[i]->mOffsetMatrix);// Convert InverseBind pose to Engine Matrix
+			//
+			//			aLoaderMesh->myModel->myBoneInfo[BoneIndex].BoneOffset = NodeTransformation;
+			//			aLoaderMesh->myModel->myBoneNameToIndex[jointInfo.JointName.c_str()] = BoneIndex;
+			//		}
+			//		else
+			//		{
+			//			BoneIndex = aLoaderMesh->myModel->myBoneNameToIndex[jointInfo.JointName.c_str()];
+			//		}
+			//
+			//		for (unsigned int j = 0; j < fbxMesh->mBones[i]->mNumWeights; j++)
+			//		{
+			//			unsigned int VertexID = fbxMesh->mBones[i]->mWeights[j].mVertexId;
+			//			float Weight = fbxMesh->mBones[i]->mWeights[j].mWeight;
+			//			boneData[VertexID].AddBoneData(BoneIndex, Weight);
+			//		}
+			//	}
+			//}
 
 			// Vertices
 			constexpr F32 scaleModifier = 0.01f;
@@ -161,46 +161,46 @@ namespace Havtorn
 					break;
 				case EAssetType::SkeletalMesh:
 					{
-						SSkeletalMeshVertex newVertex;
+						//SSkeletalMeshVertex newVertex;
+						//
+						//aiVector3D& pos = fbxMesh->mVertices[i];
+						//pos *= scaleModifier;
+						//newVertex.StaticMeshVertex.x = pos.x;
+						//newVertex.StaticMeshVertex.y = pos.y;
+						//newVertex.StaticMeshVertex.z = pos.z;
+						//
+						//const aiVector3D& norm = fbxMesh->mNormals[i];
+						//newVertex.StaticMeshVertex.nx = norm.x;
+						//newVertex.StaticMeshVertex.ny = norm.y;
+						//newVertex.StaticMeshVertex.nz = norm.z;
+						//
+						//const aiVector3D& tangent = fbxMesh->mTangents[i];
+						//newVertex.StaticMeshVertex.tx = tangent.x;
+						//newVertex.StaticMeshVertex.ty = tangent.y;
+						//newVertex.StaticMeshVertex.tz = tangent.z;
+						//
+						//const aiVector3D& biTangent = fbxMesh->mBitangents[i];
+						//newVertex.StaticMeshVertex.bx = biTangent.x;
+						//newVertex.StaticMeshVertex.by = biTangent.y;
+						//newVertex.StaticMeshVertex.bz = biTangent.z;
+						//
+						//newVertex.StaticMeshVertex.u = fbxMesh->mTextureCoords[0][i].x;
+						//newVertex.StaticMeshVertex.v = fbxMesh->mTextureCoords[0][i].y;
 
-						aiVector3D& pos = fbxMesh->mVertices[i];
-						pos *= scaleModifier;
-						newVertex.StaticMeshVertex.x = pos.x;
-						newVertex.StaticMeshVertex.y = pos.y;
-						newVertex.StaticMeshVertex.z = pos.z;
+						//auto bones = fbxMesh->mBones;
+						//bones[0]->
+						////VertexBoneData& boneData = collectedBoneData[i];
+						//newVertex.ID0 = boneData.IDs[0];
+						//newVertex.ID1 = boneData.IDs[1];
+						//newVertex.ID2 = boneData.IDs[2];
+						//newVertex.ID3 = boneData.IDs[3];
+						//
+						//newVertex.Weight0 = boneData.Weights[0];
+						//newVertex.Weight1 = boneData.Weights[1];
+						//newVertex.Weight2 = boneData.Weights[2];
+						//newVertex.Weight3 = boneData.Weights[3];
 
-						const aiVector3D& norm = fbxMesh->mNormals[i];
-						newVertex.StaticMeshVertex.nx = norm.x;
-						newVertex.StaticMeshVertex.ny = norm.y;
-						newVertex.StaticMeshVertex.nz = norm.z;
-
-						const aiVector3D& tangent = fbxMesh->mTangents[i];
-						newVertex.StaticMeshVertex.tx = tangent.x;
-						newVertex.StaticMeshVertex.ty = tangent.y;
-						newVertex.StaticMeshVertex.tz = tangent.z;
-
-						const aiVector3D& biTangent = fbxMesh->mBitangents[i];
-						newVertex.StaticMeshVertex.bx = biTangent.x;
-						newVertex.StaticMeshVertex.by = biTangent.y;
-						newVertex.StaticMeshVertex.bz = biTangent.z;
-
-						newVertex.StaticMeshVertex.u = fbxMesh->mTextureCoords[0][i].x;
-						newVertex.StaticMeshVertex.v = fbxMesh->mTextureCoords[0][i].y;
-
-						auto bones = fbxMesh->mBones;
-						bones[0]->
-						//VertexBoneData& boneData = collectedBoneData[i];
-						newVertex.ID0 = boneData.IDs[0];
-						newVertex.ID1 = boneData.IDs[1];
-						newVertex.ID2 = boneData.IDs[2];
-						newVertex.ID3 = boneData.IDs[3];
-
-						newVertex.Weight0 = boneData.Weights[0];
-						newVertex.Weight1 = boneData.Weights[1];
-						newVertex.Weight2 = boneData.Weights[2];
-						newVertex.Weight3 = boneData.Weights[3];
-
-						fileHeaderMesh.Vertices.emplace_back(newVertex);
+						//fileHeaderMesh.Vertices.emplace_back(newVertex);
 					}
 					break;
 				case EAssetType::Animation:

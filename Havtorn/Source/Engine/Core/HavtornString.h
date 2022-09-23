@@ -18,17 +18,17 @@ namespace Havtorn
             string[size] = '\0';
         }
 
-        const std::string AsString() const { return std::string(string); }
-
-        const char* c_str() const { return string; }
-
-        const char* ConstChar() const { return string; }
-
         ~CHavtornString()
         {
             delete[] string;
             string = nullptr;
         }
+
+        const std::string AsString() const { return std::string(string); }
+
+        const char* c_str() const { return string; }
+
+        const char* ConstChar() const { return string; }
 
     private:
         char* string = nullptr;
