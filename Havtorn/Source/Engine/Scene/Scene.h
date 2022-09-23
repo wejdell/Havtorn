@@ -2,9 +2,9 @@
 
 #pragma once
 
-#ifdef _DEBUG
-#include "Debug/DebugShape.h"
-#endif
+//#ifdef _DEBUG
+//#include "Debug/DebugShape.h"
+//#endif
 
 namespace Havtorn
 {
@@ -55,9 +55,9 @@ namespace Havtorn
 
 		std::vector<Ref<SEntity>>& GetEntities() { return Entities; }
 
-#ifdef _DEBUG
-		 void AddDebugShapes(std::vector<const Debug::SDebugShape*>&& shapes) { DebugShapes = std::move(shapes); }
-#endif
+//#ifdef _DEBUG
+//		 void AddDebugShapes(std::vector<const Debug::SDebugShape*>&& shapes) { DebugShapes = std::move(shapes); }
+//#endif
 		Ref<SEntity> CreateEntity(const std::string& name);
 		COMPONENT_ADDER_DECLARATION(TransformComponent)
 		COMPONENT_ADDER_DECLARATION(StaticMeshComponent)
@@ -86,8 +86,8 @@ namespace Havtorn
 		COMPONENT_VECTOR_DECLARATION(DecalComponent)
 		std::vector<Ptr<ISystem>> Systems;
 
-#ifdef _DEBUG
-		std::vector<const Debug::SDebugShape*> DebugShapes;
-#endif
+//#ifdef _DEBUG
+//		std::vector<const Debug::SDebugShape*> DebugShapes;
+//#endif
 	};
 }

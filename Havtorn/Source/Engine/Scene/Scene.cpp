@@ -5,7 +5,7 @@
 #include "ECS/ECSInclude.h"
 #include "Graphics/RenderManager.h"
 
-#include "ECS/Systems/DebugUtilitySystem.h"//temp
+//#include "ECS/Systems/DebugUtilitySystem.h"//temp
 
 namespace Havtorn
 {
@@ -15,7 +15,7 @@ namespace Havtorn
 		Systems.emplace_back(std::make_unique<CCameraSystem>());
 		Systems.emplace_back(std::make_unique<CLightSystem>(renderManager));
 		Systems.emplace_back(std::make_unique<CRenderSystem>(renderManager));
-		Systems.emplace_back(std::make_unique<CDebugUtilitySystem>(/*renderManager*/));
+		//Systems.emplace_back(std::make_unique<CDebugUtilitySystem>(/*renderManager*/));// Removed/Unused
 
 		// Create entities
 		auto cameraEntity = CreateEntity("Camera");
