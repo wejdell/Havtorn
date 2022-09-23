@@ -454,6 +454,12 @@ namespace Havtorn
 					FrameBufferData.CameraPosition = transformComp->Transform.GetMatrix().GetTranslation4();
 					BindBuffer(FrameBuffer, FrameBufferData, "Frame Buffer");
 
+					/*
+						DebugFrameData.ToCameraFromWorld = bla;
+						DebugFrameData.ToWorldFromCamera = bla;
+						DebugFrameData.ToProjectionFromCamera = bla;
+					*/
+
 					Context->VSSetConstantBuffers(0, 1, &FrameBuffer);
 					Context->PSSetConstantBuffers(0, 1, &FrameBuffer);
 				}

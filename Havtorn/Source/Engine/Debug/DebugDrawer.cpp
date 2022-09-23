@@ -25,21 +25,6 @@ namespace Havtorn
 			shape->Color = color;
 			shape->LifeTime = LifeTimeForShape(singleFrame, lifeTimeSeconds);
 
-			//SPositionVertex startVert;
-			//startVert.x = start.X;
-			//startVert.y = start.Y;
-			//startVert.z = start.Z;
-			//startVert.w = 1.0f;
-			//
-			//SPositionVertex endVert;
-			//endVert.x = end.X;
-			//endVert.y = end.Y;
-			//endVert.z = end.Z;
-			//endVert.w = 1.0f;
-			//
-			//shape.Vertices.push_back(startVert);
-			//shape.Vertices.push_back(endVert);
-
 			shape->Vertices[0].x = start.X;
 			shape->Vertices[0].y = start.Y;
 			shape->Vertices[0].z = start.Z;
@@ -71,7 +56,7 @@ namespace Havtorn
 			U16 stillLifeTimeCount = 0;
 			for (U16 i = 0; i < DEBUG_SHAPES_COUNT ; i++)
 			{
-				if (shapes[i].LifeTime >= time)
+				if (shapes[i].LifeTime > time)
 					stillLifeTimeCount = i;
 
 				shapesToRender[i] = &shapes[i];
@@ -94,7 +79,7 @@ namespace Havtorn
 				DEBUG_SHAPES_COUNT++;
 				return true;
 			}
-			HV_LOG_WARN("GDebugDrawer: Reached MAX_DEBUG_SHAPES, cannot draw more shapes!");
+			HV_LOG_ERROR("GDebugDrawer: Reached MAX_DEBUG_SHAPES, cannot draw more shapes!");
 			return false;
 		}
 
