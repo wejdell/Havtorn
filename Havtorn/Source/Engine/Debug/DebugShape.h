@@ -23,7 +23,7 @@ namespace Havtorn
 
 		struct SDebugShape
 		{
-			static constexpr U8 MAXVERTICES = 2;
+			static constexpr U8 MAXVERTICES = 2;//32*32?
 			std::array<SPositionVertex, MAXVERTICES> Vertices = {};
 			//std::unique_ptr<SPositionVertex[]> Vertices = std::make_unique<SPositionVertex[]>(MAXVERTICES);// This works too
 			U8 UsedVertices = 0;
