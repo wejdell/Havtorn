@@ -46,6 +46,7 @@ namespace Havtorn
 		Decal = 3,
 		PointAndSpotLight = 4,
 		EditorPreview = 5,
+		Line = 6,
 	};
 
 	enum class EPixelShaders
@@ -61,6 +62,7 @@ namespace Havtorn
 		VolumetricPoint = 8,
 		VolumetricSpot = 9,
 		EditorPreview = 10,
+		Line = 11,
 	};
 
 	enum class ESamplers
@@ -72,6 +74,7 @@ namespace Havtorn
 	enum class ETopologies
 	{
 		TriangleList = 0,
+		LineList = 1,
 	};
 
 	class CGraphicsFramework;

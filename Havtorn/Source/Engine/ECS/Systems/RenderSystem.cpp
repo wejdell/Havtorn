@@ -28,10 +28,7 @@ namespace Havtorn
 		const auto& spotLightComponents = scene->GetSpotLightComponents();
 		const auto& volumetricLightComponents = scene->GetVolumetricLightComponents();
 		const auto& decalComponents = scene->GetDecalComponents();
-#ifdef _DEBUG
-		const auto& debugShapes = Debug::GDebugDrawer::GetShapesToRender();
-		debugShapes;
-#endif
+
 		RenderManager->ClearSystemStaticMeshInstanceTransforms();
 
 		if (!cameraComponents.empty())
@@ -210,5 +207,23 @@ namespace Havtorn
 			SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::VolumetricBufferBlurPass);
 			RenderManager->PushRenderCommand(command);
 		}
+
+#ifdef _DEBUG
+		{
+			// TODO.AG: add extra safety
+			const std::vector<Debug::SDebugShape*>& debugShapes = Debug::GDebugDrawer::GetShapesToRender();
+			
+			for (U16 i = 0; i < static_cast<U16>(debugShapes.size()); i++)
+			{
+				std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
+				Ref<SDebugShapeComponent> comp = std::make_shared<SDebugShapeComponent>(nullptr, EComponentType::DebugShapeComponent);
+				comp->ShapeIndex = i;
+				components[static_cast<U8>(EComponentType::DebugShapeComponent)] = comp;
+				
+				SRenderCommand command(components, ERenderCommandType::DebugShape);
+				RenderManager->PushRenderCommand(command);
+			}
+		}
+#endif
 	}
 }
