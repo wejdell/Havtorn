@@ -7,6 +7,8 @@
 #include <vector>
 #include <array>
 
+// Keep extension in mind
+
 namespace Havtorn
 {
 	namespace Debug
@@ -14,23 +16,28 @@ namespace Havtorn
 		struct SColor
 		{
 			F32 R, G, B, A;
-
-			static const SColor Red;
-			static const SColor Green;
-			static const SColor Blue;
-			static const SColor White;
 		};
+
+		namespace Color
+		{
+			const SColor Red =	{ 255.0f, 0.0f, 0.0f, 255.0f };
+			const SColor Green = { 0.0f, 255.0f, 0.0f, 255.0f };
+			const SColor Blue =	{ 0.0f,	0.0f, 255.0f, 255.0f };
+			const SColor White = { 255.0f, 255.0f, 255.0f, 255.0f };
+		}
 
 		struct SDebugShape
 		{
 			static constexpr U8 MAXVERTICES = 2;//32*32?
-			std::array<SPositionVertex, MAXVERTICES> Vertices = {};
+			std::array<SPositionVertex, MAXVERTICES> Vertices = {};// Can probably remove W from SPositionVertex since it is always 1.0f.
 			//std::unique_ptr<SPositionVertex[]> Vertices = std::make_unique<SPositionVertex[]>(MAXVERTICES);// This works too
-			U8 UsedVertices = 0;
-
-			//std::vector<SPositionVertex> Vertices;
+			U8 UsedVertices = 0;	
 			
-			SColor Color = SColor::White;
+			// Make into Entity + Component.
+
+			STransform Transform = {};
+
+			SColor Color = Color::White;
 			F32 LifeTime = 0.0f;
 
 			const bool operator<(const SDebugShape& rhs) const

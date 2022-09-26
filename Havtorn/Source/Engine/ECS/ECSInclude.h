@@ -21,3 +21,4 @@
 #include "ECS/Components/SpotLightComponent.h"
 #include "ECS/Components/VolumetricLightComponent.h"
 #include "ECS/Components/DecalComponent.h"
+#include "ECS/Components/DebugShapeComponent.h"

@@ -109,4 +109,10 @@ namespace Havtorn
 		4,5,6,
 		5,7,6
 	};
+
+	static std::vector<SPositionVertex> Line =
+	{
+		{ 0.0f, 0.0f, 0.0f,  1.0f },
+		{  0.0f, 0.0f, 1.0f,  1.0f }
+	};
 }

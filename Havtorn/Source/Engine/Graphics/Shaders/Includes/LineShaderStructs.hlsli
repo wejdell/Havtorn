@@ -3,7 +3,7 @@
 struct LineVertexInput
 {
     float4 Position   : POSITION;
-    float4 Color      : COLOR;
+    //float4 Color      : COLOR;
 };
 struct LineVertexToPixel
 {
