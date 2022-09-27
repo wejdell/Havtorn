@@ -16,6 +16,8 @@ namespace Havtorn
 		struct SColor
 		{
 			F32 R, G, B, A;
+
+			SVector4 AsVector4() const { return SVector4(R / 255.0f, G / 255.0f, B / 255.0f, A / 255.0f); } 
 		};
 
 		namespace Color

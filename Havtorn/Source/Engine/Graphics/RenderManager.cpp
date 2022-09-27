@@ -72,6 +72,9 @@ namespace Havtorn
 		bufferDescription.ByteWidth = sizeof(SObjectBufferData);
 		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &ObjectBuffer), "Object Buffer could not be created.");
 
+		bufferDescription.ByteWidth = sizeof(SColorObjectBufferData);
+		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &ColorObjectBuffer), "Color Object Buffer could not be created.");
+
 		bufferDescription.ByteWidth = sizeof(SDecalBufferData);
 		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DecalBuffer), "Decal Buffer could not be created.");
 
@@ -127,6 +130,8 @@ namespace Havtorn
 		AddSampler(ESamplerType::Border);
 		AddTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
+		InitVertexBufferPrimitves();
+
 		InitDecalResources();
 		
 		AddMeshVertexStride(sizeof(SStaticMeshVertex));
@@ -146,7 +151,7 @@ namespace Havtorn
 		AddShader("Shaders/Line_VS.cso", EShaderType::Vertex);
 		AddShader("Shaders/Line_PS.cso", EShaderType::Pixel);
 		AddTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-		AddVertexBuffer<SPositionVertex>(Line);
+		//AddVertexBuffer<SPositionVertex>(Line);// TBD Remove, moved to InitVertexBufferPrimitves()
 
 		LoadDemoSceneResources();
 
@@ -239,9 +244,16 @@ namespace Havtorn
 		}
 	}
 
-	void CRenderManager::InitDecalResources()
+	void CRenderManager::InitVertexBufferPrimitves()
 	{
 		AddVertexBuffer<SStaticMeshVertex>(DecalProjector);
+		AddVertexBuffer<SPositionVertex>(PointLightCube);
+		AddVertexBuffer<SPositionVertex>(Line);
+	}
+
+	void CRenderManager::InitDecalResources()
+	{
+		//AddVertexBuffer<SStaticMeshVertex>(DecalProjector);//TBD on removing
 		AddIndexBuffer(DecalProjectorIndices);
 
 		AddShader("Shaders/Decal_VS.cso", EShaderType::Vertex);
@@ -253,7 +265,7 @@ namespace Havtorn
 
 	void CRenderManager::InitPointLightResources()
 	{
-		AddVertexBuffer<SPositionVertex>(PointLightCube);
+		//AddVertexBuffer<SPositionVertex>(PointLightCube);//TBD on removing, placed in InitVertexBufferPrimitives
 		AddIndexBuffer(PointLightCubeIndices);
 		
 		AddMeshVertexStride(sizeof(SPositionVertex));
@@ -1025,17 +1037,18 @@ namespace Havtorn
 				
 					SDebugShapeComponent* debugShape = currentCommand.GetComponent(DebugShapeComponent);
 					Debug::SDebugShape shape = Debug::GDebugDrawer::GetShapeOn(debugShape->ShapeIndex);
-					ObjectBufferData.ToWorldFromObject = shape.Transform.GetMatrix();
+					ColorObjectBufferData.ToWorldFromObject = shape.Transform.GetMatrix();
+					ColorObjectBufferData.Color = shape.Color.AsVector4();
 
-					BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
+					BindBuffer(ColorObjectBuffer, ColorObjectBufferData, "Object Buffer");
 
 					Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::LineList)]);
 					Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
 					
-					Context->IASetVertexBuffers(0, 1, &VertexBuffers[2], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
+					Context->IASetVertexBuffers(0, 1, &VertexBuffers[debugShape->VertexBufferIndex], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
 					//Context->IASetIndexBuffer(lineData.myIndexBuffer, DXGI_FORMAT_R32_UINT, 0);// if indexed in the future past
 
-					Context->VSSetConstantBuffers(1, 1, &ObjectBuffer);
+					Context->VSSetConstantBuffers(1, 1, &ColorObjectBuffer);
 					Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Line)], nullptr, 0);
 
 					Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::Line)], nullptr, 0);

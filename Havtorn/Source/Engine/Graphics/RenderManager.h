@@ -77,6 +77,14 @@ namespace Havtorn
 		LineList = 1,
 	};
 
+	enum class EVertexBufferPrimitives
+	{
+		DecalProjector,
+		PointLightCube,
+		LineShape,
+		//TODO: add more debug shape primitives
+	};
+
 	class CGraphicsFramework;
 	class CWindowHandler;
 	struct SRenderCommand;
@@ -136,6 +144,8 @@ namespace Havtorn
 		void InitRenderTextures(CWindowHandler* windowHandler);
 		void InitShadowmapAtlas(SVector2<F32> atlasResolution);
 		void InitShadowmapLOD(SVector2<F32> topLeftCoordinate, const SVector2<F32>& widthAndHeight, const SVector2<F32>& depth, const SVector2<F32>& atlasResolution, U16 mapsInLod, U16 startIndex);
+		// Init order 1:1 to EVertexBufferPrimitives.
+		void InitVertexBufferPrimitves();
 		void InitDecalResources();
 		void InitPointLightResources();
 		void InitSpotLightResources();
@@ -206,6 +216,13 @@ namespace Havtorn
 		} ObjectBufferData;
 		HV_ASSERT_BUFFER(SObjectBufferData)
 
+		struct SColorObjectBufferData
+		{
+			SMatrix ToWorldFromObject;
+			SVector4 Color;
+		} ColorObjectBufferData;
+		HV_ASSERT_BUFFER(SColorObjectBufferData)
+
 		struct SDecalBufferData
 		{
 			SMatrix ToWorld;
@@ -275,6 +292,7 @@ namespace Havtorn
 		ID3D11DeviceContext* Context;
 		ID3D11Buffer* FrameBuffer;
 		ID3D11Buffer* ObjectBuffer;
+		ID3D11Buffer* ColorObjectBuffer;
 		ID3D11Buffer* DecalBuffer;
 		ID3D11Buffer* DirectionalLightBuffer;
 		ID3D11Buffer* PointLightBuffer;
