@@ -3,8 +3,8 @@
 #pragma once
 
 #include "ECS/Component.h"
-
-#include "Debug/DebugShape.h"
+#include "Graphics/RenderManager.h"// Temp
+#include "Debug/DebugShape.h"// Temp. TODO.AG: SVector4 as colors
 
 namespace Havtorn
 {
@@ -13,7 +13,12 @@ namespace Havtorn
 		SDebugShapeComponent(Ref<SEntity> entity, EComponentType type)
 			: SComponent(std::move(entity), type) {}
 
-		//std::vector<const Debug::SDebugShape*> shapes;
-		U16 ShapeIndex;
+		U16 ShapeIndex = 0;//TODO.AG: Remove this
+		U8 VertexBufferIndex = static_cast<U8>(EVertexBufferPrimitives::LineShape);// temp
+		SVector4 Color = Debug::Color::White.AsVector4();
+		F32 LifeTime = 0.0f;
+
+		const bool operator<(const SDebugShapeComponent& rhs) const { return LifeTime < rhs.LifeTime; }
+		const bool operator>(const SDebugShapeComponent& rhs) const { return LifeTime > rhs.LifeTime; }
 	};
 }

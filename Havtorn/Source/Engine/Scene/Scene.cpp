@@ -50,11 +50,11 @@ namespace Havtorn
 		auto volumetricLight = AddVolumetricLightComponentToEntity(directionalLightEntity);
 		//volumetricLight->IsActive = true;
 
-		Debug::GDebugDrawer::AddLine({ 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, Debug::Color::Blue, false, 100.0f);
-		Debug::GDebugDrawer::AddLine({ 1.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 1.0f }, Debug::Color::Red);
-		Debug::GDebugDrawer::AddLine({ 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, Debug::Color::Green, false, 20.0f);
-		Debug::GDebugDrawer::AddLine({ 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, Debug::Color::White, false, 33.0f);
-		Debug::GDebugDrawer::AddLine({ 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, Debug::Color::Blue);
+		Debug::GDebugDrawer::AddLine({ 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, Debug::Color::Red, false, 100.0f);
+		//Debug::GDebugDrawer::AddLine({ 1.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 1.0f }, Debug::Color::Red);
+		//Debug::GDebugDrawer::AddLine({ 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, Debug::Color::Green, false, 20.0f);
+		//Debug::GDebugDrawer::AddLine({ 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, Debug::Color::White, false, 33.0f);
+		//Debug::GDebugDrawer::AddLine({ 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, Debug::Color::Blue);
 
 		InitDemoScene(renderManager);
 
