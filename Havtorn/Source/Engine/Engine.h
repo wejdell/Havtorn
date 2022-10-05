@@ -29,7 +29,7 @@ namespace Havtorn
 
 	namespace Debug
 	{
-		class GDebugDrawer;
+		class GDebugUtilityShape;
 	}
 
 	class GEngine
@@ -76,7 +76,7 @@ namespace Havtorn
 		CRenderManager* RenderManager = nullptr;
 		GTimer* Timer = nullptr;
 		CInputMapper* InputMapper = nullptr;
-		Debug::GDebugDrawer* DebugDrawer = nullptr;
+		Debug::GDebugUtilityShape* DebugShape = nullptr;
 
 		CScene* Scene = nullptr;
 

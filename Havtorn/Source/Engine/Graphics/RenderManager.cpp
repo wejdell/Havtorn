@@ -22,8 +22,6 @@
 
 #include "ModelImporter.h"
 
-#include "Debug/DebugDrawer.h"
-
 #include <DirectXTex/DirectXTex.h>
 
 namespace Havtorn
@@ -1035,17 +1033,17 @@ namespace Havtorn
 					RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
 					RenderedScene.SetAsActiveTarget();
 				
-					SDebugShapeComponent* debugShape = currentCommand.GetComponent(DebugShapeComponent);
-					Debug::SDebugShape shape = Debug::GDebugDrawer::GetShapeOn(debugShape->ShapeIndex);
-					ColorObjectBufferData.ToWorldFromObject = shape.Transform.GetMatrix();
-					ColorObjectBufferData.Color = shape.Color.AsVector4();
+					SDebugShapeComponent* shape = currentCommand.GetComponent(DebugShapeComponent);
+					STransformComponent* transform = currentCommand.GetComponent(TransformComponent);
+					ColorObjectBufferData.ToWorldFromObject = transform->Transform.GetMatrix();
+					ColorObjectBufferData.Color = shape->Color;
 
 					BindBuffer(ColorObjectBuffer, ColorObjectBufferData, "Object Buffer");
 
 					Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::LineList)]);
 					Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
 					
-					Context->IASetVertexBuffers(0, 1, &VertexBuffers[debugShape->VertexBufferIndex], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
+					Context->IASetVertexBuffers(0, 1, &VertexBuffers[shape->VertexBufferIndex], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
 					//Context->IASetIndexBuffer(lineData.myIndexBuffer, DXGI_FORMAT_R32_UINT, 0);// if indexed in the future past
 
 					Context->VSSetConstantBuffers(1, 1, &ColorObjectBuffer);
@@ -1053,7 +1051,7 @@ namespace Havtorn
 
 					Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::Line)], nullptr, 0);
 
-					Context->Draw(shape.UsedVertices, 0);
+					Context->Draw(shape->VertexCount, 0);
 					NumberOfDrawCallsThisFrame++;
 				}
 				break;

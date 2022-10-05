@@ -6,7 +6,7 @@
 #include "Graphics/RenderManager.h"
 #include "Graphics/RenderCommand.h"
 #include "Input/Input.h"
-#include "Debug/DebugDrawer.h"
+#include "Debug/DebugUtilityShape.h"
 
 namespace Havtorn
 {
@@ -208,18 +208,19 @@ namespace Havtorn
 			RenderManager->PushRenderCommand(command);
 		}
 
-#ifdef _DEBUG
+#ifdef USE_DEBUG_SHAPE
 		{
-			// TODO.AG: add extra safety
-			const std::vector<Debug::SDebugShape*>& debugShapes = Debug::GDebugDrawer::GetShapesToRender();
-			
-			for (U16 i = 0; i < static_cast<U16>(debugShapes.size()); i++)
+			const std::vector<Ref<SEntity>>& entities = scene->GetEntities();
+			const std::vector<Ref<SDebugShapeComponent>>& debugShapes = scene->GetDebugShapeComponents();
+			const std::vector<U64>& debugShapeIndices = Debug::GDebugUtilityShape::GetActiveShapeIndices();
+			for (U64 i = 0; i < debugShapeIndices.size(); i++)
 			{
 				std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
-				Ref<SDebugShapeComponent> comp = std::make_shared<SDebugShapeComponent>(nullptr, EComponentType::DebugShapeComponent);
-				comp->ShapeIndex = i;
-				components[static_cast<U8>(EComponentType::DebugShapeComponent)] = comp;
-				
+				const U64 shapeIndex = entities[debugShapeIndices[i]]->GetComponentIndex(EComponentType::DebugShapeComponent);
+				const U64 transformIndex = entities[debugShapeIndices[i]]->GetComponentIndex(EComponentType::TransformComponent);
+				components[static_cast<U8>(EComponentType::DebugShapeComponent)] = debugShapes[shapeIndex];
+				components[static_cast<U8>(EComponentType::TransformComponent)] = transformComponents[transformIndex];
+
 				SRenderCommand command(components, ERenderCommandType::DebugShape);
 				RenderManager->PushRenderCommand(command);
 			}

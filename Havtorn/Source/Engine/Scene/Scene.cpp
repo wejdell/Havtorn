@@ -5,19 +5,17 @@
 #include "ECS/ECSInclude.h"
 #include "Graphics/RenderManager.h"
 
-#include "Debug/DebugDrawer.h"
-
-//#include "ECS/Systems/DebugUtilitySystem.h"//temp
+#include "Debug/DebugUtilityShape.h"
 
 namespace Havtorn
 {
 	bool CScene::Init(CRenderManager* renderManager)
 	{
 		// Setup systems
+		Systems.emplace_back(std::make_unique<CDebugUtilitySystem>(this));
 		Systems.emplace_back(std::make_unique<CCameraSystem>());
 		Systems.emplace_back(std::make_unique<CLightSystem>(renderManager));
 		Systems.emplace_back(std::make_unique<CRenderSystem>(renderManager));
-		//Systems.emplace_back(std::make_unique<CDebugUtilitySystem>(/*renderManager*/));// Removed/Unused
 
 		// Create entities
 		auto cameraEntity = CreateEntity("Camera");
@@ -50,11 +48,10 @@ namespace Havtorn
 		auto volumetricLight = AddVolumetricLightComponentToEntity(directionalLightEntity);
 		//volumetricLight->IsActive = true;
 
-		Debug::GDebugDrawer::AddLine({ 1.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, Debug::Color::Red, false, 100.0f);
-		//Debug::GDebugDrawer::AddLine({ 1.0f, 1.0f, 0.0f }, { 0.0f, 1.0f, 1.0f }, Debug::Color::Red);
-		//Debug::GDebugDrawer::AddLine({ 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, Debug::Color::Green, false, 20.0f);
-		//Debug::GDebugDrawer::AddLine({ 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, Debug::Color::White, false, 33.0f);
-		//Debug::GDebugDrawer::AddLine({ 1.0f, 1.0f, 1.0f }, { 1.0f, 1.0f, 1.0f }, Debug::Color::Blue);
+		Debug::GDebugUtilityShape::AddLine({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, Color::Red, false, 10.0f);
+		Debug::GDebugUtilityShape::AddLine({ 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 2.0f }, Color::Green, false, 10.0f);
+		Debug::GDebugUtilityShape::AddLine({ 2.0f, 0.0f, 0.0f }, { 2.0f, 0.0f, 3.0f }, Color::Blue, false, 10.0f);
+
 
 		InitDemoScene(renderManager);
 
@@ -310,4 +307,5 @@ namespace Havtorn
 	COMPONENT_ADDER_DEFINITION(SpotLightComponent)
 	COMPONENT_ADDER_DEFINITION(VolumetricLightComponent)
 	COMPONENT_ADDER_DEFINITION(DecalComponent)
+	COMPONENT_ADDER_DEFINITION(DebugShapeComponent)
 }

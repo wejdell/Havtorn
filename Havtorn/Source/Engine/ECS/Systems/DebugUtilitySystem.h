@@ -8,13 +8,10 @@ namespace Havtorn
 	class CDebugUtilitySystem final : public ISystem
 	{
 	public:
-		CDebugUtilitySystem();
+		CDebugUtilitySystem(CScene* scene);
 		~CDebugUtilitySystem() override;
 
 		void Update(CScene* scene) override;
-
-	private:
-		void CheckDebugShapesForRendering(CScene* scene);
 
 	};
 }
