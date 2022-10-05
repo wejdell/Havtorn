@@ -42,8 +42,12 @@ namespace ImGui
 			
 			for (auto& entity : entities) 
 			{
+				if (entity->Name.Contains("hie_"))
+				{
+					continue;
+				}
+
 				ImGui::PushID(static_cast<int>(entity->ID));
-	
 				if (ImGui::Selectable(entity->Name.c_str(), index == SelectedIndex, ImGuiSelectableFlags_None)) 
 				{
 					SelectedIndex = index;
