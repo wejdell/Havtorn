@@ -10,27 +10,33 @@ namespace Havtorn
     public:
         CHavtornString(const std::string& name)
         {
-            size_t size = name.length();
+            U16 size = static_cast<U16>(name.length());
             HV_ASSERT(size != 0, "Trying to create HavtornString from std::string with size 0!");
 
-            string = new char[size + 1];
-            memcpy(string, &name[0], sizeof(char) * size);
-            string[size] = '\0';
+            Characters = new char[size + 1];
+            memcpy(Characters, &name[0], sizeof(char) * size);
+            Characters[size] = '\0';
+            Size = size - 1;
         }
 
-        const std::string AsString() const { return std::string(string); }
-
-        const char* c_str() const { return string; }
-
-        const char* ConstChar() const { return string; }
+        inline const U16 Length() const { return Size; }
+        inline const std::string AsString() const { return std::string(Characters); }
+        inline const char* c_str() const { return Characters; }
+        inline const char* ConstChar() const { return Characters; }
+        bool Contains(const char* str) const;
 
         ~CHavtornString()
         {
-            delete[] string;
-            string = nullptr;
+            delete[] Characters;
+            Characters = nullptr;
         }
 
     private:
-        char* string = nullptr;
+        [[nodiscard]] std::array<U16, 256> CharacterTableForComparison(const char* pattern) const;
+        bool Same(const char* str1, const char* str2, const U16 count) const;
+
+    private:
+        char* Characters = nullptr;
+        U16 Size = 0;
     };
 }
