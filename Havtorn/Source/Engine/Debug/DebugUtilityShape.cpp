@@ -6,6 +6,7 @@
 #include "Scene/Scene.h"
 #include "ECS/Components/DebugShapeComponent.h"
 #include "ECS/Components/TransformComponent.h"
+#include "Graphics/VertexBufferPrimitivesUtility.h"
 
 namespace Havtorn
 {
@@ -31,8 +32,8 @@ namespace Havtorn
 			std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->ActiveScene->GetDebugShapeComponents();
 			debugShapes[shapeIndex]->Color = color;
 			debugShapes[shapeIndex]->LifeTime = LifeTimeForShape(singleFrame, lifeTimeSeconds);
-			debugShapes[shapeIndex]->VertexBufferIndex = static_cast<U8>(EVertexBufferPrimitives::LineShape);// Should have getter for shape
-			debugShapes[shapeIndex]->VertexCount = 2;// Should have getter for shape
+			debugShapes[shapeIndex]->VertexBufferIndex = Utility::VertexBufferPrimitives::GetVertexBufferIndex<U8>(EVertexBufferPrimitives::LineShape);
+			debugShapes[shapeIndex]->VertexCount = Utility::VertexBufferPrimitives::GetVertexCount<U8>(EVertexBufferPrimitives::LineShape);
 			
 			std::vector<Ref<STransformComponent>>& transforms = Instance->ActiveScene->GetTransformComponents();
 			const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
@@ -40,8 +41,8 @@ namespace Havtorn
 			//Rotate to face
 			 
 			// Scale to reach
-			F32 length = start.Distance(end);
-			transforms[transformIndex]->Transform.Scale(length);
+			//F32 length = start.Distance(end);
+			//transforms[transformIndex]->Transform.Scale(length);
 			
 			transforms[transformIndex]->Transform.Move(start);
 
