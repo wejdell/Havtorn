@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "Core/ColorList.h"
+
 #include <queue>
 
 #ifdef _DEBUG
