@@ -77,6 +77,8 @@ namespace Havtorn
 		LineList = 1,
 	};
 
+	// Should be 1:1 to RenderManager::InitVertexBufferPrimitives()
+	// Geometries used can be found in GeometryPrimitives.h
 	enum class EVertexBufferPrimitives
 	{
 		DecalProjector,

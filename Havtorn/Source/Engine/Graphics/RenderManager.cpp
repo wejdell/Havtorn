@@ -244,15 +244,15 @@ namespace Havtorn
 
 	void CRenderManager::InitVertexBufferPrimitves()
 	{
-		AddVertexBuffer<SStaticMeshVertex>(DecalProjector);
-		AddVertexBuffer<SPositionVertex>(PointLightCube);
-		AddVertexBuffer<SPositionVertex>(Line);
+		AddVertexBuffer<SStaticMeshVertex>(GeometryPrimitives::DecalProjector);
+		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::PointLightCube);
+		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::Line);
 	}
 
 	void CRenderManager::InitDecalResources()
 	{
 		//AddVertexBuffer<SStaticMeshVertex>(DecalProjector);//TBD on removing
-		AddIndexBuffer(DecalProjectorIndices);
+		AddIndexBuffer(GeometryPrimitives::DecalProjectorIndices);
 
 		AddShader("Shaders/Decal_VS.cso", EShaderType::Vertex);
 
@@ -264,7 +264,7 @@ namespace Havtorn
 	void CRenderManager::InitPointLightResources()
 	{
 		//AddVertexBuffer<SPositionVertex>(PointLightCube);//TBD on removing, placed in InitVertexBufferPrimitives
-		AddIndexBuffer(PointLightCubeIndices);
+		AddIndexBuffer(GeometryPrimitives::PointLightCubeIndices);
 		
 		AddMeshVertexStride(sizeof(SPositionVertex));
 
