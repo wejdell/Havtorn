@@ -188,7 +188,6 @@ namespace Havtorn
 
 		auto& transform1 = AddTransformComponentToEntity(pendulum)->Transform;
 		transform1.GetMatrix().SetTranslation({1.75f, 0.0f, 0.25f});
-		//transform1.GetMatrix().Translation({0.0f, 0.0f, 1.0f});
 
 		renderManager->LoadStaticMeshComponent(modelPath1, AddStaticMeshComponentToEntity(pendulum).get());
 		renderManager->LoadMaterialComponent(materialNames1, AddMaterialComponentToEntity(pendulum).get());

@@ -42,7 +42,9 @@ namespace Havtorn
 			RenderManager->PushRenderCommand(command);
 		}
 		else
+		{
 			return;
+		}
 
 		for (auto& staticMeshComponent : staticMeshComponents)
 		{
