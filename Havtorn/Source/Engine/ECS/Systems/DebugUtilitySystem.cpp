@@ -18,7 +18,8 @@ namespace Havtorn
 		U64 currentNrOfEntities = scene->GetEntities().size();
 		for (U16 i = 0; i < Debug::GDebugUtilityShape::MaxDebugShapes; i++)
 		{
-			Ref<SEntity> entity = scene->CreateEntity("hie_DebugShape");
+			Ref<SEntity> entity = scene->CreateEntity("DebugShape");
+			//Ref<SEntity> entity = scene->CreateEntity("hie_DebugShape");
 			scene->AddTransformComponentToEntity(entity);
 			scene->AddDebugShapeComponentToEntity(entity);
 		}
@@ -26,7 +27,7 @@ namespace Havtorn
 		Debug::GDebugUtilityShape::Init(scene, currentNrOfEntities);
 
 		size_t allocated = 
-			(sizeof(SEntity) * Debug::GDebugUtilityShape::MaxDebugShapes) 
+			  (sizeof(SEntity) * Debug::GDebugUtilityShape::MaxDebugShapes) 
 			+ (sizeof(SDebugShapeComponent) * Debug::GDebugUtilityShape::MaxDebugShapes) 
 			+ (sizeof(STransformComponent) * Debug::GDebugUtilityShape::MaxDebugShapes);
 		HV_LOG_INFO(" DebugUtilitySystem: DebugUtilityShape [MaxShapes: %d] [Allocated: %d bytes]", Debug::GDebugUtilityShape::MaxDebugShapes, allocated);

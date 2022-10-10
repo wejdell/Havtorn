@@ -13,9 +13,9 @@
 #endif
 #define DEBUG_DRAWER_LOG
 #ifdef DEBUG_DRAWER_LOG
-#define DEBUG_DRAWER_LOG_SHAPESRENDER 1
-#define DEBUG_DRAWER_LOG_ADDSHAPE 1
-#define DEBUG_DRAWER_LOG_ERROR 1
+#define DEBUG_DRAWER_LOG_SHAPESRENDER 0
+#define DEBUG_DRAWER_LOG_ADDSHAPE 0
+#define DEBUG_DRAWER_LOG_ERROR 0
 #endif
 
 #endif
@@ -37,11 +37,10 @@ namespace Havtorn
 			friend class CDebugUtilitySystem;
 
 		public:
-
 			static HAVTORN_API void AddLine(const SVector& start, const SVector& end, const SVector4& color, const bool singleFrame = true, const F32 lifeTimeSeconds = 0.0f);// DepthPrio
 
 		public:
-			static constexpr U16 MaxDebugShapes = 500;
+			static constexpr U16 MaxDebugShapes = 5;
 			static const std::vector<U64>& GetActiveShapeIndices();
 		
 		private:

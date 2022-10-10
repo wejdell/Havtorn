@@ -221,6 +221,8 @@ namespace Havtorn
 				components[static_cast<U8>(EComponentType::DebugShapeComponent)] = debugShapes[shapeIndex];
 				components[static_cast<U8>(EComponentType::TransformComponent)] = transformComponents[transformIndex];
 
+				debugShapes[shapeIndex]->Rendered = true;
+
 				SRenderCommand command(components, ERenderCommandType::DebugShape);
 				RenderManager->PushRenderCommand(command);
 			}

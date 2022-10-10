@@ -34,17 +34,39 @@ namespace Havtorn
 			debugShapes[shapeIndex]->LifeTime = LifeTimeForShape(singleFrame, lifeTimeSeconds);
 			debugShapes[shapeIndex]->VertexBufferIndex = Utility::VertexBufferPrimitives::GetVertexBufferIndex<U8>(EVertexBufferPrimitives::LineShape);
 			debugShapes[shapeIndex]->VertexCount = Utility::VertexBufferPrimitives::GetVertexCount<U8>(EVertexBufferPrimitives::LineShape);
-			
+			debugShapes[shapeIndex]->Rendered = false;
+
 			std::vector<Ref<STransformComponent>>& transforms = Instance->ActiveScene->GetTransformComponents();
 			const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
 			
-			//Rotate to face
-			 
-			// Scale to reach
-			//F32 length = start.Distance(end);
-			//transforms[transformIndex]->Transform.Scale(length);
+			//transforms[transformIndex]->Transform = STransform();
+			// Move to start
+			SVector forwardDir = transforms[transformIndex]->Transform.GetMatrix().GetRight();
+			SVector targetDir = end - start;
+
+			SVector crossForwardTarget = targetDir.Cross(forwardDir);// Unused
+			F32 length = start.Distance(end);
+			//SMatrix::Recompose(start, SMatrix::LookAtLH(start, end, crossForwardTarget.GetNormalized()).GetEuler(), SVector(1.0f, 1.0f, length), transforms[transformIndex]->Transform.LocalMatrix);// Make setter 
+			SMatrix::Recompose(start, SMatrix::LookAtLH(start, end, transforms[transformIndex]->Transform.GetMatrix().GetUp()).GetEuler(), SVector(1.0f, 1.0f, length), transforms[transformIndex]->Transform.LocalMatrix);// Make setter 
+
+			//transforms[transformIndex]->Transform.GetMatrix().SetTranslation(start);
+
+			// Rotate to face // Note this is inverted. It also scales the shape.
+
+				//transforms[transformIndex]->Transform.Rotate(SMatrix::LookAtLH(start, end, crossForwardTarget).GetEuler());
+			//HV_LOG_INFO("LookAt: %s",SMatrix::LookAtLH(start, end, SVector::Up).GetEuler().ToString().c_str());
 			
-			transforms[transformIndex]->Transform.Move(start);
+			//transforms[transformIndex]->Transform.GetMatrix().SetRotation(SMatrix::LookAtLH(start, end, crossForwardTarget.GetNormalized()));// Its changing the scale as well? -> Its in the editor
+			
+			//F32 length = start.Distance(end);
+			//HV_LOG_INFO("Dist: %f",length);
+			////transforms[transformIndex]->Transform.GetMatrix().SetScale(1.0f, 1.0f, length);
+			//transforms[transformIndex]->Transform.Scale(1.0f, 1.0f, length);
+
+			// Note: SMatrix look over const &
+			
+			// Scale to reach // Note: This messes up rotation
+			//transforms[transformIndex]->Transform.Scale(length, length, length);
 
 			Instance->PrintDebugAddedShape(*debugShapes[shapeIndex].get(), singleFrame, __FUNCTION__);	
 		}
@@ -106,7 +128,7 @@ namespace Havtorn
 			{
 				U64& activeIndex = Instance->ActiveIndices[i];
 				Ref<SDebugShapeComponent> shape = debugShapes[activeIndex];
-				if (shape->LifeTime <= time)
+				if (shape->LifeTime <= time && shape->Rendered)
 				{
 					Instance->AvailableIndices.push(activeIndex);
 					activeIndicesToRemove.push_back(i);

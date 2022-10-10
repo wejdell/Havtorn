@@ -48,9 +48,17 @@ namespace Havtorn
 		auto volumetricLight = AddVolumetricLightComponentToEntity(directionalLightEntity);
 		//volumetricLight->IsActive = true;
 
-		Debug::GDebugUtilityShape::AddLine({ 0.0f, 0.0f, 0.0f }, { 0.0f, 0.0f, 1.0f }, Color::Red, false, 10.0f);
-		Debug::GDebugUtilityShape::AddLine({ 1.0f, 0.0f, 0.0f }, { 1.0f, 0.0f, 2.0f }, Color::Green, false, 10.0f);
-		Debug::GDebugUtilityShape::AddLine({ 2.0f, 0.0f, 0.0f }, { 2.0f, 0.0f, 3.0f }, Color::Blue, false, 10.0f);
+		SVector start = { 0.0f, 0.0f, 0.0f };
+		SVector end = { 0.0f, 1.0f, 0.0f };
+		bool singleFrame = false;
+		F32 durationSeconds = 60.0f;
+		Debug::GDebugUtilityShape::AddLine(start, end, Color::Red, singleFrame, durationSeconds);
+
+		Debug::GDebugUtilityShape::AddLine({ -2.0f, -1.0f, 0.0f }, { 2.0f, 1.0f, 0.0f }, Color::Green, false, 59.0f);
+		//Debug::GDebugUtilityShape::AddLine({ 1.0f, 0.0f, -3.0f }, { 1.0f, 0.0f, 1.0f }, Color::White, false, 58.0f);
+		
+		//Debug::GDebugUtilityShape::AddLine({ 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 0.0f }, Color::Green, false, 60.0f);
+		//Debug::GDebugUtilityShape::AddLine({ 2.0f, 0.0f, 0.0f }, { 2.0f, 1.0f, 0.0f }, Color::Blue, false, 60.0f);
 
 
 		InitDemoScene(renderManager);
@@ -58,12 +66,14 @@ namespace Havtorn
 		return true;
 	}
 
+	Ref<STransformComponent> lookAt;
 	void CScene::Update()
 	{
 		for (const auto& system : Systems)
 		{
 			system->Update(this);
 		}
+		//Debug::GDebugUtilityShape::AddLine({ 1.0f, 0.0f, 0.0f }, lookAt->Transform.GetMatrix().GetTranslation(), Color::White, true, 600.0f);
 	}
 
 	void CScene::InitDemoScene(CRenderManager* renderManager)
@@ -201,7 +211,8 @@ namespace Havtorn
 		// === Lamp ===
 		auto lamp = CreateEntity("Lamp");
 
-		auto& transform4 = AddTransformComponentToEntity(lamp)->Transform;
+		lookAt = AddTransformComponentToEntity(lamp);
+		auto& transform4 = lookAt->Transform;
 		transform4.GetMatrix().SetTranslation({ -1.0f, 1.4f, -0.75f });
 		transform4.Rotate({ 0.0f, UMath::DegToRad(90.0f), 0.0f });
 
