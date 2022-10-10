@@ -51,13 +51,14 @@ namespace Havtorn
 		SVector add = { 0.0f, 0.0f, -1.0f };
 		SVector mult = { 1.25f, 1.0f, 1.0f };
 		bool useLifeTime = true;
+		bool ignoreDepth = true;
 		F32 durationSeconds = 30.0f;
-		Debug::UDebugShapeSystem::AddLine(start * mult + add * 0.0f, end * mult + add * 0.0f, Color::White, durationSeconds, useLifeTime);
-		Debug::UDebugShapeSystem::AddLine(start * mult + add * 0.5f, end * mult + add * 0.5f, Color::Red, durationSeconds / 2.0f, useLifeTime);
-		Debug::UDebugShapeSystem::AddLine(start * mult + add * 1.0f, end * mult + add * 1.0f, Color::Green, durationSeconds / 3.0f, useLifeTime);
-		Debug::UDebugShapeSystem::AddLine(start * mult + add * 1.5f, end * mult + add * 1.5f, Color::Blue, durationSeconds / 4.0f, useLifeTime);
-		Debug::UDebugShapeSystem::AddLine(start * mult + add * 2.0f, end * mult + add * 2.0f, Color::Red, durationSeconds / 5.0f, useLifeTime);
-		Debug::UDebugShapeSystem::AddLine(start * mult + add * 2.5f, end * mult + add * 2.5f, Color::Green, durationSeconds / 6.0f, useLifeTime);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 0.0f, end * mult + add * 0.0f, Color::White, durationSeconds, useLifeTime, ignoreDepth);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 0.5f, end * mult + add * 0.5f, Color::Red, durationSeconds / 2.0f, useLifeTime, !ignoreDepth);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 1.0f, end * mult + add * 1.0f, Color::Green, durationSeconds / 3.0f, useLifeTime, ignoreDepth);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 1.5f, end * mult + add * 1.5f, Color::Blue, durationSeconds / 4.0f, useLifeTime, !ignoreDepth);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 2.0f, end * mult + add * 2.0f, Color::Red, durationSeconds / 5.0f, useLifeTime, ignoreDepth);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 2.5f, end * mult + add * 2.5f, Color::Green, durationSeconds / 6.0f, useLifeTime, !ignoreDepth);
 
 		InitDemoScene(renderManager);
 

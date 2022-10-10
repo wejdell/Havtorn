@@ -43,7 +43,7 @@ namespace Havtorn
 			static constexpr U16 MaxShapes = 50;
 			
 			// TODO.AG: DepthPrio and Thickness
-			static HAVTORN_API void AddLine(const SVector& start, const SVector& end, const SVector4& color, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true);
+			static HAVTORN_API void AddLine(const SVector& start, const SVector& end, const SVector4& color, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const bool ignoreDepth = true);
 
 		private:
 			static bool InstanceExists();

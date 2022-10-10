@@ -1825,11 +1825,22 @@ namespace Havtorn
 
 	inline void CRenderManager::DebugShapes(const SRenderCommand& command)
 	{
-		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
-		RenderedScene.SetAsActiveTarget();
-
 		SDebugShapeComponent* shape = command.GetComponent(DebugShapeComponent);
 		STransformComponent* transform = command.GetComponent(TransformComponent);
+
+		RenderStateManager.SetDepthStencilState(CRenderStateManager::EDepthStencilStates::OnlyRead);
+		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
+		
+		// TODO.AG: Separate lines into those that IgnoreDepth and those that don't so that this is done no more than 2 times.
+		if (shape->IgnoreDepth)
+		{
+			RenderedScene.SetAsActiveTarget();
+		}
+		else
+		{
+			RenderedScene.SetAsActiveTarget(&IntermediateDepth);
+		}
+
 		ColorObjectBufferData.ToWorldFromObject = transform->Transform.GetMatrix();
 		ColorObjectBufferData.Color = shape->Color;
 
