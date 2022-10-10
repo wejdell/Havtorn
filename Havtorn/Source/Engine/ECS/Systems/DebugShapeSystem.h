@@ -30,7 +30,7 @@ namespace Havtorn
 
 	namespace Debug
 	{
-		// Requirement: Add to Scene systemts after RenderSystem.
+		// Requirement: Add to Scene systems after RenderSystem.
 		class UDebugShapeSystem final : public ISystem
 		{
 		public: // ISystem inherited.
