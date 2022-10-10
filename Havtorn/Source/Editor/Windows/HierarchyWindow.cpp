@@ -30,11 +30,11 @@ namespace ImGui
 	void CHierarchyWindow::OnInspectorGUI()
 	{
 		const Havtorn::SEditorLayout& layout = Manager->GetEditorLayout();
-
+		
 		const ImGuiViewport* mainViewport = ImGui::GetMainViewport();
 		ImGui::SetNextWindowPos(ImVec2(mainViewport->WorkPos.x + layout.HierarchyViewPosition.X, mainViewport->WorkPos.y + layout.HierarchyViewPosition.Y));
 		ImGui::SetNextWindowSize(ImVec2(layout.HierarchyViewSize.X, layout.HierarchyViewSize.Y));
-
+		
 		if (ImGui::Begin(Name(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus))
 		{
 			Havtorn::I32 index = 0;
@@ -42,18 +42,18 @@ namespace ImGui
 			
 			for (auto& entity : entities) 
 			{
-				if (entity->Name.Contains("hie_"))
+				if (entity->Name.Contains("hie_"))// Temporary solution to ignore listing DebugShapes!
 				{
 					continue;
 				}
-
+		
 				ImGui::PushID(static_cast<int>(entity->ID));
 				if (ImGui::Selectable(entity->Name.c_str(), index == SelectedIndex, ImGuiSelectableFlags_None)) 
 				{
 					SelectedIndex = index;
 					Manager->SetSelectedEntity(entity);
 				}
-
+		
 				ImGui::PopID();
 			}
 		}
