@@ -431,30 +431,7 @@ namespace Havtorn
 
 				case ERenderCommandType::DebugShape: 
 				{
-					RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
-					RenderedScene.SetAsActiveTarget();
-				
-					SDebugShapeComponent* shape = currentCommand.GetComponent(DebugShapeComponent);
-					STransformComponent* transform = currentCommand.GetComponent(TransformComponent);
-					ColorObjectBufferData.ToWorldFromObject = transform->Transform.GetMatrix();
-					ColorObjectBufferData.Color = shape->Color;
-
-					BindBuffer(ColorObjectBuffer, ColorObjectBufferData, "Object Buffer");
-
-					Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::LineList)]);
-					Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
-					
-					Context->IASetVertexBuffers(0, 1, &VertexBuffers[shape->VertexBufferIndex], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
-					// if indexed in the future past
-					//Context->IASetIndexBuffer(lineData.myIndexBuffer, DXGI_FORMAT_R32_UINT, 0); 
-
-					Context->VSSetConstantBuffers(1, 1, &ColorObjectBuffer);
-					Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Line)], nullptr, 0);
-
-					Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::Line)], nullptr, 0);
-
-					Context->Draw(shape->VertexCount, 0);
-					NumberOfDrawCallsThisFrame++;
+					DebugShapes(currentCommand);
 				}
 				break;
 
@@ -1844,6 +1821,34 @@ namespace Havtorn
 		Context->RSSetViewports(1, &viewport);
 		ShadowAtlasDepth.SetAsResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
+	}
+
+	inline void CRenderManager::DebugShapes(const SRenderCommand& command)
+	{
+		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
+		RenderedScene.SetAsActiveTarget();
+
+		SDebugShapeComponent* shape = command.GetComponent(DebugShapeComponent);
+		STransformComponent* transform = command.GetComponent(TransformComponent);
+		ColorObjectBufferData.ToWorldFromObject = transform->Transform.GetMatrix();
+		ColorObjectBufferData.Color = shape->Color;
+
+		BindBuffer(ColorObjectBuffer, ColorObjectBufferData, "Object Buffer");
+
+		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::LineList)]);
+		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
+
+		Context->IASetVertexBuffers(0, 1, &VertexBuffers[shape->VertexBufferIndex], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
+		// TODO.AG: for when using Indices.
+		//Context->IASetIndexBuffer(lineData.myIndexBuffer, DXGI_FORMAT_R32_UINT, 0); 
+
+		Context->VSSetConstantBuffers(1, 1, &ColorObjectBuffer);
+		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Line)], nullptr, 0);
+
+		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::Line)], nullptr, 0);
+
+		Context->Draw(shape->VertexCount, 0);
+		NumberOfDrawCallsThisFrame++;
 	}
 
 	bool SRenderCommandComparer::operator()(const SRenderCommand& a, const SRenderCommand& b) const

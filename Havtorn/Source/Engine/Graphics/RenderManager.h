@@ -200,6 +200,7 @@ namespace Havtorn
 		inline void VolumetricBlur();
 		inline void RenderBloom();
 		inline void DebugShadowAtlas();
+		inline void DebugShapes(const SRenderCommand& command);
 
 	private:
 		template<class T>
