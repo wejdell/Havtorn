@@ -36,8 +36,8 @@ namespace Havtorn
 			for (U16 i = 0; i < MaxShapes; i++)
 			{
 				// hie_ prefix filters HierarchyWindow display.
-				Ref<SEntity> entity = scene->CreateEntity("DebugShape" + std::to_string(i));
-				//Ref<SEntity> entity = scene->CreateEntity("hie_DebugShape" + std::to_string(i));
+				//Ref<SEntity> entity = scene->CreateEntity("DebugShape" + std::to_string(i));
+				Ref<SEntity> entity = scene->CreateEntity("hie_DebugShape" + std::to_string(i));
 				scene->AddTransformComponentToEntity(entity);
 				scene->AddDebugShapeComponentToEntity(entity);
 			}
