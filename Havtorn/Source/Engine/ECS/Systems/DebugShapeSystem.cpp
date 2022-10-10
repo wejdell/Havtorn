@@ -76,7 +76,7 @@ namespace Havtorn
 			const std::vector<Ref<STransformComponent>>& transformComponents = scene->GetTransformComponents();
 
 			SendRenderCommands(entities, debugShapes, transformComponents);
-			CheckActiveIndicies(debugShapes);
+			CheckActiveIndices(debugShapes);
 
 		}
 
@@ -155,7 +155,7 @@ namespace Havtorn
 			}
 		}
 
-		void UDebugShapeSystem::CheckActiveIndicies(const std::vector<Ref<SDebugShapeComponent>>& debugShapes)
+		void UDebugShapeSystem::CheckActiveIndices(const std::vector<Ref<SDebugShapeComponent>>& debugShapes)
 		{
 			const F32 time = GTimer::Time();
 			std::vector<U64> activeIndicesToRemove;

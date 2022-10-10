@@ -53,9 +53,6 @@ namespace Havtorn
 
 		std::vector<Ref<SEntity>>& GetEntities() { return Entities; }
 
-//#ifdef _DEBUG
-//		 void AddDebugShapes(std::vector<const Debug::SDebugShape*>&& shapes) { DebugShapes = std::move(shapes); }
-//#endif
 		Ref<SEntity> CreateEntity(const std::string& name);
 		COMPONENT_ADDER_DECLARATION(TransformComponent)
 		COMPONENT_ADDER_DECLARATION(StaticMeshComponent)

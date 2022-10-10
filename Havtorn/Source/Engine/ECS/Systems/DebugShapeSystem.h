@@ -54,7 +54,7 @@ namespace Havtorn
 				const std::vector<Ref<SDebugShapeComponent>>& debugShapes,
 				const std::vector<Ref<STransformComponent>>& transformComponents
 			);
-			void CheckActiveIndicies(const std::vector<Ref<SDebugShapeComponent>>& debugShapes);
+			void CheckActiveIndices(const std::vector<Ref<SDebugShapeComponent>>& debugShapes);
 
 			/*
 			* AG: Kept in case it is needed in the future. Currently however, 
