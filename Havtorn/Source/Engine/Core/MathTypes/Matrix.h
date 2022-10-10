@@ -43,6 +43,9 @@ namespace Havtorn
 		inline SMatrix FastInverse() const;
 		// Based on XMMatrixInverse
 		inline SMatrix Inverse() const;
+
+		static inline void Decompose(const SMatrix& matrix, SVector& translation, SVector& rotation, SVector& scale);
+		static inline void Recompose(const SVector& translation, const SVector& rotation, const SVector& scale, SMatrix& outMatrix);
 		
 		inline SMatrix GetRHViewMatrix() const;
 		inline SMatrix GetRHProjectionMatrix() const;
@@ -717,6 +720,48 @@ namespace Havtorn
 		return result;
 	}
 
+	inline void SMatrix::Decompose(const SMatrix& matrix, SVector& translation, SVector& rotation, SVector& scale)
+	{
+		scale = matrix.GetScale();
+		rotation = matrix.GetEuler();
+		translation = matrix.GetTranslation();	
+	}
+
+	inline void SMatrix::Recompose(const SVector& translation, const SVector& rotation, const SVector& scale, SMatrix& outMatrix)
+	{
+		SMatrix rot[3];
+		SVector unaryDirections[3] = { SVector::Right, SVector::Up, SVector::Forward };
+		F32 rotations[3] = { rotation.X, rotation.Y, rotation.Z };
+		for (U8 i = 0; i < 3; i++)
+		{
+			rot[i] = SMatrix::CreateRotationAroundAxis(UMath::DegToRad(rotations[i]), unaryDirections[i]);
+		}
+
+		outMatrix = rot[2] * rot[1] * rot[0];
+
+		F32 scales[3] = { scale.X, scale.Y, scale.Z };
+		F32 validScale[3] = { 1.0f, 1.0f, 1.0f };
+		for (U8 i = 0; i < 3; i++)
+		{
+			if (UMath::FAbs(scales[i]) < FLT_EPSILON)
+			{
+				validScale[i] = 0.001f;
+			}
+			else
+			{
+				validScale[i] = scales[i];
+			}
+		}
+		SVector right = outMatrix.GetRight() * validScale[0];
+		SVector up = outMatrix.GetUp() * validScale[1];
+		SVector forward = outMatrix.GetForward() * validScale[2];
+		outMatrix.SetRight(right);
+		outMatrix.SetUp(up);
+		outMatrix.SetForward(forward);
+
+		outMatrix.SetTranslation(translation);
+	}
+
 	inline SMatrix SMatrix::GetRHViewMatrix() const
 	{
 		SMatrix result = *this;
@@ -751,6 +796,7 @@ namespace Havtorn
 		SVector r2 = eyeDirection.GetNormalized();
 		SVector r0 = upDirection.Cross(r2).GetNormalized();
 		SVector r1 = r2.Cross(r0);
+		r1 = r1.GetNormalized();
 
 		SVector negEyePosition = -eyePosition;
 

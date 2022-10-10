@@ -22,6 +22,7 @@ namespace Havtorn
 	struct SSpotLightComponent;
 	struct SVolumetricLightComponent;
 	struct SDecalComponent;
+	struct SDebugShapeComponent;
 
 	class ISystem;
 	class CRenderManager;
@@ -48,6 +49,7 @@ namespace Havtorn
 		std::vector<Ref<SSpotLightComponent>>& GetSpotLightComponents() { return SpotLightComponents; }
 		COMPONENT_VECTOR_GETTER(VolumetricLightComponent)
 		COMPONENT_VECTOR_GETTER(DecalComponent)
+		COMPONENT_VECTOR_GETTER(DebugShapeComponent)
 
 		std::vector<Ref<SEntity>>& GetEntities() { return Entities; }
 
@@ -63,6 +65,7 @@ namespace Havtorn
 		COMPONENT_ADDER_DECLARATION(SpotLightComponent)
 		COMPONENT_ADDER_DECLARATION(VolumetricLightComponent)
 		COMPONENT_ADDER_DECLARATION(DecalComponent)
+		COMPONENT_ADDER_DECLARATION(DebugShapeComponent)
 
 	private:
 		std::vector<Ref<SEntity>> Entities;
@@ -78,5 +81,7 @@ namespace Havtorn
 		COMPONENT_VECTOR_DECLARATION(VolumetricLightComponent)
 		COMPONENT_VECTOR_DECLARATION(DecalComponent)
 		std::vector<Ptr<ISystem>> Systems;
+		std::vector<Ref<SDebugShapeComponent>> DebugShapeComponents;
+
 	};
 }

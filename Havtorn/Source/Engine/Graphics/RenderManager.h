@@ -46,6 +46,7 @@ namespace Havtorn
 		Decal = 3,
 		PointAndSpotLight = 4,
 		EditorPreview = 5,
+		Line = 6,
 	};
 
 	enum class EPixelShaders
@@ -61,6 +62,7 @@ namespace Havtorn
 		VolumetricPoint = 8,
 		VolumetricSpot = 9,
 		EditorPreview = 10,
+		Line = 11,
 	};
 
 	enum class ESamplers
@@ -72,6 +74,17 @@ namespace Havtorn
 	enum class ETopologies
 	{
 		TriangleList = 0,
+		LineList = 1,
+	};
+
+	// Should be 1:1 to RenderManager::InitVertexBufferPrimitives()
+	// Geometries used can be found in GeometryPrimitives.h
+	enum class EVertexBufferPrimitives
+	{
+		DecalProjector,
+		PointLightCube,
+		LineShape,
+		//TODO: add more debug shape primitives
 	};
 
 	class CGraphicsFramework;
@@ -133,9 +146,21 @@ namespace Havtorn
 		void InitRenderTextures(CWindowHandler* windowHandler);
 		void InitShadowmapAtlas(SVector2<F32> atlasResolution);
 		void InitShadowmapLOD(SVector2<F32> topLeftCoordinate, const SVector2<F32>& widthAndHeight, const SVector2<F32>& depth, const SVector2<F32>& atlasResolution, U16 mapsInLod, U16 startIndex);
-		void InitDecalResources();
-		void InitPointLightResources();
-		void InitSpotLightResources();
+		
+		// Init order 1:1 to EVertexShaders
+		void InitVertexShadersAndInputLayouts();
+		// Init order 1:1 to EPixelShaders
+		void InitPixelShaders();
+		// Init order 1:1 to ESamplers
+		void InitSamplers();
+		// Init order 1:1 to EVertexBufferPrimitives.
+		void InitVertexBuffers();
+		void InitIndexBuffers();
+		// Init order 1:1 to ETopologies.
+		void InitTopologies();
+		void InitMeshVertexStrides();
+		void InitMeshVertexOffset();
+		
 		void InitEditorResources();
 		void LoadDemoSceneResources();
 
@@ -202,6 +227,13 @@ namespace Havtorn
 			SMatrix ToWorldFromObject;
 		} ObjectBufferData;
 		HV_ASSERT_BUFFER(SObjectBufferData)
+
+		struct SColorObjectBufferData
+		{
+			SMatrix ToWorldFromObject;
+			SVector4 Color;
+		} ColorObjectBufferData;
+		HV_ASSERT_BUFFER(SColorObjectBufferData)
 
 		struct SDecalBufferData
 		{
@@ -272,6 +304,7 @@ namespace Havtorn
 		ID3D11DeviceContext* Context;
 		ID3D11Buffer* FrameBuffer;
 		ID3D11Buffer* ObjectBuffer;
+		ID3D11Buffer* ColorObjectBuffer;
 		ID3D11Buffer* DecalBuffer;
 		ID3D11Buffer* DirectionalLightBuffer;
 		ID3D11Buffer* PointLightBuffer;

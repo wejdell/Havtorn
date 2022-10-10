@@ -9,6 +9,7 @@
 #include "ECS/Systems/RenderSystem.h"
 #include "ECS/Systems/CameraSystem.h"
 #include "ECS/Systems/LightSystem.h"
+#include "ECS/Systems/DebugShapeSystem.h"
 
 #include "ECS/Components/TransformComponent.h"
 #include "ECS/Components/StaticMeshComponent.h"
@@ -21,3 +22,4 @@
 #include "ECS/Components/SpotLightComponent.h"
 #include "ECS/Components/VolumetricLightComponent.h"
 #include "ECS/Components/DecalComponent.h"
+#include "ECS/Components/DebugShapeComponent.h"

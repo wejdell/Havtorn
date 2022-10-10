@@ -6,7 +6,7 @@ namespace Havtorn
 {
 	struct SPositionVertex
 	{
-		F32 x, y, z, w;
+		F32 x, y, z, w;// Remove W, always 1 as is position
 	};
 
 	struct SStaticMeshVertex
