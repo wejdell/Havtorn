@@ -10,10 +10,10 @@ namespace Havtorn
 	bool CScene::Init(CRenderManager* renderManager)
 	{
 		// Setup systems
-		Systems.emplace_back(std::make_unique<Debug::UDebugShapeSystem>(this));
 		Systems.emplace_back(std::make_unique<CCameraSystem>());
 		Systems.emplace_back(std::make_unique<CLightSystem>(renderManager));
 		Systems.emplace_back(std::make_unique<CRenderSystem>(renderManager));
+		Systems.emplace_back(std::make_unique<Debug::UDebugShapeSystem>(this, renderManager));
 
 		// Create entities
 		auto cameraEntity = CreateEntity("Camera");
@@ -66,7 +66,7 @@ namespace Havtorn
 		{
 			system->Update(this);
 		}
-		//Debug::UDebugShapeSystem::AddLine({ 1.0f, 0.0f, 0.0f }, lookAt->Transform.GetMatrix().GetTranslation(), Color::White, true, 600.0f);
+		Debug::UDebugShapeSystem::AddLine({ 1.0f, 0.0f, 0.0f }, lookAt->Transform.GetMatrix().GetTranslation(), Color::White, true, 600.0f);
 	}
 
 	void CScene::InitDemoScene(CRenderManager* renderManager)

@@ -6,7 +6,6 @@
 #include "Graphics/RenderManager.h"
 #include "Graphics/RenderCommand.h"
 #include "Input/Input.h"
-#include "ECS/Systems/DebugShapeSystem.h"
 
 namespace Havtorn
 {
@@ -207,26 +206,5 @@ namespace Havtorn
 			SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::VolumetricBufferBlurPass);
 			RenderManager->PushRenderCommand(command);
 		}
-
-#ifdef USE_DEBUG_SHAPE
-		{
-			const std::vector<Ref<SEntity>>& entities = scene->GetEntities();
-			const std::vector<Ref<SDebugShapeComponent>>& debugShapes = scene->GetDebugShapeComponents();
-			const std::vector<U64>& debugShapeIndices = Debug::UDebugShapeSystem::GetActiveShapeIndices();
-			for (U64 i = 0; i < debugShapeIndices.size(); i++)
-			{
-				std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
-				const U64 shapeIndex = entities[debugShapeIndices[i]]->GetComponentIndex(EComponentType::DebugShapeComponent);
-				const U64 transformIndex = entities[debugShapeIndices[i]]->GetComponentIndex(EComponentType::TransformComponent);
-				components[static_cast<U8>(EComponentType::DebugShapeComponent)] = debugShapes[shapeIndex];
-				components[static_cast<U8>(EComponentType::TransformComponent)] = transformComponents[transformIndex];
-
-				debugShapes[shapeIndex]->Rendered = true;
-
-				SRenderCommand command(components, ERenderCommandType::DebugShape);
-				RenderManager->PushRenderCommand(command);
-			}
-		}
-#endif
 	}
 }

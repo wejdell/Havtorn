@@ -8,14 +8,16 @@
 #include "ECS/Components/TransformComponent.h"
 #include "Graphics/VertexBufferPrimitivesUtility.h"
 
+#include "Graphics/RenderManager.h"
+#include "Graphics/RenderCommand.h"
+
 namespace Havtorn
 {
 	namespace Debug
 	{
 		UDebugShapeSystem* UDebugShapeSystem::Instance = nullptr;
-		const std::vector<U64> UDebugShapeSystem::NoShapeIndices;
 
-		UDebugShapeSystem::UDebugShapeSystem(CScene* scene)
+		UDebugShapeSystem::UDebugShapeSystem(CScene* scene, CRenderManager* renderManager)
 			: ISystem()
 		{
 #ifdef USE_DEBUG_SHAPE
@@ -45,7 +47,11 @@ namespace Havtorn
 				+ (sizeof(STransformComponent) * MaxShapes);
 			HV_LOG_INFO(" UDebugShapeSystem: [MaxShapes: %d] [Allocated: %d bytes]", MaxShapes, allocated);
 
-			Init(scene, currentNrOfEntities);
+			Scene = scene;
+			RenderManager = renderManager;
+			EntityStartIndex = currentNrOfEntities;
+			ActiveIndices.clear();
+			ResetAvailableIndices();
 #else
 			scene;
 #endif
@@ -64,44 +70,47 @@ namespace Havtorn
 
 		void UDebugShapeSystem::Update(CScene* scene)
 		{
-			const F32 time = GTimer::Time();
-			std::vector<Ref<SDebugShapeComponent>>& debugShapes = scene->GetDebugShapeComponents();
-			std::vector<U64> activeIndicesToRemove;
-			for (U64 i = 0; i < Instance->ActiveIndices.size(); i++)
+			const std::vector<Ref<SEntity>>& entities = scene->GetEntities();
+			const std::vector<Ref<SDebugShapeComponent>>& debugShapes = scene->GetDebugShapeComponents();
+			const std::vector<Ref<STransformComponent>>& transformComponents = scene->GetTransformComponents();
+
+			for (U64 i = 0; i < ActiveIndices.size(); i++)
 			{
-				U64& activeIndex = Instance->ActiveIndices[i];
+				std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
+				const U64 shapeIndex = entities[ActiveIndices[i]]->GetComponentIndex(EComponentType::DebugShapeComponent);
+				const U64 transformIndex = entities[ActiveIndices[i]]->GetComponentIndex(EComponentType::TransformComponent);
+				components[static_cast<U8>(EComponentType::DebugShapeComponent)] = debugShapes[shapeIndex];
+				components[static_cast<U8>(EComponentType::TransformComponent)] = transformComponents[transformIndex];
+
+				debugShapes[shapeIndex]->Rendered = true;
+
+				SRenderCommand command(components, ERenderCommandType::DebugShape);
+				RenderManager->PushRenderCommand(command);
+			}
+			
+			const F32 time = GTimer::Time();
+			std::vector<U64> activeIndicesToRemove;
+			for (U64 i = 0; i < ActiveIndices.size(); i++)
+			{
+				U64& activeIndex = ActiveIndices[i];
 				Ref<SDebugShapeComponent> shape = debugShapes[activeIndex];
 				if (shape->LifeTime <= time && shape->Rendered)
 				{
-					Instance->AvailableIndices.push(activeIndex);
+					AvailableIndices.push(activeIndex);
 					activeIndicesToRemove.push_back(i);
 				}
 			}
 
 			for (U64 i = 0; i < activeIndicesToRemove.size(); i++)
 			{
-				if (Instance->ActiveIndices.size() <= 1)
+				if (ActiveIndices.size() <= 1)
 				{
-					Instance->ActiveIndices.pop_back();
+					ActiveIndices.pop_back();
 					continue;
 				}
-				std::swap(Instance->ActiveIndices[i], Instance->ActiveIndices.back());
-				Instance->ActiveIndices.pop_back();
+				std::swap(ActiveIndices[i], ActiveIndices.back());
+				ActiveIndices.pop_back();
 			}
-		}
-
-
-		const std::vector<U64>& UDebugShapeSystem::GetActiveShapeIndices()
-		{
-			if (!InstanceExists())
-			{
-				return NoShapeIndices;
-			}
-
-			//if (!Instance->HasConnectionToScene())// Call should be unnecessary
-			//{//	return NoShapeIndices; //}
-
-			return Instance->ActiveIndices;
 		}
 
 		void UDebugShapeSystem::AddLine(const SVector& start, const SVector& end, const SVector4& color, const bool singleFrame, const F32 lifeTimeSeconds)
@@ -160,14 +169,6 @@ namespace Havtorn
 				return GTimer::Time() + requestedLifeTime;
 		}
 
-
-		void UDebugShapeSystem::Init(CScene* activeScene, U64 entityStartIndex)
-		{
-			Scene = activeScene;
-			EntityStartIndex = entityStartIndex;
-			ActiveIndices.clear();
-			ResetAvailableIndices();
-		}
 
 		bool UDebugShapeSystem::HasConnectionToScene()
 		{

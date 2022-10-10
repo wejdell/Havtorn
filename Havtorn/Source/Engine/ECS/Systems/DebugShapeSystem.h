@@ -24,29 +24,26 @@
 namespace Havtorn
 {
 	struct SDebugShapeComponent;
+	class CRenderManager;
 
 	namespace Debug
 	{
+		// Requirement: Add to Scene systemts after RenderSystem.
 		class UDebugShapeSystem final : public ISystem
 		{
 		public: // ISystem inherited.
-			UDebugShapeSystem(CScene* scene);
+			UDebugShapeSystem(CScene* scene, CRenderManager* renderManager);
 			~UDebugShapeSystem() override;
 
 			void Update(CScene* scene) override;
 
-		public:// Static Other
-			static constexpr U16 MaxShapes = 5;
-			static const std::vector<U64>& GetActiveShapeIndices();
-
 		public:// Static Add Shape functions.
+			static constexpr U16 MaxShapes = 5;
 			static HAVTORN_API void AddLine(const SVector& start, const SVector& end, const SVector4& color, const bool singleFrame = true, const F32 lifeTimeSeconds = 0.0f);// DepthPrio
 
 		private:
 			static bool InstanceExists();
 			static F32 LifeTimeForShape(const bool singleFrame, const F32 requestedLifeTime);
-
-			void Init(CScene* activeScene, U64 entityStartIndex);
 
 			// HasConnectionToScene:
 			/*
@@ -62,10 +59,10 @@ namespace Havtorn
 
 		private:
 			static HAVTORN_API UDebugShapeSystem* Instance;
-			static const std::vector<U64> NoShapeIndices;
 
 			U64 EntityStartIndex = 0;
 			CScene* Scene = nullptr;
+			CRenderManager* RenderManager = nullptr;
 			std::vector<U64> ActiveIndices;
 			std::queue<U64> AvailableIndices;
 		};
