@@ -45,9 +45,9 @@ namespace Havtorn
 		return nullptr;
 	}
 
-	void CEditorResourceManager::ConvertToHVA(const std::string fileName, EAssetType assetType)
+	void CEditorResourceManager::ConvertToHVA(const std::string& fileName, const std::string& destination, EAssetType assetType) const
 	{
-		RenderManager->ConvertToHVA(fileName, assetType);
+		RenderManager->ConvertToHVA(fileName, destination, assetType);
 	}
 
 	std::string CEditorResourceManager::GetFileName(EEditorTexture texture)

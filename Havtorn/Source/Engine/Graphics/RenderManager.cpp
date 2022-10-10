@@ -70,6 +70,9 @@ namespace Havtorn
 		bufferDescription.ByteWidth = sizeof(SObjectBufferData);
 		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &ObjectBuffer), "Object Buffer could not be created.");
 
+		bufferDescription.ByteWidth = sizeof(SColorObjectBufferData);
+		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &ColorObjectBuffer), "Color Object Buffer could not be created.");
+
 		bufferDescription.ByteWidth = sizeof(SDecalBufferData);
 		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DecalBuffer), "Decal Buffer could not be created.");
 
@@ -113,31 +116,14 @@ namespace Havtorn
 		InitRenderTextures(windowHandler);
 
 		// Load default resources
-		AddShader("Shaders/FullscreenVertexShader_VS.cso", EShaderType::Vertex);
-		std::string vsData = AddShader("Shaders/DeferredStaticMesh_VS.cso", EShaderType::Vertex);
-		AddInputLayout(vsData, EInputLayoutType::Pos3Nor3Tan3Bit3UV2);
-		vsData = AddShader("Shaders/DeferredInstancedMesh_VS.cso", EShaderType::Vertex);
-		AddInputLayout(vsData, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans);
-
-		AddShader("Shaders/GBuffer_PS.cso", EShaderType::Pixel);
-
-		AddSampler(ESamplerType::Wrap);
-		AddSampler(ESamplerType::Border);
-		AddTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-		InitDecalResources();
-		
-		AddMeshVertexStride(sizeof(SStaticMeshVertex));
-		AddMeshVertexOffset(0);
-
-		AddShader("Shaders/DeferredLightDirectionalAndEnvironment_PS.cso", EShaderType::Pixel);
-		
-		InitPointLightResources();
-		InitSpotLightResources();
-
-		AddShader("Shaders/DeferredLightDirectionalVolumetric_PS.cso", EShaderType::Pixel);
-		AddShader("Shaders/DeferredLightPointVolumetric_PS.cso", EShaderType::Pixel);
-		AddShader("Shaders/DeferredLightSpotVolumetric_PS.cso", EShaderType::Pixel);
+		InitVertexShadersAndInputLayouts();
+		InitPixelShaders();
+		InitSamplers();
+		InitVertexBuffers();
+		InitIndexBuffers();
+		InitTopologies();
+		InitMeshVertexStrides();
+		InitMeshVertexOffset();
 
 		InitEditorResources();
 		LoadDemoSceneResources();
@@ -231,41 +217,84 @@ namespace Havtorn
 		}
 	}
 
-	void CRenderManager::InitDecalResources()
+	void CRenderManager::InitVertexShadersAndInputLayouts()
 	{
-		AddVertexBuffer<SStaticMeshVertex>(DecalProjector);
-		AddIndexBuffer(DecalProjectorIndices);
-
+		AddShader("Shaders/FullscreenVertexShader_VS.cso", EShaderType::Vertex);
+		
+		std::string vsData = AddShader("Shaders/DeferredStaticMesh_VS.cso", EShaderType::Vertex);
+		AddInputLayout(vsData, EInputLayoutType::Pos3Nor3Tan3Bit3UV2);
+		
+		vsData = AddShader("Shaders/DeferredInstancedMesh_VS.cso", EShaderType::Vertex);
+		AddInputLayout(vsData, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans);
+		
 		AddShader("Shaders/Decal_VS.cso", EShaderType::Vertex);
+
+		vsData = AddShader("Shaders/PointLight_VS.cso", EShaderType::Vertex);
+		AddInputLayout(vsData, EInputLayoutType::Pos4);
+
+		AddShader("Shaders/EditorPreview_VS.cso", EShaderType::Vertex);
+		
+		AddShader("Shaders/Line_VS.cso", EShaderType::Vertex);
+	}
+
+	void CRenderManager::InitPixelShaders()
+	{
+		AddShader("Shaders/GBuffer_PS.cso", EShaderType::Pixel);
 
 		AddShader("Shaders/Decal_Albedo_PS.cso", EShaderType::Pixel);
 		AddShader("Shaders/Decal_Material_PS.cso", EShaderType::Pixel);
 		AddShader("Shaders/Decal_Normal_PS.cso", EShaderType::Pixel);
-	}
-
-	void CRenderManager::InitPointLightResources()
-	{
-		AddVertexBuffer<SPositionVertex>(PointLightCube);
-		AddIndexBuffer(PointLightCubeIndices);
 		
-		AddMeshVertexStride(sizeof(SPositionVertex));
-
-		const std::string vsData = AddShader("Shaders/PointLight_VS.cso", EShaderType::Vertex);
-		AddInputLayout(vsData, EInputLayoutType::Pos4);
-
+		AddShader("Shaders/DeferredLightDirectionalAndEnvironment_PS.cso", EShaderType::Pixel);
 		AddShader("Shaders/DeferredLightPoint_PS.cso", EShaderType::Pixel);
+		AddShader("Shaders/DeferredLightSpot_PS.cso", EShaderType::Pixel);
+		
+		AddShader("Shaders/DeferredLightDirectionalVolumetric_PS.cso", EShaderType::Pixel);
+		AddShader("Shaders/DeferredLightPointVolumetric_PS.cso", EShaderType::Pixel);
+		AddShader("Shaders/DeferredLightSpotVolumetric_PS.cso", EShaderType::Pixel);
+		
+		AddShader("Shaders/EditorPreview_PS.cso", EShaderType::Pixel);
+		AddShader("Shaders/Line_PS.cso", EShaderType::Pixel);
 	}
 
-	void CRenderManager::InitSpotLightResources()
+	void CRenderManager::InitSamplers()
 	{
-		AddShader("Shaders/DeferredLightSpot_PS.cso", EShaderType::Pixel);
+		AddSampler(ESamplerType::Wrap);
+		AddSampler(ESamplerType::Border);
+	}
+
+	void CRenderManager::InitVertexBuffers()
+	{
+		AddVertexBuffer<SStaticMeshVertex>(GeometryPrimitives::DecalProjector);
+		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::PointLightCube);
+		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::Line);
+	}
+
+	void CRenderManager::InitIndexBuffers()
+	{
+		AddIndexBuffer(GeometryPrimitives::DecalProjectorIndices);
+		AddIndexBuffer(GeometryPrimitives::PointLightCubeIndices);
+	}
+
+	void CRenderManager::InitTopologies()
+	{
+		AddTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		AddTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+	}
+
+	void CRenderManager::InitMeshVertexStrides()
+	{
+		AddMeshVertexStride(sizeof(SStaticMeshVertex));
+		AddMeshVertexStride(sizeof(SPositionVertex));
+	}
+
+	void CRenderManager::InitMeshVertexOffset()
+	{
+		AddMeshVertexOffset(0);
 	}
 
 	void CRenderManager::InitEditorResources()
-	{
-		AddShader("Shaders/EditorPreview_VS.cso", EShaderType::Vertex);
-		AddShader("Shaders/EditorPreview_PS.cso", EShaderType::Pixel);
-	}
+	{}
 
 	void CRenderManager::LoadDemoSceneResources()
 	{
@@ -400,6 +429,35 @@ namespace Havtorn
 				}
 				break;
 
+				case ERenderCommandType::DebugShape: 
+				{
+					RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
+					RenderedScene.SetAsActiveTarget();
+				
+					SDebugShapeComponent* shape = currentCommand.GetComponent(DebugShapeComponent);
+					STransformComponent* transform = currentCommand.GetComponent(TransformComponent);
+					ColorObjectBufferData.ToWorldFromObject = transform->Transform.GetMatrix();
+					ColorObjectBufferData.Color = shape->Color;
+
+					BindBuffer(ColorObjectBuffer, ColorObjectBufferData, "Object Buffer");
+
+					Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::LineList)]);
+					Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
+					
+					Context->IASetVertexBuffers(0, 1, &VertexBuffers[shape->VertexBufferIndex], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
+					// if indexed in the future past
+					//Context->IASetIndexBuffer(lineData.myIndexBuffer, DXGI_FORMAT_R32_UINT, 0); 
+
+					Context->VSSetConstantBuffers(1, 1, &ColorObjectBuffer);
+					Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Line)], nullptr, 0);
+
+					Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::Line)], nullptr, 0);
+
+					Context->Draw(shape->VertexCount, 0);
+					NumberOfDrawCallsThisFrame++;
+				}
+				break;
+
 				default:
 					break;
 				}
@@ -475,13 +533,14 @@ namespace Havtorn
 		//myGBufferCopy.ReleaseResources();
 	}
 
-	void CRenderManager::ConvertToHVA(const std::string& filePath, EAssetType assetType)
+	std::string CRenderManager::ConvertToHVA(const std::string& filePath, const std::string& destination, EAssetType assetType) const
 	{
+		std::string hvaPath;
 		switch (assetType)
 		{
 		case EAssetType::StaticMesh:
 			{
-				CModelImporter::ImportFBX(filePath);
+				hvaPath = CModelImporter::ImportFBX(filePath);
 			}
 			break;
 		case EAssetType::Texture:
@@ -497,7 +556,8 @@ namespace Havtorn
 
 				STextureFileHeader asset;
 				asset.AssetType = EAssetType::Texture;
-				asset.MaterialName = filePath.substr(0, filePath.find_last_of("."));
+
+				asset.MaterialName = destination + filePath.substr(filePath.find_last_of('\\'), filePath.find_first_of('.') - filePath.find_last_of('\\'));// destination.substr(0, destination.find_last_of("."));
 				asset.MaterialNameLength = static_cast<U32>(asset.MaterialName.length());
 				asset.OriginalFormat = format;
 				asset.Suffix = filePath[filePath.find_last_of(".") - 1];
@@ -508,8 +568,9 @@ namespace Havtorn
 
 				asset.Serialize(data);
 				GEngine::GetFileSystem()->Serialize(asset.MaterialName + ".hva", &data[0], asset.GetSize());
-				
 				delete[] data;
+
+				hvaPath = asset.MaterialName + ".hva";
 			}
 			break;
 		case EAssetType::SkeletalMesh: 
@@ -523,6 +584,8 @@ namespace Havtorn
 		case EAssetType::VisualFX: 
 			break;
 		}
+
+		return hvaPath;
 	}
 
 	void CRenderManager::LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent)
