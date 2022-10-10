@@ -35,8 +35,8 @@ namespace Havtorn
 			U64 currentNrOfEntities = scene->GetEntities().size();
 			for (U16 i = 0; i < MaxShapes; i++)
 			{
-				Ref<SEntity> entity = scene->CreateEntity("DebugShape");
-				//Ref<SEntity> entity = scene->CreateEntity("hie_DebugShape");
+				Ref<SEntity> entity = scene->CreateEntity("DebugShape" + std::to_string(i));
+				//Ref<SEntity> entity = scene->CreateEntity("hie_DebugShape" + std::to_string(i));
 				scene->AddTransformComponentToEntity(entity);
 				scene->AddDebugShapeComponentToEntity(entity);
 			}
@@ -74,43 +74,9 @@ namespace Havtorn
 			const std::vector<Ref<SDebugShapeComponent>>& debugShapes = scene->GetDebugShapeComponents();
 			const std::vector<Ref<STransformComponent>>& transformComponents = scene->GetTransformComponents();
 
-			for (U64 i = 0; i < ActiveIndices.size(); i++)
-			{
-				std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
-				const U64 shapeIndex = entities[ActiveIndices[i]]->GetComponentIndex(EComponentType::DebugShapeComponent);
-				const U64 transformIndex = entities[ActiveIndices[i]]->GetComponentIndex(EComponentType::TransformComponent);
-				components[static_cast<U8>(EComponentType::DebugShapeComponent)] = debugShapes[shapeIndex];
-				components[static_cast<U8>(EComponentType::TransformComponent)] = transformComponents[transformIndex];
+			SendRenderCommands(entities, debugShapes, transformComponents);
+			CheckActiveIndicies(debugShapes);
 
-				debugShapes[shapeIndex]->Rendered = true;
-
-				SRenderCommand command(components, ERenderCommandType::DebugShape);
-				RenderManager->PushRenderCommand(command);
-			}
-			
-			const F32 time = GTimer::Time();
-			std::vector<U64> activeIndicesToRemove;
-			for (U64 i = 0; i < ActiveIndices.size(); i++)
-			{
-				U64& activeIndex = ActiveIndices[i];
-				Ref<SDebugShapeComponent> shape = debugShapes[activeIndex];
-				if (shape->LifeTime <= time && shape->Rendered)
-				{
-					AvailableIndices.push(activeIndex);
-					activeIndicesToRemove.push_back(i);
-				}
-			}
-
-			for (U64 i = 0; i < activeIndicesToRemove.size(); i++)
-			{
-				if (ActiveIndices.size() <= 1)
-				{
-					ActiveIndices.pop_back();
-					continue;
-				}
-				std::swap(ActiveIndices[i], ActiveIndices.back());
-				ActiveIndices.pop_back();
-			}
 		}
 
 		void UDebugShapeSystem::AddLine(const SVector& start, const SVector& end, const SVector4& color, const bool singleFrame, const F32 lifeTimeSeconds)
@@ -131,7 +97,6 @@ namespace Havtorn
 			debugShapes[shapeIndex]->LifeTime = LifeTimeForShape(singleFrame, lifeTimeSeconds);
 			debugShapes[shapeIndex]->VertexBufferIndex = Utility::VertexBufferPrimitives::GetVertexBufferIndex<U8>(EVertexBufferPrimitives::LineShape);
 			debugShapes[shapeIndex]->VertexCount = Utility::VertexBufferPrimitives::GetVertexCount<U8>(EVertexBufferPrimitives::LineShape);
-			debugShapes[shapeIndex]->Rendered = false;
 
 			std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
 			const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
@@ -167,6 +132,58 @@ namespace Havtorn
 				return -1.0f;
 			else
 				return GTimer::Time() + requestedLifeTime;
+		}
+
+
+		void UDebugShapeSystem::SendRenderCommands(
+			const std::vector<Ref<SEntity>>& entities,
+			const std::vector<Ref<SDebugShapeComponent>>& debugShapes,
+			const std::vector<Ref<STransformComponent>>& transformComponents
+		)
+		{
+			for (U64 i = 0; i < ActiveIndices.size(); i++)
+			{
+				std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
+				const U64 shapeIndex = entities[ActiveIndices[i]]->GetComponentIndex(EComponentType::DebugShapeComponent);
+				const U64 transformIndex = entities[ActiveIndices[i]]->GetComponentIndex(EComponentType::TransformComponent);
+				components[static_cast<U8>(EComponentType::DebugShapeComponent)] = debugShapes[shapeIndex];
+				components[static_cast<U8>(EComponentType::TransformComponent)] = transformComponents[transformIndex];
+
+				SRenderCommand command(components, ERenderCommandType::DebugShape);
+				RenderManager->PushRenderCommand(command);
+			}
+		}
+
+		void UDebugShapeSystem::CheckActiveIndicies(const std::vector<Ref<SDebugShapeComponent>>& debugShapes)
+		{
+			const F32 time = GTimer::Time();
+			std::vector<U64> activeIndicesToRemove;
+			for (U64 i = 0; i < ActiveIndices.size(); i++)
+			{
+				const U64& activeIndex = ActiveIndices[i];
+				const Ref<SDebugShapeComponent>& shape = debugShapes[activeIndex];
+				if (shape->LifeTime <= time)
+				{
+					AvailableIndices.push(activeIndex);
+					activeIndicesToRemove.push_back(i);
+				}
+			}
+
+			// Bad - Improve
+			for (U64 i = static_cast<U64>(activeIndicesToRemove.size()) - 1; i > 0; i--)
+			{
+				if (ActiveIndices.size() <= 1)
+				{
+					ActiveIndices.pop_back();
+					break;
+				}
+
+				if (activeIndicesToRemove.empty())
+					break;
+				
+				std::swap(ActiveIndices[activeIndicesToRemove[i]], ActiveIndices.back());
+				ActiveIndices.pop_back();
+			}
 		}
 
 

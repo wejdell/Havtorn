@@ -18,9 +18,6 @@ namespace Havtorn
 		U8 VertexBufferIndex = 0;
 		U8 VertexCount = 0;
 
-		// Temp, for test. Might be necessary.
-		bool Rendered = true;
-
 		const bool operator<(const SDebugShapeComponent& rhs) const { return LifeTime < rhs.LifeTime; }
 		const bool operator>(const SDebugShapeComponent& rhs) const { return LifeTime > rhs.LifeTime; }
 	};

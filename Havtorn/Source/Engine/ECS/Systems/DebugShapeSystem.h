@@ -16,13 +16,15 @@
 #ifdef DEBUG_DRAWER_LOG
 #define DEBUG_DRAWER_LOG_SHAPESRENDER 0
 #define DEBUG_DRAWER_LOG_ADDSHAPE 0
-#define DEBUG_DRAWER_LOG_ERROR 0
+#define DEBUG_DRAWER_LOG_ERROR 1
 #endif
 
 #endif
 
 namespace Havtorn
 {
+	struct SEntity;
+	struct STransformComponent;
 	struct SDebugShapeComponent;
 	class CRenderManager;
 
@@ -39,11 +41,19 @@ namespace Havtorn
 
 		public:// Static Add Shape functions.
 			static constexpr U16 MaxShapes = 5;
+
 			static HAVTORN_API void AddLine(const SVector& start, const SVector& end, const SVector4& color, const bool singleFrame = true, const F32 lifeTimeSeconds = 0.0f);// DepthPrio
 
 		private:
 			static bool InstanceExists();
 			static F32 LifeTimeForShape(const bool singleFrame, const F32 requestedLifeTime);
+
+			void SendRenderCommands(
+				const std::vector<Ref<SEntity>>& entities,
+				const std::vector<Ref<SDebugShapeComponent>>& debugShapes,
+				const std::vector<Ref<STransformComponent>>& transformComponents
+			);
+			void CheckActiveIndicies(const std::vector<Ref<SDebugShapeComponent>>& debugShapes);
 
 			// HasConnectionToScene:
 			/*
