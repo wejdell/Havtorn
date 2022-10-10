@@ -49,9 +49,9 @@ namespace Havtorn
 		}
 
 		template<typename T>
-		inline T GetComponentInternal(EComponentType type)
+		inline T GetComponentInternal(EComponentType type) const
 		{
-			return dynamic_cast<T>(Components[static_cast<size_t>(type)].get());
+			return 	dynamic_cast<T>(Components[static_cast<size_t>(type)].get());
 		}
 
 		std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> Components;

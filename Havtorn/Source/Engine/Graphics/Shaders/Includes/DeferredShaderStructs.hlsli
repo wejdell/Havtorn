@@ -29,7 +29,7 @@ struct SkeletalMeshVertexInput
     float3 Position     : POSITION;
     float3 Normal       : NORMAL;
     float3 Tangent      : TANGENT;
-    float3 Bitangent : BINORMAL;
+    float3 Bitangent    : BINORMAL;
     float2 UV           : UV;
     float4 BoneID       : BONEID;
     float4 BoneWeight   : BONEWEIGHT;
@@ -40,7 +40,7 @@ struct SkeletalInstancedMeshVertexInput
     float3 Position     : POSITION;
     float3 Normal       : NORMAL;
     float3 Tangent      : TANGENT;
-    float3 Bitangent : BINORMAL;
+    float3 Bitangent    : BINORMAL;
     float2 UV           : UV;
     float4 BoneID       : BONEID;
     float4 BoneWeight   : BONEWEIGHT;
@@ -52,7 +52,7 @@ struct VertexPaintedModelInput
     float4 Position   : POSITION;
     float4 Normal     : NORMAL;
     float4 Tangent    : TANGENT;
-    float4 Binormal : BINORMAL;
+    float4 Binormal   : BINORMAL;
     float2 UV         : UV;
     float3 Color      : COLOR;
 };
@@ -69,7 +69,7 @@ struct VertexModelToPixel
     float4 WorldPosition  : WORLD_POSITION;
     float4 Normal         : NORMAL;
     float4 Tangent        : TANGENT;
-    float4 Bitangent : BINORMAL;
+    float4 Bitangent      : BINORMAL;
     float2 UV             : UV;
 };
 
@@ -79,7 +79,7 @@ struct VertexPaintModelToPixel
     float4 WorldPosition    : WORLDPOSITION;
     float4 Normal           : NORMAL;
     float4 Tangent          : TANGENT;
-    float4 Binormal : BINORMAL;
+    float4 Binormal         : BINORMAL;
     float2 UV               : UV;
     float3 Color            : COLOR;
 };
