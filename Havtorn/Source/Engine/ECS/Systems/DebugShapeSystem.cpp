@@ -103,12 +103,12 @@ namespace Havtorn
 
 			const F32 lineLength = start.Distance(end);
 			const SVector transformUp = transforms[transformIndex]->Transform.GetMatrix().GetUp();
-			SMatrix::Recompose(
-				start, 
-				SMatrix::LookAtLH(start, end, transformUp).GetEuler(), 
-				SVector(1.0f, 1.0f, lineLength), 
-				transforms[transformIndex]->Transform.LocalMatrix // Make setter: Parent/Child relationship affects LocalMatrix 
-			);
+			const SVector eulerRotation = SMatrix::LookAtLH(start, end, transformUp).GetEuler();
+			const SVector scale = SVector(1.0f, 1.0f, lineLength);
+			SMatrix matrix;
+			SMatrix::Recompose( start, eulerRotation, scale, matrix);
+
+			transforms[transformIndex]->Transform.SetMatrix(matrix);
 
 			Instance->PrintDebugAddedShape(*debugShapes[shapeIndex].get(), singleFrame, __FUNCTION__);	
 		}

@@ -6,7 +6,7 @@ namespace Havtorn
 {
 	struct STransform
 	{
-	public:
+	private:
 		SMatrix LocalMatrix = SMatrix::Identity;
 		SMatrix WorldMatrix = SMatrix::Identity;
 		STransform* Parent = nullptr;
@@ -14,6 +14,7 @@ namespace Havtorn
 
 	public:
 		[[nodiscard]] SMatrix& GetMatrix();
+		void SetMatrix(const SMatrix& matrix);
 		void SetParent(STransform* parent);
 		void SetChild(STransform* child);
 		void RemoveChild(STransform* child);
@@ -45,6 +46,11 @@ namespace Havtorn
 		}
 
 		return LocalMatrix;
+	}
+
+	inline void STransform::SetMatrix(const SMatrix& matrix)
+	{
+		LocalMatrix = matrix;
 	}
 
 	inline void STransform::SetParent(STransform* parent)
