@@ -79,10 +79,8 @@ namespace Havtorn
 
 		}
 
-		void UDebugShapeSystem::AddLine(const SVector& start, const SVector& end, const SVector4& color, const bool singleFrame, const F32 lifeTimeSeconds)
+		void UDebugShapeSystem::AddLine(const SVector& start, const SVector& end, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime)
 		{
-			end; start; color; singleFrame; lifeTimeSeconds;
-
 			if (!InstanceExists())
 				return;
 
@@ -94,7 +92,7 @@ namespace Havtorn
 			const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
 			std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
 			debugShapes[shapeIndex]->Color = color;
-			debugShapes[shapeIndex]->LifeTime = LifeTimeForShape(singleFrame, lifeTimeSeconds);
+			debugShapes[shapeIndex]->LifeTime = LifeTimeForShape(useLifeTime, lifeTimeSeconds);
 			debugShapes[shapeIndex]->VertexBufferIndex = Utility::VertexBufferPrimitives::GetVertexBufferIndex<U8>(EVertexBufferPrimitives::LineShape);
 			debugShapes[shapeIndex]->VertexCount = Utility::VertexBufferPrimitives::GetVertexCount<U8>(EVertexBufferPrimitives::LineShape);
 
@@ -106,11 +104,11 @@ namespace Havtorn
 			const SVector eulerRotation = SMatrix::LookAtLH(start, end, transformUp).GetEuler();
 			const SVector scale = SVector(1.0f, 1.0f, lineLength);
 			SMatrix matrix;
-			SMatrix::Recompose( start, eulerRotation, scale, matrix);
+			SMatrix::Recompose(start, eulerRotation, scale, matrix);
 
 			transforms[transformIndex]->Transform.SetMatrix(matrix);
 
-			Instance->PrintDebugAddedShape(*debugShapes[shapeIndex].get(), singleFrame, __FUNCTION__);	
+			Instance->PrintDebugAddedShape(*debugShapes[shapeIndex].get(), useLifeTime, __FUNCTION__);	
 		}
 
 
@@ -126,9 +124,9 @@ namespace Havtorn
 			return true;
 		}
 
-		F32 UDebugShapeSystem::LifeTimeForShape(const bool singleFrame, const F32 requestedLifeTime)
+		F32 UDebugShapeSystem::LifeTimeForShape(const bool useLifeTime, const F32 requestedLifeTime)
 		{
-			if (singleFrame)
+			if (!useLifeTime)
 				return -1.0f;
 			else
 				return GTimer::Time() + requestedLifeTime;
@@ -230,9 +228,9 @@ namespace Havtorn
 		{
 #if DEBUG_DRAWER_LOG_ADDSHAPE
 			HV_LOG_INFO("%s: Added:", callerFunction);
-			HV_LOG_INFO("\tColor[%s] SingleFrame[%d] LifeTime[%5.fs] Type[%d]"
+			HV_LOG_INFO("\tColor[%s] UseLifeTime[%d] LifeTime[%5.fs] Type[%d]"
 				, shape.Color.ToString().c_str()
-				, singleFrame
+				, useLifeTime
 				, shape.LifeTime
 				, shape.VertexBufferIndex
 			);
