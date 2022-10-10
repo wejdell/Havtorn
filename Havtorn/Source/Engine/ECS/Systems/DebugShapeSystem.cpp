@@ -54,7 +54,7 @@ namespace Havtorn
 			ActiveIndices.clear();
 			ResetAvailableIndices();
 #else
-			scene;
+			scene; renderManager;
 #endif
 		}
 
@@ -77,7 +77,6 @@ namespace Havtorn
 
 			SendRenderCommands(entities, debugShapes, transformComponents);
 			CheckActiveIndices(debugShapes);
-
 		}
 
 		void UDebugShapeSystem::AddLine(const SVector& start, const SVector& end, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime)
@@ -109,7 +108,7 @@ namespace Havtorn
 
 			transforms[transformIndex]->Transform.SetMatrix(matrix);
 
-#ifdef DEBUG_DRAWER_LOG_ADDSHAPE
+#if DEBUG_DRAWER_LOG_ADDSHAPE
 			Instance->PrintDebugAddedShape(*debugShapes[shapeIndex].get(), useLifeTime, __FUNCTION__);	
 #endif
 		}
