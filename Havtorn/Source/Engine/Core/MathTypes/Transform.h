@@ -6,7 +6,7 @@ namespace Havtorn
 {
 	struct STransform
 	{
-	private:
+	public:
 		SMatrix LocalMatrix = SMatrix::Identity;
 		SMatrix WorldMatrix = SMatrix::Identity;
 		STransform* Parent = nullptr;
