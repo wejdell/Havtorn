@@ -29,7 +29,8 @@ namespace Havtorn
 		VolumetricBufferBlurPass,
 		ForwardTransparency,
 		OutlineMask,
-		Outline
+		Outline,
+		DebugShape
 	};
 
 	struct SRenderCommand

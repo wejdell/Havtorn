@@ -13,6 +13,7 @@ namespace Havtorn
 		Systems.emplace_back(std::make_unique<CCameraSystem>());
 		Systems.emplace_back(std::make_unique<CLightSystem>(renderManager));
 		Systems.emplace_back(std::make_unique<CRenderSystem>(renderManager));
+		Systems.emplace_back(std::make_unique<Debug::UDebugShapeSystem>(this, renderManager));
 
 		// Create entities
 		auto cameraEntity = CreateEntity("Camera");
@@ -44,6 +45,19 @@ namespace Havtorn
 		
 		auto volumetricLight = AddVolumetricLightComponentToEntity(directionalLightEntity);
 		//volumetricLight->IsActive = true;
+
+		SVector start = { 0.0f, 0.0f, 0.0f };
+		SVector end = { 0.5f, 1.0f, 0.0f };
+		SVector add = { 0.0f, 0.0f, -1.0f };
+		SVector mult = { 1.25f, 1.0f, 1.0f };
+		bool useLifeTime = true;
+		F32 durationSeconds = 30.0f;
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 0.0f, end * mult + add * 0.0f, Color::White, durationSeconds, useLifeTime);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 0.5f, end * mult + add * 0.5f, Color::Red, durationSeconds / 2.0f, useLifeTime);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 1.0f, end * mult + add * 1.0f, Color::Green, durationSeconds / 3.0f, useLifeTime);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 1.5f, end * mult + add * 1.5f, Color::Blue, durationSeconds / 4.0f, useLifeTime);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 2.0f, end * mult + add * 2.0f, Color::Red, durationSeconds / 5.0f, useLifeTime);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 2.5f, end * mult + add * 2.5f, Color::Green, durationSeconds / 6.0f, useLifeTime);
 
 		InitDemoScene(renderManager);
 
@@ -299,4 +313,5 @@ namespace Havtorn
 	COMPONENT_ADDER_DEFINITION(SpotLightComponent)
 	COMPONENT_ADDER_DEFINITION(VolumetricLightComponent)
 	COMPONENT_ADDER_DEFINITION(DecalComponent)
+	COMPONENT_ADDER_DEFINITION(DebugShapeComponent)
 }
