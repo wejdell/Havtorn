@@ -65,7 +65,7 @@ namespace Havtorn
 			bool TryGetAvailableIndex(U64& outIndex);
 			void ResetAvailableIndices();
 
-			// To be removed/ looked over. Use case is debatable.
+			// AG: To be removed/ looked over. Use case is debatable.
 			void PrintDebugAddedShape(const SDebugShapeComponent& shape, const bool useLifeTime, const char* callerFunction);
 
 		private:
