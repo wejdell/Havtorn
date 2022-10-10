@@ -142,10 +142,6 @@ namespace Havtorn
 	private:
 		void ToggleRenderPass(bool shouldToggleForwards = true);
 
-		void VolumetricBlur();
-		void RenderBloom();
-		void DebugShadowAtlas();
-
 	private:
 		template<typename T>
 		U16 AddVertexBuffer(const std::vector<T>& vertices);
@@ -160,6 +156,25 @@ namespace Havtorn
 		void AddViewport(SVector2<F32> topLeftCoordinate, SVector2<F32> widthAndHeight, SVector2<F32> depth);
 
 		std::vector<U16> AddMaterial(const std::string& materialName, EMaterialConfiguration configuration);
+
+		inline void ShadowAtlasPrePassDirectional(const SRenderCommand& command);
+		inline void ShadowAtlasPrePassPoint(const SRenderCommand& command);
+		inline void ShadowAtlasPrePassSpot(const SRenderCommand& command);
+		inline void CameraDataStorage(const SRenderCommand& command);
+		inline void GBufferData(const SRenderCommand& command);
+		inline void GBufferDataInstanced(const SRenderCommand& command);
+		inline void DecalDepthCopy();
+		inline void DeferredDecal(const SRenderCommand& command);
+		inline void PreLightingPass();
+		inline void DeferredLightingDirectional(const SRenderCommand& command);
+		inline void DeferredLightingPoint(const SRenderCommand& command);
+		inline void DeferredLightingSpot(const SRenderCommand& command);
+		inline void VolumetricLightingDirectional(const SRenderCommand& command);
+		inline void VolumetricLightingPoint(const SRenderCommand& command);
+		inline void VolumetricLightingSpot(const SRenderCommand& command);
+		inline void VolumetricBlur();
+		inline void RenderBloom();
+		inline void DebugShadowAtlas();
 
 	private:
 		template<class T>
