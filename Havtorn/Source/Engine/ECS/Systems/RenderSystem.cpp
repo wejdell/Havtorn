@@ -6,7 +6,7 @@
 #include "Graphics/RenderManager.h"
 #include "Graphics/RenderCommand.h"
 #include "Input/Input.h"
-#include "Debug/DebugUtilityShape.h"
+#include "ECS/Systems/DebugShapeSystem.h"
 
 namespace Havtorn
 {
@@ -212,7 +212,7 @@ namespace Havtorn
 		{
 			const std::vector<Ref<SEntity>>& entities = scene->GetEntities();
 			const std::vector<Ref<SDebugShapeComponent>>& debugShapes = scene->GetDebugShapeComponents();
-			const std::vector<U64>& debugShapeIndices = Debug::GDebugUtilityShape::GetActiveShapeIndices();
+			const std::vector<U64>& debugShapeIndices = Debug::UDebugShapeSystem::GetActiveShapeIndices();
 			for (U64 i = 0; i < debugShapeIndices.size(); i++)
 			{
 				std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;

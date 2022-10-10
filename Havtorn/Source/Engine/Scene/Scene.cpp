@@ -5,14 +5,12 @@
 #include "ECS/ECSInclude.h"
 #include "Graphics/RenderManager.h"
 
-#include "Debug/DebugUtilityShape.h"
-
 namespace Havtorn
 {
 	bool CScene::Init(CRenderManager* renderManager)
 	{
 		// Setup systems
-		Systems.emplace_back(std::make_unique<CDebugUtilitySystem>(this));
+		Systems.emplace_back(std::make_unique<Debug::UDebugShapeSystem>(this));
 		Systems.emplace_back(std::make_unique<CCameraSystem>());
 		Systems.emplace_back(std::make_unique<CLightSystem>(renderManager));
 		Systems.emplace_back(std::make_unique<CRenderSystem>(renderManager));
@@ -52,14 +50,9 @@ namespace Havtorn
 		SVector end = { 0.0f, 1.0f, 0.0f };
 		bool singleFrame = false;
 		F32 durationSeconds = 60.0f;
-		Debug::GDebugUtilityShape::AddLine(start, end, Color::Red, singleFrame, durationSeconds);
+		Debug::UDebugShapeSystem::AddLine(start, end, Color::Red, singleFrame, durationSeconds);
 
-		Debug::GDebugUtilityShape::AddLine({ -2.0f, -1.0f, 0.0f }, { 2.0f, 1.0f, 0.0f }, Color::Green, false, 59.0f);
-		//Debug::GDebugUtilityShape::AddLine({ 1.0f, 0.0f, -3.0f }, { 1.0f, 0.0f, 1.0f }, Color::White, false, 58.0f);
-		
-		//Debug::GDebugUtilityShape::AddLine({ 1.0f, 0.0f, 0.0f }, { 1.0f, 1.0f, 0.0f }, Color::Green, false, 60.0f);
-		//Debug::GDebugUtilityShape::AddLine({ 2.0f, 0.0f, 0.0f }, { 2.0f, 1.0f, 0.0f }, Color::Blue, false, 60.0f);
-
+		Debug::UDebugShapeSystem::AddLine({ -2.0f, -1.0f, 0.0f }, { 2.0f, 1.0f, 0.0f }, Color::Green, false, 59.0f);
 
 		InitDemoScene(renderManager);
 
@@ -73,7 +66,7 @@ namespace Havtorn
 		{
 			system->Update(this);
 		}
-		//Debug::GDebugUtilityShape::AddLine({ 1.0f, 0.0f, 0.0f }, lookAt->Transform.GetMatrix().GetTranslation(), Color::White, true, 600.0f);
+		//Debug::UDebugShapeSystem::AddLine({ 1.0f, 0.0f, 0.0f }, lookAt->Transform.GetMatrix().GetTranslation(), Color::White, true, 600.0f);
 	}
 
 	void CScene::InitDemoScene(CRenderManager* renderManager)
