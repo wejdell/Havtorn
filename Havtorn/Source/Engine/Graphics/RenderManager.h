@@ -146,11 +146,21 @@ namespace Havtorn
 		void InitRenderTextures(CWindowHandler* windowHandler);
 		void InitShadowmapAtlas(SVector2<F32> atlasResolution);
 		void InitShadowmapLOD(SVector2<F32> topLeftCoordinate, const SVector2<F32>& widthAndHeight, const SVector2<F32>& depth, const SVector2<F32>& atlasResolution, U16 mapsInLod, U16 startIndex);
+		
+		// Init order 1:1 to EVertexShaders
+		void InitVertexShadersAndInputLayouts();
+		// Init order 1:1 to EPixelShaders
+		void InitPixelShaders();
+		// Init order 1:1 to ESamplers
+		void InitSamplers();
 		// Init order 1:1 to EVertexBufferPrimitives.
-		void InitVertexBufferPrimitves();
-		void InitDecalResources();
-		void InitPointLightResources();
-		void InitSpotLightResources();
+		void InitVertexBuffers();
+		void InitIndexBuffers();
+		// Init order 1:1 to ETopologies.
+		void InitTopologies();
+		void InitMeshVertexStrides();
+		void InitMeshVertexOffset();
+		
 		void InitEditorResources();
 		void LoadDemoSceneResources();
 

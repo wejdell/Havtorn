@@ -116,41 +116,16 @@ namespace Havtorn
 		InitRenderTextures(windowHandler);
 
 		// Load default resources
-		AddShader("Shaders/FullscreenVertexShader_VS.cso", EShaderType::Vertex);
-		std::string vsData = AddShader("Shaders/DeferredStaticMesh_VS.cso", EShaderType::Vertex);
-		AddInputLayout(vsData, EInputLayoutType::Pos3Nor3Tan3Bit3UV2);
-		vsData = AddShader("Shaders/DeferredInstancedMesh_VS.cso", EShaderType::Vertex);
-		AddInputLayout(vsData, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans);
-
-		AddShader("Shaders/GBuffer_PS.cso", EShaderType::Pixel);
-
-		AddSampler(ESamplerType::Wrap);
-		AddSampler(ESamplerType::Border);
-		AddTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-		InitVertexBufferPrimitves();
-
-		InitDecalResources();
-		
-		AddMeshVertexStride(sizeof(SStaticMeshVertex));
-		AddMeshVertexOffset(0);
-
-		AddShader("Shaders/DeferredLightDirectionalAndEnvironment_PS.cso", EShaderType::Pixel);
-		
-		InitPointLightResources();
-		InitSpotLightResources();
-
-		AddShader("Shaders/DeferredLightDirectionalVolumetric_PS.cso", EShaderType::Pixel);
-		AddShader("Shaders/DeferredLightPointVolumetric_PS.cso", EShaderType::Pixel);
-		AddShader("Shaders/DeferredLightSpotVolumetric_PS.cso", EShaderType::Pixel);
+		InitVertexShadersAndInputLayouts();
+		InitPixelShaders();
+		InitSamplers();
+		InitVertexBuffers();
+		InitIndexBuffers();
+		InitTopologies();
+		InitMeshVertexStrides();
+		InitMeshVertexOffset();
 
 		InitEditorResources();
-
-		AddShader("Shaders/Line_VS.cso", EShaderType::Vertex);
-		AddShader("Shaders/Line_PS.cso", EShaderType::Pixel);
-		AddTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-		//AddVertexBuffer<SPositionVertex>(Line);// TBD Remove, moved to InitVertexBufferPrimitves()
-
 		LoadDemoSceneResources();
 
 		return true;
@@ -242,48 +217,84 @@ namespace Havtorn
 		}
 	}
 
-	void CRenderManager::InitVertexBufferPrimitves()
+	void CRenderManager::InitVertexShadersAndInputLayouts()
+	{
+		AddShader("Shaders/FullscreenVertexShader_VS.cso", EShaderType::Vertex);
+		
+		std::string vsData = AddShader("Shaders/DeferredStaticMesh_VS.cso", EShaderType::Vertex);
+		AddInputLayout(vsData, EInputLayoutType::Pos3Nor3Tan3Bit3UV2);
+		
+		vsData = AddShader("Shaders/DeferredInstancedMesh_VS.cso", EShaderType::Vertex);
+		AddInputLayout(vsData, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans);
+		
+		AddShader("Shaders/Decal_VS.cso", EShaderType::Vertex);
+
+		vsData = AddShader("Shaders/PointLight_VS.cso", EShaderType::Vertex);
+		AddInputLayout(vsData, EInputLayoutType::Pos4);
+
+		AddShader("Shaders/EditorPreview_VS.cso", EShaderType::Vertex);
+		
+		AddShader("Shaders/Line_VS.cso", EShaderType::Vertex);
+	}
+
+	void CRenderManager::InitPixelShaders()
+	{
+		AddShader("Shaders/GBuffer_PS.cso", EShaderType::Pixel);
+
+		AddShader("Shaders/Decal_Albedo_PS.cso", EShaderType::Pixel);
+		AddShader("Shaders/Decal_Material_PS.cso", EShaderType::Pixel);
+		AddShader("Shaders/Decal_Normal_PS.cso", EShaderType::Pixel);
+		
+		AddShader("Shaders/DeferredLightDirectionalAndEnvironment_PS.cso", EShaderType::Pixel);
+		AddShader("Shaders/DeferredLightPoint_PS.cso", EShaderType::Pixel);
+		AddShader("Shaders/DeferredLightSpot_PS.cso", EShaderType::Pixel);
+		
+		AddShader("Shaders/DeferredLightDirectionalVolumetric_PS.cso", EShaderType::Pixel);
+		AddShader("Shaders/DeferredLightPointVolumetric_PS.cso", EShaderType::Pixel);
+		AddShader("Shaders/DeferredLightSpotVolumetric_PS.cso", EShaderType::Pixel);
+		
+		AddShader("Shaders/EditorPreview_PS.cso", EShaderType::Pixel);
+		AddShader("Shaders/Line_PS.cso", EShaderType::Pixel);
+	}
+
+	void CRenderManager::InitSamplers()
+	{
+		AddSampler(ESamplerType::Wrap);
+		AddSampler(ESamplerType::Border);
+	}
+
+	void CRenderManager::InitVertexBuffers()
 	{
 		AddVertexBuffer<SStaticMeshVertex>(GeometryPrimitives::DecalProjector);
 		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::PointLightCube);
 		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::Line);
 	}
 
-	void CRenderManager::InitDecalResources()
+	void CRenderManager::InitIndexBuffers()
 	{
-		//AddVertexBuffer<SStaticMeshVertex>(DecalProjector);//TBD on removing
 		AddIndexBuffer(GeometryPrimitives::DecalProjectorIndices);
-
-		AddShader("Shaders/Decal_VS.cso", EShaderType::Vertex);
-
-		AddShader("Shaders/Decal_Albedo_PS.cso", EShaderType::Pixel);
-		AddShader("Shaders/Decal_Material_PS.cso", EShaderType::Pixel);
-		AddShader("Shaders/Decal_Normal_PS.cso", EShaderType::Pixel);
-	}
-
-	void CRenderManager::InitPointLightResources()
-	{
-		//AddVertexBuffer<SPositionVertex>(PointLightCube);//TBD on removing, placed in InitVertexBufferPrimitives
 		AddIndexBuffer(GeometryPrimitives::PointLightCubeIndices);
-		
-		AddMeshVertexStride(sizeof(SPositionVertex));
-
-		const std::string vsData = AddShader("Shaders/PointLight_VS.cso", EShaderType::Vertex);
-		AddInputLayout(vsData, EInputLayoutType::Pos4);
-
-		AddShader("Shaders/DeferredLightPoint_PS.cso", EShaderType::Pixel);
 	}
 
-	void CRenderManager::InitSpotLightResources()
+	void CRenderManager::InitTopologies()
 	{
-		AddShader("Shaders/DeferredLightSpot_PS.cso", EShaderType::Pixel);
+		AddTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		AddTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+	}
+
+	void CRenderManager::InitMeshVertexStrides()
+	{
+		AddMeshVertexStride(sizeof(SStaticMeshVertex));
+		AddMeshVertexStride(sizeof(SPositionVertex));
+	}
+
+	void CRenderManager::InitMeshVertexOffset()
+	{
+		AddMeshVertexOffset(0);
 	}
 
 	void CRenderManager::InitEditorResources()
-	{
-		AddShader("Shaders/EditorPreview_VS.cso", EShaderType::Vertex);
-		AddShader("Shaders/EditorPreview_PS.cso", EShaderType::Pixel);
-	}
+	{}
 
 	void CRenderManager::LoadDemoSceneResources()
 	{
@@ -1044,7 +1055,8 @@ namespace Havtorn
 					Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
 					
 					Context->IASetVertexBuffers(0, 1, &VertexBuffers[shape->VertexBufferIndex], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
-					//Context->IASetIndexBuffer(lineData.myIndexBuffer, DXGI_FORMAT_R32_UINT, 0);// if indexed in the future past
+					// if indexed in the future past
+					//Context->IASetIndexBuffer(lineData.myIndexBuffer, DXGI_FORMAT_R32_UINT, 0); 
 
 					Context->VSSetConstantBuffers(1, 1, &ColorObjectBuffer);
 					Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Line)], nullptr, 0);

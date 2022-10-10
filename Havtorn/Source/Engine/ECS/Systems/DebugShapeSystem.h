@@ -39,10 +39,11 @@ namespace Havtorn
 
 			void Update(CScene* scene) override;
 
-		public:// Static Add Shape functions.
+		public: // Static Add Shape functions.
 			static constexpr U16 MaxShapes = 50;
-
-			static HAVTORN_API void AddLine(const SVector& start, const SVector& end, const SVector4& color, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true);// DepthPrio
+			
+			// TODO.AG: DepthPrio and Thickness
+			static HAVTORN_API void AddLine(const SVector& start, const SVector& end, const SVector4& color, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true);
 
 		private:
 			static bool InstanceExists();
@@ -55,14 +56,13 @@ namespace Havtorn
 			);
 			void CheckActiveIndicies(const std::vector<Ref<SDebugShapeComponent>>& debugShapes);
 
-			// HasConnectionToScene:
 			/*
-			* Kept in - case it is needed in the future.Currently however, 
+			* AG: Kept in case it is needed in the future. Currently however, 
 			* there should be no circumstance where Scene == nullptr after construction.
 			*/ 
 			bool HasConnectionToScene();
 
-			bool TryGetAvailableIndex(U64& outIndex);// Might want to rework how this works.
+			bool TryGetAvailableIndex(U64& outIndex);
 			void ResetAvailableIndices();
 
 			// To be removed/ looked over. Use case is debatable.

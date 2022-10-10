@@ -29,14 +29,15 @@ namespace Havtorn
 			Instance = this;
 			HV_LOG_INFO("GDebugUtilityShape: Instance created.");
 
-			// FrameRate drops by 200@10kshapes if we add these:
-			//	Primary Cause: Editor window iterates through all entities, 10000+ iterations is a lot.
-			//				   Filtering DebugShapes improves performance by a little.	
+			// AG: FrameRate drops by 200@10kshapes if we add these:
+			// Primary Cause: Editor window iterates through all entities, 10000+ iterations is a lot.
+			// Filtering DebugShapes improves performance by a little.	
 			U64 currentNrOfEntities = scene->GetEntities().size();
 			for (U16 i = 0; i < MaxShapes; i++)
 			{
-				//Ref<SEntity> entity = scene->CreateEntity("DebugShape" + std::to_string(i));
-				Ref<SEntity> entity = scene->CreateEntity("hie_DebugShape" + std::to_string(i));// hie_ prefix filters HierarchyWindow display
+				// hie_ prefix filters HierarchyWindow display.
+				Ref<SEntity> entity = scene->CreateEntity("DebugShape" + std::to_string(i));
+				//Ref<SEntity> entity = scene->CreateEntity("hie_DebugShape" + std::to_string(i));
 				scene->AddTransformComponentToEntity(entity);
 				scene->AddDebugShapeComponentToEntity(entity);
 			}
@@ -169,7 +170,7 @@ namespace Havtorn
 				}
 			}
 
-			// Bad - Improve
+			// TODO.AG: Bad - Improve
 			for (U64 i = static_cast<U64>(activeIndicesToRemove.size()) - 1; i > 0; i--)
 			{
 				if (ActiveIndices.size() <= 1)
