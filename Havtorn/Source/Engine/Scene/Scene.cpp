@@ -50,28 +50,26 @@ namespace Havtorn
 		SVector end = { 0.5f, 1.0f, 0.0f };
 		SVector add = { 0.0f, 0.0f, -1.0f };
 		SVector mult = { 1.25f, 1.0f, 1.0f };
-		bool singleFrame = false;
+		bool useLifeTime = true;
 		F32 durationSeconds = 30.0f;
-		Debug::UDebugShapeSystem::AddLine(start * mult + add * 0.0f, end * mult + add * 0.0f, Color::White, singleFrame, durationSeconds);
-		Debug::UDebugShapeSystem::AddLine(start * mult + add * 0.5f, end * mult + add * 0.5f, Color::Red, singleFrame, durationSeconds / 2.0f);
-		Debug::UDebugShapeSystem::AddLine(start * mult + add * 1.0f, end * mult + add * 1.0f, Color::Green, singleFrame, durationSeconds / 3.0f);
-		Debug::UDebugShapeSystem::AddLine(start * mult + add * 1.5f, end * mult + add * 1.5f, Color::Blue, singleFrame, durationSeconds / 4.0f);
-		Debug::UDebugShapeSystem::AddLine(start * mult + add * 2.0f, end * mult + add * 2.0f, Color::Red, singleFrame, durationSeconds / 5.0f);
-		Debug::UDebugShapeSystem::AddLine(start * mult + add * 2.5f, end * mult + add * 2.5f, Color::Green, singleFrame, durationSeconds / 6.0f);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 0.0f, end * mult + add * 0.0f, Color::White, durationSeconds, useLifeTime);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 0.5f, end * mult + add * 0.5f, Color::Red, durationSeconds / 2.0f, useLifeTime);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 1.0f, end * mult + add * 1.0f, Color::Green, durationSeconds / 3.0f, useLifeTime);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 1.5f, end * mult + add * 1.5f, Color::Blue, durationSeconds / 4.0f, useLifeTime);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 2.0f, end * mult + add * 2.0f, Color::Red, durationSeconds / 5.0f, useLifeTime);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 2.5f, end * mult + add * 2.5f, Color::Green, durationSeconds / 6.0f, useLifeTime);
 
 		InitDemoScene(renderManager);
 
 		return true;
 	}
 
-	Ref<STransformComponent> lookAt;
 	void CScene::Update()
 	{
 		for (const auto& system : Systems)
 		{
 			system->Update(this);
 		}
-		Debug::UDebugShapeSystem::AddLine({ 1.0f, 0.0f, 0.0f }, lookAt->Transform.GetMatrix().GetTranslation(), Color::White, true, 600.0f);
 	}
 
 	void CScene::InitDemoScene(CRenderManager* renderManager)
@@ -209,8 +207,7 @@ namespace Havtorn
 		// === Lamp ===
 		auto lamp = CreateEntity("Lamp");
 
-		lookAt = AddTransformComponentToEntity(lamp);
-		auto& transform4 = lookAt->Transform;
+		auto& transform4 = AddTransformComponentToEntity(lamp)->Transform;
 		transform4.GetMatrix().SetTranslation({ -1.0f, 1.4f, -0.75f });
 		transform4.Rotate({ 0.0f, UMath::DegToRad(90.0f), 0.0f });
 

@@ -115,14 +115,10 @@ namespace Havtorn
 		static std::vector<SPositionVertex> Line =
 		{
 			{ 0.0f, 0.0f, 0.0f,  1.0f },
-			{  0.0f, 0.0f, 1.0f,  1.0f },
-			// below this is temp
-				//{  0.15f, 0.0f, 0.8f,  1.0f },
-				//{  0.0f, 0.0f, 1.0f,  1.0f },
-				//{  -0.15f, 0.0f, 0.8f,  1.0f },
-				//{  0.0f, 0.0f, 1.0f,  1.0f },
+			{  0.0f, 0.0f, 1.0f,  1.0f }
 		};
 
+		// Without Indices
 		static std::vector<SPositionVertex> Arrow =
 		{
 			{ 0.0f, 0.0f, 0.0f,  1.0f },
@@ -131,6 +127,6 @@ namespace Havtorn
 			{  0.0f, 0.0f, 1.0f,  1.0f },
 			{  -0.15f, 0.0f, 0.8f,  1.0f },
 			{  0.0f, 0.0f, 1.0f,  1.0f },
-		};//Without Indices
+		}; 
 	}
 }
