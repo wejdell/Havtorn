@@ -40,7 +40,7 @@ namespace Havtorn
 			void Update(CScene* scene) override;
 
 		public:// Static Add Shape functions.
-			static constexpr U16 MaxShapes = 5;
+			static constexpr U16 MaxShapes = 50;
 
 			static HAVTORN_API void AddLine(const SVector& start, const SVector& end, const SVector4& color, const bool singleFrame = true, const F32 lifeTimeSeconds = 0.0f);// DepthPrio
 

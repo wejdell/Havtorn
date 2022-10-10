@@ -47,18 +47,17 @@ namespace Havtorn
 		//volumetricLight->IsActive = true;
 
 		SVector start = { 0.0f, 0.0f, 0.0f };
-		SVector end = { 0.0f, 1.0f, 0.0f };
+		SVector end = { 0.5f, 1.0f, 0.0f };
 		SVector add = { 0.0f, 0.0f, -1.0f };
+		SVector mult = { 1.25f, 1.0f, 1.0f };
 		bool singleFrame = false;
 		F32 durationSeconds = 30.0f;
-		Debug::UDebugShapeSystem::AddLine(start + add * 0.0f, end + add * 0.0f, Color::White, singleFrame, durationSeconds);
-		Debug::UDebugShapeSystem::AddLine(start + add * 0.5f, end + add * 0.5f, Color::Red, singleFrame, durationSeconds / 2.0f);
-		Debug::UDebugShapeSystem::AddLine(start + add * 1.0f, end + add * 1.0f, Color::Green, singleFrame, durationSeconds / 3.0f);
-		Debug::UDebugShapeSystem::AddLine(start + add * 1.5f, end + add * 1.5f, Color::Blue, singleFrame, durationSeconds / 4.0f);
-		Debug::UDebugShapeSystem::AddLine(start + add * 2.0f, end + add * 2.0f, Color::Red, singleFrame, durationSeconds / 5.0f);
-		Debug::UDebugShapeSystem::AddLine(start + add * 2.5f, end + add * 2.5f, Color::Green, singleFrame, durationSeconds / 6.0f);
-		//Debug::UDebugShapeSystem::AddLine(start + add * 2.5f, end + add * 2.5f, Color::White, singleFrame, durationSeconds);
-		//Debug::UDebugShapeSystem::AddLine(start + add * 2.5f, end + add * 2.5f, Color::White, singleFrame, durationSeconds);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 0.0f, end * mult + add * 0.0f, Color::White, singleFrame, durationSeconds);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 0.5f, end * mult + add * 0.5f, Color::Red, singleFrame, durationSeconds / 2.0f);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 1.0f, end * mult + add * 1.0f, Color::Green, singleFrame, durationSeconds / 3.0f);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 1.5f, end * mult + add * 1.5f, Color::Blue, singleFrame, durationSeconds / 4.0f);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 2.0f, end * mult + add * 2.0f, Color::Red, singleFrame, durationSeconds / 5.0f);
+		Debug::UDebugShapeSystem::AddLine(start * mult + add * 2.5f, end * mult + add * 2.5f, Color::Green, singleFrame, durationSeconds / 6.0f);
 
 		InitDemoScene(renderManager);
 
