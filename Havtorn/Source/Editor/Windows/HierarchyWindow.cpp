@@ -42,7 +42,8 @@ namespace ImGui
 			
 			for (auto& entity : entities) 
 			{
-				if (entity->Name.Contains("hie_"))// Temporary solution to ignore listing DebugShapes!
+				// TODO.AG: Temporary solution to ignore listing DebugShapes!
+				if (entity->Name.Contains("hie_"))
 				{
 					continue;
 				}
