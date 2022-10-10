@@ -42,11 +42,11 @@ namespace Havtorn
 		public:// Static Add Shape functions.
 			static constexpr U16 MaxShapes = 50;
 
-			static HAVTORN_API void AddLine(const SVector& start, const SVector& end, const SVector4& color, const bool singleFrame = true, const F32 lifeTimeSeconds = 0.0f);// DepthPrio
+			static HAVTORN_API void AddLine(const SVector& start, const SVector& end, const SVector4& color, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true);// DepthPrio
 
 		private:
 			static bool InstanceExists();
-			static F32 LifeTimeForShape(const bool singleFrame, const F32 requestedLifeTime);
+			static F32 LifeTimeForShape(const bool useLifeTime, const F32 requestedLifeTime);
 
 			void SendRenderCommands(
 				const std::vector<Ref<SEntity>>& entities,
