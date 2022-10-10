@@ -65,7 +65,8 @@ namespace Havtorn
 			bool TryGetAvailableIndex(U64& outIndex);// Might want to rework how this works.
 			void ResetAvailableIndices();
 
-			void PrintDebugAddedShape(const SDebugShapeComponent& shape, const bool singleFrame, const char* callerFunction);
+			// To be removed/ looked over. Use case is debatable.
+			void PrintDebugAddedShape(const SDebugShapeComponent& shape, const bool useLifeTime, const char* callerFunction);
 
 		private:
 			static HAVTORN_API UDebugShapeSystem* Instance;

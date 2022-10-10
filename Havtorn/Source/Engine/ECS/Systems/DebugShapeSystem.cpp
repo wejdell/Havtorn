@@ -99,16 +99,18 @@ namespace Havtorn
 			std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
 			const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
 
-			const F32 lineLength = start.Distance(end);
 			const SVector transformUp = transforms[transformIndex]->Transform.GetMatrix().GetUp();
 			const SVector eulerRotation = SMatrix::LookAtLH(start, end, transformUp).GetEuler();
+			const F32 lineLength = start.Distance(end);
 			const SVector scale = SVector(1.0f, 1.0f, lineLength);
 			SMatrix matrix;
 			SMatrix::Recompose(start, eulerRotation, scale, matrix);
 
 			transforms[transformIndex]->Transform.SetMatrix(matrix);
 
+#ifdef DEBUG_DRAWER_LOG_ADDSHAPE
 			Instance->PrintDebugAddedShape(*debugShapes[shapeIndex].get(), useLifeTime, __FUNCTION__);	
+#endif
 		}
 
 
@@ -224,9 +226,8 @@ namespace Havtorn
 			}
 		}
 
-		void UDebugShapeSystem::PrintDebugAddedShape(const SDebugShapeComponent& shape, const bool singleFrame, const char* callerFunction)
+		void UDebugShapeSystem::PrintDebugAddedShape(const SDebugShapeComponent& shape, const bool useLifeTime, const char* callerFunction)
 		{
-#if DEBUG_DRAWER_LOG_ADDSHAPE
 			HV_LOG_INFO("%s: Added:", callerFunction);
 			HV_LOG_INFO("\tColor[%s] UseLifeTime[%d] LifeTime[%5.fs] Type[%d]"
 				, shape.Color.ToString().c_str()
@@ -234,9 +235,6 @@ namespace Havtorn
 				, shape.LifeTime
 				, shape.VertexBufferIndex
 			);
-#else
-			shape; singleFrame; callerFunction;
-#endif
 		}
 	}
 }
