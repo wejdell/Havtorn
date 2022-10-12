@@ -118,6 +118,7 @@ namespace Havtorn
 		// Load default resources
 		InitVertexShadersAndInputLayouts();
 		InitPixelShaders();
+		InitGeometryShaders();
 		InitSamplers();
 		InitVertexBuffers();
 		InitIndexBuffers();
@@ -255,6 +256,11 @@ namespace Havtorn
 		
 		AddShader("Shaders/EditorPreview_PS.cso", EShaderType::Pixel);
 		AddShader("Shaders/Line_PS.cso", EShaderType::Pixel);
+	}
+
+	void CRenderManager::InitGeometryShaders()
+	{
+		AddShader("Shaders/Line_GS.cso", EShaderType::Geometry);
 	}
 
 	void CRenderManager::InitSamplers()
@@ -905,7 +911,12 @@ namespace Havtorn
 		break;
 		case EShaderType::Compute:
 		case EShaderType::Geometry:
-			break;
+		{
+			ID3D11GeometryShader* geometryShader;
+			UGraphicsUtils::CreateGeometryShader(fileName, Framework, &geometryShader);
+			GeometryShaders.emplace_back(geometryShader);
+		}
+		break;
 		case EShaderType::Pixel:
 		{
 			ID3D11PixelShader* pixelShader;
@@ -1852,6 +1863,9 @@ namespace Havtorn
 		Context->IASetVertexBuffers(0, 1, &VertexBuffers[shape->VertexBufferIndex], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
 		// TODO.AG: for when using Indices.
 		//Context->IASetIndexBuffer(lineData.myIndexBuffer, DXGI_FORMAT_R32_UINT, 0); 
+
+		Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::Line)], nullptr, 0);
+		Context->GSSetConstantBuffers(1, 1, &ColorObjectBuffer);
 
 		Context->VSSetConstantBuffers(1, 1, &ColorObjectBuffer);
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Line)], nullptr, 0);
