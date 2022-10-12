@@ -65,6 +65,11 @@ namespace Havtorn
 		Line = 11,
 	};
 
+	enum class EGeometryShaders
+	{
+		Line = 0,
+	};
+
 	enum class ESamplers
 	{
 		DefaultWrap = 0,
@@ -151,6 +156,8 @@ namespace Havtorn
 		void InitVertexShadersAndInputLayouts();
 		// Init order 1:1 to EPixelShaders
 		void InitPixelShaders();
+		// Init order 1:1 to EGeometryShaders
+		void InitGeometryShaders();
 		// Init order 1:1 to ESamplers
 		void InitSamplers();
 		// Init order 1:1 to EVertexBufferPrimitives.
@@ -371,6 +378,7 @@ namespace Havtorn
 
 		std::vector<ID3D11VertexShader*> VertexShaders;
 		std::vector<ID3D11PixelShader*> PixelShaders;
+		std::vector<ID3D11GeometryShader*> GeometryShaders;
 		std::vector<ID3D11SamplerState*> Samplers;
 		std::vector<ID3D11Buffer*> VertexBuffers;
 		std::vector<ID3D11Buffer*> IndexBuffers;
