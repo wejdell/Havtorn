@@ -93,6 +93,10 @@ project "Engine"
 		filter("files:**_VS.hlsl")
 		removeflags("ExcludeFromBuild")
 		shadertype("Vertex")
+
+		filter("files:**_GS.hlsl")
+		removeflags("ExcludeFromBuild")
+		shadertype("Geometry")
 		
 		filter{} -- Clear filter
 	-- End Shader Stuff
