@@ -79,7 +79,7 @@ namespace Havtorn
 			CheckActiveIndices(debugShapes);
 		}
 
-		void UDebugShapeSystem::AddLine(const SVector& start, const SVector& end, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const bool ignoreDepth)
+		void UDebugShapeSystem::AddLine(const SVector& start, const SVector& end, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 		{
 			if (!InstanceExists())
 				return;
@@ -91,11 +91,13 @@ namespace Havtorn
 			const std::vector<Ref<SEntity>>& entities = Instance->Scene->GetEntities();
 			const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
 			std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
-			debugShapes[shapeIndex]->Color = color;
-			debugShapes[shapeIndex]->LifeTime = LifeTimeForShape(useLifeTime, lifeTimeSeconds);
+			SetSharedMembersForShape(debugShapes[shapeIndex], color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
+			//debugShapes[shapeIndex]->Color = color;
+			//debugShapes[shapeIndex]->LifeTime = LifeTimeForShape(useLifeTime, lifeTimeSeconds);
+			//debugShapes[shapeIndex]->Thickness = ClampThickness(thickness);
+			//debugShapes[shapeIndex]->IgnoreDepth = ignoreDepth;
 			debugShapes[shapeIndex]->VertexBufferIndex = Utility::VertexBufferPrimitives::GetVertexBufferIndex<U8>(EVertexBufferPrimitives::LineShape);
 			debugShapes[shapeIndex]->VertexCount = Utility::VertexBufferPrimitives::GetVertexCount<U8>(EVertexBufferPrimitives::LineShape);
-			debugShapes[shapeIndex]->IgnoreDepth = ignoreDepth;
 
 			std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
 			const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
@@ -133,6 +135,19 @@ namespace Havtorn
 				return -1.0f;
 			else
 				return GTimer::Time() + requestedLifeTime;
+		}
+
+		F32 UDebugShapeSystem::ClampThickness(const F32 thickness)
+		{
+			return UMath::Clamp(thickness, ThicknessMinimum, ThicknessMaximum);
+		}
+
+		void UDebugShapeSystem::SetSharedMembersForShape(Ref<SDebugShapeComponent>& inoutShape, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+		{
+			inoutShape->Color = color;
+			inoutShape->LifeTime = LifeTimeForShape(useLifeTime, lifeTimeSeconds);
+			inoutShape->Thickness = ClampThickness(thickness);
+			inoutShape->IgnoreDepth = ignoreDepth;
 		}
 
 

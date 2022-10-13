@@ -11,10 +11,11 @@ namespace Havtorn
 		SDebugShapeComponent(Ref<SEntity> entity, EComponentType type)
 			: SComponent(std::move(entity), type) {}
 
-		// Might want to replace SVector4 with a unique color struct
+		// TODO.AG: Might want to replace SVector4 with a unique color struct, to wrap 255.0f RGBA values
 		SVector4 Color = { 0.0f, 0.0f, 0.0f, 0.0f };
 
 		F32 LifeTime = 0.0f;
+		F32 Thickness = 1.0f;
 		U8 VertexBufferIndex = 0;
 		U8 VertexCount = 0;
 		bool IgnoreDepth = true;
