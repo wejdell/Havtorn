@@ -277,12 +277,17 @@ namespace Havtorn
 		AddVertexBuffer<SStaticMeshVertex>(GeometryPrimitives::DecalProjector);
 		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::PointLightCube);
 		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::Line);
+		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::FlatArrow);
+		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::DebugCube);
 	}
 
 	void CRenderManager::InitIndexBuffers()
 	{
 		AddIndexBuffer(GeometryPrimitives::DecalProjectorIndices);
 		AddIndexBuffer(GeometryPrimitives::PointLightCubeIndices);
+		AddIndexBuffer(GeometryPrimitives::LineIndices);
+		AddIndexBuffer(GeometryPrimitives::FlatArrowIndices);
+		AddIndexBuffer(GeometryPrimitives::DebugCubeIndices);
 	}
 
 	void CRenderManager::InitTopologies()
@@ -1315,7 +1320,7 @@ namespace Havtorn
 		Context->IASetPrimitiveTopology(Topologies[0]);
 		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos3Nor3Tan3Bit3UV2)]);
 		Context->IASetVertexBuffers(0, 1, &VertexBuffers[0], &MeshVertexStrides[0], &MeshVertexOffsets[0]);
-		Context->IASetIndexBuffer(IndexBuffers[0], DXGI_FORMAT_R32_UINT, 0);
+		Context->IASetIndexBuffer(IndexBuffers[static_cast<U8>(EDefaultIndexBuffers::DecalProjector)], DXGI_FORMAT_R32_UINT, 0);
 
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Decal)], nullptr, 0);
 
@@ -1466,7 +1471,7 @@ namespace Havtorn
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
 		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
 		Context->IASetVertexBuffers(0, 1, &VertexBuffers[1], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
-		Context->IASetIndexBuffer(IndexBuffers[1], DXGI_FORMAT_R32_UINT, 0);
+		Context->IASetIndexBuffer(IndexBuffers[static_cast<U8>(EDefaultIndexBuffers::PointLightCube)], DXGI_FORMAT_R32_UINT, 0);
 
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::PointAndSpotLight)], nullptr, 0);
 		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::DeferredPoint)], nullptr, 0);
@@ -1526,7 +1531,7 @@ namespace Havtorn
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
 		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
 		Context->IASetVertexBuffers(0, 1, &VertexBuffers[1], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
-		Context->IASetIndexBuffer(IndexBuffers[1], DXGI_FORMAT_R32_UINT, 0);
+		Context->IASetIndexBuffer(IndexBuffers[static_cast<U8>(EDefaultIndexBuffers::PointLightCube)], DXGI_FORMAT_R32_UINT, 0);
 
 		// Use Point Light Vertex Shader
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::PointAndSpotLight)], nullptr, 0);
@@ -1642,7 +1647,7 @@ namespace Havtorn
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
 		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
 		Context->IASetVertexBuffers(0, 1, &VertexBuffers[1], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
-		Context->IASetIndexBuffer(IndexBuffers[1], DXGI_FORMAT_R32_UINT, 0);
+		Context->IASetIndexBuffer(IndexBuffers[static_cast<U8>(EDefaultIndexBuffers::PointLightCube)], DXGI_FORMAT_R32_UINT, 0);
 
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::PointAndSpotLight)], nullptr, 0);
 		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::VolumetricPoint)], nullptr, 0);
@@ -1713,7 +1718,7 @@ namespace Havtorn
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
 		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
 		Context->IASetVertexBuffers(0, 1, &VertexBuffers[1], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
-		Context->IASetIndexBuffer(IndexBuffers[1], DXGI_FORMAT_R32_UINT, 0);
+		Context->IASetIndexBuffer(IndexBuffers[static_cast<U8>(EDefaultIndexBuffers::PointLightCube)], DXGI_FORMAT_R32_UINT, 0);
 
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::PointAndSpotLight)], nullptr, 0);
 		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::VolumetricSpot)], nullptr, 0);
@@ -1865,18 +1870,28 @@ namespace Havtorn
 		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
 
 		Context->IASetVertexBuffers(0, 1, &VertexBuffers[shape->VertexBufferIndex], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
-		// TODO.AG: for when using Indices.
-		//Context->IASetIndexBuffer(lineData.myIndexBuffer, DXGI_FORMAT_R32_UINT, 0); 
+		Context->IASetIndexBuffer(IndexBuffers[shape->IndexBufferIndex], DXGI_FORMAT_R32_UINT, 0);
 
 		Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::Line)], nullptr, 0);
 		Context->GSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
+
+		// AG.TEST: Probably slows down rendering, wanted to test how it would look.
+		//if (shape->Thickness > Debug::UDebugShapeSystem::ThicknessMinimum + 0.0005f)
+		//{
+		//	Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::Line)], nullptr, 0);
+		//	Context->GSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
+		//}
+		//else
+		//{
+		//	Context->GSSetShader(nullptr, nullptr, 0);
+		//}
 
 		Context->VSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Line)], nullptr, 0);
 
 		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::Line)], nullptr, 0);
 
-		Context->Draw(shape->VertexCount, 0);
+		Context->DrawIndexed(shape->IndexCount, 0, 0);
 		NumberOfDrawCallsThisFrame++;
 	}
 

@@ -89,6 +89,18 @@ namespace Havtorn
 		DecalProjector,
 		PointLightCube,
 		LineShape,
+		FlatArrow,
+		DebugCube
+		//TODO: add more debug shape primitives
+	};
+
+	enum class EDefaultIndexBuffers
+	{
+		DecalProjector,
+		PointLightCube,
+		LineShape,
+		FlatArrow,
+		DebugCube
 		//TODO: add more debug shape primitives
 	};
 

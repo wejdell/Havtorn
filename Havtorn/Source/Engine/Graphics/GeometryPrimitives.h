@@ -57,14 +57,14 @@ namespace Havtorn
 		static std::vector<SPositionVertex> PointLightCube = 
 		{
 			// X      Y      Z      W 
-			{ -1.0f, -1.0f, -1.0f,  1.0f },
-			{  1.0f, -1.0f, -1.0f,  1.0f },
-			{ -1.0f,  1.0f, -1.0f,  1.0f },
-			{  1.0f,  1.0f, -1.0f,  1.0f },
-			{ -1.0f, -1.0f,  1.0f,  1.0f },
-			{  1.0f, -1.0f,  1.0f,  1.0f },
-			{ -1.0f,  1.0f,  1.0f,  1.0f },
-			{  1.0f,  1.0f,  1.0f,  1.0f }
+			{ -1.0f, -1.0f, -1.0f,  1.0f },// 0
+			{  1.0f, -1.0f, -1.0f,  1.0f },// 1
+			{ -1.0f,  1.0f, -1.0f,  1.0f },// 2
+			{  1.0f,  1.0f, -1.0f,  1.0f },// 3
+			{ -1.0f, -1.0f,  1.0f,  1.0f },// 4
+			{  1.0f, -1.0f,  1.0f,  1.0f },// 5
+			{ -1.0f,  1.0f,  1.0f,  1.0f },// 6
+			{  1.0f,  1.0f,  1.0f,  1.0f }//  7
 		};
 
 		static std::vector<U32> PointLightCubeIndices = 
@@ -112,21 +112,46 @@ namespace Havtorn
 			5,7,6
 		};
 
-		static std::vector<SPositionVertex> Line =
+		const static std::vector<SPositionVertex> Line =
 		{
-			{ 0.0f, 0.0f, 0.0f,  1.0f },
-			{  0.0f, 0.0f, 1.0f,  1.0f }
+			{ 0.0f, 0.0f, 0.0f, 1.0f },
+			{ 0.0f, 0.0f, 1.0f, 1.0f }
 		};
 
-		// Without Indices
-		static std::vector<SPositionVertex> FlatArrow =
+		const static std::vector<U32> LineIndices =
 		{
-			{ 0.0f, 0.0f, 0.0f,  1.0f },
-			{  0.0f, 0.0f, 1.0f,  1.0f },
-			{  0.15f, 0.0f, 0.8f,  1.0f },
-			{  0.0f, 0.0f, 1.0f,  1.0f },
-			{  -0.15f, 0.0f, 0.8f,  1.0f },
-			{  0.0f, 0.0f, 1.0f,  1.0f },
+			0, 1, 0
+		};
+		
+		const static std::vector<SPositionVertex> FlatArrow =
+		{
+			{ 0.0f, 0.0f, 0.0f, 1.0f },
+			{ 0.0f, 0.0f, 1.0f, 1.0f },
+			{ 0.15f, 0.0f, 0.8f, 1.0f },
+			{ -0.15f, 0.0f, 0.8f, 1.0f }
 		}; 
+
+		const static std::vector<U32> FlatArrowIndices =
+		{
+			0, 1, 2, 1, 3, 1
+		};
+
+		static std::vector<SPositionVertex> DebugCube = 
+		{
+			// X      Y      Z      W 
+			{ -1.0f, -1.0f, -1.0f,  1.0f },// 0
+			{  1.0f, -1.0f, -1.0f,  1.0f },// 1
+			{ -1.0f,  1.0f, -1.0f,  1.0f },// 2
+			{  1.0f,  1.0f, -1.0f,  1.0f },// 3
+			{ -1.0f, -1.0f,  1.0f,  1.0f },// 4
+			{  1.0f, -1.0f,  1.0f,  1.0f },// 5
+			{ -1.0f,  1.0f,  1.0f,  1.0f },// 6
+			{  1.0f,  1.0f,  1.0f,  1.0f }//  7
+		};
+
+		static std::vector<U32> DebugCubeIndices =
+		{
+			0, 1, 1, 3, 3, 2, 2, 0, 0, 4, 4, 6, 6, 2, 6, 7, 7, 5, 5, 4, 7, 3, 5, 1
+		};
 	}
 }

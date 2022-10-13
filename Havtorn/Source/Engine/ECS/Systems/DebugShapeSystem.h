@@ -45,12 +45,16 @@ namespace Havtorn
 			static constexpr F32 ThicknessMaximum = 0.05f;
 
 			static HAVTORN_API void AddLine(const SVector& start, const SVector& end, const SVector4& color = Color::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+			static HAVTORN_API void AddArrow(const SVector& start, const SVector& end, const SVector4& color = Color::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+			static HAVTORN_API void AddCube(const SVector& center, const F32 scale, const SVector& eulerRotation, const SVector4& color = Color::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 
 		private:
 			static bool InstanceExists();
 			static F32 LifeTimeForShape(const bool useLifeTime, const F32 requestedLifeTime);
 			static F32 ClampThickness(const F32 thickness);
+			
 			static void SetSharedDataForShape(Ref<SDebugShapeComponent>& inoutShape, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth);
+			static void TransformToFaceAndReach(Ref<STransformComponent>& inoutTransform, const SVector& start, const SVector& end);
 
 			void SendRenderCommands(
 				const std::vector<Ref<SEntity>>& entities,
