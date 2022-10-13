@@ -2,98 +2,115 @@
 
 #include "Includes/LineShaderStructs.hlsli"
 
-[maxvertexcount(16)]
+#define LINE_HALFTHICKNESS_MAX 0.05f
+#define LINE_HALFTHICKNESS_MIN 0.005f
+
+[maxvertexcount(27)]
 void main(line LineVertexToPixel input[2], inout TriangleStream<LineVertexToPixel> outputStream)
 {
     LineVertexToPixel output;
     output.Color = input[0].Color;
 
-    // Get direction from input[0].pos -> input[1].pos
-    // Get normal of direction
-    // output.pos1 = input[0].pos + normalOfDirection.normalized * thickness
-    // output.pos2 = input[0].pos - normalOfDirection.normalized * thickness
-    // we have the object's transform float4x4, r1 == horizontal, r2 == vertical?, r3 == frwdir?
+    const float aspectRatio = (16.0f / 9.0f);
+    const float4 horizontal = float4(1, 0, 0, 0) / aspectRatio;
+    const float4 vertical = float4(0, 1, 0, 0);
     
-    //float4 directionOfLine = input[1].Position - input[0].Position;
-    //directionOfLine = normalize(directionOfLine);
+    //float thickness = 0.005f;// Min
+    float halfThickness = 0.025f;// Max
+    halfThickness = clamp(halfThickness, LINE_HALFTHICKNESS_MIN, LINE_HALFTHICKNESS_MAX);
+    const float4 hIncrement = horizontal * halfThickness;
+    const float4 vIncrement = vertical * halfThickness;
     
-    float4 horizontal = /*ToWorld._11_12_13_14*/float4(1, 0, 0, 0);
-    float4 vertical = /*ToWorld._21_22_23_24*/float4(0, 1, 0, 0);
+    /*
+           .
+        .  o  .     o = inputPos, . = vert
+           .
     
-    float thickness = 0.005f;
-    float4 hThicknessIncrement = normalize(horizontal) * thickness;
-    float4 vThicknessIncrement = normalize(vertical) * thickness;
-    
-    //float4 vertexObjectPos = input.Position.xyzw;
-    //float4 vertexWorldPos = mul(ToWorld, vertexObjectPos);
-    //float4 vertexViewPos = mul(ToCameraSpace, vertexWorldPos);
-    //float4 vertexProjectionPos = mul(ToProjectionSpace, vertexViewPos);
-    
-    // H
-    // h tri1
-    output.Position = input[0].Position + hThicknessIncrement;
-    outputStream.Append(output);
-    
-    output.Position = input[0].Position - hThicknessIncrement;
-    outputStream.Append(output);
-    
-    output.Position = input[1].Position - hThicknessIncrement;
-    outputStream.Append(output);
-    
-    output.Position = input[0].Position + hThicknessIncrement;
-    outputStream.Append(output);
-    
-    // h tri2
-    output.Position = input[0].Position + hThicknessIncrement;
-    outputStream.Append(output);
-    
-    output.Position = input[1].Position - hThicknessIncrement;
-    outputStream.Append(output);
-    
-    output.Position = input[1].Position + hThicknessIncrement;
-    outputStream.Append(output);
-
-    output.Position = input[0].Position + hThicknessIncrement;
-    outputStream.Append(output);
-    
-    // V
-    // v tri1
-    output.Position = input[0].Position + vThicknessIncrement;
-    outputStream.Append(output);
-    
-    output.Position = input[0].Position - vThicknessIncrement;
-    outputStream.Append(output);
-    
-    output.Position = input[1].Position - vThicknessIncrement;
-    outputStream.Append(output);
-    
-    output.Position = input[0].Position + vThicknessIncrement;
-    outputStream.Append(output);
-    
-    // v tri2
-    output.Position = input[0].Position + vThicknessIncrement;
-    outputStream.Append(output);
-    
-    output.Position = input[1].Position - vThicknessIncrement;
-    outputStream.Append(output);
-    
-    output.Position = input[1].Position + vThicknessIncrement;
-    outputStream.Append(output);
-
-    output.Position = input[0].Position + vThicknessIncrement;
-    outputStream.Append(output);
-    
-    //for (uint i = 0; i < 2; i++)
-    //{
-    //    output.Position = input[i].Position + hThicknessIncrement;
-    //    outputStream.Append(output);
+        t = top, l = left, r = right, b = bottom
         
-    //    output.Position = input[i].Position - hThicknessIncrement;
-    //    outputStream.Append(output);
+        t = inputPos + vIncrement
+        r = inputPos + hIncrement
+        b = inputPos - vIncrement
+        l = inputPos - hIncrement
+    */
+
+    const float4 vertexPos1Top   = input[0].Position + vIncrement;
+    const float4 vertexPos1Right = input[0].Position + hIncrement;
+    const float4 vertexPos1Bot   = input[0].Position - vIncrement;
+    const float4 vertexPos1Left  = input[0].Position - hIncrement;
+    
+    const float4 vertexPos2Top   = input[1].Position + vIncrement;
+    const float4 vertexPos2Right = input[1].Position + hIncrement;
+    const float4 vertexPos2Bot   = input[1].Position - vIncrement;
+    const float4 vertexPos2Left  = input[1].Position - hIncrement;
         
-    //    output.Position = input[i].Position - hThicknessIncrement;
-    //    outputStream.Append(output);
-    //}
+    // Plane on Point 1 verts:[5]
+    output.Position = vertexPos1Left;
+    outputStream.Append(output);
+    output.Position = vertexPos1Top;
+    outputStream.Append(output);
+    output.Position = vertexPos1Right;
+    outputStream.Append(output);
+    output.Position = vertexPos1Bot;
+    outputStream.Append(output);
+    output.Position = vertexPos1Left;
+    outputStream.Append(output);
+    
+    // Tri1 of Plane: Left - Right verts:[4]
+    output.Position = vertexPos1Left;
+    outputStream.Append(output);
+    output.Position = vertexPos2Left;
+    outputStream.Append(output);
+    output.Position = vertexPos2Right;
+    outputStream.Append(output);
+    output.Position = vertexPos1Left;
+    outputStream.Append(output);
+    
+    // Tri2 of Plane: verts:[4]
+    output.Position = vertexPos1Left;
+    outputStream.Append(output);
+    output.Position = vertexPos1Right;
+    outputStream.Append(output);
+    output.Position = vertexPos2Right;
+    outputStream.Append(output);
+    output.Position = vertexPos1Left;
+    outputStream.Append(output);
+    
+    // verts:[1]
+    output.Position = input[0].Position;
+    outputStream.Append(output);
+    
+    // Tri1 of Plane: Top - Bot verts:[4]
+    output.Position = vertexPos1Top;
+    outputStream.Append(output);
+    output.Position = vertexPos2Top;
+    outputStream.Append(output);
+    output.Position = vertexPos2Bot;
+    outputStream.Append(output);
+    output.Position = vertexPos1Top;
+    outputStream.Append(output);
+    
+    // Tri2 of Plane: Top - Bot verts:[4]
+    output.Position = vertexPos1Top;
+    outputStream.Append(output);
+    output.Position = vertexPos1Bot;
+    outputStream.Append(output);
+    output.Position = vertexPos2Bot;
+    outputStream.Append(output);
+    output.Position = vertexPos1Top;
+    outputStream.Append(output);
+ 
+    // Plane on Point 2 verts:[5]
+    output.Position = vertexPos2Top;
+    outputStream.Append(output);
+    output.Position = vertexPos2Right;
+    outputStream.Append(output);
+    output.Position = vertexPos2Bot;
+    outputStream.Append(output);
+    output.Position = vertexPos2Left;
+    outputStream.Append(output);
+    output.Position = vertexPos2Top;
+    outputStream.Append(output);
     
     outputStream.RestartStrip();
 }
