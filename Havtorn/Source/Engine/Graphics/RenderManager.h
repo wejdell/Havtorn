@@ -206,6 +206,10 @@ namespace Havtorn
 		inline void VolumetricLightingSpot(const SRenderCommand& command);
 		inline void VolumetricBlur();
 		inline void RenderBloom();
+		inline void Tonemapping();
+		inline void AntiAliasing();
+		inline void GammaCorrection();
+		inline void RendererDebug();
 		inline void DebugShadowAtlas();
 		inline void DebugShapes(const SRenderCommand& command);
 

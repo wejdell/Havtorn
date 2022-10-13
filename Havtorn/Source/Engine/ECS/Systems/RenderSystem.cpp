@@ -208,5 +208,30 @@ namespace Havtorn
 			SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::VolumetricBufferBlurPass);
 			RenderManager->PushRenderCommand(command);
 		}
+
+		{
+			SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::Bloom);
+			RenderManager->PushRenderCommand(command);
+		}
+
+		{
+			SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::Tonemapping);
+			RenderManager->PushRenderCommand(command);
+		}
+
+		{
+			SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::AntiAliasing);
+			RenderManager->PushRenderCommand(command);
+		}
+
+		{
+			SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::GammaCorrection);
+			RenderManager->PushRenderCommand(command);
+		}
+
+		{
+			SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::RendererDebug);
+			RenderManager->PushRenderCommand(command);
+		}
 	}
 }
