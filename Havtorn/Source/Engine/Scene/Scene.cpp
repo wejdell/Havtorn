@@ -46,19 +46,19 @@ namespace Havtorn
 		auto volumetricLight = AddVolumetricLightComponentToEntity(directionalLightEntity);
 		//volumetricLight->IsActive = true;
 
-		SVector start = { 0.0f, 0.0f, 0.0f };
-		SVector end = { 0.5f, 1.0f, 0.0f };
-		SVector add = { 0.0f, 0.0f, -1.0f };
-		SVector mult = { 1.25f, 1.0f, 1.0f };
 		bool useLifeTime = true;
 		bool ignoreDepth = true;
-		F32 durationSeconds = 30.0f;
-		Debug::UDebugShapeSystem::AddLine(start * mult + add * 0.0f, end * mult + add * 0.0f, Color::White, durationSeconds, useLifeTime, ignoreDepth);
-		Debug::UDebugShapeSystem::AddLine(start * mult + add * 0.5f, end * mult + add * 0.5f, Color::Red, durationSeconds / 2.0f, useLifeTime, !ignoreDepth);
-		Debug::UDebugShapeSystem::AddLine(start * mult + add * 1.0f, end * mult + add * 1.0f, Color::Green, durationSeconds / 3.0f, useLifeTime, ignoreDepth);
-		Debug::UDebugShapeSystem::AddLine(start * mult + add * 1.5f, end * mult + add * 1.5f, Color::Blue, durationSeconds / 4.0f, useLifeTime, !ignoreDepth);
-		Debug::UDebugShapeSystem::AddLine(start * mult + add * 2.0f, end * mult + add * 2.0f, Color::Red, durationSeconds / 5.0f, useLifeTime, ignoreDepth);
-		Debug::UDebugShapeSystem::AddLine(start * mult + add * 2.5f, end * mult + add * 2.5f, Color::Green, durationSeconds / 6.0f, useLifeTime, !ignoreDepth);
+		F32 durationSeconds = 60.0f;
+		F32 thickness = Debug::UDebugShapeSystem::ThicknessMaximum;
+		Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(1.0f, 0.0f, 0.0f), Color::Red, durationSeconds, useLifeTime, thickness, ignoreDepth);
+		Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(0.0f, 1.0f, 0.0f), Color::Green, durationSeconds, useLifeTime, thickness, ignoreDepth);
+		Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(0.0f, 0.0f, 1.0f), Color::Blue, durationSeconds, useLifeTime, thickness,  ignoreDepth);
+		
+		ignoreDepth = false;
+		thickness = Debug::UDebugShapeSystem::ThicknessMinimum;
+		Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(-1.0f, 0.0f, 0.0f), Color::Yellow, durationSeconds, useLifeTime, thickness, ignoreDepth);
+		Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(0.0f, -1.0f, 0.0f), Color::Teal, durationSeconds, useLifeTime, thickness, ignoreDepth);
+		Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(0.0f, 0.0f, -1.0f), Color::Purple, durationSeconds, useLifeTime, thickness,  ignoreDepth);
 
 		InitDemoScene(renderManager);
 
@@ -80,7 +80,7 @@ namespace Havtorn
 
 		auto pointLightTransform = AddTransformComponentToEntity(pointLightEntity);
 		pointLightTransform->Transform.GetMatrix().SetTranslation({ 1.25f, 0.35f, -1.65f });
-
+		
 		auto pointLightComp = AddPointLightComponentToEntity(pointLightEntity);
 		pointLightComp->ColorAndIntensity = { 0.0f, 1.0f, 1.0f, 10.0f };
 		pointLightComp->Range = 1.0f;
@@ -207,7 +207,8 @@ namespace Havtorn
 		// === Lamp ===
 		auto lamp = CreateEntity("Lamp");
 
-		auto& transform4 = AddTransformComponentToEntity(lamp)->Transform;
+		auto lampTransform = AddTransformComponentToEntity(lamp);
+		auto& transform4 = lampTransform->Transform;
 		transform4.GetMatrix().SetTranslation({ -1.0f, 1.4f, -0.75f });
 		transform4.Rotate({ 0.0f, UMath::DegToRad(90.0f), 0.0f });
 
