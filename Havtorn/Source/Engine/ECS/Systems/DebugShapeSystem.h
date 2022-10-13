@@ -41,13 +41,16 @@ namespace Havtorn
 
 		public: // Static Add Shape functions.
 			static constexpr U16 MaxShapes = 50;
-			
-			// TODO.AG: DepthPrio and Thickness
-			static HAVTORN_API void AddLine(const SVector& start, const SVector& end, const SVector4& color, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true);
+			static constexpr F32 ThicknessMinimum = 0.005f;
+			static constexpr F32 ThicknessMaximum = 0.05f;
+
+			static HAVTORN_API void AddLine(const SVector& start, const SVector& end, const SVector4& color = Color::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 
 		private:
 			static bool InstanceExists();
 			static F32 LifeTimeForShape(const bool useLifeTime, const F32 requestedLifeTime);
+			static F32 ClampThickness(const F32 thickness);
+			static void SetSharedDataForShape(Ref<SDebugShapeComponent>& inoutShape, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth);
 
 			void SendRenderCommands(
 				const std::vector<Ref<SEntity>>& entities,
@@ -65,7 +68,7 @@ namespace Havtorn
 			bool TryGetAvailableIndex(U64& outIndex);
 			void ResetAvailableIndices();
 
-			// To be removed/ looked over. Use case is debatable.
+			// AG: To be removed/ looked over. Use case is debatable.
 			void PrintDebugAddedShape(const SDebugShapeComponent& shape, const bool useLifeTime, const char* callerFunction);
 
 		private:

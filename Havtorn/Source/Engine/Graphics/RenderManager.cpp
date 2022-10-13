@@ -38,6 +38,9 @@ namespace Havtorn
 		, PointLightBuffer(nullptr)
 		, SpotLightBuffer(nullptr)
 		, ShadowmapBuffer(nullptr)
+		, DebugShapeObjectBuffer(nullptr)
+		, EmissiveBuffer(nullptr)
+		, InstancedTransformBuffer(nullptr)
 		, VolumetricLightBuffer(nullptr)
 	    , PushToCommands(&RenderCommandsA)
 	    , PopFromCommands(&RenderCommandsB)
@@ -70,8 +73,8 @@ namespace Havtorn
 		bufferDescription.ByteWidth = sizeof(SObjectBufferData);
 		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &ObjectBuffer), "Object Buffer could not be created.");
 
-		bufferDescription.ByteWidth = sizeof(SColorObjectBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &ColorObjectBuffer), "Color Object Buffer could not be created.");
+		bufferDescription.ByteWidth = sizeof(SDebugShapeObjectBufferData);
+		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DebugShapeObjectBuffer), "Debug Shape Object Buffer could not be created.");
 
 		bufferDescription.ByteWidth = sizeof(SDecalBufferData);
 		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DecalBuffer), "Decal Buffer could not be created.");
@@ -118,6 +121,7 @@ namespace Havtorn
 		// Load default resources
 		InitVertexShadersAndInputLayouts();
 		InitPixelShaders();
+		InitGeometryShaders();
 		InitSamplers();
 		InitVertexBuffers();
 		InitIndexBuffers();
@@ -255,6 +259,11 @@ namespace Havtorn
 		
 		AddShader("Shaders/EditorPreview_PS.cso", EShaderType::Pixel);
 		AddShader("Shaders/Line_PS.cso", EShaderType::Pixel);
+	}
+
+	void CRenderManager::InitGeometryShaders()
+	{
+		AddShader("Shaders/Line_GS.cso", EShaderType::Geometry);
 	}
 
 	void CRenderManager::InitSamplers()
@@ -431,30 +440,7 @@ namespace Havtorn
 
 				case ERenderCommandType::DebugShape: 
 				{
-					RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
-					RenderedScene.SetAsActiveTarget();
-				
-					SDebugShapeComponent* shape = currentCommand.GetComponent(DebugShapeComponent);
-					STransformComponent* transform = currentCommand.GetComponent(TransformComponent);
-					ColorObjectBufferData.ToWorldFromObject = transform->Transform.GetMatrix();
-					ColorObjectBufferData.Color = shape->Color;
-
-					BindBuffer(ColorObjectBuffer, ColorObjectBufferData, "Object Buffer");
-
-					Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::LineList)]);
-					Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
-					
-					Context->IASetVertexBuffers(0, 1, &VertexBuffers[shape->VertexBufferIndex], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
-					// if indexed in the future past
-					//Context->IASetIndexBuffer(lineData.myIndexBuffer, DXGI_FORMAT_R32_UINT, 0); 
-
-					Context->VSSetConstantBuffers(1, 1, &ColorObjectBuffer);
-					Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Line)], nullptr, 0);
-
-					Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::Line)], nullptr, 0);
-
-					Context->Draw(shape->VertexCount, 0);
-					NumberOfDrawCallsThisFrame++;
+					DebugShapes(currentCommand);
 				}
 				break;
 
@@ -928,7 +914,12 @@ namespace Havtorn
 		break;
 		case EShaderType::Compute:
 		case EShaderType::Geometry:
-			break;
+		{
+			ID3D11GeometryShader* geometryShader;
+			UGraphicsUtils::CreateGeometryShader(fileName, Framework, &geometryShader);
+			GeometryShaders.emplace_back(geometryShader);
+		}
+		break;
 		case EShaderType::Pixel:
 		{
 			ID3D11PixelShader* pixelShader;
@@ -1844,6 +1835,49 @@ namespace Havtorn
 		Context->RSSetViewports(1, &viewport);
 		ShadowAtlasDepth.SetAsResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
+	}
+
+	inline void CRenderManager::DebugShapes(const SRenderCommand& command)
+	{
+		SDebugShapeComponent* shape = command.GetComponent(DebugShapeComponent);
+		STransformComponent* transform = command.GetComponent(TransformComponent);
+
+		RenderStateManager.SetDepthStencilState(CRenderStateManager::EDepthStencilStates::OnlyRead);
+		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
+		
+		// TODO.AG: Separate lines into those that IgnoreDepth and those that don't so that this is done no more than 2 times.
+		if (shape->IgnoreDepth)
+		{
+			RenderedScene.SetAsActiveTarget();
+		}
+		else
+		{
+			RenderedScene.SetAsActiveTarget(&IntermediateDepth);
+		}
+
+		DebugShapeObjectBufferData.ToWorldFromObject = transform->Transform.GetMatrix();
+		DebugShapeObjectBufferData.Color = shape->Color;
+		DebugShapeObjectBufferData.HalfThickness = shape->Thickness;
+
+		BindBuffer(DebugShapeObjectBuffer, DebugShapeObjectBufferData, "Object Buffer");
+
+		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::LineList)]);
+		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
+
+		Context->IASetVertexBuffers(0, 1, &VertexBuffers[shape->VertexBufferIndex], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
+		// TODO.AG: for when using Indices.
+		//Context->IASetIndexBuffer(lineData.myIndexBuffer, DXGI_FORMAT_R32_UINT, 0); 
+
+		Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::Line)], nullptr, 0);
+		Context->GSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
+
+		Context->VSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
+		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Line)], nullptr, 0);
+
+		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::Line)], nullptr, 0);
+
+		Context->Draw(shape->VertexCount, 0);
+		NumberOfDrawCallsThisFrame++;
 	}
 
 	bool SRenderCommandComparer::operator()(const SRenderCommand& a, const SRenderCommand& b) const
