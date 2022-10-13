@@ -256,7 +256,7 @@ namespace Havtorn
 			SMatrix ToWorldFromObject;
 			SVector4 Color;
 			F32 HalfThickness;
-		} ColorObjectBufferData;
+		} DebugShapeObjectBufferData;
 		HV_ASSERT_BUFFER(SDebugShapeObjectBufferData)
 
 		struct SDecalBufferData
@@ -328,7 +328,7 @@ namespace Havtorn
 		ID3D11DeviceContext* Context;
 		ID3D11Buffer* FrameBuffer;
 		ID3D11Buffer* ObjectBuffer;
-		ID3D11Buffer* ColorObjectBuffer;
+		ID3D11Buffer* DebugShapeObjectBuffer;
 		ID3D11Buffer* DecalBuffer;
 		ID3D11Buffer* DirectionalLightBuffer;
 		ID3D11Buffer* PointLightBuffer;

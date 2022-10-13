@@ -38,6 +38,9 @@ namespace Havtorn
 		, PointLightBuffer(nullptr)
 		, SpotLightBuffer(nullptr)
 		, ShadowmapBuffer(nullptr)
+		, DebugShapeObjectBuffer(nullptr)
+		, EmissiveBuffer(nullptr)
+		, InstancedTransformBuffer(nullptr)
 		, VolumetricLightBuffer(nullptr)
 	    , PushToCommands(&RenderCommandsA)
 	    , PopFromCommands(&RenderCommandsB)
@@ -71,7 +74,7 @@ namespace Havtorn
 		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &ObjectBuffer), "Object Buffer could not be created.");
 
 		bufferDescription.ByteWidth = sizeof(SDebugShapeObjectBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &ColorObjectBuffer), "Color Object Buffer could not be created.");
+		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DebugShapeObjectBuffer), "Debug Shape Object Buffer could not be created.");
 
 		bufferDescription.ByteWidth = sizeof(SDecalBufferData);
 		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DecalBuffer), "Decal Buffer could not be created.");
@@ -1852,11 +1855,11 @@ namespace Havtorn
 			RenderedScene.SetAsActiveTarget(&IntermediateDepth);
 		}
 
-		ColorObjectBufferData.ToWorldFromObject = transform->Transform.GetMatrix();
-		ColorObjectBufferData.Color = shape->Color;
-		ColorObjectBufferData.HalfThickness = shape->Thickness;
+		DebugShapeObjectBufferData.ToWorldFromObject = transform->Transform.GetMatrix();
+		DebugShapeObjectBufferData.Color = shape->Color;
+		DebugShapeObjectBufferData.HalfThickness = shape->Thickness;
 
-		BindBuffer(ColorObjectBuffer, ColorObjectBufferData, "Object Buffer");
+		BindBuffer(DebugShapeObjectBuffer, DebugShapeObjectBufferData, "Object Buffer");
 
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::LineList)]);
 		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
@@ -1866,9 +1869,9 @@ namespace Havtorn
 		//Context->IASetIndexBuffer(lineData.myIndexBuffer, DXGI_FORMAT_R32_UINT, 0); 
 
 		Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::Line)], nullptr, 0);
-		Context->GSSetConstantBuffers(1, 1, &ColorObjectBuffer);
+		Context->GSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
 
-		Context->VSSetConstantBuffers(1, 1, &ColorObjectBuffer);
+		Context->VSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Line)], nullptr, 0);
 
 		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::Line)], nullptr, 0);
