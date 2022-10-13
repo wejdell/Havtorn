@@ -438,9 +438,39 @@ namespace Havtorn
 				}
 				break;
 
+				case ERenderCommandType::Bloom:
+				{
+					RenderBloom();
+				}
+				break;
+
+				case ERenderCommandType::Tonemapping:
+				{
+					Tonemapping();
+				}
+				break;
+
 				case ERenderCommandType::DebugShape: 
 				{
 					DebugShapes(currentCommand);
+				}
+				break;
+
+				case ERenderCommandType::AntiAliasing:
+				{
+					AntiAliasing();
+				}
+				break;
+
+				case ERenderCommandType::GammaCorrection:
+				{
+					GammaCorrection();
+				}
+				break;
+
+				case ERenderCommandType::RendererDebug:
+				{
+					RendererDebug();
 				}
 				break;
 
@@ -450,35 +480,10 @@ namespace Havtorn
 				PopFromCommands->pop();
 			}
 
-			RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::Disable);
-			RenderStateManager.SetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
-	
-			// Bloom
-			RenderBloom();
-
-			// Tonemapping
-			TonemappedTexture.SetAsActiveTarget();
-			RenderedScene.SetAsResourceOnSlot(0);
-			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Tonemap);
-	
-			// Anti-aliasing
-			AntiAliasedTexture.SetAsActiveTarget();
-			TonemappedTexture.SetAsResourceOnSlot(0);
-			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::FXAA);
-
-			// Gamma correction
-			RenderedScene.SetAsActiveTarget();
-			AntiAliasedTexture.SetAsResourceOnSlot(0);
-			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::GammaCorrection);
-
-			//DebugShadowAtlas();
-
 			// RenderedScene should be complete as that is the texture we send to the viewport
 			Backbuffer.SetAsActiveTarget();
 			RenderedScene.SetAsResourceOnSlot(0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
-
-			//StaticMeshInstanceTransforms.clear();
 
 			CThreadManager::RenderThreadStatus = ERenderThreadStatus::PostRender;
 			uniqueLock.unlock();
@@ -1777,6 +1782,9 @@ namespace Havtorn
 
 	void CRenderManager::RenderBloom()
 	{
+		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::Disable);
+		RenderStateManager.SetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
+
 		HalfSizeTexture.SetAsActiveTarget();
 		RenderedScene.SetAsResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
@@ -1823,6 +1831,36 @@ namespace Havtorn
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Bloom);
 	}
 
+	inline void CRenderManager::Tonemapping()
+	{
+		TonemappedTexture.SetAsActiveTarget();
+		RenderedScene.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Tonemap);
+	}
+
+	inline void CRenderManager::AntiAliasing()
+	{
+		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::Disable);
+		RenderStateManager.SetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
+		
+
+		AntiAliasedTexture.SetAsActiveTarget();
+		TonemappedTexture.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::FXAA);
+	}
+
+	inline void CRenderManager::GammaCorrection()
+	{
+		RenderedScene.SetAsActiveTarget();
+		AntiAliasedTexture.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::GammaCorrection);
+	}
+
+	inline void CRenderManager::RendererDebug()
+	{
+		//DebugShadowAtlas();
+	}
+
 	void CRenderManager::DebugShadowAtlas()
 	{
 		D3D11_VIEWPORT viewport;
@@ -1848,11 +1886,11 @@ namespace Havtorn
 		// TODO.AG: Separate lines into those that IgnoreDepth and those that don't so that this is done no more than 2 times.
 		if (shape->IgnoreDepth)
 		{
-			RenderedScene.SetAsActiveTarget();
+			TonemappedTexture.SetAsActiveTarget();
 		}
 		else
 		{
-			RenderedScene.SetAsActiveTarget(&IntermediateDepth);
+			TonemappedTexture.SetAsActiveTarget(&IntermediateDepth);
 		}
 
 		DebugShapeObjectBufferData.ToWorldFromObject = transform->Transform.GetMatrix();
