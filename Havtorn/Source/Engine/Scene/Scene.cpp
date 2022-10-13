@@ -296,7 +296,6 @@ namespace Havtorn
 		Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(-1.0f, 0.0f, 0.0f), Color::Yellow, durationSeconds, useLifeTime, thickness, ignoreDepth);
 		Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(0.0f, -1.0f, 0.0f), Color::Teal, durationSeconds, useLifeTime, thickness, ignoreDepth);
 		Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(0.0f, 0.0f, -1.0f), Color::Purple, durationSeconds, useLifeTime, thickness,  ignoreDepth);
-
 	}
 
 	Ref<SEntity> CScene::CreateEntity(const std::string& name)
