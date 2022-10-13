@@ -70,7 +70,7 @@ namespace Havtorn
 		bufferDescription.ByteWidth = sizeof(SObjectBufferData);
 		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &ObjectBuffer), "Object Buffer could not be created.");
 
-		bufferDescription.ByteWidth = sizeof(SColorObjectBufferData);
+		bufferDescription.ByteWidth = sizeof(SDebugShapeObjectBufferData);
 		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &ColorObjectBuffer), "Color Object Buffer could not be created.");
 
 		bufferDescription.ByteWidth = sizeof(SDecalBufferData);
@@ -1854,6 +1854,7 @@ namespace Havtorn
 
 		ColorObjectBufferData.ToWorldFromObject = transform->Transform.GetMatrix();
 		ColorObjectBufferData.Color = shape->Color;
+		ColorObjectBufferData.HalfThickness = shape->Thickness;
 
 		BindBuffer(ColorObjectBuffer, ColorObjectBufferData, "Object Buffer");
 

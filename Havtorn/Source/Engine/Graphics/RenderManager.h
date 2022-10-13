@@ -251,12 +251,13 @@ namespace Havtorn
 		} ObjectBufferData;
 		HV_ASSERT_BUFFER(SObjectBufferData)
 
-		struct SColorObjectBufferData
+		struct SDebugShapeObjectBufferData
 		{
 			SMatrix ToWorldFromObject;
 			SVector4 Color;
+			F32 HalfThickness;
 		} ColorObjectBufferData;
-		HV_ASSERT_BUFFER(SColorObjectBufferData)
+		HV_ASSERT_BUFFER(SDebugShapeObjectBufferData)
 
 		struct SDecalBufferData
 		{
