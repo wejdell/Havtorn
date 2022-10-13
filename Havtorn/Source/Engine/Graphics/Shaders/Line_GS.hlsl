@@ -108,3 +108,4 @@ void main(line LineVertexToPixel input[2], inout TriangleStream<LineVertexToPixe
     
     outputStream.RestartStrip();
 }
+
