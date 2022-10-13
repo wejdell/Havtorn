@@ -65,6 +65,11 @@ namespace Havtorn
 		Line = 11,
 	};
 
+	enum class EGeometryShaders
+	{
+		Line = 0,
+	};
+
 	enum class ESamplers
 	{
 		DefaultWrap = 0,
@@ -151,6 +156,8 @@ namespace Havtorn
 		void InitVertexShadersAndInputLayouts();
 		// Init order 1:1 to EPixelShaders
 		void InitPixelShaders();
+		// Init order 1:1 to EGeometryShaders
+		void InitGeometryShaders();
 		// Init order 1:1 to ESamplers
 		void InitSamplers();
 		// Init order 1:1 to EVertexBufferPrimitives.
@@ -200,6 +207,7 @@ namespace Havtorn
 		inline void VolumetricBlur();
 		inline void RenderBloom();
 		inline void DebugShadowAtlas();
+		inline void DebugShapes(const SRenderCommand& command);
 
 	private:
 		template<class T>
@@ -243,12 +251,13 @@ namespace Havtorn
 		} ObjectBufferData;
 		HV_ASSERT_BUFFER(SObjectBufferData)
 
-		struct SColorObjectBufferData
+		struct SDebugShapeObjectBufferData
 		{
 			SMatrix ToWorldFromObject;
 			SVector4 Color;
-		} ColorObjectBufferData;
-		HV_ASSERT_BUFFER(SColorObjectBufferData)
+			F32 HalfThickness;
+		} DebugShapeObjectBufferData;
+		HV_ASSERT_BUFFER(SDebugShapeObjectBufferData)
 
 		struct SDecalBufferData
 		{
@@ -319,7 +328,7 @@ namespace Havtorn
 		ID3D11DeviceContext* Context;
 		ID3D11Buffer* FrameBuffer;
 		ID3D11Buffer* ObjectBuffer;
-		ID3D11Buffer* ColorObjectBuffer;
+		ID3D11Buffer* DebugShapeObjectBuffer;
 		ID3D11Buffer* DecalBuffer;
 		ID3D11Buffer* DirectionalLightBuffer;
 		ID3D11Buffer* PointLightBuffer;
@@ -370,6 +379,7 @@ namespace Havtorn
 
 		std::vector<ID3D11VertexShader*> VertexShaders;
 		std::vector<ID3D11PixelShader*> PixelShaders;
+		std::vector<ID3D11GeometryShader*> GeometryShaders;
 		std::vector<ID3D11SamplerState*> Samplers;
 		std::vector<ID3D11Buffer*> VertexBuffers;
 		std::vector<ID3D11Buffer*> IndexBuffers;

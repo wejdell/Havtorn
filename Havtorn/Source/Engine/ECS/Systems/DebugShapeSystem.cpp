@@ -79,7 +79,7 @@ namespace Havtorn
 			CheckActiveIndices(debugShapes);
 		}
 
-		void UDebugShapeSystem::AddLine(const SVector& start, const SVector& end, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime)
+		void UDebugShapeSystem::AddLine(const SVector& start, const SVector& end, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 		{
 			if (!InstanceExists())
 				return;
@@ -91,8 +91,7 @@ namespace Havtorn
 			const std::vector<Ref<SEntity>>& entities = Instance->Scene->GetEntities();
 			const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
 			std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
-			debugShapes[shapeIndex]->Color = color;
-			debugShapes[shapeIndex]->LifeTime = LifeTimeForShape(useLifeTime, lifeTimeSeconds);
+			SetSharedMembersForShape(debugShapes[shapeIndex], color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
 			debugShapes[shapeIndex]->VertexBufferIndex = Utility::VertexBufferPrimitives::GetVertexBufferIndex<U8>(EVertexBufferPrimitives::LineShape);
 			debugShapes[shapeIndex]->VertexCount = Utility::VertexBufferPrimitives::GetVertexCount<U8>(EVertexBufferPrimitives::LineShape);
 
@@ -134,6 +133,19 @@ namespace Havtorn
 				return GTimer::Time() + requestedLifeTime;
 		}
 
+		F32 UDebugShapeSystem::ClampThickness(const F32 thickness)
+		{
+			return UMath::Clamp(thickness, ThicknessMinimum, ThicknessMaximum);
+		}
+
+		void UDebugShapeSystem::SetSharedMembersForShape(Ref<SDebugShapeComponent>& inoutShape, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+		{
+			inoutShape->Color = color;
+			inoutShape->LifeTime = LifeTimeForShape(useLifeTime, lifeTimeSeconds);
+			inoutShape->Thickness = ClampThickness(thickness);
+			inoutShape->IgnoreDepth = ignoreDepth;
+		}
+
 
 		void UDebugShapeSystem::SendRenderCommands(
 			const std::vector<Ref<SEntity>>& entities,
@@ -157,7 +169,7 @@ namespace Havtorn
 		void UDebugShapeSystem::CheckActiveIndices(const std::vector<Ref<SDebugShapeComponent>>& debugShapes)
 		{
 			const F32 time = GTimer::Time();
-			std::vector<U64> activeIndicesToRemove;
+			std::queue<U64> activeIndicesToRemove;
 			for (U64 i = 0; i < ActiveIndices.size(); i++)
 			{
 				const U64& activeIndex = ActiveIndices[i];
@@ -165,24 +177,15 @@ namespace Havtorn
 				if (shape->LifeTime <= time)
 				{
 					AvailableIndices.push(activeIndex);
-					activeIndicesToRemove.push_back(i);
+					activeIndicesToRemove.push(i);
 				}
 			}
 
-			// TODO.AG: Bad - Improve
-			for (U64 i = static_cast<U64>(activeIndicesToRemove.size()) - 1; i > 0; i--)
+			while (!activeIndicesToRemove.empty())
 			{
-				if (ActiveIndices.size() <= 1)
-				{
-					ActiveIndices.pop_back();
-					break;
-				}
-
-				if (activeIndicesToRemove.empty())
-					break;
-				
-				std::swap(ActiveIndices[activeIndicesToRemove[i]], ActiveIndices.back());
+				std::swap(ActiveIndices[activeIndicesToRemove.front()], ActiveIndices.back());
 				ActiveIndices.pop_back();
+				activeIndicesToRemove.pop();
 			}
 		}
 
