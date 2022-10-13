@@ -91,7 +91,7 @@ namespace Havtorn
 			const std::vector<Ref<SEntity>>& entities = Instance->Scene->GetEntities();
 			const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
 			std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
-			SetSharedMembersForShape(debugShapes[shapeIndex], color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
+			SetSharedDataForShape(debugShapes[shapeIndex], color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
 			debugShapes[shapeIndex]->VertexBufferIndex = Utility::VertexBufferPrimitives::GetVertexBufferIndex<U8>(EVertexBufferPrimitives::LineShape);
 			debugShapes[shapeIndex]->VertexCount = Utility::VertexBufferPrimitives::GetVertexCount<U8>(EVertexBufferPrimitives::LineShape);
 
@@ -138,7 +138,7 @@ namespace Havtorn
 			return UMath::Clamp(thickness, ThicknessMinimum, ThicknessMaximum);
 		}
 
-		void UDebugShapeSystem::SetSharedMembersForShape(Ref<SDebugShapeComponent>& inoutShape, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+		void UDebugShapeSystem::SetSharedDataForShape(Ref<SDebugShapeComponent>& inoutShape, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 		{
 			inoutShape->Color = color;
 			inoutShape->LifeTime = LifeTimeForShape(useLifeTime, lifeTimeSeconds);

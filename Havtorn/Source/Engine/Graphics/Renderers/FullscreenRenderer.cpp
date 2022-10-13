@@ -226,6 +226,7 @@ namespace Havtorn
 
 		Context->VSSetShader(VertexShader, nullptr, 0);
 		Context->PSSetShader(PixelShaders[static_cast<size_t>(effect)], nullptr, 0);
+		Context->GSSetShader(nullptr, nullptr, 0);
 		Context->PSSetSamplers(0, 1, &ClampSampler);
 		Context->PSSetSamplers(1, 1, &WrapSampler);
 		Context->PSSetConstantBuffers(1, 1, &FullscreenDataBuffer);
@@ -248,7 +249,5 @@ namespace Havtorn
 		Context->PSSetShaderResources(9, 1, &nullView);
 		Context->PSSetShaderResources(21, 1, &nullView);
 		Context->PSSetShaderResources(22, 1, &nullView);
-
-		Context->GSSetShader(nullptr, nullptr, 0);
 	}
 }
