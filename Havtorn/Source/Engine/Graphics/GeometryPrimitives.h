@@ -119,7 +119,7 @@ namespace Havtorn
 		};
 
 		// Without Indices
-		static std::vector<SPositionVertex> Arrow =
+		static std::vector<SPositionVertex> FlatArrow =
 		{
 			{ 0.0f, 0.0f, 0.0f,  1.0f },
 			{  0.0f, 0.0f, 1.0f,  1.0f },
