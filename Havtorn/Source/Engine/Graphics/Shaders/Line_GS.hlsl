@@ -2,9 +2,6 @@
 
 #include "Includes/LineShaderStructs.hlsli"
 
-#define LINE_HALFTHICKNESS_MAX 0.05f
-#define LINE_HALFTHICKNESS_MIN 0.005f
-
 [maxvertexcount(27)]
 void main(line LineVertexToPixel input[2], inout TriangleStream<LineVertexToPixel> outputStream)
 {
@@ -15,11 +12,8 @@ void main(line LineVertexToPixel input[2], inout TriangleStream<LineVertexToPixe
     const float4 horizontal = float4(1, 0, 0, 0) / aspectRatio;
     const float4 vertical = float4(0, 1, 0, 0);
     
-    //float thickness = 0.005f;// Min
-    float halfThickness = 0.025f;// Max
-    halfThickness = clamp(halfThickness, LINE_HALFTHICKNESS_MIN, LINE_HALFTHICKNESS_MAX);
-    const float4 hIncrement = horizontal * halfThickness;
-    const float4 vIncrement = vertical * halfThickness;
+    const float4 hIncrement = horizontal * HalfThickness;
+    const float4 vIncrement = vertical * HalfThickness;
     
     /*
            .
