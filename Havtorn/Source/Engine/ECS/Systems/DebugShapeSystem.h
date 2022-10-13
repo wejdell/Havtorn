@@ -50,7 +50,7 @@ namespace Havtorn
 			static bool InstanceExists();
 			static F32 LifeTimeForShape(const bool useLifeTime, const F32 requestedLifeTime);
 			static F32 ClampThickness(const F32 thickness);
-			static void SetSharedMembersForShape(Ref<SDebugShapeComponent>& inoutShape, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth);
+			static void SetSharedDataForShape(Ref<SDebugShapeComponent>& inoutShape, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth);
 
 			void SendRenderCommands(
 				const std::vector<Ref<SEntity>>& entities,
