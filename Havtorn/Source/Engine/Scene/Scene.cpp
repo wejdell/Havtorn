@@ -46,20 +46,6 @@ namespace Havtorn
 		auto volumetricLight = AddVolumetricLightComponentToEntity(directionalLightEntity);
 		//volumetricLight->IsActive = true;
 
-		bool useLifeTime = true;
-		bool ignoreDepth = true;
-		F32 durationSeconds = 60.0f;
-		F32 thickness = Debug::UDebugShapeSystem::ThicknessMaximum;
-		Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(1.0f, 0.0f, 0.0f), Color::Red, durationSeconds, useLifeTime, thickness, ignoreDepth);
-		Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(0.0f, 1.0f, 0.0f), Color::Green, durationSeconds, useLifeTime, thickness, ignoreDepth);
-		Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(0.0f, 0.0f, 1.0f), Color::Blue, durationSeconds, useLifeTime, thickness,  ignoreDepth);
-		
-		ignoreDepth = false;
-		thickness = Debug::UDebugShapeSystem::ThicknessMinimum;
-		Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(-1.0f, 0.0f, 0.0f), Color::Yellow, durationSeconds, useLifeTime, thickness, ignoreDepth);
-		Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(0.0f, -1.0f, 0.0f), Color::Teal, durationSeconds, useLifeTime, thickness, ignoreDepth);
-		Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(0.0f, 0.0f, -1.0f), Color::Purple, durationSeconds, useLifeTime, thickness,  ignoreDepth);
-
 		InitDemoScene(renderManager);
 
 		return true;
@@ -296,6 +282,21 @@ namespace Havtorn
 			renderManager->LoadMaterialComponent(materialNames3, AddMaterialComponentToEntity(floor).get());
 		}
 		// === !Other Wall ===
+
+		bool useLifeTime = true;
+		bool ignoreDepth = true;
+		F32 durationSeconds = 60.0f;
+		F32 thickness = Debug::UDebugShapeSystem::ThicknessMaximum;
+		Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(1.0f, 0.0f, 0.0f), Color::Red, durationSeconds, useLifeTime, thickness, ignoreDepth);
+		Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(0.0f, 1.0f, 0.0f), Color::Green, durationSeconds, useLifeTime, thickness, ignoreDepth);
+		Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(0.0f, 0.0f, 1.0f), Color::Blue, durationSeconds, useLifeTime, thickness,  ignoreDepth);
+
+		ignoreDepth = false;
+		thickness = Debug::UDebugShapeSystem::ThicknessMinimum;
+		Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(-1.0f, 0.0f, 0.0f), Color::Yellow, durationSeconds, useLifeTime, thickness, ignoreDepth);
+		Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(0.0f, -1.0f, 0.0f), Color::Teal, durationSeconds, useLifeTime, thickness, ignoreDepth);
+		Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(0.0f, 0.0f, -1.0f), Color::Purple, durationSeconds, useLifeTime, thickness,  ignoreDepth);
+
 	}
 
 	Ref<SEntity> CScene::CreateEntity(const std::string& name)
