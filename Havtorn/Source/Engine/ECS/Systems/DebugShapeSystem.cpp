@@ -129,7 +129,7 @@ namespace Havtorn
 			TransformToFaceAndReach(transforms[transformIndex], start, end);
 		}
 
-		void UDebugShapeSystem::AddCube(const SVector& center, const F32 scale, const SVector& eulerRotation, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+		void UDebugShapeSystem::AddCube(const SVector& center, const SVector& scale, const SVector& eulerRotation, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 		{
 			if (!InstanceExists())
 				return;
@@ -152,6 +152,33 @@ namespace Havtorn
 			
 			SMatrix matrix;
 			SMatrix::Recompose(center, eulerRotation, scale, matrix);
+			transforms[transformIndex]->Transform.SetMatrix(matrix);
+		}
+
+		void UDebugShapeSystem::AddCamera(const SVector& origin, const SVector& eulerRotation, const F32 fov, const F32 farZ, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+		{
+			if (!InstanceExists())
+				return;
+
+			U64 entityIndex = 0;
+			if (!Instance->TryGetAvailableIndex(entityIndex))
+				return;
+
+			const std::vector<Ref<SEntity>>& entities = Instance->Scene->GetEntities();
+
+			const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
+			std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
+			SetSharedDataForShape(debugShapes[shapeIndex], color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
+			debugShapes[shapeIndex]->VertexBufferIndex = Utility::VertexBufferPrimitives::GetVertexBufferIndex<U8>(EVertexBufferPrimitives::Camera);
+			debugShapes[shapeIndex]->IndexCount = Utility::VertexBufferPrimitives::GetIndexCount<U8>(EVertexBufferPrimitives::Camera);
+			debugShapes[shapeIndex]->IndexBufferIndex = Utility::VertexBufferPrimitives::GetIndexBufferIndex<U8>(EDefaultIndexBuffers::Camera);
+
+			std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
+			const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
+			SMatrix matrix;
+			farZ;// TODO.AG: make farZ work properly.
+			SVector vScale((fov / 50.0f), 1.0f, 1.0f);
+			SMatrix::Recompose(origin, eulerRotation, vScale, matrix);
 			transforms[transformIndex]->Transform.SetMatrix(matrix);
 		}
 

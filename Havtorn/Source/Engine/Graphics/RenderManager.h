@@ -273,7 +273,7 @@ namespace Havtorn
 		{
 			SMatrix ToWorldFromObject;
 			SVector4 Color;
-			F32 HalfThickness;
+			F32 HalfThickness = 0.5f;
 		} DebugShapeObjectBufferData;
 		HV_ASSERT_BUFFER(SDebugShapeObjectBufferData)
 

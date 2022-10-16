@@ -136,7 +136,7 @@ namespace Havtorn
 			0, 1, 2, 1, 3, 1
 		};
 
-		static std::vector<SPositionVertex> DebugCube = 
+		const static std::vector<SPositionVertex> DebugCube = 
 		{
 			// X      Y      Z      W 
 			{ -0.5f, -0.5f, -0.5f,  1.0f },// 0
@@ -149,34 +149,33 @@ namespace Havtorn
 			{  0.5f,  0.5f,  0.5f,  1.0f }//  7
 		};
 
-		static std::vector<U32> DebugCubeIndices =
+		const static std::vector<U32> DebugCubeIndices =
 		{
 			0, 1, 1, 3, 3, 2, 2, 0, 0, 4, 4, 6, 6, 2, 6, 7, 7, 5, 5, 4, 7, 3, 5, 1
 		};
 
-		static std::vector<SPositionVertex> Camera = 
+		const static std::vector<SPositionVertex> Camera = 
 		{
 			// X      Y      Z      W
-			{ -0.35f, -0.5f, -0.7f,  1.0f },// 0
-			{  0.35f, -0.5f, -0.7f,  1.0f },// 1
-			{ -0.35f,  0.5f, -0.7f,  1.0f },// 2
-			{  0.35f,  0.5f, -0.7f,  1.0f },// 3
-			{ -0.35f, -0.5f,  0.5f,  1.0f },// 4
-			{  0.35f, -0.5f,  0.5f,  1.0f },// 5
-			{ -0.35f,  0.5f,  0.5f,  1.0f },// 6
-			{  0.35f,  0.5f,  0.5f,  1.0f },// 7
-			{  0.0f,  0.0f,  0.5f,  1.0f },// 8
-			{  0.3f,  0.3f,  0.9f,  1.0f },// 9
-			{  -0.3f,  0.3f,  0.9f,  1.0f },// 10
-			{  -0.3f,  -0.3f,  0.9f,  1.0f },// 11
-			{  0.3f,  -0.3f, 0.9f,  1.0f },// 12
+			{ 0.0f, 0.0f, 0.0f, 1.0f },// 0 // Pivot
+
+			{ 0.3f, 0.3f, 0.7f, 1.0f },// 1 // Frame Upper Right
+			{ 0.3f, -0.3f, 0.7f, 1.0f },// 2 // Frame Lower Right
+			{ -0.3f, 0.3f, 0.7f, 1.0f },// 3 // Frame Upper Left
+			{ -0.3f, -0.3f, 0.7f, 1.0f },// 4 // Frame Lower Left
+
+			{ -0.15f, 0.325f, 0.7f, 1.0f },// 5 // Up Arrow Left
+			{ 0.0f, 0.45f, 0.7f, 1.0f },// 6 // Up Arrow Center
+			{ 0.15f, 0.325f, 0.7f, 1.0f },// 7 // Up Arrow Right
 		};
 
-		static std::vector<U32> CameraIndices =
+		const static std::vector<U32> CameraIndices =
 		{
-			0, 1, 1, 3, 3, 2, 2, 0, 0, 4, 4, 6, 6, 2, 6, 7, 7, 5, 5, 4, 7, 3, 5, 1,
-			8, 9, 8, 10, 8, 11, 8, 12,
-			9, 10, 10, 11, 11, 12, 12, 9
+			0, 1, 0, 2, 0, 3, 0, 4,
+
+			1, 2, 2, 4, 4, 3, 3, 1,
+
+			5, 6, 6, 7, 7, 5
 		};
 	}
 }
