@@ -30,7 +30,12 @@ namespace Havtorn
 		ForwardTransparency,
 		OutlineMask,
 		Outline,
-		DebugShape
+		Bloom,
+		Tonemapping,
+		DebugShape,
+		AntiAliasing,
+		GammaCorrection,
+		RendererDebug
 	};
 
 	struct SRenderCommand
