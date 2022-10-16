@@ -46,6 +46,7 @@ namespace Havtorn
 
 			static HAVTORN_API void AddLine(const SVector& start, const SVector& end, const SVector4& color = Color::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 			static HAVTORN_API void AddArrow(const SVector& start, const SVector& end, const SVector4& color = Color::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+			// Cube with Width/Height/Depth = 1. Pivot is in center.
 			static HAVTORN_API void AddCube(const SVector& center, const F32 scale, const SVector& eulerRotation, const SVector4& color = Color::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 
 		private:
