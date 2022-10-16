@@ -31,6 +31,9 @@ namespace Havtorn
 				case EVertexBufferPrimitives::DebugCube:
 					return static_cast<T>(GeometryPrimitives::DebugCube.size());
 
+				case EVertexBufferPrimitives::Camera:
+					return static_cast<T>(GeometryPrimitives::Camera.size());
+
 				default:
 					return 0;
 				}
@@ -61,6 +64,9 @@ namespace Havtorn
 
 				case EVertexBufferPrimitives::DebugCube:
 					return static_cast<T>(GeometryPrimitives::DebugCubeIndices.size());
+
+				case EVertexBufferPrimitives::Camera:
+					return static_cast<T>(GeometryPrimitives::CameraIndices.size());
 
 				default:
 					return 0;

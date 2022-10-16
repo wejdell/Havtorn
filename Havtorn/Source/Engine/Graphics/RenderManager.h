@@ -90,7 +90,8 @@ namespace Havtorn
 		PointLightCube,
 		LineShape,
 		FlatArrow,
-		DebugCube
+		DebugCube,
+		Camera
 		//TODO: add more debug shape primitives
 	};
 
@@ -100,7 +101,8 @@ namespace Havtorn
 		PointLightCube,
 		LineShape,
 		FlatArrow,
-		DebugCube
+		DebugCube,
+		Camera
 		//TODO: add more debug shape primitives
 	};
 

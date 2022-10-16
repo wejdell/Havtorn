@@ -279,6 +279,7 @@ namespace Havtorn
 		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::Line);
 		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::FlatArrow);
 		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::DebugCube);
+		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::Camera);
 	}
 
 	void CRenderManager::InitIndexBuffers()
@@ -288,6 +289,7 @@ namespace Havtorn
 		AddIndexBuffer(GeometryPrimitives::LineIndices);
 		AddIndexBuffer(GeometryPrimitives::FlatArrowIndices);
 		AddIndexBuffer(GeometryPrimitives::DebugCubeIndices);
+		AddIndexBuffer(GeometryPrimitives::CameraIndices);
 	}
 
 	void CRenderManager::InitTopologies()
