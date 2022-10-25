@@ -181,4 +181,62 @@ namespace Havtorn
 		pointerPosition += DeserializeSimple(DataSize, fromData, pointerPosition);
 		DeserializeString(Data, fromData, DataSize, pointerPosition);
 	}
+
+	struct SMaterialAssetFileHeader
+	{
+		EAssetType AssetType = EAssetType::Material;
+		U32 MaterialNameLength = 0;
+		std::string MaterialName = "";
+		SOfflineGraphicsMaterial Material;
+
+		[[nodiscard]] U32 GetSize() const;
+		void Serialize(char* toData) const;
+		void Deserialize(const char* fromData);
+	};
+
+	inline U32 SMaterialAssetFileHeader::GetSize() const
+	{
+		U32 size = sizeof(EAssetType);
+		size += sizeof(U32);
+		size += sizeof(char) * MaterialNameLength;
+		size += Material.GetSize();
+
+		return size;
+	}
+
+	inline void SMaterialAssetFileHeader::Serialize(char* toData) const
+	{
+		U32 pointerPosition = 0;
+		pointerPosition += SerializeSimple(AssetType, toData, pointerPosition);
+		pointerPosition += SerializeSimple(MaterialNameLength, toData, pointerPosition);
+		pointerPosition += SerializeString(MaterialName, toData, pointerPosition);
+
+		for (auto& materialProperty : Material.Properties)
+		{
+			pointerPosition += SerializeSimple(materialProperty.ConstantValue, toData, pointerPosition);
+			pointerPosition += SerializeSimple(materialProperty.TexturePathLength, toData, pointerPosition);
+			pointerPosition += SerializeString(materialProperty.TexturePath, toData, pointerPosition);
+			pointerPosition += SerializeSimple(materialProperty.TextureChannelIndex, toData, pointerPosition);
+		}
+
+		pointerPosition += SerializeSimple(Material.RecreateZ, toData, pointerPosition);
+	}
+
+	inline void SMaterialAssetFileHeader::Deserialize(const char* fromData)
+	{
+		U32 pointerPosition = 0;
+		pointerPosition += DeserializeSimple(AssetType, fromData, pointerPosition);
+		pointerPosition += DeserializeSimple(MaterialNameLength, fromData, pointerPosition);
+		pointerPosition += DeserializeString(MaterialName, fromData, MaterialNameLength, pointerPosition);
+
+		for (auto& materialProperty : Material.Properties)
+		{
+			pointerPosition += DeserializeSimple(materialProperty.ConstantValue, fromData, pointerPosition);
+			pointerPosition += DeserializeSimple(materialProperty.TexturePathLength, fromData, pointerPosition);
+			pointerPosition += DeserializeString(materialProperty.TexturePath, fromData, materialProperty.TexturePathLength, pointerPosition);
+			pointerPosition += DeserializeSimple(materialProperty.TextureChannelIndex, fromData, pointerPosition);
+		}
+
+		pointerPosition += DeserializeSimple(Material.RecreateZ, fromData, pointerPosition);
+	}
 }

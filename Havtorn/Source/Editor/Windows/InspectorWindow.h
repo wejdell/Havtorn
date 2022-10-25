@@ -7,6 +7,7 @@ namespace Havtorn
 {
 	class CScene;
 	struct SStaticMeshComponent;
+	struct SMaterialComponent;
 }
 
 namespace ImGui
@@ -35,6 +36,7 @@ namespace ImGui
 
 		void OpenSelectMeshAssetModal(Havtorn::SStaticMeshComponent* meshAssetToChange);
 		void OpenSelectTextureAssetModal(Havtorn::U16& textureRefToChange);
+		void OpenSelectMaterialAssetModal(Havtorn::SMaterialComponent* materialComponentToChange, Havtorn::U8 materialIndex);
 
 	private:
 		Havtorn::CScene* Scene = nullptr;
@@ -43,6 +45,7 @@ namespace ImGui
 		Havtorn::SVector2<Havtorn::F32> DummySize = { 0.0f, 0.5f };
 		Havtorn::F32 SlideSpeed = 0.1f;
 		Havtorn::U16 MaterialRefToChangeIndex = 0;
+		Havtorn::U8 MaterialToChangeIndex = 0;
 		bool SelectTextureWindowOpen = false;
 	};
 }

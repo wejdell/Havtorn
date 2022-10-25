@@ -17,6 +17,7 @@ namespace Havtorn
 		StaticMesh,
 		SkeletalMesh,
 		Texture,
+		Material,
 		Animation,
 		AudioOneShot,
 		AudioCollection,
