@@ -267,10 +267,18 @@ namespace Havtorn
 
 		struct SMaterialBufferData
 		{
-			SGPUGraphicsMaterialProperty Properties[11];
+			SMaterialBufferData() = default;
+
+			SMaterialBufferData(const SEngineGraphicsMaterial& engineGraphicsMaterial)
+				: RecreateZ(engineGraphicsMaterial.RecreateNormalZ)
+			{
+				memcpy(&Properties[0], &engineGraphicsMaterial, sizeof(SRuntimeGraphicsMaterialProperty) * 11);
+			}
+
+			SRuntimeGraphicsMaterialProperty Properties[11];
 
 			bool RecreateZ = true;
-			bool boolPad[15];
+			bool Padding[15] = {};
 
 		} MaterialBufferData;
 		HV_ASSERT_BUFFER(SMaterialBufferData)

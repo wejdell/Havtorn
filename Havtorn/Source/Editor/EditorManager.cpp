@@ -582,7 +582,7 @@ namespace Havtorn
 	std::string CEditorManager::GetFrameRate() const
 	{
 		std::string frameRateString = "Framerate: ";
-		const U32 frameRate = static_cast<U32>(GTimer::AverageFrameRate());
+		const U32 frameRate = static_cast<U32>(GTime::AverageFrameRate());
 		const float frameTime = 1000.0f / frameRate;
 		std::string frameTimeString = std::format("{:.2f}", frameTime);
 
@@ -590,6 +590,21 @@ namespace Havtorn
 		frameRateString.append(" (");
 		frameRateString.append(frameTimeString);
 		frameRateString.append(" ms)");
+
+		frameRateString.append(" | CPU: ");
+		const U32 frameRateCPU = static_cast<U32>(GTime::AverageFrameRate(ETimerCategory::CPU));
+		const float frameTimeCPU = 1000.0f / frameRateCPU;
+		std::string frameTimeStringCPU = std::format("{:.2f}", frameTimeCPU);
+		frameRateString.append(frameTimeStringCPU);
+		frameRateString.append(" ms");
+		
+		frameRateString.append(" | GPU: ");
+		const U32 frameRateGPU = static_cast<U32>(GTime::AverageFrameRate(ETimerCategory::GPU));
+		const float frameTimeGPU = 1000.0f / frameRateGPU;
+		std::string frameTimeStringGPU = std::format("{:.2f}", frameTimeGPU);
+		frameRateString.append(frameTimeStringGPU);
+		frameRateString.append(" ms");
+
 		return frameRateString;
 	}
 

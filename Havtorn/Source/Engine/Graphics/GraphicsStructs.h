@@ -63,7 +63,7 @@ namespace Havtorn
 		U16 ShadowmapViewportIndex = 0;
 	};
 
-	struct SGPUGraphicsMaterialProperty
+	struct SRuntimeGraphicsMaterialProperty
 	{
 		F32 ConstantValue = -1.0f;
 		F32 TextureIndex = 0.0f;

@@ -28,7 +28,7 @@ namespace Havtorn
 		Instance = this;
 
 		FileSystem = new CFileSystem();
-		Timer = new GTimer();
+		Timer = new GTime();
 		WindowHandler = new CWindowHandler();
 		ThreadManager = new CThreadManager();
 		Framework = new CGraphicsFramework();
@@ -74,14 +74,17 @@ namespace Havtorn
 
 	float GEngine::BeginFrame()
 	{
-		return GTimer::Mark();
+		GTime::BeginTracking(ETimerCategory::CPU);
+		return GTime::Mark();
 	}
 
 	void GEngine::Update()
 	{
 		InputMapper->Update();
 		Scene->Update();
-	
+
+		GTime::EndTracking(ETimerCategory::CPU);
+
 		std::unique_lock<std::mutex> uniqueLock(CThreadManager::RenderMutex);
 		CThreadManager::RenderCondition.wait(uniqueLock, []
 			{

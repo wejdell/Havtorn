@@ -17,14 +17,14 @@ namespace Havtorn
 		{
 			CTextureBank* textureBank = GEngine::GetTextureBank();
 			
-			auto fillProperty = [&](const SOfflineGraphicsMaterialProperty& offlineProperty, SEngineGraphicsMaterialProperty& outProperty)
+			auto fillProperty = [&](const SOfflineGraphicsMaterialProperty& offlineProperty, SRuntimeGraphicsMaterialProperty& outProperty)
 			{
 				outProperty.ConstantValue = offlineProperty.ConstantValue;
 				
 				if (offlineProperty.TexturePathLength != 0)
-					outProperty.TextureIndex = static_cast<U16>(textureBank->GetTextureIndex(offlineProperty.TexturePath));
+					outProperty.TextureIndex = static_cast<F32>(textureBank->GetTextureIndex(offlineProperty.TexturePath));
 				
-				outProperty.TextureChannelIndex = offlineProperty.TextureChannelIndex;
+				outProperty.TextureChannelIndex = static_cast<F32>(offlineProperty.TextureChannelIndex);
 			};
 
 			fillProperty(offlineMaterial.Properties[0], AlbedoR);
@@ -42,17 +42,18 @@ namespace Havtorn
 			RecreateNormalZ = offlineMaterial.RecreateZ;
 		}
 
-		SEngineGraphicsMaterialProperty AlbedoR = {};
-		SEngineGraphicsMaterialProperty AlbedoG = {};
-		SEngineGraphicsMaterialProperty AlbedoB = {};
-		SEngineGraphicsMaterialProperty AlbedoA = {};
-		SEngineGraphicsMaterialProperty NormalX = {};
-		SEngineGraphicsMaterialProperty NormalY = {};
-		SEngineGraphicsMaterialProperty NormalZ = {};
-		SEngineGraphicsMaterialProperty AmbientOcclusion = {};
-		SEngineGraphicsMaterialProperty Metalness = {};
-		SEngineGraphicsMaterialProperty Roughness = {};
-		SEngineGraphicsMaterialProperty Emissive = {};
+		SRuntimeGraphicsMaterialProperty AlbedoR = {};
+		SRuntimeGraphicsMaterialProperty AlbedoG = {};
+		SRuntimeGraphicsMaterialProperty AlbedoB = {};
+		SRuntimeGraphicsMaterialProperty AlbedoA = {};
+		SRuntimeGraphicsMaterialProperty NormalX = {};
+		SRuntimeGraphicsMaterialProperty NormalY = {};
+		SRuntimeGraphicsMaterialProperty NormalZ = {};
+		SRuntimeGraphicsMaterialProperty AmbientOcclusion = {};
+		SRuntimeGraphicsMaterialProperty Metalness = {};
+		SRuntimeGraphicsMaterialProperty Roughness = {};
+		SRuntimeGraphicsMaterialProperty Emissive = {};
+
 
 		std::string Name = "";
 		bool RecreateNormalZ = true;

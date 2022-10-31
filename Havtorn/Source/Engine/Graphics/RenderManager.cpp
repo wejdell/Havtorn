@@ -41,6 +41,7 @@ namespace Havtorn
 		, ShadowmapBuffer(nullptr)
 		, DebugShapeObjectBuffer(nullptr)
 		, EmissiveBuffer(nullptr)
+		, MaterialBuffer(nullptr)
 		, InstancedTransformBuffer(nullptr)
 		, VolumetricLightBuffer(nullptr)
 	    , PushToCommands(&RenderCommandsA)
@@ -323,6 +324,8 @@ namespace Havtorn
 			CThreadManager::RenderCondition.wait(uniqueLock, [] 
 				{ return CThreadManager::RenderThreadStatus == ERenderThreadStatus::ReadyToRender; });
 
+			GTime::BeginTracking(ETimerCategory::GPU);
+
 			ShouldBlurVolumetricBuffer = false;
 			CRenderManager::NumberOfDrawCallsThisFrame = 0;
 			RenderStateManager.SetAllDefault();
@@ -490,6 +493,8 @@ namespace Havtorn
 			Backbuffer.SetAsActiveTarget();
 			RenderedScene.SetAsResourceOnSlot(0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+
+			GTime::EndTracking(ETimerCategory::GPU);
 
 			CThreadManager::RenderThreadStatus = ERenderThreadStatus::PostRender;
 			uniqueLock.unlock();
@@ -889,12 +894,13 @@ namespace Havtorn
 
 		std::map<U16, U16> textureIndices;
 		auto textureBank = GEngine::GetTextureBank();
-		auto findTextureByIndex = [&](SEngineGraphicsMaterialProperty& materialProperty)
+		//auto findTextureByIndex = [&](SEngineGraphicsMaterialProperty& materialProperty)
+		auto findTextureByIndex = [&](SRuntimeGraphicsMaterialProperty& materialProperty)
 		{
-			U16* textureIndex = &materialProperty.TextureIndex;
+			F32* textureIndex = &materialProperty.TextureIndex;
 			if (materialProperty.TextureChannelIndex > -1)
 			{
-				U16 textureIndexCopy = *textureIndex;
+				U16 textureIndexCopy = static_cast<U16>(*textureIndex);
 				if (!textureIndices.contains(textureIndexCopy))
 				{
 					resourceViewPointers.emplace_back(textureBank->GetTexture(textureIndexCopy));
@@ -917,24 +923,24 @@ namespace Havtorn
 		findTextureByIndex(materialCopy.Roughness);
 		findTextureByIndex(materialCopy.Emissive);
 
-		auto convertToFloats = [&](SEngineGraphicsMaterialProperty& materialProperty, int propertyIndex)
-		{
-			MaterialBufferData.Properties[propertyIndex].ConstantValue = materialProperty.ConstantValue;
-			MaterialBufferData.Properties[propertyIndex].TextureIndex = static_cast<F32>(materialProperty.TextureIndex);
-			MaterialBufferData.Properties[propertyIndex].TextureChannelIndex = static_cast<F32>(materialProperty.TextureChannelIndex);
-		};
+		//auto convertToFloats = [&](SEngineGraphicsMaterialProperty& materialProperty, int propertyIndex)
+		//{
+		//	MaterialBufferData.Properties[propertyIndex].ConstantValue = materialProperty.ConstantValue;
+		//	MaterialBufferData.Properties[propertyIndex].TextureIndex = static_cast<F32>(materialProperty.TextureIndex);
+		//	MaterialBufferData.Properties[propertyIndex].TextureChannelIndex = static_cast<F32>(materialProperty.TextureChannelIndex);
+		//};
 
-		convertToFloats(materialCopy.AlbedoR, 0);
-		convertToFloats(materialCopy.AlbedoG, 1);
-		convertToFloats(materialCopy.AlbedoB, 2);
-		convertToFloats(materialCopy.AlbedoA, 3);
-		convertToFloats(materialCopy.NormalX, 4);
-		convertToFloats(materialCopy.NormalY, 5);
-		convertToFloats(materialCopy.NormalZ, 6);
-		convertToFloats(materialCopy.AmbientOcclusion, 7);
-		convertToFloats(materialCopy.Metalness, 8);
-		convertToFloats(materialCopy.Roughness, 9);
-		convertToFloats(materialCopy.Emissive, 10);
+		//convertToFloats(materialCopy.AlbedoR, 0);
+		//convertToFloats(materialCopy.AlbedoG, 1);
+		//convertToFloats(materialCopy.AlbedoB, 2);
+		//convertToFloats(materialCopy.AlbedoA, 3);
+		//convertToFloats(materialCopy.NormalX, 4);
+		//convertToFloats(materialCopy.NormalY, 5);
+		//convertToFloats(materialCopy.NormalZ, 6);
+		//convertToFloats(materialCopy.AmbientOcclusion, 7);
+		//convertToFloats(materialCopy.Metalness, 8);
+		//convertToFloats(materialCopy.Roughness, 9);
+		//convertToFloats(materialCopy.Emissive, 10);
 
 		MaterialBufferData.RecreateZ = materialCopy.RecreateNormalZ;
 		BindBuffer(MaterialBuffer, MaterialBufferData, "Material Buffer");
@@ -1478,58 +1484,36 @@ namespace Havtorn
 		auto textureBank = GEngine::GetTextureBank();
 		for (U8 drawCallIndex = 0; drawCallIndex < static_cast<U8>(staticMeshComp->DrawCallData.size()); drawCallIndex++)
 		{
-			SEngineGraphicsMaterial materialCopy = materialComp->Materials[drawCallIndex];
 			std::vector<ID3D11ShaderResourceView*> resourceViewPointers;
 			
-			std::map<U16, U16> textureIndices;
-			auto findTextureByIndex = [&] (SEngineGraphicsMaterialProperty& materialProperty)
+			std::map<F32, F32> textureIndices;
+			auto findTextureByIndex = [&] (SRuntimeGraphicsMaterialProperty& bufferProperty)
 			{
-				U16* textureIndex = &materialProperty.TextureIndex;
-				if (materialProperty.TextureChannelIndex > -1)
+				if (bufferProperty.TextureChannelIndex > -1.0f)
 				{
-					U16 textureIndexCopy = *textureIndex;
-					if (!textureIndices.contains(textureIndexCopy))
+					if (!textureIndices.contains(bufferProperty.TextureIndex))
 					{
-						resourceViewPointers.emplace_back(textureBank->GetTexture(textureIndexCopy));
-						textureIndices.emplace(textureIndexCopy, static_cast<U16>(resourceViewPointers.size() - 1));
+						resourceViewPointers.emplace_back(textureBank->GetTexture(static_cast<U32>(bufferProperty.TextureIndex)));
+						textureIndices.emplace(bufferProperty.TextureIndex, static_cast<F32>(resourceViewPointers.size() - 1));
 					}
 					
-					*textureIndex = textureIndices[textureIndexCopy];
+					bufferProperty.TextureIndex = textureIndices[bufferProperty.TextureIndex];
 				}
 			};
 
-			findTextureByIndex(materialCopy.AlbedoR);
-			findTextureByIndex(materialCopy.AlbedoG);
-			findTextureByIndex(materialCopy.AlbedoB);
-			findTextureByIndex(materialCopy.AlbedoA);
-			findTextureByIndex(materialCopy.NormalX);
-			findTextureByIndex(materialCopy.NormalY);
-			findTextureByIndex(materialCopy.NormalZ);
-			findTextureByIndex(materialCopy.AmbientOcclusion);
-			findTextureByIndex(materialCopy.Metalness);
-			findTextureByIndex(materialCopy.Roughness);
-			findTextureByIndex(materialCopy.Emissive);
+			MaterialBufferData = SMaterialBufferData(materialComp->Materials[drawCallIndex]);
+			findTextureByIndex(MaterialBufferData.Properties[0]);
+			findTextureByIndex(MaterialBufferData.Properties[1]);
+			findTextureByIndex(MaterialBufferData.Properties[2]);
+			findTextureByIndex(MaterialBufferData.Properties[3]);
+			findTextureByIndex(MaterialBufferData.Properties[4]);
+			findTextureByIndex(MaterialBufferData.Properties[5]);
+			findTextureByIndex(MaterialBufferData.Properties[6]);
+			findTextureByIndex(MaterialBufferData.Properties[7]);
+			findTextureByIndex(MaterialBufferData.Properties[8]);
+			findTextureByIndex(MaterialBufferData.Properties[9]);
+			findTextureByIndex(MaterialBufferData.Properties[10]);
 
-			auto convertToFloats = [&] (SEngineGraphicsMaterialProperty& materialProperty, int propertyIndex)
-			{
-				MaterialBufferData.Properties[propertyIndex].ConstantValue = materialProperty.ConstantValue;
-				MaterialBufferData.Properties[propertyIndex].TextureIndex = static_cast<F32>(materialProperty.TextureIndex);
-				MaterialBufferData.Properties[propertyIndex].TextureChannelIndex = static_cast<F32>(materialProperty.TextureChannelIndex);
-			};
-
-			convertToFloats(materialCopy.AlbedoR, 0);
-			convertToFloats(materialCopy.AlbedoG, 1);
-			convertToFloats(materialCopy.AlbedoB, 2);
-			convertToFloats(materialCopy.AlbedoA, 3);
-			convertToFloats(materialCopy.NormalX, 4);
-			convertToFloats(materialCopy.NormalY, 5);
-			convertToFloats(materialCopy.NormalZ, 6);
-			convertToFloats(materialCopy.AmbientOcclusion, 7);
-			convertToFloats(materialCopy.Metalness, 8);
-			convertToFloats(materialCopy.Roughness, 9);
-			convertToFloats(materialCopy.Emissive, 10);
-
-			MaterialBufferData.RecreateZ = materialCopy.RecreateNormalZ;
 			BindBuffer(MaterialBuffer, MaterialBufferData, "Material Buffer");
 
 			Context->PSSetShaderResources(5, static_cast<U32>(resourceViewPointers.size()), resourceViewPointers.data());

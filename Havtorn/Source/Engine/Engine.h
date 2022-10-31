@@ -12,7 +12,7 @@ namespace Havtorn
 	class CCameraFactory;
 	class CLightFactory;
 	class CGraphicsFramework;
-	class GTimer;
+	class GTime;
 	class CScene;
 	class CRenderManager;
 	class CParticleEmitterFactory;
@@ -69,7 +69,7 @@ namespace Havtorn
 		CGraphicsFramework* Framework = nullptr;
 		CTextureBank* TextureBank = nullptr;
 		CRenderManager* RenderManager = nullptr;
-		GTimer* Timer = nullptr;
+		GTime* Timer = nullptr;
 		CInputMapper* InputMapper = nullptr;
 
 		CScene* Scene = nullptr;
