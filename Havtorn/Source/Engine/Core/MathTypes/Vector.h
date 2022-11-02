@@ -12,7 +12,7 @@ namespace Havtorn
 #define VECTOR_COMPARISON_EPSILON 1.e-4f
 #define VECTOR_NORMALIZED_EPSILON 1.e-1f
 
-	struct SVector
+	struct HAVTORN_API SVector
 	{
 		// TODO.NR: Make union so you can access xyz as F32[3]
 		// TODO.NR: Add [] operator
@@ -258,7 +258,7 @@ namespace Havtorn
 
 	inline F32 SVector::SizeSquared() const
 	{
-		return this->SizeSquared();
+		return this->LengthSquared();
 	}
 
 	inline F32 SVector::Length2D() const
@@ -374,7 +374,7 @@ namespace Havtorn
 
 	inline std::string SVector::ToString() const
 	{
-		char buffer[32];
+		char buffer[64];
 		sprintf_s(buffer, "{X: %.1f, Y: %.1f, Z: %.1f}", X, Y, Z);
 		return buffer;
 	}
