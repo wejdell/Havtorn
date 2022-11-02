@@ -146,27 +146,27 @@ namespace Havtorn
 			{ -0.5f, -0.5f,  0.5f,  1.0f },// 4
 			{  0.5f, -0.5f,  0.5f,  1.0f },// 5
 			{ -0.5f,  0.5f,  0.5f,  1.0f },// 6
-			{  0.5f,  0.5f,  0.5f,  1.0f }//  7
+			{  0.5f,  0.5f,  0.5f,  1.0f },// 7
 		};
 
 		const static std::vector<U32> DebugCubeIndices =
 		{
-			0, 1, 1, 3, 3, 2, 2, 0, 0, 4, 4, 6, 6, 2, 6, 7, 7, 5, 5, 4, 7, 3, 5, 1
+			0, 1, 1, 3, 3, 2, 2, 0, 0, 4, 4, 6, 6, 2, 6, 7, 7, 5, 5, 4, 7, 3, 5, 1,
 		};
 
 		const static std::vector<SPositionVertex> Camera = 
 		{
 			// X      Y      Z      W
-			{ 0.0f, 0.0f, 0.0f, 1.0f },// 0 // Pivot
+			{ 0.0f, 0.0f, 0.0f, 1.0f },// 0
 
-			{ 0.3f, 0.3f, 0.7f, 1.0f },// 1 // Frame Upper Right
-			{ 0.3f, -0.3f, 0.7f, 1.0f },// 2 // Frame Lower Right
-			{ -0.3f, 0.3f, 0.7f, 1.0f },// 3 // Frame Upper Left
-			{ -0.3f, -0.3f, 0.7f, 1.0f },// 4 // Frame Lower Left
+			{ 0.3f, 0.3f, 0.7f, 1.0f },// 1
+			{ 0.3f, -0.3f, 0.7f, 1.0f },// 2
+			{ -0.3f, 0.3f, 0.7f, 1.0f },// 3
+			{ -0.3f, -0.3f, 0.7f, 1.0f },// 4
 
-			{ -0.15f, 0.325f, 0.7f, 1.0f },// 5 // Up Arrow Left
-			{ 0.0f, 0.45f, 0.7f, 1.0f },// 6 // Up Arrow Center
-			{ 0.15f, 0.325f, 0.7f, 1.0f },// 7 // Up Arrow Right
+			{ -0.15f, 0.325f, 0.7f, 1.0f },// 5
+			{ 0.0f, 0.45f, 0.7f, 1.0f },// 6
+			{ 0.15f, 0.325f, 0.7f, 1.0f },// 7
 		};
 
 		const static std::vector<U32> CameraIndices =
