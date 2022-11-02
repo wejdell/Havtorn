@@ -100,10 +100,6 @@ namespace Havtorn
 			std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
 			const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
 			TransformToFaceAndReach(transforms[transformIndex], start, end);
-
-#if DEBUG_DRAWER_LOG_ADDSHAPE
-			Instance->PrintDebugAddedShape(*debugShapes[shapeIndex].get(), useLifeTime, __FUNCTION__);	
-#endif
 		}
 
 		void UDebugShapeSystem::AddArrow(const SVector& start, const SVector& end, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
