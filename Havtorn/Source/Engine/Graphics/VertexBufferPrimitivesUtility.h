@@ -34,6 +34,15 @@ namespace Havtorn
 				case EVertexBufferPrimitives::Camera:
 					return static_cast<T>(GeometryPrimitives::Camera.size());
 
+				case EVertexBufferPrimitives::CircleXY8Segments:
+					return static_cast<T>(GeometryPrimitives::CircleXY8.size());
+
+				case EVertexBufferPrimitives::CircleXY16Segments:
+					return static_cast<T>(GeometryPrimitives::CircleXY16.size());
+
+				case EVertexBufferPrimitives::CircleXY32Segments:
+					return static_cast<T>(GeometryPrimitives::CircleXY32.size());
+
 				default:
 					return 0;
 				}
@@ -67,6 +76,15 @@ namespace Havtorn
 
 				case EVertexBufferPrimitives::Camera:
 					return static_cast<T>(GeometryPrimitives::CameraIndices.size());
+
+				case EVertexBufferPrimitives::CircleXY8Segments:
+					return static_cast<T>(GeometryPrimitives::CircleXY8Indices.size());
+
+				case EVertexBufferPrimitives::CircleXY16Segments:
+					return static_cast<T>(GeometryPrimitives::CircleXY16Indices.size());
+
+				case EVertexBufferPrimitives::CircleXY32Segments:
+					return static_cast<T>(GeometryPrimitives::CircleXY32Indices.size());
 
 				default:
 					return 0;
