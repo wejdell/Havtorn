@@ -23,6 +23,7 @@
 
 namespace Havtorn
 {
+	struct SMatrix;
 	struct SEntity;
 	struct STransformComponent;
 	struct SDebugShapeComponent;
@@ -49,8 +50,14 @@ namespace Havtorn
 			// Cube with Width/Height/Depth = 1. Pivot is in center.
 			static HAVTORN_API void AddCube(const SVector& center, const SVector& scale, const SVector& eulerRotation, const SVector4& color = Color::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 			static HAVTORN_API void AddCamera(const SVector& origin, const SVector& eulerRotation, const F32 fov = 70.0f, const F32 farZ = 1.0f, const SVector4& color = Color::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+			
+			static HAVTORN_API void AddCircleXY(const SVector& origin, const SVector& eulerRotation, const F32 radius = 0.5f, const UINT8 segments = 16, const SVector4& color = Color::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+			static HAVTORN_API void AddCircleXZ(const SVector& origin, const SVector& eulerRotation, const F32 radius = 0.5f, const UINT8 segments = 16, const SVector4& color = Color::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+			static HAVTORN_API void AddCircleYZ(const SVector& origin, const SVector& eulerRotation, const F32 radius = 0.5f, const UINT8 segments = 16, const SVector4& color = Color::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 
 		private:
+			static HAVTORN_API void AddDefaultCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius = 0.5f, const UINT8 segments = 16, const SVector4& color = Color::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+			
 			static bool InstanceExists();
 			static F32 LifeTimeForShape(const bool useLifeTime, const F32 requestedLifeTime);
 			static F32 ClampThickness(const F32 thickness);

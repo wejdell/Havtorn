@@ -178,6 +178,74 @@ namespace Havtorn
 			transforms[transformIndex]->Transform.SetMatrix(matrix);
 		}
 
+		void UDebugShapeSystem::AddCircleXY(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+		{
+			AddDefaultCircle(origin, eulerRotation, radius, segments, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
+		}
+
+		void UDebugShapeSystem::AddCircleXZ(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+		{
+			SVector rotation = eulerRotation + SVector(90.0f, 0.0f, 0.0f);
+			AddDefaultCircle(origin, rotation, radius, segments, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
+		}
+
+		void UDebugShapeSystem::AddCircleYZ(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SVector4 & color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+		{
+			SVector rotation = eulerRotation + SVector(0.0f, 90.0f, 0.0f);
+			AddDefaultCircle(origin, rotation, radius, segments, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
+		}
+
+		void UDebugShapeSystem::AddDefaultCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+		{
+			if (!InstanceExists())
+				return;
+
+			U64 entityIndex = 0;
+			if (!Instance->TryGetAvailableIndex(entityIndex))
+				return;
+
+			// AG. The Default Circle is across the XY plane
+			auto EnumFromSegment = [&](const UINT8& s, EVertexBufferPrimitives& v, EDefaultIndexBuffers& i)
+			{
+				if (s >= 16 - (16 / 4) && s <= 16 + (16 / 4))
+				{
+					v = EVertexBufferPrimitives::CircleXY16Segments;
+					i = EDefaultIndexBuffers::CircleXY16Segments;
+					return;
+				}
+
+				if (s < 16)
+				{
+					v = EVertexBufferPrimitives::CircleXY8Segments;
+					i = EDefaultIndexBuffers::CircleXY8Segments;
+				}
+				else
+				{
+					v = EVertexBufferPrimitives::CircleXY32Segments;
+					i = EDefaultIndexBuffers::CircleXY32Segments;
+				}
+			};
+
+			const std::vector<Ref<SEntity>>& entities = Instance->Scene->GetEntities();
+
+			const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
+			std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
+			SetSharedDataForShape(debugShapes[shapeIndex], color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
+		
+			EVertexBufferPrimitives vertexBufferPrimitive = EVertexBufferPrimitives::CircleXY16Segments;
+			EDefaultIndexBuffers indexBuffer = EDefaultIndexBuffers::CircleXY16Segments;
+			EnumFromSegment(segments, vertexBufferPrimitive, indexBuffer);
+			debugShapes[shapeIndex]->VertexBufferIndex = Utility::VertexBufferPrimitives::GetVertexBufferIndex<U8>(vertexBufferPrimitive);
+			debugShapes[shapeIndex]->IndexCount = Utility::VertexBufferPrimitives::GetIndexCount<U8>(vertexBufferPrimitive);
+			debugShapes[shapeIndex]->IndexBufferIndex = Utility::VertexBufferPrimitives::GetIndexBufferIndex<U8>(indexBuffer);
+
+			std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
+			const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
+			SMatrix& matrix = transforms[transformIndex]->Transform.GetMatrix();
+			SVector scale(radius / GeometryPrimitives::CircleXYRadius);
+			SMatrix::Recompose(origin, eulerRotation, scale, matrix);
+		}
+
 
 		bool UDebugShapeSystem::InstanceExists()
 		{
