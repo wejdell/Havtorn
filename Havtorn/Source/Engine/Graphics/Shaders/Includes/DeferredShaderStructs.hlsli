@@ -217,3 +217,15 @@ sampler shadowSampler  : register(s1);
 #define METALNESS           8
 #define ROUGHNESS           9
 #define EMISSIVE            10
+
+#define MATERIAL_CHANNEL_0  0
+#define MATERIAL_CHANNEL_1  1
+#define MATERIAL_CHANNEL_2  2
+#define MATERIAL_CHANNEL_3  3
+#define MATERIAL_CHANNEL_4  4
+#define MATERIAL_CHANNEL_5  5
+#define MATERIAL_CHANNEL_6  6
+#define MATERIAL_CHANNEL_7  7
+#define MATERIAL_CHANNEL_8  8
+#define MATERIAL_CHANNEL_9  9
+#define MATERIAL_CHANNEL_10 10

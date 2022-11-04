@@ -14,4 +14,20 @@ namespace Havtorn
 	{
 		AlbedoMaterialNormal_Packed
 	};
+
+	enum class EMaterialProperty
+	{
+		AlbedoR,
+		AlbedoG,
+		AlbedoB,
+		AlbedoA,
+		NormalX,
+		NormalY,
+		NormalZ,
+		AmbientOcclusion,
+		Metalness,
+		Roughness,
+		Emissive,
+		Count
+	};
 }

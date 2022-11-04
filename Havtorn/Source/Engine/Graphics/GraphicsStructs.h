@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "GraphicsEnums.h"
+
 namespace Havtorn
 {
 	struct SPositionVertex
@@ -98,7 +100,7 @@ namespace Havtorn
 
 	struct SOfflineGraphicsMaterial
 	{
-		SOfflineGraphicsMaterialProperty Properties[11];
+		SOfflineGraphicsMaterialProperty Properties[static_cast<U8>(EMaterialProperty::Count)];
 		bool RecreateZ = true;
 
 		U32 GetSize() const

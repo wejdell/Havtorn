@@ -27,17 +27,17 @@ namespace Havtorn
 				outProperty.TextureChannelIndex = static_cast<F32>(offlineProperty.TextureChannelIndex);
 			};
 
-			fillProperty(offlineMaterial.Properties[0], AlbedoR);
-			fillProperty(offlineMaterial.Properties[1], AlbedoG);
-			fillProperty(offlineMaterial.Properties[2], AlbedoB);
-			fillProperty(offlineMaterial.Properties[3], AlbedoA);
-			fillProperty(offlineMaterial.Properties[4], NormalX);
-			fillProperty(offlineMaterial.Properties[5], NormalY);
-			fillProperty(offlineMaterial.Properties[6], NormalZ);
-			fillProperty(offlineMaterial.Properties[7], AmbientOcclusion);
-			fillProperty(offlineMaterial.Properties[8], Metalness);
-			fillProperty(offlineMaterial.Properties[9], Roughness);
-			fillProperty(offlineMaterial.Properties[10], Emissive);
+			fillProperty(offlineMaterial.Properties[static_cast<U8>(EMaterialProperty::AlbedoR)], AlbedoR);
+			fillProperty(offlineMaterial.Properties[static_cast<U8>(EMaterialProperty::AlbedoG)], AlbedoG);
+			fillProperty(offlineMaterial.Properties[static_cast<U8>(EMaterialProperty::AlbedoB)], AlbedoB);
+			fillProperty(offlineMaterial.Properties[static_cast<U8>(EMaterialProperty::AlbedoA)], AlbedoA);
+			fillProperty(offlineMaterial.Properties[static_cast<U8>(EMaterialProperty::NormalX)], NormalX);
+			fillProperty(offlineMaterial.Properties[static_cast<U8>(EMaterialProperty::NormalY)], NormalY);
+			fillProperty(offlineMaterial.Properties[static_cast<U8>(EMaterialProperty::NormalZ)], NormalZ);
+			fillProperty(offlineMaterial.Properties[static_cast<U8>(EMaterialProperty::AmbientOcclusion)], AmbientOcclusion);
+			fillProperty(offlineMaterial.Properties[static_cast<U8>(EMaterialProperty::Metalness)], Metalness);
+			fillProperty(offlineMaterial.Properties[static_cast<U8>(EMaterialProperty::Roughness)], Roughness);
+			fillProperty(offlineMaterial.Properties[static_cast<U8>(EMaterialProperty::Emissive)], Emissive);
 
 			RecreateNormalZ = offlineMaterial.RecreateZ;
 		}
