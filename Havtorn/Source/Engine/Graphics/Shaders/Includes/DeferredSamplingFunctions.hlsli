@@ -1,11 +1,7 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #include "DeferredShaderStructs.hlsli"
-//#include "MathHelpers.hlsli"
 #include "DetailNormalHelpers.hlsli"
-//#include "ShadowSampling.hlsli"
-
-//static float emissiveStrength = 20.0f;
 
 float4 PixelShader_WorldPosition(float2 uv)
 {       
@@ -200,37 +196,37 @@ float SampleMaterialTexture(const int textureIndex, const int textureChannelInde
     switch (textureIndex)
     {
         case 0:
-            returnValue = materialChannelTextures[0].Sample(defaultSampler, uv)[textureChannelIndex];
+            returnValue = materialChannelTextures[MATERIAL_CHANNEL_0].Sample(defaultSampler, uv)[textureChannelIndex];
             break;
         case 1:
-            returnValue = materialChannelTextures[1].Sample(defaultSampler, uv)[textureChannelIndex];
+            returnValue = materialChannelTextures[MATERIAL_CHANNEL_1].Sample(defaultSampler, uv)[textureChannelIndex];
             break;
         case 2:
-            returnValue = materialChannelTextures[2].Sample(defaultSampler, uv)[textureChannelIndex];
+            returnValue = materialChannelTextures[MATERIAL_CHANNEL_2].Sample(defaultSampler, uv)[textureChannelIndex];
             break;
         case 3:
-            returnValue = materialChannelTextures[3].Sample(defaultSampler, uv)[textureChannelIndex];
+            returnValue = materialChannelTextures[MATERIAL_CHANNEL_3].Sample(defaultSampler, uv)[textureChannelIndex];
             break;
         case 4:
-            returnValue = materialChannelTextures[4].Sample(defaultSampler, uv)[textureChannelIndex];
+            returnValue = materialChannelTextures[MATERIAL_CHANNEL_4].Sample(defaultSampler, uv)[textureChannelIndex];
             break;
         case 5:
-            returnValue = materialChannelTextures[5].Sample(defaultSampler, uv)[textureChannelIndex];
+            returnValue = materialChannelTextures[MATERIAL_CHANNEL_5].Sample(defaultSampler, uv)[textureChannelIndex];
             break;
         case 6:
-            returnValue = materialChannelTextures[6].Sample(defaultSampler, uv)[textureChannelIndex];
+            returnValue = materialChannelTextures[MATERIAL_CHANNEL_6].Sample(defaultSampler, uv)[textureChannelIndex];
             break;
         case 7:
-            returnValue = materialChannelTextures[7].Sample(defaultSampler, uv)[textureChannelIndex];
+            returnValue = materialChannelTextures[MATERIAL_CHANNEL_7].Sample(defaultSampler, uv)[textureChannelIndex];
             break;
         case 8:
-            returnValue = materialChannelTextures[8].Sample(defaultSampler, uv)[textureChannelIndex];
+            returnValue = materialChannelTextures[MATERIAL_CHANNEL_8].Sample(defaultSampler, uv)[textureChannelIndex];
             break;
         case 9:
-            returnValue = materialChannelTextures[9].Sample(defaultSampler, uv)[textureChannelIndex];
+            returnValue = materialChannelTextures[MATERIAL_CHANNEL_9].Sample(defaultSampler, uv)[textureChannelIndex];
             break;
         case 10:
-            returnValue = materialChannelTextures[10].Sample(defaultSampler, uv)[textureChannelIndex];
+            returnValue = materialChannelTextures[MATERIAL_CHANNEL_10].Sample(defaultSampler, uv)[textureChannelIndex];
             break;
     }
     

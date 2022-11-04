@@ -372,12 +372,6 @@ namespace Havtorn
 				}
 				break;
 
-				case ERenderCommandType::GBufferData:
-				{
-					GBufferData(currentCommand);
-				}
-				break;
-
 				case ERenderCommandType::GBufferDataInstanced:
 				{
 					GBufferDataInstanced(currentCommand);
@@ -647,10 +641,16 @@ namespace Havtorn
 	bool CRenderManager::TryReplaceMaterialOnComponent(const std::string& filePath, U8 materialIndex, SMaterialComponent* outMaterialComponent) const
 	{
 		if (!GEngine::GetFileSystem()->DoesFileExist(filePath))
+		{
+			HV_LOG_ERROR("File not found when trying to replace material: %s", filePath.c_str());
 			return false;
+		}
 
 		if (materialIndex >= static_cast<U8>(outMaterialComponent->Materials.size()))
+		{
+			HV_LOG_ERROR("Material index out of bounds when trying to replace material: %s", filePath.c_str());
 			return false;
+		}
 
 		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
 		char* data = new char[fileSize];
@@ -908,17 +908,17 @@ namespace Havtorn
 		};
 
 		MaterialBufferData = SMaterialBufferData(materialComp->Materials[0]);
-		findTextureByIndex(MaterialBufferData.Properties[0]);
-		findTextureByIndex(MaterialBufferData.Properties[1]);
-		findTextureByIndex(MaterialBufferData.Properties[2]);
-		findTextureByIndex(MaterialBufferData.Properties[3]);
-		findTextureByIndex(MaterialBufferData.Properties[4]);
-		findTextureByIndex(MaterialBufferData.Properties[5]);
-		findTextureByIndex(MaterialBufferData.Properties[6]);
-		findTextureByIndex(MaterialBufferData.Properties[7]);
-		findTextureByIndex(MaterialBufferData.Properties[8]);
-		findTextureByIndex(MaterialBufferData.Properties[9]);
-		findTextureByIndex(MaterialBufferData.Properties[10]);
+		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AlbedoR)]);
+		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AlbedoG)]);
+		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AlbedoB)]);
+		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AlbedoA)]);
+		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::NormalX)]);
+		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::NormalY)]);
+		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::NormalZ)]);
+		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AmbientOcclusion)]);
+		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::Metalness)]);
+		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::Roughness)]);
+		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::Emissive)]);
 
 		BindBuffer(MaterialBuffer, MaterialBufferData, "Material Buffer");
 
@@ -989,6 +989,8 @@ namespace Havtorn
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 
 		delete materialComp;
+		delete directionalLightComp;
+		delete environmentLightComp;
 		delete viewport;
 		renderTarget->Release();
 		texture->Release();
@@ -1395,47 +1397,6 @@ namespace Havtorn
 		Context->PSSetConstantBuffers(0, 1, &FrameBuffer);
 	}
 
-	void CRenderManager::GBufferData(const SRenderCommand& /*command*/)
-	{
-		//const auto transformComp = command.GetComponent(TransformComponent);
-		//const auto staticMeshComp = command.GetComponent(StaticMeshComponent);
-		//const auto materialComp = command.GetComponent(MaterialComponent);
-
-		//ObjectBufferData.ToWorldFromObject = transformComp->Transform.GetMatrix();
-		//BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
-
-		//Context->VSSetConstantBuffers(1, 1, &ObjectBuffer);
-		//Context->IASetPrimitiveTopology(Topologies[staticMeshComp->TopologyIndex]);
-		//Context->IASetInputLayout(InputLayouts[staticMeshComp->InputLayoutIndex]);
-
-		//Context->VSSetShader(VertexShaders[staticMeshComp->VertexShaderIndex], nullptr, 0);
-		//Context->PSSetShader(PixelShaders[staticMeshComp->PixelShaderIndex], nullptr, 0);
-
-		//ID3D11SamplerState* sampler = Samplers[staticMeshComp->SamplerIndex];
-		//Context->PSSetSamplers(0, 1, &sampler);
-
-		//auto textureBank = GEngine::GetTextureBank();
-		//for (U8 drawCallIndex = 0; drawCallIndex < static_cast<U8>(staticMeshComp->DrawCallData.size()); drawCallIndex++)
-		//{
-		//	// Load Textures
-		//	std::vector<ID3D11ShaderResourceView*> resourceViewPointers;
-		//	resourceViewPointers.resize(TexturesPerMaterial);
-		//	for (U8 textureIndex = 0, pointerTracker = 0; textureIndex < TexturesPerMaterial; textureIndex++, pointerTracker++)
-		//	{
-		//		U8 materialIndex = UMath::Min(drawCallIndex, static_cast<U8>(staticMeshComp->NumberOfMaterials - 1));
-		//		resourceViewPointers[pointerTracker] = textureBank->GetTexture(materialComp->MaterialReferences[textureIndex + materialIndex * TexturesPerMaterial]);
-		//	}
-		//	Context->PSSetShaderResources(5, TexturesPerMaterial, resourceViewPointers.data());
-
-		//	const SDrawCallData& drawData = staticMeshComp->DrawCallData[drawCallIndex];
-		//	ID3D11Buffer* vertexBuffer = VertexBuffers[drawData.VertexBufferIndex];
-		//	Context->IASetVertexBuffers(0, 1, &vertexBuffer, &MeshVertexStrides[drawData.VertexStrideIndex], &MeshVertexOffsets[drawData.VertexOffsetIndex]);
-		//	Context->IASetIndexBuffer(IndexBuffers[drawData.IndexBufferIndex], DXGI_FORMAT_R32_UINT, 0);
-		//	Context->DrawIndexed(drawData.IndexCount, 0, 0);
-		//	CRenderManager::NumberOfDrawCallsThisFrame++;
-		//}
-	}
-
 	void CRenderManager::GBufferDataInstanced(const SRenderCommand& command)
 	{
 		const auto transformComp = command.GetComponent(TransformComponent);
@@ -1464,7 +1425,7 @@ namespace Havtorn
 			std::vector<ID3D11ShaderResourceView*> resourceViewPointers;
 			
 			std::map<F32, F32> textureIndices;
-			auto findTextureByIndex = [&] (SRuntimeGraphicsMaterialProperty& bufferProperty)
+			auto findTextureByIndex = [&](SRuntimeGraphicsMaterialProperty& bufferProperty)
 			{
 				if (bufferProperty.TextureChannelIndex > -1.0f)
 				{
@@ -1479,17 +1440,17 @@ namespace Havtorn
 			};
 
 			MaterialBufferData = SMaterialBufferData(materialComp->Materials[drawCallIndex]);
-			findTextureByIndex(MaterialBufferData.Properties[0]);
-			findTextureByIndex(MaterialBufferData.Properties[1]);
-			findTextureByIndex(MaterialBufferData.Properties[2]);
-			findTextureByIndex(MaterialBufferData.Properties[3]);
-			findTextureByIndex(MaterialBufferData.Properties[4]);
-			findTextureByIndex(MaterialBufferData.Properties[5]);
-			findTextureByIndex(MaterialBufferData.Properties[6]);
-			findTextureByIndex(MaterialBufferData.Properties[7]);
-			findTextureByIndex(MaterialBufferData.Properties[8]);
-			findTextureByIndex(MaterialBufferData.Properties[9]);
-			findTextureByIndex(MaterialBufferData.Properties[10]);
+			findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AlbedoR)]);
+			findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AlbedoG)]);
+			findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AlbedoB)]);
+			findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AlbedoA)]);
+			findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::NormalX)]);
+			findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::NormalY)]);
+			findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::NormalZ)]);
+			findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AmbientOcclusion)]);
+			findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::Metalness)]);
+			findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::Roughness)]);
+			findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::Emissive)]);
 
 			BindBuffer(MaterialBuffer, MaterialBufferData, "Material Buffer");
 

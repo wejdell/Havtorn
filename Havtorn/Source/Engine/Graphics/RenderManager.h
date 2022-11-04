@@ -203,7 +203,6 @@ namespace Havtorn
 		inline void ShadowAtlasPrePassPoint(const SRenderCommand& command);
 		inline void ShadowAtlasPrePassSpot(const SRenderCommand& command);
 		inline void CameraDataStorage(const SRenderCommand& command);
-		inline void GBufferData(const SRenderCommand& command);
 		inline void GBufferDataInstanced(const SRenderCommand& command);
 		inline void DecalDepthCopy();
 		inline void DeferredDecal(const SRenderCommand& command);
