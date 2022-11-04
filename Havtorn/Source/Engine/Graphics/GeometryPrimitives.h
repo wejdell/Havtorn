@@ -134,7 +134,6 @@ namespace Havtorn
 
 		static void Subdivide(std::vector<SVector>& outPositions, std::vector<U32>& outIndices)
 		{
-			std::vector<SVector> vertices = outPositions;
 			std::vector<U32> indices;
 			std::map<std::tuple<U32, U32>, U32> newVertices;
 
@@ -155,9 +154,9 @@ namespace Havtorn
 				U32 i1 = outIndices[i * 3];
 				U32 i2 = outIndices[i * 3 + 1];
 				U32 i3 = outIndices[i * 3 + 2];
-				U32 a = GetNewVertex(i1, i2, vertices, newVertices);
-				U32 b = GetNewVertex(i2, i3, vertices, newVertices);
-				U32 c = GetNewVertex(i3, i1, vertices, newVertices);
+				U32 a = GetNewVertex(i1, i2, outPositions, newVertices);
+				U32 b = GetNewVertex(i2, i3, outPositions, newVertices);
+				U32 c = GetNewVertex(i3, i1, outPositions, newVertices);
 				
 				indices.emplace_back(i1);
 				indices.emplace_back(a);
@@ -173,7 +172,6 @@ namespace Havtorn
 				indices.emplace_back(c);
 			}
 
-			outPositions = vertices;
 			outIndices = indices;
 		}
 
