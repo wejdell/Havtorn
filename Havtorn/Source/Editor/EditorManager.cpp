@@ -59,7 +59,7 @@ namespace Havtorn
 
 	static HINSTANCE hinstDLL;
 
-	bool CEditorManager::Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager, CScene* scene)
+	bool CEditorManager::Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager)
 	{
 		// Unused, left for future reference.
 			// AG.20220812: On the msdn page for SetWindowsHookEx/ SetWindowsHookExA there are is a list of definitions/options for the first parameter.
@@ -100,8 +100,8 @@ namespace Havtorn
 
 		Windows.emplace_back(std::make_unique<ImGui::CViewportWindow>("Viewport", this));
 		Windows.emplace_back(std::make_unique<ImGui::CAssetBrowserWindow>("Asset Browser", this));
-		Windows.emplace_back(std::make_unique<ImGui::CHierarchyWindow>("Hierarchy", scene, this));
-		Windows.emplace_back(std::make_unique<ImGui::CInspectorWindow>("Inspector", scene, this));
+		Windows.emplace_back(std::make_unique<ImGui::CHierarchyWindow>("Hierarchy", this));
+		Windows.emplace_back(std::make_unique<ImGui::CInspectorWindow>("Inspector", this));
 
 		ResourceManager = new CEditorResourceManager();
 		bool success = ResourceManager->Init(renderManager, framework);

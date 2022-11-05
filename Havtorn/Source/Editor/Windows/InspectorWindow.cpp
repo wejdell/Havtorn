@@ -21,9 +21,8 @@ namespace ImGui
 	using Havtorn::EComponentType;
 	using Havtorn::F32;
 
-	CInspectorWindow::CInspectorWindow(const char* name, Havtorn::CScene* scene, Havtorn::CEditorManager* manager)
+	CInspectorWindow::CInspectorWindow(const char* name, Havtorn::CEditorManager* manager)
 		: CWindow(name, manager)
-		, Scene(scene)
 	{
 	}
 
@@ -33,6 +32,7 @@ namespace ImGui
 
 	void CInspectorWindow::OnEnable()
 	{
+		Scene = Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get();
 	}
 
 	void CInspectorWindow::OnInspectorGUI()

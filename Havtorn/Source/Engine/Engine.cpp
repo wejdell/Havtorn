@@ -11,6 +11,7 @@
 #include "Graphics/GraphicsFramework.h"
 #include "Graphics/TextureBank.h"
 
+#include "Scene/World.h"
 #include "Scene/Scene.h"
 #include "ECS/ECSInclude.h"
 
@@ -35,12 +36,12 @@ namespace Havtorn
 		TextureBank = new CTextureBank();
 		RenderManager = new CRenderManager();
 		InputMapper = new CInputMapper();
-		Scene = new CScene();
+		World = new CWorld();
 	}
 
 	GEngine::~GEngine()
 	{
-		SAFE_DELETE(Scene);
+		SAFE_DELETE(World);
 		SAFE_DELETE(InputMapper);
 #ifdef _DEBUG
 		//SAFE_DELETE(EditorManager);
@@ -65,7 +66,7 @@ namespace Havtorn
 		ENGINE_ERROR_BOOL_MESSAGE(RenderManager->Init(Framework, WindowHandler), "RenderManager could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(ThreadManager->Init(RenderManager), "Thread Manager could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(InputMapper->Init(), "Input Mapper could not be initialized.");
-		ENGINE_ERROR_BOOL_MESSAGE(Scene->Init(RenderManager), "Scene could not be initialized.");
+		ENGINE_ERROR_BOOL_MESSAGE(World->Init(RenderManager), "World could not be initialized.");
 
 		InitWindowsImaging();
 
@@ -81,7 +82,7 @@ namespace Havtorn
 	void GEngine::Update()
 	{
 		InputMapper->Update();
-		Scene->Update();
+		World->Update();
 
 		GTime::EndTracking(ETimerCategory::CPU);
 
@@ -126,6 +127,11 @@ namespace Havtorn
 	CThreadManager* GEngine::GetThreadManager()
 	{
 		return Instance->ThreadManager;
+	}
+
+	CWorld* GEngine::GetWorld()
+	{
+		return Instance->World;
 	}
 
 	CInputMapper* GEngine::GetInput()

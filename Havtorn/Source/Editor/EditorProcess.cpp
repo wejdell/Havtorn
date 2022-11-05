@@ -30,7 +30,7 @@ namespace Havtorn
 			return false;
 		}
 
-		return EditorManager->Init(havtornEngine->Framework, havtornEngine->WindowHandler, havtornEngine->RenderManager, havtornEngine->Scene);
+		return EditorManager->Init(havtornEngine->Framework, havtornEngine->WindowHandler, havtornEngine->RenderManager);
 	}
 
 	void CEditorProcess::BeginFrame()

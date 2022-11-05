@@ -24,7 +24,6 @@ namespace Havtorn
 	struct SDecalComponent;
 	struct SDebugShapeComponent;
 
-	class ISystem;
 	class CRenderManager;
 
 	class CScene final
@@ -34,7 +33,6 @@ namespace Havtorn
 		~CScene() = default;
 
 		bool Init(CRenderManager* renderManager);
-		void Update();
 
 		void InitDemoScene(CRenderManager* renderManager);
 
@@ -80,8 +78,6 @@ namespace Havtorn
 		std::vector<Ref<SSpotLightComponent>> SpotLightComponents;
 		COMPONENT_VECTOR_DECLARATION(VolumetricLightComponent)
 		COMPONENT_VECTOR_DECLARATION(DecalComponent)
-		std::vector<Ptr<ISystem>> Systems;
 		std::vector<Ref<SDebugShapeComponent>> DebugShapeComponents;
-
 	};
 }
