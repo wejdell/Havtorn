@@ -4,6 +4,7 @@
 //#include <imgui.h>
 #include "EditorManager.h"
 
+#include "Engine.h"
 #include "Scene/Scene.h"
 #include "ECS/Entity.h"
 #include "Core/MathTypes/EngineMath.h"
@@ -11,9 +12,8 @@
 
 namespace ImGui
 {
-	CHierarchyWindow::CHierarchyWindow(const char* name, Havtorn::CScene* scene, Havtorn::CEditorManager* manager)
+	CHierarchyWindow::CHierarchyWindow(const char* name, Havtorn::CEditorManager* manager)
 		: CWindow(name, manager)
-		, Scene(scene)
 		, SelectedIndex(0)
 	{
 	}
@@ -24,7 +24,6 @@ namespace ImGui
 
 	void CHierarchyWindow::OnEnable()
 	{
-		
 	}
 
 	void CHierarchyWindow::OnInspectorGUI()
@@ -38,7 +37,7 @@ namespace ImGui
 		if (ImGui::Begin(Name(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus))
 		{
 			Havtorn::I32 index = 0;
-			auto& entities = Scene->GetEntities();
+			auto& entities = Havtorn::GEngine::GetWorld()->GetEntities();
 			
 			for (auto& entity : entities) 
 			{

@@ -88,7 +88,7 @@ namespace Havtorn
 		__declspec(dllexport) CEditorManager();
 		__declspec(dllexport) ~CEditorManager();
 
-		bool __declspec(dllexport) Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager, CScene* scene);
+		bool __declspec(dllexport) Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager);
 		void __declspec(dllexport) BeginFrame();
 		void __declspec(dllexport) Render();
 		void __declspec(dllexport) EndFrame();

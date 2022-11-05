@@ -15,7 +15,7 @@ namespace ImGui
 	class CInspectorWindow : public CWindow
 	{
 	public:
-		CInspectorWindow(const char* name, Havtorn::CScene* scene, Havtorn::CEditorManager* manager);
+		CInspectorWindow(const char* name, Havtorn::CEditorManager* manager);
 		~CInspectorWindow() override;
 		void OnEnable() override;
 		void OnInspectorGUI() override;
@@ -40,7 +40,6 @@ namespace ImGui
 
 	private:
 		Havtorn::CScene* Scene = nullptr;
-
 		Havtorn::SVector2<Havtorn::F32> TexturePreviewSize = { 64.0f, 64.0f };
 		Havtorn::SVector2<Havtorn::F32> DummySize = { 0.0f, 0.5f };
 		Havtorn::F32 SlideSpeed = 0.1f;

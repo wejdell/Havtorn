@@ -9,12 +9,6 @@ namespace Havtorn
 {
 	bool CScene::Init(CRenderManager* renderManager)
 	{
-		// Setup systems
-		Systems.emplace_back(std::make_unique<CCameraSystem>());
-		Systems.emplace_back(std::make_unique<CLightSystem>(renderManager));
-		Systems.emplace_back(std::make_unique<CRenderSystem>(renderManager));
-		Systems.emplace_back(std::make_unique<Debug::UDebugShapeSystem>(this, renderManager));
-
 		// Create entities
 		auto cameraEntity = CreateEntity("Camera");
 
@@ -49,14 +43,6 @@ namespace Havtorn
 		InitDemoScene(renderManager);
 
 		return true;
-	}
-
-	void CScene::Update()
-	{
-		for (const auto& system : Systems)
-		{
-			system->Update(this);
-		}
 	}
 
 	void CScene::InitDemoScene(CRenderManager* renderManager)
@@ -202,86 +188,86 @@ namespace Havtorn
 		renderManager->LoadMaterialComponent(materialNames4, AddMaterialComponentToEntity(lamp).get());
 		// === !Lamp ===
 
-		// === Floor ===
-		std::vector<SVector> translations;
-		translations.emplace_back(-1.0f, 0.0f, -2.0f);
-		translations.emplace_back(0.0f, 0.0f, -2.0f);
-		translations.emplace_back(1.0f, 0.0f, -2.0f);
-		translations.emplace_back(2.0f, 0.0f, -2.0f);
-		translations.emplace_back(-1.0f, 0.0f, -1.0f);
-		translations.emplace_back(0.0f, 0.0f, -1.0f);
-		translations.emplace_back(1.0f, 0.0f, -1.0f);
-		translations.emplace_back(2.0f, 0.0f, -1.0f);
-		translations.emplace_back(-1.0f, 0.0f, 0.0f);
-		translations.emplace_back(0.0f, 0.0f, 0.0f);
-		translations.emplace_back(1.0f, 0.0f, 0.0f);
-		translations.emplace_back(2.0f, 0.0f, 0.0f);
+		//// === Floor ===
+		//std::vector<SVector> translations;
+		//translations.emplace_back(-1.0f, 0.0f, -2.0f);
+		//translations.emplace_back(0.0f, 0.0f, -2.0f);
+		//translations.emplace_back(1.0f, 0.0f, -2.0f);
+		//translations.emplace_back(2.0f, 0.0f, -2.0f);
+		//translations.emplace_back(-1.0f, 0.0f, -1.0f);
+		//translations.emplace_back(0.0f, 0.0f, -1.0f);
+		//translations.emplace_back(1.0f, 0.0f, -1.0f);
+		//translations.emplace_back(2.0f, 0.0f, -1.0f);
+		//translations.emplace_back(-1.0f, 0.0f, 0.0f);
+		//translations.emplace_back(0.0f, 0.0f, 0.0f);
+		//translations.emplace_back(1.0f, 0.0f, 0.0f);
+		//translations.emplace_back(2.0f, 0.0f, 0.0f);
 
-		for (U8 i = 0; i < 12; ++i)
-		{
-			auto floor = CreateEntity("Floor");
+		//for (U8 i = 0; i < 12; ++i)
+		//{
+		//	auto floor = CreateEntity("Floor");
 
-			auto& transform3 = AddTransformComponentToEntity(floor)->Transform;
-			transform3.GetMatrix().SetTranslation(translations[i]);
-			transform3.GetMatrix().SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)));
+		//	auto& transform3 = AddTransformComponentToEntity(floor)->Transform;
+		//	transform3.GetMatrix().SetTranslation(translations[i]);
+		//	transform3.GetMatrix().SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)));
 
-			renderManager->LoadStaticMeshComponent(modelPath3, AddStaticMeshComponentToEntity(floor).get());
-			renderManager->LoadMaterialComponent(materialNames3, AddMaterialComponentToEntity(floor).get());
-		}
-		// === !Floor ===
+		//	renderManager->LoadStaticMeshComponent(modelPath3, AddStaticMeshComponentToEntity(floor).get());
+		//	renderManager->LoadMaterialComponent(materialNames3, AddMaterialComponentToEntity(floor).get());
+		//}
+		//// === !Floor ===
 
-		// === Wall ===
-		translations.clear();
-		translations.emplace_back(-1.0f, 0.5f, 0.5f);
-		translations.emplace_back(0.0f, 0.5f, 0.5f);
-		translations.emplace_back(1.0f, 0.5f, 0.5f);
-		translations.emplace_back(2.0f, 0.5f, 0.5f);
-		translations.emplace_back(-1.0f, 1.5f, 0.5f);
-		translations.emplace_back(0.0f, 1.5f, 0.5f);
-		translations.emplace_back(1.0f, 1.5f, 0.5f);
-		translations.emplace_back(2.0f, 1.5f, 0.5f);
-		translations.emplace_back(-1.0f, 2.5f, 0.5f);
-		translations.emplace_back(0.0f, 2.5f, 0.5f);
-		translations.emplace_back(1.0f, 2.5f, 0.5f);
-		translations.emplace_back(2.0f, 2.5f, 0.5f);
+		//// === Wall ===
+		//translations.clear();
+		//translations.emplace_back(-1.0f, 0.5f, 0.5f);
+		//translations.emplace_back(0.0f, 0.5f, 0.5f);
+		//translations.emplace_back(1.0f, 0.5f, 0.5f);
+		//translations.emplace_back(2.0f, 0.5f, 0.5f);
+		//translations.emplace_back(-1.0f, 1.5f, 0.5f);
+		//translations.emplace_back(0.0f, 1.5f, 0.5f);
+		//translations.emplace_back(1.0f, 1.5f, 0.5f);
+		//translations.emplace_back(2.0f, 1.5f, 0.5f);
+		//translations.emplace_back(-1.0f, 2.5f, 0.5f);
+		//translations.emplace_back(0.0f, 2.5f, 0.5f);
+		//translations.emplace_back(1.0f, 2.5f, 0.5f);
+		//translations.emplace_back(2.0f, 2.5f, 0.5f);
 
-		for (U8 i = 0; i < 12; ++i)
-		{
-			auto floor = CreateEntity("Wall");
+		//for (U8 i = 0; i < 12; ++i)
+		//{
+		//	auto floor = CreateEntity("Wall");
 
-			auto& transform3 = AddTransformComponentToEntity(floor)->Transform;
-			transform3.GetMatrix().SetTranslation(translations[i]);
-			transform3.GetMatrix().SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundX(UMath::DegToRad(-90.0f)));
+		//	auto& transform3 = AddTransformComponentToEntity(floor)->Transform;
+		//	transform3.GetMatrix().SetTranslation(translations[i]);
+		//	transform3.GetMatrix().SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundX(UMath::DegToRad(-90.0f)));
 
-			renderManager->LoadStaticMeshComponent(modelPath3, AddStaticMeshComponentToEntity(floor).get());
-			renderManager->LoadMaterialComponent(materialNames3, AddMaterialComponentToEntity(floor).get());
-		}
-		// === !Wall ===
+		//	renderManager->LoadStaticMeshComponent(modelPath3, AddStaticMeshComponentToEntity(floor).get());
+		//	renderManager->LoadMaterialComponent(materialNames3, AddMaterialComponentToEntity(floor).get());
+		//}
+		//// === !Wall ===
 
-		// === Other Wall ===
-		translations.clear();
-		translations.emplace_back(-1.0f, 0.5f, -2.5f);
-		translations.emplace_back(-1.0f, 0.5f, -1.5f);
-		translations.emplace_back(-1.0f, 0.5f, -0.5f);
-		translations.emplace_back(-1.0f, 1.5f, -2.5f);
-		translations.emplace_back(-1.0f, 1.5f, -1.5f);
-		translations.emplace_back(-1.0f, 1.5f, -0.5f);
-		translations.emplace_back(-1.0f, 2.5f, -2.5f);
-		translations.emplace_back(-1.0f, 2.5f, -1.5f);
-		translations.emplace_back(-1.0f, 2.5f, -0.5f);
+		//// === Other Wall ===
+		//translations.clear();
+		//translations.emplace_back(-1.0f, 0.5f, -2.5f);
+		//translations.emplace_back(-1.0f, 0.5f, -1.5f);
+		//translations.emplace_back(-1.0f, 0.5f, -0.5f);
+		//translations.emplace_back(-1.0f, 1.5f, -2.5f);
+		//translations.emplace_back(-1.0f, 1.5f, -1.5f);
+		//translations.emplace_back(-1.0f, 1.5f, -0.5f);
+		//translations.emplace_back(-1.0f, 2.5f, -2.5f);
+		//translations.emplace_back(-1.0f, 2.5f, -1.5f);
+		//translations.emplace_back(-1.0f, 2.5f, -0.5f);
 
-		for (U8 i = 0; i < 9; ++i)
-		{
-			auto floor = CreateEntity("Wall");
+		//for (U8 i = 0; i < 9; ++i)
+		//{
+		//	auto floor = CreateEntity("Wall");
 
-			auto& transform3 = AddTransformComponentToEntity(floor)->Transform;
-			transform3.GetMatrix().SetTranslation(translations[i]);
-			transform3.GetMatrix().SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundX(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundY(UMath::DegToRad(-90.0f)));
-			
-			renderManager->LoadStaticMeshComponent(modelPath3, AddStaticMeshComponentToEntity(floor).get());
-			renderManager->LoadMaterialComponent(materialNames3, AddMaterialComponentToEntity(floor).get());
-		}
-		// === !Other Wall ===
+		//	auto& transform3 = AddTransformComponentToEntity(floor)->Transform;
+		//	transform3.GetMatrix().SetTranslation(translations[i]);
+		//	transform3.GetMatrix().SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundX(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundY(UMath::DegToRad(-90.0f)));
+		//	
+		//	renderManager->LoadStaticMeshComponent(modelPath3, AddStaticMeshComponentToEntity(floor).get());
+		//	renderManager->LoadMaterialComponent(materialNames3, AddMaterialComponentToEntity(floor).get());
+		//}
+		//// === !Other Wall ===
 
 		//bool useLifeTime = true;
 		//bool ignoreDepth = true;
