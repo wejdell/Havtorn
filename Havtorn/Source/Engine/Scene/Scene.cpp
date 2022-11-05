@@ -162,13 +162,13 @@ namespace Havtorn
 		// === !Decal ===
 
 		const std::string modelPath1 = "Assets/Tests/En_P_PendulumClock.hva";
-		const std::vector<std::string> materialNames1 = { "T_PendulumClock", "Checkboard_128x128" };
+		const std::vector<std::string> materialNames1 = { "Assets/Materials/M_PendulumClock.hva", "Assets/Materials/M_Checkboard_128x128.hva" };
 		const std::string modelPath2 = "Assets/Tests/En_P_Bed.hva";
-		const std::vector<std::string> materialNames2 = { "T_Bed", "T_Bedsheet" };
+		const std::vector<std::string> materialNames2 = { "Assets/Materials/M_Bed.hva", "Assets/Materials/M_Bedsheet.hva" };
 		const std::string modelPath3 = "Assets/Tests/Quad.hva";
-		const std::vector<std::string> materialNames3 = { "T_Quad" };
+		const std::vector<std::string> materialNames3 = { "Assets/Materials/M_Quad.hva" };
 		const std::string modelPath4 = "Assets/Tests/En_P_WallLamp.hva";
-		const std::vector<std::string> materialNames4 = { "T_Quad", "T_Emissive", "T_Headlamp" };
+		const std::vector<std::string> materialNames4 = { "Assets/Materials/M_Quad.hva", "Assets/Materials/M_Emissive.hva", "Assets/Materials/M_Headlamp.hva" };
 
 		// === Pendulum ===
 		auto pendulum = CreateEntity("Clock");

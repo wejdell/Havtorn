@@ -5,6 +5,7 @@
 #include "FileSystem/FileHeaderDeclarations.h"
 #include "Graphics/GraphicsStructs.h"
 #include "Graphics/GraphicsUtilities.h"
+#include "Graphics/GraphicsMaterial.h"
 
 namespace Havtorn
 {
@@ -48,5 +49,18 @@ namespace Havtorn
 		EMaterialConfiguration MaterialConfiguration = EMaterialConfiguration::AlbedoMaterialNormal_Packed;
 		char Suffix = 0;
 		ID3D11ShaderResourceView* ShaderResourceView = nullptr;
+	};
+
+	struct SGraphicsMaterialAsset
+	{
+		SGraphicsMaterialAsset() = default;
+
+		explicit SGraphicsMaterialAsset(const SMaterialAssetFileHeader assetFileData)
+			: AssetType(assetFileData.AssetType)
+			, Material(assetFileData.Material, assetFileData.MaterialName)
+		{}
+
+		EAssetType AssetType = EAssetType::Material;
+		SEngineGraphicsMaterial Material;
 	};
 }

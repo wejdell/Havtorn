@@ -74,6 +74,17 @@ namespace Havtorn
 		static inline T Sin(T angle);
 		template<typename T>
 		static inline T Cos(T angle);
+		template<typename T>
+		static inline T Tan(T angle);
+
+		template<typename T>
+		static inline T ASin(T angle);
+		template<typename T>
+		static inline T ACos(T angle);
+		template<typename T>
+		static inline T ATan(T angle);
+		template<typename T>
+		static inline T ATan2(T y, T x);
 
 		template<typename T>
 		static inline T DegToRad(T angleInDegrees);
@@ -218,6 +229,36 @@ namespace Havtorn
 	inline T UMath::Cos(T angle)
 	{
 		return std::cos(angle);
+	}
+
+	template<typename T>
+	inline T UMath::Tan(T angle)
+	{
+		return std::tan(angle);
+	}
+
+	template<typename T>
+	inline T UMath::ASin(T angle)
+	{
+		return std::asin(angle);
+	}
+
+	template<typename T>
+	inline T UMath::ACos(T angle)
+	{
+		return std::acos(angle);
+	}
+
+	template<typename T>
+	inline T UMath::ATan(T angle)
+	{
+		return std::atan(angle);
+	}
+
+	template<typename T>
+	inline T UMath::ATan2(T y, T x)
+	{
+		return std::atan2(y, x);
 	}
 
 	template<typename T>

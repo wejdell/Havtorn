@@ -9,6 +9,7 @@
 #include "RenderStateManager.h"
 #include "GBuffer.h"
 #include "GraphicsEnums.h"
+#include "GraphicsMaterial.h"
 #include <queue>
 
 #include "Core/RuntimeAssetDeclarations.h"
@@ -88,8 +89,16 @@ namespace Havtorn
 	{
 		DecalProjector,
 		PointLightCube,
+		Icosphere,
 		LineShape,
 		//TODO: add more debug shape primitives
+	};
+
+	enum class EIndexBufferPrimitives
+	{
+		DecalProjector,
+		PointLightCube,
+		Icosphere
 	};
 
 	class CGraphicsFramework;
@@ -118,20 +127,20 @@ namespace Havtorn
 
 		void Release();
 
-		HAVTORN_API std::string ConvertToHVA(const std::string& filePath, const std::string& destination, EAssetType assetType) const;
 		HAVTORN_API void LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent);
-		HAVTORN_API void LoadMaterialComponent(const std::vector<std::string>& materialNames, SMaterialComponent* outMaterialComponent);
+		HAVTORN_API void LoadMaterialComponent(const std::vector<std::string>& materialPaths, SMaterialComponent* outMaterialComponent);
 		// NR: Note that we use the file *name* instead of the full path here, we assume that it already exists in the registry.
 		HAVTORN_API bool TryLoadStaticMeshComponent(const std::string& fileName, SStaticMeshComponent* outStaticMeshComponent) const;
+		HAVTORN_API bool TryReplaceMaterialOnComponent(const std::string& filePath, U8 materialIndex, SMaterialComponent* outMaterialComponent) const;
 
-		HAVTORN_API EMaterialConfiguration GetMaterialConfiguration() const;
 		HAVTORN_API SVector2<F32> GetShadowAtlasResolution() const;
 		
 		void LoadDecalComponent(const std::vector<std::string>& textureNames, SDecalComponent* outDecalComponent);
 		void LoadEnvironmentLightComponent(const std::string& ambientCubemapTextureName, SEnvironmentLightComponent* outEnvironmentLightComponent);
 
-		HAVTORN_API void* RenderStaticMeshAssetTexture(const std::string& fileName);
-		HAVTORN_API void* GetTextureAssetTexture(const std::string& fileName);
+		HAVTORN_API void* RenderStaticMeshAssetTexture(const std::string& filePath);
+		HAVTORN_API void* GetTextureAssetTexture(const std::string& filePath);
+		HAVTORN_API void* RenderMaterialAssetTexture(const std::string& filePath);
 
 		bool IsStaticMeshInInstancedRenderList(const std::string& meshName);
 		void AddStaticMeshToInstancedRenderList(const std::string& meshName, const SMatrix& transformMatrix);
@@ -162,6 +171,7 @@ namespace Havtorn
 		void InitSamplers();
 		// Init order 1:1 to EVertexBufferPrimitives.
 		void InitVertexBuffers();
+		// Init order 1:1 to EIndexBufferPrimitives
 		void InitIndexBuffers();
 		// Init order 1:1 to ETopologies.
 		void InitTopologies();
@@ -193,7 +203,6 @@ namespace Havtorn
 		inline void ShadowAtlasPrePassPoint(const SRenderCommand& command);
 		inline void ShadowAtlasPrePassSpot(const SRenderCommand& command);
 		inline void CameraDataStorage(const SRenderCommand& command);
-		inline void GBufferData(const SRenderCommand& command);
 		inline void GBufferDataInstanced(const SRenderCommand& command);
 		inline void DecalDepthCopy();
 		inline void DeferredDecal(const SRenderCommand& command);
@@ -254,6 +263,24 @@ namespace Havtorn
 			SMatrix ToWorldFromObject;
 		} ObjectBufferData;
 		HV_ASSERT_BUFFER(SObjectBufferData)
+
+		struct SMaterialBufferData
+		{
+			SMaterialBufferData() = default;
+
+			SMaterialBufferData(const SEngineGraphicsMaterial& engineGraphicsMaterial)
+				: RecreateZ(engineGraphicsMaterial.RecreateNormalZ)
+			{
+				memcpy(&Properties[0], &engineGraphicsMaterial, sizeof(SRuntimeGraphicsMaterialProperty) * 11);
+			}
+
+			SRuntimeGraphicsMaterialProperty Properties[11];
+
+			bool RecreateZ = true;
+			bool Padding[15] = {};
+
+		} MaterialBufferData;
+		HV_ASSERT_BUFFER(SMaterialBufferData)
 
 		struct SDebugShapeObjectBufferData
 		{
@@ -332,6 +359,7 @@ namespace Havtorn
 		ID3D11DeviceContext* Context;
 		ID3D11Buffer* FrameBuffer;
 		ID3D11Buffer* ObjectBuffer;
+		ID3D11Buffer* MaterialBuffer;
 		ID3D11Buffer* DebugShapeObjectBuffer;
 		ID3D11Buffer* DecalBuffer;
 		ID3D11Buffer* DirectionalLightBuffer;
@@ -403,9 +431,6 @@ namespace Havtorn
 		ID3D11ShaderResourceView* DefaultAlbedoTexture = nullptr;
 		ID3D11ShaderResourceView* DefaultNormalTexture = nullptr;
 		ID3D11ShaderResourceView* DefaultMaterialTexture = nullptr;
-		
-		EMaterialConfiguration MaterialConfiguration = EMaterialConfiguration::AlbedoMaterialNormal_Packed;
-		U8 TexturesPerMaterial = 3;
 
 		SVector2<F32> ShadowAtlasResolution = SVector2<F32>::Zero;
 

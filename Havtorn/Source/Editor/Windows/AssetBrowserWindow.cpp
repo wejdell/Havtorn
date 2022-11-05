@@ -120,7 +120,7 @@ namespace ImGui
 		std::string filePath = filePaths[0]; //temporarily the first filepath out of potentially many 0 to test
 		
 		//Copies file from original path and creates a HVA File in Assets/ (depending on where the AssetBrowser window is currently at)
-		std::string hvaFilePath = Manager->GetRenderManager()->ConvertToHVA(filePath, CurrentDirectory.string(), Havtorn::EAssetType::Texture); 
+		std::string hvaFilePath = Manager->GetResourceManager()->ConvertToHVA(filePath, CurrentDirectory.string(), Havtorn::EAssetType::Texture); 
 
 		Manager->CreateAssetRep(hvaFilePath); //Creates a SEditorAssetRepresentation and adds it to the AssetRepresentations
 	}
