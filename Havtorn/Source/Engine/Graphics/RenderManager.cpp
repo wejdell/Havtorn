@@ -23,6 +23,7 @@
 #include "ModelImporter.h"
 
 #include <DirectXTex/DirectXTex.h>
+#include <set>
 
 namespace Havtorn
 {
@@ -40,6 +41,7 @@ namespace Havtorn
 		, ShadowmapBuffer(nullptr)
 		, DebugShapeObjectBuffer(nullptr)
 		, EmissiveBuffer(nullptr)
+		, MaterialBuffer(nullptr)
 		, InstancedTransformBuffer(nullptr)
 		, VolumetricLightBuffer(nullptr)
 	    , PushToCommands(&RenderCommandsA)
@@ -72,6 +74,9 @@ namespace Havtorn
 
 		bufferDescription.ByteWidth = sizeof(SObjectBufferData);
 		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &ObjectBuffer), "Object Buffer could not be created.");
+		
+		bufferDescription.ByteWidth = sizeof(SMaterialBufferData);
+		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &MaterialBuffer), "Material Buffer could not be created.");
 
 		bufferDescription.ByteWidth = sizeof(SDebugShapeObjectBufferData);
 		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DebugShapeObjectBuffer), "Debug Shape Object Buffer could not be created.");
@@ -274,15 +279,17 @@ namespace Havtorn
 
 	void CRenderManager::InitVertexBuffers()
 	{
-		AddVertexBuffer<SStaticMeshVertex>(GeometryPrimitives::DecalProjector);
-		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::PointLightCube);
-		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::Line);
+		AddVertexBuffer(GeometryPrimitives::DecalProjector);
+		AddVertexBuffer(GeometryPrimitives::PointLightCube);
+		AddVertexBuffer(GeometryPrimitives::Icosphere.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Line);
 	}
 
 	void CRenderManager::InitIndexBuffers()
 	{
 		AddIndexBuffer(GeometryPrimitives::DecalProjectorIndices);
 		AddIndexBuffer(GeometryPrimitives::PointLightCubeIndices);
+		AddIndexBuffer(GeometryPrimitives::Icosphere.Indices);
 	}
 
 	void CRenderManager::InitTopologies()
@@ -316,6 +323,8 @@ namespace Havtorn
 			std::unique_lock<std::mutex> uniqueLock(CThreadManager::RenderMutex);
 			CThreadManager::RenderCondition.wait(uniqueLock, [] 
 				{ return CThreadManager::RenderThreadStatus == ERenderThreadStatus::ReadyToRender; });
+
+			GTime::BeginTracking(ETimerCategory::GPU);
 
 			ShouldBlurVolumetricBuffer = false;
 			CRenderManager::NumberOfDrawCallsThisFrame = 0;
@@ -360,12 +369,6 @@ namespace Havtorn
 				case ERenderCommandType::CameraDataStorage:
 				{
 					CameraDataStorage(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::GBufferData:
-				{
-					GBufferData(currentCommand);
 				}
 				break;
 
@@ -485,6 +488,8 @@ namespace Havtorn
 			RenderedScene.SetAsResourceOnSlot(0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 
+			GTime::EndTracking(ETimerCategory::GPU);
+
 			CThreadManager::RenderThreadStatus = ERenderThreadStatus::PostRender;
 			uniqueLock.unlock();
 			CThreadManager::RenderCondition.notify_one();
@@ -522,61 +527,6 @@ namespace Havtorn
 
 		//myGBuffer.ReleaseResources();
 		//myGBufferCopy.ReleaseResources();
-	}
-
-	std::string CRenderManager::ConvertToHVA(const std::string& filePath, const std::string& destination, EAssetType assetType) const
-	{
-		std::string hvaPath;
-		switch (assetType)
-		{
-		case EAssetType::StaticMesh:
-			{
-				hvaPath = CModelImporter::ImportFBX(filePath);
-			}
-			break;
-		case EAssetType::Texture:
-			{
-				std::string textureFileData;
-				GEngine::GetFileSystem()->Deserialize(filePath, textureFileData);
-
-				ETextureFormat format = {};
-				if (const std::string extension = filePath.substr(filePath.size() - 4); extension == ".dds")
-					format = ETextureFormat::DDS;
-				else if (extension == ".tga")
-					format = ETextureFormat::TGA;
-
-				STextureFileHeader asset;
-				asset.AssetType = EAssetType::Texture;
-
-				asset.MaterialName = destination + filePath.substr(filePath.find_last_of('\\'), filePath.find_first_of('.') - filePath.find_last_of('\\'));// destination.substr(0, destination.find_last_of("."));
-				asset.MaterialNameLength = static_cast<U32>(asset.MaterialName.length());
-				asset.OriginalFormat = format;
-				asset.Suffix = filePath[filePath.find_last_of(".") - 1];
-				asset.DataSize = static_cast<U32>(textureFileData.length() * sizeof(char));
-				asset.Data = std::move(textureFileData);
-
-				const auto data = new char[asset.GetSize()];
-
-				asset.Serialize(data);
-				GEngine::GetFileSystem()->Serialize(asset.MaterialName + ".hva", &data[0], asset.GetSize());
-				delete[] data;
-
-				hvaPath = asset.MaterialName + ".hva";
-			}
-			break;
-		case EAssetType::SkeletalMesh: 
-			break;
-		case EAssetType::Animation: 
-			break;
-		case EAssetType::AudioOneShot: 
-			break;
-		case EAssetType::AudioCollection: 
-			break;
-		case EAssetType::VisualFX: 
-			break;
-		}
-
-		return hvaPath;
 	}
 
 	void CRenderManager::LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent)
@@ -624,15 +574,22 @@ namespace Havtorn
 		outStaticMeshComponent->DrawCallData = asset.DrawCallData;
 	}
 
-	void CRenderManager::LoadMaterialComponent(const std::vector<std::string>& materialNames, SMaterialComponent* outMaterialComponent)
+	void CRenderManager::LoadMaterialComponent(const std::vector<std::string>& materialPaths, SMaterialComponent* outMaterialComponent)
 	{
-		outMaterialComponent->MaterialReferences.clear();
-		for (const std::string& materialName : materialNames)
+		SGraphicsMaterialAsset asset;
+		for (const std::string& materialPath : materialPaths)
 		{
-			std::vector<U16> references = AddMaterial(materialName, MaterialConfiguration);
+			const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(materialPath);
+			char* data = new char[fileSize];
+
+			GEngine::GetFileSystem()->Deserialize(materialPath, data, static_cast<U32>(fileSize));
+
+			SMaterialAssetFileHeader assetFile;
+			assetFile.Deserialize(data);
+			asset = SGraphicsMaterialAsset(assetFile);
 			
-			for (U16 reference : references)
-				outMaterialComponent->MaterialReferences.emplace_back(reference);
+			SEngineGraphicsMaterial& material = outMaterialComponent->Materials.emplace_back();
+			material = asset.Material;
 		}
 	}
 
@@ -651,11 +608,6 @@ namespace Havtorn
 	{
 		auto textureBank = GEngine::GetTextureBank();
 		outEnvironmentLightComponent->AmbientCubemapReference = static_cast<U16>(textureBank->GetTextureIndex("Assets/Textures/Cubemaps/" + ambientCubemapTextureName + ".hva"));
-	}
-
-	EMaterialConfiguration CRenderManager::GetMaterialConfiguration() const
-	{
-		return MaterialConfiguration;
 	}
 
 	SVector2<F32> CRenderManager::GetShadowAtlasResolution() const
@@ -683,6 +635,33 @@ namespace Havtorn
 		outStaticMeshComponent->TopologyIndex = static_cast<U8>(ETopologies::TriangleList);
 		outStaticMeshComponent->DrawCallData = asset.DrawCallData;
 
+		return true;
+	}
+
+	bool CRenderManager::TryReplaceMaterialOnComponent(const std::string& filePath, U8 materialIndex, SMaterialComponent* outMaterialComponent) const
+	{
+		if (!GEngine::GetFileSystem()->DoesFileExist(filePath))
+		{
+			HV_LOG_ERROR("File not found when trying to replace material: %s", filePath.c_str());
+			return false;
+		}
+
+		if (materialIndex >= static_cast<U8>(outMaterialComponent->Materials.size()))
+		{
+			HV_LOG_ERROR("Material index out of bounds when trying to replace material: %s", filePath.c_str());
+			return false;
+		}
+
+		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
+		char* data = new char[fileSize];
+
+		GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));
+
+		SMaterialAssetFileHeader assetFile;
+		assetFile.Deserialize(data);
+		SGraphicsMaterialAsset asset(assetFile);
+
+		outMaterialComponent->Materials[materialIndex] = asset.Material;
 		return true;
 	}
 
@@ -811,6 +790,219 @@ namespace Havtorn
 		STextureAsset asset = STextureAsset(assetFile, Framework->GetDevice());
 
 		return asset.ShaderResourceView;
+	}
+
+	void* CRenderManager::RenderMaterialAssetTexture(const std::string& filePath)
+	{
+		D3D11_TEXTURE2D_DESC textureDesc = { 0 };
+		textureDesc.Width = static_cast<U16>(256.0f);
+		textureDesc.Height = static_cast<U16>(256.0f);
+		textureDesc.MipLevels = 1;
+		textureDesc.ArraySize = 1;
+		textureDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+		textureDesc.SampleDesc.Count = 1;
+		textureDesc.SampleDesc.Quality = 0;
+		textureDesc.Usage = D3D11_USAGE_DEFAULT;
+		textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+		textureDesc.CPUAccessFlags = 0;
+		textureDesc.MiscFlags = 0;
+
+		D3D11_TEXTURE2D_DESC depthStencilDesc = { 0 };
+		depthStencilDesc.Width = static_cast<U16>(256.0f);
+		depthStencilDesc.Height = static_cast<U16>(256.0f);
+		depthStencilDesc.MipLevels = 1;
+		depthStencilDesc.ArraySize = 1;
+		depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+		depthStencilDesc.SampleDesc.Count = 1;
+		depthStencilDesc.SampleDesc.Quality = 0;
+		depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
+		depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+		depthStencilDesc.CPUAccessFlags = 0;
+		depthStencilDesc.MiscFlags = 0;
+
+		D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
+		depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
+		depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+		depthStencilViewDesc.Texture2D.MipSlice = 0;
+		depthStencilViewDesc.Flags = 0;
+
+		ID3D11Texture2D* depthStencilBuffer;
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateTexture2D(&depthStencilDesc, nullptr, &depthStencilBuffer), "Texture could not be created.");
+
+		ID3D11DepthStencilView* depthStencilView;
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateDepthStencilView(depthStencilBuffer, &depthStencilViewDesc, &depthStencilView), "Depth could not be created.");
+
+		ID3D11Texture2D* texture;
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateTexture2D(&textureDesc, nullptr, &texture), "Could not create Fullscreen Texture2D");
+
+		ID3D11ShaderResourceView* shaderResource;
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateShaderResourceView(texture, nullptr, &shaderResource), "Could not create Fullscreen Shader Resource View.");
+
+		ID3D11RenderTargetView* renderTarget;
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateRenderTargetView(texture, nullptr, &renderTarget), "Could not create Fullcreen Render Target View.");
+
+		D3D11_VIEWPORT* viewport;
+		D3D11_TEXTURE2D_DESC textureDescription;
+		texture->GetDesc(&textureDescription);
+		viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, static_cast<F32>(textureDescription.Width), static_cast<F32>(textureDescription.Height), 0.0f, 1.0f });
+
+		CGBuffer gBuffer = FullscreenTextureFactory.CreateGBuffer({ static_cast<F32>(textureDescription.Width), static_cast<F32>(textureDescription.Height) });
+		gBuffer.SetAsActiveTarget();
+		Context->RSSetViewports(1, viewport);
+
+		STransform camTransform;
+		constexpr F32 zoomMultiplier = 0.72f;
+		camTransform.Translate(SVector4::Backward * 1.8f * zoomMultiplier);
+		camTransform.Translate(SVector4::Right * 1.08f * zoomMultiplier);
+		camTransform.Translate(SVector4::Up * 1.2f * zoomMultiplier);
+		camTransform.Rotate({ UMath::DegToRad(-30.0f), UMath::DegToRad(30.0f), 0.0f });
+		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), 1.0f, 0.01f, 10.0f);
+
+		FrameBufferData.ToCameraFromWorld = camTransform.GetMatrix().FastInverse();
+		FrameBufferData.ToWorldFromCamera = camTransform.GetMatrix();
+		FrameBufferData.ToProjectionFromCamera = camProjection;
+		FrameBufferData.ToCameraFromProjection = camProjection.Inverse();
+		FrameBufferData.CameraPosition = camTransform.GetMatrix().GetTranslation4();
+		BindBuffer(FrameBuffer, FrameBufferData, "Frame Buffer");
+
+		Context->VSSetConstantBuffers(0, 1, &FrameBuffer);
+		Context->PSSetConstantBuffers(0, 1, &FrameBuffer);
+
+		ObjectBufferData.ToWorldFromObject = SMatrix();
+		BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
+
+		Ref<SEntity> tempEntity = std::make_shared<SEntity>(0, "Temp");
+		SMaterialComponent* materialComp = new SMaterialComponent(tempEntity, EComponentType::MaterialComponent);
+		LoadMaterialComponent({ filePath }, materialComp);
+
+		Context->VSSetConstantBuffers(1, 1, &ObjectBuffer);
+		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
+		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos3Nor3Tan3Bit3UV2)]);
+
+		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::StaticMesh)], nullptr, 0);
+		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::GBuffer)], nullptr, 0);
+
+		ID3D11SamplerState* sampler = Samplers[static_cast<U8>(ESamplers::DefaultWrap)];
+		Context->PSSetSamplers(0, 1, &sampler);
+
+		ID3D11Buffer* vertexBuffer = VertexBuffers[static_cast<U8>(EVertexBufferPrimitives::Icosphere)];
+		Context->IASetVertexBuffers(0, 1, &vertexBuffer, &MeshVertexStrides[0], &MeshVertexOffsets[0]);
+		Context->IASetIndexBuffer(IndexBuffers[static_cast<U8>(EIndexBufferPrimitives::Icosphere)], DXGI_FORMAT_R32_UINT, 0);
+			
+		auto textureBank = GEngine::GetTextureBank();
+		std::vector<ID3D11ShaderResourceView*> resourceViewPointers;
+
+		std::map<F32, F32> textureIndices;
+		auto findTextureByIndex = [&](SRuntimeGraphicsMaterialProperty& bufferProperty)
+		{
+			if (bufferProperty.TextureChannelIndex > -1.0f)
+			{
+				if (!textureIndices.contains(bufferProperty.TextureIndex))
+				{
+					resourceViewPointers.emplace_back(textureBank->GetTexture(static_cast<U32>(bufferProperty.TextureIndex)));
+					textureIndices.emplace(bufferProperty.TextureIndex, static_cast<F32>(resourceViewPointers.size() - 1));
+				}
+
+				bufferProperty.TextureIndex = textureIndices[bufferProperty.TextureIndex];
+			}
+		};
+
+		MaterialBufferData = SMaterialBufferData(materialComp->Materials[0]);
+		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AlbedoR)]);
+		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AlbedoG)]);
+		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AlbedoB)]);
+		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AlbedoA)]);
+		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::NormalX)]);
+		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::NormalY)]);
+		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::NormalZ)]);
+		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AmbientOcclusion)]);
+		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::Metalness)]);
+		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::Roughness)]);
+		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::Emissive)]);
+
+		BindBuffer(MaterialBuffer, MaterialBufferData, "Material Buffer");
+
+		Context->PSSetShaderResources(5, static_cast<U32>(resourceViewPointers.size()), resourceViewPointers.data());
+		Context->PSSetConstantBuffers(8, 1, &MaterialBuffer);
+		
+		Context->DrawIndexed(static_cast<U32>(GeometryPrimitives::Icosphere.Indices.size()), 0, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
+
+		// ======== Lighting =========
+		Context->OMSetRenderTargets(1, &renderTarget, nullptr);
+
+		SEnvironmentLightComponent* environmentLightComp = new SEnvironmentLightComponent(tempEntity, EComponentType::EnvironmentLightComponent);
+		SDirectionalLightComponent* directionalLightComp = new SDirectionalLightComponent(tempEntity, EComponentType::DirectionalLightComponent);
+
+		LoadEnvironmentLightComponent("Skybox", environmentLightComp);
+
+		directionalLightComp->Direction = { -1.0f, 0.0f, 0.0f, 0.0f };
+		directionalLightComp->Color = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };
+		directionalLightComp->ShadowmapView.ShadowmapViewportIndex = 0;
+		directionalLightComp->ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLightComp->ShadowViewSize.X, directionalLightComp->ShadowViewSize.Y, directionalLightComp->ShadowNearAndFarPlane.X, directionalLightComp->ShadowNearAndFarPlane.Y);	
+
+		gBuffer.SetAllAsResources(1);
+		IntermediateDepth.SetAsResourceOnSlot(21);
+		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
+
+		// add Alpha blend PS shader
+
+		ShadowAtlasDepth.SetAsResourceOnSlot(22);
+		SSAOBlurTexture.SetAsResourceOnSlot(23);
+
+		auto cubemapTexture = GEngine::GetTextureBank()->GetTexture(environmentLightComp->AmbientCubemapReference);
+		Context->PSSetShaderResources(0, 1, &cubemapTexture);
+
+		// Update lightbufferdata and fill lightbuffer
+		DirectionalLightBufferData.DirectionalLightDirection = directionalLightComp->Direction;
+		DirectionalLightBufferData.DirectionalLightColor = directionalLightComp->Color;
+		BindBuffer(DirectionalLightBuffer, DirectionalLightBufferData, "Light Buffer");
+		Context->PSSetConstantBuffers(2, 1, &DirectionalLightBuffer);
+
+		ShadowmapBufferData.ToShadowmapView = directionalLightComp->ShadowmapView.ShadowViewMatrix;
+		ShadowmapBufferData.ToShadowmapProjection = directionalLightComp->ShadowmapView.ShadowProjectionMatrix;
+		ShadowmapBufferData.ShadowmapPosition = directionalLightComp->ShadowmapView.ShadowPosition;
+
+		const auto& shadowmapViewport = Viewports[directionalLightComp->ShadowmapView.ShadowmapViewportIndex];
+		ShadowmapBufferData.ShadowmapResolution = { shadowmapViewport.Width, shadowmapViewport.Height };
+		ShadowmapBufferData.ShadowAtlasResolution = ShadowAtlasResolution;
+		ShadowmapBufferData.ShadowmapStartingUV = { shadowmapViewport.TopLeftX / ShadowAtlasResolution.X, shadowmapViewport.TopLeftY / ShadowAtlasResolution.Y };
+		ShadowmapBufferData.ShadowTestTolerance = 0.001f;
+
+		BindBuffer(ShadowmapBuffer, ShadowmapBufferData, "Shadowmap Buffer");
+		Context->PSSetConstantBuffers(5, 1, &ShadowmapBuffer);
+
+		// Emissive Post Processing 
+		EmissiveBufferData.EmissiveStrength = FullscreenRenderer.PostProcessingBufferData.EmissiveStrength;
+		BindBuffer(EmissiveBuffer, EmissiveBufferData, "Emissive Buffer");
+		Context->PSSetConstantBuffers(7, 1, &EmissiveBuffer);
+
+		Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+		Context->IASetInputLayout(nullptr);
+		Context->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
+		Context->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
+
+		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Fullscreen)], nullptr, 0);
+		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::DeferredDirectional)], nullptr, 0);
+
+		Context->Draw(3, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
+
+		delete materialComp;
+		delete directionalLightComp;
+		delete environmentLightComp;
+		delete viewport;
+		renderTarget->Release();
+		texture->Release();
+		depthStencilView->Release();
+		depthStencilBuffer->Release();
+
+		ID3D11ShaderResourceView* nullView = NULL;
+		Context->PSSetShaderResources(21, 1, &nullView);
+		Context->PSSetShaderResources(22, 1, &nullView);
+		Context->PSSetShaderResources(23, 1, &nullView);
+
+		return std::move((void*)shaderResource);
 	}
 
 	bool CRenderManager::IsStaticMeshInInstancedRenderList(const std::string& meshName)
@@ -1205,47 +1397,6 @@ namespace Havtorn
 		Context->PSSetConstantBuffers(0, 1, &FrameBuffer);
 	}
 
-	void CRenderManager::GBufferData(const SRenderCommand& command)
-	{
-		const auto transformComp = command.GetComponent(TransformComponent);
-		const auto staticMeshComp = command.GetComponent(StaticMeshComponent);
-		const auto materialComp = command.GetComponent(MaterialComponent);
-
-		ObjectBufferData.ToWorldFromObject = transformComp->Transform.GetMatrix();
-		BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
-
-		Context->VSSetConstantBuffers(1, 1, &ObjectBuffer);
-		Context->IASetPrimitiveTopology(Topologies[staticMeshComp->TopologyIndex]);
-		Context->IASetInputLayout(InputLayouts[staticMeshComp->InputLayoutIndex]);
-
-		Context->VSSetShader(VertexShaders[staticMeshComp->VertexShaderIndex], nullptr, 0);
-		Context->PSSetShader(PixelShaders[staticMeshComp->PixelShaderIndex], nullptr, 0);
-
-		ID3D11SamplerState* sampler = Samplers[staticMeshComp->SamplerIndex];
-		Context->PSSetSamplers(0, 1, &sampler);
-
-		auto textureBank = GEngine::GetTextureBank();
-		for (U8 drawCallIndex = 0; drawCallIndex < static_cast<U8>(staticMeshComp->DrawCallData.size()); drawCallIndex++)
-		{
-			// Load Textures
-			std::vector<ID3D11ShaderResourceView*> resourceViewPointers;
-			resourceViewPointers.resize(TexturesPerMaterial);
-			for (U8 textureIndex = 0, pointerTracker = 0; textureIndex < TexturesPerMaterial; textureIndex++, pointerTracker++)
-			{
-				U8 materialIndex = UMath::Min(drawCallIndex, static_cast<U8>(staticMeshComp->NumberOfMaterials - 1));
-				resourceViewPointers[pointerTracker] = textureBank->GetTexture(materialComp->MaterialReferences[textureIndex + materialIndex * TexturesPerMaterial]);
-			}
-			Context->PSSetShaderResources(5, TexturesPerMaterial, resourceViewPointers.data());
-
-			const SDrawCallData& drawData = staticMeshComp->DrawCallData[drawCallIndex];
-			ID3D11Buffer* vertexBuffer = VertexBuffers[drawData.VertexBufferIndex];
-			Context->IASetVertexBuffers(0, 1, &vertexBuffer, &MeshVertexStrides[drawData.VertexStrideIndex], &MeshVertexOffsets[drawData.VertexOffsetIndex]);
-			Context->IASetIndexBuffer(IndexBuffers[drawData.IndexBufferIndex], DXGI_FORMAT_R32_UINT, 0);
-			Context->DrawIndexed(drawData.IndexCount, 0, 0);
-			CRenderManager::NumberOfDrawCallsThisFrame++;
-		}
-	}
-
 	void CRenderManager::GBufferDataInstanced(const SRenderCommand& command)
 	{
 		const auto transformComp = command.GetComponent(TransformComponent);
@@ -1271,15 +1422,40 @@ namespace Havtorn
 		auto textureBank = GEngine::GetTextureBank();
 		for (U8 drawCallIndex = 0; drawCallIndex < static_cast<U8>(staticMeshComp->DrawCallData.size()); drawCallIndex++)
 		{
-			// Load Textures
 			std::vector<ID3D11ShaderResourceView*> resourceViewPointers;
-			resourceViewPointers.resize(TexturesPerMaterial);
-			for (U8 textureIndex = 0, pointerTracker = 0; textureIndex < TexturesPerMaterial; textureIndex++, pointerTracker++)
+			
+			std::map<F32, F32> textureIndices;
+			auto findTextureByIndex = [&](SRuntimeGraphicsMaterialProperty& bufferProperty)
 			{
-				U8 materialIndex = UMath::Min(drawCallIndex, static_cast<U8>(staticMeshComp->NumberOfMaterials - 1));
-				resourceViewPointers[pointerTracker] = textureBank->GetTexture(materialComp->MaterialReferences[textureIndex + materialIndex * TexturesPerMaterial]);
-			}
-			Context->PSSetShaderResources(5, TexturesPerMaterial, resourceViewPointers.data());
+				if (bufferProperty.TextureChannelIndex > -1.0f)
+				{
+					if (!textureIndices.contains(bufferProperty.TextureIndex))
+					{
+						resourceViewPointers.emplace_back(textureBank->GetTexture(static_cast<U32>(bufferProperty.TextureIndex)));
+						textureIndices.emplace(bufferProperty.TextureIndex, static_cast<F32>(resourceViewPointers.size() - 1));
+					}
+					
+					bufferProperty.TextureIndex = textureIndices[bufferProperty.TextureIndex];
+				}
+			};
+
+			MaterialBufferData = SMaterialBufferData(materialComp->Materials[drawCallIndex]);
+			findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AlbedoR)]);
+			findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AlbedoG)]);
+			findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AlbedoB)]);
+			findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AlbedoA)]);
+			findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::NormalX)]);
+			findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::NormalY)]);
+			findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::NormalZ)]);
+			findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AmbientOcclusion)]);
+			findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::Metalness)]);
+			findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::Roughness)]);
+			findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::Emissive)]);
+
+			BindBuffer(MaterialBuffer, MaterialBufferData, "Material Buffer");
+
+			Context->PSSetShaderResources(5, static_cast<U32>(resourceViewPointers.size()), resourceViewPointers.data());
+			Context->PSSetConstantBuffers(8, 1, &MaterialBuffer);
 
 			const SDrawCallData& drawData = staticMeshComp->DrawCallData[drawCallIndex];
 			ID3D11Buffer* bufferPointers[2] = { VertexBuffers[drawData.VertexBufferIndex], InstancedTransformBuffer };
@@ -1843,7 +2019,6 @@ namespace Havtorn
 		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::Disable);
 		RenderStateManager.SetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
 		
-
 		AntiAliasedTexture.SetAsActiveTarget();
 		TonemappedTexture.SetAsResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::FXAA);

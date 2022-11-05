@@ -42,7 +42,7 @@ namespace Havtorn
 		const I64 transformCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
 		auto& transformComp = transformComponents[transformCompIndex];
 
-		const F32 dt = GTimer::Dt();
+		const F32 dt = GTime::Dt();
 
 		if (!IsFreeCamActive)
 		{

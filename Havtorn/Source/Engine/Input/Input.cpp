@@ -381,13 +381,13 @@ namespace Havtorn
 	{
 		if (!HorizontalPressed) 
 		{
-			if (Horizontal >= (0.0f + GTimer::FixedDt())) 
+			if (Horizontal >= (0.0f + GTime::FixedDt())) 
 			{
-				Horizontal -= GTimer::FixedDt();
+				Horizontal -= GTime::FixedDt();
 			}
-			else if (Horizontal <= (0.0f - GTimer::FixedDt())) 
+			else if (Horizontal <= (0.0f - GTime::FixedDt())) 
 			{
-				Horizontal += GTimer::FixedDt();
+				Horizontal += GTime::FixedDt();
 			}
 			else 
 			{
@@ -396,13 +396,13 @@ namespace Havtorn
 		}
 		if (VerticalPressed == false) 
 		{
-			if (Vertical >= (0.0f + GTimer::FixedDt())) 
+			if (Vertical >= (0.0f + GTime::FixedDt())) 
 			{
-				Vertical -= GTimer::FixedDt();
+				Vertical -= GTime::FixedDt();
 			}
-			else if (Vertical <= (0.0f - GTimer::FixedDt())) 
+			else if (Vertical <= (0.0f - GTime::FixedDt())) 
 			{
-				Vertical += GTimer::FixedDt();
+				Vertical += GTime::FixedDt();
 			}
 			else {
 				Vertical = 0.0f;
@@ -430,7 +430,7 @@ namespace Havtorn
 			if (IsKeyDown('A')) 
 			{
 				HorizontalPressed = true;
-				Horizontal += GTimer::FixedDt(); // For falloff/deceleration
+				Horizontal += GTime::FixedDt(); // For falloff/deceleration
 				if (Horizontal >= 1.0f)
 				{
 					Horizontal = 1.0f;
@@ -439,7 +439,7 @@ namespace Havtorn
 			if (IsKeyDown('D')) 
 			{
 				HorizontalPressed = true;
-				Horizontal -= GTimer::FixedDt(); // For falloff/deceleration
+				Horizontal -= GTime::FixedDt(); // For falloff/deceleration
 				if (Horizontal <= -1.0f)
 				{
 					Horizontal = -1.0f;
@@ -453,7 +453,7 @@ namespace Havtorn
 			if (IsKeyDown('W')) 
 			{
 				VerticalPressed = true;
-				Vertical += GTimer::FixedDt(); // For falloff/deceleration
+				Vertical += GTime::FixedDt(); // For falloff/deceleration
 				if (Vertical >= 1.0f) 
 				{
 					Vertical = 1.0f;
@@ -462,7 +462,7 @@ namespace Havtorn
 			if (IsKeyDown('S')) 
 			{
 				VerticalPressed = true;
-				Vertical -= GTimer::FixedDt(); // For falloff/deceleration
+				Vertical -= GTime::FixedDt(); // For falloff/deceleration
 				if (Vertical <= -1.0f)
 				{
 					Vertical = -1.0f;

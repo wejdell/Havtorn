@@ -155,6 +155,20 @@ cbuffer EmissiveBuffer : register(b7)
     float3 Padding;
 }
 
+cbuffer MaterialBuffer : register(b8)
+{    
+    struct GPUMaterialProperty
+    {
+        float ConstantValue;
+        float TextureIndex;
+        float TextureChannelIndex;
+        float Padding;
+    } MaterialProperties[11];
+    
+    bool RecreateNormalZ;               // 1
+    bool MaterialPadding[15];            // 15
+}
+
 // Cubemap used for environment light shading
 TextureCube environmentTexture : register(t0);
 
@@ -173,6 +187,8 @@ Texture2D detailNormals[4] : register(t8);
 // Vertex Paint Materials
 Texture2D vertexPaintTextures[9] : register(t12);
 
+Texture2D materialChannelTextures[11] : register(t5);
+
 Texture2D depthTexture          : register(t21);
 Texture2D shadowDepthTexture    : register(t22);
 Texture2D SSAOTexture           : register(t23);
@@ -189,3 +205,27 @@ sampler shadowSampler  : register(s1);
 #define BLUE_ALBEDO     6
 #define BLUE_MATERIAL   7
 #define BLUE_NORMAL     8
+
+#define ALBEDO_R            0
+#define ALBEDO_G            1
+#define ALBEDO_B            2
+#define ALBEDO_A            3
+#define NORMAL_X            4
+#define NORMAL_Y            5
+#define NORMAL_Z            6
+#define AMBIENT_OCCLUSION   7
+#define METALNESS           8
+#define ROUGHNESS           9
+#define EMISSIVE            10
+
+#define MATERIAL_CHANNEL_0  0
+#define MATERIAL_CHANNEL_1  1
+#define MATERIAL_CHANNEL_2  2
+#define MATERIAL_CHANNEL_3  3
+#define MATERIAL_CHANNEL_4  4
+#define MATERIAL_CHANNEL_5  5
+#define MATERIAL_CHANNEL_6  6
+#define MATERIAL_CHANNEL_7  7
+#define MATERIAL_CHANNEL_8  8
+#define MATERIAL_CHANNEL_9  9
+#define MATERIAL_CHANNEL_10 10

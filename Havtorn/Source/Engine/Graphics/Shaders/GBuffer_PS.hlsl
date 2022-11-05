@@ -14,13 +14,29 @@ GBufferOutput main(VertexModelToPixel input)
 {
     VertexToPixel vertToPixel;
     vertToPixel.Position  = input.Position;
-    vertToPixel.UV        = input.UV;
+    vertToPixel.UV        = input.UV;   
     
-    // Alpha clip for foliage
-    clip(PixelShader_Albedo(vertToPixel.UV).a - 0.5f);
+    float albedoA = DetermineProperty(MaterialProperties[ALBEDO_A], vertToPixel.UV);
+    clip(albedoA - 0.5f);
     
-    float3 albedo = PixelShader_Albedo(vertToPixel.UV).rgb;
-    float3 normal = PixelShader_Normal(vertToPixel.UV).xyz;
+    float albedoR = DetermineProperty(MaterialProperties[ALBEDO_R], vertToPixel.UV);
+    float albedoG = DetermineProperty(MaterialProperties[ALBEDO_G], vertToPixel.UV);
+    float albedoB = DetermineProperty(MaterialProperties[ALBEDO_B], vertToPixel.UV);
+    float3 albedo = float3(albedoR, albedoG, albedoB);
+    
+    float normalX = DetermineProperty(MaterialProperties[NORMAL_X], vertToPixel.UV);
+    float normalY = DetermineProperty(MaterialProperties[NORMAL_Y], vertToPixel.UV);
+    float3 normal = float3(normalX, normalY, 0.0f);
+    
+    if (RecreateNormalZ)
+        RecreateZ(normal);
+    else
+        normal.z = DetermineProperty(MaterialProperties[NORMAL_Z], vertToPixel.UV);
+    
+    float ambientOcclusion = DetermineProperty(MaterialProperties[AMBIENT_OCCLUSION], vertToPixel.UV);
+    float metalness = DetermineProperty(MaterialProperties[METALNESS], vertToPixel.UV);
+    float perceptualRoughness = DetermineProperty(MaterialProperties[ROUGHNESS], vertToPixel.UV);
+    float emissive = DetermineProperty(MaterialProperties[EMISSIVE], vertToPixel.UV);
     
     // === Detail Normals ===
     //if (NumberOfDetailNormals > 0)
@@ -80,11 +96,6 @@ GBufferOutput main(VertexModelToPixel input)
     float3x3 tangentSpaceMatrix = float3x3(normalize(input.Tangent.xyz), normalize(input.Bitangent.xyz), normalize(input.Normal.xyz));
     normal = mul(normal.xyz, tangentSpaceMatrix);
     normal = normalize(normal);
-    
-    float ambientOcclusion      = PixelShader_AmbientOcclusion(vertToPixel.UV);
-    float metalness             = PixelShader_Metalness(vertToPixel.UV);
-    float perceptualRoughness   = PixelShader_PerceptualRoughness(vertToPixel.UV);
-    float emissive              = PixelShader_Emissive(vertToPixel.UV);
     
     GBufferOutput output;    
     output.Albedo = float4(albedo.xyz, 1.0f);

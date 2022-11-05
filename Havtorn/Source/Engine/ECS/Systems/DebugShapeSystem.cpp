@@ -130,7 +130,7 @@ namespace Havtorn
 			if (!useLifeTime)
 				return -1.0f;
 			else
-				return GTimer::Time() + requestedLifeTime;
+				return GTime::Time() + requestedLifeTime;
 		}
 
 		F32 UDebugShapeSystem::ClampThickness(const F32 thickness)
@@ -168,7 +168,7 @@ namespace Havtorn
 
 		void UDebugShapeSystem::CheckActiveIndices(const std::vector<Ref<SDebugShapeComponent>>& debugShapes)
 		{
-			const F32 time = GTimer::Time();
+			const F32 time = GTime::Time();
 			std::queue<U64> activeIndicesToRemove;
 			for (U64 i = 0; i < ActiveIndices.size(); i++)
 			{

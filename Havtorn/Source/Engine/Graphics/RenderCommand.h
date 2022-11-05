@@ -15,7 +15,6 @@ namespace Havtorn
 		ShadowAtlasPrePassPoint,
 		ShadowAtlasPrePassSpot,
 		CameraDataStorage,
-		GBufferData,
 		GBufferDataInstanced,
 		DecalDepthCopy,
 		DeferredDecal,

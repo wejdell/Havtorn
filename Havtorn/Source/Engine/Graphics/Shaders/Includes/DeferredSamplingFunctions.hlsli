@@ -1,11 +1,7 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #include "DeferredShaderStructs.hlsli"
-//#include "MathHelpers.hlsli"
 #include "DetailNormalHelpers.hlsli"
-//#include "ShadowSampling.hlsli"
-
-//static float emissiveStrength = 20.0f;
 
 float4 PixelShader_WorldPosition(float2 uv)
 {       
@@ -83,6 +79,14 @@ float4 PixelShader_Normal(float2 uv)
     normal = normalize(normal);
     
     return float4(normal.x, normal.y, normal.z, 1.0f);
+}
+
+void RecreateZ(inout float3 normal)
+{
+    normal.z = 0.0f;
+    normal = (normal * 2.0f) - 1.0f;
+    normal.z = sqrt(1 - saturate((normal.x * normal.x) + (normal.y * normal.y)));
+    normal = normalize(normal);
 }
 
 float4 PixelShader_Normal(Texture2D aNormalTexture, float2 uv)
@@ -178,6 +182,64 @@ float PixelShader_SSAO(float2 uv)
 {
 	const float ssao = SSAOTexture.Sample(defaultSampler, uv).r;
     return ssao;
+}
+
+float SampleMaterialTexture(const int textureIndex, const int textureChannelIndex, const float2 uv)
+{
+    // NR: Texture2D materialChannelTextures[11] is not actually an array of Texture2Ds. In DirectX11,
+    // this is just provided as syntactic sugar, and actually defines a bunch of textures in a row without
+    // a wrapping struct. Because of this, it needs to resolve at compile time which texture to actually
+    // sample from, and so the argument to the "array" must be a literal expression. Hence the switch below.
+    
+    float returnValue = 0.0f;
+    
+    switch (textureIndex)
+    {
+        case 0:
+            returnValue = materialChannelTextures[MATERIAL_CHANNEL_0].Sample(defaultSampler, uv)[textureChannelIndex];
+            break;
+        case 1:
+            returnValue = materialChannelTextures[MATERIAL_CHANNEL_1].Sample(defaultSampler, uv)[textureChannelIndex];
+            break;
+        case 2:
+            returnValue = materialChannelTextures[MATERIAL_CHANNEL_2].Sample(defaultSampler, uv)[textureChannelIndex];
+            break;
+        case 3:
+            returnValue = materialChannelTextures[MATERIAL_CHANNEL_3].Sample(defaultSampler, uv)[textureChannelIndex];
+            break;
+        case 4:
+            returnValue = materialChannelTextures[MATERIAL_CHANNEL_4].Sample(defaultSampler, uv)[textureChannelIndex];
+            break;
+        case 5:
+            returnValue = materialChannelTextures[MATERIAL_CHANNEL_5].Sample(defaultSampler, uv)[textureChannelIndex];
+            break;
+        case 6:
+            returnValue = materialChannelTextures[MATERIAL_CHANNEL_6].Sample(defaultSampler, uv)[textureChannelIndex];
+            break;
+        case 7:
+            returnValue = materialChannelTextures[MATERIAL_CHANNEL_7].Sample(defaultSampler, uv)[textureChannelIndex];
+            break;
+        case 8:
+            returnValue = materialChannelTextures[MATERIAL_CHANNEL_8].Sample(defaultSampler, uv)[textureChannelIndex];
+            break;
+        case 9:
+            returnValue = materialChannelTextures[MATERIAL_CHANNEL_9].Sample(defaultSampler, uv)[textureChannelIndex];
+            break;
+        case 10:
+            returnValue = materialChannelTextures[MATERIAL_CHANNEL_10].Sample(defaultSampler, uv)[textureChannelIndex];
+            break;
+    }
+    
+    return returnValue;
+}
+
+float DetermineProperty(GPUMaterialProperty property, float2 uv)
+{
+    const float textureExists = property.TextureChannelIndex >= 0.0f;
+    const float constantValueExists = property.ConstantValue >= 0.0f;
+    
+    return SampleMaterialTexture(property.TextureIndex, property.TextureChannelIndex, uv) * textureExists
+            + property.ConstantValue * saturate(constantValueExists - textureExists);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////

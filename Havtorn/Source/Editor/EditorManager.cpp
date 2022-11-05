@@ -9,6 +9,7 @@
 
 #include <windows.h>
 #include <psapi.h>
+#include <format>
 
 #include "Engine.h"
 #include "FileSystem/FileSystem.h"
@@ -106,7 +107,7 @@ namespace Havtorn
 		bool success = ResourceManager->Init(renderManager, framework);
 		if (!success)
 			return false;
-		
+
 		InitEditorLayout();
 		InitAssetRepresentations();
 
@@ -230,11 +231,11 @@ namespace Havtorn
 		std::filesystem::directory_entry entry(path);
 		HV_ASSERT(!entry.is_directory(), "You are trying to create SEditorAssetRepresentation but you're creating a new folder.");
 
-		std::string fileName = path.string();
-		const U64 fileSize = UMath::Max(GEngine::GetFileSystem()->GetFileSize(fileName), sizeof(EAssetType));
+		std::string filePath = path.string();
+		const U64 fileSize = UMath::Max(GEngine::GetFileSystem()->GetFileSize(filePath), sizeof(EAssetType));
 		char* data = new char[fileSize];
 
-		GEngine::GetFileSystem()->Deserialize(fileName, data, static_cast<U32>(fileSize));
+		GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));
 
 		SEditorAssetRepresentation rep;
 
@@ -244,7 +245,7 @@ namespace Havtorn
 		rep.DirectoryEntry = entry;
 		rep.Name = entry.path().filename().string();
 		rep.Name = rep.Name.substr(0, rep.Name.length() - 4);
-		rep.TextureRef = ResourceManager->RenderAssetTexure(rep.AssetType, fileName);
+		rep.TextureRef = ResourceManager->RenderAssetTexure(rep.AssetType, filePath);
 
 		AssetRepresentations.emplace_back(std::make_unique<SEditorAssetRepresentation>(rep));
 
@@ -453,8 +454,6 @@ namespace Havtorn
 				continue;
 
 			CreateAssetRep(entry.path());
-
-
 		}
 	}
 
@@ -583,17 +582,36 @@ namespace Havtorn
 	std::string CEditorManager::GetFrameRate() const
 	{
 		std::string frameRateString = "Framerate: ";
-		const U16 frameRate = static_cast<U16>(GTimer::AverageFrameRate());
+		const U32 frameRate = static_cast<U32>(GTime::AverageFrameRate());
+		const float frameTime = 1000.0f / frameRate;
+		std::string frameTimeString = std::format("{:.2f}", frameTime);
+
 		frameRateString.append(std::to_string(frameRate));
+		frameRateString.append(" (");
+		frameRateString.append(frameTimeString);
+		frameRateString.append(" ms)");
+
+		frameRateString.append(" | CPU: ");
+		const U32 frameRateCPU = static_cast<U32>(GTime::AverageFrameRate(ETimerCategory::CPU));
+		const float frameTimeCPU = 1000.0f / frameRateCPU;
+		std::string frameTimeStringCPU = std::format("{:.2f}", frameTimeCPU);
+		frameRateString.append(frameTimeStringCPU);
+		frameRateString.append(" ms");
+		
+		frameRateString.append(" | GPU: ");
+		const U32 frameRateGPU = static_cast<U32>(GTime::AverageFrameRate(ETimerCategory::GPU));
+		const float frameTimeGPU = 1000.0f / frameRateGPU;
+		std::string frameTimeStringGPU = std::format("{:.2f}", frameTimeGPU);
+		frameRateString.append(frameTimeStringGPU);
+		frameRateString.append(" ms");
+
 		return frameRateString;
 	}
 
 	std::string CEditorManager::GetSystemMemory() const
 	{
 		PROCESS_MEMORY_COUNTERS memCounter;
-		if (GetProcessMemoryInfo(GetCurrentProcess(),
-			&memCounter,
-			sizeof memCounter))
+		if (GetProcessMemoryInfo(GetCurrentProcess(), &memCounter, sizeof memCounter))
 		{
 			const SIZE_T memUsed = (memCounter.WorkingSetSize) / 1024;
 			const SIZE_T memUsedMb = (memCounter.WorkingSetSize) / 1024 / 1024;
@@ -602,7 +620,7 @@ namespace Havtorn
 			mem.append(std::to_string(memUsed));
 			mem.append("Kb (");
 			mem.append(std::to_string(memUsedMb));
-			mem.append("Mb)");
+			mem.append(" Mb)");
 
 			return mem;
 		}

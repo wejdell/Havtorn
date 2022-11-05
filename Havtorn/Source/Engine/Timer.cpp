@@ -5,94 +5,135 @@
 
 namespace Havtorn
 {
-	GTimer* GTimer::Instance = nullptr;
+	GTime* GTime::Instance = nullptr;
 	
-	GTimer::GTimer()
+	GTime::GTime()
 	{
 		Instance = this;
-		Last = std::chrono::steady_clock::now();
-		First = Last;
+		Timers[ETimerCategory::Frame] = {};
+		Timers[ETimerCategory::Frame].Last = std::chrono::steady_clock::now();
+		Timers[ETimerCategory::Frame].First = Timers[ETimerCategory::Frame].Last;
+		
+		Timers[ETimerCategory::Frame].FixedTime = 0.0f;
+		Timers[ETimerCategory::Frame].FixedTimeInterval = 1.0f / 60.0f;
+		
+		Timers[ETimerCategory::Frame].DeltaTime = 0.0f;
+		
+		Timers[ETimerCategory::Frame].AverageFrameTime = 0.0f;
+		Timers[ETimerCategory::Frame].FrameTimes.fill(0.0f);
+		Timers[ETimerCategory::Frame].CurrentFrameTimeIndex = 0;
+		Timers[ETimerCategory::Frame].FrameTimesLoaded = 0;
+		
+		Timers[ETimerCategory::CPU] = {};
+		Timers[ETimerCategory::CPU].Last = std::chrono::steady_clock::now();
+		Timers[ETimerCategory::CPU].First = Timers[ETimerCategory::CPU].Last;
 
-		FixedTime = 0.0f;
-		FixedTimeInterval = 1.0f / 60.0f;
+		Timers[ETimerCategory::CPU].FixedTime = 0.0f;
+		Timers[ETimerCategory::CPU].FixedTimeInterval = 1.0f / 60.0f;
 
-		DeltaTime = 0.0f;
+		Timers[ETimerCategory::CPU].DeltaTime = 0.0f;
 
-		AverageFrameTime = 0.0f;
-		FrameTimes.fill(0.0f);
-		CurrentFrameTimeIndex = 0;
-		FrameTimesLoaded = 0;
+		Timers[ETimerCategory::CPU].AverageFrameTime = 0.0f;
+		Timers[ETimerCategory::CPU].FrameTimes.fill(0.0f);
+		Timers[ETimerCategory::CPU].CurrentFrameTimeIndex = 0;
+		Timers[ETimerCategory::CPU].FrameTimesLoaded = 0;
+		
+		Timers[ETimerCategory::GPU] = {};
+		Timers[ETimerCategory::GPU].Last = std::chrono::steady_clock::now();
+		Timers[ETimerCategory::GPU].First = Timers[ETimerCategory::GPU].Last;
+
+		Timers[ETimerCategory::GPU].FixedTime = 0.0f;
+		Timers[ETimerCategory::GPU].FixedTimeInterval = 1.0f / 60.0f;
+
+		Timers[ETimerCategory::GPU].DeltaTime = 0.0f;
+
+		Timers[ETimerCategory::GPU].AverageFrameTime = 0.0f;
+		Timers[ETimerCategory::GPU].FrameTimes.fill(0.0f);
+		Timers[ETimerCategory::GPU].CurrentFrameTimeIndex = 0;
+		Timers[ETimerCategory::GPU].FrameTimesLoaded = 0;
 	}
 
-	GTimer::~GTimer()
+	GTime::~GTime()
 	{
 		Instance = nullptr;
 	}
 
 	//Total duration in seconds since start
-	float GTimer::Time()
+	float GTime::Time(ETimerCategory category)
 	{
-		return Instance->TotalTime();
+		return Instance->TotalTime(category);
 	}
 
 	//Delta time in seconds between the last two frames
-	float GTimer::Dt()
+	float GTime::Dt(ETimerCategory category)
 	{
-		return Instance->DeltaTime;
+		return Instance->Timers[category].DeltaTime;
 	}
 
-	float GTimer::FixedDt()
+	float GTime::FixedDt(ETimerCategory category)
 	{
-		return Instance->FixedTimeInterval;
+		return Instance->Timers[category].FixedTimeInterval;
 	}
 
-	F32 GTimer::AverageFrameRate()
+	F32 GTime::AverageFrameRate(ETimerCategory category)
 	{
-		return (1.0f / Instance->AverageFrameTime);
+		return (1.0f / Instance->Timers[category].AverageFrameTime);
 	}
 
-	float GTimer::Mark()
+	float GTime::Mark(ETimerCategory category)
 	{
-		return Instance->NewFrame();
+		return Instance->NewFrame(category);
 	}
 
-	bool GTimer::FixedTimeStep()
+	void GTime::BeginTracking(ETimerCategory category)
 	{
-		return Instance->FixedTime >= Instance->FixedTimeInterval;
+		Instance->Timers[category].Last = std::chrono::steady_clock::now();
 	}
 
-	float GTimer::NewFrame()
+	void GTime::EndTracking(ETimerCategory category)
 	{
-		const auto old = Last;
-		Last = std::chrono::steady_clock::now();
-		const std::chrono::duration<float> dt = Last - old;
-		DeltaTime = dt.count();
+		Instance->NewFrame(category);
+	}
 
-		if (FixedTime > FixedTimeInterval)
+	bool GTime::FixedTimeStep(ETimerCategory category)
+	{
+		return Instance->Timers[category].FixedTime >= Instance->Timers[category].FixedTimeInterval;
+	}
+
+	float GTime::NewFrame(ETimerCategory category)
+	{
+		STimeData& timer = Timers[category];
+
+		const auto old = timer.Last;
+		timer.Last = std::chrono::steady_clock::now();
+		const std::chrono::duration<float> dt = timer.Last - old;
+		timer.DeltaTime = dt.count();
+
+		if (timer.FixedTime > timer.FixedTimeInterval)
 		{
-			FixedTime -= FixedTimeInterval;
+			timer.FixedTime -= timer.FixedTimeInterval;
 		}
 
 #pragma region Average
-		FrameTimes[CurrentFrameTimeIndex] = DeltaTime;
-		CurrentFrameTimeIndex = (CurrentFrameTimeIndex + 1) % NO_FRAMES_TO_AVERAGE;
-		if (FrameTimesLoaded < NO_FRAMES_TO_AVERAGE)
-			FrameTimesLoaded++;
+		timer.FrameTimes[timer.CurrentFrameTimeIndex] = timer.DeltaTime;
+		timer.CurrentFrameTimeIndex = (timer.CurrentFrameTimeIndex + 1) % NO_FRAMES_TO_AVERAGE;
+		if (timer.FrameTimesLoaded < NO_FRAMES_TO_AVERAGE)
+			timer.FrameTimesLoaded++;
 
 		F32 sum = 0.0f;
-		for (U16 i = 0; i < FrameTimesLoaded; i++)
-			sum += FrameTimes[i];
+		for (U16 i = 0; i < timer.FrameTimesLoaded; i++)
+			sum += timer.FrameTimes[i];
 
-		AverageFrameTime = sum / FrameTimesLoaded;
+		timer.AverageFrameTime = sum / timer.FrameTimesLoaded;
 #pragma endregion 
 
-		FixedTime += DeltaTime;
+		timer.FixedTime += timer.DeltaTime;
 
-		return DeltaTime;
+		return timer.DeltaTime;
 	}
 
-	float GTimer::TotalTime() const
+	float GTime::TotalTime(ETimerCategory category) const
 	{
-		return std::chrono::duration<float>(std::chrono::steady_clock::now() - First).count();
+		return std::chrono::duration<float>(std::chrono::steady_clock::now() - Instance->Timers[category].First).count();
 	}
 }
