@@ -7,6 +7,7 @@
 #include "RenderCommand.h"
 
 #include "Engine.h"
+#include "Scene/World.h"
 
 #include "ECS/ECSInclude.h"
 #include "GraphicsStructs.h"

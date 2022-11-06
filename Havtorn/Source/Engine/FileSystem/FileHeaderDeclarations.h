@@ -3,6 +3,7 @@
 #pragma once
 #include "Graphics/GraphicsStructs.h"
 #include "Graphics/GraphicsEnums.h"
+#include "Scene/Scene.h"
 
 namespace Havtorn
 {
@@ -238,5 +239,45 @@ namespace Havtorn
 		}
 
 		pointerPosition += DeserializeSimple(Material.RecreateZ, fromData, pointerPosition);
+	}
+
+	struct SSceneFileHeader
+	{
+		EAssetType AssetType = EAssetType::Scene;
+		U32 SceneNameLength = 0;
+		std::string SceneName = "";
+		CScene* Scene;
+
+		[[nodiscard]] U32 GetSize() const;
+		void Serialize(char* toData) const;
+		void Deserialize(const char* fromData);
+	};
+
+	inline U32 SSceneFileHeader::GetSize() const
+	{
+		U32 size = sizeof(EAssetType);
+		size += sizeof(U32);
+		size += sizeof(char) * SceneNameLength;
+		size += sizeof(Scene);
+
+		return size;
+	}
+
+	inline void SSceneFileHeader::Serialize(char* toData) const
+	{
+		U32 pointerPosition = 0;
+		pointerPosition += SerializeSimple(AssetType, toData, pointerPosition);
+		pointerPosition += SerializeSimple(SceneNameLength, toData, pointerPosition);
+		pointerPosition += SerializeString(SceneName, toData, pointerPosition);
+		//pointerPosition += SerializeSimple(Scene, toData, pointerPosition);
+	}
+
+	inline void SSceneFileHeader::Deserialize(const char* fromData)
+	{
+		U32 pointerPosition = 0;
+		pointerPosition += DeserializeSimple(AssetType, fromData, pointerPosition);
+		pointerPosition += DeserializeSimple(SceneNameLength, fromData, pointerPosition);
+		pointerPosition += DeserializeString(SceneName, fromData, SceneNameLength, pointerPosition);
+		//pointerPosition += DeserializeSimple(Scene, fromData, pointerPosition);
 	}
 }

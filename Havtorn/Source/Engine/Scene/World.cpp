@@ -9,13 +9,22 @@ namespace Havtorn
 {
 	void CWorld::LoadScene(std::string filePath)
 	{
+		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
+		char* data = new char[fileSize];
 
+		GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));
+
+		SSceneFileHeader sceneFile;
+		sceneFile.Deserialize(data);
+		
+		//Scenes.emplace_back(std::make_unique<CScene>(std::move(sceneFile.Scene)));
 	}
 
 	bool CWorld::Init(CRenderManager* renderManager)
 	{
 		RenderManager = renderManager;
 
+		//LoadScene("Assets/Scenes/TestScene.hvs");
 		Scenes.emplace_back(std::make_unique<CScene>());
 		ENGINE_ERROR_BOOL_MESSAGE(Scenes.back()->Init(RenderManager), "World could not be initialized.");
 
@@ -47,5 +56,10 @@ namespace Havtorn
 	std::vector<Ref<SEntity>>& CWorld::GetEntities() const
 	{
 		return Scenes.back()->GetEntities();
+	}
+	
+	void CWorld::SaveActiveScene(const std::string& destinationPath)
+	{
+		Scenes.back()->SaveScene(destinationPath);
 	}
 }

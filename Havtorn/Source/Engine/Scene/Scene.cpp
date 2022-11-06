@@ -4,6 +4,7 @@
 
 #include "ECS/ECSInclude.h"
 #include "Graphics/RenderManager.h"
+#include "FileSystem/FileHeaderDeclarations.h"
 
 namespace Havtorn
 {
@@ -47,105 +48,105 @@ namespace Havtorn
 
 	void CScene::InitDemoScene(CRenderManager* renderManager)
 	{
-		// === Point light ===
-		auto pointLightEntity = CreateEntity("Point Light");
+		//// === Point light ===
+		//auto pointLightEntity = CreateEntity("Point Light");
 
-		auto pointLightTransform = AddTransformComponentToEntity(pointLightEntity);
-		pointLightTransform->Transform.GetMatrix().SetTranslation({ 1.25f, 0.35f, -1.65f });
-		
-		auto pointLightComp = AddPointLightComponentToEntity(pointLightEntity);
-		pointLightComp->ColorAndIntensity = { 0.0f, 1.0f, 1.0f, 10.0f };
-		pointLightComp->Range = 1.0f;
+		//auto pointLightTransform = AddTransformComponentToEntity(pointLightEntity);
+		//pointLightTransform->Transform.GetMatrix().SetTranslation({ 1.25f, 0.35f, -1.65f });
+		//
+		//auto pointLightComp = AddPointLightComponentToEntity(pointLightEntity);
+		//pointLightComp->ColorAndIntensity = { 0.0f, 1.0f, 1.0f, 10.0f };
+		//pointLightComp->Range = 1.0f;
 
-		auto volumetricPointLight = AddVolumetricLightComponentToEntity(pointLightEntity);
-		//volumetricPointLight->IsActive = true;
+		//auto volumetricPointLight = AddVolumetricLightComponentToEntity(pointLightEntity);
+		////volumetricPointLight->IsActive = true;
 
-		const SMatrix constantProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, pointLightComp->Range);
-		const SVector4 constantPosition = pointLightTransform->Transform.GetMatrix().GetTranslation4();
+		//const SMatrix constantProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, pointLightComp->Range);
+		//const SVector4 constantPosition = pointLightTransform->Transform.GetMatrix().GetTranslation4();
 
-		// Forward
-		SShadowmapViewData& view1 = pointLightComp->ShadowmapViews[0];
-		view1.ShadowPosition = constantPosition;
-		view1.ShadowmapViewportIndex = 1;
-		view1.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Forward).ToVector3(), SVector::Up);
-		view1.ShadowProjectionMatrix = constantProjectionMatrix;
+		//// Forward
+		//SShadowmapViewData& view1 = pointLightComp->ShadowmapViews[0];
+		//view1.ShadowPosition = constantPosition;
+		//view1.ShadowmapViewportIndex = 1;
+		//view1.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Forward).ToVector3(), SVector::Up);
+		//view1.ShadowProjectionMatrix = constantProjectionMatrix;
 
-		// Right
-		SShadowmapViewData& view2 = pointLightComp->ShadowmapViews[1];
-		view2.ShadowPosition = constantPosition;
-		view2.ShadowmapViewportIndex = 2;
-		view2.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Right).ToVector3(), SVector::Up);
-		view2.ShadowProjectionMatrix = constantProjectionMatrix;
+		//// Right
+		//SShadowmapViewData& view2 = pointLightComp->ShadowmapViews[1];
+		//view2.ShadowPosition = constantPosition;
+		//view2.ShadowmapViewportIndex = 2;
+		//view2.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Right).ToVector3(), SVector::Up);
+		//view2.ShadowProjectionMatrix = constantProjectionMatrix;
 
-		// Backward
-		SShadowmapViewData& view3 = pointLightComp->ShadowmapViews[2];
-		view3.ShadowPosition = constantPosition;
-		view3.ShadowmapViewportIndex = 3;
-		view3.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Backward).ToVector3(), SVector::Up);
-		view3.ShadowProjectionMatrix = constantProjectionMatrix;
+		//// Backward
+		//SShadowmapViewData& view3 = pointLightComp->ShadowmapViews[2];
+		//view3.ShadowPosition = constantPosition;
+		//view3.ShadowmapViewportIndex = 3;
+		//view3.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Backward).ToVector3(), SVector::Up);
+		//view3.ShadowProjectionMatrix = constantProjectionMatrix;
 
-		// Left
-		SShadowmapViewData& view4 = pointLightComp->ShadowmapViews[3];
-		view4.ShadowPosition = constantPosition;
-		view4.ShadowmapViewportIndex = 4;
-		view4.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Left).ToVector3(), SVector::Up);
-		view4.ShadowProjectionMatrix = constantProjectionMatrix;
+		//// Left
+		//SShadowmapViewData& view4 = pointLightComp->ShadowmapViews[3];
+		//view4.ShadowPosition = constantPosition;
+		//view4.ShadowmapViewportIndex = 4;
+		//view4.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Left).ToVector3(), SVector::Up);
+		//view4.ShadowProjectionMatrix = constantProjectionMatrix;
 
-		// Up
-		SShadowmapViewData& view5 = pointLightComp->ShadowmapViews[4];
-		view5.ShadowPosition = constantPosition;
-		view5.ShadowmapViewportIndex = 5;
-		view5.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Up).ToVector3(), SVector::Backward);
-		view5.ShadowProjectionMatrix = constantProjectionMatrix;
+		//// Up
+		//SShadowmapViewData& view5 = pointLightComp->ShadowmapViews[4];
+		//view5.ShadowPosition = constantPosition;
+		//view5.ShadowmapViewportIndex = 5;
+		//view5.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Up).ToVector3(), SVector::Backward);
+		//view5.ShadowProjectionMatrix = constantProjectionMatrix;
 
-		// Down
-		SShadowmapViewData& view6 = pointLightComp->ShadowmapViews[5];
-		view6.ShadowPosition = constantPosition;
-		view6.ShadowmapViewportIndex = 6;
-		view6.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Down).ToVector3(), SVector::Forward);
-		view6.ShadowProjectionMatrix = constantProjectionMatrix;
-		// === !Point light ===
+		//// Down
+		//SShadowmapViewData& view6 = pointLightComp->ShadowmapViews[5];
+		//view6.ShadowPosition = constantPosition;
+		//view6.ShadowmapViewportIndex = 6;
+		//view6.ShadowViewMatrix = SMatrix::LookAtLH(constantPosition.ToVector3(), (constantPosition + SVector4::Down).ToVector3(), SVector::Forward);
+		//view6.ShadowProjectionMatrix = constantProjectionMatrix;
+		//// === !Point light ===
 
-		// === Spotlight ===
-		auto spotlight = CreateEntity("SpotLight");
+		//// === Spotlight ===
+		//auto spotlight = CreateEntity("SpotLight");
 
-		auto& spotlightTransform = AddTransformComponentToEntity(spotlight)->Transform;
-		spotlightTransform.Translate({ 1.5f, 0.5f, -1.0f });
+		//auto& spotlightTransform = AddTransformComponentToEntity(spotlight)->Transform;
+		//spotlightTransform.Translate({ 1.5f, 0.5f, -1.0f });
 
-		auto spotlightComp = AddSpotLightComponentToEntity(spotlight);
-		spotlightComp->Direction = SVector4::Forward;
-		spotlightComp->DirectionNormal1 = SVector4::Right;
-		spotlightComp->DirectionNormal2 = SVector4::Up;
-		spotlightComp->ColorAndIntensity = { 0.0f, 1.0f, 0.0f, 5.0f };
-		spotlightComp->OuterAngle = 25.0f;
-		spotlightComp->InnerAngle = 5.0f;
-		spotlightComp->Range = 3.0f;
+		//auto spotlightComp = AddSpotLightComponentToEntity(spotlight);
+		//spotlightComp->Direction = SVector4::Forward;
+		//spotlightComp->DirectionNormal1 = SVector4::Right;
+		//spotlightComp->DirectionNormal2 = SVector4::Up;
+		//spotlightComp->ColorAndIntensity = { 0.0f, 1.0f, 0.0f, 5.0f };
+		//spotlightComp->OuterAngle = 25.0f;
+		//spotlightComp->InnerAngle = 5.0f;
+		//spotlightComp->Range = 3.0f;
 
-		auto volumetricSpotLight = AddVolumetricLightComponentToEntity(spotlight);
-		//volumetricSpotLight->IsActive = true;
+		//auto volumetricSpotLight = AddVolumetricLightComponentToEntity(spotlight);
+		////volumetricSpotLight->IsActive = true;
 
-		const SMatrix spotlightProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, spotlightComp->Range);
-		const SVector4 spotlightPosition = TransformComponents.back()->Transform.GetMatrix().GetTranslation4();
+		//const SMatrix spotlightProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, spotlightComp->Range);
+		//const SVector4 spotlightPosition = TransformComponents.back()->Transform.GetMatrix().GetTranslation4();
 
-		spotlightComp->ShadowmapView.ShadowPosition = spotlightPosition;
-		spotlightComp->ShadowmapView.ShadowmapViewportIndex = 7;
-		spotlightComp->ShadowmapView.ShadowViewMatrix = SMatrix::LookAtLH(spotlightPosition.ToVector3(), (spotlightPosition + spotlightComp->Direction).ToVector3(), spotlightComp->DirectionNormal2.ToVector3());
-		spotlightComp->ShadowmapView.ShadowProjectionMatrix = spotlightProjection;
-		// === !Spotlight ===
+		//spotlightComp->ShadowmapView.ShadowPosition = spotlightPosition;
+		//spotlightComp->ShadowmapView.ShadowmapViewportIndex = 7;
+		//spotlightComp->ShadowmapView.ShadowViewMatrix = SMatrix::LookAtLH(spotlightPosition.ToVector3(), (spotlightPosition + spotlightComp->Direction).ToVector3(), spotlightComp->DirectionNormal2.ToVector3());
+		//spotlightComp->ShadowmapView.ShadowProjectionMatrix = spotlightProjection;
+		//// === !Spotlight ===
 
-		// === Decal ===
-		auto decal = CreateEntity("Decal");
+		//// === Decal ===
+		//auto decal = CreateEntity("Decal");
 
-		auto& decalTransform = AddTransformComponentToEntity(decal)->Transform;
-		decalTransform.GetMatrix().SetTranslation({ 0.45f, 1.60f, 0.85f });
+		//auto& decalTransform = AddTransformComponentToEntity(decal)->Transform;
+		//decalTransform.GetMatrix().SetTranslation({ 0.45f, 1.60f, 0.85f });
 
-		auto decalComp = AddDecalComponentToEntity(decal);
+		//auto decalComp = AddDecalComponentToEntity(decal);
 
-		renderManager->LoadDecalComponent({"T_noscare_AL_c", "T_noscare_AL_m", "T_noscare_AL_n"}, decalComp.get());
-		decalComp->ShouldRenderAlbedo = true;
-		decalComp->ShouldRenderMaterial = true;
-		decalComp->ShouldRenderNormal = true;
-		// === !Decal ===
+		//renderManager->LoadDecalComponent({"T_noscare_AL_c", "T_noscare_AL_m", "T_noscare_AL_n"}, decalComp.get());
+		//decalComp->ShouldRenderAlbedo = true;
+		//decalComp->ShouldRenderMaterial = true;
+		//decalComp->ShouldRenderNormal = true;
+		//// === !Decal ===
 
 		const std::string modelPath1 = "Assets/Tests/En_P_PendulumClock.hva";
 		const std::vector<std::string> materialNames1 = { "Assets/Materials/M_PendulumClock.hva", "Assets/Materials/M_Checkboard_128x128.hva" };
@@ -187,6 +188,16 @@ namespace Havtorn
 		renderManager->LoadStaticMeshComponent(modelPath4, AddStaticMeshComponentToEntity(lamp).get());
 		renderManager->LoadMaterialComponent(materialNames4, AddMaterialComponentToEntity(lamp).get());
 		// === !Lamp ===
+
+		// === TestSaveEntity ===
+		auto testSaveEntity = CreateEntity("TestSaveEntity");
+
+		auto testSaveEntityTransform = AddTransformComponentToEntity(testSaveEntity);
+		auto& testSaveEntityTransform4 = testSaveEntityTransform->Transform;
+		testSaveEntityTransform4.GetMatrix().SetTranslation({ -1.0f, 1.4f, -0.75f });
+		testSaveEntityTransform4.Rotate({ 0.0f, UMath::DegToRad(90.0f), 0.0f });
+		testSaveEntityTransform4.Scale({ 1.1f, 2.0f, 0.9f });
+		// === !TestSaveEntity ===
 
 		//// === Floor ===
 		//std::vector<SVector> translations;
@@ -282,6 +293,44 @@ namespace Havtorn
 		//Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(-1.0f, 0.0f, 0.0f), Color::Yellow, durationSeconds, useLifeTime, thickness, ignoreDepth);
 		//Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(0.0f, -1.0f, 0.0f), Color::Teal, durationSeconds, useLifeTime, thickness, ignoreDepth);
 		//Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(0.0f, 0.0f, -1.0f), Color::Purple, durationSeconds, useLifeTime, thickness,  ignoreDepth);
+	}
+
+	void CScene::SaveScene(const std::string& destinationPath)
+	{
+		SSceneFileHeader fileHeader;
+		fileHeader.SceneName = "TestScene";
+		fileHeader.SceneNameLength = static_cast<U32>(fileHeader.SceneName.size());
+		fileHeader.Scene = this;
+		
+		char* data = new char[fileHeader.GetSize()];
+		
+		fileHeader.Serialize(data);
+		GEngine::GetFileSystem()->Serialize(destinationPath, &data[0], fileHeader.GetSize());
+		delete[] data;
+	}
+
+	void CScene::LoadScene(const std::string& /*destinationPath*/)
+	{
+	}
+
+	U32 CScene::GetSize() const
+	{
+		return U32();
+	}
+
+	void CScene::Serialize(char* /*toData*/) const
+	{
+		//U32 pointerPosition = 0;
+
+		//for (auto& entity : Entities)
+		//{
+
+		//}
+		//pointerPosition += SerializeSimple();
+	}
+
+	void CScene::Deserialize(const char* /*fromData*/)
+	{
 	}
 
 	Ref<SEntity> CScene::CreateEntity(const std::string& name)

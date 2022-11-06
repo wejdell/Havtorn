@@ -17,6 +17,7 @@ namespace Havtorn
 		void LoadScene(std::string filePath);
 		HAVTORN_API std::vector<Ptr<CScene>>& GetActiveScenes();
 		HAVTORN_API std::vector<Ref<SEntity>>& GetEntities() const;
+		HAVTORN_API void SaveActiveScene(const std::string& destinationPath);
 
 	private:
 		CWorld() = default;

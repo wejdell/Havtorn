@@ -36,6 +36,12 @@ namespace Havtorn
 
 		void InitDemoScene(CRenderManager* renderManager);
 
+		void SaveScene(const std::string& destinationPath);
+		void LoadScene(const std::string& destinationPath);
+		[[nodiscard]] U32 GetSize() const;
+		void Serialize(char* toData) const;
+		void Deserialize(const char* fromData);
+
 		std::vector<Ref<STransformComponent>>& GetTransformComponents() { return TransformComponents; }
 		std::vector<Ref<SStaticMeshComponent>>& GetStaticMeshComponents() { return StaticMeshComponents; }
 		std::vector<Ref<SCameraComponent>>& GetCameraComponents() { return CameraComponents; }
