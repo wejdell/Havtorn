@@ -171,11 +171,12 @@ namespace Havtorn
 
 			std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
 			const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
-			SMatrix matrix;
-			farZ;// TODO.AG: make farZ work properly.
-			SVector vScale((fov / 50.0f), 1.0f, 1.0f);
+
+			F32 y = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
+			F32 x = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
+			SVector vScale(x, y, farZ);
+			SMatrix& matrix = transforms[transformIndex]->Transform.GetMatrix();
 			SMatrix::Recompose(origin, eulerRotation, vScale, matrix);
-			transforms[transformIndex]->Transform.SetMatrix(matrix);
 		}
 
 		void UDebugShapeSystem::AddCircleXY(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
