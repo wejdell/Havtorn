@@ -295,7 +295,6 @@ namespace Havtorn
 	{
 		AddIndexBuffer(GeometryPrimitives::DecalProjectorIndices);
 		AddIndexBuffer(GeometryPrimitives::PointLightCubeIndices);
-		AddIndexBuffer(GeometryPrimitives::Icosphere.Indices);
 		AddIndexBuffer(GeometryPrimitives::LineIndices);
 		AddIndexBuffer(GeometryPrimitives::FlatArrowIndices);
 		AddIndexBuffer(GeometryPrimitives::DebugCubeIndices);
@@ -303,6 +302,7 @@ namespace Havtorn
 		AddIndexBuffer(GeometryPrimitives::CircleXY8Indices);
 		AddIndexBuffer(GeometryPrimitives::CircleXY16Indices);
 		AddIndexBuffer(GeometryPrimitives::CircleXY32Indices);
+		AddIndexBuffer(GeometryPrimitives::Icosphere.Indices);
 	}
 
 	void CRenderManager::InitTopologies()
