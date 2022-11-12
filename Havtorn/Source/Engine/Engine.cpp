@@ -11,26 +11,13 @@
 #include "Graphics/GraphicsFramework.h"
 #include "Graphics/TextureBank.h"
 
-//#include "WindowHandler.h"
-//#include "DirectXFramework.h"
-//#include "ForwardRenderer.h"
 #include "Scene/Scene.h"
 #include "ECS/ECSInclude.h"
 
-//#include "ParticleEmitterFactory.h"
-//#include "TextFactory.h"
-//#include "VFXMeshFactory.h"
-//#include "LineFactory.h"
-//#include "SpriteFactory.h"
-
 #include "Graphics/RenderManager.h"
-
-//#include "AudioManager.h"
 #include "Input/InputMapper.h"
 
 #include "Timer.h"
-
-//#include "PhysXWrapper.h"
 
 namespace Havtorn
 {
@@ -41,7 +28,7 @@ namespace Havtorn
 		Instance = this;
 
 		FileSystem = new CFileSystem();
-		Timer = new GTimer();
+		Timer = new GTime();
 		WindowHandler = new CWindowHandler();
 		ThreadManager = new CThreadManager();
 		Framework = new CGraphicsFramework();
@@ -80,17 +67,6 @@ namespace Havtorn
 		ENGINE_ERROR_BOOL_MESSAGE(InputMapper->Init(), "Input Mapper could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(Scene->Init(RenderManager), "Scene could not be initialized.");
 
-		//ENGINE_ERROR_BOOL_MESSAGE(ModelFactory->Init(Framework), "Model Factory could not be initiliazed.");
-		//ENGINE_ERROR_BOOL_MESSAGE(CameraFactory->Init(WindowHandler), "Camera Factory could not be initialized.");
-		//ENGINE_ERROR_BOOL_MESSAGE(CMainSingleton::MaterialHandler().Init(Framework), "Material Handler could not be initialized.");
-		//ENGINE_ERROR_BOOL_MESSAGE(LightFactory->Init(*this), "Light Factory could not be initialized.");
-		//ENGINE_ERROR_BOOL_MESSAGE(ParticleFactory->Init(Framework), "Particle Factory could not be initialized.");
-		//ENGINE_ERROR_BOOL_MESSAGE(VFXFactory->Init(Framework), "VFX Factory could not be initialized.");
-		//ENGINE_ERROR_BOOL_MESSAGE(LineFactory->Init(Framework), "Line Factory could not be initialized.");
-		//ENGINE_ERROR_BOOL_MESSAGE(SpriteFactory->Init(Framework), "Sprite Factory could not be initialized.");
-		//ENGINE_ERROR_BOOL_MESSAGE(TextFactory->Init(Framework), "Text Factory could not be initialized.");
-
-		//ENGINE_ERROR_BOOL_MESSAGE(PhysxWrapper->Init(), "PhysX could not be initialized.");
 		InitWindowsImaging();
 
 		return true;
@@ -98,27 +74,17 @@ namespace Havtorn
 
 	float GEngine::BeginFrame()
 	{
-		return GTimer::Mark();
+		GTime::BeginTracking(ETimerCategory::CPU);
+		return GTime::Mark();
 	}
 
 	void GEngine::Update()
 	{
-		//if (mySceneMap.find(myActiveState) != mySceneMap.end())
-		//{
-		//	if (GTimer::FixedTimeStep() == true)
-		//	{
-		//		PhysxWrapper->Simulate(); //<-- Anropas i samma intervall som Fixed "�r"
-		//		mySceneMap[myActiveState]->FixedUpdate();
-		//	}
-		//	mySceneMap[myActiveState]->Update();
-		//}
-
 		InputMapper->Update();
 		Scene->Update();
 
-		//AudioManager->Update();
-		//CSceneFactory::Get()->Update(); //Used for loading Scenes on a seperate Thread!
-	
+		GTime::EndTracking(ETimerCategory::CPU);
+
 		std::unique_lock<std::mutex> uniqueLock(CThreadManager::RenderMutex);
 		CThreadManager::RenderCondition.wait(uniqueLock, []
 			{
@@ -128,9 +94,6 @@ namespace Havtorn
 
 	void GEngine::RenderFrame()
 	{
-		//ThreadManager->PushJob(std::bind(&CRenderManager::Render, RenderManager));
-		//RenderManager->Render();
-
 	}
 
 	void GEngine::EndFrame()

@@ -2,6 +2,7 @@
 
 #pragma once
 #include "ECS/Component.h"
+#include "Graphics/GraphicsMaterial.h"
 
 namespace Havtorn
 {
@@ -11,6 +12,6 @@ namespace Havtorn
 			: SComponent(std::move(entity), type)
 		{}
 
-		std::vector<U16> MaterialReferences;
+		std::vector<SEngineGraphicsMaterial> Materials;
 	};
 }

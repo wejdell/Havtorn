@@ -205,47 +205,29 @@ namespace ImGui
 	void CInspectorWindow::InspectMaterialComponent(Havtorn::I64 materialComponentIndex)
 	{
 		auto& materialComp = Scene->GetMaterialComponents()[materialComponentIndex];
-		auto renderManager = Manager->GetRenderManager();
 
 		if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			Havtorn::EMaterialConfiguration materialConfig = renderManager->GetMaterialConfiguration();
-
-			for (Havtorn::U16 materialIndex = 0; materialIndex < materialComp->MaterialReferences.size(); materialIndex++)
+			for (Havtorn::U8 materialIndex = 0; materialIndex < materialComp->Materials.size(); materialIndex++)
 			{
-				switch (materialConfig)
-				{
-				case Havtorn::EMaterialConfiguration::AlbedoMaterialNormal_Packed:
-				{
-					if (materialIndex % 3 == 0)
-					{
-						ImGui::Text("Material %i", materialIndex / 3);
-						ImGui::Separator();
-						ImGui::Text("Albedo");
-					}
+				Havtorn::SEditorAssetRepresentation* assetRep = Manager->GetAssetRepFromName(materialComp->Materials[materialIndex].Name).get();
 
-					if (materialIndex % 3 == 1)
-						ImGui::Text("Material");
+				ImGui::Separator();
 
-					if (materialIndex % 3 == 2)
-						ImGui::Text("Normal");
-				}
-					break;
-				default:
-					break;
-				}
+				if (assetRep->Name.size() > 0)
+					ImGui::Text(assetRep->Name.c_str());
+				else
+					ImGui::Text("Empty Material");
 
-				Havtorn::U16 ref = materialComp->MaterialReferences[materialIndex];
-				if (ImGui::ImageButton((void*)Havtorn::GEngine::GetTextureBank()->GetTexture(ref), { TexturePreviewSize.X, TexturePreviewSize.Y }))
+				if (ImGui::ImageButton(assetRep->TextureRef, { TexturePreviewSize.X, TexturePreviewSize.Y }))
 				{
-					MaterialRefToChangeIndex = materialIndex;
-					ImGui::OpenPopup("Select Texture Asset");
+					MaterialToChangeIndex = materialIndex;
+					ImGui::OpenPopup("Select Material Asset");
 					ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 				}
 			}
 		
-			MaterialRefToChangeIndex = Havtorn::UMath::Min(static_cast<Havtorn::U16>(materialComp->MaterialReferences.size()), MaterialRefToChangeIndex);
-			OpenSelectTextureAssetModal(materialComp->MaterialReferences[MaterialRefToChangeIndex]);
+			OpenSelectMaterialAssetModal(materialComp.get(), MaterialToChangeIndex);
 		}
 	}
 
@@ -333,8 +315,8 @@ namespace ImGui
 
 			ImGui::Checkbox("Is Active", &volumetricLightComp->IsActive);
 			ImGui::DragFloat("Number Of Samples", &volumetricLightComp->NumberOfSamples, SlideSpeed, 4.0f);
-			// Todo.Anyone: Replace std::min with Havtorn's max.
-			volumetricLightComp->NumberOfSamples = std::max(volumetricLightComp->NumberOfSamples, 4.0f);
+
+			volumetricLightComp->NumberOfSamples = Havtorn::UMath::Max(volumetricLightComp->NumberOfSamples, 4.0f);
 			ImGui::DragFloat("Light Power", &volumetricLightComp->LightPower, SlideSpeed * 10000.0f, 0.0f);
 			ImGui::DragFloat("Scattering Probability", &volumetricLightComp->ScatteringProbability, SlideSpeed * 0.1f, 0.0f, 1.0f, "%.4f", ImGuiSliderFlags_Logarithmic);
 			ImGui::DragFloat("Henyey-Greenstein G", &volumetricLightComp->HenyeyGreensteinGValue);
@@ -351,29 +333,16 @@ namespace ImGui
 			ImGui::Checkbox("Render Material", &decalComp->ShouldRenderMaterial);
 			ImGui::Checkbox("Render Normal", &decalComp->ShouldRenderNormal);
 
-			auto renderManager = Manager->GetRenderManager();
-
-			Havtorn::EMaterialConfiguration materialConfig = renderManager->GetMaterialConfiguration();
-
 			for (Havtorn::U16 materialIndex = 0; materialIndex < decalComp->TextureReferences.size(); materialIndex++)
 			{
-				switch (materialConfig)
-				{
-				case Havtorn::EMaterialConfiguration::AlbedoMaterialNormal_Packed:
-				{
-					if (materialIndex % 3 == 0)
-						ImGui::Text("Albedo");
+				if (materialIndex % 3 == 0)
+					ImGui::Text("Albedo");
 
-					if (materialIndex % 3 == 1)
-						ImGui::Text("Material");
+				if (materialIndex % 3 == 1)
+					ImGui::Text("Material");
 
-					if (materialIndex % 3 == 2)
-						ImGui::Text("Normal");
-				}
-				break;
-				default:
-					break;
-				}
+				if (materialIndex % 3 == 2)
+					ImGui::Text("Normal");
 
 				Havtorn::U16 ref = decalComp->TextureReferences[materialIndex];
 				if (ImGui::ImageButton((void*)Havtorn::GEngine::GetTextureBank()->GetTexture(ref), { TexturePreviewSize.X, TexturePreviewSize.Y }))
@@ -424,34 +393,24 @@ namespace ImGui
 						if (meshAssetToChange->Entity->HasComponent(EComponentType::MaterialComponent))
 						{
 							auto& materialComp = Scene->GetMaterialComponents()[meshAssetToChange->Entity->GetComponentIndex(EComponentType::MaterialComponent)];
-							Havtorn::EMaterialConfiguration materialConfig = Manager->GetRenderManager()->GetMaterialConfiguration();
-							Havtorn::U8 texturesPerMaterial = 0;
-							switch (materialConfig)
-							{
-							case Havtorn::EMaterialConfiguration::AlbedoMaterialNormal_Packed:
-								texturesPerMaterial = 3;
-								break;
-							default:
-								break;
-							}
 
-							Havtorn::U8 materialReferencesByMesh = meshAssetToChange->NumberOfMaterials * texturesPerMaterial;
-							Havtorn::I8 referenceDifference = materialReferencesByMesh - static_cast<Havtorn::U8>(materialComp->MaterialReferences.size());
+							Havtorn::U8 meshMaterialNumber = meshAssetToChange->NumberOfMaterials;
+							Havtorn::I8 materialNumberDifference = meshMaterialNumber - static_cast<Havtorn::U8>(materialComp->Materials.size());
 
-							// NR: Add texture references to correspond with mesh
-							if (referenceDifference > 0)
+							// NR: Add materials to correspond with mesh
+							if (materialNumberDifference > 0)
 							{
-								for (Havtorn::U8 i = 0; i < referenceDifference; i++)
+								for (Havtorn::U8 i = 0; i < materialNumberDifference; i++)
 								{
-									materialComp->MaterialReferences.push_back(1);
+									materialComp->Materials.emplace_back();
 								}
 							}
-							// NR: Remove texture references to correspond with mesh
-							else if (referenceDifference < 0)
+							// NR: Remove materials to correspond with mesh
+							else if (materialNumberDifference < 0)
 							{
-								for (Havtorn::U8 i = 0; i < referenceDifference * -1.0f; i++)
+								for (Havtorn::U8 i = 0; i < materialNumberDifference * -1.0f; i++)
 								{
-									materialComp->MaterialReferences.pop_back();
+									materialComp->Materials.pop_back();
 								}
 							}
 							// NR: Do nothing
@@ -501,6 +460,49 @@ namespace ImGui
 					if (ImGui::ImageButton(assetRep->TextureRef, { TexturePreviewSize.X * 0.75f, TexturePreviewSize.Y * 0.75f }))
 					{
 						textureRefToChange = static_cast<Havtorn::U16>(Havtorn::GEngine::GetTextureBank()->GetTextureIndex(entry.path().string()));
+						ImGui::CloseCurrentPopup();
+					}
+
+					ImGui::Text(assetRep->Name.c_str());
+					ImGui::PopID();
+				}
+
+				ImGui::EndTable();
+			}
+
+			if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) { ImGui::CloseCurrentPopup(); }
+
+			ImGui::EndPopup();
+		}
+	}
+
+	void CInspectorWindow::OpenSelectMaterialAssetModal(Havtorn::SMaterialComponent* materialComponentToChange, Havtorn::U8 materialIndex)
+	{
+		if (ImGui::BeginPopupModal("Select Material Asset", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		{
+			F32 thumbnailPadding = 4.0f;
+			F32 cellWidth = TexturePreviewSize.X * 0.75f + thumbnailPadding;
+			F32 panelWidth = 256.0f;
+			Havtorn::I32 columnCount = static_cast<Havtorn::I32>(panelWidth / cellWidth);
+			Havtorn::U32 id = 0;
+
+			if (ImGui::BeginTable("NewMaterialAssetTable", columnCount))
+			{
+				for (auto& entry : std::filesystem::recursive_directory_iterator("Assets/Materials"))
+				{
+					if (entry.is_directory())
+						continue;
+
+					auto& assetRep = Manager->GetAssetRepFromDirEntry(entry);
+
+					ImGui::TableNextColumn();
+					ImGui::PushID(id++);
+
+					if (ImGui::ImageButton(assetRep->TextureRef, { TexturePreviewSize.X * 0.75f, TexturePreviewSize.Y * 0.75f }))
+					{
+
+						Manager->GetRenderManager()->TryReplaceMaterialOnComponent(assetRep->DirectoryEntry.path().string(), materialIndex, materialComponentToChange);
+
 						ImGui::CloseCurrentPopup();
 					}
 
