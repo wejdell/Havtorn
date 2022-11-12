@@ -315,7 +315,7 @@ namespace Havtorn
 		void UDebugShapeSystem::CheckActiveIndices(const std::vector<Ref<SDebugShapeComponent>>& debugShapes)
 		{
 			const F32 time = GTime::Time();
-			std::queue<U64> activeIndicesToRemove;
+			std::vector<U64> activeIndicesToRemove;
 			for (U64 i = 0; i < ActiveIndices.size(); i++)
 			{
 				const U64& activeIndex = ActiveIndices[i];
