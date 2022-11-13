@@ -41,7 +41,7 @@ namespace Havtorn
 			void Update(CScene* scene) override;
 
 		public: // Static Add Shape functions.
-			static constexpr U16 MaxShapes = 50;
+			static constexpr U16 MaxShapes = 500;
 			static constexpr F32 ThicknessMinimum = 0.005f;
 			static constexpr F32 ThicknessMaximum = 0.05f;
 

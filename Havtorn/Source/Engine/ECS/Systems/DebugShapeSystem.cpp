@@ -299,17 +299,49 @@ namespace Havtorn
 			const std::vector<Ref<STransformComponent>>& transformComponents
 		)
 		{
+			typedef std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> Components;
+
+			// Send and set prepass rendercommand for debug shapes
+			std::vector<SRenderCommand> ignoreDepth;
+			ignoreDepth.reserve(ActiveIndices.size());
+			std::vector<SRenderCommand> useDepth;
+			useDepth.reserve(ActiveIndices.size());
+			{
+				Components components;
+				SRenderCommand command(components, ERenderCommandType::PreDebugShape);
+				RenderManager->PushRenderCommand(command);
+
+				ignoreDepth.emplace_back(SRenderCommand(components, ERenderCommandType::PostToneMappingIgnoreDepth));
+				useDepth.emplace_back(SRenderCommand(components, ERenderCommandType::PostToneMappingUseDepth));
+			}
+
+			// Sort render commands based on use of depth
+			const U8 debugShapeComponent = static_cast<U8>(EComponentType::DebugShapeComponent);
+			const U8 transformComponent = static_cast<U8>(EComponentType::TransformComponent);
 			for (U64 i = 0; i < ActiveIndices.size(); i++)
 			{
-				std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
+				//const ERenderCommandType renderCommandType = ERenderCommandType::DebugShape;
 				const U64 shapeIndex = entities[ActiveIndices[i]]->GetComponentIndex(EComponentType::DebugShapeComponent);
 				const U64 transformIndex = entities[ActiveIndices[i]]->GetComponentIndex(EComponentType::TransformComponent);
-				components[static_cast<U8>(EComponentType::DebugShapeComponent)] = debugShapes[shapeIndex];
-				components[static_cast<U8>(EComponentType::TransformComponent)] = transformComponents[transformIndex];
+				Components components;
+				components[debugShapeComponent] = debugShapes[shapeIndex];
+				components[transformComponent] = transformComponents[transformIndex];
 
-				SRenderCommand command(components, ERenderCommandType::DebugShape);
-				RenderManager->PushRenderCommand(command);
+				if (debugShapes[shapeIndex]->IgnoreDepth)
+					ignoreDepth.emplace_back(SRenderCommand(components, ERenderCommandType::DebugShapeIgnoreDepth));
+				else
+					useDepth.emplace_back(SRenderCommand(components, ERenderCommandType::DebugShapeUseDepth));
 			}
+
+			auto SendRenderCommands = [&](std::vector<SRenderCommand>& commands)
+			{
+				for (U64 i = 0; i < commands.size(); i++)
+				{
+					RenderManager->PushRenderCommand(commands[i]);
+				}
+			};
+			SendRenderCommands(useDepth);
+			SendRenderCommands(ignoreDepth);
 		}
 
 		void UDebugShapeSystem::CheckActiveIndices(const std::vector<Ref<SDebugShapeComponent>>& debugShapes)
