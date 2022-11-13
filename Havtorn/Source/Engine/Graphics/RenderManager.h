@@ -240,6 +240,7 @@ namespace Havtorn
 		inline void GammaCorrection();
 		inline void RendererDebug();
 		inline void DebugShadowAtlas();
+		inline void PreDebugShapes();
 		inline void DebugShapes(const SRenderCommand& command);
 
 	private:
@@ -307,6 +308,7 @@ namespace Havtorn
 			SMatrix ToWorldFromObject;
 			SVector4 Color;
 			F32 HalfThickness = 0.5f;
+			F32 Padding[3] = {};
 		} DebugShapeObjectBufferData;
 		HV_ASSERT_BUFFER(SDebugShapeObjectBufferData)
 
