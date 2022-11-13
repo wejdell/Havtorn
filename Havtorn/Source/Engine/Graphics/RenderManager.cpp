@@ -466,7 +466,31 @@ namespace Havtorn
 				}
 				break;
 
-				case ERenderCommandType::DebugShape: 
+				case ERenderCommandType::PreDebugShape: 
+				{
+					PreDebugShapes();
+				}
+				break;
+
+				case ERenderCommandType::PostToneMappingUseDepth:
+				{
+					TonemappedTexture.SetAsActiveTarget(&IntermediateDepth);
+				}
+				break;
+
+				case ERenderCommandType::DebugShapeUseDepth: 
+				{
+					DebugShapes(currentCommand);
+				}
+				break;
+
+				case ERenderCommandType::PostToneMappingIgnoreDepth:
+				{
+					TonemappedTexture.SetAsActiveTarget();
+				}
+				break;
+
+				case ERenderCommandType::DebugShapeIgnoreDepth: 
 				{
 					DebugShapes(currentCommand);
 				}
@@ -2063,23 +2087,23 @@ namespace Havtorn
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
 	}
 
+	inline void CRenderManager::PreDebugShapes()
+	{
+		RenderStateManager.SetDepthStencilState(CRenderStateManager::EDepthStencilStates::OnlyRead);
+		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
+
+		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::LineList)]);
+		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
+
+		Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::Line)], nullptr, 0);
+		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Line)], nullptr, 0);
+		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::Line)], nullptr, 0);
+	}
+
 	inline void CRenderManager::DebugShapes(const SRenderCommand& command)
 	{
 		SDebugShapeComponent* shape = command.GetComponent(DebugShapeComponent);
 		STransformComponent* transform = command.GetComponent(TransformComponent);
-
-		RenderStateManager.SetDepthStencilState(CRenderStateManager::EDepthStencilStates::OnlyRead);
-		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
-		
-		// TODO.AG: Separate lines into those that IgnoreDepth and those that don't so that this is done no more than 2 times.
-		if (shape->IgnoreDepth)
-		{
-			TonemappedTexture.SetAsActiveTarget();
-		}
-		else
-		{
-			TonemappedTexture.SetAsActiveTarget(&IntermediateDepth);
-		}
 
 		DebugShapeObjectBufferData.ToWorldFromObject = transform->Transform.GetMatrix();
 		DebugShapeObjectBufferData.Color = shape->Color;
@@ -2087,16 +2111,13 @@ namespace Havtorn
 
 		BindBuffer(DebugShapeObjectBuffer, DebugShapeObjectBufferData, "Object Buffer");
 
-		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::LineList)]);
-		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
-
 		Context->IASetVertexBuffers(0, 1, &VertexBuffers[shape->VertexBufferIndex], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
 		Context->IASetIndexBuffer(IndexBuffers[shape->IndexBufferIndex], DXGI_FORMAT_R32_UINT, 0);
 
-		Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::Line)], nullptr, 0);
 		Context->GSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
 
 		// AG.TEST: Probably slows down rendering, wanted to test how it would look.
+		// TODO:AG: Remove or restructure
 		//if (shape->Thickness > Debug::UDebugShapeSystem::ThicknessMinimum + 0.0005f)
 		//{
 		//	Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::Line)], nullptr, 0);
@@ -2108,10 +2129,6 @@ namespace Havtorn
 		//}
 
 		Context->VSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
-		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Line)], nullptr, 0);
-
-		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::Line)], nullptr, 0);
-
 		Context->DrawIndexed(shape->IndexCount, 0, 0);
 		NumberOfDrawCallsThisFrame++;
 	}
