@@ -39,12 +39,12 @@ namespace Havtorn
 
 	inline SQuaternion::SQuaternion(F32 pitch, F32 yaw, F32 roll)
 	{
-		F32 cosYaw = UMath::Cos(yaw * 0.5f);
-		F32 sinYaw = UMath::Sin(yaw * 0.5f);
-		F32 cosPitch = UMath::Cos(pitch * 0.5f);
-		F32 sinPitch = UMath::Sin(pitch * 0.5f);
-		F32 cosRoll = UMath::Cos(roll * 0.5f);
-		F32 sinRoll = UMath::Sin(roll * 0.5f);
+		const F32 cosYaw = UMath::Cos(yaw * 0.5f);
+		const F32 sinYaw = UMath::Sin(yaw * 0.5f);
+		const F32 cosPitch = UMath::Cos(pitch * 0.5f);
+		const F32 sinPitch = UMath::Sin(pitch * 0.5f);
+		const F32 cosRoll = UMath::Cos(roll * 0.5f);
+		const F32 sinRoll = UMath::Sin(roll * 0.5f);
 
 		X = cosRoll * sinPitch * cosYaw + sinRoll * cosPitch * sinYaw;
 		Y = cosRoll * cosPitch * sinYaw - sinRoll * sinPitch * cosYaw;
