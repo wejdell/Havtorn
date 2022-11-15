@@ -228,17 +228,12 @@ namespace Havtorn
 		rotationMatrix.SetTranslation(SVector::Zero);
 		return rotationMatrix;
 	}
-
 	inline SVector SMatrix::GetEuler() const
-	{
-		SMatrix rotationMatrix = *this;
-		rotationMatrix.OrthoNormalize();
-		
+	{		
 		SVector euler;
 		euler.X = UMath::RadToDeg(atan2f(M[1][2], M[2][2]));
 		euler.Y = UMath::RadToDeg(atan2f(-M[0][2], sqrtf(M[1][2] * M[1][2] + M[2][2] * M[2][2])));
-		euler.Z = UMath::RadToDeg(atan2f(M[0][1], M[0][0]));
-		
+		euler.Z = UMath::RadToDeg(atan2f(M[0][1], M[0][0]));	
 		return euler;
 	}
 
