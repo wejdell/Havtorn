@@ -22,7 +22,7 @@ namespace Havtorn
 		return temp;
 	}
 
-	SVector4 operator*(SMatrix matrix, SVector4 vector)
+	SVector4 operator*(const SMatrix& matrix, const SVector4& vector)
 	{
 		SVector4 result;
 		SVector4 temp1 = SVector4(matrix(0, 0), matrix(1, 0), matrix(2, 0), matrix(3, 0));
@@ -36,7 +36,7 @@ namespace Havtorn
 		return result;
 	}
 
-	SVector4 operator*(SVector4 vector, SMatrix matrix)
+	SVector4 operator*(const SVector4& vector, const SMatrix& matrix)
 	{
 		SVector4 result;
 		SVector4 temp1 = SVector4(matrix(0, 0), matrix(1, 0), matrix(2, 0), matrix(3, 0));
@@ -56,7 +56,7 @@ namespace Havtorn
 		return CreateRotationFromQuaternion(quaternion);
 	}
 
-	inline SMatrix SMatrix::CreateRotationFromQuaternion(SQuaternion quaternion)
+	inline SMatrix SMatrix::CreateRotationFromQuaternion(const SQuaternion& quaternion)
 	{
 		SMatrix result;
 		const F32 xx2 = 2.0f * quaternion.X * quaternion.X;
