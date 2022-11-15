@@ -34,7 +34,7 @@ namespace Havtorn
 		static SMatrix CreateRotationAroundY(F32 angleInRadians);
 		static SMatrix CreateRotationAroundZ(F32 angleInRadians);
 		static SMatrix CreateRotationAroundAxis(F32 angleInRadians, const SVector& axis);
-		static SMatrix CreateRotationFromEuler(F32 pitch, F32 yaw, F32 roll);
+		static SMatrix CreateRotationFromEuler(F32 pitchRadians, F32 yawRadians, F32 rollRadians);
 		static SMatrix CreateRotationFromQuaternion(const SQuaternion& quaternion);
 		static SMatrix CreateRotationFromAxisAngle(const SVector& axis, F32 angleInRadians);
 		// Static function for creating a transpose of a matrix.

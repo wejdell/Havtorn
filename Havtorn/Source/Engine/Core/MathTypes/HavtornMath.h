@@ -50,9 +50,9 @@ namespace Havtorn
 		return result;
 	}
 
-	inline SMatrix SMatrix::CreateRotationFromEuler(F32 pitch, F32 yaw, F32 roll)
+	inline SMatrix SMatrix::CreateRotationFromEuler(F32 pitchRadians, F32 yawRadians, F32 rollRadians)
 	{
-		const auto quaternion = SQuaternion(pitch, yaw, roll);
+		const auto quaternion = SQuaternion(pitchRadians, yawRadians, rollRadians);
 		return CreateRotationFromQuaternion(quaternion);
 	}
 
@@ -80,6 +80,7 @@ namespace Havtorn
 		result(2, 0) = xz2 + yw2;
 		result(2, 1) = yz2 - xw2;
 		result(2, 2) = 1.0f - xx2 - yy2;
+
 		return result;
 	}
 
