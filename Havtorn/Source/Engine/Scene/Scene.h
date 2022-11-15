@@ -39,8 +39,8 @@ namespace Havtorn
 		void SaveScene(const std::string& destinationPath);
 		void LoadScene(const std::string& destinationPath);
 		[[nodiscard]] U32 GetSize() const;
-		void Serialize(char* toData) const;
-		void Deserialize(const char* fromData);
+		void Serialize(char* toData, U32& pointerPosition) const;
+		void Deserialize(const char* fromData, U32& pointerPosition);
 
 		std::vector<Ref<STransformComponent>>& GetTransformComponents() { return TransformComponents; }
 		std::vector<Ref<SStaticMeshComponent>>& GetStaticMeshComponents() { return StaticMeshComponents; }

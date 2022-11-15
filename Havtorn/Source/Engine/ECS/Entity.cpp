@@ -32,4 +32,9 @@ namespace Havtorn
 	{
 		return ComponentIndices[static_cast<size_t>(type)];
 	}
+	
+	const std::array<I64, static_cast<size_t>(EComponentType::Count)>& SEntity::GetComponentIndices() const
+	{
+		return ComponentIndices;
+	}
 }

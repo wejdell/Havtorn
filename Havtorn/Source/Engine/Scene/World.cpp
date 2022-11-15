@@ -14,10 +14,10 @@ namespace Havtorn
 
 		GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));
 
+		Scenes.emplace_back(std::make_unique<CScene>());
+
 		SSceneFileHeader sceneFile;
-		sceneFile.Deserialize(data);
-		
-		//Scenes.emplace_back(std::make_unique<CScene>(std::move(sceneFile.Scene)));
+		sceneFile.Deserialize(data, Scenes.back().get());
 	}
 
 	bool CWorld::Init(CRenderManager* renderManager)
@@ -32,7 +32,7 @@ namespace Havtorn
 		Systems.emplace_back(std::make_unique<CCameraSystem>());
 		Systems.emplace_back(std::make_unique<CLightSystem>(RenderManager));
 		Systems.emplace_back(std::make_unique<CRenderSystem>(RenderManager));
-		Systems.emplace_back(std::make_unique<Debug::UDebugShapeSystem>(Scenes.back().get(), RenderManager));
+		//Systems.emplace_back(std::make_unique<Debug::UDebugShapeSystem>(Scenes.back().get(), RenderManager));
 
 		return true;
 	}

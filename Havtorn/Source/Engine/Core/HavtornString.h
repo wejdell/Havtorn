@@ -10,16 +10,16 @@ namespace Havtorn
     public:
         CHavtornString(const std::string& name)
         {
-            U16 size = static_cast<U16>(name.length());
+            U32 size = static_cast<U32>(name.length());
             HV_ASSERT(size != 0, "Trying to create HavtornString from std::string with size 0!");
 
             Characters = new char[size + 1];
             memcpy(Characters, &name[0], sizeof(char) * size);
             Characters[size] = '\0';
-            Size = size - 1;
+            Size = size;
         }
 
-        inline const U16 Length() const { return Size; }
+        inline const U32 Length() const { return Size; }
         inline const std::string AsString() const { return std::string(Characters); }
         inline const char* c_str() const { return Characters; }
         inline const char* ConstChar() const { return Characters; }
@@ -37,6 +37,6 @@ namespace Havtorn
 
     private:
         char* Characters = nullptr;
-        U16 Size = 0;
+        U32 Size = 0;
     };
 }

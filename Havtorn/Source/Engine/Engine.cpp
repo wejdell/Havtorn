@@ -69,6 +69,8 @@ namespace Havtorn
 		ENGINE_ERROR_BOOL_MESSAGE(World->Init(RenderManager), "World could not be initialized.");
 
 		GEngine::GetWorld()->SaveActiveScene("Assets/Scenes/TestScene.hvs");
+		GEngine::GetWorld()->LoadScene("Assets/Scenes/TestScene.hvs");
+
 
 		InitWindowsImaging();
 

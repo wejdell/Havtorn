@@ -21,6 +21,7 @@ namespace Havtorn
 		void RemoveComponent(EComponentType type) const;
 		bool HasComponent(EComponentType type) const;
 		const I64 GetComponentIndex(EComponentType type) const;
+		const std::array<I64, static_cast<size_t>(EComponentType::Count)>& GetComponentIndices() const;
 
 	private:
 		 mutable std::array<I64, static_cast<size_t>(EComponentType::Count)> ComponentIndices = {};

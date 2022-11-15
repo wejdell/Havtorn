@@ -300,12 +300,15 @@ namespace Havtorn
 		SSceneFileHeader fileHeader;
 		fileHeader.SceneName = "TestScene";
 		fileHeader.SceneNameLength = static_cast<U32>(fileHeader.SceneName.size());
+		fileHeader.NumberOfEntities = static_cast<U32>(Entities.size());
 		fileHeader.Scene = this;
 		
-		char* data = new char[fileHeader.GetSize()];
+		U32 size = fileHeader.GetSize();
+		char* data = new char[size];
 		
 		fileHeader.Serialize(data);
-		GEngine::GetFileSystem()->Serialize(destinationPath, &data[0], fileHeader.GetSize());
+		size = fileHeader.GetSize();
+		GEngine::GetFileSystem()->Serialize(destinationPath, &data[0], size);
 		delete[] data;
 	}
 
@@ -315,22 +318,203 @@ namespace Havtorn
 
 	U32 CScene::GetSize() const
 	{
-		return U32();
+		U32 size = 0;
+
+		for (auto& entity : Entities)
+		{
+			size += sizeof(U32);
+			size += sizeof(char) * entity->Name.Length();
+
+			size += sizeof(I64) * static_cast<size_t>(EComponentType::Count);
+
+			if (entity->HasComponent(EComponentType::TransformComponent))
+				size += sizeof(STransformComponent);
+
+			if (entity->HasComponent(EComponentType::StaticMeshComponent))
+				size += sizeof(SStaticMeshComponent);
+
+			if (entity->HasComponent(EComponentType::CameraComponent))
+				size += sizeof(SCameraComponent);
+
+			if (entity->HasComponent(EComponentType::CameraControllerComponent))
+				size += sizeof(SCameraControllerComponent);
+
+			if (entity->HasComponent(EComponentType::MaterialComponent))
+				size += sizeof(SMaterialComponent);
+
+			if (entity->HasComponent(EComponentType::EnvironmentLightComponent))
+				size += sizeof(SEnvironmentLightComponent);
+
+			if (entity->HasComponent(EComponentType::DirectionalLightComponent))
+				size += sizeof(SDirectionalLightComponent);
+
+			if (entity->HasComponent(EComponentType::PointLightComponent))
+				size += sizeof(SPointLightComponent);
+
+			if (entity->HasComponent(EComponentType::SpotLightComponent))
+				size += sizeof(SSpotLightComponent);
+
+			if (entity->HasComponent(EComponentType::VolumetricLightComponent))
+				size += sizeof(SVolumetricLightComponent);
+
+			if (entity->HasComponent(EComponentType::DecalComponent))
+				size += sizeof(SDecalComponent);
+		}
+
+		return size;
 	}
 
-	void CScene::Serialize(char* /*toData*/) const
+	void CScene::Serialize(char* toData, U32& pointerPosition) const
 	{
-		//U32 pointerPosition = 0;
+		pointerPosition += SerializeSimple(static_cast<U32>(Entities.size()), toData, pointerPosition);
 
-		//for (auto& entity : Entities)
-		//{
+		for (auto& entity : Entities)
+		{
+			pointerPosition += SerializeSimple(entity->Name.Length(), toData, pointerPosition);
+			pointerPosition += SerializeString(entity->Name.ConstChar(), toData, pointerPosition);
 
-		//}
-		//pointerPosition += SerializeSimple();
+			pointerPosition += SerializeSimple(entity->GetComponentIndices(), toData, pointerPosition);
+
+			if (entity->HasComponent(EComponentType::TransformComponent))
+			{
+				pointerPosition += TransformComponents[entity->GetComponentIndex(EComponentType::TransformComponent)]->Serialize<STransformComponent>(toData, pointerPosition);
+			}
+
+			if (entity->HasComponent(EComponentType::StaticMeshComponent))
+			{
+				pointerPosition += StaticMeshComponents[entity->GetComponentIndex(EComponentType::StaticMeshComponent)]->Serialize<SStaticMeshComponent>(toData, pointerPosition);
+			}
+
+			if (entity->HasComponent(EComponentType::CameraComponent))
+			{
+				pointerPosition += CameraComponents[entity->GetComponentIndex(EComponentType::CameraComponent)]->Serialize<SCameraComponent>(toData, pointerPosition);
+			}
+
+			if (entity->HasComponent(EComponentType::CameraControllerComponent))
+			{
+				pointerPosition += CameraControllerComponents[entity->GetComponentIndex(EComponentType::CameraControllerComponent)]->Serialize<SCameraControllerComponent>(toData, pointerPosition);
+			}
+			
+			if (entity->HasComponent(EComponentType::MaterialComponent))
+			{
+				pointerPosition += MaterialComponents[entity->GetComponentIndex(EComponentType::MaterialComponent)]->Serialize<SMaterialComponent>(toData, pointerPosition);
+			}
+
+			if (entity->HasComponent(EComponentType::EnvironmentLightComponent))
+			{
+				pointerPosition += EnvironmentLightComponents[entity->GetComponentIndex(EComponentType::EnvironmentLightComponent)]->Serialize<SEnvironmentLightComponent>(toData, pointerPosition);
+			}
+
+			if (entity->HasComponent(EComponentType::DirectionalLightComponent))
+			{
+				pointerPosition += DirectionalLightComponents[entity->GetComponentIndex(EComponentType::DirectionalLightComponent)]->Serialize<SDirectionalLightComponent>(toData, pointerPosition);
+			}
+
+			if (entity->HasComponent(EComponentType::PointLightComponent))
+			{
+				pointerPosition += PointLightComponents[entity->GetComponentIndex(EComponentType::PointLightComponent)]->Serialize<SPointLightComponent>(toData, pointerPosition);
+			}
+
+			if (entity->HasComponent(EComponentType::SpotLightComponent))
+			{
+				pointerPosition += SpotLightComponents[entity->GetComponentIndex(EComponentType::SpotLightComponent)]->Serialize<SSpotLightComponent>(toData, pointerPosition);
+			}
+
+			if (entity->HasComponent(EComponentType::VolumetricLightComponent))
+			{
+				pointerPosition += VolumetricLightComponents[entity->GetComponentIndex(EComponentType::VolumetricLightComponent)]->Serialize<SVolumetricLightComponent>(toData, pointerPosition);
+			}
+				
+			if (entity->HasComponent(EComponentType::DecalComponent))
+			{
+				pointerPosition += DecalComponents[entity->GetComponentIndex(EComponentType::DecalComponent)]->Serialize<SDecalComponent>(toData, pointerPosition);
+			}
+		}
 	}
 
-	void CScene::Deserialize(const char* /*fromData*/)
+	void CScene::Deserialize(const char* fromData, U32& pointerPosition)
 	{
+		U32 numberOfEntities = 0;
+		pointerPosition += DeserializeSimple(numberOfEntities, fromData, pointerPosition);
+
+		for (U32 i = 0; i < numberOfEntities; i++)
+		{
+			U32 nameLength = 0;
+			pointerPosition += DeserializeSimple(nameLength, fromData, pointerPosition);
+			std::string name = "";
+			pointerPosition += DeserializeString(name, fromData, nameLength, pointerPosition);
+
+			CreateEntity(name);
+
+			std::array<I64, static_cast<size_t>(EComponentType::Count)> indices;
+			pointerPosition += DeserializeSimple(indices, fromData, pointerPosition);
+
+			if (indices[static_cast<U32>(EComponentType::TransformComponent)] >= 0)
+			{
+				AddTransformComponentToEntity(Entities.back());
+				pointerPosition += TransformComponents.back()->Deserialize<STransformComponent>(fromData, pointerPosition);
+			}
+
+			if (indices[static_cast<U32>(EComponentType::StaticMeshComponent)] >= 0)
+			{
+				AddStaticMeshComponentToEntity(Entities.back());
+				pointerPosition += StaticMeshComponents.back()->Deserialize<SStaticMeshComponent>(fromData, pointerPosition);
+			}
+
+			if (indices[static_cast<U32>(EComponentType::CameraComponent)] >= 0)
+			{
+				AddCameraComponentToEntity(Entities.back());
+				pointerPosition += CameraComponents.back()->Deserialize<SCameraComponent>(fromData, pointerPosition);
+			}
+
+			if (indices[static_cast<U32>(EComponentType::CameraControllerComponent)] >= 0)
+			{
+				AddCameraControllerComponentToEntity(Entities.back());
+				pointerPosition += CameraControllerComponents.back()->Deserialize<SCameraControllerComponent>(fromData, pointerPosition);
+			}
+
+			if (indices[static_cast<U32>(EComponentType::MaterialComponent)] >= 0)
+			{
+				AddMaterialComponentToEntity(Entities.back());
+				pointerPosition += MaterialComponents.back()->Deserialize<SMaterialComponent>(fromData, pointerPosition);
+			}
+
+			if (indices[static_cast<U32>(EComponentType::EnvironmentLightComponent)] >= 0)
+			{
+				AddEnvironmentLightComponentToEntity(Entities.back());
+				pointerPosition += EnvironmentLightComponents.back()->Deserialize<SEnvironmentLightComponent>(fromData, pointerPosition);
+			}
+
+			if (indices[static_cast<U32>(EComponentType::DirectionalLightComponent)] >= 0)
+			{
+				AddDirectionalLightComponentToEntity(Entities.back());
+				pointerPosition += DirectionalLightComponents.back()->Deserialize<SDirectionalLightComponent>(fromData, pointerPosition);
+			}
+
+			if (indices[static_cast<U32>(EComponentType::PointLightComponent)] >= 0)
+			{
+				AddPointLightComponentToEntity(Entities.back());
+				pointerPosition += PointLightComponents.back()->Deserialize<SPointLightComponent>(fromData, pointerPosition);
+			}
+
+			if (indices[static_cast<U32>(EComponentType::SpotLightComponent)] >= 0)
+			{
+				AddSpotLightComponentToEntity(Entities.back());
+				pointerPosition += SpotLightComponents.back()->Deserialize<SSpotLightComponent>(fromData, pointerPosition);
+			}
+
+			if (indices[static_cast<U32>(EComponentType::VolumetricLightComponent)] >= 0)
+			{
+				AddVolumetricLightComponentToEntity(Entities.back());
+				pointerPosition += VolumetricLightComponents.back()->Deserialize<SVolumetricLightComponent>(fromData, pointerPosition);
+			}
+
+			if (indices[static_cast<U32>(EComponentType::DecalComponent)] >= 0)
+			{
+				AddDecalComponentToEntity(Entities.back());
+				pointerPosition += DecalComponents.back()->Deserialize<SDecalComponent>(fromData, pointerPosition);
+			}
+		}
 	}
 
 	Ref<SEntity> CScene::CreateEntity(const std::string& name)

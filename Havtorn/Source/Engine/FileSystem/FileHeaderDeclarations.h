@@ -30,6 +30,13 @@ namespace Havtorn
 		return size;
 	}
 
+	inline U32 SerializeString(const std::string& source, char* destination, U32 numberOfElements, U32 bufferPosition)
+	{
+		const U32 size = sizeof(char) * numberOfElements;
+		memcpy(&destination[bufferPosition], source.data(), size);
+		return size;
+	}
+
 	template<typename T>
 	U32 DeserializeSimple(T& destination, const char* source, U32 bufferPosition)
 	{
@@ -246,11 +253,12 @@ namespace Havtorn
 		EAssetType AssetType = EAssetType::Scene;
 		U32 SceneNameLength = 0;
 		std::string SceneName = "";
-		CScene* Scene;
+		U32 NumberOfEntities = 0;
+		CScene* Scene = nullptr;
 
 		[[nodiscard]] U32 GetSize() const;
 		void Serialize(char* toData) const;
-		void Deserialize(const char* fromData);
+		void Deserialize(const char* fromData, CScene* outScene);
 	};
 
 	inline U32 SSceneFileHeader::GetSize() const
@@ -258,7 +266,10 @@ namespace Havtorn
 		U32 size = sizeof(EAssetType);
 		size += sizeof(U32);
 		size += sizeof(char) * SceneNameLength;
-		size += sizeof(Scene);
+
+		size += sizeof(U32);
+
+		size += Scene->GetSize();
 
 		return size;
 	}
@@ -269,15 +280,17 @@ namespace Havtorn
 		pointerPosition += SerializeSimple(AssetType, toData, pointerPosition);
 		pointerPosition += SerializeSimple(SceneNameLength, toData, pointerPosition);
 		pointerPosition += SerializeString(SceneName, toData, pointerPosition);
-		//pointerPosition += SerializeSimple(Scene, toData, pointerPosition);
+		
+		Scene->Serialize(toData, pointerPosition);
 	}
 
-	inline void SSceneFileHeader::Deserialize(const char* fromData)
+	inline void SSceneFileHeader::Deserialize(const char* fromData, CScene* outScene)
 	{
 		U32 pointerPosition = 0;
 		pointerPosition += DeserializeSimple(AssetType, fromData, pointerPosition);
 		pointerPosition += DeserializeSimple(SceneNameLength, fromData, pointerPosition);
 		pointerPosition += DeserializeString(SceneName, fromData, SceneNameLength, pointerPosition);
-		//pointerPosition += DeserializeSimple(Scene, fromData, pointerPosition);
+
+		outScene->Deserialize(fromData, pointerPosition);
 	}
 }
