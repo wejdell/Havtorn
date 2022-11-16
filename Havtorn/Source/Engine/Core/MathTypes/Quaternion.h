@@ -20,6 +20,7 @@ namespace Havtorn
 		inline SQuaternion();
 		inline SQuaternion(F32 x, F32 y, F32 z, F32 w);
 		inline SQuaternion(F32 pitch, F32 yaw, F32 roll);
+		inline SQuaternion(const SVector& eulerAngles);
 		inline SQuaternion(const SVector& axis, F32 angleInDegrees);
 		explicit SQuaternion(const SMatrix& M);
 		//explicit SQuaternion(const SRotator& R);
@@ -50,6 +51,11 @@ namespace Havtorn
 		Y = cosRoll * cosPitch * sinYaw - sinRoll * sinPitch * cosYaw;
 		Z = sinRoll * cosPitch * cosYaw - cosRoll * sinPitch * sinYaw;
 		W = cosRoll * cosPitch * cosYaw + sinRoll * sinPitch * sinYaw;
+	}
+
+	inline SQuaternion::SQuaternion(const SVector& eulerAngles)
+	{
+		SQuaternion(UMath::DegToRad(eulerAngles.X), UMath::DegToRad(eulerAngles.Y), UMath::DegToRad(eulerAngles.Z));
 	}
 
 	SQuaternion::SQuaternion(const SVector& axis, F32 angleInDegrees)
