@@ -6,7 +6,8 @@
 #include "Scene/Scene.h"
 #include "ECS/Components/DebugShapeComponent.h"
 #include "ECS/Components/TransformComponent.h"
-#include "Graphics/VertexBufferPrimitivesUtility.h"
+#include "Graphics/GeometryPrimitives.h"
+#include "Graphics/GeometryPrimitivesUtility.h"
 
 #include "Graphics/RenderManager.h"
 #include "Graphics/RenderCommand.h"
@@ -93,9 +94,9 @@ namespace Havtorn
 			const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
 			std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
 			SetSharedDataForShape(debugShapes[shapeIndex], color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
-			debugShapes[shapeIndex]->VertexBufferIndex = Utility::VertexBufferPrimitives::GetVertexBufferIndex<U8>(EVertexBufferPrimitives::LineShape);
-			debugShapes[shapeIndex]->IndexCount = Utility::VertexBufferPrimitives::GetIndexCount<U8>(EVertexBufferPrimitives::LineShape);
-			debugShapes[shapeIndex]->IndexBufferIndex = Utility::VertexBufferPrimitives::GetIndexBufferIndex<U8>(EDefaultIndexBuffers::LineShape);
+			debugShapes[shapeIndex]->VertexBufferIndex = static_cast<U8>(EVertexBufferPrimitives::LineShape);
+			debugShapes[shapeIndex]->IndexCount = static_cast<U8>(UGraphicsUtils::GetIndexCount(EVertexBufferPrimitives::LineShape));
+			debugShapes[shapeIndex]->IndexBufferIndex = static_cast<U8>(EDefaultIndexBuffers::LineShape);
 
 			std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
 			const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
@@ -116,9 +117,9 @@ namespace Havtorn
 			const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
 			std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
 			SetSharedDataForShape(debugShapes[shapeIndex], color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
-			debugShapes[shapeIndex]->VertexBufferIndex = Utility::VertexBufferPrimitives::GetVertexBufferIndex<U8>(EVertexBufferPrimitives::FlatArrow);
-			debugShapes[shapeIndex]->IndexCount = Utility::VertexBufferPrimitives::GetIndexCount<U8>(EVertexBufferPrimitives::FlatArrow);
-			debugShapes[shapeIndex]->IndexBufferIndex = Utility::VertexBufferPrimitives::GetIndexBufferIndex<U8>(EDefaultIndexBuffers::FlatArrow);
+			debugShapes[shapeIndex]->VertexBufferIndex = static_cast<U8>(EVertexBufferPrimitives::FlatArrow);
+			debugShapes[shapeIndex]->IndexCount = static_cast<U8>(UGraphicsUtils::GetIndexCount(EVertexBufferPrimitives::FlatArrow));
+			debugShapes[shapeIndex]->IndexBufferIndex = static_cast<U8>(EDefaultIndexBuffers::FlatArrow);
 
 			std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
 			const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
@@ -139,9 +140,9 @@ namespace Havtorn
 			const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
 			std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
 			SetSharedDataForShape(debugShapes[shapeIndex], color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
-			debugShapes[shapeIndex]->VertexBufferIndex = Utility::VertexBufferPrimitives::GetVertexBufferIndex<U8>(EVertexBufferPrimitives::DebugCube);
-			debugShapes[shapeIndex]->IndexCount = Utility::VertexBufferPrimitives::GetIndexCount<U8>(EVertexBufferPrimitives::DebugCube);
-			debugShapes[shapeIndex]->IndexBufferIndex = Utility::VertexBufferPrimitives::GetIndexBufferIndex<U8>(EDefaultIndexBuffers::DebugCube);
+			debugShapes[shapeIndex]->VertexBufferIndex = static_cast<U8>(EVertexBufferPrimitives::DebugCube);
+			debugShapes[shapeIndex]->IndexCount = static_cast<U8>(UGraphicsUtils::GetIndexCount(EVertexBufferPrimitives::DebugCube));
+			debugShapes[shapeIndex]->IndexBufferIndex = static_cast<U8>(EDefaultIndexBuffers::DebugCube);
 
 			std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
 			const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
@@ -165,9 +166,9 @@ namespace Havtorn
 			const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
 			std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
 			SetSharedDataForShape(debugShapes[shapeIndex], color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
-			debugShapes[shapeIndex]->VertexBufferIndex = Utility::VertexBufferPrimitives::GetVertexBufferIndex<U8>(EVertexBufferPrimitives::Camera);
-			debugShapes[shapeIndex]->IndexCount = Utility::VertexBufferPrimitives::GetIndexCount<U8>(EVertexBufferPrimitives::Camera);
-			debugShapes[shapeIndex]->IndexBufferIndex = Utility::VertexBufferPrimitives::GetIndexBufferIndex<U8>(EDefaultIndexBuffers::Camera);
+			debugShapes[shapeIndex]->VertexBufferIndex = static_cast<U8>(EVertexBufferPrimitives::Camera);
+			debugShapes[shapeIndex]->IndexCount = static_cast<U8>(UGraphicsUtils::GetIndexCount(EVertexBufferPrimitives::Camera));
+			debugShapes[shapeIndex]->IndexBufferIndex = static_cast<U8>(EDefaultIndexBuffers::Camera);
 
 			std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
 			const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
@@ -210,20 +211,20 @@ namespace Havtorn
 			{
 				if (s >= 16 - (16 / 4) && s <= 16 + (16 / 4))
 				{
-					v = EVertexBufferPrimitives::CircleXY16Segments;
-					i = EDefaultIndexBuffers::CircleXY16Segments;
+					v = EVertexBufferPrimitives::CircleXY16;
+					i = EDefaultIndexBuffers::CircleXY16;
 					return;
 				}
 
 				if (s < 16)
 				{
-					v = EVertexBufferPrimitives::CircleXY8Segments;
-					i = EDefaultIndexBuffers::CircleXY8Segments;
+					v = EVertexBufferPrimitives::CircleXY8;
+					i = EDefaultIndexBuffers::CircleXY8;
 				}
 				else
 				{
-					v = EVertexBufferPrimitives::CircleXY32Segments;
-					i = EDefaultIndexBuffers::CircleXY32Segments;
+					v = EVertexBufferPrimitives::CircleXY32;
+					i = EDefaultIndexBuffers::CircleXY32;
 				}
 			};
 
@@ -233,12 +234,12 @@ namespace Havtorn
 			std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
 			SetSharedDataForShape(debugShapes[shapeIndex], color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
 		
-			EVertexBufferPrimitives vertexBufferPrimitive = EVertexBufferPrimitives::CircleXY16Segments;
-			EDefaultIndexBuffers indexBuffer = EDefaultIndexBuffers::CircleXY16Segments;
+			EVertexBufferPrimitives vertexBufferPrimitive = EVertexBufferPrimitives::CircleXY16;
+			EDefaultIndexBuffers indexBuffer = EDefaultIndexBuffers::CircleXY16;
 			EnumFromSegment(segments, vertexBufferPrimitive, indexBuffer);
-			debugShapes[shapeIndex]->VertexBufferIndex = Utility::VertexBufferPrimitives::GetVertexBufferIndex<U8>(vertexBufferPrimitive);
-			debugShapes[shapeIndex]->IndexCount = Utility::VertexBufferPrimitives::GetIndexCount<U8>(vertexBufferPrimitive);
-			debugShapes[shapeIndex]->IndexBufferIndex = Utility::VertexBufferPrimitives::GetIndexBufferIndex<U8>(indexBuffer);
+			debugShapes[shapeIndex]->VertexBufferIndex = static_cast<U8>(vertexBufferPrimitive);
+			debugShapes[shapeIndex]->IndexCount = static_cast<U8>(UGraphicsUtils::GetIndexCount(vertexBufferPrimitive));
+			debugShapes[shapeIndex]->IndexBufferIndex = static_cast<U8>(indexBuffer);
 
 			std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
 			const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);

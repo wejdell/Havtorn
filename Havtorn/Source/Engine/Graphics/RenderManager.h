@@ -94,9 +94,9 @@ namespace Havtorn
 		FlatArrow,
 		DebugCube,
 		Camera,
-		CircleXY8Segments,
-		CircleXY16Segments,
-		CircleXY32Segments,
+		CircleXY8,
+		CircleXY16,
+		CircleXY32,
 		//TODO: add more debug shape primitives
 	};
 
@@ -108,9 +108,9 @@ namespace Havtorn
 		FlatArrow,
 		DebugCube,
 		Camera,
-		CircleXY8Segments,
-		CircleXY16Segments,
-		CircleXY32Segments,
+		CircleXY8,
+		CircleXY16,
+		CircleXY32,
 		//TODO: add more debug shape primitives
 	};
 
