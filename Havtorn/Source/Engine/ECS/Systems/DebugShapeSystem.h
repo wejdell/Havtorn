@@ -3,6 +3,7 @@
 #pragma once
 #include "ECS/System.h"
 
+#include "Graphics/GraphicsEnums.h"
 #include "Core/ColorList.h"
 
 #include <queue>
@@ -23,62 +24,73 @@
 
 namespace Havtorn
 {
+	struct SMatrix;
 	struct SEntity;
 	struct STransformComponent;
 	struct SDebugShapeComponent;
 	class CRenderManager;
 
-	namespace Debug
+	// Requirement: Add to Scene systems after RenderSystem.
+	class UDebugShapeSystem final : public ISystem
 	{
-		// Requirement: Add to Scene systems after RenderSystem.
-		class UDebugShapeSystem final : public ISystem
-		{
-		public: // ISystem inherited.
-			UDebugShapeSystem(CScene* scene, CRenderManager* renderManager);
-			~UDebugShapeSystem() override;
+	public: // ISystem inherited.
+		UDebugShapeSystem(CScene* scene, CRenderManager* renderManager);
+		~UDebugShapeSystem() override;
 
-			void Update(CScene* scene) override;
+		void Update(CScene* scene) override;
 
-		public: // Static Add Shape functions.
-			static constexpr U16 MaxShapes = 50;
-			static constexpr F32 ThicknessMinimum = 0.005f;
-			static constexpr F32 ThicknessMaximum = 0.05f;
+	public: // Static Add Shape functions.
+		static constexpr U16 MaxShapes = 500;
+		static constexpr F32 ThicknessMinimum = 0.005f;
+		static constexpr F32 ThicknessMaximum = 0.05f;
 
-			static HAVTORN_API void AddLine(const SVector& start, const SVector& end, const SVector4& color = Color::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static HAVTORN_API void AddLine(const SVector& start, const SVector& end, const SVector4& color = Color::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static HAVTORN_API void AddArrow(const SVector& start, const SVector& end, const SVector4& color = Color::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		// Cube with Width/Height/Depth = 1. Pivot is in center.
+		static HAVTORN_API void AddCube(const SVector& center, const SVector& scale, const SVector& eulerRotation, const SVector4& color = Color::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static HAVTORN_API void AddCamera(const SVector& origin, const SVector& eulerRotation, const F32 fov = 70.0f, const F32 farZ = 1.0f, const SVector4& color = Color::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+			
+		static HAVTORN_API void AddCircleXY(const SVector& origin, const SVector& eulerRotation, const F32 radius = 0.5f, const UINT8 segments = 16, const SVector4& color = Color::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static HAVTORN_API void AddCircleXZ(const SVector& origin, const SVector& eulerRotation, const F32 radius = 0.5f, const UINT8 segments = 16, const SVector4& color = Color::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static HAVTORN_API void AddCircleYZ(const SVector& origin, const SVector& eulerRotation, const F32 radius = 0.5f, const UINT8 segments = 16, const SVector4& color = Color::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 
-		private:
-			static bool InstanceExists();
-			static F32 LifeTimeForShape(const bool useLifeTime, const F32 requestedLifeTime);
-			static F32 ClampThickness(const F32 thickness);
-			static void SetSharedDataForShape(Ref<SDebugShapeComponent>& inoutShape, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth);
+	private:
+		static HAVTORN_API void AddDefaultCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius = 0.5f, const UINT8 segments = 16, const SVector4& color = Color::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+			
+		static bool InstanceExists();
+		static F32 LifeTimeForShape(const bool useLifeTime, const F32 requestedLifeTime);
+		static F32 ClampThickness(const F32 thickness);
+			
+		static bool TryAddShape(const EVertexBufferPrimitives vertexBuffer, EDefaultIndexBuffers indexBuffer, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, Ref<STransformComponent>& outTransform);
+		
+		void TransformToFaceAndReach(SMatrix& transform, const SVector& start, const SVector& end);
 
-			void SendRenderCommands(
-				const std::vector<Ref<SEntity>>& entities,
-				const std::vector<Ref<SDebugShapeComponent>>& debugShapes,
-				const std::vector<Ref<STransformComponent>>& transformComponents
-			);
-			void CheckActiveIndices(const std::vector<Ref<SDebugShapeComponent>>& debugShapes);
+		void SendRenderCommands(
+			const std::vector<Ref<SEntity>>& entities,
+			const std::vector<Ref<SDebugShapeComponent>>& debugShapes,
+			const std::vector<Ref<STransformComponent>>& transformComponents
+		);
+		void CheckActiveIndices(const std::vector<Ref<SDebugShapeComponent>>& debugShapes);
 
-			/*
-			* AG: Kept in case it is needed in the future. Currently however, 
-			* there should be no circumstance where Scene == nullptr after construction.
-			*/ 
-			bool HasConnectionToScene();
+		/*
+		* AG: Kept in case it is needed in the future. Currently however, 
+		* there should be no circumstance where Scene == nullptr after construction.
+		*/ 
+		bool HasConnectionToScene();
 
-			bool TryGetAvailableIndex(U64& outIndex);
-			void ResetAvailableIndices();
+		bool TryGetAvailableIndex(U64& outIndex);
+		void ResetAvailableIndices();
 
-			// AG: To be removed/ looked over. Use case is debatable.
-			void PrintDebugAddedShape(const SDebugShapeComponent& shape, const bool useLifeTime, const char* callerFunction);
+		// AG: To be removed/ looked over. Use case is debatable.
+		void PrintDebugAddedShape(const SDebugShapeComponent& shape, const bool useLifeTime, const char* callerFunction);
 
-		private:
-			static HAVTORN_API UDebugShapeSystem* Instance;
+	private:
+		static HAVTORN_API UDebugShapeSystem* Instance;
 
-			U64 EntityStartIndex = 0;
-			CScene* Scene = nullptr;
-			CRenderManager* RenderManager = nullptr;
-			std::vector<U64> ActiveIndices;
-			std::queue<U64> AvailableIndices;
-		};
-	}
+		U64 EntityStartIndex = 0;
+		CScene* Scene = nullptr;
+		CRenderManager* RenderManager = nullptr;
+		std::vector<U64> ActiveIndices;
+		std::queue<U64> AvailableIndices;
+	};
 }

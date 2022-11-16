@@ -12,7 +12,7 @@ namespace Havtorn
 #define VECTOR_COMPARISON_EPSILON 1.e-4f
 #define VECTOR_NORMALIZED_EPSILON 1.e-1f
 
-	struct SVector
+	struct HAVTORN_API SVector
 	{
 		// TODO.NR: Make union so you can access xyz as F32[3]
 		// TODO.NR: Add [] operator
@@ -258,7 +258,7 @@ namespace Havtorn
 
 	inline F32 SVector::SizeSquared() const
 	{
-		return this->SizeSquared();
+		return this->LengthSquared();
 	}
 
 	inline F32 SVector::Length2D() const
@@ -374,7 +374,12 @@ namespace Havtorn
 
 	inline std::string SVector::ToString() const
 	{
-		char buffer[32];
+		// AG: Regarding buffer size:
+		// "{X: , Y: , Z: }" => 15 chars, Leaves 49 chars for float values X, Y & Z to be pasted into %.1f.
+		// With 49 chars to share: X, Y & Z each should get 16 chars. Which allows values up to 13 digits.
+		// Each take min 3 chars, min value should be: 0.0
+		// Max should be 9999999999999.9
+		char buffer[64];
 		sprintf_s(buffer, "{X: %.1f, Y: %.1f, Z: %.1f}", X, Y, Z);
 		return buffer;
 	}

@@ -3,6 +3,8 @@
 #pragma once
 #include "GraphicsUtilities.h"
 
+#include "Graphics/GeometryPrimitives.h"
+
 namespace Havtorn
 {
 	namespace UGraphicsUtils
@@ -177,5 +179,6 @@ namespace Havtorn
 
 			return shaderResourceView;
 		}
+	
 	}
 }
