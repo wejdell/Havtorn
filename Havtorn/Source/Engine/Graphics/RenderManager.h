@@ -16,90 +16,7 @@
 
 namespace Havtorn
 {
-	enum class EShaderType
-	{
-		Vertex,
-		Compute,
-		Geometry,
-		Pixel
-	};
-
-	enum class ESamplerType
-	{
-		Border,
-		Clamp,
-		Mirror,
-		Wrap
-	};
-
-	enum class EInputLayoutType
-	{
-		Pos3Nor3Tan3Bit3UV2,
-		Pos3Nor3Tan3Bit3UV2Trans,
-		Pos4
-	};
-
-	enum class EVertexShaders
-	{
-		Fullscreen = 0,
-		StaticMesh = 1,
-		StaticMeshInstanced = 2,
-		Decal = 3,
-		PointAndSpotLight = 4,
-		EditorPreview = 5,
-		Line = 6,
-	};
-
-	enum class EPixelShaders
-	{
-		GBuffer = 0,
-		DecalAlbedo = 1,
-		DecalMaterial = 2,
-		DecalNormal = 3,
-		DeferredDirectional = 4,
-		DeferredPoint = 5,
-		DeferredSpot = 6,
-		VolumetricDirectional = 7,
-		VolumetricPoint = 8,
-		VolumetricSpot = 9,
-		EditorPreview = 10,
-		Line = 11,
-	};
-
-	enum class EGeometryShaders
-	{
-		Line = 0,
-	};
-
-	enum class ESamplers
-	{
-		DefaultWrap = 0,
-		DefaultBorder = 1,
-	};
-
-	enum class ETopologies
-	{
-		TriangleList = 0,
-		LineList = 1,
-	};
-
-	// Should be 1:1 to RenderManager::InitVertexBufferPrimitives()
-	// Geometries used can be found in GeometryPrimitives.h
-	enum class EVertexBufferPrimitives
-	{
-		DecalProjector,
-		PointLightCube,
-		Icosphere,
-		LineShape,
-		//TODO: add more debug shape primitives
-	};
-
-	enum class EIndexBufferPrimitives
-	{
-		DecalProjector,
-		PointLightCube,
-		Icosphere
-	};
+	
 
 	class CGraphicsFramework;
 	class CWindowHandler;
@@ -220,6 +137,7 @@ namespace Havtorn
 		inline void GammaCorrection();
 		inline void RendererDebug();
 		inline void DebugShadowAtlas();
+		inline void PreDebugShapes();
 		inline void DebugShapes(const SRenderCommand& command);
 
 	private:
@@ -286,7 +204,8 @@ namespace Havtorn
 		{
 			SMatrix ToWorldFromObject;
 			SVector4 Color;
-			F32 HalfThickness;
+			F32 HalfThickness = 0.5f;
+			F32 Padding[3] = {};
 		} DebugShapeObjectBufferData;
 		HV_ASSERT_BUFFER(SDebugShapeObjectBufferData)
 

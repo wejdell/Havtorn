@@ -7,7 +7,7 @@ void main(line LineVertexToPixel input[2], inout TriangleStream<LineVertexToPixe
 {
     LineVertexToPixel output;
     output.Color = input[0].Color;
-
+    
     const float aspectRatio = (16.0f / 9.0f);
     const float4 horizontal = float4(1, 0, 0, 0) / aspectRatio;
     const float4 vertical = float4(0, 1, 0, 0);

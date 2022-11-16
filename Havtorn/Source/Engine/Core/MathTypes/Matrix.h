@@ -4,6 +4,7 @@
 
 #include "Core/CoreTypes.h"
 #include "EngineMath.h"
+#include "Log.h"
 
 #include <assert.h>
 
@@ -12,6 +13,8 @@ namespace Havtorn
 	struct SVector;
 	struct SVector4;
 	struct SQuaternion;
+
+#define SMATRIX_MIN_SCALE 0.001f
 
 	// Left-handed row-major
 	struct SMatrix 
@@ -45,7 +48,9 @@ namespace Havtorn
 		inline SMatrix Inverse() const;
 
 		static inline void Decompose(const SMatrix& matrix, SVector& translation, SVector& rotation, SVector& scale);
+		static inline void Decompose(const SMatrix& matrix, F32* translationData,  F32* rotationData,  F32* scaleData);
 		static inline void Recompose(const SVector& translation, const SVector& rotation, const SVector& scale, SMatrix& outMatrix);
+		static inline void Recompose(const F32* translationData, const F32* rotationData, const F32* scaleData, SMatrix& outMatrix);
 		
 		inline SMatrix GetRHViewMatrix() const;
 		inline SMatrix GetRHProjectionMatrix() const;
@@ -185,7 +190,7 @@ namespace Havtorn
 		if (lengthSq < FLT_EPSILON)
 			return SMatrix();
 		
-		SVector n = axis * (1.f / sqrtf(lengthSq));
+		SVector n = axis.GetNormalized();
 		F32 cosTerm = UMath::Cos(angleInRadians);
 		F32 sinTerm = UMath::Sin(angleInRadians);
 		F32 oneMinusCos = 1.0f - cosTerm;
@@ -235,10 +240,10 @@ namespace Havtorn
 		rotationMatrix.OrthoNormalize();
 		
 		SVector euler;
-		euler.X = UMath::RadToDeg(atan2f(M[1][2], M[2][2]));
-		euler.Y = UMath::RadToDeg(atan2f(-M[0][2], sqrtf(M[1][2] * M[1][2] + M[2][2] * M[2][2])));
-		euler.Z = UMath::RadToDeg(atan2f(M[0][1], M[0][0]));
-		
+		euler.X = UMath::RadToDeg(atan2f(rotationMatrix.M[1][2], rotationMatrix.M[2][2]));
+		euler.Y = UMath::RadToDeg(atan2f(-rotationMatrix.M[0][2], sqrtf(rotationMatrix.M[1][2] * rotationMatrix.M[1][2] + rotationMatrix.M[2][2] * rotationMatrix.M[2][2])));
+		euler.Z = UMath::RadToDeg(atan2f(rotationMatrix.M[0][1], rotationMatrix.M[0][0]));
+
 		return euler;
 	}
 
@@ -292,9 +297,9 @@ namespace Havtorn
 	inline void SMatrix::SetScale(SVector scale)
 	{
 		F32 validScale[3];
-		validScale[0] = scale.X < FLT_EPSILON ? 0.001f : scale.X;
-		validScale[1] = scale.Y < FLT_EPSILON ? 0.001f : scale.Y;
-		validScale[2] = scale.Z < FLT_EPSILON ? 0.001f : scale.Z;
+		validScale[0] = scale.X < FLT_EPSILON ? SMATRIX_MIN_SCALE : scale.X;
+		validScale[1] = scale.Y < FLT_EPSILON ? SMATRIX_MIN_SCALE : scale.Y;
+		validScale[2] = scale.Z < FLT_EPSILON ? SMATRIX_MIN_SCALE : scale.Z;
 
 		M[0][0] = validScale[0];
 		M[1][1] = validScale[1];
@@ -727,29 +732,53 @@ namespace Havtorn
 		translation = matrix.GetTranslation();	
 	}
 
+	inline void SMatrix::Decompose(const SMatrix& matrix, F32* translationData, F32* rotationData, F32* scaleData)
+	{
+		const SVector& t = matrix.GetTranslation();
+		translationData[0] = t.X;
+		translationData[1] = t.Y;
+		translationData[2] = t.Z;
+
+		const SVector& r = matrix.GetEuler();
+		rotationData[0] = r.X;
+		rotationData[1] = r.Y;
+		rotationData[2] = r.Z;
+
+		const SVector& s = matrix.GetScale();
+		scaleData[0] = s.X;
+		scaleData[1] = s.Y;
+		scaleData[2] = s.Z;
+	}
+	
 	inline void SMatrix::Recompose(const SVector& translation, const SVector& rotation, const SVector& scale, SMatrix& outMatrix)
 	{
-		SMatrix rot[3];
-		SVector unaryDirections[3] = { SVector::Right, SVector::Up, SVector::Forward };
-		F32 rotations[3] = { rotation.X, rotation.Y, rotation.Z };
-		for (U8 i = 0; i < 3; i++)
-		{
-			rot[i] = SMatrix::CreateRotationAroundAxis(UMath::DegToRad(rotations[i]), unaryDirections[i]);
-		}
+		F32 t[3] = { translation.X, translation.Y, translation.Z };
+		F32 r[3] = { rotation.X, rotation.Y, rotation.Z };
+		F32 s[3] = { scale.X, scale.Y, scale.Z };
+		Recompose(t, r, s, outMatrix);
+	}
 
-		outMatrix = rot[2] * rot[1] * rot[0];
+	inline void SMatrix::Recompose(const F32* translationData, const F32* rotationData, const F32* scaleData, SMatrix& outMatrix) 
+	{
+		HV_ASSERT((translationData), "Passing nullptr [translationData] to Recompose!");
+		HV_ASSERT((rotationData), "Passing nullptr [rotationData] to Recompose!");
+		HV_ASSERT((scaleData), "Passing nullptr [scaleData] to Recompose!");
 
-		F32 scales[3] = { scale.X, scale.Y, scale.Z };
+		// AG: Rotation Order XYZ used to not cause issues with ImGuizmo used in InspectorWindow.
+		outMatrix = CreateRotationAroundX(UMath::DegToRad(rotationData[0]));
+		outMatrix *= CreateRotationAroundY(UMath::DegToRad(rotationData[1]));
+		outMatrix *= CreateRotationAroundZ(UMath::DegToRad(rotationData[2]));
+
 		F32 validScale[3] = { 1.0f, 1.0f, 1.0f };
 		for (U8 i = 0; i < 3; i++)
 		{
-			if (UMath::FAbs(scales[i]) < FLT_EPSILON)
+			if (UMath::FAbs(scaleData[i]) < FLT_EPSILON)
 			{
-				validScale[i] = 0.001f;
+				validScale[i] = SMATRIX_MIN_SCALE;
 			}
 			else
 			{
-				validScale[i] = scales[i];
+				validScale[i] = scaleData[i];
 			}
 		}
 		SVector right = outMatrix.GetRight() * validScale[0];
@@ -759,7 +788,7 @@ namespace Havtorn
 		outMatrix.SetUp(up);
 		outMatrix.SetForward(forward);
 
-		outMatrix.SetTranslation(translation);
+		outMatrix.SetTranslation(SVector(translationData[0], translationData[1], translationData[2]));
 	}
 
 	inline SMatrix SMatrix::GetRHViewMatrix() const
