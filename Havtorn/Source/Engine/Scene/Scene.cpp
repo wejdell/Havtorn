@@ -51,14 +51,12 @@ namespace Havtorn
 		return true;
 	}
 
-	Ref<STransformComponent> target;
 	void CScene::Update()
 	{
 		for (const auto& system : Systems)
 		{
 			system->Update(this);
 		}
-		Debug::UDebugShapeSystem::AddCube(target->Transform.GetMatrix().GetTranslation(), 1.0f, target->Transform.GetMatrix().GetEuler(), Color::Yellow, 1.0f, false, Debug::UDebugShapeSystem::ThicknessMaximum / 4.0f);
 	}
 
 	void CScene::InitDemoScene(CRenderManager* renderManager)
@@ -175,7 +173,9 @@ namespace Havtorn
 		// === Pendulum ===
 		auto pendulum = CreateEntity("Clock");
 
-		auto& transform1 = AddTransformComponentToEntity(pendulum)->Transform;
+		auto tc = AddTransformComponentToEntity(pendulum);
+		/*target = tc;*/
+		auto& transform1 = tc->Transform;
 		transform1.GetMatrix().SetTranslation({1.75f, 0.0f, 0.25f});
 
 		renderManager->LoadStaticMeshComponent(modelPath1, AddStaticMeshComponentToEntity(pendulum).get());
@@ -196,7 +196,6 @@ namespace Havtorn
 		auto lamp = CreateEntity("Lamp");
 
 		auto lampTransform = AddTransformComponentToEntity(lamp);
-		target = lampTransform;
 		auto& transform4 = lampTransform->Transform;
 		transform4.GetMatrix().SetTranslation({ -1.0f, 1.4f, -0.75f });
 		transform4.Rotate({ 0.0f, UMath::DegToRad(90.0f), 0.0f });
@@ -285,29 +284,6 @@ namespace Havtorn
 			renderManager->LoadMaterialComponent(materialNames3, AddMaterialComponentToEntity(floor).get());
 		}
 		// === !Other Wall ===
-
-		//bool useLifeTime = true;
-		//bool ignoreDepth = true;
-		//F32 durationSeconds = 10.0f;
-		//F32 thickness = Debug::UDebugShapeSystem::ThicknessMaximum;
-		//Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(1.0f, 0.0f, 0.0f), Color::Red, durationSeconds, useLifeTime, thickness, ignoreDepth);
-		//Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(0.0f, 1.0f, 0.0f), Color::Green, durationSeconds, useLifeTime, thickness, ignoreDepth);
-		//Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(0.0f, 0.0f, 1.0f), Color::Blue, durationSeconds, useLifeTime, thickness,  ignoreDepth);
-		//
-		//durationSeconds = 5.0f;
-		//Debug::UDebugShapeSystem::AddLine(SVector(2.0f, 0.0f, 0.0f), SVector(1.0f, 0.0f, 0.0f), Color::Red, durationSeconds, useLifeTime, thickness, ignoreDepth);
-		//Debug::UDebugShapeSystem::AddLine(SVector(1.0f, 0.0f, 0.0f), SVector(0.0f, 1.0f, 0.0f), Color::Green, durationSeconds, useLifeTime, thickness, ignoreDepth);
-		//Debug::UDebugShapeSystem::AddLine(SVector(1.0f, 0.0f, 0.0f), SVector(0.0f, 0.0f, 1.0f), Color::Blue, durationSeconds, useLifeTime, thickness,  ignoreDepth);
-		//
-		//durationSeconds = 15.0f;
-		//Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 1.0f, 0.0f), SVector(1.0f, 0.0f, 0.0f), Color::Red, durationSeconds, useLifeTime, thickness, ignoreDepth);
-		//Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 2.0f, 0.0f), SVector(0.0f, 1.0f, 0.0f), Color::Green, durationSeconds, useLifeTime, thickness, ignoreDepth);
-		//Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 1.0f, 0.0f), SVector(0.0f, 0.0f, 1.0f), Color::Blue, durationSeconds, useLifeTime, thickness,  ignoreDepth);
-		//
-		//durationSeconds = 20.0f;
-		//Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 1.0f), SVector(1.0f, 0.0f, 0.0f), Color::Red, durationSeconds, useLifeTime, thickness, ignoreDepth);
-		//Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 1.0f), SVector(0.0f, 1.0f, 0.0f), Color::Green, durationSeconds, useLifeTime, thickness, ignoreDepth);
-		//Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 2.0f), SVector(0.0f, 0.0f, 1.0f), Color::Blue, durationSeconds, useLifeTime, thickness,  ignoreDepth);
 	}
 
 	Ref<SEntity> CScene::CreateEntity(const std::string& name)
