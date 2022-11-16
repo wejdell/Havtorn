@@ -40,7 +40,7 @@ namespace Havtorn
 		void Update(CScene* scene) override;
 
 	public: // Static Add Shape functions.
-		static constexpr U16 MaxShapes = 500;
+		static constexpr U16 MaxShapes = 600;
 		static constexpr F32 ThicknessMinimum = 0.005f;
 		static constexpr F32 ThicknessMaximum = 0.05f;
 
@@ -61,7 +61,7 @@ namespace Havtorn
 		static F32 LifeTimeForShape(const bool useLifeTime, const F32 requestedLifeTime);
 		static F32 ClampThickness(const F32 thickness);
 			
-		static bool TryAddShape(const EVertexBufferPrimitives vertexBuffer, EDefaultIndexBuffers indexBuffer, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, Ref<STransformComponent>& outTransform);
+		static bool TryAddShape(const EVertexBufferPrimitives vertexBuffer, const EDefaultIndexBuffers indexBuffer, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, Ref<STransformComponent>& outTransform);
 		
 		void TransformToFaceAndReach(SMatrix& transform, const SVector& start, const SVector& end);
 
@@ -72,17 +72,8 @@ namespace Havtorn
 		);
 		void CheckActiveIndices(const std::vector<Ref<SDebugShapeComponent>>& debugShapes);
 
-		/*
-		* AG: Kept in case it is needed in the future. Currently however, 
-		* there should be no circumstance where Scene == nullptr after construction.
-		*/ 
-		bool HasConnectionToScene();
-
 		bool TryGetAvailableIndex(U64& outIndex);
 		void ResetAvailableIndices();
-
-		// AG: To be removed/ looked over. Use case is debatable.
-		void PrintDebugAddedShape(const SDebugShapeComponent& shape, const bool useLifeTime, const char* callerFunction);
 
 	private:
 		static HAVTORN_API UDebugShapeSystem* Instance;
