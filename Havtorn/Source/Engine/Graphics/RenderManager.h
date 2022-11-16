@@ -85,6 +85,7 @@ namespace Havtorn
 
 	// Should be 1:1 to RenderManager::InitVertexBufferPrimitives()
 	// Geometries used can be found in GeometryPrimitives.h
+	// EVertexBufferPrimitives Count should not exceed U8 max (255)
 	enum class EVertexBufferPrimitives
 	{
 		DecalProjector,
@@ -97,9 +98,10 @@ namespace Havtorn
 		CircleXY8,
 		CircleXY16,
 		CircleXY32,
-		//TODO: add more debug shape primitives
+		//TODO.ANYONE: add more debug shape primitives.
 	};
 
+	// EDefaultIndexBuffers Count should not exceed U8 max (255)
 	enum class EDefaultIndexBuffers
 	{
 		DecalProjector,
@@ -111,7 +113,7 @@ namespace Havtorn
 		CircleXY8,
 		CircleXY16,
 		CircleXY32,
-		//TODO: add more debug shape primitives
+		//TODO.ANYONE: add more debug shape primitives.
 	};
 
 	enum class EIndexBufferPrimitives
