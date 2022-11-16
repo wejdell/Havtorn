@@ -47,9 +47,6 @@ namespace Havtorn
 			+ (sizeof(STransformComponent) * MaxShapes);
 		HV_LOG_INFO("UDebugShapeSystem: [MaxShapes: %d] [Allocated: %d bytes]", MaxShapes, allocated);
 
-		//HV_LOG_INFO("%d", GeometryPrimitives::GeometryPrimitives[GeometryPrimitives::Foo::Bar].size());
-		//HV_LOG_INFO("%d", GeometryPrimitives::GeometryPrimitives[GeometryPrimitives::Foo::Barb].size());
-
 		Scene = scene;
 		RenderManager = renderManager;
 		EntityStartIndex = currentNrOfEntities;
@@ -83,102 +80,41 @@ namespace Havtorn
 
 	void UDebugShapeSystem::AddLine(const SVector& start, const SVector& end, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
-		if (!InstanceExists())
-			return;
-
-		U64 entityIndex = 0;
-		if (!Instance->TryGetAvailableIndex(entityIndex))
-			return;
-
-		const std::vector<Ref<SEntity>>& entities = Instance->Scene->GetEntities();
-			
-		const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
-		std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
-		SetSharedDataForShape(debugShapes[shapeIndex], color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
-		debugShapes[shapeIndex]->VertexBufferIndex = static_cast<U8>(EVertexBufferPrimitives::LineShape);
-		debugShapes[shapeIndex]->IndexCount = UGraphicsUtils::GetIndexCount<U8>(EVertexBufferPrimitives::LineShape);
-		debugShapes[shapeIndex]->IndexBufferIndex = static_cast<U8>(EDefaultIndexBuffers::LineShape);
-
-		std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
-		const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
-		TransformToFaceAndReach(transforms[transformIndex], start, end);
+		Ref<STransformComponent> transform;
+		if (TrySetShape(EVertexBufferPrimitives::LineShape, EDefaultIndexBuffers::LineShape, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		{
+			Instance->TransformToFaceAndReach(transform->Transform.GetMatrix(), start, end);
+		}	
 	}
 
 	void UDebugShapeSystem::AddArrow(const SVector& start, const SVector& end, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
-		if (!InstanceExists())
-			return;
-
-		U64 entityIndex = 0;
-		if (!Instance->TryGetAvailableIndex(entityIndex))
-			return;
-
-		const std::vector<Ref<SEntity>>& entities = Instance->Scene->GetEntities();
-
-		const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
-		std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
-		SetSharedDataForShape(debugShapes[shapeIndex], color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
-		debugShapes[shapeIndex]->VertexBufferIndex = static_cast<U8>(EVertexBufferPrimitives::FlatArrow);
-		debugShapes[shapeIndex]->IndexCount = UGraphicsUtils::GetIndexCount<U8>(EVertexBufferPrimitives::FlatArrow);
-		debugShapes[shapeIndex]->IndexBufferIndex = static_cast<U8>(EDefaultIndexBuffers::FlatArrow);
-
-		std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
-		const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
-		TransformToFaceAndReach(transforms[transformIndex], start, end);
+		Ref<STransformComponent> transform;
+		if (TrySetShape(EVertexBufferPrimitives::FlatArrow, EDefaultIndexBuffers::FlatArrow, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		{
+			Instance->TransformToFaceAndReach(transform->Transform.GetMatrix(), start, end);
+		}	
 	}
 
 	void UDebugShapeSystem::AddCube(const SVector& center, const SVector& scale, const SVector& eulerRotation, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
-		if (!InstanceExists())
-			return;
-
-		U64 entityIndex = 0;
-		if (!Instance->TryGetAvailableIndex(entityIndex))
-			return;
-
-		const std::vector<Ref<SEntity>>& entities = Instance->Scene->GetEntities();
-
-		const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
-		std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
-		SetSharedDataForShape(debugShapes[shapeIndex], color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
-		debugShapes[shapeIndex]->VertexBufferIndex = static_cast<U8>(EVertexBufferPrimitives::DebugCube);
-		debugShapes[shapeIndex]->IndexCount = UGraphicsUtils::GetIndexCount<U8>(EVertexBufferPrimitives::DebugCube);
-		debugShapes[shapeIndex]->IndexBufferIndex = static_cast<U8>(EDefaultIndexBuffers::DebugCube);
-
-		std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
-		const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
-			
-		SMatrix matrix;
-		SMatrix::Recompose(center, eulerRotation, scale, matrix);
-		transforms[transformIndex]->Transform.SetMatrix(matrix);
+		Ref<STransformComponent> transform;
+		if (TrySetShape(EVertexBufferPrimitives::DebugCube, EDefaultIndexBuffers::DebugCube, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		{
+			SMatrix::Recompose(center, eulerRotation, scale, transform->Transform.GetMatrix());
+		}		
 	}
 
 	void UDebugShapeSystem::AddCamera(const SVector& origin, const SVector& eulerRotation, const F32 fov, const F32 farZ, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
-		if (!InstanceExists())
-			return;
-
-		U64 entityIndex = 0;
-		if (!Instance->TryGetAvailableIndex(entityIndex))
-			return;
-
-		const std::vector<Ref<SEntity>>& entities = Instance->Scene->GetEntities();
-
-		const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
-		std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
-		SetSharedDataForShape(debugShapes[shapeIndex], color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
-		debugShapes[shapeIndex]->VertexBufferIndex = static_cast<U8>(EVertexBufferPrimitives::Camera);
-		debugShapes[shapeIndex]->IndexCount = UGraphicsUtils::GetIndexCount<U8>(EVertexBufferPrimitives::Camera);
-		debugShapes[shapeIndex]->IndexBufferIndex = static_cast<U8>(EDefaultIndexBuffers::Camera);
-
-		std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
-		const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
-
-		F32 y = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
-		F32 x = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
-		SVector vScale(x, y, farZ);
-		SMatrix& matrix = transforms[transformIndex]->Transform.GetMatrix();
-		SMatrix::Recompose(origin, eulerRotation, vScale, matrix);
+		Ref<STransformComponent> transform;
+		if (TrySetShape(EVertexBufferPrimitives::Camera, EDefaultIndexBuffers::Camera, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		{
+			F32 y = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
+			F32 x = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
+			SVector vScale(x, y, farZ);
+			SMatrix::Recompose(origin, eulerRotation, vScale, transform->Transform.GetMatrix());
+		}
 	}
 
 	void UDebugShapeSystem::AddCircleXY(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
@@ -200,13 +136,6 @@ namespace Havtorn
 
 	void UDebugShapeSystem::AddDefaultCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
-		if (!InstanceExists())
-			return;
-
-		U64 entityIndex = 0;
-		if (!Instance->TryGetAvailableIndex(entityIndex))
-			return;
-
 		// AG. The Default Circle is across the XY plane
 		auto EnumFromSegment = [&](const UINT8& s, EVertexBufferPrimitives& v, EDefaultIndexBuffers& i)
 		{
@@ -229,24 +158,16 @@ namespace Havtorn
 			}
 		};
 
-		const std::vector<Ref<SEntity>>& entities = Instance->Scene->GetEntities();
-
-		const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
-		std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
-		SetSharedDataForShape(debugShapes[shapeIndex], color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
-		
 		EVertexBufferPrimitives vertexBufferPrimitive = EVertexBufferPrimitives::CircleXY16;
 		EDefaultIndexBuffers indexBuffer = EDefaultIndexBuffers::CircleXY16;
 		EnumFromSegment(segments, vertexBufferPrimitive, indexBuffer);
-		debugShapes[shapeIndex]->VertexBufferIndex = static_cast<U8>(vertexBufferPrimitive);
-		debugShapes[shapeIndex]->IndexCount = UGraphicsUtils::GetIndexCount<U8>(vertexBufferPrimitive);
-		debugShapes[shapeIndex]->IndexBufferIndex = static_cast<U8>(indexBuffer);
-
-		std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
-		const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
-		SMatrix& matrix = transforms[transformIndex]->Transform.GetMatrix();
-		SVector scale(radius / GeometryPrimitives::CircleXYRadius);
-		SMatrix::Recompose(origin, eulerRotation, scale, matrix);
+		
+		Ref<STransformComponent> transform;
+		if (TrySetShape(vertexBufferPrimitive, indexBuffer, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		{
+			SVector scale(radius / GeometryPrimitives::CircleXYRadius);
+			SMatrix::Recompose(origin, eulerRotation, scale, transform->Transform.GetMatrix());
+		}
 	}
 
 
@@ -275,23 +196,41 @@ namespace Havtorn
 		return UMath::Clamp(thickness, ThicknessMinimum, ThicknessMaximum);
 	}
 
-	void UDebugShapeSystem::SetSharedDataForShape(Ref<SDebugShapeComponent>& inoutShape, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	bool UDebugShapeSystem::TrySetShape(const EVertexBufferPrimitives vertexBuffer, EDefaultIndexBuffers indexBuffer, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, Ref<STransformComponent>& outTransform)
 	{
-		inoutShape->Color = color;
-		inoutShape->LifeTime = LifeTimeForShape(useLifeTime, lifeTimeSeconds);
-		inoutShape->Thickness = ClampThickness(thickness);
-		inoutShape->IgnoreDepth = ignoreDepth;
+		if (!InstanceExists())
+			return false;
+
+		U64 entityIndex = 0;
+		if (!Instance->TryGetAvailableIndex(entityIndex))
+			return false;
+
+		const std::vector<Ref<SEntity>>& entities = Instance->Scene->GetEntities();
+
+		const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
+		std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
+		debugShapes[shapeIndex]->Color = color;
+		debugShapes[shapeIndex]->LifeTime = LifeTimeForShape(useLifeTime, lifeTimeSeconds);
+		debugShapes[shapeIndex]->Thickness = ClampThickness(thickness);
+		debugShapes[shapeIndex]->IgnoreDepth = ignoreDepth;
+		debugShapes[shapeIndex]->VertexBufferIndex = static_cast<U8>(vertexBuffer);
+		debugShapes[shapeIndex]->IndexCount = UGraphicsUtils::GetIndexCount<U8>(vertexBuffer);
+		debugShapes[shapeIndex]->IndexBufferIndex = static_cast<U8>(indexBuffer);
+
+		std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
+		const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
+		outTransform = transforms[transformIndex];
+		
+		return true;
 	}
 
-	void UDebugShapeSystem::TransformToFaceAndReach(Ref<STransformComponent>& inoutTransform, const SVector& start, const SVector& end)
+	void UDebugShapeSystem::TransformToFaceAndReach(SMatrix& transform, const SVector& start, const SVector& end)
 	{
-		const SVector transformUp = inoutTransform->Transform.GetMatrix().GetUp();
+		const SVector transformUp = transform.GetUp();
 		const SVector eulerRotation = SMatrix::LookAtLH(start, end, transformUp).GetEuler();
 		const F32 lineLength = start.Distance(end);
 		const SVector scale = SVector(1.0f, 1.0f, lineLength);
-		SMatrix matrix;
-		SMatrix::Recompose(start, eulerRotation, scale, matrix);
-		inoutTransform->Transform.SetMatrix(matrix);
+		SMatrix::Recompose(start, eulerRotation, scale, transform);
 	}
 
 

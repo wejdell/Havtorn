@@ -3,6 +3,7 @@
 #pragma once
 #include "ECS/System.h"
 
+#include "Graphics/GraphicsEnums.h"
 #include "Core/ColorList.h"
 
 #include <queue>
@@ -60,8 +61,9 @@ namespace Havtorn
 		static F32 LifeTimeForShape(const bool useLifeTime, const F32 requestedLifeTime);
 		static F32 ClampThickness(const F32 thickness);
 			
-		static void SetSharedDataForShape(Ref<SDebugShapeComponent>& inoutShape, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth);
-		static void TransformToFaceAndReach(Ref<STransformComponent>& inoutTransform, const SVector& start, const SVector& end);
+		static bool TrySetShape(const EVertexBufferPrimitives vertexBuffer, EDefaultIndexBuffers indexBuffer, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, Ref<STransformComponent>& outTransform);
+		
+		void TransformToFaceAndReach(SMatrix& transform, const SVector& start, const SVector& end);
 
 		void SendRenderCommands(
 			const std::vector<Ref<SEntity>>& entities,
