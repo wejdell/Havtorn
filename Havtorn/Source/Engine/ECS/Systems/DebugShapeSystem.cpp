@@ -196,7 +196,7 @@ namespace Havtorn
 		return UMath::Clamp(thickness, ThicknessMinimum, ThicknessMaximum);
 	}
 
-	bool UDebugShapeSystem::TryAddShape(const EVertexBufferPrimitives vertexBuffer, EDefaultIndexBuffers indexBuffer, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, Ref<STransformComponent>& outTransform)
+	bool UDebugShapeSystem::TryAddShape(const EVertexBufferPrimitives vertexBuffer, const EDefaultIndexBuffers indexBuffer, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, Ref<STransformComponent>& outTransform)
 	{
 		if (!InstanceExists())
 			return false;
@@ -317,19 +317,6 @@ namespace Havtorn
 		}
 	}
 
-
-	bool UDebugShapeSystem::HasConnectionToScene()
-	{
-		if (Instance->Scene == nullptr)
-		{
-#if DEBUG_DRAWER_LOG_ERROR
-			HV_LOG_ERROR("UDebugShapeSystem is missing a reference to the active scene!");
-#endif
-			return false;
-		}
-		return true;
-	}
-
 	bool UDebugShapeSystem::TryGetAvailableIndex(U64& outIndex)
 	{
 		if (AvailableIndices.empty())
@@ -355,16 +342,5 @@ namespace Havtorn
 		{
 			AvailableIndices.push(i);
 		}
-	}
-
-	void UDebugShapeSystem::PrintDebugAddedShape(const SDebugShapeComponent& shape, const bool useLifeTime, const char* callerFunction)
-	{
-		HV_LOG_INFO("%s: Added:", callerFunction);
-		HV_LOG_INFO("\tColor[%s] UseLifeTime[%d] LifeTime[%5.fs] Type[%d]"
-			, shape.Color.ToString().c_str()
-			, useLifeTime
-			, shape.LifeTime
-			, shape.VertexBufferIndex
-		);
 	}
 }
