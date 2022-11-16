@@ -34,6 +34,7 @@ namespace Havtorn
 		static SMatrix CreateRotationAroundY(F32 angleInRadians);
 		static SMatrix CreateRotationAroundZ(F32 angleInRadians);
 		static SMatrix CreateRotationAroundAxis(F32 angleInRadians, const SVector& axis);
+		// NOTE.AG: Euler should always be in degrees. If Euler is mentioned == degrees.
 		static SMatrix CreateRotationFromEuler(F32 pitchRadians, F32 yawRadians, F32 rollRadians);
 		static SMatrix CreateRotationFromQuaternion(const SQuaternion& quaternion);
 		static SMatrix CreateRotationFromAxisAngle(const SVector& axis, F32 angleInRadians);
@@ -44,7 +45,9 @@ namespace Havtorn
 		// Based on XMMatrixInverse
 		inline SMatrix Inverse() const;
 
+		// TODO.AG: Change parameters to clarify that rotation is in degrees, if its not supposed to be in degrees: change internal workings to return rotation in radians.
 		static inline void Decompose(const SMatrix& matrix, SVector& translation, SVector& rotation, SVector& scale);
+		// TODO.AG: Change parameters to clarify that rotation is in degrees, if its not supposed to be in degrees: change internal workings to return rotation in radians.
 		static inline void Recompose(const SVector& translation, const SVector& rotation, const SVector& scale, SMatrix& outMatrix);
 		
 		inline SMatrix GetRHViewMatrix() const;
