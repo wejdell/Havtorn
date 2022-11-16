@@ -279,16 +279,16 @@ namespace Havtorn
 
 	void CRenderManager::InitVertexBuffers()
 	{
-		AddVertexBuffer<SStaticMeshVertex>(GeometryPrimitives::DecalProjector);
-		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::PointLightCube);
+		AddVertexBuffer(GeometryPrimitives::DecalProjector);
+		AddVertexBuffer(GeometryPrimitives::PointLightCube);
 		AddVertexBuffer(GeometryPrimitives::Icosphere.Vertices);
-		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::Line);
-		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::FlatArrow);
-		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::DebugCube);
-		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::Camera);
-		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::CircleXY8);
-		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::CircleXY16);
-		AddVertexBuffer<SPositionVertex>(GeometryPrimitives::CircleXY32);
+		AddVertexBuffer(GeometryPrimitives::Line);
+		AddVertexBuffer(GeometryPrimitives::FlatArrow);
+		AddVertexBuffer(GeometryPrimitives::DebugCube);
+		AddVertexBuffer(GeometryPrimitives::Camera);
+		AddVertexBuffer(GeometryPrimitives::CircleXY8);
+		AddVertexBuffer(GeometryPrimitives::CircleXY16);
+		AddVertexBuffer(GeometryPrimitives::CircleXY32);
 	}
 
 	void CRenderManager::InitIndexBuffers()
