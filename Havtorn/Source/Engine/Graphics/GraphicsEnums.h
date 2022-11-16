@@ -73,6 +73,7 @@ namespace Havtorn
 
 	// Should be 1:1 to RenderManager::InitVertexBufferPrimitives()
 	// Geometries used can be found in GeometryPrimitives.h
+	// GeometryPrimitivesUtility.h has a std::map that simplifies access to the primitives the enum refers to.
 	// EVertexBufferPrimitives Count should not exceed U8 max (255)
 	enum class EVertexBufferPrimitives
 	{
@@ -89,6 +90,7 @@ namespace Havtorn
 		//TODO.ANYONE: add more debug shape primitives.
 	};
 
+	// GeometryPrimitivesUtility.h has a std::map that simplifies access to the primitives the enum refers to.
 	// EDefaultIndexBuffers Count should not exceed U8 max (255)
 	enum class EDefaultIndexBuffers
 	{
