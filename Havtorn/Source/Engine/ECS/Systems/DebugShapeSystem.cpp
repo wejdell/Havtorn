@@ -81,7 +81,7 @@ namespace Havtorn
 	void UDebugShapeSystem::AddLine(const SVector& start, const SVector& end, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		Ref<STransformComponent> transform;
-		if (TrySetShape(EVertexBufferPrimitives::LineShape, EDefaultIndexBuffers::LineShape, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		if (TryAddShape(EVertexBufferPrimitives::LineShape, EDefaultIndexBuffers::LineShape, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
 		{
 			Instance->TransformToFaceAndReach(transform->Transform.GetMatrix(), start, end);
 		}	
@@ -90,7 +90,7 @@ namespace Havtorn
 	void UDebugShapeSystem::AddArrow(const SVector& start, const SVector& end, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		Ref<STransformComponent> transform;
-		if (TrySetShape(EVertexBufferPrimitives::FlatArrow, EDefaultIndexBuffers::FlatArrow, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		if (TryAddShape(EVertexBufferPrimitives::FlatArrow, EDefaultIndexBuffers::FlatArrow, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
 		{
 			Instance->TransformToFaceAndReach(transform->Transform.GetMatrix(), start, end);
 		}	
@@ -99,7 +99,7 @@ namespace Havtorn
 	void UDebugShapeSystem::AddCube(const SVector& center, const SVector& scale, const SVector& eulerRotation, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		Ref<STransformComponent> transform;
-		if (TrySetShape(EVertexBufferPrimitives::DebugCube, EDefaultIndexBuffers::DebugCube, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		if (TryAddShape(EVertexBufferPrimitives::DebugCube, EDefaultIndexBuffers::DebugCube, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
 		{
 			SMatrix::Recompose(center, eulerRotation, scale, transform->Transform.GetMatrix());
 		}		
@@ -108,7 +108,7 @@ namespace Havtorn
 	void UDebugShapeSystem::AddCamera(const SVector& origin, const SVector& eulerRotation, const F32 fov, const F32 farZ, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		Ref<STransformComponent> transform;
-		if (TrySetShape(EVertexBufferPrimitives::Camera, EDefaultIndexBuffers::Camera, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		if (TryAddShape(EVertexBufferPrimitives::Camera, EDefaultIndexBuffers::Camera, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
 		{
 			F32 y = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
 			F32 x = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
@@ -163,7 +163,7 @@ namespace Havtorn
 		EnumFromSegment(segments, vertexBufferPrimitive, indexBuffer);
 		
 		Ref<STransformComponent> transform;
-		if (TrySetShape(vertexBufferPrimitive, indexBuffer, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		if (TryAddShape(vertexBufferPrimitive, indexBuffer, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
 		{
 			SVector scale(radius / GeometryPrimitives::CircleXYRadius);
 			SMatrix::Recompose(origin, eulerRotation, scale, transform->Transform.GetMatrix());
@@ -196,7 +196,7 @@ namespace Havtorn
 		return UMath::Clamp(thickness, ThicknessMinimum, ThicknessMaximum);
 	}
 
-	bool UDebugShapeSystem::TrySetShape(const EVertexBufferPrimitives vertexBuffer, EDefaultIndexBuffers indexBuffer, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, Ref<STransformComponent>& outTransform)
+	bool UDebugShapeSystem::TryAddShape(const EVertexBufferPrimitives vertexBuffer, EDefaultIndexBuffers indexBuffer, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, Ref<STransformComponent>& outTransform)
 	{
 		if (!InstanceExists())
 			return false;

@@ -61,7 +61,7 @@ namespace Havtorn
 		static F32 LifeTimeForShape(const bool useLifeTime, const F32 requestedLifeTime);
 		static F32 ClampThickness(const F32 thickness);
 			
-		static bool TrySetShape(const EVertexBufferPrimitives vertexBuffer, EDefaultIndexBuffers indexBuffer, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, Ref<STransformComponent>& outTransform);
+		static bool TryAddShape(const EVertexBufferPrimitives vertexBuffer, EDefaultIndexBuffers indexBuffer, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, Ref<STransformComponent>& outTransform);
 		
 		void TransformToFaceAndReach(SMatrix& transform, const SVector& start, const SVector& end);
 
