@@ -174,7 +174,6 @@ namespace Havtorn
 		auto pendulum = CreateEntity("Clock");
 
 		auto tc = AddTransformComponentToEntity(pendulum);
-		/*target = tc;*/
 		auto& transform1 = tc->Transform;
 		transform1.GetMatrix().SetTranslation({1.75f, 0.0f, 0.25f});
 
