@@ -48,7 +48,6 @@ namespace Havtorn
 		// Based on XMMatrixInverse
 		inline SMatrix Inverse() const;
 
-		// TODO.AG: Change parameters to clarify that rotation is in degrees, if its not supposed to be in degrees: change internal workings to return rotation in radians.
 		static inline void Decompose(const SMatrix& matrix, SVector& translation, SVector& euler, SVector& scale);
 		static inline void Decompose(const SMatrix& matrix, F32* translationData,  F32* eulerRotationData,  F32* scaleData);
 		static inline void Recompose(const SVector& translation, const SVector& eulerRotation, const SVector& scale, SMatrix& outMatrix);
