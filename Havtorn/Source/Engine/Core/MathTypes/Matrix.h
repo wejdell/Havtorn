@@ -14,6 +14,8 @@ namespace Havtorn
 	struct SVector4;
 	struct SQuaternion;
 
+#define SMATRIX_MIN_SCALE 0.001f
+
 	// Left-handed row-major
 	struct SMatrix 
 	{	
@@ -188,7 +190,6 @@ namespace Havtorn
 		if (lengthSq < FLT_EPSILON)
 			return SMatrix();
 		
-		//SVector n = axis * (1.f / sqrtf(lengthSq));// same as normalize?
 		SVector n = axis.GetNormalized();
 		F32 cosTerm = UMath::Cos(angleInRadians);
 		F32 sinTerm = UMath::Sin(angleInRadians);
@@ -239,10 +240,9 @@ namespace Havtorn
 		rotationMatrix.OrthoNormalize();
 		
 		SVector euler;
-		// OrhothoNormalized rotation matrix is not used!
-		euler.X = UMath::RadToDeg(atan2f(M[1][2], M[2][2]));
-		euler.Y = UMath::RadToDeg(atan2f(-M[0][2], sqrtf(M[1][2] * M[1][2] + M[2][2] * M[2][2])));
-		euler.Z = UMath::RadToDeg(atan2f(M[0][1], M[0][0]));
+		euler.X = UMath::RadToDeg(atan2f(rotationMatrix.M[1][2], rotationMatrix.M[2][2]));
+		euler.Y = UMath::RadToDeg(atan2f(-rotationMatrix.M[0][2], sqrtf(rotationMatrix.M[1][2] * rotationMatrix.M[1][2] + rotationMatrix.M[2][2] * rotationMatrix.M[2][2])));
+		euler.Z = UMath::RadToDeg(atan2f(rotationMatrix.M[0][1], rotationMatrix.M[0][0]));
 
 		return euler;
 	}
@@ -297,9 +297,9 @@ namespace Havtorn
 	inline void SMatrix::SetScale(SVector scale)
 	{
 		F32 validScale[3];
-		validScale[0] = scale.X < FLT_EPSILON ? 0.001f : scale.X;
-		validScale[1] = scale.Y < FLT_EPSILON ? 0.001f : scale.Y;
-		validScale[2] = scale.Z < FLT_EPSILON ? 0.001f : scale.Z;
+		validScale[0] = scale.X < FLT_EPSILON ? SMATRIX_MIN_SCALE : scale.X;
+		validScale[1] = scale.Y < FLT_EPSILON ? SMATRIX_MIN_SCALE : scale.Y;
+		validScale[2] = scale.Z < FLT_EPSILON ? SMATRIX_MIN_SCALE : scale.Z;
 
 		M[0][0] = validScale[0];
 		M[1][1] = validScale[1];
@@ -774,7 +774,7 @@ namespace Havtorn
 		{
 			if (UMath::FAbs(scaleData[i]) < FLT_EPSILON)
 			{
-				validScale[i] = 0.001f;
+				validScale[i] = SMATRIX_MIN_SCALE;
 			}
 			else
 			{
