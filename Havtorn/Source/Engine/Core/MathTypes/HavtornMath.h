@@ -56,6 +56,11 @@ namespace Havtorn
 		return CreateRotationFromQuaternion(quaternion);
 	}
 
+	inline SMatrix SMatrix::CreateRotationFromEuler(const SVector& eulerAngles)
+	{
+		return CreateRotationFromEuler(eulerAngles.X, eulerAngles.Y, eulerAngles.Z);
+	}
+
 	inline SMatrix SMatrix::CreateRotationFromQuaternion(const SQuaternion& quaternion)
 	{
 		SMatrix result;
