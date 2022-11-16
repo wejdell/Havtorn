@@ -8,7 +8,7 @@ namespace Havtorn
 {
 	namespace UGraphicsUtils
 	{
-		const static std::map<EVertexBufferPrimitives, const std::vector<SPositionVertex>> PrimitivesVertices = {
+		const static std::map<EVertexBufferPrimitives, const std::vector<SPositionVertex>&> PrimitivesVertices = {
 			{ EVertexBufferPrimitives::PointLightCube, GeometryPrimitives::PointLightCube},
 			{ EVertexBufferPrimitives::LineShape, GeometryPrimitives::LineShape},
 			{ EVertexBufferPrimitives::FlatArrow, GeometryPrimitives::FlatArrow},
@@ -19,7 +19,7 @@ namespace Havtorn
 			{ EVertexBufferPrimitives::CircleXY32, GeometryPrimitives::CircleXY32},
 		};
 
-		const static std::map<EVertexBufferPrimitives, const std::vector<U32>> PrimitivesIndices = {
+		const static std::map<EVertexBufferPrimitives, const std::vector<U32>&> PrimitivesIndices = {
 			{ EVertexBufferPrimitives::DecalProjector, GeometryPrimitives::DecalProjectorIndices},
 			{ EVertexBufferPrimitives::PointLightCube, GeometryPrimitives::PointLightCubeIndices},
 			{ EVertexBufferPrimitives::LineShape, GeometryPrimitives::LineShapeIndices},
