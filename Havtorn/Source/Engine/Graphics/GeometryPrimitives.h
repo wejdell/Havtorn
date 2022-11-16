@@ -249,13 +249,13 @@ namespace Havtorn
 
 		static SMeshData Icosphere = CreateIcosphere(2);
 
-		static std::vector<SPositionVertex> Line =
+		static std::vector<SPositionVertex> LineShape =
 		{
 			{ 0.0f, 0.0f, 0.0f, 1.0f },
 			{ 0.0f, 0.0f, 1.0f, 1.0f }
 		};
 
-		const static std::vector<U32> LineIndices =
+		const static std::vector<U32> LineShapeIndices =
 		{
 			0, 1, 0
 		};
