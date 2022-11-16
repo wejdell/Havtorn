@@ -13,7 +13,7 @@ namespace Havtorn
 		Systems.emplace_back(std::make_unique<CCameraSystem>());
 		Systems.emplace_back(std::make_unique<CLightSystem>(renderManager));
 		Systems.emplace_back(std::make_unique<CRenderSystem>(renderManager));
-		Systems.emplace_back(std::make_unique<Debug::UDebugShapeSystem>(this, renderManager));
+		Systems.emplace_back(std::make_unique<UDebugShapeSystem>(this, renderManager));
 
 		// Create entities
 		auto cameraEntity = CreateEntity("Camera");
@@ -173,7 +173,9 @@ namespace Havtorn
 		// === Pendulum ===
 		auto pendulum = CreateEntity("Clock");
 
-		auto& transform1 = AddTransformComponentToEntity(pendulum)->Transform;
+		auto tc = AddTransformComponentToEntity(pendulum);
+		/*target = tc;*/
+		auto& transform1 = tc->Transform;
 		transform1.GetMatrix().SetTranslation({1.75f, 0.0f, 0.25f});
 
 		renderManager->LoadStaticMeshComponent(modelPath1, AddStaticMeshComponentToEntity(pendulum).get());
@@ -282,20 +284,6 @@ namespace Havtorn
 			renderManager->LoadMaterialComponent(materialNames3, AddMaterialComponentToEntity(floor).get());
 		}
 		// === !Other Wall ===
-
-		//bool useLifeTime = true;
-		//bool ignoreDepth = true;
-		//F32 durationSeconds = 60.0f;
-		//F32 thickness = Debug::UDebugShapeSystem::ThicknessMaximum;
-		//Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(1.0f, 0.0f, 0.0f), Color::Red, durationSeconds, useLifeTime, thickness, ignoreDepth);
-		//Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(0.0f, 1.0f, 0.0f), Color::Green, durationSeconds, useLifeTime, thickness, ignoreDepth);
-		//Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(0.0f, 0.0f, 1.0f), Color::Blue, durationSeconds, useLifeTime, thickness,  ignoreDepth);
-
-		//ignoreDepth = false;
-		//thickness = Debug::UDebugShapeSystem::ThicknessMinimum;
-		//Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(-1.0f, 0.0f, 0.0f), Color::Yellow, durationSeconds, useLifeTime, thickness, ignoreDepth);
-		//Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(0.0f, -1.0f, 0.0f), Color::Teal, durationSeconds, useLifeTime, thickness, ignoreDepth);
-		//Debug::UDebugShapeSystem::AddLine(SVector(0.0f, 0.0f, 0.0f), SVector(0.0f, 0.0f, -1.0f), Color::Purple, durationSeconds, useLifeTime, thickness,  ignoreDepth);
 	}
 
 	Ref<SEntity> CScene::CreateEntity(const std::string& name)
