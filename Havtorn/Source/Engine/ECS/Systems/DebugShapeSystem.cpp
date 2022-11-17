@@ -78,7 +78,7 @@ namespace Havtorn
 		CheckActiveIndices(debugShapes);
 	}
 
-	void UDebugShapeSystem::AddLine(const SVector& start, const SVector& end, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddLine(const SVector& start, const SVector& end, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		Ref<STransformComponent> transform;
 		if (TryAddShape(EVertexBufferPrimitives::LineShape, EDefaultIndexBuffers::LineShape, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
@@ -87,7 +87,7 @@ namespace Havtorn
 		}	
 	}
 
-	void UDebugShapeSystem::AddArrow(const SVector& start, const SVector& end, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddArrow(const SVector& start, const SVector& end, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		Ref<STransformComponent> transform;
 		if (TryAddShape(EVertexBufferPrimitives::FlatArrow, EDefaultIndexBuffers::FlatArrow, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
@@ -96,7 +96,7 @@ namespace Havtorn
 		}	
 	}
 
-	void UDebugShapeSystem::AddCube(const SVector& center, const SVector& scale, const SVector& eulerRotation, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddCube(const SVector& center, const SVector& scale, const SVector& eulerRotation, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		Ref<STransformComponent> transform;
 		if (TryAddShape(EVertexBufferPrimitives::DebugCube, EDefaultIndexBuffers::DebugCube, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
@@ -105,7 +105,7 @@ namespace Havtorn
 		}		
 	}
 
-	void UDebugShapeSystem::AddCamera(const SVector& origin, const SVector& eulerRotation, const F32 fov, const F32 farZ, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddCamera(const SVector& origin, const SVector& eulerRotation, const F32 fov, const F32 farZ, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		Ref<STransformComponent> transform;
 		if (TryAddShape(EVertexBufferPrimitives::Camera, EDefaultIndexBuffers::Camera, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
@@ -117,24 +117,24 @@ namespace Havtorn
 		}
 	}
 
-	void UDebugShapeSystem::AddCircleXY(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddCircleXY(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		AddDefaultCircle(origin, eulerRotation, radius, segments, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
 	}
 
-	void UDebugShapeSystem::AddCircleXZ(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddCircleXZ(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		SVector rotation = eulerRotation + SVector(90.0f, 0.0f, 0.0f);
 		AddDefaultCircle(origin, rotation, radius, segments, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
 	}
 
-	void UDebugShapeSystem::AddCircleYZ(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SVector4 & color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddCircleYZ(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SColor & color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		SVector rotation = eulerRotation + SVector(0.0f, 90.0f, 0.0f);
 		AddDefaultCircle(origin, rotation, radius, segments, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
 	}
 
-	void UDebugShapeSystem::AddDefaultCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddDefaultCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		// AG. The Default Circle is across the XY plane
 		auto EnumFromSegment = [&](const UINT8& s, EVertexBufferPrimitives& v, EDefaultIndexBuffers& i)
@@ -196,7 +196,7 @@ namespace Havtorn
 		return UMath::Clamp(thickness, ThicknessMinimum, ThicknessMaximum);
 	}
 
-	bool UDebugShapeSystem::TryAddShape(const EVertexBufferPrimitives vertexBuffer, const EDefaultIndexBuffers indexBuffer, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, Ref<STransformComponent>& outTransform)
+	bool UDebugShapeSystem::TryAddShape(const EVertexBufferPrimitives vertexBuffer, const EDefaultIndexBuffers indexBuffer, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, Ref<STransformComponent>& outTransform)
 	{
 		if (!InstanceExists())
 			return false;
