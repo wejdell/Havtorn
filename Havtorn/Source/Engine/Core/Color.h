@@ -17,11 +17,12 @@ namespace Havtorn
 		static const SColor Grey;
 		static const SColor Teal;
 		static const SColor Orange;
-		static const SColor Purple;
+		static const SColor Magenta;
 		static const SColor Yellow;
 		// TODO.AG: Add more color presets
 
-		inline SColor() = default;
+		inline SColor();
+		// Alpha is set to 255.
 		inline SColor(U8 monochrome);
 		inline SColor(U8 r, U8 g, U8 b);
 		inline SColor(U8 r, U8 g, U8 b, U8 a);
@@ -36,9 +37,20 @@ namespace Havtorn
 		inline SVector4 AsVector4() const;
 	};
 
+	SColor::SColor()
+	{
+		R = 255;
+		G = 255; 
+		B = 255;
+		A = 255;
+	}
+
 	SColor::SColor(U8 monochrome)
 	{
-		R, G, B, A = monochrome; 
+		R = monochrome; 
+		G = monochrome; 
+		B = monochrome; 
+		A = 255; 
 	}
 
 	SColor::SColor(U8 r, U8 g, U8 b)
@@ -76,31 +88,19 @@ namespace Havtorn
 	SVector SColor::AsVector() const
 	{
 		SVector v;
-		v.X = static_cast<F32>(R / 255);
-		v.Y = static_cast<F32>(G / 255);
-		v.Z = static_cast<F32>(B / 255);
+		v.X = static_cast<F32>(R) / 255.0f;
+		v.Y = static_cast<F32>(G) / 255.0f;
+		v.Z = static_cast<F32>(B) / 255.0f;
 		return v;
 	}
 
 	SVector4 SColor::AsVector4() const
 	{
 		SVector4 v;
-		v.X = static_cast<F32>(R / 255);
-		v.Y = static_cast<F32>(G / 255);
-		v.Z = static_cast<F32>(B / 255);
-		v.W = static_cast<F32>(A / 255);
+		v.X = static_cast<F32>(R) / 255.0f;
+		v.Y = static_cast<F32>(G) / 255.0f;
+		v.Z = static_cast<F32>(B) / 255.0f;
+		v.W = static_cast<F32>(A) / 255.0f;
 		return v;
-	}
-
-	namespace Color
-	{
-		const SVector4 Red =	{ 255.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f, 255.0f / 255.0f};
-		const SVector4 Green =	{ 0.0f / 255.0f, 255.0f / 255.0f, 0.0f / 255.0f, 255.0f / 255.0f };
-		const SVector4 Blue =	{ 0.0f / 255.0f, 0.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f };
-		const SVector4 White =	{ 255.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f};
-		const SVector4 Black =	{ 0.0f / 255.0f, 0.0f / 255.0f, 0.0f / 255.0f, 255.0f / 255.0f};
-		const SVector4 Teal =	{ 50.0f / 255.0f, 255.0f / 255.0f, 225.0f / 255.0f, 255.0f / 255.0f};
-		const SVector4 Yellow =	{ 255.0f / 255.0f, 255.0f / 255.0f, 25.0f / 255.0f, 255.0f / 255.0f};
-		const SVector4 Purple =	{ 255.0f / 255.0f, 25.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f};
 	}
 }
