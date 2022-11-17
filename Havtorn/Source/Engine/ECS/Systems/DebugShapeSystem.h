@@ -4,7 +4,7 @@
 #include "ECS/System.h"
 
 #include "Graphics/GraphicsEnums.h"
-#include "Core/ColorList.h"
+#include "Core/Color.h"
 
 #include <queue>
 
