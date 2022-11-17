@@ -2106,7 +2106,7 @@ namespace Havtorn
 		STransformComponent* transform = command.GetComponent(TransformComponent);
 
 		DebugShapeObjectBufferData.ToWorldFromObject = transform->Transform.GetMatrix();
-		DebugShapeObjectBufferData.Color = shape->Color;
+		DebugShapeObjectBufferData.Color = shape->Color.AsVector4();
 		DebugShapeObjectBufferData.HalfThickness = shape->Thickness;
 
 		BindBuffer(DebugShapeObjectBuffer, DebugShapeObjectBufferData, "Object Buffer");
