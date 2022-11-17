@@ -40,7 +40,7 @@ namespace Havtorn
 		void Update(CScene* scene) override;
 
 	public: // Static Add Shape functions.
-		static constexpr U16 MaxShapes = 600;
+		static constexpr U16 MaxShapes = 500;
 		static constexpr F32 ThicknessMinimum = 0.005f;
 		static constexpr F32 ThicknessMaximum = 0.05f;
 
@@ -55,7 +55,7 @@ namespace Havtorn
 		static HAVTORN_API void AddCircleYZ(const SVector& origin, const SVector& eulerRotation, const F32 radius = 0.5f, const UINT8 segments = 16, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 
 	private:
-		static HAVTORN_API void AddDefaultCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius = 0.5f, const UINT8 segments = 16, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static HAVTORN_API void AddDefaultCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth);
 			
 		static bool InstanceExists();
 		static F32 LifeTimeForShape(const bool useLifeTime, const F32 requestedLifeTime);

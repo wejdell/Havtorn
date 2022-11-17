@@ -243,17 +243,16 @@ namespace Havtorn
 		typedef std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> Components;
 
 		// Send and set prepass rendercommand for debug shapes
-		std::vector<SRenderCommand> ignoreDepth;
-		ignoreDepth.reserve(ActiveIndices.size());
-		std::vector<SRenderCommand> useDepth;
-		useDepth.reserve(ActiveIndices.size());
 		{
 			Components components;
 			SRenderCommand command(components, ERenderCommandType::PreDebugShape);
 			RenderManager->PushRenderCommand(command);
 
-			ignoreDepth.emplace_back(SRenderCommand(components, ERenderCommandType::PostToneMappingIgnoreDepth));
-			useDepth.emplace_back(SRenderCommand(components, ERenderCommandType::PostToneMappingUseDepth));
+			command.Type = ERenderCommandType::PostToneMappingIgnoreDepth;
+			RenderManager->PushRenderCommand(command);
+
+			command.Type = ERenderCommandType::PostToneMappingUseDepth;
+			RenderManager->PushRenderCommand(command);
 		}
 
 		// Sort render commands based on use of depth
@@ -264,36 +263,27 @@ namespace Havtorn
 			//const ERenderCommandType renderCommandType = ERenderCommandType::DebugShape;
 			const U64 shapeIndex = entities[ActiveIndices[i]]->GetComponentIndex(EComponentType::DebugShapeComponent);
 			const U64 transformIndex = entities[ActiveIndices[i]]->GetComponentIndex(EComponentType::TransformComponent);
+			
 			Components components;
 			components[debugShapeComponent] = debugShapes[shapeIndex];
 			components[transformComponent] = transformComponents[transformIndex];
 
-			if (debugShapes[shapeIndex]->IgnoreDepth)
-				ignoreDepth.emplace_back(SRenderCommand(components, ERenderCommandType::DebugShapeIgnoreDepth));
-			else
-				useDepth.emplace_back(SRenderCommand(components, ERenderCommandType::DebugShapeUseDepth));
-		}
+			ERenderCommandType commandType = (debugShapes[shapeIndex]->IgnoreDepth) ? ERenderCommandType::DebugShapeIgnoreDepth : ERenderCommandType::DebugShapeUseDepth;
 
-		auto SendRenderCommands = [&](std::vector<SRenderCommand>& commands)
-		{
-			for (U64 i = 0; i < commands.size(); i++)
-			{
-				RenderManager->PushRenderCommand(commands[i]);
-			}
-		};
-		SendRenderCommands(useDepth);
-		SendRenderCommands(ignoreDepth);
+			SRenderCommand command(components, commandType);
+			RenderManager->PushRenderCommand(command);
+		}
 	}
 
 	void UDebugShapeSystem::CheckActiveIndices(const std::vector<Ref<SDebugShapeComponent>>& debugShapes)
 	{
 		const F32 time = GTime::Time();
 		std::vector<U64> activeIndicesToRemove;
+		activeIndicesToRemove.reserve(ActiveIndices.size());
 		for (U64 i = 0; i < ActiveIndices.size(); i++)
 		{
 			const U64& activeIndex = ActiveIndices[i];
-			const Ref<SDebugShapeComponent>& shape = debugShapes[activeIndex];
-			if (shape->LifeTime <= time)
+			if (debugShapes[activeIndex]->LifeTime <= time)
 			{
 				AvailableIndices.push(activeIndex);
 				activeIndicesToRemove.push_back(i);
@@ -304,14 +294,11 @@ namespace Havtorn
 
 		while (!activeIndicesToRemove.empty())
 		{
-			if (ActiveIndices.size() == 1)
+			if (ActiveIndices.size() > 1)
 			{
-				ActiveIndices.pop_back();
-				activeIndicesToRemove.pop_back();
-				break;
+				std::swap(ActiveIndices[activeIndicesToRemove.back()], ActiveIndices.back());
 			}
 
-			std::swap(ActiveIndices[activeIndicesToRemove.back()], ActiveIndices.back());
 			ActiveIndices.pop_back();
 			activeIndicesToRemove.pop_back();
 		}
