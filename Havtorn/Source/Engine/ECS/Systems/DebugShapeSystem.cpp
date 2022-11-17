@@ -12,6 +12,8 @@
 #include "Graphics/RenderManager.h"
 #include "Graphics/RenderCommand.h"
 
+#include "Core/GeneralUtilities.h"
+
 namespace Havtorn
 {
 	UDebugShapeSystem* UDebugShapeSystem::Instance = nullptr;
@@ -40,7 +42,8 @@ namespace Havtorn
 			(sizeof(SEntity) * MaxShapes) 
 			+ (sizeof(SDebugShapeComponent) * MaxShapes) 
 			+ (sizeof(STransformComponent) * MaxShapes);
-		HV_LOG_INFO("UDebugShapeSystem: [MaxShapes: %d] [Allocated: %d bytes]", MaxShapes, allocated);
+
+		HV_LOG_INFO("UDebugShapeSystem: [MaxShapes: %d] [Allocated: %s ]", MaxShapes, UGeneralUtils::BytesAsString(allocated).c_str());
 
 		Scene = scene;
 		RenderManager = renderManager;
@@ -73,6 +76,7 @@ namespace Havtorn
 		CheckActiveIndices(debugShapes);
 	}
 
+#pragma region AddShape
 	void UDebugShapeSystem::AddLine(const SVector& start, const SVector& end, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		Ref<STransformComponent> transform;
@@ -164,7 +168,7 @@ namespace Havtorn
 			SMatrix::Recompose(origin, eulerRotation, scale, transform->Transform.GetMatrix());
 		}
 	}
-
+#pragma endregion !AddShape
 
 	bool UDebugShapeSystem::InstanceExists()
 	{
