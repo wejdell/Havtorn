@@ -29,7 +29,7 @@ namespace Havtorn
 		camera->ViewMatrix = SMatrix::LookAtLH(SVector::Zero, SVector::Forward, SVector::Up);
 	
 		auto controllerComp = AddCameraControllerComponentToEntity(cameraEntity);
-		controllerComp->CurrentYaw = UMath::DegToRad(-35.0f);
+		controllerComp->CurrentYaw = -35.0f;
 
 		auto environmentLightEntity = CreateEntity("Environment Light");
 		AddTransformComponentToEntity(environmentLightEntity);
