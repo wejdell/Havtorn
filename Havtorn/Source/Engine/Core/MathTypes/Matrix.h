@@ -49,9 +49,9 @@ namespace Havtorn
 		inline SMatrix Inverse() const;
 
 		static inline void Decompose(const SMatrix& matrix, SVector& translation, SVector& euler, SVector& scale);
-		static inline void Decompose(const SMatrix& matrix, F32* translationData,  F32* eulerRotationData,  F32* scaleData);
-		static inline void Recompose(const SVector& translation, const SVector& eulerRotation, const SVector& scale, SMatrix& outMatrix);
-		static inline void Recompose(const F32* translationData, const F32* eulerRotationData, const F32* scaleData, SMatrix& outMatrix);
+		static inline void Decompose(const SMatrix& matrix, F32* translationData,  F32* eulerData,  F32* scaleData);
+		static inline void Recompose(const SVector& translation, const SVector& euler, const SVector& scale, SMatrix& outMatrix);
+		static inline void Recompose(const F32* translationData, const F32* eulerData, const F32* scaleData, SMatrix& outMatrix);
 		
 		inline SMatrix GetRHViewMatrix() const;
 		inline SMatrix GetRHProjectionMatrix() const;
@@ -725,14 +725,14 @@ namespace Havtorn
 		return result;
 	}
 
-	inline void SMatrix::Decompose(const SMatrix& matrix, SVector& translation, SVector& eulerRotation, SVector& scale)
+	inline void SMatrix::Decompose(const SMatrix& matrix, SVector& translation, SVector& euler, SVector& scale)
 	{
 		scale = matrix.GetScale();
-		eulerRotation = matrix.GetEuler();
+		euler = matrix.GetEuler();
 		translation = matrix.GetTranslation();	
 	}
 
-	inline void SMatrix::Decompose(const SMatrix& matrix, F32* translationData, F32* eulerRotationData, F32* scaleData)
+	inline void SMatrix::Decompose(const SMatrix& matrix, F32* translationData, F32* eulerData, F32* scaleData)
 	{
 		const SVector& t = matrix.GetTranslation();
 		translationData[0] = t.X;
@@ -740,9 +740,9 @@ namespace Havtorn
 		translationData[2] = t.Z;
 
 		const SVector& r = matrix.GetEuler();
-		eulerRotationData[0] = r.X;
-		eulerRotationData[1] = r.Y;
-		eulerRotationData[2] = r.Z;
+		eulerData[0] = r.X;
+		eulerData[1] = r.Y;
+		eulerData[2] = r.Z;
 
 		const SVector& s = matrix.GetScale();
 		scaleData[0] = s.X;
@@ -750,24 +750,21 @@ namespace Havtorn
 		scaleData[2] = s.Z;
 	}
 	
-	inline void SMatrix::Recompose(const SVector& translation, const SVector& eulerRotation, const SVector& scale, SMatrix& outMatrix)
+	inline void SMatrix::Recompose(const SVector& translation, const SVector& euler, const SVector& scale, SMatrix& outMatrix)
 	{
-		F32 t[3] = { translation.X, translation.Y, translation.Z };
-		F32 r[3] = { eulerRotation.X, eulerRotation.Y, eulerRotation.Z };
-		F32 s[3] = { scale.X, scale.Y, scale.Z };
-		Recompose(t, r, s, outMatrix);
+		Recompose(&translation.X, &euler.X, &scale.X, outMatrix);
 	}
 
-	inline void SMatrix::Recompose(const F32* translationData, const F32* eulerRotationData, const F32* scaleData, SMatrix& outMatrix) 
+	inline void SMatrix::Recompose(const F32* translationData, const F32* eulerData, const F32* scaleData, SMatrix& outMatrix) 
 	{
 		HV_ASSERT((translationData), "Passing nullptr [translationData] to Recompose!");
-		HV_ASSERT((eulerRotationData), "Passing nullptr [rotationData] to Recompose!");
+		HV_ASSERT((eulerData), "Passing nullptr [eulerData] to Recompose!");
 		HV_ASSERT((scaleData), "Passing nullptr [scaleData] to Recompose!");
 
 		// AG: Rotation Order XYZ used to not cause issues with ImGuizmo used in InspectorWindow.
-		outMatrix = CreateRotationAroundX(UMath::DegToRad(eulerRotationData[0]));
-		outMatrix *= CreateRotationAroundY(UMath::DegToRad(eulerRotationData[1]));
-		outMatrix *= CreateRotationAroundZ(UMath::DegToRad(eulerRotationData[2]));
+		outMatrix = CreateRotationAroundX(UMath::DegToRad(eulerData[0]));
+		outMatrix *= CreateRotationAroundY(UMath::DegToRad(eulerData[1]));
+		outMatrix *= CreateRotationAroundZ(UMath::DegToRad(eulerData[2]));
 
 		SMatrix scaleMatrix;
 		scaleMatrix.SetScale(scaleData[0], scaleData[1], scaleData[2]);
