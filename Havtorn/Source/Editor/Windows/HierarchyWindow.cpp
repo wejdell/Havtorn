@@ -9,6 +9,8 @@
 #include "Core/MathTypes/EngineMath.h"
 #include "Core/CoreTypes.h"
 
+#include "ECS/Systems/DebugShapeSystem.h"
+
 namespace ImGui
 {
 	CHierarchyWindow::CHierarchyWindow(const char* name, Havtorn::CScene* scene, Havtorn::CEditorManager* manager)
@@ -40,13 +42,9 @@ namespace ImGui
 			Havtorn::I32 index = 0;
 			auto& entities = Scene->GetEntities();
 			
-			for (auto& entity : entities) 
+			for(Havtorn::U64 i = Havtorn::UDebugShapeSystem::MaxShapes; i < entities.size(); i++)
 			{
-				// TODO.AG: Temporary solution to ignore listing DebugShapes!
-				if (entity->Name.Contains("hie_"))
-				{
-					continue;
-				}
+				Havtorn::Ref<Havtorn::SEntity>& entity = entities[i];
 		
 				ImGui::PushID(static_cast<int>(entity->ID));
 				if (ImGui::Selectable(entity->Name.c_str(), index == SelectedIndex, ImGuiSelectableFlags_None)) 
