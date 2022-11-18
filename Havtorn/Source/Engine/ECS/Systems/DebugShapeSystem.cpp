@@ -89,7 +89,7 @@ namespace Havtorn
 	void UDebugShapeSystem::AddArrow(const SVector& start, const SVector& end, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		Ref<STransformComponent> transform;
-		if (TryAddShape(EVertexBufferPrimitives::FlatArrow, EDefaultIndexBuffers::FlatArrow, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		if (TryAddShape(EVertexBufferPrimitives::Arrow, EDefaultIndexBuffers::Arrow, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
 		{
 			Instance->TransformToFaceAndReach(transform->Transform.GetMatrix(), start, end);
 		}	
