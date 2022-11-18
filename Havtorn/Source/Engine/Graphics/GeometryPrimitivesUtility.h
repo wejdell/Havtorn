@@ -11,7 +11,7 @@ namespace Havtorn
 		const static std::map<EVertexBufferPrimitives, const std::vector<SPositionVertex>&> PrimitivesVertices = {
 			{ EVertexBufferPrimitives::PointLightCube, GeometryPrimitives::PointLightCube},
 			{ EVertexBufferPrimitives::LineShape, GeometryPrimitives::LineShape},
-			{ EVertexBufferPrimitives::FlatArrow, GeometryPrimitives::FlatArrow},
+			{ EVertexBufferPrimitives::Arrow, GeometryPrimitives::Arrow},
 			{ EVertexBufferPrimitives::DebugCube, GeometryPrimitives::DebugCube},
 			{ EVertexBufferPrimitives::Camera, GeometryPrimitives::Camera},
 			{ EVertexBufferPrimitives::CircleXY8, GeometryPrimitives::CircleXY8},
@@ -23,7 +23,7 @@ namespace Havtorn
 			{ EVertexBufferPrimitives::DecalProjector, GeometryPrimitives::DecalProjectorIndices},
 			{ EVertexBufferPrimitives::PointLightCube, GeometryPrimitives::PointLightCubeIndices},
 			{ EVertexBufferPrimitives::LineShape, GeometryPrimitives::LineShapeIndices},
-			{ EVertexBufferPrimitives::FlatArrow, GeometryPrimitives::FlatArrowIndices},
+			{ EVertexBufferPrimitives::Arrow, GeometryPrimitives::ArrowIndices},
 			{ EVertexBufferPrimitives::DebugCube, GeometryPrimitives::DebugCubeIndices},
 			{ EVertexBufferPrimitives::Camera, GeometryPrimitives::CameraIndices},
 			{ EVertexBufferPrimitives::CircleXY8, GeometryPrimitives::CircleXY8Indices},
