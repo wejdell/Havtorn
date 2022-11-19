@@ -55,7 +55,7 @@ namespace Havtorn
 		}
 
 		// === Rotation ===
-		controllerComp->CurrentPitch = UMath::Clamp(controllerComp->CurrentPitch + (CameraRotateInput.X * controllerComp->RotationSpeed * dt), (-180.0f * 0.5f) + 0.01f, (180.0f * 0.5f) - 0.01f);
+		controllerComp->CurrentPitch = UMath::Clamp(controllerComp->CurrentPitch + (CameraRotateInput.X * controllerComp->RotationSpeed * dt), -SCameraControllerComponent::MaxPitchDegreesPerFrame + 0.01f, SCameraControllerComponent::MaxPitchDegreesPerFrame - 0.01f);
 		controllerComp->CurrentYaw = UMath::WrapAngle(controllerComp->CurrentYaw + (CameraRotateInput.Y * controllerComp->RotationSpeed * dt));
 		transformComp->Transform.GetMatrix().SetRotation({ controllerComp->CurrentPitch, controllerComp->CurrentYaw, 0.0f });
 
