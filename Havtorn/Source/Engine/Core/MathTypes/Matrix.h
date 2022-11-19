@@ -761,14 +761,14 @@ namespace Havtorn
 		HV_ASSERT((eulerData), "Passing nullptr [eulerData] to Recompose!");
 		HV_ASSERT((scaleData), "Passing nullptr [scaleData] to Recompose!");
 
-		// AG: Rotation Order XYZ used to not cause issues with ImGuizmo used in InspectorWindow.
-		outMatrix = CreateRotationAroundX(UMath::DegToRad(eulerData[0]));
-		outMatrix *= CreateRotationAroundY(UMath::DegToRad(eulerData[1]));
-		outMatrix *= CreateRotationAroundZ(UMath::DegToRad(eulerData[2]));
-
 		SMatrix scaleMatrix;
 		scaleMatrix.SetScale(scaleData[0], scaleData[1], scaleData[2]);
-		outMatrix *= scaleMatrix;
+		outMatrix = scaleMatrix;
+
+		// AG: Rotation Order XYZ used to not cause issues with ImGuizmo used in InspectorWindow.
+		outMatrix *= CreateRotationAroundX(UMath::DegToRad(eulerData[0]));
+		outMatrix *= CreateRotationAroundY(UMath::DegToRad(eulerData[1]));
+		outMatrix *= CreateRotationAroundZ(UMath::DegToRad(eulerData[2]));
 
 		outMatrix.SetTranslation(SVector(translationData[0], translationData[1], translationData[2]));
 	}
