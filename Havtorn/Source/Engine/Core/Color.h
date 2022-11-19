@@ -37,53 +37,39 @@ namespace Havtorn
 		inline SVector4 AsVector4() const;
 	};
 
-	SColor::SColor()
-	{
-		R = 255;
-		G = 255; 
-		B = 255;
-		A = 255;
-	}
+	SColor::SColor() {}
 
 	SColor::SColor(U8 monochrome)
-	{
-		R = monochrome; 
-		G = monochrome; 
-		B = monochrome; 
-		A = 255; 
-	}
+		: R(monochrome)
+		, G(monochrome)
+		, B(monochrome)
+	{}
 
 	SColor::SColor(U8 r, U8 g, U8 b)
-	{
-		R = r;
-		G = g;
-		B = b;
-		A = 255;
-	}
+		: R(r)
+		, G(g)
+		, B(b)
+	{}
 
 	SColor::SColor(U8 r, U8 g, U8 b, U8 a)
-	{
-		R = r;
-		G = g;
-		B = b;
-		A = a;
-	}
+		: R(r)
+		, G(g)
+		, B(b)
+		, A(a)
+	{}
 
 	SColor::SColor(const SVector& rgb)
-	{
-		R = static_cast<U8>(rgb.X * 255.0f);
-		G = static_cast<U8>(rgb.Y * 255.0f);
-		B = static_cast<U8>(rgb.Z * 255.0f);
-		A = 255;
-	}
+		: R(static_cast<U8>(rgb.X * 255.0f))
+		, G(static_cast<U8>(rgb.Y * 255.0f))
+		, B(static_cast<U8>(rgb.Z * 255.0f))
+	{}
 
 	SColor::SColor(const SVector4& rgba)
-	{
-		R = static_cast<U8>(rgba.X * 255.0f);
-		G = static_cast<U8>(rgba.Y * 255.0f);
-		B = static_cast<U8>(rgba.Z * 255.0f);
-		A = static_cast<U8>(rgba.W * 255.0f);
-	}
+		: R(static_cast<U8>(rgba.X * 255.0f))
+		, G(static_cast<U8>(rgba.Y * 255.0f))
+		, B(static_cast<U8>(rgba.Z * 255.0f))
+		, A(static_cast<U8>(rgba.W * 255.0f))
+	{}
 
 	SVector SColor::AsVector() const
 	{
