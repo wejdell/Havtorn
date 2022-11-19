@@ -46,7 +46,7 @@ namespace ImGui
 			{
 				Havtorn::Ref<Havtorn::SEntity>& entity = entities[i];
 		
-				ImGui::PushID(static_cast<int>(entity->ID));
+				ImGui::PushID(static_cast<Havtorn::I64>(entity->ID));
 				if (ImGui::Selectable(entity->Name.c_str(), index == SelectedIndex, ImGuiSelectableFlags_None)) 
 				{
 					SelectedIndex = index;
