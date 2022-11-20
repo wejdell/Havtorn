@@ -19,7 +19,7 @@ namespace Havtorn
 			: SComponent(std::move(entity), type)
 		{}
 
-		static constexpr F32 MaxPitchDegreesPerFrame = 90.0f;
+		static constexpr F32 MaxPitchDegrees = 90.0f;
 
 		F32 MaxMoveSpeed = 3.0f;
 		F32 RotationSpeed = 0.5f;
