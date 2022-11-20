@@ -42,9 +42,6 @@ namespace Havtorn
 	{
 		SAFE_DELETE(Scene);
 		SAFE_DELETE(InputMapper);
-#ifdef _DEBUG
-		//SAFE_DELETE(EditorManager);
-#endif
 		SAFE_DELETE(ThreadManager);
 		SAFE_DELETE(RenderManager);
 		SAFE_DELETE(TextureBank);
