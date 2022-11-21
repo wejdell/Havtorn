@@ -29,7 +29,7 @@ namespace Havtorn
 		camera->ViewMatrix = SMatrix::LookAtLH(SVector::Zero, SVector::Forward, SVector::Up);
 	
 		auto controllerComp = AddCameraControllerComponentToEntity(cameraEntity);
-		controllerComp->CurrentYaw = UMath::DegToRad(-35.0f);
+		controllerComp->CurrentYaw = -35.0f;
 
 		auto environmentLightEntity = CreateEntity("Environment Light");
 		AddTransformComponentToEntity(environmentLightEntity);
@@ -174,7 +174,6 @@ namespace Havtorn
 		auto pendulum = CreateEntity("Clock");
 
 		auto tc = AddTransformComponentToEntity(pendulum);
-		/*target = tc;*/
 		auto& transform1 = tc->Transform;
 		transform1.GetMatrix().SetTranslation({1.75f, 0.0f, 0.25f});
 

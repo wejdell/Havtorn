@@ -22,7 +22,7 @@ namespace Havtorn
 		return temp;
 	}
 
-	SVector4 operator*(SMatrix matrix, SVector4 vector)
+	SVector4 operator*(const SMatrix& matrix, const SVector4& vector)
 	{
 		SVector4 result;
 		SVector4 temp1 = SVector4(matrix(0, 0), matrix(1, 0), matrix(2, 0), matrix(3, 0));
@@ -36,7 +36,7 @@ namespace Havtorn
 		return result;
 	}
 
-	SVector4 operator*(SVector4 vector, SMatrix matrix)
+	SVector4 operator*(const SVector4& vector, const SMatrix& matrix)
 	{
 		SVector4 result;
 		SVector4 temp1 = SVector4(matrix(0, 0), matrix(1, 0), matrix(2, 0), matrix(3, 0));
@@ -52,11 +52,16 @@ namespace Havtorn
 
 	inline SMatrix SMatrix::CreateRotationFromEuler(F32 pitch, F32 yaw, F32 roll)
 	{
-		const auto quaternion = SQuaternion(pitch, yaw, roll);
+		const auto quaternion = SQuaternion(UMath::DegToRad(pitch), UMath::DegToRad(yaw), UMath::DegToRad(roll));
 		return CreateRotationFromQuaternion(quaternion);
 	}
 
-	inline SMatrix SMatrix::CreateRotationFromQuaternion(SQuaternion quaternion)
+	inline SMatrix SMatrix::CreateRotationFromEuler(const SVector& eulerAngles)
+	{
+		return CreateRotationFromEuler(eulerAngles.X, eulerAngles.Y, eulerAngles.Z);
+	}
+
+	inline SMatrix SMatrix::CreateRotationFromQuaternion(const SQuaternion& quaternion)
 	{
 		SMatrix result;
 		const F32 xx2 = 2.0f * quaternion.X * quaternion.X;
@@ -80,6 +85,7 @@ namespace Havtorn
 		result(2, 0) = xz2 + yw2;
 		result(2, 1) = yz2 - xw2;
 		result(2, 2) = 1.0f - xx2 - yy2;
+
 		return result;
 	}
 
