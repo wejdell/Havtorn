@@ -353,7 +353,7 @@ namespace Havtorn
 
 		SVector2<F32> ShadowAtlasResolution = SVector2<F32>::Zero;
 
-		U16 InstancedMeshNumberLimit = 200;
+		const U16 InstancedMeshNumberLimit = 65535;
 	};
 
 	template <typename T>
