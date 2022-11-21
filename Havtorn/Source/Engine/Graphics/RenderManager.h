@@ -161,7 +161,6 @@ namespace Havtorn
 			const std::string errorMessage = bufferType + " could not be bound.";
 			ENGINE_HR_MESSAGE(Context->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &localBufferData), errorMessage.c_str());
 
-			//memcpy(localBufferData.pData, &bufferData[0], UMath::Min(sizeof(T) * bufferData.size(), sizeof(T) * 201));
 			memcpy(localBufferData.pData, &bufferData[0], sizeof(T) * bufferData.size());
 			Context->Unmap(buffer, 0);
 		}
