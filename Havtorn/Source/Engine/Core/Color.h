@@ -7,6 +7,10 @@ namespace Havtorn
 	// Represents a color in RGBA 0-255 range.
 	struct HAVTORN_API SColor
 	{
+		static const F32 FloatMax;
+		static const F32 FloatMin;
+		static const U8 U8Max;
+
 		U8 R, G, B, A = 255;
 
 		static const SColor Red;
@@ -35,6 +39,11 @@ namespace Havtorn
 		inline SVector AsVector() const;
 		// Returns the RGBA values in a [0.0f - 1.0f] range.
 		inline SVector4 AsVector4() const;
+
+		// Expects SVector values to be [0.0f - 1.0f] range.
+		inline static U8 ToU8Range(const F32 c);
+		// Returs color value in a [0.0f - 1.0f] range.
+		inline static F32 ToFloatRange(const U8 c);
 	};
 
 	SColor::SColor() {}
@@ -59,34 +68,44 @@ namespace Havtorn
 	{}
 
 	SColor::SColor(const SVector& rgb)
-		: R(static_cast<U8>(rgb.X * 255.0f))
-		, G(static_cast<U8>(rgb.Y * 255.0f))
-		, B(static_cast<U8>(rgb.Z * 255.0f))
+		: R(ToU8Range(rgb.X))
+		, G(ToU8Range(rgb.Y))
+		, B(ToU8Range(rgb.Z))
 	{}
 
 	SColor::SColor(const SVector4& rgba)
-		: R(static_cast<U8>(rgba.X * 255.0f))
-		, G(static_cast<U8>(rgba.Y * 255.0f))
-		, B(static_cast<U8>(rgba.Z * 255.0f))
-		, A(static_cast<U8>(rgba.W * 255.0f))
+		: R(ToU8Range(rgba.X))
+		, G(ToU8Range(rgba.Y))
+		, B(ToU8Range(rgba.Z))
+		, A(ToU8Range(rgba.W))
 	{}
 
 	SVector SColor::AsVector() const
 	{
 		SVector v;
-		v.X = static_cast<F32>(R) / 255.0f;
-		v.Y = static_cast<F32>(G) / 255.0f;
-		v.Z = static_cast<F32>(B) / 255.0f;
+		v.X = ToFloatRange(R);
+		v.Y = ToFloatRange(G);
+		v.Z = ToFloatRange(B);
 		return v;
 	}
 
 	SVector4 SColor::AsVector4() const
 	{
 		SVector4 v;
-		v.X = static_cast<F32>(R) / 255.0f;
-		v.Y = static_cast<F32>(G) / 255.0f;
-		v.Z = static_cast<F32>(B) / 255.0f;
-		v.W = static_cast<F32>(A) / 255.0f;
+		v.X = ToFloatRange(R);
+		v.Y = ToFloatRange(G);
+		v.Z = ToFloatRange(B);
+		v.W = ToFloatRange(A);
 		return v;
+	}
+
+	U8 SColor::ToU8Range(const F32 c)
+	{
+		return static_cast<U8>(UMath::Clamp(c, FloatMin, FloatMax) * static_cast<F32>(U8Max));
+	}
+
+	F32 SColor::ToFloatRange(const U8 c)
+	{
+		return static_cast<F32>(c) / static_cast<F32>(U8Max);
 	}
 }
