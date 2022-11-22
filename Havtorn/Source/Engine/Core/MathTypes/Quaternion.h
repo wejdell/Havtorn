@@ -20,6 +20,7 @@ namespace Havtorn
 		inline SQuaternion();
 		inline SQuaternion(F32 x, F32 y, F32 z, F32 w);
 		inline SQuaternion(F32 pitch, F32 yaw, F32 roll);
+		inline SQuaternion(const SVector& eulerAngles);
 		inline SQuaternion(const SVector& axis, F32 angleInDegrees);
 		explicit SQuaternion(const SMatrix& M);
 		//explicit SQuaternion(const SRotator& R);
@@ -39,17 +40,22 @@ namespace Havtorn
 
 	inline SQuaternion::SQuaternion(F32 pitch, F32 yaw, F32 roll)
 	{
-		F32 cosYaw = UMath::Cos(yaw * 0.5f);
-		F32 sinYaw = UMath::Sin(yaw * 0.5f);
-		F32 cosPitch = UMath::Cos(pitch * 0.5f);
-		F32 sinPitch = UMath::Sin(pitch * 0.5f);
-		F32 cosRoll = UMath::Cos(roll * 0.5f);
-		F32 sinRoll = UMath::Sin(roll * 0.5f);
+		const F32 cosYaw = UMath::Cos(yaw * 0.5f);
+		const F32 sinYaw = UMath::Sin(yaw * 0.5f);
+		const F32 cosPitch = UMath::Cos(pitch * 0.5f);
+		const F32 sinPitch = UMath::Sin(pitch * 0.5f);
+		const F32 cosRoll = UMath::Cos(roll * 0.5f);
+		const F32 sinRoll = UMath::Sin(roll * 0.5f);
 
 		X = cosRoll * sinPitch * cosYaw + sinRoll * cosPitch * sinYaw;
 		Y = cosRoll * cosPitch * sinYaw - sinRoll * sinPitch * cosYaw;
 		Z = sinRoll * cosPitch * cosYaw - cosRoll * sinPitch * sinYaw;
 		W = cosRoll * cosPitch * cosYaw + sinRoll * sinPitch * sinYaw;
+	}
+
+	inline SQuaternion::SQuaternion(const SVector& eulerAngles)
+	{
+		SQuaternion(UMath::DegToRad(eulerAngles.X), UMath::DegToRad(eulerAngles.Y), UMath::DegToRad(eulerAngles.Z));
 	}
 
 	SQuaternion::SQuaternion(const SVector& axis, F32 angleInDegrees)
