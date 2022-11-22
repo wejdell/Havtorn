@@ -93,6 +93,8 @@ namespace Havtorn
 
 		template<typename T>
 		static inline T WrapAngle(T angleInDegrees);
+		template<typename T>
+		static inline T WrapAngleRadians(T angleInRadians);
 
 		/* From XM Math Misc - XMScalarSinCos */
 		static inline void MapFov(F32& outSinValue, F32& outCosValue, F32 halfYFovAngle);
@@ -274,9 +276,15 @@ namespace Havtorn
 	}
 
 	template<typename T>
-	inline T UMath::WrapAngle(T angle)
+	inline T UMath::WrapAngle(T angleInDegrees)
 	{
-		return fmodf(angle, Tau);
+		return fmodf(angleInDegrees, UMath::RadToDeg(Tau));
+	}
+
+	template<typename T>
+	inline T UMath::WrapAngleRadians(T angleInRadians)
+	{
+		return fmodf(angleInRadians, Tau);
 	}
 
 	inline bool UMath::NearlyEqual(F32 a, F32 b, F32 tolerance)
