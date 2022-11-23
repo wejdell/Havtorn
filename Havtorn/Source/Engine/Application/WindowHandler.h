@@ -30,6 +30,7 @@ namespace Havtorn
 		SVector2<F32> GetCenterPosition();
 		const float GetResolutionScale() const;
 
+		// TODO.AG: reconsider access rights.
 		HAVTORN_API void EnableDragDrop() const;
 		HAVTORN_API void DisableDragDrop() const;
 

@@ -8,11 +8,6 @@
 #include "Core/imgui_impl_dx11.h"
 #include "Core/ImGuizmo/ImGuizmo.h"
 
-//#include <d3d11.h>
-//#pragma comment(lib, "d3d11.lib")
-
-//#include "../Engine/Log.h"
-
 IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 namespace Havtorn
@@ -60,7 +55,6 @@ namespace Havtorn
     {
         if (HasInstance())
             ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
-            //ImGui_ImplWin32_WndProcHandler((HWND)hWnd, msg, (WPARAM)wParam, (LPARAM)lParam);
     }
 
     void GImGuiManager::NewFrame()
