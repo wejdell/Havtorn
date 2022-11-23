@@ -48,10 +48,7 @@ namespace Havtorn
 		CROSS_PROJECT_IMGUI_SETUP();
 		windowHandler->EnableDragDrop();
 
-		ImGui::DebugCheckVersionAndDataLayout("1.86 WIP", sizeof(ImGuiIO), sizeof(ImGuiStyle), sizeof(ImVec2), sizeof(ImVec4), sizeof(ImDrawVert), sizeof(unsigned int));
-
 		SetEditorTheme(EEditorColorTheme::HavtornDark, EEditorStyleTheme::Havtorn);
-		ImGui::GetIO().Fonts->AddFontFromFileTTF("../External/imgui/misc/fonts/Roboto-Medium.ttf", 15.0f);
 		
 		MenuElements.emplace_back(std::make_unique<ImGui::CFileMenu>("File", this));
 		MenuElements.emplace_back(std::make_unique<ImGui::CEditMenu>("Edit", this));
@@ -203,40 +200,35 @@ namespace Havtorn
 		{
 		case Havtorn::EEditorColorTheme::HavtornDark:
 		{
-			SEditorColorProfile colorProfile;
-			colorProfile.BackgroundBase = SVector4(0.11f, 0.11f, 0.11f, 1.00f);
-			colorProfile.BackgroundMid = SVector4(0.198f, 0.198f, 0.198f, 1.00f);
-			colorProfile.ElementBackground = SVector4(0.278f, 0.271f, 0.267f, 1.00f);
-			colorProfile.ElementHovered = SVector4(0.478f, 0.361f, 0.188f, 1.00f);
-			colorProfile.ElementActive = SVector4(0.814f, 0.532f, 0.00f, 1.00f);
-			colorProfile.ElementHighlight = SVector4(1.00f, 0.659f, 0.00f, 1.00f);
-			SetEditorColorProfile(colorProfile);
+			GImGuiManager::SetImGuiColorProfile(SImGuiColorProfile());
 		}
 		break;
 
 		case Havtorn::EEditorColorTheme::HavtornRed:
 		{
-			SEditorColorProfile colorProfile;
-			colorProfile.BackgroundBase = SVector4(0.11f, 0.11f, 0.11f, 1.00f);
-			colorProfile.BackgroundMid = SVector4(0.198f, 0.198f, 0.198f, 1.00f);
-			colorProfile.ElementBackground = SVector4(0.278f, 0.271f, 0.267f, 1.00f);
-			colorProfile.ElementHovered = SVector4(0.478f, 0.188f, 0.188f, 1.00f);
-			colorProfile.ElementActive = SVector4(0.814f, 0.00f, 0.00f, 1.00f);
-			colorProfile.ElementHighlight = SVector4(1.00f, 0.00f, 0.00f, 1.00f);
-			SetEditorColorProfile(colorProfile);
+			SImGuiColorProfile colorProfile(
+				ImVec4(0.11f, 0.11f, 0.11f, 1.00f),
+				ImVec4(0.198f, 0.198f, 0.198f, 1.00f),
+				ImVec4(0.278f, 0.271f, 0.267f, 1.00f),
+				ImVec4(0.478f, 0.188f, 0.188f, 1.00f),
+				ImVec4(0.814f, 0.00f, 0.00f, 1.00f),
+				ImVec4(1.00f, 0.00f, 0.00f, 1.00f)
+			);
+			GImGuiManager::SetImGuiColorProfile(colorProfile);
 		}
 		break;
 
 		case Havtorn::EEditorColorTheme::HavtornGreen:
 		{
-			SEditorColorProfile colorProfile;
-			colorProfile.BackgroundBase = SVector4(0.11f, 0.11f, 0.11f, 1.00f);
-			colorProfile.BackgroundMid = SVector4(0.198f, 0.198f, 0.198f, 1.00f);
-			colorProfile.ElementBackground = SVector4(0.278f, 0.271f, 0.267f, 1.00f);
-			colorProfile.ElementHovered = SVector4(0.355f, 0.478f, 0.188f, 1.00f);
-			colorProfile.ElementActive = SVector4(0.469f, 0.814f, 0.00f, 1.00f);
-			colorProfile.ElementHighlight = SVector4(0.576f, 1.00f, 0.00f, 1.00f);
-			SetEditorColorProfile(colorProfile);
+			SImGuiColorProfile colorProfile(
+				ImVec4(0.11f, 0.11f, 0.11f, 1.00f),
+				ImVec4(0.198f, 0.198f, 0.198f, 1.00f),
+				ImVec4(0.278f, 0.271f, 0.267f, 1.00f),
+				ImVec4(0.355f, 0.478f, 0.188f, 1.00f),
+				ImVec4(0.469f, 0.814f, 0.00f, 1.00f),
+				ImVec4(0.576f, 1.00f, 0.00f, 1.00f)
+			);
+			GImGuiManager::SetImGuiColorProfile(colorProfile);
 		}
 		break;
 
@@ -246,34 +238,11 @@ namespace Havtorn
 			break;
 		}
 
-		ImGuiStyle* style = &ImGui::GetStyle();
-
 		switch (styleTheme)
 		{
 		case Havtorn::EEditorStyleTheme::Havtorn:
 
-			style->WindowPadding = ImVec2(8.00f, 8.00f);
-			style->FramePadding = ImVec2(5.00f, 2.00f);
-			style->CellPadding = ImVec2(6.00f, 6.00f);
-			style->ItemSpacing = ImVec2(6.00f, 6.00f);
-			style->ItemInnerSpacing = ImVec2(6.00f, 6.00f);
-			style->TouchExtraPadding = ImVec2(0.00f, 0.00f);
-			style->IndentSpacing = 25;
-			style->ScrollbarSize = 15;
-			style->GrabMinSize = 10;
-			style->WindowBorderSize = 1;
-			style->ChildBorderSize = 1;
-			style->PopupBorderSize = 1;
-			style->FrameBorderSize = 1;
-			style->TabBorderSize = 1;
-			style->WindowRounding = 1;
-			style->ChildRounding = 1;
-			style->FrameRounding = 1;
-			style->PopupRounding = 1;
-			style->ScrollbarRounding = 1;
-			style->GrabRounding = 1;
-			style->LogSliderDeadzone = 4;
-			style->TabRounding = 1;
+			GImGuiManager::SetImGuiStyleProfile(SImGuiStyleProfile());
 			break;
 		case Havtorn::EEditorStyleTheme::Count:
 		case Havtorn::EEditorStyleTheme::Default:
@@ -429,7 +398,7 @@ namespace Havtorn
 		}
 	}
 
-	void CEditorManager::SetEditorColorProfile(const SEditorColorProfile& colorProfile)
+	/*void CEditorManager::SetEditorColorProfile(const SEditorColorProfile& colorProfile)
 	{
 		ImVec4* colors = (&ImGui::GetStyle())->Colors;
 
@@ -489,7 +458,7 @@ namespace Havtorn
 		colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
 		colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
 		colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
-	}
+	}*/
 
 	void CEditorManager::SetTransformGizmo(const SInputActionPayload payload)
 	{
