@@ -6,10 +6,8 @@
 
 #include "Input/Input.h"
 
-#include <Core/imgui_impl_win32.h>
-#include <Core/imgui_impl_dx11.h>
+#include "ImGuiManager.h"
 
-IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 namespace Havtorn
 {
@@ -18,7 +16,7 @@ namespace Havtorn
         static CWindowHandler* windowHandler = nullptr;
         CREATESTRUCT* createStruct;    
 
-        ImGui_ImplWin32_WndProcHandler(hwnd, uMsg, wParam, lParam);
+        GImGuiManager::WindowsWindowProc(hwnd, uMsg, wParam, lParam);
 
         switch (uMsg)
         {
@@ -125,10 +123,6 @@ namespace Havtorn
 
     CWindowHandler::~CWindowHandler()
     {
-        ImGui_ImplWin32_Shutdown();
-        ImGui_ImplDX11_Shutdown();
-        ImGui::DestroyContext();
-
         LockCursor(false);
         CursorIsLocked = false;
         WindowIsInEditingMode = false;
@@ -237,8 +231,6 @@ namespace Havtorn
 
         Resolution = new SVector2<F32>();
 
-        ImGui::CreateContext();
-
         return true;
     }
 
@@ -262,16 +254,6 @@ namespace Havtorn
     SVector2<F32> CWindowHandler::GetResolution()
     {
         return *Resolution;
-    }
-
-    HAVTORN_API ImGuiContext* CWindowHandler::GetImGuiContext() const
-    {
-        return ImGui::GetCurrentContext();
-    }
-
-    void CWindowHandler::GetImGuiAllocatorFunctions(ImGuiMemAllocFunc* allocFunc, ImGuiMemFreeFunc* freeFunc, void** userData) const
-    {
-        ImGui::GetAllocatorFunctions(allocFunc, freeFunc, userData);
     }
 
     void CWindowHandler::SetResolution(SVector2<F32> resolution)
@@ -358,5 +340,15 @@ namespace Havtorn
     const float CWindowHandler::GetResolutionScale() const
     {
         return ResolutionScale;
+    }
+
+    HAVTORN_API void CWindowHandler::EnableDragDrop() const
+    {
+        DragAcceptFiles(WindowHandle, TRUE);
+    }
+
+    HAVTORN_API void CWindowHandler::DisableDragDrop() const
+    {
+        DragAcceptFiles(WindowHandle, FALSE);
     }
 }
