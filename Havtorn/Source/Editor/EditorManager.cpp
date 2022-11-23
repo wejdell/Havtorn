@@ -25,18 +25,10 @@
 #include "EditorWindows.h"
 #include "EditorToggleables.h"
 
-#include <Application/ImGuiDLLSetup.h>
+#include <Application/ImGuiCrossProjectSetup.h>
 
 namespace Havtorn
 {
-	// Unused, left for future reference.
-	//LRESULT EditorWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
-	//{
-	//	hwnd; uMsg; wParam; lParam;
-	//	return 0;
-	//	//return CallNextHookEx(NULL, uMsg, wParam, lParam);// This should be done if you want to it proper.
-	//}
-
 	CEditorManager::CEditorManager()
 	{
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::TranslateTransform).AddMember(this, &CEditorManager::SetTransformGizmo);
@@ -49,43 +41,12 @@ namespace Havtorn
 	{
 		RenderManager = nullptr;
 		SAFE_DELETE(ResourceManager);
-
-		// Make sure to Unhook used Hooks // Unused, left for future reference.
-		//UnhookWindowsHookEx(WindowProcHook);
-		//UnhookWindowsHookEx(MouseHook);
-		//UnhookWindowsHookEx(MouseLLHook);
-		//UnhookWindowsHookEx(KeyboardHook);
 	}
-
-	static HINSTANCE hinstDLL;
 
 	bool CEditorManager::Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager, CScene* scene)
 	{
-		// Unused, left for future reference.
-			// AG.20220812: On the msdn page for SetWindowsHookEx/ SetWindowsHookExA there are is a list of definitions/options for the first parameter.
-			//				SetWindowsHookExA is for 64bit. Hook should match target applications 'bitness'. 
-			//
-			//				WH_CALLWNDPROCRET:		Message to receive window calls after main window.
-			//				WH_CALLWNDPROC:			Message to receive window calls before main window. (used)
-			//				WH_MOUSE:				Mouse input. Received before main window. (used)
-			//				WH_MOUSE_LL:			Low Level Mouse input. Received before main window. (used)
-			//				WH_KEYBOARD:			Keyboard input. Received before main window. (used)
-
-			// Can hook into several messages at once. Use only the ones we need.
-			//HINSTANCE hInstance = GetModuleHandle(nullptr);
-			//DWORD currentThreadId = GetCurrentThreadId();
-
-			//WindowProcHook = SetWindowsHookExA(WH_CALLWNDPROC, (HOOKPROC)WndProc, hInstance, currentThreadId);
-			//MouseHook = SetWindowsHookExA(WH_MOUSE, (HOOKPROC)WndProc, hInstance, currentThreadId);
-			//MouseLLHook = SetWindowsHookExA(WH_MOUSE_LL, (HOOKPROC)WndProc, hInstance, currentThreadId);// Seems to give nothing we need.
-			//KeyboardHook = SetWindowsHookExA(WH_KEYBOARD, (HOOKPROC)WndProc, hInstance, currentThreadId);
-		// !Unused, left for future reference.
-
-		DragAcceptFiles(windowHandler->WindowHandle, TRUE);
-		//DragAcceptFiles(WindowHandle, FALSE);// Call this if DragDrop is to be disabled, e.g when pressing Play. Not needed now.
-
-		CROSS_DLL_IMGUI_SETUP(windowHandler);
-		ImGuizmo::SetImGuiContext(ImGui::GetCurrentContext());
+		CROSS_PROJECT_IMGUI_SETUP();
+		windowHandler->EnableDragDrop();
 
 		ImGui::DebugCheckVersionAndDataLayout("1.86 WIP", sizeof(ImGuiIO), sizeof(ImGuiStyle), sizeof(ImVec2), sizeof(ImVec4), sizeof(ImDrawVert), sizeof(unsigned int));
 
@@ -107,30 +68,17 @@ namespace Havtorn
 		bool success = ResourceManager->Init(renderManager, framework);
 		if (!success)
 			return false;
+		RenderManager = renderManager;
 
 		InitEditorLayout();
 		InitAssetRepresentations();
 
-		success = ImGui_ImplWin32_Init(windowHandler->GetWindowHandle());
-		if (!success)
-			return false;
-
-		success = ImGui_ImplDX11_Init(framework->GetDevice(), framework->GetContext());
-		if (!success)
-			return false;
-
-		RenderManager = renderManager;
 
 		return success;
 	}
 
 	void CEditorManager::BeginFrame()
 	{
-		// TODO.AG: Move to Engine
-		ImGui_ImplDX11_NewFrame();
-		ImGui_ImplWin32_NewFrame();
-		ImGui::NewFrame();
-		ImGuizmo::BeginFrame();
 	}
 
 	void CEditorManager::Render()
@@ -139,21 +87,18 @@ namespace Havtorn
 		if (IsEnabled)
 		{
 			ImGui::BeginMainMenuBar();
-
+		
 			for (const auto& element : MenuElements)
 				element->OnInspectorGUI();
-
+		
 			ImGui::EndMainMenuBar();
 		}
-
+		
 		// Windows
 		for (const auto& window : Windows)
 			window->OnInspectorGUI();
-
+		
 		DebugWindow();
-
-		ImGui::Render();
-		ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 	}
 
 	void CEditorManager::EndFrame()
