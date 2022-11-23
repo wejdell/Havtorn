@@ -165,7 +165,6 @@ namespace Havtorn
 		static void SetFontTTF(const char* fontPath = DefaultFont, const F32 size = DefaultFontSize);	
 
 	private:
-		//static void WindowsWindowProc(void* hWnd, unsigned int msg, void* wParam, void* lParam);
 		static void WindowsWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 		void NewFrame();
 		void EndFrame();
