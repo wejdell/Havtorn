@@ -6,9 +6,10 @@
 
 namespace Havtorn
 {
-	const F32 SColor::FloatMax = 1.0f;
-	const F32 SColor::FloatMin = 0.0f;
-	const U8 SColor::U8Max = 255;
+	const F32 SColor::F32Max = 1.0f;
+	const F32 SColor::F32Min = 0.0f;
+	const F32 SColor::U8MaxAsF32 = 255.0f;
+	const F32 SColor::U8MaxAsF32Reciprocal = 1.0f / 255.0f;
 
 	 const SColor SColor::Red = SColor(255, 0, 0);
 	 const SColor SColor::Green = SColor(0, 255, 0);

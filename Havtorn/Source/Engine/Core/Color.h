@@ -7,9 +7,10 @@ namespace Havtorn
 	// Represents a color in RGBA 0-255 range.
 	struct HAVTORN_API SColor
 	{
-		static const F32 FloatMax;
-		static const F32 FloatMin;
-		static const U8 U8Max;
+		static const F32 F32Max;
+		static const F32 F32Min;
+		static const F32 U8MaxAsF32;
+		static const F32 U8MaxAsF32Reciprocal; 
 
 		U8 R, G, B, A = 255;
 
@@ -101,11 +102,11 @@ namespace Havtorn
 
 	U8 SColor::ToU8Range(const F32 c)
 	{
-		return static_cast<U8>(UMath::Clamp(c, FloatMin, FloatMax) * static_cast<F32>(U8Max));
+		return static_cast<U8>(UMath::Clamp(c, F32Min, F32Max) * U8MaxAsF32);
 	}
 
 	F32 SColor::ToFloatRange(const U8 c)
 	{
-		return static_cast<F32>(c) / static_cast<F32>(U8Max);
+		return static_cast<F32>(c) * U8MaxAsF32Reciprocal;
 	}
 }
