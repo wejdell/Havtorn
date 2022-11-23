@@ -160,11 +160,6 @@ namespace Havtorn
             ImGui::GetIO().Fonts->AddFontFromFileTTF(fontPath, size);
     }
 
-    ImVec4 GImGuiManager::Vector4ToImVec4(const SVector4& v)
-    {
-        return ImVec4( v.X, v.Y, v.Z, v.W );
-    }
-
     void GImGuiManager::WindowsWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
         if (HasInstance())
