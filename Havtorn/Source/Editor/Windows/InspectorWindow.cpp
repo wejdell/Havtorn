@@ -1,7 +1,6 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #include "InspectorWindow.h"
-#include "Core/ImGuizmo/ImGuizmo.h"
 
 #include "ECS/ECSInclude.h"
 #include "Engine.h"
@@ -11,6 +10,9 @@
 #include "Scene/Scene.h"
 
 #include "Windows/ViewportWindow.h"
+
+#include <Core/imgui.h>
+#include <Core/ImGuizmo/ImGuizmo.h>
 
 namespace ImGui
 {
