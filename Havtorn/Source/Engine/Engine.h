@@ -34,7 +34,10 @@ namespace Havtorn
 		friend class CLineFactory;
 		friend class CTextureBank;
 		friend class CSceneFactory;
+		
+		// TODO.AG: figure out a way to not have friend class on processes.
 		friend class CEditorProcess;
+		friend class CImGuiProcess;
 
 	public:
 		GEngine();
