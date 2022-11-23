@@ -3,6 +3,8 @@
 #pragma once
 #include "EditorWindow.h"
 
+#include <Core/imgui.h>
+
 struct ID3D11Texture2D;
 
 namespace Havtorn

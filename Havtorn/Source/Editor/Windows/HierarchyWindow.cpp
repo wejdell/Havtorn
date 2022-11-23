@@ -1,13 +1,16 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #include "HierarchyWindow.h"
-//#include <imgui.h>
 #include "EditorManager.h"
 
 #include "Scene/Scene.h"
 #include "ECS/Entity.h"
 #include "Core/MathTypes/EngineMath.h"
 #include "Core/CoreTypes.h"
+
+#include <ECS/Systems/DebugShapeSystem.h>
+
+#include <imgui.h>
 
 namespace ImGui
 {
@@ -40,13 +43,14 @@ namespace ImGui
 			Havtorn::I32 index = 0;
 			auto& entities = Scene->GetEntities();
 			
-			for (auto& entity : entities) 
+			for(Havtorn::U64 i = Havtorn::UDebugShapeSystem::MaxShapes; i < entities.size(); i++)
 			{
+				auto& entity = entities[i];
 				// TODO.AG: Temporary solution to ignore listing DebugShapes!
-				if (entity->Name.Contains("hie_"))
-				{
-					continue;
-				}
+				//if (entity->Name.Contains("hie_"))
+				//{
+				//	continue;
+				//}
 		
 				ImGui::PushID(static_cast<int>(entity->ID));
 				if (ImGui::Selectable(entity->Name.c_str(), index == SelectedIndex, ImGuiSelectableFlags_None)) 
