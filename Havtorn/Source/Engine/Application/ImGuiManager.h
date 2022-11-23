@@ -162,10 +162,7 @@ namespace Havtorn
 		static void SetImGuiColorProfile(const SImGuiColorProfile& colorProfile);
 		static void SetImGuiStyleProfile(const SImGuiStyleProfile& styleProfile);
 		
-		static void SetFontTTF(const char* fontPath = DefaultFont, const F32 size = DefaultFontSize);
-
-		// TODO.AG: Move to ImGuiTypeUtil
-		static ImVec4 Vector4ToImVec4(const SVector4& v);
+		static void SetFontTTF(const char* fontPath = DefaultFont, const F32 size = DefaultFontSize);	
 
 	private:
 		//static void WindowsWindowProc(void* hWnd, unsigned int msg, void* wParam, void* lParam);
