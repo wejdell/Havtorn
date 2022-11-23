@@ -398,68 +398,6 @@ namespace Havtorn
 		}
 	}
 
-	/*void CEditorManager::SetEditorColorProfile(const SEditorColorProfile& colorProfile)
-	{
-		ImVec4* colors = (&ImGui::GetStyle())->Colors;
-
-		const ImVec4 backgroundBase = { colorProfile.BackgroundBase.X, colorProfile.BackgroundBase.Y, colorProfile.BackgroundBase.Z, colorProfile.BackgroundBase.W };
-		const ImVec4 backgroundMid = { colorProfile.BackgroundMid.X, colorProfile.BackgroundMid.Y, colorProfile.BackgroundMid.Z, colorProfile.BackgroundMid.W };
-
-		const ImVec4 elementBackground = { colorProfile.ElementBackground.X, colorProfile.ElementBackground.Y, colorProfile.ElementBackground.Z, colorProfile.ElementBackground.W };
-		const ImVec4 elementHovered = { colorProfile.ElementHovered.X, colorProfile.ElementHovered.Y, colorProfile.ElementHovered.Z, colorProfile.ElementHovered.W };
-		const ImVec4 elementActive = { colorProfile.ElementActive.X, colorProfile.ElementActive.Y, colorProfile.ElementActive.Z, colorProfile.ElementActive.W };
-		const ImVec4 elementHighlight = { colorProfile.ElementHighlight.X, colorProfile.ElementHighlight.Y, colorProfile.ElementHighlight.Z, colorProfile.ElementHighlight.W };
-
-		colors[ImGuiCol_Text] = ImVec4(0.92f, 0.92f, 0.92f, 1.00f);
-		colors[ImGuiCol_TextDisabled] = ImVec4(0.44f, 0.44f, 0.44f, 1.00f);
-		colors[ImGuiCol_WindowBg] = backgroundMid;
-		colors[ImGuiCol_ChildBg] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-		colors[ImGuiCol_PopupBg] = ImVec4(0.13f, 0.13f, 0.13f, 0.94f);
-		colors[ImGuiCol_Border] = ImVec4(0.05f, 0.05f, 0.04f, 0.94f);
-		colors[ImGuiCol_BorderShadow] = ImVec4(0.00f, 0.00f, 0.00f, 0.00f);
-		colors[ImGuiCol_FrameBg] = elementBackground;
-		colors[ImGuiCol_FrameBgHovered] = elementHovered;
-		colors[ImGuiCol_FrameBgActive] = elementBackground;
-		colors[ImGuiCol_TitleBg] = elementHovered;
-		colors[ImGuiCol_TitleBgActive] = elementActive;
-		colors[ImGuiCol_TitleBgCollapsed] = ImVec4(0.00f, 0.00f, 0.00f, 0.51f);
-		colors[ImGuiCol_MenuBarBg] = backgroundBase;
-		colors[ImGuiCol_ScrollbarBg] = backgroundBase;
-		colors[ImGuiCol_ScrollbarGrab] = elementBackground;
-		colors[ImGuiCol_ScrollbarGrabHovered] = elementHovered;
-		colors[ImGuiCol_ScrollbarGrabActive] = elementActive;
-		colors[ImGuiCol_CheckMark] = elementActive;
-		colors[ImGuiCol_SliderGrab] = elementActive;
-		colors[ImGuiCol_SliderGrabActive] = elementActive;
-		colors[ImGuiCol_Button] = elementBackground;
-		colors[ImGuiCol_ButtonHovered] = elementHovered;
-		colors[ImGuiCol_ButtonActive] = elementActive;
-		colors[ImGuiCol_Header] = elementBackground;
-		colors[ImGuiCol_HeaderHovered] = elementHovered;
-		colors[ImGuiCol_HeaderActive] = elementActive;
-		colors[ImGuiCol_Separator] = elementBackground;
-		colors[ImGuiCol_SeparatorHovered] = elementHovered;
-		colors[ImGuiCol_SeparatorActive] = elementActive;
-		colors[ImGuiCol_ResizeGrip] = backgroundBase;
-		colors[ImGuiCol_ResizeGripHovered] = elementHovered;
-		colors[ImGuiCol_ResizeGripActive] = elementActive;
-		colors[ImGuiCol_Tab] = elementBackground;
-		colors[ImGuiCol_TabHovered] = elementHovered;
-		colors[ImGuiCol_TabActive] = elementActive;
-		colors[ImGuiCol_TabUnfocused] = ImVec4(0.07f, 0.10f, 0.15f, 0.97f);
-		colors[ImGuiCol_TabUnfocusedActive] = ImVec4(0.14f, 0.26f, 0.42f, 1.00f);
-		colors[ImGuiCol_PlotLines] = ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
-		colors[ImGuiCol_PlotLinesHovered] = elementHighlight;
-		colors[ImGuiCol_PlotHistogram] = elementHighlight;
-		colors[ImGuiCol_PlotHistogramHovered] = elementActive;
-		colors[ImGuiCol_TextSelectedBg] = ImVec4(0.26f, 0.59f, 0.98f, 0.35f);
-		colors[ImGuiCol_DragDropTarget] = elementHighlight;
-		colors[ImGuiCol_NavHighlight] = ImVec4(0.26f, 0.59f, 0.98f, 1.00f);
-		colors[ImGuiCol_NavWindowingHighlight] = ImVec4(1.00f, 1.00f, 1.00f, 0.70f);
-		colors[ImGuiCol_NavWindowingDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.20f);
-		colors[ImGuiCol_ModalWindowDimBg] = ImVec4(0.80f, 0.80f, 0.80f, 0.35f);
-	}*/
-
 	void CEditorManager::SetTransformGizmo(const SInputActionPayload payload)
 	{
 		switch (payload.Event)
