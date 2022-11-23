@@ -18,6 +18,7 @@ namespace Havtorn
 	CImGuiProcess::~CImGuiProcess()
 	{
 		SAFE_DELETE(ImGuiManager);
+		HV_LOG_WARN("ImGui shutdown!");
 	}
 
 	bool CImGuiProcess::Init()
