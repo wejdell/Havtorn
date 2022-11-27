@@ -133,6 +133,15 @@ namespace Havtorn
 		AddDefaultCircle(origin, rotation, radius, segments, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
 	}
 
+	void UDebugShapeSystem::AddGrid(const SVector& origin, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	{
+		Ref<STransformComponent> transform;
+		if (TryAddShape(EVertexBufferPrimitives::Grid, EDefaultIndexBuffers::Grid, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		{
+			SMatrix::Recompose(origin, SVector(), SVector(1.0f), transform->Transform.GetMatrix());
+		}
+	}
+
 	void UDebugShapeSystem::AddDefaultCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		// AG. The Default Circle is across the XY plane

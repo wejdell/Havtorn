@@ -419,5 +419,44 @@ namespace Havtorn
 			0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13, 14, 14, 15, 15, 16, 16, 17, 17, 18, 18, 19, 19, 20, 20, 21, 21, 22, 22, 23, 23, 24, 24, 25, 25, 26, 26, 27, 27, 28, 28, 29, 29, 30, 30, 31, 31, 0,  
 		};
 
+		// TEMP
+		const static std::vector<SPositionVertex> GenerateGridVertices(U64 segments)
+		{
+			std::vector<SPositionVertex> verts;
+			SPositionVertex v;
+			v.y = 0.0f;
+			v.w = 1.0f;
+			const F32 start = static_cast<F32>(segments / 2);
+			for (U64 i = 0; i < segments + 1; i++)
+			{
+				v.x = -start + static_cast<F32>(i);
+				v.z = -start;
+				verts.push_back(v);
+				v.z = start;
+				verts.push_back(v);
+
+				v.x = -start;
+				v.z = -start + static_cast<F32>(i);
+				verts.push_back(v);
+				v.x = start;
+				verts.push_back(v);
+			}
+			return verts;
+		}
+
+		const static std::vector<U32> GenerateGridIndices(U64 segments)
+		{	
+			std::vector<U32> indices;
+			for (U64 i = 0; i < (segments + 1) * 4; i++)
+			{
+				indices.push_back(static_cast<U32>(i));
+			}
+			return indices;
+		}
+
+		const static std::vector<SPositionVertex> GridVertices = GenerateGridVertices(10);
+		const static std::vector<U32> GridIndices = GenerateGridIndices(10);
+		// ! TEMP
+
 	}
 }
