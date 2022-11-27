@@ -80,13 +80,13 @@ namespace Havtorn
 		DecalProjector,
 		PointLightCube,
 		Icosphere,
-		LineShape,
+		Line,
 		Arrow,
-		DebugCube,
+		BoundingBox,
 		Camera,
-		CircleXY8,
-		CircleXY16,
-		CircleXY32,
+		Circle8,
+		Circle16,
+		Circle32,
 		Grid,
 		//TODO.ANYONE: add more debug shape primitives.
 	};
@@ -97,13 +97,13 @@ namespace Havtorn
 	{
 		DecalProjector,
 		PointLightCube,
-		LineShape,
+		Line,
 		Arrow,
-		DebugCube,
+		BoundingBox,
 		Camera,
-		CircleXY8,
-		CircleXY16,
-		CircleXY32,
+		Circle8,
+		Circle16,
+		Circle32,
 		Grid,
 		//TODO.ANYONE: add more debug shape primitives.
 	};

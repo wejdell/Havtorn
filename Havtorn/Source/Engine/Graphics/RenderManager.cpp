@@ -282,28 +282,28 @@ namespace Havtorn
 		AddVertexBuffer(GeometryPrimitives::DecalProjector);
 		AddVertexBuffer(GeometryPrimitives::PointLightCube);
 		AddVertexBuffer(GeometryPrimitives::Icosphere.Vertices);
-		AddVertexBuffer(GeometryPrimitives::LineShape);
-		AddVertexBuffer(GeometryPrimitives::Arrow);
-		AddVertexBuffer(GeometryPrimitives::DebugCube);
-		AddVertexBuffer(GeometryPrimitives::Camera);
-		AddVertexBuffer(GeometryPrimitives::CircleXY8);
-		AddVertexBuffer(GeometryPrimitives::CircleXY16);
-		AddVertexBuffer(GeometryPrimitives::CircleXY32);
-		AddVertexBuffer(GeometryPrimitives::GridVertices);
+		AddVertexBuffer(GeometryPrimitives::Line.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Arrow.Vertices);
+		AddVertexBuffer(GeometryPrimitives::BoundingBox.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Camera.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Circle8.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Circle16.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Circle32.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Grid.Vertices);
 	}
 
 	void CRenderManager::InitIndexBuffers()
 	{
 		AddIndexBuffer(GeometryPrimitives::DecalProjectorIndices);
 		AddIndexBuffer(GeometryPrimitives::PointLightCubeIndices);
-		AddIndexBuffer(GeometryPrimitives::LineShapeIndices);
-		AddIndexBuffer(GeometryPrimitives::ArrowIndices);
-		AddIndexBuffer(GeometryPrimitives::DebugCubeIndices);
-		AddIndexBuffer(GeometryPrimitives::CameraIndices);
-		AddIndexBuffer(GeometryPrimitives::CircleXY8Indices);
-		AddIndexBuffer(GeometryPrimitives::CircleXY16Indices);
-		AddIndexBuffer(GeometryPrimitives::CircleXY32Indices);
-		AddIndexBuffer(GeometryPrimitives::GridIndices);
+		AddIndexBuffer(GeometryPrimitives::Line.Indices);
+		AddIndexBuffer(GeometryPrimitives::Arrow.Indices);
+		AddIndexBuffer(GeometryPrimitives::BoundingBox.Indices);
+		AddIndexBuffer(GeometryPrimitives::Camera.Indices);
+		AddIndexBuffer(GeometryPrimitives::Circle8.Indices);
+		AddIndexBuffer(GeometryPrimitives::Circle16.Indices);
+		AddIndexBuffer(GeometryPrimitives::Circle32.Indices);
+		AddIndexBuffer(GeometryPrimitives::Grid.Indices);
 
 		AddIndexBuffer(GeometryPrimitives::Icosphere.Indices);
 	}

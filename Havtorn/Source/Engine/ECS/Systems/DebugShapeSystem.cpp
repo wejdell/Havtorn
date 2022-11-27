@@ -7,7 +7,6 @@
 #include "ECS/Components/DebugShapeComponent.h"
 #include "ECS/Components/TransformComponent.h"
 #include "Graphics/GeometryPrimitives.h"
-#include "Graphics/GeometryPrimitivesUtility.h"
 
 #include "Graphics/RenderManager.h"
 #include "Graphics/RenderCommand.h"
@@ -17,6 +16,18 @@
 namespace Havtorn
 {
 	UDebugShapeSystem* UDebugShapeSystem::Instance = nullptr;
+
+	const std::map<EVertexBufferPrimitives, const SPrimitive&> UDebugShapeSystem::Shapes = 
+	{
+		{ EVertexBufferPrimitives::Line, GeometryPrimitives::Line},
+		{ EVertexBufferPrimitives::Arrow, GeometryPrimitives::Arrow},
+		{ EVertexBufferPrimitives::BoundingBox, GeometryPrimitives::BoundingBox},
+		{ EVertexBufferPrimitives::Camera, GeometryPrimitives::Camera},
+		{ EVertexBufferPrimitives::Circle8, GeometryPrimitives::Circle8},
+		{ EVertexBufferPrimitives::Circle16, GeometryPrimitives::Circle16},
+		{ EVertexBufferPrimitives::Circle32, GeometryPrimitives::Circle32},
+		{ EVertexBufferPrimitives::Grid, GeometryPrimitives::Grid},
+	};
 
 	UDebugShapeSystem::UDebugShapeSystem(CScene* scene, CRenderManager* renderManager)
 		: ISystem()
@@ -80,7 +91,7 @@ namespace Havtorn
 	void UDebugShapeSystem::AddLine(const SVector& start, const SVector& end, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		Ref<STransformComponent> transform;
-		if (TryAddShape(EVertexBufferPrimitives::LineShape, EDefaultIndexBuffers::LineShape, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		if (TryAddShape(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
 		{
 			Instance->TransformToFaceAndReach(transform->Transform.GetMatrix(), start, end);
 		}	
@@ -98,7 +109,7 @@ namespace Havtorn
 	void UDebugShapeSystem::AddCube(const SVector& center, const SVector& scale, const SVector& eulerRotation, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		Ref<STransformComponent> transform;
-		if (TryAddShape(EVertexBufferPrimitives::DebugCube, EDefaultIndexBuffers::DebugCube, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		if (TryAddShape(EVertexBufferPrimitives::BoundingBox, EDefaultIndexBuffers::BoundingBox, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
 		{
 			SMatrix::Recompose(center, eulerRotation, scale, transform->Transform.GetMatrix());
 		}		
@@ -116,64 +127,43 @@ namespace Havtorn
 		}
 	}
 
-	void UDebugShapeSystem::AddCircleXY(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		AddDefaultCircle(origin, eulerRotation, radius, segments, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
 	}
 
-	void UDebugShapeSystem::AddCircleXZ(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
-	{
-		SVector rotation = eulerRotation + SVector(90.0f, 0.0f, 0.0f);
-		AddDefaultCircle(origin, rotation, radius, segments, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
-	}
-
-	void UDebugShapeSystem::AddCircleYZ(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SColor & color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
-	{
-		SVector rotation = eulerRotation + SVector(0.0f, 90.0f, 0.0f);
-		AddDefaultCircle(origin, rotation, radius, segments, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
-	}
-
-	void UDebugShapeSystem::AddGrid(const SVector& origin, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddGrid(const SVector& origin, const SVector& eulerRotation, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		Ref<STransformComponent> transform;
 		if (TryAddShape(EVertexBufferPrimitives::Grid, EDefaultIndexBuffers::Grid, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
 		{
-			SMatrix::Recompose(origin, SVector(), SVector(1.0f), transform->Transform.GetMatrix());
+			SMatrix::Recompose(origin, eulerRotation, SVector(1.0f), transform->Transform.GetMatrix());
 		}
 	}
 
 	void UDebugShapeSystem::AddDefaultCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
-		// AG. The Default Circle is across the XY plane
-		auto EnumFromSegment = [&](const UINT8& s, EVertexBufferPrimitives& v, EDefaultIndexBuffers& i)
+		// AG. The Default Circle is across the XZ plane
+		EVertexBufferPrimitives vertexBufferPrimitive = EVertexBufferPrimitives::Circle16;
+		EDefaultIndexBuffers indexBuffer = EDefaultIndexBuffers::Circle16;
+
+		// if requested segments are closer to 32
+		if (segments > 24)
 		{
-			if (s >= 16 - (16 / 4) && s <= 16 + (16 / 4))
-			{
-				v = EVertexBufferPrimitives::CircleXY16;
-				i = EDefaultIndexBuffers::CircleXY16;
-				return;
-			}
-
-			if (s < 16)
-			{
-				v = EVertexBufferPrimitives::CircleXY8;
-				i = EDefaultIndexBuffers::CircleXY8;
-			}
-			else
-			{
-				v = EVertexBufferPrimitives::CircleXY32;
-				i = EDefaultIndexBuffers::CircleXY32;
-			}
-		};
-
-		EVertexBufferPrimitives vertexBufferPrimitive = EVertexBufferPrimitives::CircleXY16;
-		EDefaultIndexBuffers indexBuffer = EDefaultIndexBuffers::CircleXY16;
-		EnumFromSegment(segments, vertexBufferPrimitive, indexBuffer);
+			vertexBufferPrimitive = EVertexBufferPrimitives::Circle32;
+			indexBuffer = EDefaultIndexBuffers::Circle32;
+		}
+		// if requested segments are closer to 8
+		else if (segments < 12)
+		{
+			vertexBufferPrimitive = EVertexBufferPrimitives::Circle8;
+			indexBuffer = EDefaultIndexBuffers::Circle8;
+		}
 		
 		Ref<STransformComponent> transform;
 		if (TryAddShape(vertexBufferPrimitive, indexBuffer, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
 		{
-			SVector scale(radius / GeometryPrimitives::CircleXYRadius);
+			SVector scale(radius / GeometryPrimitives::CircleRadius);
 			SMatrix::Recompose(origin, eulerRotation, scale, transform->Transform.GetMatrix());
 		}
 	}
@@ -222,7 +212,7 @@ namespace Havtorn
 		debugShapes[shapeIndex]->Thickness = ClampThickness(thickness);
 		debugShapes[shapeIndex]->IgnoreDepth = ignoreDepth;
 		debugShapes[shapeIndex]->VertexBufferIndex = static_cast<U8>(vertexBuffer);
-		debugShapes[shapeIndex]->IndexCount = UGraphicsUtils::GetIndexCount<U8>(vertexBuffer);
+		debugShapes[shapeIndex]->IndexCount = GetIndexCount<U8>(vertexBuffer);
 		debugShapes[shapeIndex]->IndexBufferIndex = static_cast<U8>(indexBuffer);
 
 		std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
