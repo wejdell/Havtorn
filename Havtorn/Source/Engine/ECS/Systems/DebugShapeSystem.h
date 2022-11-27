@@ -44,6 +44,7 @@ namespace Havtorn
 		static constexpr F32 ThicknessMinimum = 0.005f;
 		static constexpr F32 ThicknessMaximum = 0.05f;
 
+		// TODO.AG: write some documentation on steps for adding a shape.
 		static HAVTORN_API void AddLine(const SVector& start, const SVector& end, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		static HAVTORN_API void AddArrow(const SVector& start, const SVector& end, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		// Cube with Width/Height/Depth = 1. Pivot is in center.
@@ -54,6 +55,9 @@ namespace Havtorn
 		static HAVTORN_API void AddCircleXZ(const SVector& origin, const SVector& eulerRotation, const F32 radius = 0.5f, const UINT8 segments = 16, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		static HAVTORN_API void AddCircleYZ(const SVector& origin, const SVector& eulerRotation, const F32 radius = 0.5f, const UINT8 segments = 16, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 
+		// Adds a 10x10 grid across the XZ-plane.
+		static HAVTORN_API void AddGrid(const SVector& origin, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+	
 	private:
 		static HAVTORN_API void AddDefaultCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth);
 			

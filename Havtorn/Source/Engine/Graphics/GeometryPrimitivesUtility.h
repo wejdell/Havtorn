@@ -8,6 +8,8 @@ namespace Havtorn
 {
 	namespace UGraphicsUtils
 	{
+		// TODO.AG: Change this to be part of a class. Combine Vertices and Indices into an single struct.
+
 		const static std::map<EVertexBufferPrimitives, const std::vector<SPositionVertex>&> PrimitivesVertices = {
 			{ EVertexBufferPrimitives::PointLightCube, GeometryPrimitives::PointLightCube},
 			{ EVertexBufferPrimitives::LineShape, GeometryPrimitives::LineShape},
@@ -17,6 +19,7 @@ namespace Havtorn
 			{ EVertexBufferPrimitives::CircleXY8, GeometryPrimitives::CircleXY8},
 			{ EVertexBufferPrimitives::CircleXY16, GeometryPrimitives::CircleXY16},
 			{ EVertexBufferPrimitives::CircleXY32, GeometryPrimitives::CircleXY32},
+			{ EVertexBufferPrimitives::Grid, GeometryPrimitives::GridVertices},
 		};
 
 		const static std::map<EVertexBufferPrimitives, const std::vector<U32>&> PrimitivesIndices = {
@@ -29,6 +32,7 @@ namespace Havtorn
 			{ EVertexBufferPrimitives::CircleXY8, GeometryPrimitives::CircleXY8Indices},
 			{ EVertexBufferPrimitives::CircleXY16, GeometryPrimitives::CircleXY16Indices},
 			{ EVertexBufferPrimitives::CircleXY32, GeometryPrimitives::CircleXY32Indices},
+			{ EVertexBufferPrimitives::Grid, GeometryPrimitives::GridIndices},
 		};
 
 		template<class T>
