@@ -88,6 +88,7 @@ namespace Havtorn
 		Circle16,
 		Circle32,
 		Grid,
+		Axis,
 		//TODO.ANYONE: add more debug shape primitives.
 	};
 
@@ -105,6 +106,7 @@ namespace Havtorn
 		Circle16,
 		Circle32,
 		Grid,
+		Axis,
 		//TODO.ANYONE: add more debug shape primitives.
 	};
 
