@@ -445,5 +445,20 @@ namespace Havtorn
 
 		// 10x10 segment across XZ-plane.
 		const static SPrimitive Grid = GenerateGrid(10);
+
+		const static SPrimitive Axis =
+		{
+			{
+				{ 0.5f,		0.0f,	0.0f,	 1.0f},
+				{ -0.5f,	0.0f,	0.0f,	 1.0f},
+				{ 0.0f,		0.5f,	0.0f,	 1.0f},
+				{ 0.0f,		-0.5f,	0.0f,	 1.0f},
+				{ 0.0f,		0.0f,	0.5f,	 1.0f},
+				{ 0.0f,		0.0f,	-0.5f,	 1.0f},
+			},
+			{
+				0,1, 2,3, 4,5
+			}
+		};
 	}
 }
