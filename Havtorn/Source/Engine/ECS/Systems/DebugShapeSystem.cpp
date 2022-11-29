@@ -260,7 +260,7 @@ namespace Havtorn
 		{
 			const U64& activeIndex = ActiveIndices[i];
 			const U64 shapeIndex = entities[activeIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
-			const U64 transformIndex = entities[ActiveIndices[activeIndex]]->GetComponentIndex(EComponentType::TransformComponent);
+			const U64 transformIndex = entities[activeIndex]->GetComponentIndex(EComponentType::TransformComponent);
 			
 			components[debugShapeComponent] = debugShapes[shapeIndex];
 			components[transformComponent] = transformComponents[transformIndex];
@@ -329,30 +329,30 @@ namespace Havtorn
 #if _DEBUG
 	void UDebugShapeSystem::TestAllShapes()
 	{
-		UDebugShapeSystem::AddGrid(SVector(), SVector(), SColor::Grey, 1.0f, false, ThicknessMinimum * 4.f, false);
-		UDebugShapeSystem::AddArrow(SVector(), SVector::Right, SColor::Red, 1.0f, false, ThicknessMinimum  * 2.f, true);
-		UDebugShapeSystem::AddArrow(SVector(), SVector::Up, SColor::Green, 1.0f, false, ThicknessMinimum  * 2.f, true);
-		UDebugShapeSystem::AddArrow(SVector(), SVector::Forward, SColor::Blue, 1.0f, false, ThicknessMinimum  * 2.f, true);
+		AddGrid(SVector(), SVector(), SColor::Grey, 1.0f, false, ThicknessMinimum * 4.f, false);
+		AddArrow(SVector(), SVector::Right, SColor::Red, 1.0f, false, ThicknessMinimum  * 2.f, true);
+		AddArrow(SVector(), SVector::Up, SColor::Green, 1.0f, false, ThicknessMinimum  * 2.f, true);
+		AddArrow(SVector(), SVector::Forward, SColor::Blue, 1.0f, false, ThicknessMinimum  * 2.f, true);
 
 		const F32 time = GTime::Time();
-		static F32 previousTime = 0.0f;
 		const F32 cosTime = UMath::Cos(time);
 		const F32 sinTime = UMath::Sin(time);
+
+		static F32 previousTime = 0.0f;
 		const F32 lifeTime = 2.0f;
 		if (time >= (previousTime + lifeTime + 0.5f))
 		{
 			previousTime = time;
-			const F32 angle = 180.0f;
-			F32 radius = 2.0f + (0.5f * sinTime);
-			SVector rotation(angle * cosTime, 0.0f, 0.0f);
-			UINT8 segments = static_cast<UINT8>(UMath::Random(0, 13));
-			UDebugShapeSystem::AddCircle(SVector(), rotation, radius, segments, SColor::Black, lifeTime, true, ThicknessMaximum, false);
-			radius = 2.25f + (0.5f * sinTime);
-			segments = static_cast<UINT8>(UMath::Random(13, 24));
-			UDebugShapeSystem::AddCircle(SVector(), rotation, radius, segments, SColor::Grey, lifeTime, true, ThicknessMaximum, false);
-			radius = 2.5f + (0.5f * sinTime);
-			segments = static_cast<UINT8>(UMath::Random(25, 50));
-			UDebugShapeSystem::AddCircle(SVector(), rotation, radius, segments, SColor::White, lifeTime, true, ThicknessMaximum, false);
+
+			SVector rotation(180.0f * cosTime, 0.0f, 0.0f);
+			const F32 radiusIncrement = (0.5f * sinTime);
+			auto Circle = [&](UINT8 segments, F32 radius, const SColor& color)
+			{
+				AddCircle(SVector(), rotation, radius + radiusIncrement, segments, color, lifeTime, true, ThicknessMaximum, false);
+			};
+			Circle(static_cast<UINT8>(UMath::Random(0, 13)), 2.0f, SColor::Black);
+			Circle(static_cast<UINT8>(UMath::Random(14, 24)), 2.25f, SColor::Grey);
+			Circle(static_cast<UINT8>(UMath::Random(25, 33)), 2.5f, SColor::White);
 			
 			const SVector posLowerBound(-3.0f);
 			const SVector posUpperBound(3.0f);
@@ -360,46 +360,25 @@ namespace Havtorn
 			const SVector rotUpperBound(180.0f);
 			const SVector sclLowerBound(0.5f);
 			const SVector sclUpperBound(2.0f);
-			UDebugShapeSystem::AddCube(
+			AddCube(
 				SVector::Random(posLowerBound, posUpperBound), 
 				SVector::Random(rotLowerBound, rotUpperBound), 
 				SVector::Random(sclLowerBound, sclUpperBound), 
 				SColor::Teal, lifeTime, true, ThicknessMaximum, false);
 		}
 		
-		F32 posRadius = 3.0f;
-		F32 rotation = 90.0f;
-		F32 scale = 2.0f;
-		SVector targetPos = SVector(posRadius * cosTime, posRadius * sinTime, posRadius * cosTime);
-		SVector targetRot = SVector(rotation * cosTime, rotation * sinTime, rotation * cosTime);
-		SVector targetScl = SVector(scale * cosTime, scale * cosTime, scale * cosTime) + SVector(0.5f);
-		UDebugShapeSystem::AddAxis(targetPos, targetRot, targetScl, SColor::Yellow, 1.0f, false, ThicknessMaximum, true);
-		UDebugShapeSystem::AddLine(SVector(), targetPos, SColor::Orange, 1.0f, false, ThicknessMaximum * 0.7f, true);
+		auto LineFollowingAxis = [&](F32 rotation, F32 scale, const SVector& pos, const SColor& axisColor, const SColor& lineColor)
+		{
+			SVector targetRot = SVector(rotation * cosTime, rotation * sinTime, rotation * cosTime);
+			SVector targetScl = SVector(scale * cosTime, scale * cosTime, scale * cosTime) + SVector(0.5f);
+			AddAxis(pos, targetRot, targetScl, axisColor, 1.0f, false, ThicknessMaximum, true);
+			AddLine(SVector(), pos, lineColor, 1.0f, false, ThicknessMaximum * 0.7f, true);
+		};
 
-		posRadius = 1.5f;
-		rotation = 90.0f;
-		scale = 0.5f;
-
-		// Rotate around X axis
-		targetPos = SVector(0.0f, posRadius * cosTime, posRadius * sinTime);
-		targetRot = SVector(rotation * sinTime, rotation * cosTime, rotation * sinTime);
-		targetScl = SVector(scale);
-		UDebugShapeSystem::AddAxis(targetPos, targetRot, targetScl, SColor::Red, 0.1f, false, ThicknessMaximum, false);
-		UDebugShapeSystem::AddLine(SVector(), targetPos, SColor::Red, 0.1f, false, ThicknessMinimum * 2.0f, false);
-
-		// Rotate around Y axis
-		targetPos = SVector(posRadius * cosTime, 0.0f, posRadius * sinTime);
-		targetRot = SVector(rotation * sinTime, rotation * cosTime, rotation * sinTime);
-		targetScl = SVector(scale);
-		UDebugShapeSystem::AddAxis(targetPos, targetRot, targetScl, SColor::Green, 0.1f, false, ThicknessMaximum, false);
-		UDebugShapeSystem::AddLine(SVector(), targetPos, SColor::Green, 0.1f, false, ThicknessMinimum * 2.0f, false);
-
-		// Rotate around Z axis
-		targetPos = SVector(posRadius * sinTime, posRadius * cosTime, 0.0f);
-		targetRot = SVector(rotation * sinTime, rotation * cosTime, rotation * sinTime);
-		targetScl = SVector(scale);
-		UDebugShapeSystem::AddAxis(targetPos, targetRot, targetScl, SColor::Blue, 0.1f, false, ThicknessMaximum, false);
-		UDebugShapeSystem::AddLine(SVector(), targetPos, SColor::Blue, 0.1f, false, ThicknessMinimum * 2.0f, false);
+		LineFollowingAxis(90.0f, 2.0f, SVector(3.0f * cosTime, 3.0f * sinTime, 3.0f * cosTime), SColor::Yellow, SColor::Orange);
+		LineFollowingAxis(90.0f, 0.5f, SVector(0.0f, 1.5f * cosTime, 1.5f * sinTime), SColor::Red, SColor::Red);
+		LineFollowingAxis(90.0f, 0.5f, SVector(1.5f * cosTime, 0.0f, 1.5f * sinTime), SColor::Green, SColor::Green);
+		LineFollowingAxis(90.0f, 0.5f, SVector(1.5f * sinTime, 1.5f * cosTime, 0.0f), SColor::Blue, SColor::Blue);
 	}
 
 	void UDebugShapeSystem::AddMaxShapes()
@@ -422,7 +401,7 @@ namespace Havtorn
 			UDebugShapeSystem::AddGrid(
 				SVector::Random(posLowerBound, posUpperBound), 
 				SVector::Random(rotLowerBound, rotUpperBound), 
-				SColor::Black, 1.0f, false, ThicknessMaximum, i % 2 == 0);
+				SColor::Black, 1.0f, false, 0.0f, i % 2 == 0);
 		}
 
 	}

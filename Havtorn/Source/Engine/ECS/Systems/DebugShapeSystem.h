@@ -65,7 +65,6 @@ namespace Havtorn
 		// 10x10 grid across the XZ-plane (default).
 		static HAVTORN_API void AddGrid(const SVector& origin, const SVector& eulerRotation = SVector(), const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		static HAVTORN_API void AddAxis(const SVector& origin, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
-	
 
 	private:
 		static HAVTORN_API void AddDefaultCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth);
