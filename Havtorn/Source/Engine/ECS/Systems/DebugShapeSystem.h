@@ -15,8 +15,9 @@
 #ifndef USE_DEBUG_SHAPE
 #define USE_DEBUG_SHAPE
 #endif
-#define DEBUG_DRAWER_LOG
-#ifdef DEBUG_DRAWER_LOG
+
+#define DEBUG_DRAWER_LOG 1
+#if DEBUG_DRAWER_LOG
 #define DEBUG_DRAWER_LOG_SHAPESRENDER 0
 #define DEBUG_DRAWER_LOG_ADDSHAPE 0
 #define DEBUG_DRAWER_LOG_ERROR 1
@@ -42,50 +43,57 @@ namespace Havtorn
 		void Update(CScene* scene) override;
 
 	public: // Static Add Shape functions.
-		static constexpr U16 MaxShapes = 10000;
+		/*
+		*	Adding a shape, steps:
+		*	+	Create SPrimitive in GeometryPrimitives.h for the shape
+		*	+	Add entry to EVertexBufferPrimitives and EDefaultIndexBuffers in GraphicsEnum.h
+		*	+	In RenderManager.cpp: InitVertexBuffers() and InitIndexBuffers() call AddVertexBuffer(..)/AddIndexBuffer(..) for shape
+		*	+	In DebugShapeSystem.cpp: add EVertexBufferPrimitives entry and the corresponding SPrimitive to UDebugShapeSystem::Shapes
+		*	+	Create a static function for the shape, use TryAddShape(..) to set default parameters
+		*	+	Optional: add a call to the shape to TestAllShapes() and call it somewhere to see that everything is working as expected.
+		*/
+		static constexpr U16 MaxShapes = 2000;
 		static constexpr F32 ThicknessMinimum = 0.005f;
 		static constexpr F32 ThicknessMaximum = 0.05f;
 
-		// TODO.AG: write some documentation on steps for adding a shape.
 		static HAVTORN_API void AddLine(const SVector& start, const SVector& end, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		static HAVTORN_API void AddArrow(const SVector& start, const SVector& end, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
-		// Cube with Width/Height/Depth = 1. Pivot is in center.
-		static HAVTORN_API void AddCube(const SVector& center, const SVector& scale, const SVector& eulerRotation, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		// Object aligned bounding box with Width/Height/Depth = 1. Pivot is in center.
+		static HAVTORN_API void AddCube(const SVector& center,const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		static HAVTORN_API void AddCamera(const SVector& origin, const SVector& eulerRotation, const F32 fov = 70.0f, const F32 farZ = 1.0f, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
-			
 		static HAVTORN_API void AddCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius = 0.5f, const UINT8 segments = 16, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
-
-		// Adds a 10x10 grid across the XZ-plane.
-		static HAVTORN_API void AddGrid(const SVector& origin, const SVector& eulerRotation, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		// 10x10 grid across the XZ-plane (default).
+		static HAVTORN_API void AddGrid(const SVector& origin, const SVector& eulerRotation = SVector(), const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static HAVTORN_API void AddAxis(const SVector& origin, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 	
-	public:
-		template<class T>
-		static const T GetIndexCount(const EVertexBufferPrimitives primitive);
 
 	private:
 		static HAVTORN_API void AddDefaultCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth);
 			
 		static bool InstanceExists();
-		static F32 LifeTimeForShape(const bool useLifeTime, const F32 requestedLifeTime);
-		static F32 ClampThickness(const F32 thickness);
-			
 		static bool TryAddShape(const EVertexBufferPrimitives vertexBuffer, const EDefaultIndexBuffers indexBuffer, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, Ref<STransformComponent>& outTransform);
 		
-		void TransformToFaceAndReach(SMatrix& transform, const SVector& start, const SVector& end);
-
 		void SendRenderCommands(
 			const std::vector<Ref<SEntity>>& entities,
 			const std::vector<Ref<SDebugShapeComponent>>& debugShapes,
 			const std::vector<Ref<STransformComponent>>& transformComponents
 		);
 		void CheckActiveIndices(const std::vector<Ref<SDebugShapeComponent>>& debugShapes);
-
-		bool TryGetAvailableIndex(U64& outIndex);
 		void ResetAvailableIndices();
 
+		void TransformToFaceAndReach(const SVector& start, const SVector& end, SMatrix& transform);
+		bool TryGetAvailableIndex(U64& outIndex);
+
+#if _DEBUG
+	public:
+		// TODO.AG: Should only be usable in debug.
+		static void TestAllShapes();
+		// To stress test. Should use shape with most vertices & indices.
+		static void AddMaxShapes();
+#endif
+		
 	private:
 		static HAVTORN_API UDebugShapeSystem* Instance;
-
 		const static std::map<EVertexBufferPrimitives, const SPrimitive&> Shapes;
 
 		U64 EntityStartIndex = 0;
@@ -94,10 +102,4 @@ namespace Havtorn
 		std::vector<U64> ActiveIndices;
 		std::queue<U64> AvailableIndices;
 	};
-
-	template<class T>
-	static const T UDebugShapeSystem::GetIndexCount(const EVertexBufferPrimitives primitive)
-	{
-		return static_cast<T>(Shapes.at(primitive).Indices.size());
-	}
 }

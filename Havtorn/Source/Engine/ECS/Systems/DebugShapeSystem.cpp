@@ -27,6 +27,7 @@ namespace Havtorn
 		{ EVertexBufferPrimitives::Circle16, GeometryPrimitives::Circle16},
 		{ EVertexBufferPrimitives::Circle32, GeometryPrimitives::Circle32},
 		{ EVertexBufferPrimitives::Grid, GeometryPrimitives::Grid},
+		{ EVertexBufferPrimitives::Axis, GeometryPrimitives::Axis},
 	};
 
 	UDebugShapeSystem::UDebugShapeSystem(CScene* scene, CRenderManager* renderManager)
@@ -93,7 +94,7 @@ namespace Havtorn
 		Ref<STransformComponent> transform;
 		if (TryAddShape(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
 		{
-			Instance->TransformToFaceAndReach(transform->Transform.GetMatrix(), start, end);
+			Instance->TransformToFaceAndReach(start, end, transform->Transform.GetMatrix());
 		}	
 	}
 
@@ -102,11 +103,11 @@ namespace Havtorn
 		Ref<STransformComponent> transform;
 		if (TryAddShape(EVertexBufferPrimitives::Arrow, EDefaultIndexBuffers::Arrow, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
 		{
-			Instance->TransformToFaceAndReach(transform->Transform.GetMatrix(), start, end);
+			Instance->TransformToFaceAndReach(start, end, transform->Transform.GetMatrix());
 		}	
 	}
 
-	void UDebugShapeSystem::AddCube(const SVector& center, const SVector& scale, const SVector& eulerRotation, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddCube(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		Ref<STransformComponent> transform;
 		if (TryAddShape(EVertexBufferPrimitives::BoundingBox, EDefaultIndexBuffers::BoundingBox, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
@@ -120,6 +121,7 @@ namespace Havtorn
 		Ref<STransformComponent> transform;
 		if (TryAddShape(EVertexBufferPrimitives::Camera, EDefaultIndexBuffers::Camera, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
 		{
+			// TODO.AG: Rework this. Does not seem to properly represent fov & farZ.
 			F32 y = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
 			F32 x = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
 			SVector vScale(x, y, farZ);
@@ -138,6 +140,15 @@ namespace Havtorn
 		if (TryAddShape(EVertexBufferPrimitives::Grid, EDefaultIndexBuffers::Grid, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
 		{
 			SMatrix::Recompose(origin, eulerRotation, SVector(1.0f), transform->Transform.GetMatrix());
+		}
+	}
+
+	void UDebugShapeSystem::AddAxis(const SVector& origin, const SVector& eulerRotation, const SVector& scale, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	{
+		Ref<STransformComponent> transform;
+		if (TryAddShape(EVertexBufferPrimitives::Axis, EDefaultIndexBuffers::Axis, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		{
+			SMatrix::Recompose(origin, eulerRotation, scale, transform->Transform.GetMatrix());
 		}
 	}
 
@@ -181,19 +192,6 @@ namespace Havtorn
 		return true;
 	}
 
-	F32 UDebugShapeSystem::LifeTimeForShape(const bool useLifeTime, const F32 requestedLifeTime)
-	{
-		if (!useLifeTime)
-			return -1.0f;
-		else
-			return GTime::Time() + requestedLifeTime;
-	}
-
-	F32 UDebugShapeSystem::ClampThickness(const F32 thickness)
-	{
-		return UMath::Clamp(thickness, ThicknessMinimum, ThicknessMaximum);
-	}
-
 	bool UDebugShapeSystem::TryAddShape(const EVertexBufferPrimitives vertexBuffer, const EDefaultIndexBuffers indexBuffer, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, Ref<STransformComponent>& outTransform)
 	{
 		if (!InstanceExists())
@@ -208,11 +206,11 @@ namespace Havtorn
 		const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
 		std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
 		debugShapes[shapeIndex]->Color = color;
-		debugShapes[shapeIndex]->LifeTime = LifeTimeForShape(useLifeTime, lifeTimeSeconds);
-		debugShapes[shapeIndex]->Thickness = ClampThickness(thickness);
+		debugShapes[shapeIndex]->LifeTime = useLifeTime ? (GTime::Time() + lifeTimeSeconds) : -1.0f;
+		debugShapes[shapeIndex]->Thickness = UMath::Clamp(thickness, ThicknessMinimum, ThicknessMaximum);
 		debugShapes[shapeIndex]->IgnoreDepth = ignoreDepth;
 		debugShapes[shapeIndex]->VertexBufferIndex = static_cast<U8>(vertexBuffer);
-		debugShapes[shapeIndex]->IndexCount = GetIndexCount<U8>(vertexBuffer);
+		debugShapes[shapeIndex]->IndexCount = static_cast<U8>(Shapes.at(vertexBuffer).Indices.size());
 		debugShapes[shapeIndex]->IndexBufferIndex = static_cast<U8>(indexBuffer);
 
 		std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
@@ -222,13 +220,14 @@ namespace Havtorn
 		return true;
 	}
 
-	void UDebugShapeSystem::TransformToFaceAndReach(SMatrix& transform, const SVector& start, const SVector& end)
+	void UDebugShapeSystem::TransformToFaceAndReach(const SVector& start, const SVector& end, SMatrix& transform)
 	{
-		const SVector transformUp = transform.GetUp();
-		const SVector eulerRotation = SMatrix::LookAtLH(start, end, transformUp).GetEuler();
-		const F32 lineLength = start.Distance(end);
-		const SVector scale = SVector(1.0f, 1.0f, lineLength);
-		SMatrix::Recompose(start, eulerRotation, scale, transform);
+		// AG: Using SVector::Forward as up works for some reason?
+		const SVector up = SVector::Forward;// SVector::Up: breaks up == direction.
+		const SVector direction = (end - start).GetNormalized();
+		const SVector scale = SVector(1.0f, 1.0f, start.Distance(end));
+		transform = SMatrix::Face(start, direction, up);
+		SMatrix::Recompose(start, transform.GetEuler(), scale, transform);
 	}
 
 
@@ -256,13 +255,13 @@ namespace Havtorn
 		// Sort render commands based on use of depth
 		const U8 debugShapeComponent = static_cast<U8>(EComponentType::DebugShapeComponent);
 		const U8 transformComponent = static_cast<U8>(EComponentType::TransformComponent);
+		Components components;
 		for (U64 i = 0; i < ActiveIndices.size(); i++)
 		{
-			//const ERenderCommandType renderCommandType = ERenderCommandType::DebugShape;
-			const U64 shapeIndex = entities[ActiveIndices[i]]->GetComponentIndex(EComponentType::DebugShapeComponent);
-			const U64 transformIndex = entities[ActiveIndices[i]]->GetComponentIndex(EComponentType::TransformComponent);
+			const U64& activeIndex = ActiveIndices[i];
+			const U64 shapeIndex = entities[activeIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
+			const U64 transformIndex = entities[ActiveIndices[activeIndex]]->GetComponentIndex(EComponentType::TransformComponent);
 			
-			Components components;
 			components[debugShapeComponent] = debugShapes[shapeIndex];
 			components[transformComponent] = transformComponents[transformIndex];
 
@@ -287,16 +286,14 @@ namespace Havtorn
 				activeIndicesToRemove.push_back(i);
 			}
 		}
-
-		std::sort(activeIndicesToRemove.begin(), activeIndicesToRemove.end());
-
+		
 		while (!activeIndicesToRemove.empty())
 		{
 			if (ActiveIndices.size() > 1)
 			{
 				std::swap(ActiveIndices[activeIndicesToRemove.back()], ActiveIndices.back());
 			}
-
+		
 			ActiveIndices.pop_back();
 			activeIndicesToRemove.pop_back();
 		}
@@ -328,4 +325,106 @@ namespace Havtorn
 			AvailableIndices.push(i);
 		}
 	}
+
+#if _DEBUG
+	void UDebugShapeSystem::TestAllShapes()
+	{
+		UDebugShapeSystem::AddGrid(SVector(), SVector(), SColor::Grey, 1.0f, false, ThicknessMinimum * 4.f, false);
+		UDebugShapeSystem::AddArrow(SVector(), SVector::Right, SColor::Red, 1.0f, false, ThicknessMinimum  * 2.f, true);
+		UDebugShapeSystem::AddArrow(SVector(), SVector::Up, SColor::Green, 1.0f, false, ThicknessMinimum  * 2.f, true);
+		UDebugShapeSystem::AddArrow(SVector(), SVector::Forward, SColor::Blue, 1.0f, false, ThicknessMinimum  * 2.f, true);
+
+		const F32 time = GTime::Time();
+		static F32 previousTime = 0.0f;
+		const F32 cosTime = UMath::Cos(time);
+		const F32 sinTime = UMath::Sin(time);
+		const F32 lifeTime = 2.0f;
+		if (time >= (previousTime + lifeTime + 0.5f))
+		{
+			previousTime = time;
+			const F32 angle = 180.0f;
+			F32 radius = 2.0f + (0.5f * sinTime);
+			SVector rotation(angle * cosTime, 0.0f, 0.0f);
+			UINT8 segments = static_cast<UINT8>(UMath::Random(0, 13));
+			UDebugShapeSystem::AddCircle(SVector(), rotation, radius, segments, SColor::Black, lifeTime, true, ThicknessMaximum, false);
+			radius = 2.25f + (0.5f * sinTime);
+			segments = static_cast<UINT8>(UMath::Random(13, 24));
+			UDebugShapeSystem::AddCircle(SVector(), rotation, radius, segments, SColor::Grey, lifeTime, true, ThicknessMaximum, false);
+			radius = 2.5f + (0.5f * sinTime);
+			segments = static_cast<UINT8>(UMath::Random(25, 50));
+			UDebugShapeSystem::AddCircle(SVector(), rotation, radius, segments, SColor::White, lifeTime, true, ThicknessMaximum, false);
+			
+			const SVector posLowerBound(-3.0f);
+			const SVector posUpperBound(3.0f);
+			const SVector rotLowerBound(0.0f);
+			const SVector rotUpperBound(180.0f);
+			const SVector sclLowerBound(0.5f);
+			const SVector sclUpperBound(2.0f);
+			UDebugShapeSystem::AddCube(
+				SVector::Random(posLowerBound, posUpperBound), 
+				SVector::Random(rotLowerBound, rotUpperBound), 
+				SVector::Random(sclLowerBound, sclUpperBound), 
+				SColor::Teal, lifeTime, true, ThicknessMaximum, false);
+		}
+		
+		F32 posRadius = 3.0f;
+		F32 rotation = 90.0f;
+		F32 scale = 2.0f;
+		SVector targetPos = SVector(posRadius * cosTime, posRadius * sinTime, posRadius * cosTime);
+		SVector targetRot = SVector(rotation * cosTime, rotation * sinTime, rotation * cosTime);
+		SVector targetScl = SVector(scale * cosTime, scale * cosTime, scale * cosTime) + SVector(0.5f);
+		UDebugShapeSystem::AddAxis(targetPos, targetRot, targetScl, SColor::Yellow, 1.0f, false, ThicknessMaximum, true);
+		UDebugShapeSystem::AddLine(SVector(), targetPos, SColor::Orange, 1.0f, false, ThicknessMaximum * 0.7f, true);
+
+		posRadius = 1.5f;
+		rotation = 90.0f;
+		scale = 0.5f;
+
+		// Rotate around X axis
+		targetPos = SVector(0.0f, posRadius * cosTime, posRadius * sinTime);
+		targetRot = SVector(rotation * sinTime, rotation * cosTime, rotation * sinTime);
+		targetScl = SVector(scale);
+		UDebugShapeSystem::AddAxis(targetPos, targetRot, targetScl, SColor::Red, 0.1f, false, ThicknessMaximum, false);
+		UDebugShapeSystem::AddLine(SVector(), targetPos, SColor::Red, 0.1f, false, ThicknessMinimum * 2.0f, false);
+
+		// Rotate around Y axis
+		targetPos = SVector(posRadius * cosTime, 0.0f, posRadius * sinTime);
+		targetRot = SVector(rotation * sinTime, rotation * cosTime, rotation * sinTime);
+		targetScl = SVector(scale);
+		UDebugShapeSystem::AddAxis(targetPos, targetRot, targetScl, SColor::Green, 0.1f, false, ThicknessMaximum, false);
+		UDebugShapeSystem::AddLine(SVector(), targetPos, SColor::Green, 0.1f, false, ThicknessMinimum * 2.0f, false);
+
+		// Rotate around Z axis
+		targetPos = SVector(posRadius * sinTime, posRadius * cosTime, 0.0f);
+		targetRot = SVector(rotation * sinTime, rotation * cosTime, rotation * sinTime);
+		targetScl = SVector(scale);
+		UDebugShapeSystem::AddAxis(targetPos, targetRot, targetScl, SColor::Blue, 0.1f, false, ThicknessMaximum, false);
+		UDebugShapeSystem::AddLine(SVector(), targetPos, SColor::Blue, 0.1f, false, ThicknessMinimum * 2.0f, false);
+	}
+
+	void UDebugShapeSystem::AddMaxShapes()
+	{
+		const SVector posLowerBound(-100.0f);
+		const SVector posUpperBound(100.0f);
+		const SVector rotLowerBound(0.0f);
+		const SVector rotUpperBound(180.0f);
+		//const SVector sclLowerBound(0.5f);
+		//const SVector sclUpperBound(2.0f);
+		for (U16 i = 0; i < MaxShapes; i++)
+		{
+			//UDebugShapeSystem::AddCircle(
+			//	SVector::Random(posLowerBound, posUpperBound), 
+			//	SVector::Random(rotLowerBound, rotUpperBound), 
+			//	0.5f,
+			//	32,
+			//	SColor::Black, 1.0f, false, ThicknessMaximum, i % 2 == 0);
+
+			UDebugShapeSystem::AddGrid(
+				SVector::Random(posLowerBound, posUpperBound), 
+				SVector::Random(rotLowerBound, rotUpperBound), 
+				SColor::Black, 1.0f, false, ThicknessMaximum, i % 2 == 0);
+		}
+
+	}
+#endif
 }
