@@ -2121,18 +2121,6 @@ namespace Havtorn
 
 		Context->GSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
 
-		// AG.TEST: Probably slows down rendering, wanted to test how it would look.
-		// TODO:AG: Remove or restructure
-		//if (shape->Thickness > Debug::UDebugShapeSystem::ThicknessMinimum + 0.0005f)
-		//{
-		//	Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::Line)], nullptr, 0);
-		//	Context->GSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
-		//}
-		//else
-		//{
-		//	Context->GSSetShader(nullptr, nullptr, 0);
-		//}
-
 		Context->VSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
 		Context->DrawIndexed(shape->IndexCount, 0, 0);
 		NumberOfDrawCallsThisFrame++;

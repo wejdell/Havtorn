@@ -401,7 +401,7 @@ namespace Havtorn
 			UDebugShapeSystem::AddGrid(
 				SVector::Random(posLowerBound, posUpperBound), 
 				SVector::Random(rotLowerBound, rotUpperBound), 
-				SColor::Black, 1.0f, false, 0.0f, i % 2 == 0);
+				SColor::Black, 1.0f, false, 1.0f, i % 2 == 0);
 		}
 
 	}
