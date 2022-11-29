@@ -95,6 +95,10 @@ namespace Havtorn
 
 		inline static SVector Random(const SVector& lowerBound, const SVector& upperBound);
 
+		// Returns: [-PI >= angle <= PI ], the signed angle  between From and To projected onto Axis.
+		// Ex: ( From, World Forward, World Up ): the angle of From around the World Up axis, if From == World Forward: angle = 0. 
+		inline static F32 SignedAxisAngle(const SVector& fromDirection, const SVector& toDirection, const SVector& axis);
+
 		inline std::string ToString() const;
 	};
 
@@ -370,6 +374,25 @@ namespace Havtorn
 		F32 z = UMath::Random(lowerBound.Z, upperBound.Z);
 
 		return SVector(x, y, z);
+	}
+
+	inline F32 SVector::SignedAxisAngle(const SVector& fromDirection, const SVector& toDirection, const SVector& axis)
+	{
+		// Adapted from Evan VanderZee's solution: https://stackoverflow.com/questions/38470638/how-to-calculate-the-signed-angle-between-2-vectors-with-a-given-axis-normal-in
+		const SVector aNorm = fromDirection.GetNormalized();
+		const SVector bNorm = toDirection.GetNormalized();
+		const SVector axisNorm = axis.GetNormalized();
+
+		SVector aProj = aNorm - (aNorm.Dot(axisNorm) * axisNorm);
+		SVector bProj = bNorm - (bNorm.Dot(axisNorm) * axisNorm);
+		aProj.Normalize();
+		bProj.Normalize();
+
+		// Adapted from Adrian Leonhard's solution: https://stackoverflow.com/questions/5188561/signed-angle-between-two-3d-vectors-with-same-origin-within-the-same-plane
+		const SVector crossABProj = bProj.Cross(aProj);
+		const F32 dotCrossA = crossABProj.Dot(axisNorm);
+		const F32 dotAB = aNorm.Dot(bNorm);
+		return UMath::ATan2(dotCrossA, dotAB);
 	}
 
 	inline std::string SVector::ToString() const
