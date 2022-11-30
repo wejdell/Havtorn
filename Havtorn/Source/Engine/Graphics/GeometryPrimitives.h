@@ -175,29 +175,23 @@ namespace Havtorn
 			outIndices = indices;
 		}
 
-		static SMeshData CreateIcosphere(U8 numberOfSubdivisions)
+		static void IcoSpherePositionsAndIndices(U8 numberOfSubdivisions, std::vector<SVector>& outPositions, std::vector<U32>& outIndices)
 		{
-			// NR: Adapted from Introduction to 3D Graphics Programming with Direct X 12 by Frank D. Luna
-
-			// NR: We use a world transform to scale this instead of providing a radius argument here
-			
-			std::vector<SStaticMeshVertex> vertices;
-
 			// Put a cap on the number of subdivisions.
 			numberOfSubdivisions = UMath::Min(numberOfSubdivisions, static_cast<U8>(6));
-			
+
 			// Approximate a sphere by tessellating an icosahedron.
 			const float X = 0.525731f;
 			const float Z = 0.850651f;
 
 			std::vector<SVector> positions =
 			{
-			SVector(-X, 0.0f, Z),	SVector(X, 0.0f, Z),
-			SVector(-X, 0.0f, -Z),	SVector(X, 0.0f, -Z),
-			SVector(0.0f, Z, X),	SVector(0.0f, Z, -X),
-			SVector(0.0f, -Z, X),	SVector(0.0f, -Z, -X),
-			SVector(Z, X, 0.0f),	SVector(-Z, X, 0.0f),
-			SVector(Z, -X, 0.0f),	SVector(-Z, -X, 0.0f)
+				SVector(-X, 0.0f, Z),	SVector(X, 0.0f, Z),
+				SVector(-X, 0.0f, -Z),	SVector(X, 0.0f, -Z),
+				SVector(0.0f, Z, X),	SVector(0.0f, Z, -X),
+				SVector(0.0f, -Z, X),	SVector(0.0f, -Z, -X),
+				SVector(Z, X, 0.0f),	SVector(-Z, X, 0.0f),
+				SVector(Z, -X, 0.0f),	SVector(-Z, -X, 0.0f)
 			};
 
 			std::vector<U32> indices =
@@ -210,6 +204,22 @@ namespace Havtorn
 
 			for (U32 i = 0; i < numberOfSubdivisions; ++i)
 				Subdivide(positions, indices);
+
+			outPositions = std::move(positions);
+			outIndices = std::move(indices);
+		}
+
+		static SMeshData CreateIcosphere(U8 numberOfSubdivisions)
+		{
+			// NR: Adapted from Introduction to 3D Graphics Programming with Direct X 12 by Frank D. Luna
+
+			// NR: We use a world transform to scale this instead of providing a radius argument here
+			
+			std::vector<SStaticMeshVertex> vertices;
+
+			std::vector<SVector> positions;
+			std::vector<U32> indices;
+			IcoSpherePositionsAndIndices(numberOfSubdivisions, positions, indices);
 
 			// Project vertices onto sphere and scale.
 			for (U16 i = 0; i < static_cast<U16>(positions.size()); ++i)
@@ -249,6 +259,7 @@ namespace Havtorn
 
 		static SMeshData Icosphere = CreateIcosphere(2);
 
+#pragma region SPRIMITIVES_FOR_DEBUG_SHAPES
 
 		const static SPrimitive Line = 
 		{
@@ -460,5 +471,12 @@ namespace Havtorn
 				0,1, 2,3, 4,5
 			}
 		};
+
+		static SPrimitive IcoSpherePrimitive(U8 numberOfSubdivisions)
+		{
+
+		}
+
+#pragma endregion !SPRIMITIVES_FOR_DEBUG_SHAPES
 	}
 }
