@@ -16,8 +16,8 @@ namespace Havtorn
 		SColor Color;
 		F32 LifeTime = 0.0f;
 		F32 Thickness = 1.0f;
-		U8 VertexBufferIndex = 0;
 		U8 IndexCount = 0;
+		U8 VertexBufferIndex = 0;
 		U8 IndexBufferIndex = 0;
 		bool IgnoreDepth = true;
 

@@ -28,6 +28,7 @@ namespace Havtorn
 		{ EVertexBufferPrimitives::Circle32, GeometryPrimitives::Circle32},
 		{ EVertexBufferPrimitives::Grid, GeometryPrimitives::Grid},
 		{ EVertexBufferPrimitives::Axis, GeometryPrimitives::Axis},
+		{ EVertexBufferPrimitives::WireframeIcoSphere, GeometryPrimitives::WireFrameIcoSphere},
 	};
 
 	UDebugShapeSystem::UDebugShapeSystem(CScene* scene, CRenderManager* renderManager)
@@ -121,7 +122,7 @@ namespace Havtorn
 		Ref<STransformComponent> transform;
 		if (TryAddShape(EVertexBufferPrimitives::Camera, EDefaultIndexBuffers::Camera, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
 		{
-			// TODO.AG: Rework this. Does not seem to properly represent fov & farZ.
+			// TODO.AG: Rework this. Does not seem to properly represent fov & farZ. Might have to use aspectratio?
 			F32 y = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
 			F32 x = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
 			SVector vScale(x, y, farZ);
@@ -131,7 +132,29 @@ namespace Havtorn
 
 	void UDebugShapeSystem::AddCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
-		AddDefaultCircle(origin, eulerRotation, radius, segments, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
+		// AG. The Default Circle is across the XZ plane
+		EVertexBufferPrimitives vertexBufferPrimitive = EVertexBufferPrimitives::Circle16;
+		EDefaultIndexBuffers indexBuffer = EDefaultIndexBuffers::Circle16;
+
+		// if requested segments are closer to 32
+		if (segments > 24)
+		{
+			vertexBufferPrimitive = EVertexBufferPrimitives::Circle32;
+			indexBuffer = EDefaultIndexBuffers::Circle32;
+		}
+		// if requested segments are closer to 8
+		else if (segments < 12)
+		{
+			vertexBufferPrimitive = EVertexBufferPrimitives::Circle8;
+			indexBuffer = EDefaultIndexBuffers::Circle8;
+		}
+
+		Ref<STransformComponent> transform;
+		if (TryAddShape(vertexBufferPrimitive, indexBuffer, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		{
+			SVector scale(radius / GeometryPrimitives::CircleRadius);
+			SMatrix::Recompose(origin, eulerRotation, scale, transform->Transform.GetMatrix());
+		}
 	}
 
 	void UDebugShapeSystem::AddGrid(const SVector& origin, const SVector& eulerRotation, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
@@ -152,32 +175,15 @@ namespace Havtorn
 		}
 	}
 
-	void UDebugShapeSystem::AddDefaultCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddPoint(const SVector& origin, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
-		// AG. The Default Circle is across the XZ plane
-		EVertexBufferPrimitives vertexBufferPrimitive = EVertexBufferPrimitives::Circle16;
-		EDefaultIndexBuffers indexBuffer = EDefaultIndexBuffers::Circle16;
-
-		// if requested segments are closer to 32
-		if (segments > 24)
-		{
-			vertexBufferPrimitive = EVertexBufferPrimitives::Circle32;
-			indexBuffer = EDefaultIndexBuffers::Circle32;
-		}
-		// if requested segments are closer to 8
-		else if (segments < 12)
-		{
-			vertexBufferPrimitive = EVertexBufferPrimitives::Circle8;
-			indexBuffer = EDefaultIndexBuffers::Circle8;
-		}
-		
 		Ref<STransformComponent> transform;
-		if (TryAddShape(vertexBufferPrimitive, indexBuffer, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		if (TryAddShape(EVertexBufferPrimitives::WireframeIcoSphere, EDefaultIndexBuffers::WireframeIcoSphere, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
 		{
-			SVector scale(radius / GeometryPrimitives::CircleRadius);
-			SMatrix::Recompose(origin, eulerRotation, scale, transform->Transform.GetMatrix());
+			SMatrix::Recompose(origin, SVector(), SVector(0.1f), transform->Transform.GetMatrix());
 		}
 	}
+
 #pragma endregion !AddShape
 
 	bool UDebugShapeSystem::InstanceExists()
@@ -344,41 +350,57 @@ namespace Havtorn
 		{
 			previousTime = time;
 
-			SVector rotation(180.0f * cosTime, 0.0f, 0.0f);
-			const F32 radiusIncrement = (0.5f * sinTime);
-			auto Circle = [&](UINT8 segments, F32 radius, const SColor& color)
-			{
-				AddCircle(SVector(), rotation, radius + radiusIncrement, segments, color, lifeTime, true, ThicknessMaximum, false);
-			};
-			Circle(static_cast<UINT8>(UMath::Random(0, 13)), 2.0f, SColor::Black);
-			Circle(static_cast<UINT8>(UMath::Random(14, 24)), 2.25f, SColor::Grey);
-			Circle(static_cast<UINT8>(UMath::Random(25, 33)), 2.5f, SColor::White);
-			
 			const SVector posLowerBound(-3.0f);
 			const SVector posUpperBound(3.0f);
 			const SVector rotLowerBound(0.0f);
 			const SVector rotUpperBound(180.0f);
 			const SVector sclLowerBound(0.5f);
 			const SVector sclUpperBound(2.0f);
+
 			AddCube(
 				SVector::Random(posLowerBound, posUpperBound), 
 				SVector::Random(rotLowerBound, rotUpperBound), 
 				SVector::Random(sclLowerBound, sclUpperBound), 
 				SColor::Teal, lifeTime, true, ThicknessMaximum, false);
+
+			for (U8 i = 0; i < 7; i++)
+			{
+				AddPoint(SVector::Random(posLowerBound, posUpperBound), SColor::Magenta, lifeTime);
+			}
+
+			auto Line = [&](const SVector& pos, const SVector& rot, const SColor& axisColor, const SColor& lineColor)
+			{
+				SVector targetScl = SVector(cosTime, cosTime, cosTime) + SVector(0.5f);
+				AddAxis(pos, rot, targetScl, axisColor, lifeTime, true, ThicknessMaximum, true);
+				AddLine(SVector(), pos, lineColor, lifeTime, true, ThicknessMaximum * 0.7f, true);
+			};
+			Line(SVector::Random(posLowerBound, posUpperBound), SVector::Random(rotLowerBound, rotUpperBound), SColor::White, SColor::Grey);
+			Line(SVector::Random(posLowerBound, posUpperBound), SVector::Random(rotLowerBound, rotUpperBound), SColor::Grey, SColor::Black);
+			Line(SVector::Random(posLowerBound, posUpperBound), SVector::Random(rotLowerBound, rotUpperBound), SColor::Yellow, SColor::Orange);
+			Line(SVector::Random(posLowerBound, posUpperBound), SVector::Random(rotLowerBound, rotUpperBound), SColor::Orange, SColor::Red);
 		}
 		
-		auto LineFollowingAxis = [&](F32 rotation, F32 scale, const SVector& pos, const SColor& axisColor, const SColor& lineColor)
+		const F32 radiusIncrement = (0.5f * sinTime);
+		auto Circle = [&](UINT8 segments, F32 radius, const SVector& rotation, const SColor& color)
 		{
-			SVector targetRot = SVector(rotation * cosTime, rotation * sinTime, rotation * cosTime);
-			SVector targetScl = SVector(scale * cosTime, scale * cosTime, scale * cosTime) + SVector(0.5f);
-			AddAxis(pos, targetRot, targetScl, axisColor, 1.0f, false, ThicknessMaximum, true);
-			AddLine(SVector(), pos, lineColor, 1.0f, false, ThicknessMaximum * 0.7f, true);
+			AddCircle(SVector(), rotation, radius + radiusIncrement, segments, color, lifeTime, false, ThicknessMaximum, false);
 		};
+		Circle(static_cast<UINT8>(UMath::Random(0, 11)), 2.0f, { 0.0f, 180.0f * sinTime, 90.0f }, SColor::Red);
+		Circle(static_cast<UINT8>(UMath::Random(12, 24)), 2.25f, { 0.0f, 180.0f * sinTime, 0.0f }, SColor::Green);
+		Circle(static_cast<UINT8>(UMath::Random(25, 33)), 2.5f, { 90.0f, 0.0f, 180.0f * sinTime },SColor::Blue);
 
-		LineFollowingAxis(90.0f, 2.0f, SVector(3.0f * cosTime, 3.0f * sinTime, 3.0f * cosTime), SColor::Yellow, SColor::Orange);
-		LineFollowingAxis(90.0f, 0.5f, SVector(0.0f, 1.5f * cosTime, 1.5f * sinTime), SColor::Red, SColor::Red);
-		LineFollowingAxis(90.0f, 0.5f, SVector(1.5f * cosTime, 0.0f, 1.5f * sinTime), SColor::Green, SColor::Green);
-		LineFollowingAxis(90.0f, 0.5f, SVector(1.5f * sinTime, 1.5f * cosTime, 0.0f), SColor::Blue, SColor::Blue);
+		//auto LineFollowingAxis = [&](F32 rotation, F32 scale, const SVector& pos, const SColor& axisColor, const SColor& lineColor)
+		//{
+		//	SVector targetRot = SVector(rotation * cosTime, rotation * sinTime, rotation * cosTime);
+		//	SVector targetScl = SVector(scale * cosTime, scale * cosTime, scale * cosTime) + SVector(0.5f);
+		//	AddAxis(pos, targetRot, targetScl, axisColor, 1.0f, false, ThicknessMaximum, true);
+		//	AddLine(SVector(), pos, lineColor, 1.0f, false, ThicknessMaximum * 0.7f, true);
+		//};
+		//
+		//LineFollowingAxis(90.0f, 2.0f, SVector(3.0f * cosTime, 3.0f * sinTime, 3.0f * cosTime), SColor::Yellow, SColor::Orange);
+		//LineFollowingAxis(90.0f, 0.5f, SVector(0.0f, 1.5f * cosTime, 1.5f * sinTime), SColor::Red, SColor::Red);
+		//LineFollowingAxis(90.0f, 0.5f, SVector(1.5f * cosTime, 0.0f, 1.5f * sinTime), SColor::Green, SColor::Green);
+		//LineFollowingAxis(90.0f, 0.5f, SVector(1.5f * sinTime, 1.5f * cosTime, 0.0f), SColor::Blue, SColor::Blue);
 	}
 
 	void UDebugShapeSystem::AddMaxShapes()
