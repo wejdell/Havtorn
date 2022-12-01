@@ -175,16 +175,13 @@ namespace Havtorn
 			outIndices = indices;
 		}
 
-		static void IcoSpherePositionsAndIndices(U8 numberOfSubdivisions, std::vector<SVector>& outPositions, std::vector<U32>& outIndices)
+		static void IcoSpherePositionsAndIndices(std::vector<SVector>& outPositions, std::vector<U32>& outIndices)
 		{
-			// Put a cap on the number of subdivisions.
-			numberOfSubdivisions = UMath::Min(numberOfSubdivisions, static_cast<U8>(6));
-
 			// Approximate a sphere by tessellating an icosahedron.
 			const float X = 0.525731f;
 			const float Z = 0.850651f;
 
-			std::vector<SVector> positions =
+			outPositions =
 			{
 				SVector(-X, 0.0f, Z),	SVector(X, 0.0f, Z),
 				SVector(-X, 0.0f, -Z),	SVector(X, 0.0f, -Z),
@@ -194,24 +191,21 @@ namespace Havtorn
 				SVector(Z, -X, 0.0f),	SVector(-Z, -X, 0.0f)
 			};
 
-			std::vector<U32> indices =
+			outIndices =
 			{
 				1,4,0, 4,9,0, 4,5,9, 8,5,4, 1,8,4,
 				1,10,8, 10,3,8, 8,3,5, 3,2,5, 3,7,2,
 				3,10,7, 10,6,7, 6,11,7, 6,0,11, 6,1,0,
 				10,1,6, 11,0,9, 2,11,9, 5,2,9, 11,2,7
 			};
-
-			for (U32 i = 0; i < numberOfSubdivisions; ++i)
-				Subdivide(positions, indices);
-
-			outPositions = std::move(positions);
-			outIndices = std::move(indices);
 		}
 
 		static SMeshData CreateIcosphere(U8 numberOfSubdivisions)
 		{
 			// NR: Adapted from Introduction to 3D Graphics Programming with Direct X 12 by Frank D. Luna
+
+			// Put a cap on the number of subdivisions.
+			numberOfSubdivisions = UMath::Min(numberOfSubdivisions, static_cast<U8>(6));
 
 			// NR: We use a world transform to scale this instead of providing a radius argument here
 			
@@ -219,7 +213,10 @@ namespace Havtorn
 
 			std::vector<SVector> positions;
 			std::vector<U32> indices;
-			IcoSpherePositionsAndIndices(numberOfSubdivisions, positions, indices);
+			IcoSpherePositionsAndIndices(positions, indices);
+			
+			for (U32 i = 0; i < numberOfSubdivisions; ++i)
+				Subdivide(positions, indices);
 
 			// Project vertices onto sphere and scale.
 			for (U16 i = 0; i < static_cast<U16>(positions.size()); ++i)
@@ -472,10 +469,54 @@ namespace Havtorn
 			}
 		};
 
-		static SPrimitive IcoSpherePrimitive(U8 numberOfSubdivisions)
+		// IcoSphere adapted for LineTopologies.
+		static SPrimitive CreateIcoSphereLineTopo()
 		{
+			std::vector<SVector> positions;
+			std::vector<U32> indices;
+			IcoSpherePositionsAndIndices(positions, indices);
 
+			SPrimitive sphere;
+			for (auto& pos : positions)
+				sphere.Vertices.push_back({ pos.X, pos.Y, pos.Z, 1.0f });
+
+			U64 safeSize = static_cast<U64>(indices.size());
+			while (safeSize % 3 != 0)
+			{
+				safeSize--;
+			}
+
+			// AG: Slow but improves runtime performance. Really slow if subdivisions are > 2.
+			typedef std::pair<U32, U32> Line;
+			std::vector<Line> lines;
+			auto LineExists = [&](U32 a, U32 b)
+			{
+				for (U64 i = 0; i < lines.size(); i++)
+				{
+					if ((lines[i].first == a && lines[i].second == b)
+					|| (lines[i].first == b && lines[i].second == b))
+						return true;
+				}
+				return false;
+			};
+			for (U64 i = 0; i < indices.size(); i += 3)
+			{
+				for (U8 j = 0; j < 3; j++)
+				{
+					U8 next = (j + 1) % 3;
+					if (!LineExists(indices[i + j], indices[i + next]))
+					{
+						sphere.Indices.push_back(indices[i + j]);
+						sphere.Indices.push_back(indices[i + next]);
+						lines.push_back(Line(static_cast<U32>(i + j), static_cast<U32>(i + next)));
+					}
+				}	
+			}
+
+			return sphere;
 		}
+
+		const static SPrimitive WireFrameIcoSphere = CreateIcoSphereLineTopo();
 
 #pragma endregion !SPRIMITIVES_FOR_DEBUG_SHAPES
 	}
