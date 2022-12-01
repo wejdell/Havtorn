@@ -258,6 +258,11 @@ namespace Havtorn
 
 #pragma region SPRIMITIVES_FOR_DEBUG_SHAPES
 
+		/*
+			[Last edited: 2022-12-01 by AG]
+			SPrimitives are currently only used by DebugShape-Component/System. Max limit on vertices and indices are U8: 255.
+		*/
+
 		const static SPrimitive Line = 
 		{
 			{
