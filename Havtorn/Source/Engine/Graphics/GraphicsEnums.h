@@ -89,6 +89,7 @@ namespace Havtorn
 		Circle32,
 		Grid,
 		Axis,
+		WireframeIcoSphere,
 		//TODO.ANYONE: add more debug shape primitives.
 	};
 
@@ -107,6 +108,7 @@ namespace Havtorn
 		Circle32,
 		Grid,
 		Axis,
+		WireframeIcoSphere,
 		//TODO.ANYONE: add more debug shape primitives.
 	};
 
