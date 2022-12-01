@@ -29,6 +29,7 @@ namespace Havtorn
 		{ EVertexBufferPrimitives::Grid, GeometryPrimitives::Grid},
 		{ EVertexBufferPrimitives::Axis, GeometryPrimitives::Axis},
 		{ EVertexBufferPrimitives::WireframeIcoSphere, GeometryPrimitives::WireFrameIcoSphere},
+		{ EVertexBufferPrimitives::Square, GeometryPrimitives::Square},
 	};
 
 	UDebugShapeSystem::UDebugShapeSystem(CScene* scene, CRenderManager* renderManager)
@@ -181,6 +182,15 @@ namespace Havtorn
 		if (TryAddShape(EVertexBufferPrimitives::WireframeIcoSphere, EDefaultIndexBuffers::WireframeIcoSphere, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
 		{
 			SMatrix::Recompose(origin, SVector(), SVector(0.1f), transform->Transform.GetMatrix());
+		}
+	}
+
+	void UDebugShapeSystem::AddRectangle(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	{
+		Ref<STransformComponent> transform;
+		if (TryAddShape(EVertexBufferPrimitives::Square, EDefaultIndexBuffers::Square, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		{
+			SMatrix::Recompose(center, eulerRotation, scale, transform->Transform.GetMatrix());
 		}
 	}
 
@@ -388,6 +398,15 @@ namespace Havtorn
 		Circle(static_cast<UINT8>(UMath::Random(0, 11)), 2.0f, { 0.0f, 180.0f * sinTime, 90.0f }, SColor::Red);
 		Circle(static_cast<UINT8>(UMath::Random(12, 24)), 2.25f, { 0.0f, 180.0f * sinTime, 0.0f }, SColor::Green);
 		Circle(static_cast<UINT8>(UMath::Random(25, 33)), 2.5f, { 90.0f, 0.0f, 180.0f * sinTime },SColor::Blue);
+
+		const SVector scale = { 10.0f * UMath::FAbs(cosTime), 0.0f,  10.0f * UMath::FAbs(sinTime) };
+		const SColor rectColor = SColor::Black;
+		AddRectangle(SVector(0.0f, -5.0f, 0.0f), SVector(), scale, rectColor);
+		AddRectangle(SVector(0.0f, 5.0f, 0.0f), SVector(), scale,rectColor);
+		AddRectangle(SVector(-5.0f, 0.0f, 0.0f), SVector(0.0f, 0.0f, 90.0f), scale, rectColor);
+		AddRectangle(SVector(5.0f, 0.0f, 0.0f), SVector(0.0f, 0.0f, 90.0f), scale, rectColor);
+		AddRectangle(SVector(0.0f, 0.0f, -5.0f), SVector(90.0f, 0.0f, 0.0f), scale, rectColor);
+		AddRectangle(SVector(0.0f, 0.0f, 5.0f), SVector(90.0f, 0.0f, 0.0f), scale, rectColor);
 
 		//auto LineFollowingAxis = [&](F32 rotation, F32 scale, const SVector& pos, const SColor& axisColor, const SColor& lineColor)
 		//{
