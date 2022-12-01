@@ -90,6 +90,7 @@ namespace Havtorn
 		Grid,
 		Axis,
 		WireframeIcoSphere,
+		Square,
 		//TODO.ANYONE: add more debug shape primitives.
 	};
 
@@ -109,6 +110,7 @@ namespace Havtorn
 		Grid,
 		Axis,
 		WireframeIcoSphere,
+		Square,
 		//TODO.ANYONE: add more debug shape primitives.
 	};
 
