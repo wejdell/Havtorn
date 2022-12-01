@@ -59,13 +59,14 @@ namespace Havtorn
 		static HAVTORN_API void AddLine(const SVector& start, const SVector& end, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		static HAVTORN_API void AddArrow(const SVector& start, const SVector& end, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		// Object aligned bounding box with Width/Height/Depth = 1. Pivot is in center.
-		static HAVTORN_API void AddCube(const SVector& center,const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static HAVTORN_API void AddCube(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		static HAVTORN_API void AddCamera(const SVector& origin, const SVector& eulerRotation, const F32 fov = 70.0f, const F32 farZ = 1.0f, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		// Adds a circle across the XZ-plane with 8/16/32 segments.
 		static HAVTORN_API void AddCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius = 0.5f, const UINT8 segments = 16, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		// 10x10 grid across the XZ-plane (default).
 		static HAVTORN_API void AddGrid(const SVector& origin, const SVector& eulerRotation = SVector(), const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		static HAVTORN_API void AddAxis(const SVector& origin, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
-		// Adds IcoSphere
+		// Adds a point at 1/10th of world scale.
 		static HAVTORN_API void AddPoint(const SVector& origin, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMaximum, const bool ignoreDepth = true);
 
 	private:	
