@@ -523,6 +523,19 @@ namespace Havtorn
 
 		const static SPrimitive WireFrameIcoSphere = CreateIcoSphereLineTopo();
 
+		const static SPrimitive Square =
+		{
+			{
+				{  0.5f,  0.0f,  0.5f,  1.0f },
+				{ -0.5f,  0.0f,  0.5f,  1.0f },
+				{ -0.5f,  0.0f, -0.5f,  1.0f },
+				{  0.5f,  0.0f, -0.5f,  1.0f },
+			},
+			{
+				0,1, 1,2, 2,3, 3,0 
+			}
+		};
+
 #pragma endregion !SPRIMITIVES_FOR_DEBUG_SHAPES
 	}
 }

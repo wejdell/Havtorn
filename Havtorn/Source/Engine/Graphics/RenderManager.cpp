@@ -292,6 +292,7 @@ namespace Havtorn
 		AddVertexBuffer(GeometryPrimitives::Grid.Vertices);
 		AddVertexBuffer(GeometryPrimitives::Axis.Vertices);
 		AddVertexBuffer(GeometryPrimitives::WireFrameIcoSphere.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Square.Vertices);
 	}
 
 	void CRenderManager::InitIndexBuffers()
@@ -308,6 +309,7 @@ namespace Havtorn
 		AddIndexBuffer(GeometryPrimitives::Grid.Indices);
 		AddIndexBuffer(GeometryPrimitives::Axis.Indices);
 		AddIndexBuffer(GeometryPrimitives::WireFrameIcoSphere.Indices);
+		AddIndexBuffer(GeometryPrimitives::Square.Indices);
 
 		AddIndexBuffer(GeometryPrimitives::Icosphere.Indices);
 	}
