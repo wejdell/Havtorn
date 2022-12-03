@@ -91,6 +91,7 @@ namespace Havtorn
 		Axis,
 		WireframeIcoSphere,
 		Square,
+		UVSphere,
 		//TODO.ANYONE: add more debug shape primitives.
 	};
 
@@ -111,6 +112,7 @@ namespace Havtorn
 		Axis,
 		WireframeIcoSphere,
 		Square,
+		UVSphere,
 		//TODO.ANYONE: add more debug shape primitives.
 	};
 
