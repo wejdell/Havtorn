@@ -521,6 +521,7 @@ namespace Havtorn
 			return sphere;
 		}
 
+		// TODO.AG: Make less expensive to draw.
 		const static SPrimitive WireFrameIcoSphere = CreateIcoSphereLineTopo();
 
 		const static SPrimitive Square =
@@ -534,6 +535,108 @@ namespace Havtorn
 			{
 				0,1, 1,2, 2,3, 3,0 
 			}
+		};
+
+		static std::vector<SPositionVertex> UVSphereVertices(const F32 radius, U32 latitudes, U32 longitudes)
+		{
+			// AG: Modified version of: https://gist.github.com/Pikachuxxxx/5c4c490a7d7679824e0e18af42918efc
+			
+			longitudes = UMath::Max(3u, longitudes);
+			latitudes = UMath::Max(2u, latitudes);
+
+			const F32 theta = 2.0f * UMath::Pi;
+			const F32 phi = UMath::Pi;
+			F32 deltaLatitude = phi / static_cast<F32>(latitudes);
+			F32 deltaLongitude = theta / static_cast<F32>(longitudes);
+			F32 latitudeAngle;
+			F32 longitudeAngle;
+
+			std::vector<SPositionVertex> vertices;
+			
+			// Add North and South poles to indices 0 & 1 respectively.
+			vertices.push_back({0.0f, radius, 0.0f, 1.0f});
+			vertices.push_back({0.0f, -radius, 0.0f, 1.0f});
+			
+			const F32 halfPi = UMath::Pi / 2.0f;
+			// [ 1 >= i <= latitudes - 1 ]:
+			// NPole == latitudeAngle = halfPi - (0 * deltaLatitude);
+			// SPole == latitudeAngle = halfPi - (latitudes * deltaLatitude);
+			for (U32 i = 1u; i <= (latitudes - 1u); i++)
+			{
+				// Every step of latitudeAngle creates 1 circle around the Y axis. => Indices 2, ..., 2+longitudes-1 shape 1 circle
+				latitudeAngle = halfPi - (static_cast<F32>(i) * deltaLatitude);
+				F32 xz = radius * UMath::Cos(latitudeAngle);
+				F32 y = radius * UMath::Sin(latitudeAngle);
+
+				for (U32 j = 0u; j < longitudes; j++)
+				{
+					longitudeAngle = static_cast<F32>(j) * deltaLongitude;
+
+					SPositionVertex vertex;
+					vertex.x = xz * UMath::Cos(longitudeAngle);
+					vertex.y = y;
+					vertex.z = xz * UMath::Sin(longitudeAngle);
+					vertex.w = 1.0f;
+					vertices.push_back(vertex);
+				}
+			}
+
+			return vertices;			
+		}
+
+		static std::vector<U32> UVSphereIndicesLineTopo(U32 latitudes, U32 longitudes)
+		{
+			longitudes = UMath::Max(3u, longitudes);
+			latitudes = UMath::Max(2u, latitudes);
+
+			std::vector<U32> indices;
+			
+			// Latitudinal indices: 
+			U32 startIndex = 2;
+			for (U32 i = 0; i <= (latitudes - 2); i++)
+			{
+				U32 endIndex = startIndex + (longitudes - 1);
+				indices.push_back(startIndex);
+				indices.push_back(endIndex);
+				for (U32 j = startIndex; j < endIndex;)
+				{
+					U32 nextIndex = j + 1;
+					indices.push_back(j);
+					indices.push_back(nextIndex);
+					j = nextIndex;
+				}
+				startIndex = endIndex + 1;
+			}
+
+			// Longitudinal indices: 
+			const U32 northPole = 0;
+			const U32 southPole = 1;
+			startIndex = 2;
+			for (U32 i = 0; i < longitudes; i++)
+			{
+				U32 endIndex = startIndex + ((latitudes - 2) * longitudes);
+				indices.push_back(northPole);
+				indices.push_back(startIndex);
+				indices.push_back(endIndex);
+				indices.push_back(southPole);
+				for (U32 j = startIndex; j < endIndex;)
+				{
+					U32 nextIndex = j + (longitudes);
+					indices.push_back(j);
+					indices.push_back(nextIndex);
+					j = nextIndex;
+				}
+				startIndex++;
+			}
+
+			return indices;
+		}
+
+		// 12 as max should be enough
+		const static SPrimitive UVSphere =
+		{
+			UVSphereVertices(0.5f, 12, 12),
+			UVSphereIndicesLineTopo(12, 12)
 		};
 
 #pragma endregion !SPRIMITIVES_FOR_DEBUG_SHAPES
