@@ -30,6 +30,7 @@ namespace Havtorn
 		{ EVertexBufferPrimitives::Axis, GeometryPrimitives::Axis},
 		{ EVertexBufferPrimitives::WireframeIcoSphere, GeometryPrimitives::WireFrameIcoSphere},
 		{ EVertexBufferPrimitives::Square, GeometryPrimitives::Square},
+		{ EVertexBufferPrimitives::UVSphere, GeometryPrimitives::UVSphere},
 	};
 
 	UDebugShapeSystem::UDebugShapeSystem(CScene* scene, CRenderManager* renderManager)
@@ -194,6 +195,15 @@ namespace Havtorn
 		}
 	}
 
+	void UDebugShapeSystem::AddSphere(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	{
+		Ref<STransformComponent> transform;
+		if (TryAddShape(EVertexBufferPrimitives::UVSphere, EDefaultIndexBuffers::UVSphere, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		{
+			SMatrix::Recompose(center, eulerRotation, scale, transform->Transform.GetMatrix());
+		}
+	}
+
 #pragma endregion !AddShape
 
 	bool UDebugShapeSystem::InstanceExists()
@@ -226,7 +236,7 @@ namespace Havtorn
 		debugShapes[shapeIndex]->Thickness = UMath::Clamp(thickness, ThicknessMinimum, ThicknessMaximum);
 		debugShapes[shapeIndex]->IgnoreDepth = ignoreDepth;
 		debugShapes[shapeIndex]->VertexBufferIndex = static_cast<U8>(vertexBuffer);
-		debugShapes[shapeIndex]->IndexCount = static_cast<U8>(Shapes.at(vertexBuffer).Indices.size());
+		debugShapes[shapeIndex]->IndexCount = static_cast<U16>(Shapes.at(vertexBuffer).Indices.size());
 		debugShapes[shapeIndex]->IndexBufferIndex = static_cast<U8>(indexBuffer);
 
 		std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
