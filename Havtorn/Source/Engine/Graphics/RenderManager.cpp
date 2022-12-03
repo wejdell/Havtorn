@@ -293,6 +293,7 @@ namespace Havtorn
 		AddVertexBuffer(GeometryPrimitives::Axis.Vertices);
 		AddVertexBuffer(GeometryPrimitives::WireFrameIcoSphere.Vertices);
 		AddVertexBuffer(GeometryPrimitives::Square.Vertices);
+		AddVertexBuffer(GeometryPrimitives::UVSphere.Vertices);
 	}
 
 	void CRenderManager::InitIndexBuffers()
@@ -310,6 +311,7 @@ namespace Havtorn
 		AddIndexBuffer(GeometryPrimitives::Axis.Indices);
 		AddIndexBuffer(GeometryPrimitives::WireFrameIcoSphere.Indices);
 		AddIndexBuffer(GeometryPrimitives::Square.Indices);
+		AddIndexBuffer(GeometryPrimitives::UVSphere.Indices);
 
 		AddIndexBuffer(GeometryPrimitives::Icosphere.Indices);
 	}
@@ -2104,6 +2106,7 @@ namespace Havtorn
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::LineList)]);
 		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
 
+		// TEMP
 		Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::Line)], nullptr, 0);
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Line)], nullptr, 0);
 		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::Line)], nullptr, 0);
