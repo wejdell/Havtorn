@@ -45,6 +45,10 @@ namespace Havtorn
 		inline static U8 ToU8Range(const F32 c);
 		// Returs color value in a [0.0f - 1.0f] range.
 		inline static F32 ToFloatRange(const U8 c);
+		inline static SColor Random(U8 lowerBound, U8 upperBound, U8 alpha);
+		inline static SColor Random(U8 lowerBound, U8 upperBound);
+		// TODO.AG: change the name, uniform sounds a bit odd.
+		inline static SColor RandomUniform(U8 lowerBound, U8 upperBound, U8 alpha);
 	};
 
 	SColor::SColor() {}
@@ -108,5 +112,25 @@ namespace Havtorn
 	F32 SColor::ToFloatRange(const U8 c)
 	{
 		return static_cast<F32>(c) * U8MaxAsF32Reciprocal;
+	}
+
+	inline SColor SColor::Random(U8 lowerBound, U8 upperBound, U8 alpha)
+	{
+		return SColor(
+			static_cast<U8>(UMath::Random(lowerBound, upperBound)), 
+			static_cast<U8>(UMath::Random(lowerBound, upperBound)), 
+			static_cast<U8>(UMath::Random(lowerBound, upperBound)), 
+			alpha);
+	}
+
+	inline SColor SColor::Random(U8 lowerBound, U8 upperBound)
+	{
+		return SColor::Random(lowerBound,upperBound, static_cast<U8>(UMath::Random(lowerBound, upperBound)));
+	}
+
+	inline SColor SColor::RandomUniform(U8 lowerBound, U8 upperBound, U8 alpha)
+	{
+		U8 c = static_cast<U8>(UMath::Random(lowerBound, upperBound));
+		return SColor(c, c, c, alpha);
 	}
 }
