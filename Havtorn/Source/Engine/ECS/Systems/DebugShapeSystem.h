@@ -70,6 +70,8 @@ namespace Havtorn
 		static HAVTORN_API void AddPoint(const SVector& origin, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMaximum, const bool ignoreDepth = true);
 		// Adds a rectangle across the XZ-plane. Default (Scale = 1,1,1) is a square.
 		static HAVTORN_API void AddRectangle(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		// Adds UVSphere
+		static HAVTORN_API void AddSphere(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 
 	private:	
 		static bool InstanceExists();
