@@ -463,7 +463,7 @@ namespace Havtorn
 			}
 		};
 
-		static std::vector<SPositionVertex> UVSphereVertices(const F32 radius, U32 latitudes, U32 longitudes)
+		static std::vector<SPositionVertex> UVSphereVertices(const F32 diameter, U32 latitudes, U32 longitudes)
 		{
 			// AG: Modified version of: https://gist.github.com/Pikachuxxxx/5c4c490a7d7679824e0e18af42918efc
 			
@@ -480,8 +480,8 @@ namespace Havtorn
 			std::vector<SPositionVertex> vertices;
 			
 			// Add North and South poles to indices 0 & 1 respectively.
-			vertices.push_back({0.0f, radius, 0.0f, 1.0f});
-			vertices.push_back({0.0f, -radius, 0.0f, 1.0f});
+			vertices.push_back({0.0f, diameter, 0.0f, 1.0f});
+			vertices.push_back({0.0f, -diameter, 0.0f, 1.0f});
 			
 			const F32 halfPi = UMath::Pi / 2.0f;
 			// [ 1 >= i <= latitudes - 1 ]:
@@ -491,8 +491,8 @@ namespace Havtorn
 			{
 				// Every step of latitudeAngle creates 1 circle around the Y axis. => Indices 2, ..., 2+longitudes-1 shape 1 circle
 				latitudeAngle = halfPi - (static_cast<F32>(i) * deltaLatitude);
-				F32 xz = radius * UMath::Cos(latitudeAngle);
-				F32 y = radius * UMath::Sin(latitudeAngle);
+				F32 xz = diameter * UMath::Cos(latitudeAngle);
+				F32 y = diameter * UMath::Sin(latitudeAngle);
 
 				for (U32 j = 0u; j < longitudes; j++)
 				{
@@ -560,7 +560,7 @@ namespace Havtorn
 
 		const static SPrimitive UVSphere =
 		{
-			UVSphereVertices(0.5f, 12, 12),
+			UVSphereVertices(1.0f, 12, 12),
 			UVSphereIndicesLineTopo(12, 12)
 		};
 
