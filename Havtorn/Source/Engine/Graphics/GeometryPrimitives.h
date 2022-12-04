@@ -326,8 +326,12 @@ namespace Havtorn
 		};
 
 		constexpr F32 CircleRadius = 0.5f;
-		const static std::vector<SPositionVertex> CircleVertices(const F32 radius, const U8 segments)
+
+		// Creates circle across the XZ-plane
+		const static std::vector<SPositionVertex> CircleVertices(const F32 radius, U32 segments)
 		{
+			segments = UMath::Max(4u, static_cast<U32>(UMath::DecrementUntilEven(segments)));
+
 			const F32 step = (2.0f * UMath::Pi) / static_cast<F32>(segments);
 
 			std::vector<SPositionVertex> vertices;
@@ -345,8 +349,10 @@ namespace Havtorn
 			return vertices;
 		}
 		
-		const static std::vector<U32> CircleIndicesLineTopology(const U8 segments)
+		const static std::vector<U32> CircleIndicesLineTopology(U32 segments)
 		{
+			segments = UMath::Max(4u, static_cast<U32>(UMath::DecrementUntilEven(segments)));
+
 			std::vector<U32> indices;
 			for (U8 i = 0u; i < segments; i++)
 			{
