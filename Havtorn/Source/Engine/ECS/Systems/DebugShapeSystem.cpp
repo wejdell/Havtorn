@@ -28,7 +28,7 @@ namespace Havtorn
 		{ EVertexBufferPrimitives::Circle32, GeometryPrimitives::Circle32},
 		{ EVertexBufferPrimitives::Grid, GeometryPrimitives::Grid},
 		{ EVertexBufferPrimitives::Axis, GeometryPrimitives::Axis},
-		{ EVertexBufferPrimitives::WireframeIcoSphere, GeometryPrimitives::WireFrameIcoSphere},
+		{ EVertexBufferPrimitives::Octahedron, GeometryPrimitives::Octahedron},
 		{ EVertexBufferPrimitives::Square, GeometryPrimitives::Square},
 		{ EVertexBufferPrimitives::UVSphere, GeometryPrimitives::UVSphere},
 	};
@@ -180,7 +180,7 @@ namespace Havtorn
 	void UDebugShapeSystem::AddPoint(const SVector& origin, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		Ref<STransformComponent> transform;
-		if (TryAddShape(EVertexBufferPrimitives::WireframeIcoSphere, EDefaultIndexBuffers::WireframeIcoSphere, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		if (TryAddShape(EVertexBufferPrimitives::Octahedron, EDefaultIndexBuffers::Octahedron, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
 		{
 			SMatrix::Recompose(origin, SVector(), SVector(0.1f), transform->Transform.GetMatrix());
 		}
