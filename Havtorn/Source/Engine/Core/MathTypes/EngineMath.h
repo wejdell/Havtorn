@@ -146,6 +146,8 @@ namespace Havtorn
 
 		static inline I32 Random(I32 lowerBound, I32 upperBound, I32 excludedNumber);
 		static inline I32 Random(I32 lowerBound, I32 upperBound, std::vector<I32>& excludedNumbers);
+
+		static inline U64 DecrementUntilEven(U64 val);
 	};
 
 	template<typename T>
@@ -604,5 +606,12 @@ namespace Havtorn
 		}
 
 		return num;
+	}
+
+	inline U64 UMath::DecrementUntilEven(U64 val)
+	{
+		while (val % 2u != 0u)
+			val--;
+		return val;
 	}
 }
