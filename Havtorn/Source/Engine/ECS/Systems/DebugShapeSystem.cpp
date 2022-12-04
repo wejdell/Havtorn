@@ -31,6 +31,7 @@ namespace Havtorn
 		{ EVertexBufferPrimitives::Octahedron, GeometryPrimitives::Octahedron},
 		{ EVertexBufferPrimitives::Square, GeometryPrimitives::Square},
 		{ EVertexBufferPrimitives::UVSphere, GeometryPrimitives::UVSphere},
+		{ EVertexBufferPrimitives::Cone, GeometryPrimitives::Cone},
 	};
 
 	UDebugShapeSystem::UDebugShapeSystem(CScene* scene, CRenderManager* renderManager)
@@ -94,41 +95,41 @@ namespace Havtorn
 #pragma region AddShape
 	void UDebugShapeSystem::AddLine(const SVector& start, const SVector& end, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
-		Ref<STransformComponent> transform;
-		if (TryAddShape(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line)};
+		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
 		{
-			Instance->TransformToFaceAndReach(start, end, transform->Transform.GetMatrix());
+			Instance->TransformToFaceAndReach(start, end, shapes[0].Transform->Transform.GetMatrix());
 		}	
 	}
 
 	void UDebugShapeSystem::AddArrow(const SVector& start, const SVector& end, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
-		Ref<STransformComponent> transform;
-		if (TryAddShape(EVertexBufferPrimitives::Arrow, EDefaultIndexBuffers::Arrow, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::Arrow, EDefaultIndexBuffers::Arrow)};
+		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
 		{
-			Instance->TransformToFaceAndReach(start, end, transform->Transform.GetMatrix());
+			Instance->TransformToFaceAndReach(start, end, shapes[0].Transform->Transform.GetMatrix());
 		}	
 	}
 
 	void UDebugShapeSystem::AddCube(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
-		Ref<STransformComponent> transform;
-		if (TryAddShape(EVertexBufferPrimitives::BoundingBox, EDefaultIndexBuffers::BoundingBox, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::BoundingBox, EDefaultIndexBuffers::BoundingBox)};
+		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
 		{
-			SMatrix::Recompose(center, eulerRotation, scale, transform->Transform.GetMatrix());
+			SMatrix::Recompose(center, eulerRotation, scale, shapes[0].Transform->Transform.GetMatrix());
 		}		
 	}
 
 	void UDebugShapeSystem::AddCamera(const SVector& origin, const SVector& eulerRotation, const F32 fov, const F32 farZ, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
-		Ref<STransformComponent> transform;
-		if (TryAddShape(EVertexBufferPrimitives::Camera, EDefaultIndexBuffers::Camera, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::Camera, EDefaultIndexBuffers::Camera)};
+		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
 		{
 			// TODO.AG: Rework this. Does not seem to properly represent fov & farZ. Might have to use aspectratio?
 			F32 y = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
 			F32 x = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
 			SVector vScale(x, y, farZ);
-			SMatrix::Recompose(origin, eulerRotation, vScale, transform->Transform.GetMatrix());
+			SMatrix::Recompose(origin, eulerRotation, vScale, shapes[0].Transform->Transform.GetMatrix());
 		}
 	}
 
@@ -151,56 +152,56 @@ namespace Havtorn
 			indexBuffer = EDefaultIndexBuffers::Circle8;
 		}
 
-		Ref<STransformComponent> transform;
-		if (TryAddShape(vertexBufferPrimitive, indexBuffer, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		std::vector<SShapeData> shapes = { SShapeData(vertexBufferPrimitive, indexBuffer)};
+		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
 		{
 			SVector scale(radius / GeometryPrimitives::CircleRadius);
-			SMatrix::Recompose(origin, eulerRotation, scale, transform->Transform.GetMatrix());
+			SMatrix::Recompose(origin, eulerRotation, scale, shapes[0].Transform->Transform.GetMatrix());
 		}
 	}
 
 	void UDebugShapeSystem::AddGrid(const SVector& origin, const SVector& eulerRotation, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
-		Ref<STransformComponent> transform;
-		if (TryAddShape(EVertexBufferPrimitives::Grid, EDefaultIndexBuffers::Grid, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::Grid, EDefaultIndexBuffers::Grid)};
+		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
 		{
-			SMatrix::Recompose(origin, eulerRotation, SVector(1.0f), transform->Transform.GetMatrix());
+			SMatrix::Recompose(origin, eulerRotation, SVector(1.0f), shapes[0].Transform->Transform.GetMatrix());
 		}
 	}
 
 	void UDebugShapeSystem::AddAxis(const SVector& origin, const SVector& eulerRotation, const SVector& scale, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
-		Ref<STransformComponent> transform;
-		if (TryAddShape(EVertexBufferPrimitives::Axis, EDefaultIndexBuffers::Axis, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::Axis, EDefaultIndexBuffers::Axis)};
+		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
 		{
-			SMatrix::Recompose(origin, eulerRotation, scale, transform->Transform.GetMatrix());
+			SMatrix::Recompose(origin, eulerRotation, scale, shapes[0].Transform->Transform.GetMatrix());
 		}
 	}
 
 	void UDebugShapeSystem::AddPoint(const SVector& origin, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
-		Ref<STransformComponent> transform;
-		if (TryAddShape(EVertexBufferPrimitives::Octahedron, EDefaultIndexBuffers::Octahedron, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::Octahedron, EDefaultIndexBuffers::Octahedron)};
+		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
 		{
-			SMatrix::Recompose(origin, SVector(), SVector(0.1f), transform->Transform.GetMatrix());
+			SMatrix::Recompose(origin, SVector(), SVector(0.1f), shapes[0].Transform->Transform.GetMatrix());
 		}
 	}
 
 	void UDebugShapeSystem::AddRectangle(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
-		Ref<STransformComponent> transform;
-		if (TryAddShape(EVertexBufferPrimitives::Square, EDefaultIndexBuffers::Square, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::Square, EDefaultIndexBuffers::Square)};
+		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
 		{
-			SMatrix::Recompose(center, eulerRotation, scale, transform->Transform.GetMatrix());
+			SMatrix::Recompose(center, eulerRotation, scale, shapes[0].Transform->Transform.GetMatrix());
 		}
 	}
 
 	void UDebugShapeSystem::AddSphere(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
-		Ref<STransformComponent> transform;
-		if (TryAddShape(EVertexBufferPrimitives::UVSphere, EDefaultIndexBuffers::UVSphere, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, transform))
+		std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::UVSphere, EDefaultIndexBuffers::UVSphere)};
+		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
 		{
-			SMatrix::Recompose(center, eulerRotation, scale, transform->Transform.GetMatrix());
+			SMatrix::Recompose(center, eulerRotation, scale, shapes[0].Transform->Transform.GetMatrix());
 		}
 	}
 
@@ -218,31 +219,35 @@ namespace Havtorn
 		return true;
 	}
 
-	bool UDebugShapeSystem::TryAddShape(const EVertexBufferPrimitives vertexBuffer, const EDefaultIndexBuffers indexBuffer, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, Ref<STransformComponent>& outTransform)
+	bool UDebugShapeSystem::TryAddShape(const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, std::vector<SShapeData>& outShapes)
 	{
 		if (!InstanceExists())
 			return false;
 
-		U64 entityIndex = 0;
-		if (!Instance->TryGetAvailableIndex(entityIndex))
+		std::vector<U64> indices;
+		if (!Instance->TryGetAvailableIndices(outShapes.size(), indices))
 			return false;
 
 		const std::vector<Ref<SEntity>>& entities = Instance->Scene->GetEntities();
 
-		const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
-		std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
-		debugShapes[shapeIndex]->Color = color;
-		debugShapes[shapeIndex]->LifeTime = useLifeTime ? (GTime::Time() + lifeTimeSeconds) : -1.0f;
-		debugShapes[shapeIndex]->Thickness = UMath::Clamp(thickness, ThicknessMinimum, ThicknessMaximum);
-		debugShapes[shapeIndex]->IgnoreDepth = ignoreDepth;
-		debugShapes[shapeIndex]->VertexBufferIndex = static_cast<U8>(vertexBuffer);
-		debugShapes[shapeIndex]->IndexCount = static_cast<U16>(Shapes.at(vertexBuffer).Indices.size());
-		debugShapes[shapeIndex]->IndexBufferIndex = static_cast<U8>(indexBuffer);
+		for (U64 i = 0u; i < indices.size(); i++)
+		{
+			const U64 entityIndex = indices[i];
+			const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
+			std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
+			debugShapes[shapeIndex]->Color = color;
+			debugShapes[shapeIndex]->LifeTime = useLifeTime ? (GTime::Time() + lifeTimeSeconds) : -1.0f;
+			debugShapes[shapeIndex]->Thickness = UMath::Clamp(thickness, ThicknessMinimum, ThicknessMaximum);
+			debugShapes[shapeIndex]->IgnoreDepth = ignoreDepth;
+			debugShapes[shapeIndex]->VertexBufferIndex = static_cast<U8>(outShapes[i].VertexBuffer);
+			debugShapes[shapeIndex]->IndexCount = static_cast<U16>(Shapes.at(outShapes[i].VertexBuffer).Indices.size());
+			debugShapes[shapeIndex]->IndexBufferIndex = static_cast<U8>(outShapes[i].IndexBuffer);
 
-		std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
-		const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
-		outTransform = transforms[transformIndex];
-		
+			std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
+			const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
+			outShapes[i].Transform = transforms[transformIndex];
+		}
+
 		return true;
 	}
 
@@ -325,20 +330,23 @@ namespace Havtorn
 		}
 	}
 
-	bool UDebugShapeSystem::TryGetAvailableIndex(U64& outIndex)
+	bool UDebugShapeSystem::TryGetAvailableIndices(const U64 nrOfIndices, std::vector<U64>& outIndices)
 	{
-		if (AvailableIndices.empty())
+		if (AvailableIndices.empty() || AvailableIndices.size() < nrOfIndices)
 		{
 #if DEBUG_DRAWER_LOG_ERROR
 			HV_LOG_ERROR("UDebugShapeSystem: Reached MAX_DEBUG_SHAPES, no more shapes available!");
 #endif
-			outIndex = 0;
 			return false;
 		}
 
-		outIndex = AvailableIndices.front();
-		AvailableIndices.pop();
-		ActiveIndices.push_back(outIndex);
+		outIndices.resize(nrOfIndices);
+		for (U64 i = 0u; i < nrOfIndices; i++)
+		{
+			outIndices[i] = AvailableIndices.front();
+			AvailableIndices.pop();
+			ActiveIndices.push_back(outIndices[i]);
+		}
 		return true;
 	}
 

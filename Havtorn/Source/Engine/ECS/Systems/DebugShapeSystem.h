@@ -72,10 +72,30 @@ namespace Havtorn
 		static HAVTORN_API void AddRectangle(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		// Adds UVSphere
 		static HAVTORN_API void AddSphere(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		// Cone with height along Y axis.
+		static HAVTORN_API void AddCone(const SVector& base, const SVector& eulerRotation, const F32 height, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 
 	private:	
 		static bool InstanceExists();
-		static bool TryAddShape(const EVertexBufferPrimitives vertexBuffer, const EDefaultIndexBuffers indexBuffer, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, Ref<STransformComponent>& outTransform);
+		/*
+			Adding several shapes at once: composite shapes.
+				Differing parameters: vertexBuffer, indexBuffer, transform
+				Need to be able to check available indices directly
+
+		*/
+		struct SShapeData
+		{
+			EVertexBufferPrimitives VertexBuffer;
+			EDefaultIndexBuffers IndexBuffer;
+			Ref<STransformComponent> Transform;
+
+			SShapeData(EVertexBufferPrimitives vertexBuffer, EDefaultIndexBuffers indexBuffer)
+				: VertexBuffer(vertexBuffer)
+				, IndexBuffer(indexBuffer)
+			{}
+
+		};
+		static bool TryAddShape(const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, std::vector<SShapeData>& outShapes);
 		
 		void SendRenderCommands(
 			const std::vector<Ref<SEntity>>& entities,
@@ -86,7 +106,7 @@ namespace Havtorn
 		void ResetAvailableIndices();
 
 		void TransformToFaceAndReach(const SVector& start, const SVector& end, SMatrix& transform);
-		bool TryGetAvailableIndex(U64& outIndex);
+		bool TryGetAvailableIndices(const U64 nrOfIndices, std::vector<U64>& outIndices);
 
 #if _DEBUG
 	public:
