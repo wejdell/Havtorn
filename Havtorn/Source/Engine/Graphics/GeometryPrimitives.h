@@ -175,6 +175,8 @@ namespace Havtorn
 			outIndices = indices;
 		}
 
+
+
 		static void IcoSpherePositionsAndIndices(std::vector<SVector>& outPositions, std::vector<U32>& outIndices)
 		{
 			// Approximate a sphere by tessellating an icosahedron.
@@ -474,55 +476,23 @@ namespace Havtorn
 			}
 		};
 
-		// IcoSphere adapted for LineTopologies.
-		static SPrimitive CreateIcoSphereLineTopo()
-		{
-			std::vector<SVector> positions;
-			std::vector<U32> indices;
-			IcoSpherePositionsAndIndices(positions, indices);
-
-			SPrimitive sphere;
-			for (auto& pos : positions)
-				sphere.Vertices.push_back({ pos.X, pos.Y, pos.Z, 1.0f });
-
-			U64 safeSize = static_cast<U64>(indices.size());
-			while (safeSize % 3 != 0)
-			{
-				safeSize--;
-			}
-
-			// AG: Slow but improves runtime performance. Really slow if subdivisions are > 2.
-			typedef std::pair<U32, U32> Line;
-			std::vector<Line> lines;
-			auto LineExists = [&](U32 a, U32 b)
-			{
-				for (U64 i = 0; i < lines.size(); i++)
-				{
-					if ((lines[i].first == a && lines[i].second == b)
-					|| (lines[i].first == b && lines[i].second == b))
-						return true;
-				}
-				return false;
-			};
-			for (U64 i = 0; i < indices.size(); i += 3)
-			{
-				for (U8 j = 0; j < 3; j++)
-				{
-					U8 next = (j + 1) % 3;
-					if (!LineExists(indices[i + j], indices[i + next]))
-					{
-						sphere.Indices.push_back(indices[i + j]);
-						sphere.Indices.push_back(indices[i + next]);
-						lines.push_back(Line(static_cast<U32>(i + j), static_cast<U32>(i + next)));
-					}
-				}	
-			}
-
-			return sphere;
-		}
-
 		// TODO.AG: Make less expensive to draw.
-		const static SPrimitive WireFrameIcoSphere = CreateIcoSphereLineTopo();
+		const static SPrimitive Octahedron =
+		{
+			{ 
+				{ 0.0f, 0.5f, 0.0f, 1.0f },
+				{ 0.5f, 0.0f, 0.0f, 1.0f },
+				{ -0.5f, 0.0f, 0.0f, 1.0f },
+				{ 0.0f, 0.0f, 0.5f, 1.0f },
+				{ 0.0f, 0.0f, -0.5f, 1.0f },
+				{ 0.0f, -0.5f, 0.0f, 1.0f },
+			},
+			{
+				0,1, 0,2, 0,3, 0,4, 
+				5,1, 5,2, 5,3, 5,4, 
+				1,4, 4,2, 2,3, 3,1 
+			}
+		};
 
 		const static SPrimitive Square =
 		{
@@ -632,7 +602,6 @@ namespace Havtorn
 			return indices;
 		}
 
-		// 12 as max should be enough
 		const static SPrimitive UVSphere =
 		{
 			UVSphereVertices(0.5f, 12, 12),
