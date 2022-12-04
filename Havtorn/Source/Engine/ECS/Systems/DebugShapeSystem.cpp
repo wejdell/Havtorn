@@ -381,7 +381,7 @@ namespace Havtorn
 				SVector::Random(posLowerBound, posUpperBound), 
 				SVector::Random(rotLowerBound, rotUpperBound), 
 				SVector::Random(sclLowerBound, sclUpperBound), 
-				SColor::Teal, lifeTime, true, ThicknessMaximum, false);
+				SColor::Random(0, 255, 255), lifeTime, true, ThicknessMaximum, false);
 
 			for (U8 i = 0; i < 7; i++)
 			{
@@ -400,6 +400,7 @@ namespace Havtorn
 			Line(SVector::Random(posLowerBound, posUpperBound), SVector::Random(rotLowerBound, rotUpperBound), SColor::Orange, SColor::Red);
 		}
 		
+
 		const F32 radiusIncrement = (0.5f * sinTime);
 		auto Circle = [&](UINT8 segments, F32 radius, const SVector& rotation, const SColor& color)
 		{
@@ -408,6 +409,7 @@ namespace Havtorn
 		Circle(static_cast<UINT8>(UMath::Random(0, 11)), 2.0f, { 0.0f, 180.0f * sinTime, 90.0f }, SColor::Red);
 		Circle(static_cast<UINT8>(UMath::Random(12, 24)), 2.25f, { 0.0f, 180.0f * sinTime, 0.0f }, SColor::Green);
 		Circle(static_cast<UINT8>(UMath::Random(25, 33)), 2.5f, { 90.0f, 0.0f, 180.0f * sinTime },SColor::Blue);
+		AddSphere(SVector(), SVector(), SVector(3.0f), SColor::Teal, 0.0f, false, ThicknessMinimum, false);
 
 		const SVector scale = { 10.0f * UMath::FAbs(cosTime), 0.0f,  10.0f * UMath::FAbs(sinTime) };
 		const SColor rectColor = SColor::Black;
