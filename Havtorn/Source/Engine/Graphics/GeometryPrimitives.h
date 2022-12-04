@@ -175,15 +175,21 @@ namespace Havtorn
 			outIndices = indices;
 		}
 
-
-
-		static void IcoSpherePositionsAndIndices(std::vector<SVector>& outPositions, std::vector<U32>& outIndices)
+		static SMeshData CreateIcosphere(U8 numberOfSubdivisions)
 		{
+			// NR: Adapted from Introduction to 3D Graphics Programming with Direct X 12 by Frank D. Luna
+
+			// Put a cap on the number of subdivisions.
+			numberOfSubdivisions = UMath::Min(numberOfSubdivisions, static_cast<U8>(6));
+
+			// NR: We use a world transform to scale this instead of providing a radius argument here
+			std::vector<SStaticMeshVertex> vertices;
+
 			// Approximate a sphere by tessellating an icosahedron.
 			const float X = 0.525731f;
 			const float Z = 0.850651f;
 
-			outPositions =
+			std::vector<SVector> positions =
 			{
 				SVector(-X, 0.0f, Z),	SVector(X, 0.0f, Z),
 				SVector(-X, 0.0f, -Z),	SVector(X, 0.0f, -Z),
@@ -193,29 +199,13 @@ namespace Havtorn
 				SVector(Z, -X, 0.0f),	SVector(-Z, -X, 0.0f)
 			};
 
-			outIndices =
+			std::vector<U32> indices =
 			{
 				1,4,0, 4,9,0, 4,5,9, 8,5,4, 1,8,4,
 				1,10,8, 10,3,8, 8,3,5, 3,2,5, 3,7,2,
 				3,10,7, 10,6,7, 6,11,7, 6,0,11, 6,1,0,
 				10,1,6, 11,0,9, 2,11,9, 5,2,9, 11,2,7
 			};
-		}
-
-		static SMeshData CreateIcosphere(U8 numberOfSubdivisions)
-		{
-			// NR: Adapted from Introduction to 3D Graphics Programming with Direct X 12 by Frank D. Luna
-
-			// Put a cap on the number of subdivisions.
-			numberOfSubdivisions = UMath::Min(numberOfSubdivisions, static_cast<U8>(6));
-
-			// NR: We use a world transform to scale this instead of providing a radius argument here
-			
-			std::vector<SStaticMeshVertex> vertices;
-
-			std::vector<SVector> positions;
-			std::vector<U32> indices;
-			IcoSpherePositionsAndIndices(positions, indices);
 			
 			for (U32 i = 0; i < numberOfSubdivisions; ++i)
 				Subdivide(positions, indices);
