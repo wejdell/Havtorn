@@ -31,7 +31,6 @@ namespace Havtorn
 		{ EVertexBufferPrimitives::Octahedron, GeometryPrimitives::Octahedron},
 		{ EVertexBufferPrimitives::Square, GeometryPrimitives::Square},
 		{ EVertexBufferPrimitives::UVSphere, GeometryPrimitives::UVSphere},
-		{ EVertexBufferPrimitives::Cone, GeometryPrimitives::Cone},
 	};
 
 	UDebugShapeSystem::UDebugShapeSystem(CScene* scene, CRenderManager* renderManager)
@@ -104,6 +103,7 @@ namespace Havtorn
 
 	void UDebugShapeSystem::AddArrow(const SVector& start, const SVector& end, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
+		// TODO.AG: Split arrow into 2 shapes: a Line and a pyramid
 		std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::Arrow, EDefaultIndexBuffers::Arrow)};
 		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
 		{
@@ -203,6 +203,41 @@ namespace Havtorn
 		{
 			SMatrix::Recompose(center, eulerRotation, scale, shapes[0].Transform->Transform.GetMatrix());
 		}
+	}
+
+	void UDebugShapeSystem::AddConeRadius(const SVector& apexPosition, const SVector& direction, const F32 height, const F32 radius, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	{
+		std::vector<SShapeData> shapes = { 
+			SShapeData(EVertexBufferPrimitives::Circle16, EDefaultIndexBuffers::Circle16),
+			SShapeData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line),
+			SShapeData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line),
+			SShapeData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line),
+			SShapeData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line),
+		};
+		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
+		{
+			const SVector base = apexPosition + direction.GetNormalized() * height;
+
+			const SVector scale(radius / GeometryPrimitives::CircleRadius);
+			const SVector up = direction.IsEqual(SVector::Up) ? SVector::Forward : SVector::Up;
+			const SMatrix lookAt = SMatrix::Face(apexPosition, direction, up);
+			
+			SMatrix::Recompose(base, lookAt.GetEuler() + SVector(90.0f, 0.0f, 0.0f), scale, shapes[0].Transform->Transform.GetMatrix());
+
+			const SVector lookAtRight = lookAt.GetRight();
+			const SVector lookAtUp = lookAt.GetUp();
+			Instance->TransformToFaceAndReach(apexPosition, base + lookAtRight * radius, shapes[1].Transform->Transform.GetMatrix());
+			Instance->TransformToFaceAndReach(apexPosition, base + lookAtRight * -radius, shapes[2].Transform->Transform.GetMatrix());
+			Instance->TransformToFaceAndReach(apexPosition, base + lookAtUp * radius, shapes[3].Transform->Transform.GetMatrix());
+			Instance->TransformToFaceAndReach(apexPosition, base + lookAtUp * -radius, shapes[4].Transform->Transform.GetMatrix());
+
+		}
+	}
+
+	void UDebugShapeSystem::AddConeAngle(const SVector& apexPosition, const SVector& direction, const F32 height, const F32 angleRadians, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	{
+		const F32 radius = height * UMath::Sin(angleRadians);
+		AddConeRadius(apexPosition, direction, height, radius, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
 	}
 
 #pragma endregion !AddShape
@@ -363,10 +398,12 @@ namespace Havtorn
 #if _DEBUG
 	void UDebugShapeSystem::TestAllShapes()
 	{
+		// TODO.AG: add Camera
+
 		AddGrid(SVector(), SVector(), SColor::Grey, 1.0f, false, ThicknessMinimum * 4.f, false);
-		AddArrow(SVector(), SVector::Right, SColor::Red, 1.0f, false, ThicknessMinimum  * 2.f, true);
-		AddArrow(SVector(), SVector::Up, SColor::Green, 1.0f, false, ThicknessMinimum  * 2.f, true);
-		AddArrow(SVector(), SVector::Forward, SColor::Blue, 1.0f, false, ThicknessMinimum  * 2.f, true);
+		AddArrow(SVector(), SVector::Right * 6.0f, SColor::Red, 1.0f, false, ThicknessMinimum  * 2.f, true);
+		AddArrow(SVector(), SVector::Up * 6.0f, SColor::Green, 1.0f, false, ThicknessMinimum  * 2.f, true);
+		AddArrow(SVector(), SVector::Forward * 6.0f, SColor::Blue, 1.0f, false, ThicknessMinimum  * 2.f, true);
 
 		const F32 time = GTime::Time();
 		const F32 cosTime = UMath::Cos(time);
@@ -406,6 +443,9 @@ namespace Havtorn
 			Line(SVector::Random(posLowerBound, posUpperBound), SVector::Random(rotLowerBound, rotUpperBound), SColor::Grey, SColor::Black);
 			Line(SVector::Random(posLowerBound, posUpperBound), SVector::Random(rotLowerBound, rotUpperBound), SColor::Yellow, SColor::Orange);
 			Line(SVector::Random(posLowerBound, posUpperBound), SVector::Random(rotLowerBound, rotUpperBound), SColor::Orange, SColor::Red);
+
+			const SVector coneDirection = SVector::Random(posLowerBound, posUpperBound) - SVector::Random(rotLowerBound, rotUpperBound);
+			AddConeAngle({ -5.0f, 0.0f, 5.0f }, coneDirection, UMath::Random(0.5f, 2.0f), UMath::Random(UMath::DegToRad(10.0f), UMath::DegToRad(90.0f)), SColor::White, lifeTime, true, ThicknessMinimum * 2.0f, false);
 		}
 		
 
@@ -419,14 +459,12 @@ namespace Havtorn
 		Circle(static_cast<UINT8>(UMath::Random(25, 33)), 2.5f, { 90.0f, 0.0f, 180.0f * sinTime },SColor::Blue);
 		AddSphere(SVector(), SVector(), SVector(3.0f), SColor::Teal, 0.0f, false, ThicknessMinimum, false);
 
-		const SVector scale = { 10.0f * UMath::FAbs(cosTime), 0.0f,  10.0f * UMath::FAbs(sinTime) };
+		const SVector scale = { UMath::FAbs(cosTime), 0.0f,  UMath::FAbs(sinTime) };
 		const SColor rectColor = SColor::Black;
-		AddRectangle(SVector(0.0f, -5.0f, 0.0f), SVector(), scale, rectColor);
-		AddRectangle(SVector(0.0f, 5.0f, 0.0f), SVector(), scale,rectColor);
-		AddRectangle(SVector(-5.0f, 0.0f, 0.0f), SVector(0.0f, 0.0f, 90.0f), scale, rectColor);
-		AddRectangle(SVector(5.0f, 0.0f, 0.0f), SVector(0.0f, 0.0f, 90.0f), scale, rectColor);
-		AddRectangle(SVector(0.0f, 0.0f, -5.0f), SVector(90.0f, 0.0f, 0.0f), scale, rectColor);
-		AddRectangle(SVector(0.0f, 0.0f, 5.0f), SVector(90.0f, 0.0f, 0.0f), scale, rectColor);
+		const SVector rectPos = SVector(4.5f, 0.0f, 4.5f);
+		AddRectangle(rectPos, SVector(), scale, rectColor);
+		AddRectangle(rectPos, SVector(0.0f, 0.0f, 90.0f), scale, rectColor);
+		AddRectangle(rectPos, SVector(90.0f, 0.0f, 0.0f), scale, rectColor);
 
 		//auto LineFollowingAxis = [&](F32 rotation, F32 scale, const SVector& pos, const SColor& axisColor, const SColor& lineColor)
 		//{
