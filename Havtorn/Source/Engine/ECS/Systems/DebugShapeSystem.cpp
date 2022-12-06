@@ -26,6 +26,7 @@ namespace Havtorn
 		{ EVertexBufferPrimitives::Circle8, GeometryPrimitives::Circle8},
 		{ EVertexBufferPrimitives::Circle16, GeometryPrimitives::Circle16},
 		{ EVertexBufferPrimitives::Circle32, GeometryPrimitives::Circle32},
+		{ EVertexBufferPrimitives::HalfCircle16, GeometryPrimitives::HalfCircle16},
 		{ EVertexBufferPrimitives::Grid, GeometryPrimitives::Grid},
 		{ EVertexBufferPrimitives::Axis, GeometryPrimitives::Axis},
 		{ EVertexBufferPrimitives::Octahedron, GeometryPrimitives::Octahedron},
