@@ -103,7 +103,6 @@ namespace Havtorn
 
 	void UDebugShapeSystem::AddArrow(const SVector& start, const SVector& end, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
-		// TODO.AG: Split arrow into 2 shapes: a Line and a pyramid
 		std::vector<SShapeData> shapes = { 
 			SShapeData(EVertexBufferPrimitives::Pyramid, EDefaultIndexBuffers::Pyramid),
 			SShapeData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line)
