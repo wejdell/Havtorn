@@ -283,7 +283,7 @@ namespace Havtorn
 		AddVertexBuffer(GeometryPrimitives::PointLightCube);
 		AddVertexBuffer(GeometryPrimitives::Icosphere.Vertices);
 		AddVertexBuffer(GeometryPrimitives::Line.Vertices);
-		AddVertexBuffer(GeometryPrimitives::Arrow.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Pyramid.Vertices);
 		AddVertexBuffer(GeometryPrimitives::BoundingBox.Vertices);
 		AddVertexBuffer(GeometryPrimitives::Camera.Vertices);
 		AddVertexBuffer(GeometryPrimitives::Circle8.Vertices);
@@ -301,7 +301,7 @@ namespace Havtorn
 		AddIndexBuffer(GeometryPrimitives::DecalProjectorIndices);
 		AddIndexBuffer(GeometryPrimitives::PointLightCubeIndices);
 		AddIndexBuffer(GeometryPrimitives::Line.Indices);
-		AddIndexBuffer(GeometryPrimitives::Arrow.Indices);
+		AddIndexBuffer(GeometryPrimitives::Pyramid.Indices);
 		AddIndexBuffer(GeometryPrimitives::BoundingBox.Indices);
 		AddIndexBuffer(GeometryPrimitives::Camera.Indices);
 		AddIndexBuffer(GeometryPrimitives::Circle8.Indices);
