@@ -20,7 +20,7 @@ namespace Havtorn
 	const std::map<EVertexBufferPrimitives, const SPrimitive&> UDebugShapeSystem::Shapes = 
 	{
 		{ EVertexBufferPrimitives::Line, GeometryPrimitives::Line},
-		{ EVertexBufferPrimitives::Arrow, GeometryPrimitives::Arrow},
+		{ EVertexBufferPrimitives::Pyramid, GeometryPrimitives::Pyramid},
 		{ EVertexBufferPrimitives::BoundingBox, GeometryPrimitives::BoundingBox},
 		{ EVertexBufferPrimitives::Camera, GeometryPrimitives::Camera},
 		{ EVertexBufferPrimitives::Circle8, GeometryPrimitives::Circle8},
@@ -104,10 +104,19 @@ namespace Havtorn
 	void UDebugShapeSystem::AddArrow(const SVector& start, const SVector& end, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		// TODO.AG: Split arrow into 2 shapes: a Line and a pyramid
-		std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::Arrow, EDefaultIndexBuffers::Arrow)};
+		std::vector<SShapeData> shapes = { 
+			SShapeData(EVertexBufferPrimitives::Pyramid, EDefaultIndexBuffers::Pyramid),
+			SShapeData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line)
+		};
 		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
 		{
-			Instance->TransformToFaceAndReach(start, end, shapes[0].Transform->Transform.GetMatrix());
+			SMatrix& lineTransform = shapes[1].Transform->Transform.GetMatrix();
+			Instance->TransformToFaceAndReach(start, end, lineTransform);
+			
+			const F32 scale = 0.1f;
+			const SVector pyramidPos = end - lineTransform.GetForward().GetNormalized() * 0.1f;
+			// Default pyramid's height is along the Y axis, rotation offset of 90 degrees around X places it along the Z axis.
+			SMatrix::Recompose(pyramidPos, lineTransform.GetEuler() + SVector(90.0f, 0.0f, 0.0f), scale, shapes[0].Transform->Transform.GetMatrix());
 		}	
 	}
 
@@ -222,6 +231,7 @@ namespace Havtorn
 			const SVector up = direction.IsEqual(SVector::Up) ? SVector::Forward : SVector::Up;
 			const SMatrix lookAt = SMatrix::Face(apexPosition, direction, up);
 			
+			// Default circle lies on the XZ plane, adding a rotation offset of 90degrees around X rotates it to the XY plane.
 			SMatrix::Recompose(base, lookAt.GetEuler() + SVector(90.0f, 0.0f, 0.0f), scale, shapes[0].Transform->Transform.GetMatrix());
 
 			const SVector lookAtRight = lookAt.GetRight();
