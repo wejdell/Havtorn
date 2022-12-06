@@ -289,6 +289,7 @@ namespace Havtorn
 		AddVertexBuffer(GeometryPrimitives::Circle8.Vertices);
 		AddVertexBuffer(GeometryPrimitives::Circle16.Vertices);
 		AddVertexBuffer(GeometryPrimitives::Circle32.Vertices);
+		AddVertexBuffer(GeometryPrimitives::HalfCircle16.Vertices);
 		AddVertexBuffer(GeometryPrimitives::Grid.Vertices);
 		AddVertexBuffer(GeometryPrimitives::Axis.Vertices);
 		AddVertexBuffer(GeometryPrimitives::Octahedron.Vertices);
@@ -307,6 +308,7 @@ namespace Havtorn
 		AddIndexBuffer(GeometryPrimitives::Circle8.Indices);
 		AddIndexBuffer(GeometryPrimitives::Circle16.Indices);
 		AddIndexBuffer(GeometryPrimitives::Circle32.Indices);
+		AddIndexBuffer(GeometryPrimitives::HalfCircle16.Indices);
 		AddIndexBuffer(GeometryPrimitives::Grid.Indices);
 		AddIndexBuffer(GeometryPrimitives::Axis.Indices);
 		AddIndexBuffer(GeometryPrimitives::Octahedron.Indices);

@@ -274,7 +274,6 @@ namespace Havtorn
 				{ -0.5f, 0.0f, 0.5f, 1.0f },
 				{ -0.5f, 0.0f, -0.5f, 1.0f },
 				{ 0.5f, 0.0f, -0.5f, 1.0f },
-
 			},
 			{
 				0,1, 0,2, 0,3, 0,4,
@@ -326,11 +325,11 @@ namespace Havtorn
 		constexpr F32 CircleRadius = 0.5f;
 
 		// Creates circle across the XZ-plane
-		const static std::vector<SPositionVertex> CircleVertices(const F32 radius, U32 segments)
+		const static std::vector<SPositionVertex> CircleVertices(const F32 maxRadians, const F32 radius, U32 segments)
 		{
 			segments = UMath::Max(4u, static_cast<U32>(UMath::DecrementUntilEven(segments)));
 
-			const F32 step = (2.0f * UMath::Pi) / static_cast<F32>(segments);
+			const F32 step = maxRadians / static_cast<F32>(segments);
 
 			std::vector<SPositionVertex> vertices;
 			for (U32 i = 0u; i < segments; i++)
@@ -352,7 +351,7 @@ namespace Havtorn
 			segments = UMath::Max(4u, static_cast<U32>(UMath::DecrementUntilEven(segments)));
 
 			std::vector<U32> indices;
-			for (U8 i = 0u; i < segments; i++)
+			for (U32 i = 0u; i < segments; i++)
 			{
 				U32 next = i + 1u;
 				next %= segments;
@@ -362,25 +361,57 @@ namespace Havtorn
 			return indices;
 		}
 
+		const static std::vector<SPositionVertex> HalfCircleVertices(const F32 maxRadians, const F32 radius, U32 segments)
+		{
+			std::vector<SPositionVertex> vertices = CircleVertices(maxRadians, radius, segments);
+			SPositionVertex v;
+			v.x = -vertices[0].x;
+			v.y = vertices[0].y;
+			v.z = vertices[0].z;
+			v.w = vertices[0].w;
+			vertices.push_back(v);
+			return vertices;
+		}
+
+		const static std::vector<U32> HalfCircleIndicesLineTopology(U32 segments)
+		{
+			std::vector<U32> indices = CircleIndicesLineTopology(segments);
+			// Remove indices composing line between last and first.
+			indices.pop_back();
+			indices.pop_back();
+
+			segments = UMath::Max(4u, static_cast<U32>(UMath::DecrementUntilEven(segments)));
+			// Account for odd vertex added in HalfCircleVertices
+			indices.push_back(segments - 1u);
+			indices.push_back(segments);
+			return indices;
+		}
+
 		// 8-segment circle across XZ-plane
 		const static SPrimitive Circle8 =
 		{
-			CircleVertices(CircleRadius, 8u),
+			CircleVertices(UMath::Tau, CircleRadius, 8u),
 			CircleIndicesLineTopology(8u)
 		};
 
 		// 16-segment circle across XZ-plane
 		const static SPrimitive Circle16 =
 		{
-			CircleVertices(CircleRadius, 16u),
+			CircleVertices(UMath::Tau, CircleRadius, 16u),
 			CircleIndicesLineTopology(16u)
 		};
 
 		// 32-segment circle across XZ-plane
 		const static SPrimitive Circle32 =
 		{
-			CircleVertices(CircleRadius, 32u),
+			CircleVertices(UMath::Tau, CircleRadius, 32u),
 			CircleIndicesLineTopology(32u)
+		};
+
+		const static SPrimitive HalfCircle16 =
+		{
+			HalfCircleVertices(UMath::Pi, CircleRadius, 17u),
+			HalfCircleIndicesLineTopology(17u)
 		};
 		
 		const static SPrimitive GenerateGrid(U64 segments)
