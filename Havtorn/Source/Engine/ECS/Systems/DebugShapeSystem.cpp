@@ -244,9 +244,9 @@ namespace Havtorn
 		}
 	}
 
-	void UDebugShapeSystem::AddConeAngle(const SVector& apexPosition, const SVector& direction, const F32 height, const F32 angleRadians, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddConeAngle(const SVector& apexPosition, const SVector& direction, const F32 height, const F32 angleDegrees, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
-		const F32 radius = height * UMath::Sin(angleRadians);
+		const F32 radius = height * UMath::Sin(UMath::DegToRad(angleDegrees));
 		AddConeRadius(apexPosition, direction, height, radius, color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
 	}
 
