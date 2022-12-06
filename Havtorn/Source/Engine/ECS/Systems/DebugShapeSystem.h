@@ -74,7 +74,9 @@ namespace Havtorn
 		// Adds a cone with its base facing towards direction.
 		static HAVTORN_API void AddConeRadius(const SVector& apexPosition, const SVector& direction, const F32 height, const F32 radius, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		// Adds a cone with its base facing towards direction. angleRadians: angle between slanted height and height at the apex of the cone.
-		static HAVTORN_API void AddConeAngle(const SVector& apexPosition, const SVector& direction, const F32 height, const F32 angleRadians, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static HAVTORN_API void AddConeAngle(const SVector& apexPosition, const SVector& direction, const F32 height, const F32 angleDegrees, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static HAVTORN_API void AddCapsule(const SVector& center, const SVector& eulerRotation, const F32 height, const F32 radius, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		
 
 	private:	
 		static bool InstanceExists();
