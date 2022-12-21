@@ -4,29 +4,17 @@
 #include "ECS/ECSInclude.h"
 #include "Scene.h"
 #include "Graphics/RenderManager.h"
+#include "AssetRegistry.h"
 
 namespace Havtorn
 {
-	void CWorld::LoadScene(std::string filePath)
-	{
-		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
-		char* data = new char[fileSize];
-
-		GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));
-
-		Scenes.emplace_back(std::make_unique<CScene>());
-
-		SSceneFileHeader sceneFile;
-		sceneFile.Deserialize(data, Scenes.back().get());
-	}
-
 	bool CWorld::Init(CRenderManager* renderManager)
 	{
 		RenderManager = renderManager;
+		AssetRegistry = std::make_unique<CAssetRegistry>();
 
-		//LoadScene("Assets/Scenes/TestScene.hvs");
 		Scenes.emplace_back(std::make_unique<CScene>());
-		ENGINE_ERROR_BOOL_MESSAGE(Scenes.back()->Init(RenderManager), "World could not be initialized.");
+		ENGINE_ERROR_BOOL_MESSAGE(Scenes.back()->InitDemoScene(RenderManager), "World could not be initialized.");
 
 		// Setup systems
 		Systems.emplace_back(std::make_unique<CCameraSystem>());
@@ -53,13 +41,55 @@ namespace Havtorn
 		return Scenes;
 	}
 
-	std::vector<Ref<SEntity>>& CWorld::GetEntities() const
+	//std::vector<Ref<SEntity>>& CWorld::GetEntities() const
+	std::array<SEntity*, ENTITY_LIMIT>& CWorld::GetEntities() const
 	{
 		return Scenes.back()->GetEntities();
 	}
 	
 	void CWorld::SaveActiveScene(const std::string& destinationPath)
 	{
-		Scenes.back()->SaveScene(destinationPath);
+		const Ptr<CScene>& scene = Scenes.back();
+		I64 sceneIndex = Scenes.size() - 1;
+
+		SSceneFileHeader fileHeader;
+		fileHeader.SceneName = "TestScene";
+		fileHeader.SceneNameLength = static_cast<U32>(fileHeader.SceneName.size());
+		fileHeader.NumberOfEntities = static_cast<U32>(scene->GetEntities().size());
+		fileHeader.Scene = scene.get();
+
+		const U32 fileSize = fileHeader.GetSize() + AssetRegistry->GetSize(sceneIndex);
+		char* data = new char[fileSize];
+
+		U32 pointerPosition = 0;
+		fileHeader.Serialize(data, pointerPosition);
+		AssetRegistry->Serialize(sceneIndex, data, pointerPosition);		
+		GEngine::GetFileSystem()->Serialize(destinationPath, data, fileSize);
+		
+		delete[] data;
+	}
+
+	void CWorld::LoadScene(const std::string& filePath)
+	{
+		Scenes.emplace_back(std::make_unique<CScene>());
+		SSceneFileHeader sceneFile;
+		I64 sceneIndex = Scenes.size() - 1;
+
+		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
+		char* data = new char[fileSize];
+
+		U32 pointerPosition = 0;
+		GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));	
+		sceneFile.Deserialize(data, Scenes.back().get(), pointerPosition);
+		AssetRegistry->Deserialize(sceneIndex, data, pointerPosition);
+		
+		delete[] data;
+
+		Scenes.back()->Init(RenderManager, AssetRegistry.get(), static_cast<U8>(sceneIndex));
+	}
+
+	CAssetRegistry* CWorld::GetAssetRegistry() const
+	{
+		return AssetRegistry.get();
 	}
 }

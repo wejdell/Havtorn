@@ -30,3 +30,6 @@
 #define BIT(x) (1 << x)
 #define CACHE_LINE 32
 #define CACHE_ALIGN __declspec(align(CACHE_LINE))
+
+#define MAX_STRING_LEN 256
+#define ENTITY_LIMIT 100

@@ -2,22 +2,27 @@
 
 #pragma once
 
+#include "ECS\Entity.h"
+
 namespace Havtorn
 {
 	struct SEntity;
 	class ISystem;
 	class CScene;
 	class CRenderManager;
+	class CAssetRegistry;
 
 	class CWorld
 	{
 		friend class GEngine;
 
 	public:
-		void LoadScene(std::string filePath);
 		HAVTORN_API std::vector<Ptr<CScene>>& GetActiveScenes();
-		HAVTORN_API std::vector<Ref<SEntity>>& GetEntities() const;
+		//HAVTORN_API std::vector<Ref<SEntity>>& GetEntities() const;
+		HAVTORN_API std::array<SEntity*, ENTITY_LIMIT>& GetEntities() const;
 		HAVTORN_API void SaveActiveScene(const std::string& destinationPath);
+		HAVTORN_API void LoadScene(const std::string& filePath);
+		HAVTORN_API CAssetRegistry* GetAssetRegistry() const;
 
 	private:
 		CWorld() = default;
@@ -29,6 +34,7 @@ namespace Havtorn
 	private:
 		std::vector<Ptr<CScene>> Scenes;
 		std::vector<Ptr<ISystem>> Systems;
+		Ptr<CAssetRegistry> AssetRegistry = nullptr;
 		CRenderManager* RenderManager = nullptr;
 	};
 }

@@ -52,6 +52,7 @@ namespace Havtorn
 		const auto intermediateVector = new T[numberOfElements];
 		memcpy(&intermediateVector[0], &source[bufferPosition], size);
 		destination.assign(&intermediateVector[0], &intermediateVector[0] + numberOfElements);
+		delete[] intermediateVector;
 		return size;
 	}
 
@@ -257,8 +258,8 @@ namespace Havtorn
 		CScene* Scene = nullptr;
 
 		[[nodiscard]] U32 GetSize() const;
-		void Serialize(char* toData) const;
-		void Deserialize(const char* fromData, CScene* outScene);
+		void Serialize(char* toData, U32& pointerPosition) const;
+		void Deserialize(const char* fromData, CScene* outScene, U32& pointerPosition);
 	};
 
 	inline U32 SSceneFileHeader::GetSize() const
@@ -274,19 +275,18 @@ namespace Havtorn
 		return size;
 	}
 
-	inline void SSceneFileHeader::Serialize(char* toData) const
+	inline void SSceneFileHeader::Serialize(char* toData, U32& pointerPosition) const
 	{
-		U32 pointerPosition = 0;
 		pointerPosition += SerializeSimple(AssetType, toData, pointerPosition);
 		pointerPosition += SerializeSimple(SceneNameLength, toData, pointerPosition);
-		pointerPosition += SerializeString(SceneName, toData, pointerPosition);
-		
+		pointerPosition += SerializeString(SceneName, toData, pointerPosition);	
+		pointerPosition += SerializeSimple(/*static_cast<U32>(Scene->GetEntities().size())*/ENTITY_LIMIT, toData, pointerPosition);
+
 		Scene->Serialize(toData, pointerPosition);
 	}
 
-	inline void SSceneFileHeader::Deserialize(const char* fromData, CScene* outScene)
+	inline void SSceneFileHeader::Deserialize(const char* fromData, CScene* outScene, U32& pointerPosition)
 	{
-		U32 pointerPosition = 0;
 		pointerPosition += DeserializeSimple(AssetType, fromData, pointerPosition);
 		pointerPosition += DeserializeSimple(SceneNameLength, fromData, pointerPosition);
 		pointerPosition += DeserializeString(SceneName, fromData, SceneNameLength, pointerPosition);

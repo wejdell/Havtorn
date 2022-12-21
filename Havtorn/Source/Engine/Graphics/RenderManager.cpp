@@ -563,6 +563,7 @@ namespace Havtorn
 			asset = LoadedStaticMeshes.at(filePath);
 		}
 
+		// NR: Components initialized by AssetRegistry and Rendermanager have dynamically sized sized, need to serialize and deserialize them in another way
 		outStaticMeshComponent->Name = UGeneralUtils::ExtractFileNameFromPath(filePath);
 		outStaticMeshComponent->NumberOfMaterials = asset.NumberOfMaterials;
 
@@ -594,21 +595,21 @@ namespace Havtorn
 		}
 	}
 
-	void CRenderManager::LoadDecalComponent(const std::vector<std::string>& textureNames, SDecalComponent* outDecalComponent)
+	void CRenderManager::LoadDecalComponent(const std::vector<std::string>& texturePaths, SDecalComponent* outDecalComponent)
 	{
 		outDecalComponent->TextureReferences.clear();
 		auto textureBank = GEngine::GetTextureBank();
 
-		for (const std::string& textureName: textureNames)
+		for (const std::string& texturePath: texturePaths)
 		{
-			outDecalComponent->TextureReferences.emplace_back(static_cast<U16>(textureBank->GetTextureIndex("Assets/Textures/" + textureName + ".hva")));
+			outDecalComponent->TextureReferences.emplace_back(static_cast<U16>(textureBank->GetTextureIndex(texturePath)));
 		}
 	}
 
-	void CRenderManager::LoadEnvironmentLightComponent(const std::string& ambientCubemapTextureName, SEnvironmentLightComponent* outEnvironmentLightComponent)
+	void CRenderManager::LoadEnvironmentLightComponent(const std::string& ambientCubemapTexturePath, SEnvironmentLightComponent* outEnvironmentLightComponent)
 	{
 		auto textureBank = GEngine::GetTextureBank();
-		outEnvironmentLightComponent->AmbientCubemapReference = static_cast<U16>(textureBank->GetTextureIndex("Assets/Textures/Cubemaps/" + ambientCubemapTextureName + ".hva"));
+		outEnvironmentLightComponent->AmbientCubemapReference = static_cast<U16>(textureBank->GetTextureIndex(ambientCubemapTexturePath));
 	}
 
 	SVector2<F32> CRenderManager::GetShadowAtlasResolution() const
@@ -744,8 +745,11 @@ namespace Havtorn
 		ObjectBufferData.ToWorldFromObject = SMatrix();
 		BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
 
-		Ref<SEntity> tempEntity = std::make_shared<SEntity>(0, "Temp");
-		SStaticMeshComponent* staticMeshComp = new SStaticMeshComponent(tempEntity, EComponentType::StaticMeshComponent);
+		//Ref<SEntity> tempEntity = std::make_shared<SEntity>(0, "Temp");
+		//SStaticMeshComponent* staticMeshComp = new SStaticMeshComponent(tempEntity, EComponentType::StaticMeshComponent);
+		auto& activeScene = GEngine::GetWorld()->GetActiveScenes()[0];
+		auto entity = activeScene->CreateEntity("TEMP");
+		auto staticMeshComp = activeScene->GetStaticMeshComponents()[entity->ID];
 		LoadStaticMeshComponent(filePath, staticMeshComp);
 
 		Context->VSSetConstantBuffers(1, 1, &ObjectBuffer);
@@ -872,8 +876,11 @@ namespace Havtorn
 		ObjectBufferData.ToWorldFromObject = SMatrix();
 		BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
 
-		Ref<SEntity> tempEntity = std::make_shared<SEntity>(0, "Temp");
-		SMaterialComponent* materialComp = new SMaterialComponent(tempEntity, EComponentType::MaterialComponent);
+		auto& activeScene = GEngine::GetWorld()->GetActiveScenes()[0];
+		auto entity = activeScene->CreateEntity("TEMP2");
+		//Ref<SEntity> tempEntity = std::make_shared<SEntity>(0, "Temp");
+		//SMaterialComponent* materialComp = new SMaterialComponent(tempEntity, EComponentType::MaterialComponent);
+		auto materialComp = activeScene->GetMaterialComponents()[entity->ID];
 		LoadMaterialComponent({ filePath }, materialComp);
 
 		Context->VSSetConstantBuffers(1, 1, &ObjectBuffer);
@@ -932,10 +939,12 @@ namespace Havtorn
 		// ======== Lighting =========
 		Context->OMSetRenderTargets(1, &renderTarget, nullptr);
 
-		SEnvironmentLightComponent* environmentLightComp = new SEnvironmentLightComponent(tempEntity, EComponentType::EnvironmentLightComponent);
-		SDirectionalLightComponent* directionalLightComp = new SDirectionalLightComponent(tempEntity, EComponentType::DirectionalLightComponent);
+		auto environmentLightComp = activeScene->GetEnvironmentLightComponents()[entity->ID];
+		auto directionalLightComp = activeScene->GetDirectionalLightComponents()[entity->ID];
+		//SEnvironmentLightComponent* environmentLightComp = new SEnvironmentLightComponent(tempEntity, EComponentType::EnvironmentLightComponent);
+		//SDirectionalLightComponent* directionalLightComp = new SDirectionalLightComponent(tempEntity, EComponentType::DirectionalLightComponent);
 
-		LoadEnvironmentLightComponent("Skybox", environmentLightComp);
+		LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/Skybox.hva", environmentLightComp);
 
 		directionalLightComp->Direction = { -1.0f, 0.0f, 0.0f, 0.0f };
 		directionalLightComp->Color = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };

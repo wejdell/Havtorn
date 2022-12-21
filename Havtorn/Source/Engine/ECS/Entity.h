@@ -12,18 +12,21 @@ namespace Havtorn
 {
 	struct HAVTORN_API SEntity
 	{
-		explicit SEntity(U64 id, const std::string& name);
+		//explicit SEntity(U64 id, const std::string& name);
 
-        const CHavtornString Name;
-		const U64 ID = 0;
+        /*const CHavtornString Name;*/
 
-		void AddComponent(EComponentType type, U64 arrayIndex) const;
-		void RemoveComponent(EComponentType type) const;
-		bool HasComponent(EComponentType type) const;
-		const I64 GetComponentIndex(EComponentType type) const;
-		const std::array<I64, static_cast<size_t>(EComponentType::Count)>& GetComponentIndices() const;
+		char Name[MAX_STRING_LEN] = "";
+		// Index into every array
+		U64 ID = 0;
 
-	private:
-		 mutable std::array<I64, static_cast<size_t>(EComponentType::Count)> ComponentIndices = {};
+	//	void AddComponent(EComponentType type, U64 arrayIndex) const;
+	//	void RemoveComponent(EComponentType type) const;
+	//	bool HasComponent(EComponentType type) const;
+	//	const I64 GetComponentIndex(EComponentType type) const;
+	//	const std::array<I64, static_cast<size_t>(EComponentType::Count)>& GetComponentIndices() const;
+
+	//private:
+	//	 mutable std::array<I64, static_cast<size_t>(EComponentType::Count)> ComponentIndices = {};
 	};
 }

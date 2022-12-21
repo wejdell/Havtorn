@@ -25,17 +25,18 @@ namespace Havtorn
 		const auto& directionalLightComponents = scene->GetDirectionalLightComponents();
 		const auto& pointLightComponents = scene->GetPointLightComponents();
 		const auto& spotLightComponents = scene->GetSpotLightComponents();
-		const auto& volumetricLightComponents = scene->GetVolumetricLightComponents();
+		//const auto& volumetricLightComponents = scene->GetVolumetricLightComponents();
 		const auto& decalComponents = scene->GetDecalComponents();
 
 		RenderManager->ClearSystemStaticMeshInstanceTransforms();
 
 		if (!cameraComponents.empty())
 		{
-			const I64 transformCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
+			//const I64 transformCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
+			const I64 transformCompIndex = 0;
 			auto& transformComp = transformComponents[transformCompIndex];
 
-			std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
+			SComponentArray components;
 			components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
 			components[static_cast<U8>(EComponentType::CameraComponent)] = cameraComponents[0];
 			SRenderCommand command(components, ERenderCommandType::CameraDataStorage);
@@ -48,23 +49,25 @@ namespace Havtorn
 
 		for (auto& staticMeshComponent : staticMeshComponents)
 		{
-			if (!staticMeshComponent->Entity->HasComponent(EComponentType::TransformComponent))
-				continue;
+			//if (!staticMeshComponent->Entity->HasComponent(EComponentType::TransformComponent))
+			//	continue;
 
-			if (!staticMeshComponent->Entity->HasComponent(EComponentType::MaterialComponent))
-				continue;
+			//if (!staticMeshComponent->Entity->HasComponent(EComponentType::MaterialComponent))
+			//	continue;
 
-			const I64 transformCompIndex = staticMeshComponent->Entity->GetComponentIndex(EComponentType::TransformComponent);
+			//const I64 transformCompIndex = staticMeshComponent->Entity->GetComponentIndex(EComponentType::TransformComponent);
+			const I64 transformCompIndex = staticMeshComponent->Entity->ID;
 			auto& transformComp = transformComponents[transformCompIndex];
 
-			const I64 materialCompIndex = staticMeshComponent->Entity->GetComponentIndex(EComponentType::MaterialComponent);
+			//const I64 materialCompIndex = staticMeshComponent->Entity->GetComponentIndex(EComponentType::MaterialComponent);
+			const I64 materialCompIndex = staticMeshComponent->Entity->ID;
 			auto& materialComp = materialComponents[materialCompIndex];
 
 			if (!RenderManager->IsStaticMeshInInstancedRenderList(staticMeshComponent->Name)) // if static, if instanced
 			{		
 				if (!directionalLightComponents.empty())
 				{
-					std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
+					SComponentArray components;
 					components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
 					components[static_cast<U8>(EComponentType::StaticMeshComponent)] = staticMeshComponent;
 					components[static_cast<U8>(EComponentType::DirectionalLightComponent)] = directionalLightComponents[0];
@@ -74,7 +77,7 @@ namespace Havtorn
 
 				if (!pointLightComponents.empty())
 				{
-					std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
+					SComponentArray components;
 					components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
 					components[static_cast<U8>(EComponentType::StaticMeshComponent)] = staticMeshComponent;
 					components[static_cast<U8>(EComponentType::PointLightComponent)] = pointLightComponents[0];
@@ -84,7 +87,7 @@ namespace Havtorn
 
 				if (!spotLightComponents.empty())
 				{
-					std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
+					SComponentArray components;
 					components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
 					components[static_cast<U8>(EComponentType::StaticMeshComponent)] = staticMeshComponent;
 					components[static_cast<U8>(EComponentType::SpotLightComponent)] = spotLightComponents[0];
@@ -92,7 +95,7 @@ namespace Havtorn
 					RenderManager->PushRenderCommand(command);
 				}
 
-				std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
+				SComponentArray components;
 				components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
 				components[static_cast<U8>(EComponentType::StaticMeshComponent)] = staticMeshComponent;
 				components[static_cast<U8>(EComponentType::MaterialComponent)] = materialComp;
@@ -104,19 +107,20 @@ namespace Havtorn
 		}
 
 		{
-			SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::DecalDepthCopy);
+			SRenderCommand command(std::array<SComponent*, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::DecalDepthCopy);
 			RenderManager->PushRenderCommand(command);
 		}
 
 		for (auto& decalComponent : decalComponents)
 		{
-			if (!decalComponent->Entity->HasComponent(EComponentType::TransformComponent))
-				continue;
+			//if (!decalComponent->Entity->HasComponent(EComponentType::TransformComponent))
+			//	continue;
 
-			const I64 transformCompIndex = decalComponent->Entity->GetComponentIndex(EComponentType::TransformComponent);
+			//const I64 transformCompIndex = decalComponent->Entity->GetComponentIndex(EComponentType::TransformComponent);
+			const I64 transformCompIndex = decalComponent->Entity->ID;
 			auto& transformComp = transformComponents[transformCompIndex];
 
-			std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
+			SComponentArray components;
 			components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
 			components[static_cast<U8>(EComponentType::DecalComponent)] = decalComponent;
 			SRenderCommand command(components, ERenderCommandType::DeferredDecal);
@@ -124,113 +128,114 @@ namespace Havtorn
 		}
 
 		{
-			SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::PreLightingPass);
+			SRenderCommand command(SComponentArray{}, ERenderCommandType::PreLightingPass);
 			RenderManager->PushRenderCommand(command);
 		}
 
 		if (!directionalLightComponents.empty())
 		{
-			const I64 transformCompIndex = directionalLightComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
+			//const I64 transformCompIndex = directionalLightComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
+			const I64 transformCompIndex = directionalLightComponents[0]->Entity->ID;
 			auto& transformComp = transformComponents[transformCompIndex];
 
-			std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
+			SComponentArray components;
 			components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
 			components[static_cast<U8>(EComponentType::EnvironmentLightComponent)] = environmentLightComponents[0];
 			components[static_cast<U8>(EComponentType::DirectionalLightComponent)] = directionalLightComponents[0];
 			SRenderCommand command(components, ERenderCommandType::DeferredLightingDirectional);
 			RenderManager->PushRenderCommand(command);
 
-			if (directionalLightComponents[0]->Entity->HasComponent(EComponentType::VolumetricLightComponent))
-			{
-				const I64 volumetricCompIndex = directionalLightComponents[0]->Entity->GetComponentIndex(EComponentType::VolumetricLightComponent);
-				auto& volumetricLightComp = volumetricLightComponents[volumetricCompIndex];
+			//if (directionalLightComponents[0]->Entity->HasComponent(EComponentType::VolumetricLightComponent))
+			//{
+			//	const I64 volumetricCompIndex = directionalLightComponents[0]->Entity->GetComponentIndex(EComponentType::VolumetricLightComponent);
+			//	auto& volumetricLightComp = volumetricLightComponents[volumetricCompIndex];
 
-				if (volumetricLightComp->IsActive)
-				{
-					components[static_cast<U8>(EComponentType::VolumetricLightComponent)] = volumetricLightComp;
-					SRenderCommand volumetricCommand(components, ERenderCommandType::VolumetricLightingDirectional);
-					RenderManager->PushRenderCommand(volumetricCommand);
-				}
-			}
+			//	if (volumetricLightComp->IsActive)
+			//	{
+			//		components[static_cast<U8>(EComponentType::VolumetricLightComponent)] = volumetricLightComp;
+			//		SRenderCommand volumetricCommand(components, ERenderCommandType::VolumetricLightingDirectional);
+			//		RenderManager->PushRenderCommand(volumetricCommand);
+			//	}
+			//}
 		}
 
-		if (!pointLightComponents.empty())
-		{
-			const I64 transformCompIndex = pointLightComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
-			auto& transformComp = transformComponents[transformCompIndex];
+		//if (!pointLightComponents.empty())
+		//{
+		//	const I64 transformCompIndex = pointLightComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
+		//	auto& transformComp = transformComponents[transformCompIndex];
 
-			std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
-			components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
-			components[static_cast<U8>(EComponentType::PointLightComponent)] = pointLightComponents[0];
-			SRenderCommand command(components, ERenderCommandType::DeferredLightingPoint);
-			RenderManager->PushRenderCommand(command);
+		//	std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
+		//	components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
+		//	components[static_cast<U8>(EComponentType::PointLightComponent)] = pointLightComponents[0];
+		//	SRenderCommand command(components, ERenderCommandType::DeferredLightingPoint);
+		//	RenderManager->PushRenderCommand(command);
 
-			if (pointLightComponents[0]->Entity->HasComponent(EComponentType::VolumetricLightComponent))
-			{
-				const I64 volumetricCompIndex = pointLightComponents[0]->Entity->GetComponentIndex(EComponentType::VolumetricLightComponent);
-				auto& volumetricLightComp = volumetricLightComponents[volumetricCompIndex];
+		//	if (pointLightComponents[0]->Entity->HasComponent(EComponentType::VolumetricLightComponent))
+		//	{
+		//		const I64 volumetricCompIndex = pointLightComponents[0]->Entity->GetComponentIndex(EComponentType::VolumetricLightComponent);
+		//		auto& volumetricLightComp = volumetricLightComponents[volumetricCompIndex];
 
-				if (volumetricLightComp->IsActive)
-				{
-					components[static_cast<U8>(EComponentType::VolumetricLightComponent)] = volumetricLightComp;
-					SRenderCommand volumetricCommand(components, ERenderCommandType::VolumetricLightingPoint);
-					RenderManager->PushRenderCommand(volumetricCommand);
-				}
-			}
-		}
+		//		if (volumetricLightComp->IsActive)
+		//		{
+		//			components[static_cast<U8>(EComponentType::VolumetricLightComponent)] = volumetricLightComp;
+		//			SRenderCommand volumetricCommand(components, ERenderCommandType::VolumetricLightingPoint);
+		//			RenderManager->PushRenderCommand(volumetricCommand);
+		//		}
+		//	}
+		//}
 
-		if (!spotLightComponents.empty())
-		{
-			const I64 transformCompIndex = spotLightComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
-			auto& transformComp = transformComponents[transformCompIndex];
+		//if (!spotLightComponents.empty())
+		//{
+		//	const I64 transformCompIndex = spotLightComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
+		//	auto& transformComp = transformComponents[transformCompIndex];
 
-			std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
-			components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
-			components[static_cast<U8>(EComponentType::SpotLightComponent)] = spotLightComponents[0];
-			SRenderCommand command(components, ERenderCommandType::DeferredLightingSpot);
-			RenderManager->PushRenderCommand(command);
+		//	std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
+		//	components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
+		//	components[static_cast<U8>(EComponentType::SpotLightComponent)] = spotLightComponents[0];
+		//	SRenderCommand command(components, ERenderCommandType::DeferredLightingSpot);
+		//	RenderManager->PushRenderCommand(command);
 
-			if (spotLightComponents[0]->Entity->HasComponent(EComponentType::VolumetricLightComponent))
-			{
-				const I64 volumetricCompIndex = spotLightComponents[0]->Entity->GetComponentIndex(EComponentType::VolumetricLightComponent);
-				auto& volumetricLightComp = volumetricLightComponents[volumetricCompIndex];
+		//	if (spotLightComponents[0]->Entity->HasComponent(EComponentType::VolumetricLightComponent))
+		//	{
+		//		const I64 volumetricCompIndex = spotLightComponents[0]->Entity->GetComponentIndex(EComponentType::VolumetricLightComponent);
+		//		auto& volumetricLightComp = volumetricLightComponents[volumetricCompIndex];
 
-				if (volumetricLightComp->IsActive)
-				{
-					components[static_cast<U8>(EComponentType::VolumetricLightComponent)] = volumetricLightComp;
-					SRenderCommand volumetricCommand(components, ERenderCommandType::VolumetricLightingSpot);
-					RenderManager->PushRenderCommand(volumetricCommand);
-				}
-			}
-		}
-
-		{
-			SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::VolumetricBufferBlurPass);
-			RenderManager->PushRenderCommand(command);
-		}
+		//		if (volumetricLightComp->IsActive)
+		//		{
+		//			components[static_cast<U8>(EComponentType::VolumetricLightComponent)] = volumetricLightComp;
+		//			SRenderCommand volumetricCommand(components, ERenderCommandType::VolumetricLightingSpot);
+		//			RenderManager->PushRenderCommand(volumetricCommand);
+		//		}
+		//	}
+		//}
 
 		{
-			SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::Bloom);
+			SRenderCommand command(SComponentArray{}, ERenderCommandType::VolumetricBufferBlurPass);
 			RenderManager->PushRenderCommand(command);
 		}
 
 		{
-			SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::Tonemapping);
+			SRenderCommand command(SComponentArray{}, ERenderCommandType::Bloom);
 			RenderManager->PushRenderCommand(command);
 		}
 
 		{
-			SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::AntiAliasing);
+			SRenderCommand command(SComponentArray{}, ERenderCommandType::Tonemapping);
 			RenderManager->PushRenderCommand(command);
 		}
 
 		{
-			SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::GammaCorrection);
+			SRenderCommand command(SComponentArray{}, ERenderCommandType::AntiAliasing);
 			RenderManager->PushRenderCommand(command);
 		}
 
 		{
-			SRenderCommand command(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::RendererDebug);
+			SRenderCommand command(SComponentArray{}, ERenderCommandType::GammaCorrection);
+			RenderManager->PushRenderCommand(command);
+		}
+
+		{
+			SRenderCommand command(SComponentArray{}, ERenderCommandType::RendererDebug);
 			RenderManager->PushRenderCommand(command);
 		}
 	}

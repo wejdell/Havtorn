@@ -8,9 +8,13 @@ namespace Havtorn
 {
 	struct SStaticMeshComponent : public SComponent
 	{
-		SStaticMeshComponent(Ref<SEntity> entity, EComponentType type)
-			: SComponent(std::move(entity), type)
-		{}
+		//SStaticMeshComponent(Ref<SEntity> entity, EComponentType type)
+		//	: SComponent(std::move(entity), type)
+		//{}
+
+		U32 Serialize(char* toData, U32& bufferPosition);
+		U32 Deserialize(const char* fromData, U32& bufferPosition);
+		[[nodiscard]] U32 GetSize() const;
 
 		// Asset Data
 		std::vector<SDrawCallData> DrawCallData;

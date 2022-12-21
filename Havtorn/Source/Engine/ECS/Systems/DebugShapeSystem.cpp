@@ -33,14 +33,15 @@ namespace Havtorn
 			// Primary Cause: Editor window iterates through all entities, 10000+ iterations is a lot.
 			// Filtering DebugShapes improves performance by a little.	
 			U64 currentNrOfEntities = scene->GetEntities().size();
-			for (U16 i = 0; i < MaxShapes; i++)
-			{
-				// hie_ prefix filters HierarchyWindow display.
-				//Ref<SEntity> entity = scene->CreateEntity("DebugShape" + std::to_string(i));
-				Ref<SEntity> entity = scene->CreateEntity("hie_DebugShape" + std::to_string(i));
-				scene->AddTransformComponentToEntity(entity);
-				scene->AddDebugShapeComponentToEntity(entity);
-			}
+			//for (U16 i = 0; i < MaxShapes; i++)
+			//{
+			//	// hie_ prefix filters HierarchyWindow display.
+			//	//Ref<SEntity> entity = scene->CreateEntity("DebugShape" + std::to_string(i));
+			//	//Ref<SEntity> entity = scene->CreateEntity("hie_DebugShape" + std::to_string(i));
+			//	//SEntity* entity = scene->CreateEntity("hie_DebugShape" + std::to_string(i));
+			//	//scene->AddTransformComponentToEntity(entity);
+			//	//scene->AddDebugShapeComponentToEntity(entity);
+			//}
 
 			size_t allocated = 
 				(sizeof(SEntity) * MaxShapes) 
@@ -69,47 +70,47 @@ namespace Havtorn
 #endif
 		}
 
-		void UDebugShapeSystem::Update(CScene* scene)
+		void UDebugShapeSystem::Update(CScene* /*scene*/)
 		{
-			const std::vector<Ref<SEntity>>& entities = scene->GetEntities();
-			const std::vector<Ref<SDebugShapeComponent>>& debugShapes = scene->GetDebugShapeComponents();
-			const std::vector<Ref<STransformComponent>>& transformComponents = scene->GetTransformComponents();
+			//const std::vector<Ref<SEntity>>& entities = scene->GetEntities();
+			//const std::vector<Ref<SDebugShapeComponent>>& debugShapes = scene->GetDebugShapeComponents();
+			//const std::vector<Ref<STransformComponent>>& transformComponents = scene->GetTransformComponents();
 
-			SendRenderCommands(entities, debugShapes, transformComponents);
-			CheckActiveIndices(debugShapes);
+			//SendRenderCommands(entities, debugShapes, transformComponents);
+			//CheckActiveIndices(debugShapes);
 		}
 
-		void UDebugShapeSystem::AddLine(const SVector& start, const SVector& end, const SVector4& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+		void UDebugShapeSystem::AddLine(const SVector& /*start*/, const SVector& /*end*/, const SVector4& /*color*/, const F32 /*lifeTimeSeconds*/, const bool /*useLifeTime*/, const F32 /*thickness*/, const bool /*ignoreDepth*/)
 		{
-			if (!InstanceExists())
-				return;
-
-			U64 entityIndex = 0;
-			if (!Instance->TryGetAvailableIndex(entityIndex))
-				return;
-
-			const std::vector<Ref<SEntity>>& entities = Instance->Scene->GetEntities();
-			const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
-			std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
-			SetSharedDataForShape(debugShapes[shapeIndex], color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
-			debugShapes[shapeIndex]->VertexBufferIndex = Utility::VertexBufferPrimitives::GetVertexBufferIndex<U8>(EVertexBufferPrimitives::LineShape);
-			debugShapes[shapeIndex]->VertexCount = Utility::VertexBufferPrimitives::GetVertexCount<U8>(EVertexBufferPrimitives::LineShape);
-
-			std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
-			const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
-
-			const SVector transformUp = transforms[transformIndex]->Transform.GetMatrix().GetUp();
-			const SVector eulerRotation = SMatrix::LookAtLH(start, end, transformUp).GetEuler();
-			const F32 lineLength = start.Distance(end);
-			const SVector scale = SVector(1.0f, 1.0f, lineLength);
-			SMatrix matrix;
-			SMatrix::Recompose(start, eulerRotation, scale, matrix);
-
-			transforms[transformIndex]->Transform.SetMatrix(matrix);
-
-#if DEBUG_DRAWER_LOG_ADDSHAPE
-			Instance->PrintDebugAddedShape(*debugShapes[shapeIndex].get(), useLifeTime, __FUNCTION__);	
-#endif
+//			if (!InstanceExists())
+//				return;
+//
+//			U64 entityIndex = 0;
+//			if (!Instance->TryGetAvailableIndex(entityIndex))
+//				return;
+//
+//			const std::vector<Ref<SEntity>>& entities = Instance->Scene->GetEntities();
+//			const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
+//			std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
+//			SetSharedDataForShape(debugShapes[shapeIndex], color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
+//			debugShapes[shapeIndex]->VertexBufferIndex = Utility::VertexBufferPrimitives::GetVertexBufferIndex<U8>(EVertexBufferPrimitives::LineShape);
+//			debugShapes[shapeIndex]->VertexCount = Utility::VertexBufferPrimitives::GetVertexCount<U8>(EVertexBufferPrimitives::LineShape);
+//
+//			std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
+//			const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
+//
+//			const SVector transformUp = transforms[transformIndex]->Transform.GetMatrix().GetUp();
+//			const SVector eulerRotation = SMatrix::LookAtLH(start, end, transformUp).GetEuler();
+//			const F32 lineLength = start.Distance(end);
+//			const SVector scale = SVector(1.0f, 1.0f, lineLength);
+//			SMatrix matrix;
+//			SMatrix::Recompose(start, eulerRotation, scale, matrix);
+//
+//			transforms[transformIndex]->Transform.SetMatrix(matrix);
+//
+//#if DEBUG_DRAWER_LOG_ADDSHAPE
+//			Instance->PrintDebugAddedShape(*debugShapes[shapeIndex].get(), useLifeTime, __FUNCTION__);	
+//#endif
 		}
 
 
@@ -148,22 +149,22 @@ namespace Havtorn
 
 
 		void UDebugShapeSystem::SendRenderCommands(
-			const std::vector<Ref<SEntity>>& entities,
-			const std::vector<Ref<SDebugShapeComponent>>& debugShapes,
-			const std::vector<Ref<STransformComponent>>& transformComponents
+			const std::vector<Ref<SEntity>>& /*entities*/,
+			const std::vector<Ref<SDebugShapeComponent>>& /*debugShapes*/,
+			const std::vector<Ref<STransformComponent>>& /*transformComponents*/
 		)
 		{
-			for (U64 i = 0; i < ActiveIndices.size(); i++)
-			{
-				std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
-				const U64 shapeIndex = entities[ActiveIndices[i]]->GetComponentIndex(EComponentType::DebugShapeComponent);
-				const U64 transformIndex = entities[ActiveIndices[i]]->GetComponentIndex(EComponentType::TransformComponent);
-				components[static_cast<U8>(EComponentType::DebugShapeComponent)] = debugShapes[shapeIndex];
-				components[static_cast<U8>(EComponentType::TransformComponent)] = transformComponents[transformIndex];
+			//for (U64 i = 0; i < ActiveIndices.size(); i++)
+			//{
+			//	std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components;
+			//	const U64 shapeIndex = entities[ActiveIndices[i]]->GetComponentIndex(EComponentType::DebugShapeComponent);
+			//	const U64 transformIndex = entities[ActiveIndices[i]]->GetComponentIndex(EComponentType::TransformComponent);
+			//	components[static_cast<U8>(EComponentType::DebugShapeComponent)] = debugShapes[shapeIndex];
+			//	components[static_cast<U8>(EComponentType::TransformComponent)] = transformComponents[transformIndex];
 
-				SRenderCommand command(components, ERenderCommandType::DebugShape);
-				RenderManager->PushRenderCommand(command);
-			}
+			//	SRenderCommand command(components, ERenderCommandType::DebugShape);
+			//	RenderManager->PushRenderCommand(command);
+			//}
 		}
 
 		void UDebugShapeSystem::CheckActiveIndices(const std::vector<Ref<SDebugShapeComponent>>& debugShapes)

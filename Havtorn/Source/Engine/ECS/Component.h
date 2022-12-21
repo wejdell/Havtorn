@@ -10,20 +10,21 @@ namespace Havtorn
 
 	struct SComponent
 	{
-		explicit SComponent(Ref<SEntity> entity, EComponentType type)
-			: Entity(entity)
-			, Type(type)
-		{}
+		SComponent() = default;
+		//explicit SComponent(SEntity* entity, EComponentType type)
+		//	: Entity(entity)
+		//	, Type(type)
+		//{}
 		virtual ~SComponent() = default;
 
 		template<typename T>
-		U32 Serialize(char* sourceData, U32 bufferPosition);
+		U32 Serialize(char* toData, U32 bufferPosition);
 
 		template<typename T>
 		U32 Deserialize(const char* fromData, U32 bufferPosition);
 
-		const Ref<SEntity> Entity;
-		const EComponentType Type;
+		SEntity* Entity = nullptr;
+		EComponentType Type = EComponentType::Count;
 	};
 
 	template<typename T>
@@ -36,7 +37,9 @@ namespace Havtorn
 	template<typename T>
 	U32 SComponent::Deserialize(const char* fromData, U32 bufferPosition)
 	{
-		memcpy(this, &fromData[bufferPosition], sizeof(T));
+		U64 offset = sizeof(SComponent);
+		U64 offsetSize = sizeof(T) - offset;
+		memcpy(this + offset, &fromData[bufferPosition + offset], offsetSize);
 		return sizeof(T);
 	}
 }

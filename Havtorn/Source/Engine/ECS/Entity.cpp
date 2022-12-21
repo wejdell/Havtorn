@@ -5,36 +5,37 @@
 
 namespace Havtorn
 {
-	SEntity::SEntity(U64 id, const std::string& name)
-		: ID(id)
-		, Name(name)
-	{
-		for (U16 i = 0; i < static_cast<U16>(EComponentType::Count); ++i)
-			ComponentIndices[i] = -1;
-	}
+	//SEntity::SEntity(U64 id, const std::string& name)
+	//	: ID(id)
+	//{
+	//	memcpy(Name, name.data(), UMath::Min(static_cast<I32>(name.length()), MAX_STRING_LEN));
 
-	void SEntity::AddComponent(EComponentType type, U64 arrayIndex) const
-	{
-		ComponentIndices[static_cast<size_t>(type)] = arrayIndex;
-	}
+	//	//for (U16 i = 0; i < static_cast<U16>(EComponentType::Count); ++i)
+	//	//	ComponentIndices[i] = -1;
+	//}
 
-	void SEntity::RemoveComponent(EComponentType type) const
-	{
-		ComponentIndices[static_cast<size_t>(type)] = -1;
-	}
+	//void SEntity::AddComponent(EComponentType type, U64 arrayIndex) const
+	//{
+	//	ComponentIndices[static_cast<size_t>(type)] = arrayIndex;
+	//}
 
-	bool SEntity::HasComponent(EComponentType type) const
-	{
-		return ComponentIndices[static_cast<size_t>(type)] != -1;
-	}
+	//void SEntity::RemoveComponent(EComponentType type) const
+	//{
+	//	ComponentIndices[static_cast<size_t>(type)] = -1;
+	//}
 
-	const I64 SEntity::GetComponentIndex(EComponentType type) const
-	{
-		return ComponentIndices[static_cast<size_t>(type)];
-	}
-	
-	const std::array<I64, static_cast<size_t>(EComponentType::Count)>& SEntity::GetComponentIndices() const
-	{
-		return ComponentIndices;
-	}
+	//bool SEntity::HasComponent(EComponentType type) const
+	//{
+	//	return ComponentIndices[static_cast<size_t>(type)] != -1;
+	//}
+
+	//const I64 SEntity::GetComponentIndex(EComponentType type) const
+	//{
+	//	return ComponentIndices[static_cast<size_t>(type)];
+	//}
+	//
+	//const std::array<I64, static_cast<size_t>(EComponentType::Count)>& SEntity::GetComponentIndices() const
+	//{
+	//	return ComponentIndices;
+	//}
 }

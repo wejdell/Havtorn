@@ -7,10 +7,15 @@ namespace Havtorn
 {
 	struct SDecalComponent : public SComponent
 	{
-		SDecalComponent(Ref<SEntity> entity, EComponentType type)
-			: SComponent(std::move(entity), type)
-		{}
+		//SDecalComponent(Ref<SEntity> entity, EComponentType type)
+		//	: SComponent(std::move(entity), type)
+		//{}
 
+		U32 Serialize(char* toData, U32& bufferPosition);
+		U32 Deserialize(const char* fromData, U32& bufferPosition);
+		[[nodiscard]] U32 GetSize() const;
+
+		// TODO.NR: Figure out what to do about this. Unify with MaterialComp? have single material as property?
 		std::vector<U16> TextureReferences = {0, 0, 0};
 		bool ShouldRenderAlbedo = false;
 		bool ShouldRenderMaterial = false;

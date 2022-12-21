@@ -36,11 +36,13 @@ namespace Havtorn
 		const auto& transformComponents = scene->GetTransformComponents();
 		const auto& cameraControllerComponents = scene->GetCameraControllerComponents();
 	
-		const I64 controllerCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::CameraControllerComponent);
-		auto& controllerComp = cameraControllerComponents[controllerCompIndex];
+		//const I64 controllerCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::CameraControllerComponent);
+		//auto& controllerComp = cameraControllerComponents[controllerCompIndex];
+		auto& controllerComp = cameraControllerComponents[0];
 
-		const I64 transformCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
-		auto& transformComp = transformComponents[transformCompIndex];
+		//const I64 transformCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
+		//auto& transformComp = transformComponents[transformCompIndex];
+		auto& transformComp = transformComponents[0];
 
 		const F32 dt = GTime::Dt();
 

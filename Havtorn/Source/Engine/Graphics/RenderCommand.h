@@ -9,6 +9,8 @@ namespace Havtorn
 
 	struct SComponent;
 
+	typedef std::array<SComponent*, static_cast<size_t>(EComponentType::Count)> SComponentArray;
+
 	enum class ERenderCommandType
 	{
 		ShadowAtlasPrePassDirectional,
@@ -39,7 +41,7 @@ namespace Havtorn
 
 	struct SRenderCommand
 	{
-		inline SRenderCommand(std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> components, ERenderCommandType type)
+		inline SRenderCommand(std::array<SComponent*, static_cast<size_t>(EComponentType::Count)> components, ERenderCommandType type)
 			: Components(components)
 			, Type(type) 
 		{}
@@ -55,10 +57,11 @@ namespace Havtorn
 		template<typename T>
 		inline T GetComponentInternal(EComponentType type) const
 		{
-			return 	dynamic_cast<T>(Components[static_cast<size_t>(type)].get());
+			//return 	dynamic_cast<T>(Components[static_cast<size_t>(type)].get());
+			return dynamic_cast<T>(Components[static_cast<size_t>(type)]);
 		}
 
-		std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> Components;
+		SComponentArray Components;
 		ERenderCommandType Type;
 	};
 }

@@ -7,9 +7,9 @@ namespace Havtorn
 {
 	struct SVolumetricLightComponent: public SComponent
 	{
-		SVolumetricLightComponent(Ref<SEntity> entity, EComponentType type)
-			: SComponent(std::move(entity), type)
-		{}
+		//SVolumetricLightComponent(Ref<SEntity> entity, EComponentType type)
+		//	: SComponent(std::move(entity), type)
+		//{}
 
 		bool IsActive = false;
 		F32 NumberOfSamples = 16.0f;
