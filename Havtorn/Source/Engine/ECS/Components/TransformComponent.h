@@ -8,8 +8,9 @@ namespace Havtorn
 {
 	struct STransformComponent : public SComponent
 	{
-		//STransformComponent(Ref<SEntity> entity, EComponentType type)
-		//	: SComponent(std::move(entity), type) {}
+		STransformComponent()
+			: SComponent(EComponentType::TransformComponent)
+		{}
 
 		STransform Transform;
 

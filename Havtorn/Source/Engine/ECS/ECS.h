@@ -18,6 +18,7 @@ namespace Havtorn
 		VolumetricLightComponent,
 		DecalComponent,
 		DebugShapeComponent,
+		MetaDataComponent,
 		Count
 	};
 }

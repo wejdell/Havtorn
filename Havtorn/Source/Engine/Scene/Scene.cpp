@@ -10,29 +10,25 @@
 
 namespace Havtorn
 {
+	U64 gEntityGUID = 0;
+
 	CScene::CScene()
 		: FirstUnusedEntityIndex(0)
 	{
-		SEntity* entityBlock = new SEntity[ENTITY_LIMIT];
-		memmove(&Entities[0], entityBlock, sizeof(SEntity) * ENTITY_LIMIT);
-
-		//for (U64 i = 0; i < static_cast<U64>(ENTITY_LIMIT); i++)
-		//{
-		//	Entities[i]->ID = i;
-		//}
-
-		ALLOCATE_COMPONENTS(TransformComponent)
-		ALLOCATE_COMPONENTS(StaticMeshComponent)
-		ALLOCATE_COMPONENTS(CameraComponent)
-		ALLOCATE_COMPONENTS(CameraControllerComponent)
-		ALLOCATE_COMPONENTS(MaterialComponent)
-		ALLOCATE_COMPONENTS(EnvironmentLightComponent)
-		ALLOCATE_COMPONENTS(DirectionalLightComponent)
-		ALLOCATE_COMPONENTS(PointLightComponent)
-		ALLOCATE_COMPONENTS(SpotLightComponent)
-		ALLOCATE_COMPONENTS(VolumetricLightComponent)
-		ALLOCATE_COMPONENTS(DecalComponent)
-		ALLOCATE_COMPONENTS(DebugShapeComponent)
+		Entities.resize(ENTITY_LIMIT);
+		TransformComponents.resize(ENTITY_LIMIT);
+		StaticMeshComponents.resize(ENTITY_LIMIT);
+		CameraComponents.resize(ENTITY_LIMIT);
+		CameraControllerComponents.resize(ENTITY_LIMIT);
+		MaterialComponents.resize(ENTITY_LIMIT);
+		EnvironmentLightComponents.resize(ENTITY_LIMIT);
+		DirectionalLightComponents.resize(ENTITY_LIMIT);
+		PointLightComponents.resize(ENTITY_LIMIT);
+		SpotLightComponents.resize(ENTITY_LIMIT);
+		VolumetricLightComponents.resize(ENTITY_LIMIT);
+		DecalComponents.resize(ENTITY_LIMIT);
+		DebugShapeComponents.resize(ENTITY_LIMIT);
+		MetaDataComponents.resize(ENTITY_LIMIT);
 	}
 
 	bool CScene::Init(CRenderManager* /*renderManager*/, CAssetRegistry* /*assetRegistry*/, U8 /*sceneIndex*/)
@@ -86,23 +82,21 @@ namespace Havtorn
 	bool CScene::InitDemoScene(CRenderManager* renderManager)
 	{
 		// Create entities
-		auto cameraEntity = CreateEntity("Camera");
+		SEntity cameraEntity;
+		TryGetNewEntity(cameraEntity);
 
 		// Setup entities (create components)
-		//auto transform = AddTransformComponentToEntity(cameraEntity);
-		auto transform = TransformComponents[cameraEntity->ID];
-		transform->Transform.GetMatrix().SetTranslation({ 2.0f, 1.0f, -3.0f });
-		transform->Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
-		transform->Transform.Translate(SVector::Right * 0.25f);
+		STransformComponent& transform = AddTransformComponentToEntity(cameraEntity);
+		transform.Transform.GetMatrix().SetTranslation({ 2.0f, 1.0f, -3.0f });
+		transform.Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
+		transform.Transform.Translate(SVector::Right * 0.25f);
 
-		//auto camera = AddCameraComponentToEntity(cameraEntity);
-		auto camera = CameraComponents[cameraEntity->ID];
-		camera->ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
-		camera->ViewMatrix = SMatrix::LookAtLH(SVector::Zero, SVector::Forward, SVector::Up);
+		SCameraComponent& camera = AddCameraComponentToEntity(cameraEntity);
+		camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
+		camera.ViewMatrix = SMatrix::LookAtLH(SVector::Zero, SVector::Forward, SVector::Up);
 
-		//auto controllerComp = AddCameraControllerComponentToEntity(cameraEntity);
-		auto controllerComp = CameraControllerComponents[cameraEntity->ID];
-		controllerComp->CurrentYaw = UMath::DegToRad(-35.0f);
+		SCameraControllerComponent& controllerComp = AddCameraControllerComponentToEntity(cameraEntity);
+		controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
 
 		//auto environmentLightEntity = CreateEntity("Environment Light");
 		//AddTransformComponentToEntity(environmentLightEntity);
@@ -613,32 +607,101 @@ namespace Havtorn
 		//}
 	}
 
-	//Ref<SEntity> CScene::CreateEntity(const std::string& name)
-	//{
-	//	return Entities.emplace_back(std::make_shared<SEntity>(Entities.size()+1, name));
-	//}
-	SEntity* CScene::CreateEntity(const std::string& name)
+	const std::vector<SEntity>& CScene::GetEntities() 
 	{
-		// TODO: Safeguard
-
-		SEntity* newEntity = Entities[FirstUnusedEntityIndex];
-		memcpy(newEntity->Name, name.data(), UMath::Min(static_cast<I32>(name.length()), MAX_STRING_LEN));
-		newEntity->ID = FirstUnusedEntityIndex;
-		FirstUnusedEntityIndex++;
-
-		return newEntity;
+		return Entities; 
 	}
 
-	//COMPONENT_ADDER_DEFINITION(TransformComponent)
-	//COMPONENT_ADDER_DEFINITION(StaticMeshComponent)
-	//COMPONENT_ADDER_DEFINITION(CameraComponent)
-	//COMPONENT_ADDER_DEFINITION(CameraControllerComponent)
-	//COMPONENT_ADDER_DEFINITION(MaterialComponent)
-	//COMPONENT_ADDER_DEFINITION(EnvironmentLightComponent)
-	//COMPONENT_ADDER_DEFINITION(DirectionalLightComponent)
-	//COMPONENT_ADDER_DEFINITION(PointLightComponent)
-	//COMPONENT_ADDER_DEFINITION(SpotLightComponent)
-	//COMPONENT_ADDER_DEFINITION(VolumetricLightComponent)
-	//COMPONENT_ADDER_DEFINITION(DecalComponent)
-	//COMPONENT_ADDER_DEFINITION(DebugShapeComponent)
+	bool CScene::TryGetNewEntity(SEntity& outEntity)
+	{
+		// TODO: Safeguard
+		if (FirstUnusedEntityIndex >= ENTITY_LIMIT)
+		{
+			HV_LOG_ERROR("Reached ENTITY_LIMIT.");
+			return false;
+		}
+
+		outEntity = Entities[FirstUnusedEntityIndex];
+		outEntity.GUID = gEntityGUID++;
+
+		EntityVectorIndices.emplace(outEntity.GUID, FirstUnusedEntityIndex);
+		FirstUnusedEntityIndex++;
+
+		return true;
+	}
+
+	bool CScene::TryRemoveEntity(SEntity& entity)
+	{
+		if (!entity.IsValid())
+		{
+			HV_LOG_ERROR("Tried to remove invalid Entity.");
+			return false;
+		}
+
+		if (FirstUnusedEntityIndex <= 0)
+		{
+			HV_LOG_ERROR("Tried to remove an entity from an empty scene.");
+			return false;
+		}
+
+		if (!EntityVectorIndices.contains(entity.GUID))
+		{
+			HV_LOG_ERROR("Tried to remove an entity from a scene other than its own.");
+			return false;
+		}
+
+		I64 entityIndex = EntityVectorIndices[entity.GUID];
+
+		if (entityIndex != (FirstUnusedEntityIndex - 1))
+		{
+			std::swap(entity, Entities[FirstUnusedEntityIndex - 1]);
+		}
+
+		UpdateComponentVector(TransformComponents, entityIndex);
+		UpdateComponentVector(StaticMeshComponents, entityIndex);
+		UpdateComponentVector(CameraComponents, entityIndex);
+		UpdateComponentVector(CameraControllerComponents, entityIndex);
+		UpdateComponentVector(MaterialComponents, entityIndex);
+		UpdateComponentVector(EnvironmentLightComponents, entityIndex);
+		UpdateComponentVector(DirectionalLightComponents, entityIndex);
+		UpdateComponentVector(PointLightComponents, entityIndex);
+		UpdateComponentVector(SpotLightComponents, entityIndex);
+		UpdateComponentVector(VolumetricLightComponents, entityIndex);
+		UpdateComponentVector(DecalComponents, entityIndex);
+		UpdateComponentVector(DebugShapeComponents, entityIndex);
+		UpdateComponentVector(MetaDataComponents, entityIndex);
+
+		Entities[FirstUnusedEntityIndex - 1].GUID = 0;
+		FirstUnusedEntityIndex--;
+
+		return true;
+	}
+
+	COMPONENT_ADDER_DEFINITION(TransformComponent)
+	COMPONENT_ADDER_DEFINITION(StaticMeshComponent)
+	COMPONENT_ADDER_DEFINITION(CameraComponent)
+	COMPONENT_ADDER_DEFINITION(CameraControllerComponent)
+	COMPONENT_ADDER_DEFINITION(MaterialComponent)
+	COMPONENT_ADDER_DEFINITION(EnvironmentLightComponent)
+	COMPONENT_ADDER_DEFINITION(DirectionalLightComponent)
+	COMPONENT_ADDER_DEFINITION(PointLightComponent)
+	COMPONENT_ADDER_DEFINITION(SpotLightComponent)
+	COMPONENT_ADDER_DEFINITION(VolumetricLightComponent)
+	COMPONENT_ADDER_DEFINITION(DecalComponent)
+	COMPONENT_ADDER_DEFINITION(DebugShapeComponent)
+	COMPONENT_ADDER_DEFINITION(MetaDataComponent)
+
+	COMPONENT_REMOVER_DEFINITION(TransformComponent)
+	COMPONENT_REMOVER_DEFINITION(StaticMeshComponent)
+	COMPONENT_REMOVER_DEFINITION(CameraComponent)
+	COMPONENT_REMOVER_DEFINITION(CameraControllerComponent)
+	COMPONENT_REMOVER_DEFINITION(MaterialComponent)
+	COMPONENT_REMOVER_DEFINITION(EnvironmentLightComponent)
+	COMPONENT_REMOVER_DEFINITION(DirectionalLightComponent)
+	COMPONENT_REMOVER_DEFINITION(PointLightComponent)
+	COMPONENT_REMOVER_DEFINITION(SpotLightComponent)
+	COMPONENT_REMOVER_DEFINITION(VolumetricLightComponent)
+	COMPONENT_REMOVER_DEFINITION(DecalComponent)
+	COMPONENT_REMOVER_DEFINITION(DebugShapeComponent)
+	COMPONENT_REMOVER_DEFINITION(MetaDataComponent)
 }

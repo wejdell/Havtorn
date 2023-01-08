@@ -8,9 +8,9 @@ namespace Havtorn
 {
 	struct SSpotLightComponent : public SComponent
 	{
-		//SSpotLightComponent(Ref<SEntity> entity, EComponentType type)
-		//	: SComponent(std::move(entity), type)
-		//{}
+		SSpotLightComponent()
+			: SComponent(EComponentType::SpotLightComponent)
+		{}
 
 		SShadowmapViewData ShadowmapView = {};
 		SVector4 ColorAndIntensity = SVector4(1.0f, 1.0f, 1.0f, 1.0f);
