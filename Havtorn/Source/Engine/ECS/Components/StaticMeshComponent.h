@@ -8,9 +8,9 @@ namespace Havtorn
 {
 	struct SStaticMeshComponent : public SComponent
 	{
-		//SStaticMeshComponent(Ref<SEntity> entity, EComponentType type)
-		//	: SComponent(std::move(entity), type)
-		//{}
+		SStaticMeshComponent()
+			: SComponent(EComponentType::StaticMeshComponent)
+		{}
 
 		U32 Serialize(char* toData, U32& bufferPosition);
 		U32 Deserialize(const char* fromData, U32& bufferPosition);

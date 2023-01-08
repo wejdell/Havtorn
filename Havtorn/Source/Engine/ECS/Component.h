@@ -11,10 +11,11 @@ namespace Havtorn
 	struct SComponent
 	{
 		SComponent() = default;
-		//explicit SComponent(SEntity* entity, EComponentType type)
-		//	: Entity(entity)
-		//	, Type(type)
-		//{}
+
+		explicit SComponent(EComponentType type)
+			: Type(type)
+		{}
+
 		virtual ~SComponent() = default;
 
 		template<typename T>
@@ -23,8 +24,8 @@ namespace Havtorn
 		template<typename T>
 		U32 Deserialize(const char* fromData, U32 bufferPosition);
 
-		SEntity* Entity = nullptr;
 		EComponentType Type = EComponentType::Count;
+		bool IsInUse = false;
 	};
 
 	template<typename T>

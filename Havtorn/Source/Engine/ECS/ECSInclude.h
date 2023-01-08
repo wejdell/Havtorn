@@ -23,3 +23,4 @@
 #include "ECS/Components/VolumetricLightComponent.h"
 #include "ECS/Components/DecalComponent.h"
 #include "ECS/Components/DebugShapeComponent.h"
+#include "ECS/Components/MetaDataComponent.h"

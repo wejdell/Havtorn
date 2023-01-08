@@ -15,9 +15,9 @@ namespace Havtorn
 
 	struct SCameraControllerComponent : public SComponent
 	{
-		//SCameraControllerComponent(Ref<SEntity> entity, EComponentType type)
-		//	: SComponent(std::move(entity), type)
-		//{}
+		SCameraControllerComponent()
+			: SComponent(EComponentType::CameraControllerComponent)
+		{}
 
 		F32 MaxMoveSpeed = 3.0f;
 		F32 RotationSpeed = 0.5f;

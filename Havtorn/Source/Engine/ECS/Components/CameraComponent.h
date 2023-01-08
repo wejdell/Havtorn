@@ -7,9 +7,9 @@ namespace Havtorn
 {
 	struct SCameraComponent : public SComponent
 	{
-		//SCameraComponent(SEntity* entity, EComponentType type)
-		//	: SComponent(entity, type)
-		//{}
+		SCameraComponent()
+			: SComponent(EComponentType::CameraComponent)
+		{}
 
 		SMatrix ViewMatrix;
 		SMatrix ProjectionMatrix;
