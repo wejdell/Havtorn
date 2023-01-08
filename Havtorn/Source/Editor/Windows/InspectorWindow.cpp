@@ -48,72 +48,74 @@ namespace ImGui
 		{
 			if (const auto selection = Manager->GetSelectedEntity())
 			{
-				ImGui::TextColored((&ImGui::GetStyle())->Colors[ImGuiCol_HeaderActive], selection->Name.c_str());
+				ImGui::TextColored((&ImGui::GetStyle())->Colors[ImGuiCol_HeaderActive], /*selection->Name.c_str()*/"Entity");
 				ImGui::Separator();
+
+				Havtorn::U64 entitySceneIndex = Scene->GetSceneIndex(*selection);
 
 				if (selection->HasComponent(EComponentType::TransformComponent))
 				{
-					InspectTransformComponent(selection->GetComponentIndex(EComponentType::TransformComponent));
+					InspectTransformComponent(entitySceneIndex);
 					ImGui::Dummy({ DummySize.X, DummySize.Y });
 				}
 
 				if (selection->HasComponent(EComponentType::StaticMeshComponent))
 				{
-					InspectStaticMeshComponent(selection->GetComponentIndex(EComponentType::StaticMeshComponent));
+					InspectStaticMeshComponent(entitySceneIndex);
 					ImGui::Dummy({ DummySize.X, DummySize.Y });
 				}
 
 				if (selection->HasComponent(EComponentType::CameraComponent))
 				{
-					InspectCameraComponent(selection->GetComponentIndex(EComponentType::CameraComponent));
+					InspectCameraComponent(entitySceneIndex);
 					ImGui::Dummy({ DummySize.X, DummySize.Y });
 				}
 
 				if (selection->HasComponent(EComponentType::CameraControllerComponent))
 				{
-					InspectCameraControllerComponent(selection->GetComponentIndex(EComponentType::CameraControllerComponent));
+					InspectCameraControllerComponent(entitySceneIndex);
 					ImGui::Dummy({ DummySize.X, DummySize.Y });
 				}
 
 				if (selection->HasComponent(EComponentType::MaterialComponent))
 				{
-					InspectMaterialComponent(selection->GetComponentIndex(EComponentType::MaterialComponent));
+					InspectMaterialComponent(entitySceneIndex);
 					ImGui::Dummy({ DummySize.X, DummySize.Y });
 				}
 
 				if (selection->HasComponent(EComponentType::EnvironmentLightComponent))
 				{
-					InspectEnvironmentLightComponent(selection->GetComponentIndex(EComponentType::EnvironmentLightComponent));
+					InspectEnvironmentLightComponent(entitySceneIndex);
 					ImGui::Dummy({ DummySize.X, DummySize.Y });
 				}
 
 				if (selection->HasComponent(EComponentType::DirectionalLightComponent))
 				{
-					InspectDirectionalLightComponent(selection->GetComponentIndex(EComponentType::DirectionalLightComponent));
+					InspectDirectionalLightComponent(entitySceneIndex);
 					ImGui::Dummy({ DummySize.X, DummySize.Y });
 				}
 
 				if (selection->HasComponent(EComponentType::PointLightComponent))
 				{
-					InspectPointLightComponent(selection->GetComponentIndex(EComponentType::PointLightComponent));
+					InspectPointLightComponent(entitySceneIndex);
 					ImGui::Dummy({ DummySize.X, DummySize.Y });
 				}
 
 				if (selection->HasComponent(EComponentType::SpotLightComponent))
 				{
-					InspectSpotLightComponent(selection->GetComponentIndex(EComponentType::SpotLightComponent));
+					InspectSpotLightComponent(entitySceneIndex);
 					ImGui::Dummy({ DummySize.X, DummySize.Y });
 				}
 
 				if (selection->HasComponent(EComponentType::VolumetricLightComponent))
 				{
-					InspectVolumetricLightComponent(selection->GetComponentIndex(EComponentType::VolumetricLightComponent));
+					InspectVolumetricLightComponent(entitySceneIndex);
 					ImGui::Dummy({ DummySize.X, DummySize.Y });
 				}
 
 				if (selection->HasComponent(EComponentType::DecalComponent))
 				{
-					InspectDecalComponent(selection->GetComponentIndex(EComponentType::DecalComponent));
+					InspectDecalComponent(entitySceneIndex);
 					ImGui::Dummy({ DummySize.X, DummySize.Y });
 				}
 			}
@@ -129,7 +131,7 @@ namespace ImGui
 	{
 		if (ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			Havtorn::SMatrix& transformMatrix = Scene->GetTransformComponents()[transformComponentIndex]->Transform.GetMatrix();
+			Havtorn::SMatrix transformMatrix = Scene->GetTransformComponents()[transformComponentIndex].Transform.GetMatrix();
 
 			F32 matrixTranslation[3], matrixRotation[3], matrixScale[3];
 			ImGuizmo::DecomposeMatrixToComponents(transformMatrix.data, matrixTranslation, matrixRotation, matrixScale);
@@ -137,6 +139,8 @@ namespace ImGui
 			ImGui::DragFloat3("Rotation", matrixRotation, SlideSpeed);
 			ImGui::DragFloat3("Scale", matrixScale, SlideSpeed);
 			ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, transformMatrix.data);
+
+			Scene->GetTransformComponents()[transformComponentIndex].Transform.SetMatrix(transformMatrix);
 
 			if (Manager->GetIsFreeCamActive())
 				return;
@@ -148,21 +152,20 @@ namespace ImGui
 			ImGuizmo::SetDrawlist(viewportWindow->GetCurrentDrawList());
 			ImGuizmo::SetRect(viewPortWindowPosition.X, viewPortWindowPosition.Y, viewPortWindowDimensions.X, viewPortWindowDimensions.Y);
 
-			auto& cameraComp = Scene->GetCameraComponents()[0];
-			auto& cameraTransformComp = Scene->GetTransformComponents()[cameraComp->Entity->GetComponentIndex(EComponentType::TransformComponent)];
-			Havtorn::SMatrix inverseView = cameraTransformComp->Transform.GetMatrix().Inverse();
+			Havtorn::U64 mainCameraIndex = Scene->GetMainCameraIndex();
+			auto& cameraComp = Scene->GetCameraComponents()[mainCameraIndex];
+			auto& cameraTransformComp = Scene->GetTransformComponents()[mainCameraIndex];
+			Havtorn::SMatrix inverseView = cameraTransformComp.Transform.GetMatrix().Inverse();
 
-			ImGuizmo::Manipulate(inverseView.data, cameraComp->ProjectionMatrix.data, static_cast<ImGuizmo::OPERATION>(Manager->GetCurrentGizmo()), ImGuizmo::LOCAL, transformMatrix.data);
+			ImGuizmo::Manipulate(inverseView.data, cameraComp.ProjectionMatrix.data, static_cast<ImGuizmo::OPERATION>(Manager->GetCurrentGizmo()), ImGuizmo::LOCAL, transformMatrix.data);
 		}
 	}
 
 	void CInspectorWindow::InspectStaticMeshComponent(Havtorn::I64 staticMeshComponentIndex)
 	{
-		Havtorn::Ref<Havtorn::SStaticMeshComponent> staticMesh = nullptr;
-
 		if (ImGui::CollapsingHeader("Static Mesh", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
 		{
-			staticMesh = Scene->GetStaticMeshComponents()[staticMeshComponentIndex];
+			Havtorn::SStaticMeshComponent* staticMesh = &Scene->GetStaticMeshComponents()[staticMeshComponentIndex];
 			Havtorn::SEditorAssetRepresentation* assetRep = Manager->GetAssetRepFromName(staticMesh->Name).get();
 
 			if (ImGui::ImageButton(assetRep->TextureRef, { TexturePreviewSize.X, TexturePreviewSize.Y }))
@@ -174,7 +177,7 @@ namespace ImGui
 			ImGui::TextDisabled("Number Of Materials: %i", staticMesh->NumberOfMaterials);
 		}
 		
-		OpenSelectMeshAssetModal(staticMesh.get());
+		OpenSelectMeshAssetModal(staticMeshComponentIndex);
 	}
 
 	void CInspectorWindow::InspectCameraComponent(Havtorn::I64 cameraComponentIndex)
@@ -182,12 +185,12 @@ namespace ImGui
 		if (ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			auto& cameraComp = Scene->GetCameraComponents()[cameraComponentIndex];
-			ImGui::DragFloat("FOV", &cameraComp->FOV, SlideSpeed, 1.0f, 180.0f);
-			ImGui::DragFloat("Aspect Ratio", &cameraComp->AspectRatio, SlideSpeed, 0.1f, 10.0f);
-			ImGui::DragFloat("Near Clip Plane", &cameraComp->NearClip, SlideSpeed, 0.01f, cameraComp->FarClip - 1.0f);
-			ImGui::DragFloat("Far Clip Plane", &cameraComp->FarClip, SlideSpeed, cameraComp->NearClip + 1.0f, 10000.0f);
+			ImGui::DragFloat("FOV", &cameraComp.FOV, SlideSpeed, 1.0f, 180.0f);
+			ImGui::DragFloat("Aspect Ratio", &cameraComp.AspectRatio, SlideSpeed, 0.1f, 10.0f);
+			ImGui::DragFloat("Near Clip Plane", &cameraComp.NearClip, SlideSpeed, 0.01f, cameraComp.FarClip - 1.0f);
+			ImGui::DragFloat("Far Clip Plane", &cameraComp.FarClip, SlideSpeed, cameraComp.NearClip + 1.0f, 10000.0f);
 
-			cameraComp->ProjectionMatrix = Havtorn::SMatrix::PerspectiveFovLH(Havtorn::UMath::DegToRad(cameraComp->FOV), cameraComp->AspectRatio, cameraComp->NearClip, cameraComp->FarClip);
+			cameraComp.ProjectionMatrix = Havtorn::SMatrix::PerspectiveFovLH(Havtorn::UMath::DegToRad(cameraComp.FOV), cameraComp.AspectRatio, cameraComp.NearClip, cameraComp.FarClip);
 		}
 	}
 
@@ -196,15 +199,15 @@ namespace ImGui
 		if (ImGui::CollapsingHeader("Camera Controller", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			auto& cameraControllerComp = Scene->GetCameraControllerComponents()[cameraControllerComponentIndex];
-			ImGui::DragFloat("Max Move Speed", &cameraControllerComp->MaxMoveSpeed, SlideSpeed, 0.1f, 10.0f);
-			ImGui::DragFloat("Rotation Speed", &cameraControllerComp->RotationSpeed, SlideSpeed, 0.1f, 5.0f);
-			ImGui::DragFloat("Acceleration Duration", &cameraControllerComp->AccelerationDuration, SlideSpeed * 0.1f, 0.1f, 5.0f);
+			ImGui::DragFloat("Max Move Speed", &cameraControllerComp.MaxMoveSpeed, SlideSpeed, 0.1f, 10.0f);
+			ImGui::DragFloat("Rotation Speed", &cameraControllerComp.RotationSpeed, SlideSpeed, 0.1f, 5.0f);
+			ImGui::DragFloat("Acceleration Duration", &cameraControllerComp.AccelerationDuration, SlideSpeed * 0.1f, 0.1f, 5.0f);
 		}
 	}
 
 	void CInspectorWindow::InspectMaterialComponent(Havtorn::I64 materialComponentIndex)
 	{
-		auto& materialComp = Scene->GetMaterialComponents()[materialComponentIndex];
+		Havtorn::SMaterialComponent* materialComp = &Scene->GetMaterialComponents()[materialComponentIndex];
 
 		if (ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
 		{
@@ -227,7 +230,7 @@ namespace ImGui
 				}
 			}
 		
-			OpenSelectMaterialAssetModal(materialComp.get(), MaterialToChangeIndex);
+			OpenSelectMaterialAssetModal(materialComp, MaterialToChangeIndex);
 		}
 	}
 
@@ -237,7 +240,7 @@ namespace ImGui
 		{
 			auto& environmentLightComp = Scene->GetEnvironmentLightComponents()[environmentLightComponentIndex];
 
-			Havtorn::U16 ref = environmentLightComp->AmbientCubemapReference;
+			Havtorn::U16 ref = environmentLightComp.AmbientCubemapReference;
 			
 			ImGui::Text("Ambient Static Cubemap");
 			if (ImGui::ImageButton((void*)Havtorn::GEngine::GetTextureBank()->GetTexture(ref), { TexturePreviewSize.X, TexturePreviewSize.Y }))
@@ -246,7 +249,7 @@ namespace ImGui
 				ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 			}
 
-			OpenSelectTextureAssetModal(environmentLightComp->AmbientCubemapReference);
+			OpenSelectTextureAssetModal(environmentLightComp.AmbientCubemapReference);
 		}
 	}
 
@@ -256,18 +259,18 @@ namespace ImGui
 		{
 			auto& directionalLightComp = Scene->GetDirectionalLightComponents()[directionalLightComponentIndex];
 			
-			Havtorn::F32 colorData[3] = { directionalLightComp->Color.X, directionalLightComp->Color.Y, directionalLightComp->Color.Z };
+			Havtorn::F32 colorData[3] = { directionalLightComp.Color.X, directionalLightComp.Color.Y, directionalLightComp.Color.Z };
 			ImGui::ColorPicker3("Color", colorData);
-			directionalLightComp->Color.X = colorData[0];
-			directionalLightComp->Color.Y = colorData[1];
-			directionalLightComp->Color.Z = colorData[2];
+			directionalLightComp.Color.X = colorData[0];
+			directionalLightComp.Color.Y = colorData[1];
+			directionalLightComp.Color.Z = colorData[2];
 
-			const SVector4 direction = directionalLightComp->Direction;
+			const SVector4 direction = directionalLightComp.Direction;
 			Havtorn::F32 dirData[3] = { direction.X, direction.Y, direction.Z };
 			ImGui::DragFloat3("Direction", dirData, SlideSpeed);
-			directionalLightComp->Direction = { dirData[0], dirData[1], dirData[2], 0.0f };
+			directionalLightComp.Direction = { dirData[0], dirData[1], dirData[2], 0.0f };
 
-			ImGui::DragFloat("Intensity", &directionalLightComp->Color.W, SlideSpeed);
+			ImGui::DragFloat("Intensity", &directionalLightComp.Color.W, SlideSpeed);
 		}
 	}
 
@@ -277,14 +280,14 @@ namespace ImGui
 		{
 			auto& pointLightComp = Scene->GetPointLightComponents()[pointLightComponentIndex];
 
-			Havtorn::F32 colorData[3] = { pointLightComp->ColorAndIntensity.X, pointLightComp->ColorAndIntensity.Y, pointLightComp->ColorAndIntensity.Z };
+			Havtorn::F32 colorData[3] = { pointLightComp.ColorAndIntensity.X, pointLightComp.ColorAndIntensity.Y, pointLightComp.ColorAndIntensity.Z };
 			ImGui::ColorPicker3("Color", colorData);
-			pointLightComp->ColorAndIntensity.X = colorData[0];
-			pointLightComp->ColorAndIntensity.Y = colorData[1];
-			pointLightComp->ColorAndIntensity.Z = colorData[2];
+			pointLightComp.ColorAndIntensity.X = colorData[0];
+			pointLightComp.ColorAndIntensity.Y = colorData[1];
+			pointLightComp.ColorAndIntensity.Z = colorData[2];
 
-			ImGui::DragFloat("Intensity", &pointLightComp->ColorAndIntensity.W, SlideSpeed);
-			ImGui::DragFloat("Range", &pointLightComp->Range, SlideSpeed, 0.1f, 100.0f);
+			ImGui::DragFloat("Intensity", &pointLightComp.ColorAndIntensity.W, SlideSpeed);
+			ImGui::DragFloat("Range", &pointLightComp.Range, SlideSpeed, 0.1f, 100.0f);
 		}
 	}
 
@@ -294,16 +297,16 @@ namespace ImGui
 		{
 			auto& spotLightComp = Scene->GetSpotLightComponents()[spotLightComponentIndex];
 
-			Havtorn::F32 colorData[3] = { spotLightComp->ColorAndIntensity.X, spotLightComp->ColorAndIntensity.Y, spotLightComp->ColorAndIntensity.Z };
+			Havtorn::F32 colorData[3] = { spotLightComp.ColorAndIntensity.X, spotLightComp.ColorAndIntensity.Y, spotLightComp.ColorAndIntensity.Z };
 			ImGui::ColorPicker3("Color", colorData);
-			spotLightComp->ColorAndIntensity.X = colorData[0];
-			spotLightComp->ColorAndIntensity.Y = colorData[1];
-			spotLightComp->ColorAndIntensity.Z = colorData[2];
+			spotLightComp.ColorAndIntensity.X = colorData[0];
+			spotLightComp.ColorAndIntensity.Y = colorData[1];
+			spotLightComp.ColorAndIntensity.Z = colorData[2];
 
-			ImGui::DragFloat("Intensity", &spotLightComp->ColorAndIntensity.W, SlideSpeed);
-			ImGui::DragFloat("Range", &spotLightComp->Range, SlideSpeed, 0.1f, 100.0f);
-			ImGui::DragFloat("Outer Angle", &spotLightComp->OuterAngle, SlideSpeed, spotLightComp->InnerAngle, 180.0f);
-			ImGui::DragFloat("InnerAngle", &spotLightComp->InnerAngle, SlideSpeed, 0.0f, spotLightComp->OuterAngle - 0.01f);
+			ImGui::DragFloat("Intensity", &spotLightComp.ColorAndIntensity.W, SlideSpeed);
+			ImGui::DragFloat("Range", &spotLightComp.Range, SlideSpeed, 0.1f, 100.0f);
+			ImGui::DragFloat("Outer Angle", &spotLightComp.OuterAngle, SlideSpeed, spotLightComp.InnerAngle, 180.0f);
+			ImGui::DragFloat("InnerAngle", &spotLightComp.InnerAngle, SlideSpeed, 0.0f, spotLightComp.OuterAngle - 0.01f);
 		}
 	}
 
@@ -313,13 +316,13 @@ namespace ImGui
 		{
 			auto& volumetricLightComp = Scene->GetVolumetricLightComponents()[volumetricLightComponentIndex];
 
-			ImGui::Checkbox("Is Active", &volumetricLightComp->IsActive);
-			ImGui::DragFloat("Number Of Samples", &volumetricLightComp->NumberOfSamples, SlideSpeed, 4.0f);
+			ImGui::Checkbox("Is Active", &volumetricLightComp.IsActive);
+			ImGui::DragFloat("Number Of Samples", &volumetricLightComp.NumberOfSamples, SlideSpeed, 4.0f);
 
-			volumetricLightComp->NumberOfSamples = Havtorn::UMath::Max(volumetricLightComp->NumberOfSamples, 4.0f);
-			ImGui::DragFloat("Light Power", &volumetricLightComp->LightPower, SlideSpeed * 10000.0f, 0.0f);
-			ImGui::DragFloat("Scattering Probability", &volumetricLightComp->ScatteringProbability, SlideSpeed * 0.1f, 0.0f, 1.0f, "%.4f", ImGuiSliderFlags_Logarithmic);
-			ImGui::DragFloat("Henyey-Greenstein G", &volumetricLightComp->HenyeyGreensteinGValue);
+			volumetricLightComp.NumberOfSamples = Havtorn::UMath::Max(volumetricLightComp.NumberOfSamples, 4.0f);
+			ImGui::DragFloat("Light Power", &volumetricLightComp.LightPower, SlideSpeed * 10000.0f, 0.0f);
+			ImGui::DragFloat("Scattering Probability", &volumetricLightComp.ScatteringProbability, SlideSpeed * 0.1f, 0.0f, 1.0f, "%.4f", ImGuiSliderFlags_Logarithmic);
+			ImGui::DragFloat("Henyey-Greenstein G", &volumetricLightComp.HenyeyGreensteinGValue);
 		}
 	}
 
@@ -329,11 +332,11 @@ namespace ImGui
 		{
 			auto& decalComp = Scene->GetDecalComponents()[decalComponentIndex];
 
-			ImGui::Checkbox("Render Albedo", &decalComp->ShouldRenderAlbedo);
-			ImGui::Checkbox("Render Material", &decalComp->ShouldRenderMaterial);
-			ImGui::Checkbox("Render Normal", &decalComp->ShouldRenderNormal);
+			ImGui::Checkbox("Render Albedo", &decalComp.ShouldRenderAlbedo);
+			ImGui::Checkbox("Render Material", &decalComp.ShouldRenderMaterial);
+			ImGui::Checkbox("Render Normal", &decalComp.ShouldRenderNormal);
 
-			for (Havtorn::U16 materialIndex = 0; materialIndex < decalComp->TextureReferences.size(); materialIndex++)
+			for (Havtorn::U16 materialIndex = 0; materialIndex < decalComp.TextureReferences.size(); materialIndex++)
 			{
 				if (materialIndex % 3 == 0)
 					ImGui::Text("Albedo");
@@ -344,7 +347,7 @@ namespace ImGui
 				if (materialIndex % 3 == 2)
 					ImGui::Text("Normal");
 
-				Havtorn::U16 ref = decalComp->TextureReferences[materialIndex];
+				Havtorn::U16 ref = decalComp.TextureReferences[materialIndex];
 				if (ImGui::ImageButton((void*)Havtorn::GEngine::GetTextureBank()->GetTexture(ref), { TexturePreviewSize.X, TexturePreviewSize.Y }))
 				{
 					MaterialRefToChangeIndex = materialIndex;
@@ -353,15 +356,17 @@ namespace ImGui
 				}
 			}
 
-			MaterialRefToChangeIndex = Havtorn::UMath::Min(MaterialRefToChangeIndex, static_cast<Havtorn::U16>(decalComp->TextureReferences.size() - 1));
-			OpenSelectTextureAssetModal(decalComp->TextureReferences[MaterialRefToChangeIndex]);
+			MaterialRefToChangeIndex = Havtorn::UMath::Min(MaterialRefToChangeIndex, static_cast<Havtorn::U16>(decalComp.TextureReferences.size() - 1));
+			OpenSelectTextureAssetModal(decalComp.TextureReferences[MaterialRefToChangeIndex]);
 		}
 	}
 
-	void CInspectorWindow::OpenSelectMeshAssetModal(Havtorn::SStaticMeshComponent* meshAssetToChange)
+	void CInspectorWindow::OpenSelectMeshAssetModal(Havtorn::I64 staticMeshComponentIndex)
 	{
 		if (ImGui::BeginPopupModal("Select Mesh Asset", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 		{
+			Havtorn::SStaticMeshComponent* staticMesh = &Scene->GetStaticMeshComponents()[staticMeshComponentIndex];
+
 			F32 thumbnailPadding = 4.0f;
 			F32 cellWidth = TexturePreviewSize.X * 0.75f + thumbnailPadding;
 			F32 panelWidth = 256.0f;
@@ -388,21 +393,21 @@ namespace ImGui
 
 					if (ImGui::ImageButton(assetRep->TextureRef, { TexturePreviewSize.X * 0.75f, TexturePreviewSize.Y * 0.75f }))
 					{
-						Manager->GetRenderManager()->TryLoadStaticMeshComponent(assetRep->Name, meshAssetToChange);
+						Manager->GetRenderManager()->TryLoadStaticMeshComponent(assetRep->Name, staticMesh);
 
-						if (meshAssetToChange->Entity->HasComponent(EComponentType::MaterialComponent))
+						if (Scene->GetMaterialComponents()[staticMeshComponentIndex].IsInUse)
 						{
-							auto& materialComp = Scene->GetMaterialComponents()[meshAssetToChange->Entity->GetComponentIndex(EComponentType::MaterialComponent)];
+							auto& materialComp = Scene->GetMaterialComponents()[staticMeshComponentIndex];
 
-							Havtorn::U8 meshMaterialNumber = meshAssetToChange->NumberOfMaterials;
-							Havtorn::I8 materialNumberDifference = meshMaterialNumber - static_cast<Havtorn::U8>(materialComp->Materials.size());
+							Havtorn::U8 meshMaterialNumber = staticMesh->NumberOfMaterials;
+							Havtorn::I8 materialNumberDifference = meshMaterialNumber - static_cast<Havtorn::U8>(materialComp.Materials.size());
 
 							// NR: Add materials to correspond with mesh
 							if (materialNumberDifference > 0)
 							{
 								for (Havtorn::U8 i = 0; i < materialNumberDifference; i++)
 								{
-									materialComp->Materials.emplace_back();
+									materialComp.Materials.emplace_back();
 								}
 							}
 							// NR: Remove materials to correspond with mesh
@@ -410,7 +415,7 @@ namespace ImGui
 							{
 								for (Havtorn::U8 i = 0; i < materialNumberDifference * -1.0f; i++)
 								{
-									materialComp->Materials.pop_back();
+									materialComp.Materials.pop_back();
 								}
 							}
 							// NR: Do nothing

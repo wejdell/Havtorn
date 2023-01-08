@@ -18,8 +18,7 @@ namespace Havtorn
 
 	public:
 		HAVTORN_API std::vector<Ptr<CScene>>& GetActiveScenes();
-		//HAVTORN_API std::vector<Ref<SEntity>>& GetEntities() const;
-		HAVTORN_API std::array<SEntity*, ENTITY_LIMIT>& GetEntities() const;
+		HAVTORN_API const std::vector<SEntity>& GetEntities() const;
 		HAVTORN_API void SaveActiveScene(const std::string& destinationPath);
 		HAVTORN_API void LoadScene(const std::string& filePath);
 		HAVTORN_API CAssetRegistry* GetAssetRegistry() const;

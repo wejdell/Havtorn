@@ -41,17 +41,17 @@ namespace ImGui
 			
 			for (auto& entity : entities) 
 			{
-				// TODO.AG: Temporary solution to ignore listing DebugShapes!
-				if (entity->Name.Contains("hie_"))
-				{
-					continue;
-				}
+				//// TODO.AG: Temporary solution to ignore listing DebugShapes!
+				//if (entity->Name.Contains("hie_"))
+				//{
+				//	continue;
+				//}
 		
-				ImGui::PushID(static_cast<int>(entity->ID));
-				if (ImGui::Selectable(entity->Name.c_str(), index == SelectedIndex, ImGuiSelectableFlags_None)) 
+				ImGui::PushID(static_cast<Havtorn::I32>(entity.GUID));
+				if (ImGui::Selectable("Selected", index == SelectedIndex, ImGuiSelectableFlags_None))
 				{
 					SelectedIndex = index;
-					Manager->SetSelectedEntity(entity);
+					Manager->SetSelectedEntity(&entity);
 				}
 		
 				ImGui::PopID();

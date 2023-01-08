@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include <unordered_map>
+
 namespace Havtorn
 {
 
@@ -15,7 +17,7 @@ namespace Havtorn
 #define COMPONENT_VECTOR_DECLARATION(x) std::vector<S##x> x##s;
 
 // TODO: Filter out using FirstUnusedEntityIndex?
-#define COMPONENT_VECTOR_GETTER(x) const std::vector<S##x>& Get##x##s() { return x##s; }
+#define COMPONENT_VECTOR_GETTER(x) std::vector<S##x>& Get##x##s() { return x##s; }
 
 #define ALLOCATE_COMPONENTS(x) {S##x* components = new S##x[ENTITY_LIMIT]; memmove(&##x##s[0], components, sizeof(S##x) * ENTITY_LIMIT);}
 
@@ -37,7 +39,7 @@ namespace Havtorn
 	class CRenderManager;
 	class CAssetRegistry;
 
-	static U64 gEntityGUID;
+	static U64 gEntityGUID = 0;
 
 	class CScene final
 	{
@@ -56,8 +58,12 @@ namespace Havtorn
 		void Deserialize(const char* fromData, U32& pointerPosition);
 
 		const std::vector<SEntity>& GetEntities();
-		bool TryGetNewEntity(SEntity& outEntity);
+		// TODO: Make convenience function where you can supply name and have it add a metadata comp on its own
+		SEntity* GetNewEntity();
 		bool TryRemoveEntity(SEntity& entity);
+
+		__declspec(dllexport) U64 GetSceneIndex(const SEntity& entity);
+		__declspec(dllexport) U64 GetMainCameraIndex() const;
 
 		COMPONENT_VECTOR_GETTER(TransformComponent)
 		COMPONENT_VECTOR_GETTER(StaticMeshComponent)
@@ -122,6 +128,7 @@ namespace Havtorn
 		COMPONENT_VECTOR_DECLARATION(DebugShapeComponent)
 		COMPONENT_VECTOR_DECLARATION(MetaDataComponent)
 		U64 FirstUnusedEntityIndex = 0;
+		U64 MainCameraIndex = 0;
 	};
 
 	template<class T>

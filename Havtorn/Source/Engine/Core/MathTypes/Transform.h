@@ -13,7 +13,7 @@ namespace Havtorn
 		std::vector<STransform*> Children;
 
 	public:
-		[[nodiscard]] SMatrix& GetMatrix();
+		[[nodiscard]] const SMatrix& GetMatrix() const;
 		void SetMatrix(const SMatrix& matrix);
 		void SetParent(STransform* parent);
 		void SetChild(STransform* child);
@@ -37,13 +37,13 @@ namespace Havtorn
 		inline void Orbit(const SVector4& point, const SMatrix& rotation);
 	};
 
-	inline SMatrix& STransform::GetMatrix()
+	inline const SMatrix& STransform::GetMatrix() const
 	{
-		if (Parent)
-		{
-			WorldMatrix = LocalMatrix * Parent->GetMatrix();
-			return WorldMatrix;
-		}
+		//if (Parent)
+		//{
+		//	WorldMatrix = LocalMatrix * Parent->GetMatrix();
+		//	return WorldMatrix;
+		//}
 
 		return LocalMatrix;
 	}

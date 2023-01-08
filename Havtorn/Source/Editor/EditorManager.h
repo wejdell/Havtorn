@@ -95,8 +95,8 @@ namespace Havtorn
 		void __declspec(dllexport) DebugWindow();
 
 	public:
-		void SetSelectedEntity(Ref<SEntity> entity);
-		Ref<SEntity> GetSelectedEntity() const;
+		void SetSelectedEntity(const SEntity* entity);
+		const SEntity* GetSelectedEntity() const;
 
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry);
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromName(const std::string& assetName);
@@ -142,7 +142,7 @@ namespace Havtorn
 		CEditorResourceManager* ResourceManager = nullptr;
 
 		// TODO.NR: Should be a weak ptr
-		Ref<SEntity> SelectedEntity = nullptr;
+		const SEntity* SelectedEntity = nullptr;
 
 		std::vector<Ptr<ImGui::CWindow>> Windows = {};
 		std::vector<Ptr<ImGui::CToggleable>> MenuElements = {};

@@ -10,8 +10,6 @@
 
 namespace Havtorn
 {
-	U64 gEntityGUID = 0;
-
 	CScene::CScene()
 		: FirstUnusedEntityIndex(0)
 	{
@@ -82,41 +80,40 @@ namespace Havtorn
 	bool CScene::InitDemoScene(CRenderManager* renderManager)
 	{
 		// Create entities
-		SEntity cameraEntity;
-		TryGetNewEntity(cameraEntity);
+		SEntity* cameraEntity = GetNewEntity();
+		if (!cameraEntity)
+			return false;
+
+		MainCameraIndex = GetSceneIndex(*cameraEntity);
 
 		// Setup entities (create components)
-		STransformComponent& transform = AddTransformComponentToEntity(cameraEntity);
-		transform.Transform.GetMatrix().SetTranslation({ 2.0f, 1.0f, -3.0f });
+		STransformComponent& transform = AddTransformComponentToEntity(*cameraEntity);
+		transform.Transform.Translate({ 2.0f, 1.0f, -3.0f });
 		transform.Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
 		transform.Transform.Translate(SVector::Right * 0.25f);
 
-		SCameraComponent& camera = AddCameraComponentToEntity(cameraEntity);
+		SCameraComponent& camera = AddCameraComponentToEntity(*cameraEntity);
 		camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
 		camera.ViewMatrix = SMatrix::LookAtLH(SVector::Zero, SVector::Forward, SVector::Up);
 
-		SCameraControllerComponent& controllerComp = AddCameraControllerComponentToEntity(cameraEntity);
+		SCameraControllerComponent& controllerComp = AddCameraControllerComponentToEntity(*cameraEntity);
 		controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
 
-		//auto environmentLightEntity = CreateEntity("Environment Light");
-		//AddTransformComponentToEntity(environmentLightEntity);
-		//renderManager->LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/CubemapTheVisit.hva", AddEnvironmentLightComponentToEntity(environmentLightEntity).get());
-		//GEngine::GetWorld()->GetAssetRegistry()->Register("Assets/Textures/Cubemaps/CubemapTheVisit.hva", SAssetReferenceCounter(EComponentType::EnvironmentLightComponent, static_cast<U16>(EnvironmentLightComponents.size()) - 1, 0, 0));
+		SEntity* environmentLightEntity = GetNewEntity();
+		AddTransformComponentToEntity(*environmentLightEntity);
+		renderManager->LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/CubemapTheVisit.hva", &AddEnvironmentLightComponentToEntity(*environmentLightEntity));
+		GEngine::GetWorld()->GetAssetRegistry()->Register("Assets/Textures/Cubemaps/CubemapTheVisit.hva", SAssetReferenceCounter(EComponentType::EnvironmentLightComponent, static_cast<U16>(EnvironmentLightComponents.size()) - 1, 0, 0));
+		
+		SEntity* directionalLightEntity = GetNewEntity();
+		if (!directionalLightEntity)
+			return false;
 
-		//auto directionalLightEntity = CreateEntity("Directional Light");
-		//AddTransformComponentToEntity(directionalLightEntity);
-		//auto directionalLight = AddDirectionalLightComponentToEntity(directionalLightEntity);
-		//directionalLight->Direction = { 1.0f, 1.0f, -1.0f, 0.0f };
-		//directionalLight->Color = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };
-		//directionalLight->ShadowmapView.ShadowmapViewportIndex = 0;
-		//directionalLight->ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLight->ShadowViewSize.X, directionalLight->ShadowViewSize.Y, directionalLight->ShadowNearAndFarPlane.X, directionalLight->ShadowNearAndFarPlane.Y);
-				
-		auto directionalLightEntity = CreateEntity("Directional Light");
-		auto directionalLight = DirectionalLightComponents[directionalLightEntity->ID];
-		directionalLight->Direction = { 1.0f, 1.0f, -1.0f, 0.0f };
-		directionalLight->Color = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };
-		directionalLight->ShadowmapView.ShadowmapViewportIndex = 0;
-		directionalLight->ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLight->ShadowViewSize.X, directionalLight->ShadowViewSize.Y, directionalLight->ShadowNearAndFarPlane.X, directionalLight->ShadowNearAndFarPlane.Y);
+		AddDirectionalLightComponentToEntity(*directionalLightEntity);
+		SDirectionalLightComponent& directionalLight = DirectionalLightComponents[GetSceneIndex(*directionalLightEntity)];
+		directionalLight.Direction = { 1.0f, 1.0f, -1.0f, 0.0f };
+		directionalLight.Color = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };
+		directionalLight.ShadowmapView.ShadowmapViewportIndex = 0;
+		directionalLight.ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLight.ShadowViewSize.X, directionalLight.ShadowViewSize.Y, directionalLight.ShadowNearAndFarPlane.X, directionalLight.ShadowNearAndFarPlane.Y);
 
 		//auto volumetricLight = AddVolumetricLightComponentToEntity(directionalLightEntity);
 		//volumetricLight->IsActive = true;
@@ -231,16 +228,23 @@ namespace Havtorn
 		const std::vector<std::string> materialNames4 = { "Assets/Materials/M_Quad.hva", "Assets/Materials/M_Emissive.hva", "Assets/Materials/M_Headlamp.hva" };
 
 		// === Pendulum ===
-		auto pendulum = CreateEntity("Clock");
 
-		//auto& transform1 = AddTransformComponentToEntity(pendulum)->Transform;
-		auto& transform1 = TransformComponents[pendulum->ID]->Transform;
-		transform1.GetMatrix().SetTranslation({1.75f, 0.0f, 0.25f});
+		// TODO: GetNewEntityIndex which provides comp index directly
 
-		//renderManager->LoadStaticMeshComponent(modelPath1, AddStaticMeshComponentToEntity(pendulum).get());
-		//renderManager->LoadMaterialComponent(materialNames1, AddMaterialComponentToEntity(pendulum).get());
-		renderManager->LoadStaticMeshComponent(modelPath1, StaticMeshComponents[pendulum->ID]);
-		renderManager->LoadMaterialComponent(materialNames1, MaterialComponents[pendulum->ID]);
+		SEntity* pendulum = GetNewEntity();
+		if (!pendulum)
+			return false;
+
+		auto& transform1 = AddTransformComponentToEntity(*pendulum).Transform;
+		//auto& transform1 = TransformComponents[GetSceneIndex(*pendulum)].Transform;
+		transform1.Translate({1.75f, 0.0f, 0.25f});
+
+		renderManager->LoadStaticMeshComponent(modelPath1, &AddStaticMeshComponentToEntity(*pendulum));
+		renderManager->LoadMaterialComponent(materialNames1, &AddMaterialComponentToEntity(*pendulum));
+		//AddStaticMeshComponentToEntity(*pendulum);
+		//AddMaterialComponentToEntity(*pendulum);
+		//renderManager->LoadStaticMeshComponent(modelPath1, &StaticMeshComponents[GetSceneIndex(*pendulum)]);
+		//renderManager->LoadMaterialComponent(materialNames1, &MaterialComponents[GetSceneIndex(*pendulum)]);
 
 		GEngine::GetWorld()->GetAssetRegistry()->Register(modelPath1, SAssetReferenceCounter(EComponentType::StaticMeshComponent, static_cast<U16>(StaticMeshComponents.size()) - 1, 0, 0));
 		GEngine::GetWorld()->GetAssetRegistry()->Register(materialNames1, SAssetReferenceCounter(EComponentType::MaterialComponent, static_cast<U16>(MaterialComponents.size()) - 1, 0, 0));
@@ -612,22 +616,23 @@ namespace Havtorn
 		return Entities; 
 	}
 
-	bool CScene::TryGetNewEntity(SEntity& outEntity)
+	SEntity* CScene::GetNewEntity()
 	{
-		// TODO: Safeguard
+		// TODO: Figure out Tombstone solution
+
 		if (FirstUnusedEntityIndex >= ENTITY_LIMIT)
 		{
 			HV_LOG_ERROR("Reached ENTITY_LIMIT.");
-			return false;
+			return nullptr;
 		}
 
-		outEntity = Entities[FirstUnusedEntityIndex];
-		outEntity.GUID = gEntityGUID++;
+		SEntity* outEntity = &Entities[FirstUnusedEntityIndex];
+		outEntity->GUID = gEntityGUID++;
 
-		EntityVectorIndices.emplace(outEntity.GUID, FirstUnusedEntityIndex);
+		EntityVectorIndices.emplace(outEntity->GUID, FirstUnusedEntityIndex);
 		FirstUnusedEntityIndex++;
 
-		return true;
+		return outEntity;
 	}
 
 	bool CScene::TryRemoveEntity(SEntity& entity)
@@ -650,7 +655,7 @@ namespace Havtorn
 			return false;
 		}
 
-		I64 entityIndex = EntityVectorIndices[entity.GUID];
+		U64 entityIndex = EntityVectorIndices[entity.GUID];
 
 		if (entityIndex != (FirstUnusedEntityIndex - 1))
 		{
@@ -675,6 +680,16 @@ namespace Havtorn
 		FirstUnusedEntityIndex--;
 
 		return true;
+	}
+
+	U64 CScene::GetSceneIndex(const SEntity& entity)
+	{
+		return EntityVectorIndices[entity.GUID];
+	}
+
+	U64 CScene::GetMainCameraIndex() const
+	{
+		return MainCameraIndex;
 	}
 
 	COMPONENT_ADDER_DEFINITION(TransformComponent)

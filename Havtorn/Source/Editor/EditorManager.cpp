@@ -180,12 +180,12 @@ namespace Havtorn
 		}
 	}
 
-	void CEditorManager::SetSelectedEntity(Ref<SEntity> entity)
+	void CEditorManager::SetSelectedEntity(const SEntity* entity)
 	{
 		SelectedEntity = entity;
 	}
 
-	Ref<SEntity> CEditorManager::GetSelectedEntity() const
+	const SEntity* CEditorManager::GetSelectedEntity() const
 	{
 		return SelectedEntity;
 	}

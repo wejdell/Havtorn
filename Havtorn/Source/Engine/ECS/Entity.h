@@ -30,32 +30,32 @@ namespace Havtorn
 
 	const static SEntity EntityTombstone;
 
-	bool SEntity::IsValid() const
+	inline bool SEntity::IsValid() const
 	{
 		return GUID > 0;
 	}
 
-	void SEntity::AddComponent(EComponentType type) const
+	inline void SEntity::AddComponent(EComponentType type) const
 	{
 		ComponentMask.Set(STATIC_U64(type));
 	}
 
-	void SEntity::RemoveComponent(EComponentType type) const
+	inline void SEntity::RemoveComponent(EComponentType type) const
 	{
 		ComponentMask.Reset(STATIC_U64(type));
 	}
 
-	bool SEntity::HasComponent(EComponentType type) const
+	inline bool SEntity::HasComponent(EComponentType type) const
 	{
 		return ComponentMask.Test(STATIC_U64(type));
 	}
 
-	bool SEntity::HasComponents(U64 mask) const
+	inline bool SEntity::HasComponents(U64 mask) const
 	{
 		return ComponentMask.Test(mask);
 	}
 
-	const CBitSet<STATIC_U64(EComponentType::Count)>& SEntity::GetComponentMask() const
+	inline const CBitSet<STATIC_U64(EComponentType::Count)>& SEntity::GetComponentMask() const
 	{
 		return ComponentMask;
 	}

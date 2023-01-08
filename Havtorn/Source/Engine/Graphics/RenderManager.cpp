@@ -745,26 +745,24 @@ namespace Havtorn
 		ObjectBufferData.ToWorldFromObject = SMatrix();
 		BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
 
-		//Ref<SEntity> tempEntity = std::make_shared<SEntity>(0, "Temp");
-		//SStaticMeshComponent* staticMeshComp = new SStaticMeshComponent(tempEntity, EComponentType::StaticMeshComponent);
 		auto& activeScene = GEngine::GetWorld()->GetActiveScenes()[0];
-		auto entity = activeScene->CreateEntity("TEMP");
-		auto staticMeshComp = activeScene->GetStaticMeshComponents()[entity->ID];
-		LoadStaticMeshComponent(filePath, staticMeshComp);
+		auto entity = activeScene->GetNewEntity();
+		auto& staticMeshComp = activeScene->GetStaticMeshComponents()[activeScene->GetSceneIndex(*entity)];
+		LoadStaticMeshComponent(filePath, &staticMeshComp);
 
 		Context->VSSetConstantBuffers(1, 1, &ObjectBuffer);
-		Context->IASetPrimitiveTopology(Topologies[staticMeshComp->TopologyIndex]);
-		Context->IASetInputLayout(InputLayouts[staticMeshComp->InputLayoutIndex]);
+		Context->IASetPrimitiveTopology(Topologies[staticMeshComp.TopologyIndex]);
+		Context->IASetInputLayout(InputLayouts[staticMeshComp.InputLayoutIndex]);
 
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::EditorPreview)], nullptr, 0);
 		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::EditorPreview)], nullptr, 0);
 
-		ID3D11SamplerState* sampler = Samplers[staticMeshComp->SamplerIndex];
+		ID3D11SamplerState* sampler = Samplers[staticMeshComp.SamplerIndex];
 		Context->PSSetSamplers(0, 1, &sampler);
 
-		for (U8 drawCallIndex = 0; drawCallIndex < static_cast<U8>(staticMeshComp->DrawCallData.size()); drawCallIndex++)
+		for (U8 drawCallIndex = 0; drawCallIndex < static_cast<U8>(staticMeshComp.DrawCallData.size()); drawCallIndex++)
 		{
-			const SDrawCallData& drawData = staticMeshComp->DrawCallData[drawCallIndex];
+			const SDrawCallData& drawData = staticMeshComp.DrawCallData[drawCallIndex];
 			ID3D11Buffer* vertexBuffer = VertexBuffers[drawData.VertexBufferIndex];
 			Context->IASetVertexBuffers(0, 1, &vertexBuffer, &MeshVertexStrides[drawData.VertexStrideIndex], &MeshVertexOffsets[drawData.VertexStrideIndex]);
 			Context->IASetIndexBuffer(IndexBuffers[drawData.IndexBufferIndex], DXGI_FORMAT_R32_UINT, 0);
@@ -772,7 +770,7 @@ namespace Havtorn
 			CRenderManager::NumberOfDrawCallsThisFrame++;
 		}
 
-		delete staticMeshComp;
+		activeScene->TryRemoveEntity(*entity);
 		delete viewport;
 		renderTarget->Release();
 		texture->Release();
@@ -877,11 +875,9 @@ namespace Havtorn
 		BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
 
 		auto& activeScene = GEngine::GetWorld()->GetActiveScenes()[0];
-		auto entity = activeScene->CreateEntity("TEMP2");
-		//Ref<SEntity> tempEntity = std::make_shared<SEntity>(0, "Temp");
-		//SMaterialComponent* materialComp = new SMaterialComponent(tempEntity, EComponentType::MaterialComponent);
-		auto materialComp = activeScene->GetMaterialComponents()[entity->ID];
-		LoadMaterialComponent({ filePath }, materialComp);
+		auto entity = activeScene->GetNewEntity();
+		auto& materialComp = activeScene->GetMaterialComponents()[activeScene->GetSceneIndex(*entity)];
+		LoadMaterialComponent({ filePath }, &materialComp);
 
 		Context->VSSetConstantBuffers(1, 1, &ObjectBuffer);
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
@@ -915,7 +911,7 @@ namespace Havtorn
 			}
 		};
 
-		MaterialBufferData = SMaterialBufferData(materialComp->Materials[0]);
+		MaterialBufferData = SMaterialBufferData(materialComp.Materials[0]);
 		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AlbedoR)]);
 		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AlbedoG)]);
 		findTextureByIndex(MaterialBufferData.Properties[static_cast<U8>(EMaterialProperty::AlbedoB)]);
@@ -939,17 +935,17 @@ namespace Havtorn
 		// ======== Lighting =========
 		Context->OMSetRenderTargets(1, &renderTarget, nullptr);
 
-		auto environmentLightComp = activeScene->GetEnvironmentLightComponents()[entity->ID];
-		auto directionalLightComp = activeScene->GetDirectionalLightComponents()[entity->ID];
+		auto& environmentLightComp = activeScene->GetEnvironmentLightComponents()[activeScene->GetSceneIndex(*entity)];
+		auto& directionalLightComp = activeScene->GetDirectionalLightComponents()[activeScene->GetSceneIndex(*entity)];
 		//SEnvironmentLightComponent* environmentLightComp = new SEnvironmentLightComponent(tempEntity, EComponentType::EnvironmentLightComponent);
 		//SDirectionalLightComponent* directionalLightComp = new SDirectionalLightComponent(tempEntity, EComponentType::DirectionalLightComponent);
 
-		LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/Skybox.hva", environmentLightComp);
+		LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/Skybox.hva", &environmentLightComp);
 
-		directionalLightComp->Direction = { -1.0f, 0.0f, 0.0f, 0.0f };
-		directionalLightComp->Color = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };
-		directionalLightComp->ShadowmapView.ShadowmapViewportIndex = 0;
-		directionalLightComp->ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLightComp->ShadowViewSize.X, directionalLightComp->ShadowViewSize.Y, directionalLightComp->ShadowNearAndFarPlane.X, directionalLightComp->ShadowNearAndFarPlane.Y);	
+		directionalLightComp.Direction = { -1.0f, 0.0f, 0.0f, 0.0f };
+		directionalLightComp.Color = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };
+		directionalLightComp.ShadowmapView.ShadowmapViewportIndex = 0;
+		directionalLightComp.ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLightComp.ShadowViewSize.X, directionalLightComp.ShadowViewSize.Y, directionalLightComp.ShadowNearAndFarPlane.X, directionalLightComp.ShadowNearAndFarPlane.Y);	
 
 		gBuffer.SetAllAsResources(1);
 		IntermediateDepth.SetAsResourceOnSlot(21);
@@ -960,20 +956,20 @@ namespace Havtorn
 		ShadowAtlasDepth.SetAsResourceOnSlot(22);
 		SSAOBlurTexture.SetAsResourceOnSlot(23);
 
-		auto cubemapTexture = GEngine::GetTextureBank()->GetTexture(environmentLightComp->AmbientCubemapReference);
+		auto cubemapTexture = GEngine::GetTextureBank()->GetTexture(environmentLightComp.AmbientCubemapReference);
 		Context->PSSetShaderResources(0, 1, &cubemapTexture);
 
 		// Update lightbufferdata and fill lightbuffer
-		DirectionalLightBufferData.DirectionalLightDirection = directionalLightComp->Direction;
-		DirectionalLightBufferData.DirectionalLightColor = directionalLightComp->Color;
+		DirectionalLightBufferData.DirectionalLightDirection = directionalLightComp.Direction;
+		DirectionalLightBufferData.DirectionalLightColor = directionalLightComp.Color;
 		BindBuffer(DirectionalLightBuffer, DirectionalLightBufferData, "Light Buffer");
 		Context->PSSetConstantBuffers(2, 1, &DirectionalLightBuffer);
 
-		ShadowmapBufferData.ToShadowmapView = directionalLightComp->ShadowmapView.ShadowViewMatrix;
-		ShadowmapBufferData.ToShadowmapProjection = directionalLightComp->ShadowmapView.ShadowProjectionMatrix;
-		ShadowmapBufferData.ShadowmapPosition = directionalLightComp->ShadowmapView.ShadowPosition;
+		ShadowmapBufferData.ToShadowmapView = directionalLightComp.ShadowmapView.ShadowViewMatrix;
+		ShadowmapBufferData.ToShadowmapProjection = directionalLightComp.ShadowmapView.ShadowProjectionMatrix;
+		ShadowmapBufferData.ShadowmapPosition = directionalLightComp.ShadowmapView.ShadowPosition;
 
-		const auto& shadowmapViewport = Viewports[directionalLightComp->ShadowmapView.ShadowmapViewportIndex];
+		const auto& shadowmapViewport = Viewports[directionalLightComp.ShadowmapView.ShadowmapViewportIndex];
 		ShadowmapBufferData.ShadowmapResolution = { shadowmapViewport.Width, shadowmapViewport.Height };
 		ShadowmapBufferData.ShadowAtlasResolution = ShadowAtlasResolution;
 		ShadowmapBufferData.ShadowmapStartingUV = { shadowmapViewport.TopLeftX / ShadowAtlasResolution.X, shadowmapViewport.TopLeftY / ShadowAtlasResolution.Y };
@@ -998,9 +994,7 @@ namespace Havtorn
 		Context->Draw(3, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 
-		delete materialComp;
-		delete directionalLightComp;
-		delete environmentLightComp;
+		activeScene->TryRemoveEntity(*entity);
 		delete viewport;
 		renderTarget->Release();
 		texture->Release();
@@ -2062,8 +2056,8 @@ namespace Havtorn
 
 	inline void CRenderManager::DebugShapes(const SRenderCommand& command)
 	{
-		SDebugShapeComponent* shape = command.GetComponent(DebugShapeComponent);
-		STransformComponent* transform = command.GetComponent(TransformComponent);
+		const SDebugShapeComponent* shape = command.GetComponent(DebugShapeComponent);
+		const STransformComponent* transform = command.GetComponent(TransformComponent);
 
 		RenderStateManager.SetDepthStencilState(CRenderStateManager::EDepthStencilStates::OnlyRead);
 		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);

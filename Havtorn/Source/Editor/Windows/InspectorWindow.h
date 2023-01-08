@@ -34,7 +34,7 @@ namespace ImGui
 		void InspectVolumetricLightComponent(Havtorn::I64 volumetricLightComponentIndex);
 		void InspectDecalComponent(Havtorn::I64 decalComponentIndex);
 
-		void OpenSelectMeshAssetModal(Havtorn::SStaticMeshComponent* meshAssetToChange);
+		void OpenSelectMeshAssetModal(Havtorn::I64 staticMeshComponentIndex);
 		void OpenSelectTextureAssetModal(Havtorn::U16& textureRefToChange);
 		void OpenSelectMaterialAssetModal(Havtorn::SMaterialComponent* materialComponentToChange, Havtorn::U8 materialIndex);
 

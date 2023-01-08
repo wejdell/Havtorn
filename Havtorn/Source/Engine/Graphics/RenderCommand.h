@@ -5,11 +5,11 @@
 
 namespace Havtorn
 {
-#define GetComponent(x) GetComponentInternal<S##x*>(EComponentType::##x)
+#define GetComponent(x) GetComponentInternal<const S##x*>(EComponentType::##x)
 
 	struct SComponent;
 
-	typedef std::array<SComponent*, static_cast<size_t>(EComponentType::Count)> SComponentArray;
+	typedef std::array<const SComponent*, static_cast<U64>(EComponentType::Count)> SComponentArray;
 
 	enum class ERenderCommandType
 	{
@@ -41,7 +41,7 @@ namespace Havtorn
 
 	struct SRenderCommand
 	{
-		inline SRenderCommand(std::array<SComponent*, static_cast<size_t>(EComponentType::Count)> components, ERenderCommandType type)
+		inline SRenderCommand(std::array<const SComponent*, static_cast<U64>(EComponentType::Count)> components, ERenderCommandType type)
 			: Components(components)
 			, Type(type) 
 		{}
@@ -51,14 +51,14 @@ namespace Havtorn
 		template<typename T>
 		inline T operator[](EComponentType type)
 		{
-			return dynamic_cast<T>(Components[static_cast<size_t>(type)].get());
+			return dynamic_cast<T>(Components[static_cast<U64>(type)].get());
 		}
 
 		template<typename T>
 		inline T GetComponentInternal(EComponentType type) const
 		{
-			//return 	dynamic_cast<T>(Components[static_cast<size_t>(type)].get());
-			return dynamic_cast<T>(Components[static_cast<size_t>(type)]);
+			//return 	dynamic_cast<T>(Components[static_cast<U64>(type)].get());
+			return dynamic_cast<T>(Components[static_cast<U64>(type)]);
 		}
 
 		SComponentArray Components;

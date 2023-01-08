@@ -25,29 +25,38 @@ namespace Havtorn
 		const auto& directionalLightComponents = scene->GetDirectionalLightComponents();
 		const auto& pointLightComponents = scene->GetPointLightComponents();
 		const auto& spotLightComponents = scene->GetSpotLightComponents();
+
+		// Unused right now
 		//const auto& volumetricLightComponents = scene->GetVolumetricLightComponents();
+
 		const auto& decalComponents = scene->GetDecalComponents();
 
 		RenderManager->ClearSystemStaticMeshInstanceTransforms();
 
-		if (!cameraComponents.empty())
+		bool sceneHasActiveCamera = false;
+
+		for (U64 i = 0; i < cameraComponents.size(); i++)
 		{
-			//const I64 transformCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
-			const I64 transformCompIndex = 0;
-			auto& transformComp = transformComponents[transformCompIndex];
+			const SCameraComponent& cameraComponent = cameraComponents[i];
+			if (!cameraComponent.IsInUse)
+				continue;
+
+			sceneHasActiveCamera = true;
+
+			const I64 transformCompIndex = i;
+			const STransformComponent& transformComp = transformComponents[transformCompIndex];
 
 			SComponentArray components;
-			components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
-			components[static_cast<U8>(EComponentType::CameraComponent)] = cameraComponents[0];
+			components[static_cast<U8>(EComponentType::TransformComponent)] = &transformComp;
+			components[static_cast<U8>(EComponentType::CameraComponent)] = &cameraComponent;
 			SRenderCommand command(components, ERenderCommandType::CameraDataStorage);
 			RenderManager->PushRenderCommand(command);
 		}
-		else
-		{
-			return;
-		}
 
-		for (auto& staticMeshComponent : staticMeshComponents)
+		if (!sceneHasActiveCamera)
+			return;
+
+		for (U64 i = 0; i < staticMeshComponents.size(); i++)
 		{
 			//if (!staticMeshComponent->Entity->HasComponent(EComponentType::TransformComponent))
 			//	continue;
@@ -55,74 +64,80 @@ namespace Havtorn
 			//if (!staticMeshComponent->Entity->HasComponent(EComponentType::MaterialComponent))
 			//	continue;
 
-			//const I64 transformCompIndex = staticMeshComponent->Entity->GetComponentIndex(EComponentType::TransformComponent);
-			const I64 transformCompIndex = staticMeshComponent->Entity->ID;
-			auto& transformComp = transformComponents[transformCompIndex];
+			const SStaticMeshComponent& staticMeshComponent = staticMeshComponents[i];
+			if (!staticMeshComponent.IsInUse)
+				continue;
 
-			//const I64 materialCompIndex = staticMeshComponent->Entity->GetComponentIndex(EComponentType::MaterialComponent);
-			const I64 materialCompIndex = staticMeshComponent->Entity->ID;
+			const I64 transformCompIndex = i;
+			const STransformComponent& transformComp = transformComponents[transformCompIndex];
+
+			const I64 materialCompIndex = i;
 			auto& materialComp = materialComponents[materialCompIndex];
 
-			if (!RenderManager->IsStaticMeshInInstancedRenderList(staticMeshComponent->Name)) // if static, if instanced
+			if (!RenderManager->IsStaticMeshInInstancedRenderList(staticMeshComponent.Name)) // if static, if instanced
 			{		
-				if (!directionalLightComponents.empty())
+				if (directionalLightComponents[i].IsInUse)
 				{
 					SComponentArray components;
-					components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
-					components[static_cast<U8>(EComponentType::StaticMeshComponent)] = staticMeshComponent;
-					components[static_cast<U8>(EComponentType::DirectionalLightComponent)] = directionalLightComponents[0];
+					components[static_cast<U8>(EComponentType::TransformComponent)] = &transformComp;
+					components[static_cast<U8>(EComponentType::StaticMeshComponent)] = &staticMeshComponent;
+					components[static_cast<U8>(EComponentType::DirectionalLightComponent)] = &directionalLightComponents[i];
 					SRenderCommand command(components, ERenderCommandType::ShadowAtlasPrePassDirectional);
 					RenderManager->PushRenderCommand(command);
 				}
 
-				if (!pointLightComponents.empty())
+				if (pointLightComponents[i].IsInUse)
 				{
 					SComponentArray components;
-					components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
-					components[static_cast<U8>(EComponentType::StaticMeshComponent)] = staticMeshComponent;
-					components[static_cast<U8>(EComponentType::PointLightComponent)] = pointLightComponents[0];
+					components[static_cast<U8>(EComponentType::TransformComponent)] = &transformComp;
+					components[static_cast<U8>(EComponentType::StaticMeshComponent)] = &staticMeshComponent;
+					components[static_cast<U8>(EComponentType::PointLightComponent)] = &pointLightComponents[i];
 					SRenderCommand command(components, ERenderCommandType::ShadowAtlasPrePassPoint);
 					RenderManager->PushRenderCommand(command);
 				}
 
-				if (!spotLightComponents.empty())
+				if (spotLightComponents[i].IsInUse)
 				{
 					SComponentArray components;
-					components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
-					components[static_cast<U8>(EComponentType::StaticMeshComponent)] = staticMeshComponent;
-					components[static_cast<U8>(EComponentType::SpotLightComponent)] = spotLightComponents[0];
+					components[static_cast<U8>(EComponentType::TransformComponent)] = &transformComp;
+					components[static_cast<U8>(EComponentType::StaticMeshComponent)] = &staticMeshComponent;
+					components[static_cast<U8>(EComponentType::SpotLightComponent)] = &spotLightComponents[i];
 					SRenderCommand command(components, ERenderCommandType::ShadowAtlasPrePassSpot);
 					RenderManager->PushRenderCommand(command);
 				}
 
 				SComponentArray components;
-				components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
-				components[static_cast<U8>(EComponentType::StaticMeshComponent)] = staticMeshComponent;
-				components[static_cast<U8>(EComponentType::MaterialComponent)] = materialComp;
+				components[static_cast<U8>(EComponentType::TransformComponent)] = &transformComp;
+				components[static_cast<U8>(EComponentType::StaticMeshComponent)] = &staticMeshComponent;
+				components[static_cast<U8>(EComponentType::MaterialComponent)] = &materialComp;
 				SRenderCommand command(components, ERenderCommandType::GBufferDataInstanced);
 				RenderManager->PushRenderCommand(command);
 			}
 
-			RenderManager->AddStaticMeshToInstancedRenderList(staticMeshComponent->Name, transformComp->Transform.GetMatrix());
+			RenderManager->AddStaticMeshToInstancedRenderList(staticMeshComponent.Name, transformComp.Transform.GetMatrix());
 		}
 
 		{
-			SRenderCommand command(std::array<SComponent*, static_cast<size_t>(EComponentType::Count)>{}, ERenderCommandType::DecalDepthCopy);
+			SRenderCommand command(SComponentArray{}, ERenderCommandType::DecalDepthCopy);
 			RenderManager->PushRenderCommand(command);
 		}
-
-		for (auto& decalComponent : decalComponents)
+		
+		for (U64 i = 0; i < decalComponents.size(); i++)
 		{
 			//if (!decalComponent->Entity->HasComponent(EComponentType::TransformComponent))
 			//	continue;
 
+			const SDecalComponent& decalComponent = decalComponents[i];
+			if (!decalComponent.IsInUse)
+				continue;
+
 			//const I64 transformCompIndex = decalComponent->Entity->GetComponentIndex(EComponentType::TransformComponent);
-			const I64 transformCompIndex = decalComponent->Entity->ID;
-			auto& transformComp = transformComponents[transformCompIndex];
+			const I64 transformCompIndex = i;
+			const STransformComponent& transformComp = transformComponents[transformCompIndex];
 
 			SComponentArray components;
-			components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
-			components[static_cast<U8>(EComponentType::DecalComponent)] = decalComponent;
+			components[static_cast<U8>(EComponentType::TransformComponent)] = &transformComp;
+			components[static_cast<U8>(EComponentType::DecalComponent)] = &decalComponent;
 			SRenderCommand command(components, ERenderCommandType::DeferredDecal);
 			RenderManager->PushRenderCommand(command);
 		}
@@ -132,16 +147,23 @@ namespace Havtorn
 			RenderManager->PushRenderCommand(command);
 		}
 
-		if (!directionalLightComponents.empty())
+		for (U64 i = 0; i < directionalLightComponents.size(); i++)
 		{
-			//const I64 transformCompIndex = directionalLightComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
-			const I64 transformCompIndex = directionalLightComponents[0]->Entity->ID;
-			auto& transformComp = transformComponents[transformCompIndex];
+			const SDirectionalLightComponent& directionalLightComp = directionalLightComponents[i];
+			if (!directionalLightComp.IsInUse)
+				continue;
+
+			// TODO: Fix hard coded index, maybe store index of environmentlight entity that the light source should use/closest?
+			const SEnvironmentLightComponent& environmentLightComp = environmentLightComponents[1];
+			if (!environmentLightComp.IsInUse)
+				continue;
+
+			const STransformComponent& transformComp = transformComponents[i];
 
 			SComponentArray components;
-			components[static_cast<U8>(EComponentType::TransformComponent)] = transformComp;
-			components[static_cast<U8>(EComponentType::EnvironmentLightComponent)] = environmentLightComponents[0];
-			components[static_cast<U8>(EComponentType::DirectionalLightComponent)] = directionalLightComponents[0];
+			components[static_cast<U8>(EComponentType::TransformComponent)] = &transformComp;
+			components[static_cast<U8>(EComponentType::EnvironmentLightComponent)] = &environmentLightComp;
+			components[static_cast<U8>(EComponentType::DirectionalLightComponent)] = &directionalLightComp;
 			SRenderCommand command(components, ERenderCommandType::DeferredLightingDirectional);
 			RenderManager->PushRenderCommand(command);
 
