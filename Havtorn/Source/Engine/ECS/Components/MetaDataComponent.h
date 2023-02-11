@@ -2,6 +2,7 @@
 
 #pragma once
 #include "ECS/Component.h"
+#include "Core/HavtornString.h"
 
 namespace Havtorn
 {
@@ -11,11 +12,6 @@ namespace Havtorn
 			: SComponent(EComponentType::MetaDataComponent)
 		{}
 
-		// TODO: Define
-		U32 Serialize(char* toData, U32& bufferPosition);
-		U32 Deserialize(const char* fromData, U32& bufferPosition);
-		[[nodiscard]] U32 GetSize() const;
-
-		std::string Name = "";
+		CHavtornStaticString<255> Name;
 	};
 }

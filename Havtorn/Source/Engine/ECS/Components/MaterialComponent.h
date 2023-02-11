@@ -12,8 +12,8 @@ namespace Havtorn
 			: SComponent(EComponentType::MaterialComponent)
 		{}
 
-		U32 Serialize(char* toData, U32& bufferPosition);
-		U32 Deserialize(const char* fromData, U32& bufferPosition);
+		void Serialize(char* toData, U32& pointerPosition) const;
+		void Deserialize(const char* fromData, U32& pointerPosition);
 		[[nodiscard]] U32 GetSize() const;
 
 		std::vector<SEngineGraphicsMaterial> Materials;

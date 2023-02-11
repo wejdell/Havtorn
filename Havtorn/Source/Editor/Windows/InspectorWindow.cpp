@@ -139,7 +139,6 @@ namespace ImGui
 			ImGui::DragFloat3("Rotation", matrixRotation, SlideSpeed);
 			ImGui::DragFloat3("Scale", matrixScale, SlideSpeed);
 			ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, transformMatrix.data);
-
 			Scene->GetTransformComponents()[transformComponentIndex].Transform.SetMatrix(transformMatrix);
 
 			if (Manager->GetIsFreeCamActive())
@@ -158,6 +157,7 @@ namespace ImGui
 			Havtorn::SMatrix inverseView = cameraTransformComp.Transform.GetMatrix().Inverse();
 
 			ImGuizmo::Manipulate(inverseView.data, cameraComp.ProjectionMatrix.data, static_cast<ImGuizmo::OPERATION>(Manager->GetCurrentGizmo()), ImGuizmo::LOCAL, transformMatrix.data);
+			Scene->GetTransformComponents()[transformComponentIndex].Transform.SetMatrix(transformMatrix);
 		}
 	}
 
@@ -166,7 +166,7 @@ namespace ImGui
 		if (ImGui::CollapsingHeader("Static Mesh", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
 		{
 			Havtorn::SStaticMeshComponent* staticMesh = &Scene->GetStaticMeshComponents()[staticMeshComponentIndex];
-			Havtorn::SEditorAssetRepresentation* assetRep = Manager->GetAssetRepFromName(staticMesh->Name).get();
+			Havtorn::SEditorAssetRepresentation* assetRep = Manager->GetAssetRepFromName(staticMesh->Name.AsString()).get();
 
 			if (ImGui::ImageButton(assetRep->TextureRef, { TexturePreviewSize.X, TexturePreviewSize.Y }))
 			{

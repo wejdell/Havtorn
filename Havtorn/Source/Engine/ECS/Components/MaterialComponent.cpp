@@ -5,62 +5,58 @@
 
 namespace Havtorn
 {
-    U32 SMaterialComponent::Serialize(char* toData, U32& bufferPosition)
+    void SMaterialComponent::Serialize(char* toData, U32& pointerPosition) const
     {
-        bufferPosition += SerializeSimple(static_cast<U32>(Materials.size()), toData, bufferPosition);
+        SerializeSimple(static_cast<U32>(Materials.size()), toData, pointerPosition);
         
         for (auto& material : Materials)
         {
-            bufferPosition += SerializeSimple(material.AlbedoR, toData, bufferPosition);
-            bufferPosition += SerializeSimple(material.AlbedoG, toData, bufferPosition);
-            bufferPosition += SerializeSimple(material.AlbedoB, toData, bufferPosition);
-            bufferPosition += SerializeSimple(material.AlbedoA, toData, bufferPosition);
-            bufferPosition += SerializeSimple(material.NormalX, toData, bufferPosition);
-            bufferPosition += SerializeSimple(material.NormalY, toData, bufferPosition);
-            bufferPosition += SerializeSimple(material.NormalZ, toData, bufferPosition);
-            bufferPosition += SerializeSimple(material.AmbientOcclusion, toData, bufferPosition);
-            bufferPosition += SerializeSimple(material.Metalness, toData, bufferPosition);
-            bufferPosition += SerializeSimple(material.Roughness, toData, bufferPosition);
-            bufferPosition += SerializeSimple(material.Emissive, toData, bufferPosition);
+            SerializeSimple(material.AlbedoR, toData, pointerPosition);
+            SerializeSimple(material.AlbedoG, toData, pointerPosition);
+            SerializeSimple(material.AlbedoB, toData, pointerPosition);
+            SerializeSimple(material.AlbedoA, toData, pointerPosition);
+            SerializeSimple(material.NormalX, toData, pointerPosition);
+            SerializeSimple(material.NormalY, toData, pointerPosition);
+            SerializeSimple(material.NormalZ, toData, pointerPosition);
+            SerializeSimple(material.AmbientOcclusion, toData, pointerPosition);
+            SerializeSimple(material.Metalness, toData, pointerPosition);
+            SerializeSimple(material.Roughness, toData, pointerPosition);
+            SerializeSimple(material.Emissive, toData, pointerPosition);
             
-            bufferPosition += SerializeSimple(static_cast<U32>(material.Name.length()), toData, bufferPosition);
-            bufferPosition += SerializeString(material.Name.c_str(), toData, bufferPosition);
+            SerializeSimple(static_cast<U32>(material.Name.length()), toData, pointerPosition);
+            SerializeString(material.Name.c_str(), toData, pointerPosition);
 
-            bufferPosition += SerializeSimple(material.RecreateNormalZ, toData, bufferPosition);
+            SerializeSimple(material.RecreateNormalZ, toData, pointerPosition);
         }
-
-        return bufferPosition;
     }
 
-    U32 SMaterialComponent::Deserialize(const char* fromData, U32& bufferPosition)
+    void SMaterialComponent::Deserialize(const char* fromData, U32& pointerPosition)
     {
         U32 materialNumber = 0;
-        bufferPosition += DeserializeSimple(materialNumber, fromData, bufferPosition);
+        DeserializeSimple(materialNumber, fromData, pointerPosition);
 
         for (U32 index = 0; index < materialNumber; index++)
         {
             auto& material = Materials.emplace_back();
 
-            bufferPosition += DeserializeSimple(material.AlbedoR, fromData, bufferPosition);
-            bufferPosition += DeserializeSimple(material.AlbedoG, fromData, bufferPosition);
-            bufferPosition += DeserializeSimple(material.AlbedoB, fromData, bufferPosition);
-            bufferPosition += DeserializeSimple(material.AlbedoA, fromData, bufferPosition);
-            bufferPosition += DeserializeSimple(material.NormalX, fromData, bufferPosition);
-            bufferPosition += DeserializeSimple(material.NormalY, fromData, bufferPosition);
-            bufferPosition += DeserializeSimple(material.NormalZ, fromData, bufferPosition);
-            bufferPosition += DeserializeSimple(material.AmbientOcclusion, fromData, bufferPosition);
-            bufferPosition += DeserializeSimple(material.Metalness, fromData, bufferPosition);
-            bufferPosition += DeserializeSimple(material.Roughness, fromData, bufferPosition);
-            bufferPosition += DeserializeSimple(material.Emissive, fromData, bufferPosition);
+            DeserializeSimple(material.AlbedoR, fromData, pointerPosition);
+            DeserializeSimple(material.AlbedoG, fromData, pointerPosition);
+            DeserializeSimple(material.AlbedoB, fromData, pointerPosition);
+            DeserializeSimple(material.AlbedoA, fromData, pointerPosition);
+            DeserializeSimple(material.NormalX, fromData, pointerPosition);
+            DeserializeSimple(material.NormalY, fromData, pointerPosition);
+            DeserializeSimple(material.NormalZ, fromData, pointerPosition);
+            DeserializeSimple(material.AmbientOcclusion, fromData, pointerPosition);
+            DeserializeSimple(material.Metalness, fromData, pointerPosition);
+            DeserializeSimple(material.Roughness, fromData, pointerPosition);
+            DeserializeSimple(material.Emissive, fromData, pointerPosition);
 
             U32 nameLength = 0;
-            bufferPosition += DeserializeSimple(nameLength, fromData, bufferPosition);
-            bufferPosition += DeserializeString(material.Name, fromData, nameLength, bufferPosition);
+            DeserializeSimple(nameLength, fromData, pointerPosition);
+            DeserializeString(material.Name, fromData, nameLength, pointerPosition);
 
-            bufferPosition += DeserializeSimple(material.RecreateNormalZ, fromData, bufferPosition);
+            DeserializeSimple(material.RecreateNormalZ, fromData, pointerPosition);
         }
-
-        return bufferPosition;
     }
 
     U32 SMaterialComponent::GetSize() const

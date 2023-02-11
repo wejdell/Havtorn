@@ -61,9 +61,8 @@ namespace Havtorn
 		const U32 fileSize = fileHeader.GetSize() + AssetRegistry->GetSize(sceneIndex);
 		char* data = new char[fileSize];
 
-		U32 pointerPosition = 0;
-		fileHeader.Serialize(data, pointerPosition);
-		AssetRegistry->Serialize(sceneIndex, data, pointerPosition);		
+		U32 pointerPosition = 0;	
+		fileHeader.Serialize(data, pointerPosition, AssetRegistry.get(), sceneIndex); //1325
 		GEngine::GetFileSystem()->Serialize(destinationPath, data, fileSize);
 		
 		delete[] data;
@@ -78,14 +77,15 @@ namespace Havtorn
 		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
 		char* data = new char[fileSize];
 
+		// Don't put it here if it does assetregistry work
+		Scenes.back()->Init(RenderManager, AssetRegistry.get(), static_cast<U8>(sceneIndex));
+
 		U32 pointerPosition = 0;
 		GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));	
-		sceneFile.Deserialize(data, Scenes.back().get(), pointerPosition);
-		AssetRegistry->Deserialize(sceneIndex, data, pointerPosition);
+		sceneFile.Deserialize(data, pointerPosition, Scenes.back().get(), AssetRegistry.get()); //1325
 		
 		delete[] data;
 
-		Scenes.back()->Init(RenderManager, AssetRegistry.get(), static_cast<U8>(sceneIndex));
 	}
 
 	CAssetRegistry* CWorld::GetAssetRegistry() const

@@ -6,8 +6,6 @@
 
 namespace Havtorn
 {
-	struct SEntity;
-
 	struct SComponent
 	{
 		SComponent() = default;
@@ -18,29 +16,29 @@ namespace Havtorn
 
 		virtual ~SComponent() = default;
 
-		template<typename T>
-		U32 Serialize(char* toData, U32 bufferPosition);
+		//template<typename T>
+		//U32 Serialize(char* toData, U32 bufferPosition) const;
 
-		template<typename T>
-		U32 Deserialize(const char* fromData, U32 bufferPosition);
+		//template<typename T>
+		//U32 Deserialize(const char* fromData, U32 bufferPosition);
 
 		EComponentType Type = EComponentType::Count;
 		bool IsInUse = false;
 	};
 
-	template<typename T>
-	U32 SComponent::Serialize(char* toData, U32 bufferPosition)
-	{
-		memcpy(&toData[bufferPosition], this, sizeof(T));
-		return sizeof(T);
-	}
+	//template<typename T>
+	//U32 SComponent::Serialize(char* toData, U32 bufferPosition) const
+	//{
+	//	memcpy(&toData[bufferPosition], this, sizeof(T));
+	//	return sizeof(T);
+	//}
 
-	template<typename T>
-	U32 SComponent::Deserialize(const char* fromData, U32 bufferPosition)
-	{
-		U64 offset = sizeof(SComponent);
-		U64 offsetSize = sizeof(T) - offset;
-		memcpy(this + offset, &fromData[bufferPosition + offset], offsetSize);
-		return sizeof(T);
-	}
+	//template<typename T>
+	//U32 SComponent::Deserialize(const char* fromData, U32 bufferPosition)
+	//{
+	//	U64 offset = sizeof(SComponent);
+	//	U64 offsetSize = sizeof(T) - offset;
+	//	memcpy(this + offset, &fromData[bufferPosition + offset], offsetSize);
+	//	return sizeof(T);
+	//}
 }

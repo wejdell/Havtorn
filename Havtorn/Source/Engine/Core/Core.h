@@ -32,4 +32,4 @@
 #define CACHE_ALIGN __declspec(align(CACHE_LINE))
 
 #define MAX_STRING_LEN 256
-#define ENTITY_LIMIT 100
+#define ENTITY_LIMIT 45

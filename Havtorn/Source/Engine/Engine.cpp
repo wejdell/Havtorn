@@ -72,7 +72,6 @@ namespace Havtorn
 		//GEngine::GetWorld()->SaveActiveScene("Assets/Scenes/TestScene.hvs");
 		//GEngine::GetWorld()->LoadScene("Assets/Scenes/TestScene.hvs");
 
-
 		InitWindowsImaging();
 
 		return true;

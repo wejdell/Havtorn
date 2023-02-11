@@ -5,27 +5,23 @@
 
 namespace Havtorn
 {
-    U32 SDecalComponent::Serialize(char* toData, U32& bufferPosition)
+    void SDecalComponent::Serialize(char* toData, U32& pointerPosition) const
     {
-        bufferPosition += SerializeSimple(static_cast<U32>(TextureReferences.size()), toData, bufferPosition);
-        bufferPosition += SerializeVector(TextureReferences, toData, bufferPosition);
-        bufferPosition += SerializeSimple(ShouldRenderAlbedo, toData, bufferPosition);
-        bufferPosition += SerializeSimple(ShouldRenderMaterial, toData, bufferPosition);
-        bufferPosition += SerializeSimple(ShouldRenderNormal, toData, bufferPosition);
-
-        return bufferPosition;
+        SerializeSimple(static_cast<U32>(TextureReferences.size()), toData, pointerPosition);
+        SerializeVector(TextureReferences, toData, pointerPosition);
+        SerializeSimple(ShouldRenderAlbedo, toData, pointerPosition);
+        SerializeSimple(ShouldRenderMaterial, toData, pointerPosition);
+        SerializeSimple(ShouldRenderNormal, toData, pointerPosition);
     }
 
-    U32 SDecalComponent::Deserialize(const char* fromData, U32& bufferPosition)
+    void SDecalComponent::Deserialize(const char* fromData, U32& pointerPosition)
     {
         U32 textureNumber = 0;
-        bufferPosition += DeserializeSimple(textureNumber, fromData, bufferPosition);
-        bufferPosition += DeserializeVector(TextureReferences, fromData, textureNumber, bufferPosition);
-        bufferPosition += DeserializeSimple(ShouldRenderAlbedo, fromData, bufferPosition);
-        bufferPosition += DeserializeSimple(ShouldRenderMaterial, fromData, bufferPosition);
-        bufferPosition += DeserializeSimple(ShouldRenderNormal, fromData, bufferPosition);
-
-        return bufferPosition;
+        DeserializeSimple(textureNumber, fromData, pointerPosition);
+        DeserializeVector(TextureReferences, fromData, textureNumber, pointerPosition);
+        DeserializeSimple(ShouldRenderAlbedo, fromData, pointerPosition);
+        DeserializeSimple(ShouldRenderMaterial, fromData, pointerPosition);
+        DeserializeSimple(ShouldRenderNormal, fromData, pointerPosition);
     }
 
     U32 SDecalComponent::GetSize() const

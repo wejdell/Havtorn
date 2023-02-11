@@ -149,7 +149,7 @@ namespace Havtorn
 
 	public:
 		[[nodiscard]] HAVTORN_API const CFullscreenTexture& GetRenderedSceneTexture() const;
-		void PushRenderCommand(SRenderCommand& command);
+		void PushRenderCommand(SRenderCommand command);
 		void SwapRenderCommandBuffers();
 
 	public:

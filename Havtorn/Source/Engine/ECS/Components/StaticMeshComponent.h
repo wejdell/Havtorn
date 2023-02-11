@@ -3,6 +3,7 @@
 #pragma once
 #include "ECS/Component.h"
 #include "Graphics/GraphicsStructs.h"
+#include "Core/HavtornString.h"
 
 namespace Havtorn
 {
@@ -12,13 +13,13 @@ namespace Havtorn
 			: SComponent(EComponentType::StaticMeshComponent)
 		{}
 
-		U32 Serialize(char* toData, U32& bufferPosition);
-		U32 Deserialize(const char* fromData, U32& bufferPosition);
+		void Serialize(char* toData, U32& pointerPosition) const;
+		void Deserialize(const char* fromData, U32& pointerPosition);
 		[[nodiscard]] U32 GetSize() const;
 
 		// Asset Data
 		std::vector<SDrawCallData> DrawCallData;
-		std::string Name = "";
+		CHavtornStaticString<255> Name;
 		U8 NumberOfMaterials = 0;
 
 		// Render Data

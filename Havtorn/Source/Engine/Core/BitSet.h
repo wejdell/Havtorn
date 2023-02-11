@@ -6,7 +6,7 @@
 
 #include "Core/Core.h"
 #include "Core/CoreTypes.h"
-#include <bitset>
+//#include <bitset>
 
 namespace Havtorn
 {
@@ -205,19 +205,19 @@ namespace Havtorn
             }
         }
 
-        //template <class _Elem = char, class _Tr = char_traits<_Elem>, class _Alloc = allocator<_Elem>>
-        //_NODISCARD basic_string<_Elem, _Tr, _Alloc> to_string(
-        //    _Elem _Elem0 = static_cast<_Elem>('0'), _Elem _Elem1 = static_cast<_Elem>('1')) const {
-        //    // convert bitset to string
-        //    basic_string<_Elem, _Tr, _Alloc> _Str;
-        //    _Str.reserve(_Bits);
+        [[nodiscard]] std::string ToString() const 
+        {
+            // convert bitset to string
+            std::string str;
+            str.reserve(bits);
 
-        //    for (auto _Pos = _Bits; 0 < _Pos;) {
-        //        _Str.push_back(_Subscript(--_Pos) ? _Elem1 : _Elem0);
-        //    }
+            for (auto pos = bits; 0 < pos;) 
+            {
+                str.push_back(Subscript(--pos) ? '1' : '0');
+            }
 
-        //    return _Str;
-        //}
+            return str;
+        }
 
         // Count number of set bits
         [[nodiscard]] U64 Count() const noexcept

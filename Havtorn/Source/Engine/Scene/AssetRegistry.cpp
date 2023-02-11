@@ -58,14 +58,30 @@ namespace Havtorn
     {
         std::vector<std::string> assetPaths;
         
+        struct SUniqueRegistryEntry
+        {
+            std::string AssetPath;
+            SAssetReferenceCounter Counter;
+        };
+
+        std::vector<SUniqueRegistryEntry> tempEntries;
+
         for (const auto& assetRef : Registry)
         {
             const std::vector<SAssetReferenceCounter>& counters = assetRef.second;
             for (const SAssetReferenceCounter& innerCounter : counters)
             {
                 if (innerCounter.HasSameComponent(counter))
-                   assetPaths.emplace_back(assetRef.first);
+                    //assetPaths.emplace_back(assetRef.first);
+                    tempEntries.emplace_back(SUniqueRegistryEntry(assetRef.first, assetRef.second[0]));
             }
+        }
+
+        std::sort(tempEntries.begin(), tempEntries.end(), [] (const SUniqueRegistryEntry& a, const SUniqueRegistryEntry& b) { return a.Counter.ComponentSubIndex < b.Counter.ComponentSubIndex; });
+
+        for (const SUniqueRegistryEntry& entry : tempEntries)
+        {
+            assetPaths.emplace_back(entry.AssetPath);
         }
 
         return assetPaths;
@@ -108,7 +124,7 @@ namespace Havtorn
             }
         }
 
-        pointerPosition += SerializeSimple(entriesForScene, toData, pointerPosition);
+        SerializeSimple(entriesForScene, toData, pointerPosition);
 
         for (const auto& assetRef : Registry)
         {
@@ -117,10 +133,10 @@ namespace Havtorn
             {
                 if (counter.SceneIndex == sceneIndex)
                 {
-                    pointerPosition += SerializeSimple(static_cast<U32>(assetRef.first.length()), toData, pointerPosition);
-                    pointerPosition += SerializeString(assetRef.first, toData, pointerPosition);
+                    SerializeSimple(static_cast<U32>(assetRef.first.length()), toData, pointerPosition);
+                    SerializeString(assetRef.first, toData, pointerPosition);
 
-                    pointerPosition += SerializeSimple(counter, toData, pointerPosition);
+                    SerializeSimple(counter, toData, pointerPosition);
                 }
             }
         }
@@ -129,17 +145,17 @@ namespace Havtorn
     void CAssetRegistry::Deserialize(I64 sceneIndex, const char* fromData, U32& pointerPosition)
     {
         U32 entriesForScene = 0;
-        pointerPosition += DeserializeSimple(entriesForScene, fromData, pointerPosition);
+        DeserializeSimple(entriesForScene, fromData, pointerPosition);
 
         for (U32 i = 0; i < entriesForScene; i++)
         {
             U32 assetRefNameLength = 0;
-            pointerPosition += DeserializeSimple(assetRefNameLength, fromData, pointerPosition);
+            DeserializeSimple(assetRefNameLength, fromData, pointerPosition);
             std::string assetRefName = "";
-            pointerPosition += DeserializeString(assetRefName, fromData, assetRefNameLength, pointerPosition);
+            DeserializeString(assetRefName, fromData, assetRefNameLength, pointerPosition);
 
             SAssetReferenceCounter newCounter = {};
-            pointerPosition += DeserializeSimple(newCounter, fromData, pointerPosition);
+            DeserializeSimple(newCounter, fromData, pointerPosition);
 
             newCounter.SceneIndex = static_cast<U8>(sceneIndex);
             Register(std::move(assetRefName), std::move(newCounter));

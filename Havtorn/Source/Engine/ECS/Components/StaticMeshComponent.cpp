@@ -6,36 +6,36 @@
 
 namespace Havtorn
 {
-    U32 SStaticMeshComponent::Serialize(char* toData, U32& bufferPosition)
+    void SStaticMeshComponent::Serialize(char* toData, U32& pointerPosition) const
     {
-        bufferPosition += SerializeSimple(static_cast<U32>(DrawCallData.size()), toData, bufferPosition);
-        bufferPosition += SerializeVector(DrawCallData, toData, bufferPosition);
-        bufferPosition += SerializeSimple(static_cast<U32>(Name.length()), toData, bufferPosition);
-        bufferPosition += SerializeString(Name, toData, bufferPosition);
-        bufferPosition += SerializeSimple(NumberOfMaterials, toData, bufferPosition);
-        bufferPosition += SerializeSimple(VertexShaderIndex, toData, bufferPosition);
-        bufferPosition += SerializeSimple(InputLayoutIndex, toData, bufferPosition);
-        bufferPosition += SerializeSimple(PixelShaderIndex, toData, bufferPosition);
-        bufferPosition += SerializeSimple(SamplerIndex, toData, bufferPosition);
-        bufferPosition += SerializeSimple(TopologyIndex, toData, bufferPosition);
-        return bufferPosition;
+        SerializeSimple(static_cast<U32>(DrawCallData.size()), toData, pointerPosition);
+        SerializeVector(DrawCallData, toData, pointerPosition);
+        // SerializeSimple(static_cast<U32>(Name.length()), toData, bufferPosition);
+        // SerializeString(Name, toData, bufferPosition);
+        SerializeSimple(Name, toData, pointerPosition);
+        SerializeSimple(NumberOfMaterials, toData, pointerPosition);
+        SerializeSimple(VertexShaderIndex, toData, pointerPosition);
+        SerializeSimple(InputLayoutIndex, toData, pointerPosition);
+        SerializeSimple(PixelShaderIndex, toData, pointerPosition);
+        SerializeSimple(SamplerIndex, toData, pointerPosition);
+        SerializeSimple(TopologyIndex, toData, pointerPosition);
     }
 
-    U32 SStaticMeshComponent::Deserialize(const char* fromData, U32& bufferPosition)
+    void SStaticMeshComponent::Deserialize(const char* fromData, U32& pointerPosition)
     {
         U32 meshNumber = 0;
-        bufferPosition += DeserializeSimple(meshNumber, fromData, bufferPosition);
-        bufferPosition += DeserializeVector(DrawCallData, fromData, meshNumber, bufferPosition);
-        U32 meshNameLength = 0;
-        bufferPosition += DeserializeSimple(meshNameLength, fromData, bufferPosition);
-        bufferPosition += DeserializeString(Name, fromData, meshNameLength, bufferPosition);
-        bufferPosition += DeserializeSimple(NumberOfMaterials, fromData, bufferPosition);
-        bufferPosition += DeserializeSimple(VertexShaderIndex, fromData, bufferPosition);
-        bufferPosition += DeserializeSimple(InputLayoutIndex, fromData, bufferPosition);
-        bufferPosition += DeserializeSimple(PixelShaderIndex, fromData, bufferPosition);
-        bufferPosition += DeserializeSimple(SamplerIndex, fromData, bufferPosition);
-        bufferPosition += DeserializeSimple(TopologyIndex, fromData, bufferPosition);
-        return bufferPosition;
+        DeserializeSimple(meshNumber, fromData, pointerPosition);
+        DeserializeVector(DrawCallData, fromData, meshNumber, pointerPosition);
+        //U32 meshNameLength = 0;
+        //bufferPosition += DeserializeSimple(meshNameLength, fromData, bufferPosition);
+        //bufferPosition += DeserializeString(Name, fromData, meshNameLength, bufferPosition);
+        DeserializeSimple(Name, fromData, pointerPosition);
+        DeserializeSimple(NumberOfMaterials, fromData, pointerPosition);
+        DeserializeSimple(VertexShaderIndex, fromData, pointerPosition);
+        DeserializeSimple(InputLayoutIndex, fromData, pointerPosition);
+        DeserializeSimple(PixelShaderIndex, fromData, pointerPosition);
+        DeserializeSimple(SamplerIndex, fromData, pointerPosition);
+        DeserializeSimple(TopologyIndex, fromData, pointerPosition);
     }
 
     U32 SStaticMeshComponent::GetSize() const
@@ -43,8 +43,9 @@ namespace Havtorn
         U32 size = 0;
         size += sizeof(U32);
         size += static_cast<U32>(DrawCallData.size()) * sizeof(SDrawCallData);
-        size += sizeof(U32);
-        size += static_cast<U32>(Name.length()) * sizeof(char);
+        //size += sizeof(U32);
+        //size += static_cast<U32>(Name.length()) * sizeof(char);
+        size += sizeof(Name);
         size += 6 * sizeof(U8);
 
         return size;

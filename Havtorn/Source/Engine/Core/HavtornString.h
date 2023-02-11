@@ -2,6 +2,7 @@
 #pragma once
 
 #include "Core/Core.h"
+#include <array>
 
 namespace Havtorn
 {
@@ -10,13 +11,13 @@ namespace Havtorn
     public:
         CHavtornString(const std::string& name)
         {
-            U32 size = static_cast<U32>(name.length());
+            U64 size = name.length() + 1;
             HV_ASSERT(size != 0, "Trying to create HavtornString from std::string with size 0!");
 
-            Characters = new char[size + 1];
+            Characters = new char[size];
             memcpy(Characters, &name[0], sizeof(char) * size);
             Characters[size] = '\0';
-            Size = size;
+            Size = static_cast<U32>(size);
         }
 
         inline const U32 Length() const { return Size; }
@@ -38,5 +39,33 @@ namespace Havtorn
     private:
         char* Characters = nullptr;
         U32 Size = 0;
+    };
+
+    template<U8 maxSize>
+    class CHavtornStaticString
+    {
+    public:
+        CHavtornStaticString() = default;
+
+        CHavtornStaticString(const std::string& name)
+        {
+            constexpr bool isNotOverflow = maxSize > 0;
+            HV_ASSERT(isNotOverflow, "Trying to create a HavtornStaticString with size > 255!\nMax allowed size is 255, so that the entire size is 256 counting the Size property.");
+
+            U64 size = name.length();
+            HV_ASSERT(size != 0, "Trying to create a HavtornStaticString from an empty std::string!");
+            HV_ASSERT(size <= maxSize, "Trying to create a HavtornStaticString from an std::string larger than the specified max size!");
+
+            memcpy(&Characters[0], name.data(), sizeof(char) * size);
+
+            Size = static_cast<U8>(size);
+        }
+
+        inline const U32 Length() const { return Size; }
+        inline const std::string AsString() const { return std::string(std::begin(Characters), std::begin(Characters) + STATIC_U64(Size)); }
+
+    private:
+        std::array<char, maxSize> Characters = {};
+        U8 Size = 0;
     };
 }

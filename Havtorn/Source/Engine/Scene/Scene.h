@@ -3,20 +3,19 @@
 #pragma once
 
 #include <unordered_map>
+#include <tuple>
 
 namespace Havtorn
 {
-
-// TODO: Check if memory is misaligned if components are constructed anew when added (to make sure they have default data), if not, call Component = Component();
 #define COMPONENT_ADDER_DECLARATION(x) S##x& Add##x##ToEntity(SEntity& entity);
-#define COMPONENT_ADDER_DEFINITION(x) S##x& CScene::Add##x##ToEntity(SEntity& entity){ entity.AddComponent(EComponentType::##x); auto& newComponent = x##s[EntityVectorIndices[entity.GUID]]; newComponent.IsInUse = true; return newComponent;}
+#define COMPONENT_ADDER_DEFINITION(x) S##x& CScene::Add##x##ToEntity(SEntity& entity){ entity.AddComponent(EComponentType::##x); S##x& newComponent = x##s[EntityVectorIndices[entity.GUID]]; newComponent.IsInUse = true; return newComponent;}
 
 #define COMPONENT_REMOVER_DECLARATION(x) void Remove##x##FromEntity(SEntity& entity);
 #define COMPONENT_REMOVER_DEFINITION(x) void CScene::Remove##x##FromEntity(SEntity& entity){ entity.RemoveComponent(EComponentType::##x); x##s[EntityVectorIndices[entity.GUID]].IsInUse = false;}
 
 #define COMPONENT_VECTOR_DECLARATION(x) std::vector<S##x> x##s;
 
-// TODO: Filter out using FirstUnusedEntityIndex?
+// TODO: Filter out using FirstUnusedEntityIndex? Make view instead
 #define COMPONENT_VECTOR_GETTER(x) std::vector<S##x>& Get##x##s() { return x##s; }
 
 #define ALLOCATE_COMPONENTS(x) {S##x* components = new S##x[ENTITY_LIMIT]; memmove(&##x##s[0], components, sizeof(S##x) * ENTITY_LIMIT);}
@@ -51,19 +50,18 @@ namespace Havtorn
 
 		bool InitDemoScene(CRenderManager* renderManager);
 
-		void SaveScene(const std::string& destinationPath);
-		void LoadScene(const std::string& destinationPath);
 		[[nodiscard]] U32 GetSize() const;
 		void Serialize(char* toData, U32& pointerPosition) const;
-		void Deserialize(const char* fromData, U32& pointerPosition);
+		void Deserialize(const char* fromData, U32& pointerPosition, CAssetRegistry* assetRegistry);
 
 		const std::vector<SEntity>& GetEntities();
 		// TODO: Make convenience function where you can supply name and have it add a metadata comp on its own
 		SEntity* GetNewEntity();
 		bool TryRemoveEntity(SEntity& entity);
 
-		__declspec(dllexport) U64 GetSceneIndex(const SEntity& entity);
+		__declspec(dllexport) U64 GetSceneIndex(const SEntity& entity) const;
 		__declspec(dllexport) U64 GetMainCameraIndex() const;
+		__declspec(dllexport) U64 GetNumberOfValidEntities() const;
 
 		COMPONENT_VECTOR_GETTER(TransformComponent)
 		COMPONENT_VECTOR_GETTER(StaticMeshComponent)
@@ -112,7 +110,7 @@ namespace Havtorn
 		void UpdateComponentVector(std::vector<T>& components, I64 index);
 
 	private:
-		std::unordered_map<U64, U64> EntityVectorIndices;
+		std::unordered_map<I64, U64> EntityVectorIndices;
 		std::vector<SEntity> Entities;
 		COMPONENT_VECTOR_DECLARATION(TransformComponent)
 		COMPONENT_VECTOR_DECLARATION(StaticMeshComponent)
@@ -129,6 +127,9 @@ namespace Havtorn
 		COMPONENT_VECTOR_DECLARATION(MetaDataComponent)
 		U64 FirstUnusedEntityIndex = 0;
 		U64 MainCameraIndex = 0;
+
+		// TODO.NR/AG: Try to remove this
+		CRenderManager* RenderManager = nullptr;
 	};
 
 	template<class T>
