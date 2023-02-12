@@ -43,19 +43,6 @@ namespace Havtorn
 
 			sceneHasActiveCamera = true;
 
-			const I64 transformCompIndex = i;
-			//const STransformComponent& transformComp = transformComponents[transformCompIndex];
-
-			// Figure out why the memory is suddenly invalidated here after deserialization? Can't even preview the memory. Happens randomly.
-
-			//STransformComponent& transformComp = transformComponents[i];
-
-			//SComponentArray components;
-			//components[static_cast<U8>(EComponentType::TransformComponent)] = &transformComp;
-			//components[static_cast<U8>(EComponentType::CameraComponent)] = &cameraComponent;
-			//components[static_cast<U8>(EComponentType::TransformComponent)] = &transformComponents[i];
-			//components[static_cast<U8>(EComponentType::CameraComponent)] = &cameraComponents[i];
-			//SRenderCommand command(components, ERenderCommandType::CameraDataStorage);
 			SRenderCommand command;
 			command.Type = ERenderCommandType::CameraDataStorage;
 			command.TransformComponent = transformComponents[i];
@@ -68,16 +55,10 @@ namespace Havtorn
 
 		for (U64 i = 0; i < staticMeshComponents.size(); i++)
 		{
-			//if (!staticMeshComponent->Entity->HasComponent(EComponentType::TransformComponent))
-			//	continue;
-
-			//if (!staticMeshComponent->Entity->HasComponent(EComponentType::MaterialComponent))
-			//	continue;
-
 			const SStaticMeshComponent& staticMeshComponent = staticMeshComponents[i];
 			if (!staticMeshComponent.IsInUse)
 				continue;
-
+		
 			const I64 transformCompIndex = i;
 			const STransformComponent& transformComp = transformComponents[transformCompIndex];
 
@@ -88,11 +69,6 @@ namespace Havtorn
 			{		
 				if (directionalLightComponents[i].IsInUse)
 				{
-					//SComponentArray components;
-					//components[static_cast<U8>(EComponentType::TransformComponent)] = &transformComp;
-					//components[static_cast<U8>(EComponentType::StaticMeshComponent)] = &staticMeshComponent;
-					//components[static_cast<U8>(EComponentType::DirectionalLightComponent)] = &directionalLightComponents[i];
-					//SRenderCommand command(components, ERenderCommandType::ShadowAtlasPrePassDirectional);
 					SRenderCommand command;
 					command.Type = ERenderCommandType::ShadowAtlasPrePassDirectional;
 					command.TransformComponent = transformComp;
@@ -103,11 +79,6 @@ namespace Havtorn
 
 				if (pointLightComponents[i].IsInUse)
 				{
-					//SComponentArray components;
-					//components[static_cast<U8>(EComponentType::TransformComponent)] = &transformComp;
-					//components[static_cast<U8>(EComponentType::StaticMeshComponent)] = &staticMeshComponent;
-					//components[static_cast<U8>(EComponentType::PointLightComponent)] = &pointLightComponents[i];
-					//SRenderCommand command(components, ERenderCommandType::ShadowAtlasPrePassPoint);
 					SRenderCommand command;
 					command.Type = ERenderCommandType::ShadowAtlasPrePassPoint;
 					command.TransformComponent = transformComp;
@@ -118,11 +89,6 @@ namespace Havtorn
 
 				if (spotLightComponents[i].IsInUse)
 				{
-					//SComponentArray components;
-					//components[static_cast<U8>(EComponentType::TransformComponent)] = &transformComp;
-					//components[static_cast<U8>(EComponentType::StaticMeshComponent)] = &staticMeshComponent;
-					//components[static_cast<U8>(EComponentType::SpotLightComponent)] = &spotLightComponents[i];
-					//SRenderCommand command(components, ERenderCommandType::ShadowAtlasPrePassSpot);
 					SRenderCommand command;
 					command.Type = ERenderCommandType::ShadowAtlasPrePassSpot;
 					command.TransformComponent = transformComp;
@@ -131,11 +97,6 @@ namespace Havtorn
 					RenderManager->PushRenderCommand(command);
 				}
 
-				//SComponentArray components;
-				//components[static_cast<U8>(EComponentType::TransformComponent)] = &transformComp;
-				//components[static_cast<U8>(EComponentType::StaticMeshComponent)] = &staticMeshComponent;
-				//components[static_cast<U8>(EComponentType::MaterialComponent)] = &materialComp;
-				//SRenderCommand command(components, ERenderCommandType::GBufferDataInstanced);
 				SRenderCommand command;
 				command.Type = ERenderCommandType::GBufferDataInstanced;
 				command.TransformComponent = transformComp;
@@ -148,7 +109,6 @@ namespace Havtorn
 		}
 
 		{
-			//SRenderCommand command(SComponentArray{}, ERenderCommandType::DecalDepthCopy);
 			SRenderCommand command;
 			command.Type = ERenderCommandType::DecalDepthCopy;
 			RenderManager->PushRenderCommand(command);
@@ -156,21 +116,12 @@ namespace Havtorn
 		
 		for (U64 i = 0; i < decalComponents.size(); i++)
 		{
-			//if (!decalComponent->Entity->HasComponent(EComponentType::TransformComponent))
-			//	continue;
-
 			const SDecalComponent& decalComponent = decalComponents[i];
 			if (!decalComponent.IsInUse)
 				continue;
 
-			//const I64 transformCompIndex = decalComponent->Entity->GetComponentIndex(EComponentType::TransformComponent);
-			const I64 transformCompIndex = i;
-			const STransformComponent& transformComp = transformComponents[transformCompIndex];
+			const STransformComponent& transformComp = transformComponents[i];
 
-			//SComponentArray components;
-			//components[static_cast<U8>(EComponentType::TransformComponent)] = &transformComp;
-			//components[static_cast<U8>(EComponentType::DecalComponent)] = &decalComponent;
-			//SRenderCommand command(components, ERenderCommandType::DeferredDecal);
 			SRenderCommand command;
 			command.Type = ERenderCommandType::DeferredDecal;
 			command.TransformComponent = transformComp;
@@ -179,7 +130,6 @@ namespace Havtorn
 		}
 
 		{
-			//SRenderCommand command(SComponentArray{}, ERenderCommandType::PreLightingPass);
 			SRenderCommand command;
 			command.Type = ERenderCommandType::PreLightingPass;
 			RenderManager->PushRenderCommand(command);
@@ -198,11 +148,6 @@ namespace Havtorn
 
 			const STransformComponent& transformComp = transformComponents[i];
 
-			//SComponentArray components;
-			//components[static_cast<U8>(EComponentType::TransformComponent)] = &transformComp;
-			//components[static_cast<U8>(EComponentType::EnvironmentLightComponent)] = &environmentLightComp;
-			//components[static_cast<U8>(EComponentType::DirectionalLightComponent)] = &directionalLightComp;
-			//SRenderCommand command(components, ERenderCommandType::DeferredLightingDirectional);
 			SRenderCommand command;
 			command.Type = ERenderCommandType::DeferredLightingDirectional;
 			command.TransformComponent = transformComp;
@@ -277,7 +222,6 @@ namespace Havtorn
 		//}
 
 		{
-			//SRenderCommand command(SComponentArray{}, ERenderCommandType::VolumetricBufferBlurPass);
 			SRenderCommand command;
 			command.Type = ERenderCommandType::VolumetricBufferBlurPass;
 			RenderManager->PushRenderCommand(command);
@@ -286,35 +230,30 @@ namespace Havtorn
 		{
 			SRenderCommand command;
 			command.Type = ERenderCommandType::Bloom;
-			//SRenderCommand command(SComponentArray{}, ERenderCommandType::Bloom);
 			RenderManager->PushRenderCommand(command);
 		}
 
 		{
 			SRenderCommand command;
 			command.Type = ERenderCommandType::Tonemapping;
-			//SRenderCommand command(SComponentArray{}, ERenderCommandType::Tonemapping);
 			RenderManager->PushRenderCommand(command);
 		}
 
 		{
 			SRenderCommand command;
 			command.Type = ERenderCommandType::AntiAliasing;
-			//SRenderCommand command(SComponentArray{}, ERenderCommandType::AntiAliasing);
 			RenderManager->PushRenderCommand(command);
 		}
 
 		{
 			SRenderCommand command;
 			command.Type = ERenderCommandType::GammaCorrection;
-			//SRenderCommand command(SComponentArray{}, ERenderCommandType::GammaCorrection);
 			RenderManager->PushRenderCommand(command);
 		}
 
 		{
 			SRenderCommand command;
 			command.Type = ERenderCommandType::RendererDebug;
-			//SRenderCommand command(SComponentArray{}, ERenderCommandType::RendererDebug);
 			RenderManager->PushRenderCommand(command);
 		}
 	}

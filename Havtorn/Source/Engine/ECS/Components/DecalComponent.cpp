@@ -7,8 +7,7 @@ namespace Havtorn
 {
     void SDecalComponent::Serialize(char* toData, U32& pointerPosition) const
     {
-        SerializeSimple(static_cast<U32>(TextureReferences.size()), toData, pointerPosition);
-        SerializeVector(TextureReferences, toData, pointerPosition);
+        // NR: Texture info is saved and loaded using AssetRegistry
         SerializeSimple(ShouldRenderAlbedo, toData, pointerPosition);
         SerializeSimple(ShouldRenderMaterial, toData, pointerPosition);
         SerializeSimple(ShouldRenderNormal, toData, pointerPosition);
@@ -16,9 +15,7 @@ namespace Havtorn
 
     void SDecalComponent::Deserialize(const char* fromData, U32& pointerPosition)
     {
-        U32 textureNumber = 0;
-        DeserializeSimple(textureNumber, fromData, pointerPosition);
-        DeserializeVector(TextureReferences, fromData, textureNumber, pointerPosition);
+        // NR: Texture info is saved and loaded using AssetRegistry
         DeserializeSimple(ShouldRenderAlbedo, fromData, pointerPosition);
         DeserializeSimple(ShouldRenderMaterial, fromData, pointerPosition);
         DeserializeSimple(ShouldRenderNormal, fromData, pointerPosition);
@@ -26,11 +23,7 @@ namespace Havtorn
 
     U32 SDecalComponent::GetSize() const
     {
-        U32 size = 0;
-        
-        size += sizeof(U32);
-        size += static_cast<U32>(TextureReferences.size()) * sizeof(U16);
-        size += 3 * sizeof(bool);
+        U32 size = 3 * sizeof(bool);
 
         return size;
     }

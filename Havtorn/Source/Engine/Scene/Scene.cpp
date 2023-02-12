@@ -425,9 +425,6 @@ namespace Havtorn
 
 		for (auto& entity : Entities)
 		{
-			//size += sizeof(U32);
-			//size += sizeof(char) * entity->Name.Length();
-
 			size += sizeof(I64) * static_cast<size_t>(EComponentType::Count);
 
 			if (entity.HasComponent(EComponentType::TransformComponent))
@@ -469,85 +466,74 @@ namespace Havtorn
 
 	void CScene::Serialize(char* toData, U32& pointerPosition) const
 	{
-		SerializeSimple(static_cast<U32>(GetNumberOfValidEntities()), toData, pointerPosition); //21
+		SerializeSimple(static_cast<U32>(GetNumberOfValidEntities()), toData, pointerPosition);
 
 		for (auto& entity : Entities)
 		{
-			//pointerPosition += SerializeSimple(entity.Name.Length(), toData, pointerPosition);
-			//pointerPosition += SerializeString(entity.Name.ConstChar(), toData, pointerPosition);
-
 			if (!entity.IsValid())
 				continue;
 
 			SerializeSimple(entity.GetComponentMask(), toData, pointerPosition);
-			U64 entitySceneIndex = GetSceneIndex(entity); //29
-
+			U64 entitySceneIndex = GetSceneIndex(entity); 
 
 			if (entity.HasComponent(EComponentType::TransformComponent))
 			{		
-				//pointerPosition += TransformComponents[entitySceneIndex].Serialize<STransformComponent>(toData, pointerPosition); //221
-				SerializeSimple(TransformComponents[entitySceneIndex], toData, pointerPosition); //221?
+				SerializeSimple(TransformComponents[entitySceneIndex], toData, pointerPosition);
 			}
 
 			if (entity.HasComponent(EComponentType::StaticMeshComponent))
 			{
-				//StaticMeshComponents[entitySceneIndex].Serialize(toData, pointerPosition); //1423
+				// Saved and Loaded using AssetRegistry
 			}
 
 			if (entity.HasComponent(EComponentType::CameraComponent))
 			{
-				//pointerPosition += CameraComponents[entitySceneIndex].Serialize<SCameraComponent>(toData, pointerPosition);
 				SerializeSimple(CameraComponents[entitySceneIndex], toData, pointerPosition);
 			}
 
 			if (entity.HasComponent(EComponentType::CameraControllerComponent))
 			{
-				//pointerPosition += CameraControllerComponents[entitySceneIndex].Serialize<SCameraControllerComponent>(toData, pointerPosition);
 				SerializeSimple(CameraControllerComponents[entitySceneIndex], toData, pointerPosition);
 			}
 			
 			if (entity.HasComponent(EComponentType::MaterialComponent))
 			{
-				//MaterialComponents[entitySceneIndex].Serialize(toData, pointerPosition);
+				// Saved and Loaded using AssetRegistry
 			}
 
 			if (entity.HasComponent(EComponentType::EnvironmentLightComponent))
 			{
-				//pointerPosition += SerializeSimple(EnvironmentLightComponents[entitySceneIndex], toData, pointerPosition);
+				// Saved and Loaded using AssetRegistry
 			}
 
 			if (entity.HasComponent(EComponentType::DirectionalLightComponent))
 			{
-				//pointerPosition += DirectionalLightComponents[entitySceneIndex].Serialize<SDirectionalLightComponent>(toData, pointerPosition);
 				SerializeSimple(DirectionalLightComponents[entitySceneIndex], toData, pointerPosition);
 			}
 
 			if (entity.HasComponent(EComponentType::PointLightComponent))
 			{
-				//pointerPosition += PointLightComponents[entitySceneIndex].Serialize<SPointLightComponent>(toData, pointerPosition);
 				SerializeSimple(PointLightComponents[entitySceneIndex], toData, pointerPosition);
 			}
 
 			if (entity.HasComponent(EComponentType::SpotLightComponent))
 			{
-				//pointerPosition += SpotLightComponents[entitySceneIndex].Serialize<SSpotLightComponent>(toData, pointerPosition);
 				SerializeSimple(SpotLightComponents[entitySceneIndex], toData, pointerPosition);
 			}
 
 			if (entity.HasComponent(EComponentType::VolumetricLightComponent))
 			{
-				//pointerPosition += VolumetricLightComponents[entitySceneIndex].Serialize<SVolumetricLightComponent>(toData, pointerPosition);
 				SerializeSimple(VolumetricLightComponents[entitySceneIndex], toData, pointerPosition);
 			}
 				
 			if (entity.HasComponent(EComponentType::DecalComponent))
 			{
-				//DecalComponents[entitySceneIndex].Serialize(toData, pointerPosition);
+				// NR: Texture info Saved and Loaded using AssetRegistry
+				DecalComponents[GetSceneIndex(entity)].Serialize(toData, pointerPosition);
 			}
 
 			if (entity.HasComponent(EComponentType::MetaDataComponent))
 			{
-				//pointerPosition += MetaDataComponents[entitySceneIndex].Serialize<SMetaDataComponent>(toData, pointerPosition);
 				SerializeSimple(MetaDataComponents[entitySceneIndex], toData, pointerPosition);
 			}
 		}
@@ -563,10 +549,7 @@ namespace Havtorn
 			SEntity* entity = GetNewEntity();
 
 			CBitSet<STATIC_U64(EComponentType::Count)> componentMask;
-			DeserializeSimple(componentMask, fromData, pointerPosition); //29
-			// 2597
-
-			std::string mask = componentMask.ToString();
+			DeserializeSimple(componentMask, fromData, pointerPosition);
 
 			if (componentMask.Test(STATIC_U64(EComponentType::TransformComponent)))
 			{
@@ -576,11 +559,8 @@ namespace Havtorn
 
 			if (componentMask.Test(STATIC_U64(EComponentType::StaticMeshComponent)))
 			{
-				//StaticMeshComponents[i].Deserialize(fromData, pointerPosition); //1423
-
 				// TODO.NR/AG: Fix hard coded scene index
 				SAssetReferenceCounter counter = { EComponentType::StaticMeshComponent, static_cast<U16>(i), 0, 0 };
-				//SStaticMeshComponent
 				RenderManager->LoadStaticMeshComponent(assetRegistry->GetAssetPath(counter), &AddStaticMeshComponentToEntity(*entity));
 			}
 
@@ -598,9 +578,6 @@ namespace Havtorn
 
 			if (componentMask.Test(STATIC_U64(EComponentType::MaterialComponent)))
 			{
-				//AddMaterialComponentToEntity(*entity);
-				//MaterialComponents[i].Deserialize(fromData, pointerPosition);
-
 				// TODO.NR/AG: Fix hard coded scene index
 				SAssetReferenceCounter counter = { EComponentType::MaterialComponent, static_cast<U16>(i), 0, 0 };
 				RenderManager->LoadMaterialComponent(assetRegistry->GetAssetPaths(counter), &AddMaterialComponentToEntity(*entity));
@@ -608,9 +585,6 @@ namespace Havtorn
 
 			if (componentMask.Test(STATIC_U64(EComponentType::EnvironmentLightComponent)))
 			{
-				//AddEnvironmentLightComponentToEntity(*entity);
-				//pointerPosition += DeserializeSimple(EnvironmentLightComponents[i], fromData, pointerPosition);
-
 				// TODO.NR/AG: Fix hard coded scene index
 				SAssetReferenceCounter counter = { EComponentType::EnvironmentLightComponent, static_cast<U16>(i), 0, 0 };
 				RenderManager->LoadEnvironmentLightComponent(assetRegistry->GetAssetPath(counter), &AddEnvironmentLightComponentToEntity(*entity));
@@ -642,14 +616,11 @@ namespace Havtorn
 
 			if (componentMask.Test(STATIC_U64(EComponentType::DecalComponent)))
 			{
-				//AddDecalComponentToEntity(*entity);
-				//DecalComponents[i].Deserialize(fromData, pointerPosition);
-
-				// Bools aren't loaded properly, nothing attempts to take care of them
-
 				// TODO.NR/AG: Fix hard coded scene index
 				SAssetReferenceCounter counter = { EComponentType::DecalComponent, static_cast<U16>(i), 0, 0 };
 				RenderManager->LoadDecalComponent(assetRegistry->GetAssetPaths(counter), &AddDecalComponentToEntity(*entity));
+
+				DecalComponents[GetSceneIndex(*entity)].Deserialize(fromData, pointerPosition);
 			}
 
 			if (componentMask.Test(STATIC_U64(EComponentType::MetaDataComponent)))
