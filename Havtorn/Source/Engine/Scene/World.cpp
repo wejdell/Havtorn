@@ -13,9 +13,6 @@ namespace Havtorn
 		RenderManager = renderManager;
 		AssetRegistry = std::make_unique<CAssetRegistry>();
 
-		Scenes.emplace_back(std::make_unique<CScene>());
-		ENGINE_ERROR_BOOL_MESSAGE(Scenes.back()->InitDemoScene(RenderManager), "World could not be initialized.");
-
 		// Setup systems
 		Systems.emplace_back(std::make_unique<CCameraSystem>());
 		Systems.emplace_back(std::make_unique<CLightSystem>(RenderManager));
@@ -86,6 +83,12 @@ namespace Havtorn
 		
 		delete[] data;
 
+	}
+
+	void CWorld::OpenDemoScene()
+	{
+		Scenes.emplace_back(std::make_unique<CScene>());
+		ENGINE_BOOL_POPUP(Scenes.back()->InitDemoScene(RenderManager), "World could not be initialized.");
 	}
 
 	CAssetRegistry* CWorld::GetAssetRegistry() const

@@ -180,6 +180,16 @@ namespace Havtorn
 		}
 	}
 
+	void CEditorManager::SetCurrentScene(CScene* scene)
+	{
+		CurrentScene = scene;
+	}
+
+	CScene* CEditorManager::GetCurrentScene() const
+	{
+		return CurrentScene;
+	}
+
 	void CEditorManager::SetSelectedEntity(const SEntity* entity)
 	{
 		SelectedEntity = entity;

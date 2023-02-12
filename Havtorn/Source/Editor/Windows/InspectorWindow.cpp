@@ -24,7 +24,6 @@ namespace ImGui
 	CInspectorWindow::CInspectorWindow(const char* name, Havtorn::CEditorManager* manager)
 		: CWindow(name, manager)
 	{
-		Scene = Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get();
 	}
 
 	CInspectorWindow::~CInspectorWindow()
@@ -46,6 +45,17 @@ namespace ImGui
 
 		if (ImGui::Begin(Name(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus))
 		{
+			if (!Scene)
+			{
+				Scene = Manager->GetCurrentScene();
+
+				if (!Scene)
+				{
+					ImGui::End();
+					return;
+				}
+			}
+
 			if (const auto selection = Manager->GetSelectedEntity())
 			{
 				ImGui::TextColored((&ImGui::GetStyle())->Colors[ImGuiCol_HeaderActive], /*selection->Name.c_str()*/"Entity");

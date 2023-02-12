@@ -36,6 +36,12 @@ namespace ImGui
 		
 		if (ImGui::Begin(Name(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus))
 		{
+			if (!Manager->GetCurrentScene())
+			{
+				ImGui::End();
+				return;
+			}
+
 			Havtorn::I32 index = 0;
 			auto& entities = Havtorn::GEngine::GetWorld()->GetEntities();
 			

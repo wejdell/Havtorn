@@ -21,6 +21,7 @@ namespace Havtorn
 		HAVTORN_API const std::vector<SEntity>& GetEntities() const;
 		HAVTORN_API void SaveActiveScene(const std::string& destinationPath);
 		HAVTORN_API void LoadScene(const std::string& filePath);
+		HAVTORN_API void OpenDemoScene();
 		HAVTORN_API CAssetRegistry* GetAssetRegistry() const;
 
 	private:

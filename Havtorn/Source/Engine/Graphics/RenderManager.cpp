@@ -745,9 +745,9 @@ namespace Havtorn
 		ObjectBufferData.ToWorldFromObject = SMatrix();
 		BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
 
-		auto& activeScene = GEngine::GetWorld()->GetActiveScenes()[0];
-		auto entity = activeScene->GetNewEntity();
-		auto& staticMeshComp = activeScene->GetStaticMeshComponents()[activeScene->GetSceneIndex(*entity)];
+		Havtorn::CScene tempScene;
+		auto entity = tempScene.GetNewEntity();
+		auto& staticMeshComp = tempScene.GetStaticMeshComponents()[tempScene.GetSceneIndex(*entity)];
 		LoadStaticMeshComponent(filePath, &staticMeshComp);
 
 		Context->VSSetConstantBuffers(1, 1, &ObjectBuffer);
@@ -770,7 +770,7 @@ namespace Havtorn
 			CRenderManager::NumberOfDrawCallsThisFrame++;
 		}
 
-		activeScene->TryRemoveEntity(*entity);
+		tempScene.TryRemoveEntity(*entity);
 		delete viewport;
 		renderTarget->Release();
 		texture->Release();
@@ -874,9 +874,9 @@ namespace Havtorn
 		ObjectBufferData.ToWorldFromObject = SMatrix();
 		BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
 
-		auto& activeScene = GEngine::GetWorld()->GetActiveScenes()[0];
-		auto entity = activeScene->GetNewEntity();
-		auto& materialComp = activeScene->GetMaterialComponents()[activeScene->GetSceneIndex(*entity)];
+		CScene tempScene;
+		auto entity = tempScene.GetNewEntity();
+		auto& materialComp = tempScene.GetMaterialComponents()[tempScene.GetSceneIndex(*entity)];
 		LoadMaterialComponent({ filePath }, &materialComp);
 
 		Context->VSSetConstantBuffers(1, 1, &ObjectBuffer);
@@ -935,10 +935,8 @@ namespace Havtorn
 		// ======== Lighting =========
 		Context->OMSetRenderTargets(1, &renderTarget, nullptr);
 
-		auto& environmentLightComp = activeScene->GetEnvironmentLightComponents()[activeScene->GetSceneIndex(*entity)];
-		auto& directionalLightComp = activeScene->GetDirectionalLightComponents()[activeScene->GetSceneIndex(*entity)];
-		//SEnvironmentLightComponent* environmentLightComp = new SEnvironmentLightComponent(tempEntity, EComponentType::EnvironmentLightComponent);
-		//SDirectionalLightComponent* directionalLightComp = new SDirectionalLightComponent(tempEntity, EComponentType::DirectionalLightComponent);
+		auto& environmentLightComp = tempScene.GetEnvironmentLightComponents()[tempScene.GetSceneIndex(*entity)];
+		auto& directionalLightComp = tempScene.GetDirectionalLightComponents()[tempScene.GetSceneIndex(*entity)];
 
 		LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/Skybox.hva", &environmentLightComp);
 
@@ -994,7 +992,8 @@ namespace Havtorn
 		Context->Draw(3, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 
-		activeScene->TryRemoveEntity(*entity);
+		// TODO.NR: Make temp scene outside, in EditorResourceManager and send it in to these functions. Need default lighting
+		tempScene.TryRemoveEntity(*entity);
 		delete viewport;
 		renderTarget->Release();
 		texture->Release();

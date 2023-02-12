@@ -95,6 +95,9 @@ namespace Havtorn
 		void __declspec(dllexport) DebugWindow();
 
 	public:
+		void SetCurrentScene(CScene* scene);
+		CScene* GetCurrentScene() const;
+
 		void SetSelectedEntity(const SEntity* entity);
 		const SEntity* GetSelectedEntity() const;
 
@@ -140,6 +143,8 @@ namespace Havtorn
 	private:
 		const CRenderManager* RenderManager = nullptr;
 		CEditorResourceManager* ResourceManager = nullptr;
+
+		CScene* CurrentScene = nullptr;
 
 		// TODO.NR: Should be a weak ptr
 		const SEntity* SelectedEntity = nullptr;

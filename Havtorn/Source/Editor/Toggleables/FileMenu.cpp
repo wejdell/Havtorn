@@ -2,6 +2,7 @@
 
 #include "FileMenu.h"
 #include "EditorManager.h"
+#include "Engine.h"
 
 namespace ImGui
 {
@@ -30,23 +31,38 @@ namespace ImGui
             if (ImGui::MenuItem("Open", "Ctrl+O")) {}
             if (ImGui::BeginMenu("Open Recent"))
             {
-                ImGui::MenuItem("fish_hat.c");
-                ImGui::MenuItem("fish_hat.inl");
-                ImGui::MenuItem("fish_hat.h");
-                if (ImGui::BeginMenu("More.."))
+                if (ImGui::MenuItem("Assets/Scenes/TestScene.hvs"))
                 {
-                    ImGui::MenuItem("Hello");
-                    ImGui::MenuItem("Sailor");
-                    //if (ImGui::BeginMenu("Recurse.."))
-                    //{
-                    //}
-                    ImGui::EndMenu();
+                    Havtorn::GEngine::GetWorld()->LoadScene("Assets/Scenes/TestScene.hvs");
+                    Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
                 }
+
+                if (ImGui::MenuItem("Open Demo Scene"))
+                {
+                    Havtorn::GEngine::GetWorld()->OpenDemoScene();
+                    Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
+                }
+
+                //ImGui::MenuItem("fish_hat.c");
+                //ImGui::MenuItem("fish_hat.inl");
+                //ImGui::MenuItem("fish_hat.h");
+                //if (ImGui::BeginMenu("More.."))
+                //{
+                //    ImGui::MenuItem("Hello");
+                //    ImGui::MenuItem("Sailor");
+                //    //if (ImGui::BeginMenu("Recurse.."))
+                //    //{
+                //    //}
+                //    ImGui::EndMenu();
+                //}
                 ImGui::EndMenu();
             }
+            
             if (ImGui::MenuItem("Save", "Ctrl+S")) 
             {
+                Havtorn::GEngine::GetWorld()->SaveActiveScene("Assets/Scenes/TestScene.hvs");
             }
+
             if (ImGui::MenuItem("Save As..")) {}
 
             ImGui::Separator();
