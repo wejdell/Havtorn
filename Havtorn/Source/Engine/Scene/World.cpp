@@ -39,7 +39,6 @@ namespace Havtorn
 	}
 
 	const std::vector<SEntity>& CWorld::GetEntities() const
-	//std::array<SEntity*, ENTITY_LIMIT>& CWorld::GetEntities() const
 	{
 		return Scenes.back()->GetEntities();
 	}
