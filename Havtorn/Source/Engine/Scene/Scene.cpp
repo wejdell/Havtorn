@@ -286,17 +286,6 @@ namespace Havtorn
 		assetRegistry->Register(materialNames4, SAssetReferenceCounter(EComponentType::MaterialComponent, lampIndex, 0, 0));
 		// === !Lamp ===
 
-		//// === TestSaveEntity ===
-		//SEntity* testSaveEntity = GetNewEntity();
-		//if (!testSaveEntity)
-		//	return false;
-
-		//STransform& testSaveEntityTransform = AddTransformComponentToEntity(*testSaveEntity).Transform;
-		//testSaveEntityTransform.Translate({ -1.0f, 1.4f, -0.75f });
-		//testSaveEntityTransform.Rotate({ 0.0f, UMath::DegToRad(90.0f), 0.0f });
-		//testSaveEntityTransform.Scale({ 1.1f, 2.0f, 0.9f });
-		//// === !TestSaveEntity ===
-
 		// === Floor ===
 		std::vector<SVector> translations;
 		translations.emplace_back(-1.0f, 0.0f, -2.0f);
