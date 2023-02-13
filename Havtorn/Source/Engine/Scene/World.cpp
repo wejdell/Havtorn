@@ -68,13 +68,13 @@ namespace Havtorn
 	{
 		Scenes.emplace_back(std::make_unique<CScene>());
 		SSceneFileHeader sceneFile;
-		I64 sceneIndex = Scenes.size() - 1;
+		//I64 sceneIndex = Scenes.size() - 1;
 
 		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
 		char* data = new char[fileSize];
 
 		// Don't put it here if it does assetregistry work
-		Scenes.back()->Init(RenderManager, AssetRegistry.get(), static_cast<U8>(sceneIndex));
+		Scenes.back()->Init(RenderManager);
 
 		U32 pointerPosition = 0;
 		GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));	

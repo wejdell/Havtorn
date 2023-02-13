@@ -46,7 +46,7 @@ namespace Havtorn
 		CScene();
 		~CScene() = default;
 
-		bool Init(CRenderManager* renderManager, CAssetRegistry* assetRegistry, U8 sceneIndex = 0);
+		bool Init(CRenderManager* renderManager);
 
 		bool InitDemoScene(CRenderManager* renderManager);
 
