@@ -29,41 +29,9 @@ namespace Havtorn
 		MetaDataComponents.resize(ENTITY_LIMIT);
 	}
 
-	bool CScene::Init(CRenderManager* renderManager, CAssetRegistry* /*assetRegistry*/, U8 /*sceneIndex*/)
+	bool CScene::Init(CRenderManager* renderManager)
 	{
 		RenderManager = renderManager;
-		// NR: This function assumes that the scene (with correponding sceneIndex) has been loaded from file
-		// and thus has entries in the AssetRegistry
-
-		//for (U16 i = 0; i < Entities.size(); i++)
-		//{
-		//	const SEntity& entity = Entities[i];
-
-		//	if (entity.HasComponent(EComponentType::EnvironmentLightComponent))
-		//	{
-		//		SAssetReferenceCounter counter = { EComponentType::EnvironmentLightComponent, i, 0, sceneIndex };
-		//		renderManager->LoadEnvironmentLightComponent(assetRegistry->GetAssetPath(counter), &EnvironmentLightComponents[i]);
-		//	}
-
-		//	if (entity.HasComponent(EComponentType::DecalComponent))
-		//	{
-		//		SAssetReferenceCounter counter = { EComponentType::DecalComponent, i, 0, sceneIndex };
-		//		renderManager->LoadDecalComponent(assetRegistry->GetAssetPaths(counter), &DecalComponents[i]);
-		//	}
-
-		//	if (entity.HasComponent(EComponentType::StaticMeshComponent))
-		//	{
-		//		SAssetReferenceCounter counter = { EComponentType::StaticMeshComponent, i, 0, sceneIndex };
-		//		renderManager->LoadStaticMeshComponent(assetRegistry->GetAssetPath(counter), &StaticMeshComponents[i]);
-		//	}
-
-		//	if (entity.HasComponent(EComponentType::MaterialComponent))
-		//	{
-		//		SAssetReferenceCounter counter = { EComponentType::MaterialComponent, i, 0, sceneIndex };
-		//		renderManager->LoadMaterialComponent(assetRegistry->GetAssetPaths(counter), &MaterialComponents[i]);
-		//	}
-		//}
-
 		return true;
 	}
 
