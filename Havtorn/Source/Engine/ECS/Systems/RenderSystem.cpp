@@ -25,15 +25,15 @@ namespace Havtorn
 		std::vector<SDirectionalLightComponent>& directionalLightComponents = scene->GetDirectionalLightComponents();
 		std::vector<SPointLightComponent>& pointLightComponents = scene->GetPointLightComponents();
 		std::vector<SSpotLightComponent>& spotLightComponents = scene->GetSpotLightComponents();
-
-		// Unused right now
-		//const auto& volumetricLightComponents = scene->GetVolumetricLightComponents();
+		std::vector<SVolumetricLightComponent>& volumetricLightComponents = scene->GetVolumetricLightComponents();
 
 		const auto& decalComponents = scene->GetDecalComponents();
 
 		RenderManager->ClearSystemStaticMeshInstanceTransforms();
 
 		bool sceneHasActiveCamera = false;
+
+		// TODO.NR: Could probably merge all of these loops into one
 
 		for (U64 i = 0; i < cameraComponents.size(); i++)
 		{
@@ -158,18 +158,17 @@ namespace Havtorn
 			command.DirectionalLightComponent = directionalLightComp;
 			RenderManager->PushRenderCommand(command);
 
-			//if (directionalLightComponents[0]->Entity->HasComponent(EComponentType::VolumetricLightComponent))
-			//{
-			//	const I64 volumetricCompIndex = directionalLightComponents[0]->Entity->GetComponentIndex(EComponentType::VolumetricLightComponent);
-			//	auto& volumetricLightComp = volumetricLightComponents[volumetricCompIndex];
+			if (volumetricLightComponents[i].IsInUse)
+			{
+				SVolumetricLightComponent& volumetricLightComp = volumetricLightComponents[i];
 
-			//	if (volumetricLightComp->IsActive)
-			//	{
-			//		components[static_cast<U8>(EComponentType::VolumetricLightComponent)] = volumetricLightComp;
-			//		SRenderCommand volumetricCommand(components, ERenderCommandType::VolumetricLightingDirectional);
-			//		RenderManager->PushRenderCommand(volumetricCommand);
-			//	}
-			//}
+				if (volumetricLightComp.IsActive)
+				{
+					command.Type = ERenderCommandType::VolumetricLightingDirectional;
+					command.VolumetricLightComponent = volumetricLightComp;
+					RenderManager->PushRenderCommand(command);
+				}
+			}
 		}
 
 		// TODO: Fix ECS View functionality, going to be a mess to keep hard coded indices
@@ -188,18 +187,17 @@ namespace Havtorn
 			command.Type = ERenderCommandType::DeferredLightingPoint;
 			RenderManager->PushRenderCommand(command);
 
-			//if (pointLightComponents[0]->Entity->HasComponent(EComponentType::VolumetricLightComponent))
-			//{
-			//	const I64 volumetricCompIndex = pointLightComponents[0]->Entity->GetComponentIndex(EComponentType::VolumetricLightComponent);
-			//	auto& volumetricLightComp = volumetricLightComponents[volumetricCompIndex];
+			if (volumetricLightComponents[i].IsInUse)
+			{
+				SVolumetricLightComponent& volumetricLightComp = volumetricLightComponents[i];
 
-			//	if (volumetricLightComp->IsActive)
-			//	{
-			//		components[static_cast<U8>(EComponentType::VolumetricLightComponent)] = volumetricLightComp;
-			//		SRenderCommand volumetricCommand(components, ERenderCommandType::VolumetricLightingPoint);
-			//		RenderManager->PushRenderCommand(volumetricCommand);
-			//	}
-			//}
+				if (volumetricLightComp.IsActive)
+				{
+					command.Type = ERenderCommandType::VolumetricLightingPoint;
+					command.VolumetricLightComponent = volumetricLightComp;
+					RenderManager->PushRenderCommand(command);
+				}
+			}
 		}
 
 		for (U64 i = 0; i < spotLightComponents.size(); i++)
@@ -216,18 +214,17 @@ namespace Havtorn
 			command.Type = ERenderCommandType::DeferredLightingSpot;
 			RenderManager->PushRenderCommand(command);
 
-			//if (spotLightComponents[0]->Entity->HasComponent(EComponentType::VolumetricLightComponent))
-			//{
-			//	const I64 volumetricCompIndex = spotLightComponents[0]->Entity->GetComponentIndex(EComponentType::VolumetricLightComponent);
-			//	auto& volumetricLightComp = volumetricLightComponents[volumetricCompIndex];
+			if (volumetricLightComponents[i].IsInUse)
+			{
+				SVolumetricLightComponent& volumetricLightComp = volumetricLightComponents[i];
 
-			//	if (volumetricLightComp->IsActive)
-			//	{
-			//		components[static_cast<U8>(EComponentType::VolumetricLightComponent)] = volumetricLightComp;
-			//		SRenderCommand volumetricCommand(components, ERenderCommandType::VolumetricLightingSpot);
-			//		RenderManager->PushRenderCommand(volumetricCommand);
-			//	}
-			//}
+				if (volumetricLightComp.IsActive)
+				{
+					command.Type = ERenderCommandType::VolumetricLightingSpot;
+					command.VolumetricLightComponent = volumetricLightComp;
+					RenderManager->PushRenderCommand(command);
+				}
+			}
 		}
 
 		{

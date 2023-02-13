@@ -108,7 +108,7 @@ namespace Havtorn
 		directionalLight.ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLight.ShadowViewSize.X, directionalLight.ShadowViewSize.Y, directionalLight.ShadowNearAndFarPlane.X, directionalLight.ShadowNearAndFarPlane.Y);
 
 		SVolumetricLightComponent& volumetricLight = AddVolumetricLightComponentToEntity(*directionalLightEntity);
-		volumetricLight.IsActive = true;
+		volumetricLight.IsActive = false;
 
 		// === Point light ===
 		SEntity* pointLightEntity = GetNewEntity();
@@ -125,8 +125,8 @@ namespace Havtorn
 		pointLightComp.ColorAndIntensity = { 0.0f, 1.0f, 1.0f, 10.0f };
 		pointLightComp.Range = 1.0f;
 
-		//SVolumetricLightComponent& volumetricPointLight = AddVolumetricLightComponentToEntity(*pointLightEntity);
-		//volumetricPointLight->IsActive = true;
+		SVolumetricLightComponent& volumetricPointLight = AddVolumetricLightComponentToEntity(*pointLightEntity);
+		volumetricPointLight.IsActive = false;
 
 		const SMatrix constantProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, pointLightComp.Range);
 		const SVector4 constantPosition = pointLightTransform.Transform.GetMatrix().GetTranslation4();
@@ -193,8 +193,8 @@ namespace Havtorn
 		spotlightComp.InnerAngle = 5.0f;
 		spotlightComp.Range = 3.0f;
 
-		//SVolumetricLightComponent& volumetricSpotLight = AddVolumetricLightComponentToEntity(*spotlight);
-		//volumetricSpotLight->IsActive = true;
+		SVolumetricLightComponent& volumetricSpotLight = AddVolumetricLightComponentToEntity(*spotlight);
+		volumetricSpotLight.IsActive = false;
 
 		const SMatrix spotlightProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, spotlightComp.Range);
 		const SVector4 spotlightPosition = spotlightTransform.GetMatrix().GetTranslation4();
