@@ -57,6 +57,7 @@ namespace Havtorn
 		const std::vector<SEntity>& GetEntities();
 		// TODO: Make convenience function where you can supply name and have it add a metadata comp on its own
 		SEntity* GetNewEntity();
+		SEntity* GetNewEntity(const std::string& nameInEditor);
 		bool TryRemoveEntity(SEntity& entity);
 
 		__declspec(dllexport) U64 GetSceneIndex(const SEntity& entity) const;

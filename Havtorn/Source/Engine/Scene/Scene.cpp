@@ -69,8 +69,8 @@ namespace Havtorn
 
 	bool CScene::InitDemoScene(CRenderManager* renderManager)
 	{
-		// Create entities
-		SEntity* cameraEntity = GetNewEntity();
+		// === Camera ===
+		SEntity* cameraEntity = GetNewEntity("Camera");
 		if (!cameraEntity)
 			return false;
 
@@ -89,14 +89,21 @@ namespace Havtorn
 
 		SCameraControllerComponent& controllerComp = AddCameraControllerComponentToEntity(*cameraEntity);
 		controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
+		// === !Camera ===
 
-		SEntity* environmentLightEntity = GetNewEntity();
+		// === Environment light ===
+		SEntity* environmentLightEntity = GetNewEntity("Environment Light");
+		if (!environmentLightEntity)
+			return false;
+
 		AddTransformComponentToEntity(*environmentLightEntity);
 		renderManager->LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/CubemapTheVisit.hva", &AddEnvironmentLightComponentToEntity(*environmentLightEntity));
 		U16 environmentLightEntitySceneIndex = static_cast<U16>(GetSceneIndex(*environmentLightEntity));
 		assetRegistry->Register("Assets/Textures/Cubemaps/CubemapTheVisit.hva", SAssetReferenceCounter(EComponentType::EnvironmentLightComponent, environmentLightEntitySceneIndex, 0, 0));
-		
-		SEntity* directionalLightEntity = GetNewEntity();
+		// === !Environment light ===
+
+		// === Directional light ===
+		SEntity* directionalLightEntity = GetNewEntity("Directional Light");
 		if (!directionalLightEntity)
 			return false;
 
@@ -109,9 +116,10 @@ namespace Havtorn
 
 		SVolumetricLightComponent& volumetricLight = AddVolumetricLightComponentToEntity(*directionalLightEntity);
 		volumetricLight.IsActive = false;
+		// === !Directional light ===
 
 		// === Point light ===
-		SEntity* pointLightEntity = GetNewEntity();
+		SEntity* pointLightEntity = GetNewEntity("Point Light");
 		if (!pointLightEntity)
 			return true; // From this point it's ok if we fail to load the rest of the demo scene
 
@@ -175,7 +183,7 @@ namespace Havtorn
 		// === !Point light ===
 
 		// === Spotlight ===
-		SEntity* spotlight = GetNewEntity();
+		SEntity* spotlight = GetNewEntity("Spot Light");
 		if (!spotlight)
 			return true;
 
@@ -206,7 +214,7 @@ namespace Havtorn
 		// === !Spotlight ===
 
 		// === Decal ===
-		SEntity* decal = GetNewEntity();
+		SEntity* decal = GetNewEntity("Decal");
 		if (!decal)
 			return true;
 
@@ -238,7 +246,7 @@ namespace Havtorn
 
 		// TODO: GetNewEntityIndex which provides comp index directly
 
-		SEntity* pendulum = GetNewEntity();
+		SEntity* pendulum = GetNewEntity("Clock");
 		if (!pendulum)
 			return false;
 
@@ -254,7 +262,7 @@ namespace Havtorn
 		// === !Pendulum ===
 
 		// === Bed ===
-		SEntity* bed = GetNewEntity();
+		SEntity* bed = GetNewEntity("Bed");
 		if (!bed)
 			return false;
 
@@ -270,7 +278,7 @@ namespace Havtorn
 		// === !Bed ===
 
 		// === Lamp ===
-		SEntity* lamp = GetNewEntity();
+		SEntity* lamp = GetNewEntity("Lamp");
 		if (!lamp)
 			return false;
 
@@ -303,7 +311,7 @@ namespace Havtorn
 
 		for (U8 i = 0; i < 12; ++i)
 		{
-			SEntity* floor = GetNewEntity();
+			SEntity* floor = GetNewEntity("Floor");
 			if (!floor)
 				return false;
 
@@ -339,7 +347,7 @@ namespace Havtorn
 
 		for (U8 i = 0; i < 12; ++i)
 		{
-			SEntity* floor = GetNewEntity();
+			SEntity* floor = GetNewEntity("Wall");
 			if (!floor)
 				return false;
 
@@ -372,7 +380,7 @@ namespace Havtorn
 
 		for (U8 i = 0; i < 9; ++i)
 		{
-			SEntity* floor = GetNewEntity();
+			SEntity* floor = GetNewEntity("Wall");
 			if (!floor)
 				return false;
 
@@ -640,6 +648,15 @@ namespace Havtorn
 
 		EntityVectorIndices.emplace(outEntity->GUID, FirstUnusedEntityIndex);
 		FirstUnusedEntityIndex++;
+
+		return outEntity;
+	}
+
+	SEntity* CScene::GetNewEntity(const std::string& nameInEditor)
+	{
+		SEntity* outEntity = GetNewEntity();
+		SMetaDataComponent& metaDataComp = AddMetaDataComponentToEntity(*outEntity);
+		metaDataComp.Name = nameInEditor;
 
 		return outEntity;
 	}

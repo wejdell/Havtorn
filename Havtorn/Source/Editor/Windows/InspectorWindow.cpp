@@ -56,9 +56,12 @@ namespace ImGui
 				}
 			}
 
-			if (const auto selection = Manager->GetSelectedEntity())
+			if (const Havtorn::SEntity* selection = Manager->GetSelectedEntity())
 			{
-				ImGui::TextColored((&ImGui::GetStyle())->Colors[ImGuiCol_HeaderActive], /*selection->Name.c_str()*/"Entity");
+				const Havtorn::SMetaDataComponent& metaDataComp = Scene->GetMetaDataComponents()[Scene->GetSceneIndex(*selection)];
+				const std::string selectionString = metaDataComp.IsInUse ? metaDataComp.Name.AsString() : "Entity";
+
+				ImGui::TextColored((&ImGui::GetStyle())->Colors[ImGuiCol_HeaderActive], selectionString.c_str());
 				ImGui::Separator();
 
 				Havtorn::U64 entitySceneIndex = Scene->GetSceneIndex(*selection);

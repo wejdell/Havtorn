@@ -9,6 +9,7 @@
 #include "ECS/Entity.h"
 #include "Core/MathTypes/EngineMath.h"
 #include "Core/CoreTypes.h"
+#include "ECS/Components/MetaDataComponent.h"
 
 namespace ImGui
 {
@@ -36,7 +37,8 @@ namespace ImGui
 		
 		if (ImGui::Begin(Name(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus))
 		{
-			if (!Manager->GetCurrentScene())
+			Havtorn::CScene* scene = Manager->GetCurrentScene();
+			if (!scene)
 			{
 				ImGui::End();
 				return;
@@ -47,14 +49,20 @@ namespace ImGui
 			
 			for (auto& entity : entities) 
 			{
+				if (!entity.IsValid())
+					continue;
+
 				//// TODO.AG: Temporary solution to ignore listing DebugShapes!
 				//if (entity->Name.Contains("hie_"))
 				//{
 				//	continue;
 				//}
 		
+				const Havtorn::SMetaDataComponent& metaDataComp = scene->GetMetaDataComponents()[scene->GetSceneIndex(entity)];
+				const std::string entryString = metaDataComp.IsInUse ? metaDataComp.Name.AsString() : "Selected";
+
 				ImGui::PushID(static_cast<Havtorn::I32>(entity.GUID));
-				if (ImGui::Selectable("Selected", index == SelectedIndex, ImGuiSelectableFlags_None))
+				if (ImGui::Selectable(entryString.c_str(), index == SelectedIndex, ImGuiSelectableFlags_None))
 				{
 					SelectedIndex = index;
 					Manager->SetSelectedEntity(&entity);
