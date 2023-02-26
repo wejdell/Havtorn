@@ -5,8 +5,6 @@
 #include "EditorManager.h"
 #include "Havtorn.h"
 
-#include <cassert>
-
 namespace Havtorn
 {
 	CEditorProcess::CEditorProcess()
@@ -16,7 +14,7 @@ namespace Havtorn
 	CEditorProcess::~CEditorProcess()
 	{
 		SAFE_DELETE(EditorManager);
-		HV_LOG_WARN("Editor shutdown!");
+		HV_LOG_INFO("Editor shutdown!");
 	}
 
 	bool CEditorProcess::Init()
@@ -26,7 +24,7 @@ namespace Havtorn
 		auto havtornEngine = GEngine::Instance;
 		if (havtornEngine == nullptr)
 		{
-			assert(havtornEngine != nullptr);
+			HV_ASSERT(havtornEngine != nullptr, "Couldn't find Havtorn Engine!");
 			return false;
 		}
 
