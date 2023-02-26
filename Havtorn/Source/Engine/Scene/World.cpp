@@ -73,7 +73,6 @@ namespace Havtorn
 		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
 		char* data = new char[fileSize];
 
-		// Don't put it here if it does assetregistry work
 		Scenes.back()->Init(RenderManager);
 
 		U32 pointerPosition = 0;

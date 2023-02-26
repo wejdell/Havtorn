@@ -239,6 +239,8 @@ namespace Havtorn
 
         ImGui::CreateContext();
 
+        SetInternalResolution();
+
         return true;
     }
 

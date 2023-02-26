@@ -44,9 +44,6 @@ namespace Havtorn
 	{
 		SAFE_DELETE(World);
 		SAFE_DELETE(InputMapper);
-#ifdef _DEBUG
-		//SAFE_DELETE(EditorManager);
-#endif
 		SAFE_DELETE(ThreadManager);
 		SAFE_DELETE(RenderManager);
 		SAFE_DELETE(TextureBank);
@@ -61,7 +58,6 @@ namespace Havtorn
 	bool GEngine::Init(const CWindowHandler::SWindowData& windowData)
 	{
 		ENGINE_ERROR_BOOL_MESSAGE(WindowHandler->Init(windowData), "Window Handler could not be initialized.");
-		WindowHandler->SetInternalResolution();
 		ENGINE_ERROR_BOOL_MESSAGE(Framework->Init(WindowHandler), "Framework could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(TextureBank->Init(Framework), "TextureBank could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(RenderManager->Init(Framework, WindowHandler), "RenderManager could not be initialized.");

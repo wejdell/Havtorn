@@ -34,6 +34,7 @@ namespace Havtorn
 		bool sceneHasActiveCamera = false;
 
 		// TODO.NR: Could probably merge all of these loops into one
+		// NR: Not worth doing right now
 
 		for (U64 i = 0; i < cameraComponents.size(); i++)
 		{
