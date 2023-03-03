@@ -20,6 +20,7 @@ namespace Havtorn
 
 	bool CGameManager::Init()
 	{
+		HV_LOG_INFO("GameManager Initialized.");
 		return true;
 	}
 
