@@ -35,6 +35,12 @@ namespace Havtorn
 		std::vector<U32> Indices;
 	};
 
+	struct SPrimitive
+	{
+		std::vector<SPositionVertex> Vertices;
+		std::vector<U32> Indices;
+	};
+
 	struct SStaticMesh
 	{
 		U32 NameLength = 0;

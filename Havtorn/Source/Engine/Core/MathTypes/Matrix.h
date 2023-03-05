@@ -112,6 +112,8 @@ namespace Havtorn
 		static SMatrix OrthographicLH(F32 viewWidth, F32 viewHeight, F32 nearZ, F32 farZ);
 		static SMatrix LookAtLH(const SVector& eyePosition, const SVector& focusPosition, const SVector& upDirection);
 		static SMatrix LookToLH(const SVector& eyePosition, const SVector& eyeDirection, const SVector& upDirection);
+		// Modified version of LookAtLH for use with non-view transforms.
+		static SMatrix Face(const SVector& position, const SVector& direction, const SVector& upDirection);
 	};
 
 	SMatrix::SMatrix()
@@ -804,6 +806,7 @@ namespace Havtorn
 		assert(!eyeDirection.IsEqual(SVector::Zero));
 		assert(!upDirection.IsEqual(SVector::Zero));
 
+		// Original
 		SVector r2 = eyeDirection.GetNormalized();
 		SVector r0 = upDirection.Cross(r2).GetNormalized();
 		SVector r1 = r2.Cross(r0);
@@ -824,6 +827,26 @@ namespace Havtorn
 		M(2, 3) = d2;
 
 		return Transpose(M);
+
+		// https://learn.microsoft.com/en-us/previous-versions/windows/desktop/bb281710(v=vs.85)
+		// AG. Same as Original, but does not require Transpose().
+		//const SVector zAxis = eyeDirection.GetNormalized();
+		//const SVector xAxis = upDirection.Cross(zAxis).GetNormalized();
+		//const SVector yAxis = zAxis.Cross(xAxis).GetNormalized();
+		//
+		//SMatrix m;
+		//m.SetRight({ xAxis.X, yAxis.X, zAxis.X } );
+		//m.SetUp({ xAxis.Y, yAxis.Y, zAxis.Y } );
+		//m.SetForward({ xAxis.Z, yAxis.Z, zAxis.Z } );
+		//m(3, 0) = -xAxis.Dot(eyePosition);
+		//m(3, 1) = -yAxis.Dot(eyePosition);
+		//m(3, 2) = -zAxis.Dot(eyePosition);
+		//return m
+	}
+
+	inline SMatrix SMatrix::Face(const SVector& position, const SVector& direction, const SVector& upDirection) 
+	{
+		return Transpose(LookToLH(position, direction, upDirection));
 	}
 
 	inline SMatrix SMatrix::PerspectiveFovLH(F32 fovAngleY, F32 aspectRatio, F32 nearZ, F32 farZ)

@@ -282,26 +282,39 @@ namespace Havtorn
 		AddVertexBuffer(GeometryPrimitives::DecalProjector);
 		AddVertexBuffer(GeometryPrimitives::PointLightCube);
 		AddVertexBuffer(GeometryPrimitives::Icosphere.Vertices);
-		AddVertexBuffer(GeometryPrimitives::LineShape);
-		AddVertexBuffer(GeometryPrimitives::FlatArrow);
-		AddVertexBuffer(GeometryPrimitives::DebugCube);
-		AddVertexBuffer(GeometryPrimitives::Camera);
-		AddVertexBuffer(GeometryPrimitives::CircleXY8);
-		AddVertexBuffer(GeometryPrimitives::CircleXY16);
-		AddVertexBuffer(GeometryPrimitives::CircleXY32);
+		AddVertexBuffer(GeometryPrimitives::Line.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Pyramid.Vertices);
+		AddVertexBuffer(GeometryPrimitives::BoundingBox.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Camera.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Circle8.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Circle16.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Circle32.Vertices);
+		AddVertexBuffer(GeometryPrimitives::HalfCircle16.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Grid.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Axis.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Octahedron.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Square.Vertices);
+		AddVertexBuffer(GeometryPrimitives::UVSphere.Vertices);
 	}
 
 	void CRenderManager::InitIndexBuffers()
 	{
 		AddIndexBuffer(GeometryPrimitives::DecalProjectorIndices);
 		AddIndexBuffer(GeometryPrimitives::PointLightCubeIndices);
-		AddIndexBuffer(GeometryPrimitives::LineShapeIndices);
-		AddIndexBuffer(GeometryPrimitives::FlatArrowIndices);
-		AddIndexBuffer(GeometryPrimitives::DebugCubeIndices);
-		AddIndexBuffer(GeometryPrimitives::CameraIndices);
-		AddIndexBuffer(GeometryPrimitives::CircleXY8Indices);
-		AddIndexBuffer(GeometryPrimitives::CircleXY16Indices);
-		AddIndexBuffer(GeometryPrimitives::CircleXY32Indices);
+		AddIndexBuffer(GeometryPrimitives::Line.Indices);
+		AddIndexBuffer(GeometryPrimitives::Pyramid.Indices);
+		AddIndexBuffer(GeometryPrimitives::BoundingBox.Indices);
+		AddIndexBuffer(GeometryPrimitives::Camera.Indices);
+		AddIndexBuffer(GeometryPrimitives::Circle8.Indices);
+		AddIndexBuffer(GeometryPrimitives::Circle16.Indices);
+		AddIndexBuffer(GeometryPrimitives::Circle32.Indices);
+		AddIndexBuffer(GeometryPrimitives::HalfCircle16.Indices);
+		AddIndexBuffer(GeometryPrimitives::Grid.Indices);
+		AddIndexBuffer(GeometryPrimitives::Axis.Indices);
+		AddIndexBuffer(GeometryPrimitives::Octahedron.Indices);
+		AddIndexBuffer(GeometryPrimitives::Square.Indices);
+		AddIndexBuffer(GeometryPrimitives::UVSphere.Indices);
+
 		AddIndexBuffer(GeometryPrimitives::Icosphere.Indices);
 	}
 
@@ -2106,7 +2119,7 @@ namespace Havtorn
 		STransformComponent* transform = command.GetComponent(TransformComponent);
 
 		DebugShapeObjectBufferData.ToWorldFromObject = transform->Transform.GetMatrix();
-		DebugShapeObjectBufferData.Color = shape->Color;
+		DebugShapeObjectBufferData.Color = shape->Color.AsVector4();
 		DebugShapeObjectBufferData.HalfThickness = shape->Thickness;
 
 		BindBuffer(DebugShapeObjectBuffer, DebugShapeObjectBufferData, "Object Buffer");
@@ -2115,18 +2128,6 @@ namespace Havtorn
 		Context->IASetIndexBuffer(IndexBuffers[shape->IndexBufferIndex], DXGI_FORMAT_R32_UINT, 0);
 
 		Context->GSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
-
-		// AG.TEST: Probably slows down rendering, wanted to test how it would look.
-		// TODO:AG: Remove or restructure
-		//if (shape->Thickness > Debug::UDebugShapeSystem::ThicknessMinimum + 0.0005f)
-		//{
-		//	Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::Line)], nullptr, 0);
-		//	Context->GSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
-		//}
-		//else
-		//{
-		//	Context->GSSetShader(nullptr, nullptr, 0);
-		//}
 
 		Context->VSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
 		Context->DrawIndexed(shape->IndexCount, 0, 0);
