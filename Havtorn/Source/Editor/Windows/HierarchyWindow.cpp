@@ -9,7 +9,9 @@
 #include "Core/MathTypes/EngineMath.h"
 #include "Core/CoreTypes.h"
 
-#include "ECS/Systems/DebugShapeSystem.h"
+#include <ECS/Systems/DebugShapeSystem.h>
+
+#include <imgui.h>
 
 namespace ImGui
 {
