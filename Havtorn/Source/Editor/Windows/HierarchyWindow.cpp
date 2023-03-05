@@ -46,7 +46,7 @@ namespace ImGui
 			
 			for(Havtorn::U64 i = Havtorn::UDebugShapeSystem::MaxShapes; i < entities.size(); i++)
 			{
-				Havtorn::Ref<Havtorn::SEntity>& entity = entities[i];
+				auto& entity = entities[i];
 		
 				ImGui::PushID(static_cast<int>(entity->ID));
 				if (ImGui::Selectable(entity->Name.c_str(), index == SelectedIndex, ImGuiSelectableFlags_None)) 
