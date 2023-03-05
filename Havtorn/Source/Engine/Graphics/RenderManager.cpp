@@ -25,8 +25,6 @@
 #include <DirectXTex/DirectXTex.h>
 #include <set>
 
-#include "Application/ImGuiManager.h"
-
 namespace Havtorn
 {
 	U32 CRenderManager::NumberOfDrawCallsThisFrame = 0;
