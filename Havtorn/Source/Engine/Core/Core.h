@@ -24,6 +24,7 @@
 #endif
 
 #define SAFE_DELETE(x) delete x; x = nullptr;
+#define SAFE_ARRAY_DELETE(x) delete[] x; x = nullptr;
 
 #define HV_ASSERT_BUFFER(x) static_assert((sizeof(x) % 16) == 0, "CB size not padded correctly");
 

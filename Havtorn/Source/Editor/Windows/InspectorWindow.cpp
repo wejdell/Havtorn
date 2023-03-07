@@ -61,15 +61,12 @@ namespace ImGui
 			return;
 		}
 
+		Scene = Manager->GetCurrentScene();
+
 		if (!Scene)
 		{
-			Scene = Manager->GetCurrentScene();
-
-			if (!Scene)
-			{
-				ImGui::End();
-				return;
-			}
+			ImGui::End();
+			return;
 		}
 
 		const Havtorn::SEntity* selection = Manager->GetSelectedEntity();

@@ -183,6 +183,7 @@ namespace Havtorn
 	void CEditorManager::SetCurrentScene(CScene* scene)
 	{
 		CurrentScene = scene;
+		SelectedEntity = nullptr;
 	}
 
 	CScene* CEditorManager::GetCurrentScene() const

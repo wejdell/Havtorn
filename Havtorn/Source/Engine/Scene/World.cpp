@@ -33,6 +33,24 @@ namespace Havtorn
 		}
 	}
 
+	void CWorld::LoadScene(const std::string& filePath)
+	{
+		Scenes.emplace_back(std::make_unique<CScene>());
+		SSceneFileHeader sceneFile;
+		//I64 sceneIndex = Scenes.size() - 1;
+
+		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
+		char* data = new char[fileSize];
+
+		Scenes.back()->Init(RenderManager);
+
+		U32 pointerPosition = 0;
+		GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));
+		sceneFile.Deserialize(data, pointerPosition, Scenes.back().get(), AssetRegistry.get());
+
+		delete[] data;
+	}
+
 	std::vector<Ptr<CScene>>& CWorld::GetActiveScenes()
 	{
 		return Scenes;
@@ -45,6 +63,12 @@ namespace Havtorn
 	
 	void CWorld::SaveActiveScene(const std::string& destinationPath)
 	{
+		if (Scenes.empty())
+		{
+			HV_LOG_ERROR("Tried to save empty Scene.");
+			return;
+		}
+
 		const Ptr<CScene>& scene = Scenes.back();
 		I64 sceneIndex = Scenes.size() - 1;
 
@@ -58,35 +82,37 @@ namespace Havtorn
 		char* data = new char[fileSize];
 
 		U32 pointerPosition = 0;	
-		fileHeader.Serialize(data, pointerPosition, AssetRegistry.get(), sceneIndex); //1325
+		fileHeader.Serialize(data, pointerPosition, AssetRegistry.get(), sceneIndex);
 		GEngine::GetFileSystem()->Serialize(destinationPath, data, fileSize);
 		
 		delete[] data;
 	}
 
-	void CWorld::LoadScene(const std::string& filePath)
+	void CWorld::AddScene(const std::string& filePath)
 	{
-		Scenes.emplace_back(std::make_unique<CScene>());
-		SSceneFileHeader sceneFile;
-		//I64 sceneIndex = Scenes.size() - 1;
+		LoadScene(filePath);
+	}
 
-		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
-		char* data = new char[fileSize];
+	void CWorld::RemoveScene(U64 sceneIndex)
+	{
+		if (sceneIndex >= Scenes.size())
+			return;
 
-		Scenes.back()->Init(RenderManager);
+		std::swap(Scenes.back(), Scenes[sceneIndex]);
+		Scenes.pop_back();
+	}
 
-		U32 pointerPosition = 0;
-		GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));	
-		sceneFile.Deserialize(data, pointerPosition, Scenes.back().get(), AssetRegistry.get()); //1325
-		
-		delete[] data;
-
+	void CWorld::ChangeScene(const std::string& filePath)
+	{
+		Scenes.clear();
+		LoadScene(filePath);
 	}
 
 	void CWorld::OpenDemoScene()
 	{
+		Scenes.clear();
 		Scenes.emplace_back(std::make_unique<CScene>());
-		ENGINE_BOOL_POPUP(Scenes.back()->InitDemoScene(RenderManager), "World could not be initialized.");
+		ENGINE_BOOL_POPUP(Scenes.back()->InitDemoScene(RenderManager), "Demo Scene could not be initialized.");
 	}
 
 	CAssetRegistry* CWorld::GetAssetRegistry() const

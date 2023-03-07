@@ -44,7 +44,7 @@ namespace Havtorn
 	{
 	public:
 		CScene();
-		~CScene() = default;
+		~CScene();
 
 		bool Init(CRenderManager* renderManager);
 

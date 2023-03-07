@@ -20,7 +20,9 @@ namespace Havtorn
 		HAVTORN_API std::vector<Ptr<CScene>>& GetActiveScenes();
 		HAVTORN_API const std::vector<SEntity>& GetEntities() const;
 		HAVTORN_API void SaveActiveScene(const std::string& destinationPath);
-		HAVTORN_API void LoadScene(const std::string& filePath);
+		HAVTORN_API void AddScene(const std::string& filePath);
+		HAVTORN_API void RemoveScene(U64 sceneIndex);
+		HAVTORN_API void ChangeScene(const std::string& filePath);
 		HAVTORN_API void OpenDemoScene();
 		HAVTORN_API CAssetRegistry* GetAssetRegistry() const;
 
@@ -30,6 +32,8 @@ namespace Havtorn
 		
 		bool Init(CRenderManager* renderManager);
 		void Update();
+
+		void LoadScene(const std::string& filePath);
 
 	private:
 		std::vector<Ptr<CScene>> Scenes;

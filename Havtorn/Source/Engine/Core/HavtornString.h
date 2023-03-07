@@ -20,17 +20,16 @@ namespace Havtorn
             Size = static_cast<U32>(size);
         }
 
+        ~CHavtornString()
+        {
+            SAFE_ARRAY_DELETE(Characters);
+        }
+
         inline const U32 Length() const { return Size; }
         inline const std::string AsString() const { return std::string(Characters); }
         inline const char* c_str() const { return Characters; }
         inline const char* ConstChar() const { return Characters; }
         bool Contains(const char* str) const;
-
-        ~CHavtornString()
-        {
-            delete[] Characters;
-            Characters = nullptr;
-        }
 
     private:
         [[nodiscard]] std::array<U16, 256> CharacterTableForComparison(const char* pattern) const;
@@ -59,6 +58,36 @@ namespace Havtorn
             memcpy(&Characters[0], name.data(), sizeof(char) * size);
 
             Size = static_cast<U8>(size);
+        }
+
+        ~CHavtornStaticString()
+        {
+        }
+
+        CHavtornStaticString(const CHavtornStaticString& other)
+        {
+            memcpy(&Characters[0], other.Characters.data(), sizeof(char) * other.Size);
+            Size = static_cast<U8>(other.Size);
+        }
+
+        CHavtornStaticString(const CHavtornStaticString&& other)
+        {
+            Characters = std::move(other.Characters);
+            Size = static_cast<U8>(other.Size);
+        }
+
+        CHavtornStaticString& operator=(const CHavtornStaticString& other)
+        {
+            memcpy(&Characters[0], other.Characters.data(), sizeof(char) * other.Size);
+            Size = static_cast<U8>(other.Size);
+            return *this;
+        }
+
+        CHavtornStaticString& operator=(const CHavtornStaticString&& other)
+        {
+            Characters = std::move(other.Characters);
+            Size = static_cast<U8>(other.Size);
+            return *this;
         }
 
         inline const U32 Length() const { return Size; }

@@ -29,6 +29,26 @@ namespace Havtorn
 		MetaDataComponents.resize(ENTITY_LIMIT);
 	}
 
+	CScene::~CScene()
+	{
+		EntityVectorIndices.clear();
+		Entities.clear();
+		TransformComponents.clear();
+		StaticMeshComponents.clear();
+		CameraComponents.clear();
+		CameraControllerComponents.clear();
+		MaterialComponents.clear();
+		EnvironmentLightComponents.clear();
+		DirectionalLightComponents.clear();
+		PointLightComponents.clear();
+		SpotLightComponents.clear();
+		VolumetricLightComponents.clear();
+		DecalComponents.clear();
+		DebugShapeComponents.clear();
+		MetaDataComponents.clear();
+		RenderManager = nullptr;
+	}
+
 	bool CScene::Init(CRenderManager* renderManager)
 	{
 		RenderManager = renderManager;
@@ -519,7 +539,10 @@ namespace Havtorn
 			if (componentMask.Test(STATIC_U64(EComponentType::TransformComponent)))
 			{
 				STransformComponent& transform = AddTransformComponentToEntity(*entity);
-				DeserializeSimple(transform, fromData, pointerPosition);
+				// NR: Write to a copy then assign to avoid breaking vtable ptr
+				STransformComponent dataCopy;
+				DeserializeSimple(dataCopy, fromData, pointerPosition);
+				transform = dataCopy;
 			}
 
 			if (componentMask.Test(STATIC_U64(EComponentType::StaticMeshComponent)))
@@ -530,15 +553,19 @@ namespace Havtorn
 			}
 
 			if (componentMask.Test(STATIC_U64(EComponentType::CameraComponent)))
-			{
-				AddCameraComponentToEntity(*entity);
-				DeserializeSimple(CameraComponents[i], fromData, pointerPosition);
+			{				
+				SCameraComponent& camera = AddCameraComponentToEntity(*entity);
+				SCameraComponent dataCopy;
+				DeserializeSimple(dataCopy, fromData, pointerPosition);
+				camera = dataCopy;
 			}
 
 			if (componentMask.Test(STATIC_U64(EComponentType::CameraControllerComponent)))
 			{
-				AddCameraControllerComponentToEntity(*entity);
-				DeserializeSimple(CameraControllerComponents[i], fromData, pointerPosition);
+				SCameraControllerComponent& controller = AddCameraControllerComponentToEntity(*entity);
+				SCameraControllerComponent dataCopy;
+				DeserializeSimple(dataCopy, fromData, pointerPosition);
+				controller = dataCopy;
 			}
 
 			if (componentMask.Test(STATIC_U64(EComponentType::MaterialComponent)))
@@ -557,26 +584,34 @@ namespace Havtorn
 
 			if (componentMask.Test(STATIC_U64(EComponentType::DirectionalLightComponent)))
 			{
-				AddDirectionalLightComponentToEntity(*entity);
-				DeserializeSimple(DirectionalLightComponents[i], fromData, pointerPosition);
+				SDirectionalLightComponent& directionalLight = AddDirectionalLightComponentToEntity(*entity);
+				SDirectionalLightComponent dataCopy;
+				DeserializeSimple(dataCopy, fromData, pointerPosition);
+				directionalLight = dataCopy;
 			}
 
 			if (componentMask.Test(STATIC_U64(EComponentType::PointLightComponent)))
 			{
-				AddPointLightComponentToEntity(*entity);
-				DeserializeSimple(PointLightComponents[i], fromData, pointerPosition);
+				SPointLightComponent& pointLight = AddPointLightComponentToEntity(*entity);
+				SPointLightComponent dataCopy;
+				DeserializeSimple(dataCopy, fromData, pointerPosition);
+				pointLight = dataCopy;
 			}
 
 			if (componentMask.Test(STATIC_U64(EComponentType::SpotLightComponent)))
 			{
-				AddSpotLightComponentToEntity(*entity);
-				DeserializeSimple(SpotLightComponents[i], fromData, pointerPosition);
+				SSpotLightComponent& spotLight = AddSpotLightComponentToEntity(*entity);
+				SSpotLightComponent dataCopy;
+				DeserializeSimple(dataCopy, fromData, pointerPosition);
+				spotLight = dataCopy;
 			}
 
 			if (componentMask.Test(STATIC_U64(EComponentType::VolumetricLightComponent)))
 			{
-				AddVolumetricLightComponentToEntity(*entity);
-				DeserializeSimple(VolumetricLightComponents[i], fromData, pointerPosition);
+				SVolumetricLightComponent& volumetric = AddVolumetricLightComponentToEntity(*entity);
+				SVolumetricLightComponent dataCopy;
+				DeserializeSimple(dataCopy, fromData, pointerPosition);
+				volumetric = dataCopy;
 			}
 
 			if (componentMask.Test(STATIC_U64(EComponentType::DecalComponent)))
@@ -590,8 +625,10 @@ namespace Havtorn
 
 			if (componentMask.Test(STATIC_U64(EComponentType::MetaDataComponent)))
 			{
-				AddMetaDataComponentToEntity(*entity);
-				DeserializeSimple(MetaDataComponents[i], fromData, pointerPosition);
+				SMetaDataComponent& metaData = AddMetaDataComponentToEntity(*entity);
+				SMetaDataComponent dataCopy;
+				DeserializeSimple(dataCopy, fromData, pointerPosition);
+				metaData = dataCopy;
 			}
 		}
 	}
