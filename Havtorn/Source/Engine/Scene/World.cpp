@@ -56,7 +56,7 @@ namespace Havtorn
 		return Scenes;
 	}
 
-	const std::vector<SEntity>& CWorld::GetEntities() const
+	std::vector<SEntity>& CWorld::GetEntities() const
 	{
 		return Scenes.back()->GetEntities();
 	}
