@@ -76,19 +76,24 @@ namespace ImGui
 			return;
 		}
 
-		const Havtorn::SMetaDataComponent& metaDataComp = Scene->GetMetaDataComponents()[Scene->GetSceneIndex(*selection)];
-		const std::string selectionString = metaDataComp.IsInUse ? metaDataComp.Name.AsString() : "Entity";
-
-		ImGui::TextColored((&ImGui::GetStyle())->Colors[ImGuiCol_HeaderActive], selectionString.c_str());
-		ImGui::Separator();
-		
 		SelectedEntityIndex = Scene->GetSceneIndex(*selection);
+
+		Havtorn::SMetaDataComponent& metaDataComp = Scene->GetMetaDataComponents()[SelectedEntityIndex];
+		ImGui::HavtornInputText("", &metaDataComp.Name);
+		ImGui::Separator();
 
 		for (U64 i = 0; i < STATIC_U64(EComponentType::Count) - 2; i++)
 		{
 			TryInspectComponent(selection, static_cast<EComponentType>(i));
 		}
 			
+		if (ImGui::Button("Add Component", ImVec2(ImGui::GetContentRegionAvail().x, 0))) 
+		{ 
+			ImGui::OpenPopup("Add Component Modal");
+		}
+		
+		OpenAddComponentModal();
+
 		ImGui::End();
 	}
 
@@ -107,7 +112,10 @@ namespace ImGui
 
 	void CInspectorWindow::InspectTransformComponent()
 	{
-		if (!ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
+		bool isHeaderOpen = ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+		RemoveComponentButton(Havtorn::EComponentType::TransformComponent);
+
+		if (!isHeaderOpen)
 			return;
 
 		Havtorn::SMatrix transformMatrix = Scene->GetTransformComponents()[SelectedEntityIndex].Transform.GetMatrix();
@@ -141,7 +149,10 @@ namespace ImGui
 
 	void CInspectorWindow::InspectStaticMeshComponent()
 	{
-		if (!ImGui::CollapsingHeader("Static Mesh", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
+		bool isHeaderOpen = ImGui::CollapsingHeader("Static Mesh", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+		RemoveComponentButton(Havtorn::EComponentType::StaticMeshComponent);
+
+		if (!isHeaderOpen)
 			return;
 
 		Havtorn::SStaticMeshComponent* staticMesh = &Scene->GetStaticMeshComponents()[SelectedEntityIndex];
@@ -161,9 +172,12 @@ namespace ImGui
 
 	void CInspectorWindow::InspectCameraComponent()
 	{
-		if (!ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
+		bool isHeaderOpen = ImGui::CollapsingHeader("Camera", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+		RemoveComponentButton(Havtorn::EComponentType::CameraComponent);
+
+		if (!isHeaderOpen)
 			return;
-			
+
 		auto& cameraComp = Scene->GetCameraComponents()[SelectedEntityIndex];
 		ImGui::DragFloat("FOV", &cameraComp.FOV, SlideSpeed, 1.0f, 180.0f);
 		ImGui::DragFloat("Aspect Ratio", &cameraComp.AspectRatio, SlideSpeed, 0.1f, 10.0f);
@@ -175,7 +189,10 @@ namespace ImGui
 
 	void CInspectorWindow::InspectCameraControllerComponent()
 	{
-		if (!ImGui::CollapsingHeader("Camera Controller", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
+		bool isHeaderOpen = ImGui::CollapsingHeader("Camera Controller", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+		RemoveComponentButton(Havtorn::EComponentType::CameraControllerComponent);
+
+		if (!isHeaderOpen)
 			return;
 
 		auto& cameraControllerComp = Scene->GetCameraControllerComponents()[SelectedEntityIndex];
@@ -186,11 +203,13 @@ namespace ImGui
 
 	void CInspectorWindow::InspectMaterialComponent()
 	{
-		Havtorn::SMaterialComponent* materialComp = &Scene->GetMaterialComponents()[SelectedEntityIndex];
+		bool isHeaderOpen = ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+		RemoveComponentButton(Havtorn::EComponentType::MaterialComponent);
 
-		if (!ImGui::CollapsingHeader("Material", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
+		if (!isHeaderOpen)
 			return;
 
+		Havtorn::SMaterialComponent* materialComp = &Scene->GetMaterialComponents()[SelectedEntityIndex];
 		for (Havtorn::U8 materialIndex = 0; materialIndex < materialComp->Materials.size(); materialIndex++)
 		{
 			Havtorn::SEditorAssetRepresentation* assetRep = Manager->GetAssetRepFromName(materialComp->Materials[materialIndex].Name).get();
@@ -215,7 +234,10 @@ namespace ImGui
 
 	void CInspectorWindow::InspectEnvironmentLightComponent()
 	{
-		if (!ImGui::CollapsingHeader("Environment Light", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
+		bool isHeaderOpen = ImGui::CollapsingHeader("Environment Light", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+		RemoveComponentButton(Havtorn::EComponentType::EnvironmentLightComponent);
+
+		if (!isHeaderOpen)
 			return;
 
 		auto& environmentLightComp = Scene->GetEnvironmentLightComponents()[SelectedEntityIndex];
@@ -234,7 +256,10 @@ namespace ImGui
 
 	void CInspectorWindow::InspectDirectionalLightComponent()
 	{
-		if (!ImGui::CollapsingHeader("Directional Light", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
+		bool isHeaderOpen = ImGui::CollapsingHeader("Directional Light", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+		RemoveComponentButton(Havtorn::EComponentType::DirectionalLightComponent);
+
+		if (!isHeaderOpen)
 			return;
 
 		auto& directionalLightComp = Scene->GetDirectionalLightComponents()[SelectedEntityIndex];
@@ -255,7 +280,10 @@ namespace ImGui
 
 	void CInspectorWindow::InspectPointLightComponent()
 	{
-		if (!ImGui::CollapsingHeader("Point Light", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
+		bool isHeaderOpen = ImGui::CollapsingHeader("Point Light", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+		RemoveComponentButton(Havtorn::EComponentType::PointLightComponent);
+
+		if (!isHeaderOpen)
 			return;
 
 		auto& pointLightComp = Scene->GetPointLightComponents()[SelectedEntityIndex];
@@ -272,7 +300,10 @@ namespace ImGui
 
 	void CInspectorWindow::InspectSpotLightComponent()
 	{
-		if (!ImGui::CollapsingHeader("Spot Light", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
+		bool isHeaderOpen = ImGui::CollapsingHeader("Spot Light", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+		RemoveComponentButton(Havtorn::EComponentType::SpotLightComponent);
+
+		if (!isHeaderOpen)
 			return;
 
 		auto& spotLightComp = Scene->GetSpotLightComponents()[SelectedEntityIndex];
@@ -291,7 +322,10 @@ namespace ImGui
 
 	void CInspectorWindow::InspectVolumetricLightComponent()
 	{
-		if (!ImGui::CollapsingHeader("Volumetric Light", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
+		bool isHeaderOpen = ImGui::CollapsingHeader("Volumetric Light", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+		RemoveComponentButton(Havtorn::EComponentType::VolumetricLightComponent);
+
+		if (!isHeaderOpen)
 			return;
 
 		auto& volumetricLightComp = Scene->GetVolumetricLightComponents()[SelectedEntityIndex];
@@ -307,7 +341,10 @@ namespace ImGui
 
 	void CInspectorWindow::InspectDecalComponent()
 	{
-		if (!ImGui::CollapsingHeader("Decal", ImGuiTreeNodeFlags_Framed | ImGuiTreeNodeFlags_DefaultOpen))
+		bool isHeaderOpen = ImGui::CollapsingHeader("Decal", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+		RemoveComponentButton(Havtorn::EComponentType::DecalComponent);
+
+		if (!isHeaderOpen)
 			return;
 
 		auto& decalComp = Scene->GetDecalComponents()[SelectedEntityIndex];
@@ -505,7 +542,61 @@ namespace ImGui
 
 		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) { ImGui::CloseCurrentPopup(); }
 
+		ImGui::EndPopup();	
+	}
+
+	void CInspectorWindow::OpenAddComponentModal()
+	{
+		if (!ImGui::BeginPopupModal("Add Component Modal", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+			return;
+
+		Havtorn::U32 id = 0;
+
+		if (ImGui::BeginTable("NewComponentTypeTable", 1))
+		{
+			for (U64 i = 0; i < STATIC_U64(EComponentType::Count) - 2; i++)
+			{
+				ImGui::TableNextColumn();
+				ImGui::PushID(id++);
+
+				EComponentType componentType = static_cast<EComponentType>(i);
+				if (ImGui::Button(GetComponentTypeString(componentType).c_str()))
+				{
+					Havtorn::CScene* scene = Manager->GetCurrentScene();
+					Havtorn::SEntity* selection = Manager->GetSelectedEntity();
+
+					if (scene != nullptr && selection != nullptr)
+						scene->AddComponentToEntity(componentType, *selection);
+					
+					ImGui::CloseCurrentPopup();
+				}
+
+				ImGui::PopID();
+			}
+
+			ImGui::EndTable();
+		}
+
+		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) { ImGui::CloseCurrentPopup(); }
+
 		ImGui::EndPopup();
-		
+	}
+	
+	void CInspectorWindow::RemoveComponentButton(Havtorn::EComponentType componentType)
+	{
+		ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - ImGui::GetTreeNodeToLabelSpacing()*0.3f);
+
+		ImGui::PushID(static_cast<U64>(componentType));
+		if (ImGui::Button("X"))
+		{
+			Havtorn::CScene* scene = Manager->GetCurrentScene();
+			Havtorn::SEntity* selection = Manager->GetSelectedEntity();
+
+			if (scene == nullptr || selection == nullptr)
+				return;
+
+			scene->RemoveComponentFromEntity(componentType, *selection);
+		}
+		ImGui::PopID();
 	}
 }

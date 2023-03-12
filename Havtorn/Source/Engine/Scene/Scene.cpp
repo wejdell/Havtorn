@@ -633,7 +633,7 @@ namespace Havtorn
 		}
 	}
 
-	const std::vector<SEntity>& CScene::GetEntities() 
+	std::vector<SEntity>& CScene::GetEntities() 
 	{
 		return Entities; 
 	}
@@ -726,6 +726,98 @@ namespace Havtorn
 	U64 CScene::GetNumberOfValidEntities() const
 	{
 		return FirstUnusedEntityIndex;
+	}
+
+	void CScene::AddComponentToEntity(EComponentType componentType, SEntity& entity)
+	{
+		switch (componentType)
+		{
+		case Havtorn::EComponentType::TransformComponent:
+			AddTransformComponentToEntity(entity);
+			break;
+		case Havtorn::EComponentType::StaticMeshComponent:
+			AddStaticMeshComponentToEntity(entity);
+			break;
+		case Havtorn::EComponentType::CameraComponent:
+			AddCameraComponentToEntity(entity);
+			break;
+		case Havtorn::EComponentType::CameraControllerComponent:
+			AddCameraControllerComponentToEntity(entity);
+			break;
+		case Havtorn::EComponentType::MaterialComponent:
+			AddMaterialComponentToEntity(entity);
+			break;
+		case Havtorn::EComponentType::EnvironmentLightComponent:
+			AddEnvironmentLightComponentToEntity(entity);
+			break;
+		case Havtorn::EComponentType::DirectionalLightComponent:
+			AddDirectionalLightComponentToEntity(entity);
+			break;
+		case Havtorn::EComponentType::PointLightComponent:
+			AddPointLightComponentToEntity(entity);
+			break;
+		case Havtorn::EComponentType::SpotLightComponent:
+			AddSpotLightComponentToEntity(entity);
+			break;
+		case Havtorn::EComponentType::VolumetricLightComponent:
+			AddVolumetricLightComponentToEntity(entity);
+			break;
+		case Havtorn::EComponentType::DecalComponent:
+			AddDecalComponentToEntity(entity);
+			break;
+
+		case Havtorn::EComponentType::DebugShapeComponent:
+		case Havtorn::EComponentType::MetaDataComponent:	
+		case Havtorn::EComponentType::Count:
+		default:
+			break;
+		}
+	}
+
+	void CScene::RemoveComponentFromEntity(EComponentType componentType, SEntity& entity)
+	{
+		switch (componentType)
+		{
+		case Havtorn::EComponentType::TransformComponent:
+			RemoveTransformComponentFromEntity(entity);
+			break;
+		case Havtorn::EComponentType::StaticMeshComponent:
+			RemoveStaticMeshComponentFromEntity(entity);
+			break;
+		case Havtorn::EComponentType::CameraComponent:
+			RemoveCameraComponentFromEntity(entity);
+			break;
+		case Havtorn::EComponentType::CameraControllerComponent:
+			RemoveCameraControllerComponentFromEntity(entity);
+			break;
+		case Havtorn::EComponentType::MaterialComponent:
+			RemoveMaterialComponentFromEntity(entity);
+			break;
+		case Havtorn::EComponentType::EnvironmentLightComponent:
+			RemoveEnvironmentLightComponentFromEntity(entity);
+			break;
+		case Havtorn::EComponentType::DirectionalLightComponent:
+			RemoveDirectionalLightComponentFromEntity(entity);
+			break;
+		case Havtorn::EComponentType::PointLightComponent:
+			RemovePointLightComponentFromEntity(entity);
+			break;
+		case Havtorn::EComponentType::SpotLightComponent:
+			RemoveSpotLightComponentFromEntity(entity);
+			break;
+		case Havtorn::EComponentType::VolumetricLightComponent:
+			RemoveVolumetricLightComponentFromEntity(entity);
+			break;
+		case Havtorn::EComponentType::DecalComponent:
+			RemoveDecalComponentFromEntity(entity);
+			break;
+
+		case Havtorn::EComponentType::DebugShapeComponent:
+		case Havtorn::EComponentType::MetaDataComponent:
+		case Havtorn::EComponentType::Count:
+		default:
+			break;
+		}
 	}
 
 	COMPONENT_ADDER_DEFINITION(TransformComponent)

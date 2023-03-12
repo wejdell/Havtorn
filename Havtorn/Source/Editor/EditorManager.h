@@ -3,6 +3,7 @@
 #pragma once
 #include "Havtorn.h"
 #include "Input/InputTypes.h"
+#include "Utils/ImGuiUtils.h"
 
 #include <filesystem>
 
@@ -98,8 +99,8 @@ namespace Havtorn
 		void SetCurrentScene(CScene* scene);
 		CScene* GetCurrentScene() const;
 
-		void SetSelectedEntity(const SEntity* entity);
-		const SEntity* GetSelectedEntity() const;
+		void SetSelectedEntity(SEntity* entity);
+		SEntity* GetSelectedEntity() const;
 
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry);
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromName(const std::string& assetName);
@@ -147,7 +148,7 @@ namespace Havtorn
 		CScene* CurrentScene = nullptr;
 
 		// TODO.NR: Should be a weak ptr
-		const SEntity* SelectedEntity = nullptr;
+		SEntity* SelectedEntity = nullptr;
 
 		std::vector<Ptr<ImGui::CWindow>> Windows = {};
 		std::vector<Ptr<ImGui::CToggleable>> MenuElements = {};

@@ -54,8 +54,7 @@ namespace Havtorn
 		void Serialize(char* toData, U32& pointerPosition) const;
 		void Deserialize(const char* fromData, U32& pointerPosition, CAssetRegistry* assetRegistry);
 
-		const std::vector<SEntity>& GetEntities();
-		// TODO: Make convenience function where you can supply name and have it add a metadata comp on its own
+		std::vector<SEntity>& GetEntities();
 		SEntity* GetNewEntity();
 		SEntity* GetNewEntity(const std::string& nameInEditor);
 		bool TryRemoveEntity(SEntity& entity);
@@ -63,6 +62,9 @@ namespace Havtorn
 		__declspec(dllexport) U64 GetSceneIndex(const SEntity& entity) const;
 		__declspec(dllexport) U64 GetMainCameraIndex() const;
 		__declspec(dllexport) U64 GetNumberOfValidEntities() const;
+
+		__declspec(dllexport) void AddComponentToEntity(EComponentType componentType, SEntity& entity);
+		__declspec(dllexport) void RemoveComponentFromEntity(EComponentType componentType, SEntity& entity);
 
 		COMPONENT_VECTOR_GETTER(TransformComponent)
 		COMPONENT_VECTOR_GETTER(StaticMeshComponent)

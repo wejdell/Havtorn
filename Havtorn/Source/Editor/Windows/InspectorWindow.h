@@ -42,6 +42,8 @@ namespace ImGui
 		void OpenSelectMeshAssetModal(Havtorn::I64 staticMeshComponentIndex);
 		void OpenSelectTextureAssetModal(Havtorn::U16& textureRefToChange);
 		void OpenSelectMaterialAssetModal(Havtorn::SMaterialComponent* materialComponentToChange, Havtorn::U8 materialIndex);
+		void OpenAddComponentModal();
+		void RemoveComponentButton(Havtorn::EComponentType componentType);
 
 	private:
 		std::map<Havtorn::EComponentType, std::function<void()>> InspectionFunctions;

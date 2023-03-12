@@ -92,6 +92,10 @@ namespace Havtorn
 
         inline const U32 Length() const { return Size; }
         inline const std::string AsString() const { return std::string(std::begin(Characters), std::begin(Characters) + STATIC_U64(Size)); }
+        char* Data() { return Characters.data(); }
+
+        // NR: This should only be called when we know reliably what the new length should be. Used by HavtornInputTextResizeCallback
+        void SetLength(U8 length) { HV_ASSERT(Size <= maxSize, "Trying to set size larger than max!"); Size = length; }
 
     private:
         std::array<char, maxSize> Characters = {};
