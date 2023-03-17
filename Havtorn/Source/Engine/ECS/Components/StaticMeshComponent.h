@@ -13,8 +13,8 @@ namespace Havtorn
 			: SComponent(EComponentType::StaticMeshComponent)
 		{}
 
-		void Serialize(char* toData, U32& pointerPosition) const;
-		void Deserialize(const char* fromData, U32& pointerPosition);
+		void Serialize(char* toData, U64& pointerPosition) const;
+		void Deserialize(const char* fromData, U64& pointerPosition);
 		[[nodiscard]] U32 GetSize() const;
 
 		// Asset Data

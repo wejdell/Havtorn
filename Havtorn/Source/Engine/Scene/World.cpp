@@ -44,7 +44,7 @@ namespace Havtorn
 
 		Scenes.back()->Init(RenderManager);
 
-		U32 pointerPosition = 0;
+		U64 pointerPosition = 0;
 		GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));
 		sceneFile.Deserialize(data, pointerPosition, Scenes.back().get(), AssetRegistry.get());
 
@@ -81,7 +81,7 @@ namespace Havtorn
 		const U32 fileSize = fileHeader.GetSize() + AssetRegistry->GetSize(sceneIndex);
 		char* data = new char[fileSize];
 
-		U32 pointerPosition = 0;	
+		U64 pointerPosition = 0;	
 		fileHeader.Serialize(data, pointerPosition, AssetRegistry.get(), sceneIndex);
 		GEngine::GetFileSystem()->Serialize(destinationPath, data, fileSize);
 		

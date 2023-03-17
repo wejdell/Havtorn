@@ -51,8 +51,8 @@ namespace Havtorn
 		bool InitDemoScene(CRenderManager* renderManager);
 
 		[[nodiscard]] U32 GetSize() const;
-		void Serialize(char* toData, U32& pointerPosition) const;
-		void Deserialize(const char* fromData, U32& pointerPosition, CAssetRegistry* assetRegistry);
+		void Serialize(char* toData, U64& pointerPosition) const;
+		void Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry);
 
 		std::vector<SEntity>& GetEntities();
 		SEntity* GetNewEntity();

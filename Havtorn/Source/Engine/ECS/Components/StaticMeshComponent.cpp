@@ -6,7 +6,7 @@
 
 namespace Havtorn
 {
-    void SStaticMeshComponent::Serialize(char* toData, U32& pointerPosition) const
+    void SStaticMeshComponent::Serialize(char* toData, U64& pointerPosition) const
     {
         SerializeSimple(static_cast<U32>(DrawCallData.size()), toData, pointerPosition);
         SerializeVector(DrawCallData, toData, pointerPosition);
@@ -21,7 +21,7 @@ namespace Havtorn
         SerializeSimple(TopologyIndex, toData, pointerPosition);
     }
 
-    void SStaticMeshComponent::Deserialize(const char* fromData, U32& pointerPosition)
+    void SStaticMeshComponent::Deserialize(const char* fromData, U64& pointerPosition)
     {
         U32 meshNumber = 0;
         DeserializeSimple(meshNumber, fromData, pointerPosition);

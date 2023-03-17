@@ -28,8 +28,8 @@ namespace Havtorn
 		std::vector<std::string> GetAssetPaths(const SAssetReferenceCounter& counter);
 
 		[[nodiscard]] U32 GetSize(I64 sceneIndex) const;
-		void Serialize(I64 sceneIndex, char* toData, U32& pointerPosition) const;
-		void Deserialize(I64 sceneIndex, const char* fromData, U32& pointerPosition);
+		void Serialize(I64 sceneIndex, char* toData, U64& pointerPosition) const;
+		void Deserialize(I64 sceneIndex, const char* fromData, U64& pointerPosition);
 
 	private:
 		std::map<std::string, std::vector<SAssetReferenceCounter>> Registry;

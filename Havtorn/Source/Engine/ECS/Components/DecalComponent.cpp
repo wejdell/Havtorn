@@ -5,7 +5,7 @@
 
 namespace Havtorn
 {
-    void SDecalComponent::Serialize(char* toData, U32& pointerPosition) const
+    void SDecalComponent::Serialize(char* toData, U64& pointerPosition) const
     {
         // NR: Texture info is saved and loaded using AssetRegistry
         SerializeSimple(ShouldRenderAlbedo, toData, pointerPosition);
@@ -13,7 +13,7 @@ namespace Havtorn
         SerializeSimple(ShouldRenderNormal, toData, pointerPosition);
     }
 
-    void SDecalComponent::Deserialize(const char* fromData, U32& pointerPosition)
+    void SDecalComponent::Deserialize(const char* fromData, U64& pointerPosition)
     {
         // NR: Texture info is saved and loaded using AssetRegistry
         DeserializeSimple(ShouldRenderAlbedo, fromData, pointerPosition);

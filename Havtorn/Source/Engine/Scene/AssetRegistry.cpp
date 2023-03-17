@@ -110,7 +110,7 @@ namespace Havtorn
         return size;
     }
 
-    void CAssetRegistry::Serialize(I64 sceneIndex, char* toData, U32& pointerPosition) const
+    void CAssetRegistry::Serialize(I64 sceneIndex, char* toData, U64& pointerPosition) const
     {        
         // NR: Pre-pass to know how many entries are expected from the file
         U32 entriesForScene = 0;
@@ -142,7 +142,7 @@ namespace Havtorn
         }
     }
 
-    void CAssetRegistry::Deserialize(I64 sceneIndex, const char* fromData, U32& pointerPosition)
+    void CAssetRegistry::Deserialize(I64 sceneIndex, const char* fromData, U64& pointerPosition)
     {
         U32 entriesForScene = 0;
         DeserializeSimple(entriesForScene, fromData, pointerPosition);

@@ -67,7 +67,6 @@ namespace ImGui
 					SelectedIndex = index;
 					Manager->SetSelectedEntity(&entity);
 				}
-		
 				ImGui::PopID();
 			}
 		}

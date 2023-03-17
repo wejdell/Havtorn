@@ -5,7 +5,7 @@
 
 namespace Havtorn
 {
-    void SMaterialComponent::Serialize(char* toData, U32& pointerPosition) const
+    void SMaterialComponent::Serialize(char* toData, U64& pointerPosition) const
     {
         SerializeSimple(static_cast<U32>(Materials.size()), toData, pointerPosition);
         
@@ -30,7 +30,7 @@ namespace Havtorn
         }
     }
 
-    void SMaterialComponent::Deserialize(const char* fromData, U32& pointerPosition)
+    void SMaterialComponent::Deserialize(const char* fromData, U64& pointerPosition)
     {
         U32 materialNumber = 0;
         DeserializeSimple(materialNumber, fromData, pointerPosition);
