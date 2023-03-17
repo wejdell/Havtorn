@@ -449,7 +449,7 @@ namespace Havtorn
 		return size;
 	}
 
-	void CScene::Serialize(char* toData, U32& pointerPosition) const
+	void CScene::Serialize(char* toData, U64& pointerPosition) const
 	{
 		SerializeSimple(static_cast<U32>(GetNumberOfValidEntities()), toData, pointerPosition);
 
@@ -524,7 +524,7 @@ namespace Havtorn
 		}
 	}
 
-	void CScene::Deserialize(const char* fromData, U32& pointerPosition, CAssetRegistry* assetRegistry)
+	void CScene::Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry)
 	{
 		U32 numberOfEntities = 0;
 		DeserializeSimple(numberOfEntities, fromData, pointerPosition);

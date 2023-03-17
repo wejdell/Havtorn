@@ -9,7 +9,7 @@
 namespace Havtorn
 {
 	template<typename T>
-	void SerializeSimple(const T& source, char* destination, U32& pointerPosition)
+	void SerializeSimple(const T& source, char* destination, U64& pointerPosition)
 	{
 		const U32 size = sizeof(T);
 		memcpy(&destination[pointerPosition], &source, size);
@@ -17,21 +17,21 @@ namespace Havtorn
 	}
 
 	template<typename T>
-	void SerializeVector(const std::vector<T>& source, char* destination, U32& pointerPosition)
+	void SerializeVector(const std::vector<T>& source, char* destination, U64& pointerPosition)
 	{
 		const U32 size = sizeof(T) * static_cast<U32>(source.size());
 		memcpy(&destination[pointerPosition], source.data(), size);
 		pointerPosition += size;
 	}
 
-	inline void SerializeString(const std::string& source, char* destination, U32& pointerPosition)
+	inline void SerializeString(const std::string& source, char* destination, U64& pointerPosition)
 	{
 		const U32 size = sizeof(char) * static_cast<U32>(source.length());
 		memcpy(&destination[pointerPosition], source.data(), size);
 		pointerPosition += size;
 	}
 
-	inline void SerializeString(const std::string& source, char* destination, U32 numberOfElements, U32& pointerPosition)
+	inline void SerializeString(const std::string& source, char* destination, U32 numberOfElements, U64& pointerPosition)
 	{
 		const U32 size = sizeof(char) * numberOfElements;
 		memcpy(&destination[pointerPosition], source.data(), size);
@@ -39,7 +39,7 @@ namespace Havtorn
 	}
 
 	template<typename T>
-	void DeserializeSimple(T& destination, const char* source, U32& pointerPosition)
+	void DeserializeSimple(T& destination, const char* source, U64& pointerPosition)
 	{
 		const U32 size = sizeof(T);
 		memcpy(&destination, &source[pointerPosition], size);
@@ -47,7 +47,7 @@ namespace Havtorn
 	}
 
 	template<typename T>
-	void DeserializeVector(std::vector<T>& destination, const char* source, U32 numberOfElements, U32& pointerPosition)
+	void DeserializeVector(std::vector<T>& destination, const char* source, U32 numberOfElements, U64& pointerPosition)
 	{
 		const U32 size = sizeof(T) * numberOfElements;
 		const auto intermediateVector = new T[numberOfElements];
@@ -57,7 +57,7 @@ namespace Havtorn
 		pointerPosition += size;
 	}
 
-	inline void DeserializeString(std::string& destination, const char* source, U32 numberOfElements, U32& pointerPosition)
+	inline void DeserializeString(std::string& destination, const char* source, U32 numberOfElements, U64& pointerPosition)
 	{
 		const U32 size = sizeof(char) * numberOfElements;
 		destination = std::string(&source[pointerPosition], size);
@@ -100,7 +100,7 @@ namespace Havtorn
 
 	inline void SStaticModelFileHeader::Serialize(char* toData) const
 	{
-		U32 pointerPosition = 0;
+		U64 pointerPosition = 0;
 		SerializeSimple(AssetType, toData, pointerPosition);
 		SerializeSimple(NumberOfMaterials, toData, pointerPosition);
 		SerializeSimple(NumberOfMeshes, toData, pointerPosition);
@@ -118,7 +118,7 @@ namespace Havtorn
 
 	inline void SStaticModelFileHeader::Deserialize(const char* fromData)
 	{
-		U32 pointerPosition = 0;
+		U64 pointerPosition = 0;
 		DeserializeSimple(AssetType, fromData, pointerPosition);
 		DeserializeSimple(NumberOfMaterials, fromData, pointerPosition);
 		DeserializeSimple(NumberOfMeshes, fromData, pointerPosition);
@@ -168,7 +168,7 @@ namespace Havtorn
 
 	inline void STextureFileHeader::Serialize(char* toData) const
 	{
-		U32 pointerPosition = 0;
+		U64 pointerPosition = 0;
 		SerializeSimple(AssetType, toData, pointerPosition);
 		SerializeSimple(MaterialNameLength, toData, pointerPosition);
 		SerializeString(MaterialName, toData, pointerPosition);
@@ -181,7 +181,7 @@ namespace Havtorn
 
 	inline void STextureFileHeader::Deserialize(const char* fromData)
 	{
-		U32 pointerPosition = 0;
+		U64 pointerPosition = 0;
 		DeserializeSimple(AssetType, fromData, pointerPosition);
 		DeserializeSimple(MaterialNameLength, fromData, pointerPosition);
 		DeserializeString(MaterialName, fromData, MaterialNameLength, pointerPosition);
@@ -216,7 +216,7 @@ namespace Havtorn
 
 	inline void SMaterialAssetFileHeader::Serialize(char* toData) const
 	{
-		U32 pointerPosition = 0;
+		U64 pointerPosition = 0;
 		SerializeSimple(AssetType, toData, pointerPosition);
 		SerializeSimple(MaterialNameLength, toData, pointerPosition);
 		SerializeString(MaterialName, toData, pointerPosition);
@@ -234,7 +234,7 @@ namespace Havtorn
 
 	inline void SMaterialAssetFileHeader::Deserialize(const char* fromData)
 	{
-		U32 pointerPosition = 0;
+		U64 pointerPosition = 0;
 		DeserializeSimple(AssetType, fromData, pointerPosition);
 		DeserializeSimple(MaterialNameLength, fromData, pointerPosition);
 		DeserializeString(MaterialName, fromData, MaterialNameLength, pointerPosition);
@@ -259,8 +259,8 @@ namespace Havtorn
 		CScene* Scene = nullptr;
 
 		[[nodiscard]] U32 GetSize() const;
-		void Serialize(char* toData, U32& pointerPosition, CAssetRegistry* assetRegistry, I64 sceneIndex) const;
-		void Deserialize(const char* fromData, U32& pointerPosition, CScene* outScene, CAssetRegistry* assetRegistry);
+		void Serialize(char* toData, U64& pointerPosition, CAssetRegistry* assetRegistry, I64 sceneIndex) const;
+		void Deserialize(const char* fromData, U64& pointerPosition, CScene* outScene, CAssetRegistry* assetRegistry);
 	};
 
 	inline U32 SSceneFileHeader::GetSize() const
@@ -276,7 +276,7 @@ namespace Havtorn
 		return size;
 	}
 
-	inline void SSceneFileHeader::Serialize(char* toData, U32& pointerPosition, CAssetRegistry* assetRegistry, I64 sceneIndex) const
+	inline void SSceneFileHeader::Serialize(char* toData, U64& pointerPosition, CAssetRegistry* assetRegistry, I64 sceneIndex) const
 	{
 		SerializeSimple(AssetType, toData, pointerPosition); //4
 		SerializeSimple(SceneNameLength, toData, pointerPosition); //8
@@ -288,7 +288,7 @@ namespace Havtorn
 		Scene->Serialize(toData, pointerPosition);
 	}
 
-	inline void SSceneFileHeader::Deserialize(const char* fromData, U32& pointerPosition, CScene* outScene, CAssetRegistry* assetRegistry)
+	inline void SSceneFileHeader::Deserialize(const char* fromData, U64& pointerPosition, CScene* outScene, CAssetRegistry* assetRegistry)
 	{
 		DeserializeSimple(AssetType, fromData, pointerPosition); //4
 		DeserializeSimple(SceneNameLength, fromData, pointerPosition); //8
