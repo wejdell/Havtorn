@@ -3,11 +3,6 @@
 #pragma once
 #include "EditorWindow.h"
 
-namespace Havtorn
-{
-	class CScene;
-}
-
 namespace ImGui
 {
 	class CHierarchyWindow : public CWindow

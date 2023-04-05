@@ -6,6 +6,7 @@
 #include "Windows/AssetBrowserWindow.h"
 #include "Windows/HierarchyWindow.h"
 #include "Windows/InspectorWindow.h"
+#include "Windows/SequencerWindow.h"
 //#include "LoadScene.h"
 //#include "CameraSetting.h"
 //#include "VFXEditorWindow.h"
