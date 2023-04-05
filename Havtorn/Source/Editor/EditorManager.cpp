@@ -102,6 +102,7 @@ namespace Havtorn
 		Windows.emplace_back(std::make_unique<ImGui::CAssetBrowserWindow>("Asset Browser", this));
 		Windows.emplace_back(std::make_unique<ImGui::CHierarchyWindow>("Hierarchy", this));
 		Windows.emplace_back(std::make_unique<ImGui::CInspectorWindow>("Inspector", this));
+		Windows.emplace_back(std::make_unique<ImGui::CSequencerWindow>("Sequencer", this));
 
 		ResourceManager = new CEditorResourceManager();
 		bool success = ResourceManager->Init(renderManager, framework);
