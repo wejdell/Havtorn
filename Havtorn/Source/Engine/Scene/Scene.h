@@ -55,8 +55,8 @@ namespace Havtorn
 		void Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry);
 
 		std::vector<SEntity>& GetEntities();
-		SEntity* GetNewEntity();
-		SEntity* GetNewEntity(const std::string& nameInEditor);
+		SEntity* GetNewEntity(U64 guid = 0);
+		SEntity* GetNewEntity(const std::string& nameInEditor, U64 guid = 0);
 		bool TryRemoveEntity(SEntity& entity);
 
 		__declspec(dllexport) U64 GetSceneIndex(const SEntity& entity) const;
@@ -113,7 +113,7 @@ namespace Havtorn
 		void UpdateComponentVector(std::vector<T>& components, I64 index);
 
 	private:
-		std::unordered_map<I64, U64> EntityVectorIndices;
+		std::unordered_map<U64, U64> EntityVectorIndices;
 		std::vector<SEntity> Entities;
 		COMPONENT_VECTOR_DECLARATION(TransformComponent)
 		COMPONENT_VECTOR_DECLARATION(StaticMeshComponent)

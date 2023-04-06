@@ -3,6 +3,7 @@
 #include "Scene.h"
 
 #include "ECS/ECSInclude.h"
+#include "ECS/GUIDManager.h"
 #include "Graphics/RenderManager.h"
 #include "FileSystem/FileHeaderDeclarations.h"
 #include "World.h"
@@ -410,6 +411,8 @@ namespace Havtorn
 
 		for (auto& entity : Entities)
 		{
+			size += sizeof(U64);
+
 			size += sizeof(I64) * static_cast<size_t>(EComponentType::Count);
 
 			if (entity.HasComponent(EComponentType::TransformComponent))
@@ -457,6 +460,8 @@ namespace Havtorn
 		{
 			if (!entity.IsValid())
 				continue;
+
+			SerializeSimple(entity.GUID, toData, pointerPosition);
 
 			SerializeSimple(entity.GetComponentMask(), toData, pointerPosition);
 			U64 entitySceneIndex = GetSceneIndex(entity); 
@@ -531,7 +536,10 @@ namespace Havtorn
 
 		for (U32 i = 0; i < numberOfEntities; i++)
 		{
-			SEntity* entity = GetNewEntity();
+			U64 guid = 0;
+			DeserializeSimple(guid, fromData, pointerPosition);
+
+			SEntity* entity = GetNewEntity(guid);
 
 			CBitSet<STATIC_U64(EComponentType::Count)> componentMask;
 			DeserializeSimple(componentMask, fromData, pointerPosition);
@@ -638,7 +646,7 @@ namespace Havtorn
 		return Entities; 
 	}
 
-	SEntity* CScene::GetNewEntity()
+	SEntity* CScene::GetNewEntity(U64 guid)
 	{
 		// TODO: Figure out Tombstone solution
 
@@ -649,7 +657,7 @@ namespace Havtorn
 		}
 
 		SEntity* outEntity = &Entities[FirstUnusedEntityIndex];
-		outEntity->GUID = gEntityGUID++;
+		outEntity->GUID = guid != 0 ? guid : UGUIDManager::Generate();
 
 		EntityVectorIndices.emplace(outEntity->GUID, FirstUnusedEntityIndex);
 		FirstUnusedEntityIndex++;
@@ -657,9 +665,9 @@ namespace Havtorn
 		return outEntity;
 	}
 
-	SEntity* CScene::GetNewEntity(const std::string& nameInEditor)
+	SEntity* CScene::GetNewEntity(const std::string& nameInEditor, U64 guid)
 	{
-		SEntity* outEntity = GetNewEntity();
+		SEntity* outEntity = GetNewEntity(guid);
 		SMetaDataComponent& metaDataComp = AddMetaDataComponentToEntity(*outEntity);
 		metaDataComp.Name = nameInEditor;
 

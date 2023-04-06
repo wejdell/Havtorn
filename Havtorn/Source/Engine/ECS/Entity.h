@@ -11,8 +11,7 @@ namespace Havtorn
 {
 	struct HAVTORN_API SEntity
 	{
-		// TODO: GUID Handler
-		I64 GUID = -1;
+		U64 GUID = 0;
 
 		bool IsValid() const;
 		void AddComponent(EComponentType type) const;
@@ -32,7 +31,7 @@ namespace Havtorn
 
 	inline bool SEntity::IsValid() const
 	{
-		return GUID > -1;
+		return GUID > 0;
 	}
 
 	inline void SEntity::AddComponent(EComponentType type) const
