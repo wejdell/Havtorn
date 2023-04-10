@@ -10,7 +10,7 @@ namespace ImGui
 		: CWindow(name, manager)
 	{
         Sequencer.FrameMin = -100;
-        Sequencer.FrameMax = 1000;
+        Sequencer.FrameMax = 100;
         Sequencer.Items.push_back(SSequenceItem{ 0, 10, 30, false });
         Sequencer.Items.push_back(SSequenceItem{ 1, 20, 30, true });
         Sequencer.Items.push_back(SSequenceItem{ 3, 12, 60, false });
@@ -156,52 +156,36 @@ namespace ImCurveEdit
 
     U32 Edit(SSequencerDelegate& delegate, const ImVec2& size, U32 id, const ImRect* clippingRect, ImVector<SSequencerEditPoint>* selectedPoints)
     {
+        // Declare variables
         static bool selectingQuad = false;
         static ImVec2 quadSelection;
-        static int overCurve = -1;
-        static int movingCurve = -1;
+        static int overCurveIndex = -1;
+        static int movingCurveIndex = -1;
         static bool scrollingV = false;
         static std::set<SSequencerEditPoint> selection;
         static bool overSelectedPoint = false;
 
-        int ret = 0;
+        int returnValue = 0;
 
+        // ImGui variables / style setup
         ImGuiIO& io = ImGui::GetIO();
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
         ImGui::PushStyleColor(ImGuiCol_Border, 0);
         ImGui::BeginChildFrame(id, size);
         delegate.IsFocused = ImGui::IsWindowFocused();
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
         if (clippingRect)
             draw_list->PushClipRect(clippingRect->Min, clippingRect->Max, true);
 
+        // Temp variables
         const ImVec2 offset = ImGui::GetCursorScreenPos() + ImVec2(0.f, size.y);
         const ImVec2 ssize(size.x, -size.y);
         const ImRect container(offset + ImVec2(0.f, ssize.y), offset + ImVec2(ssize.x, 0.f));
         ImVec2& min = delegate.GetMin();
         ImVec2& max = delegate.GetMax();
 
-        // handle zoom and VScroll
-        if (container.Contains(io.MousePos))
-        {
-            if (fabsf(io.MouseWheel) > FLT_EPSILON)
-            {
-                const float r = (io.MousePos.y - offset.y) / ssize.y;
-                float ratioY = ImLerp(min.y, max.y, r);
-                auto scaleValue = [&](float v) {
-                    v -= ratioY;
-                    v *= (1.f - io.MouseWheel * 0.05f);
-                    v += ratioY;
-                    return v;
-                };
-                min.y = scaleValue(min.y);
-                max.y = scaleValue(max.y);
-            }
-            if (!scrollingV && ImGui::IsMouseDown(2))
-            {
-                scrollingV = true;
-            }
-        }
+        HandleZoomAndVScroll(container, io, offset, ssize, min, max, scrollingV);
         ImVec2 range = max - min + ImVec2(1.f, 0.f);  // +1 because of inclusive last frame
 
         const ImVec2 viewSize(size.x, -size.y);
@@ -219,23 +203,207 @@ namespace ImCurveEdit
 
         draw_list->AddRectFilled(offset, offset + ssize, delegate.GetBackgroundColor());
 
-        auto pointToRange = [&](ImVec2 pt) { return (pt - min) / range; };
-        auto rangeToPoint = [&](ImVec2 pt) { return (pt * range) + min; };
-
         draw_list->AddLine(ImVec2(-1.f, -min.y / range.y) * viewSize + offset, ImVec2(1.f, -min.y / range.y) * viewSize + offset, 0xFF000000, 1.5f);
         bool overCurveOrPoint = false;
 
-        int localOverCurve = -1;
+        int localOverCurveIndex = -1;
         // make sure highlighted curve is rendered last
         int* curvesIndex = (int*)_malloca(sizeof(int) * curveCount);
         for (size_t c = 0; c < curveCount; c++)
             curvesIndex[c] = int(c);
         int highLightedCurveIndex = -1;
-        if (overCurve != -1 && curveCount)
+        if (overCurveIndex != -1 && curveCount)
         {
-            ImSwap(curvesIndex[overCurve], curvesIndex[curveCount - 1]);
-            highLightedCurveIndex = overCurve;
+            ImSwap(curvesIndex[overCurveIndex], curvesIndex[curveCount - 1]);
+            highLightedCurveIndex = overCurveIndex;
         }
+
+        LoopOverCurves(curveCount, curvesIndex, delegate, highLightedCurveIndex, selection, selectingQuad, movingCurveIndex, range, min, viewSize, offset, io, scrollingV, localOverCurveIndex, overCurveIndex, overCurveOrPoint, draw_list, overSelectedPoint);
+
+        if (localOverCurveIndex == -1)
+            overCurveIndex = -1;
+
+        static bool pointsMoved = false;
+        static ImVec2 mousePosOrigin;
+        static std::vector<ImVec2> originalPoints;
+
+        MoveSelection(overSelectedPoint, io, selection, pointsMoved, delegate, mousePosOrigin, originalPoints, returnValue, range, sizeOfPixel);
+
+        CheckIsOverSelectedPoint(overSelectedPoint, io, pointsMoved, delegate);
+
+        AddPoint(overCurveIndex, io, delegate, offset, viewSize, range, returnValue);
+
+        MoveCurve(movingCurveIndex, delegate, pointsMoved, mousePosOrigin, io, originalPoints, range, sizeOfPixel, returnValue, overCurveIndex, selection, selectingQuad);
+
+        QuadSelection(selectingQuad, quadSelection, io, draw_list, selection, curveCount, delegate, range, viewSize, offset, overCurveOrPoint, movingCurveIndex, overSelectedPoint, container);
+      
+        if (clippingRect)
+            draw_list->PopClipRect();
+
+        ImGui::EndChildFrame();
+        ImGui::PopStyleVar();
+        ImGui::PopStyleColor(1);
+
+        UpdateSelectedPoints(selectedPoints, selection);
+        return returnValue;
+    }
+
+    void CheckIsOverSelectedPoint(bool& overSelectedPoint, ImGuiIO& io, bool& pointsMoved, ImCurveEdit::SSequencerDelegate& delegate)
+    {
+        if (overSelectedPoint && !io.MouseDown[0])
+        {
+            overSelectedPoint = false;
+            if (pointsMoved)
+            {
+                pointsMoved = false;
+                delegate.EndEdit();
+            }
+        }
+    }
+
+    void UpdateSelectedPoints(ImVector<ImCurveEdit::SSequencerEditPoint>* selectedPoints, std::set<ImCurveEdit::SSequencerEditPoint>& selection)
+    {
+        if (selectedPoints)
+        {
+            selectedPoints->resize(int(selection.size()));
+            int index = 0;
+            for (auto& point : selection)
+                (*selectedPoints)[index++] = point;
+        }
+    }
+
+    void QuadSelection(bool& selectingQuad, ImVec2& quadSelection, ImGuiIO& io, ImDrawList* draw_list, std::set<ImCurveEdit::SSequencerEditPoint>& selection, const size_t& curveCount, ImCurveEdit::SSequencerDelegate& delegate, ImVec2& range, const ImVec2& viewSize, const ImVec2& offset, bool overCurveOrPoint, int movingCurveIndex, bool overSelectedPoint, const ImRect& container)
+    {
+        if (selectingQuad)
+        {
+            const ImVec2 bmin = ImMin(quadSelection, io.MousePos);
+            const ImVec2 bmax = ImMax(quadSelection, io.MousePos);
+            draw_list->AddRectFilled(bmin, bmax, 0x40FF0000, 1.f);
+            draw_list->AddRect(bmin, bmax, 0xFFFF0000, 1.f);
+            const ImRect selectionQuad(bmin, bmax);
+            if (!io.MouseDown[0])
+            {
+                if (!io.KeyShift)
+                    selection.clear();
+                // select everythnig is quad
+                for (size_t c = 0; c < curveCount; c++)
+                {
+                    if (!delegate.GetIsVisible(c))
+                        continue;
+
+                    const size_t ptCount = delegate.GetPointCount(c);
+                    if (ptCount < 1)
+                        continue;
+
+                    const ImVec2* pts = delegate.GetPoints(c);
+                    for (size_t p = 0; p < ptCount; p++)
+                    {
+                        const ImVec2 center = delegate.PointToRange(pts[p], range) * viewSize + offset;
+                        if (selectionQuad.Contains(center))
+                            selection.insert({ U64(c), U32(p) });
+                    }
+                }
+                // done
+                selectingQuad = false;
+            }
+        }
+        if (!overCurveOrPoint && ImGui::IsMouseClicked(0) && !selectingQuad && movingCurveIndex == -1 && !overSelectedPoint && container.Contains(io.MousePos))
+        {
+            selectingQuad = true;
+            quadSelection = io.MousePos;
+        }
+    }
+
+    void AddPoint(int overCurveIndex, ImGuiIO& io, ImCurveEdit::SSequencerDelegate& delegate, const ImVec2& offset, const ImVec2& viewSize, ImVec2& range, int& returnValue)
+    {
+        if (overCurveIndex != -1 && io.MouseDoubleClicked[0])
+        {
+            const ImVec2 np = delegate.RangeToPoint((io.MousePos - offset) / viewSize, range);
+            delegate.BeginEdit(overCurveIndex);
+            delegate.AddPoint(overCurveIndex, np);
+            delegate.EndEdit();
+            returnValue = 1;
+        }
+    }
+
+    void MoveCurve(int& movingCurveIndex, ImCurveEdit::SSequencerDelegate& delegate, bool& pointsMoved, ImVec2& mousePosOrigin, ImGuiIO& io, std::vector<ImVec2>& originalPoints, ImVec2& range, const ImVec2& sizeOfPixel, int& returnValue, int overCurveIndex, std::set<ImCurveEdit::SSequencerEditPoint>& selection, bool selectingQuad)
+    {
+        if (movingCurveIndex != -1)
+        {
+            const size_t ptCount = delegate.GetPointCount(movingCurveIndex);
+            const ImVec2* pts = delegate.GetPoints(movingCurveIndex);
+            if (!pointsMoved)
+            {
+                mousePosOrigin = io.MousePos;
+                pointsMoved = true;
+                originalPoints.resize(ptCount);
+                for (size_t index = 0; index < ptCount; index++)
+                {
+                    originalPoints[index] = pts[index];
+                }
+            }
+            if (ptCount >= 1)
+            {
+                for (size_t p = 0; p < ptCount; p++)
+                {
+                    delegate.EditPoint(movingCurveIndex, int(p), delegate.RangeToPoint(delegate.PointToRange(originalPoints[p], range) + (io.MousePos - mousePosOrigin) * sizeOfPixel, range));
+                }
+                returnValue = 1;
+            }
+            if (!io.MouseDown[0])
+            {
+                movingCurveIndex = -1;
+                pointsMoved = false;
+                delegate.EndEdit();
+            }
+        }
+        if (movingCurveIndex == -1 && overCurveIndex != -1 && ImGui::IsMouseClicked(0) && selection.empty() && !selectingQuad)
+        {
+            movingCurveIndex = overCurveIndex;
+            delegate.BeginEdit(overCurveIndex);
+        }
+    }
+
+    void MoveSelection(bool overSelectedPoint, ImGuiIO& io, std::set<ImCurveEdit::SSequencerEditPoint>& selection, bool& pointsMoved, ImCurveEdit::SSequencerDelegate& delegate, ImVec2& mousePosOrigin, std::vector<ImVec2>& originalPoints, int& ret, const ImVec2& range, const ImVec2& sizeOfPixel)
+    {
+        if (overSelectedPoint && io.MouseDown[0])
+        {
+            if ((fabsf(io.MouseDelta.x) > 0.f || fabsf(io.MouseDelta.y) > 0.f) && !selection.empty())
+            {
+                if (!pointsMoved)
+                {
+                    delegate.BeginEdit(0);
+                    mousePosOrigin = io.MousePos;
+                    originalPoints.resize(selection.size());
+                    int index = 0;
+                    for (auto& sel : selection)
+                    {
+                        const ImVec2* pts = delegate.GetPoints(sel.CurveIndex);
+                        originalPoints[index++] = pts[sel.PointIndex];
+                    }
+                }
+                pointsMoved = true;
+                ret = 1;
+                auto prevSelection = selection;
+                int originalIndex = 0;
+                for (auto& sel : prevSelection)
+                {
+                    const ImVec2 p = delegate.RangeToPoint(delegate.PointToRange(originalPoints[originalIndex], range) + (io.MousePos - mousePosOrigin) * sizeOfPixel, range);
+                    const U32 newIndex = delegate.EditPoint(sel.CurveIndex, sel.PointIndex, p);
+                    if (newIndex != sel.PointIndex)
+                    {
+                        selection.erase(sel);
+                        selection.insert({ sel.CurveIndex, newIndex });
+                    }
+                    originalIndex++;
+                }
+            }
+        }
+    }
+
+    void LoopOverCurves(const size_t& curveCount, int* curvesIndex, ImCurveEdit::SSequencerDelegate& delegate, int highLightedCurveIndex, std::set<ImCurveEdit::SSequencerEditPoint>& selection, bool selectingQuad, int movingCurve, const ImVec2& range, ImVec2& min, const ImVec2& viewSize, const ImVec2& offset, ImGuiIO& io, bool scrollingV, int& localOverCurve, int& overCurve, bool& overCurveOrPoint, ImDrawList* draw_list, bool& overSelectedPoint)
+    {
+        auto pointToRange = [&](ImVec2 pt) { return (pt - min) / range; };
 
         for (size_t cur = 0; cur < curveCount; cur++)
         {
@@ -321,158 +489,29 @@ namespace ImCurveEdit
                 }
             }
         } // curves loop
-
-        if (localOverCurve == -1)
-            overCurve = -1;
-
-        // move selection
-        static bool pointsMoved = false;
-        static ImVec2 mousePosOrigin;
-        static std::vector<ImVec2> originalPoints;
-        if (overSelectedPoint && io.MouseDown[0])
-        {
-            if ((fabsf(io.MouseDelta.x) > 0.f || fabsf(io.MouseDelta.y) > 0.f) && !selection.empty())
-            {
-                if (!pointsMoved)
-                {
-                    delegate.BeginEdit(0);
-                    mousePosOrigin = io.MousePos;
-                    originalPoints.resize(selection.size());
-                    int index = 0;
-                    for (auto& sel : selection)
-                    {
-                        const ImVec2* pts = delegate.GetPoints(sel.CurveIndex);
-                        originalPoints[index++] = pts[sel.PointIndex];
-                    }
-                }
-                pointsMoved = true;
-                ret = 1;
-                auto prevSelection = selection;
-                int originalIndex = 0;
-                for (auto& sel : prevSelection)
-                {
-                    const ImVec2 p = rangeToPoint(pointToRange(originalPoints[originalIndex]) + (io.MousePos - mousePosOrigin) * sizeOfPixel);
-                    const U32 newIndex = delegate.EditPoint(sel.CurveIndex, sel.PointIndex, p);
-                    if (newIndex != sel.PointIndex)
-                    {
-                        selection.erase(sel);
-                        selection.insert({ sel.CurveIndex, newIndex });
-                    }
-                    originalIndex++;
-                }
-            }
-        }
-
-        if (overSelectedPoint && !io.MouseDown[0])
-        {
-            overSelectedPoint = false;
-            if (pointsMoved)
-            {
-                pointsMoved = false;
-                delegate.EndEdit();
-            }
-        }
-
-        // add point
-        if (overCurve != -1 && io.MouseDoubleClicked[0])
-        {
-            const ImVec2 np = rangeToPoint((io.MousePos - offset) / viewSize);
-            delegate.BeginEdit(overCurve);
-            delegate.AddPoint(overCurve, np);
-            delegate.EndEdit();
-            ret = 1;
-        }
-
-        // move curve
-
-        if (movingCurve != -1)
-        {
-            const size_t ptCount = delegate.GetPointCount(movingCurve);
-            const ImVec2* pts = delegate.GetPoints(movingCurve);
-            if (!pointsMoved)
-            {
-                mousePosOrigin = io.MousePos;
-                pointsMoved = true;
-                originalPoints.resize(ptCount);
-                for (size_t index = 0; index < ptCount; index++)
-                {
-                    originalPoints[index] = pts[index];
-                }
-            }
-            if (ptCount >= 1)
-            {
-                for (size_t p = 0; p < ptCount; p++)
-                {
-                    delegate.EditPoint(movingCurve, int(p), rangeToPoint(pointToRange(originalPoints[p]) + (io.MousePos - mousePosOrigin) * sizeOfPixel));
-                }
-                ret = 1;
-            }
-            if (!io.MouseDown[0])
-            {
-                movingCurve = -1;
-                pointsMoved = false;
-                delegate.EndEdit();
-            }
-        }
-        if (movingCurve == -1 && overCurve != -1 && ImGui::IsMouseClicked(0) && selection.empty() && !selectingQuad)
-        {
-            movingCurve = overCurve;
-            delegate.BeginEdit(overCurve);
-        }
-
-        // quad selection
-        if (selectingQuad)
-        {
-            const ImVec2 bmin = ImMin(quadSelection, io.MousePos);
-            const ImVec2 bmax = ImMax(quadSelection, io.MousePos);
-            draw_list->AddRectFilled(bmin, bmax, 0x40FF0000, 1.f);
-            draw_list->AddRect(bmin, bmax, 0xFFFF0000, 1.f);
-            const ImRect selectionQuad(bmin, bmax);
-            if (!io.MouseDown[0])
-            {
-                if (!io.KeyShift)
-                    selection.clear();
-                // select everythnig is quad
-                for (size_t c = 0; c < curveCount; c++)
-                {
-                    if (!delegate.GetIsVisible(c))
-                        continue;
-
-                    const size_t ptCount = delegate.GetPointCount(c);
-                    if (ptCount < 1)
-                        continue;
-
-                    const ImVec2* pts = delegate.GetPoints(c);
-                    for (size_t p = 0; p < ptCount; p++)
-                    {
-                        const ImVec2 center = pointToRange(pts[p]) * viewSize + offset;
-                        if (selectionQuad.Contains(center))
-                            selection.insert({ U64(c), U32(p) });
-                    }
-                }
-                // done
-                selectingQuad = false;
-            }
-        }
-        if (!overCurveOrPoint && ImGui::IsMouseClicked(0) && !selectingQuad && movingCurve == -1 && !overSelectedPoint && container.Contains(io.MousePos))
-        {
-            selectingQuad = true;
-            quadSelection = io.MousePos;
-        }
-        if (clippingRect)
-            draw_list->PopClipRect();
-
-        ImGui::EndChildFrame();
-        ImGui::PopStyleVar();
-        ImGui::PopStyleColor(1);
-
-        if (selectedPoints)
-        {
-            selectedPoints->resize(int(selection.size()));
-            int index = 0;
-            for (auto& point : selection)
-                (*selectedPoints)[index++] = point;
-        }
-        return ret;
     }
+
+    void HandleZoomAndVScroll(const ImRect& container, const ImGuiIO& io, const ImVec2& offset, const ImVec2& ssize, ImVec2& inOutMin, ImVec2& inOutMax, bool& outScrollingV)
+    {
+        if (container.Contains(io.MousePos))
+        {
+            if (fabsf(io.MouseWheel) > FLT_EPSILON)
+            {
+                const float r = (io.MousePos.y - offset.y) / ssize.y;
+                float ratioY = ImLerp(inOutMin.y, inOutMax.y, r);
+                auto scaleValue = [&](float v) {
+                    v -= ratioY;
+                    v *= (1.f - io.MouseWheel * 0.05f);
+                    v += ratioY;
+                    return v;
+                };
+                inOutMin.y = scaleValue(inOutMin.y);
+                inOutMax.y = scaleValue(inOutMax.y);
+            }
+            if (!outScrollingV && ImGui::IsMouseDown(2))
+            {
+                outScrollingV = true;
+            }
+        }
     }
+}

@@ -1,6 +1,8 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #pragma once
+#include <set>
+
 #include "EditorWindow.h"
 #include "Core/ImGuizmo/ImSequencer.h"
 
@@ -8,7 +10,6 @@
 #include "imgui_internal.h"
 
 #include "Core/ImGuizmo/ImGuizmo.h"
-#include "Core/ImGuizmo/ImSequencer.h"
 
 static const char* SequencerItemTypeNames[] = { "Camera","Music", "ScreenEffect", "FadeIn", "Animation" };
 
@@ -54,6 +55,8 @@ namespace ImCurveEdit
         virtual ECurveType GetCurveType(U64 /*curveIndex*/) const { return CurveLinear; }
         virtual ImVec2& GetMin() = 0;
         virtual ImVec2& GetMax() = 0;
+        virtual ImVec2 PointToRange(const ImVec2& point, const ImVec2& range) = 0;
+        virtual ImVec2 RangeToPoint(const ImVec2& point, const ImVec2& range) = 0;
         virtual U64 GetPointCount(U64 curveIndex) = 0;
         virtual U32 GetCurveColor(U64 curveIndex) = 0;
         virtual ImVec2* GetPoints(U64 curveIndex) = 0;
@@ -67,6 +70,22 @@ namespace ImCurveEdit
     };
 
     U32 Edit(SSequencerDelegate& delegate, const ImVec2& size, U32 id, const ImRect* clippingRect = NULL, ImVector<SSequencerEditPoint>* selectedPoints = NULL);
+
+    void CheckIsOverSelectedPoint(bool& overSelectedPoint, ImGuiIO& io, bool& pointsMoved, ImCurveEdit::SSequencerDelegate& delegate);
+
+    void UpdateSelectedPoints(ImVector<ImCurveEdit::SSequencerEditPoint>* selectedPoints, std::set<ImCurveEdit::SSequencerEditPoint>& selection);
+
+    void QuadSelection(bool& selectingQuad, ImVec2& quadSelection, ImGuiIO& io, ImDrawList* draw_list, std::set<ImCurveEdit::SSequencerEditPoint>& selection, const size_t& curveCount, ImCurveEdit::SSequencerDelegate& delegate, ImVec2& range, const ImVec2& viewSize, const ImVec2& offset, bool overCurveOrPoint, int movingCurveIndex, bool overSelectedPoint, const ImRect& container);
+
+    void AddPoint(int overCurveIndex, ImGuiIO& io, ImCurveEdit::SSequencerDelegate& delegate, const ImVec2& offset, const ImVec2& viewSize, ImVec2& range, int& returnValue);
+
+    void MoveCurve(int& movingCurveIndex, ImCurveEdit::SSequencerDelegate& delegate, bool& pointsMoved, ImVec2& mousePosOrigin, ImGuiIO& io, std::vector<ImVec2>& originalPoints, ImVec2& range, const ImVec2& sizeOfPixel, int& returnValue, int overCurveIndex, std::set<ImCurveEdit::SSequencerEditPoint>& selection, bool selectingQuad);
+
+    void MoveSelection(bool overSelectedPoint, ImGuiIO& io, std::set<ImCurveEdit::SSequencerEditPoint>& selection, bool& pointsMoved, ImCurveEdit::SSequencerDelegate& delegate, ImVec2& mousePosOrigin, std::vector<ImVec2>& originalPoints, int& ret, const ImVec2& range, const ImVec2& sizeOfPixel);
+
+    void LoopOverCurves(const size_t& curveCount, int* curvesIndex, ImCurveEdit::SSequencerDelegate& delegate, int highLightedCurveIndex, std::set<ImCurveEdit::SSequencerEditPoint>& selection, bool selectingQuad, int movingCurve, const ImVec2& range, ImVec2& min, const ImVec2& viewSize, const ImVec2& offset, ImGuiIO& io, bool scrollingV, int& localOverCurve, int& overCurve, bool& overCurveOrPoint, ImDrawList* draw_list, bool& overSelectedPoint);
+
+    void HandleZoomAndVScroll(const ImRect& container, const ImGuiIO& io, const ImVec2& offset, const ImVec2& ssize, ImVec2& inOutMin, ImVec2& inOutMax, bool& outScrollingV);
 }
 
 struct SRampEdit : public ImCurveEdit::SSequencerDelegate
@@ -153,6 +172,10 @@ struct SRampEdit : public ImCurveEdit::SSequencerDelegate
 
     virtual ImVec2& GetMax() { return MaxValue; }
     virtual ImVec2& GetMin() { return MinValue; }
+
+    virtual ImVec2 PointToRange(const ImVec2& point, const ImVec2& range) { return (point - MinValue) / range; }
+    virtual ImVec2 RangeToPoint(const ImVec2& point, const ImVec2& range) { return (point * range) + MinValue; }
+
     virtual U32 GetBackgroundColor() { return 0; }
 
     ImVec2 Points[3][8];
@@ -223,7 +246,7 @@ struct SSequencer : public ImSequencer::SequenceInterface
     SSequencer() : FrameMin(0), FrameMax(0) {}
     int FrameMin, FrameMax;
     std::vector<SSequenceItem> Items;
-    SRampEdit rampEdit;
+    SRampEdit RampEdit;
 
     virtual void DoubleClick(int index) 
     {
@@ -243,18 +266,18 @@ struct SSequencer : public ImSequencer::SequenceInterface
     {
         static const char* labels[] = { "Translation", "Rotation" , "Scale" };
 
-        rampEdit.MaxValue = ImVec2(float(FrameMax), 1.f);
-        rampEdit.MinValue = ImVec2(float(FrameMin), 0.f);
+        RampEdit.MaxValue = ImVec2(float(FrameMax), 1.f);
+        RampEdit.MinValue = ImVec2(float(FrameMin), 0.f);
         drawList->PushClipRect(legendClippingRect.Min, legendClippingRect.Max, true);
 
         for (int i = 0; i < 3; i++)
         {
             ImVec2 pta(legendRect.Min.x + 30, legendRect.Min.y + i * 14.f);
             ImVec2 ptb(legendRect.Max.x, legendRect.Min.y + (i + 1) * 14.f);
-            drawList->AddText(pta, rampEdit.IsVisible[i] ? 0xFFFFFFFF : 0x80FFFFFF, labels[i]);
+            drawList->AddText(pta, RampEdit.IsVisible[i] ? 0xFFFFFFFF : 0x80FFFFFF, labels[i]);
 
             if (ImRect(pta, ptb).Contains(GImGui->IO.MousePos) && ImGui::IsMouseClicked(0))
-                rampEdit.IsVisible[i] = !rampEdit.IsVisible[i];
+                RampEdit.IsVisible[i] = !RampEdit.IsVisible[i];
         }
 
         drawList->PopClipRect();
@@ -263,20 +286,20 @@ struct SSequencer : public ImSequencer::SequenceInterface
         ImVec2 max = rect.Max;
         ImVec2 min = rect.Min;
         ImVec2 size = ImVec2(max.x - min.x, max.y - min.y);
-        ImCurveEdit::Edit(rampEdit, size, 137 + index, &clippingRect);
+        ImCurveEdit::Edit(RampEdit, size, 137 + index, &clippingRect);
     }
 
     virtual void CustomDrawCompact(int index, ImDrawList* drawList, const ImRect& rect, const ImRect& clippingRect)
     {
-        rampEdit.MaxValue = ImVec2(float(FrameMax), 1.f);
-        rampEdit.MinValue = ImVec2(float(FrameMin), 0.f);
+        RampEdit.MaxValue = ImVec2(float(FrameMax), 1.f);
+        RampEdit.MinValue = ImVec2(float(FrameMin), 0.f);
         drawList->PushClipRect(clippingRect.Min, clippingRect.Max, true);
 
         for (int i = 0; i < 3; i++)
         {
-            for (int j = 0; j < rampEdit.PointCount[i]; j++)
+            for (int j = 0; j < RampEdit.PointCount[i]; j++)
             {
-                float p = rampEdit.Points[i][j].x;
+                float p = RampEdit.Points[i][j].x;
                 if (p < Items[index].FrameStart || p > Items[index].FrameEnd)
                     continue;
                 float r = (p - FrameMin) / float(FrameMax - FrameMin);
