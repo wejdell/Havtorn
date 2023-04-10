@@ -137,6 +137,7 @@ namespace ImGui
 
 		ImGuizmo::SetDrawlist(viewportWindow->GetCurrentDrawList());
 		ImGuizmo::SetRect(viewPortWindowPosition.X, viewPortWindowPosition.Y, viewPortWindowDimensions.X, viewPortWindowDimensions.Y);
+		//ImGui::PushClipRect({ viewPortWindowPosition.X, viewPortWindowPosition.Y }, { viewPortWindowPosition.X + viewPortWindowDimensions.X, viewPortWindowPosition.Y + viewPortWindowDimensions.Y }, true);
 
 		Havtorn::U64 mainCameraIndex = Scene->GetMainCameraIndex();
 		auto& cameraComp = Scene->GetCameraComponents()[mainCameraIndex];
@@ -145,6 +146,7 @@ namespace ImGui
 
 		ImGuizmo::Manipulate(inverseView.data, cameraComp.ProjectionMatrix.data, static_cast<ImGuizmo::OPERATION>(Manager->GetCurrentGizmo()), ImGuizmo::LOCAL, transformMatrix.data);
 		Scene->GetTransformComponents()[SelectedEntityIndex].Transform.SetMatrix(transformMatrix);
+		//ImGui::PopClipRect();
 	}
 
 	void CInspectorWindow::InspectStaticMeshComponent()
