@@ -26,7 +26,7 @@ namespace Havtorn
 		{
 			HV_ASSERT(havtornEngine != nullptr, "Couldn't find Havtorn Engine!");
 			return false;
-		}
+		}  
 
 		return EditorManager->Init(havtornEngine->Framework, havtornEngine->WindowHandler, havtornEngine->RenderManager);
 	}
