@@ -4,6 +4,7 @@
 
 #include "Core/CoreTypes.h"
 #include "EngineMath.h"
+#include "Log.h"
 
 #include <assert.h>
 
@@ -12,6 +13,8 @@ namespace Havtorn
 	struct SVector;
 	struct SVector4;
 	struct SQuaternion;
+
+#define SMATRIX_MIN_SCALE 0.001f
 
 	// Left-handed row-major
 	struct SMatrix 
@@ -33,9 +36,10 @@ namespace Havtorn
 		static SMatrix CreateRotationAroundX(F32 angleInRadians);
 		static SMatrix CreateRotationAroundY(F32 angleInRadians);
 		static SMatrix CreateRotationAroundZ(F32 angleInRadians);
-		static SMatrix CreateRotationAroundAxis(F32 angleInRadians, SVector axis);
+		static SMatrix CreateRotationAroundAxis(F32 angleInRadians, const SVector& axis);
 		static SMatrix CreateRotationFromEuler(F32 pitch, F32 yaw, F32 roll);
-		static SMatrix CreateRotationFromQuaternion(SQuaternion quaternion);
+		static SMatrix CreateRotationFromEuler(const SVector& eulerAngles);
+		static SMatrix CreateRotationFromQuaternion(const SQuaternion& quaternion);
 		static SMatrix CreateRotationFromAxisAngle(const SVector& axis, F32 angleInRadians);
 		// Static function for creating a transpose of a matrix.
 		static SMatrix Transpose(const SMatrix& matrixToTranspose);
@@ -44,21 +48,23 @@ namespace Havtorn
 		// Based on XMMatrixInverse
 		inline SMatrix Inverse() const;
 
-		static inline void Decompose(const SMatrix& matrix, SVector& translation, SVector& rotation, SVector& scale);
-		static inline void Recompose(const SVector& translation, const SVector& rotation, const SVector& scale, SMatrix& outMatrix);
+		static inline void Decompose(const SMatrix& matrix, SVector& translation, SVector& euler, SVector& scale);
+		static inline void Decompose(const SMatrix& matrix, F32* translationData,  F32* eulerData,  F32* scaleData);
+		static inline void Recompose(const SVector& translation, const SVector& euler, const SVector& scale, SMatrix& outMatrix);
+		static inline void Recompose(const F32* translationData, const F32* eulerData, const F32* scaleData, SMatrix& outMatrix);
 		
 		inline SMatrix GetRHViewMatrix() const;
 		inline SMatrix GetRHProjectionMatrix() const;
 
 		inline SMatrix GetRotationMatrix() const;
 		inline SVector GetEuler() const;
-		inline void SetRotation(SMatrix matrix);
-		inline void SetRotation(SVector eulerAngles);
+		inline void SetRotation(const SMatrix& matrix);
+		inline void SetRotation(const SVector& eulerAngles);
 		inline SMatrix GetTranslationMatrix() const;
 		inline F32 GetRotationMatrixTrace() const;
 		inline SMatrix GetScalingMatrix() const;
 		inline SVector GetScale() const;
-		inline void SetScale(SVector scale);
+		inline void SetScale(const SVector& scale);
 		inline void SetScale(F32 xScale, F32 yScale, F32 zScale);
 		inline void SetScale(F32 scale);
 
@@ -72,8 +78,8 @@ namespace Havtorn
 		inline SMatrix& operator=(const SMatrix& matrix);
 		inline SMatrix operator*(F32 scalar);
 		inline SMatrix& operator*=(F32 scalar);
-		inline friend SVector4 operator*(SMatrix matrix, SVector4 vector);
-		inline friend SVector4 operator*(SVector4 vector, SMatrix matrix);
+		inline friend SVector4 operator*(const SMatrix& matrix, const SVector4& vector);
+		inline friend SVector4 operator*(const SVector4& vector, const SMatrix& matrix);
 
 		inline SVector4 GetRow(U8 index) const;
 		inline SVector4 GetColumn(U8 index) const;
@@ -104,8 +110,10 @@ namespace Havtorn
 
 		static SMatrix PerspectiveFovLH(F32 fovAngleY, F32 aspectRatio, F32 nearZ, F32 farZ);
 		static SMatrix OrthographicLH(F32 viewWidth, F32 viewHeight, F32 nearZ, F32 farZ);
-		static SMatrix LookAtLH(SVector eyePosition, SVector focusPosition, SVector upDirection);
-		static SMatrix LookToLH(SVector eyePosition, SVector eyeDirection, SVector upDirection);
+		static SMatrix LookAtLH(const SVector& eyePosition, const SVector& focusPosition, const SVector& upDirection);
+		static SMatrix LookToLH(const SVector& eyePosition, const SVector& eyeDirection, const SVector& upDirection);
+		// Modified version of LookAtLH for use with non-view transforms.
+		static SMatrix Face(const SVector& position, const SVector& direction, const SVector& upDirection);
 	};
 
 	SMatrix::SMatrix()
@@ -179,13 +187,13 @@ namespace Havtorn
 		return matrix;
 	}
 
-	inline SMatrix SMatrix::CreateRotationAroundAxis(F32 angleInRadians, SVector axis)
+	inline SMatrix SMatrix::CreateRotationAroundAxis(F32 angleInRadians, const SVector& axis)
 	{
 		F32 lengthSq = axis.LengthSquared();
 		if (lengthSq < FLT_EPSILON)
 			return SMatrix();
 		
-		SVector n = axis * (1.f / sqrtf(lengthSq));
+		SVector n = axis.GetNormalized();
 		F32 cosTerm = UMath::Cos(angleInRadians);
 		F32 sinTerm = UMath::Sin(angleInRadians);
 		F32 oneMinusCos = 1.0f - cosTerm;
@@ -228,21 +236,20 @@ namespace Havtorn
 		rotationMatrix.SetTranslation(SVector::Zero);
 		return rotationMatrix;
 	}
-
 	inline SVector SMatrix::GetEuler() const
-	{
+	{		
 		SMatrix rotationMatrix = *this;
 		rotationMatrix.OrthoNormalize();
-		
+
 		SVector euler;
-		euler.X = UMath::RadToDeg(atan2f(M[1][2], M[2][2]));
-		euler.Y = UMath::RadToDeg(atan2f(-M[0][2], sqrtf(M[1][2] * M[1][2] + M[2][2] * M[2][2])));
-		euler.Z = UMath::RadToDeg(atan2f(M[0][1], M[0][0]));
-		
+		euler.X = UMath::RadToDeg(atan2f(rotationMatrix.M[1][2], rotationMatrix.M[2][2]));
+		euler.Y = UMath::RadToDeg(atan2f(-rotationMatrix.M[0][2], sqrtf(rotationMatrix.M[1][2] * rotationMatrix.M[1][2] + rotationMatrix.M[2][2] * rotationMatrix.M[2][2])));
+		euler.Z = UMath::RadToDeg(atan2f(rotationMatrix.M[0][1], rotationMatrix.M[0][0]));
+
 		return euler;
 	}
 
-	inline void SMatrix::SetRotation(SMatrix matrix)
+	inline void SMatrix::SetRotation(const SMatrix& matrix)
 	{
 		for (U8 row = 0; row < 3; ++row)
 		{
@@ -253,7 +260,7 @@ namespace Havtorn
 		}
 	}
 
-	inline void SMatrix::SetRotation(SVector eulerAngles)
+	inline void SMatrix::SetRotation(const SVector& eulerAngles)
 	{
 		SMatrix rotationMatrix = SMatrix::CreateRotationFromEuler(eulerAngles.X, eulerAngles.Y, eulerAngles.Z);
 		SetRotation(rotationMatrix);
@@ -289,12 +296,12 @@ namespace Havtorn
 		return scale;
 	}
 
-	inline void SMatrix::SetScale(SVector scale)
+	inline void SMatrix::SetScale(const SVector& scale)
 	{
 		F32 validScale[3];
-		validScale[0] = scale.X < FLT_EPSILON ? 0.001f : scale.X;
-		validScale[1] = scale.Y < FLT_EPSILON ? 0.001f : scale.Y;
-		validScale[2] = scale.Z < FLT_EPSILON ? 0.001f : scale.Z;
+		validScale[0] = scale.X < FLT_EPSILON ? SMATRIX_MIN_SCALE : scale.X;
+		validScale[1] = scale.Y < FLT_EPSILON ? SMATRIX_MIN_SCALE : scale.Y;
+		validScale[2] = scale.Z < FLT_EPSILON ? SMATRIX_MIN_SCALE : scale.Z;
 
 		M[0][0] = validScale[0];
 		M[1][1] = validScale[1];
@@ -720,46 +727,52 @@ namespace Havtorn
 		return result;
 	}
 
-	inline void SMatrix::Decompose(const SMatrix& matrix, SVector& translation, SVector& rotation, SVector& scale)
+	inline void SMatrix::Decompose(const SMatrix& matrix, SVector& translation, SVector& euler, SVector& scale)
 	{
 		scale = matrix.GetScale();
-		rotation = matrix.GetEuler();
+		euler = matrix.GetEuler();
 		translation = matrix.GetTranslation();	
 	}
 
-	inline void SMatrix::Recompose(const SVector& translation, const SVector& rotation, const SVector& scale, SMatrix& outMatrix)
+	inline void SMatrix::Decompose(const SMatrix& matrix, F32* translationData, F32* eulerData, F32* scaleData)
 	{
-		SMatrix rot[3];
-		SVector unaryDirections[3] = { SVector::Right, SVector::Up, SVector::Forward };
-		F32 rotations[3] = { rotation.X, rotation.Y, rotation.Z };
-		for (U8 i = 0; i < 3; i++)
-		{
-			rot[i] = SMatrix::CreateRotationAroundAxis(UMath::DegToRad(rotations[i]), unaryDirections[i]);
-		}
+		const SVector& t = matrix.GetTranslation();
+		translationData[0] = t.X;
+		translationData[1] = t.Y;
+		translationData[2] = t.Z;
 
-		outMatrix = rot[2] * rot[1] * rot[0];
+		const SVector& r = matrix.GetEuler();
+		eulerData[0] = r.X;
+		eulerData[1] = r.Y;
+		eulerData[2] = r.Z;
 
-		F32 scales[3] = { scale.X, scale.Y, scale.Z };
-		F32 validScale[3] = { 1.0f, 1.0f, 1.0f };
-		for (U8 i = 0; i < 3; i++)
-		{
-			if (UMath::FAbs(scales[i]) < FLT_EPSILON)
-			{
-				validScale[i] = 0.001f;
-			}
-			else
-			{
-				validScale[i] = scales[i];
-			}
-		}
-		SVector right = outMatrix.GetRight() * validScale[0];
-		SVector up = outMatrix.GetUp() * validScale[1];
-		SVector forward = outMatrix.GetForward() * validScale[2];
-		outMatrix.SetRight(right);
-		outMatrix.SetUp(up);
-		outMatrix.SetForward(forward);
+		const SVector& s = matrix.GetScale();
+		scaleData[0] = s.X;
+		scaleData[1] = s.Y;
+		scaleData[2] = s.Z;
+	}
+	
+	inline void SMatrix::Recompose(const SVector& translation, const SVector& euler, const SVector& scale, SMatrix& outMatrix)
+	{
+		Recompose(&translation.X, &euler.X, &scale.X, outMatrix);
+	}
 
-		outMatrix.SetTranslation(translation);
+	inline void SMatrix::Recompose(const F32* translationData, const F32* eulerData, const F32* scaleData, SMatrix& outMatrix) 
+	{
+		HV_ASSERT((translationData), "Passing nullptr [translationData] to Recompose!");
+		HV_ASSERT((eulerData), "Passing nullptr [eulerData] to Recompose!");
+		HV_ASSERT((scaleData), "Passing nullptr [scaleData] to Recompose!");
+
+		SMatrix scaleMatrix;
+		scaleMatrix.SetScale(scaleData[0], scaleData[1], scaleData[2]);
+		outMatrix = scaleMatrix;
+
+		// AG: Rotation Order XYZ used to not cause issues with ImGuizmo used in InspectorWindow.
+		outMatrix *= CreateRotationAroundX(UMath::DegToRad(eulerData[0]));
+		outMatrix *= CreateRotationAroundY(UMath::DegToRad(eulerData[1]));
+		outMatrix *= CreateRotationAroundZ(UMath::DegToRad(eulerData[2]));
+
+		outMatrix.SetTranslation(SVector(translationData[0], translationData[1], translationData[2]));
 	}
 
 	inline SMatrix SMatrix::GetRHViewMatrix() const
@@ -782,17 +795,18 @@ namespace Havtorn
 		return result;
 	}
 
-	inline SMatrix SMatrix::LookAtLH(SVector eyePosition, SVector focusPosition, SVector upDirection)
+	inline SMatrix SMatrix::LookAtLH(const SVector& eyePosition, const SVector& focusPosition, const SVector& upDirection)
 	{
 		SVector eyeDirection = focusPosition - eyePosition;
 		return LookToLH(eyePosition, eyeDirection, upDirection);
 	}
 
-	inline SMatrix SMatrix::LookToLH(SVector eyePosition, SVector eyeDirection, SVector upDirection)
+	inline SMatrix SMatrix::LookToLH(const SVector& eyePosition, const SVector& eyeDirection, const SVector& upDirection)
 	{
 		assert(!eyeDirection.IsEqual(SVector::Zero));
 		assert(!upDirection.IsEqual(SVector::Zero));
 
+		// Original
 		SVector r2 = eyeDirection.GetNormalized();
 		SVector r0 = upDirection.Cross(r2).GetNormalized();
 		SVector r1 = r2.Cross(r0);
@@ -813,6 +827,26 @@ namespace Havtorn
 		M(2, 3) = d2;
 
 		return Transpose(M);
+
+		// https://learn.microsoft.com/en-us/previous-versions/windows/desktop/bb281710(v=vs.85)
+		// AG. Same as Original, but does not require Transpose().
+		//const SVector zAxis = eyeDirection.GetNormalized();
+		//const SVector xAxis = upDirection.Cross(zAxis).GetNormalized();
+		//const SVector yAxis = zAxis.Cross(xAxis).GetNormalized();
+		//
+		//SMatrix m;
+		//m.SetRight({ xAxis.X, yAxis.X, zAxis.X } );
+		//m.SetUp({ xAxis.Y, yAxis.Y, zAxis.Y } );
+		//m.SetForward({ xAxis.Z, yAxis.Z, zAxis.Z } );
+		//m(3, 0) = -xAxis.Dot(eyePosition);
+		//m(3, 1) = -yAxis.Dot(eyePosition);
+		//m(3, 2) = -zAxis.Dot(eyePosition);
+		//return m
+	}
+
+	inline SMatrix SMatrix::Face(const SVector& position, const SVector& direction, const SVector& upDirection) 
+	{
+		return Transpose(LookToLH(position, direction, upDirection));
 	}
 
 	inline SMatrix SMatrix::PerspectiveFovLH(F32 fovAngleY, F32 aspectRatio, F32 nearZ, F32 farZ)

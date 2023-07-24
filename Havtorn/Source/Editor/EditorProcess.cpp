@@ -21,14 +21,11 @@ namespace Havtorn
 	{
 		EditorManager = new CEditorManager();
 
-		auto havtornEngine = GEngine::Instance;
-		if (havtornEngine == nullptr)
-		{
-			HV_ASSERT(havtornEngine != nullptr, "Couldn't find Havtorn Engine!");
+		GEngine* engineInstance = GEngine::Instance;
+		if (!engineInstance)
 			return false;
-		}  
-
-		return EditorManager->Init(havtornEngine->Framework, havtornEngine->WindowHandler, havtornEngine->RenderManager);
+	 
+		return EditorManager->Init(engineInstance->Framework, engineInstance->WindowHandler, engineInstance->RenderManager);
 	}
 
 	void CEditorProcess::BeginFrame()

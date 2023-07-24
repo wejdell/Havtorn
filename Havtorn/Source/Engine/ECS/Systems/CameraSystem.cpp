@@ -57,7 +57,7 @@ namespace Havtorn
 		}
 
 		// === Rotation ===
-		controllerComp.CurrentPitch = UMath::Clamp(controllerComp.CurrentPitch + (CameraRotateInput.X * controllerComp.RotationSpeed * dt), (-UMath::Pi * 0.5f) + 0.01f, (UMath::Pi * 0.5f) - 0.01f);
+		controllerComp.CurrentPitch = UMath::Clamp(controllerComp.CurrentPitch + (CameraRotateInput.X * controllerComp.RotationSpeed * dt), -SCameraControllerComponent::MaxPitchDegrees + 0.01f, SCameraControllerComponent::MaxPitchDegrees - 0.01f);
 		controllerComp.CurrentYaw = UMath::WrapAngle(controllerComp.CurrentYaw + (CameraRotateInput.Y * controllerComp.RotationSpeed * dt));
 		SMatrix newMatrix = transformComp.Transform.GetMatrix();
 		newMatrix.SetRotation({ controllerComp.CurrentPitch, controllerComp.CurrentYaw, 0.0f });
@@ -101,10 +101,10 @@ namespace Havtorn
 				CameraMoveInput += SVector::Forward * payload.AxisValue;
 				return;
 			case EInputAxisEvent::MouseVertical:
-				CameraRotateInput.X += UMath::DegToRad(90.0f) * payload.AxisValue;
+				CameraRotateInput.X += 90.0f * payload.AxisValue;
 				return;
 			case EInputAxisEvent::MouseHorizontal:
-				CameraRotateInput.Y += UMath::DegToRad(90.0f) * payload.AxisValue;
+				CameraRotateInput.Y += 90.0f * payload.AxisValue;
 				return;
 			default: 
 				return;

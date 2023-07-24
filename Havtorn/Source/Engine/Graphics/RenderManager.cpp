@@ -283,13 +283,39 @@ namespace Havtorn
 		AddVertexBuffer(GeometryPrimitives::DecalProjector);
 		AddVertexBuffer(GeometryPrimitives::PointLightCube);
 		AddVertexBuffer(GeometryPrimitives::Icosphere.Vertices);
-		AddVertexBuffer(GeometryPrimitives::Line);
+		AddVertexBuffer(GeometryPrimitives::Line.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Pyramid.Vertices);
+		AddVertexBuffer(GeometryPrimitives::BoundingBox.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Camera.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Circle8.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Circle16.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Circle32.Vertices);
+		AddVertexBuffer(GeometryPrimitives::HalfCircle16.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Grid.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Axis.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Octahedron.Vertices);
+		AddVertexBuffer(GeometryPrimitives::Square.Vertices);
+		AddVertexBuffer(GeometryPrimitives::UVSphere.Vertices);
 	}
 
 	void CRenderManager::InitIndexBuffers()
 	{
 		AddIndexBuffer(GeometryPrimitives::DecalProjectorIndices);
 		AddIndexBuffer(GeometryPrimitives::PointLightCubeIndices);
+		AddIndexBuffer(GeometryPrimitives::Line.Indices);
+		AddIndexBuffer(GeometryPrimitives::Pyramid.Indices);
+		AddIndexBuffer(GeometryPrimitives::BoundingBox.Indices);
+		AddIndexBuffer(GeometryPrimitives::Camera.Indices);
+		AddIndexBuffer(GeometryPrimitives::Circle8.Indices);
+		AddIndexBuffer(GeometryPrimitives::Circle16.Indices);
+		AddIndexBuffer(GeometryPrimitives::Circle32.Indices);
+		AddIndexBuffer(GeometryPrimitives::HalfCircle16.Indices);
+		AddIndexBuffer(GeometryPrimitives::Grid.Indices);
+		AddIndexBuffer(GeometryPrimitives::Axis.Indices);
+		AddIndexBuffer(GeometryPrimitives::Octahedron.Indices);
+		AddIndexBuffer(GeometryPrimitives::Square.Indices);
+		AddIndexBuffer(GeometryPrimitives::UVSphere.Indices);
+
 		AddIndexBuffer(GeometryPrimitives::Icosphere.Indices);
 	}
 
@@ -454,7 +480,31 @@ namespace Havtorn
 				}
 				break;
 
-				case ERenderCommandType::DebugShape: 
+				case ERenderCommandType::PreDebugShape: 
+				{
+					PreDebugShapes();
+				}
+				break;
+
+				case ERenderCommandType::PostToneMappingUseDepth:
+				{
+					TonemappedTexture.SetAsActiveTarget(&IntermediateDepth);
+				}
+				break;
+
+				case ERenderCommandType::DebugShapeUseDepth: 
+				{
+					DebugShapes(currentCommand);
+				}
+				break;
+
+				case ERenderCommandType::PostToneMappingIgnoreDepth:
+				{
+					TonemappedTexture.SetAsActiveTarget();
+				}
+				break;
+
+				case ERenderCommandType::DebugShapeIgnoreDepth: 
 				{
 					DebugShapes(currentCommand);
 				}
@@ -1499,7 +1549,7 @@ namespace Havtorn
 		Context->IASetPrimitiveTopology(Topologies[0]);
 		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos3Nor3Tan3Bit3UV2)]);
 		Context->IASetVertexBuffers(0, 1, &VertexBuffers[0], &MeshVertexStrides[0], &MeshVertexOffsets[0]);
-		Context->IASetIndexBuffer(IndexBuffers[0], DXGI_FORMAT_R32_UINT, 0);
+		Context->IASetIndexBuffer(IndexBuffers[static_cast<U8>(EDefaultIndexBuffers::DecalProjector)], DXGI_FORMAT_R32_UINT, 0);
 
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Decal)], nullptr, 0);
 
@@ -1650,7 +1700,7 @@ namespace Havtorn
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
 		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
 		Context->IASetVertexBuffers(0, 1, &VertexBuffers[1], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
-		Context->IASetIndexBuffer(IndexBuffers[1], DXGI_FORMAT_R32_UINT, 0);
+		Context->IASetIndexBuffer(IndexBuffers[static_cast<U8>(EDefaultIndexBuffers::PointLightCube)], DXGI_FORMAT_R32_UINT, 0);
 
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::PointAndSpotLight)], nullptr, 0);
 		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::DeferredPoint)], nullptr, 0);
@@ -1710,7 +1760,7 @@ namespace Havtorn
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
 		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
 		Context->IASetVertexBuffers(0, 1, &VertexBuffers[1], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
-		Context->IASetIndexBuffer(IndexBuffers[1], DXGI_FORMAT_R32_UINT, 0);
+		Context->IASetIndexBuffer(IndexBuffers[static_cast<U8>(EDefaultIndexBuffers::PointLightCube)], DXGI_FORMAT_R32_UINT, 0);
 
 		// Use Point Light Vertex Shader
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::PointAndSpotLight)], nullptr, 0);
@@ -1826,7 +1876,7 @@ namespace Havtorn
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
 		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
 		Context->IASetVertexBuffers(0, 1, &VertexBuffers[1], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
-		Context->IASetIndexBuffer(IndexBuffers[1], DXGI_FORMAT_R32_UINT, 0);
+		Context->IASetIndexBuffer(IndexBuffers[static_cast<U8>(EDefaultIndexBuffers::PointLightCube)], DXGI_FORMAT_R32_UINT, 0);
 
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::PointAndSpotLight)], nullptr, 0);
 		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::VolumetricPoint)], nullptr, 0);
@@ -1897,7 +1947,7 @@ namespace Havtorn
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
 		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
 		Context->IASetVertexBuffers(0, 1, &VertexBuffers[1], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
-		Context->IASetIndexBuffer(IndexBuffers[1], DXGI_FORMAT_R32_UINT, 0);
+		Context->IASetIndexBuffer(IndexBuffers[static_cast<U8>(EDefaultIndexBuffers::PointLightCube)], DXGI_FORMAT_R32_UINT, 0);
 
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::PointAndSpotLight)], nullptr, 0);
 		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::VolumetricSpot)], nullptr, 0);
@@ -2053,47 +2103,38 @@ namespace Havtorn
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
 	}
 
-	inline void CRenderManager::DebugShapes(const SRenderCommand& command)
+	inline void CRenderManager::PreDebugShapes()
 	{
-		const SDebugShapeComponent& shape = command.GetComponent(DebugShapeComponent);
-		const STransformComponent& transform = command.GetComponent(TransformComponent);
-
 		RenderStateManager.SetDepthStencilState(CRenderStateManager::EDepthStencilStates::OnlyRead);
 		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
-		
-		// TODO.AG: Separate lines into those that IgnoreDepth and those that don't so that this is done no more than 2 times.
-		if (shape.IgnoreDepth)
-		{
-			TonemappedTexture.SetAsActiveTarget();
-		}
-		else
-		{
-			TonemappedTexture.SetAsActiveTarget(&IntermediateDepth);
-		}
-
-		DebugShapeObjectBufferData.ToWorldFromObject = transform.Transform.GetMatrix();
-		DebugShapeObjectBufferData.Color = shape.Color;
-		DebugShapeObjectBufferData.HalfThickness = shape.Thickness;
-
-		BindBuffer(DebugShapeObjectBuffer, DebugShapeObjectBufferData, "Object Buffer");
 
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::LineList)]);
 		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
 
-		Context->IASetVertexBuffers(0, 1, &VertexBuffers[shape.VertexBufferIndex], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
-		// TODO.AG: for when using Indices.
-		//Context->IASetIndexBuffer(lineData.myIndexBuffer, DXGI_FORMAT_R32_UINT, 0); 
-
 		Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::Line)], nullptr, 0);
-		Context->GSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
-
-		Context->VSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Line)], nullptr, 0);
-
 		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::Line)], nullptr, 0);
+	}
 
-		Context->Draw(shape.VertexCount, 0);
-		NumberOfDrawCallsThisFrame++;
+	inline void CRenderManager::DebugShapes(const SRenderCommand& /*command*/)
+	{
+		//const SDebugShapeComponent& shape = command.GetComponent(DebugShapeComponent);
+		//const STransformComponent& transform = command.GetComponent(TransformComponent);
+
+		//DebugShapeObjectBufferData.ToWorldFromObject = transform->Transform.GetMatrix();
+		//DebugShapeObjectBufferData.Color = shape->Color.AsVector4();
+		//DebugShapeObjectBufferData.HalfThickness = shape->Thickness;
+
+		//BindBuffer(DebugShapeObjectBuffer, DebugShapeObjectBufferData, "Object Buffer");
+
+		//Context->IASetVertexBuffers(0, 1, &VertexBuffers[shape->VertexBufferIndex], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
+		//Context->IASetIndexBuffer(IndexBuffers[shape->IndexBufferIndex], DXGI_FORMAT_R32_UINT, 0);
+
+		//Context->GSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
+
+		//Context->VSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
+		//Context->DrawIndexed(shape->IndexCount, 0, 0);
+		//NumberOfDrawCallsThisFrame++;
 	}
 
 	bool SRenderCommandComparer::operator()(const SRenderCommand& a, const SRenderCommand& b) const

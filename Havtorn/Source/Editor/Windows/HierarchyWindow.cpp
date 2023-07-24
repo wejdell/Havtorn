@@ -1,7 +1,6 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #include "HierarchyWindow.h"
-//#include <imgui.h>
 #include "EditorManager.h"
 
 #include "Engine.h"
@@ -10,6 +9,10 @@
 #include "Core/MathTypes/EngineMath.h"
 #include "Core/CoreTypes.h"
 #include "ECS/Components/MetaDataComponent.h"
+
+#include <ECS/Systems/DebugShapeSystem.h>
+
+#include <imgui.h>
 
 namespace ImGui
 {
@@ -47,16 +50,11 @@ namespace ImGui
 			Havtorn::I32 index = 0;
 			auto& entities = Havtorn::GEngine::GetWorld()->GetEntities();
 			
-			for (auto& entity : entities) 
+			for (Havtorn::U64 i = Havtorn::UDebugShapeSystem::MaxShapes; i < entities.size(); i++)
 			{
+				auto& entity = entities[i];
 				if (!entity.IsValid())
 					continue;
-
-				//// TODO.AG: Temporary solution to ignore listing DebugShapes!
-				//if (entity->Name.Contains("hie_"))
-				//{
-				//	continue;
-				//}
 		
 				const Havtorn::SMetaDataComponent& metaDataComp = scene->GetMetaDataComponents()[scene->GetSceneIndex(entity)];
 				const std::string entryString = metaDataComp.IsInUse ? metaDataComp.Name.AsString() : "Selected";

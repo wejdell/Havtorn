@@ -1,10 +1,11 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #pragma once
+//#include <imgui.h>
 
 namespace ImGui
 {
-	static int HavtornInputTextResizeCallback(ImGuiInputTextCallbackData* data)
+	static int HavtornInputTextResizeCallback(struct ImGuiInputTextCallbackData* data)
 	{
 		if (data->EventFlag == ImGuiInputTextFlags_CallbackResize)
 		{

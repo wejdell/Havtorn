@@ -8,6 +8,8 @@
 #include "FileSystem/FileSystem.h"
 #include "Graphics/RenderManager.h"
 
+#include <imgui.h>
+
 namespace ImGui
 {
 	using Havtorn::F32;

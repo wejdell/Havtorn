@@ -3,9 +3,7 @@
 #pragma once
 
 #include "Core/WindowsInclude.h"
-
-#include <Core/imgui.h>
-#include <Core/HavtornDelegate.h>
+#include "Core/HavtornDelegate.h"
 
 namespace Havtorn
 {
@@ -14,6 +12,9 @@ namespace Havtorn
 		friend class GEngine;
 		friend class CEditorManager;
 		friend class CGraphicsFramework;
+
+		// TODO.AG: figure out a way to not have friend class on processes.
+		friend class CImGuiProcess;
 
 	public:
 		struct SWindowData
@@ -29,15 +30,16 @@ namespace Havtorn
 		SVector2<F32> GetCenterPosition();
 		const float GetResolutionScale() const;
 
+		// TODO.AG: reconsider access rights.
+		HAVTORN_API void EnableDragDrop() const;
+		HAVTORN_API void DisableDragDrop() const;
+
 	public:
 		CMulticastDelegate<std::vector<std::string>> OnDragDropAccepted;
 
 	private:
 		CWindowHandler();
 		~CWindowHandler();
-
-		HAVTORN_API ImGuiContext* GetImGuiContext() const;
-		HAVTORN_API void GetImGuiAllocatorFunctions(ImGuiMemAllocFunc* allocFunc, ImGuiMemFreeFunc* freeFunc, void** userData) const;
 
 		HAVTORN_API const HWND GetWindowHandle() const;
 		bool Init(SWindowData someWindowData);
