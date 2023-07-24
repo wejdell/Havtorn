@@ -388,6 +388,7 @@ namespace ImGui
 					ImGui::TableNextColumn();
 					ImGui::PushID(id++);
 
+					// TODO.AG/AS: Replace direct change with queue addition.
 					if (ImGui::ImageButton(assetRep->TextureRef, { TexturePreviewSize.X * 0.75f, TexturePreviewSize.Y * 0.75f }))
 					{
 						Manager->GetRenderManager()->TryLoadStaticMeshComponent(assetRep->Name, meshAssetToChange);

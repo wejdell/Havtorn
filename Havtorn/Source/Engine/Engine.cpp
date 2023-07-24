@@ -71,6 +71,7 @@ namespace Havtorn
 
 	float GEngine::BeginFrame()
 	{
+		// TODO.AG/AS: Do the empty the editor-changes-queue here
 		GTime::BeginTracking(ETimerCategory::CPU);
 		return GTime::Mark();
 	}
