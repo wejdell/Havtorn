@@ -39,6 +39,8 @@ namespace ImGui
 		InspectionFunctions[EComponentType::SpotLightComponent]			= std::bind(&CInspectorWindow::InspectSpotLightComponent, this);
 		InspectionFunctions[EComponentType::VolumetricLightComponent]	= std::bind(&CInspectorWindow::InspectVolumetricLightComponent, this);
 		InspectionFunctions[EComponentType::DecalComponent]				= std::bind(&CInspectorWindow::InspectDecalComponent, this);
+		InspectionFunctions[EComponentType::SpriteComponent]			= std::bind(&CInspectorWindow::InspectSpriteComponent, this);
+		InspectionFunctions[EComponentType::Transform2DComponent]		= std::bind(&CInspectorWindow::InspectTransform2DComponent, this);
 	}
 
 	CInspectorWindow::~CInspectorWindow()
@@ -380,6 +382,62 @@ namespace ImGui
 
 		MaterialRefToChangeIndex = Havtorn::UMath::Min(MaterialRefToChangeIndex, static_cast<Havtorn::U16>(decalComp.TextureReferences.size() - 1));
 		OpenSelectTextureAssetModal(decalComp.TextureReferences[MaterialRefToChangeIndex]);		
+	}
+
+	void CInspectorWindow::InspectSpriteComponent()
+	{
+		bool isHeaderOpen = ImGui::CollapsingHeader("Sprite", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+		RemoveComponentButton(Havtorn::EComponentType::SpriteComponent);
+
+		if (!isHeaderOpen)
+			return;
+
+		Havtorn::SSpriteComponent& spriteComp = Scene->GetSpriteComponents()[SelectedEntityIndex];
+
+		SVector4 colorFloat = spriteComp.Color.AsVector4();
+		Havtorn::F32 color[4] = { colorFloat.X, colorFloat.Y, colorFloat.Z, colorFloat.W };
+		Havtorn::F32 rect[4] = { spriteComp.UVRect.X, spriteComp.UVRect.Y, spriteComp.UVRect.Z, spriteComp.UVRect.W };
+
+		ImGui::ColorPicker4("Color", color);
+		ImGui::DragFloat4("UVRect", rect, SlideSpeed);
+
+		spriteComp.Color = SVector4(color[0], color[1], color[2], color[3]);
+		spriteComp.UVRect = { rect[0], rect[1], rect[2], rect[3] };
+
+		Havtorn::U16 ref = static_cast<Havtorn::U16>(spriteComp.TextureIndex);
+
+		ImGui::Text("Texture");
+		if (ImGui::ImageButton((void*)Havtorn::GEngine::GetTextureBank()->GetTexture(ref), { TexturePreviewSize.X, TexturePreviewSize.Y }))
+		{
+			ImGui::OpenPopup("Select Texture Asset");
+			ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+		}
+
+		// TODO.NR: Fix so that sprite texture can be changed
+		OpenSelectTextureAssetModal(ref);
+		spriteComp.TextureIndex = static_cast<Havtorn::U32>(ref);
+	}
+
+	void CInspectorWindow::InspectTransform2DComponent()
+	{
+		bool isHeaderOpen = ImGui::CollapsingHeader("Transform2D", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+		RemoveComponentButton(Havtorn::EComponentType::Transform2DComponent);
+
+		if (!isHeaderOpen)
+			return;
+
+		// TODO.NR: Make editable with gizmo
+		Havtorn::STransform2DComponent& transform2DComp = Scene->GetTransform2DComponents()[SelectedEntityIndex];
+
+		F32 position[2] = {transform2DComp.Position.X, transform2DComp.Position.Y};
+		F32 scale[2] = {transform2DComp.Scale.X, transform2DComp.Scale.Y};
+
+		ImGui::DragFloat2("Position", position, SlideSpeed);
+		ImGui::DragFloat("DegreesRoll", &transform2DComp.DegreesRoll, SlideSpeed);
+		ImGui::DragFloat2("Scale", scale, SlideSpeed);
+
+		transform2DComp.Position = { position[0], position[1] };
+		transform2DComp.Scale = { scale[0], scale[1] };
 	}
 
 	void CInspectorWindow::OpenSelectMeshAssetModal(Havtorn::I64 staticMeshComponentIndex)

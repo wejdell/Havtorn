@@ -17,6 +17,8 @@ namespace Havtorn
 		SpotLightComponent,
 		VolumetricLightComponent,
 		DecalComponent,
+		SpriteComponent,
+		Transform2DComponent,
 		DebugShapeComponent,
 		MetaDataComponent,
 		Count
@@ -48,6 +50,10 @@ namespace Havtorn
 			return "VolumetricLightComponent";
 		case Havtorn::EComponentType::DecalComponent:
 			return "DecalComponent";
+		case Havtorn::EComponentType::SpriteComponent:
+			return "SpriteComponent";
+		case Havtorn::EComponentType::Transform2DComponent:
+			return "Transform2DComponent";
 
 		case Havtorn::EComponentType::DebugShapeComponent:
 		case Havtorn::EComponentType::MetaDataComponent:

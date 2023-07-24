@@ -26,6 +26,8 @@ namespace Havtorn
 		std::vector<SPointLightComponent>& pointLightComponents = scene->GetPointLightComponents();
 		std::vector<SSpotLightComponent>& spotLightComponents = scene->GetSpotLightComponents();
 		std::vector<SVolumetricLightComponent>& volumetricLightComponents = scene->GetVolumetricLightComponents();
+		std::vector<SSpriteComponent>& spriteComponents = scene->GetSpriteComponents();
+		std::vector<STransform2DComponent>& transform2DComponents = scene->GetTransform2DComponents();
 
 		const auto& decalComponents = scene->GetDecalComponents();
 
@@ -231,6 +233,23 @@ namespace Havtorn
 		{
 			SRenderCommand command;
 			command.Type = ERenderCommandType::VolumetricBufferBlurPass;
+			RenderManager->PushRenderCommand(command);
+		}
+
+		for (U64 i = 0; i < spriteComponents.size(); i++)
+		{
+			const STransform2DComponent& transform2DComp = transform2DComponents[i];
+			if (!transform2DComp.IsInUse)
+				continue;
+
+			const SSpriteComponent& spriteComp = spriteComponents[i];
+			if (!spriteComp.IsInUse)
+				continue;
+
+			SRenderCommand command;
+			command.Transform2DComponent = transform2DComp;
+			command.SpriteComponent = spriteComp;
+			command.Type = ERenderCommandType::ForwardTransparency;
 			RenderManager->PushRenderCommand(command);
 		}
 

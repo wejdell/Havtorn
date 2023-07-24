@@ -26,6 +26,8 @@ namespace Havtorn
 		SpotLightComponents.resize(ENTITY_LIMIT);
 		VolumetricLightComponents.resize(ENTITY_LIMIT);
 		DecalComponents.resize(ENTITY_LIMIT);
+		SpriteComponents.resize(ENTITY_LIMIT);
+		Transform2DComponents.resize(ENTITY_LIMIT);
 		DebugShapeComponents.resize(ENTITY_LIMIT);
 		MetaDataComponents.resize(ENTITY_LIMIT);
 	}
@@ -45,6 +47,8 @@ namespace Havtorn
 		SpotLightComponents.clear();
 		VolumetricLightComponents.clear();
 		DecalComponents.clear();
+		SpriteComponents.clear();
+		Transform2DComponents.clear();
 		DebugShapeComponents.clear();
 		MetaDataComponents.clear();
 		RenderManager = nullptr;
@@ -221,6 +225,24 @@ namespace Havtorn
 		U16 decalEntitySceneIndex = static_cast<U16>(GetSceneIndex(*decal));
 		assetRegistry->Register(decalTextures, SAssetReferenceCounter(EComponentType::DecalComponent, decalEntitySceneIndex, 0, 0));
 		// === !Decal ===
+
+		// === Sprite ===
+		SEntity* sprite = GetNewEntity("Sprite");
+		if (!sprite)
+			return true;
+
+		STransform2DComponent& transform2D = AddTransform2DComponentToEntity(*sprite);
+		transform2D.Position = { 0.5f, 0.5f };
+		transform2D.Scale = { 1.0f, 1.0f };
+
+		const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
+		SSpriteComponent& spriteComp = AddSpriteComponentToEntity(*sprite);
+		spriteComp.UVRect = { 0.0f, 0.0f, 1.0f, 1.0f };
+		renderManager->LoadSpriteComponent(spritePath, &spriteComp);
+
+		U16 spriteIndex = static_cast<U16>(GetSceneIndex(*sprite));
+		assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
+		// === !Sprite ===
 
 		const std::string modelPath1 = "Assets/Tests/En_P_PendulumClock.hva";
 		const std::vector<std::string> materialNames1 = { "Assets/Materials/M_PendulumClock.hva", "Assets/Materials/M_Checkboard_128x128.hva" };
@@ -433,6 +455,12 @@ namespace Havtorn
 
 			if (entity.HasComponent(EComponentType::DecalComponent))
 				size += DecalComponents[GetSceneIndex(entity)].GetSize();
+
+			if (entity.HasComponent(EComponentType::SpriteComponent))
+				size += sizeof(SSpriteComponent);
+
+			if (entity.HasComponent(EComponentType::Transform2DComponent))
+				size += sizeof(STransform2DComponent);
 		}
 
 		return size;
@@ -506,6 +534,17 @@ namespace Havtorn
 			{
 				// NR: Texture info Saved and Loaded using AssetRegistry
 				DecalComponents[GetSceneIndex(entity)].Serialize(toData, pointerPosition);
+			}
+
+			if (entity.HasComponent(EComponentType::SpriteComponent))
+			{
+				// NR: Texture info Saved and Loaded using AssetRegistry
+				SerializeSimple(SpriteComponents[entitySceneIndex], toData, pointerPosition);
+			}
+
+			if (entity.HasComponent(EComponentType::Transform2DComponent))
+			{
+				SerializeSimple(Transform2DComponents[entitySceneIndex], toData, pointerPosition);
 			}
 
 			if (entity.HasComponent(EComponentType::MetaDataComponent))
@@ -617,6 +656,25 @@ namespace Havtorn
 				DecalComponents[GetSceneIndex(*entity)].Deserialize(fromData, pointerPosition);
 			}
 
+			if (componentMask.Test(STATIC_U64(EComponentType::SpriteComponent)))
+			{
+				SSpriteComponent& spriteComponent = AddSpriteComponentToEntity(*entity);
+				SSpriteComponent dataCopy;
+				DeserializeSimple(dataCopy, fromData, pointerPosition);
+				spriteComponent = dataCopy;
+
+				SAssetReferenceCounter counter = { EComponentType::SpriteComponent, static_cast<U16>(i), 0, 0 };
+				RenderManager->LoadSpriteComponent(assetRegistry->GetAssetPath(counter), &spriteComponent);
+			}
+
+			if (componentMask.Test(STATIC_U64(EComponentType::Transform2DComponent)))
+			{
+				STransform2DComponent& transform = AddTransform2DComponentToEntity(*entity);
+				STransform2DComponent dataCopy;
+				DeserializeSimple(dataCopy, fromData, pointerPosition);
+				transform = dataCopy;
+			}
+
 			if (componentMask.Test(STATIC_U64(EComponentType::MetaDataComponent)))
 			{
 				SMetaDataComponent& metaData = AddMetaDataComponentToEntity(*entity);
@@ -698,6 +756,8 @@ namespace Havtorn
 		UpdateComponentVector(SpotLightComponents, entityIndex);
 		UpdateComponentVector(VolumetricLightComponents, entityIndex);
 		UpdateComponentVector(DecalComponents, entityIndex);
+		UpdateComponentVector(SpriteComponents, entityIndex);
+		UpdateComponentVector(Transform2DComponents, entityIndex);
 		UpdateComponentVector(DebugShapeComponents, entityIndex);
 		UpdateComponentVector(MetaDataComponents, entityIndex);
 
@@ -759,6 +819,12 @@ namespace Havtorn
 		case Havtorn::EComponentType::DecalComponent:
 			AddDecalComponentToEntity(entity);
 			break;
+		case Havtorn::EComponentType::SpriteComponent:
+			AddSpriteComponentToEntity(entity);
+			break;
+		case Havtorn::EComponentType::Transform2DComponent:
+			AddTransform2DComponentToEntity(entity);
+			break;
 
 		case Havtorn::EComponentType::DebugShapeComponent:
 		case Havtorn::EComponentType::MetaDataComponent:	
@@ -805,6 +871,12 @@ namespace Havtorn
 		case Havtorn::EComponentType::DecalComponent:
 			RemoveDecalComponentFromEntity(entity);
 			break;
+		case Havtorn::EComponentType::SpriteComponent:
+			RemoveSpriteComponentFromEntity(entity);
+			break;
+		case Havtorn::EComponentType::Transform2DComponent:
+			RemoveTransform2DComponentFromEntity(entity);
+			break;
 
 		case Havtorn::EComponentType::DebugShapeComponent:
 		case Havtorn::EComponentType::MetaDataComponent:
@@ -825,6 +897,8 @@ namespace Havtorn
 	COMPONENT_ADDER_DEFINITION(SpotLightComponent)
 	COMPONENT_ADDER_DEFINITION(VolumetricLightComponent)
 	COMPONENT_ADDER_DEFINITION(DecalComponent)
+	COMPONENT_ADDER_DEFINITION(SpriteComponent) 
+	COMPONENT_ADDER_DEFINITION(Transform2DComponent)
 	COMPONENT_ADDER_DEFINITION(DebugShapeComponent)
 	COMPONENT_ADDER_DEFINITION(MetaDataComponent)
 
@@ -839,6 +913,8 @@ namespace Havtorn
 	COMPONENT_REMOVER_DEFINITION(SpotLightComponent)
 	COMPONENT_REMOVER_DEFINITION(VolumetricLightComponent)
 	COMPONENT_REMOVER_DEFINITION(DecalComponent)
+	COMPONENT_REMOVER_DEFINITION(SpriteComponent)
+	COMPONENT_REMOVER_DEFINITION(Transform2DComponent)
 	COMPONENT_REMOVER_DEFINITION(DebugShapeComponent)
 	COMPONENT_REMOVER_DEFINITION(MetaDataComponent)
 }

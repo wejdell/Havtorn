@@ -117,6 +117,8 @@ namespace Havtorn
 		inline const SSpotLightComponent& GetSpotLightComponent() const { return SpotLightComponent; }
 		inline const SVolumetricLightComponent& GetVolumetricLightComponent() const { return VolumetricLightComponent; }
 		inline const SDecalComponent& GetDecalComponent() const { return DecalComponent; }
+		inline const SSpriteComponent& GetSpriteComponent() const { return SpriteComponent; }
+		inline const STransform2DComponent& GetTransform2DComponent() const { return Transform2DComponent; }
 		inline const SDebugShapeComponent& GetDebugShapeComponent() const { return DebugShapeComponent; }
 		inline const SMetaDataComponent& GetMetaDataComponent() const { return MetaDataComponent; }
 
@@ -133,6 +135,8 @@ namespace Havtorn
 		SSpotLightComponent SpotLightComponent;
 		SVolumetricLightComponent VolumetricLightComponent;
 		SDecalComponent DecalComponent;
+		SSpriteComponent SpriteComponent;
+		STransform2DComponent Transform2DComponent;
 		SDebugShapeComponent DebugShapeComponent;
 		SMetaDataComponent MetaDataComponent;
 	};

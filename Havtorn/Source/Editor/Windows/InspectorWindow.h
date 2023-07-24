@@ -38,6 +38,8 @@ namespace ImGui
 		void InspectSpotLightComponent();
 		void InspectVolumetricLightComponent();
 		void InspectDecalComponent();
+		void InspectSpriteComponent();
+		void InspectTransform2DComponent();
 
 		void OpenSelectMeshAssetModal(Havtorn::I64 staticMeshComponentIndex);
 		void OpenSelectTextureAssetModal(Havtorn::U16& textureRefToChange);

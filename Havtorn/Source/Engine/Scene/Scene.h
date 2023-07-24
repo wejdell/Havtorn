@@ -32,6 +32,8 @@ namespace Havtorn
 	struct SSpotLightComponent;
 	struct SVolumetricLightComponent;
 	struct SDecalComponent;
+	struct SSpriteComponent;
+	struct STransform2DComponent;
 	struct SDebugShapeComponent;
 	struct SMetaDataComponent;
 
@@ -77,6 +79,8 @@ namespace Havtorn
 		COMPONENT_VECTOR_GETTER(SpotLightComponent)
 		COMPONENT_VECTOR_GETTER(VolumetricLightComponent)
 		COMPONENT_VECTOR_GETTER(DecalComponent)
+		COMPONENT_VECTOR_GETTER(SpriteComponent)
+		COMPONENT_VECTOR_GETTER(Transform2DComponent)
 		COMPONENT_VECTOR_GETTER(DebugShapeComponent)
 		COMPONENT_VECTOR_GETTER(MetaDataComponent)
 
@@ -91,6 +95,8 @@ namespace Havtorn
 		COMPONENT_ADDER_DECLARATION(SpotLightComponent)
 		COMPONENT_ADDER_DECLARATION(VolumetricLightComponent)
 		COMPONENT_ADDER_DECLARATION(DecalComponent)
+		COMPONENT_ADDER_DECLARATION(SpriteComponent)
+		COMPONENT_ADDER_DECLARATION(Transform2DComponent)
 		COMPONENT_ADDER_DECLARATION(DebugShapeComponent)
 		COMPONENT_ADDER_DECLARATION(MetaDataComponent)
 
@@ -105,6 +111,8 @@ namespace Havtorn
 		COMPONENT_REMOVER_DECLARATION(SpotLightComponent)
 		COMPONENT_REMOVER_DECLARATION(VolumetricLightComponent)
 		COMPONENT_REMOVER_DECLARATION(DecalComponent)
+		COMPONENT_REMOVER_DECLARATION(SpriteComponent)
+		COMPONENT_REMOVER_DECLARATION(Transform2DComponent)
 		COMPONENT_REMOVER_DECLARATION(DebugShapeComponent)
 		COMPONENT_REMOVER_DECLARATION(MetaDataComponent)
 
@@ -126,6 +134,8 @@ namespace Havtorn
 		COMPONENT_VECTOR_DECLARATION(SpotLightComponent)
 		COMPONENT_VECTOR_DECLARATION(VolumetricLightComponent)
 		COMPONENT_VECTOR_DECLARATION(DecalComponent)
+		COMPONENT_VECTOR_DECLARATION(SpriteComponent)
+		COMPONENT_VECTOR_DECLARATION(Transform2DComponent)
 		COMPONENT_VECTOR_DECLARATION(DebugShapeComponent)
 		COMPONENT_VECTOR_DECLARATION(MetaDataComponent)
 		U64 FirstUnusedEntityIndex = 0;

@@ -85,6 +85,9 @@ namespace Havtorn
 		bufferDescription.ByteWidth = sizeof(SDecalBufferData);
 		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DecalBuffer), "Decal Buffer could not be created.");
 
+		bufferDescription.ByteWidth = sizeof(SSpriteBufferData);
+		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &SpriteBuffer), "Sprite Buffer could not be created.");
+
 		bufferDescription.ByteWidth = sizeof(SDirectionalLightBufferData);
 		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DirectionalLightBuffer), "Directional Light Buffer could not be created.");
 
@@ -245,6 +248,8 @@ namespace Havtorn
 		AddShader("Shaders/EditorPreview_VS.cso", EShaderType::Vertex);
 		
 		AddShader("Shaders/Line_VS.cso", EShaderType::Vertex);
+
+		AddShader("Shaders/Sprite_VS.cso", EShaderType::Vertex);
 	}
 
 	void CRenderManager::InitPixelShaders()
@@ -265,11 +270,13 @@ namespace Havtorn
 		
 		AddShader("Shaders/EditorPreview_PS.cso", EShaderType::Pixel);
 		AddShader("Shaders/Line_PS.cso", EShaderType::Pixel);
+		AddShader("Shaders/Sprite_PS.cso", EShaderType::Pixel);
 	}
 
 	void CRenderManager::InitGeometryShaders()
 	{
 		AddShader("Shaders/Line_GS.cso", EShaderType::Geometry);
+		AddShader("Shaders/Sprite_GS.cso", EShaderType::Geometry);
 	}
 
 	void CRenderManager::InitSamplers()
@@ -323,6 +330,7 @@ namespace Havtorn
 	{
 		AddTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		AddTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
+		AddTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
 	}
 
 	void CRenderManager::InitMeshVertexStrides()
@@ -345,7 +353,7 @@ namespace Havtorn
 
 	void CRenderManager::Render()
 	{
-		while(CThreadManager::RunRenderThread)
+		while (CThreadManager::RunRenderThread)
 		{
 			std::unique_lock<std::mutex> uniqueLock(CThreadManager::RenderMutex);
 			CThreadManager::RenderCondition.wait(uniqueLock, [] 
@@ -465,6 +473,12 @@ namespace Havtorn
 						break;
 
 					VolumetricBlur();
+				}
+				break;
+
+				case ERenderCommandType::ForwardTransparency:
+				{
+					ForwardTransparency(currentCommand);
 				}
 				break;
 
@@ -660,6 +674,12 @@ namespace Havtorn
 	{
 		auto textureBank = GEngine::GetTextureBank();
 		outEnvironmentLightComponent->AmbientCubemapReference = static_cast<U16>(textureBank->GetTextureIndex(ambientCubemapTexturePath));
+	}
+
+	void CRenderManager::LoadSpriteComponent(const std::string& filePath, SSpriteComponent* outSpriteComponent)
+	{
+		auto textureBank = GEngine::GetTextureBank();
+		outSpriteComponent->TextureIndex = textureBank->GetTextureIndex(filePath);
 	}
 
 	SVector2<F32> CRenderManager::GetShadowAtlasResolution() const
@@ -2007,6 +2027,42 @@ namespace Havtorn
 		DownsampledDepth.SetAsResourceOnSlot(1);
 		IntermediateDepth.SetAsResourceOnSlot(2);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::DepthAwareUpsampling);
+	}
+
+	inline void CRenderManager::ForwardTransparency(const SRenderCommand& command)
+	{
+		const STransform2DComponent& transform2DComp = command.GetComponent(Transform2DComponent);
+		const SSpriteComponent& spriteComponent = command.GetComponent(SpriteComponent);
+
+        SpriteBufferData.Color = spriteComponent.Color.AsVector4();
+        SpriteBufferData.UVRect = spriteComponent.UVRect;
+        SpriteBufferData.Position = transform2DComp.Position;
+        SpriteBufferData.Size = transform2DComp.Scale;
+        SpriteBufferData.Rotation = UMath::DegToRad(transform2DComp.DegreesRoll);
+
+        BindBuffer(SpriteBuffer, SpriteBufferData, "Sprite Buffer");
+
+        Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::PointList)]);
+        Context->IASetInputLayout(nullptr);
+        Context->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
+        Context->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
+
+        Context->VSSetConstantBuffers(0, 1, &SpriteBuffer);
+        Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Sprite)], nullptr, 0);
+
+        Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::Sprite)], nullptr, 0);
+
+        Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::Sprite)], nullptr, 0);
+        Context->PSSetConstantBuffers(0, 1, &SpriteBuffer);
+
+		auto spriteTexture = GEngine::GetTextureBank()->GetTexture(spriteComponent.TextureIndex);
+		Context->PSSetShaderResources(0, 1, &spriteTexture);
+
+        Context->Draw(3, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
+
+		ID3D11Buffer* nullBuffer = NULL;
+		Context->VSSetConstantBuffers(0, 1, &nullBuffer);
 	}
 
 	void CRenderManager::RenderBloom()
