@@ -13,6 +13,8 @@ editorProj = "Editor"
 editorSource = "Source/" .. editorProj .. "/"
 imGuiProj = "ImGui"
 imGuiSource = "Source/" .. imGuiProj .. "/"
+gameProj = "Game"
+gameSource = "Source/" .. gameProj .. "/"
 
 project "Engine"
 	location ("Source/" .. engineProj)
@@ -143,6 +145,106 @@ project "Engine"
 		optimize "On"
 		flags { "LinkTimeOptimization" }
 
+
+
+
+
+project "Game"
+	location ("Source/" .. gameProj)
+	kind "SharedLib"
+	language "C++"
+	cppdialect "C++20"
+	architecture "x86_64"
+
+	targetname "%{prj.name}_%{cfg.buildcfg}"
+
+	targetdir ("Bin/" .. outputdir .. "/%{prj.name}") 
+	objdir ("Temp/" .. outputdir .. "/%{prj.name}") 
+
+	warnings "Extra"
+	flags { "FatalWarnings", "ShadowedVariables", "MultiProcessorCompile" }
+
+	pchheader "hvpch.h"
+	pchsource ("Source/" .. gameProj .. "/hvpch.cpp")
+	forceincludes { "hvpch.h" }
+
+	files 
+	{
+		"Source/%{prj.name}/**.h",
+		"Source/%{prj.name}/**.cpp",
+		
+		vpaths 
+		{
+			["*"] = "Source/"
+		}
+	}
+
+	includedirs
+	{
+		"Source/%{prj.name}",
+		"External",
+		"External/FastNoise2/include",
+		"External/rapidjson",
+		"External/imgui",
+		"External/DirectXTex",
+		"Source/Engine",
+		"Source/ImGui"		
+	}
+
+	libdirs 
+	{
+		"Lib/",
+		"External/Lib"
+	}
+
+	links
+	{
+		"Engine",
+		"ImGui"
+	}
+
+	floatingpoint "Fast"
+	debugdir "Bin/"
+
+	filter "system:Windows"
+		staticruntime "On"
+		systemversion "latest"
+		vectorextensions "SSE4.1"
+
+		defines 
+		{
+			"HV_PLATFORM_WINDOWS"
+		}
+
+		postbuildcommands
+		{
+		    "{copy} %{cfg.buildtarget.relpath} ../../bin/"
+		}
+
+	filter "configurations:Debug"
+		defines "HV_DEBUG"
+		buildoptions "/MDd"
+		staticruntime "off"
+		runtime "Debug"
+		symbols "On"
+
+		defines 
+		{
+			"HV_ENABLE_ASSERTS"
+		}
+
+	filter "configurations:Release"
+		defines "HV_RELEASE"
+		buildoptions "/MD"
+		staticruntime "off"
+		runtime "Release"
+		optimize "On"
+		flags { "LinkTimeOptimization" }
+
+
+
+
+
 project "Editor"
 	location ("Source/" .. editorProj)
 	kind "SharedLib"
@@ -179,16 +281,17 @@ project "Editor"
 		"Source/ImGui"
 	}
 
-	links
-	{
-		"Engine",
-		"ImGui"
-	}
-
 	libdirs 
 	{ 
 		"Lib/",
 		"External/Lib"
+	}
+
+	links
+	{
+		"Engine",
+		"Game",
+		"ImGui"
 	}
 
 	floatingpoint "Fast"
@@ -228,6 +331,10 @@ project "Editor"
 		runtime "Release"
 		optimize "On"
 		flags { "LinkTimeOptimization" }
+		
+		
+		
+		
 		
 project "ImGui"
 	location ("Source/" .. imGuiProj)
@@ -299,6 +406,10 @@ project "ImGui"
 		optimize "On"
 		flags { "LinkTimeOptimization" }
 
+
+
+
+
 project "Launcher"
 	location "Source/Launcher"
 	kind "WindowedApp"
@@ -330,12 +441,14 @@ project "Launcher"
 		"Source/%{prj.name}",
 		"Source/ImGui",
 		"Source/Editor",
-		"Source/Engine"
+		"Source/Engine",
+		"Source/Game"
 	}
 
 	links
 	{
 		"Engine",
+		"Game",
 		"Editor",
 		"ImGui",
 	}

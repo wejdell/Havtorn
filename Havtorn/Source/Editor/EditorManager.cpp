@@ -7,6 +7,8 @@
 #include "Core/imgui_impl_dx11.h"
 #include "Core/ImGuizmo/ImGuizmo.h"
 
+#include "Utils/ImGuiUtils.h"
+
 #include <windows.h>
 #include <psapi.h>
 #include <format>
@@ -43,7 +45,7 @@ namespace Havtorn
 		SAFE_DELETE(ResourceManager);
 	}
 
-	bool CEditorManager::Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager, CScene* scene)
+	bool CEditorManager::Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager)
 	{
 		CROSS_PROJECT_IMGUI_SETUP();
 		windowHandler->EnableDragDrop();
@@ -58,8 +60,9 @@ namespace Havtorn
 
 		Windows.emplace_back(std::make_unique<ImGui::CViewportWindow>("Viewport", this));
 		Windows.emplace_back(std::make_unique<ImGui::CAssetBrowserWindow>("Asset Browser", this));
-		Windows.emplace_back(std::make_unique<ImGui::CHierarchyWindow>("Hierarchy", scene, this));
-		Windows.emplace_back(std::make_unique<ImGui::CInspectorWindow>("Inspector", scene, this));
+		Windows.emplace_back(std::make_unique<ImGui::CHierarchyWindow>("Hierarchy", this));
+		Windows.emplace_back(std::make_unique<ImGui::CInspectorWindow>("Inspector", this));
+		Windows.emplace_back(std::make_unique<ImGui::CSequencerWindow>("Sequencer", this));
 
 		ResourceManager = new CEditorResourceManager();
 		bool success = ResourceManager->Init(renderManager, framework);
@@ -122,12 +125,23 @@ namespace Havtorn
 		}
 	}
 
-	void CEditorManager::SetSelectedEntity(Ref<SEntity> entity)
+	void CEditorManager::SetCurrentScene(CScene* scene)
+	{
+		CurrentScene = scene;
+		SelectedEntity = nullptr;
+	}
+
+	CScene* CEditorManager::GetCurrentScene() const
+	{
+		return CurrentScene;
+	}
+
+	void CEditorManager::SetSelectedEntity(SEntity* entity)
 	{
 		SelectedEntity = entity;
 	}
 
-	Ref<SEntity> CEditorManager::GetSelectedEntity() const
+	SEntity* CEditorManager::GetSelectedEntity() const
 	{
 		return SelectedEntity;
 	}
@@ -435,7 +449,7 @@ namespace Havtorn
 	{
 		std::string frameRateString = "Framerate: ";
 		const U32 frameRate = static_cast<U32>(GTime::AverageFrameRate());
-		const float frameTime = 1000.0f / frameRate;
+		const F32 frameTime = 1000.0f / frameRate;
 		std::string frameTimeString = std::format("{:.2f}", frameTime);
 
 		frameRateString.append(std::to_string(frameRate));
@@ -445,14 +459,14 @@ namespace Havtorn
 
 		frameRateString.append(" | CPU: ");
 		const U32 frameRateCPU = static_cast<U32>(GTime::AverageFrameRate(ETimerCategory::CPU));
-		const float frameTimeCPU = 1000.0f / frameRateCPU;
+		const F32 frameTimeCPU = 1000.0f / frameRateCPU;
 		std::string frameTimeStringCPU = std::format("{:.2f}", frameTimeCPU);
 		frameRateString.append(frameTimeStringCPU);
 		frameRateString.append(" ms");
 		
 		frameRateString.append(" | GPU: ");
 		const U32 frameRateGPU = static_cast<U32>(GTime::AverageFrameRate(ETimerCategory::GPU));
-		const float frameTimeGPU = 1000.0f / frameRateGPU;
+		const F32 frameTimeGPU = 1000.0f / frameRateGPU;
 		std::string frameTimeStringGPU = std::format("{:.2f}", frameTimeGPU);
 		frameRateString.append(frameTimeStringGPU);
 		frameRateString.append(" ms");

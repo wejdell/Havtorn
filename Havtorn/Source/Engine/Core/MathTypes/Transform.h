@@ -9,16 +9,10 @@ namespace Havtorn
 	private:
 		SMatrix LocalMatrix = SMatrix::Identity;
 		SMatrix WorldMatrix = SMatrix::Identity;
-		STransform* Parent = nullptr;
-		std::vector<STransform*> Children;
 
 	public:
-		[[nodiscard]] SMatrix& GetMatrix();
+		[[nodiscard]] const SMatrix& GetMatrix() const;
 		void SetMatrix(const SMatrix& matrix);
-		void SetParent(STransform* parent);
-		void SetChild(STransform* child);
-		void RemoveChild(STransform* child);
-		void ClearChildren();
 
 		inline void Rotate(const SMatrix& rotationMatrix);
 		inline void Rotate(const SVector& eulerAngles);
@@ -37,13 +31,13 @@ namespace Havtorn
 		inline void Orbit(const SVector4& point, const SMatrix& rotation);
 	};
 
-	inline SMatrix& STransform::GetMatrix()
+	inline const SMatrix& STransform::GetMatrix() const
 	{
-		if (Parent)
-		{
-			WorldMatrix = LocalMatrix * Parent->GetMatrix();
-			return WorldMatrix;
-		}
+		//if (Parent)
+		//{
+		//	WorldMatrix = LocalMatrix * Parent->GetMatrix();
+		//	return WorldMatrix;
+		//}
 
 		return LocalMatrix;
 	}
@@ -51,26 +45,6 @@ namespace Havtorn
 	inline void STransform::SetMatrix(const SMatrix& matrix)
 	{
 		LocalMatrix = matrix;
-	}
-
-	inline void STransform::SetParent(STransform* parent)
-	{
-		Parent = parent;
-	}
-
-	inline void STransform::SetChild(STransform* child)
-	{
-		Children.emplace_back(child);
-	}
-
-	inline void STransform::RemoveChild(STransform* child)
-	{
-		Children.erase(std::ranges::find(Children, child));
-	}
-
-	inline void STransform::ClearChildren()
-	{
-		Children.clear();
 	}
 
 	inline void STransform::Rotate(const SMatrix& rotationMatrix)

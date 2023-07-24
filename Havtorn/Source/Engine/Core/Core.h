@@ -24,9 +24,13 @@
 #endif
 
 #define SAFE_DELETE(x) delete x; x = nullptr;
+#define SAFE_ARRAY_DELETE(x) delete[] x; x = nullptr;
 
 #define HV_ASSERT_BUFFER(x) static_assert((sizeof(x) % 16) == 0, "CB size not padded correctly");
 
 #define BIT(x) (1 << x)
 #define CACHE_LINE 32
 #define CACHE_ALIGN __declspec(align(CACHE_LINE))
+
+#define MAX_STRING_LEN 256
+#define ENTITY_LIMIT 45

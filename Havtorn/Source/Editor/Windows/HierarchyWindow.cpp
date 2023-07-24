@@ -3,10 +3,12 @@
 #include "HierarchyWindow.h"
 #include "EditorManager.h"
 
+#include "Engine.h"
 #include "Scene/Scene.h"
 #include "ECS/Entity.h"
 #include "Core/MathTypes/EngineMath.h"
 #include "Core/CoreTypes.h"
+#include "ECS/Components/MetaDataComponent.h"
 
 #include <ECS/Systems/DebugShapeSystem.h>
 
@@ -14,9 +16,8 @@
 
 namespace ImGui
 {
-	CHierarchyWindow::CHierarchyWindow(const char* name, Havtorn::CScene* scene, Havtorn::CEditorManager* manager)
+	CHierarchyWindow::CHierarchyWindow(const char* name, Havtorn::CEditorManager* manager)
 		: CWindow(name, manager)
-		, Scene(scene)
 		, SelectedIndex(0)
 	{
 	}
@@ -27,7 +28,6 @@ namespace ImGui
 
 	void CHierarchyWindow::OnEnable()
 	{
-		
 	}
 
 	void CHierarchyWindow::OnInspectorGUI()
@@ -40,20 +40,31 @@ namespace ImGui
 		
 		if (ImGui::Begin(Name(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus))
 		{
+			Havtorn::CScene* scene = Manager->GetCurrentScene();
+			if (!scene)
+			{
+				ImGui::End();
+				return;
+			}
+
 			Havtorn::I32 index = 0;
-			auto& entities = Scene->GetEntities();
+			auto& entities = Havtorn::GEngine::GetWorld()->GetEntities();
 			
-			for(Havtorn::U64 i = Havtorn::UDebugShapeSystem::MaxShapes; i < entities.size(); i++)
+			for (Havtorn::U64 i = Havtorn::UDebugShapeSystem::MaxShapes; i < entities.size(); i++)
 			{
 				auto& entity = entities[i];
+				if (!entity.IsValid())
+					continue;
 		
-				ImGui::PushID(static_cast<int>(entity->ID));
-				if (ImGui::Selectable(entity->Name.c_str(), index == SelectedIndex, ImGuiSelectableFlags_None)) 
+				const Havtorn::SMetaDataComponent& metaDataComp = scene->GetMetaDataComponents()[scene->GetSceneIndex(entity)];
+				const std::string entryString = metaDataComp.IsInUse ? metaDataComp.Name.AsString() : "Selected";
+
+				ImGui::PushID(static_cast<Havtorn::I32>(entity.GUID));
+				if (ImGui::Selectable(entryString.c_str(), index == SelectedIndex, ImGuiSelectableFlags_None))
 				{
 					SelectedIndex = index;
-					Manager->SetSelectedEntity(entity);
+					Manager->SetSelectedEntity(&entity);
 				}
-		
 				ImGui::PopID();
 			}
 		}

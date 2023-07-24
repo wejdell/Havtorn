@@ -49,9 +49,9 @@ namespace Havtorn
 		U64 currentNrOfEntities = scene->GetEntities().size();
 		for (U16 i = 0; i < MaxShapes; i++)
 		{
-			Ref<SEntity> entity = scene->CreateEntity("DebugShape" + std::to_string(i));
-			scene->AddTransformComponentToEntity(entity);
-			scene->AddDebugShapeComponentToEntity(entity);
+			//Ref<SEntity> entity = scene->CreateEntity("DebugShape" + std::to_string(i));
+			//scene->AddTransformComponentToEntity(entity);
+			//scene->AddDebugShapeComponentToEntity(entity);
 		}
 
 		size_t allocated = 
@@ -82,166 +82,166 @@ namespace Havtorn
 #endif
 	}
 
-	void UDebugShapeSystem::Update(CScene* scene)
+	void UDebugShapeSystem::Update(CScene* /*scene*/)
 	{
-		const std::vector<Ref<SEntity>>& entities = scene->GetEntities();
-		const std::vector<Ref<SDebugShapeComponent>>& debugShapes = scene->GetDebugShapeComponents();
-		const std::vector<Ref<STransformComponent>>& transformComponents = scene->GetTransformComponents();
+		//const std::vector<Ref<SEntity>>& entities = scene->GetEntities();
+		//const std::vector<Ref<SDebugShapeComponent>>& debugShapes = scene->GetDebugShapeComponents();
+		//const std::vector<Ref<STransformComponent>>& transformComponents = scene->GetTransformComponents();
 
-		SendRenderCommands(entities, debugShapes, transformComponents);
-		CheckActiveIndices(debugShapes);
+		//SendRenderCommands(entities, debugShapes, transformComponents);
+		//CheckActiveIndices(debugShapes);
 	}
 
 #pragma region AddShape
-	void UDebugShapeSystem::AddLine(const SVector& start, const SVector& end, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddLine(const SVector& /*start*/, const SVector& /*end*/, const SColor& /*color*/, const F32 /*lifeTimeSeconds*/, const bool /*useLifeTime*/, const F32 /*thickness*/, const bool /*ignoreDepth*/)
 	{
-		std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line)};
-		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
-		{
-			Instance->TransformToFaceAndReach(start, end, shapes[0].Transform->Transform.GetMatrix());
-		}	
+		//std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line)};
+		//if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
+		//{
+		//	Instance->TransformToFaceAndReach(start, end, shapes[0].Transform->Transform.GetMatrix());
+		//}	
 	}
 
-	void UDebugShapeSystem::AddArrow(const SVector& start, const SVector& end, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddArrow(const SVector& /*start*/, const SVector& /*end*/, const SColor& /*color*/, const F32 /*lifeTimeSeconds*/, const bool /*useLifeTime*/, const F32 /*thickness*/, const bool /*ignoreDepth*/)
 	{
-		std::vector<SShapeData> shapes = { 
-			SShapeData(EVertexBufferPrimitives::Pyramid, EDefaultIndexBuffers::Pyramid),
-			SShapeData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line)
-		};
-		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
-		{
-			SMatrix& lineTransform = shapes[1].Transform->Transform.GetMatrix();
-			Instance->TransformToFaceAndReach(start, end, lineTransform);
-			
-			const F32 scale = 0.1f;
-			const SVector pyramidPos = end - lineTransform.GetForward().GetNormalized() * 0.1f;
-			// Default pyramid's height is along the Y axis, rotation offset of 90 degrees around X places it along the Z axis.
-			SMatrix::Recompose(pyramidPos, lineTransform.GetEuler() + SVector(90.0f, 0.0f, 0.0f), scale, shapes[0].Transform->Transform.GetMatrix());
-		}	
+		//std::vector<SShapeData> shapes = { 
+		//	SShapeData(EVertexBufferPrimitives::Pyramid, EDefaultIndexBuffers::Pyramid),
+		//	SShapeData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line)
+		//};
+		//if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
+		//{
+		//	SMatrix& lineTransform = shapes[1].Transform->Transform.GetMatrix();
+		//	Instance->TransformToFaceAndReach(start, end, lineTransform);
+		//	
+		//	const F32 scale = 0.1f;
+		//	const SVector pyramidPos = end - lineTransform.GetForward().GetNormalized() * 0.1f;
+		//	// Default pyramid's height is along the Y axis, rotation offset of 90 degrees around X places it along the Z axis.
+		//	SMatrix::Recompose(pyramidPos, lineTransform.GetEuler() + SVector(90.0f, 0.0f, 0.0f), scale, shapes[0].Transform->Transform.GetMatrix());
+		//}	
 	}
 
-	void UDebugShapeSystem::AddCube(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddCube(const SVector& /*center*/, const SVector& /*eulerRotation*/, const SVector& /*scale*/, const SColor& /*color*/, const F32 /*lifeTimeSeconds*/, const bool /*useLifeTime*/, const F32 /*thickness*/, const bool /*ignoreDepth*/)
 	{
-		std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::BoundingBox, EDefaultIndexBuffers::BoundingBox)};
+/*		std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::BoundingBox, EDefaultIndexBuffers::BoundingBox)};
 		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
 		{
 			SMatrix::Recompose(center, eulerRotation, scale, shapes[0].Transform->Transform.GetMatrix());
-		}		
+		}*/		
 	}
 
-	void UDebugShapeSystem::AddCamera(const SVector& origin, const SVector& eulerRotation, const F32 fov, const F32 farZ, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddCamera(const SVector& /*origin*/, const SVector& /*eulerRotation*/, const F32 /*fov*/, const F32 /*farZ*/, const SColor& /*color*/, const F32 /*lifeTimeSeconds*/, const bool /*useLifeTime*/, const F32 /*thickness*/, const bool /*ignoreDepth*/)
 	{
-		std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::Camera, EDefaultIndexBuffers::Camera)};
-		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
-		{
-			// TODO.AG: Rework this. Does not seem to properly represent fov & farZ. Might have to use aspectratio?
-			F32 y = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
-			F32 x = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
-			SVector vScale(x, y, farZ);
-			SMatrix::Recompose(origin, eulerRotation, vScale, shapes[0].Transform->Transform.GetMatrix());
-		}
+		//std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::Camera, EDefaultIndexBuffers::Camera)};
+		//if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
+		//{
+		//	// TODO.AG: Rework this. Does not seem to properly represent fov & farZ. Might have to use aspectratio?
+		//	F32 y = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
+		//	F32 x = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
+		//	SVector vScale(x, y, farZ);
+		//	SMatrix::Recompose(origin, eulerRotation, vScale, shapes[0].Transform->Transform.GetMatrix());
+		//}
 	}
 
-	void UDebugShapeSystem::AddCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius, const UINT8 segments, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddCircle(const SVector& /*origin*/, const SVector& /*eulerRotation*/, const F32 /*radius*/, const UINT8 /*segments*/, const SColor& /*color*/, const F32 /*lifeTimeSeconds*/, const bool /*useLifeTime*/, const F32 /*thickness*/, const bool /*ignoreDepth*/)
 	{
-		// AG. The Default Circle is across the XZ plane
-		EVertexBufferPrimitives vertexBufferPrimitive = EVertexBufferPrimitives::Circle16;
-		EDefaultIndexBuffers indexBuffer = EDefaultIndexBuffers::Circle16;
+		//// AG. The Default Circle is across the XZ plane
+		//EVertexBufferPrimitives vertexBufferPrimitive = EVertexBufferPrimitives::Circle16;
+		//EDefaultIndexBuffers indexBuffer = EDefaultIndexBuffers::Circle16;
 
-		// if requested segments are closer to 32
-		if (segments > 24)
-		{
-			vertexBufferPrimitive = EVertexBufferPrimitives::Circle32;
-			indexBuffer = EDefaultIndexBuffers::Circle32;
-		}
-		// if requested segments are closer to 8
-		else if (segments < 12)
-		{
-			vertexBufferPrimitive = EVertexBufferPrimitives::Circle8;
-			indexBuffer = EDefaultIndexBuffers::Circle8;
-		}
+		//// if requested segments are closer to 32
+		//if (segments > 24)
+		//{
+		//	vertexBufferPrimitive = EVertexBufferPrimitives::Circle32;
+		//	indexBuffer = EDefaultIndexBuffers::Circle32;
+		//}
+		//// if requested segments are closer to 8
+		//else if (segments < 12)
+		//{
+		//	vertexBufferPrimitive = EVertexBufferPrimitives::Circle8;
+		//	indexBuffer = EDefaultIndexBuffers::Circle8;
+		//}
 
-		std::vector<SShapeData> shapes = { SShapeData(vertexBufferPrimitive, indexBuffer)};
-		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
-		{
-			SVector scale(radius / GeometryPrimitives::CircleRadius);
-			SMatrix::Recompose(origin, eulerRotation, scale, shapes[0].Transform->Transform.GetMatrix());
-		}
+		//std::vector<SShapeData> shapes = { SShapeData(vertexBufferPrimitive, indexBuffer)};
+		//if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
+		//{
+		//	SVector scale(radius / GeometryPrimitives::CircleRadius);
+		//	SMatrix::Recompose(origin, eulerRotation, scale, shapes[0].Transform->Transform.GetMatrix());
+		//}
 	}
 
-	void UDebugShapeSystem::AddGrid(const SVector& origin, const SVector& eulerRotation, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddGrid(const SVector& /*origin*/, const SVector& /*eulerRotation*/, const SColor& /*color*/, const F32 /*lifeTimeSeconds*/, const bool /*useLifeTime*/, const F32 /*thickness*/, const bool /*ignoreDepth*/)
 	{
-		std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::Grid, EDefaultIndexBuffers::Grid)};
-		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
-		{
-			SMatrix::Recompose(origin, eulerRotation, SVector(1.0f), shapes[0].Transform->Transform.GetMatrix());
-		}
+		//std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::Grid, EDefaultIndexBuffers::Grid)};
+		//if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
+		//{
+		//	SMatrix::Recompose(origin, eulerRotation, SVector(1.0f), shapes[0].Transform->Transform.GetMatrix());
+		//}
 	}
 
-	void UDebugShapeSystem::AddAxis(const SVector& origin, const SVector& eulerRotation, const SVector& scale, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddAxis(const SVector& /*origin*/, const SVector& /*eulerRotation*/, const SVector& /*scale*/, const SColor& /*color*/, const F32 /*lifeTimeSeconds*/, const bool /*useLifeTime*/, const F32 /*thickness*/, const bool /*ignoreDepth*/)
 	{
-		std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::Axis, EDefaultIndexBuffers::Axis)};
-		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
-		{
-			SMatrix::Recompose(origin, eulerRotation, scale, shapes[0].Transform->Transform.GetMatrix());
-		}
+		//std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::Axis, EDefaultIndexBuffers::Axis)};
+		//if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
+		//{
+		//	SMatrix::Recompose(origin, eulerRotation, scale, shapes[0].Transform->Transform.GetMatrix());
+		//}
 	}
 
-	void UDebugShapeSystem::AddPoint(const SVector& origin, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddPoint(const SVector& /*origin*/, const SColor& /*color*/, const F32 /*lifeTimeSeconds*/, const bool /*useLifeTime*/, const F32 /*thickness*/, const bool /*ignoreDepth*/)
 	{
-		std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::Octahedron, EDefaultIndexBuffers::Octahedron)};
-		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
-		{
-			SMatrix::Recompose(origin, SVector(), SVector(0.1f), shapes[0].Transform->Transform.GetMatrix());
-		}
+		//std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::Octahedron, EDefaultIndexBuffers::Octahedron)};
+		//if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
+		//{
+		//	SMatrix::Recompose(origin, SVector(), SVector(0.1f), shapes[0].Transform->Transform.GetMatrix());
+		//}
 	}
 
-	void UDebugShapeSystem::AddRectangle(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddRectangle(const SVector& /*center*/, const SVector& /*eulerRotation*/, const SVector& /*scale*/, const SColor& /*color*/, const F32 /*lifeTimeSeconds*/, const bool /*useLifeTime*/, const F32 /*thickness*/, const bool /*ignoreDepth*/)
 	{
-		std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::Square, EDefaultIndexBuffers::Square)};
-		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
-		{
-			SMatrix::Recompose(center, eulerRotation, scale, shapes[0].Transform->Transform.GetMatrix());
-		}
+		//std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::Square, EDefaultIndexBuffers::Square)};
+		//if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
+		//{
+		//	SMatrix::Recompose(center, eulerRotation, scale, shapes[0].Transform->Transform.GetMatrix());
+		//}
 	}
 
-	void UDebugShapeSystem::AddSphere(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddSphere(const SVector& /*center*/, const SVector& /*eulerRotation*/, const SVector& /*scale*/, const SColor& /*color*/, const F32 /*lifeTimeSeconds*/, const bool /*useLifeTime*/, const F32 /*thickness*/, const bool /*ignoreDepth*/)
 	{
-		std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::UVSphere, EDefaultIndexBuffers::UVSphere)};
-		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
-		{
-			SMatrix::Recompose(center, eulerRotation, scale, shapes[0].Transform->Transform.GetMatrix());
-		}
+		//std::vector<SShapeData> shapes = { SShapeData(EVertexBufferPrimitives::UVSphere, EDefaultIndexBuffers::UVSphere)};
+		//if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
+		//{
+		//	SMatrix::Recompose(center, eulerRotation, scale, shapes[0].Transform->Transform.GetMatrix());
+		//}
 	}
 
-	void UDebugShapeSystem::AddConeRadius(const SVector& apexPosition, const SVector& direction, const F32 height, const F32 radius, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void UDebugShapeSystem::AddConeRadius(const SVector& /*apexPosition*/, const SVector& /*direction*/, const F32 /*height*/, const F32 /*radius*/, const SColor& /*color*/, const F32 /*lifeTimeSeconds*/, const bool /*useLifeTime*/, const F32 /*thickness*/, const bool /*ignoreDepth*/)
 	{
-		std::vector<SShapeData> shapes = { 
-			SShapeData(EVertexBufferPrimitives::Circle16, EDefaultIndexBuffers::Circle16),
-			SShapeData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line),
-			SShapeData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line),
-			SShapeData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line),
-			SShapeData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line),
-		};
-		if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
-		{
-			const SVector base = apexPosition + direction.GetNormalized() * height;
+		//std::vector<SShapeData> shapes = { 
+		//	SShapeData(EVertexBufferPrimitives::Circle16, EDefaultIndexBuffers::Circle16),
+		//	SShapeData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line),
+		//	SShapeData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line),
+		//	SShapeData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line),
+		//	SShapeData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line),
+		//};
+		//if (TryAddShape(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, shapes))
+		//{
+		//	const SVector base = apexPosition + direction.GetNormalized() * height;
 
-			const SVector scale(radius / GeometryPrimitives::CircleRadius);
-			const SVector up = direction.IsEqual(SVector::Up) ? SVector::Forward : SVector::Up;
-			const SMatrix lookAt = SMatrix::Face(apexPosition, direction, up);
-			
-			// Default circle lies on the XZ plane, adding a rotation offset of 90degrees around X rotates it to the XY plane.
-			SMatrix::Recompose(base, lookAt.GetEuler() + SVector(90.0f, 0.0f, 0.0f), scale, shapes[0].Transform->Transform.GetMatrix());
+		//	const SVector scale(radius / GeometryPrimitives::CircleRadius);
+		//	const SVector up = direction.IsEqual(SVector::Up) ? SVector::Forward : SVector::Up;
+		//	const SMatrix lookAt = SMatrix::Face(apexPosition, direction, up);
+		//	
+		//	// Default circle lies on the XZ plane, adding a rotation offset of 90degrees around X rotates it to the XY plane.
+		//	SMatrix::Recompose(base, lookAt.GetEuler() + SVector(90.0f, 0.0f, 0.0f), scale, shapes[0].Transform->Transform.GetMatrix());
 
-			const SVector lookAtRight = lookAt.GetRight();
-			const SVector lookAtUp = lookAt.GetUp();
-			Instance->TransformToFaceAndReach(apexPosition, base + lookAtRight * radius, shapes[1].Transform->Transform.GetMatrix());
-			Instance->TransformToFaceAndReach(apexPosition, base + lookAtRight * -radius, shapes[2].Transform->Transform.GetMatrix());
-			Instance->TransformToFaceAndReach(apexPosition, base + lookAtUp * radius, shapes[3].Transform->Transform.GetMatrix());
-			Instance->TransformToFaceAndReach(apexPosition, base + lookAtUp * -radius, shapes[4].Transform->Transform.GetMatrix());
+		//	const SVector lookAtRight = lookAt.GetRight();
+		//	const SVector lookAtUp = lookAt.GetUp();
+		//	Instance->TransformToFaceAndReach(apexPosition, base + lookAtRight * radius, shapes[1].Transform->Transform.GetMatrix());
+		//	Instance->TransformToFaceAndReach(apexPosition, base + lookAtRight * -radius, shapes[2].Transform->Transform.GetMatrix());
+		//	Instance->TransformToFaceAndReach(apexPosition, base + lookAtUp * radius, shapes[3].Transform->Transform.GetMatrix());
+		//	Instance->TransformToFaceAndReach(apexPosition, base + lookAtUp * -radius, shapes[4].Transform->Transform.GetMatrix());
 
-		}
+		//}
 	}
 
 	void UDebugShapeSystem::AddConeAngle(const SVector& apexPosition, const SVector& direction, const F32 height, const F32 angleDegrees, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
@@ -264,34 +264,34 @@ namespace Havtorn
 		return true;
 	}
 
-	bool UDebugShapeSystem::TryAddShape(const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, std::vector<SShapeData>& outShapes)
+	bool UDebugShapeSystem::TryAddShape(const SColor& /*color*/, const F32 /*lifeTimeSeconds*/, const bool /*useLifeTime*/, const F32 /*thickness*/, const bool /*ignoreDepth*/, std::vector<SShapeData>& /*outShapes*/)
 	{
-		if (!InstanceExists())
-			return false;
+		//if (!InstanceExists())
+		//	return false;
 
-		std::vector<U64> indices;
-		if (!Instance->TryGetAvailableIndices(outShapes.size(), indices))
-			return false;
+		//std::vector<U64> indices;
+		//if (!Instance->TryGetAvailableIndices(outShapes.size(), indices))
+		//	return false;
 
-		const std::vector<Ref<SEntity>>& entities = Instance->Scene->GetEntities();
+		//const std::vector<Ref<SEntity>>& entities = Instance->Scene->GetEntities();
 
-		for (U64 i = 0u; i < indices.size(); i++)
-		{
-			const U64 entityIndex = indices[i];
-			const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
-			std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
-			debugShapes[shapeIndex]->Color = color;
-			debugShapes[shapeIndex]->LifeTime = useLifeTime ? (GTime::Time() + lifeTimeSeconds) : -1.0f;
-			debugShapes[shapeIndex]->Thickness = UMath::Clamp(thickness, ThicknessMinimum, ThicknessMaximum);
-			debugShapes[shapeIndex]->IgnoreDepth = ignoreDepth;
-			debugShapes[shapeIndex]->VertexBufferIndex = static_cast<U8>(outShapes[i].VertexBuffer);
-			debugShapes[shapeIndex]->IndexCount = static_cast<U16>(Shapes.at(outShapes[i].VertexBuffer).Indices.size());
-			debugShapes[shapeIndex]->IndexBufferIndex = static_cast<U8>(outShapes[i].IndexBuffer);
+		//for (U64 i = 0u; i < indices.size(); i++)
+		//{
+		//	const U64 entityIndex = indices[i];
+		//	const U64 shapeIndex = entities[entityIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
+		//	std::vector<Ref<SDebugShapeComponent>>& debugShapes = Instance->Scene->GetDebugShapeComponents();
+		//	debugShapes[shapeIndex]->Color = color;
+		//	debugShapes[shapeIndex]->LifeTime = useLifeTime ? (GTime::Time() + lifeTimeSeconds) : -1.0f;
+		//	debugShapes[shapeIndex]->Thickness = UMath::Clamp(thickness, ThicknessMinimum, ThicknessMaximum);
+		//	debugShapes[shapeIndex]->IgnoreDepth = ignoreDepth;
+		//	debugShapes[shapeIndex]->VertexBufferIndex = static_cast<U8>(outShapes[i].VertexBuffer);
+		//	debugShapes[shapeIndex]->IndexCount = static_cast<U16>(Shapes.at(outShapes[i].VertexBuffer).Indices.size());
+		//	debugShapes[shapeIndex]->IndexBufferIndex = static_cast<U8>(outShapes[i].IndexBuffer);
 
-			std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
-			const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
-			outShapes[i].Transform = transforms[transformIndex];
-		}
+		//	std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
+		//	const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
+		//	outShapes[i].Transform = transforms[transformIndex];
+		//}
 
 		return true;
 	}
@@ -308,24 +308,24 @@ namespace Havtorn
 
 
 	void UDebugShapeSystem::SendRenderCommands(
-		const std::vector<Ref<SEntity>>& entities,
-		const std::vector<Ref<SDebugShapeComponent>>& debugShapes,
-		const std::vector<Ref<STransformComponent>>& transformComponents
+		const std::vector<Ref<SEntity>>& /*entities*/,
+		const std::vector<Ref<SDebugShapeComponent>>& /*debugShapes*/,
+		const std::vector<Ref<STransformComponent>>& /*transformComponents*/
 	)
 	{
 		typedef std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> Components;
 
 		// Send and set prepass rendercommand for debug shapes
 		{
-			Components components;
-			SRenderCommand command(components, ERenderCommandType::PreDebugShape);
-			RenderManager->PushRenderCommand(command);
+			//Components components;
+			//SRenderCommand command(components, ERenderCommandType::PreDebugShape);
+			//RenderManager->PushRenderCommand(command);
 
-			command.Type = ERenderCommandType::PostToneMappingIgnoreDepth;
-			RenderManager->PushRenderCommand(command);
+			//command.Type = ERenderCommandType::PostToneMappingIgnoreDepth;
+			//RenderManager->PushRenderCommand(command);
 
-			command.Type = ERenderCommandType::PostToneMappingUseDepth;
-			RenderManager->PushRenderCommand(command);
+			//command.Type = ERenderCommandType::PostToneMappingUseDepth;
+			//RenderManager->PushRenderCommand(command);
 		}
 
 		// Sort render commands based on use of depth
@@ -334,17 +334,17 @@ namespace Havtorn
 		Components components;
 		for (U64 i = 0; i < ActiveIndices.size(); i++)
 		{
-			const U64& activeIndex = ActiveIndices[i];
-			const U64 shapeIndex = entities[activeIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
-			const U64 transformIndex = entities[activeIndex]->GetComponentIndex(EComponentType::TransformComponent);
-			
-			components[debugShapeComponent] = debugShapes[shapeIndex];
-			components[transformComponent] = transformComponents[transformIndex];
+			//const U64& activeIndex = ActiveIndices[i];
+			//const U64 shapeIndex = entities[activeIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
+			//const U64 transformIndex = entities[activeIndex]->GetComponentIndex(EComponentType::TransformComponent);
+			//
+			//components[debugShapeComponent] = debugShapes[shapeIndex];
+			//components[transformComponent] = transformComponents[transformIndex];
 
-			ERenderCommandType commandType = (debugShapes[shapeIndex]->IgnoreDepth) ? ERenderCommandType::DebugShapeIgnoreDepth : ERenderCommandType::DebugShapeUseDepth;
+			//ERenderCommandType commandType = (debugShapes[shapeIndex]->IgnoreDepth) ? ERenderCommandType::DebugShapeIgnoreDepth : ERenderCommandType::DebugShapeUseDepth;
 
-			SRenderCommand command(components, commandType);
-			RenderManager->PushRenderCommand(command);
+			//SRenderCommand command(components, commandType);
+			//RenderManager->PushRenderCommand(command);
 		}
 	}
 

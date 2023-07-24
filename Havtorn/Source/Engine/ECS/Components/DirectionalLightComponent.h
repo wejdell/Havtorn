@@ -8,8 +8,8 @@ namespace Havtorn
 {
 	struct SDirectionalLightComponent : public SComponent
 	{
-		SDirectionalLightComponent(Ref<SEntity> entity, EComponentType type)
-			: SComponent(std::move(entity), type)
+		SDirectionalLightComponent()
+			: SComponent(EComponentType::DirectionalLightComponent)
 		{}
 
 		SShadowmapViewData ShadowmapView = SShadowmapViewData();

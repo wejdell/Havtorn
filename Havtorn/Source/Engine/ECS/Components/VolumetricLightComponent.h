@@ -7,8 +7,8 @@ namespace Havtorn
 {
 	struct SVolumetricLightComponent: public SComponent
 	{
-		SVolumetricLightComponent(Ref<SEntity> entity, EComponentType type)
-			: SComponent(std::move(entity), type)
+		SVolumetricLightComponent()
+			: SComponent(EComponentType::VolumetricLightComponent)
 		{}
 
 		bool IsActive = false;

@@ -78,15 +78,18 @@ namespace Havtorn
 		__declspec(dllexport) CEditorManager();
 		__declspec(dllexport) ~CEditorManager();
 
-		bool __declspec(dllexport) Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager, CScene* scene);
+		bool __declspec(dllexport) Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager);
 		void __declspec(dllexport) BeginFrame();
 		void __declspec(dllexport) Render();
 		void __declspec(dllexport) EndFrame();
 		void __declspec(dllexport) DebugWindow();
 
 	public:
-		void SetSelectedEntity(Ref<SEntity> entity);
-		Ref<SEntity> GetSelectedEntity() const;
+		void SetCurrentScene(CScene* scene);
+		CScene* GetCurrentScene() const;
+
+		void SetSelectedEntity(SEntity* entity);
+		SEntity* GetSelectedEntity() const;
 
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry);
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromName(const std::string& assetName);
@@ -130,8 +133,10 @@ namespace Havtorn
 		const CRenderManager* RenderManager = nullptr;
 		CEditorResourceManager* ResourceManager = nullptr;
 
+		CScene* CurrentScene = nullptr;
+
 		// TODO.NR: Should be a weak ptr
-		Ref<SEntity> SelectedEntity = nullptr;
+		SEntity* SelectedEntity = nullptr;
 
 		std::vector<Ptr<ImGui::CWindow>> Windows = {};
 		std::vector<Ptr<ImGui::CToggleable>> MenuElements = {};

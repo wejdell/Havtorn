@@ -54,7 +54,6 @@ namespace Havtorn
 		SRuntimeGraphicsMaterialProperty Roughness = {};
 		SRuntimeGraphicsMaterialProperty Emissive = {};
 
-
 		std::string Name = "";
 		bool RecreateNormalZ = true;
 	};

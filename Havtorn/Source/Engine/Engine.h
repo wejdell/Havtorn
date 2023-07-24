@@ -7,37 +7,22 @@ namespace Havtorn
 {
 	class CWindowHandler;
 	class CThreadManager;
-	class CDirextXFramework;
-	class CModelFactory;
-	class CCameraFactory;
-	class CLightFactory;
 	class CGraphicsFramework;
-	class GTime;
-	class CScene;
 	class CRenderManager;
-	class CParticleEmitterFactory;
-	class CSpriteFactory;
-	class CTextFactory;
+	class GTime;
+	class CWorld;
 	class CInputMapper;
-	class CVFXMeshFactory;
-	class CLineFactory;
 	class CAudioManager;
-	class CPhysXWrapper;
-	class CSceneFactory;
 	class CFileSystem;
 	class CTextureBank;
 
 	class GEngine
 	{
-		friend class CVFXMeshFactory;
 		friend class CRenderManager;
-		friend class CLineFactory;
 		friend class CTextureBank;
-		friend class CSceneFactory;
-		
-		// TODO.AG: figure out a way to not have friend class on processes.
 		friend class CEditorProcess;
 		friend class CImGuiProcess;
+		friend class CGameProcess;
 
 	public:
 		GEngine();
@@ -52,6 +37,7 @@ namespace Havtorn
 		static HAVTORN_API CFileSystem* GetFileSystem();
 		static HAVTORN_API CTextureBank* GetTextureBank();
 		static HAVTORN_API CThreadManager* GetThreadManager();
+		static HAVTORN_API CWorld* GetWorld();
 		static HAVTORN_API CInputMapper* GetInput();
 		
 	public:
@@ -74,15 +60,6 @@ namespace Havtorn
 		CRenderManager* RenderManager = nullptr;
 		GTime* Timer = nullptr;
 		CInputMapper* InputMapper = nullptr;
-
-		CScene* Scene = nullptr;
-
-		//CPhysXWrapper* PhysxWrapper;
-		//CParticleEmitterFactory* ParticleFactory;
-		//CVFXMeshFactory* VFXFactory;
-		//CLineFactory* LineFactory;
-		//CSpriteFactory* SpriteFactory;
-		//CTextFactory* TextFactory;
-		//CAudioManager* AudioManager;
+		CWorld* World = nullptr;
 	};
 }

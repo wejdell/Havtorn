@@ -10,8 +10,9 @@ namespace Havtorn
 {
 	struct SDebugShapeComponent : public SComponent
 	{
-		SDebugShapeComponent(Ref<SEntity> entity, EComponentType type)
-			: SComponent(std::move(entity), type) {}
+		SDebugShapeComponent()
+			: SComponent(EComponentType::DebugShapeComponent) 
+		{}
 
 		SColor Color;
 		F32 LifeTime = 0.0f;

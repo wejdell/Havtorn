@@ -8,9 +8,13 @@ namespace Havtorn
 {
 	struct SMaterialComponent : public SComponent
 	{
-		SMaterialComponent(Ref<SEntity> entity, EComponentType type)
-			: SComponent(std::move(entity), type)
+		SMaterialComponent()
+			: SComponent(EComponentType::MaterialComponent)
 		{}
+
+		void Serialize(char* toData, U64& pointerPosition) const;
+		void Deserialize(const char* fromData, U64& pointerPosition);
+		[[nodiscard]] U32 GetSize() const;
 
 		std::vector<SEngineGraphicsMaterial> Materials;
 	};

@@ -2,9 +2,12 @@
 
 #pragma once
 #include "EditorWindow.h"
+#include <map>
+#include <functional>
 
 namespace Havtorn
 {
+	enum class EComponentType;
 	class CScene;
 	struct SStaticMeshComponent;
 	struct SMaterialComponent;
@@ -15,34 +18,41 @@ namespace ImGui
 	class CInspectorWindow : public CWindow
 	{
 	public:
-		CInspectorWindow(const char* name, Havtorn::CScene* scene, Havtorn::CEditorManager* manager);
+		CInspectorWindow(const char* name, Havtorn::CEditorManager* manager);
 		~CInspectorWindow() override;
 		void OnEnable() override;
 		void OnInspectorGUI() override;
 		void OnDisable() override;
 	
 	private:
-		void InspectTransformComponent(Havtorn::I64 transformComponentIndex);
-		void InspectStaticMeshComponent(Havtorn::I64 staticMeshComponentIndex);
-		void InspectCameraComponent(Havtorn::I64 cameraComponentIndex);
-		void InspectCameraControllerComponent(Havtorn::I64 cameraControllerComponentIndex);
-		void InspectMaterialComponent(Havtorn::I64 materialComponentIndex);
-		void InspectEnvironmentLightComponent(Havtorn::I64 environmentLightComponentIndex);
-		void InspectDirectionalLightComponent(Havtorn::I64 directionalLightComponentIndex);
-		void InspectPointLightComponent(Havtorn::I64 pointLightComponentIndex);
-		void InspectSpotLightComponent(Havtorn::I64 spotLightComponentIndex);
-		void InspectVolumetricLightComponent(Havtorn::I64 volumetricLightComponentIndex);
-		void InspectDecalComponent(Havtorn::I64 decalComponentIndex);
+		void TryInspectComponent(const Havtorn::SEntity* selectedEntity, Havtorn::EComponentType componentType);
 
-		void OpenSelectMeshAssetModal(Havtorn::SStaticMeshComponent* meshAssetToChange);
+		void InspectTransformComponent();
+		void InspectStaticMeshComponent();
+		void InspectCameraComponent();
+		void InspectCameraControllerComponent();
+		void InspectMaterialComponent();
+		void InspectEnvironmentLightComponent();
+		void InspectDirectionalLightComponent();
+		void InspectPointLightComponent();
+		void InspectSpotLightComponent();
+		void InspectVolumetricLightComponent();
+		void InspectDecalComponent();
+		void InspectSpriteComponent();
+		void InspectTransform2DComponent();
+
+		void OpenSelectMeshAssetModal(Havtorn::I64 staticMeshComponentIndex);
 		void OpenSelectTextureAssetModal(Havtorn::U16& textureRefToChange);
 		void OpenSelectMaterialAssetModal(Havtorn::SMaterialComponent* materialComponentToChange, Havtorn::U8 materialIndex);
+		void OpenAddComponentModal();
+		void RemoveComponentButton(Havtorn::EComponentType componentType);
 
 	private:
+		std::map<Havtorn::EComponentType, std::function<void()>> InspectionFunctions;
 		Havtorn::CScene* Scene = nullptr;
-
 		Havtorn::SVector2<Havtorn::F32> TexturePreviewSize = { 64.0f, 64.0f };
 		Havtorn::SVector2<Havtorn::F32> DummySize = { 0.0f, 0.5f };
+		Havtorn::U64 SelectedEntityIndex = 0;
 		Havtorn::F32 SlideSpeed = 0.1f;
 		Havtorn::U16 MaterialRefToChangeIndex = 0;
 		Havtorn::U8 MaterialToChangeIndex = 0;

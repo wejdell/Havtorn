@@ -2,20 +2,43 @@
 
 #pragma once
 #include "Entity.h"
+#include "FileSystem/FileHeaderDeclarations.h"
 
 namespace Havtorn
 {
-	struct SEntity;
-
 	struct SComponent
 	{
-		explicit SComponent(Ref<SEntity> entity, EComponentType type)
-			: Entity(entity)
-			, Type(type)
+		SComponent() = default;
+
+		explicit SComponent(EComponentType type)
+			: Type(type)
 		{}
+
 		virtual ~SComponent() = default;
 
-		const Ref<SEntity> Entity;
-		const EComponentType Type;
+		//template<typename T>
+		//U32 Serialize(char* toData, U32 bufferPosition) const;
+
+		//template<typename T>
+		//U32 Deserialize(const char* fromData, U32 bufferPosition);
+
+		EComponentType Type = EComponentType::Count;
+		bool IsInUse = false;
 	};
+
+	//template<typename T>
+	//U32 SComponent::Serialize(char* toData, U32 bufferPosition) const
+	//{
+	//	memcpy(&toData[bufferPosition], this, sizeof(T));
+	//	return sizeof(T);
+	//}
+
+	//template<typename T>
+	//U32 SComponent::Deserialize(const char* fromData, U32 bufferPosition)
+	//{
+	//	U64 offset = sizeof(SComponent);
+	//	U64 offsetSize = sizeof(T) - offset;
+	//	memcpy(this + offset, &fromData[bufferPosition + offset], offsetSize);
+	//	return sizeof(T);
+	//}
 }

@@ -3,55 +3,65 @@
 #pragma once
 #include "Graphics/GraphicsStructs.h"
 #include "Graphics/GraphicsEnums.h"
+#include "Scene/Scene.h"
+#include "Scene/AssetRegistry.h"
 
 namespace Havtorn
 {
 	template<typename T>
-	U32 SerializeSimple(const T& source, char* destination, U32 bufferPosition)
+	void SerializeSimple(const T& source, char* destination, U64& pointerPosition)
 	{
 		const U32 size = sizeof(T);
-		memcpy(&destination[bufferPosition], &source, size);
-		return size;
+		memcpy(&destination[pointerPosition], &source, size);
+		pointerPosition += size;
 	}
 
 	template<typename T>
-	U32 SerializeVector(const std::vector<T>& source, char* destination, U32 bufferPosition)
+	void SerializeVector(const std::vector<T>& source, char* destination, U64& pointerPosition)
 	{
 		const U32 size = sizeof(T) * static_cast<U32>(source.size());
-		memcpy(&destination[bufferPosition], source.data(), size);
-		return size;
+		memcpy(&destination[pointerPosition], source.data(), size);
+		pointerPosition += size;
 	}
 
-	inline U32 SerializeString(const std::string& source, char* destination, U32 bufferPosition)
+	inline void SerializeString(const std::string& source, char* destination, U64& pointerPosition)
 	{
 		const U32 size = sizeof(char) * static_cast<U32>(source.length());
-		memcpy(&destination[bufferPosition], source.data(), size);
-		return size;
+		memcpy(&destination[pointerPosition], source.data(), size);
+		pointerPosition += size;
+	}
+
+	inline void SerializeString(const std::string& source, char* destination, U32 numberOfElements, U64& pointerPosition)
+	{
+		const U32 size = sizeof(char) * numberOfElements;
+		memcpy(&destination[pointerPosition], source.data(), size);
+		pointerPosition += size;
 	}
 
 	template<typename T>
-	U32 DeserializeSimple(T& destination, const char* source, U32 bufferPosition)
+	void DeserializeSimple(T& destination, const char* source, U64& pointerPosition)
 	{
 		const U32 size = sizeof(T);
-		memcpy(&destination, &source[bufferPosition], size);
-		return size;
+		memcpy(&destination, &source[pointerPosition], size);
+		pointerPosition += size;
 	}
 
 	template<typename T>
-	U32 DeserializeVector(std::vector<T>& destination, const char* source, U32 numberOfElements, U32 bufferPosition)
+	void DeserializeVector(std::vector<T>& destination, const char* source, U32 numberOfElements, U64& pointerPosition)
 	{
 		const U32 size = sizeof(T) * numberOfElements;
 		const auto intermediateVector = new T[numberOfElements];
-		memcpy(&intermediateVector[0], &source[bufferPosition], size);
+		memcpy(&intermediateVector[0], &source[pointerPosition], size);
 		destination.assign(&intermediateVector[0], &intermediateVector[0] + numberOfElements);
-		return size;
+		delete[] intermediateVector;
+		pointerPosition += size;
 	}
 
-	inline U32 DeserializeString(std::string& destination, const char* source, U32 numberOfElements, U32 bufferPosition)
+	inline void DeserializeString(std::string& destination, const char* source, U32 numberOfElements, U64& pointerPosition)
 	{
 		const U32 size = sizeof(char) * numberOfElements;
-		destination = std::string(&source[bufferPosition], size);
-		return size;
+		destination = std::string(&source[pointerPosition], size);
+		pointerPosition += size;
 	}
 
 	struct SStaticModelFileHeader
@@ -90,39 +100,39 @@ namespace Havtorn
 
 	inline void SStaticModelFileHeader::Serialize(char* toData) const
 	{
-		U32 pointerPosition = 0;
-		pointerPosition += SerializeSimple(AssetType, toData, pointerPosition);
-		pointerPosition += SerializeSimple(NumberOfMaterials, toData, pointerPosition);
-		pointerPosition += SerializeSimple(NumberOfMeshes, toData, pointerPosition);
+		U64 pointerPosition = 0;
+		SerializeSimple(AssetType, toData, pointerPosition);
+		SerializeSimple(NumberOfMaterials, toData, pointerPosition);
+		SerializeSimple(NumberOfMeshes, toData, pointerPosition);
 
 		for (auto& mesh : Meshes)
 		{
-			pointerPosition += SerializeSimple(mesh.NameLength, toData, pointerPosition);
-			pointerPosition += SerializeString(mesh.Name, toData, pointerPosition);
-			pointerPosition += SerializeSimple(mesh.NumberOfVertices, toData, pointerPosition);
-			pointerPosition += SerializeVector(mesh.Vertices, toData, pointerPosition);
-			pointerPosition += SerializeSimple(mesh.NumberOfIndices, toData, pointerPosition);
-			pointerPosition += SerializeVector(mesh.Indices, toData, pointerPosition);
+			SerializeSimple(mesh.NameLength, toData, pointerPosition);
+			SerializeString(mesh.Name, toData, pointerPosition);
+			SerializeSimple(mesh.NumberOfVertices, toData, pointerPosition);
+			SerializeVector(mesh.Vertices, toData, pointerPosition);
+			SerializeSimple(mesh.NumberOfIndices, toData, pointerPosition);
+			SerializeVector(mesh.Indices, toData, pointerPosition);
 		}
 	}
 
 	inline void SStaticModelFileHeader::Deserialize(const char* fromData)
 	{
-		U32 pointerPosition = 0;
-		pointerPosition += DeserializeSimple(AssetType, fromData, pointerPosition);
-		pointerPosition += DeserializeSimple(NumberOfMaterials, fromData, pointerPosition);
-		pointerPosition += DeserializeSimple(NumberOfMeshes, fromData, pointerPosition);
+		U64 pointerPosition = 0;
+		DeserializeSimple(AssetType, fromData, pointerPosition);
+		DeserializeSimple(NumberOfMaterials, fromData, pointerPosition);
+		DeserializeSimple(NumberOfMeshes, fromData, pointerPosition);
 
 		Meshes.reserve(NumberOfMeshes);
 		for (U16 i = 0; i < NumberOfMeshes; i++)
 		{
 			Meshes.emplace_back();
-			pointerPosition += DeserializeSimple(Meshes.back().NameLength, fromData, pointerPosition);
-			pointerPosition += DeserializeString(Meshes.back().Name, fromData, Meshes.back().NameLength, pointerPosition);
-			pointerPosition += DeserializeSimple(Meshes.back().NumberOfVertices, fromData, pointerPosition);
-			pointerPosition += DeserializeVector(Meshes.back().Vertices, fromData, Meshes.back().NumberOfVertices, pointerPosition);
-			pointerPosition += DeserializeSimple(Meshes.back().NumberOfIndices, fromData, pointerPosition);
-			pointerPosition += DeserializeVector(Meshes.back().Indices, fromData, Meshes.back().NumberOfIndices, pointerPosition);
+			DeserializeSimple(Meshes.back().NameLength, fromData, pointerPosition);
+			DeserializeString(Meshes.back().Name, fromData, Meshes.back().NameLength, pointerPosition);
+			DeserializeSimple(Meshes.back().NumberOfVertices, fromData, pointerPosition);
+			DeserializeVector(Meshes.back().Vertices, fromData, Meshes.back().NumberOfVertices, pointerPosition);
+			DeserializeSimple(Meshes.back().NumberOfIndices, fromData, pointerPosition);
+			DeserializeVector(Meshes.back().Indices, fromData, Meshes.back().NumberOfIndices, pointerPosition);
 		}
 	}
 
@@ -158,27 +168,27 @@ namespace Havtorn
 
 	inline void STextureFileHeader::Serialize(char* toData) const
 	{
-		U32 pointerPosition = 0;
-		pointerPosition += SerializeSimple(AssetType, toData, pointerPosition);
-		pointerPosition += SerializeSimple(MaterialNameLength, toData, pointerPosition);
-		pointerPosition += SerializeString(MaterialName, toData, pointerPosition);
-		pointerPosition += SerializeSimple(OriginalFormat, toData, pointerPosition);
-		pointerPosition += SerializeSimple(MaterialConfiguration, toData, pointerPosition);
-		pointerPosition += SerializeSimple(Suffix, toData, pointerPosition);
-		pointerPosition += SerializeSimple(DataSize, toData, pointerPosition);
+		U64 pointerPosition = 0;
+		SerializeSimple(AssetType, toData, pointerPosition);
+		SerializeSimple(MaterialNameLength, toData, pointerPosition);
+		SerializeString(MaterialName, toData, pointerPosition);
+		SerializeSimple(OriginalFormat, toData, pointerPosition);
+		SerializeSimple(MaterialConfiguration, toData, pointerPosition);
+		SerializeSimple(Suffix, toData, pointerPosition);
+		SerializeSimple(DataSize, toData, pointerPosition);
 		SerializeString(Data, toData, pointerPosition);
 	}
 
 	inline void STextureFileHeader::Deserialize(const char* fromData)
 	{
-		U32 pointerPosition = 0;
-		pointerPosition += DeserializeSimple(AssetType, fromData, pointerPosition);
-		pointerPosition += DeserializeSimple(MaterialNameLength, fromData, pointerPosition);
-		pointerPosition += DeserializeString(MaterialName, fromData, MaterialNameLength, pointerPosition);
-		pointerPosition += DeserializeSimple(OriginalFormat, fromData, pointerPosition);
-		pointerPosition += DeserializeSimple(MaterialConfiguration, fromData, pointerPosition);
-		pointerPosition += DeserializeSimple(Suffix, fromData, pointerPosition);
-		pointerPosition += DeserializeSimple(DataSize, fromData, pointerPosition);
+		U64 pointerPosition = 0;
+		DeserializeSimple(AssetType, fromData, pointerPosition);
+		DeserializeSimple(MaterialNameLength, fromData, pointerPosition);
+		DeserializeString(MaterialName, fromData, MaterialNameLength, pointerPosition);
+		DeserializeSimple(OriginalFormat, fromData, pointerPosition);
+		DeserializeSimple(MaterialConfiguration, fromData, pointerPosition);
+		DeserializeSimple(Suffix, fromData, pointerPosition);
+		DeserializeSimple(DataSize, fromData, pointerPosition);
 		DeserializeString(Data, fromData, DataSize, pointerPosition);
 	}
 
@@ -206,37 +216,88 @@ namespace Havtorn
 
 	inline void SMaterialAssetFileHeader::Serialize(char* toData) const
 	{
-		U32 pointerPosition = 0;
-		pointerPosition += SerializeSimple(AssetType, toData, pointerPosition);
-		pointerPosition += SerializeSimple(MaterialNameLength, toData, pointerPosition);
-		pointerPosition += SerializeString(MaterialName, toData, pointerPosition);
+		U64 pointerPosition = 0;
+		SerializeSimple(AssetType, toData, pointerPosition);
+		SerializeSimple(MaterialNameLength, toData, pointerPosition);
+		SerializeString(MaterialName, toData, pointerPosition);
 
 		for (auto& materialProperty : Material.Properties)
 		{
-			pointerPosition += SerializeSimple(materialProperty.ConstantValue, toData, pointerPosition);
-			pointerPosition += SerializeSimple(materialProperty.TexturePathLength, toData, pointerPosition);
-			pointerPosition += SerializeString(materialProperty.TexturePath, toData, pointerPosition);
-			pointerPosition += SerializeSimple(materialProperty.TextureChannelIndex, toData, pointerPosition);
+			SerializeSimple(materialProperty.ConstantValue, toData, pointerPosition);
+			SerializeSimple(materialProperty.TexturePathLength, toData, pointerPosition);
+			SerializeString(materialProperty.TexturePath, toData, pointerPosition);
+			SerializeSimple(materialProperty.TextureChannelIndex, toData, pointerPosition);
 		}
 
-		pointerPosition += SerializeSimple(Material.RecreateZ, toData, pointerPosition);
+		SerializeSimple(Material.RecreateZ, toData, pointerPosition);
 	}
 
 	inline void SMaterialAssetFileHeader::Deserialize(const char* fromData)
 	{
-		U32 pointerPosition = 0;
-		pointerPosition += DeserializeSimple(AssetType, fromData, pointerPosition);
-		pointerPosition += DeserializeSimple(MaterialNameLength, fromData, pointerPosition);
-		pointerPosition += DeserializeString(MaterialName, fromData, MaterialNameLength, pointerPosition);
+		U64 pointerPosition = 0;
+		DeserializeSimple(AssetType, fromData, pointerPosition);
+		DeserializeSimple(MaterialNameLength, fromData, pointerPosition);
+		DeserializeString(MaterialName, fromData, MaterialNameLength, pointerPosition);
 
 		for (auto& materialProperty : Material.Properties)
 		{
-			pointerPosition += DeserializeSimple(materialProperty.ConstantValue, fromData, pointerPosition);
-			pointerPosition += DeserializeSimple(materialProperty.TexturePathLength, fromData, pointerPosition);
-			pointerPosition += DeserializeString(materialProperty.TexturePath, fromData, materialProperty.TexturePathLength, pointerPosition);
-			pointerPosition += DeserializeSimple(materialProperty.TextureChannelIndex, fromData, pointerPosition);
+			DeserializeSimple(materialProperty.ConstantValue, fromData, pointerPosition);
+			DeserializeSimple(materialProperty.TexturePathLength, fromData, pointerPosition);
+			DeserializeString(materialProperty.TexturePath, fromData, materialProperty.TexturePathLength, pointerPosition);
+			DeserializeSimple(materialProperty.TextureChannelIndex, fromData, pointerPosition);
 		}
 
-		pointerPosition += DeserializeSimple(Material.RecreateZ, fromData, pointerPosition);
+		DeserializeSimple(Material.RecreateZ, fromData, pointerPosition);
+	}
+
+	struct SSceneFileHeader
+	{
+		EAssetType AssetType = EAssetType::Scene;
+		U32 SceneNameLength = 0;
+		std::string SceneName = "";
+		U32 NumberOfEntities = 0;
+		CScene* Scene = nullptr;
+
+		[[nodiscard]] U32 GetSize() const;
+		void Serialize(char* toData, U64& pointerPosition, CAssetRegistry* assetRegistry, I64 sceneIndex) const;
+		void Deserialize(const char* fromData, U64& pointerPosition, CScene* outScene, CAssetRegistry* assetRegistry);
+	};
+
+	inline U32 SSceneFileHeader::GetSize() const
+	{
+		U32 size = sizeof(EAssetType);
+		size += sizeof(U32);
+		size += sizeof(char) * SceneNameLength;
+
+		size += sizeof(U32);
+
+		size += Scene->GetSize();
+
+		return size;
+	}
+
+	inline void SSceneFileHeader::Serialize(char* toData, U64& pointerPosition, CAssetRegistry* assetRegistry, I64 sceneIndex) const
+	{
+		SerializeSimple(AssetType, toData, pointerPosition); //4
+		SerializeSimple(SceneNameLength, toData, pointerPosition); //8
+		SerializeString(SceneName, toData, pointerPosition);	//17
+		
+		SerializeSimple(sceneIndex, toData, pointerPosition); //25
+		assetRegistry->Serialize(sceneIndex, toData, pointerPosition); //233
+
+		Scene->Serialize(toData, pointerPosition);
+	}
+
+	inline void SSceneFileHeader::Deserialize(const char* fromData, U64& pointerPosition, CScene* outScene, CAssetRegistry* assetRegistry)
+	{
+		DeserializeSimple(AssetType, fromData, pointerPosition); //4
+		DeserializeSimple(SceneNameLength, fromData, pointerPosition); //8
+		DeserializeString(SceneName, fromData, SceneNameLength, pointerPosition); //17
+		
+		I64 sceneIndex = 0;
+		DeserializeSimple(sceneIndex, fromData, pointerPosition); //25
+		assetRegistry->Deserialize(sceneIndex, fromData, pointerPosition); //233
+
+		outScene->Deserialize(fromData, pointerPosition, assetRegistry);
 	}
 }

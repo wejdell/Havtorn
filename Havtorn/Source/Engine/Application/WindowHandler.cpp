@@ -231,6 +231,8 @@ namespace Havtorn
 
         Resolution = new SVector2<F32>();
 
+        SetInternalResolution();
+
         return true;
     }
 

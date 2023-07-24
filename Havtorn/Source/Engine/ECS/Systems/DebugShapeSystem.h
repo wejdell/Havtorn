@@ -52,7 +52,7 @@ namespace Havtorn
 		*	+	Create a static function for the shape, use TryAddShape(..) to set default parameters
 		*	+	Optional: add a call to the shape to TestAllShapes() and call it somewhere to see that everything is working as expected.
 		*/
-		static constexpr U16 MaxShapes = 2048;
+		static constexpr U16 MaxShapes = 0;
 		static constexpr F32 ThicknessMinimum = 0.005f;
 		static constexpr F32 ThicknessMaximum = 0.05f;
 
