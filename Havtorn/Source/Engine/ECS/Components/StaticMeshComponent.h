@@ -3,18 +3,23 @@
 #pragma once
 #include "ECS/Component.h"
 #include "Graphics/GraphicsStructs.h"
+#include "Core/HavtornString.h"
 
 namespace Havtorn
 {
 	struct SStaticMeshComponent : public SComponent
 	{
-		SStaticMeshComponent(Ref<SEntity> entity, EComponentType type)
-			: SComponent(std::move(entity), type)
+		SStaticMeshComponent()
+			: SComponent(EComponentType::StaticMeshComponent)
 		{}
+
+		void Serialize(char* toData, U64& pointerPosition) const;
+		void Deserialize(const char* fromData, U64& pointerPosition);
+		[[nodiscard]] U32 GetSize() const;
 
 		// Asset Data
 		std::vector<SDrawCallData> DrawCallData;
-		std::string Name = "";
+		CHavtornStaticString<255> Name;
 		U8 NumberOfMaterials = 0;
 
 		// Render Data

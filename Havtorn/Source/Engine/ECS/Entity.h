@@ -5,24 +5,67 @@
 #include "Core/Core.h"
 #include "ECS/ECS.h"
 #include "Core/HavtornString.h"
-
-#include <array>
+#include "Core/BitSet.h"
 
 namespace Havtorn
 {
 	struct HAVTORN_API SEntity
 	{
-		explicit SEntity(U64 id, const std::string& name);
+		U64 GUID = 0;
 
-        const CHavtornString Name;
-		const U64 ID = 0;
-
-		void AddComponent(EComponentType type, U64 arrayIndex) const;
+		bool IsValid() const;
+		void AddComponent(EComponentType type) const;
 		void RemoveComponent(EComponentType type) const;
 		bool HasComponent(EComponentType type) const;
-		const I64 GetComponentIndex(EComponentType type) const;
+		bool HasComponents(U64 mask) const;
+		const CBitSet<STATIC_U64(EComponentType::Count)>& GetComponentMask() const;
+
+		bool operator==(const SEntity& other) const;
+		bool operator!=(const SEntity& other) const;
 
 	private:
-		 mutable std::array<I64, static_cast<size_t>(EComponentType::Count)> ComponentIndices = {};
+		 mutable CBitSet<STATIC_U64(EComponentType::Count)> ComponentMask;
 	};
+
+	const static SEntity EntityTombstone;
+
+	inline bool SEntity::IsValid() const
+	{
+		return GUID > 0;
+	}
+
+	inline void SEntity::AddComponent(EComponentType type) const
+	{
+		ComponentMask.Set(STATIC_U64(type));
+	}
+
+	inline void SEntity::RemoveComponent(EComponentType type) const
+	{
+		ComponentMask.Reset(STATIC_U64(type));
+	}
+
+	inline bool SEntity::HasComponent(EComponentType type) const
+	{
+		return ComponentMask.Test(STATIC_U64(type));
+	}
+
+	inline bool SEntity::HasComponents(U64 mask) const
+	{
+		return ComponentMask.Test(mask);
+	}
+
+	inline const CBitSet<STATIC_U64(EComponentType::Count)>& SEntity::GetComponentMask() const
+	{
+		return ComponentMask;
+	}
+
+	inline bool SEntity::operator==(const SEntity& other) const
+	{
+		return GUID == other.GUID;
+	}
+
+	inline bool SEntity::operator!=(const SEntity& other) const
+	{
+		return GUID != other.GUID;
+	}
 }

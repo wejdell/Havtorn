@@ -21,6 +21,7 @@ namespace Havtorn
 		Animation,
 		AudioOneShot,
 		AudioCollection,
-		VisualFX
+		VisualFX,
+		Scene
 	};
 }

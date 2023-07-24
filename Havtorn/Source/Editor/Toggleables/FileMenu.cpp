@@ -2,6 +2,7 @@
 
 #include "FileMenu.h"
 #include "EditorManager.h"
+#include "Engine.h"
 
 #include <imgui.h>
 
@@ -30,23 +31,65 @@ namespace ImGui
             ImGui::MenuItem("(demo menu)", nullptr, false, false);
             if (ImGui::MenuItem("New")) {}
             if (ImGui::MenuItem("Open", "Ctrl+O")) {}
+
+            if (ImGui::MenuItem("Clear")) 
+            {
+                Havtorn::GEngine::GetWorld()->RemoveScene(0);
+                if (Havtorn::GEngine::GetWorld()->GetActiveScenes().size() > 0)
+                {
+                    Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
+                }
+                else
+                {
+                    Manager->SetCurrentScene(nullptr);
+                }
+            }
+
+            if (ImGui::MenuItem("Generate Demo Scene"))
+            {
+                Havtorn::GEngine::GetWorld()->OpenDemoScene();
+                Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
+            }
+
             if (ImGui::BeginMenu("Open Recent"))
             {
-                ImGui::MenuItem("fish_hat.c");
-                ImGui::MenuItem("fish_hat.inl");
-                ImGui::MenuItem("fish_hat.h");
-                if (ImGui::BeginMenu("More.."))
+                if (ImGui::MenuItem("Assets/Scenes/TestScene.hvs"))
                 {
-                    ImGui::MenuItem("Hello");
-                    ImGui::MenuItem("Sailor");
-                    //if (ImGui::BeginMenu("Recurse.."))
-                    //{
-                    //}
-                    ImGui::EndMenu();
+                    Havtorn::GEngine::GetWorld()->ChangeScene("Assets/Scenes/TestScene.hvs");
+                    Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
                 }
+
+                if (ImGui::MenuItem("Open Demo Scene"))
+                {
+                    Havtorn::GEngine::GetWorld()->ChangeScene("Assets/Scenes/DemoScene.hvs");
+                    Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
+                }
+
+                //ImGui::MenuItem("fish_hat.c");
+                //ImGui::MenuItem("fish_hat.inl");
+                //ImGui::MenuItem("fish_hat.h");
+                //if (ImGui::BeginMenu("More.."))
+                //{
+                //    ImGui::MenuItem("Hello");
+                //    ImGui::MenuItem("Sailor");
+                //    //if (ImGui::BeginMenu("Recurse.."))
+                //    //{
+                //    //}
+                //    ImGui::EndMenu();
+                //}
                 ImGui::EndMenu();
             }
-            if (ImGui::MenuItem("Save", "Ctrl+S")) {}
+
+            if (ImGui::MenuItem("Save Demo Scene"))
+            {
+                Havtorn::GEngine::GetWorld()->SaveActiveScene("Assets/Scenes/DemoScene.hvs");
+            }
+
+            if (ImGui::MenuItem("Save", "Ctrl+S")) 
+            {
+                Havtorn::GEngine::GetWorld()->SaveActiveScene("Assets/Scenes/TestScene.hvs");
+            }
+
             if (ImGui::MenuItem("Save As..")) {}
 
             ImGui::Separator();

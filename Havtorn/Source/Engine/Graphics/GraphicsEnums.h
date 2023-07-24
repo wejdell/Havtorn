@@ -36,6 +36,7 @@ namespace Havtorn
 		PointAndSpotLight = 4,
 		EditorPreview = 5,
 		Line = 6,
+		Sprite = 7,
 	};
 
 	enum class EPixelShaders
@@ -52,11 +53,13 @@ namespace Havtorn
 		VolumetricSpot = 9,
 		EditorPreview = 10,
 		Line = 11,
+		Sprite = 12,
 	};
 
 	enum class EGeometryShaders
 	{
 		Line = 0,
+		Sprite = 1,
 	};
 
 	enum class ESamplers
@@ -69,6 +72,7 @@ namespace Havtorn
 	{
 		TriangleList = 0,
 		LineList = 1,
+		PointList = 2,
 	};
 
 	// Should be 1:1 to RenderManager::InitVertexBufferPrimitives()

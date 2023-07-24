@@ -16,8 +16,6 @@
 
 namespace Havtorn
 {
-	
-
 	class CGraphicsFramework;
 	class CWindowHandler;
 	struct SRenderCommand;
@@ -25,6 +23,7 @@ namespace Havtorn
 	struct SMaterialComponent;
 	struct SDecalComponent;
 	struct SEnvironmentLightComponent;
+	struct SSpriteComponent;
 
 	struct SRenderCommandComparer
 	{
@@ -52,8 +51,10 @@ namespace Havtorn
 
 		HAVTORN_API SVector2<F32> GetShadowAtlasResolution() const;
 		
-		void LoadDecalComponent(const std::vector<std::string>& textureNames, SDecalComponent* outDecalComponent);
-		void LoadEnvironmentLightComponent(const std::string& ambientCubemapTextureName, SEnvironmentLightComponent* outEnvironmentLightComponent);
+		void LoadDecalComponent(const std::vector<std::string>& texturePaths, SDecalComponent* outDecalComponent);
+		void LoadEnvironmentLightComponent(const std::string& ambientCubemapTexturePath, SEnvironmentLightComponent* outEnvironmentLightComponent);
+
+		void LoadSpriteComponent(const std::string& filePath, SSpriteComponent* outSpriteComponent);
 
 		HAVTORN_API void* RenderStaticMeshAssetTexture(const std::string& filePath);
 		HAVTORN_API void* GetTextureAssetTexture(const std::string& filePath);
@@ -66,7 +67,7 @@ namespace Havtorn
 
 	public:
 		[[nodiscard]] HAVTORN_API const CFullscreenTexture& GetRenderedSceneTexture() const;
-		void PushRenderCommand(SRenderCommand& command);
+		void PushRenderCommand(SRenderCommand command);
 		void SwapRenderCommandBuffers();
 
 	public:
@@ -131,6 +132,7 @@ namespace Havtorn
 		inline void VolumetricLightingPoint(const SRenderCommand& command);
 		inline void VolumetricLightingSpot(const SRenderCommand& command);
 		inline void VolumetricBlur();
+		inline void ForwardTransparency(const SRenderCommand& command);
 		inline void RenderBloom();
 		inline void Tonemapping();
 		inline void AntiAliasing();
@@ -216,6 +218,17 @@ namespace Havtorn
 		} DecalBufferData;
 		HV_ASSERT_BUFFER(SDecalBufferData)
 
+		struct SSpriteBufferData
+		{
+			SVector4 Color;
+			SVector4 UVRect;
+			SVector2<F32> Position;
+			SVector2<F32> Size;
+			F32 Rotation;
+			SVector Padding;
+		} SpriteBufferData;
+		HV_ASSERT_BUFFER(SSpriteBufferData)
+
 		struct SDirectionalLightBufferData
 		{
 			SVector4 DirectionalLightDirection;
@@ -281,6 +294,7 @@ namespace Havtorn
 		ID3D11Buffer* MaterialBuffer;
 		ID3D11Buffer* DebugShapeObjectBuffer;
 		ID3D11Buffer* DecalBuffer;
+		ID3D11Buffer* SpriteBuffer;
 		ID3D11Buffer* DirectionalLightBuffer;
 		ID3D11Buffer* PointLightBuffer;
 		ID3D11Buffer* SpotLightBuffer;

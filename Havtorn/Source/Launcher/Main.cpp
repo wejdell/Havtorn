@@ -5,6 +5,7 @@
 
 #include "Application/Application.h"
 #include "../Engine/Application/EngineProcess.h"
+#include "../Game/GameProcess.h"
 #include "../Editor/EditorProcess.h"
 #include "../Engine/Application/ImGuiProcess.h"
 
@@ -53,11 +54,13 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	GLog::Init();
 
 	CEngineProcess* engineProcess = new CEngineProcess(100, 100, 1280, 720);
+	CGameProcess* gameProcess = new CGameProcess();
 	CEditorProcess* editorProcess = new CEditorProcess();
 	CImGuiProcess* imGuiProcess = new CImGuiProcess();
 
 	auto application = new CApplication();
 		application->AddProcess(engineProcess);
+		application->AddProcess(gameProcess);
 		application->AddProcess(editorProcess);
 		application->AddProcess(imGuiProcess);
 

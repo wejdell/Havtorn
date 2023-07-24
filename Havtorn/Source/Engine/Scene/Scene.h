@@ -2,13 +2,23 @@
 
 #pragma once
 
+#include <unordered_map>
+#include <tuple>
+
 namespace Havtorn
 {
-#define COMPONENT_ADDER_DECLARATION(x) Ref<S##x> Add##x##ToEntity(Ref<SEntity> entity);
-#define COMPONENT_ADDER_DEFINITION(x) Ref<S##x> CScene::Add##x##ToEntity(Ref<SEntity> entity){ entity->AddComponent(EComponentType::##x, x##s.size()); return x##s.emplace_back(std::make_shared<S##x>(entity, EComponentType::##x));}
+#define COMPONENT_ADDER_DECLARATION(x) S##x& Add##x##ToEntity(SEntity& entity);
+#define COMPONENT_ADDER_DEFINITION(x) S##x& CScene::Add##x##ToEntity(SEntity& entity){ entity.AddComponent(EComponentType::##x); S##x& newComponent = x##s[EntityVectorIndices[entity.GUID]]; newComponent.IsInUse = true; return newComponent;}
 
-#define COMPONENT_VECTOR_DECLARATION(x) std::vector<Ref<S##x>> x##s;
-#define COMPONENT_VECTOR_GETTER(x) std::vector<Ref<S##x>>& Get##x##s() { return x##s; }
+#define COMPONENT_REMOVER_DECLARATION(x) void Remove##x##FromEntity(SEntity& entity);
+#define COMPONENT_REMOVER_DEFINITION(x) void CScene::Remove##x##FromEntity(SEntity& entity){ entity.RemoveComponent(EComponentType::##x); x##s[EntityVectorIndices[entity.GUID]].IsInUse = false;}
+
+#define COMPONENT_VECTOR_DECLARATION(x) std::vector<S##x> x##s;
+
+// TODO: Filter out using FirstUnusedEntityIndex? Make view instead
+#define COMPONENT_VECTOR_GETTER(x) std::vector<S##x>& Get##x##s() { return x##s; }
+
+#define ALLOCATE_COMPONENTS(x) {S##x* components = new S##x[ENTITY_LIMIT]; memmove(&##x##s[0], components, sizeof(S##x) * ENTITY_LIMIT);}
 
 	struct SEntity;
 	struct STransformComponent;
@@ -22,38 +32,58 @@ namespace Havtorn
 	struct SSpotLightComponent;
 	struct SVolumetricLightComponent;
 	struct SDecalComponent;
+	struct SSpriteComponent;
+	struct STransform2DComponent;
 	struct SDebugShapeComponent;
+	struct SMetaDataComponent;
 
-	class ISystem;
 	class CRenderManager;
+	class CAssetRegistry;
+
+	static U64 gEntityGUID = 0;
 
 	class CScene final
 	{
 	public:
-		CScene() = default;
-		~CScene() = default;
+		CScene();
+		~CScene();
 
 		bool Init(CRenderManager* renderManager);
-		void Update();
 
-		void InitDemoScene(CRenderManager* renderManager);
+		bool InitDemoScene(CRenderManager* renderManager);
 
-		std::vector<Ref<STransformComponent>>& GetTransformComponents() { return TransformComponents; }
-		std::vector<Ref<SStaticMeshComponent>>& GetStaticMeshComponents() { return StaticMeshComponents; }
-		std::vector<Ref<SCameraComponent>>& GetCameraComponents() { return CameraComponents; }
+		[[nodiscard]] U32 GetSize() const;
+		void Serialize(char* toData, U64& pointerPosition) const;
+		void Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry);
+
+		std::vector<SEntity>& GetEntities();
+		SEntity* GetNewEntity(U64 guid = 0);
+		SEntity* GetNewEntity(const std::string& nameInEditor, U64 guid = 0);
+		bool TryRemoveEntity(SEntity& entity);
+
+		__declspec(dllexport) U64 GetSceneIndex(const SEntity& entity) const;
+		__declspec(dllexport) U64 GetMainCameraIndex() const;
+		__declspec(dllexport) U64 GetNumberOfValidEntities() const;
+
+		__declspec(dllexport) void AddComponentToEntity(EComponentType componentType, SEntity& entity);
+		__declspec(dllexport) void RemoveComponentFromEntity(EComponentType componentType, SEntity& entity);
+
+		COMPONENT_VECTOR_GETTER(TransformComponent)
+		COMPONENT_VECTOR_GETTER(StaticMeshComponent)
+		COMPONENT_VECTOR_GETTER(CameraComponent)
 		COMPONENT_VECTOR_GETTER(CameraControllerComponent)
 		COMPONENT_VECTOR_GETTER(MaterialComponent)
 		COMPONENT_VECTOR_GETTER(EnvironmentLightComponent)
-		std::vector<Ref<SDirectionalLightComponent>>& GetDirectionalLightComponents() { return DirectionalLightComponents; }
+		COMPONENT_VECTOR_GETTER(DirectionalLightComponent)
 		COMPONENT_VECTOR_GETTER(PointLightComponent)
-		std::vector<Ref<SSpotLightComponent>>& GetSpotLightComponents() { return SpotLightComponents; }
+		COMPONENT_VECTOR_GETTER(SpotLightComponent)
 		COMPONENT_VECTOR_GETTER(VolumetricLightComponent)
 		COMPONENT_VECTOR_GETTER(DecalComponent)
+		COMPONENT_VECTOR_GETTER(SpriteComponent)
+		COMPONENT_VECTOR_GETTER(Transform2DComponent)
 		COMPONENT_VECTOR_GETTER(DebugShapeComponent)
+		COMPONENT_VECTOR_GETTER(MetaDataComponent)
 
-		std::vector<Ref<SEntity>>& GetEntities() { return Entities; }
-
-		Ref<SEntity> CreateEntity(const std::string& name);
 		COMPONENT_ADDER_DECLARATION(TransformComponent)
 		COMPONENT_ADDER_DECLARATION(StaticMeshComponent)
 		COMPONENT_ADDER_DECLARATION(CameraComponent)
@@ -65,23 +95,68 @@ namespace Havtorn
 		COMPONENT_ADDER_DECLARATION(SpotLightComponent)
 		COMPONENT_ADDER_DECLARATION(VolumetricLightComponent)
 		COMPONENT_ADDER_DECLARATION(DecalComponent)
+		COMPONENT_ADDER_DECLARATION(SpriteComponent)
+		COMPONENT_ADDER_DECLARATION(Transform2DComponent)
 		COMPONENT_ADDER_DECLARATION(DebugShapeComponent)
+		COMPONENT_ADDER_DECLARATION(MetaDataComponent)
+
+		COMPONENT_REMOVER_DECLARATION(TransformComponent)
+		COMPONENT_REMOVER_DECLARATION(StaticMeshComponent)
+		COMPONENT_REMOVER_DECLARATION(CameraComponent)
+		COMPONENT_REMOVER_DECLARATION(CameraControllerComponent)
+		COMPONENT_REMOVER_DECLARATION(MaterialComponent)
+		COMPONENT_REMOVER_DECLARATION(EnvironmentLightComponent)
+		COMPONENT_REMOVER_DECLARATION(DirectionalLightComponent)
+		COMPONENT_REMOVER_DECLARATION(PointLightComponent)
+		COMPONENT_REMOVER_DECLARATION(SpotLightComponent)
+		COMPONENT_REMOVER_DECLARATION(VolumetricLightComponent)
+		COMPONENT_REMOVER_DECLARATION(DecalComponent)
+		COMPONENT_REMOVER_DECLARATION(SpriteComponent)
+		COMPONENT_REMOVER_DECLARATION(Transform2DComponent)
+		COMPONENT_REMOVER_DECLARATION(DebugShapeComponent)
+		COMPONENT_REMOVER_DECLARATION(MetaDataComponent)
 
 	private:
-		std::vector<Ref<SEntity>> Entities;
-		std::vector<Ref<STransformComponent>> TransformComponents;
-		std::vector<Ref<SStaticMeshComponent>> StaticMeshComponents;
-		std::vector<Ref<SCameraComponent>> CameraComponents;
+		template<class T>
+		void UpdateComponentVector(std::vector<T>& components, I64 index);
+
+	private:
+		std::unordered_map<U64, U64> EntityVectorIndices;
+		std::vector<SEntity> Entities;
+		COMPONENT_VECTOR_DECLARATION(TransformComponent)
+		COMPONENT_VECTOR_DECLARATION(StaticMeshComponent)
+		COMPONENT_VECTOR_DECLARATION(CameraComponent)
 		COMPONENT_VECTOR_DECLARATION(CameraControllerComponent)
 		COMPONENT_VECTOR_DECLARATION(MaterialComponent)
 		COMPONENT_VECTOR_DECLARATION(EnvironmentLightComponent)
-		std::vector<Ref<SDirectionalLightComponent>> DirectionalLightComponents;
+		COMPONENT_VECTOR_DECLARATION(DirectionalLightComponent)
 		COMPONENT_VECTOR_DECLARATION(PointLightComponent)
-		std::vector<Ref<SSpotLightComponent>> SpotLightComponents;
+		COMPONENT_VECTOR_DECLARATION(SpotLightComponent)
 		COMPONENT_VECTOR_DECLARATION(VolumetricLightComponent)
 		COMPONENT_VECTOR_DECLARATION(DecalComponent)
-		std::vector<Ptr<ISystem>> Systems;
-		std::vector<Ref<SDebugShapeComponent>> DebugShapeComponents;
+		COMPONENT_VECTOR_DECLARATION(SpriteComponent)
+		COMPONENT_VECTOR_DECLARATION(Transform2DComponent)
+		COMPONENT_VECTOR_DECLARATION(DebugShapeComponent)
+		COMPONENT_VECTOR_DECLARATION(MetaDataComponent)
+		U64 FirstUnusedEntityIndex = 0;
+		U64 MainCameraIndex = 0;
 
+		// TODO.NR/AG: Try to remove this
+		CRenderManager* RenderManager = nullptr;
 	};
+
+	template<class T>
+	void CScene::UpdateComponentVector(std::vector<T>& components, I64 index)
+	{
+		I64 lastUsedEntityIndex = FirstUnusedEntityIndex - 1;
+
+		if (index < 0 || index == lastUsedEntityIndex)
+			return;
+
+		if (!components[lastUsedEntityIndex].IsInUse)
+			return;
+
+		std::swap(components[index], components[lastUsedEntityIndex]);
+		components[lastUsedEntityIndex].IsInUse = false;
+	}
 }

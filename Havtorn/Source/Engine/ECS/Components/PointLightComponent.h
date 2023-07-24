@@ -8,8 +8,8 @@ namespace Havtorn
 {
 	struct SPointLightComponent : public SComponent
 	{
-		SPointLightComponent(Ref<SEntity> entity, EComponentType type)
-			: SComponent(std::move(entity), type)
+		SPointLightComponent()
+			: SComponent(EComponentType::PointLightComponent)
 		{}
 
 		std::array<SShadowmapViewData, 6> ShadowmapViews = {};

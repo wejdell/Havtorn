@@ -7,7 +7,6 @@
 
 using std::fstream;
 
-
 namespace Havtorn
 {
 	using DirectoryIterator = std::filesystem::recursive_directory_iterator;

@@ -42,7 +42,7 @@ namespace ImGui
 		{
 			if (CurrentDirectory != std::filesystem::path(DefaultAssetPath))
 			{
-				if (ImGui::Button("<-"))
+				if (ImGui::ArrowButton("GoBackDir", 0))
 				{
 					CurrentDirectory = CurrentDirectory.parent_path();
 				}

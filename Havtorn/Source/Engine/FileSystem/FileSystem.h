@@ -4,6 +4,7 @@
 
 #include <filesystem>
 #include <fstream>
+#include <rapidjson.h>
 
 namespace Havtorn
 {

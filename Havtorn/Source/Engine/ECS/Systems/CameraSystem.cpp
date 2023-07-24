@@ -33,52 +33,56 @@ namespace Havtorn
 		if (cameraComponents.empty())
 			return;
 
-		const auto& transformComponents = scene->GetTransformComponents();
-		const auto& cameraControllerComponents = scene->GetCameraControllerComponents();
+		std::vector<STransformComponent>& transformComponents = scene->GetTransformComponents();
+		std::vector<SCameraControllerComponent>& cameraControllerComponents = scene->GetCameraControllerComponents();
 	
-		const I64 controllerCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::CameraControllerComponent);
-		auto& controllerComp = cameraControllerComponents[controllerCompIndex];
+		//const I64 controllerCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::CameraControllerComponent);
+		//auto& controllerComp = cameraControllerComponents[controllerCompIndex];
+		auto& controllerComp = cameraControllerComponents[0];
 
-		const I64 transformCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
-		auto& transformComp = transformComponents[transformCompIndex];
+		//const I64 transformCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
+		//auto& transformComp = transformComponents[transformCompIndex];
+		auto& transformComp = transformComponents[0];
 
 		const F32 dt = GTime::Dt();
 
 		if (!IsFreeCamActive)
 		{
 			// Decelerate
-			controllerComp->CurrentAccelerationFactor = UMath::Clamp(controllerComp->CurrentAccelerationFactor - (1.0f / controllerComp->AccelerationDuration) * dt);
-			transformComp->Transform.Translate(controllerComp->AccelerationDirection * controllerComp->CurrentAccelerationFactor * controllerComp->MaxMoveSpeed * dt);
+			controllerComp.CurrentAccelerationFactor = UMath::Clamp(controllerComp.CurrentAccelerationFactor - (1.0f / controllerComp.AccelerationDuration) * dt);
+			transformComp.Transform.Translate(controllerComp.AccelerationDirection * controllerComp.CurrentAccelerationFactor * controllerComp.MaxMoveSpeed * dt);
 
 			ResetInput();
 			return;
 		}
 
 		// === Rotation ===
-		controllerComp->CurrentPitch = UMath::Clamp(controllerComp->CurrentPitch + (CameraRotateInput.X * controllerComp->RotationSpeed * dt), -SCameraControllerComponent::MaxPitchDegrees + 0.01f, SCameraControllerComponent::MaxPitchDegrees - 0.01f);
-		controllerComp->CurrentYaw = UMath::WrapAngle(controllerComp->CurrentYaw + (CameraRotateInput.Y * controllerComp->RotationSpeed * dt));
-		transformComp->Transform.GetMatrix().SetRotation({ controllerComp->CurrentPitch, controllerComp->CurrentYaw, 0.0f });
+		controllerComp.CurrentPitch = UMath::Clamp(controllerComp.CurrentPitch + (CameraRotateInput.X * controllerComp.RotationSpeed * dt), -SCameraControllerComponent::MaxPitchDegrees + 0.01f, SCameraControllerComponent::MaxPitchDegrees - 0.01f);
+		controllerComp.CurrentYaw = UMath::WrapAngle(controllerComp.CurrentYaw + (CameraRotateInput.Y * controllerComp.RotationSpeed * dt));
+		SMatrix newMatrix = transformComp.Transform.GetMatrix();
+		newMatrix.SetRotation({ controllerComp.CurrentPitch, controllerComp.CurrentYaw, 0.0f });
+		transformComp.Transform.SetMatrix(newMatrix);
 
 		// === Translation ===
 		if (CameraMoveInput.IsNearlyZero())
 		{
 			// Decelerate
-			controllerComp->CurrentAccelerationFactor = UMath::Clamp(controllerComp->CurrentAccelerationFactor - (1.0f / controllerComp->AccelerationDuration) * dt);
-			transformComp->Transform.Translate(controllerComp->AccelerationDirection * controllerComp->CurrentAccelerationFactor * controllerComp->MaxMoveSpeed * dt);
+			controllerComp.CurrentAccelerationFactor = UMath::Clamp(controllerComp.CurrentAccelerationFactor - (1.0f / controllerComp.AccelerationDuration) * dt);
+			transformComp.Transform.Translate(controllerComp.AccelerationDirection * controllerComp.CurrentAccelerationFactor * controllerComp.MaxMoveSpeed * dt);
 
 			ResetInput();
 			return;
 		}
 
 		// Jerk
-		if (controllerComp->AccelerationDirection != CameraMoveInput.GetNormalized())
-			controllerComp->CurrentAccelerationFactor = UMath::Min(controllerComp->CurrentAccelerationFactor, 0.5f);
+		if (controllerComp.AccelerationDirection != CameraMoveInput.GetNormalized())
+			controllerComp.CurrentAccelerationFactor = UMath::Min(controllerComp.CurrentAccelerationFactor, 0.5f);
 		 
 		// Accelerate
-		controllerComp->CurrentAccelerationFactor = UMath::Clamp(controllerComp->CurrentAccelerationFactor + (1.0f / controllerComp->AccelerationDuration) * dt);
-		controllerComp->AccelerationDirection = CameraMoveInput.GetNormalized();	
+		controllerComp.CurrentAccelerationFactor = UMath::Clamp(controllerComp.CurrentAccelerationFactor + (1.0f / controllerComp.AccelerationDuration) * dt);
+		controllerComp.AccelerationDirection = CameraMoveInput.GetNormalized();	
 		
-		transformComp->Transform.Translate(controllerComp->AccelerationDirection * controllerComp->CurrentAccelerationFactor * controllerComp->MaxMoveSpeed * dt);
+		transformComp.Transform.Translate(controllerComp.AccelerationDirection * controllerComp.CurrentAccelerationFactor * controllerComp.MaxMoveSpeed * dt);
 
 		ResetInput();
 	}
