@@ -37,7 +37,11 @@ namespace Havtorn
 		Outline,
 		Bloom,
 		Tonemapping,
-		DebugShape,
+		PreDebugShape,
+		PostToneMappingUseDepth,
+		DebugShapeUseDepth,
+		PostToneMappingIgnoreDepth,
+		DebugShapeIgnoreDepth,
 		AntiAliasing,
 		GammaCorrection,
 		RendererDebug

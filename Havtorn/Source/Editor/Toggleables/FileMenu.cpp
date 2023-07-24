@@ -4,6 +4,8 @@
 #include "EditorManager.h"
 #include "Engine.h"
 
+#include <imgui.h>
+
 namespace ImGui
 {
     CFileMenu::CFileMenu(const char* aName, Havtorn::CEditorManager* manager)

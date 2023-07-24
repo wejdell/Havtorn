@@ -21,6 +21,7 @@ namespace Havtorn
 		friend class CRenderManager;
 		friend class CTextureBank;
 		friend class CEditorProcess;
+		friend class CImGuiProcess;
 		friend class CGameProcess;
 
 	public:

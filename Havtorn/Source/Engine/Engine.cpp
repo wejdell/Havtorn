@@ -32,19 +32,19 @@ namespace Havtorn
 		FileSystem = new CFileSystem();
 		Timer = new GTime();
 		WindowHandler = new CWindowHandler();
-		ThreadManager = new CThreadManager();
 		Framework = new CGraphicsFramework();
 		TextureBank = new CTextureBank();
 		RenderManager = new CRenderManager();
 		InputMapper = new CInputMapper();
 		World = new CWorld();
+		ThreadManager = new CThreadManager();
 	}
 
 	GEngine::~GEngine()
 	{
+		SAFE_DELETE(ThreadManager);
 		SAFE_DELETE(World);
 		SAFE_DELETE(InputMapper);
-		SAFE_DELETE(ThreadManager);
 		SAFE_DELETE(RenderManager);
 		SAFE_DELETE(TextureBank);
 		SAFE_DELETE(Framework);
@@ -61,9 +61,9 @@ namespace Havtorn
 		ENGINE_ERROR_BOOL_MESSAGE(Framework->Init(WindowHandler), "Framework could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(TextureBank->Init(Framework), "TextureBank could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(RenderManager->Init(Framework, WindowHandler), "RenderManager could not be initialized.");
-		ENGINE_ERROR_BOOL_MESSAGE(ThreadManager->Init(RenderManager), "Thread Manager could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(InputMapper->Init(), "Input Mapper could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(World->Init(RenderManager), "World could not be initialized.");
+		ENGINE_ERROR_BOOL_MESSAGE(ThreadManager->Init(RenderManager), "Thread Manager could not be initialized.");
 
 		InitWindowsImaging();
 
@@ -72,6 +72,7 @@ namespace Havtorn
 
 	float GEngine::BeginFrame()
 	{
+		// TODO.AG/AS: Do the empty the editor-changes-queue here
 		GTime::BeginTracking(ETimerCategory::CPU);
 		return GTime::Mark();
 	}

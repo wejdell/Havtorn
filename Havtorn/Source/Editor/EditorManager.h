@@ -3,7 +3,6 @@
 #pragma once
 #include "Havtorn.h"
 #include "Input/InputTypes.h"
-#include "Utils/ImGuiUtils.h"
 
 #include <filesystem>
 
@@ -65,16 +64,6 @@ namespace Havtorn
 		SVector2<U16> InspectorSize			= SVector2<U16>::Zero;
 	};
 
-	struct SEditorColorProfile
-	{
-		SVector4 BackgroundBase		= SVector4::Zero;
-		SVector4 BackgroundMid		= SVector4::Zero;
-		SVector4 ElementBackground	= SVector4::Zero;
-		SVector4 ElementHovered		= SVector4::Zero;
-		SVector4 ElementActive		= SVector4::Zero;
-		SVector4 ElementHighlight	= SVector4::Zero;
-	};
-
 	struct SEditorAssetRepresentation
 	{
 		EAssetType AssetType = EAssetType::None;
@@ -132,7 +121,6 @@ namespace Havtorn
 		void InitAssetRepresentations();
 		void PreProcessAssets();
 
-		void SetEditorColorProfile(const SEditorColorProfile& colorProfile);
 		void SetTransformGizmo(const SInputActionPayload payload);
 
 		void ToggleFreeCam(const SInputActionPayload payload);
@@ -155,7 +143,6 @@ namespace Havtorn
 		std::vector<Ptr<SEditorAssetRepresentation>> AssetRepresentations = {};
 
 		SEditorLayout EditorLayout;
-		SEditorColorProfile EditorColorProfile;
 
 		ETransformGizmo CurrentGizmo = ETransformGizmo::Translate;
 
@@ -164,12 +151,5 @@ namespace Havtorn
 		bool IsDebugInfoOpen = true;
 		bool IsDemoOpen = false;
 		bool IsFreeCamActive = false;
-
-	private:
-		// Use only the ones we need // Unused, left for future reference.
-		//HHOOK WindowProcHook = nullptr;
-		//HHOOK MouseHook = nullptr;
-		//HHOOK MouseLLHook = nullptr;
-		//HHOOK KeyboardHook = nullptr;
 	};
 }
