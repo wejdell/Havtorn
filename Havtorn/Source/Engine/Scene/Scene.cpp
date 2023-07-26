@@ -60,7 +60,7 @@ namespace Havtorn
 		return true;
 	}
 
-	bool CScene::InitDemoScene(CRenderManager* renderManager)
+	bool CScene::Init3DDemoScene(CRenderManager* renderManager)
 	{
 		// === Camera ===
 		SEntity* cameraEntity = GetNewEntity("Camera");
@@ -409,6 +409,80 @@ namespace Havtorn
 			assetRegistry->Register(materialNames3, SAssetReferenceCounter(EComponentType::MaterialComponent, floorSceneIndex, 0, 0));
 		}
 		// === !Other Wall ===
+
+		return true;
+	}
+
+	bool CScene::Init2DDemoScene(CRenderManager* renderManager)
+	{
+		// === Camera ===
+		SEntity* cameraEntity = GetNewEntity("Camera");
+		if (!cameraEntity)
+			return false;
+
+		MainCameraIndex = GetSceneIndex(*cameraEntity);
+		CAssetRegistry* assetRegistry = GEngine::GetWorld()->GetAssetRegistry();
+
+		// Setup entities (create components)
+		STransformComponent& transform = AddTransformComponentToEntity(*cameraEntity);
+		transform.Transform.Translate({ 2.0f, 1.0f, -3.0f });
+		transform.Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
+		transform.Transform.Translate(SVector::Right * 0.25f);
+
+		SCameraComponent& camera = AddCameraComponentToEntity(*cameraEntity);
+		camera.ProjectionType = ECameraProjectionType::Orthographic;
+		camera.ProjectionMatrix = SMatrix::OrthographicLH(5.0f, 5.0f, 0.1f, 1000.0f);
+		camera.ViewMatrix = SMatrix::LookAtLH(SVector::Zero, SVector::Forward, SVector::Up);
+
+		SCameraControllerComponent& controllerComp = AddCameraControllerComponentToEntity(*cameraEntity);
+		controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
+		// === !Camera ===
+
+		// === Environment light ===
+		SEntity* environmentLightEntity = GetNewEntity("Environment Light");
+		if (!environmentLightEntity)
+			return false;
+
+		AddTransformComponentToEntity(*environmentLightEntity);
+		renderManager->LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/CubemapTheVisit.hva", &AddEnvironmentLightComponentToEntity(*environmentLightEntity));
+		U16 environmentLightEntitySceneIndex = static_cast<U16>(GetSceneIndex(*environmentLightEntity));
+		assetRegistry->Register("Assets/Textures/Cubemaps/CubemapTheVisit.hva", SAssetReferenceCounter(EComponentType::EnvironmentLightComponent, environmentLightEntitySceneIndex, 0, 0));
+		// === !Environment light ===
+
+		// === Directional light ===
+		SEntity* directionalLightEntity = GetNewEntity("Directional Light");
+		if (!directionalLightEntity)
+			return false;
+
+		AddDirectionalLightComponentToEntity(*directionalLightEntity);
+		SDirectionalLightComponent& directionalLight = DirectionalLightComponents[GetSceneIndex(*directionalLightEntity)];
+		directionalLight.Direction = { 1.0f, 1.0f, -1.0f, 0.0f };
+		directionalLight.Color = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };
+		directionalLight.ShadowmapView.ShadowmapViewportIndex = 0;
+		directionalLight.ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLight.ShadowViewSize.X, directionalLight.ShadowViewSize.Y, directionalLight.ShadowNearAndFarPlane.X, directionalLight.ShadowNearAndFarPlane.Y);
+
+		SVolumetricLightComponent& volumetricLight = AddVolumetricLightComponentToEntity(*directionalLightEntity);
+		volumetricLight.IsActive = false;
+		// === !Directional light ===
+
+		// === Sprite ===
+		SEntity* sprite = GetNewEntity("Sprite");
+		if (!sprite)
+			return true;
+
+		STransform2DComponent& transform2D = AddTransform2DComponentToEntity(*sprite);
+		transform2D.Position = { 0.5f, 0.5f };
+		transform2D.Scale = { 1.0f, 1.0f };
+
+		const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
+		SSpriteComponent& spriteComp = AddSpriteComponentToEntity(*sprite);
+		spriteComp.UVRect = { 0.0f, 0.0f, 1.0f, 1.0f };
+		renderManager->LoadSpriteComponent(spritePath, &spriteComp);
+
+		U16 spriteIndex = static_cast<U16>(GetSceneIndex(*sprite));
+		assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
+		// === !Sprite ===
+
 
 		return true;
 	}

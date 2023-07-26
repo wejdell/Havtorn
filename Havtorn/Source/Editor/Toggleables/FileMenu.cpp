@@ -45,9 +45,15 @@ namespace ImGui
                 }
             }
 
-            if (ImGui::MenuItem("Generate Demo Scene"))
+            if (ImGui::MenuItem("Generate 3D Demo Scene"))
             {
-                Havtorn::GEngine::GetWorld()->OpenDemoScene();
+                Havtorn::GEngine::GetWorld()->OpenDemoScene(true);
+                Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
+            }
+
+            if (ImGui::MenuItem("Generate 2D Demo Scene"))
+            {
+                Havtorn::GEngine::GetWorld()->OpenDemoScene(false);
                 Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
             }
 
