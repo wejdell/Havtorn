@@ -238,18 +238,18 @@ namespace Havtorn
 
 		for (U64 i = 0; i < spriteComponents.size(); i++)
 		{
-			const STransform2DComponent& transform2DComp = transform2DComponents[i];
-			if (!transform2DComp.IsInUse)
-				continue;
-
 			const SSpriteComponent& spriteComp = spriteComponents[i];
 			if (!spriteComp.IsInUse)
+				continue;
+
+			const STransform2DComponent& transform2DComp = transform2DComponents[i];
+			if (!transform2DComp.IsInUse)
 				continue;
 
 			SRenderCommand command;
 			command.Transform2DComponent = transform2DComp;
 			command.SpriteComponent = spriteComp;
-			command.Type = ERenderCommandType::ForwardTransparency;
+			command.Type = ERenderCommandType::ScreenSpaceSprite;
 			RenderManager->PushRenderCommand(command);
 		}
 

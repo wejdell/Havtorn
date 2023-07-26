@@ -481,6 +481,12 @@ namespace Havtorn
 				}
 				break;
 
+				case ERenderCommandType::ScreenSpaceSprite:
+				{
+					ScreenSpaceSprite(currentCommand);
+				}
+				break;
+
 				case ERenderCommandType::Bloom:
 				{
 					RenderBloom();
@@ -2028,38 +2034,43 @@ namespace Havtorn
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::DepthAwareUpsampling);
 	}
 
-	inline void CRenderManager::ForwardTransparency(const SRenderCommand& command)
+	inline void CRenderManager::ForwardTransparency(const SRenderCommand& /*command*/)
+	{
+		//RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
+	}
+
+	void CRenderManager::ScreenSpaceSprite(const SRenderCommand& command)
 	{
 		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
 
 		const STransform2DComponent& transform2DComp = command.GetComponent(Transform2DComponent);
 		const SSpriteComponent& spriteComponent = command.GetComponent(SpriteComponent);
 
-        SpriteBufferData.Color = spriteComponent.Color.AsVector4();
-        SpriteBufferData.UVRect = spriteComponent.UVRect;
-        SpriteBufferData.Position = transform2DComp.Position;
-        SpriteBufferData.Size = transform2DComp.Scale;
-        SpriteBufferData.Rotation = UMath::DegToRad(transform2DComp.DegreesRoll);
+		SpriteBufferData.Color = spriteComponent.Color.AsVector4();
+		SpriteBufferData.UVRect = spriteComponent.UVRect;
+		SpriteBufferData.Position = transform2DComp.Position;
+		SpriteBufferData.Size = transform2DComp.Scale;
+		SpriteBufferData.Rotation = UMath::DegToRad(transform2DComp.DegreesRoll);
 
-        BindBuffer(SpriteBuffer, SpriteBufferData, "Sprite Buffer");
+		BindBuffer(SpriteBuffer, SpriteBufferData, "Sprite Buffer");
 
-        Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::PointList)]);
-        Context->IASetInputLayout(nullptr);
-        Context->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
-        Context->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
+		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::PointList)]);
+		Context->IASetInputLayout(nullptr);
+		Context->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
+		Context->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
 
-        Context->VSSetConstantBuffers(0, 1, &SpriteBuffer);
-        Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Sprite)], nullptr, 0);
+		Context->VSSetConstantBuffers(0, 1, &SpriteBuffer);
+		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Sprite)], nullptr, 0);
 
-        Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::Sprite)], nullptr, 0);
+		Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::Sprite)], nullptr, 0);
 
-        Context->PSSetConstantBuffers(0, 1, &SpriteBuffer);
-        Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::Sprite)], nullptr, 0);
+		Context->PSSetConstantBuffers(0, 1, &SpriteBuffer);
+		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::Sprite)], nullptr, 0);
 
 		auto spriteTexture = GEngine::GetTextureBank()->GetTexture(spriteComponent.TextureIndex);
 		Context->PSSetShaderResources(0, 1, &spriteTexture);
 
-        Context->Draw(3, 0);
+		Context->Draw(1, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 
 		ID3D11Buffer* nullBuffer = NULL;

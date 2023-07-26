@@ -133,6 +133,7 @@ namespace Havtorn
 		inline void VolumetricLightingSpot(const SRenderCommand& command);
 		inline void VolumetricBlur();
 		inline void ForwardTransparency(const SRenderCommand& command);
+		inline void ScreenSpaceSprite(const SRenderCommand& command);
 		inline void RenderBloom();
 		inline void Tonemapping();
 		inline void AntiAliasing();

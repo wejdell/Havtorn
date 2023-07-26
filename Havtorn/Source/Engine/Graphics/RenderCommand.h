@@ -35,6 +35,7 @@ namespace Havtorn
 		ForwardTransparency,
 		OutlineMask,
 		Outline,
+		ScreenSpaceSprite,
 		Bloom,
 		Tonemapping,
 		PreDebugShape,
