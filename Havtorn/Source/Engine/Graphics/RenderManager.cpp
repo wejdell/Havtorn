@@ -309,6 +309,7 @@ namespace Havtorn
 	{
 		AddIndexBuffer(GeometryPrimitives::DecalProjectorIndices);
 		AddIndexBuffer(GeometryPrimitives::PointLightCubeIndices);
+		AddIndexBuffer(GeometryPrimitives::Icosphere.Indices);
 		AddIndexBuffer(GeometryPrimitives::Line.Indices);
 		AddIndexBuffer(GeometryPrimitives::Pyramid.Indices);
 		AddIndexBuffer(GeometryPrimitives::BoundingBox.Indices);
@@ -322,8 +323,6 @@ namespace Havtorn
 		AddIndexBuffer(GeometryPrimitives::Octahedron.Indices);
 		AddIndexBuffer(GeometryPrimitives::Square.Indices);
 		AddIndexBuffer(GeometryPrimitives::UVSphere.Indices);
-
-		AddIndexBuffer(GeometryPrimitives::Icosphere.Indices);
 	}
 
 	void CRenderManager::InitTopologies()
@@ -2031,6 +2030,8 @@ namespace Havtorn
 
 	inline void CRenderManager::ForwardTransparency(const SRenderCommand& command)
 	{
+		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
+
 		const STransform2DComponent& transform2DComp = command.GetComponent(Transform2DComponent);
 		const SSpriteComponent& spriteComponent = command.GetComponent(SpriteComponent);
 
@@ -2052,8 +2053,8 @@ namespace Havtorn
 
         Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::Sprite)], nullptr, 0);
 
-        Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::Sprite)], nullptr, 0);
         Context->PSSetConstantBuffers(0, 1, &SpriteBuffer);
+        Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::Sprite)], nullptr, 0);
 
 		auto spriteTexture = GEngine::GetTextureBank()->GetTexture(spriteComponent.TextureIndex);
 		Context->PSSetShaderResources(0, 1, &spriteTexture);
