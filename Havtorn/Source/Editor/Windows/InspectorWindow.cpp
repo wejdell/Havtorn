@@ -186,12 +186,35 @@ namespace ImGui
 			return;
 
 		auto& cameraComp = Scene->GetCameraComponents()[SelectedEntityIndex];
-		ImGui::DragFloat("FOV", &cameraComp.FOV, SlideSpeed, 1.0f, 180.0f);
-		ImGui::DragFloat("Aspect Ratio", &cameraComp.AspectRatio, SlideSpeed, 0.1f, 10.0f);
+
+		int projectionIndex = static_cast<int>(cameraComp.ProjectionType);
+		const char* projectionNames[2] = { "Perspective", "Orthographic" };
+		const char* projectionName = (projectionIndex >= 0 && projectionIndex < 2) ? projectionNames[projectionIndex] : "Unknown";
+		ImGui::SliderInt("Projection Type", &projectionIndex, 0, 1, projectionName);
+		cameraComp.ProjectionType = static_cast<Havtorn::ECameraProjectionType>(projectionIndex);
+
+		if (cameraComp.ProjectionType == Havtorn::ECameraProjectionType::Perspective)
+		{
+			ImGui::DragFloat("FOV", &cameraComp.FOV, SlideSpeed, 1.0f, 180.0f);
+			ImGui::DragFloat("Aspect Ratio", &cameraComp.AspectRatio, SlideSpeed, 0.1f, 10.0f);
+		}
+		else if (cameraComp.ProjectionType == Havtorn::ECameraProjectionType::Orthographic)
+		{
+			ImGui::DragFloat("View Width", &cameraComp.ViewWidth, SlideSpeed, 0.1f, 100.0f);
+			ImGui::DragFloat("View Height", &cameraComp.ViewHeight, SlideSpeed, 0.1f, 100.0f);
+		}
+
 		ImGui::DragFloat("Near Clip Plane", &cameraComp.NearClip, SlideSpeed, 0.01f, cameraComp.FarClip - 1.0f);
 		ImGui::DragFloat("Far Clip Plane", &cameraComp.FarClip, SlideSpeed, cameraComp.NearClip + 1.0f, 10000.0f);
 
-		cameraComp.ProjectionMatrix = Havtorn::SMatrix::PerspectiveFovLH(Havtorn::UMath::DegToRad(cameraComp.FOV), cameraComp.AspectRatio, cameraComp.NearClip, cameraComp.FarClip);
+		if (cameraComp.ProjectionType == Havtorn::ECameraProjectionType::Perspective)
+		{
+			cameraComp.ProjectionMatrix = Havtorn::SMatrix::PerspectiveFovLH(Havtorn::UMath::DegToRad(cameraComp.FOV), cameraComp.AspectRatio, cameraComp.NearClip, cameraComp.FarClip);
+		}
+		else if (cameraComp.ProjectionType == Havtorn::ECameraProjectionType::Orthographic)
+		{
+			cameraComp.ProjectionMatrix = Havtorn::SMatrix::OrthographicLH(cameraComp.ViewWidth, cameraComp.ViewHeight, cameraComp.NearClip, cameraComp.FarClip);
+		}
 	}
 
 	void CInspectorWindow::InspectCameraControllerComponent()
