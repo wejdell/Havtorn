@@ -110,6 +110,8 @@ namespace ImGui
 	{
 		if (selectedEntity->HasComponent(componentType))
 		{
+			// TODO.NR/AG: Extract Collapsing Header and Remove Component button logic and move it here
+
 			InspectionFunctions[componentType]();
 			ImGui::Dummy({ DummySize.X, DummySize.Y });
 		}

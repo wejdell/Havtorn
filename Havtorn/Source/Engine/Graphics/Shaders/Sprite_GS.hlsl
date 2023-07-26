@@ -32,11 +32,11 @@ void main(
         GeometryToPixel vertex;
         vertex.Position = 0.0f;
         vertex.Position.w = 1.0f;
-        vertex.Position.xy += inputVertex.Position;
         vertex.Position.xy += offset[index] * inputVertex.Size;
         float2 intermediate = vertex.Position.xy;
         vertex.Position.x = intermediate.x * cos(inputVertex.Rotation) - intermediate.y * sin(inputVertex.Rotation);
         vertex.Position.y = intermediate.x * sin(inputVertex.Rotation) + intermediate.y * cos(inputVertex.Rotation);
+        vertex.Position.xy += inputVertex.Position;
         vertex.Position.xy *= aspectRatioDivider;
         vertex.Color = inputVertex.Color;
         vertex.UV = uv[index];
