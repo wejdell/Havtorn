@@ -36,8 +36,8 @@ void main(
         float2 intermediate = vertex.Position.xy;
         vertex.Position.x = intermediate.x * cos(inputVertex.Rotation) - intermediate.y * sin(inputVertex.Rotation);
         vertex.Position.y = intermediate.x * sin(inputVertex.Rotation) + intermediate.y * cos(inputVertex.Rotation);
-        vertex.Position.xy += inputVertex.Position;
         vertex.Position.xy *= aspectRatioDivider;
+        vertex.Position.xy += inputVertex.Position * 2.0f - 1.0f;
         vertex.Color = inputVertex.Color;
         vertex.UV = uv[index];
         output.Append(vertex);
