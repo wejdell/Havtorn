@@ -3,7 +3,7 @@
 #include "Includes/SpriteShaderStructs.hlsli"
 #include "Includes/MathHelpers.hlsli"
 
-PixelOutput main(GeometryToPixel input)
+PixelOutput main(GeometryToPixelScreenSpace input)
 {
     PixelOutput output;
     float4 textureColor = spriteTexture.Sample(defaultSampler, input.UV.xy).rgba;

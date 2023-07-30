@@ -7,6 +7,7 @@
 #include "RenderCommand.h"
 
 #include "Engine.h"
+#include "Input/InputMapper.h"
 #include "Scene/World.h"
 
 #include "ECS/ECSInclude.h"
@@ -48,10 +49,6 @@ namespace Havtorn
 	    , PushToCommands(&RenderCommandsA)
 	    , PopFromCommands(&RenderCommandsB)
 	    , ClearColor(0.5f, 0.5f, 0.5f, 1.0f)
-	    , RenderPassIndex(0)
-	    , DoFullRender(true)
-	    , UseAntiAliasing(true)
-	    , UseBrokenScreenPass(false)
 	{
 	}
 
@@ -65,58 +62,6 @@ namespace Havtorn
 		Framework = framework;
 		Context = Framework->GetContext();
 
-		D3D11_BUFFER_DESC bufferDescription = { 0 };
-		bufferDescription.Usage = D3D11_USAGE_DYNAMIC;
-		bufferDescription.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-		bufferDescription.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-		bufferDescription.ByteWidth = sizeof(SFrameBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &FrameBuffer), "Frame Buffer could not be created.");
-
-		bufferDescription.ByteWidth = sizeof(SObjectBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &ObjectBuffer), "Object Buffer could not be created.");
-		
-		bufferDescription.ByteWidth = sizeof(SMaterialBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &MaterialBuffer), "Material Buffer could not be created.");
-
-		bufferDescription.ByteWidth = sizeof(SDebugShapeObjectBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DebugShapeObjectBuffer), "Debug Shape Object Buffer could not be created.");
-
-		bufferDescription.ByteWidth = sizeof(SDecalBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DecalBuffer), "Decal Buffer could not be created.");
-
-		bufferDescription.ByteWidth = sizeof(SSpriteBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &SpriteBuffer), "Sprite Buffer could not be created.");
-
-		bufferDescription.ByteWidth = sizeof(SDirectionalLightBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DirectionalLightBuffer), "Directional Light Buffer could not be created.");
-
-		bufferDescription.ByteWidth = sizeof(SPointLightBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &PointLightBuffer), "Point Light Buffer could not be created.");
-
-		bufferDescription.ByteWidth = sizeof(SSpotLightBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &SpotLightBuffer), "Spot Light Buffer could not be created.");
-
-		bufferDescription.ByteWidth = sizeof(SShadowmapBufferData) * 6;
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &ShadowmapBuffer), "Shadowmap Buffer could not be created.");
-
-		bufferDescription.ByteWidth = sizeof(SVolumetricLightBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &VolumetricLightBuffer), "Volumetric Light Buffer could not be created.");
-
-		bufferDescription.ByteWidth = sizeof(SEmissiveBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &EmissiveBuffer), "Emissive Buffer could not be created.");
-
-		//Instance Buffer
-		D3D11_BUFFER_DESC instanceBufferDesc;
-		instanceBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-		instanceBufferDesc.ByteWidth = sizeof(SMatrix) * InstancedMeshNumberLimit;
-		instanceBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		instanceBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-		instanceBufferDesc.MiscFlags = 0;
-		instanceBufferDesc.StructureByteStride = 0;
-
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&instanceBufferDesc, nullptr, &InstancedTransformBuffer), "Instanced Transform Buffer could not be created.");
-
 		ENGINE_ERROR_BOOL_MESSAGE(FullscreenRenderer.Init(framework), "Failed to Init Fullscreen Renderer.");
 		ENGINE_ERROR_BOOL_MESSAGE(FullscreenTextureFactory.Init(framework), "Failed to Init Fullscreen Texture Factory.");
 		ENGINE_ERROR_BOOL_MESSAGE(RenderStateManager.Init(framework), "Failed to Init Render State Manager.");
@@ -126,6 +71,8 @@ namespace Havtorn
 
 		Backbuffer = FullscreenTextureFactory.CreateTexture(backbufferTexture);
 		InitRenderTextures(windowHandler);
+
+		InitDataBuffers();
 
 		// Load default resources
 		InitVertexShadersAndInputLayouts();
@@ -140,6 +87,10 @@ namespace Havtorn
 
 		InitEditorResources();
 		LoadDemoSceneResources();
+
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderPassForward).AddMember(this, &CRenderManager::CycleRenderPass);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderPassBackward).AddMember(this, &CRenderManager::CycleRenderPass);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderPassReset).AddMember(this, &CRenderManager::CycleRenderPass);
 
 		return true;
 	}
@@ -249,7 +200,10 @@ namespace Havtorn
 		
 		AddShader("Shaders/Line_VS.cso", EShaderType::Vertex);
 
-		AddShader("Shaders/Sprite_VS.cso", EShaderType::Vertex);
+		AddShader("Shaders/SpriteScreenSpace_VS.cso", EShaderType::Vertex);
+		
+		vsData = AddShader("Shaders/SpriteWorldSpace_VS.cso", EShaderType::Vertex);
+		AddInputLayout(vsData, EInputLayoutType::TransUVRectColor);
 	}
 
 	void CRenderManager::InitPixelShaders()
@@ -270,13 +224,15 @@ namespace Havtorn
 		
 		AddShader("Shaders/EditorPreview_PS.cso", EShaderType::Pixel);
 		AddShader("Shaders/Line_PS.cso", EShaderType::Pixel);
-		AddShader("Shaders/Sprite_PS.cso", EShaderType::Pixel);
+		AddShader("Shaders/SpriteScreenSpace_PS.cso", EShaderType::Pixel);
+		AddShader("Shaders/SpriteWorldSpace_PS.cso", EShaderType::Pixel);
 	}
 
 	void CRenderManager::InitGeometryShaders()
 	{
 		AddShader("Shaders/Line_GS.cso", EShaderType::Geometry);
-		AddShader("Shaders/Sprite_GS.cso", EShaderType::Geometry);
+		AddShader("Shaders/SpriteScreenSpace_GS.cso", EShaderType::Geometry);
+		AddShader("Shaders/SpriteWorldSpace_GS.cso", EShaderType::Geometry);
 	}
 
 	void CRenderManager::InitSamplers()
@@ -409,6 +365,12 @@ namespace Havtorn
 				case ERenderCommandType::GBufferDataInstanced:
 				{
 					GBufferDataInstanced(currentCommand);
+				}
+				break;
+
+				case ERenderCommandType::GBufferSpriteInstanced:
+				{
+					GBufferSpriteInstanced(currentCommand);
 				}
 				break;
 
@@ -552,6 +514,8 @@ namespace Havtorn
 				}
 				PopFromCommands->pop();
 			}
+
+			CheckIsolatedRenderPass();
 
 			// RenderedScene should be complete as that is the texture we send to the viewport
 			Backbuffer.SetAsActiveTarget();
@@ -1106,6 +1070,75 @@ namespace Havtorn
 		return SystemStaticMeshInstanceTransforms.clear();
 	}
 
+	bool CRenderManager::IsSpriteInInstancedTransformRenderList(const U32 textureBankIndex)
+	{
+		return SystemSpriteInstanceTransforms.contains(textureBankIndex);
+	}
+
+	void CRenderManager::AddSpriteToInstancedTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix)
+	{
+		if (!SystemSpriteInstanceTransforms.contains(textureBankIndex))
+			SystemSpriteInstanceTransforms.emplace(textureBankIndex, std::vector<SMatrix>());
+
+		SystemSpriteInstanceTransforms[textureBankIndex].emplace_back(transformMatrix);
+	}
+
+	void CRenderManager::SwapSpriteInstancedTransformRenderLists()
+	{
+		std::swap(SystemSpriteInstanceTransforms, RendererSpriteInstanceTransforms);
+	}
+
+	void CRenderManager::ClearSpriteInstanceTransforms()
+	{
+		SystemSpriteInstanceTransforms.clear();
+	}
+
+	bool CRenderManager::IsSpriteInInstancedUVRectRenderList(const U32 textureBankIndex)
+	{
+		return SystemSpriteInstanceUVRects.contains(textureBankIndex);
+	}
+
+	void CRenderManager::AddSpriteToInstancedUVRectRenderList(const U32 textureBankIndex, const SVector4& uvRect)
+	{
+		if (!SystemSpriteInstanceUVRects.contains(textureBankIndex))
+			SystemSpriteInstanceUVRects.emplace(textureBankIndex, std::vector<SVector4>());
+
+		SystemSpriteInstanceUVRects[textureBankIndex].emplace_back(uvRect);
+	}
+
+	void CRenderManager::SwapSpriteInstancedUVRectRenderLists()
+	{
+		std::swap(SystemSpriteInstanceUVRects, RendererSpriteInstanceUVRects);
+	}
+
+	void CRenderManager::ClearSpriteInstanceUVRects()
+	{
+		SystemSpriteInstanceUVRects.clear();
+	}
+
+	bool CRenderManager::IsSpriteInInstancedColorRenderList(const U32 textureBankIndex)
+	{
+		return SystemSpriteInstanceColors.contains(textureBankIndex);
+	}
+
+	void CRenderManager::AddSpriteToInstancedColorRenderList(const U32 textureBankIndex, const SVector4& color)
+	{
+		if (!SystemSpriteInstanceColors.contains(textureBankIndex))
+			SystemSpriteInstanceColors.emplace(textureBankIndex, std::vector<SVector4>());
+
+		SystemSpriteInstanceColors[textureBankIndex].emplace_back(color);
+	}
+
+	void CRenderManager::SwapSpriteInstancedColorRenderLists()
+	{
+		std::swap(SystemSpriteInstanceColors, RendererSpriteInstanceColors);
+	}
+
+	void CRenderManager::ClearSpriteInstanceColors()
+	{
+		SystemSpriteInstanceColors.clear();
+	}
+
 	const CFullscreenTexture& CRenderManager::GetRenderedSceneTexture() const
 	{
 		return RenderedScene;
@@ -1127,22 +1160,67 @@ namespace Havtorn
 		//myIntermediateDepth.ClearDepth();
 	}
 
-	void CRenderManager::ToggleRenderPass(bool shouldToggleForwards)
+	void CRenderManager::InitDataBuffers()
 	{
-		if (!shouldToggleForwards)
-		{
-			--RenderPassIndex;
-			if (RenderPassIndex < 0) {
-				RenderPassIndex = 8;
-			}
-			return;
-		}
+		D3D11_BUFFER_DESC bufferDescription = { 0 };
+		bufferDescription.Usage = D3D11_USAGE_DYNAMIC;
+		bufferDescription.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		bufferDescription.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
-		++RenderPassIndex;
-		if (RenderPassIndex > 8)
-		{
-			RenderPassIndex = 0;
-		}
+		bufferDescription.ByteWidth = sizeof(SFrameBufferData);
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &FrameBuffer), "Frame Buffer could not be created.");
+
+		bufferDescription.ByteWidth = sizeof(SObjectBufferData);
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &ObjectBuffer), "Object Buffer could not be created.");
+
+		bufferDescription.ByteWidth = sizeof(SMaterialBufferData);
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &MaterialBuffer), "Material Buffer could not be created.");
+
+		bufferDescription.ByteWidth = sizeof(SDebugShapeObjectBufferData);
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DebugShapeObjectBuffer), "Debug Shape Object Buffer could not be created.");
+
+		bufferDescription.ByteWidth = sizeof(SDecalBufferData);
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DecalBuffer), "Decal Buffer could not be created.");
+
+		bufferDescription.ByteWidth = sizeof(SSpriteBufferData);
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &SpriteBuffer), "Sprite Buffer could not be created.");
+
+		bufferDescription.ByteWidth = sizeof(SDirectionalLightBufferData);
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DirectionalLightBuffer), "Directional Light Buffer could not be created.");
+
+		bufferDescription.ByteWidth = sizeof(SPointLightBufferData);
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &PointLightBuffer), "Point Light Buffer could not be created.");
+
+		bufferDescription.ByteWidth = sizeof(SSpotLightBufferData);
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &SpotLightBuffer), "Spot Light Buffer could not be created.");
+
+		bufferDescription.ByteWidth = sizeof(SShadowmapBufferData) * 6;
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &ShadowmapBuffer), "Shadowmap Buffer could not be created.");
+
+		bufferDescription.ByteWidth = sizeof(SVolumetricLightBufferData);
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &VolumetricLightBuffer), "Volumetric Light Buffer could not be created.");
+
+		bufferDescription.ByteWidth = sizeof(SEmissiveBufferData);
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &EmissiveBuffer), "Emissive Buffer could not be created.");
+
+		//Instance Transform Buffer
+		D3D11_BUFFER_DESC instanceBufferDesc;
+		instanceBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+		instanceBufferDesc.ByteWidth = sizeof(SMatrix) * InstancedDrawInstanceLimit;
+		instanceBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		instanceBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		instanceBufferDesc.MiscFlags = 0;
+		instanceBufferDesc.StructureByteStride = 0;
+
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&instanceBufferDesc, nullptr, &InstancedTransformBuffer), "Instanced Transform Buffer could not be created.");
+
+		//Instance UV Rect Buffer
+		instanceBufferDesc.ByteWidth = sizeof(SVector4) * InstancedDrawInstanceLimit;
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&instanceBufferDesc, nullptr, &InstancedUVRectBuffer), "Instanced UV Rect Buffer could not be created.");
+
+		//Instance Color Buffer
+		instanceBufferDesc.ByteWidth = sizeof(SVector4) * InstancedDrawInstanceLimit;
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&instanceBufferDesc, nullptr, &InstancedColorBuffer), "Instanced Color Buffer could not be created.");
 	}
 
 	U16 CRenderManager::AddIndexBuffer(const std::vector<U32>& indices)
@@ -1242,6 +1320,18 @@ namespace Havtorn
 			layout =
 			{
 				{"POSITION"	,	0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
+			};
+			break;
+
+		case EInputLayoutType::TransUVRectColor:
+			layout =
+			{
+				{"INSTANCETRANSFORM",	0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+				{"INSTANCETRANSFORM",	1, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+				{"INSTANCETRANSFORM",	2, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+				{"INSTANCETRANSFORM",	3, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+				{"INSTANCEUVRECT",		0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+				{"INSTANCECOLOR",		0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1}
 			};
 			break;
 		}
@@ -1473,6 +1563,7 @@ namespace Havtorn
 
 		Context->VSSetConstantBuffers(0, 1, &FrameBuffer);
 		Context->PSSetConstantBuffers(0, 1, &FrameBuffer);
+		Context->GSSetConstantBuffers(0, 1, &FrameBuffer);
 	}
 
 	void CRenderManager::GBufferDataInstanced(const SRenderCommand& command)
@@ -1544,6 +1635,51 @@ namespace Havtorn
 			Context->DrawIndexedInstanced(drawData.IndexCount, static_cast<U32>(matrices.size()), 0, 0, 0);
 			CRenderManager::NumberOfDrawCallsThisFrame++;
 		}
+	}
+
+	void CRenderManager::GBufferSpriteInstanced(const SRenderCommand& command)
+	{
+		// TODO.NR: Fix transparency
+		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::GBufferAlphaBlend);
+
+		//const STransformComponent& transformComp = command.GetComponent(TransformComponent);
+		const SSpriteComponent& spriteComp = command.GetComponent(SpriteComponent); 
+
+		//ObjectBufferData.ToWorldFromObject = transformComp.Transform.GetMatrix();
+		//BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
+
+		const std::vector<SMatrix>& matrices = RendererSpriteInstanceTransforms[spriteComp.TextureIndex];
+		BindBuffer(InstancedTransformBuffer, matrices, "Instanced Transform Buffer");
+
+		const std::vector<SVector4>& uvRects = RendererSpriteInstanceUVRects[spriteComp.TextureIndex];
+		BindBuffer(InstancedUVRectBuffer, uvRects, "Instanced UV Rect Buffer");
+
+		const std::vector<SVector4>& colors = RendererSpriteInstanceColors[spriteComp.TextureIndex];
+		BindBuffer(InstancedColorBuffer, colors, "Instanced Color Buffer");
+
+		//Context->VSSetConstantBuffers(1, 1, &ObjectBuffer);
+		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::PointList)]);
+		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::TransUVRectColor)]);
+
+		// Make new VS, GS, PS, need to write to GBuffer
+		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::SpriteWorldSpace)], nullptr, 0);
+		Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::SpriteWorldSpace)], nullptr, 0);
+		//Context->PSSetConstantBuffers(0, 1, &SpriteBuffer);
+		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::SpriteWorldSpace)], nullptr, 0);
+
+		ID3D11SamplerState* sampler = Samplers[static_cast<U8>(ESamplers::DefaultWrap)];
+		Context->PSSetSamplers(0, 1, &sampler);
+
+		ID3D11ShaderResourceView* spriteTexture = GEngine::GetTextureBank()->GetTexture(spriteComp.TextureIndex);
+		Context->PSSetShaderResources(0, 1, &spriteTexture);
+
+		ID3D11Buffer* bufferPointers[3] = { InstancedTransformBuffer, InstancedUVRectBuffer, InstancedColorBuffer };
+		const U32 strides[3] = { sizeof(SMatrix), sizeof(SVector4), sizeof(SVector4) };
+		const U32 offsets[3] = { 0, 0, 0 };
+		Context->IASetVertexBuffers(0, 3, bufferPointers, strides, offsets);
+		Context->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
+		Context->DrawInstanced(1, static_cast<U32>(matrices.size()), 0, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
 	}
 
 	void CRenderManager::DecalDepthCopy()
@@ -2060,14 +2196,14 @@ namespace Havtorn
 		Context->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
 
 		Context->VSSetConstantBuffers(0, 1, &SpriteBuffer);
-		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Sprite)], nullptr, 0);
+		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::SpriteScreenSpace)], nullptr, 0);
 
-		Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::Sprite)], nullptr, 0);
+		Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::SpriteScreenSpace)], nullptr, 0);
 
 		Context->PSSetConstantBuffers(0, 1, &SpriteBuffer);
-		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::Sprite)], nullptr, 0);
+		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::SpriteScreenSpace)], nullptr, 0);
 
-		auto spriteTexture = GEngine::GetTextureBank()->GetTexture(spriteComponent.TextureIndex);
+		ID3D11ShaderResourceView* spriteTexture = GEngine::GetTextureBank()->GetTexture(spriteComponent.TextureIndex);
 		Context->PSSetShaderResources(0, 1, &spriteTexture);
 
 		Context->Draw(1, 0);
@@ -2203,6 +2339,124 @@ namespace Havtorn
 		//Context->VSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
 		//Context->DrawIndexed(shape->IndexCount, 0, 0);
 		//NumberOfDrawCallsThisFrame++;
+	}
+
+	void CRenderManager::CheckIsolatedRenderPass()
+	{
+		switch (CurrentRunningRenderPass)
+		{
+		case Havtorn::ERenderPass::All:
+			break;
+		case Havtorn::ERenderPass::Depth:
+		{
+			RenderedScene.SetAsActiveTarget();
+			DepthCopy.SetAsResourceOnSlot(0);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
+		}
+		break;
+		case Havtorn::ERenderPass::GBufferAlbedo:
+		{
+			RenderedScene.SetAsActiveTarget();
+			GBuffer.SetAsResourceOnSlot(CGBuffer::EGBufferTextures::Albedo, 0);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		}
+		break;
+		case Havtorn::ERenderPass::GBufferNormals:
+		{
+			RenderedScene.SetAsActiveTarget();
+			GBuffer.SetAsResourceOnSlot(CGBuffer::EGBufferTextures::Normal, 0);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		}
+		break;
+		case Havtorn::ERenderPass::GBufferMaterials:
+		{
+			RenderedScene.SetAsActiveTarget();
+			GBuffer.SetAsResourceOnSlot(CGBuffer::EGBufferTextures::Material, 0);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		}
+		break;
+		case Havtorn::ERenderPass::SSAO:
+		{
+			RenderedScene.SetAsActiveTarget();
+			SSAOBlurTexture.SetAsResourceOnSlot(0);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		}
+		break;
+		case Havtorn::ERenderPass::DeferredLighting:
+		{
+			// NR: Need interception
+		}
+		break;
+		case Havtorn::ERenderPass::VolumetricLighting:
+		{
+			RenderedScene.SetAsActiveTarget();
+			VolumetricAccumulationBuffer.SetAsResourceOnSlot(0);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		}
+		break;
+		case Havtorn::ERenderPass::Bloom:
+		{
+			RenderedScene.SetAsActiveTarget();
+			VignetteTexture.SetAsResourceOnSlot(0);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		}
+		break;
+		case Havtorn::ERenderPass::Tonemapping:
+		{
+			RenderedScene.SetAsActiveTarget();
+			TonemappedTexture.SetAsResourceOnSlot(0);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		}
+		break;
+		case Havtorn::ERenderPass::Antialiasing:
+		{
+			RenderedScene.SetAsActiveTarget();
+			AntiAliasedTexture.SetAsResourceOnSlot(0);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		}
+		break;
+		case Havtorn::ERenderPass::GammaCorrection:
+			// NR: Is this necessary?
+			break;
+		case Havtorn::ERenderPass::Debug:
+			// NR: Is this necessary?
+			break;
+		case Havtorn::ERenderPass::Count:
+			break;
+		default:
+			break;
+		}
+	}
+
+	void CRenderManager::CycleRenderPass(const SInputActionPayload payload)
+	{
+		if (!payload.IsPressed)
+			return;
+
+		U8 currentRunningRenderPassIndex = static_cast<U8>(CurrentRunningRenderPass);
+		switch (payload.Event)
+		{
+		case EInputActionEvent::CycleRenderPassForward:
+			currentRunningRenderPassIndex = (currentRunningRenderPassIndex + 1) % static_cast<U8>(ERenderPass::Count);
+			break;
+
+		case EInputActionEvent::CycleRenderPassBackward:
+		{
+			U8 maxIndex = static_cast<U8>(ERenderPass::Count) - 1;
+			currentRunningRenderPassIndex = UMath::Min(--currentRunningRenderPassIndex, maxIndex);
+		}
+			break;
+
+		case EInputActionEvent::CycleRenderPassReset:
+			currentRunningRenderPassIndex = static_cast<U8>(ERenderPass::All);
+			break;
+
+		default:
+			break;
+		}
+
+		HV_LOG_TRACE("Render Pass Index: %i", currentRunningRenderPassIndex);
+		CurrentRunningRenderPass = static_cast<ERenderPass>(currentRunningRenderPassIndex);
 	}
 
 	bool SRenderCommandComparer::operator()(const SRenderCommand& a, const SRenderCommand& b) const

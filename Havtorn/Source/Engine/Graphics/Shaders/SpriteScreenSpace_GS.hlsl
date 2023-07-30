@@ -5,7 +5,7 @@
 [maxvertexcount(4)]
 void main(
 	point VertexToGeometry input[1],
-	inout TriangleStream<GeometryToPixel> output
+	inout TriangleStream<GeometryToPixelScreenSpace> output
 )
 {
     const float2 offset[4] =
@@ -29,7 +29,7 @@ void main(
     float2 aspectRatioDivider = { 9.0f / 16.0f, 1.0f };
     for (unsigned int index = 0; index < 4; index++)
     {
-        GeometryToPixel vertex;
+        GeometryToPixelScreenSpace vertex;
         vertex.Position = 0.0f;
         vertex.Position.w = 1.0f;
         vertex.Position.xy += offset[index] * inputVertex.Size;

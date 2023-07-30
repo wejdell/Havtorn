@@ -438,7 +438,6 @@ namespace ImGui
 			ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 		}
 
-		// TODO.NR: Fix so that sprite texture can be changed
 		OpenSelectTextureAssetModal(ref);
 		spriteComp.TextureIndex = static_cast<Havtorn::U32>(ref);
 	}

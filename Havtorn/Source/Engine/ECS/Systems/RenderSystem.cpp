@@ -32,6 +32,9 @@ namespace Havtorn
 		const auto& decalComponents = scene->GetDecalComponents();
 
 		RenderManager->ClearSystemStaticMeshInstanceTransforms();
+		RenderManager->ClearSpriteInstanceTransforms();
+		RenderManager->ClearSpriteInstanceUVRects();
+		RenderManager->ClearSpriteInstanceColors();
 
 		bool sceneHasActiveCamera = false;
 
@@ -242,15 +245,40 @@ namespace Havtorn
 			if (!spriteComp.IsInUse)
 				continue;
 
-			const STransform2DComponent& transform2DComp = transform2DComponents[i];
-			if (!transform2DComp.IsInUse)
-				continue;
+			RenderManager->AddSpriteToInstancedUVRectRenderList(spriteComp.TextureIndex, spriteComp.UVRect);
+			RenderManager->AddSpriteToInstancedColorRenderList(spriteComp.TextureIndex, spriteComp.Color.AsVector4());
 
-			SRenderCommand command;
-			command.Transform2DComponent = transform2DComp;
-			command.SpriteComponent = spriteComp;
-			command.Type = ERenderCommandType::ScreenSpaceSprite;
-			RenderManager->PushRenderCommand(command);
+			const STransformComponent& transformComp = transformComponents[i];
+			const STransform2DComponent& transform2DComp = transform2DComponents[i];
+
+			if (transformComp.IsInUse)
+			{
+				if (!RenderManager->IsSpriteInInstancedTransformRenderList(spriteComp.TextureIndex)) 
+				{
+					// NR: Don't push a command every time
+					SRenderCommand command;
+					//command.TransformComponent = transformComp;
+					command.SpriteComponent = spriteComp;
+					command.Type = ERenderCommandType::GBufferSpriteInstanced;
+					RenderManager->PushRenderCommand(command);
+				}
+
+				RenderManager->AddSpriteToInstancedTransformRenderList(spriteComp.TextureIndex, transformComp.Transform.GetMatrix());
+			}
+			else if (transform2DComp.IsInUse)
+			{
+				if (!RenderManager->IsSpriteInInstancedColorRenderList(spriteComp.TextureIndex))
+				{
+					SRenderCommand command;
+					//command.Transform2DComponent = transform2DComp;
+					command.SpriteComponent = spriteComp;
+					command.Type = ERenderCommandType::ScreenSpaceSprite;
+					RenderManager->PushRenderCommand(command);
+				}
+
+				// TODO.NR: Need to add roll and size as well. need a screen space Transform or something
+				// Add to instanced transform render list somehow
+			}
 		}
 
 		{

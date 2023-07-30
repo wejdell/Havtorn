@@ -430,8 +430,9 @@ namespace Havtorn
 		transform.Transform.Translate(SVector::Right * 0.25f);
 
 		SCameraComponent& camera = AddCameraComponentToEntity(*cameraEntity);
-		camera.ProjectionType = ECameraProjectionType::Orthographic;
-		camera.ProjectionMatrix = SMatrix::OrthographicLH(5.0f, 5.0f, 0.1f, 1000.0f);
+		//camera.ProjectionType = ECameraProjectionType::Orthographic;
+		camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
+		//camera.ProjectionMatrix = SMatrix::OrthographicLH(5.0f, 5.0f, 0.1f, 1000.0f);
 		camera.ViewMatrix = SMatrix::LookAtLH(SVector::Zero, SVector::Forward, SVector::Up);
 
 		SCameraControllerComponent& controllerComp = AddCameraControllerComponentToEntity(*cameraEntity);
@@ -465,23 +466,82 @@ namespace Havtorn
 		volumetricLight.IsActive = false;
 		// === !Directional light ===
 
-		// === Sprite ===
-		SEntity* sprite = GetNewEntity("Sprite");
-		if (!sprite)
-			return true;
+		//// === Screen Space Sprite ===
+		//SEntity* spriteSS = GetNewEntity("SpriteSS");
+		//if (!spriteSS)
+		//	return true;
 
-		STransform2DComponent& transform2D = AddTransform2DComponentToEntity(*sprite);
-		transform2D.Position = { 0.5f, 0.5f };
-		transform2D.Scale = { 1.0f, 1.0f };
+		//STransform2DComponent& transform2D = AddTransform2DComponentToEntity(*spriteSS);
+		//transform2D.Position = { 0.5f, 0.5f };
+		//transform2D.Scale = { 1.0f, 1.0f };
 
-		const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
-		SSpriteComponent& spriteComp = AddSpriteComponentToEntity(*sprite);
-		spriteComp.UVRect = { 0.0f, 0.0f, 1.0f, 1.0f };
-		renderManager->LoadSpriteComponent(spritePath, &spriteComp);
+		//const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
+		//SSpriteComponent& spriteComp = AddSpriteComponentToEntity(*spriteSS);
+		//spriteComp.UVRect = { 0.0f, 0.0f, 1.0f, 1.0f };
+		//renderManager->LoadSpriteComponent(spritePath, &spriteComp);
 
-		U16 spriteIndex = static_cast<U16>(GetSceneIndex(*sprite));
-		assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
-		// === !Sprite ===
+		//U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteSS));
+		//assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
+		//// === !Sprite ===
+
+		// === World Space Sprite ===
+		{
+			SEntity* spriteWS = GetNewEntity("SpriteWS");
+			if (!spriteWS)
+				return true;
+
+			STransformComponent& spriteWStransform = AddTransformComponentToEntity(*spriteWS);
+			spriteWStransform.Transform.Move({ 0.0f, 2.0f, 0.0f });
+			F32 radians = UMath::DegToRad(12.5f);
+			spriteWStransform.Transform.Rotate({ radians, radians, radians });
+
+			const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
+			SSpriteComponent& spriteWSComp = AddSpriteComponentToEntity(*spriteWS);
+			spriteWSComp.UVRect = { 0.0f, 0.0f, 1.0f, 1.0f };
+			renderManager->LoadSpriteComponent(spritePath, &spriteWSComp);
+
+			U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteWS));
+			assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
+		}
+
+		{
+			SEntity* spriteWS = GetNewEntity("SpriteWS");
+			if (!spriteWS)
+				return true;
+
+			STransformComponent& spriteWStransform = AddTransformComponentToEntity(*spriteWS);
+			spriteWStransform.Transform.Move({ 2.0f, 0.0f, 0.0f });
+			F32 radians = UMath::DegToRad(45.0f);
+			spriteWStransform.Transform.Rotate({ radians, radians, radians });
+
+			const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
+			SSpriteComponent& spriteWSComp = AddSpriteComponentToEntity(*spriteWS);
+			spriteWSComp.UVRect = { 0.0f, 0.0f, 0.5f, 0.5f };
+			renderManager->LoadSpriteComponent(spritePath, &spriteWSComp);
+
+			U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteWS));
+			assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
+		}
+
+		{
+			SEntity* spriteWS = GetNewEntity("SpriteWS");
+			if (!spriteWS)
+				return true;
+
+			STransformComponent& spriteWStransform = AddTransformComponentToEntity(*spriteWS);
+			spriteWStransform.Transform.Move({ -2.0f, 0.0f, 2.0f });
+			F32 radians = UMath::DegToRad(180.0f);
+			spriteWStransform.Transform.Rotate({ radians, radians, radians });
+
+			const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
+			SSpriteComponent& spriteWSComp = AddSpriteComponentToEntity(*spriteWS);
+			spriteWSComp.UVRect = { 0.0f, 0.0f, 2.0f, 2.0f };
+			renderManager->LoadSpriteComponent(spritePath, &spriteWSComp);
+
+			U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteWS));
+			assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
+		}
+		// === !World Space Sprite ===
 
 
 		return true;
