@@ -39,8 +39,6 @@ namespace Havtorn
 		Bloom,
 		Tonemapping,
 		Antialiasing,
-		GammaCorrection,
-		Debug,
 		Count
 	};
 
@@ -161,6 +159,7 @@ namespace Havtorn
 		inline void DeferredLightingDirectional(const SRenderCommand& command);
 		inline void DeferredLightingPoint(const SRenderCommand& command);
 		inline void DeferredLightingSpot(const SRenderCommand& command);
+		inline void PostBaseLightingPass(const SRenderCommand& command);
 		inline void VolumetricLightingDirectional(const SRenderCommand& command);
 		inline void VolumetricLightingPoint(const SRenderCommand& command);
 		inline void VolumetricLightingSpot(const SRenderCommand& command);
@@ -355,6 +354,7 @@ namespace Havtorn
 		CFullscreenTexture BlurTexture2;
 		CFullscreenTexture VignetteTexture;
 
+		CFullscreenTexture LitScene;
 		CFullscreenTexture VolumetricAccumulationBuffer;
 		CFullscreenTexture VolumetricBlurTexture;
 		CFullscreenTexture SSAOBuffer;

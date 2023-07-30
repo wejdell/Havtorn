@@ -45,7 +45,7 @@ struct LuminanceData
 
 float2 GetTexelSize()
 {
-    return float2(1.0f / myResolution.x, 1.0f / myResolution.y);
+    return float2(1.0f / Resolution.x, 1.0f / Resolution.y);
 }
 
 float LinearRGBToLuminance(float3 linearRgb)
@@ -233,11 +233,11 @@ float DetermineEdgeBlendFactor(LuminanceData l, EdgeData e, float2 uv)
 float4 ApplyFXAA(VertexToPixel input)
 {
     float4 returnValue;
-    float2 uv = input.myUV.xy;
+    float2 uv = input.UV.xy;
     LuminanceData l = SampleLuminanceNeighborhood(uv);
     if (ShouldSkipPixel(l))
     {
-        returnValue = Sample(input.myUV.xy);
+        returnValue = Sample(input.UV.xy);
         return returnValue;
     }
 
@@ -261,6 +261,6 @@ float4 ApplyFXAA(VertexToPixel input)
 PixelOutput main(VertexToPixel input)
 {
     PixelOutput returnValue;
-    returnValue.myColor = ApplyFXAA(input);
+    returnValue.Color = ApplyFXAA(input);
     return returnValue;
 }

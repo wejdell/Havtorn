@@ -47,6 +47,7 @@ namespace Havtorn
 			Copy,
 			CopyDepth,
 			CopyGBuffer,
+			Difference,
 			Luminance,
 			GaussianHorizontal,
 			GaussianVertical,
@@ -56,19 +57,12 @@ namespace Havtorn
 			Vignette,
 			Tonemap,
 			GammaCorrection,
-			//GammaCorrectionRenderPass,
 			FXAA,
 			SSAO,
 			SSAOBlur,
 			BrokenScreenEffect,
 			DownsampleDepth,
 			DepthAwareUpsampling,
-			//DeferredAlbedo,
-			//DeferredNormals,
-			//DeferredRoughness,
-			//DeferredMetalness,
-			//DeferredAmbientOcclusion,
-			//DeferredEmissive,
 			Count
 		};
 

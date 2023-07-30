@@ -5,8 +5,8 @@
 PixelOutput main(VertexToPixel input)
 {
     PixelOutput returnValue;
-    float4 resource = fullscreenTexture1.Sample(defaultSampler, input.myUV.xy).rgba;
-    float4 vignetteTexture = fullscreenTexture2.Sample(defaultSampler, input.myUV.xy).rgba;
+    float4 resource = fullscreenTexture1.Sample(defaultSampler, input.UV.xy).rgba;
+    float4 vignetteTexture = fullscreenTexture2.Sample(defaultSampler, input.UV.xy).rgba;
     
     //float2 uv = input.myUV.xy;
     //uv -= 0.5f;
@@ -20,13 +20,13 @@ PixelOutput main(VertexToPixel input)
     //resource.y *= clamp(vignette + myVignetteColor.g, 0.0f, 1.0f);
     //resource.z *= clamp(vignette + myVignetteColor.b, 0.0f, 1.0f);
     
-    vignetteTexture.a *= myVignetteStrength;
+    vignetteTexture.a *= VignetteStrength;
     
     //resource = lerp(vignetteTexture, resource, saturate(vignette));
     resource = lerp(resource, vignetteTexture, vignetteTexture.a);
     
-    returnValue.myColor.rgb = resource.rgb;
-    returnValue.myColor.a = /*resource.a*/1.0f;
+    returnValue.Color.rgb = resource.rgb;
+    returnValue.Color.a = /*resource.a*/1.0f;
     
     return returnValue;
 }

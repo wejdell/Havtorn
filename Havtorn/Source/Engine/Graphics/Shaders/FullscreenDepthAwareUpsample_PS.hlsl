@@ -38,8 +38,8 @@ PixelOutput main(VertexToPixel input)
     //    //returnValue.myColor.a = downSampledColorAlpha.w;
     //}
 
-    const float3 resource = fullscreenTexture1.Sample(defaultSampler, input.myUV.xy).rgb;
-    returnValue.myColor.rgb = resource;
-    returnValue.myColor.a = 1.0f;
+    const float3 resource = fullscreenTexture1.Sample(defaultSampler, input.UV.xy).rgb;
+    returnValue.Color.rgb = resource;
+    returnValue.Color.a = 1.0f;
     return returnValue;
 };

@@ -233,11 +233,11 @@ float DetermineEdgeBlendFactor(LuminanceData l, EdgeData e, float2 uv)
 
 float4 ApplyFXAA(VertexToPixel input)
 {
-    float2 uv = input.myUV.xy;
+    float2 uv = input.UV.xy;
     LuminanceData l = SampleLuminanceNeighborhood(uv);
     if (ShouldSkipPixel(l))
     {
-        return Sample(input.myUV.xy);
+        return Sample(input.UV.xy);
     }
 
     const float pixelBlend = DeterminePixelBlendFactor(l);
@@ -259,6 +259,6 @@ float4 ApplyFXAA(VertexToPixel input)
 PixelOutput main(VertexToPixel input)
 {
     PixelOutput returnValue;
-    returnValue.myColor = ApplyFXAA(input);
+    returnValue.Color = ApplyFXAA(input);
     return returnValue;
 }

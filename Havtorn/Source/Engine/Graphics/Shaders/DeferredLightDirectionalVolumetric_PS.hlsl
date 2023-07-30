@@ -73,7 +73,7 @@ PixelOutput main(VertexToPixel input)
     
     float raymarchDistanceLimit = 99999.0f;
     
-    float4 worldPosition = PixelShader_WorldPosition(input.myUV);
+    float4 worldPosition = PixelShader_WorldPosition(input.UV);
     float4 camPos = cameraPosition;
     
     SShadowmapViewData viewData = ShadowmapViewData[0];
@@ -97,7 +97,7 @@ PixelOutput main(VertexToPixel input)
     float stepSize = raymarchDistance * numberOfSamplesReciprocal;
     
     // Calculate the offsets on the ray according to the interleaved sampling pattern
-    float2 interleavedPos = fmod(input.myPosition.xy - 0.5f, INTERLEAVED_GRID_SIZE);
+    float2 interleavedPos = fmod(input.Position.xy - 0.5f, INTERLEAVED_GRID_SIZE);
 #if defined(USE_RANDOM_RAY_SAMPLES)
     float index = (floor(interleavedPos.y) * INTERLEAVED_GRID_SIZE + floor(interleavedPos.x));
     // lightVolumetricRandomRaySamples contains the values 0..63 in a randomized order
@@ -124,7 +124,7 @@ PixelOutput main(VertexToPixel input)
     //depth = (depth - 0.95f) / 0.05f;
     //float3 VLI = exp(depth/* * fogDensity*/);
     
-    output.myColor.rgb = directionalLightColor.rgb * VLI;
-    output.myColor.a = 1.0f;
+    output.Color.rgb = directionalLightColor.rgb * VLI;
+    output.Color.a = 1.0f;
     return output;
 }

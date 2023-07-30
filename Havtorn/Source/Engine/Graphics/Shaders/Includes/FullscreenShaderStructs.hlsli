@@ -2,55 +2,55 @@
 
 struct VertexInput
 {
-    unsigned int myIndex : SV_VERTEXID;
+    unsigned int Index : SV_VERTEXID;
 };
 
 struct VertexToPixel
 {
-	float4 myPosition : SV_POSITION;
-	float2 myUV : UV;
+	float4 Position : SV_POSITION;
+	float2 UV : UV;
 };
 
 struct PixelOutput
 {
-	float4 myColor : SV_TARGET;
+	float4 Color : SV_TARGET;
 };
 
 struct GBufferOutput
 {
-    float3 myAlbedo         : SV_TARGET0;
-    float3 myNormal         : SV_TARGET1;
-    float3 myVertexNormal   : SV_TARGET2;
-    float4 myMetalRoughAOEm : SV_TARGET3;
+    float3 Albedo         : SV_TARGET0;
+    float3 Normal         : SV_TARGET1;
+    float3 VertexNormal   : SV_TARGET2;
+    float4 MetalRoughAOEm : SV_TARGET3;
 };
 
 cbuffer FullscreenBuffer : register(b1)
 {
-    float2 myResolution;
-    float2 myNoiseScale;
-    float4 mySampleKernel[16];
+    float2 Resolution;
+    float2 NoiseScale;
+    float4 SampleKernel[16];
 }
 
 cbuffer PostProcessingBuffer : register(b2)
 {
-    float4 myWhitePointColor;
-    float myWhitePointIntensity;
-    float myExposure;
-    float mySSAORadius;
-    float mySSAOSampleBias;
-    float mySSAOMagnitude;
-    float mySSAOContrast;
+    float4 WhitePointColor;
+    float WhitePointIntensity;
+    float Exposure;
+    float SSAORadius;
+    float SSAOSampleBias;
+    float SSAOMagnitude;
+    float SSAOContrast;
 		
-    int myIsReinhard;
-    int myIsUncharted;
-    int myIsACES;
+    int IsReinhard;
+    int IsUncharted;
+    int IsACES;
 
-    float myEmissiveStrength;
+    float EmissiveStrength;
     
-    float myVignetteStrength;    
-    float myPadding;
+    float VignetteStrength;    
+    float Padding;
     
-    float4 myVignetteColor;
+    float4 VignetteColor;
 }
 
 Texture2D fullscreenTexture1 : register(t0);
