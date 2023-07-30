@@ -235,6 +235,12 @@ namespace Havtorn
 
 		{
 			SRenderCommand command;
+			command.Type = ERenderCommandType::PostBaseLightingPass;
+			RenderManager->PushRenderCommand(command);
+		}
+
+		{
+			SRenderCommand command;
 			command.Type = ERenderCommandType::VolumetricBufferBlurPass;
 			RenderManager->PushRenderCommand(command);
 		}

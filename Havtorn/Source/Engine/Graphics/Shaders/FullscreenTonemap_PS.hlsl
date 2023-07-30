@@ -66,8 +66,8 @@ PixelOutput main(VertexToPixel input)
 {
     PixelOutput returnValue;
 
-    returnValue.myColor.rgba = 1.0f;
-    const float3 resource = fullscreenTexture1.Sample(defaultSampler, input.myUV.xy).rgb;
+    returnValue.Color.rgba = 1.0f;
+    const float3 resource = fullscreenTexture1.Sample(defaultSampler, input.UV.xy).rgb;
 	
 	// No Tonemapping
 	//{
@@ -76,27 +76,27 @@ PixelOutput main(VertexToPixel input)
 	// No Tonemapping
 
 	// Reinhard
-    if (myIsReinhard)
+    if (IsReinhard)
     {
-        returnValue.myColor.rgb = resource / (resource + 1.0f);
+        returnValue.Color.rgb = resource / (resource + 1.0f);
     }
 	// Reinhard
     
 	// Uncharted 2
-    if (myIsUncharted)
+    if (IsUncharted)
     {
-	    const float3 whitePoint = (float3)myWhitePointColor * myWhitePointIntensity; //10.0f;
-	    const float exposure = myExposure; //3.0f;
-        returnValue.myColor.rgb = Uncharted2Tonemap(resource * exposure) / Uncharted2Tonemap(whitePoint);
+	    const float3 whitePoint = (float3)WhitePointColor * WhitePointIntensity; //10.0f;
+	    const float exposure = Exposure; //3.0f;
+        returnValue.Color.rgb = Uncharted2Tonemap(resource * exposure) / Uncharted2Tonemap(whitePoint);
     }
 	// Uncharted 2
     
     // ACES
-    if (myIsACES)
+    if (IsACES)
     {
-	    const float3 whitePoint = (float3)myWhitePointColor * myWhitePointIntensity; //10.0f;
-	    const float exposure = myExposure; //3.0f;
-        returnValue.myColor.rgb = ACESFitted(resource * exposure) / ACESFitted(whitePoint);
+	    const float3 whitePoint = (float3)WhitePointColor * WhitePointIntensity; //10.0f;
+	    const float exposure = Exposure; //3.0f;
+        returnValue.Color.rgb = ACESFitted(resource * exposure) / ACESFitted(whitePoint);
     }
     // ACES
     
@@ -108,6 +108,6 @@ PixelOutput main(VertexToPixel input)
     //}
     // ACES approx
     
-    returnValue.myColor.a = 0.0f;
+    returnValue.Color.a = 0.0f;
     return returnValue;
 };

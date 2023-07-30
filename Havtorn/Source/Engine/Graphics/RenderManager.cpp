@@ -111,6 +111,7 @@ namespace Havtorn
 	void CRenderManager::InitRenderTextures(CWindowHandler* windowHandler)
 	{
 		RenderedScene = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
+		LitScene = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
 		IntermediateDepth = FullscreenTextureFactory.CreateDepth(windowHandler->GetResolution(), DXGI_FORMAT_R24G8_TYPELESS);
 
 		ShadowAtlasResolution = {8192.0f, 8192.0f};
@@ -325,6 +326,7 @@ namespace Havtorn
 			SSAOBuffer.ClearTexture();
 
 			RenderedScene.ClearTexture();
+			LitScene.ClearTexture();
 			IntermediateTexture.ClearTexture();
 			IntermediateDepth.ClearDepth();
 			VolumetricAccumulationBuffer.ClearTexture();
@@ -407,6 +409,12 @@ namespace Havtorn
 				case ERenderCommandType::DeferredLightingSpot:
 				{
 					DeferredLightingSpot(currentCommand);
+				}
+				break;
+
+				case ERenderCommandType::PostBaseLightingPass:
+				{
+					PostBaseLightingPass(currentCommand);
 				}
 				break;
 
@@ -1764,15 +1772,15 @@ namespace Havtorn
 		Context->PSSetSamplers(1, 1, &Samplers[static_cast<U8>(ESamplers::DefaultBorder)]);
 
 		Context->GSSetShader(nullptr, nullptr, 0);
+
+		LitScene.SetAsActiveTarget();
+		GBuffer.SetAllAsResources(1);
+		IntermediateDepth.SetAsResourceOnSlot(21);
+		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
 	}
 
 	void CRenderManager::DeferredLightingDirectional(const SRenderCommand& command)
 	{
-		RenderedScene.SetAsActiveTarget();
-		GBuffer.SetAllAsResources(1);
-		IntermediateDepth.SetAsResourceOnSlot(21);
-		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
-
 		// add Alpha blend PS shader
 
 		ShadowAtlasDepth.SetAsResourceOnSlot(22);
@@ -1822,11 +1830,6 @@ namespace Havtorn
 
 	void CRenderManager::DeferredLightingPoint(const SRenderCommand& command)
 	{
-		RenderedScene.SetAsActiveTarget();
-		GBuffer.SetAllAsResources(1);
-		IntermediateDepth.SetAsResourceOnSlot(21);
-		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
-
 		ShadowAtlasDepth.SetAsResourceOnSlot(22);
 		RenderStateManager.SetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
 
@@ -1873,11 +1876,6 @@ namespace Havtorn
 
 	void CRenderManager::DeferredLightingSpot(const SRenderCommand& command)
 	{
-		RenderedScene.SetAsActiveTarget();
-		GBuffer.SetAllAsResources(1);
-		IntermediateDepth.SetAsResourceOnSlot(21);
-		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
-
 		ShadowAtlasDepth.SetAsResourceOnSlot(22);
 		RenderStateManager.SetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
 
@@ -1930,6 +1928,13 @@ namespace Havtorn
 		Context->DrawIndexed(36, 0, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 		RenderStateManager.SetRasterizerState(CRenderStateManager::ERasterizerStates::Default);
+	}
+
+	void CRenderManager::PostBaseLightingPass(const SRenderCommand& /*command*/)
+	{
+		RenderedScene.SetAsActiveTarget();
+		LitScene.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 	}
 
 	void CRenderManager::VolumetricLightingDirectional(const SRenderCommand& command)
@@ -2384,7 +2389,9 @@ namespace Havtorn
 		break;
 		case Havtorn::ERenderPass::DeferredLighting:
 		{
-			// NR: Need interception
+			RenderedScene.SetAsActiveTarget();
+			LitScene.SetAsResourceOnSlot(0);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 		}
 		break;
 		case Havtorn::ERenderPass::VolumetricLighting:
@@ -2398,7 +2405,8 @@ namespace Havtorn
 		{
 			RenderedScene.SetAsActiveTarget();
 			VignetteTexture.SetAsResourceOnSlot(0);
-			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+			HalfSizeTexture.SetAsResourceOnSlot(1);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Difference);
 		}
 		break;
 		case Havtorn::ERenderPass::Tonemapping:
@@ -2412,15 +2420,10 @@ namespace Havtorn
 		{
 			RenderedScene.SetAsActiveTarget();
 			AntiAliasedTexture.SetAsResourceOnSlot(0);
-			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+			TonemappedTexture.SetAsResourceOnSlot(1);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Difference);
 		}
 		break;
-		case Havtorn::ERenderPass::GammaCorrection:
-			// NR: Is this necessary?
-			break;
-		case Havtorn::ERenderPass::Debug:
-			// NR: Is this necessary?
-			break;
 		case Havtorn::ERenderPass::Count:
 			break;
 		default:
