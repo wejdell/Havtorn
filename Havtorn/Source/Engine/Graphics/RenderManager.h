@@ -10,6 +10,7 @@
 #include "GBuffer.h"
 #include "GraphicsEnums.h"
 #include "GraphicsMaterial.h"
+#include "RenderCommand.h"
 #include <queue>
 
 #include "Core/RuntimeAssetDeclarations.h"
@@ -153,9 +154,9 @@ namespace Havtorn
 		inline void CameraDataStorage(const SRenderCommand& command);
 		inline void GBufferDataInstanced(const SRenderCommand& command);
 		inline void GBufferSpriteInstanced(const SRenderCommand& command);
-		inline void DecalDepthCopy();
+		inline void DecalDepthCopy(const SRenderCommand& command);
 		inline void DeferredDecal(const SRenderCommand& command);
-		inline void PreLightingPass();
+		inline void PreLightingPass(const SRenderCommand& command);
 		inline void DeferredLightingDirectional(const SRenderCommand& command);
 		inline void DeferredLightingPoint(const SRenderCommand& command);
 		inline void DeferredLightingSpot(const SRenderCommand& command);
@@ -163,17 +164,20 @@ namespace Havtorn
 		inline void VolumetricLightingDirectional(const SRenderCommand& command);
 		inline void VolumetricLightingPoint(const SRenderCommand& command);
 		inline void VolumetricLightingSpot(const SRenderCommand& command);
-		inline void VolumetricBlur();
+		inline void VolumetricBlur(const SRenderCommand& command);
 		inline void ForwardTransparency(const SRenderCommand& command);
 		inline void ScreenSpaceSprite(const SRenderCommand& command);
-		inline void RenderBloom();
-		inline void Tonemapping();
-		inline void AntiAliasing();
-		inline void GammaCorrection();
-		inline void RendererDebug();
-		inline void DebugShadowAtlas();
-		inline void PreDebugShapes();
+		inline void RenderBloom(const SRenderCommand& command);
+		inline void Tonemapping(const SRenderCommand& command);
+		inline void AntiAliasing(const SRenderCommand& command);
+		inline void GammaCorrection(const SRenderCommand& command);
+		inline void RendererDebug(const SRenderCommand& command);
+		inline void PreDebugShapes(const SRenderCommand& command);
+		inline void PostTonemappingUseDepth(const SRenderCommand& command);
+		inline void PostTonemappingIgnoreDepth(const SRenderCommand& command);
 		inline void DebugShapes(const SRenderCommand& command);
+
+		inline void DebugShadowAtlas();
 
 		void CheckIsolatedRenderPass();
 		void CycleRenderPass(const SInputActionPayload payload);
@@ -372,6 +376,7 @@ namespace Havtorn
 
 		SVector4 ClearColor;
 
+		std::map<ERenderCommandType, std::function<void(const SRenderCommand& command)>> RenderFunctions;
 		ERenderPass CurrentRunningRenderPass = ERenderPass::All;
 		bool ShouldBlurVolumetricBuffer = false;
 

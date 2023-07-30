@@ -4,7 +4,6 @@
 #include "RenderManager.h"
 #include "GraphicsUtilities.h"
 #include "Core/GeneralUtilities.h"
-#include "RenderCommand.h"
 
 #include "Engine.h"
 #include "Input/InputMapper.h"
@@ -87,6 +86,36 @@ namespace Havtorn
 
 		InitEditorResources();
 		LoadDemoSceneResources();
+
+		RenderFunctions[ERenderCommandType::ShadowAtlasPrePassDirectional] = std::bind(&CRenderManager::ShadowAtlasPrePassDirectional, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::ShadowAtlasPrePassPoint] = std::bind(&CRenderManager::ShadowAtlasPrePassPoint, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::ShadowAtlasPrePassSpot] = std::bind(&CRenderManager::ShadowAtlasPrePassSpot, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::CameraDataStorage] = std::bind(&CRenderManager::CameraDataStorage, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::GBufferDataInstanced] = std::bind(&CRenderManager::GBufferDataInstanced, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::GBufferSpriteInstanced] = std::bind(&CRenderManager::GBufferSpriteInstanced, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::DecalDepthCopy] = std::bind(&CRenderManager::DecalDepthCopy, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::DeferredDecal] = std::bind(&CRenderManager::DeferredDecal, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::PreLightingPass] = std::bind(&CRenderManager::PreLightingPass, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::DeferredLightingDirectional] = std::bind(&CRenderManager::DeferredLightingDirectional, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::DeferredLightingPoint] = std::bind(&CRenderManager::DeferredLightingPoint, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::DeferredLightingSpot] = std::bind(&CRenderManager::DeferredLightingSpot, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::PostBaseLightingPass] = std::bind(&CRenderManager::PostBaseLightingPass, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::VolumetricLightingDirectional] = std::bind(&CRenderManager::VolumetricLightingDirectional, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::VolumetricLightingPoint] = std::bind(&CRenderManager::VolumetricLightingPoint, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::VolumetricLightingSpot] = std::bind(&CRenderManager::VolumetricLightingSpot, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::VolumetricBufferBlurPass] = std::bind(&CRenderManager::VolumetricBlur, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::ForwardTransparency] = std::bind(&CRenderManager::ForwardTransparency, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::ScreenSpaceSprite] = std::bind(&CRenderManager::ScreenSpaceSprite, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::Bloom] = std::bind(&CRenderManager::RenderBloom, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::Tonemapping] = std::bind(&CRenderManager::Tonemapping, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::PreDebugShape] = std::bind(&CRenderManager::PreDebugShapes, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::PostToneMappingUseDepth] = std::bind(&CRenderManager::PostTonemappingUseDepth, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::PostToneMappingIgnoreDepth] = std::bind(&CRenderManager::PostTonemappingIgnoreDepth, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::DebugShapeUseDepth] = std::bind(&CRenderManager::DebugShapes, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::DebugShapeIgnoreDepth] = std::bind(&CRenderManager::DebugShapes, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::AntiAliasing] = std::bind(&CRenderManager::AntiAliasing, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::GammaCorrection] = std::bind(&CRenderManager::GammaCorrection, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::RendererDebug] = std::bind(&CRenderManager::RendererDebug, this, std::placeholders::_1);
 
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderPassForward).AddMember(this, &CRenderManager::CycleRenderPass);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderPassBackward).AddMember(this, &CRenderManager::CycleRenderPass);
@@ -338,188 +367,7 @@ namespace Havtorn
 			for (U16 i = 0; i < commandsInHeap; ++i)
 			{
 				SRenderCommand currentCommand = PopFromCommands->top();
-				switch (currentCommand.Type)
-				{
-				case ERenderCommandType::ShadowAtlasPrePassDirectional:
-				{
-					ShadowAtlasPrePassDirectional(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::ShadowAtlasPrePassPoint:
-				{
-					ShadowAtlasPrePassPoint(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::ShadowAtlasPrePassSpot:
-				{
-					ShadowAtlasPrePassSpot(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::CameraDataStorage:
-				{
-					CameraDataStorage(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::GBufferDataInstanced:
-				{
-					GBufferDataInstanced(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::GBufferSpriteInstanced:
-				{
-					GBufferSpriteInstanced(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::DecalDepthCopy:
-				{
-					DecalDepthCopy();
-				}
-				break;
-
-				case ERenderCommandType::DeferredDecal:
-				{
-					DeferredDecal(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::PreLightingPass:
-				{
-					PreLightingPass();
-				}
-				break;
-
-				case ERenderCommandType::DeferredLightingDirectional:
-				{
-					DeferredLightingDirectional(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::DeferredLightingPoint: 
-				{
-					DeferredLightingPoint(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::DeferredLightingSpot:
-				{
-					DeferredLightingSpot(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::PostBaseLightingPass:
-				{
-					PostBaseLightingPass(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::VolumetricLightingDirectional:
-				{					
-					VolumetricLightingDirectional(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::VolumetricLightingPoint:
-				{
-					VolumetricLightingPoint(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::VolumetricLightingSpot:
-				{
-					VolumetricLightingSpot(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::VolumetricBufferBlurPass:
-				{
-					if (!ShouldBlurVolumetricBuffer)
-						break;
-
-					VolumetricBlur();
-				}
-				break;
-
-				case ERenderCommandType::ForwardTransparency:
-				{
-					ForwardTransparency(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::ScreenSpaceSprite:
-				{
-					ScreenSpaceSprite(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::Bloom:
-				{
-					RenderBloom();
-				}
-				break;
-
-				case ERenderCommandType::Tonemapping:
-				{
-					Tonemapping();
-				}
-				break;
-
-				case ERenderCommandType::PreDebugShape: 
-				{
-					PreDebugShapes();
-				}
-				break;
-
-				case ERenderCommandType::PostToneMappingUseDepth:
-				{
-					TonemappedTexture.SetAsActiveTarget(&IntermediateDepth);
-				}
-				break;
-
-				case ERenderCommandType::DebugShapeUseDepth: 
-				{
-					DebugShapes(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::PostToneMappingIgnoreDepth:
-				{
-					TonemappedTexture.SetAsActiveTarget();
-				}
-				break;
-
-				case ERenderCommandType::DebugShapeIgnoreDepth: 
-				{
-					DebugShapes(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::AntiAliasing:
-				{
-					AntiAliasing();
-				}
-				break;
-
-				case ERenderCommandType::GammaCorrection:
-				{
-					GammaCorrection();
-				}
-				break;
-
-				case ERenderCommandType::RendererDebug:
-				{
-					RendererDebug();
-				}
-				break;
-
-				default:
-					break;
-				}
+				RenderFunctions[currentCommand.Type](currentCommand);
 				PopFromCommands->pop();
 			}
 
@@ -1690,7 +1538,7 @@ namespace Havtorn
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 	}
 
-	void CRenderManager::DecalDepthCopy()
+	void CRenderManager::DecalDepthCopy(const SRenderCommand& /*command*/)
 	{
 		DepthCopy.SetAsActiveTarget();
 		IntermediateDepth.SetAsResourceOnSlot(0);
@@ -1754,7 +1602,7 @@ namespace Havtorn
 		}
 	}
 
-	void CRenderManager::PreLightingPass()
+	void CRenderManager::PreLightingPass(const SRenderCommand& /*command*/)
 	{
 		// === SSAO ===
 		SSAOBuffer.SetAsActiveTarget();
@@ -2125,8 +1973,11 @@ namespace Havtorn
 		ShouldBlurVolumetricBuffer = true;
 	}
 
-	void CRenderManager::VolumetricBlur()
+	void CRenderManager::VolumetricBlur(const SRenderCommand& /*command*/)
 	{
+		if (!ShouldBlurVolumetricBuffer)
+			return;
+
 		// Downsampling and Blur
 		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::Disable);
 		DownsampledDepth.SetAsActiveTarget();
@@ -2218,7 +2069,7 @@ namespace Havtorn
 		Context->VSSetConstantBuffers(0, 1, &nullBuffer);
 	}
 
-	void CRenderManager::RenderBloom()
+	void CRenderManager::RenderBloom(const SRenderCommand& /*command*/)
 	{
 		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::Disable);
 		RenderStateManager.SetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
@@ -2269,14 +2120,14 @@ namespace Havtorn
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Bloom);
 	}
 
-	inline void CRenderManager::Tonemapping()
+	inline void CRenderManager::Tonemapping(const SRenderCommand& /*command*/)
 	{
 		TonemappedTexture.SetAsActiveTarget();
 		RenderedScene.SetAsResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Tonemap);
 	}
 
-	inline void CRenderManager::AntiAliasing()
+	inline void CRenderManager::AntiAliasing(const SRenderCommand& /*command*/)
 	{
 		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::Disable);
 		RenderStateManager.SetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
@@ -2286,33 +2137,19 @@ namespace Havtorn
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::FXAA);
 	}
 
-	inline void CRenderManager::GammaCorrection()
+	inline void CRenderManager::GammaCorrection(const SRenderCommand& /*command*/)
 	{
 		RenderedScene.SetAsActiveTarget();
 		AntiAliasedTexture.SetAsResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::GammaCorrection);
 	}
 
-	inline void CRenderManager::RendererDebug()
+	inline void CRenderManager::RendererDebug(const SRenderCommand& /*command*/)
 	{
 		//DebugShadowAtlas();
 	}
 
-	void CRenderManager::DebugShadowAtlas()
-	{
-		D3D11_VIEWPORT viewport;
-		viewport.TopLeftX = 0.0f;
-		viewport.TopLeftY = 0.0f;
-		viewport.Width = 256.0f;
-		viewport.Height = 256.0f;
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
-		Context->RSSetViewports(1, &viewport);
-		ShadowAtlasDepth.SetAsResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
-	}
-
-	inline void CRenderManager::PreDebugShapes()
+	inline void CRenderManager::PreDebugShapes(const SRenderCommand& /*command*/)
 	{
 		RenderStateManager.SetDepthStencilState(CRenderStateManager::EDepthStencilStates::OnlyRead);
 		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
@@ -2323,6 +2160,16 @@ namespace Havtorn
 		Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::Line)], nullptr, 0);
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Line)], nullptr, 0);
 		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::Line)], nullptr, 0);
+	}
+
+	inline void CRenderManager::PostTonemappingUseDepth(const SRenderCommand& /*command*/)
+	{
+		TonemappedTexture.SetAsActiveTarget(&IntermediateDepth);
+	}
+
+	inline void CRenderManager::PostTonemappingIgnoreDepth(const SRenderCommand& /*command*/)
+	{
+		TonemappedTexture.SetAsActiveTarget();
 	}
 
 	inline void CRenderManager::DebugShapes(const SRenderCommand& /*command*/)
@@ -2344,6 +2191,20 @@ namespace Havtorn
 		//Context->VSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
 		//Context->DrawIndexed(shape->IndexCount, 0, 0);
 		//NumberOfDrawCallsThisFrame++;
+	}
+
+	void CRenderManager::DebugShadowAtlas()
+	{
+		D3D11_VIEWPORT viewport;
+		viewport.TopLeftX = 0.0f;
+		viewport.TopLeftY = 0.0f;
+		viewport.Width = 256.0f;
+		viewport.Height = 256.0f;
+		viewport.MinDepth = 0.0f;
+		viewport.MaxDepth = 1.0f;
+		Context->RSSetViewports(1, &viewport);
+		ShadowAtlasDepth.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
 	}
 
 	void CRenderManager::CheckIsolatedRenderPass()
