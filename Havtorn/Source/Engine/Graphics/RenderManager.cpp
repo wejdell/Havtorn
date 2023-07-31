@@ -229,10 +229,8 @@ namespace Havtorn
 		AddShader("Shaders/EditorPreview_VS.cso", EShaderType::Vertex);
 		
 		AddShader("Shaders/Line_VS.cso", EShaderType::Vertex);
-
-		AddShader("Shaders/SpriteScreenSpace_VS.cso", EShaderType::Vertex);
 		
-		vsData = AddShader("Shaders/SpriteWorldSpace_VS.cso", EShaderType::Vertex);
+		vsData = AddShader("Shaders/SpriteInstanced_VS.cso", EShaderType::Vertex);
 		AddInputLayout(vsData, EInputLayoutType::TransUVRectColor);
 	}
 
@@ -926,27 +924,50 @@ namespace Havtorn
 		return SystemStaticMeshInstanceTransforms.clear();
 	}
 
-	bool CRenderManager::IsSpriteInInstancedTransformRenderList(const U32 textureBankIndex)
+	bool CRenderManager::IsSpriteInInstancedWSTransformRenderList(const U32 textureBankIndex)
 	{
-		return SystemSpriteInstanceTransforms.contains(textureBankIndex);
+		return SystemSpriteInstanceWSTransforms.contains(textureBankIndex);
 	}
 
-	void CRenderManager::AddSpriteToInstancedTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix)
+	void CRenderManager::AddSpriteToInstancedWSTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix)
 	{
-		if (!SystemSpriteInstanceTransforms.contains(textureBankIndex))
-			SystemSpriteInstanceTransforms.emplace(textureBankIndex, std::vector<SMatrix>());
+		if (!SystemSpriteInstanceWSTransforms.contains(textureBankIndex))
+			SystemSpriteInstanceWSTransforms.emplace(textureBankIndex, std::vector<SMatrix>());
 
-		SystemSpriteInstanceTransforms[textureBankIndex].emplace_back(transformMatrix);
+		SystemSpriteInstanceWSTransforms[textureBankIndex].emplace_back(transformMatrix);
 	}
 
-	void CRenderManager::SwapSpriteInstancedTransformRenderLists()
+	void CRenderManager::SwapSpriteInstancedWSTransformRenderLists()
 	{
-		std::swap(SystemSpriteInstanceTransforms, RendererSpriteInstanceTransforms);
+		std::swap(SystemSpriteInstanceWSTransforms, RendererSpriteInstanceWSTransforms);
 	}
 
-	void CRenderManager::ClearSpriteInstanceTransforms()
+	void CRenderManager::ClearSpriteInstanceWSTransforms()
 	{
-		SystemSpriteInstanceTransforms.clear();
+		SystemSpriteInstanceWSTransforms.clear();
+	}
+
+	bool CRenderManager::IsSpriteInInstancedSSTransformRenderList(const U32 textureBankIndex)
+	{
+		return SystemSpriteInstanceSSTransforms.contains(textureBankIndex);
+	}
+
+	void CRenderManager::AddSpriteToInstancedSSTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix)
+	{
+		if (!SystemSpriteInstanceSSTransforms.contains(textureBankIndex))
+			SystemSpriteInstanceSSTransforms.emplace(textureBankIndex, std::vector<SMatrix>());
+
+		SystemSpriteInstanceSSTransforms[textureBankIndex].emplace_back(transformMatrix);
+	}
+
+	void CRenderManager::SwapSpriteInstancedSSTransformRenderLists()
+	{
+		std::swap(SystemSpriteInstanceSSTransforms, RendererSpriteInstanceSSTransforms);
+	}
+
+	void CRenderManager::ClearSpriteInstanceSSTransforms()
+	{
+		SystemSpriteInstanceSSTransforms.clear();
 	}
 
 	bool CRenderManager::IsSpriteInInstancedUVRectRenderList(const U32 textureBankIndex)
@@ -1498,13 +1519,9 @@ namespace Havtorn
 		// TODO.NR: Fix transparency
 		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::GBufferAlphaBlend);
 
-		//const STransformComponent& transformComp = command.GetComponent(TransformComponent);
 		const SSpriteComponent& spriteComp = command.GetComponent(SpriteComponent); 
 
-		//ObjectBufferData.ToWorldFromObject = transformComp.Transform.GetMatrix();
-		//BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
-
-		const std::vector<SMatrix>& matrices = RendererSpriteInstanceTransforms[spriteComp.TextureIndex];
+		const std::vector<SMatrix>& matrices = RendererSpriteInstanceWSTransforms[spriteComp.TextureIndex];
 		BindBuffer(InstancedTransformBuffer, matrices, "Instanced Transform Buffer");
 
 		const std::vector<SVector4>& uvRects = RendererSpriteInstanceUVRects[spriteComp.TextureIndex];
@@ -1513,14 +1530,11 @@ namespace Havtorn
 		const std::vector<SVector4>& colors = RendererSpriteInstanceColors[spriteComp.TextureIndex];
 		BindBuffer(InstancedColorBuffer, colors, "Instanced Color Buffer");
 
-		//Context->VSSetConstantBuffers(1, 1, &ObjectBuffer);
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::PointList)]);
 		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::TransUVRectColor)]);
 
-		// Make new VS, GS, PS, need to write to GBuffer
-		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::SpriteWorldSpace)], nullptr, 0);
+		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::SpriteInstanced)], nullptr, 0);
 		Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::SpriteWorldSpace)], nullptr, 0);
-		//Context->PSSetConstantBuffers(0, 1, &SpriteBuffer);
 		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::SpriteWorldSpace)], nullptr, 0);
 
 		ID3D11SamplerState* sampler = Samplers[static_cast<U8>(ESamplers::DefaultWrap)];
@@ -2035,34 +2049,36 @@ namespace Havtorn
 	{
 		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
 
-		const STransform2DComponent& transform2DComp = command.GetComponent(Transform2DComponent);
 		const SSpriteComponent& spriteComponent = command.GetComponent(SpriteComponent);
 
-		SpriteBufferData.Color = spriteComponent.Color.AsVector4();
-		SpriteBufferData.UVRect = spriteComponent.UVRect;
-		SpriteBufferData.Position = transform2DComp.Position;
-		SpriteBufferData.Size = transform2DComp.Scale;
-		SpriteBufferData.Rotation = UMath::DegToRad(transform2DComp.DegreesRoll);
+		const std::vector<SMatrix>& matrices = RendererSpriteInstanceSSTransforms[spriteComponent.TextureIndex];
+		BindBuffer(InstancedTransformBuffer, matrices, "Instanced Transform Buffer");
 
-		BindBuffer(SpriteBuffer, SpriteBufferData, "Sprite Buffer");
+		const std::vector<SVector4>& uvRects = RendererSpriteInstanceUVRects[spriteComponent.TextureIndex];
+		BindBuffer(InstancedUVRectBuffer, uvRects, "Instanced UV Rect Buffer");
+
+		const std::vector<SVector4>& colors = RendererSpriteInstanceColors[spriteComponent.TextureIndex];
+		BindBuffer(InstancedColorBuffer, colors, "Instanced Color Buffer");
 
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::PointList)]);
-		Context->IASetInputLayout(nullptr);
-		Context->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
-		Context->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
+		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::TransUVRectColor)]);
 
-		Context->VSSetConstantBuffers(0, 1, &SpriteBuffer);
-		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::SpriteScreenSpace)], nullptr, 0);
-
+		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::SpriteInstanced)], nullptr, 0);
 		Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::SpriteScreenSpace)], nullptr, 0);
-
-		Context->PSSetConstantBuffers(0, 1, &SpriteBuffer);
 		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::SpriteScreenSpace)], nullptr, 0);
+
+		ID3D11SamplerState* sampler = Samplers[static_cast<U8>(ESamplers::DefaultWrap)];
+		Context->PSSetSamplers(0, 1, &sampler);
 
 		ID3D11ShaderResourceView* spriteTexture = GEngine::GetTextureBank()->GetTexture(spriteComponent.TextureIndex);
 		Context->PSSetShaderResources(0, 1, &spriteTexture);
 
-		Context->Draw(1, 0);
+		ID3D11Buffer* bufferPointers[3] = { InstancedTransformBuffer, InstancedUVRectBuffer, InstancedColorBuffer };
+		const U32 strides[3] = { sizeof(SMatrix), sizeof(SVector4), sizeof(SVector4) };
+		const U32 offsets[3] = { 0, 0, 0 };
+		Context->IASetVertexBuffers(0, 3, bufferPointers, strides, offsets);
+		Context->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
+		Context->DrawInstanced(1, static_cast<U32>(matrices.size()), 0, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 
 		ID3D11Buffer* nullBuffer = NULL;

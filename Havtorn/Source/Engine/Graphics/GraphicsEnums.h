@@ -37,8 +37,7 @@ namespace Havtorn
 		PointAndSpotLight = 4,
 		EditorPreview = 5,
 		Line = 6,
-		SpriteScreenSpace = 7,
-		SpriteWorldSpace = 8,
+		SpriteInstanced = 7,
 	};
 
 	enum class EPixelShaders

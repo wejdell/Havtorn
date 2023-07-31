@@ -99,7 +99,8 @@ namespace Havtorn
 	{
 		RenderManager->SwapRenderCommandBuffers();
 		RenderManager->SwapStaticMeshInstancedRenderLists();
-		RenderManager->SwapSpriteInstancedTransformRenderLists();
+		RenderManager->SwapSpriteInstancedWSTransformRenderLists();
+		RenderManager->SwapSpriteInstancedSSTransformRenderLists();
 		RenderManager->SwapSpriteInstancedUVRectRenderLists();
 		RenderManager->SwapSpriteInstancedColorRenderLists();
 		Framework->EndFrame();

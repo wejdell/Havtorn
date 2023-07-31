@@ -82,10 +82,15 @@ namespace Havtorn
 		void SwapStaticMeshInstancedRenderLists();
 		void ClearSystemStaticMeshInstanceTransforms();
 
-		bool IsSpriteInInstancedTransformRenderList(const U32 textureBankIndex);
-		void AddSpriteToInstancedTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix);
-		void SwapSpriteInstancedTransformRenderLists();
-		void ClearSpriteInstanceTransforms();
+		bool IsSpriteInInstancedWSTransformRenderList(const U32 textureBankIndex);
+		void AddSpriteToInstancedWSTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix);
+		void SwapSpriteInstancedWSTransformRenderLists();
+		void ClearSpriteInstanceWSTransforms();
+
+		bool IsSpriteInInstancedSSTransformRenderList(const U32 textureBankIndex);
+		void AddSpriteToInstancedSSTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix);
+		void SwapSpriteInstancedSSTransformRenderLists();
+		void ClearSpriteInstanceSSTransforms();
 
 		bool IsSpriteInInstancedUVRectRenderList(const U32 textureBankIndex);
 		void AddSpriteToInstancedUVRectRenderList(const U32 textureBankIndex, const SVector4& uvRect);
@@ -415,8 +420,11 @@ namespace Havtorn
 			the TextureBank in a roundabout way, to use as the key into the above collection, but
 			this seems better for now
 		*/
-		std::unordered_map<U32, std::vector<SMatrix>> SystemSpriteInstanceTransforms;
-		std::unordered_map<U32, std::vector<SMatrix>> RendererSpriteInstanceTransforms;
+		std::unordered_map<U32, std::vector<SMatrix>> SystemSpriteInstanceWSTransforms;
+		std::unordered_map<U32, std::vector<SMatrix>> RendererSpriteInstanceWSTransforms;
+
+		std::unordered_map<U32, std::vector<SMatrix>> SystemSpriteInstanceSSTransforms;
+		std::unordered_map<U32, std::vector<SMatrix>> RendererSpriteInstanceSSTransforms;
 
 		std::unordered_map<U32, std::vector<SVector4>> SystemSpriteInstanceUVRects;
 		std::unordered_map<U32, std::vector<SVector4>> RendererSpriteInstanceUVRects;

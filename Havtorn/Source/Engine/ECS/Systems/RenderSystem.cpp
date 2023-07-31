@@ -32,7 +32,8 @@ namespace Havtorn
 		const auto& decalComponents = scene->GetDecalComponents();
 
 		RenderManager->ClearSystemStaticMeshInstanceTransforms();
-		RenderManager->ClearSpriteInstanceTransforms();
+		RenderManager->ClearSpriteInstanceWSTransforms();
+		RenderManager->ClearSpriteInstanceSSTransforms();
 		RenderManager->ClearSpriteInstanceUVRects();
 		RenderManager->ClearSpriteInstanceColors();
 
@@ -259,31 +260,32 @@ namespace Havtorn
 
 			if (transformComp.IsInUse)
 			{
-				if (!RenderManager->IsSpriteInInstancedTransformRenderList(spriteComp.TextureIndex)) 
+				if (!RenderManager->IsSpriteInInstancedWSTransformRenderList(spriteComp.TextureIndex)) 
 				{
 					// NR: Don't push a command every time
 					SRenderCommand command;
-					//command.TransformComponent = transformComp;
 					command.SpriteComponent = spriteComp;
 					command.Type = ERenderCommandType::GBufferSpriteInstanced;
 					RenderManager->PushRenderCommand(command);
 				}
 
-				RenderManager->AddSpriteToInstancedTransformRenderList(spriteComp.TextureIndex, transformComp.Transform.GetMatrix());
+				RenderManager->AddSpriteToInstancedWSTransformRenderList(spriteComp.TextureIndex, transformComp.Transform.GetMatrix());
 			}
 			else if (transform2DComp.IsInUse)
 			{
-				if (!RenderManager->IsSpriteInInstancedColorRenderList(spriteComp.TextureIndex))
+				if (!RenderManager->IsSpriteInInstancedSSTransformRenderList(spriteComp.TextureIndex))
 				{
 					SRenderCommand command;
-					//command.Transform2DComponent = transform2DComp;
 					command.SpriteComponent = spriteComp;
 					command.Type = ERenderCommandType::ScreenSpaceSprite;
 					RenderManager->PushRenderCommand(command);
 				}
 
-				// TODO.NR: Need to add roll and size as well. need a screen space Transform or something
-				// Add to instanced transform render list somehow
+				SMatrix transformFrom2DComponent;
+				transformFrom2DComponent.SetScale(transform2DComp.Scale.X, transform2DComp.Scale.Y, 1.0f);
+				transformFrom2DComponent *= SMatrix::CreateRotationAroundZ(UMath::DegToRad(transform2DComp.DegreesRoll));
+				transformFrom2DComponent.SetTranslation({ transform2DComp.Position.X, transform2DComp.Position.Y, 0.0f });
+				RenderManager->AddSpriteToInstancedSSTransformRenderList(spriteComp.TextureIndex, transformFrom2DComponent);
 			}
 		}
 
