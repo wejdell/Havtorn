@@ -7,8 +7,8 @@
 
 namespace ImGui
 {
-	CViewMenu::CViewMenu(const char* aName, Havtorn::CEditorManager* manager)
-		: CToggleable(aName, manager)
+	CViewMenu::CViewMenu(const char* displayName, Havtorn::CEditorManager* manager)
+		: CToggleable(displayName, manager)
 	{
 	}
 
@@ -19,9 +19,9 @@ namespace ImGui
 	void CViewMenu::OnInspectorGUI()
 	{
 		if (ImGui::Button(Name()))
-			ImGui::OpenPopup("my_view_popup");
+			ImGui::OpenPopup(PopupName);
 
-		if (ImGui::BeginPopup("my_view_popup"))
+		if (ImGui::BeginPopup(PopupName))
 		{
 			if(ImGui::MenuItem("Debug info"))
 			{

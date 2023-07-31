@@ -14,8 +14,8 @@ namespace ImGui
 {
 	using Havtorn::F32;
 
-	CAssetBrowserWindow::CAssetBrowserWindow(const char* name, Havtorn::CEditorManager* manager)
-		: CWindow(name, manager)
+	CAssetBrowserWindow::CAssetBrowserWindow(const char* displayName, Havtorn::CEditorManager* manager)
+		: CWindow(displayName, manager)
 		, FileSystem(Havtorn::GEngine::GetFileSystem())
 	{
 		CurrentDirectory = std::filesystem::path(DefaultAssetPath);		

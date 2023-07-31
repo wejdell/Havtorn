@@ -25,8 +25,8 @@ namespace ImGui
 	using Havtorn::U64;
 	using Havtorn::F32;
 
-	CInspectorWindow::CInspectorWindow(const char* name, Havtorn::CEditorManager* manager)
-		: CWindow(name, manager)
+	CInspectorWindow::CInspectorWindow(const char* displayName, Havtorn::CEditorManager* manager)
+		: CWindow(displayName, manager)
 	{
 		InspectionFunctions[EComponentType::TransformComponent]			= std::bind(&CInspectorWindow::InspectTransformComponent, this);
 		InspectionFunctions[EComponentType::StaticMeshComponent]		= std::bind(&CInspectorWindow::InspectStaticMeshComponent, this);

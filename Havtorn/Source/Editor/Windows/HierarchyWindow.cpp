@@ -16,8 +16,8 @@
 
 namespace ImGui
 {
-	CHierarchyWindow::CHierarchyWindow(const char* name, Havtorn::CEditorManager* manager)
-		: CWindow(name, manager)
+	CHierarchyWindow::CHierarchyWindow(const char* displayName, Havtorn::CEditorManager* manager)
+		: CWindow(displayName, manager)
 		, SelectedIndex(0)
 	{
 	}

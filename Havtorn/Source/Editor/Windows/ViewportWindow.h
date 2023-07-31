@@ -17,7 +17,7 @@ namespace ImGui
 	class CViewportWindow : public CWindow
 	{
 	public:
-		CViewportWindow(const char* name, Havtorn::CEditorManager* manager);
+		CViewportWindow(const char* displayName, Havtorn::CEditorManager* manager);
 		~CViewportWindow() override;
 		void OnEnable() override;
 		void OnInspectorGUI() override;

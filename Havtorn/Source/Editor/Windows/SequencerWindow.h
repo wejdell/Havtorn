@@ -317,7 +317,7 @@ namespace ImGui
 	class CSequencerWindow : public CWindow
 	{
 	public:
-		CSequencerWindow(const char* name, Havtorn::CEditorManager* manager);
+		CSequencerWindow(const char* displayName, Havtorn::CEditorManager* manager);
 		~CSequencerWindow() override;
 		void OnEnable() override;
 		void OnInspectorGUI() override;

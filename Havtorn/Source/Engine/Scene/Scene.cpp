@@ -226,24 +226,6 @@ namespace Havtorn
 		assetRegistry->Register(decalTextures, SAssetReferenceCounter(EComponentType::DecalComponent, decalEntitySceneIndex, 0, 0));
 		// === !Decal ===
 
-		// === Sprite ===
-		SEntity* sprite = GetNewEntity("Sprite");
-		if (!sprite)
-			return true;
-
-		STransform2DComponent& transform2D = AddTransform2DComponentToEntity(*sprite);
-		transform2D.Position = { 0.5f, 0.5f };
-		transform2D.Scale = { 1.0f, 1.0f };
-
-		const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
-		SSpriteComponent& spriteComp = AddSpriteComponentToEntity(*sprite);
-		spriteComp.UVRect = { 0.0f, 0.0f, 1.0f, 1.0f };
-		renderManager->LoadSpriteComponent(spritePath, &spriteComp);
-
-		U16 spriteIndex = static_cast<U16>(GetSceneIndex(*sprite));
-		assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
-		// === !Sprite ===
-
 		const std::string modelPath1 = "Assets/Tests/En_P_PendulumClock.hva";
 		const std::vector<std::string> materialNames1 = { "Assets/Materials/M_PendulumClock.hva", "Assets/Materials/M_Checkboard_128x128.hva" };
 		const std::string modelPath2 = "Assets/Tests/En_P_Bed.hva";
@@ -263,7 +245,6 @@ namespace Havtorn
 
 		STransform& transform1 = AddTransformComponentToEntity(*pendulum).Transform;
 		transform1.Translate({ 1.75f, 0.0f, 0.25f });
-		transform1.Rotate({ 0.0f, 90.0f, 0.0f });
 
 		renderManager->LoadStaticMeshComponent(modelPath1, &AddStaticMeshComponentToEntity(*pendulum));
 		renderManager->LoadMaterialComponent(materialNames1, &AddMaterialComponentToEntity(*pendulum));
