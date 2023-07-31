@@ -263,6 +263,7 @@ namespace Havtorn
 
 		STransform& transform1 = AddTransformComponentToEntity(*pendulum).Transform;
 		transform1.Translate({ 1.75f, 0.0f, 0.25f });
+		transform1.Rotate({ 0.0f, 90.0f, 0.0f });
 
 		renderManager->LoadStaticMeshComponent(modelPath1, &AddStaticMeshComponentToEntity(*pendulum));
 		renderManager->LoadMaterialComponent(materialNames1, &AddMaterialComponentToEntity(*pendulum));
@@ -430,8 +431,8 @@ namespace Havtorn
 		transform.Transform.Translate(SVector::Right * 0.25f);
 
 		SCameraComponent& camera = AddCameraComponentToEntity(*cameraEntity);
-		//camera.ProjectionType = ECameraProjectionType::Orthographic;
 		camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
+		//camera.ProjectionType = ECameraProjectionType::Orthographic;
 		//camera.ProjectionMatrix = SMatrix::OrthographicLH(5.0f, 5.0f, 0.1f, 1000.0f);
 		camera.ViewMatrix = SMatrix::LookAtLH(SVector::Zero, SVector::Forward, SVector::Up);
 
@@ -466,6 +467,37 @@ namespace Havtorn
 		volumetricLight.IsActive = false;
 		// === !Directional light ===
 
+		// === Spotlight ===
+		SEntity* spotlight = GetNewEntity("Spot Light");
+		if (!spotlight)
+			return true;
+
+		STransform& spotlightTransform = AddTransformComponentToEntity(*spotlight).Transform;
+		SMatrix spotlightMatrix = spotlightTransform.GetMatrix();
+		spotlightMatrix.SetTranslation({ 0.0f, 0.0f, 0.0f });
+		spotlightTransform.SetMatrix(spotlightMatrix);
+
+		SSpotLightComponent& spotlightComp = AddSpotLightComponentToEntity(*spotlight);
+		spotlightComp.Direction = SVector4::Forward;
+		spotlightComp.DirectionNormal1 = SVector4::Right;
+		spotlightComp.DirectionNormal2 = SVector4::Up;
+		spotlightComp.ColorAndIntensity = { 0.0f, 1.0f, 0.0f, 5.0f };
+		spotlightComp.OuterAngle = 40.0f;
+		spotlightComp.InnerAngle = 30.0f;
+		spotlightComp.Range = 3.0f;
+
+		SVolumetricLightComponent& volumetricSpotLight = AddVolumetricLightComponentToEntity(*spotlight);
+		volumetricSpotLight.IsActive = false;
+
+		const SMatrix spotlightProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, spotlightComp.Range);
+		const SVector4 spotlightPosition = spotlightTransform.GetMatrix().GetTranslation4();
+
+		spotlightComp.ShadowmapView.ShadowPosition = spotlightPosition;
+		spotlightComp.ShadowmapView.ShadowmapViewportIndex = 7;
+		spotlightComp.ShadowmapView.ShadowViewMatrix = SMatrix::LookAtLH(spotlightPosition.ToVector3(), (spotlightPosition + spotlightComp.Direction).ToVector3(), spotlightComp.DirectionNormal2.ToVector3());
+		spotlightComp.ShadowmapView.ShadowProjectionMatrix = spotlightProjection;
+		// === !Spotlight ===
+
 		//// === Screen Space Sprite ===
 		//SEntity* spriteSS = GetNewEntity("SpriteSS");
 		//if (!spriteSS)
@@ -491,9 +523,7 @@ namespace Havtorn
 				return true;
 
 			STransformComponent& spriteWStransform = AddTransformComponentToEntity(*spriteWS);
-			spriteWStransform.Transform.Move({ 0.0f, 2.0f, 0.0f });
-			F32 radians = UMath::DegToRad(12.5f);
-			spriteWStransform.Transform.Rotate({ radians, radians, radians });
+			spriteWStransform.Transform.Move({ 0.0f, 0.0f, 2.0f });
 
 			const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
 			SSpriteComponent& spriteWSComp = AddSpriteComponentToEntity(*spriteWS);

@@ -133,6 +133,9 @@ namespace ImGui
 		ImGui::DragFloat3("Rotation", matrixRotation, SlideSpeed);
 		ImGui::DragFloat3("Scale", matrixScale, SlideSpeed);
 		ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, transformMatrix.data);
+
+		// TODO.NR: Fix rotation here, can't rotate full range of Yaw due to weird clamping. Other axes are fine
+		//Havtorn::SMatrix::Recompose(matrixTranslation, matrixRotation, matrixScale, transformMatrix);
 		Scene->GetTransformComponents()[SelectedEntityIndex].Transform.SetMatrix(transformMatrix);
 
 		if (Manager->GetIsFreeCamActive())
@@ -199,11 +202,13 @@ namespace ImGui
 		{
 			ImGui::DragFloat("FOV", &cameraComp.FOV, SlideSpeed, 1.0f, 180.0f);
 			ImGui::DragFloat("Aspect Ratio", &cameraComp.AspectRatio, SlideSpeed, 0.1f, 10.0f);
+			ImGuizmo::SetOrthographic(false);
 		}
 		else if (cameraComp.ProjectionType == Havtorn::ECameraProjectionType::Orthographic)
 		{
 			ImGui::DragFloat("View Width", &cameraComp.ViewWidth, SlideSpeed, 0.1f, 100.0f);
 			ImGui::DragFloat("View Height", &cameraComp.ViewHeight, SlideSpeed, 0.1f, 100.0f);
+			ImGuizmo::SetOrthographic(true);
 		}
 
 		ImGui::DragFloat("Near Clip Plane", &cameraComp.NearClip, SlideSpeed, 0.01f, cameraComp.FarClip - 1.0f);
