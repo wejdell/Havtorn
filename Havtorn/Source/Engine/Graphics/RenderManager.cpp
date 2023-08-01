@@ -2335,7 +2335,7 @@ namespace Havtorn
 			break;
 		}
 
-		HV_LOG_TRACE("Render Pass Index: %i", currentRunningRenderPassIndex);
+		// TODO.NR: Add debug print on screen indicating what render pass is shown
 		CurrentRunningRenderPass = static_cast<ERenderPass>(currentRunningRenderPassIndex);
 	}
 

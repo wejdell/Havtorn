@@ -60,7 +60,6 @@ namespace Havtorn
 			FXAA,
 			SSAO,
 			SSAOBlur,
-			BrokenScreenEffect,
 			DownsampleDepth,
 			DepthAwareUpsampling,
 			Count

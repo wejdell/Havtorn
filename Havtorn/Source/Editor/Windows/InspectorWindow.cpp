@@ -110,7 +110,10 @@ namespace ImGui
 	{
 		if (selectedEntity->HasComponent(componentType))
 		{
-			// TODO.NR/AG: Extract Collapsing Header and Remove Component button logic and move it here
+			// TODO.NR/AG: Extract Collapsing Header and Remove Component button logic and move it here.
+			// We can use GetComponentTypeString to get the *label* parameter for ImGui::CollapsingHeader, 
+			// though we'll have to take a substring of the return value to get "Transform" instead of 
+			// "TransformComponent" for example.
 
 			InspectionFunctions[componentType]();
 			ImGui::Dummy({ DummySize.X, DummySize.Y });
@@ -132,10 +135,10 @@ namespace ImGui
 		ImGui::DragFloat3("Position", matrixTranslation, SlideSpeed);
 		ImGui::DragFloat3("Rotation", matrixRotation, SlideSpeed);
 		ImGui::DragFloat3("Scale", matrixScale, SlideSpeed);
-		ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, transformMatrix.data);
 
-		// TODO.NR: Fix rotation here, can't rotate full range of Yaw due to weird clamping. Other axes are fine
-		//Havtorn::SMatrix::Recompose(matrixTranslation, matrixRotation, matrixScale, transformMatrix);
+		// TODO.NR: Fix yaw rotation singularity here, using our own math functions. Ref: https://github.com/CedricGuillemet/ImGuizmo/issues/244
+		ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, transformMatrix.data);
+		
 		Scene->GetTransformComponents()[SelectedEntityIndex].Transform.SetMatrix(transformMatrix);
 
 		if (Manager->GetIsFreeCamActive())
