@@ -55,26 +55,27 @@ namespace Havtorn
 		ENGINE_ERROR_BOOL_MESSAGE(UGraphicsUtils::CreateVertexShader("Shaders/FullscreenVertexShader_VS.cso", framework, &VertexShader, vsData), "Could not create Vertex Shader from FullscreenVertexShader_VS.cso");
 
 		std::array<std::string, STATIC_U64(EFullscreenShader::Count)> filepaths;
-		filepaths[STATIC_U64(EFullscreenShader::Multiply)] = "Shaders/FullscreenMultiply_PS.cso";
-		filepaths[STATIC_U64(EFullscreenShader::Copy)] = "Shaders/FullscreenCopy_PS.cso";
-		filepaths[STATIC_U64(EFullscreenShader::CopyDepth)] = "Shaders/FullscreenCopyDepth_PS.cso";
-		filepaths[STATIC_U64(EFullscreenShader::CopyGBuffer)] = "Shaders/FullscreenCopyGBuffer_PS.cso";
-		filepaths[STATIC_U64(EFullscreenShader::Difference)] = "Shaders/FullscreenDifference_PS.cso";
-		filepaths[STATIC_U64(EFullscreenShader::Luminance)] = "Shaders/FullscreenLuminance_PS.cso";
-		filepaths[STATIC_U64(EFullscreenShader::GaussianHorizontal)] = "Shaders/FullscreenGaussianBlurHorizontal_PS.cso";
-		filepaths[STATIC_U64(EFullscreenShader::GaussianVertical)] = "Shaders/FullscreenGaussianBlurVertical_PS.cso";
-		filepaths[STATIC_U64(EFullscreenShader::BilateralHorizontal)] = "Shaders/FullscreenBilateralBlurHorizontal_PS.cso";
-		filepaths[STATIC_U64(EFullscreenShader::BilateralVertical)] = "Shaders/FullscreenBilateralBlurVertical_PS.cso";
-		filepaths[STATIC_U64(EFullscreenShader::Bloom)] = "Shaders/FullscreenBloom_PS.cso";
-		filepaths[STATIC_U64(EFullscreenShader::Vignette)] = "Shaders/FullscreenVignette_PS.cso";
-		filepaths[STATIC_U64(EFullscreenShader::Tonemap)] = "Shaders/FullscreenTonemap_PS.cso";
-		filepaths[STATIC_U64(EFullscreenShader::GammaCorrection)] = "Shaders/FullscreenGammaCorrection_PS.cso";
-		filepaths[STATIC_U64(EFullscreenShader::FXAA)] = "Shaders/FullscreenFXAA_PS.cso";
-		filepaths[STATIC_U64(EFullscreenShader::SSAO)] = "Shaders/FullscreenSSAO_PS.cso";
-		filepaths[STATIC_U64(EFullscreenShader::SSAOBlur)] = "Shaders/FullscreenSSAOBlur_PS.cso";
-		filepaths[STATIC_U64(EFullscreenShader::BrokenScreenEffect)] = "Shaders/FullscreenBrokenScreenEffect_PS.cso";
-		filepaths[STATIC_U64(EFullscreenShader::DownsampleDepth)] = "Shaders/FullscreenDepthDownSample_PS.cso";
-		filepaths[STATIC_U64(EFullscreenShader::DepthAwareUpsampling)] = "Shaders/FullscreenDepthAwareUpsample_PS.cso";
+		{
+			filepaths[STATIC_U64(EFullscreenShader::Multiply)]				= "Shaders/FullscreenMultiply_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::Copy)]					= "Shaders/FullscreenCopy_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::CopyDepth)]				= "Shaders/FullscreenCopyDepth_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::CopyGBuffer)]			= "Shaders/FullscreenCopyGBuffer_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::Difference)]			= "Shaders/FullscreenDifference_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::Luminance)]				= "Shaders/FullscreenLuminance_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::GaussianHorizontal)]	= "Shaders/FullscreenGaussianBlurHorizontal_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::GaussianVertical)]		= "Shaders/FullscreenGaussianBlurVertical_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::BilateralHorizontal)]	= "Shaders/FullscreenBilateralBlurHorizontal_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::BilateralVertical)]		= "Shaders/FullscreenBilateralBlurVertical_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::Bloom)]					= "Shaders/FullscreenBloom_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::Vignette)]				= "Shaders/FullscreenVignette_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::Tonemap)]				= "Shaders/FullscreenTonemap_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::GammaCorrection)]		= "Shaders/FullscreenGammaCorrection_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::FXAA)]					= "Shaders/FullscreenFXAA_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::SSAO)]					= "Shaders/FullscreenSSAO_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::SSAOBlur)]				= "Shaders/FullscreenSSAOBlur_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::DownsampleDepth)]		= "Shaders/FullscreenDepthDownSample_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::DepthAwareUpsampling)]	= "Shaders/FullscreenDepthAwareUpsample_PS.cso";
+		}
 
 		for (U64 i = 0; i < STATIC_U64(EFullscreenShader::Count); i++) 
 		{

@@ -35,6 +35,7 @@ namespace Havtorn
 		VolumetricLightingSpot,
 		VolumetricBufferBlurPass,
 		ForwardTransparency,
+		// NR: Not implemented yet, but should be about here in the list when we implement outlines for editor selections.
 		//OutlineMask,
 		//Outline,
 		ScreenSpaceSprite,
