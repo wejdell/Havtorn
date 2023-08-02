@@ -24,7 +24,7 @@ namespace Havtorn
 	{
 		Pos3Nor3Tan3Bit3UV2,
 		Pos3Nor3Tan3Bit3UV2Trans,
-		Pos4,
+		Position4,
 		TransUVRectColor,
 	};
 

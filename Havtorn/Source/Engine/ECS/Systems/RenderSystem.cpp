@@ -32,8 +32,8 @@ namespace Havtorn
 		const auto& decalComponents = scene->GetDecalComponents();
 
 		RenderManager->ClearSystemStaticMeshInstanceTransforms();
-		RenderManager->ClearSpriteInstanceWSTransforms();
-		RenderManager->ClearSpriteInstanceSSTransforms();
+		RenderManager->ClearSpriteInstanceWorldSpaceTransforms();
+		RenderManager->ClearSpriteInstanceScreenSpaceTransforms();
 		RenderManager->ClearSpriteInstanceUVRects();
 		RenderManager->ClearSpriteInstanceColors();
 
@@ -260,7 +260,7 @@ namespace Havtorn
 
 			if (transformComp.IsInUse)
 			{
-				if (!RenderManager->IsSpriteInInstancedWSTransformRenderList(spriteComp.TextureIndex)) 
+				if (!RenderManager->IsSpriteInInstancedWorldSpaceTransformRenderList(spriteComp.TextureIndex)) 
 				{
 					// NR: Don't push a command every time
 					SRenderCommand command;
@@ -269,11 +269,11 @@ namespace Havtorn
 					RenderManager->PushRenderCommand(command);
 				}
 
-				RenderManager->AddSpriteToInstancedWSTransformRenderList(spriteComp.TextureIndex, transformComp.Transform.GetMatrix());
+				RenderManager->AddSpriteToInstancedWorldSpaceTransformRenderList(spriteComp.TextureIndex, transformComp.Transform.GetMatrix());
 			}
 			else if (transform2DComp.IsInUse)
 			{
-				if (!RenderManager->IsSpriteInInstancedSSTransformRenderList(spriteComp.TextureIndex))
+				if (!RenderManager->IsSpriteInInstancedScreenSpaceTransformRenderList(spriteComp.TextureIndex))
 				{
 					SRenderCommand command;
 					command.SpriteComponent = spriteComp;
@@ -285,7 +285,7 @@ namespace Havtorn
 				transformFrom2DComponent.SetScale(transform2DComp.Scale.X, transform2DComp.Scale.Y, 1.0f);
 				transformFrom2DComponent *= SMatrix::CreateRotationAroundZ(UMath::DegToRad(transform2DComp.DegreesRoll));
 				transformFrom2DComponent.SetTranslation({ transform2DComp.Position.X, transform2DComp.Position.Y, 0.0f });
-				RenderManager->AddSpriteToInstancedSSTransformRenderList(spriteComp.TextureIndex, transformFrom2DComponent);
+				RenderManager->AddSpriteToInstancedScreenSpaceTransformRenderList(spriteComp.TextureIndex, transformFrom2DComponent);
 			}
 		}
 

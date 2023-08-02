@@ -87,35 +87,7 @@ namespace Havtorn
 		InitEditorResources();
 		LoadDemoSceneResources();
 
-		RenderFunctions[ERenderCommandType::ShadowAtlasPrePassDirectional] = std::bind(&CRenderManager::ShadowAtlasPrePassDirectional, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::ShadowAtlasPrePassPoint] = std::bind(&CRenderManager::ShadowAtlasPrePassPoint, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::ShadowAtlasPrePassSpot] = std::bind(&CRenderManager::ShadowAtlasPrePassSpot, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::CameraDataStorage] = std::bind(&CRenderManager::CameraDataStorage, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::GBufferDataInstanced] = std::bind(&CRenderManager::GBufferDataInstanced, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::GBufferSpriteInstanced] = std::bind(&CRenderManager::GBufferSpriteInstanced, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::DecalDepthCopy] = std::bind(&CRenderManager::DecalDepthCopy, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::DeferredDecal] = std::bind(&CRenderManager::DeferredDecal, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::PreLightingPass] = std::bind(&CRenderManager::PreLightingPass, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::DeferredLightingDirectional] = std::bind(&CRenderManager::DeferredLightingDirectional, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::DeferredLightingPoint] = std::bind(&CRenderManager::DeferredLightingPoint, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::DeferredLightingSpot] = std::bind(&CRenderManager::DeferredLightingSpot, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::PostBaseLightingPass] = std::bind(&CRenderManager::PostBaseLightingPass, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::VolumetricLightingDirectional] = std::bind(&CRenderManager::VolumetricLightingDirectional, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::VolumetricLightingPoint] = std::bind(&CRenderManager::VolumetricLightingPoint, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::VolumetricLightingSpot] = std::bind(&CRenderManager::VolumetricLightingSpot, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::VolumetricBufferBlurPass] = std::bind(&CRenderManager::VolumetricBlur, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::ForwardTransparency] = std::bind(&CRenderManager::ForwardTransparency, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::ScreenSpaceSprite] = std::bind(&CRenderManager::ScreenSpaceSprite, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::Bloom] = std::bind(&CRenderManager::RenderBloom, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::Tonemapping] = std::bind(&CRenderManager::Tonemapping, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::PreDebugShape] = std::bind(&CRenderManager::PreDebugShapes, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::PostToneMappingUseDepth] = std::bind(&CRenderManager::PostTonemappingUseDepth, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::PostToneMappingIgnoreDepth] = std::bind(&CRenderManager::PostTonemappingIgnoreDepth, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::DebugShapeUseDepth] = std::bind(&CRenderManager::DebugShapes, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::DebugShapeIgnoreDepth] = std::bind(&CRenderManager::DebugShapes, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::AntiAliasing] = std::bind(&CRenderManager::AntiAliasing, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::GammaCorrection] = std::bind(&CRenderManager::GammaCorrection, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::RendererDebug] = std::bind(&CRenderManager::RendererDebug, this, std::placeholders::_1);
+		BindRenderFunctions();
 
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderPassForward).AddMember(this, &CRenderManager::CycleRenderPass);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderPassBackward).AddMember(this, &CRenderManager::CycleRenderPass);
@@ -213,6 +185,10 @@ namespace Havtorn
 
 	void CRenderManager::InitVertexShadersAndInputLayouts()
 	{
+		// TODO.NR: Think about how to make this safer. Could be nice to use the enum directly to 
+		// loop through and add the shaders dependent on enum order, like in the FullscreenRenderer.
+		// The issue with vertex shaders is their dependency on the InputLayout.
+
 		AddShader("Shaders/FullscreenVertexShader_VS.cso", EShaderType::Vertex);
 		
 		std::string vsData = AddShader("Shaders/DeferredStaticMesh_VS.cso", EShaderType::Vertex);
@@ -224,7 +200,7 @@ namespace Havtorn
 		AddShader("Shaders/Decal_VS.cso", EShaderType::Vertex);
 
 		vsData = AddShader("Shaders/PointLight_VS.cso", EShaderType::Vertex);
-		AddInputLayout(vsData, EInputLayoutType::Pos4);
+		AddInputLayout(vsData, EInputLayoutType::Position4);
 
 		AddShader("Shaders/EditorPreview_VS.cso", EShaderType::Vertex);
 		
@@ -327,6 +303,39 @@ namespace Havtorn
 		AddMeshVertexOffset(0);
 	}
 
+	void CRenderManager::BindRenderFunctions()
+	{
+		RenderFunctions[ERenderCommandType::ShadowAtlasPrePassDirectional] = std::bind(&CRenderManager::ShadowAtlasPrePassDirectional, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::ShadowAtlasPrePassPoint] = std::bind(&CRenderManager::ShadowAtlasPrePassPoint, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::ShadowAtlasPrePassSpot] = std::bind(&CRenderManager::ShadowAtlasPrePassSpot, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::CameraDataStorage] = std::bind(&CRenderManager::CameraDataStorage, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::GBufferDataInstanced] = std::bind(&CRenderManager::GBufferDataInstanced, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::GBufferSpriteInstanced] = std::bind(&CRenderManager::GBufferSpriteInstanced, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::DecalDepthCopy] = std::bind(&CRenderManager::DecalDepthCopy, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::DeferredDecal] = std::bind(&CRenderManager::DeferredDecal, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::PreLightingPass] = std::bind(&CRenderManager::PreLightingPass, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::DeferredLightingDirectional] = std::bind(&CRenderManager::DeferredLightingDirectional, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::DeferredLightingPoint] = std::bind(&CRenderManager::DeferredLightingPoint, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::DeferredLightingSpot] = std::bind(&CRenderManager::DeferredLightingSpot, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::PostBaseLightingPass] = std::bind(&CRenderManager::PostBaseLightingPass, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::VolumetricLightingDirectional] = std::bind(&CRenderManager::VolumetricLightingDirectional, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::VolumetricLightingPoint] = std::bind(&CRenderManager::VolumetricLightingPoint, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::VolumetricLightingSpot] = std::bind(&CRenderManager::VolumetricLightingSpot, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::VolumetricBufferBlurPass] = std::bind(&CRenderManager::VolumetricBlur, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::ForwardTransparency] = std::bind(&CRenderManager::ForwardTransparency, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::ScreenSpaceSprite] = std::bind(&CRenderManager::ScreenSpaceSprite, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::Bloom] = std::bind(&CRenderManager::RenderBloom, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::Tonemapping] = std::bind(&CRenderManager::Tonemapping, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::PreDebugShape] = std::bind(&CRenderManager::PreDebugShapes, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::PostToneMappingUseDepth] = std::bind(&CRenderManager::PostTonemappingUseDepth, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::PostToneMappingIgnoreDepth] = std::bind(&CRenderManager::PostTonemappingIgnoreDepth, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::DebugShapeUseDepth] = std::bind(&CRenderManager::DebugShapes, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::DebugShapeIgnoreDepth] = std::bind(&CRenderManager::DebugShapes, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::AntiAliasing] = std::bind(&CRenderManager::AntiAliasing, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::GammaCorrection] = std::bind(&CRenderManager::GammaCorrection, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::RendererDebug] = std::bind(&CRenderManager::RendererDebug, this, std::placeholders::_1);
+	}
+
 	void CRenderManager::InitEditorResources()
 	{}
 
@@ -391,30 +400,7 @@ namespace Havtorn
 		GEngine::Instance->Framework->GetContext()->OMGetDepthStencilState(0, 0);
 		GEngine::Instance->Framework->GetContext()->ClearState();
 
-		//Backbuffer.ReleaseTexture();
-		//myIntermediateTexture.ReleaseTexture();
-		//myIntermediateDepth.ReleaseDepth();
-		//myLuminanceTexture.ReleaseTexture();
-		//myHalfSizeTexture.ReleaseTexture();
-		//myQuarterSizeTexture.ReleaseTexture();
-		//myBlurTexture1.ReleaseTexture();
-		//myBlurTexture2.ReleaseTexture();
-		//myVignetteTexture.ReleaseTexture();
-		//myVignetteOverlayTexture.ReleaseTexture();
-		//myDeferredLightingTexture.ReleaseTexture();
-
-		//myEnvironmentShadowDepth.ReleaseDepth();
-		//myBoxLightShadowDepth.ReleaseDepth();
-		//myDepthCopy.ReleaseDepth();
-		//myDownsampledDepth.ReleaseDepth();
-
-		//myVolumetricAccumulationBuffer.ReleaseTexture();
-		//myVolumetricBlurTexture.ReleaseTexture();
-		//myTonemappedTexture.ReleaseTexture();
-		//myAntiAliasedTexture.ReleaseTexture();
-
-		//myGBuffer.ReleaseResources();
-		//myGBufferCopy.ReleaseResources();
+		// TODO.NR: Implement this properly for window resizing
 	}
 
 	void CRenderManager::LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent)
@@ -437,8 +423,8 @@ namespace Havtorn
 				// TODO.NR: Check for existing buffers
 				asset.DrawCallData[i].VertexBufferIndex = AddVertexBuffer(assetFile.Meshes[i].Vertices);
 				asset.DrawCallData[i].IndexBufferIndex = AddIndexBuffer(assetFile.Meshes[i].Indices);
-				asset.DrawCallData[i].VertexStrideIndex = /*AddMeshVertexStride(static_cast<U32>(sizeof(SStaticMeshVertex)))*/0;
-				asset.DrawCallData[i].VertexOffsetIndex = /*AddMeshVertexOffset(0)*/0;
+				asset.DrawCallData[i].VertexStrideIndex = 0;
+				asset.DrawCallData[i].VertexOffsetIndex = 0;
 			}
 
 			// NR: Mesh name will be much easier to handle
@@ -924,50 +910,50 @@ namespace Havtorn
 		return SystemStaticMeshInstanceTransforms.clear();
 	}
 
-	bool CRenderManager::IsSpriteInInstancedWSTransformRenderList(const U32 textureBankIndex)
+	bool CRenderManager::IsSpriteInInstancedWorldSpaceTransformRenderList(const U32 textureBankIndex)
 	{
-		return SystemSpriteInstanceWSTransforms.contains(textureBankIndex);
+		return SystemSpriteInstanceWorldSpaceTransforms.contains(textureBankIndex);
 	}
 
-	void CRenderManager::AddSpriteToInstancedWSTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix)
+	void CRenderManager::AddSpriteToInstancedWorldSpaceTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix)
 	{
-		if (!SystemSpriteInstanceWSTransforms.contains(textureBankIndex))
-			SystemSpriteInstanceWSTransforms.emplace(textureBankIndex, std::vector<SMatrix>());
+		if (!SystemSpriteInstanceWorldSpaceTransforms.contains(textureBankIndex))
+			SystemSpriteInstanceWorldSpaceTransforms.emplace(textureBankIndex, std::vector<SMatrix>());
 
-		SystemSpriteInstanceWSTransforms[textureBankIndex].emplace_back(transformMatrix);
+		SystemSpriteInstanceWorldSpaceTransforms[textureBankIndex].emplace_back(transformMatrix);
 	}
 
-	void CRenderManager::SwapSpriteInstancedWSTransformRenderLists()
+	void CRenderManager::SwapSpriteInstancedWorldSpaceTransformRenderLists()
 	{
-		std::swap(SystemSpriteInstanceWSTransforms, RendererSpriteInstanceWSTransforms);
+		std::swap(SystemSpriteInstanceWorldSpaceTransforms, RendererSpriteInstanceWorldSpaceTransforms);
 	}
 
-	void CRenderManager::ClearSpriteInstanceWSTransforms()
+	void CRenderManager::ClearSpriteInstanceWorldSpaceTransforms()
 	{
-		SystemSpriteInstanceWSTransforms.clear();
+		SystemSpriteInstanceWorldSpaceTransforms.clear();
 	}
 
-	bool CRenderManager::IsSpriteInInstancedSSTransformRenderList(const U32 textureBankIndex)
+	bool CRenderManager::IsSpriteInInstancedScreenSpaceTransformRenderList(const U32 textureBankIndex)
 	{
-		return SystemSpriteInstanceSSTransforms.contains(textureBankIndex);
+		return SystemSpriteInstanceScreenSpaceTransforms.contains(textureBankIndex);
 	}
 
-	void CRenderManager::AddSpriteToInstancedSSTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix)
+	void CRenderManager::AddSpriteToInstancedScreenSpaceTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix)
 	{
-		if (!SystemSpriteInstanceSSTransforms.contains(textureBankIndex))
-			SystemSpriteInstanceSSTransforms.emplace(textureBankIndex, std::vector<SMatrix>());
+		if (!SystemSpriteInstanceScreenSpaceTransforms.contains(textureBankIndex))
+			SystemSpriteInstanceScreenSpaceTransforms.emplace(textureBankIndex, std::vector<SMatrix>());
 
-		SystemSpriteInstanceSSTransforms[textureBankIndex].emplace_back(transformMatrix);
+		SystemSpriteInstanceScreenSpaceTransforms[textureBankIndex].emplace_back(transformMatrix);
 	}
 
-	void CRenderManager::SwapSpriteInstancedSSTransformRenderLists()
+	void CRenderManager::SwapSpriteInstancedScreenSpaceTransformRenderLists()
 	{
-		std::swap(SystemSpriteInstanceSSTransforms, RendererSpriteInstanceSSTransforms);
+		std::swap(SystemSpriteInstanceScreenSpaceTransforms, RendererSpriteInstanceScreenSpaceTransforms);
 	}
 
-	void CRenderManager::ClearSpriteInstanceSSTransforms()
+	void CRenderManager::ClearSpriteInstanceScreenSpaceTransforms()
 	{
-		SystemSpriteInstanceSSTransforms.clear();
+		SystemSpriteInstanceScreenSpaceTransforms.clear();
 	}
 
 	bool CRenderManager::IsSpriteInInstancedUVRectRenderList(const U32 textureBankIndex)
@@ -1193,7 +1179,7 @@ namespace Havtorn
 			};
 			break;
 
-		case EInputLayoutType::Pos4:
+		case EInputLayoutType::Position4:
 			layout =
 			{
 				{"POSITION"	,	0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
@@ -1521,7 +1507,7 @@ namespace Havtorn
 
 		const SSpriteComponent& spriteComp = command.GetComponent(SpriteComponent); 
 
-		const std::vector<SMatrix>& matrices = RendererSpriteInstanceWSTransforms[spriteComp.TextureIndex];
+		const std::vector<SMatrix>& matrices = RendererSpriteInstanceWorldSpaceTransforms[spriteComp.TextureIndex];
 		BindBuffer(InstancedTransformBuffer, matrices, "Instanced Transform Buffer");
 
 		const std::vector<SVector4>& uvRects = RendererSpriteInstanceUVRects[spriteComp.TextureIndex];
@@ -1724,7 +1710,7 @@ namespace Havtorn
 		Context->PSSetConstantBuffers(5, 1, &ShadowmapBuffer);
 
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
-		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
+		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Position4)]);
 		Context->IASetVertexBuffers(0, 1, &VertexBuffers[1], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
 		Context->IASetIndexBuffer(IndexBuffers[static_cast<U8>(EDefaultIndexBuffers::PointLightCube)], DXGI_FORMAT_R32_UINT, 0);
 
@@ -1779,7 +1765,7 @@ namespace Havtorn
 		Context->PSSetConstantBuffers(5, 1, &ShadowmapBuffer);
 
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
-		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
+		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Position4)]);
 		Context->IASetVertexBuffers(0, 1, &VertexBuffers[1], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
 		Context->IASetIndexBuffer(IndexBuffers[static_cast<U8>(EDefaultIndexBuffers::PointLightCube)], DXGI_FORMAT_R32_UINT, 0);
 
@@ -1902,7 +1888,7 @@ namespace Havtorn
 		Context->PSSetConstantBuffers(5, 1, &ShadowmapBuffer);
 
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
-		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
+		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Position4)]);
 		Context->IASetVertexBuffers(0, 1, &VertexBuffers[1], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
 		Context->IASetIndexBuffer(IndexBuffers[static_cast<U8>(EDefaultIndexBuffers::PointLightCube)], DXGI_FORMAT_R32_UINT, 0);
 
@@ -1973,7 +1959,7 @@ namespace Havtorn
 		Context->PSSetConstantBuffers(5, 1, &ShadowmapBuffer);
 
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
-		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
+		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Position4)]);
 		Context->IASetVertexBuffers(0, 1, &VertexBuffers[1], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
 		Context->IASetIndexBuffer(IndexBuffers[static_cast<U8>(EDefaultIndexBuffers::PointLightCube)], DXGI_FORMAT_R32_UINT, 0);
 
@@ -2051,7 +2037,7 @@ namespace Havtorn
 
 		const SSpriteComponent& spriteComponent = command.GetComponent(SpriteComponent);
 
-		const std::vector<SMatrix>& matrices = RendererSpriteInstanceSSTransforms[spriteComponent.TextureIndex];
+		const std::vector<SMatrix>& matrices = RendererSpriteInstanceScreenSpaceTransforms[spriteComponent.TextureIndex];
 		BindBuffer(InstancedTransformBuffer, matrices, "Instanced Transform Buffer");
 
 		const std::vector<SVector4>& uvRects = RendererSpriteInstanceUVRects[spriteComponent.TextureIndex];
@@ -2171,7 +2157,7 @@ namespace Havtorn
 		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
 
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::LineList)]);
-		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
+		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Position4)]);
 
 		Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::Line)], nullptr, 0);
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Line)], nullptr, 0);

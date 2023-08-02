@@ -82,15 +82,15 @@ namespace Havtorn
 		void SwapStaticMeshInstancedRenderLists();
 		void ClearSystemStaticMeshInstanceTransforms();
 
-		bool IsSpriteInInstancedWSTransformRenderList(const U32 textureBankIndex);
-		void AddSpriteToInstancedWSTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix);
-		void SwapSpriteInstancedWSTransformRenderLists();
-		void ClearSpriteInstanceWSTransforms();
+		bool IsSpriteInInstancedWorldSpaceTransformRenderList(const U32 textureBankIndex);
+		void AddSpriteToInstancedWorldSpaceTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix);
+		void SwapSpriteInstancedWorldSpaceTransformRenderLists();
+		void ClearSpriteInstanceWorldSpaceTransforms();
 
-		bool IsSpriteInInstancedSSTransformRenderList(const U32 textureBankIndex);
-		void AddSpriteToInstancedSSTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix);
-		void SwapSpriteInstancedSSTransformRenderLists();
-		void ClearSpriteInstanceSSTransforms();
+		bool IsSpriteInInstancedScreenSpaceTransformRenderList(const U32 textureBankIndex);
+		void AddSpriteToInstancedScreenSpaceTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix);
+		void SwapSpriteInstancedScreenSpaceTransformRenderLists();
+		void ClearSpriteInstanceScreenSpaceTransforms();
 
 		bool IsSpriteInInstancedUVRectRenderList(const U32 textureBankIndex);
 		void AddSpriteToInstancedUVRectRenderList(const U32 textureBankIndex, const SVector4& uvRect);
@@ -135,6 +135,8 @@ namespace Havtorn
 		void InitMeshVertexStrides();
 		void InitMeshVertexOffset();
 		
+		void BindRenderFunctions();
+
 		void InitEditorResources();
 		void LoadDemoSceneResources();
 
@@ -420,11 +422,11 @@ namespace Havtorn
 			the TextureBank in a roundabout way, to use as the key into the above collection, but
 			this seems better for now
 		*/
-		std::unordered_map<U32, std::vector<SMatrix>> SystemSpriteInstanceWSTransforms;
-		std::unordered_map<U32, std::vector<SMatrix>> RendererSpriteInstanceWSTransforms;
+		std::unordered_map<U32, std::vector<SMatrix>> SystemSpriteInstanceWorldSpaceTransforms;
+		std::unordered_map<U32, std::vector<SMatrix>> RendererSpriteInstanceWorldSpaceTransforms;
 
-		std::unordered_map<U32, std::vector<SMatrix>> SystemSpriteInstanceSSTransforms;
-		std::unordered_map<U32, std::vector<SMatrix>> RendererSpriteInstanceSSTransforms;
+		std::unordered_map<U32, std::vector<SMatrix>> SystemSpriteInstanceScreenSpaceTransforms;
+		std::unordered_map<U32, std::vector<SMatrix>> RendererSpriteInstanceScreenSpaceTransforms;
 
 		std::unordered_map<U32, std::vector<SVector4>> SystemSpriteInstanceUVRects;
 		std::unordered_map<U32, std::vector<SVector4>> RendererSpriteInstanceUVRects;
