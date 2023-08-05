@@ -409,18 +409,19 @@ namespace Havtorn
 
 		// Setup entities (create components)
 		STransformComponent& transform = AddTransformComponentToEntity(*cameraEntity);
-		transform.Transform.Translate({ 2.0f, 1.0f, -3.0f });
-		transform.Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
+		transform.Transform.Translate({ 0.0f, 1.0f, -5.0f });
+		//transform.Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
 		transform.Transform.Translate(SVector::Right * 0.25f);
 
 		SCameraComponent& camera = AddCameraComponentToEntity(*cameraEntity);
-		camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
-		//camera.ProjectionType = ECameraProjectionType::Orthographic;
-		//camera.ProjectionMatrix = SMatrix::OrthographicLH(5.0f, 5.0f, 0.1f, 1000.0f);
+		//camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
+		camera.ProjectionType = ECameraProjectionType::Orthographic;
+		camera.ProjectionMatrix = SMatrix::OrthographicLH(5.0f, 5.0f, 0.1f, 1000.0f);
 		camera.ViewMatrix = SMatrix::LookAtLH(SVector::Zero, SVector::Forward, SVector::Up);
 
-		SCameraControllerComponent& controllerComp = AddCameraControllerComponentToEntity(*cameraEntity);
-		controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
+//		SCameraControllerComponent& controllerComp = 
+			AddCameraControllerComponentToEntity(*cameraEntity);
+		//controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
 		// === !Camera ===
 
 		// === Environment light ===
@@ -502,25 +503,42 @@ namespace Havtorn
 		//	assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
 		//}
 
-		{
-			SEntity* spriteSS = GetNewEntity("SpriteSS");
-			if (!spriteSS)
-				return true;
+		//{
+		//	SEntity* spriteSS = GetNewEntity("SpriteSS");
+		//	if (!spriteSS)
+		//		return true;
 
-			STransform2DComponent& transform2D = AddTransform2DComponentToEntity(*spriteSS);
-			transform2D.Position = { 0.5f, 0.5f };
-			transform2D.Scale = { 1.0f, 1.0f };
-			transform2D.DegreesRoll = 0.0f;
+		//	STransform2DComponent& transform2D = AddTransform2DComponentToEntity(*spriteSS);
+		//	transform2D.Position = { 0.5f, 0.5f };
+		//	transform2D.Scale = { 1.0f, 1.0f };
+		//	transform2D.DegreesRoll = 0.0f;
 
-			const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
-			SSpriteComponent& spriteComp = AddSpriteComponentToEntity(*spriteSS);
-			spriteComp.UVRect = { 0.0f, 0.0f, 1.0f, 1.0f };
-			spriteComp.Color = SVector4(1.0f, 1.0f, 1.0f, 1.0f);
-			renderManager->LoadSpriteComponent(spritePath, &spriteComp);
+		//	const std::string& spritePath = "Assets/Textures/Sprite0001.hva";
+		//	SSpriteComponent& spriteComp = AddSpriteComponentToEntity(*spriteSS);
+		//	spriteComp.UVRect = { 0.0f, 0.0f, 0.1f, 0.1f };
+		//	spriteComp.Color = SVector4(1.0f, 1.0f, 1.0f, 1.0f);
+		//	renderManager->LoadSpriteComponent(spritePath, &spriteComp);
 
-			U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteSS));
-			assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
-		}
+		//	U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteSS));
+		//	assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
+		//}
+
+		//{
+		//	SEntity* animatedSprite = GetNewEntity("AnimatedSprite");
+		//	if (!animatedSprite)
+		//		return true;
+
+		//	STransform2DComponent& transform2D = AddTransform2DComponentToEntity(*animatedSprite);
+		//	transform2D.Position = { 0.5f, 0.5f };
+		//	transform2D.Scale = { 1.0f, 1.0f };
+		//	transform2D.DegreesRoll = 0.0f;
+
+		//	const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
+		//	SSpriteComponent& spriteComp = AddSpriteComponentToEntity(*animatedSprite);
+		//	spriteComp.UVRect = { 0.0f, 0.0f, 1.0f, 1.0f };
+		//	spriteComp.Color = SVector4(1.0f, 1.0f, 1.0f, 1.0f);
+		//	renderManager->LoadSpriteComponent(spritePath, &spriteComp);
+		//}
 
 		//{
 		//	SEntity* spriteSS = GetNewEntity("SpriteSS");
@@ -561,20 +579,50 @@ namespace Havtorn
 		//	assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
 		//}
 
+		//{
+		//	SEntity* spriteWS = GetNewEntity("SpriteWS");
+		//	if (!spriteWS)
+		//		return true;
+
+		//	STransformComponent& spriteWStransform = AddTransformComponentToEntity(*spriteWS);
+		//	spriteWStransform.Transform.Move({ 2.0f, 0.0f, 0.0f });
+		//	F32 radians = UMath::DegToRad(45.0f);
+		//	spriteWStransform.Transform.Rotate({ radians, radians, radians });
+
+		//	const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
+		//	SSpriteComponent& spriteWSComp = AddSpriteComponentToEntity(*spriteWS);
+		//	spriteWSComp.UVRect = { 0.0f, 0.0f, 0.5f, 0.5f };
+		//	renderManager->LoadSpriteComponent(spritePath, &spriteWSComp);
+
+		//	U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteWS));
+		//	assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
+		//}
+
 		{
-			SEntity* spriteWS = GetNewEntity("SpriteWS");
+			SEntity* spriteWS = GetNewEntity("Ghosty");
 			if (!spriteWS)
 				return true;
 
 			STransformComponent& spriteWStransform = AddTransformComponentToEntity(*spriteWS);
-			spriteWStransform.Transform.Move({ 2.0f, 0.0f, 0.0f });
-			F32 radians = UMath::DegToRad(45.0f);
-			spriteWStransform.Transform.Rotate({ radians, radians, radians });
+			spriteWStransform.Transform.Move({ 0.0f, 0.0f, 0.0f });
+			//F32 radians = UMath::DegToRad(45.0f);
+			//spriteWStransform.Transform.Rotate({ radians, radians, radians });
 
-			const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
+			const std::string& spritePath = "Assets/Textures/Sprite0001.hva";
 			SSpriteComponent& spriteWSComp = AddSpriteComponentToEntity(*spriteWS);
-			spriteWSComp.UVRect = { 0.0f, 0.0f, 0.5f, 0.5f };
+			spriteWSComp.UVRect = { 0.0f, 0.0f, 0.125f, 0.125f };
+			//spriteWSComp.UVRect = { 0.0f, 0.0f, 0.1f, 0.1f };
 			renderManager->LoadSpriteComponent(spritePath, &spriteWSComp);
+
+			SSpriteAnimatorGraphComponent& animator = AddSpriteAnimatorGraphComponentToEntity(*spriteWS);
+			SSpriteAnimationClip clip;
+			clip.UVRects.push_back(SVector4(0.0f, 0.0f, 0.125f, 0.125f));
+			clip.Durations.push_back(0.15f);
+
+			clip.UVRects.push_back(SVector4(0.125f, 0.0f, 0.125f * 2, 0.125f));
+			clip.Durations.push_back(0.15f);
+
+			animator.AnimationClips.emplace_back(clip);
 
 			U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteWS));
 			assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
