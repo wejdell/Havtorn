@@ -6,8 +6,8 @@
 
 namespace ImGui
 {
-	CSequencerWindow::CSequencerWindow(const char* name, Havtorn::CEditorManager* manager)
-		: CWindow(name, manager)
+	CSequencerWindow::CSequencerWindow(const char* displayName, Havtorn::CEditorManager* manager)
+		: CWindow(displayName, manager)
 	{
         Sequencer.FrameMin = -100;
         Sequencer.FrameMax = 100;

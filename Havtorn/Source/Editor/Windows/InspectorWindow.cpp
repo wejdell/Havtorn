@@ -25,8 +25,8 @@ namespace ImGui
 	using Havtorn::U64;
 	using Havtorn::F32;
 
-	CInspectorWindow::CInspectorWindow(const char* name, Havtorn::CEditorManager* manager)
-		: CWindow(name, manager)
+	CInspectorWindow::CInspectorWindow(const char* displayName, Havtorn::CEditorManager* manager)
+		: CWindow(displayName, manager)
 	{
 		InspectionFunctions[EComponentType::TransformComponent]			= std::bind(&CInspectorWindow::InspectTransformComponent, this);
 		InspectionFunctions[EComponentType::StaticMeshComponent]		= std::bind(&CInspectorWindow::InspectStaticMeshComponent, this);
@@ -110,6 +110,11 @@ namespace ImGui
 	{
 		if (selectedEntity->HasComponent(componentType))
 		{
+			// TODO.NR/AG: Extract Collapsing Header and Remove Component button logic and move it here.
+			// We can use GetComponentTypeString to get the *label* parameter for ImGui::CollapsingHeader, 
+			// though we'll have to take a substring of the return value to get "Transform" instead of 
+			// "TransformComponent" for example.
+
 			InspectionFunctions[componentType]();
 			ImGui::Dummy({ DummySize.X, DummySize.Y });
 		}
@@ -130,7 +135,10 @@ namespace ImGui
 		ImGui::DragFloat3("Position", matrixTranslation, SlideSpeed);
 		ImGui::DragFloat3("Rotation", matrixRotation, SlideSpeed);
 		ImGui::DragFloat3("Scale", matrixScale, SlideSpeed);
+
+		// TODO.NR: Fix yaw rotation singularity here, using our own math functions. Ref: https://github.com/CedricGuillemet/ImGuizmo/issues/244
 		ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, transformMatrix.data);
+		
 		Scene->GetTransformComponents()[SelectedEntityIndex].Transform.SetMatrix(transformMatrix);
 
 		if (Manager->GetIsFreeCamActive())
@@ -186,12 +194,37 @@ namespace ImGui
 			return;
 
 		auto& cameraComp = Scene->GetCameraComponents()[SelectedEntityIndex];
-		ImGui::DragFloat("FOV", &cameraComp.FOV, SlideSpeed, 1.0f, 180.0f);
-		ImGui::DragFloat("Aspect Ratio", &cameraComp.AspectRatio, SlideSpeed, 0.1f, 10.0f);
+
+		int projectionIndex = static_cast<int>(cameraComp.ProjectionType);
+		const char* projectionNames[2] = { "Perspective", "Orthographic" };
+		const char* projectionName = (projectionIndex >= 0 && projectionIndex < 2) ? projectionNames[projectionIndex] : "Unknown";
+		ImGui::SliderInt("Projection Type", &projectionIndex, 0, 1, projectionName);
+		cameraComp.ProjectionType = static_cast<Havtorn::ECameraProjectionType>(projectionIndex);
+
+		if (cameraComp.ProjectionType == Havtorn::ECameraProjectionType::Perspective)
+		{
+			ImGui::DragFloat("FOV", &cameraComp.FOV, SlideSpeed, 1.0f, 180.0f);
+			ImGui::DragFloat("Aspect Ratio", &cameraComp.AspectRatio, SlideSpeed, 0.1f, 10.0f);
+			ImGuizmo::SetOrthographic(false);
+		}
+		else if (cameraComp.ProjectionType == Havtorn::ECameraProjectionType::Orthographic)
+		{
+			ImGui::DragFloat("View Width", &cameraComp.ViewWidth, SlideSpeed, 0.1f, 100.0f);
+			ImGui::DragFloat("View Height", &cameraComp.ViewHeight, SlideSpeed, 0.1f, 100.0f);
+			ImGuizmo::SetOrthographic(true);
+		}
+
 		ImGui::DragFloat("Near Clip Plane", &cameraComp.NearClip, SlideSpeed, 0.01f, cameraComp.FarClip - 1.0f);
 		ImGui::DragFloat("Far Clip Plane", &cameraComp.FarClip, SlideSpeed, cameraComp.NearClip + 1.0f, 10000.0f);
 
-		cameraComp.ProjectionMatrix = Havtorn::SMatrix::PerspectiveFovLH(Havtorn::UMath::DegToRad(cameraComp.FOV), cameraComp.AspectRatio, cameraComp.NearClip, cameraComp.FarClip);
+		if (cameraComp.ProjectionType == Havtorn::ECameraProjectionType::Perspective)
+		{
+			cameraComp.ProjectionMatrix = Havtorn::SMatrix::PerspectiveFovLH(Havtorn::UMath::DegToRad(cameraComp.FOV), cameraComp.AspectRatio, cameraComp.NearClip, cameraComp.FarClip);
+		}
+		else if (cameraComp.ProjectionType == Havtorn::ECameraProjectionType::Orthographic)
+		{
+			cameraComp.ProjectionMatrix = Havtorn::SMatrix::OrthographicLH(cameraComp.ViewWidth, cameraComp.ViewHeight, cameraComp.NearClip, cameraComp.FarClip);
+		}
 	}
 
 	void CInspectorWindow::InspectCameraControllerComponent()
@@ -413,7 +446,6 @@ namespace ImGui
 			ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 		}
 
-		// TODO.NR: Fix so that sprite texture can be changed
 		OpenSelectTextureAssetModal(ref);
 		spriteComp.TextureIndex = static_cast<Havtorn::U32>(ref);
 	}

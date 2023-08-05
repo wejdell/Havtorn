@@ -8,8 +8,8 @@
 
 namespace ImGui
 {
-	CViewportWindow::CViewportWindow(const char* name, Havtorn::CEditorManager* manager)
-		: CWindow(name, manager)
+	CViewportWindow::CViewportWindow(const char* displayName, Havtorn::CEditorManager* manager)
+		: CWindow(displayName, manager)
 		, RenderedSceneTextureReference(nullptr)
 	{
 	}

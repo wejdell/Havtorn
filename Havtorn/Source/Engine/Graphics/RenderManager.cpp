@@ -4,9 +4,9 @@
 #include "RenderManager.h"
 #include "GraphicsUtilities.h"
 #include "Core/GeneralUtilities.h"
-#include "RenderCommand.h"
 
 #include "Engine.h"
+#include "Input/InputMapper.h"
 #include "Scene/World.h"
 
 #include "ECS/ECSInclude.h"
@@ -48,10 +48,6 @@ namespace Havtorn
 	    , PushToCommands(&RenderCommandsA)
 	    , PopFromCommands(&RenderCommandsB)
 	    , ClearColor(0.5f, 0.5f, 0.5f, 1.0f)
-	    , RenderPassIndex(0)
-	    , DoFullRender(true)
-	    , UseAntiAliasing(true)
-	    , UseBrokenScreenPass(false)
 	{
 	}
 
@@ -65,58 +61,6 @@ namespace Havtorn
 		Framework = framework;
 		Context = Framework->GetContext();
 
-		D3D11_BUFFER_DESC bufferDescription = { 0 };
-		bufferDescription.Usage = D3D11_USAGE_DYNAMIC;
-		bufferDescription.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-		bufferDescription.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-
-		bufferDescription.ByteWidth = sizeof(SFrameBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &FrameBuffer), "Frame Buffer could not be created.");
-
-		bufferDescription.ByteWidth = sizeof(SObjectBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &ObjectBuffer), "Object Buffer could not be created.");
-		
-		bufferDescription.ByteWidth = sizeof(SMaterialBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &MaterialBuffer), "Material Buffer could not be created.");
-
-		bufferDescription.ByteWidth = sizeof(SDebugShapeObjectBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DebugShapeObjectBuffer), "Debug Shape Object Buffer could not be created.");
-
-		bufferDescription.ByteWidth = sizeof(SDecalBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DecalBuffer), "Decal Buffer could not be created.");
-
-		bufferDescription.ByteWidth = sizeof(SSpriteBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &SpriteBuffer), "Sprite Buffer could not be created.");
-
-		bufferDescription.ByteWidth = sizeof(SDirectionalLightBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DirectionalLightBuffer), "Directional Light Buffer could not be created.");
-
-		bufferDescription.ByteWidth = sizeof(SPointLightBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &PointLightBuffer), "Point Light Buffer could not be created.");
-
-		bufferDescription.ByteWidth = sizeof(SSpotLightBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &SpotLightBuffer), "Spot Light Buffer could not be created.");
-
-		bufferDescription.ByteWidth = sizeof(SShadowmapBufferData) * 6;
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &ShadowmapBuffer), "Shadowmap Buffer could not be created.");
-
-		bufferDescription.ByteWidth = sizeof(SVolumetricLightBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &VolumetricLightBuffer), "Volumetric Light Buffer could not be created.");
-
-		bufferDescription.ByteWidth = sizeof(SEmissiveBufferData);
-		ENGINE_HR_BOOL_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &EmissiveBuffer), "Emissive Buffer could not be created.");
-
-		//Instance Buffer
-		D3D11_BUFFER_DESC instanceBufferDesc;
-		instanceBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
-		instanceBufferDesc.ByteWidth = sizeof(SMatrix) * InstancedMeshNumberLimit;
-		instanceBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-		instanceBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
-		instanceBufferDesc.MiscFlags = 0;
-		instanceBufferDesc.StructureByteStride = 0;
-
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&instanceBufferDesc, nullptr, &InstancedTransformBuffer), "Instanced Transform Buffer could not be created.");
-
 		ENGINE_ERROR_BOOL_MESSAGE(FullscreenRenderer.Init(framework), "Failed to Init Fullscreen Renderer.");
 		ENGINE_ERROR_BOOL_MESSAGE(FullscreenTextureFactory.Init(framework), "Failed to Init Fullscreen Texture Factory.");
 		ENGINE_ERROR_BOOL_MESSAGE(RenderStateManager.Init(framework), "Failed to Init Render State Manager.");
@@ -126,6 +70,8 @@ namespace Havtorn
 
 		Backbuffer = FullscreenTextureFactory.CreateTexture(backbufferTexture);
 		InitRenderTextures(windowHandler);
+
+		InitDataBuffers();
 
 		// Load default resources
 		InitVertexShadersAndInputLayouts();
@@ -140,6 +86,12 @@ namespace Havtorn
 
 		InitEditorResources();
 		LoadDemoSceneResources();
+
+		BindRenderFunctions();
+
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderPassForward).AddMember(this, &CRenderManager::CycleRenderPass);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderPassBackward).AddMember(this, &CRenderManager::CycleRenderPass);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderPassReset).AddMember(this, &CRenderManager::CycleRenderPass);
 
 		return true;
 	}
@@ -160,6 +112,7 @@ namespace Havtorn
 	void CRenderManager::InitRenderTextures(CWindowHandler* windowHandler)
 	{
 		RenderedScene = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
+		LitScene = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
 		IntermediateDepth = FullscreenTextureFactory.CreateDepth(windowHandler->GetResolution(), DXGI_FORMAT_R24G8_TYPELESS);
 
 		ShadowAtlasResolution = {8192.0f, 8192.0f};
@@ -232,6 +185,10 @@ namespace Havtorn
 
 	void CRenderManager::InitVertexShadersAndInputLayouts()
 	{
+		// TODO.NR: Think about how to make this safer. Could be nice to use the enum directly to 
+		// loop through and add the shaders dependent on enum order, like in the FullscreenRenderer.
+		// The issue with vertex shaders is their dependency on the InputLayout.
+
 		AddShader("Shaders/FullscreenVertexShader_VS.cso", EShaderType::Vertex);
 		
 		std::string vsData = AddShader("Shaders/DeferredStaticMesh_VS.cso", EShaderType::Vertex);
@@ -243,13 +200,14 @@ namespace Havtorn
 		AddShader("Shaders/Decal_VS.cso", EShaderType::Vertex);
 
 		vsData = AddShader("Shaders/PointLight_VS.cso", EShaderType::Vertex);
-		AddInputLayout(vsData, EInputLayoutType::Pos4);
+		AddInputLayout(vsData, EInputLayoutType::Position4);
 
 		AddShader("Shaders/EditorPreview_VS.cso", EShaderType::Vertex);
 		
 		AddShader("Shaders/Line_VS.cso", EShaderType::Vertex);
-
-		AddShader("Shaders/Sprite_VS.cso", EShaderType::Vertex);
+		
+		vsData = AddShader("Shaders/SpriteInstanced_VS.cso", EShaderType::Vertex);
+		AddInputLayout(vsData, EInputLayoutType::TransUVRectColor);
 	}
 
 	void CRenderManager::InitPixelShaders()
@@ -270,13 +228,15 @@ namespace Havtorn
 		
 		AddShader("Shaders/EditorPreview_PS.cso", EShaderType::Pixel);
 		AddShader("Shaders/Line_PS.cso", EShaderType::Pixel);
-		AddShader("Shaders/Sprite_PS.cso", EShaderType::Pixel);
+		AddShader("Shaders/SpriteScreenSpace_PS.cso", EShaderType::Pixel);
+		AddShader("Shaders/SpriteWorldSpace_PS.cso", EShaderType::Pixel);
 	}
 
 	void CRenderManager::InitGeometryShaders()
 	{
 		AddShader("Shaders/Line_GS.cso", EShaderType::Geometry);
-		AddShader("Shaders/Sprite_GS.cso", EShaderType::Geometry);
+		AddShader("Shaders/SpriteScreenSpace_GS.cso", EShaderType::Geometry);
+		AddShader("Shaders/SpriteWorldSpace_GS.cso", EShaderType::Geometry);
 	}
 
 	void CRenderManager::InitSamplers()
@@ -309,6 +269,7 @@ namespace Havtorn
 	{
 		AddIndexBuffer(GeometryPrimitives::DecalProjectorIndices);
 		AddIndexBuffer(GeometryPrimitives::PointLightCubeIndices);
+		AddIndexBuffer(GeometryPrimitives::Icosphere.Indices);
 		AddIndexBuffer(GeometryPrimitives::Line.Indices);
 		AddIndexBuffer(GeometryPrimitives::Pyramid.Indices);
 		AddIndexBuffer(GeometryPrimitives::BoundingBox.Indices);
@@ -322,8 +283,6 @@ namespace Havtorn
 		AddIndexBuffer(GeometryPrimitives::Octahedron.Indices);
 		AddIndexBuffer(GeometryPrimitives::Square.Indices);
 		AddIndexBuffer(GeometryPrimitives::UVSphere.Indices);
-
-		AddIndexBuffer(GeometryPrimitives::Icosphere.Indices);
 	}
 
 	void CRenderManager::InitTopologies()
@@ -342,6 +301,39 @@ namespace Havtorn
 	void CRenderManager::InitMeshVertexOffset()
 	{
 		AddMeshVertexOffset(0);
+	}
+
+	void CRenderManager::BindRenderFunctions()
+	{
+		RenderFunctions[ERenderCommandType::ShadowAtlasPrePassDirectional] = std::bind(&CRenderManager::ShadowAtlasPrePassDirectional, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::ShadowAtlasPrePassPoint] = std::bind(&CRenderManager::ShadowAtlasPrePassPoint, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::ShadowAtlasPrePassSpot] = std::bind(&CRenderManager::ShadowAtlasPrePassSpot, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::CameraDataStorage] = std::bind(&CRenderManager::CameraDataStorage, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::GBufferDataInstanced] = std::bind(&CRenderManager::GBufferDataInstanced, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::GBufferSpriteInstanced] = std::bind(&CRenderManager::GBufferSpriteInstanced, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::DecalDepthCopy] = std::bind(&CRenderManager::DecalDepthCopy, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::DeferredDecal] = std::bind(&CRenderManager::DeferredDecal, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::PreLightingPass] = std::bind(&CRenderManager::PreLightingPass, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::DeferredLightingDirectional] = std::bind(&CRenderManager::DeferredLightingDirectional, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::DeferredLightingPoint] = std::bind(&CRenderManager::DeferredLightingPoint, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::DeferredLightingSpot] = std::bind(&CRenderManager::DeferredLightingSpot, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::PostBaseLightingPass] = std::bind(&CRenderManager::PostBaseLightingPass, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::VolumetricLightingDirectional] = std::bind(&CRenderManager::VolumetricLightingDirectional, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::VolumetricLightingPoint] = std::bind(&CRenderManager::VolumetricLightingPoint, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::VolumetricLightingSpot] = std::bind(&CRenderManager::VolumetricLightingSpot, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::VolumetricBufferBlurPass] = std::bind(&CRenderManager::VolumetricBlur, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::ForwardTransparency] = std::bind(&CRenderManager::ForwardTransparency, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::ScreenSpaceSprite] = std::bind(&CRenderManager::ScreenSpaceSprite, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::Bloom] = std::bind(&CRenderManager::RenderBloom, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::Tonemapping] = std::bind(&CRenderManager::Tonemapping, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::PreDebugShape] = std::bind(&CRenderManager::PreDebugShapes, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::PostToneMappingUseDepth] = std::bind(&CRenderManager::PostTonemappingUseDepth, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::PostToneMappingIgnoreDepth] = std::bind(&CRenderManager::PostTonemappingIgnoreDepth, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::DebugShapeUseDepth] = std::bind(&CRenderManager::DebugShapes, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::DebugShapeIgnoreDepth] = std::bind(&CRenderManager::DebugShapes, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::AntiAliasing] = std::bind(&CRenderManager::AntiAliasing, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::GammaCorrection] = std::bind(&CRenderManager::GammaCorrection, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::RendererDebug] = std::bind(&CRenderManager::RendererDebug, this, std::placeholders::_1);
 	}
 
 	void CRenderManager::InitEditorResources()
@@ -370,6 +362,7 @@ namespace Havtorn
 			SSAOBuffer.ClearTexture();
 
 			RenderedScene.ClearTexture();
+			LitScene.ClearTexture();
 			IntermediateTexture.ClearTexture();
 			IntermediateDepth.ClearDepth();
 			VolumetricAccumulationBuffer.ClearTexture();
@@ -381,172 +374,11 @@ namespace Havtorn
 			for (U16 i = 0; i < commandsInHeap; ++i)
 			{
 				SRenderCommand currentCommand = PopFromCommands->top();
-				switch (currentCommand.Type)
-				{
-				case ERenderCommandType::ShadowAtlasPrePassDirectional:
-				{
-					ShadowAtlasPrePassDirectional(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::ShadowAtlasPrePassPoint:
-				{
-					ShadowAtlasPrePassPoint(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::ShadowAtlasPrePassSpot:
-				{
-					ShadowAtlasPrePassSpot(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::CameraDataStorage:
-				{
-					CameraDataStorage(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::GBufferDataInstanced:
-				{
-					GBufferDataInstanced(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::DecalDepthCopy:
-				{
-					DecalDepthCopy();
-				}
-				break;
-
-				case ERenderCommandType::DeferredDecal:
-				{
-					DeferredDecal(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::PreLightingPass:
-				{
-					PreLightingPass();
-				}
-				break;
-
-				case ERenderCommandType::DeferredLightingDirectional:
-				{
-					DeferredLightingDirectional(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::DeferredLightingPoint: 
-				{
-					DeferredLightingPoint(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::DeferredLightingSpot:
-				{
-					DeferredLightingSpot(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::VolumetricLightingDirectional:
-				{					
-					VolumetricLightingDirectional(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::VolumetricLightingPoint:
-				{
-					VolumetricLightingPoint(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::VolumetricLightingSpot:
-				{
-					VolumetricLightingSpot(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::VolumetricBufferBlurPass:
-				{
-					if (!ShouldBlurVolumetricBuffer)
-						break;
-
-					VolumetricBlur();
-				}
-				break;
-
-				case ERenderCommandType::ForwardTransparency:
-				{
-					ForwardTransparency(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::Bloom:
-				{
-					RenderBloom();
-				}
-				break;
-
-				case ERenderCommandType::Tonemapping:
-				{
-					Tonemapping();
-				}
-				break;
-
-				case ERenderCommandType::PreDebugShape: 
-				{
-					PreDebugShapes();
-				}
-				break;
-
-				case ERenderCommandType::PostToneMappingUseDepth:
-				{
-					TonemappedTexture.SetAsActiveTarget(&IntermediateDepth);
-				}
-				break;
-
-				case ERenderCommandType::DebugShapeUseDepth: 
-				{
-					DebugShapes(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::PostToneMappingIgnoreDepth:
-				{
-					TonemappedTexture.SetAsActiveTarget();
-				}
-				break;
-
-				case ERenderCommandType::DebugShapeIgnoreDepth: 
-				{
-					DebugShapes(currentCommand);
-				}
-				break;
-
-				case ERenderCommandType::AntiAliasing:
-				{
-					AntiAliasing();
-				}
-				break;
-
-				case ERenderCommandType::GammaCorrection:
-				{
-					GammaCorrection();
-				}
-				break;
-
-				case ERenderCommandType::RendererDebug:
-				{
-					RendererDebug();
-				}
-				break;
-
-				default:
-					break;
-				}
+				RenderFunctions[currentCommand.Type](currentCommand);
 				PopFromCommands->pop();
 			}
+
+			CheckIsolatedRenderPass();
 
 			// RenderedScene should be complete as that is the texture we send to the viewport
 			Backbuffer.SetAsActiveTarget();
@@ -568,30 +400,7 @@ namespace Havtorn
 		GEngine::Instance->Framework->GetContext()->OMGetDepthStencilState(0, 0);
 		GEngine::Instance->Framework->GetContext()->ClearState();
 
-		//Backbuffer.ReleaseTexture();
-		//myIntermediateTexture.ReleaseTexture();
-		//myIntermediateDepth.ReleaseDepth();
-		//myLuminanceTexture.ReleaseTexture();
-		//myHalfSizeTexture.ReleaseTexture();
-		//myQuarterSizeTexture.ReleaseTexture();
-		//myBlurTexture1.ReleaseTexture();
-		//myBlurTexture2.ReleaseTexture();
-		//myVignetteTexture.ReleaseTexture();
-		//myVignetteOverlayTexture.ReleaseTexture();
-		//myDeferredLightingTexture.ReleaseTexture();
-
-		//myEnvironmentShadowDepth.ReleaseDepth();
-		//myBoxLightShadowDepth.ReleaseDepth();
-		//myDepthCopy.ReleaseDepth();
-		//myDownsampledDepth.ReleaseDepth();
-
-		//myVolumetricAccumulationBuffer.ReleaseTexture();
-		//myVolumetricBlurTexture.ReleaseTexture();
-		//myTonemappedTexture.ReleaseTexture();
-		//myAntiAliasedTexture.ReleaseTexture();
-
-		//myGBuffer.ReleaseResources();
-		//myGBufferCopy.ReleaseResources();
+		// TODO.NR: Implement this properly for window resizing
 	}
 
 	void CRenderManager::LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent)
@@ -614,8 +423,8 @@ namespace Havtorn
 				// TODO.NR: Check for existing buffers
 				asset.DrawCallData[i].VertexBufferIndex = AddVertexBuffer(assetFile.Meshes[i].Vertices);
 				asset.DrawCallData[i].IndexBufferIndex = AddIndexBuffer(assetFile.Meshes[i].Indices);
-				asset.DrawCallData[i].VertexStrideIndex = /*AddMeshVertexStride(static_cast<U32>(sizeof(SStaticMeshVertex)))*/0;
-				asset.DrawCallData[i].VertexOffsetIndex = /*AddMeshVertexOffset(0)*/0;
+				asset.DrawCallData[i].VertexStrideIndex = 0;
+				asset.DrawCallData[i].VertexOffsetIndex = 0;
 			}
 
 			// NR: Mesh name will be much easier to handle
@@ -1101,6 +910,98 @@ namespace Havtorn
 		return SystemStaticMeshInstanceTransforms.clear();
 	}
 
+	bool CRenderManager::IsSpriteInInstancedWorldSpaceTransformRenderList(const U32 textureBankIndex)
+	{
+		return SystemSpriteInstanceWorldSpaceTransforms.contains(textureBankIndex);
+	}
+
+	void CRenderManager::AddSpriteToInstancedWorldSpaceTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix)
+	{
+		if (!SystemSpriteInstanceWorldSpaceTransforms.contains(textureBankIndex))
+			SystemSpriteInstanceWorldSpaceTransforms.emplace(textureBankIndex, std::vector<SMatrix>());
+
+		SystemSpriteInstanceWorldSpaceTransforms[textureBankIndex].emplace_back(transformMatrix);
+	}
+
+	void CRenderManager::SwapSpriteInstancedWorldSpaceTransformRenderLists()
+	{
+		std::swap(SystemSpriteInstanceWorldSpaceTransforms, RendererSpriteInstanceWorldSpaceTransforms);
+	}
+
+	void CRenderManager::ClearSpriteInstanceWorldSpaceTransforms()
+	{
+		SystemSpriteInstanceWorldSpaceTransforms.clear();
+	}
+
+	bool CRenderManager::IsSpriteInInstancedScreenSpaceTransformRenderList(const U32 textureBankIndex)
+	{
+		return SystemSpriteInstanceScreenSpaceTransforms.contains(textureBankIndex);
+	}
+
+	void CRenderManager::AddSpriteToInstancedScreenSpaceTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix)
+	{
+		if (!SystemSpriteInstanceScreenSpaceTransforms.contains(textureBankIndex))
+			SystemSpriteInstanceScreenSpaceTransforms.emplace(textureBankIndex, std::vector<SMatrix>());
+
+		SystemSpriteInstanceScreenSpaceTransforms[textureBankIndex].emplace_back(transformMatrix);
+	}
+
+	void CRenderManager::SwapSpriteInstancedScreenSpaceTransformRenderLists()
+	{
+		std::swap(SystemSpriteInstanceScreenSpaceTransforms, RendererSpriteInstanceScreenSpaceTransforms);
+	}
+
+	void CRenderManager::ClearSpriteInstanceScreenSpaceTransforms()
+	{
+		SystemSpriteInstanceScreenSpaceTransforms.clear();
+	}
+
+	bool CRenderManager::IsSpriteInInstancedUVRectRenderList(const U32 textureBankIndex)
+	{
+		return SystemSpriteInstanceUVRects.contains(textureBankIndex);
+	}
+
+	void CRenderManager::AddSpriteToInstancedUVRectRenderList(const U32 textureBankIndex, const SVector4& uvRect)
+	{
+		if (!SystemSpriteInstanceUVRects.contains(textureBankIndex))
+			SystemSpriteInstanceUVRects.emplace(textureBankIndex, std::vector<SVector4>());
+
+		SystemSpriteInstanceUVRects[textureBankIndex].emplace_back(uvRect);
+	}
+
+	void CRenderManager::SwapSpriteInstancedUVRectRenderLists()
+	{
+		std::swap(SystemSpriteInstanceUVRects, RendererSpriteInstanceUVRects);
+	}
+
+	void CRenderManager::ClearSpriteInstanceUVRects()
+	{
+		SystemSpriteInstanceUVRects.clear();
+	}
+
+	bool CRenderManager::IsSpriteInInstancedColorRenderList(const U32 textureBankIndex)
+	{
+		return SystemSpriteInstanceColors.contains(textureBankIndex);
+	}
+
+	void CRenderManager::AddSpriteToInstancedColorRenderList(const U32 textureBankIndex, const SVector4& color)
+	{
+		if (!SystemSpriteInstanceColors.contains(textureBankIndex))
+			SystemSpriteInstanceColors.emplace(textureBankIndex, std::vector<SVector4>());
+
+		SystemSpriteInstanceColors[textureBankIndex].emplace_back(color);
+	}
+
+	void CRenderManager::SwapSpriteInstancedColorRenderLists()
+	{
+		std::swap(SystemSpriteInstanceColors, RendererSpriteInstanceColors);
+	}
+
+	void CRenderManager::ClearSpriteInstanceColors()
+	{
+		SystemSpriteInstanceColors.clear();
+	}
+
 	const CFullscreenTexture& CRenderManager::GetRenderedSceneTexture() const
 	{
 		return RenderedScene;
@@ -1122,22 +1023,67 @@ namespace Havtorn
 		//myIntermediateDepth.ClearDepth();
 	}
 
-	void CRenderManager::ToggleRenderPass(bool shouldToggleForwards)
+	void CRenderManager::InitDataBuffers()
 	{
-		if (!shouldToggleForwards)
-		{
-			--RenderPassIndex;
-			if (RenderPassIndex < 0) {
-				RenderPassIndex = 8;
-			}
-			return;
-		}
+		D3D11_BUFFER_DESC bufferDescription = { 0 };
+		bufferDescription.Usage = D3D11_USAGE_DYNAMIC;
+		bufferDescription.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+		bufferDescription.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
 
-		++RenderPassIndex;
-		if (RenderPassIndex > 8)
-		{
-			RenderPassIndex = 0;
-		}
+		bufferDescription.ByteWidth = sizeof(SFrameBufferData);
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &FrameBuffer), "Frame Buffer could not be created.");
+
+		bufferDescription.ByteWidth = sizeof(SObjectBufferData);
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &ObjectBuffer), "Object Buffer could not be created.");
+
+		bufferDescription.ByteWidth = sizeof(SMaterialBufferData);
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &MaterialBuffer), "Material Buffer could not be created.");
+
+		bufferDescription.ByteWidth = sizeof(SDebugShapeObjectBufferData);
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DebugShapeObjectBuffer), "Debug Shape Object Buffer could not be created.");
+
+		bufferDescription.ByteWidth = sizeof(SDecalBufferData);
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DecalBuffer), "Decal Buffer could not be created.");
+
+		bufferDescription.ByteWidth = sizeof(SSpriteBufferData);
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &SpriteBuffer), "Sprite Buffer could not be created.");
+
+		bufferDescription.ByteWidth = sizeof(SDirectionalLightBufferData);
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &DirectionalLightBuffer), "Directional Light Buffer could not be created.");
+
+		bufferDescription.ByteWidth = sizeof(SPointLightBufferData);
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &PointLightBuffer), "Point Light Buffer could not be created.");
+
+		bufferDescription.ByteWidth = sizeof(SSpotLightBufferData);
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &SpotLightBuffer), "Spot Light Buffer could not be created.");
+
+		bufferDescription.ByteWidth = sizeof(SShadowmapBufferData) * 6;
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &ShadowmapBuffer), "Shadowmap Buffer could not be created.");
+
+		bufferDescription.ByteWidth = sizeof(SVolumetricLightBufferData);
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &VolumetricLightBuffer), "Volumetric Light Buffer could not be created.");
+
+		bufferDescription.ByteWidth = sizeof(SEmissiveBufferData);
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &EmissiveBuffer), "Emissive Buffer could not be created.");
+
+		//Instance Transform Buffer
+		D3D11_BUFFER_DESC instanceBufferDesc;
+		instanceBufferDesc.Usage = D3D11_USAGE_DYNAMIC;
+		instanceBufferDesc.ByteWidth = sizeof(SMatrix) * InstancedDrawInstanceLimit;
+		instanceBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+		instanceBufferDesc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
+		instanceBufferDesc.MiscFlags = 0;
+		instanceBufferDesc.StructureByteStride = 0;
+
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&instanceBufferDesc, nullptr, &InstancedTransformBuffer), "Instanced Transform Buffer could not be created.");
+
+		//Instance UV Rect Buffer
+		instanceBufferDesc.ByteWidth = sizeof(SVector4) * InstancedDrawInstanceLimit;
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&instanceBufferDesc, nullptr, &InstancedUVRectBuffer), "Instanced UV Rect Buffer could not be created.");
+
+		//Instance Color Buffer
+		instanceBufferDesc.ByteWidth = sizeof(SVector4) * InstancedDrawInstanceLimit;
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&instanceBufferDesc, nullptr, &InstancedColorBuffer), "Instanced Color Buffer could not be created.");
 	}
 
 	U16 CRenderManager::AddIndexBuffer(const std::vector<U32>& indices)
@@ -1233,10 +1179,22 @@ namespace Havtorn
 			};
 			break;
 
-		case EInputLayoutType::Pos4:
+		case EInputLayoutType::Position4:
 			layout =
 			{
 				{"POSITION"	,	0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
+			};
+			break;
+
+		case EInputLayoutType::TransUVRectColor:
+			layout =
+			{
+				{"INSTANCETRANSFORM",	0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+				{"INSTANCETRANSFORM",	1, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+				{"INSTANCETRANSFORM",	2, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+				{"INSTANCETRANSFORM",	3, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+				{"INSTANCEUVRECT",		0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+				{"INSTANCECOLOR",		0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1}
 			};
 			break;
 		}
@@ -1468,6 +1426,7 @@ namespace Havtorn
 
 		Context->VSSetConstantBuffers(0, 1, &FrameBuffer);
 		Context->PSSetConstantBuffers(0, 1, &FrameBuffer);
+		Context->GSSetConstantBuffers(0, 1, &FrameBuffer);
 	}
 
 	void CRenderManager::GBufferDataInstanced(const SRenderCommand& command)
@@ -1541,7 +1500,45 @@ namespace Havtorn
 		}
 	}
 
-	void CRenderManager::DecalDepthCopy()
+	void CRenderManager::GBufferSpriteInstanced(const SRenderCommand& command)
+	{
+		// TODO.NR: Fix transparency
+		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::GBufferAlphaBlend);
+
+		const SSpriteComponent& spriteComp = command.GetComponent(SpriteComponent); 
+
+		const std::vector<SMatrix>& matrices = RendererSpriteInstanceWorldSpaceTransforms[spriteComp.TextureIndex];
+		BindBuffer(InstancedTransformBuffer, matrices, "Instanced Transform Buffer");
+
+		const std::vector<SVector4>& uvRects = RendererSpriteInstanceUVRects[spriteComp.TextureIndex];
+		BindBuffer(InstancedUVRectBuffer, uvRects, "Instanced UV Rect Buffer");
+
+		const std::vector<SVector4>& colors = RendererSpriteInstanceColors[spriteComp.TextureIndex];
+		BindBuffer(InstancedColorBuffer, colors, "Instanced Color Buffer");
+
+		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::PointList)]);
+		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::TransUVRectColor)]);
+
+		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::SpriteInstanced)], nullptr, 0);
+		Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::SpriteWorldSpace)], nullptr, 0);
+		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::SpriteWorldSpace)], nullptr, 0);
+
+		ID3D11SamplerState* sampler = Samplers[static_cast<U8>(ESamplers::DefaultWrap)];
+		Context->PSSetSamplers(0, 1, &sampler);
+
+		ID3D11ShaderResourceView* spriteTexture = GEngine::GetTextureBank()->GetTexture(spriteComp.TextureIndex);
+		Context->PSSetShaderResources(0, 1, &spriteTexture);
+
+		ID3D11Buffer* bufferPointers[3] = { InstancedTransformBuffer, InstancedUVRectBuffer, InstancedColorBuffer };
+		const U32 strides[3] = { sizeof(SMatrix), sizeof(SVector4), sizeof(SVector4) };
+		const U32 offsets[3] = { 0, 0, 0 };
+		Context->IASetVertexBuffers(0, 3, bufferPointers, strides, offsets);
+		Context->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
+		Context->DrawInstanced(1, static_cast<U32>(matrices.size()), 0, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
+	}
+
+	void CRenderManager::DecalDepthCopy(const SRenderCommand& /*command*/)
 	{
 		DepthCopy.SetAsActiveTarget();
 		IntermediateDepth.SetAsResourceOnSlot(0);
@@ -1605,7 +1602,7 @@ namespace Havtorn
 		}
 	}
 
-	void CRenderManager::PreLightingPass()
+	void CRenderManager::PreLightingPass(const SRenderCommand& /*command*/)
 	{
 		// === SSAO ===
 		SSAOBuffer.SetAsActiveTarget();
@@ -1623,15 +1620,15 @@ namespace Havtorn
 		Context->PSSetSamplers(1, 1, &Samplers[static_cast<U8>(ESamplers::DefaultBorder)]);
 
 		Context->GSSetShader(nullptr, nullptr, 0);
+
+		LitScene.SetAsActiveTarget();
+		GBuffer.SetAllAsResources(1);
+		IntermediateDepth.SetAsResourceOnSlot(21);
+		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
 	}
 
 	void CRenderManager::DeferredLightingDirectional(const SRenderCommand& command)
 	{
-		RenderedScene.SetAsActiveTarget();
-		GBuffer.SetAllAsResources(1);
-		IntermediateDepth.SetAsResourceOnSlot(21);
-		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
-
 		// add Alpha blend PS shader
 
 		ShadowAtlasDepth.SetAsResourceOnSlot(22);
@@ -1681,11 +1678,6 @@ namespace Havtorn
 
 	void CRenderManager::DeferredLightingPoint(const SRenderCommand& command)
 	{
-		RenderedScene.SetAsActiveTarget();
-		GBuffer.SetAllAsResources(1);
-		IntermediateDepth.SetAsResourceOnSlot(21);
-		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
-
 		ShadowAtlasDepth.SetAsResourceOnSlot(22);
 		RenderStateManager.SetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
 
@@ -1718,7 +1710,7 @@ namespace Havtorn
 		Context->PSSetConstantBuffers(5, 1, &ShadowmapBuffer);
 
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
-		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
+		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Position4)]);
 		Context->IASetVertexBuffers(0, 1, &VertexBuffers[1], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
 		Context->IASetIndexBuffer(IndexBuffers[static_cast<U8>(EDefaultIndexBuffers::PointLightCube)], DXGI_FORMAT_R32_UINT, 0);
 
@@ -1732,11 +1724,6 @@ namespace Havtorn
 
 	void CRenderManager::DeferredLightingSpot(const SRenderCommand& command)
 	{
-		RenderedScene.SetAsActiveTarget();
-		GBuffer.SetAllAsResources(1);
-		IntermediateDepth.SetAsResourceOnSlot(21);
-		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
-
 		ShadowAtlasDepth.SetAsResourceOnSlot(22);
 		RenderStateManager.SetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
 
@@ -1778,7 +1765,7 @@ namespace Havtorn
 		Context->PSSetConstantBuffers(5, 1, &ShadowmapBuffer);
 
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
-		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
+		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Position4)]);
 		Context->IASetVertexBuffers(0, 1, &VertexBuffers[1], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
 		Context->IASetIndexBuffer(IndexBuffers[static_cast<U8>(EDefaultIndexBuffers::PointLightCube)], DXGI_FORMAT_R32_UINT, 0);
 
@@ -1789,6 +1776,13 @@ namespace Havtorn
 		Context->DrawIndexed(36, 0, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 		RenderStateManager.SetRasterizerState(CRenderStateManager::ERasterizerStates::Default);
+	}
+
+	void CRenderManager::PostBaseLightingPass(const SRenderCommand& /*command*/)
+	{
+		RenderedScene.SetAsActiveTarget();
+		LitScene.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 	}
 
 	void CRenderManager::VolumetricLightingDirectional(const SRenderCommand& command)
@@ -1894,7 +1888,7 @@ namespace Havtorn
 		Context->PSSetConstantBuffers(5, 1, &ShadowmapBuffer);
 
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
-		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
+		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Position4)]);
 		Context->IASetVertexBuffers(0, 1, &VertexBuffers[1], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
 		Context->IASetIndexBuffer(IndexBuffers[static_cast<U8>(EDefaultIndexBuffers::PointLightCube)], DXGI_FORMAT_R32_UINT, 0);
 
@@ -1965,7 +1959,7 @@ namespace Havtorn
 		Context->PSSetConstantBuffers(5, 1, &ShadowmapBuffer);
 
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::TriangleList)]);
-		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
+		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Position4)]);
 		Context->IASetVertexBuffers(0, 1, &VertexBuffers[1], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
 		Context->IASetIndexBuffer(IndexBuffers[static_cast<U8>(EDefaultIndexBuffers::PointLightCube)], DXGI_FORMAT_R32_UINT, 0);
 
@@ -1979,8 +1973,11 @@ namespace Havtorn
 		ShouldBlurVolumetricBuffer = true;
 	}
 
-	void CRenderManager::VolumetricBlur()
+	void CRenderManager::VolumetricBlur(const SRenderCommand& /*command*/)
 	{
+		if (!ShouldBlurVolumetricBuffer)
+			return;
+
 		// Downsampling and Blur
 		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::Disable);
 		DownsampledDepth.SetAsActiveTarget();
@@ -2029,43 +2026,52 @@ namespace Havtorn
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::DepthAwareUpsampling);
 	}
 
-	inline void CRenderManager::ForwardTransparency(const SRenderCommand& command)
+	inline void CRenderManager::ForwardTransparency(const SRenderCommand& /*command*/)
 	{
-		const STransform2DComponent& transform2DComp = command.GetComponent(Transform2DComponent);
+		//RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
+	}
+
+	void CRenderManager::ScreenSpaceSprite(const SRenderCommand& command)
+	{
+		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
+
 		const SSpriteComponent& spriteComponent = command.GetComponent(SpriteComponent);
 
-        SpriteBufferData.Color = spriteComponent.Color.AsVector4();
-        SpriteBufferData.UVRect = spriteComponent.UVRect;
-        SpriteBufferData.Position = transform2DComp.Position;
-        SpriteBufferData.Size = transform2DComp.Scale;
-        SpriteBufferData.Rotation = UMath::DegToRad(transform2DComp.DegreesRoll);
+		const std::vector<SMatrix>& matrices = RendererSpriteInstanceScreenSpaceTransforms[spriteComponent.TextureIndex];
+		BindBuffer(InstancedTransformBuffer, matrices, "Instanced Transform Buffer");
 
-        BindBuffer(SpriteBuffer, SpriteBufferData, "Sprite Buffer");
+		const std::vector<SVector4>& uvRects = RendererSpriteInstanceUVRects[spriteComponent.TextureIndex];
+		BindBuffer(InstancedUVRectBuffer, uvRects, "Instanced UV Rect Buffer");
 
-        Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::PointList)]);
-        Context->IASetInputLayout(nullptr);
-        Context->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
-        Context->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
+		const std::vector<SVector4>& colors = RendererSpriteInstanceColors[spriteComponent.TextureIndex];
+		BindBuffer(InstancedColorBuffer, colors, "Instanced Color Buffer");
 
-        Context->VSSetConstantBuffers(0, 1, &SpriteBuffer);
-        Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Sprite)], nullptr, 0);
+		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::PointList)]);
+		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::TransUVRectColor)]);
 
-        Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::Sprite)], nullptr, 0);
+		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::SpriteInstanced)], nullptr, 0);
+		Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::SpriteScreenSpace)], nullptr, 0);
+		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::SpriteScreenSpace)], nullptr, 0);
 
-        Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::Sprite)], nullptr, 0);
-        Context->PSSetConstantBuffers(0, 1, &SpriteBuffer);
+		ID3D11SamplerState* sampler = Samplers[static_cast<U8>(ESamplers::DefaultWrap)];
+		Context->PSSetSamplers(0, 1, &sampler);
 
-		auto spriteTexture = GEngine::GetTextureBank()->GetTexture(spriteComponent.TextureIndex);
+		ID3D11ShaderResourceView* spriteTexture = GEngine::GetTextureBank()->GetTexture(spriteComponent.TextureIndex);
 		Context->PSSetShaderResources(0, 1, &spriteTexture);
 
-        Context->Draw(3, 0);
+		ID3D11Buffer* bufferPointers[3] = { InstancedTransformBuffer, InstancedUVRectBuffer, InstancedColorBuffer };
+		const U32 strides[3] = { sizeof(SMatrix), sizeof(SVector4), sizeof(SVector4) };
+		const U32 offsets[3] = { 0, 0, 0 };
+		Context->IASetVertexBuffers(0, 3, bufferPointers, strides, offsets);
+		Context->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
+		Context->DrawInstanced(1, static_cast<U32>(matrices.size()), 0, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 
 		ID3D11Buffer* nullBuffer = NULL;
 		Context->VSSetConstantBuffers(0, 1, &nullBuffer);
 	}
 
-	void CRenderManager::RenderBloom()
+	void CRenderManager::RenderBloom(const SRenderCommand& /*command*/)
 	{
 		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::Disable);
 		RenderStateManager.SetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
@@ -2116,14 +2122,14 @@ namespace Havtorn
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Bloom);
 	}
 
-	inline void CRenderManager::Tonemapping()
+	inline void CRenderManager::Tonemapping(const SRenderCommand& /*command*/)
 	{
 		TonemappedTexture.SetAsActiveTarget();
 		RenderedScene.SetAsResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Tonemap);
 	}
 
-	inline void CRenderManager::AntiAliasing()
+	inline void CRenderManager::AntiAliasing(const SRenderCommand& /*command*/)
 	{
 		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::Disable);
 		RenderStateManager.SetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
@@ -2133,43 +2139,39 @@ namespace Havtorn
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::FXAA);
 	}
 
-	inline void CRenderManager::GammaCorrection()
+	inline void CRenderManager::GammaCorrection(const SRenderCommand& /*command*/)
 	{
 		RenderedScene.SetAsActiveTarget();
 		AntiAliasedTexture.SetAsResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::GammaCorrection);
 	}
 
-	inline void CRenderManager::RendererDebug()
+	inline void CRenderManager::RendererDebug(const SRenderCommand& /*command*/)
 	{
 		//DebugShadowAtlas();
 	}
 
-	void CRenderManager::DebugShadowAtlas()
-	{
-		D3D11_VIEWPORT viewport;
-		viewport.TopLeftX = 0.0f;
-		viewport.TopLeftY = 0.0f;
-		viewport.Width = 256.0f;
-		viewport.Height = 256.0f;
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
-		Context->RSSetViewports(1, &viewport);
-		ShadowAtlasDepth.SetAsResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
-	}
-
-	inline void CRenderManager::PreDebugShapes()
+	inline void CRenderManager::PreDebugShapes(const SRenderCommand& /*command*/)
 	{
 		RenderStateManager.SetDepthStencilState(CRenderStateManager::EDepthStencilStates::OnlyRead);
 		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
 
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::LineList)]);
-		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos4)]);
+		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Position4)]);
 
 		Context->GSSetShader(GeometryShaders[static_cast<U8>(EGeometryShaders::Line)], nullptr, 0);
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::Line)], nullptr, 0);
 		Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::Line)], nullptr, 0);
+	}
+
+	inline void CRenderManager::PostTonemappingUseDepth(const SRenderCommand& /*command*/)
+	{
+		TonemappedTexture.SetAsActiveTarget(&IntermediateDepth);
+	}
+
+	inline void CRenderManager::PostTonemappingIgnoreDepth(const SRenderCommand& /*command*/)
+	{
+		TonemappedTexture.SetAsActiveTarget();
 	}
 
 	inline void CRenderManager::DebugShapes(const SRenderCommand& /*command*/)
@@ -2191,6 +2193,136 @@ namespace Havtorn
 		//Context->VSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
 		//Context->DrawIndexed(shape->IndexCount, 0, 0);
 		//NumberOfDrawCallsThisFrame++;
+	}
+
+	void CRenderManager::DebugShadowAtlas()
+	{
+		D3D11_VIEWPORT viewport;
+		viewport.TopLeftX = 0.0f;
+		viewport.TopLeftY = 0.0f;
+		viewport.Width = 256.0f;
+		viewport.Height = 256.0f;
+		viewport.MinDepth = 0.0f;
+		viewport.MaxDepth = 1.0f;
+		Context->RSSetViewports(1, &viewport);
+		ShadowAtlasDepth.SetAsResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
+	}
+
+	void CRenderManager::CheckIsolatedRenderPass()
+	{
+		switch (CurrentRunningRenderPass)
+		{
+		case Havtorn::ERenderPass::All:
+			break;
+		case Havtorn::ERenderPass::Depth:
+		{
+			RenderedScene.SetAsActiveTarget();
+			DepthCopy.SetAsResourceOnSlot(0);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
+		}
+		break;
+		case Havtorn::ERenderPass::GBufferAlbedo:
+		{
+			RenderedScene.SetAsActiveTarget();
+			GBuffer.SetAsResourceOnSlot(CGBuffer::EGBufferTextures::Albedo, 0);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		}
+		break;
+		case Havtorn::ERenderPass::GBufferNormals:
+		{
+			RenderedScene.SetAsActiveTarget();
+			GBuffer.SetAsResourceOnSlot(CGBuffer::EGBufferTextures::Normal, 0);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		}
+		break;
+		case Havtorn::ERenderPass::GBufferMaterials:
+		{
+			RenderedScene.SetAsActiveTarget();
+			GBuffer.SetAsResourceOnSlot(CGBuffer::EGBufferTextures::Material, 0);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		}
+		break;
+		case Havtorn::ERenderPass::SSAO:
+		{
+			RenderedScene.SetAsActiveTarget();
+			SSAOBlurTexture.SetAsResourceOnSlot(0);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		}
+		break;
+		case Havtorn::ERenderPass::DeferredLighting:
+		{
+			RenderedScene.SetAsActiveTarget();
+			LitScene.SetAsResourceOnSlot(0);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		}
+		break;
+		case Havtorn::ERenderPass::VolumetricLighting:
+		{
+			RenderedScene.SetAsActiveTarget();
+			VolumetricAccumulationBuffer.SetAsResourceOnSlot(0);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		}
+		break;
+		case Havtorn::ERenderPass::Bloom:
+		{
+			RenderedScene.SetAsActiveTarget();
+			VignetteTexture.SetAsResourceOnSlot(0);
+			HalfSizeTexture.SetAsResourceOnSlot(1);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Difference);
+		}
+		break;
+		case Havtorn::ERenderPass::Tonemapping:
+		{
+			RenderedScene.SetAsActiveTarget();
+			TonemappedTexture.SetAsResourceOnSlot(0);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		}
+		break;
+		case Havtorn::ERenderPass::Antialiasing:
+		{
+			RenderedScene.SetAsActiveTarget();
+			AntiAliasedTexture.SetAsResourceOnSlot(0);
+			TonemappedTexture.SetAsResourceOnSlot(1);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Difference);
+		}
+		break;
+		case Havtorn::ERenderPass::Count:
+			break;
+		default:
+			break;
+		}
+	}
+
+	void CRenderManager::CycleRenderPass(const SInputActionPayload payload)
+	{
+		if (!payload.IsPressed)
+			return;
+
+		U8 currentRunningRenderPassIndex = static_cast<U8>(CurrentRunningRenderPass);
+		switch (payload.Event)
+		{
+		case EInputActionEvent::CycleRenderPassForward:
+			currentRunningRenderPassIndex = (currentRunningRenderPassIndex + 1) % static_cast<U8>(ERenderPass::Count);
+			break;
+
+		case EInputActionEvent::CycleRenderPassBackward:
+		{
+			U8 maxIndex = static_cast<U8>(ERenderPass::Count) - 1;
+			currentRunningRenderPassIndex = UMath::Min(--currentRunningRenderPassIndex, maxIndex);
+		}
+			break;
+
+		case EInputActionEvent::CycleRenderPassReset:
+			currentRunningRenderPassIndex = static_cast<U8>(ERenderPass::All);
+			break;
+
+		default:
+			break;
+		}
+
+		// TODO.NR: Add debug print on screen indicating what render pass is shown
+		CurrentRunningRenderPass = static_cast<ERenderPass>(currentRunningRenderPassIndex);
 	}
 
 	bool SRenderCommandComparer::operator()(const SRenderCommand& a, const SRenderCommand& b) const

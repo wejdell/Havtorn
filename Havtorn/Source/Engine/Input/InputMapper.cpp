@@ -42,6 +42,15 @@ namespace Havtorn
 		const SInputAction toggleFreeCam = { EInputKey::Mouse2, EInputContext::Editor };
 		MapEvent(EInputActionEvent::ToggleFreeCam, toggleFreeCam);
 
+		const SInputAction renderPassForward = { EInputKey::F8, EInputContext::Editor };
+		MapEvent(EInputActionEvent::CycleRenderPassForward, renderPassForward);
+
+		const SInputAction renderPassBackward = { EInputKey::F7, EInputContext::Editor };
+		MapEvent(EInputActionEvent::CycleRenderPassBackward, renderPassBackward);
+
+		const SInputAction renderPassReset = { EInputKey::F9, EInputContext::Editor };
+		MapEvent(EInputActionEvent::CycleRenderPassReset, renderPassReset);
+
 		return true;
 	}
 

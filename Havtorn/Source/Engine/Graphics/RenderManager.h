@@ -10,9 +10,11 @@
 #include "GBuffer.h"
 #include "GraphicsEnums.h"
 #include "GraphicsMaterial.h"
+#include "RenderCommand.h"
 #include <queue>
 
 #include "Core/RuntimeAssetDeclarations.h"
+#include "Input/InputTypes.h"
 
 namespace Havtorn
 {
@@ -24,6 +26,22 @@ namespace Havtorn
 	struct SDecalComponent;
 	struct SEnvironmentLightComponent;
 	struct SSpriteComponent;
+
+	enum class ERenderPass
+	{
+		All,
+		Depth,
+		GBufferAlbedo,
+		GBufferNormals,
+		GBufferMaterials,
+		SSAO,
+		DeferredLighting,
+		VolumetricLighting,
+		Bloom,
+		Tonemapping,
+		Antialiasing,
+		Count
+	};
 
 	struct SRenderCommandComparer
 	{
@@ -53,7 +71,6 @@ namespace Havtorn
 		
 		void LoadDecalComponent(const std::vector<std::string>& texturePaths, SDecalComponent* outDecalComponent);
 		void LoadEnvironmentLightComponent(const std::string& ambientCubemapTexturePath, SEnvironmentLightComponent* outEnvironmentLightComponent);
-
 		void LoadSpriteComponent(const std::string& filePath, SSpriteComponent* outSpriteComponent);
 
 		HAVTORN_API void* RenderStaticMeshAssetTexture(const std::string& filePath);
@@ -64,6 +81,26 @@ namespace Havtorn
 		void AddStaticMeshToInstancedRenderList(const std::string& meshName, const SMatrix& transformMatrix);
 		void SwapStaticMeshInstancedRenderLists();
 		void ClearSystemStaticMeshInstanceTransforms();
+
+		bool IsSpriteInInstancedWorldSpaceTransformRenderList(const U32 textureBankIndex);
+		void AddSpriteToInstancedWorldSpaceTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix);
+		void SwapSpriteInstancedWorldSpaceTransformRenderLists();
+		void ClearSpriteInstanceWorldSpaceTransforms();
+
+		bool IsSpriteInInstancedScreenSpaceTransformRenderList(const U32 textureBankIndex);
+		void AddSpriteToInstancedScreenSpaceTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix);
+		void SwapSpriteInstancedScreenSpaceTransformRenderLists();
+		void ClearSpriteInstanceScreenSpaceTransforms();
+
+		bool IsSpriteInInstancedUVRectRenderList(const U32 textureBankIndex);
+		void AddSpriteToInstancedUVRectRenderList(const U32 textureBankIndex, const SVector4& uvRect);
+		void SwapSpriteInstancedUVRectRenderLists();
+		void ClearSpriteInstanceUVRects();
+
+		bool IsSpriteInInstancedColorRenderList(const U32 textureBankIndex);
+		void AddSpriteToInstancedColorRenderList(const U32 textureBankIndex, const SVector4& color);
+		void SwapSpriteInstancedColorRenderLists();
+		void ClearSpriteInstanceColors();
 
 	public:
 		[[nodiscard]] HAVTORN_API const CFullscreenTexture& GetRenderedSceneTexture() const;
@@ -79,6 +116,8 @@ namespace Havtorn
 		void InitShadowmapAtlas(SVector2<F32> atlasResolution);
 		void InitShadowmapLOD(SVector2<F32> topLeftCoordinate, const SVector2<F32>& widthAndHeight, const SVector2<F32>& depth, const SVector2<F32>& atlasResolution, U16 mapsInLod, U16 startIndex);
 		
+		void InitDataBuffers();
+
 		// Init order 1:1 to EVertexShaders
 		void InitVertexShadersAndInputLayouts();
 		// Init order 1:1 to EPixelShaders
@@ -96,11 +135,10 @@ namespace Havtorn
 		void InitMeshVertexStrides();
 		void InitMeshVertexOffset();
 		
+		void BindRenderFunctions();
+
 		void InitEditorResources();
 		void LoadDemoSceneResources();
-
-	private:
-		void ToggleRenderPass(bool shouldToggleForwards = true);
 
 	private:
 		template<typename T>
@@ -122,25 +160,34 @@ namespace Havtorn
 		inline void ShadowAtlasPrePassSpot(const SRenderCommand& command);
 		inline void CameraDataStorage(const SRenderCommand& command);
 		inline void GBufferDataInstanced(const SRenderCommand& command);
-		inline void DecalDepthCopy();
+		inline void GBufferSpriteInstanced(const SRenderCommand& command);
+		inline void DecalDepthCopy(const SRenderCommand& command);
 		inline void DeferredDecal(const SRenderCommand& command);
-		inline void PreLightingPass();
+		inline void PreLightingPass(const SRenderCommand& command);
 		inline void DeferredLightingDirectional(const SRenderCommand& command);
 		inline void DeferredLightingPoint(const SRenderCommand& command);
 		inline void DeferredLightingSpot(const SRenderCommand& command);
+		inline void PostBaseLightingPass(const SRenderCommand& command);
 		inline void VolumetricLightingDirectional(const SRenderCommand& command);
 		inline void VolumetricLightingPoint(const SRenderCommand& command);
 		inline void VolumetricLightingSpot(const SRenderCommand& command);
-		inline void VolumetricBlur();
+		inline void VolumetricBlur(const SRenderCommand& command);
 		inline void ForwardTransparency(const SRenderCommand& command);
-		inline void RenderBloom();
-		inline void Tonemapping();
-		inline void AntiAliasing();
-		inline void GammaCorrection();
-		inline void RendererDebug();
-		inline void DebugShadowAtlas();
-		inline void PreDebugShapes();
+		inline void ScreenSpaceSprite(const SRenderCommand& command);
+		inline void RenderBloom(const SRenderCommand& command);
+		inline void Tonemapping(const SRenderCommand& command);
+		inline void AntiAliasing(const SRenderCommand& command);
+		inline void GammaCorrection(const SRenderCommand& command);
+		inline void RendererDebug(const SRenderCommand& command);
+		inline void PreDebugShapes(const SRenderCommand& command);
+		inline void PostTonemappingUseDepth(const SRenderCommand& command);
+		inline void PostTonemappingIgnoreDepth(const SRenderCommand& command);
 		inline void DebugShapes(const SRenderCommand& command);
+
+		inline void DebugShadowAtlas();
+
+		void CheckIsolatedRenderPass();
+		void CycleRenderPass(const SInputActionPayload payload);
 
 	private:
 		template<class T>
@@ -318,6 +365,7 @@ namespace Havtorn
 		CFullscreenTexture BlurTexture2;
 		CFullscreenTexture VignetteTexture;
 
+		CFullscreenTexture LitScene;
 		CFullscreenTexture VolumetricAccumulationBuffer;
 		CFullscreenTexture VolumetricBlurTexture;
 		CFullscreenTexture SSAOBuffer;
@@ -335,11 +383,8 @@ namespace Havtorn
 
 		SVector4 ClearColor;
 
-		I8 RenderPassIndex;
-		// Effectively used to toggle renderpasses and bloom. True == enable bloom, full render. False == disable bloom, isolated render pass
-		bool DoFullRender;
-		bool UseAntiAliasing;
-		bool UseBrokenScreenPass;
+		std::map<ERenderCommandType, std::function<void(const SRenderCommand& command)>> RenderFunctions;
+		ERenderPass CurrentRunningRenderPass = ERenderPass::All;
 		bool ShouldBlurVolumetricBuffer = false;
 
 		std::vector<ID3D11VertexShader*> VertexShaders;
@@ -353,7 +398,12 @@ namespace Havtorn
 		std::vector<D3D11_VIEWPORT> Viewports;
 		std::vector<U32> MeshVertexStrides;
 		std::vector<U32> MeshVertexOffsets;
+		
 		ID3D11Buffer* InstancedTransformBuffer;
+
+		// NR: Used together with the InstancedTransformBuffer to batch World Space Sprites as well as Screen Space Sprites
+		ID3D11Buffer* InstancedUVRectBuffer;
+		ID3D11Buffer* InstancedColorBuffer;
 
 		// TODO.NR: Add GUIDs to things like this
 		std::unordered_map<std::string, SStaticMeshAsset> LoadedStaticMeshes;
@@ -361,13 +411,36 @@ namespace Havtorn
 		std::unordered_map<std::string, std::vector<SMatrix>> SystemStaticMeshInstanceTransforms;
 		std::unordered_map<std::string, std::vector<SMatrix>> RendererStaticMeshInstanceTransforms;
 
+		// TODO.NR: Maybe generalize GPU Instancing resources that are kept duplicate like this, combining
+		// the 4 function calls as well somehow. Maybe templated? Could use two template arguments, one for key and 
+		// one for the value
+
+		/*
+			NR: It's annoying having a separate map for the SMatrix collections, but since sprites
+			reference their texture using an index directly into the TextureBank, it makes sense 
+			to key into these collections using that. We could get the corresponding filepath from
+			the TextureBank in a roundabout way, to use as the key into the above collection, but
+			this seems better for now
+		*/
+		std::unordered_map<U32, std::vector<SMatrix>> SystemSpriteInstanceWorldSpaceTransforms;
+		std::unordered_map<U32, std::vector<SMatrix>> RendererSpriteInstanceWorldSpaceTransforms;
+
+		std::unordered_map<U32, std::vector<SMatrix>> SystemSpriteInstanceScreenSpaceTransforms;
+		std::unordered_map<U32, std::vector<SMatrix>> RendererSpriteInstanceScreenSpaceTransforms;
+
+		std::unordered_map<U32, std::vector<SVector4>> SystemSpriteInstanceUVRects;
+		std::unordered_map<U32, std::vector<SVector4>> RendererSpriteInstanceUVRects;
+
+		std::unordered_map<U32, std::vector<SVector4>> SystemSpriteInstanceColors;
+		std::unordered_map<U32, std::vector<SVector4>> RendererSpriteInstanceColors;
+
 		ID3D11ShaderResourceView* DefaultAlbedoTexture = nullptr;
 		ID3D11ShaderResourceView* DefaultNormalTexture = nullptr;
 		ID3D11ShaderResourceView* DefaultMaterialTexture = nullptr;
 
 		SVector2<F32> ShadowAtlasResolution = SVector2<F32>::Zero;
 
-		const U16 InstancedMeshNumberLimit = 65535;
+		const U16 InstancedDrawInstanceLimit = 65535;
 	};
 
 	template <typename T>

@@ -7,8 +7,8 @@
 
 namespace ImGui
 {
-	CHelpMenu::CHelpMenu(const char* aName, Havtorn::CEditorManager* manager)
-		: CToggleable(aName, manager)
+	CHelpMenu::CHelpMenu(const char* displayName, Havtorn::CEditorManager* manager)
+		: CToggleable(displayName, manager)
 	{
 	}
 

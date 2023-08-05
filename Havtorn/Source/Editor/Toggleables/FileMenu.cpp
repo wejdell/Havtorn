@@ -8,8 +8,8 @@
 
 namespace ImGui
 {
-    CFileMenu::CFileMenu(const char* aName, Havtorn::CEditorManager* manager)
-        : CToggleable(aName, manager)
+    CFileMenu::CFileMenu(const char* displayName, Havtorn::CEditorManager* manager)
+        : CToggleable(displayName, manager)
     {
     }
 
@@ -24,9 +24,9 @@ namespace ImGui
     void CFileMenu::OnInspectorGUI()
     {
         if (ImGui::Button(Name()))
-            ImGui::OpenPopup("my_file_popup");
+            ImGui::OpenPopup(PopupName);
 
-        if (ImGui::BeginPopup("my_file_popup"))
+        if (ImGui::BeginPopup(PopupName))
         {
             ImGui::MenuItem("(demo menu)", nullptr, false, false);
             if (ImGui::MenuItem("New")) {}
@@ -45,9 +45,15 @@ namespace ImGui
                 }
             }
 
-            if (ImGui::MenuItem("Generate Demo Scene"))
+            if (ImGui::MenuItem("Generate 3D Demo Scene"))
             {
-                Havtorn::GEngine::GetWorld()->OpenDemoScene();
+                Havtorn::GEngine::GetWorld()->OpenDemoScene(true);
+                Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
+            }
+
+            if (ImGui::MenuItem("Generate 2D Demo Scene"))
+            {
+                Havtorn::GEngine::GetWorld()->OpenDemoScene(false);
                 Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
             }
 

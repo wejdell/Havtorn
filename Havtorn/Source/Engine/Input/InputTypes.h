@@ -136,6 +136,9 @@ namespace Havtorn
 		RotateTransform,
 		ScaleTransform,
 		ToggleFreeCam,
+		CycleRenderPassForward,
+		CycleRenderPassBackward,
+		CycleRenderPassReset,
 		Count
 	};
 

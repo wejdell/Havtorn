@@ -60,7 +60,7 @@ namespace Havtorn
 		return true;
 	}
 
-	bool CScene::InitDemoScene(CRenderManager* renderManager)
+	bool CScene::Init3DDemoScene(CRenderManager* renderManager)
 	{
 		// === Camera ===
 		SEntity* cameraEntity = GetNewEntity("Camera");
@@ -225,24 +225,6 @@ namespace Havtorn
 		U16 decalEntitySceneIndex = static_cast<U16>(GetSceneIndex(*decal));
 		assetRegistry->Register(decalTextures, SAssetReferenceCounter(EComponentType::DecalComponent, decalEntitySceneIndex, 0, 0));
 		// === !Decal ===
-
-		// === Sprite ===
-		SEntity* sprite = GetNewEntity("Sprite");
-		if (!sprite)
-			return true;
-
-		STransform2DComponent& transform2D = AddTransform2DComponentToEntity(*sprite);
-		transform2D.Position = { 0.5f, 0.5f };
-		transform2D.Scale = { 1.0f, 1.0f };
-
-		const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
-		SSpriteComponent& spriteComp = AddSpriteComponentToEntity(*sprite);
-		spriteComp.UVRect = { 0.0f, 0.0f, 1.0f, 1.0f };
-		renderManager->LoadSpriteComponent(spritePath, &spriteComp);
-
-		U16 spriteIndex = static_cast<U16>(GetSceneIndex(*sprite));
-		assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
-		// === !Sprite ===
 
 		const std::string modelPath1 = "Assets/Tests/En_P_PendulumClock.hva";
 		const std::vector<std::string> materialNames1 = { "Assets/Materials/M_PendulumClock.hva", "Assets/Materials/M_Checkboard_128x128.hva" };
@@ -409,6 +391,213 @@ namespace Havtorn
 			assetRegistry->Register(materialNames3, SAssetReferenceCounter(EComponentType::MaterialComponent, floorSceneIndex, 0, 0));
 		}
 		// === !Other Wall ===
+
+		return true;
+	}
+
+	bool CScene::Init2DDemoScene(CRenderManager* renderManager)
+	{
+		// === Camera ===
+		SEntity* cameraEntity = GetNewEntity("Camera");
+		if (!cameraEntity)
+			return false;
+
+		MainCameraIndex = GetSceneIndex(*cameraEntity);
+		CAssetRegistry* assetRegistry = GEngine::GetWorld()->GetAssetRegistry();
+
+		// Setup entities (create components)
+		STransformComponent& transform = AddTransformComponentToEntity(*cameraEntity);
+		transform.Transform.Translate({ 2.0f, 1.0f, -3.0f });
+		transform.Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
+		transform.Transform.Translate(SVector::Right * 0.25f);
+
+		SCameraComponent& camera = AddCameraComponentToEntity(*cameraEntity);
+		camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
+		//camera.ProjectionType = ECameraProjectionType::Orthographic;
+		//camera.ProjectionMatrix = SMatrix::OrthographicLH(5.0f, 5.0f, 0.1f, 1000.0f);
+		camera.ViewMatrix = SMatrix::LookAtLH(SVector::Zero, SVector::Forward, SVector::Up);
+
+		SCameraControllerComponent& controllerComp = AddCameraControllerComponentToEntity(*cameraEntity);
+		controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
+		// === !Camera ===
+
+		// === Environment light ===
+		SEntity* environmentLightEntity = GetNewEntity("Environment Light");
+		if (!environmentLightEntity)
+			return false;
+
+		AddTransformComponentToEntity(*environmentLightEntity);
+		renderManager->LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/CubemapTheVisit.hva", &AddEnvironmentLightComponentToEntity(*environmentLightEntity));
+		U16 environmentLightEntitySceneIndex = static_cast<U16>(GetSceneIndex(*environmentLightEntity));
+		assetRegistry->Register("Assets/Textures/Cubemaps/CubemapTheVisit.hva", SAssetReferenceCounter(EComponentType::EnvironmentLightComponent, environmentLightEntitySceneIndex, 0, 0));
+		// === !Environment light ===
+
+		// === Directional light ===
+		SEntity* directionalLightEntity = GetNewEntity("Directional Light");
+		if (!directionalLightEntity)
+			return false;
+
+		AddDirectionalLightComponentToEntity(*directionalLightEntity);
+		SDirectionalLightComponent& directionalLight = DirectionalLightComponents[GetSceneIndex(*directionalLightEntity)];
+		directionalLight.Direction = { 1.0f, 1.0f, -1.0f, 0.0f };
+		directionalLight.Color = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };
+		directionalLight.ShadowmapView.ShadowmapViewportIndex = 0;
+		directionalLight.ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLight.ShadowViewSize.X, directionalLight.ShadowViewSize.Y, directionalLight.ShadowNearAndFarPlane.X, directionalLight.ShadowNearAndFarPlane.Y);
+
+		SVolumetricLightComponent& volumetricLight = AddVolumetricLightComponentToEntity(*directionalLightEntity);
+		volumetricLight.IsActive = false;
+		// === !Directional light ===
+
+		// === Spotlight ===
+		SEntity* spotlight = GetNewEntity("Spot Light");
+		if (!spotlight)
+			return true;
+
+		STransform& spotlightTransform = AddTransformComponentToEntity(*spotlight).Transform;
+		SMatrix spotlightMatrix = spotlightTransform.GetMatrix();
+		spotlightMatrix.SetTranslation({ 0.0f, 0.0f, 0.0f });
+		spotlightTransform.SetMatrix(spotlightMatrix);
+
+		SSpotLightComponent& spotlightComp = AddSpotLightComponentToEntity(*spotlight);
+		spotlightComp.Direction = SVector4::Forward;
+		spotlightComp.DirectionNormal1 = SVector4::Right;
+		spotlightComp.DirectionNormal2 = SVector4::Up;
+		spotlightComp.ColorAndIntensity = { 0.0f, 1.0f, 0.0f, 5.0f };
+		spotlightComp.OuterAngle = 40.0f;
+		spotlightComp.InnerAngle = 30.0f;
+		spotlightComp.Range = 3.0f;
+
+		SVolumetricLightComponent& volumetricSpotLight = AddVolumetricLightComponentToEntity(*spotlight);
+		volumetricSpotLight.IsActive = false;
+
+		const SMatrix spotlightProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, spotlightComp.Range);
+		const SVector4 spotlightPosition = spotlightTransform.GetMatrix().GetTranslation4();
+
+		spotlightComp.ShadowmapView.ShadowPosition = spotlightPosition;
+		spotlightComp.ShadowmapView.ShadowmapViewportIndex = 7;
+		spotlightComp.ShadowmapView.ShadowViewMatrix = SMatrix::LookAtLH(spotlightPosition.ToVector3(), (spotlightPosition + spotlightComp.Direction).ToVector3(), spotlightComp.DirectionNormal2.ToVector3());
+		spotlightComp.ShadowmapView.ShadowProjectionMatrix = spotlightProjection;
+		// === !Spotlight ===
+
+		// === Screen Space Sprite ===
+		//{
+		//	SEntity* spriteSS = GetNewEntity("SpriteSS");
+		//	if (!spriteSS)
+		//		return true;
+
+		//	STransform2DComponent& transform2D = AddTransform2DComponentToEntity(*spriteSS);
+		//	transform2D.Position = { 0.0f, 0.0f };
+		//	transform2D.Scale = { 1.0f, 2.0f };
+		//	transform2D.DegreesRoll = 90.0f;
+
+		//	const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
+		//	SSpriteComponent& spriteComp = AddSpriteComponentToEntity(*spriteSS);
+		//	spriteComp.UVRect = { 0.0f, 0.0f, 2.0f, 2.0f };
+		//	spriteComp.Color = SVector4(0.0f, 0.0f, 1.0f, 1.0f);
+		//	renderManager->LoadSpriteComponent(spritePath, &spriteComp);
+
+		//	U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteSS));
+		//	assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
+		//}
+
+		{
+			SEntity* spriteSS = GetNewEntity("SpriteSS");
+			if (!spriteSS)
+				return true;
+
+			STransform2DComponent& transform2D = AddTransform2DComponentToEntity(*spriteSS);
+			transform2D.Position = { 0.5f, 0.5f };
+			transform2D.Scale = { 1.0f, 1.0f };
+			transform2D.DegreesRoll = 0.0f;
+
+			const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
+			SSpriteComponent& spriteComp = AddSpriteComponentToEntity(*spriteSS);
+			spriteComp.UVRect = { 0.0f, 0.0f, 1.0f, 1.0f };
+			spriteComp.Color = SVector4(1.0f, 1.0f, 1.0f, 1.0f);
+			renderManager->LoadSpriteComponent(spritePath, &spriteComp);
+
+			U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteSS));
+			assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
+		}
+
+		//{
+		//	SEntity* spriteSS = GetNewEntity("SpriteSS");
+		//	if (!spriteSS)
+		//		return true;
+
+		//	STransform2DComponent& transform2D = AddTransform2DComponentToEntity(*spriteSS);
+		//	transform2D.Position = { 1.0f, 1.0f };
+		//	transform2D.Scale = { 2.0f, 1.0f };
+		//	transform2D.DegreesRoll = -90.0f;
+
+		//	const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
+		//	SSpriteComponent& spriteComp = AddSpriteComponentToEntity(*spriteSS);
+		//	spriteComp.UVRect = { 0.0f, 0.0f, 0.5f, 0.5f };
+		//	spriteComp.Color = SVector4(1.0f, 1.0f, 1.0f, 1.0f);
+		//	renderManager->LoadSpriteComponent(spritePath, &spriteComp);
+
+		//	U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteSS));
+		//	assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
+		//}
+		// === !Sprite ===
+
+		//// === World Space Sprite ===
+		//{
+		//	SEntity* spriteWS = GetNewEntity("SpriteWS");
+		//	if (!spriteWS)
+		//		return true;
+
+		//	STransformComponent& spriteWStransform = AddTransformComponentToEntity(*spriteWS);
+		//	spriteWStransform.Transform.Move({ 0.0f, 0.0f, 2.0f });
+
+		//	const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
+		//	SSpriteComponent& spriteWSComp = AddSpriteComponentToEntity(*spriteWS);
+		//	spriteWSComp.UVRect = { 0.0f, 0.0f, 1.0f, 1.0f };
+		//	renderManager->LoadSpriteComponent(spritePath, &spriteWSComp);
+
+		//	U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteWS));
+		//	assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
+		//}
+
+		{
+			SEntity* spriteWS = GetNewEntity("SpriteWS");
+			if (!spriteWS)
+				return true;
+
+			STransformComponent& spriteWStransform = AddTransformComponentToEntity(*spriteWS);
+			spriteWStransform.Transform.Move({ 2.0f, 0.0f, 0.0f });
+			F32 radians = UMath::DegToRad(45.0f);
+			spriteWStransform.Transform.Rotate({ radians, radians, radians });
+
+			const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
+			SSpriteComponent& spriteWSComp = AddSpriteComponentToEntity(*spriteWS);
+			spriteWSComp.UVRect = { 0.0f, 0.0f, 0.5f, 0.5f };
+			renderManager->LoadSpriteComponent(spritePath, &spriteWSComp);
+
+			U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteWS));
+			assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
+		}
+
+		//{
+		//	SEntity* spriteWS = GetNewEntity("SpriteWS");
+		//	if (!spriteWS)
+		//		return true;
+
+		//	STransformComponent& spriteWStransform = AddTransformComponentToEntity(*spriteWS);
+		//	spriteWStransform.Transform.Move({ -2.0f, 0.0f, 2.0f });
+		//	F32 radians = UMath::DegToRad(180.0f);
+		//	spriteWStransform.Transform.Rotate({ radians, radians, radians });
+
+		//	const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
+		//	SSpriteComponent& spriteWSComp = AddSpriteComponentToEntity(*spriteWS);
+		//	spriteWSComp.UVRect = { 0.0f, 0.0f, 2.0f, 2.0f };
+		//	renderManager->LoadSpriteComponent(spritePath, &spriteWSComp);
+
+		//	U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteWS));
+		//	assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
+		//}
+		//// === !World Space Sprite ===
+
 
 		return true;
 	}

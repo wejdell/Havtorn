@@ -32,6 +32,10 @@ namespace Havtorn
 		const auto& decalComponents = scene->GetDecalComponents();
 
 		RenderManager->ClearSystemStaticMeshInstanceTransforms();
+		RenderManager->ClearSpriteInstanceWorldSpaceTransforms();
+		RenderManager->ClearSpriteInstanceScreenSpaceTransforms();
+		RenderManager->ClearSpriteInstanceUVRects();
+		RenderManager->ClearSpriteInstanceColors();
 
 		bool sceneHasActiveCamera = false;
 
@@ -232,25 +236,57 @@ namespace Havtorn
 
 		{
 			SRenderCommand command;
+			command.Type = ERenderCommandType::PostBaseLightingPass;
+			RenderManager->PushRenderCommand(command);
+		}
+
+		{
+			SRenderCommand command;
 			command.Type = ERenderCommandType::VolumetricBufferBlurPass;
 			RenderManager->PushRenderCommand(command);
 		}
 
 		for (U64 i = 0; i < spriteComponents.size(); i++)
 		{
-			const STransform2DComponent& transform2DComp = transform2DComponents[i];
-			if (!transform2DComp.IsInUse)
-				continue;
-
 			const SSpriteComponent& spriteComp = spriteComponents[i];
 			if (!spriteComp.IsInUse)
 				continue;
 
-			SRenderCommand command;
-			command.Transform2DComponent = transform2DComp;
-			command.SpriteComponent = spriteComp;
-			command.Type = ERenderCommandType::ForwardTransparency;
-			RenderManager->PushRenderCommand(command);
+			RenderManager->AddSpriteToInstancedUVRectRenderList(spriteComp.TextureIndex, spriteComp.UVRect);
+			RenderManager->AddSpriteToInstancedColorRenderList(spriteComp.TextureIndex, spriteComp.Color.AsVector4());
+
+			const STransformComponent& transformComp = transformComponents[i];
+			const STransform2DComponent& transform2DComp = transform2DComponents[i];
+
+			if (transformComp.IsInUse)
+			{
+				if (!RenderManager->IsSpriteInInstancedWorldSpaceTransformRenderList(spriteComp.TextureIndex)) 
+				{
+					// NR: Don't push a command every time
+					SRenderCommand command;
+					command.SpriteComponent = spriteComp;
+					command.Type = ERenderCommandType::GBufferSpriteInstanced;
+					RenderManager->PushRenderCommand(command);
+				}
+
+				RenderManager->AddSpriteToInstancedWorldSpaceTransformRenderList(spriteComp.TextureIndex, transformComp.Transform.GetMatrix());
+			}
+			else if (transform2DComp.IsInUse)
+			{
+				if (!RenderManager->IsSpriteInInstancedScreenSpaceTransformRenderList(spriteComp.TextureIndex))
+				{
+					SRenderCommand command;
+					command.SpriteComponent = spriteComp;
+					command.Type = ERenderCommandType::ScreenSpaceSprite;
+					RenderManager->PushRenderCommand(command);
+				}
+
+				SMatrix transformFrom2DComponent;
+				transformFrom2DComponent.SetScale(transform2DComp.Scale.X, transform2DComp.Scale.Y, 1.0f);
+				transformFrom2DComponent *= SMatrix::CreateRotationAroundZ(UMath::DegToRad(transform2DComp.DegreesRoll));
+				transformFrom2DComponent.SetTranslation({ transform2DComp.Position.X, transform2DComp.Position.Y, 0.0f });
+				RenderManager->AddSpriteToInstancedScreenSpaceTransformRenderList(spriteComp.TextureIndex, transformFrom2DComponent);
+			}
 		}
 
 		{

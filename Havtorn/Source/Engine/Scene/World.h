@@ -23,7 +23,7 @@ namespace Havtorn
 		HAVTORN_API void AddScene(const std::string& filePath);
 		HAVTORN_API void RemoveScene(U64 sceneIndex);
 		HAVTORN_API void ChangeScene(const std::string& filePath);
-		HAVTORN_API void OpenDemoScene();
+		HAVTORN_API void OpenDemoScene(const bool shouldOpen3DDemo = true);
 		HAVTORN_API CAssetRegistry* GetAssetRegistry() const;
 
 	private:

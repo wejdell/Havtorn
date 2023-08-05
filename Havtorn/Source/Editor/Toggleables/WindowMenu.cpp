@@ -8,8 +8,8 @@
 
 namespace ImGui
 {
-	CWindowMenu::CWindowMenu(const char* aName, Havtorn::CEditorManager* manager)
-		: CToggleable(aName, manager)
+	CWindowMenu::CWindowMenu(const char* displayName, Havtorn::CEditorManager* manager)
+		: CToggleable(displayName, manager)
 	{
 	}
 
@@ -20,9 +20,9 @@ namespace ImGui
 	void CWindowMenu::OnInspectorGUI()
 	{
 		if (ImGui::Button(Name()))
-			ImGui::OpenPopup("window_popup");
+			ImGui::OpenPopup(PopupName);
 		
-		if (ImGui::BeginPopup("window_popup"))
+		if (ImGui::BeginPopup(PopupName))
 		{
 			Havtorn::F32 viewportPadding = Manager->GetViewportPadding();
 			if (ImGui::DragFloat("Viewport Padding", &viewportPadding, 0.01f, 0.0f, 0.5f))

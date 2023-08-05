@@ -18,7 +18,7 @@ namespace ImGui
 	class CInspectorWindow : public CWindow
 	{
 	public:
-		CInspectorWindow(const char* name, Havtorn::CEditorManager* manager);
+		CInspectorWindow(const char* displayName, Havtorn::CEditorManager* manager);
 		~CInspectorWindow() override;
 		void OnEnable() override;
 		void OnInspectorGUI() override;

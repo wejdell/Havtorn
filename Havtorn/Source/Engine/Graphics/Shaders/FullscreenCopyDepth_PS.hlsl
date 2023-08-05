@@ -12,6 +12,7 @@ float InvLerp(float a, float b, float v)
     return (v - a) / (b - a);
 }
 
+// NR: Keep for visual debugging
 float Remap(float inMin, float inMax, float outMin, float outMax, float v)
 {
     float t = InvLerp(inMin, inMax, v);
@@ -21,11 +22,10 @@ float Remap(float inMin, float inMax, float outMin, float outMax, float v)
 PixelOutput main(VertexToPixel input)
 {
     PixelOutput returnValue;
-    const float resource = fullscreenTexture1.Sample(defaultSampler, input.myUV.xy).r;
+    const float resource = fullscreenTexture1.Sample(defaultSampler, input.UV.xy).r;
 
-    //returnValue.myColor.r = Remap(0.99f, 1.0f, 0.0f, 1.0f, resource);
-    returnValue.myColor.r = resource.r;
-    returnValue.myColor.gb = 0.0f;
-    returnValue.myColor.a = 1.0f;
+    returnValue.Color.r = resource.r;
+    returnValue.Color.gb = 0.0f;
+    returnValue.Color.a = 1.0f;
     return returnValue;
 }

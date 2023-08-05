@@ -8,13 +8,13 @@ namespace ImGui
 	class CWindowMenu : public CToggleable
 	{
 	public:
-		CWindowMenu(const char* aName, Havtorn::CEditorManager* manager);
+		CWindowMenu(const char* displayName, Havtorn::CEditorManager* manager);
 		~CWindowMenu() override = default;
 		void OnEnable() override;
 		void OnInspectorGUI() override;
 		void OnDisable() override;
 
 	private:
-
+		const char* PopupName = "WindowMenuPopup";
 	};
 }
