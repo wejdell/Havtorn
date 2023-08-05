@@ -28,6 +28,7 @@ namespace Havtorn
 		DecalComponents.resize(ENTITY_LIMIT);
 		SpriteComponents.resize(ENTITY_LIMIT);
 		Transform2DComponents.resize(ENTITY_LIMIT);
+		SpriteAnimatorGraphComponents.resize(ENTITY_LIMIT);
 		DebugShapeComponents.resize(ENTITY_LIMIT);
 		MetaDataComponents.resize(ENTITY_LIMIT);
 	}
@@ -49,6 +50,7 @@ namespace Havtorn
 		DecalComponents.clear();
 		SpriteComponents.clear();
 		Transform2DComponents.clear();
+		SpriteAnimatorGraphComponents.clear();
 		DebugShapeComponents.clear();
 		MetaDataComponents.clear();
 		RenderManager = nullptr;
@@ -121,7 +123,7 @@ namespace Havtorn
 		pointLightMatrix.SetTranslation({ 1.25f, 0.35f, -1.65f });
 		pointLightTransform.Transform.SetMatrix(pointLightMatrix);
 
-		
+
 		SPointLightComponent& pointLightComp = AddPointLightComponentToEntity(*pointLightEntity);
 		pointLightComp.ColorAndIntensity = { 0.0f, 1.0f, 1.0f, 10.0f };
 		pointLightComp.Range = 1.0f;
@@ -382,7 +384,7 @@ namespace Havtorn
 			matrix3.SetTranslation(translations[i]);
 			matrix3.SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundX(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundY(UMath::DegToRad(-90.0f)));
 			transform3.SetMatrix(matrix3);
-			
+
 			renderManager->LoadStaticMeshComponent(modelPath3, &AddStaticMeshComponentToEntity(*floor));
 			renderManager->LoadMaterialComponent(materialNames3, &AddMaterialComponentToEntity(*floor));
 
@@ -667,10 +669,10 @@ namespace Havtorn
 			SerializeSimple(entity.GUID, toData, pointerPosition);
 
 			SerializeSimple(entity.GetComponentMask(), toData, pointerPosition);
-			U64 entitySceneIndex = GetSceneIndex(entity); 
+			U64 entitySceneIndex = GetSceneIndex(entity);
 
 			if (entity.HasComponent(EComponentType::TransformComponent))
-			{		
+			{
 				SerializeSimple(TransformComponents[entitySceneIndex], toData, pointerPosition);
 			}
 
@@ -688,7 +690,7 @@ namespace Havtorn
 			{
 				SerializeSimple(CameraControllerComponents[entitySceneIndex], toData, pointerPosition);
 			}
-			
+
 			if (entity.HasComponent(EComponentType::MaterialComponent))
 			{
 				// Saved and Loaded using AssetRegistry
@@ -718,7 +720,7 @@ namespace Havtorn
 			{
 				SerializeSimple(VolumetricLightComponents[entitySceneIndex], toData, pointerPosition);
 			}
-				
+
 			if (entity.HasComponent(EComponentType::DecalComponent))
 			{
 				// NR: Texture info Saved and Loaded using AssetRegistry
@@ -775,7 +777,7 @@ namespace Havtorn
 			}
 
 			if (componentMask.Test(STATIC_U64(EComponentType::CameraComponent)))
-			{				
+			{
 				SCameraComponent& camera = AddCameraComponentToEntity(*entity);
 				SCameraComponent dataCopy;
 				DeserializeSimple(dataCopy, fromData, pointerPosition);
@@ -874,9 +876,9 @@ namespace Havtorn
 		}
 	}
 
-	std::vector<SEntity>& CScene::GetEntities() 
+	std::vector<SEntity>& CScene::GetEntities()
 	{
-		return Entities; 
+		return Entities;
 	}
 
 	SEntity* CScene::GetNewEntity(U64 guid)
@@ -947,6 +949,7 @@ namespace Havtorn
 		UpdateComponentVector(DecalComponents, entityIndex);
 		UpdateComponentVector(SpriteComponents, entityIndex);
 		UpdateComponentVector(Transform2DComponents, entityIndex);
+		UpdateComponentVector(SpriteAnimatorGraphComponents, entityIndex);
 		UpdateComponentVector(DebugShapeComponents, entityIndex);
 		UpdateComponentVector(MetaDataComponents, entityIndex);
 
@@ -1014,9 +1017,12 @@ namespace Havtorn
 		case Havtorn::EComponentType::Transform2DComponent:
 			AddTransform2DComponentToEntity(entity);
 			break;
+		case Havtorn::EComponentType::SpriteAnimatorGraphComponent:
+			AddSpriteAnimatorGraphComponentToEntity(entity);
+			break;
 
 		case Havtorn::EComponentType::DebugShapeComponent:
-		case Havtorn::EComponentType::MetaDataComponent:	
+		case Havtorn::EComponentType::MetaDataComponent:
 		case Havtorn::EComponentType::Count:
 		default:
 			break;
@@ -1066,6 +1072,9 @@ namespace Havtorn
 		case Havtorn::EComponentType::Transform2DComponent:
 			RemoveTransform2DComponentFromEntity(entity);
 			break;
+		case Havtorn::EComponentType::SpriteAnimatorGraphComponent:
+			RemoveSpriteAnimatorGraphComponentFromEntity(entity);
+			break;
 
 		case Havtorn::EComponentType::DebugShapeComponent:
 		case Havtorn::EComponentType::MetaDataComponent:
@@ -1076,34 +1085,36 @@ namespace Havtorn
 	}
 
 	COMPONENT_ADDER_DEFINITION(TransformComponent)
-	COMPONENT_ADDER_DEFINITION(StaticMeshComponent)
-	COMPONENT_ADDER_DEFINITION(CameraComponent)
-	COMPONENT_ADDER_DEFINITION(CameraControllerComponent)
-	COMPONENT_ADDER_DEFINITION(MaterialComponent)
-	COMPONENT_ADDER_DEFINITION(EnvironmentLightComponent)
-	COMPONENT_ADDER_DEFINITION(DirectionalLightComponent)
-	COMPONENT_ADDER_DEFINITION(PointLightComponent)
-	COMPONENT_ADDER_DEFINITION(SpotLightComponent)
-	COMPONENT_ADDER_DEFINITION(VolumetricLightComponent)
-	COMPONENT_ADDER_DEFINITION(DecalComponent)
-	COMPONENT_ADDER_DEFINITION(SpriteComponent) 
-	COMPONENT_ADDER_DEFINITION(Transform2DComponent)
-	COMPONENT_ADDER_DEFINITION(DebugShapeComponent)
-	COMPONENT_ADDER_DEFINITION(MetaDataComponent)
+		COMPONENT_ADDER_DEFINITION(StaticMeshComponent)
+		COMPONENT_ADDER_DEFINITION(CameraComponent)
+		COMPONENT_ADDER_DEFINITION(CameraControllerComponent)
+		COMPONENT_ADDER_DEFINITION(MaterialComponent)
+		COMPONENT_ADDER_DEFINITION(EnvironmentLightComponent)
+		COMPONENT_ADDER_DEFINITION(DirectionalLightComponent)
+		COMPONENT_ADDER_DEFINITION(PointLightComponent)
+		COMPONENT_ADDER_DEFINITION(SpotLightComponent)
+		COMPONENT_ADDER_DEFINITION(VolumetricLightComponent)
+		COMPONENT_ADDER_DEFINITION(DecalComponent)
+		COMPONENT_ADDER_DEFINITION(SpriteComponent)
+		COMPONENT_ADDER_DEFINITION(Transform2DComponent)
+		COMPONENT_ADDER_DEFINITION(SpriteAnimatorGraphComponent)
+		COMPONENT_ADDER_DEFINITION(DebugShapeComponent)
+		COMPONENT_ADDER_DEFINITION(MetaDataComponent)
 
-	COMPONENT_REMOVER_DEFINITION(TransformComponent)
-	COMPONENT_REMOVER_DEFINITION(StaticMeshComponent)
-	COMPONENT_REMOVER_DEFINITION(CameraComponent)
-	COMPONENT_REMOVER_DEFINITION(CameraControllerComponent)
-	COMPONENT_REMOVER_DEFINITION(MaterialComponent)
-	COMPONENT_REMOVER_DEFINITION(EnvironmentLightComponent)
-	COMPONENT_REMOVER_DEFINITION(DirectionalLightComponent)
-	COMPONENT_REMOVER_DEFINITION(PointLightComponent)
-	COMPONENT_REMOVER_DEFINITION(SpotLightComponent)
-	COMPONENT_REMOVER_DEFINITION(VolumetricLightComponent)
-	COMPONENT_REMOVER_DEFINITION(DecalComponent)
-	COMPONENT_REMOVER_DEFINITION(SpriteComponent)
-	COMPONENT_REMOVER_DEFINITION(Transform2DComponent)
-	COMPONENT_REMOVER_DEFINITION(DebugShapeComponent)
-	COMPONENT_REMOVER_DEFINITION(MetaDataComponent)
+		COMPONENT_REMOVER_DEFINITION(TransformComponent)
+		COMPONENT_REMOVER_DEFINITION(StaticMeshComponent)
+		COMPONENT_REMOVER_DEFINITION(CameraComponent)
+		COMPONENT_REMOVER_DEFINITION(CameraControllerComponent)
+		COMPONENT_REMOVER_DEFINITION(MaterialComponent)
+		COMPONENT_REMOVER_DEFINITION(EnvironmentLightComponent)
+		COMPONENT_REMOVER_DEFINITION(DirectionalLightComponent)
+		COMPONENT_REMOVER_DEFINITION(PointLightComponent)
+		COMPONENT_REMOVER_DEFINITION(SpotLightComponent)
+		COMPONENT_REMOVER_DEFINITION(VolumetricLightComponent)
+		COMPONENT_REMOVER_DEFINITION(DecalComponent)
+		COMPONENT_REMOVER_DEFINITION(SpriteComponent)
+		COMPONENT_REMOVER_DEFINITION(Transform2DComponent)
+		COMPONENT_REMOVER_DEFINITION(SpriteAnimatorGraphComponent)
+		COMPONENT_REMOVER_DEFINITION(DebugShapeComponent)
+		COMPONENT_REMOVER_DEFINITION(MetaDataComponent)
 }
