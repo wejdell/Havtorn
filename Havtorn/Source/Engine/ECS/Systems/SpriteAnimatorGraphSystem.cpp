@@ -32,8 +32,6 @@ namespace Havtorn
 		}
 	}
 
-	//Gotta add This ComponentData to Inspector types in the Editor Stuffs..!
-
 	SVector4 CSpriteAnimatorGraphSystem::TickAnimationClip(SSpriteAnimatorGraphComponent& c, const F32 deltaTime)
 	{
 		F32 duration = c.AnimationClips[c.CurrentAnimationClipKey].Durations[c.CurrentFrame];
