@@ -41,6 +41,8 @@ namespace ImGui
 		InspectionFunctions[EComponentType::DecalComponent]				= std::bind(&CInspectorWindow::InspectDecalComponent, this);
 		InspectionFunctions[EComponentType::SpriteComponent]			= std::bind(&CInspectorWindow::InspectSpriteComponent, this);
 		InspectionFunctions[EComponentType::Transform2DComponent]		= std::bind(&CInspectorWindow::InspectTransform2DComponent, this);
+		InspectionFunctions[EComponentType::SpriteAnimatorGraphComponent] = std::bind(&CInspectorWindow::InspectSpriteAnimatorGraphComponent, this);
+
 	}
 
 	CInspectorWindow::~CInspectorWindow()
@@ -470,6 +472,15 @@ namespace ImGui
 
 		transform2DComp.Position = { position[0], position[1] };
 		transform2DComp.Scale = { scale[0], scale[1] };
+	}
+
+	void CInspectorWindow::InspectSpriteAnimatorGraphComponent()
+	{
+		bool isHeaderOpen = ImGui::CollapsingHeader("Sprite Animator Graph", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+		RemoveComponentButton(Havtorn::EComponentType::SpriteAnimatorGraphComponent);
+
+		if (!isHeaderOpen)
+			return;
 	}
 
 	void CInspectorWindow::OpenSelectMeshAssetModal(Havtorn::I64 staticMeshComponentIndex)
