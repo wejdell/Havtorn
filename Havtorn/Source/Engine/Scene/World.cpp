@@ -16,7 +16,9 @@ namespace Havtorn
 		// Setup systems
 		Systems.emplace_back(std::make_unique<CCameraSystem>());
 		Systems.emplace_back(std::make_unique<CLightSystem>(RenderManager));
+		Systems.emplace_back(std::make_unique<CSpriteAnimatorGraphSystem>());
 		Systems.emplace_back(std::make_unique<CRenderSystem>(RenderManager));
+
 		//Systems.emplace_back(std::make_unique<Debug::UDebugShapeSystem>(Scenes.back().get(), RenderManager));
 
 		return true;
