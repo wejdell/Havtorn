@@ -16,7 +16,12 @@ namespace Havtorn
 	//datan vi får från transitionen välja en ny start Frame som passar
 	//bättre med förra framen
 
-
+	struct SSpriteAnimationClip
+	{
+		std::vector<SVector4> UVRects;
+		std::vector<float> Durations;
+		bool IsLooping = false;
+	};
 
 	struct SSpriteAnimatorGraphNode //This is basically a Switch
 	{
@@ -31,8 +36,12 @@ namespace Havtorn
 		{
 		}
 
-		U32 CurrentAnimationClipKey;
-		U32 ResolvedAnimationClipKey;
+		SSpriteAnimatorGraphNode Graph;
+		U32 CurrentFrame = 0;
+		U32 CurrentAnimationClipKey = 0;
+		U32 ResolvedAnimationClipKey = 0;
+		F32 Time = 0.0f;
+		std::vector<SSpriteAnimationClip> AnimationClips;
 
 		/*
 
