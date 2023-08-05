@@ -24,5 +24,6 @@
 #include "ECS/Components/DecalComponent.h"
 #include "ECS/Components/SpriteComponent.h"
 #include "ECS/Components/Transform2DComponent.h"
+#include "ECS/Components/SpriteAnimatorGraphComponent.h"
 #include "ECS/Components/DebugShapeComponent.h"
 #include "ECS/Components/MetaDataComponent.h"
