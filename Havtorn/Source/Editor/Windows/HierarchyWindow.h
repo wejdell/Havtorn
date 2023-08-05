@@ -8,7 +8,7 @@ namespace ImGui
 	class CHierarchyWindow : public CWindow
 	{
 	public:
-		CHierarchyWindow(const char* name, Havtorn::CEditorManager* manager);
+		CHierarchyWindow(const char* displayName, Havtorn::CEditorManager* manager);
 		~CHierarchyWindow() override;
 		void OnEnable() override;
 		void OnInspectorGUI() override;

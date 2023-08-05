@@ -28,7 +28,7 @@ namespace Havtorn
 
 	void CCameraSystem::Update(CScene* scene)
 	{
-		const auto& cameraComponents = scene->GetCameraComponents();
+		const std::vector<SCameraComponent>& cameraComponents = scene->GetCameraComponents();
 		
 		if (cameraComponents.empty())
 			return;
@@ -36,13 +36,10 @@ namespace Havtorn
 		std::vector<STransformComponent>& transformComponents = scene->GetTransformComponents();
 		std::vector<SCameraControllerComponent>& cameraControllerComponents = scene->GetCameraControllerComponents();
 	
-		//const I64 controllerCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::CameraControllerComponent);
-		//auto& controllerComp = cameraControllerComponents[controllerCompIndex];
-		auto& controllerComp = cameraControllerComponents[0];
+		const U64 mainCameraIndex = scene->GetMainCameraIndex();
 
-		//const I64 transformCompIndex = cameraComponents[0]->Entity->GetComponentIndex(EComponentType::TransformComponent);
-		//auto& transformComp = transformComponents[transformCompIndex];
-		auto& transformComp = transformComponents[0];
+		SCameraControllerComponent& controllerComp = cameraControllerComponents[mainCameraIndex];
+		STransformComponent& transformComp = transformComponents[mainCameraIndex];
 
 		const F32 dt = GTime::Dt();
 

@@ -1,12 +1,11 @@
+// Copyright 2022 Team Havtorn. All Rights Reserved.
+
 // Copyright 2023 Team Havtorn. All Rights Reserved.
 
 #include "Includes/SpriteShaderStructs.hlsli"
 
 [maxvertexcount(4)]
-void main(
-	point VertexToGeometry input[1],
-	inout TriangleStream<GeometryToPixel> output
-)
+void main(point InstancedVertexToGeometry input[1], inout TriangleStream<GeometryToPixelScreenSpace> output)
 {
     const float2 offset[4] =
     {
@@ -16,7 +15,7 @@ void main(
         { 1.0f, -1.0f }
     };
 
-    VertexToGeometry inputVertex = input[0];
+    InstancedVertexToGeometry inputVertex = input[0];
     
     const float2 uv[4] =
     {
@@ -29,15 +28,16 @@ void main(
     float2 aspectRatioDivider = { 9.0f / 16.0f, 1.0f };
     for (unsigned int index = 0; index < 4; index++)
     {
-        GeometryToPixel vertex;
+        const float3x3 localRotation = (float3x3) inputVertex.Transform;
+        float2 screenSpacePosition = inputVertex.Transform._14_24;
+        
+        GeometryToPixelScreenSpace vertex;
         vertex.Position = 0.0f;
         vertex.Position.w = 1.0f;
-        vertex.Position.xy += inputVertex.Position;
-        vertex.Position.xy += offset[index] * inputVertex.Size;
-        float2 intermediate = vertex.Position.xy;
-        vertex.Position.x = intermediate.x * cos(inputVertex.Rotation) - intermediate.y * sin(inputVertex.Rotation);
-        vertex.Position.y = intermediate.x * sin(inputVertex.Rotation) + intermediate.y * cos(inputVertex.Rotation);
+        vertex.Position.xy += offset[index];
+        vertex.Position.xyz = mul(localRotation, vertex.Position.xyz);
         vertex.Position.xy *= aspectRatioDivider;
+        vertex.Position.xy += screenSpacePosition * 2.0f - 1.0f;
         vertex.Color = inputVertex.Color;
         vertex.UV = uv[index];
         output.Append(vertex);

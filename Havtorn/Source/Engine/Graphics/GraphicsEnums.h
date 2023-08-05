@@ -24,7 +24,8 @@ namespace Havtorn
 	{
 		Pos3Nor3Tan3Bit3UV2,
 		Pos3Nor3Tan3Bit3UV2Trans,
-		Pos4
+		Position4,
+		TransUVRectColor,
 	};
 
 	enum class EVertexShaders
@@ -36,7 +37,7 @@ namespace Havtorn
 		PointAndSpotLight = 4,
 		EditorPreview = 5,
 		Line = 6,
-		Sprite = 7,
+		SpriteInstanced = 7,
 	};
 
 	enum class EPixelShaders
@@ -53,13 +54,15 @@ namespace Havtorn
 		VolumetricSpot = 9,
 		EditorPreview = 10,
 		Line = 11,
-		Sprite = 12,
+		SpriteScreenSpace = 12,
+		SpriteWorldSpace = 13,
 	};
 
 	enum class EGeometryShaders
 	{
 		Line = 0,
-		Sprite = 1,
+		SpriteScreenSpace = 1,
+		SpriteWorldSpace = 2,
 	};
 
 	enum class ESamplers

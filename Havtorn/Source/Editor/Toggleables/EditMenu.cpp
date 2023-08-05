@@ -6,8 +6,8 @@
 
 namespace ImGui
 {
-	CEditMenu::CEditMenu(const char* aName, Havtorn::CEditorManager* manager)
-		: CToggleable(aName, manager)
+	CEditMenu::CEditMenu(const char* displayName, Havtorn::CEditorManager* manager)
+		: CToggleable(displayName, manager)
 	{
 	}
 
@@ -22,9 +22,9 @@ namespace ImGui
 	void CEditMenu::OnInspectorGUI()
 	{
 		if (ImGui::Button(Name()))
-			ImGui::OpenPopup("my_edit_popup");
+			ImGui::OpenPopup(PopupName);
 		
-        if (ImGui::BeginPopup("my_edit_popup"))
+        if (ImGui::BeginPopup(PopupName))
 		{
             if (ImGui::BeginMenu("Editor Themes"))
             {

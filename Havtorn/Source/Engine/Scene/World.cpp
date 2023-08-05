@@ -108,11 +108,19 @@ namespace Havtorn
 		LoadScene(filePath);
 	}
 
-	void CWorld::OpenDemoScene()
+	void CWorld::OpenDemoScene(const bool shouldOpen3DDemo)
 	{
 		Scenes.clear();
 		Scenes.emplace_back(std::make_unique<CScene>());
-		ENGINE_BOOL_POPUP(Scenes.back()->InitDemoScene(RenderManager), "Demo Scene could not be initialized.");
+		
+		if (shouldOpen3DDemo)
+		{
+			ENGINE_BOOL_POPUP(Scenes.back()->Init3DDemoScene(RenderManager), "Demo Scene could not be initialized.");
+		}
+		else
+		{
+			ENGINE_BOOL_POPUP(Scenes.back()->Init2DDemoScene(RenderManager), "Demo Scene could not be initialized.");
+		}
 	}
 
 	CAssetRegistry* CWorld::GetAssetRegistry() const

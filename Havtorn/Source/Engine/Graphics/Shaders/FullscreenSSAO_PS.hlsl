@@ -41,12 +41,12 @@ PixelOutput main(VertexToPixel input)
 {
     PixelOutput output;
     
-    float2 uv = input.myUV;
+    float2 uv = input.UV;
     float z = depthTexture.Sample(defaultSampler, uv).r;
     
     if (z > 0.999999f)
     {
-        output.myColor = 1.0f;
+        output.Color = 1.0f;
         return output;
     }
     
@@ -63,7 +63,7 @@ PixelOutput main(VertexToPixel input)
     normal = mul((float3x3)toCameraSpace, normal);
     normalize(normal);
     
-    float3 randomVector = noiseTexture.Sample(wrapSampler, uv * myNoiseScale).xyz * 2.0f - 1.0f;
+    float3 randomVector = noiseTexture.Sample(wrapSampler, uv * NoiseScale).xyz * 2.0f - 1.0f;
     randomVector.z = 0.0f;
     randomVector = normalize(randomVector);
     const float3 tangent = normalize(float3(1.0f, 0.0f, 0.0f) - normal * dot(float3(1.0f, 0.0f, 0.0f), normal));
@@ -79,8 +79,8 @@ PixelOutput main(VertexToPixel input)
     float occlusion = numberOfSamples;
     for (unsigned int i = 0; i < (unsigned int)numberOfSamples; ++i)
     {
-        float3 samplePosition = mul(mySampleKernel[i].xyz, tbn);
-        samplePosition = origin + samplePosition * mySSAORadius;
+        float3 samplePosition = mul(SampleKernel[i].xyz, tbn);
+        samplePosition = origin + samplePosition * SSAORadius;
         
         float4 offsetUV = float4(samplePosition.xyz, 1.0);
         offsetUV = mul(toProjectionSpace, offsetUV);
@@ -100,7 +100,7 @@ PixelOutput main(VertexToPixel input)
         float4 offsetPosition = fromDepthViewSpacePos;
         
         float occluded;
-        if (samplePosition.z + mySSAOSampleBias <= offsetPosition.z)
+        if (samplePosition.z + SSAOSampleBias <= offsetPosition.z)
         {
             occluded = 0.0f;
         }
@@ -109,18 +109,17 @@ PixelOutput main(VertexToPixel input)
             occluded = 1.0f;
         }
 
-        const float intensity = smoothstep(0.0f, 1.0f, mySSAORadius / abs(origin.z - offsetPosition.z));
+        const float intensity = smoothstep(0.0f, 1.0f, SSAORadius / abs(origin.z - offsetPosition.z));
         occluded *= intensity;
         
         occlusion -= occluded;
     }
     
     occlusion /= numberOfSamples;
-    occlusion = pow(abs(occlusion), mySSAOMagnitude);
-    //occlusion = pow(occlusion, mySSAOMagnitude);
-    occlusion = mySSAOContrast * (occlusion - 0.5f) + 0.5f;
+    occlusion = pow(abs(occlusion), SSAOMagnitude);
+    occlusion = SSAOContrast * (occlusion - 0.5f) + 0.5f;
     
-    output.myColor.rgb = saturate(occlusion + constantBias);
-    output.myColor.a = 1.0f;
+    output.Color.rgb = saturate(occlusion + constantBias);
+    output.Color.a = 1.0f;
     return output;
 }

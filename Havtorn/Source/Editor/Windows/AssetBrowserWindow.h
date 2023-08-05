@@ -14,7 +14,7 @@ namespace ImGui
 	class CAssetBrowserWindow : public CWindow
 	{
 	public:
-		CAssetBrowserWindow(const char* name, Havtorn::CEditorManager* manager);
+		CAssetBrowserWindow(const char* displayName, Havtorn::CEditorManager* manager);
 		~CAssetBrowserWindow() override;
 		void OnEnable() override;
 		void OnInspectorGUI() override;

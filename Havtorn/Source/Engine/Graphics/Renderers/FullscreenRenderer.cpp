@@ -6,9 +6,6 @@
 #include "Graphics/GraphicsFramework.h"
 #include "Graphics/RenderManager.h"
 #include "Graphics/GraphicsUtilities.h"
-//#include "Scene.h"
-//#include "CameraComponent.h"
-//#include <fstream>
 
 namespace Havtorn
 {
@@ -57,35 +54,30 @@ namespace Havtorn
 		std::string vsData;
 		ENGINE_ERROR_BOOL_MESSAGE(UGraphicsUtils::CreateVertexShader("Shaders/FullscreenVertexShader_VS.cso", framework, &VertexShader, vsData), "Could not create Vertex Shader from FullscreenVertexShader_VS.cso");
 
-		std::array<std::string, static_cast<size_t>(EFullscreenShader::Count)> filepaths;
-		filepaths[static_cast<size_t>(EFullscreenShader::Multiply)] = "Shaders/FullscreenMultiply_PS.cso";
-		filepaths[static_cast<size_t>(EFullscreenShader::Copy)] = "Shaders/FullscreenCopy_PS.cso";
-		filepaths[static_cast<size_t>(EFullscreenShader::CopyDepth)] = "Shaders/FullscreenCopyDepth_PS.cso";
-		filepaths[static_cast<size_t>(EFullscreenShader::CopyGBuffer)] = "Shaders/FullscreenCopyGBuffer_PS.cso";
-		filepaths[static_cast<size_t>(EFullscreenShader::Luminance)] = "Shaders/FullscreenLuminance_PS.cso";
-		filepaths[static_cast<size_t>(EFullscreenShader::GaussianHorizontal)] = "Shaders/FullscreenGaussianBlurHorizontal_PS.cso";
-		filepaths[static_cast<size_t>(EFullscreenShader::GaussianVertical)] = "Shaders/FullscreenGaussianBlurVertical_PS.cso";
-		filepaths[static_cast<size_t>(EFullscreenShader::BilateralHorizontal)] = "Shaders/FullscreenBilateralBlurHorizontal_PS.cso";
-		filepaths[static_cast<size_t>(EFullscreenShader::BilateralVertical)] = "Shaders/FullscreenBilateralBlurVertical_PS.cso";
-		filepaths[static_cast<size_t>(EFullscreenShader::Bloom)] = "Shaders/FullscreenBloom_PS.cso";
-		filepaths[static_cast<size_t>(EFullscreenShader::Vignette)] = "Shaders/FullscreenVignette_PS.cso";
-		filepaths[static_cast<size_t>(EFullscreenShader::Tonemap)] = "Shaders/FullscreenTonemap_PS.cso";
-		filepaths[static_cast<size_t>(EFullscreenShader::GammaCorrection)] = "Shaders/FullscreenGammaCorrection_PS.cso";
-		//filepaths[static_cast<size_t>(EFullscreenShader::GammaCorrectionRenderPass)] = "Shaders/DeferredRenderPassFullscreenPixelShader_GammaCorrection.cso";
-		filepaths[static_cast<size_t>(EFullscreenShader::FXAA)] = "Shaders/FullscreenFXAA_PS.cso";
-		filepaths[static_cast<size_t>(EFullscreenShader::SSAO)] = "Shaders/FullscreenSSAO_PS.cso";
-		filepaths[static_cast<size_t>(EFullscreenShader::SSAOBlur)] = "Shaders/FullscreenSSAOBlur_PS.cso";
-		filepaths[static_cast<size_t>(EFullscreenShader::BrokenScreenEffect)] = "Shaders/FullscreenBrokenScreenEffect_PS.cso";
-		filepaths[static_cast<size_t>(EFullscreenShader::DownsampleDepth)] = "Shaders/FullscreenDepthDownSample_PS.cso";
-		filepaths[static_cast<size_t>(EFullscreenShader::DepthAwareUpsampling)] = "Shaders/FullscreenDepthAwareUpsample_PS.cso";
-		//filepaths[static_cast<size_t>(EFullscreenShader::DeferredAlbedo)] = "Shaders/DeferredRenderPassShader_Albedo.cso";
-		//filepaths[static_cast<size_t>(EFullscreenShader::DeferredNormals)] = "Shaders/DeferredRenderPassShader_Normal.cso";
-		//filepaths[static_cast<size_t>(EFullscreenShader::DeferredRoughness)] = "Shaders/DeferredRenderPassShader_Roughness.cso";
-		//filepaths[static_cast<size_t>(EFullscreenShader::DeferredMetalness)] = "Shaders/DeferredRenderPassShader_Metalness.cso";
-		//filepaths[static_cast<size_t>(EFullscreenShader::DeferredAmbientOcclusion)] = "Shaders/DeferredRenderPassShader_AO.cso";
-		//filepaths[static_cast<size_t>(EFullscreenShader::DeferredEmissive)] = "Shaders/DeferredRenderPassShader_Emissive.cso";
+		std::array<std::string, STATIC_U64(EFullscreenShader::Count)> filepaths;
+		{
+			filepaths[STATIC_U64(EFullscreenShader::Multiply)]				= "Shaders/FullscreenMultiply_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::Copy)]					= "Shaders/FullscreenCopy_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::CopyDepth)]				= "Shaders/FullscreenCopyDepth_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::CopyGBuffer)]			= "Shaders/FullscreenCopyGBuffer_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::Difference)]			= "Shaders/FullscreenDifference_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::Luminance)]				= "Shaders/FullscreenLuminance_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::GaussianHorizontal)]	= "Shaders/FullscreenGaussianBlurHorizontal_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::GaussianVertical)]		= "Shaders/FullscreenGaussianBlurVertical_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::BilateralHorizontal)]	= "Shaders/FullscreenBilateralBlurHorizontal_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::BilateralVertical)]		= "Shaders/FullscreenBilateralBlurVertical_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::Bloom)]					= "Shaders/FullscreenBloom_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::Vignette)]				= "Shaders/FullscreenVignette_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::Tonemap)]				= "Shaders/FullscreenTonemap_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::GammaCorrection)]		= "Shaders/FullscreenGammaCorrection_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::FXAA)]					= "Shaders/FullscreenFXAA_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::SSAO)]					= "Shaders/FullscreenSSAO_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::SSAOBlur)]				= "Shaders/FullscreenSSAOBlur_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::DownsampleDepth)]		= "Shaders/FullscreenDepthDownSample_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::DepthAwareUpsampling)]	= "Shaders/FullscreenDepthAwareUpsample_PS.cso";
+		}
 
-		for (UINT i = 0; i < static_cast<size_t>(EFullscreenShader::Count); i++) 
+		for (U64 i = 0; i < STATIC_U64(EFullscreenShader::Count); i++) 
 		{
 			ENGINE_ERROR_BOOL_MESSAGE(UGraphicsUtils::CreatePixelShader(filepaths[i], framework, &PixelShaders[i]), "Could not create Pixel Shader from %s", filepaths[i].c_str());
 		}
@@ -107,25 +99,6 @@ namespace Havtorn
 		//End Samplers
 
 #pragma region SSAO Setup
-	//for (unsigned int i = 0; i < KernelSize; ++i) 
-	//{
-	//	float r = 1.0f * sqrt(UMath::Random(0.0f, 1.0f));
-	//	float theta = UMath::Random(F32(i) / F32(KernelSize), F32(i+1) / F32(KernelSize)) * UMath::Tau;
-	//	float x = r * cosf(theta);
-	//	float y = r * sinf(theta);
-	//	float z = sqrt(1 - x * x - y * y);
-	//	Kernel[i] = SVector4(
-	//		x,
-	//		y,
-	//		z,
-	//		1.0f);
-	//		//Kernel[i].Normalize();
-	//		Kernel[i] *= UMath::Random(0.0f, 1.0f);
-	//		//F32 scale = F32(i) / F32(KernelSize);
-	//		//scale = UMath::Lerp(0.1f, 1.0f, scale * scale);
-	//		//Kernel[i] *= scale;
-	//}
-
 	// Hardcoded Kernel
 		Kernel[0] = { 0.528985322f, 0.163332120f, 0.620016515f, 1.0f };
 		Kernel[1] = { 0.573982120f, 0.378577918f, 0.470547318f, 1.0f };
@@ -217,8 +190,6 @@ namespace Havtorn
 
 		BindBuffer(PostProcessingBuffer, PostProcessingBufferData, "Post Processing Buffer");
 
-		//Context->VSSetConstantBuffers(0, 1, &FrameBuffer);
-
 		Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		Context->IASetInputLayout(nullptr);
 		Context->IASetVertexBuffers(0, 0, nullptr, nullptr, nullptr);
@@ -242,9 +213,6 @@ namespace Havtorn
 		Context->PSSetShaderResources(2, 1, &nullView);
 		Context->PSSetShaderResources(3, 1, &nullView);
 		Context->PSSetShaderResources(4, 1, &nullView);
-		//Context->PSSetShaderResources(5, 1, &nullView);
-		//Context->PSSetShaderResources(6, 1, &nullView);
-		//Context->PSSetShaderResources(7, 1, &nullView);
 		Context->PSSetShaderResources(8, 1, &nullView);
 		Context->PSSetShaderResources(9, 1, &nullView);
 		Context->PSSetShaderResources(21, 1, &nullView);

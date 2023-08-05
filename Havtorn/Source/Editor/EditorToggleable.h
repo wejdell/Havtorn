@@ -30,6 +30,7 @@ namespace ImGui
 	protected:
 		// TODO.AG: Test WeakPtr 
 		/*Havtorn::Ref<Havtorn::CEditorManager>*/Havtorn::CEditorManager* Manager;
+		const char* PopupName = "WindowPopup";
 	
 	private:
 		const char* DisplayName;

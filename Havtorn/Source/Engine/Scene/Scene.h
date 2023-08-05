@@ -50,7 +50,8 @@ namespace Havtorn
 
 		bool Init(CRenderManager* renderManager);
 
-		bool InitDemoScene(CRenderManager* renderManager);
+		bool Init3DDemoScene(CRenderManager* renderManager);
+		bool Init2DDemoScene(CRenderManager* renderManager);
 
 		[[nodiscard]] U32 GetSize() const;
 		void Serialize(char* toData, U64& pointerPosition) const;
