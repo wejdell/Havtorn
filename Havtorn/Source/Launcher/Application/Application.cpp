@@ -14,10 +14,8 @@ namespace Havtorn
 
 	CApplication::~CApplication() 
 	{
-		for (int i = 0; i < Processes.size(); i++)
-		{
+		for (int i = static_cast<int>(Processes.size() - 1); i >= 0; i--)
 			delete Processes[i];
-		}
 	}
 
 	void CApplication::AddProcess(IProcess* process)
@@ -28,6 +26,8 @@ namespace Havtorn
 	void CApplication::Run()
 	{
 		Setup();
+
+		const int processes = static_cast<int>(Processes.size() - 1);
 
 		MSG windowMessage = { 0 };
 		while (IsRunning)
@@ -44,20 +44,22 @@ namespace Havtorn
 				}
 			}
 
-			for (const auto& process : Processes)
-				process->BeginFrame();
+			// Processes are run in reverse-order. Dependent to least dependent.
 
-			for (const auto& process : Processes)
-				process->PreUpdate();
+			for (int i = processes; i >= 0; i--)
+				Processes[i]->BeginFrame();
 
-			for (const auto& process : Processes)
-				process->Update();
+			for (int i = processes; i >= 0; i--)
+				Processes[i]->PreUpdate();
 
-			for (const auto& process : Processes)
-				process->PostUpdate();
+			for (int i = processes; i >= 0; i--)
+				Processes[i]->Update();
 
-			for (const auto& process : Processes)
-				process->EndFrame();
+			for (int i = processes; i >= 0; i--)
+				Processes[i]->PostUpdate();
+
+			for (int i = processes; i >= 0; i--)
+				Processes[i]->EndFrame();
 		}
 	}
 

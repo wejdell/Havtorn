@@ -14,6 +14,8 @@ namespace Havtorn
 		CApplication();
 		~CApplication();
 
+		// Least-dependent-lowest-level processes should be added first.
+		// Processes are initialized in order of addition, run and destructed in reverse-order.
 		void AddProcess(IProcess* process);
 
 		void Run();
