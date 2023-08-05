@@ -47,8 +47,7 @@ namespace Havtorn
 		inline static F32 ToFloatRange(const U8 c);
 		inline static SColor Random(U8 lowerBound, U8 upperBound, U8 alpha);
 		inline static SColor Random(U8 lowerBound, U8 upperBound);
-		// TODO.AG: change the name, uniform sounds a bit odd.
-		inline static SColor RandomUniform(U8 lowerBound, U8 upperBound, U8 alpha);
+		inline static SColor RandomGrey(U8 lowerBound, U8 upperBound, U8 alpha);
 	};
 
 	SColor::SColor() {}
@@ -128,7 +127,7 @@ namespace Havtorn
 		return SColor::Random(lowerBound,upperBound, static_cast<U8>(UMath::Random(lowerBound, upperBound)));
 	}
 
-	inline SColor SColor::RandomUniform(U8 lowerBound, U8 upperBound, U8 alpha)
+	inline SColor SColor::RandomGrey(U8 lowerBound, U8 upperBound, U8 alpha)
 	{
 		U8 c = static_cast<U8>(UMath::Random(lowerBound, upperBound));
 		return SColor(c, c, c, alpha);
