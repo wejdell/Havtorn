@@ -23,10 +23,29 @@ namespace Havtorn
 		bool IsLooping = false;
 	};
 
+	struct SSpriteAnimatorState
+	{
+		I8 HorizontalKey = 0;
+	};
+
 	struct SSpriteAnimatorGraphNode //This is basically a Switch
 	{
 		U32 AnimationClipKey;
 		std::vector<SSpriteAnimatorGraphNode> Nodes;
+		U32 Evaluate(const SSpriteAnimatorState& state) const
+		{
+			if (state.HorizontalKey == -1)
+			{
+				return Nodes[1].AnimationClipKey;
+			}
+
+			if (state.HorizontalKey == 1)
+			{
+				return Nodes[2].AnimationClipKey;
+			}
+
+			return Nodes[0].AnimationClipKey;
+		}
 	};
 
 	struct SSpriteAnimatorGraphComponent : public SComponent
@@ -35,7 +54,7 @@ namespace Havtorn
 			: SComponent(EComponentType::SpriteAnimatorGraphComponent)
 		{
 		}
-
+		SSpriteAnimatorState State;
 		SSpriteAnimatorGraphNode Graph;
 		U32 CurrentFrame = 0;
 		U32 CurrentAnimationClipKey = 0;
