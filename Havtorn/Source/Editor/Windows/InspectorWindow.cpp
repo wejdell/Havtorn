@@ -481,6 +481,40 @@ namespace ImGui
 
 		if (!isHeaderOpen)
 			return;
+
+		Havtorn::SSpriteAnimatorGraphComponent& c = Scene->GetSpriteAnimatorGraphComponents()[SelectedEntityIndex];
+		for (Havtorn::U32 i = 0; i < c.AnimationClips.size(); i++)
+		{
+			ImGui::Text("Animation Clip Settings");
+			Havtorn::SSpriteAnimationClip& clip = c.AnimationClips[i];
+			
+			for (Havtorn::U32 clipIndex = 0; clipIndex < clip.Durations.size(); clipIndex++)
+			{
+				ImGui::PushID(clipIndex);
+				SVector4& rect = clip.UVRects[clipIndex];
+				F32 uvRect[4] = { rect.X, rect.Y, rect.Z, rect.W };
+				if (ImGui::DragFloat4("UVRect", uvRect, SlideSpeed))
+				{
+					clip.UVRects[clipIndex].X = uvRect[0];
+					clip.UVRects[clipIndex].Y = uvRect[1];
+					clip.UVRects[clipIndex].Z = uvRect[2];
+					clip.UVRects[clipIndex].W = uvRect[3];
+				}
+
+				F32 duration = clip.Durations[clipIndex];
+				if (ImGui::DragFloat("Duration", &duration, SlideSpeed))
+				{
+					clip.Durations[clipIndex] = duration;
+				}
+				ImGui::PopID();
+			}
+
+			if (ImGui::Button("New Frame"))
+			{
+				clip.Durations.push_back(clip.Durations.back());
+				clip.UVRects.push_back(clip.UVRects.back());
+			}
+		}
 	}
 
 	void CInspectorWindow::OpenSelectMeshAssetModal(Havtorn::I64 staticMeshComponentIndex)
