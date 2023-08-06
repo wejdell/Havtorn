@@ -4,11 +4,11 @@
 
 #pragma once
 #include "ECS/System.h"
+#include "Input/InputTypes.h"
 
 namespace Havtorn
 {
 	struct SSpriteAnimatorGraphComponent;
-	//SSpriteAnimatorGraphComponent
 	class CSpriteAnimatorGraphSystem : public ISystem
 	{
 	public:
@@ -18,5 +18,9 @@ namespace Havtorn
 
 	private:
 		SVector4 TickAnimationClip(SSpriteAnimatorGraphComponent& component, const F32 deltaTime);
+		void HandleAxisInput(const SInputAxisPayload payload);
+		void ResetInput();
+
+		F32 horizontal = 0.0f;
 	};
 }
