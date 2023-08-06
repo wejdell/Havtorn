@@ -419,8 +419,8 @@ namespace Havtorn
 		camera.ProjectionMatrix = SMatrix::OrthographicLH(5.0f, 5.0f, 0.1f, 1000.0f);
 		camera.ViewMatrix = SMatrix::LookAtLH(SVector::Zero, SVector::Forward, SVector::Up);
 
-//		SCameraControllerComponent& controllerComp = 
-			AddCameraControllerComponentToEntity(*cameraEntity);
+		//		SCameraControllerComponent& controllerComp = 
+		AddCameraControllerComponentToEntity(*cameraEntity);
 		//controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
 		// === !Camera ===
 
@@ -614,15 +614,51 @@ namespace Havtorn
 			//spriteWSComp.UVRect = { 0.0f, 0.0f, 0.1f, 0.1f };
 			renderManager->LoadSpriteComponent(spritePath, &spriteWSComp);
 
+
 			SSpriteAnimatorGraphComponent& animator = AddSpriteAnimatorGraphComponentToEntity(*spriteWS);
-			SSpriteAnimationClip clip;
-			clip.UVRects.push_back(SVector4(0.0f, 0.0f, 0.125f, 0.125f));
-			clip.Durations.push_back(0.15f);
+			F32 size = 32.0f / 256.0f;
+			std::vector<SVector4> uvRectsIdle = {
+				SVector4{ 0.0f,		0.0f,		size,			size },
+				SVector4{ size,		0.0f,		size * 2,		size },
+			};
+			std::vector<SVector4> uvRectsMoveLeft = {
+				SVector4{ 0.0f,		size,		size,		size * 2 },
+				SVector4{ size,		size,		size * 2,	size * 2 },
+				SVector4{ size * 2, size,		size * 3,	size * 2 },
+				SVector4{ size * 3, size,		size * 4,	size * 2 },
+			};
+			std::vector<SVector4> uvRectsMoveRight = {
+				SVector4{ 0.0f,		size * 2,	size,		size * 3 },
+				SVector4{ size,		size * 2,	size * 2,	size * 3 },
+				SVector4{ size * 2, size * 2,	size * 3,	size * 3 },
+				SVector4{ size * 3, size * 2,	size * 4,	size * 3 },
+			};
 
-			clip.UVRects.push_back(SVector4(0.125f, 0.0f, 0.125f * 2, 0.125f));
-			clip.Durations.push_back(0.15f);
+			SSpriteAnimationClip idle;
+			idle.UVRects = uvRectsIdle;
+			idle.Durations.push_back(0.15f);
+			idle.Durations.push_back(0.15f);
 
-			animator.AnimationClips.emplace_back(clip);
+			SSpriteAnimationClip moveLeft;
+			moveLeft.UVRects = uvRectsMoveLeft;
+			moveLeft.Durations.push_back(0.15f);
+			moveLeft.Durations.push_back(0.15f);
+			moveLeft.Durations.push_back(0.15f);
+
+			SSpriteAnimationClip moveRight;
+			moveRight.UVRects = uvRectsMoveRight;
+			moveRight.Durations.push_back(0.15f);
+			moveRight.Durations.push_back(0.15f);
+			moveRight.Durations.push_back(0.15f);
+
+			animator.AnimationClips.emplace_back(idle);
+			animator.AnimationClips.emplace_back(moveLeft);
+			animator.AnimationClips.emplace_back(moveRight);
+
+			animator.Graph = SSpriteAnimatorGraphNode();
+			animator.Graph.Nodes.push_back(SSpriteAnimatorGraphNode{ 0 });
+			animator.Graph.Nodes.push_back(SSpriteAnimatorGraphNode{ 1 });
+			animator.Graph.Nodes.push_back(SSpriteAnimatorGraphNode{ 2 });
 
 			U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteWS));
 			assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
