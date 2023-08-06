@@ -30,7 +30,7 @@ namespace Havtorn
 
 	struct SSpriteAnimatorGraphNode //This is basically a Switch
 	{
-		U32 AnimationClipKey;
+		U32 AnimationClipKey = 0;
 		std::vector<SSpriteAnimatorGraphNode> Nodes;
 		U32 Evaluate(const SSpriteAnimatorState& state) const
 		{
@@ -54,6 +54,7 @@ namespace Havtorn
 			: SComponent(EComponentType::SpriteAnimatorGraphComponent)
 		{
 		}
+
 		SSpriteAnimatorState State;
 		SSpriteAnimatorGraphNode Graph;
 		U32 CurrentFrame = 0;
