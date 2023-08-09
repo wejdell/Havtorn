@@ -12,7 +12,6 @@ namespace Havtorn
 	public:
 		CGhostySystem();
 		~CGhostySystem() override = default;
-
 		void Update(CScene* scene) override;
 
 	public:
