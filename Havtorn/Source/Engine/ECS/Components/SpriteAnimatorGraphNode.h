@@ -4,8 +4,9 @@
 
 #pragma once
 
-#include <functional>
 #include "Core/HavtornString.h"
+
+#include <functional>
 
 namespace Havtorn
 {
@@ -17,6 +18,8 @@ namespace Havtorn
 		std::vector<float> Durations;
 		bool IsLooping = false;
 
+		// AS: UVRect count vs Durations Count, if UVRect.Size == 5 and Durations.Size == 2, we'll still loop 5 times when processing an AnimationClip,
+		// then we could for example, for frame 3 (> Duration.Size()) choose Duration[min(Duration.Size() - 1, i)]
 		const U32 KeyFrameCount() const { return static_cast<U32>(UVRects.size()); }
 	};
 
