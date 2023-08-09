@@ -41,6 +41,7 @@ namespace ImGui
 		void InspectSpriteComponent();
 		void InspectTransform2DComponent();
 		void InspectSpriteAnimatorGraphComponent();
+		void InspectGhostyComponent();
 
 		void OpenSelectMeshAssetModal(Havtorn::I64 staticMeshComponentIndex);
 		void OpenSelectTextureAssetModal(Havtorn::U16& textureRefToChange);
