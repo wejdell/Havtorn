@@ -52,8 +52,8 @@ namespace Havtorn
 		auto hashCode = typeid(TSystem).hash_code();
 		for (U32 i = 0; i < Systems.size(); i++)
 		{
-			auto hc = typeid(*Systems[i].get()).hash_code();
-			if (hc == hashCode)
+			U32 systemHashCode = typeid(*Systems[i].get()).hash_code();
+			if (systemHashCode == hashCode)
 				return static_cast<TSystem*>(Systems[i].get());
 		}
 		return nullptr;
