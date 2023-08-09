@@ -12,7 +12,6 @@
 #include "ECS/Systems/DebugShapeSystem.h"
 #include "ECS/Systems/SpriteAnimatorGraphSystem.h"
 
-
 #include "ECS/Components/TransformComponent.h"
 #include "ECS/Components/StaticMeshComponent.h"
 #include "ECS/Components/CameraComponent.h"
@@ -29,3 +28,6 @@
 #include "ECS/Components/SpriteAnimatorGraphComponent.h"
 #include "ECS/Components/DebugShapeComponent.h"
 #include "ECS/Components/MetaDataComponent.h"
+
+#include <../Game/Ghosty/GhostySystem.h>
+#include <../Game/Ghosty/GhostyComponent.h>
