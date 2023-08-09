@@ -16,7 +16,7 @@ namespace Havtorn
 		SGhostyComponent() 
 			: SComponent(EComponentType::GhostyComponent)
 		{}
-		~SGhostyComponent() override { }
+		~SGhostyComponent() override = default;
 
 		SGhostyState State;
 	};
