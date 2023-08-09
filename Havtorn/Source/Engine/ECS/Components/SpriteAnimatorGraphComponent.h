@@ -21,7 +21,7 @@ namespace Havtorn
 		U32 CurrentFrame = 0;
 		I16 CurrentAnimationClipKey = 0;
 		I16 ResolvedAnimationClipKey = 0;
-		F32 Time = 0.0f;
+		F32 ElapsedTimeInSeconds = 0.0f;
 
 		// AS: Dont add animationClips directly to this vector. They are added using SSpriteAnimatorGraphNode::AddClipNode
 		std::vector<SSpriteAnimationClip> AnimationClips;
