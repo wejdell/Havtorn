@@ -496,7 +496,7 @@ namespace Havtorn
 			//F32 radians = UMath::DegToRad(45.0f);
 			//spriteWStransform.Transform.Rotate({ radians, radians, radians });
 
-			const std::string& spritePath = "Assets/Textures/Sprite0001.hva";
+			const std::string spritePath = "Assets/Textures/Sprite0001.hva";
 			spriteWSComp.UVRect = { 0.0f, 0.0f, 0.125f, 0.125f };
 			renderManager->LoadSpriteComponent(spritePath, &spriteWSComp);
 
