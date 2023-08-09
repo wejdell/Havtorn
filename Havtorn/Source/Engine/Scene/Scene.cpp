@@ -29,6 +29,7 @@ namespace Havtorn
 		SpriteComponents.resize(ENTITY_LIMIT);
 		Transform2DComponents.resize(ENTITY_LIMIT);
 		SpriteAnimatorGraphComponents.resize(ENTITY_LIMIT);
+		GhostyComponents.resize(ENTITY_LIMIT);
 		DebugShapeComponents.resize(ENTITY_LIMIT);
 		MetaDataComponents.resize(ENTITY_LIMIT);
 	}
@@ -51,6 +52,7 @@ namespace Havtorn
 		SpriteComponents.clear();
 		Transform2DComponents.clear();
 		SpriteAnimatorGraphComponents.clear();
+		GhostyComponents.clear();
 		DebugShapeComponents.clear();
 		MetaDataComponents.clear();
 		RenderManager = nullptr;
@@ -414,9 +416,9 @@ namespace Havtorn
 		transform.Transform.Translate(SVector::Right * 0.25f);
 
 		SCameraComponent& camera = AddCameraComponentToEntity(*cameraEntity);
-		//camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
-		camera.ProjectionType = ECameraProjectionType::Orthographic;
-		camera.ProjectionMatrix = SMatrix::OrthographicLH(5.0f, 5.0f, 0.1f, 1000.0f);
+		camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
+		//camera.ProjectionType = ECameraProjectionType::Orthographic;
+		//camera.ProjectionMatrix = SMatrix::OrthographicLH(5.0f, 5.0f, 0.1f, 1000.0f);
 		camera.ViewMatrix = SMatrix::LookAtLH(SVector::Zero, SVector::Forward, SVector::Up);
 
 		//		SCameraControllerComponent& controllerComp = 
@@ -482,140 +484,23 @@ namespace Havtorn
 		spotlightComp.ShadowmapView.ShadowProjectionMatrix = spotlightProjection;
 		// === !Spotlight ===
 
-		// === Screen Space Sprite ===
-		//{
-		//	SEntity* spriteSS = GetNewEntity("SpriteSS");
-		//	if (!spriteSS)
-		//		return true;
-
-		//	STransform2DComponent& transform2D = AddTransform2DComponentToEntity(*spriteSS);
-		//	transform2D.Position = { 0.0f, 0.0f };
-		//	transform2D.Scale = { 1.0f, 2.0f };
-		//	transform2D.DegreesRoll = 90.0f;
-
-		//	const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
-		//	SSpriteComponent& spriteComp = AddSpriteComponentToEntity(*spriteSS);
-		//	spriteComp.UVRect = { 0.0f, 0.0f, 2.0f, 2.0f };
-		//	spriteComp.Color = SVector4(0.0f, 0.0f, 1.0f, 1.0f);
-		//	renderManager->LoadSpriteComponent(spritePath, &spriteComp);
-
-		//	U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteSS));
-		//	assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
-		//}
-
-		//{
-		//	SEntity* spriteSS = GetNewEntity("SpriteSS");
-		//	if (!spriteSS)
-		//		return true;
-
-		//	STransform2DComponent& transform2D = AddTransform2DComponentToEntity(*spriteSS);
-		//	transform2D.Position = { 0.5f, 0.5f };
-		//	transform2D.Scale = { 1.0f, 1.0f };
-		//	transform2D.DegreesRoll = 0.0f;
-
-		//	const std::string& spritePath = "Assets/Textures/Sprite0001.hva";
-		//	SSpriteComponent& spriteComp = AddSpriteComponentToEntity(*spriteSS);
-		//	spriteComp.UVRect = { 0.0f, 0.0f, 0.1f, 0.1f };
-		//	spriteComp.Color = SVector4(1.0f, 1.0f, 1.0f, 1.0f);
-		//	renderManager->LoadSpriteComponent(spritePath, &spriteComp);
-
-		//	U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteSS));
-		//	assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
-		//}
-
-		//{
-		//	SEntity* animatedSprite = GetNewEntity("AnimatedSprite");
-		//	if (!animatedSprite)
-		//		return true;
-
-		//	STransform2DComponent& transform2D = AddTransform2DComponentToEntity(*animatedSprite);
-		//	transform2D.Position = { 0.5f, 0.5f };
-		//	transform2D.Scale = { 1.0f, 1.0f };
-		//	transform2D.DegreesRoll = 0.0f;
-
-		//	const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
-		//	SSpriteComponent& spriteComp = AddSpriteComponentToEntity(*animatedSprite);
-		//	spriteComp.UVRect = { 0.0f, 0.0f, 1.0f, 1.0f };
-		//	spriteComp.Color = SVector4(1.0f, 1.0f, 1.0f, 1.0f);
-		//	renderManager->LoadSpriteComponent(spritePath, &spriteComp);
-		//}
-
-		//{
-		//	SEntity* spriteSS = GetNewEntity("SpriteSS");
-		//	if (!spriteSS)
-		//		return true;
-
-		//	STransform2DComponent& transform2D = AddTransform2DComponentToEntity(*spriteSS);
-		//	transform2D.Position = { 1.0f, 1.0f };
-		//	transform2D.Scale = { 2.0f, 1.0f };
-		//	transform2D.DegreesRoll = -90.0f;
-
-		//	const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
-		//	SSpriteComponent& spriteComp = AddSpriteComponentToEntity(*spriteSS);
-		//	spriteComp.UVRect = { 0.0f, 0.0f, 0.5f, 0.5f };
-		//	spriteComp.Color = SVector4(1.0f, 1.0f, 1.0f, 1.0f);
-		//	renderManager->LoadSpriteComponent(spritePath, &spriteComp);
-
-		//	U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteSS));
-		//	assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
-		//}
-		// === !Sprite ===
-
-		//// === World Space Sprite ===
-		//{
-		//	SEntity* spriteWS = GetNewEntity("SpriteWS");
-		//	if (!spriteWS)
-		//		return true;
-
-		//	STransformComponent& spriteWStransform = AddTransformComponentToEntity(*spriteWS);
-		//	spriteWStransform.Transform.Move({ 0.0f, 0.0f, 2.0f });
-
-		//	const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
-		//	SSpriteComponent& spriteWSComp = AddSpriteComponentToEntity(*spriteWS);
-		//	spriteWSComp.UVRect = { 0.0f, 0.0f, 1.0f, 1.0f };
-		//	renderManager->LoadSpriteComponent(spritePath, &spriteWSComp);
-
-		//	U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteWS));
-		//	assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
-		//}
-
-		//{
-		//	SEntity* spriteWS = GetNewEntity("SpriteWS");
-		//	if (!spriteWS)
-		//		return true;
-
-		//	STransformComponent& spriteWStransform = AddTransformComponentToEntity(*spriteWS);
-		//	spriteWStransform.Transform.Move({ 2.0f, 0.0f, 0.0f });
-		//	F32 radians = UMath::DegToRad(45.0f);
-		//	spriteWStransform.Transform.Rotate({ radians, radians, radians });
-
-		//	const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
-		//	SSpriteComponent& spriteWSComp = AddSpriteComponentToEntity(*spriteWS);
-		//	spriteWSComp.UVRect = { 0.0f, 0.0f, 0.5f, 0.5f };
-		//	renderManager->LoadSpriteComponent(spritePath, &spriteWSComp);
-
-		//	U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteWS));
-		//	assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
-		//}
-
 		{
-			SEntity* spriteWS = GetNewEntity("Ghosty");
-			if (!spriteWS)
+			SEntity* ghosty = GetNewEntity("Ghosty");
+			if (!ghosty)
 				return true;
-
-			STransformComponent& spriteWStransform = AddTransformComponentToEntity(*spriteWS);
+			STransformComponent& spriteWStransform = AddTransformComponentToEntity(*ghosty);
+			SSpriteComponent& spriteWSComp = AddSpriteComponentToEntity(*ghosty);		
+			AddGhostyComponentToEntity(*ghosty);
+			
 			spriteWStransform.Transform.Move({ 0.0f, 0.0f, 0.0f });
 			//F32 radians = UMath::DegToRad(45.0f);
 			//spriteWStransform.Transform.Rotate({ radians, radians, radians });
 
 			const std::string& spritePath = "Assets/Textures/Sprite0001.hva";
-			SSpriteComponent& spriteWSComp = AddSpriteComponentToEntity(*spriteWS);
 			spriteWSComp.UVRect = { 0.0f, 0.0f, 0.125f, 0.125f };
-			//spriteWSComp.UVRect = { 0.0f, 0.0f, 0.1f, 0.1f };
 			renderManager->LoadSpriteComponent(spritePath, &spriteWSComp);
 
-
-			SSpriteAnimatorGraphComponent& animator = AddSpriteAnimatorGraphComponentToEntity(*spriteWS);
+			//Define UVRects for Animation Frames on row 0, 1, 2
 			F32 size = 32.0f / 256.0f;
 			std::vector<SVector4> uvRectsIdle = {
 				SVector4{ 0.0f,		0.0f,		size,			size },
@@ -625,13 +510,14 @@ namespace Havtorn
 				SVector4{ 0.0f,		size,		size,		size * 2 },
 				SVector4{ size,		size,		size * 2,	size * 2 },
 				SVector4{ size * 2, size,		size * 3,	size * 2 },
-				SVector4{ size * 3, size,		size * 4,	size * 2 },
+				//SVector4{ size * 3, size,		size * 4,	size * 2 },
 			};
 			std::vector<SVector4> uvRectsMoveRight = {
 				SVector4{ 0.0f,		size * 2,	size,		size * 3 },
 				SVector4{ size,		size * 2,	size * 2,	size * 3 },
 				SVector4{ size * 2, size * 2,	size * 3,	size * 3 },
-				SVector4{ size * 3, size * 2,	size * 4,	size * 3 },
+				
+				//SVector4{ size * 3, size * 2,	size * 4,	size * 3 },
 			};
 
 			SSpriteAnimationClip idle;
@@ -645,22 +531,33 @@ namespace Havtorn
 			moveLeft.Durations.push_back(0.15f);
 			moveLeft.Durations.push_back(0.15f);
 
-			SSpriteAnimationClip moveRight;
-			moveRight.UVRects = uvRectsMoveRight;
-			moveRight.Durations.push_back(0.15f);
-			moveRight.Durations.push_back(0.15f);
-			moveRight.Durations.push_back(0.15f);
 
-			animator.AnimationClips.emplace_back(idle);
-			animator.AnimationClips.emplace_back(moveLeft);
-			animator.AnimationClips.emplace_back(moveRight);
+			SSpriteAnimationClip moveRight
+			{
+				uvRectsMoveRight, //UVRects
+				{ 0.15f, 0.15f, 0.15f }, //Duration per Frame
+				true	//IsLooping
+			};
 
-			animator.Graph = SSpriteAnimatorGraphNode();
-			animator.Graph.Nodes.push_back(SSpriteAnimatorGraphNode{ 0 });
-			animator.Graph.Nodes.push_back(SSpriteAnimatorGraphNode{ 1 });
-			animator.Graph.Nodes.push_back(SSpriteAnimatorGraphNode{ 2 });
+			//moveRight.UVRects = uvRectsMoveRight;
+			//moveRight.Durations.push_back(0.15f);
+			//moveRight.Durations.push_back(0.15f);
+			//moveRight.Durations.push_back(0.15f);
+	
+			CGhostySystem* ghostySystem = GEngine::GetWorld()->GetSystem<CGhostySystem>();		
+			SSpriteAnimatorGraphComponent& spriteAnimatorGraphComponent = AddSpriteAnimatorGraphComponentToEntity(*ghosty);
 
-			U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteWS));
+			SSpriteAnimatorGraphNode& rootNode = spriteAnimatorGraphComponent.SetRoot(std::string("Idle | Locomotion"), ghostySystem->EvaluateIdleFunc);
+			rootNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Idle"), idle);
+			
+			SSpriteAnimatorGraphNode& locomotionNode = rootNode.AddSwitchNode(std::string("Locomotion: Left | Right"), ghostySystem->EvaluateLocomotionFunc);
+			locomotionNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Move Left"), moveLeft);
+			locomotionNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Move Right"), moveRight);
+
+
+
+
+			U16 spriteIndex = static_cast<U16>(GetSceneIndex(*ghosty));
 			assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
 		}
 
@@ -1182,6 +1079,7 @@ namespace Havtorn
 		COMPONENT_ADDER_DEFINITION(SpriteComponent)
 		COMPONENT_ADDER_DEFINITION(Transform2DComponent)
 		COMPONENT_ADDER_DEFINITION(SpriteAnimatorGraphComponent)
+		COMPONENT_ADDER_DEFINITION(GhostyComponent);
 		COMPONENT_ADDER_DEFINITION(DebugShapeComponent)
 		COMPONENT_ADDER_DEFINITION(MetaDataComponent)
 
@@ -1199,6 +1097,7 @@ namespace Havtorn
 		COMPONENT_REMOVER_DEFINITION(SpriteComponent)
 		COMPONENT_REMOVER_DEFINITION(Transform2DComponent)
 		COMPONENT_REMOVER_DEFINITION(SpriteAnimatorGraphComponent)
+		COMPONENT_REMOVER_DEFINITION(GhostyComponent)
 		COMPONENT_REMOVER_DEFINITION(DebugShapeComponent)
 		COMPONENT_REMOVER_DEFINITION(MetaDataComponent)
 }
