@@ -19,9 +19,6 @@ namespace Havtorn
 		EvaluateLocomotionFunc = std::bind(&CGhostySystem::EvaluateLocomotion, this, std::placeholders::_1, std::placeholders::_2);
 	}
 
-	CGhostySystem::~CGhostySystem()
-	{
-	}
 	void CGhostySystem::Update(CScene* scene)
 	{
 		F32 deltaTime = GTime::Dt();
