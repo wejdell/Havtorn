@@ -1,5 +1,8 @@
-#include "SpriteAnimatorGraphComponent.h"
 // Copyright 2022 Team Havtorn. All Rights Reserved.
+
+// Copyright 2023 Team Havtorn. All Rights Reserved.
+
+#include "SpriteAnimatorGraphComponent.h"
 
 namespace Havtorn
 {
