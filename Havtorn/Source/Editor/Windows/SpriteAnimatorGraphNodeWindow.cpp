@@ -59,7 +59,7 @@ namespace ImGui
 				{
 					ImGui::PushID(i);
 
-					Havtorn::SVector4& rect = Component->AnimationClips[animationClipKey].UVRects[i];
+					Havtorn::SVector4& rect = animationClip.UVRects[i];
 					Havtorn::F32 uvRect[4] = { rect.X, rect.Y, rect.Z, rect.W };
 					if (ImGui::DragFloat4("UVRect", uvRect, 0.01))
 					{
@@ -69,7 +69,7 @@ namespace ImGui
 						animationClip.UVRects[i].W = uvRect[3];
 					}
 
-					Havtorn::F32 duration = Component->AnimationClips[animationClipKey].Durations[i];
+					Havtorn::F32 duration = animationClip.Durations[i];
 					if (ImGui::DragFloat("Duration", &duration, 0.01))
 					{
 						animationClip.Durations[i] = duration;
@@ -77,6 +77,7 @@ namespace ImGui
 
 					ImGui::PopID();
 				}
+
 				ImGui::PopID();
 			}
 
