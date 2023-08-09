@@ -1,41 +1,30 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
-// Copyright 2023 Team Havtorn. All Rights Reserved.
-
+#include <imgui.h>
 #include "SpriteAnimatorGraphNodeWindow.h"
 #include "EditorManager.h"
 
 #include "ECS/Components/SpriteAnimatorGraphComponent.h"
 #include "ECS/Components/SpriteAnimatorGraphNode.h"
 
-#include <imgui.h>
-
 namespace ImGui
 {
 	CSpriteAnimatorGraphNodeWindow::CSpriteAnimatorGraphNodeWindow(const char* displayName, Havtorn::CEditorManager* manager)
 		: CWindow(displayName, manager, false)
 		, Component(nullptr)
-	{ }
-
-	void CSpriteAnimatorGraphNodeWindow::OnEnable()
-	{ }
-
-	void CSpriteAnimatorGraphNodeWindow::OnDisable()
-	{ }
-
-	void CSpriteAnimatorGraphNodeWindow::OnInspectorGUI()
-	{
-		if (ImGui::Begin(Name(), &IsEnabled))
-		{
-			RecursiveTree(&Component->Graph);
-		}
-		ImGui::End();
+	{ 
 	}
 
-	void CSpriteAnimatorGraphNodeWindow::Inspect(Havtorn::SSpriteAnimatorGraphComponent& component)
-	{
-		Component = &component;
-		SetEnabled(true);
+	CSpriteAnimatorGraphNodeWindow::~CSpriteAnimatorGraphNodeWindow()
+	{ 
+	}
+
+	void CSpriteAnimatorGraphNodeWindow::OnEnable()
+	{ 
+	}
+
+	void CSpriteAnimatorGraphNodeWindow::OnDisable()
+	{ 
 	}
 
 	void CSpriteAnimatorGraphNodeWindow::RecursiveTree(Havtorn::SSpriteAnimatorGraphNode* node)
@@ -44,8 +33,8 @@ namespace ImGui
 		{
 			if (node->AnimationClipKey == -1)
 			{
-				for (Havtorn::SSpriteAnimatorGraphNode& childNode : node->Nodes)
-					RecursiveTree(&childNode);
+				for (auto& child : node->Nodes)
+					RecursiveTree(&child);
 			}
 
 			if (node->AnimationClipKey >= 0 && node->AnimationClipKey < Component->AnimationClips.size())
@@ -59,9 +48,9 @@ namespace ImGui
 				{
 					ImGui::PushID(i);
 
-					Havtorn::SVector4& rect = animationClip.UVRects[i];
+					Havtorn::SVector4& rect = Component->AnimationClips[animationClipKey].UVRects[i];
 					Havtorn::F32 uvRect[4] = { rect.X, rect.Y, rect.Z, rect.W };
-					if (ImGui::DragFloat4("UVRect", uvRect, UVRectSlideSpeed))
+					if (ImGui::DragFloat4("UVRect", uvRect, 0.01))
 					{
 						animationClip.UVRects[i].X = uvRect[0];
 						animationClip.UVRects[i].Y = uvRect[1];
@@ -69,19 +58,33 @@ namespace ImGui
 						animationClip.UVRects[i].W = uvRect[3];
 					}
 
-					Havtorn::F32 duration = animationClip.Durations[i];
-					if (ImGui::DragFloat("Duration", &duration, DurationSlideSpeed))
+					Havtorn::F32 duration = Component->AnimationClips[animationClipKey].Durations[i];
+					if (ImGui::DragFloat("Duration", &duration, 0.01))
 					{
 						animationClip.Durations[i] = duration;
 					}
 
 					ImGui::PopID();
 				}
-
 				ImGui::PopID();
 			}
 
 			ImGui::TreePop();
 		}
+	}
+
+	void CSpriteAnimatorGraphNodeWindow::OnInspectorGUI()
+	{
+		if (ImGui::Begin(Name(), Open()))
+		{
+			RecursiveTree(&Component->Graph);
+		}
+		ImGui::End();
+	}
+
+	void CSpriteAnimatorGraphNodeWindow::Inspect(Havtorn::SSpriteAnimatorGraphComponent& component)
+	{
+		Component = &component;
+		Enable(true);
 	}
 }
