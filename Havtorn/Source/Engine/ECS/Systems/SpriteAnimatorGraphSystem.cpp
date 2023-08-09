@@ -4,74 +4,69 @@
 
 #include "hvpch.h"
 #include "SpriteAnimatorGraphSystem.h"
-#include "Engine.h"
-#include "ECS/Components/SpriteAnimatorGraphComponent.h"
 #include "ECS/Components/SpriteComponent.h"
-#include "Input/InputMapper.h"
-
+#include "ECS/Components/SpriteAnimatorGraphComponent.h"
 
 namespace Havtorn
 {
 	CSpriteAnimatorGraphSystem::CSpriteAnimatorGraphSystem()
-	{
-		GEngine::GetInput()->GetAxisDelegate(Havtorn::EInputAxisEvent::Right).AddMember(this, &CSpriteAnimatorGraphSystem::HandleAxisInput);
-	}
+	{}
 
 	CSpriteAnimatorGraphSystem::~CSpriteAnimatorGraphSystem()
-	{
-	}
+	{}
 
 	void CSpriteAnimatorGraphSystem::Update(CScene* scene)
 	{
+		const F32 deltaTime = GTime::Dt();
 		std::vector<SSpriteAnimatorGraphComponent>& spriteAnimatorGraphComponents = scene->GetSpriteAnimatorGraphComponents();
 		std::vector<SSpriteComponent>& spriteComponents = scene->GetSpriteComponents();
-		const F32 deltaTime = GTime::Dt();
 		for (U64 i = 0; i < spriteAnimatorGraphComponents.size(); i++)
 		{
 			SSpriteAnimatorGraphComponent& component = spriteAnimatorGraphComponents[i];
 			if (!component.IsInUse)
 				continue;
 
-			component.State.HorizontalKey = static_cast<I8>(horizontal); //Some system that controls the Animators State 
-			component.ResolvedAnimationClipKey = component.Graph.Evaluate(component.State); //Evaluate AnimationClip based on State
+			if(component.AnimationClips.size() == 0)
+				continue;
+
+			if (component.Graph.Evaluate)
+			{
+				SSpriteAnimatorGraphNode* currentNode = &component.Graph;
+				while (currentNode != nullptr)
+				{
+					if (currentNode->AnimationClipKey != -1)
+					{
+						component.ResolvedAnimationClipKey = currentNode->AnimationClipKey;
+						break;
+					}
+					
+					I16 evaluatedNodeIndex = currentNode->Evaluate(scene, i);
+					if (evaluatedNodeIndex >= 0 && evaluatedNodeIndex < currentNode->Nodes.size())
+						currentNode = &currentNode->Nodes[evaluatedNodeIndex];			
+				}
+			}
 
 			spriteComponents[i].UVRect = TickAnimationClip(component, deltaTime);
 		}
-
-		ResetInput();
 	}
 
-	SVector4 CSpriteAnimatorGraphSystem::TickAnimationClip(SSpriteAnimatorGraphComponent& c, const F32 deltaTime)
+	SVector4 CSpriteAnimatorGraphSystem::TickAnimationClip(SSpriteAnimatorGraphComponent& data, const F32 deltaTime)
 	{
-		F32 duration = c.AnimationClips[c.CurrentAnimationClipKey].Durations[c.CurrentFrame];
-		c.Time += deltaTime;
-		if (c.Time >= duration)
+		data.Time += deltaTime;	
+		if (data.Time >= data.AnimationClips[data.CurrentAnimationClipKey].Durations[data.CurrentFrame])
 		{
-			bool animationClipHasChanged = c.CurrentAnimationClipKey != c.ResolvedAnimationClipKey;
+			bool animationClipHasChanged = data.CurrentAnimationClipKey != data.ResolvedAnimationClipKey;
 			if (animationClipHasChanged)
-			{
-				c.CurrentAnimationClipKey = c.ResolvedAnimationClipKey;
-			}
+				data.CurrentAnimationClipKey = data.ResolvedAnimationClipKey;
 
-			U32 frameCount = static_cast<U32>(c.AnimationClips[c.CurrentAnimationClipKey].Durations.size());
-			c.CurrentFrame = (c.CurrentFrame + 1) % frameCount;
+			data.CurrentFrame = (data.CurrentFrame + 1) % data.AnimationClips[data.CurrentAnimationClipKey].KeyFrameCount();
 
 			if (animationClipHasChanged)
-			{
-				c.CurrentFrame = 0;
-			}
+				data.CurrentFrame = 0;
 
-			c.Time = 0.0f;
+			data.Time = 0.0f;
 		}
-		return c.AnimationClips[c.CurrentAnimationClipKey].UVRects[c.CurrentFrame];
-	}
 
-	void CSpriteAnimatorGraphSystem::HandleAxisInput(const SInputAxisPayload payload)
-	{
-		horizontal = payload.AxisValue;
-	}
-	void CSpriteAnimatorGraphSystem::ResetInput()
-	{
-		horizontal = 0.0f;
+		return data.AnimationClips[data.CurrentAnimationClipKey].UVRects[data.CurrentFrame];
 	}
 }
