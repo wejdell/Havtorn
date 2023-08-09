@@ -98,7 +98,7 @@ namespace Havtorn
 		// Windows
 		for (const auto& window : Windows)
 		{
-			if (!window->Enable())
+			if (!window->GetEnabled())
 				continue;
 
 			window->OnInspectorGUI();

@@ -25,7 +25,7 @@ namespace ImGui
 
 	void CSpriteAnimatorGraphNodeWindow::OnInspectorGUI()
 	{
-		if (ImGui::Begin(Name(), Open()))
+		if (ImGui::Begin(Name(), &IsEnabled))
 		{
 			RecursiveTree(&Component->Graph);
 		}
@@ -35,7 +35,7 @@ namespace ImGui
 	void CSpriteAnimatorGraphNodeWindow::Inspect(Havtorn::SSpriteAnimatorGraphComponent& component)
 	{
 		Component = &component;
-		Enable(true);
+		SetEnabled(true);
 	}
 
 	void CSpriteAnimatorGraphNodeWindow::RecursiveTree(Havtorn::SSpriteAnimatorGraphNode* node)

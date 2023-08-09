@@ -22,19 +22,17 @@ namespace ImGui
 		virtual void OnDisable() = 0;
 
 	public:
+		// AS: Rename "Name()" to "GetDisplayName()" Next time Everyone is merged to Main/Master
 		inline const char* Name() { return DisplayName; }
-		inline void Enable(const bool enable) { IsEnabled = enable; }
-		inline const bool Enable() const { return IsEnabled; }
-
-	protected:
-		bool* Open() { return &IsEnabled; }
+		inline void SetEnabled(const bool enable) { IsEnabled = enable; }
+		inline const bool GetEnabled() const { return IsEnabled; }
 
 	protected:
 		// TODO.AG: Test WeakPtr 
 		/*Havtorn::Ref<Havtorn::CEditorManager>*/Havtorn::CEditorManager* Manager;
+		bool IsEnabled = true;
 
 	private:
 		const char* DisplayName;
-		bool IsEnabled = true;
 	};
 }
