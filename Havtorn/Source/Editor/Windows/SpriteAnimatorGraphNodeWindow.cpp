@@ -2,12 +2,13 @@
 
 // Copyright 2023 Team Havtorn. All Rights Reserved.
 
-#include <imgui.h>
 #include "SpriteAnimatorGraphNodeWindow.h"
 #include "EditorManager.h"
 
 #include "ECS/Components/SpriteAnimatorGraphComponent.h"
 #include "ECS/Components/SpriteAnimatorGraphNode.h"
+
+#include <imgui.h>
 
 namespace ImGui
 {
