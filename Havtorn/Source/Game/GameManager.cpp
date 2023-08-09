@@ -25,7 +25,6 @@ namespace Havtorn
 		HV_LOG_INFO("GameManager Initialized.");
 		GEngine::GetWorld()->RegisterSystem(std::make_unique<Havtorn::CGhostySystem>());
 
-
 		return true;
 	}
 
