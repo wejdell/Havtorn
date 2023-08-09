@@ -2,20 +2,27 @@
 
 #include "SequencerWindow.h"
 #include "../ImGuizmo/ImGradient.h"
+#include "EditorManager.h"
+#include "EditorResourceManager.h"
+#include "ECS/Systems/SequencerSystem.h"
 #include <set>
 
 namespace ImGui
 {
-	CSequencerWindow::CSequencerWindow(const char* displayName, Havtorn::CEditorManager* manager)
+	CSequencerWindow::CSequencerWindow(const char* displayName, Havtorn::CEditorManager* manager, Havtorn::CSequencerSystem* sequencerSystem)
 		: CWindow(displayName, manager)
+        , SequencerSystem(sequencerSystem)
 	{
-        Sequencer.FrameMin = -100;
+        Sequencer.FrameMin = 0;
         Sequencer.FrameMax = 100;
         Sequencer.Items.push_back(SSequenceItem{ 0, 10, 30, false });
         Sequencer.Items.push_back(SSequenceItem{ 1, 20, 30, true });
         Sequencer.Items.push_back(SSequenceItem{ 3, 12, 60, false });
         Sequencer.Items.push_back(SSequenceItem{ 2, 61, 90, false });
         Sequencer.Items.push_back(SSequenceItem{ 4, 90, 99, false });
+
+        Sequencers.push_back("Intro");
+        Sequencers.push_back("BossFight");
 	}
 
 	CSequencerWindow::~CSequencerWindow()
@@ -30,27 +37,81 @@ namespace ImGui
 	{
         if (ImGui::Begin(Name(), nullptr))
         {
+            ImGui::SameLine();
+            if (ImGui::BeginCombo("Sequencer", Sequencers[CurrentSequencerIndex].c_str()))
+            {
+                for (Havtorn::U16 index = 0; index < Sequencers.size(); index++)
+                {
+                    const std::string& sequencerName = Sequencers[index];
+                    
+                    if (ImGui::Selectable(sequencerName.c_str()))
+                    {
+                        // Load Sequencer function
+                        CurrentSequencerIndex = index;
+                        break;
+                    }
+                }
+                ImGui::EndCombo();
+            }
+            ImGui::SameLine();
+            ImGui::Text("Scene: ");
+
+            Havtorn::SSequencerContextData contextData = SequencerSystem->GetSequencerContextData();
+
+            ImGui::PushItemWidth(140);
+
+            ImTextureID playButtonID = Manager->GetResourceManager()->GetEditorTexture(Havtorn::EEditorTexture::PlayIcon);
+            if (ImGui::ImageButton(playButtonID, { 16.0f, 16.0f }))
+            {
+                contextData.IsPlayingSequence = true;
+            }
+            ImGui::SameLine();
+
+            ImTextureID pauseButtonID = Manager->GetResourceManager()->GetEditorTexture(Havtorn::EEditorTexture::PauseIcon);
+            if (ImGui::ImageButton(pauseButtonID, { 16.0f, 16.0f }))
+            {
+                contextData.IsPlayingSequence = false;
+            }
+            ImGui::SameLine();
+
+            ImTextureID stopButtonID = Manager->GetResourceManager()->GetEditorTexture(Havtorn::EEditorTexture::StopIcon);
+            if (ImGui::ImageButton(stopButtonID, { 16.0f, 16.0f }))
+            {
+                contextData.IsPlayingSequence = false;
+                contextData.CurrentFrame = 0;
+            }
+            ImGui::SameLine();
+
             // let's create the sequencer
             static int selectedEntry = -1;
             static int firstFrame = 0;
             static bool expanded = true;
-            static int currentFrame = 100;
+            int imGuiFrame = contextData.CurrentFrame;
+            int imGuiMaxFrame = contextData.MaxFrames;
+            int playRate = static_cast<int>(contextData.PlayRate);
 
-            ImGui::PushItemWidth(130);
-            ImGui::InputInt("Frame Min", &Sequencer.FrameMin);
+            ImGui::InputInt("Current Frame ", &imGuiFrame);
             ImGui::SameLine();
-            ImGui::InputInt("Frame ", &currentFrame);
+            ImGui::InputInt("Frame Max", &imGuiMaxFrame);
             ImGui::SameLine();
-            ImGui::InputInt("Frame Max", &Sequencer.FrameMax);
+            ImGui::InputInt("Play Rate", &playRate);
+            ImGui::SameLine();
+            ImGui::Checkbox("Loop", &contextData.IsLooping);
             ImGui::PopItemWidth();
-            ImSequencer::Sequencer(&Sequencer, &currentFrame, &expanded, &selectedEntry, &firstFrame, ImSequencer::SEQUENCER_EDIT_STARTEND | ImSequencer::SEQUENCER_ADD | ImSequencer::SEQUENCER_DEL | ImSequencer::SEQUENCER_COPYPASTE | ImSequencer::SEQUENCER_CHANGE_FRAME);
+
+            ImSequencer::Sequencer(&Sequencer, &imGuiFrame, &expanded, &selectedEntry, &firstFrame, ImSequencer::SEQUENCER_EDIT_STARTEND | ImSequencer::SEQUENCER_ADD | ImSequencer::SEQUENCER_DEL | ImSequencer::SEQUENCER_COPYPASTE | ImSequencer::SEQUENCER_CHANGE_FRAME);
             // add a UI to edit that particular item
-            if (selectedEntry != -1)
-            {
-                const SSequenceItem& item = Sequencer.Items[selectedEntry];
-                ImGui::Text("I am a %s, please edit me", SequencerItemTypeNames[item.Type]);
-                // switch (type) ....
-            }
+            //if (selectedEntry != -1)
+            //{
+            //    const SSequenceItem& item = Sequencer.Items[selectedEntry];
+            //    ImGui::Text("I am a %s, please edit me", SequencerItemTypeNames[item.Type]);
+            //    // switch (type) ....
+            //}
+            contextData.CurrentFrame = imGuiFrame;
+            contextData.MaxFrames = imGuiMaxFrame;
+            contextData.PlayRate = static_cast<Havtorn::U16>(playRate);
+
+            SequencerSystem->SetSequencerContextData(contextData);
         }
         ImGui::End();
 	}

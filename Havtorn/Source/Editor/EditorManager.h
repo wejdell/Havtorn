@@ -27,6 +27,7 @@ namespace Havtorn
 	class CRenderManager;
 	class CEditorResourceManager;
 	class CScene;
+	class CSequencerSystem;
 
 	enum class EEditorColorTheme
 	{
@@ -78,7 +79,7 @@ namespace Havtorn
 		__declspec(dllexport) CEditorManager();
 		__declspec(dllexport) ~CEditorManager();
 
-		bool __declspec(dllexport) Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager);
+		bool __declspec(dllexport) Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager, CSequencerSystem* sequencerSystem);
 		void __declspec(dllexport) BeginFrame();
 		void __declspec(dllexport) Render();
 		void __declspec(dllexport) EndFrame();

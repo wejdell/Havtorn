@@ -11,6 +11,7 @@ namespace Havtorn
 	class CScene;
 	class CRenderManager;
 	class CAssetRegistry;
+	class CSequencerSystem;
 
 	class CWorld
 	{
@@ -26,6 +27,7 @@ namespace Havtorn
 		HAVTORN_API void OpenDemoScene(const bool shouldOpen3DDemo = true);
 		HAVTORN_API CAssetRegistry* GetAssetRegistry() const;
 
+		CSequencerSystem* GetSequencerSystem();
 	private:
 		CWorld() = default;
 		~CWorld() = default;

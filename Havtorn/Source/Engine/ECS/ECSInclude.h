@@ -10,6 +10,7 @@
 #include "ECS/Systems/CameraSystem.h"
 #include "ECS/Systems/LightSystem.h"
 #include "ECS/Systems/DebugShapeSystem.h"
+#include "ECS/Systems/SequencerSystem.h"
 
 #include "ECS/Components/TransformComponent.h"
 #include "ECS/Components/StaticMeshComponent.h"

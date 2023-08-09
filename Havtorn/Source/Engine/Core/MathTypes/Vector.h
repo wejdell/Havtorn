@@ -100,6 +100,8 @@ namespace Havtorn
 		inline static F32 SignedAxisAngle(const SVector& fromDirection, const SVector& toDirection, const SVector& axis);
 
 		inline std::string ToString() const;
+
+		static SVector Lerp(const SVector& a, const SVector& b, F32 t);
 	};
 
 	SVector::SVector() : X(0), Y(0), Z(0) {}
@@ -405,6 +407,11 @@ namespace Havtorn
 		char buffer[64];
 		sprintf_s(buffer, "{X: %.1f, Y: %.1f, Z: %.1f}", X, Y, Z);
 		return buffer;
+	}
+	
+	inline SVector SVector::Lerp(const SVector& a, const SVector& b, F32 t)
+	{
+		return a * (1.0f - t) + (b * t);
 	}
 }
 

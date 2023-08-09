@@ -31,6 +31,9 @@
 
 struct ImDrawList;
 struct ImRect;
+struct ImVec2;
+struct ImGuiIO;
+
 namespace ImSequencer
 {
    enum SEQUENCER_OPTIONS
@@ -75,5 +78,25 @@ namespace ImSequencer
 
    // return true if selection is made
    bool Sequencer(SequenceInterface* sequence, int* currentFrame, bool* expanded, int* selectedEntry, int* firstFrame, int sequenceOptions);
+
+   void Scrollbar(bool hasScrollBar, ImVec2& scrollBarSize, int firstFrameUsed, ImSequencer::SequenceInterface* sequence, int frameCount, ImVec2& canvas_size, int legendWidth, ImDrawList* draw_list, ImGuiIO& io, const float& barWidthInPixels, bool& MovingScrollBar, float& framePixelWidthTarget, float& framePixelWidth, int* firstFrame, const int& visibleFrameCount, ImVec2& panningViewSource, int& panningViewFrame, bool MovingCurrentFrame, int movingEntry);
+
+   void CopyPaste(int sequenceOptions, const ImVec2& contentMin, ImVec2& canvas_pos, int ItemHeight, ImGuiIO& io, ImDrawList* draw_list, ImSequencer::SequenceInterface* sequence);
+
+   void Moving(int& movingEntry, int cx, int& movingPos, float framePixelWidth, ImSequencer::SequenceInterface* sequence, int* selectedEntry, int movingPart, ImGuiIO& io, bool& ret);
+
+   void Selection(bool selected, size_t& customHeight, int* selectedEntry, ImSequencer::SequenceInterface* sequence, ImDrawList* draw_list, const ImVec2& contentMin, int ItemHeight, ImVec2& canvas_size);
+
+   void TrackSlotsBackground(int sequenceCount, ImSequencer::SequenceInterface* sequence, const ImVec2& contentMin, int legendWidth, int ItemHeight, size_t& customHeight, ImVec2& canvas_size, ImVec2& canvas_pos, bool popupOpened, int cy, int movingEntry, int cx, ImDrawList* draw_list);
+
+   void TrackHeader(int sequenceCount, ImSequencer::SequenceInterface* sequence, const ImVec2& contentMin, int ItemHeight, size_t& customHeight, ImDrawList* draw_list, int sequenceOptions, int legendWidth, ImGuiIO& io, int& delEntry, int& dupEntry);
+
+   void ChangeCurrentFrame(bool& MovingCurrentFrame, bool MovingScrollBar, int movingEntry, int sequenceOptions, int* currentFrame, ImRect& topRect, ImGuiIO& io, int frameCount, float framePixelWidth, int firstFrameUsed, ImSequencer::SequenceInterface* sequence);
+
+   void Panning(ImGuiIO& io, bool& panningView, ImVec2& panningViewSource, int& panningViewFrame, int* firstFrame, float& framePixelWidth, ImSequencer::SequenceInterface* sequence, const int& visibleFrameCount, float& framePixelWidthTarget, int& frameCount);
+
+   void NotExpanded(ImVec2& canvas_size, ImVec2& canvas_pos, int ItemHeight, ImDrawList* draw_list, ImSequencer::SequenceInterface* sequence, int frameCount, int sequenceCount);
+
+   void AddTrackButton(int /*sequenceOptions*/, ImDrawList* /*draw_list*/, ImVec2& /*canvas_pos*/, int /*legendWidth*/, int /*ItemHeight*/, ImGuiIO& /*io*/, ImSequencer::SequenceInterface* /*sequence*/, int* /*selectedEntry*/, bool& /*popupOpened*/);
 
 }

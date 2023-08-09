@@ -17,6 +17,7 @@ namespace Havtorn
 		Systems.emplace_back(std::make_unique<CCameraSystem>());
 		Systems.emplace_back(std::make_unique<CLightSystem>(RenderManager));
 		Systems.emplace_back(std::make_unique<CRenderSystem>(RenderManager));
+		Systems.emplace_back(std::make_unique<CSequencerSystem>());
 		//Systems.emplace_back(std::make_unique<Debug::UDebugShapeSystem>(Scenes.back().get(), RenderManager));
 
 		return true;
@@ -42,8 +43,11 @@ namespace Havtorn
 		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
 		char* data = new char[fileSize];
 
-		Scenes.back()->Init(RenderManager);
-
+		const U64 lastSlashIndex = filePath.find_last_of("/");
+		const U64 lastDotIndex = filePath.find_last_of(".");
+		std::string sceneNameSubstring = filePath.substr(lastSlashIndex, lastDotIndex - lastSlashIndex);
+		Scenes.back()->Init(RenderManager, sceneNameSubstring);
+		
 		U64 pointerPosition = 0;
 		GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));
 		sceneFile.Deserialize(data, pointerPosition, Scenes.back().get(), AssetRegistry.get());
@@ -126,5 +130,11 @@ namespace Havtorn
 	CAssetRegistry* CWorld::GetAssetRegistry() const
 	{
 		return AssetRegistry.get();
+	}
+	
+	CSequencerSystem* CWorld::GetSequencerSystem()
+	{
+		// TODO.NR: Should not be hard coded
+		return reinterpret_cast<CSequencerSystem*>(Systems[3].get());
 	}
 }

@@ -54,14 +54,17 @@ namespace Havtorn
 		RenderManager = nullptr;
 	}
 
-	bool CScene::Init(CRenderManager* renderManager)
+	bool CScene::Init(CRenderManager* renderManager, const std::string& sceneName)
 	{
 		RenderManager = renderManager;
+		SceneName = sceneName;
 		return true;
 	}
 
 	bool CScene::Init3DDemoScene(CRenderManager* renderManager)
 	{
+		SceneName = std::string("3DDemoScene");
+
 		// === Camera ===
 		SEntity* cameraEntity = GetNewEntity("Camera");
 		if (!cameraEntity)
@@ -397,6 +400,8 @@ namespace Havtorn
 
 	bool CScene::Init2DDemoScene(CRenderManager* renderManager)
 	{
+		SceneName = std::string("2DDemoScene");
+
 		// === Camera ===
 		SEntity* cameraEntity = GetNewEntity("Camera");
 		if (!cameraEntity)
@@ -741,6 +746,8 @@ namespace Havtorn
 				SerializeSimple(MetaDataComponents[entitySceneIndex], toData, pointerPosition);
 			}
 		}
+
+		SerializeSimple(&SceneName, toData, pointerPosition);
 	}
 
 	void CScene::Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry)
@@ -872,6 +879,13 @@ namespace Havtorn
 				metaData = dataCopy;
 			}
 		}
+
+		DeserializeSimple(SceneName, fromData, pointerPosition);
+	}
+
+	std::string CScene::GetSceneName() const
+	{
+		return SceneName.AsString();
 	}
 
 	std::vector<SEntity>& CScene::GetEntities() 
@@ -959,6 +973,11 @@ namespace Havtorn
 	U64 CScene::GetSceneIndex(const SEntity& entity) const
 	{
 		return EntityVectorIndices.at(entity.GUID);
+	}
+
+	U64 CScene::GetSceneIndex(const U64 entityGUID) const
+	{
+		return EntityVectorIndices.at(entityGUID);
 	}
 
 	U64 CScene::GetMainCameraIndex() const

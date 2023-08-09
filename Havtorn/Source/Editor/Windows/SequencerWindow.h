@@ -312,18 +312,26 @@ struct SSequencer : public ImSequencer::SequenceInterface
     }
 };
 
+namespace Havtorn
+{
+    class CSequencerSystem;
+}
+
 namespace ImGui
 {
 	class CSequencerWindow : public CWindow
 	{
 	public:
-		CSequencerWindow(const char* displayName, Havtorn::CEditorManager* manager);
+		CSequencerWindow(const char* displayName, Havtorn::CEditorManager* manager, Havtorn::CSequencerSystem* sequencerSystem);
 		~CSequencerWindow() override;
 		void OnEnable() override;
 		void OnInspectorGUI() override;
 		void OnDisable() override;
 
 	private:
+        Havtorn::CSequencerSystem* SequencerSystem = nullptr;
         SSequencer Sequencer;
+        std::vector<std::string> Sequencers;
+        Havtorn::U16 CurrentSequencerIndex = 0;
 	};
 }
