@@ -43,6 +43,7 @@ namespace ImGui
 		InspectionFunctions[EComponentType::SpriteComponent]			= std::bind(&CInspectorWindow::InspectSpriteComponent, this);
 		InspectionFunctions[EComponentType::Transform2DComponent]		= std::bind(&CInspectorWindow::InspectTransform2DComponent, this);
 		InspectionFunctions[EComponentType::SpriteAnimatorGraphComponent] = std::bind(&CInspectorWindow::InspectSpriteAnimatorGraphComponent, this);
+		// AS: Ghosty Component is actually defined in another project -> Game Relevant for future Editor / Game Seperation
 		InspectionFunctions[EComponentType::GhostyComponent]			= std::bind(&CInspectorWindow::InspectGhostyComponent, this);
 	}
 
