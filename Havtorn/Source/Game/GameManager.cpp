@@ -3,8 +3,9 @@
 // Copyright 2023 Team Havtorn. All Rights Reserved.
 
 #include "GameManager.h"
-#include <Engine.h>
 #include "Ghosty\GhostySystem.h"
+
+#include <Engine.h>
 
 namespace Havtorn
 {
