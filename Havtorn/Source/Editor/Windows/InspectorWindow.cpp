@@ -10,6 +10,7 @@
 #include "Scene/Scene.h"
 
 #include "Windows/ViewportWindow.h"
+#include "Windows/SpriteAnimatorGraphNodeWindow.h"
 
 #include <Core/imgui.h>
 #include <Core/ImGuizmo/ImGuizmo.h>
@@ -42,7 +43,7 @@ namespace ImGui
 		InspectionFunctions[EComponentType::SpriteComponent]			= std::bind(&CInspectorWindow::InspectSpriteComponent, this);
 		InspectionFunctions[EComponentType::Transform2DComponent]		= std::bind(&CInspectorWindow::InspectTransform2DComponent, this);
 		InspectionFunctions[EComponentType::SpriteAnimatorGraphComponent] = std::bind(&CInspectorWindow::InspectSpriteAnimatorGraphComponent, this);
-
+		InspectionFunctions[EComponentType::GhostyComponent]			= std::bind(&CInspectorWindow::InspectGhostyComponent, this);
 	}
 
 	CInspectorWindow::~CInspectorWindow()
@@ -93,12 +94,10 @@ namespace ImGui
 		{
 			TryInspectComponent(selection, static_cast<EComponentType>(i));
 		}
-			
-		if (ImGui::Button("Add Component", ImVec2(ImGui::GetContentRegionAvail().x, 0))) 
-		{ 
+		if (ImGui::Button("Add Component", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+		{
 			ImGui::OpenPopup("Add Component Modal");
 		}
-		
 		OpenAddComponentModal();
 
 		ImGui::End();
@@ -140,7 +139,6 @@ namespace ImGui
 
 		// TODO.NR: Fix yaw rotation singularity here, using our own math functions. Ref: https://github.com/CedricGuillemet/ImGuizmo/issues/244
 		ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, transformMatrix.data);
-		
 		Scene->GetTransformComponents()[SelectedEntityIndex].Transform.SetMatrix(transformMatrix);
 
 		if (Manager->GetIsFreeCamActive())
@@ -182,8 +180,6 @@ namespace ImGui
 		}
 		ImGui::Text(assetRep->Name.c_str());
 		ImGui::TextDisabled("Number Of Materials: %i", staticMesh->NumberOfMaterials);
-		
-		
 		OpenSelectMeshAssetModal(SelectedEntityIndex);
 	}
 
@@ -270,8 +266,7 @@ namespace ImGui
 				ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 			}
 		}
-		
-		OpenSelectMaterialAssetModal(materialComp, MaterialToChangeIndex);	
+		OpenSelectMaterialAssetModal(materialComp, MaterialToChangeIndex);
 	}
 
 	void CInspectorWindow::InspectEnvironmentLightComponent()
@@ -285,7 +280,6 @@ namespace ImGui
 		auto& environmentLightComp = Scene->GetEnvironmentLightComponents()[SelectedEntityIndex];
 
 		Havtorn::U16 ref = environmentLightComp.AmbientCubemapReference;
-			
 		ImGui::Text("Ambient Static Cubemap");
 		if (ImGui::ImageButton((void*)Havtorn::GEngine::GetTextureBank()->GetTexture(ref), { TexturePreviewSize.X, TexturePreviewSize.Y }))
 		{
@@ -293,7 +287,7 @@ namespace ImGui
 			ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 		}
 
-		OpenSelectTextureAssetModal(environmentLightComp.AmbientCubemapReference);	
+		OpenSelectTextureAssetModal(environmentLightComp.AmbientCubemapReference);
 	}
 
 	void CInspectorWindow::InspectDirectionalLightComponent()
@@ -305,7 +299,6 @@ namespace ImGui
 			return;
 
 		auto& directionalLightComp = Scene->GetDirectionalLightComponents()[SelectedEntityIndex];
-			
 		Havtorn::F32 colorData[3] = { directionalLightComp.Color.X, directionalLightComp.Color.Y, directionalLightComp.Color.Z };
 		ImGui::ColorPicker3("Color", colorData);
 		directionalLightComp.Color.X = colorData[0];
@@ -317,7 +310,7 @@ namespace ImGui
 		ImGui::DragFloat3("Direction", dirData, SlideSpeed);
 		directionalLightComp.Direction = { dirData[0], dirData[1], dirData[2], 0.0f };
 
-		ImGui::DragFloat("Intensity", &directionalLightComp.Color.W, SlideSpeed);	
+		ImGui::DragFloat("Intensity", &directionalLightComp.Color.W, SlideSpeed);
 	}
 
 	void CInspectorWindow::InspectPointLightComponent()
@@ -359,7 +352,7 @@ namespace ImGui
 		ImGui::DragFloat("Intensity", &spotLightComp.ColorAndIntensity.W, SlideSpeed);
 		ImGui::DragFloat("Range", &spotLightComp.Range, SlideSpeed, 0.1f, 100.0f);
 		ImGui::DragFloat("Outer Angle", &spotLightComp.OuterAngle, SlideSpeed, spotLightComp.InnerAngle, 180.0f);
-		ImGui::DragFloat("InnerAngle", &spotLightComp.InnerAngle, SlideSpeed, 0.0f, spotLightComp.OuterAngle - 0.01f);	
+		ImGui::DragFloat("InnerAngle", &spotLightComp.InnerAngle, SlideSpeed, 0.0f, spotLightComp.OuterAngle - 0.01f);
 	}
 
 	void CInspectorWindow::InspectVolumetricLightComponent()
@@ -416,7 +409,7 @@ namespace ImGui
 		}
 
 		MaterialRefToChangeIndex = Havtorn::UMath::Min(MaterialRefToChangeIndex, static_cast<Havtorn::U16>(decalComp.TextureReferences.size() - 1));
-		OpenSelectTextureAssetModal(decalComp.TextureReferences[MaterialRefToChangeIndex]);		
+		OpenSelectTextureAssetModal(decalComp.TextureReferences[MaterialRefToChangeIndex]);
 	}
 
 	void CInspectorWindow::InspectSpriteComponent()
@@ -463,8 +456,8 @@ namespace ImGui
 		// TODO.NR: Make editable with gizmo
 		Havtorn::STransform2DComponent& transform2DComp = Scene->GetTransform2DComponents()[SelectedEntityIndex];
 
-		F32 position[2] = {transform2DComp.Position.X, transform2DComp.Position.Y};
-		F32 scale[2] = {transform2DComp.Scale.X, transform2DComp.Scale.Y};
+		F32 position[2] = { transform2DComp.Position.X, transform2DComp.Position.Y };
+		F32 scale[2] = { transform2DComp.Scale.X, transform2DComp.Scale.Y };
 
 		ImGui::DragFloat2("Position", position, SlideSpeed);
 		ImGui::DragFloat("DegreesRoll", &transform2DComp.DegreesRoll, SlideSpeed);
@@ -483,38 +476,27 @@ namespace ImGui
 			return;
 
 		Havtorn::SSpriteAnimatorGraphComponent& c = Scene->GetSpriteAnimatorGraphComponents()[SelectedEntityIndex];
-		for (Havtorn::U32 i = 0; i < c.AnimationClips.size(); i++)
+		if (ImGui::Button("Open Animator"))
 		{
-			ImGui::Text("Animation Clip Settings");
-			Havtorn::SSpriteAnimationClip& clip = c.AnimationClips[i];
-			
-			for (Havtorn::U32 clipIndex = 0; clipIndex < clip.Durations.size(); clipIndex++)
-			{
-				ImGui::PushID(clipIndex);
-				SVector4& rect = clip.UVRects[clipIndex];
-				F32 uvRect[4] = { rect.X, rect.Y, rect.Z, rect.W };
-				if (ImGui::DragFloat4("UVRect", uvRect, SlideSpeed))
-				{
-					clip.UVRects[clipIndex].X = uvRect[0];
-					clip.UVRects[clipIndex].Y = uvRect[1];
-					clip.UVRects[clipIndex].Z = uvRect[2];
-					clip.UVRects[clipIndex].W = uvRect[3];
-				}
-
-				F32 duration = clip.Durations[clipIndex];
-				if (ImGui::DragFloat("Duration", &duration, SlideSpeed))
-				{
-					clip.Durations[clipIndex] = duration;
-				}
-				ImGui::PopID();
-			}
-
-			if (ImGui::Button("New Frame"))
-			{
-				clip.Durations.push_back(clip.Durations.back());
-				clip.UVRects.push_back(clip.UVRects.back());
-			}
+			Manager->GetAnimatorWindow()->Inspect(c);
 		}
+	}
+
+	void CInspectorWindow::InspectGhostyComponent()
+	{
+		bool isHeaderOpen = ImGui::CollapsingHeader("Ghosty", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+		RemoveComponentButton(Havtorn::EComponentType::SpriteAnimatorGraphComponent);
+
+		if (!isHeaderOpen)
+			return;
+
+		Havtorn::SGhostyComponent& c = Scene->GetGhostyComponents()[SelectedEntityIndex];
+
+		F32 ghostyInput[3] = { c.State.Input.X, c.State.Input.Y, c.State.Input.Z };
+		ImGui::DragFloat3("GhostyState", ghostyInput, 0.0f);
+
+		ImGui::Checkbox("IsInWalkingAnimation", &c.State.IsInWalkingAnimationState);
+
 	}
 
 	void CInspectorWindow::OpenSelectMeshAssetModal(Havtorn::I64 staticMeshComponentIndex)
