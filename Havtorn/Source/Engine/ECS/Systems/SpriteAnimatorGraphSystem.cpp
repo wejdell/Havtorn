@@ -54,6 +54,8 @@ namespace Havtorn
 	SVector4 CSpriteAnimatorGraphSystem::TickAnimationClip(SSpriteAnimatorGraphComponent& data, const F32 deltaTime)
 	{
 		data.Time += deltaTime;	
+
+		// AS: By design, We wait for the end of the current frame before we allow changing clip
 		if (data.Time >= data.AnimationClips[data.CurrentAnimationClipKey].Durations[data.CurrentFrame])
 		{
 			bool animationClipHasChanged = data.CurrentAnimationClipKey != data.ResolvedAnimationClipKey;
