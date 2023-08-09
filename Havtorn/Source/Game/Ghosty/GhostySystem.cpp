@@ -1,10 +1,12 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
+// Copyright 2023 Team Havtorn. All Rights Reserved.
+
 #include "hvpch.h"
 #include "GhostySystem.h"
+#include "GhostyComponent.h"
 #include "Scene/Scene.h"
 #include "Input/InputMapper.h"
-#include "GhostyComponent.h"
 
 namespace Havtorn
 {
@@ -23,8 +25,8 @@ namespace Havtorn
 	void CGhostySystem::Update(CScene* scene)
 	{
 		F32 deltaTime = GTime::Dt();
-		auto& transformComponents = scene->GetTransformComponents();
-		auto& ghostyComponents = scene->GetGhostyComponents();
+		std::vector<STransformComponent>& transformComponents = scene->GetTransformComponents();
+		std::vector<SGhostyComponent>& ghostyComponents = scene->GetGhostyComponents();
 		for (U32 i = 0; i < ghostyComponents.size(); i++)
 		{
 			SGhostyComponent& ghosty = ghostyComponents[i];
@@ -45,7 +47,7 @@ namespace Havtorn
 
 	I16 CGhostySystem::EvaluateIdle(CScene* scene, U64 entitySceneIndex)
 	{
-		auto& ghostyComponent = scene->GetGhostyComponents()[entitySceneIndex];
+		SGhostyComponent& ghostyComponent = scene->GetGhostyComponents()[entitySceneIndex];
 		if (ghostyComponent.State.Input.LengthSquared() > 0.0f)
 			return 1;
 
@@ -55,7 +57,7 @@ namespace Havtorn
 
 	I16 CGhostySystem::EvaluateLocomotion(CScene* scene, U64 entitySceneIndex)
 	{
-		auto& ghostyComponent = scene->GetGhostyComponents()[entitySceneIndex];
+		SGhostyComponent& ghostyComponent = scene->GetGhostyComponents()[entitySceneIndex];
 		SVector stateInput = ghostyComponent.State.Input;
 
 		ghostyComponent.State.IsInWalkingAnimationState = true;
