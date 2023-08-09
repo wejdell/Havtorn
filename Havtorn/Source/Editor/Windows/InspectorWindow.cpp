@@ -267,6 +267,7 @@ namespace ImGui
 				ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 			}
 		}
+
 		OpenSelectMaterialAssetModal(materialComp, MaterialToChangeIndex);
 	}
 
