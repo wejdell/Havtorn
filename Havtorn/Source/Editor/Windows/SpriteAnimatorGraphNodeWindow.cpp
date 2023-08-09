@@ -61,7 +61,7 @@ namespace ImGui
 
 					Havtorn::SVector4& rect = animationClip.UVRects[i];
 					Havtorn::F32 uvRect[4] = { rect.X, rect.Y, rect.Z, rect.W };
-					if (ImGui::DragFloat4("UVRect", uvRect, 0.01))
+					if (ImGui::DragFloat4("UVRect", uvRect, UVRectSlideSpeed))
 					{
 						animationClip.UVRects[i].X = uvRect[0];
 						animationClip.UVRects[i].Y = uvRect[1];
@@ -70,7 +70,7 @@ namespace ImGui
 					}
 
 					Havtorn::F32 duration = animationClip.Durations[i];
-					if (ImGui::DragFloat("Duration", &duration, 0.01))
+					if (ImGui::DragFloat("Duration", &duration, DurationSlideSpeed))
 					{
 						animationClip.Durations[i] = duration;
 					}

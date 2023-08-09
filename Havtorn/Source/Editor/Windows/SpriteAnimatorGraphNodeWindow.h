@@ -26,7 +26,9 @@ namespace ImGui
 	private:
 		void RecursiveTree(Havtorn::SSpriteAnimatorGraphNode* node);
 
-
+	private:
 		Havtorn::SSpriteAnimatorGraphComponent* Component;
+		Havtorn::F32 DurationSlideSpeed = 0.01f;
+		Havtorn::F32 UVRectSlideSpeed = 0.01f;
 	};
 }
