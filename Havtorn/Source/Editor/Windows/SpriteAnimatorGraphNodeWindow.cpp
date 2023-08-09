@@ -23,6 +23,21 @@ namespace ImGui
 	void CSpriteAnimatorGraphNodeWindow::OnDisable()
 	{ }
 
+	void CSpriteAnimatorGraphNodeWindow::OnInspectorGUI()
+	{
+		if (ImGui::Begin(Name(), Open()))
+		{
+			RecursiveTree(&Component->Graph);
+		}
+		ImGui::End();
+	}
+
+	void CSpriteAnimatorGraphNodeWindow::Inspect(Havtorn::SSpriteAnimatorGraphComponent& component)
+	{
+		Component = &component;
+		Enable(true);
+	}
+
 	void CSpriteAnimatorGraphNodeWindow::RecursiveTree(Havtorn::SSpriteAnimatorGraphNode* node)
 	{
 		if (ImGui::TreeNode(node->Name.Data()))
@@ -67,20 +82,5 @@ namespace ImGui
 
 			ImGui::TreePop();
 		}
-	}
-
-	void CSpriteAnimatorGraphNodeWindow::OnInspectorGUI()
-	{
-		if (ImGui::Begin(Name(), Open()))
-		{
-			RecursiveTree(&Component->Graph);
-		}
-		ImGui::End();
-	}
-
-	void CSpriteAnimatorGraphNodeWindow::Inspect(Havtorn::SSpriteAnimatorGraphComponent& component)
-	{
-		Component = &component;
-		Enable(true);
 	}
 }
