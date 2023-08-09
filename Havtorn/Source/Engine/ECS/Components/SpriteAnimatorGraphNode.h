@@ -23,7 +23,8 @@ namespace Havtorn
 		const U32 KeyFrameCount() const { return static_cast<U32>(UVRects.size()); }
 	};
 
-	struct SSpriteAnimatorGraphNode //This is basically a Switch and an index into animationClips vector
+	// AS: This is basically a Switch and an index into animationClips vector
+	struct SSpriteAnimatorGraphNode 
 	{
 		CHavtornStaticString<32> Name;
 		std::vector<SSpriteAnimatorGraphNode> Nodes;
