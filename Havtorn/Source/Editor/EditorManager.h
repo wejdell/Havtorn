@@ -17,6 +17,7 @@ namespace ImGui
 	class CWindow;
 	class CToggleable;
 	class CViewportWindow;
+	class CSpriteAnimatorGraphNodeWindow;
 }
 
 namespace Havtorn
@@ -62,6 +63,7 @@ namespace Havtorn
 		SVector2<U16> HierarchyViewSize		= SVector2<U16>::Zero;
 		SVector2<I16> InspectorPosition		= SVector2<I16>::Zero;
 		SVector2<U16> InspectorSize			= SVector2<U16>::Zero;
+		SVector2<U16> SpriteAnimatorGraphNodeSize = SVector2<U16>::Zero;
 	};
 
 	struct SEditorAssetRepresentation
@@ -109,6 +111,7 @@ namespace Havtorn
 		void SetViewportPadding(const F32 padding);
 	
 		ImGui::CViewportWindow* GetViewportWindow() const;
+		ImGui::CSpriteAnimatorGraphNodeWindow* GetAnimatorWindow() const;
 
 		[[nodiscard]] const CRenderManager* GetRenderManager() const;
 		[[nodiscard]] const CEditorResourceManager* GetResourceManager() const;

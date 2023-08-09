@@ -15,7 +15,7 @@ namespace ImGui
 	{
 	public:
 		virtual ~CWindow() { }
-		CWindow(const char* displayName, Havtorn::CEditorManager* manager);
+		CWindow(const char* displayName, Havtorn::CEditorManager* manager, bool isEnabled = true);
 	public:
 		virtual void OnEnable() = 0;
 		virtual void OnInspectorGUI() = 0;
@@ -35,6 +35,6 @@ namespace ImGui
 
 	private:
 		const char* DisplayName;
-		bool IsEnabled;
+		bool IsEnabled = true;
 	};
 }
