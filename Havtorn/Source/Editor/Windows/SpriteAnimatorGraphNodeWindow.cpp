@@ -2,8 +2,6 @@
 
 // Copyright 2023 Team Havtorn. All Rights Reserved.
 
-
-
 #include <imgui.h>
 #include "SpriteAnimatorGraphNodeWindow.h"
 #include "EditorManager.h"
