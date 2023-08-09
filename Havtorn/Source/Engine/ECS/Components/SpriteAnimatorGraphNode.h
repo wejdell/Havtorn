@@ -26,10 +26,8 @@ namespace Havtorn
 		std::vector<SSpriteAnimatorGraphNode> Nodes;
 		std::function<I16(CScene*, U64)> Evaluate;
 		I16 AnimationClipKey = -1;
-		I16 ParentIndex = -1;
 
 		HAVTORN_API SSpriteAnimatorGraphNode& AddSwitchNode(const CHavtornStaticString<32>& name, std::function<I16(CScene*, U64)> evaluator);
-
 		HAVTORN_API void AddClipNode(SSpriteAnimatorGraphComponent* component, const CHavtornStaticString<32>& name, const SSpriteAnimationClip& clipData);
 	};
 }

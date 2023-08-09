@@ -11,7 +11,6 @@ namespace Havtorn
 	SSpriteAnimatorGraphNode& SSpriteAnimatorGraphNode::AddSwitchNode(const CHavtornStaticString<32>& name, std::function<I16(CScene*, U64)> evaluator)
 	{
 		SSpriteAnimatorGraphNode& switchNode = Nodes.emplace_back();
-		switchNode.ParentIndex = static_cast<I16>(Nodes.size() - 1);
 		switchNode.Name = name;
 		switchNode.Evaluate = evaluator;
 		switchNode.AnimationClipKey = -1;
@@ -21,7 +20,6 @@ namespace Havtorn
 	void SSpriteAnimatorGraphNode::AddClipNode(SSpriteAnimatorGraphComponent* component, const CHavtornStaticString<32>& name, const SSpriteAnimationClip& clipData)
 	{
 		SSpriteAnimatorGraphNode& clipNode = Nodes.emplace_back();
-		clipNode.ParentIndex = static_cast<I16>(Nodes.size() - 1);
 		clipNode.Name = name;
 		clipNode.AnimationClipKey = static_cast<I16>(component->AnimationClips.size());
 		component->AnimationClips.push_back(clipData);
