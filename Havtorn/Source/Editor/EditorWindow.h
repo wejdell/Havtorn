@@ -1,7 +1,8 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
-#pragma once
+// Copyright 2023 Team Havtorn. All Rights Reserved.
 
+#pragma once
 #include "Havtorn.h"
 
 namespace Havtorn
