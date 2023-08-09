@@ -44,8 +44,8 @@ namespace ImGui
 		{
 			if (node->AnimationClipKey == -1)
 			{
-				for (auto& child : node->Nodes)
-					RecursiveTree(&child);
+				for (Havtorn::SSpriteAnimatorGraphNode& childNode : node->Nodes)
+					RecursiveTree(&childNode);
 			}
 
 			if (node->AnimationClipKey >= 0 && node->AnimationClipKey < Component->AnimationClips.size())
