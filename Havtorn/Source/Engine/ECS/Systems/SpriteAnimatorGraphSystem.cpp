@@ -20,6 +20,7 @@ namespace Havtorn
 		const F32 deltaTime = GTime::Dt();
 		std::vector<SSpriteAnimatorGraphComponent>& spriteAnimatorGraphComponents = scene->GetSpriteAnimatorGraphComponents();
 		std::vector<SSpriteComponent>& spriteComponents = scene->GetSpriteComponents();
+
 		for (U64 i = 0; i < spriteAnimatorGraphComponents.size(); i++)
 		{
 			SSpriteAnimatorGraphComponent& component = spriteAnimatorGraphComponents[i];
