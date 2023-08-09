@@ -17,7 +17,7 @@ namespace ImGui
 	{
 	public:
 		CSpriteAnimatorGraphNodeWindow(const char* displayName, Havtorn::CEditorManager* manager);
-		~CSpriteAnimatorGraphNodeWindow() override;
+		~CSpriteAnimatorGraphNodeWindow() override = default;
 		void OnEnable() override;
 		void OnInspectorGUI() override;
 		void OnDisable() override;

@@ -17,9 +17,6 @@ namespace ImGui
 		, Component(nullptr)
 	{ }
 
-	CSpriteAnimatorGraphNodeWindow::~CSpriteAnimatorGraphNodeWindow()
-	{ }
-
 	void CSpriteAnimatorGraphNodeWindow::OnEnable()
 	{ }
 
