@@ -322,23 +322,6 @@ namespace Havtorn
 		InitEditorLayout();
 	}
 
-	ImGui::CViewportWindow* CEditorManager::GetViewportWindow() const
-	{
-		return reinterpret_cast<ImGui::CViewportWindow*>(Windows[0].get());
-	}
-
-	ImGui::CSpriteAnimatorGraphNodeWindow* CEditorManager::GetAnimatorWindow() const
-	{
-		auto hashCode = typeid(ImGui::CSpriteAnimatorGraphNodeWindow).hash_code();
-		for (U32 i = 0; i < Windows.size(); i++)
-		{
-			if (typeid(*Windows[i].get()).hash_code() == hashCode)
-				return static_cast<ImGui::CSpriteAnimatorGraphNodeWindow*>(Windows[i].get());
-		}
-
-		return nullptr;
-	}
-
 	const CRenderManager* CEditorManager::GetRenderManager() const
 	{
 		return RenderManager;
