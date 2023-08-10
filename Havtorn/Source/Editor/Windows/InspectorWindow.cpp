@@ -96,10 +96,12 @@ namespace ImGui
 		{
 			TryInspectComponent(selection, static_cast<EComponentType>(i));
 		}
+
 		if (ImGui::Button("Add Component", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
 		{
 			ImGui::OpenPopup("Add Component Modal");
 		}
+
 		OpenAddComponentModal();
 
 		ImGui::End();
