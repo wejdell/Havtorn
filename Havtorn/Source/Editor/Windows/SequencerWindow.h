@@ -328,6 +328,8 @@ namespace ImGui
 		void OnInspectorGUI() override;
 		void OnDisable() override;
 
+        void AddTransformKeyframe();
+
 	private:
         Havtorn::CSequencerSystem* SequencerSystem = nullptr;
         SSequencer Sequencer;

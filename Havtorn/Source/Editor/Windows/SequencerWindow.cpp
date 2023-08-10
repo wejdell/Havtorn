@@ -97,6 +97,12 @@ namespace ImGui
             ImGui::InputInt("Play Rate", &playRate);
             ImGui::SameLine();
             ImGui::Checkbox("Loop", &contextData.IsLooping);
+
+            if (ImGui::Button("Add New Transform Keyframe"))
+            {
+                AddTransformKeyframe();
+            }
+
             ImGui::PopItemWidth();
 
             ImSequencer::Sequencer(&Sequencer, &imGuiFrame, &expanded, &selectedEntry, &firstFrame, ImSequencer::SEQUENCER_EDIT_STARTEND | ImSequencer::SEQUENCER_ADD | ImSequencer::SEQUENCER_DEL | ImSequencer::SEQUENCER_COPYPASTE | ImSequencer::SEQUENCER_CHANGE_FRAME);
@@ -119,6 +125,11 @@ namespace ImGui
 	void CSequencerWindow::OnDisable()
 	{
 	}
+    
+    void CSequencerWindow::AddTransformKeyframe()
+    {
+        SequencerSystem->AddEmptyKeyframe<Havtorn::SSequencerTransformKeyframe>(Havtorn::EComponentType::TransformComponent);
+    }
 }
 
 namespace ImCurveEdit
