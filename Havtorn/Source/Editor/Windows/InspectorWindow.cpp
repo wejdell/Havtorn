@@ -43,7 +43,7 @@ namespace ImGui
 		InspectionFunctions[EComponentType::SpriteComponent]			= std::bind(&CInspectorWindow::InspectSpriteComponent, this);
 		InspectionFunctions[EComponentType::Transform2DComponent]		= std::bind(&CInspectorWindow::InspectTransform2DComponent, this);
 		InspectionFunctions[EComponentType::SpriteAnimatorGraphComponent] = std::bind(&CInspectorWindow::InspectSpriteAnimatorGraphComponent, this);
-		// AS: Ghosty Component is actually defined in another project -> Game Relevant for future Editor / Game Separation
+
 		// AS: Ghosty is a Game-project Component / System. The goal is to separate out any Game Component/Systems so they don't have to be added in Engine
 		InspectionFunctions[EComponentType::GhostyComponent]			= std::bind(&CInspectorWindow::InspectGhostyComponent, this);
 	}
@@ -146,7 +146,7 @@ namespace ImGui
 		if (Manager->GetIsFreeCamActive())
 			return;
 
-		CViewportWindow* viewportWindow = Manager->GetViewportWindow();
+		CViewportWindow* viewportWindow = Manager->GetEditorWindow<CViewportWindow>();
 		SVector2<F32> viewPortWindowDimensions = viewportWindow->GetRenderedSceneDimensions();
 		SVector2<F32> viewPortWindowPosition = viewportWindow->GetRenderedScenePosition();
 
@@ -481,7 +481,7 @@ namespace ImGui
 		Havtorn::SSpriteAnimatorGraphComponent& c = Scene->GetSpriteAnimatorGraphComponents()[SelectedEntityIndex];
 		if (ImGui::Button("Open Animator"))
 		{
-			Manager->GetAnimatorWindow()->Inspect(c);
+			Manager->GetEditorWindow<CSpriteAnimatorGraphNodeWindow>()->Inspect(c);
 		}
 	}
 
