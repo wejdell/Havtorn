@@ -17,7 +17,7 @@ namespace Havtorn
 #define SMATRIX_MIN_SCALE 0.001f
 
 	// Left-handed row-major
-	struct SMatrix 
+	struct HAVTORN_API SMatrix 
 	{	
 		union { __declspec(align(16)) F32 M[4][4]; F32 data[16];  };
 

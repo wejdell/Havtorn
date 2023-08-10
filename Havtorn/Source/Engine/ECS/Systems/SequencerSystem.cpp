@@ -7,18 +7,15 @@
 
 namespace Havtorn
 {
-	void SSequencerTransformKeyframe::Blend(const SSequencerTransformKeyframe& nextKeyframe, F32 blendParam)
+	void SSequencerTransformKeyframe::Blend(SSequencerKeyframe* nextKeyframe, F32 blendParam)
 	{
-		// NR: The decision to directly set versus blending should not be made inside 
-		// the Blend function, but a level higher
+		if (SSequencerTransformKeyframe* nextTransformKeyframe = dynamic_cast<SSequencerTransformKeyframe*>(nextKeyframe))
+		{
+			IntermediateMatrix = SMatrix::Interpolate(KeyframedMatrix, nextTransformKeyframe->KeyframedMatrix, blendParam);
+			return;
+		}
 
-		// TODO.NR: Try override virtual destructor in transformcomponent, see if inheritance solution works then
-
-		IntermediateComponent = SMatrix::Interpolate(KeyframedComponent, nextKeyframe.KeyframedComponent, blendParam);
-	}
-
-	CSequencerSystem::CSequencerSystem()
-	{
+		IntermediateMatrix = KeyframedMatrix;
 	}
 
 	void CSequencerSystem::Update(CScene* scene)
@@ -49,6 +46,9 @@ namespace Havtorn
 		// 
 		// There can be a lot of work done on previewing in the sequencer, the duration of the animation can be visualized, audio duration as well.
 
+		if (ShouldRecordNewKeyframes)
+			RecordNewKeyframes(scene);
+
 		Tick(scene);
 
 		if (Tracks.size() > 0)
@@ -63,27 +63,20 @@ namespace Havtorn
 		SSequencerEntityTrack& mainCameraTrack = Tracks.emplace_back(SSequencerEntityTrack{ mainCameraEntityGUID, {} });
 		SSequencerComponentTrack& mainCameraTransformTrack = mainCameraTrack.ComponentTracks.emplace_back(SSequencerComponentTrack{ EComponentType::TransformComponent, {}, {}, {} });
 
-		SSequencerTransformKeyframe firstKeyframe;
-		firstKeyframe.FrameNumber = 0;
-		//firstKeyframe.KeyframedComponent = transformComponents[mainCameraIndex];
-		firstKeyframe.KeyframedComponent = transformComponents[mainCameraIndex].Transform.GetMatrix();
+		//SSequencerTransformKeyframe* keyframes = new SSequencerTransformKeyframe[13513];
+
+		SSequencerTransformKeyframe* firstKeyframe = new SSequencerTransformKeyframe();
+		firstKeyframe->FrameNumber = 0;
+		firstKeyframe->KeyframedMatrix = transformComponents[mainCameraIndex].Transform.GetMatrix();
 
 		SMatrix finalMatrix;		
 		finalMatrix = transformComponents[mainCameraIndex].Transform.GetMatrix();
 		finalMatrix.SetRotation({ 30.0f, -75.0f, 0.0f });
 		finalMatrix.SetTranslation({ 3.0f, 2.0f, -1.0f });
-		//STransformComponent finalTransformComponent;
-		//finalTransformComponent.Transform.SetMatrix(finalMatrix);
 
-		SSequencerTransformKeyframe lastKeyframe;
-		lastKeyframe.FrameNumber = 60;
-		//lastKeyframe.KeyframedComponent = finalTransformComponent;
-		lastKeyframe.KeyframedComponent = finalMatrix;
-
-		//mainCameraTransformTrack.Keyframes.push_back(new SSequencerTransformKeyframe{firstKeyframe});
-		//mainCameraTransformTrack.Keyframes.push_back(new SSequencerTransformKeyframe{lastKeyframe});
-		//*(mainCameraTransformTrack.Keyframes[0]) = firstKeyframe;
-		//*(mainCameraTransformTrack.Keyframes[1]) = lastKeyframe;
+		SSequencerTransformKeyframe* lastKeyframe = new SSequencerTransformKeyframe();
+		lastKeyframe->FrameNumber = 60;
+		lastKeyframe->KeyframedMatrix = finalMatrix;
 
 		mainCameraTransformTrack.Keyframes.push_back(firstKeyframe);
 		mainCameraTransformTrack.Keyframes.push_back(lastKeyframe);
@@ -97,6 +90,46 @@ namespace Havtorn
 	SSequencerContextData CSequencerSystem::GetSequencerContextData() const
 	{
 		return Data;
+	}
+
+	// NR: Don't want to couple this system more to specific keyframe implementations. Create recorded data outside this class
+	void CSequencerSystem::RecordNewKeyframes(CScene* scene)
+	{
+		ShouldRecordNewKeyframes = false;
+
+		for (SSequencerEntityTrack& entityTrack : Tracks)
+		{
+			for (SSequencerComponentTrack& componentTrack : entityTrack.ComponentTracks)
+			{
+				U16 numberOfKeyframes = static_cast<U16>(componentTrack.Keyframes.size());
+
+				for (U16 index = 0; index < numberOfKeyframes; index++)
+				{
+					SSequencerKeyframe* keyframe = componentTrack.Keyframes[index];
+					if (!keyframe->ShouldRecord)
+						continue;
+
+					keyframe->ShouldRecord = false;
+
+					U64 sceneIndex = scene->GetSceneIndex(entityTrack.EntityGUID);
+
+					switch (componentTrack.ComponentType)
+					{
+					case EComponentType::TransformComponent:
+					{
+						SSequencerTransformKeyframe* transformKeyframe = static_cast<SSequencerTransformKeyframe*>(keyframe);
+
+						STransformComponent& transformComponent = scene->GetTransformComponents()[sceneIndex];
+						transformKeyframe->KeyframedMatrix = transformComponent.Transform.GetMatrix();
+					}
+					break;
+
+					default:
+						break;
+					}
+				}
+			}
+		}
 	}
 
 	void CSequencerSystem::Tick(CScene* scene)
@@ -114,6 +147,7 @@ namespace Havtorn
 			
 			Data.CurrentFrame = Data.IsLooping ? (1 + Data.CurrentFrame) % (1 + Data.MaxFrames) : UMath::Min(1 + Data.CurrentFrame, Data.MaxFrames);
 				
+			// TODO.NR: Should ideally be called after track logic has been updated, but only once
 			if (!Data.IsLooping && Data.CurrentFrame == Data.MaxFrames)
 				OnSequenceFinished();
 		}
@@ -131,21 +165,27 @@ namespace Havtorn
 				U16 numberOfKeyframes = static_cast<U16>(componentTrack.Keyframes.size());
 				componentTrack.TrackState = ESequencerComponentTrackState::Waiting;
 
-				for (U16 index = 0; index < numberOfKeyframes; index++)
-				{
-					SSequencerTransformKeyframe keyframe = componentTrack.Keyframes[index];
+				// Start iterating from the start if we haven't yet or if we've have reached the end
+				if (componentTrack.CurrentKeyframeIndex == -1 || componentTrack.CurrentKeyframeIndex >= numberOfKeyframes - 1)
+					componentTrack.CurrentKeyframeIndex = 0;
 
-					if (keyframe.FrameNumber <= Data.CurrentFrame && (index + 1) < numberOfKeyframes && componentTrack.Keyframes[index + 1].FrameNumber > Data.CurrentFrame)
+				for (U16 index = static_cast<U16>(componentTrack.CurrentKeyframeIndex); index < numberOfKeyframes; index++)
+				{
+					componentTrack.CurrentKeyframeIndex = index;
+					SSequencerKeyframe& keyframe = *componentTrack.Keyframes[index];
+
+					if (keyframe.FrameNumber <= Data.CurrentFrame && (index + 1) < numberOfKeyframes && (*componentTrack.Keyframes[index + 1]).FrameNumber > Data.CurrentFrame)
 					{
 						componentTrack.CurrentKeyframe = componentTrack.Keyframes[index];
 						componentTrack.NextKeyframe = componentTrack.Keyframes[index + 1];
 						componentTrack.TrackState = ESequencerComponentTrackState::Blending;
 						break;
 					}
-					else if (keyframe.FrameNumber <= Data.CurrentFrame && (index + 1) >= numberOfKeyframes) // Reached left side of last keyframe
+					// Reached left side of last keyframe
+					else if (keyframe.FrameNumber <= Data.CurrentFrame && (index + 1) >= numberOfKeyframes) 
 					{
 						componentTrack.CurrentKeyframe = componentTrack.Keyframes[index];
-						componentTrack.NextKeyframe = componentTrack.Keyframes[index];
+						componentTrack.NextKeyframe = nullptr;
 						componentTrack.TrackState = ESequencerComponentTrackState::Setting;
 						break;
 					}
@@ -155,44 +195,42 @@ namespace Havtorn
 				if (componentTrack.TrackState == ESequencerComponentTrackState::Waiting)
 					break;
 
-				// Set Result
-				U64 sceneIndex = scene->GetSceneIndex(entityTrack.EntityGUID);
-
-				switch (componentTrack.ComponentType)
+				// Only blend if both keyframes are set
+				if (componentTrack.TrackState == ESequencerComponentTrackState::Blending)
 				{
-				case EComponentType::TransformComponent:
+					F32 blendParam = UMath::Remap(static_cast<F32>(componentTrack.CurrentKeyframe->FrameNumber), static_cast<F32>(componentTrack.NextKeyframe->FrameNumber), 0.0f, 1.0f, static_cast<F32>(Data.CurrentFrame));
+					componentTrack.CurrentKeyframe->Blend(componentTrack.NextKeyframe, blendParam);
+				}
+				else if (componentTrack.TrackState == ESequencerComponentTrackState::Setting)
 				{
-					//SSequencerTransformKeyframe* transformKeyframe = reinterpret_cast<SSequencerTransformKeyframe*>(componentTrack.CurrentKeyframe);
-					//SSequencerTransformKeyframe* nextTransformKeyframe = reinterpret_cast<SSequencerTransformKeyframe*>(componentTrack.NextKeyframe);
-
-					SSequencerTransformKeyframe transformKeyframe = componentTrack.CurrentKeyframe;
-					SSequencerTransformKeyframe nextTransformKeyframe = componentTrack.NextKeyframe;
-
-					//if (transformKeyframe == nullptr || nextTransformKeyframe == nullptr)
-					//	break;
-
-					// Only blend if both keyframes are set
-					if (componentTrack.TrackState == ESequencerComponentTrackState::Blending)
-					{
-						F32 blendParam = UMath::Remap(static_cast<F32>(transformKeyframe.FrameNumber), static_cast<F32>(nextTransformKeyframe.FrameNumber), 0.0f, 1.0f, static_cast<F32>(Data.CurrentFrame));
-						//componentTrack.CurrentKeyframe.Blend(&componentTrack.NextKeyframe, blendParam);
-						HV_LOG_DEBUG("Blend Param: %f", blendParam);
-						transformKeyframe.Blend(nextTransformKeyframe, blendParam);
-					}
-					else if (componentTrack.TrackState == ESequencerComponentTrackState::Setting)
-					{
-						transformKeyframe.IntermediateComponent = transformKeyframe.KeyframedComponent;
-					}
-
-					STransformComponent& transformComponent = scene->GetTransformComponents()[sceneIndex];
-					//transformComponent.Transform.SetMatrix(transformKeyframe.IntermediateComponent.Transform.GetMatrix());
-					transformComponent.Transform.SetMatrix(transformKeyframe.IntermediateComponent);
+					componentTrack.CurrentKeyframe->Blend(nullptr, 0.0f);
 				}
-					break;
-				default:
-					break;
-				}
+
+				SetKeyframeDataOnEntity(scene, entityTrack, componentTrack);
 			}
+		}
+	}
+
+	void CSequencerSystem::SetKeyframeDataOnEntity(CScene* scene, const SSequencerEntityTrack& entityTrack, const SSequencerComponentTrack& componentTrack)
+	{
+		// TODO.NR: This should perhaps be done once per frame instead of once per componentTrack, looping through the tracks 
+		// again but only accessing the scene data once?
+
+		U64 sceneIndex = scene->GetSceneIndex(entityTrack.EntityGUID);
+
+		switch (componentTrack.ComponentType)
+		{
+			case EComponentType::TransformComponent:
+			{
+				SSequencerTransformKeyframe* transformKeyframe = static_cast<SSequencerTransformKeyframe*>(componentTrack.CurrentKeyframe);
+
+				STransformComponent& transformComponent = scene->GetTransformComponents()[sceneIndex];
+				transformComponent.Transform.SetMatrix(transformKeyframe->IntermediateMatrix);
+			}
+			break;
+
+			default:
+			break;
 		}
 	}
 
