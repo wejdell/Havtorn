@@ -368,7 +368,6 @@ namespace Havtorn
 		EditorLayout.HierarchyViewSize = { static_cast<U16>(viewportPosX), static_cast<U16>(resolution.Y - sizeOffsetY) };
 		EditorLayout.InspectorPosition = { static_cast<I16>(resolution.X - static_cast<F32>(viewportPosX)), viewportPosY };
 		EditorLayout.InspectorSize = { static_cast<U16>(viewportPosX), static_cast<U16>(resolution.Y - sizeOffsetY) };
-		EditorLayout.SpriteAnimatorGraphNodeSize = { viewportSizeX, static_cast<U16>(resolution.Y - static_cast<F32>(viewportSizeY) - sizeOffsetY) };
 	}
 
 	void CEditorManager::InitAssetRepresentations()

@@ -27,7 +27,7 @@ namespace Havtorn
 		HAVTORN_API CAssetRegistry* GetAssetRegistry() const;
 		HAVTORN_API void RegisterSystem(Ptr<ISystem> system);
 
-		template<typename TSystem>
+		template<class TSystem>
 		inline TSystem* GetSystem();
 
 	private:
@@ -46,14 +46,14 @@ namespace Havtorn
 		CRenderManager* RenderManager = nullptr;
 	};
 
-	template<typename TSystem>
+	template<class TSystem>
 	inline TSystem* CWorld::GetSystem()
 	{
-		U64 hashCode = typeid(TSystem).hash_code();
+		U64 targetHashCode = typeid(TSystem).hash_code();
 		for (U32 i = 0; i < Systems.size(); i++)
 		{
-			U64 systemHashCode = typeid(*Systems[i].get()).hash_code();
-			if (systemHashCode == hashCode)
+			U64 hashCode = typeid(*Systems[i].get()).hash_code();
+			if (hashCode == targetHashCode)
 				return static_cast<TSystem*>(Systems[i].get());
 		}
 		return nullptr;

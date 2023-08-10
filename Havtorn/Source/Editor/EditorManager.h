@@ -16,8 +16,6 @@ namespace ImGui
 {
 	class CWindow;
 	class CToggleable;
-	class CViewportWindow;
-	class CSpriteAnimatorGraphNodeWindow;
 }
 
 namespace Havtorn
@@ -63,7 +61,6 @@ namespace Havtorn
 		SVector2<U16> HierarchyViewSize		= SVector2<U16>::Zero;
 		SVector2<I16> InspectorPosition		= SVector2<I16>::Zero;
 		SVector2<U16> InspectorSize			= SVector2<U16>::Zero;
-		SVector2<U16> SpriteAnimatorGraphNodeSize = SVector2<U16>::Zero;
 	};
 
 	struct SEditorAssetRepresentation
@@ -112,7 +109,7 @@ namespace Havtorn
 	
 		// AS: We're returning at ' T* const ' In contrast to ' const T* ' 
 		// This means that the Pointer itself is Const, meaning the user cannot re-point it to something else.
-		template<typename TEditorWindowType>
+		template<class TEditorWindowType>
 		inline TEditorWindowType* const GetEditorWindow() const;
 
 		[[nodiscard]] const CRenderManager* GetRenderManager() const;
@@ -158,14 +155,14 @@ namespace Havtorn
 		bool IsFreeCamActive = false;
 	};
 
-	template<typename TEditorWindowType>
+	template<class TEditorWindowType>
 	inline TEditorWindowType* const CEditorManager::GetEditorWindow() const
 	{
-		U64 targetEditorWindowTypeHashCode = typeid(TEditorWindowType).hash_code();
+		U64 targetHashCode = typeid(TEditorWindowType).hash_code();
 		for (U32 i = 0; i < Windows.size(); i++)
 		{
-			U64 editorWindowTypeHashCode = typeid(*Windows[i].get()).hash_code();
-			if (editorWindowTypeHashCode == targetEditorWindowTypeHashCode)
+			U64 hashCode = typeid(*Windows[i].get()).hash_code();
+			if (hashCode == targetHashCode)
 				return static_cast<TEditorWindowType*>(Windows[i].get());
 		}
 		return nullptr;
