@@ -14,6 +14,14 @@ namespace Havtorn
 	struct SSpriteAnimatorGraphComponent;
 	struct SSpriteAnimationClip
 	{
+		SSpriteAnimationClip() = default;
+		SSpriteAnimationClip(const std::vector<SVector4>& uvRects, const std::vector<float>& durations, const bool isLooping)
+			: UVRects(uvRects)
+			, Durations(durations)
+			, IsLooping(isLooping)
+		{
+		}
+
 		std::vector<SVector4> UVRects;
 		std::vector<float> Durations;
 		bool IsLooping = false;
