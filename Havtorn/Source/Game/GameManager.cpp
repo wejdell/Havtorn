@@ -3,6 +3,9 @@
 // Copyright 2023 Team Havtorn. All Rights Reserved.
 
 #include "GameManager.h"
+#include "Ghosty\GhostySystem.h"
+
+#include <Engine.h>
 
 namespace Havtorn
 {
@@ -21,6 +24,8 @@ namespace Havtorn
 	bool CGameManager::Init()
 	{
 		HV_LOG_INFO("GameManager Initialized.");
+		GEngine::GetWorld()->RegisterSystem(std::make_unique<Havtorn::CGhostySystem>());
+
 		return true;
 	}
 

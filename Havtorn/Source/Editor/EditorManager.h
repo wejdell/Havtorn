@@ -16,7 +16,6 @@ namespace ImGui
 {
 	class CWindow;
 	class CToggleable;
-	class CViewportWindow;
 }
 
 namespace Havtorn
@@ -109,7 +108,10 @@ namespace Havtorn
 		[[nodiscard]] F32 GetViewportPadding() const;
 		void SetViewportPadding(const F32 padding);
 	
-		ImGui::CViewportWindow* GetViewportWindow() const;
+		// AS: We're returning at ' T* const ' In contrast to ' const T* ' 
+		// This means that the Pointer itself is Const, meaning the user cannot re-point it to something else.
+		template<class TEditorWindowType>
+		inline TEditorWindowType* const GetEditorWindow() const;
 
 		[[nodiscard]] const CRenderManager* GetRenderManager() const;
 		[[nodiscard]] const CEditorResourceManager* GetResourceManager() const;
@@ -153,4 +155,17 @@ namespace Havtorn
 		bool IsDemoOpen = false;
 		bool IsFreeCamActive = false;
 	};
+
+	template<class TEditorWindowType>
+	inline TEditorWindowType* const CEditorManager::GetEditorWindow() const
+	{
+		U64 targetHashCode = typeid(TEditorWindowType).hash_code();
+		for (U32 i = 0; i < Windows.size(); i++)
+		{
+			U64 hashCode = typeid(*Windows[i].get()).hash_code();
+			if (hashCode == targetHashCode)
+				return static_cast<TEditorWindowType*>(Windows[i].get());
+		}
+		return nullptr;
+	}
 }

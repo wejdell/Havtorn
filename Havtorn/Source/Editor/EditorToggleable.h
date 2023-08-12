@@ -22,7 +22,7 @@ namespace ImGui
 	public:
 		[[nodiscard]] inline const char* Name() const { return DisplayName; }
 		inline void Enable(const bool enable) { IsEnabled = enable; }
-		[[nodiscard]] inline bool Enable() const { return IsEnabled; }
+		[[nodiscard]] inline bool GetEnabled() const { return IsEnabled; }
 
 	protected:
 		bool* Open() { return &IsEnabled; }

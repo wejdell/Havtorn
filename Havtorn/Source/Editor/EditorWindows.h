@@ -7,6 +7,7 @@
 #include "Windows/HierarchyWindow.h"
 #include "Windows/InspectorWindow.h"
 #include "Windows/SequencerWindow.h"
+#include "Windows/SpriteAnimatorGraphNodeWindow.h"
 //#include "LoadScene.h"
 //#include "CameraSetting.h"
 //#include "VFXEditorWindow.h"

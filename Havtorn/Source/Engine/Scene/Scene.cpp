@@ -28,6 +28,8 @@ namespace Havtorn
 		DecalComponents.resize(ENTITY_LIMIT);
 		SpriteComponents.resize(ENTITY_LIMIT);
 		Transform2DComponents.resize(ENTITY_LIMIT);
+		SpriteAnimatorGraphComponents.resize(ENTITY_LIMIT);
+		GhostyComponents.resize(ENTITY_LIMIT);
 		DebugShapeComponents.resize(ENTITY_LIMIT);
 		MetaDataComponents.resize(ENTITY_LIMIT);
 	}
@@ -49,6 +51,8 @@ namespace Havtorn
 		DecalComponents.clear();
 		SpriteComponents.clear();
 		Transform2DComponents.clear();
+		SpriteAnimatorGraphComponents.clear();
+		GhostyComponents.clear();
 		DebugShapeComponents.clear();
 		MetaDataComponents.clear();
 		RenderManager = nullptr;
@@ -124,7 +128,7 @@ namespace Havtorn
 		pointLightMatrix.SetTranslation({ 1.25f, 0.35f, -1.65f });
 		pointLightTransform.Transform.SetMatrix(pointLightMatrix);
 
-		
+
 		SPointLightComponent& pointLightComp = AddPointLightComponentToEntity(*pointLightEntity);
 		pointLightComp.ColorAndIntensity = { 0.0f, 1.0f, 1.0f, 10.0f };
 		pointLightComp.Range = 1.0f;
@@ -385,7 +389,7 @@ namespace Havtorn
 			matrix3.SetTranslation(translations[i]);
 			matrix3.SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundX(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundY(UMath::DegToRad(-90.0f)));
 			transform3.SetMatrix(matrix3);
-			
+
 			renderManager->LoadStaticMeshComponent(modelPath3, &AddStaticMeshComponentToEntity(*floor));
 			renderManager->LoadMaterialComponent(materialNames3, &AddMaterialComponentToEntity(*floor));
 
@@ -396,6 +400,24 @@ namespace Havtorn
 		// === !Other Wall ===
 
 		return true;
+	}
+
+	std::vector<SVector4> CreateAnimationClip(const F32 width, const F32 height, const F32 frameSize, const U32 row, const U32 column, const U32 frameCount)
+	{
+		std::vector<SVector4> uvRects;
+		F32 normalizedFrameSize = frameSize / width;
+
+		for (U32 i = 0; i < frameCount; i++)
+		{
+			F32 x = (column + i) * normalizedFrameSize;
+			F32 y = row * (frameSize / height);
+			F32 z = x + normalizedFrameSize;
+			F32 w = y + (frameSize / height);
+
+			uvRects.push_back(SVector4{ x, y, z, w });
+		}
+
+		return uvRects;
 	}
 
 	bool CScene::Init2DDemoScene(CRenderManager* renderManager)
@@ -412,8 +434,8 @@ namespace Havtorn
 
 		// Setup entities (create components)
 		STransformComponent& transform = AddTransformComponentToEntity(*cameraEntity);
-		transform.Transform.Translate({ 2.0f, 1.0f, -3.0f });
-		transform.Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
+		transform.Transform.Translate({ 0.0f, 1.0f, -5.0f });
+		//transform.Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
 		transform.Transform.Translate(SVector::Right * 0.25f);
 
 		SCameraComponent& camera = AddCameraComponentToEntity(*cameraEntity);
@@ -422,8 +444,9 @@ namespace Havtorn
 		//camera.ProjectionMatrix = SMatrix::OrthographicLH(5.0f, 5.0f, 0.1f, 1000.0f);
 		camera.ViewMatrix = SMatrix::LookAtLH(SVector::Zero, SVector::Forward, SVector::Up);
 
-		SCameraControllerComponent& controllerComp = AddCameraControllerComponentToEntity(*cameraEntity);
-		controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
+		//		SCameraControllerComponent& controllerComp = 
+		AddCameraControllerComponentToEntity(*cameraEntity);
+		//controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
 		// === !Camera ===
 
 		// === Environment light ===
@@ -484,102 +507,86 @@ namespace Havtorn
 		spotlightComp.ShadowmapView.ShadowProjectionMatrix = spotlightProjection;
 		// === !Spotlight ===
 
-		// === Screen Space Sprite ===
-		//{
-		//	SEntity* spriteSS = GetNewEntity("SpriteSS");
-		//	if (!spriteSS)
-		//		return true;
-
-		//	STransform2DComponent& transform2D = AddTransform2DComponentToEntity(*spriteSS);
-		//	transform2D.Position = { 0.0f, 0.0f };
-		//	transform2D.Scale = { 1.0f, 2.0f };
-		//	transform2D.DegreesRoll = 90.0f;
-
-		//	const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
-		//	SSpriteComponent& spriteComp = AddSpriteComponentToEntity(*spriteSS);
-		//	spriteComp.UVRect = { 0.0f, 0.0f, 2.0f, 2.0f };
-		//	spriteComp.Color = SVector4(0.0f, 0.0f, 1.0f, 1.0f);
-		//	renderManager->LoadSpriteComponent(spritePath, &spriteComp);
-
-		//	U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteSS));
-		//	assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
-		//}
-
 		{
-			SEntity* spriteSS = GetNewEntity("SpriteSS");
-			if (!spriteSS)
+			SEntity* ghosty = GetNewEntity("Ghosty");
+			if (!ghosty)
 				return true;
+			STransformComponent& spriteWStransform = AddTransformComponentToEntity(*ghosty);
+			SSpriteComponent& spriteWSComp = AddSpriteComponentToEntity(*ghosty);
+			AddGhostyComponentToEntity(*ghosty);
 
-			STransform2DComponent& transform2D = AddTransform2DComponentToEntity(*spriteSS);
-			transform2D.Position = { 0.5f, 0.5f };
-			transform2D.Scale = { 1.0f, 1.0f };
-			transform2D.DegreesRoll = 0.0f;
+			spriteWStransform.Transform.Move({ 0.0f, 0.0f, 0.0f });
+			//F32 radians = UMath::DegToRad(45.0f);
+			//spriteWStransform.Transform.Rotate({ radians, radians, radians });
 
-			const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
-			SSpriteComponent& spriteComp = AddSpriteComponentToEntity(*spriteSS);
-			spriteComp.UVRect = { 0.0f, 0.0f, 1.0f, 1.0f };
-			spriteComp.Color = SVector4(1.0f, 1.0f, 1.0f, 1.0f);
-			renderManager->LoadSpriteComponent(spritePath, &spriteComp);
-
-			U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteSS));
-			assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
-		}
-
-		//{
-		//	SEntity* spriteSS = GetNewEntity("SpriteSS");
-		//	if (!spriteSS)
-		//		return true;
-
-		//	STransform2DComponent& transform2D = AddTransform2DComponentToEntity(*spriteSS);
-		//	transform2D.Position = { 1.0f, 1.0f };
-		//	transform2D.Scale = { 2.0f, 1.0f };
-		//	transform2D.DegreesRoll = -90.0f;
-
-		//	const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
-		//	SSpriteComponent& spriteComp = AddSpriteComponentToEntity(*spriteSS);
-		//	spriteComp.UVRect = { 0.0f, 0.0f, 0.5f, 0.5f };
-		//	spriteComp.Color = SVector4(1.0f, 1.0f, 1.0f, 1.0f);
-		//	renderManager->LoadSpriteComponent(spritePath, &spriteComp);
-
-		//	U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteSS));
-		//	assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
-		//}
-		// === !Sprite ===
-
-		//// === World Space Sprite ===
-		//{
-		//	SEntity* spriteWS = GetNewEntity("SpriteWS");
-		//	if (!spriteWS)
-		//		return true;
-
-		//	STransformComponent& spriteWStransform = AddTransformComponentToEntity(*spriteWS);
-		//	spriteWStransform.Transform.Move({ 0.0f, 0.0f, 2.0f });
-
-		//	const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
-		//	SSpriteComponent& spriteWSComp = AddSpriteComponentToEntity(*spriteWS);
-		//	spriteWSComp.UVRect = { 0.0f, 0.0f, 1.0f, 1.0f };
-		//	renderManager->LoadSpriteComponent(spritePath, &spriteWSComp);
-
-		//	U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteWS));
-		//	assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
-		//}
-
-		{
-			SEntity* spriteWS = GetNewEntity("SpriteWS");
-			if (!spriteWS)
-				return true;
-
-			STransformComponent& spriteWStransform = AddTransformComponentToEntity(*spriteWS);
-			spriteWStransform.Transform.Move({ 2.0f, 0.0f, 0.0f });
-			F32 radians = UMath::DegToRad(45.0f);
-			spriteWStransform.Transform.Rotate({ radians, radians, radians });
-
-			const std::string& spritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
-			SSpriteComponent& spriteWSComp = AddSpriteComponentToEntity(*spriteWS);
-			spriteWSComp.UVRect = { 0.0f, 0.0f, 0.5f, 0.5f };
+			const std::string spritePath = "Assets/Textures/EllahSpriteSheet.hva";
+			spriteWSComp.UVRect = { 0.0f, 0.0f, 0.125f, 0.125f };
 			renderManager->LoadSpriteComponent(spritePath, &spriteWSComp);
 
-			U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteWS));
+			//Define UVRects for Animation Frames on row 0, 1, 2
+			//F32 size = 32.0f / 256.0f;
+			F32 width = 1152.0f;
+			F32 height = 384.0f;
+			F32 frameSize = 96.0f;
+			std::vector<SVector4> uvRectsIdle = CreateAnimationClip(width, height, frameSize, 3, 6, 6);
+			std::vector<SVector4> uvRectsMoveLeft = CreateAnimationClip(width, height, frameSize, 0, 0, 6);
+			std::vector<SVector4> uvRectsMoveRight = CreateAnimationClip(width, height, frameSize, 1, 0, 6);
+			//std::vector<SVector4> uvRectsIdle = {
+			//	SVector4{ 0.0f,		0.0f,		size,			size },
+			//	SVector4{ size,		0.0f,		size * 2,		size },
+			//};
+			//std::vector<SVector4> uvRectsMoveLeft = {
+			//	SVector4{ 0.0f,		size,		size,		size * 2 },
+			//	SVector4{ size,		size,		size * 2,	size * 2 },
+			//	SVector4{ size * 2, size,		size * 3,	size * 2 },
+			//	//SVector4{ size * 3, size,		size * 4,	size * 2 },
+			//};
+			//std::vector<SVector4> uvRectsMoveRight = {
+			//	SVector4{ 0.0f,		size * 2,	size,		size * 3 },
+			//	SVector4{ size,		size * 2,	size * 2,	size * 3 },
+			//	SVector4{ size * 2, size * 2,	size * 3,	size * 3 },
+			//	
+			//	//SVector4{ size * 3, size * 2,	size * 4,	size * 3 },
+			//};
+
+			SSpriteAnimationClip idle;
+			idle.UVRects = uvRectsIdle;
+			idle.Durations.push_back(0.15f);
+			idle.Durations.push_back(0.15f);
+
+			SSpriteAnimationClip moveLeft;
+			moveLeft.UVRects = uvRectsMoveLeft;
+			moveLeft.Durations.push_back(0.15f);
+			moveLeft.Durations.push_back(0.15f);
+			moveLeft.Durations.push_back(0.15f);
+
+
+			SSpriteAnimationClip moveRight
+			{
+				uvRectsMoveRight, //UVRects
+				{ 0.15f, 0.15f, 0.15f }, //Duration per Frame
+				true	//IsLooping
+			};
+
+			//moveRight.UVRects = uvRectsMoveRight;
+			//moveRight.Durations.push_back(0.15f);
+			//moveRight.Durations.push_back(0.15f);
+			//moveRight.Durations.push_back(0.15f);
+
+			CGhostySystem* ghostySystem = GEngine::GetWorld()->GetSystem<CGhostySystem>();
+			SSpriteAnimatorGraphComponent& spriteAnimatorGraphComponent = AddSpriteAnimatorGraphComponentToEntity(*ghosty);
+
+			SSpriteAnimatorGraphNode& rootNode = spriteAnimatorGraphComponent.SetRoot(std::string("Idle | Locomotion"), ghostySystem->EvaluateIdleFunc);
+			rootNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Idle"), idle);
+
+			SSpriteAnimatorGraphNode& locomotionNode = rootNode.AddSwitchNode(std::string("Locomotion: Left | Right"), ghostySystem->EvaluateLocomotionFunc);
+			locomotionNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Move Left"), moveLeft);
+			locomotionNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Move Right"), moveRight);
+
+
+
+
+			U16 spriteIndex = static_cast<U16>(GetSceneIndex(*ghosty));
 			assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
 		}
 
@@ -672,10 +679,10 @@ namespace Havtorn
 			SerializeSimple(entity.GUID, toData, pointerPosition);
 
 			SerializeSimple(entity.GetComponentMask(), toData, pointerPosition);
-			U64 entitySceneIndex = GetSceneIndex(entity); 
+			U64 entitySceneIndex = GetSceneIndex(entity);
 
 			if (entity.HasComponent(EComponentType::TransformComponent))
-			{		
+			{
 				SerializeSimple(TransformComponents[entitySceneIndex], toData, pointerPosition);
 			}
 
@@ -693,7 +700,7 @@ namespace Havtorn
 			{
 				SerializeSimple(CameraControllerComponents[entitySceneIndex], toData, pointerPosition);
 			}
-			
+
 			if (entity.HasComponent(EComponentType::MaterialComponent))
 			{
 				// Saved and Loaded using AssetRegistry
@@ -723,7 +730,7 @@ namespace Havtorn
 			{
 				SerializeSimple(VolumetricLightComponents[entitySceneIndex], toData, pointerPosition);
 			}
-				
+
 			if (entity.HasComponent(EComponentType::DecalComponent))
 			{
 				// NR: Texture info Saved and Loaded using AssetRegistry
@@ -782,7 +789,7 @@ namespace Havtorn
 			}
 
 			if (componentMask.Test(STATIC_U64(EComponentType::CameraComponent)))
-			{				
+			{
 				SCameraComponent& camera = AddCameraComponentToEntity(*entity);
 				SCameraComponent dataCopy;
 				DeserializeSimple(dataCopy, fromData, pointerPosition);
@@ -888,9 +895,9 @@ namespace Havtorn
 		return SceneName.AsString();
 	}
 
-	std::vector<SEntity>& CScene::GetEntities() 
+	std::vector<SEntity>& CScene::GetEntities()
 	{
-		return Entities; 
+		return Entities;
 	}
 
 	SEntity* CScene::GetNewEntity(U64 guid)
@@ -961,6 +968,7 @@ namespace Havtorn
 		UpdateComponentVector(DecalComponents, entityIndex);
 		UpdateComponentVector(SpriteComponents, entityIndex);
 		UpdateComponentVector(Transform2DComponents, entityIndex);
+		UpdateComponentVector(SpriteAnimatorGraphComponents, entityIndex);
 		UpdateComponentVector(DebugShapeComponents, entityIndex);
 		UpdateComponentVector(MetaDataComponents, entityIndex);
 
@@ -1033,9 +1041,12 @@ namespace Havtorn
 		case Havtorn::EComponentType::Transform2DComponent:
 			AddTransform2DComponentToEntity(entity);
 			break;
+		case Havtorn::EComponentType::SpriteAnimatorGraphComponent:
+			AddSpriteAnimatorGraphComponentToEntity(entity);
+			break;
 
 		case Havtorn::EComponentType::DebugShapeComponent:
-		case Havtorn::EComponentType::MetaDataComponent:	
+		case Havtorn::EComponentType::MetaDataComponent:
 		case Havtorn::EComponentType::Count:
 		default:
 			break;
@@ -1085,6 +1096,9 @@ namespace Havtorn
 		case Havtorn::EComponentType::Transform2DComponent:
 			RemoveTransform2DComponentFromEntity(entity);
 			break;
+		case Havtorn::EComponentType::SpriteAnimatorGraphComponent:
+			RemoveSpriteAnimatorGraphComponentFromEntity(entity);
+			break;
 
 		case Havtorn::EComponentType::DebugShapeComponent:
 		case Havtorn::EComponentType::MetaDataComponent:
@@ -1095,34 +1109,38 @@ namespace Havtorn
 	}
 
 	COMPONENT_ADDER_DEFINITION(TransformComponent)
-	COMPONENT_ADDER_DEFINITION(StaticMeshComponent)
-	COMPONENT_ADDER_DEFINITION(CameraComponent)
-	COMPONENT_ADDER_DEFINITION(CameraControllerComponent)
-	COMPONENT_ADDER_DEFINITION(MaterialComponent)
-	COMPONENT_ADDER_DEFINITION(EnvironmentLightComponent)
-	COMPONENT_ADDER_DEFINITION(DirectionalLightComponent)
-	COMPONENT_ADDER_DEFINITION(PointLightComponent)
-	COMPONENT_ADDER_DEFINITION(SpotLightComponent)
-	COMPONENT_ADDER_DEFINITION(VolumetricLightComponent)
-	COMPONENT_ADDER_DEFINITION(DecalComponent)
-	COMPONENT_ADDER_DEFINITION(SpriteComponent) 
-	COMPONENT_ADDER_DEFINITION(Transform2DComponent)
+		COMPONENT_ADDER_DEFINITION(StaticMeshComponent)
+		COMPONENT_ADDER_DEFINITION(CameraComponent)
+		COMPONENT_ADDER_DEFINITION(CameraControllerComponent)
+		COMPONENT_ADDER_DEFINITION(MaterialComponent)
+		COMPONENT_ADDER_DEFINITION(EnvironmentLightComponent)
+		COMPONENT_ADDER_DEFINITION(DirectionalLightComponent)
+		COMPONENT_ADDER_DEFINITION(PointLightComponent)
+		COMPONENT_ADDER_DEFINITION(SpotLightComponent)
+		COMPONENT_ADDER_DEFINITION(VolumetricLightComponent)
+		COMPONENT_ADDER_DEFINITION(DecalComponent)
+		COMPONENT_ADDER_DEFINITION(SpriteComponent)
+		COMPONENT_ADDER_DEFINITION(Transform2DComponent)
+		COMPONENT_ADDER_DEFINITION(SpriteAnimatorGraphComponent)
+		COMPONENT_ADDER_DEFINITION(GhostyComponent);
 	COMPONENT_ADDER_DEFINITION(DebugShapeComponent)
-	COMPONENT_ADDER_DEFINITION(MetaDataComponent)
+		COMPONENT_ADDER_DEFINITION(MetaDataComponent)
 
-	COMPONENT_REMOVER_DEFINITION(TransformComponent)
-	COMPONENT_REMOVER_DEFINITION(StaticMeshComponent)
-	COMPONENT_REMOVER_DEFINITION(CameraComponent)
-	COMPONENT_REMOVER_DEFINITION(CameraControllerComponent)
-	COMPONENT_REMOVER_DEFINITION(MaterialComponent)
-	COMPONENT_REMOVER_DEFINITION(EnvironmentLightComponent)
-	COMPONENT_REMOVER_DEFINITION(DirectionalLightComponent)
-	COMPONENT_REMOVER_DEFINITION(PointLightComponent)
-	COMPONENT_REMOVER_DEFINITION(SpotLightComponent)
-	COMPONENT_REMOVER_DEFINITION(VolumetricLightComponent)
-	COMPONENT_REMOVER_DEFINITION(DecalComponent)
-	COMPONENT_REMOVER_DEFINITION(SpriteComponent)
-	COMPONENT_REMOVER_DEFINITION(Transform2DComponent)
-	COMPONENT_REMOVER_DEFINITION(DebugShapeComponent)
-	COMPONENT_REMOVER_DEFINITION(MetaDataComponent)
+		COMPONENT_REMOVER_DEFINITION(TransformComponent)
+		COMPONENT_REMOVER_DEFINITION(StaticMeshComponent)
+		COMPONENT_REMOVER_DEFINITION(CameraComponent)
+		COMPONENT_REMOVER_DEFINITION(CameraControllerComponent)
+		COMPONENT_REMOVER_DEFINITION(MaterialComponent)
+		COMPONENT_REMOVER_DEFINITION(EnvironmentLightComponent)
+		COMPONENT_REMOVER_DEFINITION(DirectionalLightComponent)
+		COMPONENT_REMOVER_DEFINITION(PointLightComponent)
+		COMPONENT_REMOVER_DEFINITION(SpotLightComponent)
+		COMPONENT_REMOVER_DEFINITION(VolumetricLightComponent)
+		COMPONENT_REMOVER_DEFINITION(DecalComponent)
+		COMPONENT_REMOVER_DEFINITION(SpriteComponent)
+		COMPONENT_REMOVER_DEFINITION(Transform2DComponent)
+		COMPONENT_REMOVER_DEFINITION(SpriteAnimatorGraphComponent)
+		COMPONENT_REMOVER_DEFINITION(GhostyComponent)
+		COMPONENT_REMOVER_DEFINITION(DebugShapeComponent)
+		COMPONENT_REMOVER_DEFINITION(MetaDataComponent)
 }

@@ -16,6 +16,7 @@ namespace Havtorn
 		// Setup systems
 		Systems.emplace_back(std::make_unique<CCameraSystem>());
 		Systems.emplace_back(std::make_unique<CLightSystem>(RenderManager));
+		Systems.emplace_back(std::make_unique<CSpriteAnimatorGraphSystem>());
 		Systems.emplace_back(std::make_unique<CRenderSystem>(RenderManager));
 		Systems.emplace_back(std::make_unique<CSequencerSystem>());
 		//Systems.emplace_back(std::make_unique<Debug::UDebugShapeSystem>(Scenes.back().get(), RenderManager));
@@ -130,6 +131,11 @@ namespace Havtorn
 	CAssetRegistry* CWorld::GetAssetRegistry() const
 	{
 		return AssetRegistry.get();
+	}
+
+	void CWorld::RegisterSystem(Ptr<ISystem> system)
+	{
+		Systems.emplace_back(std::move(system));
 	}
 	
 	CSequencerSystem* CWorld::GetSequencerSystem()

@@ -1,5 +1,7 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
+// Copyright 2023 Team Havtorn. All Rights Reserved.
+
 #pragma once
 #include "Graphics/GraphicsStructs.h"
 #include "Graphics/GraphicsEnums.h"
@@ -281,7 +283,6 @@ namespace Havtorn
 		SerializeSimple(AssetType, toData, pointerPosition); //4
 		SerializeSimple(SceneNameLength, toData, pointerPosition); //8
 		SerializeString(SceneName, toData, pointerPosition);	//17
-		
 		SerializeSimple(sceneIndex, toData, pointerPosition); //25
 		assetRegistry->Serialize(sceneIndex, toData, pointerPosition); //233
 
@@ -299,5 +300,52 @@ namespace Havtorn
 		assetRegistry->Deserialize(sceneIndex, fromData, pointerPosition); //233
 
 		outScene->Deserialize(fromData, pointerPosition, assetRegistry);
+	}
+
+	struct SSpriteAnimationClipFileHeader
+	{
+		EAssetType AssetType = EAssetType::SpriteAnimation;
+		U32 NumberOfUVRects;
+		std::vector<SVector4> UVRects;
+		U32 NumberOfDurations;
+		std::vector<F32> Durations;
+		bool IsLooping = false;
+
+		[[nodiscard]] U32 GetSize() const;
+		void Serialize(char* toData) const;
+		void Deserialize(const char* fromData);
+	};
+
+	inline U32 SSpriteAnimationClipFileHeader::GetSize() const
+	{
+		U32 size = sizeof(EAssetType);
+		size += sizeof(U32);
+		size += sizeof(SVector4) * NumberOfUVRects;
+		size += sizeof(U32);
+		size += sizeof(F32) * NumberOfDurations;
+		size += sizeof(bool);
+		return size;
+	}
+
+	inline void SSpriteAnimationClipFileHeader::Serialize(char* toData) const
+	{
+		U64 pointerPosition = 0;
+		SerializeSimple(AssetType, toData, pointerPosition);
+		SerializeSimple(NumberOfUVRects, toData, pointerPosition);
+		SerializeVector(UVRects, toData, pointerPosition);
+		SerializeSimple(NumberOfDurations, toData, pointerPosition);
+		SerializeVector(Durations, toData, pointerPosition);
+		SerializeSimple(IsLooping, toData, pointerPosition);
+	}
+
+	inline void SSpriteAnimationClipFileHeader::Deserialize(const char* fromData)
+	{
+		U64 pointerPosition = 0;
+		DeserializeSimple(AssetType, fromData, pointerPosition);
+		DeserializeSimple(NumberOfUVRects, fromData, pointerPosition);
+		DeserializeVector(UVRects, fromData, NumberOfUVRects, pointerPosition);
+		DeserializeSimple(NumberOfDurations, fromData, pointerPosition);
+		DeserializeVector(Durations, fromData, NumberOfDurations, pointerPosition);
+		DeserializeSimple(IsLooping, fromData, pointerPosition);
 	}
 }

@@ -10,6 +10,7 @@
 #include "Scene/Scene.h"
 
 #include "Windows/ViewportWindow.h"
+#include "Windows/SpriteAnimatorGraphNodeWindow.h"
 
 #include <Core/imgui.h>
 #include <Core/ImGuizmo/ImGuizmo.h>
@@ -41,6 +42,10 @@ namespace ImGui
 		InspectionFunctions[EComponentType::DecalComponent]				= std::bind(&CInspectorWindow::InspectDecalComponent, this);
 		InspectionFunctions[EComponentType::SpriteComponent]			= std::bind(&CInspectorWindow::InspectSpriteComponent, this);
 		InspectionFunctions[EComponentType::Transform2DComponent]		= std::bind(&CInspectorWindow::InspectTransform2DComponent, this);
+		InspectionFunctions[EComponentType::SpriteAnimatorGraphComponent] = std::bind(&CInspectorWindow::InspectSpriteAnimatorGraphComponent, this);
+
+		// AS: Ghosty is a Game-project Component / System. The goal is to separate out any Game Component/Systems so they don't have to be added in Engine
+		InspectionFunctions[EComponentType::GhostyComponent]			= std::bind(&CInspectorWindow::InspectGhostyComponent, this);
 	}
 
 	CInspectorWindow::~CInspectorWindow()
@@ -91,12 +96,12 @@ namespace ImGui
 		{
 			TryInspectComponent(selection, static_cast<EComponentType>(i));
 		}
-			
-		if (ImGui::Button("Add Component", ImVec2(ImGui::GetContentRegionAvail().x, 0))) 
-		{ 
+
+		if (ImGui::Button("Add Component", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+		{
 			ImGui::OpenPopup("Add Component Modal");
 		}
-		
+
 		OpenAddComponentModal();
 
 		ImGui::End();
@@ -138,13 +143,12 @@ namespace ImGui
 
 		// TODO.NR: Fix yaw rotation singularity here, using our own math functions. Ref: https://github.com/CedricGuillemet/ImGuizmo/issues/244
 		ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, transformMatrix.data);
-		
 		Scene->GetTransformComponents()[SelectedEntityIndex].Transform.SetMatrix(transformMatrix);
 
 		if (Manager->GetIsFreeCamActive())
 			return;
 
-		CViewportWindow* viewportWindow = Manager->GetViewportWindow();
+		CViewportWindow* viewportWindow = Manager->GetEditorWindow<CViewportWindow>();
 		SVector2<F32> viewPortWindowDimensions = viewportWindow->GetRenderedSceneDimensions();
 		SVector2<F32> viewPortWindowPosition = viewportWindow->GetRenderedScenePosition();
 
@@ -180,8 +184,6 @@ namespace ImGui
 		}
 		ImGui::Text(assetRep->Name.c_str());
 		ImGui::TextDisabled("Number Of Materials: %i", staticMesh->NumberOfMaterials);
-		
-		
 		OpenSelectMeshAssetModal(SelectedEntityIndex);
 	}
 
@@ -268,8 +270,8 @@ namespace ImGui
 				ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 			}
 		}
-		
-		OpenSelectMaterialAssetModal(materialComp, MaterialToChangeIndex);	
+
+		OpenSelectMaterialAssetModal(materialComp, MaterialToChangeIndex);
 	}
 
 	void CInspectorWindow::InspectEnvironmentLightComponent()
@@ -283,7 +285,6 @@ namespace ImGui
 		auto& environmentLightComp = Scene->GetEnvironmentLightComponents()[SelectedEntityIndex];
 
 		Havtorn::U16 ref = environmentLightComp.AmbientCubemapReference;
-			
 		ImGui::Text("Ambient Static Cubemap");
 		if (ImGui::ImageButton((void*)Havtorn::GEngine::GetTextureBank()->GetTexture(ref), { TexturePreviewSize.X, TexturePreviewSize.Y }))
 		{
@@ -291,7 +292,7 @@ namespace ImGui
 			ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
 		}
 
-		OpenSelectTextureAssetModal(environmentLightComp.AmbientCubemapReference);	
+		OpenSelectTextureAssetModal(environmentLightComp.AmbientCubemapReference);
 	}
 
 	void CInspectorWindow::InspectDirectionalLightComponent()
@@ -303,7 +304,6 @@ namespace ImGui
 			return;
 
 		auto& directionalLightComp = Scene->GetDirectionalLightComponents()[SelectedEntityIndex];
-			
 		Havtorn::F32 colorData[3] = { directionalLightComp.Color.X, directionalLightComp.Color.Y, directionalLightComp.Color.Z };
 		ImGui::ColorPicker3("Color", colorData);
 		directionalLightComp.Color.X = colorData[0];
@@ -315,7 +315,7 @@ namespace ImGui
 		ImGui::DragFloat3("Direction", dirData, SlideSpeed);
 		directionalLightComp.Direction = { dirData[0], dirData[1], dirData[2], 0.0f };
 
-		ImGui::DragFloat("Intensity", &directionalLightComp.Color.W, SlideSpeed);	
+		ImGui::DragFloat("Intensity", &directionalLightComp.Color.W, SlideSpeed);
 	}
 
 	void CInspectorWindow::InspectPointLightComponent()
@@ -357,7 +357,7 @@ namespace ImGui
 		ImGui::DragFloat("Intensity", &spotLightComp.ColorAndIntensity.W, SlideSpeed);
 		ImGui::DragFloat("Range", &spotLightComp.Range, SlideSpeed, 0.1f, 100.0f);
 		ImGui::DragFloat("Outer Angle", &spotLightComp.OuterAngle, SlideSpeed, spotLightComp.InnerAngle, 180.0f);
-		ImGui::DragFloat("InnerAngle", &spotLightComp.InnerAngle, SlideSpeed, 0.0f, spotLightComp.OuterAngle - 0.01f);	
+		ImGui::DragFloat("InnerAngle", &spotLightComp.InnerAngle, SlideSpeed, 0.0f, spotLightComp.OuterAngle - 0.01f);
 	}
 
 	void CInspectorWindow::InspectVolumetricLightComponent()
@@ -414,7 +414,7 @@ namespace ImGui
 		}
 
 		MaterialRefToChangeIndex = Havtorn::UMath::Min(MaterialRefToChangeIndex, static_cast<Havtorn::U16>(decalComp.TextureReferences.size() - 1));
-		OpenSelectTextureAssetModal(decalComp.TextureReferences[MaterialRefToChangeIndex]);		
+		OpenSelectTextureAssetModal(decalComp.TextureReferences[MaterialRefToChangeIndex]);
 	}
 
 	void CInspectorWindow::InspectSpriteComponent()
@@ -461,8 +461,8 @@ namespace ImGui
 		// TODO.NR: Make editable with gizmo
 		Havtorn::STransform2DComponent& transform2DComp = Scene->GetTransform2DComponents()[SelectedEntityIndex];
 
-		F32 position[2] = {transform2DComp.Position.X, transform2DComp.Position.Y};
-		F32 scale[2] = {transform2DComp.Scale.X, transform2DComp.Scale.Y};
+		F32 position[2] = { transform2DComp.Position.X, transform2DComp.Position.Y };
+		F32 scale[2] = { transform2DComp.Scale.X, transform2DComp.Scale.Y };
 
 		ImGui::DragFloat2("Position", position, SlideSpeed);
 		ImGui::DragFloat("DegreesRoll", &transform2DComp.DegreesRoll, SlideSpeed);
@@ -470,6 +470,39 @@ namespace ImGui
 
 		transform2DComp.Position = { position[0], position[1] };
 		transform2DComp.Scale = { scale[0], scale[1] };
+	}
+
+	void CInspectorWindow::InspectSpriteAnimatorGraphComponent()
+	{
+		bool isHeaderOpen = ImGui::CollapsingHeader("Sprite Animator Graph", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+		RemoveComponentButton(Havtorn::EComponentType::SpriteAnimatorGraphComponent);
+
+		if (!isHeaderOpen)
+			return;
+
+		Havtorn::SSpriteAnimatorGraphComponent& c = Scene->GetSpriteAnimatorGraphComponents()[SelectedEntityIndex];
+		if (ImGui::Button("Open Animator"))
+		{
+			Manager->GetEditorWindow<CSpriteAnimatorGraphNodeWindow>()->Inspect(c);
+		}
+	}
+
+	// AS: Ghosty is a Game-project Component / System. The goal is to separate out any Game Component/Systems so they don't have to be added in Engine
+	void CInspectorWindow::InspectGhostyComponent()
+	{
+		bool isHeaderOpen = ImGui::CollapsingHeader("Ghosty", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+		RemoveComponentButton(Havtorn::EComponentType::SpriteAnimatorGraphComponent);
+
+		if (!isHeaderOpen)
+			return;
+
+		Havtorn::SGhostyComponent& c = Scene->GetGhostyComponents()[SelectedEntityIndex];
+
+		F32 ghostyInput[3] = { c.State.Input.X, c.State.Input.Y, c.State.Input.Z };
+		ImGui::DragFloat3("GhostyState", ghostyInput, 0.0f);
+
+		ImGui::Checkbox("IsInWalkingAnimation", &c.State.IsInWalkingAnimationState);
+
 	}
 
 	void CInspectorWindow::OpenSelectMeshAssetModal(Havtorn::I64 staticMeshComponentIndex)

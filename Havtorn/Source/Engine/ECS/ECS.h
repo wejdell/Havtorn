@@ -19,6 +19,8 @@ namespace Havtorn
 		DecalComponent,
 		SpriteComponent,
 		Transform2DComponent,
+		SpriteAnimatorGraphComponent,
+		GhostyComponent,
 		DebugShapeComponent,
 		MetaDataComponent,
 		Count
@@ -54,6 +56,10 @@ namespace Havtorn
 			return "SpriteComponent";
 		case Havtorn::EComponentType::Transform2DComponent:
 			return "Transform2DComponent";
+		case Havtorn::EComponentType::SpriteAnimatorGraphComponent:
+			return "SpriteAnimatorGraphComponent";
+		case Havtorn::EComponentType::GhostyComponent:
+			return "GhostyComponent";
 
 		case Havtorn::EComponentType::DebugShapeComponent:
 		case Havtorn::EComponentType::MetaDataComponent:
