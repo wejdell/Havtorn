@@ -58,9 +58,24 @@ namespace Havtorn
 		explicit SGraphicsMaterialAsset(const SMaterialAssetFileHeader assetFileData)
 			: AssetType(assetFileData.AssetType)
 			, Material(assetFileData.Material, assetFileData.MaterialName)
-		{}
+		{
+		}
 
 		EAssetType AssetType = EAssetType::Material;
 		SEngineGraphicsMaterial Material;
+	};
+
+	struct SSpriteAninmationClipAsset
+	{
+		SSpriteAninmationClipAsset() = default;
+
+		explicit SSpriteAninmationClipAsset(const SSpriteAnimationClipFileHeader assetFileData)
+			: AssetType(assetFileData.AssetType)
+			, SpriteAnimationClip(SSpriteAnimationClip(assetFileData.UVRects, assetFileData.Durations, assetFileData.IsLooping))
+		{
+		}
+
+		EAssetType AssetType = EAssetType::SpriteAnimation;
+		SSpriteAnimationClip SpriteAnimationClip;
 	};
 }
