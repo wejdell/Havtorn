@@ -88,6 +88,8 @@ namespace Havtorn
 		break;
 		case Havtorn::EAssetType::Animation:
 			break;
+		case Havtorn::EAssetType::SpriteAnimation:
+			break;
 		case Havtorn::EAssetType::AudioOneShot:
 			break;
 		case Havtorn::EAssetType::AudioCollection:
