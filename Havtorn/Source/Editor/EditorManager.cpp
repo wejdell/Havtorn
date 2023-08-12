@@ -51,7 +51,7 @@ namespace Havtorn
 		windowHandler->EnableDragDrop();
 
 		SetEditorTheme(EEditorColorTheme::HavtornDark, EEditorStyleTheme::Havtorn);
-		
+
 		MenuElements.emplace_back(std::make_unique<ImGui::CFileMenu>("File", this));
 		MenuElements.emplace_back(std::make_unique<ImGui::CEditMenu>("Edit", this));
 		MenuElements.emplace_back(std::make_unique<ImGui::CViewMenu>("View", this));
@@ -63,6 +63,7 @@ namespace Havtorn
 		Windows.emplace_back(std::make_unique<ImGui::CHierarchyWindow>("Hierarchy", this));
 		Windows.emplace_back(std::make_unique<ImGui::CInspectorWindow>("Inspector", this));
 		Windows.emplace_back(std::make_unique<ImGui::CSequencerWindow>("Sequencer", this, sequencerSystem));
+		Windows.emplace_back(std::make_unique<ImGui::CSpriteAnimatorGraphNodeWindow>("Sprite Animator", this));
 
 		ResourceManager = new CEditorResourceManager();
 		bool success = ResourceManager->Init(renderManager, framework);
@@ -87,17 +88,22 @@ namespace Havtorn
 		if (IsEnabled)
 		{
 			ImGui::BeginMainMenuBar();
-		
+
 			for (const auto& element : MenuElements)
 				element->OnInspectorGUI();
-		
+
 			ImGui::EndMainMenuBar();
 		}
-		
+
 		// Windows
 		for (const auto& window : Windows)
+		{
+			if (!window->GetEnabled())
+				continue;
+
 			window->OnInspectorGUI();
-		
+		}
+
 		DebugWindow();
 	}
 
@@ -316,11 +322,6 @@ namespace Havtorn
 		InitEditorLayout();
 	}
 
-	ImGui::CViewportWindow* CEditorManager::GetViewportWindow() const
-	{
-		return reinterpret_cast<ImGui::CViewportWindow*>(Windows[0].get());
-	}
-
 	const CRenderManager* CEditorManager::GetRenderManager() const
 	{
 		return RenderManager;
@@ -386,7 +387,7 @@ namespace Havtorn
 	}
 
 	void CEditorManager::PreProcessAssets()
-	{	
+	{
 		//Import non-.hva files to .hva
 		for (const auto& entry : std::filesystem::recursive_directory_iterator(std::filesystem::path("Assets")))
 		{
@@ -463,7 +464,7 @@ namespace Havtorn
 		std::string frameTimeStringCPU = std::format("{:.2f}", frameTimeCPU);
 		frameRateString.append(frameTimeStringCPU);
 		frameRateString.append(" ms");
-		
+
 		frameRateString.append(" | GPU: ");
 		const U32 frameRateGPU = static_cast<U32>(GTime::AverageFrameRate(ETimerCategory::GPU));
 		const F32 frameTimeGPU = 1000.0f / frameRateGPU;

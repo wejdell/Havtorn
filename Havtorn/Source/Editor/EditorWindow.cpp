@@ -5,9 +5,9 @@
 //#include "Core/imgui.h"
 #include "EditorManager.h"
 
-ImGui::CWindow::CWindow(const char* displayName, Havtorn::CEditorManager* manager)
+ImGui::CWindow::CWindow(const char* displayName, Havtorn::CEditorManager* manager, bool isEnabled)
 	: DisplayName(displayName)
 	, Manager(manager)
-	, IsEnabled(false)
+	, IsEnabled(isEnabled)
 {
 }

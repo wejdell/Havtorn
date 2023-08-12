@@ -40,6 +40,9 @@ namespace ImGui
 		void InspectDecalComponent();
 		void InspectSpriteComponent();
 		void InspectTransform2DComponent();
+		void InspectSpriteAnimatorGraphComponent();
+		// AS: Ghosty is a Game-project Component / System. The goal is to separate out any Game Component/Systems so they don't have to be added in Engine
+		void InspectGhostyComponent();
 
 		void OpenSelectMeshAssetModal(Havtorn::I64 staticMeshComponentIndex);
 		void OpenSelectTextureAssetModal(Havtorn::U16& textureRefToChange);

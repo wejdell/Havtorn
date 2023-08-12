@@ -26,6 +26,10 @@ namespace Havtorn
 		HAVTORN_API void ChangeScene(const std::string& filePath);
 		HAVTORN_API void OpenDemoScene(const bool shouldOpen3DDemo = true);
 		HAVTORN_API CAssetRegistry* GetAssetRegistry() const;
+		HAVTORN_API void RegisterSystem(Ptr<ISystem> system);
+
+		template<class TSystem>
+		inline TSystem* GetSystem();
 
 		CSequencerSystem* GetSequencerSystem();
 	private:
@@ -43,4 +47,17 @@ namespace Havtorn
 		Ptr<CAssetRegistry> AssetRegistry = nullptr;
 		CRenderManager* RenderManager = nullptr;
 	};
+
+	template<class TSystem>
+	inline TSystem* CWorld::GetSystem()
+	{
+		U64 targetHashCode = typeid(TSystem).hash_code();
+		for (U32 i = 0; i < Systems.size(); i++)
+		{
+			U64 hashCode = typeid(*Systems[i].get()).hash_code();
+			if (hashCode == targetHashCode)
+				return static_cast<TSystem*>(Systems[i].get());
+		}
+		return nullptr;
+	}
 }

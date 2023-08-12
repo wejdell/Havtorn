@@ -19,6 +19,7 @@ namespace Havtorn
 		Texture,
 		Material,
 		Animation,
+		SpriteAnimation,
 		AudioOneShot,
 		AudioCollection,
 		VisualFX,
