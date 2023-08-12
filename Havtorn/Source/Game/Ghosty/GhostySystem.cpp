@@ -35,7 +35,7 @@ namespace Havtorn
 			STransformComponent& transform = transformComponents[i];
 			if (ghosty.State.IsInWalkingAnimationState)
 			{
-				transform.Transform.Move(ghosty.State.Input * deltaTime);
+				transform.Transform.Move(ghosty.State.Input * ghosty.State.MoveSpeed * deltaTime);
 			}
 		}
 
