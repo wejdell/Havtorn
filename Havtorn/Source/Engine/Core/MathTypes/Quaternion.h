@@ -11,9 +11,9 @@
 
 namespace Havtorn
 {
-	struct SQuaternion
+	struct HAVTORN_API SQuaternion
 	{
-		F32 X, Y, Z, W;
+		F32 X = 0.0f, Y = 0.0f, Z = 0.0f, W = 1.0f;
 
 		static const SQuaternion Identity;
 
@@ -104,9 +104,8 @@ namespace Havtorn
 	}
 
 	inline SQuaternion::SQuaternion(const SVector& eulerAngles)
-	{
-		SQuaternion(UMath::DegToRad(eulerAngles.X), UMath::DegToRad(eulerAngles.Y), UMath::DegToRad(eulerAngles.Z));
-	}
+		: SQuaternion(UMath::DegToRad(eulerAngles.X), UMath::DegToRad(eulerAngles.Y), UMath::DegToRad(eulerAngles.Z))
+	{}
 
 	SQuaternion::SQuaternion(const SVector& axis, F32 angleInDegrees)
 	{
