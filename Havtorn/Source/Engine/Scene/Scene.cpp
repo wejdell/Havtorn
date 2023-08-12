@@ -399,6 +399,24 @@ namespace Havtorn
 		return true;
 	}
 
+	std::vector<SVector4> CreateAnimationClip(const F32 width, const F32 height, const F32 frameSize, const U32 row, const U32 column, const U32 frameCount)
+	{
+		std::vector<SVector4> uvRects;
+		F32 normalizedFrameSize = frameSize / width;
+
+		for (U32 i = 0; i < frameCount; i++)
+		{
+			F32 x = (column + i) * normalizedFrameSize;
+			F32 y = row * (frameSize / height);
+			F32 z = x + normalizedFrameSize;
+			F32 w = y + (frameSize / height);
+
+			uvRects.push_back(SVector4{ x, y, z, w });
+		}
+
+		return uvRects;
+	}
+
 	bool CScene::Init2DDemoScene(CRenderManager* renderManager)
 	{
 		// === Camera ===
@@ -489,36 +507,42 @@ namespace Havtorn
 			if (!ghosty)
 				return true;
 			STransformComponent& spriteWStransform = AddTransformComponentToEntity(*ghosty);
-			SSpriteComponent& spriteWSComp = AddSpriteComponentToEntity(*ghosty);		
+			SSpriteComponent& spriteWSComp = AddSpriteComponentToEntity(*ghosty);
 			AddGhostyComponentToEntity(*ghosty);
-			
+
 			spriteWStransform.Transform.Move({ 0.0f, 0.0f, 0.0f });
 			//F32 radians = UMath::DegToRad(45.0f);
 			//spriteWStransform.Transform.Rotate({ radians, radians, radians });
 
-			const std::string spritePath = "Assets/Textures/Sprite0001.hva";
+			const std::string spritePath = "Assets/Textures/EllahSpriteSheet.hva";
 			spriteWSComp.UVRect = { 0.0f, 0.0f, 0.125f, 0.125f };
 			renderManager->LoadSpriteComponent(spritePath, &spriteWSComp);
 
 			//Define UVRects for Animation Frames on row 0, 1, 2
-			F32 size = 32.0f / 256.0f;
-			std::vector<SVector4> uvRectsIdle = {
-				SVector4{ 0.0f,		0.0f,		size,			size },
-				SVector4{ size,		0.0f,		size * 2,		size },
-			};
-			std::vector<SVector4> uvRectsMoveLeft = {
-				SVector4{ 0.0f,		size,		size,		size * 2 },
-				SVector4{ size,		size,		size * 2,	size * 2 },
-				SVector4{ size * 2, size,		size * 3,	size * 2 },
-				//SVector4{ size * 3, size,		size * 4,	size * 2 },
-			};
-			std::vector<SVector4> uvRectsMoveRight = {
-				SVector4{ 0.0f,		size * 2,	size,		size * 3 },
-				SVector4{ size,		size * 2,	size * 2,	size * 3 },
-				SVector4{ size * 2, size * 2,	size * 3,	size * 3 },
-				
-				//SVector4{ size * 3, size * 2,	size * 4,	size * 3 },
-			};
+			//F32 size = 32.0f / 256.0f;
+			F32 width = 1152.0f;
+			F32 height = 384.0f;
+			F32 frameSize = 96.0f;
+			std::vector<SVector4> uvRectsIdle = CreateAnimationClip(width, height, frameSize, 3, 6, 6);
+			std::vector<SVector4> uvRectsMoveLeft = CreateAnimationClip(width, height, frameSize, 0, 0, 6);
+			std::vector<SVector4> uvRectsMoveRight = CreateAnimationClip(width, height, frameSize, 1, 0, 6);
+			//std::vector<SVector4> uvRectsIdle = {
+			//	SVector4{ 0.0f,		0.0f,		size,			size },
+			//	SVector4{ size,		0.0f,		size * 2,		size },
+			//};
+			//std::vector<SVector4> uvRectsMoveLeft = {
+			//	SVector4{ 0.0f,		size,		size,		size * 2 },
+			//	SVector4{ size,		size,		size * 2,	size * 2 },
+			//	SVector4{ size * 2, size,		size * 3,	size * 2 },
+			//	//SVector4{ size * 3, size,		size * 4,	size * 2 },
+			//};
+			//std::vector<SVector4> uvRectsMoveRight = {
+			//	SVector4{ 0.0f,		size * 2,	size,		size * 3 },
+			//	SVector4{ size,		size * 2,	size * 2,	size * 3 },
+			//	SVector4{ size * 2, size * 2,	size * 3,	size * 3 },
+			//	
+			//	//SVector4{ size * 3, size * 2,	size * 4,	size * 3 },
+			//};
 
 			SSpriteAnimationClip idle;
 			idle.UVRects = uvRectsIdle;
@@ -543,13 +567,13 @@ namespace Havtorn
 			//moveRight.Durations.push_back(0.15f);
 			//moveRight.Durations.push_back(0.15f);
 			//moveRight.Durations.push_back(0.15f);
-	
-			CGhostySystem* ghostySystem = GEngine::GetWorld()->GetSystem<CGhostySystem>();		
+
+			CGhostySystem* ghostySystem = GEngine::GetWorld()->GetSystem<CGhostySystem>();
 			SSpriteAnimatorGraphComponent& spriteAnimatorGraphComponent = AddSpriteAnimatorGraphComponentToEntity(*ghosty);
 
 			SSpriteAnimatorGraphNode& rootNode = spriteAnimatorGraphComponent.SetRoot(std::string("Idle | Locomotion"), ghostySystem->EvaluateIdleFunc);
 			rootNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Idle"), idle);
-			
+
 			SSpriteAnimatorGraphNode& locomotionNode = rootNode.AddSwitchNode(std::string("Locomotion: Left | Right"), ghostySystem->EvaluateLocomotionFunc);
 			locomotionNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Move Left"), moveLeft);
 			locomotionNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Move Right"), moveRight);
@@ -1066,38 +1090,38 @@ namespace Havtorn
 	}
 
 	COMPONENT_ADDER_DEFINITION(TransformComponent)
-	COMPONENT_ADDER_DEFINITION(StaticMeshComponent)
-	COMPONENT_ADDER_DEFINITION(CameraComponent)
-	COMPONENT_ADDER_DEFINITION(CameraControllerComponent)
-	COMPONENT_ADDER_DEFINITION(MaterialComponent)
-	COMPONENT_ADDER_DEFINITION(EnvironmentLightComponent)
-	COMPONENT_ADDER_DEFINITION(DirectionalLightComponent)
-	COMPONENT_ADDER_DEFINITION(PointLightComponent)
-	COMPONENT_ADDER_DEFINITION(SpotLightComponent)
-	COMPONENT_ADDER_DEFINITION(VolumetricLightComponent)
-	COMPONENT_ADDER_DEFINITION(DecalComponent)
-	COMPONENT_ADDER_DEFINITION(SpriteComponent)
-	COMPONENT_ADDER_DEFINITION(Transform2DComponent)
-	COMPONENT_ADDER_DEFINITION(SpriteAnimatorGraphComponent)
-	COMPONENT_ADDER_DEFINITION(GhostyComponent);
+		COMPONENT_ADDER_DEFINITION(StaticMeshComponent)
+		COMPONENT_ADDER_DEFINITION(CameraComponent)
+		COMPONENT_ADDER_DEFINITION(CameraControllerComponent)
+		COMPONENT_ADDER_DEFINITION(MaterialComponent)
+		COMPONENT_ADDER_DEFINITION(EnvironmentLightComponent)
+		COMPONENT_ADDER_DEFINITION(DirectionalLightComponent)
+		COMPONENT_ADDER_DEFINITION(PointLightComponent)
+		COMPONENT_ADDER_DEFINITION(SpotLightComponent)
+		COMPONENT_ADDER_DEFINITION(VolumetricLightComponent)
+		COMPONENT_ADDER_DEFINITION(DecalComponent)
+		COMPONENT_ADDER_DEFINITION(SpriteComponent)
+		COMPONENT_ADDER_DEFINITION(Transform2DComponent)
+		COMPONENT_ADDER_DEFINITION(SpriteAnimatorGraphComponent)
+		COMPONENT_ADDER_DEFINITION(GhostyComponent);
 	COMPONENT_ADDER_DEFINITION(DebugShapeComponent)
-	COMPONENT_ADDER_DEFINITION(MetaDataComponent)
+		COMPONENT_ADDER_DEFINITION(MetaDataComponent)
 
-	COMPONENT_REMOVER_DEFINITION(TransformComponent)
-	COMPONENT_REMOVER_DEFINITION(StaticMeshComponent)
-	COMPONENT_REMOVER_DEFINITION(CameraComponent)
-	COMPONENT_REMOVER_DEFINITION(CameraControllerComponent)
-	COMPONENT_REMOVER_DEFINITION(MaterialComponent)
-	COMPONENT_REMOVER_DEFINITION(EnvironmentLightComponent)
-	COMPONENT_REMOVER_DEFINITION(DirectionalLightComponent)
-	COMPONENT_REMOVER_DEFINITION(PointLightComponent)
-	COMPONENT_REMOVER_DEFINITION(SpotLightComponent)
-	COMPONENT_REMOVER_DEFINITION(VolumetricLightComponent)
-	COMPONENT_REMOVER_DEFINITION(DecalComponent)
-	COMPONENT_REMOVER_DEFINITION(SpriteComponent)
-	COMPONENT_REMOVER_DEFINITION(Transform2DComponent)
-	COMPONENT_REMOVER_DEFINITION(SpriteAnimatorGraphComponent)
-	COMPONENT_REMOVER_DEFINITION(GhostyComponent)
-	COMPONENT_REMOVER_DEFINITION(DebugShapeComponent)
-	COMPONENT_REMOVER_DEFINITION(MetaDataComponent)
+		COMPONENT_REMOVER_DEFINITION(TransformComponent)
+		COMPONENT_REMOVER_DEFINITION(StaticMeshComponent)
+		COMPONENT_REMOVER_DEFINITION(CameraComponent)
+		COMPONENT_REMOVER_DEFINITION(CameraControllerComponent)
+		COMPONENT_REMOVER_DEFINITION(MaterialComponent)
+		COMPONENT_REMOVER_DEFINITION(EnvironmentLightComponent)
+		COMPONENT_REMOVER_DEFINITION(DirectionalLightComponent)
+		COMPONENT_REMOVER_DEFINITION(PointLightComponent)
+		COMPONENT_REMOVER_DEFINITION(SpotLightComponent)
+		COMPONENT_REMOVER_DEFINITION(VolumetricLightComponent)
+		COMPONENT_REMOVER_DEFINITION(DecalComponent)
+		COMPONENT_REMOVER_DEFINITION(SpriteComponent)
+		COMPONENT_REMOVER_DEFINITION(Transform2DComponent)
+		COMPONENT_REMOVER_DEFINITION(SpriteAnimatorGraphComponent)
+		COMPONENT_REMOVER_DEFINITION(GhostyComponent)
+		COMPONENT_REMOVER_DEFINITION(DebugShapeComponent)
+		COMPONENT_REMOVER_DEFINITION(MetaDataComponent)
 }
