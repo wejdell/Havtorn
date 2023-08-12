@@ -1,11 +1,15 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
-#include <imgui.h>
+// Copyright 2023 Team Havtorn. All Rights Reserved.
+
 #include "SpriteAnimatorGraphNodeWindow.h"
 #include "EditorManager.h"
 
 #include "ECS/Components/SpriteAnimatorGraphComponent.h"
 #include "ECS/Components/SpriteAnimatorGraphNode.h"
+#include "Core/MathTypes/EngineMath.h"
+
+#include <imgui.h>
 
 namespace ImGui
 {
@@ -40,7 +44,7 @@ namespace ImGui
 
 				ImGui::Text("Animation Clip Settings");
 				ImGui::PushID(node->Name.Data());
-				for (Havtorn::U32 i = 0; i < animationClip.UVRects.size(); i++)
+				for (Havtorn::U32 i = 0; i < animationClip.KeyFrameCount(); i++)
 				{
 					ImGui::PushID(i);
 
@@ -54,10 +58,11 @@ namespace ImGui
 						animationClip.UVRects[i].W = uvRect[3];
 					}
 
-					Havtorn::F32 duration = Component->AnimationClips[animationClipKey].Durations[i];
+					Havtorn::U64 durationIndex = Havtorn::UMath::Min<Havtorn::U64>(i, Component->AnimationClips[Component->CurrentAnimationClipKey].Durations.size() - 1);
+					Havtorn::F32 duration = Component->AnimationClips[animationClipKey].Durations[durationIndex];
 					if (ImGui::DragFloat("Duration", &duration, 0.01))
 					{
-						animationClip.Durations[i] = duration;
+						animationClip.Durations[durationIndex] = duration;
 					}
 
 					ImGui::PopID();
