@@ -4,11 +4,11 @@
 
 #pragma once
 #include "ECS/System.h"
-//#include "ECS/ECSInclude.h"
-#include "ECS/Components/TransformComponent.h"
 
 namespace Havtorn
 {
+	struct SSequencerKeyframe;
+
 	struct SSequencerContextData
 	{
 		U32 MaxFrames = 100;
@@ -16,25 +16,6 @@ namespace Havtorn
 		U16 PlayRate = 30;
 		bool IsPlayingSequence = false;
 		bool IsLooping = false;
-	};
-
-	// TODO.NR: Move to separate file?
-	struct HAVTORN_API SSequencerKeyframe
-	{
-		U32 FrameNumber = 0;
-		bool ShouldRecord = false;
-
-		// NR: Make sure to support nextKeyframe being nullptr, this means that the function should 
-		// only set its data to the current value at the current keyframe
-		virtual void Blend(SSequencerKeyframe* /*nextKeyframe*/, F32 /*blendParam*/) {};
-	};
-	
-	struct HAVTORN_API SSequencerTransformKeyframe : public SSequencerKeyframe
-	{
-		SMatrix KeyframedMatrix;
-		SMatrix IntermediateMatrix;
-
-		virtual void Blend(SSequencerKeyframe* nextKeyframe, F32 blendParam) override;
 	};
 
 	enum class ESequencerComponentTrackState
@@ -79,7 +60,6 @@ namespace Havtorn
 		void RecordNewKeyframes(CScene* scene);
 		void Tick(CScene* scene);
 		void UpdateTracks(CScene* scene);
-		void SetKeyframeDataOnEntity(CScene* scene, const SSequencerEntityTrack& entityTrack, const SSequencerComponentTrack& componentTrack);
 		void OnSequenceFinished();
 
 	private:

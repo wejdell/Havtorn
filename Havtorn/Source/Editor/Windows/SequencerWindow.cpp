@@ -5,6 +5,9 @@
 #include "EditorManager.h"
 #include "EditorResourceManager.h"
 #include "ECS/Systems/SequencerSystem.h"
+#include "SequencerKeyframes/SequencerTransformKeyframe.h"
+#include "SequencerKeyframes/SequencerSpriteKeyframe.h"
+
 #include <set>
 
 namespace ImGui
@@ -103,6 +106,11 @@ namespace ImGui
                 AddTransformKeyframe();
             }
 
+            if (ImGui::Button("Add New Sprite Keyframe"))
+            {
+                AddSpriteKeyframe();
+            }
+
             ImGui::PopItemWidth();
 
             ImSequencer::Sequencer(&Sequencer, &imGuiFrame, &expanded, &selectedEntry, &firstFrame, ImSequencer::SEQUENCER_EDIT_STARTEND | ImSequencer::SEQUENCER_ADD | ImSequencer::SEQUENCER_DEL | ImSequencer::SEQUENCER_COPYPASTE | ImSequencer::SEQUENCER_CHANGE_FRAME);
@@ -129,6 +137,11 @@ namespace ImGui
     void CSequencerWindow::AddTransformKeyframe()
     {
         SequencerSystem->AddEmptyKeyframe<Havtorn::SSequencerTransformKeyframe>(Havtorn::EComponentType::TransformComponent);
+    }
+
+    void CSequencerWindow::AddSpriteKeyframe()
+    {
+        SequencerSystem->AddEmptyKeyframe<Havtorn::SSequencerSpriteKeyframe>(Havtorn::EComponentType::SpriteComponent);
     }
 }
 

@@ -4,6 +4,7 @@
 
 #pragma once
 #include "ECS/Component.h"
+#include "Core/Color.h"
 
 namespace Havtorn
 {

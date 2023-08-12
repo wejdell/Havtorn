@@ -329,6 +329,7 @@ namespace ImGui
 		void OnDisable() override;
 
         void AddTransformKeyframe();
+        void AddSpriteKeyframe();
 
 	private:
         Havtorn::CSequencerSystem* SequencerSystem = nullptr;

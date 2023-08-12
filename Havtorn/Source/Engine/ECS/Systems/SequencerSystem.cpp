@@ -4,20 +4,13 @@
 
 #include "SequencerSystem.h"
 #include "Scene/Scene.h"
+#include "SequencerKeyframes/SequencerKeyframe.h"
+
+#include "SequencerKeyframes/SequencerTransformKeyframe.h"
+#include "ECS/Components/TransformComponent.h"
 
 namespace Havtorn
 {
-	void SSequencerTransformKeyframe::Blend(SSequencerKeyframe* nextKeyframe, F32 blendParam)
-	{
-		if (SSequencerTransformKeyframe* nextTransformKeyframe = dynamic_cast<SSequencerTransformKeyframe*>(nextKeyframe))
-		{
-			IntermediateMatrix = SMatrix::Interpolate(KeyframedMatrix, nextTransformKeyframe->KeyframedMatrix, blendParam);
-			return;
-		}
-
-		IntermediateMatrix = KeyframedMatrix;
-	}
-
 	void CSequencerSystem::Update(CScene* scene)
 	{
 		// Keyframes. Keyframe components with properties that can be lerped. Per keyframe maybe need to determine blend in and out behavior
@@ -51,35 +44,41 @@ namespace Havtorn
 
 		Tick(scene);
 
+		// NR: Test code, remove includes when no longer necessary
 		if (Tracks.size() > 0)
 			return;
 
+		//std::vector<SEntity>& entities = scene->GetEntities();
+		//std::vector<STransformComponent>& transformComponents = scene->GetTransformComponents();
+		//U64 mainCameraIndex = scene->GetMainCameraIndex();
+
+		//U64 mainCameraEntityGUID = entities[mainCameraIndex].GUID;
+		//
+		//SSequencerEntityTrack& mainCameraTrack = Tracks.emplace_back(SSequencerEntityTrack{ mainCameraEntityGUID, {} });
+		//SSequencerComponentTrack& mainCameraTransformTrack = mainCameraTrack.ComponentTracks.emplace_back(SSequencerComponentTrack{ EComponentType::TransformComponent, {}, {}, {} });
+
+		//SSequencerTransformKeyframe* firstKeyframe = new SSequencerTransformKeyframe();
+		//firstKeyframe->FrameNumber = 0;
+		//firstKeyframe->KeyframedMatrix = transformComponents[mainCameraIndex].Transform.GetMatrix();
+
+		//SMatrix finalMatrix;		
+		//finalMatrix = transformComponents[mainCameraIndex].Transform.GetMatrix();
+		//finalMatrix.SetRotation({ 30.0f, -75.0f, 0.0f });
+		//finalMatrix.SetTranslation({ 3.0f, 2.0f, -1.0f });
+
+		//SSequencerTransformKeyframe* lastKeyframe = new SSequencerTransformKeyframe();
+		//lastKeyframe->FrameNumber = 60;
+		//lastKeyframe->KeyframedMatrix = finalMatrix;
+
+		//mainCameraTransformTrack.Keyframes.push_back(firstKeyframe);
+		//mainCameraTransformTrack.Keyframes.push_back(lastKeyframe);
+
 		std::vector<SEntity>& entities = scene->GetEntities();
-		std::vector<STransformComponent>& transformComponents = scene->GetTransformComponents();
-		U64 mainCameraIndex = scene->GetMainCameraIndex();
-
-		U64 mainCameraEntityGUID = entities[mainCameraIndex].GUID;
 		
-		SSequencerEntityTrack& mainCameraTrack = Tracks.emplace_back(SSequencerEntityTrack{ mainCameraEntityGUID, {} });
-		SSequencerComponentTrack& mainCameraTransformTrack = mainCameraTrack.ComponentTracks.emplace_back(SSequencerComponentTrack{ EComponentType::TransformComponent, {}, {}, {} });
-
-		//SSequencerTransformKeyframe* keyframes = new SSequencerTransformKeyframe[13513];
-
-		SSequencerTransformKeyframe* firstKeyframe = new SSequencerTransformKeyframe();
-		firstKeyframe->FrameNumber = 0;
-		firstKeyframe->KeyframedMatrix = transformComponents[mainCameraIndex].Transform.GetMatrix();
-
-		SMatrix finalMatrix;		
-		finalMatrix = transformComponents[mainCameraIndex].Transform.GetMatrix();
-		finalMatrix.SetRotation({ 30.0f, -75.0f, 0.0f });
-		finalMatrix.SetTranslation({ 3.0f, 2.0f, -1.0f });
-
-		SSequencerTransformKeyframe* lastKeyframe = new SSequencerTransformKeyframe();
-		lastKeyframe->FrameNumber = 60;
-		lastKeyframe->KeyframedMatrix = finalMatrix;
-
-		mainCameraTransformTrack.Keyframes.push_back(firstKeyframe);
-		mainCameraTransformTrack.Keyframes.push_back(lastKeyframe);
+		U64 spriteGUID = entities[5].GUID;
+		
+		SSequencerEntityTrack& spriteTrack = Tracks.emplace_back(SSequencerEntityTrack{ spriteGUID, {} });
+		spriteTrack.ComponentTracks.emplace_back(SSequencerComponentTrack{ EComponentType::SpriteComponent, {}, {}, {} });
 	}
 
 	void CSequencerSystem::SetSequencerContextData(const SSequencerContextData& data)
@@ -102,7 +101,6 @@ namespace Havtorn
 			for (SSequencerComponentTrack& componentTrack : entityTrack.ComponentTracks)
 			{
 				U16 numberOfKeyframes = static_cast<U16>(componentTrack.Keyframes.size());
-
 				for (U16 index = 0; index < numberOfKeyframes; index++)
 				{
 					SSequencerKeyframe* keyframe = componentTrack.Keyframes[index];
@@ -112,21 +110,7 @@ namespace Havtorn
 					keyframe->ShouldRecord = false;
 
 					U64 sceneIndex = scene->GetSceneIndex(entityTrack.EntityGUID);
-
-					switch (componentTrack.ComponentType)
-					{
-					case EComponentType::TransformComponent:
-					{
-						SSequencerTransformKeyframe* transformKeyframe = static_cast<SSequencerTransformKeyframe*>(keyframe);
-
-						STransformComponent& transformComponent = scene->GetTransformComponents()[sceneIndex];
-						transformKeyframe->KeyframedMatrix = transformComponent.Transform.GetMatrix();
-					}
-					break;
-
-					default:
-						break;
-					}
+					keyframe->SetEntityDataOnKeyframe(scene, sceneIndex);
 				}
 			}
 		}
@@ -206,31 +190,9 @@ namespace Havtorn
 					componentTrack.CurrentKeyframe->Blend(nullptr, 0.0f);
 				}
 
-				SetKeyframeDataOnEntity(scene, entityTrack, componentTrack);
+				U64 sceneIndex = scene->GetSceneIndex(entityTrack.EntityGUID);
+				componentTrack.CurrentKeyframe->SetKeyframeDataOnEntity(scene, sceneIndex);
 			}
-		}
-	}
-
-	void CSequencerSystem::SetKeyframeDataOnEntity(CScene* scene, const SSequencerEntityTrack& entityTrack, const SSequencerComponentTrack& componentTrack)
-	{
-		// TODO.NR: This should perhaps be done once per frame instead of once per componentTrack, looping through the tracks 
-		// again but only accessing the scene data once?
-
-		U64 sceneIndex = scene->GetSceneIndex(entityTrack.EntityGUID);
-
-		switch (componentTrack.ComponentType)
-		{
-			case EComponentType::TransformComponent:
-			{
-				SSequencerTransformKeyframe* transformKeyframe = static_cast<SSequencerTransformKeyframe*>(componentTrack.CurrentKeyframe);
-
-				STransformComponent& transformComponent = scene->GetTransformComponents()[sceneIndex];
-				transformComponent.Transform.SetMatrix(transformKeyframe->IntermediateMatrix);
-			}
-			break;
-
-			default:
-			break;
 		}
 	}
 
