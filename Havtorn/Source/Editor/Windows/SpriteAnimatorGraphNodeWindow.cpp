@@ -4,6 +4,7 @@
 
 #include "SpriteAnimatorGraphNodeWindow.h"
 #include "EditorManager.h"
+#include "EditorResourceManager.h"
 
 #include "ECS/Components/SpriteAnimatorGraphComponent.h"
 #include "ECS/Components/SpriteAnimatorGraphNode.h"
@@ -80,6 +81,17 @@ namespace ImGui
 		{
 			RecursiveTree(&Component->Graph);
 		}
+
+		// AS: Want to experiment with creating/saving SpriteAnimationClips
+		if (ImGui::Button("Save Asset"))
+		{
+			Havtorn::CScene* scene = Manager->GetCurrentScene();
+			scene;
+			//scene->GetEntities()[]
+			//Manager->GetCurrentScene()->GetSpriteAnimatorGraphComponents()
+			//Manager->GetResourceManager()->CreateAsset(Component)
+		}
+
 		ImGui::End();
 	}
 
