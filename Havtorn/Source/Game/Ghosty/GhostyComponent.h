@@ -10,6 +10,7 @@ namespace Havtorn
 	struct SGhostyState
 	{
 		SVector Input;
+		F32 MoveSpeed = 3.145f;
 		bool IsInWalkingAnimationState;
 	};
 
