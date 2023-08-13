@@ -18,11 +18,15 @@ namespace ImGui
 	{
         Sequencer.FrameMin = 0;
         Sequencer.FrameMax = 100;
-        Sequencer.Items.push_back(SSequenceItem{ 0, 10, 30, false });
-        Sequencer.Items.push_back(SSequenceItem{ 1, 20, 30, true });
-        Sequencer.Items.push_back(SSequenceItem{ 3, 12, 60, false });
-        Sequencer.Items.push_back(SSequenceItem{ 2, 61, 90, false });
-        Sequencer.Items.push_back(SSequenceItem{ 4, 90, 99, false });
+        //Sequencer.Items.push_back(SSequenceItem{ 0, 10, 30, false });
+        //Sequencer.Items.push_back(SSequenceItem{ 1, 20, 30, true });
+        //Sequencer.Items.push_back(SSequenceItem{ 3, 12, 60, false });
+        //Sequencer.Items.push_back(SSequenceItem{ 2, 61, 90, false });
+        //
+        //Sequencer.ItemNames.push_back("Camera");
+        //Sequencer.ItemNames.push_back("Camera");
+        //Sequencer.ItemNames.push_back("Camera");
+        //Sequencer.ItemNames.push_back("Camera");
 
         Sequencers.push_back("Intro");
         Sequencers.push_back("BossFight");
@@ -103,15 +107,22 @@ namespace ImGui
 
             if (ImGui::Button("Add New Transform Keyframe"))
             {
-                AddTransformKeyframe();
+                AddKeyframe<Havtorn::SSequencerTransformKeyframe>(Havtorn::EComponentType::TransformComponent);
             }
 
             if (ImGui::Button("Add New Sprite Keyframe"))
             {
-                AddSpriteKeyframe();
+                AddKeyframe<Havtorn::SSequencerSpriteKeyframe>(Havtorn::EComponentType::SpriteComponent);
+            }
+
+            if (ImGui::Button("Add Sprite Track"))
+            {
+                AddComponentTrack(Havtorn::EComponentType::SpriteComponent);
             }
 
             ImGui::PopItemWidth();
+
+            // TODO.NR: Add Add component track button/control
 
             ImSequencer::Sequencer(&Sequencer, &imGuiFrame, &expanded, &selectedEntry, &firstFrame, ImSequencer::SEQUENCER_EDIT_STARTEND | ImSequencer::SEQUENCER_ADD | ImSequencer::SEQUENCER_DEL | ImSequencer::SEQUENCER_COPYPASTE | ImSequencer::SEQUENCER_CHANGE_FRAME);
             // add a UI to edit that particular item
@@ -133,15 +144,30 @@ namespace ImGui
 	void CSequencerWindow::OnDisable()
 	{
 	}
-    
-    void CSequencerWindow::AddTransformKeyframe()
+
+    void CSequencerWindow::AddComponentTrack(Havtorn::EComponentType componentType)
     {
-        SequencerSystem->AddEmptyKeyframe<Havtorn::SSequencerTransformKeyframe>(Havtorn::EComponentType::TransformComponent);
+        Havtorn::SEntity* entity = Manager->GetSelectedEntity();
+        Havtorn::CScene* scene = Manager->GetCurrentScene();
+
+        if (entity == nullptr || scene == nullptr)
+            return;
+
+        U64 sceneIndex = scene->GetSceneIndex(entity->GUID);
+        std::vector<Havtorn::SSequencerComponent>& sequencerComponents = scene->GetSequencerComponents();
+
+        if (sceneIndex >= sequencerComponents.size())
+            return;
+
+        SequencerSystem->AddComponentTrackToComponent(sequencerComponents[sceneIndex], componentType);
+
+        AddSequencerItem(SSequenceItem{ 0, 10, 30, false }, Havtorn::GetComponentTypeString(componentType));
     }
 
-    void CSequencerWindow::AddSpriteKeyframe()
+    void CSequencerWindow::AddSequencerItem(SSequenceItem item, const std::string& itemName)
     {
-        SequencerSystem->AddEmptyKeyframe<Havtorn::SSequencerSpriteKeyframe>(Havtorn::EComponentType::SpriteComponent);
+        Sequencer.Items.push_back(item);
+        Sequencer.ItemNames.push_back(itemName);
     }
 }
 

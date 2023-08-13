@@ -29,6 +29,7 @@ namespace Havtorn
 		SpriteComponents.resize(ENTITY_LIMIT);
 		Transform2DComponents.resize(ENTITY_LIMIT);
 		SpriteAnimatorGraphComponents.resize(ENTITY_LIMIT);
+		SequencerComponents.resize(ENTITY_LIMIT);
 		GhostyComponents.resize(ENTITY_LIMIT);
 		DebugShapeComponents.resize(ENTITY_LIMIT);
 		MetaDataComponents.resize(ENTITY_LIMIT);
@@ -52,6 +53,7 @@ namespace Havtorn
 		SpriteComponents.clear();
 		Transform2DComponents.clear();
 		SpriteAnimatorGraphComponents.clear();
+		SequencerComponents.clear();
 		GhostyComponents.clear();
 		DebugShapeComponents.clear();
 		MetaDataComponents.clear();
@@ -588,6 +590,8 @@ namespace Havtorn
 
 			U16 spriteIndex = static_cast<U16>(GetSceneIndex(*ghosty));
 			assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
+
+			AddSequencerComponentToEntity(*ghosty);
 		}
 
 		//{
@@ -661,6 +665,20 @@ namespace Havtorn
 				size += sizeof(SSpriteComponent);
 
 			if (entity.HasComponent(EComponentType::Transform2DComponent))
+				size += sizeof(STransform2DComponent);
+
+			// TODO.AS: Implement GetSize (since the component is not trivially serializable)
+			if (entity.HasComponent(EComponentType::SpriteAnimatorGraphComponent))
+				size += sizeof(STransform2DComponent);
+
+			// TODO.NR: Implement GetSize (since the component is not trivially serializable)
+			if (entity.HasComponent(EComponentType::SequencerComponent))
+				size += sizeof(STransform2DComponent);
+
+			if (entity.HasComponent(EComponentType::GhostyComponent))
+				size += sizeof(STransform2DComponent);
+
+			if (entity.HasComponent(EComponentType::MetaDataComponent))
 				size += sizeof(STransform2DComponent);
 		}
 
@@ -746,6 +764,23 @@ namespace Havtorn
 			if (entity.HasComponent(EComponentType::Transform2DComponent))
 			{
 				SerializeSimple(Transform2DComponents[entitySceneIndex], toData, pointerPosition);
+			}
+
+			if (entity.HasComponent(EComponentType::SpriteAnimatorGraphComponent))
+			{
+				// TODO.AS: Implement Serialize (since the component is not trivially serializable)
+				SerializeSimple(SpriteAnimatorGraphComponents[entitySceneIndex], toData, pointerPosition);
+			}
+
+			if (entity.HasComponent(EComponentType::SequencerComponent))
+			{
+				// TODO.NR: Implement Serialize (since the component is not trivially serializable)
+				SerializeSimple(SequencerComponents[entitySceneIndex], toData, pointerPosition);
+			}
+
+			if (entity.HasComponent(EComponentType::GhostyComponent))
+			{
+				SerializeSimple(GhostyComponents[entitySceneIndex], toData, pointerPosition);
 			}
 
 			if (entity.HasComponent(EComponentType::MetaDataComponent))
@@ -878,6 +913,24 @@ namespace Havtorn
 				transform = dataCopy;
 			}
 
+			if (componentMask.Test(STATIC_U64(EComponentType::SpriteAnimatorGraphComponent)))
+			{
+				// TODO.AS: Implement Deserialize (since the component is not trivially serializable)
+			}
+
+			if (componentMask.Test(STATIC_U64(EComponentType::SequencerComponent)))
+			{
+				// TODO.NR: Implement Deserialize (since the component is not trivially serializable)
+			}
+
+			if (componentMask.Test(STATIC_U64(EComponentType::GhostyComponent)))
+			{
+				SGhostyComponent& ghostyComponent = AddGhostyComponentToEntity(*entity);
+				SGhostyComponent dataCopy;
+				DeserializeSimple(dataCopy, fromData, pointerPosition);
+				ghostyComponent = dataCopy;
+			}
+
 			if (componentMask.Test(STATIC_U64(EComponentType::MetaDataComponent)))
 			{
 				SMetaDataComponent& metaData = AddMetaDataComponentToEntity(*entity);
@@ -969,6 +1022,8 @@ namespace Havtorn
 		UpdateComponentVector(SpriteComponents, entityIndex);
 		UpdateComponentVector(Transform2DComponents, entityIndex);
 		UpdateComponentVector(SpriteAnimatorGraphComponents, entityIndex);
+		UpdateComponentVector(SequencerComponents, entityIndex);
+		UpdateComponentVector(GhostyComponents, entityIndex);
 		UpdateComponentVector(DebugShapeComponents, entityIndex);
 		UpdateComponentVector(MetaDataComponents, entityIndex);
 
@@ -1044,6 +1099,9 @@ namespace Havtorn
 		case Havtorn::EComponentType::SpriteAnimatorGraphComponent:
 			AddSpriteAnimatorGraphComponentToEntity(entity);
 			break;
+		case Havtorn::EComponentType::SequencerComponent:
+			AddSequencerComponentToEntity(entity);
+			break;
 
 		case Havtorn::EComponentType::DebugShapeComponent:
 		case Havtorn::EComponentType::MetaDataComponent:
@@ -1099,6 +1157,9 @@ namespace Havtorn
 		case Havtorn::EComponentType::SpriteAnimatorGraphComponent:
 			RemoveSpriteAnimatorGraphComponentFromEntity(entity);
 			break;
+		case Havtorn::EComponentType::SequencerComponent:
+			RemoveSequencerComponentFromEntity(entity);
+			break;
 
 		case Havtorn::EComponentType::DebugShapeComponent:
 		case Havtorn::EComponentType::MetaDataComponent:
@@ -1109,38 +1170,40 @@ namespace Havtorn
 	}
 
 	COMPONENT_ADDER_DEFINITION(TransformComponent)
-		COMPONENT_ADDER_DEFINITION(StaticMeshComponent)
-		COMPONENT_ADDER_DEFINITION(CameraComponent)
-		COMPONENT_ADDER_DEFINITION(CameraControllerComponent)
-		COMPONENT_ADDER_DEFINITION(MaterialComponent)
-		COMPONENT_ADDER_DEFINITION(EnvironmentLightComponent)
-		COMPONENT_ADDER_DEFINITION(DirectionalLightComponent)
-		COMPONENT_ADDER_DEFINITION(PointLightComponent)
-		COMPONENT_ADDER_DEFINITION(SpotLightComponent)
-		COMPONENT_ADDER_DEFINITION(VolumetricLightComponent)
-		COMPONENT_ADDER_DEFINITION(DecalComponent)
-		COMPONENT_ADDER_DEFINITION(SpriteComponent)
-		COMPONENT_ADDER_DEFINITION(Transform2DComponent)
-		COMPONENT_ADDER_DEFINITION(SpriteAnimatorGraphComponent)
-		COMPONENT_ADDER_DEFINITION(GhostyComponent);
+	COMPONENT_ADDER_DEFINITION(StaticMeshComponent)
+	COMPONENT_ADDER_DEFINITION(CameraComponent)
+	COMPONENT_ADDER_DEFINITION(CameraControllerComponent)
+	COMPONENT_ADDER_DEFINITION(MaterialComponent)
+	COMPONENT_ADDER_DEFINITION(EnvironmentLightComponent)
+	COMPONENT_ADDER_DEFINITION(DirectionalLightComponent)
+	COMPONENT_ADDER_DEFINITION(PointLightComponent)
+	COMPONENT_ADDER_DEFINITION(SpotLightComponent)
+	COMPONENT_ADDER_DEFINITION(VolumetricLightComponent)
+	COMPONENT_ADDER_DEFINITION(DecalComponent)
+	COMPONENT_ADDER_DEFINITION(SpriteComponent)
+	COMPONENT_ADDER_DEFINITION(Transform2DComponent)
+	COMPONENT_ADDER_DEFINITION(SpriteAnimatorGraphComponent)
+	COMPONENT_ADDER_DEFINITION(SequencerComponent)
+	COMPONENT_ADDER_DEFINITION(GhostyComponent);
 	COMPONENT_ADDER_DEFINITION(DebugShapeComponent)
-		COMPONENT_ADDER_DEFINITION(MetaDataComponent)
+	COMPONENT_ADDER_DEFINITION(MetaDataComponent)
 
-		COMPONENT_REMOVER_DEFINITION(TransformComponent)
-		COMPONENT_REMOVER_DEFINITION(StaticMeshComponent)
-		COMPONENT_REMOVER_DEFINITION(CameraComponent)
-		COMPONENT_REMOVER_DEFINITION(CameraControllerComponent)
-		COMPONENT_REMOVER_DEFINITION(MaterialComponent)
-		COMPONENT_REMOVER_DEFINITION(EnvironmentLightComponent)
-		COMPONENT_REMOVER_DEFINITION(DirectionalLightComponent)
-		COMPONENT_REMOVER_DEFINITION(PointLightComponent)
-		COMPONENT_REMOVER_DEFINITION(SpotLightComponent)
-		COMPONENT_REMOVER_DEFINITION(VolumetricLightComponent)
-		COMPONENT_REMOVER_DEFINITION(DecalComponent)
-		COMPONENT_REMOVER_DEFINITION(SpriteComponent)
-		COMPONENT_REMOVER_DEFINITION(Transform2DComponent)
-		COMPONENT_REMOVER_DEFINITION(SpriteAnimatorGraphComponent)
-		COMPONENT_REMOVER_DEFINITION(GhostyComponent)
-		COMPONENT_REMOVER_DEFINITION(DebugShapeComponent)
-		COMPONENT_REMOVER_DEFINITION(MetaDataComponent)
+	COMPONENT_REMOVER_DEFINITION(TransformComponent)
+	COMPONENT_REMOVER_DEFINITION(StaticMeshComponent)
+	COMPONENT_REMOVER_DEFINITION(CameraComponent)
+	COMPONENT_REMOVER_DEFINITION(CameraControllerComponent)
+	COMPONENT_REMOVER_DEFINITION(MaterialComponent)
+	COMPONENT_REMOVER_DEFINITION(EnvironmentLightComponent)
+	COMPONENT_REMOVER_DEFINITION(DirectionalLightComponent)
+	COMPONENT_REMOVER_DEFINITION(PointLightComponent)
+	COMPONENT_REMOVER_DEFINITION(SpotLightComponent)
+	COMPONENT_REMOVER_DEFINITION(VolumetricLightComponent)
+	COMPONENT_REMOVER_DEFINITION(DecalComponent)
+	COMPONENT_REMOVER_DEFINITION(SpriteComponent)
+	COMPONENT_REMOVER_DEFINITION(Transform2DComponent)
+	COMPONENT_REMOVER_DEFINITION(SpriteAnimatorGraphComponent)
+	COMPONENT_REMOVER_DEFINITION(SequencerComponent)
+	COMPONENT_REMOVER_DEFINITION(GhostyComponent)
+	COMPONENT_REMOVER_DEFINITION(DebugShapeComponent)
+	COMPONENT_REMOVER_DEFINITION(MetaDataComponent)
 }

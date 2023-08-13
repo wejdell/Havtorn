@@ -41,6 +41,7 @@ namespace ImGui
 		void InspectSpriteComponent();
 		void InspectTransform2DComponent();
 		void InspectSpriteAnimatorGraphComponent();
+		void InspectSequencerComponent();
 		// AS: Ghosty is a Game-project Component / System. The goal is to separate out any Game Component/Systems so they don't have to be added in Engine
 		void InspectGhostyComponent();
 

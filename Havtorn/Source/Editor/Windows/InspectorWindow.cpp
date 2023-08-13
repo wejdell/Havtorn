@@ -43,6 +43,7 @@ namespace ImGui
 		InspectionFunctions[EComponentType::SpriteComponent]			= std::bind(&CInspectorWindow::InspectSpriteComponent, this);
 		InspectionFunctions[EComponentType::Transform2DComponent]		= std::bind(&CInspectorWindow::InspectTransform2DComponent, this);
 		InspectionFunctions[EComponentType::SpriteAnimatorGraphComponent] = std::bind(&CInspectorWindow::InspectSpriteAnimatorGraphComponent, this);
+		InspectionFunctions[EComponentType::SequencerComponent]			= std::bind(&CInspectorWindow::InspectSequencerComponent, this);
 
 		// AS: Ghosty is a Game-project Component / System. The goal is to separate out any Game Component/Systems so they don't have to be added in Engine
 		InspectionFunctions[EComponentType::GhostyComponent]			= std::bind(&CInspectorWindow::InspectGhostyComponent, this);
@@ -484,6 +485,21 @@ namespace ImGui
 		if (ImGui::Button("Open Animator"))
 		{
 			Manager->GetEditorWindow<CSpriteAnimatorGraphNodeWindow>()->Inspect(c);
+		}
+	}
+
+	void CInspectorWindow::InspectSequencerComponent()
+	{
+		bool isHeaderOpen = ImGui::CollapsingHeader("Sequencer", ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+		RemoveComponentButton(Havtorn::EComponentType::SequencerComponent);
+
+		if (!isHeaderOpen)
+			return;
+
+		Havtorn::SSequencerComponent& sequencerComponent = Scene->GetSequencerComponents()[SelectedEntityIndex];
+		for (const Havtorn::SSequencerComponentTrack& componentTrack : sequencerComponent.ComponentTracks)
+		{
+			ImGui::Text(Havtorn::GetComponentTypeString(componentTrack.ComponentType).c_str());
 		}
 	}
 

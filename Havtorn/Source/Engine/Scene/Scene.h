@@ -37,6 +37,7 @@ namespace Havtorn
 	struct SSpriteComponent;
 	struct STransform2DComponent;
 	struct SSpriteAnimatorGraphComponent;
+	struct SSequencerComponent;
 	struct SGhostyComponent;
 	struct SDebugShapeComponent;
 	struct SMetaDataComponent;
@@ -57,6 +58,7 @@ namespace Havtorn
 		bool Init3DDemoScene(CRenderManager* renderManager);
 		bool Init2DDemoScene(CRenderManager* renderManager);
 
+		// TODO.NR: Rework serialization to decrease amount of boilerplate
 		[[nodiscard]] U32 GetSize() const;
 		void Serialize(char* toData, U64& pointerPosition) const;
 		void Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry);
@@ -90,6 +92,7 @@ namespace Havtorn
 		COMPONENT_VECTOR_GETTER(SpriteComponent)
 		COMPONENT_VECTOR_GETTER(Transform2DComponent)
 		COMPONENT_VECTOR_GETTER(SpriteAnimatorGraphComponent)
+		COMPONENT_VECTOR_GETTER(SequencerComponent)
 		COMPONENT_VECTOR_GETTER(GhostyComponent)
 		COMPONENT_VECTOR_GETTER(DebugShapeComponent)
 		COMPONENT_VECTOR_GETTER(MetaDataComponent)
@@ -108,6 +111,7 @@ namespace Havtorn
 		COMPONENT_ADDER_DECLARATION(SpriteComponent)
 		COMPONENT_ADDER_DECLARATION(Transform2DComponent)
 		COMPONENT_ADDER_DECLARATION(SpriteAnimatorGraphComponent)
+		COMPONENT_ADDER_DECLARATION(SequencerComponent)
 		COMPONENT_ADDER_DECLARATION(GhostyComponent)
 		COMPONENT_ADDER_DECLARATION(DebugShapeComponent)
 		COMPONENT_ADDER_DECLARATION(MetaDataComponent)
@@ -126,6 +130,7 @@ namespace Havtorn
 		COMPONENT_REMOVER_DECLARATION(SpriteComponent)
 		COMPONENT_REMOVER_DECLARATION(Transform2DComponent)
 		COMPONENT_REMOVER_DECLARATION(SpriteAnimatorGraphComponent)
+		COMPONENT_REMOVER_DECLARATION(SequencerComponent)
 		COMPONENT_REMOVER_DECLARATION(GhostyComponent)
 		COMPONENT_REMOVER_DECLARATION(DebugShapeComponent)
 		COMPONENT_REMOVER_DECLARATION(MetaDataComponent)
@@ -151,6 +156,7 @@ namespace Havtorn
 		COMPONENT_VECTOR_DECLARATION(SpriteComponent)
 		COMPONENT_VECTOR_DECLARATION(Transform2DComponent)
 		COMPONENT_VECTOR_DECLARATION(SpriteAnimatorGraphComponent)
+		COMPONENT_VECTOR_DECLARATION(SequencerComponent)
 		COMPONENT_VECTOR_DECLARATION(GhostyComponent)
 		COMPONENT_VECTOR_DECLARATION(DebugShapeComponent)
 		COMPONENT_VECTOR_DECLARATION(MetaDataComponent)

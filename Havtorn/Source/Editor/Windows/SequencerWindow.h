@@ -1,17 +1,22 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include <set>
 
 #include "EditorWindow.h"
-#include "Core/ImGuizmo/ImSequencer.h"
+#include "EditorManager.h"
+
+#include <Scene/Scene.h>
+#include <ECS/Systems/SequencerSystem.h>
 
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"
 
+#include "Core/ImGuizmo/ImSequencer.h"
 #include "Core/ImGuizmo/ImGuizmo.h"
 
-static const char* SequencerItemTypeNames[] = { "Camera","Music", "ScreenEffect", "FadeIn", "Animation" };
+#include <set>
+#include <map>
+#include <string>
 
 using namespace ImSequencer;
 using Havtorn::U64;
@@ -215,12 +220,12 @@ struct SSequencer : public ImSequencer::SequenceInterface
 
     virtual int GetItemCount() const { return (int)Items.size(); }
 
-    virtual int GetItemTypeCount() const { return sizeof(SequencerItemTypeNames) / sizeof(char*); }
-    virtual const char* GetItemTypeName(int typeIndex) const { return SequencerItemTypeNames[typeIndex]; }
+    virtual int GetItemTypeCount() const { return static_cast<int>(ItemNames.size()); }
+    virtual const char* GetItemTypeName(int typeIndex) const { return ItemNames[typeIndex].c_str(); }
     virtual const char* GetItemLabel(int index) const
     {
         static char tmps[512];
-        snprintf(tmps, 512, "[%02d] %s", index, SequencerItemTypeNames[Items[index].Type]);
+        snprintf(tmps, 512, "[%02d] %s", index, ItemNames[Items[index].Type].c_str());
         return tmps;
     }
 
@@ -246,6 +251,7 @@ struct SSequencer : public ImSequencer::SequenceInterface
     SSequencer() : FrameMin(0), FrameMax(0) {}
     int FrameMin, FrameMax;
     std::vector<SSequenceItem> Items;
+    std::vector<std::string> ItemNames;
     SRampEdit RampEdit;
 
     virtual void DoubleClick(int index) 
@@ -328,8 +334,11 @@ namespace ImGui
 		void OnInspectorGUI() override;
 		void OnDisable() override;
 
-        void AddTransformKeyframe();
-        void AddSpriteKeyframe();
+        void AddComponentTrack(Havtorn::EComponentType componentType);
+        template<typename T>
+        void AddKeyframe(Havtorn::EComponentType componentType);
+
+        void AddSequencerItem(SSequenceItem item, const std::string& itemName);
 
 	private:
         Havtorn::CSequencerSystem* SequencerSystem = nullptr;
@@ -337,4 +346,22 @@ namespace ImGui
         std::vector<std::string> Sequencers;
         Havtorn::U16 CurrentSequencerIndex = 0;
 	};
+    
+    template<typename T>
+    inline void CSequencerWindow::AddKeyframe(Havtorn::EComponentType componentType)
+    {
+        Havtorn::SEntity* entity = Manager->GetSelectedEntity();
+        Havtorn::CScene* scene = Manager->GetCurrentScene();
+
+        if (entity == nullptr || scene == nullptr)
+            return;
+
+        U64 sceneIndex = scene->GetSceneIndex(entity->GUID);
+        std::vector<Havtorn::SSequencerComponent>& sequencerComponents = scene->GetSequencerComponents();
+
+        if (sceneIndex >= sequencerComponents.size())
+            return;
+
+        SequencerSystem->AddEmptyKeyframeToComponent<T>(sequencerComponents[sceneIndex], componentType);
+    }
 }
