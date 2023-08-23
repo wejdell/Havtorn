@@ -30,10 +30,10 @@ namespace Havtorn
 		HAVTORN_API SSequencerContextData GetSequencerContextData() const;
 		HAVTORN_API void SetSequencerContextData(const SSequencerContextData& data);
 		
+		HAVTORN_API void AddComponentTrackToComponent(SSequencerComponent& sequencerComponent, EComponentType trackComponentType);
+
 		template<typename T>
 		void AddEmptyKeyframeToComponent(SSequencerComponent& sequencerComponent, EComponentType componentType);
-
-		HAVTORN_API void AddComponentTrackToComponent(SSequencerComponent& sequencerComponent, EComponentType trackComponentType);
 	
 	private:
 		void RecordNewKeyframes(CScene* scene, std::vector<SSequencerComponent>& sequencerComponents);
