@@ -11,14 +11,12 @@
 #define IMGUI_DEFINE_MATH_OPERATORS
 #include "imgui_internal.h"
 
-#include "Core/ImGuizmo/ImSequencer.h"
 #include "Core/ImGuizmo/ImGuizmo.h"
 
 #include <set>
 #include <map>
 #include <string>
 
-using namespace ImSequencer;
 using Havtorn::U64;
 using Havtorn::U32;
 
@@ -199,14 +197,27 @@ private:
     }
 };
 
+
+enum SEQUENCER_OPTIONS
+{
+    SEQUENCER_EDIT_NONE = 0,
+    SEQUENCER_EDIT_STARTEND = 1 << 1,
+    SEQUENCER_CHANGE_FRAME = 1 << 3,
+    SEQUENCER_ADD = 1 << 4,
+    SEQUENCER_DEL = 1 << 5,
+    SEQUENCER_COPYPASTE = 1 << 6,
+    SEQUENCER_EDIT_ALL = SEQUENCER_EDIT_STARTEND | SEQUENCER_CHANGE_FRAME
+};
+
 struct SSequenceItem
 {
     int Type;
     int FrameStart, FrameEnd;
     bool IsExpanded;
+    std::vector<std::string> TrackNames;
 };
 
-struct SSequencer : public ImSequencer::SequenceInterface
+struct SSequencer
 {
     virtual int GetFrameMin() const 
     {
@@ -220,6 +231,8 @@ struct SSequencer : public ImSequencer::SequenceInterface
 
     virtual int GetItemCount() const { return (int)Items.size(); }
 
+    virtual void BeginEdit(int /*index*/) {}
+    virtual void EndEdit() {}
     virtual int GetItemTypeCount() const { return static_cast<int>(ItemNames.size()); }
     virtual const char* GetItemTypeName(int typeIndex) const { return ItemNames[typeIndex].c_str(); }
     virtual const char* GetItemLabel(int index) const
@@ -228,6 +241,8 @@ struct SSequencer : public ImSequencer::SequenceInterface
         snprintf(tmps, 512, "[%02d] %s", index, ItemNames[Items[index].Type].c_str());
         return tmps;
     }
+    virtual const std::vector<std::string> GetTrackLabels(int index) { return Items[index].TrackNames; }
+    virtual const char* GetCollapseFmt() const { return "%d Frames / %d entries"; }
 
     virtual void Get(int index, int** start, int** end, int* type, unsigned int* color)
     {
@@ -245,11 +260,15 @@ struct SSequencer : public ImSequencer::SequenceInterface
     virtual void Del(int index) { Items.erase(Items.begin() + index); }
     virtual void Duplicate(int index) { Items.push_back(Items[index]); }
 
+    virtual void Copy() {}
+    virtual void Paste() {}
+
     virtual U64 GetCustomHeight(int index) { return Items[index].IsExpanded ? 300 : 0; }
 
     // Data
     SSequencer() : FrameMin(0), FrameMax(0) {}
     int FrameMin, FrameMax;
+    bool IsFocused = false;
     std::vector<SSequenceItem> Items;
     std::vector<std::string> ItemNames;
     SRampEdit RampEdit;
@@ -268,19 +287,17 @@ struct SSequencer : public ImSequencer::SequenceInterface
         Items[index].IsExpanded = !Items[index].IsExpanded;
     }
 
-    virtual void CustomDraw(int index, ImDrawList* drawList, const ImRect& rect, const ImRect& legendRect, const ImRect& clippingRect, const ImRect& legendClippingRect)
+    virtual void CustomDraw(int index, ImDrawList* drawList, const ImRect& rect, const ImRect& legendRect, const ImRect& clippingRect, const ImRect& legendClippingRect, const std::vector<std::string>& labels)
     {
-        static const char* labels[] = { "Translation", "Rotation" , "Scale" };
-
         RampEdit.MaxValue = ImVec2(float(FrameMax), 1.f);
         RampEdit.MinValue = ImVec2(float(FrameMin), 0.f);
         drawList->PushClipRect(legendClippingRect.Min, legendClippingRect.Max, true);
 
-        for (int i = 0; i < 3; i++)
+        for (int i = 0; i < labels.size(); i++)
         {
             ImVec2 pta(legendRect.Min.x + 30, legendRect.Min.y + i * 14.f);
             ImVec2 ptb(legendRect.Max.x, legendRect.Min.y + (i + 1) * 14.f);
-            drawList->AddText(pta, RampEdit.IsVisible[i] ? 0xFFFFFFFF : 0x80FFFFFF, labels[i]);
+            drawList->AddText(pta, RampEdit.IsVisible[i] ? 0xFFFFFFFF : 0x80FFFFFF, labels[i].c_str());
 
             if (ImRect(pta, ptb).Contains(GImGui->IO.MousePos) && ImGui::IsMouseClicked(0))
                 RampEdit.IsVisible[i] = !RampEdit.IsVisible[i];
@@ -332,6 +349,8 @@ namespace ImGui
 		~CSequencerWindow() override;
 		void OnEnable() override;
 		void OnInspectorGUI() override;
+        void FlowControls(Havtorn::SSequencerContextData& contextData);
+        void FillSequencer();
 		void OnDisable() override;
 
         void AddComponentTrack(Havtorn::EComponentType componentType);
@@ -339,6 +358,32 @@ namespace ImGui
         void AddKeyframe(Havtorn::EComponentType componentType);
 
         void AddSequencerItem(SSequenceItem item, const std::string& itemName);
+
+        // Draw Functions
+
+        // return true if selection is made
+        bool DrawSequencer(SSequencer* sequence, int* currentFrame, bool* expanded, int* selectedEntry, int* firstFrame, int sequenceOptions);
+
+        void Scrollbar(bool hasScrollBar, ImVec2& scrollBarSize, int firstFrameUsed, SSequencer* sequence, int frameCount, ImVec2& canvas_size, int legendWidth, ImDrawList* draw_list, ImGuiIO& io, const float& barWidthInPixels, bool& MovingScrollBar, float& framePixelWidthTarget, float& framePixelWidth, int* firstFrame, const int& visibleFrameCount, ImVec2& panningViewSource, int& panningViewFrame, bool MovingCurrentFrame, int movingEntry);
+
+        void CopyPaste(int sequenceOptions, const ImVec2& contentMin, ImVec2& canvas_pos, int ItemHeight, ImGuiIO& io, ImDrawList* draw_list, SSequencer* sequence);
+
+        void Moving(int& movingEntry, int cx, int& movingPos, float framePixelWidth, SSequencer* sequence, int* selectedEntry, int movingPart, ImGuiIO& io, bool& ret);
+
+        void Selection(bool selected, size_t& customHeight, int* selectedEntry, SSequencer* sequence, ImDrawList* draw_list, const ImVec2& contentMin, int ItemHeight, ImVec2& canvas_size);
+
+        void TrackSlotsBackground(int sequenceCount, SSequencer* sequence, const ImVec2& contentMin, int legendWidth, int ItemHeight, size_t& customHeight, ImVec2& canvas_size, ImVec2& canvas_pos, bool popupOpened, int cy, int movingEntry, int cx, ImDrawList* draw_list);
+
+        void TrackHeader(int sequenceCount, SSequencer* sequence, const ImVec2& contentMin, int ItemHeight, size_t& customHeight, ImDrawList* draw_list, int sequenceOptions, int legendWidth, ImGuiIO& io, int& delEntry, int& dupEntry);
+
+        void ChangeCurrentFrame(bool& MovingCurrentFrame, bool MovingScrollBar, int movingEntry, int sequenceOptions, int* currentFrame, ImRect& topRect, ImGuiIO& io, int frameCount, float framePixelWidth, int firstFrameUsed, SSequencer* sequence);
+
+        void Panning(ImGuiIO& io, bool& panningView, ImVec2& panningViewSource, int& panningViewFrame, int* firstFrame, float& framePixelWidth, SSequencer* sequence, const int& visibleFrameCount, float& framePixelWidthTarget, int& frameCount);
+
+        void NotExpanded(ImVec2& canvas_size, ImVec2& canvas_pos, int ItemHeight, ImDrawList* draw_list, SSequencer* sequence, int frameCount, int sequenceCount);
+
+        void AddTrackButton(int /*sequenceOptions*/, ImDrawList* /*draw_list*/, ImVec2& /*canvas_pos*/, int /*legendWidth*/, int /*ItemHeight*/, ImGuiIO& /*io*/, SSequencer* /*sequence*/, int* /*selectedEntry*/, bool& /*popupOpened*/);
+        // Draw Functions
 
 	private:
         Havtorn::CSequencerSystem* SequencerSystem = nullptr;
