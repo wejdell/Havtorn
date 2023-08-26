@@ -160,7 +160,16 @@ namespace ImGui
             
             for (U64 componentTrackIndex = 0; componentTrackIndex < component.ComponentTracks.size(); componentTrackIndex++)
             {
-                entityTrack.ComponentTracks.push_back({ component.ComponentTracks[componentTrackIndex].ComponentType });
+                // TODO.NR: Algo library?
+
+                const Havtorn::SSequencerComponentTrack& componentTrack = component.ComponentTracks[componentTrackIndex];
+                std::vector<U32> keyframes;
+                for (U64 keyframeIndex = 0; keyframeIndex < componentTrack.Keyframes.size(); keyframeIndex++)
+                {
+                    keyframes.push_back(componentTrack.Keyframes[keyframeIndex]->FrameNumber);
+                }
+
+                entityTrack.ComponentTracks.push_back({ componentTrack.ComponentType, keyframes });
             }
 
             entityTrack.FrameStart = 10;
@@ -320,7 +329,7 @@ namespace ImGui
             draw_list->AddRectFilled(canvas_pos, ImVec2(canvas_size.x + canvas_pos.x, canvas_pos.y + ItemHeight), 0xFF3D3837, 0);
 
             AddTrackButton(sequenceOptions, draw_list, canvas_pos, legendWidth, ItemHeight, io, sequence, selectedEntry, popupOpened);
-
+            
             //header frame number and lines
             int modFrameCount = 10;
             int frameStep = 1;
@@ -1369,4 +1378,73 @@ namespace ImCurveEdit
             }
         }
     }
+}
+
+void SSequencer::CustomDraw(int index, ImDrawList* drawList, const ImRect& rect, const ImRect& legendRect, const ImRect& clippingRect, const ImRect& legendClippingRect, const std::vector<SEditorComponentTrack>& componentTracks)
+{
+    RampEdit.MaxValue = ImVec2(float(FrameMax), 1.f);
+    RampEdit.MinValue = ImVec2(float(FrameMin), 0.f);
+    drawList->PushClipRect(legendClippingRect.Min, legendClippingRect.Max, true);
+
+    for (int i = 0; i < componentTracks.size(); i++)
+    {
+        ImVec2 pta(legendRect.Min.x + 30, legendRect.Min.y + i * 14.f);
+        ImVec2 ptb(legendRect.Max.x, legendRect.Min.y + (i + 1) * 14.f);
+
+        drawList->AddText(pta, RampEdit.IsVisible[i] ? 0xFFFFFFFF : 0x80FFFFFF, Havtorn::GetComponentTypeString(componentTracks[i].ComponentType).c_str());
+
+        if (ImRect(pta, ptb).Contains(GImGui->IO.MousePos) && ImGui::IsMouseClicked(0))
+            RampEdit.IsVisible[i] = !RampEdit.IsVisible[i];
+    }
+
+    drawList->PopClipRect();
+
+    ImGui::SetCursorScreenPos(rect.Min);
+    ImVec2 rectMax = rect.Max;
+    ImVec2 rectMin = rect.Min;
+    ImVec2 size = ImVec2(rectMax.x - rectMin.x, rectMax.y - rectMin.y);
+    U32 id = 137 + index;
+
+    // ImGui variables / style setup
+    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
+    ImGui::PushStyleColor(ImGuiCol_Border, 0);
+    ImGui::BeginChildFrame(id, size);
+    RampEdit.IsFocused = ImGui::IsWindowFocused();
+    ImDrawList* draw_list = ImGui::GetWindowDrawList();
+
+    draw_list->PushClipRect(clippingRect.Min, clippingRect.Max, true);
+
+    // Temp variables
+    // NR: What is -4.5 exactly? horizontal offset from frame line or something. Look at playhead's horizontal offset
+    const ImVec2 offset = ImGui::GetCursorScreenPos() + ImVec2(-4.5f, size.y);
+    const ImVec2 ssize(size.x, -size.y);
+    ImVec2 min = ImVec2(float(FrameMin), offset.y);
+    ImVec2 max = ImVec2(float(FrameMax), offset.y + ssize.y - 9.0f);
+    ImVec2 range = max - min + ImVec2(1.f, 0.f);  // +1 because of inclusive last frame
+    const ImVec2 viewSize(size.x, -size.y);
+
+    draw_list->AddRectFilled(offset, offset + ssize, RampEdit.GetBackgroundColor());
+
+    auto pointToRange = [&](ImVec2 pt) { return (pt - min) / range; };
+    for (int i2 = 0; i2 < componentTracks.size(); i2++)
+    {
+        const SEditorComponentTrack& componentTrack = componentTracks[i2];
+        for (U32 keyframe : componentTrack.Keyframes)
+        {
+            ImVec2 point = ImVec2(static_cast<Havtorn::F32>(keyframe), legendRect.Min.y + i2 * 14.f);
+            DrawKeyframe(drawList, pointToRange(point), viewSize, offset, false);
+        }
+    }
+
+    draw_list->PopClipRect();
+
+    ImGui::EndChildFrame();
+    ImGui::PopStyleVar();
+    ImGui::PopStyleColor(1);
+
+    //ImGui::SetCursorScreenPos(rect.Min);
+    //ImVec2 max = rect.Max;
+    //ImVec2 min = rect.Min;
+    //ImVec2 size = ImVec2(max.x - min.x, max.y - min.y);
+    //ImCurveEdit::Edit(RampEdit, size, 137 + index, &clippingRect);
 }
