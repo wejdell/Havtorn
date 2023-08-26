@@ -19,14 +19,8 @@ namespace ImGui
         Sequencer.FrameMin = 0;
         Sequencer.FrameMax = 100;
 
-        Sequencer.Items.push_back(SSequenceItem{ 0, 10, 30, false, {std::string("transform"), std::string("rotation"), std::string("blabla")}});
-        Sequencer.Items.push_back(SSequenceItem{ 1, 20, 30, true, {std::string("transform"), std::string("rotation"), std::string("blabla")} });
-        Sequencer.Items.push_back(SSequenceItem{ 3, 12, 60, false, {std::string("transform"), std::string("rotation"), std::string("blabla")} });
-        Sequencer.Items.push_back(SSequenceItem{ 2, 61, 90, false, {std::string("transform"), std::string("rotation"), std::string("blabla")} });
-        Sequencer.ItemNames.push_back("Camera");
-        Sequencer.ItemNames.push_back("Camera");
-        Sequencer.ItemNames.push_back("Camera");
-        Sequencer.ItemNames.push_back("Camera");
+        Sequencer.EntityTracks.push_back(SEditorEntityTrack{ std::string("Camera"), {{Havtorn::EComponentType::TransformComponent}, {Havtorn::EComponentType::SpriteComponent}}, 0, 10, 30, false });
+        Sequencer.EntityTracks.push_back(SEditorEntityTrack{ std::string("Player"), {{Havtorn::EComponentType::TransformComponent}, {Havtorn::EComponentType::SpriteComponent}}, 1, 20, 30, true });
 
         Sequencers.push_back("Intro");
         Sequencers.push_back("BossFight");
@@ -165,13 +159,12 @@ namespace ImGui
 
         SequencerSystem->AddComponentTrackToComponent(sequencerComponents[sceneIndex], componentType);
 
-        AddSequencerItem(SSequenceItem{ 0, 10, 30, false }, Havtorn::GetComponentTypeString(componentType));
+        AddSequencerItem(SEditorEntityTrack{ std::string("Sprite"), { {componentType} }, 0, 10, 30, false });
     }
 
-    void CSequencerWindow::AddSequencerItem(SSequenceItem item, const std::string& itemName)
+    void CSequencerWindow::AddSequencerItem(SEditorEntityTrack item)
     {
-        Sequencer.Items.push_back(item);
-        Sequencer.ItemNames.push_back(itemName);
+        Sequencer.EntityTracks.push_back(item);
     }
 
     // Draw Functions
@@ -217,7 +210,7 @@ namespace ImGui
         int ItemHeight = 20;
 
         bool popupOpened = false;
-        int sequenceCount = sequence->GetItemCount();
+        int sequenceCount = sequence->GetEntityTrackCount();
         if (!sequenceCount)
             return false;
         ImGui::BeginGroup();
@@ -241,7 +234,7 @@ namespace ImGui
             ImRect legendRect;
             ImRect clippingRect;
             ImRect legendClippingRect;
-            std::vector<std::string> labels;
+            std::vector<SEditorComponentTrack> componentTracks;
         };
         ImVector<CustomDraw> customDraws;
         ImVector<CustomDraw> compactCustomDraws;
@@ -450,8 +443,8 @@ namespace ImGui
 
                     ImRect legendRect(rp + ImVec2(0.f, float(ItemHeight)), rp + ImVec2(float(legendWidth), float(localCustomHeight)));
                     ImRect legendClippingRect(canvas_pos + ImVec2(0.f, float(ItemHeight)), canvas_pos + ImVec2(float(legendWidth), float(localCustomHeight + ItemHeight)));
-                    std::vector<std::string> labels = sequence->GetTrackLabels(i);
-                    customDraws.push_back({ i, customRect, legendRect, clippingRect, legendClippingRect, labels });
+                    std::vector<SEditorComponentTrack> componentTracks = sequence->GetComponentTracks(i);
+                    customDraws.push_back({ i, customRect, legendRect, clippingRect, legendClippingRect, componentTracks });
                 }
                 else
                 {
@@ -484,7 +477,7 @@ namespace ImGui
             draw_list->PopClipRect();
 
             for (auto& customDraw : customDraws)
-                sequence->CustomDraw(customDraw.index, draw_list, customDraw.customRect, customDraw.legendRect, customDraw.clippingRect, customDraw.legendClippingRect, /*customDraw.labels*/sequence->Items[0].TrackNames);
+                sequence->CustomDraw(customDraw.index, draw_list, customDraw.customRect, customDraw.legendRect, customDraw.clippingRect, customDraw.legendClippingRect, /*customDraw.labels*/sequence->EntityTracks[0].ComponentTracks);
             for (auto& customDraw : compactCustomDraws)
                 sequence->CustomDrawCompact(customDraw.index, draw_list, customDraw.customRect, customDraw.clippingRect);
 
@@ -550,7 +543,7 @@ namespace ImGui
         if (delEntry != -1)
         {
             sequence->Del(delEntry);
-            if (selectedEntry && (*selectedEntry == delEntry || *selectedEntry >= sequence->GetItemCount()))
+            if (selectedEntry && (*selectedEntry == delEntry || *selectedEntry >= sequence->GetEntityTrackCount()))
                 *selectedEntry = -1;
         }
 
@@ -789,7 +782,7 @@ namespace ImGui
             int type;
             sequence->Get(i, NULL, NULL, &type, NULL);
             ImVec2 tpos(contentMin.x + 3, contentMin.y + i * ItemHeight + 2 + customHeight);
-            draw_list->AddText(tpos, 0xFFFFFFFF, sequence->GetItemLabel(i));
+            draw_list->AddText(tpos, 0xFFFFFFFF, sequence->GetEntityTrackLabel(i));
 
             if (sequenceOptions & SEQUENCER_DEL)
             {
@@ -871,12 +864,17 @@ namespace ImGui
 
             if (ImGui::BeginPopup("addEntry"))
             {
-                for (int i = 0; i < sequence->GetItemTypeCount(); i++)
-                    if (ImGui::Selectable(sequence->GetItemTypeName(i)))
+                if (*selectedEntry > -1 && *selectedEntry < sequence->GetEntityTrackCount())
+                {
+                    for (int i = 0; i < sequence->GetComponentTrackCount(*selectedEntry); i++)
                     {
-                        sequence->Add(i);
-                        *selectedEntry = sequence->GetItemCount() - 1;
+                        if (ImGui::Selectable(sequence->GetComponentTrackLabel(*selectedEntry, i).c_str()))
+                        {
+                            sequence->Add(i);
+                            //*selectedEntry = sequence->GetEntityTrackCount() - 1;
+                        }
                     }
+                }
 
                 ImGui::EndPopup();
                 popupOpened = true;

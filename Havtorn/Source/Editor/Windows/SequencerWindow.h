@@ -209,12 +209,18 @@ enum SEQUENCER_OPTIONS
     SEQUENCER_EDIT_ALL = SEQUENCER_EDIT_STARTEND | SEQUENCER_CHANGE_FRAME
 };
 
-struct SSequenceItem
+struct SEditorComponentTrack
 {
+    Havtorn::EComponentType ComponentType;
+};
+
+struct SEditorEntityTrack
+{
+    std::string Name;
+    std::vector<SEditorComponentTrack> ComponentTracks;
     int Type;
     int FrameStart, FrameEnd;
     bool IsExpanded;
-    std::vector<std::string> TrackNames;
 };
 
 struct SSequencer
@@ -229,24 +235,24 @@ struct SSequencer
         return FrameMax;
     }
 
-    virtual int GetItemCount() const { return (int)Items.size(); }
+    virtual int GetEntityTrackCount() const { return (int)EntityTracks.size(); }
 
     virtual void BeginEdit(int /*index*/) {}
     virtual void EndEdit() {}
-    virtual int GetItemTypeCount() const { return static_cast<int>(ItemNames.size()); }
-    virtual const char* GetItemTypeName(int typeIndex) const { return ItemNames[typeIndex].c_str(); }
-    virtual const char* GetItemLabel(int index) const
+    virtual int GetComponentTrackCount(int entityTrackIndex) const { return static_cast<int>(EntityTracks[entityTrackIndex].ComponentTracks.size()); }
+    virtual std::string GetComponentTrackLabel(int entityTrackIndex, int componentTrackIndex) const { return Havtorn::GetComponentTypeString(EntityTracks[entityTrackIndex].ComponentTracks[componentTrackIndex].ComponentType); }
+    virtual const char* GetEntityTrackLabel(int index) const
     {
         static char tmps[512];
-        snprintf(tmps, 512, "[%02d] %s", index, ItemNames[Items[index].Type].c_str());
+        snprintf(tmps, 512, "[%02d] %s", index, EntityTracks[index].Name.c_str());
         return tmps;
     }
-    virtual const std::vector<std::string> GetTrackLabels(int index) { return Items[index].TrackNames; }
+    virtual const std::vector<SEditorComponentTrack>& GetComponentTracks(int index) { return EntityTracks[index].ComponentTracks; }
     virtual const char* GetCollapseFmt() const { return "%d Frames / %d entries"; }
 
     virtual void Get(int index, int** start, int** end, int* type, unsigned int* color)
     {
-        SSequenceItem& item = Items[index];
+        SEditorEntityTrack& item = EntityTracks[index];
         if (color)
             *color = 0xFFAA8080; // same color for everyone, return color based on type
         if (start)
@@ -256,48 +262,47 @@ struct SSequencer
         if (type)
             *type = item.Type;
     }
-    virtual void Add(int type) { Items.push_back(SSequenceItem{ type, 0, 10, false }); };
-    virtual void Del(int index) { Items.erase(Items.begin() + index); }
-    virtual void Duplicate(int index) { Items.push_back(Items[index]); }
+    virtual void Add(int /*type*/) { EntityTracks.push_back(SEditorEntityTrack{ "Player", {{Havtorn::EComponentType::TransformComponent}}, 0, 10, 20, false }); };
+    virtual void Del(int index) { EntityTracks.erase(EntityTracks.begin() + index); }
+    virtual void Duplicate(int index) { EntityTracks.push_back(EntityTracks[index]); }
 
     virtual void Copy() {}
     virtual void Paste() {}
 
-    virtual U64 GetCustomHeight(int index) { return Items[index].IsExpanded ? 300 : 0; }
+    virtual U64 GetCustomHeight(int index) { return EntityTracks[index].IsExpanded ? 300 : 0; }
 
     // Data
     SSequencer() : FrameMin(0), FrameMax(0) {}
     int FrameMin, FrameMax;
     bool IsFocused = false;
-    std::vector<SSequenceItem> Items;
-    std::vector<std::string> ItemNames;
+    std::vector<SEditorEntityTrack> EntityTracks;
     SRampEdit RampEdit;
 
     virtual void DoubleClick(int index) 
     {
-        if (Items[index].IsExpanded)
+        if (EntityTracks[index].IsExpanded)
         {
-            Items[index].IsExpanded = false;
+            EntityTracks[index].IsExpanded = false;
             return;
         }
 
-        for (auto& item : Items)
+        for (auto& item : EntityTracks)
             item.IsExpanded = false;
 
-        Items[index].IsExpanded = !Items[index].IsExpanded;
+        EntityTracks[index].IsExpanded = !EntityTracks[index].IsExpanded;
     }
 
-    virtual void CustomDraw(int index, ImDrawList* drawList, const ImRect& rect, const ImRect& legendRect, const ImRect& clippingRect, const ImRect& legendClippingRect, const std::vector<std::string>& labels)
+    virtual void CustomDraw(int index, ImDrawList* drawList, const ImRect& rect, const ImRect& legendRect, const ImRect& clippingRect, const ImRect& legendClippingRect, const std::vector<SEditorComponentTrack>& componentTracks)
     {
         RampEdit.MaxValue = ImVec2(float(FrameMax), 1.f);
         RampEdit.MinValue = ImVec2(float(FrameMin), 0.f);
         drawList->PushClipRect(legendClippingRect.Min, legendClippingRect.Max, true);
 
-        for (int i = 0; i < labels.size(); i++)
+        for (int i = 0; i < componentTracks.size(); i++)
         {
             ImVec2 pta(legendRect.Min.x + 30, legendRect.Min.y + i * 14.f);
             ImVec2 ptb(legendRect.Max.x, legendRect.Min.y + (i + 1) * 14.f);
-            drawList->AddText(pta, RampEdit.IsVisible[i] ? 0xFFFFFFFF : 0x80FFFFFF, labels[i].c_str());
+            drawList->AddText(pta, RampEdit.IsVisible[i] ? 0xFFFFFFFF : 0x80FFFFFF, Havtorn::GetComponentTypeString(componentTracks[i].ComponentType).c_str());
 
             if (ImRect(pta, ptb).Contains(GImGui->IO.MousePos) && ImGui::IsMouseClicked(0))
                 RampEdit.IsVisible[i] = !RampEdit.IsVisible[i];
@@ -323,7 +328,7 @@ struct SSequencer
             for (int j = 0; j < RampEdit.PointCount[i]; j++)
             {
                 float p = RampEdit.Points[i][j].x;
-                if (p < Items[index].FrameStart || p > Items[index].FrameEnd)
+                if (p < EntityTracks[index].FrameStart || p > EntityTracks[index].FrameEnd)
                     continue;
                 float r = (p - FrameMin) / float(FrameMax - FrameMin);
                 float x = ImLerp(rect.Min.x, rect.Max.x, r);
@@ -357,7 +362,7 @@ namespace ImGui
         template<typename T>
         void AddKeyframe(Havtorn::EComponentType componentType);
 
-        void AddSequencerItem(SSequenceItem item, const std::string& itemName);
+        void AddSequencerItem(SEditorEntityTrack item);
 
         // Draw Functions
 
