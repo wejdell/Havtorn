@@ -147,7 +147,7 @@ struct SRampEdit : public ImCurveEdit::SSequencerDelegate
         return Points[curveIndex];
     }
     
-    virtual ImCurveEdit::ECurveType GetCurveType(U64 /*curveIndex*/) const { return ImCurveEdit::CurveSmooth; }
+    virtual ImCurveEdit::ECurveType GetCurveType(U64 /*curveIndex*/) const { return ImCurveEdit::CurveDiscrete; }
     
     virtual U32 EditPoint(U64 curveIndex, U32 pointIndex, ImVec2 value)
     {
@@ -212,6 +212,7 @@ enum SEQUENCER_OPTIONS
 struct SEditorComponentTrack
 {
     Havtorn::EComponentType ComponentType;
+    std::vector<U32> Keyframes = {};
 };
 
 struct SEditorEntityTrack
@@ -289,30 +290,7 @@ struct SSequencer
         EntityTracks[index].IsExpanded = !EntityTracks[index].IsExpanded;
     }
 
-    virtual void CustomDraw(int index, ImDrawList* drawList, const ImRect& rect, const ImRect& legendRect, const ImRect& clippingRect, const ImRect& legendClippingRect, const std::vector<SEditorComponentTrack>& componentTracks)
-    {
-        RampEdit.MaxValue = ImVec2(float(FrameMax), 1.f);
-        RampEdit.MinValue = ImVec2(float(FrameMin), 0.f);
-        drawList->PushClipRect(legendClippingRect.Min, legendClippingRect.Max, true);
-
-        for (int i = 0; i < componentTracks.size(); i++)
-        {
-            ImVec2 pta(legendRect.Min.x + 30, legendRect.Min.y + i * 14.f);
-            ImVec2 ptb(legendRect.Max.x, legendRect.Min.y + (i + 1) * 14.f);
-            drawList->AddText(pta, RampEdit.IsVisible[i] ? 0xFFFFFFFF : 0x80FFFFFF, Havtorn::GetComponentTypeString(componentTracks[i].ComponentType).c_str());
-
-            if (ImRect(pta, ptb).Contains(GImGui->IO.MousePos) && ImGui::IsMouseClicked(0))
-                RampEdit.IsVisible[i] = !RampEdit.IsVisible[i];
-        }
-
-        drawList->PopClipRect();
-
-        ImGui::SetCursorScreenPos(rect.Min);
-        ImVec2 max = rect.Max;
-        ImVec2 min = rect.Min;
-        ImVec2 size = ImVec2(max.x - min.x, max.y - min.y);
-        ImCurveEdit::Edit(RampEdit, size, 137 + index, &clippingRect);
-    }
+    virtual void CustomDraw(int index, ImDrawList* drawList, const ImRect& rect, const ImRect& legendRect, const ImRect& clippingRect, const ImRect& legendClippingRect, const std::vector<SEditorComponentTrack>& componentTracks);
 
     virtual void CustomDrawCompact(int index, ImDrawList* drawList, const ImRect& rect, const ImRect& clippingRect)
     {
@@ -335,6 +313,38 @@ struct SSequencer
 
         drawList->PopClipRect();
     }
+
+    static int DrawKeyframe(ImDrawList* draw_list, ImVec2 pos, const ImVec2 size, const ImVec2 offset, bool edited)
+    {
+        int ret = 0;
+        ImGuiIO& io = ImGui::GetIO();
+
+        static const ImVec2 localOffsets[4] = { ImVec2(1,0), ImVec2(0,1), ImVec2(-1,0), ImVec2(0,-1) };
+        ImVec2 offsets[4];
+        for (int i = 0; i < 4; i++)
+        {
+            offsets[i] = pos * size + localOffsets[i] * 4.5f + offset;
+        }
+
+        const ImVec2 center = pos * size + offset;
+        const ImRect anchor(center - ImVec2(5, 5), center + ImVec2(5, 5));
+        draw_list->AddConvexPolyFilled(offsets, 4, 0xFF000000);
+        if (anchor.Contains(io.MousePos))
+        {
+            ret = 1;
+            if (io.MouseDown[0])
+                ret = 2;
+        }
+        if (edited)
+            draw_list->AddPolyline(offsets, 4, 0xFFFFFFFF, true, 3.0f);
+        else if (ret)
+            draw_list->AddPolyline(offsets, 4, 0xFF80B0FF, true, 2.0f);
+        else
+            draw_list->AddPolyline(offsets, 4, 0xFF0080FF, true, 2.0f);
+
+        return ret;
+    }
+
 };
 
 namespace Havtorn

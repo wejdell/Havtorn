@@ -585,13 +585,11 @@ namespace Havtorn
 			locomotionNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Move Left"), moveLeft);
 			locomotionNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Move Right"), moveRight);
 
-
-
-
 			U16 spriteIndex = static_cast<U16>(GetSceneIndex(*ghosty));
 			assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
 
 			SSequencerComponent& sequencerComponent = AddSequencerComponentToEntity(*ghosty);
+			sequencerComponent.ComponentTracks.push_back({ EComponentType::TransformComponent });
 			sequencerComponent.ComponentTracks.push_back({ EComponentType::SpriteComponent });
 		}
 
