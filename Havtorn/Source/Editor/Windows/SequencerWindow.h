@@ -218,7 +218,6 @@ struct SEditorEntityTrack
 {
     std::string Name;
     std::vector<SEditorComponentTrack> ComponentTracks;
-    int Type;
     int FrameStart, FrameEnd;
     bool IsExpanded;
 };
@@ -250,7 +249,7 @@ struct SSequencer
     virtual const std::vector<SEditorComponentTrack>& GetComponentTracks(int index) { return EntityTracks[index].ComponentTracks; }
     virtual const char* GetCollapseFmt() const { return "%d Frames / %d entries"; }
 
-    virtual void Get(int index, int** start, int** end, int* type, unsigned int* color)
+    virtual void Get(int index, int** start, int** end, int* /*type*/, unsigned int* color)
     {
         SEditorEntityTrack& item = EntityTracks[index];
         if (color)
@@ -259,10 +258,8 @@ struct SSequencer
             *start = &item.FrameStart;
         if (end)
             *end = &item.FrameEnd;
-        if (type)
-            *type = item.Type;
     }
-    virtual void Add(int /*type*/) { EntityTracks.push_back(SEditorEntityTrack{ "Player", {{Havtorn::EComponentType::TransformComponent}}, 0, 10, 20, false }); };
+    virtual void Add(int /*type*/) { EntityTracks.push_back(SEditorEntityTrack{ "Player", {{Havtorn::EComponentType::TransformComponent}}, 10, 20, false }); };
     virtual void Del(int index) { EntityTracks.erase(EntityTracks.begin() + index); }
     virtual void Duplicate(int index) { EntityTracks.push_back(EntityTracks[index]); }
 

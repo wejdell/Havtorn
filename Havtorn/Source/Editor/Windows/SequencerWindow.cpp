@@ -4,9 +4,11 @@
 #include "../ImGuizmo/ImGradient.h"
 #include "EditorManager.h"
 #include "EditorResourceManager.h"
-#include "ECS/Systems/SequencerSystem.h"
-#include "SequencerKeyframes/SequencerTransformKeyframe.h"
-#include "SequencerKeyframes/SequencerSpriteKeyframe.h"
+
+#include <ECS/Systems/SequencerSystem.h>
+#include <ECS/Components/MetaDataComponent.h>
+#include <SequencerKeyframes/SequencerTransformKeyframe.h>
+#include <SequencerKeyframes/SequencerSpriteKeyframe.h>
 
 #include <set>
 
@@ -19,8 +21,8 @@ namespace ImGui
         Sequencer.FrameMin = 0;
         Sequencer.FrameMax = 100;
 
-        Sequencer.EntityTracks.push_back(SEditorEntityTrack{ std::string("Camera"), {{Havtorn::EComponentType::TransformComponent}, {Havtorn::EComponentType::SpriteComponent}}, 0, 10, 30, false });
-        Sequencer.EntityTracks.push_back(SEditorEntityTrack{ std::string("Player"), {{Havtorn::EComponentType::TransformComponent}, {Havtorn::EComponentType::SpriteComponent}}, 1, 20, 30, true });
+        //Sequencer.EntityTracks.push_back(SEditorEntityTrack{ std::string("Camera"), {{Havtorn::EComponentType::TransformComponent}, {Havtorn::EComponentType::SpriteComponent}}, 10, 30, false });
+        //Sequencer.EntityTracks.push_back(SEditorEntityTrack{ std::string("Player"), {{Havtorn::EComponentType::TransformComponent}, {Havtorn::EComponentType::SpriteComponent}}, 20, 30, true });
 
         Sequencers.push_back("Intro");
         Sequencers.push_back("BossFight");
@@ -136,7 +138,37 @@ namespace ImGui
 
     void CSequencerWindow::FillSequencer()
     {
+        Havtorn::CScene* const scene = Manager->GetCurrentScene();
+        if (scene == nullptr)
+            return;
 
+        std::vector<Havtorn::SSequencerComponent>& sequencerComponents = scene->GetSequencerComponents();
+        std::vector<Havtorn::SMetaDataComponent>& metaDataComponents = scene->GetMetaDataComponents();
+
+        Sequencer.EntityTracks.clear();
+
+        for (U64 index = 0; index < sequencerComponents.size(); index++)
+        {
+            const Havtorn::SSequencerComponent& component = sequencerComponents[index];
+            if (!component.IsInUse)
+                continue;
+
+            const Havtorn::SMetaDataComponent& metaData = metaDataComponents[index];
+
+            SEditorEntityTrack entityTrack;
+            entityTrack.Name = metaData.Name.AsString();
+            
+            for (U64 componentTrackIndex = 0; componentTrackIndex < component.ComponentTracks.size(); componentTrackIndex++)
+            {
+                entityTrack.ComponentTracks.push_back({ component.ComponentTracks[componentTrackIndex].ComponentType });
+            }
+
+            entityTrack.FrameStart = 10;
+            entityTrack.FrameEnd = 20;
+            entityTrack.IsExpanded = true;
+
+            Sequencer.EntityTracks.push_back(entityTrack);
+        }
     }
 
 	void CSequencerWindow::OnDisable()
@@ -145,8 +177,8 @@ namespace ImGui
 
     void CSequencerWindow::AddComponentTrack(Havtorn::EComponentType componentType)
     {
-        Havtorn::SEntity* entity = Manager->GetSelectedEntity();
-        Havtorn::CScene* scene = Manager->GetCurrentScene();
+        Havtorn::SEntity* const entity = Manager->GetSelectedEntity();
+        Havtorn::CScene* const scene = Manager->GetCurrentScene();
 
         if (entity == nullptr || scene == nullptr)
             return;
@@ -159,7 +191,7 @@ namespace ImGui
 
         SequencerSystem->AddComponentTrackToComponent(sequencerComponents[sceneIndex], componentType);
 
-        AddSequencerItem(SEditorEntityTrack{ std::string("Sprite"), { {componentType} }, 0, 10, 30, false });
+        //AddSequencerItem(SEditorEntityTrack{ std::string("Sprite"), { {componentType} }, 10, 30, false });
     }
 
     void CSequencerWindow::AddSequencerItem(SEditorEntityTrack item)

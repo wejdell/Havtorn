@@ -591,7 +591,8 @@ namespace Havtorn
 			U16 spriteIndex = static_cast<U16>(GetSceneIndex(*ghosty));
 			assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
 
-			AddSequencerComponentToEntity(*ghosty);
+			SSequencerComponent& sequencerComponent = AddSequencerComponentToEntity(*ghosty);
+			sequencerComponent.ComponentTracks.push_back({ EComponentType::SpriteComponent });
 		}
 
 		//{

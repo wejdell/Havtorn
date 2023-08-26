@@ -83,7 +83,7 @@ namespace Havtorn
 
 		U64 spriteGUID = entities[4].GUID;
 		U64 sceneIndex = scene->GetSceneIndex(spriteGUID);
-		
+
 		AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(scene->GetSequencerComponents()[sceneIndex], EComponentType::SpriteComponent);
 		//spriteTrack.ComponentTracks.emplace_back(SSequencerComponentTrack{ EComponentType::SpriteComponent, {}, {}, {} });
 	}

@@ -52,6 +52,8 @@ namespace Havtorn
 	template<typename T>
 	void CSequencerSystem::AddEmptyKeyframeToComponent(SSequencerComponent& sequencerComponent, EComponentType componentType)
 	{
+		// TODO.NR: Add new component track if doesn't exist?
+
 		for (SSequencerComponentTrack& componentTrack : sequencerComponent.ComponentTracks)
 		{
 			if (componentType == componentTrack.ComponentType)
