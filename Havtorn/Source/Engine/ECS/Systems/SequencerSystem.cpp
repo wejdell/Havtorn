@@ -7,7 +7,7 @@
 #include "SequencerKeyframes/SequencerKeyframe.h"
 #include "ECS/Components/SequencerComponent.h"
 
-//#include "SequencerKeyframes/SequencerTransformKeyframe.h"
+#include "SequencerKeyframes/SequencerTransformKeyframe.h"
 #include "SequencerKeyframes/SequencerSpriteKeyframe.h"
 #include "ECS/Components/TransformComponent.h"
 
@@ -87,6 +87,22 @@ namespace Havtorn
 		AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(scene->GetSequencerComponents()[sceneIndex], EComponentType::SpriteComponent);
 		Data.CurrentFrame = 24;
 		AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(scene->GetSequencerComponents()[sceneIndex], EComponentType::SpriteComponent);
+		Data.CurrentFrame = 30;
+		auto newKeyframe = AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(scene->GetSequencerComponents()[sceneIndex], EComponentType::SpriteComponent);
+		newKeyframe->ShouldBlendRight = false;
+		newKeyframe->ShouldBlendLeft = false;
+		Data.CurrentFrame = 40;
+		newKeyframe = AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(scene->GetSequencerComponents()[sceneIndex], EComponentType::SpriteComponent);
+		newKeyframe->ShouldBlendLeft = false;
+		Data.CurrentFrame = 60;
+		newKeyframe = AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(scene->GetSequencerComponents()[sceneIndex], EComponentType::SpriteComponent);
+		newKeyframe->ShouldBlendRight = false;
+
+		Data.CurrentFrame = 18;
+		AddEmptyKeyframeToComponent<SSequencerTransformKeyframe>(scene->GetSequencerComponents()[sceneIndex], EComponentType::TransformComponent);
+		Data.CurrentFrame = 29;
+		AddEmptyKeyframeToComponent<SSequencerTransformKeyframe>(scene->GetSequencerComponents()[sceneIndex], EComponentType::TransformComponent);
+		
 		Data.CurrentFrame = 0;
 		//spriteTrack.ComponentTracks.emplace_back(SSequencerComponentTrack{ EComponentType::SpriteComponent, {}, {}, {} });
 	}
