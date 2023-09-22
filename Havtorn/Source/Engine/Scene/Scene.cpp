@@ -449,6 +449,9 @@ namespace Havtorn
 		//		SCameraControllerComponent& controllerComp = 
 		AddCameraControllerComponentToEntity(*cameraEntity);
 		//controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
+		// 
+		SSequencerComponent& cameraSequencerComponent = AddSequencerComponentToEntity(*cameraEntity);
+		cameraSequencerComponent.ComponentTracks.push_back({ EComponentType::TransformComponent });
 		// === !Camera ===
 
 		// === Environment light ===
@@ -507,6 +510,10 @@ namespace Havtorn
 		spotlightComp.ShadowmapView.ShadowmapViewportIndex = 7;
 		spotlightComp.ShadowmapView.ShadowViewMatrix = SMatrix::LookAtLH(spotlightPosition.ToVector3(), (spotlightPosition + spotlightComp.Direction).ToVector3(), spotlightComp.DirectionNormal2.ToVector3());
 		spotlightComp.ShadowmapView.ShadowProjectionMatrix = spotlightProjection;
+
+		SSequencerComponent& spotlightSequencerComponent = AddSequencerComponentToEntity(*spotlight);
+		spotlightSequencerComponent.ComponentTracks.push_back({ EComponentType::SpotLightComponent });
+		spotlightSequencerComponent.ComponentTracks.push_back({ EComponentType::DecalComponent });
 		// === !Spotlight ===
 
 		{
@@ -591,6 +598,8 @@ namespace Havtorn
 			SSequencerComponent& sequencerComponent = AddSequencerComponentToEntity(*ghosty);
 			sequencerComponent.ComponentTracks.push_back({ EComponentType::TransformComponent });
 			sequencerComponent.ComponentTracks.push_back({ EComponentType::SpriteComponent });
+			sequencerComponent.ComponentTracks.push_back({ EComponentType::GhostyComponent });
+			sequencerComponent.ComponentTracks.push_back({ EComponentType::CameraComponent });
 		}
 
 		//{

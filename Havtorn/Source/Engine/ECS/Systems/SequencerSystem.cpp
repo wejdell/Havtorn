@@ -83,8 +83,11 @@ namespace Havtorn
 
 		U64 spriteGUID = entities[4].GUID;
 		U64 sceneIndex = scene->GetSceneIndex(spriteGUID);
-
+		Data.CurrentFrame = 20;
 		AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(scene->GetSequencerComponents()[sceneIndex], EComponentType::SpriteComponent);
+		Data.CurrentFrame = 24;
+		AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(scene->GetSequencerComponents()[sceneIndex], EComponentType::SpriteComponent);
+		Data.CurrentFrame = 0;
 		//spriteTrack.ComponentTracks.emplace_back(SSequencerComponentTrack{ EComponentType::SpriteComponent, {}, {}, {} });
 	}
 
@@ -173,23 +176,40 @@ namespace Havtorn
 				for (U16 index = static_cast<U16>(componentTrack.CurrentKeyframeIndex); index < numberOfKeyframes; index++)
 				{
 					componentTrack.CurrentKeyframeIndex = index;
-					SSequencerKeyframe& keyframe = *componentTrack.Keyframes[index];
+					//SSequencerKeyframe& keyframe = *componentTrack.Keyframes[index];
+					SSequencerKeyframe* keyframe = componentTrack.Keyframes[index];
+					SSequencerKeyframe* nextKeyframe = (index + 1) < numberOfKeyframes ? componentTrack.Keyframes[index + 1] : nullptr;
+					
+					if (keyframe->FrameNumber <= Data.CurrentFrame)
+					{
+						componentTrack.CurrentKeyframe = keyframe;
+						componentTrack.NextKeyframe = nextKeyframe;
 
-					if (keyframe.FrameNumber <= Data.CurrentFrame && (index + 1) < numberOfKeyframes && (*componentTrack.Keyframes[index + 1]).FrameNumber > Data.CurrentFrame)
-					{
-						componentTrack.CurrentKeyframe = componentTrack.Keyframes[index];
-						componentTrack.NextKeyframe = componentTrack.Keyframes[index + 1];
-						componentTrack.TrackState = ESequencerComponentTrackState::Blending;
-						break;
-					}
-					// Reached left side of last keyframe
-					else if (keyframe.FrameNumber <= Data.CurrentFrame && (index + 1) >= numberOfKeyframes) 
-					{
-						componentTrack.CurrentKeyframe = componentTrack.Keyframes[index];
-						componentTrack.NextKeyframe = nullptr;
+						if (nextKeyframe != nullptr && nextKeyframe->FrameNumber > Data.CurrentFrame && keyframe->ShouldBlendRight && nextKeyframe->ShouldBlendLeft)
+						{
+							componentTrack.TrackState = ESequencerComponentTrackState::Blending;
+							break;
+						}
+
 						componentTrack.TrackState = ESequencerComponentTrackState::Setting;
 						break;
 					}
+
+					//if (keyframe.FrameNumber <= Data.CurrentFrame && (index + 1) < numberOfKeyframes && (*componentTrack.Keyframes[index + 1]).FrameNumber > Data.CurrentFrame)
+					//{
+					//	componentTrack.CurrentKeyframe = componentTrack.Keyframes[index];
+					//	componentTrack.NextKeyframe = componentTrack.Keyframes[index + 1];
+					//	componentTrack.TrackState = ESequencerComponentTrackState::Blending;
+					//	break;
+					//}
+					//// Reached left side of last keyframe
+					//else if (keyframe.FrameNumber <= Data.CurrentFrame && (index + 1) >= numberOfKeyframes) 
+					//{
+					//	componentTrack.CurrentKeyframe = componentTrack.Keyframes[index];
+					//	componentTrack.NextKeyframe = nullptr;
+					//	componentTrack.TrackState = ESequencerComponentTrackState::Setting;
+					//	break;
+					//}
 				}
 
 				// Don't set anything if we haven't reached a keyframe yet

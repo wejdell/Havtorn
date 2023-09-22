@@ -11,6 +11,8 @@ namespace Havtorn
 	struct HAVTORN_API SSequencerKeyframe
 	{
 		U32 FrameNumber = 0;
+		bool ShouldBlendRight = true;
+		bool ShouldBlendLeft = true;
 		bool ShouldRecord = false;
 
 		// NR: Make sure to support nextKeyframe being nullptr, this means that the function should 
