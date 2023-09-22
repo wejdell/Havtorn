@@ -197,7 +197,6 @@ private:
     }
 };
 
-
 enum SEQUENCER_OPTIONS
 {
     SEQUENCER_EDIT_NONE = 0,
@@ -209,10 +208,17 @@ enum SEQUENCER_OPTIONS
     SEQUENCER_EDIT_ALL = SEQUENCER_EDIT_STARTEND | SEQUENCER_CHANGE_FRAME
 };
 
+struct SEditorKeyframe
+{
+    U32 FrameNumber = 0;
+    bool ShouldBlendRight = true;
+    bool ShouldBlendLeft = true;
+};
+
 struct SEditorComponentTrack
 {
     Havtorn::EComponentType ComponentType;
-    std::vector<U32> Keyframes = {};
+    std::vector<SEditorKeyframe> Keyframes = {};
 };
 
 struct SEditorEntityTrack
@@ -272,7 +278,7 @@ struct SSequencer
             *end = &item.FrameEnd;
     }
 
-    virtual void GetBlendRegionInfo(int entityTrackIndex, int componentTrackIndex, int& start, int& end, unsigned int* color);
+    virtual void GetBlendRegionInfo(ImGui::CSequencerWindow* window, int entityTrackIndex, int componentTrackIndex, std::vector<std::pair<int, int>>& blendRegions, unsigned int* color);
 
     virtual void Add(int /*type*/) { EntityTracks.push_back(SEditorEntityTrack{ "Player", {{Havtorn::EComponentType::TransformComponent}}, 10, 20, false }); };
     virtual void Del(int index) { EntityTracks.erase(EntityTracks.begin() + index); }

@@ -53,7 +53,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
 	GLog::Init();
 
-	CEngineProcess* engineProcess = new CEngineProcess(100, 100, 1920, 1080);
+	CEngineProcess* engineProcess = new CEngineProcess(100, 100, 1280, 720);
 	CImGuiProcess* imGuiProcess = new CImGuiProcess();
 	CGameProcess* gameProcess = new CGameProcess();
 	CEditorProcess* editorProcess = new CEditorProcess();

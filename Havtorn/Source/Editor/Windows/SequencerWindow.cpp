@@ -164,10 +164,12 @@ namespace ImGui
                 // TODO.NR: Algo library?
 
                 const Havtorn::SSequencerComponentTrack& componentTrack = component.ComponentTracks[componentTrackIndex];
-                std::vector<U32> keyframes;
+                std::vector<SEditorKeyframe> keyframes;
                 for (U64 keyframeIndex = 0; keyframeIndex < componentTrack.Keyframes.size(); keyframeIndex++)
                 {
-                    keyframes.push_back(componentTrack.Keyframes[keyframeIndex]->FrameNumber);
+                    // TODO.NR: Make constructor for SEditorKeyframe taking a SSequencerKeyframe
+                    const Havtorn::SSequencerKeyframe* keyframe = componentTrack.Keyframes[keyframeIndex];
+                    keyframes.push_back({ keyframe->FrameNumber, keyframe->ShouldBlendRight, keyframe->ShouldBlendLeft });
                 }
 
                 entityTrack.ComponentTracks.push_back({ componentTrack.ComponentType, keyframes });
@@ -424,63 +426,71 @@ namespace ImGui
             {
                 for (int componentTrackIndex = 0; componentTrackIndex < sequence->GetComponentTrackCount(i); componentTrackIndex++)
                 {
-                    int start, end;
+                    std::vector<std::pair<int, int>> blendRegions = {};
                     unsigned int color;
-                    sequence->GetBlendRegionInfo(i, componentTrackIndex, start, end, &color);
+                    sequence->GetBlendRegionInfo(this, i, componentTrackIndex, blendRegions, &color);
 
-                    ImVec2 pos = ImVec2(contentMin.x + legendWidth - firstFrameUsed * framePixelWidth, contentMin.y + ItemHeight * (i + componentTrackIndex) - 7.f + customHeight);
-                    ImVec2 slotP1(pos.x + Havtorn::UMath::Max(start - 1, 0) * framePixelWidth, pos.y + 2 + 10.f);
-                    ImVec2 slotP2(pos.x + end * framePixelWidth, pos.y + ItemHeight - 2);
-                    unsigned int slotColor = color | 0x88000000;
+                    if (blendRegions.empty())
+                        continue;
 
-                    if (slotP1.x <= (canvas_size.x + contentMin.x) && slotP2.x >= (contentMin.x + legendWidth))
+                    for (int blendRegionIndex = 0; blendRegionIndex < blendRegions.size(); blendRegionIndex++)
                     {
-                        // Blend region rect
-                        draw_list->AddRectFilled(slotP1, slotP2, slotColor, 2);
-                    }
-                    if (ImRect(slotP1, slotP2).Contains(io.MousePos) && io.MouseDoubleClicked[0])
-                    {
-                        sequence->DoubleClick(i);
-                    }
-                    // Ensure grabbable handles
-                    const float max_handle_width = slotP2.x - slotP1.x / 3.0f;
-                    const float min_handle_width = ImMin(10.0f, max_handle_width);
-                    const float handle_width = ImClamp(framePixelWidth / 2.0f, min_handle_width, max_handle_width);
-                    ImRect rects[3] = { ImRect(slotP1, ImVec2(slotP1.x + handle_width, slotP2.y))
-                        , ImRect(ImVec2(slotP2.x - handle_width, slotP1.y), slotP2)
-                        , ImRect(slotP1, slotP2) };
+                        const std::pair<int, int>& blendRegion = blendRegions[blendRegionIndex];
+                        const int start = blendRegion.first, end = blendRegion.second;
+
+                        ImVec2 pos = ImVec2(contentMin.x + legendWidth - firstFrameUsed * framePixelWidth, contentMin.y + ItemHeight * (i + 1 + componentTrackIndex) - 7.f + customHeight);
+                        ImVec2 slotP1(pos.x + Havtorn::UMath::Max(start - 1, 0) * framePixelWidth, pos.y + 2 + 10.f);
+                        ImVec2 slotP2(pos.x + end * framePixelWidth, pos.y + ItemHeight - 2);
+                        unsigned int slotColor = color - 0x88000000;
+
+                        if (slotP1.x <= (canvas_size.x + contentMin.x) && slotP2.x >= (contentMin.x + legendWidth))
+                        {
+                            // Blend region rect
+                            draw_list->AddRectFilled(slotP1, slotP2, slotColor, 2);
+                        }
+                        if (ImRect(slotP1, slotP2).Contains(io.MousePos) && io.MouseDoubleClicked[0])
+                        {
+                            sequence->DoubleClick(i);
+                        }
+                        // Ensure grabbable handles
+                        const float max_handle_width = slotP2.x - slotP1.x / 3.0f;
+                        const float min_handle_width = ImMin(10.0f, max_handle_width);
+                        const float handle_width = ImClamp(framePixelWidth / 2.0f, min_handle_width, max_handle_width);
+                        ImRect rects[3] = { ImRect(slotP1, ImVec2(slotP1.x + handle_width, slotP2.y))
+                            , ImRect(ImVec2(slotP2.x - handle_width, slotP1.y), slotP2)
+                            , ImRect(slotP1, slotP2) };
 
 #pragma region Edit blending region
-                    const unsigned int quadColor[] = { 0xFFFFFFFF, 0xFFFFFFFF, slotColor + (selected ? 0 : 0x202020) };
-                    if (movingEntry == -1 && (sequenceOptions & SEQUENCER_EDIT_STARTEND))// TODOFOCUS && backgroundRect.Contains(io.MousePos))
-                    {
-                        for (int j = 2; j >= 0; j--)
+                        const unsigned int quadColor[] = { 0xFFFFFFFF, 0xFFFFFFFF, slotColor + (selected ? 0 : 0x202020) };
+                        if (movingEntry == -1 && (sequenceOptions & SEQUENCER_EDIT_STARTEND))// TODOFOCUS && backgroundRect.Contains(io.MousePos))
                         {
-                            ImRect& rc = rects[j];
-                            if (!rc.Contains(io.MousePos))
-                                continue;
-                            draw_list->AddRectFilled(rc.Min, rc.Max, quadColor[j], 2);
-                        }
-
-                        for (int j = 0; j < 3; j++)
-                        {
-                            ImRect& rc = rects[j];
-                            if (!rc.Contains(io.MousePos))
-                                continue;
-                            if (!ImRect(childFramePos, childFramePos + childFrameSize).Contains(io.MousePos))
-                                continue;
-                            if (ImGui::IsMouseClicked(0) && !MovingScrollBar && !MovingCurrentFrame)
+                            for (int j = 2; j >= 0; j--)
                             {
-                                movingEntry = i;
-                                movingPos = cx;
-                                movingPart = j + 1;
-                                sequence->BeginEdit(movingEntry);
-                                break;
+                                ImRect& rc = rects[j];
+                                if (!rc.Contains(io.MousePos))
+                                    continue;
+                                draw_list->AddRectFilled(rc.Min, rc.Max, quadColor[j], 2);
+                            }
+
+                            for (int j = 0; j < 3; j++)
+                            {
+                                ImRect& rc = rects[j];
+                                if (!rc.Contains(io.MousePos))
+                                    continue;
+                                if (!ImRect(childFramePos, childFramePos + childFrameSize).Contains(io.MousePos))
+                                    continue;
+                                if (ImGui::IsMouseClicked(0) && !MovingScrollBar && !MovingCurrentFrame)
+                                {
+                                    movingEntry = i;
+                                    movingPos = cx;
+                                    movingPart = j + 1;
+                                    sequence->BeginEdit(movingEntry);
+                                    break;
+                                }
                             }
                         }
-                    }
 #pragma endregion
-
+                    }
                 }
 
                 int* start, *end;
@@ -1407,19 +1417,41 @@ namespace ImCurveEdit
     }
 }
 
-void SSequencer::GetBlendRegionInfo(int entityTrackIndex, int componentTrackIndex, int& start, int& end, unsigned int* color)
+void SSequencer::GetBlendRegionInfo(ImGui::CSequencerWindow* window, int entityTrackIndex, int componentTrackIndex, std::vector<std::pair<int, int>>& blendRegions, unsigned int* color)
 {
     SEditorEntityTrack& entityTrack = EntityTracks[entityTrackIndex];
     SEditorComponentTrack& componentTrack = entityTrack.ComponentTracks[componentTrackIndex];
 
     if (color)
-        *color = 0x00AA8080;
+        *color = /*0x00AA8080*/window->GetColorPackFromComponentType(componentTrack.ComponentType).KeyframeBaseColor;
 
-    if (componentTrack.Keyframes.size() > 0)
-        start = componentTrack.Keyframes[0];
+    U64 numberOfKeyframes = componentTrack.Keyframes.size();
+    for (Havtorn::U64 keyframeIndex = 0; keyframeIndex < numberOfKeyframes; keyframeIndex++)
+    {
+        const SEditorKeyframe& keyframe = componentTrack.Keyframes[keyframeIndex];
+        if (!keyframe.ShouldBlendRight)
+            continue;
 
-    if (componentTrack.Keyframes.size() > 1)
-        end = componentTrack.Keyframes[1];
+        std::pair<int, int> potentialRegion;
+        potentialRegion.first = keyframe.FrameNumber;
+        for (Havtorn::U64 nextKeyframeIndex = keyframeIndex + 1; nextKeyframeIndex < numberOfKeyframes; nextKeyframeIndex++, keyframeIndex++)
+        {           
+            const SEditorKeyframe& nextKeyframe = componentTrack.Keyframes[nextKeyframeIndex];
+            if (nextKeyframe.ShouldBlendLeft)
+            {
+                potentialRegion.second = nextKeyframe.FrameNumber;
+            }
+            else
+            {
+                break;
+            }
+        }
+        
+        if (potentialRegion.first < potentialRegion.second)
+        {
+            blendRegions.push_back(potentialRegion);
+        }
+    }
 }
 
 void SSequencer::DrawComponentTracks(class ImGui::CSequencerWindow* sequencerWindow, int index, ImDrawList* drawList, const ImRect& rect, const ImRect& legendRect, const ImRect& clippingRect, const ImRect& legendClippingRect, const std::vector<SEditorComponentTrack>& componentTracks)
@@ -1476,7 +1508,7 @@ void SSequencer::DrawComponentTracks(class ImGui::CSequencerWindow* sequencerWin
         //for (U32 keyframe : componentTrack.Keyframes)
         for (U32 i3 = 0; i3 < componentTrack.Keyframes.size(); i3++)
         {
-            U32 keyframe = componentTrack.Keyframes[i3];
+            U32 keyframe = componentTrack.Keyframes[i3].FrameNumber;
             ImVec2 point = ImVec2(static_cast<Havtorn::F32>(keyframe), legendRect.Min.y + i2 * componentTrackHeight);
             const SEditorKeyframeColorPack colorPack = sequencerWindow->GetColorPackFromComponentType(componentTrack.ComponentType);
             DrawKeyframe(drawList, pointToRange(point), viewSize, offset, false, colorPack.KeyframeBaseColor, colorPack.KeyframeHighlightColor);

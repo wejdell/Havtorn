@@ -33,7 +33,7 @@ namespace Havtorn
 		HAVTORN_API void AddComponentTrackToComponent(SSequencerComponent& sequencerComponent, EComponentType trackComponentType);
 
 		template<typename T>
-		void AddEmptyKeyframeToComponent(SSequencerComponent& sequencerComponent, EComponentType componentType);
+		T* AddEmptyKeyframeToComponent(SSequencerComponent& sequencerComponent, EComponentType componentType);
 	
 	private:
 		void RecordNewKeyframes(CScene* scene, std::vector<SSequencerComponent>& sequencerComponents);
@@ -50,7 +50,7 @@ namespace Havtorn
 	};
 
 	template<typename T>
-	void CSequencerSystem::AddEmptyKeyframeToComponent(SSequencerComponent& sequencerComponent, EComponentType componentType)
+	T* CSequencerSystem::AddEmptyKeyframeToComponent(SSequencerComponent& sequencerComponent, EComponentType componentType)
 	{
 		// TODO.NR: Add new component track if doesn't exist?
 
@@ -65,11 +65,14 @@ namespace Havtorn
 				ShouldRecordNewKeyframes = true;
 
 				std::sort(componentTrack.Keyframes.begin(), componentTrack.Keyframes.end(), [&](const SSequencerKeyframe* a, const SSequencerKeyframe* b)
-					{
-						return a->FrameNumber < b->FrameNumber;
-					});
+				{
+					return a->FrameNumber < b->FrameNumber;
+				});
+
+				return newKeyframe;
 			}
 		}
-		
+
+		return nullptr;
 	}
 }
