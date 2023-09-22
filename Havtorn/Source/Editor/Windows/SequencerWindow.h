@@ -223,6 +223,17 @@ struct SEditorEntityTrack
     bool IsExpanded;
 };
 
+struct SEditorKeyframeColorPack
+{
+    U32 KeyframeBaseColor = 0xFF0080FF; // ARGB, 2 values per channel
+    U32 KeyframeHighlightColor = 0xFF80B0FF;
+};
+
+namespace ImGui
+{
+    class CSequencerWindow;
+}
+
 struct SSequencer
 {
     virtual int GetFrameMin() const 
@@ -260,6 +271,9 @@ struct SSequencer
         if (end)
             *end = &item.FrameEnd;
     }
+
+    virtual void GetBlendRegionInfo(int entityTrackIndex, int componentTrackIndex, int& start, int& end, unsigned int* color);
+
     virtual void Add(int /*type*/) { EntityTracks.push_back(SEditorEntityTrack{ "Player", {{Havtorn::EComponentType::TransformComponent}}, 10, 20, false }); };
     virtual void Del(int index) { EntityTracks.erase(EntityTracks.begin() + index); }
     virtual void Duplicate(int index) { EntityTracks.push_back(EntityTracks[index]); }
@@ -267,7 +281,12 @@ struct SSequencer
     virtual void Copy() {}
     virtual void Paste() {}
 
-    virtual U64 GetCustomHeight(int index) { return EntityTracks[index].IsExpanded ? 300 : 0; }
+    virtual U64 GetCustomHeight(int index) 
+    { 
+        constexpr int buffer = 30;
+        constexpr int componentTrackLabelHeight = 20;
+        return EntityTracks[index].IsExpanded ? (EntityTracks[index].ComponentTracks.size() * componentTrackLabelHeight) + buffer: 0;
+    }
 
     // Data
     SSequencer() : FrameMin(0), FrameMax(0) {}
@@ -290,7 +309,7 @@ struct SSequencer
         EntityTracks[index].IsExpanded = !EntityTracks[index].IsExpanded;
     }
 
-    virtual void CustomDraw(int index, ImDrawList* drawList, const ImRect& rect, const ImRect& legendRect, const ImRect& clippingRect, const ImRect& legendClippingRect, const std::vector<SEditorComponentTrack>& componentTracks);
+    virtual void DrawComponentTracks(ImGui::CSequencerWindow* sequencerWindow, int index, ImDrawList* drawList, const ImRect& rect, const ImRect& legendRect, const ImRect& clippingRect, const ImRect& legendClippingRect, const std::vector<SEditorComponentTrack>& componentTracks);
 
     virtual void CustomDrawCompact(int index, ImDrawList* drawList, const ImRect& rect, const ImRect& clippingRect)
     {
@@ -314,7 +333,7 @@ struct SSequencer
         drawList->PopClipRect();
     }
 
-    static int DrawKeyframe(ImDrawList* draw_list, ImVec2 pos, const ImVec2 size, const ImVec2 offset, bool edited)
+    static int DrawKeyframe(ImDrawList* draw_list, ImVec2 pos, const ImVec2 size, const ImVec2 offset, bool edited, U32 baseColor, U32 highlightColor)
     {
         int ret = 0;
         ImGuiIO& io = ImGui::GetIO();
@@ -335,12 +354,13 @@ struct SSequencer
             if (io.MouseDown[0])
                 ret = 2;
         }
+        // ABGR // base 0xFF0080FF // highlight 0xFF80B0FF
         if (edited)
             draw_list->AddPolyline(offsets, 4, 0xFFFFFFFF, true, 3.0f);
         else if (ret)
-            draw_list->AddPolyline(offsets, 4, 0xFF80B0FF, true, 2.0f);
+            draw_list->AddPolyline(offsets, 4, highlightColor, true, 2.0f);
         else
-            draw_list->AddPolyline(offsets, 4, 0xFF0080FF, true, 2.0f);
+            draw_list->AddPolyline(offsets, 4, baseColor, true, 2.0f);
 
         return ret;
     }
@@ -394,14 +414,17 @@ namespace ImGui
 
         void NotExpanded(ImVec2& canvas_size, ImVec2& canvas_pos, int ItemHeight, ImDrawList* draw_list, SSequencer* sequence, int frameCount, int sequenceCount);
 
-        void AddTrackButton(int /*sequenceOptions*/, ImDrawList* /*draw_list*/, ImVec2& /*canvas_pos*/, int /*legendWidth*/, int /*ItemHeight*/, ImGuiIO& /*io*/, SSequencer* /*sequence*/, int* /*selectedEntry*/, bool& /*popupOpened*/);
+        void AddEntityTrackButton(int /*sequenceOptions*/, ImDrawList* /*draw_list*/, ImVec2& /*canvas_pos*/, int /*legendWidth*/, int /*ItemHeight*/, ImGuiIO& /*io*/, SSequencer* /*sequence*/, int* /*selectedEntry*/, bool& /*popupOpened*/);
         // Draw Functions
+
+        const SEditorKeyframeColorPack GetColorPackFromComponentType(Havtorn::EComponentType componentType) const;
 
 	private:
         Havtorn::CSequencerSystem* SequencerSystem = nullptr;
         SSequencer Sequencer;
         std::vector<std::string> Sequencers;
         Havtorn::U16 CurrentSequencerIndex = 0;
+        std::map<Havtorn::EComponentType, SEditorKeyframeColorPack> KeyframeColorMap;
 	};
     
     template<typename T>
