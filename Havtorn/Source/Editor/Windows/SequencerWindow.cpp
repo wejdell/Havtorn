@@ -27,6 +27,9 @@ namespace ImGui
         KeyframeColorMap.insert({Havtorn::EComponentType::TransformComponent, { 0xFF95CAA5, 0xFFCAE4D2 }});
         KeyframeColorMap.insert({Havtorn::EComponentType::SpriteComponent, { 0xFFCA94A3, 0xFFE4C9D1 }});
         KeyframeColorMap.insert({Havtorn::EComponentType::SpotLightComponent, { 0xFF03BAFC, 0xFF5FABC7 }});
+
+        SupportedComponentTrackTypes.push_back(Havtorn::EComponentType::TransformComponent);
+        SupportedComponentTrackTypes.push_back(Havtorn::EComponentType::SpriteComponent);
 	}
 
 	CSequencerWindow::~CSequencerWindow()
@@ -82,20 +85,7 @@ namespace ImGui
             ImGui::SameLine();
             ImGui::Checkbox("Loop", &contextData.IsLooping);
 
-            if (ImGui::Button("Add New Transform Keyframe"))
-            {
-                AddKeyframe<Havtorn::SSequencerTransformKeyframe>(Havtorn::EComponentType::TransformComponent);
-            }
-
-            if (ImGui::Button("Add New Sprite Keyframe"))
-            {
-                AddKeyframe<Havtorn::SSequencerSpriteKeyframe>(Havtorn::EComponentType::SpriteComponent);
-            }
-
-            if (ImGui::Button("Add Sprite Track"))
-            {
-                AddComponentTrack(Havtorn::EComponentType::SpriteComponent);
-            }
+            ContentControls(&imGuiFrame, &firstFrame);
 
             ImGui::PopItemWidth();            
 
@@ -137,6 +127,132 @@ namespace ImGui
         ImGui::SameLine();
     }
 
+    void CSequencerWindow::ContentControls(int* /*currentFrame*/, int* firstFrame)
+    {
+        if (ImGui::Button("Add Component Track"))
+        {
+            // TODO.NR: Could have a bool distinguish between functionality and keep one popup function
+            ImGui::OpenPopup(NewComponentTrackPopupName.c_str());
+        }
+
+        if (ImGui::BeginPopup(NewComponentTrackPopupName.c_str()))
+        {
+            for (const Havtorn::EComponentType componentType : SupportedComponentTrackTypes)
+            {
+                if (ImGui::MenuItem(Havtorn::GetComponentTypeString(componentType).c_str()))
+                {
+                    AddComponentTrack(componentType);
+                }
+            }
+            ImGui::EndPopup();
+        }
+
+        ImGui::SameLine();
+
+        if (ImGui::Button("Add Keyframe"))
+        {
+            ImGui::OpenPopup(NewKeyframePopupName.c_str());
+        }
+
+        if (ImGui::BeginPopup(NewKeyframePopupName.c_str()))
+        {
+            for (const Havtorn::EComponentType componentType : SupportedComponentTrackTypes)
+            {
+                if (ImGui::MenuItem(Havtorn::GetComponentTypeString(componentType).c_str()))
+                {
+                    switch (componentType)
+                    {
+                    case Havtorn::EComponentType::TransformComponent:
+                        AddKeyframe<Havtorn::SSequencerTransformKeyframe>(componentType);
+                        break;
+                    case Havtorn::EComponentType::SpriteComponent:
+                        AddKeyframe<Havtorn::SSequencerSpriteKeyframe>(componentType);
+                        break;
+                    default:
+                        break;
+                    }
+                }
+            }
+            ImGui::EndPopup();
+        }
+
+        SEditorKeyframe* selectedKeyframe = GetSelectedKeyframe();
+        if (selectedKeyframe != nullptr)
+        {
+            bool keyframeIsEdited = false;
+            ImGui::SameLine();
+            ImGui::Text(" | ");
+            ImGui::SameLine();
+            ImGui::Text("Selected Keyframe");
+            ImGui::SameLine();
+
+            int frameNumber = static_cast<int>(selectedKeyframe->FrameNumber);
+            if (ImGui::InputInt("Frame Number:", &frameNumber))
+                keyframeIsEdited = true;
+
+            if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+            {
+                ImGuiIO& io = ImGui::GetIO();
+                int cx = (int)(io.MousePos.x);
+                static float framePixelWidth = 10.f;
+                int legendWidth = 200;
+                ImVec2 canvasPosition = ImGui::GetCursorScreenPos();
+                const ImVec2 contentMax = ImGui::GetItemRectMax();
+
+                frameNumber = cx / int((contentMax.x - float(legendWidth)) / framePixelWidth) + *firstFrame;
+
+                //HV_LOG_TRACE("Frame Number: %i", frameNumber);
+                //HV_LOG_TRACE("canvas pos x: %f", canvasPosition.x); 
+                //HV_LOG_TRACE("mouse pos x: %f", ImGui::GetMousePos().x);
+                //HV_LOG_TRACE("frac: %f", ImGui::GetMousePos().x / canvasPosition.x);
+                //float frac = ImGui::GetMousePos().x / canvasPosition.x;
+                int framesInContentArea = int((contentMax.x - float(legendWidth)) / framePixelWidth * 2.0f);
+                HV_LOG_TRACE("frames: %i", framesInContentArea);
+            }
+
+            selectedKeyframe->FrameNumber = frameNumber;
+            ImGui::SameLine();
+            if (ImGui::Checkbox("Blend Left:", &selectedKeyframe->ShouldBlendLeft))
+                keyframeIsEdited = true;
+
+            ImGui::SameLine();
+            if (ImGui::Checkbox("Blend Right:", &selectedKeyframe->ShouldBlendRight))
+                keyframeIsEdited = true;
+
+            ImGui::SameLine();
+            if (ImGui::Button("Set Current Component Value"))
+                SetCurrentComponentValueOnKeyframe();
+
+            if (keyframeIsEdited)
+                EditSelectedKeyframe(selectedKeyframe);
+        }
+    }
+
+    void CSequencerWindow::SetCurrentComponentValueOnKeyframe()
+    {
+        if (!SelectedKeyframeMetaData.IsValid())
+            return;
+
+        Havtorn::CScene* const scene = Manager->GetCurrentScene();
+        if (scene == nullptr)
+            return;
+
+        std::vector<Havtorn::SSequencerComponent>& sequencerComponents = scene->GetSequencerComponents();
+        for (U64 index = 0, entityTrackIndex = 0; index < sequencerComponents.size(); index++)
+        {
+            Havtorn::SSequencerComponent& component = sequencerComponents[index];
+            if (!component.IsInUse)
+                continue;
+
+            if (entityTrackIndex++ != SelectedKeyframeMetaData.EntityTrackIndex)
+                continue;
+
+            Havtorn::SSequencerKeyframe* sequencerKeyframe = component.ComponentTracks[SelectedKeyframeMetaData.ComponentTrackIndex].Keyframes[SelectedKeyframeMetaData.KeyframeIndex];
+
+            sequencerKeyframe->SetEntityDataOnKeyframe(scene, index);
+        }
+    }
+
     void CSequencerWindow::FillSequencer()
     {
         Havtorn::CScene* const scene = Manager->GetCurrentScene();
@@ -169,7 +285,7 @@ namespace ImGui
                 {
                     // TODO.NR: Make constructor for SEditorKeyframe taking a SSequencerKeyframe
                     const Havtorn::SSequencerKeyframe* keyframe = componentTrack.Keyframes[keyframeIndex];
-                    keyframes.push_back({ keyframe->FrameNumber, keyframe->ShouldBlendRight, keyframe->ShouldBlendLeft });
+                    keyframes.push_back({ keyframe->FrameNumber, keyframe->ShouldBlendLeft, keyframe->ShouldBlendRight });
                 }
 
                 entityTrack.ComponentTracks.push_back({ componentTrack.ComponentType, keyframes });
@@ -202,13 +318,34 @@ namespace ImGui
             return;
 
         SequencerSystem->AddComponentTrackToComponent(sequencerComponents[sceneIndex], componentType);
-
-        //AddSequencerItem(SEditorEntityTrack{ std::string("Sprite"), { {componentType} }, 10, 30, false });
     }
 
-    void CSequencerWindow::AddSequencerItem(SEditorEntityTrack item)
+    void CSequencerWindow::EditSelectedKeyframe(SEditorKeyframe* selectedKeyframe)
     {
-        Sequencer.EntityTracks.push_back(item);
+        if (!SelectedKeyframeMetaData.IsValid())
+            return;
+
+        Havtorn::CScene* const scene = Manager->GetCurrentScene();
+        if (scene == nullptr)
+            return;
+
+        std::vector<Havtorn::SSequencerComponent>& sequencerComponents = scene->GetSequencerComponents();
+        for (U64 index = 0, entityTrackIndex = 0; index < sequencerComponents.size(); index++)
+        {
+            Havtorn::SSequencerComponent& component = sequencerComponents[index];
+            if (!component.IsInUse)
+                continue;
+
+            if (entityTrackIndex++ != SelectedKeyframeMetaData.EntityTrackIndex)
+                continue;
+
+            Havtorn::SSequencerKeyframe* sequencerKeyframe = component.ComponentTracks[SelectedKeyframeMetaData.ComponentTrackIndex].Keyframes[SelectedKeyframeMetaData.KeyframeIndex];
+            
+            sequencerKeyframe->FrameNumber = selectedKeyframe->FrameNumber;
+            sequencerKeyframe->ShouldBlendLeft = selectedKeyframe->ShouldBlendLeft;
+            sequencerKeyframe->ShouldBlendRight = selectedKeyframe->ShouldBlendRight;
+        }
+
     }
 
     // Draw Functions
@@ -266,7 +403,7 @@ namespace ImGui
         ImGui::BeginGroup();
 
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
-        ImVec2 canvas_pos = ImGui::GetCursorScreenPos();            // ImDrawList API uses screen coordinates!
+        ImVec2 canvasPosition = ImGui::GetCursorScreenPos();            // ImDrawList API uses screen coordinates!
         ImVec2 canvas_size = ImGui::GetContentRegionAvail();        // Resize canvas to what's available
         int firstFrameUsed = firstFrame ? *firstFrame : 0;
 
@@ -293,7 +430,7 @@ namespace ImGui
         const float barWidthRatio = ImMin(visibleFrameCount / (float)frameCount, 1.f);
         const float barWidthInPixels = barWidthRatio * (canvas_size.x - legendWidth);
 
-        ImRect regionRect(canvas_pos, canvas_pos + canvas_size);
+        ImRect regionRect(canvasPosition, canvasPosition + canvas_size);
 #pragma endregion
 
         static bool panningView = false;
@@ -304,7 +441,7 @@ namespace ImGui
         // --
         if (expanded && !*expanded)
         {
-            NotExpanded(canvas_size, canvas_pos, ItemHeight, draw_list, sequence, frameCount, entityTrackCount);
+            NotExpanded(canvas_size, canvasPosition, ItemHeight, draw_list, sequence, frameCount, entityTrackCount);
         }
         else
         {
@@ -314,7 +451,7 @@ namespace ImGui
             ImVec2 headerSize(canvas_size.x, (float)ItemHeight);
             ImVec2 scrollBarSize(canvas_size.x, 14.f);
             ImGui::InvisibleButton("topBar", headerSize);
-            draw_list->AddRectFilled(canvas_pos, canvas_pos + headerSize, 0xFFFF0000, 0);
+            draw_list->AddRectFilled(canvasPosition, canvasPosition + headerSize, 0xFFFF0000, 0);
             ImVec2 childFramePos = ImGui::GetCursorScreenPos();
             ImVec2 childFrameSize(canvas_size.x, canvas_size.y - 8.f - headerSize.y - (hasScrollBar ? scrollBarSize.y : 0));
             ImGui::PushStyleColor(ImGuiCol_FrameBg, 0);
@@ -327,17 +464,17 @@ namespace ImGui
             const float contentHeight = contentMax.y - contentMin.y;
 
             // full background
-            draw_list->AddRectFilled(canvas_pos, canvas_pos + canvas_size, 0xFF242424, 0);
+            draw_list->AddRectFilled(canvasPosition, canvasPosition + canvas_size, 0xFF242424, 0);
 
             // current frame top
-            ImRect topRect(ImVec2(canvas_pos.x + legendWidth, canvas_pos.y), ImVec2(canvas_pos.x + canvas_size.x, canvas_pos.y + ItemHeight));
+            ImRect topRect(ImVec2(canvasPosition.x + legendWidth, canvasPosition.y), ImVec2(canvasPosition.x + canvas_size.x, canvasPosition.y + ItemHeight));
 
             ChangeCurrentFrame(MovingCurrentFrame, MovingScrollBar, movingEntry, sequenceOptions, currentFrame, topRect, io, frameCount, framePixelWidth, firstFrameUsed, sequence);
 
             //header
-            draw_list->AddRectFilled(canvas_pos, ImVec2(canvas_size.x + canvas_pos.x, canvas_pos.y + ItemHeight), 0xFF3D3837, 0);
+            draw_list->AddRectFilled(canvasPosition, ImVec2(canvas_size.x + canvasPosition.x, canvasPosition.y + ItemHeight), 0xFF3D3837, 0);
 
-            AddEntityTrackButton(sequenceOptions, draw_list, canvas_pos, legendWidth, ItemHeight, io, sequence, selectedEntry, popupOpened);
+            AddEntityTrackButton(sequenceOptions, draw_list, canvasPosition, legendWidth, ItemHeight, io, sequence, selectedEntry, popupOpened);
             
             //header frame number and lines
             int modFrameCount = 10;
@@ -352,32 +489,32 @@ namespace ImGui
             auto drawLine = [&](int i, int regionHeight) {
                 bool baseIndex = ((i % modFrameCount) == 0) || (i == sequence->GetFrameMax() || i == sequence->GetFrameMin());
                 bool halfIndex = (i % halfModFrameCount) == 0;
-                int px = (int)canvas_pos.x + int(i * framePixelWidth) + legendWidth - int(firstFrameUsed * framePixelWidth);
+                int px = (int)canvasPosition.x + int(i * framePixelWidth) + legendWidth - int(firstFrameUsed * framePixelWidth);
                 int tiretStart = baseIndex ? 4 : (halfIndex ? 10 : 14);
                 int tiretEnd = baseIndex ? regionHeight : ItemHeight;
 
-                if (px <= (canvas_size.x + canvas_pos.x) && px >= (canvas_pos.x + legendWidth))
+                if (px <= (canvas_size.x + canvasPosition.x) && px >= (canvasPosition.x + legendWidth))
                 {
-                    draw_list->AddLine(ImVec2((float)px, canvas_pos.y + (float)tiretStart), ImVec2((float)px, canvas_pos.y + (float)tiretEnd - 1), 0xFF606060, 1);
+                    draw_list->AddLine(ImVec2((float)px, canvasPosition.y + (float)tiretStart), ImVec2((float)px, canvasPosition.y + (float)tiretEnd - 1), 0xFF606060, 1);
 
-                    draw_list->AddLine(ImVec2((float)px, canvas_pos.y + (float)ItemHeight), ImVec2((float)px, canvas_pos.y + (float)regionHeight - 1), 0x30606060, 1);
+                    draw_list->AddLine(ImVec2((float)px, canvasPosition.y + (float)ItemHeight), ImVec2((float)px, canvasPosition.y + (float)regionHeight - 1), 0x30606060, 1);
                 }
 
-                if (baseIndex && px > (canvas_pos.x + legendWidth))
+                if (baseIndex && px > (canvasPosition.x + legendWidth))
                 {
                     char tmps[512];
                     ImFormatString(tmps, IM_ARRAYSIZE(tmps), "%d", i);
-                    draw_list->AddText(ImVec2((float)px + 3.f, canvas_pos.y), 0xFFBBBBBB, tmps);
+                    draw_list->AddText(ImVec2((float)px + 3.f, canvasPosition.y), 0xFFBBBBBB, tmps);
                 }
 
             };
 
             auto drawLineContent = [&](int i, int /*regionHeight*/) {
-                int px = (int)canvas_pos.x + int(i * framePixelWidth) + legendWidth - int(firstFrameUsed * framePixelWidth);
+                int px = (int)canvasPosition.x + int(i * framePixelWidth) + legendWidth - int(firstFrameUsed * framePixelWidth);
                 int tiretStart = int(contentMin.y);
                 int tiretEnd = int(contentMax.y);
 
-                if (px <= (canvas_size.x + canvas_pos.x) && px >= (canvas_pos.x + legendWidth))
+                if (px <= (canvas_size.x + canvasPosition.x) && px >= (canvasPosition.x + legendWidth))
                 {
                     draw_list->AddLine(ImVec2(float(px), float(tiretStart)), ImVec2(float(px), float(tiretEnd)), 0x30606060, 1);
                 }
@@ -403,7 +540,7 @@ namespace ImGui
 
             // Track rect and backgrounds
             customHeight = 0;
-            TrackSlotsBackground(entityTrackCount, sequence, contentMin, legendWidth, ItemHeight, customHeight, canvas_size, canvas_pos, popupOpened, cy, movingEntry, cx, draw_list);
+            TrackSlotsBackground(entityTrackCount, sequence, contentMin, legendWidth, ItemHeight, customHeight, canvas_size, canvasPosition, popupOpened, cy, movingEntry, cx, draw_list);
 
             draw_list->PushClipRect(childFramePos + ImVec2(float(legendWidth), 0.f), childFramePos + childFrameSize);
 
@@ -422,13 +559,13 @@ namespace ImGui
             // slots
 #pragma region Track Content, component tracks
             customHeight = 0;
-            for (int i = 0; i < entityTrackCount; i++)
+            for (int entityTrackIndex = 0; entityTrackIndex < entityTrackCount; entityTrackIndex++)
             {
-                for (int componentTrackIndex = 0; componentTrackIndex < sequence->GetComponentTrackCount(i); componentTrackIndex++)
+                for (int componentTrackIndex = 0; componentTrackIndex < sequence->GetComponentTrackCount(entityTrackIndex); componentTrackIndex++)
                 {
                     std::vector<std::pair<int, int>> blendRegions = {};
                     unsigned int color;
-                    sequence->GetBlendRegionInfo(this, i, componentTrackIndex, blendRegions, &color);
+                    sequence->GetBlendRegionInfo(this, entityTrackIndex, componentTrackIndex, blendRegions, &color);
 
                     if (blendRegions.empty())
                         continue;
@@ -438,7 +575,7 @@ namespace ImGui
                         const std::pair<int, int>& blendRegion = blendRegions[blendRegionIndex];
                         const int start = blendRegion.first, end = blendRegion.second;
 
-                        ImVec2 pos = ImVec2(contentMin.x + legendWidth - firstFrameUsed * framePixelWidth, contentMin.y + ItemHeight * (i + 1 + componentTrackIndex) - 7.f + customHeight);
+                        ImVec2 pos = ImVec2(contentMin.x + legendWidth - firstFrameUsed * framePixelWidth, contentMin.y + ItemHeight * (entityTrackIndex + 1 + componentTrackIndex) - 7.f + customHeight);
                         ImVec2 slotP1(pos.x + Havtorn::UMath::Max(start - 1, 0) * framePixelWidth, pos.y + 2 + 10.f);
                         ImVec2 slotP2(pos.x + end * framePixelWidth, pos.y + ItemHeight - 2);
                         unsigned int slotColor = color - 0x88000000;
@@ -450,59 +587,20 @@ namespace ImGui
                         }
                         if (ImRect(slotP1, slotP2).Contains(io.MousePos) && io.MouseDoubleClicked[0])
                         {
-                            sequence->DoubleClick(i);
+                            sequence->DoubleClick(entityTrackIndex);
                         }
-                        // Ensure grabbable handles
-                        const float max_handle_width = slotP2.x - slotP1.x / 3.0f;
-                        const float min_handle_width = ImMin(10.0f, max_handle_width);
-                        const float handle_width = ImClamp(framePixelWidth / 2.0f, min_handle_width, max_handle_width);
-                        ImRect rects[3] = { ImRect(slotP1, ImVec2(slotP1.x + handle_width, slotP2.y))
-                            , ImRect(ImVec2(slotP2.x - handle_width, slotP1.y), slotP2)
-                            , ImRect(slotP1, slotP2) };
-
-#pragma region Edit blending region
-                        const unsigned int quadColor[] = { 0xFFFFFFFF, 0xFFFFFFFF, slotColor + (selected ? 0 : 0x202020) };
-                        if (movingEntry == -1 && (sequenceOptions & SEQUENCER_EDIT_STARTEND))// TODOFOCUS && backgroundRect.Contains(io.MousePos))
-                        {
-                            for (int j = 2; j >= 0; j--)
-                            {
-                                ImRect& rc = rects[j];
-                                if (!rc.Contains(io.MousePos))
-                                    continue;
-                                draw_list->AddRectFilled(rc.Min, rc.Max, quadColor[j], 2);
-                            }
-
-                            for (int j = 0; j < 3; j++)
-                            {
-                                ImRect& rc = rects[j];
-                                if (!rc.Contains(io.MousePos))
-                                    continue;
-                                if (!ImRect(childFramePos, childFramePos + childFrameSize).Contains(io.MousePos))
-                                    continue;
-                                if (ImGui::IsMouseClicked(0) && !MovingScrollBar && !MovingCurrentFrame)
-                                {
-                                    movingEntry = i;
-                                    movingPos = cx;
-                                    movingPart = j + 1;
-                                    sequence->BeginEdit(movingEntry);
-                                    break;
-                                }
-                            }
-                        }
-#pragma endregion
                     }
                 }
 
                 int* start, *end;
                 unsigned int color;
-                sequence->Get(i, &start, &end, NULL, &color);
-                //sequence->GetBlendRegionInfo(i, componentTrackIndex, start, end, &color);
-                size_t localCustomHeight = sequence->GetCustomHeight(i);
+                sequence->Get(entityTrackIndex, &start, &end, NULL, &color);
+                size_t localCustomHeight = sequence->GetCustomHeight(entityTrackIndex);
                 
                 // custom draw
                 if (localCustomHeight > 0)
                 {
-                    ImVec2 rp(canvas_pos.x, contentMin.y + ItemHeight * i + 1 + customHeight);
+                    ImVec2 rp(canvasPosition.x, contentMin.y + ItemHeight * entityTrackIndex + 1 + customHeight);
                     ImRect customRect(rp + ImVec2(legendWidth - (firstFrameUsed - sequence->GetFrameMin() - 0.5f) * framePixelWidth, float(ItemHeight)),
                         rp + ImVec2(legendWidth + (sequence->GetFrameMax() - firstFrameUsed - 0.5f + 2.f) * framePixelWidth, float(localCustomHeight + ItemHeight)));
                     ImRect clippingRect(rp + ImVec2(float(legendWidth), float(ItemHeight)), rp + ImVec2(canvas_size.x, float(localCustomHeight + ItemHeight)));
@@ -510,19 +608,19 @@ namespace ImGui
                     ImRect legendRect(rp + ImVec2(0.f, float(ItemHeight)), rp + ImVec2(float(legendWidth), float(localCustomHeight)));
 
                     //ImRect legendClippingRect(canvas_pos + ImVec2(0.f, float(ItemHeight)), canvas_pos + ImVec2(float(legendWidth), float(localCustomHeight + ItemHeight)));
-                    ImRect legendClippingRect(canvas_pos, canvas_pos + ImVec2(float(legendWidth), float(canvas_size.y)));
+                    ImRect legendClippingRect(canvasPosition, canvasPosition + ImVec2(float(legendWidth), float(canvas_size.y)));
 
-                    std::vector<SEditorComponentTrack> componentTracks = sequence->GetComponentTracks(i);
-                    customDraws.push_back({ i, customRect, legendRect, clippingRect, legendClippingRect, componentTracks });
+                    std::vector<SEditorComponentTrack>& componentTracks = sequence->GetComponentTracks(entityTrackIndex);
+                    customDraws.push_back({ entityTrackIndex, customRect, legendRect, clippingRect, legendClippingRect, componentTracks });
                 }
                 else
                 {
-                    ImVec2 rp(canvas_pos.x, contentMin.y + ItemHeight * i + customHeight);
+                    ImVec2 rp(canvasPosition.x, contentMin.y + ItemHeight * entityTrackIndex + customHeight);
                     ImRect customRect(rp + ImVec2(legendWidth - (firstFrameUsed - sequence->GetFrameMin() - 0.5f) * framePixelWidth, float(0.f)),
                         rp + ImVec2(legendWidth + (sequence->GetFrameMax() - firstFrameUsed - 0.5f + 2.f) * framePixelWidth, float(ItemHeight)));
                     ImRect clippingRect(rp + ImVec2(float(legendWidth), float(0.f)), rp + ImVec2(canvas_size.x, float(ItemHeight)));
 
-                    compactCustomDraws.push_back({ i, customRect, ImRect(), clippingRect, ImRect() });
+                    compactCustomDraws.push_back({ entityTrackIndex, customRect, ImRect(), clippingRect, ImRect() });
                 }
                 customHeight += localCustomHeight; 
             }
@@ -534,25 +632,25 @@ namespace ImGui
 #pragma region Playhead
             if (currentFrame && firstFrame && *currentFrame >= *firstFrame && *currentFrame <= sequence->GetFrameMax())
             {
-                static const float cursorWidth = 8.f;
+                static const float cursorWidth = 4.5f;
                 float cursorOffset = contentMin.x + legendWidth + (*currentFrame - firstFrameUsed) * framePixelWidth + framePixelWidth / 2 - cursorWidth * 0.5f;
-                draw_list->AddLine(ImVec2(cursorOffset, canvas_pos.y), ImVec2(cursorOffset, contentMax.y), 0xA02A2AFF, cursorWidth);
-                char tmps[512];
-                ImFormatString(tmps, IM_ARRAYSIZE(tmps), "%d", *currentFrame);
-                draw_list->AddText(ImVec2(cursorOffset + 10, canvas_pos.y + 2), 0xFF2A2AFF, tmps);
+                draw_list->AddLine(ImVec2(cursorOffset, canvasPosition.y), ImVec2(cursorOffset, contentMax.y), 0xA02A2AFF, cursorWidth);
+                //char tmps[512];
+                //ImFormatString(tmps, IM_ARRAYSIZE(tmps), "%d", *currentFrame);
+                //draw_list->AddText(ImVec2(cursorOffset + 10, canvasPosition.y + 2), 0xFF2A2AFF, tmps);
             }
 #pragma endregion
 
             draw_list->PopClipRect();
             draw_list->PopClipRect();
 
-            for (auto& customDraw : customDraws)
+            for (CustomDraw& customDraw : customDraws)
                 sequence->DrawComponentTracks(this, customDraw.index, draw_list, customDraw.customRect, customDraw.legendRect, customDraw.clippingRect, customDraw.legendClippingRect, customDraw.componentTracks);
-            for (auto& customDraw : compactCustomDraws)
+            for (CustomDraw& customDraw : compactCustomDraws)
                 sequence->CustomDrawCompact(customDraw.index, draw_list, customDraw.customRect, customDraw.clippingRect);
 
             // copy paste
-            CopyPaste(sequenceOptions, contentMin, canvas_pos, ItemHeight, io, draw_list, sequence);
+            CopyPaste(sequenceOptions, contentMin, canvasPosition, ItemHeight, io, draw_list, sequence);
             //
 
             ImGui::EndChildFrame();
@@ -605,7 +703,7 @@ namespace ImGui
 
         if (expanded)
         {
-            bool overExpanded = SequencerAddDelButton(draw_list, ImVec2(canvas_pos.x + 2, canvas_pos.y + 2), !*expanded);
+            bool overExpanded = SequencerAddDelButton(draw_list, ImVec2(canvasPosition.x + 2, canvasPosition.y + 2), !*expanded);
             if (overExpanded && io.MouseReleased[0])
                 *expanded = !*expanded;
         }
@@ -958,6 +1056,30 @@ namespace ImGui
             return SEditorKeyframeColorPack();
         
         return KeyframeColorMap.at(componentType);
+    }
+    
+    SEditorKeyframe* CSequencerWindow::GetSelectedKeyframe()
+    {
+        if (!SelectedKeyframeMetaData.IsValid())
+            return nullptr;
+
+        if (SelectedKeyframeMetaData.EntityTrackIndex >= Sequencer.GetEntityTrackCount())
+            return nullptr;
+
+        if (SelectedKeyframeMetaData.ComponentTrackIndex >= Sequencer.GetComponentTrackCount(SelectedKeyframeMetaData.EntityTrackIndex))
+            return nullptr;
+
+        if (SelectedKeyframeMetaData.KeyframeIndex >= Sequencer.GetKeyframeCount(SelectedKeyframeMetaData.EntityTrackIndex, SelectedKeyframeMetaData.ComponentTrackIndex))
+            return nullptr;
+
+        return &Sequencer.GetComponentTracks(SelectedKeyframeMetaData.EntityTrackIndex)[SelectedKeyframeMetaData.ComponentTrackIndex].Keyframes[SelectedKeyframeMetaData.KeyframeIndex];
+    }
+    
+    void CSequencerWindow::SetSelectedKeyframe(Havtorn::U32 entityTrackIndex, Havtorn::U32 componentTrackIndex, Havtorn::U32 keyframeIndex)
+    {
+        SelectedKeyframeMetaData.EntityTrackIndex = entityTrackIndex;
+        SelectedKeyframeMetaData.ComponentTrackIndex = componentTrackIndex;
+        SelectedKeyframeMetaData.KeyframeIndex = keyframeIndex;
     }
 }
 
@@ -1454,7 +1576,7 @@ void SSequencer::GetBlendRegionInfo(ImGui::CSequencerWindow* window, int entityT
     }
 }
 
-void SSequencer::DrawComponentTracks(class ImGui::CSequencerWindow* sequencerWindow, int index, ImDrawList* drawList, const ImRect& rect, const ImRect& legendRect, const ImRect& clippingRect, const ImRect& legendClippingRect, const std::vector<SEditorComponentTrack>& componentTracks)
+void SSequencer::DrawComponentTracks(class ImGui::CSequencerWindow* sequencerWindow, int index, ImDrawList* drawList, const ImRect& rect, const ImRect& legendRect, const ImRect& clippingRect, const ImRect& legendClippingRect, std::vector<SEditorComponentTrack>& componentTracks)
 {
     // ========= LEGEND ========= 
     drawList->PushClipRect(legendClippingRect.Min, legendClippingRect.Max, true);
@@ -1504,16 +1626,17 @@ void SSequencer::DrawComponentTracks(class ImGui::CSequencerWindow* sequencerWin
     auto pointToRange = [&](ImVec2 pt) { return (pt - min) / range; };
     for (int i2 = 0; i2 < componentTracks.size(); i2++)
     {
-        const SEditorComponentTrack& componentTrack = componentTracks[i2];
-        //for (U32 keyframe : componentTrack.Keyframes)
+        SEditorComponentTrack& componentTrack = componentTracks[i2];
         for (U32 i3 = 0; i3 < componentTrack.Keyframes.size(); i3++)
         {
             U32 keyframe = componentTrack.Keyframes[i3].FrameNumber;
             ImVec2 point = ImVec2(static_cast<Havtorn::F32>(keyframe), legendRect.Min.y + i2 * componentTrackHeight);
             const SEditorKeyframeColorPack colorPack = sequencerWindow->GetColorPackFromComponentType(componentTrack.ComponentType);
-            DrawKeyframe(drawList, pointToRange(point), viewSize, offset, false, colorPack.KeyframeBaseColor, colorPack.KeyframeHighlightColor);
-
-            //draw_list->AddRectFilled(slotP1, slotP2, slotColor, 2);
+            int returnValue = DrawKeyframe(drawList, pointToRange(point), viewSize, offset, false, colorPack.KeyframeBaseColor, colorPack.KeyframeHighlightColor);
+            if (returnValue == 2)
+            {
+                sequencerWindow->SetSelectedKeyframe(index, i2, i3);
+            }
         }
     }
 

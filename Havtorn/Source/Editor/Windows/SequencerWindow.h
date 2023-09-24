@@ -211,8 +211,8 @@ enum SEQUENCER_OPTIONS
 struct SEditorKeyframe
 {
     U32 FrameNumber = 0;
-    bool ShouldBlendRight = true;
     bool ShouldBlendLeft = true;
+    bool ShouldBlendRight = true;
 };
 
 struct SEditorComponentTrack
@@ -257,6 +257,8 @@ struct SSequencer
     virtual void BeginEdit(int /*index*/) {}
     virtual void EndEdit() {}
     virtual int GetComponentTrackCount(int entityTrackIndex) const { return static_cast<int>(EntityTracks[entityTrackIndex].ComponentTracks.size()); }
+    virtual int GetKeyframeCount(int entityTrackIndex, int componentTrackIndex) const { return static_cast<int>(EntityTracks[entityTrackIndex].ComponentTracks[componentTrackIndex].Keyframes.size()); }
+    
     virtual std::string GetComponentTrackLabel(int entityTrackIndex, int componentTrackIndex) const { return Havtorn::GetComponentTypeString(EntityTracks[entityTrackIndex].ComponentTracks[componentTrackIndex].ComponentType); }
     virtual const char* GetEntityTrackLabel(int index) const
     {
@@ -264,7 +266,7 @@ struct SSequencer
         snprintf(tmps, 512, "[%02d] %s", index, EntityTracks[index].Name.c_str());
         return tmps;
     }
-    virtual const std::vector<SEditorComponentTrack>& GetComponentTracks(int index) { return EntityTracks[index].ComponentTracks; }
+    virtual std::vector<SEditorComponentTrack>& GetComponentTracks(int index) { return EntityTracks[index].ComponentTracks; }
     virtual const char* GetCollapseFmt() const { return "%d Frames / %d entries"; }
 
     virtual void Get(int index, int** start, int** end, int* /*type*/, unsigned int* color)
@@ -315,7 +317,7 @@ struct SSequencer
         EntityTracks[index].IsExpanded = !EntityTracks[index].IsExpanded;
     }
 
-    virtual void DrawComponentTracks(ImGui::CSequencerWindow* sequencerWindow, int index, ImDrawList* drawList, const ImRect& rect, const ImRect& legendRect, const ImRect& clippingRect, const ImRect& legendClippingRect, const std::vector<SEditorComponentTrack>& componentTracks);
+    virtual void DrawComponentTracks(ImGui::CSequencerWindow* sequencerWindow, int index, ImDrawList* drawList, const ImRect& rect, const ImRect& legendRect, const ImRect& clippingRect, const ImRect& legendClippingRect, std::vector<SEditorComponentTrack>& componentTracks);
 
     virtual void CustomDrawCompact(int index, ImDrawList* drawList, const ImRect& rect, const ImRect& clippingRect)
     {
@@ -387,43 +389,40 @@ namespace ImGui
 		~CSequencerWindow() override;
 		void OnEnable() override;
 		void OnInspectorGUI() override;
-        void FlowControls(Havtorn::SSequencerContextData& contextData);
-        void FillSequencer();
 		void OnDisable() override;
 
         void AddComponentTrack(Havtorn::EComponentType componentType);
         template<typename T>
         void AddKeyframe(Havtorn::EComponentType componentType);
+        
+        void EditSelectedKeyframe(SEditorKeyframe* selectedKeyframe);
 
-        void AddSequencerItem(SEditorEntityTrack item);
-
+        // TODO.NR: Refactor
         // Draw Functions
-
         // return true if selection is made
         bool DrawSequencer(SSequencer* sequence, int* currentFrame, bool* expanded, int* selectedEntry, int* firstFrame, int sequenceOptions);
-
-        void Scrollbar(bool hasScrollBar, ImVec2& scrollBarSize, int firstFrameUsed, SSequencer* sequence, int frameCount, ImVec2& canvas_size, int legendWidth, ImDrawList* draw_list, ImGuiIO& io, const float& barWidthInPixels, bool& MovingScrollBar, float& framePixelWidthTarget, float& framePixelWidth, int* firstFrame, const int& visibleFrameCount, ImVec2& panningViewSource, int& panningViewFrame, bool MovingCurrentFrame, int movingEntry);
-
+        void Scrollbar(bool hasScrollBar, ImVec2& scrollBahvvcrSize, int firstFrameUsed, SSequencer* sequence, int frameCount, ImVec2& canvas_size, int legendWidth, ImDrawList* draw_list, ImGuiIO& io, const float& barWidthInPixels, bool& MovingScrollBar, float& framePixelWidthTarget, float& framePixelWidth, int* firstFrame, const int& visibleFrameCount, ImVec2& panningViewSource, int& panningViewFrame, bool MovingCurrentFrame, int movingEntry);
         void CopyPaste(int sequenceOptions, const ImVec2& contentMin, ImVec2& canvas_pos, int ItemHeight, ImGuiIO& io, ImDrawList* draw_list, SSequencer* sequence);
-
         void Moving(int& movingEntry, int cx, int& movingPos, float framePixelWidth, SSequencer* sequence, int* selectedEntry, int movingPart, ImGuiIO& io, bool& ret);
-
         void Selection(bool selected, size_t& customHeight, int* selectedEntry, SSequencer* sequence, ImDrawList* draw_list, const ImVec2& contentMin, int ItemHeight, ImVec2& canvas_size);
-
         void TrackSlotsBackground(int sequenceCount, SSequencer* sequence, const ImVec2& contentMin, int legendWidth, int ItemHeight, size_t& customHeight, ImVec2& canvas_size, ImVec2& canvas_pos, bool popupOpened, int cy, int movingEntry, int cx, ImDrawList* draw_list);
-
         void TrackHeader(int sequenceCount, SSequencer* sequence, const ImVec2& contentMin, int ItemHeight, size_t& customHeight, ImDrawList* draw_list, int sequenceOptions, int legendWidth, ImGuiIO& io, int& delEntry, int& dupEntry);
-
         void ChangeCurrentFrame(bool& MovingCurrentFrame, bool MovingScrollBar, int movingEntry, int sequenceOptions, int* currentFrame, ImRect& topRect, ImGuiIO& io, int frameCount, float framePixelWidth, int firstFrameUsed, SSequencer* sequence);
-
         void Panning(ImGuiIO& io, bool& panningView, ImVec2& panningViewSource, int& panningViewFrame, int* firstFrame, float& framePixelWidth, SSequencer* sequence, const int& visibleFrameCount, float& framePixelWidthTarget, int& frameCount);
-
         void NotExpanded(ImVec2& canvas_size, ImVec2& canvas_pos, int ItemHeight, ImDrawList* draw_list, SSequencer* sequence, int frameCount, int sequenceCount);
-
         void AddEntityTrackButton(int /*sequenceOptions*/, ImDrawList* /*draw_list*/, ImVec2& /*canvas_pos*/, int /*legendWidth*/, int /*ItemHeight*/, ImGuiIO& /*io*/, SSequencer* /*sequence*/, int* /*selectedEntry*/, bool& /*popupOpened*/);
         // Draw Functions
 
         const SEditorKeyframeColorPack GetColorPackFromComponentType(Havtorn::EComponentType componentType) const;
+
+        SEditorKeyframe* GetSelectedKeyframe();
+        void SetSelectedKeyframe(Havtorn::U32 entityTrackIndex, Havtorn::U32 componentTrackIndex, Havtorn::U32 keyframeIndex);
+
+    private:
+        void FlowControls(Havtorn::SSequencerContextData& contextData);
+        void ContentControls(int* currentFrame, int* firstFrame);
+        void SetCurrentComponentValueOnKeyframe();
+        void FillSequencer();
 
 	private:
         Havtorn::CSequencerSystem* SequencerSystem = nullptr;
@@ -431,6 +430,20 @@ namespace ImGui
         std::vector<std::string> Sequencers;
         Havtorn::U16 CurrentSequencerIndex = 0;
         std::map<Havtorn::EComponentType, SEditorKeyframeColorPack> KeyframeColorMap;
+        std::vector<Havtorn::EComponentType> SupportedComponentTrackTypes;
+
+        struct SEditorKeyframeMetaData
+        {
+            Havtorn::I32 EntityTrackIndex = -1;
+            Havtorn::I32 ComponentTrackIndex = -1;
+            Havtorn::I32 KeyframeIndex = -1;
+
+            bool IsValid() const { return EntityTrackIndex >= 0 && ComponentTrackIndex >= 0 && KeyframeIndex >= 0; }
+            //SEditorKeyframe* SelectedKeyframe = nullptr;
+        } SelectedKeyframeMetaData;
+
+        std::string NewComponentTrackPopupName = "AddNewComponentTrackPopup";
+        std::string NewKeyframePopupName = "AddNewKeyframePopup";
 	};
     
     template<typename T>
