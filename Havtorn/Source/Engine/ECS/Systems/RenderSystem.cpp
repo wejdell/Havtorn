@@ -90,6 +90,7 @@ namespace Havtorn
 						command.ShadowViewMatrix = directionalLightComp.ShadowmapView.ShadowViewMatrix;
 						command.ShadowProjectionMatrix = directionalLightComp.ShadowmapView.ShadowProjectionMatrix;
 						command.ShadowPosition = directionalLightComp.ShadowmapView.ShadowPosition;
+						command.ShadowmapViewportIndex = directionalLightComp.ShadowmapView.ShadowmapViewportIndex;
 						command.ObjectMatrix = transformComp.Transform.GetMatrix();
 						command.StaticMeshName = staticMeshComponent.Name.AsString();
 						command.TopologyIndex = staticMeshComponent.TopologyIndex;
@@ -113,8 +114,14 @@ namespace Havtorn
 
 					if (spotLightComponents[j].IsInUse)
 					{
+						const SSpotLightComponent& spotLightComp = spotLightComponents[j];
+
 						SRenderCommand command;
 						command.Type = ERenderCommandType::ShadowAtlasPrePassSpot;
+						command.ShadowViewMatrix = spotLightComp.ShadowmapView.ShadowViewMatrix;
+						command.ShadowProjectionMatrix = spotLightComp.ShadowmapView.ShadowProjectionMatrix;
+						command.ShadowPosition = spotLightComp.ShadowmapView.ShadowPosition;
+						command.ShadowmapViewportIndex = spotLightComp.ShadowmapView.ShadowmapViewportIndex;
 						command.ObjectMatrix = transformComp.Transform.GetMatrix();
 						command.StaticMeshName = staticMeshComponent.Name.AsString();
 						command.TopologyIndex = staticMeshComponent.TopologyIndex;
