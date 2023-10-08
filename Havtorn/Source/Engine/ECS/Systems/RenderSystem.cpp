@@ -50,10 +50,15 @@ namespace Havtorn
 
 			sceneHasActiveCamera = true;
 
+			const STransformComponent& transformComponent = transformComponents[i];
+
 			SRenderCommand command;
 			command.Type = ERenderCommandType::CameraDataStorage;
-			command.TransformComponent = transformComponents[i];
-			command.CameraComponent = cameraComponents[i];
+			command.ToCameraFromWorld = transformComponent.Transform.GetMatrix().FastInverse();
+			command.ToWorldFromCamera = transformComponent.Transform.GetMatrix();
+			command.ToProjectionFromCamera = cameraComponent.ProjectionMatrix;
+			command.ToCameraFromProjection = cameraComponent.ProjectionMatrix.Inverse();
+			command.CameraPosition = transformComponent.Transform.GetMatrix().GetTranslation4();
 			RenderManager->PushRenderCommand(command);
 		}
 
@@ -78,21 +83,31 @@ namespace Havtorn
 				{
 					if (directionalLightComponents[j].IsInUse)
 					{
+						const SDirectionalLightComponent& directionalLightComp = directionalLightComponents[j];
+
 						SRenderCommand command;
-						command.Type = ERenderCommandType::ShadowAtlasPrePassDirectional;
-						command.TransformComponent = transformComp;
-						command.StaticMeshComponent = staticMeshComponent;
-						command.DirectionalLightComponent = directionalLightComponents[j];
+						command.Type = ERenderCommandType::ShadowAtlasPrePassDirectional;						
+						command.ShadowViewMatrix = directionalLightComp.ShadowmapView.ShadowViewMatrix;
+						command.ShadowProjectionMatrix = directionalLightComp.ShadowmapView.ShadowProjectionMatrix;
+						command.ShadowPosition = directionalLightComp.ShadowmapView.ShadowPosition;
+						command.ObjectMatrix = transformComp.Transform.GetMatrix();
+						command.StaticMeshName = staticMeshComponent.Name.AsString();
+						command.TopologyIndex = staticMeshComponent.TopologyIndex;
+						command.DrawCallData = staticMeshComponent.DrawCallData;
 						RenderManager->PushRenderCommand(command);
 					}
 
 					if (pointLightComponents[j].IsInUse)
 					{
+						const SPointLightComponent& pointLightComp = pointLightComponents[j];
+
 						SRenderCommand command;
 						command.Type = ERenderCommandType::ShadowAtlasPrePassPoint;
-						command.TransformComponent = transformComp;
-						command.StaticMeshComponent = staticMeshComponent;
-						command.PointLightComponent = pointLightComponents[j];
+						command.ObjectMatrix = transformComp.Transform.GetMatrix();
+						command.StaticMeshName = staticMeshComponent.Name.AsString();
+						command.TopologyIndex = staticMeshComponent.TopologyIndex;
+						command.DrawCallData = staticMeshComponent.DrawCallData;
+						command.ShadowmapViews = pointLightComp.ShadowmapViews;
 						RenderManager->PushRenderCommand(command);
 					}
 
@@ -100,18 +115,23 @@ namespace Havtorn
 					{
 						SRenderCommand command;
 						command.Type = ERenderCommandType::ShadowAtlasPrePassSpot;
-						command.TransformComponent = transformComp;
-						command.StaticMeshComponent = staticMeshComponent;
-						command.SpotLightComponent = spotLightComponents[j];
+						command.ObjectMatrix = transformComp.Transform.GetMatrix();
+						command.StaticMeshName = staticMeshComponent.Name.AsString();
+						command.TopologyIndex = staticMeshComponent.TopologyIndex;
+						command.DrawCallData = staticMeshComponent.DrawCallData;
 						RenderManager->PushRenderCommand(command);
 					}
 				}
 
 				SRenderCommand command;
 				command.Type = ERenderCommandType::GBufferDataInstanced;
-				command.TransformComponent = transformComp;
-				command.StaticMeshComponent = staticMeshComponent;
-				command.MaterialComponent = materialComp;
+				command.ObjectMatrix = transformComp.Transform.GetMatrix();
+				command.StaticMeshName = staticMeshComponent.Name.AsString();
+				command.TopologyIndex = staticMeshComponent.TopologyIndex;
+				command.DrawCallData = staticMeshComponent.DrawCallData;
+				command.SamplerIndex = staticMeshComponent.SamplerIndex;
+				command.PixelShaderIndex = staticMeshComponent.PixelShaderIndex;
+				command.Materials = materialComp.Materials;
 				RenderManager->PushRenderCommand(command);
 			}
 
@@ -134,8 +154,12 @@ namespace Havtorn
 
 			SRenderCommand command;
 			command.Type = ERenderCommandType::DeferredDecal;
-			command.TransformComponent = transformComp;
-			command.DecalComponent = decalComponent;
+			command.ToWorld = transformComp.Transform.GetMatrix();
+			command.ToObjectSpace = transformComp.Transform.GetMatrix().Inverse();
+			command.ShouldRenderAlbedo = decalComponent.ShouldRenderAlbedo;
+			command.ShouldRenderMaterial = decalComponent.ShouldRenderMaterial;
+			command.ShouldRenderNormal = decalComponent.ShouldRenderNormal;
+			command.TextureReferences = decalComponent.TextureReferences;
 			RenderManager->PushRenderCommand(command);
 		}
 
@@ -156,13 +180,15 @@ namespace Havtorn
 			if (!environmentLightComp.IsInUse)
 				continue;
 
-			const STransformComponent& transformComp = transformComponents[i];
-
 			SRenderCommand command;
 			command.Type = ERenderCommandType::DeferredLightingDirectional;
-			command.TransformComponent = transformComp;
-			command.EnvironmentLightComponent = environmentLightComp;
-			command.DirectionalLightComponent = directionalLightComp;
+			command.AmbientCubemapReference = environmentLightComp.AmbientCubemapReference;
+			command.Direction = directionalLightComp.Direction;
+			command.Color = directionalLightComp.Color;
+			command.ShadowViewMatrix = directionalLightComp.ShadowmapView.ShadowViewMatrix;
+			command.ShadowProjectionMatrix = directionalLightComp.ShadowmapView.ShadowProjectionMatrix;
+			command.ShadowPosition = directionalLightComp.ShadowmapView.ShadowPosition;
+			command.ShadowmapViewportIndex = directionalLightComp.ShadowmapView.ShadowmapViewportIndex;
 			RenderManager->PushRenderCommand(command);
 
 			if (volumetricLightComponents[i].IsInUse)
@@ -172,7 +198,7 @@ namespace Havtorn
 				if (volumetricLightComp.IsActive)
 				{
 					command.Type = ERenderCommandType::VolumetricLightingDirectional;
-					command.VolumetricLightComponent = volumetricLightComp;
+					command.SetVolumetricDataFromComponent(volumetricLightComp);
 					RenderManager->PushRenderCommand(command);
 				}
 			}
@@ -189,9 +215,12 @@ namespace Havtorn
 			const STransformComponent& transformComp = transformComponents[i];
 
 			SRenderCommand command;
-			command.TransformComponent = transformComp;
-			command.PointLightComponent = pointLightComp;
 			command.Type = ERenderCommandType::DeferredLightingPoint;
+			command.ObjectMatrix = transformComp.Transform.GetMatrix();
+			command.Color = SColor(pointLightComp.ColorAndIntensity.X, pointLightComp.ColorAndIntensity.Y, pointLightComp.ColorAndIntensity.Z, 1.0f);
+			command.Intensity = pointLightComp.ColorAndIntensity.W;
+			command.Range = pointLightComp.Range;
+			command.ShadowmapViews = pointLightComp.ShadowmapViews;
 			RenderManager->PushRenderCommand(command);
 
 			if (volumetricLightComponents[i].IsInUse)
@@ -201,7 +230,7 @@ namespace Havtorn
 				if (volumetricLightComp.IsActive)
 				{
 					command.Type = ERenderCommandType::VolumetricLightingPoint;
-					command.VolumetricLightComponent = volumetricLightComp;
+					command.SetVolumetricDataFromComponent(volumetricLightComp);
 					RenderManager->PushRenderCommand(command);
 				}
 			}
@@ -216,9 +245,20 @@ namespace Havtorn
 			const STransformComponent& transformComp = transformComponents[i];
 
 			SRenderCommand command;
-			command.TransformComponent = transformComp;
-			command.SpotLightComponent = spotLightComp;
 			command.Type = ERenderCommandType::DeferredLightingSpot;
+			command.ObjectMatrix = transformComp.Transform.GetMatrix();
+			command.Color = SColor(spotLightComp.ColorAndIntensity.X, spotLightComp.ColorAndIntensity.Y, spotLightComp.ColorAndIntensity.Z, 1.0f);
+			command.Intensity = spotLightComp.ColorAndIntensity.W;
+			command.Range = spotLightComp.Range;
+			command.Direction = spotLightComp.Direction;
+			command.DirectionNormal1 = spotLightComp.DirectionNormal1;
+			command.DirectionNormal2 = spotLightComp.DirectionNormal2;
+			command.OuterAngle = spotLightComp.OuterAngle;
+			command.InnerAngle = spotLightComp.InnerAngle;
+			command.ShadowViewMatrix = spotLightComp.ShadowmapView.ShadowViewMatrix;
+			command.ShadowProjectionMatrix = spotLightComp.ShadowmapView.ShadowProjectionMatrix;
+			command.ShadowPosition = spotLightComp.ShadowmapView.ShadowPosition;
+			command.ShadowmapViewportIndex = spotLightComp.ShadowmapView.ShadowmapViewportIndex;
 			RenderManager->PushRenderCommand(command);
 
 			if (volumetricLightComponents[i].IsInUse)
@@ -228,7 +268,7 @@ namespace Havtorn
 				if (volumetricLightComp.IsActive)
 				{
 					command.Type = ERenderCommandType::VolumetricLightingSpot;
-					command.VolumetricLightComponent = volumetricLightComp;
+					command.SetVolumetricDataFromComponent(volumetricLightComp);
 					RenderManager->PushRenderCommand(command);
 				}
 			}
@@ -264,8 +304,8 @@ namespace Havtorn
 				{
 					// NR: Don't push a command every time
 					SRenderCommand command;
-					command.SpriteComponent = spriteComp;
 					command.Type = ERenderCommandType::GBufferSpriteInstanced;
+					command.TextureIndex = spriteComp.TextureIndex;
 					RenderManager->PushRenderCommand(command);
 				}
 
@@ -276,8 +316,8 @@ namespace Havtorn
 				if (!RenderManager->IsSpriteInInstancedScreenSpaceTransformRenderList(spriteComp.TextureIndex))
 				{
 					SRenderCommand command;
-					command.SpriteComponent = spriteComp;
 					command.Type = ERenderCommandType::ScreenSpaceSprite;
+					command.TextureIndex = spriteComp.TextureIndex;
 					RenderManager->PushRenderCommand(command);
 				}
 
