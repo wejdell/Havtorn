@@ -85,7 +85,7 @@ namespace ImGui
             ImGui::SameLine();
             ImGui::Checkbox("Loop", &contextData.IsLooping);
 
-            ContentControls(&imGuiFrame, &firstFrame);
+            ContentControls();
 
             ImGui::PopItemWidth();            
 
@@ -127,7 +127,7 @@ namespace ImGui
         ImGui::SameLine();
     }
 
-    void CSequencerWindow::ContentControls(int* /*currentFrame*/, int* firstFrame)
+    void CSequencerWindow::ContentControls()
     {
         if (ImGui::Button("Add Component Track"))
         {
@@ -190,25 +190,25 @@ namespace ImGui
             if (ImGui::InputInt("Frame Number:", &frameNumber))
                 keyframeIsEdited = true;
 
-            if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
-            {
-                ImGuiIO& io = ImGui::GetIO();
-                int cx = (int)(io.MousePos.x);
-                static float framePixelWidth = 10.f;
-                int legendWidth = 200;
-                ImVec2 canvasPosition = ImGui::GetCursorScreenPos();
-                const ImVec2 contentMax = ImGui::GetItemRectMax();
+            //if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+            //{
+            //    ImGuiIO& io = ImGui::GetIO();
+            //    int cx = (int)(io.MousePos.x);
+            //    static float framePixelWidth = 10.f;
+            //    int legendWidth = 200;
+            //    ImVec2 canvasPosition = ImGui::GetCursorScreenPos();
+            //    const float contentWidth = ImGui::GetItemRectSize().x;
 
-                frameNumber = cx / int((contentMax.x - float(legendWidth)) / framePixelWidth) + *firstFrame;
+            //    frameNumber = cx / int((contentWidth - float(legendWidth)) / framePixelWidth) + *firstFrame;
 
-                //HV_LOG_TRACE("Frame Number: %i", frameNumber);
-                //HV_LOG_TRACE("canvas pos x: %f", canvasPosition.x); 
-                //HV_LOG_TRACE("mouse pos x: %f", ImGui::GetMousePos().x);
-                //HV_LOG_TRACE("frac: %f", ImGui::GetMousePos().x / canvasPosition.x);
-                //float frac = ImGui::GetMousePos().x / canvasPosition.x;
-                int framesInContentArea = int((contentMax.x - float(legendWidth)) / framePixelWidth * 2.0f);
-                HV_LOG_TRACE("frames: %i", framesInContentArea);
-            }
+            //    HV_LOG_TRACE("Content Width: %f", contentWidth);
+            //    HV_LOG_TRACE("Frame Number: %i", frameNumber);
+            //    //HV_LOG_TRACE("mouse pos x: %f", ImGui::GetMousePos().x);
+            //    //HV_LOG_TRACE("frac: %f", ImGui::GetMousePos().x / canvasPosition.x);
+            //    //float frac = ImGui::GetMousePos().x / canvasPosition.x;
+            //    //int framesInContentArea = int((contentWidth - float(legendWidth)) / framePixelWidth);
+            //    //HV_LOG_TRACE("frames: %i", framesInContentArea);
+            //}
 
             selectedKeyframe->FrameNumber = frameNumber;
             ImGui::SameLine();
