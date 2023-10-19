@@ -420,7 +420,7 @@ namespace ImGui
 
     private:
         void FlowControls(Havtorn::SSequencerContextData& contextData);
-        void ContentControls(int* currentFrame, int* firstFrame);
+        void ContentControls();
         void SetCurrentComponentValueOnKeyframe();
         void FillSequencer();
 
