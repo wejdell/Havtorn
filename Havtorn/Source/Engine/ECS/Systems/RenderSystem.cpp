@@ -54,11 +54,8 @@ namespace Havtorn
 
 			SRenderCommand command;
 			command.Type = ERenderCommandType::CameraDataStorage;
-			command.ToCameraFromWorld = transformComponent.Transform.GetMatrix().FastInverse();
-			command.ToWorldFromCamera = transformComponent.Transform.GetMatrix();
-			command.ToProjectionFromCamera = cameraComponent.ProjectionMatrix;
-			command.ToCameraFromProjection = cameraComponent.ProjectionMatrix.Inverse();
-			command.CameraPosition = transformComponent.Transform.GetMatrix().GetTranslation4();
+			command.ObjectMatrix = transformComponent.Transform.GetMatrix();
+			command.ProjectionMatrix = cameraComponent.ProjectionMatrix;
 			RenderManager->PushRenderCommand(command);
 		}
 
@@ -86,11 +83,8 @@ namespace Havtorn
 						const SDirectionalLightComponent& directionalLightComp = directionalLightComponents[j];
 
 						SRenderCommand command;
-						command.Type = ERenderCommandType::ShadowAtlasPrePassDirectional;						
-						command.ShadowViewMatrix = directionalLightComp.ShadowmapView.ShadowViewMatrix;
-						command.ShadowProjectionMatrix = directionalLightComp.ShadowmapView.ShadowProjectionMatrix;
-						command.ShadowPosition = directionalLightComp.ShadowmapView.ShadowPosition;
-						command.ShadowmapViewportIndex = directionalLightComp.ShadowmapView.ShadowmapViewportIndex;
+						command.Type = ERenderCommandType::ShadowAtlasPrePassDirectional;			
+						command.ShadowViewData = directionalLightComp.ShadowmapView;
 						command.ObjectMatrix = transformComp.Transform.GetMatrix();
 						command.StaticMeshName = staticMeshComponent.Name.AsString();
 						command.TopologyIndex = staticMeshComponent.TopologyIndex;
@@ -118,10 +112,7 @@ namespace Havtorn
 
 						SRenderCommand command;
 						command.Type = ERenderCommandType::ShadowAtlasPrePassSpot;
-						command.ShadowViewMatrix = spotLightComp.ShadowmapView.ShadowViewMatrix;
-						command.ShadowProjectionMatrix = spotLightComp.ShadowmapView.ShadowProjectionMatrix;
-						command.ShadowPosition = spotLightComp.ShadowmapView.ShadowPosition;
-						command.ShadowmapViewportIndex = spotLightComp.ShadowmapView.ShadowmapViewportIndex;
+						command.ShadowViewData = spotLightComp.ShadowmapView;
 						command.ObjectMatrix = transformComp.Transform.GetMatrix();
 						command.StaticMeshName = staticMeshComponent.Name.AsString();
 						command.TopologyIndex = staticMeshComponent.TopologyIndex;
@@ -161,8 +152,7 @@ namespace Havtorn
 
 			SRenderCommand command;
 			command.Type = ERenderCommandType::DeferredDecal;
-			command.ToWorld = transformComp.Transform.GetMatrix();
-			command.ToObjectSpace = transformComp.Transform.GetMatrix().Inverse();
+			command.ObjectMatrix = transformComp.Transform.GetMatrix();
 			command.ShouldRenderAlbedo = decalComponent.ShouldRenderAlbedo;
 			command.ShouldRenderMaterial = decalComponent.ShouldRenderMaterial;
 			command.ShouldRenderNormal = decalComponent.ShouldRenderNormal;
@@ -192,10 +182,7 @@ namespace Havtorn
 			command.AmbientCubemapReference = environmentLightComp.AmbientCubemapReference;
 			command.Direction = directionalLightComp.Direction;
 			command.Color = directionalLightComp.Color;
-			command.ShadowViewMatrix = directionalLightComp.ShadowmapView.ShadowViewMatrix;
-			command.ShadowProjectionMatrix = directionalLightComp.ShadowmapView.ShadowProjectionMatrix;
-			command.ShadowPosition = directionalLightComp.ShadowmapView.ShadowPosition;
-			command.ShadowmapViewportIndex = directionalLightComp.ShadowmapView.ShadowmapViewportIndex;
+			command.ShadowViewData = directionalLightComp.ShadowmapView;
 			RenderManager->PushRenderCommand(command);
 
 			if (volumetricLightComponents[i].IsInUse)
@@ -262,10 +249,7 @@ namespace Havtorn
 			command.DirectionNormal2 = spotLightComp.DirectionNormal2;
 			command.OuterAngle = spotLightComp.OuterAngle;
 			command.InnerAngle = spotLightComp.InnerAngle;
-			command.ShadowViewMatrix = spotLightComp.ShadowmapView.ShadowViewMatrix;
-			command.ShadowProjectionMatrix = spotLightComp.ShadowmapView.ShadowProjectionMatrix;
-			command.ShadowPosition = spotLightComp.ShadowmapView.ShadowPosition;
-			command.ShadowmapViewportIndex = spotLightComp.ShadowmapView.ShadowmapViewportIndex;
+			command.ShadowViewData = spotLightComp.ShadowmapView;
 			RenderManager->PushRenderCommand(command);
 
 			if (volumetricLightComponents[i].IsInUse)

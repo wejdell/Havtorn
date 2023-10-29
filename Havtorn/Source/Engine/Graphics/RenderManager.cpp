@@ -1277,13 +1277,13 @@ namespace Havtorn
 
 	void CRenderManager::ShadowAtlasPrePassDirectional(const SRenderCommand& command)
 	{
-		FrameBufferData.ToCameraFromWorld = command.ShadowViewMatrix;
-		FrameBufferData.ToWorldFromCamera = command.ShadowViewMatrix.FastInverse();
-		FrameBufferData.ToProjectionFromCamera = command.ShadowProjectionMatrix;
-		FrameBufferData.ToCameraFromProjection = command.ShadowProjectionMatrix.Inverse();
-		FrameBufferData.CameraPosition = command.ShadowPosition;
+		FrameBufferData.ToCameraFromWorld = command.ShadowViewData.ShadowViewMatrix;
+		FrameBufferData.ToWorldFromCamera = command.ShadowViewData.ShadowViewMatrix.FastInverse();
+		FrameBufferData.ToProjectionFromCamera = command.ShadowViewData.ShadowProjectionMatrix;
+		FrameBufferData.ToCameraFromProjection = command.ShadowViewData.ShadowProjectionMatrix.Inverse();
+		FrameBufferData.CameraPosition = command.ShadowViewData.ShadowPosition;
 		BindBuffer(FrameBuffer, FrameBufferData, "Frame Buffer");
-		Context->RSSetViewports(1, &Viewports[command.ShadowmapViewportIndex]);
+		Context->RSSetViewports(1, &Viewports[command.ShadowViewData.ShadowmapViewportIndex]);
 
 		// =============
 
@@ -1360,18 +1360,18 @@ namespace Havtorn
 
 	void CRenderManager::ShadowAtlasPrePassSpot(const SRenderCommand& command)
 	{
-		FrameBufferData.ToCameraFromWorld = command.ShadowViewMatrix;
-		FrameBufferData.ToWorldFromCamera = command.ShadowViewMatrix.FastInverse();
-		FrameBufferData.ToProjectionFromCamera = command.ShadowProjectionMatrix;
-		FrameBufferData.ToCameraFromProjection = command.ShadowProjectionMatrix.Inverse();
-		FrameBufferData.CameraPosition = command.ShadowPosition;
+		FrameBufferData.ToCameraFromWorld = command.ShadowViewData.ShadowViewMatrix;
+		FrameBufferData.ToWorldFromCamera = command.ShadowViewData.ShadowViewMatrix.FastInverse();
+		FrameBufferData.ToProjectionFromCamera = command.ShadowViewData.ShadowProjectionMatrix;
+		FrameBufferData.ToCameraFromProjection = command.ShadowViewData.ShadowProjectionMatrix.Inverse();
+		FrameBufferData.CameraPosition = command.ShadowViewData.ShadowPosition;
 		BindBuffer(FrameBuffer, FrameBufferData, "Frame Buffer");
 
 		ObjectBufferData.ToWorldFromObject = command.ObjectMatrix/*transformComp.Transform.GetMatrix()*/;
 		BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
 
 		Context->VSSetConstantBuffers(0, 1, &FrameBuffer);
-		Context->RSSetViewports(1, &Viewports[command.ShadowmapViewportIndex]);
+		Context->RSSetViewports(1, &Viewports[command.ShadowViewData.ShadowmapViewportIndex]);
 
 		// =============
 
@@ -1402,11 +1402,11 @@ namespace Havtorn
 	{
 		GBuffer.SetAsActiveTarget(&IntermediateDepth);
 
-		FrameBufferData.ToCameraFromWorld = command.ToCameraFromWorld/* transformComp.Transform.GetMatrix().FastInverse()*/;
-		FrameBufferData.ToWorldFromCamera = command.ToWorldFromCamera;//transformComp.Transform.GetMatrix();
-		FrameBufferData.ToProjectionFromCamera = command.ToProjectionFromCamera;//cameraComp.ProjectionMatrix;
-		FrameBufferData.ToCameraFromProjection = command.ToCameraFromProjection;//cameraComp.ProjectionMatrix.Inverse();
-		FrameBufferData.CameraPosition = command.CameraPosition;//transformComp.Transform.GetMatrix().GetTranslation4();
+		FrameBufferData.ToWorldFromCamera = command.ObjectMatrix;
+		FrameBufferData.ToCameraFromWorld = command.ObjectMatrix.FastInverse();
+		FrameBufferData.ToProjectionFromCamera = command.ProjectionMatrix;
+		FrameBufferData.ToCameraFromProjection = command.ProjectionMatrix.Inverse();
+		FrameBufferData.CameraPosition = command.ObjectMatrix.GetTranslation4();
 		BindBuffer(FrameBuffer, FrameBufferData, "Frame Buffer");
 
 		Context->VSSetConstantBuffers(0, 1, &FrameBuffer);
@@ -1531,8 +1531,8 @@ namespace Havtorn
 		GBuffer.SetAsActiveTarget(&IntermediateDepth);
 		DepthCopy.SetAsResourceOnSlot(21);
 
-		DecalBufferData.ToWorld = command.ToWorld;//transformComp.Transform.GetMatrix();
-		DecalBufferData.ToObjectSpace = command.ToObjectSpace;//transformComp.Transform.GetMatrix().Inverse();
+		DecalBufferData.ToWorld = command.ObjectMatrix;
+		DecalBufferData.ToObjectSpace = command.ObjectMatrix.Inverse();
 
 		BindBuffer(DecalBuffer, DecalBufferData, "Decal Buffer");
 
@@ -1619,11 +1619,11 @@ namespace Havtorn
 		BindBuffer(DirectionalLightBuffer, DirectionalLightBufferData, "Light Buffer");
 		Context->PSSetConstantBuffers(2, 1, &DirectionalLightBuffer);
 
-		ShadowmapBufferData.ToShadowmapView = command.ShadowViewMatrix;
-		ShadowmapBufferData.ToShadowmapProjection = command.ShadowProjectionMatrix;
-		ShadowmapBufferData.ShadowmapPosition = command.ShadowPosition;
+		ShadowmapBufferData.ToShadowmapView = command.ShadowViewData.ShadowViewMatrix;
+		ShadowmapBufferData.ToShadowmapProjection = command.ShadowViewData.ShadowProjectionMatrix;
+		ShadowmapBufferData.ShadowmapPosition = command.ShadowViewData.ShadowPosition;
 
-		const auto& viewport = Viewports[command.ShadowmapViewportIndex];
+		const auto& viewport = Viewports[command.ShadowViewData.ShadowmapViewportIndex];
 		ShadowmapBufferData.ShadowmapResolution = { viewport.Width, viewport.Height };
 		ShadowmapBufferData.ShadowAtlasResolution = ShadowAtlasResolution;
 		ShadowmapBufferData.ShadowmapStartingUV = { viewport.TopLeftX / ShadowAtlasResolution.X, viewport.TopLeftY / ShadowAtlasResolution.Y };
@@ -1722,11 +1722,11 @@ namespace Havtorn
 		Context->PSSetConstantBuffers(3, 1, &SpotLightBuffer);
 
 		SShadowmapBufferData shadowmapBufferData;
-		shadowmapBufferData.ToShadowmapView = command.ShadowViewMatrix;
-		shadowmapBufferData.ToShadowmapProjection = command.ShadowProjectionMatrix;
-		shadowmapBufferData.ShadowmapPosition = command.ShadowPosition;
+		shadowmapBufferData.ToShadowmapView = command.ShadowViewData.ShadowViewMatrix;
+		shadowmapBufferData.ToShadowmapProjection = command.ShadowViewData.ShadowProjectionMatrix;
+		shadowmapBufferData.ShadowmapPosition = command.ShadowViewData.ShadowPosition;
 
-		const auto& viewport = Viewports[command.ShadowmapViewportIndex];
+		const auto& viewport = Viewports[command.ShadowViewData.ShadowmapViewportIndex];
 		shadowmapBufferData.ShadowmapResolution = { viewport.Width, viewport.Height };
 		shadowmapBufferData.ShadowAtlasResolution = ShadowAtlasResolution;
 		shadowmapBufferData.ShadowmapStartingUV = { viewport.TopLeftX / ShadowAtlasResolution.X, viewport.TopLeftY / ShadowAtlasResolution.Y };
@@ -1780,11 +1780,11 @@ namespace Havtorn
 		Context->PSSetConstantBuffers(4, 1, &VolumetricLightBuffer);
 
 		// Shadowbuffer
-		ShadowmapBufferData.ToShadowmapView = command.ShadowViewMatrix;
-		ShadowmapBufferData.ToShadowmapProjection = command.ShadowProjectionMatrix;
-		ShadowmapBufferData.ShadowmapPosition = command.ShadowPosition;
+		ShadowmapBufferData.ToShadowmapView = command.ShadowViewData.ShadowViewMatrix;
+		ShadowmapBufferData.ToShadowmapProjection = command.ShadowViewData.ShadowProjectionMatrix;
+		ShadowmapBufferData.ShadowmapPosition = command.ShadowViewData.ShadowPosition;
 
-		const auto& viewport = Viewports[command.ShadowmapViewportIndex];
+		const auto& viewport = Viewports[command.ShadowViewData.ShadowmapViewportIndex];
 		ShadowmapBufferData.ShadowmapResolution = { viewport.Width, viewport.Height };
 		ShadowmapBufferData.ShadowAtlasResolution = ShadowAtlasResolution;
 		ShadowmapBufferData.ShadowmapStartingUV = { viewport.TopLeftX / ShadowAtlasResolution.X, viewport.TopLeftY / ShadowAtlasResolution.Y };
@@ -1907,11 +1907,11 @@ namespace Havtorn
 
 		// Shadow Buffer
 		SShadowmapBufferData shadowmapBufferData;
-		shadowmapBufferData.ToShadowmapView =command.ShadowViewMatrix;
-		shadowmapBufferData.ToShadowmapProjection = command.ShadowProjectionMatrix;
-		shadowmapBufferData.ShadowmapPosition = command.ShadowPosition;
+		shadowmapBufferData.ToShadowmapView =command.ShadowViewData.ShadowViewMatrix;
+		shadowmapBufferData.ToShadowmapProjection = command.ShadowViewData.ShadowProjectionMatrix;
+		shadowmapBufferData.ShadowmapPosition = command.ShadowViewData.ShadowPosition;
 
-		const auto& viewport = Viewports[command.ShadowmapViewportIndex];
+		const auto& viewport = Viewports[command.ShadowViewData.ShadowmapViewportIndex];
 		shadowmapBufferData.ShadowmapResolution = { viewport.Width, viewport.Height };
 		shadowmapBufferData.ShadowAtlasResolution = ShadowAtlasResolution;
 		shadowmapBufferData.ShadowmapStartingUV = { viewport.TopLeftX / ShadowAtlasResolution.X, viewport.TopLeftY / ShadowAtlasResolution.Y };
