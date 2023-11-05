@@ -417,6 +417,7 @@ namespace ImGui
 
         SEditorKeyframe* GetSelectedKeyframe();
         void SetSelectedKeyframe(Havtorn::U32 entityTrackIndex, Havtorn::U32 componentTrackIndex, Havtorn::U32 keyframeIndex);
+        void ResetSelectedKeyframe();
 
     private:
         void FlowControls(Havtorn::SSequencerContextData& contextData);
@@ -432,14 +433,28 @@ namespace ImGui
         std::map<Havtorn::EComponentType, SEditorKeyframeColorPack> KeyframeColorMap;
         std::vector<Havtorn::EComponentType> SupportedComponentTrackTypes;
 
+        bool IsMenuOpen = false;
+
         struct SEditorKeyframeMetaData
         {
             Havtorn::I32 EntityTrackIndex = -1;
             Havtorn::I32 ComponentTrackIndex = -1;
             Havtorn::I32 KeyframeIndex = -1;
 
-            bool IsValid() const { return EntityTrackIndex >= 0 && ComponentTrackIndex >= 0 && KeyframeIndex >= 0; }
-            //SEditorKeyframe* SelectedKeyframe = nullptr;
+            bool IsValid(const SSequencer& sequencer) const
+            { 
+                using Math = Havtorn::UMath;
+                if (!Math::IsWithin(EntityTrackIndex, 0, sequencer.GetEntityTrackCount()))
+                    return false;
+
+                if (!Math::IsWithin(ComponentTrackIndex, 0, sequencer.GetComponentTrackCount(EntityTrackIndex)))
+                    return false;
+
+                if (!Math::IsWithin(KeyframeIndex, 0, sequencer.GetKeyframeCount(EntityTrackIndex, ComponentTrackIndex)))
+                    return false;
+
+                return true;
+            }
         } SelectedKeyframeMetaData;
 
         std::string NewComponentTrackPopupName = "AddNewComponentTrackPopup";
