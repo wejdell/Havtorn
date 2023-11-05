@@ -76,6 +76,7 @@ namespace ImGui
             int imGuiFrame = contextData.CurrentFrame;
             int imGuiMaxFrame = contextData.MaxFrames;
             int playRate = static_cast<int>(contextData.PlayRate);
+            IsMenuOpen = false;
 
             ImGui::InputInt("Current Frame ", &imGuiFrame);
             ImGui::SameLine();
@@ -97,6 +98,7 @@ namespace ImGui
             contextData.MaxFrames = imGuiMaxFrame;
             contextData.PlayRate = static_cast<Havtorn::U16>(playRate);
 
+            HV_LOG_TRACE("current frame after update: %i", contextData.CurrentFrame);
             SequencerSystem->SetSequencerContextData(contextData);
         }
         ImGui::End();
@@ -137,6 +139,8 @@ namespace ImGui
 
         if (ImGui::BeginPopup(NewComponentTrackPopupName.c_str()))
         {
+            IsMenuOpen = true;
+
             for (const Havtorn::EComponentType componentType : SupportedComponentTrackTypes)
             {
                 if (ImGui::MenuItem(Havtorn::GetComponentTypeString(componentType).c_str()))
@@ -156,6 +160,8 @@ namespace ImGui
 
         if (ImGui::BeginPopup(NewKeyframePopupName.c_str()))
         {
+            IsMenuOpen = true;
+
             for (const Havtorn::EComponentType componentType : SupportedComponentTrackTypes)
             {
                 if (ImGui::MenuItem(Havtorn::GetComponentTypeString(componentType).c_str()))
@@ -190,25 +196,21 @@ namespace ImGui
             if (ImGui::InputInt("Frame Number:", &frameNumber))
                 keyframeIsEdited = true;
 
-            //if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
-            //{
-            //    ImGuiIO& io = ImGui::GetIO();
-            //    int cx = (int)(io.MousePos.x);
-            //    static float framePixelWidth = 10.f;
-            //    int legendWidth = 200;
-            //    ImVec2 canvasPosition = ImGui::GetCursorScreenPos();
-            //    const float contentWidth = ImGui::GetItemRectSize().x;
+            if (ImGui::IsMouseDragging(ImGuiMouseButton_Left))
+            {
+                float framePixelWidth = 10.f;
+                int legendWidth = 200;
+                int itemHeight = 20;
 
-            //    frameNumber = cx / int((contentWidth - float(legendWidth)) / framePixelWidth) + *firstFrame;
+                ImGuiIO& io = ImGui::GetIO();
+                ImVec2 canvasPosition = ImGui::GetCursorScreenPos();
+                ImVec2 canvas_size = ImGui::GetContentRegionAvail();
 
-            //    HV_LOG_TRACE("Content Width: %f", contentWidth);
-            //    HV_LOG_TRACE("Frame Number: %i", frameNumber);
-            //    //HV_LOG_TRACE("mouse pos x: %f", ImGui::GetMousePos().x);
-            //    //HV_LOG_TRACE("frac: %f", ImGui::GetMousePos().x / canvasPosition.x);
-            //    //float frac = ImGui::GetMousePos().x / canvasPosition.x;
-            //    //int framesInContentArea = int((contentWidth - float(legendWidth)) / framePixelWidth);
-            //    //HV_LOG_TRACE("frames: %i", framesInContentArea);
-            //}
+                ImRect topRect(ImVec2(canvasPosition.x + legendWidth, canvasPosition.y), ImVec2(canvasPosition.x + canvas_size.x, canvasPosition.y + itemHeight));
+                frameNumber = (int)((io.MousePos.x - topRect.Min.x) / framePixelWidth) + 0;
+                frameNumber = Havtorn::UMath::Clamp(frameNumber, 0, 100);
+                keyframeIsEdited = true;
+            }
 
             selectedKeyframe->FrameNumber = frameNumber;
             ImGui::SameLine();
@@ -230,7 +232,7 @@ namespace ImGui
 
     void CSequencerWindow::SetCurrentComponentValueOnKeyframe()
     {
-        if (!SelectedKeyframeMetaData.IsValid())
+        if (!SelectedKeyframeMetaData.IsValid(Sequencer))
             return;
 
         Havtorn::CScene* const scene = Manager->GetCurrentScene();
@@ -322,7 +324,7 @@ namespace ImGui
 
     void CSequencerWindow::EditSelectedKeyframe(SEditorKeyframe* selectedKeyframe)
     {
-        if (!SelectedKeyframeMetaData.IsValid())
+        if (!SelectedKeyframeMetaData.IsValid(Sequencer))
             return;
 
         Havtorn::CScene* const scene = Manager->GetCurrentScene();
@@ -643,6 +645,9 @@ namespace ImGui
 
             draw_list->PopClipRect();
             draw_list->PopClipRect();
+
+            if (io.MouseClicked[0])
+                ResetSelectedKeyframe();
 
             for (CustomDraw& customDraw : customDraws)
                 sequence->DrawComponentTracks(this, customDraw.index, draw_list, customDraw.customRect, customDraw.legendRect, customDraw.clippingRect, customDraw.legendClippingRect, customDraw.componentTracks);
@@ -968,7 +973,7 @@ namespace ImGui
 
     void CSequencerWindow::ChangeCurrentFrame(bool& MovingCurrentFrame, bool MovingScrollBar, int movingEntry, int sequenceOptions, int* currentFrame, ImRect& topRect, ImGuiIO& io, int frameCount, float framePixelWidth, int firstFrameUsed, SSequencer* sequence)
     {
-        if (!MovingCurrentFrame && !MovingScrollBar && movingEntry == -1 && sequenceOptions & SEQUENCER_CHANGE_FRAME && currentFrame && *currentFrame >= 0 && topRect.Contains(io.MousePos) && io.MouseDown[0])
+        if (!IsMenuOpen && !MovingCurrentFrame && !MovingScrollBar && movingEntry == -1 && sequenceOptions & SEQUENCER_CHANGE_FRAME && currentFrame && *currentFrame >= 0 && topRect.Contains(io.MousePos) && io.MouseDown[0])
         {
             MovingCurrentFrame = true;
         }
@@ -1060,16 +1065,7 @@ namespace ImGui
     
     SEditorKeyframe* CSequencerWindow::GetSelectedKeyframe()
     {
-        if (!SelectedKeyframeMetaData.IsValid())
-            return nullptr;
-
-        if (SelectedKeyframeMetaData.EntityTrackIndex >= Sequencer.GetEntityTrackCount())
-            return nullptr;
-
-        if (SelectedKeyframeMetaData.ComponentTrackIndex >= Sequencer.GetComponentTrackCount(SelectedKeyframeMetaData.EntityTrackIndex))
-            return nullptr;
-
-        if (SelectedKeyframeMetaData.KeyframeIndex >= Sequencer.GetKeyframeCount(SelectedKeyframeMetaData.EntityTrackIndex, SelectedKeyframeMetaData.ComponentTrackIndex))
+        if (!SelectedKeyframeMetaData.IsValid(Sequencer))
             return nullptr;
 
         return &Sequencer.GetComponentTracks(SelectedKeyframeMetaData.EntityTrackIndex)[SelectedKeyframeMetaData.ComponentTrackIndex].Keyframes[SelectedKeyframeMetaData.KeyframeIndex];
@@ -1080,6 +1076,13 @@ namespace ImGui
         SelectedKeyframeMetaData.EntityTrackIndex = entityTrackIndex;
         SelectedKeyframeMetaData.ComponentTrackIndex = componentTrackIndex;
         SelectedKeyframeMetaData.KeyframeIndex = keyframeIndex;
+    }
+    
+    void CSequencerWindow::ResetSelectedKeyframe()
+    {
+        SelectedKeyframeMetaData.EntityTrackIndex = -1;
+        SelectedKeyframeMetaData.ComponentTrackIndex = -1;
+        SelectedKeyframeMetaData.KeyframeIndex = -1;
     }
 }
 
@@ -1632,6 +1635,9 @@ void SSequencer::DrawComponentTracks(class ImGui::CSequencerWindow* sequencerWin
             U32 keyframe = componentTrack.Keyframes[i3].FrameNumber;
             ImVec2 point = ImVec2(static_cast<Havtorn::F32>(keyframe), legendRect.Min.y + i2 * componentTrackHeight);
             const SEditorKeyframeColorPack colorPack = sequencerWindow->GetColorPackFromComponentType(componentTrack.ComponentType);
+
+            // TODO.NR: Draw selected keyframe highlighted
+            // TODO.NR: Don't base selection on DrawKeyframe function
             int returnValue = DrawKeyframe(drawList, pointToRange(point), viewSize, offset, false, colorPack.KeyframeBaseColor, colorPack.KeyframeHighlightColor);
             if (returnValue == 2)
             {
