@@ -185,14 +185,13 @@ namespace Havtorn
 				U16 numberOfKeyframes = static_cast<U16>(componentTrack.Keyframes.size());
 				componentTrack.TrackState = ESequencerComponentTrackState::Waiting;
 
-				// Start iterating from the start if we haven't yet or if we've have reached the end
+				// Start iterating from the start if we haven't yet or if we've reached the end
 				if (componentTrack.CurrentKeyframeIndex == -1 || componentTrack.CurrentKeyframeIndex >= numberOfKeyframes - 1)
 					componentTrack.CurrentKeyframeIndex = 0;
 
 				for (U16 index = static_cast<U16>(componentTrack.CurrentKeyframeIndex); index < numberOfKeyframes; index++)
 				{
 					componentTrack.CurrentKeyframeIndex = index;
-					//SSequencerKeyframe& keyframe = *componentTrack.Keyframes[index];
 					SSequencerKeyframe* keyframe = componentTrack.Keyframes[index];
 					SSequencerKeyframe* nextKeyframe = (index + 1) < numberOfKeyframes ? componentTrack.Keyframes[index + 1] : nullptr;
 					
@@ -210,22 +209,6 @@ namespace Havtorn
 						componentTrack.TrackState = ESequencerComponentTrackState::Setting;
 						break;
 					}
-
-					//if (keyframe.FrameNumber <= Data.CurrentFrame && (index + 1) < numberOfKeyframes && (*componentTrack.Keyframes[index + 1]).FrameNumber > Data.CurrentFrame)
-					//{
-					//	componentTrack.CurrentKeyframe = componentTrack.Keyframes[index];
-					//	componentTrack.NextKeyframe = componentTrack.Keyframes[index + 1];
-					//	componentTrack.TrackState = ESequencerComponentTrackState::Blending;
-					//	break;
-					//}
-					//// Reached left side of last keyframe
-					//else if (keyframe.FrameNumber <= Data.CurrentFrame && (index + 1) >= numberOfKeyframes) 
-					//{
-					//	componentTrack.CurrentKeyframe = componentTrack.Keyframes[index];
-					//	componentTrack.NextKeyframe = nullptr;
-					//	componentTrack.TrackState = ESequencerComponentTrackState::Setting;
-					//	break;
-					//}
 				}
 
 				// Don't set anything if we haven't reached a keyframe yet

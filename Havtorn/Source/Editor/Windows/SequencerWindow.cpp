@@ -18,8 +18,8 @@ namespace ImGui
         : CWindow(displayName, manager)
         , SequencerSystem(sequencerSystem)
     {
-        Sequencer.FrameMin = 0;
-        Sequencer.FrameMax = 100;
+        FrameMin = 0;
+        FrameMax = 100;
 
         Sequencers.push_back("Intro");
         Sequencers.push_back("BossFight");
@@ -92,13 +92,12 @@ namespace ImGui
 
             FillSequencer();
 
-            DrawSequencer(&Sequencer, &imGuiFrame, &expanded, &selectedEntry, &firstFrame, SEQUENCER_EDIT_STARTEND | SEQUENCER_ADD | SEQUENCER_DEL | SEQUENCER_COPYPASTE | SEQUENCER_CHANGE_FRAME);
+            DrawSequencer(&imGuiFrame, &expanded, &selectedEntry, &firstFrame, SEQUENCER_EDIT_STARTEND | SEQUENCER_ADD | SEQUENCER_DEL | SEQUENCER_COPYPASTE | SEQUENCER_CHANGE_FRAME);
 
             contextData.CurrentFrame = imGuiFrame;
             contextData.MaxFrames = imGuiMaxFrame;
             contextData.PlayRate = static_cast<Havtorn::U16>(playRate);
 
-            HV_LOG_TRACE("current frame after update: %i", contextData.CurrentFrame);
             SequencerSystem->SetSequencerContextData(contextData);
         }
         ImGui::End();
@@ -232,7 +231,7 @@ namespace ImGui
 
     void CSequencerWindow::SetCurrentComponentValueOnKeyframe()
     {
-        if (!SelectedKeyframeMetaData.IsValid(Sequencer))
+        if (!SelectedKeyframeMetaData.IsValid(this))
             return;
 
         Havtorn::CScene* const scene = Manager->GetCurrentScene();
@@ -255,6 +254,31 @@ namespace ImGui
         }
     }
 
+    void CSequencerWindow::SetCurrentKeyframeValueOnComponent()
+    {
+        if (!SelectedKeyframeMetaData.IsValid(this))
+            return;
+
+        Havtorn::CScene* const scene = Manager->GetCurrentScene();
+        if (scene == nullptr)
+            return;
+
+        std::vector<Havtorn::SSequencerComponent>& sequencerComponents = scene->GetSequencerComponents();
+        for (U64 index = 0, entityTrackIndex = 0; index < sequencerComponents.size(); index++)
+        {
+            Havtorn::SSequencerComponent& component = sequencerComponents[index];
+            if (!component.IsInUse)
+                continue;
+
+            if (entityTrackIndex++ != SelectedKeyframeMetaData.EntityTrackIndex)
+                continue;
+
+            Havtorn::SSequencerKeyframe* sequencerKeyframe = component.ComponentTracks[SelectedKeyframeMetaData.ComponentTrackIndex].Keyframes[SelectedKeyframeMetaData.KeyframeIndex];
+
+            sequencerKeyframe->SetKeyframeDataOnEntity(scene, index);
+        }
+    }
+
     void CSequencerWindow::FillSequencer()
     {
         Havtorn::CScene* const scene = Manager->GetCurrentScene();
@@ -264,7 +288,7 @@ namespace ImGui
         std::vector<Havtorn::SSequencerComponent>& sequencerComponents = scene->GetSequencerComponents();
         std::vector<Havtorn::SMetaDataComponent>& metaDataComponents = scene->GetMetaDataComponents();
 
-        Sequencer.EntityTracks.clear();
+        EntityTracks.clear();
 
         for (U64 index = 0; index < sequencerComponents.size(); index++)
         {
@@ -297,7 +321,7 @@ namespace ImGui
             entityTrack.FrameEnd = 20;
             entityTrack.IsExpanded = true;
 
-            Sequencer.EntityTracks.push_back(entityTrack);
+            EntityTracks.push_back(entityTrack);
         }
     }
 
@@ -324,7 +348,7 @@ namespace ImGui
 
     void CSequencerWindow::EditSelectedKeyframe(SEditorKeyframe* selectedKeyframe)
     {
-        if (!SelectedKeyframeMetaData.IsValid(Sequencer))
+        if (!SelectedKeyframeMetaData.IsValid(this))
             return;
 
         Havtorn::CScene* const scene = Manager->GetCurrentScene();
@@ -374,10 +398,10 @@ namespace ImGui
         return overDel;
     }
 
-    bool CSequencerWindow::DrawSequencer(SSequencer* sequence, int* currentFrame, bool* expanded, int* selectedEntry, int* firstFrame, int sequenceOptions)
+    bool CSequencerWindow::DrawSequencer(int* currentFrame, bool* expanded, int* selectedEntry, int* firstFrame, int sequenceOptions)
     {
 #pragma region Setup
-        int entityTrackCount = sequence->GetEntityTrackCount();
+        int entityTrackCount = GetEntityTrackCount();
         if (!entityTrackCount)
             return false;
 
@@ -411,8 +435,8 @@ namespace ImGui
 
         int controlHeight = entityTrackCount * ItemHeight;
         for (int i = 0; i < entityTrackCount; i++)
-            controlHeight += int(sequence->GetCustomHeight(i));
-        int frameCount = ImMax(sequence->GetFrameMax() - sequence->GetFrameMin(), 1);
+            controlHeight += int(GetCustomHeight(i));
+        int frameCount = ImMax(GetFrameMax() - GetFrameMin(), 1);
 
         static bool MovingScrollBar = false;
         static bool MovingCurrentFrame = false;
@@ -438,12 +462,12 @@ namespace ImGui
         static bool panningView = false;
         static ImVec2 panningViewSource;
         static int panningViewFrame;
-        Panning(io, panningView, panningViewSource, panningViewFrame, firstFrame, framePixelWidth, sequence, visibleFrameCount, framePixelWidthTarget, frameCount);
+        Panning(io, panningView, panningViewSource, panningViewFrame, firstFrame, framePixelWidth, visibleFrameCount, framePixelWidthTarget, frameCount);
 
         // --
         if (expanded && !*expanded)
         {
-            NotExpanded(canvas_size, canvasPosition, ItemHeight, draw_list, sequence, frameCount, entityTrackCount);
+            NotExpanded(canvas_size, canvasPosition, ItemHeight, draw_list, frameCount, entityTrackCount);
         }
         else
         {
@@ -458,7 +482,7 @@ namespace ImGui
             ImVec2 childFrameSize(canvas_size.x, canvas_size.y - 8.f - headerSize.y - (hasScrollBar ? scrollBarSize.y : 0));
             ImGui::PushStyleColor(ImGuiCol_FrameBg, 0);
             ImGui::BeginChildFrame(889, childFrameSize);
-            sequence->IsFocused = ImGui::IsWindowFocused();
+            IsFocused = ImGui::IsWindowFocused();
             ImGui::InvisibleButton("contentBar", ImVec2(canvas_size.x, float(controlHeight)));
             const ImVec2 contentMin = ImGui::GetItemRectMin();
             const ImVec2 contentMax = ImGui::GetItemRectMax();
@@ -471,12 +495,12 @@ namespace ImGui
             // current frame top
             ImRect topRect(ImVec2(canvasPosition.x + legendWidth, canvasPosition.y), ImVec2(canvasPosition.x + canvas_size.x, canvasPosition.y + ItemHeight));
 
-            ChangeCurrentFrame(MovingCurrentFrame, MovingScrollBar, movingEntry, sequenceOptions, currentFrame, topRect, io, frameCount, framePixelWidth, firstFrameUsed, sequence);
+            ChangeCurrentFrame(MovingCurrentFrame, MovingScrollBar, movingEntry, sequenceOptions, currentFrame, topRect, io, frameCount, framePixelWidth, firstFrameUsed);
 
             //header
             draw_list->AddRectFilled(canvasPosition, ImVec2(canvas_size.x + canvasPosition.x, canvasPosition.y + ItemHeight), 0xFF3D3837, 0);
 
-            AddEntityTrackButton(sequenceOptions, draw_list, canvasPosition, legendWidth, ItemHeight, io, sequence, selectedEntry, popupOpened);
+            AddEntityTrackButton(sequenceOptions, draw_list, canvasPosition, legendWidth, ItemHeight, io, selectedEntry, popupOpened);
             
             //header frame number and lines
             int modFrameCount = 10;
@@ -489,7 +513,7 @@ namespace ImGui
             int halfModFrameCount = modFrameCount / 2;
 
             auto drawLine = [&](int i, int regionHeight) {
-                bool baseIndex = ((i % modFrameCount) == 0) || (i == sequence->GetFrameMax() || i == sequence->GetFrameMin());
+                bool baseIndex = ((i % modFrameCount) == 0) || (i == GetFrameMax() || i == GetFrameMin());
                 bool halfIndex = (i % halfModFrameCount) == 0;
                 int px = (int)canvasPosition.x + int(i * framePixelWidth) + legendWidth - int(firstFrameUsed * framePixelWidth);
                 int tiretStart = baseIndex ? 4 : (halfIndex ? 10 : 14);
@@ -522,12 +546,12 @@ namespace ImGui
                 }
             };
 
-            for (int i = sequence->GetFrameMin(); i <= sequence->GetFrameMax(); i += frameStep)
+            for (int i = GetFrameMin(); i <= GetFrameMax(); i += frameStep)
             {
                 drawLine(i, ItemHeight);
             }
-            drawLine(sequence->GetFrameMin(), ItemHeight);
-            drawLine(sequence->GetFrameMax(), ItemHeight);
+            drawLine(GetFrameMin(), ItemHeight);
+            drawLine(GetFrameMax(), ItemHeight);
 
             // clip content
             draw_list->PushClipRect(childFramePos, childFramePos + childFrameSize);
@@ -535,39 +559,39 @@ namespace ImGui
             size_t customHeight = 0;
             
             // Draw entity names in the legend rect on the left
-            TrackHeader(entityTrackCount, sequence, contentMin, ItemHeight, customHeight, draw_list, sequenceOptions, legendWidth, io, delEntry, dupEntry);
+            TrackHeader(entityTrackCount, contentMin, ItemHeight, customHeight, draw_list, sequenceOptions, legendWidth, io, delEntry, dupEntry);
 
             // clipping rect so items bars are not visible in the legend on the left when scrolled
             //
 
             // Track rect and backgrounds
             customHeight = 0;
-            TrackSlotsBackground(entityTrackCount, sequence, contentMin, legendWidth, ItemHeight, customHeight, canvas_size, canvasPosition, popupOpened, cy, movingEntry, cx, draw_list);
+            TrackSlotsBackground(entityTrackCount, contentMin, legendWidth, ItemHeight, customHeight, canvas_size, canvasPosition, popupOpened, cy, movingEntry, cx, draw_list);
 
             draw_list->PushClipRect(childFramePos + ImVec2(float(legendWidth), 0.f), childFramePos + childFrameSize);
 
             // Vertical frame lines on tracks
-            for (int i = sequence->GetFrameMin(); i <= sequence->GetFrameMax(); i += frameStep)
+            for (int i = GetFrameMin(); i <= GetFrameMax(); i += frameStep)
             {
                 drawLineContent(i, int(contentHeight));
             }
-            drawLineContent(sequence->GetFrameMin(), int(contentHeight));
-            drawLineContent(sequence->GetFrameMax(), int(contentHeight));
+            drawLineContent(GetFrameMin(), int(contentHeight));
+            drawLineContent(GetFrameMax(), int(contentHeight));
 
             // selection
             bool selected = selectedEntry && (*selectedEntry >= 0);
-            Selection(selected, customHeight, selectedEntry, sequence, draw_list, contentMin, ItemHeight, canvas_size);
+            Selection(selected, customHeight, selectedEntry, draw_list, contentMin, ItemHeight, canvas_size);
 
             // slots
 #pragma region Track Content, component tracks
             customHeight = 0;
             for (int entityTrackIndex = 0; entityTrackIndex < entityTrackCount; entityTrackIndex++)
             {
-                for (int componentTrackIndex = 0; componentTrackIndex < sequence->GetComponentTrackCount(entityTrackIndex); componentTrackIndex++)
+                for (int componentTrackIndex = 0; componentTrackIndex < GetComponentTrackCount(entityTrackIndex); componentTrackIndex++)
                 {
                     std::vector<std::pair<int, int>> blendRegions = {};
                     unsigned int color;
-                    sequence->GetBlendRegionInfo(this, entityTrackIndex, componentTrackIndex, blendRegions, &color);
+                    GetBlendRegionInfo(this, entityTrackIndex, componentTrackIndex, blendRegions, &color);
 
                     if (blendRegions.empty())
                         continue;
@@ -589,22 +613,22 @@ namespace ImGui
                         }
                         if (ImRect(slotP1, slotP2).Contains(io.MousePos) && io.MouseDoubleClicked[0])
                         {
-                            sequence->DoubleClick(entityTrackIndex);
+                            DoubleClick(entityTrackIndex);
                         }
                     }
                 }
 
                 int* start, *end;
                 unsigned int color;
-                sequence->Get(entityTrackIndex, &start, &end, NULL, &color);
-                size_t localCustomHeight = sequence->GetCustomHeight(entityTrackIndex);
+                Get(entityTrackIndex, &start, &end, NULL, &color);
+                size_t localCustomHeight = GetCustomHeight(entityTrackIndex);
                 
                 // custom draw
                 if (localCustomHeight > 0)
                 {
                     ImVec2 rp(canvasPosition.x, contentMin.y + ItemHeight * entityTrackIndex + 1 + customHeight);
-                    ImRect customRect(rp + ImVec2(legendWidth - (firstFrameUsed - sequence->GetFrameMin() - 0.5f) * framePixelWidth, float(ItemHeight)),
-                        rp + ImVec2(legendWidth + (sequence->GetFrameMax() - firstFrameUsed - 0.5f + 2.f) * framePixelWidth, float(localCustomHeight + ItemHeight)));
+                    ImRect customRect(rp + ImVec2(legendWidth - (firstFrameUsed - GetFrameMin() - 0.5f) * framePixelWidth, float(ItemHeight)),
+                        rp + ImVec2(legendWidth + (GetFrameMax() - firstFrameUsed - 0.5f + 2.f) * framePixelWidth, float(localCustomHeight + ItemHeight)));
                     ImRect clippingRect(rp + ImVec2(float(legendWidth), float(ItemHeight)), rp + ImVec2(canvas_size.x, float(localCustomHeight + ItemHeight)));
 
                     ImRect legendRect(rp + ImVec2(0.f, float(ItemHeight)), rp + ImVec2(float(legendWidth), float(localCustomHeight)));
@@ -612,14 +636,14 @@ namespace ImGui
                     //ImRect legendClippingRect(canvas_pos + ImVec2(0.f, float(ItemHeight)), canvas_pos + ImVec2(float(legendWidth), float(localCustomHeight + ItemHeight)));
                     ImRect legendClippingRect(canvasPosition, canvasPosition + ImVec2(float(legendWidth), float(canvas_size.y)));
 
-                    std::vector<SEditorComponentTrack>& componentTracks = sequence->GetComponentTracks(entityTrackIndex);
+                    std::vector<SEditorComponentTrack>& componentTracks = GetComponentTracks(entityTrackIndex);
                     customDraws.push_back({ entityTrackIndex, customRect, legendRect, clippingRect, legendClippingRect, componentTracks });
                 }
                 else
                 {
                     ImVec2 rp(canvasPosition.x, contentMin.y + ItemHeight * entityTrackIndex + customHeight);
-                    ImRect customRect(rp + ImVec2(legendWidth - (firstFrameUsed - sequence->GetFrameMin() - 0.5f) * framePixelWidth, float(0.f)),
-                        rp + ImVec2(legendWidth + (sequence->GetFrameMax() - firstFrameUsed - 0.5f + 2.f) * framePixelWidth, float(ItemHeight)));
+                    ImRect customRect(rp + ImVec2(legendWidth - (firstFrameUsed - GetFrameMin() - 0.5f) * framePixelWidth, float(0.f)),
+                        rp + ImVec2(legendWidth + (GetFrameMax() - firstFrameUsed - 0.5f + 2.f) * framePixelWidth, float(ItemHeight)));
                     ImRect clippingRect(rp + ImVec2(float(legendWidth), float(0.f)), rp + ImVec2(canvas_size.x, float(ItemHeight)));
 
                     compactCustomDraws.push_back({ entityTrackIndex, customRect, ImRect(), clippingRect, ImRect() });
@@ -629,10 +653,10 @@ namespace ImGui
 #pragma endregion
 
             // moving
-            Moving(movingEntry, cx, movingPos, framePixelWidth, sequence, selectedEntry, movingPart, io, returnValue);
+            Moving(movingEntry, cx, movingPos, framePixelWidth, selectedEntry, movingPart, io, returnValue);
 
 #pragma region Playhead
-            if (currentFrame && firstFrame && *currentFrame >= *firstFrame && *currentFrame <= sequence->GetFrameMax())
+            if (currentFrame && firstFrame && *currentFrame >= *firstFrame && *currentFrame <= GetFrameMax())
             {
                 static const float cursorWidth = 4.5f;
                 float cursorOffset = contentMin.x + legendWidth + (*currentFrame - firstFrameUsed) * framePixelWidth + framePixelWidth / 2 - cursorWidth * 0.5f;
@@ -646,21 +670,19 @@ namespace ImGui
             draw_list->PopClipRect();
             draw_list->PopClipRect();
 
-            if (io.MouseClicked[0])
-                ResetSelectedKeyframe();
+            //if (io.MouseClicked[0])
+            //    ResetSelectedKeyframe();
 
             for (CustomDraw& customDraw : customDraws)
-                sequence->DrawComponentTracks(this, customDraw.index, draw_list, customDraw.customRect, customDraw.legendRect, customDraw.clippingRect, customDraw.legendClippingRect, customDraw.componentTracks);
-            for (CustomDraw& customDraw : compactCustomDraws)
-                sequence->CustomDrawCompact(customDraw.index, draw_list, customDraw.customRect, customDraw.clippingRect);
+                DrawComponentTracks(this, customDraw.index, draw_list, customDraw.customRect, customDraw.legendRect, customDraw.clippingRect, customDraw.legendClippingRect, customDraw.componentTracks);
 
             // copy paste
-            CopyPaste(sequenceOptions, contentMin, canvasPosition, ItemHeight, io, draw_list, sequence);
+            CopyPaste(sequenceOptions, contentMin, canvasPosition, ItemHeight, io, draw_list);
             //
 
             ImGui::EndChildFrame();
             ImGui::PopStyleColor();
-            Scrollbar(hasScrollBar, scrollBarSize, firstFrameUsed, sequence, frameCount, canvas_size, legendWidth, draw_list, io, barWidthInPixels, MovingScrollBar, framePixelWidthTarget, framePixelWidth, firstFrame, visibleFrameCount, panningViewSource, panningViewFrame, MovingCurrentFrame, movingEntry);
+            Scrollbar(hasScrollBar, scrollBarSize, firstFrameUsed, frameCount, canvas_size, legendWidth, draw_list, io, barWidthInPixels, MovingScrollBar, framePixelWidthTarget, framePixelWidth, firstFrame, visibleFrameCount, panningViewSource, panningViewFrame, MovingCurrentFrame, movingEntry);
         }
 
         ImGui::EndGroup();
@@ -715,19 +737,19 @@ namespace ImGui
 
         if (delEntry != -1)
         {
-            sequence->Del(delEntry);
-            if (selectedEntry && (*selectedEntry == delEntry || *selectedEntry >= sequence->GetEntityTrackCount()))
+            Del(delEntry);
+            if (selectedEntry && (*selectedEntry == delEntry || *selectedEntry >= GetEntityTrackCount()))
                 *selectedEntry = -1;
         }
 
         if (dupEntry != -1)
         {
-            sequence->Duplicate(dupEntry);
+            Duplicate(dupEntry);
         }
         return returnValue;
     }
 
-    void CSequencerWindow::Scrollbar(bool hasScrollBar, ImVec2& scrollBarSize, int firstFrameUsed, SSequencer* sequence, int frameCount, ImVec2& canvas_size, int legendWidth, ImDrawList* draw_list, ImGuiIO& io, const float& barWidthInPixels, bool& MovingScrollBar, float& framePixelWidthTarget, float& framePixelWidth, int* firstFrame, const int& visibleFrameCount, ImVec2& panningViewSource, int& panningViewFrame, bool MovingCurrentFrame, int movingEntry)
+    void CSequencerWindow::Scrollbar(bool hasScrollBar, ImVec2& scrollBarSize, int firstFrameUsed, int frameCount, ImVec2& canvas_size, int legendWidth, ImDrawList* draw_list, ImGuiIO& io, const float& barWidthInPixels, bool& MovingScrollBar, float& framePixelWidthTarget, float& framePixelWidth, int* firstFrame, const int& visibleFrameCount, ImVec2& panningViewSource, int& panningViewFrame, bool MovingCurrentFrame, int movingEntry)
     {
         if (hasScrollBar)
         {
@@ -737,7 +759,7 @@ namespace ImGui
 
             // ratio = number of frames visible in control / number to total frames
 
-            float startFrameOffset = ((float)(firstFrameUsed - sequence->GetFrameMin()) / (float)frameCount) * (canvas_size.x - legendWidth);
+            float startFrameOffset = ((float)(firstFrameUsed - GetFrameMin()) / (float)frameCount) * (canvas_size.x - legendWidth);
             ImVec2 scrollBarA(scrollBarMin.x + legendWidth, scrollBarMin.y - 2);
             ImVec2 scrollBarB(scrollBarMin.x + canvas_size.x, scrollBarMax.y - 1);
             draw_list->AddRectFilled(scrollBarA, scrollBarB, 0xFF222222, 0);
@@ -779,9 +801,9 @@ namespace ImGui
                     framePixelWidthTarget = framePixelWidth = framePixelWidth / barRatio;
                     int newVisibleFrameCount = int((canvas_size.x - legendWidth) / framePixelWidthTarget);
                     int lastFrame = *firstFrame + newVisibleFrameCount;
-                    if (lastFrame > sequence->GetFrameMax())
+                    if (lastFrame > GetFrameMax())
                     {
-                        framePixelWidthTarget = framePixelWidth = (canvas_size.x - legendWidth) / float(sequence->GetFrameMax() - *firstFrame);
+                        framePixelWidthTarget = framePixelWidth = (canvas_size.x - legendWidth) / float(GetFrameMax() - *firstFrame);
                     }
                 }
             }
@@ -801,7 +823,7 @@ namespace ImGui
                         framePixelWidthTarget = framePixelWidth = framePixelWidth / barRatio;
                         int newVisibleFrameCount = int(visibleFrameCount / barRatio);
                         int newFirstFrame = *firstFrame + newVisibleFrameCount - visibleFrameCount;
-                        newFirstFrame = ImClamp(newFirstFrame, sequence->GetFrameMin(), ImMax(sequence->GetFrameMax() - visibleFrameCount, sequence->GetFrameMin()));
+                        newFirstFrame = ImClamp(newFirstFrame, GetFrameMin(), ImMax(GetFrameMax() - visibleFrameCount, GetFrameMin()));
                         if (newFirstFrame == *firstFrame)
                         {
                             framePixelWidth = framePixelWidthTarget = previousFramePixelWidthTarget;
@@ -825,7 +847,7 @@ namespace ImGui
                     {
                         float framesPerPixelInBar = barWidthInPixels / (float)visibleFrameCount;
                         *firstFrame = int((io.MousePos.x - panningViewSource.x) / framesPerPixelInBar) - panningViewFrame;
-                        *firstFrame = ImClamp(*firstFrame, sequence->GetFrameMin(), ImMax(sequence->GetFrameMax() - visibleFrameCount, sequence->GetFrameMin()));
+                        *firstFrame = ImClamp(*firstFrame, GetFrameMin(), ImMax(GetFrameMax() - visibleFrameCount, GetFrameMin()));
                     }
                 }
                 else
@@ -846,7 +868,7 @@ namespace ImGui
         }
     }
 
-    void CSequencerWindow::CopyPaste(int sequenceOptions, const ImVec2& contentMin, ImVec2& canvas_pos, int ItemHeight, ImGuiIO& io, ImDrawList* draw_list, SSequencer* sequence)
+    void CSequencerWindow::CopyPaste(int sequenceOptions, const ImVec2& contentMin, ImVec2& canvas_pos, int ItemHeight, ImGuiIO& io, ImDrawList* draw_list)
     {
         if (sequenceOptions & SEQUENCER_COPYPASTE)
         {
@@ -864,16 +886,16 @@ namespace ImGui
 
             if (inRectCopy && io.MouseReleased[0])
             {
-                sequence->Copy();
+                Copy();
             }
             if (inRectPaste && io.MouseReleased[0])
             {
-                sequence->Paste();
+                Paste();
             }
         }
     }
 
-    void CSequencerWindow::Moving(int& movingEntry, int cx, int& movingPos, float framePixelWidth, SSequencer* sequence, int* selectedEntry, int movingPart, ImGuiIO& io, bool& ret)
+    void CSequencerWindow::Moving(int& movingEntry, int cx, int& movingPos, float framePixelWidth, int* selectedEntry, int movingPart, ImGuiIO& io, bool& ret)
     {
         if (movingEntry >= 0)
         {
@@ -882,7 +904,7 @@ namespace ImGui
             if (std::abs(diffFrame) > 0)
             {
                 int* start, * end;
-                sequence->Get(movingEntry, &start, &end, NULL, NULL);
+                Get(movingEntry, &start, &end, NULL, NULL);
                 if (selectedEntry)
                     *selectedEntry = movingEntry;
                 int& l = *start;
@@ -913,29 +935,29 @@ namespace ImGui
                 }
 
                 movingEntry = -1;
-                sequence->EndEdit();
+                EndEdit();
             }
         }
     }
 
-    void CSequencerWindow::Selection(bool selected, size_t& customHeight, int* selectedEntry, SSequencer* sequence, ImDrawList* draw_list, const ImVec2& contentMin, int ItemHeight, ImVec2& canvas_size)
+    void CSequencerWindow::Selection(bool selected, size_t& customHeight, int* selectedEntry, ImDrawList* draw_list, const ImVec2& contentMin, int ItemHeight, ImVec2& canvas_size)
     {
         if (selected)
         {
             customHeight = 0;
             for (int i = 0; i < *selectedEntry; i++)
-                customHeight += sequence->GetCustomHeight(i);;
+                customHeight += GetCustomHeight(i);;
             draw_list->AddRectFilled(ImVec2(contentMin.x, contentMin.y + ItemHeight * *selectedEntry + customHeight), ImVec2(contentMin.x + canvas_size.x, contentMin.y + ItemHeight * (*selectedEntry + 1) + customHeight), 0x801080FF, 1.f);
         }
     }
 
-    void CSequencerWindow::TrackSlotsBackground(int numberOfEntityTracks, SSequencer* sequence, const ImVec2& contentMin, int legendWidth, int ItemHeight, size_t& customHeight, ImVec2& canvas_size, ImVec2& canvas_pos, bool popupOpened, int cy, int movingEntry, int cx, ImDrawList* draw_list)
+    void CSequencerWindow::TrackSlotsBackground(int numberOfEntityTracks, const ImVec2& contentMin, int legendWidth, int ItemHeight, size_t& customHeight, ImVec2& canvas_size, ImVec2& canvas_pos, bool popupOpened, int cy, int movingEntry, int cx, ImDrawList* draw_list)
     {
         for (int i = 0; i < numberOfEntityTracks; i++)
         {
             unsigned int col = (i & 1) ? 0xFF3A3636 : 0xFF413D3D;
 
-            size_t localCustomHeight = sequence->GetCustomHeight(i);
+            size_t localCustomHeight = GetCustomHeight(i);
             ImVec2 pos = ImVec2(contentMin.x + legendWidth, contentMin.y + ItemHeight * i + 1 + customHeight);
             ImVec2 sz = ImVec2(canvas_size.x + canvas_pos.x, pos.y + ItemHeight - 1 + localCustomHeight);
             if (!popupOpened && cy >= pos.y && cy < pos.y + (ItemHeight + localCustomHeight) && movingEntry == -1 && cx>contentMin.x && cx < contentMin.x + canvas_size.x)
@@ -948,14 +970,14 @@ namespace ImGui
         }
     }
 
-    void CSequencerWindow::TrackHeader(int numberOfEntityTracks, SSequencer* sequence, const ImVec2& contentMin, int ItemHeight, size_t& customHeight, ImDrawList* draw_list, int sequenceOptions, int legendWidth, ImGuiIO& io, int& delEntry, int& dupEntry)
+    void CSequencerWindow::TrackHeader(int numberOfEntityTracks, const ImVec2& contentMin, int ItemHeight, size_t& customHeight, ImDrawList* draw_list, int sequenceOptions, int legendWidth, ImGuiIO& io, int& delEntry, int& dupEntry)
     {
         for (int i = 0; i < numberOfEntityTracks; i++)
         {
             int type;
-            sequence->Get(i, NULL, NULL, &type, NULL);
+            Get(i, NULL, NULL, &type, NULL);
             ImVec2 tpos(contentMin.x + 3, contentMin.y + i * ItemHeight + 2 + customHeight);
-            draw_list->AddText(tpos, 0xFFFFFFFF, sequence->GetEntityTrackLabel(i));
+            draw_list->AddText(tpos, 0xFFFFFFFF, GetEntityTrackLabel(i));
 
             if (sequenceOptions & SEQUENCER_DEL)
             {
@@ -967,11 +989,11 @@ namespace ImGui
                 if (overDup && io.MouseReleased[0])
                     dupEntry = i;
             }
-            customHeight += sequence->GetCustomHeight(i);
+            customHeight += GetCustomHeight(i);
         }
     }
 
-    void CSequencerWindow::ChangeCurrentFrame(bool& MovingCurrentFrame, bool MovingScrollBar, int movingEntry, int sequenceOptions, int* currentFrame, ImRect& topRect, ImGuiIO& io, int frameCount, float framePixelWidth, int firstFrameUsed, SSequencer* sequence)
+    void CSequencerWindow::ChangeCurrentFrame(bool& MovingCurrentFrame, bool MovingScrollBar, int movingEntry, int sequenceOptions, int* currentFrame, ImRect& topRect, ImGuiIO& io, int frameCount, float framePixelWidth, int firstFrameUsed)
     {
         if (!IsMenuOpen && !MovingCurrentFrame && !MovingScrollBar && movingEntry == -1 && sequenceOptions & SEQUENCER_CHANGE_FRAME && currentFrame && *currentFrame >= 0 && topRect.Contains(io.MousePos) && io.MouseDown[0])
         {
@@ -982,17 +1004,17 @@ namespace ImGui
             if (frameCount)
             {
                 *currentFrame = (int)((io.MousePos.x - topRect.Min.x) / framePixelWidth) + firstFrameUsed;
-                if (*currentFrame < sequence->GetFrameMin())
-                    *currentFrame = sequence->GetFrameMin();
-                if (*currentFrame >= sequence->GetFrameMax())
-                    *currentFrame = sequence->GetFrameMax();
+                if (*currentFrame < GetFrameMin())
+                    *currentFrame = GetFrameMin();
+                if (*currentFrame >= GetFrameMax())
+                    *currentFrame = GetFrameMax();
             }
             if (!io.MouseDown[0])
                 MovingCurrentFrame = false;
         }
     }
 
-    void CSequencerWindow::Panning(ImGuiIO& io, bool& panningView, ImVec2& panningViewSource, int& panningViewFrame, int* firstFrame, float& framePixelWidth, SSequencer* sequence, const int& visibleFrameCount, float& framePixelWidthTarget, int& frameCount)
+    void CSequencerWindow::Panning(ImGuiIO& io, bool& panningView, ImVec2& panningViewSource, int& panningViewFrame, int* firstFrame, float& framePixelWidth, const int& visibleFrameCount, float& framePixelWidthTarget, int& frameCount)
     {
         if (ImGui::IsWindowFocused() && io.KeyAlt && io.MouseDown[2])
         {
@@ -1003,7 +1025,7 @@ namespace ImGui
                 panningViewFrame = *firstFrame;
             }
             *firstFrame = panningViewFrame - int((io.MousePos.x - panningViewSource.x) / framePixelWidth);
-            *firstFrame = ImClamp(*firstFrame, sequence->GetFrameMin(), sequence->GetFrameMax() - visibleFrameCount);
+            *firstFrame = ImClamp(*firstFrame, GetFrameMin(), GetFrameMax() - visibleFrameCount);
         }
         if (panningView && !io.MouseDown[2])
         {
@@ -1013,21 +1035,21 @@ namespace ImGui
 
         framePixelWidth = ImLerp(framePixelWidth, framePixelWidthTarget, 0.33f);
 
-        frameCount = sequence->GetFrameMax() - sequence->GetFrameMin();
+        frameCount = GetFrameMax() - GetFrameMin();
         if (visibleFrameCount >= frameCount && firstFrame)
-            *firstFrame = sequence->GetFrameMin();
+            *firstFrame = GetFrameMin();
     }
 
-    void CSequencerWindow::NotExpanded(ImVec2& canvas_size, ImVec2& canvas_pos, int ItemHeight, ImDrawList* draw_list, SSequencer* sequence, int frameCount, int sequenceCount)
+    void CSequencerWindow::NotExpanded(ImVec2& canvas_size, ImVec2& canvas_pos, int ItemHeight, ImDrawList* draw_list, int frameCount, int sequenceCount)
     {
         ImGui::InvisibleButton("canvas", ImVec2(canvas_size.x - canvas_pos.x, (float)ItemHeight));
         draw_list->AddRectFilled(canvas_pos, ImVec2(canvas_size.x + canvas_pos.x, canvas_pos.y + ItemHeight), 0xFF3D3837, 0);
         char tmps[512];
-        ImFormatString(tmps, IM_ARRAYSIZE(tmps), sequence->GetCollapseFmt(), frameCount, sequenceCount);
+        ImFormatString(tmps, IM_ARRAYSIZE(tmps), GetCollapseFmt(), frameCount, sequenceCount);
         draw_list->AddText(ImVec2(canvas_pos.x + 26, canvas_pos.y + 2), 0xFFFFFFFF, tmps);
     }
 
-    void CSequencerWindow::AddEntityTrackButton(int sequenceOptions, ImDrawList* draw_list, ImVec2& canvas_pos, int legendWidth, int ItemHeight, ImGuiIO& io, SSequencer* sequence, int* selectedEntry, bool& popupOpened)
+    void CSequencerWindow::AddEntityTrackButton(int sequenceOptions, ImDrawList* draw_list, ImVec2& canvas_pos, int legendWidth, int ItemHeight, ImGuiIO& io, int* selectedEntry, bool& popupOpened)
     {
         if (sequenceOptions & SEQUENCER_ADD)
         {
@@ -1037,13 +1059,13 @@ namespace ImGui
 
             if (ImGui::BeginPopup("addEntry"))
             {
-                if (*selectedEntry > -1 && *selectedEntry < sequence->GetEntityTrackCount())
+                if (*selectedEntry > -1 && *selectedEntry < GetEntityTrackCount())
                 {
-                    for (int i = 0; i < sequence->GetComponentTrackCount(*selectedEntry); i++)
+                    for (int i = 0; i < GetComponentTrackCount(*selectedEntry); i++)
                     {
-                        if (ImGui::Selectable(sequence->GetComponentTrackLabel(*selectedEntry, i).c_str()))
+                        if (ImGui::Selectable(GetComponentTrackLabel(*selectedEntry, i).c_str()))
                         {
-                            sequence->Add(i);
+                            Add(i);
                             //*selectedEntry = sequence->GetEntityTrackCount() - 1;
                         }
                     }
@@ -1065,10 +1087,10 @@ namespace ImGui
     
     SEditorKeyframe* CSequencerWindow::GetSelectedKeyframe()
     {
-        if (!SelectedKeyframeMetaData.IsValid(Sequencer))
+        if (!SelectedKeyframeMetaData.IsValid(this))
             return nullptr;
 
-        return &Sequencer.GetComponentTracks(SelectedKeyframeMetaData.EntityTrackIndex)[SelectedKeyframeMetaData.ComponentTrackIndex].Keyframes[SelectedKeyframeMetaData.KeyframeIndex];
+        return &GetComponentTracks(SelectedKeyframeMetaData.EntityTrackIndex)[SelectedKeyframeMetaData.ComponentTrackIndex].Keyframes[SelectedKeyframeMetaData.KeyframeIndex];
     }
     
     void CSequencerWindow::SetSelectedKeyframe(Havtorn::U32 entityTrackIndex, Havtorn::U32 componentTrackIndex, Havtorn::U32 keyframeIndex)
@@ -1076,6 +1098,8 @@ namespace ImGui
         SelectedKeyframeMetaData.EntityTrackIndex = entityTrackIndex;
         SelectedKeyframeMetaData.ComponentTrackIndex = componentTrackIndex;
         SelectedKeyframeMetaData.KeyframeIndex = keyframeIndex;
+
+        // Set playhead at frame index
     }
     
     void CSequencerWindow::ResetSelectedKeyframe()
@@ -1084,571 +1108,115 @@ namespace ImGui
         SelectedKeyframeMetaData.ComponentTrackIndex = -1;
         SelectedKeyframeMetaData.KeyframeIndex = -1;
     }
-}
 
-namespace ImCurveEdit
-{
-#ifndef IMGUI_DEFINE_MATH_OPERATORS
-    static ImVec2 operator+(const ImVec2& a, const ImVec2& b) {
-        return ImVec2(a.x + b.x, a.y + b.y);
-    }
-
-    static ImVec2 operator-(const ImVec2& a, const ImVec2& b) {
-        return ImVec2(a.x - b.x, a.y - b.y);
-    }
-
-    static ImVec2 operator*(const ImVec2& a, const ImVec2& b) {
-        return ImVec2(a.x * b.x, a.y * b.y);
-    }
-
-    static ImVec2 operator/(const ImVec2& a, const ImVec2& b) {
-        return ImVec2(a.x / b.x, a.y / b.y);
-    }
-
-    static ImVec2 operator*(const ImVec2& a, const float b) {
-        return ImVec2(a.x * b, a.y * b);
-    }
-#endif
-
-    static float smoothstep(float edge0, float edge1, float x)
+    void CSequencerWindow::GetBlendRegionInfo(ImGui::CSequencerWindow* window, int entityTrackIndex, int componentTrackIndex, std::vector<std::pair<int, int>>& blendRegions, unsigned int* color)
     {
-        x = ImClamp((x - edge0) / (edge1 - edge0), 0.0f, 1.0f);
-        return x * x * (3 - 2 * x);
-    }
+        SEditorEntityTrack& entityTrack = EntityTracks[entityTrackIndex];
+        SEditorComponentTrack& componentTrack = entityTrack.ComponentTracks[componentTrackIndex];
 
-    static float distance(float x, float y, float x1, float y1, float x2, float y2)
-    {
-        float A = x - x1;
-        float B = y - y1;
-        float C = x2 - x1;
-        float D = y2 - y1;
+        if (color)
+            *color = /*0x00AA8080*/window->GetColorPackFromComponentType(componentTrack.ComponentType).KeyframeBaseColor;
 
-        float dot = A * C + B * D;
-        float len_sq = C * C + D * D;
-        float param = -1.f;
-        if (len_sq > FLT_EPSILON)
-            param = dot / len_sq;
-
-        float xx, yy;
-
-        if (param < 0.f) {
-            xx = x1;
-            yy = y1;
-        }
-        else if (param > 1.f) {
-            xx = x2;
-            yy = y2;
-        }
-        else {
-            xx = x1 + param * C;
-            yy = y1 + param * D;
-        }
-
-        float dx = x - xx;
-        float dy = y - yy;
-        return sqrtf(dx * dx + dy * dy);
-    }
-
-    static int DrawPoint(ImDrawList* draw_list, ImVec2 pos, const ImVec2 size, const ImVec2 offset, bool edited)
-    {
-        int ret = 0;
-        ImGuiIO& io = ImGui::GetIO();
-
-        static const ImVec2 localOffsets[4] = { ImVec2(1,0), ImVec2(0,1), ImVec2(-1,0), ImVec2(0,-1) };
-        ImVec2 offsets[4];
-        for (int i = 0; i < 4; i++)
+        U64 numberOfKeyframes = componentTrack.Keyframes.size();
+        for (Havtorn::U64 keyframeIndex = 0; keyframeIndex < numberOfKeyframes; keyframeIndex++)
         {
-            offsets[i] = pos * size + localOffsets[i] * 4.5f + offset;
-        }
+            const SEditorKeyframe& keyframe = componentTrack.Keyframes[keyframeIndex];
+            if (!keyframe.ShouldBlendRight)
+                continue;
 
-        const ImVec2 center = pos * size + offset;
-        const ImRect anchor(center - ImVec2(5, 5), center + ImVec2(5, 5));
-        draw_list->AddConvexPolyFilled(offsets, 4, 0xFF000000);
-        if (anchor.Contains(io.MousePos))
-        {
-            ret = 1;
-            if (io.MouseDown[0])
-                ret = 2;
+            std::pair<int, int> potentialRegion;
+            potentialRegion.first = keyframe.FrameNumber;
+            for (Havtorn::U64 nextKeyframeIndex = keyframeIndex + 1; nextKeyframeIndex < numberOfKeyframes; nextKeyframeIndex++, keyframeIndex++)
+            {           
+                const SEditorKeyframe& nextKeyframe = componentTrack.Keyframes[nextKeyframeIndex];
+                if (nextKeyframe.ShouldBlendLeft)
+                {
+                    potentialRegion.second = nextKeyframe.FrameNumber;
+                }
+                else
+                {
+                    break;
+                }
+            }
+        
+            if (potentialRegion.first < potentialRegion.second)
+            {
+                blendRegions.push_back(potentialRegion);
+            }
         }
-        if (edited)
-            draw_list->AddPolyline(offsets, 4, 0xFFFFFFFF, true, 3.0f);
-        else if (ret)
-            draw_list->AddPolyline(offsets, 4, 0xFF80B0FF, true, 2.0f);
-        else
-            draw_list->AddPolyline(offsets, 4, 0xFF0080FF, true, 2.0f);
-
-        return ret;
     }
 
-    U32 Edit(SSequencerDelegate& delegate, const ImVec2& size, U32 id, const ImRect* clippingRect, ImVector<SSequencerEditPoint>* selectedPoints)
+    void CSequencerWindow::DrawComponentTracks(class ImGui::CSequencerWindow* sequencerWindow, int index, ImDrawList* drawList, const ImRect& rect, const ImRect& legendRect, const ImRect& clippingRect, const ImRect& legendClippingRect, std::vector<SEditorComponentTrack>& componentTracks)
     {
-        // Declare variables
-        static bool selectingQuad = false;
-        static ImVec2 quadSelection;
-        static int overCurveIndex = -1;
-        static int movingCurveIndex = -1;
-        static bool scrollingV = false;
-        static std::set<SSequencerEditPoint> selection;
-        static bool overSelectedPoint = false;
+        // ========= LEGEND ========= 
+        drawList->PushClipRect(legendClippingRect.Min, legendClippingRect.Max, true);
 
-        int returnValue = 0;
+        constexpr float componentTrackHeight = 20.0f;
+        constexpr float componentTrackIndentation = 30.0f;
+
+        for (int i = 0; i < componentTracks.size(); i++)
+        {
+            ImVec2 upperLeft(legendRect.Min.x + componentTrackIndentation, legendRect.Min.y + i * componentTrackHeight);
+            ImVec2 lowerRight(legendRect.Max.x, legendRect.Min.y + (i + 1) * componentTrackHeight);
+
+            drawList->AddText(upperLeft, 0xFFFFFFFF, Havtorn::GetComponentTypeString(componentTracks[i].ComponentType).c_str());
+
+            // Select component track
+            //if (ImRect(upperLeft, lowerRight).Contains(GImGui->IO.MousePos) && ImGui::IsMouseClicked(0))
+        }
+
+        drawList->PopClipRect();
+
+        // ========= CONTENT ========= 
+        ImGui::SetCursorScreenPos(rect.Min);
+        ImVec2 rectMax = rect.Max;
+        ImVec2 rectMin = rect.Min;
+        ImVec2 size = ImVec2(rectMax.x - rectMin.x, rectMax.y - rectMin.y);
+        U32 id = 137 + index;
 
         // ImGui variables / style setup
-        ImGuiIO& io = ImGui::GetIO();
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
         ImGui::PushStyleColor(ImGuiCol_Border, 0);
         ImGui::BeginChildFrame(id, size);
-        delegate.IsFocused = ImGui::IsWindowFocused();
         ImDrawList* draw_list = ImGui::GetWindowDrawList();
 
-        if (clippingRect)
-            draw_list->PushClipRect(clippingRect->Min, clippingRect->Max, true);
+        draw_list->PushClipRect(clippingRect.Min, clippingRect.Max, true);
 
         // Temp variables
-        const ImVec2 offset = ImGui::GetCursorScreenPos() + ImVec2(0.f, size.y);
-        const ImVec2 ssize(size.x, -size.y);
-        const ImRect container(offset + ImVec2(0.f, ssize.y), offset + ImVec2(ssize.x, 0.f));
-        ImVec2& min = delegate.GetMin();
-        ImVec2& max = delegate.GetMax();
-
-        HandleZoomAndVScroll(container, io, offset, ssize, min, max, scrollingV);
-        ImVec2 range = max - min + ImVec2(1.f, 0.f);  // +1 because of inclusive last frame
+        // NR: What is -4.5 exactly? horizontal offset from frame line or something. Look at playhead's horizontal offset
+        const ImVec2 offset = ImGui::GetCursorScreenPos() + ImVec2(-4.5f, size.y);
 
         const ImVec2 viewSize(size.x, -size.y);
-        const ImVec2 sizeOfPixel = ImVec2(1.f, 1.f) / viewSize;
-        const size_t curveCount = delegate.GetCurveCount();
+        ImVec2 min = ImVec2(float(FrameMin), offset.y);
+        ImVec2 max = ImVec2(float(FrameMax), offset.y + viewSize.y - 9.0f);
+        ImVec2 range = max - min + ImVec2(1.f, 0.f);  // +1 because of inclusive last frame
 
-        if (scrollingV)
+        //draw_list->AddRectFilled(offset, offset + viewSize, RampEdit.GetBackgroundColor());
+
+        auto pointToRange = [&](ImVec2 pt) { return (pt - min) / range; };
+        for (int i2 = 0; i2 < componentTracks.size(); i2++)
         {
-            float deltaH = io.MouseDelta.y * range.y * sizeOfPixel.y;
-            min.y -= deltaH;
-            max.y -= deltaH;
-            if (!ImGui::IsMouseDown(2))
-                scrollingV = false;
+            SEditorComponentTrack& componentTrack = componentTracks[i2];
+            for (U32 i3 = 0; i3 < componentTrack.Keyframes.size(); i3++)
+            {
+                U32 keyframe = componentTrack.Keyframes[i3].FrameNumber;
+                ImVec2 point = ImVec2(static_cast<Havtorn::F32>(keyframe), legendRect.Min.y + i2 * componentTrackHeight);
+                const SEditorKeyframeColorPack colorPack = sequencerWindow->GetColorPackFromComponentType(componentTrack.ComponentType);
+
+                // TODO.NR: Draw selected keyframe highlighted
+                // TODO.NR: Don't base selection on DrawKeyframe function
+                int returnValue = DrawKeyframe(drawList, pointToRange(point), viewSize, offset, false, colorPack.KeyframeBaseColor, colorPack.KeyframeHighlightColor);
+                if (returnValue == 2)
+                {
+                    sequencerWindow->SetSelectedKeyframe(index, i2, i3);
+                }
+            }
         }
 
-        draw_list->AddRectFilled(offset, offset + ssize, delegate.GetBackgroundColor());
-
-        draw_list->AddLine(ImVec2(-1.f, -min.y / range.y) * viewSize + offset, ImVec2(1.f, -min.y / range.y) * viewSize + offset, 0xFF000000, 1.5f);
-        bool overCurveOrPoint = false;
-
-        int localOverCurveIndex = -1;
-        // make sure highlighted curve is rendered last
-        int* curvesIndex = (int*)_malloca(sizeof(int) * curveCount);
-        for (size_t c = 0; c < curveCount; c++)
-            curvesIndex[c] = int(c);
-        int highLightedCurveIndex = -1;
-        if (overCurveIndex != -1 && curveCount)
-        {
-            ImSwap(curvesIndex[overCurveIndex], curvesIndex[curveCount - 1]);
-            highLightedCurveIndex = overCurveIndex;
-        }
-
-        LoopOverCurves(curveCount, curvesIndex, delegate, highLightedCurveIndex, selection, selectingQuad, movingCurveIndex, range, min, viewSize, offset, io, scrollingV, localOverCurveIndex, overCurveIndex, overCurveOrPoint, draw_list, overSelectedPoint);
-
-        if (localOverCurveIndex == -1)
-            overCurveIndex = -1;
-
-        static bool pointsMoved = false;
-        static ImVec2 mousePosOrigin;
-        static std::vector<ImVec2> originalPoints;
-
-        MoveSelection(overSelectedPoint, io, selection, pointsMoved, delegate, mousePosOrigin, originalPoints, returnValue, range, sizeOfPixel);
-
-        CheckIsOverSelectedPoint(overSelectedPoint, io, pointsMoved, delegate);
-
-        AddPoint(overCurveIndex, io, delegate, offset, viewSize, range, returnValue);
-
-        MoveCurve(movingCurveIndex, delegate, pointsMoved, mousePosOrigin, io, originalPoints, range, sizeOfPixel, returnValue, overCurveIndex, selection, selectingQuad);
-
-        QuadSelection(selectingQuad, quadSelection, io, draw_list, selection, curveCount, delegate, range, viewSize, offset, overCurveOrPoint, movingCurveIndex, overSelectedPoint, container);
-
-        if (clippingRect)
-            draw_list->PopClipRect();
+        draw_list->PopClipRect();
 
         ImGui::EndChildFrame();
         ImGui::PopStyleVar();
         ImGui::PopStyleColor(1);
-
-        UpdateSelectedPoints(selectedPoints, selection);
-        return returnValue;
     }
-
-    void CheckIsOverSelectedPoint(bool& overSelectedPoint, ImGuiIO& io, bool& pointsMoved, ImCurveEdit::SSequencerDelegate& delegate)
-    {
-        if (overSelectedPoint && !io.MouseDown[0])
-        {
-            overSelectedPoint = false;
-            if (pointsMoved)
-            {
-                pointsMoved = false;
-                delegate.EndEdit();
-            }
-        }
-    }
-
-    void UpdateSelectedPoints(ImVector<ImCurveEdit::SSequencerEditPoint>* selectedPoints, std::set<ImCurveEdit::SSequencerEditPoint>& selection)
-    {
-        if (selectedPoints)
-        {
-            selectedPoints->resize(int(selection.size()));
-            int index = 0;
-            for (auto& point : selection)
-                (*selectedPoints)[index++] = point;
-        }
-    }
-
-    void QuadSelection(bool& selectingQuad, ImVec2& quadSelection, ImGuiIO& io, ImDrawList* draw_list, std::set<ImCurveEdit::SSequencerEditPoint>& selection, const size_t& curveCount, ImCurveEdit::SSequencerDelegate& delegate, ImVec2& range, const ImVec2& viewSize, const ImVec2& offset, bool overCurveOrPoint, int movingCurveIndex, bool overSelectedPoint, const ImRect& container)
-    {
-        if (selectingQuad)
-        {
-            const ImVec2 bmin = ImMin(quadSelection, io.MousePos);
-            const ImVec2 bmax = ImMax(quadSelection, io.MousePos);
-            draw_list->AddRectFilled(bmin, bmax, 0x40FF0000, 1.f);
-            draw_list->AddRect(bmin, bmax, 0xFFFF0000, 1.f);
-            const ImRect selectionQuad(bmin, bmax);
-            if (!io.MouseDown[0])
-            {
-                if (!io.KeyShift)
-                    selection.clear();
-                // select everythnig is quad
-                for (size_t c = 0; c < curveCount; c++)
-                {
-                    if (!delegate.GetIsVisible(c))
-                        continue;
-
-                    const size_t ptCount = delegate.GetPointCount(c);
-                    if (ptCount < 1)
-                        continue;
-
-                    const ImVec2* pts = delegate.GetPoints(c);
-                    for (size_t p = 0; p < ptCount; p++)
-                    {
-                        const ImVec2 center = delegate.PointToRange(pts[p], range) * viewSize + offset;
-                        if (selectionQuad.Contains(center))
-                            selection.insert({ U64(c), U32(p) });
-                    }
-                }
-                // done
-                selectingQuad = false;
-            }
-        }
-        if (!overCurveOrPoint && ImGui::IsMouseClicked(0) && !selectingQuad && movingCurveIndex == -1 && !overSelectedPoint && container.Contains(io.MousePos))
-        {
-            selectingQuad = true;
-            quadSelection = io.MousePos;
-        }
-    }
-
-    void AddPoint(int overCurveIndex, ImGuiIO& io, ImCurveEdit::SSequencerDelegate& delegate, const ImVec2& offset, const ImVec2& viewSize, ImVec2& range, int& returnValue)
-    {
-        if (overCurveIndex != -1 && io.MouseDoubleClicked[0])
-        {
-            const ImVec2 np = delegate.RangeToPoint((io.MousePos - offset) / viewSize, range);
-            delegate.BeginEdit(overCurveIndex);
-            delegate.AddPoint(overCurveIndex, np);
-            delegate.EndEdit();
-            returnValue = 1;
-        }
-    }
-
-    void MoveCurve(int& movingCurveIndex, ImCurveEdit::SSequencerDelegate& delegate, bool& pointsMoved, ImVec2& mousePosOrigin, ImGuiIO& io, std::vector<ImVec2>& originalPoints, ImVec2& range, const ImVec2& sizeOfPixel, int& returnValue, int overCurveIndex, std::set<ImCurveEdit::SSequencerEditPoint>& selection, bool selectingQuad)
-    {
-        if (movingCurveIndex != -1)
-        {
-            const size_t ptCount = delegate.GetPointCount(movingCurveIndex);
-            const ImVec2* pts = delegate.GetPoints(movingCurveIndex);
-            if (!pointsMoved)
-            {
-                mousePosOrigin = io.MousePos;
-                pointsMoved = true;
-                originalPoints.resize(ptCount);
-                for (size_t index = 0; index < ptCount; index++)
-                {
-                    originalPoints[index] = pts[index];
-                }
-            }
-            if (ptCount >= 1)
-            {
-                for (size_t p = 0; p < ptCount; p++)
-                {
-                    delegate.EditPoint(movingCurveIndex, int(p), delegate.RangeToPoint(delegate.PointToRange(originalPoints[p], range) + (io.MousePos - mousePosOrigin) * sizeOfPixel, range));
-                }
-                returnValue = 1;
-            }
-            if (!io.MouseDown[0])
-            {
-                movingCurveIndex = -1;
-                pointsMoved = false;
-                delegate.EndEdit();
-            }
-        }
-        if (movingCurveIndex == -1 && overCurveIndex != -1 && ImGui::IsMouseClicked(0) && selection.empty() && !selectingQuad)
-        {
-            movingCurveIndex = overCurveIndex;
-            delegate.BeginEdit(overCurveIndex);
-        }
-    }
-
-    void MoveSelection(bool overSelectedPoint, ImGuiIO& io, std::set<ImCurveEdit::SSequencerEditPoint>& selection, bool& pointsMoved, ImCurveEdit::SSequencerDelegate& delegate, ImVec2& mousePosOrigin, std::vector<ImVec2>& originalPoints, int& ret, const ImVec2& range, const ImVec2& sizeOfPixel)
-    {
-        if (overSelectedPoint && io.MouseDown[0])
-        {
-            if ((fabsf(io.MouseDelta.x) > 0.f || fabsf(io.MouseDelta.y) > 0.f) && !selection.empty())
-            {
-                if (!pointsMoved)
-                {
-                    delegate.BeginEdit(0);
-                    mousePosOrigin = io.MousePos;
-                    originalPoints.resize(selection.size());
-                    int index = 0;
-                    for (auto& sel : selection)
-                    {
-                        const ImVec2* pts = delegate.GetPoints(sel.CurveIndex);
-                        originalPoints[index++] = pts[sel.PointIndex];
-                    }
-                }
-                pointsMoved = true;
-                ret = 1;
-                auto prevSelection = selection;
-                int originalIndex = 0;
-                for (auto& sel : prevSelection)
-                {
-                    const ImVec2 p = delegate.RangeToPoint(delegate.PointToRange(originalPoints[originalIndex], range) + (io.MousePos - mousePosOrigin) * sizeOfPixel, range);
-                    const U32 newIndex = delegate.EditPoint(sel.CurveIndex, sel.PointIndex, p);
-                    if (newIndex != sel.PointIndex)
-                    {
-                        selection.erase(sel);
-                        selection.insert({ sel.CurveIndex, newIndex });
-                    }
-                    originalIndex++;
-                }
-            }
-        }
-    }
-
-    void LoopOverCurves(const size_t& curveCount, int* curvesIndex, ImCurveEdit::SSequencerDelegate& delegate, int highLightedCurveIndex, std::set<ImCurveEdit::SSequencerEditPoint>& selection, bool selectingQuad, int movingCurve, const ImVec2& range, ImVec2& min, const ImVec2& viewSize, const ImVec2& offset, ImGuiIO& io, bool scrollingV, int& localOverCurve, int& overCurve, bool& overCurveOrPoint, ImDrawList* draw_list, bool& overSelectedPoint)
-    {
-        auto pointToRange = [&](ImVec2 pt) { return (pt - min) / range; };
-
-        for (size_t cur = 0; cur < curveCount; cur++)
-        {
-            int c = curvesIndex[cur];
-            if (!delegate.GetIsVisible(c))
-                continue;
-            const size_t ptCount = delegate.GetPointCount(c);
-            if (ptCount < 1)
-                continue;
-            ECurveType curveType = delegate.GetCurveType(c);
-            if (curveType == CurveNone)
-                continue;
-            const ImVec2* pts = delegate.GetPoints(c);
-            uint32_t curveColor = delegate.GetCurveColor(c);
-            if ((c == highLightedCurveIndex && selection.empty() && !selectingQuad) || movingCurve == c)
-                curveColor = 0xFFFFFFFF;
-
-            for (size_t p = 0; p < ptCount - 1; p++)
-            {
-                const ImVec2 p1 = pointToRange(pts[p]);
-                const ImVec2 p2 = pointToRange(pts[p + 1]);
-
-                if (curveType == CurveSmooth || curveType == CurveLinear)
-                {
-                    size_t subStepCount = (curveType == CurveSmooth) ? 20 : 2;
-                    float step = 1.f / float(subStepCount - 1);
-                    for (size_t substep = 0; substep < subStepCount - 1; substep++)
-                    {
-                        float t = float(substep) * step;
-
-                        const ImVec2 sp1 = ImLerp(p1, p2, t);
-                        const ImVec2 sp2 = ImLerp(p1, p2, t + step);
-
-                        const float rt1 = smoothstep(p1.x, p2.x, sp1.x);
-                        const float rt2 = smoothstep(p1.x, p2.x, sp2.x);
-
-                        const ImVec2 pos1 = ImVec2(sp1.x, ImLerp(p1.y, p2.y, rt1)) * viewSize + offset;
-                        const ImVec2 pos2 = ImVec2(sp2.x, ImLerp(p1.y, p2.y, rt2)) * viewSize + offset;
-
-                        if (distance(io.MousePos.x, io.MousePos.y, pos1.x, pos1.y, pos2.x, pos2.y) < 8.f && !scrollingV)
-                        {
-                            localOverCurve = int(c);
-                            overCurve = int(c);
-                            overCurveOrPoint = true;
-                        }
-
-                        draw_list->AddLine(pos1, pos2, curveColor, 1.3f);
-                    } // substep
-                }
-                else if (curveType == CurveDiscrete)
-                {
-                    ImVec2 dp1 = p1 * viewSize + offset;
-                    ImVec2 dp2 = ImVec2(p2.x, p1.y) * viewSize + offset;
-                    ImVec2 dp3 = p2 * viewSize + offset;
-                    draw_list->AddLine(dp1, dp2, curveColor, 1.3f);
-                    draw_list->AddLine(dp2, dp3, curveColor, 1.3f);
-
-                    if ((distance(io.MousePos.x, io.MousePos.y, dp1.x, dp1.y, dp3.x, dp1.y) < 8.f ||
-                        distance(io.MousePos.x, io.MousePos.y, dp3.x, dp1.y, dp3.x, dp3.y) < 8.f)
-                        /*&& localOverCurve == -1*/)
-                    {
-                        localOverCurve = int(c);
-                        overCurve = int(c);
-                        overCurveOrPoint = true;
-                    }
-                }
-            } // point loop
-
-            for (size_t p = 0; p < ptCount; p++)
-            {
-                const int drawState = DrawPoint(draw_list, pointToRange(pts[p]), viewSize, offset, (selection.find({ U64(c), U32(p) }) != selection.end() && movingCurve == -1 && !scrollingV));
-                if (drawState && movingCurve == -1 && !selectingQuad)
-                {
-                    overCurveOrPoint = true;
-                    overSelectedPoint = true;
-                    overCurve = -1;
-                    if (drawState == 2)
-                    {
-                        if (!io.KeyShift && selection.find({ U64(c), U32(p) }) == selection.end())
-                            selection.clear();
-                        selection.insert({ U64(c), U32(p) });
-                    }
-                }
-            }
-        } // curves loop
-    }
-
-    void HandleZoomAndVScroll(const ImRect& container, const ImGuiIO& io, const ImVec2& offset, const ImVec2& ssize, ImVec2& inOutMin, ImVec2& inOutMax, bool& outScrollingV)
-    {
-        if (container.Contains(io.MousePos))
-        {
-            if (fabsf(io.MouseWheel) > FLT_EPSILON)
-            {
-                const float r = (io.MousePos.y - offset.y) / ssize.y;
-                float ratioY = ImLerp(inOutMin.y, inOutMax.y, r);
-                auto scaleValue = [&](float v) {
-                    v -= ratioY;
-                    v *= (1.f - io.MouseWheel * 0.05f);
-                    v += ratioY;
-                    return v;
-                };
-                inOutMin.y = scaleValue(inOutMin.y);
-                inOutMax.y = scaleValue(inOutMax.y);
-            }
-            if (!outScrollingV && ImGui::IsMouseDown(2))
-            {
-                outScrollingV = true;
-            }
-        }
-    }
-}
-
-void SSequencer::GetBlendRegionInfo(ImGui::CSequencerWindow* window, int entityTrackIndex, int componentTrackIndex, std::vector<std::pair<int, int>>& blendRegions, unsigned int* color)
-{
-    SEditorEntityTrack& entityTrack = EntityTracks[entityTrackIndex];
-    SEditorComponentTrack& componentTrack = entityTrack.ComponentTracks[componentTrackIndex];
-
-    if (color)
-        *color = /*0x00AA8080*/window->GetColorPackFromComponentType(componentTrack.ComponentType).KeyframeBaseColor;
-
-    U64 numberOfKeyframes = componentTrack.Keyframes.size();
-    for (Havtorn::U64 keyframeIndex = 0; keyframeIndex < numberOfKeyframes; keyframeIndex++)
-    {
-        const SEditorKeyframe& keyframe = componentTrack.Keyframes[keyframeIndex];
-        if (!keyframe.ShouldBlendRight)
-            continue;
-
-        std::pair<int, int> potentialRegion;
-        potentialRegion.first = keyframe.FrameNumber;
-        for (Havtorn::U64 nextKeyframeIndex = keyframeIndex + 1; nextKeyframeIndex < numberOfKeyframes; nextKeyframeIndex++, keyframeIndex++)
-        {           
-            const SEditorKeyframe& nextKeyframe = componentTrack.Keyframes[nextKeyframeIndex];
-            if (nextKeyframe.ShouldBlendLeft)
-            {
-                potentialRegion.second = nextKeyframe.FrameNumber;
-            }
-            else
-            {
-                break;
-            }
-        }
-        
-        if (potentialRegion.first < potentialRegion.second)
-        {
-            blendRegions.push_back(potentialRegion);
-        }
-    }
-}
-
-void SSequencer::DrawComponentTracks(class ImGui::CSequencerWindow* sequencerWindow, int index, ImDrawList* drawList, const ImRect& rect, const ImRect& legendRect, const ImRect& clippingRect, const ImRect& legendClippingRect, std::vector<SEditorComponentTrack>& componentTracks)
-{
-    // ========= LEGEND ========= 
-    drawList->PushClipRect(legendClippingRect.Min, legendClippingRect.Max, true);
-
-    constexpr float componentTrackHeight = 20.0f;
-    constexpr float componentTrackIndentation = 30.0f;
-
-    for (int i = 0; i < componentTracks.size(); i++)
-    {
-        ImVec2 upperLeft(legendRect.Min.x + componentTrackIndentation, legendRect.Min.y + i * componentTrackHeight);
-        ImVec2 lowerRight(legendRect.Max.x, legendRect.Min.y + (i + 1) * componentTrackHeight);
-
-        drawList->AddText(upperLeft, 0xFFFFFFFF, Havtorn::GetComponentTypeString(componentTracks[i].ComponentType).c_str());
-
-        // Select component track
-        //if (ImRect(upperLeft, lowerRight).Contains(GImGui->IO.MousePos) && ImGui::IsMouseClicked(0))
-    }
-
-    drawList->PopClipRect();
-
-    // ========= CONTENT ========= 
-    ImGui::SetCursorScreenPos(rect.Min);
-    ImVec2 rectMax = rect.Max;
-    ImVec2 rectMin = rect.Min;
-    ImVec2 size = ImVec2(rectMax.x - rectMin.x, rectMax.y - rectMin.y);
-    U32 id = 137 + index;
-
-    // ImGui variables / style setup
-    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(0, 0));
-    ImGui::PushStyleColor(ImGuiCol_Border, 0);
-    ImGui::BeginChildFrame(id, size);
-    ImDrawList* draw_list = ImGui::GetWindowDrawList();
-
-    draw_list->PushClipRect(clippingRect.Min, clippingRect.Max, true);
-
-    // Temp variables
-    // NR: What is -4.5 exactly? horizontal offset from frame line or something. Look at playhead's horizontal offset
-    const ImVec2 offset = ImGui::GetCursorScreenPos() + ImVec2(-4.5f, size.y);
-
-    const ImVec2 viewSize(size.x, -size.y);
-    ImVec2 min = ImVec2(float(FrameMin), offset.y);
-    ImVec2 max = ImVec2(float(FrameMax), offset.y + viewSize.y - 9.0f);
-    ImVec2 range = max - min + ImVec2(1.f, 0.f);  // +1 because of inclusive last frame
-
-    draw_list->AddRectFilled(offset, offset + viewSize, RampEdit.GetBackgroundColor());
-
-    auto pointToRange = [&](ImVec2 pt) { return (pt - min) / range; };
-    for (int i2 = 0; i2 < componentTracks.size(); i2++)
-    {
-        SEditorComponentTrack& componentTrack = componentTracks[i2];
-        for (U32 i3 = 0; i3 < componentTrack.Keyframes.size(); i3++)
-        {
-            U32 keyframe = componentTrack.Keyframes[i3].FrameNumber;
-            ImVec2 point = ImVec2(static_cast<Havtorn::F32>(keyframe), legendRect.Min.y + i2 * componentTrackHeight);
-            const SEditorKeyframeColorPack colorPack = sequencerWindow->GetColorPackFromComponentType(componentTrack.ComponentType);
-
-            // TODO.NR: Draw selected keyframe highlighted
-            // TODO.NR: Don't base selection on DrawKeyframe function
-            int returnValue = DrawKeyframe(drawList, pointToRange(point), viewSize, offset, false, colorPack.KeyframeBaseColor, colorPack.KeyframeHighlightColor);
-            if (returnValue == 2)
-            {
-                sequencerWindow->SetSelectedKeyframe(index, i2, i3);
-            }
-        }
-    }
-
-    draw_list->PopClipRect();
-
-    ImGui::EndChildFrame();
-    ImGui::PopStyleVar();
-    ImGui::PopStyleColor(1);
 }
