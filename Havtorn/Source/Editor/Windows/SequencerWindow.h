@@ -117,6 +117,7 @@ namespace ImGui
         void Get(int index, int** start, int** end, int* /*type*/, unsigned int* color);
         void GetBlendRegionInfo(ImGui::CSequencerWindow* window, int entityTrackIndex, int componentTrackIndex, std::vector<std::pair<int, int>>& blendRegions, unsigned int* color);
         U64 GetCustomHeight(int index);
+        ImRect GetItemTopRect(const ImVec2& canvasPosition, const ImVec2& canvasSize, const Havtorn::F32 xOffset, const Havtorn::F32 yHeight);
         void DoubleClick(int index);
         // !Sequencer Window data
 

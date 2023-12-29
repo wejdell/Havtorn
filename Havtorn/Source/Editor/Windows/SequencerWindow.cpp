@@ -211,10 +211,9 @@ namespace ImGui
 				
 				ImGuiIO& io = ImGui::GetIO();
 				ImVec2 canvasPosition = ImGui::GetCursorScreenPos();
-				ImVec2 canvas_size = ImGui::GetContentRegionAvail();
+				ImVec2 canvasSize = ImGui::GetContentRegionAvail();
 
-				ImRect topRect(ImVec2(canvasPosition.x + legendWidth, canvasPosition.y), ImVec2(canvasPosition.x + canvas_size.x, canvasPosition.y + itemHeight));
-				frameNumber = (int)((io.MousePos.x - topRect.Min.x) / framePixelWidth) + 0;
+				frameNumber = (int)((io.MousePos.x - GetItemTopRect(canvasPosition, canvasSize, legendWidth, itemHeight).Min.x) / framePixelWidth) + 0;
 				frameNumber = Havtorn::UMath::Clamp(frameNumber, 0, 100);
 				keyframeIsEdited = true;
 			}
@@ -501,6 +500,11 @@ namespace ImGui
 		return EntityTracks[index].IsExpanded ? (EntityTracks[index].ComponentTracks.size() * componentTrackLabelHeight) + buffer : 0;
 	}
 
+	ImRect CSequencerWindow::GetItemTopRect(const ImVec2& canvasPosition, const ImVec2& canvasSize, const Havtorn::F32 xStartOffset, const Havtorn::F32 yHeight)
+	{
+		return ImRect(ImVec2(canvasPosition.x + xStartOffset, canvasPosition.y), ImVec2(canvasPosition.x + canvasSize.x, canvasPosition.y + yHeight));
+	}
+
 	void CSequencerWindow::DoubleClick(int index)
 	{
 		if (EntityTracks[index].IsExpanded)
@@ -596,8 +600,7 @@ namespace ImGui
 			drawList->AddRectFilled(canvasPosition, canvasPosition + canvasSize, 0xFF242424, 0);
 
 			// current frame top
-			ImRect topRect(ImVec2(canvasPosition.x + SequencerState.LegendWidth, canvasPosition.y), ImVec2(canvasPosition.x + canvasSize.x, canvasPosition.y + SequencerState.ItemHeight));
-
+			ImRect topRect = GetItemTopRect(canvasPosition, canvasSize, SequencerState.LegendWidth, SequencerState.ItemHeight);
 			ScrubPlayhead(sequenceOptions, currentFrame, topRect, frameCount, firstFrameUsed);
 
 			//header
