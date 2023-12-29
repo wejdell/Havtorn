@@ -43,8 +43,8 @@ namespace Havtorn
 
 		std::vector<SSequencerComponent>& sequencerComponents = scene->GetSequencerComponents();
 
-		if (ShouldRecordNewKeyframes)
-			RecordNewKeyframes(scene, sequencerComponents);
+		//if (ShouldRecordNewKeyframes)
+		//	RecordNewKeyframes(scene, sequencerComponents);
 
 		Tick(scene, sequencerComponents);
 
