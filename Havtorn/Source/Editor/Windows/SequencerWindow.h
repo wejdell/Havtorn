@@ -82,6 +82,7 @@ namespace ImGui
 {
 	class CSequencerWindow : public CWindow
 	{
+
     public:
 		CSequencerWindow(const char* displayName, Havtorn::CEditorManager* manager, Havtorn::CSequencerSystem* sequencerSystem);
 		~CSequencerWindow() override;
@@ -93,6 +94,7 @@ namespace ImGui
         // Master Flow
         void FlowControls(Havtorn::SSequencerContextData& contextData);
         void ContentControls();
+        void ResolveSelection();
         void SetCurrentComponentValueOnKeyframe();
         void SetCurrentKeyframeValueOnComponent();
         void FillSequencer();
@@ -176,6 +178,8 @@ namespace ImGui
             bool IsPopupOpen = false;
             bool IsMovingScrollBar = false;
             bool IsMovingCurrentFrame = false;
+
+            std::map<std::string, ImRect> ClippingRects;
         } SequencerState;
 
         struct SEditorKeyframeMetaData
@@ -186,6 +190,8 @@ namespace ImGui
             
             bool IsValid(const CSequencerWindow* sequencerWindow) const;
         } SelectedKeyframeMetaData;
+
+        SEditorKeyframeMetaData CandidateKeyframeMetaData;
 
         std::string NewComponentTrackPopupName = "AddNewComponentTrackPopup";
         std::string NewKeyframePopupName = "AddNewKeyframePopup";
@@ -207,5 +213,6 @@ namespace ImGui
             return;
 
         SequencerSystem->AddEmptyKeyframeToComponent<T>(sequencerComponents[sceneIndex], componentType);
+        SequencerSystem->RecordNewKeyframes(scene, sequencerComponents);
     }
 }

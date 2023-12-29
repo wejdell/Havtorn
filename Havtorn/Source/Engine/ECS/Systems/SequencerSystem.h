@@ -28,15 +28,14 @@ namespace Havtorn
 		void Update(CScene* scene) override;
 
 		HAVTORN_API SSequencerContextData GetSequencerContextData() const;
-		HAVTORN_API void SetSequencerContextData(const SSequencerContextData& data);
-		
+		HAVTORN_API void SetSequencerContextData(const SSequencerContextData& data);	
 		HAVTORN_API void AddComponentTrackToComponent(SSequencerComponent& sequencerComponent, EComponentType trackComponentType);
 
 		template<typename T>
 		T* AddEmptyKeyframeToComponent(SSequencerComponent& sequencerComponent, EComponentType componentType);
 	
+		HAVTORN_API void RecordNewKeyframes(CScene* scene, std::vector<SSequencerComponent>& sequencerComponents);
 	private:
-		void RecordNewKeyframes(CScene* scene, std::vector<SSequencerComponent>& sequencerComponents);
 		void Tick(CScene* scene, std::vector<SSequencerComponent>& sequencerComponents);
 		void UpdateTracks(CScene* scene, std::vector<SSequencerComponent>& sequencerComponents);
 		void OnSequenceFinished();
