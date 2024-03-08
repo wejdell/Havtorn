@@ -211,9 +211,9 @@ namespace ImGui
 				
 				ImGuiIO& io = ImGui::GetIO();
 				ImVec2 canvasPosition = ImGui::GetCursorScreenPos();
-				ImVec2 canvas_size = ImGui::GetContentRegionAvail();
+				ImVec2 canvasSize = ImGui::GetContentRegionAvail();
 
-				ImRect topRect(ImVec2(canvasPosition.x + legendWidth, canvasPosition.y), ImVec2(canvasPosition.x + canvas_size.x, canvasPosition.y + itemHeight));
+				ImRect topRect(ImVec2(canvasPosition.x + legendWidth, canvasPosition.y), ImVec2(canvasPosition.x + canvasSize.x, canvasPosition.y + itemHeight));
 				frameNumber = (int)((io.MousePos.x - topRect.Min.x) / framePixelWidth) + 0;
 				frameNumber = Havtorn::UMath::Clamp(frameNumber, 0, 100);
 				keyframeIsEdited = true;
@@ -1259,6 +1259,8 @@ namespace ImGui
 			sequencerKeyframe->FrameNumber = selectedKeyframe->FrameNumber;
 			sequencerKeyframe->ShouldBlendLeft = selectedKeyframe->ShouldBlendLeft;
 			sequencerKeyframe->ShouldBlendRight = selectedKeyframe->ShouldBlendRight;
+			
+			SequencerSystem->SortKeyframes(component, SelectedKeyframeMetaData.ComponentTrackIndex);
 		}
 	}
 

@@ -148,6 +148,34 @@ namespace Havtorn
 		}
 	}
 
+	void CSequencerSystem::SortKeyframes(SSequencerComponent& sequencerComponent, U32 trackIndex)
+	{
+		if (!sequencerComponent.IsInUse)
+			return;
+
+		if (!UMath::IsWithin(trackIndex, (U32)0, static_cast<U32>(sequencerComponent.ComponentTracks.size())))
+			return;
+
+		SSequencerComponentTrack& componentTrack = sequencerComponent.ComponentTracks[trackIndex];
+		if (componentTrack.Keyframes.size() < 2)
+			return;
+
+		std::sort(componentTrack.Keyframes.begin(), componentTrack.Keyframes.end(), [](SSequencerKeyframe* a, SSequencerKeyframe* b) { return a->FrameNumber < b->FrameNumber; });
+
+		U16 numberOfKeyframes = static_cast<U16>(componentTrack.Keyframes.size());
+		U32 lastFrameNumber = componentTrack.Keyframes[0]->FrameNumber;
+		for (U16 index = 1; index < numberOfKeyframes; index++)
+		{
+			SSequencerKeyframe* keyframe = componentTrack.Keyframes[index];
+
+			// NR: Allow keyframes to cascade if there are a number of them lined up.
+			if (keyframe->FrameNumber == lastFrameNumber)
+				keyframe->FrameNumber += 1;
+
+			lastFrameNumber = keyframe->FrameNumber;
+		}
+	}
+
 	void CSequencerSystem::Tick(CScene* scene, std::vector<SSequencerComponent>& sequencerComponents)
 	{
 		if (!Data.IsPlayingSequence && Data.CurrentFrame == InternalCurrentFrame)
