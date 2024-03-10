@@ -232,15 +232,13 @@ namespace ImGui
 			if (ImGui::Button("Set Current Component Value"))
 				SetCurrentComponentValueOnKeyframe();
 
-			if (keyframeIsEdited)
+			if (keyframeIsEdited)			
 				EditSelectedKeyframe(selectedKeyframe);
 		}
 	}
 
 	void CSequencerWindow::ResolveSelection()
 	{
-		HV_LOG_DEBUG("IsFocused: %s, SelectedKeyframe: %i", SequencerState.IsFocused ? "True" : "False", SelectedKeyframeMetaData.KeyframeIndex);
-
 		//if (!SequencerState.IsFocused) 
 		//	return;
 
@@ -1260,7 +1258,7 @@ namespace ImGui
 			sequencerKeyframe->ShouldBlendLeft = selectedKeyframe->ShouldBlendLeft;
 			sequencerKeyframe->ShouldBlendRight = selectedKeyframe->ShouldBlendRight;
 			
-			SequencerSystem->SortKeyframes(component, SelectedKeyframeMetaData.ComponentTrackIndex);
+			SequencerSystem->SortKeyframes(component, SelectedKeyframeMetaData.ComponentTrackIndex, SelectedKeyframeMetaData.KeyframeIndex);
 		}
 	}
 

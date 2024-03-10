@@ -148,7 +148,7 @@ namespace Havtorn
 		}
 	}
 
-	void CSequencerSystem::SortKeyframes(SSequencerComponent& sequencerComponent, U32 trackIndex)
+	void CSequencerSystem::SortKeyframes(SSequencerComponent& sequencerComponent, U32 trackIndex, I32& lastEditedKeyframeIndex)
 	{
 		if (!sequencerComponent.IsInUse)
 			return;
@@ -168,9 +168,25 @@ namespace Havtorn
 		{
 			SSequencerKeyframe* keyframe = componentTrack.Keyframes[index];
 
+			// NR: Frame number collision handling for edited keyframe
+			if (index == lastEditedKeyframeIndex && keyframe->FrameNumber == lastFrameNumber)
+			{
+				std::swap(componentTrack.Keyframes[index], componentTrack.Keyframes[index - 1]);
+				componentTrack.Keyframes[index]->FrameNumber++;
+				lastEditedKeyframeIndex--;
+				continue;
+			}
+			else if (index == lastEditedKeyframeIndex + 1 && keyframe->FrameNumber == lastFrameNumber)
+			{
+				std::swap(componentTrack.Keyframes[index], componentTrack.Keyframes[index - 1]);
+				componentTrack.Keyframes[index - 1]->FrameNumber--;
+				lastEditedKeyframeIndex++;
+				continue;
+			}
+
 			// NR: Allow keyframes to cascade if there are a number of them lined up.
 			if (keyframe->FrameNumber == lastFrameNumber)
-				keyframe->FrameNumber += 1;
+				keyframe->FrameNumber++;
 
 			lastFrameNumber = keyframe->FrameNumber;
 		}

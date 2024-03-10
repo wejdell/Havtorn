@@ -35,7 +35,7 @@ namespace Havtorn
 		T* AddEmptyKeyframeToComponent(SSequencerComponent& sequencerComponent, EComponentType componentType);
 	
 		HAVTORN_API void RecordNewKeyframes(CScene* scene, std::vector<SSequencerComponent>& sequencerComponents);
-		HAVTORN_API void SortKeyframes(SSequencerComponent& sequencerComponent, U32 trackIndex);
+		HAVTORN_API void SortKeyframes(SSequencerComponent& sequencerComponent, U32 trackIndex, I32& lastEditedKeyframeIndex);
 
 	private:
 		void Tick(CScene* scene, std::vector<SSequencerComponent>& sequencerComponents);
