@@ -97,6 +97,7 @@ namespace ImGui
         void ResolveSelection();
         void SetCurrentComponentValueOnKeyframe();
         void SetCurrentKeyframeValueOnComponent();
+        void InspectKeyframe();
         void FillSequencer();
         // !Master Flow
 

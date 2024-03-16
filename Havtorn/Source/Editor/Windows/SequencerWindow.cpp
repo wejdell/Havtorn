@@ -313,6 +313,31 @@ namespace ImGui
 		}
 	}
 
+	void CSequencerWindow::InspectKeyframe()
+	{
+		if (!SelectedKeyframeMetaData.IsValid(this))
+			return;
+
+		Havtorn::CScene* const scene = Manager->GetCurrentScene();
+		if (scene == nullptr)
+			return;
+
+		std::vector<Havtorn::SSequencerComponent>& sequencerComponents = scene->GetSequencerComponents();
+		for (U64 index = 0, entityTrackIndex = 0; index < sequencerComponents.size(); index++)
+		{
+			Havtorn::SSequencerComponent& component = sequencerComponents[index];
+			if (!component.IsInUse)
+				continue;
+
+			if (entityTrackIndex++ != SelectedKeyframeMetaData.EntityTrackIndex)
+				continue;
+
+			Havtorn::SSequencerKeyframe* sequencerKeyframe = component.ComponentTracks[SelectedKeyframeMetaData.ComponentTrackIndex].Keyframes[SelectedKeyframeMetaData.KeyframeIndex];
+
+			sequencerKeyframe->SetKeyframeDataOnEntity(scene, index);
+		}
+	}
+
 	void CSequencerWindow::FillSequencer()
 	{
 		Havtorn::CScene* const scene = Manager->GetCurrentScene();
