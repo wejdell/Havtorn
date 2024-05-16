@@ -11,6 +11,7 @@
 #include <SequencerKeyframes/SequencerSpriteKeyframe.h>
 
 #include <set>
+#include <Windows/InspectorWindow.h>
 
 namespace ImGui
 {
@@ -234,6 +235,8 @@ namespace ImGui
 
 			if (keyframeIsEdited)			
 				EditSelectedKeyframe(selectedKeyframe);
+
+			InspectKeyframe();
 		}
 	}
 
@@ -254,7 +257,7 @@ namespace ImGui
 		if (CandidateKeyframeMetaData.IsValid(this) && ImGui::IsMouseClicked(0))
 		{
 			SetSelectedKeyframe(CandidateKeyframeMetaData.EntityTrackIndex, CandidateKeyframeMetaData.ComponentTrackIndex, CandidateKeyframeMetaData.KeyframeIndex);
-			SetCurrentKeyframeValueOnComponent();
+			//SetCurrentKeyframeValueOnComponent();
 		}
 		// Explicit deselect
 		else if (ImGui::IsMouseClicked(0) && ImGui::IsMouseHoveringRect(clippingRect.Min, clippingRect.Max))
@@ -322,20 +325,19 @@ namespace ImGui
 		if (scene == nullptr)
 			return;
 
-		std::vector<Havtorn::SSequencerComponent>& sequencerComponents = scene->GetSequencerComponents();
-		for (U64 index = 0, entityTrackIndex = 0; index < sequencerComponents.size(); index++)
-		{
-			Havtorn::SSequencerComponent& component = sequencerComponents[index];
-			if (!component.IsInUse)
-				continue;
+		Havtorn::SEntity* const selectedEntity = Manager->GetSelectedEntity();
+		if (selectedEntity == nullptr)
+			return;
 
-			if (entityTrackIndex++ != SelectedKeyframeMetaData.EntityTrackIndex)
-				continue;
+		const Havtorn::SSequencerComponent& sequencerComponent = scene->GetSequencerComponents()[scene->GetSceneIndex(selectedEntity->GUID)];
+					
+		if (!sequencerComponent.IsInUse)
+			return;
 
-			Havtorn::SSequencerKeyframe* sequencerKeyframe = component.ComponentTracks[SelectedKeyframeMetaData.ComponentTrackIndex].Keyframes[SelectedKeyframeMetaData.KeyframeIndex];
-
-			sequencerKeyframe->SetKeyframeDataOnEntity(scene, index);
-		}
+		Havtorn::EComponentType componentType = sequencerComponent.ComponentTracks[SelectedKeyframeMetaData.ComponentTrackIndex].ComponentType;
+		Manager->GetEditorWindow<CInspectorWindow>()->TryInspectComponent(componentType);
+			
+		//sequencerKeyframe->SetKeyframeDataOnEntity(scene, index);
 	}
 
 	void CSequencerWindow::FillSequencer()

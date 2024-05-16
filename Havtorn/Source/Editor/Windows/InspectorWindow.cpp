@@ -95,7 +95,10 @@ namespace ImGui
 
 		for (U64 i = 0; i < STATIC_U64(EComponentType::Count) - 2; i++)
 		{
-			TryInspectComponent(selection, static_cast<EComponentType>(i));
+			if (selection->HasComponent(static_cast<EComponentType>(i)))
+			{
+				TryInspectComponent(static_cast<EComponentType>(i));
+			}
 		}
 
 		if (ImGui::Button("Add Component", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
@@ -112,21 +115,18 @@ namespace ImGui
 	{
 	}
 
-	void CInspectorWindow::TryInspectComponent(const Havtorn::SEntity* selectedEntity, Havtorn::EComponentType componentType)
+	void CInspectorWindow::TryInspectComponent(Havtorn::EComponentType componentType)
 	{
-		if (selectedEntity->HasComponent(componentType))
-		{
-			const std::string componentTypeString = Havtorn::GetComponentTypeString(componentType);
-			std::string headerName = componentTypeString.substr(0, componentTypeString.length() - std::string("Component").length());
-			bool isHeaderOpen = ImGui::CollapsingHeader(headerName.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
-			RemoveComponentButton(componentType);
+		const std::string componentTypeString = Havtorn::GetComponentTypeString(componentType);
+		std::string headerName = componentTypeString.substr(0, componentTypeString.length() - std::string("Component").length());
+		bool isHeaderOpen = ImGui::CollapsingHeader(headerName.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+		RemoveComponentButton(componentType);
 
-			if (!isHeaderOpen)
-				return;
+		if (!isHeaderOpen)
+			return;
 
-			InspectionFunctions[componentType]();
-			ImGui::Dummy({ DummySize.X, DummySize.Y });
-		}
+		InspectionFunctions[componentType]();
+		ImGui::Dummy({ DummySize.X, DummySize.Y });
 	}
 
 	void CInspectorWindow::InspectTransformComponent()
