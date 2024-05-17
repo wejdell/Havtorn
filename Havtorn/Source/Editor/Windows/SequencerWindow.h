@@ -207,13 +207,7 @@ namespace ImGui
         if (entity == nullptr || scene == nullptr)
             return;
 
-        U64 sceneIndex = scene->GetSceneIndex(entity->GUID);
-        std::vector<Havtorn::SSequencerComponent>& sequencerComponents = scene->GetSequencerComponents();
-
-        if (sceneIndex >= sequencerComponents.size())
-            return;
-
-        SequencerSystem->AddEmptyKeyframeToComponent<T>(sequencerComponents[sceneIndex], componentType);
-        SequencerSystem->RecordNewKeyframes(scene, sequencerComponents);
+        SequencerSystem->AddEmptyKeyframeToComponent<T>(entity->GUID, componentType);
+        SequencerSystem->RecordNewKeyframes(scene);
     }
 }

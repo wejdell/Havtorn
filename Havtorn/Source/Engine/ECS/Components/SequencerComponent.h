@@ -9,29 +9,10 @@
 
 namespace Havtorn
 {
-	enum class ESequencerComponentTrackState
-	{
-		Waiting,
-		Blending,
-		Setting
-	};
-
-	struct SSequencerComponentTrack
-	{
-		EComponentType ComponentType = EComponentType::Count;
-		std::vector<SSequencerKeyframe*> Keyframes = {};
-		SSequencerKeyframe* CurrentKeyframe = nullptr;
-		SSequencerKeyframe* NextKeyframe = nullptr;
-		ESequencerComponentTrackState TrackState = ESequencerComponentTrackState::Waiting;
-		I32 CurrentKeyframeIndex = -1;
-	};
-
 	struct SSequencerComponent : public SComponent
 	{
 		SSequencerComponent()
 			: SComponent(EComponentType::SequencerComponent)
 		{}
-
-		std::vector<SSequencerComponentTrack> ComponentTracks;
 	};
 }

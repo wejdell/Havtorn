@@ -450,8 +450,8 @@ namespace Havtorn
 		AddCameraControllerComponentToEntity(*cameraEntity);
 		//controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
 		// 
-		SSequencerComponent& cameraSequencerComponent = AddSequencerComponentToEntity(*cameraEntity);
-		cameraSequencerComponent.ComponentTracks.push_back({ EComponentType::TransformComponent });
+		//SSequencerComponent& cameraSequencerComponent = AddSequencerComponentToEntity(*cameraEntity);
+		//cameraSequencerComponent.ComponentTracks.push_back({ EComponentType::TransformComponent });
 		// === !Camera ===
 
 		// === Environment light ===
@@ -511,9 +511,9 @@ namespace Havtorn
 		spotlightComp.ShadowmapView.ShadowViewMatrix = SMatrix::LookAtLH(spotlightPosition.ToVector3(), (spotlightPosition + spotlightComp.Direction).ToVector3(), spotlightComp.DirectionNormal2.ToVector3());
 		spotlightComp.ShadowmapView.ShadowProjectionMatrix = spotlightProjection;
 
-		SSequencerComponent& spotlightSequencerComponent = AddSequencerComponentToEntity(*spotlight);
-		spotlightSequencerComponent.ComponentTracks.push_back({ EComponentType::SpotLightComponent });
-		spotlightSequencerComponent.ComponentTracks.push_back({ EComponentType::DecalComponent });
+		//SSequencerComponent& spotlightSequencerComponent = AddSequencerComponentToEntity(*spotlight);
+		//spotlightSequencerComponent.ComponentTracks.push_back({ EComponentType::SpotLightComponent });
+		//spotlightSequencerComponent.ComponentTracks.push_back({ EComponentType::DecalComponent });
 		// === !Spotlight ===
 
 		{
@@ -595,11 +595,11 @@ namespace Havtorn
 			U16 spriteIndex = static_cast<U16>(GetSceneIndex(*ghosty));
 			assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
 
-			SSequencerComponent& sequencerComponent = AddSequencerComponentToEntity(*ghosty);
-			sequencerComponent.ComponentTracks.push_back({ EComponentType::TransformComponent });
-			sequencerComponent.ComponentTracks.push_back({ EComponentType::SpriteComponent });
-			sequencerComponent.ComponentTracks.push_back({ EComponentType::GhostyComponent });
-			sequencerComponent.ComponentTracks.push_back({ EComponentType::CameraComponent });
+			//SSequencerComponent& sequencerComponent = AddSequencerComponentToEntity(*ghosty);
+			//sequencerComponent.ComponentTracks.push_back({ EComponentType::TransformComponent });
+			//sequencerComponent.ComponentTracks.push_back({ EComponentType::SpriteComponent });
+			//sequencerComponent.ComponentTracks.push_back({ EComponentType::GhostyComponent });
+			//sequencerComponent.ComponentTracks.push_back({ EComponentType::CameraComponent });
 		}
 
 		//{
