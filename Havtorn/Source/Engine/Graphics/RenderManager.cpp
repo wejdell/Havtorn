@@ -1287,7 +1287,7 @@ namespace Havtorn
 
 		// =============
 
-		ObjectBufferData.ToWorldFromObject = command.ObjectMatrix;/*transformComp.Transform.GetMatrix()*/;
+		ObjectBufferData.ToWorldFromObject = command.ObjectMatrix;
 		BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
 
 		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceTransforms[command.StaticMeshName];
@@ -1316,7 +1316,7 @@ namespace Havtorn
 	void CRenderManager::ShadowAtlasPrePassPoint(const SRenderCommand& command)
 	{
 		// TODO.NR: Not needed for instanced rendering?
-		ObjectBufferData.ToWorldFromObject = command.ObjectMatrix/*transformComp.Transform.GetMatrix()*/;
+		ObjectBufferData.ToWorldFromObject = command.ObjectMatrix;
 		BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
 
 		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceTransforms[command.StaticMeshName];
@@ -1367,7 +1367,7 @@ namespace Havtorn
 		FrameBufferData.CameraPosition = command.ShadowViewData.ShadowPosition;
 		BindBuffer(FrameBuffer, FrameBufferData, "Frame Buffer");
 
-		ObjectBufferData.ToWorldFromObject = command.ObjectMatrix/*transformComp.Transform.GetMatrix()*/;
+		ObjectBufferData.ToWorldFromObject = command.ObjectMatrix;
 		BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
 
 		Context->VSSetConstantBuffers(0, 1, &FrameBuffer);
@@ -1416,7 +1416,7 @@ namespace Havtorn
 
 	void CRenderManager::GBufferDataInstanced(const SRenderCommand& command)
 	{
-		ObjectBufferData.ToWorldFromObject = command.ObjectMatrix;//transformComp.Transform.GetMatrix();
+		ObjectBufferData.ToWorldFromObject = command.ObjectMatrix;
 		BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
 
 		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceTransforms[command.StaticMeshName];
@@ -1655,8 +1655,8 @@ namespace Havtorn
 		RenderStateManager.SetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
 
 		// Update lightbufferdata and fill lightbuffer
-		SVector position = command.ObjectMatrix.GetTranslation();//transformComponent.Transform.GetMatrix().GetTranslation();
-		PointLightBufferData.ToWorldFromObject = command.ObjectMatrix;//transformComponent.Transform.GetMatrix();
+		SVector position = command.ObjectMatrix.GetTranslation();
+		PointLightBufferData.ToWorldFromObject = command.ObjectMatrix;
 		PointLightBufferData.ColorAndIntensity = command.Color.AsVector4();
 		PointLightBufferData.ColorAndIntensity.W = command.Intensity;
 		PointLightBufferData.PositionAndRange = { position.X, position.Y, position.Z, command.Range };
@@ -1700,10 +1700,10 @@ namespace Havtorn
 		RenderStateManager.SetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
 
 		// Update lightbufferdata and fill lightbuffer
-		SVector position = command.ObjectMatrix.GetTranslation();//transformComponent.Transform.GetMatrix().GetTranslation();
+		SVector position = command.ObjectMatrix.GetTranslation();
 
-		PointLightBufferData.ToWorldFromObject = command.ObjectMatrix;//transformComponent.Transform.GetMatrix();
-		PointLightBufferData.ColorAndIntensity = command.Color.AsVector4();//spotLightComp.ColorAndIntensity;
+		PointLightBufferData.ToWorldFromObject = command.ObjectMatrix;
+		PointLightBufferData.ColorAndIntensity = command.Color.AsVector4();
 		PointLightBufferData.ColorAndIntensity.W = command.Intensity;
 		PointLightBufferData.PositionAndRange = { position.X, position.Y, position.Z, command.Range };
 
@@ -1816,9 +1816,9 @@ namespace Havtorn
 		ShadowAtlasDepth.SetAsResourceOnSlot(22);
 
 		// Light Buffer
-		SVector position = command.ObjectMatrix.GetTranslation();//transformComp.Transform.GetMatrix().GetTranslation();
+		SVector position = command.ObjectMatrix.GetTranslation();
 		PointLightBufferData.ToWorldFromObject = command.ObjectMatrix;
-		PointLightBufferData.ColorAndIntensity = command.Color.AsVector4();//pointLightComp.ColorAndIntensity;
+		PointLightBufferData.ColorAndIntensity = command.Color.AsVector4();
 		PointLightBufferData.ColorAndIntensity.W = command.Intensity;
 		PointLightBufferData.PositionAndRange = { position.X, position.Y, position.Z, command.Range };
 		BindBuffer(PointLightBuffer, PointLightBufferData, "Point Light Buffer");
@@ -1876,9 +1876,9 @@ namespace Havtorn
 		ShadowAtlasDepth.SetAsResourceOnSlot(22);
 
 		// Light Buffer
-		SVector position = command.ObjectMatrix.GetTranslation();//transformComp.Transform.GetMatrix().GetTranslation();
-		PointLightBufferData.ToWorldFromObject = command.ObjectMatrix;//transformComp.Transform.GetMatrix();
-		PointLightBufferData.ColorAndIntensity = command.Color.AsVector4();//spotLightComp.ColorAndIntensity;
+		SVector position = command.ObjectMatrix.GetTranslation();
+		PointLightBufferData.ToWorldFromObject = command.ObjectMatrix;
+		PointLightBufferData.ColorAndIntensity = command.Color.AsVector4();
 		PointLightBufferData.ColorAndIntensity.W = command.Intensity;
 		PointLightBufferData.PositionAndRange = { position.X, position.Y, position.Z, command.Range };
 
