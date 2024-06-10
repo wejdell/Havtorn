@@ -92,6 +92,7 @@ namespace ImGui
 
     private:
         // Master Flow
+        void FileControls();
         void FlowControls(Havtorn::SSequencerContextData& contextData);
         void ContentControls();
         void ResolveSelection();

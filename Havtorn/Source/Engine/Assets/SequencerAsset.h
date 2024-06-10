@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "Core/HavtornString.h"
 #include "SequencerKeyframes/SequencerKeyframe.h"
 
 namespace Havtorn
@@ -15,22 +16,32 @@ namespace Havtorn
 		Setting
 	};
 
-	struct SSequencerComponentTrack
+	struct SSequencerComponentTrack : ISerializable
 	{
+		SSequencerComponentTrack() = default;
+		SSequencerComponentTrack(EComponentType componentType);
+		~SSequencerComponentTrack();
+
 		EComponentType ComponentType = EComponentType::Count;
 		std::vector<SSequencerKeyframe*> Keyframes = {};
 		SSequencerKeyframe* CurrentKeyframe = nullptr;
 		SSequencerKeyframe* NextKeyframe = nullptr;
 		ESequencerComponentTrackState TrackState = ESequencerComponentTrackState::Waiting;
 		I32 CurrentKeyframeIndex = -1;
+
+		// Inherited via ISerializable
+		virtual U32 GetSize() const override;
+		virtual void Serialize(char* toData, U64& pointerPosition) const override;
+		virtual void Deserialize(const char* fromData, U64& pointerPosition) override;
+
+	private: 
+		mutable U32 NumberOfKeyframes = 0;
 	};
 
-	struct SSequencerEntityReference
+	struct SSequencerEntityReference : ISerializable
 	{
-		SSequencerEntityReference(const U64 guid)
-			: GUID(guid)
-			, ComponentTracks({})
-		{}
+		SSequencerEntityReference() = default;
+		SSequencerEntityReference(const U64 guid);
 
 		U64 GUID = 0;
 		std::vector<SSequencerComponentTrack> ComponentTracks;
@@ -39,18 +50,29 @@ namespace Havtorn
 		{
 			return GUID == guid;
 		}
+
+		// Inherited via ISerializable
+		virtual U32 GetSize() const override;
+		virtual void Serialize(char* toData, U64& pointerPosition) const override;
+		virtual void Deserialize(const char* fromData, U64& pointerPosition) override;
+	
+	private:
+		mutable U32 NumberOfComponentTracks = 0;
 	};
 
 	class CSequencerAsset
 	{
+	public:
 		friend class CSequencerSystem;
-
 		CSequencerAsset()
 		{}
 
 		HAVTORN_API SSequencerEntityReference* TryGetEntityReference(const U64 guid);
-
+		HAVTORN_API bool operator==(const CSequencerAsset& other) const;
+		HAVTORN_API bool operator==(const std::string& otherName) const;
+	
 	private:
+		CHavtornStaticString<255> Name;
 		std::vector<SSequencerEntityReference> EntityReferences;
 	};
 }

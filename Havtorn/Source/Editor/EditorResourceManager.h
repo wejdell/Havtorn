@@ -21,6 +21,8 @@ namespace Havtorn
 		PlayIcon,
 		PauseIcon,
 		StopIcon,
+		SceneIcon,
+		SequencerIcon,
 		Count
 	};
 

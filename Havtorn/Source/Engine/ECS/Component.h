@@ -2,7 +2,6 @@
 
 #pragma once
 #include "Entity.h"
-#include "FileSystem/FileHeaderDeclarations.h"
 
 namespace Havtorn
 {

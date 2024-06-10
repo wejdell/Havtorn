@@ -90,6 +90,26 @@ namespace Havtorn
             return *this;
         }
 
+        CHavtornStaticString& operator=(const char* cString)
+        {
+            Characters = std::move(cString);
+            Size = static_cast<U8>(strlen(cString));
+        }
+
+        bool operator==(const CHavtornStaticString& other) const
+        {
+            if (Size != other.Size)
+                return false;
+
+            for (U8 index = 0; index < Size; index++)
+            {
+                if (Characters[index] != other.Characters[index])
+                    return false;
+            }
+
+            return true;
+        }
+
         inline const U32 Length() const { return Size; }
         inline const std::string AsString() const { return std::string(std::begin(Characters), std::begin(Characters) + STATIC_U64(Size)); }
         char* Data() { return Characters.data(); }

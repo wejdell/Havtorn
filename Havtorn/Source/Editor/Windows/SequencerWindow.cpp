@@ -42,24 +42,25 @@ namespace ImGui
 	{
 		if (ImGui::Begin(Name(), nullptr))
 		{
-			ImGui::SameLine();
-			if (ImGui::BeginCombo("Sequencer", Sequencers[CurrentSequencerIndex].c_str()))
-			{
-				for (Havtorn::U16 index = 0; index < Sequencers.size(); index++)
-				{
-					const std::string& sequencerName = Sequencers[index];
+			FileControls();
 
-					if (ImGui::Selectable(sequencerName.c_str()))
-					{
-						// Load Sequencer function
-						CurrentSequencerIndex = index;
-						break;
-					}
-				}
-				ImGui::EndCombo();
-			}
-			ImGui::SameLine();
-			ImGui::Text("Scene: ");
+			//if (ImGui::BeginCombo("Sequencer", Sequencers[CurrentSequencerIndex].c_str()))
+			//{
+			//	for (Havtorn::U16 index = 0; index < Sequencers.size(); index++)
+			//	{
+			//		const std::string& sequencerName = Sequencers[index];
+
+			//		if (ImGui::Selectable(sequencerName.c_str()))
+			//		{
+			//			// Load Sequencer function
+			//			CurrentSequencerIndex = index;
+			//			break;
+			//		}
+			//	}
+			//	ImGui::EndCombo();
+			//}
+			//ImGui::SameLine();
+			//ImGui::Text("Scene: ");
 
 			Havtorn::SSequencerContextData contextData = SequencerSystem->GetSequencerContextData();
 
@@ -106,6 +107,24 @@ namespace ImGui
 
 	void CSequencerWindow::OnDisable()
 	{
+	}
+
+	void CSequencerWindow::FileControls()
+	{
+		const char* currentSequencerName = SequencerSystem->GetCurrentSequencerName();
+
+		if (ImGui::Button("Save"))
+		{
+			// TODO.NR: Save and load from system
+			SequencerSystem->SaveCurrentSequencer(std::string("Assets/Sequencers/") + currentSequencerName + std::string(".hva"));
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Load"))
+		{
+		}
+		ImGui::SameLine();
+
+		ImGui::Text(currentSequencerName ? currentSequencerName : "");
 	}
 
 	void CSequencerWindow::FlowControls(Havtorn::SSequencerContextData& contextData)

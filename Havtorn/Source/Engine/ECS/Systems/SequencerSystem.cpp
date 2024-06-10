@@ -12,6 +12,11 @@
 #include "SequencerKeyframes/SequencerSpriteKeyframe.h"
 #include "ECS/Components/TransformComponent.h"
 
+#include "Core/HavtornString.h"
+#include "Engine.h"
+#include "FileSystem/FileSystem.h"
+#include "FileSystem/FileHeaderDeclarations.h"
+
 namespace Havtorn
 {
 	void CSequencerSystem::Update(CScene* scene)
@@ -47,7 +52,7 @@ namespace Havtorn
 		//if (ShouldRecordNewKeyframes)
 		//	RecordNewKeyframes(scene, sequencerComponents);
 
-		Tick(scene/*, sequencerComponents*/);
+		Tick(scene);
 
 		if (IsInitialized)
 			return;
@@ -82,25 +87,26 @@ namespace Havtorn
 
 		SequencerAssets.emplace_back(new CSequencerAsset());
 		CurrentSequencer = SequencerAssets[0];
+		CurrentSequencer->Name = std::string("Intro");
 
 		std::vector<SEntity>& entities = scene->GetEntities();
 
 		U64 spriteGUID = entities[4].GUID;
-		AddComponentTrackToEntityReference(spriteGUID, EComponentType::SpriteComponent);
-		Data.CurrentFrame = 20;
-		AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(spriteGUID, EComponentType::SpriteComponent);
-		Data.CurrentFrame = 24;
-		AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(spriteGUID, EComponentType::SpriteComponent);
-		Data.CurrentFrame = 30;
-		auto newKeyframe = AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(spriteGUID, EComponentType::SpriteComponent);
-		newKeyframe->ShouldBlendRight = false;
-		newKeyframe->ShouldBlendLeft = false;
-		Data.CurrentFrame = 40;
-		newKeyframe = AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(spriteGUID, EComponentType::SpriteComponent);
-		newKeyframe->ShouldBlendLeft = false;
-		Data.CurrentFrame = 60;
-		newKeyframe = AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(spriteGUID, EComponentType::SpriteComponent);
-		newKeyframe->ShouldBlendRight = false;
+		//AddComponentTrackToEntityReference(spriteGUID, EComponentType::SpriteComponent);
+		//Data.CurrentFrame = 20;
+		//AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(spriteGUID, EComponentType::SpriteComponent);
+		//Data.CurrentFrame = 24;
+		//AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(spriteGUID, EComponentType::SpriteComponent);
+		//Data.CurrentFrame = 30;
+		//auto newKeyframe = AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(spriteGUID, EComponentType::SpriteComponent);
+		//newKeyframe->ShouldBlendRight = false;
+		//newKeyframe->ShouldBlendLeft = false;
+		//Data.CurrentFrame = 40;
+		//newKeyframe = AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(spriteGUID, EComponentType::SpriteComponent);
+		//newKeyframe->ShouldBlendLeft = false;
+		//Data.CurrentFrame = 60;
+		//newKeyframe = AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(spriteGUID, EComponentType::SpriteComponent);
+		//newKeyframe->ShouldBlendRight = false;
 
 		AddComponentTrackToEntityReference(spriteGUID, EComponentType::TransformComponent);
 		Data.CurrentFrame = 18;
@@ -109,7 +115,8 @@ namespace Havtorn
 		AddEmptyKeyframeToComponent<SSequencerTransformKeyframe>(spriteGUID, EComponentType::TransformComponent);
 		
 		Data.CurrentFrame = 0;
-		//spriteTrack.ComponentTracks.emplace_back(SSequencerComponentTrack{ EComponentType::SpriteComponent, {}, {}, {} });
+
+		//LoadSequencerFromFile(std::string("Assets/Sequencers/Intro.hva"));
 	}
 
 	void CSequencerSystem::SetSequencerContextData(const SSequencerContextData& data)
@@ -243,12 +250,82 @@ namespace Havtorn
 		}
 	}
 
+	const char* CSequencerSystem::GetCurrentSequencerName() const
+	{
+		if (CurrentSequencer == nullptr)
+			return nullptr;
+
+		return CurrentSequencer->Name.Data();
+	}
+
 	const std::vector<SSequencerEntityReference>* CSequencerSystem::GetCurrentEntityReferences() const
 	{
 		if (CurrentSequencer == nullptr)
 			return nullptr;
 
 		return &CurrentSequencer->EntityReferences;
+	}
+
+	void CSequencerSystem::SaveCurrentSequencer(const std::string& filePath)
+	{
+		if (CurrentSequencer == nullptr)
+			return;
+
+		SSequencerFileHeader fileHeader;
+		fileHeader.SequencerName = CurrentSequencer->Name.AsString();
+		fileHeader.SequencerNameLength = static_cast<U32>(fileHeader.SequencerName.size());
+		fileHeader.NumberOfEntityReferences = static_cast<U32>(CurrentSequencer->EntityReferences.size());
+		fileHeader.EntityReferences = CurrentSequencer->EntityReferences;
+
+		const U32 fileSize = fileHeader.GetSize();
+		char* data = new char[fileSize];
+
+		fileHeader.Serialize(data);
+		GEngine::GetFileSystem()->Serialize(filePath, data, fileSize);
+
+		delete[] data;
+	}
+
+	void CSequencerSystem::LoadSequencerFromFile(const std::string& filePath)
+	{
+		U8 nameLength = static_cast<U8>(filePath.find_last_of(".") - (filePath.find_last_of("/") + 1));
+		std::string sequencerName = filePath.substr(filePath.find_last_of("/") + 1, nameLength);
+
+		if (CSequencerAsset* asset = TryGetSequencerWithName(sequencerName))
+			return LoadSequencer(sequencerName);
+
+		SSequencerFileHeader sequencerFile;
+
+		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
+		char* data = new char[fileSize];
+
+		GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));
+		sequencerFile.Deserialize(data);
+
+		CSequencerAsset* newAsset = SequencerAssets.emplace_back(new CSequencerAsset());
+		newAsset->Name = sequencerFile.SequencerName;
+		newAsset->EntityReferences = sequencerFile.EntityReferences;
+
+		CurrentSequencer = newAsset;
+
+		delete[] data;
+	}
+
+	void CSequencerSystem::LoadSequencer(const std::string& sequencerName)
+	{
+		if (CSequencerAsset* asset = TryGetSequencerWithName(sequencerName))
+			CurrentSequencer = asset;
+	}
+
+	CSequencerAsset* CSequencerSystem::TryGetSequencerWithName(const std::string& sequencerName) const
+	{
+		for (CSequencerAsset* asset : SequencerAssets)
+		{
+			if (asset->Name == sequencerName)
+				return asset;
+		}
+
+		return nullptr;
 	}
 
 	void CSequencerSystem::Tick(CScene* scene)

@@ -41,7 +41,14 @@ namespace Havtorn
 		HAVTORN_API void RecordNewKeyframes(CScene* scene);
 		HAVTORN_API void SortKeyframes(const U64 guid, U32 trackIndex, I32& lastEditedKeyframeIndex);
 
+		HAVTORN_API const char* GetCurrentSequencerName() const;
 		HAVTORN_API const std::vector<SSequencerEntityReference>* GetCurrentEntityReferences() const;
+
+		HAVTORN_API void SaveCurrentSequencer(const std::string& filePath);
+		HAVTORN_API void LoadSequencerFromFile(const std::string& filePath);
+		HAVTORN_API void LoadSequencer(const std::string& sequencerName);
+
+		HAVTORN_API CSequencerAsset* TryGetSequencerWithName(const std::string& sequencerName) const;
 
 	private:
 		void Tick(CScene* scene);
@@ -70,7 +77,7 @@ namespace Havtorn
 		if (!entityReferencePointer)
 			return nullptr;
 
-		for (SSequencerComponentTrack& componentTrack : /*sequencerComponent*/entityReferencePointer->ComponentTracks)
+		for (SSequencerComponentTrack& componentTrack : entityReferencePointer->ComponentTracks)
 		{
 			if (componentType == componentTrack.ComponentType)
 			{

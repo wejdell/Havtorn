@@ -6,6 +6,7 @@
 #include "SpriteAnimatorGraphSystem.h"
 #include "ECS/Components/SpriteComponent.h"
 #include "ECS/Components/SpriteAnimatorGraphComponent.h"
+#include "Scene/Scene.h"
 
 namespace Havtorn
 {
