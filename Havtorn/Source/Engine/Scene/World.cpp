@@ -39,7 +39,6 @@ namespace Havtorn
 	{
 		Scenes.emplace_back(std::make_unique<CScene>());
 		SSceneFileHeader sceneFile;
-		//I64 sceneIndex = Scenes.size() - 1;
 
 		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
 		char* data = new char[fileSize];
@@ -78,8 +77,6 @@ namespace Havtorn
 		I64 sceneIndex = Scenes.size() - 1;
 
 		SSceneFileHeader fileHeader;
-		fileHeader.SceneName = "TestScene";
-		fileHeader.SceneNameLength = static_cast<U32>(fileHeader.SceneName.size());
 		fileHeader.NumberOfEntities = static_cast<U32>(scene->GetEntities().size());
 		fileHeader.Scene = scene.get();
 
