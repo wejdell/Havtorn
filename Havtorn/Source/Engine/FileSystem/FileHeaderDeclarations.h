@@ -7,65 +7,10 @@
 #include "Graphics/GraphicsEnums.h"
 #include "Scene/Scene.h"
 #include "Scene/AssetRegistry.h"
+#include "Assets/SequencerAsset.h"
 
 namespace Havtorn
 {
-	template<typename T>
-	void SerializeSimple(const T& source, char* destination, U64& pointerPosition)
-	{
-		const U32 size = sizeof(T);
-		memcpy(&destination[pointerPosition], &source, size);
-		pointerPosition += size;
-	}
-
-	template<typename T>
-	void SerializeVector(const std::vector<T>& source, char* destination, U64& pointerPosition)
-	{
-		const U32 size = sizeof(T) * static_cast<U32>(source.size());
-		memcpy(&destination[pointerPosition], source.data(), size);
-		pointerPosition += size;
-	}
-
-	inline void SerializeString(const std::string& source, char* destination, U64& pointerPosition)
-	{
-		const U32 size = sizeof(char) * static_cast<U32>(source.length());
-		memcpy(&destination[pointerPosition], source.data(), size);
-		pointerPosition += size;
-	}
-
-	inline void SerializeString(const std::string& source, char* destination, U32 numberOfElements, U64& pointerPosition)
-	{
-		const U32 size = sizeof(char) * numberOfElements;
-		memcpy(&destination[pointerPosition], source.data(), size);
-		pointerPosition += size;
-	}
-
-	template<typename T>
-	void DeserializeSimple(T& destination, const char* source, U64& pointerPosition)
-	{
-		const U32 size = sizeof(T);
-		memcpy(&destination, &source[pointerPosition], size);
-		pointerPosition += size;
-	}
-
-	template<typename T>
-	void DeserializeVector(std::vector<T>& destination, const char* source, U32 numberOfElements, U64& pointerPosition)
-	{
-		const U32 size = sizeof(T) * numberOfElements;
-		const auto intermediateVector = new T[numberOfElements];
-		memcpy(&intermediateVector[0], &source[pointerPosition], size);
-		destination.assign(&intermediateVector[0], &intermediateVector[0] + numberOfElements);
-		delete[] intermediateVector;
-		pointerPosition += size;
-	}
-
-	inline void DeserializeString(std::string& destination, const char* source, U32 numberOfElements, U64& pointerPosition)
-	{
-		const U32 size = sizeof(char) * numberOfElements;
-		destination = std::string(&source[pointerPosition], size);
-		pointerPosition += size;
-	}
-
 	struct SStaticModelFileHeader
 	{
 		EAssetType AssetType = EAssetType::StaticMesh;
@@ -255,8 +200,6 @@ namespace Havtorn
 	struct SSceneFileHeader
 	{
 		EAssetType AssetType = EAssetType::Scene;
-		U32 SceneNameLength = 0;
-		std::string SceneName = "";
 		U32 NumberOfEntities = 0;
 		CScene* Scene = nullptr;
 
@@ -269,10 +212,6 @@ namespace Havtorn
 	{
 		U32 size = sizeof(EAssetType);
 		size += sizeof(U32);
-		size += sizeof(char) * SceneNameLength;
-
-		size += sizeof(U32);
-
 		size += Scene->GetSize();
 
 		return size;
@@ -280,24 +219,20 @@ namespace Havtorn
 
 	inline void SSceneFileHeader::Serialize(char* toData, U64& pointerPosition, CAssetRegistry* assetRegistry, I64 sceneIndex) const
 	{
-		SerializeSimple(AssetType, toData, pointerPosition); //4
-		SerializeSimple(SceneNameLength, toData, pointerPosition); //8
-		SerializeString(SceneName, toData, pointerPosition);	//17
-		SerializeSimple(sceneIndex, toData, pointerPosition); //25
-		assetRegistry->Serialize(sceneIndex, toData, pointerPosition); //233
+		SerializeSimple(AssetType, toData, pointerPosition);
+		SerializeSimple(sceneIndex, toData, pointerPosition);
+		assetRegistry->Serialize(sceneIndex, toData, pointerPosition);
 
 		Scene->Serialize(toData, pointerPosition);
 	}
 
 	inline void SSceneFileHeader::Deserialize(const char* fromData, U64& pointerPosition, CScene* outScene, CAssetRegistry* assetRegistry)
 	{
-		DeserializeSimple(AssetType, fromData, pointerPosition); //4
-		DeserializeSimple(SceneNameLength, fromData, pointerPosition); //8
-		DeserializeString(SceneName, fromData, SceneNameLength, pointerPosition); //17
+		DeserializeSimple(AssetType, fromData, pointerPosition);
 		
 		I64 sceneIndex = 0;
-		DeserializeSimple(sceneIndex, fromData, pointerPosition); //25
-		assetRegistry->Deserialize(sceneIndex, fromData, pointerPosition); //233
+		DeserializeSimple(sceneIndex, fromData, pointerPosition);
+		assetRegistry->Deserialize(sceneIndex, fromData, pointerPosition);
 
 		outScene->Deserialize(fromData, pointerPosition, assetRegistry);
 	}
@@ -347,5 +282,62 @@ namespace Havtorn
 		DeserializeSimple(NumberOfDurations, fromData, pointerPosition);
 		DeserializeVector(Durations, fromData, NumberOfDurations, pointerPosition);
 		DeserializeSimple(IsLooping, fromData, pointerPosition);
+	}
+
+	struct SSequencerFileHeader
+	{
+		EAssetType AssetType = EAssetType::Sequencer;
+		U32 SequencerNameLength = 0;
+		std::string SequencerName = "";
+		U32 NumberOfEntityReferences = 0;
+		std::vector<SSequencerEntityReference> EntityReferences;
+
+		[[nodiscard]] U32 GetSize() const;
+		void Serialize(char* toData) const;
+		void Deserialize(const char* fromData);
+	};
+
+	inline U32 SSequencerFileHeader::GetSize() const
+	{
+		U32 size = sizeof(EAssetType);
+		size += sizeof(U32);
+		size += sizeof(char) * SequencerNameLength;
+		size += sizeof(U32);
+
+		for (const SSequencerEntityReference& reference : EntityReferences)
+		{
+			size += reference.GetSize();
+		}
+
+		return size;
+	}
+
+	inline void SSequencerFileHeader::Serialize(char* toData) const
+	{
+		U64 pointerPosition = 0;
+		SerializeSimple(AssetType, toData, pointerPosition);
+		SerializeSimple(SequencerNameLength, toData, pointerPosition);
+		SerializeString(SequencerName, toData, pointerPosition);
+		SerializeSimple(NumberOfEntityReferences, toData, pointerPosition);
+		
+		for (const SSequencerEntityReference& reference : EntityReferences)
+		{
+			reference.Serialize(toData, pointerPosition);
+		}
+	}
+
+	inline void SSequencerFileHeader::Deserialize(const char* fromData)
+	{
+		U64 pointerPosition = 0;
+		DeserializeSimple(AssetType, fromData, pointerPosition);
+		DeserializeSimple(SequencerNameLength, fromData, pointerPosition);
+		DeserializeString(SequencerName, fromData, SequencerNameLength, pointerPosition);
+		DeserializeSimple(NumberOfEntityReferences, fromData, pointerPosition);
+
+		for (U64 index = 0; index < NumberOfEntityReferences; index++)
+		{
+			EntityReferences.emplace_back();
+			EntityReferences.back().Deserialize(fromData, pointerPosition);
+		}
 	}
 }

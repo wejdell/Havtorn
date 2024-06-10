@@ -797,7 +797,7 @@ namespace Havtorn
 			}
 		}
 
-		SerializeSimple(&SceneName, toData, pointerPosition);
+		SerializeSimple(SceneName, toData, pointerPosition);
 	}
 
 	void CScene::Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry)
@@ -1043,11 +1043,23 @@ namespace Havtorn
 
 	U64 CScene::GetSceneIndex(const SEntity& entity) const
 	{
+		if (!EntityVectorIndices.contains(entity.GUID))
+		{
+			HV_LOG_ERROR("%s could not resolve entity %u's GUID to a scene index! Returning 0.", __FUNCTION__, entity.GUID);
+			return 0;
+		}
+
 		return EntityVectorIndices.at(entity.GUID);
 	}
 
 	U64 CScene::GetSceneIndex(const U64 entityGUID) const
 	{
+		if (!EntityVectorIndices.contains(entityGUID))
+		{
+			HV_LOG_ERROR("%s could not resolve entity %u's GUID to a scene index! Returning 0.", __FUNCTION__, entityGUID);
+			return 0;
+		}
+
 		return EntityVectorIndices.at(entityGUID);
 	}
 
@@ -1110,11 +1122,16 @@ namespace Havtorn
 		case Havtorn::EComponentType::SequencerComponent:
 			AddSequencerComponentToEntity(entity);
 			break;
+		case Havtorn::EComponentType::GhostyComponent:
+			AddGhostyComponentToEntity(entity);
+			break;
 
 		case Havtorn::EComponentType::DebugShapeComponent:
 		case Havtorn::EComponentType::MetaDataComponent:
 		case Havtorn::EComponentType::Count:
+			break;
 		default:
+			HV_LOG_ERROR("%s: Unhandled case for EComponentType %s.", __FUNCTION__, GetComponentTypeString(componentType).c_str());
 			break;
 		}
 	}
@@ -1168,11 +1185,16 @@ namespace Havtorn
 		case Havtorn::EComponentType::SequencerComponent:
 			RemoveSequencerComponentFromEntity(entity);
 			break;
+		case Havtorn::EComponentType::GhostyComponent:
+			RemoveGhostyComponentFromEntity(entity);
+			break;
 
 		case Havtorn::EComponentType::DebugShapeComponent:
 		case Havtorn::EComponentType::MetaDataComponent:
 		case Havtorn::EComponentType::Count:
+			break;
 		default:
+			HV_LOG_ERROR("%s: Unhandled case for EComponentType %s.", __FUNCTION__, GetComponentTypeString(componentType).c_str());
 			break;
 		}
 	}
