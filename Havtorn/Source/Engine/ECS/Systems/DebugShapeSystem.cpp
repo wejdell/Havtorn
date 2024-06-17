@@ -329,11 +329,11 @@ namespace Havtorn
 		}
 
 		// Sort render commands based on use of depth
-		const U8 debugShapeComponent = static_cast<U8>(EComponentType::DebugShapeComponent);
-		const U8 transformComponent = static_cast<U8>(EComponentType::TransformComponent);
-		Components components;
-		for (U64 i = 0; i < ActiveIndices.size(); i++)
-		{
+		//const U8 debugShapeComponent = static_cast<U8>(EComponentType::DebugShapeComponent);
+		//const U8 transformComponent = static_cast<U8>(EComponentType::TransformComponent);
+		//Components components;
+		//for (U64 i = 0; i < ActiveIndices.size(); i++)
+		//{
 			//const U64& activeIndex = ActiveIndices[i];
 			//const U64 shapeIndex = entities[activeIndex]->GetComponentIndex(EComponentType::DebugShapeComponent);
 			//const U64 transformIndex = entities[activeIndex]->GetComponentIndex(EComponentType::TransformComponent);
@@ -345,7 +345,7 @@ namespace Havtorn
 
 			//SRenderCommand command(components, commandType);
 			//RenderManager->PushRenderCommand(command);
-		}
+		//}
 	}
 
 	void UDebugShapeSystem::CheckActiveIndices(const std::vector<Ref<SDebugShapeComponent>>& debugShapes)
