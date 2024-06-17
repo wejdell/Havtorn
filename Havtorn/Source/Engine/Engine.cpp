@@ -67,6 +67,8 @@ namespace Havtorn
 
 		InitWindowsImaging();
 
+		SequencerSystem = World->GetSequencerSystem();
+
 		return true;
 	}
 

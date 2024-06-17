@@ -1,4 +1,4 @@
-call External\premake\premake5.exe vs2019
+call External\premake\premake5.exe vs2022
 @echo.
 @echo Checking license in files...
 @echo off

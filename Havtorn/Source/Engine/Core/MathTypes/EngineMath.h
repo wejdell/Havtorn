@@ -10,8 +10,8 @@
 
 namespace
 {
-	std::random_device myRandomDevice{};
-	std::mt19937 myRandomEngine{ myRandomDevice() };
+	std::random_device RandomDevice{};
+	std::mt19937 RandomEngine{ RandomDevice() };
 }
 
 namespace Havtorn
@@ -148,6 +148,9 @@ namespace Havtorn
 		static inline I32 Random(I32 lowerBound, I32 upperBound, std::vector<I32>& excludedNumbers);
 
 		static inline U64 DecrementUntilEven(U64 val);
+
+		// If x is positive, select A. Otherwise select B
+		static inline F32 FloatSelect(F32 x, F32 a, F32 b);
 	};
 
 	template<typename T>
@@ -544,17 +547,17 @@ namespace Havtorn
 
 	inline F32 UMath::RandomGaussian(F32 mean, F32 standardDeviation)
 	{
-		return std::normal_distribution<F32>{ mean, standardDeviation }(myRandomEngine);
+		return std::normal_distribution<F32>{ mean, standardDeviation }(RandomEngine);
 	}
 
 	inline F32 UMath::Random(F32 lowerBound, F32 upperBound)
 	{
-		return std::uniform_real_distribution<F32>{ lowerBound, upperBound }(myRandomEngine);
+		return std::uniform_real_distribution<F32>{ lowerBound, upperBound }(RandomEngine);
 	}
 
 	inline I32 UMath::Random(I32 lowerBound, I32 upperBound)
 	{
-		return std::uniform_int_distribution<>{ lowerBound, upperBound }(myRandomEngine);
+		return std::uniform_int_distribution<>{ lowerBound, upperBound }(RandomEngine);
 	}
 
 	inline I32 UMath::Random(I32 lowerBound, I32 upperBound, I32 excludedNumber)
@@ -613,5 +616,10 @@ namespace Havtorn
 		while (val % 2u != 0u)
 			val--;
 		return val;
+	}
+	
+	inline F32 UMath::FloatSelect(F32 x, F32 a, F32 b)
+	{
+		return x >= 0.0f ? a : b;
 	}
 }

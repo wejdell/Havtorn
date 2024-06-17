@@ -17,6 +17,7 @@ namespace Havtorn
 		Systems.emplace_back(std::make_unique<CCameraSystem>());
 		Systems.emplace_back(std::make_unique<CLightSystem>(RenderManager));
 		Systems.emplace_back(std::make_unique<CSpriteAnimatorGraphSystem>());
+		Systems.emplace_back(std::make_unique<CSequencerSystem>());
 		Systems.emplace_back(std::make_unique<CRenderSystem>(RenderManager));
 		//Systems.emplace_back(std::make_unique<Debug::UDebugShapeSystem>(Scenes.back().get(), RenderManager));
 
@@ -38,13 +39,15 @@ namespace Havtorn
 	{
 		Scenes.emplace_back(std::make_unique<CScene>());
 		SSceneFileHeader sceneFile;
-		//I64 sceneIndex = Scenes.size() - 1;
 
 		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
 		char* data = new char[fileSize];
 
-		Scenes.back()->Init(RenderManager);
-
+		const U64 lastSlashIndex = filePath.find_last_of("/");
+		const U64 lastDotIndex = filePath.find_last_of(".");
+		std::string sceneNameSubstring = filePath.substr(lastSlashIndex, lastDotIndex - lastSlashIndex);
+		Scenes.back()->Init(RenderManager, sceneNameSubstring);
+		
 		U64 pointerPosition = 0;
 		GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));
 		sceneFile.Deserialize(data, pointerPosition, Scenes.back().get(), AssetRegistry.get());
@@ -74,8 +77,6 @@ namespace Havtorn
 		I64 sceneIndex = Scenes.size() - 1;
 
 		SSceneFileHeader fileHeader;
-		fileHeader.SceneName = "TestScene";
-		fileHeader.SceneNameLength = static_cast<U32>(fileHeader.SceneName.size());
 		fileHeader.NumberOfEntities = static_cast<U32>(scene->GetEntities().size());
 		fileHeader.Scene = scene.get();
 
@@ -132,5 +133,11 @@ namespace Havtorn
 	void CWorld::RegisterSystem(Ptr<ISystem> system)
 	{
 		Systems.emplace_back(std::move(system));
+	}
+	
+	CSequencerSystem* CWorld::GetSequencerSystem()
+	{
+		// TODO.NR: Should not be hard coded
+		return reinterpret_cast<CSequencerSystem*>(Systems[3].get());
 	}
 }
