@@ -17,7 +17,7 @@ namespace Havtorn
 		// TODO.NR: Make union so you can access xyz as F32[3]
 		// TODO.NR: Add [] operator
 
-		F32 X, Y, Z;
+		F32 X, Y, Z = 0.0f;
 
 		static const SVector Zero;
 

@@ -11,7 +11,7 @@ namespace Havtorn
 	{
 		SVector Input;
 		F32 MoveSpeed = 3.145f;
-		bool IsInWalkingAnimationState;
+		bool IsInWalkingAnimationState = false;
 	};
 
 	struct SGhostyComponent : SComponent
