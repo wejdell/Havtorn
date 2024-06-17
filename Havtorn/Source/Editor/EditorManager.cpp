@@ -64,6 +64,7 @@ namespace Havtorn
 		Windows.emplace_back(std::make_unique<ImGui::CInspectorWindow>("Inspector", this));
 		Windows.emplace_back(std::make_unique<ImGui::CSpriteAnimatorGraphNodeWindow>("Sprite Animator", this));
 		Windows.emplace_back(std::make_unique<ImGui::CSequencerWindow>("Sequencer", this, sequencerSystem));
+		Windows.back()->SetEnabled(false);
 
 		ResourceManager = new CEditorResourceManager();
 		bool success = ResourceManager->Init(renderManager, framework);
