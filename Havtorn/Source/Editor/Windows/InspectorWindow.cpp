@@ -409,11 +409,7 @@ namespace ImGui
 
 	void CInspectorWindow::InspectSequencerComponent()
 	{
-		//Havtorn::SSequencerComponent& sequencerComponent = Scene->GetSequencerComponents()[SelectedEntityIndex];
-		//for (const Havtorn::SSequencerComponentTrack& componentTrack : sequencerComponent.ComponentTracks)
-		//{
-		//	ImGui::Text(Havtorn::GetComponentTypeString(componentTrack.ComponentType).c_str());
-		//}
+		// TODO.NR: Set up references to SequencerAssets?
 	}
 
 	// AS: Ghosty is a Game-project Component / System. The goal is to separate out any Game Component/Systems so they don't have to be added in Engine

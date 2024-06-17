@@ -44,24 +44,6 @@ namespace ImGui
 		{
 			FileControls();
 
-			//if (ImGui::BeginCombo("Sequencer", Sequencers[CurrentSequencerIndex].c_str()))
-			//{
-			//	for (Havtorn::U16 index = 0; index < Sequencers.size(); index++)
-			//	{
-			//		const std::string& sequencerName = Sequencers[index];
-
-			//		if (ImGui::Selectable(sequencerName.c_str()))
-			//		{
-			//			// Load Sequencer function
-			//			CurrentSequencerIndex = index;
-			//			break;
-			//		}
-			//	}
-			//	ImGui::EndCombo();
-			//}
-			//ImGui::SameLine();
-			//ImGui::Text("Scene: ");
-
 			Havtorn::SSequencerContextData contextData = SequencerSystem->GetSequencerContextData();
 
 			ImGui::PushItemWidth(140);
@@ -115,12 +97,13 @@ namespace ImGui
 
 		if (ImGui::Button("Save"))
 		{
-			// TODO.NR: Save and load from system
+			// TODO.NR: Save using dialog
 			SequencerSystem->SaveCurrentSequencer(std::string("Assets/Sequencers/") + currentSequencerName + std::string(".hva"));
 		}
 		ImGui::SameLine();
 		if (ImGui::Button("Load"))
 		{
+			// TODO.NR: Load using dialog
 		}
 		ImGui::SameLine();
 
@@ -261,22 +244,16 @@ namespace ImGui
 
 	void CSequencerWindow::ResolveSelection()
 	{
-		//if (!SequencerState.IsFocused) 
-		//	return;
-
 		if (SequencerState.IsMovingCurrentFrame)
 		{
 			ResetSelectedKeyframe();
 			return;
 		}
 
-		//Am i actually dragging a transform position X Slider..?
-
 		ImRect clippingRect = SequencerState.ClippingRects["TrackRect"];
 		if (CandidateKeyframeMetaData.IsValid(this) && ImGui::IsMouseClicked(0))
 		{
 			SetSelectedKeyframe(CandidateKeyframeMetaData.EntityTrackIndex, CandidateKeyframeMetaData.ComponentTrackIndex, CandidateKeyframeMetaData.KeyframeIndex);
-			//SetCurrentKeyframeValueOnComponent();
 		}
 		// Explicit deselect
 		else if (ImGui::IsMouseClicked(0) && ImGui::IsMouseHoveringRect(clippingRect.Min, clippingRect.Max))
@@ -492,14 +469,10 @@ namespace ImGui
 			for (Havtorn::U64 nextKeyframeIndex = keyframeIndex + 1; nextKeyframeIndex < numberOfKeyframes; nextKeyframeIndex++, keyframeIndex++)
 			{
 				const SEditorKeyframe& nextKeyframe = componentTrack.Keyframes[nextKeyframeIndex];
-				if (nextKeyframe.ShouldBlendLeft)
-				{
-					potentialRegion.second = nextKeyframe.FrameNumber;
-				}
-				else
-				{
+				if (!nextKeyframe.ShouldBlendLeft)
 					break;
-				}
+				
+				potentialRegion.second = nextKeyframe.FrameNumber;
 			}
 
 			if (potentialRegion.first < potentialRegion.second)
@@ -553,6 +526,7 @@ namespace ImGui
 	}
 #endif
 
+#pragma region Legacy Sequencer
 	static bool SequencerAddDelButton(ImDrawList* draw_list, ImVec2 pos, bool add = true)
 	{
 		ImGuiIO& io = ImGui::GetIO();
@@ -802,9 +776,6 @@ namespace ImGui
 
 			drawList->PopClipRect();
 			drawList->PopClipRect();
-
-			//if (io.MouseClicked[0])
-			//    ResetSelectedKeyframe();
 
 			for (const SEntityTrackDrawInfo& entityTrackDrawInfo : entityTrackDrawInfos)
 				DrawComponentTracks(drawList, entityTrackDrawInfo);
@@ -1064,8 +1035,6 @@ namespace ImGui
 
 	void CSequencerWindow::TrackHeader(int numberOfEntityTracks, const ImVec2& contentMin, size_t& customHeight, ImDrawList* draw_list)
 	{
-		//ImVec2 upperLeft(entityTrackDrawInfo.LegendRect.Min.x + componentTrackIndentation, entityTrackDrawInfo.LegendRect.Min.y + i * componentTrackHeight);
-
 		for (int i = 0; i < numberOfEntityTracks; i++)
 		{
 			int type;
@@ -1245,6 +1214,8 @@ namespace ImGui
 
 		return ret;
 	}
+#pragma endregion
+
 
 	void CSequencerWindow::AddComponentTrack(Havtorn::EComponentType componentType)
 	{
