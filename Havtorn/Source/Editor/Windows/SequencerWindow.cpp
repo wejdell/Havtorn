@@ -40,7 +40,7 @@ namespace ImGui
 
 	void CSequencerWindow::OnInspectorGUI()
 	{
-		if (ImGui::Begin(Name(), nullptr))
+		if (ImGui::Begin(Name(), &IsEnabled))
 		{
 			FileControls();
 
