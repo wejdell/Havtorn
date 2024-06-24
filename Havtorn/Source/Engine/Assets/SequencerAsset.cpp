@@ -1,4 +1,4 @@
-// Copyright 2022 Team Havtorn. All Rights Reserved.
+// Copyright 2024 Team Havtorn. All Rights Reserved.
 
 #include "ECS/Systems/SequencerSystem.h"
 #include "SequencerKeyframes/SequencerTransformKeyframe.h"
