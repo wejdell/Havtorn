@@ -54,8 +54,8 @@ namespace Havtorn
 
 			SRenderCommand command;
 			command.Type = ERenderCommandType::CameraDataStorage;
-			command.ObjectMatrix = transformComponent.Transform.GetMatrix();
-			command.ProjectionMatrix = cameraComponent.ProjectionMatrix;
+			command.Matrices.push_back(transformComponent.Transform.GetMatrix());
+			command.Matrices.push_back(cameraComponent.ProjectionMatrix);
 			RenderManager->PushRenderCommand(command);
 		}
 
@@ -83,11 +83,11 @@ namespace Havtorn
 						const SDirectionalLightComponent& directionalLightComp = directionalLightComponents[j];
 
 						SRenderCommand command;
-						command.Type = ERenderCommandType::ShadowAtlasPrePassDirectional;			
-						command.ShadowViewData = directionalLightComp.ShadowmapView;
-						command.ObjectMatrix = transformComp.Transform.GetMatrix();
-						command.StaticMeshName = staticMeshComponent.Name.AsString();
-						command.TopologyIndex = staticMeshComponent.TopologyIndex;
+						command.Type = ERenderCommandType::ShadowAtlasPrePassDirectional;	
+						command.ShadowmapViews.push_back(directionalLightComp.ShadowmapView);
+						command.Matrices.push_back(transformComp.Transform.GetMatrix());
+						command.Strings.push_back(staticMeshComponent.Name.AsString());
+						command.U8s.push_back(staticMeshComponent.TopologyIndex);
 						command.DrawCallData = staticMeshComponent.DrawCallData;
 						RenderManager->PushRenderCommand(command);
 					}
@@ -98,11 +98,11 @@ namespace Havtorn
 
 						SRenderCommand command;
 						command.Type = ERenderCommandType::ShadowAtlasPrePassPoint;
-						command.ObjectMatrix = transformComp.Transform.GetMatrix();
-						command.StaticMeshName = staticMeshComponent.Name.AsString();
-						command.TopologyIndex = staticMeshComponent.TopologyIndex;
+						command.Matrices.push_back(transformComp.Transform.GetMatrix());
+						command.Strings.push_back(staticMeshComponent.Name.AsString());
+						command.U8s.push_back(staticMeshComponent.TopologyIndex);
 						command.DrawCallData = staticMeshComponent.DrawCallData;
-						command.ShadowmapViews = pointLightComp.ShadowmapViews;
+						command.SetShadowMapViews(pointLightComp.ShadowmapViews);
 						RenderManager->PushRenderCommand(command);
 					}
 
@@ -112,23 +112,23 @@ namespace Havtorn
 
 						SRenderCommand command;
 						command.Type = ERenderCommandType::ShadowAtlasPrePassSpot;
-						command.ShadowViewData = spotLightComp.ShadowmapView;
-						command.ObjectMatrix = transformComp.Transform.GetMatrix();
-						command.StaticMeshName = staticMeshComponent.Name.AsString();
-						command.TopologyIndex = staticMeshComponent.TopologyIndex;
+						command.Matrices.push_back(transformComp.Transform.GetMatrix());
+						command.Strings.push_back(staticMeshComponent.Name.AsString());
+						command.U8s.push_back(staticMeshComponent.TopologyIndex);
 						command.DrawCallData = staticMeshComponent.DrawCallData;
+						command.ShadowmapViews.push_back(spotLightComp.ShadowmapView);
 						RenderManager->PushRenderCommand(command);
 					}
 				}
 
 				SRenderCommand command;
 				command.Type = ERenderCommandType::GBufferDataInstanced;
-				command.ObjectMatrix = transformComp.Transform.GetMatrix();
-				command.StaticMeshName = staticMeshComponent.Name.AsString();
-				command.TopologyIndex = staticMeshComponent.TopologyIndex;
+				command.Matrices.push_back(transformComp.Transform.GetMatrix());
+				command.Strings.push_back(staticMeshComponent.Name.AsString());
+				command.U8s.push_back(staticMeshComponent.TopologyIndex);
+				command.U8s.push_back(staticMeshComponent.PixelShaderIndex);
+				command.U8s.push_back(staticMeshComponent.SamplerIndex);
 				command.DrawCallData = staticMeshComponent.DrawCallData;
-				command.SamplerIndex = staticMeshComponent.SamplerIndex;
-				command.PixelShaderIndex = staticMeshComponent.PixelShaderIndex;
 				command.Materials = materialComp.Materials;
 				RenderManager->PushRenderCommand(command);
 			}
@@ -152,11 +152,11 @@ namespace Havtorn
 
 			SRenderCommand command;
 			command.Type = ERenderCommandType::DeferredDecal;
-			command.ObjectMatrix = transformComp.Transform.GetMatrix();
-			command.ShouldRenderAlbedo = decalComponent.ShouldRenderAlbedo;
-			command.ShouldRenderMaterial = decalComponent.ShouldRenderMaterial;
-			command.ShouldRenderNormal = decalComponent.ShouldRenderNormal;
-			command.TextureReferences = decalComponent.TextureReferences;
+			command.Matrices.push_back(transformComp.Transform.GetMatrix());
+			command.Flags.push_back(decalComponent.ShouldRenderAlbedo);
+			command.Flags.push_back(decalComponent.ShouldRenderMaterial);
+			command.Flags.push_back(decalComponent.ShouldRenderNormal);
+			command.U16s = decalComponent.TextureReferences;
 			RenderManager->PushRenderCommand(command);
 		}
 
@@ -179,10 +179,10 @@ namespace Havtorn
 
 			SRenderCommand command;
 			command.Type = ERenderCommandType::DeferredLightingDirectional;
-			command.AmbientCubemapReference = environmentLightComp.AmbientCubemapReference;
-			command.Direction = directionalLightComp.Direction;
-			command.Color = directionalLightComp.Color;
-			command.ShadowViewData = directionalLightComp.ShadowmapView;
+			command.U16s.push_back(environmentLightComp.AmbientCubemapReference);
+			command.Vectors.push_back(directionalLightComp.Direction);
+			command.Colors.push_back(directionalLightComp.Color);
+			command.ShadowmapViews.push_back(directionalLightComp.ShadowmapView);
 			RenderManager->PushRenderCommand(command);
 
 			if (volumetricLightComponents[i].IsInUse)
@@ -210,11 +210,11 @@ namespace Havtorn
 
 			SRenderCommand command;
 			command.Type = ERenderCommandType::DeferredLightingPoint;
-			command.ObjectMatrix = transformComp.Transform.GetMatrix();
-			command.Color = SColor(pointLightComp.ColorAndIntensity.X, pointLightComp.ColorAndIntensity.Y, pointLightComp.ColorAndIntensity.Z, 1.0f);
-			command.Intensity = pointLightComp.ColorAndIntensity.W;
-			command.Range = pointLightComp.Range;
-			command.ShadowmapViews = pointLightComp.ShadowmapViews;
+			command.Matrices.push_back(transformComp.Transform.GetMatrix());
+			command.Colors.push_back(SColor(pointLightComp.ColorAndIntensity.X, pointLightComp.ColorAndIntensity.Y, pointLightComp.ColorAndIntensity.Z, 1.0f));
+			command.F32s.push_back(pointLightComp.ColorAndIntensity.W);
+			command.F32s.push_back(pointLightComp.Range);
+			command.SetShadowMapViews(pointLightComp.ShadowmapViews);
 			RenderManager->PushRenderCommand(command);
 
 			if (volumetricLightComponents[i].IsInUse)
@@ -240,16 +240,16 @@ namespace Havtorn
 
 			SRenderCommand command;
 			command.Type = ERenderCommandType::DeferredLightingSpot;
-			command.ObjectMatrix = transformComp.Transform.GetMatrix();
-			command.Color = SColor(spotLightComp.ColorAndIntensity.X, spotLightComp.ColorAndIntensity.Y, spotLightComp.ColorAndIntensity.Z, 1.0f);
-			command.Intensity = spotLightComp.ColorAndIntensity.W;
-			command.Range = spotLightComp.Range;
-			command.Direction = spotLightComp.Direction;
-			command.DirectionNormal1 = spotLightComp.DirectionNormal1;
-			command.DirectionNormal2 = spotLightComp.DirectionNormal2;
-			command.OuterAngle = spotLightComp.OuterAngle;
-			command.InnerAngle = spotLightComp.InnerAngle;
-			command.ShadowViewData = spotLightComp.ShadowmapView;
+			command.Matrices.push_back(transformComp.Transform.GetMatrix());
+			command.Colors.push_back(SColor(spotLightComp.ColorAndIntensity.X, spotLightComp.ColorAndIntensity.Y, spotLightComp.ColorAndIntensity.Z, 1.0f));
+			command.F32s.push_back(spotLightComp.ColorAndIntensity.W);
+			command.F32s.push_back(spotLightComp.Range);
+			command.F32s.push_back(spotLightComp.OuterAngle);
+			command.F32s.push_back(spotLightComp.InnerAngle);
+			command.Vectors.push_back(spotLightComp.Direction);
+			command.Vectors.push_back(spotLightComp.DirectionNormal1);
+			command.Vectors.push_back(spotLightComp.DirectionNormal2);
+			command.ShadowmapViews.push_back(spotLightComp.ShadowmapView);
 			RenderManager->PushRenderCommand(command);
 
 			if (volumetricLightComponents[i].IsInUse)
@@ -296,7 +296,7 @@ namespace Havtorn
 					// NR: Don't push a command every time
 					SRenderCommand command;
 					command.Type = ERenderCommandType::GBufferSpriteInstanced;
-					command.TextureIndex = spriteComp.TextureIndex;
+					command.U32s.push_back(spriteComp.TextureIndex);
 					RenderManager->PushRenderCommand(command);
 				}
 
@@ -308,7 +308,7 @@ namespace Havtorn
 				{
 					SRenderCommand command;
 					command.Type = ERenderCommandType::ScreenSpaceSprite;
-					command.TextureIndex = spriteComp.TextureIndex;
+					command.U32s.push_back(spriteComp.TextureIndex);
 					RenderManager->PushRenderCommand(command);
 				}
 

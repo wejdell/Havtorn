@@ -52,66 +52,113 @@ namespace Havtorn
 		RendererDebug
 	};
 
-	struct SRenderCommand
+	struct SShadowViewRenderCommandData
 	{
-		ERenderCommandType Type;
+		SShadowmapViewData ShadowViewData;
+	};
 
-		SMatrix ObjectMatrix;
-		SMatrix ProjectionMatrix;
+	struct SMultiShadowViewRenderCommandData
+	{
+		std::array<SShadowmapViewData, 6> ShadowmapViews; 
+	};
 
-		SVector4 Direction;
-		SVector4 DirectionNormal1;
-		SVector4 DirectionNormal2;
-		SColor Color;
-		F32 Intensity;
-		F32 Range;
-		F32 OuterAngle;
-		F32 InnerAngle;
-
+	struct SVolumetricRenderCommandData
+	{
 		F32 NumberOfSamplesReciprocal;
 		F32 LightPower;
 		F32 ScatteringProbability;
 		F32 HenyeyGreensteinGValue;
+	};
 
-		U8 TopologyIndex;
-		U8 PixelShaderIndex;
-		U8 SamplerIndex;
-		U16 VertexBufferIndex;
-		U16 IndexBufferIndex;
-		U16 VertexStrideIndex;
-		U16 VertexOffsetIndex;
-		U32 IndexCount;
-		U32 TextureIndex;
+	struct SColorRenderCommandData
+	{
+		SColor Color;
+		F32 Intensity;
+	};
 
+	struct SStaticMeshRenderCommandData
+	{
 		std::string StaticMeshName;
-		std::array<SShadowmapViewData, 6> ShadowmapViews;
-		SShadowmapViewData ShadowViewData;
-		SVector2<F32> ShadowmapResolution;
-		SVector2<F32> ShadowAtlasResolution;
-		SVector2<F32> ShadowmapStartingUV;
-		F32	ShadowTestTolerance;
+		U8 TopologyIndex;
+		std::vector<SDrawCallData> DrawCallData;
+	};
 
-		F32 EmissiveStrength;
+	struct SViewRenderCommandData
+	{
+		SMatrix ObjectMatrix;
+		SMatrix ProjectionMatrix;
+	};
 
+	struct SConeRenderCommandData
+	{
+		SVector4 Direction;
+		SVector4 DirectionNormal1;
+		SVector4 DirectionNormal2;
+		F32 OuterAngle;
+		F32 InnerAngle;
+	};
+
+	struct SRayRenderCommandData
+	{
+		SVector4 Direction;
+		F32 Range;
+	};
+
+	struct STextureRenderCommandData
+	{
 		bool ShouldRenderAlbedo;
 		bool ShouldRenderMaterial;
 		bool ShouldRenderNormal;
-
-		U16 AmbientCubemapReference;
-
-		std::vector<U32> TextureBankIndices;
+		U32 TextureIndex;
 		std::vector<U16> TextureReferences;
+	};
+
+	struct SAmbientRenderCommandData
+	{
+		U16 AmbientCubemapReference;
+	};
+
+	struct SMaterialRenderCommandData
+	{
+		U8 PixelShaderIndex;
+		std::vector<SEngineGraphicsMaterial> Materials;
+	};
+
+	struct SSamplerRenderCommandData
+	{
+		U8 SamplerIndex;
+	};
+
+	struct SRenderCommand
+	{
+		ERenderCommandType Type;
+
+		std::vector<SMatrix> Matrices;
+		std::vector<SVector4> Vectors;
+		std::vector<SColor> Colors;
+		std::vector<F32> F32s;
+		std::vector<U8> U8s;
+		std::vector<U16> U16s;
+		std::vector<U32> U32s;
+		std::vector<bool> Flags;
+		std::vector<std::string> Strings;
 		std::vector<SEngineGraphicsMaterial> Materials;
 		std::vector<SDrawCallData> DrawCallData;
+		std::vector<SShadowmapViewData> ShadowmapViews;
 
 		~SRenderCommand() = default;
+	
+		void SetShadowMapViews(const std::array<SShadowmapViewData, 6>& shadowmapViews)
+		{
+			ShadowmapViews.assign(shadowmapViews.begin(), shadowmapViews.end());
+		}
 
 		void SetVolumetricDataFromComponent(const SVolumetricLightComponent& component)
 		{
-			NumberOfSamplesReciprocal = component.NumberOfSamples;
-			LightPower = component.LightPower;
-			ScatteringProbability = component.ScatteringProbability;
-			HenyeyGreensteinGValue = component.HenyeyGreensteinGValue;
+			F32s.push_back(component.NumberOfSamples);
+			F32s.push_back(component.LightPower);
+			F32s.push_back(component.ScatteringProbability);
+			F32s.push_back(component.HenyeyGreensteinGValue);
 		}
 	};
 }

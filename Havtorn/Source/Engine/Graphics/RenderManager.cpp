@@ -1277,24 +1277,24 @@ namespace Havtorn
 
 	void CRenderManager::ShadowAtlasPrePassDirectional(const SRenderCommand& command)
 	{
-		FrameBufferData.ToCameraFromWorld = command.ShadowViewData.ShadowViewMatrix;
-		FrameBufferData.ToWorldFromCamera = command.ShadowViewData.ShadowViewMatrix.FastInverse();
-		FrameBufferData.ToProjectionFromCamera = command.ShadowViewData.ShadowProjectionMatrix;
-		FrameBufferData.ToCameraFromProjection = command.ShadowViewData.ShadowProjectionMatrix.Inverse();
-		FrameBufferData.CameraPosition = command.ShadowViewData.ShadowPosition;
+		const auto shadowViewData = command.ShadowmapViews[0];
+		FrameBufferData.ToCameraFromWorld = shadowViewData.ShadowViewMatrix;
+		FrameBufferData.ToWorldFromCamera = shadowViewData.ShadowViewMatrix.FastInverse();
+		FrameBufferData.ToProjectionFromCamera = shadowViewData.ShadowProjectionMatrix;
+		FrameBufferData.ToCameraFromProjection = shadowViewData.ShadowProjectionMatrix.Inverse();
+		FrameBufferData.CameraPosition = shadowViewData.ShadowPosition;
 		BindBuffer(FrameBuffer, FrameBufferData, "Frame Buffer");
-		Context->RSSetViewports(1, &Viewports[command.ShadowViewData.ShadowmapViewportIndex]);
+		Context->RSSetViewports(1, &Viewports[shadowViewData.ShadowmapViewportIndex]);
 
 		// =============
-
-		ObjectBufferData.ToWorldFromObject = command.ObjectMatrix;
+		ObjectBufferData.ToWorldFromObject = command.Matrices[0];
 		BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
 
-		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceTransforms[command.StaticMeshName];
+		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceTransforms[command.Strings[0]];
 		BindBuffer(InstancedTransformBuffer, matrices, "Instanced Transform Buffer");
 
 		Context->VSSetConstantBuffers(1, 1, &ObjectBuffer);
-		Context->IASetPrimitiveTopology(Topologies[command.TopologyIndex]);
+		Context->IASetPrimitiveTopology(Topologies[command.U8s[0]]);
 		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans)]);
 
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::StaticMeshInstanced)], nullptr, 0);
@@ -1316,14 +1316,14 @@ namespace Havtorn
 	void CRenderManager::ShadowAtlasPrePassPoint(const SRenderCommand& command)
 	{
 		// TODO.NR: Not needed for instanced rendering?
-		ObjectBufferData.ToWorldFromObject = command.ObjectMatrix;
+		ObjectBufferData.ToWorldFromObject = command.Matrices[0];
 		BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
 
-		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceTransforms[command.StaticMeshName];
+		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceTransforms[command.Strings[0]];
 		BindBuffer(InstancedTransformBuffer, matrices, "Instanced Transform Buffer");
 
 		Context->VSSetConstantBuffers(1, 1, &ObjectBuffer);
-		Context->IASetPrimitiveTopology(Topologies[command.TopologyIndex]);
+		Context->IASetPrimitiveTopology(Topologies[command.U8s[0]]);
 		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans)]);
 
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::StaticMeshInstanced)], nullptr, 0);
@@ -1360,26 +1360,27 @@ namespace Havtorn
 
 	void CRenderManager::ShadowAtlasPrePassSpot(const SRenderCommand& command)
 	{
-		FrameBufferData.ToCameraFromWorld = command.ShadowViewData.ShadowViewMatrix;
-		FrameBufferData.ToWorldFromCamera = command.ShadowViewData.ShadowViewMatrix.FastInverse();
-		FrameBufferData.ToProjectionFromCamera = command.ShadowViewData.ShadowProjectionMatrix;
-		FrameBufferData.ToCameraFromProjection = command.ShadowViewData.ShadowProjectionMatrix.Inverse();
-		FrameBufferData.CameraPosition = command.ShadowViewData.ShadowPosition;
+		const auto& shadowViewData = command.ShadowmapViews[0];
+		FrameBufferData.ToCameraFromWorld = shadowViewData.ShadowViewMatrix;
+		FrameBufferData.ToWorldFromCamera = shadowViewData.ShadowViewMatrix.FastInverse();
+		FrameBufferData.ToProjectionFromCamera = shadowViewData.ShadowProjectionMatrix;
+		FrameBufferData.ToCameraFromProjection = shadowViewData.ShadowProjectionMatrix.Inverse();
+		FrameBufferData.CameraPosition = shadowViewData.ShadowPosition;
 		BindBuffer(FrameBuffer, FrameBufferData, "Frame Buffer");
 
-		ObjectBufferData.ToWorldFromObject = command.ObjectMatrix;
+		ObjectBufferData.ToWorldFromObject = command.Matrices[0];
 		BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
 
 		Context->VSSetConstantBuffers(0, 1, &FrameBuffer);
-		Context->RSSetViewports(1, &Viewports[command.ShadowViewData.ShadowmapViewportIndex]);
+		Context->RSSetViewports(1, &Viewports[shadowViewData.ShadowmapViewportIndex]);
 
 		// =============
 
-		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceTransforms[command.StaticMeshName];
+		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceTransforms[command.Strings[0]];
 		BindBuffer(InstancedTransformBuffer, matrices, "Instanced Transform Buffer");
 
 		Context->VSSetConstantBuffers(1, 1, &ObjectBuffer);
-		Context->IASetPrimitiveTopology(Topologies[command.TopologyIndex]);
+		Context->IASetPrimitiveTopology(Topologies[command.U8s[0]]);
 		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans)]);
 
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::StaticMeshInstanced)], nullptr, 0);
@@ -1402,11 +1403,13 @@ namespace Havtorn
 	{
 		GBuffer.SetAsActiveTarget(&IntermediateDepth);
 
-		FrameBufferData.ToWorldFromCamera = command.ObjectMatrix;
-		FrameBufferData.ToCameraFromWorld = command.ObjectMatrix.FastInverse();
-		FrameBufferData.ToProjectionFromCamera = command.ProjectionMatrix;
-		FrameBufferData.ToCameraFromProjection = command.ProjectionMatrix.Inverse();
-		FrameBufferData.CameraPosition = command.ObjectMatrix.GetTranslation4();
+		const auto& objectMatrix = command.Matrices[0];
+		const auto& projectionMatrix = command.Matrices[1];
+		FrameBufferData.ToWorldFromCamera = objectMatrix;
+		FrameBufferData.ToCameraFromWorld = objectMatrix.FastInverse();
+		FrameBufferData.ToProjectionFromCamera = projectionMatrix;
+		FrameBufferData.ToCameraFromProjection = projectionMatrix.Inverse();
+		FrameBufferData.CameraPosition = objectMatrix.GetTranslation4();
 		BindBuffer(FrameBuffer, FrameBufferData, "Frame Buffer");
 
 		Context->VSSetConstantBuffers(0, 1, &FrameBuffer);
@@ -1416,20 +1419,20 @@ namespace Havtorn
 
 	void CRenderManager::GBufferDataInstanced(const SRenderCommand& command)
 	{
-		ObjectBufferData.ToWorldFromObject = command.ObjectMatrix;
+		ObjectBufferData.ToWorldFromObject = command.Matrices[0];
 		BindBuffer(ObjectBuffer, ObjectBufferData, "Object Buffer");
 
-		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceTransforms[command.StaticMeshName];
+		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceTransforms[command.Strings[0]];
 		BindBuffer(InstancedTransformBuffer, matrices, "Instanced Transform Buffer");
 
 		Context->VSSetConstantBuffers(1, 1, &ObjectBuffer);
-		Context->IASetPrimitiveTopology(Topologies[command.TopologyIndex]);
+		Context->IASetPrimitiveTopology(Topologies[command.U8s[0]]);
 		Context->IASetInputLayout(InputLayouts[static_cast<U8>(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans)]);
 
 		Context->VSSetShader(VertexShaders[static_cast<U8>(EVertexShaders::StaticMeshInstanced)], nullptr, 0);
-		Context->PSSetShader(PixelShaders[command.PixelShaderIndex], nullptr, 0);
+		Context->PSSetShader(PixelShaders[command.U8s[1]], nullptr, 0);
 
-		ID3D11SamplerState* sampler = Samplers[command.SamplerIndex];
+		ID3D11SamplerState* sampler = Samplers[command.U8s[2]];
 		Context->PSSetSamplers(0, 1, &sampler);
 
 		auto textureBank = GEngine::GetTextureBank();
@@ -1486,13 +1489,14 @@ namespace Havtorn
 		// TODO.NR: Fix transparency
 		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::GBufferAlphaBlend);
 
-		const std::vector<SMatrix>& matrices = RendererSpriteInstanceWorldSpaceTransforms[command.TextureIndex];
+		const auto& textureIndex = command.U32s[0];
+		const std::vector<SMatrix>& matrices = RendererSpriteInstanceWorldSpaceTransforms[textureIndex];
 		BindBuffer(InstancedTransformBuffer, matrices, "Instanced Transform Buffer");
 
-		const std::vector<SVector4>& uvRects = RendererSpriteInstanceUVRects[command.TextureIndex];
+		const std::vector<SVector4>& uvRects = RendererSpriteInstanceUVRects[textureIndex];
 		BindBuffer(InstancedUVRectBuffer, uvRects, "Instanced UV Rect Buffer");
 
-		const std::vector<SVector4>& colors = RendererSpriteInstanceColors[command.TextureIndex];
+		const std::vector<SVector4>& colors = RendererSpriteInstanceColors[textureIndex];
 		BindBuffer(InstancedColorBuffer, colors, "Instanced Color Buffer");
 
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::PointList)]);
@@ -1505,7 +1509,7 @@ namespace Havtorn
 		ID3D11SamplerState* sampler = Samplers[static_cast<U8>(ESamplers::DefaultWrap)];
 		Context->PSSetSamplers(0, 1, &sampler);
 
-		ID3D11ShaderResourceView* spriteTexture = GEngine::GetTextureBank()->GetTexture(command.TextureIndex);
+		ID3D11ShaderResourceView* spriteTexture = GEngine::GetTextureBank()->GetTexture(textureIndex);
 		Context->PSSetShaderResources(0, 1, &spriteTexture);
 
 		ID3D11Buffer* bufferPointers[3] = { InstancedTransformBuffer, InstancedUVRectBuffer, InstancedColorBuffer };
@@ -1531,8 +1535,9 @@ namespace Havtorn
 		GBuffer.SetAsActiveTarget(&IntermediateDepth);
 		DepthCopy.SetAsResourceOnSlot(21);
 
-		DecalBufferData.ToWorld = command.ObjectMatrix;
-		DecalBufferData.ToObjectSpace = command.ObjectMatrix.Inverse();
+		const auto& objectMatrix = command.Matrices[0];
+		DecalBufferData.ToWorld = objectMatrix;
+		DecalBufferData.ToObjectSpace = objectMatrix.Inverse();
 
 		BindBuffer(DecalBuffer, DecalBufferData, "Decal Buffer");
 
@@ -1550,27 +1555,30 @@ namespace Havtorn
 		Context->PSSetSamplers(0, 1, &sampler);
 
 		auto textureBank = GEngine::GetTextureBank();
-		if (command.ShouldRenderAlbedo)
+		const auto shouldRenderAlbedo = command.Flags[0];
+		if (shouldRenderAlbedo)
 		{
-			auto shaderResource = textureBank->GetTexture(command.TextureReferences[0]);
+			auto shaderResource = textureBank->GetTexture(command.U16s[0]);
 			Context->PSSetShaderResources(5, 1, &shaderResource);
 			Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::DecalAlbedo)], nullptr, 0);
 			Context->DrawIndexed(36, 0, 0);
 			CRenderManager::NumberOfDrawCallsThisFrame++;
 		}
 
-		if (command.ShouldRenderMaterial)
+		const auto shouldRenderMaterial = command.Flags[1];
+		if (shouldRenderMaterial)
 		{
-			auto shaderResource = textureBank->GetTexture(command.TextureReferences[1]);
+			auto shaderResource = textureBank->GetTexture(command.U16s[1]);
 			Context->PSSetShaderResources(6, 1, &shaderResource);
 			Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::DecalMaterial)], nullptr, 0);
 			Context->DrawIndexed(36, 0, 0);
 			CRenderManager::NumberOfDrawCallsThisFrame++;
 		}
 
-		if (command.ShouldRenderNormal)
+		const auto shouldRenderNormal = command.Flags[2];
+		if (shouldRenderNormal)
 		{
-			auto shaderResource = textureBank->GetTexture(command.TextureReferences[2]);
+			auto shaderResource = textureBank->GetTexture(command.U16s[2]);
 			Context->PSSetShaderResources(7, 1, &shaderResource);
 			Context->PSSetShader(PixelShaders[static_cast<U8>(EPixelShaders::DecalNormal)], nullptr, 0);
 			Context->DrawIndexed(36, 0, 0);
@@ -1610,20 +1618,21 @@ namespace Havtorn
 		ShadowAtlasDepth.SetAsResourceOnSlot(22);
 		SSAOBlurTexture.SetAsResourceOnSlot(23);
 
-		auto cubemapTexture = GEngine::GetTextureBank()->GetTexture(command.AmbientCubemapReference);
+		auto cubemapTexture = GEngine::GetTextureBank()->GetTexture(command.U16s[0]);
 		Context->PSSetShaderResources(0, 1, &cubemapTexture);
 
 		// Update lightbufferdata and fill lightbuffer
-		DirectionalLightBufferData.DirectionalLightDirection = command.Direction;
-		DirectionalLightBufferData.DirectionalLightColor = command.Color.AsVector4();
+		DirectionalLightBufferData.DirectionalLightDirection = command.Vectors[0];
+		DirectionalLightBufferData.DirectionalLightColor = command.Colors[0].AsVector4();
 		BindBuffer(DirectionalLightBuffer, DirectionalLightBufferData, "Light Buffer");
 		Context->PSSetConstantBuffers(2, 1, &DirectionalLightBuffer);
 
-		ShadowmapBufferData.ToShadowmapView = command.ShadowViewData.ShadowViewMatrix;
-		ShadowmapBufferData.ToShadowmapProjection = command.ShadowViewData.ShadowProjectionMatrix;
-		ShadowmapBufferData.ShadowmapPosition = command.ShadowViewData.ShadowPosition;
+		const auto& shadowViewData = command.ShadowmapViews[0];
+		ShadowmapBufferData.ToShadowmapView = shadowViewData.ShadowViewMatrix;
+		ShadowmapBufferData.ToShadowmapProjection = shadowViewData.ShadowProjectionMatrix;
+		ShadowmapBufferData.ShadowmapPosition = shadowViewData.ShadowPosition;
 
-		const auto& viewport = Viewports[command.ShadowViewData.ShadowmapViewportIndex];
+		const auto& viewport = Viewports[shadowViewData.ShadowmapViewportIndex];
 		ShadowmapBufferData.ShadowmapResolution = { viewport.Width, viewport.Height };
 		ShadowmapBufferData.ShadowAtlasResolution = ShadowAtlasResolution;
 		ShadowmapBufferData.ShadowmapStartingUV = { viewport.TopLeftX / ShadowAtlasResolution.X, viewport.TopLeftY / ShadowAtlasResolution.Y };
@@ -1655,11 +1664,11 @@ namespace Havtorn
 		RenderStateManager.SetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
 
 		// Update lightbufferdata and fill lightbuffer
-		SVector position = command.ObjectMatrix.GetTranslation();
-		PointLightBufferData.ToWorldFromObject = command.ObjectMatrix;
-		PointLightBufferData.ColorAndIntensity = command.Color.AsVector4();
-		PointLightBufferData.ColorAndIntensity.W = command.Intensity;
-		PointLightBufferData.PositionAndRange = { position.X, position.Y, position.Z, command.Range };
+		PointLightBufferData.ToWorldFromObject = command.Matrices[0];
+		PointLightBufferData.ColorAndIntensity = command.Colors[0].AsVector4();
+		PointLightBufferData.ColorAndIntensity.W = command.F32s[0];
+		const SVector& position = command.Matrices[0].GetTranslation();
+		PointLightBufferData.PositionAndRange = { position.X, position.Y, position.Z, command.F32s[1] };
 		BindBuffer(PointLightBuffer, PointLightBufferData, "Point Light Buffer");
 		Context->VSSetConstantBuffers(3, 1, &PointLightBuffer);
 		Context->PSSetConstantBuffers(3, 1, &PointLightBuffer);
@@ -1700,33 +1709,33 @@ namespace Havtorn
 		RenderStateManager.SetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
 
 		// Update lightbufferdata and fill lightbuffer
-		SVector position = command.ObjectMatrix.GetTranslation();
-
-		PointLightBufferData.ToWorldFromObject = command.ObjectMatrix;
-		PointLightBufferData.ColorAndIntensity = command.Color.AsVector4();
-		PointLightBufferData.ColorAndIntensity.W = command.Intensity;
-		PointLightBufferData.PositionAndRange = { position.X, position.Y, position.Z, command.Range };
+		PointLightBufferData.ToWorldFromObject = command.Matrices[0];
+		PointLightBufferData.ColorAndIntensity = command.Colors[0].AsVector4();
+		PointLightBufferData.ColorAndIntensity.W = command.F32s[0];
+		const SVector position = command.Matrices[0].GetTranslation();
+		PointLightBufferData.PositionAndRange = { position.X, position.Y, position.Z, command.F32s[1] };
 
 		BindBuffer(PointLightBuffer, PointLightBufferData, "Spotlight Vertex Shader Buffer");
 		Context->VSSetConstantBuffers(3, 1, &PointLightBuffer);
 
 		SpotLightBufferData.ColorAndIntensity = PointLightBufferData.ColorAndIntensity;
 		SpotLightBufferData.PositionAndRange = PointLightBufferData.PositionAndRange;
-		SpotLightBufferData.Direction = command.Direction;
-		SpotLightBufferData.DirectionNormal1 = command.DirectionNormal1;
-		SpotLightBufferData.DirectionNormal2 = command.DirectionNormal2;
-		SpotLightBufferData.OuterAngle = command.OuterAngle;
-		SpotLightBufferData.InnerAngle = command.InnerAngle;
+		SpotLightBufferData.Direction = command.Vectors[0];
+		SpotLightBufferData.DirectionNormal1 = command.Vectors[1];
+		SpotLightBufferData.DirectionNormal2 = command.Vectors[2];
+		SpotLightBufferData.OuterAngle = command.F32s[2];
+		SpotLightBufferData.InnerAngle = command.F32s[3];
 
 		BindBuffer(SpotLightBuffer, SpotLightBufferData, "Spotlight Pixel Shader Buffer");
 		Context->PSSetConstantBuffers(3, 1, &SpotLightBuffer);
 
+		const auto& shadowViewData = command.ShadowmapViews[0];
 		SShadowmapBufferData shadowmapBufferData;
-		shadowmapBufferData.ToShadowmapView = command.ShadowViewData.ShadowViewMatrix;
-		shadowmapBufferData.ToShadowmapProjection = command.ShadowViewData.ShadowProjectionMatrix;
-		shadowmapBufferData.ShadowmapPosition = command.ShadowViewData.ShadowPosition;
+		shadowmapBufferData.ToShadowmapView = shadowViewData.ShadowViewMatrix;
+		shadowmapBufferData.ToShadowmapProjection = shadowViewData.ShadowProjectionMatrix;
+		shadowmapBufferData.ShadowmapPosition = shadowViewData.ShadowPosition;
 
-		const auto& viewport = Viewports[command.ShadowViewData.ShadowmapViewportIndex];
+		const auto& viewport = Viewports[shadowViewData.ShadowmapViewportIndex];
 		shadowmapBufferData.ShadowmapResolution = { viewport.Width, viewport.Height };
 		shadowmapBufferData.ShadowAtlasResolution = ShadowAtlasResolution;
 		shadowmapBufferData.ShadowmapStartingUV = { viewport.TopLeftX / ShadowAtlasResolution.X, viewport.TopLeftY / ShadowAtlasResolution.Y };
@@ -1765,26 +1774,27 @@ namespace Havtorn
 		ShadowAtlasDepth.SetAsResourceOnSlot(22);
 
 		// Lightbuffer
-		DirectionalLightBufferData.DirectionalLightDirection = command.Direction;
-		DirectionalLightBufferData.DirectionalLightColor = command.Color.AsVector4();
+		DirectionalLightBufferData.DirectionalLightDirection = command.Vectors[0];
+		DirectionalLightBufferData.DirectionalLightColor = command.Colors[0].AsVector4();
 		BindBuffer(DirectionalLightBuffer, DirectionalLightBufferData, "Light Buffer");
 		Context->PSSetConstantBuffers(1, 1, &DirectionalLightBuffer);
 
 		// Volumetric buffer
-		VolumetricLightBufferData.NumberOfSamplesReciprocal = (1.0f / command.NumberOfSamplesReciprocal);
-		VolumetricLightBufferData.LightPower = command.LightPower;
-		VolumetricLightBufferData.ScatteringProbability = command.ScatteringProbability;
-		VolumetricLightBufferData.HenyeyGreensteinGValue = command.HenyeyGreensteinGValue;
+		VolumetricLightBufferData.NumberOfSamplesReciprocal = (1.0f / command.F32s[0]);
+		VolumetricLightBufferData.LightPower = command.F32s[1];
+		VolumetricLightBufferData.ScatteringProbability = command.F32s[2];
+		VolumetricLightBufferData.HenyeyGreensteinGValue = command.F32s[3];
 
 		BindBuffer(VolumetricLightBuffer, VolumetricLightBufferData, "Volumetric Light Buffer");
 		Context->PSSetConstantBuffers(4, 1, &VolumetricLightBuffer);
 
 		// Shadowbuffer
-		ShadowmapBufferData.ToShadowmapView = command.ShadowViewData.ShadowViewMatrix;
-		ShadowmapBufferData.ToShadowmapProjection = command.ShadowViewData.ShadowProjectionMatrix;
-		ShadowmapBufferData.ShadowmapPosition = command.ShadowViewData.ShadowPosition;
+		const auto& shadowViewData = command.ShadowmapViews[0];
+		ShadowmapBufferData.ToShadowmapView = shadowViewData.ShadowViewMatrix;
+		ShadowmapBufferData.ToShadowmapProjection = shadowViewData.ShadowProjectionMatrix;
+		ShadowmapBufferData.ShadowmapPosition = shadowViewData.ShadowPosition;
 
-		const auto& viewport = Viewports[command.ShadowViewData.ShadowmapViewportIndex];
+		const auto& viewport = Viewports[shadowViewData.ShadowmapViewportIndex];
 		ShadowmapBufferData.ShadowmapResolution = { viewport.Width, viewport.Height };
 		ShadowmapBufferData.ShadowAtlasResolution = ShadowAtlasResolution;
 		ShadowmapBufferData.ShadowmapStartingUV = { viewport.TopLeftX / ShadowAtlasResolution.X, viewport.TopLeftY / ShadowAtlasResolution.Y };
@@ -1816,20 +1826,20 @@ namespace Havtorn
 		ShadowAtlasDepth.SetAsResourceOnSlot(22);
 
 		// Light Buffer
-		SVector position = command.ObjectMatrix.GetTranslation();
-		PointLightBufferData.ToWorldFromObject = command.ObjectMatrix;
-		PointLightBufferData.ColorAndIntensity = command.Color.AsVector4();
-		PointLightBufferData.ColorAndIntensity.W = command.Intensity;
-		PointLightBufferData.PositionAndRange = { position.X, position.Y, position.Z, command.Range };
+		PointLightBufferData.ToWorldFromObject = command.Matrices[0];
+		PointLightBufferData.ColorAndIntensity = command.Colors[0].AsVector4();
+		PointLightBufferData.ColorAndIntensity.W = command.F32s[0];
+		const SVector& position = command.Matrices[0].GetTranslation();
+		PointLightBufferData.PositionAndRange = { position.X, position.Y, position.Z, command.F32s[1] };
 		BindBuffer(PointLightBuffer, PointLightBufferData, "Point Light Buffer");
 		Context->VSSetConstantBuffers(3, 1, &PointLightBuffer);
 		Context->PSSetConstantBuffers(3, 1, &PointLightBuffer);
 
 		// Volumetric buffer
-		VolumetricLightBufferData.NumberOfSamplesReciprocal = (1.0f / command.NumberOfSamplesReciprocal);
-		VolumetricLightBufferData.LightPower = command.LightPower;
-		VolumetricLightBufferData.ScatteringProbability = command.ScatteringProbability;
-		VolumetricLightBufferData.HenyeyGreensteinGValue = command.HenyeyGreensteinGValue;
+		VolumetricLightBufferData.NumberOfSamplesReciprocal = (1.0f / command.F32s[2]);
+		VolumetricLightBufferData.LightPower = command.F32s[3];
+		VolumetricLightBufferData.ScatteringProbability = command.F32s[4];
+		VolumetricLightBufferData.HenyeyGreensteinGValue = command.F32s[5];
 
 		BindBuffer(VolumetricLightBuffer, VolumetricLightBufferData, "Volumetric Light Buffer");
 		Context->PSSetConstantBuffers(4, 1, &VolumetricLightBuffer);
@@ -1876,42 +1886,43 @@ namespace Havtorn
 		ShadowAtlasDepth.SetAsResourceOnSlot(22);
 
 		// Light Buffer
-		SVector position = command.ObjectMatrix.GetTranslation();
-		PointLightBufferData.ToWorldFromObject = command.ObjectMatrix;
-		PointLightBufferData.ColorAndIntensity = command.Color.AsVector4();
-		PointLightBufferData.ColorAndIntensity.W = command.Intensity;
-		PointLightBufferData.PositionAndRange = { position.X, position.Y, position.Z, command.Range };
+		SVector position = command.Matrices[0].GetTranslation();
+		PointLightBufferData.ToWorldFromObject = command.Matrices[0];
+		PointLightBufferData.ColorAndIntensity = command.Colors[0].AsVector4();
+		PointLightBufferData.ColorAndIntensity.W = command.F32s[0];
+		PointLightBufferData.PositionAndRange = { position.X, position.Y, position.Z, command.F32s[1] };
 
 		BindBuffer(PointLightBuffer, PointLightBufferData, "Spotlight Vertex Shader Buffer");
 		Context->VSSetConstantBuffers(3, 1, &PointLightBuffer);
 
 		SpotLightBufferData.ColorAndIntensity = PointLightBufferData.ColorAndIntensity;
 		SpotLightBufferData.PositionAndRange = PointLightBufferData.PositionAndRange;
-		SpotLightBufferData.Direction = command.Direction;
-		SpotLightBufferData.DirectionNormal1 = command.DirectionNormal1;
-		SpotLightBufferData.DirectionNormal2 = command.DirectionNormal2;
-		SpotLightBufferData.OuterAngle = command.OuterAngle;
-		SpotLightBufferData.InnerAngle = command.InnerAngle;
+		SpotLightBufferData.Direction = command.Vectors[0];
+		SpotLightBufferData.DirectionNormal1 = command.Vectors[1];
+		SpotLightBufferData.DirectionNormal2 = command.Vectors[2];
+		SpotLightBufferData.OuterAngle = command.F32s[2];
+		SpotLightBufferData.InnerAngle = command.F32s[3];
 
 		BindBuffer(SpotLightBuffer, SpotLightBufferData, "Spotlight Pixel Shader Buffer");
 		Context->PSSetConstantBuffers(3, 1, &SpotLightBuffer);
 
 		// Volumetric buffer
-		VolumetricLightBufferData.NumberOfSamplesReciprocal = (1.0f / command.NumberOfSamplesReciprocal);
-		VolumetricLightBufferData.LightPower = command.LightPower;
-		VolumetricLightBufferData.ScatteringProbability = command.ScatteringProbability;
-		VolumetricLightBufferData.HenyeyGreensteinGValue = command.HenyeyGreensteinGValue;
+		VolumetricLightBufferData.NumberOfSamplesReciprocal = (1.0f / command.F32s[4]);
+		VolumetricLightBufferData.LightPower = command.F32s[5];
+		VolumetricLightBufferData.ScatteringProbability = command.F32s[6];
+		VolumetricLightBufferData.HenyeyGreensteinGValue = command.F32s[7];
 
 		BindBuffer(VolumetricLightBuffer, VolumetricLightBufferData, "Volumetric Light Buffer");
 		Context->PSSetConstantBuffers(4, 1, &VolumetricLightBuffer);
 
 		// Shadow Buffer
+		const auto& shadowViewData = command.ShadowmapViews[0];
 		SShadowmapBufferData shadowmapBufferData;
-		shadowmapBufferData.ToShadowmapView =command.ShadowViewData.ShadowViewMatrix;
-		shadowmapBufferData.ToShadowmapProjection = command.ShadowViewData.ShadowProjectionMatrix;
-		shadowmapBufferData.ShadowmapPosition = command.ShadowViewData.ShadowPosition;
+		shadowmapBufferData.ToShadowmapView = shadowViewData.ShadowViewMatrix;
+		shadowmapBufferData.ToShadowmapProjection = shadowViewData.ShadowProjectionMatrix;
+		shadowmapBufferData.ShadowmapPosition = shadowViewData.ShadowPosition;
 
-		const auto& viewport = Viewports[command.ShadowViewData.ShadowmapViewportIndex];
+		const auto& viewport = Viewports[shadowViewData.ShadowmapViewportIndex];
 		shadowmapBufferData.ShadowmapResolution = { viewport.Width, viewport.Height };
 		shadowmapBufferData.ShadowAtlasResolution = ShadowAtlasResolution;
 		shadowmapBufferData.ShadowmapStartingUV = { viewport.TopLeftX / ShadowAtlasResolution.X, viewport.TopLeftY / ShadowAtlasResolution.Y };
@@ -1997,13 +2008,14 @@ namespace Havtorn
 	{
 		RenderStateManager.SetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
 
-		const std::vector<SMatrix>& matrices = RendererSpriteInstanceScreenSpaceTransforms[command.TextureIndex];
+		const auto textureIndex = command.U32s[0];
+		const std::vector<SMatrix>& matrices = RendererSpriteInstanceScreenSpaceTransforms[textureIndex];
 		BindBuffer(InstancedTransformBuffer, matrices, "Instanced Transform Buffer");
 
-		const std::vector<SVector4>& uvRects = RendererSpriteInstanceUVRects[command.TextureIndex];
+		const std::vector<SVector4>& uvRects = RendererSpriteInstanceUVRects[textureIndex];
 		BindBuffer(InstancedUVRectBuffer, uvRects, "Instanced UV Rect Buffer");
 
-		const std::vector<SVector4>& colors = RendererSpriteInstanceColors[command.TextureIndex];
+		const std::vector<SVector4>& colors = RendererSpriteInstanceColors[textureIndex];
 		BindBuffer(InstancedColorBuffer, colors, "Instanced Color Buffer");
 
 		Context->IASetPrimitiveTopology(Topologies[static_cast<U8>(ETopologies::PointList)]);
@@ -2016,7 +2028,7 @@ namespace Havtorn
 		ID3D11SamplerState* sampler = Samplers[static_cast<U8>(ESamplers::DefaultWrap)];
 		Context->PSSetSamplers(0, 1, &sampler);
 
-		ID3D11ShaderResourceView* spriteTexture = GEngine::GetTextureBank()->GetTexture(command.TextureIndex);
+		ID3D11ShaderResourceView* spriteTexture = GEngine::GetTextureBank()->GetTexture(textureIndex);
 		Context->PSSetShaderResources(0, 1, &spriteTexture);
 
 		ID3D11Buffer* bufferPointers[3] = { InstancedTransformBuffer, InstancedUVRectBuffer, InstancedColorBuffer };
