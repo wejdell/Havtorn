@@ -1,4 +1,5 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
+
 #pragma once
 
 #include "Core/Core.h"
@@ -88,6 +89,26 @@ namespace Havtorn
             Characters = std::move(other.Characters);
             Size = static_cast<U8>(other.Size);
             return *this;
+        }
+
+        CHavtornStaticString& operator=(const char* cString)
+        {
+            Characters = std::move(cString);
+            Size = static_cast<U8>(strlen(cString));
+        }
+
+        bool operator==(const CHavtornStaticString& other) const
+        {
+            if (Size != other.Size)
+                return false;
+
+            for (U8 index = 0; index < Size; index++)
+            {
+                if (Characters[index] != other.Characters[index])
+                    return false;
+            }
+
+            return true;
         }
 
         inline const U32 Length() const { return Size; }

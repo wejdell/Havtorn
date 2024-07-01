@@ -15,6 +15,7 @@ namespace Havtorn
 	class CAudioManager;
 	class CFileSystem;
 	class CTextureBank;
+	class CSequencerSystem;
 
 	class GEngine
 	{
@@ -61,5 +62,8 @@ namespace Havtorn
 		GTime* Timer = nullptr;
 		CInputMapper* InputMapper = nullptr;
 		CWorld* World = nullptr;
+
+		// TODO.NR: Figure out how to set up dependencies for Editor systems on Engine ECS Systems
+		CSequencerSystem* SequencerSystem = nullptr;
 	};
 }

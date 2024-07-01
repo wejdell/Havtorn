@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "Core/HavtornString.h"
+
 #include <unordered_map>
 #include <tuple>
 
@@ -35,6 +37,7 @@ namespace Havtorn
 	struct SSpriteComponent;
 	struct STransform2DComponent;
 	struct SSpriteAnimatorGraphComponent;
+	struct SSequencerComponent;
 	struct SGhostyComponent;
 	struct SDebugShapeComponent;
 	struct SMetaDataComponent;
@@ -50,26 +53,30 @@ namespace Havtorn
 		CScene();
 		~CScene();
 
-		bool Init(CRenderManager* renderManager);
+		bool Init(CRenderManager* renderManager, const std::string& sceneName);
 
 		bool Init3DDemoScene(CRenderManager* renderManager);
 		bool Init2DDemoScene(CRenderManager* renderManager);
 
+		// TODO.NR: Rework serialization to decrease amount of boilerplate
 		[[nodiscard]] U32 GetSize() const;
 		void Serialize(char* toData, U64& pointerPosition) const;
 		void Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry);
+
+		HAVTORN_API std::string GetSceneName() const;
 
 		std::vector<SEntity>& GetEntities();
 		SEntity* GetNewEntity(U64 guid = 0);
 		SEntity* GetNewEntity(const std::string& nameInEditor, U64 guid = 0);
 		bool TryRemoveEntity(SEntity& entity);
 
-		__declspec(dllexport) U64 GetSceneIndex(const SEntity& entity) const;
-		__declspec(dllexport) U64 GetMainCameraIndex() const;
-		__declspec(dllexport) U64 GetNumberOfValidEntities() const;
+		HAVTORN_API U64 GetSceneIndex(const SEntity& entity) const;
+		HAVTORN_API U64 GetSceneIndex(const U64 entityGUID) const;
+		HAVTORN_API U64 GetMainCameraIndex() const;
+		HAVTORN_API U64 GetNumberOfValidEntities() const;
 
-		__declspec(dllexport) void AddComponentToEntity(EComponentType componentType, SEntity& entity);
-		__declspec(dllexport) void RemoveComponentFromEntity(EComponentType componentType, SEntity& entity);
+		HAVTORN_API void AddComponentToEntity(EComponentType componentType, SEntity& entity);
+		HAVTORN_API void RemoveComponentFromEntity(EComponentType componentType, SEntity& entity);
 
 		COMPONENT_VECTOR_GETTER(TransformComponent)
 		COMPONENT_VECTOR_GETTER(StaticMeshComponent)
@@ -85,6 +92,7 @@ namespace Havtorn
 		COMPONENT_VECTOR_GETTER(SpriteComponent)
 		COMPONENT_VECTOR_GETTER(Transform2DComponent)
 		COMPONENT_VECTOR_GETTER(SpriteAnimatorGraphComponent)
+		COMPONENT_VECTOR_GETTER(SequencerComponent)
 		COMPONENT_VECTOR_GETTER(GhostyComponent)
 		COMPONENT_VECTOR_GETTER(DebugShapeComponent)
 		COMPONENT_VECTOR_GETTER(MetaDataComponent)
@@ -103,6 +111,7 @@ namespace Havtorn
 		COMPONENT_ADDER_DECLARATION(SpriteComponent)
 		COMPONENT_ADDER_DECLARATION(Transform2DComponent)
 		COMPONENT_ADDER_DECLARATION(SpriteAnimatorGraphComponent)
+		COMPONENT_ADDER_DECLARATION(SequencerComponent)
 		COMPONENT_ADDER_DECLARATION(GhostyComponent)
 		COMPONENT_ADDER_DECLARATION(DebugShapeComponent)
 		COMPONENT_ADDER_DECLARATION(MetaDataComponent)
@@ -121,6 +130,7 @@ namespace Havtorn
 		COMPONENT_REMOVER_DECLARATION(SpriteComponent)
 		COMPONENT_REMOVER_DECLARATION(Transform2DComponent)
 		COMPONENT_REMOVER_DECLARATION(SpriteAnimatorGraphComponent)
+		COMPONENT_REMOVER_DECLARATION(SequencerComponent)
 		COMPONENT_REMOVER_DECLARATION(GhostyComponent)
 		COMPONENT_REMOVER_DECLARATION(DebugShapeComponent)
 		COMPONENT_REMOVER_DECLARATION(MetaDataComponent)
@@ -146,9 +156,13 @@ namespace Havtorn
 		COMPONENT_VECTOR_DECLARATION(SpriteComponent)
 		COMPONENT_VECTOR_DECLARATION(Transform2DComponent)
 		COMPONENT_VECTOR_DECLARATION(SpriteAnimatorGraphComponent)
+		COMPONENT_VECTOR_DECLARATION(SequencerComponent)
 		COMPONENT_VECTOR_DECLARATION(GhostyComponent)
 		COMPONENT_VECTOR_DECLARATION(DebugShapeComponent)
 		COMPONENT_VECTOR_DECLARATION(MetaDataComponent)
+		
+		CHavtornStaticString<255> SceneName = std::string("SceneName");
+		
 		U64 FirstUnusedEntityIndex = 0;
 		U64 MainCameraIndex = 0;
 

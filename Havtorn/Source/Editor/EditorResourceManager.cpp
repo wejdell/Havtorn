@@ -40,6 +40,10 @@ namespace Havtorn
 			break;
 		case Havtorn::EAssetType::VisualFX:
 			break;
+		case Havtorn::EAssetType::Scene:
+			break;
+		case Havtorn::EAssetType::Sequencer:
+			return std::move(GetEditorTexture(Havtorn::EEditorTexture::SequencerIcon));
 		case Havtorn::EAssetType::None:
 		default:
 			break;
@@ -208,6 +212,12 @@ namespace Havtorn
 
 		case Havtorn::EEditorTexture::StopIcon:
 			return ResourceAssetPath + "StopIcon" + extension;
+
+		case Havtorn::EEditorTexture::SceneIcon:
+			return ResourceAssetPath + "SceneIcon" + extension;
+
+		case Havtorn::EEditorTexture::SequencerIcon:
+			return ResourceAssetPath + "SequencerIcon" + extension;
 		
 		case Havtorn::EEditorTexture::Count:
 		default:

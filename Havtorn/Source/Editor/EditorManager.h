@@ -26,6 +26,7 @@ namespace Havtorn
 	class CRenderManager;
 	class CEditorResourceManager;
 	class CScene;
+	class CSequencerSystem;
 
 	enum class EEditorColorTheme
 	{
@@ -77,7 +78,7 @@ namespace Havtorn
 		__declspec(dllexport) CEditorManager();
 		__declspec(dllexport) ~CEditorManager();
 
-		bool __declspec(dllexport) Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager);
+		bool __declspec(dllexport) Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager, CSequencerSystem* sequencerSystem);
 		void __declspec(dllexport) BeginFrame();
 		void __declspec(dllexport) Render();
 		void __declspec(dllexport) EndFrame();
@@ -140,8 +141,9 @@ namespace Havtorn
 		// TODO.NR: Should be a weak ptr
 		SEntity* SelectedEntity = nullptr;
 
-		std::vector<Ptr<ImGui::CWindow>> Windows = {};
-		std::vector<Ptr<ImGui::CToggleable>> MenuElements = {};
+		// TODO.NR: Figure out why we can't use unique ptrs with these namespaced imgui classes
+		std::vector<ImGui::CWindow*> Windows = {};
+		std::vector<ImGui::CToggleable*> MenuElements = {};
 		std::vector<Ptr<SEditorAssetRepresentation>> AssetRepresentations = {};
 
 		SEditorLayout EditorLayout;
@@ -158,12 +160,13 @@ namespace Havtorn
 	template<class TEditorWindowType>
 	inline TEditorWindowType* const CEditorManager::GetEditorWindow() const
 	{
+		// TODO.NR: Figure out why we can't use unique ptrs with these namespaced imgui classes
 		U64 targetHashCode = typeid(TEditorWindowType).hash_code();
 		for (U32 i = 0; i < Windows.size(); i++)
 		{
-			U64 hashCode = typeid(*Windows[i].get()).hash_code();
+			U64 hashCode = typeid(*(Windows[i])).hash_code();
 			if (hashCode == targetHashCode)
-				return static_cast<TEditorWindowType*>(Windows[i].get());
+				return static_cast<TEditorWindowType*>(Windows[i]);
 		}
 		return nullptr;
 	}

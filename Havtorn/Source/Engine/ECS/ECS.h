@@ -20,6 +20,7 @@ namespace Havtorn
 		SpriteComponent,
 		Transform2DComponent,
 		SpriteAnimatorGraphComponent,
+		SequencerComponent,
 		GhostyComponent,
 		DebugShapeComponent,
 		MetaDataComponent,
@@ -58,6 +59,8 @@ namespace Havtorn
 			return "Transform2DComponent";
 		case Havtorn::EComponentType::SpriteAnimatorGraphComponent:
 			return "SpriteAnimatorGraphComponent";
+		case Havtorn::EComponentType::SequencerComponent:
+			return "SequencerComponent";
 		case Havtorn::EComponentType::GhostyComponent:
 			return "GhostyComponent";
 

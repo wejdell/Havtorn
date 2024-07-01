@@ -8,6 +8,7 @@
 #include "MathTypes/Matrix.h"
 #include "MathTypes/Transform.h"
 #include "MathTypes/Curve.h"
+#include "Core/Serializable.h"
 
 namespace Havtorn
 {
@@ -23,6 +24,7 @@ namespace Havtorn
 		AudioOneShot,
 		AudioCollection,
 		VisualFX,
-		Scene
+		Scene,
+		Sequencer
 	};
 }

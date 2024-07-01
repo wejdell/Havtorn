@@ -1,5 +1,3 @@
-// Copyright 2022 Team Havtorn. All Rights Reserved.
-
 // Copyright 2023 Team Havtorn. All Rights Reserved
 
 #pragma once
@@ -11,7 +9,7 @@ namespace Havtorn
 	{
 		SVector Input;
 		F32 MoveSpeed = 3.145f;
-		bool IsInWalkingAnimationState;
+		bool IsInWalkingAnimationState = false;
 	};
 
 	struct SGhostyComponent : SComponent

@@ -11,6 +11,7 @@ namespace Havtorn
 	class CScene;
 	class CRenderManager;
 	class CAssetRegistry;
+	class CSequencerSystem;
 
 	class CWorld
 	{
@@ -30,6 +31,7 @@ namespace Havtorn
 		template<class TSystem>
 		inline TSystem* GetSystem();
 
+		CSequencerSystem* GetSequencerSystem();
 	private:
 		CWorld() = default;
 		~CWorld() = default;

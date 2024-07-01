@@ -17,7 +17,7 @@ namespace Havtorn
 #define SMATRIX_MIN_SCALE 0.001f
 
 	// Left-handed row-major
-	struct SMatrix 
+	struct HAVTORN_API SMatrix 
 	{	
 		union { __declspec(align(16)) F32 M[4][4]; F32 data[16];  };
 
@@ -49,14 +49,17 @@ namespace Havtorn
 		inline SMatrix Inverse() const;
 
 		static inline void Decompose(const SMatrix& matrix, SVector& translation, SVector& euler, SVector& scale);
+		static inline void Decompose(const SMatrix& matrix, SVector& translation, SQuaternion& rotation, SVector& scale);
 		static inline void Decompose(const SMatrix& matrix, F32* translationData,  F32* eulerData,  F32* scaleData);
 		static inline void Recompose(const SVector& translation, const SVector& euler, const SVector& scale, SMatrix& outMatrix);
+		static inline void Recompose(const SVector& translation, const SQuaternion& rotation, const SVector& scale, SMatrix& outMatrix);
 		static inline void Recompose(const F32* translationData, const F32* eulerData, const F32* scaleData, SMatrix& outMatrix);
 		
 		inline SMatrix GetRHViewMatrix() const;
 		inline SMatrix GetRHProjectionMatrix() const;
 
 		inline SMatrix GetRotationMatrix() const;
+		// Resulting Euler angles in degrees
 		inline SVector GetEuler() const;
 		inline void SetRotation(const SMatrix& matrix);
 		inline void SetRotation(const SVector& eulerAngles);
@@ -114,6 +117,11 @@ namespace Havtorn
 		static SMatrix LookToLH(const SVector& eyePosition, const SVector& eyeDirection, const SVector& upDirection);
 		// Modified version of LookAtLH for use with non-view transforms.
 		static SMatrix Face(const SVector& position, const SVector& direction, const SVector& upDirection);
+
+		// Uses Lerp for translation and scale, and Quaternion Slerp for rotation
+		static SMatrix Interpolate(const SMatrix& a, const SMatrix& b, F32 t);
+
+		std::string ToString() const;
 	};
 
 	SMatrix::SMatrix()
@@ -236,6 +244,7 @@ namespace Havtorn
 		rotationMatrix.SetTranslation(SVector::Zero);
 		return rotationMatrix;
 	}
+
 	inline SVector SMatrix::GetEuler() const
 	{		
 		SMatrix rotationMatrix = *this;
@@ -847,6 +856,17 @@ namespace Havtorn
 	inline SMatrix SMatrix::Face(const SVector& position, const SVector& direction, const SVector& upDirection) 
 	{
 		return Transpose(LookToLH(position, direction, upDirection));
+	}
+
+	inline std::string SMatrix::ToString() const
+	{
+		SVector translation;
+		SVector rotation;
+		SVector scale;
+		SMatrix::Decompose(*this, translation, rotation, scale);
+		char buffer[256];
+		sprintf_s(buffer, "\nMatrix \n{\nTranslation{X: %.1f, Y: %.1f, Z: %.1f},\nRotationEuler{Pitch: %.1f, Yaw: %.1f, Roll: %.1f},\nScale{X: %.1f, Y: %.1f, Z: %.1f}\n}", translation.X, translation.Y, translation.Z, rotation.X, rotation.Y, rotation.Z, scale.X, scale.Y, scale.Z);
+		return buffer;
 	}
 
 	inline SMatrix SMatrix::PerspectiveFovLH(F32 fovAngleY, F32 aspectRatio, F32 nearZ, F32 farZ)

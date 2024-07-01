@@ -25,7 +25,7 @@ namespace Havtorn
 		if (!engineInstance)
 			return false;
 	 
-		return EditorManager->Init(engineInstance->Framework, engineInstance->WindowHandler, engineInstance->RenderManager);
+		return EditorManager->Init(engineInstance->Framework, engineInstance->WindowHandler, engineInstance->RenderManager, engineInstance->SequencerSystem);
 	}
 
 	void CEditorProcess::BeginFrame()

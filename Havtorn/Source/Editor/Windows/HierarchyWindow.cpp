@@ -47,6 +47,8 @@ namespace ImGui
 				return;
 			}
 
+			ImGui::Text(scene->GetSceneName().c_str());
+
 			Havtorn::I32 index = 0;
 			auto& entities = Havtorn::GEngine::GetWorld()->GetEntities();
 			

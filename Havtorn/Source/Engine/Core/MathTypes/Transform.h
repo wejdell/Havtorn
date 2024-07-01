@@ -14,6 +14,8 @@ namespace Havtorn
 		[[nodiscard]] const SMatrix& GetMatrix() const;
 		void SetMatrix(const SMatrix& matrix);
 
+		// TODO.NR: Make all use of EulerAngles expect degrees, convert to radians internally, never force radians
+
 		inline void Rotate(const SMatrix& rotationMatrix);
 		inline void Rotate(const SVector& eulerAngles);
 		inline void Translate(const SVector& v);
