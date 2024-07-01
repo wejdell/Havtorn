@@ -25,6 +25,7 @@
 
 #include "EditorResourceManager.h"
 #include "EditorWindows.h"
+#include "EditorToggleable.h"
 #include "EditorToggleables.h"
 
 #include <Application/ImGuiCrossProjectSetup.h>
@@ -45,25 +46,27 @@ namespace Havtorn
 		SAFE_DELETE(ResourceManager);
 	}
 
-	bool CEditorManager::Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager)
+	bool CEditorManager::Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager, CSequencerSystem* sequencerSystem)
 	{
 		CROSS_PROJECT_IMGUI_SETUP();
 		windowHandler->EnableDragDrop();
 
 		SetEditorTheme(EEditorColorTheme::HavtornDark, EEditorStyleTheme::Havtorn);
 
-		MenuElements.emplace_back(std::make_unique<ImGui::CFileMenu>("File", this));
-		MenuElements.emplace_back(std::make_unique<ImGui::CEditMenu>("Edit", this));
-		MenuElements.emplace_back(std::make_unique<ImGui::CViewMenu>("View", this));
-		MenuElements.emplace_back(std::make_unique<ImGui::CWindowMenu>("Window", this));
-		MenuElements.emplace_back(std::make_unique<ImGui::CHelpMenu>("Help", this));
+		// TODO.NR: Figure out why we can't use unique ptrs with these namespaced imgui classes
+		MenuElements.emplace_back(new ImGui::CFileMenu("File", this));
+		MenuElements.emplace_back(new ImGui::CEditMenu("Edit", this));
+		MenuElements.emplace_back(new ImGui::CViewMenu("View", this));
+		MenuElements.emplace_back(new ImGui::CWindowMenu("Window", this));
+		MenuElements.emplace_back(new ImGui::CHelpMenu("Help", this));
 
-		Windows.emplace_back(std::make_unique<ImGui::CViewportWindow>("Viewport", this));
-		Windows.emplace_back(std::make_unique<ImGui::CAssetBrowserWindow>("Asset Browser", this));
-		Windows.emplace_back(std::make_unique<ImGui::CHierarchyWindow>("Hierarchy", this));
-		Windows.emplace_back(std::make_unique<ImGui::CInspectorWindow>("Inspector", this));
-		Windows.emplace_back(std::make_unique<ImGui::CSequencerWindow>("Sequencer", this));
-		Windows.emplace_back(std::make_unique<ImGui::CSpriteAnimatorGraphNodeWindow>("Sprite Animator", this));
+		Windows.emplace_back(new ImGui::CViewportWindow("Viewport", this));
+		Windows.emplace_back(new ImGui::CAssetBrowserWindow("Asset Browser", this));
+		Windows.emplace_back(new ImGui::CHierarchyWindow("Hierarchy", this));
+		Windows.emplace_back(new ImGui::CInspectorWindow("Inspector", this));
+		Windows.emplace_back(new ImGui::CSpriteAnimatorGraphNodeWindow("Sprite Animator", this));
+		Windows.emplace_back(new ImGui::CSequencerWindow("Sequencer", this, sequencerSystem));
+		Windows.back()->SetEnabled(false);
 
 		ResourceManager = new CEditorResourceManager();
 		bool success = ResourceManager->Init(renderManager, framework);
