@@ -15,17 +15,17 @@ namespace Havtorn
 
     void Havtorn::SSequencerKeyframe::Serialize(char* toData, U64& pointerPosition) const
     {
-        SerializeSimple(FrameNumber, toData, pointerPosition);
-        SerializeSimple(ShouldBlendLeft, toData, pointerPosition);
-        SerializeSimple(ShouldBlendRight, toData, pointerPosition);
-        SerializeSimple(ShouldRecord, toData, pointerPosition);
+        SerializeData(FrameNumber, toData, pointerPosition);
+        SerializeData(ShouldBlendLeft, toData, pointerPosition);
+        SerializeData(ShouldBlendRight, toData, pointerPosition);
+        SerializeData(ShouldRecord, toData, pointerPosition);
     }
 
     void Havtorn::SSequencerKeyframe::Deserialize(const char* fromData, U64& pointerPosition)
     {
-        DeserializeSimple(FrameNumber, fromData, pointerPosition);
-        DeserializeSimple(ShouldBlendLeft, fromData, pointerPosition);
-        DeserializeSimple(ShouldBlendRight, fromData, pointerPosition);
-        DeserializeSimple(ShouldRecord, fromData, pointerPosition);
+        DeserializeData(FrameNumber, fromData, pointerPosition);
+        DeserializeData(ShouldBlendLeft, fromData, pointerPosition);
+        DeserializeData(ShouldBlendRight, fromData, pointerPosition);
+        DeserializeData(ShouldRecord, fromData, pointerPosition);
     }
 }

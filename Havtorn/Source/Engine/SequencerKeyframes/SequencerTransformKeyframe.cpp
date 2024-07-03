@@ -39,14 +39,14 @@ namespace Havtorn
 	void SSequencerTransformKeyframe::Serialize(char* toData, U64& pointerPosition) const
 	{
 		SSequencerKeyframe::Serialize(toData, pointerPosition);
-		SerializeSimple(KeyframedMatrix, toData, pointerPosition);
-		SerializeSimple(IntermediateMatrix, toData, pointerPosition);
+		SerializeData(KeyframedMatrix, toData, pointerPosition);
+		SerializeData(IntermediateMatrix, toData, pointerPosition);
 	}
 
 	void SSequencerTransformKeyframe::Deserialize(const char* fromData, U64& pointerPosition)
 	{
 		SSequencerKeyframe::Deserialize(fromData, pointerPosition);
-		DeserializeSimple(KeyframedMatrix, fromData, pointerPosition);
-		DeserializeSimple(IntermediateMatrix, fromData, pointerPosition);
+		DeserializeData(KeyframedMatrix, fromData, pointerPosition);
+		DeserializeData(IntermediateMatrix, fromData, pointerPosition);
 	}
 }

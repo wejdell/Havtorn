@@ -13,7 +13,7 @@ namespace Havtorn
 	};
 
 	template<typename T>
-	void SerializeSimple(const T& source, char* destination, U64& pointerPosition)
+	void SerializeData(const T& source, char* destination, U64& pointerPosition)
 	{
 		const U32 size = sizeof(T);
 		memcpy(&destination[pointerPosition], &source, size);
@@ -21,29 +21,23 @@ namespace Havtorn
 	}
 
 	template<typename T>
-	void SerializeVector(const std::vector<T>& source, char* destination, U64& pointerPosition)
+	inline void SerializeData(const std::vector<T>& source, char* destination, U64& pointerPosition)
 	{
 		const U32 size = sizeof(T) * static_cast<U32>(source.size());
 		memcpy(&destination[pointerPosition], source.data(), size);
 		pointerPosition += size;
 	}
 
-	inline void SerializeString(const std::string& source, char* destination, U64& pointerPosition)
+	template<>
+	inline void SerializeData(const std::string& source, char* destination, U64& pointerPosition)
 	{
 		const U32 size = sizeof(char) * static_cast<U32>(source.length());
 		memcpy(&destination[pointerPosition], source.data(), size);
 		pointerPosition += size;
 	}
 
-	inline void SerializeString(const std::string& source, char* destination, U32 numberOfElements, U64& pointerPosition)
-	{
-		const U32 size = sizeof(char) * numberOfElements;
-		memcpy(&destination[pointerPosition], source.data(), size);
-		pointerPosition += size;
-	}
-
 	template<typename T>
-	void DeserializeSimple(T& destination, const char* source, U64& pointerPosition)
+	void DeserializeData(T& destination, const char* source, U64& pointerPosition)
 	{
 		const U32 size = sizeof(T);
 		memcpy(&destination, &source[pointerPosition], size);
@@ -51,7 +45,7 @@ namespace Havtorn
 	}
 
 	template<typename T>
-	void DeserializeVector(std::vector<T>& destination, const char* source, U32 numberOfElements, U64& pointerPosition)
+	inline void DeserializeData(std::vector<T>& destination, const char* source, U32 numberOfElements, U64& pointerPosition)
 	{
 		const U32 size = sizeof(T) * numberOfElements;
 		const auto intermediateVector = new T[numberOfElements];
@@ -61,7 +55,7 @@ namespace Havtorn
 		pointerPosition += size;
 	}
 
-	inline void DeserializeString(std::string& destination, const char* source, U32 numberOfElements, U64& pointerPosition)
+	inline void DeserializeData(std::string& destination, const char* source, U32 numberOfElements, U64& pointerPosition)
 	{
 		const U32 size = sizeof(char) * numberOfElements;
 		destination = std::string(&source[pointerPosition], size);

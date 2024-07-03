@@ -124,7 +124,7 @@ namespace Havtorn
             }
         }
 
-        SerializeSimple(entriesForScene, toData, pointerPosition);
+        SerializeData(entriesForScene, toData, pointerPosition);
 
         for (const auto& assetRef : Registry)
         {
@@ -133,10 +133,10 @@ namespace Havtorn
             {
                 if (counter.SceneIndex == sceneIndex)
                 {
-                    SerializeSimple(static_cast<U32>(assetRef.first.length()), toData, pointerPosition);
-                    SerializeString(assetRef.first, toData, pointerPosition);
+                    SerializeData(static_cast<U32>(assetRef.first.length()), toData, pointerPosition);
+                    SerializeData(assetRef.first, toData, pointerPosition);
 
-                    SerializeSimple(counter, toData, pointerPosition);
+                    SerializeData(counter, toData, pointerPosition);
                 }
             }
         }
@@ -145,17 +145,17 @@ namespace Havtorn
     void CAssetRegistry::Deserialize(I64 sceneIndex, const char* fromData, U64& pointerPosition)
     {
         U32 entriesForScene = 0;
-        DeserializeSimple(entriesForScene, fromData, pointerPosition);
+        DeserializeData(entriesForScene, fromData, pointerPosition);
 
         for (U32 i = 0; i < entriesForScene; i++)
         {
             U32 assetRefNameLength = 0;
-            DeserializeSimple(assetRefNameLength, fromData, pointerPosition);
+            DeserializeData(assetRefNameLength, fromData, pointerPosition);
             std::string assetRefName = "";
-            DeserializeString(assetRefName, fromData, assetRefNameLength, pointerPosition);
+            DeserializeData(assetRefName, fromData, assetRefNameLength, pointerPosition);
 
             SAssetReferenceCounter newCounter = {};
-            DeserializeSimple(newCounter, fromData, pointerPosition);
+            DeserializeData(newCounter, fromData, pointerPosition);
 
             newCounter.SceneIndex = static_cast<U8>(sceneIndex);
             Register(std::move(assetRefName), std::move(newCounter));

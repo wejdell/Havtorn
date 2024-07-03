@@ -32,12 +32,12 @@ namespace Havtorn
 	void Havtorn::SSequencerSpriteKeyframe::Serialize(char* toData, U64& pointerPosition) const
 	{
 		SSequencerKeyframe::Serialize(toData, pointerPosition);
-		SerializeSimple(UVRect, toData, pointerPosition);
+		SerializeData(UVRect, toData, pointerPosition);
 	}
 
 	void Havtorn::SSequencerSpriteKeyframe::Deserialize(const char* fromData, U64& pointerPosition)
 	{
 		SSequencerKeyframe::Deserialize(fromData, pointerPosition);
-		DeserializeSimple(UVRect, fromData, pointerPosition);
+		DeserializeData(UVRect, fromData, pointerPosition);
 	}
 }

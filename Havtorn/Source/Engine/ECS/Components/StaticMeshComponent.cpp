@@ -8,34 +8,34 @@ namespace Havtorn
 {
     void SStaticMeshComponent::Serialize(char* toData, U64& pointerPosition) const
     {
-        SerializeSimple(static_cast<U32>(DrawCallData.size()), toData, pointerPosition);
-        SerializeVector(DrawCallData, toData, pointerPosition);
-        // SerializeSimple(static_cast<U32>(Name.length()), toData, bufferPosition);
-        // SerializeString(Name, toData, bufferPosition);
-        SerializeSimple(Name, toData, pointerPosition);
-        SerializeSimple(NumberOfMaterials, toData, pointerPosition);
-        SerializeSimple(VertexShaderIndex, toData, pointerPosition);
-        SerializeSimple(InputLayoutIndex, toData, pointerPosition);
-        SerializeSimple(PixelShaderIndex, toData, pointerPosition);
-        SerializeSimple(SamplerIndex, toData, pointerPosition);
-        SerializeSimple(TopologyIndex, toData, pointerPosition);
+        SerializeData(static_cast<U32>(DrawCallData.size()), toData, pointerPosition);
+        SerializeData(DrawCallData, toData, pointerPosition);
+        // SerializeData(static_cast<U32>(Name.length()), toData, bufferPosition);
+        // SerializeData(Name, toData, bufferPosition);
+        SerializeData(Name, toData, pointerPosition);
+        SerializeData(NumberOfMaterials, toData, pointerPosition);
+        SerializeData(VertexShaderIndex, toData, pointerPosition);
+        SerializeData(InputLayoutIndex, toData, pointerPosition);
+        SerializeData(PixelShaderIndex, toData, pointerPosition);
+        SerializeData(SamplerIndex, toData, pointerPosition);
+        SerializeData(TopologyIndex, toData, pointerPosition);
     }
 
     void SStaticMeshComponent::Deserialize(const char* fromData, U64& pointerPosition)
     {
         U32 meshNumber = 0;
-        DeserializeSimple(meshNumber, fromData, pointerPosition);
-        DeserializeVector(DrawCallData, fromData, meshNumber, pointerPosition);
+        DeserializeData(meshNumber, fromData, pointerPosition);
+        DeserializeData(DrawCallData, fromData, meshNumber, pointerPosition);
         //U32 meshNameLength = 0;
-        //bufferPosition += DeserializeSimple(meshNameLength, fromData, bufferPosition);
-        //bufferPosition += DeserializeString(Name, fromData, meshNameLength, bufferPosition);
-        DeserializeSimple(Name, fromData, pointerPosition);
-        DeserializeSimple(NumberOfMaterials, fromData, pointerPosition);
-        DeserializeSimple(VertexShaderIndex, fromData, pointerPosition);
-        DeserializeSimple(InputLayoutIndex, fromData, pointerPosition);
-        DeserializeSimple(PixelShaderIndex, fromData, pointerPosition);
-        DeserializeSimple(SamplerIndex, fromData, pointerPosition);
-        DeserializeSimple(TopologyIndex, fromData, pointerPosition);
+        //bufferPosition += DeserializeData(meshNameLength, fromData, bufferPosition);
+        //bufferPosition += DeserializeData(Name, fromData, meshNameLength, bufferPosition);
+        DeserializeData(Name, fromData, pointerPosition);
+        DeserializeData(NumberOfMaterials, fromData, pointerPosition);
+        DeserializeData(VertexShaderIndex, fromData, pointerPosition);
+        DeserializeData(InputLayoutIndex, fromData, pointerPosition);
+        DeserializeData(PixelShaderIndex, fromData, pointerPosition);
+        DeserializeData(SamplerIndex, fromData, pointerPosition);
+        DeserializeData(TopologyIndex, fromData, pointerPosition);
     }
 
     U32 SStaticMeshComponent::GetSize() const
