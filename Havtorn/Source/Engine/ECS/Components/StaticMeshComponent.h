@@ -18,7 +18,11 @@ namespace Havtorn
 		[[nodiscard]] U32 GetSize() const;
 
 		// Asset Data
+		// A.G: Could potentially use an index/id to a map within the RenderManager for 'DrawCallData' instead?
 		std::vector<SDrawCallData> DrawCallData;
+		// A.G: Could potentially use an index/id to a map within the RenderManager for 'Name' instead?
+		// Are DrawCallData & Name ever used outside of the RenderManager?
+		// The map could be owned by some other static object/registry. I think it could reduce the size of components.
 		CHavtornStaticString<255> Name;
 		U8 NumberOfMaterials = 0;
 

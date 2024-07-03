@@ -31,6 +31,8 @@ namespace Havtorn
 		inline SColor(U8 monochrome);
 		inline SColor(U8 r, U8 g, U8 b);
 		inline SColor(U8 r, U8 g, U8 b, U8 a);
+		// Expects float values to be [0.0f - 1.0f] range.
+		inline SColor(const float r, const float g, const float b, const float a);
 		// Expects SVector values to be [0.0f - 1.0f] range.
 		inline SColor(const SVector& rgb);
 		// Expects SVector4 values to be [0.0f - 1.0f] range.
@@ -69,6 +71,13 @@ namespace Havtorn
 		, G(g)
 		, B(b)
 		, A(a)
+	{}
+
+	inline SColor::SColor(const float r, const float g, const float b, const float a)
+		: R(ToU8Range(r))
+		, G(ToU8Range(g))
+		, B(ToU8Range(b))
+		, A(ToU8Range(a))
 	{}
 
 	SColor::SColor(const SVector& rgb)
