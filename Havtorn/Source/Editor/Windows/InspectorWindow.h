@@ -24,9 +24,9 @@ namespace ImGui
 		void OnInspectorGUI() override;
 		void OnDisable() override;
 	
-	private:
-		void TryInspectComponent(const Havtorn::SEntity* selectedEntity, Havtorn::EComponentType componentType);
+		void TryInspectComponent(Havtorn::EComponentType componentType);
 
+	private:
 		void InspectTransformComponent();
 		void InspectStaticMeshComponent();
 		void InspectCameraComponent();

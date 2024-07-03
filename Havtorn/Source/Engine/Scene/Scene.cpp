@@ -450,8 +450,8 @@ namespace Havtorn
 		AddCameraControllerComponentToEntity(*cameraEntity);
 		//controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
 		// 
-		SSequencerComponent& cameraSequencerComponent = AddSequencerComponentToEntity(*cameraEntity);
-		cameraSequencerComponent.ComponentTracks.push_back({ EComponentType::TransformComponent });
+		//SSequencerComponent& cameraSequencerComponent = AddSequencerComponentToEntity(*cameraEntity);
+		//cameraSequencerComponent.ComponentTracks.push_back({ EComponentType::TransformComponent });
 		// === !Camera ===
 
 		// === Environment light ===
@@ -511,9 +511,9 @@ namespace Havtorn
 		spotlightComp.ShadowmapView.ShadowViewMatrix = SMatrix::LookAtLH(spotlightPosition.ToVector3(), (spotlightPosition + spotlightComp.Direction).ToVector3(), spotlightComp.DirectionNormal2.ToVector3());
 		spotlightComp.ShadowmapView.ShadowProjectionMatrix = spotlightProjection;
 
-		SSequencerComponent& spotlightSequencerComponent = AddSequencerComponentToEntity(*spotlight);
-		spotlightSequencerComponent.ComponentTracks.push_back({ EComponentType::SpotLightComponent });
-		spotlightSequencerComponent.ComponentTracks.push_back({ EComponentType::DecalComponent });
+		//SSequencerComponent& spotlightSequencerComponent = AddSequencerComponentToEntity(*spotlight);
+		//spotlightSequencerComponent.ComponentTracks.push_back({ EComponentType::SpotLightComponent });
+		//spotlightSequencerComponent.ComponentTracks.push_back({ EComponentType::DecalComponent });
 		// === !Spotlight ===
 
 		{
@@ -595,11 +595,11 @@ namespace Havtorn
 			U16 spriteIndex = static_cast<U16>(GetSceneIndex(*ghosty));
 			assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
 
-			SSequencerComponent& sequencerComponent = AddSequencerComponentToEntity(*ghosty);
-			sequencerComponent.ComponentTracks.push_back({ EComponentType::TransformComponent });
-			sequencerComponent.ComponentTracks.push_back({ EComponentType::SpriteComponent });
-			sequencerComponent.ComponentTracks.push_back({ EComponentType::GhostyComponent });
-			sequencerComponent.ComponentTracks.push_back({ EComponentType::CameraComponent });
+			//SSequencerComponent& sequencerComponent = AddSequencerComponentToEntity(*ghosty);
+			//sequencerComponent.ComponentTracks.push_back({ EComponentType::TransformComponent });
+			//sequencerComponent.ComponentTracks.push_back({ EComponentType::SpriteComponent });
+			//sequencerComponent.ComponentTracks.push_back({ EComponentType::GhostyComponent });
+			//sequencerComponent.ComponentTracks.push_back({ EComponentType::CameraComponent });
 		}
 
 		//{
@@ -695,21 +695,21 @@ namespace Havtorn
 
 	void CScene::Serialize(char* toData, U64& pointerPosition) const
 	{
-		SerializeSimple(static_cast<U32>(GetNumberOfValidEntities()), toData, pointerPosition);
+		SerializeData(static_cast<U32>(GetNumberOfValidEntities()), toData, pointerPosition);
 
-		for (auto& entity : Entities)
+ 		for (auto& entity : Entities)
 		{
 			if (!entity.IsValid())
 				continue;
 
-			SerializeSimple(entity.GUID, toData, pointerPosition);
+			SerializeData(entity.GUID, toData, pointerPosition);
 
-			SerializeSimple(entity.GetComponentMask(), toData, pointerPosition);
+			SerializeData(entity.GetComponentMask(), toData, pointerPosition);
 			U64 entitySceneIndex = GetSceneIndex(entity);
 
 			if (entity.HasComponent(EComponentType::TransformComponent))
 			{
-				SerializeSimple(TransformComponents[entitySceneIndex], toData, pointerPosition);
+				SerializeData(TransformComponents[entitySceneIndex], toData, pointerPosition);
 			}
 
 			if (entity.HasComponent(EComponentType::StaticMeshComponent))
@@ -719,12 +719,12 @@ namespace Havtorn
 
 			if (entity.HasComponent(EComponentType::CameraComponent))
 			{
-				SerializeSimple(CameraComponents[entitySceneIndex], toData, pointerPosition);
+				SerializeData(CameraComponents[entitySceneIndex], toData, pointerPosition);
 			}
 
 			if (entity.HasComponent(EComponentType::CameraControllerComponent))
 			{
-				SerializeSimple(CameraControllerComponents[entitySceneIndex], toData, pointerPosition);
+				SerializeData(CameraControllerComponents[entitySceneIndex], toData, pointerPosition);
 			}
 
 			if (entity.HasComponent(EComponentType::MaterialComponent))
@@ -739,22 +739,22 @@ namespace Havtorn
 
 			if (entity.HasComponent(EComponentType::DirectionalLightComponent))
 			{
-				SerializeSimple(DirectionalLightComponents[entitySceneIndex], toData, pointerPosition);
+				SerializeData(DirectionalLightComponents[entitySceneIndex], toData, pointerPosition);
 			}
 
 			if (entity.HasComponent(EComponentType::PointLightComponent))
 			{
-				SerializeSimple(PointLightComponents[entitySceneIndex], toData, pointerPosition);
+				SerializeData(PointLightComponents[entitySceneIndex], toData, pointerPosition);
 			}
 
 			if (entity.HasComponent(EComponentType::SpotLightComponent))
 			{
-				SerializeSimple(SpotLightComponents[entitySceneIndex], toData, pointerPosition);
+				SerializeData(SpotLightComponents[entitySceneIndex], toData, pointerPosition);
 			}
 
 			if (entity.HasComponent(EComponentType::VolumetricLightComponent))
 			{
-				SerializeSimple(VolumetricLightComponents[entitySceneIndex], toData, pointerPosition);
+				SerializeData(VolumetricLightComponents[entitySceneIndex], toData, pointerPosition);
 			}
 
 			if (entity.HasComponent(EComponentType::DecalComponent))
@@ -766,61 +766,61 @@ namespace Havtorn
 			if (entity.HasComponent(EComponentType::SpriteComponent))
 			{
 				// NR: Texture info Saved and Loaded using AssetRegistry
-				SerializeSimple(SpriteComponents[entitySceneIndex], toData, pointerPosition);
+				SerializeData(SpriteComponents[entitySceneIndex], toData, pointerPosition);
 			}
 
 			if (entity.HasComponent(EComponentType::Transform2DComponent))
 			{
-				SerializeSimple(Transform2DComponents[entitySceneIndex], toData, pointerPosition);
+				SerializeData(Transform2DComponents[entitySceneIndex], toData, pointerPosition);
 			}
 
 			if (entity.HasComponent(EComponentType::SpriteAnimatorGraphComponent))
 			{
 				// TODO.AS: Implement Serialize (since the component is not trivially serializable)
-				SerializeSimple(SpriteAnimatorGraphComponents[entitySceneIndex], toData, pointerPosition);
+				SerializeData(SpriteAnimatorGraphComponents[entitySceneIndex], toData, pointerPosition);
 			}
 
 			if (entity.HasComponent(EComponentType::SequencerComponent))
 			{
 				// TODO.NR: Implement Serialize (since the component is not trivially serializable)
-				SerializeSimple(SequencerComponents[entitySceneIndex], toData, pointerPosition);
+				SerializeData(SequencerComponents[entitySceneIndex], toData, pointerPosition);
 			}
 
 			if (entity.HasComponent(EComponentType::GhostyComponent))
 			{
-				SerializeSimple(GhostyComponents[entitySceneIndex], toData, pointerPosition);
+				SerializeData(GhostyComponents[entitySceneIndex], toData, pointerPosition);
 			}
 
 			if (entity.HasComponent(EComponentType::MetaDataComponent))
 			{
-				SerializeSimple(MetaDataComponents[entitySceneIndex], toData, pointerPosition);
+				SerializeData(MetaDataComponents[entitySceneIndex], toData, pointerPosition);
 			}
 		}
 
-		SerializeSimple(&SceneName, toData, pointerPosition);
+		SerializeData(SceneName, toData, pointerPosition);
 	}
 
 	void CScene::Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry)
 	{
 		U32 numberOfEntities = 0;
-		DeserializeSimple(numberOfEntities, fromData, pointerPosition);
+		DeserializeData(numberOfEntities, fromData, pointerPosition);
 
 		for (U32 i = 0; i < numberOfEntities; i++)
 		{
 			U64 guid = 0;
-			DeserializeSimple(guid, fromData, pointerPosition);
+			DeserializeData(guid, fromData, pointerPosition);
 
 			SEntity* entity = GetNewEntity(guid);
 
 			CBitSet<STATIC_U64(EComponentType::Count)> componentMask;
-			DeserializeSimple(componentMask, fromData, pointerPosition);
+			DeserializeData(componentMask, fromData, pointerPosition);
 
 			if (componentMask.Test(STATIC_U64(EComponentType::TransformComponent)))
 			{
 				STransformComponent& transform = AddTransformComponentToEntity(*entity);
 				// NR: Write to a copy then assign to avoid breaking vtable ptr
 				STransformComponent dataCopy;
-				DeserializeSimple(dataCopy, fromData, pointerPosition);
+				DeserializeData(dataCopy, fromData, pointerPosition);
 				transform = dataCopy;
 			}
 
@@ -835,7 +835,7 @@ namespace Havtorn
 			{
 				SCameraComponent& camera = AddCameraComponentToEntity(*entity);
 				SCameraComponent dataCopy;
-				DeserializeSimple(dataCopy, fromData, pointerPosition);
+				DeserializeData(dataCopy, fromData, pointerPosition);
 				camera = dataCopy;
 			}
 
@@ -843,7 +843,7 @@ namespace Havtorn
 			{
 				SCameraControllerComponent& controller = AddCameraControllerComponentToEntity(*entity);
 				SCameraControllerComponent dataCopy;
-				DeserializeSimple(dataCopy, fromData, pointerPosition);
+				DeserializeData(dataCopy, fromData, pointerPosition);
 				controller = dataCopy;
 			}
 
@@ -865,7 +865,7 @@ namespace Havtorn
 			{
 				SDirectionalLightComponent& directionalLight = AddDirectionalLightComponentToEntity(*entity);
 				SDirectionalLightComponent dataCopy;
-				DeserializeSimple(dataCopy, fromData, pointerPosition);
+				DeserializeData(dataCopy, fromData, pointerPosition);
 				directionalLight = dataCopy;
 			}
 
@@ -873,7 +873,7 @@ namespace Havtorn
 			{
 				SPointLightComponent& pointLight = AddPointLightComponentToEntity(*entity);
 				SPointLightComponent dataCopy;
-				DeserializeSimple(dataCopy, fromData, pointerPosition);
+				DeserializeData(dataCopy, fromData, pointerPosition);
 				pointLight = dataCopy;
 			}
 
@@ -881,7 +881,7 @@ namespace Havtorn
 			{
 				SSpotLightComponent& spotLight = AddSpotLightComponentToEntity(*entity);
 				SSpotLightComponent dataCopy;
-				DeserializeSimple(dataCopy, fromData, pointerPosition);
+				DeserializeData(dataCopy, fromData, pointerPosition);
 				spotLight = dataCopy;
 			}
 
@@ -889,7 +889,7 @@ namespace Havtorn
 			{
 				SVolumetricLightComponent& volumetric = AddVolumetricLightComponentToEntity(*entity);
 				SVolumetricLightComponent dataCopy;
-				DeserializeSimple(dataCopy, fromData, pointerPosition);
+				DeserializeData(dataCopy, fromData, pointerPosition);
 				volumetric = dataCopy;
 			}
 
@@ -906,7 +906,7 @@ namespace Havtorn
 			{
 				SSpriteComponent& spriteComponent = AddSpriteComponentToEntity(*entity);
 				SSpriteComponent dataCopy;
-				DeserializeSimple(dataCopy, fromData, pointerPosition);
+				DeserializeData(dataCopy, fromData, pointerPosition);
 				spriteComponent = dataCopy;
 
 				SAssetReferenceCounter counter = { EComponentType::SpriteComponent, static_cast<U16>(i), 0, 0 };
@@ -917,7 +917,7 @@ namespace Havtorn
 			{
 				STransform2DComponent& transform = AddTransform2DComponentToEntity(*entity);
 				STransform2DComponent dataCopy;
-				DeserializeSimple(dataCopy, fromData, pointerPosition);
+				DeserializeData(dataCopy, fromData, pointerPosition);
 				transform = dataCopy;
 			}
 
@@ -935,7 +935,7 @@ namespace Havtorn
 			{
 				SGhostyComponent& ghostyComponent = AddGhostyComponentToEntity(*entity);
 				SGhostyComponent dataCopy;
-				DeserializeSimple(dataCopy, fromData, pointerPosition);
+				DeserializeData(dataCopy, fromData, pointerPosition);
 				ghostyComponent = dataCopy;
 			}
 
@@ -943,12 +943,12 @@ namespace Havtorn
 			{
 				SMetaDataComponent& metaData = AddMetaDataComponentToEntity(*entity);
 				SMetaDataComponent dataCopy;
-				DeserializeSimple(dataCopy, fromData, pointerPosition);
+				DeserializeData(dataCopy, fromData, pointerPosition);
 				metaData = dataCopy;
 			}
 		}
 
-		DeserializeSimple(SceneName, fromData, pointerPosition);
+		DeserializeData(SceneName, fromData, pointerPosition);
 	}
 
 	std::string CScene::GetSceneName() const
@@ -1043,11 +1043,23 @@ namespace Havtorn
 
 	U64 CScene::GetSceneIndex(const SEntity& entity) const
 	{
+		if (!EntityVectorIndices.contains(entity.GUID))
+		{
+			HV_LOG_ERROR("%s could not resolve entity %u's GUID to a scene index! Returning 0.", __FUNCTION__, entity.GUID);
+			return 0;
+		}
+
 		return EntityVectorIndices.at(entity.GUID);
 	}
 
 	U64 CScene::GetSceneIndex(const U64 entityGUID) const
 	{
+		if (!EntityVectorIndices.contains(entityGUID))
+		{
+			HV_LOG_ERROR("%s could not resolve entity %u's GUID to a scene index! Returning 0.", __FUNCTION__, entityGUID);
+			return 0;
+		}
+
 		return EntityVectorIndices.at(entityGUID);
 	}
 
@@ -1110,11 +1122,16 @@ namespace Havtorn
 		case Havtorn::EComponentType::SequencerComponent:
 			AddSequencerComponentToEntity(entity);
 			break;
+		case Havtorn::EComponentType::GhostyComponent:
+			AddGhostyComponentToEntity(entity);
+			break;
 
 		case Havtorn::EComponentType::DebugShapeComponent:
 		case Havtorn::EComponentType::MetaDataComponent:
 		case Havtorn::EComponentType::Count:
+			break;
 		default:
+			HV_LOG_ERROR("%s: Unhandled case for EComponentType %s.", __FUNCTION__, GetComponentTypeString(componentType).c_str());
 			break;
 		}
 	}
@@ -1168,11 +1185,16 @@ namespace Havtorn
 		case Havtorn::EComponentType::SequencerComponent:
 			RemoveSequencerComponentFromEntity(entity);
 			break;
+		case Havtorn::EComponentType::GhostyComponent:
+			RemoveGhostyComponentFromEntity(entity);
+			break;
 
 		case Havtorn::EComponentType::DebugShapeComponent:
 		case Havtorn::EComponentType::MetaDataComponent:
 		case Havtorn::EComponentType::Count:
+			break;
 		default:
+			HV_LOG_ERROR("%s: Unhandled case for EComponentType %s.", __FUNCTION__, GetComponentTypeString(componentType).c_str());
 			break;
 		}
 	}

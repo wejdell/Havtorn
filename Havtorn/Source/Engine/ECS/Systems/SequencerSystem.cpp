@@ -1,15 +1,19 @@
 // Copyright 2023 Team Havtorn. All Rights Reserved.
-// 
-// Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #include "SequencerSystem.h"
 #include "Scene/Scene.h"
 #include "SequencerKeyframes/SequencerKeyframe.h"
 #include "ECS/Components/SequencerComponent.h"
+#include "Assets/SequencerAsset.h"
 
 #include "SequencerKeyframes/SequencerTransformKeyframe.h"
 #include "SequencerKeyframes/SequencerSpriteKeyframe.h"
 #include "ECS/Components/TransformComponent.h"
+
+#include "Core/HavtornString.h"
+#include "Engine.h"
+#include "FileSystem/FileSystem.h"
+#include "FileSystem/FileHeaderDeclarations.h"
 
 namespace Havtorn
 {
@@ -41,12 +45,12 @@ namespace Havtorn
 		// 
 		// There can be a lot of work done on previewing in the sequencer, the duration of the animation can be visualized, audio duration as well.
 
-		std::vector<SSequencerComponent>& sequencerComponents = scene->GetSequencerComponents();
+		//std::vector<SSequencerComponent>& sequencerComponents = scene->GetSequencerComponents();
 
 		//if (ShouldRecordNewKeyframes)
 		//	RecordNewKeyframes(scene, sequencerComponents);
 
-		Tick(scene, sequencerComponents);
+		Tick(scene);
 
 		if (IsInitialized)
 			return;
@@ -79,32 +83,38 @@ namespace Havtorn
 		//mainCameraTransformTrack.Keyframes.push_back(firstKeyframe);
 		//mainCameraTransformTrack.Keyframes.push_back(lastKeyframe);
 
+		SequencerAssets.emplace_back(new CSequencerAsset());
+		CurrentSequencer = SequencerAssets[0];
+		CurrentSequencer->Name = std::string("Intro");
+
 		std::vector<SEntity>& entities = scene->GetEntities();
 
 		U64 spriteGUID = entities[4].GUID;
-		U64 sceneIndex = scene->GetSceneIndex(spriteGUID);
-		Data.CurrentFrame = 20;
-		AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(scene->GetSequencerComponents()[sceneIndex], EComponentType::SpriteComponent);
-		Data.CurrentFrame = 24;
-		AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(scene->GetSequencerComponents()[sceneIndex], EComponentType::SpriteComponent);
-		Data.CurrentFrame = 30;
-		auto newKeyframe = AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(scene->GetSequencerComponents()[sceneIndex], EComponentType::SpriteComponent);
-		newKeyframe->ShouldBlendRight = false;
-		newKeyframe->ShouldBlendLeft = false;
-		Data.CurrentFrame = 40;
-		newKeyframe = AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(scene->GetSequencerComponents()[sceneIndex], EComponentType::SpriteComponent);
-		newKeyframe->ShouldBlendLeft = false;
-		Data.CurrentFrame = 60;
-		newKeyframe = AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(scene->GetSequencerComponents()[sceneIndex], EComponentType::SpriteComponent);
-		newKeyframe->ShouldBlendRight = false;
+		//AddComponentTrackToEntityReference(spriteGUID, EComponentType::SpriteComponent);
+		//Data.CurrentFrame = 20;
+		//AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(spriteGUID, EComponentType::SpriteComponent);
+		//Data.CurrentFrame = 24;
+		//AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(spriteGUID, EComponentType::SpriteComponent);
+		//Data.CurrentFrame = 30;
+		//auto newKeyframe = AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(spriteGUID, EComponentType::SpriteComponent);
+		//newKeyframe->ShouldBlendRight = false;
+		//newKeyframe->ShouldBlendLeft = false;
+		//Data.CurrentFrame = 40;
+		//newKeyframe = AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(spriteGUID, EComponentType::SpriteComponent);
+		//newKeyframe->ShouldBlendLeft = false;
+		//Data.CurrentFrame = 60;
+		//newKeyframe = AddEmptyKeyframeToComponent<SSequencerSpriteKeyframe>(spriteGUID, EComponentType::SpriteComponent);
+		//newKeyframe->ShouldBlendRight = false;
 
+		AddComponentTrackToEntityReference(spriteGUID, EComponentType::TransformComponent);
 		Data.CurrentFrame = 18;
-		AddEmptyKeyframeToComponent<SSequencerTransformKeyframe>(scene->GetSequencerComponents()[sceneIndex], EComponentType::TransformComponent);
+		AddEmptyKeyframeToComponent<SSequencerTransformKeyframe>(spriteGUID, EComponentType::TransformComponent);
 		Data.CurrentFrame = 29;
-		AddEmptyKeyframeToComponent<SSequencerTransformKeyframe>(scene->GetSequencerComponents()[sceneIndex], EComponentType::TransformComponent);
+		AddEmptyKeyframeToComponent<SSequencerTransformKeyframe>(spriteGUID, EComponentType::TransformComponent);
 		
 		Data.CurrentFrame = 0;
-		//spriteTrack.ComponentTracks.emplace_back(SSequencerComponentTrack{ EComponentType::SpriteComponent, {}, {}, {} });
+
+		//LoadSequencerFromFile(std::string("Assets/Sequencers/Intro.hva"));
 	}
 
 	void CSequencerSystem::SetSequencerContextData(const SSequencerContextData& data)
@@ -117,22 +127,67 @@ namespace Havtorn
 		return Data;
 	}
 
-	void CSequencerSystem::AddComponentTrackToComponent(SSequencerComponent& sequencerComponent, EComponentType trackComponentType)
+	void CSequencerSystem::AddComponentTrackToEntityReference(const U64 guid, EComponentType trackComponentType)
 	{
-		sequencerComponent.ComponentTracks.push_back(SSequencerComponentTrack{ trackComponentType });
+		if (!CurrentSequencer)
+			return;
+
+		SSequencerEntityReference* entityReferencePointer = CurrentSequencer->TryGetEntityReference(guid);
+		if (!entityReferencePointer)
+		{
+			CurrentSequencer->EntityReferences.push_back(guid);
+		}
+
+		entityReferencePointer = CurrentSequencer->TryGetEntityReference(guid);
+		if (!entityReferencePointer)
+			return;
+
+		entityReferencePointer->ComponentTracks.push_back(SSequencerComponentTrack{ trackComponentType });
 	}
 
-	void CSequencerSystem::RecordNewKeyframes(CScene* scene, std::vector<SSequencerComponent>& sequencerComponents)
+	const EComponentType CSequencerSystem::GetComponentTrackTypeFromEntityReference(const U64 guid, const I32 componentTrackIndex)
 	{
+		if (!CurrentSequencer)
+			return EComponentType::Count;
+
+		SSequencerEntityReference* const entityReferencePointer = CurrentSequencer->TryGetEntityReference(guid);
+		if (!entityReferencePointer)
+			return EComponentType::Count;
+
+		if (!UMath::IsWithin(componentTrackIndex, I32(0), static_cast<I32>(entityReferencePointer->ComponentTracks.size())))
+			return EComponentType::Count;
+
+		return entityReferencePointer->ComponentTracks[componentTrackIndex].ComponentType;
+	}
+
+	SSequencerKeyframe* const CSequencerSystem::GetKeyframeFromEntityReference(const U64 guid, const I32 componentTrackIndex, const I32 keyframeIndex)
+	{
+		if (!CurrentSequencer)
+			return nullptr;
+
+		SSequencerEntityReference* const entityReferencePointer = CurrentSequencer->TryGetEntityReference(guid);
+		if (!entityReferencePointer)
+			return nullptr;
+
+		if (!UMath::IsWithin(componentTrackIndex, I32(0), static_cast<I32>(entityReferencePointer->ComponentTracks.size())))
+			return nullptr;
+
+		if (!UMath::IsWithin(keyframeIndex, I32(0), static_cast<I32>(entityReferencePointer->ComponentTracks[componentTrackIndex].Keyframes.size())))
+			return nullptr;
+
+		return entityReferencePointer->ComponentTracks[componentTrackIndex].Keyframes[keyframeIndex];
+	}
+
+	void CSequencerSystem::RecordNewKeyframes(CScene* scene)
+	{
+		if (!CurrentSequencer)
+			return;
+
 		ShouldRecordNewKeyframes = false;
 
-		for (U64 componentIndex = 0; componentIndex < sequencerComponents.size(); componentIndex++)
+		for (SSequencerEntityReference& entityReference : CurrentSequencer->EntityReferences)
 		{
-			SSequencerComponent& sequencerComponent = sequencerComponents[componentIndex];
-			if (!sequencerComponent.IsInUse)
-				continue;
-
-			for (SSequencerComponentTrack& componentTrack : sequencerComponent.ComponentTracks)
+			for (SSequencerComponentTrack& componentTrack : entityReference.ComponentTracks)
 			{
 				U16 numberOfKeyframes = static_cast<U16>(componentTrack.Keyframes.size());
 				for (U16 index = 0; index < numberOfKeyframes; index++)
@@ -142,13 +197,136 @@ namespace Havtorn
 						continue;
 
 					keyframe->ShouldRecord = false;
-					keyframe->SetEntityDataOnKeyframe(scene, componentIndex);
+					keyframe->SetEntityDataOnKeyframe(scene, scene->GetSceneIndex(entityReference.GUID));
 				}
 			}
 		}
 	}
 
-	void CSequencerSystem::Tick(CScene* scene, std::vector<SSequencerComponent>& sequencerComponents)
+	void CSequencerSystem::SortKeyframes(const U64 guid, U32 trackIndex, I32& lastEditedKeyframeIndex)
+	{
+		SSequencerEntityReference* const entityReferencePointer = CurrentSequencer->TryGetEntityReference(guid);
+		if (!entityReferencePointer)
+			return;
+
+		if (!UMath::IsWithin(trackIndex, (U32)0, static_cast<U32>(entityReferencePointer->ComponentTracks.size())))
+			return;
+
+		SSequencerComponentTrack& componentTrack = entityReferencePointer->ComponentTracks[trackIndex];
+		if (componentTrack.Keyframes.size() < 2)
+			return;
+
+		std::sort(componentTrack.Keyframes.begin(), componentTrack.Keyframes.end(), [](SSequencerKeyframe* a, SSequencerKeyframe* b) { return a->FrameNumber < b->FrameNumber; });
+
+		U16 numberOfKeyframes = static_cast<U16>(componentTrack.Keyframes.size());
+		U32 lastFrameNumber = componentTrack.Keyframes[0]->FrameNumber;
+		for (U16 index = 1; index < numberOfKeyframes; index++)
+		{
+			SSequencerKeyframe* keyframe = componentTrack.Keyframes[index];
+
+			// NR: Frame number collision handling for edited keyframe
+			if (index == lastEditedKeyframeIndex && keyframe->FrameNumber == lastFrameNumber)
+			{
+				std::swap(componentTrack.Keyframes[index], componentTrack.Keyframes[index - 1]);
+				componentTrack.Keyframes[index]->FrameNumber++;
+				lastEditedKeyframeIndex--;
+				continue;
+			}
+			else if (index == lastEditedKeyframeIndex + 1 && keyframe->FrameNumber == lastFrameNumber)
+			{
+				std::swap(componentTrack.Keyframes[index], componentTrack.Keyframes[index - 1]);
+				componentTrack.Keyframes[index - 1]->FrameNumber--;
+				lastEditedKeyframeIndex++;
+				continue;
+			}
+
+			// NR: Allow keyframes to cascade if there are a number of them lined up.
+			if (keyframe->FrameNumber == lastFrameNumber)
+				keyframe->FrameNumber++;
+
+			lastFrameNumber = keyframe->FrameNumber;
+		}
+	}
+
+	const char* CSequencerSystem::GetCurrentSequencerName() const
+	{
+		if (CurrentSequencer == nullptr)
+			return nullptr;
+
+		return CurrentSequencer->Name.Data();
+	}
+
+	const std::vector<SSequencerEntityReference>* CSequencerSystem::GetCurrentEntityReferences() const
+	{
+		if (CurrentSequencer == nullptr)
+			return nullptr;
+
+		return &CurrentSequencer->EntityReferences;
+	}
+
+	void CSequencerSystem::SaveCurrentSequencer(const std::string& filePath)
+	{
+		if (CurrentSequencer == nullptr)
+			return;
+
+		SSequencerFileHeader fileHeader;
+		fileHeader.SequencerName = CurrentSequencer->Name.AsString();
+		fileHeader.SequencerNameLength = static_cast<U32>(fileHeader.SequencerName.size());
+		fileHeader.NumberOfEntityReferences = static_cast<U32>(CurrentSequencer->EntityReferences.size());
+		fileHeader.EntityReferences = CurrentSequencer->EntityReferences;
+
+		const U32 fileSize = fileHeader.GetSize();
+		char* data = new char[fileSize];
+
+		fileHeader.Serialize(data);
+		GEngine::GetFileSystem()->Serialize(filePath, data, fileSize);
+
+		delete[] data;
+	}
+
+	void CSequencerSystem::LoadSequencerFromFile(const std::string& filePath)
+	{
+		U8 nameLength = static_cast<U8>(filePath.find_last_of(".") - (filePath.find_last_of("/") + 1));
+		std::string sequencerName = filePath.substr(filePath.find_last_of("/") + 1, nameLength);
+
+		if (CSequencerAsset* asset = TryGetSequencerWithName(sequencerName))
+			return LoadSequencer(sequencerName);
+
+		SSequencerFileHeader sequencerFile;
+
+		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
+		char* data = new char[fileSize];
+
+		GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));
+		sequencerFile.Deserialize(data);
+
+		CSequencerAsset* newAsset = SequencerAssets.emplace_back(new CSequencerAsset());
+		newAsset->Name = sequencerFile.SequencerName;
+		newAsset->EntityReferences = sequencerFile.EntityReferences;
+
+		CurrentSequencer = newAsset;
+
+		delete[] data;
+	}
+
+	void CSequencerSystem::LoadSequencer(const std::string& sequencerName)
+	{
+		if (CSequencerAsset* asset = TryGetSequencerWithName(sequencerName))
+			CurrentSequencer = asset;
+	}
+
+	CSequencerAsset* CSequencerSystem::TryGetSequencerWithName(const std::string& sequencerName) const
+	{
+		for (CSequencerAsset* asset : SequencerAssets)
+		{
+			if (asset->Name == sequencerName)
+				return asset;
+		}
+
+		return nullptr;
+	}
+
+	void CSequencerSystem::Tick(CScene* scene)
 	{
 		if (!Data.IsPlayingSequence && Data.CurrentFrame == InternalCurrentFrame)
 			return;
@@ -168,19 +346,15 @@ namespace Havtorn
 				OnSequenceFinished();
 		}
 		
-		UpdateTracks(scene, sequencerComponents);
+		UpdateTracks(scene);
 		InternalCurrentFrame = Data.CurrentFrame;
 	}
 
-	void CSequencerSystem::UpdateTracks(CScene* scene, std::vector<SSequencerComponent>& sequencerComponents)
+	void CSequencerSystem::UpdateTracks(CScene* scene)
 	{
-		for (U64 componentIndex = 0; componentIndex < sequencerComponents.size(); componentIndex++)
+		for (SSequencerEntityReference& entityReference : CurrentSequencer->EntityReferences)
 		{
-			SSequencerComponent& sequencerComponent = sequencerComponents[componentIndex];
-			if (!sequencerComponent.IsInUse)
-				continue;
-
-			for (SSequencerComponentTrack& componentTrack : sequencerComponent.ComponentTracks)
+			for (SSequencerComponentTrack& componentTrack : entityReference.ComponentTracks)
 			{
 				U16 numberOfKeyframes = static_cast<U16>(componentTrack.Keyframes.size());
 				componentTrack.TrackState = ESequencerComponentTrackState::Waiting;
@@ -226,7 +400,7 @@ namespace Havtorn
 					componentTrack.CurrentKeyframe->Blend(nullptr, 0.0f);
 				}
 
-				componentTrack.CurrentKeyframe->SetKeyframeDataOnEntity(scene, componentIndex);
+				componentTrack.CurrentKeyframe->SetKeyframeDataOnEntity(scene, scene->GetSceneIndex(entityReference.GUID));
 			}
 		}
 	}

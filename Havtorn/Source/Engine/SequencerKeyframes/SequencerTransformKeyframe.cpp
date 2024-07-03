@@ -1,7 +1,4 @@
-
 // Copyright 2023 Team Havtorn. All Rights Reserved.
-
-// Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #include "SequencerTransformKeyframe.h"
 #include "ECS/Components/TransformComponent.h"
@@ -30,5 +27,26 @@ namespace Havtorn
 	{
 		STransformComponent& transformComponent = scene->GetTransformComponents()[sceneIndex];
 		transformComponent.Transform.SetMatrix(IntermediateMatrix);
+	}
+
+	U32 SSequencerTransformKeyframe::GetSize() const
+	{
+		U32 size = SSequencerKeyframe::GetSize();
+		size += sizeof(SMatrix) * 2;
+		return size;
+	}
+
+	void SSequencerTransformKeyframe::Serialize(char* toData, U64& pointerPosition) const
+	{
+		SSequencerKeyframe::Serialize(toData, pointerPosition);
+		SerializeData(KeyframedMatrix, toData, pointerPosition);
+		SerializeData(IntermediateMatrix, toData, pointerPosition);
+	}
+
+	void SSequencerTransformKeyframe::Deserialize(const char* fromData, U64& pointerPosition)
+	{
+		SSequencerKeyframe::Deserialize(fromData, pointerPosition);
+		DeserializeData(KeyframedMatrix, fromData, pointerPosition);
+		DeserializeData(IntermediateMatrix, fromData, pointerPosition);
 	}
 }

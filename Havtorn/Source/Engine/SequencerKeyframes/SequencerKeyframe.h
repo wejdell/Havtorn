@@ -1,14 +1,12 @@
 // Copyright 2023 Team Havtorn. All Rights Reserved.
 
-// Copyright 2022 Team Havtorn. All Rights Reserved.
-
 #pragma once
 
 namespace Havtorn
 {
 	class CScene;
 
-	struct HAVTORN_API SSequencerKeyframe
+	struct HAVTORN_API SSequencerKeyframe : ISerializable
 	{
 		U32 FrameNumber = 0;
 		bool ShouldBlendLeft = true;
@@ -20,5 +18,10 @@ namespace Havtorn
 		virtual void Blend(SSequencerKeyframe* /*nextKeyframe*/, F32 /*blendParam*/) {};
 		virtual void SetEntityDataOnKeyframe(CScene* /*scene*/, U64 /*sceneIndex*/) {};
 		virtual void SetKeyframeDataOnEntity(CScene* /*scene*/, U64 /*sceneIndex*/) {};
+
+		// Inherited via ISerializable
+		virtual U32 GetSize() const override;
+		virtual void Serialize(char* toData, U64& pointerPosition) const override;
+		virtual void Deserialize(const char* fromData, U64& pointerPosition) override;
 	};
 }

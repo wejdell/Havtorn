@@ -1,7 +1,5 @@
 // Copyright 2023 Team Havtorn. All Rights Reserved.
 
-// Copyright 2022 Team Havtorn. All Rights Reserved.
-
 #include "SequencerSpriteKeyframe.h"
 #include "ECS/Components/SpriteComponent.h"
 #include "Scene/Scene.h"
@@ -22,5 +20,24 @@ namespace Havtorn
 	{
 		SSpriteComponent& spriteComponent = scene->GetSpriteComponents()[sceneIndex];
 		spriteComponent.UVRect = UVRect;
+	}
+
+	U32 Havtorn::SSequencerSpriteKeyframe::GetSize() const
+	{
+		U32 size = SSequencerKeyframe::GetSize();
+		size += sizeof(SVector4);
+		return size;
+	}
+
+	void Havtorn::SSequencerSpriteKeyframe::Serialize(char* toData, U64& pointerPosition) const
+	{
+		SSequencerKeyframe::Serialize(toData, pointerPosition);
+		SerializeData(UVRect, toData, pointerPosition);
+	}
+
+	void Havtorn::SSequencerSpriteKeyframe::Deserialize(const char* fromData, U64& pointerPosition)
+	{
+		SSequencerKeyframe::Deserialize(fromData, pointerPosition);
+		DeserializeData(UVRect, fromData, pointerPosition);
 	}
 }

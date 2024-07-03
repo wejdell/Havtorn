@@ -6,16 +6,7 @@
 
 namespace Havtorn
 {
-	HAVTORN_API Ref<GLog> GLog::Logger;
-
-	void GLog::Init()
-	{
-		Logger = std::make_shared<GLog>();
-
-		HV_LOG_INFO("Logger initialized.");
-	}
-
-	void GLog::Print(const EConsoleColor& color, const char* category, const char* message, ...)
+	void ULog::Print(const EConsoleColor& color, const char* category, const char* message, ...)
 	{
 		const HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
 		const bool isDefault = color == EConsoleColor::White;
@@ -42,5 +33,21 @@ namespace Havtorn
 		// Reset Console Color
 		if (!isDefault)
 			SetConsoleTextAttribute(hConsole, static_cast<WORD>(EConsoleColor::White));
+	}
+
+	std::string ULog::StringVsprintf(const char* format, const std::va_list args)
+	{
+		va_list tmpArgs; //unfortunately you cannot consume a va_list twice
+		va_copy(tmpArgs, args); //so we have to copy it
+		const int requiredLen = _vscprintf(format, tmpArgs) + 1;
+		va_end(tmpArgs);
+
+		char buff[4096];
+		memset(buff, 0, requiredLen);
+
+		if (vsnprintf_s(buff, requiredLen, format, args) < 0)
+			return "StringVsprintf encoding error";
+
+		return { buff };
 	}
 }

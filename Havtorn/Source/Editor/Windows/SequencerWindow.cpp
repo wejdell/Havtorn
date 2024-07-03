@@ -11,6 +11,7 @@
 #include <SequencerKeyframes/SequencerSpriteKeyframe.h>
 
 #include <set>
+#include <Windows/InspectorWindow.h>
 
 namespace ImGui
 {
@@ -39,26 +40,9 @@ namespace ImGui
 
 	void CSequencerWindow::OnInspectorGUI()
 	{
-		if (ImGui::Begin(Name(), nullptr))
+		if (ImGui::Begin(Name(), &IsEnabled))
 		{
-			ImGui::SameLine();
-			if (ImGui::BeginCombo("Sequencer", Sequencers[CurrentSequencerIndex].c_str()))
-			{
-				for (Havtorn::U16 index = 0; index < Sequencers.size(); index++)
-				{
-					const std::string& sequencerName = Sequencers[index];
-
-					if (ImGui::Selectable(sequencerName.c_str()))
-					{
-						// Load Sequencer function
-						CurrentSequencerIndex = index;
-						break;
-					}
-				}
-				ImGui::EndCombo();
-			}
-			ImGui::SameLine();
-			ImGui::Text("Scene: ");
+			FileControls();
 
 			Havtorn::SSequencerContextData contextData = SequencerSystem->GetSequencerContextData();
 
@@ -105,6 +89,25 @@ namespace ImGui
 
 	void CSequencerWindow::OnDisable()
 	{
+	}
+
+	void CSequencerWindow::FileControls()
+	{
+		const char* currentSequencerName = SequencerSystem->GetCurrentSequencerName();
+
+		if (ImGui::Button("Save"))
+		{
+			// TODO.NR: Save using dialog
+			SequencerSystem->SaveCurrentSequencer(std::string("Assets/Sequencers/") + currentSequencerName + std::string(".hva"));
+		}
+		ImGui::SameLine();
+		if (ImGui::Button("Load"))
+		{
+			// TODO.NR: Load using dialog
+		}
+		ImGui::SameLine();
+
+		ImGui::Text(currentSequencerName ? currentSequencerName : "");
 	}
 
 	void CSequencerWindow::FlowControls(Havtorn::SSequencerContextData& contextData)
@@ -231,31 +234,25 @@ namespace ImGui
 			if (ImGui::Button("Set Current Component Value"))
 				SetCurrentComponentValueOnKeyframe();
 
-			if (keyframeIsEdited)
+			if (keyframeIsEdited)			
 				EditSelectedKeyframe(selectedKeyframe);
+
+			InspectKeyframe();
 		}
 	}
 
 	void CSequencerWindow::ResolveSelection()
 	{
-		HV_LOG_DEBUG("IsFocused: %s, SelectedKeyframe: %i", SequencerState.IsFocused ? "True" : "False", SelectedKeyframeMetaData.KeyframeIndex);
-
-		//if (!SequencerState.IsFocused) 
-		//	return;
-
 		if (SequencerState.IsMovingCurrentFrame)
 		{
 			ResetSelectedKeyframe();
 			return;
 		}
 
-		//Am i actually dragging a transform position X Slider..?
-
 		ImRect clippingRect = SequencerState.ClippingRects["TrackRect"];
 		if (CandidateKeyframeMetaData.IsValid(this) && ImGui::IsMouseClicked(0))
 		{
 			SetSelectedKeyframe(CandidateKeyframeMetaData.EntityTrackIndex, CandidateKeyframeMetaData.ComponentTrackIndex, CandidateKeyframeMetaData.KeyframeIndex);
-			SetCurrentKeyframeValueOnComponent();
 		}
 		// Explicit deselect
 		else if (ImGui::IsMouseClicked(0) && ImGui::IsMouseHoveringRect(clippingRect.Min, clippingRect.Max))
@@ -273,20 +270,15 @@ namespace ImGui
 		if (scene == nullptr)
 			return;
 
-		std::vector<Havtorn::SSequencerComponent>& sequencerComponents = scene->GetSequencerComponents();
-		for (U64 index = 0, entityTrackIndex = 0; index < sequencerComponents.size(); index++)
-		{
-			Havtorn::SSequencerComponent& component = sequencerComponents[index];
-			if (!component.IsInUse)
-				continue;
+		const Havtorn::SEntity* entity = Manager->GetSelectedEntity();
+		if (entity == nullptr)
+			return;
 
-			if (entityTrackIndex++ != SelectedKeyframeMetaData.EntityTrackIndex)
-				continue;
+		Havtorn::SSequencerKeyframe* sequencerKeyframe = SequencerSystem->GetKeyframeFromEntityReference(entity->GUID, SelectedKeyframeMetaData.ComponentTrackIndex, SelectedKeyframeMetaData.KeyframeIndex);
+		if (sequencerKeyframe == nullptr)
+			return;
 
-			Havtorn::SSequencerKeyframe* sequencerKeyframe = component.ComponentTracks[SelectedKeyframeMetaData.ComponentTrackIndex].Keyframes[SelectedKeyframeMetaData.KeyframeIndex];
-
-			sequencerKeyframe->SetEntityDataOnKeyframe(scene, index);
-		}
+		sequencerKeyframe->SetEntityDataOnKeyframe(scene, scene->GetSceneIndex(entity->GUID));
 	}
 
 	void CSequencerWindow::SetCurrentKeyframeValueOnComponent()
@@ -298,20 +290,35 @@ namespace ImGui
 		if (scene == nullptr)
 			return;
 
-		std::vector<Havtorn::SSequencerComponent>& sequencerComponents = scene->GetSequencerComponents();
-		for (U64 index = 0, entityTrackIndex = 0; index < sequencerComponents.size(); index++)
-		{
-			Havtorn::SSequencerComponent& component = sequencerComponents[index];
-			if (!component.IsInUse)
-				continue;
+		const Havtorn::SEntity* entity = Manager->GetSelectedEntity();
+		if (entity == nullptr)
+			return;
 
-			if (entityTrackIndex++ != SelectedKeyframeMetaData.EntityTrackIndex)
-				continue;
+		Havtorn::SSequencerKeyframe* sequencerKeyframe = SequencerSystem->GetKeyframeFromEntityReference(entity->GUID, SelectedKeyframeMetaData.ComponentTrackIndex, SelectedKeyframeMetaData.KeyframeIndex);
+		if (sequencerKeyframe == nullptr)
+			return;
 
-			Havtorn::SSequencerKeyframe* sequencerKeyframe = component.ComponentTracks[SelectedKeyframeMetaData.ComponentTrackIndex].Keyframes[SelectedKeyframeMetaData.KeyframeIndex];
+		sequencerKeyframe->SetKeyframeDataOnEntity(scene, scene->GetSceneIndex(entity->GUID));
+	}
 
-			sequencerKeyframe->SetKeyframeDataOnEntity(scene, index);
-		}
+	void CSequencerWindow::InspectKeyframe()
+	{
+		if (!SelectedKeyframeMetaData.IsValid(this))
+			return;
+
+		Havtorn::CScene* const scene = Manager->GetCurrentScene();
+		if (scene == nullptr)
+			return;
+
+		Havtorn::SEntity* const selectedEntity = Manager->GetSelectedEntity();
+		if (selectedEntity == nullptr)
+			return;
+
+		Havtorn::EComponentType componentType = SequencerSystem->GetComponentTrackTypeFromEntityReference(selectedEntity->GUID, SelectedKeyframeMetaData.ComponentTrackIndex);
+		if (componentType == Havtorn::EComponentType::Count)
+			return;
+
+		Manager->GetEditorWindow<CInspectorWindow>()->TryInspectComponent(componentType);
 	}
 
 	void CSequencerWindow::FillSequencer()
@@ -320,27 +327,26 @@ namespace ImGui
 		if (scene == nullptr)
 			return;
 
-		std::vector<Havtorn::SSequencerComponent>& sequencerComponents = scene->GetSequencerComponents();
 		std::vector<Havtorn::SMetaDataComponent>& metaDataComponents = scene->GetMetaDataComponents();
 
 		EntityTracks.clear();
 
-		for (U64 index = 0; index < sequencerComponents.size(); index++)
-		{
-			const Havtorn::SSequencerComponent& component = sequencerComponents[index];
-			if (!component.IsInUse)
-				continue;
+		const std::vector<Havtorn::SSequencerEntityReference>* entityReferences = SequencerSystem->GetCurrentEntityReferences();
+		if (entityReferences == nullptr)
+			return;
 
-			const Havtorn::SMetaDataComponent& metaData = metaDataComponents[index];
+		for (const Havtorn::SSequencerEntityReference& entityReference : *entityReferences)
+		{
+			const Havtorn::SMetaDataComponent& metaData = metaDataComponents[scene->GetSceneIndex(entityReference.GUID)];
 
 			SEditorEntityTrack entityTrack;
 			entityTrack.Name = metaData.Name.AsString();
 
-			for (U64 componentTrackIndex = 0; componentTrackIndex < component.ComponentTracks.size(); componentTrackIndex++)
+			for (U64 componentTrackIndex = 0; componentTrackIndex < entityReference.ComponentTracks.size(); componentTrackIndex++)
 			{
 				// TODO.NR: Algo library?
 
-				const Havtorn::SSequencerComponentTrack& componentTrack = component.ComponentTracks[componentTrackIndex];
+				const Havtorn::SSequencerComponentTrack& componentTrack = entityReference.ComponentTracks[componentTrackIndex];
 				std::vector<SEditorKeyframe> keyframes;
 				for (U64 keyframeIndex = 0; keyframeIndex < componentTrack.Keyframes.size(); keyframeIndex++)
 				{
@@ -462,14 +468,10 @@ namespace ImGui
 			for (Havtorn::U64 nextKeyframeIndex = keyframeIndex + 1; nextKeyframeIndex < numberOfKeyframes; nextKeyframeIndex++, keyframeIndex++)
 			{
 				const SEditorKeyframe& nextKeyframe = componentTrack.Keyframes[nextKeyframeIndex];
-				if (nextKeyframe.ShouldBlendLeft)
-				{
-					potentialRegion.second = nextKeyframe.FrameNumber;
-				}
-				else
-				{
+				if (!nextKeyframe.ShouldBlendLeft)
 					break;
-				}
+				
+				potentialRegion.second = nextKeyframe.FrameNumber;
 			}
 
 			if (potentialRegion.first < potentialRegion.second)
@@ -528,6 +530,7 @@ namespace ImGui
 	}
 #endif
 
+#pragma region Legacy Sequencer
 	static bool SequencerAddDelButton(ImDrawList* draw_list, ImVec2 pos, bool add = true)
 	{
 		ImGuiIO& io = ImGui::GetIO();
@@ -776,9 +779,6 @@ namespace ImGui
 
 			drawList->PopClipRect();
 			drawList->PopClipRect();
-
-			//if (io.MouseClicked[0])
-			//    ResetSelectedKeyframe();
 
 			for (const SEntityTrackDrawInfo& entityTrackDrawInfo : entityTrackDrawInfos)
 				DrawComponentTracks(drawList, entityTrackDrawInfo);
@@ -1038,9 +1038,6 @@ namespace ImGui
 
 	void CSequencerWindow::TrackHeader(int numberOfEntityTracks, const ImVec2& contentMin, size_t& customHeight, ImDrawList* draw_list)
 	{
-		//ImVec2 upperLeft(entityTrackDrawInfo.LegendRect.Min.x + componentTrackIndentation, entityTrackDrawInfo.LegendRect.Min.y + i * componentTrackHeight);
-
-
 		for (int i = 0; i < numberOfEntityTracks; i++)
 		{
 			int type;
@@ -1220,22 +1217,16 @@ namespace ImGui
 
 		return ret;
 	}
+#pragma endregion
+
 
 	void CSequencerWindow::AddComponentTrack(Havtorn::EComponentType componentType)
 	{
 		Havtorn::SEntity* const entity = Manager->GetSelectedEntity();
-		Havtorn::CScene* const scene = Manager->GetCurrentScene();
-
-		if (entity == nullptr || scene == nullptr)
+		if (entity == nullptr)
 			return;
 
-		U64 sceneIndex = scene->GetSceneIndex(entity->GUID);
-		std::vector<Havtorn::SSequencerComponent>& sequencerComponents = scene->GetSequencerComponents();
-
-		if (sceneIndex >= sequencerComponents.size())
-			return;
-
-		SequencerSystem->AddComponentTrackToComponent(sequencerComponents[sceneIndex], componentType);
+		SequencerSystem->AddComponentTrackToEntityReference(entity->GUID, componentType);
 	}
 
 	void CSequencerWindow::EditSelectedKeyframe(SEditorKeyframe* selectedKeyframe)
@@ -1247,22 +1238,19 @@ namespace ImGui
 		if (scene == nullptr)
 			return;
 
-		std::vector<Havtorn::SSequencerComponent>& sequencerComponents = scene->GetSequencerComponents();
-		for (U64 index = 0, entityTrackIndex = 0; index < sequencerComponents.size(); index++)
-		{
-			Havtorn::SSequencerComponent& component = sequencerComponents[index];
-			if (!component.IsInUse)
-				continue;
+		const Havtorn::SEntity* entity = Manager->GetSelectedEntity();
+		if (entity == nullptr)
+			return;
 
-			if (entityTrackIndex++ != SelectedKeyframeMetaData.EntityTrackIndex)
-				continue;
+		Havtorn::SSequencerKeyframe* sequencerKeyframe = SequencerSystem->GetKeyframeFromEntityReference(entity->GUID, SelectedKeyframeMetaData.ComponentTrackIndex, SelectedKeyframeMetaData.KeyframeIndex);
+		if (sequencerKeyframe == nullptr)
+			return;
 
-			Havtorn::SSequencerKeyframe* sequencerKeyframe = component.ComponentTracks[SelectedKeyframeMetaData.ComponentTrackIndex].Keyframes[SelectedKeyframeMetaData.KeyframeIndex];
-
-			sequencerKeyframe->FrameNumber = selectedKeyframe->FrameNumber;
-			sequencerKeyframe->ShouldBlendLeft = selectedKeyframe->ShouldBlendLeft;
-			sequencerKeyframe->ShouldBlendRight = selectedKeyframe->ShouldBlendRight;
-		}
+		sequencerKeyframe->FrameNumber = selectedKeyframe->FrameNumber;
+		sequencerKeyframe->ShouldBlendLeft = selectedKeyframe->ShouldBlendLeft;
+		sequencerKeyframe->ShouldBlendRight = selectedKeyframe->ShouldBlendRight;
+			
+		SequencerSystem->SortKeyframes(entity->GUID, SelectedKeyframeMetaData.ComponentTrackIndex, SelectedKeyframeMetaData.KeyframeIndex);
 	}
 
 	bool CSequencerWindow::SEditorKeyframeMetaData::IsValid(const CSequencerWindow* sequencerWindow) const
