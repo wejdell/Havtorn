@@ -208,7 +208,7 @@ namespace ImGui
 			ImRect clippingRect = SequencerState.ClippingRects["TrackRect"];
 			if (ImGui::IsMouseDragging(ImGuiMouseButton_Left) && ImGui::IsMouseHoveringRect(clippingRect.Min, clippingRect.Max))
 			{
-				float framePixelWidth = 10.f;
+				Havtorn::F32 framePixelWidth = 10.f;
 				int legendWidth = 200;
 				int itemHeight = 20;
 				
@@ -216,7 +216,8 @@ namespace ImGui
 				ImVec2 canvasPosition = ImGui::GetCursorScreenPos();
 				ImVec2 canvasSize = ImGui::GetContentRegionAvail();
 
-				frameNumber = (int)((io.MousePos.x - GetItemTopRect(canvasPosition, canvasSize, legendWidth, itemHeight).Min.x) / framePixelWidth) + 0;
+				Havtorn::F32 mousePosToRectXDiff = io.MousePos.x - GetItemTopRect(canvasPosition, canvasSize, static_cast<Havtorn::F32>(legendWidth), static_cast<Havtorn::F32>(itemHeight)).Min.x;
+				frameNumber = static_cast<int>(mousePosToRectXDiff / framePixelWidth);
 				frameNumber = Havtorn::UMath::Clamp(frameNumber, 0, 100);
 				keyframeIsEdited = true;
 			}
@@ -603,7 +604,7 @@ namespace ImGui
 			drawList->AddRectFilled(canvasPosition, canvasPosition + canvasSize, 0xFF242424, 0);
 
 			// current frame top
-			ImRect topRect = GetItemTopRect(canvasPosition, canvasSize, SequencerState.LegendWidth, SequencerState.ItemHeight);
+			ImRect topRect = GetItemTopRect(canvasPosition, canvasSize, static_cast<Havtorn::F32>(SequencerState.LegendWidth), static_cast<Havtorn::F32>(SequencerState.ItemHeight));
 			ScrubPlayhead(sequenceOptions, currentFrame, topRect, frameCount, firstFrameUsed);
 
 			//header
