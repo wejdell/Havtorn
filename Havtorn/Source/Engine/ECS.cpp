@@ -3,23 +3,39 @@
 #include <unordered_map>
 #include <map>
 #include <typeindex>
+#include <initializer_list>
 
 using U64 = std::uint64_t;
 using U32 = std::uint32_t;
+using U8 = std::uint8_t;
 using I64 = std::int64_t;
 using I32 = std::int32_t;
 
+struct SEntity
+{
+	U64 GUID = 0;
+};
+
 struct SComponent
 {
-	SComponent() = default;
+	SComponent() = delete;
+	SComponent(const SEntity& entity)
+		: EntityOwner(entity)
+	{}
 	virtual ~SComponent() = default;
+
+	SEntity EntityOwner = SEntity();
 };
 
 struct STransform : public SComponent
 {
-	STransform() = default;
-	STransform(float x, float y)
-		: X(x)
+	STransform(const SEntity& entity)
+		: SComponent(entity)
+	{};
+
+	STransform(const SEntity& entity, float x, float y)
+		: SComponent(entity)
+		, X(x)
 		, Y(y)
 	{};
 
@@ -29,87 +45,98 @@ struct STransform : public SComponent
 
 struct SMaterial : public SComponent
 {
-	int ID = 0;
-};
+	SMaterial(const SEntity& entity)
+		: SComponent(entity)
+	{};
 
-struct SEntity
-{
-	U64 GUID;
-};
+	SMaterial(const SEntity& entity, U8 id)
+		: SComponent(entity)
+		, ID(id)
+	{};
 
-using SComponentTypeID = std::size_t;
-
-struct SComponentMapNode
-{
-	std::pair<SComponent*, const SEntity&> ComponentNode;
+	U8 ID = 0;
 };
 
 struct SComponentStorage
 {
-	std::unordered_map<U64, U64> SparseTypeIndices;
-	std::vector<SComponentMapNode> ComponentNodes;
-};
-
-struct SComponentMap
-{
-	SComponentMap() = default;
+	std::unordered_map<U64, U64> EntityIndices;
+	std::vector<SComponent*> Components;
 };
 
 struct SScene
 {
 	template<typename T, typename... Params>
-	void AddComponent(const SEntity& toEntity, Params... params)
+	T* AddComponent(const SEntity& toEntity, Params... params)
 	{
-		U64 typeIDHashCode = typeid(T).hash_code();
-		if (!SparseTypeIndices.contains(typeIDHashCode))
+		const U64 typeIDHashCode = typeid(T).hash_code();
+		if (!ComponentTypeIndices.contains(typeIDHashCode))
 		{
-			SparseTypeIndices.emplace(typeIDHashCode, Storages.size());
+			ComponentTypeIndices.emplace(typeIDHashCode, Storages.size());
 			Storages.emplace_back();
 		}
 
-		SComponentStorage& componentStorage = Storages[SparseTypeIndices.at(typeIDHashCode)];
+		SComponentStorage& componentStorage = Storages[ComponentTypeIndices.at(typeIDHashCode)];
 
-		if (componentStorage.SparseTypeIndices.contains(toEntity.GUID))
+		if (componentStorage.EntityIndices.contains(toEntity.GUID))
 		{
-			componentStorage.ComponentNodes[componentStorage.SparseTypeIndices.at(toEntity.GUID)].ComponentNode
+			*(dynamic_cast<T*>(componentStorage.Components[componentStorage.EntityIndices.at(toEntity.GUID)])) = T(toEntity, params...);
+		}
+		else
+		{
+			componentStorage.EntityIndices.emplace(toEntity.GUID, componentStorage.Components.size());
+			componentStorage.Components.emplace_back(new T(toEntity, params...));
 		}
 		
-		componentStorage.SparseTypeIndices.emplace(toEntity.GUID, componentStorage.ComponentNodes.size());
-		componentStorage.ComponentNodes.emplace_back(SComponentMapNode{ std::pair<SComponent*, const SEntity&>(new T(params...), toEntity) });
+		return dynamic_cast<T*>(componentStorage.Components.back());
+	}
+
+	template<typename T>
+	const SEntity& GetEntity(const T* fromComponent) const
+	{
+		return fromComponent->EntityOwner;
 	}
 
 	template<typename T>
 	T* GetComponent(const SEntity& fromEntity) const
 	{
-		U64 typeIDHashCode = typeid(T).hash_code();
-		if (!SparseTypeIndices.contains(typeIDHashCode))
+		const U64 typeIDHashCode = typeid(T).hash_code();
+		if (!ComponentTypeIndices.contains(typeIDHashCode))
 			return nullptr;
 
-		const SComponentStorage& componentStorage = Storages[SparseTypeIndices.at(typeIDHashCode)];
+		const SComponentStorage& componentStorage = Storages[ComponentTypeIndices.at(typeIDHashCode)];
 
-		if (!componentStorage.SparseTypeIndices.contains(fromEntity.GUID))
+		if (!componentStorage.EntityIndices.contains(fromEntity.GUID))
 			return nullptr;
 
-		return dynamic_cast<T*>(componentStorage.ComponentNodes[componentStorage.SparseTypeIndices.at(fromEntity.GUID)].ComponentNode.first);
+		return dynamic_cast<T*>(componentStorage.Components[componentStorage.EntityIndices.at(fromEntity.GUID)]);
+	}
+
+	template<typename... Ts>
+	std::tuple<Ts*...> GetComponents(const SEntity& fromEntity) const
+	{
+		return std::make_tuple(GetComponent<Ts>(fromEntity) ...);
 	}
 
 	template<typename T>
-	T* GetComponents(const SEntity& fromEntity) const
+	std::vector<T*> GetComponents()
 	{
-		U64 typeIDHashCode = typeid(T).hash_code();
-		if (!SparseTypeIndices.contains(typeIDHashCode))
-			return nullptr;
+		const U64 typeIDHashCode = typeid(T).hash_code();
+		if (!ComponentTypeIndices.contains(typeIDHashCode))
+			return {};
 
-		const SComponentStorage& componentStorage = Storages[SparseTypeIndices.at(typeIDHashCode)];
+		// NR: This looks problematic but works because we know we only fill buckets with the same component type. 
+		// This would be a bad idea if we kept different derived components in the same vectors.
 
-		if (!componentStorage.SparseTypeIndices.contains(fromEntity.GUID))
-			return nullptr;
+		SComponentStorage& componentStorage = Storages[ComponentTypeIndices.at(typeIDHashCode)];
+		std::vector<T*> specializedComponents;
+		specializedComponents.resize(componentStorage.Components.size());
+		memcpy(&specializedComponents[0], componentStorage.Components.data(), sizeof(T*) * componentStorage.Components.size());
 
-		return dynamic_cast<T*>(componentStorage.ComponentNodes[componentStorage.SparseTypeIndices.at(fromEntity.GUID)].ComponentNode.first);
+		return specializedComponents;
 	}
 
 	std::vector<SEntity> Entities;
-	std::unordered_map<U64, U64> SparseTypeIndices;
+	std::unordered_map<U64, U64> ComponentTypeIndices;
 	std::vector<SComponentStorage> Storages;
 };
 
@@ -118,21 +145,30 @@ struct A {};
 int main()
 {
 	SScene scene;
-	SEntity main;
-	SEntity second;
+	SEntity main = {111};
+	SEntity second = {222};
 	scene.Entities.emplace_back(main);
+	scene.Entities.emplace_back(second);
 
-	scene.AddComponent<STransform>(main, 1.f, 2.f);
+	STransform* addedTransformComponent = scene.AddComponent<STransform>(main, 1.f, 2.f);
 	STransform* transform = scene.GetComponent<STransform>(main);
 	scene.AddComponent<SMaterial>(main);
 	SMaterial* material = scene.GetComponent<SMaterial>(main);
 	scene.AddComponent<STransform>(second, 0.f, 5.f);
-	STransform* transform = scene.GetComponent<STransform>(main);
+	STransform* transform2 = scene.GetComponent<STransform>(second);
+	scene.AddComponent<SMaterial>(second, 1);
+	SMaterial* material2 = scene.GetComponent<SMaterial>(second);
 
-	// TODO.NR: Remove entity ref in pair? 
+	const SEntity& query1 = scene.GetEntity(addedTransformComponent);
+	const SEntity& query2 = scene.GetEntity(transform);
+
+	const std::vector<STransform*>& transformComponents = scene.GetComponents<STransform>();
+	const SEntity& query3 = transformComponents[0]->EntityOwner;
+
+	auto [transformBinding, materialBinding] = scene.GetComponents<STransform, SMaterial>(second);
+
 	// TODO.NR: Try fix so that you can replace component for an entity
 	// TODO.NR: Check memory contiguousness, force it somehow?
-	// TODO.NR: How to get full array of components? would be nice to figure out casting
 
 	return 0;
 }
