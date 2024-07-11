@@ -29,6 +29,7 @@ namespace Havtorn
 		HAVTORN_API ID3D11Device* GetDevice() const;
 		HAVTORN_API ID3D11DeviceContext* GetContext() const;
 		HAVTORN_API ID3D11Texture2D* GetBackbufferTexture() const;
+		HAVTORN_API IDXGISwapChain* GetSwapChain() const;
 
 	private:
 		WinComPtr<IDXGISwapChain> SwapChain;
