@@ -44,9 +44,9 @@ namespace Havtorn
 
 	void SSequencerEntityReference::Serialize(char* toData, U64& pointerPosition) const
 	{
-		SerializeSimple(GUID, toData, pointerPosition);
+		SerializeData(GUID, toData, pointerPosition);
 		NumberOfComponentTracks = static_cast<U32>(ComponentTracks.size()); // mutable
-		SerializeSimple(NumberOfComponentTracks, toData, pointerPosition);
+		SerializeData(NumberOfComponentTracks, toData, pointerPosition);
 
 		for (const SSequencerComponentTrack& componentTrack : ComponentTracks)
 			componentTrack.Serialize(toData, pointerPosition);
@@ -54,8 +54,8 @@ namespace Havtorn
 
 	void SSequencerEntityReference::Deserialize(const char* fromData, U64& pointerPosition)
 	{
-		DeserializeSimple(GUID, fromData, pointerPosition);
-		DeserializeSimple(NumberOfComponentTracks, fromData, pointerPosition);
+		DeserializeData(GUID, fromData, pointerPosition);
+		DeserializeData(NumberOfComponentTracks, fromData, pointerPosition);
 
 		for (I64 index = 0; index < NumberOfComponentTracks; index++)
 		{
@@ -90,9 +90,9 @@ namespace Havtorn
 
 	void SSequencerComponentTrack::Serialize(char* toData, U64& pointerPosition) const
 	{
-		SerializeSimple(ComponentType, toData, pointerPosition);
+		SerializeData(ComponentType, toData, pointerPosition);
 		NumberOfKeyframes = static_cast<U32>(Keyframes.size());
-		SerializeSimple(NumberOfKeyframes, toData, pointerPosition);
+		SerializeData(NumberOfKeyframes, toData, pointerPosition);
 
 		for (SSequencerKeyframe* keyframe : Keyframes)
 			keyframe->Serialize(toData, pointerPosition);
@@ -100,8 +100,8 @@ namespace Havtorn
 
 	void SSequencerComponentTrack::Deserialize(const char* fromData, U64& pointerPosition)
 	{
-		DeserializeSimple(ComponentType, fromData, pointerPosition);
-		DeserializeSimple(NumberOfKeyframes, fromData, pointerPosition);
+		DeserializeData(ComponentType, fromData, pointerPosition);
+		DeserializeData(NumberOfKeyframes, fromData, pointerPosition);
 
 		Keyframes.resize(NumberOfKeyframes);
 
