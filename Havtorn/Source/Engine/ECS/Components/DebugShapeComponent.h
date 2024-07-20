@@ -10,8 +10,9 @@ namespace Havtorn
 {
 	struct SDebugShapeComponent : public SComponent
 	{
-		SDebugShapeComponent()
-			: SComponent(EComponentType::DebugShapeComponent) 
+		SDebugShapeComponent() = default;
+		SDebugShapeComponent(const SEntity& entityOwner)
+			: SComponent(entityOwner) 
 		{}
 
 		SColor Color;

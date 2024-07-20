@@ -15,8 +15,9 @@ namespace Havtorn
 
 	struct SCameraControllerComponent : public SComponent
 	{
-		SCameraControllerComponent()
-			: SComponent(EComponentType::CameraControllerComponent)
+		SCameraControllerComponent() = default;
+		SCameraControllerComponent(const SEntity& entityOwner)
+			: SComponent(entityOwner)
 		{}
 
 		static constexpr F32 MaxPitchDegrees = 90.0f;

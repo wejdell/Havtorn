@@ -17,19 +17,9 @@ namespace Havtorn
 
 	void CRenderSystem::Update(CScene* scene)
 	{
-		std::vector<SStaticMeshComponent>& staticMeshComponents = scene->GetStaticMeshComponents();
-		std::vector<STransformComponent>& transformComponents = scene->GetTransformComponents();
-		std::vector<SCameraComponent>& cameraComponents = scene->GetCameraComponents();
-		std::vector<SMaterialComponent>& materialComponents = scene->GetMaterialComponents();
-		std::vector<SEnvironmentLightComponent>& environmentLightComponents = scene->GetEnvironmentLightComponents();
-		std::vector<SDirectionalLightComponent>& directionalLightComponents = scene->GetDirectionalLightComponents();
-		std::vector<SPointLightComponent>& pointLightComponents = scene->GetPointLightComponents();
-		std::vector<SSpotLightComponent>& spotLightComponents = scene->GetSpotLightComponents();
-		std::vector<SVolumetricLightComponent>& volumetricLightComponents = scene->GetVolumetricLightComponents();
-		std::vector<SSpriteComponent>& spriteComponents = scene->GetSpriteComponents();
-		std::vector<STransform2DComponent>& transform2DComponents = scene->GetTransform2DComponents();
-
-		const auto& decalComponents = scene->GetDecalComponents();
+		const std::vector<SDirectionalLightComponent*>& directionalLightComponents = scene->GetComponents<SDirectionalLightComponent>();
+		const std::vector<SPointLightComponent*>& pointLightComponents = scene->GetComponents<SPointLightComponent>();
+		const std::vector<SSpotLightComponent*>& spotLightComponents = scene->GetComponents<SSpotLightComponent>();
 
 		RenderManager->ClearSystemStaticMeshInstanceTransforms();
 		RenderManager->ClearSpriteInstanceWorldSpaceTransforms();
@@ -42,98 +32,93 @@ namespace Havtorn
 		// TODO.NR: Could probably merge all of these loops into one
 		// NR: Not worth doing right now
 
-		for (U64 i = 0; i < cameraComponents.size(); i++)
+		for (const SCameraComponent* cameraComponent : scene->GetComponents<SCameraComponent>())
 		{
-			const SCameraComponent& cameraComponent = cameraComponents[i];
-			if (!cameraComponent.IsInUse)
+			if (!cameraComponent->IsValid())
 				continue;
 
 			sceneHasActiveCamera = true;
 
-			const STransformComponent& transformComponent = transformComponents[i];
+			const STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(cameraComponent);
 
 			SRenderCommand command;
 			command.Type = ERenderCommandType::CameraDataStorage;
-			command.Matrices.push_back(transformComponent.Transform.GetMatrix());
-			command.Matrices.push_back(cameraComponent.ProjectionMatrix);
+			command.Matrices.push_back(transformComponent->Transform.GetMatrix());
+			command.Matrices.push_back(cameraComponent->ProjectionMatrix);
 			RenderManager->PushRenderCommand(command);
 		}
 
 		if (!sceneHasActiveCamera)
 			return;
 
-		for (U64 i = 0; i < staticMeshComponents.size(); i++)
+		for (const SStaticMeshComponent* staticMeshComponent : scene->GetComponents<SStaticMeshComponent>())
 		{
-			const SStaticMeshComponent& staticMeshComponent = staticMeshComponents[i];
-			if (!staticMeshComponent.IsInUse)
+			if (!staticMeshComponent->IsValid())
 				continue;
 		
-			const I64 transformCompIndex = i;
-			const STransformComponent& transformComp = transformComponents[transformCompIndex];
+			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(staticMeshComponent);
+			const SMaterialComponent* materialComp = scene->GetComponent<SMaterialComponent>(staticMeshComponent);
 
-			const I64 materialCompIndex = i;
-			auto& materialComp = materialComponents[materialCompIndex];
-
-			if (!RenderManager->IsStaticMeshInInstancedRenderList(staticMeshComponent.Name.AsString())) // if static, if instanced
+			if (!RenderManager->IsStaticMeshInInstancedRenderList(staticMeshComponent->Name.AsString())) // if static, if instanced
 			{		
-				for (U64 j = 0; j < staticMeshComponents.size(); j++)
+				for (const SDirectionalLightComponent* directionalLightComp : directionalLightComponents)
 				{
-					if (directionalLightComponents[j].IsInUse)
+					if (directionalLightComp->IsValid())
 					{
-						const SDirectionalLightComponent& directionalLightComp = directionalLightComponents[j];
-
 						SRenderCommand command;
-						command.Type = ERenderCommandType::ShadowAtlasPrePassDirectional;	
-						command.ShadowmapViews.push_back(directionalLightComp.ShadowmapView);
-						command.Matrices.push_back(transformComp.Transform.GetMatrix());
-						command.Strings.push_back(staticMeshComponent.Name.AsString());
-						command.U8s.push_back(staticMeshComponent.TopologyIndex);
-						command.DrawCallData = staticMeshComponent.DrawCallData;
+						command.Type = ERenderCommandType::ShadowAtlasPrePassDirectional;
+						command.ShadowmapViews.push_back(directionalLightComp->ShadowmapView);
+						command.Matrices.push_back(transformComp->Transform.GetMatrix());
+						command.Strings.push_back(staticMeshComponent->Name.AsString());
+						command.U8s.push_back(staticMeshComponent->TopologyIndex);
+						command.DrawCallData = staticMeshComponent->DrawCallData;
 						RenderManager->PushRenderCommand(command);
 					}
+				}
 
-					if (pointLightComponents[j].IsInUse)
+				for (const SPointLightComponent* pointLightComp : pointLightComponents)
+				{
+					if (pointLightComp->IsValid())
 					{
-						const SPointLightComponent& pointLightComp = pointLightComponents[j];
-
 						SRenderCommand command;
 						command.Type = ERenderCommandType::ShadowAtlasPrePassPoint;
-						command.Matrices.push_back(transformComp.Transform.GetMatrix());
-						command.Strings.push_back(staticMeshComponent.Name.AsString());
-						command.U8s.push_back(staticMeshComponent.TopologyIndex);
-						command.DrawCallData = staticMeshComponent.DrawCallData;
-						command.SetShadowMapViews(pointLightComp.ShadowmapViews);
+						command.Matrices.push_back(transformComp->Transform.GetMatrix());
+						command.Strings.push_back(staticMeshComponent->Name.AsString());
+						command.U8s.push_back(staticMeshComponent->TopologyIndex);
+						command.DrawCallData = staticMeshComponent->DrawCallData;
+						command.SetShadowMapViews(pointLightComp->ShadowmapViews);
 						RenderManager->PushRenderCommand(command);
 					}
+				}
 
-					if (spotLightComponents[j].IsInUse)
+				for (const SSpotLightComponent* spotLightComp : spotLightComponents)
+				{
+					if (spotLightComp->IsValid())
 					{
-						const SSpotLightComponent& spotLightComp = spotLightComponents[j];
-
 						SRenderCommand command;
 						command.Type = ERenderCommandType::ShadowAtlasPrePassSpot;
-						command.Matrices.push_back(transformComp.Transform.GetMatrix());
-						command.Strings.push_back(staticMeshComponent.Name.AsString());
-						command.U8s.push_back(staticMeshComponent.TopologyIndex);
-						command.DrawCallData = staticMeshComponent.DrawCallData;
-						command.ShadowmapViews.push_back(spotLightComp.ShadowmapView);
+						command.Matrices.push_back(transformComp->Transform.GetMatrix());
+						command.Strings.push_back(staticMeshComponent->Name.AsString());
+						command.U8s.push_back(staticMeshComponent->TopologyIndex);
+						command.DrawCallData = staticMeshComponent->DrawCallData;
+						command.ShadowmapViews.push_back(spotLightComp->ShadowmapView);
 						RenderManager->PushRenderCommand(command);
 					}
 				}
 
 				SRenderCommand command;
 				command.Type = ERenderCommandType::GBufferDataInstanced;
-				command.Matrices.push_back(transformComp.Transform.GetMatrix());
-				command.Strings.push_back(staticMeshComponent.Name.AsString());
-				command.U8s.push_back(staticMeshComponent.TopologyIndex);
-				command.U8s.push_back(staticMeshComponent.PixelShaderIndex);
-				command.U8s.push_back(staticMeshComponent.SamplerIndex);
-				command.DrawCallData = staticMeshComponent.DrawCallData;
-				command.Materials = materialComp.Materials;
+				command.Matrices.push_back(transformComp->Transform.GetMatrix());
+				command.Strings.push_back(staticMeshComponent->Name.AsString());
+				command.U8s.push_back(staticMeshComponent->TopologyIndex);
+				command.U8s.push_back(staticMeshComponent->PixelShaderIndex);
+				command.U8s.push_back(staticMeshComponent->SamplerIndex);
+				command.DrawCallData = staticMeshComponent->DrawCallData;
+				command.Materials = materialComp->Materials;
 				RenderManager->PushRenderCommand(command);
 			}
 
-			RenderManager->AddStaticMeshToInstancedRenderList(staticMeshComponent.Name.AsString(), transformComp.Transform.GetMatrix());
+			RenderManager->AddStaticMeshToInstancedRenderList(staticMeshComponent->Name.AsString(), transformComp->Transform.GetMatrix());
 		}
 
 		{
@@ -142,21 +127,20 @@ namespace Havtorn
 			RenderManager->PushRenderCommand(command);
 		}
 		
-		for (U64 i = 0; i < decalComponents.size(); i++)
+		for (const SDecalComponent* decalComponent : scene->GetComponents<SDecalComponent>())
 		{
-			const SDecalComponent& decalComponent = decalComponents[i];
-			if (!decalComponent.IsInUse)
+			if (!decalComponent->IsValid())
 				continue;
 
-			const STransformComponent& transformComp = transformComponents[i];
+			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(decalComponent);
 
 			SRenderCommand command;
 			command.Type = ERenderCommandType::DeferredDecal;
-			command.Matrices.push_back(transformComp.Transform.GetMatrix());
-			command.Flags.push_back(decalComponent.ShouldRenderAlbedo);
-			command.Flags.push_back(decalComponent.ShouldRenderMaterial);
-			command.Flags.push_back(decalComponent.ShouldRenderNormal);
-			command.U16s = decalComponent.TextureReferences;
+			command.Matrices.push_back(transformComp->Transform.GetMatrix());
+			command.Flags.push_back(decalComponent->ShouldRenderAlbedo);
+			command.Flags.push_back(decalComponent->ShouldRenderMaterial);
+			command.Flags.push_back(decalComponent->ShouldRenderNormal);
+			command.U16s = decalComponent->TextureReferences;
 			RenderManager->PushRenderCommand(command);
 		}
 
@@ -166,100 +150,88 @@ namespace Havtorn
 			RenderManager->PushRenderCommand(command);
 		}
 
-		for (U64 i = 0; i < directionalLightComponents.size(); i++)
+		for (const SDirectionalLightComponent* directionalLightComp : directionalLightComponents)
 		{
-			const SDirectionalLightComponent& directionalLightComp = directionalLightComponents[i];
-			if (!directionalLightComp.IsInUse)
+			if (!directionalLightComp->IsValid())
 				continue;
 
-			// TODO: Fix hard coded index, maybe store index of environmentlight entity that the light source should use/closest?
-			const SEnvironmentLightComponent& environmentLightComp = environmentLightComponents[1];
-			if (!environmentLightComp.IsInUse)
+			const SEnvironmentLightComponent* environmentLightComp = scene->GetComponent<SEnvironmentLightComponent>(directionalLightComp);
+			if (!environmentLightComp->IsValid())
 				continue;
 
 			SRenderCommand command;
 			command.Type = ERenderCommandType::DeferredLightingDirectional;
-			command.U16s.push_back(environmentLightComp.AmbientCubemapReference);
-			command.Vectors.push_back(directionalLightComp.Direction);
-			command.Colors.push_back(directionalLightComp.Color);
-			command.ShadowmapViews.push_back(directionalLightComp.ShadowmapView);
+			command.U16s.push_back(environmentLightComp->AmbientCubemapReference);
+			command.Vectors.push_back(directionalLightComp->Direction);
+			command.Colors.push_back(directionalLightComp->Color);
+			command.ShadowmapViews.push_back(directionalLightComp->ShadowmapView);
 			RenderManager->PushRenderCommand(command);
 
-			if (volumetricLightComponents[i].IsInUse)
+			if (const SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(directionalLightComp))
 			{
-				SVolumetricLightComponent& volumetricLightComp = volumetricLightComponents[i];
-
-				if (volumetricLightComp.IsActive)
+				if (volumetricLightComp->IsActive)
 				{
 					command.Type = ERenderCommandType::VolumetricLightingDirectional;
-					command.SetVolumetricDataFromComponent(volumetricLightComp);
+					command.SetVolumetricDataFromComponent(*volumetricLightComp);
 					RenderManager->PushRenderCommand(command);
 				}
 			}
 		}
 
-		// TODO: Fix ECS View functionality, going to be a mess to keep hard coded indices
-		
-		for (U64 i = 0; i < pointLightComponents.size(); i++)
+		for (const SPointLightComponent* pointLightComp : pointLightComponents)
 		{
-			const SPointLightComponent& pointLightComp = pointLightComponents[i];
-			if (!pointLightComp.IsInUse)
+			if (!pointLightComp->IsValid())
 				continue;
 
-			const STransformComponent& transformComp = transformComponents[i];
+			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(pointLightComp);
 
 			SRenderCommand command;
 			command.Type = ERenderCommandType::DeferredLightingPoint;
-			command.Matrices.push_back(transformComp.Transform.GetMatrix());
-			command.Colors.push_back(SColor(pointLightComp.ColorAndIntensity.X, pointLightComp.ColorAndIntensity.Y, pointLightComp.ColorAndIntensity.Z, 1.0f));
-			command.F32s.push_back(pointLightComp.ColorAndIntensity.W);
-			command.F32s.push_back(pointLightComp.Range);
-			command.SetShadowMapViews(pointLightComp.ShadowmapViews);
+			command.Matrices.push_back(transformComp->Transform.GetMatrix());
+			command.Colors.push_back(SColor(pointLightComp->ColorAndIntensity.X, pointLightComp->ColorAndIntensity.Y, pointLightComp->ColorAndIntensity.Z, 1.0f));
+			command.F32s.push_back(pointLightComp->ColorAndIntensity.W);
+			command.F32s.push_back(pointLightComp->Range);
+			command.SetShadowMapViews(pointLightComp->ShadowmapViews);
 			RenderManager->PushRenderCommand(command);
 
-			if (volumetricLightComponents[i].IsInUse)
+			if (const SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(pointLightComp))
 			{
-				SVolumetricLightComponent& volumetricLightComp = volumetricLightComponents[i];
-
-				if (volumetricLightComp.IsActive)
+				if (volumetricLightComp->IsActive)
 				{
 					command.Type = ERenderCommandType::VolumetricLightingPoint;
-					command.SetVolumetricDataFromComponent(volumetricLightComp);
+					command.SetVolumetricDataFromComponent(*volumetricLightComp);
 					RenderManager->PushRenderCommand(command);
 				}
 			}
 		}
 
-		for (U64 i = 0; i < spotLightComponents.size(); i++)
+		for (const SSpotLightComponent* spotLightComp : spotLightComponents)
 		{
-			const SSpotLightComponent& spotLightComp = spotLightComponents[i];
-			if (!spotLightComp.IsInUse)
+			if (!spotLightComp->IsValid())
 				continue;
 
-			const STransformComponent& transformComp = transformComponents[i];
+			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(spotLightComp);
 
 			SRenderCommand command;
 			command.Type = ERenderCommandType::DeferredLightingSpot;
-			command.Matrices.push_back(transformComp.Transform.GetMatrix());
-			command.Colors.push_back(SColor(spotLightComp.ColorAndIntensity.X, spotLightComp.ColorAndIntensity.Y, spotLightComp.ColorAndIntensity.Z, 1.0f));
-			command.F32s.push_back(spotLightComp.ColorAndIntensity.W);
-			command.F32s.push_back(spotLightComp.Range);
-			command.F32s.push_back(spotLightComp.OuterAngle);
-			command.F32s.push_back(spotLightComp.InnerAngle);
-			command.Vectors.push_back(spotLightComp.Direction);
-			command.Vectors.push_back(spotLightComp.DirectionNormal1);
-			command.Vectors.push_back(spotLightComp.DirectionNormal2);
-			command.ShadowmapViews.push_back(spotLightComp.ShadowmapView);
+			command.Matrices.push_back(transformComp->Transform.GetMatrix());
+			command.Colors.push_back(SColor(spotLightComp->ColorAndIntensity.X, spotLightComp->ColorAndIntensity.Y, spotLightComp->ColorAndIntensity.Z, 1.0f));
+			command.F32s.push_back(spotLightComp->ColorAndIntensity.W);
+			command.F32s.push_back(spotLightComp->Range);
+			command.F32s.push_back(spotLightComp->OuterAngle);
+			command.F32s.push_back(spotLightComp->InnerAngle);
+			command.Vectors.push_back(spotLightComp->Direction);
+			command.Vectors.push_back(spotLightComp->DirectionNormal1);
+			command.Vectors.push_back(spotLightComp->DirectionNormal2);
+			command.ShadowmapViews.push_back(spotLightComp->ShadowmapView);
 			RenderManager->PushRenderCommand(command);
 
-			if (volumetricLightComponents[i].IsInUse)
+			if (const SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(spotLightComp))
 			{
-				SVolumetricLightComponent& volumetricLightComp = volumetricLightComponents[i];
-
-				if (volumetricLightComp.IsActive)
+				if (volumetricLightComp->IsValid())
 				{
 					command.Type = ERenderCommandType::VolumetricLightingSpot;
-					command.SetVolumetricDataFromComponent(volumetricLightComp);
+					command.SetVolumetricDataFromComponent(*volumetricLightComp);
 					RenderManager->PushRenderCommand(command);
 				}
 			}
@@ -277,46 +249,45 @@ namespace Havtorn
 			RenderManager->PushRenderCommand(command);
 		}
 
-		for (U64 i = 0; i < spriteComponents.size(); i++)
+		for (const SSpriteComponent* spriteComp : scene->GetComponents<SSpriteComponent>())
 		{
-			const SSpriteComponent& spriteComp = spriteComponents[i];
-			if (!spriteComp.IsInUse)
+			if (!spriteComp->IsValid())
 				continue;
 
-			RenderManager->AddSpriteToInstancedUVRectRenderList(spriteComp.TextureIndex, spriteComp.UVRect);
-			RenderManager->AddSpriteToInstancedColorRenderList(spriteComp.TextureIndex, spriteComp.Color.AsVector4());
+			RenderManager->AddSpriteToInstancedUVRectRenderList(spriteComp->TextureIndex, spriteComp->UVRect);
+			RenderManager->AddSpriteToInstancedColorRenderList(spriteComp->TextureIndex, spriteComp->Color.AsVector4());
 
-			const STransformComponent& transformComp = transformComponents[i];
-			const STransform2DComponent& transform2DComp = transform2DComponents[i];
+			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(spriteComp);
+			const STransform2DComponent* transform2DComp = scene->GetComponent<STransform2DComponent>(spriteComp);
 
-			if (transformComp.IsInUse)
+			if (transformComp->IsValid())
 			{
-				if (!RenderManager->IsSpriteInInstancedWorldSpaceTransformRenderList(spriteComp.TextureIndex)) 
+				if (!RenderManager->IsSpriteInInstancedWorldSpaceTransformRenderList(spriteComp->TextureIndex)) 
 				{
 					// NR: Don't push a command every time
 					SRenderCommand command;
 					command.Type = ERenderCommandType::GBufferSpriteInstanced;
-					command.U32s.push_back(spriteComp.TextureIndex);
+					command.U32s.push_back(spriteComp->TextureIndex);
 					RenderManager->PushRenderCommand(command);
 				}
 
-				RenderManager->AddSpriteToInstancedWorldSpaceTransformRenderList(spriteComp.TextureIndex, transformComp.Transform.GetMatrix());
+				RenderManager->AddSpriteToInstancedWorldSpaceTransformRenderList(spriteComp->TextureIndex, transformComp->Transform.GetMatrix());
 			}
-			else if (transform2DComp.IsInUse)
+			else if (transform2DComp->IsValid())
 			{
-				if (!RenderManager->IsSpriteInInstancedScreenSpaceTransformRenderList(spriteComp.TextureIndex))
+				if (!RenderManager->IsSpriteInInstancedScreenSpaceTransformRenderList(spriteComp->TextureIndex))
 				{
 					SRenderCommand command;
 					command.Type = ERenderCommandType::ScreenSpaceSprite;
-					command.U32s.push_back(spriteComp.TextureIndex);
+					command.U32s.push_back(spriteComp->TextureIndex);
 					RenderManager->PushRenderCommand(command);
 				}
 
 				SMatrix transformFrom2DComponent;
-				transformFrom2DComponent.SetScale(transform2DComp.Scale.X, transform2DComp.Scale.Y, 1.0f);
-				transformFrom2DComponent *= SMatrix::CreateRotationAroundZ(UMath::DegToRad(transform2DComp.DegreesRoll));
-				transformFrom2DComponent.SetTranslation({ transform2DComp.Position.X, transform2DComp.Position.Y, 0.0f });
-				RenderManager->AddSpriteToInstancedScreenSpaceTransformRenderList(spriteComp.TextureIndex, transformFrom2DComponent);
+				transformFrom2DComponent.SetScale(transform2DComp->Scale.X, transform2DComp->Scale.Y, 1.0f);
+				transformFrom2DComponent *= SMatrix::CreateRotationAroundZ(UMath::DegToRad(transform2DComp->DegreesRoll));
+				transformFrom2DComponent.SetTranslation({ transform2DComp->Position.X, transform2DComp->Position.Y, 0.0f });
+				RenderManager->AddSpriteToInstancedScreenSpaceTransformRenderList(spriteComp->TextureIndex, transformFrom2DComponent);
 			}
 		}
 

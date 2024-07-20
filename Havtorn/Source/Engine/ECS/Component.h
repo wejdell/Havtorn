@@ -5,17 +5,25 @@
 
 namespace Havtorn
 {
-	struct SComponent
+	struct HAVTORN_API SComponent
 	{
 		SComponent() = default;
-
-		explicit SComponent(EComponentType type)
-			: Type(type)
-		{}
-
+		SComponent(const SEntity& entity);
 		virtual ~SComponent() = default;
 
-		EComponentType Type = EComponentType::Count;
-		bool IsInUse = false;
+		bool IsValid() const;
+
+		SEntity EntityOwner = SEntity::Null;
+
+		//SComponent() = default;
+
+		//explicit SComponent(EComponentType type)
+		//	: Type(type)
+		//{}
+
+		//virtual ~SComponent() = default;
+
+		//EComponentType Type = EComponentType::Count;
+		//bool IsInUse = false;
 	};
 }

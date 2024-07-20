@@ -84,7 +84,7 @@ namespace Havtorn
             return *this;
         }
 
-        CHavtornStaticString& operator=(const CHavtornStaticString&& other)
+        CHavtornStaticString& operator=(const CHavtornStaticString&& other) noexcept 
         {
             Characters = std::move(other.Characters);
             Size = static_cast<U8>(other.Size);

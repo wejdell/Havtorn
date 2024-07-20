@@ -17,7 +17,7 @@ namespace Havtorn
 		Systems.emplace_back(std::make_unique<CCameraSystem>());
 		Systems.emplace_back(std::make_unique<CLightSystem>(RenderManager));
 		Systems.emplace_back(std::make_unique<CSpriteAnimatorGraphSystem>());
-		Systems.emplace_back(std::make_unique<CSequencerSystem>());
+		//Systems.emplace_back(std::make_unique<CSequencerSystem>());
 		Systems.emplace_back(std::make_unique<CRenderSystem>(RenderManager));
 		//Systems.emplace_back(std::make_unique<Debug::UDebugShapeSystem>(Scenes.back().get(), RenderManager));
 
@@ -62,7 +62,7 @@ namespace Havtorn
 
 	std::vector<SEntity>& CWorld::GetEntities() const
 	{
-		return Scenes.back()->GetEntities();
+		return Scenes.back()->Entities;
 	}
 	
 	void CWorld::SaveActiveScene(const std::string& destinationPath)
@@ -77,10 +77,10 @@ namespace Havtorn
 		I64 sceneIndex = Scenes.size() - 1;
 
 		SSceneFileHeader fileHeader;
-		fileHeader.NumberOfEntities = static_cast<U32>(scene->GetEntities().size());
+		fileHeader.NumberOfEntities = static_cast<U32>(scene->Entities.size());
 		fileHeader.Scene = scene.get();
 
-		const U32 fileSize = fileHeader.GetSize() + AssetRegistry->GetSize(sceneIndex);
+		const U32 fileSize = fileHeader.GetSize() + AssetRegistry->GetSize();
 		char* data = new char[fileSize];
 
 		U64 pointerPosition = 0;	

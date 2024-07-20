@@ -58,8 +58,8 @@ namespace ImGui
 				if (!entity.IsValid())
 					continue;
 		
-				const Havtorn::SMetaDataComponent& metaDataComp = scene->GetMetaDataComponents()[scene->GetSceneIndex(entity)];
-				const std::string entryString = metaDataComp.IsInUse ? metaDataComp.Name.AsString() : "Selected";
+				const Havtorn::SMetaDataComponent* metaDataComp = scene->GetComponent<Havtorn::SMetaDataComponent>(entity);
+				const std::string entryString = metaDataComp->IsValid() ? metaDataComp->Name.AsString() : "Selected";
 
 				ImGui::PushID(static_cast<Havtorn::I32>(entity.GUID));
 				if (ImGui::Selectable(entryString.c_str(), index == SelectedIndex, ImGuiSelectableFlags_None))

@@ -46,7 +46,7 @@ namespace Havtorn
 		Instance = this;
 		HV_LOG_INFO("GDebugUtilityShape: Instance created.");
 
-		U64 currentNrOfEntities = scene->GetEntities().size();
+		U64 currentNrOfEntities = scene->Entities.size();
 		for (U16 i = 0; i < MaxShapes; i++)
 		{
 			//Ref<SEntity> entity = scene->CreateEntity("DebugShape" + std::to_string(i));
@@ -313,8 +313,6 @@ namespace Havtorn
 		const std::vector<Ref<STransformComponent>>& /*transformComponents*/
 	)
 	{
-		typedef std::array<Ref<SComponent>, static_cast<size_t>(EComponentType::Count)> Components;
-
 		// Send and set prepass rendercommand for debug shapes
 		{
 			//Components components;

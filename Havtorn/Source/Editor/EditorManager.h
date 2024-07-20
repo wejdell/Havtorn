@@ -88,8 +88,8 @@ namespace Havtorn
 		void SetCurrentScene(CScene* scene);
 		CScene* GetCurrentScene() const;
 
-		void SetSelectedEntity(SEntity* entity);
-		SEntity* GetSelectedEntity() const;
+		void SetSelectedEntity(const SEntity& entity);
+		SEntity GetSelectedEntity() const;
 
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry);
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromName(const std::string& assetName);
@@ -137,9 +137,7 @@ namespace Havtorn
 		CEditorResourceManager* ResourceManager = nullptr;
 
 		CScene* CurrentScene = nullptr;
-
-		// TODO.NR: Should be a weak ptr
-		SEntity* SelectedEntity = nullptr;
+		SEntity SelectedEntity = SEntity::Null;
 
 		// TODO.NR: Figure out why we can't use unique ptrs with these namespaced imgui classes
 		std::vector<ImGui::CWindow*> Windows = {};

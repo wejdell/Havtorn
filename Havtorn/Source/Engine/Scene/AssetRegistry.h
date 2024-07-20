@@ -5,34 +5,35 @@
 
 namespace Havtorn
 {
-	struct SAssetReferenceCounter
-	{
-		EComponentType ComponentType = EComponentType::Count;
-		U16 ComponentIndex = 0;
-		U8 ComponentSubIndex = 0;
-		U8 SceneIndex = 0;
-
-		bool HasSameComponent(const SAssetReferenceCounter& other) const;
-		bool operator==(const SAssetReferenceCounter& other) const;
-	};
-
 	class CAssetRegistry
 	{
+		struct SReferenceCounter
+		{
+			SReferenceCounter() = default;
+			SReferenceCounter(U64 guid) 
+				: GUID(guid)
+				, NumberOfReferences(0)
+			{}
+
+			U64 GUID = 0;
+			U64 NumberOfReferences = 0;
+		};
+
 	public:
-		void Register(const std::string& assetPath, SAssetReferenceCounter&& counter);
-		void Register(const std::vector<std::string>& assetPaths, const SAssetReferenceCounter& counter);
-		void Unregister(const std::string& assetPath, const SAssetReferenceCounter& counter);
+		U64 Register(const std::string& assetPath);
+		std::vector<U64> Register(const std::vector<std::string>& assetPaths);
+		void Unregister(const std::string& assetPath);
 
 		// TODO.NR: This is slow, and should only be done during loading/unloading
-		const std::string& GetAssetPath(const SAssetReferenceCounter& counter);
-		std::vector<std::string> GetAssetPaths(const SAssetReferenceCounter& counter);
+		const std::string& GetAssetPath(const U64& guid);
+		std::vector<std::string> GetAssetPaths(const std::vector<U64>& guids);
 
-		[[nodiscard]] U32 GetSize(I64 sceneIndex) const;
-		void Serialize(I64 sceneIndex, char* toData, U64& pointerPosition) const;
-		void Deserialize(I64 sceneIndex, const char* fromData, U64& pointerPosition);
+		[[nodiscard]] U32 GetSize() const;
+		void Serialize(char* toData, U64& pointerPosition) const;
+		void Deserialize(const char* fromData, U64& pointerPosition);
 
 	private:
-		std::map<std::string, std::vector<SAssetReferenceCounter>> Registry;
+		std::map<std::string, SReferenceCounter> Registry;
 		const std::string InvalidPath = "INVALID_ASSET_PATH";
 	};
 }

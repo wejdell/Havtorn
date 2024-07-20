@@ -27,23 +27,23 @@ namespace ImGui
 		void TryInspectComponent(Havtorn::EComponentType componentType);
 
 	private:
-		void InspectTransformComponent();
-		void InspectStaticMeshComponent();
-		void InspectCameraComponent();
-		void InspectCameraControllerComponent();
-		void InspectMaterialComponent();
-		void InspectEnvironmentLightComponent();
-		void InspectDirectionalLightComponent();
-		void InspectPointLightComponent();
-		void InspectSpotLightComponent();
-		void InspectVolumetricLightComponent();
-		void InspectDecalComponent();
-		void InspectSpriteComponent();
-		void InspectTransform2DComponent();
-		void InspectSpriteAnimatorGraphComponent();
-		void InspectSequencerComponent();
-		// AS: Ghosty is a Game-project Component / System. The goal is to separate out any Game Component/Systems so they don't have to be added in Engine
-		void InspectGhostyComponent();
+		//void InspectTransformComponent();
+		//void InspectStaticMeshComponent();
+		//void InspectCameraComponent();
+		//void InspectCameraControllerComponent();
+		//void InspectMaterialComponent();
+		//void InspectEnvironmentLightComponent();
+		//void InspectDirectionalLightComponent();
+		//void InspectPointLightComponent();
+		//void InspectSpotLightComponent();
+		//void InspectVolumetricLightComponent();
+		//void InspectDecalComponent();
+		//void InspectSpriteComponent();
+		//void InspectTransform2DComponent();
+		//void InspectSpriteAnimatorGraphComponent();
+		//void InspectSequencerComponent();
+		//// AS: Ghosty is a Game-project Component / System. The goal is to separate out any Game Component/Systems so they don't have to be added in Engine
+		//void InspectGhostyComponent();
 
 		void OpenSelectMeshAssetModal(Havtorn::I64 staticMeshComponentIndex);
 		void OpenSelectTextureAssetModal(Havtorn::U16& textureRefToChange);
@@ -56,7 +56,7 @@ namespace ImGui
 		Havtorn::CScene* Scene = nullptr;
 		Havtorn::SVector2<Havtorn::F32> TexturePreviewSize = { 64.0f, 64.0f };
 		Havtorn::SVector2<Havtorn::F32> DummySize = { 0.0f, 0.5f };
-		Havtorn::U64 SelectedEntityIndex = 0;
+		Havtorn::SEntity SelectedEntity = Havtorn::SEntity::Null;
 		Havtorn::F32 SlideSpeed = 0.1f;
 		Havtorn::U16 MaterialRefToChangeIndex = 0;
 		Havtorn::U8 MaterialToChangeIndex = 0;
