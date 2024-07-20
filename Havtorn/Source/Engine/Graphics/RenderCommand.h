@@ -8,13 +8,7 @@
 
 namespace Havtorn
 {
-//#define GetComponent(x) GetComponentInternal<const S##x*>(EComponentType::##x)
-//#define GetComponent(x) GetComponentInternal<S##x&>(EComponentType::##x)
-#define GetComponent(x) Get##x()
 	struct SComponent;
-
-	// TODO.NR: Can't send pointers between threads (to Render Thread), need to copy components
-	typedef std::array<const SComponent*, static_cast<U64>(EComponentType::Count)> SComponentArray;
 
 	enum class ERenderCommandType
 	{

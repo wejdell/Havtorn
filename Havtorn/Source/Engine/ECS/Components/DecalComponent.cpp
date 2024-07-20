@@ -11,6 +11,9 @@ namespace Havtorn
         SerializeData(ShouldRenderAlbedo, toData, pointerPosition);
         SerializeData(ShouldRenderMaterial, toData, pointerPosition);
         SerializeData(ShouldRenderNormal, toData, pointerPosition);
+        SerializeData(EntityOwner, toData, pointerPosition);
+        SerializeData(static_cast<U32>(AssetRegistryKeys.size()), toData, pointerPosition);
+        SerializeData(AssetRegistryKeys, toData, pointerPosition);
     }
 
     void SDecalComponent::Deserialize(const char* fromData, U64& pointerPosition)
@@ -19,12 +22,18 @@ namespace Havtorn
         DeserializeData(ShouldRenderAlbedo, fromData, pointerPosition);
         DeserializeData(ShouldRenderMaterial, fromData, pointerPosition);
         DeserializeData(ShouldRenderNormal, fromData, pointerPosition);
+        DeserializeData(EntityOwner, fromData, pointerPosition);
+        U32 numberOfAssetRegistryKeys = 0;
+        DeserializeData(numberOfAssetRegistryKeys, fromData, pointerPosition);
+        DeserializeData(AssetRegistryKeys, fromData, numberOfAssetRegistryKeys, pointerPosition);
     }
 
     U32 SDecalComponent::GetSize() const
     {
         U32 size = 3 * sizeof(bool);
-
+        size += sizeof(SEntity);
+        size += sizeof(U32);
+        size += sizeof(U64) * static_cast<U32>(AssetRegistryKeys.size());
         return size;
     }
 }

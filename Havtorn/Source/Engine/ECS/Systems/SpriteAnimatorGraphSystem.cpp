@@ -17,26 +17,26 @@ namespace Havtorn
 	void CSpriteAnimatorGraphSystem::Update(CScene* scene)
 	{
 		const F32 deltaTime = GTime::Dt();
-		std::vector<SSpriteAnimatorGraphComponent>& spriteAnimatorGraphComponents = scene->GetSpriteAnimatorGraphComponents();
-		std::vector<SSpriteComponent>& spriteComponents = scene->GetSpriteComponents();
+		const std::vector<SSpriteAnimatorGraphComponent*>& spriteAnimatorGraphComponents = scene->GetComponents<SSpriteAnimatorGraphComponent>();
+		const std::vector<SSpriteComponent*>& spriteComponents = scene->GetComponents<SSpriteComponent>();
 
 		for (U64 i = 0; i < spriteAnimatorGraphComponents.size(); i++)
 		{
-			SSpriteAnimatorGraphComponent& component = spriteAnimatorGraphComponents[i];
-			if (!component.IsInUse)
+			SSpriteAnimatorGraphComponent* component = spriteAnimatorGraphComponents[i];
+			if (!component)
 				continue;
 
-			if(component.AnimationClips.size() == 0)
+			if(component->AnimationClips.size() == 0)
 				continue;
 
-			if (component.Graph.Evaluate)
+			if (component->Graph.Evaluate)
 			{
-				SSpriteAnimatorGraphNode* currentNode = &component.Graph;
+				SSpriteAnimatorGraphNode* currentNode = &component->Graph;
 				while (currentNode != nullptr)
 				{
 					if (currentNode->AnimationClipKey != -1)
 					{
-						component.ResolvedAnimationClipKey = currentNode->AnimationClipKey;
+						component->ResolvedAnimationClipKey = currentNode->AnimationClipKey;
 						break;
 					}
 					
@@ -46,7 +46,7 @@ namespace Havtorn
 				}
 			}
 
-			spriteComponents[i].UVRect = TickAnimationClip(component, deltaTime);
+			spriteComponents[i]->UVRect = TickAnimationClip(*component, deltaTime);
 		}
 	}
 

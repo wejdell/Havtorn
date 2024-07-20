@@ -20,20 +20,18 @@ namespace Havtorn
 	void CGhostySystem::Update(CScene* scene)
 	{
 		F32 deltaTime = GTime::Dt();
-		std::vector<STransformComponent>& transformComponents = scene->GetTransformComponents();
-		std::vector<SGhostyComponent>& ghostyComponents = scene->GetGhostyComponents();
-		for (U32 i = 0; i < ghostyComponents.size(); i++)
+		
+		for (SGhostyComponent* ghostyComponent : scene->GetComponents<SGhostyComponent>())
 		{
-			SGhostyComponent& ghosty = ghostyComponents[i];
-			if (!ghosty.IsInUse)
+			if (!ghostyComponent->IsValid())
 				continue;
 
-			ghosty.State.Input = input;
+			ghostyComponent->State.Input = input;
 
-			STransformComponent& transform = transformComponents[i];
-			if (ghosty.State.IsInWalkingAnimationState)
+			STransformComponent* transform = scene->GetComponent<STransformComponent>(ghostyComponent);
+			if (ghostyComponent->State.IsInWalkingAnimationState)
 			{
-				transform.Transform.Move(ghosty.State.Input * ghosty.State.MoveSpeed * deltaTime);
+				transform->Transform.Move(ghostyComponent->State.Input * ghostyComponent->State.MoveSpeed * deltaTime);
 			}
 		}
 
@@ -42,20 +40,20 @@ namespace Havtorn
 
 	I16 CGhostySystem::EvaluateIdle(CScene* scene, U64 entitySceneIndex)
 	{
-		SGhostyComponent& ghostyComponent = scene->GetGhostyComponents()[entitySceneIndex];
-		if (ghostyComponent.State.Input.LengthSquared() > 0.0f)
+		SGhostyComponent* ghostyComponent = scene->GetComponents<SGhostyComponent>()[entitySceneIndex];
+		if (ghostyComponent->State.Input.LengthSquared() > 0.0f)
 			return 1;
 
-		ghostyComponent.State.IsInWalkingAnimationState = false;
+		ghostyComponent->State.IsInWalkingAnimationState = false;
 		return 0;
 	}
 
 	I16 CGhostySystem::EvaluateLocomotion(CScene* scene, U64 entitySceneIndex)
 	{
-		SGhostyComponent& ghostyComponent = scene->GetGhostyComponents()[entitySceneIndex];
-		SVector stateInput = ghostyComponent.State.Input;
+		SGhostyComponent* ghostyComponent = scene->GetComponents<SGhostyComponent>()[entitySceneIndex];
+		SVector stateInput = ghostyComponent->State.Input;
 
-		ghostyComponent.State.IsInWalkingAnimationState = true;
+		ghostyComponent->State.IsInWalkingAnimationState = true;
 
 		if (stateInput.X < 0)
 			return 0;

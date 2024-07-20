@@ -13,8 +13,9 @@ namespace Havtorn
 
 	struct SCameraComponent : public SComponent
 	{
-		SCameraComponent()
-			: SComponent(EComponentType::CameraComponent)
+		SCameraComponent() = default;
+		SCameraComponent(const SEntity& entityOwner)
+			: SComponent(entityOwner)
 		{}
 
 		SMatrix ViewMatrix;

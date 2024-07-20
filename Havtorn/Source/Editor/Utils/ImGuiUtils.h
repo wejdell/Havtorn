@@ -1,6 +1,7 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #pragma once
+#include <Core/HavtornString.h>
 //#include <imgui.h>
 
 namespace ImGui

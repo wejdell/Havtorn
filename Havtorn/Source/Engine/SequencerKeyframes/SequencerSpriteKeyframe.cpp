@@ -12,14 +12,14 @@ namespace Havtorn
 
 	void SSequencerSpriteKeyframe::SetEntityDataOnKeyframe(CScene* scene, U64 sceneIndex)
 	{
-		SSpriteComponent& spriteComponent = scene->GetSpriteComponents()[sceneIndex];
-		UVRect = spriteComponent.UVRect;
+		const SSpriteComponent* spriteComponent = scene->GetComponents<SSpriteComponent>()[sceneIndex];
+		UVRect = spriteComponent->UVRect;
 	}
 
 	void SSequencerSpriteKeyframe::SetKeyframeDataOnEntity(CScene* scene, U64 sceneIndex)
 	{
-		SSpriteComponent& spriteComponent = scene->GetSpriteComponents()[sceneIndex];
-		spriteComponent.UVRect = UVRect;
+		SSpriteComponent* spriteComponent = scene->GetComponents<SSpriteComponent>()[sceneIndex];
+		spriteComponent->UVRect = UVRect;
 	}
 
 	U32 Havtorn::SSequencerSpriteKeyframe::GetSize() const
