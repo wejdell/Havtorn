@@ -489,7 +489,7 @@ namespace Havtorn
 	void CRenderManager::LoadSpriteComponent(const std::string& filePath, SSpriteComponent* outSpriteComponent)
 	{
 		auto textureBank = GEngine::GetTextureBank();
-		outSpriteComponent->TextureIndex = textureBank->GetTextureIndex(filePath);
+		outSpriteComponent->TextureIndex = static_cast<U16>(textureBank->GetTextureIndex(filePath));
 	}
 
 	SVector2<F32> CRenderManager::GetShadowAtlasResolution() const

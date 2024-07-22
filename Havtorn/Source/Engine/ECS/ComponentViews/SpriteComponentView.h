@@ -1,21 +1,12 @@
-// Copyright 2023 Team Havtorn. All Rights Reserved.
+// Copyright 2024 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include "ECS/Component.h"
-#include "Core/Color.h"
+#include "ECS/ComponentView.h"
 
 namespace Havtorn
 {
-	struct SSpriteComponent : public SComponent
+	struct SSpriteComponentView : public SComponentView
 	{
-		SSpriteComponent() = default;
-		SSpriteComponent(const SEntity& entityOwner)
-			: SComponent(entityOwner)
-		{}
-
-		SColor Color = SColor::White;
-		SVector4 UVRect = SVector4::Zero;
-		U32 TextureIndex = 0;
-		U64 AssetRegistryKey = 0;
+		SComponentViewResult View(const SEntity& entityOwner, CScene* scene) override;
 	};
 }

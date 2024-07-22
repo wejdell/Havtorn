@@ -1,22 +1,12 @@
-// Copyright 2022 Team Havtorn. All Rights Reserved.
+// Copyright 2024 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include "ECS/Component.h"
-#include "Graphics/GraphicsStructs.h"
+#include "ECS/ComponentView.h"
 
 namespace Havtorn
 {
-	struct SDirectionalLightComponent : public SComponent
+	struct SDirectionalLightComponentView : public SComponentView
 	{
-		SDirectionalLightComponent() = default;
-		SDirectionalLightComponent(const SEntity& entityOwner)
-			: SComponent(entityOwner)
-		{}
-
-		SShadowmapViewData ShadowmapView = SShadowmapViewData();
-		SVector4 Direction = SVector4::Up;
-		SVector4 Color = SVector4(1.0f, 1.0f, 1.0f, 1.0f);
-		SVector2<F32> ShadowViewSize = { 8.0f, 8.0f };
-		SVector2<F32> ShadowNearAndFarPlane = { -8.0f, 8.0f };
+		SComponentViewResult View(const SEntity& entityOwner, CScene* scene) override;
 	};
 }

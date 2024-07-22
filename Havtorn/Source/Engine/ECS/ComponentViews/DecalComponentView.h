@@ -7,6 +7,6 @@ namespace Havtorn
 {
 	struct SDecalComponentView : public SComponentView
 	{
-		void View(const SEntity& entityOwner, CScene* scene) override;
+		SComponentViewResult View(const SEntity& entityOwner, CScene* scene) override;
 	};
 }

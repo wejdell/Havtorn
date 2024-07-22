@@ -2,17 +2,34 @@
 
 #pragma once
 
-#include "Entity.h"
-#include "Scene/Scene.h"
+//#include "Entity.h"
+//#include "Scene/Scene.h"
 
 namespace Havtorn
 {
+	struct SComponent;
+	struct SEntity;
+	class CScene;
+
+	enum class EComponentViewResultLabel
+	{
+		PassThrough,
+		UpdateCameraGizmo,
+		OpenMeshAssetModal,
+		OpenTextureAssetModal,
+		OpenMaterialAssetModal,
+		OpenSpriteAnimatorGraph,
+	};
+
+	struct SComponentViewResult
+	{
+		EComponentViewResultLabel Label = EComponentViewResultLabel::PassThrough;
+		SComponent* ComponentViewed = nullptr;
+		U8 ComponentSubIndex = 0;
+	};
+
 	struct SComponentView
 	{
-		virtual void View(const SEntity& entityOwner, CScene* scene) {};
+		virtual SComponentViewResult View(const SEntity& /*entityOwner*/, CScene* /*scene*/) {};
 	};
 }
-
-/*
-add as components, this is what inspector uses, puti n scene, similar pattern but with std::map<guid, SComponentView*>
-*/

@@ -12,7 +12,7 @@
 
 #include <ECS/Systems/DebugShapeSystem.h>
 
-#include <imgui.h>
+#include <Core/imgui.h>
 
 namespace ImGui
 {
@@ -65,7 +65,7 @@ namespace ImGui
 				if (ImGui::Selectable(entryString.c_str(), index == SelectedIndex, ImGuiSelectableFlags_None))
 				{
 					SelectedIndex = index;
-					Manager->SetSelectedEntity(&entity);
+					Manager->SetSelectedEntity(entity);
 				}
 				ImGui::PopID();
 			}

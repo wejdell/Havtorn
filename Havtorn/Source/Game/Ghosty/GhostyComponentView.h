@@ -5,7 +5,7 @@
 
 namespace Havtorn
 {
-	struct SSpotLightComponentView : public SComponentView
+	struct SGhostyComponentView : SComponentView
 	{
 		SComponentViewResult View(const SEntity& entityOwner, CScene* scene) override;
 	};

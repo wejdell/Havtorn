@@ -1,19 +1,12 @@
-// Copyright 2022 Team Havtorn. All Rights Reserved.
+// Copyright 2024 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include "ECS/Component.h"
+#include "ECS/ComponentView.h"
 
 namespace Havtorn
 {
-	struct STransformComponent : public SComponent
+	struct STransformComponentView : public SComponentView
 	{
-		STransformComponent() = default;
-		STransformComponent(const SEntity& entityOwner)
-			: SComponent(entityOwner)
-		{}
-
-		STransform Transform;
-
-		// TODO.NR: Add Static/Dynamic modifiers
+		SComponentViewResult View(const SEntity& entityOwner, CScene* scene) override;
 	};
 }

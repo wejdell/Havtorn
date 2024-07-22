@@ -1,20 +1,12 @@
-// Copyright 2022 Team Havtorn. All Rights Reserved.
+// Copyright 2024 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include "ECS/Component.h"
-#include "Graphics/GraphicsStructs.h"
+#include "ECS/ComponentView.h"
 
 namespace Havtorn
 {
-	struct SPointLightComponent : public SComponent
+	struct SPointLightComponentView : public SComponentView
 	{
-		SPointLightComponent() = default;
-		SPointLightComponent(const SEntity& entityOwner)
-			: SComponent(entityOwner)
-		{}
-
-		std::array<SShadowmapViewData, 6> ShadowmapViews = {};
-		SVector4 ColorAndIntensity = SVector4(1.0f, 1.0f, 1.0f, 1.0f);
-		F32 Range = 1.0f;
+		SComponentViewResult View(const SEntity& entityOwner, CScene* scene) override;
 	};
 }

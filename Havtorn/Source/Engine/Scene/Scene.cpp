@@ -9,54 +9,17 @@
 #include "World.h"
 #include "AssetRegistry.h"
 
+#include <../Game/Ghosty/GhostyComponent.h>
+#include <../Game/Ghosty/GhostySystem.h>
+
 namespace Havtorn
 {
 	CScene::CScene()
-		//: FirstUnusedEntityIndex(0)
-	{
-		//Entities.resize(ENTITY_LIMIT);
-		//TransformComponents.resize(ENTITY_LIMIT);
-		//StaticMeshComponents.resize(ENTITY_LIMIT);
-		//CameraComponents.resize(ENTITY_LIMIT);
-		//CameraControllerComponents.resize(ENTITY_LIMIT);
-		//MaterialComponents.resize(ENTITY_LIMIT);
-		//EnvironmentLightComponents.resize(ENTITY_LIMIT);
-		//DirectionalLightComponents.resize(ENTITY_LIMIT);
-		//PointLightComponents.resize(ENTITY_LIMIT);
-		//SpotLightComponents.resize(ENTITY_LIMIT);
-		//VolumetricLightComponents.resize(ENTITY_LIMIT);
-		//DecalComponents.resize(ENTITY_LIMIT);
-		//SpriteComponents.resize(ENTITY_LIMIT);
-		//Transform2DComponents.resize(ENTITY_LIMIT);
-		//SpriteAnimatorGraphComponents.resize(ENTITY_LIMIT);
-		//SequencerComponents.resize(ENTITY_LIMIT);
-		//GhostyComponents.resize(ENTITY_LIMIT);
-		//DebugShapeComponents.resize(ENTITY_LIMIT);
-		//MetaDataComponents.resize(ENTITY_LIMIT);
-	}
+	{}
 
 	CScene::~CScene()
 	{
-		//EntityVectorIndices.clear();
 		Entities.clear();
-		//TransformComponents.clear();
-		//StaticMeshComponents.clear();
-		//CameraComponents.clear();
-		//CameraControllerComponents.clear();
-		//MaterialComponents.clear();
-		//EnvironmentLightComponents.clear();
-		//DirectionalLightComponents.clear();
-		//PointLightComponents.clear();
-		//SpotLightComponents.clear();
-		//VolumetricLightComponents.clear();
-		//DecalComponents.clear();
-		//SpriteComponents.clear();
-		//Transform2DComponents.clear();
-		//SpriteAnimatorGraphComponents.clear();
-		//SequencerComponents.clear();
-		//GhostyComponents.clear();
-		//DebugShapeComponents.clear();
-		//MetaDataComponents.clear();
 		RenderManager = nullptr;
 	}
 
@@ -106,7 +69,7 @@ namespace Havtorn
 
 		// === Directional light ===
 		const SEntity& directionalLightEntity = AddEntity("Directional Light");
-		if (directionalLightEntity.IsValid())
+		if (!directionalLightEntity.IsValid())
 			return false;
 
 		SDirectionalLightComponent& directionalLight = *AddComponent<SDirectionalLightComponent>(directionalLightEntity);
@@ -1030,90 +993,31 @@ namespace Havtorn
 		EntityIndices.erase(entity.GUID);
 	}
 
-	//std::vector<SEntity>& CScene::GetEntities()
-	//{
-	//	return Entities;
-	//}
+	void CScene::RemoveViews(const SEntity& entityOwner)
+	{
+		if (!ComponentViews.contains(entityOwner.GUID))
+			return;
 
-	//SEntity* CScene::GetNewEntity(U64 guid)
-	//{
-	//	// TODO: Figure out Tombstone solution
+		for (auto& [typeHashID, componentView] : ComponentViews.at(entityOwner.GUID))
+		{
+			delete componentView;
+			componentView = nullptr;
+		}
 
-	//	if (FirstUnusedEntityIndex >= ENTITY_LIMIT)
-	//	{
-	//		HV_ASSERT(false, "Reached ENTITY_LIMIT.");
-	//		return nullptr;
-	//	}
+		ComponentViews.erase(entityOwner.GUID);
+	}
 
-	//	SEntity* outEntity = &Entities[FirstUnusedEntityIndex];
-	//	outEntity->GUID = guid != 0 ? guid : UGUIDManager::Generate();
+	std::vector<SComponentView*> CScene::GetViews(const SEntity& entityOwner)
+	{
+		if (!ComponentViews.contains(entityOwner.GUID))
+			return {};
 
-	//	EntityVectorIndices.emplace(outEntity->GUID, FirstUnusedEntityIndex);
-	//	FirstUnusedEntityIndex++;
+		std::vector<SComponentView*> viewsToReturn = {};
+		for (auto& [typeHashID, componentView] : ComponentViews.at(entityOwner.GUID))
+			viewsToReturn.push_back(componentView);
 
-	//	return outEntity;
-	//}
-
-	//SEntity* CScene::GetNewEntity(const std::string& nameInEditor, U64 guid)
-	//{
-	//	SEntity* outEntity = GetNewEntity(guid);
-	//	SMetaDataComponent& metaDataComp = AddMetaDataComponentToEntity(*outEntity);
-	//	metaDataComp.Name = nameInEditor;
-
-	//	return outEntity;
-	//}
-
-	//bool CScene::TryRemoveEntity(SEntity& entity)
-	//{
-	//	if (!entity.IsValid())
-	//	{
-	//		HV_LOG_ERROR("Tried to remove invalid Entity.");
-	//		return false;
-	//	}
-
-	//	if (FirstUnusedEntityIndex <= 0)
-	//	{
-	//		HV_LOG_ERROR("Tried to remove an entity from an empty scene.");
-	//		return false;
-	//	}
-
-	//	if (!EntityVectorIndices.contains(entity.GUID))
-	//	{
-	//		HV_LOG_ERROR("Tried to remove an entity from a scene other than its own.");
-	//		return false;
-	//	}
-
-	//	U64 entityIndex = EntityVectorIndices[entity.GUID];
-
-	//	if (entityIndex != (FirstUnusedEntityIndex - 1))
-	//	{
-	//		std::swap(entity, Entities[FirstUnusedEntityIndex - 1]);
-	//	}
-
-	//	UpdateComponentVector(TransformComponents, entityIndex);
-	//	UpdateComponentVector(StaticMeshComponents, entityIndex);
-	//	UpdateComponentVector(CameraComponents, entityIndex);
-	//	UpdateComponentVector(CameraControllerComponents, entityIndex);
-	//	UpdateComponentVector(MaterialComponents, entityIndex);
-	//	UpdateComponentVector(EnvironmentLightComponents, entityIndex);
-	//	UpdateComponentVector(DirectionalLightComponents, entityIndex);
-	//	UpdateComponentVector(PointLightComponents, entityIndex);
-	//	UpdateComponentVector(SpotLightComponents, entityIndex);
-	//	UpdateComponentVector(VolumetricLightComponents, entityIndex);
-	//	UpdateComponentVector(DecalComponents, entityIndex);
-	//	UpdateComponentVector(SpriteComponents, entityIndex);
-	//	UpdateComponentVector(Transform2DComponents, entityIndex);
-	//	UpdateComponentVector(SpriteAnimatorGraphComponents, entityIndex);
-	//	UpdateComponentVector(SequencerComponents, entityIndex);
-	//	UpdateComponentVector(GhostyComponents, entityIndex);
-	//	UpdateComponentVector(DebugShapeComponents, entityIndex);
-	//	UpdateComponentVector(MetaDataComponents, entityIndex);
-
-	//	Entities[FirstUnusedEntityIndex - 1].GUID = 0;
-	//	FirstUnusedEntityIndex--;
-
-	//	return true;
-	//}
+		return viewsToReturn;
+	}
 
 	U64 CScene::GetSceneIndex(const SEntity& entity) const
 	{
@@ -1130,178 +1034,4 @@ namespace Havtorn
 
 		return EntityIndices.at(entityGUID);
 	}
-
-	//U64 CScene::GetMainCameraIndex() const
-	//{
-	//	return MainCameraEntity;
-	//}
-
-	//U64 CScene::GetNumberOfValidEntities() const
-	//{
-	//	return FirstUnusedEntityIndex;
-	//}
-
-	//void CScene::AddComponentToEntity(EComponentType componentType, SEntity& entity)
-	//{
-	//	switch (componentType)
-	//	{
-	//	case Havtorn::EComponentType::TransformComponent:
-	//		AddTransformComponentToEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::StaticMeshComponent:
-	//		AddStaticMeshComponentToEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::CameraComponent:
-	//		AddCameraComponentToEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::CameraControllerComponent:
-	//		AddCameraControllerComponentToEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::MaterialComponent:
-	//		AddMaterialComponentToEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::EnvironmentLightComponent:
-	//		AddEnvironmentLightComponentToEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::DirectionalLightComponent:
-	//		AddDirectionalLightComponentToEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::PointLightComponent:
-	//		AddPointLightComponentToEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::SpotLightComponent:
-	//		AddSpotLightComponentToEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::VolumetricLightComponent:
-	//		AddVolumetricLightComponentToEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::DecalComponent:
-	//		AddDecalComponentToEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::SpriteComponent:
-	//		AddSpriteComponentToEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::Transform2DComponent:
-	//		AddTransform2DComponentToEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::SpriteAnimatorGraphComponent:
-	//		AddSpriteAnimatorGraphComponentToEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::SequencerComponent:
-	//		AddSequencerComponentToEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::GhostyComponent:
-	//		AddGhostyComponentToEntity(entity);
-	//		break;
-
-	//	case Havtorn::EComponentType::DebugShapeComponent:
-	//	case Havtorn::EComponentType::MetaDataComponent:
-	//	case Havtorn::EComponentType::Count:
-	//		break;
-	//	default:
-	//		HV_LOG_ERROR("%s: Unhandled case for EComponentType %s.", __FUNCTION__, GetComponentTypeString(componentType).c_str());
-	//		break;
-	//	}
-	//}
-
-	//void CScene::RemoveComponentFromEntity(EComponentType componentType, SEntity& entity)
-	//{
-	//	switch (componentType)
-	//	{
-	//	case Havtorn::EComponentType::TransformComponent:
-	//		RemoveTransformComponentFromEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::StaticMeshComponent:
-	//		RemoveStaticMeshComponentFromEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::CameraComponent:
-	//		RemoveCameraComponentFromEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::CameraControllerComponent:
-	//		RemoveCameraControllerComponentFromEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::MaterialComponent:
-	//		RemoveMaterialComponentFromEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::EnvironmentLightComponent:
-	//		RemoveEnvironmentLightComponentFromEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::DirectionalLightComponent:
-	//		RemoveDirectionalLightComponentFromEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::PointLightComponent:
-	//		RemovePointLightComponentFromEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::SpotLightComponent:
-	//		RemoveSpotLightComponentFromEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::VolumetricLightComponent:
-	//		RemoveVolumetricLightComponentFromEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::DecalComponent:
-	//		RemoveDecalComponentFromEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::SpriteComponent:
-	//		RemoveSpriteComponentFromEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::Transform2DComponent:
-	//		RemoveTransform2DComponentFromEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::SpriteAnimatorGraphComponent:
-	//		RemoveSpriteAnimatorGraphComponentFromEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::SequencerComponent:
-	//		RemoveSequencerComponentFromEntity(entity);
-	//		break;
-	//	case Havtorn::EComponentType::GhostyComponent:
-	//		RemoveGhostyComponentFromEntity(entity);
-	//		break;
-
-	//	case Havtorn::EComponentType::DebugShapeComponent:
-	//	case Havtorn::EComponentType::MetaDataComponent:
-	//	case Havtorn::EComponentType::Count:
-	//		break;
-	//	default:
-	//		HV_LOG_ERROR("%s: Unhandled case for EComponentType %s.", __FUNCTION__, GetComponentTypeString(componentType).c_str());
-	//		break;
-	//	}
-	//}
-
-	//COMPONENT_ADDER_DEFINITION(TransformComponent)
-	//COMPONENT_ADDER_DEFINITION(StaticMeshComponent)
-	//COMPONENT_ADDER_DEFINITION(CameraComponent)
-	//COMPONENT_ADDER_DEFINITION(CameraControllerComponent)
-	//COMPONENT_ADDER_DEFINITION(MaterialComponent)
-	//COMPONENT_ADDER_DEFINITION(EnvironmentLightComponent)
-	//COMPONENT_ADDER_DEFINITION(DirectionalLightComponent)
-	//COMPONENT_ADDER_DEFINITION(PointLightComponent)
-	//COMPONENT_ADDER_DEFINITION(SpotLightComponent)
-	//COMPONENT_ADDER_DEFINITION(VolumetricLightComponent)
-	//COMPONENT_ADDER_DEFINITION(DecalComponent)
-	//COMPONENT_ADDER_DEFINITION(SpriteComponent)
-	//COMPONENT_ADDER_DEFINITION(Transform2DComponent)
-	//COMPONENT_ADDER_DEFINITION(SpriteAnimatorGraphComponent)
-	//COMPONENT_ADDER_DEFINITION(SequencerComponent)
-	//COMPONENT_ADDER_DEFINITION(GhostyComponent);
-	//COMPONENT_ADDER_DEFINITION(DebugShapeComponent)
-	//COMPONENT_ADDER_DEFINITION(MetaDataComponent)
-
-	//COMPONENT_REMOVER_DEFINITION(TransformComponent)
-	//COMPONENT_REMOVER_DEFINITION(StaticMeshComponent)
-	//COMPONENT_REMOVER_DEFINITION(CameraComponent)
-	//COMPONENT_REMOVER_DEFINITION(CameraControllerComponent)
-	//COMPONENT_REMOVER_DEFINITION(MaterialComponent)
-	//COMPONENT_REMOVER_DEFINITION(EnvironmentLightComponent)
-	//COMPONENT_REMOVER_DEFINITION(DirectionalLightComponent)
-	//COMPONENT_REMOVER_DEFINITION(PointLightComponent)
-	//COMPONENT_REMOVER_DEFINITION(SpotLightComponent)
-	//COMPONENT_REMOVER_DEFINITION(VolumetricLightComponent)
-	//COMPONENT_REMOVER_DEFINITION(DecalComponent)
-	//COMPONENT_REMOVER_DEFINITION(SpriteComponent)
-	//COMPONENT_REMOVER_DEFINITION(Transform2DComponent)
-	//COMPONENT_REMOVER_DEFINITION(SpriteAnimatorGraphComponent)
-	//COMPONENT_REMOVER_DEFINITION(SequencerComponent)
-	//COMPONENT_REMOVER_DEFINITION(GhostyComponent)
-	//COMPONENT_REMOVER_DEFINITION(DebugShapeComponent)
-	//COMPONENT_REMOVER_DEFINITION(MetaDataComponent)
 }

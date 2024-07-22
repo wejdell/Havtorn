@@ -2,15 +2,13 @@
 
 #pragma once
 #include "EditorWindow.h"
-#include <map>
-#include <functional>
+//#include <map>
+//#include <functional>
 
 namespace Havtorn
 {
-	enum class EComponentType;
+	struct SComponentViewResult;
 	class CScene;
-	struct SStaticMeshComponent;
-	struct SMaterialComponent;
 }
 
 namespace ImGui
@@ -23,36 +21,18 @@ namespace ImGui
 		void OnEnable() override;
 		void OnInspectorGUI() override;
 		void OnDisable() override;
-	
-		void TryInspectComponent(Havtorn::EComponentType componentType);
 
 	private:
-		//void InspectTransformComponent();
-		//void InspectStaticMeshComponent();
-		//void InspectCameraComponent();
-		//void InspectCameraControllerComponent();
-		//void InspectMaterialComponent();
-		//void InspectEnvironmentLightComponent();
-		//void InspectDirectionalLightComponent();
-		//void InspectPointLightComponent();
-		//void InspectSpotLightComponent();
-		//void InspectVolumetricLightComponent();
-		//void InspectDecalComponent();
-		//void InspectSpriteComponent();
-		//void InspectTransform2DComponent();
-		//void InspectSpriteAnimatorGraphComponent();
-		//void InspectSequencerComponent();
-		//// AS: Ghosty is a Game-project Component / System. The goal is to separate out any Game Component/Systems so they don't have to be added in Engine
-		//void InspectGhostyComponent();
-
-		void OpenSelectMeshAssetModal(Havtorn::I64 staticMeshComponentIndex);
-		void OpenSelectTextureAssetModal(Havtorn::U16& textureRefToChange);
-		void OpenSelectMaterialAssetModal(Havtorn::SMaterialComponent* materialComponentToChange, Havtorn::U8 materialIndex);
+		void UpdateCameraGizmo(const Havtorn::SComponentViewResult& result);
+		void OpenSelectMeshAssetModal(const Havtorn::SComponentViewResult& result);
+		void OpenSelectTextureAssetModal(const Havtorn::SComponentViewResult& result);
+		void OpenSelectMaterialAssetModal(const Havtorn::SComponentViewResult& result);
+		void OpenAssetTool(const Havtorn::SComponentViewResult& result);
+		void HandleTextureAssetModal(const std::string& pathToSearch, Havtorn::U16& textureReference);
 		void OpenAddComponentModal();
-		void RemoveComponentButton(Havtorn::EComponentType componentType);
+		void RemoveComponentButton(/*Havtorn::EComponentType componentType*/);
 
 	private:
-		std::map<Havtorn::EComponentType, std::function<void()>> InspectionFunctions;
 		Havtorn::CScene* Scene = nullptr;
 		Havtorn::SVector2<Havtorn::F32> TexturePreviewSize = { 64.0f, 64.0f };
 		Havtorn::SVector2<Havtorn::F32> DummySize = { 0.0f, 0.5f };
