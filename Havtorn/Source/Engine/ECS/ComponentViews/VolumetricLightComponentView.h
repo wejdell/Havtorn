@@ -1,21 +1,12 @@
-// Copyright 2022 Team Havtorn. All Rights Reserved.
+// Copyright 2024 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include "ECS/Component.h"
+#include "ECS/ComponentView.h"
 
 namespace Havtorn
 {
-	struct SVolumetricLightComponent: public SComponent
+	struct SVolumetricLightComponentView: public SComponentView
 	{
-		SVolumetricLightComponent() = default;
-		SVolumetricLightComponent(const SEntity& entityOwner)
-			: SComponent(entityOwner)
-		{}
-
-		bool IsActive = false;
-		F32 NumberOfSamples = 16.0f;
-		F32 LightPower = 500000.0f;
-		F32 ScatteringProbability = 0.0001f;
-		F32 HenyeyGreensteinGValue = 0.0f;
+		SComponentViewResult View(const SEntity& entityOwner, CScene* scene) override;
 	};
 }

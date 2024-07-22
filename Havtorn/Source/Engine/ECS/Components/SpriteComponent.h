@@ -15,7 +15,7 @@ namespace Havtorn
 
 		SColor Color = SColor::White;
 		SVector4 UVRect = SVector4::Zero;
-		U32 TextureIndex = 0;
 		U64 AssetRegistryKey = 0;
+		U16 TextureIndex = 0;
 	};
 }

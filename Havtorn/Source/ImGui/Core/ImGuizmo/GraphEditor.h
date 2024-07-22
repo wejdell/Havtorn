@@ -30,8 +30,8 @@
 #include <vector>
 #include <stdint.h>
 #include <string>
-#include "imgui.h"
-#include "imgui_internal.h"
+#include <Core/imgui.h>
+#include <Core/imgui_internal.h>
 
 namespace GraphEditor {
 

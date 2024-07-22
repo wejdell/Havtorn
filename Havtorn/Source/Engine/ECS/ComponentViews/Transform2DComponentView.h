@@ -1,19 +1,12 @@
-// Copyright 2023 Team Havtorn. All Rights Reserved.
+// Copyright 2024 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include "ECS/Component.h"
+#include "ECS/ComponentView.h"
 
 namespace Havtorn
 {
-	struct STransform2DComponent : public SComponent
+	struct STransform2DComponentView : public SComponentView
 	{
-		STransform2DComponent() = default;
-		STransform2DComponent(const SEntity& entityOwner)
-			: SComponent(entityOwner)
-		{}
-
-		SVector2<F32> Position = SVector2<F32>::Zero;
-		SVector2<F32> Scale = SVector2<F32>::Zero;
-		F32 DegreesRoll = 0;
+		SComponentViewResult View(const SEntity& entityOwner, CScene* scene) override;
 	};
 }

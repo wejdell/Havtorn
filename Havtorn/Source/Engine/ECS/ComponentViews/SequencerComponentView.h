@@ -1,17 +1,13 @@
-// Copyright 2023 Team Havtorn. All Rights Reserved.
+// Copyright 2024 Team Havtorn. All Rights Reserved.
 
 #pragma once
 
-#include "ECS/Component.h"
-#include "SequencerKeyframes/SequencerKeyframe.h"
+#include "ECS/ComponentView.h"
 
 namespace Havtorn
 {
-	struct SSequencerComponent : public SComponent
+	struct SSequencerComponentView : public SComponentView
 	{
-		SSequencerComponent() = default;
-		SSequencerComponent(const SEntity& entityOwner)
-			: SComponent(entityOwner)
-		{}
+		SComponentViewResult View(const SEntity& entityOwner, CScene* scene) override;
 	};
 }

@@ -2,14 +2,16 @@
 
 #include "hvpch.h"
 #include "CameraComponentView.h"
+
 #include "ECS/Components/CameraComponent.h"
+#include "Scene/Scene.h"
 
 #include <Core/imgui.h>
 #include <Core/ImGuizmo/ImGuizmo.h>
 
 namespace Havtorn
 {
-	void SCameraComponentView::View(const SEntity& entityOwner, CScene* scene)
+	SComponentViewResult SCameraComponentView::View(const SEntity& entityOwner, CScene* scene)
 	{
 		SCameraComponent* cameraComp = scene->GetComponent<SCameraComponent>(entityOwner);
 
@@ -45,5 +47,7 @@ namespace Havtorn
 		{
 			cameraComp->ProjectionMatrix = Havtorn::SMatrix::OrthographicLH(cameraComp->ViewWidth, cameraComp->ViewHeight, cameraComp->NearClip, cameraComp->FarClip);
 		}
+
+		return SComponentViewResult();
 	}
 }

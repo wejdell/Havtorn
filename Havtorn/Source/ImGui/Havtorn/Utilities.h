@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "Core/imgui.h"
 #include <string>
 
 namespace ImGui
@@ -14,16 +15,14 @@ namespace ImGui
 		static const float DummySizeX;
 		static const float DummySizeY;
 		static const float ThumbnailPadding;
+		static const float PanelWidth;
 
 		static const std::string SelectTextureModalName;
+
+		static const ImVec2 TexturePreviewSize;
+		static const ImVec2 DummySize;
+		static const ImVec2 ModalWindowPivot;
+
+		//void TryOpenModalTableWindow(const std::string& identifier, const std::string& searchPath);
 	};
-
-	const float UUtils::SliderSpeed = 0.1f;
-	const float UUtils::TexturePreviewSizeX = 64.f;
-	const float UUtils::TexturePreviewSizeY = 64.f;
-	const float UUtils::DummySizeX = 0.0f;
-	const float UUtils::DummySizeY = 0.5f;
-	const float UUtils::ThumbnailPadding = 4.0f;
-
-	const std::string UUtils::SelectTextureModalName = "Select Texture Asset";
 }

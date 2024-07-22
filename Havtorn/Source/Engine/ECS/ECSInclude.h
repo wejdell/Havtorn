@@ -4,6 +4,7 @@
 
 #include "ECS/Entity.h"
 #include "ECS/Component.h"
+#include "ECS/ComponentView.h"
 #include "ECS/System.h"
 
 #include "ECS/Systems/RenderSystem.h"
@@ -30,6 +31,3 @@
 #include "ECS/Components/SequencerComponent.h"
 #include "ECS/Components/DebugShapeComponent.h"
 #include "ECS/Components/MetaDataComponent.h"
-
-#include <../Game/Ghosty/GhostySystem.h>
-#include <../Game/Ghosty/GhostyComponent.h>
