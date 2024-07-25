@@ -53,8 +53,15 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
 	CEngineProcess* engineProcess = new CEngineProcess(100, 100, 1280, 720);
 	CImGuiProcess* imGuiProcess = new CImGuiProcess();
+	// Editor starts without CGameProcess
 	CGameProcess* gameProcess = new CGameProcess();
 	CEditorProcess* editorProcess = new CEditorProcess();
+
+	// Map subprocess to process here?
+	// 
+	// application->Map(editorProcess, gameProcess, "Game")
+	// 
+	//
 
 	auto application = new CApplication();
 		application->AddProcess(engineProcess);

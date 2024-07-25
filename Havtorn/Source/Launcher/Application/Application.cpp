@@ -27,6 +27,7 @@ namespace Havtorn
 	{
 		Setup();
 
+		// Don't do this if process count can change 
 		const int processes = static_cast<int>(Processes.size() - 1);
 
 		MSG windowMessage = { 0 };
@@ -43,6 +44,27 @@ namespace Havtorn
 					break;
 				}
 			}
+			
+			// Would we want to just know the type of the sub-process and then allocate & dea-llocate it here?
+			// Or should the sub-process be pre-allocated, and then init & de-init?
+			//		Could change Init to be Startup & Shutdown, destructor is kept for final part. Process destroys it's subprocess(es).
+			// 
+			// Here a Process should be able to push/pop a sub-process
+			/*
+			 	Find better name than "parentProcess"
+			 
+				while( AddSubProcessQueue > 0)
+					(parentProcess, subProcess) = SubProcessQueue.pop
+					parentProcess is given knowledge of index & start of execution
+					startup subProcess
+					add subProcess to Processes
+
+				while( RemoveSubProcessQueue > 0)
+					(parentProcess, subProcess) = SubProcessQueue.pop
+					subProcessShutdown = find subProcess in Processes & remove it
+					shutdown subProcessShutdown
+					inform parentProcess of subProcessShutdown
+			*/
 
 			// Processes are run in reverse-order. Dependent to least dependent.
 
