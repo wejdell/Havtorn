@@ -56,8 +56,9 @@ namespace Havtorn
 
 			if (componentStorage.EntityIndices.contains(toEntity.GUID))
 			{
-				std::string templateName = typeid(T).name();
-				 HV_LOG_WARN(__FUNCTION__" with T=[%s]: Tried to add component that already existed for entity with GUID : %i. Overwriting data on component.", templateName.c_str(), toEntity.GUID);
+				// TODO.NR: Make a toggle for this, keep for now
+				//std::string templateName = typeid(T).name();
+				 //HV_LOG_WARN(__FUNCTION__" with T=[%s]: Tried to add component that already existed for entity with GUID : %i. Overwriting data on component.", templateName.c_str(), toEntity.GUID);
 				*(dynamic_cast<T*>(componentStorage.Components[componentStorage.EntityIndices.at(toEntity.GUID)])) = T(toEntity, params...);
 			}
 			else
@@ -81,7 +82,8 @@ namespace Havtorn
 			const U64 typeIDHashCode = typeid(T).hash_code();
 			if (!ComponentTypeIndices.contains(typeIDHashCode))
 			{
-				std::string templateName = typeid(T).name();
+				// TODO.NR: Make a toggle for this, keep for now
+				//std::string templateName = typeid(T).name();
 				// HV_LOG_WARN(__FUNCTION__" with T=[%s]: Tried to remove component that does not have any storage. Doing nothing instead.", templateName.c_str());
 				return;
 			}
@@ -90,7 +92,8 @@ namespace Havtorn
 
 			if (!componentStorage.EntityIndices.contains(fromEntity.GUID))
 			{
-				std::string templateName = typeid(T).name();
+				// TODO.NR: Make a toggle for this, keep for now
+				//std::string templateName = typeid(T).name();
 				// HV_LOG_WARN(__FUNCTION__" with T=[%s]: Tried to remove component that the entity with GUID: %i did not have registered. Doing nothing instead.", templateName.c_str(), fromEntity.GUID);
 				return;
 			}
@@ -130,8 +133,9 @@ namespace Havtorn
 			const U64 typeIDHashCode = typeid(T).hash_code();
 			if (!ComponentTypeIndices.contains(typeIDHashCode))
 			{
-				std::string templateName = typeid(T).name();
-				HV_LOG_TRACE(__FUNCTION__" with T=[%s]: Tried to get a component that does not have any storage. Returning nullptr.", templateName.c_str());
+				// TODO.NR: Make a toggle for this, keep for now
+				//std::string templateName = typeid(T).name();
+				//HV_LOG_TRACE(__FUNCTION__" with T=[%s]: Tried to get a component that does not have any storage. Returning nullptr.", templateName.c_str());
 				return nullptr;
 			}
 
@@ -139,8 +143,9 @@ namespace Havtorn
 
 			if (!componentStorage.EntityIndices.contains(fromEntity.GUID))
 			{
-				std::string templateName = typeid(T).name();
-				HV_LOG_TRACE(__FUNCTION__" with T=[%s]: Tried to remove component that the entity with GUID: %i did not have registered. Returning nullptr.", templateName.c_str(), fromEntity.GUID);
+				// TODO.NR: Make a toggle for this, keep for now
+				//std::string templateName = typeid(T).name();
+				//HV_LOG_TRACE(__FUNCTION__" with T=[%s]: Tried to remove component that the entity with GUID: %i did not have registered. Returning nullptr.", templateName.c_str(), fromEntity.GUID);
 				return nullptr;
 			}
 
@@ -171,8 +176,9 @@ namespace Havtorn
 			const U64 typeIDHashCode = typeid(T).hash_code();
 			if (!ComponentTypeIndices.contains(typeIDHashCode))
 			{
-				std::string templateName = typeid(T).name();
-				 HV_LOG_WARN(__FUNCTION__" with T=[%s]: Tried to get all components of a type that does not have any storage. Returning empty vector.", templateName.c_str());
+				// TODO.NR: Make a toggle for this, keep for now
+				//std::string templateName = typeid(T).name();
+				//HV_LOG_WARN(__FUNCTION__" with T=[%s]: Tried to get all components of a type that does not have any storage. Returning empty vector.", templateName.c_str());
 				return {};
 			}
 
@@ -191,7 +197,7 @@ namespace Havtorn
 		void AddView(const SEntity& entityOwner)
 		{
 			if (!ComponentViews.contains(entityOwner.GUID))
-				ComponentViews.emplace(entityOwner.GUID, {});
+				ComponentViews.emplace(entityOwner.GUID, std::unordered_map<U64, SComponentView*>());
 
 			auto& viewMap = ComponentViews.at(entityOwner.GUID);
 
@@ -223,22 +229,18 @@ namespace Havtorn
 		}
 
 		HAVTORN_API void RemoveViews(const SEntity& entityOwner);
-		HAVTORN_API std::vector<struct SComponentView*> GetViews(const SEntity& entityOwner);
+		HAVTORN_API std::vector<SComponentView*> GetViews(const SEntity& entityOwner);
 		
-		std::unordered_map<U64, std::map<U64, struct SComponentView*>> ComponentViews;
+		std::unordered_map<U64, std::unordered_map<U64, SComponentView*>> ComponentViews;
 
 		std::unordered_map<U64, U64> EntityIndices;
 		std::vector<SEntity> Entities;
 
 		std::unordered_map<U64, U64> ComponentTypeIndices;
-
-		// NR: How do we serialize SComponentStorage? Maybe we need one master hash table of component types that would be the only place we need to update.
-		// Then that could be separated into engine types at the top and game types at the bottom, with some spacing in between. Need to solve the serialization.
 		std::vector<SComponentStorage> Storages;
 
 		CHavtornStaticString<255> SceneName = std::string("SceneName");
-		
-		//U64 FirstUnusedEntityIndex = 0;
+
 		SEntity MainCameraEntity = SEntity::Null;
 
 		// TODO.NR/AG: Try to remove this

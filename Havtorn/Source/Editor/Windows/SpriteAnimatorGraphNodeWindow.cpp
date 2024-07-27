@@ -8,7 +8,7 @@
 #include "ECS/Components/SpriteAnimatorGraphNode.h"
 #include "Core/MathTypes/EngineMath.h"
 
-#include <imgui.h>
+#include <Core/imgui.h>
 
 namespace ImGui
 {

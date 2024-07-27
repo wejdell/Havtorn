@@ -1,7 +1,8 @@
 // Copyright 2024 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include "ECS/ComponentView.h"
+#include <ECS/ComponentView.h>
+#include <Scene/Scene.h>
 
 namespace Havtorn
 {

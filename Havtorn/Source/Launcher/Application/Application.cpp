@@ -3,7 +3,7 @@
 #include "Application.h"
 #include "Process.h"
 
-#include <Windows.h>
+#include <Core/WindowsInclude.h>
 
 namespace Havtorn
 {

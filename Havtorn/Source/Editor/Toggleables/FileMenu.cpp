@@ -4,7 +4,7 @@
 #include "EditorManager.h"
 #include "Engine.h"
 
-#include <imgui.h>
+#include <Core/imgui.h>
 
 namespace ImGui
 {

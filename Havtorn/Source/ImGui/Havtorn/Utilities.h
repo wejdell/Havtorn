@@ -23,6 +23,6 @@ namespace ImGui
 		static const ImVec2 DummySize;
 		static const ImVec2 ModalWindowPivot;
 
-		//void TryOpenModalTableWindow(const std::string& identifier, const std::string& searchPath);
+		static bool TryOpenComponentView(const std::string& componentViewName);
 	};
 }

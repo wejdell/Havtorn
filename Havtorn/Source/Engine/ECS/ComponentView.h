@@ -2,16 +2,13 @@
 
 #pragma once
 
-//#include "Entity.h"
-//#include "Scene/Scene.h"
-
 namespace Havtorn
 {
 	struct SComponent;
 	struct SEntity;
 	class CScene;
 
-	enum class EComponentViewResultLabel
+	enum class HAVTORN_API EComponentViewResultLabel
 	{
 		PassThrough,
 		UpdateCameraGizmo,
@@ -21,15 +18,15 @@ namespace Havtorn
 		OpenSpriteAnimatorGraph,
 	};
 
-	struct SComponentViewResult
+	struct HAVTORN_API SComponentViewResult
 	{
 		EComponentViewResultLabel Label = EComponentViewResultLabel::PassThrough;
 		SComponent* ComponentViewed = nullptr;
 		U8 ComponentSubIndex = 0;
 	};
 
-	struct SComponentView
+	struct HAVTORN_API SComponentView
 	{
-		virtual SComponentViewResult View(const SEntity& /*entityOwner*/, CScene* /*scene*/) {};
+		virtual SComponentViewResult View(const SEntity& /*entityOwner*/, CScene* /*scene*/) { return SComponentViewResult(); };
 	};
 }

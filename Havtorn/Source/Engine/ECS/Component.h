@@ -14,16 +14,5 @@ namespace Havtorn
 		bool IsValid() const;
 
 		SEntity EntityOwner = SEntity::Null;
-
-		//SComponent() = default;
-
-		//explicit SComponent(EComponentType type)
-		//	: Type(type)
-		//{}
-
-		//virtual ~SComponent() = default;
-
-		//EComponentType Type = EComponentType::Count;
-		//bool IsInUse = false;
 	};
 }

@@ -5,6 +5,7 @@
 #include "ECS/ECSInclude.h"
 #include "Graphics/RenderManager.h"
 #include "Graphics/RenderCommand.h"
+#include "ECS/ComponentAlgo.h"
 #include "Input/Input.h"
 
 namespace Havtorn
@@ -155,7 +156,8 @@ namespace Havtorn
 			if (!directionalLightComp->IsValid())
 				continue;
 
-			const SEnvironmentLightComponent* environmentLightComp = scene->GetComponent<SEnvironmentLightComponent>(directionalLightComp);
+			const SEntity& closestEnvironmentLightEntity = UComponentAlgo::GetClosestEntity3D(directionalLightComp->EntityOwner, scene->GetComponents<SEnvironmentLightComponent>(), scene);
+			const SEnvironmentLightComponent* environmentLightComp = scene->GetComponent<SEnvironmentLightComponent>(closestEnvironmentLightEntity);
 			if (!environmentLightComp->IsValid())
 				continue;
 

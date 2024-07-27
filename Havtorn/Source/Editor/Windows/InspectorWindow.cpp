@@ -76,14 +76,6 @@ namespace ImGui
 
 		for (Havtorn::SComponentView* view : Scene->GetViews(SelectedEntity))
 		{
-			//const std::string componentTypeString = Havtorn::GetComponentTypeString(componentType);
-			//std::string headerName = componentTypeString.substr(0, componentTypeString.length() - std::string("Component").length());
-			//bool isHeaderOpen = ImGui::CollapsingHeader(headerName.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
-			//RemoveComponentButton(componentType);
-
-			//if (!isHeaderOpen)
-			//	return;
-
 			//RemoveComponentButton();
 			Havtorn::SComponentViewResult result = view->View(SelectedEntity, Scene);
 
@@ -243,14 +235,16 @@ namespace ImGui
 		if (!ImGui::BeginPopupModal("Select Texture Asset", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 			return;
 		
+		constexpr const char* searchPath = "Assets/Textures";
+
 		if (Havtorn::SDecalComponent* decalComponent = static_cast<Havtorn::SDecalComponent*>(result.ComponentViewed))
-			HandleTextureAssetModal("Assets/Textures", decalComponent->TextureReferences[result.ComponentSubIndex]);
+			HandleTextureAssetModal(searchPath, decalComponent->TextureReferences[result.ComponentSubIndex]);
 
 		if (Havtorn::SEnvironmentLightComponent* environmentLightComponent = static_cast<Havtorn::SEnvironmentLightComponent*>(result.ComponentViewed))
-			HandleTextureAssetModal("Asset/Textires", environmentLightComponent->AmbientCubemapReference);
+			HandleTextureAssetModal(searchPath, environmentLightComponent->AmbientCubemapReference);
 
 		if (Havtorn::SSpriteComponent* spriteComponent = static_cast<Havtorn::SSpriteComponent*>(result.ComponentViewed))
-			HandleTextureAssetModal("Asset/Textures", spriteComponent->TextureIndex);
+			HandleTextureAssetModal(searchPath, spriteComponent->TextureIndex);
 
 		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) 
 			ImGui::CloseCurrentPopup();

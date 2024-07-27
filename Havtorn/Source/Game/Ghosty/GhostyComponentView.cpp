@@ -7,11 +7,15 @@
 
 #include <Scene/Scene.h>
 #include <Core/imgui.h>
+#include <Havtorn/Utilities.h>
 
 namespace Havtorn
 {
 	SComponentViewResult SGhostyComponentView::View(const SEntity& entityOwner, CScene* scene)
 	{
+		if (!ImGui::UUtils::TryOpenComponentView("Ghosty"))
+			return SComponentViewResult();
+
 		SGhostyComponent* component = scene->GetComponent<SGhostyComponent>(entityOwner);
 
 		F32 ghostyInput[3] = { component->State.Input.X, component->State.Input.Y, component->State.Input.Z };

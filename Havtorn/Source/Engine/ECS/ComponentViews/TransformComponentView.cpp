@@ -14,6 +14,9 @@ namespace Havtorn
 {
     SComponentViewResult STransformComponentView::View(const SEntity& entityOwner, CScene* scene)
     {
+		if (!ImGui::UUtils::TryOpenComponentView("Transform"))
+			return SComponentViewResult();
+
 		STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(entityOwner);
 		Havtorn::SMatrix transformMatrix = transformComponent->Transform.GetMatrix();
 

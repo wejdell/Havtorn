@@ -10,6 +10,7 @@
 #include "AssetRegistry.h"
 
 #include <../Game/Ghosty/GhostyComponent.h>
+#include <../Game/Ghosty/GhostyComponentView.h>
 #include <../Game/Ghosty/GhostySystem.h>
 
 namespace Havtorn
@@ -44,16 +45,19 @@ namespace Havtorn
 
 		// Setup entities (create components)
 		STransformComponent& transform = *AddComponent<STransformComponent>(MainCameraEntity);
+		AddView<STransformComponentView>(MainCameraEntity);
 
 		transform.Transform.Translate({ 2.0f, 1.0f, -3.0f });
 		transform.Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
 		transform.Transform.Translate(SVector::Right * 0.25f);
 
 		SCameraComponent& camera = *AddComponent<SCameraComponent>(MainCameraEntity);
+		AddView<SCameraComponentView>(MainCameraEntity);
 		camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
 		camera.ViewMatrix = SMatrix::LookAtLH(SVector::Zero, SVector::Forward, SVector::Up);
 
 		SCameraControllerComponent& controllerComp = *AddComponent<SCameraControllerComponent>(MainCameraEntity);
+		AddView<SCameraControllerComponentView>(MainCameraEntity);
 		controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
 		// === !Camera ===
 
@@ -63,7 +67,9 @@ namespace Havtorn
 			return false;
 
 		AddComponent<STransformComponent>(environmentLightEntity);
+		AddView<STransformComponentView>(environmentLightEntity);
 		renderManager->LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/CubemapTheVisit.hva", AddComponent<SEnvironmentLightComponent>(environmentLightEntity));
+		AddView<SEnvironmentLightComponentView>(environmentLightEntity);
 		GetComponent<SEnvironmentLightComponent>(environmentLightEntity)->AssetRegistryKey = assetRegistry->Register("Assets/Textures/Cubemaps/CubemapTheVisit.hva");
 		// === !Environment light ===
 
@@ -72,13 +78,19 @@ namespace Havtorn
 		if (!directionalLightEntity.IsValid())
 			return false;
 
+		// NR: Add transform to directional light so it can filter environmental lights based on distance
+		AddComponent<STransformComponent>(directionalLightEntity);
+		AddView<STransformComponentView>(directionalLightEntity);
+
 		SDirectionalLightComponent& directionalLight = *AddComponent<SDirectionalLightComponent>(directionalLightEntity);
+		AddView<SDirectionalLightComponentView>(directionalLightEntity);
 		directionalLight.Direction = { 1.0f, 1.0f, -1.0f, 0.0f };
 		directionalLight.Color = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };
 		directionalLight.ShadowmapView.ShadowmapViewportIndex = 0;
 		directionalLight.ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLight.ShadowViewSize.X, directionalLight.ShadowViewSize.Y, directionalLight.ShadowNearAndFarPlane.X, directionalLight.ShadowNearAndFarPlane.Y);
 
 		SVolumetricLightComponent& volumetricLight = *AddComponent<SVolumetricLightComponent>(directionalLightEntity);
+		AddView<SVolumetricLightComponentView>(directionalLightEntity);
 		volumetricLight.IsActive = false;
 		// === !Directional light ===
 
@@ -88,16 +100,19 @@ namespace Havtorn
 			return true; // From this point it's ok if we fail to load the rest of the demo scene
 
 		STransformComponent& pointLightTransform = *AddComponent<STransformComponent>(pointLightEntity);
+		AddView<STransformComponentView>(pointLightEntity);
 		SMatrix pointLightMatrix = pointLightTransform.Transform.GetMatrix();
 		pointLightMatrix.SetTranslation({ 1.25f, 0.35f, -1.65f });
 		pointLightTransform.Transform.SetMatrix(pointLightMatrix);
 
 
 		SPointLightComponent& pointLightComp = *AddComponent<SPointLightComponent>(pointLightEntity);
+		AddView<SPointLightComponentView>(pointLightEntity);
 		pointLightComp.ColorAndIntensity = { 0.0f, 1.0f, 1.0f, 10.0f };
 		pointLightComp.Range = 1.0f;
 
 		SVolumetricLightComponent& volumetricPointLight = *AddComponent<SVolumetricLightComponent>(pointLightEntity);
+		AddView<SVolumetricLightComponentView>(pointLightEntity);
 		volumetricPointLight.IsActive = false;
 
 		const SMatrix constantProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, pointLightComp.Range);
@@ -152,11 +167,13 @@ namespace Havtorn
 			return true;
 
 		STransform& spotlightTransform = (*AddComponent<STransformComponent>(spotlight)).Transform;
+		AddView<STransformComponentView>(spotlight);
 		SMatrix spotlightMatrix = spotlightTransform.GetMatrix();
 		spotlightMatrix.SetTranslation({ 1.5f, 0.5f, -1.0f });
 		spotlightTransform.SetMatrix(spotlightMatrix);
 
 		SSpotLightComponent& spotlightComp = *AddComponent<SSpotLightComponent>(spotlight);
+		AddView<SSpotLightComponentView>(spotlight);
 		spotlightComp.Direction = SVector4::Forward;
 		spotlightComp.DirectionNormal1 = SVector4::Right;
 		spotlightComp.DirectionNormal2 = SVector4::Up;
@@ -166,6 +183,7 @@ namespace Havtorn
 		spotlightComp.Range = 3.0f;
 
 		SVolumetricLightComponent& volumetricSpotLight = *AddComponent<SVolumetricLightComponent>(spotlight);
+		AddView<SVolumetricLightComponentView>(spotlight);
 		volumetricSpotLight.IsActive = false;
 
 		const SMatrix spotlightProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, spotlightComp.Range);
@@ -183,9 +201,11 @@ namespace Havtorn
 			return true;
 
 		STransform& decalTransform = (*AddComponent<STransformComponent>(decal)).Transform;
+		AddView<STransformComponentView>(decal);
 		decalTransform.Translate({ 0.45f, 1.60f, 0.85f });
 
 		SDecalComponent& decalComp = *AddComponent<SDecalComponent>(decal);
+		AddView<SDecalComponentView>(decal);
 
 		std::vector<std::string> decalTextures = { "Assets/Textures/T_noscare_AL_c.hva", "Assets/Textures/T_noscare_AL_m.hva", "Assets/Textures/T_noscare_AL_n.hva" };
 		renderManager->LoadDecalComponent(decalTextures, &decalComp);
@@ -217,7 +237,9 @@ namespace Havtorn
 		transform1.Translate({ 1.75f, 0.0f, 0.25f });
 
 		renderManager->LoadStaticMeshComponent(modelPath1, AddComponent<SStaticMeshComponent>(pendulum));
+		AddView<SStaticMeshComponentView>(pendulum);
 		renderManager->LoadMaterialComponent(materialNames1, AddComponent<SMaterialComponent>(pendulum));
+		AddView<SMaterialComponentView>(pendulum);
 
 		GetComponent<SStaticMeshComponent>(pendulum)->AssetRegistryKey = assetRegistry->Register(modelPath1);
 		GetComponent<SMaterialComponent>(pendulum)->AssetRegistryKeys = assetRegistry->Register(materialNames1);
@@ -229,10 +251,13 @@ namespace Havtorn
 			return false;
 
 		STransform& transform2 = (*AddComponent<STransformComponent>(bed)).Transform;
+		AddView<STransformComponentView>(bed);
 		transform2.Translate({ 0.25f, 0.0f, 0.25f });
 
 		renderManager->LoadStaticMeshComponent(modelPath2, AddComponent<SStaticMeshComponent>(bed));
+		AddView<SStaticMeshComponentView>(bed);
 		renderManager->LoadMaterialComponent(materialNames2, AddComponent<SMaterialComponent>(bed));
+		AddView<SMaterialComponentView>(bed);
 
 		GetComponent<SStaticMeshComponent>(bed)->AssetRegistryKey = assetRegistry->Register(modelPath2);
 		GetComponent<SMaterialComponent>(bed)->AssetRegistryKeys = assetRegistry->Register(materialNames2);
@@ -248,7 +273,9 @@ namespace Havtorn
 		lampTransform.Rotate({ 0.0f, UMath::DegToRad(90.0f), 0.0f });
 
 		renderManager->LoadStaticMeshComponent(modelPath4, AddComponent<SStaticMeshComponent>(lamp));
+		AddView<SStaticMeshComponentView>(lamp);
 		renderManager->LoadMaterialComponent(materialNames4, AddComponent<SMaterialComponent>(lamp));
+		AddView<SMaterialComponentView>(lamp);
 
 		GetComponent<SStaticMeshComponent>(lamp)->AssetRegistryKey = assetRegistry->Register(modelPath4);
 		GetComponent<SMaterialComponent>(lamp)->AssetRegistryKeys = assetRegistry->Register(materialNames4);
@@ -276,13 +303,16 @@ namespace Havtorn
 				return false;
 
 			STransform& transform3 = (*AddComponent<STransformComponent>(floor)).Transform;
+			AddView<STransformComponentView>(floor);
 			SMatrix matrix3 = transform3.GetMatrix();
 			matrix3.SetTranslation(translations[i]);
 			matrix3.SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)));
 			transform3.SetMatrix(matrix3);
 
 			renderManager->LoadStaticMeshComponent(modelPath3, AddComponent<SStaticMeshComponent>(floor));
+			AddView<SStaticMeshComponentView>(floor);
 			renderManager->LoadMaterialComponent(materialNames3, AddComponent<SMaterialComponent>(floor));
+			AddView<SMaterialComponentView>(floor);
 
 			GetComponent<SStaticMeshComponent>(floor)->AssetRegistryKey = assetRegistry->Register(modelPath3);
 			GetComponent<SMaterialComponent>(floor)->AssetRegistryKeys = assetRegistry->Register(materialNames3);
@@ -311,13 +341,16 @@ namespace Havtorn
 				return false;
 
 			STransform& transform3 = (*AddComponent<STransformComponent>(floor)).Transform;
+			AddView<STransformComponentView>(floor);
 			SMatrix matrix3 = transform3.GetMatrix();
 			matrix3.SetTranslation(translations[i]);
 			matrix3.SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundX(UMath::DegToRad(-90.0f)));
 			transform3.SetMatrix(matrix3);
 
 			renderManager->LoadStaticMeshComponent(modelPath3, AddComponent<SStaticMeshComponent>(floor));
+			AddView<SStaticMeshComponentView>(floor);
 			renderManager->LoadMaterialComponent(materialNames3, AddComponent<SMaterialComponent>(floor));
+			AddView<SMaterialComponentView>(floor);
 
 			GetComponent<SStaticMeshComponent>(floor)->AssetRegistryKey = assetRegistry->Register(modelPath3);
 			GetComponent<SMaterialComponent>(floor)->AssetRegistryKeys = assetRegistry->Register(materialNames3);
@@ -343,13 +376,16 @@ namespace Havtorn
 				return false;
 
 			STransform& transform3 = (*AddComponent<STransformComponent>(floor)).Transform;
+			AddView<STransformComponentView>(floor);
 			SMatrix matrix3 = transform3.GetMatrix();
 			matrix3.SetTranslation(translations[i]);
 			matrix3.SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundX(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundY(UMath::DegToRad(-90.0f)));
 			transform3.SetMatrix(matrix3);
 
 			renderManager->LoadStaticMeshComponent(modelPath3, AddComponent<SStaticMeshComponent>(floor));
+			AddView<SStaticMeshComponentView>(floor);
 			renderManager->LoadMaterialComponent(materialNames3, AddComponent<SMaterialComponent>(floor));
+			AddView<SMaterialComponentView>(floor);
 
 			GetComponent<SStaticMeshComponent>(floor)->AssetRegistryKey = assetRegistry->Register(modelPath3);
 			GetComponent<SMaterialComponent>(floor)->AssetRegistryKeys = assetRegistry->Register(materialNames3);
@@ -390,11 +426,13 @@ namespace Havtorn
 
 		// Setup entities (create components)
 		STransformComponent& transform = (*AddComponent<STransformComponent>(MainCameraEntity));
+		AddView<STransformComponentView>(MainCameraEntity);
 		transform.Transform.Translate({ 0.0f, 1.0f, -5.0f });
 		//transform.Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
 		transform.Transform.Translate(SVector::Right * 0.25f);
 
 		SCameraComponent& camera = *AddComponent<SCameraComponent>(MainCameraEntity);
+		AddView<SCameraComponentView>(MainCameraEntity);
 		camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
 		//camera.ProjectionType = ECameraProjectionType::Orthographic;
 		//camera.ProjectionMatrix = SMatrix::OrthographicLH(5.0f, 5.0f, 0.1f, 1000.0f);
@@ -402,6 +440,7 @@ namespace Havtorn
 
 		//		SCameraControllerComponent& controllerComp = 
 		AddComponent<SCameraControllerComponent>(MainCameraEntity);
+		AddView<SCameraControllerComponentView>(MainCameraEntity);
 		//controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
 		// 
 		//SSequencerComponent& cameraSequencerComponent = AddSequencerComponentToEntity(*cameraEntity);
@@ -414,7 +453,9 @@ namespace Havtorn
 			return false;
 
 		AddComponent<STransformComponent>(environmentLightEntity);
+		AddView<STransformComponentView>(environmentLightEntity);
 		renderManager->LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/CubemapTheVisit.hva", AddComponent<SEnvironmentLightComponent>(environmentLightEntity));
+		AddView<SEnvironmentLightComponentView>(environmentLightEntity);
 		GetComponent<SEnvironmentLightComponent>(environmentLightEntity)->AssetRegistryKey = assetRegistry->Register("Assets/Textures/Cubemaps/CubemapTheVisit.hva");
 		// === !Environment light ===
 
@@ -424,12 +465,14 @@ namespace Havtorn
 			return false;
 
 		SDirectionalLightComponent& directionalLight = *AddComponent<SDirectionalLightComponent>(directionalLightEntity);
+		AddView<SDirectionalLightComponentView>(directionalLightEntity);
 		directionalLight.Direction = { 1.0f, 1.0f, -1.0f, 0.0f };
 		directionalLight.Color = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };
 		directionalLight.ShadowmapView.ShadowmapViewportIndex = 0;
 		directionalLight.ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLight.ShadowViewSize.X, directionalLight.ShadowViewSize.Y, directionalLight.ShadowNearAndFarPlane.X, directionalLight.ShadowNearAndFarPlane.Y);
 
 		SVolumetricLightComponent& volumetricLight = *AddComponent<SVolumetricLightComponent>(directionalLightEntity);
+		AddView<SVolumetricLightComponentView>(directionalLightEntity);
 		volumetricLight.IsActive = false;
 		// === !Directional light ===
 
@@ -439,11 +482,13 @@ namespace Havtorn
 			return true;
 
 		STransform& spotlightTransform = (*AddComponent<STransformComponent>(spotlight)).Transform;
+		AddView<STransformComponentView>(spotlight);
 		SMatrix spotlightMatrix = spotlightTransform.GetMatrix();
 		spotlightMatrix.SetTranslation({ 0.0f, 0.0f, 0.0f });
 		spotlightTransform.SetMatrix(spotlightMatrix);
 
 		SSpotLightComponent& spotlightComp = *AddComponent<SSpotLightComponent>(spotlight);
+		AddView<SSpotLightComponentView>(spotlight);
 		spotlightComp.Direction = SVector4::Forward;
 		spotlightComp.DirectionNormal1 = SVector4::Right;
 		spotlightComp.DirectionNormal2 = SVector4::Up;
@@ -453,6 +498,7 @@ namespace Havtorn
 		spotlightComp.Range = 3.0f;
 
 		SVolumetricLightComponent& volumetricSpotLight = *AddComponent<SVolumetricLightComponent>(spotlight);
+		AddView<SVolumetricLightComponentView>(spotlight);
 		volumetricSpotLight.IsActive = false;
 
 		const SMatrix spotlightProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, spotlightComp.Range);
@@ -473,8 +519,11 @@ namespace Havtorn
 			if (!ghosty.IsValid())
 				return true;
 			STransformComponent& spriteWStransform = *AddComponent<STransformComponent>(ghosty);
+			AddView<STransformComponentView>(ghosty);
 			SSpriteComponent& spriteWSComp = *AddComponent<SSpriteComponent>(ghosty);
+			AddView<SSpriteComponentView>(ghosty);
 			AddComponent<SGhostyComponent>(ghosty);
+			AddView<SGhostyComponentView>(ghosty);
 
 			spriteWStransform.Transform.Move({ 0.0f, 0.0f, 0.0f });
 			//F32 radians = UMath::DegToRad(45.0f);
@@ -536,6 +585,7 @@ namespace Havtorn
 
 			CGhostySystem* ghostySystem = GEngine::GetWorld()->GetSystem<CGhostySystem>();
 			SSpriteAnimatorGraphComponent& spriteAnimatorGraphComponent = *AddComponent<SSpriteAnimatorGraphComponent>(ghosty);
+			AddView<SSpriteAnimatorGraphComponentView>(ghosty);
 
 			SSpriteAnimatorGraphNode& rootNode = spriteAnimatorGraphComponent.SetRoot(std::string("Idle | Locomotion"), ghostySystem->EvaluateIdleFunc);
 			rootNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Idle"), idle);

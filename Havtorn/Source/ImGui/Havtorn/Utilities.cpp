@@ -20,47 +20,8 @@ namespace ImGui
 	const ImVec2 UUtils::DummySize = { UUtils::DummySizeX, UUtils::DummySizeY };
 	const ImVec2 UUtils::ModalWindowPivot = { 0.5f, 0.5f };
 
-	//void UUtils::TryOpenModalTableWindow(const std::string& identifier, const std::string& searchPath)
-	//{
-	//	const std::string modalName = identifier + "ModalName";
-	//	if (!ImGui::BeginPopupModal(modalName.c_str(), NULL, ImGuiWindowFlags_AlwaysAutoResize))
-	//		return;
-
-	//	float cellWidth = UUtils::TexturePreviewSizeX * 0.75f + UUtils::ThumbnailPadding;
-	//	int columnCount = static_cast<int>(UUtils::PanelWidth / cellWidth);
-	//	unsigned id = 0;
-
-	//	const std::string tableName = identifier + "TableName";
-	//	if (ImGui::BeginTable(tableName.c_str(), columnCount))
-	//	{
-	//		for (auto& entry : std::filesystem::recursive_directory_iterator(searchPath))
-	//		{
-	//			if (entry.is_directory())
-	//				continue;
-
-	//			auto& assetRep = Manager->GetAssetRepFromDirEntry(entry);
-
-	//			ImGui::TableNextColumn();
-	//			ImGui::PushID(id++);
-
-	//			if (ImGui::ImageButton(assetRep->TextureRef, { UUtils::TexturePreviewSizeX * 0.75f, UUtils::TexturePreviewSizeY * 0.75f }))
-	//			{
-
-	//				Manager->GetRenderManager()->TryReplaceMaterialOnComponent(assetRep->DirectoryEntry.path().string(), materialIndex, materialComponentToChange);
-
-	//				ImGui::CloseCurrentPopup();
-	//			}
-
-	//			ImGui::Text(assetRep->Name.c_str());
-	//			ImGui::PopID();
-	//		}
-
-	//		ImGui::EndTable();
-	//	}
-
-	//	if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
-	//		ImGui::CloseCurrentPopup();
-
-	//	ImGui::EndPopup();
-	//}
+	bool UUtils::TryOpenComponentView(const std::string& componentViewName)
+	{
+		return ImGui::CollapsingHeader(componentViewName.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
+	}
 }
