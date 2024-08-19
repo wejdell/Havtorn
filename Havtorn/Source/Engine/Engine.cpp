@@ -67,7 +67,7 @@ namespace Havtorn
 
 		InitWindowsImaging();
 
-		SequencerSystem = World->GetSequencerSystem();
+		SequencerSystem = World->GetSystem<CSequencerSystem>();
 		WindowHandler->ResizeTarget = { };
 
 		return true;
@@ -84,7 +84,7 @@ namespace Havtorn
 	{
 		InputMapper->Update();
 		World->Update();
-
+		
 		GTime::EndTracking(ETimerCategory::CPU);
 
 		std::unique_lock<std::mutex> uniqueLock(CThreadManager::RenderMutex);
