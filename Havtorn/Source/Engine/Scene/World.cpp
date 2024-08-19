@@ -13,19 +13,31 @@ namespace Havtorn
 		RenderManager = renderManager;
 		AssetRegistry = std::make_unique<CAssetRegistry>();
 
-		// Setup systems
-		Systems.emplace_back(std::make_unique<CCameraSystem>());
-		Systems.emplace_back(std::make_unique<CLightSystem>(RenderManager));
-		Systems.emplace_back(std::make_unique<CSpriteAnimatorGraphSystem>());
-		Systems.emplace_back(std::make_unique<CSequencerSystem>());
-		Systems.emplace_back(std::make_unique<CRenderSystem>(RenderManager));
-		//Systems.emplace_back(std::make_unique<Debug::UDebugShapeSystem>(Scenes.back().get(), RenderManager));
+		AddSystem<CCameraSystem>();
+		AddSystem<CLightSystem>(RenderManager);
+		QueueAddSystem<CSequencerSystem>();
+		AddSystem<CSpriteAnimatorGraphSystem>();
+		QueueAddSystem<CRenderSystem>(RenderManager);
+		
+		QueueRemoveSystem<CRenderSystem>();
+		QueueRemoveSystem<CSpriteAnimatorGraphSystem>();
 
 		return true;
 	}
-
+	static int counter = 0;
 	void CWorld::Update()
 	{
+		counter++;
+
+		if(counter == 10000)
+			AddPendingSystems();
+
+		if(counter == 12000)
+			AddPendingSystems();
+
+		if(counter == 11000)
+			RemovePendingSystems();
+
 		for (auto& scene : Scenes)
 		{
 			for (const auto& system : Systems)
@@ -33,6 +45,55 @@ namespace Havtorn
 				system->Update(scene.get());
 			}
 		}
+	}
+
+	void CWorld::AddPendingSystems()
+	{
+		std::cout << "Adding Pending Systems" << std::endl;
+		for (U16 i = 0; i < SystemsToAdd.size(); i++)
+			Systems.push_back(std::move(SystemsToAdd[i]));
+
+		SystemsToAdd.clear();
+	}
+
+	void CWorld::RemovePendingSystems()
+	{
+		std::cout << "Removing Pending Systems" << std::endl;
+		for (U16 toRemoveIndex = 0; toRemoveIndex < SystemsToRemove.size(); toRemoveIndex++)
+		{
+			for (U16 systemsIndex = 0; systemsIndex < Systems.size(); systemsIndex++)
+			{
+				if (typeid(*Systems[systemsIndex].get()).hash_code() != SystemsToRemove[toRemoveIndex])
+					continue;
+
+				RemoveSystemRespectOrder(systemsIndex);
+			}
+		}
+
+		SystemsToRemove.clear();
+
+		QueueAddSystem<CSpriteAnimatorGraphSystem>();
+		QueueAddSystem<CRenderSystem>(RenderManager);
+	}
+
+	void  CWorld::RemoveSystem(U16 index)
+	{
+		Systems[index] = std::move(Systems.back());
+		Systems.pop_back();
+	}
+
+	void  CWorld::RemoveSystemRespectOrder(U16 index)
+	{
+		for (U16 i = index; i < Systems.size(); i++)
+		{
+			U16 next = i + 1;
+			if (next == Systems.size())
+				break;
+
+			Systems[i] = std::move(Systems[next]);
+		}
+
+		Systems.pop_back();
 	}
 
 	void CWorld::LoadScene(const std::string& filePath)
@@ -128,16 +189,5 @@ namespace Havtorn
 	CAssetRegistry* CWorld::GetAssetRegistry() const
 	{
 		return AssetRegistry.get();
-	}
-
-	void CWorld::RegisterSystem(Ptr<ISystem> system)
-	{
-		Systems.emplace_back(std::move(system));
-	}
-	
-	CSequencerSystem* CWorld::GetSequencerSystem()
-	{
-		// TODO.NR: Should not be hard coded
-		return reinterpret_cast<CSequencerSystem*>(Systems[3].get());
 	}
 }
