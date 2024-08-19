@@ -15,8 +15,8 @@ namespace Havtorn
 
 		AddSystem<CCameraSystem>();
 		AddSystem<CLightSystem>(RenderManager);
-		QueueAddSystem<CSequencerSystem>();
 		AddSystem<CSpriteAnimatorGraphSystem>();
+		QueueAddSystem<CSequencerSystem>();
 		QueueAddSystem<CRenderSystem>(RenderManager);
 		
 		QueueRemoveSystem<CRenderSystem>();
