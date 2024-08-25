@@ -5,8 +5,8 @@
 
 namespace Havtorn
 {
-	struct SStaticMeshComponentView : public SComponentView
+	struct SStaticMeshComponentView
 	{
-		SComponentViewResult View(const SEntity& entityOwner, CScene* scene) override;
+		static HAVTORN_API SComponentViewResult View(const SEntity& entityOwner, CScene* scene);
 	};
 }

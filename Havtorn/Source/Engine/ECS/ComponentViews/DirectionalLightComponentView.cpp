@@ -13,6 +13,9 @@ namespace Havtorn
 {
     SComponentViewResult SDirectionalLightComponentView::View(const SEntity& entityOwner, CScene* scene)
     {
+		if (!ImGui::UUtils::TryOpenComponentView("DirectionalLight"))
+			return SComponentViewResult();
+
 		SDirectionalLightComponent* directionalLightComp = scene->GetComponent<SDirectionalLightComponent>(entityOwner);
 
 		Havtorn::F32 colorData[3] = { directionalLightComp->Color.X, directionalLightComp->Color.Y, directionalLightComp->Color.Z };

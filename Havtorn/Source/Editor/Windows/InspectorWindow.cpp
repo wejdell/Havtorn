@@ -74,10 +74,10 @@ namespace ImGui
 		ImGui::HavtornInputText("", &metaDataComp->Name);
 		ImGui::Separator();
 
-		for (Havtorn::SComponentView* view : Scene->GetViews(SelectedEntity))
+		for (Havtorn::CScene::SViewFunctionPointer viewFunction : Scene->GetViews(SelectedEntity))
 		{
-			//RemoveComponentButton();
-			Havtorn::SComponentViewResult result = view->View(SelectedEntity, Scene);
+			RemoveComponentButton();
+			Havtorn::SComponentViewResult result = viewFunction(SelectedEntity, Scene);
 
 			// TODO.NR: Could make this a enum-function map, but would be good to set up clear rules for how this should work.
 			switch (result.Label)

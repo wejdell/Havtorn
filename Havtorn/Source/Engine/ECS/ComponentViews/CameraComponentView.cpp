@@ -8,11 +8,15 @@
 
 #include <Core/imgui.h>
 #include <Core/ImGuizmo/ImGuizmo.h>
+#include <Havtorn/Utilities.h>
 
 namespace Havtorn
 {
 	SComponentViewResult SCameraComponentView::View(const SEntity& entityOwner, CScene* scene)
 	{
+		if (!ImGui::UUtils::TryOpenComponentView("Camera"))
+			return SComponentViewResult();
+
 		SCameraComponent* cameraComp = scene->GetComponent<SCameraComponent>(entityOwner);
 
 		F32 slideSpeed = 0.1f;

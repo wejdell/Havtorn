@@ -13,6 +13,9 @@ namespace Havtorn
 {
     SComponentViewResult Havtorn::SPointLightComponentView::View(const SEntity& entityOwner, CScene* scene)
     {
+		if (!ImGui::UUtils::TryOpenComponentView("PointLight"))
+			return SComponentViewResult();
+
 		SPointLightComponent* pointLightComp = scene->GetComponent<SPointLightComponent>(entityOwner);
 
 		Havtorn::F32 colorData[3] = { pointLightComp->ColorAndIntensity.X, pointLightComp->ColorAndIntensity.Y, pointLightComp->ColorAndIntensity.Z };

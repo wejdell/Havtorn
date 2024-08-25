@@ -11,8 +11,11 @@ namespace Havtorn
 		static const F32 F32Min;
 		static const F32 U8MaxAsF32;
 		static const F32 U8MaxAsF32Reciprocal; 
-
-		U8 R, G, B, A = 255;
+		
+		U8 R = 255; 
+		U8 G = 255; 
+		U8 B = 255;
+		U8 A = 255;
 
 		static const SColor Red;
 		static const SColor Green;

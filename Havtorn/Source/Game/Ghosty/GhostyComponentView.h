@@ -6,8 +6,8 @@
 
 namespace Havtorn
 {
-	struct SGhostyComponentView : SComponentView
+	struct SGhostyComponentView
 	{
-		SComponentViewResult View(const SEntity& entityOwner, CScene* scene) override;
+		static SComponentViewResult View(const SEntity& entityOwner, CScene* scene);
 	};
 }

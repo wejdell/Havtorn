@@ -5,8 +5,8 @@
 
 namespace Havtorn
 {
-	struct SSpriteAnimatorGraphComponentView : public SComponentView
+	struct SSpriteAnimatorGraphComponentView
 	{
-		SComponentViewResult View(const SEntity& entityOwner, CScene* scene) override;
+		static HAVTORN_API SComponentViewResult View(const SEntity& entityOwner, CScene* scene);
 	};
 }

@@ -13,6 +13,9 @@ namespace Havtorn
 {
     SComponentViewResult SVolumetricLightComponentView::View(const SEntity& entityOwner, CScene* scene)
     {
+		if (!ImGui::UUtils::TryOpenComponentView("VolumetricLight"))
+			return SComponentViewResult();
+
 		SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(entityOwner);
 
 		ImGui::Checkbox("Is Active", &volumetricLightComp->IsActive);

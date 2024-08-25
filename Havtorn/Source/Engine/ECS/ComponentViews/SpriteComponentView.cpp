@@ -15,6 +15,9 @@ namespace Havtorn
 {
     SComponentViewResult Havtorn::SSpriteComponentView::View(const SEntity& entityOwner, CScene* scene)
     {
+		if (!ImGui::UUtils::TryOpenComponentView("Sprite"))
+			return SComponentViewResult();
+
 		SSpriteComponent* spriteComp = scene->GetComponent<SSpriteComponent>(entityOwner);
 
 		SVector4 colorFloat = spriteComp->Color.AsVector4();

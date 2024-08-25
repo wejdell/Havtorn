@@ -15,6 +15,9 @@ namespace Havtorn
 {
     SComponentViewResult SEnvironmentLightComponentView::View(const SEntity& entityOwner, CScene* scene)
     {
+		if (!ImGui::UUtils::TryOpenComponentView("EnvironmentLight"))
+			return SComponentViewResult();
+
 		SEnvironmentLightComponent* environmentLightComp = scene->GetComponent<SEnvironmentLightComponent>(entityOwner);
 
 		ImGui::Text("Ambient Static Cubemap");

@@ -13,6 +13,9 @@ namespace Havtorn
 {
     SComponentViewResult STransform2DComponentView::View(const SEntity& entityOwner, CScene* scene)
     {
+		if (!ImGui::UUtils::TryOpenComponentView("Transform2D"))
+			return SComponentViewResult();
+
 		// TODO.NR: Make editable with gizmo
 		STransform2DComponent* transform2DComp = scene->GetComponent<STransform2DComponent>(entityOwner);
 

@@ -4,6 +4,7 @@
 #include "Ghosty\GhostySystem.h"
 
 #include <Engine.h>
+#include <Application/ImGuiManager.h>
 
 namespace Havtorn
 {
@@ -23,6 +24,8 @@ namespace Havtorn
 	{
 		HV_LOG_INFO("GameManager Initialized.");
 		GEngine::GetWorld()->RegisterSystem(std::make_unique<Havtorn::CGhostySystem>());
+
+		ImGui::SetCurrentContext(Havtorn::GImGuiManager::GetContext());
 
 		return true;
 	}

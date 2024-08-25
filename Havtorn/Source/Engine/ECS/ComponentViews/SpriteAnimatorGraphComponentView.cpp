@@ -7,11 +7,15 @@
 #include "Scene/Scene.h"
 
 #include <Core/imgui.h>
+#include <Havtorn/Utilities.h>
 
 namespace Havtorn
 {
     SComponentViewResult Havtorn::SSpriteAnimatorGraphComponentView::View(const SEntity& entityOwner, CScene* scene)
     {
+        if (!ImGui::UUtils::TryOpenComponentView("SpriteAnimatorGraph"))
+            return SComponentViewResult();
+
         SSpriteAnimatorGraphComponent* component = scene->GetComponent<SSpriteAnimatorGraphComponent>(entityOwner);
         
         SComponentViewResult result;

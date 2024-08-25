@@ -5,6 +5,7 @@
 #include "Engine.h"
 
 #include <Core/imgui.h>
+#include <../Game/GameScene.h>
 
 namespace ImGui
 {
@@ -47,13 +48,13 @@ namespace ImGui
 
             if (ImGui::MenuItem("Generate 3D Demo Scene"))
             {
-                Havtorn::GEngine::GetWorld()->OpenDemoScene(true);
+                Havtorn::GEngine::GetWorld()->OpenDemoScene<Havtorn::CGameScene>(true);
                 Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
             }
 
             if (ImGui::MenuItem("Generate 2D Demo Scene"))
             {
-                Havtorn::GEngine::GetWorld()->OpenDemoScene(false);
+                Havtorn::GEngine::GetWorld()->OpenDemoScene<Havtorn::CGameScene>(false);
                 Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
             }
 

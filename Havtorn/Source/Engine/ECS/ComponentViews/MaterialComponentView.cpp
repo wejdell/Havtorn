@@ -4,10 +4,15 @@
 #include "MaterialComponentView.h"
 #include "ECS/Components/MaterialComponent.h"
 
+#include <Havtorn/Utilities.h>
+
 namespace Havtorn
 {
     SComponentViewResult Havtorn::SMaterialComponentView::View(const SEntity& /*entityOwner*/, CScene* /*scene*/)
     {
+		if (!ImGui::UUtils::TryOpenComponentView("Material"))
+			return SComponentViewResult();
+
 		//SMaterialComponent* materialComp = scene->GetComponent<SMaterialComponent>(entityOwner);
 
 		//for (Havtorn::U8 materialIndex = 0; materialIndex < materialComp->Materials.size(); materialIndex++)

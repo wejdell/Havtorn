@@ -13,6 +13,9 @@ namespace Havtorn
 {
     SComponentViewResult SSpotLightComponentView::View(const SEntity& entityOwner, CScene* scene)
     {
+		if (!ImGui::UUtils::TryOpenComponentView("SpotLight"))
+			return SComponentViewResult();
+
 		SSpotLightComponent* spotLightComp = scene->GetComponent<SSpotLightComponent>(entityOwner);
 
 		Havtorn::F32 colorData[3] = { spotLightComp->ColorAndIntensity.X, spotLightComp->ColorAndIntensity.Y, spotLightComp->ColorAndIntensity.Z };

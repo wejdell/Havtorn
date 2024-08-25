@@ -15,6 +15,9 @@ namespace Havtorn
 {
 	SComponentViewResult SDecalComponentView::View(const SEntity& entityOwner, CScene* scene)
 	{
+		if (!ImGui::UUtils::TryOpenComponentView("Decal"))
+			return SComponentViewResult();
+
 		SDecalComponent* decalComp = scene->GetComponent<SDecalComponent>(entityOwner);
 
 		ImGui::Checkbox("Render Albedo", &decalComp->ShouldRenderAlbedo);

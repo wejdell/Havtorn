@@ -5,10 +5,15 @@
 
 #include "ECS/Components/StaticMeshComponent.h"
 
+#include <Havtorn/Utilities.h>
+
 namespace Havtorn
 {
     SComponentViewResult SStaticMeshComponentView::View(const SEntity& /*entityOwner*/, CScene* /*scene*/)
     {
+		if (!ImGui::UUtils::TryOpenComponentView("StaticMesh"))
+			return SComponentViewResult();
+
 		//SStaticMeshComponent* staticMesh = scene->GetComponent<SStaticMeshComponent>(entityOwner);
 
 		//Havtorn::SEditorAssetRepresentation* assetRep = Manager->GetAssetRepFromName(staticMesh->Name.AsString()).get();

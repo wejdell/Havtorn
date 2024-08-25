@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <map>
 #include <tuple>
+#include <functional>
 
 namespace Havtorn
 {
@@ -22,21 +23,21 @@ namespace Havtorn
 	class CRenderManager;
 	class CAssetRegistry;
 
-	class CScene
+	class /*HAVTORN_API*/ CScene
 	{
 	public:
-		CScene();
-		~CScene();
+		HAVTORN_API CScene();
+		HAVTORN_API ~CScene();
 
 		bool Init(CRenderManager* renderManager, const std::string& sceneName);
 
-		bool Init3DDemoScene(CRenderManager* renderManager);
-		bool Init2DDemoScene(CRenderManager* renderManager);
+		HAVTORN_API virtual bool Init3DDemoScene(CRenderManager* renderManager);
+		HAVTORN_API virtual bool Init2DDemoScene(CRenderManager* renderManager);
 
 		// TODO.NR: Rework serialization to decrease amount of boilerplate
-		[[nodiscard]] U32 GetSize() const;
-		void Serialize(char* toData, U64& pointerPosition) const;
-		void Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry);
+		HAVTORN_API virtual [[nodiscard]] U32 GetSize() const;
+		HAVTORN_API virtual void Serialize(char* toData, U64& pointerPosition) const;
+		HAVTORN_API virtual void Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry);
 
 		HAVTORN_API std::string GetSceneName() const;
 		HAVTORN_API U64 GetSceneIndex(const SEntity& entity) const;
@@ -193,45 +194,50 @@ namespace Havtorn
 			return specializedComponents;
 		}
 
-		template<typename T>
-		void AddView(const SEntity& entityOwner)
-		{
-			if (!ComponentViews.contains(entityOwner.GUID))
-				ComponentViews.emplace(entityOwner.GUID, std::unordered_map<U64, SComponentView*>());
+		//template<typename T>
+		//void AddView(const SEntity& entityOwner)
+		//{
+		//	if (!ComponentViews.contains(entityOwner.GUID))
+		//		ComponentViews.emplace(entityOwner.GUID, std::unordered_map<U64, SComponentView*>());
 
-			auto& viewMap = ComponentViews.at(entityOwner.GUID);
+		//	auto& viewMap = ComponentViews.at(entityOwner.GUID);
 
-			const U64 typeIDHashCode = typeid(T).hash_code();
-			if (viewMap.contains(typeIDHashCode))
-				return;
+		//	const U64 typeIDHashCode = typeid(T).hash_code();
+		//	if (viewMap.contains(typeIDHashCode))
+		//		return;
 
-			viewMap.emplace(typeIDHashCode, new T());
-		}
+		//	viewMap.emplace(typeIDHashCode, new T());
+		//}
 
-		template<typename T>
-		void RemoveView(const SEntity& entityOwner)
-		{
-			if (!ComponentViews.contains(entityOwner.GUID))
-				return;
+		//template<typename T>
+		//void RemoveView(const SEntity& entityOwner)
+		//{
+		//	if (!ComponentViews.contains(entityOwner.GUID))
+		//		return;
 
-			auto& viewMap = ComponentViews.at(entityOwner.GUID);
-			
-			const U64 typeIDHashCode = typeid(T).hash_code();
-			if (!viewMap.contains(typeIDHashCode))
-				return;
+		//	auto& viewMap = ComponentViews.at(entityOwner.GUID);
+		//	
+		//	const U64 typeIDHashCode = typeid(T).hash_code();
+		//	if (!viewMap.contains(typeIDHashCode))
+		//		return;
 
-			auto& view = viewMap.at(typeIDHashCode);
+		//	auto& view = viewMap.at(typeIDHashCode);
 
-			delete view;
-			view = nullptr;
+		//	delete view;
+		//	view = nullptr;
 
-			viewMap.erase(typeIDHashCode);
-		}
+		//	viewMap.erase(typeIDHashCode);
+		//}
+		
+		using SViewFunctionPointer = std::function<SComponentViewResult(const SEntity&, CScene*)>;
+		HAVTORN_API void AddView(const SEntity& entityOwner, SViewFunctionPointer function);
+		HAVTORN_API void RemoveView(const SEntity& entityOwner, SViewFunctionPointer function);
 
 		HAVTORN_API void RemoveViews(const SEntity& entityOwner);
-		HAVTORN_API std::vector<SComponentView*> GetViews(const SEntity& entityOwner);
+		HAVTORN_API std::vector<SViewFunctionPointer> GetViews(const SEntity& entityOwner);
 		
-		std::unordered_map<U64, std::unordered_map<U64, SComponentView*>> ComponentViews;
+		//std::unordered_map<U64, std::unordered_map<U64, SViewFunctionPointer>> ComponentViews;
+		std::unordered_map<U64, std::vector<SViewFunctionPointer>> ComponentViews;
 
 		std::unordered_map<U64, U64> EntityIndices;
 		std::vector<SEntity> Entities;
