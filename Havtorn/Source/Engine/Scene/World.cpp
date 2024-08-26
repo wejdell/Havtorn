@@ -16,27 +16,16 @@ namespace Havtorn
 		AddSystem<CCameraSystem>();
 		AddSystem<CLightSystem>(RenderManager);
 		AddSystem<CSpriteAnimatorGraphSystem>();
-		QueueAddSystem<CSequencerSystem>();
-		QueueAddSystem<CRenderSystem>(RenderManager);
-		
-		QueueRemoveSystem<CRenderSystem>();
-		QueueRemoveSystem<CSpriteAnimatorGraphSystem>();
+		AddSystem<CSequencerSystem>();
+		AddSystem<CRenderSystem>(RenderManager);
 
 		return true;
 	}
-	static int counter = 0;
+
 	void CWorld::Update()
 	{
-		counter++;
-
-		if(counter == 10000)
-			AddPendingSystems();
-
-		if(counter == 12000)
-			AddPendingSystems();
-
-		if(counter == 11000)
-			RemovePendingSystems();
+		RemovePendingSystems();
+		AddPendingSystems();
 
 		for (auto& scene : Scenes)
 		{
@@ -49,7 +38,6 @@ namespace Havtorn
 
 	void CWorld::AddPendingSystems()
 	{
-		std::cout << "Adding Pending Systems" << std::endl;
 		for (U16 i = 0; i < SystemsToAdd.size(); i++)
 			Systems.push_back(std::move(SystemsToAdd[i]));
 
@@ -58,12 +46,11 @@ namespace Havtorn
 
 	void CWorld::RemovePendingSystems()
 	{
-		std::cout << "Removing Pending Systems" << std::endl;
 		for (U16 toRemoveIndex = 0; toRemoveIndex < SystemsToRemove.size(); toRemoveIndex++)
 		{
 			for (U16 systemsIndex = 0; systemsIndex < Systems.size(); systemsIndex++)
 			{
-				if (typeid(*Systems[systemsIndex].get()).hash_code() != SystemsToRemove[toRemoveIndex])
+				if (typeid(*Systems[systemsIndex].get()).hash_code() != SystemsToRemove[toRemoveIndex].HashCode)
 					continue;
 
 				RemoveSystemRespectOrder(systemsIndex);
@@ -71,9 +58,6 @@ namespace Havtorn
 		}
 
 		SystemsToRemove.clear();
-
-		QueueAddSystem<CSpriteAnimatorGraphSystem>();
-		QueueAddSystem<CRenderSystem>(RenderManager);
 	}
 
 	void  CWorld::RemoveSystem(U16 index)

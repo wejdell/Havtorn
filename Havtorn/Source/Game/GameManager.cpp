@@ -22,7 +22,7 @@ namespace Havtorn
 	bool CGameManager::Init()
 	{
 		HV_LOG_INFO("GameManager Initialized.");
-		GEngine::GetWorld()->QueueAddSystem<CGhostySystem>();
+		GEngine::GetWorld()->AddSystem<CGhostySystem>();
 
 		return true;
 	}

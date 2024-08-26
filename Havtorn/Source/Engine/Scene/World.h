@@ -36,7 +36,6 @@ namespace Havtorn
 		template<class TSystem>
 		HAVTORN_API inline bool TryGetSystem(TSystem* outSystem);
 
-		// Rename to RegisterSystem?
 		template<class TSystem>
 		HAVTORN_API inline void AddSystem();
 
@@ -67,22 +66,19 @@ namespace Havtorn
 		void LoadScene(const std::string& filePath);
 
 	private:
-		template<class TSystem>
-		struct SystemId
+		struct SystemTypeCode
 		{
-			const U64 HashValue;
+			const U64 HashCode;
 
-			template<class TSystem>
-			SystemId()
-			{
-				HashValue = typeid(TSystem).hash_code();
-			}
+			SystemTypeCode(U64 hashCode) 
+				: HashCode(hashCode)
+			{}
 		};
 
 		std::vector<Ptr<CScene>> Scenes;
 		std::vector<Ptr<ISystem>> Systems;
 
-		std::vector<U64> SystemsToRemove;
+		std::vector<SystemTypeCode> SystemsToRemove;
 		std::vector<Ptr<ISystem>> SystemsToAdd;
 
 		Ptr<CAssetRegistry> AssetRegistry = nullptr;
@@ -142,6 +138,6 @@ namespace Havtorn
 	template<class TSystem>
 	inline void CWorld::QueueRemoveSystem()
 	{
-		SystemsToRemove.push_back(typeid(TSystem).hash_code());
+		SystemsToRemove.push_back(SystemTypeCode(typeid(TSystem).hash_code()));
 	}
 }
