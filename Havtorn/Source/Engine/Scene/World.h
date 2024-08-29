@@ -68,7 +68,7 @@ namespace Havtorn
 	private:
 		struct SystemTypeCode
 		{
-			const U64 HashCode;
+			const U64 HashCode = 0;
 
 			SystemTypeCode(U64 hashCode) 
 				: HashCode(hashCode)
