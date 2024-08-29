@@ -28,28 +28,28 @@ namespace Havtorn
 		HAVTORN_API CAssetRegistry* GetAssetRegistry() const;
 
 		template<class TSystem>
-		HAVTORN_API inline TSystem* GetSystem();
+		inline TSystem* GetSystem();
 
 		template<class TSystem>
-		HAVTORN_API inline bool HasSystem();
+		inline bool HasSystem();
 
 		template<class TSystem>
-		HAVTORN_API inline bool TryGetSystem(TSystem* outSystem);
+		inline bool TryGetSystem(TSystem* outSystem);
 
 		template<class TSystem>
-		HAVTORN_API inline void AddSystem();
+		inline void AddSystem();
 
 		template<class TSystem, typename... Args>
-		HAVTORN_API inline void AddSystem(Args&&... args);
+		inline void AddSystem(Args&&... args);
 
 		template<class TSystem>
-		HAVTORN_API inline void QueueAddSystem();
+		inline void QueueAddSystem();
 
 		template<class TSystem, typename... Args>
-		HAVTORN_API inline void QueueAddSystem(Args&&... args);
+		inline void QueueAddSystem(Args&&... args);
 
 		template<class TSystem>
-		HAVTORN_API inline void QueueRemoveSystem();
+		inline void QueueRemoveSystem();
 
 	private:
 		CWorld() = default;
