@@ -62,7 +62,7 @@ namespace Havtorn
 
 	void  CWorld::RemoveSystem(U16 index)
 	{
-		Systems[index] = std::move(Systems.back());
+		std::swap(Systems[index], Systems.back());
 		Systems.pop_back();
 	}
 
@@ -74,7 +74,7 @@ namespace Havtorn
 			if (next == Systems.size())
 				break;
 
-			Systems[i] = std::move(Systems[next]);
+			std::swap(Systems[i], Systems[next]);
 		}
 
 		Systems.pop_back();
