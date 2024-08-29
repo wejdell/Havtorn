@@ -38,8 +38,8 @@ namespace Havtorn
 
 	void CWorld::AddPendingSystems()
 	{
-		for (U16 i = 0; i < SystemsToAdd.size(); i++)
-			Systems.push_back(std::move(SystemsToAdd[i]));
+		for (auto& system : SystemsToAdd)
+			Systems.push_back(std::move(system));
 
 		SystemsToAdd.clear();
 	}
