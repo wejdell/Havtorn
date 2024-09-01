@@ -120,21 +120,21 @@ namespace Havtorn
 		InitShadowmapAtlas(ShadowAtlasResolution);
 
 		DepthCopy = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R32_FLOAT);
-		DownsampledDepth = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 2.0f, DXGI_FORMAT_R32_FLOAT);
+		DownsampledDepth = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 2, DXGI_FORMAT_R32_FLOAT);
 
-		IntermediateTexture = FullscreenTextureFactory.CreateTexture(ShadowAtlasResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		IntermediateTexture = FullscreenTextureFactory.CreateTexture(SVector2<U16>(static_cast<U16>(ShadowAtlasResolution.X), static_cast<U16>(ShadowAtlasResolution.Y)), DXGI_FORMAT_R16G16B16A16_FLOAT);
 
-		HalfSizeTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 2.0f, DXGI_FORMAT_R16G16B16A16_FLOAT);
-		QuarterSizeTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 4.0f, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		HalfSizeTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		QuarterSizeTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 4, DXGI_FORMAT_R16G16B16A16_FLOAT);
 		BlurTexture1 = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
 		BlurTexture2 = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
 		VignetteTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
 
-		VolumetricAccumulationBuffer = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 2.0f, DXGI_FORMAT_R16G16B16A16_FLOAT);
-		VolumetricBlurTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 2.0f, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		VolumetricAccumulationBuffer = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		VolumetricBlurTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
 
-		SSAOBuffer = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 2.0f, DXGI_FORMAT_R16G16B16A16_FLOAT);
-		SSAOBlurTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 2.0f, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		SSAOBuffer = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		SSAOBlurTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
 
 		TonemappedTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
 		AntiAliasedTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
@@ -143,7 +143,7 @@ namespace Havtorn
 
 	void CRenderManager::InitShadowmapAtlas(SVector2<F32> atlasResolution)
 	{
-		ShadowAtlasDepth = FullscreenTextureFactory.CreateDepth(atlasResolution, DXGI_FORMAT_R32_TYPELESS);
+		ShadowAtlasDepth = FullscreenTextureFactory.CreateDepth(SVector2<U16>(static_cast<U16>(atlasResolution.X), static_cast<U16>(atlasResolution.Y)), DXGI_FORMAT_R32_TYPELESS);
 
 		// LOD 1
 		U16 mapsInLod = 8;
@@ -402,6 +402,12 @@ namespace Havtorn
 		GEngine::Instance->Framework->GetContext()->ClearState();
 
 		// TODO.NR: Implement this properly for window resizing
+
+		Backbuffer.ReleaseTexture();
+		//TODO.AS: Is this ultra deep call really neccesary to do here? Context: We need to specifically Resize the SwapChain Buffers Right after we Release
+		//the Backbuffer texture. 
+		SVector2<U16>& resizeTarget = GEngine::Instance->WindowHandler->ResizeTarget;
+		GEngine::Instance->Framework->GetSwapChain()->ResizeBuffers(0, resizeTarget.X, resizeTarget.Y, DXGI_FORMAT_UNKNOWN, 0);
 	}
 
 	void CRenderManager::LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent)
@@ -729,7 +735,7 @@ namespace Havtorn
 		texture->GetDesc(&textureDescription);
 		viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, static_cast<F32>(textureDescription.Width), static_cast<F32>(textureDescription.Height), 0.0f, 1.0f });
 
-		CGBuffer gBuffer = FullscreenTextureFactory.CreateGBuffer({ static_cast<F32>(textureDescription.Width), static_cast<F32>(textureDescription.Height) });
+		CGBuffer gBuffer = FullscreenTextureFactory.CreateGBuffer({ static_cast<U16>(textureDescription.Width), static_cast<U16>(textureDescription.Height) });
 		gBuffer.SetAsActiveTarget();
 		Context->RSSetViewports(1, viewport);
 

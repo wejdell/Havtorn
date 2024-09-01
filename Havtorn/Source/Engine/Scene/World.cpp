@@ -14,16 +14,20 @@ namespace Havtorn
 		AssetRegistry = std::make_unique<CAssetRegistry>();
 
 		// Setup systems
-		Systems.emplace_back(std::make_unique<CCameraSystem>());
-		Systems.emplace_back(std::make_unique<CLightSystem>(RenderManager));
-		Systems.emplace_back(std::make_unique<CSpriteAnimatorGraphSystem>());
-		Systems.emplace_back(std::make_unique<CRenderSystem>(RenderManager));
+		AddSystem<CCameraSystem>();
+		AddSystem<CLightSystem>(RenderManager);
+		AddSystem<CSpriteAnimatorGraphSystem>();
+		AddSystem<CSequencerSystem>();
+		AddSystem<CRenderSystem>(RenderManager);
 
 		return true;
 	}
 
 	void CWorld::Update()
 	{
+		RemovePendingSystems();
+		AddPendingSystems();
+
 		for (auto& scene : Scenes)
 		{
 			for (const auto& system : Systems)
@@ -31,6 +35,50 @@ namespace Havtorn
 				system->Update(scene.get());
 			}
 		}
+	}
+
+	void CWorld::AddPendingSystems()
+	{
+		for (auto& system : SystemsToAdd)
+			Systems.push_back(std::move(system));
+
+		SystemsToAdd.clear();
+	}
+
+	void CWorld::RemovePendingSystems()
+	{
+		for (U16 toRemoveIndex = 0; toRemoveIndex < SystemsToRemove.size(); toRemoveIndex++)
+		{
+			for (U16 systemsIndex = 0; systemsIndex < Systems.size(); systemsIndex++)
+			{
+				if (typeid(*Systems[systemsIndex].get()).hash_code() != SystemsToRemove[toRemoveIndex].HashCode)
+					continue;
+
+				RemoveSystemRespectOrder(systemsIndex);
+			}
+		}
+
+		SystemsToRemove.clear();
+	}
+
+	void  CWorld::RemoveSystem(U16 index)
+	{
+		std::swap(Systems[index], Systems.back());
+		Systems.pop_back();
+	}
+
+	void  CWorld::RemoveSystemRespectOrder(U16 index)
+	{
+		for (U16 i = index; i < Systems.size(); i++)
+		{
+			U16 next = i + 1;
+			if (next == Systems.size())
+				break;
+
+			std::swap(Systems[i], Systems[next]);
+		}
+
+		Systems.pop_back();
 	}
 
 	void CWorld::LoadScene(const std::string& filePath)
@@ -111,16 +159,5 @@ namespace Havtorn
 	CAssetRegistry* CWorld::GetAssetRegistry() const
 	{
 		return AssetRegistry.get();
-	}
-
-	void CWorld::RegisterSystem(Ptr<ISystem> system)
-	{
-		Systems.emplace_back(std::move(system));
-	}
-	
-	CSequencerSystem* CWorld::GetSequencerSystem()
-	{
-		// TODO.NR: Should not be hard coded
-		return reinterpret_cast<CSequencerSystem*>(Systems[3].get());
 	}
 }

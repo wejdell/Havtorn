@@ -1,8 +1,8 @@
 // TODO.NR: Add support for sequencer with new ECS. Has to be done on a separate branch, when we need it.
-//// Copyright 2023 Team Havtorn. All Rights Reserved.
-//
-//#include "SequencerSystem.h"
-//#include "Scene/Scene.h"
+// Copyright 2023 Team Havtorn. All Rights Reserved.
+
+#include "SequencerSystem.h"
+#include "Scene/Scene.h"
 //#include "SequencerKeyframes/SequencerKeyframe.h"
 //#include "ECS/Components/SequencerComponent.h"
 //#include "Assets/SequencerAsset.h"
@@ -16,10 +16,10 @@
 //#include "FileSystem/FileSystem.h"
 //#include "FileSystem/FileHeaderDeclarations.h"
 //
-//namespace Havtorn
-//{
-//	void CSequencerSystem::Update(CScene* scene)
-//	{
+namespace Havtorn
+{
+	void CSequencerSystem::Update(CScene* /*scene*/)
+	{
 //		// Keyframes. Keyframe components with properties that can be lerped. Per keyframe maybe need to determine blend in and out behavior
 //		// Adding keyframe can be done more than once, basic workflow should be to move around or change values on an entity in the editor to key the 
 //		// keyable properties
@@ -116,7 +116,7 @@
 //		Data.CurrentFrame = 0;
 //
 //		//LoadSequencerFromFile(std::string("Assets/Sequencers/Intro.hva"));
-//	}
+	}
 //
 //	void CSequencerSystem::SetSequencerContextData(const SSequencerContextData& data)
 //	{
@@ -413,4 +413,4 @@
 //		Data.CurrentFrame = 0;
 //		TickTime = 0.0f;
 //	}
-//}
+}

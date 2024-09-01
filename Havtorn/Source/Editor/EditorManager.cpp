@@ -73,6 +73,8 @@ namespace Havtorn
 			return false;
 		RenderManager = renderManager;
 
+		GEngine::GetWindowHandler()->OnResolutionChanged.AddMember(this, &CEditorManager::OnResolutionChanged);
+
 		InitEditorLayout();
 		InitAssetRepresentations();
 
@@ -348,7 +350,7 @@ namespace Havtorn
 	{
 		EditorLayout = SEditorLayout();
 
-		const Havtorn::SVector2<F32> resolution = GEngine::GetWindowHandler()->GetResolution();
+		const Havtorn::SVector2<U16> resolution = GEngine::GetWindowHandler()->GetResolution();
 
 		constexpr F32 viewportAspectRatioInv = (9.0f / 16.0f);
 		const F32 viewportPaddingX = ViewportPadding;
@@ -436,6 +438,12 @@ namespace Havtorn
 	void CEditorManager::ToggleFreeCam(const SInputActionPayload payload)
 	{
 		IsFreeCamActive = payload.IsHeld;
+	}
+
+	void CEditorManager::OnResolutionChanged(SVector2<U16> newResolution)
+	{
+		HV_LOG_INFO("EditorMananger -> New Res X: %i, New Res Y: %i", newResolution.X, newResolution.Y);
+		InitEditorLayout();
 	}
 
 	ETransformGizmo CEditorManager::GetCurrentGizmo() const

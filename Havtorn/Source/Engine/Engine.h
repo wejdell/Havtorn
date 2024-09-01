@@ -24,6 +24,7 @@ namespace Havtorn
 		friend class CEditorProcess;
 		friend class CImGuiProcess;
 		friend class CGameProcess;
+		friend CWindowHandler;
 
 	public:
 		GEngine();
@@ -44,8 +45,6 @@ namespace Havtorn
 	public:
 		void InitWindowsImaging();
 		void CrashWithScreenShot(std::wstring& subPath);
-
-		void SetResolution(SVector2<F32> resolution);
 
 		void ShowCursor(const bool& isInEditorMode = true);
 		void HideCursor(const bool& isInEditorMode = false);

@@ -90,4 +90,8 @@ namespace Havtorn
 		ENGINE_HR_MESSAGE(SwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), (void**)&backbufferTexture), "Failed to Get Buffer");
 		return backbufferTexture;
 	}
+	IDXGISwapChain* CGraphicsFramework::GetSwapChain() const
+	{
+		return SwapChain.Get();
+	}
 }

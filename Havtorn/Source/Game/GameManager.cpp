@@ -23,7 +23,7 @@ namespace Havtorn
 	bool CGameManager::Init()
 	{
 		HV_LOG_INFO("GameManager Initialized.");
-		GEngine::GetWorld()->RegisterSystem(std::make_unique<Havtorn::CGhostySystem>());
+		GEngine::GetWorld()->AddSystem<CGhostySystem>();
 
 		ImGui::SetCurrentContext(Havtorn::GImGuiManager::GetContext());
 
