@@ -22,17 +22,6 @@ namespace Havtorn
 
 		ImGui::Text("Ambient Static Cubemap");
 	
-		SComponentViewResult result;
-		Havtorn::U16 ref = environmentLightComp->AmbientCubemapReference;
-		if (ImGui::ImageButton((void*)Havtorn::GEngine::GetTextureBank()->GetTexture(ref), ImGui::UUtils::TexturePreviewSize))
-		{
-			result.Label = EComponentViewResultLabel::OpenTextureAssetModal;
-			result.ComponentViewed = environmentLightComp;
-
-			ImGui::OpenPopup(ImGui::UUtils::SelectTextureModalName.c_str());
-			ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImGui::UUtils::ModalWindowPivot);
-		}
-
-        return result;
+		return { EComponentViewResultLabel::InspectAssetComponent, environmentLightComp, 0 };
     }
 }

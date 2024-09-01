@@ -21,6 +21,7 @@ namespace Havtorn
 		HAVTORN_API U32 GetTextureIndex(const std::string& fileName);
 		HAVTORN_API ID3D11ShaderResourceView* GetTexture(const std::string& fileName);
 		HAVTORN_API ID3D11ShaderResourceView* GetTexture(U32 index);
+		HAVTORN_API std::string GetTexturePath(U32 index);
 
 		HAVTORN_API const std::vector<ID3D11ShaderResourceView*>& GetTextures();
 
@@ -31,5 +32,6 @@ namespace Havtorn
 		ID3D11Device* Device = nullptr;
 		std::vector<ID3D11ShaderResourceView*> Textures = {};
 		std::unordered_map<std::string, U32> Indices = {};
+		std::unordered_map<U32, std::string> TexturePaths = {};
 	};
 }

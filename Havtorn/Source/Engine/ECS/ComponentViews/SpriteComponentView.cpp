@@ -30,22 +30,8 @@ namespace Havtorn
 		spriteComp->Color = SVector4(color[0], color[1], color[2], color[3]);
 		spriteComp->UVRect = { rect[0], rect[1], rect[2], rect[3] };
 
-		Havtorn::U16 ref = spriteComp->TextureIndex;
-
 		ImGui::Text("Texture");
-		SComponentViewResult result;
-		if (ImGui::ImageButton((void*)Havtorn::GEngine::GetTextureBank()->GetTexture(ref), ImGui::UUtils::TexturePreviewSize))
-		{
-			result.Label = EComponentViewResultLabel::OpenTextureAssetModal;
-			result.ComponentViewed = spriteComp;
 
-			ImGui::OpenPopup(ImGui::UUtils::SelectTextureModalName.c_str());
-			ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImGui::UUtils::ModalWindowPivot);
-		}
-
-		//OpenSelectTextureAssetModal(ref);
-		//spriteComp.TextureIndex = static_cast<Havtorn::U32>(ref);
-
-        return result;
+		return { EComponentViewResultLabel::InspectAssetComponent, spriteComp, 0 };
     }
 }
