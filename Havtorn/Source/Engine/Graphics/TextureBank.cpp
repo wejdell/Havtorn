@@ -34,6 +34,11 @@ namespace Havtorn
 		return Textures[index];
 	}
 
+	std::string CTextureBank::GetTexturePath(U32 index)
+	{
+		return TexturePaths.contains(index) ? TexturePaths[index] : "INVALID_ASSET_PATH";
+	}
+
 	ID3D11ShaderResourceView* CTextureBank::GetTexture(const std::string& fileName)
 	{
 		U32 index = GetTextureIndex(fileName);
@@ -60,5 +65,6 @@ namespace Havtorn
 		Textures.emplace_back(std::move(UGraphicsUtils::TryGetShaderResourceView(Device, filePath)));
 		//std::string fileName = filePath.substr(filePath.find_last_of("/") + 1);
 		Indices.emplace(filePath, static_cast<U32>(Textures.size() - 1));
+		TexturePaths.emplace(static_cast<U32>(Textures.size() - 1), filePath);
 	}
 }

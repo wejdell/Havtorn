@@ -19,8 +19,6 @@ namespace Havtorn
 
 		SCameraComponent* cameraComp = scene->GetComponent<SCameraComponent>(entityOwner);
 
-		F32 slideSpeed = 0.1f;
-
 		int projectionIndex = static_cast<int>(cameraComp->ProjectionType);
 		const char* projectionNames[2] = { "Perspective", "Orthographic" };
 		const char* projectionName = (projectionIndex >= 0 && projectionIndex < 2) ? projectionNames[projectionIndex] : "Unknown";
@@ -29,19 +27,19 @@ namespace Havtorn
 
 		if (cameraComp->ProjectionType == Havtorn::ECameraProjectionType::Perspective)
 		{
-			ImGui::DragFloat("FOV", &cameraComp->FOV, slideSpeed, 1.0f, 180.0f);
-			ImGui::DragFloat("Aspect Ratio", &cameraComp->AspectRatio, slideSpeed, 0.1f, 10.0f);
+			ImGui::DragFloat("FOV", &cameraComp->FOV, ImGui::UUtils::SliderSpeed, 1.0f, 180.0f);
+			ImGui::DragFloat("Aspect Ratio", &cameraComp->AspectRatio, ImGui::UUtils::SliderSpeed, 0.1f, 10.0f);
 			ImGuizmo::SetOrthographic(false);
 		}
 		else if (cameraComp->ProjectionType == Havtorn::ECameraProjectionType::Orthographic)
 		{
-			ImGui::DragFloat("View Width", &cameraComp->ViewWidth, slideSpeed, 0.1f, 100.0f);
-			ImGui::DragFloat("View Height", &cameraComp->ViewHeight, slideSpeed, 0.1f, 100.0f);
+			ImGui::DragFloat("View Width", &cameraComp->ViewWidth, ImGui::UUtils::SliderSpeed, 0.1f, 100.0f);
+			ImGui::DragFloat("View Height", &cameraComp->ViewHeight, ImGui::UUtils::SliderSpeed, 0.1f, 100.0f);
 			ImGuizmo::SetOrthographic(true);
 		}
 
-		ImGui::DragFloat("Near Clip Plane", &cameraComp->NearClip, slideSpeed, 0.01f, cameraComp->FarClip - 1.0f);
-		ImGui::DragFloat("Far Clip Plane", &cameraComp->FarClip, slideSpeed, cameraComp->NearClip + 1.0f, 10000.0f);
+		ImGui::DragFloat("Near Clip Plane", &cameraComp->NearClip, ImGui::UUtils::SliderSpeed, 0.01f, cameraComp->FarClip - 1.0f);
+		ImGui::DragFloat("Far Clip Plane", &cameraComp->FarClip, ImGui::UUtils::SliderSpeed, cameraComp->NearClip + 1.0f, 10000.0f);
 
 		if (cameraComp->ProjectionType == Havtorn::ECameraProjectionType::Perspective)
 		{

@@ -8,6 +8,7 @@
 #include <Graphics/RenderManager.h>
 #include <Graphics/TextureBank.h>
 #include <Scene/Scene.h>
+#include <Core/GeneralUtilities.h>
 
 #include "Windows/ViewportWindow.h"
 #include "Windows/SpriteAnimatorGraphNodeWindow.h"
@@ -82,17 +83,11 @@ namespace ImGui
 			// TODO.NR: Could make this a enum-function map, but would be good to set up clear rules for how this should work.
 			switch (result.Label)
 			{
-			case Havtorn::EComponentViewResultLabel::UpdateCameraGizmo:
-				UpdateCameraGizmo(result);
+			case Havtorn::EComponentViewResultLabel::UpdateTransformGizmo:
+				UpdateTransformGizmo(result);
 				break;
-			case Havtorn::EComponentViewResultLabel::OpenTextureAssetModal:
-				OpenSelectTextureAssetModal(result);
-				break;
-			case Havtorn::EComponentViewResultLabel::OpenMaterialAssetModal:
-				OpenSelectMaterialAssetModal(result);
-				break;
-			case Havtorn::EComponentViewResultLabel::OpenMeshAssetModal:
-				OpenSelectMeshAssetModal(result);
+			case Havtorn::EComponentViewResultLabel::InspectAssetComponent:
+				InspectAssetComponent(result);
 				break;
 			case Havtorn::EComponentViewResultLabel::OpenSpriteAnimatorGraph:
 				OpenAssetTool(result);
@@ -102,7 +97,7 @@ namespace ImGui
 				break;
 			}
 
-			ImGui::Dummy({ DummySize.X, DummySize.Y });
+			ImGui::Dummy({ ImGui::UUtils::DummySizeX, ImGui::UUtils::DummySizeY });
 		}
 
 		if (ImGui::Button("Add Component", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
@@ -119,7 +114,7 @@ namespace ImGui
 	{
 	}
 
-	void CInspectorWindow::UpdateCameraGizmo(const Havtorn::SComponentViewResult& result)
+	void CInspectorWindow::UpdateTransformGizmo(const Havtorn::SComponentViewResult& result)
 	{
 		if (Manager->GetIsFreeCamActive())
 			return;
@@ -134,6 +129,7 @@ namespace ImGui
 
 		ImGuizmo::SetDrawlist(viewportWindow->GetCurrentDrawList());
 		ImGuizmo::SetRect(viewPortWindowPosition.X, viewPortWindowPosition.Y, viewPortWindowDimensions.X, viewPortWindowDimensions.Y);
+		// TODO.NR: Figure out if we can use the clip rect
 		//ImGui::PushClipRect({ viewPortWindowPosition.X, viewPortWindowPosition.Y }, { viewPortWindowPosition.X + viewPortWindowDimensions.X, viewPortWindowPosition.Y + viewPortWindowDimensions.Y }, true);
 
 		Havtorn::SCameraComponent* cameraComp = Scene->GetComponent<Havtorn::SCameraComponent>(Scene->MainCameraEntity);
@@ -143,7 +139,85 @@ namespace ImGui
 		Havtorn::SMatrix transformMatrix = viewedTransformComponent->Transform.GetMatrix();
 		ImGuizmo::Manipulate(inverseView.data, cameraComp->ProjectionMatrix.data, static_cast<ImGuizmo::OPERATION>(Manager->GetCurrentGizmo()), ImGuizmo::LOCAL, transformMatrix.data);
 		viewedTransformComponent->Transform.SetMatrix(transformMatrix);
+		// TODO.NR: Figure out if we can use the clip rect
 		//ImGui::PopClipRect();
+	}
+
+	void CInspectorWindow::InspectAssetComponent(const Havtorn::SComponentViewResult& result)
+	{
+		std::vector<std::string> assetNames = {};
+		std::vector<std::string> assetLabels = {};
+		std::string modalNameToOpen = "";
+
+		if (Havtorn::SStaticMeshComponent* staticMeshComponent = dynamic_cast<Havtorn::SStaticMeshComponent*>(result.ComponentViewed))
+		{
+			assetNames.push_back(staticMeshComponent->Name.AsString());
+			modalNameToOpen = SelectMeshAssetModalName;
+		}
+		else if (Havtorn::SMaterialComponent* materialComponent = dynamic_cast<Havtorn::SMaterialComponent*>(result.ComponentViewed))
+		{
+			for (auto& material : materialComponent->Materials)
+				assetNames.push_back(material.Name);
+
+			modalNameToOpen = SelectMaterialAssetModalName;
+		}
+		else if (Havtorn::SDecalComponent* decalComponent = dynamic_cast<Havtorn::SDecalComponent*>(result.ComponentViewed))
+		{
+			for (Havtorn::U16 textureRef : decalComponent->TextureReferences)
+				assetNames.push_back(Havtorn::UGeneralUtils::ExtractFileNameFromPath(Havtorn::GEngine::GetTextureBank()->GetTexturePath(static_cast<Havtorn::U32>(textureRef))));
+
+			modalNameToOpen = SelectTextureAssetModalName;
+			assetLabels.push_back("Albedo");
+			assetLabels.push_back("Material");
+			assetLabels.push_back("Normal");
+		}
+		else if (Havtorn::SEnvironmentLightComponent* environmentLightComponent = dynamic_cast<Havtorn::SEnvironmentLightComponent*>(result.ComponentViewed))
+		{
+			assetNames.push_back(Havtorn::UGeneralUtils::ExtractFileNameFromPath(Havtorn::GEngine::GetTextureBank()->GetTexturePath(static_cast<Havtorn::U32>(environmentLightComponent->AmbientCubemapReference))));
+			modalNameToOpen = SelectTextureAssetModalName;
+		}
+		else if (Havtorn::SSpriteComponent* spriteComponent = dynamic_cast<Havtorn::SSpriteComponent*>(result.ComponentViewed))
+		{
+			assetNames.push_back(Havtorn::UGeneralUtils::ExtractFileNameFromPath(Havtorn::GEngine::GetTextureBank()->GetTexturePath(static_cast<Havtorn::U32>(spriteComponent->TextureIndex))));
+			modalNameToOpen = SelectTextureAssetModalName;
+		}
+
+		IterateAssetRepresentations(result, assetNames, assetLabels, modalNameToOpen);
+	}
+
+	void CInspectorWindow::IterateAssetRepresentations(const Havtorn::SComponentViewResult& result, const std::vector<std::string>& assetNames, const std::vector<std::string>& assetLabels, const std::string& modalNameToOpen)
+	{
+		for (Havtorn::U8 index = 0; index < static_cast<Havtorn::U8>(assetNames.size()); index++)
+		{
+			std::string assetName = assetNames[index];
+
+			Havtorn::SEditorAssetRepresentation* assetRep = Manager->GetAssetRepFromName(assetName).get();
+
+			ImGui::Separator();
+
+			if (assetLabels.size() > index)
+				ImGui::Text(assetLabels[index].c_str());
+			else if (assetRep->Name.empty())
+				ImGui::Text("N/A");
+			else
+				ImGui::Text(assetRep->Name.c_str());
+
+			// TODO.NR: Update ImGui and use the overload that takes a unique identifier. This currently breaks when using two buttons with the same texture.
+			if (ImGui::ImageButton(assetRep->TextureRef, { ImGui::UUtils::TexturePreviewSizeX, ImGui::UUtils::TexturePreviewSizeY }))
+			{
+				// TODO.NR: Make Algo lib function that finds index of object in array, make for-each loop
+				AssetPickedIndex = index;
+				ImGui::OpenPopup(modalNameToOpen.c_str());
+				ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+			}
+		}
+
+		if (modalNameToOpen == SelectMeshAssetModalName)
+			OpenSelectMeshAssetModal(result);
+		else if (modalNameToOpen == SelectMaterialAssetModalName)
+			OpenSelectMaterialAssetModal(result);
+		else if (modalNameToOpen == SelectTextureAssetModalName)
+			OpenSelectTextureAssetModal(result);
 	}
 
 	void CInspectorWindow::OpenSelectMeshAssetModal(const Havtorn::SComponentViewResult& result)
@@ -156,7 +230,7 @@ namespace ImGui
 			return;
 
 		F32 thumbnailPadding = 4.0f;
-		F32 cellWidth = TexturePreviewSize.X * 0.75f + thumbnailPadding;
+		F32 cellWidth = ImGui::UUtils::TexturePreviewSizeX * 0.75f + thumbnailPadding;
 		F32 panelWidth = 256.0f;
 		Havtorn::I32 columnCount = static_cast<Havtorn::I32>(panelWidth / cellWidth);
 		Havtorn::U32 id = 0;
@@ -183,7 +257,7 @@ namespace ImGui
 			ImGui::TableNextColumn();
 			ImGui::PushID(id++);
 
-			if (ImGui::ImageButton(assetRep->TextureRef, { TexturePreviewSize.X * 0.75f, TexturePreviewSize.Y * 0.75f }))
+			if (ImGui::ImageButton(assetRep->TextureRef, { ImGui::UUtils::TexturePreviewSizeX * 0.75f, ImGui::UUtils::TexturePreviewSizeY * 0.75f }))
 			{
 				Manager->GetRenderManager()->TryLoadStaticMeshComponent(assetRep->Name, staticMesh);
 
@@ -237,13 +311,13 @@ namespace ImGui
 		
 		constexpr const char* searchPath = "Assets/Textures";
 
-		if (Havtorn::SDecalComponent* decalComponent = static_cast<Havtorn::SDecalComponent*>(result.ComponentViewed))
+		if (Havtorn::SDecalComponent* decalComponent = dynamic_cast<Havtorn::SDecalComponent*>(result.ComponentViewed))
 			HandleTextureAssetModal(searchPath, decalComponent->TextureReferences[result.ComponentSubIndex]);
 
-		if (Havtorn::SEnvironmentLightComponent* environmentLightComponent = static_cast<Havtorn::SEnvironmentLightComponent*>(result.ComponentViewed))
+		if (Havtorn::SEnvironmentLightComponent* environmentLightComponent = dynamic_cast<Havtorn::SEnvironmentLightComponent*>(result.ComponentViewed))
 			HandleTextureAssetModal(searchPath, environmentLightComponent->AmbientCubemapReference);
 
-		if (Havtorn::SSpriteComponent* spriteComponent = static_cast<Havtorn::SSpriteComponent*>(result.ComponentViewed))
+		if (Havtorn::SSpriteComponent* spriteComponent = dynamic_cast<Havtorn::SSpriteComponent*>(result.ComponentViewed))
 			HandleTextureAssetModal(searchPath, spriteComponent->TextureIndex);
 
 		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) 
@@ -257,12 +331,12 @@ namespace ImGui
 		if (!ImGui::BeginPopupModal("Select Material Asset", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 			return;
 
-		Havtorn::SMaterialComponent* materialComponent = static_cast<Havtorn::SMaterialComponent*>(result.ComponentViewed);
+		Havtorn::SMaterialComponent* materialComponent = dynamic_cast<Havtorn::SMaterialComponent*>(result.ComponentViewed);
 		if (materialComponent == nullptr)
 			return;
 
 		F32 thumbnailPadding = 4.0f;
-		F32 cellWidth = TexturePreviewSize.X * 0.75f + thumbnailPadding;
+		F32 cellWidth = ImGui::UUtils::TexturePreviewSizeX * 0.75f + thumbnailPadding;
 		F32 panelWidth = 256.0f;
 		Havtorn::I32 columnCount = static_cast<Havtorn::I32>(panelWidth / cellWidth);
 		Havtorn::U32 id = 0;
@@ -279,11 +353,11 @@ namespace ImGui
 				ImGui::TableNextColumn();
 				ImGui::PushID(id++);
 
-				if (ImGui::ImageButton(assetRep->TextureRef, { TexturePreviewSize.X * 0.75f, TexturePreviewSize.Y * 0.75f }))
+				if (ImGui::ImageButton(assetRep->TextureRef, { ImGui::UUtils::TexturePreviewSizeX * 0.75f, ImGui::UUtils::TexturePreviewSizeY * 0.75f }))
 				{
 
-					Manager->GetRenderManager()->TryReplaceMaterialOnComponent(assetRep->DirectoryEntry.path().string(), result.ComponentSubIndex, materialComponent);
-
+					Manager->GetRenderManager()->TryReplaceMaterialOnComponent(assetRep->DirectoryEntry.path().string(), AssetPickedIndex, materialComponent);
+					AssetPickedIndex = 0;
 					ImGui::CloseCurrentPopup();
 				}
 
@@ -326,7 +400,7 @@ namespace ImGui
 				ImGui::TableNextColumn();
 				ImGui::PushID(id++);
 
-				if (ImGui::ImageButton(assetRep->TextureRef, { TexturePreviewSize.X * 0.75f, TexturePreviewSize.Y * 0.75f }))
+				if (ImGui::ImageButton(assetRep->TextureRef, { ImGui::UUtils::TexturePreviewSizeX * 0.75f, ImGui::UUtils::TexturePreviewSizeY * 0.75f }))
 				{
 					textureReference = static_cast<Havtorn::U16>(Havtorn::GEngine::GetTextureBank()->GetTextureIndex(entry.path().string()));
 					ImGui::CloseCurrentPopup();
@@ -345,6 +419,7 @@ namespace ImGui
 		if (!ImGui::BeginPopupModal("Add Component Modal", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 			return;
 
+		// TODO.NR: Support adding and removing components through the editor. Unsolved problem.
 		//Havtorn::U32 id = 0;
 
 		//if (ImGui::BeginTable("NewComponentTypeTable", 1))
@@ -379,6 +454,7 @@ namespace ImGui
 	
 	void CInspectorWindow::RemoveComponentButton(/*Havtorn::EComponentType componentType*/)
 	{
+		// TODO.NR: Support adding and removing components through the editor. Unsolved problem.
 		//ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - ImGui::GetTreeNodeToLabelSpacing()*0.3f);
 
 		//ImGui::PushID(static_cast<U64>(componentType));

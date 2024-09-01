@@ -11,10 +11,8 @@ namespace Havtorn
 	enum class HAVTORN_API EComponentViewResultLabel
 	{
 		PassThrough,
-		UpdateCameraGizmo,
-		OpenMeshAssetModal,
-		OpenTextureAssetModal,
-		OpenMaterialAssetModal,
+		UpdateTransformGizmo,
+		InspectAssetComponent,
 		OpenSpriteAnimatorGraph,
 	};
 

@@ -31,7 +31,7 @@ namespace Havtorn
 		transformComponent->Transform.SetMatrix(transformMatrix);
 
 		SComponentViewResult result;
-		result.Label = EComponentViewResultLabel::UpdateCameraGizmo;
+		result.Label = EComponentViewResultLabel::UpdateTransformGizmo;
 		result.ComponentViewed = transformComponent;
 
 		return result;

@@ -230,7 +230,7 @@ namespace Havtorn
 
 			if (const SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(spotLightComp))
 			{
-				if (volumetricLightComp->IsValid())
+				if (volumetricLightComp->IsActive)
 				{
 					command.Type = ERenderCommandType::VolumetricLightingSpot;
 					command.SetVolumetricDataFromComponent(*volumetricLightComp);

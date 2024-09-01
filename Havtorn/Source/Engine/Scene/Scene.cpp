@@ -257,7 +257,7 @@ namespace Havtorn
 		transform2.Translate({ 0.25f, 0.0f, 0.25f });
 
 		renderManager->LoadStaticMeshComponent(modelPath2, AddComponent<SStaticMeshComponent>(bed));
-		AddView(bed, SMaterialComponentView::View);
+		AddView(bed, SStaticMeshComponentView::View);
 		renderManager->LoadMaterialComponent(materialNames2, AddComponent<SMaterialComponent>(bed));
 		AddView(bed, SMaterialComponentView::View);
 
@@ -275,7 +275,7 @@ namespace Havtorn
 		lampTransform.Rotate({ 0.0f, UMath::DegToRad(90.0f), 0.0f });
 
 		renderManager->LoadStaticMeshComponent(modelPath4, AddComponent<SStaticMeshComponent>(lamp));
-		AddView(lamp, SMaterialComponentView::View);
+		AddView(lamp, SStaticMeshComponentView::View);
 		renderManager->LoadMaterialComponent(materialNames4, AddComponent<SMaterialComponent>(lamp));
 		AddView(lamp, SMaterialComponentView::View);
 

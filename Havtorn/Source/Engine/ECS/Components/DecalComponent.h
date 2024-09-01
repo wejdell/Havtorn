@@ -18,6 +18,7 @@ namespace Havtorn
 
 		std::vector<U64> AssetRegistryKeys = {};
 		// TODO.NR: Figure out what to do about this. Unify with MaterialComp? have single material as property?
+		// TODO.NR: Change to U32 so that it matches with TextureBank
 		std::vector<U16> TextureReferences = {0, 0, 0};
 		bool ShouldRenderAlbedo = false;
 		bool ShouldRenderMaterial = false;
