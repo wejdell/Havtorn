@@ -2,7 +2,6 @@
 
 #pragma once
 #include <Core/HavtornString.h>
-//#include <imgui.h>
 
 namespace ImGui
 {

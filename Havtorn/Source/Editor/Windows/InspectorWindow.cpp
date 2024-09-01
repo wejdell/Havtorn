@@ -89,7 +89,7 @@ namespace ImGui
 			case Havtorn::EComponentViewResultLabel::InspectAssetComponent:
 				InspectAssetComponent(result);
 				break;
-			case Havtorn::EComponentViewResultLabel::OpenSpriteAnimatorGraph:
+			case Havtorn::EComponentViewResultLabel::OpenAssetTool:
 				OpenAssetTool(result);
 				break;
 			case Havtorn::EComponentViewResultLabel::PassThrough:

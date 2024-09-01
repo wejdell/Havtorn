@@ -32,4 +32,3 @@
 #include "Core/HavtornDelegate.h"
 #include "Timer.h"
 #include "Log.h"
-#include "ECS/ECS.h"

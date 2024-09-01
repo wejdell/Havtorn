@@ -37,11 +37,11 @@ namespace Havtorn
 
 		void* RenderAssetTexure(EAssetType assetType, const std::string& fileName);
 
-		__declspec(dllexport) void CreateAsset(const std::string& destinationPath, EAssetType assetType) const;
-		__declspec(dllexport) std::string ConvertToHVA(const std::string& filePath, const std::string& destination, const EAssetType assetType) const;
+		HAVTORN_EXPORT void CreateAsset(const std::string& destinationPath, EAssetType assetType) const;
+		HAVTORN_EXPORT std::string ConvertToHVA(const std::string& filePath, const std::string& destination, const EAssetType assetType) const;
 
 		// NR: Based on current material config: albedo, material and normal textures
-		__declspec(dllexport) void CreateMaterial(const std::string& destinationPath);
+		HAVTORN_EXPORT void CreateMaterial(const std::string& destinationPath);
 
 	private:
 		std::string GetFileName(EEditorTexture texture);

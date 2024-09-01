@@ -46,7 +46,7 @@ namespace Havtorn
 		SAFE_DELETE(ResourceManager);
 	}
 
-	bool CEditorManager::Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager, CSequencerSystem* /*sequencerSystem*/)
+	bool CEditorManager::Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager)
 	{
 		CROSS_PROJECT_IMGUI_SETUP();
 		windowHandler->EnableDragDrop();
@@ -65,7 +65,6 @@ namespace Havtorn
 		Windows.emplace_back(new ImGui::CHierarchyWindow("Hierarchy", this));
 		Windows.emplace_back(new ImGui::CInspectorWindow("Inspector", this));
 		Windows.emplace_back(new ImGui::CSpriteAnimatorGraphNodeWindow("Sprite Animator", this));
-		//Windows.emplace_back(new ImGui::CSequencerWindow("Sequencer", this, sequencerSystem));
 		Windows.back()->SetEnabled(false);
 
 		ResourceManager = new CEditorResourceManager();
@@ -150,7 +149,7 @@ namespace Havtorn
 		SelectedEntity = entity;
 	}
 
-	SEntity CEditorManager::GetSelectedEntity() const
+	const SEntity& CEditorManager::GetSelectedEntity() const
 	{
 		return SelectedEntity;
 	}

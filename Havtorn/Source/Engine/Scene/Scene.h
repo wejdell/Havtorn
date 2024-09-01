@@ -23,7 +23,7 @@ namespace Havtorn
 	class CRenderManager;
 	class CAssetRegistry;
 
-	class /*HAVTORN_API*/ CScene
+	class CScene
 	{
 	public:
 		HAVTORN_API CScene();
@@ -193,41 +193,6 @@ namespace Havtorn
 
 			return specializedComponents;
 		}
-
-		//template<typename T>
-		//void AddView(const SEntity& entityOwner)
-		//{
-		//	if (!ComponentViews.contains(entityOwner.GUID))
-		//		ComponentViews.emplace(entityOwner.GUID, std::unordered_map<U64, SComponentView*>());
-
-		//	auto& viewMap = ComponentViews.at(entityOwner.GUID);
-
-		//	const U64 typeIDHashCode = typeid(T).hash_code();
-		//	if (viewMap.contains(typeIDHashCode))
-		//		return;
-
-		//	viewMap.emplace(typeIDHashCode, new T());
-		//}
-
-		//template<typename T>
-		//void RemoveView(const SEntity& entityOwner)
-		//{
-		//	if (!ComponentViews.contains(entityOwner.GUID))
-		//		return;
-
-		//	auto& viewMap = ComponentViews.at(entityOwner.GUID);
-		//	
-		//	const U64 typeIDHashCode = typeid(T).hash_code();
-		//	if (!viewMap.contains(typeIDHashCode))
-		//		return;
-
-		//	auto& view = viewMap.at(typeIDHashCode);
-
-		//	delete view;
-		//	view = nullptr;
-
-		//	viewMap.erase(typeIDHashCode);
-		//}
 		
 		using SViewFunctionPointer = std::function<SComponentViewResult(const SEntity&, CScene*)>;
 		HAVTORN_API void AddView(const SEntity& entityOwner, SViewFunctionPointer function);
@@ -236,7 +201,6 @@ namespace Havtorn
 		HAVTORN_API void RemoveViews(const SEntity& entityOwner);
 		HAVTORN_API std::vector<SViewFunctionPointer> GetViews(const SEntity& entityOwner);
 		
-		//std::unordered_map<U64, std::unordered_map<U64, SViewFunctionPointer>> ComponentViews;
 		std::unordered_map<U64, std::vector<SViewFunctionPointer>> ComponentViews;
 
 		std::unordered_map<U64, U64> EntityIndices;
@@ -251,22 +215,5 @@ namespace Havtorn
 
 		// TODO.NR/AG: Try to remove this
 		CRenderManager* RenderManager = nullptr;
-
-
 	};
-
-	//template<class T>
-	//void CScene::UpdateComponentVector(std::vector<T>& components, I64 index)
-	//{
-	//	I64 lastUsedEntityIndex = FirstUnusedEntityIndex - 1;
-
-	//	if (index < 0 || index == lastUsedEntityIndex)
-	//		return;
-
-	//	if (!components[lastUsedEntityIndex].IsInUse)
-	//		return;
-
-	//	std::swap(components[index], components[lastUsedEntityIndex]);
-	//	components[lastUsedEntityIndex].IsInUse = false;
-	//}
 }

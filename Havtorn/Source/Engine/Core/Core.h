@@ -9,6 +9,9 @@
 		#define HAVTORN_API __declspec(dllimport)
 	#endif
 
+// TODO.NR: Figure out what our approach should be to exporting. It seems as though imports are not as often needing to be explicit
+#define HAVTORN_EXPORT __declspec(dllexport)
+
 #ifndef HV_DIRECTX_11
 	#define HV_DIRECTX_11
 #endif

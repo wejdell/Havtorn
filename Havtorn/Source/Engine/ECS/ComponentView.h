@@ -13,7 +13,7 @@ namespace Havtorn
 		PassThrough,
 		UpdateTransformGizmo,
 		InspectAssetComponent,
-		OpenSpriteAnimatorGraph,
+		OpenAssetTool,
 	};
 
 	struct HAVTORN_API SComponentViewResult

@@ -16,9 +16,4 @@ namespace Havtorn
 	{
 		return GUID == other.GUID;
 	}
-
-	inline bool SEntity::operator!=(const SEntity& other) const
-	{
-		return GUID != other.GUID;
-	}
 }

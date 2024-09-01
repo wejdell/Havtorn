@@ -14,6 +14,6 @@ namespace Havtorn
 
 		bool IsValid() const;
 		bool operator==(const SEntity& other) const;
-		bool operator!=(const SEntity& other) const;
+		bool operator!=(const SEntity& other) const = default;
 	};
 }

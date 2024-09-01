@@ -21,10 +21,10 @@ namespace Havtorn
         SComponentViewResult result;
         if (ImGui::Button("Open Animator"))
         {
-            result.Label = EComponentViewResultLabel::OpenSpriteAnimatorGraph;
+            result.Label = EComponentViewResultLabel::OpenAssetTool;
             result.ComponentViewed = component;
         }
 
-        return SComponentViewResult();
+        return result;
     }
 }

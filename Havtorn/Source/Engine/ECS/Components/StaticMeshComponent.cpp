@@ -8,6 +8,7 @@ namespace Havtorn
 {
     void SStaticMeshComponent::Serialize(char* toData, U64& pointerPosition) const
     {
+        // TODO.NR: Look at serialization, keep this until it works again.
         //SerializeData(static_cast<U32>(DrawCallData.size()), toData, pointerPosition);
         //SerializeData(DrawCallData, toData, pointerPosition);
         //// SerializeData(static_cast<U32>(Name.length()), toData, bufferPosition);
@@ -26,6 +27,7 @@ namespace Havtorn
 
     void SStaticMeshComponent::Deserialize(const char* fromData, U64& pointerPosition)
     {
+        // TODO.NR: Look at serialization, keep this until it works again.
         //U32 meshNumber = 0;
         //DeserializeData(meshNumber, fromData, pointerPosition);
         //DeserializeData(DrawCallData, fromData, meshNumber, pointerPosition);
@@ -45,6 +47,7 @@ namespace Havtorn
 
     U32 SStaticMeshComponent::GetSize() const
     {
+        // TODO.NR: Look at serialization, keep this until it works again.
         U32 size = 0;
         //size += sizeof(U32);
         //size += static_cast<U32>(DrawCallData.size()) * sizeof(SDrawCallData);

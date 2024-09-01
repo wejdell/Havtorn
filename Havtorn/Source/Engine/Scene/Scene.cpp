@@ -43,7 +43,6 @@ namespace Havtorn
 
 		// Setup entities (create components)
 		STransformComponent& transform = *AddComponent<STransformComponent>(MainCameraEntity);
-		//AddView<STransformComponentView>(MainCameraEntity);
 		AddView(MainCameraEntity, STransformComponentView::View);
 
 		transform.Transform.Translate({ 2.0f, 1.0f, -3.0f });
@@ -51,13 +50,11 @@ namespace Havtorn
 		transform.Transform.Translate(SVector::Right * 0.25f);
 
 		SCameraComponent& camera = *AddComponent<SCameraComponent>(MainCameraEntity);
-		//AddView<SCameraComponentView>(MainCameraEntity);
 		AddView(MainCameraEntity, SCameraComponentView::View);
 		camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
 		camera.ViewMatrix = SMatrix::LookAtLH(SVector::Zero, SVector::Forward, SVector::Up);
 
 		SCameraControllerComponent& controllerComp = *AddComponent<SCameraControllerComponent>(MainCameraEntity);
-		//AddView<SCameraControllerComponentView>(MainCameraEntity);
 		AddView(MainCameraEntity, SCameraControllerComponentView::View);
 		controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
 		// === !Camera ===
@@ -68,7 +65,6 @@ namespace Havtorn
 			return false;
 
 		AddComponent<STransformComponent>(environmentLightEntity);
-		//AddView<STransformComponentView>(environmentLightEntity);
 		AddView(environmentLightEntity, STransformComponentView::View);
 		renderManager->LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/CubemapTheVisit.hva", AddComponent<SEnvironmentLightComponent>(environmentLightEntity));
 		AddView(environmentLightEntity, SEnvironmentLightComponentView::View);
@@ -592,33 +588,6 @@ namespace Havtorn
 
 	void CScene::Serialize(char* toData, U64& pointerPosition) const
 	{
-		// Specialize Scene into CScene and CGameScene : public CScene.
-		// When serializing, always follow strict protocol. Start with:
-		// 1) Number of entities. This is trivial as they are only wrappers for U64s.
-		// 2) A protocol over which and how many components are in the scene. E.g.
-		//		Number of STransformComponents. Serialize as needed
-		//		Number of SStaticMeshComponents. Serialize as needed
-		// After all engine components are serialized, the overloaded function in CGameScene
-		// should continue with its components according to a similar protocol, serializing
-		// whole collections of its own components. This way we do not need to care about 
-		// serializing an identifier for every specific component.
-
-		// Mockup for how we imagine the saved data. Will use simplified examples of components (e.g Tranform is only a vec3 position)
-		/*
-			4								// There are 4 entities
-			1987654
-			1234567
-			2345678
-			5788653
-			3								// There are 3 STransformComponent(s)
-			0,0,0, 1987654
-			1,1,1, 1234567
-			2,2,2, 5788653
-			2
-			sprites/square.png, 1987654
-			sprites/circle.png, 5788653
-
-		*/
 		SerializeData(SceneName, toData, pointerPosition);
 
 		SerializeData(Entities.size(), toData, pointerPosition);
@@ -728,8 +697,6 @@ namespace Havtorn
 		U64 numberOfTransformComponents = 0;
 		DeserializeData(numberOfTransformComponents, fromData, pointerPosition);
 		std::vector<STransformComponent> transformComponents;
-		//std::vector<STransformComponent> transformComponents = std::vector<STransformComponent>(100, STransformComponent(SEntity::Null));
-		//memcpy(transformComponents.data(), &fromData[pointerPosition], sizeof(STransformComponent) * static_cast<U32>(numberOfTransformComponents));
 		DeserializeData(transformComponents, fromData, static_cast<U32>(numberOfTransformComponents), pointerPosition);
 		for (const auto& component : transformComponents)
 			AddComponent<STransformComponent>(component.EntityOwner);
@@ -933,6 +900,7 @@ namespace Havtorn
 			ComponentViews.emplace(entityOwner.GUID, std::vector<SViewFunctionPointer>());
 		 
 		auto& functionPointers = ComponentViews.at(entityOwner.GUID);
+		// TODO.NR: Support adding and removing components through the editor. Unsolved problem.
 		//if (std::find(functionPointers.begin(), functionPointers.end(), function) == functionPointers.end())
 			functionPointers.push_back(function);
 	}
@@ -942,6 +910,7 @@ namespace Havtorn
 		if (!ComponentViews.contains(entityOwner.GUID))
 			return;
 
+		// TODO.NR: Support adding and removing components through the editor. Unsolved problem.
 		//auto& functionPointers = ComponentViews.at(entityOwner.GUID);
 		//auto it = std::find(functionPointers.begin(), functionPointers.end(), function);
 		//if (it != functionPointers.end())
@@ -950,6 +919,7 @@ namespace Havtorn
 
 	void CScene::RemoveViews(const SEntity& entityOwner)
 	{
+		// TODO.NR: Support adding and removing components through the editor. Unsolved problem.
 		//if (!ComponentViews.contains(entityOwner.GUID))
 		//	return;
 
@@ -968,17 +938,10 @@ namespace Havtorn
 		ComponentViews.erase(entityOwner.GUID);
 	}
 
-	//std::vector<SComponentView*> CScene::GetViews(const SEntity& entityOwner)
 	std::vector<CScene::SViewFunctionPointer> CScene::GetViews(const SEntity& entityOwner)
 	{
 		if (!ComponentViews.contains(entityOwner.GUID))
 			return {};
-
-		//std::vector<SComponentView*> viewsToReturn = {};
-		//for (auto& [typeHashID, componentView] : ComponentViews.at(entityOwner.GUID))
-		//	viewsToReturn.push_back(componentView);
-
-		//return viewsToReturn;
 
 		return ComponentViews.at(entityOwner.GUID);
 	}

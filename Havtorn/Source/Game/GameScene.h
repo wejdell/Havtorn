@@ -8,12 +8,12 @@ namespace Havtorn
     class CGameScene : public CScene
     {
     public:
-		__declspec(dllexport) virtual bool Init3DDemoScene(CRenderManager* renderManager) override;
-		__declspec(dllexport) virtual bool Init2DDemoScene(CRenderManager* renderManager) override;
+		HAVTORN_EXPORT virtual bool Init3DDemoScene(CRenderManager* renderManager) override;
+		HAVTORN_EXPORT virtual bool Init2DDemoScene(CRenderManager* renderManager) override;
 
-		__declspec(dllexport) virtual [[nodiscard]] U32 GetSize() const override;
-		__declspec(dllexport) virtual void Serialize(char* toData, U64& pointerPosition) const override;
-		__declspec(dllexport) virtual void Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry) override;
+		HAVTORN_EXPORT virtual [[nodiscard]] U32 GetSize() const override;
+		HAVTORN_EXPORT virtual void Serialize(char* toData, U64& pointerPosition) const override;
+		HAVTORN_EXPORT virtual void Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry) override;
     };
 }
 

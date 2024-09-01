@@ -1,3 +1,4 @@
+// TODO.NR: Add support for sequencer with new ECS. Has to be done on a separate branch, when we need it.
 //// Copyright 2022 Team Havtorn. All Rights Reserved.
 //
 //#include "SequencerWindow.h"
