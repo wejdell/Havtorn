@@ -530,8 +530,7 @@ namespace Havtorn
 		if (a == 0)
 			return SVector2();
 
-		const T scale = 1 / a;
-		return SVector2(X * scale, Y * scale);
+		return SVector2(X / a, Y / a);
 	}
 
 	template<typename T>

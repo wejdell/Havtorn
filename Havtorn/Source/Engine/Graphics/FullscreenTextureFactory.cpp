@@ -21,11 +21,11 @@ namespace Havtorn
 		return true;
 	}
 
-	CFullscreenTexture CFullscreenTextureFactory::CreateTexture(SVector2<F32> size, DXGI_FORMAT format)
+	CFullscreenTexture CFullscreenTextureFactory::CreateTexture(SVector2<U16> size, DXGI_FORMAT format)
 	{
 		D3D11_TEXTURE2D_DESC textureDesc = { 0 };
-		textureDesc.Width = static_cast<U16>(size.X);
-		textureDesc.Height = static_cast<U16>(size.Y);
+		textureDesc.Width = size.X;
+		textureDesc.Height = size.Y;
 		textureDesc.MipLevels = 1;
 		textureDesc.ArraySize = 1;
 		textureDesc.Format = format;
@@ -55,7 +55,7 @@ namespace Havtorn
 		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateRenderTargetView(texture, nullptr, &renderTarget), "Could not create Fullcreen Render Target View.");
 
 		D3D11_VIEWPORT* viewport = nullptr;
-		if (texture) 
+		if (texture)
 		{
 			D3D11_TEXTURE2D_DESC textureDescription;
 			texture->GetDesc(&textureDescription);
@@ -71,11 +71,11 @@ namespace Havtorn
 		return returnTexture;
 	}
 
-	CFullscreenTexture CFullscreenTextureFactory::CreateTexture(SVector2<F32> size, DXGI_FORMAT format, const std::string& filePath)
+	CFullscreenTexture CFullscreenTextureFactory::CreateTexture(SVector2<U16> size, DXGI_FORMAT format, const std::string& filePath)
 	{
 		D3D11_TEXTURE2D_DESC textureDesc = { 0 };
-		textureDesc.Width = static_cast<U16>(size.X);
-		textureDesc.Height = static_cast<U16>(size.Y);
+		textureDesc.Width = size.X;
+		textureDesc.Height = size.Y;
 		textureDesc.MipLevels = 1;
 		textureDesc.ArraySize = 1;
 		textureDesc.Format = format;
@@ -98,7 +98,7 @@ namespace Havtorn
 		return returnTexture;
 	}
 
-	CFullscreenTexture CFullscreenTextureFactory::CreateDepth(SVector2<F32> size, DXGI_FORMAT format)
+	CFullscreenTexture CFullscreenTextureFactory::CreateDepth(SVector2<U16> size, DXGI_FORMAT format)
 	{
 		DXGI_FORMAT stencilViewFormat = DXGI_FORMAT_UNKNOWN;
 		DXGI_FORMAT shaderResourceViewFormat = DXGI_FORMAT_UNKNOWN;
@@ -118,8 +118,8 @@ namespace Havtorn
 		}
 
 		D3D11_TEXTURE2D_DESC depthStencilDesc = { 0 };
-		depthStencilDesc.Width = static_cast<U16>(size.X);
-		depthStencilDesc.Height = static_cast<U16>(size.Y);
+		depthStencilDesc.Width = size.X;
+		depthStencilDesc.Height = size.Y;
 		depthStencilDesc.MipLevels = 1;
 		depthStencilDesc.ArraySize = 1;
 		depthStencilDesc.Format = format;
@@ -149,7 +149,7 @@ namespace Havtorn
 		ID3D11ShaderResourceView* shaderResource;
 		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateShaderResourceView(depthStencilBuffer, &shaderResourceViewDesc, &shaderResource), "Depth Shader Resource could not be created.");
 
-		D3D11_VIEWPORT* viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, size.X, size.Y, 0.0f, 1.0f });
+		D3D11_VIEWPORT* viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, static_cast<F32>(size.X), static_cast<F32>(size.Y), 0.0f, 1.0f });
 
 		CFullscreenTexture returnDepth;
 		returnDepth.Context = Framework->GetContext();
@@ -160,7 +160,7 @@ namespace Havtorn
 		return returnDepth;
 	}
 
-	CGBuffer CFullscreenTextureFactory::CreateGBuffer(SVector2<F32> size)
+	CGBuffer CFullscreenTextureFactory::CreateGBuffer(SVector2<U16> size)
 	{
 		std::array<DXGI_FORMAT, static_cast<size_t>(CGBuffer::EGBufferTextures::Count)> textureFormats =
 		{
@@ -174,15 +174,15 @@ namespace Havtorn
 		std::array<ID3D11Texture2D*, static_cast<size_t>(CGBuffer::EGBufferTextures::Count)> textures = {};
 		std::array<ID3D11RenderTargetView*, static_cast<size_t>(CGBuffer::EGBufferTextures::Count)> renderTargets = {};
 		std::array<ID3D11ShaderResourceView*, static_cast<size_t>(CGBuffer::EGBufferTextures::Count)> shaderResources = {};
-		
-		for (UINT i = 0; i < static_cast<size_t>(CGBuffer::EGBufferTextures::Count); ++i) 
+
+		for (UINT i = 0; i < static_cast<size_t>(CGBuffer::EGBufferTextures::Count); ++i)
 		{
 			CFullscreenTexture texture = CreateTexture(size, textureFormats[i]);
 			textures[i] = texture.Texture;
 			renderTargets[i] = texture.RenderTarget;
 			shaderResources[i] = texture.ShaderResource;
 		}
-		D3D11_VIEWPORT* viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, size.X, size.Y, 0.0f, 1.0f });
+		D3D11_VIEWPORT* viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, static_cast<F32>(size.X), static_cast<F32>(size.Y), 0.0f, 1.0f });
 
 		CGBuffer returnGBuffer;
 		returnGBuffer.Context = Framework->GetContext();

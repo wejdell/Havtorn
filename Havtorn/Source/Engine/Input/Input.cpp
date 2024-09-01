@@ -266,15 +266,11 @@ namespace Havtorn
 	{
 		POINT p;
 		GetCursorPos(&p);
-		const SVector2<F32> currentPos = 
-		{
-			static_cast<F32>(p.x),
-			static_cast<F32>(p.y)
-		};
-		const SVector2<F32> center = GEngine::GetWindowHandler()->GetCenterPosition();
-		//SetCursorPos(static_cast<I32>(center.X), static_cast<I32>(center.Y));
-		const SVector2<F32> axisRaw = currentPos - center;
-		return axisRaw;
+		const SVector2<U16> currentPos = { static_cast<U16>(p.x), static_cast<U16>(p.y) };
+		const SVector2<U16> center = GEngine::GetWindowHandler()->GetCenterPosition();
+		const SVector2<U16> result = currentPos - center;
+
+		return SVector2<F32>(result.X, result.Y);
 	}
 
 	U16 CInput::GetMouseX() const

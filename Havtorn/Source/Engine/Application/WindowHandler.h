@@ -26,8 +26,8 @@ namespace Havtorn
 		};
 
 		HAVTORN_API static LRESULT CALLBACK WinProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam);
-		HAVTORN_API SVector2<F32> GetResolution();
-		SVector2<F32> GetCenterPosition();
+		HAVTORN_API SVector2<U16> GetResolution();
+		SVector2<U16> GetCenterPosition();
 		const float GetResolutionScale() const;
 
 		// TODO.AG: reconsider access rights.
@@ -36,6 +36,8 @@ namespace Havtorn
 
 	public:
 		CMulticastDelegate<std::vector<std::string>> OnDragDropAccepted;
+		CMulticastDelegate<SVector2<U16>> OnResolutionChanged;
+
 
 	private:
 		CWindowHandler();
@@ -55,17 +57,23 @@ namespace Havtorn
 
 	private:
 		void SetInternalResolution();
-		void SetResolution(SVector2<F32> resolution);
+		void SetResolution(SVector2<U16> resolution);
 
 	private:
 
 		CWindowHandler::SWindowData WindowData = {};
 		HWND WindowHandle = 0;
-		SVector2<F32>* Resolution = nullptr;
+		SVector2<U16> Resolution;
 		F32 ResolutionScale = 1.0f;
 		U16 MaxResX = 1920;
 		U16 MaxResY = 1080;
 		bool CursorIsLocked = false;
 		bool WindowIsInEditingMode = false;
+
+	public:
+		SVector2<U16> ResizeTarget = {};
+	/*	UINT ResizeWidth = 0;
+		UINT ResizeHeight = 0;*/
+
 	};
 }

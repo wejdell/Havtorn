@@ -67,7 +67,8 @@ namespace Havtorn
 
 		InitWindowsImaging();
 
-		SequencerSystem = World->GetSequencerSystem();
+		SequencerSystem = World->GetSystem<CSequencerSystem>();
+		WindowHandler->ResizeTarget = { };
 
 		return true;
 	}
@@ -83,7 +84,7 @@ namespace Havtorn
 	{
 		InputMapper->Update();
 		World->Update();
-
+		
 		GTime::EndTracking(ETimerCategory::CPU);
 
 		std::unique_lock<std::mutex> uniqueLock(CThreadManager::RenderMutex);
@@ -107,10 +108,23 @@ namespace Havtorn
 		RenderManager->SwapSpriteInstancedColorRenderLists();
 		Framework->EndFrame();
 
+		if (WindowHandler->ResizeTarget.LengthSquared() > 0)
+		{
+			RenderManager->Release();
+			
+			//replace w/ Resize To ResizeTarget
+			//WindowHandler->SetResolution(WindowHandler->ResizeTarget);
+			WindowHandler->SetInternalResolution();
+
+			WindowHandler->ResizeTarget = { };
+			RenderManager->ReInit(Framework, WindowHandler);
+		}
+
 		std::unique_lock<std::mutex> uniqueLock(CThreadManager::RenderMutex);
 		CThreadManager::RenderThreadStatus = ERenderThreadStatus::ReadyToRender;
 		uniqueLock.unlock();
 		CThreadManager::RenderCondition.notify_one();
+
 	}
 
 	CWindowHandler* GEngine::GetWindowHandler()
@@ -149,6 +163,7 @@ namespace Havtorn
 		Microsoft::WRL::Wrappers::RoInitializeWrapper initialize(RO_INIT_MULTITHREADED);
 		if (FAILED(initialize))
 			// error
+
 #else
 		HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 		if (FAILED(hr))
@@ -176,12 +191,12 @@ namespace Havtorn
 		//CoUninitialize();
 	}
 
-	void GEngine::SetResolution(SVector2<F32> resolution)
-	{
-		WindowHandler->SetResolution(resolution);
-		RenderManager->Release();
-		RenderManager->ReInit(Framework, WindowHandler);
-	}
+	//void GEngine::SetResolution(SVector2<F32> resolution)
+	//{
+	//	WindowHandler->SetResolution(resolution);
+	//	RenderManager->Release();
+	//	RenderManager->ReInit(Framework, WindowHandler);
+	//}
 
 	void GEngine::ShowCursor(const bool& isInEditorMode)
 	{

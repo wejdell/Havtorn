@@ -128,6 +128,8 @@ namespace Havtorn
 
 		void ToggleFreeCam(const SInputActionPayload payload);
 
+		void OnResolutionChanged(SVector2<U16> newResolution);
+
 		[[nodiscard]] std::string GetFrameRate() const;
 		[[nodiscard]] std::string GetSystemMemory() const;
 		[[nodiscard]] std::string GetDrawCalls() const;

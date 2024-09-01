@@ -183,7 +183,8 @@ namespace Havtorn
 
 	void CFullscreenRenderer::Render(EFullscreenShader effect)
 	{
-		FullscreenData.Resolution = GEngine::GetWindowHandler()->GetResolution();
+		SVector2<U16> resolution = GEngine::GetWindowHandler()->GetResolution();
+		FullscreenData.Resolution = SVector2<F32>(resolution.X, resolution.Y);
 		FullscreenData.NoiseScale = { FullscreenData.Resolution.X / static_cast<F32>(UMath::Sqrt(KernelSize)), FullscreenData.Resolution.Y / static_cast<F32>(UMath::Sqrt(KernelSize)) };
 		memcpy(&FullscreenData.SampleKernel[0], &Kernel[0], sizeof(Kernel));
 		BindBuffer(FullscreenDataBuffer, FullscreenData, "Fullscreen Data Buffer");
