@@ -15,8 +15,8 @@ namespace Havtorn
 	class CFullscreenTexture
 	{
 	public:
-		CFullscreenTexture();
-		~CFullscreenTexture();
+		CFullscreenTexture() = default;
+		~CFullscreenTexture() = default;
 		void ClearTexture(SVector4 clearColor = { 0.0f, 0.0f, 0.0f, 0.0f });
 		void ClearDepth(F32 clearDepth = 1.0f, U32 clearStencil = 0);
 		void SetAsActiveTarget(CFullscreenTexture* depth = nullptr);
@@ -33,15 +33,15 @@ namespace Havtorn
 		friend class CGBuffer;
 
 	private:
-		ID3D11DeviceContext* Context;
-		ID3D11Texture2D* Texture;
+		ID3D11DeviceContext* Context = nullptr;
+		ID3D11Texture2D* Texture = nullptr;
 
 		union {
-			ID3D11RenderTargetView* RenderTarget;
+			ID3D11RenderTargetView* RenderTarget = nullptr;
 			ID3D11DepthStencilView* Depth;
 		};
 
-		ID3D11ShaderResourceView* ShaderResource;
-		D3D11_VIEWPORT* Viewport;
+		ID3D11ShaderResourceView* ShaderResource = nullptr;
+		D3D11_VIEWPORT* Viewport = nullptr;
 	};
 }

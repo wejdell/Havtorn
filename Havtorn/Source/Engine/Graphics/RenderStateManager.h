@@ -45,7 +45,7 @@ namespace Havtorn
 		};
 
 	public:
-		CRenderStateManager();
+		CRenderStateManager() = default;
 		~CRenderStateManager();
 
 		bool Init(class CGraphicsFramework* framework);
@@ -66,7 +66,7 @@ namespace Havtorn
 		bool CreateSamplerStates(ID3D11Device* device);
 
 	private:
-		ID3D11DeviceContext* Context;
+		ID3D11DeviceContext* Context = nullptr;
 		std::array<ID3D11BlendState*, (U64)EBlendStates::Count> BlendStates;
 		std::array<ID3D11DepthStencilState*, (U64)EDepthStencilStates::Count> DepthStencilStates;
 		std::array<ID3D11RasterizerState*, (U64)ERasterizerStates::Count> RasterizerStates;

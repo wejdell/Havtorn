@@ -31,27 +31,6 @@ namespace Havtorn
 {
 	U32 CRenderManager::NumberOfDrawCallsThisFrame = 0;
 
-	CRenderManager::CRenderManager()
-		: Framework(nullptr)
-	    , Context(nullptr)
-	    , FrameBuffer(nullptr)
-	    , ObjectBuffer(nullptr)
-		, DecalBuffer(nullptr)
-	    , DirectionalLightBuffer(nullptr)
-		, PointLightBuffer(nullptr)
-		, SpotLightBuffer(nullptr)
-		, ShadowmapBuffer(nullptr)
-		, DebugShapeObjectBuffer(nullptr)
-		, EmissiveBuffer(nullptr)
-		, MaterialBuffer(nullptr)
-		, InstancedTransformBuffer(nullptr)
-		, VolumetricLightBuffer(nullptr)
-	    , PushToCommands(&RenderCommandsA)
-	    , PopFromCommands(&RenderCommandsB)
-	    , ClearColor(0.5f, 0.5f, 0.5f, 1.0f)
-	{
-	}
-
 	CRenderManager::~CRenderManager()
 	{
 		Release();

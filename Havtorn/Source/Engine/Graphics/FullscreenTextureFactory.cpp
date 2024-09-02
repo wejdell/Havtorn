@@ -9,12 +9,6 @@
 
 namespace Havtorn
 {
-	CFullscreenTextureFactory::CFullscreenTextureFactory() : Framework(nullptr)
-	{}
-
-	CFullscreenTextureFactory::~CFullscreenTextureFactory()
-	{}
-
 	bool CFullscreenTextureFactory::Init(CGraphicsFramework* framework)
 	{
 		Framework = framework;
