@@ -6,11 +6,11 @@
 namespace Havtorn
 {
 	SComponent::SComponent(const SEntity& entity)
-		: EntityOwner(entity)
+		: Owner(entity)
 	{}
 
 	bool SComponent::IsValid() const
 	{
-		return this != nullptr && EntityOwner.IsValid();
+		return this != nullptr && Owner.IsValid();
 	};
 }

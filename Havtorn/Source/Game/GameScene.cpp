@@ -165,6 +165,6 @@ namespace Havtorn
 		std::vector<SGhostyComponent> ghostyComponents;
 		DeserializeData(ghostyComponents, fromData, static_cast<U32>(numberOfGhostyComponents), pointerPosition);
 		for (const auto& component : ghostyComponents)
-			AddComponent<SGhostyComponent>(component.EntityOwner);
+			AddComponent<SGhostyComponent>(component.Owner);
     }
 }

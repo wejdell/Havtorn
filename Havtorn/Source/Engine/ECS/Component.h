@@ -13,6 +13,6 @@ namespace Havtorn
 
 		bool IsValid() const;
 
-		SEntity EntityOwner = SEntity::Null;
+		SEntity Owner = SEntity::Null;
 	};
 }

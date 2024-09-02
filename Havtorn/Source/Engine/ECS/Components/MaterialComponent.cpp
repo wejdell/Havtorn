@@ -7,14 +7,14 @@ namespace Havtorn
 {
     void SMaterialComponent::Serialize(char* toData, U64& pointerPosition) const
     {
-        SerializeData(EntityOwner, toData, pointerPosition);
+        SerializeData(Owner, toData, pointerPosition);
         SerializeData(static_cast<U32>(AssetRegistryKeys.size()), toData, pointerPosition);
         SerializeData(AssetRegistryKeys, toData, pointerPosition);
     }
 
     void SMaterialComponent::Deserialize(const char* fromData, U64& pointerPosition)
     {
-        DeserializeData(EntityOwner, fromData, pointerPosition);
+        DeserializeData(Owner, fromData, pointerPosition);
         U32 numberOfAssetRegistryKeys = 0;
         DeserializeData(numberOfAssetRegistryKeys, fromData, pointerPosition);
         DeserializeData(AssetRegistryKeys, fromData, numberOfAssetRegistryKeys, pointerPosition);

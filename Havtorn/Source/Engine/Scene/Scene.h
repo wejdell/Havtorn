@@ -125,7 +125,7 @@ namespace Havtorn
 		template<typename T>
 		const SEntity& GetEntity(const T* fromComponent) const
 		{
-			return fromComponent->EntityOwner;
+			return fromComponent->Owner;
 		}
 
 		template<typename T>
@@ -156,7 +156,7 @@ namespace Havtorn
 		template<typename T>
 		T* GetComponent(const SComponent* fromOtherComponent) const
 		{
-			return GetComponent<T>(fromOtherComponent->EntityOwner);
+			return GetComponent<T>(fromOtherComponent->Owner);
 		}
 
 		template<typename... Ts>
@@ -168,7 +168,7 @@ namespace Havtorn
 		template<typename... Ts>
 		std::tuple<Ts*...> GetComponents(const SComponent* fromOtherComponent) const
 		{
-			return std::make_tuple(GetComponent<Ts>(fromOtherComponent->EntityOwner) ...);
+			return std::make_tuple(GetComponent<Ts>(fromOtherComponent->Owner) ...);
 		}
 
 		template<typename T>
@@ -195,11 +195,11 @@ namespace Havtorn
 		}
 		
 		using SViewFunctionPointer = std::function<SComponentViewResult(const SEntity&, CScene*)>;
-		HAVTORN_API void AddView(const SEntity& entityOwner, SViewFunctionPointer function);
-		HAVTORN_API void RemoveView(const SEntity& entityOwner, SViewFunctionPointer function);
+		HAVTORN_API void AddView(const SEntity& owner, SViewFunctionPointer function);
+		HAVTORN_API void RemoveView(const SEntity& owner, SViewFunctionPointer function);
 
-		HAVTORN_API void RemoveViews(const SEntity& entityOwner);
-		HAVTORN_API std::vector<SViewFunctionPointer> GetViews(const SEntity& entityOwner);
+		HAVTORN_API void RemoveViews(const SEntity& owner);
+		HAVTORN_API std::vector<SViewFunctionPointer> GetViews(const SEntity& owner);
 		
 		std::unordered_map<U64, std::vector<SViewFunctionPointer>> ComponentViews;
 

@@ -156,7 +156,7 @@ namespace Havtorn
 			if (!directionalLightComp->IsValid())
 				continue;
 
-			const SEntity& closestEnvironmentLightEntity = UComponentAlgo::GetClosestEntity3D(directionalLightComp->EntityOwner, scene->GetComponents<SEnvironmentLightComponent>(), scene);
+			const SEntity& closestEnvironmentLightEntity = UComponentAlgo::GetClosestEntity3D(directionalLightComp->Owner, scene->GetComponents<SEnvironmentLightComponent>(), scene);
 			const SEnvironmentLightComponent* environmentLightComp = scene->GetComponent<SEnvironmentLightComponent>(closestEnvironmentLightEntity);
 			if (!environmentLightComp->IsValid())
 				continue;

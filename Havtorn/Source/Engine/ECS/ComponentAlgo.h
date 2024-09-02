@@ -31,7 +31,7 @@ namespace Havtorn
 			if (distanceSquared < minDistanceSquared)
 			{
 				minDistanceSquared = distanceSquared;
-				closestEntity = otherTransformComponent->EntityOwner;
+				closestEntity = otherTransformComponent->Owner;
 			}
 		}
 

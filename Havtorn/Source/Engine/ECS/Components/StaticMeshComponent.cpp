@@ -20,7 +20,7 @@ namespace Havtorn
         //SerializeData(PixelShaderIndex, toData, pointerPosition);
         //SerializeData(SamplerIndex, toData, pointerPosition);
         //SerializeData(TopologyIndex, toData, pointerPosition);
-        SerializeData(EntityOwner, toData, pointerPosition);
+        SerializeData(Owner, toData, pointerPosition);
         SerializeData(AssetRegistryKey, toData, pointerPosition);
 
     }
@@ -41,7 +41,7 @@ namespace Havtorn
         //DeserializeData(PixelShaderIndex, fromData, pointerPosition);
         //DeserializeData(SamplerIndex, fromData, pointerPosition);
         //DeserializeData(TopologyIndex, fromData, pointerPosition);
-        DeserializeData(EntityOwner, fromData, pointerPosition);
+        DeserializeData(Owner, fromData, pointerPosition);
         DeserializeData(AssetRegistryKey, fromData, pointerPosition);
     }
 

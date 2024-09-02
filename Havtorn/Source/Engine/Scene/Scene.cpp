@@ -699,7 +699,7 @@ namespace Havtorn
 		std::vector<STransformComponent> transformComponents;
 		DeserializeData(transformComponents, fromData, static_cast<U32>(numberOfTransformComponents), pointerPosition);
 		for (const auto& component : transformComponents)
-			AddComponent<STransformComponent>(component.EntityOwner);
+			AddComponent<STransformComponent>(component.Owner);
 
 		U64 numberOfStaticMeshComponents = 0;
 		DeserializeData(numberOfStaticMeshComponents, fromData, pointerPosition);
@@ -708,7 +708,7 @@ namespace Havtorn
 		for (auto& component : staticMeshComponents)
 		{
 			component.Deserialize(fromData, pointerPosition);
-			RenderManager->LoadStaticMeshComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SStaticMeshComponent>(component.EntityOwner));
+			RenderManager->LoadStaticMeshComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SStaticMeshComponent>(component.Owner));
 		}
 
 		U64 numberOfCameraComponents = 0;
@@ -716,14 +716,14 @@ namespace Havtorn
 		std::vector<SCameraComponent> cameraComponents;
 		DeserializeData(cameraComponents, fromData, static_cast<U32>(numberOfCameraComponents), pointerPosition);
 		for (const auto& component : cameraComponents)
-			AddComponent<SCameraComponent>(component.EntityOwner);
+			AddComponent<SCameraComponent>(component.Owner);
 
 		U64 numberOfCameraControllerComponents = 0;
 		DeserializeData(numberOfCameraControllerComponents, fromData, pointerPosition);
 		std::vector<SCameraControllerComponent> cameraControllerComponents;
 		DeserializeData(cameraControllerComponents, fromData, static_cast<U32>(numberOfCameraControllerComponents), pointerPosition);
 		for (const auto& component : cameraControllerComponents)
-			AddComponent<SCameraControllerComponent>(component.EntityOwner);
+			AddComponent<SCameraControllerComponent>(component.Owner);
 
 		U64 numberOfMaterialComponents = 0;
 		DeserializeData(numberOfMaterialComponents, fromData, pointerPosition);
@@ -732,7 +732,7 @@ namespace Havtorn
 		for (auto& component : materialComponents)
 		{
 			component.Deserialize(fromData, pointerPosition);
-			RenderManager->LoadMaterialComponent(assetRegistry->GetAssetPaths(component.AssetRegistryKeys), AddComponent<SMaterialComponent>(component.EntityOwner));
+			RenderManager->LoadMaterialComponent(assetRegistry->GetAssetPaths(component.AssetRegistryKeys), AddComponent<SMaterialComponent>(component.Owner));
 		}
 
 		U64 numberOfEnvironmentLightComponents = 0;
@@ -742,7 +742,7 @@ namespace Havtorn
 		for (auto& component : environmentLightComponent)
 		{
 			DeserializeData(component, fromData, pointerPosition);
-			RenderManager->LoadEnvironmentLightComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SEnvironmentLightComponent>(component.EntityOwner));
+			RenderManager->LoadEnvironmentLightComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SEnvironmentLightComponent>(component.Owner));
 		}
 
 		U64 numberOfDirectionalLightComponents = 0;
@@ -750,28 +750,28 @@ namespace Havtorn
 		std::vector<SDirectionalLightComponent> directionalLightComponent;
 		DeserializeData(directionalLightComponent, fromData, static_cast<U32>(numberOfDirectionalLightComponents), pointerPosition);
 		for (const auto& component : directionalLightComponent)
-			AddComponent<SDirectionalLightComponent>(component.EntityOwner);
+			AddComponent<SDirectionalLightComponent>(component.Owner);
 
 		U64 numberOfPointLightComponents = 0;
 		DeserializeData(numberOfPointLightComponents, fromData, pointerPosition);
 		std::vector<SPointLightComponent> pointLightComponents;
 		DeserializeData(pointLightComponents, fromData, static_cast<U32>(numberOfPointLightComponents), pointerPosition);
 		for (const auto& component : pointLightComponents)
-			AddComponent<SPointLightComponent>(component.EntityOwner);
+			AddComponent<SPointLightComponent>(component.Owner);
 
 		U64 numberOfSpotLightComponents = 0;
 		DeserializeData(numberOfSpotLightComponents, fromData, pointerPosition);
 		std::vector<SSpotLightComponent> spotLightComponents;
 		DeserializeData(spotLightComponents, fromData, static_cast<U32>(numberOfSpotLightComponents), pointerPosition);
 		for (const auto& component : spotLightComponents)
-			AddComponent<SSpotLightComponent>(component.EntityOwner);
+			AddComponent<SSpotLightComponent>(component.Owner);
 
 		U64 numberOfVolumetricLightComponents = 0;
 		DeserializeData(numberOfVolumetricLightComponents, fromData, pointerPosition);
 		std::vector<SVolumetricLightComponent> volumetricLightComponents;
 		DeserializeData(volumetricLightComponents, fromData, static_cast<U32>(numberOfVolumetricLightComponents), pointerPosition);
 		for (const auto& component : volumetricLightComponents)
-			AddComponent<SVolumetricLightComponent>(component.EntityOwner);
+			AddComponent<SVolumetricLightComponent>(component.Owner);
 
 		U64 numberOfDecalComponents = 0;
 		DeserializeData(numberOfDecalComponents, fromData, pointerPosition);
@@ -780,7 +780,7 @@ namespace Havtorn
 		for (auto& component : decalComponents)
 		{
 			DeserializeData(component, fromData, pointerPosition);
-			RenderManager->LoadDecalComponent(assetRegistry->GetAssetPaths(component.AssetRegistryKeys), AddComponent<SDecalComponent>(component.EntityOwner));
+			RenderManager->LoadDecalComponent(assetRegistry->GetAssetPaths(component.AssetRegistryKeys), AddComponent<SDecalComponent>(component.Owner));
 		}
 
 		U64 numberOfSpriteComponents = 0;
@@ -790,7 +790,7 @@ namespace Havtorn
 		for (auto& component : spriteComponents)
 		{
 			DeserializeData(component, fromData, pointerPosition);
-			RenderManager->LoadSpriteComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SSpriteComponent>(component.EntityOwner));
+			RenderManager->LoadSpriteComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SSpriteComponent>(component.Owner));
 		}
 
 		U64 numberOfTransform2DComponents = 0;
@@ -798,28 +798,28 @@ namespace Havtorn
 		std::vector<STransform2DComponent> transform2DComponents;
 		DeserializeData(transform2DComponents, fromData, static_cast<U32>(numberOfTransform2DComponents), pointerPosition);
 		for (const auto& component : transform2DComponents)
-			AddComponent<STransform2DComponent>(component.EntityOwner);
+			AddComponent<STransform2DComponent>(component.Owner);
 
 		U64 numberOfSpriteAnimatorGraphComponents = 0;
 		DeserializeData(numberOfSpriteAnimatorGraphComponents, fromData, pointerPosition);
 		//std::vector<SSpriteAnimatorGraphComponent> spriteAnimatorGraphComponents;
 		//DeserializeData(spriteAnimatorGraphComponents, fromData, static_cast<U32>(numberOfSpriteAnimatorGraphComponents), pointerPosition);
 		//for (const auto& component : spriteAnimatorGraphComponents)
-		//	AddComponent<SSpriteAnimatorGraphComponent>(component.EntityOwner);
+		//	AddComponent<SSpriteAnimatorGraphComponent>(component.Owner);
 
 		U64 numberOfSequencerComponents = 0;
 		DeserializeData(numberOfSequencerComponents, fromData, pointerPosition);
 		//std::vector<SSequencerComponent> sequencerComponents;
 		//DeserializeData(sequencerComponents, fromData, static_cast<U32>(numberOfSequencerComponents), pointerPosition);
 		//for (const auto& component : sequencerComponents)
-		//	AddComponent<SSequencerComponent>(component.EntityOwner);
+		//	AddComponent<SSequencerComponent>(component.Owner);
 
 		U64 numberOfMetaDataComponents = 0;
 		DeserializeData(numberOfMetaDataComponents, fromData, pointerPosition);
 		std::vector<SMetaDataComponent> metaDataComponents;
 		DeserializeData(metaDataComponents, fromData, static_cast<U32>(numberOfMetaDataComponents), pointerPosition);
 		for (const auto& component : metaDataComponents)
-			AddComponent<SMetaDataComponent>(component.EntityOwner, component.Name.AsString());
+			AddComponent<SMetaDataComponent>(component.Owner, component.Name.AsString());
 	}
 
 	std::string CScene::GetSceneName() const
@@ -894,56 +894,56 @@ namespace Havtorn
 		EntityIndices.erase(entity.GUID);
 	}
 
-	void CScene::AddView(const SEntity& entityOwner, SViewFunctionPointer function)
+	void CScene::AddView(const SEntity& owner, SViewFunctionPointer function)
 	{
-		if (!ComponentViews.contains(entityOwner.GUID))
-			ComponentViews.emplace(entityOwner.GUID, std::vector<SViewFunctionPointer>());
+		if (!ComponentViews.contains(owner.GUID))
+			ComponentViews.emplace(owner.GUID, std::vector<SViewFunctionPointer>());
 		 
-		auto& functionPointers = ComponentViews.at(entityOwner.GUID);
+		auto& functionPointers = ComponentViews.at(owner.GUID);
 		// TODO.NR: Support adding and removing components through the editor. Unsolved problem.
 		//if (std::find(functionPointers.begin(), functionPointers.end(), function) == functionPointers.end())
 			functionPointers.push_back(function);
 	}
 
-	void CScene::RemoveView(const SEntity& entityOwner, SViewFunctionPointer function)
+	void CScene::RemoveView(const SEntity& owner, SViewFunctionPointer function)
 	{
-		if (!ComponentViews.contains(entityOwner.GUID))
+		if (!ComponentViews.contains(owner.GUID))
 			return;
 
 		// TODO.NR: Support adding and removing components through the editor. Unsolved problem.
-		//auto& functionPointers = ComponentViews.at(entityOwner.GUID);
+		//auto& functionPointers = ComponentViews.at(owner.GUID);
 		//auto it = std::find(functionPointers.begin(), functionPointers.end(), function);
 		//if (it != functionPointers.end())
 		//	functionPointers.erase(it);
 	}
 
-	void CScene::RemoveViews(const SEntity& entityOwner)
+	void CScene::RemoveViews(const SEntity& owner)
 	{
 		// TODO.NR: Support adding and removing components through the editor. Unsolved problem.
-		//if (!ComponentViews.contains(entityOwner.GUID))
+		//if (!ComponentViews.contains(owner.GUID))
 		//	return;
 
-		//for (auto& [typeHashID, componentView] : ComponentViews.at(entityOwner.GUID))
+		//for (auto& [typeHashID, componentView] : ComponentViews.at(owner.GUID))
 		//{
 		//	delete componentView;
 		//	componentView = nullptr;
 		//}
 
-		//ComponentViews.erase(entityOwner.GUID);
+		//ComponentViews.erase(owner.GUID);
 
-		if (!ComponentViews.contains(entityOwner.GUID))
+		if (!ComponentViews.contains(owner.GUID))
 			return;
 
-		ComponentViews.at(entityOwner.GUID).clear();
-		ComponentViews.erase(entityOwner.GUID);
+		ComponentViews.at(owner.GUID).clear();
+		ComponentViews.erase(owner.GUID);
 	}
 
-	std::vector<CScene::SViewFunctionPointer> CScene::GetViews(const SEntity& entityOwner)
+	std::vector<CScene::SViewFunctionPointer> CScene::GetViews(const SEntity& owner)
 	{
-		if (!ComponentViews.contains(entityOwner.GUID))
+		if (!ComponentViews.contains(owner.GUID))
 			return {};
 
-		return ComponentViews.at(entityOwner.GUID);
+		return ComponentViews.at(owner.GUID);
 	}
 
 	U64 CScene::GetSceneIndex(const SEntity& entity) const
