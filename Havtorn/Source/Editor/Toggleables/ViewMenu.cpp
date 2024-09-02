@@ -3,7 +3,7 @@
 #include "ViewMenu.h"
 #include "EditorManager.h"
 
-#include <imgui.h>
+#include <Core/imgui.h>
 
 namespace ImGui
 {

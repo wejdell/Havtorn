@@ -9,54 +9,16 @@
 #include "World.h"
 #include "AssetRegistry.h"
 
+#include <algorithm>
+
 namespace Havtorn
 {
 	CScene::CScene()
-		: FirstUnusedEntityIndex(0)
-	{
-		Entities.resize(ENTITY_LIMIT);
-		TransformComponents.resize(ENTITY_LIMIT);
-		StaticMeshComponents.resize(ENTITY_LIMIT);
-		CameraComponents.resize(ENTITY_LIMIT);
-		CameraControllerComponents.resize(ENTITY_LIMIT);
-		MaterialComponents.resize(ENTITY_LIMIT);
-		EnvironmentLightComponents.resize(ENTITY_LIMIT);
-		DirectionalLightComponents.resize(ENTITY_LIMIT);
-		PointLightComponents.resize(ENTITY_LIMIT);
-		SpotLightComponents.resize(ENTITY_LIMIT);
-		VolumetricLightComponents.resize(ENTITY_LIMIT);
-		DecalComponents.resize(ENTITY_LIMIT);
-		SpriteComponents.resize(ENTITY_LIMIT);
-		Transform2DComponents.resize(ENTITY_LIMIT);
-		SpriteAnimatorGraphComponents.resize(ENTITY_LIMIT);
-		SequencerComponents.resize(ENTITY_LIMIT);
-		GhostyComponents.resize(ENTITY_LIMIT);
-		DebugShapeComponents.resize(ENTITY_LIMIT);
-		MetaDataComponents.resize(ENTITY_LIMIT);
-	}
+	{}
 
 	CScene::~CScene()
 	{
-		EntityVectorIndices.clear();
 		Entities.clear();
-		TransformComponents.clear();
-		StaticMeshComponents.clear();
-		CameraComponents.clear();
-		CameraControllerComponents.clear();
-		MaterialComponents.clear();
-		EnvironmentLightComponents.clear();
-		DirectionalLightComponents.clear();
-		PointLightComponents.clear();
-		SpotLightComponents.clear();
-		VolumetricLightComponents.clear();
-		DecalComponents.clear();
-		SpriteComponents.clear();
-		Transform2DComponents.clear();
-		SpriteAnimatorGraphComponents.clear();
-		SequencerComponents.clear();
-		GhostyComponents.clear();
-		DebugShapeComponents.clear();
-		MetaDataComponents.clear();
 		RenderManager = nullptr;
 	}
 
@@ -72,70 +34,83 @@ namespace Havtorn
 		SceneName = std::string("3DDemoScene");
 
 		// === Camera ===
-		SEntity* cameraEntity = GetNewEntity("Camera");
-		if (!cameraEntity)
+		MainCameraEntity = AddEntity("Camera");
+		
+		if (!MainCameraEntity.IsValid())
 			return false;
 
-		MainCameraIndex = GetSceneIndex(*cameraEntity);
 		CAssetRegistry* assetRegistry = GEngine::GetWorld()->GetAssetRegistry();
 
 		// Setup entities (create components)
-		STransformComponent& transform = AddTransformComponentToEntity(*cameraEntity);
+		STransformComponent& transform = *AddComponent<STransformComponent>(MainCameraEntity);
+		AddView(MainCameraEntity, STransformComponentView::View);
+
 		transform.Transform.Translate({ 2.0f, 1.0f, -3.0f });
 		transform.Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
 		transform.Transform.Translate(SVector::Right * 0.25f);
 
-		SCameraComponent& camera = AddCameraComponentToEntity(*cameraEntity);
+		SCameraComponent& camera = *AddComponent<SCameraComponent>(MainCameraEntity);
+		AddView(MainCameraEntity, SCameraComponentView::View);
 		camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
 		camera.ViewMatrix = SMatrix::LookAtLH(SVector::Zero, SVector::Forward, SVector::Up);
 
-		SCameraControllerComponent& controllerComp = AddCameraControllerComponentToEntity(*cameraEntity);
+		SCameraControllerComponent& controllerComp = *AddComponent<SCameraControllerComponent>(MainCameraEntity);
+		AddView(MainCameraEntity, SCameraControllerComponentView::View);
 		controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
 		// === !Camera ===
 
 		// === Environment light ===
-		SEntity* environmentLightEntity = GetNewEntity("Environment Light");
-		if (!environmentLightEntity)
+		const SEntity& environmentLightEntity = AddEntity("Environment Light");
+		if (!environmentLightEntity.IsValid())
 			return false;
 
-		AddTransformComponentToEntity(*environmentLightEntity);
-		renderManager->LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/CubemapTheVisit.hva", &AddEnvironmentLightComponentToEntity(*environmentLightEntity));
-		U16 environmentLightEntitySceneIndex = static_cast<U16>(GetSceneIndex(*environmentLightEntity));
-		assetRegistry->Register("Assets/Textures/Cubemaps/CubemapTheVisit.hva", SAssetReferenceCounter(EComponentType::EnvironmentLightComponent, environmentLightEntitySceneIndex, 0, 0));
+		AddComponent<STransformComponent>(environmentLightEntity);
+		AddView(environmentLightEntity, STransformComponentView::View);
+		renderManager->LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/CubemapTheVisit.hva", AddComponent<SEnvironmentLightComponent>(environmentLightEntity));
+		AddView(environmentLightEntity, SEnvironmentLightComponentView::View);
+		GetComponent<SEnvironmentLightComponent>(environmentLightEntity)->AssetRegistryKey = assetRegistry->Register("Assets/Textures/Cubemaps/CubemapTheVisit.hva");
 		// === !Environment light ===
 
 		// === Directional light ===
-		SEntity* directionalLightEntity = GetNewEntity("Directional Light");
-		if (!directionalLightEntity)
+		const SEntity& directionalLightEntity = AddEntity("Directional Light");
+		if (!directionalLightEntity.IsValid())
 			return false;
 
-		AddDirectionalLightComponentToEntity(*directionalLightEntity);
-		SDirectionalLightComponent& directionalLight = DirectionalLightComponents[GetSceneIndex(*directionalLightEntity)];
+		// NR: Add transform to directional light so it can filter environmental lights based on distance
+		AddComponent<STransformComponent>(directionalLightEntity);
+		AddView(directionalLightEntity, STransformComponentView::View);
+
+		SDirectionalLightComponent& directionalLight = *AddComponent<SDirectionalLightComponent>(directionalLightEntity);
+		AddView(directionalLightEntity, SDirectionalLightComponentView::View);
 		directionalLight.Direction = { 1.0f, 1.0f, -1.0f, 0.0f };
 		directionalLight.Color = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };
 		directionalLight.ShadowmapView.ShadowmapViewportIndex = 0;
 		directionalLight.ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLight.ShadowViewSize.X, directionalLight.ShadowViewSize.Y, directionalLight.ShadowNearAndFarPlane.X, directionalLight.ShadowNearAndFarPlane.Y);
 
-		SVolumetricLightComponent& volumetricLight = AddVolumetricLightComponentToEntity(*directionalLightEntity);
+		SVolumetricLightComponent& volumetricLight = *AddComponent<SVolumetricLightComponent>(directionalLightEntity);
+		AddView(directionalLightEntity, SVolumetricLightComponentView::View);
 		volumetricLight.IsActive = false;
 		// === !Directional light ===
 
 		// === Point light ===
-		SEntity* pointLightEntity = GetNewEntity("Point Light");
-		if (!pointLightEntity)
+		const SEntity& pointLightEntity = AddEntity("Point Light");
+		if (!pointLightEntity.IsValid())
 			return true; // From this point it's ok if we fail to load the rest of the demo scene
 
-		STransformComponent& pointLightTransform = AddTransformComponentToEntity(*pointLightEntity);
+		STransformComponent& pointLightTransform = *AddComponent<STransformComponent>(pointLightEntity);
+		AddView(pointLightEntity, STransformComponentView::View);
 		SMatrix pointLightMatrix = pointLightTransform.Transform.GetMatrix();
 		pointLightMatrix.SetTranslation({ 1.25f, 0.35f, -1.65f });
 		pointLightTransform.Transform.SetMatrix(pointLightMatrix);
 
 
-		SPointLightComponent& pointLightComp = AddPointLightComponentToEntity(*pointLightEntity);
+		SPointLightComponent& pointLightComp = *AddComponent<SPointLightComponent>(pointLightEntity);
+		AddView(pointLightEntity, SPointLightComponentView::View);
 		pointLightComp.ColorAndIntensity = { 0.0f, 1.0f, 1.0f, 10.0f };
 		pointLightComp.Range = 1.0f;
 
-		SVolumetricLightComponent& volumetricPointLight = AddVolumetricLightComponentToEntity(*pointLightEntity);
+		SVolumetricLightComponent& volumetricPointLight = *AddComponent<SVolumetricLightComponent>(pointLightEntity);
+		AddView(pointLightEntity, SVolumetricLightComponentView::View);
 		volumetricPointLight.IsActive = false;
 
 		const SMatrix constantProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, pointLightComp.Range);
@@ -185,16 +160,18 @@ namespace Havtorn
 		// === !Point light ===
 
 		// === Spotlight ===
-		SEntity* spotlight = GetNewEntity("Spot Light");
-		if (!spotlight)
+		const SEntity& spotlight = AddEntity("Spot Light");
+		if (!spotlight.IsValid())
 			return true;
 
-		STransform& spotlightTransform = AddTransformComponentToEntity(*spotlight).Transform;
+		STransform& spotlightTransform = (*AddComponent<STransformComponent>(spotlight)).Transform;
+		AddView(spotlight, STransformComponentView::View);
 		SMatrix spotlightMatrix = spotlightTransform.GetMatrix();
 		spotlightMatrix.SetTranslation({ 1.5f, 0.5f, -1.0f });
 		spotlightTransform.SetMatrix(spotlightMatrix);
 
-		SSpotLightComponent& spotlightComp = AddSpotLightComponentToEntity(*spotlight);
+		SSpotLightComponent& spotlightComp = *AddComponent<SSpotLightComponent>(spotlight);
+		AddView(spotlight, SSpotLightComponentView::View);
 		spotlightComp.Direction = SVector4::Forward;
 		spotlightComp.DirectionNormal1 = SVector4::Right;
 		spotlightComp.DirectionNormal2 = SVector4::Up;
@@ -203,7 +180,8 @@ namespace Havtorn
 		spotlightComp.InnerAngle = 5.0f;
 		spotlightComp.Range = 3.0f;
 
-		SVolumetricLightComponent& volumetricSpotLight = AddVolumetricLightComponentToEntity(*spotlight);
+		SVolumetricLightComponent& volumetricSpotLight = *AddComponent<SVolumetricLightComponent>(spotlight);
+		AddView(spotlight, SVolumetricLightComponentView::View);
 		volumetricSpotLight.IsActive = false;
 
 		const SMatrix spotlightProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, spotlightComp.Range);
@@ -216,14 +194,16 @@ namespace Havtorn
 		// === !Spotlight ===
 
 		// === Decal ===
-		SEntity* decal = GetNewEntity("Decal");
-		if (!decal)
+		const SEntity& decal = AddEntity("Decal");
+		if (!decal.IsValid())
 			return true;
 
-		STransform& decalTransform = AddTransformComponentToEntity(*decal).Transform;
+		STransform& decalTransform = (*AddComponent<STransformComponent>(decal)).Transform;
+		AddView(decal, STransformComponentView::View);
 		decalTransform.Translate({ 0.45f, 1.60f, 0.85f });
 
-		SDecalComponent& decalComp = AddDecalComponentToEntity(*decal);
+		SDecalComponent& decalComp = *AddComponent<SDecalComponent>(decal);
+		AddView(decal, SDecalComponentView::View);
 
 		std::vector<std::string> decalTextures = { "Assets/Textures/T_noscare_AL_c.hva", "Assets/Textures/T_noscare_AL_m.hva", "Assets/Textures/T_noscare_AL_n.hva" };
 		renderManager->LoadDecalComponent(decalTextures, &decalComp);
@@ -231,8 +211,7 @@ namespace Havtorn
 		decalComp.ShouldRenderMaterial = true;
 		decalComp.ShouldRenderNormal = true;
 
-		U16 decalEntitySceneIndex = static_cast<U16>(GetSceneIndex(*decal));
-		assetRegistry->Register(decalTextures, SAssetReferenceCounter(EComponentType::DecalComponent, decalEntitySceneIndex, 0, 0));
+		decalComp.AssetRegistryKeys = assetRegistry->Register(decalTextures);
 		// === !Decal ===
 
 		const std::string modelPath1 = "Assets/Tests/En_P_PendulumClock.hva";
@@ -248,52 +227,56 @@ namespace Havtorn
 
 		// TODO: GetNewEntityIndex which provides comp index directly
 
-		SEntity* pendulum = GetNewEntity("Clock");
-		if (!pendulum)
+		const SEntity& pendulum = AddEntity("Clock");
+		if (!pendulum.IsValid())
 			return false;
 
-		STransform& transform1 = AddTransformComponentToEntity(*pendulum).Transform;
+		STransform& transform1 = (*AddComponent<STransformComponent>(pendulum)).Transform;
 		transform1.Translate({ 1.75f, 0.0f, 0.25f });
 
-		renderManager->LoadStaticMeshComponent(modelPath1, &AddStaticMeshComponentToEntity(*pendulum));
-		renderManager->LoadMaterialComponent(materialNames1, &AddMaterialComponentToEntity(*pendulum));
+		renderManager->LoadStaticMeshComponent(modelPath1, AddComponent<SStaticMeshComponent>(pendulum));
+		AddView(pendulum, SStaticMeshComponentView::View);
+		renderManager->LoadMaterialComponent(materialNames1, AddComponent<SMaterialComponent>(pendulum));
+		AddView(pendulum, SMaterialComponentView::View);
 
-		U16 pendulumIndex = static_cast<U16>(GetSceneIndex(*pendulum));
-		assetRegistry->Register(modelPath1, SAssetReferenceCounter(EComponentType::StaticMeshComponent, pendulumIndex, 0, 0));
-		assetRegistry->Register(materialNames1, SAssetReferenceCounter(EComponentType::MaterialComponent, pendulumIndex, 0, 0));
+		GetComponent<SStaticMeshComponent>(pendulum)->AssetRegistryKey = assetRegistry->Register(modelPath1);
+		GetComponent<SMaterialComponent>(pendulum)->AssetRegistryKeys = assetRegistry->Register(materialNames1);
 		// === !Pendulum ===
 
 		// === Bed ===
-		SEntity* bed = GetNewEntity("Bed");
-		if (!bed)
+		const SEntity& bed = AddEntity("Bed");
+		if (!bed.IsValid())
 			return false;
 
-		STransform& transform2 = AddTransformComponentToEntity(*bed).Transform;
+		STransform& transform2 = (*AddComponent<STransformComponent>(bed)).Transform;
+		AddView(bed, STransformComponentView::View);
 		transform2.Translate({ 0.25f, 0.0f, 0.25f });
 
-		renderManager->LoadStaticMeshComponent(modelPath2, &AddStaticMeshComponentToEntity(*bed));
-		renderManager->LoadMaterialComponent(materialNames2, &AddMaterialComponentToEntity(*bed));
+		renderManager->LoadStaticMeshComponent(modelPath2, AddComponent<SStaticMeshComponent>(bed));
+		AddView(bed, SStaticMeshComponentView::View);
+		renderManager->LoadMaterialComponent(materialNames2, AddComponent<SMaterialComponent>(bed));
+		AddView(bed, SMaterialComponentView::View);
 
-		U16 bedIndex = static_cast<U16>(GetSceneIndex(*bed));
-		assetRegistry->Register(modelPath2, SAssetReferenceCounter(EComponentType::StaticMeshComponent, bedIndex, 0, 0));
-		assetRegistry->Register(materialNames2, SAssetReferenceCounter(EComponentType::MaterialComponent, bedIndex, 0, 0));
+		GetComponent<SStaticMeshComponent>(bed)->AssetRegistryKey = assetRegistry->Register(modelPath2);
+		GetComponent<SMaterialComponent>(bed)->AssetRegistryKeys = assetRegistry->Register(materialNames2);
 		// === !Bed ===
 
 		// === Lamp ===
-		SEntity* lamp = GetNewEntity("Lamp");
-		if (!lamp)
+		const SEntity& lamp = AddEntity("Lamp");
+		if (!lamp.IsValid())
 			return false;
 
-		STransform& lampTransform = AddTransformComponentToEntity(*lamp).Transform;
+		STransform& lampTransform = (*AddComponent<STransformComponent>(lamp)).Transform;
 		lampTransform.Translate({ -1.0f, 1.4f, -0.75f });
 		lampTransform.Rotate({ 0.0f, UMath::DegToRad(90.0f), 0.0f });
 
-		renderManager->LoadStaticMeshComponent(modelPath4, &AddStaticMeshComponentToEntity(*lamp));
-		renderManager->LoadMaterialComponent(materialNames4, &AddMaterialComponentToEntity(*lamp));
+		renderManager->LoadStaticMeshComponent(modelPath4, AddComponent<SStaticMeshComponent>(lamp));
+		AddView(lamp, SStaticMeshComponentView::View);
+		renderManager->LoadMaterialComponent(materialNames4, AddComponent<SMaterialComponent>(lamp));
+		AddView(lamp, SMaterialComponentView::View);
 
-		U16 lampIndex = static_cast<U16>(GetSceneIndex(*lamp));
-		assetRegistry->Register(modelPath4, SAssetReferenceCounter(EComponentType::StaticMeshComponent, lampIndex, 0, 0));
-		assetRegistry->Register(materialNames4, SAssetReferenceCounter(EComponentType::MaterialComponent, lampIndex, 0, 0));
+		GetComponent<SStaticMeshComponent>(lamp)->AssetRegistryKey = assetRegistry->Register(modelPath4);
+		GetComponent<SMaterialComponent>(lamp)->AssetRegistryKeys = assetRegistry->Register(materialNames4);
 		// === !Lamp ===
 
 		// === Floor ===
@@ -313,22 +296,24 @@ namespace Havtorn
 
 		for (U8 i = 0; i < 12; ++i)
 		{
-			SEntity* floor = GetNewEntity("Floor");
-			if (!floor)
+			const SEntity& floor = AddEntity("Floor");
+			if (!floor.IsValid())
 				return false;
 
-			STransform& transform3 = AddTransformComponentToEntity(*floor).Transform;
+			STransform& transform3 = (*AddComponent<STransformComponent>(floor)).Transform;
+			AddView(floor, STransformComponentView::View);
 			SMatrix matrix3 = transform3.GetMatrix();
 			matrix3.SetTranslation(translations[i]);
 			matrix3.SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)));
 			transform3.SetMatrix(matrix3);
 
-			renderManager->LoadStaticMeshComponent(modelPath3, &AddStaticMeshComponentToEntity(*floor));
-			renderManager->LoadMaterialComponent(materialNames3, &AddMaterialComponentToEntity(*floor));
+			renderManager->LoadStaticMeshComponent(modelPath3, AddComponent<SStaticMeshComponent>(floor));
+			AddView(floor, SMaterialComponentView::View);
+			renderManager->LoadMaterialComponent(materialNames3, AddComponent<SMaterialComponent>(floor));
+			AddView(floor, SMaterialComponentView::View);
 
-			U16 floorSceneIndex = static_cast<U16>(GetSceneIndex(*floor));
-			assetRegistry->Register(modelPath3, SAssetReferenceCounter(EComponentType::StaticMeshComponent, floorSceneIndex, 0, 0));
-			assetRegistry->Register(materialNames3, SAssetReferenceCounter(EComponentType::MaterialComponent, floorSceneIndex, 0, 0));
+			GetComponent<SStaticMeshComponent>(floor)->AssetRegistryKey = assetRegistry->Register(modelPath3);
+			GetComponent<SMaterialComponent>(floor)->AssetRegistryKeys = assetRegistry->Register(materialNames3);
 		}
 		// === !Floor ===
 
@@ -349,22 +334,24 @@ namespace Havtorn
 
 		for (U8 i = 0; i < 12; ++i)
 		{
-			SEntity* floor = GetNewEntity("Wall");
-			if (!floor)
+			const SEntity& floor = AddEntity("Wall");
+			if (!floor.IsValid())
 				return false;
 
-			STransform& transform3 = AddTransformComponentToEntity(*floor).Transform;
+			STransform& transform3 = (*AddComponent<STransformComponent>(floor)).Transform;
+			AddView(floor, STransformComponentView::View);
 			SMatrix matrix3 = transform3.GetMatrix();
 			matrix3.SetTranslation(translations[i]);
 			matrix3.SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundX(UMath::DegToRad(-90.0f)));
 			transform3.SetMatrix(matrix3);
 
-			renderManager->LoadStaticMeshComponent(modelPath3, &AddStaticMeshComponentToEntity(*floor));
-			renderManager->LoadMaterialComponent(materialNames3, &AddMaterialComponentToEntity(*floor));
+			renderManager->LoadStaticMeshComponent(modelPath3, AddComponent<SStaticMeshComponent>(floor));
+			AddView(floor, SMaterialComponentView::View);
+			renderManager->LoadMaterialComponent(materialNames3, AddComponent<SMaterialComponent>(floor));
+			AddView(floor, SMaterialComponentView::View);
 
-			U16 floorSceneIndex = static_cast<U16>(GetSceneIndex(*floor));
-			assetRegistry->Register(modelPath3, SAssetReferenceCounter(EComponentType::StaticMeshComponent, floorSceneIndex, 0, 0));
-			assetRegistry->Register(materialNames3, SAssetReferenceCounter(EComponentType::MaterialComponent, floorSceneIndex, 0, 0));
+			GetComponent<SStaticMeshComponent>(floor)->AssetRegistryKey = assetRegistry->Register(modelPath3);
+			GetComponent<SMaterialComponent>(floor)->AssetRegistryKeys = assetRegistry->Register(materialNames3);
 		}
 		// === !Wall ===
 
@@ -382,44 +369,28 @@ namespace Havtorn
 
 		for (U8 i = 0; i < 9; ++i)
 		{
-			SEntity* floor = GetNewEntity("Wall");
-			if (!floor)
+			const SEntity& floor = AddEntity("Wall");
+			if (!floor.IsValid())
 				return false;
 
-			STransform& transform3 = AddTransformComponentToEntity(*floor).Transform;
+			STransform& transform3 = (*AddComponent<STransformComponent>(floor)).Transform;
+			AddView(floor, STransformComponentView::View);
 			SMatrix matrix3 = transform3.GetMatrix();
 			matrix3.SetTranslation(translations[i]);
 			matrix3.SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundX(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundY(UMath::DegToRad(-90.0f)));
 			transform3.SetMatrix(matrix3);
 
-			renderManager->LoadStaticMeshComponent(modelPath3, &AddStaticMeshComponentToEntity(*floor));
-			renderManager->LoadMaterialComponent(materialNames3, &AddMaterialComponentToEntity(*floor));
+			renderManager->LoadStaticMeshComponent(modelPath3, AddComponent<SStaticMeshComponent>(floor));
+			AddView(floor, SMaterialComponentView::View);
+			renderManager->LoadMaterialComponent(materialNames3, AddComponent<SMaterialComponent>(floor));
+			AddView(floor, SMaterialComponentView::View);
 
-			U16 floorSceneIndex = static_cast<U16>(GetSceneIndex(*floor));
-			assetRegistry->Register(modelPath3, SAssetReferenceCounter(EComponentType::StaticMeshComponent, floorSceneIndex, 0, 0));
-			assetRegistry->Register(materialNames3, SAssetReferenceCounter(EComponentType::MaterialComponent, floorSceneIndex, 0, 0));
+			GetComponent<SStaticMeshComponent>(floor)->AssetRegistryKey = assetRegistry->Register(modelPath3);
+			GetComponent<SMaterialComponent>(floor)->AssetRegistryKeys = assetRegistry->Register(materialNames3);
 		}
 		// === !Other Wall ===
 
 		return true;
-	}
-
-	std::vector<SVector4> CreateAnimationClip(const F32 width, const F32 height, const F32 frameSize, const U32 row, const U32 column, const U32 frameCount)
-	{
-		std::vector<SVector4> uvRects;
-		F32 normalizedFrameSize = frameSize / width;
-
-		for (U32 i = 0; i < frameCount; i++)
-		{
-			F32 x = (column + i) * normalizedFrameSize;
-			F32 y = row * (frameSize / height);
-			F32 z = x + normalizedFrameSize;
-			F32 w = y + (frameSize / height);
-
-			uvRects.push_back(SVector4{ x, y, z, w });
-		}
-
-		return uvRects;
 	}
 
 	bool CScene::Init2DDemoScene(CRenderManager* renderManager)
@@ -427,27 +398,29 @@ namespace Havtorn
 		SceneName = std::string("2DDemoScene");
 
 		// === Camera ===
-		SEntity* cameraEntity = GetNewEntity("Camera");
-		if (!cameraEntity)
+		MainCameraEntity = AddEntity("Camera");
+		if (!MainCameraEntity.IsValid())
 			return false;
 
-		MainCameraIndex = GetSceneIndex(*cameraEntity);
 		CAssetRegistry* assetRegistry = GEngine::GetWorld()->GetAssetRegistry();
 
 		// Setup entities (create components)
-		STransformComponent& transform = AddTransformComponentToEntity(*cameraEntity);
+		STransformComponent& transform = (*AddComponent<STransformComponent>(MainCameraEntity));
+		AddView(MainCameraEntity, STransformComponentView::View);
 		transform.Transform.Translate({ 0.0f, 1.0f, -5.0f });
 		//transform.Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
 		transform.Transform.Translate(SVector::Right * 0.25f);
 
-		SCameraComponent& camera = AddCameraComponentToEntity(*cameraEntity);
+		SCameraComponent& camera = *AddComponent<SCameraComponent>(MainCameraEntity);
+		AddView(MainCameraEntity, SCameraComponentView::View);
 		camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
 		//camera.ProjectionType = ECameraProjectionType::Orthographic;
 		//camera.ProjectionMatrix = SMatrix::OrthographicLH(5.0f, 5.0f, 0.1f, 1000.0f);
 		camera.ViewMatrix = SMatrix::LookAtLH(SVector::Zero, SVector::Forward, SVector::Up);
 
 		//		SCameraControllerComponent& controllerComp = 
-		AddCameraControllerComponentToEntity(*cameraEntity);
+		AddComponent<SCameraControllerComponent>(MainCameraEntity);
+		AddView(MainCameraEntity, SCameraControllerComponentView::View);
 		//controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
 		// 
 		//SSequencerComponent& cameraSequencerComponent = AddSequencerComponentToEntity(*cameraEntity);
@@ -455,43 +428,51 @@ namespace Havtorn
 		// === !Camera ===
 
 		// === Environment light ===
-		SEntity* environmentLightEntity = GetNewEntity("Environment Light");
-		if (!environmentLightEntity)
+		const SEntity& environmentLightEntity = AddEntity("Environment Light");
+		if (!environmentLightEntity.IsValid())
 			return false;
 
-		AddTransformComponentToEntity(*environmentLightEntity);
-		renderManager->LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/CubemapTheVisit.hva", &AddEnvironmentLightComponentToEntity(*environmentLightEntity));
-		U16 environmentLightEntitySceneIndex = static_cast<U16>(GetSceneIndex(*environmentLightEntity));
-		assetRegistry->Register("Assets/Textures/Cubemaps/CubemapTheVisit.hva", SAssetReferenceCounter(EComponentType::EnvironmentLightComponent, environmentLightEntitySceneIndex, 0, 0));
+		AddComponent<STransformComponent>(environmentLightEntity);
+		AddView(environmentLightEntity, STransformComponentView::View);
+		renderManager->LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/CubemapTheVisit.hva", AddComponent<SEnvironmentLightComponent>(environmentLightEntity));
+		AddView(environmentLightEntity, SEnvironmentLightComponentView::View);
+		GetComponent<SEnvironmentLightComponent>(environmentLightEntity)->AssetRegistryKey = assetRegistry->Register("Assets/Textures/Cubemaps/CubemapTheVisit.hva");
 		// === !Environment light ===
 
 		// === Directional light ===
-		SEntity* directionalLightEntity = GetNewEntity("Directional Light");
-		if (!directionalLightEntity)
+		const SEntity& directionalLightEntity = AddEntity("Directional Light");
+		if (!directionalLightEntity.IsValid())
 			return false;
 
-		AddDirectionalLightComponentToEntity(*directionalLightEntity);
-		SDirectionalLightComponent& directionalLight = DirectionalLightComponents[GetSceneIndex(*directionalLightEntity)];
+		// NR: Add transform to directional light so it can filter environmental lights based on distance
+		AddComponent<STransformComponent>(directionalLightEntity);
+		AddView(directionalLightEntity, STransformComponentView::View);
+
+		SDirectionalLightComponent& directionalLight = *AddComponent<SDirectionalLightComponent>(directionalLightEntity);
+		AddView(directionalLightEntity, SDirectionalLightComponentView::View);
 		directionalLight.Direction = { 1.0f, 1.0f, -1.0f, 0.0f };
 		directionalLight.Color = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };
 		directionalLight.ShadowmapView.ShadowmapViewportIndex = 0;
 		directionalLight.ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLight.ShadowViewSize.X, directionalLight.ShadowViewSize.Y, directionalLight.ShadowNearAndFarPlane.X, directionalLight.ShadowNearAndFarPlane.Y);
 
-		SVolumetricLightComponent& volumetricLight = AddVolumetricLightComponentToEntity(*directionalLightEntity);
+		SVolumetricLightComponent& volumetricLight = *AddComponent<SVolumetricLightComponent>(directionalLightEntity);
+		AddView(directionalLightEntity, SVolumetricLightComponentView::View);
 		volumetricLight.IsActive = false;
 		// === !Directional light ===
 
 		// === Spotlight ===
-		SEntity* spotlight = GetNewEntity("Spot Light");
-		if (!spotlight)
+		const SEntity& spotlight = AddEntity("Spot Light");
+		if (!spotlight.IsValid())
 			return true;
 
-		STransform& spotlightTransform = AddTransformComponentToEntity(*spotlight).Transform;
+		STransform& spotlightTransform = (*AddComponent<STransformComponent>(spotlight)).Transform;
+		AddView(spotlight, STransformComponentView::View);
 		SMatrix spotlightMatrix = spotlightTransform.GetMatrix();
 		spotlightMatrix.SetTranslation({ 0.0f, 0.0f, 0.0f });
 		spotlightTransform.SetMatrix(spotlightMatrix);
 
-		SSpotLightComponent& spotlightComp = AddSpotLightComponentToEntity(*spotlight);
+		SSpotLightComponent& spotlightComp = *AddComponent<SSpotLightComponent>(spotlight);
+		AddView(spotlight, SSpotLightComponentView::View);
 		spotlightComp.Direction = SVector4::Forward;
 		spotlightComp.DirectionNormal1 = SVector4::Right;
 		spotlightComp.DirectionNormal2 = SVector4::Up;
@@ -500,7 +481,8 @@ namespace Havtorn
 		spotlightComp.InnerAngle = 30.0f;
 		spotlightComp.Range = 3.0f;
 
-		SVolumetricLightComponent& volumetricSpotLight = AddVolumetricLightComponentToEntity(*spotlight);
+		SVolumetricLightComponent& volumetricSpotLight = *AddComponent<SVolumetricLightComponent>(spotlight);
+		AddView(spotlight, SVolumetricLightComponentView::View);
 		volumetricSpotLight.IsActive = false;
 
 		const SMatrix spotlightProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, spotlightComp.Range);
@@ -515,92 +497,6 @@ namespace Havtorn
 		//spotlightSequencerComponent.ComponentTracks.push_back({ EComponentType::SpotLightComponent });
 		//spotlightSequencerComponent.ComponentTracks.push_back({ EComponentType::DecalComponent });
 		// === !Spotlight ===
-
-		{
-			SEntity* ghosty = GetNewEntity("Ghosty");
-			if (!ghosty)
-				return true;
-			STransformComponent& spriteWStransform = AddTransformComponentToEntity(*ghosty);
-			SSpriteComponent& spriteWSComp = AddSpriteComponentToEntity(*ghosty);
-			AddGhostyComponentToEntity(*ghosty);
-
-			spriteWStransform.Transform.Move({ 0.0f, 0.0f, 0.0f });
-			//F32 radians = UMath::DegToRad(45.0f);
-			//spriteWStransform.Transform.Rotate({ radians, radians, radians });
-
-			const std::string spritePath = "Assets/Textures/EllahSpriteSheet.hva";
-			spriteWSComp.UVRect = { 0.0f, 0.0f, 0.125f, 0.125f };
-			renderManager->LoadSpriteComponent(spritePath, &spriteWSComp);
-
-			//Define UVRects for Animation Frames on row 0, 1, 2
-			//F32 size = 32.0f / 256.0f;
-			F32 width = 1152.0f;
-			F32 height = 384.0f;
-			F32 frameSize = 96.0f;
-			std::vector<SVector4> uvRectsIdle = CreateAnimationClip(width, height, frameSize, 3, 6, 6);
-			std::vector<SVector4> uvRectsMoveLeft = CreateAnimationClip(width, height, frameSize, 0, 0, 6);
-			std::vector<SVector4> uvRectsMoveRight = CreateAnimationClip(width, height, frameSize, 1, 0, 6);
-			//std::vector<SVector4> uvRectsIdle = {
-			//	SVector4{ 0.0f,		0.0f,		size,			size },
-			//	SVector4{ size,		0.0f,		size * 2,		size },
-			//};
-			//std::vector<SVector4> uvRectsMoveLeft = {
-			//	SVector4{ 0.0f,		size,		size,		size * 2 },
-			//	SVector4{ size,		size,		size * 2,	size * 2 },
-			//	SVector4{ size * 2, size,		size * 3,	size * 2 },
-			//	//SVector4{ size * 3, size,		size * 4,	size * 2 },
-			//};
-			//std::vector<SVector4> uvRectsMoveRight = {
-			//	SVector4{ 0.0f,		size * 2,	size,		size * 3 },
-			//	SVector4{ size,		size * 2,	size * 2,	size * 3 },
-			//	SVector4{ size * 2, size * 2,	size * 3,	size * 3 },
-			//	
-			//	//SVector4{ size * 3, size * 2,	size * 4,	size * 3 },
-			//};
-
-			SSpriteAnimationClip idle;
-			idle.UVRects = uvRectsIdle;
-			idle.Durations.push_back(0.15f);
-			idle.Durations.push_back(0.15f);
-
-			SSpriteAnimationClip moveLeft;
-			moveLeft.UVRects = uvRectsMoveLeft;
-			moveLeft.Durations.push_back(0.15f);
-			moveLeft.Durations.push_back(0.15f);
-			moveLeft.Durations.push_back(0.15f);
-
-
-			SSpriteAnimationClip moveRight
-			{
-				uvRectsMoveRight, //UVRects
-				{ 0.15f, 0.15f, 0.15f }, //Duration per Frame
-				true	//IsLooping
-			};
-
-			//moveRight.UVRects = uvRectsMoveRight;
-			//moveRight.Durations.push_back(0.15f);
-			//moveRight.Durations.push_back(0.15f);
-			//moveRight.Durations.push_back(0.15f);
-
-			CGhostySystem* ghostySystem = GEngine::GetWorld()->GetSystem<CGhostySystem>();
-			SSpriteAnimatorGraphComponent& spriteAnimatorGraphComponent = AddSpriteAnimatorGraphComponentToEntity(*ghosty);
-
-			SSpriteAnimatorGraphNode& rootNode = spriteAnimatorGraphComponent.SetRoot(std::string("Idle | Locomotion"), ghostySystem->EvaluateIdleFunc);
-			rootNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Idle"), idle);
-
-			SSpriteAnimatorGraphNode& locomotionNode = rootNode.AddSwitchNode(std::string("Locomotion: Left | Right"), ghostySystem->EvaluateLocomotionFunc);
-			locomotionNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Move Left"), moveLeft);
-			locomotionNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Move Right"), moveRight);
-
-			U16 spriteIndex = static_cast<U16>(GetSceneIndex(*ghosty));
-			assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
-
-			//SSequencerComponent& sequencerComponent = AddSequencerComponentToEntity(*ghosty);
-			//sequencerComponent.ComponentTracks.push_back({ EComponentType::TransformComponent });
-			//sequencerComponent.ComponentTracks.push_back({ EComponentType::SpriteComponent });
-			//sequencerComponent.ComponentTracks.push_back({ EComponentType::GhostyComponent });
-			//sequencerComponent.ComponentTracks.push_back({ EComponentType::CameraComponent });
-		}
 
 		//{
 		//	SEntity* spriteWS = GetNewEntity("SpriteWS");
@@ -622,7 +518,6 @@ namespace Havtorn
 		//}
 		//// === !World Space Sprite ===
 
-
 		return true;
 	}
 
@@ -630,325 +525,301 @@ namespace Havtorn
 	{
 		U32 size = 0;
 
-		for (auto& entity : Entities)
-		{
-			size += sizeof(U64);
+		size += sizeof(CHavtornStaticString<255>);
 
-			size += sizeof(I64) * static_cast<size_t>(EComponentType::Count);
+		size += sizeof(U64);
+		size += sizeof(SEntity) * static_cast<U32>(Entities.size());
 
-			if (entity.HasComponent(EComponentType::TransformComponent))
-				size += sizeof(STransformComponent);
+		size += sizeof(U64);
+		size += sizeof(STransformComponent) * static_cast<U32>(GetComponents<STransformComponent>().size());
 
-			if (entity.HasComponent(EComponentType::StaticMeshComponent))
-				size += StaticMeshComponents[GetSceneIndex(entity)].GetSize();
+		size += sizeof(U64);
+		for (const auto component : GetComponents<SStaticMeshComponent>())
+			size += component->GetSize();
 
-			if (entity.HasComponent(EComponentType::CameraComponent))
-				size += sizeof(SCameraComponent);
+		size += sizeof(U64);
+		size += sizeof(SCameraComponent) * static_cast<U32>(GetComponents<SCameraComponent>().size());
 
-			if (entity.HasComponent(EComponentType::CameraControllerComponent))
-				size += sizeof(SCameraControllerComponent);
+		size += sizeof(U64);
+		size += sizeof(SCameraControllerComponent) * static_cast<U32>(GetComponents<SCameraControllerComponent>().size());
 
-			if (entity.HasComponent(EComponentType::MaterialComponent))
-				size += MaterialComponents[GetSceneIndex(entity)].GetSize();
+		size += sizeof(U64);
+		for (const auto component : GetComponents<SMaterialComponent>())
+			size += component->GetSize();
 
-			if (entity.HasComponent(EComponentType::EnvironmentLightComponent))
-				size += sizeof(SEnvironmentLightComponent);
+		size += sizeof(U64);
+		size += sizeof(SEnvironmentLightComponent) * static_cast<U32>(GetComponents<SEnvironmentLightComponent>().size());
 
-			if (entity.HasComponent(EComponentType::DirectionalLightComponent))
-				size += sizeof(SDirectionalLightComponent);
+		size += sizeof(U64);
+		size += sizeof(SDirectionalLightComponent) * static_cast<U32>(GetComponents<SDirectionalLightComponent>().size());
 
-			if (entity.HasComponent(EComponentType::PointLightComponent))
-				size += sizeof(SPointLightComponent);
+		size += sizeof(U64);
+		size += sizeof(SPointLightComponent) * static_cast<U32>(GetComponents<SPointLightComponent>().size());
 
-			if (entity.HasComponent(EComponentType::SpotLightComponent))
-				size += sizeof(SSpotLightComponent);
+		size += sizeof(U64);
+		size += sizeof(SSpotLightComponent) * static_cast<U32>(GetComponents<SSpotLightComponent>().size());
 
-			if (entity.HasComponent(EComponentType::VolumetricLightComponent))
-				size += sizeof(SVolumetricLightComponent);
+		size += sizeof(U64);
+		size += sizeof(SVolumetricLightComponent) * static_cast<U32>(GetComponents<SVolumetricLightComponent>().size());
 
-			if (entity.HasComponent(EComponentType::DecalComponent))
-				size += DecalComponents[GetSceneIndex(entity)].GetSize();
+		size += sizeof(U64);
+		for (const auto component : GetComponents<SDecalComponent>())
+			size += component->GetSize();
 
-			if (entity.HasComponent(EComponentType::SpriteComponent))
-				size += sizeof(SSpriteComponent);
+		size += sizeof(U64);
+		size += sizeof(SSpriteComponent) * static_cast<U32>(GetComponents<SSpriteComponent>().size());
 
-			if (entity.HasComponent(EComponentType::Transform2DComponent))
-				size += sizeof(STransform2DComponent);
+		size += sizeof(U64);
+		size += sizeof(STransform2DComponent) * static_cast<U32>(GetComponents<STransform2DComponent>().size());
 
-			// TODO.AS: Implement GetSize (since the component is not trivially serializable)
-			if (entity.HasComponent(EComponentType::SpriteAnimatorGraphComponent))
-				size += sizeof(STransform2DComponent);
+		// TODO.AS: Implement GetSize (since the component is not trivially serializable)
+		size += sizeof(U64);
+		//size += sizeof(STransform2DComponent) * static_cast<U32>(GetComponents<SSpriteAnimatorGraphComponent>().size());
 
-			// TODO.NR: Implement GetSize (since the component is not trivially serializable)
-			if (entity.HasComponent(EComponentType::SequencerComponent))
-				size += sizeof(STransform2DComponent);
+		// TODO.NR: Implement GetSize (since the component is not trivially serializable)
+		size += sizeof(U64);
+		//size += sizeof(STransform2DComponent) * static_cast<U32>(GetComponents<SSequencerComponent>().size());
 
-			if (entity.HasComponent(EComponentType::GhostyComponent))
-				size += sizeof(STransform2DComponent);
-
-			if (entity.HasComponent(EComponentType::MetaDataComponent))
-				size += sizeof(STransform2DComponent);
-		}
+		size += sizeof(U64);
+		size += sizeof(SMetaDataComponent) * static_cast<U32>(GetComponents<SMetaDataComponent>().size());
 
 		return size;
 	}
 
 	void CScene::Serialize(char* toData, U64& pointerPosition) const
 	{
-		SerializeData(static_cast<U32>(GetNumberOfValidEntities()), toData, pointerPosition);
+		SerializeData(SceneName, toData, pointerPosition);
 
- 		for (auto& entity : Entities)
-		{
-			if (!entity.IsValid())
-				continue;
-
+		SerializeData(Entities.size(), toData, pointerPosition);
+		for (const auto& entity : Entities)
 			SerializeData(entity.GUID, toData, pointerPosition);
 
-			SerializeData(entity.GetComponentMask(), toData, pointerPosition);
-			U64 entitySceneIndex = GetSceneIndex(entity);
+		const auto& transformComponents = GetComponents<STransformComponent>();
+		SerializeData(transformComponents.size(), toData, pointerPosition);
+		for (const auto component : transformComponents)
+			SerializeData(*component, toData, pointerPosition);
 
-			if (entity.HasComponent(EComponentType::TransformComponent))
-			{
-				SerializeData(TransformComponents[entitySceneIndex], toData, pointerPosition);
-			}
+		// NR: Saved and loaded using AssetRegistry
+		const auto& staticMeshComponents = GetComponents<SStaticMeshComponent>();
+		SerializeData(staticMeshComponents.size(), toData, pointerPosition);
+		for (auto component : staticMeshComponents)
+			component->Serialize(toData, pointerPosition);
 
-			if (entity.HasComponent(EComponentType::StaticMeshComponent))
-			{
-				// Saved and Loaded using AssetRegistry
-			}
+		const auto& cameraComponents = GetComponents<SCameraComponent>();
+		SerializeData(cameraComponents.size(), toData, pointerPosition);
+		for (const auto component : cameraComponents)
+			SerializeData(*component, toData, pointerPosition);
 
-			if (entity.HasComponent(EComponentType::CameraComponent))
-			{
-				SerializeData(CameraComponents[entitySceneIndex], toData, pointerPosition);
-			}
+		const auto& cameraControllerComponents = GetComponents<SCameraControllerComponent>();
+		SerializeData(cameraControllerComponents.size(), toData, pointerPosition);
+		for (const auto component : cameraControllerComponents)
+			SerializeData(*component, toData, pointerPosition);
 
-			if (entity.HasComponent(EComponentType::CameraControllerComponent))
-			{
-				SerializeData(CameraControllerComponents[entitySceneIndex], toData, pointerPosition);
-			}
+		const auto& materialComponents = GetComponents<SMaterialComponent>();
+		SerializeData(materialComponents.size(), toData, pointerPosition);
+		for (auto component : materialComponents)
+			component->Serialize(toData, pointerPosition);
 
-			if (entity.HasComponent(EComponentType::MaterialComponent))
-			{
-				// Saved and Loaded using AssetRegistry
-			}
+		const auto& environmentLightComponents = GetComponents<SEnvironmentLightComponent>();
+		SerializeData(environmentLightComponents.size(), toData, pointerPosition);
+		for (auto component : environmentLightComponents)
+			SerializeData(*component, toData, pointerPosition);
 
-			if (entity.HasComponent(EComponentType::EnvironmentLightComponent))
-			{
-				// Saved and Loaded using AssetRegistry
-			}
+		const auto& directionalLightComponents = GetComponents<SDirectionalLightComponent>();
+		SerializeData(directionalLightComponents.size(), toData, pointerPosition);
+		for (const auto component : directionalLightComponents)
+			SerializeData(*component, toData, pointerPosition);
 
-			if (entity.HasComponent(EComponentType::DirectionalLightComponent))
-			{
-				SerializeData(DirectionalLightComponents[entitySceneIndex], toData, pointerPosition);
-			}
+		const auto& pointLightComponents = GetComponents<SPointLightComponent>();
+		SerializeData(pointLightComponents.size(), toData, pointerPosition);
+		for (const auto component : pointLightComponents)
+			SerializeData(*component, toData, pointerPosition);
 
-			if (entity.HasComponent(EComponentType::PointLightComponent))
-			{
-				SerializeData(PointLightComponents[entitySceneIndex], toData, pointerPosition);
-			}
+		const auto& spotLightComponents = GetComponents<SSpotLightComponent>();
+		SerializeData(spotLightComponents.size(), toData, pointerPosition);
+		for (const auto component : spotLightComponents)
+			SerializeData(*component, toData, pointerPosition);
 
-			if (entity.HasComponent(EComponentType::SpotLightComponent))
-			{
-				SerializeData(SpotLightComponents[entitySceneIndex], toData, pointerPosition);
-			}
+		const auto& volumetricLightComponents = GetComponents<SVolumetricLightComponent>();
+		SerializeData(volumetricLightComponents.size(), toData, pointerPosition);
+		for (const auto component : volumetricLightComponents)
+			SerializeData(*component, toData, pointerPosition);
 
-			if (entity.HasComponent(EComponentType::VolumetricLightComponent))
-			{
-				SerializeData(VolumetricLightComponents[entitySceneIndex], toData, pointerPosition);
-			}
+		// NR: Texture info Saved and Loaded using AssetRegistry
+		const auto& decalComponents = GetComponents<SDecalComponent>();
+		SerializeData(decalComponents.size(), toData, pointerPosition);
+		for (auto component : decalComponents)
+			component->Serialize(toData, pointerPosition);
 
-			if (entity.HasComponent(EComponentType::DecalComponent))
-			{
-				// NR: Texture info Saved and Loaded using AssetRegistry
-				DecalComponents[GetSceneIndex(entity)].Serialize(toData, pointerPosition);
-			}
+		// NR: Texture info Saved and Loaded using AssetRegistry
+		const auto& spriteComponents = GetComponents<SSpriteComponent>();
+		SerializeData(spriteComponents.size(), toData, pointerPosition);
+		for (auto component : spriteComponents)
+			SerializeData(*component, toData, pointerPosition);
 
-			if (entity.HasComponent(EComponentType::SpriteComponent))
-			{
-				// NR: Texture info Saved and Loaded using AssetRegistry
-				SerializeData(SpriteComponents[entitySceneIndex], toData, pointerPosition);
-			}
+		const auto& transform2DComponents = GetComponents<STransform2DComponent>();
+		SerializeData(transform2DComponents.size(), toData, pointerPosition);
+		for (auto component : transform2DComponents)
+			SerializeData(*component, toData, pointerPosition);
+		
+		// TODO.AS: Implement Serialize (since the component is not trivially serializable)
+		const auto& spriteAnimatorGraphComponents = GetComponents<SSpriteAnimatorGraphComponent>();
+		SerializeData(spriteAnimatorGraphComponents.size(), toData, pointerPosition);
+		//for (auto component : spriteAnimatorGraphComponents)
+		//	component->Serialize(toData, pointerPosition);
 
-			if (entity.HasComponent(EComponentType::Transform2DComponent))
-			{
-				SerializeData(Transform2DComponents[entitySceneIndex], toData, pointerPosition);
-			}
+		// TODO.NR: Implement Serialize (since the component is not trivially serializable)
+		const auto& sequencerComponents = GetComponents<SSequencerComponent>();
+		SerializeData(sequencerComponents.size(), toData, pointerPosition);
+		//for (auto component : sequencerComponents)
+		//	component->Serialize(toData, pointerPosition);
 
-			if (entity.HasComponent(EComponentType::SpriteAnimatorGraphComponent))
-			{
-				// TODO.AS: Implement Serialize (since the component is not trivially serializable)
-				SerializeData(SpriteAnimatorGraphComponents[entitySceneIndex], toData, pointerPosition);
-			}
-
-			if (entity.HasComponent(EComponentType::SequencerComponent))
-			{
-				// TODO.NR: Implement Serialize (since the component is not trivially serializable)
-				SerializeData(SequencerComponents[entitySceneIndex], toData, pointerPosition);
-			}
-
-			if (entity.HasComponent(EComponentType::GhostyComponent))
-			{
-				SerializeData(GhostyComponents[entitySceneIndex], toData, pointerPosition);
-			}
-
-			if (entity.HasComponent(EComponentType::MetaDataComponent))
-			{
-				SerializeData(MetaDataComponents[entitySceneIndex], toData, pointerPosition);
-			}
-		}
-
-		SerializeData(SceneName, toData, pointerPosition);
+		const auto& metaDataComponents = GetComponents<SMetaDataComponent>();
+		SerializeData(metaDataComponents.size(), toData, pointerPosition);
+		for (auto component : metaDataComponents)
+			SerializeData(*component, toData, pointerPosition);
 	}
 
 	void CScene::Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry)
 	{
-		U32 numberOfEntities = 0;
-		DeserializeData(numberOfEntities, fromData, pointerPosition);
+		DeserializeData(SceneName, fromData, pointerPosition);
 
-		for (U32 i = 0; i < numberOfEntities; i++)
+		U64 numberOfEntities = 0;
+		DeserializeData(numberOfEntities, fromData, pointerPosition);
+		for (U64 index = 0; index < numberOfEntities; index++)
 		{
 			U64 guid = 0;
 			DeserializeData(guid, fromData, pointerPosition);
 
-			SEntity* entity = GetNewEntity(guid);
-
-			CBitSet<STATIC_U64(EComponentType::Count)> componentMask;
-			DeserializeData(componentMask, fromData, pointerPosition);
-
-			if (componentMask.Test(STATIC_U64(EComponentType::TransformComponent)))
-			{
-				STransformComponent& transform = AddTransformComponentToEntity(*entity);
-				// NR: Write to a copy then assign to avoid breaking vtable ptr
-				STransformComponent dataCopy;
-				DeserializeData(dataCopy, fromData, pointerPosition);
-				transform = dataCopy;
-			}
-
-			if (componentMask.Test(STATIC_U64(EComponentType::StaticMeshComponent)))
-			{
-				// TODO.NR/AG: Fix hard coded scene index
-				SAssetReferenceCounter counter = { EComponentType::StaticMeshComponent, static_cast<U16>(i), 0, 0 };
-				RenderManager->LoadStaticMeshComponent(assetRegistry->GetAssetPath(counter), &AddStaticMeshComponentToEntity(*entity));
-			}
-
-			if (componentMask.Test(STATIC_U64(EComponentType::CameraComponent)))
-			{
-				SCameraComponent& camera = AddCameraComponentToEntity(*entity);
-				SCameraComponent dataCopy;
-				DeserializeData(dataCopy, fromData, pointerPosition);
-				camera = dataCopy;
-			}
-
-			if (componentMask.Test(STATIC_U64(EComponentType::CameraControllerComponent)))
-			{
-				SCameraControllerComponent& controller = AddCameraControllerComponentToEntity(*entity);
-				SCameraControllerComponent dataCopy;
-				DeserializeData(dataCopy, fromData, pointerPosition);
-				controller = dataCopy;
-			}
-
-			if (componentMask.Test(STATIC_U64(EComponentType::MaterialComponent)))
-			{
-				// TODO.NR/AG: Fix hard coded scene index
-				SAssetReferenceCounter counter = { EComponentType::MaterialComponent, static_cast<U16>(i), 0, 0 };
-				RenderManager->LoadMaterialComponent(assetRegistry->GetAssetPaths(counter), &AddMaterialComponentToEntity(*entity));
-			}
-
-			if (componentMask.Test(STATIC_U64(EComponentType::EnvironmentLightComponent)))
-			{
-				// TODO.NR/AG: Fix hard coded scene index
-				SAssetReferenceCounter counter = { EComponentType::EnvironmentLightComponent, static_cast<U16>(i), 0, 0 };
-				RenderManager->LoadEnvironmentLightComponent(assetRegistry->GetAssetPath(counter), &AddEnvironmentLightComponentToEntity(*entity));
-			}
-
-			if (componentMask.Test(STATIC_U64(EComponentType::DirectionalLightComponent)))
-			{
-				SDirectionalLightComponent& directionalLight = AddDirectionalLightComponentToEntity(*entity);
-				SDirectionalLightComponent dataCopy;
-				DeserializeData(dataCopy, fromData, pointerPosition);
-				directionalLight = dataCopy;
-			}
-
-			if (componentMask.Test(STATIC_U64(EComponentType::PointLightComponent)))
-			{
-				SPointLightComponent& pointLight = AddPointLightComponentToEntity(*entity);
-				SPointLightComponent dataCopy;
-				DeserializeData(dataCopy, fromData, pointerPosition);
-				pointLight = dataCopy;
-			}
-
-			if (componentMask.Test(STATIC_U64(EComponentType::SpotLightComponent)))
-			{
-				SSpotLightComponent& spotLight = AddSpotLightComponentToEntity(*entity);
-				SSpotLightComponent dataCopy;
-				DeserializeData(dataCopy, fromData, pointerPosition);
-				spotLight = dataCopy;
-			}
-
-			if (componentMask.Test(STATIC_U64(EComponentType::VolumetricLightComponent)))
-			{
-				SVolumetricLightComponent& volumetric = AddVolumetricLightComponentToEntity(*entity);
-				SVolumetricLightComponent dataCopy;
-				DeserializeData(dataCopy, fromData, pointerPosition);
-				volumetric = dataCopy;
-			}
-
-			if (componentMask.Test(STATIC_U64(EComponentType::DecalComponent)))
-			{
-				// TODO.NR/AG: Fix hard coded scene index
-				SAssetReferenceCounter counter = { EComponentType::DecalComponent, static_cast<U16>(i), 0, 0 };
-				RenderManager->LoadDecalComponent(assetRegistry->GetAssetPaths(counter), &AddDecalComponentToEntity(*entity));
-
-				DecalComponents[GetSceneIndex(*entity)].Deserialize(fromData, pointerPosition);
-			}
-
-			if (componentMask.Test(STATIC_U64(EComponentType::SpriteComponent)))
-			{
-				SSpriteComponent& spriteComponent = AddSpriteComponentToEntity(*entity);
-				SSpriteComponent dataCopy;
-				DeserializeData(dataCopy, fromData, pointerPosition);
-				spriteComponent = dataCopy;
-
-				SAssetReferenceCounter counter = { EComponentType::SpriteComponent, static_cast<U16>(i), 0, 0 };
-				RenderManager->LoadSpriteComponent(assetRegistry->GetAssetPath(counter), &spriteComponent);
-			}
-
-			if (componentMask.Test(STATIC_U64(EComponentType::Transform2DComponent)))
-			{
-				STransform2DComponent& transform = AddTransform2DComponentToEntity(*entity);
-				STransform2DComponent dataCopy;
-				DeserializeData(dataCopy, fromData, pointerPosition);
-				transform = dataCopy;
-			}
-
-			if (componentMask.Test(STATIC_U64(EComponentType::SpriteAnimatorGraphComponent)))
-			{
-				// TODO.AS: Implement Deserialize (since the component is not trivially serializable)
-			}
-
-			if (componentMask.Test(STATIC_U64(EComponentType::SequencerComponent)))
-			{
-				// TODO.NR: Implement Deserialize (since the component is not trivially serializable)
-			}
-
-			if (componentMask.Test(STATIC_U64(EComponentType::GhostyComponent)))
-			{
-				SGhostyComponent& ghostyComponent = AddGhostyComponentToEntity(*entity);
-				SGhostyComponent dataCopy;
-				DeserializeData(dataCopy, fromData, pointerPosition);
-				ghostyComponent = dataCopy;
-			}
-
-			if (componentMask.Test(STATIC_U64(EComponentType::MetaDataComponent)))
-			{
-				SMetaDataComponent& metaData = AddMetaDataComponentToEntity(*entity);
-				SMetaDataComponent dataCopy;
-				DeserializeData(dataCopy, fromData, pointerPosition);
-				metaData = dataCopy;
-			}
+			AddEntity(guid);
 		}
 
-		DeserializeData(SceneName, fromData, pointerPosition);
+		U64 numberOfTransformComponents = 0;
+		DeserializeData(numberOfTransformComponents, fromData, pointerPosition);
+		std::vector<STransformComponent> transformComponents;
+		DeserializeData(transformComponents, fromData, static_cast<U32>(numberOfTransformComponents), pointerPosition);
+		for (const auto& component : transformComponents)
+			AddComponent<STransformComponent>(component.Owner);
+
+		U64 numberOfStaticMeshComponents = 0;
+		DeserializeData(numberOfStaticMeshComponents, fromData, pointerPosition);
+		std::vector<SStaticMeshComponent> staticMeshComponents;
+		staticMeshComponents.resize(numberOfStaticMeshComponents);
+		for (auto& component : staticMeshComponents)
+		{
+			component.Deserialize(fromData, pointerPosition);
+			RenderManager->LoadStaticMeshComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SStaticMeshComponent>(component.Owner));
+		}
+
+		U64 numberOfCameraComponents = 0;
+		DeserializeData(numberOfCameraComponents, fromData, pointerPosition);
+		std::vector<SCameraComponent> cameraComponents;
+		DeserializeData(cameraComponents, fromData, static_cast<U32>(numberOfCameraComponents), pointerPosition);
+		for (const auto& component : cameraComponents)
+			AddComponent<SCameraComponent>(component.Owner);
+
+		U64 numberOfCameraControllerComponents = 0;
+		DeserializeData(numberOfCameraControllerComponents, fromData, pointerPosition);
+		std::vector<SCameraControllerComponent> cameraControllerComponents;
+		DeserializeData(cameraControllerComponents, fromData, static_cast<U32>(numberOfCameraControllerComponents), pointerPosition);
+		for (const auto& component : cameraControllerComponents)
+			AddComponent<SCameraControllerComponent>(component.Owner);
+
+		U64 numberOfMaterialComponents = 0;
+		DeserializeData(numberOfMaterialComponents, fromData, pointerPosition);
+		std::vector<SMaterialComponent> materialComponents;
+		materialComponents.resize(numberOfMaterialComponents);
+		for (auto& component : materialComponents)
+		{
+			component.Deserialize(fromData, pointerPosition);
+			RenderManager->LoadMaterialComponent(assetRegistry->GetAssetPaths(component.AssetRegistryKeys), AddComponent<SMaterialComponent>(component.Owner));
+		}
+
+		U64 numberOfEnvironmentLightComponents = 0;
+		DeserializeData(numberOfEnvironmentLightComponents, fromData, pointerPosition);
+		std::vector<SEnvironmentLightComponent> environmentLightComponent;
+		environmentLightComponent.resize(numberOfEnvironmentLightComponents);
+		for (auto& component : environmentLightComponent)
+		{
+			DeserializeData(component, fromData, pointerPosition);
+			RenderManager->LoadEnvironmentLightComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SEnvironmentLightComponent>(component.Owner));
+		}
+
+		U64 numberOfDirectionalLightComponents = 0;
+		DeserializeData(numberOfDirectionalLightComponents, fromData, pointerPosition);
+		std::vector<SDirectionalLightComponent> directionalLightComponent;
+		DeserializeData(directionalLightComponent, fromData, static_cast<U32>(numberOfDirectionalLightComponents), pointerPosition);
+		for (const auto& component : directionalLightComponent)
+			AddComponent<SDirectionalLightComponent>(component.Owner);
+
+		U64 numberOfPointLightComponents = 0;
+		DeserializeData(numberOfPointLightComponents, fromData, pointerPosition);
+		std::vector<SPointLightComponent> pointLightComponents;
+		DeserializeData(pointLightComponents, fromData, static_cast<U32>(numberOfPointLightComponents), pointerPosition);
+		for (const auto& component : pointLightComponents)
+			AddComponent<SPointLightComponent>(component.Owner);
+
+		U64 numberOfSpotLightComponents = 0;
+		DeserializeData(numberOfSpotLightComponents, fromData, pointerPosition);
+		std::vector<SSpotLightComponent> spotLightComponents;
+		DeserializeData(spotLightComponents, fromData, static_cast<U32>(numberOfSpotLightComponents), pointerPosition);
+		for (const auto& component : spotLightComponents)
+			AddComponent<SSpotLightComponent>(component.Owner);
+
+		U64 numberOfVolumetricLightComponents = 0;
+		DeserializeData(numberOfVolumetricLightComponents, fromData, pointerPosition);
+		std::vector<SVolumetricLightComponent> volumetricLightComponents;
+		DeserializeData(volumetricLightComponents, fromData, static_cast<U32>(numberOfVolumetricLightComponents), pointerPosition);
+		for (const auto& component : volumetricLightComponents)
+			AddComponent<SVolumetricLightComponent>(component.Owner);
+
+		U64 numberOfDecalComponents = 0;
+		DeserializeData(numberOfDecalComponents, fromData, pointerPosition);
+		std::vector<SDecalComponent> decalComponents;
+		decalComponents.resize(numberOfDecalComponents);
+		for (auto& component : decalComponents)
+		{
+			DeserializeData(component, fromData, pointerPosition);
+			RenderManager->LoadDecalComponent(assetRegistry->GetAssetPaths(component.AssetRegistryKeys), AddComponent<SDecalComponent>(component.Owner));
+		}
+
+		U64 numberOfSpriteComponents = 0;
+		DeserializeData(numberOfSpriteComponents, fromData, pointerPosition);
+		std::vector<SSpriteComponent> spriteComponents;
+		spriteComponents.resize(numberOfSpriteComponents);
+		for (auto& component : spriteComponents)
+		{
+			DeserializeData(component, fromData, pointerPosition);
+			RenderManager->LoadSpriteComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SSpriteComponent>(component.Owner));
+		}
+
+		U64 numberOfTransform2DComponents = 0;
+		DeserializeData(numberOfTransform2DComponents, fromData, pointerPosition);
+		std::vector<STransform2DComponent> transform2DComponents;
+		DeserializeData(transform2DComponents, fromData, static_cast<U32>(numberOfTransform2DComponents), pointerPosition);
+		for (const auto& component : transform2DComponents)
+			AddComponent<STransform2DComponent>(component.Owner);
+
+		U64 numberOfSpriteAnimatorGraphComponents = 0;
+		DeserializeData(numberOfSpriteAnimatorGraphComponents, fromData, pointerPosition);
+		//std::vector<SSpriteAnimatorGraphComponent> spriteAnimatorGraphComponents;
+		//DeserializeData(spriteAnimatorGraphComponents, fromData, static_cast<U32>(numberOfSpriteAnimatorGraphComponents), pointerPosition);
+		//for (const auto& component : spriteAnimatorGraphComponents)
+		//	AddComponent<SSpriteAnimatorGraphComponent>(component.Owner);
+
+		U64 numberOfSequencerComponents = 0;
+		DeserializeData(numberOfSequencerComponents, fromData, pointerPosition);
+		//std::vector<SSequencerComponent> sequencerComponents;
+		//DeserializeData(sequencerComponents, fromData, static_cast<U32>(numberOfSequencerComponents), pointerPosition);
+		//for (const auto& component : sequencerComponents)
+		//	AddComponent<SSequencerComponent>(component.Owner);
+
+		U64 numberOfMetaDataComponents = 0;
+		DeserializeData(numberOfMetaDataComponents, fromData, pointerPosition);
+		std::vector<SMetaDataComponent> metaDataComponents;
+		DeserializeData(metaDataComponents, fromData, static_cast<U32>(numberOfMetaDataComponents), pointerPosition);
+		for (const auto& component : metaDataComponents)
+			AddComponent<SMetaDataComponent>(component.Owner, component.Name.AsString());
 	}
 
 	std::string CScene::GetSceneName() const
@@ -956,284 +827,138 @@ namespace Havtorn
 		return SceneName.AsString();
 	}
 
-	std::vector<SEntity>& CScene::GetEntities()
+	const SEntity& CScene::AddEntity(U64 guid)
 	{
-		return Entities;
-	}
-
-	SEntity* CScene::GetNewEntity(U64 guid)
-	{
-		// TODO: Figure out Tombstone solution
-
-		if (FirstUnusedEntityIndex >= ENTITY_LIMIT)
+		if (EntityIndices.contains(guid))
 		{
-			HV_ASSERT(false, "Reached ENTITY_LIMIT.");
-			return nullptr;
+			HV_LOG_WARN("__FUNC__: Tried to add entity with GUID: %i that already exists. Returning existing Entity.", guid);
+			return Entities[EntityIndices.at(guid)];
 		}
 
-		SEntity* outEntity = &Entities[FirstUnusedEntityIndex];
-		outEntity->GUID = guid != 0 ? guid : UGUIDManager::Generate();
+		SEntity newEntity = { guid };
+		if (!newEntity.IsValid())
+			newEntity.GUID = UGUIDManager::Generate();
 
-		EntityVectorIndices.emplace(outEntity->GUID, FirstUnusedEntityIndex);
-		FirstUnusedEntityIndex++;
+		EntityIndices.emplace(newEntity.GUID, Entities.size());
+		Entities.push_back(newEntity);
 
-		return outEntity;
+		return Entities.back();
 	}
 
-	SEntity* CScene::GetNewEntity(const std::string& nameInEditor, U64 guid)
+	const SEntity& CScene::AddEntity(const std::string& nameInEditor, U64 guid)
 	{
-		SEntity* outEntity = GetNewEntity(guid);
-		SMetaDataComponent& metaDataComp = AddMetaDataComponentToEntity(*outEntity);
-		metaDataComp.Name = nameInEditor;
+		const SEntity& outEntity = AddEntity(guid);
+		AddComponent<SMetaDataComponent>(outEntity, nameInEditor);
 
 		return outEntity;
 	}
 
-	bool CScene::TryRemoveEntity(SEntity& entity)
+	void CScene::RemoveEntity(SEntity& entity)
 	{
 		if (!entity.IsValid())
 		{
-			HV_LOG_ERROR("Tried to remove invalid Entity.");
-			return false;
+			HV_LOG_ERROR("__FUNCTION__: Tried to remove an invalid Entity.");
+			return;
 		}
 
-		if (FirstUnusedEntityIndex <= 0)
+		if (!EntityIndices.contains(entity.GUID))
 		{
-			HV_LOG_ERROR("Tried to remove an entity from an empty scene.");
-			return false;
+			HV_LOG_ERROR("__FUNCTION__: Tried to remove entity with GUID: %i from a scene that does not contain it.", entity.GUID);
+			return;
 		}
 
-		if (!EntityVectorIndices.contains(entity.GUID))
+		for (SComponentStorage& storage : Storages)
 		{
-			HV_LOG_ERROR("Tried to remove an entity from a scene other than its own.");
-			return false;
+			if (storage.EntityIndices.contains(entity.GUID))
+			{
+				auto& endValue = *(--storage.EntityIndices.end());
+				storage.EntityIndices.at(endValue.first) = storage.EntityIndices.at(entity.GUID);
+
+				std::swap(storage.Components[storage.EntityIndices.at(entity.GUID)], storage.Components.back());
+
+				SComponent*& componentToBeRemoved = storage.Components.back();
+				delete componentToBeRemoved;
+				componentToBeRemoved = nullptr;
+
+				storage.Components.pop_back();
+				storage.EntityIndices.erase(entity.GUID);
+			}
 		}
 
-		U64 entityIndex = EntityVectorIndices[entity.GUID];
+		auto& endValue = *(--EntityIndices.end());
+		EntityIndices.at(endValue.first) = EntityIndices.at(entity.GUID);
 
-		if (entityIndex != (FirstUnusedEntityIndex - 1))
-		{
-			std::swap(entity, Entities[FirstUnusedEntityIndex - 1]);
-		}
+		std::swap(Entities[EntityIndices.at(entity.GUID)], Entities.back());
 
-		UpdateComponentVector(TransformComponents, entityIndex);
-		UpdateComponentVector(StaticMeshComponents, entityIndex);
-		UpdateComponentVector(CameraComponents, entityIndex);
-		UpdateComponentVector(CameraControllerComponents, entityIndex);
-		UpdateComponentVector(MaterialComponents, entityIndex);
-		UpdateComponentVector(EnvironmentLightComponents, entityIndex);
-		UpdateComponentVector(DirectionalLightComponents, entityIndex);
-		UpdateComponentVector(PointLightComponents, entityIndex);
-		UpdateComponentVector(SpotLightComponents, entityIndex);
-		UpdateComponentVector(VolumetricLightComponents, entityIndex);
-		UpdateComponentVector(DecalComponents, entityIndex);
-		UpdateComponentVector(SpriteComponents, entityIndex);
-		UpdateComponentVector(Transform2DComponents, entityIndex);
-		UpdateComponentVector(SpriteAnimatorGraphComponents, entityIndex);
-		UpdateComponentVector(SequencerComponents, entityIndex);
-		UpdateComponentVector(GhostyComponents, entityIndex);
-		UpdateComponentVector(DebugShapeComponents, entityIndex);
-		UpdateComponentVector(MetaDataComponents, entityIndex);
+		Entities.pop_back();
+		EntityIndices.erase(entity.GUID);
+	}
 
-		Entities[FirstUnusedEntityIndex - 1].GUID = 0;
-		FirstUnusedEntityIndex--;
+	void CScene::AddView(const SEntity& owner, SViewFunctionPointer function)
+	{
+		if (!ComponentViews.contains(owner.GUID))
+			ComponentViews.emplace(owner.GUID, std::vector<SViewFunctionPointer>());
+		 
+		auto& functionPointers = ComponentViews.at(owner.GUID);
+		// TODO.NR: Support adding and removing components through the editor. Unsolved problem.
+		//if (std::find(functionPointers.begin(), functionPointers.end(), function) == functionPointers.end())
+			functionPointers.push_back(function);
+	}
 
-		return true;
+	void CScene::RemoveView(const SEntity& owner, SViewFunctionPointer function)
+	{
+		if (!ComponentViews.contains(owner.GUID))
+			return;
+
+		// TODO.NR: Support adding and removing components through the editor. Unsolved problem.
+		//auto& functionPointers = ComponentViews.at(owner.GUID);
+		//auto it = std::find(functionPointers.begin(), functionPointers.end(), function);
+		//if (it != functionPointers.end())
+		//	functionPointers.erase(it);
+	}
+
+	void CScene::RemoveViews(const SEntity& owner)
+	{
+		// TODO.NR: Support adding and removing components through the editor. Unsolved problem.
+		//if (!ComponentViews.contains(owner.GUID))
+		//	return;
+
+		//for (auto& [typeHashID, componentView] : ComponentViews.at(owner.GUID))
+		//{
+		//	delete componentView;
+		//	componentView = nullptr;
+		//}
+
+		//ComponentViews.erase(owner.GUID);
+
+		if (!ComponentViews.contains(owner.GUID))
+			return;
+
+		ComponentViews.at(owner.GUID).clear();
+		ComponentViews.erase(owner.GUID);
+	}
+
+	std::vector<CScene::SViewFunctionPointer> CScene::GetViews(const SEntity& owner)
+	{
+		if (!ComponentViews.contains(owner.GUID))
+			return {};
+
+		return ComponentViews.at(owner.GUID);
 	}
 
 	U64 CScene::GetSceneIndex(const SEntity& entity) const
 	{
-		if (!EntityVectorIndices.contains(entity.GUID))
-		{
-			HV_LOG_ERROR("%s could not resolve entity %u's GUID to a scene index! Returning 0.", __FUNCTION__, entity.GUID);
-			return 0;
-		}
-
-		return EntityVectorIndices.at(entity.GUID);
+		return GetSceneIndex(entity.GUID);
 	}
 
 	U64 CScene::GetSceneIndex(const U64 entityGUID) const
 	{
-		if (!EntityVectorIndices.contains(entityGUID))
+		if (!EntityIndices.contains(entityGUID))
 		{
 			HV_LOG_ERROR("%s could not resolve entity %u's GUID to a scene index! Returning 0.", __FUNCTION__, entityGUID);
 			return 0;
 		}
 
-		return EntityVectorIndices.at(entityGUID);
+		return EntityIndices.at(entityGUID);
 	}
-
-	U64 CScene::GetMainCameraIndex() const
-	{
-		return MainCameraIndex;
-	}
-
-	U64 CScene::GetNumberOfValidEntities() const
-	{
-		return FirstUnusedEntityIndex;
-	}
-
-	void CScene::AddComponentToEntity(EComponentType componentType, SEntity& entity)
-	{
-		switch (componentType)
-		{
-		case Havtorn::EComponentType::TransformComponent:
-			AddTransformComponentToEntity(entity);
-			break;
-		case Havtorn::EComponentType::StaticMeshComponent:
-			AddStaticMeshComponentToEntity(entity);
-			break;
-		case Havtorn::EComponentType::CameraComponent:
-			AddCameraComponentToEntity(entity);
-			break;
-		case Havtorn::EComponentType::CameraControllerComponent:
-			AddCameraControllerComponentToEntity(entity);
-			break;
-		case Havtorn::EComponentType::MaterialComponent:
-			AddMaterialComponentToEntity(entity);
-			break;
-		case Havtorn::EComponentType::EnvironmentLightComponent:
-			AddEnvironmentLightComponentToEntity(entity);
-			break;
-		case Havtorn::EComponentType::DirectionalLightComponent:
-			AddDirectionalLightComponentToEntity(entity);
-			break;
-		case Havtorn::EComponentType::PointLightComponent:
-			AddPointLightComponentToEntity(entity);
-			break;
-		case Havtorn::EComponentType::SpotLightComponent:
-			AddSpotLightComponentToEntity(entity);
-			break;
-		case Havtorn::EComponentType::VolumetricLightComponent:
-			AddVolumetricLightComponentToEntity(entity);
-			break;
-		case Havtorn::EComponentType::DecalComponent:
-			AddDecalComponentToEntity(entity);
-			break;
-		case Havtorn::EComponentType::SpriteComponent:
-			AddSpriteComponentToEntity(entity);
-			break;
-		case Havtorn::EComponentType::Transform2DComponent:
-			AddTransform2DComponentToEntity(entity);
-			break;
-		case Havtorn::EComponentType::SpriteAnimatorGraphComponent:
-			AddSpriteAnimatorGraphComponentToEntity(entity);
-			break;
-		case Havtorn::EComponentType::SequencerComponent:
-			AddSequencerComponentToEntity(entity);
-			break;
-		case Havtorn::EComponentType::GhostyComponent:
-			AddGhostyComponentToEntity(entity);
-			break;
-
-		case Havtorn::EComponentType::DebugShapeComponent:
-		case Havtorn::EComponentType::MetaDataComponent:
-		case Havtorn::EComponentType::Count:
-			break;
-		default:
-			HV_LOG_ERROR("%s: Unhandled case for EComponentType %s.", __FUNCTION__, GetComponentTypeString(componentType).c_str());
-			break;
-		}
-	}
-
-	void CScene::RemoveComponentFromEntity(EComponentType componentType, SEntity& entity)
-	{
-		switch (componentType)
-		{
-		case Havtorn::EComponentType::TransformComponent:
-			RemoveTransformComponentFromEntity(entity);
-			break;
-		case Havtorn::EComponentType::StaticMeshComponent:
-			RemoveStaticMeshComponentFromEntity(entity);
-			break;
-		case Havtorn::EComponentType::CameraComponent:
-			RemoveCameraComponentFromEntity(entity);
-			break;
-		case Havtorn::EComponentType::CameraControllerComponent:
-			RemoveCameraControllerComponentFromEntity(entity);
-			break;
-		case Havtorn::EComponentType::MaterialComponent:
-			RemoveMaterialComponentFromEntity(entity);
-			break;
-		case Havtorn::EComponentType::EnvironmentLightComponent:
-			RemoveEnvironmentLightComponentFromEntity(entity);
-			break;
-		case Havtorn::EComponentType::DirectionalLightComponent:
-			RemoveDirectionalLightComponentFromEntity(entity);
-			break;
-		case Havtorn::EComponentType::PointLightComponent:
-			RemovePointLightComponentFromEntity(entity);
-			break;
-		case Havtorn::EComponentType::SpotLightComponent:
-			RemoveSpotLightComponentFromEntity(entity);
-			break;
-		case Havtorn::EComponentType::VolumetricLightComponent:
-			RemoveVolumetricLightComponentFromEntity(entity);
-			break;
-		case Havtorn::EComponentType::DecalComponent:
-			RemoveDecalComponentFromEntity(entity);
-			break;
-		case Havtorn::EComponentType::SpriteComponent:
-			RemoveSpriteComponentFromEntity(entity);
-			break;
-		case Havtorn::EComponentType::Transform2DComponent:
-			RemoveTransform2DComponentFromEntity(entity);
-			break;
-		case Havtorn::EComponentType::SpriteAnimatorGraphComponent:
-			RemoveSpriteAnimatorGraphComponentFromEntity(entity);
-			break;
-		case Havtorn::EComponentType::SequencerComponent:
-			RemoveSequencerComponentFromEntity(entity);
-			break;
-		case Havtorn::EComponentType::GhostyComponent:
-			RemoveGhostyComponentFromEntity(entity);
-			break;
-
-		case Havtorn::EComponentType::DebugShapeComponent:
-		case Havtorn::EComponentType::MetaDataComponent:
-		case Havtorn::EComponentType::Count:
-			break;
-		default:
-			HV_LOG_ERROR("%s: Unhandled case for EComponentType %s.", __FUNCTION__, GetComponentTypeString(componentType).c_str());
-			break;
-		}
-	}
-
-	COMPONENT_ADDER_DEFINITION(TransformComponent)
-	COMPONENT_ADDER_DEFINITION(StaticMeshComponent)
-	COMPONENT_ADDER_DEFINITION(CameraComponent)
-	COMPONENT_ADDER_DEFINITION(CameraControllerComponent)
-	COMPONENT_ADDER_DEFINITION(MaterialComponent)
-	COMPONENT_ADDER_DEFINITION(EnvironmentLightComponent)
-	COMPONENT_ADDER_DEFINITION(DirectionalLightComponent)
-	COMPONENT_ADDER_DEFINITION(PointLightComponent)
-	COMPONENT_ADDER_DEFINITION(SpotLightComponent)
-	COMPONENT_ADDER_DEFINITION(VolumetricLightComponent)
-	COMPONENT_ADDER_DEFINITION(DecalComponent)
-	COMPONENT_ADDER_DEFINITION(SpriteComponent)
-	COMPONENT_ADDER_DEFINITION(Transform2DComponent)
-	COMPONENT_ADDER_DEFINITION(SpriteAnimatorGraphComponent)
-	COMPONENT_ADDER_DEFINITION(SequencerComponent)
-	COMPONENT_ADDER_DEFINITION(GhostyComponent);
-	COMPONENT_ADDER_DEFINITION(DebugShapeComponent)
-	COMPONENT_ADDER_DEFINITION(MetaDataComponent)
-
-	COMPONENT_REMOVER_DEFINITION(TransformComponent)
-	COMPONENT_REMOVER_DEFINITION(StaticMeshComponent)
-	COMPONENT_REMOVER_DEFINITION(CameraComponent)
-	COMPONENT_REMOVER_DEFINITION(CameraControllerComponent)
-	COMPONENT_REMOVER_DEFINITION(MaterialComponent)
-	COMPONENT_REMOVER_DEFINITION(EnvironmentLightComponent)
-	COMPONENT_REMOVER_DEFINITION(DirectionalLightComponent)
-	COMPONENT_REMOVER_DEFINITION(PointLightComponent)
-	COMPONENT_REMOVER_DEFINITION(SpotLightComponent)
-	COMPONENT_REMOVER_DEFINITION(VolumetricLightComponent)
-	COMPONENT_REMOVER_DEFINITION(DecalComponent)
-	COMPONENT_REMOVER_DEFINITION(SpriteComponent)
-	COMPONENT_REMOVER_DEFINITION(Transform2DComponent)
-	COMPONENT_REMOVER_DEFINITION(SpriteAnimatorGraphComponent)
-	COMPONENT_REMOVER_DEFINITION(SequencerComponent)
-	COMPONENT_REMOVER_DEFINITION(GhostyComponent)
-	COMPONENT_REMOVER_DEFINITION(DebugShapeComponent)
-	COMPONENT_REMOVER_DEFINITION(MetaDataComponent)
 }

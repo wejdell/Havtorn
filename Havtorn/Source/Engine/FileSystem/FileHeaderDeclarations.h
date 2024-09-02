@@ -220,7 +220,7 @@ namespace Havtorn
 	{
 		SerializeData(AssetType, toData, pointerPosition);
 		SerializeData(sceneIndex, toData, pointerPosition);
-		assetRegistry->Serialize(sceneIndex, toData, pointerPosition);
+		assetRegistry->Serialize(toData, pointerPosition);
 
 		Scene->Serialize(toData, pointerPosition);
 	}
@@ -231,7 +231,7 @@ namespace Havtorn
 		
 		I64 sceneIndex = 0;
 		DeserializeData(sceneIndex, fromData, pointerPosition);
-		assetRegistry->Deserialize(sceneIndex, fromData, pointerPosition);
+		assetRegistry->Deserialize(fromData, pointerPosition);
 
 		outScene->Deserialize(fromData, pointerPosition, assetRegistry);
 	}

@@ -1,0 +1,13 @@
+// Copyright 2024 Team Havtorn. All Rights Reserved.
+
+#pragma once
+#include <ECS/ComponentView.h>
+#include <Scene/Scene.h>
+
+namespace Havtorn
+{
+	struct SGhostyComponentView
+	{
+		static SComponentViewResult View(const SEntity& entityOwner, CScene* scene);
+	};
+}

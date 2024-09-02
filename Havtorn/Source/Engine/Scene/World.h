@@ -2,13 +2,14 @@
 
 #pragma once
 
-#include "ECS\Entity.h"
+#include "ECS/Entity.h"
+#include "Scene.h"
+#include "Core/EngineException.h"
 
 namespace Havtorn
 {
 	struct SEntity;
 	class ISystem;
-	class CScene;
 	class CRenderManager;
 	class CAssetRegistry;
 	class CSequencerSystem;
@@ -24,8 +25,12 @@ namespace Havtorn
 		HAVTORN_API void AddScene(const std::string& filePath);
 		HAVTORN_API void RemoveScene(U64 sceneIndex);
 		HAVTORN_API void ChangeScene(const std::string& filePath);
-		HAVTORN_API void OpenDemoScene(const bool shouldOpen3DDemo = true);
 		HAVTORN_API CAssetRegistry* GetAssetRegistry() const;
+		
+		template<typename T>
+		void OpenDemoScene(const bool shouldOpen3DDemo = true);
+
+		HAVTORN_API void RegisterSystem(Ptr<ISystem> system);
 
 		template<class TSystem>
 		inline TSystem* GetSystem();
@@ -84,6 +89,22 @@ namespace Havtorn
 		Ptr<CAssetRegistry> AssetRegistry = nullptr;
 		CRenderManager* RenderManager = nullptr;
 	};
+
+	template<typename T>
+	inline void CWorld::OpenDemoScene(const bool shouldOpen3DDemo)
+	{
+		Scenes.clear();
+		Scenes.emplace_back(std::make_unique<T>());
+
+		if (shouldOpen3DDemo)
+		{
+			ENGINE_BOOL_POPUP(Scenes.back()->Init3DDemoScene(RenderManager), "Demo Scene could not be initialized.");
+		}
+		else
+		{
+			ENGINE_BOOL_POPUP(Scenes.back()->Init2DDemoScene(RenderManager), "Demo Scene could not be initialized.");
+		}
+	}
 
 	template<class TSystem>
 	inline TSystem* CWorld::GetSystem()

@@ -7,8 +7,9 @@ namespace Havtorn
 {
 	struct STransformComponent : public SComponent
 	{
-		STransformComponent()
-			: SComponent(EComponentType::TransformComponent)
+		STransformComponent() = default;
+		STransformComponent(const SEntity& entityOwner)
+			: SComponent(entityOwner)
 		{}
 
 		STransform Transform;

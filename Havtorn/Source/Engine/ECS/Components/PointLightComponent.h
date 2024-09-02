@@ -8,8 +8,9 @@ namespace Havtorn
 {
 	struct SPointLightComponent : public SComponent
 	{
-		SPointLightComponent()
-			: SComponent(EComponentType::PointLightComponent)
+		SPointLightComponent() = default;
+		SPointLightComponent(const SEntity& entityOwner)
+			: SComponent(entityOwner)
 		{}
 
 		std::array<SShadowmapViewData, 6> ShadowmapViews = {};

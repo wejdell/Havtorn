@@ -8,12 +8,14 @@ namespace Havtorn
 {
 	struct SSpriteComponent : public SComponent
 	{
-		SSpriteComponent()
-			: SComponent(EComponentType::SpriteComponent)
+		SSpriteComponent() = default;
+		SSpriteComponent(const SEntity& entityOwner)
+			: SComponent(entityOwner)
 		{}
 
 		SColor Color = SColor::White;
 		SVector4 UVRect = SVector4::Zero;
-		U32 TextureIndex = 0;
+		U64 AssetRegistryKey = 0;
+		U16 TextureIndex = 0;
 	};
 }

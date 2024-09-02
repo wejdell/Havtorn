@@ -2,173 +2,109 @@
 
 #include "AssetRegistry.h"
 #include "FileSystem/FileHeaderDeclarations.h"
+#include "ECS/GUIDManager.h"
 
 namespace Havtorn
 {
-    void CAssetRegistry::Register(const std::string& assetPath, SAssetReferenceCounter&& counter)
+    U64 CAssetRegistry::Register(const std::string& assetPath)
     {
         if (!Registry.contains(assetPath))
-            Registry.emplace(assetPath, std::vector<SAssetReferenceCounter>());
+            Registry.emplace(assetPath, SReferenceCounter(UGUIDManager::Generate()));
 
-        std::vector<SAssetReferenceCounter>& counters = Registry[assetPath];
+        SReferenceCounter& counter = Registry[assetPath];
+        counter.NumberOfReferences++;
         
-        if (std::find(counters.begin(), counters.end(), counter) == counters.end())
-            counters.emplace_back(std::move(counter));
+        return counter.GUID;
     }
 
-    void CAssetRegistry::Register(const std::vector<std::string>& assetPaths, const SAssetReferenceCounter& counter)
+    std::vector<U64> CAssetRegistry::Register(const std::vector<std::string>& assetPaths)
     {
-        for (U8 i = 0; i < static_cast<U8>(assetPaths.size()); i++)
-        {
-            const std::string& assetPath = assetPaths[i];
-            SAssetReferenceCounter newCounter = counter;
-            newCounter.ComponentSubIndex = i;
-            Register(assetPath, std::move(newCounter));
-        }
+        std::vector<U64> guids;
+        for (const std::string& assetPath : assetPaths)
+            guids.push_back(Register(assetPath));
+
+        return guids;
     }
 
-    void CAssetRegistry::Unregister(const std::string& assetPath, const SAssetReferenceCounter& counter)
+    void CAssetRegistry::Unregister(const std::string& assetPath)
     {
         if (!Registry.contains(assetPath))
             return;
 
-        std::vector<SAssetReferenceCounter>& counters = Registry[assetPath];
-        auto it = std::find(counters.begin(), counters.end(), counter);
+        SReferenceCounter& counter = Registry[assetPath];
+        if (counter.NumberOfReferences > 0)
+            counter.NumberOfReferences--;
 
-        if (it != counters.end())
-            counters.erase(it);
-
-        if (counters.empty())
+        if (counter.NumberOfReferences == 0)
             Registry.erase(assetPath);
     }
 
-    const std::string& CAssetRegistry::GetAssetPath(const SAssetReferenceCounter& counter)
+    const std::string& CAssetRegistry::GetAssetPath(const U64& guid)
     {
-        for (const auto& assetRef : Registry)
+        for (const auto& [assetPath, referenceCounter] : Registry)
         {
-            const std::vector<SAssetReferenceCounter>& counters = assetRef.second;
-            if (std::find(counters.begin(), counters.end(), counter) != counters.end())
-                return assetRef.first;
+            if (referenceCounter.GUID == guid)
+                return assetPath;
         }
 
         return InvalidPath;
     }
 
-    std::vector<std::string> CAssetRegistry::GetAssetPaths(const SAssetReferenceCounter& counter)
+    std::vector<std::string> CAssetRegistry::GetAssetPaths(const std::vector<U64>& guids)
     {
         std::vector<std::string> assetPaths;
-        
-        struct SUniqueRegistryEntry
-        {
-            std::string AssetPath;
-            SAssetReferenceCounter Counter;
-        };
-
-        std::vector<SUniqueRegistryEntry> tempEntries;
-
-        for (const auto& assetRef : Registry)
-        {
-            const std::vector<SAssetReferenceCounter>& counters = assetRef.second;
-            for (const SAssetReferenceCounter& innerCounter : counters)
-            {
-                if (innerCounter.HasSameComponent(counter))
-                    //assetPaths.emplace_back(assetRef.first);
-                    tempEntries.emplace_back(SUniqueRegistryEntry(assetRef.first, assetRef.second[0]));
-            }
-        }
-
-        std::sort(tempEntries.begin(), tempEntries.end(), [] (const SUniqueRegistryEntry& a, const SUniqueRegistryEntry& b) { return a.Counter.ComponentSubIndex < b.Counter.ComponentSubIndex; });
-
-        for (const SUniqueRegistryEntry& entry : tempEntries)
-        {
-            assetPaths.emplace_back(entry.AssetPath);
-        }
+        for (U64 guid : guids)
+            assetPaths.push_back(GetAssetPath(guid));
 
         return assetPaths;
     }
 
-    U32 CAssetRegistry::GetSize(I64 sceneIndex) const
+    U32 CAssetRegistry::GetSize() const
     {
         U32 size = 0;
         size += sizeof(U32);
 
-        for (const auto& assetRef : Registry)
+        for (const auto& [assetPath, referenceCounter] : Registry)
         {
-            const std::vector<SAssetReferenceCounter>& counters = assetRef.second;
-            for (const SAssetReferenceCounter& counter : counters)
-            {
-                if (counter.SceneIndex == sceneIndex)
-                {
-                    size += sizeof(U32);
-                    size += sizeof(char) * static_cast<U32>(assetRef.first.length());
+            size += sizeof(U32);
+            size += sizeof(char) * static_cast<U32>(assetPath.length());
 
-                    size += sizeof(SAssetReferenceCounter) * static_cast<U32>(counters.size());
-                }
-            }
+            size += sizeof(referenceCounter);
         }
 
         return size;
     }
 
-    void CAssetRegistry::Serialize(I64 sceneIndex, char* toData, U64& pointerPosition) const
-    {        
-        // NR: Pre-pass to know how many entries are expected from the file
-        U32 entriesForScene = 0;
-        for (const auto& assetRef : Registry)
+    void CAssetRegistry::Serialize(char* toData, U64& pointerPosition) const
+    {   
+        SerializeData(static_cast<U32>(Registry.size()), toData, pointerPosition);
+
+        for (const auto& [assetPath, referenceCounter] : Registry)
         {
-            const std::vector<SAssetReferenceCounter>& counters = assetRef.second;
-            for (const SAssetReferenceCounter& counter : counters)
-            {
-                if (counter.SceneIndex == sceneIndex)
-                    entriesForScene++;
-            }
-        }
+            SerializeData(static_cast<U32>(assetPath.size()), toData, pointerPosition);
+            SerializeData(assetPath, toData, pointerPosition);
 
-        SerializeData(entriesForScene, toData, pointerPosition);
-
-        for (const auto& assetRef : Registry)
-        {
-            const std::vector<SAssetReferenceCounter>& counters = assetRef.second;
-            for (const SAssetReferenceCounter& counter : counters)
-            {
-                if (counter.SceneIndex == sceneIndex)
-                {
-                    SerializeData(static_cast<U32>(assetRef.first.length()), toData, pointerPosition);
-                    SerializeData(assetRef.first, toData, pointerPosition);
-
-                    SerializeData(counter, toData, pointerPosition);
-                }
-            }
+            SerializeData(referenceCounter, toData, pointerPosition);
         }
     }
 
-    void CAssetRegistry::Deserialize(I64 sceneIndex, const char* fromData, U64& pointerPosition)
+    void CAssetRegistry::Deserialize(const char* fromData, U64& pointerPosition)
     {
-        U32 entriesForScene = 0;
-        DeserializeData(entriesForScene, fromData, pointerPosition);
+        Registry.clear();
 
-        for (U32 i = 0; i < entriesForScene; i++)
+        U32 numberOfEntries = 0;
+        DeserializeData(numberOfEntries, fromData, pointerPosition);
+
+        for (U32 i = 0; i < numberOfEntries; i++)
         {
-            U32 assetRefNameLength = 0;
-            DeserializeData(assetRefNameLength, fromData, pointerPosition);
-            std::string assetRefName = "";
-            DeserializeData(assetRefName, fromData, assetRefNameLength, pointerPosition);
+            U32 assetPathSize = 0;
+            DeserializeData(assetPathSize, fromData, pointerPosition);
+            std::string assetPath = "";
+            DeserializeData(assetPath, fromData, assetPathSize, pointerPosition);
+            SReferenceCounter referenceCounter{0};
+            DeserializeData(referenceCounter, fromData, pointerPosition);
 
-            SAssetReferenceCounter newCounter = {};
-            DeserializeData(newCounter, fromData, pointerPosition);
-
-            newCounter.SceneIndex = static_cast<U8>(sceneIndex);
-            Register(std::move(assetRefName), std::move(newCounter));
+            Registry.emplace(assetPath, referenceCounter);
         }
-    }
-
-    bool SAssetReferenceCounter::HasSameComponent(const SAssetReferenceCounter& other) const
-    {
-        return (ComponentIndex == other.ComponentIndex) && (ComponentType == other.ComponentType) && (SceneIndex == other.SceneIndex);
-    }
-
-    bool SAssetReferenceCounter::operator==(const SAssetReferenceCounter& other) const
-    {
-        return (ComponentIndex == other.ComponentIndex) && (ComponentSubIndex == other.ComponentSubIndex) && (ComponentType == other.ComponentType) && (SceneIndex == other.SceneIndex);
     }
 }

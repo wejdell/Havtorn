@@ -69,9 +69,9 @@ namespace Havtorn
 
 		HAVTORN_API SVector2<F32> GetShadowAtlasResolution() const;
 		
-		void LoadDecalComponent(const std::vector<std::string>& texturePaths, SDecalComponent* outDecalComponent);
-		void LoadEnvironmentLightComponent(const std::string& ambientCubemapTexturePath, SEnvironmentLightComponent* outEnvironmentLightComponent);
-		void LoadSpriteComponent(const std::string& filePath, SSpriteComponent* outSpriteComponent);
+		HAVTORN_API void LoadDecalComponent(const std::vector<std::string>& texturePaths, SDecalComponent* outDecalComponent);
+		HAVTORN_API void LoadEnvironmentLightComponent(const std::string& ambientCubemapTexturePath, SEnvironmentLightComponent* outEnvironmentLightComponent);
+		HAVTORN_API void LoadSpriteComponent(const std::string& filePath, SSpriteComponent* outSpriteComponent);
 
 		HAVTORN_API void* RenderStaticMeshAssetTexture(const std::string& filePath);
 		HAVTORN_API void* GetTextureAssetTexture(const std::string& filePath);

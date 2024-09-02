@@ -7,8 +7,9 @@ namespace Havtorn
 {
 	struct SVolumetricLightComponent: public SComponent
 	{
-		SVolumetricLightComponent()
-			: SComponent(EComponentType::VolumetricLightComponent)
+		SVolumetricLightComponent() = default;
+		SVolumetricLightComponent(const SEntity& entityOwner)
+			: SComponent(entityOwner)
 		{}
 
 		bool IsActive = false;

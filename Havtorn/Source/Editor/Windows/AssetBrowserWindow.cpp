@@ -8,7 +8,7 @@
 #include "FileSystem/FileSystem.h"
 #include "Graphics/RenderManager.h"
 
-#include <imgui.h>
+#include <Core/imgui.h>
 
 namespace ImGui
 {

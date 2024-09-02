@@ -9,8 +9,9 @@ namespace Havtorn
 {
 	struct SStaticMeshComponent : public SComponent
 	{
-		SStaticMeshComponent()
-			: SComponent(EComponentType::StaticMeshComponent)
+		SStaticMeshComponent() = default;
+		SStaticMeshComponent(const SEntity& entityOwner)
+			: SComponent(entityOwner)
 		{}
 
 		void Serialize(char* toData, U64& pointerPosition) const;
@@ -32,5 +33,7 @@ namespace Havtorn
 		U8 PixelShaderIndex = 0;
 		U8 SamplerIndex = 0;
 		U8 TopologyIndex = 0;
+
+		U64 AssetRegistryKey = 0;
 	};
 }

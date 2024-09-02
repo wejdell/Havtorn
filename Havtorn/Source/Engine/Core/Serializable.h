@@ -20,6 +20,7 @@ namespace Havtorn
 		pointerPosition += size;
 	}
 
+	// TODO.NR: Maybe bake in vector size in serialize and deserialize functions? Less boilerplate
 	template<typename T>
 	inline void SerializeData(const std::vector<T>& source, char* destination, U64& pointerPosition)
 	{

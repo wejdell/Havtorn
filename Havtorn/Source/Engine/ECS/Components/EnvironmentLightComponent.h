@@ -7,10 +7,12 @@ namespace Havtorn
 {
 	struct SEnvironmentLightComponent : public SComponent
 	{
-		SEnvironmentLightComponent()
-			: SComponent(EComponentType::EnvironmentLightComponent)
+		SEnvironmentLightComponent() = default;
+		SEnvironmentLightComponent(const SEntity& entityOwner)
+			: SComponent(entityOwner)
 		{}
 
 		U16 AmbientCubemapReference = 0;
+		U64 AssetRegistryKey = 0;
 	};
 }

@@ -4,9 +4,9 @@
 
 #include <complex>
 #include <random>
+
 #include "Core/CoreTypes.h"
 #include "Core/Core.h"
-//#include <FastNoise/FastNoise.h>
 
 namespace
 {
@@ -29,6 +29,9 @@ namespace Havtorn
 
 		static const F32 PiReciprocal;
 		static const F32 TauReciprocal;
+
+		static const F32 MaxFloat;
+		static const F32 MinFloat;
 
 		template<typename T>
 		static inline T Sqrt(T x);

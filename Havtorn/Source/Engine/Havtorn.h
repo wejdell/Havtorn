@@ -11,3 +11,4 @@
 #include "Engine.h"
 #include "Scene/World.h"
 #include "Core/MathTypes/EngineMath.h"
+#include "Core/HavtornString.h"

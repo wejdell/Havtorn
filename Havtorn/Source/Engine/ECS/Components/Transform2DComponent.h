@@ -7,8 +7,9 @@ namespace Havtorn
 {
 	struct STransform2DComponent : public SComponent
 	{
-		STransform2DComponent()
-			: SComponent(EComponentType::Transform2DComponent)
+		STransform2DComponent() = default;
+		STransform2DComponent(const SEntity& entityOwner)
+			: SComponent(entityOwner)
 		{}
 
 		SVector2<F32> Position = SVector2<F32>::Zero;

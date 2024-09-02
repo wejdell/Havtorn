@@ -14,8 +14,9 @@ namespace Havtorn
 
 	struct SGhostyComponent : SComponent
 	{
-		SGhostyComponent() 
-			: SComponent(EComponentType::GhostyComponent)
+		SGhostyComponent() = default;
+		SGhostyComponent(const SEntity& entityOwner) 
+			: SComponent(entityOwner)
 		{}
 		~SGhostyComponent() override = default;
 

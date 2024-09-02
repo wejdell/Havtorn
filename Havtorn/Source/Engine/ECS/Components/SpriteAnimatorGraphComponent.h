@@ -8,8 +8,9 @@ namespace Havtorn
 {
 	struct SSpriteAnimatorGraphComponent : public SComponent
 	{
-		SSpriteAnimatorGraphComponent()
-			: SComponent(EComponentType::SpriteAnimatorGraphComponent)
+		SSpriteAnimatorGraphComponent() = default;
+		SSpriteAnimatorGraphComponent(const SEntity& entityOwner)
+			: SComponent(entityOwner)
 		{
 		}
 

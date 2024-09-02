@@ -75,21 +75,21 @@ namespace Havtorn
 	class CEditorManager
 	{
 	public:
-		__declspec(dllexport) CEditorManager();
-		__declspec(dllexport) ~CEditorManager();
+		HAVTORN_EXPORT CEditorManager();
+		HAVTORN_EXPORT ~CEditorManager();
 
-		bool __declspec(dllexport) Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager, CSequencerSystem* sequencerSystem);
-		void __declspec(dllexport) BeginFrame();
-		void __declspec(dllexport) Render();
-		void __declspec(dllexport) EndFrame();
-		void __declspec(dllexport) DebugWindow();
+		bool HAVTORN_EXPORT Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager);
+		void HAVTORN_EXPORT BeginFrame();
+		void HAVTORN_EXPORT Render();
+		void HAVTORN_EXPORT EndFrame();
+		void HAVTORN_EXPORT DebugWindow();
 
 	public:
 		void SetCurrentScene(CScene* scene);
 		CScene* GetCurrentScene() const;
 
-		void SetSelectedEntity(SEntity* entity);
-		SEntity* GetSelectedEntity() const;
+		void SetSelectedEntity(const SEntity& entity);
+		const SEntity& GetSelectedEntity() const;
 
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry);
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromName(const std::string& assetName);
@@ -139,9 +139,7 @@ namespace Havtorn
 		CEditorResourceManager* ResourceManager = nullptr;
 
 		CScene* CurrentScene = nullptr;
-
-		// TODO.NR: Should be a weak ptr
-		SEntity* SelectedEntity = nullptr;
+		SEntity SelectedEntity = SEntity::Null;
 
 		// TODO.NR: Figure out why we can't use unique ptrs with these namespaced imgui classes
 		std::vector<ImGui::CWindow*> Windows = {};

@@ -19,14 +19,14 @@ namespace Havtorn
 
 	void SSequencerTransformKeyframe::SetEntityDataOnKeyframe(CScene* scene, U64 sceneIndex)
 	{
-		STransformComponent& transformComponent = scene->GetTransformComponents()[sceneIndex];
-		KeyframedMatrix = transformComponent.Transform.GetMatrix();
+		const STransformComponent* transformComponent = scene->GetComponents<STransformComponent>()[sceneIndex];
+		KeyframedMatrix = transformComponent->Transform.GetMatrix();
 	}
 
 	void SSequencerTransformKeyframe::SetKeyframeDataOnEntity(CScene* scene, U64 sceneIndex)
 	{
-		STransformComponent& transformComponent = scene->GetTransformComponents()[sceneIndex];
-		transformComponent.Transform.SetMatrix(IntermediateMatrix);
+		STransformComponent* transformComponent = scene->GetComponents<STransformComponent>()[sceneIndex];
+		transformComponent->Transform.SetMatrix(IntermediateMatrix);
 	}
 
 	U32 SSequencerTransformKeyframe::GetSize() const

@@ -9,8 +9,9 @@ namespace Havtorn
 {
 	struct SSequencerComponent : public SComponent
 	{
-		SSequencerComponent()
-			: SComponent(EComponentType::SequencerComponent)
+		SSequencerComponent() = default;
+		SSequencerComponent(const SEntity& entityOwner)
+			: SComponent(entityOwner)
 		{}
 	};
 }

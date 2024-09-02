@@ -8,8 +8,10 @@ namespace Havtorn
 {
 	struct SMetaDataComponent : public SComponent
 	{
-		SMetaDataComponent()
-			: SComponent(EComponentType::MetaDataComponent)
+		SMetaDataComponent() = default;
+		SMetaDataComponent(const SEntity& entityOwner, const std::string& nameInEditor)
+			: SComponent(entityOwner)
+			, Name(nameInEditor)
 		{}
 
 		CHavtornStaticString<255> Name;

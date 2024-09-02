@@ -2,15 +2,11 @@
 
 #pragma once
 #include "EditorWindow.h"
-#include <map>
-#include <functional>
 
 namespace Havtorn
 {
-	enum class EComponentType;
+	struct SComponentViewResult;
 	class CScene;
-	struct SStaticMeshComponent;
-	struct SMaterialComponent;
 }
 
 namespace ImGui
@@ -23,43 +19,28 @@ namespace ImGui
 		void OnEnable() override;
 		void OnInspectorGUI() override;
 		void OnDisable() override;
-	
-		void TryInspectComponent(Havtorn::EComponentType componentType);
 
 	private:
-		void InspectTransformComponent();
-		void InspectStaticMeshComponent();
-		void InspectCameraComponent();
-		void InspectCameraControllerComponent();
-		void InspectMaterialComponent();
-		void InspectEnvironmentLightComponent();
-		void InspectDirectionalLightComponent();
-		void InspectPointLightComponent();
-		void InspectSpotLightComponent();
-		void InspectVolumetricLightComponent();
-		void InspectDecalComponent();
-		void InspectSpriteComponent();
-		void InspectTransform2DComponent();
-		void InspectSpriteAnimatorGraphComponent();
-		void InspectSequencerComponent();
-		// AS: Ghosty is a Game-project Component / System. The goal is to separate out any Game Component/Systems so they don't have to be added in Engine
-		void InspectGhostyComponent();
-
-		void OpenSelectMeshAssetModal(Havtorn::I64 staticMeshComponentIndex);
-		void OpenSelectTextureAssetModal(Havtorn::U16& textureRefToChange);
-		void OpenSelectMaterialAssetModal(Havtorn::SMaterialComponent* materialComponentToChange, Havtorn::U8 materialIndex);
+		void UpdateTransformGizmo(const Havtorn::SComponentViewResult& result);
+		void InspectAssetComponent(const Havtorn::SComponentViewResult& result);
+		void IterateAssetRepresentations(const Havtorn::SComponentViewResult& result, const std::vector<std::string>& assetNames, const std::vector<std::string>& assetLabels, const std::string& modalNameToOpen);
+		void OpenSelectMeshAssetModal(const Havtorn::SComponentViewResult& result);
+		void OpenSelectTextureAssetModal(const Havtorn::SComponentViewResult& result);
+		void OpenSelectMaterialAssetModal(const Havtorn::SComponentViewResult& result);
+		void OpenAssetTool(const Havtorn::SComponentViewResult& result);
+		void HandleTextureAssetModal(const std::string& pathToSearch, Havtorn::U16& textureReference);
+		
+		// TODO.NR: Support adding and removing components through the editor. Unsolved problem.
 		void OpenAddComponentModal();
-		void RemoveComponentButton(Havtorn::EComponentType componentType);
+		void RemoveComponentButton(/*Havtorn::EComponentType componentType*/);
 
 	private:
-		std::map<Havtorn::EComponentType, std::function<void()>> InspectionFunctions;
+		const std::string SelectMeshAssetModalName = "Select Mesh Asset";
+		const std::string SelectMaterialAssetModalName = "Select Material Asset";
+		const std::string SelectTextureAssetModalName = "Select Texture Asset";
+
 		Havtorn::CScene* Scene = nullptr;
-		Havtorn::SVector2<Havtorn::F32> TexturePreviewSize = { 64.0f, 64.0f };
-		Havtorn::SVector2<Havtorn::F32> DummySize = { 0.0f, 0.5f };
-		Havtorn::U64 SelectedEntityIndex = 0;
-		Havtorn::F32 SlideSpeed = 0.1f;
-		Havtorn::U16 MaterialRefToChangeIndex = 0;
-		Havtorn::U8 MaterialToChangeIndex = 0;
-		bool SelectTextureWindowOpen = false;
+		Havtorn::SEntity SelectedEntity = Havtorn::SEntity::Null;
+		Havtorn::U8 AssetPickedIndex = 0;
 	};
 }

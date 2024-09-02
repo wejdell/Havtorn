@@ -1,3 +1,4 @@
+// TODO.NR: Add support for sequencer with new ECS. Has to be done on a separate branch, when we need it.
 // Copyright 2024 Team Havtorn. All Rights Reserved.
 
 #pragma once
@@ -17,10 +18,8 @@ namespace Havtorn
 	struct SSequencerComponentTrack : ISerializable
 	{
 		SSequencerComponentTrack() = default;
-		SSequencerComponentTrack(EComponentType componentType);
 		~SSequencerComponentTrack();
 
-		EComponentType ComponentType = EComponentType::Count;
 		std::vector<SSequencerKeyframe*> Keyframes = {};
 		SSequencerKeyframe* CurrentKeyframe = nullptr;
 		SSequencerKeyframe* NextKeyframe = nullptr;
@@ -42,7 +41,8 @@ namespace Havtorn
 		SSequencerEntityReference(const U64 guid);
 
 		U64 GUID = 0;
-		std::vector<SSequencerComponentTrack> ComponentTracks;
+		std::map<U64, U64> ComponentTypeIndices;
+		std::vector<SSequencerComponentTrack*> ComponentTracks;
 
 		const bool operator==(U64 guid)
 		{

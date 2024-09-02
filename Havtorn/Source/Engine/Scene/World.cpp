@@ -13,6 +13,7 @@ namespace Havtorn
 		RenderManager = renderManager;
 		AssetRegistry = std::make_unique<CAssetRegistry>();
 
+		// Setup systems
 		AddSystem<CCameraSystem>();
 		AddSystem<CLightSystem>(RenderManager);
 		AddSystem<CSpriteAnimatorGraphSystem>();
@@ -107,7 +108,7 @@ namespace Havtorn
 
 	std::vector<SEntity>& CWorld::GetEntities() const
 	{
-		return Scenes.back()->GetEntities();
+		return Scenes.back()->Entities;
 	}
 	
 	void CWorld::SaveActiveScene(const std::string& destinationPath)
@@ -122,10 +123,10 @@ namespace Havtorn
 		I64 sceneIndex = Scenes.size() - 1;
 
 		SSceneFileHeader fileHeader;
-		fileHeader.NumberOfEntities = static_cast<U32>(scene->GetEntities().size());
+		fileHeader.NumberOfEntities = static_cast<U32>(scene->Entities.size());
 		fileHeader.Scene = scene.get();
 
-		const U32 fileSize = fileHeader.GetSize() + AssetRegistry->GetSize(sceneIndex);
+		const U32 fileSize = fileHeader.GetSize() + AssetRegistry->GetSize();
 		char* data = new char[fileSize];
 
 		U64 pointerPosition = 0;	
@@ -153,21 +154,6 @@ namespace Havtorn
 	{
 		Scenes.clear();
 		LoadScene(filePath);
-	}
-
-	void CWorld::OpenDemoScene(const bool shouldOpen3DDemo)
-	{
-		Scenes.clear();
-		Scenes.emplace_back(std::make_unique<CScene>());
-		
-		if (shouldOpen3DDemo)
-		{
-			ENGINE_BOOL_POPUP(Scenes.back()->Init3DDemoScene(RenderManager), "Demo Scene could not be initialized.");
-		}
-		else
-		{
-			ENGINE_BOOL_POPUP(Scenes.back()->Init2DDemoScene(RenderManager), "Demo Scene could not be initialized.");
-		}
 	}
 
 	CAssetRegistry* CWorld::GetAssetRegistry() const
