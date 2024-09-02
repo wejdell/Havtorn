@@ -10,13 +10,6 @@
 
 namespace Havtorn
 {
-	CGraphicsFramework::CGraphicsFramework()
-	{
-		SwapChain = nullptr;
-		Device = nullptr;
-		Context = nullptr;
-	}
-
 	CGraphicsFramework::~CGraphicsFramework()
 	{
 		BOOL isFullscreen;

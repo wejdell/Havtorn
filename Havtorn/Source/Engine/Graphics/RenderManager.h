@@ -53,7 +53,7 @@ namespace Havtorn
 	class CRenderManager
 	{
 	public:
-		CRenderManager();
+		CRenderManager() = default;
 		~CRenderManager();
 		bool Init(CGraphicsFramework* framework, CWindowHandler* windowHandler);
 		bool ReInit(CGraphicsFramework* framework, CWindowHandler* windowHandler);
@@ -334,20 +334,20 @@ namespace Havtorn
 		HV_ASSERT_BUFFER(SEmissiveBufferData)
 
 	private:
-		CGraphicsFramework* Framework;
-		ID3D11DeviceContext* Context;
-		ID3D11Buffer* FrameBuffer;
-		ID3D11Buffer* ObjectBuffer;
-		ID3D11Buffer* MaterialBuffer;
-		ID3D11Buffer* DebugShapeObjectBuffer;
-		ID3D11Buffer* DecalBuffer;
-		ID3D11Buffer* SpriteBuffer;
-		ID3D11Buffer* DirectionalLightBuffer;
-		ID3D11Buffer* PointLightBuffer;
-		ID3D11Buffer* SpotLightBuffer;
-		ID3D11Buffer* ShadowmapBuffer;
-		ID3D11Buffer* VolumetricLightBuffer;
-		ID3D11Buffer* EmissiveBuffer;
+		CGraphicsFramework* Framework = nullptr;
+		ID3D11DeviceContext* Context = nullptr;
+		ID3D11Buffer* FrameBuffer = nullptr;
+		ID3D11Buffer* ObjectBuffer = nullptr;
+		ID3D11Buffer* MaterialBuffer = nullptr;
+		ID3D11Buffer* DebugShapeObjectBuffer = nullptr;
+		ID3D11Buffer* DecalBuffer = nullptr;
+		ID3D11Buffer* SpriteBuffer = nullptr;
+		ID3D11Buffer* DirectionalLightBuffer = nullptr;
+		ID3D11Buffer* PointLightBuffer = nullptr;
+		ID3D11Buffer* SpotLightBuffer = nullptr;
+		ID3D11Buffer* ShadowmapBuffer = nullptr;
+		ID3D11Buffer* VolumetricLightBuffer = nullptr;
+		ID3D11Buffer* EmissiveBuffer = nullptr;
 		CRenderStateManager RenderStateManager;
 		CFullscreenRenderer FullscreenRenderer;
 
@@ -378,10 +378,10 @@ namespace Havtorn
 		CRenderCommandHeap RenderCommandsA;
 		CRenderCommandHeap RenderCommandsB;
 
-		CRenderCommandHeap* PushToCommands;
-		CRenderCommandHeap* PopFromCommands;
+		CRenderCommandHeap* PushToCommands = &RenderCommandsA;
+		CRenderCommandHeap* PopFromCommands = &RenderCommandsB;
 
-		SVector4 ClearColor;
+		SVector4 ClearColor = SVector4(0.5f, 0.5f, 0.5f, 1.0f);
 
 		std::map<ERenderCommandType, std::function<void(const SRenderCommand& command)>> RenderFunctions;
 		ERenderPass CurrentRunningRenderPass = ERenderPass::All;
@@ -399,11 +399,11 @@ namespace Havtorn
 		std::vector<U32> MeshVertexStrides;
 		std::vector<U32> MeshVertexOffsets;
 		
-		ID3D11Buffer* InstancedTransformBuffer;
+		ID3D11Buffer* InstancedTransformBuffer = nullptr;
 
 		// NR: Used together with the InstancedTransformBuffer to batch World Space Sprites as well as Screen Space Sprites
-		ID3D11Buffer* InstancedUVRectBuffer;
-		ID3D11Buffer* InstancedColorBuffer;
+		ID3D11Buffer* InstancedUVRectBuffer = nullptr;
+		ID3D11Buffer* InstancedColorBuffer = nullptr;
 
 		// TODO.NR: Add GUIDs to things like this
 		std::unordered_map<std::string, SStaticMeshAsset> LoadedStaticMeshes;

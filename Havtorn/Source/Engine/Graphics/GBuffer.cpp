@@ -6,19 +6,6 @@
 
 namespace Havtorn
 {
-	CGBuffer::CGBuffer()
-		: Context(nullptr)
-		, Textures()
-		, RenderTargets()
-		, ShaderResources()
-		, Viewport(nullptr)
-	{
-	}
-
-	CGBuffer::~CGBuffer()
-	{
-	}
-
 	void CGBuffer::ClearTextures(SVector4 clearColor)
 	{
 		for (UINT i = 0; i < static_cast<U64>(EGBufferTextures::Count); ++i) 

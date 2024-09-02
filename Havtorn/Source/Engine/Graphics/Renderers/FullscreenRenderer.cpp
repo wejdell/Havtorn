@@ -9,20 +9,6 @@
 
 namespace Havtorn
 {
-	CFullscreenRenderer::CFullscreenRenderer()
-		: Context(nullptr)
-		, VertexShader(nullptr)
-		, PixelShaders()
-		, PostProcessingBufferData()
-		, ClampSampler(nullptr)
-		, WrapSampler(nullptr)
-		, FullscreenDataBuffer(nullptr)
-		, FrameBuffer(nullptr)
-		, PostProcessingBuffer(nullptr)
-		, NoiseTexture(nullptr)
-	{
-	}
-
 	CFullscreenRenderer::~CFullscreenRenderer() 
 	{}
 

@@ -6,10 +6,6 @@
 
 namespace Havtorn
 {
-	CFullscreenTexture::CFullscreenTexture() : Context(nullptr), Texture(nullptr), RenderTarget(nullptr), ShaderResource(nullptr), Viewport(nullptr) {}
-
-	CFullscreenTexture::~CFullscreenTexture() {}
-
 	void CFullscreenTexture::ClearTexture(SVector4 clearColor) 
 	{
 		Context->ClearRenderTargetView(RenderTarget, &clearColor.X);
