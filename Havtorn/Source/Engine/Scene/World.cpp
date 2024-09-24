@@ -120,17 +120,15 @@ namespace Havtorn
 		}
 
 		const Ptr<CScene>& scene = Scenes.back();
-		I64 sceneIndex = Scenes.size() - 1;
 
 		SSceneFileHeader fileHeader;
-		fileHeader.NumberOfEntities = static_cast<U32>(scene->Entities.size());
 		fileHeader.Scene = scene.get();
 
 		const U32 fileSize = fileHeader.GetSize() + AssetRegistry->GetSize();
 		char* data = new char[fileSize];
 
 		U64 pointerPosition = 0;	
-		fileHeader.Serialize(data, pointerPosition, AssetRegistry.get(), sceneIndex);
+		fileHeader.Serialize(data, pointerPosition, AssetRegistry.get());
 		GEngine::GetFileSystem()->Serialize(destinationPath, data, fileSize);
 		
 		delete[] data;

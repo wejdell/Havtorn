@@ -43,6 +43,14 @@ namespace Havtorn
 		HAVTORN_API U64 GetSceneIndex(const SEntity& entity) const;
 		HAVTORN_API U64 GetSceneIndex(const U64 entityGUID) const;
 		
+		template<typename T>
+		T* AddComponent(const T& componentCopy, const SEntity& toEntity)
+		{
+			T& newComponent = (*AddComponent<T>(toEntity));
+			newComponent = componentCopy;
+			return &newComponent;
+		}
+
 		template<typename T, typename... Params>
 		T* AddComponent(const SEntity& toEntity, Params... params)
 		{

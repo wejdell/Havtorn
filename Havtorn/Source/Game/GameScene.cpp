@@ -140,31 +140,58 @@ namespace Havtorn
 		U32 size = 0;
 		size += CScene::GetSize();
 
-		size += sizeof(U64);
-		size += sizeof(SGhostyComponent) * static_cast<U32>(GetComponents<SGhostyComponent>().size());
+		auto defaultSizeAllocator = [&]<typename T>(const std::vector<T*>&componentVector)
+		{
+			size += GetDataSize(static_cast<U32>(componentVector.size()));
+			for (const auto component : componentVector)
+			{
+				auto& componentRef = *component;
+				size += GetDataSize(componentRef);
+			}
+		};
 
-        return U32();
+		defaultSizeAllocator(GetComponents<SGhostyComponent>());
+
+        return size;
     }
 
     void CGameScene::Serialize(char* toData, U64& pointerPosition) const
     {
 		CScene::Serialize(toData, pointerPosition);
 
-		const auto& ghostyComponents = GetComponents<SGhostyComponent>();
-		SerializeData(ghostyComponents.size(), toData, pointerPosition);
-		for (auto component : ghostyComponents)
-			SerializeData(*component, toData, pointerPosition);
+		auto defaultSerializer = [&]<typename T>(const std::vector<T*>&componentVector)
+		{
+			SerializeData(static_cast<U32>(componentVector.size()), toData, pointerPosition);
+			for (const auto component : componentVector)
+			{
+				auto& componentRef = *component;
+				SerializeData(componentRef, toData, pointerPosition);
+			}
+		};
+
+		defaultSerializer(GetComponents<SGhostyComponent>());
     }
 
     void CGameScene::Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry)
     {
 		CScene::Deserialize(fromData, pointerPosition, assetRegistry);
 
-		U64 numberOfGhostyComponents = 0;
-		DeserializeData(numberOfGhostyComponents, fromData, pointerPosition);
-		std::vector<SGhostyComponent> ghostyComponents;
-		DeserializeData(ghostyComponents, fromData, static_cast<U32>(numberOfGhostyComponents), pointerPosition);
-		for (const auto& component : ghostyComponents)
-			AddComponent<SGhostyComponent>(component.Owner);
+		auto defaultDeserializer = [&]<typename T>(std::vector<T>&componentVector, SViewFunctionPointer viewFunction)
+		{
+			U32 numberOfComponents = 0;
+			DeserializeData(numberOfComponents, fromData, pointerPosition);
+			componentVector.resize(numberOfComponents);
+			for (auto& component : componentVector)
+			{
+				DeserializeData(component, fromData, pointerPosition);
+				AddComponent(component, component.Owner);
+				AddView(component.Owner, viewFunction);
+			}
+		};
+
+		{
+			std::vector<SGhostyComponent> components;
+			defaultDeserializer(components, SGhostyComponentView::View);
+		}
     }
 }

@@ -67,20 +67,19 @@ namespace Havtorn
 			SMaterialAssetFileHeader asset;
 
 			asset.MaterialName = "M_Bed";
-			asset.MaterialNameLength = static_cast<U32>(asset.MaterialName.size());
 			
 			std::vector<std::string> materialTextures = { "Assets/Textures/T_Bed_c.hva", "Assets/Textures/T_Bed_m.hva", "Assets/Textures/T_Bed_n.hva" };
-			asset.Material.Properties[0] = { -1.0f, static_cast<U32>(materialTextures[0].size()), materialTextures[0], 0 };
-			asset.Material.Properties[1] = { -1.0f, static_cast<U32>(materialTextures[0].size()), materialTextures[0], 1 };
-			asset.Material.Properties[2] = { -1.0f, static_cast<U32>(materialTextures[0].size()), materialTextures[0], 2 };
-			asset.Material.Properties[3] = { -1.0f, static_cast<U32>(materialTextures[0].size()), materialTextures[0], 3 };
-			asset.Material.Properties[4] = { -1.0f, static_cast<U32>(materialTextures[2].size()), materialTextures[2], 3 };
-			asset.Material.Properties[5] = { -1.0f, static_cast<U32>(materialTextures[2].size()), materialTextures[2], 1 };
-			asset.Material.Properties[6] = { -1.0f, 0, "", -1};
-			asset.Material.Properties[7] = { -1.0f, static_cast<U32>(materialTextures[2].size()), materialTextures[2], 2 };
-			asset.Material.Properties[8] = { -1.0f, static_cast<U32>(materialTextures[1].size()), materialTextures[1], 0 };
-			asset.Material.Properties[9] = { -1.0f, static_cast<U32>(materialTextures[1].size()), materialTextures[1], 1 };
-			asset.Material.Properties[10] = { -1.0f, static_cast<U32>(materialTextures[1].size()), materialTextures[1], 2 };
+			asset.Material.Properties[0] = { -1.0f, materialTextures[0], 0 };
+			asset.Material.Properties[1] = { -1.0f, materialTextures[0], 1 };
+			asset.Material.Properties[2] = { -1.0f, materialTextures[0], 2 };
+			asset.Material.Properties[3] = { -1.0f, materialTextures[0], 3 };
+			asset.Material.Properties[4] = { -1.0f, materialTextures[2], 3 };
+			asset.Material.Properties[5] = { -1.0f, materialTextures[2], 1 };
+			asset.Material.Properties[6] = { -1.0f, "", -1};
+			asset.Material.Properties[7] = { -1.0f, materialTextures[2], 2 };
+			asset.Material.Properties[8] = { -1.0f, materialTextures[1], 0 };
+			asset.Material.Properties[9] = { -1.0f, materialTextures[1], 1 };
+			asset.Material.Properties[10] = { -1.0f, materialTextures[1], 2 };
 			asset.Material.RecreateZ = true;
 
 			const auto data = new char[asset.GetSize()];
@@ -130,10 +129,8 @@ namespace Havtorn
 			asset.AssetType = EAssetType::Texture;
 
 			asset.MaterialName = destination + filePath.substr(filePath.find_last_of('\\'), filePath.find_first_of('.') - filePath.find_last_of('\\'));// destination.substr(0, destination.find_last_of("."));
-			asset.MaterialNameLength = static_cast<U32>(asset.MaterialName.length());
 			asset.OriginalFormat = format;
 			asset.Suffix = filePath[filePath.find_last_of(".") - 1];
-			asset.DataSize = static_cast<U32>(textureFileData.length() * sizeof(char));
 			asset.Data = std::move(textureFileData);
 
 			const auto data = new char[asset.GetSize()];
@@ -169,20 +166,19 @@ namespace Havtorn
 		std::string materialName = destinationPath.substr(startIndex, destinationPath.find_last_of(".") - startIndex);
 
 		asset.MaterialName = "M_" + materialName;
-		asset.MaterialNameLength = static_cast<U32>(asset.MaterialName.size());
 
 		std::vector<std::string> materialTextures = { "Assets/Textures/T_" + materialName + "_c.hva", "Assets/Textures/T_" + materialName + "_m.hva", "Assets/Textures/T_" + materialName + "_n.hva" };
-		asset.Material.Properties[0] = { -1.0f, static_cast<U32>(materialTextures[0].size()), materialTextures[0], 0 };
-		asset.Material.Properties[1] = { -1.0f, static_cast<U32>(materialTextures[0].size()), materialTextures[0], 1 };
-		asset.Material.Properties[2] = { -1.0f, static_cast<U32>(materialTextures[0].size()), materialTextures[0], 2 };
-		asset.Material.Properties[3] = { -1.0f, static_cast<U32>(materialTextures[0].size()), materialTextures[0], 3 };
-		asset.Material.Properties[4] = { -1.0f, static_cast<U32>(materialTextures[2].size()), materialTextures[2], 3 };
-		asset.Material.Properties[5] = { -1.0f, static_cast<U32>(materialTextures[2].size()), materialTextures[2], 1 };
-		asset.Material.Properties[6] = { -1.0f, 0, "", -1 };
-		asset.Material.Properties[7] = { -1.0f, static_cast<U32>(materialTextures[2].size()), materialTextures[2], 2 };
-		asset.Material.Properties[8] = { -1.0f, static_cast<U32>(materialTextures[1].size()), materialTextures[1], 0 };
-		asset.Material.Properties[9] = { -1.0f, static_cast<U32>(materialTextures[1].size()), materialTextures[1], 1 };
-		asset.Material.Properties[10] = { -1.0f, static_cast<U32>(materialTextures[1].size()), materialTextures[1], 2 };
+		asset.Material.Properties[0] = { -1.0f, materialTextures[0], 0 };
+		asset.Material.Properties[1] = { -1.0f, materialTextures[0], 1 };
+		asset.Material.Properties[2] = { -1.0f, materialTextures[0], 2 };
+		asset.Material.Properties[3] = { -1.0f, materialTextures[0], 3 };
+		asset.Material.Properties[4] = { -1.0f, materialTextures[2], 3 };
+		asset.Material.Properties[5] = { -1.0f, materialTextures[2], 1 };
+		asset.Material.Properties[6] = { -1.0f, "", -1 };
+		asset.Material.Properties[7] = { -1.0f, materialTextures[2], 2 };
+		asset.Material.Properties[8] = { -1.0f, materialTextures[1], 0 };
+		asset.Material.Properties[9] = { -1.0f, materialTextures[1], 1 };
+		asset.Material.Properties[10] = { -1.0f, materialTextures[1], 2 };
 		asset.Material.RecreateZ = true;
 
 		const auto data = new char[asset.GetSize()];

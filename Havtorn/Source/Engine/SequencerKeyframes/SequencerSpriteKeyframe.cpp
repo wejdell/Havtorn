@@ -24,8 +24,9 @@ namespace Havtorn
 
 	U32 Havtorn::SSequencerSpriteKeyframe::GetSize() const
 	{
-		U32 size = SSequencerKeyframe::GetSize();
-		size += sizeof(SVector4);
+		U32 size = 0;
+		size += SSequencerKeyframe::GetSize();
+		size += GetDataSize(UVRect);
 		return size;
 	}
 

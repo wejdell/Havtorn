@@ -21,7 +21,7 @@ namespace Havtorn
 			{
 				outProperty.ConstantValue = offlineProperty.ConstantValue;
 				
-				if (offlineProperty.TexturePathLength != 0)
+				if (!offlineProperty.TexturePath.empty())
 					outProperty.TextureIndex = static_cast<F32>(textureBank->GetTextureIndex(offlineProperty.TexturePath));
 				
 				outProperty.TextureChannelIndex = static_cast<F32>(offlineProperty.TextureChannelIndex);
