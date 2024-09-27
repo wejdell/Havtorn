@@ -525,63 +525,57 @@ namespace Havtorn
 	{
 		U32 size = 0;
 
-		size += sizeof(CHavtornStaticString<255>);
+		size += GetDataSize(SceneName);
+		size += GetDataSize(MainCameraEntity);
+		size += GetDataSize(Entities);
 
-		size += sizeof(U64);
-		size += sizeof(SEntity) * static_cast<U32>(Entities.size());
+		auto defaultSizeAllocator = [&]<typename T>(const std::vector<T*>& componentVector)
+		{
+			size += GetDataSize(static_cast<U32>(componentVector.size()));
+			for (const auto component : componentVector)
+			{
+				auto& componentRef = *component;
+				size += GetDataSize(componentRef);
+			}
+		};
 
-		size += sizeof(U64);
-		size += sizeof(STransformComponent) * static_cast<U32>(GetComponents<STransformComponent>().size());
+		auto specificSizeAllocator = [&]<typename T>(const std::vector<T*>& componentVector)
+		{
+			size += GetDataSize(static_cast<U32>(componentVector.size()));
+			for (auto component : componentVector)
+				size += component->GetSize();
+		};
 
-		size += sizeof(U64);
-		for (const auto component : GetComponents<SStaticMeshComponent>())
-			size += component->GetSize();
 
-		size += sizeof(U64);
-		size += sizeof(SCameraComponent) * static_cast<U32>(GetComponents<SCameraComponent>().size());
+		defaultSizeAllocator(GetComponents<STransformComponent>());		
 
-		size += sizeof(U64);
-		size += sizeof(SCameraControllerComponent) * static_cast<U32>(GetComponents<SCameraControllerComponent>().size());
+		specificSizeAllocator(GetComponents<SStaticMeshComponent>());
 
-		size += sizeof(U64);
-		for (const auto component : GetComponents<SMaterialComponent>())
-			size += component->GetSize();
+		defaultSizeAllocator(GetComponents<SCameraComponent>());
+		defaultSizeAllocator(GetComponents<SCameraControllerComponent>());
+		
+		specificSizeAllocator(GetComponents<SMaterialComponent>());
+		
+		defaultSizeAllocator(GetComponents<SEnvironmentLightComponent>());
+		defaultSizeAllocator(GetComponents<SDirectionalLightComponent>());
+		defaultSizeAllocator(GetComponents<SPointLightComponent>());
+		defaultSizeAllocator(GetComponents<SSpotLightComponent>());
+		defaultSizeAllocator(GetComponents<SVolumetricLightComponent>());
 
-		size += sizeof(U64);
-		size += sizeof(SEnvironmentLightComponent) * static_cast<U32>(GetComponents<SEnvironmentLightComponent>().size());
-
-		size += sizeof(U64);
-		size += sizeof(SDirectionalLightComponent) * static_cast<U32>(GetComponents<SDirectionalLightComponent>().size());
-
-		size += sizeof(U64);
-		size += sizeof(SPointLightComponent) * static_cast<U32>(GetComponents<SPointLightComponent>().size());
-
-		size += sizeof(U64);
-		size += sizeof(SSpotLightComponent) * static_cast<U32>(GetComponents<SSpotLightComponent>().size());
-
-		size += sizeof(U64);
-		size += sizeof(SVolumetricLightComponent) * static_cast<U32>(GetComponents<SVolumetricLightComponent>().size());
-
-		size += sizeof(U64);
-		for (const auto component : GetComponents<SDecalComponent>())
-			size += component->GetSize();
-
-		size += sizeof(U64);
-		size += sizeof(SSpriteComponent) * static_cast<U32>(GetComponents<SSpriteComponent>().size());
-
-		size += sizeof(U64);
-		size += sizeof(STransform2DComponent) * static_cast<U32>(GetComponents<STransform2DComponent>().size());
-
+		specificSizeAllocator(GetComponents<SDecalComponent>());
+		
+		defaultSizeAllocator(GetComponents<SSpriteComponent>());
+		defaultSizeAllocator(GetComponents<STransform2DComponent>());
+		
 		// TODO.AS: Implement GetSize (since the component is not trivially serializable)
-		size += sizeof(U64);
-		//size += sizeof(STransform2DComponent) * static_cast<U32>(GetComponents<SSpriteAnimatorGraphComponent>().size());
+		//defaultSizeAllocator(GetComponents<SSpriteAnimatorGraphComponent>());
+		size += GetDataSize(static_cast<U32>(GetComponents<SSpriteAnimatorGraphComponent>().size()));
 
 		// TODO.NR: Implement GetSize (since the component is not trivially serializable)
-		size += sizeof(U64);
-		//size += sizeof(STransform2DComponent) * static_cast<U32>(GetComponents<SSequencerComponent>().size());
+		//defaultSizeAllocator(GetComponents<SSequencerComponent>());
+		size += GetDataSize(static_cast<U32>(GetComponents<SSequencerComponent>().size()));
 
-		size += sizeof(U64);
-		size += sizeof(SMetaDataComponent) * static_cast<U32>(GetComponents<SMetaDataComponent>().size());
+		defaultSizeAllocator(GetComponents<SMetaDataComponent>());
 
 		return size;
 	}
@@ -589,237 +583,205 @@ namespace Havtorn
 	void CScene::Serialize(char* toData, U64& pointerPosition) const
 	{
 		SerializeData(SceneName, toData, pointerPosition);
+		SerializeData(MainCameraEntity, toData, pointerPosition);
+		SerializeData(Entities, toData, pointerPosition);
 
-		SerializeData(Entities.size(), toData, pointerPosition);
-		for (const auto& entity : Entities)
-			SerializeData(entity.GUID, toData, pointerPosition);
+		auto defaultSerializer = [&]<typename T>(const std::vector<T*>& componentVector)
+		{
+			SerializeData(static_cast<U32>(componentVector.size()), toData, pointerPosition);
+			for (const auto component : componentVector)
+			{
+				auto& componentRef = *component;
+				SerializeData(componentRef, toData, pointerPosition);
+			}
+		};
 
-		const auto& transformComponents = GetComponents<STransformComponent>();
-		SerializeData(transformComponents.size(), toData, pointerPosition);
-		for (const auto component : transformComponents)
-			SerializeData(*component, toData, pointerPosition);
+		auto specificSerializer = [&]<typename T>(const std::vector<T*>&componentVector)
+		{
+			SerializeData(static_cast<U32>(componentVector.size()), toData, pointerPosition);
+			for (auto component : componentVector)
+				component->Serialize(toData, pointerPosition);
+		};
 
-		// NR: Saved and loaded using AssetRegistry
-		const auto& staticMeshComponents = GetComponents<SStaticMeshComponent>();
-		SerializeData(staticMeshComponents.size(), toData, pointerPosition);
-		for (auto component : staticMeshComponents)
-			component->Serialize(toData, pointerPosition);
+		defaultSerializer(GetComponents<STransformComponent>());
 
-		const auto& cameraComponents = GetComponents<SCameraComponent>();
-		SerializeData(cameraComponents.size(), toData, pointerPosition);
-		for (const auto component : cameraComponents)
-			SerializeData(*component, toData, pointerPosition);
+		specificSerializer(GetComponents<SStaticMeshComponent>());
 
-		const auto& cameraControllerComponents = GetComponents<SCameraControllerComponent>();
-		SerializeData(cameraControllerComponents.size(), toData, pointerPosition);
-		for (const auto component : cameraControllerComponents)
-			SerializeData(*component, toData, pointerPosition);
+		defaultSerializer(GetComponents<SCameraComponent>());
+		defaultSerializer(GetComponents<SCameraControllerComponent>());
 
-		const auto& materialComponents = GetComponents<SMaterialComponent>();
-		SerializeData(materialComponents.size(), toData, pointerPosition);
-		for (auto component : materialComponents)
-			component->Serialize(toData, pointerPosition);
+		specificSerializer(GetComponents<SMaterialComponent>());
 
-		const auto& environmentLightComponents = GetComponents<SEnvironmentLightComponent>();
-		SerializeData(environmentLightComponents.size(), toData, pointerPosition);
-		for (auto component : environmentLightComponents)
-			SerializeData(*component, toData, pointerPosition);
-
-		const auto& directionalLightComponents = GetComponents<SDirectionalLightComponent>();
-		SerializeData(directionalLightComponents.size(), toData, pointerPosition);
-		for (const auto component : directionalLightComponents)
-			SerializeData(*component, toData, pointerPosition);
-
-		const auto& pointLightComponents = GetComponents<SPointLightComponent>();
-		SerializeData(pointLightComponents.size(), toData, pointerPosition);
-		for (const auto component : pointLightComponents)
-			SerializeData(*component, toData, pointerPosition);
-
-		const auto& spotLightComponents = GetComponents<SSpotLightComponent>();
-		SerializeData(spotLightComponents.size(), toData, pointerPosition);
-		for (const auto component : spotLightComponents)
-			SerializeData(*component, toData, pointerPosition);
-
-		const auto& volumetricLightComponents = GetComponents<SVolumetricLightComponent>();
-		SerializeData(volumetricLightComponents.size(), toData, pointerPosition);
-		for (const auto component : volumetricLightComponents)
-			SerializeData(*component, toData, pointerPosition);
+		defaultSerializer(GetComponents<SEnvironmentLightComponent>());
+		defaultSerializer(GetComponents<SDirectionalLightComponent>());
+		defaultSerializer(GetComponents<SPointLightComponent>());
+		defaultSerializer(GetComponents<SSpotLightComponent>());
+		defaultSerializer(GetComponents<SVolumetricLightComponent>());
 
 		// NR: Texture info Saved and Loaded using AssetRegistry
-		const auto& decalComponents = GetComponents<SDecalComponent>();
-		SerializeData(decalComponents.size(), toData, pointerPosition);
-		for (auto component : decalComponents)
-			component->Serialize(toData, pointerPosition);
+		specificSerializer(GetComponents<SDecalComponent>());
 
-		// NR: Texture info Saved and Loaded using AssetRegistry
-		const auto& spriteComponents = GetComponents<SSpriteComponent>();
-		SerializeData(spriteComponents.size(), toData, pointerPosition);
-		for (auto component : spriteComponents)
-			SerializeData(*component, toData, pointerPosition);
+		defaultSerializer(GetComponents<SSpriteComponent>());
+		defaultSerializer(GetComponents<STransform2DComponent>());
 
-		const auto& transform2DComponents = GetComponents<STransform2DComponent>();
-		SerializeData(transform2DComponents.size(), toData, pointerPosition);
-		for (auto component : transform2DComponents)
-			SerializeData(*component, toData, pointerPosition);
-		
 		// TODO.AS: Implement Serialize (since the component is not trivially serializable)
 		const auto& spriteAnimatorGraphComponents = GetComponents<SSpriteAnimatorGraphComponent>();
-		SerializeData(spriteAnimatorGraphComponents.size(), toData, pointerPosition);
-		//for (auto component : spriteAnimatorGraphComponents)
-		//	component->Serialize(toData, pointerPosition);
+		SerializeData(static_cast<U32>(spriteAnimatorGraphComponents.size()), toData, pointerPosition);
 
 		// TODO.NR: Implement Serialize (since the component is not trivially serializable)
 		const auto& sequencerComponents = GetComponents<SSequencerComponent>();
-		SerializeData(sequencerComponents.size(), toData, pointerPosition);
-		//for (auto component : sequencerComponents)
-		//	component->Serialize(toData, pointerPosition);
+		SerializeData(static_cast<U32>(sequencerComponents.size()), toData, pointerPosition);
 
-		const auto& metaDataComponents = GetComponents<SMetaDataComponent>();
-		SerializeData(metaDataComponents.size(), toData, pointerPosition);
-		for (auto component : metaDataComponents)
-			SerializeData(*component, toData, pointerPosition);
+		defaultSerializer(GetComponents<SMetaDataComponent>());
 	}
 
 	void CScene::Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry)
 	{
 		DeserializeData(SceneName, fromData, pointerPosition);
+		DeserializeData(MainCameraEntity, fromData, pointerPosition);
+		DeserializeData(Entities, fromData, pointerPosition);
 
-		U64 numberOfEntities = 0;
-		DeserializeData(numberOfEntities, fromData, pointerPosition);
-		for (U64 index = 0; index < numberOfEntities; index++)
+		auto defaultDeserializer = [&]<typename T>(std::vector<T>&componentVector, SViewFunctionPointer viewFunction)
 		{
-			U64 guid = 0;
-			DeserializeData(guid, fromData, pointerPosition);
+			U32 numberOfComponents = 0;
+			DeserializeData(numberOfComponents, fromData, pointerPosition);
+			componentVector.resize(numberOfComponents);
 
-			AddEntity(guid);
+			for (U64 index = 0; index < numberOfComponents; index++)
+			{
+				T component;
+				DeserializeData(component, fromData, pointerPosition);
+				AddComponent(component, component.Owner);
+				AddView(component.Owner, viewFunction);
+			}
+		};
+
+		{
+			std::vector<STransformComponent> components;
+			defaultDeserializer(components, STransformComponentView::View);
 		}
 
-		U64 numberOfTransformComponents = 0;
-		DeserializeData(numberOfTransformComponents, fromData, pointerPosition);
-		std::vector<STransformComponent> transformComponents;
-		DeserializeData(transformComponents, fromData, static_cast<U32>(numberOfTransformComponents), pointerPosition);
-		for (const auto& component : transformComponents)
-			AddComponent<STransformComponent>(component.Owner);
-
-		U64 numberOfStaticMeshComponents = 0;
-		DeserializeData(numberOfStaticMeshComponents, fromData, pointerPosition);
-		std::vector<SStaticMeshComponent> staticMeshComponents;
-		staticMeshComponents.resize(numberOfStaticMeshComponents);
-		for (auto& component : staticMeshComponents)
 		{
-			component.Deserialize(fromData, pointerPosition);
-			RenderManager->LoadStaticMeshComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SStaticMeshComponent>(component.Owner));
+			U32 numberOfStaticMeshComponents = 0;
+			DeserializeData(numberOfStaticMeshComponents, fromData, pointerPosition);
+			std::vector<SStaticMeshComponent> staticMeshComponents;
+			staticMeshComponents.resize(numberOfStaticMeshComponents);
+
+			for (U64 index = 0; index < numberOfStaticMeshComponents; index++)
+			{
+				SStaticMeshComponent component;
+				component.Deserialize(fromData, pointerPosition);
+				RenderManager->LoadStaticMeshComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SStaticMeshComponent>(component.Owner));
+				AddView(component.Owner, SStaticMeshComponentView::View);
+			}
 		}
 
-		U64 numberOfCameraComponents = 0;
-		DeserializeData(numberOfCameraComponents, fromData, pointerPosition);
-		std::vector<SCameraComponent> cameraComponents;
-		DeserializeData(cameraComponents, fromData, static_cast<U32>(numberOfCameraComponents), pointerPosition);
-		for (const auto& component : cameraComponents)
-			AddComponent<SCameraComponent>(component.Owner);
+		{
+			std::vector<SCameraComponent> components;
+			defaultDeserializer(components, SCameraComponentView::View);
+		}
 
-		U64 numberOfCameraControllerComponents = 0;
-		DeserializeData(numberOfCameraControllerComponents, fromData, pointerPosition);
-		std::vector<SCameraControllerComponent> cameraControllerComponents;
-		DeserializeData(cameraControllerComponents, fromData, static_cast<U32>(numberOfCameraControllerComponents), pointerPosition);
-		for (const auto& component : cameraControllerComponents)
-			AddComponent<SCameraControllerComponent>(component.Owner);
+		{
+			std::vector<SCameraControllerComponent> components;
+			defaultDeserializer(components, SCameraControllerComponentView::View);
+		}
 
-		U64 numberOfMaterialComponents = 0;
+		U32 numberOfMaterialComponents = 0;
 		DeserializeData(numberOfMaterialComponents, fromData, pointerPosition);
 		std::vector<SMaterialComponent> materialComponents;
 		materialComponents.resize(numberOfMaterialComponents);
-		for (auto& component : materialComponents)
+		
+		for (U64 index = 0; index < numberOfMaterialComponents; index++)
 		{
+			SMaterialComponent component;
 			component.Deserialize(fromData, pointerPosition);
 			RenderManager->LoadMaterialComponent(assetRegistry->GetAssetPaths(component.AssetRegistryKeys), AddComponent<SMaterialComponent>(component.Owner));
+			AddView(component.Owner, SMaterialComponentView::View);
 		}
 
-		U64 numberOfEnvironmentLightComponents = 0;
+		U32 numberOfEnvironmentLightComponents = 0;
 		DeserializeData(numberOfEnvironmentLightComponents, fromData, pointerPosition);
 		std::vector<SEnvironmentLightComponent> environmentLightComponent;
 		environmentLightComponent.resize(numberOfEnvironmentLightComponents);
-		for (auto& component : environmentLightComponent)
+		
+		for (U64 index = 0; index < numberOfEnvironmentLightComponents; index++)
 		{
+			SEnvironmentLightComponent component;
 			DeserializeData(component, fromData, pointerPosition);
 			RenderManager->LoadEnvironmentLightComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SEnvironmentLightComponent>(component.Owner));
+			AddView(component.Owner, SEnvironmentLightComponentView::View);
 		}
 
-		U64 numberOfDirectionalLightComponents = 0;
-		DeserializeData(numberOfDirectionalLightComponents, fromData, pointerPosition);
-		std::vector<SDirectionalLightComponent> directionalLightComponent;
-		DeserializeData(directionalLightComponent, fromData, static_cast<U32>(numberOfDirectionalLightComponents), pointerPosition);
-		for (const auto& component : directionalLightComponent)
-			AddComponent<SDirectionalLightComponent>(component.Owner);
+		{
+			std::vector<SDirectionalLightComponent> components;
+			defaultDeserializer(components, SDirectionalLightComponentView::View);
+		}
 
-		U64 numberOfPointLightComponents = 0;
-		DeserializeData(numberOfPointLightComponents, fromData, pointerPosition);
-		std::vector<SPointLightComponent> pointLightComponents;
-		DeserializeData(pointLightComponents, fromData, static_cast<U32>(numberOfPointLightComponents), pointerPosition);
-		for (const auto& component : pointLightComponents)
-			AddComponent<SPointLightComponent>(component.Owner);
+		{
+			std::vector<SPointLightComponent> components;
+			defaultDeserializer(components, SPointLightComponentView::View);
+		}
 
-		U64 numberOfSpotLightComponents = 0;
-		DeserializeData(numberOfSpotLightComponents, fromData, pointerPosition);
-		std::vector<SSpotLightComponent> spotLightComponents;
-		DeserializeData(spotLightComponents, fromData, static_cast<U32>(numberOfSpotLightComponents), pointerPosition);
-		for (const auto& component : spotLightComponents)
-			AddComponent<SSpotLightComponent>(component.Owner);
+		{
+			std::vector<SSpotLightComponent> components;
+			defaultDeserializer(components, SSpotLightComponentView::View);
+		}
 
-		U64 numberOfVolumetricLightComponents = 0;
-		DeserializeData(numberOfVolumetricLightComponents, fromData, pointerPosition);
-		std::vector<SVolumetricLightComponent> volumetricLightComponents;
-		DeserializeData(volumetricLightComponents, fromData, static_cast<U32>(numberOfVolumetricLightComponents), pointerPosition);
-		for (const auto& component : volumetricLightComponents)
-			AddComponent<SVolumetricLightComponent>(component.Owner);
+		{
+			std::vector<SVolumetricLightComponent> components;
+			defaultDeserializer(components, SVolumetricLightComponentView::View);
+		}
 
-		U64 numberOfDecalComponents = 0;
+		U32 numberOfDecalComponents = 0;
 		DeserializeData(numberOfDecalComponents, fromData, pointerPosition);
 		std::vector<SDecalComponent> decalComponents;
 		decalComponents.resize(numberOfDecalComponents);
-		for (auto& component : decalComponents)
+		
+		for (U64 index = 0; index < numberOfDecalComponents; index++)
 		{
-			DeserializeData(component, fromData, pointerPosition);
+			SDecalComponent component;
+			component.Deserialize(fromData, pointerPosition);
 			RenderManager->LoadDecalComponent(assetRegistry->GetAssetPaths(component.AssetRegistryKeys), AddComponent<SDecalComponent>(component.Owner));
+			AddView(component.Owner, SDecalComponentView::View);
 		}
 
-		U64 numberOfSpriteComponents = 0;
+		U32 numberOfSpriteComponents = 0;
 		DeserializeData(numberOfSpriteComponents, fromData, pointerPosition);
 		std::vector<SSpriteComponent> spriteComponents;
 		spriteComponents.resize(numberOfSpriteComponents);
-		for (auto& component : spriteComponents)
+		
+		for (U64 index = 0; index < numberOfSpriteComponents; index++)
 		{
+			SSpriteComponent component;
 			DeserializeData(component, fromData, pointerPosition);
 			RenderManager->LoadSpriteComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SSpriteComponent>(component.Owner));
+			AddView(component.Owner, SSpriteComponentView::View);
 		}
 
-		U64 numberOfTransform2DComponents = 0;
-		DeserializeData(numberOfTransform2DComponents, fromData, pointerPosition);
-		std::vector<STransform2DComponent> transform2DComponents;
-		DeserializeData(transform2DComponents, fromData, static_cast<U32>(numberOfTransform2DComponents), pointerPosition);
-		for (const auto& component : transform2DComponents)
-			AddComponent<STransform2DComponent>(component.Owner);
+		{
+			std::vector<STransform2DComponent> components;
+			defaultDeserializer(components, STransform2DComponentView::View);
+		}
 
-		U64 numberOfSpriteAnimatorGraphComponents = 0;
+		U32 numberOfSpriteAnimatorGraphComponents = 0;
 		DeserializeData(numberOfSpriteAnimatorGraphComponents, fromData, pointerPosition);
-		//std::vector<SSpriteAnimatorGraphComponent> spriteAnimatorGraphComponents;
-		//DeserializeData(spriteAnimatorGraphComponents, fromData, static_cast<U32>(numberOfSpriteAnimatorGraphComponents), pointerPosition);
-		//for (const auto& component : spriteAnimatorGraphComponents)
-		//	AddComponent<SSpriteAnimatorGraphComponent>(component.Owner);
 
-		U64 numberOfSequencerComponents = 0;
+		U32 numberOfSequencerComponents = 0;
 		DeserializeData(numberOfSequencerComponents, fromData, pointerPosition);
-		//std::vector<SSequencerComponent> sequencerComponents;
-		//DeserializeData(sequencerComponents, fromData, static_cast<U32>(numberOfSequencerComponents), pointerPosition);
-		//for (const auto& component : sequencerComponents)
-		//	AddComponent<SSequencerComponent>(component.Owner);
 
-		U64 numberOfMetaDataComponents = 0;
-		DeserializeData(numberOfMetaDataComponents, fromData, pointerPosition);
-		std::vector<SMetaDataComponent> metaDataComponents;
-		DeserializeData(metaDataComponents, fromData, static_cast<U32>(numberOfMetaDataComponents), pointerPosition);
-		for (const auto& component : metaDataComponents)
-			AddComponent<SMetaDataComponent>(component.Owner, component.Name.AsString());
+		{
+			std::vector<SMetaDataComponent> componentVector;
+			U32 numberOfComponents = 0;
+			DeserializeData(numberOfComponents, fromData, pointerPosition);
+			componentVector.resize(numberOfComponents);
+
+			for (U64 index = 0; index < numberOfComponents; index++)
+			{
+				SMetaDataComponent component;
+				DeserializeData(component, fromData, pointerPosition);
+				AddComponent(component, component.Owner);
+			}
+		}
 	}
 
 	std::string CScene::GetSceneName() const

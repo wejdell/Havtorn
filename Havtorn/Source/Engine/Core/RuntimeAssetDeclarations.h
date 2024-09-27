@@ -21,7 +21,7 @@ namespace Havtorn
 			for (auto& mesh : assetFileData.Meshes)
 			{
 				DrawCallData.emplace_back();
-				DrawCallData.back().IndexCount = mesh.NumberOfIndices;
+				DrawCallData.back().IndexCount = static_cast<U32>(mesh.Indices.size());
 			}
 		}
 
@@ -41,7 +41,7 @@ namespace Havtorn
 			, MaterialConfiguration(assetFileData.MaterialConfiguration)
 			, Suffix(assetFileData.Suffix)
 		{
-			ShaderResourceView = std::move(UGraphicsUtils::TryGetShaderResourceView(graphicsDevice, assetFileData.Data.data(), assetFileData.DataSize, assetFileData.OriginalFormat));
+			ShaderResourceView = std::move(UGraphicsUtils::TryGetShaderResourceView(graphicsDevice, assetFileData.Data.data(), assetFileData.Data.size(), assetFileData.OriginalFormat));
 		}
 
 		EAssetType AssetType = EAssetType::Texture;

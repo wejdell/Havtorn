@@ -50,7 +50,6 @@ namespace Havtorn
 			fileHeader.AssetType = EAssetType::StaticMesh;
 		}
 		
-		fileHeader.NameLength = assimpScene->mName.length;
 		fileHeader.Name = assimpScene->mName.C_Str();
 		fileHeader.NumberOfMeshes = assimpScene->mNumMeshes;
 		fileHeader.Meshes.reserve(fileHeader.NumberOfMeshes);
@@ -60,7 +59,6 @@ namespace Havtorn
 		{
 			fileHeader.Meshes.emplace_back();
 			fbxMesh = assimpScene->mMeshes[n];
-			fileHeader.Meshes[n].NumberOfVertices = fbxMesh->mNumVertices;
 			fileHeader.Meshes[n].Vertices.reserve(fbxMesh->mNumVertices);
 		}
 
@@ -125,7 +123,6 @@ namespace Havtorn
 			// Indices
 			for (U32 i = 0; i < fbxMesh->mNumFaces; i++)
 			{
-				fileHeaderMesh.NumberOfIndices += fbxMesh->mFaces[i].mNumIndices;
 				fileHeaderMesh.Indices.insert(fileHeaderMesh.Indices.end(), std::make_move_iterator(&fbxMesh->mFaces[i].mIndices[0]), std::make_move_iterator(&fbxMesh->mFaces[i].mIndices[fbxMesh->mFaces[i].mNumIndices]));
 			}
 

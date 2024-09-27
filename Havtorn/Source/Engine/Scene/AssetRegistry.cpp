@@ -62,14 +62,12 @@ namespace Havtorn
     U32 CAssetRegistry::GetSize() const
     {
         U32 size = 0;
-        size += sizeof(U32);
+        size += GetDataSize(static_cast<U32>(Registry.size()));
 
         for (const auto& [assetPath, referenceCounter] : Registry)
         {
-            size += sizeof(U32);
-            size += sizeof(char) * static_cast<U32>(assetPath.length());
-
-            size += sizeof(referenceCounter);
+            size += GetDataSize(assetPath);
+            size += GetDataSize(referenceCounter);
         }
 
         return size;
@@ -81,9 +79,7 @@ namespace Havtorn
 
         for (const auto& [assetPath, referenceCounter] : Registry)
         {
-            SerializeData(static_cast<U32>(assetPath.size()), toData, pointerPosition);
             SerializeData(assetPath, toData, pointerPosition);
-
             SerializeData(referenceCounter, toData, pointerPosition);
         }
     }
@@ -97,10 +93,8 @@ namespace Havtorn
 
         for (U32 i = 0; i < numberOfEntries; i++)
         {
-            U32 assetPathSize = 0;
-            DeserializeData(assetPathSize, fromData, pointerPosition);
             std::string assetPath = "";
-            DeserializeData(assetPath, fromData, assetPathSize, pointerPosition);
+            DeserializeData(assetPath, fromData, pointerPosition);
             SReferenceCounter referenceCounter{0};
             DeserializeData(referenceCounter, fromData, pointerPosition);
 

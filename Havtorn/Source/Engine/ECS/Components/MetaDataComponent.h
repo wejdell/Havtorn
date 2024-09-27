@@ -9,6 +9,9 @@ namespace Havtorn
 	struct SMetaDataComponent : public SComponent
 	{
 		SMetaDataComponent() = default;
+		SMetaDataComponent(const SEntity& entityOwner)
+			: SComponent(entityOwner)
+		{}
 		SMetaDataComponent(const SEntity& entityOwner, const std::string& nameInEditor)
 			: SComponent(entityOwner)
 			, Name(nameInEditor)

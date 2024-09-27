@@ -6,13 +6,6 @@
 
 namespace Havtorn
 {
-    CRenderStateManager::CRenderStateManager()
-        : Context(nullptr)
-        , BlendStates({})
-        , RasterizerStates({})
-        , SamplerStates({})
-    {}
-
     CRenderStateManager::~CRenderStateManager()
     {
         Context = nullptr;

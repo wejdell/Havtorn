@@ -12,8 +12,8 @@ namespace Havtorn
 	class CFullscreenTextureFactory 
 	{
 	public:
-		CFullscreenTextureFactory();
-		~CFullscreenTextureFactory();
+		CFullscreenTextureFactory() = default;
+		~CFullscreenTextureFactory() = default;
 		bool Init(CGraphicsFramework* framework);
 		CFullscreenTexture CreateTexture(SVector2<U16> size, DXGI_FORMAT format);
 		CFullscreenTexture CreateTexture(ID3D11Texture2D* texture);
@@ -22,6 +22,6 @@ namespace Havtorn
 		class CGBuffer CreateGBuffer(SVector2<U16> size);
 
 	private:
-		CGraphicsFramework* Framework;
+		CGraphicsFramework* Framework = nullptr;
 	};
 }

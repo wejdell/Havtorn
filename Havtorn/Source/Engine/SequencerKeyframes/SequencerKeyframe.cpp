@@ -8,8 +8,10 @@ namespace Havtorn
     U32 Havtorn::SSequencerKeyframe::GetSize() const
     {
         U32 size = 0;
-        size += sizeof(U32);
-        size += sizeof(bool) * 3;
+        size += GetDataSize(FrameNumber);
+        size += GetDataSize(ShouldBlendLeft);
+        size += GetDataSize(ShouldBlendRight);
+        size += GetDataSize(ShouldRecord);
         return size;
     }
 

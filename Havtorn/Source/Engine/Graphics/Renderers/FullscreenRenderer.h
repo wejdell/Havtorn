@@ -102,24 +102,24 @@ namespace Havtorn
 		HV_ASSERT_BUFFER(SFrameBufferData)
 
 	private:
-		CFullscreenRenderer();
+		CFullscreenRenderer() = default;
 		~CFullscreenRenderer();
 		bool Init(CGraphicsFramework* framework);
 		void Render(EFullscreenShader effect);
 
 		SPostProcessingBufferData PostProcessingBufferData;
 
-		ID3D11DeviceContext* Context;
-		ID3D11Buffer* FullscreenDataBuffer;
-		ID3D11Buffer* FrameBuffer;
-		ID3D11Buffer* PostProcessingBuffer;
-		ID3D11VertexShader* VertexShader;
-		ID3D11SamplerState* ClampSampler;
-		ID3D11SamplerState* WrapSampler;
+		ID3D11DeviceContext* Context = nullptr;
+		ID3D11Buffer* FullscreenDataBuffer = nullptr;
+		ID3D11Buffer* FrameBuffer = nullptr;
+		ID3D11Buffer* PostProcessingBuffer = nullptr;
+		ID3D11VertexShader* VertexShader = nullptr;
+		ID3D11SamplerState* ClampSampler = nullptr;
+		ID3D11SamplerState* WrapSampler = nullptr;
 
 		std::array<ID3D11PixelShader*, static_cast<size_t>(EFullscreenShader::Count)> PixelShaders;
 
-		ID3D11ShaderResourceView* NoiseTexture;
+		ID3D11ShaderResourceView* NoiseTexture = nullptr;
 		SVector4 Kernel[KernelSize];
 	};
 }

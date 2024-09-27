@@ -17,7 +17,7 @@ namespace Havtorn
 	class CGraphicsFramework
 	{
 	public:
-		CGraphicsFramework();
+		CGraphicsFramework() = default;
 		~CGraphicsFramework();
 
 		void EndFrame();

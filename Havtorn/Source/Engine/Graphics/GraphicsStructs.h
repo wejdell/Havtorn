@@ -43,11 +43,8 @@ namespace Havtorn
 
 	struct SStaticMesh
 	{
-		U32 NameLength = 0;
 		std::string Name;
-		U32 NumberOfVertices = 0;
 		std::vector<SStaticMeshVertex> Vertices;
-		U32 NumberOfIndices = 0;
 		std::vector<U32> Indices;
 	};
 
@@ -89,17 +86,15 @@ namespace Havtorn
 	struct SOfflineGraphicsMaterialProperty
 	{
 		F32 ConstantValue = -1.0f;
-		U32 TexturePathLength = 0;
 		std::string TexturePath;
 		I16 TextureChannelIndex = -1;
 
 		U32 GetSize() const
 		{
 			U32 size = 0;
-			size += sizeof(F32);
-			size += sizeof(U32);
-			size += sizeof(char) * TexturePathLength;
-			size += sizeof(I16);
+			size += GetDataSize(ConstantValue);
+			size += GetDataSize(TexturePath);
+			size += GetDataSize(TextureChannelIndex);
 			return size;
 		}
 	};
@@ -116,7 +111,7 @@ namespace Havtorn
 			{
 				size += property.GetSize();
 			}
-			size += sizeof(bool);
+			size += GetDataSize(RecreateZ);
 			return size;
 		}
 	};
