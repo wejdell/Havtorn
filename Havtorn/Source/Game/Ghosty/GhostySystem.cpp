@@ -4,6 +4,8 @@
 #include "GhostySystem.h"
 #include "GhostyComponent.h"
 #include "Scene/Scene.h"
+#include "Scene/World.h"
+#include "ECS/Systems/SpriteAnimatorGraphSystem.h"
 #include "Input/InputMapper.h"
 
 namespace Havtorn
@@ -15,6 +17,11 @@ namespace Havtorn
 
 		EvaluateIdleFunc = std::bind(&CGhostySystem::EvaluateIdle, this, std::placeholders::_1, std::placeholders::_2);
 		EvaluateLocomotionFunc = std::bind(&CGhostySystem::EvaluateLocomotion, this, std::placeholders::_1, std::placeholders::_2);
+
+		CSpriteAnimatorGraphSystem* animatorGraphSystem = GEngine::GetWorld()->GetSystem<CSpriteAnimatorGraphSystem>();
+		
+		animatorGraphSystem->BindEvaluateFunction(EvaluateIdleFunc, "CGhostySystem::EvaluateIdle");
+		animatorGraphSystem->BindEvaluateFunction(EvaluateLocomotionFunc, "CGhostySystem::EvaluateLocomotion");
 	}
 
 	void CGhostySystem::Update(CScene* scene)
@@ -38,9 +45,9 @@ namespace Havtorn
 		ResetInput();
 	}
 
-	I16 CGhostySystem::EvaluateIdle(CScene* scene, U64 entitySceneIndex)
+	I16 CGhostySystem::EvaluateIdle(CScene* scene, const SEntity& entity)
 	{
-		SGhostyComponent* ghostyComponent = scene->GetComponents<SGhostyComponent>()[entitySceneIndex];
+		SGhostyComponent* ghostyComponent = scene->GetComponent<SGhostyComponent>(entity);
 		if (ghostyComponent->State.Input.LengthSquared() > 0.0f)
 			return 1;
 
@@ -48,9 +55,9 @@ namespace Havtorn
 		return 0;
 	}
 
-	I16 CGhostySystem::EvaluateLocomotion(CScene* scene, U64 entitySceneIndex)
+	I16 CGhostySystem::EvaluateLocomotion(CScene* scene, const SEntity& entity)
 	{
-		SGhostyComponent* ghostyComponent = scene->GetComponents<SGhostyComponent>()[entitySceneIndex];
+		SGhostyComponent* ghostyComponent = scene->GetComponent<SGhostyComponent>(entity);
 		SVector stateInput = ghostyComponent->State.Input;
 
 		ghostyComponent->State.IsInWalkingAnimationState = true;

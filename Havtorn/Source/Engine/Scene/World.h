@@ -4,6 +4,7 @@
 
 #include "ECS/Entity.h"
 #include "Scene.h"
+#include "FileSystem/FileHeaderDeclarations.h"
 #include "Core/EngineException.h"
 
 namespace Havtorn
@@ -22,11 +23,15 @@ namespace Havtorn
 		HAVTORN_API std::vector<Ptr<CScene>>& GetActiveScenes();
 		HAVTORN_API std::vector<SEntity>& GetEntities() const;
 		HAVTORN_API void SaveActiveScene(const std::string& destinationPath);
-		HAVTORN_API void AddScene(const std::string& filePath);
 		HAVTORN_API void RemoveScene(U64 sceneIndex);
-		HAVTORN_API void ChangeScene(const std::string& filePath);
 		HAVTORN_API CAssetRegistry* GetAssetRegistry() const;
 		
+		template<typename T>
+		void AddScene(const std::string& filePath);
+
+		template<typename T>
+		void ChangeScene(const std::string& filePath);
+
 		template<typename T>
 		void OpenDemoScene(const bool shouldOpen3DDemo = true);
 
@@ -68,7 +73,7 @@ namespace Havtorn
 		void RemoveSystem(U16 index);
 		void RemoveSystemRespectOrder(U16 index);
 
-		void LoadScene(const std::string& filePath);
+		HAVTORN_API void LoadScene(const std::string& filePath, CScene* outScene);
 
 	private:
 		struct SystemTypeCode
@@ -89,6 +94,20 @@ namespace Havtorn
 		Ptr<CAssetRegistry> AssetRegistry = nullptr;
 		CRenderManager* RenderManager = nullptr;
 	};
+
+	template<typename T>
+	inline void CWorld::AddScene(const std::string& filePath)
+	{
+		Scenes.emplace_back(std::make_unique<T>());
+		LoadScene(filePath, Scenes.back().get());
+	}
+
+	template<typename T>
+	inline void CWorld::ChangeScene(const std::string& filePath)
+	{
+		Scenes.clear();
+		AddScene<T>(filePath);
+	}
 
 	template<typename T>
 	inline void CWorld::OpenDemoScene(const bool shouldOpen3DDemo)

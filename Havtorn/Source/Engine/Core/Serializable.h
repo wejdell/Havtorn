@@ -29,24 +29,28 @@ namespace Havtorn
 	U32 GetDataSize(const T& object)
 	{
 		U32 size = sizeof(object);
-		LOG_SERIALIZE("Serialized data of type %s was registered with size %i", typeid(T).name(), size);
+		LOG_SERIALIZE("Data of type %s was registered for serialization with size %i", typeid(T).name(), size);
 		return size;
 	}
 
 	template<typename T>
 	U32 GetDataSize(const std::vector<T>& objects)
 	{
-		U32 size = sizeof(U32) + sizeof(T) * static_cast<U32>(objects.size());
-		LOG_SERIALIZE("Serialized vector data of type %s was registered with size %i", typeid(T).name(), size);
-		return size;
+		U32 numberSize = sizeof(U32);
+		LOG_SERIALIZE("Data vector of type %s was registered for serialization with size %i", typeid(U32).name(), numberSize);
+		U32 dataSize = sizeof(T) * static_cast<U32>(objects.size());
+		LOG_SERIALIZE("Data vector of type %s was registered for serialization with size %i", typeid(T).name(), dataSize);
+		return numberSize + dataSize;
 	}
 
 	template<>
 	inline U32 GetDataSize(const std::string& object)
 	{
-		U32 size = sizeof(U32) + sizeof(char) * static_cast<U32>(object.length());
-		LOG_SERIALIZE("Serialized data of type std::string was registered with size %i", size);
-		return size;
+		U32 numberSize = sizeof(U32); 
+		LOG_SERIALIZE("Data of type %s was registered for serialization with size %i", typeid(U32).name(), numberSize);
+		U32 dataSize = sizeof(char) * static_cast<U32>(object.length());
+		LOG_SERIALIZE("Data of type std::string was registered for serialization with size %i", dataSize);
+		return numberSize + dataSize;
 	}
 
 	template<typename T>

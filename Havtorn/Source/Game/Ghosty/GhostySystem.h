@@ -13,13 +13,13 @@ namespace Havtorn
 		void Update(CScene* scene) override;
 
 	public:
-		std::function<I16(CScene*, U64)> EvaluateIdleFunc;
-		std::function<I16(CScene*, U64)> EvaluateLocomotionFunc;
-	private:
-		I16 EvaluateIdle(CScene* scene, U64 entitySceneIndex);
-		I16 EvaluateLocomotion(CScene* scene, U64 entitySceneIndex);
+		std::function<I16(CScene*, const SEntity&)> EvaluateIdleFunc;
+		std::function<I16(CScene*, const SEntity&)> EvaluateLocomotionFunc;
 
 	private:
+		I16 EvaluateIdle(CScene* scene, const SEntity& entity);
+		I16 EvaluateLocomotion(CScene* scene, const SEntity& entity);
+
 		void HandleAxisInput(const SInputAxisPayload payload);
 		void ResetInput();
 		SVector input;
