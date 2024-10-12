@@ -186,8 +186,7 @@ namespace Havtorn
 	inline U32 SSceneFileHeader::GetSize() const
 	{
 		U32 size = 0;
-		size += GetDataSize(AssetType);
-		// NR: Asset Registry size is calculated in the call site of this function.
+		// NR: Asset Registry size and asset type size is calculated in the call site of this function.
 		size += Scene->GetSize();
 
 		return size;

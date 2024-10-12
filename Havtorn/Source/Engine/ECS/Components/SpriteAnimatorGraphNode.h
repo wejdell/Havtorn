@@ -10,7 +10,7 @@ namespace Havtorn
 {
 	class CScene;
 	struct SSpriteAnimatorGraphComponent;
-	struct SSpriteAnimationClip
+	struct SSpriteAnimationClip : public ISerializable
 	{
 		SSpriteAnimationClip() = default;
 		SSpriteAnimationClip(const std::vector<SVector4>& uvRects, const std::vector<float>& durations, const bool isLooping)
@@ -19,6 +19,10 @@ namespace Havtorn
 			, IsLooping(isLooping)
 		{
 		}
+
+		HAVTORN_API [[nodiscard]] U32 GetSize() const override;
+		HAVTORN_API void Serialize(char* toData, U64& pointerPosition) const override;
+		HAVTORN_API void Deserialize(const char* fromData, U64& pointerPosition) override;
 
 		std::vector<SVector4> UVRects;
 		std::vector<float> Durations;
@@ -30,14 +34,18 @@ namespace Havtorn
 	};
 
 	// AS: This is basically a Switch and an index into animationClips vector
-	struct SSpriteAnimatorGraphNode 
+	struct SSpriteAnimatorGraphNode : public ISerializable
 	{
 		CHavtornStaticString<32> Name;
 		std::vector<SSpriteAnimatorGraphNode> Nodes;
-		std::function<I16(CScene*, U64)> Evaluate;
+		U64 EvaluateFunctionMapKey = 0;
 		I16 AnimationClipKey = -1;
 
-		HAVTORN_API SSpriteAnimatorGraphNode& AddSwitchNode(const CHavtornStaticString<32>& name, std::function<I16(CScene*, U64)> evaluator);
+		HAVTORN_API SSpriteAnimatorGraphNode& AddSwitchNode(const CHavtornStaticString<32>& name, const std::string& evaluatorClassAndFunctionName);
 		HAVTORN_API void AddClipNode(SSpriteAnimatorGraphComponent* component, const CHavtornStaticString<32>& name, const SSpriteAnimationClip& clipData);
+
+		HAVTORN_API [[nodiscard]] U32 GetSize() const override;
+		HAVTORN_API void Serialize(char* toData, U64& pointerPosition) const override;
+		HAVTORN_API void Deserialize(const char* fromData, U64& pointerPosition) override;
 	};
 }

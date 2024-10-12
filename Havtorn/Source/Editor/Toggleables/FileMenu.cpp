@@ -62,13 +62,13 @@ namespace ImGui
             {
                 if (ImGui::MenuItem("Assets/Scenes/TestScene.hvs"))
                 {
-                    Havtorn::GEngine::GetWorld()->ChangeScene("Assets/Scenes/TestScene.hvs");
+                    Havtorn::GEngine::GetWorld()->ChangeScene<Havtorn::CGameScene>("Assets/Scenes/TestScene.hvs");
                     Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
                 }
 
                 if (ImGui::MenuItem("Open Demo Scene"))
                 {
-                    Havtorn::GEngine::GetWorld()->ChangeScene("Assets/Scenes/DemoScene.hvs");
+                    Havtorn::GEngine::GetWorld()->ChangeScene<Havtorn::CGameScene>("Assets/Scenes/DemoScene.hvs");
                     Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
                 }
 

@@ -529,53 +529,33 @@ namespace Havtorn
 		size += GetDataSize(MainCameraEntity);
 		size += GetDataSize(Entities);
 
-		auto defaultSizeAllocator = [&]<typename T>(const std::vector<T*>& componentVector)
-		{
-			size += GetDataSize(static_cast<U32>(componentVector.size()));
-			for (const auto component : componentVector)
-			{
-				auto& componentRef = *component;
-				size += GetDataSize(componentRef);
-			}
-		};
+		size += DefaultSizeAllocator(GetComponents<STransformComponent>());		
 
-		auto specificSizeAllocator = [&]<typename T>(const std::vector<T*>& componentVector)
-		{
-			size += GetDataSize(static_cast<U32>(componentVector.size()));
-			for (auto component : componentVector)
-				size += component->GetSize();
-		};
+		size += SpecializedSizeAllocator(GetComponents<SStaticMeshComponent>());
 
-
-		defaultSizeAllocator(GetComponents<STransformComponent>());		
-
-		specificSizeAllocator(GetComponents<SStaticMeshComponent>());
-
-		defaultSizeAllocator(GetComponents<SCameraComponent>());
-		defaultSizeAllocator(GetComponents<SCameraControllerComponent>());
+		size += DefaultSizeAllocator(GetComponents<SCameraComponent>());
+		size += DefaultSizeAllocator(GetComponents<SCameraControllerComponent>());
 		
-		specificSizeAllocator(GetComponents<SMaterialComponent>());
+		size += SpecializedSizeAllocator(GetComponents<SMaterialComponent>());
 		
-		defaultSizeAllocator(GetComponents<SEnvironmentLightComponent>());
-		defaultSizeAllocator(GetComponents<SDirectionalLightComponent>());
-		defaultSizeAllocator(GetComponents<SPointLightComponent>());
-		defaultSizeAllocator(GetComponents<SSpotLightComponent>());
-		defaultSizeAllocator(GetComponents<SVolumetricLightComponent>());
+		size += DefaultSizeAllocator(GetComponents<SEnvironmentLightComponent>());
+		size += DefaultSizeAllocator(GetComponents<SDirectionalLightComponent>());
+		size += DefaultSizeAllocator(GetComponents<SPointLightComponent>());
+		size += DefaultSizeAllocator(GetComponents<SSpotLightComponent>());
+		size += DefaultSizeAllocator(GetComponents<SVolumetricLightComponent>());
 
-		specificSizeAllocator(GetComponents<SDecalComponent>());
+		size += SpecializedSizeAllocator(GetComponents<SDecalComponent>());
 		
-		defaultSizeAllocator(GetComponents<SSpriteComponent>());
-		defaultSizeAllocator(GetComponents<STransform2DComponent>());
-		
-		// TODO.AS: Implement GetSize (since the component is not trivially serializable)
-		//defaultSizeAllocator(GetComponents<SSpriteAnimatorGraphComponent>());
-		size += GetDataSize(static_cast<U32>(GetComponents<SSpriteAnimatorGraphComponent>().size()));
+		size += DefaultSizeAllocator(GetComponents<SSpriteComponent>());
+		size += DefaultSizeAllocator(GetComponents<STransform2DComponent>());
+
+		size += SpecializedSizeAllocator(GetComponents<SSpriteAnimatorGraphComponent>());
 
 		// TODO.NR: Implement GetSize (since the component is not trivially serializable)
-		//defaultSizeAllocator(GetComponents<SSequencerComponent>());
+		//size += DefaultSizeAllocator(GetComponents<SSequencerComponent>());
 		size += GetDataSize(static_cast<U32>(GetComponents<SSequencerComponent>().size()));
 
-		defaultSizeAllocator(GetComponents<SMetaDataComponent>());
+		size += DefaultSizeAllocator(GetComponents<SMetaDataComponent>());
 
 		return size;
 	}
@@ -586,53 +566,34 @@ namespace Havtorn
 		SerializeData(MainCameraEntity, toData, pointerPosition);
 		SerializeData(Entities, toData, pointerPosition);
 
-		auto defaultSerializer = [&]<typename T>(const std::vector<T*>& componentVector)
-		{
-			SerializeData(static_cast<U32>(componentVector.size()), toData, pointerPosition);
-			for (const auto component : componentVector)
-			{
-				auto& componentRef = *component;
-				SerializeData(componentRef, toData, pointerPosition);
-			}
-		};
+		DefaultSerializer(GetComponents<STransformComponent>(), toData, pointerPosition);
 
-		auto specificSerializer = [&]<typename T>(const std::vector<T*>&componentVector)
-		{
-			SerializeData(static_cast<U32>(componentVector.size()), toData, pointerPosition);
-			for (auto component : componentVector)
-				component->Serialize(toData, pointerPosition);
-		};
+		SpecializedSerializer(GetComponents<SStaticMeshComponent>(), toData, pointerPosition);
 
-		defaultSerializer(GetComponents<STransformComponent>());
+		DefaultSerializer(GetComponents<SCameraComponent>(), toData, pointerPosition);
+		DefaultSerializer(GetComponents<SCameraControllerComponent>(), toData, pointerPosition);
 
-		specificSerializer(GetComponents<SStaticMeshComponent>());
+		SpecializedSerializer(GetComponents<SMaterialComponent>(), toData, pointerPosition);
 
-		defaultSerializer(GetComponents<SCameraComponent>());
-		defaultSerializer(GetComponents<SCameraControllerComponent>());
-
-		specificSerializer(GetComponents<SMaterialComponent>());
-
-		defaultSerializer(GetComponents<SEnvironmentLightComponent>());
-		defaultSerializer(GetComponents<SDirectionalLightComponent>());
-		defaultSerializer(GetComponents<SPointLightComponent>());
-		defaultSerializer(GetComponents<SSpotLightComponent>());
-		defaultSerializer(GetComponents<SVolumetricLightComponent>());
+		DefaultSerializer(GetComponents<SEnvironmentLightComponent>(), toData, pointerPosition);
+		DefaultSerializer(GetComponents<SDirectionalLightComponent>(), toData, pointerPosition);
+		DefaultSerializer(GetComponents<SPointLightComponent>(), toData, pointerPosition);
+		DefaultSerializer(GetComponents<SSpotLightComponent>(), toData, pointerPosition);
+		DefaultSerializer(GetComponents<SVolumetricLightComponent>(), toData, pointerPosition);
 
 		// NR: Texture info Saved and Loaded using AssetRegistry
-		specificSerializer(GetComponents<SDecalComponent>());
+		SpecializedSerializer(GetComponents<SDecalComponent>(), toData, pointerPosition);
 
-		defaultSerializer(GetComponents<SSpriteComponent>());
-		defaultSerializer(GetComponents<STransform2DComponent>());
+		DefaultSerializer(GetComponents<SSpriteComponent>(), toData, pointerPosition);
+		DefaultSerializer(GetComponents<STransform2DComponent>(), toData, pointerPosition);
 
-		// TODO.AS: Implement Serialize (since the component is not trivially serializable)
-		const auto& spriteAnimatorGraphComponents = GetComponents<SSpriteAnimatorGraphComponent>();
-		SerializeData(static_cast<U32>(spriteAnimatorGraphComponents.size()), toData, pointerPosition);
+		SpecializedSerializer(GetComponents<SSpriteAnimatorGraphComponent>(), toData, pointerPosition);
 
 		// TODO.NR: Implement Serialize (since the component is not trivially serializable)
 		const auto& sequencerComponents = GetComponents<SSequencerComponent>();
 		SerializeData(static_cast<U32>(sequencerComponents.size()), toData, pointerPosition);
 
-		defaultSerializer(GetComponents<SMetaDataComponent>());
+		DefaultSerializer(GetComponents<SMetaDataComponent>(), toData, pointerPosition);
 	}
 
 	void CScene::Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry)
@@ -641,24 +602,9 @@ namespace Havtorn
 		DeserializeData(MainCameraEntity, fromData, pointerPosition);
 		DeserializeData(Entities, fromData, pointerPosition);
 
-		auto defaultDeserializer = [&]<typename T>(std::vector<T>&componentVector, SViewFunctionPointer viewFunction)
-		{
-			U32 numberOfComponents = 0;
-			DeserializeData(numberOfComponents, fromData, pointerPosition);
-			componentVector.resize(numberOfComponents);
-
-			for (U64 index = 0; index < numberOfComponents; index++)
-			{
-				T component;
-				DeserializeData(component, fromData, pointerPosition);
-				AddComponent(component, component.Owner);
-				AddView(component.Owner, viewFunction);
-			}
-		};
-
 		{
 			std::vector<STransformComponent> components;
-			defaultDeserializer(components, STransformComponentView::View);
+			DefaultDeserializer(components, STransformComponentView::View, fromData, pointerPosition);
 		}
 
 		{
@@ -678,12 +624,12 @@ namespace Havtorn
 
 		{
 			std::vector<SCameraComponent> components;
-			defaultDeserializer(components, SCameraComponentView::View);
+			DefaultDeserializer(components, SCameraComponentView::View, fromData, pointerPosition);
 		}
 
 		{
 			std::vector<SCameraControllerComponent> components;
-			defaultDeserializer(components, SCameraControllerComponentView::View);
+			DefaultDeserializer(components, SCameraControllerComponentView::View, fromData, pointerPosition);
 		}
 
 		U32 numberOfMaterialComponents = 0;
@@ -714,22 +660,22 @@ namespace Havtorn
 
 		{
 			std::vector<SDirectionalLightComponent> components;
-			defaultDeserializer(components, SDirectionalLightComponentView::View);
+			DefaultDeserializer(components, SDirectionalLightComponentView::View, fromData, pointerPosition);
 		}
 
 		{
 			std::vector<SPointLightComponent> components;
-			defaultDeserializer(components, SPointLightComponentView::View);
+			DefaultDeserializer(components, SPointLightComponentView::View, fromData, pointerPosition);
 		}
 
 		{
 			std::vector<SSpotLightComponent> components;
-			defaultDeserializer(components, SSpotLightComponentView::View);
+			DefaultDeserializer(components, SSpotLightComponentView::View, fromData, pointerPosition);
 		}
 
 		{
 			std::vector<SVolumetricLightComponent> components;
-			defaultDeserializer(components, SVolumetricLightComponentView::View);
+			DefaultDeserializer(components, SVolumetricLightComponentView::View, fromData, pointerPosition);
 		}
 
 		U32 numberOfDecalComponents = 0;
@@ -760,11 +706,13 @@ namespace Havtorn
 
 		{
 			std::vector<STransform2DComponent> components;
-			defaultDeserializer(components, STransform2DComponentView::View);
+			DefaultDeserializer(components, STransform2DComponentView::View, fromData, pointerPosition);
 		}
 
-		U32 numberOfSpriteAnimatorGraphComponents = 0;
-		DeserializeData(numberOfSpriteAnimatorGraphComponents, fromData, pointerPosition);
+		{
+			std::vector<SSpriteAnimatorGraphComponent> components;
+			SpecializedDeserializer(components, SSpriteAnimatorGraphComponentView::View, fromData, pointerPosition);
+		}
 
 		U32 numberOfSequencerComponents = 0;
 		DeserializeData(numberOfSequencerComponents, fromData, pointerPosition);

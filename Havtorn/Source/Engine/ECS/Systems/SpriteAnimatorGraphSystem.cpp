@@ -18,18 +18,16 @@ namespace Havtorn
 	{
 		const F32 deltaTime = GTime::Dt();
 		const std::vector<SSpriteAnimatorGraphComponent*>& spriteAnimatorGraphComponents = scene->GetComponents<SSpriteAnimatorGraphComponent>();
-		const std::vector<SSpriteComponent*>& spriteComponents = scene->GetComponents<SSpriteComponent>();
 
-		for (U64 i = 0; i < spriteAnimatorGraphComponents.size(); i++)
+		for (SSpriteAnimatorGraphComponent* component : spriteAnimatorGraphComponents)
 		{
-			SSpriteAnimatorGraphComponent* component = spriteAnimatorGraphComponents[i];
 			if (!component)
 				continue;
 
-			if(component->AnimationClips.size() == 0)
+			if (component->AnimationClips.size() == 0)
 				continue;
 
-			if (component->Graph.Evaluate)
+			if (component->Graph.EvaluateFunctionMapKey != 0)
 			{
 				SSpriteAnimatorGraphNode* currentNode = &component->Graph;
 				while (currentNode != nullptr)
@@ -40,14 +38,24 @@ namespace Havtorn
 						break;
 					}
 					
-					I16 evaluatedNodeIndex = currentNode->Evaluate(scene, i);
+					I16 evaluatedNodeIndex = EvaluateFunctionMap[currentNode->EvaluateFunctionMapKey](scene, component->Owner);
 					if (evaluatedNodeIndex >= 0 && evaluatedNodeIndex < currentNode->Nodes.size())
 						currentNode = &currentNode->Nodes[evaluatedNodeIndex];			
 				}
 			}
 
-			spriteComponents[i]->UVRect = TickAnimationClip(*component, deltaTime);
+			scene->GetComponent<SSpriteComponent>(component)->UVRect = TickAnimationClip(*component, deltaTime);
 		}
+	}
+
+	void CSpriteAnimatorGraphSystem::BindEvaluateFunction(std::function<I16(CScene*, const SEntity&)>& function, const std::string& classAndFunctionName)
+	{
+		U64 id = std::hash<std::string>{}(classAndFunctionName);
+
+		if (EvaluateFunctionMap.contains(id))
+			EvaluateFunctionMap.erase(id);
+
+		EvaluateFunctionMap.emplace(id, function);
 	}
 
 	SVector4 CSpriteAnimatorGraphSystem::TickAnimationClip(SSpriteAnimatorGraphComponent& data, const F32 deltaTime)
@@ -56,7 +64,7 @@ namespace Havtorn
 
 		// AS: By design, We wait for the end of the current frame before we allow changing clip
 
-		U64 durationIndex = min(data.CurrentFrame, data.AnimationClips[data.CurrentAnimationClipKey].Durations.size() - 1);
+		U64 durationIndex = UMath::Min(data.CurrentFrame, static_cast<U32>(data.AnimationClips[data.CurrentAnimationClipKey].Durations.size() - 1));
 		if (data.ElapsedTimeInSeconds >= data.AnimationClips[data.CurrentAnimationClipKey].Durations[durationIndex])
 		{
 			bool animationClipHasChanged = data.CurrentAnimationClipKey != data.ResolvedAnimationClipKey;

@@ -26,6 +26,8 @@ namespace Havtorn
 	class CScene
 	{
 	public:
+		using SViewFunctionPointer = std::function<SComponentViewResult(const SEntity&, CScene*)>;
+
 		HAVTORN_API CScene();
 		HAVTORN_API ~CScene();
 
@@ -43,6 +45,81 @@ namespace Havtorn
 		HAVTORN_API U64 GetSceneIndex(const SEntity& entity) const;
 		HAVTORN_API U64 GetSceneIndex(const U64 entityGUID) const;
 		
+		template<typename T>
+		U32 DefaultSizeAllocator(const std::vector<T*>& componentVector) const
+		{
+			U32 size = 0;
+			size += GetDataSize(static_cast<U32>(componentVector.size()));
+			for (const auto component : componentVector)
+			{
+				auto& componentRef = *component;
+				size += GetDataSize(componentRef);
+			}
+			return size;
+		}
+
+		template<typename T>
+		U32 SpecializedSizeAllocator(const std::vector<T*>& componentVector) const
+		{
+			U32 size = 0;
+			size += GetDataSize(static_cast<U32>(componentVector.size()));
+			for (auto component : componentVector)
+				size += component->GetSize();
+
+			return size;
+		}
+
+		template<typename T>
+		void DefaultSerializer(const std::vector<T*>& componentVector, char* toData, U64& pointerPosition) const
+		{
+			SerializeData(static_cast<U32>(componentVector.size()), toData, pointerPosition);
+			for (const auto component : componentVector)
+			{
+				auto& componentRef = *component;
+				SerializeData(componentRef, toData, pointerPosition);
+			}
+		}
+
+		template<typename T>
+		void SpecializedSerializer(const std::vector<T*>& componentVector, char* toData, U64& pointerPosition) const
+		{
+			SerializeData(static_cast<U32>(componentVector.size()), toData, pointerPosition);
+			for (auto component : componentVector)
+				component->Serialize(toData, pointerPosition);
+		}
+
+		template<typename T>
+		void DefaultDeserializer(std::vector<T>& componentVector, SViewFunctionPointer viewFunction, const char* fromData, U64& pointerPosition)
+		{
+			U32 numberOfComponents = 0;
+			DeserializeData(numberOfComponents, fromData, pointerPosition);
+			componentVector.resize(numberOfComponents);
+
+			for (U64 index = 0; index < numberOfComponents; index++)
+			{
+				T component;
+				DeserializeData(component, fromData, pointerPosition);
+				AddComponent(component, component.Owner);
+				AddView(component.Owner, viewFunction);
+			}
+		}
+
+		template<typename T>
+		void SpecializedDeserializer(std::vector<T>& componentVector, SViewFunctionPointer viewFunction, const char* fromData, U64& pointerPosition)
+		{
+			U32 numberOfComponents = 0;
+			DeserializeData(numberOfComponents, fromData, pointerPosition);
+			componentVector.resize(numberOfComponents);
+
+			for (U64 index = 0; index < numberOfComponents; index++)
+			{
+				T component;
+				component.Deserialize(fromData, pointerPosition);
+				AddComponent(component, component.Owner);
+				AddView(component.Owner, viewFunction);
+			}
+		}
+
 		template<typename T>
 		T* AddComponent(const T& componentCopy, const SEntity& toEntity)
 		{
@@ -202,7 +279,6 @@ namespace Havtorn
 			return specializedComponents;
 		}
 		
-		using SViewFunctionPointer = std::function<SComponentViewResult(const SEntity&, CScene*)>;
 		HAVTORN_API void AddView(const SEntity& owner, SViewFunctionPointer function);
 		HAVTORN_API void RemoveView(const SEntity& owner, SViewFunctionPointer function);
 

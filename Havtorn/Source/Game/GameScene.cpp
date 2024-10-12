@@ -112,14 +112,13 @@ namespace Havtorn
 		//moveRight.Durations.push_back(0.15f);
 		//moveRight.Durations.push_back(0.15f);
 
-		CGhostySystem* ghostySystem = GEngine::GetWorld()->GetSystem<CGhostySystem>();
 		SSpriteAnimatorGraphComponent& spriteAnimatorGraphComponent = *AddComponent<SSpriteAnimatorGraphComponent>(ghosty);
 		AddView(ghosty, SSpriteAnimatorGraphComponentView::View);
 
-		SSpriteAnimatorGraphNode& rootNode = spriteAnimatorGraphComponent.SetRoot(std::string("Idle | Locomotion"), ghostySystem->EvaluateIdleFunc);
+		SSpriteAnimatorGraphNode& rootNode = spriteAnimatorGraphComponent.SetRoot(std::string("Idle | Locomotion"), "CGhostySystem::EvaluateIdle");
 		rootNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Idle"), idle);
 
-		SSpriteAnimatorGraphNode& locomotionNode = rootNode.AddSwitchNode(std::string("Locomotion: Left | Right"), ghostySystem->EvaluateLocomotionFunc);
+		SSpriteAnimatorGraphNode& locomotionNode = rootNode.AddSwitchNode(std::string("Locomotion: Left | Right"), "CGhostySystem::EvaluateLocomotion");
 		locomotionNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Move Left"), moveLeft);
 		locomotionNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Move Right"), moveRight);
 
@@ -159,39 +158,16 @@ namespace Havtorn
     {
 		CScene::Serialize(toData, pointerPosition);
 
-		auto defaultSerializer = [&]<typename T>(const std::vector<T*>&componentVector)
-		{
-			SerializeData(static_cast<U32>(componentVector.size()), toData, pointerPosition);
-			for (const auto component : componentVector)
-			{
-				auto& componentRef = *component;
-				SerializeData(componentRef, toData, pointerPosition);
-			}
-		};
-
-		defaultSerializer(GetComponents<SGhostyComponent>());
+		DefaultSerializer(GetComponents<SGhostyComponent>(), toData, pointerPosition);
     }
 
     void CGameScene::Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry)
     {
 		CScene::Deserialize(fromData, pointerPosition, assetRegistry);
 
-		auto defaultDeserializer = [&]<typename T>(std::vector<T>&componentVector, SViewFunctionPointer viewFunction)
-		{
-			U32 numberOfComponents = 0;
-			DeserializeData(numberOfComponents, fromData, pointerPosition);
-			componentVector.resize(numberOfComponents);
-			for (auto& component : componentVector)
-			{
-				DeserializeData(component, fromData, pointerPosition);
-				AddComponent(component, component.Owner);
-				AddView(component.Owner, viewFunction);
-			}
-		};
-
 		{
 			std::vector<SGhostyComponent> components;
-			defaultDeserializer(components, SGhostyComponentView::View);
+			DefaultDeserializer(components, SGhostyComponentView::View, fromData, pointerPosition);
 		}
     }
 }

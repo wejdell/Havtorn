@@ -73,6 +73,8 @@ namespace ImGui
 
 		Havtorn::SMetaDataComponent* metaDataComp = Scene->GetComponent<Havtorn::SMetaDataComponent>(SelectedEntity);
 		ImGui::HavtornInputText("", &metaDataComp->Name);
+		ImGui::SameLine();
+		ImGui::TextDisabled("GUID %i", metaDataComp->Owner.GUID);
 		ImGui::Separator();
 
 		for (Havtorn::CScene::SViewFunctionPointer viewFunction : Scene->GetViews(SelectedEntity))
