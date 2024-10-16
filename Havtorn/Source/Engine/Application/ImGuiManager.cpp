@@ -14,7 +14,7 @@ namespace Havtorn
 {
     GImGuiManager* GImGuiManager::Instance = nullptr;
 
-    const char* GImGuiManager::Version = "1.86 WIP";
+    const char* GImGuiManager::Version = IMGUI_VERSION;
     const char* GImGuiManager::DefaultFont = "../External/imgui/misc/fonts/Roboto-Medium.ttf";
     const F32 GImGuiManager::DefaultFontSize = 15.0f;
 
@@ -31,7 +31,7 @@ namespace Havtorn
         SetImGuiColorProfile(SImGuiColorProfile());
         SetImGuiStyleProfile(SImGuiStyleProfile());
 
-        ImGui::DebugCheckVersionAndDataLayout(Version, sizeof(ImGuiIO), sizeof(ImGuiStyle), sizeof(ImVec2), sizeof(ImVec4), sizeof(ImDrawVert), sizeof(unsigned int));
+        ImGui::DebugCheckVersionAndDataLayout(Version, sizeof(ImGuiIO), sizeof(ImGuiStyle), sizeof(ImVec2), sizeof(ImVec4), sizeof(ImDrawVert), sizeof(ImDrawIdx));
         ImGui::GetIO().Fonts->AddFontFromFileTTF(DefaultFont, DefaultFontSize);
 
 #if IMGUIMANAGER_USE_LOGS

@@ -72,7 +72,7 @@ namespace ImGui
 		SelectedEntity = selection;
 
 		Havtorn::SMetaDataComponent* metaDataComp = Scene->GetComponent<Havtorn::SMetaDataComponent>(SelectedEntity);
-		ImGui::HavtornInputText("", &metaDataComp->Name);
+		ImGui::HavtornInputText("##MetaDataCompName", &metaDataComp->Name);
 		ImGui::SameLine();
 		ImGui::TextDisabled("GUID %i", metaDataComp->Owner.GUID);
 		ImGui::Separator();
@@ -205,7 +205,7 @@ namespace ImGui
 				ImGui::Text(assetRep->Name.c_str());
 
 			// TODO.NR: Update ImGui and use the overload that takes a unique identifier. This currently breaks when using two buttons with the same texture.
-			if (ImGui::ImageButton(assetRep->TextureRef, { ImGui::UUtils::TexturePreviewSizeX, ImGui::UUtils::TexturePreviewSizeY }))
+			if (ImGui::ImageButton(assetName.c_str(), (ImTextureID)(intptr_t)assetRep->TextureRef, {ImGui::UUtils::TexturePreviewSizeX, ImGui::UUtils::TexturePreviewSizeY}))
 			{
 				// TODO.NR: Make Algo lib function that finds index of object in array, make for-each loop
 				AssetPickedIndex = index;
@@ -259,7 +259,7 @@ namespace ImGui
 			ImGui::TableNextColumn();
 			ImGui::PushID(id++);
 
-			if (ImGui::ImageButton(assetRep->TextureRef, { ImGui::UUtils::TexturePreviewSizeX * 0.75f, ImGui::UUtils::TexturePreviewSizeY * 0.75f }))
+			if (ImGui::ImageButton(assetRep->Name.c_str(), (ImTextureID)(intptr_t)assetRep->TextureRef, {ImGui::UUtils::TexturePreviewSizeX * 0.75f, ImGui::UUtils::TexturePreviewSizeY * 0.75f}))
 			{
 				Manager->GetRenderManager()->TryLoadStaticMeshComponent(assetRep->Name, staticMesh);
 
@@ -355,7 +355,7 @@ namespace ImGui
 				ImGui::TableNextColumn();
 				ImGui::PushID(id++);
 
-				if (ImGui::ImageButton(assetRep->TextureRef, { ImGui::UUtils::TexturePreviewSizeX * 0.75f, ImGui::UUtils::TexturePreviewSizeY * 0.75f }))
+				if (ImGui::ImageButton(assetRep->Name.c_str(), (ImTextureID)(intptr_t)assetRep->TextureRef, {ImGui::UUtils::TexturePreviewSizeX * 0.75f, ImGui::UUtils::TexturePreviewSizeY * 0.75f}))
 				{
 
 					Manager->GetRenderManager()->TryReplaceMaterialOnComponent(assetRep->DirectoryEntry.path().string(), AssetPickedIndex, materialComponent);
@@ -402,7 +402,7 @@ namespace ImGui
 				ImGui::TableNextColumn();
 				ImGui::PushID(id++);
 
-				if (ImGui::ImageButton(assetRep->TextureRef, { ImGui::UUtils::TexturePreviewSizeX * 0.75f, ImGui::UUtils::TexturePreviewSizeY * 0.75f }))
+				if (ImGui::ImageButton(assetRep->Name.c_str(), (ImTextureID)(intptr_t)assetRep->TextureRef, {ImGui::UUtils::TexturePreviewSizeX * 0.75f, ImGui::UUtils::TexturePreviewSizeY * 0.75f}))
 				{
 					textureReference = static_cast<Havtorn::U16>(Havtorn::GEngine::GetTextureBank()->GetTextureIndex(entry.path().string()));
 					ImGui::CloseCurrentPopup();

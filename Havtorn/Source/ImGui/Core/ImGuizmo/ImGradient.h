@@ -1,7 +1,5 @@
-// Copyright 2022 Team Havtorn. All Rights Reserved.
-
 // https://github.com/CedricGuillemet/ImGuizmo
-// v 1.84 WIP
+// v1.91.3 WIP
 //
 // The MIT License(MIT)
 //
@@ -40,6 +38,7 @@ namespace ImGradient
       virtual int EditPoint(int pointIndex, ImVec4 value) = 0;
       virtual ImVec4 GetPoint(float t) = 0;
       virtual void AddPoint(ImVec4 value) = 0;
+      virtual ~Delegate() = default;
    };
 
    bool Edit(Delegate& delegate, const ImVec2& size, int& selection);

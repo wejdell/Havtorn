@@ -42,7 +42,7 @@ namespace ImGui
 		{
 			if (CurrentDirectory != std::filesystem::path(DefaultAssetPath))
 			{
-				if (ImGui::ArrowButton("GoBackDir", 0))
+				if (ImGui::ArrowButton("GoBackDir", ImGuiDir_Up))
 				{
 					CurrentDirectory = CurrentDirectory.parent_path();
 				}
@@ -53,7 +53,7 @@ namespace ImGui
 			F32 panelWidth = ImGui::GetContentRegionAvail().x;
 			Havtorn::I32 columnCount = static_cast<Havtorn::I32>(panelWidth / cellWidth);
 
-			void* folderIconID = (void*)Manager->GetResourceManager()->GetEditorTexture(Havtorn::EEditorTexture::FolderIcon);
+			ImTextureID folderIconID = (ImTextureID)(intptr_t)Manager->GetResourceManager()->GetEditorTexture(Havtorn::EEditorTexture::FolderIcon);
 
 			Havtorn::U32 id = 0;
 			if (ImGui::BeginTable("FileStructure", columnCount))
@@ -69,7 +69,7 @@ namespace ImGui
 
 					if (entry.is_directory())
 					{	
-						if (ImGui::ImageButton(folderIconID, { ThumbnailSize.X, ThumbnailSize.Y }))
+						if (ImGui::ImageButton("FolderIcon", folderIconID, {ThumbnailSize.X, ThumbnailSize.Y}))
 						{
 							CurrentDirectory /= path.filename();
 						}
@@ -82,9 +82,9 @@ namespace ImGui
 					{
 						const auto& rep = Manager->GetAssetRepFromDirEntry(entry);
 						if (!rep->TextureRef)
-							rep->TextureRef = (void*)Manager->GetResourceManager()->GetEditorTexture(Havtorn::EEditorTexture::FileIcon);
+							rep->TextureRef = Manager->GetResourceManager()->GetEditorTexture(Havtorn::EEditorTexture::FileIcon);
 
-						if (ImGui::ImageButton(rep->TextureRef, { ThumbnailSize.X, ThumbnailSize.Y }))
+						if (ImGui::ImageButton("AssetIcon", (ImTextureID)(intptr_t)rep->TextureRef, {ThumbnailSize.X, ThumbnailSize.Y}))
 						{
 							// NR: Open Tool depending on asset type
 						}

@@ -32,26 +32,26 @@ namespace ImGui
 		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
 		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 
-		ImTextureID playButtonID = Manager->GetResourceManager()->GetEditorTexture(Havtorn::EEditorTexture::PlayIcon);
-		ImTextureID pauseButtonID = Manager->GetResourceManager()->GetEditorTexture(Havtorn::EEditorTexture::PauseIcon);
-		ImTextureID stopButtonID = Manager->GetResourceManager()->GetEditorTexture(Havtorn::EEditorTexture::StopIcon);
+		ImTextureID playButtonID = (ImTextureID)(intptr_t)Manager->GetResourceManager()->GetEditorTexture(Havtorn::EEditorTexture::PlayIcon);
+		ImTextureID pauseButtonID = (ImTextureID)(intptr_t)Manager->GetResourceManager()->GetEditorTexture(Havtorn::EEditorTexture::PauseIcon);
+		ImTextureID stopButtonID = (ImTextureID)(intptr_t)Manager->GetResourceManager()->GetEditorTexture(Havtorn::EEditorTexture::StopIcon);
 
 		if (ImGui::Begin(Name(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus))
 		{
 			ImGui::SameLine(layout.ViewportSize.X * 0.5f - 8.0f - 32.0f);
-			if (ImGui::ImageButton(playButtonID, { 16.0f, 16.0f }))
+			if (ImGui::ImageButton("PlayButton", playButtonID, {16.0f, 16.0f}))
 			{
 
 			}
 
 			ImGui::SameLine(layout.ViewportSize.X * 0.5f - 8.0f);
-			if (ImGui::ImageButton(pauseButtonID, { 16.0f, 16.0f }))
+			if (ImGui::ImageButton("PauseButton", pauseButtonID, {16.0f, 16.0f}))
 			{
 
 			}
 
 			ImGui::SameLine(layout.ViewportSize.X * 0.5f - 8.0f + 32.0f);
-			if (ImGui::ImageButton(stopButtonID, { 16.0f, 16.0f }))
+			if (ImGui::ImageButton("StopButton", stopButtonID, {16.0f, 16.0f}))
 			{
 
 			}
@@ -72,7 +72,7 @@ namespace ImGui
 				RenderedScenePosition.Y = windowPos.y;
 				RenderedSceneDimensions = { width, height };
 
-				ImGui::Image((void*)RenderedSceneTextureReference->GetShaderResourceView(), ImVec2(width, height));
+				ImGui::Image((ImTextureID)(intptr_t)RenderedSceneTextureReference->GetShaderResourceView(), ImVec2(width, height));
 			}
 		
 			CurrentDrawList = ImGui::GetWindowDrawList();
