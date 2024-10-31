@@ -13,3 +13,6 @@
 [submodule "Havtorn/External/box2dcpp"]
 	path = Havtorn/External/box2dcpp
 	url = https://github.com/nicolas-risberg/box2dcpp.git
+[submodule "Havtorn/External/PhysX"]
+	path = Havtorn/External/PhysX
+	url = https://github.com/nicolas-risberg/PhysX.git
