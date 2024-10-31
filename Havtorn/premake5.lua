@@ -52,8 +52,9 @@ project "Engine"
 		"External",
 		"External/FastNoise2/include",
 		"External/rapidjson",
-		"External/imgui",
 		"External/DirectXTex",
+		"External/box2d/include/box2d",
+		"External/box2dcpp/include/box2cpp",
 		"Source/ImGui"
 	}
 
@@ -131,7 +132,17 @@ project "Engine"
 		staticruntime "off"
 		runtime "Debug"
 		symbols "On"
-
+		
+		links
+		{
+			"box2dd"
+		}
+		
+		ignoredefaultlibraries
+		{
+			"LIBCMTD"
+		}
+		
 		defines 
 		{
 			"HV_ENABLE_ASSERTS"
@@ -144,8 +155,16 @@ project "Engine"
 		runtime "Release"
 		optimize "On"
 		flags { "LinkTimeOptimization" }
+	
+		links
+		{
+			"box2d"
+		}
 
-
+		ignoredefaultlibraries
+		{
+			"LIBCMT"
+		}
 
 
 
@@ -185,8 +204,9 @@ project "Game"
 		"External",
 		"External/FastNoise2/include",
 		"External/rapidjson",
-		"External/imgui",
 		"External/DirectXTex",
+		"External/box2d/include/box2d",
+		"External/box2dcpp/include/box2cpp",
 		"Source/Engine",
 		"Source/ImGui"		
 	}
@@ -240,7 +260,7 @@ project "Game"
 		runtime "Release"
 		optimize "On"
 		flags { "LinkTimeOptimization" }
-
+		
 
 
 
@@ -275,8 +295,9 @@ project "Editor"
 	{
 		"Source/%{prj.name}",
 		"External/rapidjson",
-		"External/imgui",
 		"External/DirectXTex",
+		"External/box2d/include/box2d",
+		"External/box2dcpp/include/box2cpp",
 		"Source/Engine",
 		"Source/ImGui"
 	}
