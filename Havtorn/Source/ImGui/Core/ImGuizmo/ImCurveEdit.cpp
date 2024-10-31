@@ -1,3 +1,5 @@
+// Copyright 2024 Team Havtorn. All Rights Reserved.
+
 // https://github.com/CedricGuillemet/ImGuizmo
 // v1.91.3 WIP
 //
