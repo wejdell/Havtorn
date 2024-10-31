@@ -47,46 +47,29 @@ namespace Havtorn
 		if (!ghosty.IsValid())
 			return true;
 
-		STransformComponent& spriteWStransform = *AddComponent<STransformComponent>(ghosty);
+		STransformComponent& ghostyTransform = *AddComponent<STransformComponent>(ghosty);
 		AddView(ghosty, STransformComponentView::View);
 		SSpriteComponent& spriteWSComp = *AddComponent<SSpriteComponent>(ghosty);
 		AddView(ghosty, SSpriteComponentView::View);
 		AddComponent<SGhostyComponent>(ghosty);
 		AddView(ghosty, SGhostyComponentView::View);
 
-		spriteWStransform.Transform.Move({ 0.0f, 0.0f, 0.0f });
-		//F32 radians = UMath::DegToRad(45.0f);
-		//spriteWStransform.Transform.Rotate({ radians, radians, radians });
+		ghostyTransform.Transform.Move({ 0.0f, 2.0f, 0.0f });
 
-		const std::string spritePath = "Assets/Textures/EllahSpriteSheet.hva";
-		spriteWSComp.UVRect = { 0.0f, 0.0f, 0.125f, 0.125f };
+		const std::string spritePath = "Assets/Textures/Circle_c.hva";
+		//spriteWSComp.UVRect = { 0.0f, 0.0f, 0.125f, 0.125f };
 		renderManager->LoadSpriteComponent(spritePath, &spriteWSComp);
 
 		//Define UVRects for Animation Frames on row 0, 1, 2
-		//F32 size = 32.0f / 256.0f;
-		F32 width = 1152.0f;
-		F32 height = 384.0f;
-		F32 frameSize = 96.0f;
+		//F32 width = 1152.0f;
+		//F32 height = 384.0f;
+		//F32 frameSize = 96.0f;
+		F32 width = 128.0f;
+		F32 height = 128.0f;
+		F32 frameSize = 128.0f;
 		std::vector<SVector4> uvRectsIdle = CreateAnimationClip(width, height, frameSize, 3, 6, 6);
 		std::vector<SVector4> uvRectsMoveLeft = CreateAnimationClip(width, height, frameSize, 0, 0, 6);
 		std::vector<SVector4> uvRectsMoveRight = CreateAnimationClip(width, height, frameSize, 1, 0, 6);
-		//std::vector<SVector4> uvRectsIdle = {
-		//	SVector4{ 0.0f,		0.0f,		size,			size },
-		//	SVector4{ size,		0.0f,		size * 2,		size },
-		//};
-		//std::vector<SVector4> uvRectsMoveLeft = {
-		//	SVector4{ 0.0f,		size,		size,		size * 2 },
-		//	SVector4{ size,		size,		size * 2,	size * 2 },
-		//	SVector4{ size * 2, size,		size * 3,	size * 2 },
-		//	//SVector4{ size * 3, size,		size * 4,	size * 2 },
-		//};
-		//std::vector<SVector4> uvRectsMoveRight = {
-		//	SVector4{ 0.0f,		size * 2,	size,		size * 3 },
-		//	SVector4{ size,		size * 2,	size * 2,	size * 3 },
-		//	SVector4{ size * 2, size * 2,	size * 3,	size * 3 },
-		//	
-		//	//SVector4{ size * 3, size * 2,	size * 4,	size * 3 },
-		//};
 
 		SSpriteAnimationClip idle;
 		idle.UVRects = uvRectsIdle;
@@ -99,18 +82,12 @@ namespace Havtorn
 		moveLeft.Durations.push_back(0.15f);
 		moveLeft.Durations.push_back(0.15f);
 
-
 		SSpriteAnimationClip moveRight
 		{
 			uvRectsMoveRight, //UVRects
 			{ 0.15f, 0.15f, 0.15f }, //Duration per Frame
 			true	//IsLooping
 		};
-
-		//moveRight.UVRects = uvRectsMoveRight;
-		//moveRight.Durations.push_back(0.15f);
-		//moveRight.Durations.push_back(0.15f);
-		//moveRight.Durations.push_back(0.15f);
 
 		SSpriteAnimatorGraphComponent& spriteAnimatorGraphComponent = *AddComponent<SSpriteAnimatorGraphComponent>(ghosty);
 		AddView(ghosty, SSpriteAnimatorGraphComponentView::View);
@@ -130,6 +107,33 @@ namespace Havtorn
 		//sequencerComponent.ComponentTracks.push_back({ EComponentType::SpriteComponent });
 		//sequencerComponent.ComponentTracks.push_back({ EComponentType::GhostyComponent });
 		//sequencerComponent.ComponentTracks.push_back({ EComponentType::CameraComponent });
+
+		SPhysics2DComponent& phys2DComponent = *AddComponent<SPhysics2DComponent>(ghosty);
+		AddView(ghosty, SPhysics2DComponentView::View);
+		phys2DComponent.BodyType = EPhysics2DBodyType::Dynamic;
+		phys2DComponent.ShapeType = EPhysics2DShapeType::Circle;
+		phys2DComponent.ShapeLocalExtents = { ghostyTransform.Transform.GetMatrix().GetScale().X, ghostyTransform.Transform.GetMatrix().GetScale().Y };
+		//phys2DComponent.ConstrainRotation = true;
+		GEngine::GetWorld()->Initialize2DPhysicsData(ghosty);
+
+		const SEntity& floor = AddEntity("Floor");
+		STransformComponent& floorTransform = *AddComponent<STransformComponent>(floor);	
+		AddView(floor, STransformComponentView::View);
+		floorTransform.Transform.Move({ 0.f, -2.f, 0.f });
+		floorTransform.Transform.Scale({ 0.4f, 0.5f, 1.f });
+		SSpriteComponent& floorSprite = *AddComponent<SSpriteComponent>(floor);
+		AddView(floor, SSpriteComponentView::View);
+
+		const std::string floorSpritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
+		floorSprite.UVRect = { 0.0f, 0.0f, 1.f, 1.f };
+		renderManager->LoadSpriteComponent(floorSpritePath, &floorSprite);
+
+		SPhysics2DComponent& floorPhys2DComponent = *AddComponent<SPhysics2DComponent>(floor);
+		AddView(floor, SPhysics2DComponentView::View);
+		floorPhys2DComponent.BodyType = EPhysics2DBodyType::Static;
+		floorPhys2DComponent.ShapeType = EPhysics2DShapeType::Capsule;
+		floorPhys2DComponent.ShapeLocalExtents = { floorTransform.Transform.GetMatrix().GetScale().X, floorTransform.Transform.GetMatrix().GetScale().Y };
+		GEngine::GetWorld()->Initialize2DPhysicsData(floor);
 
 		return true;
     }

@@ -5,6 +5,7 @@
 #include "Scene.h"
 #include "Graphics/RenderManager.h"
 #include "AssetRegistry.h"
+#include "HexPhys/HexPhys.h"
 
 namespace Havtorn
 {
@@ -12,6 +13,7 @@ namespace Havtorn
 	{
 		RenderManager = renderManager;
 		AssetRegistry = std::make_unique<CAssetRegistry>();
+		PhysicsWorld2D = std::make_unique<HexPhys2D::CPhysicsWorld2D>();
 
 		// Setup systems
 		AddSystem<CCameraSystem>();
@@ -19,6 +21,7 @@ namespace Havtorn
 		AddSystem<CSpriteAnimatorGraphSystem>();
 		AddSystem<CSequencerSystem>();
 		AddSystem<CRenderSystem>(RenderManager);
+		AddSystem<HexPhys2D::CPhysics2DSystem>(PhysicsWorld2D.get());
 
 		return true;
 	}
@@ -140,6 +143,24 @@ namespace Havtorn
 
 		std::swap(Scenes.back(), Scenes[sceneIndex]);
 		Scenes.pop_back();
+	}
+
+	void CWorld::Initialize2DPhysicsData(const SEntity& entity) const
+	{
+		if (Scenes.empty())
+			return;
+
+		// TODO.NR: Make find-scene-from-entity util? Could be a thing to just take component pointers as params instead, 
+		// but wouldn't be as clean an interface when this is extended to 3D physics. Probably fine with multiple overloads.
+		if (SPhysics2DComponent* phys2DComponent = Scenes.back()->GetComponent<SPhysics2DComponent>(entity))
+			if (STransformComponent* transformComponent = Scenes.back()->GetComponent<STransformComponent>(entity))
+				PhysicsWorld2D->InitializePhysicsData(transformComponent, phys2DComponent);
+	}
+
+	void CWorld::Update2DPhysicsData(STransformComponent* transformComponent, SPhysics2DComponent* phys2DComponent) const
+	{
+		if (PhysicsWorld2D != nullptr)
+			PhysicsWorld2D->UpdatePhysicsData(transformComponent, phys2DComponent);
 	}
 
 	CAssetRegistry* CWorld::GetAssetRegistry() const
