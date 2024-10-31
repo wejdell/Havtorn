@@ -555,6 +555,7 @@ namespace Havtorn
 		//size += DefaultSizeAllocator(GetComponents<SSequencerComponent>());
 		size += GetDataSize(static_cast<U32>(GetComponents<SSequencerComponent>().size()));
 
+		size += DefaultSizeAllocator(GetComponents<SPhysics2DComponent>());
 		size += DefaultSizeAllocator(GetComponents<SMetaDataComponent>());
 
 		return size;
@@ -593,6 +594,7 @@ namespace Havtorn
 		const auto& sequencerComponents = GetComponents<SSequencerComponent>();
 		SerializeData(static_cast<U32>(sequencerComponents.size()), toData, pointerPosition);
 
+		DefaultSerializer(GetComponents<SPhysics2DComponent>(), toData, pointerPosition);
 		DefaultSerializer(GetComponents<SMetaDataComponent>(), toData, pointerPosition);
 	}
 
@@ -716,6 +718,11 @@ namespace Havtorn
 
 		U32 numberOfSequencerComponents = 0;
 		DeserializeData(numberOfSequencerComponents, fromData, pointerPosition);
+
+		{
+			std::vector<SPhysics2DComponent> components;
+			DefaultDeserializer(components, SPhysics2DComponentView::View, fromData, pointerPosition);
+		}
 
 		{
 			std::vector<SMetaDataComponent> componentVector;

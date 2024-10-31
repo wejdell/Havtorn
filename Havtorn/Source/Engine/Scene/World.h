@@ -3,17 +3,23 @@
 #pragma once
 
 #include "ECS/Entity.h"
-#include "Scene.h"
 #include "FileSystem/FileHeaderDeclarations.h"
 #include "Core/EngineException.h"
 
 namespace Havtorn
 {
 	struct SEntity;
+	struct SPhysics2DComponent;
+	struct STransformComponent;
 	class ISystem;
 	class CRenderManager;
 	class CAssetRegistry;
 	class CSequencerSystem;
+
+	namespace HexPhys2D
+	{
+		class CPhysicsWorld2D;
+	}
 
 	class CWorld
 	{
@@ -61,6 +67,9 @@ namespace Havtorn
 		template<class TSystem>
 		inline void QueueRemoveSystem();
 
+		void HAVTORN_API Initialize2DPhysicsData(const SEntity& entity) const;
+		void HAVTORN_API Update2DPhysicsData(STransformComponent* transformComponent, SPhysics2DComponent* phys2DComponent) const;
+
 	private:
 		CWorld() = default;
 		~CWorld() = default;
@@ -92,6 +101,7 @@ namespace Havtorn
 		std::vector<Ptr<ISystem>> SystemsToAdd;
 
 		Ptr<CAssetRegistry> AssetRegistry = nullptr;
+		Ptr<HexPhys2D::CPhysicsWorld2D> PhysicsWorld2D = nullptr;
 		CRenderManager* RenderManager = nullptr;
 	};
 

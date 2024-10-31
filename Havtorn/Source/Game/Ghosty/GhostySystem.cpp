@@ -26,8 +26,6 @@ namespace Havtorn
 
 	void CGhostySystem::Update(CScene* scene)
 	{
-		F32 deltaTime = GTime::Dt();
-		
 		for (SGhostyComponent* ghostyComponent : scene->GetComponents<SGhostyComponent>())
 		{
 			if (!ghostyComponent->IsValid())
@@ -36,9 +34,17 @@ namespace Havtorn
 			ghostyComponent->State.Input = input;
 
 			STransformComponent* transform = scene->GetComponent<STransformComponent>(ghostyComponent);
+			if (!transform->IsValid())
+				continue;
+
+			SPhysics2DComponent* physComponent = scene->GetComponent<SPhysics2DComponent>(ghostyComponent);
+			if (!physComponent->IsValid())
+				continue;
+
 			if (ghostyComponent->State.IsInWalkingAnimationState)
 			{
-				transform->Transform.Move(ghostyComponent->State.Input * ghostyComponent->State.MoveSpeed * deltaTime);
+				physComponent->Velocity.X = ghostyComponent->State.Input.X * ghostyComponent->State.MoveSpeed;
+				GEngine::GetWorld()->Update2DPhysicsData(transform, physComponent);
 			}
 		}
 
