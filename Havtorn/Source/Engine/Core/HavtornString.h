@@ -49,8 +49,12 @@ namespace Havtorn
 
         CHavtornStaticString(const std::string& name)
         {
+#ifdef HV_DEBUG
             constexpr bool isNotOverflow = maxSize > 0;
             HV_ASSERT(isNotOverflow, "Trying to create a HavtornStaticString with size > 255!\nMax allowed size is 255, so that the entire size is 256 counting the Size property.");
+#elif defined HV_RELEASE
+            HV_ASSERT(maxSize > 0, "Trying to create a HavtornStaticString with size > 255!\nMax allowed size is 255, so that the entire size is 256 counting the Size property.");
+#endif
 
             U64 size = name.length();
             HV_ASSERT(size != 0, "Trying to create a HavtornStaticString from an empty std::string!");
