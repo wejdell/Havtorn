@@ -13,7 +13,6 @@ namespace Havtorn
 		U64 GUID = SEntity::Null.GUID;
 
 		bool IsValid() const;
-		bool operator==(const SEntity& other) const;
-		bool operator!=(const SEntity& other) const = default;
+		auto operator<=>(const SEntity& other) const = default;
 	};
 }
