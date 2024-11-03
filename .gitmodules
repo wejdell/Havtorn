@@ -7,3 +7,9 @@
 [submodule "Havtorn/External/ImGuizmo"]
 	path = Havtorn/External/ImGuizmo
 	url = https://github.com/CedricGuillemet/ImGuizmo.git
+[submodule "Havtorn/External/box2d"]
+	path = Havtorn/External/box2d
+	url = https://github.com/nicolas-risberg/box2d.git
+[submodule "Havtorn/External/box2dcpp"]
+	path = Havtorn/External/box2dcpp
+	url = https://github.com/nicolas-risberg/box2dcpp.git

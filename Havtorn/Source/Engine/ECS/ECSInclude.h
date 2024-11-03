@@ -13,6 +13,7 @@
 #include "ECS/Systems/DebugShapeSystem.h"
 #include "ECS/Systems/SpriteAnimatorGraphSystem.h"
 #include "ECS/Systems/SequencerSystem.h"
+#include "../HexPhys/HexPhys.h"
 
 #include "ECS/Components/TransformComponent.h"
 #include "ECS/ComponentViews/TransformComponentView.h"
@@ -44,5 +45,7 @@
 #include "ECS/ComponentViews/SpriteAnimatorGraphComponentView.h"
 #include "ECS/Components/SequencerComponent.h"
 #include "ECS/ComponentViews/SequencerComponentView.h"
+#include "ECS/Components/Physics2DComponent.h"
+#include "ECS/ComponentViews/Physics2DComponentView.h"
 #include "ECS/Components/DebugShapeComponent.h"
 #include "ECS/Components/MetaDataComponent.h"

@@ -13,7 +13,7 @@ namespace Havtorn
 		{}
 
 		SVector2<F32> Position = SVector2<F32>::Zero;
-		SVector2<F32> Scale = SVector2<F32>::Zero;
+		SVector2<F32> Scale = { 1.f, 1.f };
 		F32 DegreesRoll = 0;
 	};
 }
