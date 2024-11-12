@@ -83,7 +83,9 @@ namespace Havtorn
 
 		inline bool IsEqual(const SVector& other, F32 tolerance = VECTOR_COMPARISON_EPSILON) const;
 
-		inline void ToDirectionAndLength(SVector& OutDirection, F32& outLength) const;
+		inline F32 GetAbsMax() const;
+
+		inline void ToDirectionAndLength(SVector& outDirection, F32& outLength) const;
 
 		inline F32 Distance(const SVector& other) const;
 		inline F32 DistanceSquared(const SVector& other) const;
@@ -312,6 +314,12 @@ namespace Havtorn
 	inline bool SVector::IsEqual(const SVector& other, F32 tolerance) const
 	{
 		return UMath::Abs(X - other.X) <= tolerance && UMath::Abs(Y - other.Y) <= tolerance && UMath::Abs(Z - other.Z) <= tolerance;
+	}
+
+	inline F32 SVector::GetAbsMax() const
+	{
+		F32 maxXY = UMath::Max(UMath::Abs(X), UMath::Abs(Y));
+		return UMath::Max(maxXY, UMath::Abs(Z));
 	}
 
 	inline void SVector::ToDirectionAndLength(SVector& outDirection, F32& outLength) const

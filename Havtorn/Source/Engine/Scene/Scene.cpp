@@ -45,7 +45,7 @@ namespace Havtorn
 		STransformComponent& transform = *AddComponent<STransformComponent>(MainCameraEntity);
 		AddView(MainCameraEntity, STransformComponentView::View);
 
-		transform.Transform.Translate({ 2.0f, 1.0f, -3.0f });
+		transform.Transform.Translate({ 2.5f, 1.0f, -3.5f });
 		transform.Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
 		transform.Transform.Translate(SVector::Right * 0.25f);
 
@@ -100,7 +100,7 @@ namespace Havtorn
 		STransformComponent& pointLightTransform = *AddComponent<STransformComponent>(pointLightEntity);
 		AddView(pointLightEntity, STransformComponentView::View);
 		SMatrix pointLightMatrix = pointLightTransform.Transform.GetMatrix();
-		pointLightMatrix.SetTranslation({ 1.25f, 0.35f, -1.65f });
+		pointLightMatrix.SetTranslation({ 1.75f, 0.35f, -2.15f });
 		pointLightTransform.Transform.SetMatrix(pointLightMatrix);
 
 
@@ -167,7 +167,7 @@ namespace Havtorn
 		STransform& spotlightTransform = (*AddComponent<STransformComponent>(spotlight)).Transform;
 		AddView(spotlight, STransformComponentView::View);
 		SMatrix spotlightMatrix = spotlightTransform.GetMatrix();
-		spotlightMatrix.SetTranslation({ 1.5f, 0.5f, -1.0f });
+		spotlightMatrix.SetTranslation({ 2.0f, 0.5f, -1.5f });
 		spotlightTransform.SetMatrix(spotlightMatrix);
 
 		SSpotLightComponent& spotlightComp = *AddComponent<SSpotLightComponent>(spotlight);
@@ -200,7 +200,7 @@ namespace Havtorn
 
 		STransform& decalTransform = (*AddComponent<STransformComponent>(decal)).Transform;
 		AddView(decal, STransformComponentView::View);
-		decalTransform.Translate({ 0.45f, 1.60f, 0.85f });
+		decalTransform.Translate({ 0.75f, 1.60f, 0.35f });
 
 		SDecalComponent& decalComp = *AddComponent<SDecalComponent>(decal);
 		AddView(decal, SDecalComponentView::View);
@@ -218,21 +218,21 @@ namespace Havtorn
 		const std::vector<std::string> materialNames1 = { "Assets/Materials/M_PendulumClock.hva", "Assets/Materials/M_Checkboard_128x128.hva" };
 		const std::string modelPath2 = "Assets/Tests/En_P_Bed.hva";
 		const std::vector<std::string> materialNames2 = { "Assets/Materials/M_Bed.hva", "Assets/Materials/M_Bedsheet.hva" };
-		const std::string modelPath3 = "Assets/Tests/Quad.hva";
+		const std::string modelPath3 = "Assets/Tests/Plane.hva";
 		const std::vector<std::string> materialNames3 = { "Assets/Materials/M_Quad.hva" };
 		const std::string modelPath4 = "Assets/Tests/En_P_WallLamp.hva";
 		const std::vector<std::string> materialNames4 = { "Assets/Materials/M_Quad.hva", "Assets/Materials/M_Emissive.hva", "Assets/Materials/M_Headlamp.hva" };
+		const std::string modelPath5 = "Assets/Tests/Cube_1.hva";
+		const std::vector<std::string> materialNames5 = { "Assets/Materials/M_Quad.hva" };
 
 		// === Pendulum ===
-
-		// TODO: GetNewEntityIndex which provides comp index directly
-
 		const SEntity& pendulum = AddEntity("Clock");
 		if (!pendulum.IsValid())
 			return false;
 
 		STransform& transform1 = (*AddComponent<STransformComponent>(pendulum)).Transform;
-		transform1.Translate({ 1.75f, 0.0f, 0.25f });
+		AddView(pendulum, STransformComponentView::View);
+		transform1.Translate({ 2.0f, 0.0f, -0.2f });
 
 		renderManager->LoadStaticMeshComponent(modelPath1, AddComponent<SStaticMeshComponent>(pendulum));
 		AddView(pendulum, SStaticMeshComponentView::View);
@@ -241,6 +241,16 @@ namespace Havtorn
 
 		GetComponent<SStaticMeshComponent>(pendulum)->AssetRegistryKey = assetRegistry->Register(modelPath1);
 		GetComponent<SMaterialComponent>(pendulum)->AssetRegistryKeys = assetRegistry->Register(materialNames1);
+
+		SPhysics3DComponent* clockPhysics = AddComponent<SPhysics3DComponent>(pendulum);
+		AddView(pendulum, SPhysics3DComponentView::View);
+
+		clockPhysics->BodyType = EPhysics3DBodyType::Static;
+		clockPhysics->ShapeType = EPhysics3DShapeType::Box;
+		clockPhysics->ShapeLocalExtents = SVector(0.6f, 1.9f, 0.3f);
+		clockPhysics->ShapeLocalOffset = SVector(0.0f, 0.95f, 0.0f);
+
+		GEngine::GetWorld()->Initialize3DPhysicsData(pendulum);
 		// === !Pendulum ===
 
 		// === Bed ===
@@ -250,7 +260,7 @@ namespace Havtorn
 
 		STransform& transform2 = (*AddComponent<STransformComponent>(bed)).Transform;
 		AddView(bed, STransformComponentView::View);
-		transform2.Translate({ 0.25f, 0.0f, 0.25f });
+		transform2.Translate({ 0.2f, 0.0f, 0.0f });
 
 		renderManager->LoadStaticMeshComponent(modelPath2, AddComponent<SStaticMeshComponent>(bed));
 		AddView(bed, SStaticMeshComponentView::View);
@@ -259,6 +269,16 @@ namespace Havtorn
 
 		GetComponent<SStaticMeshComponent>(bed)->AssetRegistryKey = assetRegistry->Register(modelPath2);
 		GetComponent<SMaterialComponent>(bed)->AssetRegistryKeys = assetRegistry->Register(materialNames2);
+
+		SPhysics3DComponent* bedPhysics = AddComponent<SPhysics3DComponent>(bed);
+		AddView(bed, SPhysics3DComponentView::View);
+
+		bedPhysics->BodyType = EPhysics3DBodyType::Static;
+		bedPhysics->ShapeType = EPhysics3DShapeType::Box;
+		bedPhysics->ShapeLocalExtents = SVector(1.8f, 0.7f, 2.5f);
+		bedPhysics->ShapeLocalOffset = SVector(0.0f, bedPhysics->ShapeLocalExtents.Y * 0.5f, -bedPhysics->ShapeLocalExtents.Z * 0.5f);
+
+		GEngine::GetWorld()->Initialize3DPhysicsData(bed);
 		// === !Bed ===
 
 		// === Lamp ===
@@ -267,7 +287,8 @@ namespace Havtorn
 			return false;
 
 		STransform& lampTransform = (*AddComponent<STransformComponent>(lamp)).Transform;
-		lampTransform.Translate({ -1.0f, 1.4f, -0.75f });
+		AddView(lamp, STransformComponentView::View);
+		lampTransform.Translate({ -1.0f, 1.4f, -1.25f });
 		lampTransform.Rotate({ 0.0f, UMath::DegToRad(90.0f), 0.0f });
 
 		renderManager->LoadStaticMeshComponent(modelPath4, AddComponent<SStaticMeshComponent>(lamp));
@@ -279,116 +300,159 @@ namespace Havtorn
 		GetComponent<SMaterialComponent>(lamp)->AssetRegistryKeys = assetRegistry->Register(materialNames4);
 		// === !Lamp ===
 
-		// === Floor ===
-		std::vector<SVector> translations;
-		translations.emplace_back(-1.0f, 0.0f, -2.0f);
-		translations.emplace_back(0.0f, 0.0f, -2.0f);
-		translations.emplace_back(1.0f, 0.0f, -2.0f);
-		translations.emplace_back(2.0f, 0.0f, -2.0f);
-		translations.emplace_back(-1.0f, 0.0f, -1.0f);
-		translations.emplace_back(0.0f, 0.0f, -1.0f);
-		translations.emplace_back(1.0f, 0.0f, -1.0f);
-		translations.emplace_back(2.0f, 0.0f, -1.0f);
-		translations.emplace_back(-1.0f, 0.0f, 0.0f);
-		translations.emplace_back(0.0f, 0.0f, 0.0f);
-		translations.emplace_back(1.0f, 0.0f, 0.0f);
-		translations.emplace_back(2.0f, 0.0f, 0.0f);
+		// === Player Proxy ===
+		const SEntity& playerProxy = AddEntity("Player");
+		if (!playerProxy.IsValid())
+			return false;
 
-		for (U8 i = 0; i < 12; ++i)
+		STransform& playerTransform = AddComponent<STransformComponent>(playerProxy)->Transform;
+		AddView(playerProxy, STransformComponentView::View);
+		SMatrix playerMatrix = playerTransform.GetMatrix();
+		playerMatrix.SetTranslation({ 2.0f, 0.7f, -2.2f });
+		//playerMatrix.SetRotation();
+		playerTransform.SetMatrix(playerMatrix);
+
+		SPhysics3DControllerComponent* controllerComponent = AddComponent<SPhysics3DControllerComponent>(playerProxy);
+		AddView(playerProxy, SPhysics3DComponentView::View);
+
+		controllerComponent->ControllerType = EPhysics3DControllerType::Capsule;
+		controllerComponent->ShapeLocalExtents = SVector(0.25f, 1.0f, 0.25f);
+
+		GEngine::GetWorld()->Initialize3DPhysicsData(playerProxy);
+		// === !Player Proxy ===
+
+		// === Crate ===
+		const SEntity& crate = AddEntity("Crate");
+		if (!crate.IsValid())
+			return false;
+
+		STransform& crateTransform = AddComponent<STransformComponent>(crate)->Transform;
+		AddView(crate, STransformComponentView::View);
+		SMatrix crateMatrix = crateTransform.GetMatrix();
+		SMatrix::Recompose(SVector(1.0f, 4.7f, -1.5f), SVector(45.0f, 0.0f, 45.0f), SVector(0.5f), crateMatrix);
+		crateTransform.SetMatrix(crateMatrix);
+
+		renderManager->LoadStaticMeshComponent(modelPath5, AddComponent<SStaticMeshComponent>(crate));
+		AddView(crate, SStaticMeshComponentView::View);
+		renderManager->LoadMaterialComponent(materialNames5, AddComponent<SMaterialComponent>(crate));
+		AddView(crate, SMaterialComponentView::View);
+
+		GetComponent<SStaticMeshComponent>(crate)->AssetRegistryKey = assetRegistry->Register(modelPath5);
+		GetComponent<SMaterialComponent>(crate)->AssetRegistryKeys = assetRegistry->Register(materialNames5);
+
+		SPhysics3DComponent* cratePhysics = AddComponent<SPhysics3DComponent>(crate);
+		AddView(crate, SPhysics3DComponentView::View);
+
+		cratePhysics->BodyType = EPhysics3DBodyType::Dynamic;
+		cratePhysics->ShapeType = EPhysics3DShapeType::Box;
+		cratePhysics->ShapeLocalExtents = SVector(0.5f);
+
+		GEngine::GetWorld()->Initialize3DPhysicsData(crate);
+		// === !Crate ===
+
+		// === Trigger ===
+		const SEntity& trigger = AddEntity("Trigger");
+		if (!trigger.IsValid())
+			return false;
+
+		STransform& triggerTransform = AddComponent<STransformComponent>(trigger)->Transform;
+		AddView(trigger, STransformComponentView::View);
+		triggerTransform.Translate({ 0.2f, 1.0f, -1.25f });
+
+		SPhysics3DComponent* triggerPhysics = AddComponent<SPhysics3DComponent>(trigger);
+		AddView(trigger, SPhysics3DComponentView::View);
+
+		triggerPhysics->BodyType = EPhysics3DBodyType::Static;
+		triggerPhysics->ShapeType = EPhysics3DShapeType::Box;
+		triggerPhysics->ShapeLocalExtents = SVector(1.6f, 0.5f, 2.3f);
+		triggerPhysics->IsTrigger = true;
+
+		GEngine::GetWorld()->Initialize3DPhysicsData(trigger);
+		// === !Trigger ===
+
+		// === Floor/Walls ===
+		struct SWallAndFloorInitData
 		{
-			const SEntity& floor = AddEntity("Floor");
-			if (!floor.IsValid())
+			SWallAndFloorInitData(const SVector& translation, const SVector& eulerAngles, std::string editorName)
+				: Translation(translation), EulerAngles(eulerAngles), EditorName(std::move(editorName))
+			{}
+
+			SVector Translation = SVector::Zero;
+			SVector EulerAngles = SVector::Zero;
+			std::string EditorName;
+		};
+
+		std::vector<SWallAndFloorInitData> initData;
+		SVector floorRotation = SVector{ 0.0f, 0.0f, 0.0f };
+		SVector largeWallRotation = SVector{ -90.0f, 0.0f, 0.0f};
+		// TODO.NR: There's still a singularity happening here, need to figure out why
+		SVector smallWallRotation = SVector{ 0.0f, 0.0f, -90.0f };
+
+		initData.emplace_back(SVector{ -0.5f, 0.0f, -2.5f }, floorRotation, std::string("Floor"));
+		initData.emplace_back(SVector{ 0.5f, 0.0f, -2.5f }, floorRotation, std::string("Floor"));
+		initData.emplace_back(SVector{ 1.5f, 0.0f, -2.5f }, floorRotation, std::string("Floor"));
+		initData.emplace_back(SVector{ 2.5f, 0.0f, -2.5f }, floorRotation, std::string("Floor"));
+		initData.emplace_back(SVector{ -0.5f, 0.0f, -1.5f }, floorRotation, std::string("Floor"));
+		initData.emplace_back(SVector{ 0.5f, 0.0f, -1.5f }, floorRotation, std::string("Floor"));
+		initData.emplace_back(SVector{ 1.5f, 0.0f, -1.5f }, floorRotation, std::string("Floor"));
+		initData.emplace_back(SVector{ 2.5f, 0.0f, -1.5f }, floorRotation, std::string("Floor"));
+		initData.emplace_back(SVector{ -0.5f, 0.0f, -0.5f }, floorRotation, std::string("Floor"));
+		initData.emplace_back(SVector{ 0.5f, 0.0f, -0.5f }, floorRotation, std::string("Floor"));
+		initData.emplace_back(SVector{ 1.5f, 0.0f, -0.5f }, floorRotation, std::string("Floor"));
+		initData.emplace_back(SVector{ 2.5f, 0.0f, -0.5f }, floorRotation, std::string("Floor"));
+		initData.emplace_back(SVector{ -0.5f, 0.5f, 0.0f }, largeWallRotation, std::string("Wall"));
+		initData.emplace_back(SVector{ 0.5f, 0.5f, 0.0f }, largeWallRotation, std::string("Wall"));
+		initData.emplace_back(SVector{ 1.5f, 0.5f, 0.0f }, largeWallRotation, std::string("Wall"));
+		initData.emplace_back(SVector{ 2.5f, 0.5f, 0.0f }, largeWallRotation, std::string("Wall"));
+		initData.emplace_back(SVector{ -0.5f, 1.5f, 0.0f }, largeWallRotation, std::string("Wall"));
+		initData.emplace_back(SVector{ 0.5f, 1.5f, 0.0f }, largeWallRotation, std::string("Wall"));
+		initData.emplace_back(SVector{ 1.5f, 1.5f, 0.0f }, largeWallRotation, std::string("Wall"));
+		initData.emplace_back(SVector{ 2.5f, 1.5f, 0.0f }, largeWallRotation, std::string("Wall"));
+		initData.emplace_back(SVector{ -0.5f, 2.5f, 0.0f }, largeWallRotation, std::string("Wall"));
+		initData.emplace_back(SVector{ 0.5f, 2.5f, 0.0f }, largeWallRotation, std::string("Wall"));
+		initData.emplace_back(SVector{ 1.5f, 2.5f, 0.0f }, largeWallRotation, std::string("Wall"));
+		initData.emplace_back(SVector{ 2.5f, 2.5f, 0.0f }, largeWallRotation, std::string("Wall"));
+		initData.emplace_back(SVector{ -1.0f, 0.5f, -2.5f }, smallWallRotation, std::string("Wall"));
+		initData.emplace_back(SVector{ -1.0f, 0.5f, -1.5f }, smallWallRotation, std::string("Wall"));
+		initData.emplace_back(SVector{ -1.0f, 0.5f, -0.5f }, smallWallRotation, std::string("Wall"));
+		initData.emplace_back(SVector{ -1.0f, 1.5f, -2.5f }, smallWallRotation, std::string("Wall"));
+		initData.emplace_back(SVector{ -1.0f, 1.5f, -1.5f }, smallWallRotation, std::string("Wall"));
+		initData.emplace_back(SVector{ -1.0f, 1.5f, -0.5f }, smallWallRotation, std::string("Wall"));
+		initData.emplace_back(SVector{ -1.0f, 2.5f, -2.5f }, smallWallRotation, std::string("Wall"));
+		initData.emplace_back(SVector{ -1.0f, 2.5f, -1.5f }, smallWallRotation, std::string("Wall"));
+		initData.emplace_back(SVector{ -1.0f, 2.5f, -0.5f }, smallWallRotation, std::string("Wall"));
+
+		for (const SWallAndFloorInitData& data : initData)
+		{
+			const SEntity& entity = AddEntity(data.EditorName);
+			if (!entity.IsValid())
 				return false;
 
-			STransform& transform3 = (*AddComponent<STransformComponent>(floor)).Transform;
-			AddView(floor, STransformComponentView::View);
+			STransform& transform3 = AddComponent<STransformComponent>(entity)->Transform;
+			AddView(entity, STransformComponentView::View);
 			SMatrix matrix3 = transform3.GetMatrix();
-			matrix3.SetTranslation(translations[i]);
-			matrix3.SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)));
+			matrix3.SetTranslation(data.Translation);
+			matrix3.SetRotation(data.EulerAngles);
 			transform3.SetMatrix(matrix3);
 
-			renderManager->LoadStaticMeshComponent(modelPath3, AddComponent<SStaticMeshComponent>(floor));
-			AddView(floor, SMaterialComponentView::View);
-			renderManager->LoadMaterialComponent(materialNames3, AddComponent<SMaterialComponent>(floor));
-			AddView(floor, SMaterialComponentView::View);
+			renderManager->LoadStaticMeshComponent(modelPath3, AddComponent<SStaticMeshComponent>(entity));
+			AddView(entity, SStaticMeshComponentView::View);
+			renderManager->LoadMaterialComponent(materialNames3, AddComponent<SMaterialComponent>(entity));
+			AddView(entity, SMaterialComponentView::View);
 
-			GetComponent<SStaticMeshComponent>(floor)->AssetRegistryKey = assetRegistry->Register(modelPath3);
-			GetComponent<SMaterialComponent>(floor)->AssetRegistryKeys = assetRegistry->Register(materialNames3);
+			GetComponent<SStaticMeshComponent>(entity)->AssetRegistryKey = assetRegistry->Register(modelPath3);
+			GetComponent<SMaterialComponent>(entity)->AssetRegistryKeys = assetRegistry->Register(materialNames3);
+
+			SPhysics3DComponent* physicsComponent = AddComponent<SPhysics3DComponent>(entity);
+			AddView(entity, SPhysics3DComponentView::View);
+
+			physicsComponent->BodyType = EPhysics3DBodyType::Static;
+			physicsComponent->ShapeType = EPhysics3DShapeType::Box;
+			physicsComponent->ShapeLocalExtents = SVector(1.0f, 0.1f, 1.f);
+
+			GEngine::GetWorld()->Initialize3DPhysicsData(entity);
 		}
-		// === !Floor ===
-
-		// === Wall ===
-		translations.clear();
-		translations.emplace_back(-1.0f, 0.5f, 0.5f);
-		translations.emplace_back(0.0f, 0.5f, 0.5f);
-		translations.emplace_back(1.0f, 0.5f, 0.5f);
-		translations.emplace_back(2.0f, 0.5f, 0.5f);
-		translations.emplace_back(-1.0f, 1.5f, 0.5f);
-		translations.emplace_back(0.0f, 1.5f, 0.5f);
-		translations.emplace_back(1.0f, 1.5f, 0.5f);
-		translations.emplace_back(2.0f, 1.5f, 0.5f);
-		translations.emplace_back(-1.0f, 2.5f, 0.5f);
-		translations.emplace_back(0.0f, 2.5f, 0.5f);
-		translations.emplace_back(1.0f, 2.5f, 0.5f);
-		translations.emplace_back(2.0f, 2.5f, 0.5f);
-
-		for (U8 i = 0; i < 12; ++i)
-		{
-			const SEntity& floor = AddEntity("Wall");
-			if (!floor.IsValid())
-				return false;
-
-			STransform& transform3 = (*AddComponent<STransformComponent>(floor)).Transform;
-			AddView(floor, STransformComponentView::View);
-			SMatrix matrix3 = transform3.GetMatrix();
-			matrix3.SetTranslation(translations[i]);
-			matrix3.SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundX(UMath::DegToRad(-90.0f)));
-			transform3.SetMatrix(matrix3);
-
-			renderManager->LoadStaticMeshComponent(modelPath3, AddComponent<SStaticMeshComponent>(floor));
-			AddView(floor, SMaterialComponentView::View);
-			renderManager->LoadMaterialComponent(materialNames3, AddComponent<SMaterialComponent>(floor));
-			AddView(floor, SMaterialComponentView::View);
-
-			GetComponent<SStaticMeshComponent>(floor)->AssetRegistryKey = assetRegistry->Register(modelPath3);
-			GetComponent<SMaterialComponent>(floor)->AssetRegistryKeys = assetRegistry->Register(materialNames3);
-		}
-		// === !Wall ===
-
-		// === Other Wall ===
-		translations.clear();
-		translations.emplace_back(-1.0f, 0.5f, -2.5f);
-		translations.emplace_back(-1.0f, 0.5f, -1.5f);
-		translations.emplace_back(-1.0f, 0.5f, -0.5f);
-		translations.emplace_back(-1.0f, 1.5f, -2.5f);
-		translations.emplace_back(-1.0f, 1.5f, -1.5f);
-		translations.emplace_back(-1.0f, 1.5f, -0.5f);
-		translations.emplace_back(-1.0f, 2.5f, -2.5f);
-		translations.emplace_back(-1.0f, 2.5f, -1.5f);
-		translations.emplace_back(-1.0f, 2.5f, -0.5f);
-
-		for (U8 i = 0; i < 9; ++i)
-		{
-			const SEntity& floor = AddEntity("Wall");
-			if (!floor.IsValid())
-				return false;
-
-			STransform& transform3 = (*AddComponent<STransformComponent>(floor)).Transform;
-			AddView(floor, STransformComponentView::View);
-			SMatrix matrix3 = transform3.GetMatrix();
-			matrix3.SetTranslation(translations[i]);
-			matrix3.SetRotation(SMatrix::CreateRotationAroundZ(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundX(UMath::DegToRad(-90.0f)) * SMatrix::CreateRotationAroundY(UMath::DegToRad(-90.0f)));
-			transform3.SetMatrix(matrix3);
-
-			renderManager->LoadStaticMeshComponent(modelPath3, AddComponent<SStaticMeshComponent>(floor));
-			AddView(floor, SMaterialComponentView::View);
-			renderManager->LoadMaterialComponent(materialNames3, AddComponent<SMaterialComponent>(floor));
-			AddView(floor, SMaterialComponentView::View);
-
-			GetComponent<SStaticMeshComponent>(floor)->AssetRegistryKey = assetRegistry->Register(modelPath3);
-			GetComponent<SMaterialComponent>(floor)->AssetRegistryKeys = assetRegistry->Register(materialNames3);
-		}
-		// === !Other Wall ===
+		// === !Floor/Walls ===
 
 		return true;
 	}
@@ -556,6 +620,8 @@ namespace Havtorn
 		size += GetDataSize(static_cast<U32>(GetComponents<SSequencerComponent>().size()));
 
 		size += DefaultSizeAllocator(GetComponents<SPhysics2DComponent>());
+		size += DefaultSizeAllocator(GetComponents<SPhysics3DComponent>());
+		size += DefaultSizeAllocator(GetComponents<SPhysics3DControllerComponent>());
 		size += DefaultSizeAllocator(GetComponents<SMetaDataComponent>());
 
 		return size;
@@ -595,6 +661,8 @@ namespace Havtorn
 		SerializeData(static_cast<U32>(sequencerComponents.size()), toData, pointerPosition);
 
 		DefaultSerializer(GetComponents<SPhysics2DComponent>(), toData, pointerPosition);
+		DefaultSerializer(GetComponents<SPhysics3DComponent>(), toData, pointerPosition);
+		DefaultSerializer(GetComponents<SPhysics3DControllerComponent>(), toData, pointerPosition);
 		DefaultSerializer(GetComponents<SMetaDataComponent>(), toData, pointerPosition);
 	}
 
@@ -722,6 +790,16 @@ namespace Havtorn
 		{
 			std::vector<SPhysics2DComponent> components;
 			DefaultDeserializer(components, SPhysics2DComponentView::View, fromData, pointerPosition);
+		}
+
+		{
+			std::vector<SPhysics3DComponent> components;
+			DefaultDeserializer(components, SPhysics3DComponentView::View, fromData, pointerPosition);
+		}
+
+		{
+			std::vector<SPhysics3DControllerComponent> components;
+			DefaultDeserializer(components, SPhysics3DControllerComponentView::View, fromData, pointerPosition);
 		}
 
 		{
