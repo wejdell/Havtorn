@@ -19,7 +19,13 @@ namespace Havtorn
 		{}
 
 		EPhysics3DControllerType ControllerType = EPhysics3DControllerType::Capsule;
-		SVector ShapeLocalExtents = SVector::Zero;
+
+		union
+		{
+			SVector ShapeLocalExtents = SVector::Zero;
+			SVector2<F32> ShapeLocalRadiusAndHeight;
+		};
+
 		SVector Velocity = SVector::Zero;
 	};
 }

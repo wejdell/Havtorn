@@ -313,10 +313,10 @@ namespace Havtorn
 		playerTransform.SetMatrix(playerMatrix);
 
 		SPhysics3DControllerComponent* controllerComponent = AddComponent<SPhysics3DControllerComponent>(playerProxy);
-		AddView(playerProxy, SPhysics3DComponentView::View);
+		AddView(playerProxy, SPhysics3DControllerComponentView::View);
 
 		controllerComponent->ControllerType = EPhysics3DControllerType::Capsule;
-		controllerComponent->ShapeLocalExtents = SVector(0.25f, 1.0f, 0.25f);
+		controllerComponent->ShapeLocalRadiusAndHeight = SVector2(0.25f, 1.0f);
 
 		GEngine::GetWorld()->Initialize3DPhysicsData(playerProxy);
 		// === !Player Proxy ===

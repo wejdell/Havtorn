@@ -33,6 +33,7 @@ namespace Havtorn
 		// TODO.NR: Support multiple shapes on same body
 		EPhysics2DShapeType ShapeType = EPhysics2DShapeType::Circle;
 		SVector2<F32> ShapeLocalOffset = SVector2<F32>::Zero;
+		// TODO.NR: Make union to name things clearer for every shape
 		SVector2<F32> ShapeLocalExtents = SVector2<F32>::Zero;
 		SVector2<F32> Velocity = SVector2<F32>::Zero;
 		bool ConstrainRotation = false;
