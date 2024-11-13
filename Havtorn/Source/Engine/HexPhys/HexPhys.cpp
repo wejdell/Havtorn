@@ -437,14 +437,16 @@ namespace Havtorn
 				if (transform == nullptr)
 					continue;
 
-				SVector scale = SVector::Zero;
-				SVector pos = SVector::Zero;
+				SVector translation = SVector::Zero;
 				SVector euler = SVector::Zero;
+				SVector scale = SVector::Zero;
 				SMatrix matrix = transform->Transform.GetMatrix();
-				SMatrix::Decompose(matrix, pos, euler, scale);
-				pos = Convert(rigidActor->getGlobalPose().p);
+
+				SMatrix::Decompose(matrix, translation, euler, scale);
+				translation = Convert(rigidActor->getGlobalPose().p);
 				euler = Convert(rigidActor->getGlobalPose().q).ToEuler();
-				SMatrix::Recompose(pos, euler, scale, matrix);
+				SMatrix::Recompose(translation, euler, scale, matrix);
+
 				transform->Transform.SetMatrix(matrix);
 
 				SPhysics3DComponent* component = havtornScene->GetComponent<SPhysics3DComponent>(entity);
@@ -594,11 +596,11 @@ namespace Havtorn
 			switch (component->ShapeType)
 			{
 			case EPhysics3DShapeType::Sphere:
-				return Physics->createShape(PxSphereGeometry(component->ShapeLocalExtents.GetAbsMax()), *material);
-			case EPhysics3DShapeType::Plane:
+				return Physics->createShape(PxSphereGeometry(component->ShapeLocalRadius), *material);
+			case EPhysics3DShapeType::InfinitePlane:
 				return Physics->createShape(PxPlaneGeometry(), *material);
 			case EPhysics3DShapeType::Capsule:
-				return Physics->createShape(PxCapsuleGeometry(UMath::Max(component->ShapeLocalExtents.X, component->ShapeLocalExtents.Z), component->ShapeLocalExtents.Y * 0.5f), *material);
+				return Physics->createShape(PxCapsuleGeometry(component->ShapeLocalRadiusAndHeight.X, component->ShapeLocalRadiusAndHeight.Y * 0.5f), *material);
 			case EPhysics3DShapeType::Box:
 				return Physics->createShape(PxBoxGeometry(Convert(component->ShapeLocalExtents * 0.5f)), *material);
 			case EPhysics3DShapeType::Convex:

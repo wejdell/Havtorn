@@ -18,17 +18,29 @@ namespace Havtorn
 
 		SPhysics3DControllerComponent* physicsComponent = scene->GetComponent<SPhysics3DControllerComponent>(entityOwner);
 
-		SVector Velocity = SVector::Zero;
-
 		// TODO.NR: Make a util to deal with enums
 		I32 controllerTypeIndex = static_cast<int>(physicsComponent->ControllerType);
 		const char* controllerTypeNames[2] = { "Box", "Capsule" };
 		ImGui::SliderInt("Controller Type", &controllerTypeIndex, 0, 1, controllerTypeNames[controllerTypeIndex]);
 		physicsComponent->ControllerType = static_cast<Havtorn::EPhysics3DControllerType>(controllerTypeIndex);
 
-		float localExtents[2] = { physicsComponent->ShapeLocalExtents.X, physicsComponent->ShapeLocalExtents.Y };
-		ImGui::DragFloat2("Shape Local Extents", localExtents, ImGui::UUtils::SliderSpeed);
-		physicsComponent->ShapeLocalExtents = { localExtents[0], localExtents[1] };
+		switch (physicsComponent->ControllerType)
+    	{
+		case EPhysics3DControllerType::Box:
+		{
+			F32 localExtents[3] = { physicsComponent->ShapeLocalExtents.X, physicsComponent->ShapeLocalExtents.Y, physicsComponent->ShapeLocalExtents.Z };
+			ImGui::DragFloat3("Shape Local Extents", localExtents, ImGui::UUtils::SliderSpeed);
+			physicsComponent->ShapeLocalExtents = { localExtents[0], localExtents[1], localExtents[2] };
+		}
+			break;
+		case EPhysics3DControllerType::Capsule:
+		{
+			F32 localExtents[2] = { physicsComponent->ShapeLocalRadiusAndHeight.X, physicsComponent->ShapeLocalRadiusAndHeight.Y };
+			ImGui::DragFloat2("Shape Local Radius And Height", localExtents, ImGui::UUtils::SliderSpeed);
+			physicsComponent->ShapeLocalRadiusAndHeight = { localExtents[0], localExtents[1] };
+		}
+			break;
+		}
 
 		ImGui::Text("Velocity: %s", physicsComponent->Velocity.ToString().c_str());
 

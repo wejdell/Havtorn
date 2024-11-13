@@ -15,7 +15,7 @@ namespace Havtorn
 	enum class EPhysics3DShapeType : U8
 	{
 		Sphere,
-		Plane, // Infinite plane
+		InfinitePlane, // Infinite plane
 		Capsule,
 		Box,
 		Convex,
@@ -41,7 +41,14 @@ namespace Havtorn
 		// TODO.NR: Support multiple shapes on same body
 		EPhysics3DShapeType ShapeType = EPhysics3DShapeType::Sphere;
 		SVector ShapeLocalOffset = SVector::Zero;
-		SVector ShapeLocalExtents = SVector::Zero;
+
+		union
+		{
+			SVector ShapeLocalExtents = SVector::Zero;
+			SVector2<F32> ShapeLocalRadiusAndHeight;
+			F32 ShapeLocalRadius;
+		};
+
 		SVector Velocity = SVector::Zero;
 		SPhysicsMaterial Material = {};
 		F32 Density = 10.f;
