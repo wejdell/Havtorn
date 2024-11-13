@@ -438,14 +438,14 @@ namespace Havtorn
 					continue;
 
 				SVector translation = SVector::Zero;
-				SVector euler = SVector::Zero;
+				SVector eulerAngles = SVector::Zero;
 				SVector scale = SVector::Zero;
 				SMatrix matrix = transform->Transform.GetMatrix();
 
-				SMatrix::Decompose(matrix, translation, euler, scale);
+				SMatrix::Decompose(matrix, translation, eulerAngles, scale);
 				translation = Convert(rigidActor->getGlobalPose().p);
-				euler = Convert(rigidActor->getGlobalPose().q).ToEuler();
-				SMatrix::Recompose(translation, euler, scale, matrix);
+				eulerAngles = Convert(rigidActor->getGlobalPose().q).ToEuler();
+				SMatrix::Recompose(translation, eulerAngles, scale, matrix);
 
 				transform->Transform.SetMatrix(matrix);
 
