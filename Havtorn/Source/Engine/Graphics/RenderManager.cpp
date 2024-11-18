@@ -22,8 +22,6 @@
 #include "Threading/ThreadManager.h"
 #include "TextureBank.h"
 
-#include "ModelImporter.h"
-
 #include <DirectXTex/DirectXTex.h>
 #include <set>
 
@@ -2132,25 +2130,22 @@ namespace Havtorn
 		TonemappedTexture.SetAsActiveTarget();
 	}
 
-	inline void CRenderManager::DebugShapes(const SRenderCommand& /*command*/)
+	inline void CRenderManager::DebugShapes(const SRenderCommand& command)
 	{
-		//const SDebugShapeComponent& shape = command.GetComponent(DebugShapeComponent);
-		//const STransformComponent& transform = command.GetComponent(TransformComponent);
+		DebugShapeObjectBufferData.ToWorldFromObject = command.Matrices[0];
+		DebugShapeObjectBufferData.Color = command.Vectors[0];
+		DebugShapeObjectBufferData.HalfThickness = command.F32s[0] /** 0.5f?*/;
 
-		//DebugShapeObjectBufferData.ToWorldFromObject = transform->Transform.GetMatrix();
-		//DebugShapeObjectBufferData.Color = shape->Color.AsVector4();
-		//DebugShapeObjectBufferData.HalfThickness = shape->Thickness;
+		BindBuffer(DebugShapeObjectBuffer, DebugShapeObjectBufferData, "Object Buffer");
 
-		//BindBuffer(DebugShapeObjectBuffer, DebugShapeObjectBufferData, "Object Buffer");
+		Context->IASetVertexBuffers(0, 1, &VertexBuffers[command.U8s[0]], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
+		Context->IASetIndexBuffer(IndexBuffers[command.U8s[1]], DXGI_FORMAT_R32_UINT, 0);
 
-		//Context->IASetVertexBuffers(0, 1, &VertexBuffers[shape->VertexBufferIndex], &MeshVertexStrides[1], &MeshVertexOffsets[0]);
-		//Context->IASetIndexBuffer(IndexBuffers[shape->IndexBufferIndex], DXGI_FORMAT_R32_UINT, 0);
+		Context->GSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
 
-		//Context->GSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
-
-		//Context->VSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
-		//Context->DrawIndexed(shape->IndexCount, 0, 0);
-		//NumberOfDrawCallsThisFrame++;
+		Context->VSSetConstantBuffers(1, 1, &DebugShapeObjectBuffer);
+		Context->DrawIndexed(command.U16s[0], 0, 0);
+		NumberOfDrawCallsThisFrame++;
 	}
 
 	void CRenderManager::DebugShadowAtlas()
