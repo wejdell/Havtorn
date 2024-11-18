@@ -5,11 +5,13 @@
 #include "ECS/Entity.h"
 #include "FileSystem/FileHeaderDeclarations.h"
 #include "Core/EngineException.h"
+#include "HexPhys/HexPhys.h"
 
 namespace Havtorn
 {
 	struct SEntity;
 	struct SPhysics2DComponent;
+	struct SPhysics3DComponent;
 	struct STransformComponent;
 	class ISystem;
 	class CRenderManager;
@@ -19,6 +21,11 @@ namespace Havtorn
 	namespace HexPhys2D
 	{
 		class CPhysicsWorld2D;
+	}
+
+	namespace HexPhys3D
+	{
+		class CPhysicsWorld3D;
 	}
 
 	class CWorld
@@ -70,6 +77,9 @@ namespace Havtorn
 		void HAVTORN_API Initialize2DPhysicsData(const SEntity& entity) const;
 		void HAVTORN_API Update2DPhysicsData(STransformComponent* transformComponent, SPhysics2DComponent* phys2DComponent) const;
 
+		void HAVTORN_API Initialize3DPhysicsData(const SEntity& entity) const;
+		void HAVTORN_API Update3DPhysicsData(STransformComponent* transformComponent, SPhysics3DComponent* phys2DComponent) const;
+
 	private:
 		CWorld() = default;
 		~CWorld() = default;
@@ -83,6 +93,8 @@ namespace Havtorn
 		void RemoveSystemRespectOrder(U16 index);
 
 		HAVTORN_API void LoadScene(const std::string& filePath, CScene* outScene);
+
+		void OnSceneCreated(CScene* scene) const;
 
 	private:
 		struct SystemTypeCode
@@ -102,13 +114,17 @@ namespace Havtorn
 
 		Ptr<CAssetRegistry> AssetRegistry = nullptr;
 		Ptr<HexPhys2D::CPhysicsWorld2D> PhysicsWorld2D = nullptr;
+		Ptr<HexPhys3D::CPhysicsWorld3D> PhysicsWorld3D = nullptr;
 		CRenderManager* RenderManager = nullptr;
+
+		CMulticastDelegate<CScene*> OnSceneCreatedDelegate;
 	};
 
 	template<typename T>
 	inline void CWorld::AddScene(const std::string& filePath)
 	{
 		Scenes.emplace_back(std::make_unique<T>());
+		OnSceneCreatedDelegate.Broadcast(Scenes.back().get());
 		LoadScene(filePath, Scenes.back().get());
 	}
 
@@ -124,6 +140,7 @@ namespace Havtorn
 	{
 		Scenes.clear();
 		Scenes.emplace_back(std::make_unique<T>());
+		OnSceneCreatedDelegate.Broadcast(Scenes.back().get());
 
 		if (shouldOpen3DDemo)
 		{

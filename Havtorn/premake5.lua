@@ -15,6 +15,7 @@ imGuiProj = "ImGui"
 imGuiSource = "Source/" .. imGuiProj .. "/"
 gameProj = "Game"
 gameSource = "Source/" .. gameProj .. "/"
+externalLinkDir = "External/Lib/"
 
 project "Engine"
 	location ("Source/" .. engineProj)
@@ -55,12 +56,13 @@ project "Engine"
 		"External/DirectXTex",
 		"External/box2d/include/box2d",
 		"External/box2dcpp/include/box2cpp",
+		"External/PhysX/physx/include",
 		"Source/ImGui"
 	}
 
 	libdirs 
 	{
-		"Lib/",
+		"Lib",
 		"External/Lib"
 	}
 
@@ -135,7 +137,15 @@ project "Engine"
 		
 		links
 		{
-			"box2dd"
+			externalLinkDir .. "Debug/assimp-vc142-mtd",
+			externalLinkDir .. "Debug/DirectXTex_Debug",
+			externalLinkDir .. "Debug/box2dd",
+			externalLinkDir .. "Debug/PhysX/PhysX_64",
+			externalLinkDir .. "Debug/PhysX/PhysXCommon_64",
+			externalLinkDir .. "Debug/PhysX/PhysXExtensions_static_64",
+			externalLinkDir .. "Debug/PhysX/PhysXFoundation_64",
+			externalLinkDir .. "Debug/PhysX/PhysXPvdSDK_static_64",
+			externalLinkDir .. "Debug/PhysX/PhysXCharacterKinematic_static_64"
 		}
 		
 		ignoredefaultlibraries
@@ -158,7 +168,15 @@ project "Engine"
 	
 		links
 		{
-			"box2d"
+			externalLinkDir .. "Release/assimp-vc142-mt",
+			externalLinkDir .. "Release/DirectXTex_Release",
+			externalLinkDir .. "Release/box2d",
+			externalLinkDir .. "Release/PhysX/PhysX_64",
+			externalLinkDir .. "Release/PhysX/PhysXCommon_64",
+			externalLinkDir .. "Release/PhysX/PhysXExtensions_static_64",
+			externalLinkDir .. "Release/PhysX/PhysXFoundation_64",
+			externalLinkDir .. "Release/PhysX/PhysXPvdSDK_static_64",
+			externalLinkDir .. "Debug/PhysX/PhysXCharacterKinematic_static_64"
 		}
 
 		ignoredefaultlibraries
@@ -207,6 +225,7 @@ project "Game"
 		"External/DirectXTex",
 		"External/box2d/include/box2d",
 		"External/box2dcpp/include/box2cpp",
+		"External/PhysX/physx/include",
 		"Source/Engine",
 		"Source/ImGui"		
 	}
@@ -298,6 +317,7 @@ project "Editor"
 		"External/DirectXTex",
 		"External/box2d/include/box2d",
 		"External/box2dcpp/include/box2cpp",
+		"External/PhysX/physx/include",
 		"Source/Engine",
 		"Source/ImGui"
 	}
@@ -463,7 +483,10 @@ project "Launcher"
 		"Source/ImGui",
 		"Source/Editor",
 		"Source/Engine",
-		"Source/Game"
+		"Source/Game",
+		"External/box2d/include/box2d",
+		"External/box2dcpp/include/box2cpp",
+		"External/PhysX/physx/include"
 	}
 
 	links
