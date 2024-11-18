@@ -84,7 +84,7 @@ namespace Havtorn
 	// EVertexBufferPrimitives Count should not exceed U8 max (255)
 	enum class EVertexBufferPrimitives
 	{
-		DecalProjector,
+		DecalProjector = 0,
 		PointLightCube,
 		Icosphere,
 		Line,
@@ -107,8 +107,9 @@ namespace Havtorn
 	// EDefaultIndexBuffers Count should not exceed U8 max (255)
 	enum class EDefaultIndexBuffers
 	{
-		DecalProjector,
+		DecalProjector = 0,
 		PointLightCube,
+		Icosphere,
 		Line,
 		Pyramid,
 		BoundingBox,
