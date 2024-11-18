@@ -6,19 +6,10 @@
 #include <assimp/cimport.h>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include <assimp/texture.h>
 
 #include "Engine.h"
 #include "FileSystem/FileSystem.h"
 #include "FileSystem/FileHeaderDeclarations.h"
-
-#ifdef _DEBUG
-#pragma comment(lib, "assimp-vc142-mtd.lib")
-#pragma comment(lib, "DirectXTex_Debug.lib")
-#else
-#pragma comment(lib, "assimp-vc142-mt.lib")
-#pragma comment(lib, "DirectXTex_Release.lib")
-#endif
 
 namespace Havtorn
 {
@@ -69,6 +60,7 @@ namespace Havtorn
 			//model->myMaterialIndices.push_back(fbxMesh->mMaterialIndex);
 
 			// Vertices
+			// TODO.NR: Make import options rather soon
 			constexpr F32 scaleModifier = 0.01f;
 			for (U32 i = 0; i < fbxMesh->mNumVertices; i++)
 			{

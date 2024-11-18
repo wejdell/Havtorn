@@ -17,6 +17,7 @@ namespace Havtorn
 			, Name(nameInEditor)
 		{}
 
+		// TODO.NR: Decrease this, surely the names don't require 255 chars
 		CHavtornStaticString<255> Name;
 	};
 }
