@@ -20,6 +20,7 @@
 #include "Input/InputMapper.h"
 
 #include "Timer.h"
+#include "Graphics/Debug/DebugDrawUtility.h"
 
 namespace Havtorn
 {
@@ -38,12 +39,14 @@ namespace Havtorn
 		RenderManager = new CRenderManager();
 		World = new CWorld();
 		ThreadManager = new CThreadManager();
+		DebugDraw = new GDebugDraw();
 	}
 
 	GEngine::~GEngine()
 	{
 		SAFE_DELETE(ThreadManager);
 		SAFE_DELETE(World);
+		SAFE_DELETE(DebugDraw);
 		SAFE_DELETE(RenderManager);
 		SAFE_DELETE(TextureBank);
 		SAFE_DELETE(Framework);
@@ -70,6 +73,11 @@ namespace Havtorn
 		SequencerSystem = World->GetSystem<CSequencerSystem>();
 		WindowHandler->ResizeTarget = { };
 
+		if (!DebugDraw->Init(RenderManager))
+		{
+			HV_LOG_WARN("Debug Draw Utility could not be initialized.");
+		}
+
 		return true;
 	}
 
@@ -84,6 +92,7 @@ namespace Havtorn
 	{
 		InputMapper->Update();
 		World->Update();
+		DebugDraw->Update();
 		
 		GTime::EndTracking(ETimerCategory::CPU);
 

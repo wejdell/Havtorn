@@ -5,6 +5,11 @@
 
 namespace Havtorn
 {
+	class GDebugDraw;
+}
+
+namespace Havtorn
+{
 	class CWindowHandler;
 	class CThreadManager;
 	class CGraphicsFramework;
@@ -59,6 +64,7 @@ namespace Havtorn
 		CTextureBank* TextureBank = nullptr;
 		CRenderManager* RenderManager = nullptr;
 		GTime* Timer = nullptr;
+		GDebugDraw* DebugDraw = nullptr;
 		CInputMapper* InputMapper = nullptr;
 		CWorld* World = nullptr;
 
