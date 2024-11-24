@@ -34,5 +34,11 @@ namespace ImGui
 		Havtorn::F32 ViewportMenuHeight = 16.0f;
 		Havtorn::SVector2<Havtorn::F32> RenderedSceneDimensions = Havtorn::SVector2<Havtorn::F32>::Zero;
 		Havtorn::SVector2<Havtorn::F32> RenderedScenePosition = Havtorn::SVector2<Havtorn::F32>::Zero;
+
+		// TODO.NR: Make an abstraction for what's happening inside and to the play button blocks
+		bool IsPlayButtonEngaged = false;
+		bool IsPauseButtonEngaged = false;
+		bool IsPlayButtonHovered = false;
+		bool IsPauseButtonHovered = false;
 	};
 }
