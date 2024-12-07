@@ -28,14 +28,44 @@ namespace Havtorn
 		class CPhysicsWorld3D;
 	}
 
+	struct SSystemData
+	{
+		Ptr<ISystem> System = nullptr;
+		std::vector<U64> Requesters;
+		std::vector<U64> Blockers;
+
+		std::partial_ordering operator<=>(const SSystemData&) const = default;
+	};
+
+	enum class HAVTORN_API EWorldPlayState
+	{
+		Stopped,
+		Paused,
+		Playing
+	};
+
+	enum class HAVTORN_API EWorldPlayDimensions
+	{
+		World2D,
+		World3D
+	};
+
 	class CWorld
 	{
 		friend class GEngine;
 
 	public:
+		HAVTORN_API bool BeginPlay();
+		HAVTORN_API bool PausePlay();
+		HAVTORN_API bool StopPlay();
+
+		HAVTORN_API EWorldPlayState GetWorldPlayState() const;
+		HAVTORN_API EWorldPlayDimensions GetWorldPlayDimensions() const;
+		HAVTORN_API void ToggleWorldPlayDimensions();
+
 		HAVTORN_API std::vector<Ptr<CScene>>& GetActiveScenes();
 		HAVTORN_API std::vector<SEntity>& GetEntities() const;
-		HAVTORN_API void SaveActiveScene(const std::string& destinationPath);
+		HAVTORN_API void SaveActiveScene(const std::string& destinationPath) const;
 		HAVTORN_API void RemoveScene(U64 sceneIndex);
 		HAVTORN_API CAssetRegistry* GetAssetRegistry() const;
 		
@@ -48,51 +78,52 @@ namespace Havtorn
 		template<typename T>
 		void OpenDemoScene(const bool shouldOpen3DDemo = true);
 
-		HAVTORN_API void RegisterSystem(Ptr<ISystem> system);
+		template<class T>
+		inline T* GetSystem();
 
-		template<class TSystem>
-		inline TSystem* GetSystem();
+		template<class T>
+		inline SSystemData* GetSystemHolder();
 
-		template<class TSystem>
+		template<class T>
 		inline bool HasSystem();
 
-		template<class TSystem>
-		inline bool TryGetSystem(TSystem* outSystem);
+		template<class T, typename... Args>
+		inline void RequestSystem(void* requester, Args&&... args);
 
-		template<class TSystem>
-		inline void AddSystem();
+		template<class T>
+		inline void UnrequestSystem(void* requester);
 
-		template<class TSystem, typename... Args>
-		inline void AddSystem(Args&&... args);
+		HAVTORN_API inline void UnrequestSystems(void* requester);
 
-		template<class TSystem>
-		inline void QueueAddSystem();
+		template<class T>
+		inline void BlockSystem(void* requester);
 
-		template<class TSystem, typename... Args>
-		inline void QueueAddSystem(Args&&... args);
+		template<class T>
+		inline void UnblockSystem(void* requester);
 
-		template<class TSystem>
-		inline void QueueRemoveSystem();
+		HAVTORN_API void RequestPhysicsSystem(void* requester);
+		HAVTORN_API void BlockPhysicsSystem(void* requester);
+		HAVTORN_API void UnblockPhysicsSystem(void* requester);
 
-		void HAVTORN_API Initialize2DPhysicsData(const SEntity& entity) const;
-		void HAVTORN_API Update2DPhysicsData(STransformComponent* transformComponent, SPhysics2DComponent* phys2DComponent) const;
+		HAVTORN_API void Initialize2DPhysicsData(const SEntity& entity) const;
+		HAVTORN_API void Update2DPhysicsData(STransformComponent* transformComponent, SPhysics2DComponent* phys2DComponent) const;
 
-		void HAVTORN_API Initialize3DPhysicsData(const SEntity& entity) const;
-		void HAVTORN_API Update3DPhysicsData(STransformComponent* transformComponent, SPhysics3DComponent* phys2DComponent) const;
+		HAVTORN_API void Initialize3DPhysicsData(const SEntity& entity) const;
+		HAVTORN_API void Update3DPhysicsData(STransformComponent* transformComponent, SPhysics3DComponent* phys2DComponent) const;
+
+	public:
+		CMulticastDelegate<CScene*> OnBeginPlayDelegate;
+		CMulticastDelegate<CScene*> OnPausePlayDelegate;
+		CMulticastDelegate<CScene*> OnStopPlayDelegate;
 
 	private:
 		CWorld() = default;
 		~CWorld() = default;
 		
 		bool Init(CRenderManager* renderManager);
-		void Update();
-		void AddPendingSystems();
-		void RemovePendingSystems();
+		void Update() const;
 
-		void RemoveSystem(U16 index);
-		void RemoveSystemRespectOrder(U16 index);
-
-		HAVTORN_API void LoadScene(const std::string& filePath, CScene* outScene);
+		HAVTORN_API void LoadScene(const std::string& filePath, CScene* outScene) const;
 
 		void OnSceneCreated(CScene* scene) const;
 
@@ -107,7 +138,7 @@ namespace Havtorn
 		};
 
 		std::vector<Ptr<CScene>> Scenes;
-		std::vector<Ptr<ISystem>> Systems;
+		std::vector<SSystemData> SystemData;
 
 		std::vector<SystemTypeCode> SystemsToRemove;
 		std::vector<Ptr<ISystem>> SystemsToAdd;
@@ -118,6 +149,9 @@ namespace Havtorn
 		CRenderManager* RenderManager = nullptr;
 
 		CMulticastDelegate<CScene*> OnSceneCreatedDelegate;
+
+		EWorldPlayState PlayState = EWorldPlayState::Stopped;
+		EWorldPlayDimensions PlayDimensions = EWorldPlayDimensions::World3D;
 	};
 
 	template<typename T>
@@ -152,59 +186,80 @@ namespace Havtorn
 		}
 	}
 
-	template<class TSystem>
-	inline TSystem* CWorld::GetSystem()
+	template<class T>
+	inline T* CWorld::GetSystem()
 	{
-		U64 targetHashCode = typeid(TSystem).hash_code();
-		for (U32 i = 0; i < Systems.size(); i++)
+		U64 targetHashCode = typeid(T).hash_code();
+		for (const SSystemData& holder : SystemData)
 		{
-			U64 hashCode = typeid(*Systems[i].get()).hash_code();
+			U64 hashCode = typeid(*holder.System.get()).hash_code();
 			if (hashCode == targetHashCode)
-				return static_cast<TSystem*>(Systems[i].get());
+				return static_cast<T*>(holder.System.get());
 		}
 		return nullptr;
 	}
 
-	template<class TSystem>
+	template <class T>
+	SSystemData* CWorld::GetSystemHolder()
+	{
+		U64 targetHashCode = typeid(T).hash_code();
+		for (SSystemData& holder : SystemData)
+		{
+			U64 hashCode = typeid(*holder.System.get()).hash_code();
+			if (hashCode == targetHashCode)
+				return &holder;
+		}
+		return nullptr;
+	}
+
+	template<class T>
 	inline bool CWorld::HasSystem()
 	{
-		return GetSystem<TSystem>() != nullptr;
+		return GetSystem<T>() != nullptr;
 	}
 
-	template<class TSystem>
-	inline bool CWorld::TryGetSystem(TSystem* outSystem)
+	template <class T, typename... Args>
+	void CWorld::RequestSystem(void* requester, Args&&... args)
 	{
-		outSystem = GetSystem<TSystem>();
-		return outSystem != nullptr;
+		SSystemData* holder = GetSystemHolder<T>();
+		if (holder == nullptr)
+		{
+			SystemData.push_back({std::make_unique<T>(std::forward<Args>(args)...), {}, {}});
+			holder = &SystemData.back();
+		}
+
+		holder->Requesters.push_back(reinterpret_cast<U64>(requester));
 	}
 
-	template<class TSystem>
-	inline void CWorld::AddSystem()
+	template <class T>
+	void CWorld::UnrequestSystem(void* requester)
 	{
-		Systems.push_back(std::make_unique<TSystem>());
+		SSystemData* holder = GetSystemHolder<T>();
+		if (holder == nullptr)
+			return;
+
+		std::erase(holder->Requesters, reinterpret_cast<U64>(requester));
+		if (holder->Requesters.empty())
+			SystemData.erase(std::ranges::find(SystemData, *holder));
 	}
 
-	template<class TSystem, typename... Args>
-	inline void CWorld::AddSystem(Args&&... args)
+	template <class T>
+	void CWorld::BlockSystem(void* requester)
 	{
-		Systems.push_back(std::make_unique<TSystem>(std::forward<Args>(args)...));
+		SSystemData* holder = GetSystemHolder<T>();
+		if (holder == nullptr)
+			return;
+
+		holder->Blockers.push_back(reinterpret_cast<U64>(requester));
 	}
 
-	template<class TSystem>
-	inline void CWorld::QueueAddSystem()
+	template <class T>
+	void CWorld::UnblockSystem(void* requester)
 	{
-		SystemsToAdd.push_back(std::make_unique<TSystem>());
-	}
+		SSystemData* holder = GetSystemHolder<T>();
+		if (holder == nullptr)
+			return;
 
-	template<class TSystem, typename... Args>
-	inline void CWorld::QueueAddSystem(Args&&... args)
-	{
-		SystemsToAdd.push_back(std::make_unique<TSystem>(std::forward<Args>(args)...));
-	}
-
-	template<class TSystem>
-	inline void CWorld::QueueRemoveSystem()
-	{
-		SystemsToRemove.push_back(SystemTypeCode(typeid(TSystem).hash_code()));
+		std::erase(holder->Blockers, reinterpret_cast<U64>(requester));
 	}
 }

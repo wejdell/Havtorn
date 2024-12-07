@@ -23,7 +23,10 @@ namespace Havtorn
 	bool CGameManager::Init()
 	{
 		HV_LOG_INFO("GameManager Initialized.");
-		GEngine::GetWorld()->AddSystem<CGhostySystem>();
+		World = GEngine::GetWorld();
+		World->OnBeginPlayDelegate.AddMember(this, &CGameManager::OnBeginPlay);
+		World->OnPausePlayDelegate.AddMember(this, &CGameManager::OnPausePlay);
+		World->OnStopPlayDelegate.AddMember(this, &CGameManager::OnStopPlay);
 
 		ImGui::SetCurrentContext(Havtorn::GImGuiManager::GetContext());
 
@@ -48,5 +51,23 @@ namespace Havtorn
 
 	void CGameManager::EndFrame()
 	{
+	}
+
+	void CGameManager::OnBeginPlay(CScene* /*scene*/)
+	{
+		World->RequestSystem<CSpriteAnimatorGraphSystem>(this);
+		World->RequestSystem<CGhostySystem>(this);
+		World->RequestPhysicsSystem(this);
+		World->UnblockPhysicsSystem(this);
+	}
+
+	void CGameManager::OnPausePlay(CScene* /*scene*/)
+	{
+		World->BlockPhysicsSystem(this);
+	}
+
+	void CGameManager::OnStopPlay(CScene* /*scene*/)
+	{
+		World->UnrequestSystems(this);
 	}
 }

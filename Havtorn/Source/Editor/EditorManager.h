@@ -34,7 +34,9 @@ namespace Havtorn
 		HavtornDark,
 		HavtornRed,
 		HavtornGreen,
-		Count
+		Count,
+		PlayMode,
+		PauseMode
 	};
 
 	enum class EEditorStyleTheme
@@ -129,6 +131,9 @@ namespace Havtorn
 		void ToggleFreeCam(const SInputActionPayload payload);
 
 		void OnResolutionChanged(SVector2<U16> newResolution);
+		void OnBeginPlay(CScene* scene);
+		void OnPausePlay(CScene* scene);
+		void OnStopPlay(CScene* scene);
 
 		[[nodiscard]] std::string GetFrameRate() const;
 		[[nodiscard]] std::string GetSystemMemory() const;
@@ -146,7 +151,11 @@ namespace Havtorn
 		std::vector<ImGui::CToggleable*> MenuElements = {};
 		std::vector<Ptr<SEditorAssetRepresentation>> AssetRepresentations = {};
 
+		// TODO.NR: Save these in .ini file
 		SEditorLayout EditorLayout;
+		EEditorColorTheme CurrentColorTheme = EEditorColorTheme::HavtornDark;
+
+		EEditorColorTheme CachedColorTheme = EEditorColorTheme::HavtornDark;
 
 		ETransformGizmo CurrentGizmo = ETransformGizmo::Translate;
 

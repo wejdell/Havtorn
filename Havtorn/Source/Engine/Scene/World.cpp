@@ -17,75 +17,84 @@ namespace Havtorn
 		PhysicsWorld3D = std::make_unique<HexPhys3D::CPhysicsWorld3D>();
 
 		// Setup systems
-		AddSystem<CCameraSystem>();
-		AddSystem<CLightSystem>(RenderManager);
-		AddSystem<CSpriteAnimatorGraphSystem>();
-		AddSystem<CSequencerSystem>();
-		AddSystem<CRenderSystem>(RenderManager);
-		AddSystem<HexPhys2D::CPhysics2DSystem>(PhysicsWorld2D.get());
-		AddSystem<HexPhys3D::CPhysics3DSystem>(PhysicsWorld3D.get());
+		RequestSystem<CCameraSystem>(this);
+		RequestSystem<CLightSystem>(this, RenderManager);
+		RequestSystem<CSequencerSystem>(this);
+		RequestSystem<CRenderSystem>(this, RenderManager);
 
 		OnSceneCreatedDelegate.AddMember(this, &CWorld::OnSceneCreated);
 
 		return true;
 	}
 
-	void CWorld::Update()
+	void CWorld::Update() const
 	{
-		RemovePendingSystems();
-		AddPendingSystems();
-
 		for (auto& scene : Scenes)
 		{
-			for (const auto& system : Systems)
+			for (const auto& data : SystemData)
 			{
-				system->Update(scene.get());
+				if (data.Blockers.empty())
+					data.System->Update(scene.get());
 			}
 		}
 	}
 
-	void CWorld::AddPendingSystems()
+	bool CWorld::BeginPlay()
 	{
-		for (auto& system : SystemsToAdd)
-			Systems.push_back(std::move(system));
+		if (PlayState == EWorldPlayState::Playing)
+			return false;
 
-		SystemsToAdd.clear();
+		if (Scenes.empty())
+			return false;
+
+		PlayState = EWorldPlayState::Playing;
+		OnBeginPlayDelegate.Broadcast(Scenes.back().get());
+
+		return true;
 	}
 
-	void CWorld::RemovePendingSystems()
+	bool CWorld::PausePlay()
 	{
-		for (U16 toRemoveIndex = 0; toRemoveIndex < SystemsToRemove.size(); toRemoveIndex++)
-		{
-			for (U16 systemsIndex = 0; systemsIndex < Systems.size(); systemsIndex++)
-			{
-				if (typeid(*Systems[systemsIndex].get()).hash_code() != SystemsToRemove[toRemoveIndex].HashCode)
-					continue;
+		if (PlayState == EWorldPlayState::Paused || PlayState == EWorldPlayState::Stopped)
+			return false;
 
-				RemoveSystemRespectOrder(systemsIndex);
-			}
-		}
+		if (Scenes.empty())
+			return false;
 
-		SystemsToRemove.clear();
+		PlayState = EWorldPlayState::Paused;
+		OnPausePlayDelegate.Broadcast(Scenes.back().get());
+
+		return true;
 	}
 
-	void  CWorld::RemoveSystem(U16 index)
+	bool CWorld::StopPlay()
 	{
-		std::swap(Systems[index], Systems.back());
-		Systems.pop_back();
+		if (PlayState == EWorldPlayState::Stopped)
+			return false;
+
+		if (Scenes.empty())
+			return false;
+
+		PlayState = EWorldPlayState::Stopped;
+		OnStopPlayDelegate.Broadcast(Scenes.back().get());
+
+		return true;
 	}
 
-	void  CWorld::RemoveSystemRespectOrder(U16 index)
+	EWorldPlayState CWorld::GetWorldPlayState() const
 	{
-		for (U16 i = index; i < Systems.size(); i++)
-		{
-			U16 next = i + 1;
-			if (next == Systems.size())
-				break;
+		return PlayState;
+	}
 
-			std::swap(Systems[i], Systems[next]);
-		}
+	EWorldPlayDimensions CWorld::GetWorldPlayDimensions() const
+	{
+		return PlayDimensions;
+	}
 
-		Systems.pop_back();
+	void CWorld::ToggleWorldPlayDimensions()
+	{
+		if (PlayState == EWorldPlayState::Stopped)
+			PlayDimensions == EWorldPlayDimensions::World3D ? PlayDimensions = EWorldPlayDimensions::World2D : PlayDimensions = EWorldPlayDimensions::World3D;
 	}
 
 	std::vector<Ptr<CScene>>& CWorld::GetActiveScenes()
@@ -98,7 +107,7 @@ namespace Havtorn
 		return Scenes.back()->Entities;
 	}
 	
-	void CWorld::SaveActiveScene(const std::string& destinationPath)
+	void CWorld::SaveActiveScene(const std::string& destinationPath) const
 	{
 		if (Scenes.empty())
 		{
@@ -121,7 +130,7 @@ namespace Havtorn
 		delete[] data;
 	}
 
-	void CWorld::LoadScene(const std::string& filePath, CScene* outScene)
+	void CWorld::LoadScene(const std::string& filePath, CScene* outScene) const
 	{
 		SSceneFileHeader sceneFile;
 
@@ -152,6 +161,35 @@ namespace Havtorn
 
 		std::swap(Scenes.back(), Scenes[sceneIndex]);
 		Scenes.pop_back();
+	}
+
+	void CWorld::UnrequestSystems(void* requester)
+	{
+		for (SSystemData& data : SystemData)
+			std::erase(data.Requesters, reinterpret_cast<U64>(requester));
+
+		std::erase_if(SystemData, [](const SSystemData& data) { return data.Requesters.empty(); });
+	}
+
+	void CWorld::RequestPhysicsSystem(void* requester)
+	{
+		if (PlayDimensions == EWorldPlayDimensions::World3D)
+		{
+			RequestSystem<HexPhys3D::CPhysics3DSystem>(requester, PhysicsWorld3D.get());
+			return;
+		}
+
+		RequestSystem<HexPhys2D::CPhysics2DSystem>(requester, PhysicsWorld2D.get());
+	}
+
+	void CWorld::BlockPhysicsSystem(void* requester)
+	{
+		PlayDimensions == EWorldPlayDimensions::World3D ? BlockSystem<HexPhys3D::CPhysics3DSystem>(requester) : BlockSystem<HexPhys2D::CPhysics2DSystem>(requester);
+	}
+
+	void CWorld::UnblockPhysicsSystem(void* requester)
+	{
+		PlayDimensions == EWorldPlayDimensions::World3D ? UnblockSystem<HexPhys3D::CPhysics3DSystem>(requester) : UnblockSystem<HexPhys2D::CPhysics2DSystem>(requester);
 	}
 
 	void CWorld::Initialize2DPhysicsData(const SEntity& entity) const

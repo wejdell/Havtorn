@@ -20,7 +20,12 @@ namespace Havtorn
 		_declspec(dllexport) void PostUpdate();
 		_declspec(dllexport) void EndFrame();
 
+		void OnBeginPlay(CScene* scene);
+		void OnPausePlay(CScene* scene);
+		void OnStopPlay(CScene* scene);
+
 	public:
 		static _declspec(dllexport) CGameManager* Instance;
+		CWorld* World;
 	};
 }

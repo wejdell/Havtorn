@@ -10,9 +10,8 @@ namespace Havtorn
 	class CSpriteAnimatorGraphSystem : public ISystem
 	{
 	public:
-		CSpriteAnimatorGraphSystem();
-		~CSpriteAnimatorGraphSystem() override;
-		void Update(CScene* scene) override;
+		~CSpriteAnimatorGraphSystem() override = default;
+		HAVTORN_API void Update(CScene* scene) override;
 
 		HAVTORN_API void BindEvaluateFunction(std::function<I16(CScene*, const SEntity&)>& function, const std::string& classAndFunctionName);
 
