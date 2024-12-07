@@ -38,7 +38,7 @@ namespace Havtorn
 	{
 		U32 numberSize = sizeof(U32);
 		LOG_SERIALIZE("Data vector of type %s was registered for serialization with size %i", typeid(U32).name(), numberSize);
-		U32 dataSize = sizeof(T) * static_cast<U32>(objects.size());
+		U32 dataSize = sizeof(T) * STATIC_U32(objects.size());
 		LOG_SERIALIZE("Data vector of type %s was registered for serialization with size %i", typeid(T).name(), dataSize);
 		return numberSize + dataSize;
 	}
@@ -48,7 +48,7 @@ namespace Havtorn
 	{
 		U32 numberSize = sizeof(U32); 
 		LOG_SERIALIZE("Data of type %s was registered for serialization with size %i", typeid(U32).name(), numberSize);
-		U32 dataSize = sizeof(char) * static_cast<U32>(object.length());
+		U32 dataSize = sizeof(char) * STATIC_U32(object.length());
 		LOG_SERIALIZE("Data of type std::string was registered for serialization with size %i", dataSize);
 		return numberSize + dataSize;
 	}
@@ -65,7 +65,7 @@ namespace Havtorn
 	template<typename T>
 	inline void SerializeData(const std::vector<T>& source, char* destination, U64& pointerPosition)
 	{
-		const U32 size = sizeof(T) * static_cast<U32>(source.size());
+		const U32 size = sizeof(T) * STATIC_U32(source.size());
 		SerializeData(size, destination, pointerPosition);
 		memcpy(&destination[pointerPosition], source.data(), size);
 		LOG_SERIALIZE("Serialized vector data of type %s and size %i at position %i -> %i", typeid(T).name(), size, pointerPosition, pointerPosition + size);
@@ -75,7 +75,7 @@ namespace Havtorn
 	template<>
 	inline void SerializeData(const std::string& source, char* destination, U64& pointerPosition)
 	{
-		const U32 size = sizeof(char) * static_cast<U32>(source.length());
+		const U32 size = sizeof(char) * STATIC_U32(source.length());
 		SerializeData(size, destination, pointerPosition);
 		memcpy(&destination[pointerPosition], source.data(), size);
 		LOG_SERIALIZE("Serialized data of type std::string and size %i at position %i -> %i", size, pointerPosition, pointerPosition + size);

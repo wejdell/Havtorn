@@ -119,7 +119,7 @@ namespace Havtorn
 			}
 
 			// Material Count
-			fileHeader.NumberOfMaterials = static_cast<U8>(assimpScene->mNumMaterials);
+			fileHeader.NumberOfMaterials = STATIC_U8(assimpScene->mNumMaterials);
 
 			// Bone stuff
 			//std::vector<VertexBoneData> collectedBoneData;

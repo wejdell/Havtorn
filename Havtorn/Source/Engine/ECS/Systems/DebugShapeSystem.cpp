@@ -284,9 +284,9 @@ namespace Havtorn
 		//	debugShapes[shapeIndex]->LifeTime = useLifeTime ? (GTime::Time() + lifeTimeSeconds) : -1.0f;
 		//	debugShapes[shapeIndex]->Thickness = UMath::Clamp(thickness, ThicknessMinimum, ThicknessMaximum);
 		//	debugShapes[shapeIndex]->IgnoreDepth = ignoreDepth;
-		//	debugShapes[shapeIndex]->VertexBufferIndex = static_cast<U8>(outShapes[i].VertexBuffer);
-		//	debugShapes[shapeIndex]->IndexCount = static_cast<U16>(Shapes.at(outShapes[i].VertexBuffer).Indices.size());
-		//	debugShapes[shapeIndex]->IndexBufferIndex = static_cast<U8>(outShapes[i].IndexBuffer);
+		//	debugShapes[shapeIndex]->VertexBufferIndex = STATIC_U8(outShapes[i].VertexBuffer);
+		//	debugShapes[shapeIndex]->IndexCount = STATIC_U16(Shapes.at(outShapes[i].VertexBuffer).Indices.size());
+		//	debugShapes[shapeIndex]->IndexBufferIndex = STATIC_U8(outShapes[i].IndexBuffer);
 
 		//	std::vector<Ref<STransformComponent>>& transforms = Instance->Scene->GetTransformComponents();
 		//	const U64 transformIndex = entities[entityIndex]->GetComponentIndex(EComponentType::TransformComponent);
@@ -327,8 +327,8 @@ namespace Havtorn
 		}
 
 		// Sort render commands based on use of depth
-		//const U8 debugShapeComponent = static_cast<U8>(EComponentType::DebugShapeComponent);
-		//const U8 transformComponent = static_cast<U8>(EComponentType::TransformComponent);
+		//const U8 debugShapeComponent = STATIC_U8(EComponentType::DebugShapeComponent);
+		//const U8 transformComponent = STATIC_U8(EComponentType::TransformComponent);
 		//Components components;
 		//for (U64 i = 0; i < ActiveIndices.size(); i++)
 		//{

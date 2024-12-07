@@ -21,7 +21,7 @@ namespace Havtorn
 			for (auto& mesh : assetFileData.Meshes)
 			{
 				DrawCallData.emplace_back();
-				DrawCallData.back().IndexCount = static_cast<U32>(mesh.Indices.size());
+				DrawCallData.back().IndexCount = STATIC_U32(mesh.Indices.size());
 			}
 		}
 

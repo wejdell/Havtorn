@@ -18,7 +18,6 @@ namespace Havtorn
 			: SComponent(entityOwner)
 		{}
 
-		SMatrix ViewMatrix;
 		SMatrix ProjectionMatrix;
 		F32 NearClip = 0.1f;
 		F32 FarClip = 1000.0f;

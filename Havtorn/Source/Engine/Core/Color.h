@@ -117,31 +117,31 @@ namespace Havtorn
 
 	U8 SColor::ToU8Range(const F32 c)
 	{
-		return static_cast<U8>(UMath::Clamp(c, F32Min, F32Max) * U8MaxAsF32);
+		return STATIC_U8(UMath::Clamp(c, F32Min, F32Max) * U8MaxAsF32);
 	}
 
 	F32 SColor::ToFloatRange(const U8 c)
 	{
-		return static_cast<F32>(c) * U8MaxAsF32Reciprocal;
+		return STATIC_F32(c) * U8MaxAsF32Reciprocal;
 	}
 
 	inline SColor SColor::Random(U8 lowerBound, U8 upperBound, U8 alpha)
 	{
 		return SColor(
-			static_cast<U8>(UMath::Random(lowerBound, upperBound)), 
-			static_cast<U8>(UMath::Random(lowerBound, upperBound)), 
-			static_cast<U8>(UMath::Random(lowerBound, upperBound)), 
+			STATIC_U8(UMath::Random(lowerBound, upperBound)), 
+			STATIC_U8(UMath::Random(lowerBound, upperBound)), 
+			STATIC_U8(UMath::Random(lowerBound, upperBound)), 
 			alpha);
 	}
 
 	inline SColor SColor::Random(U8 lowerBound, U8 upperBound)
 	{
-		return SColor::Random(lowerBound,upperBound, static_cast<U8>(UMath::Random(lowerBound, upperBound)));
+		return SColor::Random(lowerBound,upperBound, STATIC_U8(UMath::Random(lowerBound, upperBound)));
 	}
 
 	inline SColor SColor::RandomGrey(U8 lowerBound, U8 upperBound, U8 alpha)
 	{
-		U8 c = static_cast<U8>(UMath::Random(lowerBound, upperBound));
+		U8 c = STATIC_U8(UMath::Random(lowerBound, upperBound));
 		return SColor(c, c, c, alpha);
 	}
 }

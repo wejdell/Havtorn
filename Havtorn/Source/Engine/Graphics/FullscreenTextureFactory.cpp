@@ -2,10 +2,11 @@
 
 #include "hvpch.h"
 #include "FullscreenTextureFactory.h"
-#include "FullscreenTexture.h"
 #include "GraphicsFramework.h"
 #include "GraphicsUtilities.h"
-#include "GBuffer.h"
+
+#include "RenderingPrimitives/FullscreenTexture.h"
+#include "RenderingPrimitives/GBuffer.h"
 
 namespace Havtorn
 {
@@ -53,7 +54,7 @@ namespace Havtorn
 		{
 			D3D11_TEXTURE2D_DESC textureDescription;
 			texture->GetDesc(&textureDescription);
-			viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, static_cast<F32>(textureDescription.Width), static_cast<F32>(textureDescription.Height), 0.0f, 1.0f });
+			viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(textureDescription.Width), STATIC_F32(textureDescription.Height), 0.0f, 1.0f });
 		}
 
 		CFullscreenTexture returnTexture;
@@ -143,7 +144,7 @@ namespace Havtorn
 		ID3D11ShaderResourceView* shaderResource;
 		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateShaderResourceView(depthStencilBuffer, &shaderResourceViewDesc, &shaderResource), "Depth Shader Resource could not be created.");
 
-		D3D11_VIEWPORT* viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, static_cast<F32>(size.X), static_cast<F32>(size.Y), 0.0f, 1.0f });
+		D3D11_VIEWPORT* viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(size.X), STATIC_F32(size.Y), 0.0f, 1.0f });
 
 		CFullscreenTexture returnDepth;
 		returnDepth.Context = Framework->GetContext();
@@ -176,7 +177,7 @@ namespace Havtorn
 			renderTargets[i] = texture.RenderTarget;
 			shaderResources[i] = texture.ShaderResource;
 		}
-		D3D11_VIEWPORT* viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, static_cast<F32>(size.X), static_cast<F32>(size.Y), 0.0f, 1.0f });
+		D3D11_VIEWPORT* viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(size.X), STATIC_F32(size.Y), 0.0f, 1.0f });
 
 		CGBuffer returnGBuffer;
 		returnGBuffer.Context = Framework->GetContext();

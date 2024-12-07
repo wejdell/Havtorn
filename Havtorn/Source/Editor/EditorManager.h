@@ -143,6 +143,7 @@ namespace Havtorn
 		const CRenderManager* RenderManager = nullptr;
 		CEditorResourceManager* ResourceManager = nullptr;
 
+		CWorld* World = nullptr;
 		CScene* CurrentScene = nullptr;
 		SEntity SelectedEntity = SEntity::Null;
 

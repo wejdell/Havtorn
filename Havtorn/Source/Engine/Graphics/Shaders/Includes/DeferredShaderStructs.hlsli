@@ -169,6 +169,11 @@ cbuffer MaterialBuffer : register(b8)
     bool MaterialPadding[15];            // 15
 }
 
+cbuffer EditorDataBuffer : register(b9)
+{
+
+}
+
 // Cubemap used for environment light shading
 TextureCube environmentTexture : register(t0);
 

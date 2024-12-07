@@ -64,9 +64,7 @@ namespace Havtorn
 		}
 
 		for (U64 i = 0; i < STATIC_U64(EFullscreenShader::Count); i++) 
-		{
 			ENGINE_ERROR_BOOL_MESSAGE(UGraphicsUtils::CreatePixelShader(filepaths[i], framework, &PixelShaders[i]), "Could not create Pixel Shader from %s", filepaths[i].c_str());
-		}
 
 		//Start Samplers
 		D3D11_SAMPLER_DESC samplerDesc = {};
@@ -171,7 +169,7 @@ namespace Havtorn
 	{
 		SVector2<U16> resolution = GEngine::GetWindowHandler()->GetResolution();
 		FullscreenData.Resolution = SVector2<F32>(resolution.X, resolution.Y);
-		FullscreenData.NoiseScale = { FullscreenData.Resolution.X / static_cast<F32>(UMath::Sqrt(KernelSize)), FullscreenData.Resolution.Y / static_cast<F32>(UMath::Sqrt(KernelSize)) };
+		FullscreenData.NoiseScale = { FullscreenData.Resolution.X / STATIC_F32(UMath::Sqrt(KernelSize)), FullscreenData.Resolution.Y / STATIC_F32(UMath::Sqrt(KernelSize)) };
 		memcpy(&FullscreenData.SampleKernel[0], &Kernel[0], sizeof(Kernel));
 		BindBuffer(FullscreenDataBuffer, FullscreenData, "Fullscreen Data Buffer");
 

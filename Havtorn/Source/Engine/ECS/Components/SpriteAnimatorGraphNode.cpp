@@ -52,7 +52,7 @@ namespace Havtorn
 		U32 size = 0;
 		size += GetDataSize(Name);
 		
-		size += GetDataSize(static_cast<U32>(Nodes.size()));
+		size += GetDataSize(STATIC_U32(Nodes.size()));
 		for (const SSpriteAnimatorGraphNode& node : Nodes)
 			size += node.GetSize();
 		
@@ -66,7 +66,7 @@ namespace Havtorn
 	{
 		SerializeData(Name, toData, pointerPosition);
 
-		SerializeData(static_cast<U32>(Nodes.size()), toData, pointerPosition);
+		SerializeData(STATIC_U32(Nodes.size()), toData, pointerPosition);
 		for (const SSpriteAnimatorGraphNode& node : Nodes)
 			node.Serialize(toData, pointerPosition);
 

@@ -15,7 +15,7 @@ namespace Havtorn
 			vsFile.open(filepath, std::ios::binary);
 			const std::string vsData = { std::istreambuf_iterator<char>(vsFile), std::istreambuf_iterator<char>() };
 			outShaderData = vsData;
-			ENGINE_HR_BOOL_MESSAGE(framework->GetDevice()->CreateVertexShader(vsData.data(), vsData.size(), nullptr, outVertexShader), "Vertex Shader could not be created.");
+			ENGINE_HR_BOOL_MESSAGE(framework->GetDevice()->CreateVertexShader(vsData.data(), vsData.size(), nullptr, outVertexShader), "Vertex Shader: %s could not be created.", filepath.c_str());
 			vsFile.close();
 			return true;
 		}
@@ -25,7 +25,7 @@ namespace Havtorn
 			std::ifstream psFile;
 			psFile.open(filepath, std::ios::binary);
 			const std::string psData = { std::istreambuf_iterator<char>(psFile), std::istreambuf_iterator<char>() };
-			ENGINE_HR_BOOL_MESSAGE(framework->GetDevice()->CreatePixelShader(psData.data(), psData.size(), nullptr, outPixelShader), "Pixel Shader could not be created.");
+			ENGINE_HR_BOOL_MESSAGE(framework->GetDevice()->CreatePixelShader(psData.data(), psData.size(), nullptr, outPixelShader), "Pixel Shader: %s could not be created.", filepath.c_str());
 			psFile.close();
 			return true;
 		}
@@ -35,7 +35,7 @@ namespace Havtorn
 			std::ifstream gsFile;
 			gsFile.open(filepath, std::ios::binary);
 			const std::string gsData = { std::istreambuf_iterator<char>(gsFile), std::istreambuf_iterator<char>() };
-			ENGINE_HR_BOOL_MESSAGE(framework->GetDevice()->CreateGeometryShader(gsData.data(), gsData.size(), nullptr, outGeometryShader), "Geometry Shader could not be created.");
+			ENGINE_HR_BOOL_MESSAGE(framework->GetDevice()->CreateGeometryShader(gsData.data(), gsData.size(), nullptr, outGeometryShader), "Geometry Shader: %s could not be created.", filepath.c_str());
 			gsFile.close();
 			return true;
 		}
@@ -45,7 +45,7 @@ namespace Havtorn
 			const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
 			char* data = new char[fileSize];
 
-			GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));
+			GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
 
 			STextureFileHeader assetFile;
 			assetFile.Deserialize(data);

@@ -58,7 +58,7 @@ namespace Havtorn
 
 		// AS: By design, We wait for the end of the current frame before we allow changing clip
 
-		U64 durationIndex = UMath::Min(data.CurrentFrame, static_cast<U32>(data.AnimationClips[data.CurrentAnimationClipKey].Durations.size() - 1));
+		U64 durationIndex = UMath::Min(data.CurrentFrame, STATIC_U32(data.AnimationClips[data.CurrentAnimationClipKey].Durations.size() - 1));
 		if (data.ElapsedTimeInSeconds >= data.AnimationClips[data.CurrentAnimationClipKey].Durations[durationIndex])
 		{
 			bool animationClipHasChanged = data.CurrentAnimationClipKey != data.ResolvedAnimationClipKey;

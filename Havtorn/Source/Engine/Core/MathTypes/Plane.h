@@ -6,15 +6,15 @@
 
 namespace Havtorn 
 {
-	class Plane 
+	class SPlane 
 	{
 	public:
 		// Default constructor.
-		Plane();
+		SPlane();
 		// Constructor taking three points where the normal is (point1 - point0) x (point2 -point0).
-		Plane(const SVector& point0, const SVector& point1, const SVector& point2);
+		SPlane(const SVector& point0, const SVector& point1, const SVector& point2);
 		// Constructor taking a point and a normal.
-		Plane(const SVector& point0, const SVector& normal);
+		SPlane(const SVector& point0, const SVector& normal);
 		// Init the plane with three points, the same as the constructor above.
 		void Init(const SVector& point0, const SVector& point1, const SVector& point2);
 		// Init the plane with a point and a normal, the same as the constructor above.
@@ -29,39 +29,39 @@ namespace Havtorn
 		SVector Normal;
 	};
 
-	Plane::Plane() : Point(SVector()), Normal(SVector()) {}
+	SPlane::SPlane() : Point(SVector()), Normal(SVector()) {}
 
-	Plane::Plane(const SVector& point0, const SVector& point1, const SVector& point2) 
+	SPlane::SPlane(const SVector& point0, const SVector& point1, const SVector& point2) 
 		: Point(point0) 
 	{
 		Normal = SVector(point1 - point0).Cross(SVector(point2 - point0)).GetNormalized();
 	}
 
-	Plane::Plane(const SVector& point0, const SVector& normal) : Point(point0), Normal(normal) {}
+	SPlane::SPlane(const SVector& point0, const SVector& normal) : Point(point0), Normal(normal) {}
 
-	void Plane::Init(const SVector& point0, const SVector& point1, const SVector& point2) 
+	void SPlane::Init(const SVector& point0, const SVector& point1, const SVector& point2) 
 	{
 		Point = point0;
 		Normal = SVector(point1 - point0).Cross(SVector(point2 - point0)).GetNormalized();
 	}
 
-	void Plane::Init(const SVector& point0, const SVector& normal) 
+	void SPlane::Init(const SVector& point0, const SVector& normal) 
 	{
 		Point = point0;
 		Normal = normal;
 	}
 
-	bool Plane::IsInside(const SVector& position) const 
+	bool SPlane::IsInside(const SVector& position) const 
 	{
 		return SVector(position - Point).Dot(Normal) <= 0;
 	}
 
-	const SVector& Plane::GetNormal() const 
+	const SVector& SPlane::GetNormal() const 
 	{
 		return Normal;
 	}
 	
-	const SVector& Plane::GetPoint() const 
+	const SVector& SPlane::GetPoint() const 
 	{
 		return Point;
 	}

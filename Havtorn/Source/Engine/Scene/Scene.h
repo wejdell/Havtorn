@@ -49,7 +49,7 @@ namespace Havtorn
 		U32 DefaultSizeAllocator(const std::vector<T*>& componentVector) const
 		{
 			U32 size = 0;
-			size += GetDataSize(static_cast<U32>(componentVector.size()));
+			size += GetDataSize(STATIC_U32(componentVector.size()));
 			for (const auto component : componentVector)
 			{
 				auto& componentRef = *component;
@@ -62,7 +62,7 @@ namespace Havtorn
 		U32 SpecializedSizeAllocator(const std::vector<T*>& componentVector) const
 		{
 			U32 size = 0;
-			size += GetDataSize(static_cast<U32>(componentVector.size()));
+			size += GetDataSize(STATIC_U32(componentVector.size()));
 			for (auto component : componentVector)
 				size += component->GetSize();
 
@@ -72,7 +72,7 @@ namespace Havtorn
 		template<typename T>
 		void DefaultSerializer(const std::vector<T*>& componentVector, char* toData, U64& pointerPosition) const
 		{
-			SerializeData(static_cast<U32>(componentVector.size()), toData, pointerPosition);
+			SerializeData(STATIC_U32(componentVector.size()), toData, pointerPosition);
 			for (const auto component : componentVector)
 			{
 				auto& componentRef = *component;
@@ -83,7 +83,7 @@ namespace Havtorn
 		template<typename T>
 		void SpecializedSerializer(const std::vector<T*>& componentVector, char* toData, U64& pointerPosition) const
 		{
-			SerializeData(static_cast<U32>(componentVector.size()), toData, pointerPosition);
+			SerializeData(STATIC_U32(componentVector.size()), toData, pointerPosition);
 			for (auto component : componentVector)
 				component->Serialize(toData, pointerPosition);
 		}
