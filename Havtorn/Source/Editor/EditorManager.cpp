@@ -3,11 +3,7 @@
 #include "EditorManager.h"
 
 #include "Core/imgui.h"
-#include "Core/imgui_impl_win32.h"
-#include "Core/imgui_impl_dx11.h"
 #include "Core/ImGuizmo/ImGuizmo.h"
-
-#include "Utils/ImGuiUtils.h"
 
 #include <Core/WindowsInclude.h>
 #include <psapi.h>
@@ -19,7 +15,6 @@
 #include "Input/InputMapper.h"
 #include "Input/InputTypes.h"
 
-#include "Graphics/GraphicsFramework.h"
 #include "Graphics/RenderManager.h"
 #include "ECS/ECSInclude.h"
 
@@ -74,6 +69,10 @@ namespace Havtorn
 		RenderManager = renderManager;
 
 		GEngine::GetWindowHandler()->OnResolutionChanged.AddMember(this, &CEditorManager::OnResolutionChanged);
+		CWorld* world = GEngine::GetWorld();
+		world->OnBeginPlayDelegate.AddMember(this, &CEditorManager::OnBeginPlay);
+		world->OnPausePlayDelegate.AddMember(this, &CEditorManager::OnPausePlay);
+		world->OnStopPlayDelegate.AddMember(this, &CEditorManager::OnStopPlay);
 
 		InitEditorLayout();
 		InitAssetRepresentations();
@@ -220,6 +219,8 @@ namespace Havtorn
 
 	void CEditorManager::SetEditorTheme(EEditorColorTheme colorTheme, EEditorStyleTheme styleTheme)
 	{
+		CurrentColorTheme = colorTheme;
+
 		switch (colorTheme)
 		{
 		case Havtorn::EEditorColorTheme::HavtornDark:
@@ -251,6 +252,40 @@ namespace Havtorn
 				ImVec4(0.355f, 0.478f, 0.188f, 1.00f),
 				ImVec4(0.469f, 0.814f, 0.00f, 1.00f),
 				ImVec4(0.576f, 1.00f, 0.00f, 1.00f)
+			);
+			GImGuiManager::SetImGuiColorProfile(colorProfile);
+		}
+		break;
+
+		case Havtorn::EEditorColorTheme::PlayMode:
+		{
+			SImGuiColorProfile colorProfile(
+				ImVec4(0.01f, 0.01f, 0.01f, 1.00f),
+				ImVec4(0.05f, 0.05f, 0.04f, 1.00f),
+				ImVec4(0.11f, 0.11f, 0.11f, 1.00f),
+				ImVec4(0.11f, 0.11f, 0.11f, 1.00f),
+				ImVec4(0.11f, 0.11f, 0.11f, 1.00f),
+				ImVec4(0.11f, 0.11f, 0.11f, 1.00f)
+			);
+
+			colorProfile.Text = ImVec4(0.44f, 0.44f, 0.44f, 1.00f);
+			colorProfile.Button = ImVec4(0.278f, 0.271f, 0.267f, 1.00f);
+			colorProfile.ButtonActive = ImVec4(0.814f, 0.532f, 0.00f, 1.00f);
+			colorProfile.ButtonHovered = ImVec4(0.478f, 0.361f, 0.188f, 1.00f);
+
+			GImGuiManager::SetImGuiColorProfile(colorProfile);
+		}
+		break;
+
+		case Havtorn::EEditorColorTheme::PauseMode:
+		{
+			SImGuiColorProfile colorProfile(
+				ImVec4(0.05f, 0.05f, 0.04f, 1.00f),
+				ImVec4(0.11f, 0.11f, 0.11f, 1.00f),
+				ImVec4(0.278f, 0.271f, 0.267f, 1.00f),
+				ImVec4(0.478f, 0.361f, 0.188f, 1.00f),
+				ImVec4(0.814f, 0.532f, 0.00f, 1.00f),
+				ImVec4(1.00f, 0.659f, 0.00f, 1.00f)
 			);
 			GImGuiManager::SetImGuiColorProfile(colorProfile);
 		}
@@ -444,6 +479,24 @@ namespace Havtorn
 	{
 		HV_LOG_INFO("EditorMananger -> New Res X: %i, New Res Y: %i", newResolution.X, newResolution.Y);
 		InitEditorLayout();
+	}
+
+	void CEditorManager::OnBeginPlay(CScene* /*scene*/)
+	{
+		if (CurrentColorTheme != EEditorColorTheme::PauseMode)
+			CachedColorTheme = CurrentColorTheme;
+
+		SetEditorTheme(EEditorColorTheme::PlayMode);
+	}
+
+	void CEditorManager::OnPausePlay(CScene* /*scene*/)
+	{
+		SetEditorTheme(EEditorColorTheme::PauseMode);
+	}
+
+	void CEditorManager::OnStopPlay(CScene* /*scene*/)
+	{
+		SetEditorTheme(CachedColorTheme);
 	}
 
 	ETransformGizmo CEditorManager::GetCurrentGizmo() const

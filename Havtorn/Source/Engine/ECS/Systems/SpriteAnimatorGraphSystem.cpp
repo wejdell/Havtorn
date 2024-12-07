@@ -8,12 +8,6 @@
 
 namespace Havtorn
 {
-	CSpriteAnimatorGraphSystem::CSpriteAnimatorGraphSystem()
-	{}
-
-	CSpriteAnimatorGraphSystem::~CSpriteAnimatorGraphSystem()
-	{}
-
 	void CSpriteAnimatorGraphSystem::Update(CScene* scene)
 	{
 		const F32 deltaTime = GTime::Dt();
