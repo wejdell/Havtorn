@@ -28,6 +28,7 @@ namespace Havtorn
 
 		SVector BoundsMin = SVector::Zero;
 		SVector BoundsMax = SVector::Zero;
+		SVector BoundsCenter = SVector::Zero;
 
 		U8 NumberOfMaterials = 0;
 

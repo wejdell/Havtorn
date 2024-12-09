@@ -291,6 +291,7 @@ namespace Havtorn
 
 		outStaticMeshComponent->BoundsMin = boundsMin;
 		outStaticMeshComponent->BoundsMax = boundsMax;
+		outStaticMeshComponent->BoundsCenter = boundsMin + (boundsMax - boundsMin) * 0.5f;
 		HV_LOG_TRACE("%s | BoundsMin: %s, BoundsMax: %s", outStaticMeshComponent->Name.AsString().c_str(), boundsMin.ToString().c_str(), boundsMax.ToString().c_str());
 
 		// Geometry
@@ -472,24 +473,36 @@ namespace Havtorn
 		//F32 x = (1 + UMath::Sqrt(4)
 		//F32 d = UMath::co
 		//camera.transform.position = bounds.center - distanceZ * camera.transform.forward;
-		
-		SVector objectSizes = staticMeshComp->BoundsMax - staticMeshComp->BoundsMin;
-		F32 cameraView = 2.0f * UMath::Tan(0.5f * UMath::DegToRad(70.0f/*camera.fieldOfView*/)); // Visible height 1 meter in front
+		//===========
+		//SVector objectSizes = staticMeshComp->BoundsMax - staticMeshComp->BoundsMin;
+		//F32 cameraView = 2.0f * UMath::Tan(0.5f * UMath::DegToRad(70.0f/*camera.fieldOfView*/)); // Visible height 1 meter in front
 
-		F32 cameraDistanceY = 0.1f;
-		F32 objectSizeY = objectSizes.Y;
-		F32 distanceY = cameraDistanceY * (objectSizeY / cameraView);
-		distanceY += 0.5f * objectSizeY;
+		//F32 cameraDistanceY = 0.1f;
+		//F32 objectSizeY = objectSizes.Y;
+		//F32 distanceY = cameraDistanceY * (objectSizeY / cameraView);
+		//distanceY += 0.5f * objectSizeY;
 
-		F32 cameraDistanceZ = 2.0f; // Constant factor
-		F32 objectSizeZ = objectSizes.Z;
-		F32 distanceZ = cameraDistanceZ * (objectSizeZ / cameraView); // Combined wanted distanceZ from the object
-		distanceZ += 0.5f * objectSizeZ; // Estimated offset from the center to the outside of the object
+		//F32 cameraDistanceZ = 2.0f; // Constant factor
+		//F32 objectSizeZ = objectSizes.Z;
+		//F32 distanceZ = cameraDistanceZ * (objectSizeZ / cameraView); // Combined wanted distanceZ from the object
+		//distanceZ += 0.5f * objectSizeZ; // Estimated offset from the center to the outside of the object
 
-		camTransform.Translate(SVector4::Up * distanceY);
-		camTransform.Translate(SVector4::Backward * distanceZ);
-		camTransform.Rotate({30.0f, UMath::DegToRad(-30.0f), 0.0f});
-		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 10.0f);
+		//camTransform.Translate(SVector4::Up * distanceY);
+		//camTransform.Translate(SVector4::Backward * distanceZ);
+		////camTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(30.0f, 30.0f, 0.0f));
+		//============
+
+		SVector centerAtFront = SVector(staticMeshComp->BoundsCenter.X, staticMeshComp->BoundsCenter.Y, staticMeshComp->BoundsMax.Z);
+		SVector centerAtFrontTop = SVector(staticMeshComp->BoundsCenter.X, staticMeshComp->BoundsMax.Y, staticMeshComp->BoundsMax.Z);
+		F32 centerToTopDist = (centerAtFrontTop - centerAtFront).Size();
+		F32 marginPercentage = 1.5f;
+		F32 minDistance = (centerToTopDist * marginPercentage) / UMath::Tan(UMath::DegToRad(70.0f * 0.5f));
+
+		camTransform.Translate(SVector(staticMeshComp->BoundsCenter.X, staticMeshComp->BoundsCenter.Y, -minDistance));
+		//camTransform.SetMatrix(SMatrix::Face(SVector(staticMeshComp->BoundsCenter.X, staticMeshComp->BoundsCenter.Y, -minDistance), SVector(0.0f, 0.0f, minDistance), SVector::Up));
+		//camera.transform.LookAt(bounds.center);
+		//camTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(30.0f, 30.0f, 0.0f));
+		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.001f, 10.0f);
 
 		FrameBufferData.ToCameraFromWorld = camTransform.GetMatrix().FastInverse();
 		FrameBufferData.ToWorldFromCamera = camTransform.GetMatrix();
