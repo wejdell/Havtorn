@@ -126,9 +126,9 @@ namespace Havtorn
 		void InitAssetRepresentations();
 		void PreProcessAssets();
 
-		void SetTransformGizmo(const SInputActionPayload payload);
-
-		void ToggleFreeCam(const SInputActionPayload payload);
+		void OnInputSetTransformGizmo(const SInputActionPayload payload);
+		void OnInputToggleFreeCam(const SInputActionPayload payload);
+		void OnInputFocusSelection(const SInputActionPayload payload);
 
 		void OnResolutionChanged(SVector2<U16> newResolution);
 		void OnBeginPlay(CScene* scene);

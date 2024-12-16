@@ -60,6 +60,7 @@ namespace Havtorn
             initData[STATIC_U64(EVertexShaders::EditorPreview)] = { "Shaders/EditorPreview_VS.cso", false };
             initData[STATIC_U64(EVertexShaders::Line)] = { "Shaders/Line_VS.cso", false };
             initData[STATIC_U64(EVertexShaders::SpriteInstanced)] = { "Shaders/SpriteInstanced_VS.cso", true, EInputLayoutType::TransUVRectColor };
+            initData[STATIC_U64(EVertexShaders::StaticMeshInstancedEditor)] = { "Shaders/DeferredInstancedMeshEditor_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Entity2Trans };
         }
 
         for (U64 i = 0; i < STATIC_U64(EVertexShaders::Count); i++)
@@ -259,6 +260,22 @@ namespace Havtorn
                 {"INSTANCETRANSFORM",	1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
                 {"INSTANCETRANSFORM",	2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
                 {"INSTANCETRANSFORM",	3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1}
+            };
+            break;
+
+        case EInputLayoutType::Pos3Nor3Tan3Bit3UV2Entity2Trans:
+            layout =
+            {
+                {"POSITION"	,	0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+                {"NORMAL"   ,   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+                {"TANGENT"  ,   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+                {"BINORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+                {"UV"		,   0, DXGI_FORMAT_R32G32_FLOAT,	0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+                {"ENTITY"		,   0, DXGI_FORMAT_R32G32_UINT,	1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+                {"INSTANCETRANSFORM",	0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+                {"INSTANCETRANSFORM",	1, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+                {"INSTANCETRANSFORM",	2, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+                {"INSTANCETRANSFORM",	3, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1}
             };
             break;
 
@@ -463,7 +480,7 @@ namespace Havtorn
         RSSetRasterizerState(rasterizerState);
     }
 
-    void CRenderStateManager::SetAllDefault()
+    void CRenderStateManager::SetAllDefault() const
     {
         OMSetBlendState(EBlendStates::Disable);
         OMSetDepthStencilState(EDepthStencilStates::Default);

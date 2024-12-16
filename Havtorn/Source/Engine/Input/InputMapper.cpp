@@ -62,6 +62,9 @@ namespace Havtorn
 		const SInputAction pickEntity = { EInputKey::Mouse1, EInputContext::Editor };
 		MapEvent(EInputActionEvent::PickEditorEntity, pickEntity);
 
+		const SInputAction focusEntity = { EInputKey::KeyF, EInputContext::Editor };
+		MapEvent(EInputActionEvent::FocusEditorEntity, focusEntity);
+
 		return true;
 	}
 

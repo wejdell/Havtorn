@@ -16,6 +16,8 @@
 #include "Scene/Scene.h"
 #include "Windows/ViewportWindow.h"
 
+#include <Graphics/RenderManager.h>
+
 namespace Havtorn
 {
 	CPickingSystem::CPickingSystem(CEditorManager* editorManager)
@@ -54,10 +56,20 @@ namespace Havtorn
 		if (EditorCameraComponent == nullptr || EditorCameraTransform == nullptr)
 			return;
 
-		//ImGui::CViewportWindow* viewport = Manager->GetEditorWindow<ImGui::CViewportWindow>();
-		//SVector2<F32> renderedSceneDimensions = viewport->GetRenderedSceneDimensions();
-		//SVector2<F32> renderedScenePosition = viewport->GetRenderedScenePosition() + SVector2<F32>(0.0f, 18.0f);
-		//SRay worldRay = UMathUtilities::RaycastWorld(MousePosition, renderedSceneDimensions, renderedScenePosition, EditorCameraTransform->Transform.GetMatrix(), EditorCameraComponent->ProjectionMatrix);
-		//GDebugDraw::AddLine(worldRay.Origin, worldRay.Origin + worldRay.Direction * 10.f, SColor::Magenta, 50.0f, true, GDebugDraw::ThicknessMaximum, false);
+		const ImGui::CViewportWindow* viewport = Manager->GetEditorWindow<ImGui::CViewportWindow>();
+		const SVector2<F32> renderedSceneDimensions = viewport->GetRenderedSceneDimensions();
+		const SVector2<F32> renderedScenePosition = viewport->GetRenderedScenePosition() + SVector2<F32>(0.0f, 18.0f);
+
+		const SVector2<U16> resolution = GEngine::GetWindowHandler()->GetResolution();
+		const SVector2<F32> rectRelativeMousePos = SVector2((MousePosition.X - renderedScenePosition.X) / renderedSceneDimensions.X, (MousePosition.Y - renderedScenePosition.Y) / renderedSceneDimensions.Y);
+
+		const SVector2<F32> fullscreenMousePos = { UMath::Ceil(STATIC_F32(resolution.X) * rectRelativeMousePos.X), UMath::Ceil(STATIC_F32(resolution.Y) * rectRelativeMousePos.Y - 12.0f) };
+		
+		if (!UMath::IsWithin(fullscreenMousePos.X, 0.0f, STATIC_F32(resolution.X)) || !UMath::IsWithin(fullscreenMousePos.Y, 0.0f, STATIC_F32(resolution.Y)))
+			return;
+
+		const U64 dataIndex = STATIC_U64(fullscreenMousePos.X) + STATIC_U64(fullscreenMousePos.Y) * STATIC_U64(resolution.X);
+		const U64 pickedEntityGUID = Manager->GetRenderManager()->GetEntityGUIDFromData(dataIndex);
+		Manager->SetSelectedEntity(SEntity(pickedEntityGUID));
 	}
 }

@@ -23,6 +23,8 @@ namespace Havtorn
 		void SetAsDepthTarget();
 		void SetAsDepthTarget(CFullscreenTexture* intermediateRenderTarget);
 		void SetAsResourceOnSlot(U16 slot);
+		void* MapToCPUFromGPUTexture(ID3D11Texture2D* gpuTexture);
+		void UnmapFromCPU();
 		void ReleaseTexture();
 		void ReleaseDepth();
 		
@@ -43,5 +45,7 @@ namespace Havtorn
 
 		ID3D11ShaderResourceView* ShaderResource = nullptr;
 		D3D11_VIEWPORT* Viewport = nullptr;
+
+		bool CPUAccess = true;
 	};
 }

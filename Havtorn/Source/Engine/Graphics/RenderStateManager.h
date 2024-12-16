@@ -115,7 +115,7 @@ namespace Havtorn
 
 		// TODO.NR: Rename these to fit the naming of the above
 		void SetAllStates(EBlendStates blendState, EDepthStencilStates depthStencilState, ERasterizerStates rasterizerState) const;
-		void SetAllDefault();
+		void SetAllDefault() const;
 
 		void Release();
 

@@ -107,8 +107,19 @@ namespace Havtorn
 					}
 				}
 
+				//SRenderCommand command;
+				//command.Type = ERenderCommandType::GBufferDataInstanced;
+				//command.Matrices.push_back(transformComp->Transform.GetMatrix());
+				//command.Strings.push_back(staticMeshComponent->Name.AsString());
+				//command.U8s.push_back(staticMeshComponent->TopologyIndex);
+				//command.U8s.push_back(staticMeshComponent->PixelShaderIndex);
+				//command.U8s.push_back(staticMeshComponent->SamplerIndex);
+				//command.DrawCallData = staticMeshComponent->DrawCallData;
+				//command.Materials = materialComp->Materials;
+				//RenderManager->PushRenderCommand(command);
+
 				SRenderCommand command;
-				command.Type = ERenderCommandType::GBufferDataInstanced;
+				command.Type = ERenderCommandType::GBufferDataInstancedEditor;
 				command.Matrices.push_back(transformComp->Transform.GetMatrix());
 				command.Strings.push_back(staticMeshComponent->Name.AsString());
 				command.U8s.push_back(staticMeshComponent->TopologyIndex);
@@ -119,7 +130,7 @@ namespace Havtorn
 				RenderManager->PushRenderCommand(command);
 			}
 
-			RenderManager->AddStaticMeshToInstancedRenderList(staticMeshComponent->Name.AsString(), transformComp->Transform.GetMatrix());
+			RenderManager->AddStaticMeshToInstancedRenderList(staticMeshComponent->Name.AsString(), transformComp);
 		}
 
 		{

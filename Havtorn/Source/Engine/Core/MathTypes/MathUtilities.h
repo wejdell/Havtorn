@@ -40,5 +40,23 @@ namespace Havtorn
 			worldRay.Direction = dir.ToVector3();
 			return worldRay;
 		}
+
+		static F32 GetFocusDistanceForBounds(const SVector& boundsCenter, const SVector& bounds, SVector2<F32> fov, F32 marginPercentage = 1.0f)
+		{
+			auto calculateDistance = [](const SVector& center, const SVector& extents, const SVector& closestFaceDirection, const SVector& largestExtentDirection, F32 fov, F32 marginPercentage)
+				{
+					const SVector centerFacePosition = SVector::MaskCombine(center, extents, closestFaceDirection);
+					const SVector edgePosition = SVector::MaskCombine(centerFacePosition, extents, largestExtentDirection);
+					const F32 faceExtent = (centerFacePosition - edgePosition).Length();
+					const F32 fittingDistance = (faceExtent * marginPercentage) / UMath::Tan(UMath::DegToRad(fov * 0.5f));
+					return fittingDistance + centerFacePosition.Length();
+				};
+
+			const F32 xDistance = calculateDistance(boundsCenter, bounds, SVector::Backward, SVector::Left, fov.Y, marginPercentage);
+			const F32 yDistance = calculateDistance(boundsCenter, bounds, SVector::Backward, SVector::Up, fov.X, marginPercentage);
+			const F32 zDistance = calculateDistance(boundsCenter, bounds, SVector::Left, SVector::Forward, fov.X, marginPercentage);
+
+			return UMath::Max(xDistance, UMath::Max(yDistance, zDistance));
+		};
 	}
 }

@@ -1,4 +1,4 @@
-// Copyright 2022 Team Havtorn. All Rights Reserved.
+// Copyright 2024 Team Havtorn. All Rights Reserved.
 
 #include "Includes/DeferredSamplingFunctions.hlsli"
 
@@ -11,7 +11,7 @@ struct GBufferOutputEditor
     uint2 Entity             : SV_TARGET4;
 };
 
-GBufferOutputEditor main(VertexModelToPixel input)
+GBufferOutputEditor main(VertexModelToPixelEditor input)
 {
     VertexToPixel vertToPixel;
     vertToPixel.Position  = input.Position;
@@ -48,7 +48,7 @@ GBufferOutputEditor main(VertexModelToPixel input)
     output.Normal = float4(normal.xyz, 1.0f);
     output.VertexNormal = float4(input.Normal.xyz, 1.0f);
     output.MetalRoughEmAO = float4(metalness, perceptualRoughness, emissive, ambientOcclusion);
-    output.Entity = 0;
+    output.Entity = input.Entity;
     
     return output;
 }

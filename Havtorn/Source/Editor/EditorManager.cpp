@@ -26,15 +26,17 @@
 #include "Systems/PickingSystem.h"
 
 #include <Application/ImGuiCrossProjectSetup.h>
+#include <Core/MathTypes/MathUtilities.h>
 
 namespace Havtorn
 {
 	CEditorManager::CEditorManager()
 	{
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::TranslateTransform).AddMember(this, &CEditorManager::SetTransformGizmo);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::RotateTransform).AddMember(this, &CEditorManager::SetTransformGizmo);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ScaleTransform).AddMember(this, &CEditorManager::SetTransformGizmo);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ToggleFreeCam).AddMember(this, &CEditorManager::ToggleFreeCam);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::TranslateTransform).AddMember(this, &CEditorManager::OnInputSetTransformGizmo);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::RotateTransform).AddMember(this, &CEditorManager::OnInputSetTransformGizmo);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ScaleTransform).AddMember(this, &CEditorManager::OnInputSetTransformGizmo);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ToggleFreeCam).AddMember(this, &CEditorManager::OnInputToggleFreeCam);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::FocusEditorEntity).AddMember(this, &CEditorManager::OnInputFocusSelection);
 	}
 
 	CEditorManager::~CEditorManager()
@@ -455,7 +457,7 @@ namespace Havtorn
 		}
 	}
 
-	void CEditorManager::SetTransformGizmo(const SInputActionPayload payload)
+	void CEditorManager::OnInputSetTransformGizmo(const SInputActionPayload payload)
 	{
 		switch (payload.Event)
 		{
@@ -473,9 +475,71 @@ namespace Havtorn
 		}
 	}
 
-	void CEditorManager::ToggleFreeCam(const SInputActionPayload payload)
+	void CEditorManager::OnInputToggleFreeCam(const SInputActionPayload payload)
 	{
 		IsFreeCamActive = payload.IsHeld;
+	}
+
+	void CEditorManager::OnInputFocusSelection(const SInputActionPayload payload)
+	{
+		if (!payload.IsPressed)
+			return;
+
+		if (!SelectedEntity.IsValid())
+			return;
+
+		if (CurrentScene == nullptr)
+			return;
+
+		SEntity cameraEntity = CurrentScene->MainCameraEntity;
+		if (!cameraEntity.IsValid())
+			return;
+
+		SVector worldPos = SVector::Zero;
+		SVector center = SVector::Zero;
+		SVector bounds = SVector::Zero;
+		SVector2<F32> fov = SVector2<F32>::Zero;
+		bool foundBounds = false;
+
+		if (STransformComponent* transform = CurrentScene->GetComponent<STransformComponent>(SelectedEntity))
+		{
+			worldPos = transform->Transform.GetMatrix().GetTranslation();
+		}
+		else
+		{
+			HV_LOG_WARN("OnInputFocusSelection: could not find a transform to go to. Cannot focus current selection.");
+			return;
+		}
+		
+		if (SCameraComponent* camera = CurrentScene->GetComponent<SCameraComponent>(cameraEntity))
+		{
+			fov = { camera->AspectRatio * camera->FOV, camera->FOV };
+		}
+		else
+		{
+			HV_LOG_WARN("OnInputFocusSelection: could not find a camera component to move. Cannot focus current selection.");
+			return;
+		}
+
+		if (SStaticMeshComponent* staticMesh = CurrentScene->GetComponent<SStaticMeshComponent>(SelectedEntity))
+		{
+			center = staticMesh->BoundsCenter;
+			bounds = SVector::GetAbsMaxKeepValue(staticMesh->BoundsMax, staticMesh->BoundsMin);
+			foundBounds = true;
+		}
+
+		if (!foundBounds)
+		{
+			HV_LOG_WARN("OnInputFocusSelection: could not find component to derive bounds from. Cannot focus current selection.");
+			return;
+		}
+
+		constexpr F32 focusMarginPercentage = 1.1f;
+
+		STransform newTransform;
+		newTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(10.0f, 10.0f, 0.0f));
+		newTransform.Translate(worldPos + SVector(center.X, center.Y, -UMathUtilities::GetFocusDistanceForBounds(center, bounds, fov, focusMarginPercentage)));
+		CurrentScene->GetComponent<STransformComponent>(cameraEntity)->Transform = newTransform;
 	}
 
 	void CEditorManager::OnResolutionChanged(SVector2<U16> newResolution)

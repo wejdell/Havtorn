@@ -61,6 +61,7 @@ namespace Havtorn
 			filepaths[STATIC_U64(EFullscreenShader::SSAOBlur)]				= "Shaders/FullscreenSSAOBlur_PS.cso";
 			filepaths[STATIC_U64(EFullscreenShader::DownsampleDepth)]		= "Shaders/FullscreenDepthDownSample_PS.cso";
 			filepaths[STATIC_U64(EFullscreenShader::DepthAwareUpsampling)]	= "Shaders/FullscreenDepthAwareUpsample_PS.cso";
+			filepaths[STATIC_U64(EFullscreenShader::EditorData)]			= "Shaders/FullscreenEditorData_PS.cso";
 		}
 
 		for (U64 i = 0; i < STATIC_U64(EFullscreenShader::Count); i++) 

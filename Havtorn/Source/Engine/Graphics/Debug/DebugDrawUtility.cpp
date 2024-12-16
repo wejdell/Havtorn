@@ -92,6 +92,9 @@ namespace Havtorn
 
 	void GDebugDraw::AddLine(const SVector& start, const SVector& end, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
+		if (start.IsEqual(end))
+			return;
+
 		std::vector<SDebugDrawData> newData = { SDebugDrawData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line) };
 
 		TransformToFaceAndReach(start, end, newData[0].TransformMatrix);

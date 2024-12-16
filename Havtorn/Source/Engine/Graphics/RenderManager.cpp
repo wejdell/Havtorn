@@ -4,6 +4,7 @@
 #include "RenderManager.h"
 #include "GraphicsUtilities.h"
 #include "Core/GeneralUtilities.h"
+#include "Core/MathTypes/MathUtilities.h"
 
 #include "Engine.h"
 #include "Input/InputMapper.h"
@@ -100,7 +101,7 @@ namespace Havtorn
 
 		TonemappedTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
 		AntiAliasedTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
-		EditorDataTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R32G32_UINT);
+		EditorDataTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R32G32_UINT, true);
 		GBuffer = FullscreenTextureFactory.CreateGBuffer(windowHandler->GetResolution());
 	}
 
@@ -192,6 +193,22 @@ namespace Havtorn
 			IntermediateTexture.ClearTexture();
 			IntermediateDepth.ClearDepth();
 			VolumetricAccumulationBuffer.ClearTexture();
+
+			// TODO.NR: Figure out when to do this step
+			{
+				SVector2<U16> resolution = GEngine::GetWindowHandler()->GetResolution();
+				U32 size = (resolution.X * resolution.Y);
+
+				void* editorData = EditorDataTexture.MapToCPUFromGPUTexture(GBuffer.GetEditorDataTexture());
+				if (editorData != nullptr)
+				{
+					EntityPerPixelData = std::move(editorData);
+					EntityPerPixelDataSize = size;
+				}
+
+				EditorDataTexture.UnmapFromCPU();
+			}
+
 			GBuffer.ClearTextures(ClearColor);
 
 			ShadowAtlasDepth.SetAsDepthTarget(&IntermediateTexture);
@@ -292,7 +309,6 @@ namespace Havtorn
 		outStaticMeshComponent->BoundsMin = boundsMin;
 		outStaticMeshComponent->BoundsMax = boundsMax;
 		outStaticMeshComponent->BoundsCenter = boundsMin + (boundsMax - boundsMin) * 0.5f;
-		HV_LOG_TRACE("%s | BoundsMin: %s, BoundsMax: %s", outStaticMeshComponent->Name.AsString().c_str(), boundsMin.ToString().c_str(), boundsMax.ToString().c_str());
 
 		// Geometry
 		outStaticMeshComponent->VertexShaderIndex = STATIC_U8(EVertexShaders::StaticMesh);
@@ -464,45 +480,14 @@ namespace Havtorn
 
 		LoadStaticMeshComponent(filePath, staticMeshComp);
 
-		STransform camTransform;
-		//camTransform.Translate(SVector4::Right * 1.5f);
-		//camTransform.Translate(SVector4::Backward * 2.5f);
-		//camTransform.Translate(SVector4::Up * 2.0f);
-		//camTransform.Rotate({UMath::DegToRad(-30.0f), UMath::DegToRad(30.0f), 0.0f});
-		//F32 angleVerticalFOV = 70.0f;
-		//F32 x = (1 + UMath::Sqrt(4)
-		//F32 d = UMath::co
-		//camera.transform.position = bounds.center - distanceZ * camera.transform.forward;
-		//===========
-		//SVector objectSizes = staticMeshComp->BoundsMax - staticMeshComp->BoundsMin;
-		//F32 cameraView = 2.0f * UMath::Tan(0.5f * UMath::DegToRad(70.0f/*camera.fieldOfView*/)); // Visible height 1 meter in front
-
-		//F32 cameraDistanceY = 0.1f;
-		//F32 objectSizeY = objectSizes.Y;
-		//F32 distanceY = cameraDistanceY * (objectSizeY / cameraView);
-		//distanceY += 0.5f * objectSizeY;
-
-		//F32 cameraDistanceZ = 2.0f; // Constant factor
-		//F32 objectSizeZ = objectSizes.Z;
-		//F32 distanceZ = cameraDistanceZ * (objectSizeZ / cameraView); // Combined wanted distanceZ from the object
-		//distanceZ += 0.5f * objectSizeZ; // Estimated offset from the center to the outside of the object
-
-		//camTransform.Translate(SVector4::Up * distanceY);
-		//camTransform.Translate(SVector4::Backward * distanceZ);
-		////camTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(30.0f, 30.0f, 0.0f));
-		//============
-
-		SVector centerAtFront = SVector(staticMeshComp->BoundsCenter.X, staticMeshComp->BoundsCenter.Y, staticMeshComp->BoundsMax.Z);
-		SVector centerAtFrontTop = SVector(staticMeshComp->BoundsCenter.X, staticMeshComp->BoundsMax.Y, staticMeshComp->BoundsMax.Z);
-		F32 centerToTopDist = (centerAtFrontTop - centerAtFront).Size();
+		F32 aspectRatio = 1.0f;
 		F32 marginPercentage = 1.5f;
-		F32 minDistance = (centerToTopDist * marginPercentage) / UMath::Tan(UMath::DegToRad(70.0f * 0.5f));
+		SVector2<F32> fov = { aspectRatio * 70.0f, 70.0f };
 
-		camTransform.Translate(SVector(staticMeshComp->BoundsCenter.X, staticMeshComp->BoundsCenter.Y, -minDistance));
-		//camTransform.SetMatrix(SMatrix::Face(SVector(staticMeshComp->BoundsCenter.X, staticMeshComp->BoundsCenter.Y, -minDistance), SVector(0.0f, 0.0f, minDistance), SVector::Up));
-		//camera.transform.LookAt(bounds.center);
-		//camTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(30.0f, 30.0f, 0.0f));
-		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.001f, 10.0f);
+		STransform camTransform;
+		camTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(30.0f, 30.0f, 0.0f));
+		camTransform.Translate(SVector(staticMeshComp->BoundsCenter.X, staticMeshComp->BoundsCenter.Y, -UMathUtilities::GetFocusDistanceForBounds(staticMeshComp->BoundsCenter, SVector::GetAbsMaxKeepValue(staticMeshComp->BoundsMax, staticMeshComp->BoundsMin), fov, marginPercentage)));
+		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(fov.Y), aspectRatio, 0.001f, 100.0f);
 
 		FrameBufferData.ToCameraFromWorld = camTransform.GetMatrix().FastInverse();
 		FrameBufferData.ToWorldFromCamera = camTransform.GetMatrix();
@@ -771,27 +756,39 @@ namespace Havtorn
 		return std::move((void*)shaderResource);
 	}
 
-	bool CRenderManager::IsStaticMeshInInstancedRenderList(const std::string& meshName)
+	U64 CRenderManager::GetEntityGUIDFromData(U64 dataIndex) const
 	{
-		return SystemStaticMeshInstanceTransforms.contains(meshName);
+		if (dataIndex < EntityPerPixelDataSize)
+		{
+			U64* dataCopy = reinterpret_cast<U64*>(EntityPerPixelData);
+			return dataCopy[dataIndex];
+		}
+
+		return 0;
 	}
 
-	void CRenderManager::AddStaticMeshToInstancedRenderList(const std::string& meshName, const SMatrix& transformMatrix)
+	bool CRenderManager::IsStaticMeshInInstancedRenderList(const std::string& meshName)
 	{
-		if (!SystemStaticMeshInstanceTransforms.contains(meshName))
-			SystemStaticMeshInstanceTransforms.emplace(meshName, std::vector<SMatrix>());
+		return SystemStaticMeshInstanceData.contains(meshName);
+	}
 
-		SystemStaticMeshInstanceTransforms[meshName].emplace_back(transformMatrix);
+	void CRenderManager::AddStaticMeshToInstancedRenderList(const std::string& meshName, const STransformComponent* component)
+	{
+		if (!SystemStaticMeshInstanceData.contains(meshName))
+			SystemStaticMeshInstanceData.emplace(meshName, SStaticMeshInstanceData());
+
+		SystemStaticMeshInstanceData[meshName].Transforms.emplace_back(component->Transform.GetMatrix());
+		SystemStaticMeshInstanceData[meshName].Entities.emplace_back(component->Owner);
 	}
 
 	void CRenderManager::SwapStaticMeshInstancedRenderLists()
 	{
-		std::swap(SystemStaticMeshInstanceTransforms, RendererStaticMeshInstanceTransforms);
+		std::swap(SystemStaticMeshInstanceData, RendererStaticMeshInstanceData);
 	}
 
 	void CRenderManager::ClearSystemStaticMeshInstanceTransforms()
 	{
-		return SystemStaticMeshInstanceTransforms.clear();
+		return SystemStaticMeshInstanceData.clear();
 	}
 
 	bool CRenderManager::IsSpriteInInstancedWorldSpaceTransformRenderList(const U32 textureBankIndex)
@@ -923,6 +920,7 @@ namespace Havtorn
 		EmissiveBuffer.CreateBuffer("Emissive Buffer", Framework, sizeof(SEmissiveBufferData));
 
 		InstancedTransformBuffer.CreateBuffer("Instanced Transform Buffer", Framework, sizeof(SMatrix) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
+		InstancedEntityIDBuffer.CreateBuffer("Instanced Entity ID Buffer", Framework, sizeof(U64) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
 		InstancedUVRectBuffer.CreateBuffer("Instanced UV Rect Buffer", Framework, sizeof(SVector4) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
 		InstancedColorBuffer.CreateBuffer("Instanced Color Buffer", Framework, sizeof(SVector4) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
 	}
@@ -964,7 +962,7 @@ namespace Havtorn
 		ObjectBufferData.ToWorldFromObject = command.Matrices[0];
 		ObjectBuffer.BindBuffer(ObjectBufferData);
 
-		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceTransforms[command.Strings[0]];
+		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceData[command.Strings[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
@@ -993,7 +991,7 @@ namespace Havtorn
 		ObjectBufferData.ToWorldFromObject = command.Matrices[0];
 		ObjectBuffer.BindBuffer(ObjectBufferData);
 
-		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceTransforms[command.Strings[0]];
+		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceData[command.Strings[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
@@ -1050,7 +1048,7 @@ namespace Havtorn
 
 		// =============
 
-		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceTransforms[command.Strings[0]];
+		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceData[command.Strings[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
@@ -1075,7 +1073,7 @@ namespace Havtorn
 
 	void CRenderManager::CameraDataStorage(const SRenderCommand& command)
 	{
-		GBuffer.SetAsActiveTarget(&IntermediateDepth);
+		GBuffer.SetAsActiveTarget(&IntermediateDepth, true);
 
 		const auto& objectMatrix = command.Matrices[0];
 		const auto& projectionMatrix = command.Matrices[1];
@@ -1093,7 +1091,7 @@ namespace Havtorn
 
 	void CRenderManager::GBufferDataInstanced(const SRenderCommand& command)
 	{
-		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceTransforms[command.Strings[0]];
+		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceData[command.Strings[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
@@ -1153,9 +1151,69 @@ namespace Havtorn
 		}
 	}
 
-	void CRenderManager::GBufferDataInstancedEditor(const SRenderCommand& /*command*/)
+	void CRenderManager::GBufferDataInstancedEditor(const SRenderCommand& command)
 	{
-		// Bind instance buffer data
+		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceData[command.Strings[0]].Transforms;
+		InstancedTransformBuffer.BindBuffer(matrices);
+
+		const std::vector<SEntity>& entities = RendererStaticMeshInstanceData[command.Strings[0]].Entities;
+		InstancedEntityIDBuffer.BindBuffer(entities);
+
+		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
+		RenderStateManager.IASetTopology(static_cast<ETopologies>(command.U8s[0]));
+		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Entity2Trans);
+
+		RenderStateManager.VSSetShader(EVertexShaders::StaticMeshInstancedEditor);
+		RenderStateManager.PSSetShader(EPixelShaders::GBufferInstanceEditor);
+		RenderStateManager.PSSetSampler(0, static_cast<ESamplers>(command.U8s[2]));
+
+		auto textureBank = GEngine::GetTextureBank();
+		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(command.DrawCallData.size()); drawCallIndex++)
+		{
+			std::vector<ID3D11ShaderResourceView*> resourceViewPointers;
+
+			std::map<F32, F32> textureIndices;
+			auto findTextureByIndex = [&](SRuntimeGraphicsMaterialProperty& bufferProperty)
+				{
+					if (bufferProperty.TextureChannelIndex > -1.0f)
+					{
+						if (!textureIndices.contains(bufferProperty.TextureIndex))
+						{
+							resourceViewPointers.emplace_back(textureBank->GetTexture(STATIC_U32(bufferProperty.TextureIndex)));
+							textureIndices.emplace(bufferProperty.TextureIndex, STATIC_F32(resourceViewPointers.size() - 1));
+						}
+
+						bufferProperty.TextureIndex = textureIndices[bufferProperty.TextureIndex];
+					}
+				};
+
+			MaterialBufferData = SMaterialBufferData(command.Materials[drawCallIndex]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoR)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoG)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoB)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoA)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalX)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalY)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalZ)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AmbientOcclusion)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Metalness)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Roughness)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Emissive)]);
+
+			MaterialBuffer.BindBuffer(MaterialBufferData);
+
+			RenderStateManager.PSSetResources(5, STATIC_U8(resourceViewPointers.size()), resourceViewPointers.data());
+			RenderStateManager.PSSetConstantBuffer(8, MaterialBuffer);
+
+			const SDrawCallData& drawData = command.DrawCallData[drawCallIndex];
+			const std::vector<CDataBuffer> buffers = { RenderStateManager.VertexBuffers[drawData.VertexBufferIndex], InstancedEntityIDBuffer, InstancedTransformBuffer };
+			const U32 strides[3] = { RenderStateManager.MeshVertexStrides[drawData.VertexStrideIndex], sizeof(U64), sizeof(SMatrix) };
+			const U32 offsets[3] = { RenderStateManager.MeshVertexOffsets[drawData.VertexOffsetIndex], 0, 0 };
+			RenderStateManager.IASetVertexBuffers(0, 3, buffers, strides, offsets);
+			RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[drawData.IndexBufferIndex]);
+			RenderStateManager.DrawIndexedInstanced(drawData.IndexCount, STATIC_U32(matrices.size()), 0, 0, 0);
+			CRenderManager::NumberOfDrawCallsThisFrame++;
+		}
 	}
 
 	void CRenderManager::GBufferSpriteInstanced(const SRenderCommand& command)
@@ -1928,6 +1986,13 @@ namespace Havtorn
 			AntiAliasedTexture.SetAsResourceOnSlot(0);
 			TonemappedTexture.SetAsResourceOnSlot(1);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Difference);
+		}
+		break;
+		case Havtorn::ERenderPass::EditorData:
+		{
+			RenderedScene.SetAsActiveTarget();
+			GBuffer.SetAsResourceOnSlot(CGBuffer::EGBufferTextures::EditorData, 0);
+			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::EditorData);
 		}
 		break;
 		case Havtorn::ERenderPass::Count:

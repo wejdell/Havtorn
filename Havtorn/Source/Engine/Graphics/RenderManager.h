@@ -43,6 +43,7 @@ namespace Havtorn
 		Bloom,
 		Tonemapping,
 		Antialiasing,
+		EditorData,
 		Count
 	};
 
@@ -80,8 +81,10 @@ namespace Havtorn
 		HAVTORN_API void* GetTextureAssetTexture(const std::string& filePath);
 		HAVTORN_API void* RenderMaterialAssetTexture(const std::string& filePath);
 
+		HAVTORN_API U64 GetEntityGUIDFromData(U64 dataIndex) const;
+
 		bool IsStaticMeshInInstancedRenderList(const std::string& meshName);
-		void AddStaticMeshToInstancedRenderList(const std::string& meshName, const SMatrix& transformMatrix);
+		void AddStaticMeshToInstancedRenderList(const std::string& meshName, const STransformComponent* component);
 		void SwapStaticMeshInstancedRenderLists();
 		void ClearSystemStaticMeshInstanceTransforms();
 
@@ -336,16 +339,23 @@ namespace Havtorn
 		bool ShouldBlurVolumetricBuffer = false;
 		
 		CDataBuffer InstancedTransformBuffer;
+		CDataBuffer InstancedEntityIDBuffer;
 
 		// NR: Used together with the InstancedTransformBuffer to batch World Space Sprites as well as Screen Space Sprites
 		CDataBuffer InstancedUVRectBuffer;
 		CDataBuffer InstancedColorBuffer;
 
+		struct SStaticMeshInstanceData
+		{
+			std::vector<SMatrix> Transforms{};
+			std::vector<SEntity> Entities{};
+		};
+
 		// TODO.NR: Add GUIDs to things like this
 		std::unordered_map<std::string, SStaticMeshAsset> LoadedStaticMeshes;
 		// NR: These are used as a way of cross-thread resource management
-		std::unordered_map<std::string, std::vector<SMatrix>> SystemStaticMeshInstanceTransforms;
-		std::unordered_map<std::string, std::vector<SMatrix>> RendererStaticMeshInstanceTransforms;
+		std::unordered_map<std::string, SStaticMeshInstanceData> SystemStaticMeshInstanceData;
+		std::unordered_map<std::string, SStaticMeshInstanceData> RendererStaticMeshInstanceData;
 
 		// TODO.NR: Maybe generalize GPU Instancing resources that are kept duplicate like this, combining
 		// the 4 function calls as well somehow. Maybe templated? Could use two template arguments, one for key and 
@@ -372,6 +382,9 @@ namespace Havtorn
 
 		SVector2<F32> ShadowAtlasResolution = SVector2<F32>::Zero;
 
+		void* EntityPerPixelData = nullptr;
+		U64 EntityPerPixelDataSize = 0;
+		
 		const U16 InstancedDrawInstanceLimit = 65535;
 	};
 }

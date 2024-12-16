@@ -39,6 +39,11 @@ namespace Havtorn
 		template<typename T>
 		static inline T Square(T x);
 
+		template<typename T>
+		static inline T Ceil(T x);
+		template<typename T>
+		static inline T Floor(T x);
+
 		/* Checks if x is within the range, exclusive on max. */
 		template<typename T>
 		static inline bool IsWithin(T x, T minValue, T maxValue);
@@ -171,6 +176,18 @@ namespace Havtorn
 	inline T UMath::Square(T x)
 	{
 		return x * x;
+	}
+
+	template<typename T>
+	inline T UMath::Ceil(T x)
+	{
+		return std::ceil(x);
+	}
+
+	template<typename T>
+	inline T UMath::Floor(T x)
+	{
+		return std::floor(x);
 	}
 
 	template<typename T>

@@ -26,6 +26,7 @@ namespace Havtorn
 		Pos3Nor3Tan3Bit3UV2Trans,
 		Position4,
 		TransUVRectColor,
+		Pos3Nor3Tan3Bit3UV2Entity2Trans,
 		Null
 	};
 
@@ -39,6 +40,7 @@ namespace Havtorn
 		EditorPreview = 5,
 		Line = 6,
 		SpriteInstanced = 7,
+		StaticMeshInstancedEditor = 8,
 		Count,
 		Null = Count
 	};
