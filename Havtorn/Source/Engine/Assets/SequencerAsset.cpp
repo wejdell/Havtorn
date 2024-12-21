@@ -46,7 +46,7 @@
 //	void SSequencerEntityReference::Serialize(char* toData, U64& pointerPosition) const
 //	{
 //		SerializeData(GUID, toData, pointerPosition);
-//		NumberOfComponentTracks = static_cast<U32>(ComponentTracks.size()); // mutable
+//		NumberOfComponentTracks = STATIC_U32(ComponentTracks.size()); // mutable
 //		SerializeData(NumberOfComponentTracks, toData, pointerPosition);
 //
 //		for (const SSequencerComponentTrack* componentTrack : ComponentTracks)
@@ -86,7 +86,7 @@
 //
 //	void SSequencerComponentTrack::Serialize(char* toData, U64& pointerPosition) const
 //	{
-//		NumberOfKeyframes = static_cast<U32>(Keyframes.size());
+//		NumberOfKeyframes = STATIC_U32(Keyframes.size());
 //		SerializeData(NumberOfKeyframes, toData, pointerPosition);
 //
 //		for (SSequencerKeyframe* keyframe : Keyframes)

@@ -123,8 +123,10 @@ namespace Havtorn
 	{
 		Key,
 		MouseWheel,
-		MouseHorizontal,
-		MouseVertical,
+		MouseDeltaHorizontal,
+		MouseDeltaVertical,
+		MousePositionHorizontal,
+		MousePositionVertical,
 		AnalogHorizontal,
 		AnalogVertical
 	};
@@ -139,6 +141,8 @@ namespace Havtorn
 		CycleRenderPassForward,
 		CycleRenderPassBackward,
 		CycleRenderPassReset,
+		PickEditorEntity,
+		FocusEditorEntity,
 		Count
 	};
 
@@ -150,8 +154,10 @@ namespace Havtorn
 		Pitch,		// X-axis
 		Yaw,		// Y-axis
 		Roll,		// Z-axis
-		MouseHorizontal,
-		MouseVertical,
+		MouseDeltaHorizontal,
+		MouseDeltaVertical,
+		MousePositionHorizontal,
+		MousePositionVertical,
 		Zoom,
 		Count
 	};
@@ -175,13 +181,13 @@ namespace Havtorn
 	{
 		SInputAction(EInputKey key, EInputContext context, EInputModifier modifier)
 			: Key(key)
-			, Contexts(static_cast<U32>(context))
-			, Modifiers(static_cast<U32>(modifier))
+			, Contexts(STATIC_U32(context))
+			, Modifiers(STATIC_U32(modifier))
 		{}
 
 		SInputAction(EInputKey key, std::initializer_list<EInputContext> contexts, std::initializer_list<EInputModifier> modifiers = {})
 			: Key(key)
-			, Contexts(static_cast<U32>(EInputContext::Editor))
+			, Contexts(STATIC_U32(EInputContext::Editor))
 			, Modifiers(0)
 		{
 			SetContexts(contexts);
@@ -190,7 +196,7 @@ namespace Havtorn
 
 		SInputAction(EInputKey key, EInputContext context)
 			: Key(key)
-			, Contexts(static_cast<U32>(context))
+			, Contexts(STATIC_U32(context))
 			, Modifiers(0)
 		{}
 
@@ -205,7 +211,7 @@ namespace Havtorn
 
 			for (U32 index = 0; index < numberOfModifiers; index++)
 			{
-				Modifiers += static_cast<U32>(va_arg(args, EInputModifier));
+				Modifiers += STATIC_U32(va_arg(args, EInputModifier));
 			}
 
 			va_end(args);
@@ -215,19 +221,19 @@ namespace Havtorn
 		{
 			Modifiers = 0;
 			for (auto modifier : modifiers)
-				Modifiers += static_cast<U32>(modifier);
+				Modifiers += STATIC_U32(modifier);
 		}
 
 		void SetContexts(std::initializer_list<EInputContext> contexts)
 		{
 			Contexts = 0;
 			for (auto context : contexts)
-				Contexts += static_cast<U32>(context);
+				Contexts += STATIC_U32(context);
 		}
 
 		EInputKey Key = EInputKey::None;
-		U32 Contexts = static_cast<U32>(EInputContext::Editor);
-		U32 Modifiers = static_cast<U32>(EInputModifier::None);
+		U32 Contexts = STATIC_U32(EInputContext::Editor);
+		U32 Modifiers = STATIC_U32(EInputModifier::None);
 	};
 
 	struct SInputActionEvent
@@ -277,7 +283,7 @@ namespace Havtorn
 			: Axis(axis)
 			, AxisPositiveKey(EInputKey::KeyW)
 			, AxisNegativeKey(EInputKey::KeyS)
-			, Contexts(static_cast<U32>(context))
+			, Contexts(STATIC_U32(context))
 			, Modifiers(0)
 		{}
 
@@ -285,15 +291,15 @@ namespace Havtorn
 			: Axis(axis)
 			, AxisPositiveKey(EInputKey::KeyW)
 			, AxisNegativeKey(EInputKey::KeyS)
-			, Contexts(static_cast<U32>(context))
-			, Modifiers(static_cast<U32>(modifier))
+			, Contexts(STATIC_U32(context))
+			, Modifiers(STATIC_U32(modifier))
 		{}
 
 		SInputAxis(EInputAxis axis, EInputKey axisPositiveKey, EInputKey axisNegativeKey, EInputContext context)
 			: Axis(axis)
 			, AxisPositiveKey(axisPositiveKey)
 			, AxisNegativeKey(axisNegativeKey)
-			, Contexts(static_cast<U32>(context))
+			, Contexts(STATIC_U32(context))
 			, Modifiers(0)
 		{}
 
@@ -301,7 +307,7 @@ namespace Havtorn
 			: Axis(axis)
 			, AxisPositiveKey(EInputKey::KeyW)
 			, AxisNegativeKey(EInputKey::KeyS)
-			, Contexts(static_cast<U32>(EInputContext::Editor))
+			, Contexts(STATIC_U32(EInputContext::Editor))
 			, Modifiers(0)
 		{
 			SetContexts(contexts);
@@ -312,7 +318,7 @@ namespace Havtorn
 			: Axis(axis)
 			, AxisPositiveKey(axisPositiveKey)
 			, AxisNegativeKey(axisNegativeKey)
-			, Contexts(static_cast<U32>(EInputContext::Editor))
+			, Contexts(STATIC_U32(EInputContext::Editor))
 			, Modifiers(0)
 		{
 			SetContexts(contexts);
@@ -330,7 +336,7 @@ namespace Havtorn
 
 			for (U32 index = 0; index < numberOfModifiers; index++)
 			{
-				Modifiers += static_cast<U32>(va_arg(args, EInputModifier));
+				Modifiers += STATIC_U32(va_arg(args, EInputModifier));
 			}
 
 			va_end(args);
@@ -340,14 +346,14 @@ namespace Havtorn
 		{
 			Modifiers = 0;
 			for (auto modifier : modifiers)
-				Modifiers += static_cast<U32>(modifier);
+				Modifiers += STATIC_U32(modifier);
 		}
 
 		void SetContexts(std::initializer_list<EInputContext> contexts)
 		{
 			Contexts = 0;
 			for (auto context : contexts)
-				Contexts += static_cast<U32>(context);
+				Contexts += STATIC_U32(context);
 		}
 
 		[[nodiscard]] F32 GetAxisValue(const EInputKey& key) const
@@ -369,9 +375,11 @@ namespace Havtorn
 				case EInputAxis::MouseWheel:
 					return rawValue / 120.0f;
 
-				// Return raw delta for now
-				case EInputAxis::MouseHorizontal: 
-				case EInputAxis::MouseVertical: 
+				// Return raw value for now
+				case EInputAxis::MouseDeltaHorizontal: 
+				case EInputAxis::MouseDeltaVertical: 
+				case EInputAxis::MousePositionHorizontal:
+				case EInputAxis::MousePositionVertical:
 					return rawValue;
 
 				case EInputAxis::AnalogHorizontal: 
@@ -388,8 +396,8 @@ namespace Havtorn
 		EInputAxis Axis = EInputAxis::Key;
 		EInputKey AxisPositiveKey = EInputKey::None; // Optional
 		EInputKey AxisNegativeKey = EInputKey::None; // Optional
-		U32 Contexts = static_cast<U32>(EInputContext::Editor);
-		U32 Modifiers = static_cast<U32>(EInputModifier::None);
+		U32 Contexts = STATIC_U32(EInputContext::Editor);
+		U32 Modifiers = STATIC_U32(EInputModifier::None);
 	};
 
 	struct SInputAxisEvent

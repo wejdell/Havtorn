@@ -11,7 +11,7 @@ namespace Havtorn
 	bool CThreadManager::RunRenderThread = true;
 
 	CThreadManager::CThreadManager()
-		: NumberOfThreads(static_cast<U8>(std::thread::hardware_concurrency() - 1))
+		: NumberOfThreads(STATIC_U8(std::thread::hardware_concurrency() - 1))
 		, Terminate(false)
 		, IsTerminated(false)
 	{

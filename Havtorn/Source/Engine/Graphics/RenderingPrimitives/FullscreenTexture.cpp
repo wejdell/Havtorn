@@ -39,9 +39,34 @@ namespace Havtorn
 		Context->RSSetViewports(1, Viewport);
 	}
 
-	void CFullscreenTexture::SetAsResourceOnSlot(U16 aSlot) 
+	void CFullscreenTexture::SetAsResourceOnSlot(U16 slot) 
 	{
-		Context->PSSetShaderResources(aSlot, 1, &ShaderResource);
+		Context->PSSetShaderResources(slot, 1, &ShaderResource);
+	}
+
+	void* CFullscreenTexture::MapToCPUFromGPUTexture(ID3D11Texture2D* gpuTexture)
+	{
+		if (!CPUAccess)
+		{
+			HV_LOG_WARN("MapToCPUFromGPUTexture: Tried to map texture data to a CPU texture, but textures were not bound correctly for CPU access. Skipping mapping.");
+			return nullptr;
+		}
+
+		Context->CopyResource(Texture, gpuTexture);
+		D3D11_MAPPED_SUBRESOURCE resourceDesc = {};
+		Context->Map(Texture, 0, D3D11_MAP_READ, 0, &resourceDesc);
+		return resourceDesc.pData;
+	}
+
+	void CFullscreenTexture::UnmapFromCPU()
+	{
+		if (!CPUAccess)
+		{
+			HV_LOG_WARN("UnmapFromCPU: Tried to unmap texture data from a CPU texture, but the texture was not bound correctly for CPU access. Skipping unmapping.");
+			return;
+		}
+
+		Context->Unmap(Texture, 0);
 	}
 
 	void CFullscreenTexture::ReleaseTexture()

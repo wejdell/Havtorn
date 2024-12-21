@@ -13,14 +13,14 @@ namespace Havtorn
 		// O(n) best case
 		// O(nm) worst case
 		
-		const U16 needleLength = static_cast<U16>(strlen(str));
+		const U16 needleLength = STATIC_U16(strlen(str));
 		if (needleLength >= Size)
 			return false;
 
 		// 55 fps
 		const std::array<U16, 256> charTable = CharacterTableForComparison(str);
 		U16 skip = 0;
-		while ((static_cast<U16>(strlen(Characters)) - skip) >= needleLength)
+		while ((STATIC_U16(strlen(Characters)) - skip) >= needleLength)
 		{
 			if (Same(&Characters[skip], str, needleLength))
 			{
@@ -38,7 +38,7 @@ namespace Havtorn
 	std::array<U16, 256> CHavtornString::CharacterTableForComparison(const char* str) const
 	{
 		std::array<U16, 256> characterTable = { 0 };
-		U16 strLength = static_cast<U16>(strlen(str));
+		U16 strLength = STATIC_U16(strlen(str));
 		for (U16 i = 0; i < 256; i++)
 		{
 			characterTable[i] = strLength;

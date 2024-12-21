@@ -104,6 +104,10 @@ namespace Havtorn
 		inline std::string ToString() const;
 
 		static SVector Lerp(const SVector& a, const SVector& b, F32 t);
+		static SVector ComponentLerp(const SVector& a, const SVector& b, const SVector& t);
+		static SVector MaskCombine(const SVector& a, const SVector& b, const SVector& mask);
+		static SVector GetAbsMax(const SVector& a, const SVector& b);
+		static SVector GetAbsMaxKeepValue(const SVector& a, const SVector& b);
 	};
 
 	SVector::SVector() : X(0), Y(0), Z(0) {}
@@ -420,6 +424,29 @@ namespace Havtorn
 	inline SVector SVector::Lerp(const SVector& a, const SVector& b, F32 t)
 	{
 		return a * (1.0f - t) + (b * t);
+	}
+
+	inline SVector SVector::ComponentLerp(const SVector& a, const SVector& b, const SVector& t)
+	{
+		// NR: Using Hadamard multiplication here
+		return a * (SVector(1.0f, 1.0f, 1.0f) - t) + (b * t);
+	}
+
+	inline SVector SVector::MaskCombine(const SVector& a, const SVector& b, const SVector& mask)
+	{
+		return SVector::ComponentLerp(a, b, mask);
+	}
+
+	inline SVector SVector::GetAbsMax(const SVector& a, const SVector& b)
+	{
+		return SVector(UMath::Max(UMath::Abs(a.X), UMath::Abs(b.X)), UMath::Max(UMath::Abs(a.Y), UMath::Abs(b.Y)), UMath::Max(UMath::Abs(a.Z), UMath::Abs(b.Z)));
+	}
+	inline SVector SVector::GetAbsMaxKeepValue(const SVector& a, const SVector& b)
+	{
+		F32 x = UMath::Abs(a.X) > UMath::Abs(b.X) ? a.X : b.X;
+		F32 y = UMath::Abs(a.Y) > UMath::Abs(b.Y) ? a.Y : b.Y;
+		F32 z = UMath::Abs(a.Z) > UMath::Abs(b.Z) ? a.Z : b.Z;
+		return SVector(x, y, z);
 	}
 }
 

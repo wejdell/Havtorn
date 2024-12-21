@@ -24,6 +24,17 @@ struct StaticInstancedMeshVertexInput
     float4x4 Transform  : INSTANCETRANSFORM; // maybe needs columnmajor
 };
 
+struct StaticInstancedMeshEditorVertexInput
+{
+    float3 Position     : POSITION;
+    float3 Normal       : NORMAL;
+    float3 Tangent      : TANGENT;
+    float3 Bitangent    : BINORMAL;
+    float2 UV           : UV;
+    uint2 Entity        : ENTITY;
+    float4x4 Transform  : INSTANCETRANSFORM; // maybe needs columnmajor
+};
+
 struct SkeletalMeshVertexInput
 {
     float3 Position     : POSITION;
@@ -71,6 +82,17 @@ struct VertexModelToPixel
     float4 Tangent        : TANGENT;
     float4 Bitangent      : BINORMAL;
     float2 UV             : UV;
+};
+
+struct VertexModelToPixelEditor
+{
+    float4 Position         : SV_POSITION;
+    float4 WorldPosition    : WORLD_POSITION;
+    float4 Normal           : NORMAL;
+    float4 Tangent          : TANGENT;
+    float4 Bitangent        : BINORMAL;
+    float2 UV               : UV;
+    uint2 Entity            : ENTITY;
 };
 
 struct VertexPaintModelToPixel
@@ -167,6 +189,11 @@ cbuffer MaterialBuffer : register(b8)
     
     bool RecreateNormalZ;               // 1
     bool MaterialPadding[15];            // 15
+}
+
+cbuffer EditorDataBuffer : register(b9)
+{
+
 }
 
 // Cubemap used for environment light shading

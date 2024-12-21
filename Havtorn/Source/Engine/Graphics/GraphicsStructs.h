@@ -101,7 +101,7 @@ namespace Havtorn
 
 	struct SOfflineGraphicsMaterial
 	{
-		SOfflineGraphicsMaterialProperty Properties[static_cast<U8>(EMaterialProperty::Count)];
+		SOfflineGraphicsMaterialProperty Properties[STATIC_U8(EMaterialProperty::Count)];
 		bool RecreateZ = true;
 
 		U32 GetSize() const

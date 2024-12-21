@@ -15,6 +15,8 @@ namespace Havtorn
 
 	bool CInputMapper::Init()
 	{
+		// TODO.NR: Load from .ini file
+
 		const SInputAxis forwardAxis = { EInputAxis::Key, EInputKey::KeyW, EInputKey::KeyS, EInputContext::Editor };
 		MapEvent(EInputAxisEvent::Forward, forwardAxis);
 
@@ -24,11 +26,17 @@ namespace Havtorn
 		const SInputAxis upAxis = { EInputAxis::Key, EInputKey::KeyE, EInputKey::KeyQ, EInputContext::Editor };
 		MapEvent(EInputAxisEvent::Up, upAxis);
 
-		const SInputAxis mouseHorizontal = { EInputAxis::MouseHorizontal, EInputContext::Editor };
-		MapEvent(EInputAxisEvent::MouseHorizontal, mouseHorizontal);
+		const SInputAxis mouseDeltaHorizontal = { EInputAxis::MouseDeltaHorizontal, EInputContext::Editor };
+		MapEvent(EInputAxisEvent::MouseDeltaHorizontal, mouseDeltaHorizontal);
 
-		const SInputAxis mouseVertical = { EInputAxis::MouseVertical, EInputContext::Editor };
-		MapEvent(EInputAxisEvent::MouseVertical, mouseVertical);
+		const SInputAxis mouseDeltaVertical = { EInputAxis::MouseDeltaVertical, EInputContext::Editor };
+		MapEvent(EInputAxisEvent::MouseDeltaVertical, mouseDeltaVertical);
+
+		const SInputAxis mousePositionHorizontal = { EInputAxis::MousePositionHorizontal, EInputContext::Editor };
+		MapEvent(EInputAxisEvent::MousePositionHorizontal, mousePositionHorizontal);
+
+		const SInputAxis mousePositionVertical = { EInputAxis::MousePositionVertical, EInputContext::Editor };
+		MapEvent(EInputAxisEvent::MousePositionVertical, mousePositionVertical);
 
 		const SInputAction translateTransform = { EInputKey::KeyW, EInputContext::Editor };
 		MapEvent(EInputActionEvent::TranslateTransform, translateTransform);
@@ -50,6 +58,12 @@ namespace Havtorn
 
 		const SInputAction renderPassReset = { EInputKey::F9, EInputContext::Editor };
 		MapEvent(EInputActionEvent::CycleRenderPassReset, renderPassReset);
+
+		const SInputAction pickEntity = { EInputKey::Mouse1, EInputContext::Editor };
+		MapEvent(EInputActionEvent::PickEditorEntity, pickEntity);
+
+		const SInputAction focusEntity = { EInputKey::KeyF, EInputContext::Editor };
+		MapEvent(EInputActionEvent::FocusEditorEntity, focusEntity);
 
 		return true;
 	}
@@ -99,7 +113,7 @@ namespace Havtorn
 	void CInputMapper::UpdateKeyboardInput()
 	{
 		const auto& modifiers = Input->GetKeyInputModifiers().to_ulong();
-		const auto& context = static_cast<U32>(CurrentInputContext);
+		const auto& context = STATIC_U32(CurrentInputContext);
 
 		for (auto& param : Input->GetKeyInputBuffer())
 		{
@@ -130,21 +144,36 @@ namespace Havtorn
 
 	void CInputMapper::UpdateMouseInput()
 	{
-		SVector2<F32> rawMouseMovement = { static_cast<F32>(Input->GetMouseDeltaX()), static_cast<F32>(Input->GetMouseDeltaY()) };
-		F32 mouseWheelDelta = static_cast<F32>(Input->GetMouseWheelDelta());
+		SVector2<F32> rawMouseMovement = { STATIC_F32(Input->GetMouseDeltaX()), STATIC_F32(Input->GetMouseDeltaY()) };
+		SVector2<F32> rawMousePosition = { STATIC_F32(Input->GetMouseX()), STATIC_F32(Input->GetMouseY()) };
+		F32 mouseWheelDelta = STATIC_F32(Input->GetMouseWheelDelta());
 
 		for (auto& val : BoundAxisEvents)
 		{
-			if (rawMouseMovement.X != 0.0f && val.second.Has(EInputAxis::MouseHorizontal, rawMouseMovement.X))
+			if (rawMouseMovement.X != 0.0f && val.second.Has(EInputAxis::MouseDeltaHorizontal, rawMouseMovement.X))
 			{
 				const F32 axisValue = rawMouseMovement.X;
 				const SInputAxisPayload payload = { val.first, axisValue };
 				val.second.Delegate.Broadcast(payload);
 			}
 
-			if (rawMouseMovement.Y != 0.0f && val.second.Has(EInputAxis::MouseVertical, rawMouseMovement.Y))
+			if (rawMouseMovement.Y != 0.0f && val.second.Has(EInputAxis::MouseDeltaVertical, rawMouseMovement.Y))
 			{
 				const F32 axisValue = rawMouseMovement.Y;
+				const SInputAxisPayload payload = { val.first, axisValue };
+				val.second.Delegate.Broadcast(payload);
+			}
+
+			if (val.second.Has(EInputAxis::MousePositionHorizontal, rawMousePosition.X))
+			{
+				const F32 axisValue = rawMousePosition.X;
+				const SInputAxisPayload payload = { val.first, axisValue };
+				val.second.Delegate.Broadcast(payload);
+			}
+
+			if (val.second.Has(EInputAxis::MousePositionVertical, rawMousePosition.Y))
+			{
+				const F32 axisValue = rawMousePosition.Y;
 				const SInputAxisPayload payload = { val.first, axisValue };
 				val.second.Delegate.Broadcast(payload);
 			}

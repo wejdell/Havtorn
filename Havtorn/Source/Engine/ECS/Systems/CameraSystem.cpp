@@ -17,8 +17,8 @@ namespace Havtorn
 		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Up).AddMember(this, &CCameraSystem::HandleAxisInput);
 		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Right).AddMember(this, &CCameraSystem::HandleAxisInput);
 		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Forward).AddMember(this, &CCameraSystem::HandleAxisInput);
-		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MouseHorizontal).AddMember(this, &CCameraSystem::HandleAxisInput);
-		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MouseVertical).AddMember(this, &CCameraSystem::HandleAxisInput);
+		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MouseDeltaHorizontal).AddMember(this, &CCameraSystem::HandleAxisInput);
+		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MouseDeltaVertical).AddMember(this, &CCameraSystem::HandleAxisInput);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ToggleFreeCam).AddMember(this, &CCameraSystem::ToggleFreeCam);
 	}
 
@@ -90,10 +90,10 @@ namespace Havtorn
 			case EInputAxisEvent::Forward:
 				CameraMoveInput += SVector::Forward * payload.AxisValue;
 				return;
-			case EInputAxisEvent::MouseVertical:
+			case EInputAxisEvent::MouseDeltaVertical:
 				CameraRotateInput.X += 90.0f * payload.AxisValue;
 				return;
-			case EInputAxisEvent::MouseHorizontal:
+			case EInputAxisEvent::MouseDeltaHorizontal:
 				CameraRotateInput.Y += 90.0f * payload.AxisValue;
 				return;
 			default: 

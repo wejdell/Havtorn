@@ -190,7 +190,7 @@ namespace Havtorn
 //		{
 //			for (SSequencerComponentTrack& componentTrack : entityReference.ComponentTracks)
 //			{
-//				U16 numberOfKeyframes = static_cast<U16>(componentTrack.Keyframes.size());
+//				U16 numberOfKeyframes = STATIC_U16(componentTrack.Keyframes.size());
 //				for (U16 index = 0; index < numberOfKeyframes; index++)
 //				{
 //					SSequencerKeyframe* keyframe = componentTrack.Keyframes[index];
@@ -210,7 +210,7 @@ namespace Havtorn
 //		if (!entityReferencePointer)
 //			return;
 //
-//		if (!UMath::IsWithin(trackIndex, (U32)0, static_cast<U32>(entityReferencePointer->ComponentTracks.size())))
+//		if (!UMath::IsWithin(trackIndex, (U32)0, STATIC_U32(entityReferencePointer->ComponentTracks.size())))
 //			return;
 //
 //		SSequencerComponentTrack& componentTrack = entityReferencePointer->ComponentTracks[trackIndex];
@@ -219,7 +219,7 @@ namespace Havtorn
 //
 //		std::sort(componentTrack.Keyframes.begin(), componentTrack.Keyframes.end(), [](SSequencerKeyframe* a, SSequencerKeyframe* b) { return a->FrameNumber < b->FrameNumber; });
 //
-//		U16 numberOfKeyframes = static_cast<U16>(componentTrack.Keyframes.size());
+//		U16 numberOfKeyframes = STATIC_U16(componentTrack.Keyframes.size());
 //		U32 lastFrameNumber = componentTrack.Keyframes[0]->FrameNumber;
 //		for (U16 index = 1; index < numberOfKeyframes; index++)
 //		{
@@ -272,8 +272,8 @@ namespace Havtorn
 //
 //		SSequencerFileHeader fileHeader;
 //		fileHeader.SequencerName = CurrentSequencer->Name.AsString();
-//		fileHeader.SequencerNameLength = static_cast<U32>(fileHeader.SequencerName.size());
-//		fileHeader.NumberOfEntityReferences = static_cast<U32>(CurrentSequencer->EntityReferences.size());
+//		fileHeader.SequencerNameLength = STATIC_U32(fileHeader.SequencerName.size());
+//		fileHeader.NumberOfEntityReferences = STATIC_U32(CurrentSequencer->EntityReferences.size());
 //		fileHeader.EntityReferences = CurrentSequencer->EntityReferences;
 //
 //		const U32 fileSize = fileHeader.GetSize();
@@ -287,7 +287,7 @@ namespace Havtorn
 //
 //	void CSequencerSystem::LoadSequencerFromFile(const std::string& filePath)
 //	{
-//		U8 nameLength = static_cast<U8>(filePath.find_last_of(".") - (filePath.find_last_of("/") + 1));
+//		U8 nameLength = STATIC_U8(filePath.find_last_of(".") - (filePath.find_last_of("/") + 1));
 //		std::string sequencerName = filePath.substr(filePath.find_last_of("/") + 1, nameLength);
 //
 //		if (CSequencerAsset* asset = TryGetSequencerWithName(sequencerName))
@@ -298,7 +298,7 @@ namespace Havtorn
 //		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
 //		char* data = new char[fileSize];
 //
-//		GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));
+//		GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
 //		sequencerFile.Deserialize(data);
 //
 //		CSequencerAsset* newAsset = SequencerAssets.emplace_back(new CSequencerAsset());
@@ -357,14 +357,14 @@ namespace Havtorn
 //		{
 //			for (SSequencerComponentTrack& componentTrack : entityReference.ComponentTracks)
 //			{
-//				U16 numberOfKeyframes = static_cast<U16>(componentTrack.Keyframes.size());
+//				U16 numberOfKeyframes = STATIC_U16(componentTrack.Keyframes.size());
 //				componentTrack.TrackState = ESequencerComponentTrackState::Waiting;
 //
 //				// Start iterating from the start if we haven't yet or if we've reached the end
 //				if (componentTrack.CurrentKeyframeIndex == -1 || componentTrack.CurrentKeyframeIndex >= numberOfKeyframes - 1)
 //					componentTrack.CurrentKeyframeIndex = 0;
 //
-//				for (U16 index = static_cast<U16>(componentTrack.CurrentKeyframeIndex); index < numberOfKeyframes; index++)
+//				for (U16 index = STATIC_U16(componentTrack.CurrentKeyframeIndex); index < numberOfKeyframes; index++)
 //				{
 //					componentTrack.CurrentKeyframeIndex = index;
 //					SSequencerKeyframe* keyframe = componentTrack.Keyframes[index];
@@ -393,7 +393,7 @@ namespace Havtorn
 //				// Only blend if both keyframes are set
 //				if (componentTrack.TrackState == ESequencerComponentTrackState::Blending)
 //				{
-//					F32 blendParam = UMath::Remap(static_cast<F32>(componentTrack.CurrentKeyframe->FrameNumber), static_cast<F32>(componentTrack.NextKeyframe->FrameNumber), 0.0f, 1.0f, static_cast<F32>(Data.CurrentFrame));
+//					F32 blendParam = UMath::Remap(STATIC_F32(componentTrack.CurrentKeyframe->FrameNumber), STATIC_F32(componentTrack.NextKeyframe->FrameNumber), 0.0f, 1.0f, STATIC_F32(Data.CurrentFrame));
 //					componentTrack.CurrentKeyframe->Blend(componentTrack.NextKeyframe, blendParam);
 //				}
 //				else if (componentTrack.TrackState == ESequencerComponentTrackState::Setting)

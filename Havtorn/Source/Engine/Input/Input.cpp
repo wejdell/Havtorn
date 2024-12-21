@@ -76,59 +76,59 @@ namespace Havtorn
 			return true;
 
 		case WM_LBUTTONDOWN:
-			//MouseButton[static_cast<U32>(EMouseButton::Left)] = true;
-			HandleKeyDown(static_cast<U32>(EMouseButton::Left));
+			//MouseButton[STATIC_U32(EMouseButton::Left)] = true;
+			HandleKeyDown(STATIC_U32(EMouseButton::Left));
 			return true;
 
 		case WM_LBUTTONUP:
-			//MouseButton[static_cast<U32>(EMouseButton::Left)] = false;
-			HandleKeyUp(static_cast<U32>(EMouseButton::Left));
+			//MouseButton[STATIC_U32(EMouseButton::Left)] = false;
+			HandleKeyUp(STATIC_U32(EMouseButton::Left));
 			return true;
 
 		case WM_RBUTTONDOWN:
-			//MouseButton[static_cast<U32>(EMouseButton::Right)] = true;
-			HandleKeyDown(static_cast<U32>(EMouseButton::Right));
+			//MouseButton[STATIC_U32(EMouseButton::Right)] = true;
+			HandleKeyDown(STATIC_U32(EMouseButton::Right));
 			return true;
 
 		case WM_RBUTTONUP:
-			//MouseButton[static_cast<U32>(EMouseButton::Right)] = false;
-			HandleKeyUp(static_cast<U32>(EMouseButton::Right));
+			//MouseButton[STATIC_U32(EMouseButton::Right)] = false;
+			HandleKeyUp(STATIC_U32(EMouseButton::Right));
 			return true;
 
 		case WM_MBUTTONDOWN:
-			//MouseButton[static_cast<U32>(EMouseButton::Middle)] = true;
-			HandleKeyDown(static_cast<U32>(EMouseButton::Middle));
+			//MouseButton[STATIC_U32(EMouseButton::Middle)] = true;
+			HandleKeyDown(STATIC_U32(EMouseButton::Middle));
 			return true;
 
 		case WM_MBUTTONUP:
-			//MouseButton[static_cast<U32>(EMouseButton::Middle)] = false;
-			HandleKeyUp(static_cast<U32>(EMouseButton::Middle));
+			//MouseButton[STATIC_U32(EMouseButton::Middle)] = false;
+			HandleKeyUp(STATIC_U32(EMouseButton::Middle));
 			return true;
 
 		case WM_XBUTTONDOWN:
 			if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1) 
 			{
-				//MouseButton[MouseButton[static_cast<U32>(EMouseButton::Mouse4)]] = true;
-				HandleKeyDown(static_cast<U32>(EMouseButton::Mouse4));
+				//MouseButton[MouseButton[STATIC_U32(EMouseButton::Mouse4)]] = true;
+				HandleKeyDown(STATIC_U32(EMouseButton::Mouse4));
 			}
 			else if (GET_XBUTTON_WPARAM(wParam) == XBUTTON2) 
 			{
-				//MouseButton[MouseButton[static_cast<U32>(EMouseButton::Mouse5)]] = true;
-				HandleKeyDown(static_cast<U32>(EMouseButton::Mouse5));
+				//MouseButton[MouseButton[STATIC_U32(EMouseButton::Mouse5)]] = true;
+				HandleKeyDown(STATIC_U32(EMouseButton::Mouse5));
 			}
 			return true;
 
 		case WM_XBUTTONUP:
 			if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1)
 			{
-				//MouseButton[MouseButton[static_cast<U32>(EMouseButton::Mouse4)]] = false;
-				HandleKeyUp(static_cast<U32>(EMouseButton::Mouse4));
+				//MouseButton[MouseButton[STATIC_U32(EMouseButton::Mouse4)]] = false;
+				HandleKeyUp(STATIC_U32(EMouseButton::Mouse4));
 
 			}
 			else if (GET_XBUTTON_WPARAM(wParam) == XBUTTON2)
 			{
-				//MouseButton[MouseButton[static_cast<U32>(EMouseButton::Mouse5)]] = false;
-				HandleKeyUp(static_cast<U32>(EMouseButton::Mouse5));
+				//MouseButton[MouseButton[STATIC_U32(EMouseButton::Mouse5)]] = false;
+				HandleKeyUp(STATIC_U32(EMouseButton::Mouse5));
 			}
 			break;
 
@@ -164,8 +164,8 @@ namespace Havtorn
 				(rawInput.data.mouse.lLastX != 0 || rawInput.data.mouse.lLastY != 0))
 			{
 				// Register raw input
-				MouseRawDeltaX = static_cast<U16>(rawInput.data.mouse.lLastX);
-				MouseRawDeltaY = static_cast<U16>(rawInput.data.mouse.lLastY);
+				MouseRawDeltaX = STATIC_U16(rawInput.data.mouse.lLastX);
+				MouseRawDeltaY = STATIC_U16(rawInput.data.mouse.lLastY);
 			}
 		}
 			break;
@@ -191,8 +191,8 @@ namespace Havtorn
 		POINT point;
 		if (GetCursorPos(&point)) 
 		{
-			MouseScreenX = static_cast<U16>(point.x);
-			MouseScreenY = static_cast<U16>(point.y);
+			MouseScreenX = STATIC_U16(point.x);
+			MouseScreenY = STATIC_U16(point.y);
 		}
 
 #ifdef INPUT_AXIS_USES_FALLOFF
@@ -266,7 +266,7 @@ namespace Havtorn
 	{
 		POINT p;
 		GetCursorPos(&p);
-		const SVector2<U16> currentPos = { static_cast<U16>(p.x), static_cast<U16>(p.y) };
+		const SVector2<U16> currentPos = { STATIC_U16(p.x), STATIC_U16(p.y) };
 		const SVector2<U16> center = GEngine::GetWindowHandler()->GetCenterPosition();
 		const SVector2<U16> result = currentPos - center;
 
@@ -320,17 +320,17 @@ namespace Havtorn
 
 	//bool CInput::IsMouseDown(EMouseButton mouseButton) const
 	//{
-	//	return MouseButton[static_cast<U32>(mouseButton)];
+	//	return MouseButton[STATIC_U32(mouseButton)];
 	//}
 
 	//bool CInput::IsMousePressed(EMouseButton mouseButton) const
 	//{
-	//	return MouseButton[static_cast<U32>(mouseButton)] && (!MouseButtonLast[static_cast<U32>(mouseButton)]);
+	//	return MouseButton[STATIC_U32(mouseButton)] && (!MouseButtonLast[STATIC_U32(mouseButton)]);
 	//}
 
 	//bool CInput::IsMouseReleased(EMouseButton mouseButton) const
 	//{
-	//	return (!MouseButton[static_cast<U32>(mouseButton)]) && MouseButtonLast[static_cast<U32>(mouseButton)];
+	//	return (!MouseButton[STATIC_U32(mouseButton)]) && MouseButtonLast[STATIC_U32(mouseButton)];
 	//}
 
 	void CInput::SetMouseScreenPosition(U16 x, U16 y)

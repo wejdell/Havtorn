@@ -34,5 +34,9 @@ namespace Havtorn
 	template<typename T>
 	using WinComPtr = Microsoft::WRL::ComPtr<T>;
 
+	#define STATIC_F32(x) static_cast<F32>(x)
 	#define STATIC_U64(x) static_cast<U64>(x)
+	#define STATIC_U32(x) static_cast<U32>(x)
+	#define STATIC_U16(x) static_cast<U16>(x)
+	#define STATIC_U8(x) static_cast<U8>(x)
 }

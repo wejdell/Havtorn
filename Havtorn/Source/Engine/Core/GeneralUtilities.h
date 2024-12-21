@@ -2,7 +2,6 @@
 
 #pragma once
 #include <string>
-#include "Core/MathTypes/HavtornMath.h"
 
 namespace Havtorn
 {

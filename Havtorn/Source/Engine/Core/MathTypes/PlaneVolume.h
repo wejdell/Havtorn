@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Plane.h"
+#include "SPlane.h"
 
 namespace Havtorn 
 {
@@ -12,15 +12,15 @@ namespace Havtorn
 		// Default constructor: empty PlaneVolume.
 		PlaneVolume();
 		// Constructor taking a list of Plane that makes up the PlaneVolume.
-		PlaneVolume(const std::vector<Plane> &planeList);
+		PlaneVolume(const std::vector<SPlane> &planeList);
 		// Add a Plane to the PlaneVolume.
-		void AddPlane(const Plane& plane);
+		void AddPlane(const SPlane& plane);
 		// Returns whether a point is inside the PlaneVolume: it is inside when the point is on the
 		// plane or on the side the normal is pointing away from for all the planes in the PlaneVolume.
 		bool IsInside(const SVector& position);
 
 	private:
-		std::vector<Plane> PlaneList;
+		std::vector<SPlane> PlaneList;
 	};
 
 	PlaneVolume::PlaneVolume() 
@@ -28,12 +28,12 @@ namespace Havtorn
 		PlaneList = {};
 	}
 
-	PlaneVolume::PlaneVolume(const std::vector<Plane> &planeList) 
+	PlaneVolume::PlaneVolume(const std::vector<SPlane> &planeList) 
 	{
 		PlaneList = planeList;
 	}
 
-	void PlaneVolume::AddPlane(const Plane& plane) 
+	void PlaneVolume::AddPlane(const SPlane& plane) 
 	{
 		PlaneList.emplace_back(plane);
 	}

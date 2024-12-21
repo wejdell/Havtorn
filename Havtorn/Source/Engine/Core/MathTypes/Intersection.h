@@ -2,10 +2,10 @@
 
 #pragma once
 
-#include "Plane.h"
+#include "SPlane.h"
 #include "Sphere.h"
 #include "AABB3D.h"
-#include "Ray.h"
+#include "SRay.h"
 #include <math.h>
 
 namespace Havtorn 
@@ -15,7 +15,7 @@ namespace Havtorn
 	// isn't parallel to the plane, the intersection point is stored in
 	// aOutIntersectionPoint and true returned.
 	template <class T>
-	bool IntersectionPlaneLine(const Plane<T> &plane, const Ray<T> &ray, Vector3<T> &out_intersection_point) {
+	bool IntersectionPlaneLine(const SPlane<T> &plane, const SRay<T> &ray, Vector3<T> &out_intersection_point) {
 		T d = plane.GetPoint().Dot(plane.GetNormal());
 		T dn = ray.Direction.Dot(plane.GetNormal());
 		if (dn == 0) {
@@ -34,13 +34,13 @@ namespace Havtorn
 	// If the ray intersects the AABB, true is returned, if not, false is returned.
 	// A ray in one of the AABB's sides is counted as intersecting it.
 	template <class T>
-	bool IntersectionAABBLine(const AABB3D<T> &AABB, const Ray<T> &ray) {
-		Plane<T> plane_x_max = Plane<T>(AABB.Max, Vector3<T>(1, 0, 0));
-		Plane<T> plane_y_max = Plane<T>(AABB.Max, Vector3<T>(0, 1, 0));
-		Plane<T> plane_z_max = Plane<T>(AABB.Max, Vector3<T>(0, 0, 1));
-		Plane<T> plane_x_min = Plane<T>(AABB.Min, Vector3<T>(1, 0, 0));
-		Plane<T> plane_y_min = Plane<T>(AABB.Min, Vector3<T>(0, 1, 0));
-		Plane<T> plane_z_min = Plane<T>(AABB.Min, Vector3<T>(0, 0, 1));
+	bool IntersectionAABBLine(const AABB3D<T> &AABB, const SRay<T> &ray) {
+		SPlane<T> plane_x_max = SPlane<T>(AABB.Max, Vector3<T>(1, 0, 0));
+		SPlane<T> plane_y_max = SPlane<T>(AABB.Max, Vector3<T>(0, 1, 0));
+		SPlane<T> plane_z_max = SPlane<T>(AABB.Max, Vector3<T>(0, 0, 1));
+		SPlane<T> plane_x_min = SPlane<T>(AABB.Min, Vector3<T>(1, 0, 0));
+		SPlane<T> plane_y_min = SPlane<T>(AABB.Min, Vector3<T>(0, 1, 0));
+		SPlane<T> plane_z_min = SPlane<T>(AABB.Min, Vector3<T>(0, 0, 1));
 
 		Vector3<T> intersection_plane_x_max; 
 		Vector3<T> intersection_plane_y_max;
@@ -85,7 +85,7 @@ namespace Havtorn
 	// If the ray intersects the sphere, true is returned, if not, false is returned.
 	// A ray intersecting the surface of the sphere is considered as intersecting it.
 	template <class T>
-	bool IntersectionSphereLine(const Sphere<T> &sphere, const Ray<T> &ray) {
+	bool IntersectionSphereLine(const Sphere<T> &sphere, const SRay<T> &ray) {
 		Vector3<T> e = sphere.Center - ray.Origin;
 		T a = e.Dot(ray.Direction);
 		T t = a - sqrt((sphere.Radius * sphere.Radius) - e.LengthSqr() + (a * a));

@@ -110,8 +110,8 @@ namespace Havtorn
 				return 0;
 
 			//AS: Setting Resize Width/Height to != 0 will trigger a Resize in-engine.
-			windowHandler->ResizeTarget.X = static_cast<U16>((U32)LOWORD(lParam));
-			windowHandler->ResizeTarget.Y = static_cast<U16>((U32)HIWORD(lParam));
+			windowHandler->ResizeTarget.X = STATIC_U16((U32)LOWORD(lParam));
+			windowHandler->ResizeTarget.Y = STATIC_U16((U32)HIWORD(lParam));
 			break;
 
 		default:
@@ -256,8 +256,8 @@ namespace Havtorn
 		RECT rect = { 0 };
 		if (GetWindowRect(WindowHandle, &rect))
 		{
-			center.X = static_cast<U16>((rect.right - rect.left) / (U16)2);
-			center.Y = static_cast<U16>((rect.bottom - rect.top) / (U16)2);
+			center.X = STATIC_U16((rect.right - rect.left) / (U16)2);
+			center.Y = STATIC_U16((rect.bottom - rect.top) / (U16)2);
 		}
 		return center;
 	}
@@ -331,17 +331,17 @@ namespace Havtorn
 		LPRECT rect = new RECT{ 0, 0, 0, 0 };
 		if (GetClientRect(WindowHandle, rect) != 0)
 		{
-			Resolution.X = static_cast<U16>(rect->right);
-			Resolution.Y = static_cast<U16>(rect->bottom);
+			Resolution.X = STATIC_U16(rect->right);
+			Resolution.Y = STATIC_U16(rect->bottom);
 
 			if (ResizeTarget.LengthSquared() > 0)
 			{
-				SVector2<U16> newResolution = SVector2<U16>(static_cast<U16>(ResizeTarget.X), static_cast<U16>(ResizeTarget.Y));
+				SVector2<U16> newResolution = SVector2<U16>(STATIC_U16(ResizeTarget.X), STATIC_U16(ResizeTarget.Y));
 				OnResolutionChanged.Broadcast(Resolution);
 			}
 		}
 		delete rect;
-		ResolutionScale = static_cast<F32>(Resolution.Y / MaxResY);
+		ResolutionScale = STATIC_F32(Resolution.Y / MaxResY);
 	}
 
 	void CWindowHandler::SetWindowTitle(const std::string& title)

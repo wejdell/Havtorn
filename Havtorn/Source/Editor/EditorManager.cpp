@@ -23,16 +23,20 @@
 #include "EditorToggleable.h"
 #include "EditorToggleables.h"
 
+#include "Systems/PickingSystem.h"
+
 #include <Application/ImGuiCrossProjectSetup.h>
+#include <Core/MathTypes/MathUtilities.h>
 
 namespace Havtorn
 {
 	CEditorManager::CEditorManager()
 	{
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::TranslateTransform).AddMember(this, &CEditorManager::SetTransformGizmo);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::RotateTransform).AddMember(this, &CEditorManager::SetTransformGizmo);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ScaleTransform).AddMember(this, &CEditorManager::SetTransformGizmo);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ToggleFreeCam).AddMember(this, &CEditorManager::ToggleFreeCam);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::TranslateTransform).AddMember(this, &CEditorManager::OnInputSetTransformGizmo);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::RotateTransform).AddMember(this, &CEditorManager::OnInputSetTransformGizmo);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ScaleTransform).AddMember(this, &CEditorManager::OnInputSetTransformGizmo);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ToggleFreeCam).AddMember(this, &CEditorManager::OnInputToggleFreeCam);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::FocusEditorEntity).AddMember(this, &CEditorManager::OnInputFocusSelection);
 	}
 
 	CEditorManager::~CEditorManager()
@@ -69,10 +73,11 @@ namespace Havtorn
 		RenderManager = renderManager;
 
 		GEngine::GetWindowHandler()->OnResolutionChanged.AddMember(this, &CEditorManager::OnResolutionChanged);
-		CWorld* world = GEngine::GetWorld();
-		world->OnBeginPlayDelegate.AddMember(this, &CEditorManager::OnBeginPlay);
-		world->OnPausePlayDelegate.AddMember(this, &CEditorManager::OnPausePlay);
-		world->OnStopPlayDelegate.AddMember(this, &CEditorManager::OnStopPlay);
+		World = GEngine::GetWorld();
+		World->OnBeginPlayDelegate.AddMember(this, &CEditorManager::OnBeginPlay);
+		World->OnPausePlayDelegate.AddMember(this, &CEditorManager::OnPausePlay);
+		World->OnStopPlayDelegate.AddMember(this, &CEditorManager::OnStopPlay);
+		World->RequestSystem<CPickingSystem>(this, this);
 
 		InitEditorLayout();
 		InitAssetRepresentations();
@@ -200,7 +205,7 @@ namespace Havtorn
 		const U64 fileSize = UMath::Max(GEngine::GetFileSystem()->GetFileSize(filePath), sizeof(EAssetType));
 		char* data = new char[fileSize];
 
-		GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));
+		GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
 
 		SEditorAssetRepresentation rep;
 
@@ -361,6 +366,11 @@ namespace Havtorn
 		InitEditorLayout();
 	}
 
+	bool CEditorManager::GetIsWorldPlaying() const
+	{
+		return World->GetWorldPlayState() == EWorldPlayState::Playing;
+	}
+
 	const CRenderManager* CEditorManager::GetRenderManager() const
 	{
 		return RenderManager;
@@ -393,8 +403,8 @@ namespace Havtorn
 
 		I16 viewportPosX = static_cast<I16>(resolution.X * viewportPaddingX);
 		I16 viewportPosY = static_cast<I16>(viewportPaddingY);
-		U16 viewportSizeX = static_cast<U16>(resolution.X - (2.0f * static_cast<F32>(viewportPosX)));
-		U16 viewportSizeY = static_cast<U16>(static_cast<F32>(viewportSizeX) * viewportAspectRatioInv);
+		U16 viewportSizeX = STATIC_U16(resolution.X - (2.0f * STATIC_F32(viewportPosX)));
+		U16 viewportSizeY = STATIC_U16(STATIC_F32(viewportSizeX) * viewportAspectRatioInv);
 
 		// NR: This might be windows menu bar height?
 		U16 sizeOffsetY = 20;
@@ -402,11 +412,11 @@ namespace Havtorn
 		EditorLayout.ViewportPosition = { viewportPosX, viewportPosY };
 		EditorLayout.ViewportSize = { viewportSizeX, viewportSizeY };
 		EditorLayout.AssetBrowserPosition = { viewportPosX, static_cast<I16>(viewportPosY + viewportSizeY) };
-		EditorLayout.AssetBrowserSize = { viewportSizeX, static_cast<U16>(resolution.Y - static_cast<F32>(viewportSizeY) - sizeOffsetY) };
+		EditorLayout.AssetBrowserSize = { viewportSizeX, STATIC_U16(resolution.Y - STATIC_F32(viewportSizeY) - sizeOffsetY) };
 		EditorLayout.HierarchyViewPosition = { 0, viewportPosY };
-		EditorLayout.HierarchyViewSize = { static_cast<U16>(viewportPosX), static_cast<U16>(resolution.Y - sizeOffsetY) };
-		EditorLayout.InspectorPosition = { static_cast<I16>(resolution.X - static_cast<F32>(viewportPosX)), viewportPosY };
-		EditorLayout.InspectorSize = { static_cast<U16>(viewportPosX), static_cast<U16>(resolution.Y - sizeOffsetY) };
+		EditorLayout.HierarchyViewSize = { STATIC_U16(viewportPosX), STATIC_U16(resolution.Y - sizeOffsetY) };
+		EditorLayout.InspectorPosition = { static_cast<I16>(resolution.X - STATIC_F32(viewportPosX)), viewportPosY };
+		EditorLayout.InspectorSize = { STATIC_U16(viewportPosX), STATIC_U16(resolution.Y - sizeOffsetY) };
 	}
 
 	void CEditorManager::InitAssetRepresentations()
@@ -452,8 +462,11 @@ namespace Havtorn
 		}
 	}
 
-	void CEditorManager::SetTransformGizmo(const SInputActionPayload payload)
+	void CEditorManager::OnInputSetTransformGizmo(const SInputActionPayload payload)
 	{
+		if (GetIsFreeCamActive())
+			return;
+			
 		switch (payload.Event)
 		{
 		case EInputActionEvent::TranslateTransform:
@@ -470,9 +483,71 @@ namespace Havtorn
 		}
 	}
 
-	void CEditorManager::ToggleFreeCam(const SInputActionPayload payload)
+	void CEditorManager::OnInputToggleFreeCam(const SInputActionPayload payload)
 	{
 		IsFreeCamActive = payload.IsHeld;
+	}
+
+	void CEditorManager::OnInputFocusSelection(const SInputActionPayload payload)
+	{
+		if (!payload.IsPressed)
+			return;
+
+		if (!SelectedEntity.IsValid())
+			return;
+
+		if (CurrentScene == nullptr)
+			return;
+
+		SEntity cameraEntity = CurrentScene->MainCameraEntity;
+		if (!cameraEntity.IsValid())
+			return;
+
+		SVector worldPos = SVector::Zero;
+		SVector center = SVector::Zero;
+		SVector bounds = SVector::Zero;
+		SVector2<F32> fov = SVector2<F32>::Zero;
+		bool foundBounds = false;
+
+		if (STransformComponent* transform = CurrentScene->GetComponent<STransformComponent>(SelectedEntity))
+		{
+			worldPos = transform->Transform.GetMatrix().GetTranslation();
+		}
+		else
+		{
+			HV_LOG_WARN("OnInputFocusSelection: could not find a transform to go to. Cannot focus current selection.");
+			return;
+		}
+		
+		if (SCameraComponent* camera = CurrentScene->GetComponent<SCameraComponent>(cameraEntity))
+		{
+			fov = { camera->AspectRatio * camera->FOV, camera->FOV };
+		}
+		else
+		{
+			HV_LOG_WARN("OnInputFocusSelection: could not find a camera component to move. Cannot focus current selection.");
+			return;
+		}
+
+		if (SStaticMeshComponent* staticMesh = CurrentScene->GetComponent<SStaticMeshComponent>(SelectedEntity))
+		{
+			center = staticMesh->BoundsCenter;
+			bounds = SVector::GetAbsMaxKeepValue(staticMesh->BoundsMax, staticMesh->BoundsMin);
+			foundBounds = true;
+		}
+
+		if (!foundBounds)
+		{
+			HV_LOG_WARN("OnInputFocusSelection: could not find component to derive bounds from. Cannot focus current selection.");
+			return;
+		}
+
+		constexpr F32 focusMarginPercentage = 1.1f;
+
+		STransform newTransform;
+		newTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(10.0f, 10.0f, 0.0f));
+		newTransform.Translate(worldPos + SVector(center.X, center.Y, -UMathUtilities::GetFocusDistanceForBounds(center, bounds, fov, focusMarginPercentage)));
+		CurrentScene->GetComponent<STransformComponent>(cameraEntity)->Transform = newTransform;
 	}
 
 	void CEditorManager::OnResolutionChanged(SVector2<U16> newResolution)
@@ -487,16 +562,19 @@ namespace Havtorn
 			CachedColorTheme = CurrentColorTheme;
 
 		SetEditorTheme(EEditorColorTheme::PlayMode);
+		World->BlockSystem<CPickingSystem>(this);
 	}
 
 	void CEditorManager::OnPausePlay(CScene* /*scene*/)
 	{
 		SetEditorTheme(EEditorColorTheme::PauseMode);
+		World->UnblockSystem<CPickingSystem>(this);
 	}
 
 	void CEditorManager::OnStopPlay(CScene* /*scene*/)
 	{
 		SetEditorTheme(CachedColorTheme);
+		World->UnblockSystem<CPickingSystem>(this);
 	}
 
 	ETransformGizmo CEditorManager::GetCurrentGizmo() const
@@ -509,10 +587,15 @@ namespace Havtorn
 		return IsFreeCamActive;
 	}
 
+	bool CEditorManager::GetIsHoveringGizmo() const
+	{
+		return ImGuizmo::IsOver();
+	}
+
 	std::string CEditorManager::GetFrameRate() const
 	{
 		std::string frameRateString = "Framerate: ";
-		const U32 frameRate = static_cast<U32>(GTime::AverageFrameRate());
+		const U32 frameRate = STATIC_U32(GTime::AverageFrameRate());
 		const F32 frameTime = 1000.0f / frameRate;
 		std::string frameTimeString = std::format("{:.2f}", frameTime);
 
@@ -522,14 +605,14 @@ namespace Havtorn
 		frameRateString.append(" ms)");
 
 		frameRateString.append(" | CPU: ");
-		const U32 frameRateCPU = static_cast<U32>(GTime::AverageFrameRate(ETimerCategory::CPU));
+		const U32 frameRateCPU = STATIC_U32(GTime::AverageFrameRate(ETimerCategory::CPU));
 		const F32 frameTimeCPU = 1000.0f / frameRateCPU;
 		std::string frameTimeStringCPU = std::format("{:.2f}", frameTimeCPU);
 		frameRateString.append(frameTimeStringCPU);
 		frameRateString.append(" ms");
 
 		frameRateString.append(" | GPU: ");
-		const U32 frameRateGPU = static_cast<U32>(GTime::AverageFrameRate(ETimerCategory::GPU));
+		const U32 frameRateGPU = STATIC_U32(GTime::AverageFrameRate(ETimerCategory::GPU));
 		const F32 frameTimeGPU = 1000.0f / frameRateGPU;
 		std::string frameTimeStringGPU = std::format("{:.2f}", frameTimeGPU);
 		frameRateString.append(frameTimeStringGPU);

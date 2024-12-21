@@ -126,7 +126,7 @@ namespace Havtorn
 				return newVertices[t1];
 			}
 
-			U32 newIndex = static_cast<U32>(outPositions.size());
+			U32 newIndex = STATIC_U32(outPositions.size());
 			newVertices.emplace(t1, newIndex);
 			outPositions.emplace_back((outPositions[i1] + outPositions[i2]) * 0.5f );
 			return newIndex;
@@ -137,7 +137,7 @@ namespace Havtorn
 			std::vector<U32> indices;
 			std::map<std::tuple<U32, U32>, U32> newVertices;
 
-			U32 numTris = static_cast<U32>(outIndices.size()) / 3;
+			U32 numTris = STATIC_U32(outIndices.size()) / 3;
 
 			for (U32 i = 0; i < numTris; i++) 
 			{
@@ -180,7 +180,7 @@ namespace Havtorn
 			// NR: Adapted from Introduction to 3D Graphics Programming with Direct X 12 by Frank D. Luna
 
 			// Put a cap on the number of subdivisions.
-			numberOfSubdivisions = UMath::Min(numberOfSubdivisions, static_cast<U8>(6));
+			numberOfSubdivisions = UMath::Min(numberOfSubdivisions, STATIC_U8(6));
 
 			// NR: We use a world transform to scale this instead of providing a radius argument here
 			std::vector<SStaticMeshVertex> vertices;
@@ -211,7 +211,7 @@ namespace Havtorn
 				Subdivide(positions, indices);
 
 			// Project vertices onto sphere and scale.
-			for (U16 i = 0; i < static_cast<U16>(positions.size()); ++i)
+			for (U16 i = 0; i < STATIC_U16(positions.size()); ++i)
 			{
 				// Project onto unit sphere.
 				positions[i].Normalize();
@@ -327,17 +327,17 @@ namespace Havtorn
 		// Creates circle across the XZ-plane
 		const static std::vector<SPositionVertex> CircleVertices(const F32 maxRadians, const F32 radius, U32 segments)
 		{
-			segments = UMath::Max(4u, static_cast<U32>(UMath::DecrementUntilEven(segments)));
+			segments = UMath::Max(4u, STATIC_U32(UMath::DecrementUntilEven(segments)));
 
-			const F32 step = maxRadians / static_cast<F32>(segments);
+			const F32 step = maxRadians / STATIC_F32(segments);
 
 			std::vector<SPositionVertex> vertices;
 			for (U32 i = 0u; i < segments; i++)
 			{
 				SPositionVertex point(
-					UMath::Cos(step * static_cast<F32>(i)) * radius,
+					UMath::Cos(step * STATIC_F32(i)) * radius,
 					0.0f,
-					UMath::Sin(step * static_cast<F32>(i)) * radius,
+					UMath::Sin(step * STATIC_F32(i)) * radius,
 					1.0f
 				);
 				vertices.push_back(point);
@@ -348,7 +348,7 @@ namespace Havtorn
 		
 		const static std::vector<U32> CircleIndicesLineTopology(U32 segments)
 		{
-			segments = UMath::Max(4u, static_cast<U32>(UMath::DecrementUntilEven(segments)));
+			segments = UMath::Max(4u, STATIC_U32(UMath::DecrementUntilEven(segments)));
 
 			std::vector<U32> indices;
 			for (U32 i = 0u; i < segments; i++)
@@ -380,7 +380,7 @@ namespace Havtorn
 			indices.pop_back();
 			indices.pop_back();
 
-			segments = UMath::Max(4u, static_cast<U32>(UMath::DecrementUntilEven(segments)));
+			segments = UMath::Max(4u, STATIC_U32(UMath::DecrementUntilEven(segments)));
 			// Account for odd vertex added in HalfCircleVertices
 			indices.push_back(segments - 1u);
 			indices.push_back(segments);
@@ -425,17 +425,17 @@ namespace Havtorn
 			SPositionVertex v;
 			v.y = 0.0f;
 			v.w = 1.0f;
-			const F32 start = static_cast<F32>(segments / 2);
+			const F32 start = STATIC_F32(segments / 2);
 			for (U64 i = 0; i < segments + 1; i++)
 			{
-				v.x = -start + static_cast<F32>(i);
+				v.x = -start + STATIC_F32(i);
 				v.z = -start;
 				grid.Vertices.push_back(v);
 				v.z = start;
 				grid.Vertices.push_back(v);
 
 				v.x = -start;
-				v.z = -start + static_cast<F32>(i);
+				v.z = -start + STATIC_F32(i);
 				grid.Vertices.push_back(v);
 				v.x = start;
 				grid.Vertices.push_back(v);
@@ -443,7 +443,7 @@ namespace Havtorn
 
 			for (U64 i = 0; i < (segments + 1) * 4; i++)
 			{
-				grid.Indices[i] = static_cast<U32>(i);
+				grid.Indices[i] = STATIC_U32(i);
 			}
 			grid.Vertices.shrink_to_fit();
 			return grid;
@@ -507,8 +507,8 @@ namespace Havtorn
 
 			const F32 theta = 2.0f * UMath::Pi;
 			const F32 phi = UMath::Pi;
-			F32 deltaLatitude = phi / static_cast<F32>(latitudes);
-			F32 deltaLongitude = theta / static_cast<F32>(longitudes);
+			F32 deltaLatitude = phi / STATIC_F32(latitudes);
+			F32 deltaLongitude = theta / STATIC_F32(longitudes);
 			F32 latitudeAngle;
 			F32 longitudeAngle;
 
@@ -525,13 +525,13 @@ namespace Havtorn
 			for (U32 i = 1u; i <= (latitudes - 1u); i++)
 			{
 				// Every step of latitudeAngle creates 1 circle around the Y axis. => Indices 2, ..., 2+longitudes-1 shape 1 circle
-				latitudeAngle = halfPi - (static_cast<F32>(i) * deltaLatitude);
+				latitudeAngle = halfPi - (STATIC_F32(i) * deltaLatitude);
 				F32 xz = diameter * UMath::Cos(latitudeAngle);
 				F32 y = diameter * UMath::Sin(latitudeAngle);
 
 				for (U32 j = 0u; j < longitudes; j++)
 				{
-					longitudeAngle = static_cast<F32>(j) * deltaLongitude;
+					longitudeAngle = STATIC_F32(j) * deltaLongitude;
 
 					SPositionVertex vertex;
 					vertex.x = xz * UMath::Cos(longitudeAngle);

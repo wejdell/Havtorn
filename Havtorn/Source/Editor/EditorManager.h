@@ -106,10 +106,13 @@ namespace Havtorn
 
 		[[nodiscard]] ETransformGizmo GetCurrentGizmo() const;
 		[[nodiscard]] bool GetIsFreeCamActive() const;
+		[[nodiscard]] bool GetIsHoveringGizmo() const;
 
 		[[nodiscard]] F32 GetViewportPadding() const;
 		void SetViewportPadding(const F32 padding);
 	
+		bool GetIsWorldPlaying() const;
+
 		// AS: We're returning at ' T* const ' In contrast to ' const T* ' 
 		// This means that the Pointer itself is Const, meaning the user cannot re-point it to something else.
 		template<class TEditorWindowType>
@@ -126,9 +129,9 @@ namespace Havtorn
 		void InitAssetRepresentations();
 		void PreProcessAssets();
 
-		void SetTransformGizmo(const SInputActionPayload payload);
-
-		void ToggleFreeCam(const SInputActionPayload payload);
+		void OnInputSetTransformGizmo(const SInputActionPayload payload);
+		void OnInputToggleFreeCam(const SInputActionPayload payload);
+		void OnInputFocusSelection(const SInputActionPayload payload);
 
 		void OnResolutionChanged(SVector2<U16> newResolution);
 		void OnBeginPlay(CScene* scene);
@@ -143,6 +146,7 @@ namespace Havtorn
 		const CRenderManager* RenderManager = nullptr;
 		CEditorResourceManager* ResourceManager = nullptr;
 
+		CWorld* World = nullptr;
 		CScene* CurrentScene = nullptr;
 		SEntity SelectedEntity = SEntity::Null;
 

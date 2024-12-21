@@ -145,7 +145,7 @@ namespace Havtorn
 
 		auto defaultSizeAllocator = [&]<typename T>(const std::vector<T*>&componentVector)
 		{
-			size += GetDataSize(static_cast<U32>(componentVector.size()));
+			size += GetDataSize(STATIC_U32(componentVector.size()));
 			for (const auto component : componentVector)
 			{
 				auto& componentRef = *component;

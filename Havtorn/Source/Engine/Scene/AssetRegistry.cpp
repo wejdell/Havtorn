@@ -62,7 +62,7 @@ namespace Havtorn
     U32 CAssetRegistry::GetSize() const
     {
         U32 size = 0;
-        size += GetDataSize(static_cast<U32>(Registry.size()));
+        size += GetDataSize(STATIC_U32(Registry.size()));
 
         for (const auto& [assetPath, referenceCounter] : Registry)
         {
@@ -75,7 +75,7 @@ namespace Havtorn
 
     void CAssetRegistry::Serialize(char* toData, U64& pointerPosition) const
     {   
-        SerializeData(static_cast<U32>(Registry.size()), toData, pointerPosition);
+        SerializeData(STATIC_U32(Registry.size()), toData, pointerPosition);
 
         for (const auto& [assetPath, referenceCounter] : Registry)
         {

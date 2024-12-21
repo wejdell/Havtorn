@@ -5,6 +5,7 @@
 #include "Scene.h"
 #include "Graphics/RenderManager.h"
 #include "AssetRegistry.h"
+#include "Graphics/Debug/DebugDrawUtility.h"
 #include "HexPhys/HexPhys.h"
 
 namespace Havtorn
@@ -20,7 +21,7 @@ namespace Havtorn
 		RequestSystem<CCameraSystem>(this);
 		RequestSystem<CLightSystem>(this, RenderManager);
 		RequestSystem<CSequencerSystem>(this);
-		RequestSystem<CRenderSystem>(this, RenderManager);
+		RequestSystem<CRenderSystem>(this, RenderManager, this);
 
 		OnSceneCreatedDelegate.AddMember(this, &CWorld::OnSceneCreated);
 
@@ -35,8 +36,11 @@ namespace Havtorn
 			{
 				if (data.Blockers.empty())
 					data.System->Update(scene.get());
+
 			}
 		}
+
+		//GDebugDraw::TestAllShapes();
 	}
 
 	bool CWorld::BeginPlay()
@@ -143,7 +147,7 @@ namespace Havtorn
 		outScene->Init(RenderManager, sceneNameSubstring);
 
 		U64 pointerPosition = 0;
-		GEngine::GetFileSystem()->Deserialize(filePath, data, static_cast<U32>(fileSize));
+		GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
 		sceneFile.Deserialize(data, pointerPosition, outScene, AssetRegistry.get());
 
 		delete[] data;

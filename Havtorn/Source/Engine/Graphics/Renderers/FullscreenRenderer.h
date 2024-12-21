@@ -62,6 +62,7 @@ namespace Havtorn
 			SSAOBlur,
 			DownsampleDepth,
 			DepthAwareUpsampling,
+			EditorData,
 			Count
 		};
 
