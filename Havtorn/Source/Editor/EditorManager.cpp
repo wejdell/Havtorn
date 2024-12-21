@@ -82,7 +82,6 @@ namespace Havtorn
 		InitEditorLayout();
 		InitAssetRepresentations();
 
-
 		return success;
 	}
 
@@ -407,7 +406,7 @@ namespace Havtorn
 		U16 viewportSizeY = STATIC_U16(STATIC_F32(viewportSizeX) * viewportAspectRatioInv);
 
 		// NR: This might be windows menu bar height?
-		U16 sizeOffsetY = 20;
+		U16 sizeOffsetY = 18;
 
 		EditorLayout.ViewportPosition = { viewportPosX, viewportPosY };
 		EditorLayout.ViewportSize = { viewportSizeX, viewportSizeY };

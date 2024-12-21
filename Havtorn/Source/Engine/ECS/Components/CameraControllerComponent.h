@@ -27,8 +27,6 @@ namespace Havtorn
 		F32 AccelerationDuration = 0.2f;
 
 		SVector AccelerationDirection = SVector::Zero;
-		F32 CurrentPitch = 0.0f;
-		F32 CurrentYaw = 0.0f;
 		F32 CurrentAccelerationFactor = 0.0f;
 
 		ECameraControllerType ControllerType = ECameraControllerType::FreeCam;
