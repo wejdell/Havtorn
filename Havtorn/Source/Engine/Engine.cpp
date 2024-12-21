@@ -115,6 +115,7 @@ namespace Havtorn
 		RenderManager->SwapSpriteInstancedScreenSpaceTransformRenderLists();
 		RenderManager->SwapSpriteInstancedUVRectRenderLists();
 		RenderManager->SwapSpriteInstancedColorRenderLists();
+		RenderManager->SetWorldPlayState(World->GetWorldPlayState());
 		Framework->EndFrame();
 
 		if (WindowHandler->ResizeTarget.LengthSquared() > 0)

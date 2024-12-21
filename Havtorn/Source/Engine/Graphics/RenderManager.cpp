@@ -194,7 +194,7 @@ namespace Havtorn
 			IntermediateDepth.ClearDepth();
 			VolumetricAccumulationBuffer.ClearTexture();
 
-			// TODO.NR: Figure out when to do this step
+			if (WorldPlayState != EWorldPlayState::Playing)
 			{
 				SVector2<U16> resolution = GEngine::GetWindowHandler()->GetResolution();
 				U32 size = (resolution.X * resolution.Y);
@@ -881,6 +881,11 @@ namespace Havtorn
 	void CRenderManager::ClearSpriteInstanceColors()
 	{
 		SystemSpriteInstanceColors.clear();
+	}
+
+	void CRenderManager::SetWorldPlayState(EWorldPlayState playState)
+	{
+		WorldPlayState = playState;
 	}
 
 	const CFullscreenTexture& CRenderManager::GetRenderedSceneTexture() const

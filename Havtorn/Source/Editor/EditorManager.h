@@ -111,6 +111,8 @@ namespace Havtorn
 		[[nodiscard]] F32 GetViewportPadding() const;
 		void SetViewportPadding(const F32 padding);
 	
+		bool GetIsWorldPlaying() const;
+
 		// AS: We're returning at ' T* const ' In contrast to ' const T* ' 
 		// This means that the Pointer itself is Const, meaning the user cannot re-point it to something else.
 		template<class TEditorWindowType>

@@ -9,6 +9,7 @@
 #include "GraphicsEnums.h"
 #include "GraphicsMaterial.h"
 #include "RenderCommand.h"
+#include "Scene/World.h"
 
 #include "RenderingPrimitives/DataBuffer.h"
 #include "RenderingPrimitives/FullscreenTexture.h"
@@ -109,6 +110,7 @@ namespace Havtorn
 		void ClearSpriteInstanceColors();
 
 	public:
+		void SetWorldPlayState(EWorldPlayState playState);
 		[[nodiscard]] HAVTORN_API const CFullscreenTexture& GetRenderedSceneTexture() const;
 		void PushRenderCommand(SRenderCommand command);
 		void SwapRenderCommandBuffers();
@@ -381,6 +383,9 @@ namespace Havtorn
 		std::unordered_map<U32, std::vector<SVector4>> RendererSpriteInstanceColors;
 
 		SVector2<F32> ShadowAtlasResolution = SVector2<F32>::Zero;
+
+		// NR: Keep our own property here for use on render thread
+		EWorldPlayState WorldPlayState = EWorldPlayState::Stopped;
 
 		void* EntityPerPixelData = nullptr;
 		U64 EntityPerPixelDataSize = 0;

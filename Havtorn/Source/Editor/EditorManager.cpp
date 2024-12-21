@@ -366,6 +366,11 @@ namespace Havtorn
 		InitEditorLayout();
 	}
 
+	bool CEditorManager::GetIsWorldPlaying() const
+	{
+		return World->GetWorldPlayState() == EWorldPlayState::Playing;
+	}
+
 	const CRenderManager* CEditorManager::GetRenderManager() const
 	{
 		return RenderManager;
@@ -459,6 +464,9 @@ namespace Havtorn
 
 	void CEditorManager::OnInputSetTransformGizmo(const SInputActionPayload payload)
 	{
+		if (GetIsFreeCamActive())
+			return;
+			
 		switch (payload.Event)
 		{
 		case EInputActionEvent::TranslateTransform:
