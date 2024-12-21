@@ -47,10 +47,11 @@ namespace Havtorn
 		}
 
 		// === Rotation ===
-		controllerComp.CurrentPitch = UMath::Clamp(controllerComp.CurrentPitch + (CameraRotateInput.X * controllerComp.RotationSpeed * dt), -SCameraControllerComponent::MaxPitchDegrees + 0.01f, SCameraControllerComponent::MaxPitchDegrees - 0.01f);
-		controllerComp.CurrentYaw = UMath::WrapAngle(controllerComp.CurrentYaw + (CameraRotateInput.Y * controllerComp.RotationSpeed * dt));
+		SVector eulerAngles = transformComp.Transform.GetMatrix().GetEuler();
+		eulerAngles.X = UMath::Clamp(eulerAngles.X + (CameraRotateInput.X * controllerComp.RotationSpeed * dt), -SCameraControllerComponent::MaxPitchDegrees + 0.01f, SCameraControllerComponent::MaxPitchDegrees - 0.01f);
+		eulerAngles.Y = UMath::WrapAngle(eulerAngles.Y + (CameraRotateInput.Y * controllerComp.RotationSpeed * dt));
 		SMatrix newMatrix = transformComp.Transform.GetMatrix();
-		newMatrix.SetRotation({ controllerComp.CurrentPitch, controllerComp.CurrentYaw, 0.0f });
+		newMatrix.SetRotation({ eulerAngles.X, eulerAngles.Y, 0.0f });
 		transformComp.Transform.SetMatrix(newMatrix);
 
 		// === Translation ===
