@@ -65,6 +65,9 @@ namespace IMGUIZMO_NAMESPACE
 
    static bool Intersects(OPERATION lhs, OPERATION rhs)
    {
+     if (lhs == -1)
+       return false;
+
      return (lhs & rhs) != 0;
    }
 
@@ -2218,7 +2221,7 @@ namespace IMGUIZMO_NAMESPACE
       {
          // find new possible way to move
          vec_t gizmoHitProportion;
-         type = gContext.mbOverGizmoHotspot ? MT_NONE : GetMoveType(op, &gizmoHitProportion);
+         type = GetMoveType(op, &gizmoHitProportion);
          gContext.mbOverGizmoHotspot |= type != MT_NONE;
          if (type != MT_NONE)
          {
@@ -2268,7 +2271,7 @@ namespace IMGUIZMO_NAMESPACE
       if (!gContext.mbUsing)
       {
          // find new possible way to scale
-         type = gContext.mbOverGizmoHotspot ? MT_NONE : GetScaleType(op);
+         type = GetScaleType(op);
          gContext.mbOverGizmoHotspot |= type != MT_NONE;
 
          if (type != MT_NONE)
@@ -2391,7 +2394,7 @@ namespace IMGUIZMO_NAMESPACE
 
       if (!gContext.mbUsing)
       {
-         type = gContext.mbOverGizmoHotspot ? MT_NONE : GetRotateType(op);
+         type = GetRotateType(op);
          gContext.mbOverGizmoHotspot |= type != MT_NONE;
 
          if (type != MT_NONE)

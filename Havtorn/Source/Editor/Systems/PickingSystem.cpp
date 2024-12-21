@@ -53,7 +53,7 @@ namespace Havtorn
 
 	void CPickingSystem::WorldSpacePick() const
 	{
-		if (EditorCameraComponent == nullptr || EditorCameraTransform == nullptr)
+		if (EditorCameraComponent == nullptr || EditorCameraTransform == nullptr || Manager->GetIsHoveringGizmo())
 			return;
 
 		const ImGui::CViewportWindow* viewport = Manager->GetEditorWindow<ImGui::CViewportWindow>();
@@ -70,6 +70,11 @@ namespace Havtorn
 
 		const U64 dataIndex = STATIC_U64(fullscreenMousePos.X) + STATIC_U64(fullscreenMousePos.Y) * STATIC_U64(resolution.X);
 		const U64 pickedEntityGUID = Manager->GetRenderManager()->GetEntityGUIDFromData(dataIndex);
-		Manager->SetSelectedEntity(SEntity(pickedEntityGUID));
+
+		SEntity candidate = SEntity(pickedEntityGUID);
+		if (!candidate.IsValid() || candidate == Manager->GetSelectedEntity())
+			return;
+
+		Manager->SetSelectedEntity(candidate);
 	}
 }

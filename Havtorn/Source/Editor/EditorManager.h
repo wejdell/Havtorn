@@ -106,6 +106,7 @@ namespace Havtorn
 
 		[[nodiscard]] ETransformGizmo GetCurrentGizmo() const;
 		[[nodiscard]] bool GetIsFreeCamActive() const;
+		[[nodiscard]] bool GetIsHoveringGizmo() const;
 
 		[[nodiscard]] F32 GetViewportPadding() const;
 		void SetViewportPadding(const F32 padding);

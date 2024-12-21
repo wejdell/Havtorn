@@ -41,6 +41,8 @@ namespace Havtorn
 		// Expects SVector4 values to be [0.0f - 1.0f] range.
 		inline SColor(const SVector4& rgba);
 
+		// TODO.NR: Add to/from HEX utilities
+
 		// Returns the RGB values in a [0.0f - 1.0f] range.
 		inline SVector AsVector() const;
 		// Returns the RGBA values in a [0.0f - 1.0f] range.

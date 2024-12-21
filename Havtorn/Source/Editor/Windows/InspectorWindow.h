@@ -3,6 +3,8 @@
 #pragma once
 #include "EditorWindow.h"
 
+#include <Core/MathTypes/Vector.h>
+
 namespace Havtorn
 {
 	struct SComponentViewResult;
@@ -22,6 +24,7 @@ namespace ImGui
 
 	private:
 		void UpdateTransformGizmo(const Havtorn::SComponentViewResult& result);
+		void ViewManipulation(Havtorn::SMatrix& outCameraView, const Havtorn::SVector2<Havtorn::F32>& windowPosition, const Havtorn::SVector2<Havtorn::F32>& windowSize);
 		void InspectAssetComponent(const Havtorn::SComponentViewResult& result);
 		void IterateAssetRepresentations(const Havtorn::SComponentViewResult& result, const std::vector<std::string>& assetNames, const std::vector<std::string>& assetLabels, const std::string& modalNameToOpen);
 		void OpenSelectMeshAssetModal(const Havtorn::SComponentViewResult& result);

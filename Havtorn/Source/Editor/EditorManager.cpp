@@ -579,6 +579,11 @@ namespace Havtorn
 		return IsFreeCamActive;
 	}
 
+	bool CEditorManager::GetIsHoveringGizmo() const
+	{
+		return ImGuizmo::IsOver();
+	}
+
 	std::string CEditorManager::GetFrameRate() const
 	{
 		std::string frameRateString = "Framerate: ";
