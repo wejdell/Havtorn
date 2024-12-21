@@ -18,7 +18,7 @@ namespace Havtorn
             Characters = new char[size];
             memcpy(Characters, &name[0], sizeof(char) * size);
             Characters[size] = '\0';
-            Size = static_cast<U32>(size);
+            Size = STATIC_U32(size);
         }
 
         ~CHavtornString()
@@ -62,7 +62,7 @@ namespace Havtorn
 
             memcpy(&Characters[0], name.data(), sizeof(char) * size);
 
-            Size = static_cast<U8>(size);
+            Size = STATIC_U8(size);
         }
 
         ~CHavtornStaticString()
@@ -72,33 +72,33 @@ namespace Havtorn
         CHavtornStaticString(const CHavtornStaticString& other)
         {
             memcpy(&Characters[0], other.Characters.data(), sizeof(char) * other.Size);
-            Size = static_cast<U8>(other.Size);
+            Size = STATIC_U8(other.Size);
         }
 
         CHavtornStaticString(const CHavtornStaticString&& other)
         {
             Characters = std::move(other.Characters);
-            Size = static_cast<U8>(other.Size);
+            Size = STATIC_U8(other.Size);
         }
 
         CHavtornStaticString& operator=(const CHavtornStaticString& other)
         {
             memcpy(&Characters[0], other.Characters.data(), sizeof(char) * other.Size);
-            Size = static_cast<U8>(other.Size);
+            Size = STATIC_U8(other.Size);
             return *this;
         }
 
         CHavtornStaticString& operator=(const CHavtornStaticString&& other) noexcept 
         {
             Characters = std::move(other.Characters);
-            Size = static_cast<U8>(other.Size);
+            Size = STATIC_U8(other.Size);
             return *this;
         }
 
         CHavtornStaticString& operator=(const char* cString)
         {
             Characters = std::move(cString);
-            Size = static_cast<U8>(strlen(cString));
+            Size = STATIC_U8(strlen(cString));
         }
 
         bool operator==(const CHavtornStaticString& other) const

@@ -25,6 +25,11 @@ namespace Havtorn
 		// Are DrawCallData & Name ever used outside of the RenderManager?
 		// The map could be owned by some other static object/registry. I think it could reduce the size of components.
 		CHavtornStaticString<255> Name;
+
+		SVector BoundsMin = SVector::Zero;
+		SVector BoundsMax = SVector::Zero;
+		SVector BoundsCenter = SVector::Zero;
+
 		U8 NumberOfMaterials = 0;
 
 		// Render Data

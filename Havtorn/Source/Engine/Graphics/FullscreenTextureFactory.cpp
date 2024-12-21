@@ -2,10 +2,11 @@
 
 #include "hvpch.h"
 #include "FullscreenTextureFactory.h"
-#include "FullscreenTexture.h"
 #include "GraphicsFramework.h"
 #include "GraphicsUtilities.h"
-#include "GBuffer.h"
+
+#include "RenderingPrimitives/FullscreenTexture.h"
+#include "RenderingPrimitives/GBuffer.h"
 
 namespace Havtorn
 {
@@ -15,7 +16,7 @@ namespace Havtorn
 		return true;
 	}
 
-	CFullscreenTexture CFullscreenTextureFactory::CreateTexture(SVector2<U16> size, DXGI_FORMAT format)
+	CFullscreenTexture CFullscreenTextureFactory::CreateTexture(SVector2<U16> size, DXGI_FORMAT format, bool cpuAccess)
 	{
 		D3D11_TEXTURE2D_DESC textureDesc = { 0 };
 		textureDesc.Width = size.X;
@@ -25,41 +26,49 @@ namespace Havtorn
 		textureDesc.Format = format;
 		textureDesc.SampleDesc.Count = 1;
 		textureDesc.SampleDesc.Quality = 0;
-		textureDesc.Usage = D3D11_USAGE_DEFAULT;
-		textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-		textureDesc.CPUAccessFlags = 0;
+		textureDesc.Usage = cpuAccess ? D3D11_USAGE_STAGING : D3D11_USAGE_DEFAULT;
+		textureDesc.BindFlags = cpuAccess ? 0 : D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+		textureDesc.CPUAccessFlags = cpuAccess ? D3D11_CPU_ACCESS_READ : 0;
 		textureDesc.MiscFlags = 0;
 
 		ID3D11Texture2D* texture;
 		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateTexture2D(&textureDesc, nullptr, &texture), "Could not create Fullscreen Texture2D");
 
 		CFullscreenTexture returnTexture;
-		returnTexture = CreateTexture(texture);
+		returnTexture = CreateTexture(texture, cpuAccess);
 
-		ID3D11ShaderResourceView* shaderResource;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateShaderResourceView(texture, nullptr, &shaderResource), "Could not create Fullscreen Shader Resource View.");
+		if (!cpuAccess)
+		{
+			ID3D11ShaderResourceView* shaderResource;
+			ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateShaderResourceView(texture, nullptr, &shaderResource), "Could not create Fullscreen Shader Resource View.");
+			returnTexture.ShaderResource = shaderResource;
+		}
 
-		returnTexture.ShaderResource = shaderResource;
+		returnTexture.CPUAccess = cpuAccess;
 		return returnTexture;
 	}
 
-	CFullscreenTexture CFullscreenTextureFactory::CreateTexture(ID3D11Texture2D* texture)
+	CFullscreenTexture CFullscreenTextureFactory::CreateTexture(ID3D11Texture2D* texture, bool cpuAccess)
 	{
-		ID3D11RenderTargetView* renderTarget;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateRenderTargetView(texture, nullptr, &renderTarget), "Could not create Fullcreen Render Target View.");
-
 		D3D11_VIEWPORT* viewport = nullptr;
 		if (texture)
 		{
 			D3D11_TEXTURE2D_DESC textureDescription;
 			texture->GetDesc(&textureDescription);
-			viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, static_cast<F32>(textureDescription.Width), static_cast<F32>(textureDescription.Height), 0.0f, 1.0f });
+			viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(textureDescription.Width), STATIC_F32(textureDescription.Height), 0.0f, 1.0f });
 		}
 
 		CFullscreenTexture returnTexture;
 		returnTexture.Context = Framework->GetContext();
 		returnTexture.Texture = texture;
-		returnTexture.RenderTarget = renderTarget;
+
+		if (!cpuAccess)
+		{
+			ID3D11RenderTargetView* renderTarget;
+			ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateRenderTargetView(texture, nullptr, &renderTarget), "Could not create Fullcreen Render Target View.");
+			returnTexture.RenderTarget = renderTarget;
+		}
+
 		returnTexture.Viewport = viewport;
 
 		return returnTexture;
@@ -143,7 +152,7 @@ namespace Havtorn
 		ID3D11ShaderResourceView* shaderResource;
 		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateShaderResourceView(depthStencilBuffer, &shaderResourceViewDesc, &shaderResource), "Depth Shader Resource could not be created.");
 
-		D3D11_VIEWPORT* viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, static_cast<F32>(size.X), static_cast<F32>(size.Y), 0.0f, 1.0f });
+		D3D11_VIEWPORT* viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(size.X), STATIC_F32(size.Y), 0.0f, 1.0f });
 
 		CFullscreenTexture returnDepth;
 		returnDepth.Context = Framework->GetContext();
@@ -162,6 +171,7 @@ namespace Havtorn
 			DXGI_FORMAT_R16G16B16A16_SNORM,
 			DXGI_FORMAT_R16G16B16A16_SNORM,
 			DXGI_FORMAT_R8G8B8A8_UNORM,
+			DXGI_FORMAT_R32G32_UINT,
 		};
 
 		//Creating textures, rendertargets, shaderresources and a viewport
@@ -176,7 +186,7 @@ namespace Havtorn
 			renderTargets[i] = texture.RenderTarget;
 			shaderResources[i] = texture.ShaderResource;
 		}
-		D3D11_VIEWPORT* viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, static_cast<F32>(size.X), static_cast<F32>(size.Y), 0.0f, 1.0f });
+		D3D11_VIEWPORT* viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(size.X), STATIC_F32(size.Y), 0.0f, 1.0f });
 
 		CGBuffer returnGBuffer;
 		returnGBuffer.Context = Framework->GetContext();

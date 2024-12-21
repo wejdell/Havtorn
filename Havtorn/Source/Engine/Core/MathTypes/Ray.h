@@ -6,56 +6,39 @@
 
 namespace Havtorn 
 {
-	class Ray 
+	struct SRay 
 	{
-	public:
 		// Default constructor: there is no ray, the origin and direction are the
         // zero vector.
-		Ray();
+		SRay();
 		// Copy constructor.
-		Ray(const Ray& ray);
-		// Constructor that takes two points that define the ray, the direction is
-		// aPoint - aOrigin and the origin is aOrigin.
-		Ray(const SVector& origin, const SVector& point);
-		// Init the ray with two points, the same as the constructor above.
-		void Init(const SVector& origin, const SVector& point);
-		// Init the ray with an origin and a direction.
-		void Init(const SVector& origin, const SVector& direction);
+		SRay(const SRay& ray);
+		// Constructor that takes two points that define the ray. Note that the direction is
+		// given by point - origin.
+		SRay(const SVector& origin, const SVector& point);
 		// For a given distance value from the origin, returns the corresponding point on the ray.
-		SVector GetPointOnRay(F32 distanceFromOrigin);
+		SVector GetPointOnRay(F32 distanceFromOrigin) const;
 
 		SVector Origin;
 		SVector Direction;
 	};
 
-	Ray::Ray() : Origin(SVector()), Direction(SVector()) {}
+	inline SRay::SRay() : Origin(SVector()), Direction(SVector()) {}
 
-	Ray::Ray(const Ray& ray) 
+	inline SRay::SRay(const SRay& ray) 
 	{
 		Origin = ray.Origin;
 		Direction = ray.Direction;
 	}
 
-	Ray::Ray(const SVector& origin, const SVector& point) 
+	inline SRay::SRay(const SVector& origin, const SVector& point) 
 	{
 		Origin = origin;
 		Direction = point - origin;
 	}
 
-	void Ray::Init(const SVector& origin, const SVector& point) 
-	{
-		Origin = origin;
-		Direction = point - origin;
-	}
-
-	inline SVector Ray::GetPointOnRay(F32 distanceFromOrigin)
+	inline SVector SRay::GetPointOnRay(F32 distanceFromOrigin) const
 	{
 		return Origin + Direction * distanceFromOrigin;
-	}
-
-	void Ray::Init(const SVector& origin, const SVector& direction) 
-	{
-		Origin = origin;
-		Direction = direction;
 	}
 }

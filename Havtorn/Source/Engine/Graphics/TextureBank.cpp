@@ -64,7 +64,7 @@ namespace Havtorn
 	{
 		Textures.emplace_back(std::move(UGraphicsUtils::TryGetShaderResourceView(Device, filePath)));
 		//std::string fileName = filePath.substr(filePath.find_last_of("/") + 1);
-		Indices.emplace(filePath, static_cast<U32>(Textures.size() - 1));
-		TexturePaths.emplace(static_cast<U32>(Textures.size() - 1), filePath);
+		Indices.emplace(filePath, STATIC_U32(Textures.size() - 1));
+		TexturePaths.emplace(STATIC_U32(Textures.size() - 1), filePath);
 	}
 }

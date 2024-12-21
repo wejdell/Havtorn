@@ -97,11 +97,11 @@ namespace Havtorn
 		F32 quotient = UMath::TauReciprocal * angleInRadians;
 		if (angleInRadians >= 0.0f)
 		{
-			quotient = static_cast<F32>(static_cast<I32>(quotient + 0.5f));
+			quotient = STATIC_F32(static_cast<I32>(quotient + 0.5f));
 		}
 		else
 		{
-			quotient = static_cast<F32>(static_cast<I32>(quotient - 0.5f));
+			quotient = STATIC_F32(static_cast<I32>(quotient - 0.5f));
 		}
 		F32 y = angleInRadians - (UMath::Tau * quotient);
 

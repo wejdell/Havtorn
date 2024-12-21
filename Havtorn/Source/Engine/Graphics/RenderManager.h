@@ -4,13 +4,17 @@
 #include "hvpch.h"
 #include "GraphicsFramework.h"
 #include "Renderers/FullscreenRenderer.h"
-#include "FullscreenTexture.h"
 #include "FullscreenTextureFactory.h"
 #include "RenderStateManager.h"
-#include "GBuffer.h"
 #include "GraphicsEnums.h"
 #include "GraphicsMaterial.h"
 #include "RenderCommand.h"
+#include "Scene/World.h"
+
+#include "RenderingPrimitives/DataBuffer.h"
+#include "RenderingPrimitives/FullscreenTexture.h"
+#include "RenderingPrimitives/GBuffer.h"
+
 #include <queue>
 
 #include "Core/RuntimeAssetDeclarations.h"
@@ -40,6 +44,7 @@ namespace Havtorn
 		Bloom,
 		Tonemapping,
 		Antialiasing,
+		EditorData,
 		Count
 	};
 
@@ -77,8 +82,10 @@ namespace Havtorn
 		HAVTORN_API void* GetTextureAssetTexture(const std::string& filePath);
 		HAVTORN_API void* RenderMaterialAssetTexture(const std::string& filePath);
 
+		HAVTORN_API U64 GetEntityGUIDFromData(U64 dataIndex) const;
+
 		bool IsStaticMeshInInstancedRenderList(const std::string& meshName);
-		void AddStaticMeshToInstancedRenderList(const std::string& meshName, const SMatrix& transformMatrix);
+		void AddStaticMeshToInstancedRenderList(const std::string& meshName, const STransformComponent* component);
 		void SwapStaticMeshInstancedRenderLists();
 		void ClearSystemStaticMeshInstanceTransforms();
 
@@ -103,6 +110,7 @@ namespace Havtorn
 		void ClearSpriteInstanceColors();
 
 	public:
+		void SetWorldPlayState(EWorldPlayState playState);
 		[[nodiscard]] HAVTORN_API const CFullscreenTexture& GetRenderedSceneTexture() const;
 		void PushRenderCommand(SRenderCommand command);
 		void SwapRenderCommandBuffers();
@@ -117,42 +125,10 @@ namespace Havtorn
 		void InitShadowmapLOD(SVector2<F32> topLeftCoordinate, const SVector2<F32>& widthAndHeight, const SVector2<F32>& depth, const SVector2<F32>& atlasResolution, U16 mapsInLod, U16 startIndex);
 		
 		void InitDataBuffers();
-
-		// Init order 1:1 to EVertexShaders
-		void InitVertexShadersAndInputLayouts();
-		// Init order 1:1 to EPixelShaders
-		void InitPixelShaders();
-		// Init order 1:1 to EGeometryShaders
-		void InitGeometryShaders();
-		// Init order 1:1 to ESamplers
-		void InitSamplers();
-		// Init order 1:1 to EVertexBufferPrimitives.
-		void InitVertexBuffers();
-		// Init order 1:1 to EIndexBufferPrimitives
-		void InitIndexBuffers();
-		// Init order 1:1 to ETopologies.
-		void InitTopologies();
-		void InitMeshVertexStrides();
-		void InitMeshVertexOffset();
 		
 		void BindRenderFunctions();
 
-		void InitEditorResources();
-		void LoadDemoSceneResources();
-
 	private:
-		template<typename T>
-		U16 AddVertexBuffer(const std::vector<T>& vertices);
-		U16 AddIndexBuffer(const std::vector<U32>& indices);
-		U16 AddMeshVertexStride(U32 stride);
-		U16 AddMeshVertexOffset(U32 offset);
-
-		std::string AddShader(const std::string& fileName, EShaderType shaderType);
-		void AddInputLayout(const std::string& vsData, EInputLayoutType layoutType);
-		void AddSampler(ESamplerType samplerType);
-		void AddTopology(D3D11_PRIMITIVE_TOPOLOGY topology);
-		void AddViewport(SVector2<F32> topLeftCoordinate, SVector2<F32> widthAndHeight, SVector2<F32> depth);
-
 		std::vector<U16> AddMaterial(const std::string& materialName, EMaterialConfiguration configuration);
 
 		inline void ShadowAtlasPrePassDirectional(const SRenderCommand& command);
@@ -160,7 +136,9 @@ namespace Havtorn
 		inline void ShadowAtlasPrePassSpot(const SRenderCommand& command);
 		inline void CameraDataStorage(const SRenderCommand& command);
 		inline void GBufferDataInstanced(const SRenderCommand& command);
+		inline void GBufferDataInstancedEditor(const SRenderCommand& command);
 		inline void GBufferSpriteInstanced(const SRenderCommand& command);
+		inline void GBufferSpriteInstancedEditor(const SRenderCommand& command);
 		inline void DecalDepthCopy(const SRenderCommand& command);
 		inline void DeferredDecal(const SRenderCommand& command);
 		inline void PreLightingPass(const SRenderCommand& command);
@@ -188,31 +166,6 @@ namespace Havtorn
 
 		void CheckIsolatedRenderPass();
 		void CycleRenderPass(const SInputActionPayload payload);
-
-	private:
-		template<class T>
-		void BindBuffer(ID3D11Buffer* buffer, T& bufferData, const std::string& bufferType)
-		{
-			D3D11_MAPPED_SUBRESOURCE localBufferData;
-			ZeroMemory(&localBufferData, sizeof(D3D11_MAPPED_SUBRESOURCE));
-			const std::string errorMessage = bufferType + " could not be bound.";
-			ENGINE_HR_MESSAGE(Context->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &localBufferData), errorMessage.c_str());
-
-			memcpy(localBufferData.pData, &bufferData, sizeof(T));
-			Context->Unmap(buffer, 0);
-		}
-
-		template<class T>
-		void BindBuffer(ID3D11Buffer* buffer, const std::vector<T>& bufferData, const std::string& bufferType)
-		{
-			D3D11_MAPPED_SUBRESOURCE localBufferData;
-			ZeroMemory(&localBufferData, sizeof(D3D11_MAPPED_SUBRESOURCE));
-			const std::string errorMessage = bufferType + " could not be bound.";
-			ENGINE_HR_MESSAGE(Context->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &localBufferData), errorMessage.c_str());
-
-			memcpy(localBufferData.pData, &bufferData[0], sizeof(T) * bufferData.size());
-			Context->Unmap(buffer, 0);
-		}
 
 	private:
 		struct SFrameBufferData
@@ -335,19 +288,18 @@ namespace Havtorn
 
 	private:
 		CGraphicsFramework* Framework = nullptr;
-		ID3D11DeviceContext* Context = nullptr;
-		ID3D11Buffer* FrameBuffer = nullptr;
-		ID3D11Buffer* ObjectBuffer = nullptr;
-		ID3D11Buffer* MaterialBuffer = nullptr;
-		ID3D11Buffer* DebugShapeObjectBuffer = nullptr;
-		ID3D11Buffer* DecalBuffer = nullptr;
-		ID3D11Buffer* SpriteBuffer = nullptr;
-		ID3D11Buffer* DirectionalLightBuffer = nullptr;
-		ID3D11Buffer* PointLightBuffer = nullptr;
-		ID3D11Buffer* SpotLightBuffer = nullptr;
-		ID3D11Buffer* ShadowmapBuffer = nullptr;
-		ID3D11Buffer* VolumetricLightBuffer = nullptr;
-		ID3D11Buffer* EmissiveBuffer = nullptr;
+		CDataBuffer FrameBuffer;
+		CDataBuffer ObjectBuffer;
+		CDataBuffer MaterialBuffer;
+		CDataBuffer DebugShapeObjectBuffer;
+		CDataBuffer DecalBuffer;
+		CDataBuffer SpriteBuffer;
+		CDataBuffer DirectionalLightBuffer;
+		CDataBuffer PointLightBuffer;
+		CDataBuffer SpotLightBuffer;
+		CDataBuffer ShadowmapBuffer;
+		CDataBuffer VolumetricLightBuffer;
+		CDataBuffer EmissiveBuffer;
 		CRenderStateManager RenderStateManager;
 		CFullscreenRenderer FullscreenRenderer;
 
@@ -373,6 +325,7 @@ namespace Havtorn
 		CFullscreenTexture DownsampledDepth;
 		CFullscreenTexture TonemappedTexture;
 		CFullscreenTexture AntiAliasedTexture;
+		CFullscreenTexture EditorDataTexture;
 		CGBuffer GBuffer;
 
 		CRenderCommandHeap RenderCommandsA;
@@ -386,30 +339,25 @@ namespace Havtorn
 		std::map<ERenderCommandType, std::function<void(const SRenderCommand& command)>> RenderFunctions;
 		ERenderPass CurrentRunningRenderPass = ERenderPass::All;
 		bool ShouldBlurVolumetricBuffer = false;
-
-		std::vector<ID3D11VertexShader*> VertexShaders;
-		std::vector<ID3D11PixelShader*> PixelShaders;
-		std::vector<ID3D11GeometryShader*> GeometryShaders;
-		std::vector<ID3D11SamplerState*> Samplers;
-		std::vector<ID3D11Buffer*> VertexBuffers;
-		std::vector<ID3D11Buffer*> IndexBuffers;
-		std::vector<ID3D11InputLayout*> InputLayouts;
-		std::vector<D3D11_PRIMITIVE_TOPOLOGY> Topologies;
-		std::vector<D3D11_VIEWPORT> Viewports;
-		std::vector<U32> MeshVertexStrides;
-		std::vector<U32> MeshVertexOffsets;
 		
-		ID3D11Buffer* InstancedTransformBuffer = nullptr;
+		CDataBuffer InstancedTransformBuffer;
+		CDataBuffer InstancedEntityIDBuffer;
 
 		// NR: Used together with the InstancedTransformBuffer to batch World Space Sprites as well as Screen Space Sprites
-		ID3D11Buffer* InstancedUVRectBuffer = nullptr;
-		ID3D11Buffer* InstancedColorBuffer = nullptr;
+		CDataBuffer InstancedUVRectBuffer;
+		CDataBuffer InstancedColorBuffer;
+
+		struct SStaticMeshInstanceData
+		{
+			std::vector<SMatrix> Transforms{};
+			std::vector<SEntity> Entities{};
+		};
 
 		// TODO.NR: Add GUIDs to things like this
 		std::unordered_map<std::string, SStaticMeshAsset> LoadedStaticMeshes;
 		// NR: These are used as a way of cross-thread resource management
-		std::unordered_map<std::string, std::vector<SMatrix>> SystemStaticMeshInstanceTransforms;
-		std::unordered_map<std::string, std::vector<SMatrix>> RendererStaticMeshInstanceTransforms;
+		std::unordered_map<std::string, SStaticMeshInstanceData> SystemStaticMeshInstanceData;
+		std::unordered_map<std::string, SStaticMeshInstanceData> RendererStaticMeshInstanceData;
 
 		// TODO.NR: Maybe generalize GPU Instancing resources that are kept duplicate like this, combining
 		// the 4 function calls as well somehow. Maybe templated? Could use two template arguments, one for key and 
@@ -434,30 +382,14 @@ namespace Havtorn
 		std::unordered_map<U32, std::vector<SVector4>> SystemSpriteInstanceColors;
 		std::unordered_map<U32, std::vector<SVector4>> RendererSpriteInstanceColors;
 
-		ID3D11ShaderResourceView* DefaultAlbedoTexture = nullptr;
-		ID3D11ShaderResourceView* DefaultNormalTexture = nullptr;
-		ID3D11ShaderResourceView* DefaultMaterialTexture = nullptr;
-
 		SVector2<F32> ShadowAtlasResolution = SVector2<F32>::Zero;
 
+		// NR: Keep our own property here for use on render thread
+		EWorldPlayState WorldPlayState = EWorldPlayState::Stopped;
+
+		void* EntityPerPixelData = nullptr;
+		U64 EntityPerPixelDataSize = 0;
+		
 		const U16 InstancedDrawInstanceLimit = 65535;
 	};
-
-	template <typename T>
-	U16 CRenderManager::AddVertexBuffer(const std::vector<T>& vertices)
-	{
-		D3D11_BUFFER_DESC vertexBufferDesc = { 0 };
-		vertexBufferDesc.ByteWidth = sizeof(T) * static_cast<U32>(vertices.size());
-		vertexBufferDesc.Usage = D3D11_USAGE_IMMUTABLE;
-		vertexBufferDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
-
-		D3D11_SUBRESOURCE_DATA subVertexResourceData = { nullptr };
-		subVertexResourceData.pSysMem = vertices.data();
-
-		ID3D11Buffer* vertexBuffer;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateBuffer(&vertexBufferDesc, &subVertexResourceData, &vertexBuffer), "Vertex Buffer could not be created.");
-		VertexBuffers.emplace_back(vertexBuffer);
-
-		return static_cast<U16>(VertexBuffers.size() - 1);
-	}
 }

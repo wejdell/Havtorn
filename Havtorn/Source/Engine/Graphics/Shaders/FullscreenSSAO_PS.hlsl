@@ -61,7 +61,7 @@ PixelOutput main(VertexToPixel input)
     float3 normal = fullscreenTexture3.Sample(defaultSampler, uv).rgb;
     
     normal = mul((float3x3)toCameraSpace, normal);
-    normalize(normal);
+    normal = normalize(normal);
     
     float3 randomVector = noiseTexture.Sample(wrapSampler, uv * NoiseScale).xyz * 2.0f - 1.0f;
     randomVector.z = 0.0f;

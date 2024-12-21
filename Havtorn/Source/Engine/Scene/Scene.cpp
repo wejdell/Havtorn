@@ -52,7 +52,6 @@ namespace Havtorn
 		SCameraComponent& camera = *AddComponent<SCameraComponent>(MainCameraEntity);
 		AddView(MainCameraEntity, SCameraComponentView::View);
 		camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
-		camera.ViewMatrix = SMatrix::LookAtLH(SVector::Zero, SVector::Forward, SVector::Up);
 
 		SCameraControllerComponent& controllerComp = *AddComponent<SCameraControllerComponent>(MainCameraEntity);
 		AddView(MainCameraEntity, SCameraControllerComponentView::View);
@@ -480,7 +479,6 @@ namespace Havtorn
 		camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
 		//camera.ProjectionType = ECameraProjectionType::Orthographic;
 		//camera.ProjectionMatrix = SMatrix::OrthographicLH(5.0f, 5.0f, 0.1f, 1000.0f);
-		camera.ViewMatrix = SMatrix::LookAtLH(SVector::Zero, SVector::Forward, SVector::Up);
 
 		//		SCameraControllerComponent& controllerComp = 
 		AddComponent<SCameraControllerComponent>(MainCameraEntity);
@@ -577,7 +575,7 @@ namespace Havtorn
 		//	spriteWSComp.UVRect = { 0.0f, 0.0f, 2.0f, 2.0f };
 		//	renderManager->LoadSpriteComponent(spritePath, &spriteWSComp);
 
-		//	U16 spriteIndex = static_cast<U16>(GetSceneIndex(*spriteWS));
+		//	U16 spriteIndex = STATIC_U16(GetSceneIndex(*spriteWS));
 		//	assetRegistry->Register(spritePath, SAssetReferenceCounter(EComponentType::SpriteComponent, spriteIndex, 0, 0));
 		//}
 		//// === !World Space Sprite ===
@@ -617,7 +615,7 @@ namespace Havtorn
 
 		// TODO.NR: Implement GetSize (since the component is not trivially serializable)
 		//size += DefaultSizeAllocator(GetComponents<SSequencerComponent>());
-		size += GetDataSize(static_cast<U32>(GetComponents<SSequencerComponent>().size()));
+		size += GetDataSize(STATIC_U32(GetComponents<SSequencerComponent>().size()));
 
 		size += DefaultSizeAllocator(GetComponents<SPhysics2DComponent>());
 		size += DefaultSizeAllocator(GetComponents<SPhysics3DComponent>());
@@ -658,7 +656,7 @@ namespace Havtorn
 
 		// TODO.NR: Implement Serialize (since the component is not trivially serializable)
 		const auto& sequencerComponents = GetComponents<SSequencerComponent>();
-		SerializeData(static_cast<U32>(sequencerComponents.size()), toData, pointerPosition);
+		SerializeData(STATIC_U32(sequencerComponents.size()), toData, pointerPosition);
 
 		DefaultSerializer(GetComponents<SPhysics2DComponent>(), toData, pointerPosition);
 		DefaultSerializer(GetComponents<SPhysics3DComponent>(), toData, pointerPosition);

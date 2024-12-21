@@ -20,7 +20,7 @@ namespace Havtorn
 
 		size += Graph.GetSize();
 
-		size += GetDataSize(static_cast<U32>(AnimationClips.size()));
+		size += GetDataSize(STATIC_U32(AnimationClips.size()));
 		for (const SSpriteAnimationClip& animationClip : AnimationClips)
 			size += animationClip.GetSize();
 
@@ -33,7 +33,7 @@ namespace Havtorn
 
 		Graph.Serialize(toData, pointerPosition);
 
-		SerializeData(static_cast<U32>(AnimationClips.size()), toData, pointerPosition);
+		SerializeData(STATIC_U32(AnimationClips.size()), toData, pointerPosition);
 		for (const SSpriteAnimationClip& animationClip : AnimationClips)
 			animationClip.Serialize(toData, pointerPosition);
 	}

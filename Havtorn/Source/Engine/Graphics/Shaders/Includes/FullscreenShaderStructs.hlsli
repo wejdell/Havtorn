@@ -54,6 +54,7 @@ cbuffer PostProcessingBuffer : register(b2)
 }
 
 Texture2D fullscreenTexture1 : register(t0);
+Texture2D<uint2> fullscreenTexture6 : register(t0);
 Texture2D fullscreenTexture2 : register(t1);
 Texture2D fullscreenTexture3 : register(t2);
 Texture2D fullscreenTexture4 : register(t3);

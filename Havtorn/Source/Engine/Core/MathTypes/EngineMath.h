@@ -8,15 +8,14 @@
 #include "Core/CoreTypes.h"
 #include "Core/Core.h"
 
-namespace
+namespace Random
 {
-	std::random_device RandomDevice{};
-	std::mt19937 RandomEngine{ RandomDevice() };
+	inline std::random_device RandomDevice{};
+	inline std::mt19937 RandomEngine{ RandomDevice() };
 }
 
 namespace Havtorn
 {
-
 #define SMALL_NUMBER 1.e-8f
 #define KINDA_SMALL_NUMBER 1.e-4f
 #define DEGREES_TO_RADIANS 0.01745329251f // Pi * (1 / 180)
@@ -39,6 +38,11 @@ namespace Havtorn
 		static inline T Pow(T x, T exp);
 		template<typename T>
 		static inline T Square(T x);
+
+		template<typename T>
+		static inline T Ceil(T x);
+		template<typename T>
+		static inline T Floor(T x);
 
 		/* Checks if x is within the range, exclusive on max. */
 		template<typename T>
@@ -172,6 +176,18 @@ namespace Havtorn
 	inline T UMath::Square(T x)
 	{
 		return x * x;
+	}
+
+	template<typename T>
+	inline T UMath::Ceil(T x)
+	{
+		return std::ceil(x);
+	}
+
+	template<typename T>
+	inline T UMath::Floor(T x)
+	{
+		return std::floor(x);
 	}
 
 	template<typename T>
@@ -311,11 +327,11 @@ namespace Havtorn
 		F32 quotient = 0.5f * UMath::PiReciprocal * halfYFovAngle;
 		if (halfYFovAngle >= 0.0f)
 		{
-			quotient = static_cast<F32>(static_cast<I32>(quotient + 0.5f));
+			quotient = STATIC_F32(static_cast<I32>(quotient + 0.5f));
 		}
 		else
 		{
-			quotient = static_cast<F32>(static_cast<I32>(quotient - 0.5f));
+			quotient = STATIC_F32(static_cast<I32>(quotient - 0.5f));
 		}
 		F32 y = halfYFovAngle - UMath::Tau * quotient;
 
@@ -550,17 +566,17 @@ namespace Havtorn
 
 	inline F32 UMath::RandomGaussian(F32 mean, F32 standardDeviation)
 	{
-		return std::normal_distribution<F32>{ mean, standardDeviation }(RandomEngine);
+		return std::normal_distribution<F32>{ mean, standardDeviation }(Random::RandomEngine);
 	}
 
 	inline F32 UMath::Random(F32 lowerBound, F32 upperBound)
 	{
-		return std::uniform_real_distribution<F32>{ lowerBound, upperBound }(RandomEngine);
+		return std::uniform_real_distribution<F32>{ lowerBound, upperBound }(Random::RandomEngine);
 	}
 
 	inline I32 UMath::Random(I32 lowerBound, I32 upperBound)
 	{
-		return std::uniform_int_distribution<>{ lowerBound, upperBound }(RandomEngine);
+		return std::uniform_int_distribution<>{ lowerBound, upperBound }(Random::RandomEngine);
 	}
 
 	inline I32 UMath::Random(I32 lowerBound, I32 upperBound, I32 excludedNumber)

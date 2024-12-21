@@ -92,11 +92,14 @@ namespace Havtorn
 
 	void GDebugDraw::AddLine(const SVector& start, const SVector& end, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
+		if (start.IsEqual(end))
+			return;
+
 		std::vector<SDebugDrawData> newData = { SDebugDrawData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line) };
-		if (TryAddShapes(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, newData))
-		{
-			TransformToFaceAndReach(start, end, newData[0].TransformMatrix);
-		}
+
+		TransformToFaceAndReach(start, end, newData[0].TransformMatrix);
+
+		TryAddShapes(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, newData);
 	}
 
 	void GDebugDraw::AddArrow(const SVector& start, const SVector& end, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
@@ -105,37 +108,37 @@ namespace Havtorn
 			SDebugDrawData(EVertexBufferPrimitives::Pyramid, EDefaultIndexBuffers::Pyramid),
 			SDebugDrawData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line)
 		};
+		SMatrix& lineTransform = newData[1].TransformMatrix;
+		TransformToFaceAndReach(start, end, lineTransform);
+
+		constexpr F32 scale = 0.1f;
+		const SVector pyramidPos = end - lineTransform.GetForward().GetNormalized() * 0.1f;
+		// Default pyramid's height is along the Y axis, rotation offset of 90 degrees around X places it along the Z axis.
+		SMatrix::Recompose(pyramidPos, lineTransform.GetEuler() + SVector(90.0f, 0.0f, 0.0f), scale, newData[0].TransformMatrix);
 		if (TryAddShapes(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, newData))
 		{
-			SMatrix& lineTransform = newData[1].TransformMatrix;
-			TransformToFaceAndReach(start, end, lineTransform);
-
-			constexpr F32 scale = 0.1f;
-			const SVector pyramidPos = end - lineTransform.GetForward().GetNormalized() * 0.1f;
-			// Default pyramid's height is along the Y axis, rotation offset of 90 degrees around X places it along the Z axis.
-			SMatrix::Recompose(pyramidPos, lineTransform.GetEuler() + SVector(90.0f, 0.0f, 0.0f), scale, newData[0].TransformMatrix);
 		}	
 	}
 
 	void GDebugDraw::AddCube(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		std::vector<SDebugDrawData> newData = { SDebugDrawData(EVertexBufferPrimitives::BoundingBox, EDefaultIndexBuffers::BoundingBox)};
+		SMatrix::Recompose(center, eulerRotation, scale, newData[0].TransformMatrix);
 		if (TryAddShapes(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, newData))
 		{
-			SMatrix::Recompose(center, eulerRotation, scale, newData[0].TransformMatrix);
 		}
 	}
 
 	void GDebugDraw::AddCamera(const SVector& origin, const SVector& eulerRotation, const F32 fov, const F32 farZ, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		std::vector<SDebugDrawData> newData = { SDebugDrawData(EVertexBufferPrimitives::Camera, EDefaultIndexBuffers::Camera)};
+		// TODO.AG: Rework this. Does not seem to properly represent fov & farZ. Might have to use aspectratio?
+		F32 y = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
+		F32 x = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
+		SVector vScale(x, y, farZ);
+		SMatrix::Recompose(origin, eulerRotation, vScale, newData[0].TransformMatrix);
 		if (TryAddShapes(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, newData))
 		{
-			// TODO.AG: Rework this. Does not seem to properly represent fov & farZ. Might have to use aspectratio?
-			F32 y = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
-			F32 x = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
-			SVector vScale(x, y, farZ);
-			SMatrix::Recompose(origin, eulerRotation, vScale, newData[0].TransformMatrix);
 		}
 	}
 
@@ -159,55 +162,55 @@ namespace Havtorn
 		}
 
 		std::vector<SDebugDrawData> newData = { SDebugDrawData(vertexBufferPrimitive, indexBuffer)};
+		SVector scale(radius / GeometryPrimitives::CircleRadius);
+		SMatrix::Recompose(origin, eulerRotation, scale, newData[0].TransformMatrix);
 		if (TryAddShapes(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, newData))
 		{
-			SVector scale(radius / GeometryPrimitives::CircleRadius);
-			SMatrix::Recompose(origin, eulerRotation, scale, newData[0].TransformMatrix);
 		}
 	}
 
 	void GDebugDraw::AddGrid(const SVector& origin, const SVector& eulerRotation, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		std::vector<SDebugDrawData> data = { SDebugDrawData(EVertexBufferPrimitives::Grid, EDefaultIndexBuffers::Grid)};
+		SMatrix::Recompose(origin, eulerRotation, SVector(1.0f), data[0].TransformMatrix);
 		if (TryAddShapes(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, data))
 		{
-			SMatrix::Recompose(origin, eulerRotation, SVector(1.0f), data[0].TransformMatrix);
 		}
 	}
 
 	void GDebugDraw::AddAxis(const SVector& origin, const SVector& eulerRotation, const SVector& scale, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		std::vector<SDebugDrawData> newData = { SDebugDrawData(EVertexBufferPrimitives::Axis, EDefaultIndexBuffers::Axis)};
+		SMatrix::Recompose(origin, eulerRotation, scale, newData[0].TransformMatrix);
 		if (TryAddShapes(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, newData))
 		{
-			SMatrix::Recompose(origin, eulerRotation, scale, newData[0].TransformMatrix);
 		}
 	}
 
 	void GDebugDraw::AddPoint(const SVector& origin, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		std::vector<SDebugDrawData> newData = { SDebugDrawData(EVertexBufferPrimitives::Octahedron, EDefaultIndexBuffers::Octahedron)};
+		SMatrix::Recompose(origin, SVector(), SVector(0.1f), newData[0].TransformMatrix);
 		if (TryAddShapes(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, newData))
 		{
-			SMatrix::Recompose(origin, SVector(), SVector(0.1f), newData[0].TransformMatrix);
 		}
 	}
 
 	void GDebugDraw::AddRectangle(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		std::vector<SDebugDrawData> newData = { SDebugDrawData(EVertexBufferPrimitives::Square, EDefaultIndexBuffers::Square)};
+		SMatrix::Recompose(center, eulerRotation, scale, newData[0].TransformMatrix);
 		if (TryAddShapes(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, newData))
 		{
-			SMatrix::Recompose(center, eulerRotation, scale, newData[0].TransformMatrix);
 		}
 	}
 
 	void GDebugDraw::AddSphere(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		std::vector<SDebugDrawData> newData = { SDebugDrawData(EVertexBufferPrimitives::UVSphere, EDefaultIndexBuffers::UVSphere)};
+		SMatrix::Recompose(center, eulerRotation, scale, newData[0].TransformMatrix);
 		if (TryAddShapes(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, newData))
 		{
-			SMatrix::Recompose(center, eulerRotation, scale, newData[0].TransformMatrix);
 		}
 	}
 
@@ -220,8 +223,6 @@ namespace Havtorn
 			SDebugDrawData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line),
 			SDebugDrawData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line),
 		};
-		if (TryAddShapes(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, newData))
-		{
 			const SVector base = apexPosition + direction.GetNormalized() * height;
 
 			const SVector scale(radius / GeometryPrimitives::CircleRadius);
@@ -237,6 +238,8 @@ namespace Havtorn
 			TransformToFaceAndReach(apexPosition, base + lookAtRight * -radius, newData[2].TransformMatrix);
 			TransformToFaceAndReach(apexPosition, base + lookAtUp * radius, newData[3].TransformMatrix);
 			TransformToFaceAndReach(apexPosition, base + lookAtUp * -radius, newData[4].TransformMatrix);
+		if (TryAddShapes(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, newData))
+		{
 		}
 	}
 
@@ -276,9 +279,9 @@ namespace Havtorn
 			data.Color = color;
 			data.LifeTime = useLifeTime ? lifeTimeSeconds : -1.0f;
 			data.Thickness = UMath::Clamp(thickness, ThicknessMinimum, ThicknessMaximum);
-			data.IndexCount = static_cast<U16>(PrimitivesMap.at(data.VertexBuffer).Indices.size());
-			data.VertexBufferIndex = static_cast<U8>(data.VertexBuffer);
-			data.IndexBufferIndex = static_cast<U8>(data.IndexBuffer);
+			data.IndexCount = STATIC_U16(PrimitivesMap.at(data.VertexBuffer).Indices.size());
+			data.VertexBufferIndex = STATIC_U8(data.VertexBuffer);
+			data.IndexBufferIndex = STATIC_U8(data.IndexBuffer);
 			data.IgnoreDepth = ignoreDepth;
 		}
 
@@ -291,7 +294,7 @@ namespace Havtorn
 	void GDebugDraw::TransformToFaceAndReach(const SVector& start, const SVector& end, SMatrix& transform)
 	{
 		// AG: Using SVector::Forward as up works for some reason?
-		const SVector up = SVector::Forward;// SVector::Up: breaks up == direction.
+		const SVector up = SVector::Forward; // SVector::Up: breaks up == direction.
 		const SVector direction = (end - start).GetNormalized();
 		const SVector scale = SVector(1.0f, 1.0f, start.Distance(end));
 		transform = SMatrix::Face(start, direction, up);
@@ -304,9 +307,9 @@ namespace Havtorn
 		// TODO.AG: add Camera
 
 		AddGrid(SVector(), SVector(), SColor::Grey, 1.0f, false, ThicknessMinimum * 4.f, false);
-		AddArrow(SVector(), SVector::Right * 6.0f, SColor::Red, 1.0f, false, ThicknessMinimum * 2.f, true);
-		AddArrow(SVector(), SVector::Up * 6.0f, SColor::Green, 1.0f, false, ThicknessMinimum * 2.f, true);
-		AddArrow(SVector(), SVector::Forward * 6.0f, SColor::Blue, 1.0f, false, ThicknessMinimum * 2.f, true);
+		AddArrow(SVector(), SVector::Right * 5.0f, SColor::Red, 1.0f, false, ThicknessMinimum * 2.f, true);
+		AddArrow(SVector(), SVector::Up * 5.0f, SColor::Green, 1.0f, false, ThicknessMinimum * 2.f, true);
+		AddArrow(SVector(), SVector::Forward * 5.0f, SColor::Blue, 1.0f, false, ThicknessMinimum * 2.f, true);
 
 		const F32 time = GTime::Time();
 		const F32 cosTime = UMath::Cos(time);
@@ -350,7 +353,6 @@ namespace Havtorn
 			const SVector coneDirection = SVector::Random(posLowerBound, posUpperBound) - SVector::Random(rotLowerBound, rotUpperBound);
 			AddConeAngle({ -5.0f, 0.0f, 5.0f }, coneDirection, UMath::Random(0.5f, 2.0f), UMath::Random(UMath::DegToRad(10.0f), UMath::DegToRad(90.0f)), SColor::White, lifeTime, true, ThicknessMinimum * 2.0f, false);
 		}
-
 
 		const F32 radiusIncrement = (0.5f * sinTime);
 		auto Circle = [&](UINT8 segments, F32 radius, const SVector& rotation, const SColor& color)

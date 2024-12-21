@@ -72,9 +72,12 @@ namespace ImGui
 		SelectedEntity = selection;
 
 		Havtorn::SMetaDataComponent* metaDataComp = Scene->GetComponent<Havtorn::SMetaDataComponent>(SelectedEntity);
-		ImGui::HavtornInputText("##MetaDataCompName", &metaDataComp->Name);
-		ImGui::SameLine();
-		ImGui::TextDisabled("GUID %i", metaDataComp->Owner.GUID);
+		if (metaDataComp != nullptr)
+		{
+			ImGui::HavtornInputText("##MetaDataCompName", &metaDataComp->Name);
+			ImGui::SameLine();
+			ImGui::TextDisabled("GUID %i", metaDataComp->Owner.GUID);
+		}
 		ImGui::Separator();
 
 		for (Havtorn::CScene::SViewFunctionPointer viewFunction : Scene->GetViews(SelectedEntity))
@@ -121,28 +124,44 @@ namespace ImGui
 		if (Manager->GetIsFreeCamActive())
 			return;
 
-		Havtorn::STransformComponent* viewedTransformComponent = static_cast<Havtorn::STransformComponent*>(result.ComponentViewed);
-		if (viewedTransformComponent == nullptr)
+		Havtorn::STransformComponent* viewedTransformComp = static_cast<Havtorn::STransformComponent*>(result.ComponentViewed);
+		if (viewedTransformComp == nullptr)
 			return;
 
 		CViewportWindow* viewportWindow = Manager->GetEditorWindow<CViewportWindow>();
-		SVector2<F32> viewPortWindowDimensions = viewportWindow->GetRenderedSceneDimensions();
-		SVector2<F32> viewPortWindowPosition = viewportWindow->GetRenderedScenePosition();
+		SVector2<F32> viewportWindowDimensions = viewportWindow->GetRenderedSceneDimensions();
+		SVector2<F32> viewportWindowPosition = viewportWindow->GetRenderedScenePosition();
 
 		ImGuizmo::SetDrawlist(viewportWindow->GetCurrentDrawList());
-		ImGuizmo::SetRect(viewPortWindowPosition.X, viewPortWindowPosition.Y, viewPortWindowDimensions.X, viewPortWindowDimensions.Y);
-		// TODO.NR: Figure out if we can use the clip rect
-		//ImGui::PushClipRect({ viewPortWindowPosition.X, viewPortWindowPosition.Y }, { viewPortWindowPosition.X + viewPortWindowDimensions.X, viewPortWindowPosition.Y + viewPortWindowDimensions.Y }, true);
-
+		ImGuizmo::SetRect(viewportWindowPosition.X, viewportWindowPosition.Y, viewportWindowDimensions.X, viewportWindowDimensions.Y);
+		
 		Havtorn::SCameraComponent* cameraComp = Scene->GetComponent<Havtorn::SCameraComponent>(Scene->MainCameraEntity);
 		Havtorn::STransformComponent* cameraTransformComp = Scene->GetComponent<Havtorn::STransformComponent>(Scene->MainCameraEntity);
-		Havtorn::SMatrix inverseView = cameraTransformComp->Transform.GetMatrix().Inverse();
+		Havtorn::SMatrix viewMatrix = cameraTransformComp->Transform.GetMatrix();
+		Havtorn::SMatrix inverseView = viewMatrix.Inverse();
 
-		Havtorn::SMatrix transformMatrix = viewedTransformComponent->Transform.GetMatrix();
-		ImGuizmo::Manipulate(inverseView.data, cameraComp->ProjectionMatrix.data, static_cast<ImGuizmo::OPERATION>(Manager->GetCurrentGizmo()), ImGuizmo::LOCAL, transformMatrix.data);
-		viewedTransformComponent->Transform.SetMatrix(transformMatrix);
-		// TODO.NR: Figure out if we can use the clip rect
-		//ImGui::PopClipRect();
+		ViewManipulation(viewMatrix, viewportWindowPosition, viewportWindowDimensions);
+
+		ImGuizmo::PushID(0);
+		Havtorn::SMatrix transformMatrix = viewedTransformComp->Transform.GetMatrix();
+		ImGuizmo::Manipulate(inverseView.data, cameraComp->ProjectionMatrix.data, static_cast<ImGuizmo::OPERATION>(Manager->GetCurrentGizmo()), ImGuizmo::LOCAL, transformMatrix.data, NULL, NULL);
+		ImGuizmo::PopID();
+		
+		viewedTransformComp->Transform.SetMatrix(transformMatrix);
+		cameraTransformComp->Transform.SetMatrix(viewMatrix);
+	}
+
+	void CInspectorWindow::ViewManipulation(Havtorn::SMatrix& outCameraView, const SVector2<F32>& windowPosition, const SVector2<F32>& windowSize)
+	{
+		const F32 viewManipulateRight = windowPosition.X + windowSize.X;
+		const F32 viewManipulateTop = windowPosition.Y + 28.0f; // TODO.NR: Figure out all the menu bar sizes and stuff
+
+		// TODO.NR: Focus on object, maybe make use of Focus function. Maybe add support for local and world View manipulation.
+
+		const F32 camDistance = 1.0f;
+		const F32 size = 128.0f;
+		const Havtorn::U32 backgroundColor = 0x10101010;
+		ImGuizmo::ViewManipulate(outCameraView.data, camDistance, ImVec2(viewManipulateRight - size, viewManipulateTop), ImVec2(size, size), backgroundColor);
 	}
 
 	void CInspectorWindow::InspectAssetComponent(const Havtorn::SComponentViewResult& result)

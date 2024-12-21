@@ -4,9 +4,7 @@
 #include "EditorManager.h"
 #include "EditorResourceManager.h"
 #include "Graphics/RenderManager.h"
-#include "Graphics/FullscreenTexture.h"
-
-#include <Havtorn/Utilities.h>
+#include "Graphics/RenderingPrimitives/FullscreenTexture.h"
 
 namespace ImGui
 {
