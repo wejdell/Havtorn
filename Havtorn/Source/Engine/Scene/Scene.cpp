@@ -53,8 +53,9 @@ namespace Havtorn
 		AddView(MainCameraEntity, SCameraComponentView::View);
 		camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
 
-		AddComponent<SCameraControllerComponent>(MainCameraEntity);
+		SCameraControllerComponent& controllerComp = *AddComponent<SCameraControllerComponent>(MainCameraEntity);
 		AddView(MainCameraEntity, SCameraControllerComponentView::View);
+		controllerComp.CurrentYaw = -35.0f;
 		// === !Camera ===
 
 		// === Environment light ===
