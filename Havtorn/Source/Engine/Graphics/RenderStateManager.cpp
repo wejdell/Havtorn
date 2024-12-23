@@ -61,6 +61,7 @@ namespace Havtorn
             initData[STATIC_U64(EVertexShaders::Line)] = { "Shaders/Line_VS.cso", false };
             initData[STATIC_U64(EVertexShaders::SpriteInstanced)] = { "Shaders/SpriteInstanced_VS.cso", true, EInputLayoutType::TransUVRectColor };
             initData[STATIC_U64(EVertexShaders::StaticMeshInstancedEditor)] = { "Shaders/DeferredInstancedMeshEditor_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Entity2Trans };
+            initData[STATIC_U64(EVertexShaders::SpriteInstancedEditor)] = { "Shaders/SpriteInstancedEditor_VS.cso", true, EInputLayoutType::TransUVRectColorEntity2 };
         }
 
         for (U64 i = 0; i < STATIC_U64(EVertexShaders::Count); i++)
@@ -96,6 +97,7 @@ namespace Havtorn
             filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpace)] = "Shaders/SpriteWorldSpace_PS.cso";
             filepaths[STATIC_U64(EPixelShaders::GBufferInstanceEditor)] = "Shaders/GBufferEditor_PS.cso";
             filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpaceEditor)] = "Shaders/SpriteWorldSpaceEditor_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpaceEditorWidget)] = "Shaders/SpriteWorldSpaceEditorWidget_PS.cso";
         }
 
         for (U64 i = 0; i < STATIC_U64(EPixelShaders::Count); i++)
@@ -110,6 +112,7 @@ namespace Havtorn
         AddShader("Shaders/Line_GS.cso", EShaderType::Geometry);
         AddShader("Shaders/SpriteScreenSpace_GS.cso", EShaderType::Geometry);
         AddShader("Shaders/SpriteWorldSpace_GS.cso", EShaderType::Geometry);
+        AddShader("Shaders/SpriteWorldSpaceEditor_GS.cso", EShaderType::Geometry);
 
         // NR: Null shader. Adding this to avoid branching in state setting functions
         GeometryShaders.emplace_back(nullptr);
@@ -295,6 +298,19 @@ namespace Havtorn
                 {"INSTANCETRANSFORM",	3, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
                 {"INSTANCEUVRECT",		0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
                 {"INSTANCECOLOR",		0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1}
+            };
+            break;
+
+        case EInputLayoutType::TransUVRectColorEntity2:
+            layout =
+            {
+                {"INSTANCETRANSFORM",	0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+                {"INSTANCETRANSFORM",	1, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+                {"INSTANCETRANSFORM",	2, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+                {"INSTANCETRANSFORM",	3, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+                {"INSTANCEUVRECT",		0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+                {"INSTANCECOLOR",		0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+                {"ENTITY"		,       0, DXGI_FORMAT_R32G32_UINT,	       3, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
             };
             break;
         }
@@ -516,6 +532,14 @@ namespace Havtorn
         alphaBlendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
         alphaBlendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_MAX;
         alphaBlendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+        alphaBlendDesc.IndependentBlendEnable = true;
+        alphaBlendDesc.RenderTarget[1].SrcBlend = D3D11_BLEND_SRC_ALPHA;
+        alphaBlendDesc.RenderTarget[1].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
+        alphaBlendDesc.RenderTarget[1].BlendOp = D3D11_BLEND_OP_ADD;
+        alphaBlendDesc.RenderTarget[1].SrcBlendAlpha = D3D11_BLEND_ONE;
+        alphaBlendDesc.RenderTarget[1].DestBlendAlpha = D3D11_BLEND_ONE;
+        alphaBlendDesc.RenderTarget[1].BlendOpAlpha = D3D11_BLEND_OP_MAX;
+        alphaBlendDesc.RenderTarget[1].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
         D3D11_BLEND_DESC additiveBlendDesc = { 0 };
         additiveBlendDesc.RenderTarget[0].BlendEnable = true;
@@ -540,6 +564,7 @@ namespace Havtorn
             gbufferBlendDesc.RenderTarget[i].BlendOpAlpha = D3D11_BLEND_OP_ADD;
             gbufferBlendDesc.RenderTarget[i].RenderTargetWriteMask = 0x0f;
         }
+        gbufferBlendDesc.RenderTarget[4].BlendEnable = false;
 
         ID3D11BlendState* alphaBlendState;
         ENGINE_HR_MESSAGE(device->CreateBlendState(&alphaBlendDesc, &alphaBlendState), "Alpha Blend State could not be created.");

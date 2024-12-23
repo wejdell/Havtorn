@@ -23,6 +23,8 @@ namespace Havtorn
 		HAVTORN_API ID3D11ShaderResourceView* GetTexture(U32 index);
 		HAVTORN_API std::string GetTexturePath(U32 index);
 
+		HAVTORN_API U32 AddTexture(ID3D11ShaderResourceView* srv);
+
 		HAVTORN_API const std::vector<ID3D11ShaderResourceView*>& GetTextures();
 
 	private:

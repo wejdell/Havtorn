@@ -10,6 +10,8 @@
 #include "Input/InputMapper.h"
 #include "Scene/World.h"
 
+#include "Debug/DebugDrawUtility.h"
+
 #include "ECS/ECSInclude.h"
 
 #include "GraphicsStructs.h"
@@ -158,6 +160,7 @@ namespace Havtorn
 		RenderFunctions[ERenderCommandType::VolumetricBufferBlurPass] =			std::bind(&CRenderManager::VolumetricBlur, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::ForwardTransparency] =				std::bind(&CRenderManager::ForwardTransparency, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::ScreenSpaceSprite] =				std::bind(&CRenderManager::ScreenSpaceSprite, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::WorldSpaceSpriteEditorWidget] =			std::bind(&CRenderManager::WorldSpaceSpriteEditorWidget, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::Bloom] =							std::bind(&CRenderManager::RenderBloom, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::Tonemapping] =						std::bind(&CRenderManager::Tonemapping, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::PreDebugShape] =					std::bind(&CRenderManager::PreDebugShapes, this, std::placeholders::_1);
@@ -786,101 +789,91 @@ namespace Havtorn
 		std::swap(SystemStaticMeshInstanceData, RendererStaticMeshInstanceData);
 	}
 
-	void CRenderManager::ClearSystemStaticMeshInstanceTransforms()
+	void CRenderManager::ClearSystemStaticMeshInstanceData()
 	{
 		return SystemStaticMeshInstanceData.clear();
 	}
 
-	bool CRenderManager::IsSpriteInInstancedWorldSpaceTransformRenderList(const U32 textureBankIndex)
+	bool CRenderManager::IsSpriteInWorldSpaceInstancedRenderList(const U32 textureBankIndex)
 	{
-		return SystemSpriteInstanceWorldSpaceTransforms.contains(textureBankIndex);
+		return SystemWorldSpaceSpriteInstanceData.contains(textureBankIndex);
 	}
 
-	void CRenderManager::AddSpriteToInstancedWorldSpaceTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix)
+	void CRenderManager::AddSpriteToWorldSpaceInstancedRenderList(const U32 textureBankIndex, const STransformComponent* worldSpaceTransform, const SSpriteComponent* spriteComponent)
 	{
-		if (!SystemSpriteInstanceWorldSpaceTransforms.contains(textureBankIndex))
-			SystemSpriteInstanceWorldSpaceTransforms.emplace(textureBankIndex, std::vector<SMatrix>());
+		if (!SystemWorldSpaceSpriteInstanceData.contains(textureBankIndex))
+			SystemWorldSpaceSpriteInstanceData.emplace(textureBankIndex, SSpriteInstanceData());
 
-		SystemSpriteInstanceWorldSpaceTransforms[textureBankIndex].emplace_back(transformMatrix);
+		SystemWorldSpaceSpriteInstanceData[textureBankIndex].Transforms.emplace_back(worldSpaceTransform->Transform.GetMatrix());	
+		SystemWorldSpaceSpriteInstanceData[textureBankIndex].UVRects.emplace_back(spriteComponent->UVRect);
+		SystemWorldSpaceSpriteInstanceData[textureBankIndex].Colors.emplace_back(spriteComponent->Color.AsVector4());
+		SystemWorldSpaceSpriteInstanceData[textureBankIndex].Entities.emplace_back(spriteComponent->Owner);
 	}
 
-	void CRenderManager::SwapSpriteInstancedWorldSpaceTransformRenderLists()
+	void CRenderManager::AddSpriteToWorldSpaceInstancedRenderList(const U32 textureBankIndex, const STransformComponent* worldSpaceTransform, const STransformComponent* cameraTransform)
 	{
-		std::swap(SystemSpriteInstanceWorldSpaceTransforms, RendererSpriteInstanceWorldSpaceTransforms);
+		if (!SystemWorldSpaceSpriteInstanceData.contains(textureBankIndex))
+			SystemWorldSpaceSpriteInstanceData.emplace(textureBankIndex, SSpriteInstanceData());
+
+		const SMatrix cameraMatrix = cameraTransform->Transform.GetMatrix();
+		SMatrix orientedMatrix = worldSpaceTransform->Transform.GetMatrix();
+
+		SVector location = orientedMatrix.GetTranslation();
+		SVector euler = cameraMatrix.GetEuler();
+		constexpr F32 distanceNormalization = 7.0f;
+		constexpr F32 scaleMin = 0.15f;
+		constexpr F32 scaleMax = 0.6f;
+		F32 dist = cameraMatrix.GetTranslation().Distance(location);
+		F32 eased = UMath::EaseInOutQuad(dist / distanceNormalization);
+		F32 scaling = UMath::Remap(0.0f, 1.0f, scaleMin, scaleMax, eased);
+		SVector scale = SVector(scaling, scaling, 1.0f);
+		SMatrix::Recompose(location, euler, scale, orientedMatrix);
+		
+		SystemWorldSpaceSpriteInstanceData[textureBankIndex].Transforms.emplace_back(orientedMatrix);
+		SystemWorldSpaceSpriteInstanceData[textureBankIndex].UVRects.emplace_back(SVector4(0.0f, 0.0f, 1.0f, 1.0f));
+		SystemWorldSpaceSpriteInstanceData[textureBankIndex].Colors.emplace_back(SVector4(1.0f, 1.0f, 1.0f, 1.0f));
+		SystemWorldSpaceSpriteInstanceData[textureBankIndex].Entities.emplace_back(worldSpaceTransform->Owner);
 	}
 
-	void CRenderManager::ClearSpriteInstanceWorldSpaceTransforms()
+	void CRenderManager::SwapSpriteWorldInstancedRenderLists()
 	{
-		SystemSpriteInstanceWorldSpaceTransforms.clear();
+		std::swap(SystemWorldSpaceSpriteInstanceData, RendererWorldSpaceSpriteInstanceData);
 	}
 
-	bool CRenderManager::IsSpriteInInstancedScreenSpaceTransformRenderList(const U32 textureBankIndex)
+	void CRenderManager::ClearSystemWorldSpaceSpriteInstanceData()
 	{
-		return SystemSpriteInstanceScreenSpaceTransforms.contains(textureBankIndex);
+		return SystemWorldSpaceSpriteInstanceData.clear();
 	}
 
-	void CRenderManager::AddSpriteToInstancedScreenSpaceTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix)
+	bool CRenderManager::IsSpriteInScreenSpaceInstancedRenderList(const U32 textureBankIndex)
 	{
-		if (!SystemSpriteInstanceScreenSpaceTransforms.contains(textureBankIndex))
-			SystemSpriteInstanceScreenSpaceTransforms.emplace(textureBankIndex, std::vector<SMatrix>());
-
-		SystemSpriteInstanceScreenSpaceTransforms[textureBankIndex].emplace_back(transformMatrix);
+		return SystemScreenSpaceSpriteInstanceData.contains(textureBankIndex);
 	}
 
-	void CRenderManager::SwapSpriteInstancedScreenSpaceTransformRenderLists()
+	void CRenderManager::AddSpriteToScreenSpaceInstancedRenderList(const U32 textureBankIndex, const STransform2DComponent* screenSpaceTransform, const SSpriteComponent* spriteComponent)
 	{
-		std::swap(SystemSpriteInstanceScreenSpaceTransforms, RendererSpriteInstanceScreenSpaceTransforms);
+		if (!SystemScreenSpaceSpriteInstanceData.contains(textureBankIndex))
+			SystemScreenSpaceSpriteInstanceData.emplace(textureBankIndex, SSpriteInstanceData());
+
+		SMatrix screenSpaceMatrix;
+		screenSpaceMatrix.SetScale(screenSpaceTransform->Scale.X, screenSpaceTransform->Scale.Y, 1.0f);
+		screenSpaceMatrix *= SMatrix::CreateRotationAroundZ(UMath::DegToRad(screenSpaceTransform->DegreesRoll));
+		screenSpaceMatrix.SetTranslation({ screenSpaceTransform->Position.X, screenSpaceTransform->Position.Y, 0.0f });
+
+		SystemScreenSpaceSpriteInstanceData[textureBankIndex].Transforms.emplace_back(screenSpaceMatrix);
+		SystemScreenSpaceSpriteInstanceData[textureBankIndex].UVRects.emplace_back(spriteComponent->UVRect);
+		SystemScreenSpaceSpriteInstanceData[textureBankIndex].Colors.emplace_back(spriteComponent->Color.AsVector4());
+		SystemScreenSpaceSpriteInstanceData[textureBankIndex].Entities.emplace_back(spriteComponent->Owner);
 	}
 
-	void CRenderManager::ClearSpriteInstanceScreenSpaceTransforms()
+	void CRenderManager::SwapSpriteScreenInstancedRenderLists()
 	{
-		SystemSpriteInstanceScreenSpaceTransforms.clear();
+		std::swap(SystemScreenSpaceSpriteInstanceData, RendererScreenSpaceSpriteInstanceData);
 	}
 
-	bool CRenderManager::IsSpriteInInstancedUVRectRenderList(const U32 textureBankIndex)
+	void CRenderManager::ClearSystemScreenSpaceSpriteInstanceData()
 	{
-		return SystemSpriteInstanceUVRects.contains(textureBankIndex);
-	}
-
-	void CRenderManager::AddSpriteToInstancedUVRectRenderList(const U32 textureBankIndex, const SVector4& uvRect)
-	{
-		if (!SystemSpriteInstanceUVRects.contains(textureBankIndex))
-			SystemSpriteInstanceUVRects.emplace(textureBankIndex, std::vector<SVector4>());
-
-		SystemSpriteInstanceUVRects[textureBankIndex].emplace_back(uvRect);
-	}
-
-	void CRenderManager::SwapSpriteInstancedUVRectRenderLists()
-	{
-		std::swap(SystemSpriteInstanceUVRects, RendererSpriteInstanceUVRects);
-	}
-
-	void CRenderManager::ClearSpriteInstanceUVRects()
-	{
-		SystemSpriteInstanceUVRects.clear();
-	}
-
-	bool CRenderManager::IsSpriteInInstancedColorRenderList(const U32 textureBankIndex)
-	{
-		return SystemSpriteInstanceColors.contains(textureBankIndex);
-	}
-
-	void CRenderManager::AddSpriteToInstancedColorRenderList(const U32 textureBankIndex, const SVector4& color)
-	{
-		if (!SystemSpriteInstanceColors.contains(textureBankIndex))
-			SystemSpriteInstanceColors.emplace(textureBankIndex, std::vector<SVector4>());
-
-		SystemSpriteInstanceColors[textureBankIndex].emplace_back(color);
-	}
-
-	void CRenderManager::SwapSpriteInstancedColorRenderLists()
-	{
-		std::swap(SystemSpriteInstanceColors, RendererSpriteInstanceColors);
-	}
-
-	void CRenderManager::ClearSpriteInstanceColors()
-	{
-		SystemSpriteInstanceColors.clear();
+		return SystemScreenSpaceSpriteInstanceData.clear();
 	}
 
 	void CRenderManager::SetWorldPlayState(EWorldPlayState playState)
@@ -1227,13 +1220,13 @@ namespace Havtorn
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::GBufferAlphaBlend);
 
 		const auto& textureIndex = command.U32s[0];
-		const std::vector<SMatrix>& matrices = RendererSpriteInstanceWorldSpaceTransforms[textureIndex];
+		const std::vector<SMatrix>& matrices = RendererWorldSpaceSpriteInstanceData[textureIndex].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		const std::vector<SVector4>& uvRects = RendererSpriteInstanceUVRects[textureIndex];
+		const std::vector<SVector4>& uvRects = RendererWorldSpaceSpriteInstanceData[textureIndex].UVRects;
 		InstancedUVRectBuffer.BindBuffer(uvRects);
 
-		const std::vector<SVector4>& colors = RendererSpriteInstanceColors[textureIndex];
+		const std::vector<SVector4>& colors = RendererWorldSpaceSpriteInstanceData[textureIndex].Colors;
 		InstancedColorBuffer.BindBuffer(colors);
 
 		RenderStateManager.IASetTopology(ETopologies::PointList);
@@ -1257,9 +1250,43 @@ namespace Havtorn
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 	}
 
-	void CRenderManager::GBufferSpriteInstancedEditor(const SRenderCommand& /*command*/)
+	void CRenderManager::GBufferSpriteInstancedEditor(const SRenderCommand& command)
 	{
-		// Bind instance buffer data
+		// TODO.NR: Fix transparency
+		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::GBufferAlphaBlend);
+
+		const auto& textureIndex = command.U32s[0];
+		const std::vector<SMatrix>& matrices = RendererWorldSpaceSpriteInstanceData[textureIndex].Transforms;
+		InstancedTransformBuffer.BindBuffer(matrices);
+
+		const std::vector<SVector4>& uvRects = RendererWorldSpaceSpriteInstanceData[textureIndex].UVRects;
+		InstancedUVRectBuffer.BindBuffer(uvRects);
+
+		const std::vector<SVector4>& colors = RendererWorldSpaceSpriteInstanceData[textureIndex].Colors;
+		InstancedColorBuffer.BindBuffer(colors);
+
+		const std::vector<SEntity>& entities = RendererWorldSpaceSpriteInstanceData[textureIndex].Entities;
+		InstancedEntityIDBuffer.BindBuffer(entities);
+
+		RenderStateManager.IASetTopology(ETopologies::PointList);
+		RenderStateManager.IASetInputLayout(EInputLayoutType::TransUVRectColorEntity2);
+
+		RenderStateManager.VSSetShader(EVertexShaders::SpriteInstancedEditor);
+		RenderStateManager.GSSetShader(EGeometryShaders::SpriteWorldSpaceEditor);
+		RenderStateManager.PSSetShader(EPixelShaders::SpriteWorldSpaceEditor);
+
+		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
+
+		ID3D11ShaderResourceView* spriteTexture = GEngine::GetTextureBank()->GetTexture(textureIndex);
+		RenderStateManager.PSSetResources(0, 1, &spriteTexture);
+
+		const std::vector<CDataBuffer> buffers = { InstancedTransformBuffer, InstancedUVRectBuffer, InstancedColorBuffer, InstancedEntityIDBuffer };
+		constexpr U32 strides[4] = { sizeof(SMatrix), sizeof(SVector4), sizeof(SVector4), sizeof(SEntity) };
+		constexpr U32 offsets[4] = { 0, 0, 0, 0 };
+		RenderStateManager.IASetVertexBuffers(0, 4, buffers, strides, offsets);
+		RenderStateManager.IASetIndexBuffer(CDataBuffer::Null);
+		RenderStateManager.DrawInstanced(1, STATIC_U32(matrices.size()), 0, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
 	}
 
 	void CRenderManager::DecalDepthCopy(const SRenderCommand& /*command*/)
@@ -1748,13 +1775,13 @@ namespace Havtorn
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
 
 		const auto textureIndex = command.U32s[0];
-		const std::vector<SMatrix>& matrices = RendererSpriteInstanceScreenSpaceTransforms[textureIndex];
+		const std::vector<SMatrix>& matrices = RendererScreenSpaceSpriteInstanceData[textureIndex].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		const std::vector<SVector4>& uvRects = RendererSpriteInstanceUVRects[textureIndex];
+		const std::vector<SVector4>& uvRects = RendererScreenSpaceSpriteInstanceData[textureIndex].UVRects;
 		InstancedUVRectBuffer.BindBuffer(uvRects);
 
-		const std::vector<SVector4>& colors = RendererSpriteInstanceColors[textureIndex];
+		const std::vector<SVector4>& colors = RendererScreenSpaceSpriteInstanceData[textureIndex].Colors;
 		InstancedColorBuffer.BindBuffer(colors);
 
 		RenderStateManager.IASetTopology(ETopologies::PointList);
@@ -1778,6 +1805,46 @@ namespace Havtorn
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 
 		RenderStateManager.VSSetConstantBuffer(0, CDataBuffer::Null);
+	}
+
+	inline void CRenderManager::WorldSpaceSpriteEditorWidget(const SRenderCommand& command)
+	{
+		ID3D11RenderTargetView* renderTargets[2] = { RenderedScene.GetRenderTargetView(), GBuffer.GetEditorDataRenderTarget()};
+		RenderStateManager.OMSetRenderTargets(2, renderTargets, nullptr);
+		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
+
+		const auto& textureIndex = command.U32s[0];
+		const std::vector<SMatrix>& matrices = RendererWorldSpaceSpriteInstanceData[textureIndex].Transforms;
+		InstancedTransformBuffer.BindBuffer(matrices);
+
+		const std::vector<SVector4>& uvRects = RendererWorldSpaceSpriteInstanceData[textureIndex].UVRects;
+		InstancedUVRectBuffer.BindBuffer(uvRects);
+
+		const std::vector<SVector4>& colors = RendererWorldSpaceSpriteInstanceData[textureIndex].Colors;
+		InstancedColorBuffer.BindBuffer(colors);
+
+		const std::vector<SEntity>& entities = RendererWorldSpaceSpriteInstanceData[textureIndex].Entities;
+		InstancedEntityIDBuffer.BindBuffer(entities);
+
+		RenderStateManager.IASetTopology(ETopologies::PointList);
+		RenderStateManager.IASetInputLayout(EInputLayoutType::TransUVRectColorEntity2);
+
+		RenderStateManager.VSSetShader(EVertexShaders::SpriteInstancedEditor);
+		RenderStateManager.GSSetShader(EGeometryShaders::SpriteWorldSpaceEditor);
+		RenderStateManager.PSSetShader(EPixelShaders::SpriteWorldSpaceEditorWidget);
+
+		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
+
+		ID3D11ShaderResourceView* spriteTexture = GEngine::GetTextureBank()->GetTexture(textureIndex);
+		RenderStateManager.PSSetResources(0, 1, &spriteTexture);
+
+		const std::vector<CDataBuffer> buffers = { InstancedTransformBuffer, InstancedUVRectBuffer, InstancedColorBuffer, InstancedEntityIDBuffer };
+		constexpr U32 strides[4] = { sizeof(SMatrix), sizeof(SVector4), sizeof(SVector4), sizeof(SEntity) };
+		constexpr U32 offsets[4] = { 0, 0, 0, 0 };
+		RenderStateManager.IASetVertexBuffers(0, 4, buffers, strides, offsets);
+		RenderStateManager.IASetIndexBuffer(CDataBuffer::Null);
+		RenderStateManager.DrawInstanced(1, STATIC_U32(matrices.size()), 0, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
 	}
 
 	void CRenderManager::RenderBloom(const SRenderCommand& /*command*/)

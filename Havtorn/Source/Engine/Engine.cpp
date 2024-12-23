@@ -111,10 +111,8 @@ namespace Havtorn
 	{
 		RenderManager->SwapRenderCommandBuffers();
 		RenderManager->SwapStaticMeshInstancedRenderLists();
-		RenderManager->SwapSpriteInstancedWorldSpaceTransformRenderLists();
-		RenderManager->SwapSpriteInstancedScreenSpaceTransformRenderLists();
-		RenderManager->SwapSpriteInstancedUVRectRenderLists();
-		RenderManager->SwapSpriteInstancedColorRenderLists();
+		RenderManager->SwapSpriteWorldInstancedRenderLists();
+		RenderManager->SwapSpriteScreenInstancedRenderLists();
 		RenderManager->SetWorldPlayState(World->GetWorldPlayState());
 		Framework->EndFrame();
 

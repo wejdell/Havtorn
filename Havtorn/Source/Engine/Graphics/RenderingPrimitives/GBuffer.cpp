@@ -37,6 +37,11 @@ namespace Havtorn
 		Context->PSSetShaderResources(startSlot, STATIC_U64(EGBufferTextures::Count) - 1, &ShaderResources[0]);
 	}
 
+	ID3D11RenderTargetView* CGBuffer::GetEditorDataRenderTarget() const
+	{
+		return RenderTargets[STATIC_U64(EGBufferTextures::EditorData)];
+	}
+
 	ID3D11Texture2D* CGBuffer::GetEditorDataTexture() const
 	{
 		return Textures[STATIC_U64(EGBufferTextures::EditorData)];

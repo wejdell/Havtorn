@@ -36,6 +36,7 @@ namespace Havtorn
 		//OutlineMask,
 		//Outline,
 		ScreenSpaceSprite,
+		WorldSpaceSpriteEditorWidget,
 		Bloom,
 		Tonemapping,
 		PreDebugShape,

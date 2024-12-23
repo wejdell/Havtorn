@@ -13,6 +13,14 @@ struct InstancedVertexInput
     float4 Color : INSTANCECOLOR;
 };
 
+struct InstancedEditorVertexInput
+{
+    float4x4 Transform : INSTANCETRANSFORM;
+    float4 UVRect : INSTANCEUVRECT;
+    float4 Color : INSTANCECOLOR;
+    uint2 Entity : ENTITY;
+};
+
 struct VertexToGeometry
 {
     float4 Color : COLOR;
@@ -27,6 +35,14 @@ struct InstancedVertexToGeometry
     float4x4 Transform : INSTANCETRANSFORM;
     float4 UVRect : INSTANCEUVRECT;
     float4 Color : INSTANCECOLOR;
+};
+
+struct InstancedEditorVertexToGeometry
+{
+    float4x4 Transform : INSTANCETRANSFORM;
+    float4 UVRect : INSTANCEUVRECT;
+    float4 Color : INSTANCECOLOR;
+    uint2 Entity : ENTITY;
 };
 
 struct GeometryToPixelScreenSpace
@@ -46,9 +62,26 @@ struct GeometryToPixelWorldSpace
     float2 UV : UV;
 };
 
+struct EditorGeometryToPixelWorldSpace
+{
+    float4 Position : SV_POSITION;
+    float4 Color : COLOR;
+    float4 Normal : NORMAL;
+    float4 Tangent : TANGENT;
+    float4 Bitangent : BINORMAL;
+    float2 UV : UV;
+    uint2 Entity : ENTITY;
+};
+
 struct PixelOutput
 {
     float4 Color : SV_TARGET;
+};
+
+struct EditorPixelOutput
+{
+    float4 Color : SV_TARGET;
+    uint2 Entity : SV_TARGET4;
 };
 
 cbuffer FrameBuffer : register(b0)

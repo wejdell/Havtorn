@@ -24,13 +24,12 @@ namespace Havtorn
 		const std::vector<SPointLightComponent*>& pointLightComponents = scene->GetComponents<SPointLightComponent>();
 		const std::vector<SSpotLightComponent*>& spotLightComponents = scene->GetComponents<SSpotLightComponent>();
 
-		RenderManager->ClearSystemStaticMeshInstanceTransforms();
-		RenderManager->ClearSpriteInstanceWorldSpaceTransforms();
-		RenderManager->ClearSpriteInstanceScreenSpaceTransforms();
-		RenderManager->ClearSpriteInstanceUVRects();
-		RenderManager->ClearSpriteInstanceColors();
+		RenderManager->ClearSystemStaticMeshInstanceData();
+		RenderManager->ClearSystemWorldSpaceSpriteInstanceData();
+		RenderManager->ClearSystemScreenSpaceSpriteInstanceData();
 
 		bool sceneHasActiveCamera = false;
+		const bool isInPlayingPlayState = World->GetWorldPlayState() == EWorldPlayState::Playing;
 
 		// TODO.NR: Could probably merge all of these loops into one
 		// NR: Not worth doing right now
@@ -109,7 +108,7 @@ namespace Havtorn
 					}
 				}
 
-				if (World->GetWorldPlayState() == EWorldPlayState::Playing)
+				if (isInPlayingPlayState)
 				{
 					SRenderCommand command;
 					command.Type = ERenderCommandType::GBufferDataInstanced;
@@ -187,6 +186,17 @@ namespace Havtorn
 			command.ShadowmapViews.push_back(directionalLightComp->ShadowmapView);
 			RenderManager->PushRenderCommand(command);
 
+			if (!isInPlayingPlayState)
+			{
+				const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(directionalLightComp);
+				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(directionalLightComp->EditorTextureIndex, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity));
+
+				command = SRenderCommand();
+				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
+				command.U32s.push_back(directionalLightComp->EditorTextureIndex);
+				RenderManager->PushRenderCommand(command);
+			}
+
 			if (const SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(directionalLightComp))
 			{
 				if (volumetricLightComp->IsActive)
@@ -213,6 +223,16 @@ namespace Havtorn
 			command.F32s.push_back(pointLightComp->Range);
 			command.SetShadowMapViews(pointLightComp->ShadowmapViews);
 			RenderManager->PushRenderCommand(command);
+
+			if (!isInPlayingPlayState)
+			{
+				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(pointLightComp->EditorTextureIndex, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity));
+
+				command = SRenderCommand();
+				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
+				command.U32s.push_back(pointLightComp->EditorTextureIndex);
+				RenderManager->PushRenderCommand(command);
+			}
 
 			if (const SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(pointLightComp))
 			{
@@ -246,6 +266,16 @@ namespace Havtorn
 			command.ShadowmapViews.push_back(spotLightComp->ShadowmapView);
 			RenderManager->PushRenderCommand(command);
 
+			if (!isInPlayingPlayState)
+			{
+				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(spotLightComp->EditorTextureIndex, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity));
+
+				command = SRenderCommand();
+				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
+				command.U32s.push_back(spotLightComp->EditorTextureIndex);
+				RenderManager->PushRenderCommand(command);
+			}
+
 			if (const SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(spotLightComp))
 			{
 				if (volumetricLightComp->IsActive)
@@ -274,15 +304,12 @@ namespace Havtorn
 			if (!spriteComp->IsValid())
 				continue;
 
-			RenderManager->AddSpriteToInstancedUVRectRenderList(spriteComp->TextureIndex, spriteComp->UVRect);
-			RenderManager->AddSpriteToInstancedColorRenderList(spriteComp->TextureIndex, spriteComp->Color.AsVector4());
-
 			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(spriteComp);
 			const STransform2DComponent* transform2DComp = scene->GetComponent<STransform2DComponent>(spriteComp);
 
 			if (transformComp->IsValid())
 			{
-				if (!RenderManager->IsSpriteInInstancedWorldSpaceTransformRenderList(spriteComp->TextureIndex)) 
+				if (!RenderManager->IsSpriteInWorldSpaceInstancedRenderList(spriteComp->TextureIndex)) 
 				{
 					// NR: Don't push a command every time
 					SRenderCommand command;
@@ -291,11 +318,11 @@ namespace Havtorn
 					RenderManager->PushRenderCommand(command);
 				}
 
-				RenderManager->AddSpriteToInstancedWorldSpaceTransformRenderList(spriteComp->TextureIndex, transformComp->Transform.GetMatrix());
+				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(spriteComp->TextureIndex, transformComp, spriteComp);
 			}
 			else if (transform2DComp->IsValid())
 			{
-				if (!RenderManager->IsSpriteInInstancedScreenSpaceTransformRenderList(spriteComp->TextureIndex))
+				if (!RenderManager->IsSpriteInScreenSpaceInstancedRenderList(spriteComp->TextureIndex))
 				{
 					SRenderCommand command;
 					command.Type = ERenderCommandType::ScreenSpaceSprite;
@@ -303,11 +330,7 @@ namespace Havtorn
 					RenderManager->PushRenderCommand(command);
 				}
 
-				SMatrix transformFrom2DComponent;
-				transformFrom2DComponent.SetScale(transform2DComp->Scale.X, transform2DComp->Scale.Y, 1.0f);
-				transformFrom2DComponent *= SMatrix::CreateRotationAroundZ(UMath::DegToRad(transform2DComp->DegreesRoll));
-				transformFrom2DComponent.SetTranslation({ transform2DComp->Position.X, transform2DComp->Position.Y, 0.0f });
-				RenderManager->AddSpriteToInstancedScreenSpaceTransformRenderList(spriteComp->TextureIndex, transformFrom2DComponent);
+				RenderManager->AddSpriteToScreenSpaceInstancedRenderList(spriteComp->TextureIndex, transform2DComp, spriteComp);
 			}
 		}
 

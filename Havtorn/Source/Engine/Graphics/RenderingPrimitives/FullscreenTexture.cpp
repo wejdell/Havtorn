@@ -112,4 +112,13 @@ namespace Havtorn
 	{
 		return ShaderResource;
 	}
+
+	ID3D11RenderTargetView* const CFullscreenTexture::GetRenderTargetView() const
+	{
+		return RenderTarget;
+	}
+	ID3D11DepthStencilView* const CFullscreenTexture::GetDepthStencilView() const
+	{
+		return Depth;
+	}
 }

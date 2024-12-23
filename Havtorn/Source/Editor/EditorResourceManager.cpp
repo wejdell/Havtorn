@@ -5,9 +5,6 @@
 #include "Graphics/RenderManager.h"
 #include "ModelImporter.h"
 
-//#include <DirectXTex/DirectXTex.h>
-//#pragma comment(lib, "d3d11.lib")
-
 namespace Havtorn
 {
 	ID3D11ShaderResourceView* Havtorn::CEditorResourceManager::GetEditorTexture(EEditorTexture texture) const
@@ -214,6 +211,15 @@ namespace Havtorn
 
 		case Havtorn::EEditorTexture::SequencerIcon:
 			return ResourceAssetPath + "SequencerIcon" + extension;
+
+		case Havtorn::EEditorTexture::DirectionalLightIcon:
+			return ResourceAssetPath + "DirectionalLightIcon" + extension;
+
+		case Havtorn::EEditorTexture::PointLightIcon:
+			return ResourceAssetPath + "PointLightIcon" + extension;
+
+		case Havtorn::EEditorTexture::SpotlightIcon:
+			return ResourceAssetPath + "SpotlightIcon" + extension;
 		
 		case Havtorn::EEditorTexture::Count:
 		default:
@@ -234,6 +240,7 @@ namespace Havtorn
 		for (I64 index = 0; index < textureCount; index++)
 		{
 			UGraphicsUtils::CreateShaderResourceViewFromResource(device, GetFileName(static_cast<EEditorTexture>(index)), &Textures[index]);
+			GEngine::GetTextureBank()->AddTexture(Textures[index]);
 		}
 
 		return true;

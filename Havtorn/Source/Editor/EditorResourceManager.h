@@ -23,6 +23,9 @@ namespace Havtorn
 		StopIcon,
 		SceneIcon,
 		SequencerIcon,
+		DirectionalLightIcon,
+		PointLightIcon,
+		SpotlightIcon,
 		Count
 	};
 

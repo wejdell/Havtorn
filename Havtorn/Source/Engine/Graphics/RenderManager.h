@@ -87,27 +87,18 @@ namespace Havtorn
 		bool IsStaticMeshInInstancedRenderList(const std::string& meshName);
 		void AddStaticMeshToInstancedRenderList(const std::string& meshName, const STransformComponent* component);
 		void SwapStaticMeshInstancedRenderLists();
-		void ClearSystemStaticMeshInstanceTransforms();
+		void ClearSystemStaticMeshInstanceData();
 
-		bool IsSpriteInInstancedWorldSpaceTransformRenderList(const U32 textureBankIndex);
-		void AddSpriteToInstancedWorldSpaceTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix);
-		void SwapSpriteInstancedWorldSpaceTransformRenderLists();
-		void ClearSpriteInstanceWorldSpaceTransforms();
+		bool IsSpriteInWorldSpaceInstancedRenderList(const U32 textureBankIndex);
+		void AddSpriteToWorldSpaceInstancedRenderList(const U32 textureBankIndex, const STransformComponent* worldSpaceTransform, const SSpriteComponent* spriteComponent);
+		void AddSpriteToWorldSpaceInstancedRenderList(const U32 textureBankIndex, const STransformComponent* worldSpaceTransform, const STransformComponent* cameraTransform);
+		void SwapSpriteWorldInstancedRenderLists();
+		void ClearSystemWorldSpaceSpriteInstanceData();
 
-		bool IsSpriteInInstancedScreenSpaceTransformRenderList(const U32 textureBankIndex);
-		void AddSpriteToInstancedScreenSpaceTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix);
-		void SwapSpriteInstancedScreenSpaceTransformRenderLists();
-		void ClearSpriteInstanceScreenSpaceTransforms();
-
-		bool IsSpriteInInstancedUVRectRenderList(const U32 textureBankIndex);
-		void AddSpriteToInstancedUVRectRenderList(const U32 textureBankIndex, const SVector4& uvRect);
-		void SwapSpriteInstancedUVRectRenderLists();
-		void ClearSpriteInstanceUVRects();
-
-		bool IsSpriteInInstancedColorRenderList(const U32 textureBankIndex);
-		void AddSpriteToInstancedColorRenderList(const U32 textureBankIndex, const SVector4& color);
-		void SwapSpriteInstancedColorRenderLists();
-		void ClearSpriteInstanceColors();
+		bool IsSpriteInScreenSpaceInstancedRenderList(const U32 textureBankIndex);
+		void AddSpriteToScreenSpaceInstancedRenderList(const U32 textureBankIndex, const STransform2DComponent* screenSpaceTransform, const SSpriteComponent* spriteComponent);
+		void SwapSpriteScreenInstancedRenderLists();
+		void ClearSystemScreenSpaceSpriteInstanceData();
 
 	public:
 		void SetWorldPlayState(EWorldPlayState playState);
@@ -152,6 +143,7 @@ namespace Havtorn
 		inline void VolumetricBlur(const SRenderCommand& command);
 		inline void ForwardTransparency(const SRenderCommand& command);
 		inline void ScreenSpaceSprite(const SRenderCommand& command);
+		inline void WorldSpaceSpriteEditorWidget(const SRenderCommand& command);
 		inline void RenderBloom(const SRenderCommand& command);
 		inline void Tonemapping(const SRenderCommand& command);
 		inline void AntiAliasing(const SRenderCommand& command);
@@ -353,6 +345,14 @@ namespace Havtorn
 			std::vector<SEntity> Entities{};
 		};
 
+		struct SSpriteInstanceData
+		{
+			std::vector<SMatrix> Transforms{};
+			std::vector<SVector4> UVRects{};
+			std::vector<SVector4> Colors{};
+			std::vector<SEntity> Entities{};
+		};
+
 		// TODO.NR: Add GUIDs to things like this
 		std::unordered_map<std::string, SStaticMeshAsset> LoadedStaticMeshes;
 		// NR: These are used as a way of cross-thread resource management
@@ -370,17 +370,11 @@ namespace Havtorn
 			the TextureBank in a roundabout way, to use as the key into the above collection, but
 			this seems better for now
 		*/
-		std::unordered_map<U32, std::vector<SMatrix>> SystemSpriteInstanceWorldSpaceTransforms;
-		std::unordered_map<U32, std::vector<SMatrix>> RendererSpriteInstanceWorldSpaceTransforms;
+		std::unordered_map<U32, SSpriteInstanceData> SystemWorldSpaceSpriteInstanceData;
+		std::unordered_map<U32, SSpriteInstanceData> RendererWorldSpaceSpriteInstanceData;
 
-		std::unordered_map<U32, std::vector<SMatrix>> SystemSpriteInstanceScreenSpaceTransforms;
-		std::unordered_map<U32, std::vector<SMatrix>> RendererSpriteInstanceScreenSpaceTransforms;
-
-		std::unordered_map<U32, std::vector<SVector4>> SystemSpriteInstanceUVRects;
-		std::unordered_map<U32, std::vector<SVector4>> RendererSpriteInstanceUVRects;
-
-		std::unordered_map<U32, std::vector<SVector4>> SystemSpriteInstanceColors;
-		std::unordered_map<U32, std::vector<SVector4>> RendererSpriteInstanceColors;
+		std::unordered_map<U32, SSpriteInstanceData> SystemScreenSpaceSpriteInstanceData;
+		std::unordered_map<U32, SSpriteInstanceData> RendererScreenSpaceSpriteInstanceData;
 
 		SVector2<F32> ShadowAtlasResolution = SVector2<F32>::Zero;
 

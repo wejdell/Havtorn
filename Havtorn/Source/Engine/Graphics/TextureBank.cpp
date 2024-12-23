@@ -39,6 +39,18 @@ namespace Havtorn
 		return TexturePaths.contains(index) ? TexturePaths[index] : "INVALID_ASSET_PATH";
 	}
 
+	U32 CTextureBank::AddTexture(ID3D11ShaderResourceView* srv)
+	{
+		if (srv == nullptr)
+		{
+			HV_LOG_WARN("CTextureBank::AddTexture: Could not add shader resource view pointer!");
+			return 0;
+		}
+
+		Textures.emplace_back(srv);
+		return STATIC_U32(Textures.size()) - 1;
+	}
+
 	ID3D11ShaderResourceView* CTextureBank::GetTexture(const std::string& fileName)
 	{
 		U32 index = GetTextureIndex(fileName);

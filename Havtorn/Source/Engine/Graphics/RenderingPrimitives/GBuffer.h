@@ -32,6 +32,7 @@ namespace Havtorn
 		void SetAsResourceOnSlot(EGBufferTextures resource, U16 slot);
 		void SetAllAsResources(U16 startSlot);
 
+		ID3D11RenderTargetView* GetEditorDataRenderTarget() const;
 		ID3D11Texture2D* GetEditorDataTexture() const;
 
 		void ReleaseResources();

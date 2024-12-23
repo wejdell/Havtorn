@@ -8,7 +8,7 @@ struct GBufferOutputEditor
     float4 Normal             : SV_TARGET1;
     float4 VertexNormal       : SV_TARGET2;
     float4 MetalRoughEmAO     : SV_TARGET3;
-    uint2 Entity             : SV_TARGET4;
+    uint2 Entity              : SV_TARGET4;
 };
 
 GBufferOutputEditor main(VertexModelToPixelEditor input)
