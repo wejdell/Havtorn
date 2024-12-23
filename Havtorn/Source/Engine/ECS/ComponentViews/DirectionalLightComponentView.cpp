@@ -28,6 +28,8 @@ namespace Havtorn
 		Havtorn::F32 dirData[3] = { direction.X, direction.Y, direction.Z };
 		ImGui::DragFloat3("Direction", dirData, ImGui::UUtils::SliderSpeed);
 		directionalLightComp->Direction = { dirData[0], dirData[1], dirData[2], 0.0f };
+		if (directionalLightComp->Direction.IsEqual(SVector4::Zero))
+			directionalLightComp->Direction = SVector4(0.0f, 0.0f, 0.01f, 0.0f);
 
 		ImGui::DragFloat("Intensity", &directionalLightComp->Color.W, ImGui::UUtils::SliderSpeed);
 
