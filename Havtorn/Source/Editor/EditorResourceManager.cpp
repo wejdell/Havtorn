@@ -220,6 +220,9 @@ namespace Havtorn
 
 		case Havtorn::EEditorTexture::SpotlightIcon:
 			return ResourceAssetPath + "SpotlightIcon" + extension;
+
+		case Havtorn::EEditorTexture::DecalIcon:
+			return ResourceAssetPath + "DecalIcon" + extension;
 		
 		case Havtorn::EEditorTexture::Count:
 		default:

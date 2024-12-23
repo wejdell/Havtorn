@@ -560,6 +560,7 @@ namespace Havtorn
 		if (CurrentColorTheme != EEditorColorTheme::PauseMode)
 			CachedColorTheme = CurrentColorTheme;
 
+		SetSelectedEntity(SEntity::Null);
 		SetEditorTheme(EEditorColorTheme::PlayMode);
 		World->BlockSystem<CPickingSystem>(this);
 	}

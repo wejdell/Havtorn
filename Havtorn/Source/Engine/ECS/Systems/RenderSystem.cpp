@@ -160,6 +160,15 @@ namespace Havtorn
 			command.Flags.push_back(decalComponent->ShouldRenderNormal);
 			command.U16s = decalComponent->TextureReferences;
 			RenderManager->PushRenderCommand(command);
+
+			if (!isInPlayingPlayState)
+			{
+				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(decalComponent->EditorTextureIndex, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity));
+
+				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
+				command.U32s.push_back(decalComponent->EditorTextureIndex);
+				RenderManager->PushRenderCommand(command);
+			}
 		}
 
 		{
@@ -191,7 +200,6 @@ namespace Havtorn
 				const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(directionalLightComp);
 				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(directionalLightComp->EditorTextureIndex, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity));
 
-				command = SRenderCommand();
 				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
 				command.U32s.push_back(directionalLightComp->EditorTextureIndex);
 				RenderManager->PushRenderCommand(command);
@@ -228,7 +236,6 @@ namespace Havtorn
 			{
 				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(pointLightComp->EditorTextureIndex, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity));
 
-				command = SRenderCommand();
 				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
 				command.U32s.push_back(pointLightComp->EditorTextureIndex);
 				RenderManager->PushRenderCommand(command);
@@ -270,7 +277,6 @@ namespace Havtorn
 			{
 				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(spotLightComp->EditorTextureIndex, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity));
 
-				command = SRenderCommand();
 				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
 				command.U32s.push_back(spotLightComp->EditorTextureIndex);
 				RenderManager->PushRenderCommand(command);
