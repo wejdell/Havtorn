@@ -26,6 +26,7 @@ namespace Havtorn
 		DirectionalLightIcon,
 		PointLightIcon,
 		SpotlightIcon,
+		DecalIcon,
 		Count
 	};
 
