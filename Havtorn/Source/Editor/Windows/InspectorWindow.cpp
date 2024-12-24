@@ -212,6 +212,9 @@ namespace ImGui
 		{
 			std::string assetName = assetNames[index];
 
+			if (assetName.empty())
+				assetName = "M_Checkboard_128x128";
+
 			Havtorn::SEditorAssetRepresentation* assetRep = Manager->GetAssetRepFromName(assetName).get();
 
 			ImGui::Separator();
@@ -262,6 +265,8 @@ namespace ImGui
 			return;
 		}
 
+		Manager->SetIsModalOpen(true);
+
 		/* TODO.NR: See if one can make a general folder structure exploration function,
 		* return true and an assetRep if a directory is double clicked. Maybe multiple 
 		* versions with slight variations. Want to be able to go to any directory. 
@@ -310,6 +315,7 @@ namespace ImGui
 					}
 				}
 
+				Manager->SetIsModalOpen(false);
 				ImGui::CloseCurrentPopup();
 			}
 
@@ -319,8 +325,11 @@ namespace ImGui
 
 		ImGui::EndTable();
 
-		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) 
+		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+		{
+			Manager->SetIsModalOpen(false);
 			ImGui::CloseCurrentPopup(); 
+		}
 
 		ImGui::EndPopup();
 	}
@@ -341,8 +350,11 @@ namespace ImGui
 		if (Havtorn::SSpriteComponent* spriteComponent = dynamic_cast<Havtorn::SSpriteComponent*>(result.ComponentViewed))
 			HandleTextureAssetModal(searchPath, spriteComponent->TextureIndex);
 
-		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) 
+		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+		{
+			Manager->SetIsModalOpen(false);
 			ImGui::CloseCurrentPopup();
+		}
 
 		ImGui::EndPopup();
 	}
@@ -362,6 +374,8 @@ namespace ImGui
 		Havtorn::I32 columnCount = static_cast<Havtorn::I32>(panelWidth / cellWidth);
 		Havtorn::U32 id = 0;
 
+		Manager->SetIsModalOpen(true);
+
 		if (ImGui::BeginTable("NewMaterialAssetTable", columnCount))
 		{
 			for (auto& entry : std::filesystem::recursive_directory_iterator("Assets/Materials"))
@@ -376,9 +390,10 @@ namespace ImGui
 
 				if (ImGui::ImageButton(assetRep->Name.c_str(), (ImTextureID)(intptr_t)assetRep->TextureRef, {ImGui::UUtils::TexturePreviewSizeX * 0.75f, ImGui::UUtils::TexturePreviewSizeY * 0.75f}))
 				{
-
 					Manager->GetRenderManager()->TryReplaceMaterialOnComponent(assetRep->DirectoryEntry.path().string(), AssetPickedIndex, materialComponent);
 					AssetPickedIndex = 0;
+
+					Manager->SetIsModalOpen(false);
 					ImGui::CloseCurrentPopup();
 				}
 
@@ -389,7 +404,11 @@ namespace ImGui
 			ImGui::EndTable();
 		}
 
-		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) { ImGui::CloseCurrentPopup(); }
+		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) 
+		{
+			Manager->SetIsModalOpen(false);
+			ImGui::CloseCurrentPopup(); 
+		}
 
 		ImGui::EndPopup();	
 	}
@@ -409,6 +428,8 @@ namespace ImGui
 		Havtorn::I32 columnCount = static_cast<Havtorn::I32>(ImGui::UUtils::PanelWidth / cellWidth);
 		Havtorn::U32 id = 0;
 
+		Manager->SetIsModalOpen(true);
+
 		if (ImGui::BeginTable("NewTextureAssetTable", columnCount))
 		{
 			for (auto& entry : std::filesystem::recursive_directory_iterator(pathToSearch.c_str()))
@@ -424,6 +445,8 @@ namespace ImGui
 				if (ImGui::ImageButton(assetRep->Name.c_str(), (ImTextureID)(intptr_t)assetRep->TextureRef, {ImGui::UUtils::TexturePreviewSizeX * 0.75f, ImGui::UUtils::TexturePreviewSizeY * 0.75f}))
 				{
 					textureReference = static_cast<Havtorn::U16>(Havtorn::GEngine::GetTextureBank()->GetTextureIndex(entry.path().string()));
+					
+					Manager->SetIsModalOpen(false);
 					ImGui::CloseCurrentPopup();
 				}
 

@@ -592,6 +592,16 @@ namespace Havtorn
 		return ImGuizmo::IsOver();
 	}
 
+	bool CEditorManager::GetIsModalOpen() const
+	{
+		return IsModalOpen;
+	}
+
+	void CEditorManager::SetIsModalOpen(const bool isModalOpen)
+	{
+		IsModalOpen = isModalOpen;
+	}
+
 	std::string CEditorManager::GetFrameRate() const
 	{
 		std::string frameRateString = "Framerate: ";
