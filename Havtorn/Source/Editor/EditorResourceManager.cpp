@@ -212,6 +212,9 @@ namespace Havtorn
 		case Havtorn::EEditorTexture::SequencerIcon:
 			return ResourceAssetPath + "SequencerIcon" + extension;
 
+		case Havtorn::EEditorTexture::EnvironmentLightIcon:
+			return ResourceAssetPath + "EnvironmentLightIcon" + extension;
+
 		case Havtorn::EEditorTexture::DirectionalLightIcon:
 			return ResourceAssetPath + "DirectionalLightIcon" + extension;
 

@@ -19,6 +19,6 @@ namespace Havtorn
 
 		// TODO.NR: If we assume that EEditorResourceTexture won't change order (because we don't expect to have many editor resource textures), this
 		// hard coded index works perfectly fine. We might want to find a cleaner abstraction or way to connect this editor data to the engine though.
-		U32 EditorTextureIndex = 8;
+		U32 EditorTextureIndex = 9;
 	};
 }

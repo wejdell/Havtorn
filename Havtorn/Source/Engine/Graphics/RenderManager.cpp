@@ -822,7 +822,7 @@ namespace Havtorn
 		SVector euler = cameraMatrix.GetEuler();
 		constexpr F32 distanceNormalization = 7.0f;
 		constexpr F32 scaleMin = 0.15f;
-		constexpr F32 scaleMax = 0.6f;
+		constexpr F32 scaleMax = 0.5f;
 		F32 dist = cameraMatrix.GetTranslation().Distance(location);
 		F32 eased = UMath::EaseInOutQuad(dist / distanceNormalization);
 		F32 scaling = UMath::Remap(0.0f, 1.0f, scaleMin, scaleMax, eased);

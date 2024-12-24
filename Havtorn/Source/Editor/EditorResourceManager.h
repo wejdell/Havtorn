@@ -23,6 +23,7 @@ namespace Havtorn
 		StopIcon,
 		SceneIcon,
 		SequencerIcon,
+		EnvironmentLightIcon,
 		DirectionalLightIcon,
 		PointLightIcon,
 		SpotlightIcon,

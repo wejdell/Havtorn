@@ -177,6 +177,20 @@ namespace Havtorn
 			RenderManager->PushRenderCommand(command);
 		}
 
+		for (const SEnvironmentLightComponent* environmentLightComp : scene->GetComponents<SEnvironmentLightComponent>())
+		{
+			if (!isInPlayingPlayState)
+			{
+				const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(environmentLightComp);
+				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(environmentLightComp->EditorTextureIndex, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity));
+
+				SRenderCommand command;
+				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
+				command.U32s.push_back(environmentLightComp->EditorTextureIndex);
+				RenderManager->PushRenderCommand(command);
+			}
+		}
+
 		for (const SDirectionalLightComponent* directionalLightComp : directionalLightComponents)
 		{
 			if (!directionalLightComp->IsValid())
