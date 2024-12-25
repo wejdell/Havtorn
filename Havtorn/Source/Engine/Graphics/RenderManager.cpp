@@ -80,6 +80,7 @@ namespace Havtorn
 		RenderedScene = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
 		LitScene = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
 		IntermediateDepth = FullscreenTextureFactory.CreateDepth(windowHandler->GetResolution(), DXGI_FORMAT_R24G8_TYPELESS);
+		EditorWidgetDepth = FullscreenTextureFactory.CreateDepth(windowHandler->GetResolution(), DXGI_FORMAT_R24G8_TYPELESS);
 
 		ShadowAtlasResolution = { 8192.0f, 8192.0f };
 		InitShadowmapAtlas(ShadowAtlasResolution);
@@ -195,6 +196,7 @@ namespace Havtorn
 			LitScene.ClearTexture();
 			IntermediateTexture.ClearTexture();
 			IntermediateDepth.ClearDepth();
+			EditorWidgetDepth.ClearDepth();
 			VolumetricAccumulationBuffer.ClearTexture();
 
 			if (WorldPlayState != EWorldPlayState::Playing)
@@ -1810,8 +1812,9 @@ namespace Havtorn
 	inline void CRenderManager::WorldSpaceSpriteEditorWidget(const SRenderCommand& command)
 	{
 		ID3D11RenderTargetView* renderTargets[2] = { RenderedScene.GetRenderTargetView(), GBuffer.GetEditorDataRenderTarget()};
-		RenderStateManager.OMSetRenderTargets(2, renderTargets, nullptr);
+		RenderStateManager.OMSetRenderTargets(2, renderTargets, EditorWidgetDepth.GetDepthStencilView());
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
+		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
 
 		const auto& textureIndex = command.U32s[0];
 		const std::vector<SMatrix>& matrices = RendererWorldSpaceSpriteInstanceData[textureIndex].Transforms;
