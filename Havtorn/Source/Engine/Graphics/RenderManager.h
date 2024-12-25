@@ -300,6 +300,7 @@ namespace Havtorn
 		CFullscreenTexture Backbuffer;
 		CFullscreenTexture IntermediateTexture;
 		CFullscreenTexture IntermediateDepth;
+		CFullscreenTexture EditorWidgetDepth;
 		CFullscreenTexture ShadowAtlasDepth;
 		CFullscreenTexture DepthCopy;
 
