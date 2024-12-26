@@ -33,10 +33,11 @@ namespace ImGui
 	void CAssetBrowserWindow::OnInspectorGUI()
 	{
 		const Havtorn::SEditorLayout& layout = Manager->GetEditorLayout();
-
 		const ImGuiViewport* mainViewport = ImGui::GetMainViewport();
 		ImGui::SetNextWindowPos(ImVec2(mainViewport->WorkPos.x + layout.AssetBrowserPosition.X, mainViewport->WorkPos.y + layout.AssetBrowserPosition.Y));
-		ImGui::SetNextWindowSize(ImVec2(layout.AssetBrowserSize.X, layout.AssetBrowserSize.Y));
+		ImGui::SetNextWindowSize(ImVec2(layout.AssetBrowserSize.X * 0.5f, layout.AssetBrowserSize.Y));
+
+		//ImGui::DockSpace(1, ImVec2(0.f, 0.f), ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_AutoHideTabBar | ImGuiDockNodeFlags_NoDockingInCentralNode);
 
 		if (ImGui::Begin(Name(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus))
 		{
