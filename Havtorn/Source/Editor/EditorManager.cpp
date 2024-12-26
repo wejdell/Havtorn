@@ -50,6 +50,8 @@ namespace Havtorn
 		CROSS_PROJECT_IMGUI_SETUP();
 		windowHandler->EnableDragDrop();
 
+		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
 		SetEditorTheme(EEditorColorTheme::HavtornDark, EEditorStyleTheme::Havtorn);
 
 		// TODO.NR: Figure out why we can't use unique ptrs with these namespaced imgui classes
@@ -61,6 +63,7 @@ namespace Havtorn
 
 		Windows.emplace_back(new ImGui::CViewportWindow("Viewport", this));
 		Windows.emplace_back(new ImGui::CAssetBrowserWindow("Asset Browser", this));
+		Windows.emplace_back(new ImGui::COutputLogWindow("Output Log", this));
 		Windows.emplace_back(new ImGui::CHierarchyWindow("Hierarchy", this));
 		Windows.emplace_back(new ImGui::CInspectorWindow("Inspector", this));
 		Windows.emplace_back(new ImGui::CSpriteAnimatorGraphNodeWindow("Sprite Animator", this));
