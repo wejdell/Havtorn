@@ -14,6 +14,7 @@ namespace ImGui
 		: CWindow(displayName, manager)
 	{
 		Havtorn::GEngine::GetWindowHandler()->OnDragDropAccepted.AddMember(this, &COutputLogWindow::OnDragDropFiles);
+        Havtorn::ULog::AddLogContext(this);
 
         ClearLog();
         memset(InputBuffer, 0, sizeof(InputBuffer));
@@ -132,20 +133,17 @@ namespace ImGui
             while (clipper.Step())
                 for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
                 {
-                    const char* item = Items[i];
+                    const char* item = Items[i].Text;
 
                     if (!Filter.PassFilter(item))
                         continue;
 
-                    // Normally you would store more information in your item than just a string.
-                    // (e.g. make Items[] an array of structure, store color/type etc.)
-                    ImVec4 color;
-                    bool hasColor = false;
-                    if (strstr(item, "[error]")) { color = ImVec4(1.0f, 0.4f, 0.4f, 1.0f); hasColor = true; }
-                    else if (strncmp(item, "# ", 2) == 0) { color = ImVec4(1.0f, 0.8f, 0.6f, 1.0f); hasColor = true; }
+                    bool hasColor = Items[i].Color != ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
                     if (hasColor)
-                        ImGui::PushStyleColor(ImGuiCol_Text, color);
+                        ImGui::PushStyleColor(ImGuiCol_Text, Items[i].Color);
+
                     ImGui::TextUnformatted(item);
+
                     if (hasColor)
                         ImGui::PopStyleColor();
                 }
@@ -192,11 +190,40 @@ namespace ImGui
 	{
 	}
 
+    void COutputLogWindow::Log(const Havtorn::ELogCategory category, const std::string& message)
+    {
+        ImVec4 color = ImVec4();
+        switch (category)
+        {
+        case Havtorn::ELogCategory::Trace:
+            color = ImVec4(0.8f, 0.8f, 0.8f, 1.0f);
+            break;
+        case Havtorn::ELogCategory::Debug:
+            color = ImVec4(0.4f, 1.0f, 0.4f, 1.0f);
+            break;
+        case Havtorn::ELogCategory::Info:
+            color = ImVec4(0.4f, 0.4f, 1.0f, 1.0f);
+            break;
+        case Havtorn::ELogCategory::Warning:
+            color = ImVec4(0.4f, 1.0f, 1.0f, 1.0f);
+            break;
+        case Havtorn::ELogCategory::Error:
+            color = ImVec4(1.0f, 0.4f, 0.4f, 1.0f);
+            break;
+        case Havtorn::ELogCategory::Fatal:
+        default:
+            color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+            break;
+        }
+
+        AddLog(color, message.c_str());
+    }
+
 	void COutputLogWindow::OnDragDropFiles(const std::vector<std::string> filePaths)
 	{
 	}
 
-    void COutputLogWindow::AddLog(const char* format, ...)
+    void COutputLogWindow::AddLog(ImVec4 color, const char* format, ...)
     {
         // FIXME-OPT
         char buf[1024];
@@ -205,19 +232,19 @@ namespace ImGui
         vsnprintf(buf, IM_ARRAYSIZE(buf), format, args);
         buf[IM_ARRAYSIZE(buf) - 1] = 0;
         va_end(args);
-        Items.push_back(Strdup(buf));
+        Items.push_back({ Strdup(buf), color });
     }
 
     void COutputLogWindow::ClearLog()
     {
         for (Havtorn::I32 i = 0; i < static_cast<Havtorn::I32>(Items.Size); i++)
-            ImGui::MemFree(Items[i]);
+            ImGui::MemFree(Items[i].Text);
         Items.clear();
     }
 
     void COutputLogWindow::ExecCommand(const char* commandLine)
     {
-        AddLog("# %s\n", commandLine);
+        HV_LOG_TRACE("# %s\n", commandLine);
 
         // Insert into history. First find match and delete it so it can be pushed to the back.
         // This isn't trying to be smart or optimal.
@@ -238,19 +265,19 @@ namespace ImGui
         }
         else if (Stricmp(commandLine, "HELP") == 0)
         {
-            AddLog("Commands:");
+            HV_LOG_TRACE("Commands:");
             for (Havtorn::I32 i = 0; i < Commands.Size; i++)
-                AddLog("- %s", Commands[i]);
+                HV_LOG_TRACE("- %s", Commands[i]);
         }
         else if (Stricmp(commandLine, "HISTORY") == 0)
         {
             Havtorn::I32 first = History.Size - 10;
             for (Havtorn::I32 i = first > 0 ? first : 0; i < History.Size; i++)
-                AddLog("%3d: %s\n", i, History[i]);
+                HV_LOG_TRACE("%3d: %s\n", i, History[i]);
         }
         else
         {
-            AddLog("Unknown command: '%s'\n", commandLine);
+            HV_LOG_TRACE("Unknown command: '%s'\n", commandLine);
         }
 
         // On command input, we scroll to bottom even if AutoScroll==false
@@ -285,7 +312,7 @@ namespace ImGui
             if (candidates.Size == 0)
             {
                 // No match
-                AddLog("No match for \"%.*s\"!\n", (Havtorn::I32)(wordEnd - wordStart), wordStart);
+                HV_LOG_TRACE("No match for \"%.*s\"!\n", (Havtorn::I32)(wordEnd - wordStart), wordStart);
             }
             else if (candidates.Size == 1)
             {
@@ -320,9 +347,9 @@ namespace ImGui
                 }
 
                 // List matches
-                AddLog("Possible matches:\n");
+                HV_LOG_TRACE("Possible matches:\n");
                 for (Havtorn::I32 i = 0; i < candidates.Size; i++)
-                    AddLog("- %s\n", candidates[i]);
+                    HV_LOG_TRACE("- %s\n", candidates[i]);
             }
 
             break;

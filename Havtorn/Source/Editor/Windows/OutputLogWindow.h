@@ -3,9 +3,11 @@
 #pragma once
 #include "EditorWindow.h"
 
+#include <Log.h>
+
 namespace ImGui
 {
-	class COutputLogWindow : public CWindow
+	class COutputLogWindow : public CWindow, public Havtorn::ILogContext
 	{
 	public:
 		COutputLogWindow(const char* displayName, Havtorn::CEditorManager* manager);
@@ -13,6 +15,8 @@ namespace ImGui
 		void OnEnable() override;
 		void OnInspectorGUI() override;
 		void OnDisable() override;
+
+		void Log(const Havtorn::ELogCategory category, const std::string& message) override;
 
 		// Portable helpers
 		static int   Stricmp(const char* s1, const char* s2) { int d; while ((d = toupper(*s2) - toupper(*s1)) == 0 && *s1) { s1++; s2++; } return d; }
@@ -22,14 +26,20 @@ namespace ImGui
 
 	private:
 		void OnDragDropFiles(std::vector<std::string> filePaths);
-        void AddLog(const char* format, ...);
+        void AddLog(ImVec4 color, const char* format, ...);
         void ClearLog();
         void ExecCommand(const char* commandLine);
 		Havtorn::I32 TextEditCallback(ImGuiInputTextCallbackData* data);
 
 	private:
+		struct SLogItem
+		{
+			char* Text;
+			ImVec4 Color = ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+		};
+
 		char                  InputBuffer[256] = "";
-		ImVector<char*>       Items;
+		ImVector<SLogItem>    Items;
 		ImVector<const char*> Commands;
 		ImVector<char*>       History;
 		Havtorn::I32		  HistoryPos = -1;    // -1: new line, 0..History.Size-1 browsing history.
