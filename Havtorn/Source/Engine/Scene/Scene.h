@@ -5,7 +5,7 @@
 #include "Core/HavtornString.h"
 #include "ECS/Entity.h"
 #include "ECS/Component.h"
-#include "ECS/ComponentView.h"
+#include "ECS/ComponentEditorContext.h"
 
 #include <unordered_map>
 #include <map>
@@ -26,12 +26,10 @@ namespace Havtorn
 	class CScene
 	{
 	public:
-		using SViewFunctionPointer = std::function<SComponentViewResult(const SEntity&, CScene*)>;
-
 		HAVTORN_API CScene();
 		HAVTORN_API ~CScene();
 
-		bool Init(CRenderManager* renderManager, const std::string& sceneName);
+		HAVTORN_API virtual bool Init(CRenderManager* renderManager, const std::string& sceneName);
 
 		HAVTORN_API virtual bool Init3DDemoScene(CRenderManager* renderManager);
 		HAVTORN_API virtual bool Init2DDemoScene(CRenderManager* renderManager);
@@ -89,7 +87,7 @@ namespace Havtorn
 		}
 
 		template<typename T>
-		void DefaultDeserializer(std::vector<T>& componentVector, SComponentEditorContext context, const char* fromData, U64& pointerPosition)
+		void DefaultDeserializer(std::vector<T>& componentVector, SComponentEditorContext* context, const char* fromData, U64& pointerPosition)
 		{
 			U32 numberOfComponents = 0;
 			DeserializeData(numberOfComponents, fromData, pointerPosition);
@@ -100,12 +98,12 @@ namespace Havtorn
 				T component;
 				DeserializeData(component, fromData, pointerPosition);
 				AddComponent(component, component.Owner);
-				AddView(component.Owner, context);
+				AddComponentEditorContext(component.Owner, context);
 			}
 		}
 
 		template<typename T>
-		void SpecializedDeserializer(std::vector<T>& componentVector, SComponentEditorContext context, const char* fromData, U64& pointerPosition)
+		void SpecializedDeserializer(std::vector<T>& componentVector, SComponentEditorContext* context, const char* fromData, U64& pointerPosition)
 		{
 			U32 numberOfComponents = 0;
 			DeserializeData(numberOfComponents, fromData, pointerPosition);
@@ -116,12 +114,12 @@ namespace Havtorn
 				T component;
 				component.Deserialize(fromData, pointerPosition);
 				AddComponent(component, component.Owner);
-				AddView(component.Owner, context);
+				AddComponentEditorContext(component.Owner, context);
 			}
 		}
 
 		template<typename T>
-		void RegisterComponent(U32 startingNumberOfInstances, const SComponentEditorContext& editorContext)
+		void RegisterComponent(U32 startingNumberOfInstances, SComponentEditorContext* context)
 		{
 			const U64 typeIDHashCode = typeid(T).hash_code();
 			if (ContextIndices.contains(typeIDHashCode))
@@ -137,8 +135,8 @@ namespace Havtorn
 				Storages.back().Components.resize(startingNumberOfInstances, nullptr);
 			}
 
-			ContextIndices.emplace(typeIDHashCode, ComponentEditorContexts.size());
-			ComponentEditorContexts.emplace_back(editorContext);
+			ContextIndices.emplace(typeIDHashCode, RegisteredComponentEditorContexts.size());
+			RegisteredComponentEditorContexts.emplace_back(context);
 		}
 
 		template<typename T>
@@ -151,7 +149,7 @@ namespace Havtorn
 				return SComponentEditorContext();
 			}
 
-			return ComponentEditorContexts[ContextIndices.at(typeIDHashCode)];
+			return RegisteredComponentEditorContexts[ContextIndices.at(typeIDHashCode)];
 		}
 
 		template<typename T>
@@ -269,7 +267,8 @@ namespace Havtorn
 				return nullptr;
 			}
 
-			return dynamic_cast<T*>(componentStorage.Components[componentStorage.EntityIndices.at(fromEntity.GUID)]);
+			U64 index = componentStorage.EntityIndices.at(fromEntity.GUID);
+			return dynamic_cast<T*>(componentStorage.Components[index]);
 		}
 
 		template<typename T>
@@ -313,15 +312,15 @@ namespace Havtorn
 			return specializedComponents;
 		}
 		
-		HAVTORN_API void AddView(const SEntity& owner, SComponentEditorContext context);
-		HAVTORN_API void RemoveView(const SEntity& owner, SComponentEditorContext context);
+		HAVTORN_API void AddComponentEditorContext(const SEntity& owner, SComponentEditorContext* context);
+		HAVTORN_API void RemoveComponentEditorContext(const SEntity& owner, SComponentEditorContext* context);
 
-		HAVTORN_API void RemoveViews(const SEntity& owner);
-		HAVTORN_API std::vector<SComponentEditorContext> GetViews(const SEntity& owner);
+		HAVTORN_API void RemoveComponentEditorContexts(const SEntity& owner);
+		HAVTORN_API std::vector<SComponentEditorContext*> GetComponentEditorContexts(const SEntity& owner);
 
-		HAVTORN_API const std::vector<SComponentEditorContext>& GetEditorContexts() const;
+		HAVTORN_API const std::vector<SComponentEditorContext*>& GetComponentEditorContexts() const;
 		
-		std::unordered_map<U64, std::vector<SComponentEditorContext>> ComponentViews;
+		std::unordered_map<U64, std::vector<SComponentEditorContext*>> EntityComponentEditorContexts;
 
 		std::unordered_map<U64, U64> EntityIndices;
 		std::vector<SEntity> Entities;
@@ -330,7 +329,7 @@ namespace Havtorn
 		std::vector<SComponentStorage> Storages;
 
 		std::unordered_map<U64, U64> ContextIndices;
-		std::vector<SComponentEditorContext> ComponentEditorContexts;
+		std::vector<SComponentEditorContext*> RegisteredComponentEditorContexts;
 
 		CHavtornStaticString<255> SceneName = std::string("SceneName");
 

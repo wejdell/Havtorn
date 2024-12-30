@@ -55,7 +55,6 @@ namespace ImGui
 		}
 
 		Scene = Manager->GetCurrentScene();
-
 		if (!Scene)
 		{
 			ImGui::End();
@@ -80,10 +79,13 @@ namespace ImGui
 		}
 		ImGui::Separator();
 
-		for (Havtorn::CScene::SViewFunctionPointer viewFunction : Scene->GetViews(SelectedEntity))
+		for (Havtorn::SComponentEditorContext* context : Scene->GetComponentEditorContexts(SelectedEntity))
 		{
-			RemoveComponentButton();
-			Havtorn::SComponentViewResult result = viewFunction(SelectedEntity, Scene);
+			if (context->RemoveComponent(SelectedEntity, Scene))
+				continue;
+
+			ImGui::SameLine();
+			Havtorn::SComponentViewResult result = context->View(SelectedEntity, Scene);
 
 			// TODO.NR: Could make this a enum-function map, but would be good to set up clear rules for how this should work.
 			switch (result.Label)
@@ -463,43 +465,30 @@ namespace ImGui
 		if (!ImGui::BeginPopupModal("Add Component Modal", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 			return;
 
-		Havtorn::U32 id = 0;
+		Manager->SetIsModalOpen(true);
 
 		if (ImGui::BeginTable("NewComponentTypeTable", 1))
 		{
-			for (const Havtorn::SComponentEditorContext& context : Scene->GetEditorContexts())
+			for (const Havtorn::SComponentEditorContext* context : Scene->GetComponentEditorContexts())
 			{
 				ImGui::TableNextColumn();
-				ImGui::PushID(id++);
 
-				context.AddComponentFunction(SelectedEntity, Scene);
-
-				ImGui::PopID();
+				if (context->AddComponent(SelectedEntity, Scene))
+				{
+					Manager->SetIsModalOpen(false);
+					ImGui::CloseCurrentPopup();
+				}
 			}
 
 			ImGui::EndTable();
 		}
 
-		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) { ImGui::CloseCurrentPopup(); }
+		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) 
+		{
+			Manager->SetIsModalOpen(false);
+			ImGui::CloseCurrentPopup(); 
+		}
 
 		ImGui::EndPopup();
-	}
-	
-	void CInspectorWindow::RemoveComponentButton(std::function<void(const Havtorn::SEntity& entity, Havtorn::CScene* scene)> function)
-	{
-		ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::GetTreeNodeToLabelSpacing()*0.3f);
-
-		ImGui::PushID(static_cast<U64>(componentType));
-		if (ImGui::Button("X"))
-		{
-			Havtorn::CScene* scene = Manager->GetCurrentScene();
-			Havtorn::SEntity* selection = Manager->GetSelectedEntity();
-
-			if (scene == nullptr || selection == nullptr)
-				return;
-
-			scene->RemoveComponentFromEntity(componentType, *selection);
-		}
-		ImGui::PopID();
 	}
 }

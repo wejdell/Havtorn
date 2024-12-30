@@ -55,12 +55,12 @@ namespace Havtorn
 
 		for (const SStaticMeshComponent* staticMeshComponent : scene->GetComponents<SStaticMeshComponent>())
 		{
-			if (!staticMeshComponent->IsValid())
-				continue;
-		
 			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(staticMeshComponent);
 			const SMaterialComponent* materialComp = scene->GetComponent<SMaterialComponent>(staticMeshComponent);
 
+			if (!staticMeshComponent->IsValid() || !transformComp->IsValid() || !materialComp->IsValid())
+				continue;
+		
 			if (!RenderManager->IsStaticMeshInInstancedRenderList(staticMeshComponent->Name.AsString())) // if static, if instanced
 			{		
 				for (const SDirectionalLightComponent* directionalLightComp : directionalLightComponents)

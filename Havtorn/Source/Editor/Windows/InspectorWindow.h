@@ -35,7 +35,6 @@ namespace ImGui
 		
 		// TODO.NR: Support adding and removing components through the editor. Unsolved problem.
 		void OpenAddComponentModal();
-		void RemoveComponentButton(std::function<void(const Havtorn::SEntity& entity, Havtorn::CScene* scene)> function);
 
 	private:
 		const std::string SelectMeshAssetModalName = "Select Mesh Asset";
