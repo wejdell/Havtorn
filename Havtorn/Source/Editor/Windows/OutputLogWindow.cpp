@@ -127,22 +127,22 @@ namespace ImGui
             if (shouldCopyToClipboard)
                 ImGui::LogToClipboard();
             
-            //for (const char* item : Items)
-            ImGuiListClipper clipper;
-            clipper.Begin(Items.Size);
-            while (clipper.Step())
-                for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
+            for (const SLogItem& item : Items)
+            //ImGuiListClipper clipper;
+            //clipper.Begin(Items.Size);
+            //while (clipper.Step())
+                //for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
                 {
-                    const char* item = Items[i].Text;
+                    //const char* item = Items[i].Text;
 
-                    if (!Filter.PassFilter(item))
+                    if (!Filter.PassFilter(item.Text))
                         continue;
 
-                    bool hasColor = Items[i].Color != ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+                    bool hasColor = item.Color != ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
                     if (hasColor)
-                        ImGui::PushStyleColor(ImGuiCol_Text, Items[i].Color);
+                        ImGui::PushStyleColor(ImGuiCol_Text, item.Color);
 
-                    ImGui::TextUnformatted(item);
+                    ImGui::TextUnformatted(item.Text);
 
                     if (hasColor)
                         ImGui::PopStyleColor();
