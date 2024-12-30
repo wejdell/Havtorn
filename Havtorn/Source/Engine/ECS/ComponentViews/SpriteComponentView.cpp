@@ -13,6 +13,8 @@
 
 namespace Havtorn
 {
+	SSpriteComponentView SSpriteComponentView::Context = {};
+
     SComponentViewResult Havtorn::SSpriteComponentView::View(const SEntity& entityOwner, CScene* scene)
     {
 		if (!ImGui::UUtils::TryOpenComponentView("Sprite"))

@@ -11,6 +11,8 @@
 
 namespace Havtorn
 {
+	SCameraControllerComponentView SCameraControllerComponentView::Context = {};
+
 	SComponentViewResult Havtorn::SCameraControllerComponentView::View(const SEntity& entityOwner, CScene* scene)
 	{
 		if (!ImGui::UUtils::TryOpenComponentView("CameraController"))

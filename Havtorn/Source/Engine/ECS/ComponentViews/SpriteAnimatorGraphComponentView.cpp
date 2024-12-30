@@ -11,7 +11,9 @@
 
 namespace Havtorn
 {
-    SComponentViewResult Havtorn::SSpriteAnimatorGraphComponentView::View(const SEntity& entityOwner, CScene* scene)
+    SSpriteAnimatorGraphComponentView SSpriteAnimatorGraphComponentView::Context = {};
+
+    SComponentViewResult SSpriteAnimatorGraphComponentView::View(const SEntity& entityOwner, CScene* scene)
     {
         if (!ImGui::UUtils::TryOpenComponentView("SpriteAnimatorGraph"))
             return SComponentViewResult();

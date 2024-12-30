@@ -11,6 +11,8 @@
 
 namespace Havtorn
 {
+	SVolumetricLightComponentView SVolumetricLightComponentView::Context = {};
+
     SComponentViewResult SVolumetricLightComponentView::View(const SEntity& entityOwner, CScene* scene)
     {
 		if (!ImGui::UUtils::TryOpenComponentView("VolumetricLight"))

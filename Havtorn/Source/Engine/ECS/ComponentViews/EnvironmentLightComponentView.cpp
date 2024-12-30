@@ -13,6 +13,8 @@
 
 namespace Havtorn
 {
+	SEnvironmentLightComponentView SEnvironmentLightComponentView::Context = {};
+
     SComponentViewResult SEnvironmentLightComponentView::View(const SEntity& entityOwner, CScene* scene)
     {
 		if (!ImGui::UUtils::TryOpenComponentView("EnvironmentLight"))

@@ -48,11 +48,11 @@ namespace Havtorn
 			return true;
 
 		STransformComponent& ghostyTransform = *AddComponent<STransformComponent>(ghosty);
-		AddView(ghosty, STransformComponentView::View);
+		AddView(ghosty, STransformComponentView::Context);
 		SSpriteComponent& spriteWSComp = *AddComponent<SSpriteComponent>(ghosty);
-		AddView(ghosty, SSpriteComponentView::View);
+		AddView(ghosty, SSpriteComponentView::Context);
 		AddComponent<SGhostyComponent>(ghosty);
-		AddView(ghosty, SGhostyComponentView::View);
+		AddView(ghosty, SGhostyComponentView::Context);
 
 		ghostyTransform.Transform.Move({ 0.0f, 2.0f, 0.0f });
 

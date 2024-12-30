@@ -23,6 +23,13 @@ namespace Havtorn
 		U8 ComponentSubIndex = 0;
 	};
 
+	struct SComponentEditorContext
+	{
+		virtual HAVTORN_API SComponentViewResult View(const SEntity& /*entityOwner*/, CScene* /*scene*/) { return SComponentViewResult(); };
+		virtual HAVTORN_API void AddComponent(const SEntity& /*entity*/, CScene* /*scene*/) {};
+		virtual HAVTORN_API void RemoveComponent(const SEntity& /*entity*/, CScene* /*scene*/) {};
+	};
+
 	struct HAVTORN_API SComponentView
 	{
 		virtual SComponentViewResult View(const SEntity& /*entityOwner*/, CScene* /*scene*/) { return SComponentViewResult(); };

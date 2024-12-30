@@ -5,8 +5,10 @@
 
 namespace Havtorn
 {
-	struct SCameraComponentView
+	struct SCameraComponentView : public SComponentEditorContext
 	{
-		static HAVTORN_API SComponentViewResult View(const SEntity& entityOwner, CScene* scene);
+		HAVTORN_API SComponentViewResult View(const SEntity& entityOwner, CScene* scene) override;
+
+		static SCameraComponentView Context;
 	};
 }

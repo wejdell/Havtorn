@@ -13,6 +13,8 @@
 
 namespace Havtorn
 {
+	SStaticMeshComponentView SStaticMeshComponentView::Context = {};
+
     SComponentViewResult SStaticMeshComponentView::View(const SEntity& entityOwner, CScene* scene)
     {
 		if (!ImGui::UUtils::TryOpenComponentView("StaticMesh"))

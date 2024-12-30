@@ -11,6 +11,8 @@
 
 namespace Havtorn
 {
+	STransform2DComponentView STransform2DComponentView::Context = {};
+
     SComponentViewResult STransform2DComponentView::View(const SEntity& entityOwner, CScene* scene)
     {
 		if (!ImGui::UUtils::TryOpenComponentView("Transform2D"))

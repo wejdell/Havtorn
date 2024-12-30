@@ -89,7 +89,7 @@ namespace Havtorn
 		}
 
 		template<typename T>
-		void DefaultDeserializer(std::vector<T>& componentVector, SViewFunctionPointer viewFunction, const char* fromData, U64& pointerPosition)
+		void DefaultDeserializer(std::vector<T>& componentVector, SComponentEditorContext context, const char* fromData, U64& pointerPosition)
 		{
 			U32 numberOfComponents = 0;
 			DeserializeData(numberOfComponents, fromData, pointerPosition);
@@ -100,12 +100,12 @@ namespace Havtorn
 				T component;
 				DeserializeData(component, fromData, pointerPosition);
 				AddComponent(component, component.Owner);
-				AddView(component.Owner, viewFunction);
+				AddView(component.Owner, context);
 			}
 		}
 
 		template<typename T>
-		void SpecializedDeserializer(std::vector<T>& componentVector, SViewFunctionPointer viewFunction, const char* fromData, U64& pointerPosition)
+		void SpecializedDeserializer(std::vector<T>& componentVector, SComponentEditorContext context, const char* fromData, U64& pointerPosition)
 		{
 			U32 numberOfComponents = 0;
 			DeserializeData(numberOfComponents, fromData, pointerPosition);
@@ -116,8 +116,42 @@ namespace Havtorn
 				T component;
 				component.Deserialize(fromData, pointerPosition);
 				AddComponent(component, component.Owner);
-				AddView(component.Owner, viewFunction);
+				AddView(component.Owner, context);
 			}
+		}
+
+		template<typename T>
+		void RegisterComponent(U32 startingNumberOfInstances, const SComponentEditorContext& editorContext)
+		{
+			const U64 typeIDHashCode = typeid(T).hash_code();
+			if (ContextIndices.contains(typeIDHashCode))
+			{
+				HV_LOG_WARN("%s is already registered in the %s scene.", typeid(T).name(), SceneName.AsString().c_str());
+				return;
+			}
+
+			if (ComponentTypeIndices.contains(typeIDHashCode))
+			{
+				ComponentTypeIndices.emplace(typeIDHashCode, Storages.size());
+				Storages.emplace_back();
+				Storages.back().Components.resize(startingNumberOfInstances, nullptr);
+			}
+
+			ContextIndices.emplace(typeIDHashCode, ComponentEditorContexts.size());
+			ComponentEditorContexts.emplace_back(editorContext);
+		}
+
+		template<typename T>
+		const SComponentEditorContext& GetEditorContext() const
+		{
+			const U64 typeIDHashCode = typeid(T).hash_code();
+			if (ContextIndices.contains(typeIDHashCode))
+			{
+				HV_LOG_WARN("% s is not registered in the %s scene. Returning an empty editor context.", typeid(T).name(), SceneName.AsString().c_str());
+				return SComponentEditorContext();
+			}
+
+			return ComponentEditorContexts[ContextIndices.at(typeIDHashCode)];
 		}
 
 		template<typename T>
@@ -279,19 +313,24 @@ namespace Havtorn
 			return specializedComponents;
 		}
 		
-		HAVTORN_API void AddView(const SEntity& owner, SViewFunctionPointer function);
-		HAVTORN_API void RemoveView(const SEntity& owner, SViewFunctionPointer function);
+		HAVTORN_API void AddView(const SEntity& owner, SComponentEditorContext context);
+		HAVTORN_API void RemoveView(const SEntity& owner, SComponentEditorContext context);
 
 		HAVTORN_API void RemoveViews(const SEntity& owner);
-		HAVTORN_API std::vector<SViewFunctionPointer> GetViews(const SEntity& owner);
+		HAVTORN_API std::vector<SComponentEditorContext> GetViews(const SEntity& owner);
+
+		HAVTORN_API const std::vector<SComponentEditorContext>& GetEditorContexts() const;
 		
-		std::unordered_map<U64, std::vector<SViewFunctionPointer>> ComponentViews;
+		std::unordered_map<U64, std::vector<SComponentEditorContext>> ComponentViews;
 
 		std::unordered_map<U64, U64> EntityIndices;
 		std::vector<SEntity> Entities;
 
 		std::unordered_map<U64, U64> ComponentTypeIndices;
 		std::vector<SComponentStorage> Storages;
+
+		std::unordered_map<U64, U64> ContextIndices;
+		std::vector<SComponentEditorContext> ComponentEditorContexts;
 
 		CHavtornStaticString<255> SceneName = std::string("SceneName");
 

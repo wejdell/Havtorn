@@ -5,8 +5,10 @@
 
 namespace Havtorn
 {
-	struct SDecalComponentView
+	struct SDecalComponentView : public SComponentEditorContext
 	{
-		static HAVTORN_API SComponentViewResult View(const SEntity& entityOwner, CScene* scene);
+		HAVTORN_API SComponentViewResult View(const SEntity& entityOwner, CScene* scene) override;
+
+		static SDecalComponentView Context;
 	};
 }

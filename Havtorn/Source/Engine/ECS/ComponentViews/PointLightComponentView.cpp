@@ -11,6 +11,8 @@
 
 namespace Havtorn
 {
+	SPointLightComponentView SPointLightComponentView::Context = {};
+
     SComponentViewResult Havtorn::SPointLightComponentView::View(const SEntity& entityOwner, CScene* scene)
     {
 		if (!ImGui::UUtils::TryOpenComponentView("PointLight"))

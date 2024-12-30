@@ -11,6 +11,8 @@
 
 namespace Havtorn
 {
+	SPhysics2DComponentView SPhysics2DComponentView::Context = {};
+
     SComponentViewResult SPhysics2DComponentView::View(const SEntity& entityOwner, CScene* scene)
     {
 		if (!ImGui::UUtils::TryOpenComponentView("Physics2D"))

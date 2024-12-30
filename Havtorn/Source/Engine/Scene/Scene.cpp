@@ -26,6 +26,28 @@ namespace Havtorn
 	{
 		RenderManager = renderManager;
 		SceneName = sceneName;
+
+		RegisterComponent<STransformComponent>(40, STransformComponentView::Context);
+		//RegisterComponent<SStaticMeshComponent>(40, {});
+		//RegisterComponent<SCameraComponent>(40, {});
+		//RegisterComponent<SCameraControllerComponent>(40, {});
+		//RegisterComponent<SMaterialComponent>(40, {});
+		//RegisterComponent<SEnvironmentLightComponent>(40, {});
+		//RegisterComponent<SDirectionalLightComponent>(40, {});
+		//RegisterComponent<SPointLightComponent>(40, {});
+		//RegisterComponent<SSpotLightComponent>(40, {});
+		//RegisterComponent<SVolumetricLightComponent>(40, {});
+		//RegisterComponent<SDecalComponent>(40, {});
+		//RegisterComponent<SSpriteComponent>(40, {});
+		//RegisterComponent<STransform2DComponent>(40, {});
+		//RegisterComponent<SSpriteAnimatorGraphComponent>(40, {});
+		//RegisterComponent<SSequencerComponent>(40, {});
+		//RegisterComponent<SPhysics2DComponent>(40, {});
+		//RegisterComponent<SPhysics3DComponent>(40, {});
+		//RegisterComponent<SPhysics3DControllerComponent>(40, {});
+		//RegisterComponent<SDebugShapeComponent>(40, {});
+		//RegisterComponent<SMetaDataComponent>(40, {});
+
 		return true;
 	}
 
@@ -43,18 +65,18 @@ namespace Havtorn
 
 		// Setup entities (create components)
 		STransformComponent& transform = *AddComponent<STransformComponent>(MainCameraEntity);
-		AddView(MainCameraEntity, STransformComponentView::View);
+		AddView(MainCameraEntity, STransformComponentView::Context);
 
 		transform.Transform.Translate({ 2.5f, 1.0f, -3.5f });
 		transform.Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
 		transform.Transform.Translate(SVector::Right * 0.25f);
 
 		SCameraComponent& camera = *AddComponent<SCameraComponent>(MainCameraEntity);
-		AddView(MainCameraEntity, SCameraComponentView::View);
+		AddView(MainCameraEntity, SCameraComponentView::Context);
 		camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
 
 		SCameraControllerComponent& controllerComp = *AddComponent<SCameraControllerComponent>(MainCameraEntity);
-		AddView(MainCameraEntity, SCameraControllerComponentView::View);
+		AddView(MainCameraEntity, SCameraControllerComponentView::Context);
 		controllerComp.CurrentYaw = -35.0f;
 		// === !Camera ===
 
@@ -64,9 +86,9 @@ namespace Havtorn
 			return false;
 
 		AddComponent<STransformComponent>(environmentLightEntity);
-		AddView(environmentLightEntity, STransformComponentView::View);
+		AddView(environmentLightEntity, STransformComponentView::Context);
 		renderManager->LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/CubemapTheVisit.hva", AddComponent<SEnvironmentLightComponent>(environmentLightEntity));
-		AddView(environmentLightEntity, SEnvironmentLightComponentView::View);
+		AddView(environmentLightEntity, SEnvironmentLightComponentView::Context);
 		GetComponent<SEnvironmentLightComponent>(environmentLightEntity)->AssetRegistryKey = assetRegistry->Register("Assets/Textures/Cubemaps/CubemapTheVisit.hva");
 		// === !Environment light ===
 
@@ -77,17 +99,17 @@ namespace Havtorn
 
 		// NR: Add transform to directional light so it can filter environmental lights based on distance
 		AddComponent<STransformComponent>(directionalLightEntity);
-		AddView(directionalLightEntity, STransformComponentView::View);
+		AddView(directionalLightEntity, STransformComponentView::Context);
 
 		SDirectionalLightComponent& directionalLight = *AddComponent<SDirectionalLightComponent>(directionalLightEntity);
-		AddView(directionalLightEntity, SDirectionalLightComponentView::View);
+		AddView(directionalLightEntity, SDirectionalLightComponentView::Context);
 		directionalLight.Direction = { 1.0f, 1.0f, -1.0f, 0.0f };
 		directionalLight.Color = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };
 		directionalLight.ShadowmapView.ShadowmapViewportIndex = 0;
 		directionalLight.ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLight.ShadowViewSize.X, directionalLight.ShadowViewSize.Y, directionalLight.ShadowNearAndFarPlane.X, directionalLight.ShadowNearAndFarPlane.Y);
 
 		SVolumetricLightComponent& volumetricLight = *AddComponent<SVolumetricLightComponent>(directionalLightEntity);
-		AddView(directionalLightEntity, SVolumetricLightComponentView::View);
+		AddView(directionalLightEntity, SVolumetricLightComponentView::Context);
 		volumetricLight.IsActive = false;
 		// === !Directional light ===
 
@@ -97,19 +119,19 @@ namespace Havtorn
 			return true; // From this point it's ok if we fail to load the rest of the demo scene
 
 		STransformComponent& pointLightTransform = *AddComponent<STransformComponent>(pointLightEntity);
-		AddView(pointLightEntity, STransformComponentView::View);
+		AddView(pointLightEntity, STransformComponentView::Context);
 		SMatrix pointLightMatrix = pointLightTransform.Transform.GetMatrix();
 		pointLightMatrix.SetTranslation({ 1.75f, 0.35f, -2.15f });
 		pointLightTransform.Transform.SetMatrix(pointLightMatrix);
 
 
 		SPointLightComponent& pointLightComp = *AddComponent<SPointLightComponent>(pointLightEntity);
-		AddView(pointLightEntity, SPointLightComponentView::View);
+		AddView(pointLightEntity, SPointLightComponentView::Context);
 		pointLightComp.ColorAndIntensity = { 0.0f, 1.0f, 1.0f, 10.0f };
 		pointLightComp.Range = 1.0f;
 
 		SVolumetricLightComponent& volumetricPointLight = *AddComponent<SVolumetricLightComponent>(pointLightEntity);
-		AddView(pointLightEntity, SVolumetricLightComponentView::View);
+		AddView(pointLightEntity, SVolumetricLightComponentView::Context);
 		volumetricPointLight.IsActive = false;
 
 		const SMatrix constantProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, pointLightComp.Range);
@@ -164,13 +186,13 @@ namespace Havtorn
 			return true;
 
 		STransform& spotlightTransform = (*AddComponent<STransformComponent>(spotlight)).Transform;
-		AddView(spotlight, STransformComponentView::View);
+		AddView(spotlight, STransformComponentView::Context);
 		SMatrix spotlightMatrix = spotlightTransform.GetMatrix();
 		spotlightMatrix.SetTranslation({ 2.0f, 0.5f, -1.5f });
 		spotlightTransform.SetMatrix(spotlightMatrix);
 
 		SSpotLightComponent& spotlightComp = *AddComponent<SSpotLightComponent>(spotlight);
-		AddView(spotlight, SSpotLightComponentView::View);
+		AddView(spotlight, SSpotLightComponentView::Context);
 		spotlightComp.Direction = SVector4::Forward;
 		spotlightComp.DirectionNormal1 = SVector4::Right;
 		spotlightComp.DirectionNormal2 = SVector4::Up;
@@ -180,7 +202,7 @@ namespace Havtorn
 		spotlightComp.Range = 3.0f;
 
 		SVolumetricLightComponent& volumetricSpotLight = *AddComponent<SVolumetricLightComponent>(spotlight);
-		AddView(spotlight, SVolumetricLightComponentView::View);
+		AddView(spotlight, SVolumetricLightComponentView::Context);
 		volumetricSpotLight.IsActive = false;
 
 		const SMatrix spotlightProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, spotlightComp.Range);
@@ -198,11 +220,11 @@ namespace Havtorn
 			return true;
 
 		STransform& decalTransform = (*AddComponent<STransformComponent>(decal)).Transform;
-		AddView(decal, STransformComponentView::View);
+		AddView(decal, STransformComponentView::Context);
 		decalTransform.Translate({ 0.75f, 1.60f, 0.35f });
 
 		SDecalComponent& decalComp = *AddComponent<SDecalComponent>(decal);
-		AddView(decal, SDecalComponentView::View);
+		AddView(decal, SDecalComponentView::Context);
 
 		std::vector<std::string> decalTextures = { "Assets/Textures/T_noscare_AL_c.hva", "Assets/Textures/T_noscare_AL_m.hva", "Assets/Textures/T_noscare_AL_n.hva" };
 		renderManager->LoadDecalComponent(decalTextures, &decalComp);
@@ -230,19 +252,19 @@ namespace Havtorn
 			return false;
 
 		STransform& transform1 = (*AddComponent<STransformComponent>(pendulum)).Transform;
-		AddView(pendulum, STransformComponentView::View);
+		AddView(pendulum, STransformComponentView::Context);
 		transform1.Translate({ 2.0f, 0.0f, -0.2f });
 
 		renderManager->LoadStaticMeshComponent(modelPath1, AddComponent<SStaticMeshComponent>(pendulum));
-		AddView(pendulum, SStaticMeshComponentView::View);
+		AddView(pendulum, SStaticMeshComponentView::Context);
 		renderManager->LoadMaterialComponent(materialNames1, AddComponent<SMaterialComponent>(pendulum));
-		AddView(pendulum, SMaterialComponentView::View);
+		AddView(pendulum, SMaterialComponentView::Context);
 
 		GetComponent<SStaticMeshComponent>(pendulum)->AssetRegistryKey = assetRegistry->Register(modelPath1);
 		GetComponent<SMaterialComponent>(pendulum)->AssetRegistryKeys = assetRegistry->Register(materialNames1);
 
 		SPhysics3DComponent* clockPhysics = AddComponent<SPhysics3DComponent>(pendulum);
-		AddView(pendulum, SPhysics3DComponentView::View);
+		AddView(pendulum, SPhysics3DComponentView::Context);
 
 		clockPhysics->BodyType = EPhysics3DBodyType::Static;
 		clockPhysics->ShapeType = EPhysics3DShapeType::Box;
@@ -258,19 +280,19 @@ namespace Havtorn
 			return false;
 
 		STransform& transform2 = (*AddComponent<STransformComponent>(bed)).Transform;
-		AddView(bed, STransformComponentView::View);
+		AddView(bed, STransformComponentView::Context);
 		transform2.Translate({ 0.2f, 0.0f, 0.0f });
 
 		renderManager->LoadStaticMeshComponent(modelPath2, AddComponent<SStaticMeshComponent>(bed));
-		AddView(bed, SStaticMeshComponentView::View);
+		AddView(bed, SStaticMeshComponentView::Context);
 		renderManager->LoadMaterialComponent(materialNames2, AddComponent<SMaterialComponent>(bed));
-		AddView(bed, SMaterialComponentView::View);
+		AddView(bed, SMaterialComponentView::Context);
 
 		GetComponent<SStaticMeshComponent>(bed)->AssetRegistryKey = assetRegistry->Register(modelPath2);
 		GetComponent<SMaterialComponent>(bed)->AssetRegistryKeys = assetRegistry->Register(materialNames2);
 
 		SPhysics3DComponent* bedPhysics = AddComponent<SPhysics3DComponent>(bed);
-		AddView(bed, SPhysics3DComponentView::View);
+		AddView(bed, SPhysics3DComponentView::Context);
 
 		bedPhysics->BodyType = EPhysics3DBodyType::Static;
 		bedPhysics->ShapeType = EPhysics3DShapeType::Box;
@@ -286,14 +308,14 @@ namespace Havtorn
 			return false;
 
 		STransform& lampTransform = (*AddComponent<STransformComponent>(lamp)).Transform;
-		AddView(lamp, STransformComponentView::View);
+		AddView(lamp, STransformComponentView::Context);
 		lampTransform.Translate({ -1.0f, 1.4f, -1.25f });
 		lampTransform.Rotate({ 0.0f, UMath::DegToRad(90.0f), 0.0f });
 
 		renderManager->LoadStaticMeshComponent(modelPath4, AddComponent<SStaticMeshComponent>(lamp));
-		AddView(lamp, SStaticMeshComponentView::View);
+		AddView(lamp, SStaticMeshComponentView::Context);
 		renderManager->LoadMaterialComponent(materialNames4, AddComponent<SMaterialComponent>(lamp));
-		AddView(lamp, SMaterialComponentView::View);
+		AddView(lamp, SMaterialComponentView::Context);
 
 		GetComponent<SStaticMeshComponent>(lamp)->AssetRegistryKey = assetRegistry->Register(modelPath4);
 		GetComponent<SMaterialComponent>(lamp)->AssetRegistryKeys = assetRegistry->Register(materialNames4);
@@ -305,14 +327,14 @@ namespace Havtorn
 			return false;
 
 		STransform& playerTransform = AddComponent<STransformComponent>(playerProxy)->Transform;
-		AddView(playerProxy, STransformComponentView::View);
+		AddView(playerProxy, STransformComponentView::Context);
 		SMatrix playerMatrix = playerTransform.GetMatrix();
 		playerMatrix.SetTranslation({ 2.0f, 0.7f, -2.2f });
 		//playerMatrix.SetRotation();
 		playerTransform.SetMatrix(playerMatrix);
 
 		SPhysics3DControllerComponent* controllerComponent = AddComponent<SPhysics3DControllerComponent>(playerProxy);
-		AddView(playerProxy, SPhysics3DControllerComponentView::View);
+		AddView(playerProxy, SPhysics3DControllerComponentView::Context);
 
 		controllerComponent->ControllerType = EPhysics3DControllerType::Capsule;
 		controllerComponent->ShapeLocalRadiusAndHeight = SVector2(0.25f, 1.0f);
@@ -326,21 +348,21 @@ namespace Havtorn
 			return false;
 
 		STransform& crateTransform = AddComponent<STransformComponent>(crate)->Transform;
-		AddView(crate, STransformComponentView::View);
+		AddView(crate, STransformComponentView::Context);
 		SMatrix crateMatrix = crateTransform.GetMatrix();
 		SMatrix::Recompose(SVector(1.0f, 4.7f, -1.5f), SVector(45.0f, 0.0f, 45.0f), SVector(0.5f), crateMatrix);
 		crateTransform.SetMatrix(crateMatrix);
 
 		renderManager->LoadStaticMeshComponent(modelPath5, AddComponent<SStaticMeshComponent>(crate));
-		AddView(crate, SStaticMeshComponentView::View);
+		AddView(crate, SStaticMeshComponentView::Context);
 		renderManager->LoadMaterialComponent(materialNames5, AddComponent<SMaterialComponent>(crate));
-		AddView(crate, SMaterialComponentView::View);
+		AddView(crate, SMaterialComponentView::Context);
 
 		GetComponent<SStaticMeshComponent>(crate)->AssetRegistryKey = assetRegistry->Register(modelPath5);
 		GetComponent<SMaterialComponent>(crate)->AssetRegistryKeys = assetRegistry->Register(materialNames5);
 
 		SPhysics3DComponent* cratePhysics = AddComponent<SPhysics3DComponent>(crate);
-		AddView(crate, SPhysics3DComponentView::View);
+		AddView(crate, SPhysics3DComponentView::Context);
 
 		cratePhysics->BodyType = EPhysics3DBodyType::Dynamic;
 		cratePhysics->ShapeType = EPhysics3DShapeType::Box;
@@ -355,11 +377,11 @@ namespace Havtorn
 			return false;
 
 		STransform& triggerTransform = AddComponent<STransformComponent>(trigger)->Transform;
-		AddView(trigger, STransformComponentView::View);
+		AddView(trigger, STransformComponentView::Context);
 		triggerTransform.Translate({ 0.2f, 1.0f, -1.25f });
 
 		SPhysics3DComponent* triggerPhysics = AddComponent<SPhysics3DComponent>(trigger);
-		AddView(trigger, SPhysics3DComponentView::View);
+		AddView(trigger, SPhysics3DComponentView::Context);
 
 		triggerPhysics->BodyType = EPhysics3DBodyType::Static;
 		triggerPhysics->ShapeType = EPhysics3DShapeType::Box;
@@ -428,22 +450,22 @@ namespace Havtorn
 				return false;
 
 			STransform& transform3 = AddComponent<STransformComponent>(entity)->Transform;
-			AddView(entity, STransformComponentView::View);
+			AddView(entity, STransformComponentView::Context);
 			SMatrix matrix3 = transform3.GetMatrix();
 			matrix3.SetTranslation(data.Translation);
 			matrix3.SetRotation(data.EulerAngles);
 			transform3.SetMatrix(matrix3);
 
 			renderManager->LoadStaticMeshComponent(modelPath3, AddComponent<SStaticMeshComponent>(entity));
-			AddView(entity, SStaticMeshComponentView::View);
+			AddView(entity, SStaticMeshComponentView::Context);
 			renderManager->LoadMaterialComponent(materialNames3, AddComponent<SMaterialComponent>(entity));
-			AddView(entity, SMaterialComponentView::View);
+			AddView(entity, SMaterialComponentView::Context);
 
 			GetComponent<SStaticMeshComponent>(entity)->AssetRegistryKey = assetRegistry->Register(modelPath3);
 			GetComponent<SMaterialComponent>(entity)->AssetRegistryKeys = assetRegistry->Register(materialNames3);
 
 			SPhysics3DComponent* physicsComponent = AddComponent<SPhysics3DComponent>(entity);
-			AddView(entity, SPhysics3DComponentView::View);
+			AddView(entity, SPhysics3DComponentView::Context);
 
 			physicsComponent->BodyType = EPhysics3DBodyType::Static;
 			physicsComponent->ShapeType = EPhysics3DShapeType::Box;
@@ -469,20 +491,20 @@ namespace Havtorn
 
 		// Setup entities (create components)
 		STransformComponent& transform = (*AddComponent<STransformComponent>(MainCameraEntity));
-		AddView(MainCameraEntity, STransformComponentView::View);
+		AddView(MainCameraEntity, STransformComponentView::Context);
 		transform.Transform.Translate({ 0.0f, 1.0f, -5.0f });
 		//transform.Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
 		transform.Transform.Translate(SVector::Right * 0.25f);
 
 		SCameraComponent& camera = *AddComponent<SCameraComponent>(MainCameraEntity);
-		AddView(MainCameraEntity, SCameraComponentView::View);
+		AddView(MainCameraEntity, SCameraComponentView::Context);
 		camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
 		//camera.ProjectionType = ECameraProjectionType::Orthographic;
 		//camera.ProjectionMatrix = SMatrix::OrthographicLH(5.0f, 5.0f, 0.1f, 1000.0f);
 
 		//		SCameraControllerComponent& controllerComp = 
 		AddComponent<SCameraControllerComponent>(MainCameraEntity);
-		AddView(MainCameraEntity, SCameraControllerComponentView::View);
+		AddView(MainCameraEntity, SCameraControllerComponentView::Context);
 		//controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
 		// 
 		//SSequencerComponent& cameraSequencerComponent = AddSequencerComponentToEntity(*cameraEntity);
@@ -495,9 +517,9 @@ namespace Havtorn
 			return false;
 
 		AddComponent<STransformComponent>(environmentLightEntity);
-		AddView(environmentLightEntity, STransformComponentView::View);
+		AddView(environmentLightEntity, STransformComponentView::Context);
 		renderManager->LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/CubemapTheVisit.hva", AddComponent<SEnvironmentLightComponent>(environmentLightEntity));
-		AddView(environmentLightEntity, SEnvironmentLightComponentView::View);
+		AddView(environmentLightEntity, SEnvironmentLightComponentView::Context);
 		GetComponent<SEnvironmentLightComponent>(environmentLightEntity)->AssetRegistryKey = assetRegistry->Register("Assets/Textures/Cubemaps/CubemapTheVisit.hva");
 		// === !Environment light ===
 
@@ -508,17 +530,17 @@ namespace Havtorn
 
 		// NR: Add transform to directional light so it can filter environmental lights based on distance
 		AddComponent<STransformComponent>(directionalLightEntity);
-		AddView(directionalLightEntity, STransformComponentView::View);
+		AddView(directionalLightEntity, STransformComponentView::Context);
 
 		SDirectionalLightComponent& directionalLight = *AddComponent<SDirectionalLightComponent>(directionalLightEntity);
-		AddView(directionalLightEntity, SDirectionalLightComponentView::View);
+		AddView(directionalLightEntity, SDirectionalLightComponentView::Context);
 		directionalLight.Direction = { 1.0f, 1.0f, -1.0f, 0.0f };
 		directionalLight.Color = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };
 		directionalLight.ShadowmapView.ShadowmapViewportIndex = 0;
 		directionalLight.ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLight.ShadowViewSize.X, directionalLight.ShadowViewSize.Y, directionalLight.ShadowNearAndFarPlane.X, directionalLight.ShadowNearAndFarPlane.Y);
 
 		SVolumetricLightComponent& volumetricLight = *AddComponent<SVolumetricLightComponent>(directionalLightEntity);
-		AddView(directionalLightEntity, SVolumetricLightComponentView::View);
+		AddView(directionalLightEntity, SVolumetricLightComponentView::Context);
 		volumetricLight.IsActive = false;
 		// === !Directional light ===
 
@@ -528,13 +550,13 @@ namespace Havtorn
 			return true;
 
 		STransform& spotlightTransform = (*AddComponent<STransformComponent>(spotlight)).Transform;
-		AddView(spotlight, STransformComponentView::View);
+		AddView(spotlight, STransformComponentView::Context);
 		SMatrix spotlightMatrix = spotlightTransform.GetMatrix();
 		spotlightMatrix.SetTranslation({ 0.0f, 0.0f, 0.0f });
 		spotlightTransform.SetMatrix(spotlightMatrix);
 
 		SSpotLightComponent& spotlightComp = *AddComponent<SSpotLightComponent>(spotlight);
-		AddView(spotlight, SSpotLightComponentView::View);
+		AddView(spotlight, SSpotLightComponentView::Context);
 		spotlightComp.Direction = SVector4::Forward;
 		spotlightComp.DirectionNormal1 = SVector4::Right;
 		spotlightComp.DirectionNormal2 = SVector4::Up;
@@ -544,7 +566,7 @@ namespace Havtorn
 		spotlightComp.Range = 3.0f;
 
 		SVolumetricLightComponent& volumetricSpotLight = *AddComponent<SVolumetricLightComponent>(spotlight);
-		AddView(spotlight, SVolumetricLightComponentView::View);
+		AddView(spotlight, SVolumetricLightComponentView::Context);
 		volumetricSpotLight.IsActive = false;
 
 		const SMatrix spotlightProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, spotlightComp.Range);
@@ -672,7 +694,7 @@ namespace Havtorn
 
 		{
 			std::vector<STransformComponent> components;
-			DefaultDeserializer(components, STransformComponentView::View, fromData, pointerPosition);
+			DefaultDeserializer(components, STransformComponentView::Context, fromData, pointerPosition);
 		}
 
 		{
@@ -686,18 +708,18 @@ namespace Havtorn
 				SStaticMeshComponent component;
 				component.Deserialize(fromData, pointerPosition);
 				RenderManager->LoadStaticMeshComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SStaticMeshComponent>(component.Owner));
-				AddView(component.Owner, SStaticMeshComponentView::View);
+				AddView(component.Owner, SStaticMeshComponentView::Context);
 			}
 		}
 
 		{
 			std::vector<SCameraComponent> components;
-			DefaultDeserializer(components, SCameraComponentView::View, fromData, pointerPosition);
+			DefaultDeserializer(components, SCameraComponentView::Context, fromData, pointerPosition);
 		}
 
 		{
 			std::vector<SCameraControllerComponent> components;
-			DefaultDeserializer(components, SCameraControllerComponentView::View, fromData, pointerPosition);
+			DefaultDeserializer(components, SCameraControllerComponentView::Context, fromData, pointerPosition);
 		}
 
 		U32 numberOfMaterialComponents = 0;
@@ -710,7 +732,7 @@ namespace Havtorn
 			SMaterialComponent component;
 			component.Deserialize(fromData, pointerPosition);
 			RenderManager->LoadMaterialComponent(assetRegistry->GetAssetPaths(component.AssetRegistryKeys), AddComponent<SMaterialComponent>(component.Owner));
-			AddView(component.Owner, SMaterialComponentView::View);
+			AddView(component.Owner, SMaterialComponentView::Context);
 		}
 
 		U32 numberOfEnvironmentLightComponents = 0;
@@ -723,27 +745,27 @@ namespace Havtorn
 			SEnvironmentLightComponent component;
 			DeserializeData(component, fromData, pointerPosition);
 			RenderManager->LoadEnvironmentLightComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SEnvironmentLightComponent>(component.Owner));
-			AddView(component.Owner, SEnvironmentLightComponentView::View);
+			AddView(component.Owner, SEnvironmentLightComponentView::Context);
 		}
 
 		{
 			std::vector<SDirectionalLightComponent> components;
-			DefaultDeserializer(components, SDirectionalLightComponentView::View, fromData, pointerPosition);
+			DefaultDeserializer(components, SDirectionalLightComponentView::Context, fromData, pointerPosition);
 		}
 
 		{
 			std::vector<SPointLightComponent> components;
-			DefaultDeserializer(components, SPointLightComponentView::View, fromData, pointerPosition);
+			DefaultDeserializer(components, SPointLightComponentView::Context, fromData, pointerPosition);
 		}
 
 		{
 			std::vector<SSpotLightComponent> components;
-			DefaultDeserializer(components, SSpotLightComponentView::View, fromData, pointerPosition);
+			DefaultDeserializer(components, SSpotLightComponentView::Context, fromData, pointerPosition);
 		}
 
 		{
 			std::vector<SVolumetricLightComponent> components;
-			DefaultDeserializer(components, SVolumetricLightComponentView::View, fromData, pointerPosition);
+			DefaultDeserializer(components, SVolumetricLightComponentView::Context, fromData, pointerPosition);
 		}
 
 		U32 numberOfDecalComponents = 0;
@@ -756,7 +778,7 @@ namespace Havtorn
 			SDecalComponent component;
 			component.Deserialize(fromData, pointerPosition);
 			RenderManager->LoadDecalComponent(assetRegistry->GetAssetPaths(component.AssetRegistryKeys), AddComponent<SDecalComponent>(component.Owner));
-			AddView(component.Owner, SDecalComponentView::View);
+			AddView(component.Owner, SDecalComponentView::Context);
 		}
 
 		U32 numberOfSpriteComponents = 0;
@@ -769,17 +791,17 @@ namespace Havtorn
 			SSpriteComponent component;
 			DeserializeData(component, fromData, pointerPosition);
 			RenderManager->LoadSpriteComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SSpriteComponent>(component.Owner));
-			AddView(component.Owner, SSpriteComponentView::View);
+			AddView(component.Owner, SSpriteComponentView::Context);
 		}
 
 		{
 			std::vector<STransform2DComponent> components;
-			DefaultDeserializer(components, STransform2DComponentView::View, fromData, pointerPosition);
+			DefaultDeserializer(components, STransform2DComponentView::Context, fromData, pointerPosition);
 		}
 
 		{
 			std::vector<SSpriteAnimatorGraphComponent> components;
-			SpecializedDeserializer(components, SSpriteAnimatorGraphComponentView::View, fromData, pointerPosition);
+			SpecializedDeserializer(components, SSpriteAnimatorGraphComponentView::Context, fromData, pointerPosition);
 		}
 
 		U32 numberOfSequencerComponents = 0;
@@ -787,17 +809,17 @@ namespace Havtorn
 
 		{
 			std::vector<SPhysics2DComponent> components;
-			DefaultDeserializer(components, SPhysics2DComponentView::View, fromData, pointerPosition);
+			DefaultDeserializer(components, SPhysics2DComponentView::Context, fromData, pointerPosition);
 		}
 
 		{
 			std::vector<SPhysics3DComponent> components;
-			DefaultDeserializer(components, SPhysics3DComponentView::View, fromData, pointerPosition);
+			DefaultDeserializer(components, SPhysics3DComponentView::Context, fromData, pointerPosition);
 		}
 
 		{
 			std::vector<SPhysics3DControllerComponent> components;
-			DefaultDeserializer(components, SPhysics3DControllerComponentView::View, fromData, pointerPosition);
+			DefaultDeserializer(components, SPhysics3DControllerComponentView::Context, fromData, pointerPosition);
 		}
 
 		{
@@ -887,7 +909,7 @@ namespace Havtorn
 		EntityIndices.erase(entity.GUID);
 	}
 
-	void CScene::AddView(const SEntity& owner, SViewFunctionPointer function)
+	void CScene::AddView(const SEntity& owner, SComponentEditorContext context)
 	{
 		if (!ComponentViews.contains(owner.GUID))
 			ComponentViews.emplace(owner.GUID, std::vector<SViewFunctionPointer>());
@@ -895,10 +917,10 @@ namespace Havtorn
 		auto& functionPointers = ComponentViews.at(owner.GUID);
 		// TODO.NR: Support adding and removing components through the editor. Unsolved problem.
 		//if (std::find(functionPointers.begin(), functionPointers.end(), function) == functionPointers.end())
-			functionPointers.push_back(function);
+			functionPointers.push_back(context);
 	}
 
-	void CScene::RemoveView(const SEntity& owner, SViewFunctionPointer function)
+	void CScene::RemoveView(const SEntity& owner, SComponentEditorContext context)
 	{
 		if (!ComponentViews.contains(owner.GUID))
 			return;
@@ -931,12 +953,17 @@ namespace Havtorn
 		ComponentViews.erase(owner.GUID);
 	}
 
-	std::vector<CScene::SViewFunctionPointer> CScene::GetViews(const SEntity& owner)
+	std::vector<SComponentEditorContext> CScene::GetViews(const SEntity& owner)
 	{
 		if (!ComponentViews.contains(owner.GUID))
 			return {};
 
 		return ComponentViews.at(owner.GUID);
+	}
+
+	const std::vector<SComponentEditorContext>& CScene::GetEditorContexts() const
+	{
+		return ComponentEditorContexts;
 	}
 
 	U64 CScene::GetSceneIndex(const SEntity& entity) const

@@ -9,6 +9,8 @@
 
 namespace Havtorn
 {
+	SMaterialComponentView SMaterialComponentView::Context = {};
+
     SComponentViewResult Havtorn::SMaterialComponentView::View(const SEntity& entityOwner, CScene* scene)
     {
 		if (!ImGui::UUtils::TryOpenComponentView("Material"))

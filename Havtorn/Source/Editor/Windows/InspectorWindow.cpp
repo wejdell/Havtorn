@@ -463,55 +463,43 @@ namespace ImGui
 		if (!ImGui::BeginPopupModal("Add Component Modal", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 			return;
 
-		// TODO.NR: Support adding and removing components through the editor. Unsolved problem.
-		//Havtorn::U32 id = 0;
+		Havtorn::U32 id = 0;
 
-		//if (ImGui::BeginTable("NewComponentTypeTable", 1))
-		//{
-		//	for (U64 i = 0; i < STATIC_U64(EComponentType::Count) - 2; i++)
-		//	{
-		//		ImGui::TableNextColumn();
-		//		ImGui::PushID(id++);
+		if (ImGui::BeginTable("NewComponentTypeTable", 1))
+		{
+			for (const Havtorn::SComponentEditorContext& context : Scene->GetEditorContexts())
+			{
+				ImGui::TableNextColumn();
+				ImGui::PushID(id++);
 
-		//		EComponentType componentType = static_cast<EComponentType>(i);
-		//		if (ImGui::Button(GetComponentTypeString(componentType).c_str()))
-		//		{
-		//			Havtorn::CScene* scene = Manager->GetCurrentScene();
-		//			Havtorn::SEntity* selection = Manager->GetSelectedEntity();
+				context.AddComponentFunction(SelectedEntity, Scene);
 
-		//			if (scene != nullptr && selection != nullptr)
-		//				scene->AddComponentToEntity(componentType, *selection);
-		//			
-		//			ImGui::CloseCurrentPopup();
-		//		}
+				ImGui::PopID();
+			}
 
-		//		ImGui::PopID();
-		//	}
+			ImGui::EndTable();
+		}
 
-		//	ImGui::EndTable();
-		//}
-
-		//if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) { ImGui::CloseCurrentPopup(); }
+		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) { ImGui::CloseCurrentPopup(); }
 
 		ImGui::EndPopup();
 	}
 	
-	void CInspectorWindow::RemoveComponentButton(/*Havtorn::EComponentType componentType*/)
+	void CInspectorWindow::RemoveComponentButton(std::function<void(const Havtorn::SEntity& entity, Havtorn::CScene* scene)> function)
 	{
-		// TODO.NR: Support adding and removing components through the editor. Unsolved problem.
-		//ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - ImGui::GetTreeNodeToLabelSpacing()*0.3f);
+		ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::GetTreeNodeToLabelSpacing()*0.3f);
 
-		//ImGui::PushID(static_cast<U64>(componentType));
-		//if (ImGui::Button("X"))
-		//{
-		//	Havtorn::CScene* scene = Manager->GetCurrentScene();
-		//	Havtorn::SEntity* selection = Manager->GetSelectedEntity();
+		ImGui::PushID(static_cast<U64>(componentType));
+		if (ImGui::Button("X"))
+		{
+			Havtorn::CScene* scene = Manager->GetCurrentScene();
+			Havtorn::SEntity* selection = Manager->GetSelectedEntity();
 
-		//	if (scene == nullptr || selection == nullptr)
-		//		return;
+			if (scene == nullptr || selection == nullptr)
+				return;
 
-		//	scene->RemoveComponentFromEntity(componentType, *selection);
-		//}
-		//ImGui::PopID();
+			scene->RemoveComponentFromEntity(componentType, *selection);
+		}
+		ImGui::PopID();
 	}
 }

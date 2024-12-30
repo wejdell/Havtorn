@@ -5,8 +5,12 @@
 
 namespace Havtorn
 {
-	struct STransformComponentView
+	struct STransformComponentView : public SComponentEditorContext
 	{
-		static HAVTORN_API SComponentViewResult View(const SEntity& entityOwner, CScene* scene);
+		HAVTORN_API SComponentViewResult View(const SEntity& entityOwner, CScene* scene) override;
+		HAVTORN_API void AddComponent(const SEntity& entity, CScene* scene) override;
+		HAVTORN_API void RemoveComponent(const SEntity& entity, CScene* scene) override;
+
+		static STransformComponentView Context;
 	};
 }

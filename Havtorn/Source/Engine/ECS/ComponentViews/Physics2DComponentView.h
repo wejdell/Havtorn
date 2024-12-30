@@ -5,8 +5,10 @@
 
 namespace Havtorn
 {
-	struct SPhysics2DComponentView
+	struct SPhysics2DComponentView : public SComponentEditorContext
 	{
-		static HAVTORN_API SComponentViewResult View(const SEntity& entityOwner, CScene* scene);
+		HAVTORN_API SComponentViewResult View(const SEntity& entityOwner, CScene* scene) override;
+
+		static SPhysics2DComponentView Context;
 	};
 }

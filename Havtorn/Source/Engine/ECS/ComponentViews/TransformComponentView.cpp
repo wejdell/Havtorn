@@ -12,6 +12,8 @@
 
 namespace Havtorn
 {
+	STransformComponentView STransformComponentView::Context = {};
+
     SComponentViewResult STransformComponentView::View(const SEntity& entityOwner, CScene* scene)
     {
 		if (!ImGui::UUtils::TryOpenComponentView("Transform"))
@@ -36,4 +38,26 @@ namespace Havtorn
 
 		return result;
     }
+
+	void STransformComponentView::AddComponent(const SEntity& entity, CScene* scene)
+	{
+		if (!ImGui::Button("Transform Component"))
+			return;
+
+		if (scene != nullptr && entity.IsValid())
+			scene->AddComponent<STransformComponent>(entity);
+
+		ImGui::CloseCurrentPopup();
+	}
+
+	void STransformComponentView::RemoveComponent(const SEntity& entity, CScene* scene)
+	{
+		if (!ImGui::Button("X"))
+			return;
+			
+		if (scene == nullptr || !entity.IsValid())
+			return;
+
+		scene->RemoveComponent<STransformComponent>(entity);
+	}
 }
