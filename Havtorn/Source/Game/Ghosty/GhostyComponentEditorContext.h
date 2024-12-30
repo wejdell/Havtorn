@@ -2,7 +2,6 @@
 
 #pragma once
 #include <ECS/ComponentEditorContext.h>
-#include <Scene/Scene.h>
 
 namespace Havtorn
 {
