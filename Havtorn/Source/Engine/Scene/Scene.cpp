@@ -914,8 +914,10 @@ namespace Havtorn
 		if (!EntityComponentEditorContexts.contains(owner.GUID))
 			EntityComponentEditorContexts.emplace(owner.GUID, std::vector<SComponentEditorContext*>());
 		 
-		auto& functionPointers = EntityComponentEditorContexts.at(owner.GUID);
-		functionPointers.push_back(context);
+		auto& contexts = EntityComponentEditorContexts.at(owner.GUID);
+		contexts.push_back(context);
+
+		std::sort(contexts.begin(), contexts.end(), [](const SComponentEditorContext* a, const SComponentEditorContext* b) { return a->GetSortingPriority() < b->GetSortingPriority(); });
 	}
 
 	void CScene::RemoveComponentEditorContext(const SEntity& owner, SComponentEditorContext* context)
@@ -923,10 +925,10 @@ namespace Havtorn
 		if (!EntityComponentEditorContexts.contains(owner.GUID))
 			return;
 
-		auto& functionPointers = EntityComponentEditorContexts.at(owner.GUID);
-		auto it = std::find(functionPointers.begin(), functionPointers.end(), context);
-		if (it != functionPointers.end())
-			functionPointers.erase(it);
+		auto& contexts = EntityComponentEditorContexts.at(owner.GUID);
+		auto it = std::find(contexts.begin(), contexts.end(), context);
+		if (it != contexts.end())
+			contexts.erase(it);
 	}
 
 	void CScene::RemoveComponentEditorContexts(const SEntity& owner)
