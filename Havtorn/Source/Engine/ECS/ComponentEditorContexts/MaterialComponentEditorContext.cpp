@@ -46,4 +46,9 @@ namespace Havtorn
 		scene->RemoveComponentEditorContext(entity, &SMaterialComponentEditorContext::Context);
 		return true;
 	}
+
+	U8 SMaterialComponentEditorContext::GetSortingPriority() const
+	{
+		return 3;
+	}
 }

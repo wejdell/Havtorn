@@ -88,4 +88,9 @@ namespace Havtorn
 		scene->RemoveComponentEditorContext(entity, &SStaticMeshComponentEditorContext::Context);
 		return true;
 	}
+
+	U8 SStaticMeshComponentEditorContext::GetSortingPriority() const
+	{
+		return 2;
+	}
 }

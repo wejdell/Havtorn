@@ -28,5 +28,6 @@ namespace Havtorn
 		virtual SComponentViewResult View(const SEntity& /*entityOwner*/, CScene* /*scene*/) const { return SComponentViewResult(); };
 		virtual bool AddComponent(const SEntity& /*entity*/, CScene* /*scene*/) const { return false; };
 		virtual bool RemoveComponent(const SEntity& /*entity*/, CScene* /*scene*/) const { return false; };
+		virtual U8 GetSortingPriority() const { return UMath::MaxU8; };
 	};
 }
