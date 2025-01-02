@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Core/HavtornString.h"
+#include "Core/GeneralUtilities.h"
 #include "ECS/Entity.h"
 #include "ECS/Component.h"
 #include "ECS/ComponentEditorContext.h"
@@ -137,6 +138,8 @@ namespace Havtorn
 
 			ContextIndices.emplace(typeIDHashCode, RegisteredComponentEditorContexts.size());
 			RegisteredComponentEditorContexts.emplace_back(context);
+
+			std::sort(RegisteredComponentEditorContexts.begin(), RegisteredComponentEditorContexts.end(), [](const SComponentEditorContext* a, const SComponentEditorContext* b) { return a->GetSortingPriority() < b->GetSortingPriority(); });
 		}
 
 		template<typename T>
@@ -207,8 +210,10 @@ namespace Havtorn
 			}
 
 			SComponentStorage& componentStorage = Storages[ComponentTypeIndices.at(typeIDHashCode)];
+			std::unordered_map<U64, U64>& entityIndices = componentStorage.EntityIndices;
+			std::vector<SComponent*>& components = componentStorage.Components;
 
-			if (!componentStorage.EntityIndices.contains(fromEntity.GUID))
+			if (!entityIndices.contains(fromEntity.GUID))
 			{
 				// TODO.NR: Make a toggle for this, keep for now
 				//std::string templateName = typeid(T).name();
@@ -216,17 +221,16 @@ namespace Havtorn
 				return;
 			}
 
-			auto& endValue = *(--componentStorage.EntityIndices.end());
-			componentStorage.EntityIndices.at(endValue.first) = componentStorage.EntityIndices.at(fromEntity.GUID);
+			const std::pair<U64, U64>& maxIndexEntry = *std::ranges::find_if(entityIndices, [components](const auto& entry) { return entry.second == components.size() - 1; });
+			std::swap(components[entityIndices.at(fromEntity.GUID)], components[entityIndices.at(maxIndexEntry.first)]);
+			std::swap(entityIndices.at(maxIndexEntry.first), entityIndices.at(fromEntity.GUID));
 
-			std::swap(componentStorage.Components[componentStorage.EntityIndices.at(fromEntity.GUID)], componentStorage.Components.back());
-
-			SComponent*& componentToBeRemoved = componentStorage.Components.back();
+			T* componentToBeRemoved = reinterpret_cast<T*>(components[entityIndices.at(fromEntity.GUID)]);
 			delete componentToBeRemoved;
 			componentToBeRemoved = nullptr;
 
-			componentStorage.Components.pop_back();
-			componentStorage.EntityIndices.erase(fromEntity.GUID);
+			components.erase(components.begin() + entityIndices.at(fromEntity.GUID));
+			entityIndices.erase(fromEntity.GUID);
 		}
 
 		template<typename... Ts>
