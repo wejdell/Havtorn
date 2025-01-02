@@ -3,6 +3,7 @@
 #include "AssetBrowserWindow.h"
 
 #include "EditorManager.h"
+#include "DockSpaceWindow.h"
 #include "EditorResourceManager.h"
 #include "Engine.h"
 #include "FileSystem/FileSystem.h"
@@ -32,13 +33,6 @@ namespace ImGui
 
 	void CAssetBrowserWindow::OnInspectorGUI()
 	{
-		const Havtorn::SEditorLayout& layout = Manager->GetEditorLayout();
-		const ImGuiViewport* mainViewport = ImGui::GetMainViewport();
-		ImGui::SetNextWindowPos(ImVec2(mainViewport->WorkPos.x + layout.AssetBrowserPosition.X, mainViewport->WorkPos.y + layout.AssetBrowserPosition.Y));
-		ImGui::SetNextWindowSize(ImVec2(layout.AssetBrowserSize.X * 0.5f, layout.AssetBrowserSize.Y));
-
-		//ImGui::DockSpace(1, ImVec2(0.f, 0.f), ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_AutoHideTabBar | ImGuiDockNodeFlags_NoDockingInCentralNode);
-
 		if (ImGui::Begin(Name(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus))
 		{
 			if (CurrentDirectory != std::filesystem::path(DefaultAssetPath))
@@ -51,7 +45,8 @@ namespace ImGui
 
 			F32 thumbnailPadding = 8.0f;
 			F32 cellWidth = ThumbnailSize.X + thumbnailPadding;
-			F32 panelWidth = ImGui::GetContentRegionAvail().x;
+			const Havtorn::SEditorLayout& layout = Manager->GetEditorLayout();
+			F32 panelWidth = layout.AssetBrowserSize.X;
 			Havtorn::I32 columnCount = static_cast<Havtorn::I32>(panelWidth / cellWidth);
 
 			ImTextureID folderIconID = (ImTextureID)(intptr_t)Manager->GetResourceManager()->GetEditorTexture(Havtorn::EEditorTexture::FolderIcon);
@@ -102,8 +97,13 @@ namespace ImGui
 			}
 		}
 		ImGui::End();
-
-
+		
+		// NR: Keep this here in case we want this to be a subwindow rather than an integrated element
+		//if (ImGui::Begin("Asset Browser Folder View"), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus)
+		//{
+		//	ImGui::Text("Folder View");
+		//}
+		//ImGui::End();
 	}
 
 	void CAssetBrowserWindow::OnDisable()

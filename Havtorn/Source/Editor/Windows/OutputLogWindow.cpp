@@ -3,6 +3,7 @@
 #include "OutputLogWindow.h"
 
 #include "EditorManager.h"
+#include "DockSpaceWindow.h"
 
 #include <Core/imgui.h>
 
@@ -40,13 +41,6 @@ namespace ImGui
 
 	void COutputLogWindow::OnInspectorGUI()
 	{
-		const Havtorn::SEditorLayout& layout = Manager->GetEditorLayout();
-		const ImGuiViewport* mainViewport = ImGui::GetMainViewport();
-		ImGui::SetNextWindowPos(ImVec2(mainViewport->WorkPos.x + layout.AssetBrowserPosition.X + layout.AssetBrowserSize.X * 0.5f, mainViewport->WorkPos.y + layout.AssetBrowserPosition.Y));
-		ImGui::SetNextWindowSize(ImVec2(layout.AssetBrowserSize.X * 0.5f, layout.AssetBrowserSize.Y));
-
-		//ImGui::SetNextWindowDockID(1);
-
 		if (!ImGui::Begin(Name(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus))
         {
             ImGui::End();

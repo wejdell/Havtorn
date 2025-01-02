@@ -3,6 +3,7 @@
 #pragma once
 #include "EditorWindow.h"
 #include "Windows/ViewportWindow.h"
+#include "Windows/DockSpaceWindow.h"
 #include "Windows/AssetBrowserWindow.h"
 #include "Windows/HierarchyWindow.h"
 #include "Windows/InspectorWindow.h"

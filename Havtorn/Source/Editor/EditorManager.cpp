@@ -62,6 +62,7 @@ namespace Havtorn
 		MenuElements.emplace_back(new ImGui::CHelpMenu("Help", this));
 
 		Windows.emplace_back(new ImGui::CViewportWindow("Viewport", this));
+		Windows.emplace_back(new ImGui::CDockSpaceWindow("Dock Space", this));
 		Windows.emplace_back(new ImGui::CAssetBrowserWindow("Asset Browser", this));
 		Windows.emplace_back(new ImGui::COutputLogWindow("Output Log", this));
 		Windows.emplace_back(new ImGui::CHierarchyWindow("Hierarchy", this));
