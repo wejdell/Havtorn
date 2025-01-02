@@ -47,20 +47,10 @@ namespace ImGui
             return;
         }
 
-        // As a specific feature guaranteed by the library, after calling Begin() the last Item represent the title bar.
-        // So e.g. IsItemHovered() will return true when hovering the title bar.
-        // Here we create a context menu only available from the title bar.
-        if (ImGui::BeginPopupContextItem())
-        {
-            if (ImGui::MenuItem("Close Console"))
-                IsEnabled = false;
-            ImGui::EndPopup();
-        }
-
         // TODO: display items starting from the bottom
 
         ImGui::SameLine();
-        Filter.Draw("Filter (\"incl,-excl\") (\"error\")", 180);
+        Filter.Draw("Filter", 180);
         
         ImGui::SameLine();
 
