@@ -5,9 +5,11 @@
 #include "EditorManager.h"
 #include "DockSpaceWindow.h"
 #include "EditorResourceManager.h"
-#include "Engine.h"
-#include "FileSystem/FileSystem.h"
-#include "Graphics/RenderManager.h"
+
+#include <Engine.h>
+#include <Core/MathTypes/EngineMath.h>
+#include <FileSystem/FileSystem.h>
+#include <Graphics/RenderManager.h>
 
 #include <Core/imgui.h>
 
@@ -35,62 +37,42 @@ namespace ImGui
 	{
 		if (ImGui::Begin(Name(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus))
 		{
-			if (CurrentDirectory != std::filesystem::path(DefaultAssetPath))
+			if (ImGui::ArrowButton("GoBackDir", ImGuiDir_Up))
 			{
-				if (ImGui::ArrowButton("GoBackDir", ImGuiDir_Up))
-				{
+				if (CurrentDirectory != std::filesystem::path(DefaultAssetPath))
 					CurrentDirectory = CurrentDirectory.parent_path();
-				}
 			}
 
-			F32 thumbnailPadding = 8.0f;
+			ImGui::SameLine();
+			Filter.Draw("Search", 180);
+
+			ImGui::Separator();
+
+			// TODO.NR: Another magic number here, 10 cuts off the right border. 11 seems to work but feels too odd.
+			F32 thumbnailPadding = 12.0f;
 			F32 cellWidth = ThumbnailSize.X + thumbnailPadding;
-			const Havtorn::SEditorLayout& layout = Manager->GetEditorLayout();
-			F32 panelWidth = layout.AssetBrowserSize.X;
-			Havtorn::I32 columnCount = static_cast<Havtorn::I32>(panelWidth / cellWidth);
+			F32 panelWidth = ImGui::GetContentRegionAvail().x;
+			Havtorn::I32 columnCount = Havtorn::UMath::Max(static_cast<Havtorn::I32>(panelWidth / cellWidth), 1);
 
 			ImTextureID folderIconID = (ImTextureID)(intptr_t)Manager->GetResourceManager()->GetEditorTexture(Havtorn::EEditorTexture::FolderIcon);
 
 			Havtorn::U32 id = 0;
 			if (ImGui::BeginTable("FileStructure", columnCount))
 			{
-				for (const auto& entry : std::filesystem::directory_iterator(CurrentDirectory))
+				if (Filter.IsActive())
 				{
-					ImGui::TableNextColumn();
-					ImGui::PushID(id++);
-
-					const auto& path = entry.path();
-					auto relativePath = std::filesystem::relative(path);
-					std::string filenameString = relativePath.filename().string();
-
-					if (entry.is_directory())
-					{	
-						if (ImGui::ImageButton("FolderIcon", folderIconID, {ThumbnailSize.X, ThumbnailSize.Y}))
-						{
-							CurrentDirectory /= path.filename();
-						}
-						
-						ImGui::Text(filenameString.c_str());
-						if (ImGui::IsItemHovered())
-							ImGui::SetTooltip(filenameString.c_str());
-					}
-					else
+					for (const auto& entry : std::filesystem::recursive_directory_iterator(CurrentDirectory))
 					{
-						const auto& rep = Manager->GetAssetRepFromDirEntry(entry);
-						if (!rep->TextureRef)
-							rep->TextureRef = Manager->GetResourceManager()->GetEditorTexture(Havtorn::EEditorTexture::FileIcon);
+						if (!Filter.PassFilter(entry.path().string().c_str()))
+							continue;
 
-						if (ImGui::ImageButton("AssetIcon", (ImTextureID)(intptr_t)rep->TextureRef, {ThumbnailSize.X, ThumbnailSize.Y}))
-						{
-							// NR: Open Tool depending on asset type
-						}
-
-						ImGui::Text(rep->Name.c_str());
-						if (ImGui::IsItemHovered())
-							ImGui::SetTooltip(rep->Name.c_str());
+						InspectDirectoryEntry(entry, id, folderIconID);
 					}
-
-					ImGui::PopID();
+				}
+				else
+				{
+					for (const auto& entry : std::filesystem::directory_iterator(CurrentDirectory))
+						InspectDirectoryEntry(entry, id, folderIconID);
 				}
 
 				ImGui::EndTable();
@@ -126,5 +108,44 @@ namespace ImGui
 		std::string hvaFilePath = Manager->GetResourceManager()->ConvertToHVA(filePath, CurrentDirectory.string(), Havtorn::EAssetType::Texture); 
 
 		Manager->CreateAssetRep(hvaFilePath); //Creates a SEditorAssetRepresentation and adds it to the AssetRepresentations
+	}
+
+	void CAssetBrowserWindow::InspectDirectoryEntry(const std::filesystem::directory_entry& entry, Havtorn::U32& outCurrentID, const ImTextureID& folderIconID)
+	{
+		ImGui::TableNextColumn();
+		ImGui::PushID(outCurrentID++);
+
+		const auto& path = entry.path();
+		auto relativePath = std::filesystem::relative(path);
+		std::string filenameString = relativePath.filename().string();
+
+		if (entry.is_directory())
+		{
+			if (ImGui::ImageButton("FolderIcon", folderIconID, { ThumbnailSize.X, ThumbnailSize.Y }))
+			{
+				CurrentDirectory = entry.path();
+			}
+
+			ImGui::Text(filenameString.c_str());
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip(filenameString.c_str());
+		}
+		else
+		{
+			const auto& rep = Manager->GetAssetRepFromDirEntry(entry);
+			if (!rep->TextureRef)
+				rep->TextureRef = Manager->GetResourceManager()->GetEditorTexture(Havtorn::EEditorTexture::FileIcon);
+
+			if (ImGui::ImageButton("AssetIcon", (ImTextureID)(intptr_t)rep->TextureRef, { ThumbnailSize.X, ThumbnailSize.Y }))
+			{
+				// NR: Open Tool depending on asset type
+			}
+
+			ImGui::Text(rep->Name.c_str());
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip(rep->Name.c_str());
+		}
+
+		ImGui::PopID();
 	}
 }
