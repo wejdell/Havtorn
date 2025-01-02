@@ -221,7 +221,9 @@ namespace Havtorn
 				return;
 			}
 
-			const std::pair<U64, U64>& maxIndexEntry = *std::ranges::find_if(entityIndices, [components](const auto& entry) { return entry.second == components.size() - 1; });
+			const std::pair<U64, U64>& maxIndexEntry = *std::ranges::find_if(entityIndices, 
+				[components](const auto& entry) { return entry.second == components.size() - 1; });
+
 			std::swap(components[entityIndices.at(fromEntity.GUID)], components[entityIndices.at(maxIndexEntry.first)]);
 			std::swap(entityIndices.at(maxIndexEntry.first), entityIndices.at(fromEntity.GUID));
 
