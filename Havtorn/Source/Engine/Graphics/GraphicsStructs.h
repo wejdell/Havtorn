@@ -29,6 +29,30 @@ namespace Havtorn
 		F32 u, v;
 	};
 
+	struct SSkeletalMeshVertex
+	{
+		// Position
+		F32 x, y, z;
+
+		// Normal
+		F32 nx, ny, nz;
+
+		// Tangent
+		F32 tx, ty, tz;
+
+		// Bitangent
+		F32 bx, by, bz;
+
+		// UV
+		F32 u, v;
+
+		// Bone ID
+		F32 bix, biy, biz, biw;
+
+		// Bone Weight
+		F32 bwx, bwy, bwz, bww;
+	};
+
 	struct SMeshData
 	{
 		std::vector<SStaticMeshVertex> Vertices;
@@ -45,6 +69,13 @@ namespace Havtorn
 	{
 		std::string Name;
 		std::vector<SStaticMeshVertex> Vertices;
+		std::vector<U32> Indices;
+	};
+
+	struct SSkeletalMesh
+	{
+		std::string Name;
+		std::vector<SSkeletalMeshVertex> Vertices;
 		std::vector<U32> Indices;
 	};
 

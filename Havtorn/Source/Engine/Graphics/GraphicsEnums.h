@@ -24,9 +24,11 @@ namespace Havtorn
 	{
 		Pos3Nor3Tan3Bit3UV2,
 		Pos3Nor3Tan3Bit3UV2Trans,
+		//Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Trans,
 		Position4,
 		TransUVRectColor,
 		Pos3Nor3Tan3Bit3UV2Entity2Trans,
+		//Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2Trans,
 		TransUVRectColorEntity2,
 		Null
 	};
