@@ -15,6 +15,7 @@ namespace ImGui
 		void OnDisable() override;
 
 	private:
+		ImGuiTextFilter Filter = ImGuiTextFilter();
 		Havtorn::I32 SelectedIndex = 0;
 	};
 }

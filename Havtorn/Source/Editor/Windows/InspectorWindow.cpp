@@ -75,7 +75,9 @@ namespace ImGui
 		{
 			ImGui::HavtornInputText("##MetaDataCompName", &metaDataComp->Name);
 			ImGui::SameLine();
-			ImGui::TextDisabled("GUID %i", metaDataComp->Owner.GUID);
+			ImGui::TextDisabled("GUID %u", metaDataComp->Owner.GUID);
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("GUID %u", metaDataComp->Owner.GUID);
 		}
 		ImGui::Separator();
 
@@ -107,10 +109,9 @@ namespace ImGui
 			ImGui::Dummy({ ImGui::UUtils::DummySizeX, ImGui::UUtils::DummySizeY });
 		}
 
+		ImGui::Separator();
 		if (ImGui::Button("Add Component", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
-		{
 			ImGui::OpenPopup("Add Component Modal");
-		}
 
 		OpenAddComponentModal();
 

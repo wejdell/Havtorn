@@ -50,7 +50,7 @@ namespace ImGui
         // TODO: display items starting from the bottom
 
         ImGui::SameLine();
-        Filter.Draw("Filter", 180);
+        Filter.Draw("Search", 180);
         
         ImGui::SameLine();
 

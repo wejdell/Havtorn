@@ -40,6 +40,9 @@ namespace ImGui
 		
 		if (ImGui::Begin(Name(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus))
 		{
+			Filter.Draw("Search");
+			ImGui::Separator();
+
 			Havtorn::CScene* scene = Manager->GetCurrentScene();
 			if (!scene)
 			{
@@ -50,16 +53,18 @@ namespace ImGui
 			ImGui::Text(scene->GetSceneName().c_str());
 
 			Havtorn::I32 index = 0;
-			auto& entities = Havtorn::GEngine::GetWorld()->GetEntities();
+			const std::vector<Havtorn::SEntity>& entities = Havtorn::GEngine::GetWorld()->GetEntities();
 			
-			for (Havtorn::U64 i = Havtorn::UDebugShapeSystem::MaxShapes; i < entities.size(); i++)
+			for (const Havtorn::SEntity& entity : entities)
 			{
-				auto& entity = entities[i];
 				if (!entity.IsValid())
 					continue;
 		
 				const Havtorn::SMetaDataComponent* metaDataComp = scene->GetComponent<Havtorn::SMetaDataComponent>(entity);
 				const std::string entryString = metaDataComp->IsValid() ? metaDataComp->Name.AsString() : "Selected";
+
+				if (Filter.IsActive() && !Filter.PassFilter(entryString.c_str()))
+					continue;
 
 				ImGui::PushID(static_cast<Havtorn::I32>(entity.GUID));
 				if (ImGui::Selectable(entryString.c_str(), index == SelectedIndex, ImGuiSelectableFlags_None))
