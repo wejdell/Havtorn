@@ -72,7 +72,6 @@ namespace Havtorn
 						command.ShadowmapViews.push_back(directionalLightComp->ShadowmapView);
 						command.Matrices.push_back(transformComp->Transform.GetMatrix());
 						command.Strings.push_back(staticMeshComponent->Name.AsString());
-						command.U8s.push_back(staticMeshComponent->TopologyIndex);
 						command.DrawCallData = staticMeshComponent->DrawCallData;
 						RenderManager->PushRenderCommand(command);
 					}
@@ -86,7 +85,6 @@ namespace Havtorn
 						command.Type = ERenderCommandType::ShadowAtlasPrePassPoint;
 						command.Matrices.push_back(transformComp->Transform.GetMatrix());
 						command.Strings.push_back(staticMeshComponent->Name.AsString());
-						command.U8s.push_back(staticMeshComponent->TopologyIndex);
 						command.DrawCallData = staticMeshComponent->DrawCallData;
 						command.SetShadowMapViews(pointLightComp->ShadowmapViews);
 						RenderManager->PushRenderCommand(command);
@@ -101,7 +99,6 @@ namespace Havtorn
 						command.Type = ERenderCommandType::ShadowAtlasPrePassSpot;
 						command.Matrices.push_back(transformComp->Transform.GetMatrix());
 						command.Strings.push_back(staticMeshComponent->Name.AsString());
-						command.U8s.push_back(staticMeshComponent->TopologyIndex);
 						command.DrawCallData = staticMeshComponent->DrawCallData;
 						command.ShadowmapViews.push_back(spotLightComp->ShadowmapView);
 						RenderManager->PushRenderCommand(command);
@@ -114,9 +111,6 @@ namespace Havtorn
 					command.Type = ERenderCommandType::GBufferDataInstanced;
 					command.Matrices.push_back(transformComp->Transform.GetMatrix());
 					command.Strings.push_back(staticMeshComponent->Name.AsString());
-					command.U8s.push_back(staticMeshComponent->TopologyIndex);
-					command.U8s.push_back(staticMeshComponent->PixelShaderIndex);
-					command.U8s.push_back(staticMeshComponent->SamplerIndex);
 					command.DrawCallData = staticMeshComponent->DrawCallData;
 					command.Materials = materialComp->Materials;
 					RenderManager->PushRenderCommand(command);
@@ -127,9 +121,6 @@ namespace Havtorn
 					command.Type = ERenderCommandType::GBufferDataInstancedEditor;
 					command.Matrices.push_back(transformComp->Transform.GetMatrix());
 					command.Strings.push_back(staticMeshComponent->Name.AsString());
-					command.U8s.push_back(staticMeshComponent->TopologyIndex);
-					command.U8s.push_back(staticMeshComponent->PixelShaderIndex);
-					command.U8s.push_back(staticMeshComponent->SamplerIndex);
 					command.DrawCallData = staticMeshComponent->DrawCallData;
 					command.Materials = materialComp->Materials;
 					RenderManager->PushRenderCommand(command);

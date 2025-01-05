@@ -79,6 +79,7 @@ namespace Havtorn
 		HAVTORN_API void LoadSpriteComponent(const std::string& filePath, SSpriteComponent* outSpriteComponent);
 
 		HAVTORN_API void* RenderStaticMeshAssetTexture(const std::string& filePath);
+		HAVTORN_API void* RenderSkeletalMeshAssetTexture(const std::string& filePath);
 		HAVTORN_API void* GetTextureAssetTexture(const std::string& filePath);
 		HAVTORN_API void* RenderMaterialAssetTexture(const std::string& filePath);
 

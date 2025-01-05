@@ -1,4 +1,4 @@
-// Copyright 2022 Team Havtorn. All Rights Reserved.
+// Copyright 2025 Team Havtorn. All Rights Reserved.
 
 #include "hvpch.h"
 #include "SkeletalMeshComponent.h"

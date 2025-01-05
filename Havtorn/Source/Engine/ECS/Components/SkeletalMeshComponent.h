@@ -1,4 +1,4 @@
-// Copyright 2022 Team Havtorn. All Rights Reserved.
+// Copyright 2025 Team Havtorn. All Rights Reserved.
 
 #pragma once
 #include "ECS/Component.h"
@@ -31,14 +31,6 @@ namespace Havtorn
 		SVector BoundsCenter = SVector::Zero;
 
 		U8 NumberOfMaterials = 0;
-
-		// Render Data
-		U8 VertexShaderIndex = 0;
-		U8 InputLayoutIndex = 0;
-		U8 PixelShaderIndex = 0;
-		U8 SamplerIndex = 0;
-		U8 TopologyIndex = 0;
-
 		U64 AssetRegistryKey = 0;
 	};
 }

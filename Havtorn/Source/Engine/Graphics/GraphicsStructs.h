@@ -46,6 +46,8 @@ namespace Havtorn
 		// UV
 		F32 u, v;
 
+		// NR: Max four bones per vertex
+
 		// Bone ID
 		F32 bix, biy, biz, biw;
 
@@ -77,6 +79,7 @@ namespace Havtorn
 		std::string Name;
 		std::vector<SSkeletalMeshVertex> Vertices;
 		std::vector<U32> Indices;
+		std::vector<SMatrix> BoneOffsetMatrices;
 	};
 
 	struct SDrawCallData

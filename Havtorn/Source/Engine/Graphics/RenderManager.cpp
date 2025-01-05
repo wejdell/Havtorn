@@ -316,11 +316,6 @@ namespace Havtorn
 		outStaticMeshComponent->BoundsCenter = boundsMin + (boundsMax - boundsMin) * 0.5f;
 
 		// Geometry
-		outStaticMeshComponent->VertexShaderIndex = STATIC_U8(EVertexShaders::StaticMesh);
-		outStaticMeshComponent->PixelShaderIndex = STATIC_U8(EPixelShaders::GBuffer);
-		outStaticMeshComponent->InputLayoutIndex = STATIC_U8(EInputLayoutType::Pos3Nor3Tan3Bit3UV2);
-		outStaticMeshComponent->SamplerIndex = STATIC_U8(ESamplers::DefaultWrap);
-		outStaticMeshComponent->TopologyIndex = STATIC_U8(ETopologies::TriangleList);
 		outStaticMeshComponent->DrawCallData = asset.DrawCallData;
 	}
 
@@ -384,11 +379,6 @@ namespace Havtorn
 		outStaticMeshComponent->NumberOfMaterials = asset.NumberOfMaterials;
 
 		// Geometry
-		outStaticMeshComponent->VertexShaderIndex = STATIC_U8(EVertexShaders::StaticMesh);
-		outStaticMeshComponent->PixelShaderIndex = STATIC_U8(EPixelShaders::GBuffer);
-		outStaticMeshComponent->InputLayoutIndex = STATIC_U8(EInputLayoutType::Pos3Nor3Tan3Bit3UV2);
-		outStaticMeshComponent->SamplerIndex = STATIC_U8(ESamplers::DefaultWrap);
-		outStaticMeshComponent->TopologyIndex = STATIC_U8(ETopologies::TriangleList);
 		outStaticMeshComponent->DrawCallData = asset.DrawCallData;
 
 		return true;
@@ -479,6 +469,116 @@ namespace Havtorn
 		RenderStateManager.OMSetRenderTargets(1, &renderTarget, nullptr);
 		RenderStateManager.RSSetViewports(1, viewport);
 
+		SStaticMeshComponent* staticMeshComp = new SStaticMeshComponent();
+		LoadStaticMeshComponent(filePath, staticMeshComp);
+
+		F32 aspectRatio = 1.0f;
+		F32 marginPercentage = 1.5f;
+		SVector2<F32> fov = { aspectRatio * 70.0f, 70.0f };
+
+		STransform camTransform;
+		camTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(30.0f, 30.0f, 0.0f));
+		camTransform.Translate(SVector(staticMeshComp->BoundsCenter.X, staticMeshComp->BoundsCenter.Y, -UMathUtilities::GetFocusDistanceForBounds(staticMeshComp->BoundsCenter, SVector::GetAbsMaxKeepValue(staticMeshComp->BoundsMax, staticMeshComp->BoundsMin), fov, marginPercentage)));
+		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(fov.Y), aspectRatio, 0.001f, 100.0f);
+
+		FrameBufferData.ToCameraFromWorld = camTransform.GetMatrix().FastInverse();
+		FrameBufferData.ToWorldFromCamera = camTransform.GetMatrix();
+		FrameBufferData.ToProjectionFromCamera = camProjection;
+		FrameBufferData.ToCameraFromProjection = camProjection.Inverse();
+		FrameBufferData.CameraPosition = camTransform.GetMatrix().GetTranslation4();
+		FrameBuffer.BindBuffer(FrameBufferData);
+
+		RenderStateManager.VSSetConstantBuffer(0, FrameBuffer);
+		RenderStateManager.PSSetConstantBuffer(0, FrameBuffer);
+
+		ObjectBufferData.ToWorldFromObject = SMatrix();
+		ObjectBuffer.BindBuffer(ObjectBufferData);
+
+		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
+		RenderStateManager.IASetTopology(ETopologies::TriangleList);
+		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2);
+
+		RenderStateManager.VSSetShader(EVertexShaders::EditorPreview);
+		RenderStateManager.PSSetShader(EPixelShaders::EditorPreview);
+		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
+
+		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(staticMeshComp->DrawCallData.size()); drawCallIndex++)
+		{
+			const SDrawCallData& drawData = staticMeshComp->DrawCallData[drawCallIndex];
+			RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[drawData.VertexBufferIndex], RenderStateManager.MeshVertexStrides[drawData.VertexStrideIndex], RenderStateManager.MeshVertexOffsets[drawData.VertexOffsetIndex]);
+			RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[drawData.IndexBufferIndex]);
+			RenderStateManager.DrawIndexed(drawData.IndexCount, 0, 0);
+			CRenderManager::NumberOfDrawCallsThisFrame++;
+		}
+
+		delete staticMeshComp;
+		delete viewport;
+		renderTarget->Release();
+		texture->Release();
+		depthStencilView->Release();
+		depthStencilBuffer->Release();
+
+		return std::move((void*)shaderResource);
+	}
+
+	void* CRenderManager::RenderSkeletalMeshAssetTexture(const std::string& filePath)
+	{
+		D3D11_TEXTURE2D_DESC textureDesc = { 0 };
+		textureDesc.Width = STATIC_U16(256.0f);
+		textureDesc.Height = STATIC_U16(256.0f);
+		textureDesc.MipLevels = 1;
+		textureDesc.ArraySize = 1;
+		textureDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
+		textureDesc.SampleDesc.Count = 1;
+		textureDesc.SampleDesc.Quality = 0;
+		textureDesc.Usage = D3D11_USAGE_DEFAULT;
+		textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+		textureDesc.CPUAccessFlags = 0;
+		textureDesc.MiscFlags = 0;
+
+		D3D11_TEXTURE2D_DESC depthStencilDesc = { 0 };
+		depthStencilDesc.Width = STATIC_U16(256.0f);
+		depthStencilDesc.Height = STATIC_U16(256.0f);
+		depthStencilDesc.MipLevels = 1;
+		depthStencilDesc.ArraySize = 1;
+		depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
+		depthStencilDesc.SampleDesc.Count = 1;
+		depthStencilDesc.SampleDesc.Quality = 0;
+		depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
+		depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+		depthStencilDesc.CPUAccessFlags = 0;
+		depthStencilDesc.MiscFlags = 0;
+
+		D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
+		depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
+		depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+		depthStencilViewDesc.Texture2D.MipSlice = 0;
+		depthStencilViewDesc.Flags = 0;
+
+		ID3D11Texture2D* depthStencilBuffer;
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateTexture2D(&depthStencilDesc, nullptr, &depthStencilBuffer), "Texture could not be created.");
+
+		ID3D11DepthStencilView* depthStencilView;
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateDepthStencilView(depthStencilBuffer, &depthStencilViewDesc, &depthStencilView), "Depth could not be created.");
+
+		ID3D11Texture2D* texture;
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateTexture2D(&textureDesc, nullptr, &texture), "Could not create Fullscreen Texture2D");
+
+		ID3D11ShaderResourceView* shaderResource;
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateShaderResourceView(texture, nullptr, &shaderResource), "Could not create Fullscreen Shader Resource View.");
+
+		ID3D11RenderTargetView* renderTarget;
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateRenderTargetView(texture, nullptr, &renderTarget), "Could not create Fullcreen Render Target View.");
+
+		D3D11_VIEWPORT* viewport;
+		D3D11_TEXTURE2D_DESC textureDescription;
+		texture->GetDesc(&textureDescription);
+		viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(textureDescription.Width), STATIC_F32(textureDescription.Height), 0.0f, 1.0f });
+
+		// TODO.NR: Figure out why the depth doesn't work
+		RenderStateManager.OMSetRenderTargets(1, &renderTarget, nullptr);
+		RenderStateManager.RSSetViewports(1, viewport);
+
 		Havtorn::CScene tempScene;
 		auto entity = tempScene.AddEntity();
 		auto staticMeshComp = tempScene.AddComponent<SStaticMeshComponent>(entity);
@@ -508,12 +608,12 @@ namespace Havtorn
 		ObjectBuffer.BindBuffer(ObjectBufferData);
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
-		RenderStateManager.IASetTopology(static_cast<ETopologies>(staticMeshComp->TopologyIndex));
-		RenderStateManager.IASetInputLayout(static_cast<EInputLayoutType>(staticMeshComp->InputLayoutIndex));
+		RenderStateManager.IASetTopology(ETopologies::TriangleList);
+		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2);
 
 		RenderStateManager.VSSetShader(EVertexShaders::EditorPreview);
 		RenderStateManager.PSSetShader(EPixelShaders::EditorPreview);
-		RenderStateManager.PSSetSampler(0, static_cast<ESamplers>(staticMeshComp->SamplerIndex));
+		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
 		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(staticMeshComp->DrawCallData.size()); drawCallIndex++)
 		{
@@ -966,7 +1066,7 @@ namespace Havtorn
 		InstancedTransformBuffer.BindBuffer(matrices);
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
-		RenderStateManager.IASetTopology(static_cast<ETopologies>(command.U8s[0]));
+		RenderStateManager.IASetTopology(ETopologies::TriangleList);
 		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans);
 
 		RenderStateManager.VSSetShader(EVertexShaders::StaticMeshInstanced);
@@ -995,7 +1095,7 @@ namespace Havtorn
 		InstancedTransformBuffer.BindBuffer(matrices);
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
-		RenderStateManager.IASetTopology(static_cast<ETopologies>(command.U8s[0]));
+		RenderStateManager.IASetTopology(ETopologies::TriangleList);
 		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans);
 
 		RenderStateManager.VSSetShader(EVertexShaders::StaticMeshInstanced);
@@ -1052,7 +1152,7 @@ namespace Havtorn
 		InstancedTransformBuffer.BindBuffer(matrices);
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
-		RenderStateManager.IASetTopology(static_cast<ETopologies>(command.U8s[0]));
+		RenderStateManager.IASetTopology(ETopologies::TriangleList);
 		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans);
 
 		RenderStateManager.VSSetShader(EVertexShaders::StaticMeshInstanced);
@@ -1095,12 +1195,12 @@ namespace Havtorn
 		InstancedTransformBuffer.BindBuffer(matrices);
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
-		RenderStateManager.IASetTopology(static_cast<ETopologies>(command.U8s[0]));
+		RenderStateManager.IASetTopology(ETopologies::TriangleList);
 		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans);
 
 		RenderStateManager.VSSetShader(EVertexShaders::StaticMeshInstanced);
-		RenderStateManager.PSSetShader(static_cast<EPixelShaders>(command.U8s[1]));
-		RenderStateManager.PSSetSampler(0, static_cast<ESamplers>(command.U8s[2]));
+		RenderStateManager.PSSetShader(EPixelShaders::GBuffer);
+		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
 		auto textureBank = GEngine::GetTextureBank();
 		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(command.DrawCallData.size()); drawCallIndex++)
@@ -1160,12 +1260,12 @@ namespace Havtorn
 		InstancedEntityIDBuffer.BindBuffer(entities);
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
-		RenderStateManager.IASetTopology(static_cast<ETopologies>(command.U8s[0]));
+		RenderStateManager.IASetTopology(ETopologies::TriangleList);
 		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Entity2Trans);
 
 		RenderStateManager.VSSetShader(EVertexShaders::StaticMeshInstancedEditor);
 		RenderStateManager.PSSetShader(EPixelShaders::GBufferInstanceEditor);
-		RenderStateManager.PSSetSampler(0, static_cast<ESamplers>(command.U8s[2]));
+		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
 		auto textureBank = GEngine::GetTextureBank();
 		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(command.DrawCallData.size()); drawCallIndex++)

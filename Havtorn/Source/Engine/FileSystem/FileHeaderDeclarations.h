@@ -96,6 +96,7 @@ namespace Havtorn
 			size += GetDataSize(mesh.Name);
 			size += GetDataSize(mesh.Vertices);
 			size += GetDataSize(mesh.Indices);
+			size += GetDataSize(mesh.BoneOffsetMatrices);
 		}
 		return size;
 	}
@@ -112,6 +113,7 @@ namespace Havtorn
 			SerializeData(mesh.Name, toData, pointerPosition);
 			SerializeData(mesh.Vertices, toData, pointerPosition);
 			SerializeData(mesh.Indices, toData, pointerPosition);
+			SerializeData(mesh.BoneOffsetMatrices, toData, pointerPosition);
 		}
 	}
 
@@ -129,6 +131,7 @@ namespace Havtorn
 			DeserializeData(Meshes.back().Name, fromData, pointerPosition);
 			DeserializeData(Meshes.back().Vertices, fromData, pointerPosition);
 			DeserializeData(Meshes.back().Indices, fromData, pointerPosition);
+			DeserializeData(Meshes.back().BoneOffsetMatrices, fromData, pointerPosition);
 		}
 	}
 

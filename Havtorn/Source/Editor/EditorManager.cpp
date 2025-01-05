@@ -138,6 +138,13 @@ namespace Havtorn
 				ImGui::Text(GetDrawCalls().c_str());
 			}
 
+			if (ImGui::Button("Import mesh"))
+				ResourceManager->ConvertToHVA("FBX/Tests/CH_Enemy.fbx", "Assets/Tests/", Havtorn::EAssetType::StaticMesh);
+			if (ImGui::Button("Import skeletal mesh"))
+				ResourceManager->ConvertToHVA("FBX/Tests/CH_Enemy_SK.fbx", "Assets/Tests/", Havtorn::EAssetType::SkeletalMesh);
+			if (ImGui::Button("Import anim"))
+				ResourceManager->ConvertToHVA("FBX/Tests/CH_Enemy_Walk.fbx", "Assets/Tests/", Havtorn::EAssetType::Animation);
+
 			ImGui::End();
 		}
 	}
