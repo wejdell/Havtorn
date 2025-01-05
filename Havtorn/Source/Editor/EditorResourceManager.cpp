@@ -106,9 +106,11 @@ namespace Havtorn
 		std::string hvaPath;
 		switch (assetType)
 		{
-		case EAssetType::StaticMesh:
+		case EAssetType::StaticMesh: // fallthrough
+		case EAssetType::SkeletalMesh: // fallthrough
+		case EAssetType::Animation:
 		{
-			hvaPath = CModelImporter::ImportFBX(filePath);
+			hvaPath = UModelImporter::ImportFBX(filePath, assetType);
 		}
 		break;
 		case EAssetType::Texture:
@@ -139,11 +141,6 @@ namespace Havtorn
 			hvaPath = asset.MaterialName + ".hva";
 		}
 		break;
-		break;
-		case EAssetType::SkeletalMesh:
-			break;
-		case EAssetType::Animation:
-			break;
 		case EAssetType::AudioOneShot:
 			break;
 		case EAssetType::AudioCollection:
