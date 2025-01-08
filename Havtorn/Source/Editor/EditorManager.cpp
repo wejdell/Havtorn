@@ -468,7 +468,7 @@ namespace Havtorn
 			else
 				continue;
 
-			ResourceManager->ConvertToHVA(fileName, fileName.substr(0, fileName.find_last_of('/')), assetType);
+			ResourceManager->ConvertToHVA(fileName, fileName.substr(0, fileName.find_last_of('\\')), assetType);
 		}
 	}
 

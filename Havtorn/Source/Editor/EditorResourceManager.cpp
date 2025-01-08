@@ -24,7 +24,7 @@ namespace Havtorn
 		case Havtorn::EAssetType::StaticMesh:
 			return std::move(RenderManager->RenderStaticMeshAssetTexture(filePath));
 		case Havtorn::EAssetType::SkeletalMesh:
-			return std::move(RenderManager->RenderStaticMeshAssetTexture(filePath));
+			return std::move(RenderManager->RenderSkeletalMeshAssetTexture(filePath));
 		case Havtorn::EAssetType::Texture:
 			return std::move(RenderManager->GetTextureAssetTexture(filePath));
 		case Havtorn::EAssetType::Material:

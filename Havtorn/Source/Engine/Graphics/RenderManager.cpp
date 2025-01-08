@@ -145,7 +145,9 @@ namespace Havtorn
 		RenderFunctions[ERenderCommandType::ShadowAtlasPrePassSpot] =			std::bind(&CRenderManager::ShadowAtlasPrePassSpot, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::CameraDataStorage] =				std::bind(&CRenderManager::CameraDataStorage, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::GBufferDataInstanced] =				std::bind(&CRenderManager::GBufferDataInstanced, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::GBufferSkeletalInstanced] =			std::bind(&CRenderManager::GBufferSkeletalInstanced, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::GBufferDataInstancedEditor] =		std::bind(&CRenderManager::GBufferDataInstancedEditor, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::GBufferSkeletalInstancedEditor] =	std::bind(&CRenderManager::GBufferSkeletalInstancedEditor, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::GBufferSpriteInstanced] =			std::bind(&CRenderManager::GBufferSpriteInstanced, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::GBufferSpriteInstancedEditor] =		std::bind(&CRenderManager::GBufferSpriteInstancedEditor, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::DecalDepthCopy] =					std::bind(&CRenderManager::DecalDepthCopy, this, std::placeholders::_1);
@@ -161,7 +163,7 @@ namespace Havtorn
 		RenderFunctions[ERenderCommandType::VolumetricBufferBlurPass] =			std::bind(&CRenderManager::VolumetricBlur, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::ForwardTransparency] =				std::bind(&CRenderManager::ForwardTransparency, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::ScreenSpaceSprite] =				std::bind(&CRenderManager::ScreenSpaceSprite, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::WorldSpaceSpriteEditorWidget] =			std::bind(&CRenderManager::WorldSpaceSpriteEditorWidget, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::WorldSpaceSpriteEditorWidget] =		std::bind(&CRenderManager::WorldSpaceSpriteEditorWidget, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::Bloom] =							std::bind(&CRenderManager::RenderBloom, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::Tonemapping] =						std::bind(&CRenderManager::Tonemapping, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::PreDebugShape] =					std::bind(&CRenderManager::PreDebugShapes, this, std::placeholders::_1);
@@ -317,6 +319,68 @@ namespace Havtorn
 
 		// Geometry
 		outStaticMeshComponent->DrawCallData = asset.DrawCallData;
+	}
+
+	void CRenderManager::LoadSkeletalMeshComponent(const std::string& filePath, SSkeletalMeshComponent* outSkeletalMeshComponent)
+	{
+		SSkeletalMeshAsset asset;
+		SVector boundsMin = SVector(FLT_MAX);
+		SVector boundsMax = SVector(-FLT_MAX);
+
+		if (!LoadedSkeletalMeshes.contains(filePath))
+		{
+			// Asset Loading
+			const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
+			char* data = new char[fileSize];
+
+			GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
+
+			SSkeletalModelFileHeader assetFile;
+			assetFile.Deserialize(data);
+			asset = SSkeletalMeshAsset(assetFile);
+
+			for (U16 i = 0; i < assetFile.NumberOfMeshes; i++)
+			{
+				const SSkeletalMesh& mesh = assetFile.Meshes[i];
+				SDrawCallData& drawCallData = asset.DrawCallData[i];
+
+				// TODO.NR: Check for existing buffers
+				drawCallData.VertexBufferIndex = RenderStateManager.AddVertexBuffer(mesh.Vertices);
+				drawCallData.IndexBufferIndex = RenderStateManager.AddIndexBuffer(mesh.Indices);
+				drawCallData.VertexStrideIndex = 2;
+				drawCallData.VertexOffsetIndex = 0;
+
+				for (const SSkeletalMeshVertex& vertex : mesh.Vertices)
+				{
+					boundsMin.X = UMath::Min(vertex.x, boundsMin.X);
+					boundsMin.Y = UMath::Min(vertex.y, boundsMin.Y);
+					boundsMin.Z = UMath::Min(vertex.z, boundsMin.Z);
+
+					boundsMax.X = UMath::Max(vertex.x, boundsMax.X);
+					boundsMax.Y = UMath::Max(vertex.y, boundsMax.Y);
+					boundsMax.Z = UMath::Max(vertex.z, boundsMax.Z);
+				}
+			}
+
+			// NR: Mesh name will be much easier to handle
+			LoadedSkeletalMeshes.emplace(UGeneralUtils::ExtractFileNameFromPath(filePath), asset);
+			delete[] data;
+		}
+		else
+		{
+			asset = LoadedSkeletalMeshes.at(filePath);
+		}
+
+		// NR: Components initialized by AssetRegistry and Rendermanager have dynamically sized size, need to serialize and deserialize them in another way
+		outSkeletalMeshComponent->Name = UGeneralUtils::ExtractFileNameFromPath(filePath);
+		outSkeletalMeshComponent->NumberOfMaterials = asset.NumberOfMaterials;
+
+		outSkeletalMeshComponent->BoundsMin = boundsMin;
+		outSkeletalMeshComponent->BoundsMax = boundsMax;
+		outSkeletalMeshComponent->BoundsCenter = boundsMin + (boundsMax - boundsMin) * 0.5f;
+
+		// Geometry
+		outSkeletalMeshComponent->DrawCallData = asset.DrawCallData;
 	}
 
 	void CRenderManager::LoadMaterialComponent(const std::vector<std::string>& materialPaths, SMaterialComponent* outMaterialComponent)
@@ -523,6 +587,8 @@ namespace Havtorn
 
 	void* CRenderManager::RenderSkeletalMeshAssetTexture(const std::string& filePath)
 	{
+		// TODO.NR: Fix so that editor preview shaders can take bigger skeletal mesh vertices into account.
+
 		D3D11_TEXTURE2D_DESC textureDesc = { 0 };
 		textureDesc.Width = STATIC_U16(256.0f);
 		textureDesc.Height = STATIC_U16(256.0f);
@@ -579,11 +645,8 @@ namespace Havtorn
 		RenderStateManager.OMSetRenderTargets(1, &renderTarget, nullptr);
 		RenderStateManager.RSSetViewports(1, viewport);
 
-		Havtorn::CScene tempScene;
-		auto entity = tempScene.AddEntity();
-		auto staticMeshComp = tempScene.AddComponent<SStaticMeshComponent>(entity);
-
-		LoadStaticMeshComponent(filePath, staticMeshComp);
+		SSkeletalMeshComponent* skeletalMeshComp = new SSkeletalMeshComponent();
+		LoadSkeletalMeshComponent(filePath, skeletalMeshComp);
 
 		F32 aspectRatio = 1.0f;
 		F32 marginPercentage = 1.5f;
@@ -591,7 +654,7 @@ namespace Havtorn
 
 		STransform camTransform;
 		camTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(30.0f, 30.0f, 0.0f));
-		camTransform.Translate(SVector(staticMeshComp->BoundsCenter.X, staticMeshComp->BoundsCenter.Y, -UMathUtilities::GetFocusDistanceForBounds(staticMeshComp->BoundsCenter, SVector::GetAbsMaxKeepValue(staticMeshComp->BoundsMax, staticMeshComp->BoundsMin), fov, marginPercentage)));
+		camTransform.Translate(SVector(skeletalMeshComp->BoundsCenter.X, skeletalMeshComp->BoundsCenter.Y, -UMathUtilities::GetFocusDistanceForBounds(skeletalMeshComp->BoundsCenter, SVector::GetAbsMaxKeepValue(skeletalMeshComp->BoundsMax, skeletalMeshComp->BoundsMin), fov, marginPercentage)));
 		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(fov.Y), aspectRatio, 0.001f, 100.0f);
 
 		FrameBufferData.ToCameraFromWorld = camTransform.GetMatrix().FastInverse();
@@ -615,16 +678,16 @@ namespace Havtorn
 		RenderStateManager.PSSetShader(EPixelShaders::EditorPreview);
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
-		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(staticMeshComp->DrawCallData.size()); drawCallIndex++)
+		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(skeletalMeshComp->DrawCallData.size()); drawCallIndex++)
 		{
-			const SDrawCallData& drawData = staticMeshComp->DrawCallData[drawCallIndex];
+			const SDrawCallData& drawData = skeletalMeshComp->DrawCallData[drawCallIndex];
 			RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[drawData.VertexBufferIndex], RenderStateManager.MeshVertexStrides[drawData.VertexStrideIndex], RenderStateManager.MeshVertexOffsets[drawData.VertexOffsetIndex]);
 			RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[drawData.IndexBufferIndex]);
 			RenderStateManager.DrawIndexed(drawData.IndexCount, 0, 0);
 			CRenderManager::NumberOfDrawCallsThisFrame++;
 		}
 
-		tempScene.RemoveEntity(entity);
+		delete skeletalMeshComp;
 		delete viewport;
 		renderTarget->Release();
 		texture->Release();
@@ -893,7 +956,36 @@ namespace Havtorn
 
 	void CRenderManager::ClearSystemStaticMeshInstanceData()
 	{
-		return SystemStaticMeshInstanceData.clear();
+		SystemStaticMeshInstanceData.clear();
+	}
+
+	bool CRenderManager::IsSkeletalMeshInInstancedRenderList(const std::string& meshName)
+	{
+		return SystemSkeletalMeshInstanceData.contains(meshName);
+	}
+
+	void CRenderManager::AddSkeletalMeshToInstancedRenderList(const std::string& meshName, const STransformComponent* transformComponent, const SSkeletalAnimationComponent* animationComponent)
+	{
+		if (!SystemSkeletalMeshInstanceData.contains(meshName))
+			SystemSkeletalMeshInstanceData.emplace(meshName, SSkeletalMeshInstanceData());
+
+		SystemSkeletalMeshInstanceData[meshName].Transforms.emplace_back(transformComponent->Transform.GetMatrix());
+		SystemSkeletalMeshInstanceData[meshName].Entities.emplace_back(transformComponent->Owner);
+
+		if (animationComponent->IsValid())
+			SystemSkeletalMeshInstanceData[meshName].AnimationData.emplace_back(animationComponent->AnimationData);
+		else
+			SystemSkeletalMeshInstanceData[meshName].AnimationData.emplace_back(SVector2<U32>::Zero);
+	}
+
+	void CRenderManager::SwapSkeletalMeshInstancedRenderLists()
+	{
+		std::swap(SystemSkeletalMeshInstanceData, RendererSkeletalMeshInstanceData);
+	}
+
+	void CRenderManager::ClearSystemSkeletalMeshInstanceData()
+	{
+		SystemSkeletalMeshInstanceData.clear();
 	}
 
 	bool CRenderManager::IsSpriteInWorldSpaceInstancedRenderList(const U32 textureBankIndex)
@@ -944,7 +1036,7 @@ namespace Havtorn
 
 	void CRenderManager::ClearSystemWorldSpaceSpriteInstanceData()
 	{
-		return SystemWorldSpaceSpriteInstanceData.clear();
+		SystemWorldSpaceSpriteInstanceData.clear();
 	}
 
 	bool CRenderManager::IsSpriteInScreenSpaceInstancedRenderList(const U32 textureBankIndex)
@@ -975,7 +1067,7 @@ namespace Havtorn
 
 	void CRenderManager::ClearSystemScreenSpaceSpriteInstanceData()
 	{
-		return SystemScreenSpaceSpriteInstanceData.clear();
+		SystemScreenSpaceSpriteInstanceData.clear();
 	}
 
 	void CRenderManager::SetWorldPlayState(EWorldPlayState playState)
@@ -1020,6 +1112,7 @@ namespace Havtorn
 		EmissiveBuffer.CreateBuffer("Emissive Buffer", Framework, sizeof(SEmissiveBufferData));
 
 		InstancedTransformBuffer.CreateBuffer("Instanced Transform Buffer", Framework, sizeof(SMatrix) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
+		InstancedAnimationDataBuffer.CreateBuffer("Instanced Animation Data Buffer", Framework, sizeof(SVector2<U32>) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
 		InstancedEntityIDBuffer.CreateBuffer("Instanced Entity ID Buffer", Framework, sizeof(U64) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
 		InstancedUVRectBuffer.CreateBuffer("Instanced UV Rect Buffer", Framework, sizeof(SVector4) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
 		InstancedColorBuffer.CreateBuffer("Instanced Color Buffer", Framework, sizeof(SVector4) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
@@ -1310,6 +1403,78 @@ namespace Havtorn
 			const U32 strides[3] = { RenderStateManager.MeshVertexStrides[drawData.VertexStrideIndex], sizeof(U64), sizeof(SMatrix) };
 			const U32 offsets[3] = { RenderStateManager.MeshVertexOffsets[drawData.VertexOffsetIndex], 0, 0 };
 			RenderStateManager.IASetVertexBuffers(0, 3, buffers, strides, offsets);
+			RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[drawData.IndexBufferIndex]);
+			RenderStateManager.DrawIndexedInstanced(drawData.IndexCount, STATIC_U32(matrices.size()), 0, 0, 0);
+			CRenderManager::NumberOfDrawCallsThisFrame++;
+		}
+	}
+
+	void CRenderManager::GBufferSkeletalInstanced(const SRenderCommand& /*command*/)
+	{
+	}
+
+	void CRenderManager::GBufferSkeletalInstancedEditor(const SRenderCommand& command)
+	{
+		const std::vector<SMatrix>& matrices = RendererSkeletalMeshInstanceData[command.Strings[0]].Transforms;
+		InstancedTransformBuffer.BindBuffer(matrices);
+
+		const std::vector<SVector2<U32>>& animationData = RendererSkeletalMeshInstanceData[command.Strings[0]].AnimationData;
+		InstancedAnimationDataBuffer.BindBuffer(animationData);
+
+		const std::vector<SEntity>& entities = RendererSkeletalMeshInstanceData[command.Strings[0]].Entities;
+		InstancedEntityIDBuffer.BindBuffer(entities);
+
+		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
+		RenderStateManager.IASetTopology(ETopologies::TriangleList);
+		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2AnimDataTrans);
+
+		RenderStateManager.VSSetShader(EVertexShaders::SkeletalMeshInstancedEditor);
+		RenderStateManager.PSSetShader(EPixelShaders::GBufferInstanceEditor);
+		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
+
+		auto textureBank = GEngine::GetTextureBank();
+		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(command.DrawCallData.size()); drawCallIndex++)
+		{
+			std::vector<ID3D11ShaderResourceView*> resourceViewPointers;
+
+			std::map<F32, F32> textureIndices;
+			auto findTextureByIndex = [&](SRuntimeGraphicsMaterialProperty& bufferProperty)
+				{
+					if (bufferProperty.TextureChannelIndex > -1.0f)
+					{
+						if (!textureIndices.contains(bufferProperty.TextureIndex))
+						{
+							resourceViewPointers.emplace_back(textureBank->GetTexture(STATIC_U32(bufferProperty.TextureIndex)));
+							textureIndices.emplace(bufferProperty.TextureIndex, STATIC_F32(resourceViewPointers.size() - 1));
+						}
+
+						bufferProperty.TextureIndex = textureIndices[bufferProperty.TextureIndex];
+					}
+				};
+
+			MaterialBufferData = SMaterialBufferData(command.Materials[drawCallIndex]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoR)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoG)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoB)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoA)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalX)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalY)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalZ)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AmbientOcclusion)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Metalness)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Roughness)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Emissive)]);
+
+			MaterialBuffer.BindBuffer(MaterialBufferData);
+
+			RenderStateManager.PSSetResources(5, STATIC_U8(resourceViewPointers.size()), resourceViewPointers.data());
+			RenderStateManager.PSSetConstantBuffer(8, MaterialBuffer);
+
+			const SDrawCallData& drawData = command.DrawCallData[drawCallIndex];
+			const std::vector<CDataBuffer> buffers = { RenderStateManager.VertexBuffers[drawData.VertexBufferIndex], InstancedEntityIDBuffer, InstancedAnimationDataBuffer, InstancedTransformBuffer };
+			const U32 strides[4] = { RenderStateManager.MeshVertexStrides[drawData.VertexStrideIndex], sizeof(U64), sizeof(SVector2<U32>), sizeof(SMatrix)};
+			const U32 offsets[4] = { RenderStateManager.MeshVertexOffsets[drawData.VertexOffsetIndex], 0, 0, 0 };
+			RenderStateManager.IASetVertexBuffers(0, 4, buffers, strides, offsets);
 			RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[drawData.IndexBufferIndex]);
 			RenderStateManager.DrawIndexedInstanced(drawData.IndexCount, STATIC_U32(matrices.size()), 0, 0, 0);
 			CRenderManager::NumberOfDrawCallsThisFrame++;

@@ -25,6 +25,7 @@ namespace Havtorn
 		const std::vector<SSpotLightComponent*>& spotLightComponents = scene->GetComponents<SSpotLightComponent>();
 
 		RenderManager->ClearSystemStaticMeshInstanceData();
+		RenderManager->ClearSystemSkeletalMeshInstanceData();
 		RenderManager->ClearSystemWorldSpaceSpriteInstanceData();
 		RenderManager->ClearSystemScreenSpaceSpriteInstanceData();
 
@@ -128,6 +129,84 @@ namespace Havtorn
 			}
 
 			RenderManager->AddStaticMeshToInstancedRenderList(staticMeshComponent->Name.AsString(), transformComp);
+		}
+
+		for (const SSkeletalMeshComponent* skeletalMeshComponent : scene->GetComponents<SSkeletalMeshComponent>())
+		{
+			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(skeletalMeshComponent);
+			const SMaterialComponent* materialComp = scene->GetComponent<SMaterialComponent>(skeletalMeshComponent);
+
+			if (!skeletalMeshComponent->IsValid() || !transformComp->IsValid() || !materialComp->IsValid())
+				continue;
+
+			if (!RenderManager->IsSkeletalMeshInInstancedRenderList(skeletalMeshComponent->Name.AsString()))
+			{
+				// TODO.NR: Make shadow pass for skeletal meshes possible
+				//for (const SDirectionalLightComponent* directionalLightComp : directionalLightComponents)
+				//{
+				//	if (directionalLightComp->IsValid())
+				//	{
+				//		SRenderCommand command;
+				//		command.Type = ERenderCommandType::ShadowAtlasPrePassDirectional;
+				//		command.ShadowmapViews.push_back(directionalLightComp->ShadowmapView);
+				//		command.Matrices.push_back(transformComp->Transform.GetMatrix());
+				//		command.Strings.push_back(skeletalMeshComponent->Name.AsString());
+				//		command.DrawCallData = skeletalMeshComponent->DrawCallData;
+				//		RenderManager->PushRenderCommand(command);
+				//	}
+				//}
+
+				//for (const SPointLightComponent* pointLightComp : pointLightComponents)
+				//{
+				//	if (pointLightComp->IsValid())
+				//	{
+				//		SRenderCommand command;
+				//		command.Type = ERenderCommandType::ShadowAtlasPrePassPoint;
+				//		command.Matrices.push_back(transformComp->Transform.GetMatrix());
+				//		command.Strings.push_back(skeletalMeshComponent->Name.AsString());
+				//		command.DrawCallData = skeletalMeshComponent->DrawCallData;
+				//		command.SetShadowMapViews(pointLightComp->ShadowmapViews);
+				//		RenderManager->PushRenderCommand(command);
+				//	}
+				//}
+
+				//for (const SSpotLightComponent* spotLightComp : spotLightComponents)
+				//{
+				//	if (spotLightComp->IsValid())
+				//	{
+				//		SRenderCommand command;
+				//		command.Type = ERenderCommandType::ShadowAtlasPrePassSpot;
+				//		command.Matrices.push_back(transformComp->Transform.GetMatrix());
+				//		command.Strings.push_back(skeletalMeshComponent->Name.AsString());
+				//		command.DrawCallData = skeletalMeshComponent->DrawCallData;
+				//		command.ShadowmapViews.push_back(spotLightComp->ShadowmapView);
+				//		RenderManager->PushRenderCommand(command);
+				//	}
+				//}
+
+				if (isInPlayingPlayState)
+				{
+					SRenderCommand command;
+					command.Type = ERenderCommandType::GBufferDataInstanced;
+					command.Matrices.push_back(transformComp->Transform.GetMatrix());
+					command.Strings.push_back(skeletalMeshComponent->Name.AsString());
+					command.DrawCallData = skeletalMeshComponent->DrawCallData;
+					command.Materials = materialComp->Materials;
+					RenderManager->PushRenderCommand(command);
+				}
+				else
+				{
+					SRenderCommand command;
+					command.Type = ERenderCommandType::GBufferSkeletalInstancedEditor;
+					command.Matrices.push_back(transformComp->Transform.GetMatrix());
+					command.Strings.push_back(skeletalMeshComponent->Name.AsString());
+					command.DrawCallData = skeletalMeshComponent->DrawCallData;
+					command.Materials = materialComp->Materials;
+					RenderManager->PushRenderCommand(command);
+				}
+			}
+
+			RenderManager->AddSkeletalMeshToInstancedRenderList(skeletalMeshComponent->Name.AsString(), transformComp, scene->GetComponent<SSkeletalAnimationComponent>(transformComp));
 		}
 
 		{

@@ -79,7 +79,8 @@ namespace Havtorn
 		std::string Name;
 		std::vector<SSkeletalMeshVertex> Vertices;
 		std::vector<U32> Indices;
-		std::vector<SMatrix> BoneOffsetMatrices;
+		// NR: We might want to store the matrices in the animation struct instead, should not need default pose data?
+		//std::vector<SMatrix> BoneOffsetMatrices;
 	};
 
 	struct SDrawCallData

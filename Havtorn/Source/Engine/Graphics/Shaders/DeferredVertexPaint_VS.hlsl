@@ -7,11 +7,11 @@ VertexPaintModelToPixel main(VertexPaintedModelInput input)
     VertexPaintModelToPixel returnValue;
 
     const float4 vertexObjectPos = input.Position.xyzw;
-    const float4 vertexWorldPos = mul(toWorld, vertexObjectPos);
+    const float4 vertexWorldPos = mul(ToWorld, vertexObjectPos);
     const float4 vertexViewPos = mul(ToCameraSpace, vertexWorldPos);
     const float4 vertexProjectionPos = mul(ToProjectionSpace, vertexViewPos);
 
-    const float3x3 toWorldRotation = (float3x3) toWorld;
+    const float3x3 toWorldRotation = (float3x3)ToWorld;
     float3 vertexWorldNormal = mul(toWorldRotation, input.Normal.xyz);
     float3 vertexWorldTangent = mul(toWorldRotation, input.Tangent.xyz);
     float3 vertexWorldBinormal = mul(toWorldRotation, input.Binormal.xyz);

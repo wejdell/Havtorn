@@ -57,7 +57,7 @@ namespace Havtorn
 
 	bool SSpotLightComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("X##12"))
+		if (!ImGui::Button("X##13"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())

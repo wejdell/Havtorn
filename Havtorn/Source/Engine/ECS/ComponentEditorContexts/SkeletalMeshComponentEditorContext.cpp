@@ -1,9 +1,9 @@
-// Copyright 2024 Team Havtorn. All Rights Reserved.
+// Copyright 2025 Team Havtorn. All Rights Reserved.
 
 #include "hvpch.h"
-#include "StaticMeshComponentEditorContext.h"
+#include "SkeletalMeshComponentEditorContext.h"
 
-#include "ECS/Components/StaticMeshComponent.h"
+#include "ECS/Components/SkeletalMeshComponent.h"
 #include "ECS/Components/TransformComponent.h"
 #include "Scene/Scene.h"
 
@@ -13,28 +13,28 @@
 
 namespace Havtorn
 {
-	SStaticMeshComponentEditorContext SStaticMeshComponentEditorContext::Context = {};
+	SSkeletalMeshComponentEditorContext SSkeletalMeshComponentEditorContext::Context = {};
 
-    SComponentViewResult SStaticMeshComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
+    SComponentViewResult SSkeletalMeshComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!ImGui::UUtils::TryOpenComponentView("StaticMesh"))
+		if (!ImGui::UUtils::TryOpenComponentView("SkeletalMesh"))
 			return SComponentViewResult();
 
 		STransformComponent* transform = scene->GetComponent<STransformComponent>(entityOwner);
 		if (!transform->IsValid())
 			return SComponentViewResult();
 
-		SStaticMeshComponent* staticMesh = scene->GetComponent<SStaticMeshComponent>(entityOwner);
-		ImGui::TextDisabled("Number Of Materials: %i", staticMesh->NumberOfMaterials);
+		SSkeletalMeshComponent* skeletalMesh = scene->GetComponent<SSkeletalMeshComponent>(entityOwner);
+		ImGui::TextDisabled("Number Of Materials: %i", skeletalMesh->NumberOfMaterials);
 
-		SVector a = SVector(staticMesh->BoundsMin.X, staticMesh->BoundsMin.Y, staticMesh->BoundsMin.Z);
-		SVector b = SVector(staticMesh->BoundsMin.X, staticMesh->BoundsMin.Y, staticMesh->BoundsMax.Z);
-		SVector c = SVector(staticMesh->BoundsMax.X, staticMesh->BoundsMin.Y, staticMesh->BoundsMax.Z);
-		SVector d = SVector(staticMesh->BoundsMax.X, staticMesh->BoundsMin.Y, staticMesh->BoundsMin.Z);
-		SVector e = SVector(staticMesh->BoundsMin.X, staticMesh->BoundsMax.Y, staticMesh->BoundsMin.Z);
-		SVector f = SVector(staticMesh->BoundsMax.X, staticMesh->BoundsMax.Y, staticMesh->BoundsMin.Z);
-		SVector g = SVector(staticMesh->BoundsMax.X, staticMesh->BoundsMax.Y, staticMesh->BoundsMax.Z);
-		SVector h = SVector(staticMesh->BoundsMin.X, staticMesh->BoundsMax.Y, staticMesh->BoundsMax.Z);
+		SVector a = SVector(skeletalMesh->BoundsMin.X, skeletalMesh->BoundsMin.Y, skeletalMesh->BoundsMin.Z);
+		SVector b = SVector(skeletalMesh->BoundsMin.X, skeletalMesh->BoundsMin.Y, skeletalMesh->BoundsMax.Z);
+		SVector c = SVector(skeletalMesh->BoundsMax.X, skeletalMesh->BoundsMin.Y, skeletalMesh->BoundsMax.Z);
+		SVector d = SVector(skeletalMesh->BoundsMax.X, skeletalMesh->BoundsMin.Y, skeletalMesh->BoundsMin.Z);
+		SVector e = SVector(skeletalMesh->BoundsMin.X, skeletalMesh->BoundsMax.Y, skeletalMesh->BoundsMin.Z);
+		SVector f = SVector(skeletalMesh->BoundsMax.X, skeletalMesh->BoundsMax.Y, skeletalMesh->BoundsMin.Z);
+		SVector g = SVector(skeletalMesh->BoundsMax.X, skeletalMesh->BoundsMax.Y, skeletalMesh->BoundsMax.Z);
+		SVector h = SVector(skeletalMesh->BoundsMin.X, skeletalMesh->BoundsMax.Y, skeletalMesh->BoundsMax.Z);
 
 		SMatrix transformMatrix = transform->Transform.GetMatrix();
 
@@ -60,36 +60,36 @@ namespace Havtorn
 		GDebugDraw::AddLine(g, h, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false);
 		GDebugDraw::AddLine(h, e, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false);
 
-		return { EComponentViewResultLabel::InspectAssetComponent, staticMesh, 0 };
+		return { EComponentViewResultLabel::InspectAssetComponent, skeletalMesh, 0 };
     }
 
-	bool SStaticMeshComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
+	bool SSkeletalMeshComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("Static Mesh Component"))
+		if (!ImGui::Button("Skeletal Mesh Component"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())
 			return false;
 
-		scene->AddComponent<SStaticMeshComponent>(entity);
-		scene->AddComponentEditorContext(entity, &SStaticMeshComponentEditorContext::Context);
+		scene->AddComponent<SSkeletalMeshComponent>(entity);
+		scene->AddComponentEditorContext(entity, &SSkeletalMeshComponentEditorContext::Context);
 		return true;
 	}
 
-	bool SStaticMeshComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
+	bool SSkeletalMeshComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("X##16"))
+		if (!ImGui::Button("X##12"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())
 			return false;
 
-		scene->RemoveComponent<SStaticMeshComponent>(entity);
-		scene->RemoveComponentEditorContext(entity, &SStaticMeshComponentEditorContext::Context);
+		scene->RemoveComponent<SSkeletalMeshComponent>(entity);
+		scene->RemoveComponentEditorContext(entity, &SSkeletalMeshComponentEditorContext::Context);
 		return true;
 	}
 
-	U8 SStaticMeshComponentEditorContext::GetSortingPriority() const
+	U8 SSkeletalMeshComponentEditorContext::GetSortingPriority() const
 	{
 		return 2;
 	}

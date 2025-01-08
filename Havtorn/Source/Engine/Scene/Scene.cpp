@@ -252,7 +252,7 @@ namespace Havtorn
 
 		STransform& transform1 = (*AddComponent<STransformComponent>(pendulum)).Transform;
 		AddComponentEditorContext(pendulum, &STransformComponentEditorContext::Context);
-		transform1.Translate({ 2.0f, 0.0f, -0.2f });
+		transform1.Translate({ 1.8f, 0.0f, -0.2f });
 
 		renderManager->LoadStaticMeshComponent(modelPath1, AddComponent<SStaticMeshComponent>(pendulum));
 		AddComponentEditorContext(pendulum, &SStaticMeshComponentEditorContext::Context);
@@ -328,7 +328,7 @@ namespace Havtorn
 		STransform& playerTransform = AddComponent<STransformComponent>(playerProxy)->Transform;
 		AddComponentEditorContext(playerProxy, &STransformComponentEditorContext::Context);
 		SMatrix playerMatrix = playerTransform.GetMatrix();
-		playerMatrix.SetTranslation({ 2.0f, 0.7f, -2.2f });
+		playerMatrix.SetTranslation({ 2.6f, 0.0f, -0.24f });
 		//playerMatrix.SetRotation();
 		playerTransform.SetMatrix(playerMatrix);
 
@@ -339,6 +339,22 @@ namespace Havtorn
 		controllerComponent->ShapeLocalRadiusAndHeight = SVector2(0.25f, 1.0f);
 
 		GEngine::GetWorld()->Initialize3DPhysicsData(playerProxy);
+
+		// Static Mesh
+		//renderManager->LoadStaticMeshComponent("Assets/Tests/CH_Enemy.hva", AddComponent<SStaticMeshComponent>(playerProxy));
+		//AddComponentEditorContext(playerProxy, &SStaticMeshComponentEditorContext::Context);
+		//GetComponent<SStaticMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register("Assets/Tests/CH_Enemy.hva");
+
+		// Skeletal Mesh
+		renderManager->LoadSkeletalMeshComponent("Assets/Tests/CH_Enemy_SK.hva", AddComponent<SSkeletalMeshComponent>(playerProxy));
+		AddComponentEditorContext(playerProxy, &SSkeletalMeshComponentEditorContext::Context);
+		GetComponent<SSkeletalMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register("Assets/Tests/CH_Enemy_SK.hva");
+
+		std::vector<std::string> enemyMaterialPaths = { "Assets/Materials/M_Enemy.hva" };
+		renderManager->LoadMaterialComponent(enemyMaterialPaths, AddComponent<SMaterialComponent>(playerProxy));
+		AddComponentEditorContext(playerProxy, &SMaterialComponentEditorContext::Context);
+		GetComponent<SMaterialComponent>(playerProxy)->AssetRegistryKeys = assetRegistry->Register(enemyMaterialPaths);
+		
 		// === !Player Proxy ===
 
 		// === Crate ===

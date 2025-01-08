@@ -39,4 +39,5 @@ namespace Havtorn
 	#define STATIC_U32(x) static_cast<U32>(x)
 	#define STATIC_U16(x) static_cast<U16>(x)
 	#define STATIC_U8(x) static_cast<U8>(x)
+	#define STATIC_I32(x) static_cast<I32>(x)
 }

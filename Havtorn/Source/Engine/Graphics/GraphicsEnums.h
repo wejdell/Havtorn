@@ -28,9 +28,9 @@ namespace Havtorn
 		TransUVRectColor,
 		Pos3Nor3Tan3Bit3UV2Entity2Trans,
 		TransUVRectColorEntity2,
-		Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Trans,
-		Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2Trans,
-		Null = 6
+		Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans,
+		Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2AnimDataTrans,
+		Null
 	};
 
 	enum class EVertexShaders
@@ -45,6 +45,8 @@ namespace Havtorn
 		SpriteInstanced = 7,
 		StaticMeshInstancedEditor = 8,
 		SpriteInstancedEditor = 9,
+		SkeletalMeshInstanced = 10,
+		SkeletalMeshInstancedEditor = 11,
 		Count,
 		Null = Count
 	};

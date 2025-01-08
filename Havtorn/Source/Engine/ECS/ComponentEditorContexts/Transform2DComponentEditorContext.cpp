@@ -49,7 +49,7 @@ namespace Havtorn
 
 	bool STransform2DComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("X##16"))
+		if (!ImGui::Button("X##17"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())

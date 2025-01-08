@@ -46,7 +46,7 @@ namespace Havtorn
 
 	bool SVolumetricLightComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("X##18"))
+		if (!ImGui::Button("X##19"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())

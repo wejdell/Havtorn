@@ -236,7 +236,7 @@ namespace Havtorn
 				if (tempBoneNameToIndexMap.find(boneName) == tempBoneNameToIndexMap.end())
 				{
 					boneIndex = numBones++;
-					fileHeaderMesh.BoneOffsetMatrices.push_back(ToHavtornMatrix(fbxMesh->mBones[i]->mOffsetMatrix));
+					//fileHeaderMesh.BoneOffsetMatrices.push_back(ToHavtornMatrix(fbxMesh->mBones[i]->mOffsetMatrix));
 
 					tempBoneNameToIndexMap[boneName] = boneIndex;
 				}

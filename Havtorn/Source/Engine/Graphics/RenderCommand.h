@@ -18,6 +18,8 @@ namespace Havtorn
 		CameraDataStorage,
 		GBufferDataInstanced,
 		GBufferDataInstancedEditor,
+		GBufferSkeletalInstanced,
+		GBufferSkeletalInstancedEditor,
 		GBufferSpriteInstanced,
 		GBufferSpriteInstancedEditor,
 		DecalDepthCopy,

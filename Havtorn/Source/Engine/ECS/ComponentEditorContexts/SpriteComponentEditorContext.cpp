@@ -52,7 +52,7 @@ namespace Havtorn
 
 	bool SSpriteComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("X##14"))
+		if (!ImGui::Button("X##15"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())

@@ -26,6 +26,7 @@ namespace Havtorn
 	class CWindowHandler;
 	struct SRenderCommand;
 	struct SStaticMeshComponent;
+	struct SSkeletalMeshComponent;
 	struct SMaterialComponent;
 	struct SDecalComponent;
 	struct SEnvironmentLightComponent;
@@ -67,6 +68,7 @@ namespace Havtorn
 		void Release();
 
 		HAVTORN_API void LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent);
+		HAVTORN_API void LoadSkeletalMeshComponent(const std::string& filePath, SSkeletalMeshComponent* outSkeletalMeshComponent);
 		HAVTORN_API void LoadMaterialComponent(const std::vector<std::string>& materialPaths, SMaterialComponent* outMaterialComponent);
 		// NR: Note that we use the file *name* instead of the full path here, we assume that it already exists in the registry.
 		HAVTORN_API bool TryLoadStaticMeshComponent(const std::string& fileName, SStaticMeshComponent* outStaticMeshComponent) const;
@@ -89,6 +91,11 @@ namespace Havtorn
 		void AddStaticMeshToInstancedRenderList(const std::string& meshName, const STransformComponent* component);
 		void SwapStaticMeshInstancedRenderLists();
 		void ClearSystemStaticMeshInstanceData();
+
+		bool IsSkeletalMeshInInstancedRenderList(const std::string& meshName);
+		void AddSkeletalMeshToInstancedRenderList(const std::string& meshName, const STransformComponent* transformComponent, const SSkeletalAnimationComponent* animationComponent);
+		void SwapSkeletalMeshInstancedRenderLists();
+		void ClearSystemSkeletalMeshInstanceData();
 
 		bool IsSpriteInWorldSpaceInstancedRenderList(const U32 textureBankIndex);
 		void AddSpriteToWorldSpaceInstancedRenderList(const U32 textureBankIndex, const STransformComponent* worldSpaceTransform, const SSpriteComponent* spriteComponent);
@@ -129,6 +136,8 @@ namespace Havtorn
 		inline void CameraDataStorage(const SRenderCommand& command);
 		inline void GBufferDataInstanced(const SRenderCommand& command);
 		inline void GBufferDataInstancedEditor(const SRenderCommand& command);
+		inline void GBufferSkeletalInstanced(const SRenderCommand& command);
+		inline void GBufferSkeletalInstancedEditor(const SRenderCommand& command);
 		inline void GBufferSpriteInstanced(const SRenderCommand& command);
 		inline void GBufferSpriteInstancedEditor(const SRenderCommand& command);
 		inline void DecalDepthCopy(const SRenderCommand& command);
@@ -336,6 +345,7 @@ namespace Havtorn
 		
 		CDataBuffer InstancedTransformBuffer;
 		CDataBuffer InstancedEntityIDBuffer;
+		CDataBuffer InstancedAnimationDataBuffer;
 
 		// NR: Used together with the InstancedTransformBuffer to batch World Space Sprites as well as Screen Space Sprites
 		CDataBuffer InstancedUVRectBuffer;
@@ -344,6 +354,13 @@ namespace Havtorn
 		struct SStaticMeshInstanceData
 		{
 			std::vector<SMatrix> Transforms{};
+			std::vector<SEntity> Entities{};
+		};
+
+		struct SSkeletalMeshInstanceData
+		{
+			std::vector<SMatrix> Transforms{};
+			std::vector<SVector2<U32>> AnimationData{};
 			std::vector<SEntity> Entities{};
 		};
 
@@ -357,9 +374,13 @@ namespace Havtorn
 
 		// TODO.NR: Add GUIDs to things like this
 		std::unordered_map<std::string, SStaticMeshAsset> LoadedStaticMeshes;
+		std::unordered_map<std::string, SSkeletalMeshAsset> LoadedSkeletalMeshes;
 		// NR: These are used as a way of cross-thread resource management
 		std::unordered_map<std::string, SStaticMeshInstanceData> SystemStaticMeshInstanceData;
 		std::unordered_map<std::string, SStaticMeshInstanceData> RendererStaticMeshInstanceData;
+
+		std::unordered_map<std::string, SSkeletalMeshInstanceData> SystemSkeletalMeshInstanceData;
+		std::unordered_map<std::string, SSkeletalMeshInstanceData> RendererSkeletalMeshInstanceData;
 
 		// TODO.NR: Maybe generalize GPU Instancing resources that are kept duplicate like this, combining
 		// the 4 function calls as well somehow. Maybe templated? Could use two template arguments, one for key and 

@@ -52,16 +52,18 @@ namespace Havtorn
 
         std::array<SVertexShaderInitData, STATIC_U64(EVertexShaders::Count)> initData;
         {
-            initData[STATIC_U64(EVertexShaders::Fullscreen)] = { "Shaders/FullscreenVertexShader_VS.cso", false };
-            initData[STATIC_U64(EVertexShaders::StaticMesh)] = { "Shaders/DeferredStaticMesh_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2 };
-            initData[STATIC_U64(EVertexShaders::StaticMeshInstanced)] = { "Shaders/DeferredInstancedMesh_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans };
-            initData[STATIC_U64(EVertexShaders::Decal)] = { "Shaders/Decal_VS.cso", false };
-            initData[STATIC_U64(EVertexShaders::PointAndSpotLight)] = { "Shaders/PointLight_VS.cso", true, EInputLayoutType::Position4 };
-            initData[STATIC_U64(EVertexShaders::EditorPreview)] = { "Shaders/EditorPreview_VS.cso", false };
-            initData[STATIC_U64(EVertexShaders::Line)] = { "Shaders/Line_VS.cso", false };
-            initData[STATIC_U64(EVertexShaders::SpriteInstanced)] = { "Shaders/SpriteInstanced_VS.cso", true, EInputLayoutType::TransUVRectColor };
-            initData[STATIC_U64(EVertexShaders::StaticMeshInstancedEditor)] = { "Shaders/DeferredInstancedMeshEditor_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Entity2Trans };
-            initData[STATIC_U64(EVertexShaders::SpriteInstancedEditor)] = { "Shaders/SpriteInstancedEditor_VS.cso", true, EInputLayoutType::TransUVRectColorEntity2 };
+            initData[STATIC_U64(EVertexShaders::Fullscreen)]                    = { "Shaders/FullscreenVertexShader_VS.cso", false };
+            initData[STATIC_U64(EVertexShaders::StaticMesh)]                    = { "Shaders/DeferredStaticMesh_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2 };
+            initData[STATIC_U64(EVertexShaders::StaticMeshInstanced)]           = { "Shaders/DeferredInstancedMesh_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans };
+            initData[STATIC_U64(EVertexShaders::Decal)]                         = { "Shaders/Decal_VS.cso", false };
+            initData[STATIC_U64(EVertexShaders::PointAndSpotLight)]             = { "Shaders/PointLight_VS.cso", true, EInputLayoutType::Position4 };
+            initData[STATIC_U64(EVertexShaders::EditorPreview)]                 = { "Shaders/EditorPreview_VS.cso", false };
+            initData[STATIC_U64(EVertexShaders::Line)]                          = { "Shaders/Line_VS.cso", false };
+            initData[STATIC_U64(EVertexShaders::SpriteInstanced)]               = { "Shaders/SpriteInstanced_VS.cso", true, EInputLayoutType::TransUVRectColor };
+            initData[STATIC_U64(EVertexShaders::StaticMeshInstancedEditor)]     = { "Shaders/DeferredInstancedMeshEditor_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Entity2Trans };
+            initData[STATIC_U64(EVertexShaders::SpriteInstancedEditor)]         = { "Shaders/SpriteInstancedEditor_VS.cso", true, EInputLayoutType::TransUVRectColorEntity2 };
+            initData[STATIC_U64(EVertexShaders::SkeletalMeshInstanced)]         = { "Shaders/DeferredInstancedAnimation_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans };
+            initData[STATIC_U64(EVertexShaders::SkeletalMeshInstancedEditor)]   = { "Shaders/DeferredInstancedAnimationEditor_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2AnimDataTrans };
         }
 
         for (U64 i = 0; i < STATIC_U64(EVertexShaders::Count); i++)
@@ -175,6 +177,7 @@ namespace Havtorn
     {
         AddMeshVertexStride(sizeof(SStaticMeshVertex));
         AddMeshVertexStride(sizeof(SPositionVertex));
+        AddMeshVertexStride(sizeof(SSkeletalMeshVertex));
     }
 
     void CRenderStateManager::InitMeshVertexOffset()
@@ -266,7 +269,7 @@ namespace Havtorn
             };
             break;
 
-        case EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Trans:
+        case EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans:
             layout =
             {
                 {"POSITION"	,	0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
@@ -276,10 +279,11 @@ namespace Havtorn
                 {"UV"		,   0, DXGI_FORMAT_R32G32_FLOAT,	0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
                 {"BONEID",      0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
                 {"BONEWEIGHT",  0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"INSTANCETRANSFORM",	0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1}
+                {"INSTANCEANIMATIONDATA",   0, DXGI_FORMAT_R32G32_UINT,	1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+                {"INSTANCETRANSFORM",	0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+                {"INSTANCETRANSFORM",	1, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+                {"INSTANCETRANSFORM",	2, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+                {"INSTANCETRANSFORM",	3, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1}
             };
             break;
 
@@ -299,7 +303,7 @@ namespace Havtorn
             };
             break;
 
-        case EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2Trans:
+        case EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2AnimDataTrans:
             layout =
             {
                 {"POSITION"	,	0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
@@ -310,10 +314,11 @@ namespace Havtorn
                 {"BONEID",      0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
                 {"BONEWEIGHT",  0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
                 {"ENTITY"		,   0, DXGI_FORMAT_R32G32_UINT,	1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	1, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	2, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	3, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1}
+                {"INSTANCEANIMATIONDATA",   0, DXGI_FORMAT_R32G32_UINT,	2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+                {"INSTANCETRANSFORM",	0, DXGI_FORMAT_R32G32B32A32_FLOAT, 3, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+                {"INSTANCETRANSFORM",	1, DXGI_FORMAT_R32G32B32A32_FLOAT, 3, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+                {"INSTANCETRANSFORM",	2, DXGI_FORMAT_R32G32B32A32_FLOAT, 3, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+                {"INSTANCETRANSFORM",	3, DXGI_FORMAT_R32G32B32A32_FLOAT, 3, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1}
             };
             break;
 

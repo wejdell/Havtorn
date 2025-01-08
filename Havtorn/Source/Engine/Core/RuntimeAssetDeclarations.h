@@ -31,6 +31,28 @@ namespace Havtorn
 		std::vector<SDrawCallData> DrawCallData = {};
 	};
 
+	struct SSkeletalMeshAsset
+	{
+		SSkeletalMeshAsset() = default;
+
+		explicit SSkeletalMeshAsset(const SSkeletalModelFileHeader assetFileData)
+			: AssetType(assetFileData.AssetType)
+			, Name(assetFileData.Name)
+			, NumberOfMaterials(assetFileData.NumberOfMaterials)
+		{
+			for (auto& mesh : assetFileData.Meshes)
+			{
+				DrawCallData.emplace_back();
+				DrawCallData.back().IndexCount = STATIC_U32(mesh.Indices.size());
+			}
+		}
+
+		EAssetType AssetType = EAssetType::SkeletalMesh;
+		std::string Name = "";
+		U8 NumberOfMaterials = 0;
+		std::vector<SDrawCallData> DrawCallData = {};
+	};
+
 	struct STextureAsset
 	{
 		STextureAsset() = default;
