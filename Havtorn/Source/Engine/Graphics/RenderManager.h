@@ -110,7 +110,7 @@ namespace Havtorn
 
 	public:
 		void SetWorldPlayState(EWorldPlayState playState);
-		[[nodiscard]] HAVTORN_API const CFullscreenTexture& GetRenderedSceneTexture() const;
+		[[nodiscard]] HAVTORN_API const CRenderTexture& GetRenderedSceneTexture() const;
 		void PushRenderCommand(SRenderCommand command);
 		void SwapRenderCommandBuffers();
 
@@ -306,29 +306,31 @@ namespace Havtorn
 		CFullscreenRenderer FullscreenRenderer;
 
 		CFullscreenTextureFactory FullscreenTextureFactory;
-		CFullscreenTexture RenderedScene;
-		CFullscreenTexture Backbuffer;
-		CFullscreenTexture IntermediateTexture;
-		CFullscreenTexture IntermediateDepth;
-		CFullscreenTexture EditorWidgetDepth;
-		CFullscreenTexture ShadowAtlasDepth;
-		CFullscreenTexture DepthCopy;
+		CRenderTexture RenderedScene;
+		CRenderTexture Backbuffer;
+		CRenderTexture IntermediateTexture;
+		CRenderTexture IntermediateDepth;
+		CRenderTexture EditorWidgetDepth;
+		CRenderTexture ShadowAtlasDepth;
+		CRenderTexture DepthCopy;
 
-		CFullscreenTexture HalfSizeTexture;
-		CFullscreenTexture QuarterSizeTexture;
-		CFullscreenTexture BlurTexture1;
-		CFullscreenTexture BlurTexture2;
-		CFullscreenTexture VignetteTexture;
+		CRenderTexture HalfSizeTexture;
+		CRenderTexture QuarterSizeTexture;
+		CRenderTexture BlurTexture1;
+		CRenderTexture BlurTexture2;
+		CRenderTexture VignetteTexture;
 
-		CFullscreenTexture LitScene;
-		CFullscreenTexture VolumetricAccumulationBuffer;
-		CFullscreenTexture VolumetricBlurTexture;
-		CFullscreenTexture SSAOBuffer;
-		CFullscreenTexture SSAOBlurTexture;
-		CFullscreenTexture DownsampledDepth;
-		CFullscreenTexture TonemappedTexture;
-		CFullscreenTexture AntiAliasedTexture;
-		CFullscreenTexture EditorDataTexture;
+		CRenderTexture LitScene;
+		CRenderTexture VolumetricAccumulationBuffer;
+		CRenderTexture VolumetricBlurTexture;
+		CRenderTexture SSAOBuffer;
+		CRenderTexture SSAOBlurTexture;
+		CRenderTexture DownsampledDepth;
+		CRenderTexture TonemappedTexture;
+		CRenderTexture AntiAliasedTexture;
+		CRenderTexture EditorDataTexture;
+		CRenderTexture SkeletalAnimationDataTextureCPU;
+		CRenderTexture SkeletalAnimationDataTextureGPU;
 		CGBuffer GBuffer;
 
 		CRenderCommandHeap RenderCommandsA;

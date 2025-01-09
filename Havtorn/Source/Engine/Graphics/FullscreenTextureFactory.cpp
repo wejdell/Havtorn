@@ -16,7 +16,7 @@ namespace Havtorn
 		return true;
 	}
 
-	CFullscreenTexture CFullscreenTextureFactory::CreateTexture(SVector2<U16> size, DXGI_FORMAT format, bool cpuAccess)
+	CRenderTexture CFullscreenTextureFactory::CreateTexture(SVector2<U16> size, DXGI_FORMAT format, bool cpuAccess)
 	{
 		D3D11_TEXTURE2D_DESC textureDesc = { 0 };
 		textureDesc.Width = size.X;
@@ -34,7 +34,7 @@ namespace Havtorn
 		ID3D11Texture2D* texture;
 		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateTexture2D(&textureDesc, nullptr, &texture), "Could not create Fullscreen Texture2D");
 
-		CFullscreenTexture returnTexture;
+		CRenderTexture returnTexture;
 		returnTexture = CreateTexture(texture, cpuAccess);
 
 		if (!cpuAccess)
@@ -48,7 +48,7 @@ namespace Havtorn
 		return returnTexture;
 	}
 
-	CFullscreenTexture CFullscreenTextureFactory::CreateTexture(ID3D11Texture2D* texture, bool cpuAccess)
+	CRenderTexture CFullscreenTextureFactory::CreateTexture(ID3D11Texture2D* texture, bool cpuAccess)
 	{
 		D3D11_VIEWPORT* viewport = nullptr;
 		if (texture)
@@ -58,7 +58,7 @@ namespace Havtorn
 			viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(textureDescription.Width), STATIC_F32(textureDescription.Height), 0.0f, 1.0f });
 		}
 
-		CFullscreenTexture returnTexture;
+		CRenderTexture returnTexture;
 		returnTexture.Context = Framework->GetContext();
 		returnTexture.Texture = texture;
 
@@ -74,7 +74,7 @@ namespace Havtorn
 		return returnTexture;
 	}
 
-	CFullscreenTexture CFullscreenTextureFactory::CreateTexture(SVector2<U16> size, DXGI_FORMAT format, const std::string& filePath)
+	CRenderTexture CFullscreenTextureFactory::CreateTexture(SVector2<U16> size, DXGI_FORMAT format, const std::string& filePath)
 	{
 		D3D11_TEXTURE2D_DESC textureDesc = { 0 };
 		textureDesc.Width = size.X;
@@ -92,7 +92,7 @@ namespace Havtorn
 		ID3D11Texture2D* texture;
 		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateTexture2D(&textureDesc, nullptr, &texture), "Could not create Fullscreen Texture2D");
 
-		CFullscreenTexture returnTexture;
+		CRenderTexture returnTexture;
 		returnTexture = CreateTexture(texture);
 
 		ID3D11ShaderResourceView* shaderResource = UGraphicsUtils::GetShaderResourceView(Framework->GetDevice(), filePath);
@@ -101,7 +101,7 @@ namespace Havtorn
 		return returnTexture;
 	}
 
-	CFullscreenTexture CFullscreenTextureFactory::CreateDepth(SVector2<U16> size, DXGI_FORMAT format)
+	CRenderTexture CFullscreenTextureFactory::CreateDepth(SVector2<U16> size, DXGI_FORMAT format)
 	{
 		DXGI_FORMAT stencilViewFormat = DXGI_FORMAT_UNKNOWN;
 		DXGI_FORMAT shaderResourceViewFormat = DXGI_FORMAT_UNKNOWN;
@@ -154,7 +154,7 @@ namespace Havtorn
 
 		D3D11_VIEWPORT* viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(size.X), STATIC_F32(size.Y), 0.0f, 1.0f });
 
-		CFullscreenTexture returnDepth;
+		CRenderTexture returnDepth;
 		returnDepth.Context = Framework->GetContext();
 		returnDepth.Texture = depthStencilBuffer;
 		returnDepth.Depth = depthStencilView;
@@ -181,7 +181,7 @@ namespace Havtorn
 
 		for (UINT i = 0; i < static_cast<size_t>(CGBuffer::EGBufferTextures::Count); ++i)
 		{
-			CFullscreenTexture texture = CreateTexture(size, textureFormats[i]);
+			CRenderTexture texture = CreateTexture(size, textureFormats[i]);
 			textures[i] = texture.Texture;
 			renderTargets[i] = texture.RenderTarget;
 			shaderResources[i] = texture.ShaderResource;

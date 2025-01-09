@@ -20,7 +20,7 @@ namespace Havtorn
 		Context->OMSetRenderTargets(STATIC_U64(EGBufferTextures::Count), &nullViews[0], nullptr);
 	}
 
-	void CGBuffer::SetAsActiveTarget(CFullscreenTexture* depth, bool isUsingEditor)
+	void CGBuffer::SetAsActiveTarget(CRenderTexture* depth, bool isUsingEditor)
 	{
 		auto depthStencilView = depth ? depth->Depth : nullptr;
 		Context->OMSetRenderTargets(isUsingEditor ? STATIC_U64(EGBufferTextures::Count) : STATIC_U64(EGBufferTextures::Count) - 1, &RenderTargets[0], depthStencilView);

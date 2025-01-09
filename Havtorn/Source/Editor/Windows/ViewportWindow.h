@@ -9,7 +9,7 @@ struct ID3D11Texture2D;
 
 namespace Havtorn
 {
-	class CFullscreenTexture;
+	class CRenderTexture;
 }
 
 namespace ImGui
@@ -29,7 +29,7 @@ namespace ImGui
 		ImDrawList* GetCurrentDrawList() const;
 
 	private:
-		const Havtorn::CFullscreenTexture* RenderedSceneTextureReference;
+		const Havtorn::CRenderTexture* RenderedSceneTextureReference;
 		ImDrawList* CurrentDrawList = nullptr;
 		Havtorn::F32 ViewportMenuHeight = 16.0f;
 		Havtorn::SVector2<Havtorn::F32> RenderedSceneDimensions = Havtorn::SVector2<Havtorn::F32>::Zero;

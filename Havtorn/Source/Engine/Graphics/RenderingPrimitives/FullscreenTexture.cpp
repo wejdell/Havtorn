@@ -6,17 +6,17 @@
 
 namespace Havtorn
 {
-	void CFullscreenTexture::ClearTexture(SVector4 clearColor) 
+	void CRenderTexture::ClearTexture(SVector4 clearColor) 
 	{
 		Context->ClearRenderTargetView(RenderTarget, &clearColor.X);
 	}
 
-	void CFullscreenTexture::ClearDepth(F32 /*clearDepth*/, U32 /*clearStencil*/) 
+	void CRenderTexture::ClearDepth(F32 /*clearDepth*/, U32 /*clearStencil*/) 
 	{
 		Context->ClearDepthStencilView(Depth, D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	}
 
-	void CFullscreenTexture::SetAsActiveTarget(CFullscreenTexture* depth) 
+	void CRenderTexture::SetAsActiveTarget(CRenderTexture* depth) 
 	{
 		if (depth) 
 			Context->OMSetRenderTargets(1, &RenderTarget, depth->Depth);
@@ -27,24 +27,24 @@ namespace Havtorn
 		Context->RSSetViewports(1, Viewport);
 	}
 
-	void CFullscreenTexture::SetAsDepthTarget()
+	void CRenderTexture::SetAsDepthTarget()
 	{
 		Context->OMSetRenderTargets(0, NULL, Depth);
 		Context->RSSetViewports(1, Viewport);
 	}
 
-	void CFullscreenTexture::SetAsDepthTarget(CFullscreenTexture* intermediateRenderTarget)
+	void CRenderTexture::SetAsDepthTarget(CRenderTexture* intermediateRenderTarget)
 	{
 		Context->OMSetRenderTargets(1, &intermediateRenderTarget->RenderTarget, Depth);
 		Context->RSSetViewports(1, Viewport);
 	}
 
-	void CFullscreenTexture::SetAsResourceOnSlot(U16 slot) 
+	void CRenderTexture::SetAsResourceOnSlot(U16 slot) 
 	{
 		Context->PSSetShaderResources(slot, 1, &ShaderResource);
 	}
 
-	void* CFullscreenTexture::MapToCPUFromGPUTexture(ID3D11Texture2D* gpuTexture)
+	void* CRenderTexture::MapToCPUFromGPUTexture(ID3D11Texture2D* gpuTexture)
 	{
 		if (!CPUAccess)
 		{
@@ -58,7 +58,28 @@ namespace Havtorn
 		return resourceDesc.pData;
 	}
 
-	void CFullscreenTexture::UnmapFromCPU()
+	void CRenderTexture::CopyFromTexture(ID3D11Texture2D* texture)
+	{
+		Context->CopyResource(Texture, texture);
+	}
+
+	void CRenderTexture::WriteToCPUTexture(void* data, U64 size)
+	{
+		if (!CPUAccess)
+		{
+			HV_LOG_WARN("UnmapFromCPU: Tried to write data to a CPU texture, but the texture was not bound correctly for CPU access. Skipping write.");
+			return;
+		}
+
+		D3D11_MAPPED_SUBRESOURCE resourceDesc = {};
+		Context->Map(Texture, 0, D3D11_MAP_WRITE_DISCARD, 0, &resourceDesc);
+		
+		memcpy(resourceDesc.pData, data, size);
+
+		Context->Unmap(Texture, 0);
+	}
+
+	void CRenderTexture::UnmapFromCPU()
 	{
 		if (!CPUAccess)
 		{
@@ -69,7 +90,7 @@ namespace Havtorn
 		Context->Unmap(Texture, 0);
 	}
 
-	void CFullscreenTexture::ReleaseTexture()
+	void CRenderTexture::ReleaseTexture()
 	{
 		Context = nullptr;
 		Texture->Release();
@@ -86,7 +107,7 @@ namespace Havtorn
 		SAFE_DELETE(Viewport);
 	}
 
-	void CFullscreenTexture::ReleaseDepth()
+	void CRenderTexture::ReleaseDepth()
 	{
 		Context = nullptr;
 		Texture->Release();
@@ -103,21 +124,21 @@ namespace Havtorn
 		SAFE_DELETE(Viewport);
 	}
 
-	ID3D11Texture2D* const CFullscreenTexture::GetTexture() const
+	ID3D11Texture2D* const CRenderTexture::GetTexture() const
 	{
 		return Texture;
 	}
 
-	ID3D11ShaderResourceView* const CFullscreenTexture::GetShaderResourceView() const
+	ID3D11ShaderResourceView* const CRenderTexture::GetShaderResourceView() const
 	{
 		return ShaderResource;
 	}
 
-	ID3D11RenderTargetView* const CFullscreenTexture::GetRenderTargetView() const
+	ID3D11RenderTargetView* const CRenderTexture::GetRenderTargetView() const
 	{
 		return RenderTarget;
 	}
-	ID3D11DepthStencilView* const CFullscreenTexture::GetDepthStencilView() const
+	ID3D11DepthStencilView* const CRenderTexture::GetDepthStencilView() const
 	{
 		return Depth;
 	}
