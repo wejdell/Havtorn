@@ -452,6 +452,11 @@ namespace Havtorn
         Context->VSSetConstantBuffers(slot, 1, &buffer.Buffer);
     }
 
+    void CRenderStateManager::VSSetResources(U8 startSlot, U8 numberOfResources, ID3D11ShaderResourceView* const* resources)
+    {
+        Context->VSSetShaderResources(startSlot, numberOfResources, resources);
+    }
+
     void CRenderStateManager::GSSetShader(EGeometryShaders shader) const
     {
         Context->GSSetShader(GeometryShaders[STATIC_U8(shader)], nullptr, 0);

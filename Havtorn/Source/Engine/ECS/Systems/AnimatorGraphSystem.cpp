@@ -2,44 +2,41 @@
 
 #include "hvpch.h"
 #include "AnimatorGraphSystem.h"
-#include "ECS/Components/SpriteComponent.h"
-#include "ECS/Components/SpriteAnimatorGraphComponent.h"
+#include "Graphics/RenderManager.h"
+#include "ECS/Components/SkeletalAnimationComponent.h"
+#include "ECS/Components/SkeletalMeshComponent.h"
 #include "Scene/Scene.h"
 
 namespace Havtorn
 {
+	CAnimatorGraphSystem::CAnimatorGraphSystem(CRenderManager* renderManager)
+		: ISystem()
+		, RenderManager(renderManager)
+	{
+	}
+
 	void CAnimatorGraphSystem::Update(CScene* scene)
 	{
 		const F32 deltaTime = GTime::Dt();
-		const std::vector<SSpriteAnimatorGraphComponent*>& spriteAnimatorGraphComponents = scene->GetComponents<SSpriteAnimatorGraphComponent>();
 
-		for (SSpriteAnimatorGraphComponent* component : spriteAnimatorGraphComponents)
+		std::vector<SBoneAnimDataTransform> data;
+		for (SSkeletalAnimationComponent* component : scene->GetComponents<SSkeletalAnimationComponent>())
 		{
-			if (!component)
+			if (!component->IsValid())
 				continue;
 
-			if (component->AnimationClips.size() == 0)
-				continue;
+			if (data.empty())
+				data = PreprocessAnimation(component);
 
-			if (component->Graph.EvaluateFunctionMapKey != 0)
+			F32 frameDuration = 1.0f / STATIC_F32(component->TickRate);
+			if ((component->CurrentFrameTime += deltaTime) >= frameDuration)
 			{
-				SSpriteAnimatorGraphNode* currentNode = &component->Graph;
-				while (currentNode != nullptr)
-				{
-					if (currentNode->AnimationClipKey != -1)
-					{
-						component->ResolvedAnimationClipKey = currentNode->AnimationClipKey;
-						break;
-					}
-					
-					I16 evaluatedNodeIndex = EvaluateFunctionMap[currentNode->EvaluateFunctionMapKey](scene, component->Owner);
-					if (evaluatedNodeIndex >= 0 && evaluatedNodeIndex < currentNode->Nodes.size())
-						currentNode = &currentNode->Nodes[evaluatedNodeIndex];			
-				}
+				component->CurrentFrameTime -= frameDuration;
+				component->AnimationData.Y = (component->AnimationData.Y + 1) % component->DurationInTicks;
 			}
-
-			scene->GetComponent<SSpriteComponent>(component)->UVRect = TickAnimationClip(*component, deltaTime);
 		}
+		
+		//RenderManager->WriteToAnimationDataTexture(data.data(), sizeof(SBoneAnimDataTransform) * data.size());
 	}
 
 	void CAnimatorGraphSystem::BindEvaluateFunction(std::function<I16(CScene*, const SEntity&)>& function, const std::string& classAndFunctionName)
@@ -52,27 +49,48 @@ namespace Havtorn
 		EvaluateFunctionMap.emplace(id, function);
 	}
 
-	SVector4 CAnimatorGraphSystem::TickAnimationClip(SSpriteAnimatorGraphComponent& data, const F32 deltaTime)
+	std::vector<SBoneAnimDataTransform> CAnimatorGraphSystem::PreprocessAnimation(SSkeletalAnimationComponent* component)
 	{
-		data.ElapsedTimeInSeconds += deltaTime;	
-
-		// AS: By design, We wait for the end of the current frame before we allow changing clip
-
-		U64 durationIndex = UMath::Min(data.CurrentFrame, STATIC_U32(data.AnimationClips[data.CurrentAnimationClipKey].Durations.size() - 1));
-		if (data.ElapsedTimeInSeconds >= data.AnimationClips[data.CurrentAnimationClipKey].Durations[durationIndex])
+		std::vector<SBoneAnimDataTransform> data;
+		F32 accumulatedTime = 0.0f;
+		for (U32 tick = 0; tick < component->DurationInTicks; tick++)
 		{
-			bool animationClipHasChanged = data.CurrentAnimationClipKey != data.ResolvedAnimationClipKey;
-			if (animationClipHasChanged)
-				data.CurrentAnimationClipKey = data.ResolvedAnimationClipKey;
+			accumulatedTime += 1.0f / STATIC_F32(component->TickRate);
+			for (const SBoneAnimationTrack& track : component->BoneAnimationTracks)
+			{
+				SVecBoneAnimationKey translationKey;
+				for (const SVecBoneAnimationKey& key : track.TranslationKeys)
+					translationKey = (key.Time <= accumulatedTime) ? key : translationKey;
 
-			data.CurrentFrame = (data.CurrentFrame + 1) % data.AnimationClips[data.CurrentAnimationClipKey].KeyFrameCount();
+				SQuatBoneAnimationKey rotationKey;
+				for (const SQuatBoneAnimationKey& key : track.RotationKeys)
+					rotationKey = (key.Time <= accumulatedTime) ? key : rotationKey;
 
-			if (animationClipHasChanged)
-				data.CurrentFrame = 0;
-
-			data.ElapsedTimeInSeconds = 0.0f;
+				SVecBoneAnimationKey scaleKey;
+				for (const SVecBoneAnimationKey& key : track.ScaleKeys)
+					scaleKey = (key.Time <= accumulatedTime) ? key : scaleKey;
+				
+				data.push_back(EncodeTransform(translationKey, rotationKey, scaleKey));
+			}
 		}
+		return data;
+	}
 
-		return data.AnimationClips[data.CurrentAnimationClipKey].UVRects[data.CurrentFrame];
+	SBoneAnimDataTransform CAnimatorGraphSystem::EncodeTransform(const SVecBoneAnimationKey& translationKey, const SQuatBoneAnimationKey& rotationKey, const SVecBoneAnimationKey& scaleKey)
+	{
+		SBoneAnimDataTransform dataFrame;
+		SMatrix boneMatrix;
+		SMatrix::Recompose(translationKey.Value, rotationKey.Value.ToEuler(), scaleKey.Value, boneMatrix);
+		SVector translation = boneMatrix.GetTranslation();
+		SMatrix::Transpose(boneMatrix); // NR: Maybe should not do this
+		
+		dataFrame.Row1TX = boneMatrix.GetRow(0);
+		dataFrame.Row1TX.W = translation.X;
+		dataFrame.Row2TY = boneMatrix.GetRow(1);
+		dataFrame.Row2TY.W = translation.Y;
+		dataFrame.Row3TZ = boneMatrix.GetRow(2);
+		dataFrame.Row3TZ.W = translation.Z;
+
+		return dataFrame;
 	}
 }

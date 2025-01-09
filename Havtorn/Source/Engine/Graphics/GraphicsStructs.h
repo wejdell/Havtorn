@@ -83,6 +83,36 @@ namespace Havtorn
 		//std::vector<SMatrix> BoneOffsetMatrices;
 	};
 
+	struct SVecBoneAnimationKey
+	{
+		SVector Value = SVector::Zero;
+		F32 Time = 0.0f;
+	};
+
+	struct SQuatBoneAnimationKey
+	{
+		SQuaternion Value = SQuaternion::Identity;
+		F32 Time = 0.0f;
+	};
+
+	struct SBoneAnimationTrack
+	{
+		std::vector<SVecBoneAnimationKey> TranslationKeys;
+		std::vector<SQuatBoneAnimationKey> RotationKeys;
+		std::vector<SVecBoneAnimationKey> ScaleKeys;
+		std::string BoneName;
+
+		U32 GetSize() const
+		{
+			U32 size = 0;
+			size += GetDataSize(TranslationKeys);
+			size += GetDataSize(RotationKeys);
+			size += GetDataSize(ScaleKeys);
+			size += GetDataSize(BoneName);
+			return size;
+		}
+	};
+
 	struct SDrawCallData
 	{
 		U32 IndexCount = 0;

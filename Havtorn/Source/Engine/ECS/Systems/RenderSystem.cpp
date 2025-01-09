@@ -187,7 +187,7 @@ namespace Havtorn
 				if (isInPlayingPlayState)
 				{
 					SRenderCommand command;
-					command.Type = ERenderCommandType::GBufferDataInstanced;
+					command.Type = ERenderCommandType::GBufferSkeletalInstanced;
 					command.Matrices.push_back(transformComp->Transform.GetMatrix());
 					command.Strings.push_back(skeletalMeshComponent->Name.AsString());
 					command.DrawCallData = skeletalMeshComponent->DrawCallData;

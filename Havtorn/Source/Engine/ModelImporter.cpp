@@ -60,6 +60,22 @@ namespace Havtorn
 		return mat;
 	}
 
+	SVecBoneAnimationKey ToHavtornVecAnimationKey(const aiVectorKey& assimpKey)
+	{
+		SVecBoneAnimationKey havtornKey;
+		havtornKey.Value = { assimpKey.mValue.x, assimpKey.mValue.y, assimpKey.mValue.z };
+		havtornKey.Time = STATIC_F32(assimpKey.mTime);
+		return havtornKey;
+	}
+
+	SQuatBoneAnimationKey ToHavtornQuatAnimationKey(const aiQuatKey& assimpKey)
+	{
+		SQuatBoneAnimationKey havtornKey;
+		havtornKey.Value = { assimpKey.mValue.x, assimpKey.mValue.y, assimpKey.mValue.z, assimpKey.mValue.w };
+		havtornKey.Time = STATIC_F32(assimpKey.mTime);
+		return havtornKey;
+	}
+
 	std::string UModelImporter::ImportFBX(const std::string& filePath, const EAssetType assetType)
 	{
 		if (!CFileSystem::DoesFileExist(filePath))
@@ -316,13 +332,42 @@ namespace Havtorn
 		return newFileName;
 	}
 
-	std::string UModelImporter::ImportAnimation(const std::string& filePath, const aiScene* /*assimpScene*/)
+	std::string UModelImporter::ImportAnimation(const std::string& filePath, const aiScene* assimpScene)
 	{
+		const aiAnimation* animation = assimpScene->mAnimations[0];
+
+		// TODO.NR: Support multiple animations per file? Support montages somehow. Could be separate file using these headers (SSkeletalAnimationMontageFileHeader)
+		SSkeletalAnimationFileHeader fileHeader;
+		fileHeader.AssetType = EAssetType::Animation;
+		fileHeader.Name = UGeneralUtils::ExtractFileNameFromPath(filePath);
+		fileHeader.DurationInTicks = STATIC_U32(animation->mDuration);
+		fileHeader.NumberOfTracks = animation->mNumChannels;
+		fileHeader.BoneAnimationTracks.reserve(fileHeader.NumberOfTracks);
+		fileHeader.TickRate = STATIC_U32(animation->mTicksPerSecond);
+			
+		for (U32 i = 0; i < animation->mNumChannels; i++)
+		{
+			const aiNodeAnim* channel = animation->mChannels[i];
+			
+			fileHeader.BoneAnimationTracks.emplace_back();
+			SBoneAnimationTrack& track = fileHeader.BoneAnimationTracks.back();
+			track.BoneName = channel->mNodeName.C_Str();
+
+			for (U32 t = 0; t < channel->mNumPositionKeys; t++)
+				track.TranslationKeys.emplace_back(ToHavtornVecAnimationKey(channel->mPositionKeys[t]));
+
+			for (U32 q = 0; q < channel->mNumRotationKeys; q++)
+				track.RotationKeys.emplace_back(ToHavtornQuatAnimationKey(channel->mRotationKeys[q]));
+
+			for (U32 s = 0; s < channel->mNumScalingKeys; s++)
+				track.ScaleKeys.emplace_back(ToHavtornVecAnimationKey(channel->mScalingKeys[s]));
+		}
+
 		std::string newFileName = filePath.substr(0, filePath.length() - 4);
 		newFileName.append(".hva");
-		//const auto fileData = new char[fileHeader.GetSize()];
-		//fileHeader.Serialize(fileData);
-		//GEngine::GetFileSystem()->Serialize(newFileName, &fileData[0], fileHeader.GetSize());
+		const auto fileData = new char[fileHeader.GetSize()];
+		fileHeader.Serialize(fileData);
+		GEngine::GetFileSystem()->Serialize(newFileName, &fileData[0], fileHeader.GetSize());
 		return newFileName;
 	}
 }

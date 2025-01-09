@@ -11,6 +11,7 @@
 #include "ECS/Systems/CameraSystem.h"
 #include "ECS/Systems/LightSystem.h"
 #include "ECS/Systems/DebugShapeSystem.h"
+#include "ECS/Systems/AnimatorGraphSystem.h"
 #include "ECS/Systems/SpriteAnimatorGraphSystem.h"
 #include "ECS/Systems/SequencerSystem.h"
 #include "../HexPhys/HexPhys.h"

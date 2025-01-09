@@ -79,6 +79,7 @@ namespace Havtorn
 		HAVTORN_API void LoadDecalComponent(const std::vector<std::string>& texturePaths, SDecalComponent* outDecalComponent);
 		HAVTORN_API void LoadEnvironmentLightComponent(const std::string& ambientCubemapTexturePath, SEnvironmentLightComponent* outEnvironmentLightComponent);
 		HAVTORN_API void LoadSpriteComponent(const std::string& filePath, SSpriteComponent* outSpriteComponent);
+		HAVTORN_API void LoadSkeletalAnimationComponent(const std::string& filePath, SSkeletalAnimationComponent* outSkeletalAnimationComponent);
 
 		HAVTORN_API void* RenderStaticMeshAssetTexture(const std::string& filePath);
 		HAVTORN_API void* RenderSkeletalMeshAssetTexture(const std::string& filePath);
@@ -86,6 +87,8 @@ namespace Havtorn
 		HAVTORN_API void* RenderMaterialAssetTexture(const std::string& filePath);
 
 		HAVTORN_API U64 GetEntityGUIDFromData(U64 dataIndex) const;
+
+		void WriteToAnimationDataTexture(void* data, U64 size);
 
 		bool IsStaticMeshInInstancedRenderList(const std::string& meshName);
 		void AddStaticMeshToInstancedRenderList(const std::string& meshName, const STransformComponent* component);

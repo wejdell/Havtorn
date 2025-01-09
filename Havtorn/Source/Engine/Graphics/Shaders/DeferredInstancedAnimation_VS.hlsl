@@ -61,9 +61,21 @@ VertexModelToPixel main(SkeletalMeshInstancedVertexInput input)
     const float4 pos = float4(input.Position.xyz, 1.0f);
     
     skinnedPos += weights.x * mul(pos, LoadBoneMatrix(input.AnimationData, boneIndices.x));
-    skinnedPos += weights.y * mul(pos, LoadBoneMatrix(input.AnimationData, boneIndices.y));
-    skinnedPos += weights.z * mul(pos, LoadBoneMatrix(input.AnimationData, boneIndices.z));
-    skinnedPos += weights.w * mul(pos, LoadBoneMatrix(input.AnimationData, boneIndices.w));
+    
+    // NR: Branching may be cheaper than texture fetching
+    if (weights.y > 0)
+    {
+        skinnedPos += weights.y * mul(pos, LoadBoneMatrix(input.AnimationData, boneIndices.y));
+        if (weights.z > 0)
+        {
+            skinnedPos += weights.z * mul(pos, LoadBoneMatrix(input.AnimationData, boneIndices.z));
+            if (weights.w > 0)
+            {
+                skinnedPos += weights.w * mul(pos, LoadBoneMatrix(input.AnimationData, boneIndices.w));
+            }
+        }
+        
+    }
     
     //skinnedPos += weight * mul(pos, Bones[boneIndex]);
     

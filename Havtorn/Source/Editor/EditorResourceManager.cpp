@@ -110,6 +110,7 @@ namespace Havtorn
 		case EAssetType::SkeletalMesh: // fallthrough
 		case EAssetType::Animation:
 		{
+			// TODO.NR: Take destination into account
 			hvaPath = UModelImporter::ImportFBX(filePath, assetType);
 		}
 		break;

@@ -105,6 +105,8 @@ namespace Havtorn
 		TonemappedTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
 		AntiAliasedTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
 		EditorDataTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R32G32_UINT, true);
+		SkeletalAnimationDataTextureCPU = FullscreenTextureFactory.CreateTexture({ 256, 256 }, DXGI_FORMAT_R32G32B32A32_FLOAT, true);
+		SkeletalAnimationDataTextureGPU = FullscreenTextureFactory.CreateTexture({ 256, 256 }, DXGI_FORMAT_R32G32B32A32_FLOAT);
 		GBuffer = FullscreenTextureFactory.CreateGBuffer(windowHandler->GetResolution());
 	}
 
@@ -425,6 +427,23 @@ namespace Havtorn
 		outSpriteComponent->TextureIndex = STATIC_U16(textureBank->GetTextureIndex(filePath));
 	}
 
+	void CRenderManager::LoadSkeletalAnimationComponent(const std::string& filePath, SSkeletalAnimationComponent* outSkeletalAnimationComponent)
+	{
+		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
+		char* data = new char[fileSize];
+
+		GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
+
+		SSkeletalAnimationFileHeader assetFile;
+		assetFile.Deserialize(data);
+
+		outSkeletalAnimationComponent->BoneAnimationTracks = assetFile.BoneAnimationTracks;
+		outSkeletalAnimationComponent->Name = std::string(assetFile.Name.c_str());
+		outSkeletalAnimationComponent->DurationInTicks = assetFile.DurationInTicks;
+		outSkeletalAnimationComponent->TickRate = assetFile.TickRate;
+		outSkeletalAnimationComponent->FrameStride = assetFile.NumberOfTracks;
+	}
+
 	SVector2<F32> CRenderManager::GetShadowAtlasResolution() const
 	{
 		return ShadowAtlasResolution;
@@ -587,8 +606,6 @@ namespace Havtorn
 
 	void* CRenderManager::RenderSkeletalMeshAssetTexture(const std::string& filePath)
 	{
-		// TODO.NR: Fix so that editor preview shaders can take bigger skeletal mesh vertices into account.
-
 		D3D11_TEXTURE2D_DESC textureDesc = { 0 };
 		textureDesc.Width = STATIC_U16(256.0f);
 		textureDesc.Height = STATIC_U16(256.0f);
@@ -935,6 +952,11 @@ namespace Havtorn
 		return 0;
 	}
 
+	void CRenderManager::WriteToAnimationDataTexture(void* data, U64 size)
+	{
+		SkeletalAnimationDataTextureCPU.WriteToCPUTexture(data, size);
+	}
+
 	bool CRenderManager::IsStaticMeshInInstancedRenderList(const std::string& meshName)
 	{
 		return SystemStaticMeshInstanceData.contains(meshName);
@@ -1075,7 +1097,7 @@ namespace Havtorn
 		WorldPlayState = playState;
 	}
 
-	const CFullscreenTexture& CRenderManager::GetRenderedSceneTexture() const
+	const CRenderTexture& CRenderManager::GetRenderedSceneTexture() const
 	{
 		return RenderedScene;
 	}
@@ -1409,12 +1431,78 @@ namespace Havtorn
 		}
 	}
 
-	void CRenderManager::GBufferSkeletalInstanced(const SRenderCommand& /*command*/)
+	void CRenderManager::GBufferSkeletalInstanced(const SRenderCommand& command)
 	{
+		SkeletalAnimationDataTextureGPU.CopyFromTexture(SkeletalAnimationDataTextureCPU.GetTexture());
+
+		const std::vector<SMatrix>& matrices = RendererSkeletalMeshInstanceData[command.Strings[0]].Transforms;
+		InstancedTransformBuffer.BindBuffer(matrices);
+
+		const std::vector<SVector2<U32>>& animationData = RendererSkeletalMeshInstanceData[command.Strings[0]].AnimationData;
+		InstancedAnimationDataBuffer.BindBuffer(animationData);
+
+		SkeletalAnimationDataTextureGPU.SetAsResourceOnSlot(24);
+		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
+		RenderStateManager.IASetTopology(ETopologies::TriangleList);
+		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans);
+
+		RenderStateManager.VSSetShader(EVertexShaders::SkeletalMeshInstanced);
+		RenderStateManager.PSSetShader(EPixelShaders::GBuffer);
+		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
+
+		auto textureBank = GEngine::GetTextureBank();
+		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(command.DrawCallData.size()); drawCallIndex++)
+		{
+			std::vector<ID3D11ShaderResourceView*> resourceViewPointers;
+
+			std::map<F32, F32> textureIndices;
+			auto findTextureByIndex = [&](SRuntimeGraphicsMaterialProperty& bufferProperty)
+				{
+					if (bufferProperty.TextureChannelIndex > -1.0f)
+					{
+						if (!textureIndices.contains(bufferProperty.TextureIndex))
+						{
+							resourceViewPointers.emplace_back(textureBank->GetTexture(STATIC_U32(bufferProperty.TextureIndex)));
+							textureIndices.emplace(bufferProperty.TextureIndex, STATIC_F32(resourceViewPointers.size() - 1));
+						}
+
+						bufferProperty.TextureIndex = textureIndices[bufferProperty.TextureIndex];
+					}
+				};
+
+			MaterialBufferData = SMaterialBufferData(command.Materials[drawCallIndex]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoR)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoG)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoB)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoA)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalX)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalY)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalZ)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AmbientOcclusion)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Metalness)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Roughness)]);
+			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Emissive)]);
+
+			MaterialBuffer.BindBuffer(MaterialBufferData);
+
+			RenderStateManager.PSSetResources(5, STATIC_U8(resourceViewPointers.size()), resourceViewPointers.data());
+			RenderStateManager.PSSetConstantBuffer(8, MaterialBuffer);
+
+			const SDrawCallData& drawData = command.DrawCallData[drawCallIndex];
+			const std::vector<CDataBuffer> buffers = { RenderStateManager.VertexBuffers[drawData.VertexBufferIndex], InstancedAnimationDataBuffer, InstancedTransformBuffer };
+			const U32 strides[3] = { RenderStateManager.MeshVertexStrides[drawData.VertexStrideIndex], sizeof(SVector2<U32>), sizeof(SMatrix) };
+			const U32 offsets[3] = { RenderStateManager.MeshVertexOffsets[drawData.VertexOffsetIndex], 0, 0 };
+			RenderStateManager.IASetVertexBuffers(0, 3, buffers, strides, offsets);
+			RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[drawData.IndexBufferIndex]);
+			RenderStateManager.DrawIndexedInstanced(drawData.IndexCount, STATIC_U32(matrices.size()), 0, 0, 0);
+			CRenderManager::NumberOfDrawCallsThisFrame++;
+		}
 	}
 
 	void CRenderManager::GBufferSkeletalInstancedEditor(const SRenderCommand& command)
 	{
+		SkeletalAnimationDataTextureGPU.CopyFromTexture(SkeletalAnimationDataTextureCPU.GetTexture());
+
 		const std::vector<SMatrix>& matrices = RendererSkeletalMeshInstanceData[command.Strings[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
@@ -1424,6 +1512,7 @@ namespace Havtorn
 		const std::vector<SEntity>& entities = RendererSkeletalMeshInstanceData[command.Strings[0]].Entities;
 		InstancedEntityIDBuffer.BindBuffer(entities);
 
+		SkeletalAnimationDataTextureGPU.SetAsResourceOnSlot(24);
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
 		RenderStateManager.IASetTopology(ETopologies::TriangleList);
 		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2AnimDataTrans);
