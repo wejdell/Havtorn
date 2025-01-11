@@ -13,7 +13,7 @@ namespace Havtorn
 	{
 		SStaticMeshAsset() = default;
 
-		explicit SStaticMeshAsset(const SStaticModelFileHeader assetFileData)
+		explicit SStaticMeshAsset(const SStaticModelFileHeader& assetFileData)
 			: AssetType(assetFileData.AssetType)
 			, Name(assetFileData.Name)
 			, NumberOfMaterials(assetFileData.NumberOfMaterials)
@@ -35,7 +35,7 @@ namespace Havtorn
 	{
 		SSkeletalMeshAsset() = default;
 
-		explicit SSkeletalMeshAsset(const SSkeletalModelFileHeader assetFileData)
+		explicit SSkeletalMeshAsset(const SSkeletalModelFileHeader& assetFileData)
 			: AssetType(assetFileData.AssetType)
 			, Name(assetFileData.Name)
 			, NumberOfMaterials(assetFileData.NumberOfMaterials)
@@ -53,11 +53,76 @@ namespace Havtorn
 		std::vector<SDrawCallData> DrawCallData = {};
 	};
 
+	struct SSkeletalAnimationAsset
+	{
+		SSkeletalAnimationAsset() = default;
+
+		explicit SSkeletalAnimationAsset(const SSkeletalAnimationFileHeader& assetFileData)
+			: AssetType(assetFileData.AssetType)
+			, Name(assetFileData.Name)
+			, DurationInTicks(assetFileData.DurationInTicks)
+			, TickRate(assetFileData.TickRate)
+			, NumberOfTracks(assetFileData.NumberOfTracks)
+		{
+			PreprocessAnimation(assetFileData);
+		}
+
+		EAssetType AssetType = EAssetType::Animation;
+		std::string Name = "";
+		U32 DurationInTicks = 0;
+		U32 TickRate = 0;
+		U32 NumberOfTracks = 0;
+		std::vector<SBoneAnimDataTransform> BoneAnimTransforms;
+
+		SBoneAnimDataTransform EncodeTransform(const SVecBoneAnimationKey& translationKey, const SQuatBoneAnimationKey& rotationKey, const SVecBoneAnimationKey& scaleKey)
+		{
+			SBoneAnimDataTransform dataFrame;
+			SMatrix boneMatrix;
+			SMatrix::Recompose(translationKey.Value, rotationKey.Value.ToEuler(), scaleKey.Value, boneMatrix);
+			SVector translation = boneMatrix.GetTranslation();
+			SMatrix::Transpose(boneMatrix); // NR: Maybe should not do this
+
+			dataFrame.Row1TX = boneMatrix.GetRow(0);
+			dataFrame.Row1TX.W = translation.X;
+			dataFrame.Row2TY = boneMatrix.GetRow(1);
+			dataFrame.Row2TY.W = translation.Y;
+			dataFrame.Row3TZ = boneMatrix.GetRow(2);
+			dataFrame.Row3TZ.W = translation.Z;
+
+			return dataFrame;
+		}
+
+		void PreprocessAnimation(const SSkeletalAnimationFileHeader& assetFileData)
+		{
+			F32 accumulatedTime = 0.0f;
+			for (U32 tick = 0; tick < DurationInTicks; tick++)
+			{
+				accumulatedTime += 1.0f / STATIC_F32(TickRate);
+				for (const SBoneAnimationTrack& track : assetFileData.BoneAnimationTracks)
+				{
+					SVecBoneAnimationKey translationKey;
+					for (const SVecBoneAnimationKey& key : track.TranslationKeys)
+						translationKey = (key.Time <= accumulatedTime) ? key : translationKey;
+
+					SQuatBoneAnimationKey rotationKey;
+					for (const SQuatBoneAnimationKey& key : track.RotationKeys)
+						rotationKey = (key.Time <= accumulatedTime) ? key : rotationKey;
+
+					SVecBoneAnimationKey scaleKey;
+					for (const SVecBoneAnimationKey& key : track.ScaleKeys)
+						scaleKey = (key.Time <= accumulatedTime) ? key : scaleKey;
+
+					BoneAnimTransforms.emplace_back(EncodeTransform(translationKey, rotationKey, scaleKey));
+				}
+			}
+		}
+	};
+
 	struct STextureAsset
 	{
 		STextureAsset() = default;
 
-		explicit STextureAsset(const STextureFileHeader assetFileData, ID3D11Device* graphicsDevice)
+		explicit STextureAsset(const STextureFileHeader& assetFileData, ID3D11Device* graphicsDevice)
 			: AssetType(assetFileData.AssetType)
 			, MaterialName(assetFileData.MaterialName)
 			, MaterialConfiguration(assetFileData.MaterialConfiguration)
@@ -77,7 +142,7 @@ namespace Havtorn
 	{
 		SGraphicsMaterialAsset() = default;
 
-		explicit SGraphicsMaterialAsset(const SMaterialAssetFileHeader assetFileData)
+		explicit SGraphicsMaterialAsset(const SMaterialAssetFileHeader& assetFileData)
 			: AssetType(assetFileData.AssetType)
 			, Material(assetFileData.Material, assetFileData.MaterialName)
 		{
@@ -91,7 +156,7 @@ namespace Havtorn
 	{
 		SSpriteAninmationClipAsset() = default;
 
-		explicit SSpriteAninmationClipAsset(const SSpriteAnimationClipFileHeader assetFileData)
+		explicit SSpriteAninmationClipAsset(const SSpriteAnimationClipFileHeader& assetFileData)
 			: AssetType(assetFileData.AssetType)
 			, SpriteAnimationClip(SSpriteAnimationClip(assetFileData.UVRects, assetFileData.Durations, assetFileData.IsLooping))
 		{

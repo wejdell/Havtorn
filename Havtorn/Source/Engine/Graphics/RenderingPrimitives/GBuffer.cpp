@@ -27,7 +27,7 @@ namespace Havtorn
 		Context->RSSetViewports(1, Viewport);
 	}
 
-	void CGBuffer::SetAsResourceOnSlot(EGBufferTextures resource, U16 slot)
+	void CGBuffer::SetAsPSResourceOnSlot(EGBufferTextures resource, U16 slot)
 	{
 		Context->PSSetShaderResources(slot, 1, &ShaderResources[STATIC_U64(resource)]);
 	}
