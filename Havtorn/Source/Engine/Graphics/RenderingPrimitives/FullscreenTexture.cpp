@@ -39,9 +39,14 @@ namespace Havtorn
 		Context->RSSetViewports(1, Viewport);
 	}
 
-	void CRenderTexture::SetAsResourceOnSlot(U16 slot) 
+	void CRenderTexture::SetAsPSResourceOnSlot(U16 slot) 
 	{
 		Context->PSSetShaderResources(slot, 1, &ShaderResource);
+	}
+
+	void CRenderTexture::SetAsVSResourceOnSlot(U16 slot)
+	{
+		Context->VSSetShaderResources(slot, 1, &ShaderResource);
 	}
 
 	void* CRenderTexture::MapToCPUFromGPUTexture(ID3D11Texture2D* gpuTexture)
@@ -72,7 +77,7 @@ namespace Havtorn
 		}
 
 		D3D11_MAPPED_SUBRESOURCE resourceDesc = {};
-		Context->Map(Texture, 0, D3D11_MAP_WRITE_DISCARD, 0, &resourceDesc);
+		Context->Map(Texture, 0, D3D11_MAP_WRITE, 0, &resourceDesc);
 		
 		memcpy(resourceDesc.pData, data, size);
 

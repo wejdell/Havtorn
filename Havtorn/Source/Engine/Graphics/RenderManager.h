@@ -88,7 +88,7 @@ namespace Havtorn
 
 		HAVTORN_API U64 GetEntityGUIDFromData(U64 dataIndex) const;
 
-		void WriteToAnimationDataTexture(void* data, U64 size);
+		void WriteToAnimationDataTexture(const std::string& animationName);
 
 		bool IsStaticMeshInInstancedRenderList(const std::string& meshName);
 		void AddStaticMeshToInstancedRenderList(const std::string& meshName, const STransformComponent* component);
@@ -112,6 +112,7 @@ namespace Havtorn
 		void ClearSystemScreenSpaceSpriteInstanceData();
 
 	public:
+		void SyncCrossThreadResources(const CWorld* world);
 		void SetWorldPlayState(EWorldPlayState playState);
 		[[nodiscard]] HAVTORN_API const CRenderTexture& GetRenderedSceneTexture() const;
 		void PushRenderCommand(SRenderCommand command);
@@ -380,6 +381,7 @@ namespace Havtorn
 		// TODO.NR: Add GUIDs to things like this
 		std::unordered_map<std::string, SStaticMeshAsset> LoadedStaticMeshes;
 		std::unordered_map<std::string, SSkeletalMeshAsset> LoadedSkeletalMeshes;
+		std::unordered_map<std::string, SSkeletalAnimationAsset> LoadedSkeletalAnims;
 		// NR: These are used as a way of cross-thread resource management
 		std::unordered_map<std::string, SStaticMeshInstanceData> SystemStaticMeshInstanceData;
 		std::unordered_map<std::string, SStaticMeshInstanceData> RendererStaticMeshInstanceData;
@@ -411,6 +413,10 @@ namespace Havtorn
 
 		void* EntityPerPixelData = nullptr;
 		U64 EntityPerPixelDataSize = 0;
+
+		void* SystemSkeletalAnimationBoneData = nullptr;
+		void* RendererSkeletalAnimationBoneData = nullptr;
+		U64 SkeletalAnimationBoneDataSize = 0;
 		
 		const U16 InstancedDrawInstanceLimit = 65535;
 	};

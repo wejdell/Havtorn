@@ -113,6 +113,14 @@ namespace Havtorn
 		}
 	};
 
+	struct SBoneAnimDataTransform
+	{
+		SVector4 Row1TX;
+		SVector4 Row2TY;
+		SVector4 Row3TZ;
+		SVector4 Padding;
+	};
+
 	struct SDrawCallData
 	{
 		U32 IndexCount = 0;

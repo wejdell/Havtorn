@@ -218,6 +218,9 @@ namespace Havtorn
 				EditorDataTexture.UnmapFromCPU();
 			}
 
+			if (RendererSkeletalAnimationBoneData != nullptr)
+				SkeletalAnimationDataTextureCPU.WriteToCPUTexture(RendererSkeletalAnimationBoneData, SkeletalAnimationBoneDataSize);
+
 			GBuffer.ClearTextures(ClearColor);
 
 			ShadowAtlasDepth.SetAsDepthTarget(&IntermediateTexture);
@@ -234,7 +237,7 @@ namespace Havtorn
 
 			// RenderedScene should be complete as that is the texture we send to the viewport
 			Backbuffer.SetAsActiveTarget();
-			RenderedScene.SetAsResourceOnSlot(0);
+			RenderedScene.SetAsPSResourceOnSlot(0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 
 			GTime::EndTracking(ETimerCategory::GPU);
@@ -267,6 +270,7 @@ namespace Havtorn
 		SVector boundsMin = SVector(FLT_MAX);
 		SVector boundsMax = SVector(-FLT_MAX);
 
+		// TODO.NR: Probably need to extract the filename here??
 		if (!LoadedStaticMeshes.contains(filePath))
 		{
 			// Asset Loading
@@ -329,6 +333,7 @@ namespace Havtorn
 		SVector boundsMin = SVector(FLT_MAX);
 		SVector boundsMax = SVector(-FLT_MAX);
 
+		// TODO.NR: Probably need to extract the filename here??
 		if (!LoadedSkeletalMeshes.contains(filePath))
 		{
 			// Asset Loading
@@ -429,19 +434,89 @@ namespace Havtorn
 
 	void CRenderManager::LoadSkeletalAnimationComponent(const std::string& filePath, SSkeletalAnimationComponent* outSkeletalAnimationComponent)
 	{
-		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
-		char* data = new char[fileSize];
+		//SSkeletalMeshAsset asset;
+		//SVector boundsMin = SVector(FLT_MAX);
+		//SVector boundsMax = SVector(-FLT_MAX);
 
-		GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
+		//if (!LoadedSkeletalMeshes.contains(filePath))
+		//{
+		//	// Asset Loading
+		//	const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
+		//	char* data = new char[fileSize];
 
-		SSkeletalAnimationFileHeader assetFile;
-		assetFile.Deserialize(data);
+		//	GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
 
-		outSkeletalAnimationComponent->BoneAnimationTracks = assetFile.BoneAnimationTracks;
-		outSkeletalAnimationComponent->Name = std::string(assetFile.Name.c_str());
-		outSkeletalAnimationComponent->DurationInTicks = assetFile.DurationInTicks;
-		outSkeletalAnimationComponent->TickRate = assetFile.TickRate;
-		outSkeletalAnimationComponent->FrameStride = assetFile.NumberOfTracks;
+		//	SSkeletalModelFileHeader assetFile;
+		//	assetFile.Deserialize(data);
+		//	asset = SSkeletalMeshAsset(assetFile);
+
+		//	for (U16 i = 0; i < assetFile.NumberOfMeshes; i++)
+		//	{
+		//		const SSkeletalMesh& mesh = assetFile.Meshes[i];
+		//		SDrawCallData& drawCallData = asset.DrawCallData[i];
+
+		//		// TODO.NR: Check for existing buffers
+		//		drawCallData.VertexBufferIndex = RenderStateManager.AddVertexBuffer(mesh.Vertices);
+		//		drawCallData.IndexBufferIndex = RenderStateManager.AddIndexBuffer(mesh.Indices);
+		//		drawCallData.VertexStrideIndex = 2;
+		//		drawCallData.VertexOffsetIndex = 0;
+
+		//		for (const SSkeletalMeshVertex& vertex : mesh.Vertices)
+		//		{
+		//			boundsMin.X = UMath::Min(vertex.x, boundsMin.X);
+		//			boundsMin.Y = UMath::Min(vertex.y, boundsMin.Y);
+		//			boundsMin.Z = UMath::Min(vertex.z, boundsMin.Z);
+
+		//			boundsMax.X = UMath::Max(vertex.x, boundsMax.X);
+		//			boundsMax.Y = UMath::Max(vertex.y, boundsMax.Y);
+		//			boundsMax.Z = UMath::Max(vertex.z, boundsMax.Z);
+		//		}
+		//	}
+
+		//	// NR: Mesh name will be much easier to handle
+		//	LoadedSkeletalMeshes.emplace(UGeneralUtils::ExtractFileNameFromPath(filePath), asset);
+		//	delete[] data;
+		//}
+		//else
+		//{
+		//	asset = LoadedSkeletalMeshes.at(filePath);
+		//}
+
+		//// NR: Components initialized by AssetRegistry and Rendermanager have dynamically sized size, need to serialize and deserialize them in another way
+		//outSkeletalMeshComponent->Name = UGeneralUtils::ExtractFileNameFromPath(filePath);
+		//outSkeletalMeshComponent->NumberOfMaterials = asset.NumberOfMaterials;
+
+		//outSkeletalMeshComponent->BoundsMin = boundsMin;
+		//outSkeletalMeshComponent->BoundsMax = boundsMax;
+		//outSkeletalMeshComponent->BoundsCenter = boundsMin + (boundsMax - boundsMin) * 0.5f;
+
+		//// Geometry
+		//outSkeletalMeshComponent->DrawCallData = asset.DrawCallData;
+		SSkeletalAnimationAsset asset;
+		std::string assetName = UGeneralUtils::ExtractFileNameFromPath(filePath);
+
+		if (!LoadedSkeletalAnims.contains(assetName))
+		{
+			const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
+			char* data = new char[fileSize];
+
+			GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
+
+			SSkeletalAnimationFileHeader assetFile;
+			assetFile.Deserialize(data);
+			asset = SSkeletalAnimationAsset(assetFile);
+
+			LoadedSkeletalAnims.emplace(assetName, asset);
+			delete[] data;
+		}
+		else
+		{
+			asset = LoadedSkeletalAnims.at(filePath);
+		}
+
+		outSkeletalAnimationComponent->AssetName = assetName;
+		outSkeletalAnimationComponent->DurationInTicks = asset.DurationInTicks;
+		outSkeletalAnimationComponent->TickRate = asset.TickRate;
 	}
 
 	SVector2<F32> CRenderManager::GetShadowAtlasResolution() const
@@ -879,13 +954,13 @@ namespace Havtorn
 		directionalLightComp->ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLightComp->ShadowViewSize.X, directionalLightComp->ShadowViewSize.Y, directionalLightComp->ShadowNearAndFarPlane.X, directionalLightComp->ShadowNearAndFarPlane.Y);	
 
 		gBuffer.SetAllAsResources(1);
-		IntermediateDepth.SetAsResourceOnSlot(21);
+		IntermediateDepth.SetAsPSResourceOnSlot(21);
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
 
 		// add Alpha blend PS shader
 
-		ShadowAtlasDepth.SetAsResourceOnSlot(22);
-		SSAOBlurTexture.SetAsResourceOnSlot(23);
+		ShadowAtlasDepth.SetAsPSResourceOnSlot(22);
+		SSAOBlurTexture.SetAsPSResourceOnSlot(23);
 
 		auto cubemapTexture = GEngine::GetTextureBank()->GetTexture(environmentLightComp->AmbientCubemapReference);
 		RenderStateManager.PSSetResources(0, 1, &cubemapTexture);
@@ -952,9 +1027,15 @@ namespace Havtorn
 		return 0;
 	}
 
-	void CRenderManager::WriteToAnimationDataTexture(void* data, U64 size)
+	void CRenderManager::WriteToAnimationDataTexture(const std::string& animationName)
 	{
-		SkeletalAnimationDataTextureCPU.WriteToCPUTexture(data, size);
+		if (!LoadedSkeletalAnims.contains(animationName))
+			return;
+
+		SSkeletalAnimationAsset& asset = LoadedSkeletalAnims.at(animationName);
+		//SkeletalAnimationDataTextureCPU.WriteToCPUTexture(asset.BoneAnimTransforms.data(), sizeof(SBoneAnimDataTransform) * asset.BoneAnimTransforms.size());
+		SystemSkeletalAnimationBoneData = asset.BoneAnimTransforms.data();
+		SkeletalAnimationBoneDataSize = sizeof(SBoneAnimDataTransform) * asset.BoneAnimTransforms.size();
 	}
 
 	bool CRenderManager::IsStaticMeshInInstancedRenderList(const std::string& meshName)
@@ -1090,6 +1171,17 @@ namespace Havtorn
 	void CRenderManager::ClearSystemScreenSpaceSpriteInstanceData()
 	{
 		SystemScreenSpaceSpriteInstanceData.clear();
+	}
+
+	void CRenderManager::SyncCrossThreadResources(const CWorld* world)
+	{
+		SwapRenderCommandBuffers();
+		SwapStaticMeshInstancedRenderLists();
+		SwapSkeletalMeshInstancedRenderLists();
+		SwapSpriteWorldInstancedRenderLists();
+		SwapSpriteScreenInstancedRenderLists();
+		std::swap(SystemSkeletalAnimationBoneData, RendererSkeletalAnimationBoneData);
+		SetWorldPlayState(world->GetWorldPlayState());
 	}
 
 	void CRenderManager::SetWorldPlayState(EWorldPlayState playState)
@@ -1441,7 +1533,7 @@ namespace Havtorn
 		const std::vector<SVector2<U32>>& animationData = RendererSkeletalMeshInstanceData[command.Strings[0]].AnimationData;
 		InstancedAnimationDataBuffer.BindBuffer(animationData);
 
-		SkeletalAnimationDataTextureGPU.SetAsResourceOnSlot(24);
+		SkeletalAnimationDataTextureGPU.SetAsVSResourceOnSlot(24);
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
 		RenderStateManager.IASetTopology(ETopologies::TriangleList);
 		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans);
@@ -1512,7 +1604,7 @@ namespace Havtorn
 		const std::vector<SEntity>& entities = RendererSkeletalMeshInstanceData[command.Strings[0]].Entities;
 		InstancedEntityIDBuffer.BindBuffer(entities);
 
-		SkeletalAnimationDataTextureGPU.SetAsResourceOnSlot(24);
+		SkeletalAnimationDataTextureGPU.SetAsVSResourceOnSlot(24);
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
 		RenderStateManager.IASetTopology(ETopologies::TriangleList);
 		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2AnimDataTrans);
@@ -1648,7 +1740,7 @@ namespace Havtorn
 	void CRenderManager::DecalDepthCopy(const SRenderCommand& /*command*/)
 	{
 		DepthCopy.SetAsActiveTarget();
-		IntermediateDepth.SetAsResourceOnSlot(0);
+		IntermediateDepth.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
 	}
 
@@ -1657,7 +1749,7 @@ namespace Havtorn
 		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::OnlyRead);
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
 		GBuffer.SetAsActiveTarget(&IntermediateDepth);
-		DepthCopy.SetAsResourceOnSlot(21);
+		DepthCopy.SetAsPSResourceOnSlot(21);
 
 		const auto& objectMatrix = command.Matrices[0];
 		DecalBufferData.ToWorld = objectMatrix;
@@ -1712,13 +1804,13 @@ namespace Havtorn
 	{
 		// === SSAO ===
 		SSAOBuffer.SetAsActiveTarget();
-		GBuffer.SetAsResourceOnSlot(CGBuffer::EGBufferTextures::Normal, 2);
-		IntermediateDepth.SetAsResourceOnSlot(21);
+		GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Normal, 2);
+		IntermediateDepth.SetAsPSResourceOnSlot(21);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::SSAO);
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::Disable);
 
 		SSAOBlurTexture.SetAsActiveTarget();
-		SSAOBuffer.SetAsResourceOnSlot(0);
+		SSAOBuffer.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::SSAOBlur);
 		// === !SSAO ===
 
@@ -1729,7 +1821,7 @@ namespace Havtorn
 
 		LitScene.SetAsActiveTarget();
 		GBuffer.SetAllAsResources(1);
-		IntermediateDepth.SetAsResourceOnSlot(21);
+		IntermediateDepth.SetAsPSResourceOnSlot(21);
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
 	}
 
@@ -1737,8 +1829,8 @@ namespace Havtorn
 	{
 		// add Alpha blend PS shader
 
-		ShadowAtlasDepth.SetAsResourceOnSlot(22);
-		SSAOBlurTexture.SetAsResourceOnSlot(23);
+		ShadowAtlasDepth.SetAsPSResourceOnSlot(22);
+		SSAOBlurTexture.SetAsPSResourceOnSlot(23);
 
 		auto cubemapTexture = GEngine::GetTextureBank()->GetTexture(command.U16s[0]);
 		RenderStateManager.PSSetResources(0, 1, &cubemapTexture);
@@ -1782,7 +1874,7 @@ namespace Havtorn
 
 	void CRenderManager::DeferredLightingPoint(const SRenderCommand& command)
 	{
-		ShadowAtlasDepth.SetAsResourceOnSlot(22);
+		ShadowAtlasDepth.SetAsPSResourceOnSlot(22);
 		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
 
 		// Update lightbufferdata and fill lightbuffer
@@ -1827,7 +1919,7 @@ namespace Havtorn
 
 	void CRenderManager::DeferredLightingSpot(const SRenderCommand& command)
 	{
-		ShadowAtlasDepth.SetAsResourceOnSlot(22);
+		ShadowAtlasDepth.SetAsPSResourceOnSlot(22);
 		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
 
 		// Update lightbufferdata and fill lightbuffer
@@ -1883,7 +1975,7 @@ namespace Havtorn
 	void CRenderManager::PostBaseLightingPass(const SRenderCommand& /*command*/)
 	{
 		RenderedScene.SetAsActiveTarget();
-		LitScene.SetAsResourceOnSlot(0);
+		LitScene.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 	}
 
@@ -1892,8 +1984,8 @@ namespace Havtorn
 		VolumetricAccumulationBuffer.SetAsActiveTarget();
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
 		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::Default);
-		IntermediateDepth.SetAsResourceOnSlot(21);
-		ShadowAtlasDepth.SetAsResourceOnSlot(22);
+		IntermediateDepth.SetAsPSResourceOnSlot(21);
+		ShadowAtlasDepth.SetAsPSResourceOnSlot(22);
 
 		// Lightbuffer
 		DirectionalLightBufferData.DirectionalLightDirection = command.Vectors[0];
@@ -1944,8 +2036,8 @@ namespace Havtorn
 		VolumetricAccumulationBuffer.SetAsActiveTarget();
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
 		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
-		IntermediateDepth.SetAsResourceOnSlot(21);
-		ShadowAtlasDepth.SetAsResourceOnSlot(22);
+		IntermediateDepth.SetAsPSResourceOnSlot(21);
+		ShadowAtlasDepth.SetAsPSResourceOnSlot(22);
 
 		// Light Buffer
 		PointLightBufferData.ToWorldFromObject = command.Matrices[0];
@@ -2004,8 +2096,8 @@ namespace Havtorn
 		VolumetricAccumulationBuffer.SetAsActiveTarget();
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
 		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
-		IntermediateDepth.SetAsResourceOnSlot(21);
-		ShadowAtlasDepth.SetAsResourceOnSlot(22);
+		IntermediateDepth.SetAsPSResourceOnSlot(21);
+		ShadowAtlasDepth.SetAsPSResourceOnSlot(22);
 
 		// Light Buffer
 		SVector position = command.Matrices[0].GetTranslation();
@@ -2076,48 +2168,48 @@ namespace Havtorn
 		// Downsampling and Blur
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::Disable);
 		DownsampledDepth.SetAsActiveTarget();
-		IntermediateDepth.SetAsResourceOnSlot(0);
+		IntermediateDepth.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::DownsampleDepth);
 
 		// Blur
 		VolumetricBlurTexture.SetAsActiveTarget();
-		VolumetricAccumulationBuffer.SetAsResourceOnSlot(0);
+		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralHorizontal);
 
 		VolumetricAccumulationBuffer.SetAsActiveTarget();
-		VolumetricBlurTexture.SetAsResourceOnSlot(0);
+		VolumetricBlurTexture.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralVertical);
 
 		VolumetricBlurTexture.SetAsActiveTarget();
-		VolumetricAccumulationBuffer.SetAsResourceOnSlot(0);
+		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralHorizontal);
 
 		VolumetricAccumulationBuffer.SetAsActiveTarget();
-		VolumetricBlurTexture.SetAsResourceOnSlot(0);
+		VolumetricBlurTexture.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralVertical);
 
 		VolumetricBlurTexture.SetAsActiveTarget();
-		VolumetricAccumulationBuffer.SetAsResourceOnSlot(0);
+		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralHorizontal);
 
 		VolumetricAccumulationBuffer.SetAsActiveTarget();
-		VolumetricBlurTexture.SetAsResourceOnSlot(0);
+		VolumetricBlurTexture.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralVertical);
 
 		VolumetricBlurTexture.SetAsActiveTarget();
-		VolumetricAccumulationBuffer.SetAsResourceOnSlot(0);
+		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralHorizontal);
 
 		VolumetricAccumulationBuffer.SetAsActiveTarget();
-		VolumetricBlurTexture.SetAsResourceOnSlot(0);
+		VolumetricBlurTexture.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralVertical);
 
 		// Upsampling
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
 		RenderedScene.SetAsActiveTarget();
-		VolumetricAccumulationBuffer.SetAsResourceOnSlot(0);
-		DownsampledDepth.SetAsResourceOnSlot(1);
-		IntermediateDepth.SetAsResourceOnSlot(2);
+		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
+		DownsampledDepth.SetAsPSResourceOnSlot(1);
+		IntermediateDepth.SetAsPSResourceOnSlot(2);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::DepthAwareUpsampling);
 	}
 
@@ -2210,55 +2302,55 @@ namespace Havtorn
 		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
 
 		HalfSizeTexture.SetAsActiveTarget();
-		RenderedScene.SetAsResourceOnSlot(0);
+		RenderedScene.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 
 		QuarterSizeTexture.SetAsActiveTarget();
-		HalfSizeTexture.SetAsResourceOnSlot(0);
+		HalfSizeTexture.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 
 		BlurTexture1.SetAsActiveTarget();
-		QuarterSizeTexture.SetAsResourceOnSlot(0);
+		QuarterSizeTexture.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 
 		BlurTexture2.SetAsActiveTarget();
-		BlurTexture1.SetAsResourceOnSlot(0);
+		BlurTexture1.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::GaussianHorizontal);
 
 		BlurTexture1.SetAsActiveTarget();
-		BlurTexture2.SetAsResourceOnSlot(0);
+		BlurTexture2.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::GaussianVertical);
 
 		BlurTexture2.SetAsActiveTarget();
-		BlurTexture1.SetAsResourceOnSlot(0);
+		BlurTexture1.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::GaussianHorizontal);
 
 		BlurTexture1.SetAsActiveTarget();
-		BlurTexture2.SetAsResourceOnSlot(0);
+		BlurTexture2.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::GaussianVertical);
 
 		QuarterSizeTexture.SetAsActiveTarget();
-		BlurTexture1.SetAsResourceOnSlot(0);
+		BlurTexture1.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 
 		HalfSizeTexture.SetAsActiveTarget();
-		QuarterSizeTexture.SetAsResourceOnSlot(0);
+		QuarterSizeTexture.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 
 		VignetteTexture.SetAsActiveTarget();
-		RenderedScene.SetAsResourceOnSlot(0);
+		RenderedScene.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 
 		RenderedScene.SetAsActiveTarget();
-		VignetteTexture.SetAsResourceOnSlot(0);
-		HalfSizeTexture.SetAsResourceOnSlot(1);
+		VignetteTexture.SetAsPSResourceOnSlot(0);
+		HalfSizeTexture.SetAsPSResourceOnSlot(1);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Bloom);
 	}
 
 	inline void CRenderManager::Tonemapping(const SRenderCommand& /*command*/)
 	{
 		TonemappedTexture.SetAsActiveTarget();
-		RenderedScene.SetAsResourceOnSlot(0);
+		RenderedScene.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Tonemap);
 	}
 
@@ -2268,14 +2360,14 @@ namespace Havtorn
 		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
 		
 		AntiAliasedTexture.SetAsActiveTarget();
-		TonemappedTexture.SetAsResourceOnSlot(0);
+		TonemappedTexture.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::FXAA);
 	}
 
 	inline void CRenderManager::GammaCorrection(const SRenderCommand& /*command*/)
 	{
 		RenderedScene.SetAsActiveTarget();
-		AntiAliasedTexture.SetAsResourceOnSlot(0);
+		AntiAliasedTexture.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::GammaCorrection);
 	}
 
@@ -2335,7 +2427,7 @@ namespace Havtorn
 		viewport.MinDepth = 0.0f;
 		viewport.MaxDepth = 1.0f;
 		RenderStateManager.RSSetViewports(1, &viewport);
-		ShadowAtlasDepth.SetAsResourceOnSlot(0);
+		ShadowAtlasDepth.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
 	}
 
@@ -2348,79 +2440,79 @@ namespace Havtorn
 		case Havtorn::ERenderPass::Depth:
 		{
 			RenderedScene.SetAsActiveTarget();
-			DepthCopy.SetAsResourceOnSlot(0);
+			DepthCopy.SetAsPSResourceOnSlot(0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
 		}
 		break;
 		case Havtorn::ERenderPass::GBufferAlbedo:
 		{
 			RenderedScene.SetAsActiveTarget();
-			GBuffer.SetAsResourceOnSlot(CGBuffer::EGBufferTextures::Albedo, 0);
+			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Albedo, 0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 		}
 		break;
 		case Havtorn::ERenderPass::GBufferNormals:
 		{
 			RenderedScene.SetAsActiveTarget();
-			GBuffer.SetAsResourceOnSlot(CGBuffer::EGBufferTextures::Normal, 0);
+			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Normal, 0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 		}
 		break;
 		case Havtorn::ERenderPass::GBufferMaterials:
 		{
 			RenderedScene.SetAsActiveTarget();
-			GBuffer.SetAsResourceOnSlot(CGBuffer::EGBufferTextures::Material, 0);
+			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Material, 0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 		}
 		break;
 		case Havtorn::ERenderPass::SSAO:
 		{
 			RenderedScene.SetAsActiveTarget();
-			SSAOBlurTexture.SetAsResourceOnSlot(0);
+			SSAOBlurTexture.SetAsPSResourceOnSlot(0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 		}
 		break;
 		case Havtorn::ERenderPass::DeferredLighting:
 		{
 			RenderedScene.SetAsActiveTarget();
-			LitScene.SetAsResourceOnSlot(0);
+			LitScene.SetAsPSResourceOnSlot(0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 		}
 		break;
 		case Havtorn::ERenderPass::VolumetricLighting:
 		{
 			RenderedScene.SetAsActiveTarget();
-			VolumetricAccumulationBuffer.SetAsResourceOnSlot(0);
+			VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 		}
 		break;
 		case Havtorn::ERenderPass::Bloom:
 		{
 			RenderedScene.SetAsActiveTarget();
-			VignetteTexture.SetAsResourceOnSlot(0);
-			HalfSizeTexture.SetAsResourceOnSlot(1);
+			VignetteTexture.SetAsPSResourceOnSlot(0);
+			HalfSizeTexture.SetAsPSResourceOnSlot(1);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Difference);
 		}
 		break;
 		case Havtorn::ERenderPass::Tonemapping:
 		{
 			RenderedScene.SetAsActiveTarget();
-			TonemappedTexture.SetAsResourceOnSlot(0);
+			TonemappedTexture.SetAsPSResourceOnSlot(0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 		}
 		break;
 		case Havtorn::ERenderPass::Antialiasing:
 		{
 			RenderedScene.SetAsActiveTarget();
-			AntiAliasedTexture.SetAsResourceOnSlot(0);
-			TonemappedTexture.SetAsResourceOnSlot(1);
+			AntiAliasedTexture.SetAsPSResourceOnSlot(0);
+			TonemappedTexture.SetAsPSResourceOnSlot(1);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Difference);
 		}
 		break;
 		case Havtorn::ERenderPass::EditorData:
 		{
 			RenderedScene.SetAsActiveTarget();
-			GBuffer.SetAsResourceOnSlot(CGBuffer::EGBufferTextures::EditorData, 0);
+			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::EditorData, 0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::EditorData);
 		}
 		break;

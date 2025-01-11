@@ -22,7 +22,8 @@ namespace Havtorn
 		void SetAsActiveTarget(CRenderTexture* depth = nullptr);
 		void SetAsDepthTarget();
 		void SetAsDepthTarget(CRenderTexture* intermediateRenderTarget);
-		void SetAsResourceOnSlot(U16 slot);
+		void SetAsPSResourceOnSlot(U16 slot);
+		void SetAsVSResourceOnSlot(U16 slot);
 		void* MapToCPUFromGPUTexture(ID3D11Texture2D* gpuTexture);
 		void CopyFromTexture(ID3D11Texture2D* texture);
 		void WriteToCPUTexture(void* data, U64 size);

@@ -28,7 +28,7 @@ namespace Havtorn
 		textureDesc.SampleDesc.Quality = 0;
 		textureDesc.Usage = cpuAccess ? D3D11_USAGE_STAGING : D3D11_USAGE_DEFAULT;
 		textureDesc.BindFlags = cpuAccess ? 0 : D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-		textureDesc.CPUAccessFlags = cpuAccess ? D3D11_CPU_ACCESS_READ : 0;
+		textureDesc.CPUAccessFlags = cpuAccess ? D3D11_CPU_ACCESS_READ | D3D11_CPU_ACCESS_WRITE : 0;
 		textureDesc.MiscFlags = 0;
 
 		ID3D11Texture2D* texture;
