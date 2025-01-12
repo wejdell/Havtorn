@@ -85,16 +85,16 @@ namespace Havtorn
 		}
 
 		const aiScene* assimpScene = aiImportFile(filePath.c_str(), aiProcessPreset_TargetRealtime_Fast | aiProcess_ConvertToLeftHanded);
-
+		
 		if (!assimpScene)
 		{
-			HV_LOG_ERROR("ModelImporter failed to import %s!", filePath.c_str());
+			HV_LOG_ERROR("ModelImporter failed to import %s! Assimp Error: %s", filePath.c_str(), aiGetErrorString());
 			return "ERROR: Failed to import.";
 		}
 
 		if (assetType == EAssetType::Animation)
 		{
-			if (!assimpScene->HasAnimations() || assimpScene->HasMeshes())
+			if (!assimpScene->HasAnimations() /*|| assimpScene->HasMeshes()*/)
 			{
 				HV_LOG_ERROR("ModelImporter expected %s to be an animation file, but it either has no animations or contains meshes!", filePath.c_str());
 				return "ERROR: Failed to import.";
@@ -255,6 +255,7 @@ namespace Havtorn
 					//fileHeaderMesh.BoneOffsetMatrices.push_back(ToHavtornMatrix(fbxMesh->mBones[i]->mOffsetMatrix));
 
 					tempBoneNameToIndexMap[boneName] = boneIndex;
+					fileHeader.BoneNames.push_back(boneName);
 				}
 				else
 				{
@@ -341,26 +342,84 @@ namespace Havtorn
 		fileHeader.AssetType = EAssetType::Animation;
 		fileHeader.Name = UGeneralUtils::ExtractFileNameFromPath(filePath);
 		fileHeader.DurationInTicks = STATIC_U32(animation->mDuration);
-		fileHeader.NumberOfTracks = animation->mNumChannels;
-		fileHeader.BoneAnimationTracks.reserve(fileHeader.NumberOfTracks);
 		fileHeader.TickRate = STATIC_U32(animation->mTicksPerSecond);
 			
-		for (U32 i = 0; i < animation->mNumChannels; i++)
+		std::vector<CHavtornStaticString<32>> boneNames;
 		{
-			const aiNodeAnim* channel = animation->mChannels[i];
+			std::string rigFilePath = "FBX/Tests/CH_Enemy_SK.hva";
+			const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(rigFilePath);
+			char* data = new char[fileSize];
+
+			GEngine::GetFileSystem()->Deserialize(rigFilePath, data, STATIC_U32(fileSize));
+
+			SSkeletalModelFileHeader rigHeader;
+			rigHeader.Deserialize(data);
+
+			boneNames = rigHeader.BoneNames;
+
+			delete[] data;
+		}
+
+		fileHeader.NumberOfTracks = STATIC_U32(boneNames.size());
+		fileHeader.BoneAnimationTracks.reserve(fileHeader.NumberOfTracks);
+
+		constexpr F32 scaleModifier = 0.01f;
+		for (const CHavtornStaticString<32>& boneName : boneNames)
+		{
+			std::string channelName = boneName.AsString();
+			const aiNodeAnim* channel = nullptr;
+
+			for (U32 i = 0; i < animation->mNumChannels; i++)
+			{
+				if (strcmp(animation->mChannels[i]->mNodeName.C_Str(), channelName.c_str()) != 0)
+					continue;
+
+				channel = animation->mChannels[i];
+			}
 			
 			fileHeader.BoneAnimationTracks.emplace_back();
-			SBoneAnimationTrack& track = fileHeader.BoneAnimationTracks.back();
-			track.BoneName = channel->mNodeName.C_Str();
 
-			for (U32 t = 0; t < channel->mNumPositionKeys; t++)
-				track.TranslationKeys.emplace_back(ToHavtornVecAnimationKey(channel->mPositionKeys[t]));
+			if (channel != nullptr)
+			{
+				SBoneAnimationTrack& track = fileHeader.BoneAnimationTracks.back();
+				track.BoneName = boneName.AsString();
 
-			for (U32 q = 0; q < channel->mNumRotationKeys; q++)
-				track.RotationKeys.emplace_back(ToHavtornQuatAnimationKey(channel->mRotationKeys[q]));
+				for (U32 t = 0; t < channel->mNumPositionKeys; t++)
+				{
+					track.TranslationKeys.emplace_back(ToHavtornVecAnimationKey(channel->mPositionKeys[t]));
+					track.TranslationKeys.back().Value *= scaleModifier;
+				}
 
-			for (U32 s = 0; s < channel->mNumScalingKeys; s++)
-				track.ScaleKeys.emplace_back(ToHavtornVecAnimationKey(channel->mScalingKeys[s]));
+				for (U32 q = 0; q < channel->mNumRotationKeys; q++)
+					track.RotationKeys.emplace_back(ToHavtornQuatAnimationKey(channel->mRotationKeys[q]));
+
+				for (U32 s = 0; s < channel->mNumScalingKeys; s++)
+					track.ScaleKeys.emplace_back(ToHavtornVecAnimationKey(channel->mScalingKeys[s]));
+			}
+			else
+			{
+				// NR: Should this be <= durationInTicks?
+				for (U32 k = 0; k <= fileHeader.DurationInTicks; k++)
+				{
+					SBoneAnimationTrack& track = fileHeader.BoneAnimationTracks.back();
+					track.BoneName = boneName.AsString();
+
+					if (track.TranslationKeys.size() > 0)
+						track.TranslationKeys.emplace_back(track.TranslationKeys.back());
+					else
+						track.TranslationKeys.emplace_back(SVecBoneAnimationKey{ SVector::Zero, 0.0f });
+					
+					if (track.RotationKeys.size() > 0)
+						track.RotationKeys.emplace_back(track.RotationKeys.back());
+					else
+						track.RotationKeys.emplace_back(SQuatBoneAnimationKey{ SQuaternion::Identity, 0.0f });
+
+					if (track.ScaleKeys.size() > 0)
+						track.ScaleKeys.emplace_back(track.ScaleKeys.back());
+					else
+						track.ScaleKeys.emplace_back(SVecBoneAnimationKey{ SVector(1.0f), 0.0f});
+				}
+			}
 		}
 
 		std::string newFileName = filePath.substr(0, filePath.length() - 4);

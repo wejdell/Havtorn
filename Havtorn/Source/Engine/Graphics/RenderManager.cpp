@@ -434,64 +434,6 @@ namespace Havtorn
 
 	void CRenderManager::LoadSkeletalAnimationComponent(const std::string& filePath, SSkeletalAnimationComponent* outSkeletalAnimationComponent)
 	{
-		//SSkeletalMeshAsset asset;
-		//SVector boundsMin = SVector(FLT_MAX);
-		//SVector boundsMax = SVector(-FLT_MAX);
-
-		//if (!LoadedSkeletalMeshes.contains(filePath))
-		//{
-		//	// Asset Loading
-		//	const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
-		//	char* data = new char[fileSize];
-
-		//	GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
-
-		//	SSkeletalModelFileHeader assetFile;
-		//	assetFile.Deserialize(data);
-		//	asset = SSkeletalMeshAsset(assetFile);
-
-		//	for (U16 i = 0; i < assetFile.NumberOfMeshes; i++)
-		//	{
-		//		const SSkeletalMesh& mesh = assetFile.Meshes[i];
-		//		SDrawCallData& drawCallData = asset.DrawCallData[i];
-
-		//		// TODO.NR: Check for existing buffers
-		//		drawCallData.VertexBufferIndex = RenderStateManager.AddVertexBuffer(mesh.Vertices);
-		//		drawCallData.IndexBufferIndex = RenderStateManager.AddIndexBuffer(mesh.Indices);
-		//		drawCallData.VertexStrideIndex = 2;
-		//		drawCallData.VertexOffsetIndex = 0;
-
-		//		for (const SSkeletalMeshVertex& vertex : mesh.Vertices)
-		//		{
-		//			boundsMin.X = UMath::Min(vertex.x, boundsMin.X);
-		//			boundsMin.Y = UMath::Min(vertex.y, boundsMin.Y);
-		//			boundsMin.Z = UMath::Min(vertex.z, boundsMin.Z);
-
-		//			boundsMax.X = UMath::Max(vertex.x, boundsMax.X);
-		//			boundsMax.Y = UMath::Max(vertex.y, boundsMax.Y);
-		//			boundsMax.Z = UMath::Max(vertex.z, boundsMax.Z);
-		//		}
-		//	}
-
-		//	// NR: Mesh name will be much easier to handle
-		//	LoadedSkeletalMeshes.emplace(UGeneralUtils::ExtractFileNameFromPath(filePath), asset);
-		//	delete[] data;
-		//}
-		//else
-		//{
-		//	asset = LoadedSkeletalMeshes.at(filePath);
-		//}
-
-		//// NR: Components initialized by AssetRegistry and Rendermanager have dynamically sized size, need to serialize and deserialize them in another way
-		//outSkeletalMeshComponent->Name = UGeneralUtils::ExtractFileNameFromPath(filePath);
-		//outSkeletalMeshComponent->NumberOfMaterials = asset.NumberOfMaterials;
-
-		//outSkeletalMeshComponent->BoundsMin = boundsMin;
-		//outSkeletalMeshComponent->BoundsMax = boundsMax;
-		//outSkeletalMeshComponent->BoundsCenter = boundsMin + (boundsMax - boundsMin) * 0.5f;
-
-		//// Geometry
-		//outSkeletalMeshComponent->DrawCallData = asset.DrawCallData;
 		SSkeletalAnimationAsset asset;
 		std::string assetName = UGeneralUtils::ExtractFileNameFromPath(filePath);
 
@@ -1027,15 +969,17 @@ namespace Havtorn
 		return 0;
 	}
 
-	void CRenderManager::WriteToAnimationDataTexture(const std::string& animationName)
+	U32 CRenderManager::WriteToAnimationDataTexture(const std::string& animationName)
 	{
 		if (!LoadedSkeletalAnims.contains(animationName))
-			return;
+			return 0;
 
 		SSkeletalAnimationAsset& asset = LoadedSkeletalAnims.at(animationName);
-		//SkeletalAnimationDataTextureCPU.WriteToCPUTexture(asset.BoneAnimTransforms.data(), sizeof(SBoneAnimDataTransform) * asset.BoneAnimTransforms.size());
 		SystemSkeletalAnimationBoneData = asset.BoneAnimTransforms.data();
 		SkeletalAnimationBoneDataSize = sizeof(SBoneAnimDataTransform) * asset.BoneAnimTransforms.size();
+
+		// TODO.NR: Return index of animation in texture
+		return 0;
 	}
 
 	bool CRenderManager::IsStaticMeshInInstancedRenderList(const std::string& meshName)

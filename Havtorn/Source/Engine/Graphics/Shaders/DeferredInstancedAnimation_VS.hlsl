@@ -54,10 +54,6 @@ VertexModelToPixel main(SkeletalMeshInstancedVertexInput input)
     uint4 boneIndices = uint4((uint) input.BoneIDs.x, (uint) input.BoneIDs.y, (uint) input.BoneIDs.z, (uint) input.BoneIDs.w);
     
     float4 skinnedPos = 0;
-
-    /// Bone 0
-    //uint boneIndex = boneIndices.x;
-    //float weight = weights.x;
     const float4 pos = float4(input.Position.xyz, 1.0f);
     
     skinnedPos += weights.x * mul(pos, LoadBoneMatrix(input.AnimationData, boneIndices.x));
@@ -76,23 +72,6 @@ VertexModelToPixel main(SkeletalMeshInstancedVertexInput input)
         }
         
     }
-    
-    //skinnedPos += weight * mul(pos, Bones[boneIndex]);
-    
-    ///// Bone 1
-    //boneIndex = boneIndices.y;
-    //weight = weights.y;
-    //skinnedPos += weight * mul(pos, Bones[boneIndex]);
-    
-    ///// Bone 2
-    //boneIndex = boneIndices.z;
-    //weight = weights.z;
-    //skinnedPos += weight * mul(pos, Bones[boneIndex]);
-    
-    ///// Bone 3
-    //boneIndex = boneIndices.w;
-    //weight = weights.w;
-    //skinnedPos += weight * mul(pos, Bones[boneIndex]);
     
     input.Position.x = skinnedPos.x;
     input.Position.y = skinnedPos.y;

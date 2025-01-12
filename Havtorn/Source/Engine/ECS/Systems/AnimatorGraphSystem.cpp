@@ -31,7 +31,7 @@ namespace Havtorn
 				component->AnimationData.Y = (component->AnimationData.Y + 1) % component->DurationInTicks;
 			}
 			
-			RenderManager->WriteToAnimationDataTexture(component->AssetName);
+			component->AnimationData.X = RenderManager->WriteToAnimationDataTexture(component->AssetName);
 		}
 	}
 

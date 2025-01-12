@@ -78,6 +78,7 @@ namespace Havtorn
 		U8 NumberOfMaterials = 0;
 		U32 NumberOfMeshes = 0;
 		std::vector<SSkeletalMesh> Meshes;
+		std::vector<CHavtornStaticString<32>> BoneNames;
 
 		[[nodiscard]] U32 GetSize() const;
 		void Serialize(char* toData) const;
@@ -96,8 +97,10 @@ namespace Havtorn
 			size += GetDataSize(mesh.Name);
 			size += GetDataSize(mesh.Vertices);
 			size += GetDataSize(mesh.Indices);
-			//size += GetDataSize(mesh.BoneOffsetMatrices);
 		}
+
+		size += GetDataSize(BoneNames);
+
 		return size;
 	}
 
@@ -113,8 +116,9 @@ namespace Havtorn
 			SerializeData(mesh.Name, toData, pointerPosition);
 			SerializeData(mesh.Vertices, toData, pointerPosition);
 			SerializeData(mesh.Indices, toData, pointerPosition);
-			//SerializeData(mesh.BoneOffsetMatrices, toData, pointerPosition);
 		}
+
+		SerializeData(BoneNames, toData, pointerPosition);
 	}
 
 	inline void SSkeletalModelFileHeader::Deserialize(const char* fromData)
@@ -131,8 +135,9 @@ namespace Havtorn
 			DeserializeData(Meshes.back().Name, fromData, pointerPosition);
 			DeserializeData(Meshes.back().Vertices, fromData, pointerPosition);
 			DeserializeData(Meshes.back().Indices, fromData, pointerPosition);
-			//DeserializeData(Meshes.back().BoneOffsetMatrices, fromData, pointerPosition);
 		}
+
+		DeserializeData(BoneNames, fromData, pointerPosition);
 	}
 
 	struct SSkeletalAnimationFileHeader

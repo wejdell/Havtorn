@@ -348,7 +348,7 @@ namespace Havtorn
 		// Skeletal Mesh
 		renderManager->LoadSkeletalMeshComponent("Assets/Tests/CH_Enemy_SK.hva", AddComponent<SSkeletalMeshComponent>(playerProxy));
 		AddComponentEditorContext(playerProxy, &SSkeletalMeshComponentEditorContext::Context);
-		GetComponent<SSkeletalMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register("Assets/Tests/CH_Enemy_SK.hva");
+		GetComponent<SSkeletalMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register("Assets/Tests/XBot.hva");
 
 		renderManager->LoadSkeletalAnimationComponent("Assets/Tests/CH_Enemy_Walk.hva", AddComponent<SSkeletalAnimationComponent>(playerProxy));
 		AddComponentEditorContext(playerProxy, &SSkeletalAnimationComponentEditorContext::Context);
@@ -358,7 +358,7 @@ namespace Havtorn
 		std::vector<std::string> enemyMaterialPaths = { "Assets/Materials/M_Enemy.hva" };
 		renderManager->LoadMaterialComponent(enemyMaterialPaths, AddComponent<SMaterialComponent>(playerProxy));
 		AddComponentEditorContext(playerProxy, &SMaterialComponentEditorContext::Context);
-		GetComponent<SMaterialComponent>(playerProxy)->AssetRegistryKeys = assetRegistry->Register(enemyMaterialPaths);
+		//GetComponent<SMaterialComponent>(playerProxy)->AssetRegistryKeys = assetRegistry->Register(enemyMaterialPaths);
 		
 		// === !Player Proxy ===
 

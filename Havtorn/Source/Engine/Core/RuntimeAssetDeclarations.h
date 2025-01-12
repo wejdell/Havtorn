@@ -80,7 +80,7 @@ namespace Havtorn
 			SMatrix boneMatrix;
 			SMatrix::Recompose(translationKey.Value, rotationKey.Value.ToEuler(), scaleKey.Value, boneMatrix);
 			SVector translation = boneMatrix.GetTranslation();
-			SMatrix::Transpose(boneMatrix); // NR: Maybe should not do this
+			//SMatrix::Transpose(boneMatrix); // NR: Maybe should not do this
 
 			dataFrame.Row1TX = boneMatrix.GetRow(0);
 			dataFrame.Row1TX.W = translation.X;

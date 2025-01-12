@@ -15,6 +15,13 @@ namespace Havtorn
 		HasBones					= BIT(4)
 	};
 
+	// TODO.NR: Use these
+	struct SImportSettings
+	{
+		F32 Scale = 0.0f;
+		std::string RefSkeleton = "";
+	};
+
 	class UModelImporter
 	{
 	public:

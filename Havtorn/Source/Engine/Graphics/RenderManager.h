@@ -88,7 +88,7 @@ namespace Havtorn
 
 		HAVTORN_API U64 GetEntityGUIDFromData(U64 dataIndex) const;
 
-		void WriteToAnimationDataTexture(const std::string& animationName);
+		U32 WriteToAnimationDataTexture(const std::string& animationName);
 
 		bool IsStaticMeshInInstancedRenderList(const std::string& meshName);
 		void AddStaticMeshToInstancedRenderList(const std::string& meshName, const STransformComponent* component);
