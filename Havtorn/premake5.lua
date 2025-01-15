@@ -7,15 +7,21 @@ workspace "Havtorn"
 	startproject "Launcher"
 
 outputdir = "%{cfg.buildcfg}_%{cfg.system}_%{cfg.architecture}"
+
 engineProj = "Engine"
 engineSource = "Source/" .. engineProj .. "/"
+
 editorProj = "Editor"
 editorSource = "Source/" .. editorProj .. "/"
-imGuiProj = "ImGui"
-imGuiSource = "Source/" .. imGuiProj .. "/"
+
+GUIProj = "GUI"
+GUISource = "Source/" .. GUIProj .. "/"
+
 gameProj = "Game"
 gameSource = "Source/" .. gameProj .. "/"
+
 externalLinkDir = "External/Lib/"
+
 
 project "Engine"
 	location ("Source/" .. engineProj)
@@ -40,7 +46,17 @@ project "Engine"
 	{
 		"Source/%{prj.name}/**.h",
 		"Source/%{prj.name}/**.cpp",
-		
+		"Source/%{prj.name}/**.h",
+		"Source/%{prj.name}/**.cpp",
+
+		-- Imgui --------------------------------------
+		"External/imgui/*.cpp",
+		"External/imgui/backends/imgui_impl_dx11.cpp",
+		"External/imgui/backends/imgui_impl_win32.cpp",
+		"External/ImGuizmo/ImGuizmo.h",
+    	"External/ImGuizmo/ImGuizmo.cpp",
+		-----------------------------------------------
+
 		vpaths 
 		{
 			["*"] = "Source/"
@@ -57,7 +73,9 @@ project "Engine"
 		"External/box2d/include/box2d",
 		"External/box2dcpp/include/box2cpp",
 		"External/PhysX/physx/include",
-		"Source/ImGui"
+		-- Imgui --------------------------------------
+		"External/imgui",
+		-----------------------------------------------
 	}
 
 	libdirs 
@@ -68,7 +86,7 @@ project "Engine"
 
 	links
 	{
-		"ImGui"
+
 	}
 
 	floatingpoint "Fast"
@@ -209,7 +227,10 @@ project "Game"
 	{
 		"Source/%{prj.name}/**.h",
 		"Source/%{prj.name}/**.cpp",
-		
+
+		-- Imgui --------------------------------------
+		--"External/imgui/*.cpp",
+		-----------------------------------------------
 		vpaths 
 		{
 			["*"] = "Source/"
@@ -227,7 +248,11 @@ project "Game"
 		"External/box2dcpp/include/box2cpp",
 		"External/PhysX/physx/include",
 		"Source/Engine",
-		"Source/ImGui"		
+		"Source/GUI",
+		
+		-- Imgui --------------------------------------
+		--"External/imgui",
+		-----------------------------------------------
 	}
 
 	libdirs 
@@ -239,7 +264,7 @@ project "Game"
 	links
 	{
 		"Engine",
-		"ImGui"
+		"GUI"
 	}
 
 	floatingpoint "Fast"
@@ -281,7 +306,96 @@ project "Game"
 		flags { "LinkTimeOptimization" }
 		
 
+project "GUI"
+	location ("Source/" .. GUIProj)
+	kind "SharedLib"
+	language "C++"
+	cppdialect "C++20"
+	architecture "x64"
 
+	targetname "%{prj.name}_%{cfg.buildcfg}"
+
+	targetdir ("Bin/" .. outputdir .. "/%{prj.name}") 
+	objdir ("Temp/" .. outputdir .. "/%{prj.name}") 
+
+	warnings "Extra"
+	flags { "FatalWarnings", "ShadowedVariables", "MultiProcessorCompile" }
+
+	files
+	{
+		"Source/%{prj.name}/**.h",
+		"Source/%{prj.name}/**.cpp",
+
+		-- Imgui -------------------------------
+		"External/imgui/*.h",
+		"External/imgui/*.cpp",
+		"External/imgui/backends/imgui_impl_dx11.cpp",
+		"External/imgui/backends/imgui_impl_win32.cpp",
+
+		-- ImGuizmo ----------------------------
+		"External/ImGuizmo/*.h",
+		"External/ImGuizmo/*.cpp",
+	
+		vpaths 
+		{
+			["*"] = "Source/"
+		}
+	}
+
+	includedirs
+	{
+		"Source/Engine",
+		"External/imgui",
+		"External/ImGuizmo"
+	}
+
+	libdirs 
+	{ 
+	--	"Lib/",
+	--	"External/Lib"
+	}
+
+	--links
+	--{
+		--"Engine"
+	--}
+
+	floatingpoint "Fast"
+	debugdir "Bin/"
+	filter "system:Windows"
+		staticruntime "On"
+		systemversion "latest"
+		vectorextensions "SSE4.1"
+
+		defines 
+		{
+			"HV_BUILD_DLL"
+		}
+
+		postbuildcommands
+		{
+			"{COPY} %{cfg.buildtarget.relpath} ../../Bin/"
+		}
+
+	filter "configurations:Debug"
+		defines "HV_DEBUG"
+		buildoptions "/MDd"
+		staticruntime "off"
+		runtime "Debug"
+		symbols "On"
+
+		--defines 
+		--{
+	--		"HV_ENABLE_ASSERTS"
+	--	}
+
+	filter "configurations:Release"
+		defines "HV_RELEASE"
+		buildoptions "/MD"
+		staticruntime "off"
+		runtime "Release"
+		optimize "On"
+		flags { "LinkTimeOptimization" }
 
 
 project "Editor"
@@ -303,7 +417,12 @@ project "Editor"
 	{
 		"Source/%{prj.name}/**.h",
 		"Source/%{prj.name}/**.cpp",
-		
+
+		-- Imgui --------------------------------------
+		"External/imgui/*.cpp",
+		"External/ImGuizmo/ImGuizmo.h",
+    	"External/ImGuizmo/ImGuizmo.cpp",
+		-----------------------------------------------
 		vpaths 
 		{
 			["*"] = "Source/"
@@ -319,7 +438,10 @@ project "Editor"
 		"External/box2dcpp/include/box2cpp",
 		"External/PhysX/physx/include",
 		"Source/Engine",
-		"Source/ImGui"
+		"Source/GUI",
+		-- Imgui --------------------------------------
+		"External/imgui",
+		-----------------------------------------------
 	}
 
 	libdirs 
@@ -332,7 +454,7 @@ project "Editor"
 	{
 		"Engine",
 		"Game",
-		"ImGui"
+		"GUI"
 	}
 
 	floatingpoint "Fast"
@@ -373,80 +495,6 @@ project "Editor"
 		optimize "On"
 		flags { "LinkTimeOptimization" }
 		
-		
-		
-		
-		
-project "ImGui"
-	location ("Source/" .. imGuiProj)
-	kind "StaticLib"
-	language "C++"
-	cppdialect "C++20"
-	architecture "x86_64"
-
-	targetname "%{prj.name}_%{cfg.buildcfg}"
-
-	targetdir ("Bin/" .. outputdir .. "/%{prj.name}") 
-	objdir ("Temp/" .. outputdir .. "/%{prj.name}") 
-
-	flags { "ShadowedVariables", "MultiProcessorCompile" }
-
-	files 
-	{
-		"Source/%{prj.name}/**.h",
-		"Source/%{prj.name}/**.cpp",
-		
-		vpaths 
-		{
-			["*"] = "Source/"
-		}
-	}
-
-	includedirs
-	{
-		"Source/%{prj.name}",
-		"External/imgui"
-	}
-
-	floatingpoint "Fast"
-	debugdir "Bin/"
-
-	filter "system:Windows"
-		staticruntime "On"
-		systemversion "latest"
-		vectorextensions "SSE4.1"
-
-		defines 
-		{
-			"HV_PLATFORM_WINDOWS",
-			"HV_BUILD_DLL"
-		}
-
-		postbuildcommands
-		{
-			"{COPY} %{cfg.buildtarget.relpath} ../../Bin/"
-		}
-
-	filter "configurations:Debug"
-		defines "HV_DEBUG"
-		buildoptions "/MDd"
-		staticruntime "off"
-		runtime "Debug"
-		symbols "On"
-
-		defines 
-		{
-			"HV_ENABLE_ASSERTS"
-		}
-
-	filter "configurations:Release"
-		defines "HV_RELEASE"
-		buildoptions "/MD"
-		staticruntime "off"
-		runtime "Release"
-		optimize "On"
-		flags { "LinkTimeOptimization" }
-
 
 
 
@@ -468,6 +516,7 @@ project "Launcher"
 
 	files
 	{
+		"External/imgui/imgui*.cpp",
 		"Source/%{prj.name}/**.h",
 		"Source/%{prj.name}/**.cpp",
 
@@ -480,13 +529,24 @@ project "Launcher"
 	includedirs
 	{
 		"Source/%{prj.name}",
-		"Source/ImGui",
+		--"Source/ImGui/Havtorn",
+		"External/imgui",
 		"Source/Editor",
 		"Source/Engine",
 		"Source/Game",
 		"External/box2d/include/box2d",
 		"External/box2dcpp/include/box2cpp",
-		"External/PhysX/physx/include"
+		"External/PhysX/physx/include",
+		"External/imgui/imgui_draw.cpp",
+		"External/imgui/imgui_tables.cpp",
+		"External/imgui/imgui_widgets.cpp",
+	   -- -- Include platform-specific files if used
+		"External/imgui/backends/imgui_impl_dx11.cpp",  -- For DirectX 11
+		"External/imgui/backends/imgui_impl_win32.cpp", -- For Windows platform
+
+	   -- Extras
+		"External/ImGuizmo/ImGuizmo.h",
+		"External/ImGuizmo/ImGuizmo.cpp",
 	}
 
 	links
@@ -494,7 +554,7 @@ project "Launcher"
 		"Engine",
 		"Game",
 		"Editor",
-		"ImGui",
+		"GUI"
 	}
 
 	floatingpoint "Fast"
