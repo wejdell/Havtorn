@@ -1,24 +1,25 @@
 workspace "Havtorn"
 	architecture "x86_64"
-	location "Source"
+	location "../Source"
 
 	configurations
 	{ "Debug", "Release" }
 	startproject "Launcher"
 
+masterDir = "../"
 outputdir = "%{cfg.buildcfg}_%{cfg.system}_%{cfg.architecture}"
 engineProj = "Engine"
-engineSource = "Source/" .. engineProj .. "/"
+engineSource = masterDir .. "Source/" .. engineProj .. "/"
 editorProj = "Editor"
-editorSource = "Source/" .. editorProj .. "/"
+editorSource = masterDir .. "Source/" .. editorProj .. "/"
 imGuiProj = "ImGui"
-imGuiSource = "Source/" .. imGuiProj .. "/"
+imGuiSource = masterDir .. "Source/" .. imGuiProj .. "/"
 gameProj = "Game"
-gameSource = "Source/" .. gameProj .. "/"
-externalLinkDir = "External/Lib/"
+gameSource = masterDir .. "Source/" .. gameProj .. "/"
+externalLinkDir = masterDir .. "External/Lib/"
 
 project "Engine"
-	location ("Source/" .. engineProj)
+	location (masterDir .. "Source/" .. engineProj)
 	kind "SharedLib"
 	language "C++"
 	cppdialect "C++20"
@@ -26,44 +27,44 @@ project "Engine"
 
 	targetname "%{prj.name}_%{cfg.buildcfg}"
 
-	targetdir ("Bin/" .. outputdir .. "/%{prj.name}") 
-	objdir ("Temp/" .. outputdir .. "/%{prj.name}") 
+	targetdir (masterDir .. "Bin/" .. outputdir .. "/%{prj.name}") 
+	objdir (masterDir .. "Temp/" .. outputdir .. "/%{prj.name}") 
 
 	warnings "Extra"
 	flags { "FatalWarnings", "ShadowedVariables", "MultiProcessorCompile" }
 
 	pchheader "hvpch.h"
-	pchsource ("Source/" .. engineProj .. "/hvpch.cpp")
+	pchsource (masterDir .. "Source/" .. engineProj .. "/hvpch.cpp")
 	forceincludes { "hvpch.h" }
 
 	files 
 	{
-		"Source/%{prj.name}/**.h",
-		"Source/%{prj.name}/**.cpp",
+		masterDir .. "Source/%{prj.name}/**.h",
+		masterDir .. "Source/%{prj.name}/**.cpp",
 		
 		vpaths 
 		{
-			["*"] = "Source/"
+			["*"] = masterDir .. "Source/"
 		}
 	}
 
 	includedirs
 	{
-		"Source/%{prj.name}",
-		"External",
-		"External/FastNoise2/include",
-		"External/rapidjson",
-		"External/DirectXTex",
-		"External/box2d/include/box2d",
-		"External/box2dcpp/include/box2cpp",
-		"External/PhysX/physx/include",
-		"Source/ImGui"
+		masterDir .. "Source/%{prj.name}",
+		masterDir .. "External",
+		masterDir .. "External/FastNoise2/include",
+		masterDir .. "External/rapidjson",
+		masterDir .. "External/DirectXTex",
+		masterDir .. "External/box2d/include/box2d",
+		masterDir .. "External/box2dcpp/include/box2cpp",
+		masterDir .. "External/PhysX/physx/include",
+		masterDir .. "Source/ImGui"
 	}
 
 	libdirs 
 	{
-		"Lib",
-		"External/Lib"
+		masterDir .. "Lib",
+		masterDir .. "External/Lib"
 	}
 
 	links
@@ -72,7 +73,7 @@ project "Engine"
 	}
 
 	floatingpoint "Fast"
-	debugdir "Bin/"
+	debugdir "../Bin/"
 
 	-- Begin Shader stuff
 		filter{} -- Clear filter
@@ -187,7 +188,7 @@ project "Engine"
 
 
 project "Game"
-	location ("Source/" .. gameProj)
+	location (masterDir .. "Source/" .. gameProj)
 	kind "SharedLib"
 	language "C++"
 	cppdialect "C++20"
@@ -195,45 +196,45 @@ project "Game"
 
 	targetname "%{prj.name}_%{cfg.buildcfg}"
 
-	targetdir ("Bin/" .. outputdir .. "/%{prj.name}") 
-	objdir ("Temp/" .. outputdir .. "/%{prj.name}") 
+	targetdir (masterDir .. "Bin/" .. outputdir .. "/%{prj.name}") 
+	objdir (masterDir .. "Temp/" .. outputdir .. "/%{prj.name}") 
 
 	warnings "Extra"
 	flags { "FatalWarnings", "ShadowedVariables", "MultiProcessorCompile" }
 
 	pchheader "hvpch.h"
-	pchsource ("Source/" .. gameProj .. "/hvpch.cpp")
+	pchsource (masterDir .. "Source/" .. gameProj .. "/hvpch.cpp")
 	forceincludes { "hvpch.h" }
 
 	files 
 	{
-		"Source/%{prj.name}/**.h",
-		"Source/%{prj.name}/**.cpp",
+		masterDir .. "Source/%{prj.name}/**.h",
+		masterDir .. "Source/%{prj.name}/**.cpp",
 		
 		vpaths 
 		{
-			["*"] = "Source/"
+			["*"] = masterDir .. "Source/"
 		}
 	}
 
 	includedirs
 	{
-		"Source/%{prj.name}",
-		"External",
-		"External/FastNoise2/include",
-		"External/rapidjson",
-		"External/DirectXTex",
-		"External/box2d/include/box2d",
-		"External/box2dcpp/include/box2cpp",
-		"External/PhysX/physx/include",
-		"Source/Engine",
-		"Source/ImGui"		
+		masterDir .. "Source/%{prj.name}",
+		masterDir .. "External",
+		masterDir .. "External/FastNoise2/include",
+		masterDir .. "External/rapidjson",
+		masterDir .. "External/DirectXTex",
+		masterDir .. "External/box2d/include/box2d",
+		masterDir .. "External/box2dcpp/include/box2cpp",
+		masterDir .. "External/PhysX/physx/include",
+		masterDir .. "Source/Engine",
+		masterDir .. "Source/ImGui"		
 	}
 
 	libdirs 
 	{
-		"Lib/",
-		"External/Lib"
+		masterDir .. "Lib/",
+		masterDir .. "External/Lib"
 	}
 
 	links
@@ -243,7 +244,7 @@ project "Game"
 	}
 
 	floatingpoint "Fast"
-	debugdir "Bin/"
+	debugdir "../Bin/"
 
 	filter "system:Windows"
 		staticruntime "On"
@@ -285,7 +286,7 @@ project "Game"
 
 
 project "Editor"
-	location ("Source/" .. editorProj)
+	location (masterDir .. "Source/" .. editorProj)
 	kind "SharedLib"
 	language "C++"
 	cppdialect "C++20"
@@ -293,16 +294,16 @@ project "Editor"
 
 	targetname "%{prj.name}_%{cfg.buildcfg}"
 
-	targetdir ("Bin/" .. outputdir .. "/%{prj.name}") 
-	objdir ("Temp/" .. outputdir .. "/%{prj.name}") 
+	targetdir (masterDir .. "Bin/" .. outputdir .. "/%{prj.name}") 
+	objdir (masterDir .. "Temp/" .. outputdir .. "/%{prj.name}") 
 
 	warnings "Extra"
 	flags { "FatalWarnings", "ShadowedVariables", "MultiProcessorCompile" }
 
 	files 
 	{
-		"Source/%{prj.name}/**.h",
-		"Source/%{prj.name}/**.cpp",
+		masterDir .. "Source/%{prj.name}/**.h",
+		masterDir .. "Source/%{prj.name}/**.cpp",
 		
 		vpaths 
 		{
@@ -312,20 +313,20 @@ project "Editor"
 
 	includedirs
 	{
-		"Source/%{prj.name}",
-		"External/rapidjson",
-		"External/DirectXTex",
-		"External/box2d/include/box2d",
-		"External/box2dcpp/include/box2cpp",
-		"External/PhysX/physx/include",
-		"Source/Engine",
-		"Source/ImGui"
+		masterDir .. "Source/%{prj.name}",
+		masterDir .. "External/rapidjson",
+		masterDir .. "External/DirectXTex",
+		masterDir .. "External/box2d/include/box2d",
+		masterDir .. "External/box2dcpp/include/box2cpp",
+		masterDir .. "External/PhysX/physx/include",
+		masterDir .. "Source/Engine",
+		masterDir .. "Source/ImGui"
 	}
 
 	libdirs 
 	{ 
-		"Lib/",
-		"External/Lib"
+		masterDir .. "Lib/",
+		masterDir .. "External/Lib"
 	}
 
 	links
@@ -336,7 +337,7 @@ project "Editor"
 	}
 
 	floatingpoint "Fast"
-	debugdir "Bin/"
+	debugdir "../Bin/"
 
 	filter "system:Windows"
 		staticruntime "On"
@@ -378,7 +379,7 @@ project "Editor"
 		
 		
 project "ImGui"
-	location ("Source/" .. imGuiProj)
+	location (masterDir .. "Source/" .. imGuiProj)
 	kind "StaticLib"
 	language "C++"
 	cppdialect "C++20"
@@ -386,15 +387,15 @@ project "ImGui"
 
 	targetname "%{prj.name}_%{cfg.buildcfg}"
 
-	targetdir ("Bin/" .. outputdir .. "/%{prj.name}") 
-	objdir ("Temp/" .. outputdir .. "/%{prj.name}") 
+	targetdir (masterDir .. "Bin/" .. outputdir .. "/%{prj.name}") 
+	objdir (masterDir .. "Temp/" .. outputdir .. "/%{prj.name}") 
 
 	flags { "ShadowedVariables", "MultiProcessorCompile" }
 
 	files 
 	{
-		"Source/%{prj.name}/**.h",
-		"Source/%{prj.name}/**.cpp",
+		masterDir .. "Source/%{prj.name}/**.h",
+		masterDir .. "Source/%{prj.name}/**.cpp",
 		
 		vpaths 
 		{
@@ -404,12 +405,12 @@ project "ImGui"
 
 	includedirs
 	{
-		"Source/%{prj.name}",
-		"External/imgui"
+		masterDir .. "Source/%{prj.name}",
+		masterDir .. "External/imgui"
 	}
 
 	floatingpoint "Fast"
-	debugdir "Bin/"
+	debugdir "../Bin/"
 
 	filter "system:Windows"
 		staticruntime "On"
@@ -452,7 +453,7 @@ project "ImGui"
 
 
 project "Launcher"
-	location "Source/Launcher"
+	location (masterDir .. "Source/Launcher")
 	kind "WindowedApp"
 	language "C++"
 	cppdialect "C++20"
@@ -460,16 +461,16 @@ project "Launcher"
 
 	targetname "%{prj.name}_%{cfg.buildcfg}"
 
-	targetdir ("Bin/" .. outputdir .. "/%{prj.name}") 
-	objdir ("Temp/" .. outputdir .. "/%{prj.name}") 
+	targetdir (masterDir .. "Bin/" .. outputdir .. "/%{prj.name}") 
+	objdir (masterDir .. "Temp/" .. outputdir .. "/%{prj.name}") 
 
 	warnings "Extra"
 	flags { "FatalWarnings", "ShadowedVariables", "MultiProcessorCompile" }
 
 	files
 	{
-		"Source/%{prj.name}/**.h",
-		"Source/%{prj.name}/**.cpp",
+		masterDir .. "Source/%{prj.name}/**.h",
+		masterDir .. "Source/%{prj.name}/**.cpp",
 
 		vpaths 
 		{
@@ -479,14 +480,14 @@ project "Launcher"
 
 	includedirs
 	{
-		"Source/%{prj.name}",
-		"Source/ImGui",
-		"Source/Editor",
-		"Source/Engine",
-		"Source/Game",
-		"External/box2d/include/box2d",
-		"External/box2dcpp/include/box2cpp",
-		"External/PhysX/physx/include"
+		masterDir .. "Source/%{prj.name}",
+		masterDir .. "Source/ImGui",
+		masterDir .. "Source/Editor",
+		masterDir .. "Source/Engine",
+		masterDir .. "Source/Game",
+		masterDir .. "External/box2d/include/box2d",
+		masterDir .. "External/box2dcpp/include/box2cpp",
+		masterDir .. "External/PhysX/physx/include"
 	}
 
 	links
@@ -498,7 +499,7 @@ project "Launcher"
 	}
 
 	floatingpoint "Fast"
-	debugdir "Bin/"
+	debugdir "../Bin/"
 
 	filter "system:Windows"
 		staticruntime "On"
