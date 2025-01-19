@@ -46,6 +46,9 @@
 *premakeTest/
 *Havtorn/Source/_ReSharper.Caches
 *Havtorn/External/DirectXTex
+*Havtorn/ProjectSetup/__pycache__
+*Havtorn/ProjectSetup/CMake
+*Havtorn/ProjectSetup/Premake
 
 # Other/Intermediate
 *.ilk
