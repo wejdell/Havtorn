@@ -49,6 +49,7 @@
 *Havtorn/ProjectSetup/__pycache__
 *Havtorn/ProjectSetup/CMake
 *Havtorn/ProjectSetup/Premake
+*Havtorn/BuildFiles
 
 # Other/Intermediate
 *.ilk
