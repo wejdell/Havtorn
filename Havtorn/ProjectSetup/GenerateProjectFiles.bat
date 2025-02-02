@@ -1,5 +1,6 @@
 @echo off
-call Premake\bin\premake5.exe vs2022
+REM call Premake\bin\premake5.exe vs2022
+cmake -S ../Source -B ../BuildFiles
 REM @echo.
 REM @echo Checking license in files...
 
