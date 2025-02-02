@@ -289,8 +289,6 @@ set(ENGINE_FILES
 )
 
 # shaders
-file(MAKE_DIRECTORY "../../Bin/Shaders")
-
 set(SHADER_FOLDER "Engine/Graphics/Shaders/")
 
 set(SHADER_INCLUDES 
