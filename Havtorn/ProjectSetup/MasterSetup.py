@@ -21,6 +21,7 @@ if (cmakeInstalled):
     if platform.system() == "Windows":
         print("\nRunning CMake...")
         subprocess.call([os.path.abspath("./GenerateProjectFiles.bat"), "nopause"])
+        subprocess.call([os.path.abspath("./CompileDependencies.bat"), "nopause"])
 
     print("\nSetup completed!")
 else:
