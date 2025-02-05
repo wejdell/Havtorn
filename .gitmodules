@@ -16,6 +16,3 @@
 [submodule "Havtorn/External/PhysX"]
 	path = Havtorn/External/PhysX
 	url = https://github.com/nicolas-risberg/PhysX.git
-[submodule "assimp"]
-	path = assimp
-	url = https://github.com/nicolas-risberg/assimp.git
