@@ -19,3 +19,6 @@
 [submodule "Havtorn/External/assimp"]
 	path = Havtorn/External/assimp
 	url = https://github.com/nicolas-risberg/assimp.git
+[submodule "Havtorn/External/DirectXTex"]
+	path = Havtorn/External/DirectXTex
+	url = https://github.com/nicolas-risberg/DirectXTex.git
