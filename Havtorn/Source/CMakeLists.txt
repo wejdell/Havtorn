@@ -395,8 +395,8 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SHADER_INCLUDES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${HLSL_SHADER_FILES})
 target_link_libraries(Engine PRIVATE
-    assimp-vc142-mtd
-    DirectXTex_Debug
+    assimp-vc143-mtd
+    DirectXTex
     box2dd
     PhysX/PhysX_64
     PhysX/PhysXCommon_64
@@ -409,6 +409,7 @@ target_link_libraries(Engine PRIVATE
 target_include_directories(Engine PRIVATE
     "${ENGINE_FOLDER}"
     "${EXTERNAL_FOLDER}"
+    "${EXTERNAL_FOLDER}assimp/include"
     "${EXTERNAL_FOLDER}FastNoise2/include"
     "${EXTERNAL_FOLDER}rapidjson"
     "${EXTERNAL_FOLDER}DirectXTex"
