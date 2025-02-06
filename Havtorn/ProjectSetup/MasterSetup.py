@@ -2,20 +2,17 @@ import os
 import subprocess
 import platform
 
-from SetupPython import PythonConfiguration as PythonRequirements
+from SetupMSVC import MSVCConfiguration as MSVCRequirements
+MSVCRequirements.Validate()
 
-# Make sure everything we need for the setup is installed
+from SetupPython import PythonConfiguration as PythonRequirements
 PythonRequirements.Validate()
 
-# from SetupPremake import PremakeConfiguration as PremakeRequirements
 from SetupCMake import CMakeConfiguration as CMakeRequirements
-# os.chdir('./../') # Change from devtools/scripts directory to root
-
-# premakeInstalled = PremakeRequirements.Validate()
 cmakeInstalled = CMakeRequirements.Validate()
 
-# print("\nUpdating submodules...")
-# subprocess.call(["git", "submodule", "update", "--init", "--recursive"])
+print("\nUpdating submodules...")
+subprocess.call(["git", "submodule", "update", "--init", "--recursive"])
 
 if (cmakeInstalled):
     if platform.system() == "Windows":
