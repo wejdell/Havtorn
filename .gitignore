@@ -32,6 +32,7 @@
 *.out
 *.app
 *.exp
+!Havtorn/ProjectSetup/vs_BuildTools.exe
 
 # Visual Studio Files
 *.vs/
