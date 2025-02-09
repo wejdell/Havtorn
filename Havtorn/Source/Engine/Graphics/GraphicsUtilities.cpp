@@ -56,13 +56,13 @@ namespace Havtorn
 			switch (assetFile.OriginalFormat)
 			{
 			case ETextureFormat::DDS:
-				GetMetadataFromDDSMemory(assetFile.Data.data(), assetFile.Data.size(), DirectX::DDS_FLAGS_NONE, metaData);
-				LoadFromDDSMemory(assetFile.Data.data(), assetFile.Data.size(), DirectX::DDS_FLAGS_NONE, &metaData, scratchImage);
+				GetMetadataFromDDSMemory(reinterpret_cast<uint8_t*>(assetFile.Data.data()), assetFile.Data.size(), DirectX::DDS_FLAGS_NONE, metaData);
+				LoadFromDDSMemory(reinterpret_cast<uint8_t*>(assetFile.Data.data()), assetFile.Data.size(), DirectX::DDS_FLAGS_NONE, &metaData, scratchImage);
 
 				break;
 			case ETextureFormat::TGA:
-				GetMetadataFromTGAMemory(assetFile.Data.data(), assetFile.Data.size(), DirectX::TGA_FLAGS_NONE, metaData);
-				LoadFromTGAMemory(assetFile.Data.data(), assetFile.Data.size(), DirectX::TGA_FLAGS_NONE, &metaData, scratchImage);
+				GetMetadataFromTGAMemory(reinterpret_cast<uint8_t*>(assetFile.Data.data()), assetFile.Data.size(), DirectX::TGA_FLAGS_NONE, metaData);
+				LoadFromTGAMemory(reinterpret_cast<uint8_t*>(assetFile.Data.data()), assetFile.Data.size(), DirectX::TGA_FLAGS_NONE, &metaData, scratchImage);
 				break;
 			}
 
@@ -114,13 +114,13 @@ namespace Havtorn
 			switch (format)
 			{
 			case ETextureFormat::DDS:
-				GetMetadataFromDDSMemory(data, size, DirectX::DDS_FLAGS_NONE, metaData);
-				LoadFromDDSMemory(data, size, DirectX::DDS_FLAGS_NONE, &metaData, scratchImage);
+				GetMetadataFromDDSMemory(reinterpret_cast<const uint8_t*>(data), size, DirectX::DDS_FLAGS_NONE, metaData);
+				LoadFromDDSMemory(reinterpret_cast<const uint8_t*>(data), size, DirectX::DDS_FLAGS_NONE, &metaData, scratchImage);
 
 				break;
 			case ETextureFormat::TGA:
-				GetMetadataFromTGAMemory(data, size, DirectX::TGA_FLAGS_NONE, metaData);
-				LoadFromTGAMemory(data, size, DirectX::TGA_FLAGS_NONE, &metaData, scratchImage);
+				GetMetadataFromTGAMemory(reinterpret_cast<const uint8_t*>(data), size, DirectX::TGA_FLAGS_NONE, metaData);
+				LoadFromTGAMemory(reinterpret_cast<const uint8_t*>(data), size, DirectX::TGA_FLAGS_NONE, &metaData, scratchImage);
 				break;
 			}
 
