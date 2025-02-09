@@ -22,11 +22,13 @@ namespace ImGui
 
 	private:
 		void OnDragDropFiles(std::vector<std::string> filePaths);
+		void InspectDirectoryEntry(const std::filesystem::directory_entry& entry, Havtorn::U32& outCurrentID, const ImTextureID& folderIconID);
 
 		Havtorn::SVector2<Havtorn::F32> ThumbnailSize = { 64.0f, 64.0f };
 		Havtorn::CFileSystem* FileSystem = nullptr;
 		const std::string DefaultAssetPath = "Assets";
 		std::filesystem::path CurrentDirectory = "";
+		ImGuiTextFilter Filter = ImGuiTextFilter();
 		bool IsCurrentlySelected = false;
 	};
 }

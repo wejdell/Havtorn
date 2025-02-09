@@ -26,6 +26,7 @@ namespace Havtorn
 	class CWindowHandler;
 	struct SRenderCommand;
 	struct SStaticMeshComponent;
+	struct SSkeletalMeshComponent;
 	struct SMaterialComponent;
 	struct SDecalComponent;
 	struct SEnvironmentLightComponent;
@@ -67,6 +68,7 @@ namespace Havtorn
 		void Release();
 
 		HAVTORN_API void LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent);
+		HAVTORN_API void LoadSkeletalMeshComponent(const std::string& filePath, SSkeletalMeshComponent* outSkeletalMeshComponent);
 		HAVTORN_API void LoadMaterialComponent(const std::vector<std::string>& materialPaths, SMaterialComponent* outMaterialComponent);
 		// NR: Note that we use the file *name* instead of the full path here, we assume that it already exists in the registry.
 		HAVTORN_API bool TryLoadStaticMeshComponent(const std::string& fileName, SStaticMeshComponent* outStaticMeshComponent) const;
@@ -77,41 +79,42 @@ namespace Havtorn
 		HAVTORN_API void LoadDecalComponent(const std::vector<std::string>& texturePaths, SDecalComponent* outDecalComponent);
 		HAVTORN_API void LoadEnvironmentLightComponent(const std::string& ambientCubemapTexturePath, SEnvironmentLightComponent* outEnvironmentLightComponent);
 		HAVTORN_API void LoadSpriteComponent(const std::string& filePath, SSpriteComponent* outSpriteComponent);
+		HAVTORN_API void LoadSkeletalAnimationComponent(const std::string& filePath, SSkeletalAnimationComponent* outSkeletalAnimationComponent);
 
 		HAVTORN_API void* RenderStaticMeshAssetTexture(const std::string& filePath);
+		HAVTORN_API void* RenderSkeletalMeshAssetTexture(const std::string& filePath);
 		HAVTORN_API void* GetTextureAssetTexture(const std::string& filePath);
 		HAVTORN_API void* RenderMaterialAssetTexture(const std::string& filePath);
 
 		HAVTORN_API U64 GetEntityGUIDFromData(U64 dataIndex) const;
 
+		U32 WriteToAnimationDataTexture(const std::string& animationName);
+
 		bool IsStaticMeshInInstancedRenderList(const std::string& meshName);
 		void AddStaticMeshToInstancedRenderList(const std::string& meshName, const STransformComponent* component);
 		void SwapStaticMeshInstancedRenderLists();
-		void ClearSystemStaticMeshInstanceTransforms();
+		void ClearSystemStaticMeshInstanceData();
 
-		bool IsSpriteInInstancedWorldSpaceTransformRenderList(const U32 textureBankIndex);
-		void AddSpriteToInstancedWorldSpaceTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix);
-		void SwapSpriteInstancedWorldSpaceTransformRenderLists();
-		void ClearSpriteInstanceWorldSpaceTransforms();
+		bool IsSkeletalMeshInInstancedRenderList(const std::string& meshName);
+		void AddSkeletalMeshToInstancedRenderList(const std::string& meshName, const STransformComponent* transformComponent, const SSkeletalAnimationComponent* animationComponent);
+		void SwapSkeletalMeshInstancedRenderLists();
+		void ClearSystemSkeletalMeshInstanceData();
 
-		bool IsSpriteInInstancedScreenSpaceTransformRenderList(const U32 textureBankIndex);
-		void AddSpriteToInstancedScreenSpaceTransformRenderList(const U32 textureBankIndex, const SMatrix& transformMatrix);
-		void SwapSpriteInstancedScreenSpaceTransformRenderLists();
-		void ClearSpriteInstanceScreenSpaceTransforms();
+		bool IsSpriteInWorldSpaceInstancedRenderList(const U32 textureBankIndex);
+		void AddSpriteToWorldSpaceInstancedRenderList(const U32 textureBankIndex, const STransformComponent* worldSpaceTransform, const SSpriteComponent* spriteComponent);
+		void AddSpriteToWorldSpaceInstancedRenderList(const U32 textureBankIndex, const STransformComponent* worldSpaceTransform, const STransformComponent* cameraTransform);
+		void SwapSpriteWorldInstancedRenderLists();
+		void ClearSystemWorldSpaceSpriteInstanceData();
 
-		bool IsSpriteInInstancedUVRectRenderList(const U32 textureBankIndex);
-		void AddSpriteToInstancedUVRectRenderList(const U32 textureBankIndex, const SVector4& uvRect);
-		void SwapSpriteInstancedUVRectRenderLists();
-		void ClearSpriteInstanceUVRects();
-
-		bool IsSpriteInInstancedColorRenderList(const U32 textureBankIndex);
-		void AddSpriteToInstancedColorRenderList(const U32 textureBankIndex, const SVector4& color);
-		void SwapSpriteInstancedColorRenderLists();
-		void ClearSpriteInstanceColors();
+		bool IsSpriteInScreenSpaceInstancedRenderList(const U32 textureBankIndex);
+		void AddSpriteToScreenSpaceInstancedRenderList(const U32 textureBankIndex, const STransform2DComponent* screenSpaceTransform, const SSpriteComponent* spriteComponent);
+		void SwapSpriteScreenInstancedRenderLists();
+		void ClearSystemScreenSpaceSpriteInstanceData();
 
 	public:
+		void SyncCrossThreadResources(const CWorld* world);
 		void SetWorldPlayState(EWorldPlayState playState);
-		[[nodiscard]] HAVTORN_API const CFullscreenTexture& GetRenderedSceneTexture() const;
+		[[nodiscard]] HAVTORN_API const CRenderTexture& GetRenderedSceneTexture() const;
 		void PushRenderCommand(SRenderCommand command);
 		void SwapRenderCommandBuffers();
 
@@ -137,6 +140,8 @@ namespace Havtorn
 		inline void CameraDataStorage(const SRenderCommand& command);
 		inline void GBufferDataInstanced(const SRenderCommand& command);
 		inline void GBufferDataInstancedEditor(const SRenderCommand& command);
+		inline void GBufferSkeletalInstanced(const SRenderCommand& command);
+		inline void GBufferSkeletalInstancedEditor(const SRenderCommand& command);
 		inline void GBufferSpriteInstanced(const SRenderCommand& command);
 		inline void GBufferSpriteInstancedEditor(const SRenderCommand& command);
 		inline void DecalDepthCopy(const SRenderCommand& command);
@@ -152,6 +157,7 @@ namespace Havtorn
 		inline void VolumetricBlur(const SRenderCommand& command);
 		inline void ForwardTransparency(const SRenderCommand& command);
 		inline void ScreenSpaceSprite(const SRenderCommand& command);
+		inline void WorldSpaceSpriteEditorWidget(const SRenderCommand& command);
 		inline void RenderBloom(const SRenderCommand& command);
 		inline void Tonemapping(const SRenderCommand& command);
 		inline void AntiAliasing(const SRenderCommand& command);
@@ -304,28 +310,31 @@ namespace Havtorn
 		CFullscreenRenderer FullscreenRenderer;
 
 		CFullscreenTextureFactory FullscreenTextureFactory;
-		CFullscreenTexture RenderedScene;
-		CFullscreenTexture Backbuffer;
-		CFullscreenTexture IntermediateTexture;
-		CFullscreenTexture IntermediateDepth;
-		CFullscreenTexture ShadowAtlasDepth;
-		CFullscreenTexture DepthCopy;
+		CRenderTexture RenderedScene;
+		CRenderTexture Backbuffer;
+		CRenderTexture IntermediateTexture;
+		CRenderTexture IntermediateDepth;
+		CRenderTexture EditorWidgetDepth;
+		CRenderTexture ShadowAtlasDepth;
+		CRenderTexture DepthCopy;
 
-		CFullscreenTexture HalfSizeTexture;
-		CFullscreenTexture QuarterSizeTexture;
-		CFullscreenTexture BlurTexture1;
-		CFullscreenTexture BlurTexture2;
-		CFullscreenTexture VignetteTexture;
+		CRenderTexture HalfSizeTexture;
+		CRenderTexture QuarterSizeTexture;
+		CRenderTexture BlurTexture1;
+		CRenderTexture BlurTexture2;
+		CRenderTexture VignetteTexture;
 
-		CFullscreenTexture LitScene;
-		CFullscreenTexture VolumetricAccumulationBuffer;
-		CFullscreenTexture VolumetricBlurTexture;
-		CFullscreenTexture SSAOBuffer;
-		CFullscreenTexture SSAOBlurTexture;
-		CFullscreenTexture DownsampledDepth;
-		CFullscreenTexture TonemappedTexture;
-		CFullscreenTexture AntiAliasedTexture;
-		CFullscreenTexture EditorDataTexture;
+		CRenderTexture LitScene;
+		CRenderTexture VolumetricAccumulationBuffer;
+		CRenderTexture VolumetricBlurTexture;
+		CRenderTexture SSAOBuffer;
+		CRenderTexture SSAOBlurTexture;
+		CRenderTexture DownsampledDepth;
+		CRenderTexture TonemappedTexture;
+		CRenderTexture AntiAliasedTexture;
+		CRenderTexture EditorDataTexture;
+		CRenderTexture SkeletalAnimationDataTextureCPU;
+		CRenderTexture SkeletalAnimationDataTextureGPU;
 		CGBuffer GBuffer;
 
 		CRenderCommandHeap RenderCommandsA;
@@ -342,6 +351,7 @@ namespace Havtorn
 		
 		CDataBuffer InstancedTransformBuffer;
 		CDataBuffer InstancedEntityIDBuffer;
+		CDataBuffer InstancedAnimationDataBuffer;
 
 		// NR: Used together with the InstancedTransformBuffer to batch World Space Sprites as well as Screen Space Sprites
 		CDataBuffer InstancedUVRectBuffer;
@@ -353,11 +363,31 @@ namespace Havtorn
 			std::vector<SEntity> Entities{};
 		};
 
+		struct SSkeletalMeshInstanceData
+		{
+			std::vector<SMatrix> Transforms{};
+			std::vector<SVector2<U32>> AnimationData{};
+			std::vector<SEntity> Entities{};
+		};
+
+		struct SSpriteInstanceData
+		{
+			std::vector<SMatrix> Transforms{};
+			std::vector<SVector4> UVRects{};
+			std::vector<SVector4> Colors{};
+			std::vector<SEntity> Entities{};
+		};
+
 		// TODO.NR: Add GUIDs to things like this
 		std::unordered_map<std::string, SStaticMeshAsset> LoadedStaticMeshes;
+		std::unordered_map<std::string, SSkeletalMeshAsset> LoadedSkeletalMeshes;
+		std::unordered_map<std::string, SSkeletalAnimationAsset> LoadedSkeletalAnims;
 		// NR: These are used as a way of cross-thread resource management
 		std::unordered_map<std::string, SStaticMeshInstanceData> SystemStaticMeshInstanceData;
 		std::unordered_map<std::string, SStaticMeshInstanceData> RendererStaticMeshInstanceData;
+
+		std::unordered_map<std::string, SSkeletalMeshInstanceData> SystemSkeletalMeshInstanceData;
+		std::unordered_map<std::string, SSkeletalMeshInstanceData> RendererSkeletalMeshInstanceData;
 
 		// TODO.NR: Maybe generalize GPU Instancing resources that are kept duplicate like this, combining
 		// the 4 function calls as well somehow. Maybe templated? Could use two template arguments, one for key and 
@@ -370,17 +400,11 @@ namespace Havtorn
 			the TextureBank in a roundabout way, to use as the key into the above collection, but
 			this seems better for now
 		*/
-		std::unordered_map<U32, std::vector<SMatrix>> SystemSpriteInstanceWorldSpaceTransforms;
-		std::unordered_map<U32, std::vector<SMatrix>> RendererSpriteInstanceWorldSpaceTransforms;
+		std::unordered_map<U32, SSpriteInstanceData> SystemWorldSpaceSpriteInstanceData;
+		std::unordered_map<U32, SSpriteInstanceData> RendererWorldSpaceSpriteInstanceData;
 
-		std::unordered_map<U32, std::vector<SMatrix>> SystemSpriteInstanceScreenSpaceTransforms;
-		std::unordered_map<U32, std::vector<SMatrix>> RendererSpriteInstanceScreenSpaceTransforms;
-
-		std::unordered_map<U32, std::vector<SVector4>> SystemSpriteInstanceUVRects;
-		std::unordered_map<U32, std::vector<SVector4>> RendererSpriteInstanceUVRects;
-
-		std::unordered_map<U32, std::vector<SVector4>> SystemSpriteInstanceColors;
-		std::unordered_map<U32, std::vector<SVector4>> RendererSpriteInstanceColors;
+		std::unordered_map<U32, SSpriteInstanceData> SystemScreenSpaceSpriteInstanceData;
+		std::unordered_map<U32, SSpriteInstanceData> RendererScreenSpaceSpriteInstanceData;
 
 		SVector2<F32> ShadowAtlasResolution = SVector2<F32>::Zero;
 
@@ -389,6 +413,10 @@ namespace Havtorn
 
 		void* EntityPerPixelData = nullptr;
 		U64 EntityPerPixelDataSize = 0;
+
+		void* SystemSkeletalAnimationBoneData = nullptr;
+		void* RendererSkeletalAnimationBoneData = nullptr;
+		U64 SkeletalAnimationBoneDataSize = 0;
 		
 		const U16 InstancedDrawInstanceLimit = 65535;
 	};

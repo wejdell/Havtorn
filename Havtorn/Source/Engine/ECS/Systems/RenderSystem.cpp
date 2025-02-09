@@ -24,13 +24,13 @@ namespace Havtorn
 		const std::vector<SPointLightComponent*>& pointLightComponents = scene->GetComponents<SPointLightComponent>();
 		const std::vector<SSpotLightComponent*>& spotLightComponents = scene->GetComponents<SSpotLightComponent>();
 
-		RenderManager->ClearSystemStaticMeshInstanceTransforms();
-		RenderManager->ClearSpriteInstanceWorldSpaceTransforms();
-		RenderManager->ClearSpriteInstanceScreenSpaceTransforms();
-		RenderManager->ClearSpriteInstanceUVRects();
-		RenderManager->ClearSpriteInstanceColors();
+		RenderManager->ClearSystemStaticMeshInstanceData();
+		RenderManager->ClearSystemSkeletalMeshInstanceData();
+		RenderManager->ClearSystemWorldSpaceSpriteInstanceData();
+		RenderManager->ClearSystemScreenSpaceSpriteInstanceData();
 
 		bool sceneHasActiveCamera = false;
+		const bool isInPlayingPlayState = World->GetWorldPlayState() == EWorldPlayState::Playing;
 
 		// TODO.NR: Could probably merge all of these loops into one
 		// NR: Not worth doing right now
@@ -56,12 +56,12 @@ namespace Havtorn
 
 		for (const SStaticMeshComponent* staticMeshComponent : scene->GetComponents<SStaticMeshComponent>())
 		{
-			if (!staticMeshComponent->IsValid())
-				continue;
-		
 			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(staticMeshComponent);
 			const SMaterialComponent* materialComp = scene->GetComponent<SMaterialComponent>(staticMeshComponent);
 
+			if (!staticMeshComponent->IsValid() || !transformComp->IsValid() || !materialComp->IsValid())
+				continue;
+		
 			if (!RenderManager->IsStaticMeshInInstancedRenderList(staticMeshComponent->Name.AsString())) // if static, if instanced
 			{		
 				for (const SDirectionalLightComponent* directionalLightComp : directionalLightComponents)
@@ -73,7 +73,6 @@ namespace Havtorn
 						command.ShadowmapViews.push_back(directionalLightComp->ShadowmapView);
 						command.Matrices.push_back(transformComp->Transform.GetMatrix());
 						command.Strings.push_back(staticMeshComponent->Name.AsString());
-						command.U8s.push_back(staticMeshComponent->TopologyIndex);
 						command.DrawCallData = staticMeshComponent->DrawCallData;
 						RenderManager->PushRenderCommand(command);
 					}
@@ -87,7 +86,6 @@ namespace Havtorn
 						command.Type = ERenderCommandType::ShadowAtlasPrePassPoint;
 						command.Matrices.push_back(transformComp->Transform.GetMatrix());
 						command.Strings.push_back(staticMeshComponent->Name.AsString());
-						command.U8s.push_back(staticMeshComponent->TopologyIndex);
 						command.DrawCallData = staticMeshComponent->DrawCallData;
 						command.SetShadowMapViews(pointLightComp->ShadowmapViews);
 						RenderManager->PushRenderCommand(command);
@@ -102,22 +100,18 @@ namespace Havtorn
 						command.Type = ERenderCommandType::ShadowAtlasPrePassSpot;
 						command.Matrices.push_back(transformComp->Transform.GetMatrix());
 						command.Strings.push_back(staticMeshComponent->Name.AsString());
-						command.U8s.push_back(staticMeshComponent->TopologyIndex);
 						command.DrawCallData = staticMeshComponent->DrawCallData;
 						command.ShadowmapViews.push_back(spotLightComp->ShadowmapView);
 						RenderManager->PushRenderCommand(command);
 					}
 				}
 
-				if (World->GetWorldPlayState() == EWorldPlayState::Playing)
+				if (isInPlayingPlayState)
 				{
 					SRenderCommand command;
 					command.Type = ERenderCommandType::GBufferDataInstanced;
 					command.Matrices.push_back(transformComp->Transform.GetMatrix());
 					command.Strings.push_back(staticMeshComponent->Name.AsString());
-					command.U8s.push_back(staticMeshComponent->TopologyIndex);
-					command.U8s.push_back(staticMeshComponent->PixelShaderIndex);
-					command.U8s.push_back(staticMeshComponent->SamplerIndex);
 					command.DrawCallData = staticMeshComponent->DrawCallData;
 					command.Materials = materialComp->Materials;
 					RenderManager->PushRenderCommand(command);
@@ -128,9 +122,6 @@ namespace Havtorn
 					command.Type = ERenderCommandType::GBufferDataInstancedEditor;
 					command.Matrices.push_back(transformComp->Transform.GetMatrix());
 					command.Strings.push_back(staticMeshComponent->Name.AsString());
-					command.U8s.push_back(staticMeshComponent->TopologyIndex);
-					command.U8s.push_back(staticMeshComponent->PixelShaderIndex);
-					command.U8s.push_back(staticMeshComponent->SamplerIndex);
 					command.DrawCallData = staticMeshComponent->DrawCallData;
 					command.Materials = materialComp->Materials;
 					RenderManager->PushRenderCommand(command);
@@ -138,6 +129,84 @@ namespace Havtorn
 			}
 
 			RenderManager->AddStaticMeshToInstancedRenderList(staticMeshComponent->Name.AsString(), transformComp);
+		}
+
+		for (const SSkeletalMeshComponent* skeletalMeshComponent : scene->GetComponents<SSkeletalMeshComponent>())
+		{
+			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(skeletalMeshComponent);
+			const SMaterialComponent* materialComp = scene->GetComponent<SMaterialComponent>(skeletalMeshComponent);
+
+			if (!skeletalMeshComponent->IsValid() || !transformComp->IsValid() || !materialComp->IsValid())
+				continue;
+
+			if (!RenderManager->IsSkeletalMeshInInstancedRenderList(skeletalMeshComponent->Name.AsString()))
+			{
+				// TODO.NR: Make shadow pass for skeletal meshes possible
+				//for (const SDirectionalLightComponent* directionalLightComp : directionalLightComponents)
+				//{
+				//	if (directionalLightComp->IsValid())
+				//	{
+				//		SRenderCommand command;
+				//		command.Type = ERenderCommandType::ShadowAtlasPrePassDirectional;
+				//		command.ShadowmapViews.push_back(directionalLightComp->ShadowmapView);
+				//		command.Matrices.push_back(transformComp->Transform.GetMatrix());
+				//		command.Strings.push_back(skeletalMeshComponent->Name.AsString());
+				//		command.DrawCallData = skeletalMeshComponent->DrawCallData;
+				//		RenderManager->PushRenderCommand(command);
+				//	}
+				//}
+
+				//for (const SPointLightComponent* pointLightComp : pointLightComponents)
+				//{
+				//	if (pointLightComp->IsValid())
+				//	{
+				//		SRenderCommand command;
+				//		command.Type = ERenderCommandType::ShadowAtlasPrePassPoint;
+				//		command.Matrices.push_back(transformComp->Transform.GetMatrix());
+				//		command.Strings.push_back(skeletalMeshComponent->Name.AsString());
+				//		command.DrawCallData = skeletalMeshComponent->DrawCallData;
+				//		command.SetShadowMapViews(pointLightComp->ShadowmapViews);
+				//		RenderManager->PushRenderCommand(command);
+				//	}
+				//}
+
+				//for (const SSpotLightComponent* spotLightComp : spotLightComponents)
+				//{
+				//	if (spotLightComp->IsValid())
+				//	{
+				//		SRenderCommand command;
+				//		command.Type = ERenderCommandType::ShadowAtlasPrePassSpot;
+				//		command.Matrices.push_back(transformComp->Transform.GetMatrix());
+				//		command.Strings.push_back(skeletalMeshComponent->Name.AsString());
+				//		command.DrawCallData = skeletalMeshComponent->DrawCallData;
+				//		command.ShadowmapViews.push_back(spotLightComp->ShadowmapView);
+				//		RenderManager->PushRenderCommand(command);
+				//	}
+				//}
+
+				if (isInPlayingPlayState)
+				{
+					SRenderCommand command;
+					command.Type = ERenderCommandType::GBufferSkeletalInstanced;
+					command.Matrices.push_back(transformComp->Transform.GetMatrix());
+					command.Strings.push_back(skeletalMeshComponent->Name.AsString());
+					command.DrawCallData = skeletalMeshComponent->DrawCallData;
+					command.Materials = materialComp->Materials;
+					RenderManager->PushRenderCommand(command);
+				}
+				else
+				{
+					SRenderCommand command;
+					command.Type = ERenderCommandType::GBufferSkeletalInstancedEditor;
+					command.Matrices.push_back(transformComp->Transform.GetMatrix());
+					command.Strings.push_back(skeletalMeshComponent->Name.AsString());
+					command.DrawCallData = skeletalMeshComponent->DrawCallData;
+					command.Materials = materialComp->Materials;
+					RenderManager->PushRenderCommand(command);
+				}
+			}
+
+			RenderManager->AddSkeletalMeshToInstancedRenderList(skeletalMeshComponent->Name.AsString(), transformComp, scene->GetComponent<SSkeletalAnimationComponent>(transformComp));
 		}
 
 		{
@@ -161,12 +230,35 @@ namespace Havtorn
 			command.Flags.push_back(decalComponent->ShouldRenderNormal);
 			command.U16s = decalComponent->TextureReferences;
 			RenderManager->PushRenderCommand(command);
+
+			if (!isInPlayingPlayState)
+			{
+				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(decalComponent->EditorTextureIndex, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity));
+
+				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
+				command.U32s.push_back(decalComponent->EditorTextureIndex);
+				RenderManager->PushRenderCommand(command);
+			}
 		}
 
 		{
 			SRenderCommand command;
 			command.Type = ERenderCommandType::PreLightingPass;
 			RenderManager->PushRenderCommand(command);
+		}
+
+		for (const SEnvironmentLightComponent* environmentLightComp : scene->GetComponents<SEnvironmentLightComponent>())
+		{
+			if (!isInPlayingPlayState)
+			{
+				const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(environmentLightComp);
+				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(environmentLightComp->EditorTextureIndex, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity));
+
+				SRenderCommand command;
+				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
+				command.U32s.push_back(environmentLightComp->EditorTextureIndex);
+				RenderManager->PushRenderCommand(command);
+			}
 		}
 
 		for (const SDirectionalLightComponent* directionalLightComp : directionalLightComponents)
@@ -186,6 +278,16 @@ namespace Havtorn
 			command.Colors.push_back(directionalLightComp->Color);
 			command.ShadowmapViews.push_back(directionalLightComp->ShadowmapView);
 			RenderManager->PushRenderCommand(command);
+
+			if (!isInPlayingPlayState)
+			{
+				const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(directionalLightComp);
+				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(directionalLightComp->EditorTextureIndex, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity));
+
+				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
+				command.U32s.push_back(directionalLightComp->EditorTextureIndex);
+				RenderManager->PushRenderCommand(command);
+			}
 
 			if (const SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(directionalLightComp))
 			{
@@ -213,6 +315,15 @@ namespace Havtorn
 			command.F32s.push_back(pointLightComp->Range);
 			command.SetShadowMapViews(pointLightComp->ShadowmapViews);
 			RenderManager->PushRenderCommand(command);
+
+			if (!isInPlayingPlayState)
+			{
+				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(pointLightComp->EditorTextureIndex, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity));
+
+				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
+				command.U32s.push_back(pointLightComp->EditorTextureIndex);
+				RenderManager->PushRenderCommand(command);
+			}
 
 			if (const SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(pointLightComp))
 			{
@@ -246,6 +357,15 @@ namespace Havtorn
 			command.ShadowmapViews.push_back(spotLightComp->ShadowmapView);
 			RenderManager->PushRenderCommand(command);
 
+			if (!isInPlayingPlayState)
+			{
+				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(spotLightComp->EditorTextureIndex, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity));
+
+				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
+				command.U32s.push_back(spotLightComp->EditorTextureIndex);
+				RenderManager->PushRenderCommand(command);
+			}
+
 			if (const SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(spotLightComp))
 			{
 				if (volumetricLightComp->IsActive)
@@ -274,15 +394,12 @@ namespace Havtorn
 			if (!spriteComp->IsValid())
 				continue;
 
-			RenderManager->AddSpriteToInstancedUVRectRenderList(spriteComp->TextureIndex, spriteComp->UVRect);
-			RenderManager->AddSpriteToInstancedColorRenderList(spriteComp->TextureIndex, spriteComp->Color.AsVector4());
-
 			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(spriteComp);
 			const STransform2DComponent* transform2DComp = scene->GetComponent<STransform2DComponent>(spriteComp);
 
 			if (transformComp->IsValid())
 			{
-				if (!RenderManager->IsSpriteInInstancedWorldSpaceTransformRenderList(spriteComp->TextureIndex)) 
+				if (!RenderManager->IsSpriteInWorldSpaceInstancedRenderList(spriteComp->TextureIndex)) 
 				{
 					// NR: Don't push a command every time
 					SRenderCommand command;
@@ -291,11 +408,11 @@ namespace Havtorn
 					RenderManager->PushRenderCommand(command);
 				}
 
-				RenderManager->AddSpriteToInstancedWorldSpaceTransformRenderList(spriteComp->TextureIndex, transformComp->Transform.GetMatrix());
+				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(spriteComp->TextureIndex, transformComp, spriteComp);
 			}
 			else if (transform2DComp->IsValid())
 			{
-				if (!RenderManager->IsSpriteInInstancedScreenSpaceTransformRenderList(spriteComp->TextureIndex))
+				if (!RenderManager->IsSpriteInScreenSpaceInstancedRenderList(spriteComp->TextureIndex))
 				{
 					SRenderCommand command;
 					command.Type = ERenderCommandType::ScreenSpaceSprite;
@@ -303,11 +420,7 @@ namespace Havtorn
 					RenderManager->PushRenderCommand(command);
 				}
 
-				SMatrix transformFrom2DComponent;
-				transformFrom2DComponent.SetScale(transform2DComp->Scale.X, transform2DComp->Scale.Y, 1.0f);
-				transformFrom2DComponent *= SMatrix::CreateRotationAroundZ(UMath::DegToRad(transform2DComp->DegreesRoll));
-				transformFrom2DComponent.SetTranslation({ transform2DComp->Position.X, transform2DComp->Position.Y, 0.0f });
-				RenderManager->AddSpriteToInstancedScreenSpaceTransformRenderList(spriteComp->TextureIndex, transformFrom2DComponent);
+				RenderManager->AddSpriteToScreenSpaceInstancedRenderList(spriteComp->TextureIndex, transform2DComp, spriteComp);
 			}
 		}
 

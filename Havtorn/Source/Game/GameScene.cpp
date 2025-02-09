@@ -4,7 +4,7 @@
 #include "GameScene.h"
 #include "Ghosty/GhostySystem.h"
 #include "Ghosty/GhostyComponent.h"
-#include "Ghosty/GhostyComponentView.h"
+#include "Ghosty/GhostyComponentEditorContext.h"
 
 #include <Graphics/RenderManager.h>
 #include <Scene/World.h>
@@ -12,7 +12,17 @@
 
 namespace Havtorn
 {
-    bool CGameScene::Init3DDemoScene(CRenderManager* renderManager)
+	bool CGameScene::Init(CRenderManager* renderManager, const std::string& sceneName)
+	{
+		if (!CScene::Init(renderManager, sceneName))
+			return false;
+
+		RegisterComponent<SGhostyComponent>(1, &SGhostyComponentEditorContext::Context);
+
+		return true;
+	}
+
+	bool CGameScene::Init3DDemoScene(CRenderManager* renderManager)
     {
         if (!CScene::Init3DDemoScene(renderManager))
             return false;
@@ -48,11 +58,11 @@ namespace Havtorn
 			return true;
 
 		STransformComponent& ghostyTransform = *AddComponent<STransformComponent>(ghosty);
-		AddView(ghosty, STransformComponentView::View);
+		AddComponentEditorContext(ghosty, &STransformComponentEditorContext::Context);
 		SSpriteComponent& spriteWSComp = *AddComponent<SSpriteComponent>(ghosty);
-		AddView(ghosty, SSpriteComponentView::View);
+		AddComponentEditorContext(ghosty, &SSpriteComponentEditorContext::Context);
 		AddComponent<SGhostyComponent>(ghosty);
-		AddView(ghosty, SGhostyComponentView::View);
+		AddComponentEditorContext(ghosty, &SGhostyComponentEditorContext::Context);
 
 		ghostyTransform.Transform.Move({ 0.0f, 2.0f, 0.0f });
 
@@ -90,7 +100,7 @@ namespace Havtorn
 		};
 
 		SSpriteAnimatorGraphComponent& spriteAnimatorGraphComponent = *AddComponent<SSpriteAnimatorGraphComponent>(ghosty);
-		AddView(ghosty, SSpriteAnimatorGraphComponentView::View);
+		AddComponentEditorContext(ghosty, &SSpriteAnimatorGraphComponentEditorContext::Context);
 
 		SSpriteAnimatorGraphNode& rootNode = spriteAnimatorGraphComponent.SetRoot(std::string("Idle | Locomotion"), "CGhostySystem::EvaluateIdle");
 		rootNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Idle"), idle);
@@ -109,7 +119,7 @@ namespace Havtorn
 		//sequencerComponent.ComponentTracks.push_back({ EComponentType::CameraComponent });
 
 		SPhysics2DComponent& phys2DComponent = *AddComponent<SPhysics2DComponent>(ghosty);
-		AddView(ghosty, SPhysics2DComponentView::View);
+		AddComponentEditorContext(ghosty, &SPhysics2DComponentEditorContext::Context);
 		phys2DComponent.BodyType = EPhysics2DBodyType::Dynamic;
 		phys2DComponent.ShapeType = EPhysics2DShapeType::Circle;
 		phys2DComponent.ShapeLocalExtents = { ghostyTransform.Transform.GetMatrix().GetScale().X, ghostyTransform.Transform.GetMatrix().GetScale().Y };
@@ -117,29 +127,29 @@ namespace Havtorn
 		GEngine::GetWorld()->Initialize2DPhysicsData(ghosty);
 
 		const SEntity& floor = AddEntity("Floor");
-		STransformComponent& floorTransform = *AddComponent<STransformComponent>(floor);	
-		AddView(floor, STransformComponentView::View);
+		STransformComponent& floorTransform = *AddComponent<STransformComponent>(floor);
+		AddComponentEditorContext(floor, &STransformComponentEditorContext::Context);
 		floorTransform.Transform.Move({ 0.f, -2.f, 0.f });
 		floorTransform.Transform.Scale({ 0.4f, 0.5f, 1.f });
 		SSpriteComponent& floorSprite = *AddComponent<SSpriteComponent>(floor);
-		AddView(floor, SSpriteComponentView::View);
+		AddComponentEditorContext(floor, &SSpriteComponentEditorContext::Context);
 
 		const std::string floorSpritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
 		floorSprite.UVRect = { 0.0f, 0.0f, 1.f, 1.f };
 		renderManager->LoadSpriteComponent(floorSpritePath, &floorSprite);
 
 		SPhysics2DComponent& floorPhys2DComponent = *AddComponent<SPhysics2DComponent>(floor);
-		AddView(floor, SPhysics2DComponentView::View);
+		AddComponentEditorContext(floor, &SPhysics2DComponentEditorContext::Context);
 		floorPhys2DComponent.BodyType = EPhysics2DBodyType::Static;
 		floorPhys2DComponent.ShapeType = EPhysics2DShapeType::Capsule;
 		floorPhys2DComponent.ShapeLocalExtents = { floorTransform.Transform.GetMatrix().GetScale().X, floorTransform.Transform.GetMatrix().GetScale().Y };
 		GEngine::GetWorld()->Initialize2DPhysicsData(floor);
 
 		return true;
-    }
+	}
 
-    U32 CGameScene::GetSize() const
-    {
+	U32 CGameScene::GetSize() const
+	{
 		U32 size = 0;
 		size += CScene::GetSize();
 
@@ -155,23 +165,23 @@ namespace Havtorn
 
 		defaultSizeAllocator(GetComponents<SGhostyComponent>());
 
-        return size;
-    }
+		return size;
+	}
 
-    void CGameScene::Serialize(char* toData, U64& pointerPosition) const
-    {
+	void CGameScene::Serialize(char* toData, U64& pointerPosition) const
+	{
 		CScene::Serialize(toData, pointerPosition);
 
 		DefaultSerializer(GetComponents<SGhostyComponent>(), toData, pointerPosition);
-    }
+	}
 
-    void CGameScene::Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry)
-    {
+	void CGameScene::Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry)
+	{
 		CScene::Deserialize(fromData, pointerPosition, assetRegistry);
 
 		{
 			std::vector<SGhostyComponent> components;
-			DefaultDeserializer(components, SGhostyComponentView::View, fromData, pointerPosition);
+			DefaultDeserializer(components, &SGhostyComponentEditorContext::Context, fromData, pointerPosition);
 		}
     }
 }

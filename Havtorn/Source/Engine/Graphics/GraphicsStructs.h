@@ -29,6 +29,32 @@ namespace Havtorn
 		F32 u, v;
 	};
 
+	struct SSkeletalMeshVertex
+	{
+		// Position
+		F32 x, y, z;
+
+		// Normal
+		F32 nx, ny, nz;
+
+		// Tangent
+		F32 tx, ty, tz;
+
+		// Bitangent
+		F32 bx, by, bz;
+
+		// UV
+		F32 u, v;
+
+		// NR: Max four bones per vertex
+
+		// Bone ID
+		F32 bix, biy, biz, biw;
+
+		// Bone Weight
+		F32 bwx, bwy, bwz, bww;
+	};
+
 	struct SMeshData
 	{
 		std::vector<SStaticMeshVertex> Vertices;
@@ -46,6 +72,53 @@ namespace Havtorn
 		std::string Name;
 		std::vector<SStaticMeshVertex> Vertices;
 		std::vector<U32> Indices;
+	};
+
+	struct SSkeletalMesh
+	{
+		std::string Name;
+		std::vector<SSkeletalMeshVertex> Vertices;
+		std::vector<U32> Indices;
+		// NR: We might want to store the matrices in the animation struct instead, should not need default pose data?
+		//std::vector<SMatrix> BoneOffsetMatrices;
+	};
+
+	struct SVecBoneAnimationKey
+	{
+		SVector Value = SVector::Zero;
+		F32 Time = 0.0f;
+	};
+
+	struct SQuatBoneAnimationKey
+	{
+		SQuaternion Value = SQuaternion::Identity;
+		F32 Time = 0.0f;
+	};
+
+	struct SBoneAnimationTrack
+	{
+		std::vector<SVecBoneAnimationKey> TranslationKeys;
+		std::vector<SQuatBoneAnimationKey> RotationKeys;
+		std::vector<SVecBoneAnimationKey> ScaleKeys;
+		std::string BoneName;
+
+		U32 GetSize() const
+		{
+			U32 size = 0;
+			size += GetDataSize(TranslationKeys);
+			size += GetDataSize(RotationKeys);
+			size += GetDataSize(ScaleKeys);
+			size += GetDataSize(BoneName);
+			return size;
+		}
+	};
+
+	struct SBoneAnimDataTransform
+	{
+		SVector4 Row1TX;
+		SVector4 Row2TY;
+		SVector4 Row3TZ;
+		SVector4 Padding;
 	};
 
 	struct SDrawCallData

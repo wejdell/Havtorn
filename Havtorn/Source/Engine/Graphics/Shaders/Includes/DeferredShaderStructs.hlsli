@@ -35,26 +35,30 @@ struct StaticInstancedMeshEditorVertexInput
     float4x4 Transform  : INSTANCETRANSFORM; // maybe needs columnmajor
 };
 
-struct SkeletalMeshVertexInput
+struct SkeletalMeshInstancedVertexInput
 {
     float3 Position     : POSITION;
     float3 Normal       : NORMAL;
     float3 Tangent      : TANGENT;
     float3 Bitangent    : BINORMAL;
     float2 UV           : UV;
-    float4 BoneID       : BONEID;
-    float4 BoneWeight   : BONEWEIGHT;
+    float4 BoneIDs      : BONEID;
+    float4 BoneWeights  : BONEWEIGHT;
+    uint2 AnimationData : INSTANCEANIMATIONDATA;
+    float4x4 Transform  : INSTANCETRANSFORM;
 };
 
-struct SkeletalInstancedMeshVertexInput
+struct SkeletalMeshInstancedEditorVertexInput
 {
     float3 Position     : POSITION;
     float3 Normal       : NORMAL;
     float3 Tangent      : TANGENT;
     float3 Bitangent    : BINORMAL;
     float2 UV           : UV;
-    float4 BoneID       : BONEID;
-    float4 BoneWeight   : BONEWEIGHT;
+    float4 BoneIDs      : BONEID;
+    float4 BoneWeights  : BONEWEIGHT;
+    uint2 Entity        : ENTITY;
+    uint2 AnimationData : INSTANCEANIMATIONDATA;
     float4x4 Transform  : INSTANCETRANSFORM;
 };
 
@@ -122,7 +126,7 @@ cbuffer FrameBuffer : register(b0)
 
 cbuffer ObjectBuffer : register(b1)
 {
-    float4x4 toWorld;
+    float4x4 ToWorld;
     unsigned int NumberOfDetailNormals;
     unsigned int NumberOfTextureSets;
 }
@@ -219,6 +223,8 @@ Texture2D materialChannelTextures[11] : register(t5);
 Texture2D depthTexture          : register(t21);
 Texture2D shadowDepthTexture    : register(t22);
 Texture2D SSAOTexture           : register(t23);
+
+Texture2D MeshAnimationsTexture : register(t24);
 
 sampler defaultSampler : register(s0);
 sampler shadowSampler  : register(s1);

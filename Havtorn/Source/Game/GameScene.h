@@ -8,6 +8,8 @@ namespace Havtorn
     class CGameScene : public CScene
     {
     public:
+		HAVTORN_EXPORT virtual bool Init(CRenderManager* renderManager, const std::string& sceneName) override;
+
 		HAVTORN_EXPORT virtual bool Init3DDemoScene(CRenderManager* renderManager) override;
 		HAVTORN_EXPORT virtual bool Init2DDemoScene(CRenderManager* renderManager) override;
 

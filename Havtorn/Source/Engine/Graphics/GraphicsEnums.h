@@ -27,6 +27,9 @@ namespace Havtorn
 		Position4,
 		TransUVRectColor,
 		Pos3Nor3Tan3Bit3UV2Entity2Trans,
+		TransUVRectColorEntity2,
+		Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans,
+		Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2AnimDataTrans,
 		Null
 	};
 
@@ -41,6 +44,9 @@ namespace Havtorn
 		Line = 6,
 		SpriteInstanced = 7,
 		StaticMeshInstancedEditor = 8,
+		SpriteInstancedEditor = 9,
+		SkeletalMeshInstanced = 10,
+		SkeletalMeshInstancedEditor = 11,
 		Count,
 		Null = Count
 	};
@@ -63,6 +69,7 @@ namespace Havtorn
 		SpriteWorldSpace = 13,
 		GBufferInstanceEditor = 14,
 		SpriteWorldSpaceEditor = 15,
+		SpriteWorldSpaceEditorWidget = 16,
 		Count,
 		Null = Count
 	};
@@ -72,6 +79,7 @@ namespace Havtorn
 		Line = 0,
 		SpriteScreenSpace = 1,
 		SpriteWorldSpace = 2,
+		SpriteWorldSpaceEditor = 3,
 		Count,
 		Null = Count
 	};

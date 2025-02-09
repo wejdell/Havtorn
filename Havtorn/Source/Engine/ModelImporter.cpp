@@ -11,19 +11,102 @@
 #include "FileSystem/FileSystem.h"
 #include "FileSystem/FileHeaderDeclarations.h"
 
+#define NUM_BONES_PER_VERTEX 4
+#define ZERO_MEM(a) memset(a, 0, sizeof(a))
+#define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
+
 namespace Havtorn
 {
-	std::string CModelImporter::ImportFBX(const std::string& filePath)
+	struct SVertexBoneData
+	{
+		U32 IDs[NUM_BONES_PER_VERTEX];
+		F32 Weights[NUM_BONES_PER_VERTEX];
+
+		SVertexBoneData()
+		{
+			Reset();
+		};
+
+		void Reset()
+		{
+			ZERO_MEM(IDs);
+			ZERO_MEM(Weights);
+		}
+
+		void AddBoneData(U32 boneID, F32 weight)
+		{
+			for (U32 i = 0; i < ARRAY_SIZE_IN_ELEMENTS(IDs); i++) 
+			{
+				if (Weights[i] == 0.0) 
+				{
+					IDs[i] = boneID;
+					Weights[i] = weight;
+					return;
+				}
+			}
+
+			// should never get here - more bones than we have space for
+			assert(0);
+		}
+	};
+
+	SMatrix ToHavtornMatrix(const aiMatrix4x4& assimpMatrix)
+	{
+		SMatrix mat;
+		mat(0, 0) = assimpMatrix.a1; mat(0, 1) = assimpMatrix.a2; mat(0, 2) = assimpMatrix.a3; mat(0, 3) = assimpMatrix.a4;
+		mat(1, 0) = assimpMatrix.b1; mat(1, 1) = assimpMatrix.b2; mat(1, 2) = assimpMatrix.b3; mat(1, 3) = assimpMatrix.b4;
+		mat(2, 0) = assimpMatrix.c1; mat(2, 1) = assimpMatrix.c2; mat(2, 2) = assimpMatrix.c3; mat(2, 3) = assimpMatrix.c4;
+		mat(3, 0) = assimpMatrix.d1; mat(3, 1) = assimpMatrix.d2; mat(3, 2) = assimpMatrix.d3; mat(3, 3) = assimpMatrix.d4;
+		return mat;
+	}
+
+	SVecBoneAnimationKey ToHavtornVecAnimationKey(const aiVectorKey& assimpKey)
+	{
+		SVecBoneAnimationKey havtornKey;
+		havtornKey.Value = { assimpKey.mValue.x, assimpKey.mValue.y, assimpKey.mValue.z };
+		havtornKey.Time = STATIC_F32(assimpKey.mTime);
+		return havtornKey;
+	}
+
+	SQuatBoneAnimationKey ToHavtornQuatAnimationKey(const aiQuatKey& assimpKey)
+	{
+		SQuatBoneAnimationKey havtornKey;
+		havtornKey.Value = { assimpKey.mValue.x, assimpKey.mValue.y, assimpKey.mValue.z, assimpKey.mValue.w };
+		havtornKey.Time = STATIC_F32(assimpKey.mTime);
+		return havtornKey;
+	}
+
+	std::string UModelImporter::ImportFBX(const std::string& filePath, const EAssetType assetType)
 	{
 		if (!CFileSystem::DoesFileExist(filePath))
-			return "ERROR: File Does Not Exist";
+		{
+			HV_LOG_ERROR("ModelImporter could not import %s. File does not exist!", filePath.c_str());
+			return "ERROR: File does not exist.";
+		}
 
 		const aiScene* assimpScene = aiImportFile(filePath.c_str(), aiProcessPreset_TargetRealtime_Fast | aiProcess_ConvertToLeftHanded);
-
+		
 		if (!assimpScene)
 		{
-			HV_LOG_ERROR("ModelImporter failed to import %s!", filePath.c_str());
+			HV_LOG_ERROR("ModelImporter failed to import %s! Assimp Error: %s", filePath.c_str(), aiGetErrorString());
 			return "ERROR: Failed to import.";
+		}
+
+		if (assetType == EAssetType::Animation)
+		{
+			if (!assimpScene->HasAnimations() /*|| assimpScene->HasMeshes()*/)
+			{
+				HV_LOG_ERROR("ModelImporter expected %s to be an animation file, but it either has no animations or contains meshes!", filePath.c_str());
+				return "ERROR: Failed to import.";
+			}
+
+			return ImportAnimation(filePath, assimpScene);
+		}
+
+		if (!assimpScene->HasMeshes())
+		{
+			HV_LOG_ERROR("ModelImporter expected %s to be a mesh file, but it has no meshes!", filePath.c_str());
+			return "ERROR: Failed to import";
 		}
 
 		const aiMesh* fbxMesh = assimpScene->mMeshes[0];
@@ -32,18 +115,41 @@ namespace Havtorn
 		const bool hasNormals = fbxMesh->HasNormals();
 		const bool hasTangents = fbxMesh->HasTangentsAndBitangents();
 		const bool hasTextures = fbxMesh->HasTextureCoords(0);
-		//const bool hasBones = fbxMesh->HasBones();
-		const bool hasBones = false;
+		const bool hasBones = fbxMesh->HasBones();
 
-		SStaticModelFileHeader fileHeader;
-		if (hasPositions && hasNormals && hasTangents && hasTextures && !hasBones)
+		if (!hasPositions || !hasNormals || !hasTangents || !hasTextures)
 		{
-			fileHeader.AssetType = EAssetType::StaticMesh;
+			HV_LOG_ERROR("ModelImporter expected %s to be a mesh file, but it is lacking position, normal, tangent or UV information!", filePath.c_str());
+			return "ERROR: Failed to import";
 		}
-		
+
+		if (assetType == EAssetType::SkeletalMesh)
+		{
+			if (!hasBones)
+			{
+				HV_LOG_ERROR("ModelImporter expected %s to be a skeletal mesh file, but it lacks bone information!", filePath.c_str());
+				return "ERROR: Failed to import";
+			}
+
+			return ImportSkeletalMesh(filePath, assimpScene);
+		}
+
+		// Static Mesh
+		if (hasBones)
+			HV_LOG_WARN("ModelImporter expected %s to be a static mesh file, but it contains bone information!", filePath.c_str());
+
+		return ImportStaticMesh(filePath, assimpScene);
+	}
+
+	std::string UModelImporter::ImportStaticMesh(const std::string& filePath, const aiScene* assimpScene)
+	{
+		SStaticModelFileHeader fileHeader;
+		fileHeader.AssetType = EAssetType::StaticMesh;
 		fileHeader.Name = assimpScene->mName.C_Str();
 		fileHeader.NumberOfMeshes = assimpScene->mNumMeshes;
 		fileHeader.Meshes.reserve(fileHeader.NumberOfMeshes);
+
+		const aiMesh* fbxMesh = assimpScene->mMeshes[0];
 
 		// Pre-loading Pass
 		for (U8 n = 0; n < assimpScene->mNumMeshes; n++)
@@ -57,59 +163,39 @@ namespace Havtorn
 		{
 			auto& fileHeaderMesh = fileHeader.Meshes[n];
 			fbxMesh = assimpScene->mMeshes[n];
-			//model->myMaterialIndices.push_back(fbxMesh->mMaterialIndex);
 
 			// Vertices
 			// TODO.NR: Make import options rather soon
 			constexpr F32 scaleModifier = 0.01f;
 			for (U32 i = 0; i < fbxMesh->mNumVertices; i++)
 			{
-				switch (fileHeader.AssetType)
-				{
-				case EAssetType::StaticMesh:
-				{
-					SStaticMeshVertex newVertex;
+				SStaticMeshVertex newVertex;
 
-					aiVector3D& pos = fbxMesh->mVertices[i];
-					pos *= scaleModifier;
-					newVertex.x = pos.x;
-					newVertex.y = pos.y;
-					newVertex.z = pos.z;
+				aiVector3D& pos = fbxMesh->mVertices[i];
+				pos *= scaleModifier;
+				newVertex.x = pos.x;
+				newVertex.y = pos.y;
+				newVertex.z = pos.z;
 
-					const aiVector3D& norm = fbxMesh->mNormals[i];
-					newVertex.nx = norm.x;
-					newVertex.ny = norm.y;
-					newVertex.nz = norm.z;
+				const aiVector3D& norm = fbxMesh->mNormals[i];
+				newVertex.nx = norm.x;
+				newVertex.ny = norm.y;
+				newVertex.nz = norm.z;
 
-					const aiVector3D& tangent = fbxMesh->mTangents[i];
-					newVertex.tx = tangent.x;
-					newVertex.ty = tangent.y;
-					newVertex.tz = tangent.z;
+				const aiVector3D& tangent = fbxMesh->mTangents[i];
+				newVertex.tx = tangent.x;
+				newVertex.ty = tangent.y;
+				newVertex.tz = tangent.z;
 
-					const aiVector3D& biTangent = fbxMesh->mBitangents[i];
-					newVertex.bx = biTangent.x;
-					newVertex.by = biTangent.y;
-					newVertex.bz = biTangent.z;
+				const aiVector3D& biTangent = fbxMesh->mBitangents[i];
+				newVertex.bx = biTangent.x;
+				newVertex.by = biTangent.y;
+				newVertex.bz = biTangent.z;
 
-					newVertex.u = fbxMesh->mTextureCoords[0][i].x;
-					newVertex.v = fbxMesh->mTextureCoords[0][i].y;
+				newVertex.u = fbxMesh->mTextureCoords[0][i].x;
+				newVertex.v = fbxMesh->mTextureCoords[0][i].y;
 
-					fileHeaderMesh.Vertices.emplace_back(newVertex);
-				}
-					break;
-				case EAssetType::SkeletalMesh:
-					{
-						
-					}
-					break;
-				case EAssetType::Animation:
-					{
-						
-					}
-					break;
-				default:
-					return "ERROR: Can't find EAssetType.";
-				}
+				fileHeaderMesh.Vertices.emplace_back(newVertex);
 			}
 
 			// Indices
@@ -117,53 +203,223 @@ namespace Havtorn
 			{
 				fileHeaderMesh.Indices.insert(fileHeaderMesh.Indices.end(), std::make_move_iterator(&fbxMesh->mFaces[i].mIndices[0]), std::make_move_iterator(&fbxMesh->mFaces[i].mIndices[fbxMesh->mFaces[i].mNumIndices]));
 			}
+		}
 
-			// Material Count
-			fileHeader.NumberOfMaterials = STATIC_U8(assimpScene->mNumMaterials);
+		// Material Count
+		fileHeader.NumberOfMaterials = STATIC_U8(assimpScene->mNumMaterials);
 
-			// Bone stuff
-			//std::vector<VertexBoneData> collectedBoneData;
-			//if (fbxMesh->HasBones())
-			//{
-			//	collectedBoneData.resize(fbxMesh->mNumVertices);
+		std::string newFileName = filePath.substr(0, filePath.length() - 4);
+		newFileName.append(".hva");
+		const auto fileData = new char[fileHeader.GetSize()];
+		fileHeader.Serialize(fileData);
+		GEngine::GetFileSystem()->Serialize(newFileName, &fileData[0], fileHeader.GetSize());
+		return newFileName;
+	}
 
-			//	unsigned int BoneIndex = 0;
-			//	for (unsigned int i = 0; i < fbxMesh->mNumBones; i++)
-			//	{
-			//		std::string BoneName(fbxMesh->mBones[i]->mName.data);
-			//		if (aLoaderMesh->myModel->myBoneNameToIndex.find(BoneName) == aLoaderMesh->myModel->myBoneNameToIndex.end())
-			//		{
-			//			BoneIndex = aLoaderMesh->myModel->myNumBones;
-			//			aLoaderMesh->myModel->myNumBones++;
-			//			BoneInfo bi;
-			//			aLoaderMesh->myModel->myBoneInfo.emplace_back(bi);
+	std::string UModelImporter::ImportSkeletalMesh(const std::string& filePath, const aiScene* assimpScene)
+	{
+		SSkeletalModelFileHeader fileHeader;
+		fileHeader.AssetType = EAssetType::SkeletalMesh;
+		fileHeader.Name = assimpScene->mName.C_Str();
+		fileHeader.NumberOfMeshes = assimpScene->mNumMeshes;
+		fileHeader.Meshes.reserve(fileHeader.NumberOfMeshes);
 
+		const aiMesh* fbxMesh = nullptr;
 
-			//			Matrix44f NodeTransformation = ConvertToEngineMatrix44(fbxMesh->mBones[i]->mOffsetMatrix);
+		// Pre-loading Pass
+		for (U8 n = 0; n < assimpScene->mNumMeshes; n++)
+		{
+			fileHeader.Meshes.emplace_back();
+			fbxMesh = assimpScene->mMeshes[n];
+			fileHeader.Meshes[n].Vertices.reserve(fbxMesh->mNumVertices);
+		}
 
-			//			//Vector3 scale;
-			//			//Vector3 translation;
-			//			//Quaternion rotation;
-			//			//myTransform.Decompose(scale, rotation, translation);
-			//			//myTransform = Matrix44f::CreateFromQuaternion(rotation);
-			//			//myTransform *= Matrix44f::CreateScale(myScale);
-			//			//myTransform.Translation(translation);
+		for (U8 n = 0; n < assimpScene->mNumMeshes; n++)
+		{
+			auto& fileHeaderMesh = fileHeader.Meshes[n];
+			fbxMesh = assimpScene->mMeshes[n];
 
-			//			aLoaderMesh->myModel->myBoneInfo[BoneIndex].BoneOffset = NodeTransformation;
-			//			aLoaderMesh->myModel->myBoneNameToIndex[BoneName] = BoneIndex;
-			//		}
-			//		else
-			//		{
-			//			BoneIndex = aLoaderMesh->myModel->myBoneNameToIndex[BoneName];
-			//		}
+			// Bone pre-loading
+			std::vector<SVertexBoneData> collectedBoneData;
+			collectedBoneData.resize(fbxMesh->mNumVertices);
+			std::map<std::string, U32> tempBoneNameToIndexMap;
 
-			//		for (unsigned int j = 0; j < fbxMesh->mBones[i]->mNumWeights; j++)
-			//		{
-			//			unsigned int VertexID = fbxMesh->mBones[i]->mWeights[j].mVertexId;
-			//			float Weight = fbxMesh->mBones[i]->mWeights[j].mWeight;
-			//			collectedBoneData[VertexID].AddBoneData(BoneIndex, Weight);
-			//		}
-			//	}
+			U32 boneIndex = 0;
+			U32 numBones = 0;
+			for (U32 i = 0; i < fbxMesh->mNumBones; i++)
+			{
+				std::string boneName(fbxMesh->mBones[i]->mName.data);
+				if (tempBoneNameToIndexMap.find(boneName) == tempBoneNameToIndexMap.end())
+				{
+					boneIndex = numBones++;
+					//fileHeaderMesh.BoneOffsetMatrices.push_back(ToHavtornMatrix(fbxMesh->mBones[i]->mOffsetMatrix));
+
+					tempBoneNameToIndexMap[boneName] = boneIndex;
+					fileHeader.BoneNames.push_back(boneName);
+				}
+				else
+				{
+					boneIndex = tempBoneNameToIndexMap[boneName];
+				}
+
+				for (U32 j = 0; j < fbxMesh->mBones[i]->mNumWeights; j++)
+				{
+					U32 vertexID = fbxMesh->mBones[i]->mWeights[j].mVertexId;
+					F32 weight = fbxMesh->mBones[i]->mWeights[j].mWeight;
+					collectedBoneData[vertexID].AddBoneData(boneIndex, weight);
+				}
+			}
+
+			// Vertices
+			// TODO.NR: Make import options rather soon
+			constexpr F32 scaleModifier = 0.01f;
+			for (U32 i = 0; i < fbxMesh->mNumVertices; i++)
+			{
+				SSkeletalMeshVertex newVertex;
+
+				aiVector3D& pos = fbxMesh->mVertices[i];
+				pos *= scaleModifier;
+				newVertex.x = pos.x;
+				newVertex.y = pos.y;
+				newVertex.z = pos.z;
+
+				const aiVector3D& norm = fbxMesh->mNormals[i];
+				newVertex.nx = norm.x;
+				newVertex.ny = norm.y;
+				newVertex.nz = norm.z;
+
+				const aiVector3D& tangent = fbxMesh->mTangents[i];
+				newVertex.tx = tangent.x;
+				newVertex.ty = tangent.y;
+				newVertex.tz = tangent.z;
+
+				const aiVector3D& biTangent = fbxMesh->mBitangents[i];
+				newVertex.bx = biTangent.x;
+				newVertex.by = biTangent.y;
+				newVertex.bz = biTangent.z;
+
+				newVertex.u = fbxMesh->mTextureCoords[0][i].x;
+				newVertex.v = fbxMesh->mTextureCoords[0][i].y;
+
+				const SVertexBoneData& boneData = collectedBoneData[i];
+				newVertex.bix = STATIC_F32(boneData.IDs[0]);
+				newVertex.biy = STATIC_F32(boneData.IDs[1]);
+				newVertex.biz = STATIC_F32(boneData.IDs[2]);
+				newVertex.biw = STATIC_F32(boneData.IDs[3]);
+
+				newVertex.bwx = boneData.Weights[0];
+				newVertex.bwy = boneData.Weights[1];
+				newVertex.bwz = boneData.Weights[2];
+				newVertex.bww = boneData.Weights[3];
+
+				fileHeaderMesh.Vertices.emplace_back(newVertex);
+			}
+
+			// Indices
+			for (U32 i = 0; i < fbxMesh->mNumFaces; i++)
+			{
+				fileHeaderMesh.Indices.insert(fileHeaderMesh.Indices.end(), std::make_move_iterator(&fbxMesh->mFaces[i].mIndices[0]), std::make_move_iterator(&fbxMesh->mFaces[i].mIndices[fbxMesh->mFaces[i].mNumIndices]));
+			}
+		}
+
+		// Material Count
+		fileHeader.NumberOfMaterials = STATIC_U8(assimpScene->mNumMaterials);
+
+		std::string newFileName = filePath.substr(0, filePath.length() - 4);
+		newFileName.append(".hva");
+		const auto fileData = new char[fileHeader.GetSize()];
+		fileHeader.Serialize(fileData);
+		GEngine::GetFileSystem()->Serialize(newFileName, &fileData[0], fileHeader.GetSize());
+		return newFileName;
+	}
+
+	std::string UModelImporter::ImportAnimation(const std::string& filePath, const aiScene* assimpScene)
+	{
+		const aiAnimation* animation = assimpScene->mAnimations[0];
+
+		// TODO.NR: Support multiple animations per file? Support montages somehow. Could be separate file using these headers (SSkeletalAnimationMontageFileHeader)
+		SSkeletalAnimationFileHeader fileHeader;
+		fileHeader.AssetType = EAssetType::Animation;
+		fileHeader.Name = UGeneralUtils::ExtractFileNameFromPath(filePath);
+		fileHeader.DurationInTicks = STATIC_U32(animation->mDuration);
+		fileHeader.TickRate = STATIC_U32(animation->mTicksPerSecond);
+			
+		std::vector<CHavtornStaticString<32>> boneNames;
+		{
+			std::string rigFilePath = "FBX/Tests/CH_Enemy_SK.hva";
+			const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(rigFilePath);
+			char* data = new char[fileSize];
+
+			GEngine::GetFileSystem()->Deserialize(rigFilePath, data, STATIC_U32(fileSize));
+
+			SSkeletalModelFileHeader rigHeader;
+			rigHeader.Deserialize(data);
+
+			boneNames = rigHeader.BoneNames;
+
+			delete[] data;
+		}
+
+		fileHeader.NumberOfTracks = STATIC_U32(boneNames.size());
+		fileHeader.BoneAnimationTracks.reserve(fileHeader.NumberOfTracks);
+
+		constexpr F32 scaleModifier = 0.01f;
+		for (const CHavtornStaticString<32>& boneName : boneNames)
+		{
+			std::string channelName = boneName.AsString();
+			const aiNodeAnim* channel = nullptr;
+
+			for (U32 i = 0; i < animation->mNumChannels; i++)
+			{
+				if (strcmp(animation->mChannels[i]->mNodeName.C_Str(), channelName.c_str()) != 0)
+					continue;
+
+				channel = animation->mChannels[i];
+			}
+			
+			fileHeader.BoneAnimationTracks.emplace_back();
+
+			if (channel != nullptr)
+			{
+				SBoneAnimationTrack& track = fileHeader.BoneAnimationTracks.back();
+				track.BoneName = boneName.AsString();
+
+				for (U32 t = 0; t < channel->mNumPositionKeys; t++)
+				{
+					track.TranslationKeys.emplace_back(ToHavtornVecAnimationKey(channel->mPositionKeys[t]));
+					track.TranslationKeys.back().Value *= scaleModifier;
+				}
+
+				for (U32 q = 0; q < channel->mNumRotationKeys; q++)
+					track.RotationKeys.emplace_back(ToHavtornQuatAnimationKey(channel->mRotationKeys[q]));
+
+				for (U32 s = 0; s < channel->mNumScalingKeys; s++)
+					track.ScaleKeys.emplace_back(ToHavtornVecAnimationKey(channel->mScalingKeys[s]));
+			}
+			else
+			{
+				// NR: Should this be <= durationInTicks?
+				for (U32 k = 0; k <= fileHeader.DurationInTicks; k++)
+				{
+					SBoneAnimationTrack& track = fileHeader.BoneAnimationTracks.back();
+					track.BoneName = boneName.AsString();
+
+					if (track.TranslationKeys.size() > 0)
+						track.TranslationKeys.emplace_back(track.TranslationKeys.back());
+					else
+						track.TranslationKeys.emplace_back(SVecBoneAnimationKey{ SVector::Zero, 0.0f });
+					
+					if (track.RotationKeys.size() > 0)
+						track.RotationKeys.emplace_back(track.RotationKeys.back());
+					else
+						track.RotationKeys.emplace_back(SQuatBoneAnimationKey{ SQuaternion::Identity, 0.0f });
+
+					if (track.ScaleKeys.size() > 0)
+						track.ScaleKeys.emplace_back(track.ScaleKeys.back());
+					else
+						track.ScaleKeys.emplace_back(SVecBoneAnimationKey{ SVector(1.0f), 0.0f});
+				}
+			}
 		}
 
 		std::string newFileName = filePath.substr(0, filePath.length() - 4);
@@ -171,7 +427,6 @@ namespace Havtorn
 		const auto fileData = new char[fileHeader.GetSize()];
 		fileHeader.Serialize(fileData);
 		GEngine::GetFileSystem()->Serialize(newFileName, &fileData[0], fileHeader.GetSize());
-
 		return newFileName;
 	}
 }
@@ -221,7 +476,7 @@ namespace Havtorn
 		//			data[dataIndex + 16] = fbxMesh->mTextureCoords[TEXTURE_SET_0][i].x;
 		//			data[dataIndex + 17] = fbxMesh->mTextureCoords[TEXTURE_SET_0][i].y;
 
-		//			VertexBoneData& boneData = collectedBoneData[i];
+		//			SVertexBoneData& boneData = collectedBoneData[i];
 		//			data[dataIndex + 18] = (float)boneData.IDs[0];
 		//			data[dataIndex + 19] = (float)boneData.IDs[1];
 		//			data[dataIndex + 20] = (float)boneData.IDs[2];

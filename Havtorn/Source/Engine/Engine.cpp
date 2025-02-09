@@ -109,13 +109,7 @@ namespace Havtorn
 
 	void GEngine::EndFrame()
 	{
-		RenderManager->SwapRenderCommandBuffers();
-		RenderManager->SwapStaticMeshInstancedRenderLists();
-		RenderManager->SwapSpriteInstancedWorldSpaceTransformRenderLists();
-		RenderManager->SwapSpriteInstancedScreenSpaceTransformRenderLists();
-		RenderManager->SwapSpriteInstancedUVRectRenderLists();
-		RenderManager->SwapSpriteInstancedColorRenderLists();
-		RenderManager->SetWorldPlayState(World->GetWorldPlayState());
+		RenderManager->SyncCrossThreadResources(World);
 		Framework->EndFrame();
 
 		if (WindowHandler->ResizeTarget.LengthSquared() > 0)
@@ -134,7 +128,6 @@ namespace Havtorn
 		CThreadManager::RenderThreadStatus = ERenderThreadStatus::ReadyToRender;
 		uniqueLock.unlock();
 		CThreadManager::RenderCondition.notify_one();
-
 	}
 
 	CWindowHandler* GEngine::GetWindowHandler()

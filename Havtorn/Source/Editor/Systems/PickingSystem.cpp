@@ -53,7 +53,7 @@ namespace Havtorn
 
 	void CPickingSystem::WorldSpacePick() const
 	{
-		if (Manager->GetIsHoveringGizmo() || Manager->GetIsWorldPlaying() || EditorCameraComponent == nullptr || EditorCameraTransform == nullptr)
+		if (Manager->GetIsHoveringGizmo() || Manager->GetIsWorldPlaying() || Manager->GetIsModalOpen() || EditorCameraComponent == nullptr || EditorCameraTransform == nullptr)
 			return;
 
 		const ImGui::CViewportWindow* viewport = Manager->GetEditorWindow<ImGui::CViewportWindow>();

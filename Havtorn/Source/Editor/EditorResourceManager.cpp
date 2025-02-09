@@ -5,9 +5,6 @@
 #include "Graphics/RenderManager.h"
 #include "ModelImporter.h"
 
-//#include <DirectXTex/DirectXTex.h>
-//#pragma comment(lib, "d3d11.lib")
-
 namespace Havtorn
 {
 	ID3D11ShaderResourceView* Havtorn::CEditorResourceManager::GetEditorTexture(EEditorTexture texture) const
@@ -27,7 +24,7 @@ namespace Havtorn
 		case Havtorn::EAssetType::StaticMesh:
 			return std::move(RenderManager->RenderStaticMeshAssetTexture(filePath));
 		case Havtorn::EAssetType::SkeletalMesh:
-			break;
+			return std::move(RenderManager->RenderSkeletalMeshAssetTexture(filePath));
 		case Havtorn::EAssetType::Texture:
 			return std::move(RenderManager->GetTextureAssetTexture(filePath));
 		case Havtorn::EAssetType::Material:
@@ -109,9 +106,12 @@ namespace Havtorn
 		std::string hvaPath;
 		switch (assetType)
 		{
-		case EAssetType::StaticMesh:
+		case EAssetType::StaticMesh: // fallthrough
+		case EAssetType::SkeletalMesh: // fallthrough
+		case EAssetType::Animation:
 		{
-			hvaPath = CModelImporter::ImportFBX(filePath);
+			// TODO.NR: Take destination into account
+			hvaPath = UModelImporter::ImportFBX(filePath, assetType);
 		}
 		break;
 		case EAssetType::Texture:
@@ -142,11 +142,6 @@ namespace Havtorn
 			hvaPath = asset.MaterialName + ".hva";
 		}
 		break;
-		break;
-		case EAssetType::SkeletalMesh:
-			break;
-		case EAssetType::Animation:
-			break;
 		case EAssetType::AudioOneShot:
 			break;
 		case EAssetType::AudioCollection:
@@ -214,6 +209,21 @@ namespace Havtorn
 
 		case Havtorn::EEditorTexture::SequencerIcon:
 			return ResourceAssetPath + "SequencerIcon" + extension;
+
+		case Havtorn::EEditorTexture::EnvironmentLightIcon:
+			return ResourceAssetPath + "EnvironmentLightIcon" + extension;
+
+		case Havtorn::EEditorTexture::DirectionalLightIcon:
+			return ResourceAssetPath + "DirectionalLightIcon" + extension;
+
+		case Havtorn::EEditorTexture::PointLightIcon:
+			return ResourceAssetPath + "PointLightIcon" + extension;
+
+		case Havtorn::EEditorTexture::SpotlightIcon:
+			return ResourceAssetPath + "SpotlightIcon" + extension;
+
+		case Havtorn::EEditorTexture::DecalIcon:
+			return ResourceAssetPath + "DecalIcon" + extension;
 		
 		case Havtorn::EEditorTexture::Count:
 		default:
@@ -234,6 +244,7 @@ namespace Havtorn
 		for (I64 index = 0; index < textureCount; index++)
 		{
 			UGraphicsUtils::CreateShaderResourceViewFromResource(device, GetFileName(static_cast<EEditorTexture>(index)), &Textures[index]);
+			GEngine::GetTextureBank()->AddTexture(Textures[index]);
 		}
 
 		return true;

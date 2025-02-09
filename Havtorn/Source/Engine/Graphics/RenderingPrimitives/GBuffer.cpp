@@ -20,14 +20,14 @@ namespace Havtorn
 		Context->OMSetRenderTargets(STATIC_U64(EGBufferTextures::Count), &nullViews[0], nullptr);
 	}
 
-	void CGBuffer::SetAsActiveTarget(CFullscreenTexture* depth, bool isUsingEditor)
+	void CGBuffer::SetAsActiveTarget(CRenderTexture* depth, bool isUsingEditor)
 	{
 		auto depthStencilView = depth ? depth->Depth : nullptr;
 		Context->OMSetRenderTargets(isUsingEditor ? STATIC_U64(EGBufferTextures::Count) : STATIC_U64(EGBufferTextures::Count) - 1, &RenderTargets[0], depthStencilView);
 		Context->RSSetViewports(1, Viewport);
 	}
 
-	void CGBuffer::SetAsResourceOnSlot(EGBufferTextures resource, U16 slot)
+	void CGBuffer::SetAsPSResourceOnSlot(EGBufferTextures resource, U16 slot)
 	{
 		Context->PSSetShaderResources(slot, 1, &ShaderResources[STATIC_U64(resource)]);
 	}
@@ -35,6 +35,11 @@ namespace Havtorn
 	void CGBuffer::SetAllAsResources(U16 startSlot)
 	{
 		Context->PSSetShaderResources(startSlot, STATIC_U64(EGBufferTextures::Count) - 1, &ShaderResources[0]);
+	}
+
+	ID3D11RenderTargetView* CGBuffer::GetEditorDataRenderTarget() const
+	{
+		return RenderTargets[STATIC_U64(EGBufferTextures::EditorData)];
 	}
 
 	ID3D11Texture2D* CGBuffer::GetEditorDataTexture() const

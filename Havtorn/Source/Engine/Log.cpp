@@ -6,9 +6,15 @@
 
 namespace Havtorn
 {
-	void ULog::Print(const EConsoleColor& color, const char* category, const char* message, ...)
+	ULog* ULog::Instance = nullptr;
+
+	void ULog::Print(const ELogCategory category, const char* message, ...)
 	{
+		if (!Instance)
+			Instance = new ULog();
+
 		const HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+		const EConsoleColor color = GetColorFromCategory(category);
 		const bool isDefault = color == EConsoleColor::White;
 
 		// Set Console Color
@@ -28,7 +34,12 @@ namespace Havtorn
 		strftime(timeStamp, sizeof timeStamp, "%H:%M:%S", &newtime);
 
 		// Printout
-		std::cout << "[" << timeStamp << "]" << " " << category << combinedMessage << std::endl;
+		const std::string categoryName = GetCategoryName(category);
+		const std::string finalString = "[" + std::string(timeStamp) + "]" + " " + categoryName + combinedMessage;
+		std::cout << finalString << std::endl;
+
+		for (ILogContext* context : Instance->Contexts)
+			context->Log(category, finalString);
 
 		// Reset Console Color
 		if (!isDefault)
@@ -49,5 +60,53 @@ namespace Havtorn
 			return "StringVsprintf encoding error";
 
 		return { buff };
+	}
+
+	EConsoleColor ULog::GetColorFromCategory(const ELogCategory category)
+	{
+		switch (category)
+		{
+		case ELogCategory::Trace:
+			return EConsoleColor::White;
+		case ELogCategory::Debug:
+			return EConsoleColor::DarkGreen;
+		case ELogCategory::Info:
+			return EConsoleColor::DarkAqua;
+		case ELogCategory::Warning:
+			return EConsoleColor::Yellow;
+		case ELogCategory::Error:
+			return EConsoleColor::Red;
+		case ELogCategory::Fatal:
+		default:
+			return EConsoleColor::WhiteRedBackground;
+		};
+	}
+
+	std::string ULog::GetCategoryName(const ELogCategory category)
+	{
+		switch (category)
+		{
+		case ELogCategory::Trace:
+			return "TRACE: ";
+		case ELogCategory::Debug:
+			return "DEBUG: ";
+		case ELogCategory::Info:
+			return "INFO:  ";
+		case ELogCategory::Warning:
+			return "WARN:  ";
+		case ELogCategory::Error:
+			return "ERROR: ";
+		case ELogCategory::Fatal:
+		default:
+			return "FATAL: ";
+		};
+	}
+
+	void ULog::AddLogContext(ILogContext* context)
+	{
+		if (!Instance)
+			Instance = new ULog();
+
+		Instance->Contexts.push_back(context);
 	}
 }
