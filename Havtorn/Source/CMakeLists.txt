@@ -318,6 +318,7 @@ set(VERTEX_SHADERS
     ${SHADER_FOLDER}EditorPreview_VS.hlsl
     ${SHADER_FOLDER}FullscreenVertexShader_VS.hlsl
     ${SHADER_FOLDER}Line_VS.hlsl
+    ${SHADER_FOLDER}PointLight_VS.hlsl
     ${SHADER_FOLDER}SpriteInstanced_VS.hlsl
     ${SHADER_FOLDER}SpriteInstancedEditor_VS.hlsl
 )
