@@ -1,8 +1,8 @@
 @echo off
 echo.
 
-mkdir -p ..\External\Lib\Debug\
-mkdir -p ..\External\Lib\Release\
+mkdir -p ..\External\Lib\Debug\PhysX\
+mkdir -p ..\External\Lib\Release\PhysX\
 
 cd ..\External\assimp
 echo Generating assimp CMake files...
