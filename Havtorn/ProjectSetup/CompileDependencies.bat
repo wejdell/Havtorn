@@ -1,6 +1,9 @@
 @echo off
 echo.
 
+mkdir -p ..\External\Lib\Debug\
+mkdir -p ..\External\Lib\Release\
+
 cd ..\External\assimp
 echo Generating assimp CMake files...
 echo.
