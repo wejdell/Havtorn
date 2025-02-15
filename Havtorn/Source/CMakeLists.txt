@@ -185,6 +185,7 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/Components/Physics3DControllerComponent.h
     ${ENGINE_FOLDER}ECS/Components/PointLightComponent.h
     ${ENGINE_FOLDER}ECS/Components/SequencerComponent.h
+    ${ENGINE_FOLDER}ECS/Components/SkeletalAnimationComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/SkeletalAnimationComponent.h
     ${ENGINE_FOLDER}ECS/Components/SkeletalMeshComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/SkeletalMeshComponent.h

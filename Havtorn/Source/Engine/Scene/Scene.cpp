@@ -29,6 +29,8 @@ namespace Havtorn
 
 		RegisterComponent<STransformComponent>(50, &STransformComponentEditorContext::Context);
 		RegisterComponent<SStaticMeshComponent>(40, &SStaticMeshComponentEditorContext::Context);
+		RegisterComponent<SSkeletalMeshComponent>(40, &SSkeletalMeshComponentEditorContext::Context);
+		RegisterComponent<SSkeletalAnimationComponent>(40, &SSkeletalAnimationComponentEditorContext::Context);
 		RegisterComponent<SCameraComponent>(2, &SCameraComponentEditorContext::Context);
 		RegisterComponent<SCameraControllerComponent>(2, &SCameraControllerComponentEditorContext::Context);
 		RegisterComponent<SMaterialComponent>(40, &SMaterialComponentEditorContext::Context);
@@ -346,11 +348,11 @@ namespace Havtorn
 		//GetComponent<SStaticMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register("Assets/Tests/CH_Enemy.hva");
 
 		// Skeletal Mesh
-		renderManager->LoadSkeletalMeshComponent("Assets/Tests/CH_Enemy_SK.hva", AddComponent<SSkeletalMeshComponent>(playerProxy));
+		renderManager->LoadSkeletalMeshComponent("Assets/Tests/TestMesh.hva", AddComponent<SSkeletalMeshComponent>(playerProxy));
 		AddComponentEditorContext(playerProxy, &SSkeletalMeshComponentEditorContext::Context);
-		GetComponent<SSkeletalMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register("Assets/Tests/XBot.hva");
+		GetComponent<SSkeletalMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register("Assets/Tests/TestMesh.hva");
 
-		renderManager->LoadSkeletalAnimationComponent("Assets/Tests/CH_Enemy_Walk.hva", AddComponent<SSkeletalAnimationComponent>(playerProxy));
+		renderManager->LoadSkeletalAnimationComponent("Assets/Tests/TestWalk.hva", AddComponent<SSkeletalAnimationComponent>(playerProxy));
 		AddComponentEditorContext(playerProxy, &SSkeletalAnimationComponentEditorContext::Context);
 		// TODO.NR
 		//GetComponent<SSkeletalAnimationComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register("Assets/Tests/CH_Enemy_SK.hva");
@@ -358,7 +360,7 @@ namespace Havtorn
 		std::vector<std::string> enemyMaterialPaths = { "Assets/Materials/M_Enemy.hva" };
 		renderManager->LoadMaterialComponent(enemyMaterialPaths, AddComponent<SMaterialComponent>(playerProxy));
 		AddComponentEditorContext(playerProxy, &SMaterialComponentEditorContext::Context);
-		//GetComponent<SMaterialComponent>(playerProxy)->AssetRegistryKeys = assetRegistry->Register(enemyMaterialPaths);
+		GetComponent<SMaterialComponent>(playerProxy)->AssetRegistryKeys = assetRegistry->Register(enemyMaterialPaths);
 		
 		// === !Player Proxy ===
 
@@ -637,6 +639,7 @@ namespace Havtorn
 		size += DefaultSizeAllocator(GetComponents<STransformComponent>());		
 
 		size += SpecializedSizeAllocator(GetComponents<SStaticMeshComponent>());
+		size += SpecializedSizeAllocator(GetComponents<SSkeletalMeshComponent>());
 
 		size += DefaultSizeAllocator(GetComponents<SCameraComponent>());
 		size += DefaultSizeAllocator(GetComponents<SCameraControllerComponent>());
@@ -655,6 +658,7 @@ namespace Havtorn
 		size += DefaultSizeAllocator(GetComponents<STransform2DComponent>());
 
 		size += SpecializedSizeAllocator(GetComponents<SSpriteAnimatorGraphComponent>());
+		size += SpecializedSizeAllocator(GetComponents<SSkeletalAnimationComponent>());
 
 		// TODO.NR: Implement GetSize (since the component is not trivially serializable)
 		//size += DefaultSizeAllocator(GetComponents<SSequencerComponent>());
@@ -677,6 +681,7 @@ namespace Havtorn
 		DefaultSerializer(GetComponents<STransformComponent>(), toData, pointerPosition);
 
 		SpecializedSerializer(GetComponents<SStaticMeshComponent>(), toData, pointerPosition);
+		SpecializedSerializer(GetComponents<SSkeletalMeshComponent>(), toData, pointerPosition);
 
 		DefaultSerializer(GetComponents<SCameraComponent>(), toData, pointerPosition);
 		DefaultSerializer(GetComponents<SCameraControllerComponent>(), toData, pointerPosition);
@@ -696,6 +701,7 @@ namespace Havtorn
 		DefaultSerializer(GetComponents<STransform2DComponent>(), toData, pointerPosition);
 
 		SpecializedSerializer(GetComponents<SSpriteAnimatorGraphComponent>(), toData, pointerPosition);
+		SpecializedSerializer(GetComponents<SSkeletalAnimationComponent>(), toData, pointerPosition);
 
 		// TODO.NR: Implement Serialize (since the component is not trivially serializable)
 		const auto& sequencerComponents = GetComponents<SSequencerComponent>();
@@ -730,6 +736,22 @@ namespace Havtorn
 				component.Deserialize(fromData, pointerPosition);
 				RenderManager->LoadStaticMeshComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SStaticMeshComponent>(component.Owner));
 				AddComponentEditorContext(component.Owner, &SStaticMeshComponentEditorContext::Context);
+			}
+		}
+
+		{
+			U32 numberOfSkeletalMeshComponents = 0;
+			DeserializeData(numberOfSkeletalMeshComponents, fromData, pointerPosition);
+			std::vector<SSkeletalMeshComponent> skeletalMeshComponents;
+			skeletalMeshComponents.resize(numberOfSkeletalMeshComponents);
+
+			for (U64 index = 0; index < numberOfSkeletalMeshComponents; index++)
+			{
+				SSkeletalMeshComponent component;
+				component.Deserialize(fromData, pointerPosition);
+				auto comp = AddComponent<SSkeletalMeshComponent>(component.Owner);
+				RenderManager->LoadSkeletalMeshComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), comp);
+				AddComponentEditorContext(component.Owner, &SSkeletalMeshComponentEditorContext::Context);
 			}
 		}
 
@@ -823,6 +845,11 @@ namespace Havtorn
 		{
 			std::vector<SSpriteAnimatorGraphComponent> components;
 			SpecializedDeserializer(components, &SSpriteAnimatorGraphComponentEditorContext::Context, fromData, pointerPosition);
+		}
+
+		{
+			std::vector<SSkeletalAnimationComponent> components;
+			SpecializedDeserializer(components, &SSkeletalAnimationComponentEditorContext::Context, fromData, pointerPosition);
 		}
 
 		U32 numberOfSequencerComponents = 0;

@@ -14,6 +14,10 @@ namespace Havtorn
 			: SComponent(entityOwner)
 		{}
 
+		HAVTORN_API [[nodiscard]] U32 GetSize() const;
+		HAVTORN_API void Serialize(char* toData, U64& pointerPosition) const;
+		HAVTORN_API void Deserialize(const char* fromData, U64& pointerPosition);
+
 		// TODO.NR: This should be some of the only runtime data this component needs.
 		SVector2<U32> AnimationData; // X = animationIndex, Y = frameIndex
 		F32 CurrentFrameTime = 0.0f;
