@@ -1,5 +1,5 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
-
+#include "hvpch.h"
 #include "ViewportWindow.h"
 #include "EditorManager.h"
 #include "EditorResourceManager.h"
@@ -48,6 +48,7 @@ namespace ImGui
 
 			// TODO.NR: Make an abstraction for what's happening inside and to these button blocks
 			// TODO.NR: Make util button function based on ImGui::ImageButtonEx that can fill the whole rect (not only image background) with the color we choose
+
 
 			ImGui::SameLine(layout.ViewportSize.X * 0.5f - 8.0f - 32.0f);
 			ImVec4 playButtonColor = IsPlayButtonEngaged ? buttonActiveColor : IsPlayButtonHovered ? buttonHoveredColor : buttonInactiveColor;

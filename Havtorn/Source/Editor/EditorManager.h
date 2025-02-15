@@ -6,6 +6,11 @@
 
 #include <filesystem>
 
+//#include <imgui.h>
+//#include <EditorIMGUI/GUIProcess.h>
+
+
+
 struct ID3D11Device;
 struct ID3D11DeviceContext;
 
@@ -149,6 +154,10 @@ namespace Havtorn
 		CWorld* World = nullptr;
 		CScene* CurrentScene = nullptr;
 		SEntity SelectedEntity = SEntity::Null;
+
+		//GUI::GUIEditorWhatever* gui;
+		//GUI::GUIEditorWhatever::DrawThing(hello);
+		// gui->DrawThing(param);
 
 		// TODO.NR: Figure out why we can't use unique ptrs with these namespaced imgui classes
 		std::vector<ImGui::CWindow*> Windows = {};
