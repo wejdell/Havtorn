@@ -12,6 +12,7 @@ namespace Havtorn
 		friend class GEngine;
 		friend class CEditorManager;
 		friend class CGraphicsFramework;
+		friend class CEngineProcess;
 
 		// TODO.AG: figure out a way to not have friend class on processes.
 		friend class CImGuiProcess;

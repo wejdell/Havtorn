@@ -22,6 +22,8 @@
 #include "Timer.h"
 #include "Graphics/Debug/DebugDrawUtility.h"
 
+#include "Application/EngineProcess.h"
+
 namespace Havtorn
 {
 	GEngine* GEngine::Instance = nullptr;
@@ -165,6 +167,21 @@ namespace Havtorn
 	CInputMapper* GEngine::GetInput()
 	{
 		return Instance->InputMapper;
+	}
+
+	CGraphicsFramework* GEngine::GetGraphicsFramework()
+	{
+		return Instance->Framework;
+	}
+
+	CEngineProcess* GEngine::GetEngineProcess()
+	{
+		return Instance->engineProcess;
+	}
+
+	void GEngine::SetEngineProcess(IProcess* aProcess)
+	{
+		Instance->engineProcess = dynamic_cast<CEngineProcess*>(aProcess);
 	}
 
 	void GEngine::InitWindowsImaging()

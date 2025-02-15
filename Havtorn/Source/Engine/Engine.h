@@ -21,6 +21,9 @@ namespace Havtorn
 	class CFileSystem;
 	class CTextureBank;
 	class CSequencerSystem;
+	class CEngineProcess;
+	class IProcess;
+
 
 	class GEngine
 	{
@@ -46,6 +49,10 @@ namespace Havtorn
 		static HAVTORN_API CThreadManager* GetThreadManager();
 		static HAVTORN_API CWorld* GetWorld();
 		static HAVTORN_API CInputMapper* GetInput();
+		static HAVTORN_API CGraphicsFramework* GetGraphicsFramework();
+		static HAVTORN_API CEngineProcess* GetEngineProcess();
+
+		static HAVTORN_API void SetEngineProcess(IProcess* aProcess);
 		
 	public:
 		void InitWindowsImaging();
@@ -67,6 +74,8 @@ namespace Havtorn
 		GDebugDraw* DebugDraw = nullptr;
 		CInputMapper* InputMapper = nullptr;
 		CWorld* World = nullptr;
+
+		CEngineProcess* engineProcess = nullptr;
 
 		// TODO.NR: Figure out how to set up dependencies for Editor systems on Engine ECS Systems
 		CSequencerSystem* SequencerSystem = nullptr;

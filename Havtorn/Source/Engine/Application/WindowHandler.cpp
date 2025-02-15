@@ -8,6 +8,9 @@
 
 #include "ImGuiManager.h"
 
+#include "Engine.h"
+#include "EngineProcess.h"
+
 
 namespace Havtorn
 {
@@ -15,6 +18,9 @@ namespace Havtorn
 	{
 		static CWindowHandler* windowHandler = nullptr;
 		CREATESTRUCT* createStruct;
+
+		if(GEngine::GetEngineProcess() != nullptr)
+			GEngine::GetEngineProcess()->WindowsWindowProc(hwnd, uMsg, wParam, lParam);
 
 		GImGuiManager::WindowsWindowProc(hwnd, uMsg, wParam, lParam);
 
