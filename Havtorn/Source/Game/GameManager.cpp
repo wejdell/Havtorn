@@ -4,7 +4,11 @@
 #include "Ghosty\GhostySystem.h"
 
 #include <Engine.h>
-#include <Application/ImGuiManager.h>
+//#include <Application/ImGuiManager.h>
+
+//#include <EditorIMGUI/GUIProcess.h>
+#include <GUI.h>
+
 
 namespace Havtorn
 {
@@ -28,7 +32,7 @@ namespace Havtorn
 		World->OnPausePlayDelegate.AddMember(this, &CGameManager::OnPausePlay);
 		World->OnStopPlayDelegate.AddMember(this, &CGameManager::OnStopPlay);
 
-		ImGui::SetCurrentContext(Havtorn::GImGuiManager::GetContext());
+		//ImGui::SetCurrentContext(Havtorn::GImGuiManager::GetContext());
 
 		return true;
 	}
@@ -43,6 +47,11 @@ namespace Havtorn
 
 	void CGameManager::Update()
 	{
+		GUI::Begin("Game Window");
+		GUI::End();
+
+		GUI::Begin("Another Game Window");
+		GUI::End();
 	}
 
 	void CGameManager::PostUpdate()
