@@ -8,8 +8,8 @@
 #include "Engine.h"
 #include "Graphics/TextureBank.h"
 
-#include <Core/imgui.h>
-#include <Havtorn/Utilities.h>
+#include <imgui.h>
+#include "Core/Utilities.h"
 
 namespace Havtorn
 {

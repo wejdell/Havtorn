@@ -9,7 +9,8 @@
 
 #include "Graphics/Debug/DebugDrawUtility.h"
 
-#include <Havtorn/Utilities.h>
+#include "Core/Utilities.h"
+#include "imgui.h"
 
 namespace Havtorn
 {

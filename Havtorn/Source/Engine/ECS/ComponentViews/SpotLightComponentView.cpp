@@ -6,8 +6,8 @@
 #include "ECS/Components/SpotLightComponent.h"
 #include "Scene/Scene.h"
 
-#include <Core/imgui.h>
-#include <Havtorn/Utilities.h>
+#include <imgui.h>
+#include "Core/Utilities.h"
 
 namespace Havtorn
 {

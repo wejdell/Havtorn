@@ -5,7 +5,7 @@
 #include "ECS/Components/MaterialComponent.h"
 #include "Scene/Scene.h"
 
-#include <Havtorn/Utilities.h>
+#include "Core/Utilities.h"
 
 namespace Havtorn
 {
