@@ -46,7 +46,7 @@ namespace Havtorn
 			}
 
 			// should never get here - more bones than we have space for
-			assert(0);
+			//assert(0);
 		}
 	};
 
@@ -262,7 +262,7 @@ namespace Havtorn
 					boneIndex = tempBoneNameToIndexMap[boneName];
 				}
 
-				for (U32 j = 0; j < fbxMesh->mBones[i]->mNumWeights; j++)
+				for (U32 j = 0; j < UMath::Min(STATIC_U32(fbxMesh->mBones[i]->mNumWeights), STATIC_U32(NUM_BONES_PER_VERTEX)); j++)
 				{
 					U32 vertexID = fbxMesh->mBones[i]->mWeights[j].mVertexId;
 					F32 weight = fbxMesh->mBones[i]->mWeights[j].mWeight;
@@ -272,7 +272,8 @@ namespace Havtorn
 
 			// Vertices
 			// TODO.NR: Make import options rather soon
-			constexpr F32 scaleModifier = 0.01f;
+			//constexpr F32 scaleModifier = 0.01f;
+			constexpr F32 scaleModifier = 1.0f;
 			for (U32 i = 0; i < fbxMesh->mNumVertices; i++)
 			{
 				SSkeletalMeshVertex newVertex;
@@ -346,7 +347,8 @@ namespace Havtorn
 			
 		std::vector<CHavtornStaticString<32>> boneNames;
 		{
-			std::string rigFilePath = "FBX/Tests/CH_Enemy_SK.hva";
+			// TODO.NW: Make the rig/skeleton part of import settings
+			std::string rigFilePath = "ArtSource/Tests/TestMesh.hva";
 			const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(rigFilePath);
 			char* data = new char[fileSize];
 
@@ -363,7 +365,8 @@ namespace Havtorn
 		fileHeader.NumberOfTracks = STATIC_U32(boneNames.size());
 		fileHeader.BoneAnimationTracks.reserve(fileHeader.NumberOfTracks);
 
-		constexpr F32 scaleModifier = 0.01f;
+		//constexpr F32 scaleModifier = 0.01f;
+		constexpr F32 scaleModifier = 1.0f;
 		for (const CHavtornStaticString<32>& boneName : boneNames)
 		{
 			std::string channelName = boneName.AsString();

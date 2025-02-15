@@ -44,9 +44,11 @@ rmdir /s /q build
 mkdir build
 cd build
 echo Generating box2d files...
+echo .
 cmake -DBOX2D_SAMPLES=OFF -DBOX2D_UNIT_TESTS=OFF -S ..
 echo.
 echo Building box2d...
+echo .
 cmake --build .
 echo %cd%
 copy src\Debug\box2dd.lib ..\..\Lib\Debug\

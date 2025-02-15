@@ -28,7 +28,7 @@ matrix LoadBoneMatrix(uint2 animationData, float boneIndex)
 {
     matrix boneMatrix = IdentityMatrix;
   // If this texture were 1D, what would be the offset?
-    uint baseIndex = animationData.x + (animationData.y * 49);
+    uint baseIndex = animationData.x + (animationData.y * 56);
   // We use 4 * bone because each bone is 4 texels to form a float4x4.
     baseIndex += (4 * boneIndex);
     //baseIndex += (boneIndex);
