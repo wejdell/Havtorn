@@ -13,9 +13,10 @@
 #include "Windows/ViewportWindow.h"
 #include "Windows/SpriteAnimatorGraphNodeWindow.h"
 
-#include <Core/imgui.h>
-#include <Core/ImGuizmo/ImGuizmo.h>
-#include <Havtorn/Utilities.h>
+//#include <imgui.h>
+#include <../ImGuizmo/ImGuizmo.h>
+//#include <Utilities.h>
+#include "Core/Utilities.h"
 #include "Utils/ImGuiUtils.h"
 
 namespace ImGui
@@ -37,6 +38,9 @@ namespace ImGui
 
 	void CInspectorWindow::OnEnable()
 	{
+		ImVec2 a = ImVec2(1.0f,2.0f);
+		ImVec2 b = ImVec2(3.0f, 4.0f);
+		ImVec2 c = a * b;
 	}
 
 	void CInspectorWindow::OnInspectorGUI()
@@ -44,6 +48,9 @@ namespace ImGui
 		const SEditorLayout& layout = Manager->GetEditorLayout();
 
 		const ImGuiViewport* mainViewport = ImGui::GetMainViewport();
+
+
+		//GUI::GUIProcess::SetNextWindowPos(ImVec2(mainViewport->WorkPos.x + layout.InspectorPosition.X, mainViewport->WorkPos.y + layout.InspectorPosition.Y));
 
 		ImGui::SetNextWindowPos(ImVec2(mainViewport->WorkPos.x + layout.InspectorPosition.X, mainViewport->WorkPos.y + layout.InspectorPosition.Y));
 		ImGui::SetNextWindowSize(ImVec2(layout.InspectorSize.X, layout.InspectorSize.Y));

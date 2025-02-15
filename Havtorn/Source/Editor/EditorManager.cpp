@@ -2,8 +2,8 @@
 
 #include "EditorManager.h"
 
-#include "Core/imgui.h"
-#include "Core/ImGuizmo/ImGuizmo.h"
+//#include "imgui.h"
+#include "../ImGuizmo/ImGuizmo.h"
 
 #include <Core/WindowsInclude.h>
 #include <psapi.h>
@@ -47,7 +47,8 @@ namespace Havtorn
 
 	bool CEditorManager::Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager)
 	{
-		CROSS_PROJECT_IMGUI_SETUP();
+		// CROSS_PROJECT_IMGUI_SETUP();
+
 		windowHandler->EnableDragDrop();
 
 		SetEditorTheme(EEditorColorTheme::HavtornDark, EEditorStyleTheme::Havtorn);
@@ -129,7 +130,8 @@ namespace Havtorn
 		{
 			if (ImGui::Begin("Debug info", &IsDebugInfoOpen))
 			{
-				ImGui::Text(GetFrameRate().c_str());
+				//GUI::GUIProcess::Text(GetFrameRate().c_str());
+				//ImGui::Text(GetFrameRate().c_str());
 				ImGui::Text(GetSystemMemory().c_str());
 				ImGui::Text(GetDrawCalls().c_str());
 			}
@@ -465,7 +467,7 @@ namespace Havtorn
 	{
 		if (GetIsFreeCamActive())
 			return;
-			
+
 		switch (payload.Event)
 		{
 		case EInputActionEvent::TranslateTransform:
@@ -517,7 +519,7 @@ namespace Havtorn
 			HV_LOG_WARN("OnInputFocusSelection: could not find a transform to go to. Cannot focus current selection.");
 			return;
 		}
-		
+
 		if (SCameraComponent* camera = CurrentScene->GetComponent<SCameraComponent>(cameraEntity))
 		{
 			fov = { camera->AspectRatio * camera->FOV, camera->FOV };
