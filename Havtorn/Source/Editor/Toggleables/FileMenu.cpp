@@ -29,9 +29,47 @@ namespace ImGui
 
         if (ImGui::BeginPopup(PopupName))
         {
-            ImGui::MenuItem("(demo menu)", nullptr, false, false);
-            if (ImGui::MenuItem("New")) {}
-            if (ImGui::MenuItem("Open", "Ctrl+O")) {}
+            if (ImGui::MenuItem("New")) 
+            {
+                Havtorn::GEngine::GetWorld()->RemoveScene(0);
+                if (Havtorn::GEngine::GetWorld()->GetActiveScenes().size() > 0)
+                {
+                    Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
+                }
+                else
+                {
+                    Manager->SetCurrentScene(nullptr);
+                }
+            }
+
+            if (ImGui::BeginMenu("Open"))
+            {
+                if (ImGui::MenuItem("Demo Scene"))
+                {
+                    Havtorn::GEngine::GetWorld()->ChangeScene<Havtorn::CGameScene>("Assets/Scenes/DemoScene.hvs");
+                    Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
+                }
+
+                if (ImGui::MenuItem("Test Scene"))
+                {
+                    Havtorn::GEngine::GetWorld()->ChangeScene<Havtorn::CGameScene>("Assets/Scenes/TestScene.hvs");
+                    Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
+                }
+
+                //ImGui::MenuItem("fish_hat.c");
+                //ImGui::MenuItem("fish_hat.inl");
+                //ImGui::MenuItem("fish_hat.h");
+                //if (ImGui::BeginMenu("More.."))
+                //{
+                //    ImGui::MenuItem("Hello");
+                //    ImGui::MenuItem("Sailor");
+                //    //if (ImGui::BeginMenu("Recurse.."))
+                //    //{
+                //    //}
+                //    ImGui::EndMenu();
+                //}
+                ImGui::EndMenu();
+            }
 
             if (ImGui::MenuItem("Clear")) 
             {
@@ -58,63 +96,34 @@ namespace ImGui
                 Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
             }
 
-            if (ImGui::BeginMenu("Open Recent"))
-            {
-                if (ImGui::MenuItem("Assets/Scenes/TestScene.hvs"))
-                {
-                    Havtorn::GEngine::GetWorld()->ChangeScene<Havtorn::CGameScene>("Assets/Scenes/TestScene.hvs");
-                    Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
-                }
-
-                if (ImGui::MenuItem("Open Demo Scene"))
-                {
-                    Havtorn::GEngine::GetWorld()->ChangeScene<Havtorn::CGameScene>("Assets/Scenes/DemoScene.hvs");
-                    Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
-                }
-
-                //ImGui::MenuItem("fish_hat.c");
-                //ImGui::MenuItem("fish_hat.inl");
-                //ImGui::MenuItem("fish_hat.h");
-                //if (ImGui::BeginMenu("More.."))
-                //{
-                //    ImGui::MenuItem("Hello");
-                //    ImGui::MenuItem("Sailor");
-                //    //if (ImGui::BeginMenu("Recurse.."))
-                //    //{
-                //    //}
-                //    ImGui::EndMenu();
-                //}
-                ImGui::EndMenu();
-            }
-
             if (ImGui::MenuItem("Save Demo Scene"))
             {
                 Havtorn::GEngine::GetWorld()->SaveActiveScene("Assets/Scenes/DemoScene.hvs");
             }
 
-            if (ImGui::MenuItem("Save", "Ctrl+S")) 
+            if (ImGui::MenuItem("Save Test Scene", "Ctrl+S")) 
             {
                 Havtorn::GEngine::GetWorld()->SaveActiveScene("Assets/Scenes/TestScene.hvs");
             }
 
-            if (ImGui::MenuItem("Save As..")) {}
+            //if (ImGui::MenuItem("Save As..")) {}
 
             ImGui::Separator();
-            if (ImGui::BeginMenu("Options"))
-            {
-                static bool enabled = true;
-                ImGui::MenuItem("Enabled", "", &enabled);
-                ImGui::BeginChild("child", ImVec2(0, 60));
-                for (int i = 0; i < 10; i++)
-                    ImGui::Text("Scrolling Text %d", i);
-                ImGui::EndChild();
-                static float f = 0.5f;
-                static int n = 0;
-                ImGui::SliderFloat("Value", &f, 0.0f, 1.0f);
-                ImGui::InputFloat("Input", &f, 0.1f);
-                ImGui::Combo("Combo", &n, "Yes\0No\0Maybe\0\0");
-                ImGui::EndMenu();
-            }
+            //if (ImGui::BeginMenu("Options"))
+            //{
+            //    static bool enabled = true;
+            //    ImGui::MenuItem("Enabled", "", &enabled);
+            //    ImGui::BeginChild("child", ImVec2(0, 60));
+            //    for (int i = 0; i < 10; i++)
+            //        ImGui::Text("Scrolling Text %d", i);
+            //    ImGui::EndChild();
+            //    static float f = 0.5f;
+            //    static int n = 0;
+            //    ImGui::SliderFloat("Value", &f, 0.0f, 1.0f);
+            //    ImGui::InputFloat("Input", &f, 0.1f);
+            //    ImGui::Combo("Combo", &n, "Yes\0No\0Maybe\0\0");
+            //    ImGui::EndMenu();
+            //}
 
             if (ImGui::BeginMenu("Colors"))
             {
@@ -134,13 +143,13 @@ namespace ImGui
             // Here we demonstrate appending again to the "Options" menu (which we already created above)
             // Of course in this demo it is a little bit silly that this function calls BeginMenu("Options") twice.
             // In a real code-base using it would make senses to use this feature from very different code locations.
-            if (ImGui::BeginMenu("Options")) // <-- Append!
-            {
-                //IMGUI_DEMO_MARKER("Examples/Menu/Append to an existing menu");
-                static bool b = true;
-                ImGui::Checkbox("SomeOption", &b);
-                ImGui::EndMenu();
-            }
+            //if (ImGui::BeginMenu("Options")) // <-- Append!
+            //{
+            //    //IMGUI_DEMO_MARKER("Examples/Menu/Append to an existing menu");
+            //    static bool b = true;
+            //    ImGui::Checkbox("SomeOption", &b);
+            //    ImGui::EndMenu();
+            //}
 
             if (ImGui::BeginMenu("Disabled", false)) // Disabled
             {
