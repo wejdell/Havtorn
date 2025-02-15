@@ -8,6 +8,7 @@
 #include "../Game/GameProcess.h"
 #include "../Editor/EditorProcess.h"
 #include "../Engine/Application/ImGuiProcess.h"
+#include "../GUI/GUIProcess.h"
 
 #ifdef HV_PLATFORM_WINDOWS
 
@@ -51,18 +52,31 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	OpenConsole();
 #endif
 
+	//CImGuiProcess* imGuiProcess = new CImGuiProcess();
+	
 	CEngineProcess* engineProcess = new CEngineProcess(100, 100, 1280, 720);
-	CImGuiProcess* imGuiProcess = new CImGuiProcess();
 	CGameProcess* gameProcess = new CGameProcess();
 	CEditorProcess* editorProcess = new CEditorProcess();
+	GUIProcess* guiProcess = new GUIProcess();
+	
 
 	auto application = new CApplication();
-		application->AddProcess(engineProcess);
-		application->AddProcess(imGuiProcess);
-		application->AddProcess(gameProcess);
-		application->AddProcess(editorProcess);
+	application->AddProcess(engineProcess);
+	application->AddProcess(guiProcess);
+	//application->AddProcess(imGuiProcess);
+	application->AddProcess(gameProcess);
+	application->AddProcess(editorProcess);
+
+	//application->Depend(guiProcess, engineProcess);
+
+	application->Setup();
+
+	engineProcess->HavtornWindowProc(guiProcess);
+	auto backend = engineProcess->GetRenderBackend();
+	guiProcess->InitImGui(backend.hwnd, backend.device, backend.context);
 
 	application->Run();
+
 	delete application;
 
 	SetForegroundWindow(GetConsoleWindow());

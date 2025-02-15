@@ -23,9 +23,10 @@ namespace Havtorn
 		Processes.push_back(process);
 	}
 
+
 	void CApplication::Run()
 	{
-		Setup();
+		//Setup();
 
 		const int processes = static_cast<int>(Processes.size() - 1);
 

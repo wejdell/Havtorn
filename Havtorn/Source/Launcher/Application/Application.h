@@ -18,10 +18,11 @@ namespace Havtorn
 		// Processes are initialized in order of addition, run and destructed in reverse-order.
 		void AddProcess(IProcess* process);
 
+
 		void Run();
+		void Setup();
 
 	private:
-		void Setup();
 
 	private:
 		std::vector<IProcess*> Processes;
