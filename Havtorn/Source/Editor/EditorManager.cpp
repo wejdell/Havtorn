@@ -139,11 +139,11 @@ namespace Havtorn
 			}
 
 			if (ImGui::Button("Import skeletal mesh"))
-				ResourceManager->ConvertToHVA("FBX/Tests/CH_Enemy_SK.fbx", "Assets/Tests/", Havtorn::EAssetType::SkeletalMesh);
+				ResourceManager->ConvertToHVA("ArtSource/Tests/TestMesh.fbx", "Assets/Tests/", Havtorn::EAssetType::SkeletalMesh);
 			if (ImGui::Button("Import anim 1"))
-				ResourceManager->ConvertToHVA("FBX/Tests/CH_Enemy_Walk.fbx", "Assets/Tests/", Havtorn::EAssetType::Animation);
-			if (ImGui::Button("Import anim 2"))
-				ResourceManager->ConvertToHVA("FBX/Tests/SkinningTest.fbx", "Assets/Tests/", Havtorn::EAssetType::Animation);
+				ResourceManager->ConvertToHVA("ArtSource/Tests/TestWalk.fbx", "Assets/Tests/", Havtorn::EAssetType::Animation);
+			//if (ImGui::Button("Import anim 2"))
+				//ResourceManager->ConvertToHVA("FBX/Tests/SkinningTest.fbx", "Assets/Tests/", Havtorn::EAssetType::Animation);
 
 			ImGui::End();
 		}
