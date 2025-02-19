@@ -7,12 +7,12 @@
 struct ID3D11Device;
 struct ID3D11DeviceContext;
 
-class GUI
+class EXPORT GUI
 {
 public:
-	EXPORT GUI();
-	EXPORT ~GUI();
-	EXPORT void InitImGui(HWND hwnd, ID3D11Device* device, ID3D11DeviceContext* context);
+	/*EXPORT*/ GUI();
+	/*EXPORT*/ ~GUI();
+	/*EXPORT*/ void InitImGui(HWND hwnd, ID3D11Device* device, ID3D11DeviceContext* context);
 
 	void BeginFrame();
 	void EndFrame();
@@ -40,8 +40,8 @@ public:
 	static bool BeginMenu(const char* label, bool enabled);
 	static void EndMenu();
 
-	//static bool BeginPopup()
-	//static void EndPopup()
+	static bool BeginPopup(const char* str_id);
+	static void EndPopup();
 
 	//static bool BeginPopupModal()
 	//static void CloseCurrentPopup();
@@ -59,8 +59,7 @@ public:
 	static bool CheckBox(const char* label, bool* v);
 
 private:
-	class EXPORT ImGuiImpl;
-	std::unique_ptr<ImGuiImpl> Impl;
+	class ImGuiImpl;
+	ImGuiImpl* Impl;
 	static GUI* Instance;
 };
-
