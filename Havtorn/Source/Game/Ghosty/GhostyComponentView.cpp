@@ -35,7 +35,7 @@ namespace Havtorn
 
 		F32 ghostyInput[3] = { component->State.Input.X, component->State.Input.Y, component->State.Input.Z };
 		GUI::DragFloat3("GhostyState", ghostyInput, 0.0f, 1.0f);
-		GUI::CheckBox("Is In Walking Animation", component->State.IsInWalkingAnimationState);
+		GUI::CheckBox("Is In Walking Animation", &component->State.IsInWalkingAnimationState);
 		
 		//GUI::GUIProcess::DragFloat3("GhostyState", ghostyInput, 0.0f, 1.0f);
 		//GUI::GUIProcess::CheckBox("IsInWalkingAnimation", &component->State.IsInWalkingAnimationState);
