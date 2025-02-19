@@ -108,9 +108,19 @@ public: //ImGui Functions
 		ImGui::EndMenu();
 	}
 
+	bool BeginPopup(const char* str_id, ImGuiSliderFlags flags = 0)
+	{
+		ImGui::BeginPopup(str_id, flags);
+	}
+
+	void EndPopup()
+	{
+		ImGui::EndPopup();
+	}
+
 	bool BeginMainMenuBar()
 	{
-		ImGui::BeginMainMenuBar();
+		return ImGui::BeginMainMenuBar();
 	}
 
 	void EndMainMenuBar()
@@ -124,7 +134,7 @@ public: //ImGui Functions
 
 
 GUI::GUI()
-	: Impl(std::make_unique<ImGuiImpl>())
+	: Impl(new ImGuiImpl())
 {
 	Instance = this;
 }
@@ -235,6 +245,16 @@ bool GUI::BeginMenu(const char* label, bool enabled)
 void GUI::EndMenu()
 {
 	Instance->Impl->EndMenu();
+}
+
+bool GUI::BeginPopup(const char* str_id)
+{
+	return Instance->Impl->BeginPopup(str_id);
+}
+
+void GUI::EndPopup()
+{
+	Instance->Impl->EndPopup();
 }
 
 bool GUI::CheckBox(const char* label, bool* value)
