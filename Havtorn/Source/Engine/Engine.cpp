@@ -174,14 +174,15 @@ namespace Havtorn
 		return Instance->Framework;
 	}
 
-	CEngineProcess* GEngine::GetEngineProcess()
+	IProcess* GEngine::GetEngineProcess()
 	{
 		return Instance->engineProcess;
 	}
 
 	void GEngine::SetEngineProcess(IProcess* aProcess)
 	{
-		Instance->engineProcess = dynamic_cast<CEngineProcess*>(aProcess);
+		Instance->engineProcess = aProcess;
+			//= dynamic_cast<CEngineProcess*>(aProcess);
 	}
 
 	void GEngine::InitWindowsImaging()

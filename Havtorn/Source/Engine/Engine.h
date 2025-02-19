@@ -50,7 +50,7 @@ namespace Havtorn
 		static HAVTORN_API CWorld* GetWorld();
 		static HAVTORN_API CInputMapper* GetInput();
 		static HAVTORN_API CGraphicsFramework* GetGraphicsFramework();
-		static HAVTORN_API CEngineProcess* GetEngineProcess();
+		static HAVTORN_API IProcess* GetEngineProcess();
 
 		static HAVTORN_API void SetEngineProcess(IProcess* aProcess);
 		
@@ -75,7 +75,7 @@ namespace Havtorn
 		CInputMapper* InputMapper = nullptr;
 		CWorld* World = nullptr;
 
-		CEngineProcess* engineProcess = nullptr;
+		IProcess* engineProcess = nullptr;
 
 		// TODO.NR: Figure out how to set up dependencies for Editor systems on Engine ECS Systems
 		CSequencerSystem* SequencerSystem = nullptr;
