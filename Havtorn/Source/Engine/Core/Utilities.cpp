@@ -3,6 +3,7 @@
 #include "Utilities.h"
 
 #include <filesystem>
+#include <imgui/imgui.h>
 
 namespace ImGui
 {
@@ -16,9 +17,9 @@ namespace ImGui
 
 	const std::string UUtils::SelectTextureModalName = "Select Texture Asset";
 
-	const ImVec2 UUtils::TexturePreviewSize = { UUtils::TexturePreviewSizeX, UUtils::TexturePreviewSizeY };
-	const ImVec2 UUtils::DummySize = { UUtils::DummySizeX, UUtils::DummySizeY };
-	const ImVec2 UUtils::ModalWindowPivot = { 0.5f, 0.5f };
+	//const ImVec2 UUtils::TexturePreviewSize = { UUtils::TexturePreviewSizeX, UUtils::TexturePreviewSizeY };
+	//const ImVec2 UUtils::DummySize = { UUtils::DummySizeX, UUtils::DummySizeY };
+	//const ImVec2 UUtils::ModalWindowPivot = { 0.5f, 0.5f };
 
 	bool UUtils::TryOpenComponentView(const std::string& componentViewName)
 	{
