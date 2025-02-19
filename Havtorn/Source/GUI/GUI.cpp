@@ -110,7 +110,7 @@ public: //ImGui Functions
 
 	bool BeginPopup(const char* str_id, ImGuiSliderFlags flags = 0)
 	{
-		ImGui::BeginPopup(str_id, flags);
+		return ImGui::BeginPopup(str_id, flags);
 	}
 
 	void EndPopup()
