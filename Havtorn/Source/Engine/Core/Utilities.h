@@ -3,7 +3,7 @@
 #pragma once
 
 //#include "imgui.h"
-#include <imgui/imgui.h>
+//#include <imgui/imgui.h>
 #include <string>
 
 namespace ImGui
@@ -20,9 +20,9 @@ namespace ImGui
 
 		HAVTORN_API static const std::string SelectTextureModalName;
 
-		HAVTORN_API static const ImVec2 TexturePreviewSize;
-		HAVTORN_API static const ImVec2 DummySize;
-		HAVTORN_API static const ImVec2 ModalWindowPivot;
+		//HAVTORN_API static const ImVec2 TexturePreviewSize;
+		//HAVTORN_API static const ImVec2 DummySize;
+		//HAVTORN_API static const ImVec2 ModalWindowPivot;
 
 		HAVTORN_API static bool TryOpenComponentView(const std::string& componentViewName);
 	};
