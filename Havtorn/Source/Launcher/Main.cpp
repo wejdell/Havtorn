@@ -7,7 +7,7 @@
 #include "../Engine/Application/EngineProcess.h"
 #include "../Game/GameProcess.h"
 #include "../Editor/EditorProcess.h"
-#include "../Engine/Application/ImGuiProcess.h"
+//#include "../Engine/Application/ImGuiProcess.h"
 #include "../GUI/GUIProcess.h"
 
 #ifdef HV_PLATFORM_WINDOWS
@@ -56,7 +56,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	
 	CEngineProcess* engineProcess = new CEngineProcess(100, 100, 1280, 720);
 	CGameProcess* gameProcess = new CGameProcess();
-	CEditorProcess* editorProcess = new CEditorProcess();
+	//CEditorProcess* editorProcess = new CEditorProcess();
 	GUIProcess* guiProcess = new GUIProcess();
 	
 
@@ -65,13 +65,12 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	application->AddProcess(guiProcess);
 	//application->AddProcess(imGuiProcess);
 	application->AddProcess(gameProcess);
-	application->AddProcess(editorProcess);
+	//application->AddProcess(editorProcess);
 
-	//application->Depend(guiProcess, engineProcess);
-
-	application->Setup();
+	application->Setup(); //foreach -> process->Init();
 
 	engineProcess->HavtornWindowProc(guiProcess);
+
 	auto backend = engineProcess->GetRenderBackend();
 	guiProcess->InitImGui(backend.hwnd, backend.device, backend.context);
 
