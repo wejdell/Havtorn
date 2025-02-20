@@ -142,6 +142,10 @@ namespace Havtorn
 			hvaPath = asset.MaterialName + ".hva";
 		}
 		break;
+		case EAssetType::Material:
+			// NW: Call CreateMaterial?
+			break;
+		break;
 		case EAssetType::AudioOneShot:
 			break;
 		case EAssetType::AudioCollection:

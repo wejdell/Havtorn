@@ -188,7 +188,7 @@ namespace ImGui
 		else if (Havtorn::SDecalComponent* decalComponent = dynamic_cast<Havtorn::SDecalComponent*>(result.ComponentViewed))
 		{
 			for (Havtorn::U16 textureRef : decalComponent->TextureReferences)
-				assetNames.push_back(Havtorn::UGeneralUtils::ExtractFileNameFromPath(Havtorn::GEngine::GetTextureBank()->GetTexturePath(static_cast<Havtorn::U32>(textureRef))));
+				assetNames.push_back(Havtorn::UGeneralUtils::ExtractFileBaseNameFromPath(Havtorn::GEngine::GetTextureBank()->GetTexturePath(static_cast<Havtorn::U32>(textureRef))));
 
 			modalNameToOpen = SelectTextureAssetModalName;
 			assetLabels.push_back("Albedo");
@@ -197,12 +197,12 @@ namespace ImGui
 		}
 		else if (Havtorn::SEnvironmentLightComponent* environmentLightComponent = dynamic_cast<Havtorn::SEnvironmentLightComponent*>(result.ComponentViewed))
 		{
-			assetNames.push_back(Havtorn::UGeneralUtils::ExtractFileNameFromPath(Havtorn::GEngine::GetTextureBank()->GetTexturePath(static_cast<Havtorn::U32>(environmentLightComponent->AmbientCubemapReference))));
+			assetNames.push_back(Havtorn::UGeneralUtils::ExtractFileBaseNameFromPath(Havtorn::GEngine::GetTextureBank()->GetTexturePath(static_cast<Havtorn::U32>(environmentLightComponent->AmbientCubemapReference))));
 			modalNameToOpen = SelectTextureAssetModalName;
 		}
 		else if (Havtorn::SSpriteComponent* spriteComponent = dynamic_cast<Havtorn::SSpriteComponent*>(result.ComponentViewed))
 		{
-			assetNames.push_back(Havtorn::UGeneralUtils::ExtractFileNameFromPath(Havtorn::GEngine::GetTextureBank()->GetTexturePath(static_cast<Havtorn::U32>(spriteComponent->TextureIndex))));
+			assetNames.push_back(Havtorn::UGeneralUtils::ExtractFileBaseNameFromPath(Havtorn::GEngine::GetTextureBank()->GetTexturePath(static_cast<Havtorn::U32>(spriteComponent->TextureIndex))));
 			modalNameToOpen = SelectTextureAssetModalName;
 		}
 

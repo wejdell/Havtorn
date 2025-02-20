@@ -7,12 +7,28 @@ namespace Havtorn
 {
 	namespace UGeneralUtils
 	{
+		static std::string ExtractFileExtensionFromPath(const std::string& filePath)
+		{
+			U64 startIndex = filePath.find_last_of(".") + 1;
+			std::string extension = filePath.substr(startIndex, filePath.length() - startIndex);
+			std::for_each(extension.begin(), extension.end(), [](char& c) { c = static_cast<char>(std::tolower(c)); });
+			return extension;
+		}
+
 		static std::string ExtractFileNameFromPath(const std::string& filePath)
 		{
 			U64 forwardIndex = filePath.find_last_of("/") + 1;
 			U64 backwardIndex = filePath.find_last_of("\\") + 1;
 			U64 startIndex = UMath::Max(forwardIndex, backwardIndex);
-			return filePath.substr(startIndex, filePath.length() - startIndex - 4);
+			return filePath.substr(startIndex, filePath.length() - startIndex);
+		}
+
+		static std::string ExtractFileBaseNameFromPath(const std::string& filePath)
+		{
+			U64 forwardIndex = filePath.find_last_of("/") + 1;
+			U64 backwardIndex = filePath.find_last_of("\\") + 1;
+			U64 startIndex = UMath::Max(forwardIndex, backwardIndex);
+			return filePath.substr(startIndex, filePath.length() - startIndex - ExtractFileExtensionFromPath(filePath).length());
 		}
 
 		// Returns a string with the bytes converted to expected unit with symbol: B, KB or MB. I.e: 1024 will return "1 KB"
