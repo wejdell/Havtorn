@@ -25,4 +25,11 @@ namespace ImGui
 	{
 		return ImGui::CollapsingHeader(componentViewName.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
 	}
+
+	// NR: Just as with viewing components, components know how to add themselves and how to remove them. 
+	// Figure out an abstraction that holds all of this. It should be easy to extend components with specific knowledge of them this way.
+	// Just a lot of boilerplate. Try to introduce this in base class? Should probably include sequencer node behavior as well
+	//TryAddComponent()
+
+	//TryRemoveComponent()
 }

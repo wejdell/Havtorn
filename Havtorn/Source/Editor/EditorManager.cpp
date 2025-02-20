@@ -51,6 +51,8 @@ namespace Havtorn
 
 		windowHandler->EnableDragDrop();
 
+		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+
 		SetEditorTheme(EEditorColorTheme::HavtornDark, EEditorStyleTheme::Havtorn);
 
 		// TODO.NR: Figure out why we can't use unique ptrs with these namespaced imgui classes
@@ -61,7 +63,9 @@ namespace Havtorn
 		MenuElements.emplace_back(new ImGui::CHelpMenu("Help", this));
 
 		Windows.emplace_back(new ImGui::CViewportWindow("Viewport", this));
+		Windows.emplace_back(new ImGui::CDockSpaceWindow("Dock Space", this));
 		Windows.emplace_back(new ImGui::CAssetBrowserWindow("Asset Browser", this));
+		Windows.emplace_back(new ImGui::COutputLogWindow("Output Log", this));
 		Windows.emplace_back(new ImGui::CHierarchyWindow("Hierarchy", this));
 		Windows.emplace_back(new ImGui::CInspectorWindow("Inspector", this));
 		Windows.emplace_back(new ImGui::CSpriteAnimatorGraphNodeWindow("Sprite Animator", this));
@@ -135,6 +139,13 @@ namespace Havtorn
 				ImGui::Text(GetSystemMemory().c_str());
 				ImGui::Text(GetDrawCalls().c_str());
 			}
+
+			if (ImGui::Button("Import skeletal mesh"))
+				ResourceManager->ConvertToHVA("ArtSource/Tests/TestMesh.fbx", "Assets/Tests/", Havtorn::EAssetType::SkeletalMesh);
+			if (ImGui::Button("Import anim 1"))
+				ResourceManager->ConvertToHVA("ArtSource/Tests/TestWalk.fbx", "Assets/Tests/", Havtorn::EAssetType::Animation);
+			//if (ImGui::Button("Import anim 2"))
+				//ResourceManager->ConvertToHVA("FBX/Tests/SkinningTest.fbx", "Assets/Tests/", Havtorn::EAssetType::Animation);
 
 			ImGui::End();
 		}
@@ -459,7 +470,7 @@ namespace Havtorn
 			else
 				continue;
 
-			ResourceManager->ConvertToHVA(fileName, fileName.substr(0, fileName.find_last_of('/')), assetType);
+			ResourceManager->ConvertToHVA(fileName, fileName.substr(0, fileName.find_last_of('\\')), assetType);
 		}
 	}
 
@@ -562,6 +573,7 @@ namespace Havtorn
 		if (CurrentColorTheme != EEditorColorTheme::PauseMode)
 			CachedColorTheme = CurrentColorTheme;
 
+		SetSelectedEntity(SEntity::Null);
 		SetEditorTheme(EEditorColorTheme::PlayMode);
 		World->BlockSystem<CPickingSystem>(this);
 	}
@@ -591,6 +603,16 @@ namespace Havtorn
 	bool CEditorManager::GetIsHoveringGizmo() const
 	{
 		return ImGuizmo::IsOver();
+	}
+
+	bool CEditorManager::GetIsModalOpen() const
+	{
+		return IsModalOpen;
+	}
+
+	void CEditorManager::SetIsModalOpen(const bool isModalOpen)
+	{
+		IsModalOpen = isModalOpen;
 	}
 
 	std::string CEditorManager::GetFrameRate() const

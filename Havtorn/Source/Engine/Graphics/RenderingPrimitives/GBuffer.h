@@ -4,7 +4,7 @@
 
 namespace Havtorn
 {
-	class CFullscreenTexture;
+	class CRenderTexture;
 
 	class CGBuffer
 	{
@@ -28,10 +28,11 @@ namespace Havtorn
 
 		void ClearTextures(SVector4 clearColor = (0.0f, 0.0f, 0.0f, 0.0f));
 		void ReleaseRenderTargets();
-		void SetAsActiveTarget(CFullscreenTexture* depth = nullptr, bool isUsingEditor = false);
-		void SetAsResourceOnSlot(EGBufferTextures resource, U16 slot);
+		void SetAsActiveTarget(CRenderTexture* depth = nullptr, bool isUsingEditor = false);
+		void SetAsPSResourceOnSlot(EGBufferTextures resource, U16 slot);
 		void SetAllAsResources(U16 startSlot);
 
+		ID3D11RenderTargetView* GetEditorDataRenderTarget() const;
 		ID3D11Texture2D* GetEditorDataTexture() const;
 
 		void ReleaseResources();

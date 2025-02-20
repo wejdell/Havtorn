@@ -12,24 +12,29 @@ class CFullscreenTextureFactory;
 
 namespace Havtorn
 {
-	class CFullscreenTexture
+	class CRenderTexture
 	{
 	public:
-		CFullscreenTexture() = default;
-		~CFullscreenTexture() = default;
+		CRenderTexture() = default;
+		~CRenderTexture() = default;
 		void ClearTexture(SVector4 clearColor = { 0.0f, 0.0f, 0.0f, 0.0f });
 		void ClearDepth(F32 clearDepth = 1.0f, U32 clearStencil = 0);
-		void SetAsActiveTarget(CFullscreenTexture* depth = nullptr);
+		void SetAsActiveTarget(CRenderTexture* depth = nullptr);
 		void SetAsDepthTarget();
-		void SetAsDepthTarget(CFullscreenTexture* intermediateRenderTarget);
-		void SetAsResourceOnSlot(U16 slot);
+		void SetAsDepthTarget(CRenderTexture* intermediateRenderTarget);
+		void SetAsPSResourceOnSlot(U16 slot);
+		void SetAsVSResourceOnSlot(U16 slot);
 		void* MapToCPUFromGPUTexture(ID3D11Texture2D* gpuTexture);
+		void CopyFromTexture(ID3D11Texture2D* texture);
+		void WriteToCPUTexture(void* data, U64 size);
 		void UnmapFromCPU();
 		void ReleaseTexture();
 		void ReleaseDepth();
 		
 		HAVTORN_API ID3D11Texture2D* const GetTexture() const;
 		HAVTORN_API ID3D11ShaderResourceView* const GetShaderResourceView() const;
+		HAVTORN_API ID3D11RenderTargetView* const GetRenderTargetView() const;
+		HAVTORN_API ID3D11DepthStencilView* const GetDepthStencilView() const;
 
 		friend CFullscreenTextureFactory;
 		friend class CGBuffer;

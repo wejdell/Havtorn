@@ -108,9 +108,12 @@ namespace Havtorn
         colors[ImGuiCol_ResizeGripActive] = colorProfile.ResizeGripActive;
         colors[ImGuiCol_Tab] = colorProfile.Tab;
         colors[ImGuiCol_TabHovered] = colorProfile.TabHovered;
-        colors[ImGuiCol_TabActive] = colorProfile.TabActive;
-        colors[ImGuiCol_TabUnfocused] = colorProfile.TabUnfocused;
-        colors[ImGuiCol_TabUnfocusedActive] = colorProfile.TabUnfocusedActive;
+        colors[ImGuiCol_TabSelected] = colorProfile.TabSelected;
+        colors[ImGuiCol_TabSelectedOverline] = colorProfile.TabSelected; //
+        colors[ImGuiCol_TabDimmed] = colorProfile.TabDimmed;
+        colors[ImGuiCol_TabDimmedSelected] = colorProfile.TabDimmedSelected;
+        colors[ImGuiCol_TabDimmedSelectedOverline] = colorProfile.TabDimmedSelected; //
+        colors[ImGuiCol_DockingPreview] = colorProfile.TitleBgActive; //
         colors[ImGuiCol_PlotLines] = colorProfile.PlotLines;
         colors[ImGuiCol_PlotLinesHovered] = colorProfile.PlotLinesHovered;
         colors[ImGuiCol_PlotHistogram] = colorProfile.PlotHistogram;

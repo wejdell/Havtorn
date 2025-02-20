@@ -62,7 +62,6 @@ namespace ImGui
 		}
 
 		Scene = Manager->GetCurrentScene();
-
 		if (!Scene)
 		{
 			ImGui::End();
@@ -83,14 +82,19 @@ namespace ImGui
 		{
 			ImGui::HavtornInputText("##MetaDataCompName", &metaDataComp->Name);
 			ImGui::SameLine();
-			ImGui::TextDisabled("GUID %i", metaDataComp->Owner.GUID);
+			ImGui::TextDisabled("GUID %u", metaDataComp->Owner.GUID);
+			if (ImGui::IsItemHovered())
+				ImGui::SetTooltip("GUID %u", metaDataComp->Owner.GUID);
 		}
 		ImGui::Separator();
 
-		for (Havtorn::CScene::SViewFunctionPointer viewFunction : Scene->GetViews(SelectedEntity))
+		for (Havtorn::SComponentEditorContext* context : Scene->GetComponentEditorContexts(SelectedEntity))
 		{
-			RemoveComponentButton();
-			Havtorn::SComponentViewResult result = viewFunction(SelectedEntity, Scene);
+			if (context->RemoveComponent(SelectedEntity, Scene))
+				continue;
+
+			ImGui::SameLine();
+			Havtorn::SComponentViewResult result = context->View(SelectedEntity, Scene);
 
 			// TODO.NR: Could make this a enum-function map, but would be good to set up clear rules for how this should work.
 			switch (result.Label)
@@ -112,10 +116,9 @@ namespace ImGui
 			ImGui::Dummy({ ImGui::UUtils::DummySizeX, ImGui::UUtils::DummySizeY });
 		}
 
+		ImGui::Separator();
 		if (ImGui::Button("Add Component", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
-		{
 			ImGui::OpenPopup("Add Component Modal");
-		}
 
 		OpenAddComponentModal();
 
@@ -192,7 +195,7 @@ namespace ImGui
 		else if (Havtorn::SDecalComponent* decalComponent = dynamic_cast<Havtorn::SDecalComponent*>(result.ComponentViewed))
 		{
 			for (Havtorn::U16 textureRef : decalComponent->TextureReferences)
-				assetNames.push_back(Havtorn::UGeneralUtils::ExtractFileNameFromPath(Havtorn::GEngine::GetTextureBank()->GetTexturePath(static_cast<Havtorn::U32>(textureRef))));
+				assetNames.push_back(Havtorn::UGeneralUtils::ExtractFileBaseNameFromPath(Havtorn::GEngine::GetTextureBank()->GetTexturePath(static_cast<Havtorn::U32>(textureRef))));
 
 			modalNameToOpen = SelectTextureAssetModalName;
 			assetLabels.push_back("Albedo");
@@ -201,12 +204,12 @@ namespace ImGui
 		}
 		else if (Havtorn::SEnvironmentLightComponent* environmentLightComponent = dynamic_cast<Havtorn::SEnvironmentLightComponent*>(result.ComponentViewed))
 		{
-			assetNames.push_back(Havtorn::UGeneralUtils::ExtractFileNameFromPath(Havtorn::GEngine::GetTextureBank()->GetTexturePath(static_cast<Havtorn::U32>(environmentLightComponent->AmbientCubemapReference))));
+			assetNames.push_back(Havtorn::UGeneralUtils::ExtractFileBaseNameFromPath(Havtorn::GEngine::GetTextureBank()->GetTexturePath(static_cast<Havtorn::U32>(environmentLightComponent->AmbientCubemapReference))));
 			modalNameToOpen = SelectTextureAssetModalName;
 		}
 		else if (Havtorn::SSpriteComponent* spriteComponent = dynamic_cast<Havtorn::SSpriteComponent*>(result.ComponentViewed))
 		{
-			assetNames.push_back(Havtorn::UGeneralUtils::ExtractFileNameFromPath(Havtorn::GEngine::GetTextureBank()->GetTexturePath(static_cast<Havtorn::U32>(spriteComponent->TextureIndex))));
+			assetNames.push_back(Havtorn::UGeneralUtils::ExtractFileBaseNameFromPath(Havtorn::GEngine::GetTextureBank()->GetTexturePath(static_cast<Havtorn::U32>(spriteComponent->TextureIndex))));
 			modalNameToOpen = SelectTextureAssetModalName;
 		}
 
@@ -218,6 +221,9 @@ namespace ImGui
 		for (Havtorn::U8 index = 0; index < static_cast<Havtorn::U8>(assetNames.size()); index++)
 		{
 			std::string assetName = assetNames[index];
+
+			if (assetName.empty())
+				assetName = "M_Checkboard_128x128";
 
 			Havtorn::SEditorAssetRepresentation* assetRep = Manager->GetAssetRepFromName(assetName).get();
 
@@ -269,6 +275,8 @@ namespace ImGui
 			return;
 		}
 
+		Manager->SetIsModalOpen(true);
+
 		/* TODO.NR: See if one can make a general folder structure exploration function,
 		* return true and an assetRep if a directory is double clicked. Maybe multiple 
 		* versions with slight variations. Want to be able to go to any directory. 
@@ -317,6 +325,7 @@ namespace ImGui
 					}
 				}
 
+				Manager->SetIsModalOpen(false);
 				ImGui::CloseCurrentPopup();
 			}
 
@@ -326,8 +335,11 @@ namespace ImGui
 
 		ImGui::EndTable();
 
-		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) 
+		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+		{
+			Manager->SetIsModalOpen(false);
 			ImGui::CloseCurrentPopup(); 
+		}
 
 		ImGui::EndPopup();
 	}
@@ -348,8 +360,11 @@ namespace ImGui
 		if (Havtorn::SSpriteComponent* spriteComponent = dynamic_cast<Havtorn::SSpriteComponent*>(result.ComponentViewed))
 			HandleTextureAssetModal(searchPath, spriteComponent->TextureIndex);
 
-		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) 
+		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+		{
+			Manager->SetIsModalOpen(false);
 			ImGui::CloseCurrentPopup();
+		}
 
 		ImGui::EndPopup();
 	}
@@ -369,6 +384,8 @@ namespace ImGui
 		Havtorn::I32 columnCount = static_cast<Havtorn::I32>(panelWidth / cellWidth);
 		Havtorn::U32 id = 0;
 
+		Manager->SetIsModalOpen(true);
+
 		if (ImGui::BeginTable("NewMaterialAssetTable", columnCount))
 		{
 			for (auto& entry : std::filesystem::recursive_directory_iterator("Assets/Materials"))
@@ -383,9 +400,10 @@ namespace ImGui
 
 				if (ImGui::ImageButton(assetRep->Name.c_str(), (ImTextureID)(intptr_t)assetRep->TextureRef, {ImGui::UUtils::TexturePreviewSizeX * 0.75f, ImGui::UUtils::TexturePreviewSizeY * 0.75f}))
 				{
-
 					Manager->GetRenderManager()->TryReplaceMaterialOnComponent(assetRep->DirectoryEntry.path().string(), AssetPickedIndex, materialComponent);
 					AssetPickedIndex = 0;
+
+					Manager->SetIsModalOpen(false);
 					ImGui::CloseCurrentPopup();
 				}
 
@@ -396,7 +414,11 @@ namespace ImGui
 			ImGui::EndTable();
 		}
 
-		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) { ImGui::CloseCurrentPopup(); }
+		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) 
+		{
+			Manager->SetIsModalOpen(false);
+			ImGui::CloseCurrentPopup(); 
+		}
 
 		ImGui::EndPopup();	
 	}
@@ -416,6 +438,8 @@ namespace ImGui
 		Havtorn::I32 columnCount = static_cast<Havtorn::I32>(ImGui::UUtils::PanelWidth / cellWidth);
 		Havtorn::U32 id = 0;
 
+		Manager->SetIsModalOpen(true);
+
 		if (ImGui::BeginTable("NewTextureAssetTable", columnCount))
 		{
 			for (auto& entry : std::filesystem::recursive_directory_iterator(pathToSearch.c_str()))
@@ -431,6 +455,8 @@ namespace ImGui
 				if (ImGui::ImageButton(assetRep->Name.c_str(), (ImTextureID)(intptr_t)assetRep->TextureRef, {ImGui::UUtils::TexturePreviewSizeX * 0.75f, ImGui::UUtils::TexturePreviewSizeY * 0.75f}))
 				{
 					textureReference = static_cast<Havtorn::U16>(Havtorn::GEngine::GetTextureBank()->GetTextureIndex(entry.path().string()));
+					
+					Manager->SetIsModalOpen(false);
 					ImGui::CloseCurrentPopup();
 				}
 
@@ -447,55 +473,30 @@ namespace ImGui
 		if (!ImGui::BeginPopupModal("Add Component Modal", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 			return;
 
-		// TODO.NR: Support adding and removing components through the editor. Unsolved problem.
-		//Havtorn::U32 id = 0;
+		Manager->SetIsModalOpen(true);
 
-		//if (ImGui::BeginTable("NewComponentTypeTable", 1))
-		//{
-		//	for (U64 i = 0; i < STATIC_U64(EComponentType::Count) - 2; i++)
-		//	{
-		//		ImGui::TableNextColumn();
-		//		ImGui::PushID(id++);
+		if (ImGui::BeginTable("NewComponentTypeTable", 1))
+		{
+			for (const Havtorn::SComponentEditorContext* context : Scene->GetComponentEditorContexts())
+			{
+				ImGui::TableNextColumn();
 
-		//		EComponentType componentType = static_cast<EComponentType>(i);
-		//		if (ImGui::Button(GetComponentTypeString(componentType).c_str()))
-		//		{
-		//			Havtorn::CScene* scene = Manager->GetCurrentScene();
-		//			Havtorn::SEntity* selection = Manager->GetSelectedEntity();
+				if (context->AddComponent(SelectedEntity, Scene))
+				{
+					Manager->SetIsModalOpen(false);
+					ImGui::CloseCurrentPopup();
+				}
+			}
 
-		//			if (scene != nullptr && selection != nullptr)
-		//				scene->AddComponentToEntity(componentType, *selection);
-		//			
-		//			ImGui::CloseCurrentPopup();
-		//		}
+			ImGui::EndTable();
+		}
 
-		//		ImGui::PopID();
-		//	}
-
-		//	ImGui::EndTable();
-		//}
-
-		//if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) { ImGui::CloseCurrentPopup(); }
+		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) 
+		{
+			Manager->SetIsModalOpen(false);
+			ImGui::CloseCurrentPopup(); 
+		}
 
 		ImGui::EndPopup();
-	}
-	
-	void CInspectorWindow::RemoveComponentButton(/*Havtorn::EComponentType componentType*/)
-	{
-		// TODO.NR: Support adding and removing components through the editor. Unsolved problem.
-		//ImGui::SameLine(ImGui::GetContentRegionAvailWidth() - ImGui::GetTreeNodeToLabelSpacing()*0.3f);
-
-		//ImGui::PushID(static_cast<U64>(componentType));
-		//if (ImGui::Button("X"))
-		//{
-		//	Havtorn::CScene* scene = Manager->GetCurrentScene();
-		//	Havtorn::SEntity* selection = Manager->GetSelectedEntity();
-
-		//	if (scene == nullptr || selection == nullptr)
-		//		return;
-
-		//	scene->RemoveComponentFromEntity(componentType, *selection);
-		//}
-		//ImGui::PopID();
 	}
 }

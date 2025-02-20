@@ -17,18 +17,42 @@ namespace Havtorn
 		WhiteRedBackground = 79
 	};
 
-	struct HAVTORN_API ULog
+	enum class HAVTORN_API ELogCategory
 	{
-		static void Print(const EConsoleColor& color, const char* category, const char* message, ...);
+		Trace,
+		Debug,
+		Info,
+		Warning,
+		Error,
+		Fatal
+	};
+	
+	class HAVTORN_API ILogContext
+	{
+	public:
+		virtual void Log(const ELogCategory category, const std::string& message) = 0;
+	};
 
+	struct ULog
+	{
+		static void HAVTORN_API Print(const ELogCategory category, const char* message, ...);
+		static void HAVTORN_API AddLogContext(ILogContext* context);
+
+	private:
 		// TODO.NR: Figure out another place for this. This is the exact same as the one used in EngineException.h
 		static std::string StringVsprintf(const char* format, const std::va_list args);
+		static EConsoleColor GetColorFromCategory(const ELogCategory category);
+		static std::string GetCategoryName(const ELogCategory category);
+
+	private:
+		static ULog* Instance;
+		std::vector<ILogContext*> Contexts;
 	};
 }
 
-#define HV_LOG_TRACE(...)		::Havtorn::ULog::Print(::Havtorn::EConsoleColor::White, "TRACE: ", __VA_ARGS__)
-#define HV_LOG_DEBUG(...)		::Havtorn::ULog::Print(::Havtorn::EConsoleColor::DarkGreen, "DEBUG: ", __VA_ARGS__)
-#define HV_LOG_INFO(...)		::Havtorn::ULog::Print(::Havtorn::EConsoleColor::DarkAqua, "INFO:  ", __VA_ARGS__)
-#define HV_LOG_WARN(...)		::Havtorn::ULog::Print(::Havtorn::EConsoleColor::Yellow, "WARN:  ", __VA_ARGS__)
-#define HV_LOG_ERROR(...)		::Havtorn::ULog::Print(::Havtorn::EConsoleColor::Red, "ERROR: ", __VA_ARGS__)
-#define HV_LOG_FATAL(...)		::Havtorn::ULog::Print(::Havtorn::EConsoleColor::WhiteRedBackground, "FATAL: ", __VA_ARGS__)
+#define HV_LOG_TRACE(...)		::Havtorn::ULog::Print(::Havtorn::ELogCategory::Trace, __VA_ARGS__)
+#define HV_LOG_DEBUG(...)		::Havtorn::ULog::Print(::Havtorn::ELogCategory::Debug, __VA_ARGS__)
+#define HV_LOG_INFO(...)		::Havtorn::ULog::Print(::Havtorn::ELogCategory::Info, __VA_ARGS__)
+#define HV_LOG_WARN(...)		::Havtorn::ULog::Print(::Havtorn::ELogCategory::Warning, __VA_ARGS__)
+#define HV_LOG_ERROR(...)		::Havtorn::ULog::Print(::Havtorn::ELogCategory::Error, __VA_ARGS__)
+#define HV_LOG_FATAL(...)		::Havtorn::ULog::Print(::Havtorn::ELogCategory::Fatal, __VA_ARGS__)

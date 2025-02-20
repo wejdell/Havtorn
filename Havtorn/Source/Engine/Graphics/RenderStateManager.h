@@ -88,6 +88,7 @@ namespace Havtorn
 		// VS
 		void VSSetShader(EVertexShaders shader) const;
 		void VSSetConstantBuffer(U8 slot, const CDataBuffer& buffer);
+		void VSSetResources(U8 startSlot, U8 numberOfResources, ID3D11ShaderResourceView* const* resources);
 
 		// GS
 		void GSSetShader(EGeometryShaders shader) const;

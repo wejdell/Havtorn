@@ -53,9 +53,9 @@ namespace Havtorn
 		ImVec4 ResizeGripActive		= ElementActive;
 		ImVec4 Tab					= ElementBackground;
 		ImVec4 TabHovered			= ElementHovered;
-		ImVec4 TabActive			= ElementActive;
-		ImVec4 TabUnfocused			= ImVec4(0.07f, 0.10f, 0.15f, 0.97f);
-		ImVec4 TabUnfocusedActive	= ImVec4(0.14f, 0.26f, 0.42f, 1.00f);
+		ImVec4 TabSelected			= BackgroundMid;
+		ImVec4 TabDimmed			= ElementBackground;
+		ImVec4 TabDimmedSelected	= BackgroundMid;
 		ImVec4 PlotLines			= ImVec4(0.61f, 0.61f, 0.61f, 1.00f);
 		ImVec4 PlotLinesHovered		= ElementHighlight;
 		ImVec4 PlotHistogram		= ElementHighlight;
@@ -106,7 +106,9 @@ namespace Havtorn
 			ResizeGripActive = ElementActive;
 			Tab = ElementBackground;
 			TabHovered = ElementHovered;
-			TabActive = ElementActive;
+			TabSelected = BackgroundMid;
+			TabDimmed = ElementBackground;
+			TabDimmedSelected = BackgroundMid;
 			PlotLinesHovered = ElementHighlight;
 			PlotHistogram = ElementHighlight;
 			PlotHistogramHovered = ElementActive;

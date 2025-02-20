@@ -54,14 +54,14 @@ namespace Havtorn
 		LocalMatrix *= rotationMatrix;
 	}
 
-	inline void STransform::Rotate(const SVector& eulerAngles)
+	inline void STransform::Rotate(const SVector& eulerAnglesRadians)
 	{
-		if (eulerAngles.IsEqual(SVector::Zero))
+		if (eulerAnglesRadians.IsEqual(SVector::Zero))
 			return;
 
-		const SMatrix rightRotation = SMatrix::CreateRotationAroundAxis(eulerAngles.X, LocalMatrix.GetRight());
-		const SMatrix upRotation = SMatrix::CreateRotationAroundAxis(eulerAngles.Y, LocalMatrix.GetUp());
-		const SMatrix forwardRotation = SMatrix::CreateRotationAroundAxis(eulerAngles.Z, LocalMatrix.GetForward());
+		const SMatrix rightRotation = SMatrix::CreateRotationAroundAxis(eulerAnglesRadians.X, LocalMatrix.GetRight());
+		const SMatrix upRotation = SMatrix::CreateRotationAroundAxis(eulerAnglesRadians.Y, LocalMatrix.GetUp());
+		const SMatrix forwardRotation = SMatrix::CreateRotationAroundAxis(eulerAnglesRadians.Z, LocalMatrix.GetForward());
 
 		SMatrix finalRotation = LocalMatrix.GetRotationMatrix();
 		finalRotation *= rightRotation;

@@ -112,6 +112,9 @@ namespace Havtorn
 		[[nodiscard]] ETransformGizmo GetCurrentGizmo() const;
 		[[nodiscard]] bool GetIsFreeCamActive() const;
 		[[nodiscard]] bool GetIsHoveringGizmo() const;
+		[[nodiscard]] bool GetIsModalOpen() const;
+
+		void SetIsModalOpen(const bool isModalOpen);
 
 		[[nodiscard]] F32 GetViewportPadding() const;
 		void SetViewportPadding(const F32 padding);
@@ -177,6 +180,7 @@ namespace Havtorn
 		bool IsDebugInfoOpen = true;
 		bool IsDemoOpen = false;
 		bool IsFreeCamActive = false;
+		bool IsModalOpen = false;
 	};
 
 	template<class TEditorWindowType>

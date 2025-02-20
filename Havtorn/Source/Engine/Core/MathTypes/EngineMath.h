@@ -29,8 +29,11 @@ namespace Havtorn
 		static const F32 PiReciprocal;
 		static const F32 TauReciprocal;
 
-		static const F32 MaxFloat;
 		static const F32 MinFloat;
+		static const F32 MaxFloat;
+
+		static const U8 MinU8;
+		static const U8 MaxU8;
 
 		template<typename T>
 		static inline T Sqrt(T x);
