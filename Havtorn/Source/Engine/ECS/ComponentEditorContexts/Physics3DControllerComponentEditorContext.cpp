@@ -6,8 +6,7 @@
 #include "ECS/Components/Physics3DControllerComponent.h"
 #include "Scene/Scene.h"
 
-#include <imgui.h>
-#include "Core/Utilities.h"
+#include <GUI.h>
 
 namespace Havtorn
 {
@@ -15,7 +14,7 @@ namespace Havtorn
 
     SComponentViewResult SPhysics3DControllerComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!ImGui::UUtils::TryOpenComponentView("Physics3D"))
+		if (!GUI::TryOpenComponentView("Physics3D"))
 			return {};
 
 		SPhysics3DControllerComponent* physicsComponent = scene->GetComponent<SPhysics3DControllerComponent>(entityOwner);
@@ -23,28 +22,26 @@ namespace Havtorn
 		// TODO.NR: Make a util to deal with enums
 		I32 controllerTypeIndex = static_cast<int>(physicsComponent->ControllerType);
 		const char* controllerTypeNames[2] = { "Box", "Capsule" };
-		ImGui::SliderInt("Controller Type", &controllerTypeIndex, 0, 1, controllerTypeNames[controllerTypeIndex]);
+		GUI::SliderInt("Controller Type", &controllerTypeIndex, 0, 1, controllerTypeNames[controllerTypeIndex]);
 		physicsComponent->ControllerType = static_cast<Havtorn::EPhysics3DControllerType>(controllerTypeIndex);
 
 		switch (physicsComponent->ControllerType)
     	{
 		case EPhysics3DControllerType::Box:
 		{
-			F32 localExtents[3] = { physicsComponent->ShapeLocalExtents.X, physicsComponent->ShapeLocalExtents.Y, physicsComponent->ShapeLocalExtents.Z };
-			ImGui::DragFloat3("Shape Local Extents", localExtents, ImGui::UUtils::SliderSpeed);
-			physicsComponent->ShapeLocalExtents = { localExtents[0], localExtents[1], localExtents[2] };
+			GUI::DragFloat3("Shape Local Extents", physicsComponent->ShapeLocalExtents, GUI::SliderSpeed);
 		}
 			break;
 		case EPhysics3DControllerType::Capsule:
 		{
 			F32 localExtents[2] = { physicsComponent->ShapeLocalRadiusAndHeight.X, physicsComponent->ShapeLocalRadiusAndHeight.Y };
-			ImGui::DragFloat2("Shape Local Radius And Height", localExtents, ImGui::UUtils::SliderSpeed);
+			GUI::DragFloat2("Shape Local Radius And Height", localExtents, GUI::SliderSpeed);
 			physicsComponent->ShapeLocalRadiusAndHeight = { localExtents[0], localExtents[1] };
 		}
 			break;
 		}
 
-		ImGui::Text("Velocity: %s", physicsComponent->Velocity.ToString().c_str());
+		GUI::Text("Velocity: %s", physicsComponent->Velocity.ToString().c_str());
 
 		// TODO.NR: Most of these should only be changed during setup, but if we want a truly responsive editor we can pause
 		// during play and unpause, we should probably handle setting the data on physics wrapper entity if we make modifications here.
@@ -54,7 +51,7 @@ namespace Havtorn
 
 	bool SPhysics3DControllerComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("Physics 3D Controller Component"))
+		if (!GUI::Button("Physics 3D Controller Component"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())
@@ -67,7 +64,7 @@ namespace Havtorn
 
 	bool SPhysics3DControllerComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("X##9"))
+		if (!GUI::Button("X##9"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())

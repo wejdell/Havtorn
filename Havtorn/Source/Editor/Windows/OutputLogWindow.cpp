@@ -5,7 +5,7 @@
 #include "EditorManager.h"
 #include "DockSpaceWindow.h"
 
-#include <Core/imgui.h>
+#include <imgui.h>
 
 namespace ImGui
 {

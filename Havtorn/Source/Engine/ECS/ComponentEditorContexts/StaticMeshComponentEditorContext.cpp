@@ -9,8 +9,7 @@
 
 #include "Graphics/Debug/DebugDrawUtility.h"
 
-#include "Core/Utilities.h"
-#include "imgui.h"
+#include <GUI.h>
 
 namespace Havtorn
 {
@@ -18,7 +17,7 @@ namespace Havtorn
 
     SComponentViewResult SStaticMeshComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!ImGui::UUtils::TryOpenComponentView("StaticMesh"))
+		if (!GUI::TryOpenComponentView("StaticMesh"))
 			return SComponentViewResult();
 
 		STransformComponent* transform = scene->GetComponent<STransformComponent>(entityOwner);
@@ -26,7 +25,7 @@ namespace Havtorn
 			return SComponentViewResult();
 
 		SStaticMeshComponent* staticMesh = scene->GetComponent<SStaticMeshComponent>(entityOwner);
-		ImGui::TextDisabled("Number Of Materials: %i", staticMesh->NumberOfMaterials);
+		GUI::TextDisabled("Number Of Materials: %i", staticMesh->NumberOfMaterials);
 
 		SVector a = SVector(staticMesh->BoundsMin.X, staticMesh->BoundsMin.Y, staticMesh->BoundsMin.Z);
 		SVector b = SVector(staticMesh->BoundsMin.X, staticMesh->BoundsMin.Y, staticMesh->BoundsMax.Z);
@@ -66,7 +65,7 @@ namespace Havtorn
 
 	bool SStaticMeshComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("Static Mesh Component"))
+		if (!GUI::Button("Static Mesh Component"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())
@@ -79,7 +78,7 @@ namespace Havtorn
 
 	bool SStaticMeshComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("X##16"))
+		if (!GUI::Button("X##16"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())

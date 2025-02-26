@@ -9,7 +9,8 @@
 
 #include "Graphics/Debug/DebugDrawUtility.h"
 
-#include <Havtorn/Utilities.h>
+#include <GUI.h>
+
 
 namespace Havtorn
 {
@@ -17,7 +18,7 @@ namespace Havtorn
 
     SComponentViewResult SSkeletalMeshComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!ImGui::UUtils::TryOpenComponentView("SkeletalMesh"))
+		if (!GUI::TryOpenComponentView("SkeletalMesh"))
 			return SComponentViewResult();
 
 		STransformComponent* transform = scene->GetComponent<STransformComponent>(entityOwner);
@@ -25,7 +26,7 @@ namespace Havtorn
 			return SComponentViewResult();
 
 		SSkeletalMeshComponent* skeletalMesh = scene->GetComponent<SSkeletalMeshComponent>(entityOwner);
-		ImGui::TextDisabled("Number Of Materials: %i", skeletalMesh->NumberOfMaterials);
+		GUI::TextDisabled("Number Of Materials: %i", skeletalMesh->NumberOfMaterials);
 
 		SVector a = SVector(skeletalMesh->BoundsMin.X, skeletalMesh->BoundsMin.Y, skeletalMesh->BoundsMin.Z);
 		SVector b = SVector(skeletalMesh->BoundsMin.X, skeletalMesh->BoundsMin.Y, skeletalMesh->BoundsMax.Z);
@@ -65,7 +66,7 @@ namespace Havtorn
 
 	bool SSkeletalMeshComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("Skeletal Mesh Component"))
+		if (!GUI::Button("Skeletal Mesh Component"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())
@@ -78,7 +79,7 @@ namespace Havtorn
 
 	bool SSkeletalMeshComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("X##12"))
+		if (!GUI::Button("X##12"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())

@@ -5,7 +5,7 @@
 #include "ECS/System.h"
 
 #include <box2cpp.h>
-#include <debug_imgui_renderer.h>
+//#include <debug_imgui_renderer.h>
 
 #include <PxPhysicsAPI.h>
 
@@ -13,7 +13,7 @@ namespace b2
 {
 	class World;
 	class Body;
-	class DebugImguiRenderer;
+	//class DebugImguiRenderer;
 }
 
 namespace physx
@@ -62,7 +62,8 @@ namespace Havtorn
 
 		private:
 			b2::World World;
-			b2::DebugImguiRenderer DebugRenderer;
+			// NW: Make debug renderer through GUI project? Nice if we can avoid an ImGui include in this Project
+			//b2::DebugImguiRenderer DebugRenderer;
 			std::map<SEntity, b2::Body> Bodies;
 			std::map<U64, SEntity> BodyIDMap;
 		};

@@ -5,7 +5,8 @@
 #include "ECS/Components/MaterialComponent.h"
 #include "Scene/Scene.h"
 
-#include <Havtorn/Utilities.h>
+#include <GUI.h>
+
 
 namespace Havtorn
 {
@@ -13,7 +14,7 @@ namespace Havtorn
 
     SComponentViewResult Havtorn::SMaterialComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!ImGui::UUtils::TryOpenComponentView("Material"))
+		if (!GUI::TryOpenComponentView("Material"))
 			return SComponentViewResult();
 
 		SMaterialComponent* materialComp = scene->GetComponent<SMaterialComponent>(entityOwner);
@@ -23,7 +24,7 @@ namespace Havtorn
 	
 	bool SMaterialComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("Material Component"))
+		if (!GUI::Button("Material Component"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())
@@ -36,7 +37,7 @@ namespace Havtorn
 
 	bool SMaterialComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("X##6"))
+		if (!GUI::Button("X##6"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())

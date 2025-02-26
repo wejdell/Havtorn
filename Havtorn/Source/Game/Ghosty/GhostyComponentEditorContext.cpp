@@ -6,8 +6,7 @@
 #include "GhostyComponent.h"
 
 #include <Scene/Scene.h>
-#include <Core/imgui.h>
-#include <Havtorn/Utilities.h>
+#include <GUI.h>
 
 namespace Havtorn
 {
@@ -15,22 +14,21 @@ namespace Havtorn
 
 	SComponentViewResult SGhostyComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
 	{
-		if (!ImGui::UUtils::TryOpenComponentView("Ghosty"))
+		if (!GUI::TryOpenComponentView("Ghosty"))
 			return SComponentViewResult();
 
 		SGhostyComponent* component = scene->GetComponent<SGhostyComponent>(entityOwner);
 
-		F32 ghostyInput[3] = { component->State.Input.X, component->State.Input.Y, component->State.Input.Z };
-		ImGui::DragFloat3("GhostyState", ghostyInput, 0.0f);
+		GUI::DragFloat3("GhostyState", component->State.Input, 0.0f);
 
-		ImGui::Checkbox("IsInWalkingAnimation", &component->State.IsInWalkingAnimationState);
+		GUI::Checkbox("IsInWalkingAnimation", &component->State.IsInWalkingAnimationState);
 
 		return SComponentViewResult();
 	}
 
 	bool SGhostyComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("Ghosty Component"))
+		if (!GUI::Button("Ghosty Component"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())
@@ -43,7 +41,7 @@ namespace Havtorn
 
 	bool SGhostyComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("X"))
+		if (!GUI::Button("X"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())

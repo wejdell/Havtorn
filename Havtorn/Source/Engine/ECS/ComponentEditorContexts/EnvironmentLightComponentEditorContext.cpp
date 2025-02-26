@@ -8,8 +8,8 @@
 #include "Engine.h"
 #include "Graphics/TextureBank.h"
 
-#include <Core/imgui.h>
-#include <Havtorn/Utilities.h>
+#include <GUI.h>
+
 
 namespace Havtorn
 {
@@ -17,19 +17,19 @@ namespace Havtorn
 
     SComponentViewResult SEnvironmentLightComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!ImGui::UUtils::TryOpenComponentView("EnvironmentLight"))
+		if (!GUI::TryOpenComponentView("EnvironmentLight"))
 			return SComponentViewResult();
 
 		SEnvironmentLightComponent* environmentLightComp = scene->GetComponent<SEnvironmentLightComponent>(entityOwner);
 
-		ImGui::Text("Ambient Static Cubemap");
+		GUI::Text("Ambient Static Cubemap");
 	
 		return { EComponentViewResultLabel::InspectAssetComponent, environmentLightComp, 0 };
     }
 
 	bool SEnvironmentLightComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("Environment Light Component"))
+		if (!GUI::Button("Environment Light Component"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())
@@ -42,7 +42,7 @@ namespace Havtorn
 
 	bool SEnvironmentLightComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("X##5"))
+		if (!GUI::Button("X##5"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())

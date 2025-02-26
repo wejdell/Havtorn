@@ -22,7 +22,8 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(ENGINE_FOLDER "Engine/")
 set(EDITOR_FOLDER "Editor/")
 set(GAME_FOLDER "Game/")
-set(IMGUI_FOLDER "ImGui/")
+set(GUI_FOLDER "GUI/")
+#set(IMGUI_FOLDER "ImGui/")
 set(LAUNCHER_FOLDER "Launcher/")
 set(EXTERNAL_FOLDER "../External/")
 set(WORKING_FOLDER "${CMAKE_BINARY_DIR}/../Bin/")
@@ -31,57 +32,36 @@ set(COMMON_COMPILE_DEFINITIONS HV_PLATFORM_WINDOWS HV_DEBUG HV_ENABLE_ASSERTS _U
 set(COMMON_COMPILE_OPTIONS /W4 /WX /MP /ZI /JMC /fp:fast /FC)
 set(COMMON_LINK_OPTIONS /WX /SUBSYSTEM:WINDOWS)
 
-# ==================== IMGUI ====================
-set(IMGUI_FILES
-    ${IMGUI_FOLDER}Core/ImGuizmo/GraphEditor.cpp
-    ${IMGUI_FOLDER}Core/ImGuizmo/GraphEditor.h
-    ${IMGUI_FOLDER}Core/ImGuizmo/ImCurveEdit.cpp
-    ${IMGUI_FOLDER}Core/ImGuizmo/ImCurveEdit.h
-    ${IMGUI_FOLDER}Core/ImGuizmo/ImGradient.cpp
-    ${IMGUI_FOLDER}Core/ImGuizmo/ImGradient.h
-    ${IMGUI_FOLDER}Core/ImGuizmo/ImGuizmo.cpp
-    ${IMGUI_FOLDER}Core/ImGuizmo/ImGuizmo.h
-    ${IMGUI_FOLDER}Core/imconfig.h
-    ${IMGUI_FOLDER}Core/imgui.cpp
-    ${IMGUI_FOLDER}Core/imgui.h
-    ${IMGUI_FOLDER}Core/imgui_demo.cpp
-    ${IMGUI_FOLDER}Core/imgui_draw.cpp
-    ${IMGUI_FOLDER}Core/imgui_impl_dx11.cpp
-    ${IMGUI_FOLDER}Core/imgui_impl_dx11.h
-    ${IMGUI_FOLDER}Core/imgui_impl_win32.cpp
-    ${IMGUI_FOLDER}Core/imgui_impl_win32.h
-    ${IMGUI_FOLDER}Core/imgui_internal.h
-    ${IMGUI_FOLDER}Core/imgui_tables.cpp
-    ${IMGUI_FOLDER}Core/imgui_widgets.cpp
-    ${IMGUI_FOLDER}Core/imstb_rectpack.h
-    ${IMGUI_FOLDER}Core/imstb_textedit.h
-    ${IMGUI_FOLDER}Core/imstb_truetype.h
-    ${IMGUI_FOLDER}Havtorn/Utilities.cpp
-    ${IMGUI_FOLDER}Havtorn/Utilities.h
+# ==================== GUI ====================
+set(GUI_FILES
+   ${GUI_FOLDER}GUI.cpp
+   ${GUI_FOLDER}GUI.h
+   ${GUI_FOLDER}GUIProcess.cpp
+   ${GUI_FOLDER}GUIProcess.h
 )
-add_library(ImGui STATIC ${IMGUI_FILES})
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${IMGUI_FILES})
-target_include_directories(ImGui PRIVATE
-    "${IMGUI_FOLDER}"
-    "${IMGUI_FOLDER}Core"
+add_library(GUI STATIC ${GUI_FILES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GUI_FILES})
+target_include_directories(GUI PRIVATE
+	"${GUI_FOLDER}"
+	"${ENGINE_FOLDER}"
     "${EXTERNAL_FOLDER}imgui"
+    "${EXTERNAL_FOLDER}ImGuizmo"
 )
-target_compile_definitions(ImGui PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_BUILD_DLL)
-target_compile_options(ImGui PRIVATE /W3 /MP /ZI /JMC /fp:fast /FC)
-set_property(TARGET ImGui PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
-set_target_properties(ImGui PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER})
-# ==================== IMGUI ====================
-
+target_compile_definitions(GUI PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_BUILD_DLL)
+target_compile_options(GUI PRIVATE /W3 /MP /ZI /JMC /fp:fast /FC)
+set_property(TARGET GUI PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
+set_target_properties(GUI PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER})
+# ==================== GUI ====================
 
 # ==================== ENGINE ====================
 set(ENGINE_FILES
     ${ENGINE_FOLDER}Application/EngineProcess.cpp
     ${ENGINE_FOLDER}Application/EngineProcess.h
-    ${ENGINE_FOLDER}Application/ImGuiCrossProjectSetup.h
-    ${ENGINE_FOLDER}Application/ImGuiManager.cpp
-    ${ENGINE_FOLDER}Application/ImGuiManager.h
-    ${ENGINE_FOLDER}Application/ImGuiProcess.cpp
-    ${ENGINE_FOLDER}Application/ImGuiProcess.h
+    #${ENGINE_FOLDER}Application/ImGuiCrossProjectSetup.h
+    #${ENGINE_FOLDER}Application/ImGuiManager.cpp
+    #${ENGINE_FOLDER}Application/ImGuiManager.h
+    #${ENGINE_FOLDER}Application/ImGuiProcess.cpp
+    #${ENGINE_FOLDER}Application/ImGuiProcess.h
     ${ENGINE_FOLDER}Application/WindowHandler.cpp
     ${ENGINE_FOLDER}Application/WindowHandler.h
     ${ENGINE_FOLDER}Assets/SequencerAsset.cpp
@@ -406,7 +386,7 @@ target_link_libraries(Engine PRIVATE
     PhysX/PhysXFoundation_64
     PhysX/PhysXPvdSDK_static_64
     PhysX/PhysXCharacterKinematic_static_64
-    ImGui
+    GUI
 )
 target_include_directories(Engine PRIVATE
     "${ENGINE_FOLDER}"
@@ -418,7 +398,9 @@ target_include_directories(Engine PRIVATE
     "${EXTERNAL_FOLDER}box2d/include/box2d"
     "${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
     "${EXTERNAL_FOLDER}PhysX/physx/include"
-    "ImGui"
+    "${EXTERNAL_FOLDER}imgui"
+    "${EXTERNAL_FOLDER}ImGuizmo"
+    "GUI"
 )
 target_link_directories(Engine PRIVATE
     "${EXTERNAL_FOLDER}Lib"
@@ -431,7 +413,7 @@ target_link_options(Engine PRIVATE ${COMMON_LINK_OPTIONS} /NODEFAULTLIB:LIBCMTD.
 #target_link_options(Engine PRIVATE ${COMMON_LINK_OPTIONS} /NODEFAULTLIB:LIBCMTD.lib /IMPLIB:${CMAKE_CURRENT_BINARY_DIR}/Engine.dir/Engine/Engine_$<CONFIG>.lib)
 set_property(TARGET Engine PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
 set_target_properties(Engine PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER})
-add_dependencies(Engine ImGui)
+add_dependencies(Engine GUI)
 # ==================== ENGINE ====================
 
 
@@ -463,11 +445,11 @@ target_include_directories(Game PRIVATE
     "${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
     "${EXTERNAL_FOLDER}PhysX/physx/include"
     "Engine"
-    "ImGui"
+    "GUI"
 )
 target_link_libraries(Game PRIVATE
     Engine
-    ImGui
+    GUI
 )
 target_compile_definitions(Game PRIVATE ${COMMON_COMPILE_DEFINITIONS})
 target_compile_options(Game PRIVATE ${COMMON_COMPILE_OPTIONS})
@@ -476,7 +458,7 @@ target_precompile_headers(Game PRIVATE ${GAME_FOLDER}hvpch.h)
 target_link_options(Game PRIVATE ${COMMON_LINK_OPTIONS})
 set_property(TARGET Game PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
 set_target_properties(Game PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER})
-add_dependencies(Game Engine ImGui)
+add_dependencies(Game Engine GUI)
 # ==================== GAME ====================
 
 
@@ -534,19 +516,19 @@ target_include_directories(Editor PRIVATE
     "${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
     "${EXTERNAL_FOLDER}PhysX/physx/include"
     "Engine"
-    "ImGui"
+    "GUI"
 )
 target_link_libraries(Editor PRIVATE
     Engine
     Game
-    ImGui
+    GUI
 )
 target_compile_definitions(Editor PRIVATE ${COMMON_COMPILE_DEFINITIONS})
 target_compile_options(Editor PRIVATE ${COMMON_COMPILE_OPTIONS})
 target_link_options(Editor PRIVATE ${COMMON_LINK_OPTIONS})
 set_property(TARGET Editor PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
 set_target_properties(Editor PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER})
-add_dependencies(Editor Engine Game ImGui)
+add_dependencies(Editor Engine Game GUI)
 # ==================== EDITOR ====================
 
 
@@ -564,7 +546,7 @@ target_include_directories(Launcher PRIVATE
     "${EXTERNAL_FOLDER}box2d/include/box2d"
 	"${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
 	"${EXTERNAL_FOLDER}PhysX/physx/include"
-	"ImGui"
+	"GUI"
 	"Editor"
 	"Engine"
 	"Game"
@@ -573,7 +555,7 @@ target_link_libraries(Launcher PRIVATE
     Engine
     Game
     Editor
-    ImGui
+    GUI
 )
 target_compile_definitions(Launcher PRIVATE ${COMMON_COMPILE_DEFINITIONS})
 target_compile_options(Launcher PRIVATE ${COMMON_COMPILE_OPTIONS})
@@ -581,5 +563,5 @@ target_link_options(Launcher PRIVATE ${COMMON_LINK_OPTIONS})
 set_property(TARGET Launcher PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
 set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT Launcher)
 set_target_properties(Launcher PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER})
-add_dependencies(Launcher Engine Editor Game ImGui)
+add_dependencies(Launcher Engine Editor Game GUI)
 # ==================== LAUNCHER ====================

@@ -6,8 +6,7 @@
 #include "ECS/Components/Physics3DComponent.h"
 #include "Scene/Scene.h"
 
-#include <imgui.h>
-#include "Core/Utilities.h"
+#include <GUI.h>
 
 namespace Havtorn
 {
@@ -15,7 +14,7 @@ namespace Havtorn
 
     SComponentViewResult SPhysics3DComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!ImGui::UUtils::TryOpenComponentView("Physics3D"))
+		if (!GUI::TryOpenComponentView("Physics3D"))
 			return {};
 
 		SPhysics3DComponent* physicsComponent = scene->GetComponent<SPhysics3DComponent>(entityOwner);
@@ -23,23 +22,21 @@ namespace Havtorn
 		// TODO.NR: Make a util to deal with enums
 		I32 bodyTypeIndex = static_cast<int>(physicsComponent->BodyType);
 		const char* bodyTypeNames[3] = { "Static", "Kinematic", "Dynamic" };
-		ImGui::SliderInt("Body Type", &bodyTypeIndex, 0, 2, bodyTypeNames[bodyTypeIndex]);
+		GUI::SliderInt("Body Type", &bodyTypeIndex, 0, 2, bodyTypeNames[bodyTypeIndex]);
 		physicsComponent->BodyType = static_cast<Havtorn::EPhysics3DBodyType>(bodyTypeIndex);
 
 		I32 shapeTypeIndex = static_cast<int>(physicsComponent->ShapeType);
 		const char* shapeTypeNames[5] = { "Sphere", "Plane", "Capsule", "Box", "Convex" };
-		ImGui::SliderInt("Shape Type", &shapeTypeIndex, 0, 4, shapeTypeNames[shapeTypeIndex]);
+		GUI::SliderInt("Shape Type", &shapeTypeIndex, 0, 4, shapeTypeNames[shapeTypeIndex]);
 		physicsComponent->ShapeType = static_cast<Havtorn::EPhysics3DShapeType>(shapeTypeIndex);
 
-		F32 localOffset[3] = { physicsComponent->ShapeLocalOffset.X, physicsComponent->ShapeLocalOffset.Y, physicsComponent->ShapeLocalOffset.Z };
-		ImGui::DragFloat3("Shape Local Offset", localOffset, ImGui::UUtils::SliderSpeed);
-		physicsComponent->ShapeLocalOffset = { localOffset[0], localOffset[1], localOffset[2] };
+		GUI::DragFloat3("Shape Local Offset", physicsComponent->ShapeLocalOffset, GUI::SliderSpeed);
 
 		switch (physicsComponent->ShapeType)
 		{
 		case EPhysics3DShapeType::Sphere:
 		{
-			ImGui::DragFloat("Shape Local Radius", &physicsComponent->ShapeLocalRadius, ImGui::UUtils::SliderSpeed);
+			GUI::DragFloat("Shape Local Radius", &physicsComponent->ShapeLocalRadius, GUI::SliderSpeed);
 		}
 			break;
 		case EPhysics3DShapeType::InfinitePlane:
@@ -47,34 +44,32 @@ namespace Havtorn
 		case EPhysics3DShapeType::Capsule:
 		{
 			F32 localExtents[2] = { physicsComponent->ShapeLocalRadiusAndHeight.X, physicsComponent->ShapeLocalRadiusAndHeight.Y };
-			ImGui::DragFloat2("Shape Local Radius And Height", localExtents, ImGui::UUtils::SliderSpeed);
+			GUI::DragFloat2("Shape Local Radius And Height", localExtents, GUI::SliderSpeed);
 			physicsComponent->ShapeLocalRadiusAndHeight = { localExtents[0], localExtents[1] };
 		}
 			break;
 		case EPhysics3DShapeType::Box:
 		{
-			F32 localExtents[3] = { physicsComponent->ShapeLocalExtents.X, physicsComponent->ShapeLocalExtents.Y, physicsComponent->ShapeLocalExtents.Z };
-			ImGui::DragFloat3("Shape Local Extents", localExtents, ImGui::UUtils::SliderSpeed);
-			physicsComponent->ShapeLocalExtents = { localExtents[0], localExtents[1], localExtents[2] };
+			GUI::DragFloat3("Shape Local Extents", physicsComponent->ShapeLocalExtents, GUI::SliderSpeed);
 		}
 			break;
 		case EPhysics3DShapeType::Convex:
 			break;
 		}
 
-		ImGui::TextDisabled("Material");
+		GUI::TextDisabled("Material");
 
-		ImGui::DragFloat("Dynamic Friction", &physicsComponent->Material.DynamicFriction);
-		ImGui::DragFloat("Static Friction", &physicsComponent->Material.StaticFriction);
-		ImGui::DragFloat("Restitution", &physicsComponent->Material.Restitution);
+		GUI::DragFloat("Dynamic Friction", &physicsComponent->Material.DynamicFriction);
+		GUI::DragFloat("Static Friction", &physicsComponent->Material.StaticFriction);
+		GUI::DragFloat("Restitution", &physicsComponent->Material.Restitution);
 
-		ImGui::Separator();
+		GUI::Separator();
 
-		ImGui::Text("Velocity: %s", physicsComponent->Velocity.ToString().c_str());
+		GUI::Text("Velocity: %s", physicsComponent->Velocity.ToString().c_str());
 
-		ImGui::DragFloat("Density", &physicsComponent->Density);
+		GUI::DragFloat("Density", &physicsComponent->Density);
 
-		ImGui::Checkbox("Is Trigger", &physicsComponent->IsTrigger);
+		GUI::Checkbox("Is Trigger", &physicsComponent->IsTrigger);
 
 		// TODO.NR: Most of these should only be changed during setup, but if we want a truly responsive editor we can pause
 		// during play and unpause, we should probably handle setting the data on physics wrapper entity if we make modifications here.
@@ -84,7 +79,7 @@ namespace Havtorn
 
 	bool SPhysics3DComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("Physics 3D Component"))
+		if (!GUI::Button("Physics 3D Component"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())
@@ -97,7 +92,7 @@ namespace Havtorn
 
 	bool SPhysics3DComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("X##8"))
+		if (!GUI::Button("X##8"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())

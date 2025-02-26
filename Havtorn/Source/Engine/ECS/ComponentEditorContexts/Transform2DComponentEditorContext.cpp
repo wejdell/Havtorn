@@ -6,8 +6,8 @@
 #include "ECS/Components/Transform2DComponent.h"
 #include "Scene/Scene.h"
 
-#include <Core/imgui.h>
-#include <Havtorn/Utilities.h>
+#include <GUI.h>
+
 
 namespace Havtorn
 {
@@ -15,7 +15,7 @@ namespace Havtorn
 
     SComponentViewResult STransform2DComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!ImGui::UUtils::TryOpenComponentView("Transform2D"))
+		if (!GUI::TryOpenComponentView("Transform2D"))
 			return SComponentViewResult();
 
 		// TODO.NR: Make editable with gizmo
@@ -24,9 +24,9 @@ namespace Havtorn
 		F32 position[2] = { transform2DComp->Position.X, transform2DComp->Position.Y };
 		F32 scale[2] = { transform2DComp->Scale.X, transform2DComp->Scale.Y };
 
-		ImGui::DragFloat2("Position", position, ImGui::UUtils::SliderSpeed);
-		ImGui::DragFloat("DegreesRoll", &transform2DComp->DegreesRoll, ImGui::UUtils::SliderSpeed);
-		ImGui::DragFloat2("Scale", scale, ImGui::UUtils::SliderSpeed);
+		GUI::DragFloat2("Position", position, GUI::SliderSpeed);
+		GUI::DragFloat("DegreesRoll", &transform2DComp->DegreesRoll, GUI::SliderSpeed);
+		GUI::DragFloat2("Scale", scale, GUI::SliderSpeed);
 
 		transform2DComp->Position = { position[0], position[1] };
 		transform2DComp->Scale = { scale[0], scale[1] };
@@ -36,7 +36,7 @@ namespace Havtorn
 
 	bool STransform2DComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("Transform 2D Component"))
+		if (!GUI::Button("Transform 2D Component"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())
@@ -49,7 +49,7 @@ namespace Havtorn
 
 	bool STransform2DComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("X##17"))
+		if (!GUI::Button("X##17"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())

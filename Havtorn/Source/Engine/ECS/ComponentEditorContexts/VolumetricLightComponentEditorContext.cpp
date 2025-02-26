@@ -6,8 +6,7 @@
 #include "ECS/Components/VolumetricLightComponent.h"
 #include "Scene/Scene.h"
 
-#include <imgui.h>
-#include "Core/Utilities.h"
+#include <GUI.h>
 
 namespace Havtorn
 {
@@ -15,25 +14,25 @@ namespace Havtorn
 
     SComponentViewResult SVolumetricLightComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!ImGui::UUtils::TryOpenComponentView("VolumetricLight"))
+		if (!GUI::TryOpenComponentView("VolumetricLight"))
 			return SComponentViewResult();
 
 		SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(entityOwner);
 
-		ImGui::Checkbox("Is Active", &volumetricLightComp->IsActive);
-		ImGui::DragFloat("Number Of Samples", &volumetricLightComp->NumberOfSamples, ImGui::UUtils::SliderSpeed, 4.0f);
+		GUI::Checkbox("Is Active", &volumetricLightComp->IsActive);
+		GUI::DragFloat("Number Of Samples", &volumetricLightComp->NumberOfSamples, GUI::SliderSpeed, 4.0f);
 
 		volumetricLightComp->NumberOfSamples = Havtorn::UMath::Max(volumetricLightComp->NumberOfSamples, 4.0f);
-		ImGui::DragFloat("Light Power", &volumetricLightComp->LightPower, ImGui::UUtils::SliderSpeed * 10000.0f, 0.0f);
-		ImGui::DragFloat("Scattering Probability", &volumetricLightComp->ScatteringProbability, ImGui::UUtils::SliderSpeed * 0.1f, 0.0f, 1.0f, "%.4f", ImGuiSliderFlags_Logarithmic);
-		ImGui::DragFloat("Henyey-Greenstein G", &volumetricLightComp->HenyeyGreensteinGValue);
+		GUI::DragFloat("Light Power", &volumetricLightComp->LightPower, GUI::SliderSpeed * 10000.0f, 0.0f);
+		GUI::DragFloat("Scattering Probability", &volumetricLightComp->ScatteringProbability, GUI::SliderSpeed * 0.1f, 0.0f, 1.0f, "%.4f", EDragMode::Logarithmic);
+		GUI::DragFloat("Henyey-Greenstein G", &volumetricLightComp->HenyeyGreensteinGValue);
 
         return SComponentViewResult();
     }
 
 	bool SVolumetricLightComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("Volumetric Light Component"))
+		if (!GUI::Button("Volumetric Light Component"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())
@@ -46,7 +45,7 @@ namespace Havtorn
 
 	bool SVolumetricLightComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("X##19"))
+		if (!GUI::Button("X##19"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())
