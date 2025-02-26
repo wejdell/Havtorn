@@ -21,7 +21,7 @@ namespace Havtorn
 			b2::World::Params worldParams = {};
 			worldParams.gravity = { 0.f, -9.8f };
 			World = b2::World(worldParams);
-			DebugRenderer = b2::DebugImguiRenderer();
+			//DebugRenderer = b2::DebugImguiRenderer();
 		}
 
 		void CPhysicsWorld2D::Update(CScene* scene)

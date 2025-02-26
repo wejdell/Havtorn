@@ -6,10 +6,7 @@
 #include "ECS/Components/TransformComponent.h"
 #include "Scene/Scene.h"
 
-#include "imgui/imgui.h"
-//#include "imgui.h"
-#include "ImGuizmo/ImGuizmo.h"
-#include "Core/Utilities.h"
+#include <GUI.h>
 
 namespace Havtorn
 {
@@ -17,20 +14,20 @@ namespace Havtorn
 
     SComponentViewResult STransformComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!ImGui::UUtils::TryOpenComponentView("Transform"))
+		if (!GUI::TryOpenComponentView("Transform"))
 			return SComponentViewResult();
 
 		STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(entityOwner);
 		Havtorn::SMatrix transformMatrix = transformComponent->Transform.GetMatrix();
 
-		F32 matrixTranslation[3], matrixRotation[3], matrixScale[3];
-		ImGuizmo::DecomposeMatrixToComponents(transformMatrix.data, matrixTranslation, matrixRotation, matrixScale);
-		ImGui::DragFloat3("Position", matrixTranslation, ImGui::UUtils::SliderSpeed);
-		ImGui::DragFloat3("Rotation", matrixRotation, ImGui::UUtils::SliderSpeed);
-		ImGui::DragFloat3("Scale", matrixScale, ImGui::UUtils::SliderSpeed);
+		SVector matrixTranslation, matrixRotation, matrixScale;
+		GUI::DecomposeMatrixToComponents(transformMatrix, matrixTranslation, matrixRotation, matrixScale);
+		GUI::DragFloat3("Position", matrixTranslation, GUI::SliderSpeed);
+		GUI::DragFloat3("Rotation", matrixRotation, GUI::SliderSpeed);
+		GUI::DragFloat3("Scale", matrixScale, GUI::SliderSpeed);
 
 		// TODO.NR: Fix yaw rotation singularity here, using our own math functions. Ref: https://github.com/CedricGuillemet/ImGuizmo/issues/244
-		ImGuizmo::RecomposeMatrixFromComponents(matrixTranslation, matrixRotation, matrixScale, transformMatrix.data);
+		GUI::RecomposeMatrixFromComponents(transformMatrix, matrixTranslation, matrixRotation, matrixScale);
 		transformComponent->Transform.SetMatrix(transformMatrix);
 
 		SComponentViewResult result;
@@ -42,7 +39,7 @@ namespace Havtorn
 
 	bool STransformComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("Transform Component"))
+		if (!GUI::Button("Transform Component"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())
@@ -55,7 +52,7 @@ namespace Havtorn
 
 	bool STransformComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("X##18"))
+		if (!GUI::Button("X##18"))
 			return false;
 			
 		if (scene == nullptr || !entity.IsValid())

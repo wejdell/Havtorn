@@ -1,7 +1,7 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 #pragma once
 
-#include <imgui.h>
+#include <../imgui/imgui.h>
 #include <../ImGuizmo/ImGuizmo.h>
 #include "ImGuiManager.h"
 

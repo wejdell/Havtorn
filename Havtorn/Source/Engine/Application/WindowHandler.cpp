@@ -22,7 +22,7 @@ namespace Havtorn
 		if(GEngine::GetEngineProcess() != nullptr)
 			GEngine::GetEngineProcess()->WindowsWindowProc(hwnd, uMsg, wParam, lParam);
 
-		GImGuiManager::WindowsWindowProc(hwnd, uMsg, wParam, lParam);
+		//GImGuiManager::WindowsWindowProc(hwnd, uMsg, wParam, lParam);
 
 		switch (uMsg)
 		{

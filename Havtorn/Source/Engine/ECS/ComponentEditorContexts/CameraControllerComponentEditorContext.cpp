@@ -6,8 +6,8 @@
 #include "ECS/Components/CameraControllerComponent.h"
 #include "Scene/Scene.h"
 
-#include <Core/imgui.h>
-#include <Havtorn/Utilities.h>
+#include <GUI.h>
+
 
 namespace Havtorn
 {
@@ -15,20 +15,20 @@ namespace Havtorn
 
 	SComponentViewResult Havtorn::SCameraControllerComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
 	{
-		if (!ImGui::UUtils::TryOpenComponentView("CameraController"))
+		if (!GUI::TryOpenComponentView("CameraController"))
 			return SComponentViewResult();
 
 		SCameraControllerComponent* cameraControllerComp = scene->GetComponent<SCameraControllerComponent>(entityOwner);
-		ImGui::DragFloat("Max Move Speed", &cameraControllerComp->MaxMoveSpeed, ImGui::UUtils::SliderSpeed, 0.1f, 10.0f);
-		ImGui::DragFloat("Rotation Speed", &cameraControllerComp->RotationSpeed, ImGui::UUtils::SliderSpeed, 0.1f, 5.0f);
-		ImGui::DragFloat("Acceleration Duration", &cameraControllerComp->AccelerationDuration, ImGui::UUtils::SliderSpeed * 0.1f, 0.1f, 5.0f);
+		GUI::DragFloat("Max Move Speed", &cameraControllerComp->MaxMoveSpeed, GUI::SliderSpeed, 0.1f, 10.0f);
+		GUI::DragFloat("Rotation Speed", &cameraControllerComp->RotationSpeed, GUI::SliderSpeed, 0.1f, 5.0f);
+		GUI::DragFloat("Acceleration Duration", &cameraControllerComp->AccelerationDuration, GUI::SliderSpeed * 0.1f, 0.1f, 5.0f);
 
 		return SComponentViewResult();
 	}
 
 	bool SCameraControllerComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("Camera Controller Component"))
+		if (!GUI::Button("Camera Controller Component"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())
@@ -41,7 +41,7 @@ namespace Havtorn
 
 	bool SCameraControllerComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("X##2"))
+		if (!GUI::Button("X##2"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())

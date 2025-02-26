@@ -6,8 +6,8 @@
 #include "ECS/Components/SpotLightComponent.h"
 #include "Scene/Scene.h"
 
-#include <Core/imgui.h>
-#include <Havtorn/Utilities.h>
+#include <GUI.h>
+
 
 namespace Havtorn
 {
@@ -15,36 +15,35 @@ namespace Havtorn
 
     SComponentViewResult SSpotLightComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!ImGui::UUtils::TryOpenComponentView("SpotLight"))
+		if (!GUI::TryOpenComponentView("SpotLight"))
 			return SComponentViewResult();
 
 		SSpotLightComponent* spotLightComp = scene->GetComponent<SSpotLightComponent>(entityOwner);
 
 		Havtorn::F32 colorData[3] = { spotLightComp->ColorAndIntensity.X, spotLightComp->ColorAndIntensity.Y, spotLightComp->ColorAndIntensity.Z };
-		ImGui::ColorPicker3("Color", colorData);
+		GUI::ColorPicker3("Color", colorData);
 		spotLightComp->ColorAndIntensity.X = colorData[0];
 		spotLightComp->ColorAndIntensity.Y = colorData[1];
 		spotLightComp->ColorAndIntensity.Z = colorData[2];
 
-		ImGui::DragFloat("Intensity", &spotLightComp->ColorAndIntensity.W, ImGui::UUtils::SliderSpeed);
+		GUI::DragFloat("Intensity", &spotLightComp->ColorAndIntensity.W, GUI::SliderSpeed);
 		
-		const SVector4 direction = spotLightComp->Direction;
-		Havtorn::F32 dirData[3] = { direction.X, direction.Y, direction.Z };
-		ImGui::DragFloat3("Direction", dirData, ImGui::UUtils::SliderSpeed);
-		spotLightComp->Direction = { dirData[0], dirData[1], dirData[2], 0.0f };
+		SVector direction = SVector(spotLightComp->Direction.X, spotLightComp->Direction.Y, spotLightComp->Direction.Z);
+		GUI::DragFloat3("Direction", direction, GUI::SliderSpeed);
+		spotLightComp->Direction = SVector4(direction, 0.0f);
 		if (spotLightComp->Direction.IsEqual(SVector4::Zero))
 			spotLightComp->Direction = SVector4(0.0f, 0.0f, 0.01f, 0.0f);
 		
-		ImGui::DragFloat("Range", &spotLightComp->Range, ImGui::UUtils::SliderSpeed, 0.1f, 100.0f);
-		ImGui::DragFloat("Outer Angle", &spotLightComp->OuterAngle, ImGui::UUtils::SliderSpeed, spotLightComp->InnerAngle, 180.0f);
-		ImGui::DragFloat("InnerAngle", &spotLightComp->InnerAngle, ImGui::UUtils::SliderSpeed, 0.0f, spotLightComp->OuterAngle - 0.01f);
+		GUI::DragFloat("Range", &spotLightComp->Range, GUI::SliderSpeed, 0.1f, 100.0f);
+		GUI::DragFloat("Outer Angle", &spotLightComp->OuterAngle, GUI::SliderSpeed, spotLightComp->InnerAngle, 180.0f);
+		GUI::DragFloat("InnerAngle", &spotLightComp->InnerAngle, GUI::SliderSpeed, 0.0f, spotLightComp->OuterAngle - 0.01f);
       
 		return SComponentViewResult();
     }
 
 	bool SSpotLightComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("Spotlight Component"))
+		if (!GUI::Button("Spotlight Component"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())
@@ -57,7 +56,7 @@ namespace Havtorn
 
 	bool SSpotLightComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("X##13"))
+		if (!GUI::Button("X##13"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())

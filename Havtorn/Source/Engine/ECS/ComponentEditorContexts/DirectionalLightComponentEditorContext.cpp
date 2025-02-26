@@ -6,8 +6,7 @@
 #include "ECS/Components/DirectionalLightComponent.h"
 #include "Scene/Scene.h"
 
-#include <Core/imgui.h>
-#include <Havtorn/Utilities.h>
+#include <GUI.h>
 
 namespace Havtorn
 {
@@ -15,32 +14,31 @@ namespace Havtorn
 
     SComponentViewResult SDirectionalLightComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!ImGui::UUtils::TryOpenComponentView("DirectionalLight"))
+		if (!GUI::TryOpenComponentView("DirectionalLight"))
 			return SComponentViewResult();
 
 		SDirectionalLightComponent* directionalLightComp = scene->GetComponent<SDirectionalLightComponent>(entityOwner);
 
 		Havtorn::F32 colorData[3] = { directionalLightComp->Color.X, directionalLightComp->Color.Y, directionalLightComp->Color.Z };
-		ImGui::ColorPicker3("Color", colorData);
+		GUI::ColorPicker3("Color", colorData);
 		directionalLightComp->Color.X = colorData[0];
 		directionalLightComp->Color.Y = colorData[1];
 		directionalLightComp->Color.Z = colorData[2];
 
-		const SVector4 direction = directionalLightComp->Direction;
-		Havtorn::F32 dirData[3] = { direction.X, direction.Y, direction.Z };
-		ImGui::DragFloat3("Direction", dirData, ImGui::UUtils::SliderSpeed);
-		directionalLightComp->Direction = { dirData[0], dirData[1], dirData[2], 0.0f };
+		SVector direction = SVector(directionalLightComp->Direction.X, directionalLightComp->Direction.Y, directionalLightComp->Direction.Z);
+		GUI::DragFloat3("Direction", direction, GUI::SliderSpeed);
+		directionalLightComp->Direction = { direction.X, direction.Y, direction.Z, 0.0f };
 		if (directionalLightComp->Direction.IsEqual(SVector4::Zero))
 			directionalLightComp->Direction = SVector4(0.0f, 0.0f, 0.01f, 0.0f);
 
-		ImGui::DragFloat("Intensity", &directionalLightComp->Color.W, ImGui::UUtils::SliderSpeed);
+		GUI::DragFloat("Intensity", &directionalLightComp->Color.W, GUI::SliderSpeed);
 
         return SComponentViewResult();
     }
 
 	bool SDirectionalLightComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("Directional Light Component"))
+		if (!GUI::Button("Directional Light Component"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())
@@ -53,7 +51,7 @@ namespace Havtorn
 
 	bool SDirectionalLightComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("X##4"))
+		if (!GUI::Button("X##4"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())
