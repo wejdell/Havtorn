@@ -2,12 +2,12 @@
 
 #pragma once
 
-#include "Core/Core.h"
+#include "Core.h"
 #include <array>
 
 namespace Havtorn
 {
-    class HAVTORN_API CHavtornString
+    class CORE_API CHavtornString
     {
     public:
         CHavtornString(const std::string& name)

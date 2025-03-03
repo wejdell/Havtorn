@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Core/CoreTypes.h"
+#include "CoreTypes.h"
 #include "EngineMath.h"
 
 namespace Havtorn
@@ -12,7 +12,7 @@ namespace Havtorn
 #define VECTOR_COMPARISON_EPSILON 1.e-4f
 #define VECTOR_NORMALIZED_EPSILON 1.e-1f
 
-	struct HAVTORN_API SVector
+	struct CORE_API SVector
 	{
 		// TODO.NR: Make union so you can access xyz as F32[3]
 		// TODO.NR: Add [] operator
@@ -794,7 +794,7 @@ namespace Havtorn
 #define VECTOR_COMPARISON_EPSILON 1.e-4f
 #define VECTOR_NORMALIZED_EPSILON 1.e-1f
 
-	struct HAVTORN_API SVector4
+	struct CORE_API SVector4
 	{
 		F32 X, Y, Z, W;
 

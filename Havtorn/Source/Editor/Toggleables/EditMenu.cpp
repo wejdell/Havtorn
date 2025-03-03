@@ -3,11 +3,11 @@
 #include "EditMenu.h"
 #include "EditorManager.h"
 
-//#include <imgui.h>
+#include <GUI.h>
 
-namespace ImGui
+namespace Havtorn
 {
-	CEditMenu::CEditMenu(const char* displayName, Havtorn::CEditorManager* manager)
+	CEditMenu::CEditMenu(const char* displayName, CEditorManager* manager)
 		: CToggleable(displayName, manager)
 	{
 	}
@@ -22,32 +22,32 @@ namespace ImGui
 
 	void CEditMenu::OnInspectorGUI()
 	{
-		if (ImGui::Button(Name()))
-			ImGui::OpenPopup(PopupName);
+		if (GUI::Button(Name()))
+			GUI::OpenPopup(PopupName);
 		
-        if (ImGui::BeginPopup(PopupName))
+        if (GUI::BeginPopup(PopupName))
 		{
-            if (ImGui::BeginMenu("Editor Themes"))
+            if (GUI::BeginMenu("Editor Themes"))
             {
-                Havtorn::F32 sz = ImGui::GetTextLineHeight();
-                for (Havtorn::U16 i = 0; i < static_cast<Havtorn::U16>(Havtorn::EEditorColorTheme::Count); i++)
+                F32 sz = GUI::GetTextLineHeight();
+                for (U16 i = 0; i < static_cast<U16>(EEditorColorTheme::Count); i++)
                 {
-                    auto colorTheme = static_cast<Havtorn::EEditorColorTheme>(i);
+                    auto colorTheme = static_cast<EEditorColorTheme>(i);
                     std::string name = Manager->GetEditorColorThemeName(colorTheme).c_str();
-                    ImVec2 p = ImGui::GetCursorScreenPos();
+                    ImVec2 p = GUI::GetCursorScreenPos();
                     auto previewColor = Manager->GetEditorColorThemeRepColor(colorTheme);
-                    ImGui::GetWindowDrawList()->AddRectFilled(p, ImVec2(p.x + sz, p.y + sz), ImGui::ColorConvertFloat4ToU32(previewColor));
-                    ImGui::Dummy(ImVec2(sz, sz));
-                    ImGui::SameLine();
-                    if (ImGui::MenuItem(name.c_str()))
+                    GUI::GetWindowDrawList()->AddRectFilled(p, ImVec2(p.x + sz, p.y + sz), GUI::ColorConvertFloat4ToU32(previewColor));
+                    GUI::Dummy(ImVec2(sz, sz));
+                    GUI::SameLine();
+                    if (GUI::MenuItem(name.c_str()))
                     {
-                        Manager->SetEditorTheme(static_cast<Havtorn::EEditorColorTheme>(i));
+                        Manager->SetEditorTheme(static_cast<EEditorColorTheme>(i));
                     }
                 }
-                ImGui::EndMenu();
+                GUI::EndMenu();
             }
 
-			ImGui::EndPopup();
+			GUI::EndPopup();
 		}
 	}
 

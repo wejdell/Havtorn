@@ -3,12 +3,12 @@
 #pragma once
 #include "EditorWindow.h"
 
-namespace ImGui
+namespace Havtorn
 {
 	class CDockSpaceWindow : public CWindow
 	{
 	public:
-		CDockSpaceWindow(const char* displayName, Havtorn::CEditorManager* manager);
+		CDockSpaceWindow(const char* displayName, CEditorManager* manager);
 		~CDockSpaceWindow() override;
 		void OnEnable() override;
 		void OnInspectorGUI() override;

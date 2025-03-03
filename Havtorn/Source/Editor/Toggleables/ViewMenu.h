@@ -3,12 +3,12 @@
 #pragma once
 #include "EditorToggleable.h"
 
-namespace ImGui
+namespace Havtorn
 {
 	class CViewMenu final : public CToggleable
 	{
 	public:
-		CViewMenu(const char* displayName, Havtorn::CEditorManager* manager);
+		CViewMenu(const char* displayName, CEditorManager* manager);
 		~CViewMenu() override = default;
 		void OnEnable() override;
 		void OnInspectorGUI() override;

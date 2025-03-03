@@ -7,6 +7,7 @@
 namespace Havtorn
 {
 	class IProcess;
+	class CPlatformManager;
 
 	class CApplication
 	{
@@ -18,9 +19,8 @@ namespace Havtorn
 		// Processes are initialized in order of addition, run and destructed in reverse-order.
 		void AddProcess(IProcess* process);
 
-
 		void Run();
-		void Setup();
+		void Setup(CPlatformManager* platformManager);
 
 	private:
 

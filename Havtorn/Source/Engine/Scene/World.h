@@ -4,8 +4,8 @@
 
 #include "ECS/Entity.h"
 #include "FileSystem/FileHeaderDeclarations.h"
-#include "Core/EngineException.h"
 #include "HexPhys/HexPhys.h"
+#include <EngineException.h>
 
 namespace Havtorn
 {
@@ -37,14 +37,14 @@ namespace Havtorn
 		std::partial_ordering operator<=>(const SSystemData&) const = default;
 	};
 
-	enum class HAVTORN_API EWorldPlayState
+	enum class ENGINE_API EWorldPlayState
 	{
 		Stopped,
 		Paused,
 		Playing
 	};
 
-	enum class HAVTORN_API EWorldPlayDimensions
+	enum class ENGINE_API EWorldPlayDimensions
 	{
 		World2D,
 		World3D
@@ -55,19 +55,19 @@ namespace Havtorn
 		friend class GEngine;
 
 	public:
-		HAVTORN_API bool BeginPlay();
-		HAVTORN_API bool PausePlay();
-		HAVTORN_API bool StopPlay();
+		ENGINE_API bool BeginPlay();
+		ENGINE_API bool PausePlay();
+		ENGINE_API bool StopPlay();
 
-		HAVTORN_API EWorldPlayState GetWorldPlayState() const;
-		HAVTORN_API EWorldPlayDimensions GetWorldPlayDimensions() const;
-		HAVTORN_API void ToggleWorldPlayDimensions();
+		ENGINE_API EWorldPlayState GetWorldPlayState() const;
+		ENGINE_API EWorldPlayDimensions GetWorldPlayDimensions() const;
+		ENGINE_API void ToggleWorldPlayDimensions();
 
-		HAVTORN_API std::vector<Ptr<CScene>>& GetActiveScenes();
-		HAVTORN_API std::vector<SEntity>& GetEntities() const;
-		HAVTORN_API void SaveActiveScene(const std::string& destinationPath) const;
-		HAVTORN_API void RemoveScene(U64 sceneIndex);
-		HAVTORN_API CAssetRegistry* GetAssetRegistry() const;
+		ENGINE_API std::vector<Ptr<CScene>>& GetActiveScenes();
+		ENGINE_API std::vector<SEntity>& GetEntities() const;
+		ENGINE_API void SaveActiveScene(const std::string& destinationPath) const;
+		ENGINE_API void RemoveScene(U64 sceneIndex);
+		ENGINE_API CAssetRegistry* GetAssetRegistry() const;
 		
 		template<typename T>
 		void AddScene(const std::string& filePath);
@@ -93,7 +93,7 @@ namespace Havtorn
 		template<class T>
 		inline void UnrequestSystem(void* requester);
 
-		HAVTORN_API inline void UnrequestSystems(void* requester);
+		ENGINE_API inline void UnrequestSystems(void* requester);
 
 		template<class T>
 		inline void BlockSystem(void* requester);
@@ -101,15 +101,15 @@ namespace Havtorn
 		template<class T>
 		inline void UnblockSystem(void* requester);
 
-		HAVTORN_API void RequestPhysicsSystem(void* requester);
-		HAVTORN_API void BlockPhysicsSystem(void* requester);
-		HAVTORN_API void UnblockPhysicsSystem(void* requester);
+		ENGINE_API void RequestPhysicsSystem(void* requester);
+		ENGINE_API void BlockPhysicsSystem(void* requester);
+		ENGINE_API void UnblockPhysicsSystem(void* requester);
 
-		HAVTORN_API void Initialize2DPhysicsData(const SEntity& entity) const;
-		HAVTORN_API void Update2DPhysicsData(STransformComponent* transformComponent, SPhysics2DComponent* phys2DComponent) const;
+		ENGINE_API void Initialize2DPhysicsData(const SEntity& entity) const;
+		ENGINE_API void Update2DPhysicsData(STransformComponent* transformComponent, SPhysics2DComponent* phys2DComponent) const;
 
-		HAVTORN_API void Initialize3DPhysicsData(const SEntity& entity) const;
-		HAVTORN_API void Update3DPhysicsData(STransformComponent* transformComponent, SPhysics3DComponent* phys2DComponent) const;
+		ENGINE_API void Initialize3DPhysicsData(const SEntity& entity) const;
+		ENGINE_API void Update3DPhysicsData(STransformComponent* transformComponent, SPhysics3DComponent* phys2DComponent) const;
 
 	public:
 		CMulticastDelegate<CScene*> OnBeginPlayDelegate;
@@ -123,7 +123,7 @@ namespace Havtorn
 		bool Init(CRenderManager* renderManager);
 		void Update() const;
 
-		HAVTORN_API void LoadScene(const std::string& filePath, CScene* outScene) const;
+		ENGINE_API void LoadScene(const std::string& filePath, CScene* outScene) const;
 
 		void OnSceneCreated(CScene* scene) const;
 

@@ -8,7 +8,7 @@
 #include "MathTypes/Matrix.h"
 #include "MathTypes/Transform.h"
 #include "MathTypes/Curve.h"
-#include "Core/Serializable.h"
+#include "Serializable.h"
 
 namespace Havtorn
 {

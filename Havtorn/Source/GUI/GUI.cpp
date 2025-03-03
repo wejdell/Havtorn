@@ -6,9 +6,9 @@
 #include <backends/imgui_impl_dx11.h>
 #include <ImGuizmo.h>
 
-#include <../Engine/Core/CoreTypes.h>
-#include <../Engine/Core/MathTypes/Vector.h>
-#include <../Engine/Core/MathTypes/Matrix.h>
+#include <CoreTypes.h>
+#include <MathTypes/Vector.h>
+#include <MathTypes/Matrix.h>
 
 #include <string>
 
@@ -16,7 +16,7 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARA
 
 namespace Havtorn
 {
-	class EXPORT GUI::ImGuiImpl
+	class GUI::ImGuiImpl
 	{
 	public:
 		ImGuiImpl() = default;
@@ -201,9 +201,10 @@ namespace Havtorn
 		Instance = nullptr;
 	}
 
-	void GUI::InitImGui(HWND hwnd, ID3D11Device* device, ID3D11DeviceContext* context)
+	void GUI::InitGUI(HWND hwnd, ID3D11Device* device, ID3D11DeviceContext* context)
 	{
 		Impl->Init(hwnd, device, context);
+		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 	}
 
 	const float GUI::SliderSpeed = 0.1f;

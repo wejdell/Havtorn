@@ -2,37 +2,35 @@
 
 #pragma once
 #include "EditorWindow.h"
-//#include <imgui.h>
+
+#include <GUI.h>
 
 struct ID3D11Texture2D;
 
 namespace Havtorn
 {
 	class CRenderTexture;
-}
 
-namespace ImGui
-{
 	class CViewportWindow : public CWindow
 	{
 	public:
-		CViewportWindow(const char* displayName, Havtorn::CEditorManager* manager);
+		CViewportWindow(const char* displayName, CEditorManager* manager);
 		~CViewportWindow() override;
 		void OnEnable() override;
 		void OnInspectorGUI() override;
 		void OnDisable() override;
 
-		const Havtorn::SVector2<Havtorn::F32> GetRenderedSceneDimensions() const;
-		const Havtorn::SVector2<Havtorn::F32> GetRenderedScenePosition() const;
+		const SVector2<F32> GetRenderedSceneDimensions() const;
+		const SVector2<F32> GetRenderedScenePosition() const;
 
-		ImDrawList* GetCurrentDrawList() const;
+		GUI::SGuiDrawList* GetCurrentDrawList() const;
 
 	private:
-		const Havtorn::CRenderTexture* RenderedSceneTextureReference;
-		ImDrawList* CurrentDrawList = nullptr;
-		Havtorn::F32 ViewportMenuHeight = 16.0f;
-		Havtorn::SVector2<Havtorn::F32> RenderedSceneDimensions = Havtorn::SVector2<Havtorn::F32>::Zero;
-		Havtorn::SVector2<Havtorn::F32> RenderedScenePosition = Havtorn::SVector2<Havtorn::F32>::Zero;
+		const CRenderTexture* RenderedSceneTextureReference;
+		GUI::SGuiDrawList* CurrentDrawList = nullptr;
+		F32 ViewportMenuHeight = 16.0f;
+		SVector2<F32> RenderedSceneDimensions = SVector2<F32>::Zero;
+		SVector2<F32> RenderedScenePosition = SVector2<F32>::Zero;
 
 		// TODO.NR: Make an abstraction for what's happening inside and to the play button blocks
 		bool IsPlayButtonEngaged = false;

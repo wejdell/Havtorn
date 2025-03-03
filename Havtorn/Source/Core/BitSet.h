@@ -2,14 +2,14 @@
 
 #pragma once
 
-#include "Core/Core.h"
-#include "Core/CoreTypes.h"
+#include "Core.h"
+#include "CoreTypes.h"
 //#include <bitset>
 
 namespace Havtorn
 {
 	template<U64 bits>
-    class HAVTORN_API CBitSet
+    class CORE_API CBitSet
     {
     public:
         constexpr bool Subscript(U64 pos) const

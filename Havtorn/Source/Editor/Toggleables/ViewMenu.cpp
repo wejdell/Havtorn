@@ -3,11 +3,11 @@
 #include "ViewMenu.h"
 #include "EditorManager.h"
 
-//#include <imgui.h>
+#include <GUI.h>
 
-namespace ImGui
+namespace Havtorn
 {
-	CViewMenu::CViewMenu(const char* displayName, Havtorn::CEditorManager* manager)
+	CViewMenu::CViewMenu(const char* displayName, CEditorManager* manager)
 		: CToggleable(displayName, manager)
 	{
 	}
@@ -18,22 +18,22 @@ namespace ImGui
 
 	void CViewMenu::OnInspectorGUI()
 	{
-		if (ImGui::Button(Name()))
-			ImGui::OpenPopup(PopupName);
+		if (GUI::Button(Name()))
+			GUI::OpenPopup(PopupName);
 
-		if (ImGui::BeginPopup(PopupName))
+		if (GUI::BeginPopup(PopupName))
 		{
-			if(ImGui::MenuItem("Debug info"))
+			if(GUI::MenuItem("Debug info"))
 			{
 				Manager->ToggleDebugInfo();
 			}
 
-			if(ImGui::MenuItem("Dear Imgui Demo"))
+			if(GUI::MenuItem("Dear Imgui Demo"))
 			{
 				Manager->ToggleDemo();
 			}
 
-			ImGui::EndPopup();
+			GUI::EndPopup();
 		}
 	}
 

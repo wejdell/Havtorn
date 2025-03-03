@@ -3,35 +3,35 @@
 #pragma once
 #include "EditorWindow.h"
 
-#include <Core/MathTypes/Vector.h>
+#include <MathTypes/Vector.h>
 
 namespace Havtorn
 {
 	struct SComponentViewResult;
 	class CScene;
-}
 
-namespace ImGui
-{
+	template<typename T = F32>
+	struct SVector2;
+
 	class CInspectorWindow : public CWindow
 	{
 	public:
-		CInspectorWindow(const char* displayName, Havtorn::CEditorManager* manager);
+		CInspectorWindow(const char* displayName, CEditorManager* manager);
 		~CInspectorWindow() override;
 		void OnEnable() override;
 		void OnInspectorGUI() override;
 		void OnDisable() override;
 
 	private:
-		void UpdateTransformGizmo(const Havtorn::SComponentViewResult& result);
-		void ViewManipulation(Havtorn::SMatrix& outCameraView, const Havtorn::SVector2<Havtorn::F32>& windowPosition, const Havtorn::SVector2<Havtorn::F32>& windowSize);
-		void InspectAssetComponent(const Havtorn::SComponentViewResult& result);
-		void IterateAssetRepresentations(const Havtorn::SComponentViewResult& result, const std::vector<std::string>& assetNames, const std::vector<std::string>& assetLabels, const std::string& modalNameToOpen);
-		void OpenSelectMeshAssetModal(const Havtorn::SComponentViewResult& result);
-		void OpenSelectTextureAssetModal(const Havtorn::SComponentViewResult& result);
-		void OpenSelectMaterialAssetModal(const Havtorn::SComponentViewResult& result);
-		void OpenAssetTool(const Havtorn::SComponentViewResult& result);
-		void HandleTextureAssetModal(const std::string& pathToSearch, Havtorn::U16& textureReference);
+		void UpdateTransformGizmo(const SComponentViewResult& result);
+		void ViewManipulation(SMatrix& outCameraView, const SVector2<F32>& windowPosition, const SVector2<F32>& windowSize);
+		void InspectAssetComponent(const SComponentViewResult& result);
+		void IterateAssetRepresentations(const SComponentViewResult& result, const std::vector<std::string>& assetNames, const std::vector<std::string>& assetLabels, const std::string& modalNameToOpen);
+		void OpenSelectMeshAssetModal(const SComponentViewResult& result);
+		void OpenSelectTextureAssetModal(const SComponentViewResult& result);
+		void OpenSelectMaterialAssetModal(const SComponentViewResult& result);
+		void OpenAssetTool(const SComponentViewResult& result);
+		void HandleTextureAssetModal(const std::string& pathToSearch, U16& textureReference);
 		
 		// TODO.NR: Support adding and removing components through the editor. Unsolved problem.
 		void OpenAddComponentModal();
@@ -41,8 +41,8 @@ namespace ImGui
 		const std::string SelectMaterialAssetModalName = "Select Material Asset";
 		const std::string SelectTextureAssetModalName = "Select Texture Asset";
 
-		Havtorn::CScene* Scene = nullptr;
-		Havtorn::SEntity SelectedEntity = Havtorn::SEntity::Null;
-		Havtorn::U8 AssetPickedIndex = 0;
+		CScene* Scene = nullptr;
+		SEntity SelectedEntity = SEntity::Null;
+		U8 AssetPickedIndex = 0;
 	};
 }

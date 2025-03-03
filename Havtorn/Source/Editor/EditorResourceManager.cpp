@@ -7,7 +7,7 @@
 
 namespace Havtorn
 {
-	ID3D11ShaderResourceView* Havtorn::CEditorResourceManager::GetEditorTexture(EEditorTexture texture) const
+	ID3D11ShaderResourceView* CEditorResourceManager::GetEditorTexture(EEditorTexture texture) const
 	{
 		U64 index = static_cast<I64>(texture);
 		
@@ -21,27 +21,27 @@ namespace Havtorn
 	{
 		switch (assetType)
 		{
-		case Havtorn::EAssetType::StaticMesh:
+		case EAssetType::StaticMesh:
 			return std::move(RenderManager->RenderStaticMeshAssetTexture(filePath));
-		case Havtorn::EAssetType::SkeletalMesh:
+		case EAssetType::SkeletalMesh:
 			return std::move(RenderManager->RenderSkeletalMeshAssetTexture(filePath));
-		case Havtorn::EAssetType::Texture:
+		case EAssetType::Texture:
 			return std::move(RenderManager->GetTextureAssetTexture(filePath));
-		case Havtorn::EAssetType::Material:
+		case EAssetType::Material:
 			return std::move(RenderManager->RenderMaterialAssetTexture(filePath));
-		case Havtorn::EAssetType::Animation:
+		case EAssetType::Animation:
 			break;
-		case Havtorn::EAssetType::AudioOneShot:
+		case EAssetType::AudioOneShot:
 			break;
-		case Havtorn::EAssetType::AudioCollection:
+		case EAssetType::AudioCollection:
 			break;
-		case Havtorn::EAssetType::VisualFX:
+		case EAssetType::VisualFX:
 			break;
-		case Havtorn::EAssetType::Scene:
+		case EAssetType::Scene:
 			break;
-		case Havtorn::EAssetType::Sequencer:
-			return std::move(GetEditorTexture(Havtorn::EEditorTexture::SequencerIcon));
-		case Havtorn::EAssetType::None:
+		case EAssetType::Sequencer:
+			return std::move(GetEditorTexture(EEditorTexture::SequencerIcon));
+		case EAssetType::None:
 		default:
 			break;
 		}
@@ -53,13 +53,13 @@ namespace Havtorn
 	{
 		switch (assetType)
 		{
-		case Havtorn::EAssetType::StaticMesh:
+		case EAssetType::StaticMesh:
 			break;
-		case Havtorn::EAssetType::SkeletalMesh:
+		case EAssetType::SkeletalMesh:
 			break;
-		case Havtorn::EAssetType::Texture:
+		case EAssetType::Texture:
 			break;
-		case Havtorn::EAssetType::Material:
+		case EAssetType::Material:
 		{
 			SMaterialAssetFileHeader asset;
 
@@ -86,15 +86,15 @@ namespace Havtorn
 			delete[] data;
 		}
 		break;
-		case Havtorn::EAssetType::Animation:
+		case EAssetType::Animation:
 			break;
-		case Havtorn::EAssetType::SpriteAnimation:
+		case EAssetType::SpriteAnimation:
 			break;
-		case Havtorn::EAssetType::AudioOneShot:
+		case EAssetType::AudioOneShot:
 			break;
-		case Havtorn::EAssetType::AudioCollection:
+		case EAssetType::AudioCollection:
 			break;
-		case Havtorn::EAssetType::VisualFX:
+		case EAssetType::VisualFX:
 			break;
 		default:
 			break;
@@ -193,49 +193,49 @@ namespace Havtorn
 
 		switch (texture)
 		{
-		case Havtorn::EEditorTexture::FolderIcon:
+		case EEditorTexture::FolderIcon:
 			return ResourceAssetPath + "FolderIcon" + extension;
 
-		case Havtorn::EEditorTexture::FileIcon:
+		case EEditorTexture::FileIcon:
 			return ResourceAssetPath + "FileIcon" + extension;
 
-		case Havtorn::EEditorTexture::PlayIcon:
+		case EEditorTexture::PlayIcon:
 			return ResourceAssetPath + "PlayIcon" + extension;
 
-		case Havtorn::EEditorTexture::PauseIcon:
+		case EEditorTexture::PauseIcon:
 			return ResourceAssetPath + "PauseIcon" + extension;
 
-		case Havtorn::EEditorTexture::StopIcon:
+		case EEditorTexture::StopIcon:
 			return ResourceAssetPath + "StopIcon" + extension;
 
-		case Havtorn::EEditorTexture::SceneIcon:
+		case EEditorTexture::SceneIcon:
 			return ResourceAssetPath + "SceneIcon" + extension;
 
-		case Havtorn::EEditorTexture::SequencerIcon:
+		case EEditorTexture::SequencerIcon:
 			return ResourceAssetPath + "SequencerIcon" + extension;
 
-		case Havtorn::EEditorTexture::EnvironmentLightIcon:
+		case EEditorTexture::EnvironmentLightIcon:
 			return ResourceAssetPath + "EnvironmentLightIcon" + extension;
 
-		case Havtorn::EEditorTexture::DirectionalLightIcon:
+		case EEditorTexture::DirectionalLightIcon:
 			return ResourceAssetPath + "DirectionalLightIcon" + extension;
 
-		case Havtorn::EEditorTexture::PointLightIcon:
+		case EEditorTexture::PointLightIcon:
 			return ResourceAssetPath + "PointLightIcon" + extension;
 
-		case Havtorn::EEditorTexture::SpotlightIcon:
+		case EEditorTexture::SpotlightIcon:
 			return ResourceAssetPath + "SpotlightIcon" + extension;
 
-		case Havtorn::EEditorTexture::DecalIcon:
+		case EEditorTexture::DecalIcon:
 			return ResourceAssetPath + "DecalIcon" + extension;
 		
-		case Havtorn::EEditorTexture::Count:
+		case EEditorTexture::Count:
 		default:
 			return std::string();
 		}
 	}
 
-	bool Havtorn::CEditorResourceManager::Init(CRenderManager* renderManager, const CGraphicsFramework* framework)
+	bool CEditorResourceManager::Init(CRenderManager* renderManager, const CGraphicsFramework* framework)
 	{
 		RenderManager = renderManager;
 		ID3D11Device* device = framework->GetDevice();
@@ -254,4 +254,3 @@ namespace Havtorn
 		return true;
 	}
 }
-

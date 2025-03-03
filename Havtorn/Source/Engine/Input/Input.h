@@ -10,6 +10,7 @@
 namespace Havtorn
 {
 	class CInputMapper;
+	class CPlatformManager;
 
 	class CInput
 	{
@@ -34,13 +35,14 @@ namespace Havtorn
 		};
 
 		CInput();
+		bool Init(CPlatformManager* platformManager);
 
 		bool UpdateEvents(UINT message, WPARAM wParam, LPARAM lParam);
 		void UpdateState();
 
 		[[nodiscard]] const std::bitset<3>& GetKeyInputModifiers() const;
 
-		static SVector2<F32> GetAxisRaw();
+		//static SVector2<F32> GetAxisRaw();
 
 		F32 GetAxis(const EAxis& axis);
 		bool IsKeyDown(WPARAM wParam);
@@ -73,6 +75,7 @@ namespace Havtorn
 		F32 GetAxisUsingNoFallOff(const EAxis& axis);
 
 	private:
+		CPlatformManager* PlatformManager;
 		std::map<WPARAM, SInputActionPayload> KeyInputBuffer;
 		std::bitset<3> KeyInputModifiers;
 

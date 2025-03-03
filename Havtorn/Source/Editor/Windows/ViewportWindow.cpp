@@ -1,4 +1,5 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
+
 #include "hvpch.h"
 #include "ViewportWindow.h"
 #include "EditorManager.h"
@@ -6,9 +7,9 @@
 #include "Graphics/RenderManager.h"
 #include "Graphics/RenderingPrimitives/FullscreenTexture.h"
 
-namespace ImGui
+namespace Havtorn
 {
-	CViewportWindow::CViewportWindow(const char* displayName, Havtorn::CEditorManager* manager)
+	CViewportWindow::CViewportWindow(const char* displayName, CEditorManager* manager)
 		: CWindow(displayName, manager)
 		, RenderedSceneTextureReference(nullptr)
 	{
@@ -24,116 +25,116 @@ namespace ImGui
 
 	void CViewportWindow::OnInspectorGUI()
 	{
-		const Havtorn::SEditorLayout& layout = Manager->GetEditorLayout();
+		const SEditorLayout& layout = Manager->GetEditorLayout();
 
-		const ImGuiViewport* mainViewport = ImGui::GetMainViewport();
-		ImGui::SetNextWindowPos(ImVec2(mainViewport->WorkPos.x + layout.ViewportPosition.X, mainViewport->WorkPos.y + layout.ViewportPosition.Y));
-		ImGui::SetNextWindowSize(ImVec2(layout.ViewportSize.X, layout.ViewportSize.Y));
-		ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
-		ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+		const GUI::SGuiMainViewport* mainViewport = GUI::GetMainViewport();
+		GUI::SetNextWindowPos(ImVec2(mainViewport->WorkPos.x + layout.ViewportPosition.X, mainViewport->WorkPos.y + layout.ViewportPosition.Y));
+		GUI::SetNextWindowSize(ImVec2(layout.ViewportSize.X, layout.ViewportSize.Y));
+		GUI::PushStyleVar(GUIStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+		GUI::PushStyleVar(GUIStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
 
-		ImTextureID playButtonID = (ImTextureID)(intptr_t)Manager->GetResourceManager()->GetEditorTexture(Havtorn::EEditorTexture::PlayIcon);
-		ImTextureID pauseButtonID = (ImTextureID)(intptr_t)Manager->GetResourceManager()->GetEditorTexture(Havtorn::EEditorTexture::PauseIcon);
-		ImTextureID stopButtonID = (ImTextureID)(intptr_t)Manager->GetResourceManager()->GetEditorTexture(Havtorn::EEditorTexture::StopIcon);
+		SGuiTextureID playButtonID = (SGuiTextureID)(intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::PlayIcon);
+		SGuiTextureID pauseButtonID = (SGuiTextureID)(intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::PauseIcon);
+		SGuiTextureID stopButtonID = (SGuiTextureID)(intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::StopIcon);
 
-		if (ImGui::Begin(Name(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus))
+		if (GUI::Begin(Name(), nullptr, GUIWindowFlags_NoMove | GUIWindowFlags_NoResize | GUIWindowFlags_NoCollapse | GUIWindowFlags_NoBringToFrontOnFocus))
 		{
-			ImVec2 buttonSize = { 16.0f, 16.0f };
-			ImVec4* colors = ImGui::GetStyle().Colors;
-			ImVec4 buttonInactiveColor = colors[ImGuiCol_Button];
-			ImVec4 buttonActiveColor = colors[ImGuiCol_ButtonActive];
-			ImVec4 buttonHoveredColor = colors[ImGuiCol_ButtonHovered];
-			ImVec2 uv0 = { 0.0f, 0.0f };
-			ImVec2 uv1 = { 1.0f, 1.0f };
+			SVector2<F32> buttonSize = { 16.0f, 16.0f };
+			SColor* colors = GUI::GetStyle().Colors;
+			SColor buttonInactiveColor = colors[GUICol_Button];
+			SColor buttonActiveColor = colors[GUICol_ButtonActive];
+			SColor buttonHoveredColor = colors[GUICol_ButtonHovered];
+			SVector2<F32> uv0 = { 0.0f, 0.0f };
+			SVector2<F32> uv1 = { 1.0f, 1.0f };
 
 			// TODO.NR: Make an abstraction for what's happening inside and to these button blocks
-			// TODO.NR: Make util button function based on ImGui::ImageButtonEx that can fill the whole rect (not only image background) with the color we choose
+			// TODO.NR: Make util button function based on GUI::ImageButtonEx that can fill the whole rect (not only image background) with the color we choose
 
 
-			ImGui::SameLine(layout.ViewportSize.X * 0.5f - 8.0f - 32.0f);
-			ImVec4 playButtonColor = IsPlayButtonEngaged ? buttonActiveColor : IsPlayButtonHovered ? buttonHoveredColor : buttonInactiveColor;
-			if (ImGui::ImageButton("PlayButton", playButtonID, buttonSize, uv0, uv1, playButtonColor))
+			GUI::SameLine(layout.ViewportSize.X * 0.5f - 8.0f - 32.0f);
+			SColor playButtonColor = IsPlayButtonEngaged ? buttonActiveColor : IsPlayButtonHovered ? buttonHoveredColor : buttonInactiveColor;
+			if (GUI::ImageButton("PlayButton", playButtonID, buttonSize, uv0, uv1, playButtonColor))
 			{
-				if (Havtorn::GEngine::GetWorld()->BeginPlay())
+				if (GEngine::GetWorld()->BeginPlay())
 				{
 					IsPlayButtonEngaged = true;
 					IsPauseButtonEngaged = false;
 				}
 			}
-			IsPlayButtonHovered = IsItemHovered();
+			IsPlayButtonHovered = GUI::IsItemHovered();
 
-			ImGui::SameLine(layout.ViewportSize.X * 0.5f - 8.0f);
-			ImVec4 pauseButtonColor = IsPauseButtonEngaged ? buttonActiveColor : IsPauseButtonHovered ? buttonHoveredColor : buttonInactiveColor;
-			if (ImGui::ImageButton("PauseButton", pauseButtonID, buttonSize, uv0, uv1, pauseButtonColor))
+			GUI::SameLine(layout.ViewportSize.X * 0.5f - 8.0f);
+			SColor pauseButtonColor = IsPauseButtonEngaged ? buttonActiveColor : IsPauseButtonHovered ? buttonHoveredColor : buttonInactiveColor;
+			if (GUI::ImageButton("PauseButton", pauseButtonID, buttonSize, uv0, uv1, pauseButtonColor))
 			{
-				if (Havtorn::GEngine::GetWorld()->PausePlay())
+				if (GEngine::GetWorld()->PausePlay())
 				{
 					IsPlayButtonEngaged = false;
 					IsPauseButtonEngaged = true;
 				}
 			}
-			IsPauseButtonHovered = IsItemHovered();
+			IsPauseButtonHovered = GUI::IsItemHovered();
 
-			ImGui::SameLine(layout.ViewportSize.X * 0.5f - 8.0f + 32.0f);
-			if (ImGui::ImageButton("StopButton", stopButtonID, buttonSize))
+			GUI::SameLine(layout.ViewportSize.X * 0.5f - 8.0f + 32.0f);
+			if (GUI::ImageButton("StopButton", stopButtonID, buttonSize))
 			{
-				if (Havtorn::GEngine::GetWorld()->StopPlay())
+				if (GEngine::GetWorld()->StopPlay())
 				{
 					IsPlayButtonEngaged = false;
 					IsPauseButtonEngaged = false;					
 				}
 			}
 
-			ImGuiStyle style = ImGui::GetStyle();
-			ImGui::SameLine(layout.ViewportSize.X * 0.5f - 8.0f + 64.0f);
-			std::string playDimensionLabel = Havtorn::GEngine::GetWorld()->GetWorldPlayDimensions() == Havtorn::EWorldPlayDimensions::World3D ? "3D" : "2D";
-			if (ImGui::Button(playDimensionLabel.c_str(), buttonSize + style.FramePadding * 2.0f))
+			GUI::SGuiStyle style = GUI::GetStyle();
+			GUI::SameLine(layout.ViewportSize.X * 0.5f - 8.0f + 64.0f);
+			std::string playDimensionLabel = GEngine::GetWorld()->GetWorldPlayDimensions() == EWorldPlayDimensions::World3D ? "3D" : "2D";
+			if (GUI::Button(playDimensionLabel.c_str(), buttonSize + style.FramePadding * 2.0f))
 			{
-				Havtorn::GEngine::GetWorld()->ToggleWorldPlayDimensions();
+				GEngine::GetWorld()->ToggleWorldPlayDimensions();
 			}
 
 			RenderedSceneTextureReference = &(Manager->GetRenderManager()->GetRenderedSceneTexture());
 			
 			if (RenderedSceneTextureReference)
 			{
-				ImVec2 vMin = ImGui::GetWindowContentRegionMin();
-				ImVec2 vMax = ImGui::GetWindowContentRegionMax();
+				SVector2<F32> vMin = GUI::GetWindowContentRegionMin();
+				SVector2<F32> vMax = GUI::GetWindowContentRegionMax();
 
-				Havtorn::F32 width = static_cast<Havtorn::F32>(vMax.x - vMin.x);
-				Havtorn::F32 height = static_cast<Havtorn::F32>(vMax.y - vMin.y - ViewportMenuHeight - 4.0f);
+				F32 width = static_cast<F32>(vMax.X - vMin.X);
+				F32 height = static_cast<F32>(vMax.Y - vMin.Y - ViewportMenuHeight - 4.0f);
 
-				ImVec2 windowPos = ImVec2(mainViewport->WorkPos.x + layout.ViewportPosition.X, mainViewport->WorkPos.y + layout.ViewportPosition.Y);
-				windowPos.y += ViewportMenuHeight - 4.0f;
-				RenderedScenePosition.X = windowPos.x;
-				RenderedScenePosition.Y = windowPos.y;
+				SVector2<F32> windowPos = SVector2<F32>(mainViewport->WorkPos.x + layout.ViewportPosition.X, mainViewport->WorkPos.y + layout.ViewportPosition.Y);
+				windowPos.Y += ViewportMenuHeight - 4.0f;
+				RenderedScenePosition.X = windowPos.X;
+				RenderedScenePosition.Y = windowPos.Y;
 				RenderedSceneDimensions = { width, height };
 
-				ImGui::Image((ImTextureID)(intptr_t)RenderedSceneTextureReference->GetShaderResourceView(), ImVec2(width, height));
+				GUI::Image((SGuiTextureID)(intptr_t)RenderedSceneTextureReference->GetShaderResourceView(), ImVec2(width, height));
 			}
 		
-			CurrentDrawList = ImGui::GetWindowDrawList();
+			CurrentDrawList = GUI::GetWindowDrawList();
 		}
 
-		ImGui::PopStyleVar();
-		ImGui::PopStyleVar();
-		ImGui::End();
+		GUI::PopStyleVar();
+		GUI::PopStyleVar();
+		GUI::End();
 	}
 
 	void CViewportWindow::OnDisable()
 	{
 	}
 	
-	const Havtorn::SVector2<Havtorn::F32> CViewportWindow::GetRenderedSceneDimensions() const
+	const SVector2<F32> CViewportWindow::GetRenderedSceneDimensions() const
 	{
 		return RenderedSceneDimensions;
 	}
 	
-	const Havtorn::SVector2<Havtorn::F32> CViewportWindow::GetRenderedScenePosition() const
+	const SVector2<F32> CViewportWindow::GetRenderedScenePosition() const
 	{
 		return RenderedScenePosition;
 	}
 	
-	ImDrawList* CViewportWindow::GetCurrentDrawList() const
+	GUI::SGuiDrawList* CViewportWindow::GetCurrentDrawList() const
 	{
 		return CurrentDrawList;
 	}

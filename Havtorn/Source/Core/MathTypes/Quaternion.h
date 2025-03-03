@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "Core/Core.h"
-#include "Core/CoreTypes.h"
+#include "Core.h"
+#include "CoreTypes.h"
 #include "EngineMath.h"
 #include "Vector.h"
 #include "Rotator.h"
@@ -11,7 +11,7 @@
 
 namespace Havtorn
 {
-	struct HAVTORN_API SQuaternion
+	struct CORE_API SQuaternion
 	{
 		F32 X = 0.0f, Y = 0.0f, Z = 0.0f, W = 1.0f;
 

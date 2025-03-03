@@ -8,7 +8,7 @@
 #include "Engine.h"
 #include "FileSystem/FileSystem.h"
 #include "FileSystem/FileHeaderDeclarations.h"
-#include "Core/EngineException.h"
+#include <EngineException.h>
 
 #define ASSETPATH(path) std::string(path).c_str()
 
@@ -16,22 +16,22 @@ namespace Havtorn
 {
 	namespace UGraphicsUtils
 	{
-		HAVTORN_API bool CreateVertexShader(const std::string& filepath, const CGraphicsFramework* framework, ID3D11VertexShader** outVertexShader, std::string& outShaderData);
+		ENGINE_API bool CreateVertexShader(const std::string& filepath, const CGraphicsFramework* framework, ID3D11VertexShader** outVertexShader, std::string& outShaderData);
 
-		HAVTORN_API bool CreatePixelShader(const std::string& filepath, const CGraphicsFramework* framework, ID3D11PixelShader** outPixelShader);
+		ENGINE_API bool CreatePixelShader(const std::string& filepath, const CGraphicsFramework* framework, ID3D11PixelShader** outPixelShader);
 
-		HAVTORN_API bool CreateGeometryShader(const std::string& filepath, const CGraphicsFramework* framework, ID3D11GeometryShader** outGeometryShader);
+		ENGINE_API bool CreateGeometryShader(const std::string& filepath, const CGraphicsFramework* framework, ID3D11GeometryShader** outGeometryShader);
 	
-		HAVTORN_API HRESULT CreateShaderResourceView(ID3D11Device* device, const std::string& filePath, ID3D11ShaderResourceView** outShaderResourceView);
+		ENGINE_API HRESULT CreateShaderResourceView(ID3D11Device* device, const std::string& filePath, ID3D11ShaderResourceView** outShaderResourceView);
 
-		HAVTORN_API HRESULT CreateShaderResourceViewFromResource(ID3D11Device* device, const std::string& filePath, ID3D11ShaderResourceView** outShaderResourceView);
+		ENGINE_API HRESULT CreateShaderResourceViewFromResource(ID3D11Device* device, const std::string& filePath, ID3D11ShaderResourceView** outShaderResourceView);
 
-		HAVTORN_API HRESULT CreateShaderResourceView(ID3D11Device* device, const void* data, U64 size, ETextureFormat format, ID3D11ShaderResourceView** outShaderResourceView);
+		ENGINE_API HRESULT CreateShaderResourceView(ID3D11Device* device, const void* data, U64 size, ETextureFormat format, ID3D11ShaderResourceView** outShaderResourceView);
 
-		HAVTORN_API ID3D11ShaderResourceView* TryGetShaderResourceView(ID3D11Device* device, const std::string& texturePath);
+		ENGINE_API ID3D11ShaderResourceView* TryGetShaderResourceView(ID3D11Device* device, const std::string& texturePath);
 
-		HAVTORN_API ID3D11ShaderResourceView* TryGetShaderResourceView(ID3D11Device* device, const void* data, U64 size, ETextureFormat format);
+		ENGINE_API ID3D11ShaderResourceView* TryGetShaderResourceView(ID3D11Device* device, const void* data, U64 size, ETextureFormat format);
 
-		HAVTORN_API ID3D11ShaderResourceView* GetShaderResourceView(ID3D11Device* device, const std::string& texturePath);
+		ENGINE_API ID3D11ShaderResourceView* GetShaderResourceView(ID3D11Device* device, const std::string& texturePath);
 	};
 }

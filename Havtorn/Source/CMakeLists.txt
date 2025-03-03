@@ -23,7 +23,8 @@ set(ENGINE_FOLDER "Engine/")
 set(EDITOR_FOLDER "Editor/")
 set(GAME_FOLDER "Game/")
 set(GUI_FOLDER "GUI/")
-#set(IMGUI_FOLDER "ImGui/")
+set(CORE_FOLDER "Core/")
+set(PLATFORM_FOLDER "Platform/")
 set(LAUNCHER_FOLDER "Launcher/")
 set(EXTERNAL_FOLDER "../External/")
 set(WORKING_FOLDER "${CMAKE_BINARY_DIR}/../Bin/")
@@ -32,6 +33,94 @@ set(COMMON_COMPILE_DEFINITIONS HV_PLATFORM_WINDOWS HV_DEBUG HV_ENABLE_ASSERTS _U
 set(COMMON_COMPILE_OPTIONS /W4 /WX /MP /ZI /JMC /fp:fast /FC)
 set(COMMON_LINK_OPTIONS /WX /SUBSYSTEM:WINDOWS)
 
+# ==================== CORE ====================
+set(CORE_FILES
+    ${CORE_FOLDER}MathTypes/AABB3D.h
+    ${CORE_FOLDER}MathTypes/Curve.cpp
+    ${CORE_FOLDER}MathTypes/Curve.h
+    ${CORE_FOLDER}MathTypes/EngineMath.cpp
+    ${CORE_FOLDER}MathTypes/EngineMath.h
+    ${CORE_FOLDER}MathTypes/EngineMathSSE.h
+    ${CORE_FOLDER}MathTypes/Frustum.cpp
+    ${CORE_FOLDER}MathTypes/Frustum.h
+    ${CORE_FOLDER}MathTypes/HavtornMath.h
+    ${CORE_FOLDER}MathTypes/Intersection.h
+    ${CORE_FOLDER}MathTypes/Line.h
+    ${CORE_FOLDER}MathTypes/LineVolume.h
+    ${CORE_FOLDER}MathTypes/MathUtilities.h
+    ${CORE_FOLDER}MathTypes/Matrix.cpp
+    ${CORE_FOLDER}MathTypes/Matrix.h
+    ${CORE_FOLDER}MathTypes/Matrix3x3.h
+    ${CORE_FOLDER}MathTypes/Plane.h
+    ${CORE_FOLDER}MathTypes/PlaneVolume.h
+    ${CORE_FOLDER}MathTypes/Quaternion.cpp
+    ${CORE_FOLDER}MathTypes/Quaternion.h
+    ${CORE_FOLDER}MathTypes/Ray.h
+    ${CORE_FOLDER}MathTypes/Rotator.h
+    ${CORE_FOLDER}MathTypes/Sphere.h
+    ${CORE_FOLDER}MathTypes/Transform.h
+    ${CORE_FOLDER}MathTypes/Vector.cpp
+    ${CORE_FOLDER}MathTypes/Vector.h
+    ${CORE_FOLDER}BitSet.h
+    ${CORE_FOLDER}Color.cpp
+    ${CORE_FOLDER}Color.h
+    ${CORE_FOLDER}Core.h
+    ${CORE_FOLDER}CoreTypes.h
+    ${CORE_FOLDER}Delegate.cpp
+    ${CORE_FOLDER}Delegate.h
+    ${CORE_FOLDER}EngineException.h
+    ${CORE_FOLDER}EngineTypes.h
+    ${CORE_FOLDER}HavtornDelegate.h
+    ${CORE_FOLDER}HavtornString.cpp
+    ${CORE_FOLDER}HavtornString.h
+    ${CORE_FOLDER}Serializable.cpp
+    ${CORE_FOLDER}Serializable.h
+    ${CORE_FOLDER}hvpch.cpp
+    ${CORE_FOLDER}hvpch.h
+    "${CORE_FOLDER}Log.cpp"
+    "${CORE_FOLDER}Log.h"
+)
+add_library(Core SHARED ${CORE_FILES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${CORE_FILES})
+target_include_directories(Core PRIVATE
+    "${CORE_FOLDER}"
+)
+target_compile_definitions(Core PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_CORE_DLL)
+target_compile_options(Core PRIVATE ${COMMON_COMPILE_OPTIONS})
+target_link_options(Core PRIVATE ${COMMON_LINK_OPTIONS})
+target_precompile_headers(Core PRIVATE ${CORE_FOLDER}hvpch.h)
+set_property(TARGET Core PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
+set_target_properties(Core PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER})
+# ==================== CORE ====================
+
+# ==================== PLATFORM ====================
+set(PLATFORM_FILES
+    ${PLATFORM_FOLDER}PlatformProcess.cpp
+    ${PLATFORM_FOLDER}PlatformProcess.h
+    ${PLATFORM_FOLDER}PlatformManager.cpp
+    ${PLATFORM_FOLDER}PlatformManager.h
+    ${PLATFORM_FOLDER}WindowsInclude.h
+)
+add_library(Platform SHARED ${PLATFORM_FILES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PLATFORM_FILES})
+target_link_libraries(Platform PRIVATE
+    Core
+)
+target_include_directories(Platform PRIVATE
+	"${PLATFORM_FOLDER}"
+    "${CORE_FOLDER}"
+)
+target_link_directories(Platform PRIVATE
+    ${CMAKE_BINARY_DIR}
+)
+target_compile_definitions(Platform PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_PLATFORM_DLL)
+target_compile_options(Platform PRIVATE ${COMMON_COMPILE_OPTIONS})
+target_link_options(Platform PRIVATE ${COMMON_LINK_OPTIONS})
+set_property(TARGET Platform PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
+set_target_properties(Platform PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER})
+add_dependencies(Platform Core)
+# ==================== PLATFORM ====================
+
 # ==================== GUI ====================
 set(GUI_FILES
    ${GUI_FOLDER}GUI.cpp
@@ -39,18 +128,63 @@ set(GUI_FILES
    ${GUI_FOLDER}GUIProcess.cpp
    ${GUI_FOLDER}GUIProcess.h
 )
-add_library(GUI STATIC ${GUI_FILES})
+set(IMGUI_FILES
+   ${EXTERNAL_FOLDER}imgui/imconfig.h
+   ${EXTERNAL_FOLDER}imgui/imgui.cpp
+   ${EXTERNAL_FOLDER}imgui/imgui.h
+   ${EXTERNAL_FOLDER}imgui/imgui_demo.cpp
+   ${EXTERNAL_FOLDER}imgui/imgui_draw.cpp
+   ${EXTERNAL_FOLDER}imgui/imgui_internal.h
+   ${EXTERNAL_FOLDER}imgui/imgui_tables.cpp
+   ${EXTERNAL_FOLDER}imgui/imgui_widgets.cpp
+   ${EXTERNAL_FOLDER}imgui/imstb_rectpack.h
+   ${EXTERNAL_FOLDER}imgui/imstb_textedit.h
+   ${EXTERNAL_FOLDER}imgui/imstb_truetype.h
+   ${EXTERNAL_FOLDER}imgui/backends/imgui_impl_dx11.cpp
+   ${EXTERNAL_FOLDER}imgui/backends/imgui_impl_dx11.h
+   ${EXTERNAL_FOLDER}imgui/backends/imgui_impl_win32.cpp
+   ${EXTERNAL_FOLDER}imgui/backends/imgui_impl_win32.h
+   ${EXTERNAL_FOLDER}imgui/misc/debuggers/imgui.natvis
+   ${EXTERNAL_FOLDER}imgui/misc/debuggers/imgui.natstepfilter
+   ${EXTERNAL_FOLDER}imgui/misc/cpp/imgui_stdlib.cpp
+   ${EXTERNAL_FOLDER}imgui/misc/cpp/imgui_stdlib.h
+   ${EXTERNAL_FOLDER}ImGuizmo/GraphEditor.cpp
+   ${EXTERNAL_FOLDER}ImGuizmo/GraphEditor.h
+   ${EXTERNAL_FOLDER}ImGuizmo/ImCurveEdit.cpp
+   ${EXTERNAL_FOLDER}ImGuizmo/ImCurveEdit.h
+   ${EXTERNAL_FOLDER}ImGuizmo/ImCurveEdit.cpp
+   ${EXTERNAL_FOLDER}ImGuizmo/ImCurveEdit.h
+   ${EXTERNAL_FOLDER}ImGuizmo/ImGradient.cpp
+   ${EXTERNAL_FOLDER}ImGuizmo/ImGradient.h
+   ${EXTERNAL_FOLDER}ImGuizmo/ImGuizmo.cpp
+   ${EXTERNAL_FOLDER}ImGuizmo/ImGuizmo.h
+   ${EXTERNAL_FOLDER}ImGuizmo/ImSequencer.cpp
+   ${EXTERNAL_FOLDER}ImGuizmo/ImSequencer.h
+   ${EXTERNAL_FOLDER}ImGuizmo/ImZoomSlider.h
+)
+add_library(GUI SHARED ${GUI_FILES} ${IMGUI_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GUI_FILES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}"/../External" FILES ${IMGUI_FILES})
+target_link_libraries(GUI PRIVATE
+    Core
+    Platform
+)
 target_include_directories(GUI PRIVATE
 	"${GUI_FOLDER}"
-	"${ENGINE_FOLDER}"
+    "${PLATFORM_FOLDER}"
+	"${CORE_FOLDER}"
     "${EXTERNAL_FOLDER}imgui"
     "${EXTERNAL_FOLDER}ImGuizmo"
 )
-target_compile_definitions(GUI PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_BUILD_DLL)
+target_link_directories(GUI PRIVATE
+    ${CMAKE_BINARY_DIR}
+)
+target_compile_definitions(GUI PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_GUI_DLL)
 target_compile_options(GUI PRIVATE /W3 /MP /ZI /JMC /fp:fast /FC)
+target_link_options(GUI PRIVATE ${COMMON_LINK_OPTIONS})
 set_property(TARGET GUI PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
 set_target_properties(GUI PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER})
+add_dependencies(GUI Core Platform)
 # ==================== GUI ====================
 
 # ==================== ENGINE ====================
@@ -62,55 +196,14 @@ set(ENGINE_FILES
     #${ENGINE_FOLDER}Application/ImGuiManager.h
     #${ENGINE_FOLDER}Application/ImGuiProcess.cpp
     #${ENGINE_FOLDER}Application/ImGuiProcess.h
-    ${ENGINE_FOLDER}Application/WindowHandler.cpp
-    ${ENGINE_FOLDER}Application/WindowHandler.h
+    #${ENGINE_FOLDER}Application/WindowHandler.cpp
+    #${ENGINE_FOLDER}Application/WindowHandler.h
     ${ENGINE_FOLDER}Assets/SequencerAsset.cpp
     ${ENGINE_FOLDER}Assets/SequencerAsset.h
-    ${ENGINE_FOLDER}Core/MathTypes/AABB3D.h
-    ${ENGINE_FOLDER}Core/MathTypes/Curve.cpp
-    ${ENGINE_FOLDER}Core/MathTypes/Curve.h
-    ${ENGINE_FOLDER}Core/MathTypes/EngineMath.cpp
-    ${ENGINE_FOLDER}Core/MathTypes/EngineMath.h
-    ${ENGINE_FOLDER}Core/MathTypes/EngineMathSSE.h
-    ${ENGINE_FOLDER}Core/MathTypes/Frustum.cpp
-    ${ENGINE_FOLDER}Core/MathTypes/Frustum.h
-    ${ENGINE_FOLDER}Core/MathTypes/HavtornMath.h
-    ${ENGINE_FOLDER}Core/MathTypes/Intersection.h
-    ${ENGINE_FOLDER}Core/MathTypes/Line.h
-    ${ENGINE_FOLDER}Core/MathTypes/LineVolume.h
-    ${ENGINE_FOLDER}Core/MathTypes/MathUtilities.h
-    ${ENGINE_FOLDER}Core/MathTypes/Matrix.cpp
-    ${ENGINE_FOLDER}Core/MathTypes/Matrix.h
-    ${ENGINE_FOLDER}Core/MathTypes/Matrix3x3.h
-    ${ENGINE_FOLDER}Core/MathTypes/Plane.h
-    ${ENGINE_FOLDER}Core/MathTypes/PlaneVolume.h
-    ${ENGINE_FOLDER}Core/MathTypes/Quaternion.cpp
-    ${ENGINE_FOLDER}Core/MathTypes/Quaternion.h
-    ${ENGINE_FOLDER}Core/MathTypes/Ray.h
-    ${ENGINE_FOLDER}Core/MathTypes/Rotator.h
-    ${ENGINE_FOLDER}Core/MathTypes/Sphere.h
-    ${ENGINE_FOLDER}Core/MathTypes/Transform.h
-    ${ENGINE_FOLDER}Core/MathTypes/Vector.cpp
-    ${ENGINE_FOLDER}Core/MathTypes/Vector.h
-    ${ENGINE_FOLDER}Core/BitSet.h
-    ${ENGINE_FOLDER}Core/Color.cpp
-    ${ENGINE_FOLDER}Core/Color.h
-    ${ENGINE_FOLDER}Core/Core.h
-    ${ENGINE_FOLDER}Core/CoreTypes.h
-    ${ENGINE_FOLDER}Core/Delegate.cpp
-    ${ENGINE_FOLDER}Core/Delegate.h
-    ${ENGINE_FOLDER}Core/EngineException.h
-    ${ENGINE_FOLDER}Core/EngineTypes.h
     ${ENGINE_FOLDER}Core/GeneralUtilities.h
-    ${ENGINE_FOLDER}Core/HavtornDelegate.h
-    ${ENGINE_FOLDER}Core/HavtornString.cpp
-    ${ENGINE_FOLDER}Core/HavtornString.h
-    ${ENGINE_FOLDER}Core/ImGuiTypeUtil.cpp
-    ${ENGINE_FOLDER}Core/ImGuiTypeUtil.h
+    #${ENGINE_FOLDER}Core/ImGuiTypeUtil.cpp
+    #${ENGINE_FOLDER}Core/ImGuiTypeUtil.h
     ${ENGINE_FOLDER}Core/RuntimeAssetDeclarations.h
-    ${ENGINE_FOLDER}Core/Serializable.cpp
-    ${ENGINE_FOLDER}Core/Serializable.h
-    ${ENGINE_FOLDER}Core/WindowsInclude.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraComponentEditorContext.cpp
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraControllerComponentEditorContext.cpp
@@ -261,8 +354,6 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Havtorn.h
     ${ENGINE_FOLDER}hvpch.cpp
     ${ENGINE_FOLDER}hvpch.h
-    "${ENGINE_FOLDER}Log.cpp"
-    "${ENGINE_FOLDER}Log.h"
     ${ENGINE_FOLDER}ModelImporter.cpp
     ${ENGINE_FOLDER}ModelImporter.h
     ${ENGINE_FOLDER}Timer.cpp
@@ -386,6 +477,8 @@ target_link_libraries(Engine PRIVATE
     PhysX/PhysXFoundation_64
     PhysX/PhysXPvdSDK_static_64
     PhysX/PhysXCharacterKinematic_static_64
+    Core
+    Platform
     GUI
 )
 target_include_directories(Engine PRIVATE
@@ -398,14 +491,17 @@ target_include_directories(Engine PRIVATE
     "${EXTERNAL_FOLDER}box2d/include/box2d"
     "${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
     "${EXTERNAL_FOLDER}PhysX/physx/include"
-    "${EXTERNAL_FOLDER}imgui"
-    "${EXTERNAL_FOLDER}ImGuizmo"
+    #"${EXTERNAL_FOLDER}imgui"
+    #"${EXTERNAL_FOLDER}ImGuizmo"
+    "Core"
+    "Platform"
     "GUI"
 )
 target_link_directories(Engine PRIVATE
     "${EXTERNAL_FOLDER}Lib"
+    ${CMAKE_BINARY_DIR}
 )
-target_compile_definitions(Engine PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_BUILD_DLL)
+target_compile_definitions(Engine PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_ENGINE_DLL)
 target_compile_options(Engine PRIVATE ${COMMON_COMPILE_OPTIONS})
 target_compile_options(Engine PRIVATE "/FI${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/Engine.dir/$<CONFIG>/cmake_pch.hxx")
 target_precompile_headers(Engine PRIVATE ${ENGINE_FOLDER}hvpch.h)
@@ -413,7 +509,7 @@ target_link_options(Engine PRIVATE ${COMMON_LINK_OPTIONS} /NODEFAULTLIB:LIBCMTD.
 #target_link_options(Engine PRIVATE ${COMMON_LINK_OPTIONS} /NODEFAULTLIB:LIBCMTD.lib /IMPLIB:${CMAKE_CURRENT_BINARY_DIR}/Engine.dir/Engine/Engine_$<CONFIG>.lib)
 set_property(TARGET Engine PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
 set_target_properties(Engine PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER})
-add_dependencies(Engine GUI)
+add_dependencies(Engine Core Platform GUI)
 # ==================== ENGINE ====================
 
 
@@ -444,21 +540,28 @@ target_include_directories(Game PRIVATE
     "${EXTERNAL_FOLDER}box2d/include/box2d"
     "${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
     "${EXTERNAL_FOLDER}PhysX/physx/include"
-    "Engine"
+    "Core"
+    "Platform"
     "GUI"
+    "Engine"
 )
 target_link_libraries(Game PRIVATE
-    Engine
+    Core
+    Platform
     GUI
+    Engine
 )
-target_compile_definitions(Game PRIVATE ${COMMON_COMPILE_DEFINITIONS})
+target_link_directories(Game PRIVATE
+    ${CMAKE_BINARY_DIR}
+)
+target_compile_definitions(Game PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_GAME_DLL)
 target_compile_options(Game PRIVATE ${COMMON_COMPILE_OPTIONS})
 target_compile_options(Game PRIVATE "/FI${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/Game.dir/$<CONFIG>/cmake_pch.hxx")
 target_precompile_headers(Game PRIVATE ${GAME_FOLDER}hvpch.h)
 target_link_options(Game PRIVATE ${COMMON_LINK_OPTIONS})
 set_property(TARGET Game PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
 set_target_properties(Game PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER})
-add_dependencies(Game Engine GUI)
+add_dependencies(Game Core Platform GUI Engine)
 # ==================== GAME ====================
 
 
@@ -515,20 +618,27 @@ target_include_directories(Editor PRIVATE
     "${EXTERNAL_FOLDER}box2d/include/box2d"
     "${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
     "${EXTERNAL_FOLDER}PhysX/physx/include"
-    "Engine"
+    "Core"
+    "Platform"
     "GUI"
+    "Engine"
 )
 target_link_libraries(Editor PRIVATE
+    Core
+    Platform
+    GUI
     Engine
     Game
-    GUI
 )
-target_compile_definitions(Editor PRIVATE ${COMMON_COMPILE_DEFINITIONS})
+target_link_directories(Editor PRIVATE
+    ${CMAKE_BINARY_DIR}
+)
+target_compile_definitions(Editor PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_EDITOR_DLL)
 target_compile_options(Editor PRIVATE ${COMMON_COMPILE_OPTIONS})
 target_link_options(Editor PRIVATE ${COMMON_LINK_OPTIONS})
 set_property(TARGET Editor PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
 set_target_properties(Editor PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER})
-add_dependencies(Editor Engine Game GUI)
+add_dependencies(Editor Core Platform GUI Engine Game)
 # ==================== EDITOR ====================
 
 
@@ -546,16 +656,23 @@ target_include_directories(Launcher PRIVATE
     "${EXTERNAL_FOLDER}box2d/include/box2d"
 	"${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
 	"${EXTERNAL_FOLDER}PhysX/physx/include"
+    "Core"
+    "Platform"
 	"GUI"
-	"Editor"
 	"Engine"
 	"Game"
+	"Editor"
 )
 target_link_libraries(Launcher PRIVATE
+    Core    
+    Platform
+    GUI
     Engine
     Game
     Editor
-    GUI
+)
+target_link_directories(Launcher PRIVATE
+    ${CMAKE_BINARY_DIR}
 )
 target_compile_definitions(Launcher PRIVATE ${COMMON_COMPILE_DEFINITIONS})
 target_compile_options(Launcher PRIVATE ${COMMON_COMPILE_OPTIONS})
@@ -563,5 +680,5 @@ target_link_options(Launcher PRIVATE ${COMMON_LINK_OPTIONS})
 set_property(TARGET Launcher PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
 set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT Launcher)
 set_target_properties(Launcher PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER})
-add_dependencies(Launcher Engine Editor Game GUI)
+add_dependencies(Launcher Core Platform GUI Engine Game Editor)
 # ==================== LAUNCHER ====================

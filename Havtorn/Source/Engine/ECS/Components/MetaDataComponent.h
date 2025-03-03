@@ -2,7 +2,7 @@
 
 #pragma once
 #include "ECS/Component.h"
-#include "Core/HavtornString.h"
+#include <HavtornString.h>
 
 namespace Havtorn
 {

@@ -8,14 +8,14 @@ namespace Havtorn
     class CGameScene : public CScene
     {
     public:
-		HAVTORN_EXPORT virtual bool Init(CRenderManager* renderManager, const std::string& sceneName) override;
+		GAME_API virtual bool Init(CRenderManager* renderManager, const std::string& sceneName) override;
 
-		HAVTORN_EXPORT virtual bool Init3DDemoScene(CRenderManager* renderManager) override;
-		HAVTORN_EXPORT virtual bool Init2DDemoScene(CRenderManager* renderManager) override;
+		GAME_API virtual bool Init3DDemoScene(CRenderManager* renderManager) override;
+		GAME_API virtual bool Init2DDemoScene(CRenderManager* renderManager) override;
 
-		HAVTORN_EXPORT virtual [[nodiscard]] U32 GetSize() const override;
-		HAVTORN_EXPORT virtual void Serialize(char* toData, U64& pointerPosition) const override;
-		HAVTORN_EXPORT virtual void Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry) override;
+		GAME_API virtual [[nodiscard]] U32 GetSize() const override;
+		GAME_API virtual void Serialize(char* toData, U64& pointerPosition) const override;
+		GAME_API virtual void Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry) override;
     };
 }
 

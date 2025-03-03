@@ -35,10 +35,10 @@ namespace Havtorn
 	class GTime 
 	{
 	public:
-		HAVTORN_API static F32 Time(ETimerCategory category = ETimerCategory::Frame);
-		HAVTORN_API static F32 Dt(ETimerCategory category = ETimerCategory::Frame);
-		HAVTORN_API static F32 FixedDt(ETimerCategory category = ETimerCategory::Frame);
-		HAVTORN_API static F32 AverageFrameRate(ETimerCategory category = ETimerCategory::Frame);
+		ENGINE_API static F32 Time(ETimerCategory category = ETimerCategory::Frame);
+		ENGINE_API static F32 Dt(ETimerCategory category = ETimerCategory::Frame);
+		ENGINE_API static F32 FixedDt(ETimerCategory category = ETimerCategory::Frame);
+		ENGINE_API static F32 AverageFrameRate(ETimerCategory category = ETimerCategory::Frame);
 
 		GTime();
 		~GTime();

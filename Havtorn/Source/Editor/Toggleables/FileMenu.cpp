@@ -2,14 +2,14 @@
 
 #include "FileMenu.h"
 #include "EditorManager.h"
-#include "Engine.h"
 
-//#include <imgui.h>
+#include <Engine.h>
 #include <../Game/GameScene.h>
+#include <GUI.h>
 
-namespace ImGui
+namespace Havtorn
 {
-    CFileMenu::CFileMenu(const char* displayName, Havtorn::CEditorManager* manager)
+    CFileMenu::CFileMenu(const char* displayName, CEditorManager* manager)
         : CToggleable(displayName, manager)
     {
     }
@@ -24,17 +24,17 @@ namespace ImGui
 
     void CFileMenu::OnInspectorGUI()
     {
-        if (ImGui::Button(Name()))
-            ImGui::OpenPopup(PopupName);
+        if (GUI::Button(Name()))
+            GUI::OpenPopup(PopupName);
 
-        if (ImGui::BeginPopup(PopupName))
+        if (GUI::BeginPopup(PopupName))
         {
-            if (ImGui::MenuItem("New")) 
+            if (GUI::MenuItem("New")) 
             {
-                Havtorn::GEngine::GetWorld()->RemoveScene(0);
-                if (Havtorn::GEngine::GetWorld()->GetActiveScenes().size() > 0)
+                GEngine::GetWorld()->RemoveScene(0);
+                if (GEngine::GetWorld()->GetActiveScenes().size() > 0)
                 {
-                    Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
+                    Manager->SetCurrentScene(GEngine::GetWorld()->GetActiveScenes()[0].get());
                 }
                 else
                 {
@@ -42,41 +42,41 @@ namespace ImGui
                 }
             }
 
-            if (ImGui::BeginMenu("Open"))
+            if (GUI::BeginMenu("Open"))
             {
-                if (ImGui::MenuItem("Demo Scene"))
+                if (GUI::MenuItem("Demo Scene"))
                 {
-                    Havtorn::GEngine::GetWorld()->ChangeScene<Havtorn::CGameScene>("Assets/Scenes/DemoScene.hvs");
-                    Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
+                    GEngine::GetWorld()->ChangeScene<CGameScene>("Assets/Scenes/DemoScene.hvs");
+                    Manager->SetCurrentScene(GEngine::GetWorld()->GetActiveScenes()[0].get());
                 }
 
-                if (ImGui::MenuItem("Test Scene"))
+                if (GUI::MenuItem("Test Scene"))
                 {
-                    Havtorn::GEngine::GetWorld()->ChangeScene<Havtorn::CGameScene>("Assets/Scenes/TestScene.hvs");
-                    Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
+                    GEngine::GetWorld()->ChangeScene<CGameScene>("Assets/Scenes/TestScene.hvs");
+                    Manager->SetCurrentScene(GEngine::GetWorld()->GetActiveScenes()[0].get());
                 }
 
-                //ImGui::MenuItem("fish_hat.c");
-                //ImGui::MenuItem("fish_hat.inl");
-                //ImGui::MenuItem("fish_hat.h");
-                //if (ImGui::BeginMenu("More.."))
+                //GUI::MenuItem("fish_hat.c");
+                //GUI::MenuItem("fish_hat.inl");
+                //GUI::MenuItem("fish_hat.h");
+                //if (GUI::BeginMenu("More.."))
                 //{
-                //    ImGui::MenuItem("Hello");
-                //    ImGui::MenuItem("Sailor");
-                //    //if (ImGui::BeginMenu("Recurse.."))
+                //    GUI::MenuItem("Hello");
+                //    GUI::MenuItem("Sailor");
+                //    //if (GUI::BeginMenu("Recurse.."))
                 //    //{
                 //    //}
-                //    ImGui::EndMenu();
+                //    GUI::EndMenu();
                 //}
-                ImGui::EndMenu();
+                GUI::EndMenu();
             }
 
-            if (ImGui::MenuItem("Clear")) 
+            if (GUI::MenuItem("Clear")) 
             {
-                Havtorn::GEngine::GetWorld()->RemoveScene(0);
-                if (Havtorn::GEngine::GetWorld()->GetActiveScenes().size() > 0)
+                GEngine::GetWorld()->RemoveScene(0);
+                if (GEngine::GetWorld()->GetActiveScenes().size() > 0)
                 {
-                    Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
+                    Manager->SetCurrentScene(GEngine::GetWorld()->GetActiveScenes()[0].get());
                 }
                 else
                 {
@@ -84,81 +84,81 @@ namespace ImGui
                 }
             }
 
-            if (ImGui::MenuItem("Generate 3D Demo Scene"))
+            if (GUI::MenuItem("Generate 3D Demo Scene"))
             {
-                Havtorn::GEngine::GetWorld()->OpenDemoScene<Havtorn::CGameScene>(true);
-                Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
+                GEngine::GetWorld()->OpenDemoScene<CGameScene>(true);
+                Manager->SetCurrentScene(GEngine::GetWorld()->GetActiveScenes()[0].get());
             }
 
-            if (ImGui::MenuItem("Generate 2D Demo Scene"))
+            if (GUI::MenuItem("Generate 2D Demo Scene"))
             {
-                Havtorn::GEngine::GetWorld()->OpenDemoScene<Havtorn::CGameScene>(false);
-                Manager->SetCurrentScene(Havtorn::GEngine::GetWorld()->GetActiveScenes()[0].get());
+                GEngine::GetWorld()->OpenDemoScene<CGameScene>(false);
+                Manager->SetCurrentScene(GEngine::GetWorld()->GetActiveScenes()[0].get());
             }
 
-            if (ImGui::MenuItem("Save Demo Scene"))
+            if (GUI::MenuItem("Save Demo Scene"))
             {
-                Havtorn::GEngine::GetWorld()->SaveActiveScene("Assets/Scenes/DemoScene.hvs");
+                GEngine::GetWorld()->SaveActiveScene("Assets/Scenes/DemoScene.hvs");
             }
 
-            if (ImGui::MenuItem("Save Test Scene", "Ctrl+S")) 
+            if (GUI::MenuItem("Save Test Scene", "Ctrl+S")) 
             {
-                Havtorn::GEngine::GetWorld()->SaveActiveScene("Assets/Scenes/TestScene.hvs");
+                GEngine::GetWorld()->SaveActiveScene("Assets/Scenes/TestScene.hvs");
             }
 
-            //if (ImGui::MenuItem("Save As..")) {}
+            //if (GUI::MenuItem("Save As..")) {}
 
-            ImGui::Separator();
-            //if (ImGui::BeginMenu("Options"))
+            GUI::Separator();
+            //if (GUI::BeginMenu("Options"))
             //{
             //    static bool enabled = true;
-            //    ImGui::MenuItem("Enabled", "", &enabled);
-            //    ImGui::BeginChild("child", ImVec2(0, 60));
+            //    GUI::MenuItem("Enabled", "", &enabled);
+            //    GUI::BeginChild("child", SVector2<F32>(0, 60));
             //    for (int i = 0; i < 10; i++)
-            //        ImGui::Text("Scrolling Text %d", i);
-            //    ImGui::EndChild();
+            //        GUI::Text("Scrolling Text %d", i);
+            //    GUI::EndChild();
             //    static float f = 0.5f;
             //    static int n = 0;
-            //    ImGui::SliderFloat("Value", &f, 0.0f, 1.0f);
-            //    ImGui::InputFloat("Input", &f, 0.1f);
-            //    ImGui::Combo("Combo", &n, "Yes\0No\0Maybe\0\0");
-            //    ImGui::EndMenu();
+            //    GUI::SliderFloat("Value", &f, 0.0f, 1.0f);
+            //    GUI::InputFloat("Input", &f, 0.1f);
+            //    GUI::Combo("Combo", &n, "Yes\0No\0Maybe\0\0");
+            //    GUI::EndMenu();
             //}
 
-            if (ImGui::BeginMenu("Colors"))
+            if (GUI::BeginMenu("Colors"))
             {
-                const float sz = ImGui::GetTextLineHeight();
+                const float sz = GUI::GetTextLineHeight();
                 for (int i = 0; i < ImGuiCol_COUNT; i++)
                 {
-                    const char* name = ImGui::GetStyleColorName((ImGuiCol)i);
-                    ImVec2 p = ImGui::GetCursorScreenPos();
-                    ImGui::GetWindowDrawList()->AddRectFilled(p, ImVec2(p.x + sz, p.y + sz), ImGui::GetColorU32((ImGuiCol)i));
-                    ImGui::Dummy(ImVec2(sz, sz));
-                    ImGui::SameLine();
-                    ImGui::MenuItem(name);
+                    const char* name = GUI::GetStyleColorName((ImGuiCol)i);
+                    SVector2<F32> p = GUI::GetCursorScreenPos();
+                    GUI::GetWindowDrawList()->AddRectFilled(p, SVector2<F32>(p.x + sz, p.y + sz), GUI::GetColorU32((ImGuiCol)i));
+                    GUI::Dummy(SVector2<F32>(sz, sz));
+                    GUI::SameLine();
+                    GUI::MenuItem(name);
                 }
-                ImGui::EndMenu();
+                GUI::EndMenu();
             }
 
             // Here we demonstrate appending again to the "Options" menu (which we already created above)
             // Of course in this demo it is a little bit silly that this function calls BeginMenu("Options") twice.
             // In a real code-base using it would make senses to use this feature from very different code locations.
-            //if (ImGui::BeginMenu("Options")) // <-- Append!
+            //if (GUI::BeginMenu("Options")) // <-- Append!
             //{
             //    //IMGUI_DEMO_MARKER("Examples/Menu/Append to an existing menu");
             //    static bool b = true;
-            //    ImGui::Checkbox("SomeOption", &b);
-            //    ImGui::EndMenu();
+            //    GUI::Checkbox("SomeOption", &b);
+            //    GUI::EndMenu();
             //}
 
-            if (ImGui::BeginMenu("Disabled", false)) // Disabled
+            if (GUI::BeginMenu("Disabled", false)) // Disabled
             {
-                IM_ASSERT(0);
+                HV_ASSERT(0);
             }
-            if (ImGui::MenuItem("Checked", nullptr, true)) {}
-            if (ImGui::MenuItem("Quit", "Alt+F4")) {}
+            if (GUI::MenuItem("Checked", nullptr, true)) {}
+            if (GUI::MenuItem("Quit", "Alt+F4")) {}
 
-            ImGui::EndPopup();
+            GUI::EndPopup();
         }
     }
 

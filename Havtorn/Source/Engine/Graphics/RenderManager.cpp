@@ -4,7 +4,7 @@
 #include "RenderManager.h"
 #include "GraphicsUtilities.h"
 #include "Core/GeneralUtilities.h"
-#include "Core/MathTypes/MathUtilities.h"
+#include <MathTypes/MathUtilities.h>
 
 #include "Engine.h"
 #include "Input/InputMapper.h"
@@ -21,6 +21,8 @@
 #include <algorithm>
 #include <future>
 
+#include <PlatformManager.h>
+
 #include "FileSystem/FileSystem.h"
 #include "Threading/ThreadManager.h"
 #include "TextureBank.h"
@@ -34,14 +36,14 @@ namespace Havtorn
 
 	CRenderManager::~CRenderManager()
 	{
-		Release();
+		Release(SVector2<U16>::Zero);
 	}
 
-	bool CRenderManager::Init(CGraphicsFramework* framework, CWindowHandler* windowHandler)
+	bool CRenderManager::Init(CGraphicsFramework* framework, CPlatformManager* platformManager)
 	{
 		Framework = framework;
 
-		ENGINE_ERROR_BOOL_MESSAGE(FullscreenRenderer.Init(framework), "Failed to Init Fullscreen Renderer.");
+		ENGINE_ERROR_BOOL_MESSAGE(FullscreenRenderer.Init(framework, this), "Failed to Init Fullscreen Renderer.");
 		ENGINE_ERROR_BOOL_MESSAGE(FullscreenTextureFactory.Init(framework), "Failed to Init Fullscreen Texture Factory.");
 		ENGINE_ERROR_BOOL_MESSAGE(RenderStateManager.Init(framework), "Failed to Init Render State Manager.");
 
@@ -49,7 +51,7 @@ namespace Havtorn
 		ENGINE_ERROR_BOOL_MESSAGE(backbufferTexture, "Backbuffer Texture is null.");
 
 		Backbuffer = FullscreenTextureFactory.CreateTexture(backbufferTexture);
-		InitRenderTextures(windowHandler);
+		InitRenderTextures(platformManager->GetResolution());
 
 		InitDataBuffers();
 
@@ -62,7 +64,7 @@ namespace Havtorn
 		return true;
 	}
 
-	bool CRenderManager::ReInit(CGraphicsFramework* framework, CWindowHandler* windowHandler)
+	bool CRenderManager::ReInit(CGraphicsFramework* framework, SVector2<U16> newResolution)
 	{
 		ENGINE_ERROR_BOOL_MESSAGE(RenderStateManager.Init(framework), "Failed to Init Render State Manager.");
 
@@ -70,44 +72,44 @@ namespace Havtorn
 		ENGINE_ERROR_BOOL_MESSAGE(backbufferTexture, "Backbuffer Texture is null.");
 
 		Backbuffer = FullscreenTextureFactory.CreateTexture(backbufferTexture);
-		InitRenderTextures(windowHandler);
+		InitRenderTextures(newResolution);
 
 		return true;
 	}
 
-	void CRenderManager::InitRenderTextures(CWindowHandler* windowHandler)
+	void CRenderManager::InitRenderTextures(SVector2<U16> windowResolution)
 	{
-		RenderedScene = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
-		LitScene = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
-		IntermediateDepth = FullscreenTextureFactory.CreateDepth(windowHandler->GetResolution(), DXGI_FORMAT_R24G8_TYPELESS);
-		EditorWidgetDepth = FullscreenTextureFactory.CreateDepth(windowHandler->GetResolution(), DXGI_FORMAT_R24G8_TYPELESS);
+		RenderedScene = FullscreenTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		LitScene = FullscreenTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		IntermediateDepth = FullscreenTextureFactory.CreateDepth(windowResolution, DXGI_FORMAT_R24G8_TYPELESS);
+		EditorWidgetDepth = FullscreenTextureFactory.CreateDepth(windowResolution, DXGI_FORMAT_R24G8_TYPELESS);
 
 		ShadowAtlasResolution = { 8192.0f, 8192.0f };
 		InitShadowmapAtlas(ShadowAtlasResolution);
 
-		DepthCopy = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R32_FLOAT);
-		DownsampledDepth = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 2, DXGI_FORMAT_R32_FLOAT);
+		DepthCopy = FullscreenTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R32_FLOAT);
+		DownsampledDepth = FullscreenTextureFactory.CreateTexture(windowResolution / 2, DXGI_FORMAT_R32_FLOAT);
 		
 		IntermediateTexture = FullscreenTextureFactory.CreateTexture(SVector2<U16>(STATIC_U16(ShadowAtlasResolution.X), STATIC_U16(ShadowAtlasResolution.Y)), DXGI_FORMAT_R16G16B16A16_FLOAT);
 
-		HalfSizeTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
-		QuarterSizeTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 4, DXGI_FORMAT_R16G16B16A16_FLOAT);
-		BlurTexture1 = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
-		BlurTexture2 = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
-		VignetteTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
+		HalfSizeTexture = FullscreenTextureFactory.CreateTexture(windowResolution / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		QuarterSizeTexture = FullscreenTextureFactory.CreateTexture(windowResolution / 4, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		BlurTexture1 = FullscreenTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		BlurTexture2 = FullscreenTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		VignetteTexture = FullscreenTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
 
-		VolumetricAccumulationBuffer = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
-		VolumetricBlurTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		VolumetricAccumulationBuffer = FullscreenTextureFactory.CreateTexture(windowResolution / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		VolumetricBlurTexture = FullscreenTextureFactory.CreateTexture(windowResolution / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
 
-		SSAOBuffer = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
-		SSAOBlurTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution() / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		SSAOBuffer = FullscreenTextureFactory.CreateTexture(windowResolution / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		SSAOBlurTexture = FullscreenTextureFactory.CreateTexture(windowResolution / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
 
-		TonemappedTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
-		AntiAliasedTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R16G16B16A16_FLOAT);
-		EditorDataTexture = FullscreenTextureFactory.CreateTexture(windowHandler->GetResolution(), DXGI_FORMAT_R32G32_UINT, true);
+		TonemappedTexture = FullscreenTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		AntiAliasedTexture = FullscreenTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		EditorDataTexture = FullscreenTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R32G32_UINT, true);
 		SkeletalAnimationDataTextureCPU = FullscreenTextureFactory.CreateTexture({ 256, 256 }, DXGI_FORMAT_R32G32B32A32_FLOAT, true);
 		SkeletalAnimationDataTextureGPU = FullscreenTextureFactory.CreateTexture({ 256, 256 }, DXGI_FORMAT_R32G32B32A32_FLOAT);
-		GBuffer = FullscreenTextureFactory.CreateGBuffer(windowHandler->GetResolution());
+		GBuffer = FullscreenTextureFactory.CreateGBuffer(windowResolution);
 	}
 
 	void CRenderManager::InitShadowmapAtlas(SVector2<F32> atlasResolution)
@@ -205,8 +207,7 @@ namespace Havtorn
 
 			if (WorldPlayState != EWorldPlayState::Playing)
 			{
-				SVector2<U16> resolution = GEngine::GetWindowHandler()->GetResolution();
-				U32 size = (resolution.X * resolution.Y);
+				U32 size = (CurrentWindowResolution.X * CurrentWindowResolution.Y);
 
 				void* editorData = EditorDataTexture.MapToCPUFromGPUTexture(GBuffer.GetEditorDataTexture());
 				if (editorData != nullptr)
@@ -248,7 +249,7 @@ namespace Havtorn
 		}
 	}
 
-	void CRenderManager::Release()
+	void CRenderManager::Release(SVector2<U16> newResolution)
 	{
 		Clear(ClearColor);
 		GEngine::Instance->Framework->GetContext()->OMSetRenderTargets(0, 0, 0);
@@ -260,8 +261,8 @@ namespace Havtorn
 		Backbuffer.ReleaseTexture();
 		//TODO.AS: Is this ultra deep call really neccesary to do here? Context: We need to specifically Resize the SwapChain Buffers Right after we Release
 		//the Backbuffer texture. 
-		SVector2<U16>& resizeTarget = GEngine::Instance->WindowHandler->ResizeTarget;
-		GEngine::Instance->Framework->GetSwapChain()->ResizeBuffers(0, resizeTarget.X, resizeTarget.Y, DXGI_FORMAT_UNKNOWN, 0);
+		// TODO.NW: Sounds like this should be done in the Resize context, not in this function
+		GEngine::Instance->Framework->GetSwapChain()->ResizeBuffers(0, newResolution.X, newResolution.Y, DXGI_FORMAT_UNKNOWN, 0);
 	}
 
 	void CRenderManager::LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent)
@@ -1146,6 +1147,11 @@ namespace Havtorn
 	void CRenderManager::SwapRenderCommandBuffers()
 	{
 		std::swap(PushToCommands, PopFromCommands);
+	}
+
+	const SVector2<U16>& CRenderManager::GetCurrentWindowResolution() const
+	{
+		return CurrentWindowResolution;
 	}
 
 	void CRenderManager::Clear(SVector4 /*clearColor*/)

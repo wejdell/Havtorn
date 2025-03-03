@@ -17,7 +17,7 @@ namespace Havtorn
 		HV_LOG_INFO("Editor shutdown!");
 	}
 
-	bool CEditorProcess::Init()
+	bool CEditorProcess::Init(CPlatformManager* platformManager)
 	{
 		EditorManager = new CEditorManager();
 
@@ -25,7 +25,7 @@ namespace Havtorn
 		if (!engineInstance)
 			return false;
 	 
-		return EditorManager->Init(engineInstance->Framework, engineInstance->WindowHandler, engineInstance->RenderManager);
+		return EditorManager->Init(platformManager, engineInstance->Framework, engineInstance->RenderManager);
 	}
 
 	void CEditorProcess::BeginFrame()

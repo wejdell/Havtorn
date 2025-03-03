@@ -4,13 +4,12 @@
 #include "EditorManager.h"
 #include "EditorResourceManager.h"
 
-#include "ECS/Components/SpriteAnimatorGraphComponent.h"
-#include "ECS/Components/SpriteAnimatorGraphNode.h"
-#include "Core/MathTypes/EngineMath.h"
+#include <ECS/Components/SpriteAnimatorGraphComponent.h>
+#include <ECS/Components/SpriteAnimatorGraphNode.h>
+#include <MathTypes/EngineMath.h>
+#include <GUI.h>
 
-//#include <imgui.h>
-
-namespace ImGui
+namespace Havtorn
 {
 	CSpriteAnimatorGraphNodeWindow::CSpriteAnimatorGraphNodeWindow(const char* displayName, Havtorn::CEditorManager* manager)
 		: CWindow(displayName, manager, false)
@@ -28,7 +27,7 @@ namespace ImGui
 
 	void CSpriteAnimatorGraphNodeWindow::RecursiveTree(Havtorn::SSpriteAnimatorGraphNode* node)
 	{
-		if (ImGui::TreeNode(node->Name.Data()))
+		if (GUI::TreeNode(node->Name.Data()))
 		{
 			if (node->AnimationClipKey == -1)
 			{
@@ -41,15 +40,15 @@ namespace ImGui
 				Havtorn::I16 animationClipKey = node->AnimationClipKey;
 				Havtorn::SSpriteAnimationClip& animationClip = Component->AnimationClips[animationClipKey];
 
-				ImGui::Text("Animation Clip Settings");
-				ImGui::PushID(node->Name.Data());
+				GUI::Text("Animation Clip Settings");
+				GUI::PushID(node->Name.Data());
 				for (Havtorn::U32 i = 0; i < animationClip.KeyFrameCount(); i++)
 				{
-					ImGui::PushID(i);
+					GUI::PushID(i);
 
 					Havtorn::SVector4& rect = Component->AnimationClips[animationClipKey].UVRects[i];
 					Havtorn::F32 uvRect[4] = { rect.X, rect.Y, rect.Z, rect.W };
-					if (ImGui::DragFloat4("UVRect", uvRect, 0.01))
+					if (GUI::DragFloat4("UVRect", uvRect, 0.01))
 					{
 						animationClip.UVRects[i].X = uvRect[0];
 						animationClip.UVRects[i].Y = uvRect[1];
@@ -59,29 +58,29 @@ namespace ImGui
 
 					Havtorn::U64 durationIndex = Havtorn::UMath::Min<Havtorn::U64>(i, Component->AnimationClips[Component->CurrentAnimationClipKey].Durations.size() - 1);
 					Havtorn::F32 duration = Component->AnimationClips[animationClipKey].Durations[durationIndex];
-					if (ImGui::DragFloat("Duration", &duration, 0.01))
+					if (GUI::DragFloat("Duration", &duration, 0.01))
 					{
 						animationClip.Durations[durationIndex] = duration;
 					}
 
-					ImGui::PopID();
+					GUI::PopID();
 				}
-				ImGui::PopID();
+				GUI::PopID();
 			}
 
-			ImGui::TreePop();
+			GUI::TreePop();
 		}
 	}
 
 	void CSpriteAnimatorGraphNodeWindow::OnInspectorGUI()
 	{
-		if (ImGui::Begin(Name(), &IsEnabled))
+		if (GUI::Begin(Name(), &IsEnabled))
 		{
 			RecursiveTree(&Component->Graph);
 		}
 
 		// AS: Want to experiment with creating/saving SpriteAnimationClips
-		if (ImGui::Button("Save Asset"))
+		if (GUI::Button("Save Asset"))
 		{
 			Havtorn::CScene* scene = Manager->GetCurrentScene();
 			scene;
@@ -90,7 +89,7 @@ namespace ImGui
 			//Manager->GetResourceManager()->CreateAsset(Component)
 		}
 
-		ImGui::End();
+		GUI::End();
 	}
 
 	void CSpriteAnimatorGraphNodeWindow::Inspect(Havtorn::SSpriteAnimatorGraphComponent& component)

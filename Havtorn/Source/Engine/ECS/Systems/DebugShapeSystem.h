@@ -5,7 +5,7 @@
 
 #include "Graphics/GraphicsEnums.h"
 #include "Graphics/GraphicsStructs.h"
-#include "Core/Color.h"
+#include <Color.h>
 
 #include <queue>
 #include <map>
@@ -56,26 +56,26 @@ namespace Havtorn
 		static constexpr F32 ThicknessMinimum = 0.005f;
 		static constexpr F32 ThicknessMaximum = 0.05f;
 
-		static HAVTORN_API void AddLine(const SVector& start, const SVector& end, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
-		static HAVTORN_API void AddArrow(const SVector& start, const SVector& end, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static ENGINE_API void AddLine(const SVector& start, const SVector& end, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static ENGINE_API void AddArrow(const SVector& start, const SVector& end, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		// Object aligned bounding box with Width/Height/Depth = 1. Pivot is in center.
-		static HAVTORN_API void AddCube(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
-		static HAVTORN_API void AddCamera(const SVector& origin, const SVector& eulerRotation, const F32 fov = 70.0f, const F32 farZ = 1.0f, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static ENGINE_API void AddCube(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static ENGINE_API void AddCamera(const SVector& origin, const SVector& eulerRotation, const F32 fov = 70.0f, const F32 farZ = 1.0f, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		// Adds a circle across the XZ-plane with 8/16/32 segments.
-		static HAVTORN_API void AddCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius = 0.5f, const UINT8 segments = 16, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static ENGINE_API void AddCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius = 0.5f, const UINT8 segments = 16, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		// 10x10 grid across the XZ-plane (default).
-		static HAVTORN_API void AddGrid(const SVector& origin, const SVector& eulerRotation = SVector(), const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
-		static HAVTORN_API void AddAxis(const SVector& origin, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static ENGINE_API void AddGrid(const SVector& origin, const SVector& eulerRotation = SVector(), const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static ENGINE_API void AddAxis(const SVector& origin, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		// Adds a point at 1/10th of world scale.
-		static HAVTORN_API void AddPoint(const SVector& origin, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMaximum, const bool ignoreDepth = true);
+		static ENGINE_API void AddPoint(const SVector& origin, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMaximum, const bool ignoreDepth = true);
 		// Adds a rectangle across the XZ-plane. Default (Scale = 1,1,1) is a square.
-		static HAVTORN_API void AddRectangle(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
-		static HAVTORN_API void AddSphere(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static ENGINE_API void AddRectangle(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static ENGINE_API void AddSphere(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		// Adds a cone with its base facing towards direction.
-		static HAVTORN_API void AddConeRadius(const SVector& apexPosition, const SVector& direction, const F32 height, const F32 radius, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static ENGINE_API void AddConeRadius(const SVector& apexPosition, const SVector& direction, const F32 height, const F32 radius, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		// Adds a cone with its base facing towards direction. angleRadians: angle between slanted height and height at the apex of the cone.
-		static HAVTORN_API void AddConeAngle(const SVector& apexPosition, const SVector& direction, const F32 height, const F32 angleDegrees, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
-		static HAVTORN_API void AddCapsule(const SVector& center, const SVector& eulerRotation, const F32 height, const F32 radius, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static ENGINE_API void AddConeAngle(const SVector& apexPosition, const SVector& direction, const F32 height, const F32 angleDegrees, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static ENGINE_API void AddCapsule(const SVector& center, const SVector& eulerRotation, const F32 height, const F32 radius, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		
 
 	private:	
@@ -120,7 +120,7 @@ namespace Havtorn
 #endif
 		
 	private:
-		static HAVTORN_API UDebugShapeSystem* Instance;
+		static ENGINE_API UDebugShapeSystem* Instance;
 		const static std::map<EVertexBufferPrimitives, const SPrimitive&> Shapes;
 
 		U64 EntityStartIndex = 0;

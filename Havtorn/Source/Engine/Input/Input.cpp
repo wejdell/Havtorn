@@ -9,6 +9,8 @@
 
 #include <ranges>
 
+#include <../Platform/PlatformManager.h>
+
 namespace Havtorn
 {
 	CInput* CInput::GetInstance()
@@ -42,6 +44,13 @@ namespace Havtorn
 		{
 			ENGINE_BOOL_POPUP(false, "Mouse could not be registered as Raw Input Device")
 		}
+	}
+
+	bool CInput::Init(CPlatformManager* platformManager)
+	{
+		PlatformManager = platformManager;
+		return PlatformManager != nullptr;
+		// Bind to message pump here
 	}
 
 	bool CInput::UpdateEvents(UINT message, WPARAM wParam, LPARAM lParam) {
@@ -262,16 +271,16 @@ namespace Havtorn
 		return (!KeyDown[wParam]) && KeyDownLast[wParam];
 	}
 
-	SVector2<F32> CInput::GetAxisRaw()
-	{
-		POINT p;
-		GetCursorPos(&p);
-		const SVector2<U16> currentPos = { STATIC_U16(p.x), STATIC_U16(p.y) };
-		const SVector2<U16> center = GEngine::GetWindowHandler()->GetCenterPosition();
-		const SVector2<U16> result = currentPos - center;
+	//SVector2<F32> CInput::GetAxisRaw()
+	//{
+	//	POINT p;
+	//	GetCursorPos(&p);
+	//	const SVector2<U16> currentPos = { STATIC_U16(p.x), STATIC_U16(p.y) };
+	//	const SVector2<U16> center = Instance->PlatformManager->GetCenterPosition();
+	//	const SVector2<U16> result = currentPos - center;
 
-		return SVector2<F32>(result.X, result.Y);
-	}
+	//	return SVector2<F32>(result.X, result.Y);
+	//}
 
 	U16 CInput::GetMouseX() const
 	{

@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>	
 
-#include "Havtorn.h"
+#include <Havtorn.h>
 
 struct ID3D11ShaderResourceView;
 
@@ -42,11 +42,11 @@ namespace Havtorn
 
 		void* RenderAssetTexure(EAssetType assetType, const std::string& fileName);
 
-		HAVTORN_EXPORT void CreateAsset(const std::string& destinationPath, EAssetType assetType) const;
-		HAVTORN_EXPORT std::string ConvertToHVA(const std::string& filePath, const std::string& destination, const EAssetType assetType) const;
+		EDITOR_API void CreateAsset(const std::string& destinationPath, EAssetType assetType) const;
+		EDITOR_API std::string ConvertToHVA(const std::string& filePath, const std::string& destination, const EAssetType assetType) const;
 
 		// NR: Based on current material config: albedo, material and normal textures
-		HAVTORN_EXPORT void CreateMaterial(const std::string& destinationPath);
+		EDITOR_API void CreateMaterial(const std::string& destinationPath);
 
 	private:
 		std::string GetFileName(EEditorTexture texture);

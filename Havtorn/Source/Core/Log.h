@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Core/Core.h"
+#include "Core.h"
 #include <cstdarg>
 
 namespace Havtorn
@@ -17,7 +17,7 @@ namespace Havtorn
 		WhiteRedBackground = 79
 	};
 
-	enum class HAVTORN_API ELogCategory
+	enum class CORE_API ELogCategory
 	{
 		Trace,
 		Debug,
@@ -27,7 +27,7 @@ namespace Havtorn
 		Fatal
 	};
 	
-	class HAVTORN_API ILogContext
+	class CORE_API ILogContext
 	{
 	public:
 		virtual void Log(const ELogCategory category, const std::string& message) = 0;
@@ -35,8 +35,8 @@ namespace Havtorn
 
 	struct ULog
 	{
-		static void HAVTORN_API Print(const ELogCategory category, const char* message, ...);
-		static void HAVTORN_API AddLogContext(ILogContext* context);
+		static void CORE_API Print(const ELogCategory category, const char* message, ...);
+		static void CORE_API AddLogContext(ILogContext* context);
 
 	private:
 		// TODO.NR: Figure out another place for this. This is the exact same as the one used in EngineException.h

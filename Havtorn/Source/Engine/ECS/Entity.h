@@ -2,11 +2,11 @@
 
 #pragma once
 
-#include "Core/Core.h"
+#include <Core.h>
 
 namespace Havtorn
 {
-	struct HAVTORN_API SEntity
+	struct ENGINE_API SEntity
 	{
 		const static SEntity Null;
 

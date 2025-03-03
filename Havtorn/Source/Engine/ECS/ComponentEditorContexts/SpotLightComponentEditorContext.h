@@ -5,7 +5,7 @@
 
 namespace Havtorn
 {
-	struct HAVTORN_API SSpotLightComponentEditorContext : public SComponentEditorContext
+	struct ENGINE_API SSpotLightComponentEditorContext : public SComponentEditorContext
 	{
 		SComponentViewResult View(const SEntity& entityOwner, CScene* scene) const override;
 		bool AddComponent(const SEntity& entity, CScene* scene) const override;

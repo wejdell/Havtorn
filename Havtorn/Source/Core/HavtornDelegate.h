@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Core/Delegate.h"
+#include "Delegate.h"
 
 namespace Havtorn
 {

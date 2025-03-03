@@ -23,7 +23,7 @@
 namespace Havtorn
 {
 	class CGraphicsFramework;
-	class CWindowHandler;
+	class CPlatformManager;
 	struct SRenderCommand;
 	struct SStaticMeshComponent;
 	struct SSkeletalMeshComponent;
@@ -61,32 +61,32 @@ namespace Havtorn
 	public:
 		CRenderManager() = default;
 		~CRenderManager();
-		bool Init(CGraphicsFramework* framework, CWindowHandler* windowHandler);
-		bool ReInit(CGraphicsFramework* framework, CWindowHandler* windowHandler);
+		bool Init(CGraphicsFramework* framework, CPlatformManager* windowHandler);
+		bool ReInit(CGraphicsFramework* framework, SVector2<U16> newResolution);
 		void Render();
 
-		void Release();
+		void Release(SVector2<U16> newResolution);
 
-		HAVTORN_API void LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent);
-		HAVTORN_API void LoadSkeletalMeshComponent(const std::string& filePath, SSkeletalMeshComponent* outSkeletalMeshComponent);
-		HAVTORN_API void LoadMaterialComponent(const std::vector<std::string>& materialPaths, SMaterialComponent* outMaterialComponent);
+		ENGINE_API void LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent);
+		ENGINE_API void LoadSkeletalMeshComponent(const std::string& filePath, SSkeletalMeshComponent* outSkeletalMeshComponent);
+		ENGINE_API void LoadMaterialComponent(const std::vector<std::string>& materialPaths, SMaterialComponent* outMaterialComponent);
 		// NR: Note that we use the file *name* instead of the full path here, we assume that it already exists in the registry.
-		HAVTORN_API bool TryLoadStaticMeshComponent(const std::string& fileName, SStaticMeshComponent* outStaticMeshComponent) const;
-		HAVTORN_API bool TryReplaceMaterialOnComponent(const std::string& filePath, U8 materialIndex, SMaterialComponent* outMaterialComponent) const;
+		ENGINE_API bool TryLoadStaticMeshComponent(const std::string& fileName, SStaticMeshComponent* outStaticMeshComponent) const;
+		ENGINE_API bool TryReplaceMaterialOnComponent(const std::string& filePath, U8 materialIndex, SMaterialComponent* outMaterialComponent) const;
 
-		HAVTORN_API SVector2<F32> GetShadowAtlasResolution() const;
+		ENGINE_API SVector2<F32> GetShadowAtlasResolution() const;
 		
-		HAVTORN_API void LoadDecalComponent(const std::vector<std::string>& texturePaths, SDecalComponent* outDecalComponent);
-		HAVTORN_API void LoadEnvironmentLightComponent(const std::string& ambientCubemapTexturePath, SEnvironmentLightComponent* outEnvironmentLightComponent);
-		HAVTORN_API void LoadSpriteComponent(const std::string& filePath, SSpriteComponent* outSpriteComponent);
-		HAVTORN_API void LoadSkeletalAnimationComponent(const std::string& filePath, SSkeletalAnimationComponent* outSkeletalAnimationComponent);
+		ENGINE_API void LoadDecalComponent(const std::vector<std::string>& texturePaths, SDecalComponent* outDecalComponent);
+		ENGINE_API void LoadEnvironmentLightComponent(const std::string& ambientCubemapTexturePath, SEnvironmentLightComponent* outEnvironmentLightComponent);
+		ENGINE_API void LoadSpriteComponent(const std::string& filePath, SSpriteComponent* outSpriteComponent);
+		ENGINE_API void LoadSkeletalAnimationComponent(const std::string& filePath, SSkeletalAnimationComponent* outSkeletalAnimationComponent);
 
-		HAVTORN_API void* RenderStaticMeshAssetTexture(const std::string& filePath);
-		HAVTORN_API void* RenderSkeletalMeshAssetTexture(const std::string& filePath);
-		HAVTORN_API void* GetTextureAssetTexture(const std::string& filePath);
-		HAVTORN_API void* RenderMaterialAssetTexture(const std::string& filePath);
+		ENGINE_API void* RenderStaticMeshAssetTexture(const std::string& filePath);
+		ENGINE_API void* RenderSkeletalMeshAssetTexture(const std::string& filePath);
+		ENGINE_API void* GetTextureAssetTexture(const std::string& filePath);
+		ENGINE_API void* RenderMaterialAssetTexture(const std::string& filePath);
 
-		HAVTORN_API U64 GetEntityGUIDFromData(U64 dataIndex) const;
+		ENGINE_API U64 GetEntityGUIDFromData(U64 dataIndex) const;
 
 		U32 WriteToAnimationDataTexture(const std::string& animationName);
 
@@ -114,16 +114,18 @@ namespace Havtorn
 	public:
 		void SyncCrossThreadResources(const CWorld* world);
 		void SetWorldPlayState(EWorldPlayState playState);
-		[[nodiscard]] HAVTORN_API const CRenderTexture& GetRenderedSceneTexture() const;
+		[[nodiscard]] ENGINE_API const CRenderTexture& GetRenderedSceneTexture() const;
 		void PushRenderCommand(SRenderCommand command);
 		void SwapRenderCommandBuffers();
 
+		const SVector2<U16>& GetCurrentWindowResolution() const;
+
 	public:
-		HAVTORN_API static U32 NumberOfDrawCallsThisFrame;
+		ENGINE_API static U32 NumberOfDrawCallsThisFrame;
 
 	private:
 		void Clear(SVector4 clearColor);
-		void InitRenderTextures(CWindowHandler* windowHandler);
+		void InitRenderTextures(SVector2<U16> windowResolution);
 		void InitShadowmapAtlas(SVector2<F32> atlasResolution);
 		void InitShadowmapLOD(SVector2<F32> topLeftCoordinate, const SVector2<F32>& widthAndHeight, const SVector2<F32>& depth, const SVector2<F32>& atlasResolution, U16 mapsInLod, U16 startIndex);
 		
@@ -407,6 +409,7 @@ namespace Havtorn
 		std::unordered_map<U32, SSpriteInstanceData> RendererScreenSpaceSpriteInstanceData;
 
 		SVector2<F32> ShadowAtlasResolution = SVector2<F32>::Zero;
+		SVector2<U16> CurrentWindowResolution = SVector2<U16>::Zero;
 
 		// NR: Keep our own property here for use on render thread
 		EWorldPlayState WorldPlayState = EWorldPlayState::Stopped;

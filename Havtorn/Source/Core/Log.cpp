@@ -1,7 +1,6 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #include "hvpch.h"
-
 #include "Log.h"
 
 namespace Havtorn
