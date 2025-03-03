@@ -6,7 +6,7 @@ namespace Havtorn
 {
 	class CScene;
 
-	struct HAVTORN_API SSequencerKeyframe : ISerializable
+	struct ENGINE_API SSequencerKeyframe : ISerializable
 	{
 		U32 FrameNumber = 0;
 		bool ShouldBlendLeft = true;

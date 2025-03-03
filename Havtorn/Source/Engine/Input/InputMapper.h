@@ -7,6 +7,7 @@
 namespace Havtorn
 {
 	class CInput;
+	class CPlatformManager;
 
 	class CInputMapper
 	{
@@ -20,13 +21,13 @@ namespace Havtorn
 		CInputMapper operator=(const CInputMapper&) = delete;
 		CInputMapper operator=(CInputMapper&&) = delete;
 
-		bool Init();
+		bool Init(CPlatformManager* platformManager);
 	
 	public:
 		void Update();
 
-		[[nodiscard]] HAVTORN_API CMulticastDelegate<const SInputActionPayload>& GetActionDelegate(EInputActionEvent event);
-		[[nodiscard]] HAVTORN_API CMulticastDelegate<const SInputAxisPayload>& GetAxisDelegate(EInputAxisEvent event);
+		[[nodiscard]] ENGINE_API CMulticastDelegate<const SInputActionPayload>& GetActionDelegate(EInputActionEvent event);
+		[[nodiscard]] ENGINE_API CMulticastDelegate<const SInputAxisPayload>& GetAxisDelegate(EInputAxisEvent event);
 
 		void SetInputContext(EInputContext context);
 

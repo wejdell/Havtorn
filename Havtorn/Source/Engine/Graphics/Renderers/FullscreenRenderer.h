@@ -105,7 +105,7 @@ namespace Havtorn
 	private:
 		CFullscreenRenderer() = default;
 		~CFullscreenRenderer();
-		bool Init(CGraphicsFramework* framework);
+		bool Init(CGraphicsFramework* framework, CRenderManager* manager);
 		void Render(EFullscreenShader effect);
 
 		SPostProcessingBufferData PostProcessingBufferData;
@@ -122,5 +122,7 @@ namespace Havtorn
 
 		ID3D11ShaderResourceView* NoiseTexture = nullptr;
 		SVector4 Kernel[KernelSize];
+
+		CRenderManager* Manager = nullptr;
 	};
 }

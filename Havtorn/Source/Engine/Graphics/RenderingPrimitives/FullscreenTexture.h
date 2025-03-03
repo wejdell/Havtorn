@@ -31,10 +31,10 @@ namespace Havtorn
 		void ReleaseTexture();
 		void ReleaseDepth();
 		
-		HAVTORN_API ID3D11Texture2D* const GetTexture() const;
-		HAVTORN_API ID3D11ShaderResourceView* const GetShaderResourceView() const;
-		HAVTORN_API ID3D11RenderTargetView* const GetRenderTargetView() const;
-		HAVTORN_API ID3D11DepthStencilView* const GetDepthStencilView() const;
+		ENGINE_API ID3D11Texture2D* const GetTexture() const;
+		ENGINE_API ID3D11ShaderResourceView* const GetShaderResourceView() const;
+		ENGINE_API ID3D11RenderTargetView* const GetRenderTargetView() const;
+		ENGINE_API ID3D11DepthStencilView* const GetDepthStencilView() const;
 
 		friend CFullscreenTextureFactory;
 		friend class CGBuffer;

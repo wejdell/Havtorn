@@ -14,11 +14,11 @@ namespace Havtorn
 		{
 		}
 
-		HAVTORN_API SSpriteAnimatorGraphNode& SetRoot(const CHavtornStaticString<32>& name, const std::string& evaluatorClassAndFunctionName);
+		ENGINE_API SSpriteAnimatorGraphNode& SetRoot(const CHavtornStaticString<32>& name, const std::string& evaluatorClassAndFunctionName);
 
-		HAVTORN_API [[nodiscard]] U32 GetSize() const;
-		HAVTORN_API void Serialize(char* toData, U64& pointerPosition) const;
-		HAVTORN_API void Deserialize(const char* fromData, U64& pointerPosition);
+		ENGINE_API [[nodiscard]] U32 GetSize() const;
+		ENGINE_API void Serialize(char* toData, U64& pointerPosition) const;
+		ENGINE_API void Deserialize(const char* fromData, U64& pointerPosition);
 
 		SSpriteAnimatorGraphNode Graph;
 		U32 CurrentFrame = 0;

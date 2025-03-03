@@ -2,17 +2,20 @@
 
 #pragma once
 
+#include <Core.h>
 #include <../Launcher/Application/Process.h>
 
 namespace Havtorn
 {
-	class _declspec(dllexport) CEditorProcess : public IProcess
+	class CPlatformManager;
+
+	class EDITOR_API CEditorProcess : public IProcess
 	{
 	public:
 		CEditorProcess();
 		~CEditorProcess() override;
 
-		bool Init() override;
+		bool Init(CPlatformManager* platformManager) override;
 
 		void BeginFrame() override;
 		void PreUpdate() override;

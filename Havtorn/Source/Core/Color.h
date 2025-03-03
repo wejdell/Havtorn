@@ -5,7 +5,7 @@
 namespace Havtorn
 {
 	// Represents a color in RGBA 0-255 range.
-	struct HAVTORN_API SColor
+	struct CORE_API SColor
 	{
 		static const F32 F32Max;
 		static const F32 F32Min;

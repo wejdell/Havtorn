@@ -28,27 +28,27 @@ namespace Havtorn
 		//
 				void Update(CScene* scene) override;
 		//
-		//		HAVTORN_API SSequencerContextData GetSequencerContextData() const;
-		//		HAVTORN_API void SetSequencerContextData(const SSequencerContextData& data);	
-		//		HAVTORN_API void AddComponentTrackToEntityReference(const U64 guid, EComponentType trackComponentType);
+		//		ENGINE_API SSequencerContextData GetSequencerContextData() const;
+		//		ENGINE_API void SetSequencerContextData(const SSequencerContextData& data);	
+		//		ENGINE_API void AddComponentTrackToEntityReference(const U64 guid, EComponentType trackComponentType);
 		//
 		//		template<typename T>
 		//		T* AddEmptyKeyframeToComponent(const U64 guid, EComponentType componentType);
 		//	
-		//		HAVTORN_API const EComponentType GetComponentTrackTypeFromEntityReference(const U64 guid, const I32 componentTrackIndex);
-		//		HAVTORN_API SSequencerKeyframe* const GetKeyframeFromEntityReference(const U64 guid, const I32 componentTrackIndex, const I32 keyframeIndex);
+		//		ENGINE_API const EComponentType GetComponentTrackTypeFromEntityReference(const U64 guid, const I32 componentTrackIndex);
+		//		ENGINE_API SSequencerKeyframe* const GetKeyframeFromEntityReference(const U64 guid, const I32 componentTrackIndex, const I32 keyframeIndex);
 		//
-		//		HAVTORN_API void RecordNewKeyframes(CScene* scene);
-		//		HAVTORN_API void SortKeyframes(const U64 guid, U32 trackIndex, I32& lastEditedKeyframeIndex);
+		//		ENGINE_API void RecordNewKeyframes(CScene* scene);
+		//		ENGINE_API void SortKeyframes(const U64 guid, U32 trackIndex, I32& lastEditedKeyframeIndex);
 		//
-		//		HAVTORN_API const char* GetCurrentSequencerName() const;
-		//		HAVTORN_API const std::vector<SSequencerEntityReference>* GetCurrentEntityReferences() const;
+		//		ENGINE_API const char* GetCurrentSequencerName() const;
+		//		ENGINE_API const std::vector<SSequencerEntityReference>* GetCurrentEntityReferences() const;
 		//
-		//		HAVTORN_API void SaveCurrentSequencer(const std::string& filePath);
-		//		HAVTORN_API void LoadSequencerFromFile(const std::string& filePath);
-		//		HAVTORN_API void LoadSequencer(const std::string& sequencerName);
+		//		ENGINE_API void SaveCurrentSequencer(const std::string& filePath);
+		//		ENGINE_API void LoadSequencerFromFile(const std::string& filePath);
+		//		ENGINE_API void LoadSequencer(const std::string& sequencerName);
 		//
-		//		HAVTORN_API CSequencerAsset* TryGetSequencerWithName(const std::string& sequencerName) const;
+		//		ENGINE_API CSequencerAsset* TryGetSequencerWithName(const std::string& sequencerName) const;
 		//
 		//	private:
 		//		void Tick(CScene* scene);

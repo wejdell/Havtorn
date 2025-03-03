@@ -7,22 +7,19 @@
 #include "EditorResourceManager.h"
 
 #include <Engine.h>
-#include <Core/MathTypes/EngineMath.h>
+#include <MathTypes/EngineMath.h>
 #include <FileSystem/FileSystem.h>
 #include <Graphics/RenderManager.h>
+#include <PlatformManager.h>
 
-//#include <Core/imgui.h>
-
-namespace ImGui
+namespace Havtorn
 {
-	using Havtorn::F32;
-
-	CAssetBrowserWindow::CAssetBrowserWindow(const char* displayName, Havtorn::CEditorManager* manager)
+	CAssetBrowserWindow::CAssetBrowserWindow(const char* displayName, CEditorManager* manager)
 		: CWindow(displayName, manager)
-		, FileSystem(Havtorn::GEngine::GetFileSystem())
+		, FileSystem(GEngine::GetFileSystem())
 	{
 		CurrentDirectory = std::filesystem::path(DefaultAssetPath);		
-		Havtorn::GEngine::GetWindowHandler()->OnDragDropAccepted.AddMember(this, &CAssetBrowserWindow::OnDragDropFiles);
+		manager->GetPlatformManager()->OnDragDropAccepted.AddMember(this, &CAssetBrowserWindow::OnDragDropFiles);
 	}
 
 	CAssetBrowserWindow::~CAssetBrowserWindow()
@@ -35,29 +32,29 @@ namespace ImGui
 
 	void CAssetBrowserWindow::OnInspectorGUI()
 	{
-		if (ImGui::Begin(Name(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus))
+		if (GUI::Begin(Name(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus))
 		{
-			if (ImGui::ArrowButton("GoBackDir", ImGuiDir_Up))
+			if (GUI::ArrowButton("GoBackDir", SGuiDir_Up))
 			{
 				if (CurrentDirectory != std::filesystem::path(DefaultAssetPath))
 					CurrentDirectory = CurrentDirectory.parent_path();
 			}
 
-			ImGui::SameLine();
+			GUI::SameLine();
 			Filter.Draw("Search", 180);
 
-			ImGui::Separator();
+			GUI::Separator();
 
 			// TODO.NR: Another magic number here, 10 cuts off the right border. 11 seems to work but feels too odd.
 			F32 thumbnailPadding = 12.0f;
 			F32 cellWidth = ThumbnailSize.X + thumbnailPadding;
-			F32 panelWidth = ImGui::GetContentRegionAvail().x;
-			Havtorn::I32 columnCount = Havtorn::UMath::Max(static_cast<Havtorn::I32>(panelWidth / cellWidth), 1);
+			F32 panelWidth = GUI::GetContentRegionAvail().x;
+			I32 columnCount = UMath::Max(static_cast<I32>(panelWidth / cellWidth), 1);
 
-			ImTextureID folderIconID = (ImTextureID)(intptr_t)Manager->GetResourceManager()->GetEditorTexture(Havtorn::EEditorTexture::FolderIcon);
+			SGuiTextureID folderIconID = (SGuiTextureID)(intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::FolderIcon);
 
-			Havtorn::U32 id = 0;
-			if (ImGui::BeginTable("FileStructure", columnCount))
+			U32 id = 0;
+			if (GUI::BeginTable("FileStructure", columnCount))
 			{
 				if (Filter.IsActive())
 				{
@@ -75,25 +72,25 @@ namespace ImGui
 						InspectDirectoryEntry(entry, id, folderIconID);
 				}
 
-				ImGui::EndTable();
+				GUI::EndTable();
 			}
 		}
 
 		if (FilePathsToImport.has_value() && !FilePathsToImport->empty())
 		{
-			ImGui::OpenPopup("Asset Import");
-			ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+			GUI::OpenPopup("Asset Import");
+			GUI::SetNextWindowPos(GUI::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, SVector2<F32>(0.5f, 0.5f));
 			AssetImportModal();
 		}
 
-		ImGui::End();
+		GUI::End();
 		
 		// NR: Keep this here in case we want this to be a subwindow rather than an integrated element
-		//if (ImGui::Begin("Asset Browser Folder View"), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus)
+		//if (GUI::Begin("Asset Browser Folder View"), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus)
 		//{
-		//	ImGui::Text("Folder View");
+		//	GUI::Text("Folder View");
 		//}
-		//ImGui::End();
+		//GUI::End();
 	}
 
 	void CAssetBrowserWindow::OnDisable()
@@ -115,121 +112,121 @@ namespace ImGui
 
 	void AlignForWidth(F32 width, F32 alignment = 0.5f)
 	{
-		F32 avail = ImGui::GetContentRegionAvail().x;
+		F32 avail = GUI::GetContentRegionAvail().X;
 		F32 off = (avail - width) * alignment;
 		if (off > 0.0f)
-			ImGui::SetCursorPosX(ImGui::GetCursorPosX() + off);
+			GUI::SetCursorPosX(GUI::GetCursorPosX() + off);
 	}
 
 	void CAssetBrowserWindow::AssetImportModal()
 	{
-		if (!ImGui::BeginPopupModal("Asset Import", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		if (!GUI::BeginPopupModal("Asset Import", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 			return;
 
 		auto closePopup = [&]() 
 		{
-			CurrentImportAssetType = Havtorn::EAssetType::None;
+			CurrentImportAssetType = EAssetType::None;
 			FilePathsToImport->erase(FilePathsToImport->begin());
 			Manager->SetIsModalOpen(false);
-			ImGui::CloseCurrentPopup();
+			GUI::CloseCurrentPopup();
 		};
 
 		Manager->SetIsModalOpen(true);
 
 		std::string filePath = *FilePathsToImport->begin();
-		ImGui::Text("Importing: %s", Havtorn::UGeneralUtils::ExtractFileNameFromPath(filePath).c_str());
-		ImGui::Separator();
+		GUI::Text("Importing: %s", UGeneralUtils::ExtractFileNameFromPath(filePath).c_str());
+		GUI::Separator();
 
-		std::string fileExtension = Havtorn::UGeneralUtils::ExtractFileExtensionFromPath(filePath);
+		std::string fileExtension = UGeneralUtils::ExtractFileExtensionFromPath(filePath);
 		
 		if (fileExtension == "dds" || fileExtension == "tga" || fileExtension == "png")
 		{
-			if (CurrentImportAssetType == Havtorn::EAssetType::None)
-				CurrentImportAssetType = Havtorn::EAssetType::Texture; 
+			if (CurrentImportAssetType == EAssetType::None)
+				CurrentImportAssetType = EAssetType::Texture; 
 			
-			ImGui::Text("Asset Type");
-			ImGui::SameLine();
-			if (ImGui::RadioButton("Texture", CurrentImportAssetType == Havtorn::EAssetType::Texture))
-				CurrentImportAssetType = Havtorn::EAssetType::Texture;
-			ImGui::SameLine();
-			if (ImGui::RadioButton("Material", CurrentImportAssetType == Havtorn::EAssetType::Material))
-				CurrentImportAssetType = Havtorn::EAssetType::Material;
-			ImGui::SameLine();
-			if (ImGui::RadioButton("Sprite Animation", CurrentImportAssetType == Havtorn::EAssetType::SpriteAnimation))
-				CurrentImportAssetType = Havtorn::EAssetType::SpriteAnimation;
+			GUI::Text("Asset Type");
+			GUI::SameLine();
+			if (GUI::RadioButton("Texture", CurrentImportAssetType == EAssetType::Texture))
+				CurrentImportAssetType = EAssetType::Texture;
+			GUI::SameLine();
+			if (GUI::RadioButton("Material", CurrentImportAssetType == EAssetType::Material))
+				CurrentImportAssetType = EAssetType::Material;
+			GUI::SameLine();
+			if (GUI::RadioButton("Sprite Animation", CurrentImportAssetType == EAssetType::SpriteAnimation))
+				CurrentImportAssetType = EAssetType::SpriteAnimation;
 		}
 		else if (fileExtension == "fbx" || fileExtension == "obj" || fileExtension == "stl")
 		{
-			if (CurrentImportAssetType == Havtorn::EAssetType::None)
-				CurrentImportAssetType = Havtorn::EAssetType::StaticMesh;
+			if (CurrentImportAssetType == EAssetType::None)
+				CurrentImportAssetType = EAssetType::StaticMesh;
 
-			ImGui::Text("Asset Type");
-			ImGui::SameLine();
-			if (ImGui::RadioButton("Static Mesh", CurrentImportAssetType == Havtorn::EAssetType::StaticMesh))
-				CurrentImportAssetType = Havtorn::EAssetType::StaticMesh;
-			ImGui::SameLine();
-			if (ImGui::RadioButton("Skeletal Mesh", CurrentImportAssetType == Havtorn::EAssetType::SkeletalMesh))
-				CurrentImportAssetType = Havtorn::EAssetType::SkeletalMesh;
-			ImGui::SameLine();
-			if (ImGui::RadioButton("Animation", CurrentImportAssetType == Havtorn::EAssetType::Animation))
-				CurrentImportAssetType = Havtorn::EAssetType::Animation;
+			GUI::Text("Asset Type");
+			GUI::SameLine();
+			if (GUI::RadioButton("Static Mesh", CurrentImportAssetType == EAssetType::StaticMesh))
+				CurrentImportAssetType = EAssetType::StaticMesh;
+			GUI::SameLine();
+			if (GUI::RadioButton("Skeletal Mesh", CurrentImportAssetType == EAssetType::SkeletalMesh))
+				CurrentImportAssetType = EAssetType::SkeletalMesh;
+			GUI::SameLine();
+			if (GUI::RadioButton("Animation", CurrentImportAssetType == EAssetType::Animation))
+				CurrentImportAssetType = EAssetType::Animation;
 		}
 
 		switch (CurrentImportAssetType)
 		{
-		case Havtorn::EAssetType::StaticMesh:
+		case EAssetType::StaticMesh:
 			ImportOptionsStaticMesh();
 			break;
-		case Havtorn::EAssetType::SkeletalMesh:
+		case EAssetType::SkeletalMesh:
 			ImportOptionsSkeletalMesh();
 			break;
-		case Havtorn::EAssetType::Texture:
+		case EAssetType::Texture:
 			ImportOptionsTexture();
 			break;
-		case Havtorn::EAssetType::Material:
+		case EAssetType::Material:
 			ImportOptionsMaterial();
 			break;
-		case Havtorn::EAssetType::Animation:
+		case EAssetType::Animation:
 			ImportOptionsAnimation();
 			break;
-		case Havtorn::EAssetType::SpriteAnimation:
+		case EAssetType::SpriteAnimation:
 			ImportOptionsSpriteAnimation();
 			break;
 
-		case Havtorn::EAssetType::AudioOneShot:
-		case Havtorn::EAssetType::AudioCollection:
-		case Havtorn::EAssetType::VisualFX:
-		case Havtorn::EAssetType::Scene:
-		case Havtorn::EAssetType::Sequencer:
-		case Havtorn::EAssetType::None:
+		case EAssetType::AudioOneShot:
+		case EAssetType::AudioCollection:
+		case EAssetType::VisualFX:
+		case EAssetType::Scene:
+		case EAssetType::Sequencer:
+		case EAssetType::None:
 		default:
-			ImGui::EndPopup();
+			GUI::EndPopup();
 			return;
 		}
 
 		// Center buttons
-		ImGuiStyle& style = ImGui::GetStyle();
+		SGuiStyle& style = GUI::GetStyle();
 		F32 width = 0.0f;
-		width += ImGui::CalcTextSize("Import").x + ImGui::UUtils::ThumbnailPadding;
+		width += GUI::CalcTextSize("Import").x + GUI::ThumbnailPadding;
 		width += style.ItemSpacing.x;
-		width += ImGui::CalcTextSize("Cancel").x + ImGui::UUtils::ThumbnailPadding;
+		width += GUI::CalcTextSize("Cancel").x + GUI::ThumbnailPadding;
 		AlignForWidth(width);
 
-		if (ImGui::Button("Import"))
+		if (GUI::Button("Import"))
 		{
 			std::string hvaFilePath = Manager->GetResourceManager()->ConvertToHVA(filePath, CurrentDirectory.string(), CurrentImportAssetType);
 			Manager->CreateAssetRep(hvaFilePath);
 			closePopup();
 		}
 
-		ImGui::SameLine();
+		GUI::SameLine();
 
-		if (ImGui::Button("Cancel"))
+		if (GUI::Button("Cancel"))
 		{
 			closePopup();
 		}
 
-		ImGui::EndPopup();
+		GUI::EndPopup();
 	}
 
 	void CAssetBrowserWindow::ImportOptionsTexture()
@@ -258,10 +255,10 @@ namespace ImGui
 
 	}
 
-	void CAssetBrowserWindow::InspectDirectoryEntry(const std::filesystem::directory_entry& entry, Havtorn::U32& outCurrentID, const ImTextureID& folderIconID)
+	void CAssetBrowserWindow::InspectDirectoryEntry(const std::filesystem::directory_entry& entry, U32& outCurrentID, const SGuiTextureID& folderIconID)
 	{
-		ImGui::TableNextColumn();
-		ImGui::PushID(outCurrentID++);
+		GUI::TableNextColumn();
+		GUI::PushID(outCurrentID++);
 
 		const auto& path = entry.path();
 		auto relativePath = std::filesystem::relative(path);
@@ -269,31 +266,31 @@ namespace ImGui
 
 		if (entry.is_directory())
 		{
-			if (ImGui::ImageButton("FolderIcon", folderIconID, { ThumbnailSize.X, ThumbnailSize.Y }))
+			if (GUI::ImageButton("FolderIcon", folderIconID, { ThumbnailSize.X, ThumbnailSize.Y }))
 			{
 				CurrentDirectory = entry.path();
 			}
 
-			ImGui::Text(filenameString.c_str());
-			if (ImGui::IsItemHovered())
-				ImGui::SetTooltip(filenameString.c_str());
+			GUI::Text(filenameString.c_str());
+			if (GUI::IsItemHovered())
+				GUI::SetTooltip(filenameString.c_str());
 		}
 		else
 		{
 			const auto& rep = Manager->GetAssetRepFromDirEntry(entry);
 			if (!rep->TextureRef)
-				rep->TextureRef = Manager->GetResourceManager()->GetEditorTexture(Havtorn::EEditorTexture::FileIcon);
+				rep->TextureRef = Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::FileIcon);
 
-			if (ImGui::ImageButton("AssetIcon", (ImTextureID)(intptr_t)rep->TextureRef, { ThumbnailSize.X, ThumbnailSize.Y }))
+			if (GUI::ImageButton("AssetIcon", (SGuiTextureID)(intptr_t)rep->TextureRef, { ThumbnailSize.X, ThumbnailSize.Y }))
 			{
 				// NR: Open Tool depending on asset type
 			}
 
-			ImGui::Text(rep->Name.c_str());
-			if (ImGui::IsItemHovered())
-				ImGui::SetTooltip(rep->Name.c_str());
+			GUI::Text(rep->Name.c_str());
+			if (GUI::IsItemHovered())
+				GUI::SetTooltip(rep->Name.c_str());
 		}
 
-		ImGui::PopID();
+		GUI::PopID();
 	}
 }

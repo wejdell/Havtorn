@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Core/HavtornString.h"
+#include <HavtornString.h>
 #include "Core/GeneralUtilities.h"
 #include "ECS/Entity.h"
 #include "ECS/Component.h"
@@ -27,22 +27,22 @@ namespace Havtorn
 	class CScene
 	{
 	public:
-		HAVTORN_API CScene();
-		HAVTORN_API ~CScene();
+		ENGINE_API CScene();
+		ENGINE_API ~CScene();
 
-		HAVTORN_API virtual bool Init(CRenderManager* renderManager, const std::string& sceneName);
+		ENGINE_API virtual bool Init(CRenderManager* renderManager, const std::string& sceneName);
 
-		HAVTORN_API virtual bool Init3DDemoScene(CRenderManager* renderManager);
-		HAVTORN_API virtual bool Init2DDemoScene(CRenderManager* renderManager);
+		ENGINE_API virtual bool Init3DDemoScene(CRenderManager* renderManager);
+		ENGINE_API virtual bool Init2DDemoScene(CRenderManager* renderManager);
 
 		// TODO.NR: Rework serialization to decrease amount of boilerplate
-		HAVTORN_API virtual [[nodiscard]] U32 GetSize() const;
-		HAVTORN_API virtual void Serialize(char* toData, U64& pointerPosition) const;
-		HAVTORN_API virtual void Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry);
+		ENGINE_API virtual [[nodiscard]] U32 GetSize() const;
+		ENGINE_API virtual void Serialize(char* toData, U64& pointerPosition) const;
+		ENGINE_API virtual void Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry);
 
-		HAVTORN_API std::string GetSceneName() const;
-		HAVTORN_API U64 GetSceneIndex(const SEntity& entity) const;
-		HAVTORN_API U64 GetSceneIndex(const U64 entityGUID) const;
+		ENGINE_API std::string GetSceneName() const;
+		ENGINE_API U64 GetSceneIndex(const SEntity& entity) const;
+		ENGINE_API U64 GetSceneIndex(const U64 entityGUID) const;
 		
 		template<typename T>
 		U32 DefaultSizeAllocator(const std::vector<T*>& componentVector) const
@@ -241,9 +241,9 @@ namespace Havtorn
 			([&] { RemoveComponent<Ts>(fromEntity); } (), ...);
 		}
 
-		HAVTORN_API const SEntity& AddEntity(U64 guid = 0);
-		HAVTORN_API const SEntity& AddEntity(const std::string& nameInEditor, U64 guid = 0);
-		HAVTORN_API void RemoveEntity(SEntity& entity);
+		ENGINE_API const SEntity& AddEntity(U64 guid = 0);
+		ENGINE_API const SEntity& AddEntity(const std::string& nameInEditor, U64 guid = 0);
+		ENGINE_API void RemoveEntity(SEntity& entity);
 
 		template<typename T>
 		const SEntity& GetEntity(const T* fromComponent) const
@@ -318,13 +318,13 @@ namespace Havtorn
 			return specializedComponents;
 		}
 		
-		HAVTORN_API void AddComponentEditorContext(const SEntity& owner, SComponentEditorContext* context);
-		HAVTORN_API void RemoveComponentEditorContext(const SEntity& owner, SComponentEditorContext* context);
+		ENGINE_API void AddComponentEditorContext(const SEntity& owner, SComponentEditorContext* context);
+		ENGINE_API void RemoveComponentEditorContext(const SEntity& owner, SComponentEditorContext* context);
 
-		HAVTORN_API void RemoveComponentEditorContexts(const SEntity& owner);
-		HAVTORN_API std::vector<SComponentEditorContext*> GetComponentEditorContexts(const SEntity& owner);
+		ENGINE_API void RemoveComponentEditorContexts(const SEntity& owner);
+		ENGINE_API std::vector<SComponentEditorContext*> GetComponentEditorContexts(const SEntity& owner);
 
-		HAVTORN_API const std::vector<SComponentEditorContext*>& GetComponentEditorContexts() const;
+		ENGINE_API const std::vector<SComponentEditorContext*>& GetComponentEditorContexts() const;
 		
 		std::unordered_map<U64, std::vector<SComponentEditorContext*>> EntityComponentEditorContexts;
 

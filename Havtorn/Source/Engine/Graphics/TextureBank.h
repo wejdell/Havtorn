@@ -18,14 +18,14 @@ namespace Havtorn
 		bool Init(const CGraphicsFramework* framework);
 
 	public:
-		HAVTORN_API U32 GetTextureIndex(const std::string& fileName);
-		HAVTORN_API ID3D11ShaderResourceView* GetTexture(const std::string& fileName);
-		HAVTORN_API ID3D11ShaderResourceView* GetTexture(U32 index);
-		HAVTORN_API std::string GetTexturePath(U32 index);
+		ENGINE_API U32 GetTextureIndex(const std::string& fileName);
+		ENGINE_API ID3D11ShaderResourceView* GetTexture(const std::string& fileName);
+		ENGINE_API ID3D11ShaderResourceView* GetTexture(U32 index);
+		ENGINE_API std::string GetTexturePath(U32 index);
 
-		HAVTORN_API U32 AddTexture(ID3D11ShaderResourceView* srv);
+		ENGINE_API U32 AddTexture(ID3D11ShaderResourceView* srv);
 
-		HAVTORN_API const std::vector<ID3D11ShaderResourceView*>& GetTextures();
+		ENGINE_API const std::vector<ID3D11ShaderResourceView*>& GetTextures();
 
 	private:
 		void AddTexture(const std::string& fileName);

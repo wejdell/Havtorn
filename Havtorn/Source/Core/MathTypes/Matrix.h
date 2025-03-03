@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Core/CoreTypes.h"
+#include "CoreTypes.h"
 #include "EngineMath.h"
 #include "Log.h"
 
@@ -17,7 +17,7 @@ namespace Havtorn
 #define SMATRIX_MIN_SCALE 0.001f
 
 	// Left-handed row-major
-	struct HAVTORN_API SMatrix 
+	struct CORE_API SMatrix 
 	{	
 		union { __declspec(align(16)) F32 M[4][4]; F32 data[16];  };
 

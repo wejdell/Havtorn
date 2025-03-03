@@ -13,8 +13,10 @@ namespace Havtorn
 		, CurrentInputContext(EInputContext::Editor)
 	{}
 
-	bool CInputMapper::Init()
+	bool CInputMapper::Init(CPlatformManager* platformManager)
 	{
+		Input->Init(platformManager);
+
 		// TODO.NR: Load from .ini file
 
 		const SInputAxis forwardAxis = { EInputAxis::Key, EInputKey::KeyW, EInputKey::KeyS, EInputContext::Editor };

@@ -6,7 +6,6 @@
 
 #include "Engine.h"
 #include "FileSystem/FileSystem.h"
-#include "Application/WindowHandler.h"
 #include "Threading/ThreadManager.h"
 #include "Graphics/GraphicsFramework.h"
 #include "Graphics/TextureBank.h"
@@ -24,6 +23,8 @@
 
 #include "Application/EngineProcess.h"
 
+#include <../Platform/PlatformManager.h>
+
 namespace Havtorn
 {
 	GEngine* GEngine::Instance = nullptr;
@@ -35,7 +36,6 @@ namespace Havtorn
 		FileSystem = new CFileSystem();
 		Timer = new GTime();
 		InputMapper = new CInputMapper();
-		WindowHandler = new CWindowHandler();
 		Framework = new CGraphicsFramework();
 		TextureBank = new CTextureBank();
 		RenderManager = new CRenderManager();
@@ -52,7 +52,6 @@ namespace Havtorn
 		SAFE_DELETE(RenderManager);
 		SAFE_DELETE(TextureBank);
 		SAFE_DELETE(Framework);
-		SAFE_DELETE(WindowHandler);
 		SAFE_DELETE(InputMapper);
 		SAFE_DELETE(Timer);
 		SAFE_DELETE(FileSystem);
@@ -60,20 +59,18 @@ namespace Havtorn
 		Instance = nullptr;
 	}
 
-	bool GEngine::Init(const CWindowHandler::SWindowData& windowData)
+	bool GEngine::Init(CPlatformManager* platformManager) 
 	{
-		ENGINE_ERROR_BOOL_MESSAGE(InputMapper->Init(), "Input Mapper could not be initialized.");
-		ENGINE_ERROR_BOOL_MESSAGE(WindowHandler->Init(windowData), "Window Handler could not be initialized.");
-		ENGINE_ERROR_BOOL_MESSAGE(Framework->Init(WindowHandler), "Framework could not be initialized.");
+		ENGINE_ERROR_BOOL_MESSAGE(InputMapper->Init(platformManager), "Input Mapper could not be initialized.");
+		ENGINE_ERROR_BOOL_MESSAGE(Framework->Init(platformManager), "Framework could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(TextureBank->Init(Framework), "TextureBank could not be initialized.");
-		ENGINE_ERROR_BOOL_MESSAGE(RenderManager->Init(Framework, WindowHandler), "RenderManager could not be initialized.");
+		ENGINE_ERROR_BOOL_MESSAGE(RenderManager->Init(Framework, platformManager), "RenderManager could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(World->Init(RenderManager), "World could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(ThreadManager->Init(RenderManager), "Thread Manager could not be initialized.");
 
-		InitWindowsImaging();
-
 		SequencerSystem = World->GetSystem<CSequencerSystem>();
-		WindowHandler->ResizeTarget = { };
+
+		platformManager->OnResolutionChanged.AddMember(this, &GEngine::OnWindowResolutionChanged);
 
 		if (!DebugDraw->Init(RenderManager))
 		{
@@ -114,27 +111,23 @@ namespace Havtorn
 		RenderManager->SyncCrossThreadResources(World);
 		Framework->EndFrame();
 
-		if (WindowHandler->ResizeTarget.LengthSquared() > 0)
+		if (WindowResizeTarget.LengthSquared() > 0)
 		{
-			RenderManager->Release();
+			RenderManager->Release(WindowResizeTarget);
 			
 			//replace w/ Resize To ResizeTarget
 			//WindowHandler->SetResolution(WindowHandler->ResizeTarget);
-			WindowHandler->SetInternalResolution();
+			//WindowHandler->SetInternalResolution();
 
-			WindowHandler->ResizeTarget = { };
-			RenderManager->ReInit(Framework, WindowHandler);
+			//WindowHandler->ResizeTarget = { };
+			RenderManager->ReInit(Framework, WindowResizeTarget);
+			WindowResizeTarget = {};
 		}
 
 		std::unique_lock<std::mutex> uniqueLock(CThreadManager::RenderMutex);
 		CThreadManager::RenderThreadStatus = ERenderThreadStatus::ReadyToRender;
 		uniqueLock.unlock();
 		CThreadManager::RenderCondition.notify_one();
-	}
-
-	CWindowHandler* GEngine::GetWindowHandler()
-	{
-		return Instance->WindowHandler;
 	}
 
 	CFileSystem* GEngine::GetFileSystem()
@@ -167,30 +160,9 @@ namespace Havtorn
 		return Instance->Framework;
 	}
 
-	IProcess* GEngine::GetEngineProcess()
+	void GEngine::OnWindowResolutionChanged(SVector2<U16> newResolution)
 	{
-		return Instance->engineProcess;
-	}
-
-	void GEngine::SetEngineProcess(IProcess* aProcess)
-	{
-		Instance->engineProcess = aProcess;
-			//= dynamic_cast<CEngineProcess*>(aProcess);
-	}
-
-	void GEngine::InitWindowsImaging()
-	{
-#if (_WIN32_WINNT >= 0x0A00 /*_WIN32_WINNT_WIN10*/)
-		Microsoft::WRL::Wrappers::RoInitializeWrapper initialize(RO_INIT_MULTITHREADED);
-		if (FAILED(initialize))
-			// error
-
-#else
-		HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-		if (FAILED(hr))
-			// error
-#endif
-			return;
+		WindowResizeTarget = newResolution;
 	}
 
 #include <DbgHelp.h>
@@ -219,13 +191,13 @@ namespace Havtorn
 	//	RenderManager->ReInit(Framework, WindowHandler);
 	//}
 
-	void GEngine::ShowCursor(const bool& isInEditorMode)
-	{
-		WindowHandler->ShowAndUnlockCursor(isInEditorMode);
-	}
-	void GEngine::HideCursor(const bool& isInEditorMode)
-	{
-		WindowHandler->HideAndLockCursor(isInEditorMode);
-	}
+	//void GEngine::ShowCursor(const bool& isInEditorMode)
+	//{
+	//	WindowHandler->ShowAndUnlockCursor(isInEditorMode);
+	//}
+	//void GEngine::HideCursor(const bool& isInEditorMode)
+	//{
+	//	WindowHandler->HideAndLockCursor(isInEditorMode);
+	//}
 
 }

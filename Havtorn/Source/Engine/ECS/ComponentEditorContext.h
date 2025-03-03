@@ -8,7 +8,7 @@ namespace Havtorn
 	struct SEntity;
 	class CScene;
 
-	enum class HAVTORN_API EComponentViewResultLabel
+	enum class ENGINE_API EComponentViewResultLabel
 	{
 		PassThrough,
 		UpdateTransformGizmo,
@@ -16,14 +16,14 @@ namespace Havtorn
 		OpenAssetTool,
 	};
 
-	struct HAVTORN_API SComponentViewResult
+	struct ENGINE_API SComponentViewResult
 	{
 		EComponentViewResultLabel Label = EComponentViewResultLabel::PassThrough;
 		SComponent* ComponentViewed = nullptr;
 		U8 ComponentSubIndex = 0;
 	};
 
-	struct HAVTORN_API SComponentEditorContext
+	struct ENGINE_API SComponentEditorContext
 	{
 		virtual SComponentViewResult View(const SEntity& /*entityOwner*/, CScene* /*scene*/) const { return SComponentViewResult(); };
 		virtual bool AddComponent(const SEntity& /*entity*/, CScene* /*scene*/) const { return false; };

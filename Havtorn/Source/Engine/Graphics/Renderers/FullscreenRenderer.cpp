@@ -12,13 +12,17 @@ namespace Havtorn
 	CFullscreenRenderer::~CFullscreenRenderer() 
 	{}
 
-	bool CFullscreenRenderer::Init(CGraphicsFramework* framework) 
+	bool CFullscreenRenderer::Init(CGraphicsFramework* framework, CRenderManager* renderManager) 
 	{
 		if (!framework) 
 			return false;
 
 		Context = framework->GetContext();
 		if (!Context)
+			return false;
+
+		Manager = renderManager;
+		if (!Manager)
 			return false;
 
 		ID3D11Device* device = framework->GetDevice();
@@ -168,7 +172,7 @@ namespace Havtorn
 
 	void CFullscreenRenderer::Render(EFullscreenShader effect)
 	{
-		SVector2<U16> resolution = GEngine::GetWindowHandler()->GetResolution();
+		SVector2<U16> resolution = Manager->GetCurrentWindowResolution();
 		FullscreenData.Resolution = SVector2<F32>(resolution.X, resolution.Y);
 		FullscreenData.NoiseScale = { FullscreenData.Resolution.X / STATIC_F32(UMath::Sqrt(KernelSize)), FullscreenData.Resolution.Y / STATIC_F32(UMath::Sqrt(KernelSize)) };
 		memcpy(&FullscreenData.SampleKernel[0], &Kernel[0], sizeof(Kernel));

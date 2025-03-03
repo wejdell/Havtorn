@@ -13,22 +13,11 @@
 #include "Windows/ViewportWindow.h"
 #include "Windows/SpriteAnimatorGraphNodeWindow.h"
 
-//#include <imgui.h>
-#include <../ImGuizmo/ImGuizmo.h>
-//#include <Utilities.h>
-#include "Core/Utilities.h"
-#include "Utils/ImGuiUtils.h"
+#include <GUI.h>
 
-namespace ImGui
+namespace Havtorn
 {
-	using Havtorn::SEditorLayout;
-	using Havtorn::SVector;
-	using Havtorn::SVector4;
-	using Havtorn::SVector2;
-	using Havtorn::U64;
-	using Havtorn::F32;
-
-	CInspectorWindow::CInspectorWindow(const char* displayName, Havtorn::CEditorManager* manager)
+	CInspectorWindow::CInspectorWindow(const char* displayName, CEditorManager* manager)
 		: CWindow(displayName, manager)
 	{}
 
@@ -38,103 +27,99 @@ namespace ImGui
 
 	void CInspectorWindow::OnEnable()
 	{
-		ImVec2 a = ImVec2(1.0f,2.0f);
-		ImVec2 b = ImVec2(3.0f, 4.0f);
-		ImVec2 c = a * b;
 	}
 
 	void CInspectorWindow::OnInspectorGUI()
 	{
 		const SEditorLayout& layout = Manager->GetEditorLayout();
 
-		const ImGuiViewport* mainViewport = ImGui::GetMainViewport();
-
+		const SGuiViewport* mainViewport = GUI::GetMainViewport();
 
 		//GUI::GUIProcess::SetNextWindowPos(ImVec2(mainViewport->WorkPos.x + layout.InspectorPosition.X, mainViewport->WorkPos.y + layout.InspectorPosition.Y));
 
-		ImGui::SetNextWindowPos(ImVec2(mainViewport->WorkPos.x + layout.InspectorPosition.X, mainViewport->WorkPos.y + layout.InspectorPosition.Y));
-		ImGui::SetNextWindowSize(ImVec2(layout.InspectorSize.X, layout.InspectorSize.Y));
+		GUI::SetNextWindowPos(SVector2<F32>(mainViewport->WorkPos.x + layout.InspectorPosition.X, mainViewport->WorkPos.y + layout.InspectorPosition.Y));
+		GUI::SetNextWindowSize(SVector2<F32>(layout.InspectorSize.X, layout.InspectorSize.Y));
 
-		if (!ImGui::Begin(Name(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus))
+		if (!GUI::Begin(Name(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus))
 		{
-			ImGui::End();
+			GUI::End();
 			return;
 		}
 
 		Scene = Manager->GetCurrentScene();
 		if (!Scene)
 		{
-			ImGui::End();
+			GUI::End();
 			return;
 		}
 
-		Havtorn::SEntity selection = Manager->GetSelectedEntity();
+		SEntity selection = Manager->GetSelectedEntity();
 		if (!selection.IsValid())
 		{
-			ImGui::End();
+			GUI::End();
 			return;
 		}
 
 		SelectedEntity = selection;
 
-		Havtorn::SMetaDataComponent* metaDataComp = Scene->GetComponent<Havtorn::SMetaDataComponent>(SelectedEntity);
+		SMetaDataComponent* metaDataComp = Scene->GetComponent<SMetaDataComponent>(SelectedEntity);
 		if (metaDataComp != nullptr)
 		{
-			ImGui::HavtornInputText("##MetaDataCompName", &metaDataComp->Name);
-			ImGui::SameLine();
-			ImGui::TextDisabled("GUID %u", metaDataComp->Owner.GUID);
-			if (ImGui::IsItemHovered())
-				ImGui::SetTooltip("GUID %u", metaDataComp->Owner.GUID);
+			GUI::HavtornInputText("##MetaDataCompName", &metaDataComp->Name);
+			GUI::SameLine();
+			GUI::TextDisabled("GUID %u", metaDataComp->Owner.GUID);
+			if (GUI::IsItemHovered())
+				GUI::SetTooltip("GUID %u", metaDataComp->Owner.GUID);
 		}
-		ImGui::Separator();
+		GUI::Separator();
 
-		for (Havtorn::SComponentEditorContext* context : Scene->GetComponentEditorContexts(SelectedEntity))
+		for (SComponentEditorContext* context : Scene->GetComponentEditorContexts(SelectedEntity))
 		{
 			if (context->RemoveComponent(SelectedEntity, Scene))
 				continue;
 
-			ImGui::SameLine();
-			Havtorn::SComponentViewResult result = context->View(SelectedEntity, Scene);
+			GUI::SameLine();
+			SComponentViewResult result = context->View(SelectedEntity, Scene);
 
 			// TODO.NR: Could make this a enum-function map, but would be good to set up clear rules for how this should work.
 			switch (result.Label)
 			{
-			case Havtorn::EComponentViewResultLabel::UpdateTransformGizmo:
+			case EComponentViewResultLabel::UpdateTransformGizmo:
 				UpdateTransformGizmo(result);
 				break;
-			case Havtorn::EComponentViewResultLabel::InspectAssetComponent:
+			case EComponentViewResultLabel::InspectAssetComponent:
 				InspectAssetComponent(result);
 				break;
-			case Havtorn::EComponentViewResultLabel::OpenAssetTool:
+			case EComponentViewResultLabel::OpenAssetTool:
 				OpenAssetTool(result);
 				break;
-			case Havtorn::EComponentViewResultLabel::PassThrough:
+			case EComponentViewResultLabel::PassThrough:
 			default:
 				break;
 			}
 
-			ImGui::Dummy({ ImGui::UUtils::DummySizeX, ImGui::UUtils::DummySizeY });
+			GUI::Dummy({ GUI::DummySizeX, GUI::DummySizeY });
 		}
 
-		ImGui::Separator();
-		if (ImGui::Button("Add Component", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
-			ImGui::OpenPopup("Add Component Modal");
+		GUI::Separator();
+		if (GUI::Button("Add Component", SVector2<F32>(GUI::GetContentRegionAvail().x, 0)))
+			GUI::OpenPopup("Add Component Modal");
 
 		OpenAddComponentModal();
 
-		ImGui::End();
+		GUI::End();
 	}
 
 	void CInspectorWindow::OnDisable()
 	{
 	}
 
-	void CInspectorWindow::UpdateTransformGizmo(const Havtorn::SComponentViewResult& result)
+	void CInspectorWindow::UpdateTransformGizmo(const SComponentViewResult& result)
 	{
 		if (Manager->GetIsFreeCamActive())
 			return;
 
-		Havtorn::STransformComponent* viewedTransformComp = static_cast<Havtorn::STransformComponent*>(result.ComponentViewed);
+		STransformComponent* viewedTransformComp = static_cast<STransformComponent*>(result.ComponentViewed);
 		if (viewedTransformComp == nullptr)
 			return;
 
@@ -142,26 +127,26 @@ namespace ImGui
 		SVector2<F32> viewportWindowDimensions = viewportWindow->GetRenderedSceneDimensions();
 		SVector2<F32> viewportWindowPosition = viewportWindow->GetRenderedScenePosition();
 
-		ImGuizmo::SetDrawlist(viewportWindow->GetCurrentDrawList());
-		ImGuizmo::SetRect(viewportWindowPosition.X, viewportWindowPosition.Y, viewportWindowDimensions.X, viewportWindowDimensions.Y);
+		GUI::SetDrawlist(viewportWindow->GetCurrentDrawList());
+		GUI::SetRect(viewportWindowPosition.X, viewportWindowPosition.Y, viewportWindowDimensions.X, viewportWindowDimensions.Y);
 		
-		Havtorn::SCameraComponent* cameraComp = Scene->GetComponent<Havtorn::SCameraComponent>(Scene->MainCameraEntity);
-		Havtorn::STransformComponent* cameraTransformComp = Scene->GetComponent<Havtorn::STransformComponent>(Scene->MainCameraEntity);
-		Havtorn::SMatrix viewMatrix = cameraTransformComp->Transform.GetMatrix();
-		Havtorn::SMatrix inverseView = viewMatrix.Inverse();
+		SCameraComponent* cameraComp = Scene->GetComponent<SCameraComponent>(Scene->MainCameraEntity);
+		STransformComponent* cameraTransformComp = Scene->GetComponent<STransformComponent>(Scene->MainCameraEntity);
+		SMatrix viewMatrix = cameraTransformComp->Transform.GetMatrix();
+		SMatrix inverseView = viewMatrix.Inverse();
 
 		ViewManipulation(viewMatrix, viewportWindowPosition, viewportWindowDimensions);
 
-		ImGuizmo::PushID(0);
-		Havtorn::SMatrix transformMatrix = viewedTransformComp->Transform.GetMatrix();
-		ImGuizmo::Manipulate(inverseView.data, cameraComp->ProjectionMatrix.data, static_cast<ImGuizmo::OPERATION>(Manager->GetCurrentGizmo()), ImGuizmo::LOCAL, transformMatrix.data, NULL, NULL);
-		ImGuizmo::PopID();
+		GUI::PushID(0);
+		SMatrix transformMatrix = viewedTransformComp->Transform.GetMatrix();
+		GUI::Manipulate(inverseView.data, cameraComp->ProjectionMatrix.data, Manager->GetCurrentGizmo(), GUI::LOCAL, transformMatrix.data, NULL, NULL);
+		GUI::PopID();
 		
 		viewedTransformComp->Transform.SetMatrix(transformMatrix);
 		cameraTransformComp->Transform.SetMatrix(viewMatrix);
 	}
 
-	void CInspectorWindow::ViewManipulation(Havtorn::SMatrix& outCameraView, const SVector2<F32>& windowPosition, const SVector2<F32>& windowSize)
+	void CInspectorWindow::ViewManipulation(SMatrix& outCameraView, const SVector2<F32>& windowPosition, const SVector2<F32>& windowSize)
 	{
 		const F32 viewManipulateRight = windowPosition.X + windowSize.X;
 		const F32 viewManipulateTop = windowPosition.Y + 28.0f; // TODO.NR: Figure out all the menu bar sizes and stuff
@@ -170,79 +155,79 @@ namespace ImGui
 
 		const F32 camDistance = 1.0f;
 		const F32 size = 128.0f;
-		const Havtorn::U32 backgroundColor = 0x10101010;
-		ImGuizmo::ViewManipulate(outCameraView.data, camDistance, ImVec2(viewManipulateRight - size, viewManipulateTop), ImVec2(size, size), backgroundColor);
+		const U32 backgroundColor = 0x10101010;
+		GUI::ViewManipulate(outCameraView.data, camDistance, SVector2<F32>(viewManipulateRight - size, viewManipulateTop), SVector2<F32>(size, size), backgroundColor);
 	}
 
-	void CInspectorWindow::InspectAssetComponent(const Havtorn::SComponentViewResult& result)
+	void CInspectorWindow::InspectAssetComponent(const SComponentViewResult& result)
 	{
 		std::vector<std::string> assetNames = {};
 		std::vector<std::string> assetLabels = {};
 		std::string modalNameToOpen = "";
 
-		if (Havtorn::SStaticMeshComponent* staticMeshComponent = dynamic_cast<Havtorn::SStaticMeshComponent*>(result.ComponentViewed))
+		if (SStaticMeshComponent* staticMeshComponent = dynamic_cast<SStaticMeshComponent*>(result.ComponentViewed))
 		{
 			assetNames.push_back(staticMeshComponent->Name.AsString());
 			modalNameToOpen = SelectMeshAssetModalName;
 		}
-		else if (Havtorn::SMaterialComponent* materialComponent = dynamic_cast<Havtorn::SMaterialComponent*>(result.ComponentViewed))
+		else if (SMaterialComponent* materialComponent = dynamic_cast<SMaterialComponent*>(result.ComponentViewed))
 		{
 			for (auto& material : materialComponent->Materials)
 				assetNames.push_back(material.Name);
 
 			modalNameToOpen = SelectMaterialAssetModalName;
 		}
-		else if (Havtorn::SDecalComponent* decalComponent = dynamic_cast<Havtorn::SDecalComponent*>(result.ComponentViewed))
+		else if (SDecalComponent* decalComponent = dynamic_cast<SDecalComponent*>(result.ComponentViewed))
 		{
-			for (Havtorn::U16 textureRef : decalComponent->TextureReferences)
-				assetNames.push_back(Havtorn::UGeneralUtils::ExtractFileBaseNameFromPath(Havtorn::GEngine::GetTextureBank()->GetTexturePath(static_cast<Havtorn::U32>(textureRef))));
+			for (U16 textureRef : decalComponent->TextureReferences)
+				assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(GEngine::GetTextureBank()->GetTexturePath(static_cast<U32>(textureRef))));
 
 			modalNameToOpen = SelectTextureAssetModalName;
 			assetLabels.push_back("Albedo");
 			assetLabels.push_back("Material");
 			assetLabels.push_back("Normal");
 		}
-		else if (Havtorn::SEnvironmentLightComponent* environmentLightComponent = dynamic_cast<Havtorn::SEnvironmentLightComponent*>(result.ComponentViewed))
+		else if (SEnvironmentLightComponent* environmentLightComponent = dynamic_cast<SEnvironmentLightComponent*>(result.ComponentViewed))
 		{
-			assetNames.push_back(Havtorn::UGeneralUtils::ExtractFileBaseNameFromPath(Havtorn::GEngine::GetTextureBank()->GetTexturePath(static_cast<Havtorn::U32>(environmentLightComponent->AmbientCubemapReference))));
+			assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(GEngine::GetTextureBank()->GetTexturePath(static_cast<U32>(environmentLightComponent->AmbientCubemapReference))));
 			modalNameToOpen = SelectTextureAssetModalName;
 		}
-		else if (Havtorn::SSpriteComponent* spriteComponent = dynamic_cast<Havtorn::SSpriteComponent*>(result.ComponentViewed))
+		else if (SSpriteComponent* spriteComponent = dynamic_cast<SSpriteComponent*>(result.ComponentViewed))
 		{
-			assetNames.push_back(Havtorn::UGeneralUtils::ExtractFileBaseNameFromPath(Havtorn::GEngine::GetTextureBank()->GetTexturePath(static_cast<Havtorn::U32>(spriteComponent->TextureIndex))));
+			assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(GEngine::GetTextureBank()->GetTexturePath(static_cast<U32>(spriteComponent->TextureIndex))));
 			modalNameToOpen = SelectTextureAssetModalName;
 		}
 
 		IterateAssetRepresentations(result, assetNames, assetLabels, modalNameToOpen);
 	}
 
-	void CInspectorWindow::IterateAssetRepresentations(const Havtorn::SComponentViewResult& result, const std::vector<std::string>& assetNames, const std::vector<std::string>& assetLabels, const std::string& modalNameToOpen)
+	void CInspectorWindow::IterateAssetRepresentations(const SComponentViewResult& result, const std::vector<std::string>& assetNames, const std::vector<std::string>& assetLabels, const std::string& modalNameToOpen)
 	{
-		for (Havtorn::U8 index = 0; index < static_cast<Havtorn::U8>(assetNames.size()); index++)
+		for (U8 index = 0; index < static_cast<U8>(assetNames.size()); index++)
 		{
 			std::string assetName = assetNames[index];
 
 			if (assetName.empty())
 				assetName = "M_Checkboard_128x128";
 
-			Havtorn::SEditorAssetRepresentation* assetRep = Manager->GetAssetRepFromName(assetName).get();
+			SEditorAssetRepresentation* assetRep = Manager->GetAssetRepFromName(assetName).get();
 
-			ImGui::Separator();
+			GUI::Separator();
 
 			if (assetLabels.size() > index)
-				ImGui::Text(assetLabels[index].c_str());
+				GUI::Text(assetLabels[index].c_str());
 			else if (assetRep->Name.empty())
-				ImGui::Text("N/A");
+				GUI::Text("N/A");
 			else
-				ImGui::Text(assetRep->Name.c_str());
+				GUI::Text(assetRep->Name.c_str());
 
 			// TODO.NR: Update ImGui and use the overload that takes a unique identifier. This currently breaks when using two buttons with the same texture.
-			if (ImGui::ImageButton(assetName.c_str(), (ImTextureID)(intptr_t)assetRep->TextureRef, {ImGui::UUtils::TexturePreviewSizeX, ImGui::UUtils::TexturePreviewSizeY}))
+			if (GUI::ImageButton(assetName.c_str(), (SGuiTextureID)(intptr_t)assetRep->TextureRef, {GUI::TexturePreviewSizeX, GUI::TexturePreviewSizeY}))
 			{
 				// TODO.NR: Make Algo lib function that finds index of object in array, make for-each loop
 				AssetPickedIndex = index;
-				ImGui::OpenPopup(modalNameToOpen.c_str());
-				ImGui::SetNextWindowPos(ImGui::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, ImVec2(0.5f, 0.5f));
+				GUI::OpenPopup(modalNameToOpen.c_str());
+				GUI::SetNextWindowPos(GUI::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, SVector2<F32>(0.5f, 0.5f));
 			}
 		}
 
@@ -254,24 +239,24 @@ namespace ImGui
 			OpenSelectTextureAssetModal(result);
 	}
 
-	void CInspectorWindow::OpenSelectMeshAssetModal(const Havtorn::SComponentViewResult& result)
+	void CInspectorWindow::OpenSelectMeshAssetModal(const SComponentViewResult& result)
 	{
-		if (!ImGui::BeginPopupModal("Select Mesh Asset", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		if (!GUI::BeginPopupModal("Select Mesh Asset", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 			return;
 
-		Havtorn::SStaticMeshComponent* staticMesh = static_cast<Havtorn::SStaticMeshComponent*>(result.ComponentViewed);
+		SStaticMeshComponent* staticMesh = static_cast<SStaticMeshComponent*>(result.ComponentViewed);
 		if (staticMesh == nullptr)
 			return;
 
 		F32 thumbnailPadding = 4.0f;
-		F32 cellWidth = ImGui::UUtils::TexturePreviewSizeX * 0.75f + thumbnailPadding;
+		F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + thumbnailPadding;
 		F32 panelWidth = 256.0f;
-		Havtorn::I32 columnCount = static_cast<Havtorn::I32>(panelWidth / cellWidth);
-		Havtorn::U32 id = 0;
+		I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
+		U32 id = 0;
 
-		if (!ImGui::BeginTable("NewMeshAssetTable", columnCount))
+		if (!GUI::BeginTable("NewMeshAssetTable", columnCount))
 		{
-			EndPopup();
+			GUI::EndPopup();
 			return;
 		}
 
@@ -290,23 +275,23 @@ namespace ImGui
 
 			auto& assetRep = Manager->GetAssetRepFromDirEntry(entry);
 
-			ImGui::TableNextColumn();
-			ImGui::PushID(id++);
+			GUI::TableNextColumn();
+			GUI::PushID(id++);
 
-			if (ImGui::ImageButton(assetRep->Name.c_str(), (ImTextureID)(intptr_t)assetRep->TextureRef, {ImGui::UUtils::TexturePreviewSizeX * 0.75f, ImGui::UUtils::TexturePreviewSizeY * 0.75f}))
+			if (GUI::ImageButton(assetRep->Name.c_str(), (SGuiTextureID)(intptr_t)assetRep->TextureRef, {GUI::TexturePreviewSizeX * 0.75f, GUI::TexturePreviewSizeY * 0.75f}))
 			{
 				Manager->GetRenderManager()->TryLoadStaticMeshComponent(assetRep->Name, staticMesh);
 
-				Havtorn::SMaterialComponent* materialComp = Scene->GetComponent<Havtorn::SMaterialComponent>(staticMesh);
+				SMaterialComponent* materialComp = Scene->GetComponent<SMaterialComponent>(staticMesh);
 				if (materialComp != nullptr)
 				{
-					Havtorn::U8 meshMaterialNumber = staticMesh->NumberOfMaterials;
-					Havtorn::I8 materialNumberDifference = meshMaterialNumber - static_cast<Havtorn::U8>(materialComp->Materials.size());
+					U8 meshMaterialNumber = staticMesh->NumberOfMaterials;
+					I8 materialNumberDifference = meshMaterialNumber - static_cast<U8>(materialComp->Materials.size());
 
 					// NR: Add materials to correspond with mesh
 					if (materialNumberDifference > 0)
 					{
-						for (Havtorn::U8 i = 0; i < materialNumberDifference; i++)
+						for (U8 i = 0; i < materialNumberDifference; i++)
 						{
 							materialComp->Materials.emplace_back();
 						}
@@ -314,7 +299,7 @@ namespace ImGui
 					// NR: Remove materials to correspond with mesh
 					else if (materialNumberDifference < 0)
 					{
-						for (Havtorn::U8 i = 0; i < materialNumberDifference * -1.0f; i++)
+						for (U8 i = 0; i < materialNumberDifference * -1.0f; i++)
 						{
 							materialComp->Materials.pop_back();
 						}
@@ -326,67 +311,67 @@ namespace ImGui
 				}
 
 				Manager->SetIsModalOpen(false);
-				ImGui::CloseCurrentPopup();
+				GUI::CloseCurrentPopup();
 			}
 
-			ImGui::Text(assetRep->Name.c_str());
-			ImGui::PopID();
+			GUI::Text(assetRep->Name.c_str());
+			GUI::PopID();
 		}
 
-		ImGui::EndTable();
+		GUI::EndTable();
 
-		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+		if (GUI::Button("Cancel", SVector2<F32>(GUI::GetContentRegionAvail().x, 0))
 		{
 			Manager->SetIsModalOpen(false);
-			ImGui::CloseCurrentPopup(); 
+			GUI::CloseCurrentPopup(); 
 		}
 
-		ImGui::EndPopup();
+		GUI::EndPopup();
 	}
 
-	void CInspectorWindow::OpenSelectTextureAssetModal(const Havtorn::SComponentViewResult& result)
+	void CInspectorWindow::OpenSelectTextureAssetModal(const SComponentViewResult& result)
 	{
-		if (!ImGui::BeginPopupModal("Select Texture Asset", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		if (!GUI::BeginPopupModal("Select Texture Asset", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 			return;
 		
 		constexpr const char* searchPath = "Assets/Textures";
 
-		if (Havtorn::SDecalComponent* decalComponent = dynamic_cast<Havtorn::SDecalComponent*>(result.ComponentViewed))
+		if (SDecalComponent* decalComponent = dynamic_cast<SDecalComponent*>(result.ComponentViewed))
 			HandleTextureAssetModal(searchPath, decalComponent->TextureReferences[result.ComponentSubIndex]);
 
-		if (Havtorn::SEnvironmentLightComponent* environmentLightComponent = dynamic_cast<Havtorn::SEnvironmentLightComponent*>(result.ComponentViewed))
+		if (SEnvironmentLightComponent* environmentLightComponent = dynamic_cast<SEnvironmentLightComponent*>(result.ComponentViewed))
 			HandleTextureAssetModal(searchPath, environmentLightComponent->AmbientCubemapReference);
 
-		if (Havtorn::SSpriteComponent* spriteComponent = dynamic_cast<Havtorn::SSpriteComponent*>(result.ComponentViewed))
+		if (SSpriteComponent* spriteComponent = dynamic_cast<SSpriteComponent*>(result.ComponentViewed))
 			HandleTextureAssetModal(searchPath, spriteComponent->TextureIndex);
 
-		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+		if (GUI::Button("Cancel", SVector2<F32>(GUI::GetContentRegionAvail().x, 0)))
 		{
 			Manager->SetIsModalOpen(false);
-			ImGui::CloseCurrentPopup();
+			GUI::CloseCurrentPopup();
 		}
 
-		ImGui::EndPopup();
+		GUI::EndPopup();
 	}
 
-	void CInspectorWindow::OpenSelectMaterialAssetModal(const Havtorn::SComponentViewResult& result)
+	void CInspectorWindow::OpenSelectMaterialAssetModal(const SComponentViewResult& result)
 	{
-		if (!ImGui::BeginPopupModal("Select Material Asset", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		if (!GUI::BeginPopupModal("Select Material Asset", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 			return;
 
-		Havtorn::SMaterialComponent* materialComponent = dynamic_cast<Havtorn::SMaterialComponent*>(result.ComponentViewed);
+		SMaterialComponent* materialComponent = dynamic_cast<SMaterialComponent*>(result.ComponentViewed);
 		if (materialComponent == nullptr)
 			return;
 
 		F32 thumbnailPadding = 4.0f;
-		F32 cellWidth = ImGui::UUtils::TexturePreviewSizeX * 0.75f + thumbnailPadding;
+		F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + thumbnailPadding;
 		F32 panelWidth = 256.0f;
-		Havtorn::I32 columnCount = static_cast<Havtorn::I32>(panelWidth / cellWidth);
-		Havtorn::U32 id = 0;
+		I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
+		U32 id = 0;
 
 		Manager->SetIsModalOpen(true);
 
-		if (ImGui::BeginTable("NewMaterialAssetTable", columnCount))
+		if (GUI::BeginTable("NewMaterialAssetTable", columnCount))
 		{
 			for (auto& entry : std::filesystem::recursive_directory_iterator("Assets/Materials"))
 			{
@@ -395,52 +380,52 @@ namespace ImGui
 
 				auto& assetRep = Manager->GetAssetRepFromDirEntry(entry);
 
-				ImGui::TableNextColumn();
-				ImGui::PushID(id++);
+				GUI::TableNextColumn();
+				GUI::PushID(id++);
 
-				if (ImGui::ImageButton(assetRep->Name.c_str(), (ImTextureID)(intptr_t)assetRep->TextureRef, {ImGui::UUtils::TexturePreviewSizeX * 0.75f, ImGui::UUtils::TexturePreviewSizeY * 0.75f}))
+				if (GUI::ImageButton(assetRep->Name.c_str(), (SGuiTextureID)(intptr_t)assetRep->TextureRef, {GUI::TexturePreviewSizeX * 0.75f, GUI::TexturePreviewSizeY * 0.75f}))
 				{
 					Manager->GetRenderManager()->TryReplaceMaterialOnComponent(assetRep->DirectoryEntry.path().string(), AssetPickedIndex, materialComponent);
 					AssetPickedIndex = 0;
 
 					Manager->SetIsModalOpen(false);
-					ImGui::CloseCurrentPopup();
+					GUI::CloseCurrentPopup();
 				}
 
-				ImGui::Text(assetRep->Name.c_str());
-				ImGui::PopID();
+				GUI::Text(assetRep->Name.c_str());
+				GUI::PopID();
 			}
 
-			ImGui::EndTable();
+			GUI::EndTable();
 		}
 
-		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) 
+		if (GUI::Button("Cancel", SVector2<F32>(GUI::GetContentRegionAvail().x, 0))) 
 		{
 			Manager->SetIsModalOpen(false);
-			ImGui::CloseCurrentPopup(); 
+			GUI::CloseCurrentPopup(); 
 		}
 
-		ImGui::EndPopup();	
+		GUI::EndPopup();	
 	}
 
-	void CInspectorWindow::OpenAssetTool(const Havtorn::SComponentViewResult& result)
+	void CInspectorWindow::OpenAssetTool(const SComponentViewResult& result)
 	{
-		Havtorn::SSpriteAnimatorGraphComponent* component = static_cast<Havtorn::SSpriteAnimatorGraphComponent*>(result.ComponentViewed);
+		SSpriteAnimatorGraphComponent* component = static_cast<SSpriteAnimatorGraphComponent*>(result.ComponentViewed);
 		if (component == nullptr)
 			return;
 
 		Manager->GetEditorWindow<CSpriteAnimatorGraphNodeWindow>()->Inspect(*component);
 	}
 
-	void CInspectorWindow::HandleTextureAssetModal(const std::string& pathToSearch, Havtorn::U16& textureReference)
+	void CInspectorWindow::HandleTextureAssetModal(const std::string& pathToSearch, U16& textureReference)
 	{
-		F32 cellWidth = ImGui::UUtils::TexturePreviewSizeX * 0.75f + ImGui::UUtils::ThumbnailPadding;
-		Havtorn::I32 columnCount = static_cast<Havtorn::I32>(ImGui::UUtils::PanelWidth / cellWidth);
-		Havtorn::U32 id = 0;
+		F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + GUI::ThumbnailPadding;
+		I32 columnCount = static_cast<I32>(GUI::PanelWidth / cellWidth);
+		U32 id = 0;
 
 		Manager->SetIsModalOpen(true);
 
-		if (ImGui::BeginTable("NewTextureAssetTable", columnCount))
+		if (GUI::BeginTable("NewTextureAssetTable", columnCount))
 		{
 			for (auto& entry : std::filesystem::recursive_directory_iterator(pathToSearch.c_str()))
 			{
@@ -449,54 +434,54 @@ namespace ImGui
 
 				auto& assetRep = Manager->GetAssetRepFromDirEntry(entry);
 
-				ImGui::TableNextColumn();
-				ImGui::PushID(id++);
+				GUI::TableNextColumn();
+				GUI::PushID(id++);
 
-				if (ImGui::ImageButton(assetRep->Name.c_str(), (ImTextureID)(intptr_t)assetRep->TextureRef, {ImGui::UUtils::TexturePreviewSizeX * 0.75f, ImGui::UUtils::TexturePreviewSizeY * 0.75f}))
+				if (GUI::ImageButton(assetRep->Name.c_str(), (SGuiTextureID)(intptr_t)assetRep->TextureRef, {GUI::TexturePreviewSizeX * 0.75f, GUI::TexturePreviewSizeY * 0.75f}))
 				{
-					textureReference = static_cast<Havtorn::U16>(Havtorn::GEngine::GetTextureBank()->GetTextureIndex(entry.path().string()));
+					textureReference = static_cast<U16>(GEngine::GetTextureBank()->GetTextureIndex(entry.path().string()));
 					
 					Manager->SetIsModalOpen(false);
-					ImGui::CloseCurrentPopup();
+					GUI::CloseCurrentPopup();
 				}
 
-				ImGui::Text(assetRep->Name.c_str());
-				ImGui::PopID();
+				GUI::Text(assetRep->Name.c_str());
+				GUI::PopID();
 			}
 
-			ImGui::EndTable();
+			GUI::EndTable();
 		}
 	}
 
 	void CInspectorWindow::OpenAddComponentModal()
 	{
-		if (!ImGui::BeginPopupModal("Add Component Modal", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		if (!GUI::BeginPopupModal("Add Component Modal", NULL, ImGuiWindowFlags_AlwaysAutoResize))
 			return;
 
 		Manager->SetIsModalOpen(true);
 
-		if (ImGui::BeginTable("NewComponentTypeTable", 1))
+		if (GUI::BeginTable("NewComponentTypeTable", 1))
 		{
-			for (const Havtorn::SComponentEditorContext* context : Scene->GetComponentEditorContexts())
+			for (const SComponentEditorContext* context : Scene->GetComponentEditorContexts())
 			{
-				ImGui::TableNextColumn();
+				GUI::TableNextColumn();
 
 				if (context->AddComponent(SelectedEntity, Scene))
 				{
 					Manager->SetIsModalOpen(false);
-					ImGui::CloseCurrentPopup();
+					GUI::CloseCurrentPopup();
 				}
 			}
 
-			ImGui::EndTable();
+			GUI::EndTable();
 		}
 
-		if (ImGui::Button("Cancel", ImVec2(ImGui::GetContentRegionAvail().x, 0))) 
+		if (GUI::Button("Cancel", ImVec2(GUI::GetContentRegionAvail().x, 0))) 
 		{
 			Manager->SetIsModalOpen(false);
-			ImGui::CloseCurrentPopup(); 
+			GUI::CloseCurrentPopup(); 
 		}
 
-		ImGui::EndPopup();
+		GUI::EndPopup();
 	}
 }

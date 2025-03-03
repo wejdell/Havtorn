@@ -25,7 +25,7 @@ namespace Havtorn
 	class UModelImporter
 	{
 	public:
-		static HAVTORN_API std::string ImportFBX(const std::string& filePath, const EAssetType assetType);
+		static ENGINE_API std::string ImportFBX(const std::string& filePath, const EAssetType assetType);
 
 	private:
 		static std::string ImportStaticMesh(const std::string& filePath, const aiScene* assimpScene);

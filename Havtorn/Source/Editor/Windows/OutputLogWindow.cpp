@@ -5,17 +5,17 @@
 #include "EditorManager.h"
 #include "DockSpaceWindow.h"
 
-#include <imgui.h>
+#include <GUI.h>
+#include <Color.h>
+#include <PlatformManager.h>
 
-namespace ImGui
+namespace Havtorn
 {
-	using Havtorn::F32;
-
-	COutputLogWindow::COutputLogWindow(const char* displayName, Havtorn::CEditorManager* manager)
+	COutputLogWindow::COutputLogWindow(const char* displayName, CEditorManager* manager)
 		: CWindow(displayName, manager)
 	{
-		Havtorn::GEngine::GetWindowHandler()->OnDragDropAccepted.AddMember(this, &COutputLogWindow::OnDragDropFiles);
-        Havtorn::ULog::AddLogContext(this);
+		manager->GetPlatformManager()->OnDragDropAccepted.AddMember(this, &COutputLogWindow::OnDragDropFiles);
+        ULog::AddLogContext(this);
 
         ClearLog();
         memset(InputBuffer, 0, sizeof(InputBuffer));
@@ -30,8 +30,8 @@ namespace ImGui
 	COutputLogWindow::~COutputLogWindow()
 	{
         ClearLog();
-        for (Havtorn::I32 i = 0; i < static_cast<Havtorn::I32>(History.Size); i++)
-            ImGui::MemFree(History[i]);
+        for (I32 i = 0; i < static_cast<I32>(History.size()); i++)
+            GUI::MemFree(History[i]);
         History.clear();
 	}
 
@@ -41,50 +41,50 @@ namespace ImGui
 
 	void COutputLogWindow::OnInspectorGUI()
 	{
-		if (!ImGui::Begin(Name(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus))
+		if (!GUI::Begin(Name(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus))
         {
-            ImGui::End();
+            GUI::End();
             return;
         }
 
         // TODO: display items starting from the bottom
 
-        ImGui::SameLine();
+        GUI::SameLine();
         Filter.Draw("Search", 180);
         
-        ImGui::SameLine();
+        GUI::SameLine();
 
-        bool shouldCopyToClipboard = ImGui::SmallButton("Copy");
+        bool shouldCopyToClipboard = GUI::SmallButton("Copy");
 
-        ImGui::SameLine();
+        GUI::SameLine();
 
         // Options menu
-        if (ImGui::BeginPopup("Options"))
+        if (GUI::BeginPopup("Options"))
         {
-            ImGui::Checkbox("Auto-scroll", &ShouldAutoScroll);
-            ImGui::EndPopup();
+            GUI::Checkbox("Auto-scroll", &ShouldAutoScroll);
+            GUI::EndPopup();
         }
 
-        ImGui::SetNextItemShortcut(ImGuiMod_Ctrl | ImGuiKey_O, ImGuiInputFlags_Tooltip);
-        if (ImGui::Button("Options"))
-            ImGui::OpenPopup("Options");
+        GUI::SetNextItemShortcut(ImGuiMod_Ctrl | ImGuiKey_O, ImGuiInputFlags_Tooltip);
+        if (GUI::Button("Options"))
+            GUI::OpenPopup("Options");
 
-        ImGui::Separator();
+        GUI::Separator();
 
         // Reserve enough left-over height for 1 separator + 1 input text
-        const Havtorn::F32 footerHeightToReserve = ImGui::GetStyle().ItemSpacing.y + ImGui::GetFrameHeightWithSpacing();
-        if (ImGui::BeginChild("ScrollingRegion", ImVec2(0, -footerHeightToReserve), ImGuiChildFlags_NavFlattened, ImGuiWindowFlags_HorizontalScrollbar))
+        const F32 footerHeightToReserve = GUI::GetStyle().ItemSpacing.y + GUI::GetFrameHeightWithSpacing();
+        if (GUI::BeginChild("ScrollingRegion", SVector2<F32>(0, -footerHeightToReserve), ImGuiChildFlags_NavFlattened, ImGuiWindowFlags_HorizontalScrollbar))
         {
-            if (ImGui::BeginPopupContextWindow())
+            if (GUI::BeginPopupContextWindow())
             {
-                if (ImGui::Selectable("Clear")) 
+                if (GUI::Selectable("Clear")) 
                     ClearLog();
 
-                ImGui::EndPopup();
+                GUI::EndPopup();
             }
 
             // Display every line as a separate entry so we can change their color or add custom widgets.
-            // If you only want raw text you can use ImGui::TextUnformatted(log.begin(), log.end());
+            // If you only want raw text you can use GUI::TextUnformatted(log.begin(), log.end());
             // NB- if you have thousands of entries this approach may be too inefficient and may require user-side clipping
             // to only process visible items. The clipper will automatically measure the height of your first item and then
             // "seek" to display only items in the visible area.
@@ -107,9 +107,9 @@ namespace ImGui
             // If your items are of variable height:
             // - Split them into same height items would be simpler and facilitate random-seeking into your list.
             // - Consider using manual call to IsRectVisible() and skipping extraneous decoration from your items.
-            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
+            GUI::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4, 1)); // Tighten spacing
             if (shouldCopyToClipboard)
-                ImGui::LogToClipboard();
+                GUI::LogToClipboard();
             
             for (const SLogItem& item : Items)
             //ImGuiListClipper clipper;
@@ -122,33 +122,33 @@ namespace ImGui
                     if (!Filter.PassFilter(item.Text))
                         continue;
 
-                    bool hasColor = item.Color != ImVec4(0.0f, 0.0f, 0.0f, 0.0f);
+                    bool hasColor = item.Color != SColor(0.0f, 0.0f, 0.0f, 0.0f);
                     if (hasColor)
-                        ImGui::PushStyleColor(ImGuiCol_Text, item.Color);
+                        GUI::PushStyleColor(ImGuiCol_Text, item.Color);
 
-                    ImGui::TextUnformatted(item.Text);
+                    GUI::TextUnformatted(item.Text);
 
                     if (hasColor)
-                        ImGui::PopStyleColor();
+                        GUI::PopStyleColor();
                 }
             if (shouldCopyToClipboard)
-                ImGui::LogFinish();
+                GUI::LogFinish();
 
             // Keep up at the bottom of the scroll region if we were already at the bottom at the beginning of the frame.
             // Using a scrollbar or mouse-wheel will take away from the bottom edge.
-            if (ShouldScrollToBottom || (ShouldAutoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY()))
-                ImGui::SetScrollHereY(1.0f);
+            if (ShouldScrollToBottom || (ShouldAutoScroll && GUI::GetScrollY() >= GUI::GetScrollMaxY()))
+                GUI::SetScrollHereY(1.0f);
             ShouldScrollToBottom = false;
 
-            ImGui::PopStyleVar();
+            GUI::PopStyleVar();
         }
-        ImGui::EndChild();
-        ImGui::Separator();
+        GUI::EndChild();
+        GUI::Separator();
 
         // Command-line
         bool shouldReclaimFocus = false;
         ImGuiInputTextFlags inputTextFlags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_EscapeClearsAll | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
-        if (ImGui::InputText("Input", InputBuffer, IM_ARRAYSIZE(InputBuffer), inputTextFlags, [](ImGuiInputTextCallbackData* data)
+        if (GUI::InputText("Input", InputBuffer, IM_ARRAYSIZE(InputBuffer), inputTextFlags, [](ImGuiInputTextCallbackData* data)
             {
                 COutputLogWindow* window = (COutputLogWindow*)data->UserData;
                 return window->TextEditCallback(data);
@@ -163,40 +163,40 @@ namespace ImGui
         }
 
         // Auto-focus on window apparition
-        ImGui::SetItemDefaultFocus();
+        GUI::SetItemDefaultFocus();
         if (shouldReclaimFocus)
-            ImGui::SetKeyboardFocusHere(-1); // Auto focus previous widget
+            GUI::SetKeyboardFocusHere(-1); // Auto focus previous widget
 
-        ImGui::End();
+        GUI::End();
 	}
 
 	void COutputLogWindow::OnDisable()
 	{
 	}
 
-    void COutputLogWindow::Log(const Havtorn::ELogCategory category, const std::string& message)
+    void COutputLogWindow::Log(const ELogCategory category, const std::string& message)
     {
-        ImVec4 color = ImVec4();
+        SColor color = SColor();
         switch (category)
         {
-        case Havtorn::ELogCategory::Trace:
-            color = ImVec4(0.8f, 0.8f, 0.8f, 1.0f);
+        case ELogCategory::Trace:
+            color = SColor(0.8f, 0.8f, 0.8f, 1.0f);
             break;
-        case Havtorn::ELogCategory::Debug:
-            color = ImVec4(0.4f, 1.0f, 0.4f, 1.0f);
+        case ELogCategory::Debug:
+            color = SColor(0.4f, 1.0f, 0.4f, 1.0f);
             break;
-        case Havtorn::ELogCategory::Info:
-            color = ImVec4(0.4f, 0.4f, 1.0f, 1.0f);
+        case ELogCategory::Info:
+            color = SColor(0.4f, 0.4f, 1.0f, 1.0f);
             break;
-        case Havtorn::ELogCategory::Warning:
-            color = ImVec4(0.4f, 1.0f, 1.0f, 1.0f);
+        case ELogCategory::Warning:
+            color = SColor(0.4f, 1.0f, 1.0f, 1.0f);
             break;
-        case Havtorn::ELogCategory::Error:
-            color = ImVec4(1.0f, 0.4f, 0.4f, 1.0f);
+        case ELogCategory::Error:
+            color = SColor(1.0f, 0.4f, 0.4f, 1.0f);
             break;
-        case Havtorn::ELogCategory::Fatal:
+        case ELogCategory::Fatal:
         default:
-            color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+            color = SColor(1.0f, 0.0f, 0.0f, 1.0f);
             break;
         }
 
@@ -207,7 +207,7 @@ namespace ImGui
 	{
 	}
 
-    void COutputLogWindow::AddLog(ImVec4 color, const char* format, ...)
+    void COutputLogWindow::AddLog(SColor color, const char* format, ...)
     {
         // FIXME-OPT
         char buf[1024];
@@ -221,8 +221,8 @@ namespace ImGui
 
     void COutputLogWindow::ClearLog()
     {
-        for (Havtorn::I32 i = 0; i < static_cast<Havtorn::I32>(Items.Size); i++)
-            ImGui::MemFree(Items[i].Text);
+        for (I32 i = 0; i < static_cast<I32>(Items.size()); i++)
+            GUI::MemFree(Items[i].Text);
         Items.clear();
     }
 
@@ -233,10 +233,10 @@ namespace ImGui
         // Insert into history. First find match and delete it so it can be pushed to the back.
         // This isn't trying to be smart or optimal.
         HistoryPos = -1;
-        for (Havtorn::I32 i = History.Size - 1; i >= 0; i--)
+        for (I32 i = History.size() - 1; i >= 0; i--)
             if (Stricmp(History[i], commandLine) == 0)
             {
-                ImGui::MemFree(History[i]);
+                GUI::MemFree(History[i]);
                 History.erase(History.begin() + i);
                 break;
             }
@@ -250,13 +250,13 @@ namespace ImGui
         else if (Stricmp(commandLine, "HELP") == 0)
         {
             HV_LOG_TRACE("Commands:");
-            for (Havtorn::I32 i = 0; i < Commands.Size; i++)
+            for (I32 i = 0; i < Commands.size(); i++)
                 HV_LOG_TRACE("- %s", Commands[i]);
         }
         else if (Stricmp(commandLine, "HISTORY") == 0)
         {
-            Havtorn::I32 first = History.Size - 10;
-            for (Havtorn::I32 i = first > 0 ? first : 0; i < History.Size; i++)
+            I32 first = History.size() - 10;
+            for (I32 i = first > 0 ? first : 0; i < History.size(); i++)
                 HV_LOG_TRACE("%3d: %s\n", i, History[i]);
         }
         else
@@ -268,7 +268,7 @@ namespace ImGui
         ShouldScrollToBottom = true;
     }
 
-    Havtorn::I32 COutputLogWindow::TextEditCallback(ImGuiInputTextCallbackData* data)
+    I32 COutputLogWindow::TextEditCallback(ImGuiInputTextCallbackData* data)
     {
         switch (data->EventFlag)
         {
@@ -289,19 +289,19 @@ namespace ImGui
 
             // Build a list of candidates
             ImVector<const char*> candidates;
-            for (Havtorn::I32 i = 0; i < Commands.Size; i++)
-                if (Strnicmp(Commands[i], wordStart, (Havtorn::I32)(wordEnd - wordStart)) == 0)
+            for (I32 i = 0; i < Commands.size(); i++)
+                if (Strnicmp(Commands[i], wordStart, (I32)(wordEnd - wordStart)) == 0)
                     candidates.push_back(Commands[i]);
 
             if (candidates.Size == 0)
             {
                 // No match
-                HV_LOG_TRACE("No match for \"%.*s\"!\n", (Havtorn::I32)(wordEnd - wordStart), wordStart);
+                HV_LOG_TRACE("No match for \"%.*s\"!\n", (I32)(wordEnd - wordStart), wordStart);
             }
             else if (candidates.Size == 1)
             {
                 // Single match. Delete the beginning of the word and replace it entirely so we've got nice casing.
-                data->DeleteChars((Havtorn::I32)(wordStart - data->Buf), (Havtorn::I32)(wordEnd - wordStart));
+                data->DeleteChars((I32)(wordStart - data->Buf), (I32)(wordEnd - wordStart));
                 data->InsertChars(data->CursorPos, candidates[0]);
                 data->InsertChars(data->CursorPos, " ");
             }
@@ -309,12 +309,12 @@ namespace ImGui
             {
                 // Multiple matches. Complete as much as we can..
                 // So inputing "C"+Tab will complete to "CL" then display "CLEAR" and "CLASSIFY" as matches.
-                Havtorn::I32 matchLength = (Havtorn::I32)(wordEnd - wordStart);
+                I32 matchLength = (I32)(wordEnd - wordStart);
                 for (;;)
                 {
-                    Havtorn::I32 c = 0;
+                    I32 c = 0;
                     bool allCandidatesMatch = true;
-                    for (Havtorn::I32 i = 0; i < candidates.Size && allCandidatesMatch; i++)
+                    for (I32 i = 0; i < candidates.Size && allCandidatesMatch; i++)
                         if (i == 0)
                             c = toupper(candidates[i][matchLength]);
                         else if (c == 0 || c != toupper(candidates[i][matchLength]))
@@ -326,13 +326,13 @@ namespace ImGui
 
                 if (matchLength > 0)
                 {
-                    data->DeleteChars((Havtorn::I32)(wordStart - data->Buf), (Havtorn::I32)(wordEnd - wordStart));
+                    data->DeleteChars((I32)(wordStart - data->Buf), (I32)(wordEnd - wordStart));
                     data->InsertChars(data->CursorPos, candidates[0], candidates[0] + matchLength);
                 }
 
                 // List matches
                 HV_LOG_TRACE("Possible matches:\n");
-                for (Havtorn::I32 i = 0; i < candidates.Size; i++)
+                for (I32 i = 0; i < candidates.Size; i++)
                     HV_LOG_TRACE("- %s\n", candidates[i]);
             }
 
@@ -341,18 +341,18 @@ namespace ImGui
         case ImGuiInputTextFlags_CallbackHistory:
         {
             // Example of HISTORY
-            const Havtorn::I32 previousHistoryPosition = HistoryPos;
+            const I32 previousHistoryPosition = HistoryPos;
             if (data->EventKey == ImGuiKey_UpArrow)
             {
                 if (HistoryPos == -1)
-                    HistoryPos = History.Size - 1;
+                    HistoryPos = History.size() - 1;
                 else if (HistoryPos > 0)
                     HistoryPos--;
             }
             else if (data->EventKey == ImGuiKey_DownArrow)
             {
                 if (HistoryPos != -1)
-                    if (++HistoryPos >= History.Size)
+                    if (++HistoryPos >= History.size())
                         HistoryPos = -1;
             }
 

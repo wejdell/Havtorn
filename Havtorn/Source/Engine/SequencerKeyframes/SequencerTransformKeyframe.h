@@ -6,7 +6,7 @@
 
 namespace Havtorn
 {
-	struct HAVTORN_API SSequencerTransformKeyframe : public SSequencerKeyframe
+	struct ENGINE_API SSequencerTransformKeyframe : public SSequencerKeyframe
 	{
 		SMatrix KeyframedMatrix;
 		SMatrix IntermediateMatrix;

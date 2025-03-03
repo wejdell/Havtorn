@@ -6,7 +6,7 @@
 
 namespace Havtorn
 {
-	struct HAVTORN_API SSequencerSpriteKeyframe : public SSequencerKeyframe
+	struct ENGINE_API SSequencerSpriteKeyframe : public SSequencerKeyframe
 	{
 		SVector4 UVRect = { 0.0f, 0.0f, 1.0f, 1.0f };
 

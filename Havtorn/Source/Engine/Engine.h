@@ -1,7 +1,7 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include "Application/WindowHandler.h"
+//#include "Application/WindowHandler.h"
 
 namespace Havtorn
 {
@@ -10,7 +10,8 @@ namespace Havtorn
 
 namespace Havtorn
 {
-	class CWindowHandler;
+	class CPlatformManager;
+	//class CWindowHandler;
 	class CThreadManager;
 	class CGraphicsFramework;
 	class CRenderManager;
@@ -32,40 +33,38 @@ namespace Havtorn
 		friend class CEditorProcess;
 		friend class CImGuiProcess;
 		friend class CGameProcess;
-		friend CWindowHandler;
+		//friend CWindowHandler;
 
 	public:
 		GEngine();
 		~GEngine();
-		bool Init(const CWindowHandler::SWindowData& windowData);
+		bool Init(CPlatformManager* platformManager);
 		float BeginFrame();
 		void Update();
 		void RenderFrame();
 		void EndFrame();
 		
-		static HAVTORN_API CWindowHandler* GetWindowHandler();
-		static HAVTORN_API CFileSystem* GetFileSystem();
-		static HAVTORN_API CTextureBank* GetTextureBank();
-		static HAVTORN_API CThreadManager* GetThreadManager();
-		static HAVTORN_API CWorld* GetWorld();
-		static HAVTORN_API CInputMapper* GetInput();
-		static HAVTORN_API CGraphicsFramework* GetGraphicsFramework();
-		static HAVTORN_API IProcess* GetEngineProcess();
-
-		static HAVTORN_API void SetEngineProcess(IProcess* aProcess);
+		//static ENGINE_API CWindowHandler* GetWindowHandler();
+		static ENGINE_API CFileSystem* GetFileSystem();
+		static ENGINE_API CTextureBank* GetTextureBank();
+		static ENGINE_API CThreadManager* GetThreadManager();
+		static ENGINE_API CWorld* GetWorld();
+		static ENGINE_API CInputMapper* GetInput();
+		static ENGINE_API CGraphicsFramework* GetGraphicsFramework();
 		
+		void OnWindowResolutionChanged(SVector2<U16> newResolution);
+
 	public:
-		void InitWindowsImaging();
 		void CrashWithScreenShot(std::wstring& subPath);
 
-		void ShowCursor(const bool& isInEditorMode = true);
-		void HideCursor(const bool& isInEditorMode = false);
+		//void ShowCursor(const bool& isInEditorMode = true);
+		//void HideCursor(const bool& isInEditorMode = false);
 
 	private:
-		static HAVTORN_API GEngine* Instance;
+		static ENGINE_API GEngine* Instance;
 
 		CFileSystem* FileSystem = nullptr;
-		CWindowHandler* WindowHandler = nullptr;
+		//CWindowHandler* WindowHandler = nullptr;
 		CThreadManager* ThreadManager = nullptr;
 		CGraphicsFramework* Framework = nullptr;
 		CTextureBank* TextureBank = nullptr;
@@ -75,9 +74,9 @@ namespace Havtorn
 		CInputMapper* InputMapper = nullptr;
 		CWorld* World = nullptr;
 
-		IProcess* engineProcess = nullptr;
-
 		// TODO.NR: Figure out how to set up dependencies for Editor systems on Engine ECS Systems
 		CSequencerSystem* SequencerSystem = nullptr;
+
+		SVector2<U16> WindowResizeTarget = {};
 	};
 }

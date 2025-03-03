@@ -22,13 +22,14 @@
 
 #include <d3d11.h>
 
-#ifdef HV_PLATFORM_WINDOWS
-#include "Core/WindowsInclude.h"
-#endif
+//#ifdef HV_PLATFORM_WINDOWS
+//#include "Core/WindowsInclude.h"
+//#endif
 
-#include "Core/EngineTypes.h"
-#include "Core/MathTypes/HavtornMath.h"
-#include "Core/EngineException.h"
-#include "Core/HavtornDelegate.h"
+#include <EngineTypes.h>
+#include <MathTypes/HavtornMath.h>
+#include <EngineException.h>
+#include <HavtornDelegate.h>
+#include <Log.h>
+
 #include "Timer.h"
-#include "Log.h"

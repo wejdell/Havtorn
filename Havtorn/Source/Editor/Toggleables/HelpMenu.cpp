@@ -3,11 +3,11 @@
 #include "HelpMenu.h"
 #include "EditorManager.h"
 
-//#include <imgui.h>
+#include <GUI.h>
 
-namespace ImGui
+namespace Havtorn
 {
-	CHelpMenu::CHelpMenu(const char* displayName, Havtorn::CEditorManager* manager)
+	CHelpMenu::CHelpMenu(const char* displayName, CEditorManager* manager)
 		: CToggleable(displayName, manager)
 	{
 	}
@@ -22,7 +22,7 @@ namespace ImGui
 
 	void CHelpMenu::OnInspectorGUI()
 	{
-		if (ImGui::Button(Name()))
+		if (GUI::Button(Name()))
 		{
 
 		}

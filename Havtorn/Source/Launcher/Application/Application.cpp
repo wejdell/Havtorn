@@ -64,13 +64,13 @@ namespace Havtorn
 		}
 	}
 
-	void CApplication::Setup()
+	void CApplication::Setup(CPlatformManager* platformManager)
 	{
 		Processes.shrink_to_fit();
 
 		for (int i = 0; i < Processes.size(); i++)
 		{
-			if (!Processes[i]->Init())
+			if (!Processes[i]->Init(platformManager))
 			{
 				IsRunning = false;
 				break;

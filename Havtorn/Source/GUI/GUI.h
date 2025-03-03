@@ -5,7 +5,7 @@
 #include <memory>
 #include <wtypes.h>
 
-#define EXPORT _declspec(dllexport)
+#include <Core.h>
 
 struct ID3D11Device;
 struct ID3D11DeviceContext;
@@ -15,18 +15,18 @@ namespace Havtorn
 	struct SMatrix;
 	struct SVector;
 
-	enum class EXPORT EDragMode
+	enum class GUI_API EDragMode
 	{
 		None = 1 << 0,
 		Logarithmic = 1 << 5,
 	};
 
-	class EXPORT GUI
+	class GUI_API GUI
 	{
 	public:
 		GUI();
 		~GUI();
-		void InitImGui(HWND hwnd, ID3D11Device* device, ID3D11DeviceContext* context);
+		void InitGUI(HWND hwnd, ID3D11Device* device, ID3D11DeviceContext* context);
 
 		void BeginFrame();
 		void EndFrame();

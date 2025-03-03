@@ -6,13 +6,13 @@
 
 namespace Havtorn
 {
-	class _declspec(dllexport) CGameProcess : public IProcess
+	class GAME_API CGameProcess : public IProcess
 	{
 	public:
 		CGameProcess();
 		~CGameProcess() override;
 
-		bool Init() override;
+		bool Init(CPlatformManager* platformManager) override;
 
 		void BeginFrame() override;
 		void PreUpdate() override;

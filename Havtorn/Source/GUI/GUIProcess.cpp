@@ -24,14 +24,14 @@ namespace Havtorn
 
 	GUIProcess::~GUIProcess() = default;
 
-	bool GUIProcess::Init()
+	bool GUIProcess::Init(CPlatformManager* platformManager)
 	{
 		return true;
 	}
 
-	void GUIProcess::InitImGui(HWND hwnd, ID3D11Device* device, ID3D11DeviceContext* context)
+	void GUIProcess::InitGUI(HWND hwnd, ID3D11Device* device, ID3D11DeviceContext* context)
 	{
-		EditorGUI->InitImGui(hwnd, device, context);
+		EditorGUI->InitGUI(hwnd, device, context);
 	}
 
 	void GUIProcess::BeginFrame()
@@ -44,8 +44,8 @@ namespace Havtorn
 		EditorGUI->EndFrame();
 	}
 
-	void GUIProcess::WindowsWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-	{
-		EditorGUI->WindowsProc(hWnd, msg, wParam, lParam);
-	}
+	//void GUIProcess::WindowsWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+	//{
+	//	EditorGUI->WindowsProc(hWnd, msg, wParam, lParam);
+	//}
 }

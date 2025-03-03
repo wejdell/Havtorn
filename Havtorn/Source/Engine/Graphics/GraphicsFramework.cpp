@@ -2,7 +2,7 @@
 
 #include "hvpch.h"
 #include "GraphicsFramework.h"
-#include "Application/WindowHandler.h"
+#include <../Platform/PlatformManager.h>
 #include <d3d11.h>
 
 #pragma comment(lib, "runtimeobject.lib")
@@ -27,9 +27,9 @@ namespace Havtorn
 		SwapChain->Present(0, 0);
 	}
 
-	bool CGraphicsFramework::Init(Havtorn::CWindowHandler* windowHandler)
+	bool CGraphicsFramework::Init(CPlatformManager* platformManager)
 	{
-		if (!windowHandler)
+		if (!platformManager)
 			return false;
 
 		D3D11_CREATE_DEVICE_FLAG createFlag = static_cast<D3D11_CREATE_DEVICE_FLAG>(0);
@@ -41,7 +41,7 @@ namespace Havtorn
 		swapchainDesc.BufferCount = 1;
 		swapchainDesc.BufferDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
 		swapchainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-		swapchainDesc.OutputWindow = windowHandler->GetWindowHandle();
+		swapchainDesc.OutputWindow = platformManager->GetWindowHandle();
 		swapchainDesc.SampleDesc.Count = 1;
 		swapchainDesc.Windowed = true;
 		ENGINE_HR_MESSAGE(D3D11CreateDeviceAndSwapChain(

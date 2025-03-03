@@ -1,28 +1,21 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
-#include "hvpch.h"
+#include <hvpch.h>
 
-#include "WindowHandler.h"
+#include "PlatformManager.h"
 
-#include "Input/Input.h"
+//#include "Input/Input.h"
+#include <string>
+#include <vector>
 
-#include "ImGuiManager.h"
-
-#include "Engine.h"
-#include "EngineProcess.h"
-
+#include <Log.h>
 
 namespace Havtorn
 {
-	LRESULT CWindowHandler::WinProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam)
+	LRESULT CPlatformManager::WinProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam)
 	{
-		static CWindowHandler* windowHandler = nullptr;
+		static CPlatformManager* platformManager = nullptr;
 		CREATESTRUCT* createStruct;
-
-		if(GEngine::GetEngineProcess() != nullptr)
-			GEngine::GetEngineProcess()->WindowsWindowProc(hwnd, uMsg, wParam, lParam);
-
-		//GImGuiManager::WindowsWindowProc(hwnd, uMsg, wParam, lParam);
 
 		switch (uMsg)
 		{
@@ -34,25 +27,25 @@ namespace Havtorn
 
 		case WM_CREATE:
 			createStruct = reinterpret_cast<CREATESTRUCT*>(lParam);
-			windowHandler = reinterpret_cast<CWindowHandler*>(createStruct->lpCreateParams);
+			platformManager = reinterpret_cast<CPlatformManager*>(createStruct->lpCreateParams);
 			break;
 
 		case WM_KILLFOCUS:
-			//           windowHandler->LockCursor(false); // If we use this here the WindowIsInEditingMode bool will be preserved
+			//           platformManager->LockCursor(false); // If we use this here the WindowIsInEditingMode bool will be preserved
 			break;
 
 		case WM_SETFOCUS:
 #ifdef _DEBUG
-			//if (false/*windowHandler->GameIsInMenu*/)
-			windowHandler->ShowAndUnlockCursor();
+			//if (false/*platformManager->GameIsInMenu*/)
+			platformManager->ShowAndUnlockCursor();
 			//else
-				//windowHandler->HideAndLockCursor();
-			//windowHandler->WindowIsInEditingMode ? windowHandler->LockCursor(false) : windowHandler->LockCursor(true);
+				//platformManager->HideAndLockCursor();
+			//platformManager->WindowIsInEditingMode ? platformManager->LockCursor(false) : platformManager->LockCursor(true);
 #else
-			//if (windowHandler->myGameIsInMenu)
-			windowHandler->ShowAndUnlockCursor();
+			//if (platformManager->myGameIsInMenu)
+			platformManager->ShowAndUnlockCursor();
 			//else
-				//windowHandler->HideAndLockCursor();
+				//platformManager->HideAndLockCursor();
 #endif
 			break;
 
@@ -106,7 +99,7 @@ namespace Havtorn
 				HV_LOG_INFO(path.c_str());
 
 #pragma endregion
-			windowHandler->OnDragDropAccepted.Broadcast(dragDropFilePaths);
+			platformManager->OnDragDropAccepted.Broadcast(dragDropFilePaths);
 			return 0;
 		}break;
 
@@ -116,12 +109,13 @@ namespace Havtorn
 				return 0;
 
 			//AS: Setting Resize Width/Height to != 0 will trigger a Resize in-engine.
-			windowHandler->ResizeTarget.X = STATIC_U16((U32)LOWORD(lParam));
-			windowHandler->ResizeTarget.Y = STATIC_U16((U32)HIWORD(lParam));
+			platformManager->ResizeTarget.X = STATIC_U16((U32)LOWORD(lParam));
+			platformManager->ResizeTarget.Y = STATIC_U16((U32)HIWORD(lParam));
 			break;
 
 		default:
-			CInput::GetInstance()->UpdateEvents(uMsg, wParam, lParam);
+			// Send through engine pump
+			//CInput::GetInstance()->UpdateEvents(uMsg, wParam, lParam);
 			break;
 
 			//if (CInput::GetInstance()->UpdateEvents(uMsg, wParam, lParam))
@@ -133,10 +127,10 @@ namespace Havtorn
 		return DefWindowProc(hwnd, uMsg, wParam, lParam);
 	}
 
-	CWindowHandler::CWindowHandler()
+	CPlatformManager::CPlatformManager()
 	{}
 
-	CWindowHandler::~CWindowHandler()
+	CPlatformManager::~CPlatformManager()
 	{
 		LockCursor(false);
 		CursorIsLocked = false;
@@ -145,7 +139,7 @@ namespace Havtorn
 		UnregisterClass(L"HavtornWindowClass", GetModuleHandle(nullptr));
 	}
 
-	bool CWindowHandler::Init(CWindowHandler::SWindowData someWindowData)
+	bool CPlatformManager::Init(CPlatformManager::SWindowData someWindowData)
 	{
 		WindowData = someWindowData;
 
@@ -180,7 +174,7 @@ namespace Havtorn
 		WNDCLASSEX windowclass = {};
 		windowclass.cbSize = sizeof(WNDCLASSEX);
 		windowclass.style = CS_VREDRAW | CS_HREDRAW | CS_OWNDC;
-		windowclass.lpfnWndProc = CWindowHandler::WinProc;
+		windowclass.lpfnWndProc = CPlatformManager::WinProc;
 		windowclass.cbClsExtra = 0;
 		windowclass.cbWndExtra = 0;
 		windowclass.hInstance = GetModuleHandle(nullptr);
@@ -244,19 +238,21 @@ namespace Havtorn
 		//SetMenuInfo(hMenu, &mi);
 
 		Resolution = { WindowData.Width, WindowData.Height };
-
+		ResizeTarget = {};
 		SetResolution(Resolution);
 		/*SetInternalResolution();*/
+
+		InitWindowsImaging();
 
 		return true;
 	}
 
-	const HWND CWindowHandler::GetWindowHandle() const
+	const HWND CPlatformManager::GetWindowHandle() const
 	{
 		return WindowHandle;
 	}
 
-	SVector2<U16> CWindowHandler::GetCenterPosition()
+	SVector2<U16> CPlatformManager::GetCenterPosition() const
 	{
 		SVector2<U16> center = {};
 		RECT rect = { 0 };
@@ -268,12 +264,12 @@ namespace Havtorn
 		return center;
 	}
 
-	SVector2<U16> CWindowHandler::GetResolution()
+	SVector2<U16> CPlatformManager::GetResolution() const
 	{
 		return Resolution;
 	}
 
-	void CWindowHandler::SetResolution(SVector2<U16> resolution)
+	void CPlatformManager::SetResolution(SVector2<U16> resolution)
 	{
 		if ((I16)resolution.X <= MaxResX && (I16)resolution.Y <= MaxResY)
 		{
@@ -282,12 +278,27 @@ namespace Havtorn
 		}
 	}
 
-	const bool CWindowHandler::CursorLocked() const
+	void CPlatformManager::InitWindowsImaging()
+	{
+//#if (_WIN32_WINNT >= 0x0A00 /*_WIN32_WINNT_WIN10*/)
+//		Microsoft::WRL::Wrappers::RoInitializeWrapper initialize(RO_INIT_MULTITHREADED);
+//		if (FAILED(initialize))
+//			// error
+//
+//#else
+//		HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+//		if (FAILED(hr))
+//			// error
+//#endif
+			return;
+	}
+
+	const bool CPlatformManager::CursorLocked() const
 	{
 		return CursorIsLocked;
 	}
 
-	void CWindowHandler::LockCursor(bool shouldLock)
+	void CPlatformManager::LockCursor(bool shouldLock)
 	{
 		CursorIsLocked = shouldLock;
 		if (shouldLock)
@@ -300,7 +311,7 @@ namespace Havtorn
 		shouldLock ? static_cast<bool>(SetCapture(WindowHandle)) : static_cast<bool>(ReleaseCapture());
 	}
 
-	void CWindowHandler::HidLockCursor(bool shouldLock)
+	void CPlatformManager::HidLockCursor(bool shouldLock)
 	{
 		CursorIsLocked = shouldLock;
 		if (shouldLock)
@@ -311,7 +322,7 @@ namespace Havtorn
 		shouldLock ? static_cast<bool>(SetCapture(WindowHandle)) : static_cast<bool>(ReleaseCapture());
 	}
 
-	void CWindowHandler::HideAndLockCursor(const bool& isInEditorMode)
+	void CPlatformManager::HideAndLockCursor(const bool& isInEditorMode)
 	{
 		while (::ShowCursor(FALSE) >= 0);
 		SetCapture(WindowHandle);
@@ -323,7 +334,7 @@ namespace Havtorn
 		SetCursorPos(static_cast<I16>(center.X), static_cast<I16>(center.Y));
 	}
 
-	void CWindowHandler::ShowAndUnlockCursor(const bool& isInEditorMode)
+	void CPlatformManager::ShowAndUnlockCursor(const bool& isInEditorMode)
 	{
 		while (::ShowCursor(TRUE) < 0);
 		ReleaseCapture();
@@ -332,7 +343,7 @@ namespace Havtorn
 		WindowIsInEditingMode = isInEditorMode;
 	}
 
-	void CWindowHandler::SetInternalResolution()
+	void CPlatformManager::SetInternalResolution()
 	{
 		LPRECT rect = new RECT{ 0, 0, 0, 0 };
 		if (GetClientRect(WindowHandle, rect) != 0)
@@ -350,22 +361,22 @@ namespace Havtorn
 		ResolutionScale = STATIC_F32(Resolution.Y / MaxResY);
 	}
 
-	void CWindowHandler::SetWindowTitle(const std::string& title)
+	void CPlatformManager::SetWindowTitle(const std::string& title)
 	{
 		SetWindowTextA(WindowHandle, title.c_str());
 	}
 
-	const float CWindowHandler::GetResolutionScale() const
+	const float CPlatformManager::GetResolutionScale() const
 	{
 		return ResolutionScale;
 	}
 
-	HAVTORN_API void CWindowHandler::EnableDragDrop() const
+	void CPlatformManager::EnableDragDrop() const
 	{
 		DragAcceptFiles(WindowHandle, TRUE);
 	}
 
-	HAVTORN_API void CWindowHandler::DisableDragDrop() const
+	void CPlatformManager::DisableDragDrop() const
 	{
 		DragAcceptFiles(WindowHandle, FALSE);
 	}

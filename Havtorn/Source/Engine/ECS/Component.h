@@ -5,7 +5,7 @@
 
 namespace Havtorn
 {
-	struct HAVTORN_API SComponent
+	struct ENGINE_API SComponent
 	{
 		SComponent() = default;
 		SComponent(const SEntity& entity);

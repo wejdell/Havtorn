@@ -3,7 +3,7 @@
 #pragma once
 #include "ECS/Component.h"
 #include "Graphics/GraphicsStructs.h"
-#include "Core/HavtornString.h"
+#include <HavtornString.h>
 
 namespace Havtorn
 {

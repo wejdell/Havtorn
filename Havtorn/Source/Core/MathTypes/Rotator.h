@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "Core/CoreTypes.h"
+#include "CoreTypes.h"
 #include "EngineMath.h"
 
 namespace Havtorn

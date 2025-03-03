@@ -2,8 +2,6 @@
 
 #pragma once
 
-#include "Core/Core.h"
-
 namespace Havtorn
 {
 	class UGUIDManager

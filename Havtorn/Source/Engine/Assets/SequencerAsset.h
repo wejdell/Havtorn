@@ -3,8 +3,8 @@
 
 #pragma once
 
-#include "Core/HavtornString.h"
 #include "SequencerKeyframes/SequencerKeyframe.h"
+#include <HavtornString.h>
 
 namespace Havtorn
 {
@@ -65,9 +65,9 @@ namespace Havtorn
 		CSequencerAsset()
 		{}
 
-		HAVTORN_API SSequencerEntityReference* TryGetEntityReference(const U64 guid);
-		HAVTORN_API bool operator==(const CSequencerAsset& other) const;
-		HAVTORN_API bool operator==(const std::string& otherName) const;
+		ENGINE_API SSequencerEntityReference* TryGetEntityReference(const U64 guid);
+		ENGINE_API bool operator==(const CSequencerAsset& other) const;
+		ENGINE_API bool operator==(const std::string& otherName) const;
 	
 	private:
 		CHavtornStaticString<255> Name;

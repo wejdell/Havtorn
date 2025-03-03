@@ -5,8 +5,8 @@
 #include <complex>
 #include <random>
 
-#include "Core/CoreTypes.h"
-#include "Core/Core.h"
+#include "CoreTypes.h"
+#include "Core.h"
 
 namespace Random
 {
@@ -21,7 +21,7 @@ namespace Havtorn
 #define DEGREES_TO_RADIANS 0.01745329251f // Pi * (1 / 180)
 #define RADIANS_TO_DEGREES 57.2957795131f // 180 * (1 / Pi)
 
-	struct HAVTORN_API UMath
+	struct CORE_API UMath
 	{
 		static const F32 Pi;
 		static const F32 Tau;

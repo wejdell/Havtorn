@@ -20,14 +20,11 @@
 #include <map>
 #include <deque>
 
-#ifdef HV_PLATFORM_WINDOWS
-#include "Core/WindowsInclude.h"
-#endif
+#include <EngineTypes.h>
+#include <MathTypes/HavtornMath.h>
+#include <EngineException.h>
+#include <HavtornDelegate.h>
+#include <Log.h>
 
-#include "Core/EngineTypes.h"
-#include "Core/MathTypes/HavtornMath.h"
-#include "Core/EngineException.h"
-#include "Core/HavtornDelegate.h"
 #include "Timer.h"
-#include "Log.h"
 #include "ECS/ECSInclude.h"

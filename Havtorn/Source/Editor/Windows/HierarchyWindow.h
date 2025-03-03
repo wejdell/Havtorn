@@ -3,19 +3,21 @@
 #pragma once
 #include "EditorWindow.h"
 
-namespace ImGui
+#include <GUI.h>
+
+namespace Havtorn
 {
 	class CHierarchyWindow : public CWindow
 	{
 	public:
-		CHierarchyWindow(const char* displayName, Havtorn::CEditorManager* manager);
+		CHierarchyWindow(const char* displayName, CEditorManager* manager);
 		~CHierarchyWindow() override;
 		void OnEnable() override;
 		void OnInspectorGUI() override;
 		void OnDisable() override;
 
 	private:
-		ImGuiTextFilter Filter = ImGuiTextFilter();
-		Havtorn::I32 SelectedIndex = 0;
+		SGuiTextFilter Filter = SGuiTextFilter();
+		I32 SelectedIndex = 0;
 	};
 }

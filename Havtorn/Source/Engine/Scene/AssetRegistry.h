@@ -20,9 +20,9 @@ namespace Havtorn
 		};
 
 	public:
-		HAVTORN_API U64 Register(const std::string& assetPath);
-		HAVTORN_API std::vector<U64> Register(const std::vector<std::string>& assetPaths);
-		HAVTORN_API void Unregister(const std::string& assetPath);
+		ENGINE_API U64 Register(const std::string& assetPath);
+		ENGINE_API std::vector<U64> Register(const std::vector<std::string>& assetPaths);
+		ENGINE_API void Unregister(const std::string& assetPath);
 
 		// TODO.NR: This is slow, and should only be done during loading/unloading
 		const std::string& GetAssetPath(const U64& guid);
