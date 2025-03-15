@@ -22,21 +22,16 @@ namespace Havtorn
 		// TODO.NR: Make a util to deal with enums
 		I32 bodyTypeIndex = static_cast<int>(physicsComponent->BodyType);
 		const char* bodyTypeNames[3] = { "Static", "Kinematic", "Dynamic" };
-		GUI::SliderInt("Body Type", &bodyTypeIndex, 0, 2, bodyTypeNames[bodyTypeIndex]);
+		GUI::SliderInt("Body Type", bodyTypeIndex, 0, 2, bodyTypeNames[bodyTypeIndex]);
 		physicsComponent->BodyType = static_cast<Havtorn::EPhysics2DBodyType>(bodyTypeIndex);
 
 		I32 shapeTypeIndex = static_cast<int>(physicsComponent->ShapeType);
 		const char* shapeTypeNames[4] = { "Circle", "Capsule", "Segment", "Polygon" };
-		GUI::SliderInt("Shape Type", &shapeTypeIndex, 0, 3, shapeTypeNames[shapeTypeIndex]);
+		GUI::SliderInt("Shape Type", shapeTypeIndex, 0, 3, shapeTypeNames[shapeTypeIndex]);
 		physicsComponent->ShapeType = static_cast<Havtorn::EPhysics2DShapeType>(shapeTypeIndex);
 
-		float localOffset[2] = { physicsComponent->ShapeLocalOffset.X, physicsComponent->ShapeLocalOffset.Y };
-		GUI::DragFloat2("Shape Local Offset", localOffset, GUI::SliderSpeed);
-		physicsComponent->ShapeLocalOffset = { localOffset[0], localOffset[1] };
-
-		float localExtents[2] = { physicsComponent->ShapeLocalExtents.X, physicsComponent->ShapeLocalExtents.Y };
-		GUI::DragFloat2("Shape Local Extents", localExtents, GUI::SliderSpeed);
-		physicsComponent->ShapeLocalExtents = { localExtents[0], localExtents[1] };
+		GUI::DragFloat2("Shape Local Offset", physicsComponent->ShapeLocalOffset, GUI::SliderSpeed);
+		GUI::DragFloat2("Shape Local Extents", physicsComponent->ShapeLocalExtents, GUI::SliderSpeed);
 
 		GUI::Text("Velocity: %s", physicsComponent->Velocity.ToString().c_str());
 

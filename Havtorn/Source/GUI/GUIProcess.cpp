@@ -5,6 +5,8 @@
 #include <backends/imgui_impl_win32.h>
 #include <backends/imgui_impl_dx11.h>
 
+#include <PlatformManager.h>
+
 #include <ImGuizmo.h>
 
 #include <string>
@@ -29,9 +31,9 @@ namespace Havtorn
 		return true;
 	}
 
-	void GUIProcess::InitGUI(HWND hwnd, ID3D11Device* device, ID3D11DeviceContext* context)
+	void GUIProcess::InitGUI(CPlatformManager* platformManager, ID3D11Device* device, ID3D11DeviceContext* context)
 	{
-		EditorGUI->InitGUI(hwnd, device, context);
+		EditorGUI->InitGUI(platformManager, device, context);
 	}
 
 	void GUIProcess::BeginFrame()
@@ -39,13 +41,8 @@ namespace Havtorn
 		EditorGUI->BeginFrame();
 	}
 
-	void GUIProcess::EndFrame()
+	void GUIProcess::PostUpdate()
 	{
 		EditorGUI->EndFrame();
 	}
-
-	//void GUIProcess::WindowsWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-	//{
-	//	EditorGUI->WindowsProc(hWnd, msg, wParam, lParam);
-	//}
 }

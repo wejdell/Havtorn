@@ -4,6 +4,7 @@
 #include "EditorManager.h"
 
 #include <GUI.h>
+#include <Color.h>
 
 namespace Havtorn
 {
@@ -34,10 +35,10 @@ namespace Havtorn
                 {
                     auto colorTheme = static_cast<EEditorColorTheme>(i);
                     std::string name = Manager->GetEditorColorThemeName(colorTheme).c_str();
-                    ImVec2 p = GUI::GetCursorScreenPos();
-                    auto previewColor = Manager->GetEditorColorThemeRepColor(colorTheme);
-                    GUI::GetWindowDrawList()->AddRectFilled(p, ImVec2(p.x + sz, p.y + sz), GUI::ColorConvertFloat4ToU32(previewColor));
-                    GUI::Dummy(ImVec2(sz, sz));
+                    SVector2<F32> cursorPos = GUI::GetCursorScreenPos();
+                    SColor previewColor = Manager->GetEditorColorThemeRepColor(colorTheme);
+                    GUI::AddRectFilled(cursorPos, SVector2<F32>(sz), previewColor);
+					GUI::Dummy({ sz, sz });
                     GUI::SameLine();
                     if (GUI::MenuItem(name.c_str()))
                     {

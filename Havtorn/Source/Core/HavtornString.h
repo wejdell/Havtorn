@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Core.h"
+#include "Log.h"
 #include <array>
 
 namespace Havtorn

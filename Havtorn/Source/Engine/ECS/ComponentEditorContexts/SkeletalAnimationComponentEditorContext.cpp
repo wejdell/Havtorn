@@ -19,9 +19,9 @@ namespace Havtorn
 			return SComponentViewResult();
 
 		SSkeletalAnimationComponent* skeletalAnimationComp = scene->GetComponent<SSkeletalAnimationComponent>(entityOwner);
-		I32 data[2] = { STATIC_I32(skeletalAnimationComp->AnimationData.X), STATIC_I32(skeletalAnimationComp->AnimationData.Y) };
+		SVector2<I32> data = { STATIC_I32(skeletalAnimationComp->AnimationData.X), STATIC_I32(skeletalAnimationComp->AnimationData.Y) };
 		GUI::DragInt2("Animation Data", data);
-		skeletalAnimationComp->AnimationData = { STATIC_U32(data[0]), STATIC_U32(data[1]) };
+		skeletalAnimationComp->AnimationData = { STATIC_U32(data.X), STATIC_U32(data.Y) };
 
 		return SComponentViewResult();
 	}

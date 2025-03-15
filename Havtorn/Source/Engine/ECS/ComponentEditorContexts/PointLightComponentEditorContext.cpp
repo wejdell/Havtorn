@@ -20,14 +20,13 @@ namespace Havtorn
 
 		SPointLightComponent* pointLightComp = scene->GetComponent<SPointLightComponent>(entityOwner);
 
-		Havtorn::F32 colorData[3] = { pointLightComp->ColorAndIntensity.X, pointLightComp->ColorAndIntensity.Y, pointLightComp->ColorAndIntensity.Z };
-		GUI::ColorPicker3("Color", colorData);
-		pointLightComp->ColorAndIntensity.X = colorData[0];
-		pointLightComp->ColorAndIntensity.Y = colorData[1];
-		pointLightComp->ColorAndIntensity.Z = colorData[2];
+		SColor color = pointLightComp->ColorAndIntensity;
+		GUI::ColorPicker3("Color", color);
+		SVector colorFloat = color.AsVector();
+		pointLightComp->ColorAndIntensity = { colorFloat.X, colorFloat.Y, colorFloat.Z, pointLightComp->ColorAndIntensity.W };
 
-		GUI::DragFloat("Intensity", &pointLightComp->ColorAndIntensity.W, GUI::SliderSpeed);
-		GUI::DragFloat("Range", &pointLightComp->Range, GUI::SliderSpeed, 0.1f, 100.0f);
+		GUI::DragFloat("Intensity", pointLightComp->ColorAndIntensity.W, GUI::SliderSpeed);
+		GUI::DragFloat("Range", pointLightComp->Range, GUI::SliderSpeed, 0.1f, 100.0f);
 
         return SComponentViewResult();
     }

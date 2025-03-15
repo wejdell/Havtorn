@@ -47,11 +47,11 @@ namespace Havtorn
 
 	void CGameManager::Update()
 	{
-		GUI::Begin("Game Window");
-		GUI::End();
+		//GUI::Begin("Game Window");
+		//GUI::End();
 
-		GUI::Begin("Another Game Window");
-		GUI::End();
+		//GUI::Begin("Another Game Window");
+		//GUI::End();
 	}
 
 	void CGameManager::PostUpdate()

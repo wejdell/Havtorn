@@ -51,7 +51,8 @@ namespace Havtorn
 		ENGINE_ERROR_BOOL_MESSAGE(backbufferTexture, "Backbuffer Texture is null.");
 
 		Backbuffer = FullscreenTextureFactory.CreateTexture(backbufferTexture);
-		InitRenderTextures(platformManager->GetResolution());
+		CurrentWindowResolution = platformManager->GetResolution();
+		InitRenderTextures(CurrentWindowResolution);
 
 		InitDataBuffers();
 
@@ -60,6 +61,7 @@ namespace Havtorn
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderPassForward).AddMember(this, &CRenderManager::CycleRenderPass);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderPassBackward).AddMember(this, &CRenderManager::CycleRenderPass);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderPassReset).AddMember(this, &CRenderManager::CycleRenderPass);
+		// TODO.NW: Bind to on resolution changed?
 
 		return true;
 	}
@@ -454,7 +456,7 @@ namespace Havtorn
 		}
 		else
 		{
-			asset = LoadedSkeletalAnims.at(filePath);
+			asset = LoadedSkeletalAnims.at(assetName);
 		}
 
 		outSkeletalAnimationComponent->AssetName = assetName;

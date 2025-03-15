@@ -3,11 +3,6 @@
 #pragma once
 
 #ifdef HV_PLATFORM_WINDOWS
-	//#ifdef HV_BUILD_DLL
-	//	#define HAVTORN_API __declspec(dllexport)
-	//#else
-	//	#define HAVTORN_API __declspec(dllimport)
-	//#endif
 
 #ifdef HV_CORE_DLL
 #define CORE_API __declspec(dllexport)
@@ -70,3 +65,5 @@
 
 #define MAX_STRING_LEN 256
 #define ENTITY_LIMIT 45
+
+#define ARRAY_SIZE(x) ((int)(sizeof(x) / sizeof(*(x)))) // Size of a static C-style array. Don't use on pointers!

@@ -6,6 +6,7 @@
 #include <Engine.h>
 #include <../Game/GameScene.h>
 #include <GUI.h>
+#include <Log.h>
 
 namespace Havtorn
 {
@@ -125,21 +126,6 @@ namespace Havtorn
             //    GUI::EndMenu();
             //}
 
-            if (GUI::BeginMenu("Colors"))
-            {
-                const float sz = GUI::GetTextLineHeight();
-                for (int i = 0; i < ImGuiCol_COUNT; i++)
-                {
-                    const char* name = GUI::GetStyleColorName((ImGuiCol)i);
-                    SVector2<F32> p = GUI::GetCursorScreenPos();
-                    GUI::GetWindowDrawList()->AddRectFilled(p, SVector2<F32>(p.x + sz, p.y + sz), GUI::GetColorU32((ImGuiCol)i));
-                    GUI::Dummy(SVector2<F32>(sz, sz));
-                    GUI::SameLine();
-                    GUI::MenuItem(name);
-                }
-                GUI::EndMenu();
-            }
-
             // Here we demonstrate appending again to the "Options" menu (which we already created above)
             // Of course in this demo it is a little bit silly that this function calls BeginMenu("Options") twice.
             // In a real code-base using it would make senses to use this feature from very different code locations.
@@ -153,7 +139,7 @@ namespace Havtorn
 
             if (GUI::BeginMenu("Disabled", false)) // Disabled
             {
-                HV_ASSERT(0);
+                HV_ASSERT(false, "Menu disabled");
             }
             if (GUI::MenuItem("Checked", nullptr, true)) {}
             if (GUI::MenuItem("Quit", "Alt+F4")) {}

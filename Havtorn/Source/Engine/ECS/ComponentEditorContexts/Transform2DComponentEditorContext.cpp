@@ -21,15 +21,9 @@ namespace Havtorn
 		// TODO.NR: Make editable with gizmo
 		STransform2DComponent* transform2DComp = scene->GetComponent<STransform2DComponent>(entityOwner);
 
-		F32 position[2] = { transform2DComp->Position.X, transform2DComp->Position.Y };
-		F32 scale[2] = { transform2DComp->Scale.X, transform2DComp->Scale.Y };
-
-		GUI::DragFloat2("Position", position, GUI::SliderSpeed);
-		GUI::DragFloat("DegreesRoll", &transform2DComp->DegreesRoll, GUI::SliderSpeed);
-		GUI::DragFloat2("Scale", scale, GUI::SliderSpeed);
-
-		transform2DComp->Position = { position[0], position[1] };
-		transform2DComp->Scale = { scale[0], scale[1] };
+		GUI::DragFloat2("Position", transform2DComp->Position, GUI::SliderSpeed);
+		GUI::DragFloat("DegreesRoll", transform2DComp->DegreesRoll, GUI::SliderSpeed);
+		GUI::DragFloat2("Scale", transform2DComp->Scale, GUI::SliderSpeed);
 
         return SComponentViewResult();
     }

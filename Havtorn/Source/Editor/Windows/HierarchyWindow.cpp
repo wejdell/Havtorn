@@ -32,11 +32,11 @@ namespace Havtorn
 	{
 		const SEditorLayout& layout = Manager->GetEditorLayout();
 		
-		const SGuiViewport* mainViewport = GUI::GetMainViewport();
-		GUI::SetNextWindowPos(SVector2<F32>(mainViewport->WorkPos.x + layout.HierarchyViewPosition.X, mainViewport->WorkPos.y + layout.HierarchyViewPosition.Y));
+		const SVector2<F32>& viewportWorkPos = GUI::GetViewportWorkPos();
+		GUI::SetNextWindowPos(SVector2<F32>(viewportWorkPos.X + layout.HierarchyViewPosition.X, viewportWorkPos.Y + layout.HierarchyViewPosition.Y));
 		GUI::SetNextWindowSize(SVector2<F32>(layout.HierarchyViewSize.X, layout.HierarchyViewSize.Y));
 		
-		if (GUI::Begin(Name(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus))
+		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
 		{
 			Filter.Draw("Search");
 			GUI::Separator();
@@ -65,7 +65,7 @@ namespace Havtorn
 					continue;
 
 				GUI::PushID(STATIC_I32(entity.GUID));
-				if (GUI::Selectable(entryString.c_str(), index == SelectedIndex, ImGuiSelectableFlags_None))
+				if (GUI::Selectable(entryString.c_str(), index == SelectedIndex))
 				{
 					SelectedIndex = index;
 					Manager->SetSelectedEntity(entity);

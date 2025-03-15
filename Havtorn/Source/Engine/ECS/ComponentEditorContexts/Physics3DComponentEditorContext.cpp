@@ -22,12 +22,12 @@ namespace Havtorn
 		// TODO.NR: Make a util to deal with enums
 		I32 bodyTypeIndex = static_cast<int>(physicsComponent->BodyType);
 		const char* bodyTypeNames[3] = { "Static", "Kinematic", "Dynamic" };
-		GUI::SliderInt("Body Type", &bodyTypeIndex, 0, 2, bodyTypeNames[bodyTypeIndex]);
+		GUI::SliderInt("Body Type", bodyTypeIndex, 0, 2, bodyTypeNames[bodyTypeIndex]);
 		physicsComponent->BodyType = static_cast<Havtorn::EPhysics3DBodyType>(bodyTypeIndex);
 
 		I32 shapeTypeIndex = static_cast<int>(physicsComponent->ShapeType);
 		const char* shapeTypeNames[5] = { "Sphere", "Plane", "Capsule", "Box", "Convex" };
-		GUI::SliderInt("Shape Type", &shapeTypeIndex, 0, 4, shapeTypeNames[shapeTypeIndex]);
+		GUI::SliderInt("Shape Type", shapeTypeIndex, 0, 4, shapeTypeNames[shapeTypeIndex]);
 		physicsComponent->ShapeType = static_cast<Havtorn::EPhysics3DShapeType>(shapeTypeIndex);
 
 		GUI::DragFloat3("Shape Local Offset", physicsComponent->ShapeLocalOffset, GUI::SliderSpeed);
@@ -36,16 +36,14 @@ namespace Havtorn
 		{
 		case EPhysics3DShapeType::Sphere:
 		{
-			GUI::DragFloat("Shape Local Radius", &physicsComponent->ShapeLocalRadius, GUI::SliderSpeed);
+			GUI::DragFloat("Shape Local Radius", physicsComponent->ShapeLocalRadius, GUI::SliderSpeed);
 		}
 			break;
 		case EPhysics3DShapeType::InfinitePlane:
 			break;
 		case EPhysics3DShapeType::Capsule:
 		{
-			F32 localExtents[2] = { physicsComponent->ShapeLocalRadiusAndHeight.X, physicsComponent->ShapeLocalRadiusAndHeight.Y };
-			GUI::DragFloat2("Shape Local Radius And Height", localExtents, GUI::SliderSpeed);
-			physicsComponent->ShapeLocalRadiusAndHeight = { localExtents[0], localExtents[1] };
+			GUI::DragFloat2("Shape Local Radius And Height", physicsComponent->ShapeLocalRadiusAndHeight, GUI::SliderSpeed);
 		}
 			break;
 		case EPhysics3DShapeType::Box:
@@ -59,15 +57,15 @@ namespace Havtorn
 
 		GUI::TextDisabled("Material");
 
-		GUI::DragFloat("Dynamic Friction", &physicsComponent->Material.DynamicFriction);
-		GUI::DragFloat("Static Friction", &physicsComponent->Material.StaticFriction);
-		GUI::DragFloat("Restitution", &physicsComponent->Material.Restitution);
+		GUI::DragFloat("Dynamic Friction", physicsComponent->Material.DynamicFriction);
+		GUI::DragFloat("Static Friction", physicsComponent->Material.StaticFriction);
+		GUI::DragFloat("Restitution", physicsComponent->Material.Restitution);
 
 		GUI::Separator();
 
 		GUI::Text("Velocity: %s", physicsComponent->Velocity.ToString().c_str());
 
-		GUI::DragFloat("Density", &physicsComponent->Density);
+		GUI::DragFloat("Density", physicsComponent->Density);
 
 		GUI::Checkbox("Is Trigger", &physicsComponent->IsTrigger);
 

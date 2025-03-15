@@ -8,6 +8,9 @@ struct ID3D11DeviceContext;
 struct ID3D11VertexShader;
 struct ID3D11PixelShader;
 struct ID3D11Buffer;
+struct ID3D11SamplerState;
+struct ID3D11ShaderResourceView;
+struct D3D11_MAPPED_SUBRESOURCE;
 
 namespace Havtorn
 {
@@ -72,18 +75,6 @@ namespace Havtorn
 		static const U16 KernelSize = 16;
 
 	private:
-		template<class T>
-		void BindBuffer(ID3D11Buffer* buffer, T& bufferData, std::string bufferType)
-		{
-			D3D11_MAPPED_SUBRESOURCE localBufferData;
-			ZeroMemory(&localBufferData, sizeof(D3D11_MAPPED_SUBRESOURCE));
-			std::string errorMessage = bufferType + " could not be bound.";
-			ENGINE_HR_MESSAGE(Context->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &localBufferData), errorMessage.c_str());
-
-			memcpy(localBufferData.pData, &bufferData, sizeof(T));
-			Context->Unmap(buffer, 0);
-		}
-
 		struct SFullscreenData 
 		{
 			SVector2<F32> Resolution;

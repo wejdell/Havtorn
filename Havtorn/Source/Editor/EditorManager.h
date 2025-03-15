@@ -6,6 +6,8 @@
 
 #include <filesystem>
 
+#include <GUI.h>
+
 struct ID3D11Device;
 struct ID3D11DeviceContext;
 
@@ -39,15 +41,6 @@ namespace Havtorn
 		Default,
 		Havtorn,
 		Count
-	};
-
-	// NR: Wrapper for ImGuizmo operations
-	// NW: Move this to GUI
-	enum class ETransformGizmo
-	{
-		Translate = 7,
-		Rotate = 120,
-		Scale = 896
 	};
 
 	struct SEditorLayout
@@ -102,7 +95,7 @@ namespace Havtorn
 
 		[[nodiscard]] ETransformGizmo GetCurrentGizmo() const;
 		[[nodiscard]] bool GetIsFreeCamActive() const;
-		[[nodiscard]] bool GetIsHoveringGizmo() const;
+		[[nodiscard]] bool GetIsOverGizmo() const;
 		[[nodiscard]] bool GetIsModalOpen() const;
 
 		void SetIsModalOpen(const bool isModalOpen);

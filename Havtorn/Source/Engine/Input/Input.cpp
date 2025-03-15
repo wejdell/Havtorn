@@ -48,13 +48,12 @@ namespace Havtorn
 
 	bool CInput::Init(CPlatformManager* platformManager)
 	{
-		PlatformManager = platformManager;
-		return PlatformManager != nullptr;
-		// Bind to message pump here
+		platformManager->OnMessageHandled.AddMember(this, &CInput::UpdateEvents);
+		return true;
 	}
 
-	bool CInput::UpdateEvents(UINT message, WPARAM wParam, LPARAM lParam) {
-
+	void CInput::UpdateEvents(HWND /*handle*/, UINT message, WPARAM wParam, LPARAM lParam)
+	{
 		std::vector<char> rawBuffer;
 
 		switch (message)
@@ -64,56 +63,56 @@ namespace Havtorn
 			KeyDown[wParam] = true;
 
 			HandleKeyDown(wParam);
-
-			return true;
+			break;
+			//return true;
 
 		case WM_SYSKEYUP:
 		case WM_KEYUP:
 			KeyDown[wParam] = false;
 
 			HandleKeyUp(wParam);
-
-			return true;
+			break;
+			//return true;
 
 		case WM_MOUSEMOVE:
 			MouseX = GET_X_LPARAM(lParam); // Returns x coordiante
 			MouseY = GET_Y_LPARAM(lParam); // Returns y coordinate
-			return true;
-
+			//return true;
+			break;
 		case WM_MOUSEWHEEL:
 			MouseWheelDelta += GET_WHEEL_DELTA_WPARAM(wParam); // Returns difference in mouse wheel position
-			return true;
-
+			//return true;
+			break;
 		case WM_LBUTTONDOWN:
 			//MouseButton[STATIC_U32(EMouseButton::Left)] = true;
 			HandleKeyDown(STATIC_U32(EMouseButton::Left));
-			return true;
-
+			//return true;
+			break;
 		case WM_LBUTTONUP:
 			//MouseButton[STATIC_U32(EMouseButton::Left)] = false;
 			HandleKeyUp(STATIC_U32(EMouseButton::Left));
-			return true;
-
+			//return true;
+			break;
 		case WM_RBUTTONDOWN:
 			//MouseButton[STATIC_U32(EMouseButton::Right)] = true;
 			HandleKeyDown(STATIC_U32(EMouseButton::Right));
-			return true;
-
+			//return true;
+			break;
 		case WM_RBUTTONUP:
 			//MouseButton[STATIC_U32(EMouseButton::Right)] = false;
 			HandleKeyUp(STATIC_U32(EMouseButton::Right));
-			return true;
-
+			//return true;
+			break;
 		case WM_MBUTTONDOWN:
 			//MouseButton[STATIC_U32(EMouseButton::Middle)] = true;
 			HandleKeyDown(STATIC_U32(EMouseButton::Middle));
-			return true;
-
+			//return true;
+			break;
 		case WM_MBUTTONUP:
 			//MouseButton[STATIC_U32(EMouseButton::Middle)] = false;
 			HandleKeyUp(STATIC_U32(EMouseButton::Middle));
-			return true;
-
+			//return true;
+			break;
 		case WM_XBUTTONDOWN:
 			if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1) 
 			{
@@ -125,8 +124,8 @@ namespace Havtorn
 				//MouseButton[MouseButton[STATIC_U32(EMouseButton::Mouse5)]] = true;
 				HandleKeyDown(STATIC_U32(EMouseButton::Mouse5));
 			}
-			return true;
-
+			//return true;
+			break;
 		case WM_XBUTTONUP:
 			if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1)
 			{
@@ -183,7 +182,7 @@ namespace Havtorn
 			break;
 		}
 
-		return false;
+		//return false;
 	}
 
 	void CInput::UpdateState()

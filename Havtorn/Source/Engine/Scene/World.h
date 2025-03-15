@@ -6,6 +6,7 @@
 #include "FileSystem/FileHeaderDeclarations.h"
 #include "HexPhys/HexPhys.h"
 #include <EngineException.h>
+#include <HavtornDelegate.h>
 
 namespace Havtorn
 {
@@ -17,6 +18,7 @@ namespace Havtorn
 	class CRenderManager;
 	class CAssetRegistry;
 	class CSequencerSystem;
+	class CScene;
 
 	namespace HexPhys2D
 	{

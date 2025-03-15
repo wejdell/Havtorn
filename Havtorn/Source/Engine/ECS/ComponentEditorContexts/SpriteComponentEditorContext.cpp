@@ -21,15 +21,8 @@ namespace Havtorn
 
 		SSpriteComponent* spriteComp = scene->GetComponent<SSpriteComponent>(entityOwner);
 
-		SVector4 colorFloat = spriteComp->Color.AsVector4();
-		Havtorn::F32 color[4] = { colorFloat.X, colorFloat.Y, colorFloat.Z, colorFloat.W };
-		Havtorn::F32 rect[4] = { spriteComp->UVRect.X, spriteComp->UVRect.Y, spriteComp->UVRect.Z, spriteComp->UVRect.W };
-
-		GUI::ColorPicker4("Color", color);
-		GUI::DragFloat4("UVRect", rect, GUI::SliderSpeed);
-
-		spriteComp->Color = SVector4(color[0], color[1], color[2], color[3]);
-		spriteComp->UVRect = { rect[0], rect[1], rect[2], rect[3] };
+		GUI::ColorPicker4("Color", spriteComp->Color);
+		GUI::DragFloat4("UVRect", spriteComp->UVRect, GUI::SliderSpeed);
 
 		GUI::Text("Texture");
 

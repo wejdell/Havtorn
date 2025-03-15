@@ -14,6 +14,7 @@ namespace Havtorn
 		CWindow(const char* displayName, CEditorManager* manager, bool isEnabled = true);
 	public:
 		virtual void OnEnable() = 0;
+		// NW: Rename to Render?
 		virtual void OnInspectorGUI() = 0;
 		virtual void OnDisable() = 0;
 

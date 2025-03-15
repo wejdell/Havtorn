@@ -6,6 +6,7 @@
 #include <Core.h>
 #include <MathTypes/Vector.h>
 #include <HavtornDelegate.h>
+#include <functional>
 
 namespace Havtorn
 {
@@ -32,6 +33,8 @@ namespace Havtorn
 		PLATFORM_API void DisableDragDrop() const;
 
 	public:
+		// TODO.NW: Try figure out if we can bind to and bool returns instead
+		CMulticastDelegate<HWND, UINT, WPARAM, LPARAM> OnMessageHandled;
 		CMulticastDelegate<std::vector<std::string>> OnDragDropAccepted;
 		CMulticastDelegate<SVector2<U16>> OnResolutionChanged;
 
@@ -59,7 +62,6 @@ namespace Havtorn
 		void InitWindowsImaging();
 
 	private:
-
 		CPlatformManager::SWindowData WindowData = {};
 		HWND WindowHandle = 0;
 		SVector2<U16> Resolution;

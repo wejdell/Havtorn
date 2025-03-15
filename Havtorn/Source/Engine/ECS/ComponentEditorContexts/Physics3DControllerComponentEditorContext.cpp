@@ -22,7 +22,7 @@ namespace Havtorn
 		// TODO.NR: Make a util to deal with enums
 		I32 controllerTypeIndex = static_cast<int>(physicsComponent->ControllerType);
 		const char* controllerTypeNames[2] = { "Box", "Capsule" };
-		GUI::SliderInt("Controller Type", &controllerTypeIndex, 0, 1, controllerTypeNames[controllerTypeIndex]);
+		GUI::SliderInt("Controller Type", controllerTypeIndex, 0, 1, controllerTypeNames[controllerTypeIndex]);
 		physicsComponent->ControllerType = static_cast<Havtorn::EPhysics3DControllerType>(controllerTypeIndex);
 
 		switch (physicsComponent->ControllerType)
@@ -34,9 +34,7 @@ namespace Havtorn
 			break;
 		case EPhysics3DControllerType::Capsule:
 		{
-			F32 localExtents[2] = { physicsComponent->ShapeLocalRadiusAndHeight.X, physicsComponent->ShapeLocalRadiusAndHeight.Y };
-			GUI::DragFloat2("Shape Local Radius And Height", localExtents, GUI::SliderSpeed);
-			physicsComponent->ShapeLocalRadiusAndHeight = { localExtents[0], localExtents[1] };
+			GUI::DragFloat2("Shape Local Radius And Height", physicsComponent->ShapeLocalRadiusAndHeight, GUI::SliderSpeed);
 		}
 			break;
 		}

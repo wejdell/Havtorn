@@ -47,18 +47,11 @@ namespace Havtorn
 					GUI::PushID(i);
 
 					Havtorn::SVector4& rect = Component->AnimationClips[animationClipKey].UVRects[i];
-					Havtorn::F32 uvRect[4] = { rect.X, rect.Y, rect.Z, rect.W };
-					if (GUI::DragFloat4("UVRect", uvRect, 0.01))
-					{
-						animationClip.UVRects[i].X = uvRect[0];
-						animationClip.UVRects[i].Y = uvRect[1];
-						animationClip.UVRects[i].Z = uvRect[2];
-						animationClip.UVRects[i].W = uvRect[3];
-					}
+					GUI::DragFloat4("UVRect", rect, 0.01);
 
 					Havtorn::U64 durationIndex = Havtorn::UMath::Min<Havtorn::U64>(i, Component->AnimationClips[Component->CurrentAnimationClipKey].Durations.size() - 1);
 					Havtorn::F32 duration = Component->AnimationClips[animationClipKey].Durations[durationIndex];
-					if (GUI::DragFloat("Duration", &duration, 0.01))
+					if (GUI::DragFloat("Duration", duration, 0.01))
 					{
 						animationClip.Durations[durationIndex] = duration;
 					}

@@ -608,6 +608,8 @@ set(EDITOR_FILES
     ${EDITOR_FOLDER}EditorWindow.cpp
     ${EDITOR_FOLDER}EditorWindow.h
     ${EDITOR_FOLDER}EditorWindows.h
+    ${EDITOR_FOLDER}hvpch.cpp
+    ${EDITOR_FOLDER}hvpch.h
 )
 add_library(Editor SHARED ${EDITOR_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${EDITOR_FILES})
@@ -635,6 +637,7 @@ target_link_directories(Editor PRIVATE
 )
 target_compile_definitions(Editor PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_EDITOR_DLL)
 target_compile_options(Editor PRIVATE ${COMMON_COMPILE_OPTIONS})
+target_precompile_headers(Editor PRIVATE ${EDITOR_FOLDER}hvpch.h)
 target_link_options(Editor PRIVATE ${COMMON_LINK_OPTIONS})
 set_property(TARGET Editor PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
 set_target_properties(Editor PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER})

@@ -32,9 +32,9 @@ namespace Havtorn
 
 	void CAssetBrowserWindow::OnInspectorGUI()
 	{
-		if (GUI::Begin(Name(), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus))
+		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
 		{
-			if (GUI::ArrowButton("GoBackDir", SGuiDir_Up))
+			if (GUI::ArrowButton("GoBackDir", EGUIDirection::Left))
 			{
 				if (CurrentDirectory != std::filesystem::path(DefaultAssetPath))
 					CurrentDirectory = CurrentDirectory.parent_path();
@@ -47,11 +47,11 @@ namespace Havtorn
 
 			// TODO.NR: Another magic number here, 10 cuts off the right border. 11 seems to work but feels too odd.
 			F32 thumbnailPadding = 12.0f;
-			F32 cellWidth = ThumbnailSize.X + thumbnailPadding;
-			F32 panelWidth = GUI::GetContentRegionAvail().x;
+			F32 cellWidth = GUI::ThumbnailSizeX + thumbnailPadding;
+			F32 panelWidth = GUI::GetContentRegionAvail().X;
 			I32 columnCount = UMath::Max(static_cast<I32>(panelWidth / cellWidth), 1);
 
-			SGuiTextureID folderIconID = (SGuiTextureID)(intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::FolderIcon);
+			intptr_t folderIconID = (intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::FolderIcon);
 
 			U32 id = 0;
 			if (GUI::BeginTable("FileStructure", columnCount))
@@ -79,7 +79,7 @@ namespace Havtorn
 		if (FilePathsToImport.has_value() && !FilePathsToImport->empty())
 		{
 			GUI::OpenPopup("Asset Import");
-			GUI::SetNextWindowPos(GUI::GetMainViewport()->GetCenter(), ImGuiCond_Appearing, SVector2<F32>(0.5f, 0.5f));
+			GUI::SetNextWindowPos(GUI::GetViewportCenter(), EWindowCondition::Appearing, SVector2<F32>(0.5f, 0.5f));
 			AssetImportModal();
 		}
 
@@ -120,7 +120,7 @@ namespace Havtorn
 
 	void CAssetBrowserWindow::AssetImportModal()
 	{
-		if (!GUI::BeginPopupModal("Asset Import", NULL, ImGuiWindowFlags_AlwaysAutoResize))
+		if (!GUI::BeginPopupModal("Asset Import", NULL, { EWindowFlag::AlwaysAutoResize }))
 			return;
 
 		auto closePopup = [&]() 
@@ -205,11 +205,10 @@ namespace Havtorn
 		}
 
 		// Center buttons
-		SGuiStyle& style = GUI::GetStyle();
 		F32 width = 0.0f;
-		width += GUI::CalcTextSize("Import").x + GUI::ThumbnailPadding;
-		width += style.ItemSpacing.x;
-		width += GUI::CalcTextSize("Cancel").x + GUI::ThumbnailPadding;
+		width += GUI::CalculateTextSize("Import").X + GUI::ThumbnailPadding;
+		width += GUI::GetStyleVar(EStyleVar::ItemSpacing).X;
+		width += GUI::CalculateTextSize("Cancel").X + GUI::ThumbnailPadding;
 		AlignForWidth(width);
 
 		if (GUI::Button("Import"))
@@ -255,7 +254,7 @@ namespace Havtorn
 
 	}
 
-	void CAssetBrowserWindow::InspectDirectoryEntry(const std::filesystem::directory_entry& entry, U32& outCurrentID, const SGuiTextureID& folderIconID)
+	void CAssetBrowserWindow::InspectDirectoryEntry(const std::filesystem::directory_entry& entry, U32& outCurrentID, const intptr_t& folderIconID)
 	{
 		GUI::TableNextColumn();
 		GUI::PushID(outCurrentID++);
@@ -266,7 +265,7 @@ namespace Havtorn
 
 		if (entry.is_directory())
 		{
-			if (GUI::ImageButton("FolderIcon", folderIconID, { ThumbnailSize.X, ThumbnailSize.Y }))
+			if (GUI::ImageButton("FolderIcon", folderIconID, { GUI::ThumbnailSizeX, GUI::ThumbnailSizeY }))
 			{
 				CurrentDirectory = entry.path();
 			}
@@ -281,7 +280,7 @@ namespace Havtorn
 			if (!rep->TextureRef)
 				rep->TextureRef = Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::FileIcon);
 
-			if (GUI::ImageButton("AssetIcon", (SGuiTextureID)(intptr_t)rep->TextureRef, { ThumbnailSize.X, ThumbnailSize.Y }))
+			if (GUI::ImageButton("AssetIcon", (intptr_t)rep->TextureRef, { GUI::ThumbnailSizeX, GUI::ThumbnailSizeY }))
 			{
 				// NR: Open Tool depending on asset type
 			}

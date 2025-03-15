@@ -37,13 +37,12 @@ namespace Havtorn
 		void ImportOptionsSkeletalMesh();
 		void ImportOptionsAnimation();
 
-		void InspectDirectoryEntry(const std::filesystem::directory_entry& entry, U32& outCurrentID, const SGuiTextureID& folderIconID);
+		void InspectDirectoryEntry(const std::filesystem::directory_entry& entry, U32& outCurrentID, const intptr_t& folderIconID);
 
-		SVector2<F32> ThumbnailSize = { 64.0f, 64.0f };
 		CFileSystem* FileSystem = nullptr;
 		const std::string DefaultAssetPath = "Assets";
 		std::filesystem::path CurrentDirectory = "";
-		SGuiTextFilter Filter = ImGuiTextFilter();
+		SGuiTextFilter Filter = SGuiTextFilter();
 		bool IsCurrentlySelected = false;
 		std::optional<std::vector<std::string>> FilePathsToImport;
 		EAssetType CurrentImportAssetType = EAssetType::None;

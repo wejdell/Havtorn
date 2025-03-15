@@ -22,24 +22,24 @@ namespace Havtorn
 		int projectionIndex = static_cast<int>(cameraComp->ProjectionType);
 		const char* projectionNames[2] = { "Perspective", "Orthographic" };
 		const char* projectionName = (projectionIndex >= 0 && projectionIndex < 2) ? projectionNames[projectionIndex] : "Unknown";
-		GUI::SliderInt("Projection Type", &projectionIndex, 0, 1, projectionName);
+		GUI::SliderInt("Projection Type", projectionIndex, 0, 1, projectionName);
 		cameraComp->ProjectionType = static_cast<Havtorn::ECameraProjectionType>(projectionIndex);
 
 		if (cameraComp->ProjectionType == Havtorn::ECameraProjectionType::Perspective)
 		{
-			GUI::DragFloat("FOV", &cameraComp->FOV, GUI::SliderSpeed, 1.0f, 180.0f);
-			GUI::DragFloat("Aspect Ratio", &cameraComp->AspectRatio, GUI::SliderSpeed, 0.1f, 10.0f);
+			GUI::DragFloat("FOV", cameraComp->FOV, GUI::SliderSpeed, 1.0f, 180.0f);
+			GUI::DragFloat("Aspect Ratio", cameraComp->AspectRatio, GUI::SliderSpeed, 0.1f, 10.0f);
 			GUI::SetOrthographic(false);
 		}
 		else if (cameraComp->ProjectionType == Havtorn::ECameraProjectionType::Orthographic)
 		{
-			GUI::DragFloat("View Width", &cameraComp->ViewWidth, GUI::SliderSpeed, 0.1f, 100.0f);
-			GUI::DragFloat("View Height", &cameraComp->ViewHeight, GUI::SliderSpeed, 0.1f, 100.0f);
+			GUI::DragFloat("View Width", cameraComp->ViewWidth, GUI::SliderSpeed, 0.1f, 100.0f);
+			GUI::DragFloat("View Height", cameraComp->ViewHeight, GUI::SliderSpeed, 0.1f, 100.0f);
 			GUI::SetOrthographic(true);
 		}
 
-		GUI::DragFloat("Near Clip Plane", &cameraComp->NearClip, GUI::SliderSpeed, 0.01f, cameraComp->FarClip - 1.0f);
-		GUI::DragFloat("Far Clip Plane", &cameraComp->FarClip, GUI::SliderSpeed, cameraComp->NearClip + 1.0f, 10000.0f);
+		GUI::DragFloat("Near Clip Plane", cameraComp->NearClip, GUI::SliderSpeed, 0.01f, cameraComp->FarClip - 1.0f);
+		GUI::DragFloat("Far Clip Plane", cameraComp->FarClip, GUI::SliderSpeed, cameraComp->NearClip + 1.0f, 10000.0f);
 
 		if (cameraComp->ProjectionType == Havtorn::ECameraProjectionType::Perspective)
 		{

@@ -19,9 +19,9 @@ namespace Havtorn
 			return SComponentViewResult();
 
 		SCameraControllerComponent* cameraControllerComp = scene->GetComponent<SCameraControllerComponent>(entityOwner);
-		GUI::DragFloat("Max Move Speed", &cameraControllerComp->MaxMoveSpeed, GUI::SliderSpeed, 0.1f, 10.0f);
-		GUI::DragFloat("Rotation Speed", &cameraControllerComp->RotationSpeed, GUI::SliderSpeed, 0.1f, 5.0f);
-		GUI::DragFloat("Acceleration Duration", &cameraControllerComp->AccelerationDuration, GUI::SliderSpeed * 0.1f, 0.1f, 5.0f);
+		GUI::DragFloat("Max Move Speed", cameraControllerComp->MaxMoveSpeed, GUI::SliderSpeed, 0.1f, 10.0f);
+		GUI::DragFloat("Rotation Speed", cameraControllerComp->RotationSpeed, GUI::SliderSpeed, 0.1f, 5.0f);
+		GUI::DragFloat("Acceleration Duration", cameraControllerComp->AccelerationDuration, GUI::SliderSpeed * 0.1f, 0.1f, 5.0f);
 
 		return SComponentViewResult();
 	}

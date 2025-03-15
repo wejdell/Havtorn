@@ -48,9 +48,8 @@ namespace Havtorn
 	{
 		// CROSS_PROJECT_IMGUI_SETUP();
 
+		//GUI::SetGUIContext();
 		//windowHandler->EnableDragDrop();
-
-		//ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
 		PlatformManager = platformManager;
 		if (PlatformManager == nullptr)
@@ -137,16 +136,15 @@ namespace Havtorn
 		{
 			if (GUI::Begin("Debug info", &IsDebugInfoOpen))
 			{
-				//GUI::GUIProcess::Text(GetFrameRate().c_str());
-				//Text(GetFrameRate().c_str());
+				GUI::Text(GetFrameRate().c_str());
 				GUI::Text(GetSystemMemory().c_str());
 				GUI::Text(GetDrawCalls().c_str());
 			}
 
-			if (GUI::Button("Import skeletal mesh"))
-				ResourceManager->ConvertToHVA("ArtSource/Tests/TestMesh.fbx", "Assets/Tests/", EAssetType::SkeletalMesh);
-			if (GUI::Button("Import anim 1"))
-				ResourceManager->ConvertToHVA("ArtSource/Tests/TestWalk.fbx", "Assets/Tests/", EAssetType::Animation);
+			//if (GUI::Button("Import skeletal mesh"))
+			//	ResourceManager->ConvertToHVA("ArtSource/Tests/TestMesh.fbx", "Assets/Tests/", EAssetType::SkeletalMesh);
+			//if (GUI::Button("Import anim 1"))
+			//	ResourceManager->ConvertToHVA("ArtSource/Tests/TestWalk.fbx", "Assets/Tests/", EAssetType::Animation);
 			//if (Button("Import anim 2"))
 				//ResourceManager->ConvertToHVA("FBX/Tests/SkinningTest.fbx", "Assets/Tests/", EAssetType::Animation);
 
@@ -245,7 +243,7 @@ namespace Havtorn
 		{
 		case EEditorColorTheme::HavtornDark:
 		{
-			GUI::SetColorProfile(SGuiColorProfile());
+			GUI::SetGuiColorProfile(SGuiColorProfile());
 		}
 		break;
 
@@ -293,7 +291,7 @@ namespace Havtorn
 			colorProfile.ButtonActive = SColor(0.814f, 0.532f, 0.00f, 1.00f);
 			colorProfile.ButtonHovered = SColor(0.478f, 0.361f, 0.188f, 1.00f);
 
-			GUI::SetImGuiColorProfile(colorProfile);
+			GUI::SetGuiColorProfile(colorProfile);
 		}
 		break;
 
@@ -307,13 +305,14 @@ namespace Havtorn
 				SColor(0.814f, 0.532f, 0.00f, 1.00f),
 				SColor(1.00f, 0.659f, 0.00f, 1.00f)
 			);
-			GUI::SetImGuiColorProfile(colorProfile);
+			GUI::SetGuiColorProfile(colorProfile);
 		}
 		break;
 
 		case EEditorColorTheme::Count:
 		case EEditorColorTheme::DefaultDark:
-			GUI::StyleColorsDark();
+			// NW: Could be imgui colors instead?
+			GUI::SetGuiColorProfile(SGuiColorProfile());
 			break;
 		}
 
@@ -321,7 +320,7 @@ namespace Havtorn
 		{
 		case EEditorStyleTheme::Havtorn:
 
-			GUI::SetImGuiStyleProfile(SGuiStyleProfile());
+			GUI::SetGuiStyleProfile(SGuiStyleProfile());
 			break;
 		case EEditorStyleTheme::Count:
 		case EEditorStyleTheme::Default:
@@ -608,9 +607,9 @@ namespace Havtorn
 		return IsFreeCamActive;
 	}
 
-	bool CEditorManager::GetIsHoveringGizmo() const
+	bool CEditorManager::GetIsOverGizmo() const
 	{
-		return GUI::IsHoveringGizmo();
+		return GUI::IsOverGizmo();
 	}
 
 	bool CEditorManager::GetIsModalOpen() const

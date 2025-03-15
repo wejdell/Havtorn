@@ -17,6 +17,9 @@ namespace Havtorn
 		static CPlatformManager* platformManager = nullptr;
 		CREATESTRUCT* createStruct;
 
+		if (platformManager)
+			platformManager->OnMessageHandled.Broadcast(hwnd, uMsg, wParam, lParam);
+
 		switch (uMsg)
 		{
 		case WM_CLOSE:
@@ -241,6 +244,8 @@ namespace Havtorn
 		ResizeTarget = {};
 		SetResolution(Resolution);
 		/*SetInternalResolution();*/
+
+		EnableDragDrop();
 
 		InitWindowsImaging();
 
