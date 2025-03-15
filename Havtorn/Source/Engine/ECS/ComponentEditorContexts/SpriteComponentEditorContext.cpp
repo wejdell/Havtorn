@@ -8,8 +8,7 @@
 #include "Engine.h"
 #include "Graphics/TextureBank.h"
 
-#include <Core/imgui.h>
-#include <Havtorn/Utilities.h>
+#include <GUI.h>
 
 namespace Havtorn
 {
@@ -17,29 +16,22 @@ namespace Havtorn
 
     SComponentViewResult Havtorn::SSpriteComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!ImGui::UUtils::TryOpenComponentView("Sprite"))
+		if (!GUI::TryOpenComponentView("Sprite"))
 			return SComponentViewResult();
 
 		SSpriteComponent* spriteComp = scene->GetComponent<SSpriteComponent>(entityOwner);
 
-		SVector4 colorFloat = spriteComp->Color.AsVector4();
-		Havtorn::F32 color[4] = { colorFloat.X, colorFloat.Y, colorFloat.Z, colorFloat.W };
-		Havtorn::F32 rect[4] = { spriteComp->UVRect.X, spriteComp->UVRect.Y, spriteComp->UVRect.Z, spriteComp->UVRect.W };
+		GUI::ColorPicker4("Color", spriteComp->Color);
+		GUI::DragFloat4("UVRect", spriteComp->UVRect, GUI::SliderSpeed);
 
-		ImGui::ColorPicker4("Color", color);
-		ImGui::DragFloat4("UVRect", rect, ImGui::UUtils::SliderSpeed);
-
-		spriteComp->Color = SVector4(color[0], color[1], color[2], color[3]);
-		spriteComp->UVRect = { rect[0], rect[1], rect[2], rect[3] };
-
-		ImGui::Text("Texture");
+		GUI::Text("Texture");
 
 		return { EComponentViewResultLabel::InspectAssetComponent, spriteComp, 0 };
     }
 
 	bool SSpriteComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("Sprite Component"))
+		if (!GUI::Button("Sprite Component"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())
@@ -52,7 +44,7 @@ namespace Havtorn
 
 	bool SSpriteComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("X##15"))
+		if (!GUI::Button("X##15"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())

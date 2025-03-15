@@ -6,19 +6,36 @@
 #include "Graphics/GraphicsFramework.h"
 #include "Graphics/RenderManager.h"
 #include "Graphics/GraphicsUtilities.h"
+#include <d3d11.h>
 
 namespace Havtorn
 {
+	template<class T>
+	void BindBuffer(ID3D11DeviceContext* context, ID3D11Buffer* buffer, T& bufferData, std::string bufferType)
+	{
+		D3D11_MAPPED_SUBRESOURCE localBufferData;
+		ZeroMemory(&localBufferData, sizeof(D3D11_MAPPED_SUBRESOURCE));
+		std::string errorMessage = bufferType + " could not be bound.";
+		ENGINE_HR_MESSAGE(context->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &localBufferData), errorMessage.c_str());
+
+		memcpy(localBufferData.pData, &bufferData, sizeof(T));
+		context->Unmap(buffer, 0);
+	}
+
 	CFullscreenRenderer::~CFullscreenRenderer() 
 	{}
 
-	bool CFullscreenRenderer::Init(CGraphicsFramework* framework) 
+	bool CFullscreenRenderer::Init(CGraphicsFramework* framework, CRenderManager* renderManager) 
 	{
 		if (!framework) 
 			return false;
 
 		Context = framework->GetContext();
 		if (!Context)
+			return false;
+
+		Manager = renderManager;
+		if (!Manager)
 			return false;
 
 		ID3D11Device* device = framework->GetDevice();
@@ -168,13 +185,13 @@ namespace Havtorn
 
 	void CFullscreenRenderer::Render(EFullscreenShader effect)
 	{
-		SVector2<U16> resolution = GEngine::GetWindowHandler()->GetResolution();
+		SVector2<U16> resolution = Manager->GetCurrentWindowResolution();
 		FullscreenData.Resolution = SVector2<F32>(resolution.X, resolution.Y);
 		FullscreenData.NoiseScale = { FullscreenData.Resolution.X / STATIC_F32(UMath::Sqrt(KernelSize)), FullscreenData.Resolution.Y / STATIC_F32(UMath::Sqrt(KernelSize)) };
 		memcpy(&FullscreenData.SampleKernel[0], &Kernel[0], sizeof(Kernel));
-		BindBuffer(FullscreenDataBuffer, FullscreenData, "Fullscreen Data Buffer");
+		BindBuffer(Context, FullscreenDataBuffer, FullscreenData, "Fullscreen Data Buffer");
 
-		BindBuffer(PostProcessingBuffer, PostProcessingBufferData, "Post Processing Buffer");
+		BindBuffer(Context, PostProcessingBuffer, PostProcessingBufferData, "Post Processing Buffer");
 
 		Context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY::D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 		Context->IASetInputLayout(nullptr);

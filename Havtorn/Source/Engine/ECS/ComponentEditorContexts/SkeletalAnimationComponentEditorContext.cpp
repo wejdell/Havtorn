@@ -6,8 +6,8 @@
 #include "ECS/Components/SkeletalAnimationComponent.h"
 #include "Scene/Scene.h"
 
-#include <Core/imgui.h>
-#include <Havtorn/Utilities.h>
+#include <GUI.h>
+
 
 namespace Havtorn
 {
@@ -15,20 +15,20 @@ namespace Havtorn
 
 	SComponentViewResult Havtorn::SSkeletalAnimationComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
 	{
-		if (!ImGui::UUtils::TryOpenComponentView("SkeletalAnimation"))
+		if (!GUI::TryOpenComponentView("SkeletalAnimation"))
 			return SComponentViewResult();
 
 		SSkeletalAnimationComponent* skeletalAnimationComp = scene->GetComponent<SSkeletalAnimationComponent>(entityOwner);
-		I32 data[2] = { STATIC_I32(skeletalAnimationComp->AnimationData.X), STATIC_I32(skeletalAnimationComp->AnimationData.Y) };
-		ImGui::DragInt2("Animation Data", data);
-		skeletalAnimationComp->AnimationData = { STATIC_U32(data[0]), STATIC_U32(data[1]) };
+		SVector2<I32> data = { STATIC_I32(skeletalAnimationComp->AnimationData.X), STATIC_I32(skeletalAnimationComp->AnimationData.Y) };
+		GUI::DragInt2("Animation Data", data);
+		skeletalAnimationComp->AnimationData = { STATIC_U32(data.X), STATIC_U32(data.Y) };
 
 		return SComponentViewResult();
 	}
 
 	bool SSkeletalAnimationComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("Skeletal Animation Component"))
+		if (!GUI::Button("Skeletal Animation Component"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())
@@ -41,7 +41,7 @@ namespace Havtorn
 
 	bool SSkeletalAnimationComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("X##SkeletalAnim"))
+		if (!GUI::Button("X##SkeletalAnim"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())

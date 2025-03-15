@@ -1,8 +1,8 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 #pragma once
 
-#include <Core/imgui.h>
-#include <Core/ImGuizmo/ImGuizmo.h>
+#include <../imgui/imgui.h>
+#include <../ImGuizmo/ImGuizmo.h>
 #include "ImGuiManager.h"
 
 #ifndef CROSS_PROJECT_IMGUI_SETUP

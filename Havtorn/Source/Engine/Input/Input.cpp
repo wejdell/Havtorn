@@ -9,6 +9,8 @@
 
 #include <ranges>
 
+#include <../Platform/PlatformManager.h>
+
 namespace Havtorn
 {
 	CInput* CInput::GetInstance()
@@ -44,8 +46,14 @@ namespace Havtorn
 		}
 	}
 
-	bool CInput::UpdateEvents(UINT message, WPARAM wParam, LPARAM lParam) {
+	bool CInput::Init(CPlatformManager* platformManager)
+	{
+		platformManager->OnMessageHandled.AddMember(this, &CInput::UpdateEvents);
+		return true;
+	}
 
+	void CInput::UpdateEvents(HWND /*handle*/, UINT message, WPARAM wParam, LPARAM lParam)
+	{
 		std::vector<char> rawBuffer;
 
 		switch (message)
@@ -55,56 +63,56 @@ namespace Havtorn
 			KeyDown[wParam] = true;
 
 			HandleKeyDown(wParam);
-
-			return true;
+			break;
+			//return true;
 
 		case WM_SYSKEYUP:
 		case WM_KEYUP:
 			KeyDown[wParam] = false;
 
 			HandleKeyUp(wParam);
-
-			return true;
+			break;
+			//return true;
 
 		case WM_MOUSEMOVE:
 			MouseX = GET_X_LPARAM(lParam); // Returns x coordiante
 			MouseY = GET_Y_LPARAM(lParam); // Returns y coordinate
-			return true;
-
+			//return true;
+			break;
 		case WM_MOUSEWHEEL:
 			MouseWheelDelta += GET_WHEEL_DELTA_WPARAM(wParam); // Returns difference in mouse wheel position
-			return true;
-
+			//return true;
+			break;
 		case WM_LBUTTONDOWN:
 			//MouseButton[STATIC_U32(EMouseButton::Left)] = true;
 			HandleKeyDown(STATIC_U32(EMouseButton::Left));
-			return true;
-
+			//return true;
+			break;
 		case WM_LBUTTONUP:
 			//MouseButton[STATIC_U32(EMouseButton::Left)] = false;
 			HandleKeyUp(STATIC_U32(EMouseButton::Left));
-			return true;
-
+			//return true;
+			break;
 		case WM_RBUTTONDOWN:
 			//MouseButton[STATIC_U32(EMouseButton::Right)] = true;
 			HandleKeyDown(STATIC_U32(EMouseButton::Right));
-			return true;
-
+			//return true;
+			break;
 		case WM_RBUTTONUP:
 			//MouseButton[STATIC_U32(EMouseButton::Right)] = false;
 			HandleKeyUp(STATIC_U32(EMouseButton::Right));
-			return true;
-
+			//return true;
+			break;
 		case WM_MBUTTONDOWN:
 			//MouseButton[STATIC_U32(EMouseButton::Middle)] = true;
 			HandleKeyDown(STATIC_U32(EMouseButton::Middle));
-			return true;
-
+			//return true;
+			break;
 		case WM_MBUTTONUP:
 			//MouseButton[STATIC_U32(EMouseButton::Middle)] = false;
 			HandleKeyUp(STATIC_U32(EMouseButton::Middle));
-			return true;
-
+			//return true;
+			break;
 		case WM_XBUTTONDOWN:
 			if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1) 
 			{
@@ -116,8 +124,8 @@ namespace Havtorn
 				//MouseButton[MouseButton[STATIC_U32(EMouseButton::Mouse5)]] = true;
 				HandleKeyDown(STATIC_U32(EMouseButton::Mouse5));
 			}
-			return true;
-
+			//return true;
+			break;
 		case WM_XBUTTONUP:
 			if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1)
 			{
@@ -174,7 +182,7 @@ namespace Havtorn
 			break;
 		}
 
-		return false;
+		//return false;
 	}
 
 	void CInput::UpdateState()
@@ -262,16 +270,16 @@ namespace Havtorn
 		return (!KeyDown[wParam]) && KeyDownLast[wParam];
 	}
 
-	SVector2<F32> CInput::GetAxisRaw()
-	{
-		POINT p;
-		GetCursorPos(&p);
-		const SVector2<U16> currentPos = { STATIC_U16(p.x), STATIC_U16(p.y) };
-		const SVector2<U16> center = GEngine::GetWindowHandler()->GetCenterPosition();
-		const SVector2<U16> result = currentPos - center;
+	//SVector2<F32> CInput::GetAxisRaw()
+	//{
+	//	POINT p;
+	//	GetCursorPos(&p);
+	//	const SVector2<U16> currentPos = { STATIC_U16(p.x), STATIC_U16(p.y) };
+	//	const SVector2<U16> center = Instance->PlatformManager->GetCenterPosition();
+	//	const SVector2<U16> result = currentPos - center;
 
-		return SVector2<F32>(result.X, result.Y);
-	}
+	//	return SVector2<F32>(result.X, result.Y);
+	//}
 
 	U16 CInput::GetMouseX() const
 	{

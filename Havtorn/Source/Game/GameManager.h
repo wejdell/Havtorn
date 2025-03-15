@@ -9,23 +9,23 @@ namespace Havtorn
 	class CGameManager
 	{
 	public:
-		_declspec(dllexport) CGameManager();
-		_declspec(dllexport) ~CGameManager();
+		GAME_API CGameManager();
+		GAME_API ~CGameManager();
 
-		_declspec(dllexport) bool Init();
+		GAME_API bool Init();
 
-		_declspec(dllexport) void BeginFrame();
-		_declspec(dllexport) void PreUpdate();
-		_declspec(dllexport) void Update();
-		_declspec(dllexport) void PostUpdate();
-		_declspec(dllexport) void EndFrame();
+		GAME_API void BeginFrame();
+		GAME_API void PreUpdate();
+		GAME_API void Update();
+		GAME_API void PostUpdate();
+		GAME_API void EndFrame();
 
 		void OnBeginPlay(CScene* scene);
 		void OnPausePlay(CScene* scene);
 		void OnStopPlay(CScene* scene);
 
 	public:
-		static _declspec(dllexport) CGameManager* Instance;
+		static GAME_API CGameManager* Instance;
 		CWorld* World;
 	};
 }

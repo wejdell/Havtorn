@@ -6,17 +6,15 @@
 namespace Havtorn
 {
 	class CEditorManager;
-}
 
-namespace ImGui
-{
 	class CWindow
 	{
 	public:
 		virtual ~CWindow() { }
-		CWindow(const char* displayName, Havtorn::CEditorManager* manager, bool isEnabled = true);
+		CWindow(const char* displayName, CEditorManager* manager, bool isEnabled = true);
 	public:
 		virtual void OnEnable() = 0;
+		// NW: Rename to Render?
 		virtual void OnInspectorGUI() = 0;
 		virtual void OnDisable() = 0;
 
@@ -28,7 +26,7 @@ namespace ImGui
 
 	protected:
 		// TODO.AG: Test WeakPtr 
-		/*Havtorn::Ref<Havtorn::CEditorManager>*/Havtorn::CEditorManager* Manager;
+		/*Havtorn::Ref<Havtorn::CEditorManager>*/CEditorManager* Manager;
 		bool IsEnabled = true;
 
 	private:

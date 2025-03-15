@@ -1,7 +1,6 @@
 // Copyright 2024 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include "Core/BitSet.h"
 #include "ECS/Component.h"
 
 namespace Havtorn

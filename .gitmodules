@@ -4,9 +4,6 @@
 [submodule "Havtorn/External/FastNoise2"]
 	path = Havtorn/External/FastNoise2
 	url = https://github.com/Auburn/FastNoise2.git
-[submodule "Havtorn/External/ImGuizmo"]
-	path = Havtorn/External/ImGuizmo
-	url = https://github.com/CedricGuillemet/ImGuizmo.git
 [submodule "Havtorn/External/box2d"]
 	path = Havtorn/External/box2d
 	url = https://github.com/nicolas-risberg/box2d.git
@@ -22,3 +19,6 @@
 [submodule "Havtorn/External/DirectXTex"]
 	path = Havtorn/External/DirectXTex
 	url = https://github.com/nicolas-risberg/DirectXTex.git
+[submodule "Havtorn/External/ImGuizmo"]
+	path = Havtorn/External/ImGuizmo
+	url = https://github.com/nicolas-risberg/ImGuizmo.git

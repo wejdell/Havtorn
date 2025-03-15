@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <Core/imgui.h>
+#include <../imgui/imgui.h>
 
 struct ID3D11Device;
 struct ID3D11DeviceContext;

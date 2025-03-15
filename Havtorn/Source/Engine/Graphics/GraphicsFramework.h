@@ -1,7 +1,7 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include "Core/WindowsInclude.h"
+//#include "Core/WindowsInclude.h"
 
 struct IDXGISwapChain;
 struct ID3D11Device;
@@ -12,7 +12,7 @@ struct ID3D11Texture2D;
 
 namespace Havtorn
 {
-	class CWindowHandler;
+	class CPlatformManager;
 
 	class CGraphicsFramework
 	{
@@ -22,14 +22,14 @@ namespace Havtorn
 
 		void EndFrame();
 
-		bool Init(CWindowHandler* windowHandler);
+		bool Init(CPlatformManager* platformManager);
 
 		void ToggleFullscreenState(bool setFullscreen);
 
-		HAVTORN_API ID3D11Device* GetDevice() const;
-		HAVTORN_API ID3D11DeviceContext* GetContext() const;
-		HAVTORN_API ID3D11Texture2D* GetBackbufferTexture() const;
-		HAVTORN_API IDXGISwapChain* GetSwapChain() const;
+		ENGINE_API ID3D11Device* GetDevice() const;
+		ENGINE_API ID3D11DeviceContext* GetContext() const;
+		ENGINE_API ID3D11Texture2D* GetBackbufferTexture() const;
+		ENGINE_API IDXGISwapChain* GetSwapChain() const;
 
 	private:
 		WinComPtr<IDXGISwapChain> SwapChain;

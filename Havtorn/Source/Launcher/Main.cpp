@@ -4,10 +4,11 @@
 #include <iostream>
 
 #include "Application/Application.h"
-#include "../Engine/Application/EngineProcess.h"
-#include "../Game/GameProcess.h"
-#include "../Editor/EditorProcess.h"
-#include "../Engine/Application/ImGuiProcess.h"
+#include <../Platform/PlatformProcess.h>
+#include <../Engine/Application/EngineProcess.h>
+#include <../Game/GameProcess.h>
+#include <../Editor/EditorProcess.h>
+#include <../GUI/GUIProcess.h>
 
 #ifdef HV_PLATFORM_WINDOWS
 
@@ -50,19 +51,32 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 #ifdef USE_CONSOLE
 	OpenConsole();
 #endif
-
-	CEngineProcess* engineProcess = new CEngineProcess(100, 100, 1280, 720);
-	CImGuiProcess* imGuiProcess = new CImGuiProcess();
+	CPlatformProcess* platformProcess = new CPlatformProcess(100, 100, 1280, 720);
+	GUIProcess* guiProcess = new GUIProcess();
+	CEngineProcess* engineProcess = new CEngineProcess();
 	CGameProcess* gameProcess = new CGameProcess();
 	CEditorProcess* editorProcess = new CEditorProcess();
 
 	auto application = new CApplication();
-		application->AddProcess(engineProcess);
-		application->AddProcess(imGuiProcess);
-		application->AddProcess(gameProcess);
-		application->AddProcess(editorProcess);
+	application->AddProcess(platformProcess);
+	application->AddProcess(engineProcess);
+	application->AddProcess(guiProcess);
+	application->AddProcess(gameProcess);
+	application->AddProcess(editorProcess);
+
+	platformProcess->Init(nullptr);
+	engineProcess->Init(platformProcess->PlatformManager);
+	// TODO.NW: guiProcess init should handle InitGUI, need hold of the render backend somehow. maybe still move render backend to platform manager
+	guiProcess->Init(platformProcess->PlatformManager);
+	auto backend = engineProcess->GetRenderBackend();
+	guiProcess->InitGUI(platformProcess->PlatformManager, backend.device, backend.context);
+	gameProcess->Init(platformProcess->PlatformManager);
+	editorProcess->Init(platformProcess->PlatformManager);
+	//application->Setup(platformProcess->PlatformManager); //foreach -> process->Init();
+
 
 	application->Run();
+
 	delete application;
 
 	SetForegroundWindow(GetConsoleWindow());

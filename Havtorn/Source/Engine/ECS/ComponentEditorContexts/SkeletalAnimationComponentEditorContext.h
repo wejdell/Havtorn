@@ -5,7 +5,7 @@
 
 namespace Havtorn
 {
-	struct HAVTORN_API SSkeletalAnimationComponentEditorContext : public SComponentEditorContext
+	struct ENGINE_API SSkeletalAnimationComponentEditorContext : public SComponentEditorContext
 	{
 		SComponentViewResult View(const SEntity& entityOwner, CScene* scene) const override;
 		bool AddComponent(const SEntity& entity, CScene* scene) const override;

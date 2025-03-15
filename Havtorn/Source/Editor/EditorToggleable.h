@@ -5,15 +5,12 @@
 namespace Havtorn
 {
 	class CEditorManager;
-}
 
-namespace ImGui
-{
 	class CToggleable
 	{
 	public:
 		virtual ~CToggleable() = default;
-		CToggleable(const char* displayName, Havtorn::CEditorManager* manager);
+		CToggleable(const char* displayName, CEditorManager* manager);
 	public:
 		virtual void OnEnable() = 0;
 		virtual void OnInspectorGUI() = 0;
@@ -29,7 +26,7 @@ namespace ImGui
 
 	protected:
 		// TODO.AG: Test WeakPtr 
-		/*Havtorn::Ref<Havtorn::CEditorManager>*/Havtorn::CEditorManager* Manager;
+		/*Havtorn::Ref<Havtorn::CEditorManager>*/CEditorManager* Manager;
 		const char* PopupName = "WindowPopup";
 	
 	private:

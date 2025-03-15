@@ -6,8 +6,8 @@
 #include "ECS/Components/SpriteAnimatorGraphComponent.h"
 #include "Scene/Scene.h"
 
-#include <Core/imgui.h>
-#include <Havtorn/Utilities.h>
+#include <GUI.h>
+
 
 namespace Havtorn
 {
@@ -15,13 +15,13 @@ namespace Havtorn
 
     SComponentViewResult SSpriteAnimatorGraphComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-        if (!ImGui::UUtils::TryOpenComponentView("SpriteAnimatorGraph"))
+        if (!GUI::TryOpenComponentView("SpriteAnimatorGraph"))
             return SComponentViewResult();
 
         SSpriteAnimatorGraphComponent* component = scene->GetComponent<SSpriteAnimatorGraphComponent>(entityOwner);
         
         SComponentViewResult result;
-        if (ImGui::Button("Open Animator"))
+        if (GUI::Button("Open Animator"))
         {
             result.Label = EComponentViewResultLabel::OpenAssetTool;
             result.ComponentViewed = component;
@@ -32,7 +32,7 @@ namespace Havtorn
 
 	bool SSpriteAnimatorGraphComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("Sprite Animator Graph Component"))
+		if (!GUI::Button("Sprite Animator Graph Component"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())
@@ -45,7 +45,7 @@ namespace Havtorn
 
 	bool SSpriteAnimatorGraphComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("X##14"))
+		if (!GUI::Button("X##14"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())

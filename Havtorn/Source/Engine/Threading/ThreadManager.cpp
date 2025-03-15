@@ -68,7 +68,6 @@ namespace Havtorn
 		Condition.notify_one();
 	}
 
-	//#include <iostream>
 	void CThreadManager::Shutdown()
 	{
 		{

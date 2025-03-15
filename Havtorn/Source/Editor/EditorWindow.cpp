@@ -2,12 +2,14 @@
 
 #include "hvpch.h"
 #include "EditorWindow.h"
-//#include "Core/imgui.h"
 #include "EditorManager.h"
 
-ImGui::CWindow::CWindow(const char* displayName, Havtorn::CEditorManager* manager, bool isEnabled)
-	: DisplayName(displayName)
-	, Manager(manager)
-	, IsEnabled(isEnabled)
+namespace Havtorn
 {
+	CWindow::CWindow(const char* displayName, CEditorManager* manager, bool isEnabled)
+		: DisplayName(displayName)
+		, Manager(manager)
+		, IsEnabled(isEnabled)
+	{
+	}
 }

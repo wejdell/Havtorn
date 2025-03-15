@@ -3,7 +3,7 @@
 #pragma once
 
 #include "hvpch.h"
-#include <Core/imgui.h>
+#include <imgui.h>
 #include "ImGuiTypeUtil.h"
 
 namespace Havtorn

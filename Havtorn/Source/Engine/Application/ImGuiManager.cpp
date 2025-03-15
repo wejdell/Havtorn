@@ -3,10 +3,10 @@
 #include "hvpch.h"
 #include "ImGuiManager.h"
 
-#include "Core/imgui.h"
-#include "Core/imgui_impl_win32.h"
-#include "Core/imgui_impl_dx11.h"
-#include "Core/ImGuizmo/ImGuizmo.h"
+#include <../imgui/imgui.h>
+#include <../imgui/backends/imgui_impl_win32.h>
+#include <../imgui/backends/imgui_impl_dx11.h>
+#include <../ImGuizmo/ImGuizmo.h>
 
 IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 

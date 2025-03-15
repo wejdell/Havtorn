@@ -504,14 +504,14 @@ namespace Havtorn
         Context->OMSetBlendState(BlendStates[(U64)blendState], blendFactors.data(), 0xFFFFFFFFu);
     }
 
+    void CRenderStateManager::OMSetDepthStencilState(EDepthStencilStates depthStencilState, U32 stencilRef) const
+    {
+        Context->OMSetDepthStencilState(DepthStencilStates[(U64)depthStencilState], stencilRef);
+    }
+
     void CRenderStateManager::OMSetRenderTargets(U8 numberOfTargets, ID3D11RenderTargetView* const* targetViews, ID3D11DepthStencilView* depthStencilView) const
     {
         Context->OMSetRenderTargets(numberOfTargets, targetViews, depthStencilView);
-    }
-
-    void CRenderStateManager::OMSetDepthStencilState(EDepthStencilStates depthStencilState, UINT stencilRef) const
-    {
-        Context->OMSetDepthStencilState(DepthStencilStates[(U64)depthStencilState], stencilRef);
     }
 
     void CRenderStateManager::Draw(U32 vertexCount, U32 startVertexLocation)

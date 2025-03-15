@@ -61,17 +61,17 @@ namespace Havtorn
 		friend class GEngine;
 
 	public:
-		static HAVTORN_API bool DoesFileExist(const std::string& fileName);
+		static ENGINE_API bool DoesFileExist(const std::string& fileName);
 
-		void HAVTORN_API OpenFile(const std::string& fileName, EFileMode mode);
-		void HAVTORN_API CloseFile(EFileMode mode);
+		void ENGINE_API OpenFile(const std::string& fileName, EFileMode mode);
+		void ENGINE_API CloseFile(EFileMode mode);
 
-		void HAVTORN_API Serialize(const std::string& fileName, const char* data, U32 size);
-		void HAVTORN_API Deserialize(const std::string& fileName, char* data, U32 size);
-		void HAVTORN_API Deserialize(const std::string& fileName, std::string& outData);
-		U64 HAVTORN_API GetFileSize(const std::string& fileName) const;
+		void ENGINE_API Serialize(const std::string& fileName, const char* data, U32 size);
+		void ENGINE_API Deserialize(const std::string& fileName, char* data, U32 size);
+		void ENGINE_API Deserialize(const std::string& fileName, std::string& outData);
+		U64 ENGINE_API GetFileSize(const std::string& fileName) const;
 
-		void HAVTORN_API IterateThroughFiles(const std::string& root);
+		void ENGINE_API IterateThroughFiles(const std::string& root);
 
 	private:
 		CFileSystem();

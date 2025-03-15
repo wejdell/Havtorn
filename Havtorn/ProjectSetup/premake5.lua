@@ -1,25 +1,30 @@
 workspace "Havtorn"
 	architecture "x86_64"
-	location "../Source"
+	location "Source"
 
 	configurations
 	{ "Debug", "Release" }
 	startproject "Launcher"
 
-masterDir = "../"
 outputdir = "%{cfg.buildcfg}_%{cfg.system}_%{cfg.architecture}"
+
 engineProj = "Engine"
-engineSource = masterDir .. "Source/" .. engineProj .. "/"
+engineSource = "Source/" .. engineProj .. "/"
+
 editorProj = "Editor"
-editorSource = masterDir .. "Source/" .. editorProj .. "/"
-imGuiProj = "ImGui"
-imGuiSource = masterDir .. "Source/" .. imGuiProj .. "/"
+editorSource = "Source/" .. editorProj .. "/"
+
+GUIProj = "GUI"
+GUISource = "Source/" .. GUIProj .. "/"
+
 gameProj = "Game"
-gameSource = masterDir .. "Source/" .. gameProj .. "/"
-externalLinkDir = masterDir .. "External/Lib/"
+gameSource = "Source/" .. gameProj .. "/"
+
+externalLinkDir = "External/Lib/"
+
 
 project "Engine"
-	location (masterDir .. "Source/" .. engineProj)
+	location ("Source/" .. engineProj)
 	kind "SharedLib"
 	language "C++"
 	cppdialect "C++20"
@@ -27,53 +32,65 @@ project "Engine"
 
 	targetname "%{prj.name}_%{cfg.buildcfg}"
 
-	targetdir (masterDir .. "Bin/" .. outputdir .. "/%{prj.name}") 
-	objdir (masterDir .. "Temp/" .. outputdir .. "/%{prj.name}") 
+	targetdir ("Bin/" .. outputdir .. "/%{prj.name}") 
+	objdir ("Temp/" .. outputdir .. "/%{prj.name}") 
 
 	warnings "Extra"
 	flags { "FatalWarnings", "ShadowedVariables", "MultiProcessorCompile" }
 
 	pchheader "hvpch.h"
-	pchsource (masterDir .. "Source/" .. engineProj .. "/hvpch.cpp")
+	pchsource ("Source/" .. engineProj .. "/hvpch.cpp")
 	forceincludes { "hvpch.h" }
 
 	files 
 	{
-		masterDir .. "Source/%{prj.name}/**.h",
-		masterDir .. "Source/%{prj.name}/**.cpp",
-		
+		"Source/%{prj.name}/**.h",
+		"Source/%{prj.name}/**.cpp",
+		"Source/%{prj.name}/**.h",
+		"Source/%{prj.name}/**.cpp",
+
+		-- Imgui --------------------------------------
+		"External/imgui/*.cpp",
+		"External/imgui/backends/imgui_impl_dx11.cpp",
+		"External/imgui/backends/imgui_impl_win32.cpp",
+		"External/ImGuizmo/ImGuizmo.h",
+    	"External/ImGuizmo/ImGuizmo.cpp",
+		-----------------------------------------------
+
 		vpaths 
 		{
-			["*"] = masterDir .. "Source/"
+			["*"] = "Source/"
 		}
 	}
 
 	includedirs
 	{
-		masterDir .. "Source/%{prj.name}",
-		masterDir .. "External",
-		masterDir .. "External/FastNoise2/include",
-		masterDir .. "External/rapidjson",
-		masterDir .. "External/DirectXTex",
-		masterDir .. "External/box2d/include/box2d",
-		masterDir .. "External/box2dcpp/include/box2cpp",
-		masterDir .. "External/PhysX/physx/include",
-		masterDir .. "Source/ImGui"
+		"Source/%{prj.name}",
+		"External",
+		"External/FastNoise2/include",
+		"External/rapidjson",
+		"External/DirectXTex",
+		"External/box2d/include/box2d",
+		"External/box2dcpp/include/box2cpp",
+		"External/PhysX/physx/include",
+		-- Imgui --------------------------------------
+		"External/imgui",
+		-----------------------------------------------
 	}
 
 	libdirs 
 	{
-		masterDir .. "Lib",
-		masterDir .. "External/Lib"
+		"Lib",
+		"External/Lib"
 	}
 
 	links
 	{
-		"ImGui"
+
 	}
 
 	floatingpoint "Fast"
-	debugdir "../Bin/"
+	debugdir "Bin/"
 
 	-- Begin Shader stuff
 		filter{} -- Clear filter
@@ -188,7 +205,7 @@ project "Engine"
 
 
 project "Game"
-	location (masterDir .. "Source/" .. gameProj)
+	location ("Source/" .. gameProj)
 	kind "SharedLib"
 	language "C++"
 	cppdialect "C++20"
@@ -196,55 +213,62 @@ project "Game"
 
 	targetname "%{prj.name}_%{cfg.buildcfg}"
 
-	targetdir (masterDir .. "Bin/" .. outputdir .. "/%{prj.name}") 
-	objdir (masterDir .. "Temp/" .. outputdir .. "/%{prj.name}") 
+	targetdir ("Bin/" .. outputdir .. "/%{prj.name}") 
+	objdir ("Temp/" .. outputdir .. "/%{prj.name}") 
 
 	warnings "Extra"
 	flags { "FatalWarnings", "ShadowedVariables", "MultiProcessorCompile" }
 
 	pchheader "hvpch.h"
-	pchsource (masterDir .. "Source/" .. gameProj .. "/hvpch.cpp")
+	pchsource ("Source/" .. gameProj .. "/hvpch.cpp")
 	forceincludes { "hvpch.h" }
 
 	files 
 	{
-		masterDir .. "Source/%{prj.name}/**.h",
-		masterDir .. "Source/%{prj.name}/**.cpp",
-		
+		"Source/%{prj.name}/**.h",
+		"Source/%{prj.name}/**.cpp",
+
+		-- Imgui --------------------------------------
+		--"External/imgui/*.cpp",
+		-----------------------------------------------
 		vpaths 
 		{
-			["*"] = masterDir .. "Source/"
+			["*"] = "Source/"
 		}
 	}
 
 	includedirs
 	{
-		masterDir .. "Source/%{prj.name}",
-		masterDir .. "External",
-		masterDir .. "External/FastNoise2/include",
-		masterDir .. "External/rapidjson",
-		masterDir .. "External/DirectXTex",
-		masterDir .. "External/box2d/include/box2d",
-		masterDir .. "External/box2dcpp/include/box2cpp",
-		masterDir .. "External/PhysX/physx/include",
-		masterDir .. "Source/Engine",
-		masterDir .. "Source/ImGui"		
+		"Source/%{prj.name}",
+		"External",
+		"External/FastNoise2/include",
+		"External/rapidjson",
+		"External/DirectXTex",
+		"External/box2d/include/box2d",
+		"External/box2dcpp/include/box2cpp",
+		"External/PhysX/physx/include",
+		"Source/Engine",
+		"Source/GUI",
+		
+		-- Imgui --------------------------------------
+		--"External/imgui",
+		-----------------------------------------------
 	}
 
 	libdirs 
 	{
-		masterDir .. "Lib/",
-		masterDir .. "External/Lib"
+		"Lib/",
+		"External/Lib"
 	}
 
 	links
 	{
 		"Engine",
-		"ImGui"
+		"GUI"
 	}
 
 	floatingpoint "Fast"
-	debugdir "../Bin/"
+	debugdir "Bin/"
 
 	filter "system:Windows"
 		staticruntime "On"
@@ -282,29 +306,36 @@ project "Game"
 		flags { "LinkTimeOptimization" }
 		
 
-
-
-
-project "Editor"
-	location (masterDir .. "Source/" .. editorProj)
+project "GUI"
+	location ("Source/" .. GUIProj)
 	kind "SharedLib"
 	language "C++"
 	cppdialect "C++20"
-	architecture "x86_64"
+	architecture "x64"
 
 	targetname "%{prj.name}_%{cfg.buildcfg}"
 
-	targetdir (masterDir .. "Bin/" .. outputdir .. "/%{prj.name}") 
-	objdir (masterDir .. "Temp/" .. outputdir .. "/%{prj.name}") 
+	targetdir ("Bin/" .. outputdir .. "/%{prj.name}") 
+	objdir ("Temp/" .. outputdir .. "/%{prj.name}") 
 
 	warnings "Extra"
 	flags { "FatalWarnings", "ShadowedVariables", "MultiProcessorCompile" }
 
-	files 
+	files
 	{
-		masterDir .. "Source/%{prj.name}/**.h",
-		masterDir .. "Source/%{prj.name}/**.cpp",
-		
+		"Source/%{prj.name}/**.h",
+		"Source/%{prj.name}/**.cpp",
+
+		-- Imgui -------------------------------
+		"External/imgui/*.h",
+		"External/imgui/*.cpp",
+		"External/imgui/backends/imgui_impl_dx11.cpp",
+		"External/imgui/backends/imgui_impl_win32.cpp",
+
+		-- ImGuizmo ----------------------------
+		"External/ImGuizmo/*.h",
+		"External/ImGuizmo/*.cpp",
+	
 		vpaths 
 		{
 			["*"] = "Source/"
@@ -313,31 +344,121 @@ project "Editor"
 
 	includedirs
 	{
-		masterDir .. "Source/%{prj.name}",
-		masterDir .. "External/rapidjson",
-		masterDir .. "External/DirectXTex",
-		masterDir .. "External/box2d/include/box2d",
-		masterDir .. "External/box2dcpp/include/box2cpp",
-		masterDir .. "External/PhysX/physx/include",
-		masterDir .. "Source/Engine",
-		masterDir .. "Source/ImGui"
+		"Source/Engine",
+		"External/imgui",
+		"External/ImGuizmo"
 	}
 
 	libdirs 
 	{ 
-		masterDir .. "Lib/",
-		masterDir .. "External/Lib"
+	--	"Lib/",
+	--	"External/Lib"
+	}
+
+	--links
+	--{
+		--"Engine"
+	--}
+
+	floatingpoint "Fast"
+	debugdir "Bin/"
+	filter "system:Windows"
+		staticruntime "On"
+		systemversion "latest"
+		vectorextensions "SSE4.1"
+
+		defines 
+		{
+			"HV_BUILD_DLL"
+		}
+
+		postbuildcommands
+		{
+			"{COPY} %{cfg.buildtarget.relpath} ../../Bin/"
+		}
+
+	filter "configurations:Debug"
+		defines "HV_DEBUG"
+		buildoptions "/MDd"
+		staticruntime "off"
+		runtime "Debug"
+		symbols "On"
+
+		--defines 
+		--{
+	--		"HV_ENABLE_ASSERTS"
+	--	}
+
+	filter "configurations:Release"
+		defines "HV_RELEASE"
+		buildoptions "/MD"
+		staticruntime "off"
+		runtime "Release"
+		optimize "On"
+		flags { "LinkTimeOptimization" }
+
+
+project "Editor"
+	location ("Source/" .. editorProj)
+	kind "SharedLib"
+	language "C++"
+	cppdialect "C++20"
+	architecture "x86_64"
+
+	targetname "%{prj.name}_%{cfg.buildcfg}"
+
+	targetdir ("Bin/" .. outputdir .. "/%{prj.name}") 
+	objdir ("Temp/" .. outputdir .. "/%{prj.name}") 
+
+	warnings "Extra"
+	flags { "FatalWarnings", "ShadowedVariables", "MultiProcessorCompile" }
+
+	files 
+	{
+		"Source/%{prj.name}/**.h",
+		"Source/%{prj.name}/**.cpp",
+
+		-- Imgui --------------------------------------
+		"External/imgui/*.cpp",
+		"External/ImGuizmo/ImGuizmo.h",
+    	"External/ImGuizmo/ImGuizmo.cpp",
+		-----------------------------------------------
+		vpaths 
+		{
+			["*"] = "Source/"
+		}
+	}
+
+	includedirs
+	{
+		"Source/%{prj.name}",
+		"External/rapidjson",
+		"External/DirectXTex",
+		"External/box2d/include/box2d",
+		"External/box2dcpp/include/box2cpp",
+		"External/PhysX/physx/include",
+		"Source/Engine",
+		"Source/GUI",
+		-- Imgui --------------------------------------
+		"External/imgui",
+		-----------------------------------------------
+	}
+
+	libdirs 
+	{ 
+		"Lib/",
+		"External/Lib"
 	}
 
 	links
 	{
 		"Engine",
 		"Game",
-		"ImGui"
+		"GUI"
 	}
 
 	floatingpoint "Fast"
-	debugdir "../Bin/"
+	debugdir "Bin/"
 
 	filter "system:Windows"
 		staticruntime "On"
@@ -374,86 +495,12 @@ project "Editor"
 		optimize "On"
 		flags { "LinkTimeOptimization" }
 		
-		
-		
-		
-		
-project "ImGui"
-	location (masterDir .. "Source/" .. imGuiProj)
-	kind "StaticLib"
-	language "C++"
-	cppdialect "C++20"
-	architecture "x86_64"
-
-	targetname "%{prj.name}_%{cfg.buildcfg}"
-
-	targetdir (masterDir .. "Bin/" .. outputdir .. "/%{prj.name}") 
-	objdir (masterDir .. "Temp/" .. outputdir .. "/%{prj.name}") 
-
-	flags { "ShadowedVariables", "MultiProcessorCompile" }
-
-	files 
-	{
-		masterDir .. "Source/%{prj.name}/**.h",
-		masterDir .. "Source/%{prj.name}/**.cpp",
-		
-		vpaths 
-		{
-			["*"] = "Source/"
-		}
-	}
-
-	includedirs
-	{
-		masterDir .. "Source/%{prj.name}",
-		masterDir .. "External/imgui"
-	}
-
-	floatingpoint "Fast"
-	debugdir "../Bin/"
-
-	filter "system:Windows"
-		staticruntime "On"
-		systemversion "latest"
-		vectorextensions "SSE4.1"
-
-		defines 
-		{
-			"HV_PLATFORM_WINDOWS",
-			"HV_BUILD_DLL"
-		}
-
-		postbuildcommands
-		{
-			"{COPY} %{cfg.buildtarget.relpath} ../../Bin/"
-		}
-
-	filter "configurations:Debug"
-		defines "HV_DEBUG"
-		buildoptions "/MDd"
-		staticruntime "off"
-		runtime "Debug"
-		symbols "On"
-
-		defines 
-		{
-			"HV_ENABLE_ASSERTS"
-		}
-
-	filter "configurations:Release"
-		defines "HV_RELEASE"
-		buildoptions "/MD"
-		staticruntime "off"
-		runtime "Release"
-		optimize "On"
-		flags { "LinkTimeOptimization" }
-
 
 
 
 
 project "Launcher"
-	location (masterDir .. "Source/Launcher")
+	location "Source/Launcher"
 	kind "WindowedApp"
 	language "C++"
 	cppdialect "C++20"
@@ -461,16 +508,17 @@ project "Launcher"
 
 	targetname "%{prj.name}_%{cfg.buildcfg}"
 
-	targetdir (masterDir .. "Bin/" .. outputdir .. "/%{prj.name}") 
-	objdir (masterDir .. "Temp/" .. outputdir .. "/%{prj.name}") 
+	targetdir ("Bin/" .. outputdir .. "/%{prj.name}") 
+	objdir ("Temp/" .. outputdir .. "/%{prj.name}") 
 
 	warnings "Extra"
 	flags { "FatalWarnings", "ShadowedVariables", "MultiProcessorCompile" }
 
 	files
 	{
-		masterDir .. "Source/%{prj.name}/**.h",
-		masterDir .. "Source/%{prj.name}/**.cpp",
+		"External/imgui/imgui*.cpp",
+		"Source/%{prj.name}/**.h",
+		"Source/%{prj.name}/**.cpp",
 
 		vpaths 
 		{
@@ -480,14 +528,25 @@ project "Launcher"
 
 	includedirs
 	{
-		masterDir .. "Source/%{prj.name}",
-		masterDir .. "Source/ImGui",
-		masterDir .. "Source/Editor",
-		masterDir .. "Source/Engine",
-		masterDir .. "Source/Game",
-		masterDir .. "External/box2d/include/box2d",
-		masterDir .. "External/box2dcpp/include/box2cpp",
-		masterDir .. "External/PhysX/physx/include"
+		"Source/%{prj.name}",
+		--"Source/ImGui/Havtorn",
+		"External/imgui",
+		"Source/Editor",
+		"Source/Engine",
+		"Source/Game",
+		"External/box2d/include/box2d",
+		"External/box2dcpp/include/box2cpp",
+		"External/PhysX/physx/include",
+		"External/imgui/imgui_draw.cpp",
+		"External/imgui/imgui_tables.cpp",
+		"External/imgui/imgui_widgets.cpp",
+	   -- -- Include platform-specific files if used
+		"External/imgui/backends/imgui_impl_dx11.cpp",  -- For DirectX 11
+		"External/imgui/backends/imgui_impl_win32.cpp", -- For Windows platform
+
+	   -- Extras
+		"External/ImGuizmo/ImGuizmo.h",
+		"External/ImGuizmo/ImGuizmo.cpp",
 	}
 
 	links
@@ -495,11 +554,11 @@ project "Launcher"
 		"Engine",
 		"Game",
 		"Editor",
-		"ImGui",
+		"GUI"
 	}
 
 	floatingpoint "Fast"
-	debugdir "../Bin/"
+	debugdir "Bin/"
 
 	filter "system:Windows"
 		staticruntime "On"

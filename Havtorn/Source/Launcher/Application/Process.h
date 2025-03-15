@@ -4,6 +4,8 @@
 
 namespace Havtorn
 {
+	class CPlatformManager;
+
 	class _declspec(dllexport) IProcess
 	{
 	public:
@@ -11,7 +13,7 @@ namespace Havtorn
 		virtual ~IProcess() = default;
 
 		// Called once to see if Process can be run. Terminates Application if returns false.
-		virtual bool Init() = 0;
+		virtual bool Init(CPlatformManager* platformManager) = 0;
 
 		virtual void BeginFrame() = 0;
 		virtual void PreUpdate() = 0;

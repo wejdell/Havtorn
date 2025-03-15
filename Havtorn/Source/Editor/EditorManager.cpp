@@ -2,21 +2,17 @@
 
 #include "EditorManager.h"
 
-#include "Core/imgui.h"
-#include "Core/ImGuizmo/ImGuizmo.h"
-
-#include <Core/WindowsInclude.h>
+#include <WindowsInclude.h>
 #include <psapi.h>
 #include <format>
 
-#include "Engine.h"
-#include "FileSystem/FileSystem.h"
-#include "Application/WindowHandler.h"
-#include "Input/InputMapper.h"
-#include "Input/InputTypes.h"
+#include <Engine.h>
+#include <FileSystem/FileSystem.h>
+#include <Input/InputMapper.h>
+#include <Input/InputTypes.h>
 
-#include "Graphics/RenderManager.h"
-#include "ECS/ECSInclude.h"
+#include <Graphics/RenderManager.h>
+#include <ECS/ECSInclude.h>
 
 #include "EditorResourceManager.h"
 #include "EditorWindows.h"
@@ -25,8 +21,11 @@
 
 #include "Systems/PickingSystem.h"
 
-#include <Application/ImGuiCrossProjectSetup.h>
-#include <Core/MathTypes/MathUtilities.h>
+//#include <Application/ImGuiCrossProjectSetup.h>
+#include <MathTypes/MathUtilities.h>
+#include <PlatformManager.h>
+#include <Color.h>
+#include <Timer.h>
 
 namespace Havtorn
 {
@@ -45,29 +44,33 @@ namespace Havtorn
 		SAFE_DELETE(ResourceManager);
 	}
 
-	bool CEditorManager::Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager)
+	bool CEditorManager::Init(CPlatformManager* platformManager, const CGraphicsFramework* framework, CRenderManager* renderManager)
 	{
-		CROSS_PROJECT_IMGUI_SETUP();
-		windowHandler->EnableDragDrop();
+		// CROSS_PROJECT_IMGUI_SETUP();
 
-		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+		//GUI::SetGUIContext();
+		//windowHandler->EnableDragDrop();
+
+		PlatformManager = platformManager;
+		if (PlatformManager == nullptr)
+			return false;
 
 		SetEditorTheme(EEditorColorTheme::HavtornDark, EEditorStyleTheme::Havtorn);
 
 		// TODO.NR: Figure out why we can't use unique ptrs with these namespaced imgui classes
-		MenuElements.emplace_back(new ImGui::CFileMenu("File", this));
-		MenuElements.emplace_back(new ImGui::CEditMenu("Edit", this));
-		MenuElements.emplace_back(new ImGui::CViewMenu("View", this));
-		MenuElements.emplace_back(new ImGui::CWindowMenu("Window", this));
-		MenuElements.emplace_back(new ImGui::CHelpMenu("Help", this));
+		MenuElements.emplace_back(new CFileMenu("File", this));
+		MenuElements.emplace_back(new CEditMenu("Edit", this));
+		MenuElements.emplace_back(new CViewMenu("View", this));
+		MenuElements.emplace_back(new CWindowMenu("Window", this));
+		MenuElements.emplace_back(new CHelpMenu("Help", this));
 
-		Windows.emplace_back(new ImGui::CViewportWindow("Viewport", this));
-		Windows.emplace_back(new ImGui::CDockSpaceWindow("Dock Space", this));
-		Windows.emplace_back(new ImGui::CAssetBrowserWindow("Asset Browser", this));
-		Windows.emplace_back(new ImGui::COutputLogWindow("Output Log", this));
-		Windows.emplace_back(new ImGui::CHierarchyWindow("Hierarchy", this));
-		Windows.emplace_back(new ImGui::CInspectorWindow("Inspector", this));
-		Windows.emplace_back(new ImGui::CSpriteAnimatorGraphNodeWindow("Sprite Animator", this));
+		Windows.emplace_back(new CViewportWindow("Viewport", this));
+		Windows.emplace_back(new CDockSpaceWindow("Dock Space", this));
+		Windows.emplace_back(new CAssetBrowserWindow("Asset Browser", this));
+		Windows.emplace_back(new COutputLogWindow("Output Log", this));
+		Windows.emplace_back(new CHierarchyWindow("Hierarchy", this));
+		Windows.emplace_back(new CInspectorWindow("Inspector", this));
+		Windows.emplace_back(new CSpriteAnimatorGraphNodeWindow("Sprite Animator", this));
 		Windows.back()->SetEnabled(false);
 
 		ResourceManager = new CEditorResourceManager();
@@ -76,7 +79,7 @@ namespace Havtorn
 			return false;
 		RenderManager = renderManager;
 
-		GEngine::GetWindowHandler()->OnResolutionChanged.AddMember(this, &CEditorManager::OnResolutionChanged);
+		PlatformManager->OnResolutionChanged.AddMember(this, &CEditorManager::OnResolutionChanged);
 		World = GEngine::GetWorld();
 		World->OnBeginPlayDelegate.AddMember(this, &CEditorManager::OnBeginPlay);
 		World->OnPausePlayDelegate.AddMember(this, &CEditorManager::OnPausePlay);
@@ -98,12 +101,12 @@ namespace Havtorn
 		// Main Menu bar
 		if (IsEnabled)
 		{
-			ImGui::BeginMainMenuBar();
+			GUI::BeginMainMenuBar();
 
 			for (const auto& element : MenuElements)
 				element->OnInspectorGUI();
 
-			ImGui::EndMainMenuBar();
+			GUI::EndMainMenuBar();
 		}
 
 		// Windows
@@ -126,26 +129,26 @@ namespace Havtorn
 	{
 		if (IsDemoOpen)
 		{
-			ImGui::ShowDemoWindow(&IsDemoOpen);
+			GUI::ShowDemoWindow(&IsDemoOpen);
 		}
 
 		if (IsDebugInfoOpen)
 		{
-			if (ImGui::Begin("Debug info", &IsDebugInfoOpen))
+			if (GUI::Begin("Debug info", &IsDebugInfoOpen))
 			{
-				ImGui::Text(GetFrameRate().c_str());
-				ImGui::Text(GetSystemMemory().c_str());
-				ImGui::Text(GetDrawCalls().c_str());
+				GUI::Text(GetFrameRate().c_str());
+				GUI::Text(GetSystemMemory().c_str());
+				GUI::Text(GetDrawCalls().c_str());
 			}
 
-			if (ImGui::Button("Import skeletal mesh"))
-				ResourceManager->ConvertToHVA("ArtSource/Tests/TestMesh.fbx", "Assets/Tests/", Havtorn::EAssetType::SkeletalMesh);
-			if (ImGui::Button("Import anim 1"))
-				ResourceManager->ConvertToHVA("ArtSource/Tests/TestWalk.fbx", "Assets/Tests/", Havtorn::EAssetType::Animation);
-			//if (ImGui::Button("Import anim 2"))
-				//ResourceManager->ConvertToHVA("FBX/Tests/SkinningTest.fbx", "Assets/Tests/", Havtorn::EAssetType::Animation);
+			//if (GUI::Button("Import skeletal mesh"))
+			//	ResourceManager->ConvertToHVA("ArtSource/Tests/TestMesh.fbx", "Assets/Tests/", EAssetType::SkeletalMesh);
+			//if (GUI::Button("Import anim 1"))
+			//	ResourceManager->ConvertToHVA("ArtSource/Tests/TestWalk.fbx", "Assets/Tests/", EAssetType::Animation);
+			//if (Button("Import anim 2"))
+				//ResourceManager->ConvertToHVA("FBX/Tests/SkinningTest.fbx", "Assets/Tests/", EAssetType::Animation);
 
-			ImGui::End();
+			GUI::End();
 		}
 	}
 
@@ -238,88 +241,89 @@ namespace Havtorn
 
 		switch (colorTheme)
 		{
-		case Havtorn::EEditorColorTheme::HavtornDark:
+		case EEditorColorTheme::HavtornDark:
 		{
-			GImGuiManager::SetImGuiColorProfile(SImGuiColorProfile());
+			GUI::SetGuiColorProfile(SGuiColorProfile());
 		}
 		break;
 
-		case Havtorn::EEditorColorTheme::HavtornRed:
+		case EEditorColorTheme::HavtornRed:
 		{
-			SImGuiColorProfile colorProfile(
-				ImVec4(0.11f, 0.11f, 0.11f, 1.00f),
-				ImVec4(0.198f, 0.198f, 0.198f, 1.00f),
-				ImVec4(0.278f, 0.271f, 0.267f, 1.00f),
-				ImVec4(0.478f, 0.188f, 0.188f, 1.00f),
-				ImVec4(0.814f, 0.00f, 0.00f, 1.00f),
-				ImVec4(1.00f, 0.00f, 0.00f, 1.00f)
+			SGuiColorProfile colorProfile(
+				SColor(0.11f, 0.11f, 0.11f, 1.00f),
+				SColor(0.198f, 0.198f, 0.198f, 1.00f),
+				SColor(0.278f, 0.271f, 0.267f, 1.00f),
+				SColor(0.478f, 0.188f, 0.188f, 1.00f),
+				SColor(0.814f, 0.00f, 0.00f, 1.00f),
+				SColor(1.00f, 0.00f, 0.00f, 1.00f)
 			);
-			GImGuiManager::SetImGuiColorProfile(colorProfile);
+			GUI::SetGuiColorProfile(colorProfile);
 		}
 		break;
 
-		case Havtorn::EEditorColorTheme::HavtornGreen:
+		case EEditorColorTheme::HavtornGreen:
 		{
-			SImGuiColorProfile colorProfile(
-				ImVec4(0.11f, 0.11f, 0.11f, 1.00f),
-				ImVec4(0.198f, 0.198f, 0.198f, 1.00f),
-				ImVec4(0.278f, 0.271f, 0.267f, 1.00f),
-				ImVec4(0.355f, 0.478f, 0.188f, 1.00f),
-				ImVec4(0.469f, 0.814f, 0.00f, 1.00f),
-				ImVec4(0.576f, 1.00f, 0.00f, 1.00f)
+			SGuiColorProfile colorProfile(
+				SColor(0.11f, 0.11f, 0.11f, 1.00f),
+				SColor(0.198f, 0.198f, 0.198f, 1.00f),
+				SColor(0.278f, 0.271f, 0.267f, 1.00f),
+				SColor(0.355f, 0.478f, 0.188f, 1.00f),
+				SColor(0.469f, 0.814f, 0.00f, 1.00f),
+				SColor(0.576f, 1.00f, 0.00f, 1.00f)
 			);
-			GImGuiManager::SetImGuiColorProfile(colorProfile);
+			GUI::SetGuiColorProfile(colorProfile);
 		}
 		break;
 
-		case Havtorn::EEditorColorTheme::PlayMode:
+		case EEditorColorTheme::PlayMode:
 		{
-			SImGuiColorProfile colorProfile(
-				ImVec4(0.01f, 0.01f, 0.01f, 1.00f),
-				ImVec4(0.05f, 0.05f, 0.04f, 1.00f),
-				ImVec4(0.11f, 0.11f, 0.11f, 1.00f),
-				ImVec4(0.11f, 0.11f, 0.11f, 1.00f),
-				ImVec4(0.11f, 0.11f, 0.11f, 1.00f),
-				ImVec4(0.11f, 0.11f, 0.11f, 1.00f)
+			SGuiColorProfile colorProfile(
+				SColor(0.01f, 0.01f, 0.01f, 1.00f),
+				SColor(0.05f, 0.05f, 0.04f, 1.00f),
+				SColor(0.11f, 0.11f, 0.11f, 1.00f),
+				SColor(0.11f, 0.11f, 0.11f, 1.00f),
+				SColor(0.11f, 0.11f, 0.11f, 1.00f),
+				SColor(0.11f, 0.11f, 0.11f, 1.00f)
 			);
 
-			colorProfile.Text = ImVec4(0.44f, 0.44f, 0.44f, 1.00f);
-			colorProfile.Button = ImVec4(0.278f, 0.271f, 0.267f, 1.00f);
-			colorProfile.ButtonActive = ImVec4(0.814f, 0.532f, 0.00f, 1.00f);
-			colorProfile.ButtonHovered = ImVec4(0.478f, 0.361f, 0.188f, 1.00f);
+			colorProfile.Text = SColor(0.44f, 0.44f, 0.44f, 1.00f);
+			colorProfile.Button = SColor(0.278f, 0.271f, 0.267f, 1.00f);
+			colorProfile.ButtonActive = SColor(0.814f, 0.532f, 0.00f, 1.00f);
+			colorProfile.ButtonHovered = SColor(0.478f, 0.361f, 0.188f, 1.00f);
 
-			GImGuiManager::SetImGuiColorProfile(colorProfile);
+			GUI::SetGuiColorProfile(colorProfile);
 		}
 		break;
 
-		case Havtorn::EEditorColorTheme::PauseMode:
+		case EEditorColorTheme::PauseMode:
 		{
-			SImGuiColorProfile colorProfile(
-				ImVec4(0.05f, 0.05f, 0.04f, 1.00f),
-				ImVec4(0.11f, 0.11f, 0.11f, 1.00f),
-				ImVec4(0.278f, 0.271f, 0.267f, 1.00f),
-				ImVec4(0.478f, 0.361f, 0.188f, 1.00f),
-				ImVec4(0.814f, 0.532f, 0.00f, 1.00f),
-				ImVec4(1.00f, 0.659f, 0.00f, 1.00f)
+			SGuiColorProfile colorProfile(
+				SColor(0.05f, 0.05f, 0.04f, 1.00f),
+				SColor(0.11f, 0.11f, 0.11f, 1.00f),
+				SColor(0.278f, 0.271f, 0.267f, 1.00f),
+				SColor(0.478f, 0.361f, 0.188f, 1.00f),
+				SColor(0.814f, 0.532f, 0.00f, 1.00f),
+				SColor(1.00f, 0.659f, 0.00f, 1.00f)
 			);
-			GImGuiManager::SetImGuiColorProfile(colorProfile);
+			GUI::SetGuiColorProfile(colorProfile);
 		}
 		break;
 
-		case Havtorn::EEditorColorTheme::Count:
-		case Havtorn::EEditorColorTheme::DefaultDark:
-			ImGui::StyleColorsDark();
+		case EEditorColorTheme::Count:
+		case EEditorColorTheme::DefaultDark:
+			// NW: Could be imgui colors instead?
+			GUI::SetGuiColorProfile(SGuiColorProfile());
 			break;
 		}
 
 		switch (styleTheme)
 		{
-		case Havtorn::EEditorStyleTheme::Havtorn:
+		case EEditorStyleTheme::Havtorn:
 
-			GImGuiManager::SetImGuiStyleProfile(SImGuiStyleProfile());
+			GUI::SetGuiStyleProfile(SGuiStyleProfile());
 			break;
-		case Havtorn::EEditorStyleTheme::Count:
-		case Havtorn::EEditorStyleTheme::Default:
+		case EEditorStyleTheme::Count:
+		case EEditorStyleTheme::Default:
 			break;
 		}
 	}
@@ -328,33 +332,33 @@ namespace Havtorn
 	{
 		switch (colorTheme)
 		{
-		case Havtorn::EEditorColorTheme::DefaultDark:
+		case EEditorColorTheme::DefaultDark:
 			return "ImGui Dark";
-		case Havtorn::EEditorColorTheme::HavtornDark:
+		case EEditorColorTheme::HavtornDark:
 			return "Havtorn Dark";
-		case Havtorn::EEditorColorTheme::HavtornRed:
+		case EEditorColorTheme::HavtornRed:
 			return "Havtorn Red";
-		case Havtorn::EEditorColorTheme::HavtornGreen:
+		case EEditorColorTheme::HavtornGreen:
 			return "Havtorn Green";
-		case Havtorn::EEditorColorTheme::Count:
+		case EEditorColorTheme::Count:
 			return {};
 		}
 		return {};
 	}
 
-	ImVec4 CEditorManager::GetEditorColorThemeRepColor(const EEditorColorTheme colorTheme)
+	SColor CEditorManager::GetEditorColorThemeRepColor(const EEditorColorTheme colorTheme)
 	{
 		switch (colorTheme)
 		{
-		case Havtorn::EEditorColorTheme::DefaultDark:
+		case EEditorColorTheme::DefaultDark:
 			return { 0.11f, 0.16f, 0.55f, 1.00f };
-		case Havtorn::EEditorColorTheme::HavtornDark:
+		case EEditorColorTheme::HavtornDark:
 			return { 0.478f, 0.361f, 0.188f, 1.00f };
-		case Havtorn::EEditorColorTheme::HavtornRed:
+		case EEditorColorTheme::HavtornRed:
 			return { 0.478f, 0.188f, 0.188f, 1.00f };
-		case Havtorn::EEditorColorTheme::HavtornGreen:
+		case EEditorColorTheme::HavtornGreen:
 			return { 0.355f, 0.478f, 0.188f, 1.00f };
-		case Havtorn::EEditorColorTheme::Count:
+		case EEditorColorTheme::Count:
 			return {};
 		}
 		return {};
@@ -391,6 +395,11 @@ namespace Havtorn
 		return ResourceManager;
 	}
 
+	CPlatformManager* CEditorManager::GetPlatformManager() const
+	{
+		return PlatformManager;
+	}
+
 	void CEditorManager::ToggleDebugInfo()
 	{
 		IsDebugInfoOpen = !IsDebugInfoOpen;
@@ -405,7 +414,7 @@ namespace Havtorn
 	{
 		EditorLayout = SEditorLayout();
 
-		const Havtorn::SVector2<U16> resolution = GEngine::GetWindowHandler()->GetResolution();
+		const SVector2<U16> resolution = PlatformManager->GetResolution();
 
 		constexpr F32 viewportAspectRatioInv = (9.0f / 16.0f);
 		const F32 viewportPaddingX = ViewportPadding;
@@ -476,7 +485,7 @@ namespace Havtorn
 	{
 		if (GetIsFreeCamActive())
 			return;
-			
+
 		switch (payload.Event)
 		{
 		case EInputActionEvent::TranslateTransform:
@@ -528,7 +537,7 @@ namespace Havtorn
 			HV_LOG_WARN("OnInputFocusSelection: could not find a transform to go to. Cannot focus current selection.");
 			return;
 		}
-		
+
 		if (SCameraComponent* camera = CurrentScene->GetComponent<SCameraComponent>(cameraEntity))
 		{
 			fov = { camera->AspectRatio * camera->FOV, camera->FOV };
@@ -598,9 +607,9 @@ namespace Havtorn
 		return IsFreeCamActive;
 	}
 
-	bool CEditorManager::GetIsHoveringGizmo() const
+	bool CEditorManager::GetIsOverGizmo() const
 	{
-		return ImGuizmo::IsOver();
+		return GUI::IsOverGizmo();
 	}
 
 	bool CEditorManager::GetIsModalOpen() const

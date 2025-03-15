@@ -1,32 +1,29 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include "Havtorn.h"
-#include "Input/InputTypes.h"
+#include <Havtorn.h>
+#include <Input/InputTypes.h>
 
 #include <filesystem>
+
+#include <GUI.h>
 
 struct ID3D11Device;
 struct ID3D11DeviceContext;
 
-struct ImFontAtlas;
-struct ImVec4;
-
-namespace ImGui 
-{
-	class CWindow;
-	class CToggleable;
-}
-
 namespace Havtorn
 {
 	struct SEntity;
+	struct SColor;
 	class CGraphicsFramework;
 	class CWindowHandler;
 	class CRenderManager;
 	class CEditorResourceManager;
 	class CScene;
 	class CSequencerSystem;
+	class CPlatformManager;
+	class CWindow;
+	class CToggleable;
 
 	enum class EEditorColorTheme
 	{
@@ -44,14 +41,6 @@ namespace Havtorn
 		Default,
 		Havtorn,
 		Count
-	};
-
-	// NR: Wrapper for ImGuizmo operations
-	enum class ETransformGizmo
-	{
-		Translate = 7,
-		Rotate = 120,
-		Scale = 896
 	};
 
 	struct SEditorLayout
@@ -77,14 +66,14 @@ namespace Havtorn
 	class CEditorManager
 	{
 	public:
-		HAVTORN_EXPORT CEditorManager();
-		HAVTORN_EXPORT ~CEditorManager();
+		EDITOR_API CEditorManager();
+		EDITOR_API ~CEditorManager();
 
-		bool HAVTORN_EXPORT Init(const CGraphicsFramework* framework, const CWindowHandler* windowHandler, CRenderManager* renderManager);
-		void HAVTORN_EXPORT BeginFrame();
-		void HAVTORN_EXPORT Render();
-		void HAVTORN_EXPORT EndFrame();
-		void HAVTORN_EXPORT DebugWindow();
+		bool EDITOR_API Init(CPlatformManager* platformManager, const CGraphicsFramework* framework, CRenderManager* renderManager);
+		void EDITOR_API BeginFrame();
+		void EDITOR_API Render();
+		void EDITOR_API EndFrame();
+		void EDITOR_API DebugWindow();
 
 	public:
 		void SetCurrentScene(CScene* scene);
@@ -101,12 +90,12 @@ namespace Havtorn
 
 		void SetEditorTheme(EEditorColorTheme colorTheme = EEditorColorTheme::HavtornDark, EEditorStyleTheme styleTheme = EEditorStyleTheme::Havtorn);
 		std::string GetEditorColorThemeName(const EEditorColorTheme colorTheme);
-		ImVec4 GetEditorColorThemeRepColor(const EEditorColorTheme colorTheme);
+		SColor GetEditorColorThemeRepColor(const EEditorColorTheme colorTheme);
 		[[nodiscard]] const SEditorLayout& GetEditorLayout() const;
 
 		[[nodiscard]] ETransformGizmo GetCurrentGizmo() const;
 		[[nodiscard]] bool GetIsFreeCamActive() const;
-		[[nodiscard]] bool GetIsHoveringGizmo() const;
+		[[nodiscard]] bool GetIsOverGizmo() const;
 		[[nodiscard]] bool GetIsModalOpen() const;
 
 		void SetIsModalOpen(const bool isModalOpen);
@@ -123,6 +112,7 @@ namespace Havtorn
 
 		[[nodiscard]] const CRenderManager* GetRenderManager() const;
 		[[nodiscard]] const CEditorResourceManager* GetResourceManager() const;
+		[[nodiscard]] CPlatformManager* GetPlatformManager() const;
 
 		void ToggleDebugInfo();
 		void ToggleDemo();
@@ -147,15 +137,16 @@ namespace Havtorn
 
 	private:
 		const CRenderManager* RenderManager = nullptr;
+		CPlatformManager* PlatformManager = nullptr;
 		CEditorResourceManager* ResourceManager = nullptr;
 
 		CWorld* World = nullptr;
 		CScene* CurrentScene = nullptr;
 		SEntity SelectedEntity = SEntity::Null;
 
-		// TODO.NR: Figure out why we can't use unique ptrs with these namespaced imgui classes
-		std::vector<ImGui::CWindow*> Windows = {};
-		std::vector<ImGui::CToggleable*> MenuElements = {};
+		// TODO.NR: Figure out why we can't use unique ptrs with these namespaced classes
+		std::vector<CWindow*> Windows = {};
+		std::vector<CToggleable*> MenuElements = {};
 		std::vector<Ptr<SEditorAssetRepresentation>> AssetRepresentations = {};
 
 		// TODO.NR: Save these in .ini file

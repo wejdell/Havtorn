@@ -3,36 +3,30 @@
 #include "hvpch.h"
 
 #include "Engine.h"
-#include "WindowHandler.h"
-
+//#include "WindowHandler.h"
+#include "Graphics/GraphicsFramework.h"
 #include "EngineProcess.h"
 
 namespace Havtorn
 {
-	CEngineProcess::CEngineProcess(U16 windowPosX, U16 windowPosY, U16 windowWidth, U16 windowHeight)
+	//CEngineProcess::WindowsWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+	//CEngineProcess::WinProc = nullptr;
+	CEngineProcess::CEngineProcess()
 		: Engine(nullptr)
-		, WindowPositionX(windowPosX)
-		, WindowPositionY(windowPosY)
-		, WindowWidth(windowWidth)
-		, WindowHeight(windowHeight)
-	{}
-	
+	{
+	}
+
 	CEngineProcess::~CEngineProcess()
 	{
 		SAFE_DELETE(Engine);
 		HV_LOG_WARN("Engine shutdown!");
 	}
-	
-	bool CEngineProcess::Init()
-	{
-		CWindowHandler::SWindowData windowData;
-		windowData.X = WindowPositionX;
-		windowData.Y = WindowPositionY;
-		windowData.Width = WindowWidth;
-		windowData.Height = WindowHeight;
 
+	bool CEngineProcess::Init(CPlatformManager* platformManager)
+	{
 		Engine = new GEngine();
-		return Engine->Init(windowData);
+		bool isValid = Engine->Init(platformManager);
+		return isValid;
 	}
 
 	void CEngineProcess::BeginFrame()
@@ -58,5 +52,15 @@ namespace Havtorn
 	void CEngineProcess::EndFrame()
 	{
 		Engine->EndFrame();
+	}
+
+	SEngineRenderBackend CEngineProcess::GetRenderBackend()
+	{
+		return
+		{
+			0,
+			Engine->GetGraphicsFramework()->GetDevice(),
+			Engine->GetGraphicsFramework()->GetContext()
+		};
 	}
 }

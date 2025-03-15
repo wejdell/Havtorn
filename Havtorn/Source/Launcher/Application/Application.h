@@ -7,6 +7,7 @@
 namespace Havtorn
 {
 	class IProcess;
+	class CPlatformManager;
 
 	class CApplication
 	{
@@ -19,9 +20,9 @@ namespace Havtorn
 		void AddProcess(IProcess* process);
 
 		void Run();
+		void Setup(CPlatformManager* platformManager);
 
 	private:
-		void Setup();
 
 	private:
 		std::vector<IProcess*> Processes;

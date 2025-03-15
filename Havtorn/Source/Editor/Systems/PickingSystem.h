@@ -4,8 +4,8 @@
 
 #include <ECS/System.h>
 
-#include "Core/CoreTypes.h"
-#include "Core/MathTypes/Vector.h"
+#include <CoreTypes.h>
+#include <MathTypes/Vector.h>
 
 namespace Havtorn
 {

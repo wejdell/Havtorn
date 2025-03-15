@@ -4,7 +4,7 @@
 
 #include "ECS/Component.h"
 
-#include "Core/Color.h"
+#include <Color.h>
 
 namespace Havtorn
 {

@@ -6,8 +6,8 @@
 #include "ECS/Components/SequencerComponent.h"
 #include "Scene/Scene.h"
 
-#include <Core/imgui.h>
-#include <Havtorn/Utilities.h>
+#include <GUI.h>
+
 
 namespace Havtorn
 {
@@ -21,7 +21,7 @@ namespace Havtorn
 
 	bool SSequencerComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("Sequencer Component"))
+		if (!GUI::Button("Sequencer Component"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())
@@ -34,7 +34,7 @@ namespace Havtorn
 
 	bool SSequencerComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!ImGui::Button("X##11"))
+		if (!GUI::Button("X##11"))
 			return false;
 
 		if (scene == nullptr || !entity.IsValid())
