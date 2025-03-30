@@ -125,8 +125,8 @@ namespace Havtorn
 
 		auto closePopup = [&]() 
 		{
-			CurrentImportAssetType = EAssetType::None;
 			FilePathsToImport->erase(FilePathsToImport->begin());
+			ImportOptions = SAssetImportOptions();
 			Manager->SetIsModalOpen(false);
 			GUI::CloseCurrentPopup();
 		};
@@ -141,38 +141,40 @@ namespace Havtorn
 		
 		if (fileExtension == "dds" || fileExtension == "tga" || fileExtension == "png")
 		{
-			if (CurrentImportAssetType == EAssetType::None)
-				CurrentImportAssetType = EAssetType::Texture; 
-			
+			if (ImportOptions.AssetType == EAssetType::None)
+				ImportOptions.AssetType = EAssetType::Texture;
+
 			GUI::Text("Asset Type");
 			GUI::SameLine();
-			if (GUI::RadioButton("Texture", CurrentImportAssetType == EAssetType::Texture))
-				CurrentImportAssetType = EAssetType::Texture;
+			if (GUI::RadioButton("Texture", ImportOptions.AssetType == EAssetType::Texture))
+				ImportOptions.AssetType = EAssetType::Texture;
 			GUI::SameLine();
-			if (GUI::RadioButton("Material", CurrentImportAssetType == EAssetType::Material))
-				CurrentImportAssetType = EAssetType::Material;
+			if (GUI::RadioButton("Material", ImportOptions.AssetType == EAssetType::Material))
+				ImportOptions.AssetType = EAssetType::Material;
 			GUI::SameLine();
-			if (GUI::RadioButton("Sprite Animation", CurrentImportAssetType == EAssetType::SpriteAnimation))
-				CurrentImportAssetType = EAssetType::SpriteAnimation;
+			if (GUI::RadioButton("Sprite Animation", ImportOptions.AssetType == EAssetType::SpriteAnimation))
+				ImportOptions.AssetType = EAssetType::SpriteAnimation;
 		}
 		else if (fileExtension == "fbx" || fileExtension == "obj" || fileExtension == "stl")
 		{
-			if (CurrentImportAssetType == EAssetType::None)
-				CurrentImportAssetType = EAssetType::StaticMesh;
+			if (ImportOptions.AssetType == EAssetType::None)
+				ImportOptions.AssetType = EAssetType::StaticMesh;
 
 			GUI::Text("Asset Type");
 			GUI::SameLine();
-			if (GUI::RadioButton("Static Mesh", CurrentImportAssetType == EAssetType::StaticMesh))
-				CurrentImportAssetType = EAssetType::StaticMesh;
+			if (GUI::RadioButton("Static Mesh", ImportOptions.AssetType == EAssetType::StaticMesh))
+				ImportOptions.AssetType = EAssetType::StaticMesh;
 			GUI::SameLine();
-			if (GUI::RadioButton("Skeletal Mesh", CurrentImportAssetType == EAssetType::SkeletalMesh))
-				CurrentImportAssetType = EAssetType::SkeletalMesh;
+			if (GUI::RadioButton("Skeletal Mesh", ImportOptions.AssetType == EAssetType::SkeletalMesh))
+				ImportOptions.AssetType = EAssetType::SkeletalMesh;
 			GUI::SameLine();
-			if (GUI::RadioButton("Animation", CurrentImportAssetType == EAssetType::Animation))
-				CurrentImportAssetType = EAssetType::Animation;
+			if (GUI::RadioButton("Animation", ImportOptions.AssetType == EAssetType::Animation))
+				ImportOptions.AssetType = EAssetType::Animation;
 		}
 
-		switch (CurrentImportAssetType)
+		GUI::Separator();
+
+		switch (ImportOptions.AssetType)
 		{
 		case EAssetType::StaticMesh:
 			ImportOptionsStaticMesh();
@@ -213,7 +215,7 @@ namespace Havtorn
 
 		if (GUI::Button("Import"))
 		{
-			std::string hvaFilePath = Manager->GetResourceManager()->ConvertToHVA(filePath, CurrentDirectory.string(), CurrentImportAssetType);
+			std::string hvaFilePath = Manager->GetResourceManager()->ConvertToHVA(filePath, CurrentDirectory.string() + "/", ImportOptions);
 			Manager->CreateAssetRep(hvaFilePath);
 			closePopup();
 		}
@@ -242,16 +244,70 @@ namespace Havtorn
 
 	void CAssetBrowserWindow::ImportOptionsStaticMesh()
 	{
+		GUI::DragFloat("Import Scale", ImportOptions.Scale, 0.01f);
 	}
 
 	void CAssetBrowserWindow::ImportOptionsSkeletalMesh()
 	{
+		GUI::DragFloat("Import Scale", ImportOptions.Scale, 0.01f);
 	}
 
 	void CAssetBrowserWindow::ImportOptionsAnimation()
 	{
 		// TODO.NW: Have a "pick asset" field. show name of asset, and if clicked, open correct browser, let specify which type we want to open. Maybe fine with image button for now
+		
+		F32 thumbnailPadding = 4.0f;
+		F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + thumbnailPadding;
+		F32 panelWidth = 256.0f;
+		I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
+		U32 id = 0;
 
+		if (GUI::ImageButton("Skeletal Rig", ImportOptions.AssetRep != nullptr ? (intptr_t)ImportOptions.AssetRep->TextureRef : intptr_t(), { GUI::TexturePreviewSizeX * 0.75f, GUI::TexturePreviewSizeY * 0.75f }))
+		{
+			GUI::OpenPopup("Select Mesh Asset");
+			GUI::SetNextWindowPos(GUI::GetViewportCenter(), EWindowCondition::Appearing, SVector2<F32>(0.5f, 0.5f));
+		}
+
+		GUI::Text("Skeletal Rig");
+
+		GUI::DragFloat("Import Scale", ImportOptions.Scale, 0.01f);
+
+		// TODO.NW: Make asset picker GUI util
+		if (!GUI::BeginPopupModal("Select Mesh Asset", NULL, { EWindowFlag::AlwaysAutoResize }))
+			return;
+
+		if (!GUI::BeginTable("NewMeshAssetTable", columnCount))
+		{
+			GUI::EndPopup();
+			return;
+		}
+
+		Manager->SetIsModalOpen(true);
+
+		for (auto& entry : std::filesystem::recursive_directory_iterator("Assets/Tests"))
+		{
+			if (entry.is_directory())
+				continue;
+
+			auto& assetRep = Manager->GetAssetRepFromDirEntry(entry);
+
+			GUI::TableNextColumn();
+			GUI::PushID(id++);
+
+			if (GUI::ImageButton(assetRep->Name.c_str(), (intptr_t)assetRep->TextureRef, { GUI::TexturePreviewSizeX * 0.75f, GUI::TexturePreviewSizeY * 0.75f }))
+			{
+				ImportOptions.AssetRep = assetRep.get();
+
+				Manager->SetIsModalOpen(false);
+				GUI::CloseCurrentPopup();
+			}
+
+			GUI::Text(assetRep->Name.c_str());
+			GUI::PopID();
+		}
+
+		GUI::EndTable();
+		GUI::EndPopup();
 	}
 
 	void CAssetBrowserWindow::InspectDirectoryEntry(const std::filesystem::directory_entry& entry, U32& outCurrentID, const intptr_t& folderIconID)

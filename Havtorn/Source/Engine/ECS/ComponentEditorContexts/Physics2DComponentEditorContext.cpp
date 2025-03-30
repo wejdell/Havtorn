@@ -35,7 +35,7 @@ namespace Havtorn
 
 		GUI::Text("Velocity: %s", physicsComponent->Velocity.ToString().c_str());
 
-		GUI::Checkbox("Constrain Rotation", &physicsComponent->ConstrainRotation);
+		GUI::Checkbox("Constrain Rotation", physicsComponent->ConstrainRotation);
 
 		// TODO.NR: Most of these should only be changed during setup, but if we want a truly responsive editor we can pause
 		// during play and unpause, we should probably handle setting the data on physics wrapper entity if we make modifications here.

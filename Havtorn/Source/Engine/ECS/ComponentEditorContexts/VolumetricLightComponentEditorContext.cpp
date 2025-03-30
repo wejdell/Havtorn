@@ -19,7 +19,7 @@ namespace Havtorn
 
 		SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(entityOwner);
 
-		GUI::Checkbox("Is Active", &volumetricLightComp->IsActive);
+		GUI::Checkbox("Is Active", volumetricLightComp->IsActive);
 		GUI::DragFloat("Number Of Samples", volumetricLightComp->NumberOfSamples, GUI::SliderSpeed, 4.0f);
 
 		volumetricLightComp->NumberOfSamples = Havtorn::UMath::Max(volumetricLightComp->NumberOfSamples, 4.0f);

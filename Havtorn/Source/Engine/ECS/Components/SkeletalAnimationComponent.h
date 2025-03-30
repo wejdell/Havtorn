@@ -27,5 +27,6 @@ namespace Havtorn
 		std::string AssetName;
 		U32 DurationInTicks = 0;
 		U32 TickRate = 0;
+		bool IsPlaying = true;
 	};
 }

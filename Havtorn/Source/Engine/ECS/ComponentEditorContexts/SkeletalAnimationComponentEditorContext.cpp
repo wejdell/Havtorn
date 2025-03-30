@@ -20,8 +20,10 @@ namespace Havtorn
 
 		SSkeletalAnimationComponent* skeletalAnimationComp = scene->GetComponent<SSkeletalAnimationComponent>(entityOwner);
 		SVector2<I32> data = { STATIC_I32(skeletalAnimationComp->AnimationData.X), STATIC_I32(skeletalAnimationComp->AnimationData.Y) };
-		GUI::DragInt2("Animation Data", data);
+		// TODO.NW: Make separate clamp values for vector types
+		GUI::DragInt2("Animation Data", data, 1.0f, 0, skeletalAnimationComp->DurationInTicks - 1);
 		skeletalAnimationComp->AnimationData = { STATIC_U32(data.X), STATIC_U32(data.Y) };
+		GUI::Checkbox("Is Playing", skeletalAnimationComp->IsPlaying);
 
 		return SComponentViewResult();
 	}

@@ -22,9 +22,9 @@ namespace Havtorn
 
 		SDecalComponent* decalComp = scene->GetComponent<SDecalComponent>(entityOwner);
 
-		GUI::Checkbox("Render Albedo", &decalComp->ShouldRenderAlbedo);
-		GUI::Checkbox("Render Material", &decalComp->ShouldRenderMaterial);
-		GUI::Checkbox("Render Normal", &decalComp->ShouldRenderNormal);
+		GUI::Checkbox("Render Albedo", decalComp->ShouldRenderAlbedo);
+		GUI::Checkbox("Render Material", decalComp->ShouldRenderMaterial);
+		GUI::Checkbox("Render Normal", decalComp->ShouldRenderNormal);
 
 		return { EComponentViewResultLabel::InspectAssetComponent, decalComp, 0 };
 	}

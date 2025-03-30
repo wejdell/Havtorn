@@ -3,6 +3,7 @@
 #pragma once
 
 #include "GraphicsEnums.h"
+#include "HavtornString.h"
 
 namespace Havtorn
 {
@@ -83,6 +84,12 @@ namespace Havtorn
 		//std::vector<SMatrix> BoneOffsetMatrices;
 	};
 
+	struct SSkeletalMeshBone
+	{
+		CHavtornStaticString<32> Name;
+		SMatrix Transform = SMatrix::Identity;
+	};
+
 	struct SVecBoneAnimationKey
 	{
 		SVector Value = SVector::Zero;
@@ -95,20 +102,28 @@ namespace Havtorn
 		F32 Time = 0.0f;
 	};
 
+	struct SBoneAnimationKey
+	{
+		SMatrix Transform = SMatrix::Identity;
+		F32 Time = 0.0f;
+	};
+
 	struct SBoneAnimationTrack
 	{
-		std::vector<SVecBoneAnimationKey> TranslationKeys;
-		std::vector<SQuatBoneAnimationKey> RotationKeys;
-		std::vector<SVecBoneAnimationKey> ScaleKeys;
 		std::string BoneName;
+		std::vector<SBoneAnimationKey> AnimationKeys;
+		//std::vector<SVecBoneAnimationKey> TranslationKeys;
+		//std::vector<SQuatBoneAnimationKey> RotationKeys;
+		//std::vector<SVecBoneAnimationKey> ScaleKeys;
 
 		U32 GetSize() const
 		{
 			U32 size = 0;
-			size += GetDataSize(TranslationKeys);
-			size += GetDataSize(RotationKeys);
-			size += GetDataSize(ScaleKeys);
+			//size += GetDataSize(TranslationKeys);
+			//size += GetDataSize(RotationKeys);
+			//size += GetDataSize(ScaleKeys);
 			size += GetDataSize(BoneName);
+			size += GetDataSize(AnimationKeys);
 			return size;
 		}
 	};

@@ -348,16 +348,21 @@ namespace Havtorn
 		//GetComponent<SStaticMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register("Assets/Tests/CH_Enemy.hva");
 
 		// Skeletal Mesh
-		renderManager->LoadSkeletalMeshComponent("Assets/Tests/TestMesh.hva", AddComponent<SSkeletalMeshComponent>(playerProxy));
+		//std::string meshPath = "Assets/Tests/MaleDefault.hva";
+		std::string meshPath = "Assets/Tests/DebugAnimMesh.hva";
+		renderManager->LoadSkeletalMeshComponent(meshPath, AddComponent<SSkeletalMeshComponent>(playerProxy));
 		AddComponentEditorContext(playerProxy, &SSkeletalMeshComponentEditorContext::Context);
-		GetComponent<SSkeletalMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register("Assets/Tests/TestMesh.hva");
+		GetComponent<SSkeletalMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register(meshPath);
 
-		renderManager->LoadSkeletalAnimationComponent("Assets/Tests/TestWalk.hva", AddComponent<SSkeletalAnimationComponent>(playerProxy));
+		//std::string animationPath = "Assets/Tests/MaleDefaultWalk.hva";
+		//std::string animationPath = "Assets/Tests/MaleWave.hva";
+		std::string animationPath = "Assets/Tests/DebugAnimAnim.hva";
+		renderManager->LoadSkeletalAnimationComponent(animationPath, AddComponent<SSkeletalAnimationComponent>(playerProxy));
 		AddComponentEditorContext(playerProxy, &SSkeletalAnimationComponentEditorContext::Context);
 		// TODO.NR
 		//GetComponent<SSkeletalAnimationComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register("Assets/Tests/CH_Enemy_SK.hva");
 
-		std::vector<std::string> enemyMaterialPaths = { "Assets/Materials/M_Enemy.hva" };
+		std::vector<std::string> enemyMaterialPaths = { "Assets/Materials/M_Checkboard_128x128.hva" };
 		renderManager->LoadMaterialComponent(enemyMaterialPaths, AddComponent<SMaterialComponent>(playerProxy));
 		AddComponentEditorContext(playerProxy, &SMaterialComponentEditorContext::Context);
 		GetComponent<SMaterialComponent>(playerProxy)->AssetRegistryKeys = assetRegistry->Register(enemyMaterialPaths);

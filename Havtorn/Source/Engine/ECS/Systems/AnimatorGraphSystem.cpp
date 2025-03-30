@@ -21,7 +21,7 @@ namespace Havtorn
 
 		for (SSkeletalAnimationComponent* component : scene->GetComponents<SSkeletalAnimationComponent>())
 		{
-			if (!component->IsValid())
+			if (!component->IsValid() || !component->IsPlaying)
 				continue;
 
 			F32 frameDuration = 1.0f / STATIC_F32(component->TickRate);

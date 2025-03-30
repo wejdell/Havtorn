@@ -78,7 +78,7 @@ namespace Havtorn
 		U8 NumberOfMaterials = 0;
 		U32 NumberOfMeshes = 0;
 		std::vector<SSkeletalMesh> Meshes;
-		std::vector<CHavtornStaticString<32>> BoneNames;
+		std::vector<SSkeletalMeshBone> BindPoseBones;
 
 		[[nodiscard]] U32 GetSize() const;
 		void Serialize(char* toData) const;
@@ -99,7 +99,7 @@ namespace Havtorn
 			size += GetDataSize(mesh.Indices);
 		}
 
-		size += GetDataSize(BoneNames);
+		size += GetDataSize(BindPoseBones);
 
 		return size;
 	}
@@ -118,7 +118,7 @@ namespace Havtorn
 			SerializeData(mesh.Indices, toData, pointerPosition);
 		}
 
-		SerializeData(BoneNames, toData, pointerPosition);
+		SerializeData(BindPoseBones, toData, pointerPosition);
 	}
 
 	inline void SSkeletalModelFileHeader::Deserialize(const char* fromData)
@@ -137,7 +137,7 @@ namespace Havtorn
 			DeserializeData(Meshes.back().Indices, fromData, pointerPosition);
 		}
 
-		DeserializeData(BoneNames, fromData, pointerPosition);
+		DeserializeData(BindPoseBones, fromData, pointerPosition);
 	}
 
 	struct SSkeletalAnimationFileHeader
@@ -146,8 +146,8 @@ namespace Havtorn
 		std::string Name;
 		U32 DurationInTicks = 0;
 		U32 TickRate = 0;
-		U32 NumberOfTracks = 0;
-		std::vector<SBoneAnimationTrack> BoneAnimationTracks;
+		U32 NumberOfBones = 0;
+		std::vector<SSkeletalMeshBone> SequentialPosedBones;
 
 		[[nodiscard]] U32 GetSize() const;
 		void Serialize(char* toData) const;
@@ -161,10 +161,11 @@ namespace Havtorn
 		size += GetDataSize(Name);
 		size += GetDataSize(DurationInTicks);
 		size += GetDataSize(TickRate);
-		size += GetDataSize(NumberOfTracks);
+		size += GetDataSize(NumberOfBones);
+		size += GetDataSize(SequentialPosedBones);
 
-		for (auto& track : BoneAnimationTracks)
-			size += track.GetSize();
+		//for (auto& track : BoneAnimationTracks)
+		//	size += track.GetSize();
 
 		return size;
 	}
@@ -176,15 +177,17 @@ namespace Havtorn
 		SerializeData(Name, toData, pointerPosition);
 		SerializeData(DurationInTicks, toData, pointerPosition);
 		SerializeData(TickRate, toData, pointerPosition);
-		SerializeData(NumberOfTracks, toData, pointerPosition);
+		SerializeData(NumberOfBones, toData, pointerPosition);
+		SerializeData(SequentialPosedBones, toData, pointerPosition);
 
-		for (auto& track : BoneAnimationTracks)
-		{
-			SerializeData(track.TranslationKeys, toData, pointerPosition);
-			SerializeData(track.RotationKeys, toData, pointerPosition);
-			SerializeData(track.ScaleKeys, toData, pointerPosition);
-			SerializeData(track.BoneName, toData, pointerPosition);
-		}
+		//for (auto& track : BoneAnimationTracks)
+		//{
+		//	//SerializeData(track.TranslationKeys, toData, pointerPosition);
+		//	//SerializeData(track.RotationKeys, toData, pointerPosition);
+		//	//SerializeData(track.ScaleKeys, toData, pointerPosition);
+		//	SerializeData(track.AnimationKeys, toData, pointerPosition);
+		//	SerializeData(track.BoneName, toData, pointerPosition);
+		//}
 	}
 
 	inline void SSkeletalAnimationFileHeader::Deserialize(const char* fromData)
@@ -194,17 +197,19 @@ namespace Havtorn
 		DeserializeData(Name, fromData, pointerPosition);
 		DeserializeData(DurationInTicks, fromData, pointerPosition);
 		DeserializeData(TickRate, fromData, pointerPosition);
-		DeserializeData(NumberOfTracks, fromData, pointerPosition);
+		DeserializeData(NumberOfBones, fromData, pointerPosition);
+		DeserializeData(SequentialPosedBones, fromData, pointerPosition);
 
-		BoneAnimationTracks.reserve(NumberOfTracks);
-		for (U16 i = 0; i < NumberOfTracks; i++)
-		{
-			BoneAnimationTracks.emplace_back();
-			DeserializeData(BoneAnimationTracks.back().TranslationKeys, fromData, pointerPosition);
-			DeserializeData(BoneAnimationTracks.back().RotationKeys, fromData, pointerPosition);
-			DeserializeData(BoneAnimationTracks.back().ScaleKeys, fromData, pointerPosition);
-			DeserializeData(BoneAnimationTracks.back().BoneName, fromData, pointerPosition);
-		}
+		//SequentialPosedBones.reserve(NumberOfBones);
+		//for (U16 i = 0; i < NumberOfBones; i++)
+		//{
+		//	BoneAnimationTracks.emplace_back();
+		//	//DeserializeData(BoneAnimationTracks.back().TranslationKeys, fromData, pointerPosition);
+		//	//DeserializeData(BoneAnimationTracks.back().RotationKeys, fromData, pointerPosition);
+		//	//DeserializeData(BoneAnimationTracks.back().ScaleKeys, fromData, pointerPosition);
+		//	DeserializeData(BoneAnimationTracks.back().AnimationKeys, fromData, pointerPosition);
+		//	DeserializeData(BoneAnimationTracks.back().BoneName, fromData, pointerPosition);
+		//}
 	}
 
 	struct STextureFileHeader

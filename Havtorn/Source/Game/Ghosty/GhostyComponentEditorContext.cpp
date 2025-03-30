@@ -21,7 +21,7 @@ namespace Havtorn
 
 		GUI::DragFloat3("GhostyState", component->State.Input, 0.0f);
 
-		GUI::Checkbox("IsInWalkingAnimation", &component->State.IsInWalkingAnimationState);
+		GUI::Checkbox("IsInWalkingAnimation", component->State.IsInWalkingAnimationState);
 
 		return SComponentViewResult();
 	}

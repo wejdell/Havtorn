@@ -67,7 +67,7 @@ namespace Havtorn
 
 		GUI::DragFloat("Density", physicsComponent->Density);
 
-		GUI::Checkbox("Is Trigger", &physicsComponent->IsTrigger);
+		GUI::Checkbox("Is Trigger", physicsComponent->IsTrigger);
 
 		// TODO.NR: Most of these should only be changed during setup, but if we want a truly responsive editor we can pause
 		// during play and unpause, we should probably handle setting the data on physics wrapper entity if we make modifications here.

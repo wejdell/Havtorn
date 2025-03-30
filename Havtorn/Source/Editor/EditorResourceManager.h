@@ -13,6 +13,7 @@ namespace Havtorn
 {
 	class CGraphicsFramework;
 	class CRenderManager;
+	struct SEditorAssetRepresentation;
 
 	enum class EEditorTexture
 	{
@@ -31,6 +32,19 @@ namespace Havtorn
 		Count
 	};
 
+	struct SAssetImportOptions
+	{
+		// TODO.NW: Maybe just use inheritance here, and send off SImportOptions to whatever tools needs them (for example ModelImporter)
+		// Asset browser should have ownership. Should be fine to just new them here.
+		//void Render() {};
+
+		// TODO.NW: Add destination path here, settable through explorer navigation? Default to the current one in the asset browser
+
+		EAssetType AssetType = EAssetType::None;
+		SEditorAssetRepresentation* AssetRep = nullptr;
+		F32 Scale = 1.0f;
+	};
+
 	class CEditorResourceManager
 	{
 	public:
@@ -43,7 +57,7 @@ namespace Havtorn
 		void* RenderAssetTexure(EAssetType assetType, const std::string& fileName);
 
 		EDITOR_API void CreateAsset(const std::string& destinationPath, EAssetType assetType) const;
-		EDITOR_API std::string ConvertToHVA(const std::string& filePath, const std::string& destination, const EAssetType assetType) const;
+		EDITOR_API std::string ConvertToHVA(const std::string& filePath, const std::string& destination, const SAssetImportOptions& importOptions) const;
 
 		// NR: Based on current material config: albedo, material and normal textures
 		EDITOR_API void CreateMaterial(const std::string& destinationPath);

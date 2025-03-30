@@ -978,8 +978,8 @@ namespace Havtorn
 			return 0;
 
 		SSkeletalAnimationAsset& asset = LoadedSkeletalAnims.at(animationName);
-		SystemSkeletalAnimationBoneData = asset.BoneAnimTransforms.data();
-		SkeletalAnimationBoneDataSize = sizeof(SBoneAnimDataTransform) * asset.BoneAnimTransforms.size();
+		SystemSkeletalAnimationBoneData = asset.EncodedBoneAnimTransforms.data();
+		SkeletalAnimationBoneDataSize = sizeof(SBoneAnimDataTransform) * asset.EncodedBoneAnimTransforms.size();
 
 		// TODO.NR: Return index of animation in texture
 		return 0;
@@ -1545,7 +1545,7 @@ namespace Havtorn
 
 	void CRenderManager::GBufferSkeletalInstancedEditor(const SRenderCommand& command)
 	{
-		SkeletalAnimationDataTextureGPU.CopyFromTexture(SkeletalAnimationDataTextureCPU.GetTexture());
+		//SkeletalAnimationDataTextureGPU.CopyFromTexture(SkeletalAnimationDataTextureCPU.GetTexture());
 
 		const std::vector<SMatrix>& matrices = RendererSkeletalMeshInstanceData[command.Strings[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);

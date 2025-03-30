@@ -141,13 +141,6 @@ namespace Havtorn
 				GUI::Text(GetDrawCalls().c_str());
 			}
 
-			//if (GUI::Button("Import skeletal mesh"))
-			//	ResourceManager->ConvertToHVA("ArtSource/Tests/TestMesh.fbx", "Assets/Tests/", EAssetType::SkeletalMesh);
-			//if (GUI::Button("Import anim 1"))
-			//	ResourceManager->ConvertToHVA("ArtSource/Tests/TestWalk.fbx", "Assets/Tests/", EAssetType::Animation);
-			//if (Button("Import anim 2"))
-				//ResourceManager->ConvertToHVA("FBX/Tests/SkinningTest.fbx", "Assets/Tests/", EAssetType::Animation);
-
 			GUI::End();
 		}
 	}
@@ -456,29 +449,31 @@ namespace Havtorn
 
 	void CEditorManager::PreProcessAssets()
 	{
-		//Import non-.hva files to .hva
-		for (const auto& entry : std::filesystem::recursive_directory_iterator(std::filesystem::path("Assets")))
-		{
-			if (entry.path().extension() == ".hva" || entry.is_directory())
-				continue;
+		// NW: This probably doesn't make sense anymore now that we have import options. May return to this at some point though
+		
+		////Import non-.hva files to .hva
+		//for (const auto& entry : std::filesystem::recursive_directory_iterator(std::filesystem::path("Assets")))
+		//{
+		//	if (entry.path().extension() == ".hva" || entry.is_directory())
+		//		continue;
 
-			std::string fileName = entry.path().string();
-			std::string extension = entry.path().extension().string();
-			for (auto& character : extension)
-				character = std::tolower(character, {});
+		//	std::string fileName = entry.path().string();
+		//	std::string extension = entry.path().extension().string();
+		//	for (auto& character : extension)
+		//		character = std::tolower(character, {});
 
-			EAssetType assetType = EAssetType::None;
+		//	EAssetType assetType = EAssetType::None;
 
-			// TODO.NR: Make sure this works for animations as well
-			if (extension == ".fbx")
-				assetType = EAssetType::StaticMesh;
-			else if (extension == ".dds" || extension == ".tga")
-				assetType = EAssetType::Texture;
-			else
-				continue;
+		//	// TODO.NR: Make sure this works for animations as well
+		//	if (extension == ".fbx")
+		//		assetType = EAssetType::StaticMesh;
+		//	else if (extension == ".dds" || extension == ".tga")
+		//		assetType = EAssetType::Texture;
+		//	else
+		//		continue;
 
-			ResourceManager->ConvertToHVA(fileName, fileName.substr(0, fileName.find_last_of('\\')), assetType);
-		}
+		//	ResourceManager->ConvertToHVA(fileName, fileName.substr(0, fileName.find_last_of('\\')), assetType);
+		//}
 	}
 
 	void CEditorManager::OnInputSetTransformGizmo(const SInputActionPayload payload)

@@ -101,17 +101,16 @@ namespace Havtorn
 		}
 	}
 
-	std::string CEditorResourceManager::ConvertToHVA(const std::string& filePath, const std::string& destination, EAssetType assetType) const
+	std::string CEditorResourceManager::ConvertToHVA(const std::string& filePath, const std::string& destination, const SAssetImportOptions& importOptions) const
 	{
 		std::string hvaPath;
-		switch (assetType)
+		switch (importOptions.AssetType)
 		{
 		case EAssetType::StaticMesh: // fallthrough
 		case EAssetType::SkeletalMesh: // fallthrough
 		case EAssetType::Animation:
 		{
-			// TODO.NR: Take destination into account
-			hvaPath = UModelImporter::ImportFBX(filePath, assetType);
+			hvaPath = UModelImporter::ImportFBX(filePath, destination, importOptions);
 		}
 		break;
 		case EAssetType::Texture:

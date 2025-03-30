@@ -157,17 +157,17 @@ namespace Havtorn
 			return returnValue;
 		}
 
-		bool InputFloat(const char* label, F32& value, F32 step = 0.0f, F32 stepFast = 0.0f, const char* format = "%.3", ImGuiSliderFlags flags = 0)
+		bool InputFloat(const char* label, F32& value, F32 step = 0.0f, F32 stepFast = 0.0f, const char* format = "%.3f", ImGuiSliderFlags flags = 0)
 		{
 			return ImGui::InputFloat(label, &value, step, stepFast, format, flags);
 		}
 
-		bool SliderFloat(const char* label, F32& value, F32 min, F32 max, const char* format = "%.3", ImGuiSliderFlags flags = 0)
+		bool SliderFloat(const char* label, F32& value, F32 min, F32 max, const char* format = "%.3f", ImGuiSliderFlags flags = 0)
 		{
 			return ImGui::SliderFloat(label, &value, min, max, format, flags);
 		}
 
-		bool DragInt2(const char* label, SVector2<I32>& value, int vSpeed = 1.0f, int min = 0.0f, int max = 1.0f, const char* format = "%.3f", ImGuiSliderFlags flags = 0)
+		bool DragInt2(const char* label, SVector2<I32>& value, F32 vSpeed = 1.0f, int min = 0, int max = 0, const char* format = "%d", ImGuiSliderFlags flags = 0)
 		{
 			I32 valueData[2] = { value.X, value.Y };
 			const bool returnValue = ImGui::DragInt2(label, valueData, vSpeed, min, max, format, flags);
@@ -175,7 +175,7 @@ namespace Havtorn
 			return returnValue;
 		}
 
-		bool SliderInt(const char* label, I32& value, int min, int max, const char* format = "%.3", ImGuiSliderFlags flags = 0)
+		bool SliderInt(const char* label, I32& value, int min, int max, const char* format = "%d", ImGuiSliderFlags flags = 0)
 		{
 			return ImGui::SliderInt(label, &value, min, max, format, flags);
 		}
@@ -198,9 +198,9 @@ namespace Havtorn
 			return returnValue;
 		}
 
-		bool Checkbox(const char* label, bool* v)
+		bool Checkbox(const char* label, bool& v)
 		{
-			return ImGui::Checkbox(label, v);
+			return ImGui::Checkbox(label, &v);
 		}
 
 		bool Selectable(const char* label, const bool selected)
@@ -1103,7 +1103,7 @@ namespace Havtorn
 		return Instance->Impl->ImageButton(label, imageRef, size, uv0, uv1, backgroundColor, tintColor);
 	}
 
-	bool GUI::Checkbox(const char* label, bool* value)
+	bool GUI::Checkbox(const char* label, bool& value)
 	{
 		return Instance->Impl->Checkbox(label, value);
 	}

@@ -6,6 +6,8 @@ struct aiScene;
 
 namespace Havtorn
 {
+	struct SAssetImportOptions;
+
 	enum class EModelProperty
 	{
 		HasPositions				= BIT(0),
@@ -15,21 +17,14 @@ namespace Havtorn
 		HasBones					= BIT(4)
 	};
 
-	// TODO.NR: Use these
-	struct SImportSettings
-	{
-		F32 Scale = 0.0f;
-		std::string RefSkeleton = "";
-	};
-
 	class UModelImporter
 	{
 	public:
-		static ENGINE_API std::string ImportFBX(const std::string& filePath, const EAssetType assetType);
+		static ENGINE_API std::string ImportFBX(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions);
 
 	private:
-		static std::string ImportStaticMesh(const std::string& filePath, const aiScene* assimpScene);
-		static std::string ImportSkeletalMesh(const std::string& filePath, const aiScene* assimpScene);
-		static std::string ImportAnimation(const std::string& filePath, const aiScene* assimpScene);
+		static std::string ImportStaticMesh(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions, const aiScene* assimpScene);
+		static std::string ImportSkeletalMesh(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions, const aiScene* assimpScene);
+		static std::string ImportAnimation(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions, const aiScene* assimpScene);
 	};
 }

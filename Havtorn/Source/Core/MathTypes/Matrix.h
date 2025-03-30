@@ -905,7 +905,7 @@ namespace Havtorn
 		SVector scale;
 		SMatrix::Decompose(*this, translation, rotation, scale);
 		char buffer[256];
-		sprintf_s(buffer, "\nMatrix \n{\nTranslation{X: %.1f, Y: %.1f, Z: %.1f},\nRotationEuler{Pitch: %.1f, Yaw: %.1f, Roll: %.1f},\nScale{X: %.1f, Y: %.1f, Z: %.1f}\n}", translation.X, translation.Y, translation.Z, rotation.X, rotation.Y, rotation.Z, scale.X, scale.Y, scale.Z);
+		sprintf_s(buffer, "\nMatrix \n{\n\tTranslation{X: %.1f, Y: %.1f, Z: %.1f},\n\tRotationEuler{Pitch: %.1f, Yaw: %.1f, Roll: %.1f},\n\tScale{X: %.1f, Y: %.1f, Z: %.1f}\n}", translation.X, translation.Y, translation.Z, rotation.X, rotation.Y, rotation.Z, scale.X, scale.Y, scale.Z);
 		return buffer;
 	}
 

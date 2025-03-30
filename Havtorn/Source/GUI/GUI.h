@@ -373,9 +373,10 @@ namespace Havtorn
 		static bool DragFloat4(const char* label, SVector4& value, F32 speed = 0.1f, F32 min = 0.0f, F32 max = 0.0f, const char* format = "%.3f", EDragMode dragMode = EDragMode::None);
 		static bool SliderFloat(const char* label, F32& value, F32 min = 0.0f, F32 max = 0.0f, const char* format = "%.3f", EDragMode dragMode = EDragMode::None);
 
-		static bool DragInt2(const char* label, SVector2<I32>& value, F32 speed = 0.1f, int min = 0, int max = 1, const char* format = "%.3f", EDragMode dragMode = EDragMode::None);
+		// TODO.NW: Make unsigned variants
+		static bool DragInt2(const char* label, SVector2<I32>& value, F32 speed = 1.0f, int min = 0, int max = 0, const char* format = "%d", EDragMode dragMode = EDragMode::None);
 		// TODO.NW: Make SliderEnum that converts like usages of SliderInt?
-		static bool SliderInt(const char* label, I32& value, int min = 0, int max = 1, const char* format = "%.3f", EDragMode dragMode = EDragMode::None);
+		static bool SliderInt(const char* label, I32& value, int min = 0, int max = 1, const char* format = "%d", EDragMode dragMode = EDragMode::None);
 
 		static bool ColorPicker3(const char* label, SColor& value);
 		static bool ColorPicker4(const char* label, SColor& value);
@@ -418,7 +419,7 @@ namespace Havtorn
 		static bool SmallButton(const char* label);
 		static bool RadioButton(const char* label, bool active);
 		static bool ImageButton(const char* label, intptr_t image, const SVector2<F32>& size = SVector2<F32>(0.0f), const SVector2<F32>& uv0 = SVector2<F32>(0.0f), const SVector2<F32>& uv1 = SVector2<F32>(1.0f), const SColor& backgroundColor = SColor(0.0f, 0.0f, 0.0f, 0.0f), const SColor& tintColor = SColor::White);
-		static bool Checkbox(const char* label, bool* value);
+		static bool Checkbox(const char* label, bool& value);
 
 		static bool Selectable(const char* label, const bool selected = false);
 

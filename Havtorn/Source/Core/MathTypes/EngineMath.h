@@ -56,6 +56,8 @@ namespace Havtorn
 		static inline T Clamp(T x, T minValue = 0, T maxValue = 1);
 
 		static inline bool NearlyEqual(F32 a, F32 b, F32 tolerance = KINDA_SMALL_NUMBER);
+		static inline bool NearlyZero(F32 a, F32 tolerance = KINDA_SMALL_NUMBER);
+		static inline F32 RoundToZero(F32 a, F32 tolerance = KINDA_SMALL_NUMBER);
 
 		template<typename T>
 		static inline T Exp(T x);
@@ -317,6 +319,16 @@ namespace Havtorn
 	inline bool UMath::NearlyEqual(F32 a, F32 b, F32 tolerance)
 	{
 		return UMath::Abs(a - b) < tolerance;
+	}
+
+	inline bool UMath::NearlyZero(F32 a, F32 tolerance)
+	{
+		return UMath::Abs(a) < tolerance;
+	}
+
+	inline F32 UMath::RoundToZero(F32 a, F32 tolerance)
+	{
+		return UMath::NearlyZero(a, tolerance) ? 0.0f : a;
 	}
 
 	inline F32 UMath::FAbs(F32 x)

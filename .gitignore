@@ -45,6 +45,7 @@
 
 # Folders
 *premakeTest/
+*Notes/
 *Havtorn/Source/_ReSharper.Caches
 *Havtorn/Source/out
 *Havtorn/External/DirectXTex

@@ -11,12 +11,347 @@
 #include "FileSystem/FileSystem.h"
 #include "FileSystem/FileHeaderDeclarations.h"
 
+#include <../Editor/EditorManager.h>
+#include <../Editor/EditorResourceManager.h>
+
 #define NUM_BONES_PER_VERTEX 4
 #define ZERO_MEM(a) memset(a, 0, sizeof(a))
 #define ARRAY_SIZE_IN_ELEMENTS(a) (sizeof(a)/sizeof(a[0]))
 
 namespace Havtorn
 {
+	const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string& nodeName)
+	{
+		for (U32 i = 0; i < pAnimation->mNumChannels; ++i)
+		{
+			if (strcmp(pAnimation->mChannels[i]->mNodeName.C_Str(), nodeName.c_str()) == 0)
+			{
+				return pAnimation->mChannels[i];
+			}
+		}
+		return NULL;
+	}
+
+	U32 FindRotation(F32 AnimationTime, const aiNodeAnim* pNodeAnim)
+	{
+		assert(pNodeAnim->mNumRotationKeys > 0);
+
+		for (U32 i = 0; i < pNodeAnim->mNumRotationKeys - 1; i++)
+		{
+			if (AnimationTime < (F32)pNodeAnim->mRotationKeys[i + 1].mTime)
+			{
+				return i;
+			}
+		}
+		// This is an 'ugly-fix'
+		// In short: bypasses the error by returning the last working key
+		return pNodeAnim->mNumRotationKeys - 2;
+
+		//assert(0);
+		//return 0xFFFFFFFF;
+	}
+
+	void CalcInterpolatedRotation(aiQuaternion& Out, F32 AnimationTime, const aiNodeAnim* pNodeAnim)
+	{
+		// we need at least two values to interpolate...
+		if (pNodeAnim->mNumRotationKeys == 1)
+		{
+			Out = pNodeAnim->mRotationKeys[0].mValue;
+			return;
+		}
+
+		U32 RotationIndex = FindRotation(AnimationTime, pNodeAnim);
+		U32 NextRotationIndex = (RotationIndex + 1);
+		assert(NextRotationIndex < pNodeAnim->mNumRotationKeys);
+		F32 DeltaTime = static_cast<F32>(pNodeAnim->mRotationKeys[NextRotationIndex].mTime - pNodeAnim->mRotationKeys[RotationIndex].mTime);
+		F32 Factor = (AnimationTime - (F32)pNodeAnim->mRotationKeys[RotationIndex].mTime) / DeltaTime;
+		// This if just stops the assert below it from triggering. SP6 animations had some anims with issues and this was faster than having SG debug their animations.
+		if (!(Factor >= 0.0f && Factor <= 1.0f))
+		{
+			Factor = 0.0f;
+		}
+		// ! If, that stops the assert below it 
+		assert(Factor >= 0.0f && Factor <= 1.0f);
+		aiQuaternion& StartRotationQ = pNodeAnim->mRotationKeys[RotationIndex].mValue;
+		StartRotationQ.w = UMath::NearlyZero(StartRotationQ.w, 1.e-3f) ? 0.0f : StartRotationQ.w;
+		StartRotationQ.x = UMath::NearlyZero(StartRotationQ.x, 1.e-3f) ? 0.0f : StartRotationQ.x;
+		StartRotationQ.y = UMath::NearlyZero(StartRotationQ.y, 1.e-3f) ? 0.0f : StartRotationQ.y;
+		StartRotationQ.z = UMath::NearlyZero(StartRotationQ.z, 1.e-3f) ? 0.0f : StartRotationQ.z;
+		aiQuaternion& EndRotationQ = pNodeAnim->mRotationKeys[NextRotationIndex].mValue;
+		EndRotationQ.w = UMath::NearlyZero(EndRotationQ.w, 1.e-3f) ? 0.0f : EndRotationQ.w;
+		EndRotationQ.x = UMath::NearlyZero(EndRotationQ.x, 1.e-3f) ? 0.0f : EndRotationQ.x;
+		EndRotationQ.y = UMath::NearlyZero(EndRotationQ.y, 1.e-3f) ? 0.0f : EndRotationQ.y;
+		EndRotationQ.z = UMath::NearlyZero(EndRotationQ.z, 1.e-3f) ? 0.0f : EndRotationQ.z;
+		aiQuaternion::Interpolate(Out, StartRotationQ, EndRotationQ, Factor);
+		Out = Out.Normalize();
+	}
+
+	U32 FindScaling(F32 AnimationTime, const aiNodeAnim* pNodeAnim)
+	{
+		assert(pNodeAnim->mNumScalingKeys > 0);
+
+		// 2021 02 02 Testing/ Figuring out animation speed
+		//for (U32 i = 0; i < pNodeAnim->mNumScalingKeys - 1; i++)
+		//{
+		//	std::cout << (F32)pNodeAnim->mScalingKeys[i + 1].mTime << std::endl;
+		//}
+
+		for (U32 i = 0; i < pNodeAnim->mNumScalingKeys - 1; i++)
+		{
+			if (AnimationTime < (F32)pNodeAnim->mScalingKeys[i + 1].mTime)
+			{
+				return i;
+			}
+		}
+
+		// This is an 'ugly-fix'
+		// In short: bypasses the error by returning the last working key
+		return pNodeAnim->mNumScalingKeys - 2;
+
+		//assert(0);
+		//return 0xFFFFFFFF;
+	}
+
+	void CalcInterpolatedScaling(aiVector3D& Out, F32 AnimationTime, const aiNodeAnim* pNodeAnim)
+	{
+		// we need at least two values to interpolate...
+		if (pNodeAnim->mNumScalingKeys == 1)
+		{
+			Out = pNodeAnim->mScalingKeys[0].mValue;
+			return;
+		}
+
+		U32 ScalingIndex = FindScaling(AnimationTime, pNodeAnim);
+		U32 NextScalingIndex = (ScalingIndex + 1);
+		assert(NextScalingIndex < pNodeAnim->mNumScalingKeys);
+		F32 DeltaTime = static_cast<F32>(pNodeAnim->mScalingKeys[NextScalingIndex].mTime - pNodeAnim->mScalingKeys[ScalingIndex].mTime);
+		F32 Factor = (AnimationTime - (F32)pNodeAnim->mScalingKeys[ScalingIndex].mTime) / DeltaTime;
+		// This if just stops the assert below it from triggering. SP6 animations had some anims with issues and this was faster than having SG debug their animations.
+		if (!(Factor >= 0.0f && Factor <= 1.0f))
+		{
+			Factor = 0.0f;
+		}
+		// ! If, that stops the assert below it 
+		assert(Factor >= 0.0f && Factor <= 1.0f);
+		aiVector3D& StartScaling = pNodeAnim->mScalingKeys[ScalingIndex].mValue;
+		StartScaling.x = UMath::NearlyZero(StartScaling.x, 1.e-3f) ? 0.0f : StartScaling.x;
+		StartScaling.y = UMath::NearlyZero(StartScaling.y, 1.e-3f) ? 0.0f : StartScaling.y;
+		StartScaling.z = UMath::NearlyZero(StartScaling.z, 1.e-3f) ? 0.0f : StartScaling.z;
+		aiVector3D& EndScaling = pNodeAnim->mScalingKeys[NextScalingIndex].mValue;
+		EndScaling.x = UMath::NearlyZero(EndScaling.x, 1.e-3f) ? 0.0f : EndScaling.x;
+		EndScaling.y = UMath::NearlyZero(EndScaling.y, 1.e-3f) ? 0.0f : EndScaling.y;
+		EndScaling.z = UMath::NearlyZero(EndScaling.z, 1.e-3f) ? 0.0f : EndScaling.z;
+		Out = StartScaling * (1 - Factor) + EndScaling * Factor;
+	}
+
+	U32 FindPosition(F32 AnimationTime, const aiNodeAnim* pNodeAnim)
+	{
+		assert(pNodeAnim->mNumPositionKeys > 0);
+
+		for (U32 i = 0; i < pNodeAnim->mNumPositionKeys - 1; i++)
+		{
+			if (AnimationTime < (F32)pNodeAnim->mPositionKeys[i + 1].mTime)
+			{
+				return i;
+			}
+		}
+
+		// This is an 'ugly-fix'
+		// In short: bypasses the error by returning the last working key
+		return pNodeAnim->mNumPositionKeys - 2;
+
+		//assert(0);
+		//return 0xFFFFFFFF;
+	}
+
+	void CalcInterpolatedPosition(aiVector3D& Out, F32 AnimationTime, const aiNodeAnim* pNodeAnim)
+	{
+		// we need at least two values to interpolate...
+		if (pNodeAnim->mNumPositionKeys == 1)
+		{
+			Out = pNodeAnim->mPositionKeys[0].mValue;
+			return;
+		}
+
+		U32 PositionIndex = FindPosition(AnimationTime, pNodeAnim);
+		U32 NextPositionIndex = (PositionIndex + 1);
+		assert(NextPositionIndex < pNodeAnim->mNumPositionKeys);
+		F32 DeltaTime = static_cast<F32>(pNodeAnim->mPositionKeys[NextPositionIndex].mTime - pNodeAnim->mPositionKeys[PositionIndex].mTime);
+		F32 Factor = (AnimationTime - (F32)pNodeAnim->mPositionKeys[PositionIndex].mTime) / DeltaTime;
+		// This if just stops the assert below it from triggering. SP6 animations had some anims with issues and this was faster than having SG debug their animations.
+		if (!(Factor >= 0.0f && Factor <= 1.0f))
+		{
+			Factor = 0.0f;
+		}
+		// ! If, that stops the assert below it 
+		assert(Factor >= 0.0f && Factor <= 1.0f);
+		aiVector3D& StartPosition = pNodeAnim->mPositionKeys[PositionIndex].mValue;
+		StartPosition.x = UMath::NearlyZero(StartPosition.x, 1.e-3f) ? 0.0f : StartPosition.x;
+		StartPosition.y = UMath::NearlyZero(StartPosition.y, 1.e-3f) ? 0.0f : StartPosition.y;
+		StartPosition.z = UMath::NearlyZero(StartPosition.z, 1.e-3f) ? 0.0f : StartPosition.z;
+		aiVector3D& EndPosition = pNodeAnim->mPositionKeys[NextPositionIndex].mValue;
+		EndPosition.x = UMath::NearlyZero(EndPosition.x, 1.e-3f) ? 0.0f : EndPosition.x;
+		EndPosition.y = UMath::NearlyZero(EndPosition.y, 1.e-3f) ? 0.0f : EndPosition.y;
+		EndPosition.z = UMath::NearlyZero(EndPosition.z, 1.e-3f) ? 0.0f : EndPosition.z;
+		Out = StartPosition * (1 - Factor) + EndPosition * Factor;
+	}
+
+	void InitM4FromM3(aiMatrix4x4& out, const aiMatrix3x3& in)
+	{
+		out.a1 = UMath::RoundToZero(in.a1, 1.e-3f); out.a2 = UMath::RoundToZero(in.a2, 1.e-3f); out.a3 = UMath::RoundToZero(in.a3, 1.e-3f); out.a4 = 0.f;
+		out.b1 = UMath::RoundToZero(in.b1, 1.e-3f); out.b2 = UMath::RoundToZero(in.b2, 1.e-3f); out.b3 = UMath::RoundToZero(in.b3, 1.e-3f); out.b4 = 0.f;
+		out.c1 = UMath::RoundToZero(in.c1, 1.e-3f); out.c2 = UMath::RoundToZero(in.c2, 1.e-3f); out.c3 = UMath::RoundToZero(in.c3, 1.e-3f); out.c4 = 0.f;
+		out.d1 = 0.f;   out.d2 = 0.f;   out.d3 = 0.f;   out.d4 = 1.f;
+	}
+
+
+	void InitIdentityM4(aiMatrix4x4& m)
+	{
+		m.a1 = 1.f; m.a2 = 0.f; m.a3 = 0.f; m.a4 = 0.f;
+		m.b1 = 0.f; m.b2 = 1.f; m.b3 = 0.f; m.b4 = 0.f;
+		m.c1 = 0.f; m.c2 = 0.f; m.c3 = 1.f; m.c4 = 0.f;
+		m.d1 = 0.f; m.d2 = 0.f; m.d3 = 0.f; m.d4 = 1.f;
+		assert(m.IsIdentity());
+	}
+
+	void MulM4(aiMatrix4x4& out, aiMatrix4x4& in, float m)
+	{
+		out.a1 += in.a1 * m; out.a2 += in.a2 * m; out.a3 += in.a3 * m; out.a4 += in.a4 * m;
+		out.b1 += in.b1 * m; out.b2 += in.b2 * m; out.b3 += in.b3 * m; out.b4 += in.b4 * m;
+		out.c1 += in.c1 * m; out.c2 += in.c2 * m; out.c3 += in.c3 * m; out.c4 += in.c4 * m;
+		out.d1 += in.d1 * m; out.d2 += in.d2 * m; out.d3 += in.d3 * m; out.d4 += in.d4 * m;
+	}
+
+	void ShortMulM4(aiVector3D& out, const aiMatrix4x4& m, const aiVector3D& in)
+	{
+		out.x = m.a1 * in.x + m.a2 * in.y + m.a3 * in.z;
+		out.y = m.b1 * in.x + m.b2 * in.y + m.b3 * in.z;
+		out.z = m.c1 * in.x + m.c2 * in.y + m.c3 * in.z;
+	}
+
+	SMatrix ToHavtornMatrix(const aiMatrix4x4& assimpMatrix)
+	{
+		SMatrix mat;
+		mat(0, 0) = UMath::RoundToZero(assimpMatrix.a1, 1.e-3f); mat(0, 1) = UMath::RoundToZero(assimpMatrix.a2, 1.e-3f); mat(0, 2) = UMath::RoundToZero(assimpMatrix.a3, 1.e-3f); mat(0, 3) = UMath::RoundToZero(assimpMatrix.a4, 1.e-3f);
+		mat(1, 0) = UMath::RoundToZero(assimpMatrix.b1, 1.e-3f); mat(1, 1) = UMath::RoundToZero(assimpMatrix.b2, 1.e-3f); mat(1, 2) = UMath::RoundToZero(assimpMatrix.b3, 1.e-3f); mat(1, 3) = UMath::RoundToZero(assimpMatrix.b4, 1.e-3f);
+		mat(2, 0) = UMath::RoundToZero(assimpMatrix.c1, 1.e-3f); mat(2, 1) = UMath::RoundToZero(assimpMatrix.c2, 1.e-3f); mat(2, 2) = UMath::RoundToZero(assimpMatrix.c3, 1.e-3f); mat(2, 3) = UMath::RoundToZero(assimpMatrix.c4, 1.e-3f);
+		mat(3, 0) = UMath::RoundToZero(assimpMatrix.d1, 1.e-3f); mat(3, 1) = UMath::RoundToZero(assimpMatrix.d2, 1.e-3f); mat(3, 2) = UMath::RoundToZero(assimpMatrix.d3, 1.e-3f); mat(3, 3) = UMath::RoundToZero(assimpMatrix.d4, 1.e-3f);
+		return mat;
+	}
+
+	aiMatrix4x4 ToAssimpMatrix(const SMatrix& havtornMatrix)
+	{
+		aiMatrix4x4 mat;
+		mat.a1 = havtornMatrix(0, 0); mat.a2 = havtornMatrix(0, 1); mat.a3 = havtornMatrix(0, 2); mat.a4 = havtornMatrix(0, 3);
+		mat.b1 = havtornMatrix(1, 0); mat.b2 = havtornMatrix(1, 1); mat.b3 = havtornMatrix(1, 2); mat.b4 = havtornMatrix(1, 3);
+		mat.c1 = havtornMatrix(2, 0); mat.c2 = havtornMatrix(2, 1); mat.c3 = havtornMatrix(2, 2); mat.c4 = havtornMatrix(2, 3);
+		mat.d1 = havtornMatrix(3, 0); mat.d2 = havtornMatrix(3, 1); mat.d3 = havtornMatrix(3, 2); mat.d4 = havtornMatrix(3, 3);
+		return mat;
+	}
+
+	void ReadNodeHeirarchy(const aiScene* aScene, U32 tick, F32 animationTime, F32 scale, const aiNode* aNode, const aiMatrix4x4& aParentTransform, int aStopAnimAtLevel, const std::vector<SSkeletalMeshBone>& bindPose, std::vector<SSkeletalMeshBone>& sequentialPosedBones)
+	{
+		std::string nodeName(aNode->mName.data);
+
+		static U32 currentTick = 0;
+		static U32 numberOfTreatedBones = 0;
+		if (currentTick != tick)
+			numberOfTreatedBones = 0;
+		currentTick = tick;
+		HV_LOG_WARN("Read Bone %i at tick %i: %s", numberOfTreatedBones, tick, nodeName.c_str());
+		numberOfTreatedBones++;
+
+		const aiAnimation* animation = aScene->mAnimations[0];
+
+		aiMatrix4x4 NodeTransformation(aNode->mTransformation);
+
+		const aiNodeAnim* nodeAnimation = FindNodeAnim(animation, nodeName);
+
+		if (nodeAnimation)
+		{
+			// Interpolate scaling and generate scaling transformation matrix
+			aiVector3D Scaling = {1.0f, 1.0f, 1.0f};
+			//CalcInterpolatedScaling(Scaling, animationTime, nodeAnimation);
+			aiMatrix4x4 ScalingM;
+			aiMatrix4x4::Scaling(Scaling, ScalingM);
+
+			// Interpolate rotation and generate rotation transformation matrix
+			aiQuaternion RotationQ;
+			CalcInterpolatedRotation(RotationQ, animationTime, nodeAnimation);
+			aiMatrix4x4 RotationM;
+			InitM4FromM3(RotationM, RotationQ.GetMatrix());
+
+			// Interpolate translation and generate translation transformation matrix
+			aiVector3D Translation;
+			//{
+				//F32 timeStop(aStopAnimAtLevel <= 0 ? animationTime : 0.f);
+				CalcInterpolatedPosition(Translation, animationTime, nodeAnimation);
+			//}
+			aiMatrix4x4 TranslationM;
+			aiMatrix4x4::Translation(Translation * scale, TranslationM);
+
+			// Combine the above transformations
+			NodeTransformation = TranslationM * RotationM * ScalingM;
+		}
+		aStopAnimAtLevel--;
+
+		// GLobalTransformation is the joints animation for this frame. Multiply with the original joint orientation.
+		aiMatrix4x4 GlobalTransformation;
+		GlobalTransformation = aParentTransform * NodeTransformation;
+
+		if (auto it = std::ranges::find(bindPose, nodeName, &SSkeletalMeshBone::Name); it != bindPose.end())
+		{
+			U64 BoneIndex = std::distance(std::begin(bindPose), it) + (tick * bindPose.size());
+			
+			SMatrix bindPoseTransform = it->Transform;
+			SMatrix globalTransform = ToHavtornMatrix(GlobalTransformation);
+			SMatrix globalInverseTransform = ToHavtornMatrix(aScene->mRootNode->mTransformation.Inverse());
+			
+			//HV_LOG_FATAL("Bone index: %i", BoneIndex);
+			//HV_LOG_FATAL("Bind Pose: %s", bindPoseTransform.ToString().c_str());
+			//HV_LOG_FATAL("Global Transform: %s", globalTransform.ToString().c_str());
+			//HV_LOG_FATAL("Root Node Inverse: %s", globalInverseTransform.ToString().c_str());
+
+			//sequentialPosedBones[BoneIndex].Transform = globalInverseTransform * globalTransform * bindPoseTransform;
+			//sequentialPosedBones[BoneIndex].Transform = bindPoseTransform * globalTransform * globalInverseTransform;
+			auto rootNodeInverse = aScene->mRootNode->mTransformation.Inverse();
+			auto globalTransformation = GlobalTransformation;
+			auto boneOffset = ToAssimpMatrix(bindPoseTransform);
+			auto finalTransform = rootNodeInverse * GlobalTransformation * boneOffset;
+			auto havtornFinalTransform = SMatrix::Transpose(ToHavtornMatrix(finalTransform));
+			HV_LOG_FATAL("Final Transform: %s", havtornFinalTransform.ToString().c_str());
+			sequentialPosedBones[BoneIndex].Transform = havtornFinalTransform;
+			sequentialPosedBones[BoneIndex].Name = nodeName;
+		}
+		
+		for (U32 i = 0; i < aNode->mNumChildren; i++)
+		{
+			ReadNodeHeirarchy(aScene, tick, animationTime, scale, aNode->mChildren[i], GlobalTransformation, aStopAnimAtLevel, bindPose, sequentialPosedBones);
+		}
+
+		//for (U32 i = 0; i < aNode->mNumChildren; i++)
+		//{
+		//	if (auto it = std::ranges::find(bindPose, std::string(aNode->mChildren[i]->mName.C_Str()), &SSkeletalMeshBone::Name); it != bindPose.end())
+		//	{
+		//		ReadNodeHeirarchy(aScene, tick, animationTime, scale, aNode->mChildren[i], GlobalTransformation, aStopAnimAtLevel, bindPose, sequentialPosedBones);
+		//	}
+		//	else
+		//	{
+		//		aiNode* childNode = aNode->mChildren[i];
+		//		for (U32 j = 0; j < childNode->mNumChildren; j++)
+		//		{
+		//			if (auto childIt = std::ranges::find(bindPose, std::string(childNode->mChildren[j]->mName.C_Str()), &SSkeletalMeshBone::Name); childIt != bindPose.end())
+		//			{
+		//				ReadNodeHeirarchy(aScene, tick, animationTime, scale, childNode->mChildren[j], GlobalTransformation, aStopAnimAtLevel, bindPose, sequentialPosedBones);
+		//			}
+		//		}
+		//	}
+		//}
+	}
+
+	/////////////////////////////////////////////
+	/////////////////////////////////////////////
+
 	struct SVertexBoneData
 	{
 		U32 IDs[NUM_BONES_PER_VERTEX];
@@ -35,6 +370,8 @@ namespace Havtorn
 
 		void AddBoneData(U32 boneID, F32 weight)
 		{
+			//F32 smallestWeight = UMath::MaxFloat;
+			//U32 smallestIndex = 0;
 			for (U32 i = 0; i < ARRAY_SIZE_IN_ELEMENTS(IDs); i++) 
 			{
 				if (Weights[i] == 0.0) 
@@ -43,22 +380,27 @@ namespace Havtorn
 					Weights[i] = weight;
 					return;
 				}
+
+				// NW: Algo to find any element smaller than weight
+				
+				//if (smallestWeight > Weights[i])
+				//{
+				//	smallestWeight = Weights[i];
+				//	smallestIndex = i;
+				//}
+				
 			}
+
+			//if (weight > smallestWeight)
+			//{
+			//	IDs[smallestIndex] = boneID;
+			//	Weights[smallestIndex] = weight;
+			//}
 
 			// should never get here - more bones than we have space for
 			//assert(0);
 		}
 	};
-
-	SMatrix ToHavtornMatrix(const aiMatrix4x4& assimpMatrix)
-	{
-		SMatrix mat;
-		mat(0, 0) = assimpMatrix.a1; mat(0, 1) = assimpMatrix.a2; mat(0, 2) = assimpMatrix.a3; mat(0, 3) = assimpMatrix.a4;
-		mat(1, 0) = assimpMatrix.b1; mat(1, 1) = assimpMatrix.b2; mat(1, 2) = assimpMatrix.b3; mat(1, 3) = assimpMatrix.b4;
-		mat(2, 0) = assimpMatrix.c1; mat(2, 1) = assimpMatrix.c2; mat(2, 2) = assimpMatrix.c3; mat(2, 3) = assimpMatrix.c4;
-		mat(3, 0) = assimpMatrix.d1; mat(3, 1) = assimpMatrix.d2; mat(3, 2) = assimpMatrix.d3; mat(3, 3) = assimpMatrix.d4;
-		return mat;
-	}
 
 	SVecBoneAnimationKey ToHavtornVecAnimationKey(const aiVectorKey& assimpKey)
 	{
@@ -76,7 +418,15 @@ namespace Havtorn
 		return havtornKey;
 	}
 
-	std::string UModelImporter::ImportFBX(const std::string& filePath, const EAssetType assetType)
+	SBoneAnimationKey ToHavtornBoneAnimationKey(const aiVectorKey& translationKey, const aiQuatKey& rotationKey, const aiVectorKey& scaleKey, const F32 time)
+	{
+		SBoneAnimationKey havtornKey;
+		SMatrix::Recompose(ToHavtornVecAnimationKey(translationKey).Value, ToHavtornQuatAnimationKey(rotationKey).Value.ToEuler(), ToHavtornVecAnimationKey(scaleKey).Value, havtornKey.Transform);
+		havtornKey.Time = time;
+		return havtornKey;
+	}
+
+	std::string UModelImporter::ImportFBX(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions)
 	{
 		if (!CFileSystem::DoesFileExist(filePath))
 		{
@@ -92,7 +442,7 @@ namespace Havtorn
 			return "ERROR: Failed to import.";
 		}
 
-		if (assetType == EAssetType::Animation)
+		if (importOptions.AssetType == EAssetType::Animation)
 		{
 			if (!assimpScene->HasAnimations() /*|| assimpScene->HasMeshes()*/)
 			{
@@ -100,7 +450,7 @@ namespace Havtorn
 				return "ERROR: Failed to import.";
 			}
 
-			return ImportAnimation(filePath, assimpScene);
+			return ImportAnimation(filePath, destinationPath, importOptions, assimpScene);
 		}
 
 		if (!assimpScene->HasMeshes())
@@ -123,7 +473,7 @@ namespace Havtorn
 			return "ERROR: Failed to import";
 		}
 
-		if (assetType == EAssetType::SkeletalMesh)
+		if (importOptions.AssetType == EAssetType::SkeletalMesh)
 		{
 			if (!hasBones)
 			{
@@ -131,17 +481,17 @@ namespace Havtorn
 				return "ERROR: Failed to import";
 			}
 
-			return ImportSkeletalMesh(filePath, assimpScene);
+			return ImportSkeletalMesh(filePath, destinationPath, importOptions, assimpScene);
 		}
 
 		// Static Mesh
 		if (hasBones)
 			HV_LOG_WARN("ModelImporter expected %s to be a static mesh file, but it contains bone information!", filePath.c_str());
 
-		return ImportStaticMesh(filePath, assimpScene);
+		return ImportStaticMesh(filePath, destinationPath, importOptions, assimpScene);
 	}
 
-	std::string UModelImporter::ImportStaticMesh(const std::string& filePath, const aiScene* assimpScene)
+	std::string UModelImporter::ImportStaticMesh(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions, const aiScene* assimpScene)
 	{
 		SStaticModelFileHeader fileHeader;
 		fileHeader.AssetType = EAssetType::StaticMesh;
@@ -165,8 +515,7 @@ namespace Havtorn
 			fbxMesh = assimpScene->mMeshes[n];
 
 			// Vertices
-			// TODO.NR: Make import options rather soon
-			constexpr F32 scaleModifier = 0.01f;
+			const F32 scaleModifier = importOptions.Scale;
 			for (U32 i = 0; i < fbxMesh->mNumVertices; i++)
 			{
 				SStaticMeshVertex newVertex;
@@ -208,15 +557,14 @@ namespace Havtorn
 		// Material Count
 		fileHeader.NumberOfMaterials = STATIC_U8(assimpScene->mNumMaterials);
 
-		std::string newFileName = filePath.substr(0, filePath.length() - 4);
-		newFileName.append(".hva");
+		std::string newFileName = destinationPath + UGeneralUtils::ExtractFileBaseNameFromPath(filePath) + ".hva";
 		const auto fileData = new char[fileHeader.GetSize()];
 		fileHeader.Serialize(fileData);
 		GEngine::GetFileSystem()->Serialize(newFileName, &fileData[0], fileHeader.GetSize());
 		return newFileName;
 	}
 
-	std::string UModelImporter::ImportSkeletalMesh(const std::string& filePath, const aiScene* assimpScene)
+	std::string UModelImporter::ImportSkeletalMesh(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions, const aiScene* assimpScene)
 	{
 		SSkeletalModelFileHeader fileHeader;
 		fileHeader.AssetType = EAssetType::SkeletalMesh;
@@ -252,17 +600,16 @@ namespace Havtorn
 				if (tempBoneNameToIndexMap.find(boneName) == tempBoneNameToIndexMap.end())
 				{
 					boneIndex = numBones++;
-					//fileHeaderMesh.BoneOffsetMatrices.push_back(ToHavtornMatrix(fbxMesh->mBones[i]->mOffsetMatrix));
 
 					tempBoneNameToIndexMap[boneName] = boneIndex;
-					fileHeader.BoneNames.push_back(boneName);
+					fileHeader.BindPoseBones.push_back(SSkeletalMeshBone(boneName, ToHavtornMatrix(fbxMesh->mBones[i]->mOffsetMatrix)));
 				}
 				else
 				{
 					boneIndex = tempBoneNameToIndexMap[boneName];
 				}
 
-				for (U32 j = 0; j < UMath::Min(STATIC_U32(fbxMesh->mBones[i]->mNumWeights), STATIC_U32(NUM_BONES_PER_VERTEX)); j++)
+				for (U32 j = 0; j < STATIC_U32(fbxMesh->mBones[i]->mNumWeights); j++)
 				{
 					U32 vertexID = fbxMesh->mBones[i]->mWeights[j].mVertexId;
 					F32 weight = fbxMesh->mBones[i]->mWeights[j].mWeight;
@@ -271,9 +618,7 @@ namespace Havtorn
 			}
 
 			// Vertices
-			// TODO.NR: Make import options rather soon
-			//constexpr F32 scaleModifier = 0.01f;
-			constexpr F32 scaleModifier = 1.0f;
+			const F32 scaleModifier = importOptions.Scale;
 			for (U32 i = 0; i < fbxMesh->mNumVertices; i++)
 			{
 				SSkeletalMeshVertex newVertex;
@@ -326,15 +671,18 @@ namespace Havtorn
 		// Material Count
 		fileHeader.NumberOfMaterials = STATIC_U8(assimpScene->mNumMaterials);
 
-		std::string newFileName = filePath.substr(0, filePath.length() - 4);
-		newFileName.append(".hva");
+		for (const auto& bone : fileHeader.BindPoseBones)
+		{
+			HV_LOG_WARN("Bone %s Transform: %s", bone.Name.AsString().c_str(), bone.Transform.ToString().c_str());
+		}
+		std::string newFileName = destinationPath + UGeneralUtils::ExtractFileBaseNameFromPath(filePath) + ".hva";
 		const auto fileData = new char[fileHeader.GetSize()];
 		fileHeader.Serialize(fileData);
 		GEngine::GetFileSystem()->Serialize(newFileName, &fileData[0], fileHeader.GetSize());
 		return newFileName;
 	}
 
-	std::string UModelImporter::ImportAnimation(const std::string& filePath, const aiScene* assimpScene)
+	std::string UModelImporter::ImportAnimation(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions, const aiScene* assimpScene)
 	{
 		const aiAnimation* animation = assimpScene->mAnimations[0];
 
@@ -342,13 +690,13 @@ namespace Havtorn
 		SSkeletalAnimationFileHeader fileHeader;
 		fileHeader.AssetType = EAssetType::Animation;
 		fileHeader.Name = UGeneralUtils::ExtractFileNameFromPath(filePath);
-		fileHeader.DurationInTicks = STATIC_U32(animation->mDuration);
+		fileHeader.DurationInTicks = STATIC_U32(animation->mDuration + 1);
 		fileHeader.TickRate = STATIC_U32(animation->mTicksPerSecond);
 			
-		std::vector<CHavtornStaticString<32>> boneNames;
+		std::vector<SSkeletalMeshBone> bones;
 		{
-			// TODO.NW: Make the rig/skeleton part of import settings
-			std::string rigFilePath = "ArtSource/Tests/TestMesh.hva";
+			// Need full path here, not just filename
+			std::string rigFilePath = importOptions.AssetRep->DirectoryEntry.path().string();
 			const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(rigFilePath);
 			char* data = new char[fileSize];
 
@@ -357,76 +705,114 @@ namespace Havtorn
 			SSkeletalModelFileHeader rigHeader;
 			rigHeader.Deserialize(data);
 
-			boneNames = rigHeader.BoneNames;
+			bones = rigHeader.BindPoseBones;
 
 			delete[] data;
 		}
 
-		fileHeader.NumberOfTracks = STATIC_U32(boneNames.size());
-		fileHeader.BoneAnimationTracks.reserve(fileHeader.NumberOfTracks);
+		fileHeader.NumberOfBones = STATIC_U32(bones.size() * fileHeader.DurationInTicks);
+		fileHeader.SequentialPosedBones.resize(fileHeader.NumberOfBones);
 
-		//constexpr F32 scaleModifier = 0.01f;
-		constexpr F32 scaleModifier = 1.0f;
-		for (const CHavtornStaticString<32>& boneName : boneNames)
+		const F32 scaleModifier = importOptions.Scale;
+
+		F32 accumulatedTime = 0.0f;
+		for (U32 tick = 0; tick < fileHeader.DurationInTicks; tick++)
 		{
-			std::string channelName = boneName.AsString();
-			const aiNodeAnim* channel = nullptr;
-
-			for (U32 i = 0; i < animation->mNumChannels; i++)
-			{
-				if (strcmp(animation->mChannels[i]->mNodeName.C_Str(), channelName.c_str()) != 0)
-					continue;
-
-				channel = animation->mChannels[i];
-			}
+			accumulatedTime += 1.0f / STATIC_F32(fileHeader.TickRate);
 			
-			fileHeader.BoneAnimationTracks.emplace_back();
-
-			if (channel != nullptr)
-			{
-				SBoneAnimationTrack& track = fileHeader.BoneAnimationTracks.back();
-				track.BoneName = boneName.AsString();
-
-				for (U32 t = 0; t < channel->mNumPositionKeys; t++)
-				{
-					track.TranslationKeys.emplace_back(ToHavtornVecAnimationKey(channel->mPositionKeys[t]));
-					track.TranslationKeys.back().Value *= scaleModifier;
-				}
-
-				for (U32 q = 0; q < channel->mNumRotationKeys; q++)
-					track.RotationKeys.emplace_back(ToHavtornQuatAnimationKey(channel->mRotationKeys[q]));
-
-				for (U32 s = 0; s < channel->mNumScalingKeys; s++)
-					track.ScaleKeys.emplace_back(ToHavtornVecAnimationKey(channel->mScalingKeys[s]));
-			}
-			else
-			{
-				// NR: Should this be <= durationInTicks?
-				for (U32 k = 0; k <= fileHeader.DurationInTicks; k++)
-				{
-					SBoneAnimationTrack& track = fileHeader.BoneAnimationTracks.back();
-					track.BoneName = boneName.AsString();
-
-					if (track.TranslationKeys.size() > 0)
-						track.TranslationKeys.emplace_back(track.TranslationKeys.back());
-					else
-						track.TranslationKeys.emplace_back(SVecBoneAnimationKey{ SVector::Zero, 0.0f });
-					
-					if (track.RotationKeys.size() > 0)
-						track.RotationKeys.emplace_back(track.RotationKeys.back());
-					else
-						track.RotationKeys.emplace_back(SQuatBoneAnimationKey{ SQuaternion::Identity, 0.0f });
-
-					if (track.ScaleKeys.size() > 0)
-						track.ScaleKeys.emplace_back(track.ScaleKeys.back());
-					else
-						track.ScaleKeys.emplace_back(SVecBoneAnimationKey{ SVector(1.0f), 0.0f});
-				}
-			}
+			aiMatrix4x4 Identity;
+			InitIdentityM4(Identity);
+			ReadNodeHeirarchy(assimpScene, tick, accumulatedTime, scaleModifier, assimpScene->mRootNode, Identity, 2, bones, fileHeader.SequentialPosedBones);
+			//accumulatedTime += 0.999f;
 		}
 
-		std::string newFileName = filePath.substr(0, filePath.length() - 4);
-		newFileName.append(".hva");
+		//for (const SSkeletalMeshBone& bone : bones)
+		//{
+			//const aiNodeAnim* nodeAnimation = FindNodeAnim(animation, bone.Name.AsString());
+
+			//if (nodeAnimation)
+			//{
+
+			//}
+			//std::string channelName = bone.Name.AsString();
+			//const aiNodeAnim* channel = nullptr;
+
+			//for (U32 i = 0; i < animation->mNumChannels; i++)
+			//{
+			//	if (strcmp(animation->mChannels[i]->mNodeName.C_Str(), channelName.c_str()) != 0)
+			//		continue;
+
+			//	channel = animation->mChannels[i];
+			//	break;
+			//}
+			//
+			//fileHeader.BoneAnimationTracks.emplace_back();
+
+			//if (channel != nullptr)
+			//{
+			//	SBoneAnimationTrack& track = fileHeader.BoneAnimationTracks.back();
+			//	track.BoneName = bone.Name.AsString();
+
+			//	for (U32 t = 0; t < channel->mNumPositionKeys; t++)
+			//	{
+			//		track.TranslationKeys.emplace_back(ToHavtornVecAnimationKey(channel->mPositionKeys[t]));
+			//		track.TranslationKeys.back().Value *= scaleModifier;
+			//	}
+
+			//	for (U32 q = 0; q < channel->mNumRotationKeys; q++)
+			//		track.RotationKeys.emplace_back(ToHavtornQuatAnimationKey(channel->mRotationKeys[q]));
+
+			//	for (U32 s = 0; s < channel->mNumScalingKeys; s++)
+			//		track.ScaleKeys.emplace_back(ToHavtornVecAnimationKey(channel->mScalingKeys[s]));
+			//}
+			//else
+			//{
+			//	for (U32 k = 0; k < fileHeader.DurationInTicks; k++)
+			//	{
+			//		SBoneAnimationTrack& track = fileHeader.BoneAnimationTracks.back();
+			//		track.BoneName = bone.Name.AsString();
+
+			//		if (track.TranslationKeys.size() > 0)
+			//			track.TranslationKeys.emplace_back(track.TranslationKeys.back());
+			//		else
+			//			track.TranslationKeys.emplace_back(SVecBoneAnimationKey{ SVector::Zero, 0.0f });
+			//		
+			//		if (track.RotationKeys.size() > 0)
+			//			track.RotationKeys.emplace_back(track.RotationKeys.back());
+			//		else
+			//			track.RotationKeys.emplace_back(SQuatBoneAnimationKey{ SQuaternion::Identity, 0.0f });
+
+			//		if (track.ScaleKeys.size() > 0)
+			//			track.ScaleKeys.emplace_back(track.ScaleKeys.back());
+			//		else
+			//			track.ScaleKeys.emplace_back(SVecBoneAnimationKey{ SVector(1.0f), 0.0f});
+			//	}
+			//}
+		//}
+
+		for (U64 i = 0; i < fileHeader.SequentialPosedBones.size(); i++)
+		{
+			auto sequentialBone = fileHeader.SequentialPosedBones[i];
+			U64 frame = i / bones.size();
+			HV_LOG_WARN("Frame %i: Bone %s Transform: %s", frame, sequentialBone.Name.AsString().c_str(), sequentialBone.Transform.ToString().c_str());
+		}
+		
+		SMatrix finalFrame = SMatrix::Identity;
+		finalFrame = SMatrix::CreateRotationAroundX(UMath::DegToRad(-90.f));
+		fileHeader.SequentialPosedBones[0].Transform = SMatrix::Identity;
+		fileHeader.SequentialPosedBones[0].Transform.SetTranslation(SVector4(0.0f, 0.0f, 0.0f, 1.0f));
+		fileHeader.SequentialPosedBones[1].Transform = SMatrix::Identity;
+		fileHeader.SequentialPosedBones[1].Transform.SetTranslation(SVector4(0.0f, 0.0f, 0.0f, 1.0f));
+		fileHeader.SequentialPosedBones[2].Transform = SMatrix::Identity;
+		fileHeader.SequentialPosedBones[2].Transform.SetTranslation(SVector4(0.0f, 0.0f, 0.0f, 1.0f));
+		//fileHeader.SequentialPosedBones[2].Transform = SMatrix::CreateRotationAroundX(UMath::DegToRad(90.f));
+		//fileHeader.SequentialPosedBones[2].Transform.SetTranslation(SVector4(0.0f, 0.0f, -2.0f, 1.0f));
+		//fileHeader.SequentialPosedBones[2].Transform.SetScale(SVector(0.0f, 0.0f, -2.0f));
+		//fileHeader.SequentialPosedBones[2].Transform = SMatrix::Transpose(fileHeader.SequentialPosedBones[2].Transform);
+		fileHeader.SequentialPosedBones[3].Transform = SMatrix::Identity;
+		SMatrix::Recompose((SVector4(0.0f, 0.0f, -1.0f, 1.0f) * SMatrix::CreateRotationAroundX(45.f)).ToVector3(), SVector(0.0f, 0.0f, 0.0f), SVector(1.0f, 1.0f, 1.0f), fileHeader.SequentialPosedBones[3].Transform);
+		//fileHeader.SequentialPosedBones[3].Transform.SetTranslation(SVector4(0.0f, 0.0f, 0.0f, 1.0f));
+		std::string newFileName = destinationPath + UGeneralUtils::ExtractFileBaseNameFromPath(filePath) + ".hva";
 		const auto fileData = new char[fileHeader.GetSize()];
 		fileHeader.Serialize(fileData);
 		GEngine::GetFileSystem()->Serialize(newFileName, &fileData[0], fileHeader.GetSize());
@@ -446,7 +832,7 @@ namespace Havtorn
 		//	hasTextures = fbxMesh->HasTextureCoords(TEXTURE_SET_0);
 		//	hasBones = fbxMesh->HasBones();
 
-		//	float* data = new float[(vertexBufferSize / 4) * fbxMesh->mNumVertices];
+		//	F32* data = new F32[(vertexBufferSize / 4) * fbxMesh->mNumVertices];
 		//	if (hasPositions && hasNormals && hasTangents && hasTextures && hasBones) 
 		//	{
 		//		for (unsigned int i = 0, dataIndex = 0; i < fbxMesh->mNumVertices; i++, dataIndex += (vertexBufferSize / 4)) 
@@ -480,10 +866,10 @@ namespace Havtorn
 		//			data[dataIndex + 17] = fbxMesh->mTextureCoords[TEXTURE_SET_0][i].y;
 
 		//			SVertexBoneData& boneData = collectedBoneData[i];
-		//			data[dataIndex + 18] = (float)boneData.IDs[0];
-		//			data[dataIndex + 19] = (float)boneData.IDs[1];
-		//			data[dataIndex + 20] = (float)boneData.IDs[2];
-		//			data[dataIndex + 21] = (float)boneData.IDs[3];
+		//			data[dataIndex + 18] = (F32)boneData.IDs[0];
+		//			data[dataIndex + 19] = (F32)boneData.IDs[1];
+		//			data[dataIndex + 20] = (F32)boneData.IDs[2];
+		//			data[dataIndex + 21] = (F32)boneData.IDs[3];
 		//			//CONFJURMED by Haqvin
 
 		//			data[dataIndex + 22] = boneData.Weights[0];
@@ -596,7 +982,7 @@ namespace Havtorn
 		//// Change to support multiple animations
 		//if (scene->mNumAnimations > 0)
 		//{
-		//	model->myAnimationDuration = (float)scene->mAnimations[0]->mDuration;
+		//	model->myAnimationDuration = (F32)scene->mAnimations[0]->mDuration;
 		//}
 
 		//LoadMaterials(scene, model);

@@ -61,7 +61,7 @@ namespace Havtorn
         // Options menu
         if (GUI::BeginPopup("Options"))
         {
-            GUI::Checkbox("Auto-scroll", &ShouldAutoScroll);
+            GUI::Checkbox("Auto-scroll", ShouldAutoScroll);
             GUI::EndPopup();
         }
 

@@ -5,17 +5,11 @@
 #include <filesystem>
 
 #include <GUI.h>
+#include <EditorResourceManager.h>
 
 namespace Havtorn
 {
 	class CFileSystem;
-
-	struct SImportOptions
-	{
-		// TODO.NW: Maybe just use inheritance here, and send off SImportOptions to whatever tools needs them (for example ModelImporter)
-		// Asset browser should have ownership. Should be fine to just new them here.
-		void Render() {};
-	};
 
 	class CAssetBrowserWindow : public CWindow
 	{
@@ -39,12 +33,12 @@ namespace Havtorn
 
 		void InspectDirectoryEntry(const std::filesystem::directory_entry& entry, U32& outCurrentID, const intptr_t& folderIconID);
 
+		SAssetImportOptions ImportOptions;
 		CFileSystem* FileSystem = nullptr;
 		const std::string DefaultAssetPath = "Assets";
 		std::filesystem::path CurrentDirectory = "";
 		SGuiTextFilter Filter = SGuiTextFilter();
 		bool IsCurrentlySelected = false;
 		std::optional<std::vector<std::string>> FilePathsToImport;
-		EAssetType CurrentImportAssetType = EAssetType::None;
 	};
 }
