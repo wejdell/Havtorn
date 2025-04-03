@@ -39,6 +39,7 @@ namespace Havtorn
 			: AssetType(assetFileData.AssetType)
 			, Name(assetFileData.Name)
 			, NumberOfMaterials(assetFileData.NumberOfMaterials)
+			, BindPoseBones(assetFileData.BindPoseBones)
 		{
 			for (auto& mesh : assetFileData.Meshes)
 			{
@@ -51,6 +52,7 @@ namespace Havtorn
 		std::string Name = "";
 		U8 NumberOfMaterials = 0;
 		std::vector<SDrawCallData> DrawCallData = {};
+		std::vector<SSkeletalMeshBone> BindPoseBones = {};
 	};
 
 	struct SSkeletalAnimationAsset
@@ -63,8 +65,9 @@ namespace Havtorn
 			, DurationInTicks(assetFileData.DurationInTicks)
 			, TickRate(assetFileData.TickRate)
 			, NumberOfTracks(assetFileData.NumberOfBones)
+			, BoneAnimationTracks(assetFileData.BoneAnimationTracks)
 		{
-			PreprocessAnimation(assetFileData);
+			//PreprocessAnimation(assetFileData);
 		}
 
 		EAssetType AssetType = EAssetType::Animation;
@@ -72,59 +75,60 @@ namespace Havtorn
 		U32 DurationInTicks = 0;
 		U32 TickRate = 0;
 		U32 NumberOfTracks = 0;
-		std::vector<SBoneAnimDataTransform> EncodedBoneAnimTransforms;
+		//std::vector<SBoneAnimDataTransform> EncodedBoneAnimTransforms;
+		std::vector<SBoneAnimationTrack> BoneAnimationTracks;
 
 		//SBoneAnimDataTransform EncodeTransform(const SVecBoneAnimationKey& translationKey, const SQuatBoneAnimationKey& rotationKey, const SVecBoneAnimationKey& scaleKey)
 		//SBoneAnimDataTransform EncodeTransform(const SBoneAnimationKey& animationKey)
-		SBoneAnimDataTransform EncodeTransform(const SSkeletalMeshBone& bone)
-		{
-			SBoneAnimDataTransform dataFrame;
-			SMatrix boneMatrix = bone.Transform;
-			//SMatrix::Recompose(translationKey.Value, rotationKey.Value.ToEuler(), scaleKey.Value, boneMatrix);
-			SVector translation = boneMatrix.GetTranslation();
+		//SBoneAnimDataTransform EncodeTransform(const SSkeletalMeshBone& bone)
+		//{
+		//	SBoneAnimDataTransform dataFrame;
+		//	SMatrix boneMatrix = bone.Transform;
+		//	//SMatrix::Recompose(translationKey.Value, rotationKey.Value.ToEuler(), scaleKey.Value, boneMatrix);
+		//	SVector translation = boneMatrix.GetTranslation();
 
-			dataFrame.Row1TX = boneMatrix.GetRow(0);
-			dataFrame.Row1TX.W = translation.X;
-			dataFrame.Row2TY = boneMatrix.GetRow(1);
-			dataFrame.Row2TY.W = translation.Y;
-			dataFrame.Row3TZ = boneMatrix.GetRow(2);
-			dataFrame.Row3TZ.W = translation.Z;
+		//	dataFrame.Row1TX = boneMatrix.GetRow(0);
+		//	dataFrame.Row1TX.W = translation.X;
+		//	dataFrame.Row2TY = boneMatrix.GetRow(1);
+		//	dataFrame.Row2TY.W = translation.Y;
+		//	dataFrame.Row3TZ = boneMatrix.GetRow(2);
+		//	dataFrame.Row3TZ.W = translation.Z;
 
-			return dataFrame;
-		}
+		//	return dataFrame;
+		//}
 
-		void PreprocessAnimation(const SSkeletalAnimationFileHeader& assetFileData)
+		void PreprocessAnimation(const SSkeletalAnimationFileHeader& /*assetFileData*/)
 		{
 			//F32 accumulatedTime = 0.0f;
 			//for (U32 tick = 0; tick < DurationInTicks; tick++)
 			//{
 			//	accumulatedTime += 1.0f / STATIC_F32(TickRate);
-			//	for (const SBoneAnimationTrack& track : assetFileData.BoneAnimationTracks)
-			//	{
-			//	//	SVecBoneAnimationKey translationKey;
-			//	//	for (const SVecBoneAnimationKey& key : track.TranslationKeys)
-			//	//		translationKey = (key.Time <= accumulatedTime) ? key : translationKey;
+			//	//for (const SBoneAnimationTrack& track : assetFileData.BoneAnimationTracks)
+			//	//{
+			//		//SVecBoneAnimationKey translationKey;
+			//		//for (const SVecBoneAnimationKey& key : track.TranslationKeys)
+			//		//	translationKey = (key.Time <= accumulatedTime) ? key : translationKey;
 
-			//	//	SQuatBoneAnimationKey rotationKey;
-			//	//	for (const SQuatBoneAnimationKey& key : track.RotationKeys)
-			//	//		rotationKey = (key.Time <= accumulatedTime) ? key : rotationKey;
+			//		//SQuatBoneAnimationKey rotationKey;
+			//		//for (const SQuatBoneAnimationKey& key : track.RotationKeys)
+			//		//	rotationKey = (key.Time <= accumulatedTime) ? key : rotationKey;
 
-			//	//	SVecBoneAnimationKey scaleKey;
-			//	//	for (const SVecBoneAnimationKey& key : track.ScaleKeys)
-			//	//		scaleKey = (key.Time <= accumulatedTime) ? key : scaleKey;
+			//		//SVecBoneAnimationKey scaleKey;
+			//		//for (const SVecBoneAnimationKey& key : track.ScaleKeys)
+			//		//	scaleKey = (key.Time <= accumulatedTime) ? key : scaleKey;
 
 			//	//	EncodedBoneAnimTransforms.emplace_back(EncodeTransform(translationKey, rotationKey, scaleKey));
 			//		//SBoneAnimationKey animationKey;
 			//		//for (const SBoneAnimationKey& key : track.AnimationKeys)
 			//		//	animationKey = (key.Time <= accumulatedTime) ? key : animationKey;
 
-			//		EncodedBoneAnimTransforms.emplace_back(EncodeTransform(animationKey));
-			//	}
+			//		//EncodedBoneAnimTransforms.emplace_back(EncodeTransform(animationKey));
+			//	//}
 			//}
-			for (const SSkeletalMeshBone& bone : assetFileData.SequentialPosedBones)
-			{
-				EncodedBoneAnimTransforms.emplace_back(EncodeTransform(bone));
-			}
+			//for (const SSkeletalMeshBone& bone : assetFileData.SequentialPosedBones)
+			//{
+			//	EncodedBoneAnimTransforms.emplace_back(EncodeTransform(bone));
+			//}
 		}
 	};
 

@@ -385,6 +385,8 @@ namespace Havtorn
 		outSkeletalMeshComponent->Name = UGeneralUtils::ExtractFileNameFromPath(filePath);
 		outSkeletalMeshComponent->NumberOfMaterials = asset.NumberOfMaterials;
 
+		outSkeletalMeshComponent->BindPose = asset.BindPoseBones;
+
 		outSkeletalMeshComponent->BoundsMin = boundsMin;
 		outSkeletalMeshComponent->BoundsMax = boundsMax;
 		outSkeletalMeshComponent->BoundsCenter = boundsMin + (boundsMax - boundsMin) * 0.5f;
@@ -459,6 +461,7 @@ namespace Havtorn
 			asset = LoadedSkeletalAnims.at(assetName);
 		}
 
+		outSkeletalAnimationComponent->CurrentAnimation = asset.BoneAnimationTracks;
 		outSkeletalAnimationComponent->AssetName = assetName;
 		outSkeletalAnimationComponent->DurationInTicks = asset.DurationInTicks;
 		outSkeletalAnimationComponent->TickRate = asset.TickRate;
@@ -977,9 +980,9 @@ namespace Havtorn
 		if (!LoadedSkeletalAnims.contains(animationName))
 			return 0;
 
-		SSkeletalAnimationAsset& asset = LoadedSkeletalAnims.at(animationName);
-		SystemSkeletalAnimationBoneData = asset.EncodedBoneAnimTransforms.data();
-		SkeletalAnimationBoneDataSize = sizeof(SBoneAnimDataTransform) * asset.EncodedBoneAnimTransforms.size();
+		//SSkeletalAnimationAsset& asset = LoadedSkeletalAnims.at(animationName);
+		//SystemSkeletalAnimationBoneData = asset.EncodedBoneAnimTransforms.data();
+		//SkeletalAnimationBoneDataSize = sizeof(SBoneAnimDataTransform) * asset.EncodedBoneAnimTransforms.size();
 
 		// TODO.NR: Return index of animation in texture
 		return 0;
@@ -1023,9 +1026,9 @@ namespace Havtorn
 		SystemSkeletalMeshInstanceData[meshName].Entities.emplace_back(transformComponent->Owner);
 
 		if (animationComponent->IsValid())
-			SystemSkeletalMeshInstanceData[meshName].AnimationData.emplace_back(animationComponent->AnimationData);
-		else
-			SystemSkeletalMeshInstanceData[meshName].AnimationData.emplace_back(SVector2<U32>::Zero);
+			SystemSkeletalMeshInstanceData[meshName].Bones = animationComponent->Bones;
+		//else
+		//	SystemSkeletalMeshInstanceData[meshName].Bones.emplace_back({});
 	}
 
 	void CRenderManager::SwapSkeletalMeshInstancedRenderLists()
@@ -1176,6 +1179,7 @@ namespace Havtorn
 		ShadowmapBuffer.CreateBuffer("Shadowmap Buffer", Framework, sizeof(SShadowmapBufferData) * 6);
 		VolumetricLightBuffer.CreateBuffer("Volumetric Light Buffer", Framework, sizeof(SVolumetricLightBufferData));
 		EmissiveBuffer.CreateBuffer("Emissive Buffer", Framework, sizeof(SEmissiveBufferData));
+		BoneBuffer.CreateBuffer("Bone Buffer", Framework, sizeof(SBoneBufferData));
 
 		InstancedTransformBuffer.CreateBuffer("Instanced Transform Buffer", Framework, sizeof(SMatrix) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
 		InstancedAnimationDataBuffer.CreateBuffer("Instanced Animation Data Buffer", Framework, sizeof(SVector2<U32>) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
@@ -1482,8 +1486,8 @@ namespace Havtorn
 		const std::vector<SMatrix>& matrices = RendererSkeletalMeshInstanceData[command.Strings[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		const std::vector<SVector2<U32>>& animationData = RendererSkeletalMeshInstanceData[command.Strings[0]].AnimationData;
-		InstancedAnimationDataBuffer.BindBuffer(animationData);
+		//const std::vector<SVector2<U32>>& animationData = RendererSkeletalMeshInstanceData[command.Strings[0]].AnimationData;
+		//InstancedAnimationDataBuffer.BindBuffer(animationData);
 
 		SkeletalAnimationDataTextureGPU.SetAsVSResourceOnSlot(24);
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
@@ -1550,14 +1554,18 @@ namespace Havtorn
 		const std::vector<SMatrix>& matrices = RendererSkeletalMeshInstanceData[command.Strings[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		const std::vector<SVector2<U32>>& animationData = RendererSkeletalMeshInstanceData[command.Strings[0]].AnimationData;
-		InstancedAnimationDataBuffer.BindBuffer(animationData);
+		//const std::vector<SVector2<U32>>& animationData = RendererSkeletalMeshInstanceData[command.Strings[0]].AnimationData;
+		//InstancedAnimationDataBuffer.BindBuffer(animationData);
 
 		const std::vector<SEntity>& entities = RendererSkeletalMeshInstanceData[command.Strings[0]].Entities;
 		InstancedEntityIDBuffer.BindBuffer(entities);
 
-		SkeletalAnimationDataTextureGPU.SetAsVSResourceOnSlot(24);
+		const std::vector<SMatrix>& boneMatrices = RendererSkeletalMeshInstanceData[command.Strings[0]].Bones;
+		BoneBuffer.BindBuffer(boneMatrices);
+
+		//SkeletalAnimationDataTextureGPU.SetAsVSResourceOnSlot(24);
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
+		RenderStateManager.VSSetConstantBuffer(6, BoneBuffer);
 		RenderStateManager.IASetTopology(ETopologies::TriangleList);
 		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2AnimDataTrans);
 

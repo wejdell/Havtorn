@@ -294,6 +294,12 @@ namespace Havtorn
 		} EmissiveBufferData;
 		HV_ASSERT_BUFFER(SEmissiveBufferData)
 
+		struct SBoneBufferData
+		{
+			SMatrix Bones[64];
+		} BoneBufferData;
+		HV_ASSERT_BUFFER(SBoneBufferData)
+
 	private:
 		CGraphicsFramework* Framework = nullptr;
 		CDataBuffer FrameBuffer;
@@ -308,6 +314,7 @@ namespace Havtorn
 		CDataBuffer ShadowmapBuffer;
 		CDataBuffer VolumetricLightBuffer;
 		CDataBuffer EmissiveBuffer;
+		CDataBuffer BoneBuffer;
 		CRenderStateManager RenderStateManager;
 		CFullscreenRenderer FullscreenRenderer;
 
@@ -368,7 +375,8 @@ namespace Havtorn
 		struct SSkeletalMeshInstanceData
 		{
 			std::vector<SMatrix> Transforms{};
-			std::vector<SVector2<U32>> AnimationData{};
+			//std::vector<SVector2<U32>> AnimationData{};
+			std::vector<SMatrix> Bones{};
 			std::vector<SEntity> Entities{};
 		};
 

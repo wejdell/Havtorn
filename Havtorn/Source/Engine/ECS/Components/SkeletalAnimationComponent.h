@@ -19,8 +19,10 @@ namespace Havtorn
 		ENGINE_API void Deserialize(const char* fromData, U64& pointerPosition);
 
 		// TODO.NR: This should be some of the only runtime data this component needs.
-		SVector2<U32> AnimationData; // X = animationIndex, Y = frameIndex
-		F32 CurrentFrameTime = 0.0f;
+		//SVector2<U32> AnimationData; // X = animationIndex, Y = frameIndex
+		std::vector<SBoneAnimationTrack> CurrentAnimation = {};
+		std::vector<SMatrix> Bones = {};
+		F32 CurrentAnimationTime = 0.0f;
 
 		// TODO.NR: Support multiple animations/montages on one component
 		// TODO.NR: Load animations and use registry to serialize component, same as with meshes. The below should be a runtime asset easily written to a texture when needed.

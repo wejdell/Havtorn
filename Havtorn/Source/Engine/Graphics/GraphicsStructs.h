@@ -88,6 +88,7 @@ namespace Havtorn
 	{
 		CHavtornStaticString<32> Name;
 		SMatrix Transform = SMatrix::Identity;
+		I32 ParentIndex = -1;
 	};
 
 	struct SVecBoneAnimationKey
@@ -111,19 +112,19 @@ namespace Havtorn
 	struct SBoneAnimationTrack
 	{
 		std::string BoneName;
-		std::vector<SBoneAnimationKey> AnimationKeys;
-		//std::vector<SVecBoneAnimationKey> TranslationKeys;
-		//std::vector<SQuatBoneAnimationKey> RotationKeys;
-		//std::vector<SVecBoneAnimationKey> ScaleKeys;
+		//std::vector<SBoneAnimationKey> AnimationKeys;
+		std::vector<SVecBoneAnimationKey> TranslationKeys;
+		std::vector<SQuatBoneAnimationKey> RotationKeys;
+		std::vector<SVecBoneAnimationKey> ScaleKeys;
 
 		U32 GetSize() const
 		{
 			U32 size = 0;
-			//size += GetDataSize(TranslationKeys);
-			//size += GetDataSize(RotationKeys);
-			//size += GetDataSize(ScaleKeys);
+			size += GetDataSize(TranslationKeys);
+			size += GetDataSize(RotationKeys);
+			size += GetDataSize(ScaleKeys);
 			size += GetDataSize(BoneName);
-			size += GetDataSize(AnimationKeys);
+			//size += GetDataSize(AnimationKeys);
 			return size;
 		}
 	};

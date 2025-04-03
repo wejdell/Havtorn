@@ -52,7 +52,7 @@ namespace Havtorn
 		static inline void Decompose(const SMatrix& matrix, SVector& translation, SQuaternion& rotation, SVector& scale);
 		static inline void Decompose(const SMatrix& matrix, F32* translationData,  F32* eulerData,  F32* scaleData);
 		static inline void Recompose(const SVector& translation, const SVector& euler, const SVector& scale, SMatrix& outMatrix);
-		static inline void Recompose(const SVector& translation, const SQuaternion& rotation, const SVector& scale, SMatrix& outMatrix);
+		static void Recompose(const SVector& translation, const SQuaternion& rotation, const SVector& scale, SMatrix& outMatrix);
 		static inline void Recompose(const F32* translationData, const F32* eulerData, const F32* scaleData, SMatrix& outMatrix);
 		
 		inline SMatrix GetRHViewMatrix() const;

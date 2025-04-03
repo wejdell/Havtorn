@@ -434,7 +434,7 @@ namespace Havtorn
 			return "ERROR: File does not exist.";
 		}
 
-		const aiScene* assimpScene = aiImportFile(filePath.c_str(), aiProcessPreset_TargetRealtime_Fast | aiProcess_ConvertToLeftHanded);
+		const aiScene* assimpScene = aiImportFile(filePath.c_str(), aiProcess_PopulateArmatureData | aiProcessPreset_TargetRealtime_Fast | aiProcess_ConvertToLeftHanded);
 		
 		if (!assimpScene)
 		{
@@ -602,7 +602,12 @@ namespace Havtorn
 					boneIndex = numBones++;
 
 					tempBoneNameToIndexMap[boneName] = boneIndex;
-					fileHeader.BindPoseBones.push_back(SSkeletalMeshBone(boneName, ToHavtornMatrix(fbxMesh->mBones[i]->mOffsetMatrix)));
+
+					std::string parentName = fbxMesh->mBones[i]->mNode->mParent ? std::string(fbxMesh->mBones[i]->mNode->mParent->mName.data) : "";
+					I32 parentIndex = tempBoneNameToIndexMap.contains(parentName) ? tempBoneNameToIndexMap[parentName] : -1;
+
+					// Mesh Space -> Bone Space in Bind Pose
+					fileHeader.BindPoseBones.push_back(SSkeletalMeshBone(boneName, SMatrix::Transpose(ToHavtornMatrix(fbxMesh->mBones[i]->mOffsetMatrix)), parentIndex));
 				}
 				else
 				{
@@ -673,7 +678,7 @@ namespace Havtorn
 
 		for (const auto& bone : fileHeader.BindPoseBones)
 		{
-			HV_LOG_WARN("Bone %s Transform: %s", bone.Name.AsString().c_str(), bone.Transform.ToString().c_str());
+			HV_LOG_WARN("Bone %s", bone.Name.AsString().c_str());
 		}
 		std::string newFileName = destinationPath + UGeneralUtils::ExtractFileBaseNameFromPath(filePath) + ".hva";
 		const auto fileData = new char[fileHeader.GetSize()];
@@ -690,7 +695,7 @@ namespace Havtorn
 		SSkeletalAnimationFileHeader fileHeader;
 		fileHeader.AssetType = EAssetType::Animation;
 		fileHeader.Name = UGeneralUtils::ExtractFileNameFromPath(filePath);
-		fileHeader.DurationInTicks = STATIC_U32(animation->mDuration + 1);
+		fileHeader.DurationInTicks = STATIC_U32(animation->mDuration);
 		fileHeader.TickRate = STATIC_U32(animation->mTicksPerSecond);
 			
 		std::vector<SSkeletalMeshBone> bones;
@@ -710,21 +715,86 @@ namespace Havtorn
 			delete[] data;
 		}
 
-		fileHeader.NumberOfBones = STATIC_U32(bones.size() * fileHeader.DurationInTicks);
-		fileHeader.SequentialPosedBones.resize(fileHeader.NumberOfBones);
+		fileHeader.NumberOfBones = STATIC_U32(bones.size());
+		//fileHeader.SequentialPosedBones.resize(fileHeader.NumberOfBones);
+		//fileHeader.BoneAnimationTracks.resize(fileHeader.NumberOfBones);
 
 		const F32 scaleModifier = importOptions.Scale;
 
-		F32 accumulatedTime = 0.0f;
-		for (U32 tick = 0; tick < fileHeader.DurationInTicks; tick++)
+		for (const SSkeletalMeshBone& bone : bones)
 		{
-			accumulatedTime += 1.0f / STATIC_F32(fileHeader.TickRate);
-			
-			aiMatrix4x4 Identity;
-			InitIdentityM4(Identity);
-			ReadNodeHeirarchy(assimpScene, tick, accumulatedTime, scaleModifier, assimpScene->mRootNode, Identity, 2, bones, fileHeader.SequentialPosedBones);
-			//accumulatedTime += 0.999f;
+			//const aiNodeAnim* nodeAnimation = FindNodeAnim(animation, bone.Name.AsString());
+
+
+			std::string channelName = bone.Name.AsString();
+			const aiNodeAnim* channel = nullptr;
+
+			for (U32 i = 0; i < animation->mNumChannels; i++)
+			{
+				if (strcmp(animation->mChannels[i]->mNodeName.C_Str(), channelName.c_str()) != 0)
+					continue;
+
+				channel = animation->mChannels[i];
+				break;
+			}
+	
+			fileHeader.BoneAnimationTracks.emplace_back();
+			SBoneAnimationTrack& track = fileHeader.BoneAnimationTracks.back();
+			track.BoneName = bone.Name.AsString();
+
+			if (channel != nullptr)
+			{
+				for (U32 t = 0; t < channel->mNumPositionKeys; t++)
+				{
+					track.TranslationKeys.emplace_back(ToHavtornVecAnimationKey(channel->mPositionKeys[t]));
+					track.TranslationKeys.back().Value *= scaleModifier;
+				}
+
+				for (U32 q = 0; q < channel->mNumRotationKeys; q++)
+					track.RotationKeys.emplace_back(ToHavtornQuatAnimationKey(channel->mRotationKeys[q]));
+
+				for (U32 s = 0; s < channel->mNumScalingKeys; s++)
+					track.ScaleKeys.emplace_back(ToHavtornVecAnimationKey(channel->mScalingKeys[s]));
+			}
+			//else
+			//{
+			//	for (U32 k = 0; k < fileHeader.DurationInTicks; k++)
+			//	{
+			//		SBoneAnimationTrack& track = fileHeader.BoneAnimationTracks.back();
+			//		track.BoneName = bone.Name.AsString();
+
+			//		if (track.TranslationKeys.size() > 0)
+			//			track.TranslationKeys.emplace_back(track.TranslationKeys.back());
+			//		else
+			//			track.TranslationKeys.emplace_back(SVecBoneAnimationKey{ SVector::Zero, 0.0f });
+			//
+			//		if (track.RotationKeys.size() > 0)
+			//			track.RotationKeys.emplace_back(track.RotationKeys.back());
+			//		else
+			//			track.RotationKeys.emplace_back(SQuatBoneAnimationKey{ SQuaternion::Identity, 0.0f });
+
+			//		if (track.ScaleKeys.size() > 0)
+			//			track.ScaleKeys.emplace_back(track.ScaleKeys.back());
+			//		else
+			//			track.ScaleKeys.emplace_back(SVecBoneAnimationKey{ SVector(1.0f), 0.0f});
+			//	}
+			//}
 		}
+
+
+
+		//F32 accumulatedTime = 0.0f;
+		//for (U32 tick = 0; tick < fileHeader.DurationInTicks; tick++)
+		//{
+		//	accumulatedTime += 1.0f / STATIC_F32(fileHeader.TickRate);
+		//	
+		//	aiMatrix4x4 Identity;
+		//	InitIdentityM4(Identity);
+		//	ReadNodeHeirarchy(assimpScene, tick, accumulatedTime, scaleModifier, assimpScene->mRootNode, Identity, 2, bones, fileHeader.SequentialPosedBones);
+		//	//accumulatedTime += 0.999f;
+		//}
+
+
 
 		//for (const SSkeletalMeshBone& bone : bones)
 		//{
@@ -790,28 +860,33 @@ namespace Havtorn
 			//}
 		//}
 
-		for (U64 i = 0; i < fileHeader.SequentialPosedBones.size(); i++)
-		{
-			auto sequentialBone = fileHeader.SequentialPosedBones[i];
-			U64 frame = i / bones.size();
-			HV_LOG_WARN("Frame %i: Bone %s Transform: %s", frame, sequentialBone.Name.AsString().c_str(), sequentialBone.Transform.ToString().c_str());
-		}
+		//for (U64 i = 0; i < fileHeader.SequentialPosedBones.size(); i++)
+		//{
+		//	auto sequentialBone = fileHeader.SequentialPosedBones[i];
+		//	U64 frame = i / bones.size();
+		//	HV_LOG_WARN("Frame %i: Bone %s Transform: %s", frame, sequentialBone.Name.AsString().c_str(), sequentialBone.Transform.ToString().c_str());
+		//}
 		
-		SMatrix finalFrame = SMatrix::Identity;
-		finalFrame = SMatrix::CreateRotationAroundX(UMath::DegToRad(-90.f));
-		fileHeader.SequentialPosedBones[0].Transform = SMatrix::Identity;
-		fileHeader.SequentialPosedBones[0].Transform.SetTranslation(SVector4(0.0f, 0.0f, 0.0f, 1.0f));
-		fileHeader.SequentialPosedBones[1].Transform = SMatrix::Identity;
-		fileHeader.SequentialPosedBones[1].Transform.SetTranslation(SVector4(0.0f, 0.0f, 0.0f, 1.0f));
-		fileHeader.SequentialPosedBones[2].Transform = SMatrix::Identity;
-		fileHeader.SequentialPosedBones[2].Transform.SetTranslation(SVector4(0.0f, 0.0f, 0.0f, 1.0f));
-		//fileHeader.SequentialPosedBones[2].Transform = SMatrix::CreateRotationAroundX(UMath::DegToRad(90.f));
-		//fileHeader.SequentialPosedBones[2].Transform.SetTranslation(SVector4(0.0f, 0.0f, -2.0f, 1.0f));
-		//fileHeader.SequentialPosedBones[2].Transform.SetScale(SVector(0.0f, 0.0f, -2.0f));
-		//fileHeader.SequentialPosedBones[2].Transform = SMatrix::Transpose(fileHeader.SequentialPosedBones[2].Transform);
-		fileHeader.SequentialPosedBones[3].Transform = SMatrix::Identity;
-		SMatrix::Recompose((SVector4(0.0f, 0.0f, -1.0f, 1.0f) * SMatrix::CreateRotationAroundX(45.f)).ToVector3(), SVector(0.0f, 0.0f, 0.0f), SVector(1.0f, 1.0f, 1.0f), fileHeader.SequentialPosedBones[3].Transform);
+		//SMatrix finalFrame = SMatrix::Identity;
+		//finalFrame = SMatrix::CreateRotationAroundX(UMath::DegToRad(-90.f));
+		//fileHeader.SequentialPosedBones[0].Transform = SMatrix::Identity;
+		//fileHeader.SequentialPosedBones[0].Transform.SetTranslation(SVector4(0.0f, 0.0f, 0.0f, 1.0f));
+		//fileHeader.SequentialPosedBones[1].Transform = SMatrix::Identity;
+		//fileHeader.SequentialPosedBones[1].Transform.SetTranslation(SVector4(0.0f, 0.0f, 0.0f, 1.0f));
+		//fileHeader.SequentialPosedBones[2].Transform = SMatrix::Identity;
+		//fileHeader.SequentialPosedBones[2].Transform.SetTranslation(SVector4(0.0f, 0.0f, 0.0f, 1.0f));
+		////fileHeader.SequentialPosedBones[2].Transform = SMatrix::CreateRotationAroundX(UMath::DegToRad(90.f));
+		////fileHeader.SequentialPosedBones[2].Transform.SetTranslation(SVector4(0.0f, 0.0f, -2.0f, 1.0f));
+		////fileHeader.SequentialPosedBones[2].Transform.SetScale(SVector(0.0f, 0.0f, -2.0f));
+		////fileHeader.SequentialPosedBones[2].Transform = SMatrix::Transpose(fileHeader.SequentialPosedBones[2].Transform);
+		//fileHeader.SequentialPosedBones[3].Transform = SMatrix::Identity;
+		//SMatrix::Recompose((SVector4(0.0f, 0.0f, -1.0f, 1.0f) * SMatrix::CreateRotationAroundX(45.f)).ToVector3(), SVector(0.0f, 0.0f, 0.0f), SVector(1.0f, 1.0f, 1.0f), fileHeader.SequentialPosedBones[3].Transform);
 		//fileHeader.SequentialPosedBones[3].Transform.SetTranslation(SVector4(0.0f, 0.0f, 0.0f, 1.0f));
+		for (auto track : fileHeader.BoneAnimationTracks)
+		{
+			HV_LOG_INFO("AnimTrack: %s", track.BoneName.c_str());
+		}
+
 		std::string newFileName = destinationPath + UGeneralUtils::ExtractFileBaseNameFromPath(filePath) + ".hva";
 		const auto fileData = new char[fileHeader.GetSize()];
 		fileHeader.Serialize(fileData);
