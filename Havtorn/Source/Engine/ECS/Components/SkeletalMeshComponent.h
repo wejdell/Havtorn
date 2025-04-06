@@ -26,6 +26,7 @@ namespace Havtorn
 		// The map could be owned by some other static object/registry. I think it could reduce the size of components.
 		CHavtornStaticString<255> Name;
 		std::vector<SSkeletalMeshBone> BindPose;
+		std::vector<SSkeletalMeshNode> Nodes;
 
 		SVector BoundsMin = SVector::Zero;
 		SVector BoundsMax = SVector::Zero;

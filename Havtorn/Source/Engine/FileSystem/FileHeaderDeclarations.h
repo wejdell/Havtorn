@@ -79,6 +79,8 @@ namespace Havtorn
 		U32 NumberOfMeshes = 0;
 		std::vector<SSkeletalMesh> Meshes;
 		std::vector<SSkeletalMeshBone> BindPoseBones;
+		U32 NumberOfNodes = 0;
+		std::vector<SSkeletalMeshNode> Nodes;
 
 		[[nodiscard]] U32 GetSize() const;
 		void Serialize(char* toData) const;
@@ -101,6 +103,15 @@ namespace Havtorn
 
 		size += GetDataSize(BindPoseBones);
 
+		size += GetDataSize(NumberOfNodes);
+		//size += GetDataSize(Nodes);
+		for (auto& node : Nodes)
+		{
+			size += GetDataSize(node.Name);
+			size += GetDataSize(node.NodeTransform);
+			size += GetDataSize(node.ChildIndices);
+		}
+
 		return size;
 	}
 
@@ -119,6 +130,15 @@ namespace Havtorn
 		}
 
 		SerializeData(BindPoseBones, toData, pointerPosition);
+		
+		SerializeData(NumberOfNodes, toData, pointerPosition);
+		//SerializeData(Nodes, toData, pointerPosition);
+		for (auto& node : Nodes)
+		{
+			SerializeData(node.Name, toData, pointerPosition);
+			SerializeData(node.NodeTransform, toData, pointerPosition);
+			SerializeData(node.ChildIndices, toData, pointerPosition);
+		}
 	}
 
 	inline void SSkeletalModelFileHeader::Deserialize(const char* fromData)
@@ -138,6 +158,17 @@ namespace Havtorn
 		}
 
 		DeserializeData(BindPoseBones, fromData, pointerPosition);
+		
+		DeserializeData(NumberOfNodes, fromData, pointerPosition);
+		//DeserializeData(Nodes, fromData, pointerPosition);
+		Nodes.reserve(NumberOfNodes);
+		for (U16 i = 0; i < NumberOfNodes; i++)
+		{
+			Nodes.emplace_back();
+			DeserializeData(Nodes.back().Name, fromData, pointerPosition);
+			DeserializeData(Nodes.back().NodeTransform, fromData, pointerPosition);
+			DeserializeData(Nodes.back().ChildIndices, fromData, pointerPosition);
+		}
 	}
 
 	struct SSkeletalAnimationFileHeader

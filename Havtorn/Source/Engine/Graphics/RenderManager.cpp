@@ -386,6 +386,7 @@ namespace Havtorn
 		outSkeletalMeshComponent->NumberOfMaterials = asset.NumberOfMaterials;
 
 		outSkeletalMeshComponent->BindPose = asset.BindPoseBones;
+		outSkeletalMeshComponent->Nodes = asset.Nodes;
 
 		outSkeletalMeshComponent->BoundsMin = boundsMin;
 		outSkeletalMeshComponent->BoundsMax = boundsMax;

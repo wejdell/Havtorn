@@ -9,6 +9,8 @@ namespace Havtorn
 	struct SVecBoneAnimationKey;
 	struct SQuatBoneAnimationKey;
 	struct SSkeletalAnimationComponent;
+	struct SSkeletalMeshComponent;
+	struct SSkeletalMeshNode;
 
 	class CRenderManager;
 
@@ -22,6 +24,7 @@ namespace Havtorn
 		ENGINE_API void BindEvaluateFunction(std::function<I16(CScene*, const SEntity&)>& function, const std::string& classAndFunctionName);
 
 		std::vector<SMatrix> EvaluateLocalPose(const SSkeletalAnimationComponent* animationComponent, const F32 animationTime);
+		void ReadHierarchy(const SSkeletalAnimationComponent* animationComponent, const SSkeletalMeshComponent* mesh, const F32 animationTime, const SMatrix& parentTransform, const SSkeletalMeshNode& node, std::vector<SMatrix>& posedTransforms);
 
 	private:
 		CRenderManager* RenderManager;

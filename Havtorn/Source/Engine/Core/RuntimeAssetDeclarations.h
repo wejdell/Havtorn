@@ -40,6 +40,7 @@ namespace Havtorn
 			, Name(assetFileData.Name)
 			, NumberOfMaterials(assetFileData.NumberOfMaterials)
 			, BindPoseBones(assetFileData.BindPoseBones)
+			, Nodes(assetFileData.Nodes)
 		{
 			for (auto& mesh : assetFileData.Meshes)
 			{
@@ -53,6 +54,7 @@ namespace Havtorn
 		U8 NumberOfMaterials = 0;
 		std::vector<SDrawCallData> DrawCallData = {};
 		std::vector<SSkeletalMeshBone> BindPoseBones = {};
+		std::vector<SSkeletalMeshNode> Nodes = {};
 	};
 
 	struct SSkeletalAnimationAsset

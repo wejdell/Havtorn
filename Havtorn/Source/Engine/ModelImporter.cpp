@@ -303,7 +303,7 @@ namespace Havtorn
 		{
 			U64 BoneIndex = std::distance(std::begin(bindPose), it) + (tick * bindPose.size());
 			
-			SMatrix bindPoseTransform = it->Transform;
+			SMatrix bindPoseTransform = it->InverseBindPoseTransform;
 			SMatrix globalTransform = ToHavtornMatrix(GlobalTransformation);
 			SMatrix globalInverseTransform = ToHavtornMatrix(aScene->mRootNode->mTransformation.Inverse());
 			
@@ -320,7 +320,7 @@ namespace Havtorn
 			auto finalTransform = rootNodeInverse * GlobalTransformation * boneOffset;
 			auto havtornFinalTransform = SMatrix::Transpose(ToHavtornMatrix(finalTransform));
 			HV_LOG_FATAL("Final Transform: %s", havtornFinalTransform.ToString().c_str());
-			sequentialPosedBones[BoneIndex].Transform = havtornFinalTransform;
+			sequentialPosedBones[BoneIndex].InverseBindPoseTransform = havtornFinalTransform;
 			sequentialPosedBones[BoneIndex].Name = nodeName;
 		}
 		
@@ -564,6 +564,62 @@ namespace Havtorn
 		return newFileName;
 	}
 
+	void ExtractNodes(aiNode* node, const SMatrix& /*parentTransform*/, const std::vector<SSkeletalMeshBone>& bindPose, std::vector<SSkeletalMeshNode>& nodesToPopulate)
+	{
+		//static U32 index = 0;
+		//CHavtornStaticString<32> nodeName = CHavtornStaticString<32>(node->mName.C_Str());
+		//SMatrix scaledMatrix = SMatrix::Transpose(ToHavtornMatrix(node->mTransformation));
+		//SQuaternion rot = SQuaternion::Identity;
+		//SVector pos = SVector::Zero;
+		//SVector scl = SVector(1.0f);
+		//SMatrix::Decompose(scaledMatrix, pos, rot, scl);
+		//SMatrix unScaledMatrix = SMatrix::Identity; 
+		//SMatrix::Recompose(pos, rot, SVector(1.0f), unScaledMatrix);
+		//SMatrix transform = unScaledMatrix * parentTransform;
+		//
+		//if (auto it = std::ranges::find(bindPose, nodeName, &SSkeletalMeshBone::Name); it != bindPose.end())
+		//{
+		//	HV_LOG_ERROR("Node %i: %s, %s", ++index, nodeName.AsString().c_str(), transform.ToString().c_str());
+		//	nodesToPopulate.emplace_back(SSkeletalMeshNode(nodeName, transform));
+		//}
+
+		//for (U32 i = 0; i < node->mNumChildren; i++)
+		//	ExtractNodes(node->mChildren[i], transform, bindPose, nodesToPopulate);
+
+		static U32 index = 0;
+		CHavtornStaticString<32> nodeName = CHavtornStaticString<32>(node->mName.C_Str());
+		SMatrix scaledMatrix = SMatrix::Transpose(ToHavtornMatrix(node->mTransformation));
+		SQuaternion rot = SQuaternion::Identity;
+		SVector pos = SVector::Zero;
+		SVector scl = SVector(1.0f);
+		SMatrix::Decompose(scaledMatrix, pos, rot, scl);
+		SMatrix unScaledMatrix = SMatrix::Identity;
+		SMatrix::Recompose(pos, rot, SVector(1.0f), unScaledMatrix);
+		//SMatrix transform = unScaledMatrix * parentTransform;
+		SMatrix transform = unScaledMatrix;
+		
+		if (nodesToPopulate.size() > 0)
+		{
+			CHavtornStaticString<32> parentName = node->mParent ? std::string(node->mParent->mName.data) : "";
+			//for (U64 j = 0; j < nodesToPopulate.size(); j++)
+			//{
+			//	if (parentName == nodesToPopulate[j].Name.AsString())
+			//}
+			if (auto it = std::ranges::find(nodesToPopulate, parentName, &SSkeletalMeshNode::Name); it != nodesToPopulate.end())
+			{
+				U32 childIndex = STATIC_U32(std::distance(std::begin(nodesToPopulate), it));
+				nodesToPopulate[childIndex].ChildIndices.push_back(STATIC_U32(nodesToPopulate.size()));
+			}
+		}
+
+		HV_LOG_ERROR("Node %i: %s, %s", ++index, nodeName.AsString().c_str(), transform.ToString().c_str());
+		nodesToPopulate.emplace_back(SSkeletalMeshNode(nodeName, transform, {}));
+
+
+		for (U32 i = 0; i < node->mNumChildren; i++)
+			ExtractNodes(node->mChildren[i], transform, bindPose, nodesToPopulate);
+	}
+
 	std::string UModelImporter::ImportSkeletalMesh(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions, const aiScene* assimpScene)
 	{
 		SSkeletalModelFileHeader fileHeader;
@@ -586,7 +642,7 @@ namespace Havtorn
 		{
 			auto& fileHeaderMesh = fileHeader.Meshes[n];
 			fbxMesh = assimpScene->mMeshes[n];
-
+			
 			// Bone pre-loading
 			std::vector<SVertexBoneData> collectedBoneData;
 			collectedBoneData.resize(fbxMesh->mNumVertices);
@@ -606,8 +662,9 @@ namespace Havtorn
 					std::string parentName = fbxMesh->mBones[i]->mNode->mParent ? std::string(fbxMesh->mBones[i]->mNode->mParent->mName.data) : "";
 					I32 parentIndex = tempBoneNameToIndexMap.contains(parentName) ? tempBoneNameToIndexMap[parentName] : -1;
 
-					// Mesh Space -> Bone Space in Bind Pose
+					// Mesh Space -> Bone Space in Bind Pose, [INVERSE BIND MATRIX]. Use with bone [WORLD SPACE TRANSFORM] to find vertex pos
 					fileHeader.BindPoseBones.push_back(SSkeletalMeshBone(boneName, SMatrix::Transpose(ToHavtornMatrix(fbxMesh->mBones[i]->mOffsetMatrix)), parentIndex));
+					//HV_LOG_ERROR("Node %i: %s, %s", i+1, fbxMesh->mBones[i]->mNode->mName.C_Str(), SMatrix::Transpose(ToHavtornMatrix(fbxMesh->mBones[i]->mNode->mTransformation)).ToString().c_str());
 				}
 				else
 				{
@@ -621,6 +678,8 @@ namespace Havtorn
 					collectedBoneData[vertexID].AddBoneData(boneIndex, weight);
 				}
 			}
+
+			ExtractNodes(assimpScene->mRootNode, SMatrix::Identity, fileHeader.BindPoseBones, fileHeader.Nodes);
 
 			// Vertices
 			const F32 scaleModifier = importOptions.Scale;
@@ -675,10 +734,11 @@ namespace Havtorn
 
 		// Material Count
 		fileHeader.NumberOfMaterials = STATIC_U8(assimpScene->mNumMaterials);
+		fileHeader.NumberOfNodes = STATIC_U32(fileHeader.Nodes.size());
 
 		for (const auto& bone : fileHeader.BindPoseBones)
 		{
-			HV_LOG_WARN("Bone %s", bone.Name.AsString().c_str());
+			HV_LOG_WARN("Bone %s, %s", bone.Name.AsString().c_str(), bone.InverseBindPoseTransform.ToString().c_str());
 		}
 		std::string newFileName = destinationPath + UGeneralUtils::ExtractFileBaseNameFromPath(filePath) + ".hva";
 		const auto fileData = new char[fileHeader.GetSize()];
@@ -756,132 +816,12 @@ namespace Havtorn
 				for (U32 s = 0; s < channel->mNumScalingKeys; s++)
 					track.ScaleKeys.emplace_back(ToHavtornVecAnimationKey(channel->mScalingKeys[s]));
 			}
-			//else
-			//{
-			//	for (U32 k = 0; k < fileHeader.DurationInTicks; k++)
-			//	{
-			//		SBoneAnimationTrack& track = fileHeader.BoneAnimationTracks.back();
-			//		track.BoneName = bone.Name.AsString();
-
-			//		if (track.TranslationKeys.size() > 0)
-			//			track.TranslationKeys.emplace_back(track.TranslationKeys.back());
-			//		else
-			//			track.TranslationKeys.emplace_back(SVecBoneAnimationKey{ SVector::Zero, 0.0f });
-			//
-			//		if (track.RotationKeys.size() > 0)
-			//			track.RotationKeys.emplace_back(track.RotationKeys.back());
-			//		else
-			//			track.RotationKeys.emplace_back(SQuatBoneAnimationKey{ SQuaternion::Identity, 0.0f });
-
-			//		if (track.ScaleKeys.size() > 0)
-			//			track.ScaleKeys.emplace_back(track.ScaleKeys.back());
-			//		else
-			//			track.ScaleKeys.emplace_back(SVecBoneAnimationKey{ SVector(1.0f), 0.0f});
-			//	}
-			//}
 		}
-
-
-
-		//F32 accumulatedTime = 0.0f;
-		//for (U32 tick = 0; tick < fileHeader.DurationInTicks; tick++)
-		//{
-		//	accumulatedTime += 1.0f / STATIC_F32(fileHeader.TickRate);
-		//	
-		//	aiMatrix4x4 Identity;
-		//	InitIdentityM4(Identity);
-		//	ReadNodeHeirarchy(assimpScene, tick, accumulatedTime, scaleModifier, assimpScene->mRootNode, Identity, 2, bones, fileHeader.SequentialPosedBones);
-		//	//accumulatedTime += 0.999f;
-		//}
-
-
-
-		//for (const SSkeletalMeshBone& bone : bones)
-		//{
-			//const aiNodeAnim* nodeAnimation = FindNodeAnim(animation, bone.Name.AsString());
-
-			//if (nodeAnimation)
-			//{
-
-			//}
-			//std::string channelName = bone.Name.AsString();
-			//const aiNodeAnim* channel = nullptr;
-
-			//for (U32 i = 0; i < animation->mNumChannels; i++)
-			//{
-			//	if (strcmp(animation->mChannels[i]->mNodeName.C_Str(), channelName.c_str()) != 0)
-			//		continue;
-
-			//	channel = animation->mChannels[i];
-			//	break;
-			//}
-			//
-			//fileHeader.BoneAnimationTracks.emplace_back();
-
-			//if (channel != nullptr)
-			//{
-			//	SBoneAnimationTrack& track = fileHeader.BoneAnimationTracks.back();
-			//	track.BoneName = bone.Name.AsString();
-
-			//	for (U32 t = 0; t < channel->mNumPositionKeys; t++)
-			//	{
-			//		track.TranslationKeys.emplace_back(ToHavtornVecAnimationKey(channel->mPositionKeys[t]));
-			//		track.TranslationKeys.back().Value *= scaleModifier;
-			//	}
-
-			//	for (U32 q = 0; q < channel->mNumRotationKeys; q++)
-			//		track.RotationKeys.emplace_back(ToHavtornQuatAnimationKey(channel->mRotationKeys[q]));
-
-			//	for (U32 s = 0; s < channel->mNumScalingKeys; s++)
-			//		track.ScaleKeys.emplace_back(ToHavtornVecAnimationKey(channel->mScalingKeys[s]));
-			//}
-			//else
-			//{
-			//	for (U32 k = 0; k < fileHeader.DurationInTicks; k++)
-			//	{
-			//		SBoneAnimationTrack& track = fileHeader.BoneAnimationTracks.back();
-			//		track.BoneName = bone.Name.AsString();
-
-			//		if (track.TranslationKeys.size() > 0)
-			//			track.TranslationKeys.emplace_back(track.TranslationKeys.back());
-			//		else
-			//			track.TranslationKeys.emplace_back(SVecBoneAnimationKey{ SVector::Zero, 0.0f });
-			//		
-			//		if (track.RotationKeys.size() > 0)
-			//			track.RotationKeys.emplace_back(track.RotationKeys.back());
-			//		else
-			//			track.RotationKeys.emplace_back(SQuatBoneAnimationKey{ SQuaternion::Identity, 0.0f });
-
-			//		if (track.ScaleKeys.size() > 0)
-			//			track.ScaleKeys.emplace_back(track.ScaleKeys.back());
-			//		else
-			//			track.ScaleKeys.emplace_back(SVecBoneAnimationKey{ SVector(1.0f), 0.0f});
-			//	}
-			//}
-		//}
-
-		//for (U64 i = 0; i < fileHeader.SequentialPosedBones.size(); i++)
-		//{
-		//	auto sequentialBone = fileHeader.SequentialPosedBones[i];
-		//	U64 frame = i / bones.size();
-		//	HV_LOG_WARN("Frame %i: Bone %s Transform: %s", frame, sequentialBone.Name.AsString().c_str(), sequentialBone.Transform.ToString().c_str());
-		//}
 		
-		//SMatrix finalFrame = SMatrix::Identity;
-		//finalFrame = SMatrix::CreateRotationAroundX(UMath::DegToRad(-90.f));
-		//fileHeader.SequentialPosedBones[0].Transform = SMatrix::Identity;
-		//fileHeader.SequentialPosedBones[0].Transform.SetTranslation(SVector4(0.0f, 0.0f, 0.0f, 1.0f));
-		//fileHeader.SequentialPosedBones[1].Transform = SMatrix::Identity;
-		//fileHeader.SequentialPosedBones[1].Transform.SetTranslation(SVector4(0.0f, 0.0f, 0.0f, 1.0f));
-		//fileHeader.SequentialPosedBones[2].Transform = SMatrix::Identity;
-		//fileHeader.SequentialPosedBones[2].Transform.SetTranslation(SVector4(0.0f, 0.0f, 0.0f, 1.0f));
-		////fileHeader.SequentialPosedBones[2].Transform = SMatrix::CreateRotationAroundX(UMath::DegToRad(90.f));
-		////fileHeader.SequentialPosedBones[2].Transform.SetTranslation(SVector4(0.0f, 0.0f, -2.0f, 1.0f));
-		////fileHeader.SequentialPosedBones[2].Transform.SetScale(SVector(0.0f, 0.0f, -2.0f));
-		////fileHeader.SequentialPosedBones[2].Transform = SMatrix::Transpose(fileHeader.SequentialPosedBones[2].Transform);
-		//fileHeader.SequentialPosedBones[3].Transform = SMatrix::Identity;
-		//SMatrix::Recompose((SVector4(0.0f, 0.0f, -1.0f, 1.0f) * SMatrix::CreateRotationAroundX(45.f)).ToVector3(), SVector(0.0f, 0.0f, 0.0f), SVector(1.0f, 1.0f, 1.0f), fileHeader.SequentialPosedBones[3].Transform);
-		//fileHeader.SequentialPosedBones[3].Transform.SetTranslation(SVector4(0.0f, 0.0f, 0.0f, 1.0f));
+		//for (U64 i = 0; i < assimpScene->mRootNode.chi)
+		//{
+		//	HV_LOG_INFO("AnimTrack: %s", track.BoneName.c_str());
+		//}
 		for (auto track : fileHeader.BoneAnimationTracks)
 		{
 			HV_LOG_INFO("AnimTrack: %s", track.BoneName.c_str());

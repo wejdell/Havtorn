@@ -49,7 +49,7 @@ namespace Havtorn
 		inline SMatrix Inverse() const;
 
 		static inline void Decompose(const SMatrix& matrix, SVector& translation, SVector& euler, SVector& scale);
-		static inline void Decompose(const SMatrix& matrix, SVector& translation, SQuaternion& rotation, SVector& scale);
+		static void Decompose(const SMatrix& matrix, SVector& translation, SQuaternion& rotation, SVector& scale);
 		static inline void Decompose(const SMatrix& matrix, F32* translationData,  F32* eulerData,  F32* scaleData);
 		static inline void Recompose(const SVector& translation, const SVector& euler, const SVector& scale, SMatrix& outMatrix);
 		static void Recompose(const SVector& translation, const SQuaternion& rotation, const SVector& scale, SMatrix& outMatrix);
@@ -121,6 +121,7 @@ namespace Havtorn
 		// Uses Lerp for translation and scale, and Quaternion Slerp for rotation
 		static SMatrix Interpolate(const SMatrix& a, const SMatrix& b, F32 t);
 
+		// TODO.NW: Make all ToString functions return const char*? Mostly used for debugging anyway
 		std::string ToString() const;
 	};
 
