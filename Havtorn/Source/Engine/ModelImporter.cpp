@@ -370,6 +370,15 @@ namespace Havtorn
 
 		void AddBoneData(U32 boneID, F32 weight)
 		{
+			for (U32 i = 0; i < ARRAY_SIZE_IN_ELEMENTS(IDs); i++)
+			{
+				if (IDs[i] == boneID)
+					return;
+			}
+
+			if (weight == 0)
+				return;
+
 			//F32 smallestWeight = UMath::MaxFloat;
 			//U32 smallestIndex = 0;
 			for (U32 i = 0; i < ARRAY_SIZE_IN_ELEMENTS(IDs); i++) 
@@ -564,7 +573,7 @@ namespace Havtorn
 		return newFileName;
 	}
 
-	void ExtractNodes(aiNode* node, const SMatrix& /*parentTransform*/, const std::vector<SSkeletalMeshBone>& bindPose, std::vector<SSkeletalMeshNode>& nodesToPopulate)
+	void ExtractNodes(const aiScene* scene, aiNode* node, const SMatrix& parentTransform, const std::vector<SSkeletalMeshBone>& bindPose, std::vector<SSkeletalMeshNode>& nodesToPopulate)
 	{
 		//static U32 index = 0;
 		//CHavtornStaticString<32> nodeName = CHavtornStaticString<32>(node->mName.C_Str());
@@ -588,15 +597,26 @@ namespace Havtorn
 
 		static U32 index = 0;
 		CHavtornStaticString<32> nodeName = CHavtornStaticString<32>(node->mName.C_Str());
+
+		aiBone* leBone = scene->findBone(node->mName);
+		if (leBone == nullptr)
+		{
+			for (U32 i = 0; i < node->mNumChildren; i++)
+				ExtractNodes(scene, node->mChildren[i], parentTransform, bindPose, nodesToPopulate);
+
+			return;
+		}
+
 		SMatrix scaledMatrix = SMatrix::Transpose(ToHavtornMatrix(node->mTransformation));
-		SQuaternion rot = SQuaternion::Identity;
-		SVector pos = SVector::Zero;
-		SVector scl = SVector(1.0f);
-		SMatrix::Decompose(scaledMatrix, pos, rot, scl);
-		SMatrix unScaledMatrix = SMatrix::Identity;
-		SMatrix::Recompose(pos, rot, SVector(1.0f), unScaledMatrix);
-		//SMatrix transform = unScaledMatrix * parentTransform;
-		SMatrix transform = unScaledMatrix;
+		//SQuaternion rot = SQuaternion::Identity;
+		//SVector pos = SVector::Zero;
+		//SVector scl = SVector(1.0f);
+		//SMatrix::Decompose(scaledMatrix, pos, rot, scl);
+		//SMatrix unScaledMatrix = SMatrix::Identity;
+		//SMatrix::Recompose(pos, rot, SVector(1.0f), unScaledMatrix);
+		////SMatrix transform = unScaledMatrix * parentTransform;
+		SMatrix parentTransformCopy = parentTransform;
+		SMatrix transform = scaledMatrix;
 		
 		if (nodesToPopulate.size() > 0)
 		{
@@ -613,11 +633,10 @@ namespace Havtorn
 		}
 
 		HV_LOG_ERROR("Node %i: %s, %s", ++index, nodeName.AsString().c_str(), transform.ToString().c_str());
-		nodesToPopulate.emplace_back(SSkeletalMeshNode(nodeName, transform, {}));
-
+		nodesToPopulate.emplace_back(SSkeletalMeshNode(nodeName, transform/* * parentTransformCopy*/, {}));
 
 		for (U32 i = 0; i < node->mNumChildren; i++)
-			ExtractNodes(node->mChildren[i], transform, bindPose, nodesToPopulate);
+			ExtractNodes(scene, node->mChildren[i], transform/* * parentTransformCopy*/, bindPose, nodesToPopulate);
 	}
 
 	std::string UModelImporter::ImportSkeletalMesh(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions, const aiScene* assimpScene)
@@ -679,7 +698,7 @@ namespace Havtorn
 				}
 			}
 
-			ExtractNodes(assimpScene->mRootNode, SMatrix::Identity, fileHeader.BindPoseBones, fileHeader.Nodes);
+			ExtractNodes(assimpScene, assimpScene->mRootNode, SMatrix::Identity, fileHeader.BindPoseBones, fileHeader.Nodes);
 
 			// Vertices
 			const F32 scaleModifier = importOptions.Scale;

@@ -15,6 +15,32 @@ namespace Havtorn
 	{
 	}
 
+	void ApplyPose(const SMatrix& parentTransform, const std::vector<SSkeletalMeshBone>& bindPoseBones, const std::vector<SMatrix>& animatedPose, std::vector<SSkeletalMeshNode>& animatedNodes, SSkeletalMeshNode& animatedNode)
+	{
+		// ! NodeTransform and localPose are in the same space, they are identical in function, and relative to their parent !
+
+		// find animated pose corresponding to our node, through bind pose bones
+
+		// animatedNodes has been initialized with the bind pose nodes outside this scope, just needs to update their transforms!
+
+		I32 transformIndex = -1;
+
+		if (auto it = std::ranges::find(bindPoseBones, animatedNode.Name, &SSkeletalMeshBone::Name); it != bindPoseBones.end())
+			transformIndex = STATIC_I32(std::distance(std::begin(bindPoseBones), it));
+		
+		if (transformIndex > -1)
+		{
+			SMatrix parentTransformCopy = parentTransform;
+			SMatrix animatedPoseCopy = animatedPose[transformIndex];
+			animatedNode.NodeTransform = animatedPoseCopy * parentTransformCopy;
+		}
+
+		for (U32 i = 0; i < STATIC_U32(animatedNode.ChildIndices.size()); i++)
+		{
+			ApplyPose(animatedNode.NodeTransform, bindPoseBones, animatedPose, animatedNodes, animatedNodes[animatedNode.ChildIndices[i]]);
+		}
+	}
+
 	void CAnimatorGraphSystem::Update(CScene* scene)
 	{
 		const F32 deltaTime = GTime::Dt();
@@ -38,12 +64,52 @@ namespace Havtorn
 			F32 duration = STATIC_F32(component->DurationInTicks);
 			F32 animationTime = fmodf(timeInTicks, duration);
 
-			//// VERSION 2
+			// VERSION 2
 			//component->Bones.clear();
 			//ReadHierarchy(component, mesh, animationTime, mesh->Nodes[0].NodeTransform, mesh->Nodes[0], component->Bones);
 
 			// VERSION 1
 			std::vector<SMatrix> localPose = EvaluateLocalPose(component, animationTime);
+
+			//for (U64 i = 0; i < localPose.size(); i++)
+			//{
+				//const SSkeletalMeshBone& bindPoseBone = mesh->BindPose[i];
+				//SMatrix currentLocalTransform = localPose[i];
+				//SMatrix parentTransform = bindPoseBone.ParentIndex > -1 ? localPose[bindPoseBone.ParentIndex] : SMatrix::Identity;
+				//localPose[i] = currentLocalTransform * parentTransform;
+			//}
+
+			// Initialize unanimated transforms and child indexes
+			std::vector<SSkeletalMeshNode> animatedNodes = mesh->Nodes;
+			
+			// TODO: Need to add the root here? Root may not be identity, should try to save the "InverseGlobalTransform" i.e. root node inverse
+			ApplyPose(SMatrix::Identity, mesh->BindPose, localPose, animatedNodes, animatedNodes[0]);
+
+			// Rename localPose to finalPose at the end
+
+			// If this works, we should be able to combine these last for-loops, each element shouldn't be dependent on other elements
+			for (U64 i = 0; i < localPose.size(); i++)
+			{
+				const SSkeletalMeshBone& bindPoseBone = mesh->BindPose[i];
+				SMatrix animatedBoneSpaceTransform = localPose[i];
+				for (const auto& node : animatedNodes)
+				{
+					if (node.Name == bindPoseBone.Name)
+					{
+						/** Node Transform is relative to the node's parent. Need to go through all nodes from root to find the final object space transform for each bone (node). Probably
+						a good idea to save that in import, for bind pose.*/
+						// go from animated bone space to object space --
+						SMatrix boneObjectSpaceTransform = node.NodeTransform;
+						localPose[i] = animatedBoneSpaceTransform * boneObjectSpaceTransform;
+					}
+				}
+			}
+
+			for (U64 i = 0; i < localPose.size(); i++)
+				localPose[i] = mesh->BindPose[i].InverseBindPoseTransform * localPose[i];
+	
+			// The inverse bind pose matrices get your vertices into bone space so that their parent joint is the origin.
+			component->Bones = localPose;
 
 			// https://www.youtube.com/watch?v=cieheqt7eqc
 			//
@@ -61,27 +127,6 @@ namespace Havtorn
 			// }
 			//
 			// applyPoseToJoints(localPose, rootJoint, Identity);
-
-
-			for (U64 i = 0; i < localPose.size(); i++)
-			{
-				//const SSkeletalMeshBone& bindPoseBone = mesh->BindPose[i];
-				//SMatrix newBonePose = bindPoseBone.InverseBindPoseTransform;
-				//newBonePose *= bindPoseBone.ParentIndex > -1 ? mesh->BindPose[bindPoseBone.ParentIndex].InverseBindPoseTransform : SMatrix::Identity;
-				//localPose[i] *= newBonePose;
-
-				const SSkeletalMeshBone& bindPoseBone = mesh->BindPose[i];
-				SMatrix currentLocalTransform = localPose[i];
-				SMatrix parentTransform = bindPoseBone.ParentIndex > -1 ? localPose[bindPoseBone.ParentIndex] : SMatrix::Identity;
-				localPose[i] = currentLocalTransform * parentTransform;
-			}
-
-			for (U64 i = 0; i < localPose.size(); i++)
-				localPose[i] = mesh->BindPose[i].InverseBindPoseTransform * localPose[i];
-	
-			// The inverse bind pose matrices get your vertices into bone space so that their parent joint is the origin.
-			component->Bones = localPose;
-			//component->AnimationData.X = RenderManager->WriteToAnimationDataTexture(component->AssetName);
 		}
 	}
 
@@ -247,6 +292,7 @@ namespace Havtorn
 	void CAnimatorGraphSystem::ReadHierarchy(const SSkeletalAnimationComponent* animationComponent, const SSkeletalMeshComponent* mesh, const F32 animationTime, const SMatrix& parentTransform, const SSkeletalMeshNode& node, std::vector<SMatrix>& posedTransforms)
 	{
 		SMatrix nodeTransform = node.NodeTransform;
+		SMatrix currentLocalPose = SMatrix::Identity;
 
 		std::string nodeName = node.Name.AsString();
 		I32 boneIndex = -1;
@@ -259,8 +305,7 @@ namespace Havtorn
 			SQuaternion rotation = CalcInterpolatedRotation(animationTime, track);
 			SVector translation = CalcInterpolatedPosition(animationTime, track);
 
-			SMatrix currentLocalPose = SMatrix::Identity;
-			SMatrix::Recompose(translation, rotation, scaling, nodeTransform);
+			SMatrix::Recompose(translation, rotation, scaling, currentLocalPose);
 		}
 
 		SMatrix globalTransform = nodeTransform * parentTransform;
@@ -289,7 +334,6 @@ namespace Havtorn
 			SVector translation = CalcInterpolatedPosition(animationTime, track);
 
 			//SVector scaling = SVector(1.0f);
-			//SQuaternion rotation = CalcInterpolatedRotation(animationTime, track);
 			//SQuaternion rotation = SQuaternion::Identity;
 			//SVector translation = SVector::Zero;
 

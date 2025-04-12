@@ -7,7 +7,8 @@
 #include "Scene/Scene.h"
 
 #include <GUI.h>
-
+#include <Graphics/Debug/DebugDrawUtility.h>
+#include <ECS/Components/TransformComponent.h>
 
 namespace Havtorn
 {
@@ -25,6 +26,13 @@ namespace Havtorn
 		//skeletalAnimationComp->AnimationData = { STATIC_U32(data.X), STATIC_U32(data.Y) };
 		GUI::DragFloat("Animation Time", skeletalAnimationComp->CurrentAnimationTime, 0.01f, 0.0f, skeletalAnimationComp->DurationInTicks / STATIC_F32(skeletalAnimationComp->TickRate));
 		GUI::Checkbox("Is Playing", skeletalAnimationComp->IsPlaying);
+
+		for (SMatrix& bone : skeletalAnimationComp->Bones)
+		{
+			SMatrix parentTransform = scene->GetComponent<STransformComponent>(entityOwner)->Transform.GetMatrix();
+			SMatrix worldTransform = bone * parentTransform;
+			GDebugDraw::AddAxis(worldTransform.GetTranslation(), worldTransform.GetEuler(), worldTransform.GetScale() * 0.5f);
+		}
 
 		return SComponentViewResult();
 	}
