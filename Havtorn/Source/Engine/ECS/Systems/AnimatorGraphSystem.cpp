@@ -41,6 +41,9 @@ namespace Havtorn
 		}
 	}
 
+	static bool once = false;
+	static int nodeNameIndex = 0;
+
 	void CAnimatorGraphSystem::Update(CScene* scene)
 	{
 		const F32 deltaTime = GTime::Dt();
@@ -58,75 +61,76 @@ namespace Havtorn
 				component->CurrentAnimationTime = fmodf(component->CurrentAnimationTime += deltaTime, component->DurationInTicks / STATIC_F32(component->TickRate));
 
 			// Ticks == Frames
-			F32 ticksPerSecond = STATIC_F32(component->TickRate);
-			ticksPerSecond = (ticksPerSecond != 0) ? ticksPerSecond : 24.0f;
-			F32 timeInTicks = component->CurrentAnimationTime * ticksPerSecond;
-			F32 duration = STATIC_F32(component->DurationInTicks);
-			F32 animationTime = fmodf(timeInTicks, duration);
+			//F32 ticksPerSecond = STATIC_F32(component->TickRate);
+			//ticksPerSecond = (ticksPerSecond != 0) ? ticksPerSecond : 24.0f;
+			//F32 timeInTicks = component->CurrentAnimationTime * ticksPerSecond;
+			//F32 duration = STATIC_F32(component->DurationInTicks);
+			//F32 animationTime = fmodf(timeInTicks, duration);
 
 			// VERSION 2
-			//component->Bones.clear();
-			//ReadHierarchy(component, mesh, animationTime, mesh->Nodes[0].NodeTransform, mesh->Nodes[0], component->Bones);
+			component->Bones.clear();
+			ReadHierarchy(component, mesh, 0.0f, mesh->Nodes[0].NodeTransform, mesh->Nodes[0], component->Bones);
+			once = true;
 
-			// VERSION 1
-			std::vector<SMatrix> localPose = EvaluateLocalPose(component, animationTime);
+			//// VERSION 1
+			//std::vector<SMatrix> localPose = EvaluateLocalPose(component, animationTime);
 
+			////for (U64 i = 0; i < localPose.size(); i++)
+			////{
+			//	//const SSkeletalMeshBone& bindPoseBone = mesh->BindPose[i];
+			//	//SMatrix currentLocalTransform = localPose[i];
+			//	//SMatrix parentTransform = bindPoseBone.ParentIndex > -1 ? localPose[bindPoseBone.ParentIndex] : SMatrix::Identity;
+			//	//localPose[i] = currentLocalTransform * parentTransform;
+			////}
+
+			//// Initialize unanimated transforms and child indexes
+			//std::vector<SSkeletalMeshNode> animatedNodes = mesh->Nodes;
+			//
+			//// TODO: Need to add the root here? Root may not be identity, should try to save the "InverseGlobalTransform" i.e. root node inverse
+			//ApplyPose(SMatrix::Identity, mesh->BindPose, localPose, animatedNodes, animatedNodes[0]);
+
+			//// Rename localPose to finalPose at the end
+
+			//// If this works, we should be able to combine these last for-loops, each element shouldn't be dependent on other elements
 			//for (U64 i = 0; i < localPose.size(); i++)
 			//{
-				//const SSkeletalMeshBone& bindPoseBone = mesh->BindPose[i];
-				//SMatrix currentLocalTransform = localPose[i];
-				//SMatrix parentTransform = bindPoseBone.ParentIndex > -1 ? localPose[bindPoseBone.ParentIndex] : SMatrix::Identity;
-				//localPose[i] = currentLocalTransform * parentTransform;
+			//	const SSkeletalMeshBone& bindPoseBone = mesh->BindPose[i];
+			//	SMatrix animatedBoneSpaceTransform = localPose[i];
+			//	for (const auto& node : animatedNodes)
+			//	{
+			//		if (node.Name == bindPoseBone.Name)
+			//		{
+			//			/** Node Transform is relative to the node's parent. Need to go through all nodes from root to find the final object space transform for each bone (node). Probably
+			//			a good idea to save that in import, for bind pose.*/
+			//			// go from animated bone space to object space --
+			//			SMatrix boneObjectSpaceTransform = node.NodeTransform;
+			//			localPose[i] = animatedBoneSpaceTransform * boneObjectSpaceTransform;
+			//		}
+			//	}
 			//}
 
-			// Initialize unanimated transforms and child indexes
-			std::vector<SSkeletalMeshNode> animatedNodes = mesh->Nodes;
-			
-			// TODO: Need to add the root here? Root may not be identity, should try to save the "InverseGlobalTransform" i.e. root node inverse
-			ApplyPose(SMatrix::Identity, mesh->BindPose, localPose, animatedNodes, animatedNodes[0]);
-
-			// Rename localPose to finalPose at the end
-
-			// If this works, we should be able to combine these last for-loops, each element shouldn't be dependent on other elements
-			for (U64 i = 0; i < localPose.size(); i++)
-			{
-				const SSkeletalMeshBone& bindPoseBone = mesh->BindPose[i];
-				SMatrix animatedBoneSpaceTransform = localPose[i];
-				for (const auto& node : animatedNodes)
-				{
-					if (node.Name == bindPoseBone.Name)
-					{
-						/** Node Transform is relative to the node's parent. Need to go through all nodes from root to find the final object space transform for each bone (node). Probably
-						a good idea to save that in import, for bind pose.*/
-						// go from animated bone space to object space --
-						SMatrix boneObjectSpaceTransform = node.NodeTransform;
-						localPose[i] = animatedBoneSpaceTransform * boneObjectSpaceTransform;
-					}
-				}
-			}
-
-			for (U64 i = 0; i < localPose.size(); i++)
-				localPose[i] = mesh->BindPose[i].InverseBindPoseTransform * localPose[i];
+			//for (U64 i = 0; i < localPose.size(); i++)
+			//	localPose[i] = mesh->BindPose[i].InverseBindPoseTransform * localPose[i];
 	
-			// The inverse bind pose matrices get your vertices into bone space so that their parent joint is the origin.
-			component->Bones = localPose;
+			//// The inverse bind pose matrices get your vertices into bone space so that their parent joint is the origin.
+			//component->Bones = localPose;
 
-			// https://www.youtube.com/watch?v=cieheqt7eqc
-			//
-			// void applyPoseToJoints(localPose, joint, parentTransform)
-			// {
-			//		SMatrix currentLocalTransform = localPose[joint];
-			//		SMatrix currentTransform = parentTransform * currentLocalTransform;
-			//		for (childJoint : joint.Children)
-			//		{
-			//			applyPoseToJoints(localPose, childJoint, currentTransform);
-			//		}
-			// 
-			//		currentTransform = currentTransform * joint.InverseBindTransform;
-			//		localPose[joint] = currentTransform;
-			// }
-			//
-			// applyPoseToJoints(localPose, rootJoint, Identity);
+			//// https://www.youtube.com/watch?v=cieheqt7eqc
+			////
+			//// void applyPoseToJoints(localPose, joint, parentTransform)
+			//// {
+			////		SMatrix currentLocalTransform = localPose[joint];
+			////		SMatrix currentTransform = parentTransform * currentLocalTransform;
+			////		for (childJoint : joint.Children)
+			////		{
+			////			applyPoseToJoints(localPose, childJoint, currentTransform);
+			////		}
+			//// 
+			////		currentTransform = currentTransform * joint.InverseBindTransform;
+			////		localPose[joint] = currentTransform;
+			//// }
+			////
+			//// applyPoseToJoints(localPose, rootJoint, Identity);
 		}
 	}
 
@@ -289,12 +293,19 @@ namespace Havtorn
 		return StartPosition * (1 - Factor) + EndPosition * Factor;
 	}
 
+	std::string stripAssimpFbxSuffixTemp(const std::string& name)
+	{
+		const std::string token = "_$AssimpFbx$_";
+		size_t pos = name.find(token);
+		return pos != std::string::npos ? name.substr(0, pos) : name;
+	}
+
 	void CAnimatorGraphSystem::ReadHierarchy(const SSkeletalAnimationComponent* animationComponent, const SSkeletalMeshComponent* mesh, const F32 animationTime, const SMatrix& parentTransform, const SSkeletalMeshNode& node, std::vector<SMatrix>& posedTransforms)
 	{
 		SMatrix nodeTransform = node.NodeTransform;
-		SMatrix currentLocalPose = SMatrix::Identity;
 
 		std::string nodeName = node.Name.AsString();
+
 		I32 boneIndex = -1;
 		if (auto it = std::ranges::find(animationComponent->CurrentAnimation, nodeName, &SBoneAnimationTrack::BoneName); it != animationComponent->CurrentAnimation.end())
 		{
@@ -305,16 +316,35 @@ namespace Havtorn
 			SQuaternion rotation = CalcInterpolatedRotation(animationTime, track);
 			SVector translation = CalcInterpolatedPosition(animationTime, track);
 
-			SMatrix::Recompose(translation, rotation, scaling, currentLocalPose);
+			SMatrix::Recompose(translation, rotation, scaling, nodeTransform);
 		}
 
 		SMatrix globalTransform = nodeTransform * parentTransform;
+		if (!once)
+		{
+			HV_LOG_TRACE("%i: %s", ++nodeNameIndex, nodeName.c_str());
+			SVector trans;
+			SVector rot;
+			SVector scal;
+			SMatrix::Decompose(globalTransform, trans, rot, scal);
+			HV_LOG_TRACE("Global: t: %s, r: %s", trans.ToString().c_str(), rot.ToString().c_str());
+		}
 
 		if (boneIndex >= 0)
 		{
 			// TODO.NW: Make matrix operations const where they should be
 			SMatrix inverseBindPose = mesh->BindPose[boneIndex].InverseBindPoseTransform;
 			posedTransforms.emplace_back(inverseBindPose * globalTransform);
+
+			if (!once)
+			{
+				HV_LOG_WARN("%i: %s", nodeNameIndex, nodeName.c_str());
+				SVector trans;
+				SVector rot;
+				SVector scal;
+				SMatrix::Decompose(globalTransform, trans, rot, scal);
+				HV_LOG_WARN("Global: t: %s, r: %s", trans.ToString().c_str(), rot.ToString().c_str());
+			}
 		}
 
 		for (auto childIndex : node.ChildIndices)

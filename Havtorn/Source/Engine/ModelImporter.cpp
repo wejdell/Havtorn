@@ -20,6 +20,13 @@
 
 namespace Havtorn
 {
+	std::string stripAssimpFbxSuffix(const std::string& name)
+	{
+		const std::string token = "_$AssimpFbx$_";
+		size_t pos = name.find(token);
+		return pos != std::string::npos ? name.substr(0, pos) : name;
+	}
+
 	const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string& nodeName)
 	{
 		for (U32 i = 0; i < pAnimation->mNumChannels; ++i)
@@ -198,9 +205,9 @@ namespace Havtorn
 
 	void InitM4FromM3(aiMatrix4x4& out, const aiMatrix3x3& in)
 	{
-		out.a1 = UMath::RoundToZero(in.a1, 1.e-3f); out.a2 = UMath::RoundToZero(in.a2, 1.e-3f); out.a3 = UMath::RoundToZero(in.a3, 1.e-3f); out.a4 = 0.f;
-		out.b1 = UMath::RoundToZero(in.b1, 1.e-3f); out.b2 = UMath::RoundToZero(in.b2, 1.e-3f); out.b3 = UMath::RoundToZero(in.b3, 1.e-3f); out.b4 = 0.f;
-		out.c1 = UMath::RoundToZero(in.c1, 1.e-3f); out.c2 = UMath::RoundToZero(in.c2, 1.e-3f); out.c3 = UMath::RoundToZero(in.c3, 1.e-3f); out.c4 = 0.f;
+		out.a1 = in.a1; out.a2 = in.a2; out.a3 = in.a3; out.a4 = 0.f;
+		out.b1 = in.b1; out.b2 = in.b2; out.b3 = in.b3; out.b4 = 0.f;
+		out.c1 = in.c1; out.c2 = in.c2; out.c3 = in.c3; out.c4 = 0.f;
 		out.d1 = 0.f;   out.d2 = 0.f;   out.d3 = 0.f;   out.d4 = 1.f;
 	}
 
@@ -231,11 +238,17 @@ namespace Havtorn
 
 	SMatrix ToHavtornMatrix(const aiMatrix4x4& assimpMatrix)
 	{
+		//SMatrix mat;
+		//mat(0, 0) = UMath::RoundToZero(assimpMatrix.a1, 1.e-3f); mat(0, 1) = UMath::RoundToZero(assimpMatrix.a2, 1.e-3f); mat(0, 2) = UMath::RoundToZero(assimpMatrix.a3, 1.e-3f); mat(0, 3) = UMath::RoundToZero(assimpMatrix.a4, 1.e-3f);
+		//mat(1, 0) = UMath::RoundToZero(assimpMatrix.b1, 1.e-3f); mat(1, 1) = UMath::RoundToZero(assimpMatrix.b2, 1.e-3f); mat(1, 2) = UMath::RoundToZero(assimpMatrix.b3, 1.e-3f); mat(1, 3) = UMath::RoundToZero(assimpMatrix.b4, 1.e-3f);
+		//mat(2, 0) = UMath::RoundToZero(assimpMatrix.c1, 1.e-3f); mat(2, 1) = UMath::RoundToZero(assimpMatrix.c2, 1.e-3f); mat(2, 2) = UMath::RoundToZero(assimpMatrix.c3, 1.e-3f); mat(2, 3) = UMath::RoundToZero(assimpMatrix.c4, 1.e-3f);
+		//mat(3, 0) = UMath::RoundToZero(assimpMatrix.d1, 1.e-3f); mat(3, 1) = UMath::RoundToZero(assimpMatrix.d2, 1.e-3f); mat(3, 2) = UMath::RoundToZero(assimpMatrix.d3, 1.e-3f); mat(3, 3) = UMath::RoundToZero(assimpMatrix.d4, 1.e-3f);
+		//return mat;
 		SMatrix mat;
-		mat(0, 0) = UMath::RoundToZero(assimpMatrix.a1, 1.e-3f); mat(0, 1) = UMath::RoundToZero(assimpMatrix.a2, 1.e-3f); mat(0, 2) = UMath::RoundToZero(assimpMatrix.a3, 1.e-3f); mat(0, 3) = UMath::RoundToZero(assimpMatrix.a4, 1.e-3f);
-		mat(1, 0) = UMath::RoundToZero(assimpMatrix.b1, 1.e-3f); mat(1, 1) = UMath::RoundToZero(assimpMatrix.b2, 1.e-3f); mat(1, 2) = UMath::RoundToZero(assimpMatrix.b3, 1.e-3f); mat(1, 3) = UMath::RoundToZero(assimpMatrix.b4, 1.e-3f);
-		mat(2, 0) = UMath::RoundToZero(assimpMatrix.c1, 1.e-3f); mat(2, 1) = UMath::RoundToZero(assimpMatrix.c2, 1.e-3f); mat(2, 2) = UMath::RoundToZero(assimpMatrix.c3, 1.e-3f); mat(2, 3) = UMath::RoundToZero(assimpMatrix.c4, 1.e-3f);
-		mat(3, 0) = UMath::RoundToZero(assimpMatrix.d1, 1.e-3f); mat(3, 1) = UMath::RoundToZero(assimpMatrix.d2, 1.e-3f); mat(3, 2) = UMath::RoundToZero(assimpMatrix.d3, 1.e-3f); mat(3, 3) = UMath::RoundToZero(assimpMatrix.d4, 1.e-3f);
+		mat(0, 0) = assimpMatrix.a1; mat(0, 1) = assimpMatrix.a2; mat(0, 2) = assimpMatrix.a3; mat(0, 3) = assimpMatrix.a4;
+		mat(1, 0) = assimpMatrix.b1; mat(1, 1) = assimpMatrix.b2; mat(1, 2) = assimpMatrix.b3; mat(1, 3) = assimpMatrix.b4;
+		mat(2, 0) = assimpMatrix.c1; mat(2, 1) = assimpMatrix.c2; mat(2, 2) = assimpMatrix.c3; mat(2, 3) = assimpMatrix.c4;
+		mat(3, 0) = assimpMatrix.d1; mat(3, 1) = assimpMatrix.d2; mat(3, 2) = assimpMatrix.d3; mat(3, 3) = assimpMatrix.d4;
 		return mat;
 	}
 
@@ -596,16 +609,27 @@ namespace Havtorn
 		//	ExtractNodes(node->mChildren[i], transform, bindPose, nodesToPopulate);
 
 		static U32 index = 0;
-		CHavtornStaticString<32> nodeName = CHavtornStaticString<32>(node->mName.C_Str());
-
-		aiBone* leBone = scene->findBone(node->mName);
-		if (leBone == nullptr)
+		CHavtornStaticString<255> nodeName = CHavtornStaticString<255>(node->mName.C_Str());
+		const std::string token = "CH_";
+		size_t pos = std::string(nodeName.Data()).find(token);
+		if (pos != std::string::npos)
 		{
 			for (U32 i = 0; i < node->mNumChildren; i++)
 				ExtractNodes(scene, node->mChildren[i], parentTransform, bindPose, nodesToPopulate);
 
 			return;
 		}
+
+		//std::string strippedName = node->mName.C_Str();
+		//strippedName = stripAssimpFbxSuffix(strippedName);
+		//aiBone* leBone = scene->findBone(aiString(strippedName));
+		//if (leBone == nullptr)
+		//{
+		//	for (U32 i = 0; i < node->mNumChildren; i++)
+		//		ExtractNodes(scene, node->mChildren[i], parentTransform, bindPose, nodesToPopulate);
+
+		//	return;
+		//}
 
 		SMatrix scaledMatrix = SMatrix::Transpose(ToHavtornMatrix(node->mTransformation));
 		//SQuaternion rot = SQuaternion::Identity;
@@ -620,7 +644,7 @@ namespace Havtorn
 		
 		if (nodesToPopulate.size() > 0)
 		{
-			CHavtornStaticString<32> parentName = node->mParent ? std::string(node->mParent->mName.data) : "";
+			CHavtornStaticString<255> parentName = node->mParent ? std::string(node->mParent->mName.data) : "";
 			//for (U64 j = 0; j < nodesToPopulate.size(); j++)
 			//{
 			//	if (parentName == nodesToPopulate[j].Name.AsString())
@@ -682,7 +706,13 @@ namespace Havtorn
 					I32 parentIndex = tempBoneNameToIndexMap.contains(parentName) ? tempBoneNameToIndexMap[parentName] : -1;
 
 					// Mesh Space -> Bone Space in Bind Pose, [INVERSE BIND MATRIX]. Use with bone [WORLD SPACE TRANSFORM] to find vertex pos
-					fileHeader.BindPoseBones.push_back(SSkeletalMeshBone(boneName, SMatrix::Transpose(ToHavtornMatrix(fbxMesh->mBones[i]->mOffsetMatrix)), parentIndex));
+					SMatrix inverseBindPose = SMatrix::Transpose(ToHavtornMatrix(fbxMesh->mBones[i]->mOffsetMatrix));
+					SVector trans;
+					SQuaternion rot;
+					SVector scale;
+					SMatrix::Decompose(inverseBindPose, trans, rot, scale);
+					SMatrix::Recompose(trans * importOptions.Scale, rot, scale, inverseBindPose);
+					fileHeader.BindPoseBones.push_back(SSkeletalMeshBone(boneName, inverseBindPose, parentIndex));
 					//HV_LOG_ERROR("Node %i: %s, %s", i+1, fbxMesh->mBones[i]->mNode->mName.C_Str(), SMatrix::Transpose(ToHavtornMatrix(fbxMesh->mBones[i]->mNode->mTransformation)).ToString().c_str());
 				}
 				else
@@ -810,7 +840,9 @@ namespace Havtorn
 
 			for (U32 i = 0; i < animation->mNumChannels; i++)
 			{
-				if (strcmp(animation->mChannels[i]->mNodeName.C_Str(), channelName.c_str()) != 0)
+				std::string strippedAnimationTrackName = stripAssimpFbxSuffix(animation->mChannels[i]->mNodeName.C_Str());
+				if (strcmp(strippedAnimationTrackName.c_str(), channelName.c_str()) != 0)
+				//if (strcmp(animation->mChannels[i]->mNodeName.C_Str(), channelName.c_str()) != 0)
 					continue;
 
 				channel = animation->mChannels[i];
@@ -819,7 +851,7 @@ namespace Havtorn
 	
 			fileHeader.BoneAnimationTracks.emplace_back();
 			SBoneAnimationTrack& track = fileHeader.BoneAnimationTracks.back();
-			track.BoneName = bone.Name.AsString();
+			track.BoneName = bone.Name;
 
 			if (channel != nullptr)
 			{
@@ -843,7 +875,7 @@ namespace Havtorn
 		//}
 		for (auto track : fileHeader.BoneAnimationTracks)
 		{
-			HV_LOG_INFO("AnimTrack: %s", track.BoneName.c_str());
+			HV_LOG_INFO("AnimTrack: %s", track.BoneName.Data());
 		}
 
 		std::string newFileName = destinationPath + UGeneralUtils::ExtractFileBaseNameFromPath(filePath) + ".hva";

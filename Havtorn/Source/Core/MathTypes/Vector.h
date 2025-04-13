@@ -417,7 +417,7 @@ namespace Havtorn
 		// Each take min 3 chars, min value should be: 0.0
 		// Max should be 9999999999999.9
 		char buffer[64];
-		sprintf_s(buffer, "{X: %.1f, Y: %.1f, Z: %.1f}", X, Y, Z);
+		sprintf_s(buffer, "{X: %.7f, Y: %.7f, Z: %.7f}", X, Y, Z);
 		return buffer;
 	}
 	

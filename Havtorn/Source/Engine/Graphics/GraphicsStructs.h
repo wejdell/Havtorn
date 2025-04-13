@@ -86,14 +86,14 @@ namespace Havtorn
 
 	struct SSkeletalMeshBone
 	{
-		CHavtornStaticString<32> Name;
+		CHavtornStaticString<255> Name;
 		SMatrix InverseBindPoseTransform = SMatrix::Identity;
 		I32 ParentIndex = -1;
 	};
 
 	struct SSkeletalMeshNode
 	{
-		CHavtornStaticString<32> Name;
+		CHavtornStaticString<255> Name;
 		SMatrix NodeTransform = SMatrix::Identity;
 		std::vector<U32> ChildIndices;
 	};
@@ -118,7 +118,7 @@ namespace Havtorn
 
 	struct SBoneAnimationTrack
 	{
-		std::string BoneName;
+		CHavtornStaticString<255> BoneName;
 		//std::vector<SBoneAnimationKey> AnimationKeys;
 		std::vector<SVecBoneAnimationKey> TranslationKeys;
 		std::vector<SQuatBoneAnimationKey> RotationKeys;
