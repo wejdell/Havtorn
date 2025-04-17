@@ -61,15 +61,16 @@ namespace Havtorn
 				component->CurrentAnimationTime = fmodf(component->CurrentAnimationTime += deltaTime, component->DurationInTicks / STATIC_F32(component->TickRate));
 
 			// Ticks == Frames
-			//F32 ticksPerSecond = STATIC_F32(component->TickRate);
-			//ticksPerSecond = (ticksPerSecond != 0) ? ticksPerSecond : 24.0f;
-			//F32 timeInTicks = component->CurrentAnimationTime * ticksPerSecond;
-			//F32 duration = STATIC_F32(component->DurationInTicks);
-			//F32 animationTime = fmodf(timeInTicks, duration);
+			F32 ticksPerSecond = STATIC_F32(component->TickRate);
+			ticksPerSecond = (ticksPerSecond != 0) ? ticksPerSecond : 24.0f;
+			F32 timeInTicks = component->CurrentAnimationTime * ticksPerSecond;
+			F32 duration = STATIC_F32(component->DurationInTicks);
+			F32 animationTime = fmodf(timeInTicks, duration);
+			//F32 animationTime = 0.0f;
 
 			// VERSION 2
 			component->Bones.clear();
-			ReadHierarchy(component, mesh, 0.0f, mesh->Nodes[0].NodeTransform, mesh->Nodes[0], component->Bones);
+			ReadHierarchy(component, mesh, animationTime, mesh->Nodes[0].NodeTransform, mesh->Nodes[0], component->Bones);
 			once = true;
 
 			//// VERSION 1
@@ -305,11 +306,11 @@ namespace Havtorn
 		SMatrix nodeTransform = node.NodeTransform;
 
 		std::string nodeName = node.Name.AsString();
-
+		//if (!once)
+		//	HV_LOG_TRACE("%i: %s", ++nodeNameIndex, nodeName.c_str());
 		I32 boneIndex = -1;
-		if (auto it = std::ranges::find(animationComponent->CurrentAnimation, nodeName, &SBoneAnimationTrack::BoneName); it != animationComponent->CurrentAnimation.end())
+		if (auto it = std::ranges::find(animationComponent->CurrentAnimation, nodeName, &SBoneAnimationTrack::TrackName); it != animationComponent->CurrentAnimation.end())
 		{
-			boneIndex = STATIC_I32(std::distance(animationComponent->CurrentAnimation.begin(), it));
 			const SBoneAnimationTrack& track = *it;
 
 			SVector scaling = CalcInterpolatedScaling(animationTime, track);
@@ -317,6 +318,15 @@ namespace Havtorn
 			SVector translation = CalcInterpolatedPosition(animationTime, track);
 
 			SMatrix::Recompose(translation, rotation, scaling, nodeTransform);
+			//if (!once)
+			//{
+			//	HV_LOG_TRACE("%i: %s", ++nodeNameIndex, nodeName.c_str());
+			//	SVector trans;
+			//	SVector rot;
+			//	SVector scal;
+			//	SMatrix::Decompose(nodeTransform, trans, rot, scal);
+			//	HV_LOG_TRACE("Node Transform: t: %s, r: %s", trans.ToString().c_str(), rot.ToString().c_str());
+			//}
 		}
 
 		SMatrix globalTransform = nodeTransform * parentTransform;
@@ -327,24 +337,26 @@ namespace Havtorn
 			SVector rot;
 			SVector scal;
 			SMatrix::Decompose(globalTransform, trans, rot, scal);
-			HV_LOG_TRACE("Global: t: %s, r: %s", trans.ToString().c_str(), rot.ToString().c_str());
+			HV_LOG_WARN("Global: t: %s, r: %s, s: %s", trans.ToString().c_str(), rot.ToString().c_str(), scal.ToString().c_str());
 		}
 
-		if (boneIndex >= 0)
+		if (auto it = std::ranges::find(mesh->BindPose, nodeName, &SSkeletalMeshBone::Name); it != mesh->BindPose.end())
 		{
+			boneIndex = STATIC_I32(std::distance(mesh->BindPose.begin(), it));
+		
 			// TODO.NW: Make matrix operations const where they should be
 			SMatrix inverseBindPose = mesh->BindPose[boneIndex].InverseBindPoseTransform;
 			posedTransforms.emplace_back(inverseBindPose * globalTransform);
 
-			if (!once)
-			{
-				HV_LOG_WARN("%i: %s", nodeNameIndex, nodeName.c_str());
-				SVector trans;
-				SVector rot;
-				SVector scal;
-				SMatrix::Decompose(globalTransform, trans, rot, scal);
-				HV_LOG_WARN("Global: t: %s, r: %s", trans.ToString().c_str(), rot.ToString().c_str());
-			}
+			//if (!once)
+			//{
+			//	HV_LOG_WARN("%i: %s", ++nodeNameIndex, nodeName.c_str());
+			//	SVector trans;
+			//	SVector rot;
+			//	SVector scal;
+			//	SMatrix::Decompose(inverseBindPose, trans, rot, scal);
+			//	HV_LOG_WARN("Global: t: %s, r: %s, s: %s", trans.ToString().c_str(), rot.ToString().c_str(), scal.ToString().c_str());
+			//}
 		}
 
 		for (auto childIndex : node.ChildIndices)
@@ -358,7 +370,7 @@ namespace Havtorn
 		std::vector<SMatrix> localPose;
 		for (const SBoneAnimationTrack& track : animationComponent->CurrentAnimation)
 		{
-			//HV_LOG_WARN("bone :%s", track.BoneName.c_str());
+			//HV_LOG_WARN("bone :%s", track.TrackName.c_str());
 			SVector scaling = CalcInterpolatedScaling(animationTime, track);
 			SQuaternion rotation = CalcInterpolatedRotation(animationTime, track);
 			SVector translation = CalcInterpolatedPosition(animationTime, track);

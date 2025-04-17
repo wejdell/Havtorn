@@ -118,7 +118,7 @@ namespace Havtorn
 
 	struct SBoneAnimationTrack
 	{
-		CHavtornStaticString<255> BoneName;
+		CHavtornStaticString<255> TrackName;
 		//std::vector<SBoneAnimationKey> AnimationKeys;
 		std::vector<SVecBoneAnimationKey> TranslationKeys;
 		std::vector<SQuatBoneAnimationKey> RotationKeys;
@@ -130,7 +130,7 @@ namespace Havtorn
 			size += GetDataSize(TranslationKeys);
 			size += GetDataSize(RotationKeys);
 			size += GetDataSize(ScaleKeys);
-			size += GetDataSize(BoneName);
+			size += GetDataSize(TrackName);
 			//size += GetDataSize(AnimationKeys);
 			return size;
 		}

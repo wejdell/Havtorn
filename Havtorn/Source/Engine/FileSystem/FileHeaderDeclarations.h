@@ -218,7 +218,7 @@ namespace Havtorn
 			SerializeData(track.RotationKeys, toData, pointerPosition);
 			SerializeData(track.ScaleKeys, toData, pointerPosition);
 			//SerializeData(track.AnimationKeys, toData, pointerPosition);
-			SerializeData(track.BoneName, toData, pointerPosition);
+			SerializeData(track.TrackName, toData, pointerPosition);
 		}
 	}
 
@@ -240,7 +240,7 @@ namespace Havtorn
 			DeserializeData(BoneAnimationTracks.back().RotationKeys, fromData, pointerPosition);
 			DeserializeData(BoneAnimationTracks.back().ScaleKeys, fromData, pointerPosition);
 			//DeserializeData(BoneAnimationTracks.back().AnimationKeys, fromData, pointerPosition);
-			DeserializeData(BoneAnimationTracks.back().BoneName, fromData, pointerPosition);
+			DeserializeData(BoneAnimationTracks.back().TrackName, fromData, pointerPosition);
 		}
 	}
 

@@ -707,11 +707,13 @@ namespace Havtorn
 
 					// Mesh Space -> Bone Space in Bind Pose, [INVERSE BIND MATRIX]. Use with bone [WORLD SPACE TRANSFORM] to find vertex pos
 					SMatrix inverseBindPose = SMatrix::Transpose(ToHavtornMatrix(fbxMesh->mBones[i]->mOffsetMatrix));
-					SVector trans;
-					SQuaternion rot;
-					SVector scale;
-					SMatrix::Decompose(inverseBindPose, trans, rot, scale);
-					SMatrix::Recompose(trans * importOptions.Scale, rot, scale, inverseBindPose);
+					//SVector trans;
+					//SQuaternion rot;
+					//SVector scale;
+					//SMatrix::Decompose(inverseBindPose, trans, rot, scale);
+					//SMatrix::Recompose(trans * importOptions.Scale, rot, scale, inverseBindPose);
+					//SMatrix::Recompose(trans, rot, scale, inverseBindPose);
+					inverseBindPose.SetTranslation(inverseBindPose.GetTranslation4() * importOptions.Scale);
 					fileHeader.BindPoseBones.push_back(SSkeletalMeshBone(boneName, inverseBindPose, parentIndex));
 					//HV_LOG_ERROR("Node %i: %s, %s", i+1, fbxMesh->mBones[i]->mNode->mName.C_Str(), SMatrix::Transpose(ToHavtornMatrix(fbxMesh->mBones[i]->mNode->mTransformation)).ToString().c_str());
 				}
@@ -824,34 +826,67 @@ namespace Havtorn
 			delete[] data;
 		}
 
-		fileHeader.NumberOfBones = STATIC_U32(bones.size());
+		//fileHeader.NumberOfBones = STATIC_U32(bones.size());
+		fileHeader.NumberOfBones = STATIC_U32(animation->mNumChannels);
 		//fileHeader.SequentialPosedBones.resize(fileHeader.NumberOfBones);
 		//fileHeader.BoneAnimationTracks.resize(fileHeader.NumberOfBones);
 
 		const F32 scaleModifier = importOptions.Scale;
 
-		for (const SSkeletalMeshBone& bone : bones)
-		{
-			//const aiNodeAnim* nodeAnimation = FindNodeAnim(animation, bone.Name.AsString());
+		//for (const SSkeletalMeshBone& bone : bones)
+		//{
+		//	//const aiNodeAnim* nodeAnimation = FindNodeAnim(animation, bone.Name.AsString());
 
 
-			std::string channelName = bone.Name.AsString();
-			const aiNodeAnim* channel = nullptr;
+		//	std::string channelName = bone.Name.AsString();
+		//	const aiNodeAnim* channel = nullptr;
 
-			for (U32 i = 0; i < animation->mNumChannels; i++)
-			{
-				std::string strippedAnimationTrackName = stripAssimpFbxSuffix(animation->mChannels[i]->mNodeName.C_Str());
-				if (strcmp(strippedAnimationTrackName.c_str(), channelName.c_str()) != 0)
-				//if (strcmp(animation->mChannels[i]->mNodeName.C_Str(), channelName.c_str()) != 0)
-					continue;
+		//	for (U32 i = 0; i < animation->mNumChannels; i++)
+		//	{
+		//		std::string strippedAnimationTrackName = stripAssimpFbxSuffix(animation->mChannels[i]->mNodeName.C_Str());
+		//		if (strcmp(strippedAnimationTrackName.c_str(), channelName.c_str()) != 0)
+		//		//if (strcmp(animation->mChannels[i]->mNodeName.C_Str(), channelName.c_str()) != 0)
+		//			continue;
 
-				channel = animation->mChannels[i];
-				break;
-			}
+		//		channel = animation->mChannels[i];
+		//		break;
+		//	}
 	
+		//	fileHeader.BoneAnimationTracks.emplace_back();
+		//	SBoneAnimationTrack& track = fileHeader.BoneAnimationTracks.back();
+		//	track.TrackName = bone.Name;
+
+		//	if (channel != nullptr)
+		//	{
+		//		for (U32 t = 0; t < channel->mNumPositionKeys; t++)
+		//		{
+		//			track.TranslationKeys.emplace_back(ToHavtornVecAnimationKey(channel->mPositionKeys[t]));
+		//			track.TranslationKeys.back().Value *= scaleModifier;
+		//		}
+
+		//		for (U32 q = 0; q < channel->mNumRotationKeys; q++)
+		//			track.RotationKeys.emplace_back(ToHavtornQuatAnimationKey(channel->mRotationKeys[q]));
+
+		//		for (U32 s = 0; s < channel->mNumScalingKeys; s++)
+		//			track.ScaleKeys.emplace_back(ToHavtornVecAnimationKey(channel->mScalingKeys[s]));
+		//	}
+		//}
+		for (U32 i = 0; i < animation->mNumChannels; i++)
+		{
+			const aiNodeAnim* channel = animation->mChannels[i];
+
+			//for (const SSkeletalMeshBone& bone : bones)
+			//{
+			//	if (channelName.find(bone.Name.AsString()) != std::string::npos)
+			//	{
+			//		channel = animation->mChannels[i];
+			//		break;
+			//	}
+			//}
+
 			fileHeader.BoneAnimationTracks.emplace_back();
 			SBoneAnimationTrack& track = fileHeader.BoneAnimationTracks.back();
-			track.BoneName = bone.Name;
+			track.TrackName = std::string(channel->mNodeName.C_Str());
 
 			if (channel != nullptr)
 			{
@@ -871,11 +906,11 @@ namespace Havtorn
 		
 		//for (U64 i = 0; i < assimpScene->mRootNode.chi)
 		//{
-		//	HV_LOG_INFO("AnimTrack: %s", track.BoneName.c_str());
+		//	HV_LOG_INFO("AnimTrack: %s", track.TrackName.c_str());
 		//}
 		for (auto track : fileHeader.BoneAnimationTracks)
 		{
-			HV_LOG_INFO("AnimTrack: %s", track.BoneName.Data());
+			HV_LOG_INFO("AnimTrack: %s", track.TrackName.Data());
 		}
 
 		std::string newFileName = destinationPath + UGeneralUtils::ExtractFileBaseNameFromPath(filePath) + ".hva";

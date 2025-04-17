@@ -343,26 +343,30 @@ namespace Havtorn
 		GEngine::GetWorld()->Initialize3DPhysicsData(playerProxy);
 
 		//// Static Mesh
-		//renderManager->LoadStaticMeshComponent("Assets/Tests/CH_Enemy.hva", AddComponent<SStaticMeshComponent>(playerProxy));
+		//std::string staticMeshPath = "Assets/Tests/CH_Enemy.hva";
+		//renderManager->LoadStaticMeshComponent(staticMeshPath, AddComponent<SStaticMeshComponent>(playerProxy));
 		//AddComponentEditorContext(playerProxy, &SStaticMeshComponentEditorContext::Context);
-		//GetComponent<SStaticMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register("Assets/Tests/CH_Enemy.hva");
+		//GetComponent<SStaticMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register(staticMeshPath);
 
 		// Skeletal Mesh
-		std::string meshPath = "Assets/Tests/CH_Enemy_SK.hva";
+		//std::string meshPath = "Assets/Tests/CH_Enemy_SK.hva";
+		std::string meshPath = "Assets/Tests/MaleDefault.hva";
 		//std::string meshPath = "Assets/Tests/DebugAnimMesh.hva";
 		renderManager->LoadSkeletalMeshComponent(meshPath, AddComponent<SSkeletalMeshComponent>(playerProxy));
 		AddComponentEditorContext(playerProxy, &SSkeletalMeshComponentEditorContext::Context);
 		GetComponent<SSkeletalMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register(meshPath);
 
-		std::string animationPath = "Assets/Tests/CH_Enemy_Walk.hva";
-		//std::string animationPath = "Assets/Tests/MaleWave.hva";
+		//std::string animationPath = "Assets/Tests/CH_Enemy_Walk.hva";
+		std::string animationPath = "Assets/Tests/MaleWave.hva";
+		//std::string animationPath = "Assets/Tests/TestWalk.hva";
 		//std::string animationPath = "Assets/Tests/DebugAnimAnim.hva";
 		renderManager->LoadSkeletalAnimationComponent(animationPath, AddComponent<SSkeletalAnimationComponent>(playerProxy));
 		AddComponentEditorContext(playerProxy, &SSkeletalAnimationComponentEditorContext::Context);
 		// TODO.NR
 		//GetComponent<SSkeletalAnimationComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register("Assets/Tests/CH_Enemy_SK.hva");
 
-		std::vector<std::string> enemyMaterialPaths = { "Assets/Materials/M_Checkboard_128x128.hva" };
+		//std::vector<std::string> enemyMaterialPaths = { "Assets/Materials/M_Checkboard_128x128.hva" };
+		std::vector<std::string> enemyMaterialPaths = { "Assets/Materials/M_Enemy.hva" };
 		renderManager->LoadMaterialComponent(enemyMaterialPaths, AddComponent<SMaterialComponent>(playerProxy));
 		AddComponentEditorContext(playerProxy, &SMaterialComponentEditorContext::Context);
 		GetComponent<SMaterialComponent>(playerProxy)->AssetRegistryKeys = assetRegistry->Register(enemyMaterialPaths);
