@@ -166,7 +166,7 @@ namespace Havtorn
 		return SelectedEntity;
 	}
 
-	const Ptr<SEditorAssetRepresentation>& CEditorManager::GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry)
+	const Ptr<SEditorAssetRepresentation>& CEditorManager::GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry) const
 	{
 		for (const auto& rep : AssetRepresentations)
 		{
@@ -178,7 +178,7 @@ namespace Havtorn
 		return AssetRepresentations[0];
 	}
 
-	const Ptr<SEditorAssetRepresentation>& CEditorManager::GetAssetRepFromName(const std::string& assetName)
+	const Ptr<SEditorAssetRepresentation>& CEditorManager::GetAssetRepFromName(const std::string& assetName) const
 	{
 		for (const auto& rep : AssetRepresentations)
 		{
@@ -190,7 +190,7 @@ namespace Havtorn
 		return AssetRepresentations[0];
 	}
 
-	const Ptr<SEditorAssetRepresentation>& CEditorManager::GetAssetRepFromImageRef(void* imageRef)
+	const Ptr<SEditorAssetRepresentation>& CEditorManager::GetAssetRepFromImageRef(void* imageRef) const
 	{
 		for (const auto& rep : AssetRepresentations)
 		{
@@ -200,6 +200,15 @@ namespace Havtorn
 
 		// NR: Return empty rep
 		return AssetRepresentations[0];
+	}
+
+	std::function<SAssetInspectionData(std::filesystem::directory_entry)> CEditorManager::GetAssetInspectFunction() const
+	{
+		return [this](std::filesystem::directory_entry entry)
+			{
+				const Ptr<SEditorAssetRepresentation>& assetRep = GetAssetRepFromDirEntry(entry);
+				return SAssetInspectionData(assetRep->Name, (intptr_t)assetRep->TextureRef);
+			};
 	}
 
 	void CEditorManager::CreateAssetRep(const std::filesystem::path& path)

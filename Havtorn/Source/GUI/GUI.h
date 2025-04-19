@@ -5,6 +5,8 @@
 #include <memory>
 #include <wtypes.h>
 #include <vector>
+#include <filesystem>
+#include <functional>
 
 #include <Core.h>
 #include <CoreTypes.h>
@@ -326,7 +328,30 @@ namespace Havtorn
 		F32 TabRounding = 1.f;
 	};
 
-	// TODO.NW: Go through all methods and do the imgui conversion in the implementation, like an actual wrapper
+	struct SAssetInspectionData
+	{
+		SAssetInspectionData(const std::string& name, const intptr_t textureRef)
+			: Name(name)
+			, TextureRef(textureRef)
+		{}
+		std::string Name = "";
+		intptr_t TextureRef = 0;
+	};
+
+	struct SAssetPickResult
+	{
+		SAssetPickResult(const bool isModalOpen)
+			: IsModalOpen(isModalOpen)
+		{}
+		SAssetPickResult(const bool isModalOpen, const bool isAssetPicked, const std::filesystem::directory_entry& entry)
+			: IsModalOpen(isModalOpen)
+			, IsAssetPicked(isAssetPicked)
+			, PickedEntry(entry)
+		{}
+		bool IsModalOpen = false;
+		bool IsAssetPicked = false;
+		std::filesystem::directory_entry PickedEntry;
+	};
 
 	class GUI_API GUI
 	{
@@ -420,6 +445,8 @@ namespace Havtorn
 		static bool RadioButton(const char* label, bool active);
 		static bool ImageButton(const char* label, intptr_t image, const SVector2<F32>& size = SVector2<F32>(0.0f), const SVector2<F32>& uv0 = SVector2<F32>(0.0f), const SVector2<F32>& uv1 = SVector2<F32>(1.0f), const SColor& backgroundColor = SColor(0.0f, 0.0f, 0.0f, 0.0f), const SColor& tintColor = SColor::White);
 		static bool Checkbox(const char* label, bool& value);
+
+		static SAssetPickResult AssetPicker(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const std::function<SAssetInspectionData(std::filesystem::directory_entry)>& assetInspector);
 
 		static bool Selectable(const char* label, const bool selected = false);
 

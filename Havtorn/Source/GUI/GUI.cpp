@@ -17,7 +17,6 @@
 #include <Log.h>
 
 #include <PlatformManager.h>
-#include <functional>
 
 IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
@@ -1106,6 +1105,53 @@ namespace Havtorn
 	bool GUI::Checkbox(const char* label, bool& value)
 	{
 		return Instance->Impl->Checkbox(label, value);
+	}
+
+	SAssetPickResult GUI::AssetPicker(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const std::function<SAssetInspectionData(std::filesystem::directory_entry)>& assetInspector)
+	{
+		if (GUI::ImageButton("AssetPicker", image, { GUI::TexturePreviewSizeX * 0.75f, GUI::TexturePreviewSizeY * 0.75f }))
+		{
+			GUI::OpenPopup(modalLabel);
+			GUI::SetNextWindowPos(GUI::GetViewportCenter(), EWindowCondition::Appearing, SVector2<F32>(0.5f, 0.5f));
+		}
+
+		GUI::Text(label);
+
+		if (!GUI::BeginPopupModal(modalLabel, NULL, { EWindowFlag::AlwaysAutoResize }))
+			return SAssetPickResult(false);
+
+		if (!GUI::BeginTable("AssetPickerTable", columns))
+		{
+			GUI::EndPopup();
+			return SAssetPickResult(false);
+		}
+
+		I32 id = 0;
+		for (auto& entry : std::filesystem::recursive_directory_iterator(directory))
+		{
+			if (entry.is_directory())
+				continue;
+
+			GUI::TableNextColumn();
+			GUI::PushID(id++);
+
+			auto data = assetInspector(entry);
+			if (GUI::ImageButton(data.Name.c_str(), data.TextureRef, { GUI::TexturePreviewSizeX * 0.75f, GUI::TexturePreviewSizeY * 0.75f }))
+			{
+				GUI::PopID();
+				GUI::EndTable();
+				GUI::EndPopup();
+				GUI::CloseCurrentPopup();
+				return SAssetPickResult(false, true, entry);
+			}
+
+			GUI::Text(data.Name.c_str());
+			GUI::PopID();
+		}
+
+		GUI::EndTable();
+		GUI::EndPopup();
+		return SAssetPickResult(true);
 	}
 
 	bool GUI::Selectable(const char* label, const bool selected)
