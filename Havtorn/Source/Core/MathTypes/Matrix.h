@@ -120,8 +120,8 @@ namespace Havtorn
 		// Uses Lerp for translation and scale, and Quaternion Slerp for rotation
 		static SMatrix Interpolate(const SMatrix& a, const SMatrix& b, F32 t);
 
-		// TODO.NW: Make all ToString functions return const char*? Mostly used for debugging anyway
 		std::string ToString() const;
+		std::string ToCompactString() const;
 	};
 
 	SMatrix::SMatrix()
@@ -850,6 +850,17 @@ namespace Havtorn
 		SMatrix::Decompose(*this, translation, rotation, scale);
 		char buffer[256];
 		sprintf_s(buffer, "\nMatrix \n{\n\tTranslation{X: %.1f, Y: %.1f, Z: %.1f},\n\tRotationEuler{Pitch: %.1f, Yaw: %.1f, Roll: %.1f},\n\tScale{X: %.1f, Y: %.1f, Z: %.1f}\n}", translation.X, translation.Y, translation.Z, rotation.X, rotation.Y, rotation.Z, scale.X, scale.Y, scale.Z);
+		return buffer;
+	}
+
+	inline std::string SMatrix::ToCompactString() const
+	{
+		SVector translation;
+		SVector rotation;
+		SVector scale;
+		SMatrix::Decompose(*this, translation, rotation, scale);
+		char buffer[256];
+		sprintf_s(buffer, "Matrix: t: %s, r: %s, s: %s", translation.ToString().c_str(), rotation.ToString().c_str(), scale.ToString().c_str());
 		return buffer;
 	}
 

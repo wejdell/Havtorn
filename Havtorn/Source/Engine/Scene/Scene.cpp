@@ -330,8 +330,8 @@ namespace Havtorn
 		STransform& playerTransform = AddComponent<STransformComponent>(playerProxy)->Transform;
 		AddComponentEditorContext(playerProxy, &STransformComponentEditorContext::Context);
 		SMatrix playerMatrix = playerTransform.GetMatrix();
+		//playerMatrix.SetScale(SVector(0.01f));
 		playerMatrix.SetTranslation({ 2.6f, 0.0f, -0.24f });
-		//playerMatrix.SetRotation();
 		playerTransform.SetMatrix(playerMatrix);
 
 		SPhysics3DControllerComponent* controllerComponent = AddComponent<SPhysics3DControllerComponent>(playerProxy);
@@ -362,7 +362,7 @@ namespace Havtorn
 		//std::string animationPath = "Assets/Tests/DebugAnimAnim.hva";
 		renderManager->LoadSkeletalAnimationComponent(animationPath, AddComponent<SSkeletalAnimationComponent>(playerProxy));
 		AddComponentEditorContext(playerProxy, &SSkeletalAnimationComponentEditorContext::Context);
-		// TODO.NR
+		// TODO.NW
 		//GetComponent<SSkeletalAnimationComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register("Assets/Tests/CH_Enemy_SK.hva");
 
 		//std::vector<std::string> enemyMaterialPaths = { "Assets/Materials/M_Checkboard_128x128.hva" };
