@@ -1150,6 +1150,18 @@ namespace Havtorn
 		}
 
 		GUI::EndTable();
+
+		// TODO.NW: Make util for centering elements. Look at AssetBrowserWindow for full implementation
+		// Center buttons
+		F32 width = 0.0f;
+		width += GUI::CalculateTextSize("Cancel").X + GUI::ThumbnailPadding;
+		F32 avail = GUI::GetContentRegionAvail().X;
+		F32 off = (avail - width) * 0.5f;
+		GUI::SetCursorPosX(GUI::GetCursorPosX() + off);
+
+		if (GUI::Button("Cancel"))	
+			GUI::CloseCurrentPopup();
+
 		GUI::EndPopup();
 		return SAssetPickResult(true);
 	}
