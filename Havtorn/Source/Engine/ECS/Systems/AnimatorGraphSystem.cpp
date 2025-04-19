@@ -66,7 +66,6 @@ namespace Havtorn
 			F32 timeInTicks = component->CurrentAnimationTime * ticksPerSecond;
 			F32 duration = STATIC_F32(component->DurationInTicks);
 			F32 animationTime = fmodf(timeInTicks, duration);
-			//F32 animationTime = 0.0f;
 
 			// VERSION 2
 			component->Bones.clear();
@@ -115,23 +114,6 @@ namespace Havtorn
 	
 			//// The inverse bind pose matrices get your vertices into bone space so that their parent joint is the origin.
 			//component->Bones = localPose;
-
-			//// https://www.youtube.com/watch?v=cieheqt7eqc
-			////
-			//// void applyPoseToJoints(localPose, joint, parentTransform)
-			//// {
-			////		SMatrix currentLocalTransform = localPose[joint];
-			////		SMatrix currentTransform = parentTransform * currentLocalTransform;
-			////		for (childJoint : joint.Children)
-			////		{
-			////			applyPoseToJoints(localPose, childJoint, currentTransform);
-			////		}
-			//// 
-			////		currentTransform = currentTransform * joint.InverseBindTransform;
-			////		localPose[joint] = currentTransform;
-			//// }
-			////
-			//// applyPoseToJoints(localPose, rootJoint, Identity);
 		}
 	}
 
@@ -156,12 +138,10 @@ namespace Havtorn
 				return i;
 			}
 		}
+
 		// This is an 'ugly-fix'
 		// In short: bypasses the error by returning the last working key
 		return track.RotationKeys.size() - 2;
-
-		//assert(0);
-		//return 0xFFFFFFFF;
 	}
 
 	SQuaternion CalcInterpolatedRotation(F32 animationTime, const SBoneAnimationTrack& track)
@@ -175,32 +155,23 @@ namespace Havtorn
 			return track.RotationKeys[0].Value;
 		}
 
-		U64 RotationIndex = FindRotation(animationTime, track);
-		U64 NextRotationIndex = (RotationIndex + 1);
-		assert(NextRotationIndex < track.RotationKeys.size());
-		F32 DeltaTime = static_cast<F32>(track.RotationKeys[NextRotationIndex].Time - track.RotationKeys[RotationIndex].Time);
-		F32 Factor = (animationTime - (F32)track.RotationKeys[RotationIndex].Time) / DeltaTime;
-		// This if just stops the assert below it from triggering. SP6 animations had some anims with issues and this was faster than having SG debug their animations.
-		if (!(Factor >= 0.0f && Factor <= 1.0f))
-		{
-			Factor = 0.0f;
-		}
-		// ! If, that stops the assert below it 
-		assert(Factor >= 0.0f && Factor <= 1.0f);
-		const SQuaternion& StartRotationQ = track.RotationKeys[RotationIndex].Value;
-		const SQuaternion& EndRotationQ = track.RotationKeys[NextRotationIndex].Value;
-		return SQuaternion::Slerp(StartRotationQ, EndRotationQ, Factor).GetNormalized();
+		U64 rotationIndex = FindRotation(animationTime, track);
+		U64 nextRotationIndex = (rotationIndex + 1);
+		assert(nextRotationIndex < track.RotationKeys.size());
+		
+		F32 deltaTime = static_cast<F32>(track.RotationKeys[nextRotationIndex].Time - track.RotationKeys[rotationIndex].Time);
+
+		F32 factor = (animationTime - (F32)track.RotationKeys[rotationIndex].Time) / deltaTime;
+		factor = UMath::Clamp(factor);
+
+		const SQuaternion& startRotationQ = track.RotationKeys[rotationIndex].Value;
+		const SQuaternion& endRotationQ = track.RotationKeys[nextRotationIndex].Value;
+		return SQuaternion::Slerp(startRotationQ, endRotationQ, factor).GetNormalized();
 	}
 
 	U64 FindScaling(F32 animationTime, const SBoneAnimationTrack& track)
 	{
 		assert(track.ScaleKeys.size() > 0);
-
-		// 2021 02 02 Testing/ Figuring out animation speed
-		//for (U64 i = 0; i < track.ScaleKeys.size() - 1; i++)
-		//{
-		//	std::cout << (F32)track.ScaleKeys[i + 1].Time << std::endl;
-		//}
 
 		for (U64 i = 0; i < track.ScaleKeys.size() - 1; i++)
 		{
@@ -213,9 +184,6 @@ namespace Havtorn
 		// This is an 'ugly-fix'
 		// In short: bypasses the error by returning the last working key
 		return track.ScaleKeys.size() - 2;
-
-		//assert(0);
-		//return 0xFFFFFFFF;
 	}
 
 	SVector CalcInterpolatedScaling(F32 animationTime, const SBoneAnimationTrack& track)
@@ -223,27 +191,23 @@ namespace Havtorn
 		if (track.ScaleKeys.empty())
 			return SVector(1.0f);
 
-		// we need at least two values to interpolate...
 		if (track.ScaleKeys.size() == 1)
 		{
 			return track.ScaleKeys[0].Value;
 		}
 
-		U64 ScalingIndex = FindScaling(animationTime, track);
-		U64 NextScalingIndex = (ScalingIndex + 1);
-		assert(NextScalingIndex < track.ScaleKeys.size());
-		F32 DeltaTime = static_cast<F32>(track.ScaleKeys[NextScalingIndex].Time - track.ScaleKeys[ScalingIndex].Time);
-		F32 Factor = (animationTime - (F32)track.ScaleKeys[ScalingIndex].Time) / DeltaTime;
-		// This if just stops the assert below it from triggering. SP6 animations had some anims with issues and this was faster than having SG debug their animations.
-		if (!(Factor >= 0.0f && Factor <= 1.0f))
-		{
-			Factor = 0.0f;
-		}
-		// ! If, that stops the assert below it 
-		assert(Factor >= 0.0f && Factor <= 1.0f);
-		const SVector& StartScaling = track.ScaleKeys[ScalingIndex].Value;
-		const SVector& EndScaling = track.ScaleKeys[NextScalingIndex].Value;
-		return StartScaling * (1 - Factor) + EndScaling * Factor;
+		U64 scalingIndex = FindScaling(animationTime, track);
+		U64 nextScalingIndex = (scalingIndex + 1);
+		assert(nextScalingIndex < track.ScaleKeys.size());
+		
+		F32 deltaTime = static_cast<F32>(track.ScaleKeys[nextScalingIndex].Time - track.ScaleKeys[scalingIndex].Time);
+		
+		F32 factor = (animationTime - (F32)track.ScaleKeys[scalingIndex].Time) / deltaTime;
+		factor = UMath::Clamp(factor);
+
+		const SVector& startScaling = track.ScaleKeys[scalingIndex].Value;
+		const SVector& endScaling = track.ScaleKeys[nextScalingIndex].Value;
+		return startScaling * (1 - factor) + endScaling * factor;
 	}
 
 	U64 FindPosition(F32 animationTime, const SBoneAnimationTrack& track)
@@ -261,9 +225,6 @@ namespace Havtorn
 		// This is an 'ugly-fix'
 		// In short: bypasses the error by returning the last working key
 		return track.TranslationKeys.size() - 2;
-
-		//assert(0);
-		//return 0xFFFFFFFF;
 	}
 
 	SVector CalcInterpolatedPosition(F32 animationTime, const SBoneAnimationTrack& track)
@@ -277,38 +238,29 @@ namespace Havtorn
 			return track.TranslationKeys[0].Value;
 		}
 
-		U64 PositionIndex = FindPosition(animationTime, track);
-		U64 NextPositionIndex = (PositionIndex + 1);
-		assert(NextPositionIndex < track.TranslationKeys.size());
-		F32 DeltaTime = static_cast<F32>(track.TranslationKeys[NextPositionIndex].Time - track.TranslationKeys[PositionIndex].Time);
-		F32 Factor = (animationTime - (F32)track.TranslationKeys[PositionIndex].Time) / DeltaTime;
-		// This if just stops the assert below it from triggering. SP6 animations had some anims with issues and this was faster than having SG debug their animations.
-		if (!(Factor >= 0.0f && Factor <= 1.0f))
-		{
-			Factor = 0.0f;
-		}
-		// ! If, that stops the assert below it 
-		assert(Factor >= 0.0f && Factor <= 1.0f);
-		const SVector& StartPosition = track.TranslationKeys[PositionIndex].Value;
-		const SVector& EndPosition = track.TranslationKeys[NextPositionIndex].Value;
-		return StartPosition * (1 - Factor) + EndPosition * Factor;
-	}
-
-	std::string stripAssimpFbxSuffixTemp(const std::string& name)
-	{
-		const std::string token = "_$AssimpFbx$_";
-		size_t pos = name.find(token);
-		return pos != std::string::npos ? name.substr(0, pos) : name;
+		U64 positionIndex = FindPosition(animationTime, track);
+		U64 nextPositionIndex = (positionIndex + 1);
+		assert(nextPositionIndex < track.TranslationKeys.size());
+	
+		F32 deltaTime = static_cast<F32>(track.TranslationKeys[nextPositionIndex].Time - track.TranslationKeys[positionIndex].Time);
+		
+		F32 factor = (animationTime - (F32)track.TranslationKeys[positionIndex].Time) / deltaTime;	
+		factor = UMath::Clamp(factor);
+		
+		const SVector& startPosition = track.TranslationKeys[positionIndex].Value;
+		const SVector& endPosition = track.TranslationKeys[nextPositionIndex].Value;
+		return startPosition * (1 - factor) + endPosition * factor;
 	}
 
 	void CAnimatorGraphSystem::ReadHierarchy(const SSkeletalAnimationComponent* animationComponent, const SSkeletalMeshComponent* mesh, const F32 animationTime, const SMatrix& parentTransform, const SSkeletalMeshNode& node, std::vector<SMatrix>& posedTransforms)
 	{
 		SMatrix nodeTransform = node.NodeTransform;
 
+		// TODO.NW: Streamline this so we can read the local pose of different animations at the same time, then combine them at the end
 		std::string nodeName = node.Name.AsString();
 		//if (!once)
 		//	HV_LOG_TRACE("%i: %s", ++nodeNameIndex, nodeName.c_str());
-		I32 boneIndex = -1;
+
 		if (auto it = std::ranges::find(animationComponent->CurrentAnimation, nodeName, &SBoneAnimationTrack::TrackName); it != animationComponent->CurrentAnimation.end())
 		{
 			const SBoneAnimationTrack& track = *it;
@@ -330,23 +282,20 @@ namespace Havtorn
 		}
 
 		SMatrix globalTransform = nodeTransform * parentTransform;
-		if (!once)
-		{
-			HV_LOG_TRACE("%i: %s", ++nodeNameIndex, nodeName.c_str());
-			SVector trans;
-			SVector rot;
-			SVector scal;
-			SMatrix::Decompose(globalTransform, trans, rot, scal);
-			HV_LOG_WARN("Global: t: %s, r: %s, s: %s", trans.ToString().c_str(), rot.ToString().c_str(), scal.ToString().c_str());
-		}
+		//if (!once)
+		//{
+		//	HV_LOG_TRACE("%i: %s", ++nodeNameIndex, nodeName.c_str());
+		//	SVector trans;
+		//	SVector rot;
+		//	SVector scal;
+		//	SMatrix::Decompose(globalTransform, trans, rot, scal);
+		//	HV_LOG_WARN("Global: t: %s, r: %s, s: %s", trans.ToString().c_str(), rot.ToString().c_str(), scal.ToString().c_str());
+		//}
 
 		if (auto it = std::ranges::find(mesh->BindPose, nodeName, &SSkeletalMeshBone::Name); it != mesh->BindPose.end())
 		{
-			boneIndex = STATIC_I32(std::distance(mesh->BindPose.begin(), it));
-		
-			// TODO.NW: Make matrix operations const where they should be
-			SMatrix inverseBindPose = mesh->BindPose[boneIndex].InverseBindPoseTransform;
-			posedTransforms.emplace_back(inverseBindPose * globalTransform);
+			I32 boneIndex = STATIC_I32(std::distance(mesh->BindPose.begin(), it));
+			posedTransforms.emplace_back(mesh->BindPose[boneIndex].InverseBindPoseTransform * globalTransform);
 
 			//if (!once)
 			//{
@@ -374,10 +323,6 @@ namespace Havtorn
 			SVector scaling = CalcInterpolatedScaling(animationTime, track);
 			SQuaternion rotation = CalcInterpolatedRotation(animationTime, track);
 			SVector translation = CalcInterpolatedPosition(animationTime, track);
-
-			//SVector scaling = SVector(1.0f);
-			//SQuaternion rotation = SQuaternion::Identity;
-			//SVector translation = SVector::Zero;
 
 			SMatrix currentLocalPose = SMatrix::Identity;
 			SMatrix::Recompose(translation, rotation, scaling, currentLocalPose);

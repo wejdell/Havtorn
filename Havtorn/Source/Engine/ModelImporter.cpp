@@ -20,189 +20,6 @@
 
 namespace Havtorn
 {
-	std::string stripAssimpFbxSuffix(const std::string& name)
-	{
-		const std::string token = "_$AssimpFbx$_";
-		size_t pos = name.find(token);
-		return pos != std::string::npos ? name.substr(0, pos) : name;
-	}
-
-	const aiNodeAnim* FindNodeAnim(const aiAnimation* pAnimation, const std::string& nodeName)
-	{
-		for (U32 i = 0; i < pAnimation->mNumChannels; ++i)
-		{
-			if (strcmp(pAnimation->mChannels[i]->mNodeName.C_Str(), nodeName.c_str()) == 0)
-			{
-				return pAnimation->mChannels[i];
-			}
-		}
-		return NULL;
-	}
-
-	U32 FindRotation(F32 AnimationTime, const aiNodeAnim* pNodeAnim)
-	{
-		assert(pNodeAnim->mNumRotationKeys > 0);
-
-		for (U32 i = 0; i < pNodeAnim->mNumRotationKeys - 1; i++)
-		{
-			if (AnimationTime < (F32)pNodeAnim->mRotationKeys[i + 1].mTime)
-			{
-				return i;
-			}
-		}
-		// This is an 'ugly-fix'
-		// In short: bypasses the error by returning the last working key
-		return pNodeAnim->mNumRotationKeys - 2;
-
-		//assert(0);
-		//return 0xFFFFFFFF;
-	}
-
-	void CalcInterpolatedRotation(aiQuaternion& Out, F32 AnimationTime, const aiNodeAnim* pNodeAnim)
-	{
-		// we need at least two values to interpolate...
-		if (pNodeAnim->mNumRotationKeys == 1)
-		{
-			Out = pNodeAnim->mRotationKeys[0].mValue;
-			return;
-		}
-
-		U32 RotationIndex = FindRotation(AnimationTime, pNodeAnim);
-		U32 NextRotationIndex = (RotationIndex + 1);
-		assert(NextRotationIndex < pNodeAnim->mNumRotationKeys);
-		F32 DeltaTime = static_cast<F32>(pNodeAnim->mRotationKeys[NextRotationIndex].mTime - pNodeAnim->mRotationKeys[RotationIndex].mTime);
-		F32 Factor = (AnimationTime - (F32)pNodeAnim->mRotationKeys[RotationIndex].mTime) / DeltaTime;
-		// This if just stops the assert below it from triggering. SP6 animations had some anims with issues and this was faster than having SG debug their animations.
-		if (!(Factor >= 0.0f && Factor <= 1.0f))
-		{
-			Factor = 0.0f;
-		}
-		// ! If, that stops the assert below it 
-		assert(Factor >= 0.0f && Factor <= 1.0f);
-		aiQuaternion& StartRotationQ = pNodeAnim->mRotationKeys[RotationIndex].mValue;
-		StartRotationQ.w = UMath::NearlyZero(StartRotationQ.w, 1.e-3f) ? 0.0f : StartRotationQ.w;
-		StartRotationQ.x = UMath::NearlyZero(StartRotationQ.x, 1.e-3f) ? 0.0f : StartRotationQ.x;
-		StartRotationQ.y = UMath::NearlyZero(StartRotationQ.y, 1.e-3f) ? 0.0f : StartRotationQ.y;
-		StartRotationQ.z = UMath::NearlyZero(StartRotationQ.z, 1.e-3f) ? 0.0f : StartRotationQ.z;
-		aiQuaternion& EndRotationQ = pNodeAnim->mRotationKeys[NextRotationIndex].mValue;
-		EndRotationQ.w = UMath::NearlyZero(EndRotationQ.w, 1.e-3f) ? 0.0f : EndRotationQ.w;
-		EndRotationQ.x = UMath::NearlyZero(EndRotationQ.x, 1.e-3f) ? 0.0f : EndRotationQ.x;
-		EndRotationQ.y = UMath::NearlyZero(EndRotationQ.y, 1.e-3f) ? 0.0f : EndRotationQ.y;
-		EndRotationQ.z = UMath::NearlyZero(EndRotationQ.z, 1.e-3f) ? 0.0f : EndRotationQ.z;
-		aiQuaternion::Interpolate(Out, StartRotationQ, EndRotationQ, Factor);
-		Out = Out.Normalize();
-	}
-
-	U32 FindScaling(F32 AnimationTime, const aiNodeAnim* pNodeAnim)
-	{
-		assert(pNodeAnim->mNumScalingKeys > 0);
-
-		// 2021 02 02 Testing/ Figuring out animation speed
-		//for (U32 i = 0; i < pNodeAnim->mNumScalingKeys - 1; i++)
-		//{
-		//	std::cout << (F32)pNodeAnim->mScalingKeys[i + 1].mTime << std::endl;
-		//}
-
-		for (U32 i = 0; i < pNodeAnim->mNumScalingKeys - 1; i++)
-		{
-			if (AnimationTime < (F32)pNodeAnim->mScalingKeys[i + 1].mTime)
-			{
-				return i;
-			}
-		}
-
-		// This is an 'ugly-fix'
-		// In short: bypasses the error by returning the last working key
-		return pNodeAnim->mNumScalingKeys - 2;
-
-		//assert(0);
-		//return 0xFFFFFFFF;
-	}
-
-	void CalcInterpolatedScaling(aiVector3D& Out, F32 AnimationTime, const aiNodeAnim* pNodeAnim)
-	{
-		// we need at least two values to interpolate...
-		if (pNodeAnim->mNumScalingKeys == 1)
-		{
-			Out = pNodeAnim->mScalingKeys[0].mValue;
-			return;
-		}
-
-		U32 ScalingIndex = FindScaling(AnimationTime, pNodeAnim);
-		U32 NextScalingIndex = (ScalingIndex + 1);
-		assert(NextScalingIndex < pNodeAnim->mNumScalingKeys);
-		F32 DeltaTime = static_cast<F32>(pNodeAnim->mScalingKeys[NextScalingIndex].mTime - pNodeAnim->mScalingKeys[ScalingIndex].mTime);
-		F32 Factor = (AnimationTime - (F32)pNodeAnim->mScalingKeys[ScalingIndex].mTime) / DeltaTime;
-		// This if just stops the assert below it from triggering. SP6 animations had some anims with issues and this was faster than having SG debug their animations.
-		if (!(Factor >= 0.0f && Factor <= 1.0f))
-		{
-			Factor = 0.0f;
-		}
-		// ! If, that stops the assert below it 
-		assert(Factor >= 0.0f && Factor <= 1.0f);
-		aiVector3D& StartScaling = pNodeAnim->mScalingKeys[ScalingIndex].mValue;
-		StartScaling.x = UMath::NearlyZero(StartScaling.x, 1.e-3f) ? 0.0f : StartScaling.x;
-		StartScaling.y = UMath::NearlyZero(StartScaling.y, 1.e-3f) ? 0.0f : StartScaling.y;
-		StartScaling.z = UMath::NearlyZero(StartScaling.z, 1.e-3f) ? 0.0f : StartScaling.z;
-		aiVector3D& EndScaling = pNodeAnim->mScalingKeys[NextScalingIndex].mValue;
-		EndScaling.x = UMath::NearlyZero(EndScaling.x, 1.e-3f) ? 0.0f : EndScaling.x;
-		EndScaling.y = UMath::NearlyZero(EndScaling.y, 1.e-3f) ? 0.0f : EndScaling.y;
-		EndScaling.z = UMath::NearlyZero(EndScaling.z, 1.e-3f) ? 0.0f : EndScaling.z;
-		Out = StartScaling * (1 - Factor) + EndScaling * Factor;
-	}
-
-	U32 FindPosition(F32 AnimationTime, const aiNodeAnim* pNodeAnim)
-	{
-		assert(pNodeAnim->mNumPositionKeys > 0);
-
-		for (U32 i = 0; i < pNodeAnim->mNumPositionKeys - 1; i++)
-		{
-			if (AnimationTime < (F32)pNodeAnim->mPositionKeys[i + 1].mTime)
-			{
-				return i;
-			}
-		}
-
-		// This is an 'ugly-fix'
-		// In short: bypasses the error by returning the last working key
-		return pNodeAnim->mNumPositionKeys - 2;
-
-		//assert(0);
-		//return 0xFFFFFFFF;
-	}
-
-	void CalcInterpolatedPosition(aiVector3D& Out, F32 AnimationTime, const aiNodeAnim* pNodeAnim)
-	{
-		// we need at least two values to interpolate...
-		if (pNodeAnim->mNumPositionKeys == 1)
-		{
-			Out = pNodeAnim->mPositionKeys[0].mValue;
-			return;
-		}
-
-		U32 PositionIndex = FindPosition(AnimationTime, pNodeAnim);
-		U32 NextPositionIndex = (PositionIndex + 1);
-		assert(NextPositionIndex < pNodeAnim->mNumPositionKeys);
-		F32 DeltaTime = static_cast<F32>(pNodeAnim->mPositionKeys[NextPositionIndex].mTime - pNodeAnim->mPositionKeys[PositionIndex].mTime);
-		F32 Factor = (AnimationTime - (F32)pNodeAnim->mPositionKeys[PositionIndex].mTime) / DeltaTime;
-		// This if just stops the assert below it from triggering. SP6 animations had some anims with issues and this was faster than having SG debug their animations.
-		if (!(Factor >= 0.0f && Factor <= 1.0f))
-		{
-			Factor = 0.0f;
-		}
-		// ! If, that stops the assert below it 
-		assert(Factor >= 0.0f && Factor <= 1.0f);
-		aiVector3D& StartPosition = pNodeAnim->mPositionKeys[PositionIndex].mValue;
-		StartPosition.x = UMath::NearlyZero(StartPosition.x, 1.e-3f) ? 0.0f : StartPosition.x;
-		StartPosition.y = UMath::NearlyZero(StartPosition.y, 1.e-3f) ? 0.0f : StartPosition.y;
-		StartPosition.z = UMath::NearlyZero(StartPosition.z, 1.e-3f) ? 0.0f : StartPosition.z;
-		aiVector3D& EndPosition = pNodeAnim->mPositionKeys[NextPositionIndex].mValue;
-		EndPosition.x = UMath::NearlyZero(EndPosition.x, 1.e-3f) ? 0.0f : EndPosition.x;
-		EndPosition.y = UMath::NearlyZero(EndPosition.y, 1.e-3f) ? 0.0f : EndPosition.y;
-		EndPosition.z = UMath::NearlyZero(EndPosition.z, 1.e-3f) ? 0.0f : EndPosition.z;
-		Out = StartPosition * (1 - Factor) + EndPosition * Factor;
-	}
-
 	void InitM4FromM3(aiMatrix4x4& out, const aiMatrix3x3& in)
 	{
 		out.a1 = in.a1; out.a2 = in.a2; out.a3 = in.a3; out.a4 = 0.f;
@@ -210,7 +27,6 @@ namespace Havtorn
 		out.c1 = in.c1; out.c2 = in.c2; out.c3 = in.c3; out.c4 = 0.f;
 		out.d1 = 0.f;   out.d2 = 0.f;   out.d3 = 0.f;   out.d4 = 1.f;
 	}
-
 
 	void InitIdentityM4(aiMatrix4x4& m)
 	{
@@ -238,12 +54,6 @@ namespace Havtorn
 
 	SMatrix ToHavtornMatrix(const aiMatrix4x4& assimpMatrix)
 	{
-		//SMatrix mat;
-		//mat(0, 0) = UMath::RoundToZero(assimpMatrix.a1, 1.e-3f); mat(0, 1) = UMath::RoundToZero(assimpMatrix.a2, 1.e-3f); mat(0, 2) = UMath::RoundToZero(assimpMatrix.a3, 1.e-3f); mat(0, 3) = UMath::RoundToZero(assimpMatrix.a4, 1.e-3f);
-		//mat(1, 0) = UMath::RoundToZero(assimpMatrix.b1, 1.e-3f); mat(1, 1) = UMath::RoundToZero(assimpMatrix.b2, 1.e-3f); mat(1, 2) = UMath::RoundToZero(assimpMatrix.b3, 1.e-3f); mat(1, 3) = UMath::RoundToZero(assimpMatrix.b4, 1.e-3f);
-		//mat(2, 0) = UMath::RoundToZero(assimpMatrix.c1, 1.e-3f); mat(2, 1) = UMath::RoundToZero(assimpMatrix.c2, 1.e-3f); mat(2, 2) = UMath::RoundToZero(assimpMatrix.c3, 1.e-3f); mat(2, 3) = UMath::RoundToZero(assimpMatrix.c4, 1.e-3f);
-		//mat(3, 0) = UMath::RoundToZero(assimpMatrix.d1, 1.e-3f); mat(3, 1) = UMath::RoundToZero(assimpMatrix.d2, 1.e-3f); mat(3, 2) = UMath::RoundToZero(assimpMatrix.d3, 1.e-3f); mat(3, 3) = UMath::RoundToZero(assimpMatrix.d4, 1.e-3f);
-		//return mat;
 		SMatrix mat;
 		mat(0, 0) = assimpMatrix.a1; mat(0, 1) = assimpMatrix.a2; mat(0, 2) = assimpMatrix.a3; mat(0, 3) = assimpMatrix.a4;
 		mat(1, 0) = assimpMatrix.b1; mat(1, 1) = assimpMatrix.b2; mat(1, 2) = assimpMatrix.b3; mat(1, 3) = assimpMatrix.b4;
@@ -260,106 +70,6 @@ namespace Havtorn
 		mat.c1 = havtornMatrix(2, 0); mat.c2 = havtornMatrix(2, 1); mat.c3 = havtornMatrix(2, 2); mat.c4 = havtornMatrix(2, 3);
 		mat.d1 = havtornMatrix(3, 0); mat.d2 = havtornMatrix(3, 1); mat.d3 = havtornMatrix(3, 2); mat.d4 = havtornMatrix(3, 3);
 		return mat;
-	}
-
-	void ReadNodeHeirarchy(const aiScene* aScene, U32 tick, F32 animationTime, F32 scale, const aiNode* aNode, const aiMatrix4x4& aParentTransform, int aStopAnimAtLevel, const std::vector<SSkeletalMeshBone>& bindPose, std::vector<SSkeletalMeshBone>& sequentialPosedBones)
-	{
-		std::string nodeName(aNode->mName.data);
-
-		static U32 currentTick = 0;
-		static U32 numberOfTreatedBones = 0;
-		if (currentTick != tick)
-			numberOfTreatedBones = 0;
-		currentTick = tick;
-		HV_LOG_WARN("Read Bone %i at tick %i: %s", numberOfTreatedBones, tick, nodeName.c_str());
-		numberOfTreatedBones++;
-
-		const aiAnimation* animation = aScene->mAnimations[0];
-
-		aiMatrix4x4 NodeTransformation(aNode->mTransformation);
-
-		const aiNodeAnim* nodeAnimation = FindNodeAnim(animation, nodeName);
-
-		if (nodeAnimation)
-		{
-			// Interpolate scaling and generate scaling transformation matrix
-			aiVector3D Scaling = {1.0f, 1.0f, 1.0f};
-			//CalcInterpolatedScaling(Scaling, animationTime, nodeAnimation);
-			aiMatrix4x4 ScalingM;
-			aiMatrix4x4::Scaling(Scaling, ScalingM);
-
-			// Interpolate rotation and generate rotation transformation matrix
-			aiQuaternion RotationQ;
-			CalcInterpolatedRotation(RotationQ, animationTime, nodeAnimation);
-			aiMatrix4x4 RotationM;
-			InitM4FromM3(RotationM, RotationQ.GetMatrix());
-
-			// Interpolate translation and generate translation transformation matrix
-			aiVector3D Translation;
-			//{
-				//F32 timeStop(aStopAnimAtLevel <= 0 ? animationTime : 0.f);
-				CalcInterpolatedPosition(Translation, animationTime, nodeAnimation);
-			//}
-			aiMatrix4x4 TranslationM;
-			aiMatrix4x4::Translation(Translation * scale, TranslationM);
-
-			// Combine the above transformations
-			NodeTransformation = TranslationM * RotationM * ScalingM;
-		}
-		aStopAnimAtLevel--;
-
-		// GLobalTransformation is the joints animation for this frame. Multiply with the original joint orientation.
-		aiMatrix4x4 GlobalTransformation;
-		GlobalTransformation = aParentTransform * NodeTransformation;
-
-		if (auto it = std::ranges::find(bindPose, nodeName, &SSkeletalMeshBone::Name); it != bindPose.end())
-		{
-			U64 BoneIndex = std::distance(std::begin(bindPose), it) + (tick * bindPose.size());
-			
-			SMatrix bindPoseTransform = it->InverseBindPoseTransform;
-			SMatrix globalTransform = ToHavtornMatrix(GlobalTransformation);
-			SMatrix globalInverseTransform = ToHavtornMatrix(aScene->mRootNode->mTransformation.Inverse());
-			
-			//HV_LOG_FATAL("Bone index: %i", BoneIndex);
-			//HV_LOG_FATAL("Bind Pose: %s", bindPoseTransform.ToString().c_str());
-			//HV_LOG_FATAL("Global Transform: %s", globalTransform.ToString().c_str());
-			//HV_LOG_FATAL("Root Node Inverse: %s", globalInverseTransform.ToString().c_str());
-
-			//sequentialPosedBones[BoneIndex].Transform = globalInverseTransform * globalTransform * bindPoseTransform;
-			//sequentialPosedBones[BoneIndex].Transform = bindPoseTransform * globalTransform * globalInverseTransform;
-			auto rootNodeInverse = aScene->mRootNode->mTransformation.Inverse();
-			auto globalTransformation = GlobalTransformation;
-			auto boneOffset = ToAssimpMatrix(bindPoseTransform);
-			auto finalTransform = rootNodeInverse * GlobalTransformation * boneOffset;
-			auto havtornFinalTransform = SMatrix::Transpose(ToHavtornMatrix(finalTransform));
-			HV_LOG_FATAL("Final Transform: %s", havtornFinalTransform.ToString().c_str());
-			sequentialPosedBones[BoneIndex].InverseBindPoseTransform = havtornFinalTransform;
-			sequentialPosedBones[BoneIndex].Name = nodeName;
-		}
-		
-		for (U32 i = 0; i < aNode->mNumChildren; i++)
-		{
-			ReadNodeHeirarchy(aScene, tick, animationTime, scale, aNode->mChildren[i], GlobalTransformation, aStopAnimAtLevel, bindPose, sequentialPosedBones);
-		}
-
-		//for (U32 i = 0; i < aNode->mNumChildren; i++)
-		//{
-		//	if (auto it = std::ranges::find(bindPose, std::string(aNode->mChildren[i]->mName.C_Str()), &SSkeletalMeshBone::Name); it != bindPose.end())
-		//	{
-		//		ReadNodeHeirarchy(aScene, tick, animationTime, scale, aNode->mChildren[i], GlobalTransformation, aStopAnimAtLevel, bindPose, sequentialPosedBones);
-		//	}
-		//	else
-		//	{
-		//		aiNode* childNode = aNode->mChildren[i];
-		//		for (U32 j = 0; j < childNode->mNumChildren; j++)
-		//		{
-		//			if (auto childIt = std::ranges::find(bindPose, std::string(childNode->mChildren[j]->mName.C_Str()), &SSkeletalMeshBone::Name); childIt != bindPose.end())
-		//			{
-		//				ReadNodeHeirarchy(aScene, tick, animationTime, scale, childNode->mChildren[j], GlobalTransformation, aStopAnimAtLevel, bindPose, sequentialPosedBones);
-		//			}
-		//		}
-		//	}
-		//}
 	}
 
 	/////////////////////////////////////////////
@@ -392,8 +102,6 @@ namespace Havtorn
 			if (weight == 0)
 				return;
 
-			//F32 smallestWeight = UMath::MaxFloat;
-			//U32 smallestIndex = 0;
 			for (U32 i = 0; i < ARRAY_SIZE_IN_ELEMENTS(IDs); i++) 
 			{
 				if (Weights[i] == 0.0) 
@@ -402,25 +110,7 @@ namespace Havtorn
 					Weights[i] = weight;
 					return;
 				}
-
-				// NW: Algo to find any element smaller than weight
-				
-				//if (smallestWeight > Weights[i])
-				//{
-				//	smallestWeight = Weights[i];
-				//	smallestIndex = i;
-				//}
-				
 			}
-
-			//if (weight > smallestWeight)
-			//{
-			//	IDs[smallestIndex] = boneID;
-			//	Weights[smallestIndex] = weight;
-			//}
-
-			// should never get here - more bones than we have space for
-			//assert(0);
 		}
 	};
 
@@ -456,8 +146,9 @@ namespace Havtorn
 			return "ERROR: File does not exist.";
 		}
 
+		// NW: To make use of destructible meshes, add DontJoinIdentical (vertices)
 		const aiScene* assimpScene = aiImportFile(filePath.c_str(), aiProcess_PopulateArmatureData | aiProcessPreset_TargetRealtime_Fast | aiProcess_ConvertToLeftHanded);
-		
+
 		if (!assimpScene)
 		{
 			HV_LOG_ERROR("ModelImporter failed to import %s! Assimp Error: %s", filePath.c_str(), aiGetErrorString());
@@ -586,69 +277,11 @@ namespace Havtorn
 		return newFileName;
 	}
 
-	void ExtractNodes(const aiScene* scene, aiNode* node, const SMatrix& parentTransform, const std::vector<SSkeletalMeshBone>& bindPose, std::vector<SSkeletalMeshNode>& nodesToPopulate)
+	void ExtractNodes(const aiScene* scene, aiNode* node, const std::vector<SSkeletalMeshBone>& bindPose, std::vector<SSkeletalMeshNode>& nodesToPopulate)
 	{
-		//static U32 index = 0;
-		//CHavtornStaticString<32> nodeName = CHavtornStaticString<32>(node->mName.C_Str());
-		//SMatrix scaledMatrix = SMatrix::Transpose(ToHavtornMatrix(node->mTransformation));
-		//SQuaternion rot = SQuaternion::Identity;
-		//SVector pos = SVector::Zero;
-		//SVector scl = SVector(1.0f);
-		//SMatrix::Decompose(scaledMatrix, pos, rot, scl);
-		//SMatrix unScaledMatrix = SMatrix::Identity; 
-		//SMatrix::Recompose(pos, rot, SVector(1.0f), unScaledMatrix);
-		//SMatrix transform = unScaledMatrix * parentTransform;
-		//
-		//if (auto it = std::ranges::find(bindPose, nodeName, &SSkeletalMeshBone::Name); it != bindPose.end())
-		//{
-		//	HV_LOG_ERROR("Node %i: %s, %s", ++index, nodeName.AsString().c_str(), transform.ToString().c_str());
-		//	nodesToPopulate.emplace_back(SSkeletalMeshNode(nodeName, transform));
-		//}
-
-		//for (U32 i = 0; i < node->mNumChildren; i++)
-		//	ExtractNodes(node->mChildren[i], transform, bindPose, nodesToPopulate);
-
-		static U32 index = 0;
-		CHavtornStaticString<255> nodeName = CHavtornStaticString<255>(node->mName.C_Str());
-		const std::string token = "CH_";
-		size_t pos = std::string(nodeName.Data()).find(token);
-		if (pos != std::string::npos)
-		{
-			for (U32 i = 0; i < node->mNumChildren; i++)
-				ExtractNodes(scene, node->mChildren[i], parentTransform, bindPose, nodesToPopulate);
-
-			return;
-		}
-
-		//std::string strippedName = node->mName.C_Str();
-		//strippedName = stripAssimpFbxSuffix(strippedName);
-		//aiBone* leBone = scene->findBone(aiString(strippedName));
-		//if (leBone == nullptr)
-		//{
-		//	for (U32 i = 0; i < node->mNumChildren; i++)
-		//		ExtractNodes(scene, node->mChildren[i], parentTransform, bindPose, nodesToPopulate);
-
-		//	return;
-		//}
-
-		SMatrix scaledMatrix = SMatrix::Transpose(ToHavtornMatrix(node->mTransformation));
-		//SQuaternion rot = SQuaternion::Identity;
-		//SVector pos = SVector::Zero;
-		//SVector scl = SVector(1.0f);
-		//SMatrix::Decompose(scaledMatrix, pos, rot, scl);
-		//SMatrix unScaledMatrix = SMatrix::Identity;
-		//SMatrix::Recompose(pos, rot, SVector(1.0f), unScaledMatrix);
-		////SMatrix transform = unScaledMatrix * parentTransform;
-		SMatrix parentTransformCopy = parentTransform;
-		SMatrix transform = scaledMatrix;
-		
 		if (nodesToPopulate.size() > 0)
 		{
 			CHavtornStaticString<255> parentName = node->mParent ? std::string(node->mParent->mName.data) : "";
-			//for (U64 j = 0; j < nodesToPopulate.size(); j++)
-			//{
-			//	if (parentName == nodesToPopulate[j].Name.AsString())
-			//}
 			if (auto it = std::ranges::find(nodesToPopulate, parentName, &SSkeletalMeshNode::Name); it != nodesToPopulate.end())
 			{
 				U32 childIndex = STATIC_U32(std::distance(std::begin(nodesToPopulate), it));
@@ -656,11 +289,12 @@ namespace Havtorn
 			}
 		}
 
-		HV_LOG_ERROR("Node %i: %s, %s", ++index, nodeName.AsString().c_str(), transform.ToString().c_str());
-		nodesToPopulate.emplace_back(SSkeletalMeshNode(nodeName, transform/* * parentTransformCopy*/, {}));
+		CHavtornStaticString<255> nodeName = CHavtornStaticString<255>(node->mName.C_Str());
+		SMatrix transform = SMatrix::Transpose(ToHavtornMatrix(node->mTransformation));
+		nodesToPopulate.emplace_back(SSkeletalMeshNode(nodeName, transform, {}));
 
 		for (U32 i = 0; i < node->mNumChildren; i++)
-			ExtractNodes(scene, node->mChildren[i], transform/* * parentTransformCopy*/, bindPose, nodesToPopulate);
+			ExtractNodes(scene, node->mChildren[i], bindPose, nodesToPopulate);
 	}
 
 	std::string UModelImporter::ImportSkeletalMesh(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions, const aiScene* assimpScene)
@@ -707,15 +341,8 @@ namespace Havtorn
 
 					// Mesh Space -> Bone Space in Bind Pose, [INVERSE BIND MATRIX]. Use with bone [WORLD SPACE TRANSFORM] to find vertex pos
 					SMatrix inverseBindPose = SMatrix::Transpose(ToHavtornMatrix(fbxMesh->mBones[i]->mOffsetMatrix));
-					//SVector trans;
-					//SQuaternion rot;
-					//SVector scale;
-					//SMatrix::Decompose(inverseBindPose, trans, rot, scale);
-					//SMatrix::Recompose(trans * importOptions.Scale, rot, scale, inverseBindPose);
-					//SMatrix::Recompose(trans, rot, scale, inverseBindPose);
 					inverseBindPose.SetTranslation(inverseBindPose.GetTranslation4() * importOptions.Scale);
 					fileHeader.BindPoseBones.push_back(SSkeletalMeshBone(boneName, inverseBindPose, parentIndex));
-					//HV_LOG_ERROR("Node %i: %s, %s", i+1, fbxMesh->mBones[i]->mNode->mName.C_Str(), SMatrix::Transpose(ToHavtornMatrix(fbxMesh->mBones[i]->mNode->mTransformation)).ToString().c_str());
 				}
 				else
 				{
@@ -730,7 +357,7 @@ namespace Havtorn
 				}
 			}
 
-			ExtractNodes(assimpScene, assimpScene->mRootNode, SMatrix::Identity, fileHeader.BindPoseBones, fileHeader.Nodes);
+			ExtractNodes(assimpScene, assimpScene->mRootNode, fileHeader.BindPoseBones, fileHeader.Nodes);
 
 			// Vertices
 			const F32 scaleModifier = importOptions.Scale;
@@ -826,63 +453,13 @@ namespace Havtorn
 			delete[] data;
 		}
 
-		//fileHeader.NumberOfBones = STATIC_U32(bones.size());
 		fileHeader.NumberOfBones = STATIC_U32(animation->mNumChannels);
-		//fileHeader.SequentialPosedBones.resize(fileHeader.NumberOfBones);
-		//fileHeader.BoneAnimationTracks.resize(fileHeader.NumberOfBones);
-
+		
 		const F32 scaleModifier = importOptions.Scale;
 
-		//for (const SSkeletalMeshBone& bone : bones)
-		//{
-		//	//const aiNodeAnim* nodeAnimation = FindNodeAnim(animation, bone.Name.AsString());
-
-
-		//	std::string channelName = bone.Name.AsString();
-		//	const aiNodeAnim* channel = nullptr;
-
-		//	for (U32 i = 0; i < animation->mNumChannels; i++)
-		//	{
-		//		std::string strippedAnimationTrackName = stripAssimpFbxSuffix(animation->mChannels[i]->mNodeName.C_Str());
-		//		if (strcmp(strippedAnimationTrackName.c_str(), channelName.c_str()) != 0)
-		//		//if (strcmp(animation->mChannels[i]->mNodeName.C_Str(), channelName.c_str()) != 0)
-		//			continue;
-
-		//		channel = animation->mChannels[i];
-		//		break;
-		//	}
-	
-		//	fileHeader.BoneAnimationTracks.emplace_back();
-		//	SBoneAnimationTrack& track = fileHeader.BoneAnimationTracks.back();
-		//	track.TrackName = bone.Name;
-
-		//	if (channel != nullptr)
-		//	{
-		//		for (U32 t = 0; t < channel->mNumPositionKeys; t++)
-		//		{
-		//			track.TranslationKeys.emplace_back(ToHavtornVecAnimationKey(channel->mPositionKeys[t]));
-		//			track.TranslationKeys.back().Value *= scaleModifier;
-		//		}
-
-		//		for (U32 q = 0; q < channel->mNumRotationKeys; q++)
-		//			track.RotationKeys.emplace_back(ToHavtornQuatAnimationKey(channel->mRotationKeys[q]));
-
-		//		for (U32 s = 0; s < channel->mNumScalingKeys; s++)
-		//			track.ScaleKeys.emplace_back(ToHavtornVecAnimationKey(channel->mScalingKeys[s]));
-		//	}
-		//}
 		for (U32 i = 0; i < animation->mNumChannels; i++)
 		{
 			const aiNodeAnim* channel = animation->mChannels[i];
-
-			//for (const SSkeletalMeshBone& bone : bones)
-			//{
-			//	if (channelName.find(bone.Name.AsString()) != std::string::npos)
-			//	{
-			//		channel = animation->mChannels[i];
-			//		break;
-			//	}
-			//}
 
 			fileHeader.BoneAnimationTracks.emplace_back();
 			SBoneAnimationTrack& track = fileHeader.BoneAnimationTracks.back();
@@ -903,15 +480,6 @@ namespace Havtorn
 					track.ScaleKeys.emplace_back(ToHavtornVecAnimationKey(channel->mScalingKeys[s]));
 			}
 		}
-		
-		//for (U64 i = 0; i < assimpScene->mRootNode.chi)
-		//{
-		//	HV_LOG_INFO("AnimTrack: %s", track.TrackName.c_str());
-		//}
-		for (auto track : fileHeader.BoneAnimationTracks)
-		{
-			HV_LOG_INFO("AnimTrack: %s", track.TrackName.Data());
-		}
 
 		std::string newFileName = destinationPath + UGeneralUtils::ExtractFileBaseNameFromPath(filePath) + ".hva";
 		const auto fileData = new char[fileHeader.GetSize()];
@@ -920,173 +488,3 @@ namespace Havtorn
 		return newFileName;
 	}
 }
-
-		//	bool hasPositions = false;
-		//	bool hasNormals = false;
-		//	bool hasTangents = false;
-		//	bool hasTextures = false;
-		//	bool hasBones = false;
-
-		//	hasPositions = fbxMesh->HasPositions();
-		//	hasNormals = fbxMesh->HasNormals();
-		//	hasTangents = fbxMesh->HasTangentsAndBitangents();
-		//	hasTextures = fbxMesh->HasTextureCoords(TEXTURE_SET_0);
-		//	hasBones = fbxMesh->HasBones();
-
-		//	F32* data = new F32[(vertexBufferSize / 4) * fbxMesh->mNumVertices];
-		//	if (hasPositions && hasNormals && hasTangents && hasTextures && hasBones) 
-		//	{
-		//		for (unsigned int i = 0, dataIndex = 0; i < fbxMesh->mNumVertices; i++, dataIndex += (vertexBufferSize / 4)) 
-		//		{
-
-		//			aiVector3D& mVertice = fbxMesh->mVertices[i];
-		//			data[dataIndex] = mVertice.x;
-		//			data[dataIndex + 1] = mVertice.y;
-		//			data[dataIndex + 2] = mVertice.z;
-		//			data[dataIndex + 3] = 1.0f;
-
-		//			aiVector3D& mNorm = fbxMesh->mNormals[i];
-		//			data[dataIndex + 4] = mNorm.x;
-		//			data[dataIndex + 5] = mNorm.y;
-		//			data[dataIndex + 6] = mNorm.z;
-		//			data[dataIndex + 7] = 1.0f;
-
-		//			aiVector3D& mTangent = fbxMesh->mTangents[i];
-		//			data[dataIndex + 8] = mTangent.x;
-		//			data[dataIndex + 9] = mTangent.y;
-		//			data[dataIndex + 10] = mTangent.z;
-		//			data[dataIndex + 11] = 1.0f;
-
-		//			aiVector3D& biTangent = fbxMesh->mBitangents[i];
-		//			data[dataIndex + 12] = biTangent.x;
-		//			data[dataIndex + 13] = biTangent.y;
-		//			data[dataIndex + 14] = biTangent.z;
-		//			data[dataIndex + 15] = 1.0f;
-
-		//			data[dataIndex + 16] = fbxMesh->mTextureCoords[TEXTURE_SET_0][i].x;
-		//			data[dataIndex + 17] = fbxMesh->mTextureCoords[TEXTURE_SET_0][i].y;
-
-		//			SVertexBoneData& boneData = collectedBoneData[i];
-		//			data[dataIndex + 18] = (F32)boneData.IDs[0];
-		//			data[dataIndex + 19] = (F32)boneData.IDs[1];
-		//			data[dataIndex + 20] = (F32)boneData.IDs[2];
-		//			data[dataIndex + 21] = (F32)boneData.IDs[3];
-		//			//CONFJURMED by Haqvin
-
-		//			data[dataIndex + 22] = boneData.Weights[0];
-		//			data[dataIndex + 23] = boneData.Weights[1];
-		//			data[dataIndex + 24] = boneData.Weights[2];
-		//			data[dataIndex + 25] = boneData.Weights[3];
-		//		}
-		//	}
-		//	else if (hasPositions && hasNormals && hasTangents && hasTextures) 
-		//	{
-		//		for (unsigned int i = 0, dataIndex = 0; i < fbxMesh->mNumVertices; i++, dataIndex += (vertexBufferSize / 4)) 
-		//		{
-		//			aiVector3D& mVertice = fbxMesh->mVertices[i];
-		//			data[dataIndex] = mVertice.x;
-		//			data[dataIndex + 1] = mVertice.y;
-		//			data[dataIndex + 2] = mVertice.z;
-		//			data[dataIndex + 3] = 1.0f;
-
-		//			aiVector3D& mNorm = fbxMesh->mNormals[i];
-		//			data[dataIndex + 4] = mNorm.x;
-		//			data[dataIndex + 5] = mNorm.y;
-		//			data[dataIndex + 6] = mNorm.z;
-		//			data[dataIndex + 7] = 1.0f;
-
-		//			aiVector3D& mTangent = fbxMesh->mTangents[i];
-		//			data[dataIndex + 8] = mTangent.x;
-		//			data[dataIndex + 9] = mTangent.y;
-		//			data[dataIndex + 10] = mTangent.z;
-		//			data[dataIndex + 11] = 1.0f;
-
-		//			aiVector3D& biTangent = fbxMesh->mBitangents[i];
-		//			data[dataIndex + 12] = biTangent.x;
-		//			data[dataIndex + 13] = biTangent.y;
-		//			data[dataIndex + 14] = biTangent.z;
-		//			data[dataIndex + 15] = 1.0f;
-
-		//			data[dataIndex + 16] = fbxMesh->mTextureCoords[TEXTURE_SET_0][i].x;
-		//			data[dataIndex + 17] = fbxMesh->mTextureCoords[TEXTURE_SET_0][i].y;
-		//		}
-		//	}
-		//	else if (hasPositions && hasNormals && hasTangents) 
-		//	{
-		//		for (unsigned int i = 0, dataIndex = 0; i < fbxMesh->mNumVertices; i++, dataIndex += (vertexBufferSize / 4)) 
-		//		{
-		//			aiVector3D& mVertice = fbxMesh->mVertices[i];
-		//			data[dataIndex] = mVertice.x;
-		//			data[dataIndex + 1] = mVertice.y;
-		//			data[dataIndex + 2] = mVertice.z;
-		//			data[dataIndex + 3] = 1.0f;
-
-		//			aiVector3D& mNorm = fbxMesh->mNormals[i];
-		//			data[dataIndex + 4] = mNorm.x;
-		//			data[dataIndex + 5] = mNorm.y;
-		//			data[dataIndex + 6] = mNorm.z;
-		//			data[dataIndex + 7] = 1.0f;
-
-		//			aiVector3D& mTangent = fbxMesh->mTangents[i];
-		//			data[dataIndex + 8] = mTangent.x;
-		//			data[dataIndex + 9] = mTangent.y;
-		//			data[dataIndex + 10] = mTangent.z;
-		//			data[dataIndex + 11] = 1.0f;
-
-		//			aiVector3D& biTangent = fbxMesh->mBitangents[i];
-		//			data[dataIndex + 12] = biTangent.x;
-		//			data[dataIndex + 13] = biTangent.y;
-		//			data[dataIndex + 14] = biTangent.z;
-		//			data[dataIndex + 15] = 1.0f;
-		//		}
-		//	}
-		//	else if (hasPositions && hasNormals) 
-		//	{
-		//		for (unsigned int i = 0, dataIndex = 0; i < fbxMesh->mNumVertices; i++, dataIndex += (vertexBufferSize / 4)) 
-		//		{
-
-		//			aiVector3D& mVertice = fbxMesh->mVertices[i];
-		//			data[dataIndex] = mVertice.x;
-		//			data[dataIndex + 1] = mVertice.y;
-		//			data[dataIndex + 2] = mVertice.z;
-		//			data[dataIndex + 3] = 1.0f;
-
-		//			aiVector3D& mNorm = fbxMesh->mNormals[i];
-		//			data[dataIndex + 4] = mNorm.x;
-		//			data[dataIndex + 5] = mNorm.y;
-		//			data[dataIndex + 6] = mNorm.z;
-		//			data[dataIndex + 7] = 1.0f;
-		//		}
-		//	}
-		//	else if (hasPositions) 
-		//	{
-		//		for (unsigned int i = 0, dataIndex = 0; i < fbxMesh->mNumVertices; i++, dataIndex += (vertexBufferSize / 4)) 
-		//		{
-		//			aiVector3D& mVertice = fbxMesh->mVertices[i];
-		//			data[dataIndex] = mVertice.x;
-		//			data[dataIndex + 1] = mVertice.y;
-		//			data[dataIndex + 2] = mVertice.z;
-		//			data[dataIndex + 3] = 1.0f;
-		//		}
-		//	}
-
-		//	memmove(aLoaderMesh->myVerticies, data, vertexBufferSize * fbxMesh->mNumVertices);
-		//	delete data;
-		//	//return vertexBufferSize;
-
-
-		//	for (unsigned int i = 0; i < fbxMesh->mNumFaces; i++)
-		//	{
-		//		mesh->myIndexes.insert(mesh->myIndexes.end(), std::make_move_iterator(&fbxMesh->mFaces[i].mIndices[0]), std::make_move_iterator(&fbxMesh->mFaces[i].mIndices[fbxMesh->mFaces[i].mNumIndices]));
-		//	}
-		//}
-		//// Change to support multiple animations
-		//if (scene->mNumAnimations > 0)
-		//{
-		//	model->myAnimationDuration = (F32)scene->mAnimations[0]->mDuration;
-		//}
-
-		//LoadMaterials(scene, model);
-
-
-		//model->myGlobalInverseTransform = ConvertToEngineMatrix44(scene->mRootNode->mTransformation);

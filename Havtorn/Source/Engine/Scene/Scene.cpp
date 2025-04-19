@@ -349,15 +349,15 @@ namespace Havtorn
 		//GetComponent<SStaticMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register(staticMeshPath);
 
 		// Skeletal Mesh
-		//std::string meshPath = "Assets/Tests/CH_Enemy_SK.hva";
-		std::string meshPath = "Assets/Tests/MaleDefault.hva";
+		std::string meshPath = "Assets/Tests/CH_Enemy_SK.hva";
+		//std::string meshPath = "Assets/Tests/MaleDefault.hva";
 		//std::string meshPath = "Assets/Tests/DebugAnimMesh.hva";
 		renderManager->LoadSkeletalMeshComponent(meshPath, AddComponent<SSkeletalMeshComponent>(playerProxy));
 		AddComponentEditorContext(playerProxy, &SSkeletalMeshComponentEditorContext::Context);
 		GetComponent<SSkeletalMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register(meshPath);
 
-		//std::string animationPath = "Assets/Tests/CH_Enemy_Walk.hva";
-		std::string animationPath = "Assets/Tests/MaleWave.hva";
+		std::string animationPath = "Assets/Tests/CH_Enemy_Walk.hva";
+		//std::string animationPath = "Assets/Tests/MaleWave.hva";
 		//std::string animationPath = "Assets/Tests/TestWalk.hva";
 		//std::string animationPath = "Assets/Tests/DebugAnimAnim.hva";
 		renderManager->LoadSkeletalAnimationComponent(animationPath, AddComponent<SSkeletalAnimationComponent>(playerProxy));
