@@ -254,60 +254,18 @@ namespace Havtorn
 
 	void CAssetBrowserWindow::ImportOptionsAnimation()
 	{
-		// TODO.NW: Have a "pick asset" field. show name of asset, and if clicked, open correct browser, let specify which type we want to open. Maybe fine with image button for now
-		
 		F32 thumbnailPadding = 4.0f;
 		F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + thumbnailPadding;
 		F32 panelWidth = 256.0f;
 		I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
-		U32 id = 0;
 
-		if (GUI::ImageButton("Skeletal Rig", ImportOptions.AssetRep != nullptr ? (intptr_t)ImportOptions.AssetRep->TextureRef : intptr_t(), { GUI::TexturePreviewSizeX * 0.75f, GUI::TexturePreviewSizeY * 0.75f }))
-		{
-			GUI::OpenPopup("Select Mesh Asset");
-			GUI::SetNextWindowPos(GUI::GetViewportCenter(), EWindowCondition::Appearing, SVector2<F32>(0.5f, 0.5f));
-		}
+		intptr_t assetPickerThumbnail = ImportOptions.AssetRep != nullptr ? (intptr_t)ImportOptions.AssetRep->TextureRef : intptr_t();
+		SAssetPickResult result = GUI::AssetPicker("Skeletal Rig", "Skeletal Mesh", assetPickerThumbnail, "Assets/Tests", columnCount, Manager->GetAssetInspectFunction());
 
-		GUI::Text("Skeletal Rig");
+		if (result.IsAssetPicked)
+			ImportOptions.AssetRep = Manager->GetAssetRepFromDirEntry(result.PickedEntry).get();
 
 		GUI::DragFloat("Import Scale", ImportOptions.Scale, 0.01f);
-
-		// TODO.NW: Make asset picker GUI util
-		if (!GUI::BeginPopupModal("Select Mesh Asset", NULL, { EWindowFlag::AlwaysAutoResize }))
-			return;
-
-		if (!GUI::BeginTable("NewMeshAssetTable", columnCount))
-		{
-			GUI::EndPopup();
-			return;
-		}
-
-		Manager->SetIsModalOpen(true);
-
-		for (auto& entry : std::filesystem::recursive_directory_iterator("Assets/Tests"))
-		{
-			if (entry.is_directory())
-				continue;
-
-			auto& assetRep = Manager->GetAssetRepFromDirEntry(entry);
-
-			GUI::TableNextColumn();
-			GUI::PushID(id++);
-
-			if (GUI::ImageButton(assetRep->Name.c_str(), (intptr_t)assetRep->TextureRef, { GUI::TexturePreviewSizeX * 0.75f, GUI::TexturePreviewSizeY * 0.75f }))
-			{
-				ImportOptions.AssetRep = assetRep.get();
-
-				Manager->SetIsModalOpen(false);
-				GUI::CloseCurrentPopup();
-			}
-
-			GUI::Text(assetRep->Name.c_str());
-			GUI::PopID();
-		}
-
-		GUI::EndTable();
-		GUI::EndPopup();
 	}
 
 	void CAssetBrowserWindow::InspectDirectoryEntry(const std::filesystem::directory_entry& entry, U32& outCurrentID, const intptr_t& folderIconID)

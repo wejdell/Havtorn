@@ -82,9 +82,10 @@ namespace Havtorn
 		void SetSelectedEntity(const SEntity& entity);
 		const SEntity& GetSelectedEntity() const;
 
-		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry);
-		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromName(const std::string& assetName);
-		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromImageRef(void* imageRef);
+		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry) const;
+		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromName(const std::string& assetName) const;
+		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromImageRef(void* imageRef) const;
+		std::function<SAssetInspectionData(std::filesystem::directory_entry)> GetAssetInspectFunction() const;
 
 		void CreateAssetRep(const std::filesystem::path& destinationPath);
 
