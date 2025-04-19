@@ -71,15 +71,14 @@ namespace Havtorn
 		inline void SetScale(F32 xScale, F32 yScale, F32 zScale);
 		inline void SetScale(F32 scale);
 
-		inline SMatrix operator+(const SMatrix& matrix);
+		inline SMatrix operator+(const SMatrix& matrix) const;
 		inline SMatrix& operator+=(const SMatrix& matrix);
-		inline SMatrix operator-(const SMatrix& matrix);
+		inline SMatrix operator-(const SMatrix& matrix) const;
 		inline SMatrix& operator-=(const SMatrix& matrix);
-		inline SMatrix operator*(const SMatrix& matrix);
+		inline SMatrix operator*(const SMatrix& matrix) const;
 		inline SMatrix& operator*=(const SMatrix& matrix);
-		inline SVector4 operator*(const SVector4& vector);
 		inline SMatrix& operator=(const SMatrix& matrix);
-		inline SMatrix operator*(F32 scalar);
+		inline SMatrix operator*(F32 scalar) const;
 		inline SMatrix& operator*=(F32 scalar);
 		inline friend SVector4 operator*(const SMatrix& matrix, const SVector4& vector);
 		inline friend SVector4 operator*(const SVector4& vector, const SMatrix& matrix);
@@ -315,7 +314,7 @@ namespace Havtorn
 		SetScale({ scale, scale, scale });
 	}
 
-	SMatrix SMatrix::operator+(const SMatrix& matrix)
+	SMatrix SMatrix::operator+(const SMatrix& matrix) const
 	{
 		SMatrix result = SMatrix();
 		for (U8 row = 0; row < 4; ++row)
@@ -342,7 +341,7 @@ namespace Havtorn
 	}
 
 
-	SMatrix SMatrix::operator-(const SMatrix& matrix)
+	SMatrix SMatrix::operator-(const SMatrix& matrix) const
 	{
 		SMatrix result = SMatrix();
 		for (U8 row = 0; row < 4; ++row)
@@ -368,7 +367,7 @@ namespace Havtorn
 	}
 
 
-	SMatrix SMatrix::operator*(const SMatrix& matrix)
+	SMatrix SMatrix::operator*(const SMatrix& matrix) const
 	{
 		SMatrix result = SMatrix();
 		for (U8 row = 0; row < 4; ++row)
@@ -402,20 +401,6 @@ namespace Havtorn
 		return *this;
 	}
 
-	SVector4 SMatrix::operator*(const SVector4& vector)
-	{
-		SVector4 result;
-		SVector4 temp1 = SVector4(M[0][0], M[1][0], M[2][0], M[3][0]);
-		SVector4 temp2 = SVector4(M[0][1], M[1][1], M[2][1], M[3][1]);
-		SVector4 temp3 = SVector4(M[0][2], M[1][2], M[2][2], M[3][2]);
-		SVector4 temp4 = SVector4(M[0][3], M[1][3], M[2][3], M[3][3]);
-		result.X = vector.Dot(temp1);
-		result.Y = vector.Dot(temp2);
-		result.Z = vector.Dot(temp3);
-		result.W = vector.Dot(temp4);
-		return result;
-	}
-
 	SMatrix& SMatrix::operator=(const SMatrix& matrix)
 	{
 		for (U8 row = 0; row < 4; ++row)
@@ -428,7 +413,7 @@ namespace Havtorn
 		return *this;
 	}
 
-	SMatrix SMatrix::operator*(F32 scalar)
+	SMatrix SMatrix::operator*(F32 scalar) const
 	{
 		SMatrix matrix = *this;
 		for (U8 row = 0; row < 4; ++row)
