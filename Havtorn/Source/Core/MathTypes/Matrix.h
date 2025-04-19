@@ -60,7 +60,7 @@ namespace Havtorn
 
 		inline SMatrix GetRotationMatrix() const;
 		// Resulting Euler angles in degrees
-		inline SVector GetEuler() const;
+		SVector GetEuler() const;
 		inline void SetRotation(const SMatrix& matrix);
 		inline void SetRotation(const SVector& eulerAngles);
 		inline SMatrix GetTranslationMatrix() const;
@@ -244,59 +244,6 @@ namespace Havtorn
 		rotationMatrix.OrthoNormalize();
 		rotationMatrix.SetTranslation(SVector::Zero);
 		return rotationMatrix;
-	}
-
-	inline SVector SMatrix::GetEuler() const
-	{		
-		SMatrix rotationMatrix = *this;
-		rotationMatrix.OrthoNormalize();
-
-		SVector euler;
-		euler.X = UMath::RadToDeg(atan2f(rotationMatrix.M[1][2], rotationMatrix.M[2][2]));
-		euler.Y = UMath::RadToDeg(atan2f(-rotationMatrix.M[0][2], sqrtf(rotationMatrix.M[1][2] * rotationMatrix.M[1][2] + rotationMatrix.M[2][2] * rotationMatrix.M[2][2])));
-		euler.Z = UMath::RadToDeg(atan2f(rotationMatrix.M[0][1], rotationMatrix.M[0][0]));
-
-		// TODO.NR: Still need to figure out what is going wrong here. Using LookAtLH to look at 0,2,1 seems to give us 0,1,2, and vice versa.
-
-		// https://learnopencv.com/rotation-matrix-to-euler-angles/
-		//SVector euler;
-		//F32 sy = sqrtf(rotationMatrix(0, 0) * rotationMatrix(0, 0) + rotationMatrix(0, 1) * rotationMatrix(0, 1));
-		//bool isSingular = sy < KINDA_SMALL_NUMBER;
-		//if (!isSingular)
-		//{
-		//	euler.X = atan2f(rotationMatrix(1, 2), rotationMatrix(2, 2));
-		//	euler.Y = atan2f(-rotationMatrix(0, 2), sy);
-		//	euler.Z = atan2f(rotationMatrix(0, 1), rotationMatrix(0, 0));
-		//}
-		//else
-		//{
-		//	euler.X = atan2f(-rotationMatrix(2, 1), rotationMatrix(1, 1));
-		//	euler.Y = atan2f(-rotationMatrix(0, 2), sy);
-		//	euler.Z = 0;
-		//}
-
-		// https://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToEuler/index.htm
-		//SVector euler;
-		//if (rotationMatrix(1, 0) > 0.998) // singularity at north pole
-		//{
-		//	euler.Y = atan2(rotationMatrix(0, 2), rotationMatrix(2, 2));
-		//	euler.X = UMath::Pi / 2;
-		//	euler.Z = 0;
-		//}
-		//else if (rotationMatrix(1, 0) < -0.998) // singularity at south pole
-		//{
-		//	euler.Y = atan2f(rotationMatrix(0, 2), rotationMatrix(2, 2));
-		//	euler.X = -UMath::Pi / 2;
-		//	euler.Z = 0;
-		//}
-		//else
-		//{
-		//	euler.Y = atan2f(-rotationMatrix(2, 0), rotationMatrix(0, 0));
-		//	euler.Z = atan2f(-rotationMatrix(1, 2), rotationMatrix(1, 1));
-		//	euler.X = UMath::ASin(rotationMatrix(1, 0));
-		//}
-
-		return euler;
 	}
 
 	inline void SMatrix::SetRotation(const SMatrix& matrix)
@@ -823,6 +770,17 @@ namespace Havtorn
 		outMatrix *= CreateRotationAroundZ(UMath::DegToRad(eulerData[2]));
 
 		outMatrix.SetTranslation(SVector(translationData[0], translationData[1], translationData[2]));
+		//SMatrix tMatrix = SMatrix::Identity;
+		//SMatrix qMatrix = SMatrix::Identity;
+		//SMatrix sMatrix = SMatrix::Identity;
+
+		//tMatrix.SetTranslation(SVector(translationData[0], translationData[1], translationData[2]));
+		//qMatrix *= CreateRotationAroundX(UMath::DegToRad(eulerData[0]));
+		//qMatrix *= CreateRotationAroundY(UMath::DegToRad(eulerData[1]));
+		//qMatrix *= CreateRotationAroundZ(UMath::DegToRad(eulerData[2]));
+		//sMatrix.SetScale(scaleData[0], scaleData[1], scaleData[2]);
+
+		//outMatrix = tMatrix * qMatrix * sMatrix;
 	}
 
 	inline SMatrix SMatrix::GetRHViewMatrix() const

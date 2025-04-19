@@ -287,6 +287,37 @@ namespace Havtorn
 	{
 		SMatrix matrix = SMatrix::CreateRotationFromQuaternion(*this);
 		return matrix.GetEuler();
+		
+		//SVector euler;
+		//// heading = rotation about y (up)
+		//// attitude = rotation about -z (forward)
+		//// bank = rotation about x (right)
+		//// heading first, then attitude, then bank
+		//F32 test = X * Y + Z * W;
+		//if (test > 0.499f) 
+		//{ // singularity at north pole
+		//	euler.Y = UMath::RadToDeg(2 * UMath::ATan2(X, W));
+		//	euler.Z = UMath::RadToDeg(-UMath::Pi * 0.5f);
+		//	euler.X = 0;
+		//	return euler;
+		//}
+
+		//if (test < -0.499f) 
+		//{ // singularity at south pole
+		//	euler.Y = UMath::RadToDeg(-2 * UMath::ATan2(X, W));
+		//	euler.Z = UMath::RadToDeg(UMath::Pi * 0.5f);
+		//	euler.X = 0;
+		//	return euler;
+		//}
+
+		//F32 sqX = X * X;
+		//F32 sqY = Y * Y;
+		//F32 sqZ = Z * Z;
+		//euler.Y = UMath::RadToDeg(UMath::ATan2(2 * Y * W - 2 * X * Z, 1 - 2 * sqY - 2 * sqZ));
+		//euler.Z = UMath::RadToDeg(-UMath::ASin(2 * test));
+		//euler.X = UMath::RadToDeg(UMath::ATan2(2 * X * W - 2 * Y * Z, 1 - 2 * sqX - 2 * sqZ));
+
+		//return euler;
 	}
 	
 	inline void SQuaternion::ToAxisAndAngle(SVector& axis, F32& angle) const
@@ -357,7 +388,7 @@ namespace Havtorn
 	inline std::string SQuaternion::ToString() const
 	{
 		char buffer[64];
-		sprintf_s(buffer, "{X: %.1f, Y: %.1f, Z: %.1f, W: %.1f}", X, Y, Z, W);
+		sprintf_s(buffer, "{X: %.7f, Y: %.7f, Z: %.7f, W: %.7f}", X, Y, Z, W);
 		return buffer;
 	}
 	
@@ -381,6 +412,6 @@ namespace Havtorn
 		F32 omegaA = UMath::Sin((1.0f - t) * angularDistance) / sineOfAngularDistance;
 		F32 omegaB = UMath::Sin(t * angularDistance) / sineOfAngularDistance;
 
-		return (a * omegaA + b * omegaB).GetNormalized().Inverse();
+		return (a * omegaA + b * omegaB).GetNormalized()/*.Inverse()*/;
 	}
 }
