@@ -219,14 +219,17 @@ namespace Havtorn
 			else
 				GUI::Text(assetRep->Name.c_str());
 
-			// TODO.NR: Update ImGui and use the overload that takes a unique identifier. This currently breaks when using two buttons with the same texture.
+			GUI::PushID(index);
 			if (GUI::ImageButton(assetName.c_str(), (intptr_t)assetRep->TextureRef, {GUI::TexturePreviewSizeX, GUI::TexturePreviewSizeY}))
 			{
+				GUI::PopID();
 				// TODO.NR: Make Algo lib function that finds index of object in array, make for-each loop
 				AssetPickedIndex = index;
 				GUI::OpenPopup(modalNameToOpen.c_str());
 				GUI::SetNextWindowPos(GUI::GetViewportCenter(), EWindowCondition::Appearing, SVector2<F32>(0.5f, 0.5f));
 			}
+			else
+				GUI::PopID();
 		}
 
 		if (modalNameToOpen == SelectMeshAssetModalName)
