@@ -277,7 +277,7 @@ namespace Havtorn
 			//	SVector rot;
 			//	SVector scal;
 			//	SMatrix::Decompose(nodeTransform, trans, rot, scal);
-			//	HV_LOG_TRACE("Node Transform: t: %s, r: %s", trans.ToString().c_str(), rot.ToString().c_str());
+			//	HV_LOG_TRACE("Node Transform: t: %s, r: %s, s: %s", trans.ToString().c_str(), rot.ToString().c_str(), scal.ToString().c_str());
 			//}
 		}
 
@@ -289,7 +289,7 @@ namespace Havtorn
 		//	SVector rot;
 		//	SVector scal;
 		//	SMatrix::Decompose(globalTransform, trans, rot, scal);
-		//	HV_LOG_WARN("Global: t: %s, r: %s, s: %s", trans.ToString().c_str(), rot.ToString().c_str(), scal.ToString().c_str());
+		//	HV_LOG_TRACE("Global: t: %s, r: %s, s: %s", trans.ToString().c_str(), rot.ToString().c_str(), scal.ToString().c_str());
 		//}
 
 		if (auto it = std::ranges::find(mesh->BindPose, nodeName, &SSkeletalMeshBone::Name); it != mesh->BindPose.end())
@@ -303,8 +303,8 @@ namespace Havtorn
 			//	SVector trans;
 			//	SVector rot;
 			//	SVector scal;
-			//	SMatrix::Decompose(inverseBindPose, trans, rot, scal);
-			//	HV_LOG_WARN("Global: t: %s, r: %s, s: %s", trans.ToString().c_str(), rot.ToString().c_str(), scal.ToString().c_str());
+			//	SMatrix::Decompose(mesh->BindPose[boneIndex].InverseBindPoseTransform, trans, rot, scal);
+			//	HV_LOG_WARN("Inverse Bind Pose: t: %s, r: %s, s: %s", trans.ToString().c_str(), rot.ToString().c_str(), scal.ToString().c_str());
 			//}
 		}
 

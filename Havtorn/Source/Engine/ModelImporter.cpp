@@ -277,7 +277,7 @@ namespace Havtorn
 		return newFileName;
 	}
 
-	void ExtractNodes(const aiScene* scene, aiNode* node, const std::vector<SSkeletalMeshBone>& bindPose, std::vector<SSkeletalMeshNode>& nodesToPopulate)
+	void ExtractNodes(const aiScene* scene, const SAssetImportOptions& importOptions, aiNode* node, const std::vector<SSkeletalMeshBone>& bindPose, std::vector<SSkeletalMeshNode>& nodesToPopulate)
 	{
 		if (nodesToPopulate.size() > 0)
 		{
@@ -291,10 +291,11 @@ namespace Havtorn
 
 		CHavtornStaticString<255> nodeName = CHavtornStaticString<255>(node->mName.C_Str());
 		SMatrix transform = SMatrix::Transpose(ToHavtornMatrix(node->mTransformation));
+		transform.SetTranslation(transform.GetTranslation() * importOptions.Scale);
 		nodesToPopulate.emplace_back(SSkeletalMeshNode(nodeName, transform, {}));
 
 		for (U32 i = 0; i < node->mNumChildren; i++)
-			ExtractNodes(scene, node->mChildren[i], bindPose, nodesToPopulate);
+			ExtractNodes(scene, importOptions, node->mChildren[i], bindPose, nodesToPopulate);
 	}
 
 	std::string UModelImporter::ImportSkeletalMesh(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions, const aiScene* assimpScene)
@@ -306,6 +307,8 @@ namespace Havtorn
 		fileHeader.Meshes.reserve(fileHeader.NumberOfMeshes);
 
 		const aiMesh* fbxMesh = nullptr;
+
+		// TODO.NW: Figure out how to scale the armature so that we can reliably scale skeletal meshes
 
 		// Pre-loading Pass
 		for (U8 n = 0; n < assimpScene->mNumMeshes; n++)
@@ -357,7 +360,7 @@ namespace Havtorn
 				}
 			}
 
-			ExtractNodes(assimpScene, assimpScene->mRootNode, fileHeader.BindPoseBones, fileHeader.Nodes);
+			ExtractNodes(assimpScene, importOptions, assimpScene->mRootNode, fileHeader.BindPoseBones, fileHeader.Nodes);
 
 			// Vertices
 			const F32 scaleModifier = importOptions.Scale;
@@ -414,10 +417,6 @@ namespace Havtorn
 		fileHeader.NumberOfMaterials = STATIC_U8(assimpScene->mNumMaterials);
 		fileHeader.NumberOfNodes = STATIC_U32(fileHeader.Nodes.size());
 
-		for (const auto& bone : fileHeader.BindPoseBones)
-		{
-			HV_LOG_WARN("Bone %s, %s", bone.Name.AsString().c_str(), bone.InverseBindPoseTransform.ToString().c_str());
-		}
 		std::string newFileName = destinationPath + UGeneralUtils::ExtractFileBaseNameFromPath(filePath) + ".hva";
 		const auto fileData = new char[fileHeader.GetSize()];
 		fileHeader.Serialize(fileData);
@@ -429,7 +428,9 @@ namespace Havtorn
 	{
 		const aiAnimation* animation = assimpScene->mAnimations[0];
 
-		// TODO.NR: Support multiple animations per file? Support montages somehow. Could be separate file using these headers (SSkeletalAnimationMontageFileHeader)
+		// TODO.NW: Figure out how to scale the armature so that we can reliably scale skeletal meshes
+
+		// TODO.NW: Support multiple animations per file? Support montages somehow. Could be separate file using these headers (SSkeletalAnimationMontageFileHeader)
 		SSkeletalAnimationFileHeader fileHeader;
 		fileHeader.AssetType = EAssetType::Animation;
 		fileHeader.Name = UGeneralUtils::ExtractFileNameFromPath(filePath);
