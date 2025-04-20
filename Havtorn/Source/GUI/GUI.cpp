@@ -1118,12 +1118,12 @@ namespace Havtorn
 		GUI::Text(label);
 
 		if (!GUI::BeginPopupModal(modalLabel, NULL, { EWindowFlag::AlwaysAutoResize }))
-			return SAssetPickResult(false);
+			return SAssetPickResult();
 
 		if (!GUI::BeginTable("AssetPickerTable", columns))
 		{
 			GUI::EndPopup();
-			return SAssetPickResult(false);
+			return SAssetPickResult();
 		}
 
 		I32 id = 0;
@@ -1140,9 +1140,9 @@ namespace Havtorn
 			{
 				GUI::PopID();
 				GUI::EndTable();
-				GUI::EndPopup();
 				GUI::CloseCurrentPopup();
-				return SAssetPickResult(false, true, entry);
+				GUI::EndPopup();
+				return SAssetPickResult(entry);
 			}
 
 			GUI::Text(data.Name.c_str());
@@ -1159,11 +1159,15 @@ namespace Havtorn
 		F32 off = (avail - width) * 0.5f;
 		GUI::SetCursorPosX(GUI::GetCursorPosX() + off);
 
-		if (GUI::Button("Cancel"))	
+		if (GUI::Button("Cancel"))
+		{
 			GUI::CloseCurrentPopup();
+			GUI::EndPopup();
+			return SAssetPickResult(EAssetPickerState::Cancelled);
+		}
 
 		GUI::EndPopup();
-		return SAssetPickResult(true);
+		return SAssetPickResult(EAssetPickerState::Active);
 	}
 
 	bool GUI::Selectable(const char* label, const bool selected)

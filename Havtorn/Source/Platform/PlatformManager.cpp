@@ -222,6 +222,7 @@ namespace Havtorn
 			// Start in bordered window
 			WindowHandle = CreateWindowA("HavtornWindowClass", gameName.c_str(),
 				WS_OVERLAPPEDWINDOW | WS_POPUP | WS_VISIBLE,
+				//WS_POPUP | WS_VISIBLE,
 				WindowData.X, WindowData.Y, WindowData.Width, WindowData.Height,
 				nullptr, nullptr, nullptr, this);
 		}

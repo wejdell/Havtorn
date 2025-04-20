@@ -338,18 +338,25 @@ namespace Havtorn
 		intptr_t TextureRef = 0;
 	};
 
+	enum class EAssetPickerState
+	{
+		Inactive,
+		Active,
+		AssetPicked,
+		Cancelled,
+	};
+
 	struct SAssetPickResult
 	{
-		SAssetPickResult(const bool isModalOpen)
-			: IsModalOpen(isModalOpen)
+		SAssetPickResult() = default;
+		SAssetPickResult(EAssetPickerState state)
+			: State(state)
 		{}
-		SAssetPickResult(const bool isModalOpen, const bool isAssetPicked, const std::filesystem::directory_entry& entry)
-			: IsModalOpen(isModalOpen)
-			, IsAssetPicked(isAssetPicked)
+		SAssetPickResult(const std::filesystem::directory_entry& entry)
+			: State(EAssetPickerState::AssetPicked)
 			, PickedEntry(entry)
 		{}
-		bool IsModalOpen = false;
-		bool IsAssetPicked = false;
+		EAssetPickerState State = EAssetPickerState::Inactive;
 		std::filesystem::directory_entry PickedEntry;
 	};
 

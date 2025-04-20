@@ -8,6 +8,7 @@
 namespace Havtorn
 {
 	struct SComponentViewResult;
+	struct SEditorAssetRepresentation;
 	class CScene;
 
 	template<typename T = F32>
@@ -26,12 +27,14 @@ namespace Havtorn
 		void UpdateTransformGizmo(const SComponentViewResult& result);
 		void ViewManipulation(SMatrix& outCameraView, const SVector2<F32>& windowPosition, const SVector2<F32>& windowSize);
 		void InspectAssetComponent(const SComponentViewResult& result);
-		void IterateAssetRepresentations(const SComponentViewResult& result, const std::vector<std::string>& assetNames, const std::vector<std::string>& assetLabels, const std::string& modalNameToOpen);
-		void OpenSelectMeshAssetModal(const SComponentViewResult& result);
-		void OpenSelectTextureAssetModal(const SComponentViewResult& result);
-		void OpenSelectMaterialAssetModal(const SComponentViewResult& result);
+		
+		void IterateAssetRepresentations(const SComponentViewResult& result, const std::vector<std::string>& assetNames, const std::vector<std::string>& assetLabels, const std::string& modalNameToOpen, const std::string& defaultSearchDirectory);
+		
+		void HandleMeshAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep);
+		void HandleMaterialAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep);
+		void HandleTextureAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep);
+		
 		void OpenAssetTool(const SComponentViewResult& result);
-		void HandleTextureAssetModal(const std::string& pathToSearch, U16& textureReference);
 		
 		void OpenAddComponentModal();
 
@@ -39,6 +42,10 @@ namespace Havtorn
 		const std::string SelectMeshAssetModalName = "Select Mesh Asset";
 		const std::string SelectMaterialAssetModalName = "Select Material Asset";
 		const std::string SelectTextureAssetModalName = "Select Texture Asset";
+
+		const std::string DefaultMeshAssetDirectory = "Assets/Tests";
+		const std::string DefaultMaterialAssetDirectory = "Assets/Materials";
+		const std::string DefaultTextureAssetDirectory = "Assets/Textures";
 
 		CScene* Scene = nullptr;
 		SEntity SelectedEntity = SEntity::Null;

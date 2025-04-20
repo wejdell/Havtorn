@@ -33,8 +33,6 @@ namespace Havtorn
 	{
 		const SEditorLayout& layout = Manager->GetEditorLayout();
 
-		//GUI::GUIProcess::SetNextWindowPos(ImVec2(mainViewport->WorkPos.x + layout.InspectorPosition.X, mainViewport->WorkPos.y + layout.InspectorPosition.Y));
-
 		const SVector2<F32>& viewportWorkPos = GUI::GetViewportWorkPos();
 		GUI::SetNextWindowPos(SVector2<F32>(viewportWorkPos.X + layout.InspectorPosition.X, viewportWorkPos.Y + layout.InspectorPosition.Y));
 		GUI::SetNextWindowSize(SVector2<F32>(layout.InspectorSize.X, layout.InspectorSize.Y));
@@ -162,11 +160,13 @@ namespace Havtorn
 		std::vector<std::string> assetNames = {};
 		std::vector<std::string> assetLabels = {};
 		std::string modalNameToOpen = "";
+		std::string defaultAssetDirectory = "";
 
 		if (SStaticMeshComponent* staticMeshComponent = dynamic_cast<SStaticMeshComponent*>(result.ComponentViewed))
 		{
 			assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(staticMeshComponent->Name.AsString()));
 			modalNameToOpen = SelectMeshAssetModalName;
+			defaultAssetDirectory = DefaultMeshAssetDirectory;
 		}
 		else if (SMaterialComponent* materialComponent = dynamic_cast<SMaterialComponent*>(result.ComponentViewed))
 		{
@@ -174,6 +174,7 @@ namespace Havtorn
 				assetNames.push_back(material.Name);
 
 			modalNameToOpen = SelectMaterialAssetModalName;
+			defaultAssetDirectory = DefaultMaterialAssetDirectory;
 		}
 		else if (SDecalComponent* decalComponent = dynamic_cast<SDecalComponent*>(result.ComponentViewed))
 		{
@@ -181,26 +182,35 @@ namespace Havtorn
 				assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(GEngine::GetTextureBank()->GetTexturePath(static_cast<U32>(textureRef))));
 
 			modalNameToOpen = SelectTextureAssetModalName;
+			defaultAssetDirectory = DefaultTextureAssetDirectory;
 			assetLabels.push_back("Albedo");
 			assetLabels.push_back("Material");
 			assetLabels.push_back("Normal");
+			// TODO.NW: Figure out the nicest way to deal with labels vs asset names. Would be cool with a drop down similar to UE. See Notes
 		}
 		else if (SEnvironmentLightComponent* environmentLightComponent = dynamic_cast<SEnvironmentLightComponent*>(result.ComponentViewed))
 		{
 			assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(GEngine::GetTextureBank()->GetTexturePath(static_cast<U32>(environmentLightComponent->AmbientCubemapReference))));
 			modalNameToOpen = SelectTextureAssetModalName;
+			defaultAssetDirectory = DefaultTextureAssetDirectory;
 		}
 		else if (SSpriteComponent* spriteComponent = dynamic_cast<SSpriteComponent*>(result.ComponentViewed))
 		{
 			assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(GEngine::GetTextureBank()->GetTexturePath(static_cast<U32>(spriteComponent->TextureIndex))));
 			modalNameToOpen = SelectTextureAssetModalName;
+			defaultAssetDirectory = DefaultTextureAssetDirectory;
 		}
 
-		IterateAssetRepresentations(result, assetNames, assetLabels, modalNameToOpen);
+		IterateAssetRepresentations(result, assetNames, assetLabels, modalNameToOpen, defaultAssetDirectory);
 	}
 
-	void CInspectorWindow::IterateAssetRepresentations(const SComponentViewResult& result, const std::vector<std::string>& assetNames, const std::vector<std::string>& assetLabels, const std::string& modalNameToOpen)
+	void CInspectorWindow::IterateAssetRepresentations(const SComponentViewResult& result, const std::vector<std::string>& assetNames, const std::vector<std::string>& /*assetLabels*/, const std::string& modalNameToOpen, const std::string& defaultSearchDirectory)
 	{
+		F32 thumbnailPadding = 4.0f;
+		F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + thumbnailPadding;
+		F32 panelWidth = 256.0f;
+		I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
+
 		for (U8 index = 0; index < static_cast<U8>(assetNames.size()); index++)
 		{
 			std::string assetName = assetNames[index];
@@ -212,201 +222,95 @@ namespace Havtorn
 
 			GUI::Separator();
 
-			if (assetLabels.size() > index)
-				GUI::Text(assetLabels[index].c_str());
-			else if (assetRep->Name.empty())
-				GUI::Text("N/A");
-			else
-				GUI::Text(assetRep->Name.c_str());
+			std::string id = assetName;
+			id.append(std::to_string(index));
+			GUI::PushID(id.c_str());
 
-			GUI::PushID(index);
-			if (GUI::ImageButton(assetName.c_str(), (intptr_t)assetRep->TextureRef, {GUI::TexturePreviewSizeX, GUI::TexturePreviewSizeY}))
+			SAssetPickResult assetPickResult = GUI::AssetPicker(assetName.c_str(), modalNameToOpen.c_str(), (intptr_t)assetRep->TextureRef, defaultSearchDirectory.c_str(), columnCount, Manager->GetAssetInspectFunction());
+
+			if (assetPickResult.State == EAssetPickerState::Active)
+				Manager->SetIsModalOpen(true);
+			else if (assetPickResult.State == EAssetPickerState::Cancelled)
+				Manager->SetIsModalOpen(false);
+			else if (assetPickResult.State == EAssetPickerState::AssetPicked)
 			{
-				GUI::PopID();
-				// TODO.NR: Make Algo lib function that finds index of object in array, make for-each loop
 				AssetPickedIndex = index;
-				GUI::OpenPopup(modalNameToOpen.c_str());
-				GUI::SetNextWindowPos(GUI::GetViewportCenter(), EWindowCondition::Appearing, SVector2<F32>(0.5f, 0.5f));
-			}
-			else
-				GUI::PopID();
-		}
+				auto pickedAsset = Manager->GetAssetRepFromDirEntry(assetPickResult.PickedEntry).get();
 
-		if (modalNameToOpen == SelectMeshAssetModalName)
-			OpenSelectMeshAssetModal(result);
-		else if (modalNameToOpen == SelectMaterialAssetModalName)
-			OpenSelectMaterialAssetModal(result);
-		else if (modalNameToOpen == SelectTextureAssetModalName)
-			OpenSelectTextureAssetModal(result);
+				if (modalNameToOpen == SelectMeshAssetModalName)
+					HandleMeshAssetPicked(result, pickedAsset);
+				else if (modalNameToOpen == SelectMaterialAssetModalName)
+					HandleMaterialAssetPicked(result, pickedAsset);
+				else if (modalNameToOpen == SelectTextureAssetModalName)
+					HandleTextureAssetPicked(result, pickedAsset);
+
+				Manager->SetIsModalOpen(false);
+			}
+
+			GUI::PopID();
+		}
 	}
 
-	void CInspectorWindow::OpenSelectMeshAssetModal(const SComponentViewResult& result)
+	void CInspectorWindow::HandleMeshAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep)
 	{
-		if (!GUI::BeginPopupModal("Select Mesh Asset", NULL, { EWindowFlag::AlwaysAutoResize }))
-			return;
-
 		SStaticMeshComponent* staticMesh = static_cast<SStaticMeshComponent*>(result.ComponentViewed);
 		if (staticMesh == nullptr)
 			return;
 
-		F32 thumbnailPadding = 4.0f;
-		F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + thumbnailPadding;
-		F32 panelWidth = 256.0f;
-		I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
-		U32 id = 0;
+		Manager->GetRenderManager()->TryLoadStaticMeshComponent(assetRep->Name + ".hva", staticMesh);
 
-		if (!GUI::BeginTable("NewMeshAssetTable", columnCount))
+		SMaterialComponent* materialComp = Scene->GetComponent<SMaterialComponent>(staticMesh);
+		if (materialComp != nullptr)
 		{
-			GUI::EndPopup();
-			return;
-		}
+			U8 meshMaterialNumber = staticMesh->NumberOfMaterials;
+			I8 materialNumberDifference = meshMaterialNumber - static_cast<U8>(materialComp->Materials.size());
 
-		Manager->SetIsModalOpen(true);
-
-		/* TODO.NR: See if one can make a general folder structure exploration function,
-		* return true and an assetRep if a directory is double clicked. Maybe multiple 
-		* versions with slight variations. Want to be able to go to any directory. 
-		* Alternative might be GetDoubleClickedAssetRep(startingDirectory), use return 
-		* value as an optional.
-		*/
-		for (auto& entry : std::filesystem::recursive_directory_iterator("Assets/Tests"))
-		{
-			if (entry.is_directory())
-				continue;
-
-			auto& assetRep = Manager->GetAssetRepFromDirEntry(entry);
-
-			GUI::TableNextColumn();
-			GUI::PushID(id++);
-
-			if (GUI::ImageButton(assetRep->Name.c_str(), (intptr_t)assetRep->TextureRef, {GUI::TexturePreviewSizeX * 0.75f, GUI::TexturePreviewSizeY * 0.75f}))
+			// NR: Add materials to correspond with mesh
+			if (materialNumberDifference > 0)
 			{
-				Manager->GetRenderManager()->TryLoadStaticMeshComponent(assetRep->Name + ".hva", staticMesh);
-
-				SMaterialComponent* materialComp = Scene->GetComponent<SMaterialComponent>(staticMesh);
-				if (materialComp != nullptr)
+				for (U8 i = 0; i < materialNumberDifference; i++)
 				{
-					U8 meshMaterialNumber = staticMesh->NumberOfMaterials;
-					I8 materialNumberDifference = meshMaterialNumber - static_cast<U8>(materialComp->Materials.size());
-
-					// NR: Add materials to correspond with mesh
-					if (materialNumberDifference > 0)
-					{
-						for (U8 i = 0; i < materialNumberDifference; i++)
-						{
-							materialComp->Materials.emplace_back();
-						}
-					}
-					// NR: Remove materials to correspond with mesh
-					else if (materialNumberDifference < 0)
-					{
-						for (U8 i = 0; i < materialNumberDifference * -1.0f; i++)
-						{
-							materialComp->Materials.pop_back();
-						}
-					}
-					// NR: Do nothing
-					else
-					{ 
-					}
+					materialComp->Materials.emplace_back();
 				}
-
-				Manager->SetIsModalOpen(false);
-				GUI::CloseCurrentPopup();
 			}
-
-			GUI::Text(assetRep->Name.c_str());
-			GUI::PopID();
+			// NR: Remove materials to correspond with mesh
+			else if (materialNumberDifference < 0)
+			{
+				for (U8 i = 0; i < materialNumberDifference * -1.0f; i++)
+				{
+					materialComp->Materials.pop_back();
+				}
+			}
+			// NR: Do nothing
+			else
+			{ 
+			}
 		}
-
-		GUI::EndTable();
-
-		if (GUI::Button("Cancel", SVector2<F32>(GUI::GetContentRegionAvail().X, 0)))
-		{
-			Manager->SetIsModalOpen(false);
-			GUI::CloseCurrentPopup(); 
-		}
-
-		GUI::EndPopup();
 	}
 
-	void CInspectorWindow::OpenSelectTextureAssetModal(const SComponentViewResult& result)
+	void CInspectorWindow::HandleMaterialAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep)
 	{
-		if (!GUI::BeginPopupModal("Select Texture Asset", NULL, { EWindowFlag::AlwaysAutoResize }))
-			return;
-		
-		constexpr const char* searchPath = "Assets/Textures";
-
-		if (SDecalComponent* decalComponent = dynamic_cast<SDecalComponent*>(result.ComponentViewed))
-			HandleTextureAssetModal(searchPath, decalComponent->TextureReferences[result.ComponentSubIndex]);
-
-		if (SEnvironmentLightComponent* environmentLightComponent = dynamic_cast<SEnvironmentLightComponent*>(result.ComponentViewed))
-			HandleTextureAssetModal(searchPath, environmentLightComponent->AmbientCubemapReference);
-
-		if (SSpriteComponent* spriteComponent = dynamic_cast<SSpriteComponent*>(result.ComponentViewed))
-			HandleTextureAssetModal(searchPath, spriteComponent->TextureIndex);
-
-		if (GUI::Button("Cancel", SVector2<F32>(GUI::GetContentRegionAvail().X, 0)))
-		{
-			Manager->SetIsModalOpen(false);
-			GUI::CloseCurrentPopup();
-		}
-
-		GUI::EndPopup();
-	}
-
-	void CInspectorWindow::OpenSelectMaterialAssetModal(const SComponentViewResult& result)
-	{
-		if (!GUI::BeginPopupModal("Select Material Asset", NULL, { EWindowFlag::AlwaysAutoResize }))
-			return;
-
 		SMaterialComponent* materialComponent = dynamic_cast<SMaterialComponent*>(result.ComponentViewed);
 		if (materialComponent == nullptr)
 			return;
 
-		F32 thumbnailPadding = 4.0f;
-		F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + thumbnailPadding;
-		F32 panelWidth = 256.0f;
-		I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
-		U32 id = 0;
+		// TODO.NW: This doesn't work for instanced entities yet. Need a solution for that
+		Manager->GetRenderManager()->TryReplaceMaterialOnComponent(assetRep->DirectoryEntry.path().string(), AssetPickedIndex, materialComponent);
+		AssetPickedIndex = 0;
+	}
 
-		Manager->SetIsModalOpen(true);
+	void CInspectorWindow::HandleTextureAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep)
+	{
+		U16 textureReference = static_cast<U16>(GEngine::GetTextureBank()->GetTextureIndex(assetRep->DirectoryEntry.path().string()));
 
-		if (GUI::BeginTable("NewMaterialAssetTable", columnCount))
-		{
-			for (auto& entry : std::filesystem::recursive_directory_iterator("Assets/Materials"))
-			{
-				if (entry.is_directory())
-					continue;
+		if (SDecalComponent* decalComponent = dynamic_cast<SDecalComponent*>(result.ComponentViewed))
+			decalComponent->TextureReferences[AssetPickedIndex] = textureReference;
 
-				auto& assetRep = Manager->GetAssetRepFromDirEntry(entry);
+		if (SEnvironmentLightComponent* environmentLightComponent = dynamic_cast<SEnvironmentLightComponent*>(result.ComponentViewed))
+			environmentLightComponent->AmbientCubemapReference = textureReference;
 
-				GUI::TableNextColumn();
-				GUI::PushID(id++);
-
-				if (GUI::ImageButton(assetRep->Name.c_str(), (intptr_t)assetRep->TextureRef, {GUI::TexturePreviewSizeX * 0.75f, GUI::TexturePreviewSizeY * 0.75f}))
-				{
-					Manager->GetRenderManager()->TryReplaceMaterialOnComponent(assetRep->DirectoryEntry.path().string(), AssetPickedIndex, materialComponent);
-					AssetPickedIndex = 0;
-
-					Manager->SetIsModalOpen(false);
-					GUI::CloseCurrentPopup();
-				}
-
-				GUI::Text(assetRep->Name.c_str());
-				GUI::PopID();
-			}
-
-			GUI::EndTable();
-		}
-
-		if (GUI::Button("Cancel", SVector2<F32>(GUI::GetContentRegionAvail().X, 0))) 
-		{
-			Manager->SetIsModalOpen(false);
-			GUI::CloseCurrentPopup(); 
-		}
-
-		GUI::EndPopup();	
+		if (SSpriteComponent* spriteComponent = dynamic_cast<SSpriteComponent*>(result.ComponentViewed))
+			spriteComponent->TextureIndex = textureReference;
 	}
 
 	void CInspectorWindow::OpenAssetTool(const SComponentViewResult& result)
@@ -416,42 +320,6 @@ namespace Havtorn
 			return;
 
 		Manager->GetEditorWindow<CSpriteAnimatorGraphNodeWindow>()->Inspect(*component);
-	}
-
-	void CInspectorWindow::HandleTextureAssetModal(const std::string& pathToSearch, U16& textureReference)
-	{
-		F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + GUI::ThumbnailPadding;
-		I32 columnCount = static_cast<I32>(GUI::PanelWidth / cellWidth);
-		U32 id = 0;
-
-		Manager->SetIsModalOpen(true);
-
-		if (GUI::BeginTable("NewTextureAssetTable", columnCount))
-		{
-			for (auto& entry : std::filesystem::recursive_directory_iterator(pathToSearch.c_str()))
-			{
-				if (entry.is_directory())
-					continue;
-
-				auto& assetRep = Manager->GetAssetRepFromDirEntry(entry);
-
-				GUI::TableNextColumn();
-				GUI::PushID(id++);
-
-				if (GUI::ImageButton(assetRep->Name.c_str(), (intptr_t)assetRep->TextureRef, {GUI::TexturePreviewSizeX * 0.75f, GUI::TexturePreviewSizeY * 0.75f}))
-				{
-					textureReference = static_cast<U16>(GEngine::GetTextureBank()->GetTextureIndex(entry.path().string()));
-					
-					Manager->SetIsModalOpen(false);
-					GUI::CloseCurrentPopup();
-				}
-
-				GUI::Text(assetRep->Name.c_str());
-				GUI::PopID();
-			}
-
-			GUI::EndTable();
-		}
 	}
 
 	void CInspectorWindow::OpenAddComponentModal()

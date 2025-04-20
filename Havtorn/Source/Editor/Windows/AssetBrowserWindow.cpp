@@ -262,7 +262,7 @@ namespace Havtorn
 		intptr_t assetPickerThumbnail = ImportOptions.AssetRep != nullptr ? (intptr_t)ImportOptions.AssetRep->TextureRef : intptr_t();
 		SAssetPickResult result = GUI::AssetPicker("Skeletal Rig", "Skeletal Mesh", assetPickerThumbnail, "Assets/Tests", columnCount, Manager->GetAssetInspectFunction());
 
-		if (result.IsAssetPicked)
+		if (result.State == EAssetPickerState::AssetPicked)
 			ImportOptions.AssetRep = Manager->GetAssetRepFromDirEntry(result.PickedEntry).get();
 
 		GUI::DragFloat("Import Scale", ImportOptions.Scale, 0.01f);
