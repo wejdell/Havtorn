@@ -19,16 +19,8 @@ namespace Havtorn
 
 		SPhysics2DComponent* physicsComponent = scene->GetComponent<SPhysics2DComponent>(entityOwner);
 
-		// TODO.NR: Make a util to deal with enums
-		I32 bodyTypeIndex = static_cast<int>(physicsComponent->BodyType);
-		const char* bodyTypeNames[3] = { "Static", "Kinematic", "Dynamic" };
-		GUI::SliderInt("Body Type", bodyTypeIndex, 0, 2, bodyTypeNames[bodyTypeIndex]);
-		physicsComponent->BodyType = static_cast<Havtorn::EPhysics2DBodyType>(bodyTypeIndex);
-
-		I32 shapeTypeIndex = static_cast<int>(physicsComponent->ShapeType);
-		const char* shapeTypeNames[4] = { "Circle", "Capsule", "Segment", "Polygon" };
-		GUI::SliderInt("Shape Type", shapeTypeIndex, 0, 3, shapeTypeNames[shapeTypeIndex]);
-		physicsComponent->ShapeType = static_cast<Havtorn::EPhysics2DShapeType>(shapeTypeIndex);
+		GUI::SliderEnum("Body Type", physicsComponent->BodyType, { "Static", "Kinematic", "Dynamic" });
+		GUI::SliderEnum("Shape Type", physicsComponent->ShapeType, { "Circle", "Capsule", "Segment", "Polygon" });
 
 		GUI::DragFloat2("Shape Local Offset", physicsComponent->ShapeLocalOffset, GUI::SliderSpeed);
 		GUI::DragFloat2("Shape Local Extents", physicsComponent->ShapeLocalExtents, GUI::SliderSpeed);

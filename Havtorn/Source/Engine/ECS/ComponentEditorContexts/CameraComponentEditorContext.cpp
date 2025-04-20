@@ -19,11 +19,7 @@ namespace Havtorn
 
 		SCameraComponent* cameraComp = scene->GetComponent<SCameraComponent>(entityOwner);
 
-		int projectionIndex = static_cast<int>(cameraComp->ProjectionType);
-		const char* projectionNames[2] = { "Perspective", "Orthographic" };
-		const char* projectionName = (projectionIndex >= 0 && projectionIndex < 2) ? projectionNames[projectionIndex] : "Unknown";
-		GUI::SliderInt("Projection Type", projectionIndex, 0, 1, projectionName);
-		cameraComp->ProjectionType = static_cast<Havtorn::ECameraProjectionType>(projectionIndex);
+		GUI::SliderEnum("Projection Type", cameraComp->ProjectionType, { "Perspective", "Orthographic" });
 
 		if (cameraComp->ProjectionType == Havtorn::ECameraProjectionType::Perspective)
 		{

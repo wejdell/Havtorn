@@ -265,7 +265,7 @@ namespace Havtorn
 			ImGui::SetScrollHereY(centerYRation);
 		}
 
-		const SVector2<F32>& CalculateTextSize(const char* text)
+		SVector2<F32> CalculateTextSize(const char* text)
 		{
 			const ImVec2& imTextSize = ImGui::CalcTextSize(text);
 			return { imTextSize.x, imTextSize.y };
@@ -1221,7 +1221,7 @@ namespace Havtorn
 		Instance->Impl->SetScrollHereY(scroll);
 	}
 
-	const SVector2<F32>& GUI::CalculateTextSize(const char* text)
+	SVector2<F32> GUI::CalculateTextSize(const char* text)
 	{
 		return Instance->Impl->CalculateTextSize(text);
 	}

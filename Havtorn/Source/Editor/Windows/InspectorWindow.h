@@ -33,7 +33,6 @@ namespace Havtorn
 		void OpenAssetTool(const SComponentViewResult& result);
 		void HandleTextureAssetModal(const std::string& pathToSearch, U16& textureReference);
 		
-		// TODO.NR: Support adding and removing components through the editor. Unsolved problem.
 		void OpenAddComponentModal();
 
 	private:

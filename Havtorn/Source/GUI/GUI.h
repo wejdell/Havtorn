@@ -400,8 +400,18 @@ namespace Havtorn
 
 		// TODO.NW: Make unsigned variants
 		static bool DragInt2(const char* label, SVector2<I32>& value, F32 speed = 1.0f, int min = 0, int max = 0, const char* format = "%d", EDragMode dragMode = EDragMode::None);
-		// TODO.NW: Make SliderEnum that converts like usages of SliderInt?
 		static bool SliderInt(const char* label, I32& value, int min = 0, int max = 1, const char* format = "%d", EDragMode dragMode = EDragMode::None);
+
+		template<typename T>
+		static bool SliderEnum(const char* label, T& value, const std::vector<std::string>& valueLabels)
+		{
+			I32 index = static_cast<I32>(value);
+			I32 numberOfValues = STATIC_I32(valueLabels.size());
+			std::string valueLabel = numberOfValues > index ? valueLabels[index] : "No Label";
+			const bool returnValue = GUI::SliderInt(label, index, 0, numberOfValues > 0 ? numberOfValues - 1 : 1, valueLabel.c_str());
+			value = static_cast<T>(index);
+			return returnValue;
+		}
 
 		static bool ColorPicker3(const char* label, SColor& value);
 		static bool ColorPicker4(const char* label, SColor& value);
@@ -462,7 +472,7 @@ namespace Havtorn
 		static F32 GetScrollY();
 		static F32 GetScrollMaxY();
 		static void SetScrollHereY(const F32 centerYRatio);
-		static const SVector2<F32>& CalculateTextSize(const char* text);
+		static SVector2<F32> CalculateTextSize(const char* text);
 
 		static void SetItemDefaultFocus();
 		static void SetKeyboardFocusHere(const I32 offset = 0);

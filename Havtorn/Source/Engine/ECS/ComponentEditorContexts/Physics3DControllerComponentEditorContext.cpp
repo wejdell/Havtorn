@@ -19,11 +19,7 @@ namespace Havtorn
 
 		SPhysics3DControllerComponent* physicsComponent = scene->GetComponent<SPhysics3DControllerComponent>(entityOwner);
 
-		// TODO.NR: Make a util to deal with enums
-		I32 controllerTypeIndex = static_cast<int>(physicsComponent->ControllerType);
-		const char* controllerTypeNames[2] = { "Box", "Capsule" };
-		GUI::SliderInt("Controller Type", controllerTypeIndex, 0, 1, controllerTypeNames[controllerTypeIndex]);
-		physicsComponent->ControllerType = static_cast<Havtorn::EPhysics3DControllerType>(controllerTypeIndex);
+		GUI::SliderEnum("Controller Type", physicsComponent->ControllerType, { "Box", "Capsule" });
 
 		switch (physicsComponent->ControllerType)
     	{

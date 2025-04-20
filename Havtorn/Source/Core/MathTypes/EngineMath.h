@@ -35,6 +35,9 @@ namespace Havtorn
 		static const U8 MinU8;
 		static const U8 MaxU8;
 
+		static const I32 MinI32;
+		static const I32 MaxI32;
+
 		template<typename T>
 		static inline T Sqrt(T x);
 		template<typename T>
