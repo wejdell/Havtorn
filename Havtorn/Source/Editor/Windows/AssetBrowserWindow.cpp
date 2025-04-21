@@ -41,7 +41,7 @@ namespace Havtorn
 				GUI::Text("Project Name");
 				GUI::Separator();
 
-				if (GUI::BeginTable("ProjectName", 1))
+				if (GUI::BeginTable("FolderTreeTable", 1))
 				{
 					InspectFolderTree(DefaultAssetPath, folderIconID);
 					GUI::EndTable();
@@ -50,7 +50,6 @@ namespace Havtorn
 				GUI::SameLine();
 			}
 
-			GUI::BeginGroup();
 			GUI::BeginChild("Browser");
 			if (GUI::ArrowButton("GoBackDir", EGUIDirection::Left))
 			{
@@ -70,7 +69,7 @@ namespace Havtorn
 			I32 columnCount = UMath::Max(static_cast<I32>(panelWidth / cellWidth), 1);
 
 			U32 id = 0;
-			if (GUI::BeginTable("FileStructure", columnCount))
+			if (GUI::BeginTable("AssetTable", columnCount))
 			{
 				if (Filter.IsActive())
 				{
@@ -90,7 +89,6 @@ namespace Havtorn
 				GUI::EndTable();
 			}
 			GUI::EndChild();
-			GUI::EndGroup();
 		}
 
 		if (FilePathsToImport.has_value() && !FilePathsToImport->empty())
