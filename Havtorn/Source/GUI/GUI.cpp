@@ -527,6 +527,16 @@ namespace Havtorn
 			ImGui::CloseCurrentPopup();
 		}
 
+		void BeginGroup()
+		{
+			ImGui::BeginGroup();
+		}
+
+		void EndGroup()
+		{
+			ImGui::EndGroup();
+		}
+
 		bool BeginChild(const char* label, const SVector2<F32>& size, const std::vector<EChildFlag>& childFlags, const std::vector<EWindowFlag>& windowFlags)
 		{
 			int imChildFlags = 0;
@@ -562,6 +572,11 @@ namespace Havtorn
 			return ImGui::BeginTable(label, columns);
 		}
 
+		void TableNextRow()
+		{
+			ImGui::TableNextRow();
+		}
+
 		void TableNextColumn()
 		{
 			ImGui::TableNextColumn();
@@ -575,6 +590,15 @@ namespace Havtorn
 		bool TreeNode(const char* strID)
 		{
 			return ImGui::TreeNode(strID);
+		}
+
+		bool TreeNodeEx(const char* strID, const std::vector<ETreeNodeFlag>& treeNodeFlags)
+		{
+			int imTreeNodeFlags = 0;
+			for (const ETreeNodeFlag& treeNodeFlag : treeNodeFlags)
+				imTreeNodeFlags += int(treeNodeFlag);
+
+			return ImGui::TreeNodeEx(strID, imTreeNodeFlags);
 		}
 
 		void TreePop()
@@ -1032,6 +1056,16 @@ namespace Havtorn
 		Instance->Impl->CloseCurrentPopup();
 	}
 
+	void GUI::BeginGroup()
+	{
+		Instance->Impl->BeginGroup();
+	}
+
+	void GUI::EndGroup()
+	{
+		Instance->Impl->EndGroup();
+	}
+
 	bool GUI::BeginChild(const char* label, const SVector2<F32>& size, const std::vector<EChildFlag>& childFlags, const std::vector<EWindowFlag>& windowFlags)
 	{
 		return Instance->Impl->BeginChild(label, size, childFlags, windowFlags);
@@ -1057,6 +1091,11 @@ namespace Havtorn
 		return Instance->Impl->BeginTable(label, columns);
 	}
 
+	void GUI::TableNextRow()
+	{
+		Instance->Impl->TableNextRow();
+	}
+
 	void GUI::TableNextColumn()
 	{
 		Instance->Impl->TableNextColumn();
@@ -1070,6 +1109,11 @@ namespace Havtorn
 	bool GUI::TreeNode(const char* label)
 	{
 		return Instance->Impl->TreeNode(label);
+	}
+
+	bool GUI::TreeNodeEx(const char* label, const std::vector<ETreeNodeFlag>& treeNodeFlags)
+	{
+		return Instance->Impl->TreeNodeEx(label, treeNodeFlags);
 	}
 
 	void GUI::TreePop()

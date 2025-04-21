@@ -34,6 +34,24 @@ namespace Havtorn
 	{
 		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
 		{
+			intptr_t folderIconID = (intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::FolderIcon);
+
+			{
+				GUI::BeginChild("FolderTree", SVector2<F32>(150.0f, 0.0f), { EChildFlag::Borders, EChildFlag::ResizeX });
+				GUI::Text("Project Name");
+				GUI::Separator();
+
+				if (GUI::BeginTable("ProjectName", 1))
+				{
+					InspectFolderTree(DefaultAssetPath, folderIconID);
+					GUI::EndTable();
+				}
+				GUI::EndChild();
+				GUI::SameLine();
+			}
+
+			GUI::BeginGroup();
+			GUI::BeginChild("Browser");
 			if (GUI::ArrowButton("GoBackDir", EGUIDirection::Left))
 			{
 				if (CurrentDirectory != std::filesystem::path(DefaultAssetPath))
@@ -51,8 +69,6 @@ namespace Havtorn
 			F32 panelWidth = GUI::GetContentRegionAvail().X;
 			I32 columnCount = UMath::Max(static_cast<I32>(panelWidth / cellWidth), 1);
 
-			intptr_t folderIconID = (intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::FolderIcon);
-
 			U32 id = 0;
 			if (GUI::BeginTable("FileStructure", columnCount))
 			{
@@ -60,7 +76,7 @@ namespace Havtorn
 				{
 					for (const auto& entry : std::filesystem::recursive_directory_iterator(CurrentDirectory))
 					{
-						if (!Filter.PassFilter(entry.path().string().c_str()))
+						if (Filter.IsActive() && !Filter.PassFilter(entry.path().string().c_str()))
 							continue;
 
 						InspectDirectoryEntry(entry, id, folderIconID);
@@ -71,9 +87,10 @@ namespace Havtorn
 					for (const auto& entry : std::filesystem::directory_iterator(CurrentDirectory))
 						InspectDirectoryEntry(entry, id, folderIconID);
 				}
-
 				GUI::EndTable();
 			}
+			GUI::EndChild();
+			GUI::EndGroup();
 		}
 
 		if (FilePathsToImport.has_value() && !FilePathsToImport->empty())
@@ -85,8 +102,8 @@ namespace Havtorn
 
 		GUI::End();
 		
-		// NR: Keep this here in case we want this to be a subwindow rather than an integrated element
-		//if (GUI::Begin("Asset Browser Folder View"), nullptr, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoBringToFrontOnFocus)
+		//// NR: Keep this here in case we want this to be a subwindow rather than an integrated element
+		//if (GUI::Begin("Asset Browser Folder View", nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
 		//{
 		//	GUI::Text("Folder View");
 		//}
@@ -266,6 +283,43 @@ namespace Havtorn
 			ImportOptions.AssetRep = Manager->GetAssetRepFromDirEntry(result.PickedEntry).get();
 
 		GUI::DragFloat("Import Scale", ImportOptions.Scale, 0.01f);
+	}
+
+	void CAssetBrowserWindow::InspectFolderTree(const std::string& folderName, const intptr_t& folderIconID)
+	{
+		for (const auto& entry : std::filesystem::directory_iterator(folderName))
+		{
+			if (!entry.is_directory())
+				continue;
+			
+			GUI::TableNextRow();
+			GUI::TableNextColumn();
+			GUI::PushID(entry.path().string().c_str());
+
+			const auto& path = entry.path();
+			auto relativePath = std::filesystem::relative(path);
+			std::string filenameString = relativePath.filename().string();
+
+			const bool isOpen = GUI::TreeNode(filenameString.c_str());
+			GUI::SameLine();
+			GUI::Image(folderIconID, SVector2<F32>(12.0f));
+
+			if (isOpen)
+			{
+				std::string newPath = relativePath.string();
+				InspectFolderTree(newPath, folderIconID);
+				GUI::TreePop();
+			}
+
+			GUI::PopID();
+			
+			// NW: If not directory, do we want this?
+			//else
+			//{
+			//	const auto& rep = Manager->GetAssetRepFromDirEntry(entry);
+			//	GUI::TreeNodeEx(rep->Name.c_str(), { ETreeNodeFlag::NoTreePushOnOpen, ETreeNodeFlag::Leaf, ETreeNodeFlag::Bullet });
+			//}
+		}
 	}
 
 	void CAssetBrowserWindow::InspectDirectoryEntry(const std::filesystem::directory_entry& entry, U32& outCurrentID, const intptr_t& folderIconID)

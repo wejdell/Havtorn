@@ -37,6 +37,9 @@ namespace Havtorn
 
 	enum class GUI_API EChildFlag
 	{
+		Borders = BIT(0),
+		ResizeX = BIT(2),
+		ResizeY = BIT(3),
 		NavFlattened = BIT(8),
 	};
 
@@ -51,6 +54,13 @@ namespace Havtorn
 		AutoHideTabBar = BIT(6),   //       // Tab bar will automatically hide when there is a single window in the dock node.
 		NoUndocking = BIT(7),
 		DockSpace = BIT(10)
+	};
+
+	enum class GUI_API ETreeNodeFlag
+	{
+		NoTreePushOnOpen = BIT(3),
+		Leaf = BIT(8),
+		Bullet = BIT(9),
 	};
 
 	enum class GUI_API EWindowCondition
@@ -442,6 +452,9 @@ namespace Havtorn
 		static bool BeginPopupModal(const char* label, bool* open = 0, const std::vector<EWindowFlag>& flags = {});
 		static void CloseCurrentPopup();
 
+		static void BeginGroup();
+		static void EndGroup();
+
 		static bool BeginChild(const char* label, const SVector2<F32>& size = SVector2<F32>(0.0f), const std::vector<EChildFlag>& childFlags = {}, const std::vector<EWindowFlag>& windowFlags = {});
 		static void EndChild();
 
@@ -450,10 +463,12 @@ namespace Havtorn
 		static void OpenPopup(const char* label);
 
 		static bool BeginTable(const char* label, const I32 columns);
+		static void TableNextRow();
 		static void TableNextColumn();
 		static void EndTable();
 
 		static bool TreeNode(const char* label);
+		static bool TreeNodeEx(const char* label, const std::vector<ETreeNodeFlag>& treeNodeFlags);
 		static void TreePop();
 
 		static bool ArrowButton(const char* label, const EGUIDirection direction);
