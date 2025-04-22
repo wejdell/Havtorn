@@ -202,9 +202,15 @@ namespace Havtorn
 			return ImGui::Checkbox(label, &v);
 		}
 
-		bool Selectable(const char* label, const bool selected)
+		bool Selectable(const char* label, const bool selected, const std::vector<ESelectableFlag>& flags, const SVector2<F32>& size)
 		{
-			return ImGui::Selectable(label, selected);
+			int imFlags = 0;
+			for (const ESelectableFlag& flag : flags)
+				imFlags += int(flag);
+
+			ImVec2 imSize = { size.X, size.Y };
+
+			return ImGui::Selectable(label, selected, imFlags, imSize);
 		}
 
 		void Image(intptr_t textureID, const SVector2<F32>& size, const SVector2<F32>& uv0, const SVector2<F32>& uv1, const SColor& tintColor, const SColor& borderColor)
@@ -235,9 +241,26 @@ namespace Havtorn
 			ImGui::SameLine(offsetFromStart, spacing);
 		}
 
+		bool IsItemClicked()
+		{
+			return ImGui::IsItemClicked();
+		}
+
 		bool IsItemHovered()
 		{
 			return ImGui::IsItemHovered();
+		}
+
+		SVector2<F32> GetCursorPos()
+		{
+			const ImVec2& imCursorPos = ImGui::GetCursorPos();
+			return { imCursorPos.x, imCursorPos.y };
+		}
+
+		void SetCursorPos(const SVector2<F32>& cursorPos)
+		{
+			const ImVec2& imCursorPos = { cursorPos.X, cursorPos.Y };
+			ImGui::SetCursorPos(imCursorPos);
 		}
 
 		F32 GetCursorPosX()
@@ -390,6 +413,11 @@ namespace Havtorn
 		bool IsOverGizmo()
 		{
 			return ImGuizmo::IsOver();
+		}
+
+		bool IsDoubleClick()
+		{
+			return ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
 		}
 
 		F32 GetTextLineHeight()
@@ -555,6 +583,80 @@ namespace Havtorn
 		void EndChild()
 		{
 			ImGui::EndChild();
+		}
+
+		bool BeginDragDropSource(const std::vector<EDragDropFlag>& flags)
+		{
+			int imFlags = 0;
+			for (const EDragDropFlag& flag : flags)
+				imFlags += int(flag);
+
+			return ImGui::BeginDragDropSource(imFlags);
+		}
+
+		SGuiPayload GetDragDropPayload()
+		{
+			const ImGuiPayload* imGuiPayload = ImGui::GetDragDropPayload();
+			if (imGuiPayload == nullptr)
+				return {};
+
+			SGuiPayload guiPayload;
+			guiPayload.Data = imGuiPayload->Data;
+			guiPayload.Size = imGuiPayload->DataSize;
+			guiPayload.SourceID = imGuiPayload->SourceId;
+			guiPayload.SourceParentID = imGuiPayload->SourceParentId;
+			guiPayload.DataFrameCount = imGuiPayload->DataFrameCount;
+			guiPayload.IDTag = imGuiPayload->DataType;
+			guiPayload.IsPreview = imGuiPayload->Preview;
+			guiPayload.IsDelivery = imGuiPayload->Delivery;
+			return guiPayload;
+		}
+		
+		bool SetDragDropPayload(const char* type, const void* data, U64 dataSize)
+		{
+			return ImGui::SetDragDropPayload(type, data, dataSize);
+		}
+
+		void EndDragDropSource()
+		{
+			ImGui::EndDragDropSource();
+		}
+
+		bool BeginDragDropTarget()
+		{
+			return ImGui::BeginDragDropTarget();
+		}
+
+		bool IsDragDropPayloadBeingAccepted()
+		{
+			return ImGui::IsDragDropPayloadBeingAccepted();
+		}
+
+		SGuiPayload AcceptDragDropPayload(const char* type, const std::vector<EDragDropFlag>& flags)
+		{
+			int imFlags = 0;
+			for (const EDragDropFlag& flag : flags)
+				imFlags += int(flag);
+
+			const ImGuiPayload* imGuiPayload = ImGui::AcceptDragDropPayload(type, imFlags);
+			if (imGuiPayload == nullptr)
+				return {};
+
+			SGuiPayload guiPayload;
+			guiPayload.Data = imGuiPayload->Data;
+			guiPayload.Size = imGuiPayload->DataSize;
+			guiPayload.SourceID = imGuiPayload->SourceId;
+			guiPayload.SourceParentID = imGuiPayload->SourceParentId;
+			guiPayload.DataFrameCount = imGuiPayload->DataFrameCount;
+			guiPayload.IDTag = imGuiPayload->DataType;
+			guiPayload.IsPreview = imGuiPayload->Preview;
+			guiPayload.IsDelivery = imGuiPayload->Delivery;
+			return guiPayload;
+		}
+
+		void EndDragDropTarget()
+		{
+			ImGui::EndDragDropTarget();
 		}
 
 		bool BeginPopupContextWindow()
@@ -1076,6 +1178,46 @@ namespace Havtorn
 		Instance->Impl->EndChild();
 	}
 
+	bool GUI::BeginDragDropSource(const std::vector<EDragDropFlag>& flags)
+	{
+		return Instance->Impl->BeginDragDropSource(flags);
+	}
+
+	SGuiPayload GUI::GetDragDropPayload()
+	{
+		return Instance->Impl->GetDragDropPayload();
+	}
+
+	bool GUI::SetDragDropPayload(const char* type, const void* data, U64 dataSize)
+	{
+		return Instance->Impl->SetDragDropPayload(type, data, dataSize);
+	}
+
+	void GUI::EndDragDropSource()
+	{
+		Instance->Impl->EndDragDropSource();
+	}
+
+	bool GUI::BeginDragDropTarget()
+	{
+		return Instance->Impl->BeginDragDropTarget();
+	}
+
+	bool GUI::IsDragDropPayloadBeingAccepted()
+	{
+		return Instance->Impl->IsDragDropPayloadBeingAccepted();
+	}
+
+	SGuiPayload GUI::AcceptDragDropPayload(const char* type, const std::vector<EDragDropFlag>& flags)
+	{
+		return Instance->Impl->AcceptDragDropPayload(type, flags);
+	}
+
+	void GUI::EndDragDropTarget()
+	{
+		Instance->Impl->EndDragDropTarget();
+	}
+
 	bool GUI::BeginPopupContextWindow()
 	{
 		return Instance->Impl->BeginPopupContextWindow();
@@ -1214,9 +1356,9 @@ namespace Havtorn
 		return SAssetPickResult(EAssetPickerState::Active);
 	}
 
-	bool GUI::Selectable(const char* label, const bool selected)
+	bool GUI::Selectable(const char* label, const bool selected, const std::vector<ESelectableFlag>& flags, const SVector2<F32>& size)
 	{
-		return Instance->Impl->Selectable(label, selected);
+		return Instance->Impl->Selectable(label, selected, flags, size);
 	}
 
 	void GUI::Image(intptr_t image, const SVector2<F32>& size, const SVector2<F32>& uv0, const SVector2<F32>& uv1, const SColor& tintColor, const SColor& borderColor)
@@ -1239,9 +1381,24 @@ namespace Havtorn
 		Instance->Impl->SameLine(offsetFromX, spacing);
 	}
 
+	bool GUI::IsItemClicked()
+	{
+		return Instance->Impl->IsItemClicked();
+	}
+
 	bool GUI::IsItemHovered()
 	{
 		return Instance->Impl->IsItemHovered();
+	}
+
+	SVector2<F32> GUI::GetCursorPos()
+	{
+		return Instance->Impl->GetCursorPos();;
+	}
+
+	void GUI::SetCursorPos(const SVector2<F32>& cursorPos)
+	{
+		Instance->Impl->SetCursorPos(cursorPos);
 	}
 
 	F32 GUI::GetCursorPosX()
@@ -1353,6 +1510,11 @@ namespace Havtorn
 	bool GUI::IsOverGizmo()
 	{
 		return Instance->Impl->IsOverGizmo();
+	}
+
+	bool GUI::IsDoubleClick()
+	{
+		return Instance->Impl->IsDoubleClick();
 	}
 
 	F32 GUI::GetTextLineHeight()

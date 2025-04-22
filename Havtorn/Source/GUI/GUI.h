@@ -56,6 +56,26 @@ namespace Havtorn
 		DockSpace = BIT(10)
 	};
 
+	enum class GUI_API EDragDropFlag
+	{
+		SourceNoPreviewToolTip = BIT(0),
+		SourceNoDisableHover = BIT(1),
+		SourceNoHoldToOpenOthers = BIT(2),
+		SourceExtern = BIT(4),
+		AcceptBeforeDelivery = BIT(10),
+		AcceptNoDrawDefaultRect = BIT(11),
+		AcceptNopreviewTooltip = BIT(12)
+	};
+
+	enum class GUI_API ESelectableFlag
+	{
+		NoAutoClosePopups = BIT(0),
+		AllowDoubleClick = BIT(2),
+		Disabled = BIT(3),
+		AllowOverlap = BIT(4),
+		Highlight = BIT(5)
+	};
+
 	enum class GUI_API ETreeNodeFlag
 	{
 		NoTreePushOnOpen = BIT(3),
@@ -202,6 +222,21 @@ namespace Havtorn
 		char                    InputBuf[256];
 		std::vector<SGuiTextRange> Filters;
 		int                     CountGrep;
+	};
+
+	struct SGuiPayload
+	{
+		void* Data = nullptr;
+		U64 Size = 0;
+
+		U32 SourceID = 0;
+		U32 SourceParentID = 0;
+		I32 DataFrameCount = 0;
+		std::string IDTag = "";
+		bool IsPreview = false;
+		bool IsDelivery = false;
+
+		bool IsID(const std::string& id) { return IDTag == id; }
 	};
 
 	// Havtorn Default == Struct Default Values
@@ -458,6 +493,16 @@ namespace Havtorn
 		static bool BeginChild(const char* label, const SVector2<F32>& size = SVector2<F32>(0.0f), const std::vector<EChildFlag>& childFlags = {}, const std::vector<EWindowFlag>& windowFlags = {});
 		static void EndChild();
 
+		static bool BeginDragDropSource(const std::vector<EDragDropFlag>& flags = {});
+		static SGuiPayload GetDragDropPayload();
+		static bool SetDragDropPayload(const char* type, const void* data, U64 dataSize);
+		static void EndDragDropSource();
+
+		static bool BeginDragDropTarget();
+		static bool IsDragDropPayloadBeingAccepted();
+		static SGuiPayload AcceptDragDropPayload(const char* type, const std::vector<EDragDropFlag>& flags = {});
+		static void EndDragDropTarget();
+
 		static bool BeginPopupContextWindow();
 
 		static void OpenPopup(const char* label);
@@ -480,15 +525,18 @@ namespace Havtorn
 
 		static SAssetPickResult AssetPicker(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const std::function<SAssetInspectionData(std::filesystem::directory_entry)>& assetInspector);
 
-		static bool Selectable(const char* label, const bool selected = false);
+		static bool Selectable(const char* label, const bool selected = false, const std::vector<ESelectableFlag>& flags = {}, const SVector2<F32>& size = SVector2<F32>(0.0f));
 
 		static void Image(intptr_t image, const SVector2<F32>& size, const SVector2<F32>& uv0 = SVector2<F32>(0.0f), const SVector2<F32>& uv1 = SVector2<F32>(1.0f), const SColor& tintColor = SColor::White, const SColor& borderColor = SColor(0.0f, 0.0f, 0.0f, 0.0f));
 
 		static void Separator();
 		static void Dummy(const SVector2<F32>& size);
 		static void SameLine(const F32 offsetFromX = 0.0f, const F32 spacing = -1.0f);
+		static bool IsItemClicked();
 		static bool IsItemHovered();
 
+		static SVector2<F32> GetCursorPos();
+		static void SetCursorPos(const SVector2<F32>& cursorPos);
 		static F32 GetCursorPosX();
 		static void SetCursorPosX(const F32 cursorPosX);
 		static F32 GetScrollY();
@@ -511,7 +559,9 @@ namespace Havtorn
 		static void DecomposeMatrixToComponents(const SMatrix& matrix, SVector& translation, SVector& rotation, SVector& scale);
 		static void RecomposeMatrixFromComponents(SMatrix& matrix, const SVector& translation, const SVector& rotation, const SVector& scale);
 		static void SetOrthographic(const bool enabled);
+		
 		static bool IsOverGizmo();
+		static bool IsDoubleClick();
 
 		static F32 GetTextLineHeight();
 		static SVector2<F32> GetCursorScreenPos();

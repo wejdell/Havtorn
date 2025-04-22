@@ -88,6 +88,7 @@ namespace Havtorn
 		std::function<SAssetInspectionData(std::filesystem::directory_entry)> GetAssetInspectFunction() const;
 
 		void CreateAssetRep(const std::filesystem::path& destinationPath);
+		void RemoveAssetRep(const std::filesystem::directory_entry& sourceEntry);
 
 		void SetEditorTheme(EEditorColorTheme colorTheme = EEditorColorTheme::HavtornDark, EEditorStyleTheme styleTheme = EEditorStyleTheme::Havtorn);
 		std::string GetEditorColorThemeName(const EEditorColorTheme colorTheme);

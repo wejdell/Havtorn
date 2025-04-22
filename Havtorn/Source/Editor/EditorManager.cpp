@@ -230,11 +230,20 @@ namespace Havtorn
 		rep.DirectoryEntry = entry;
 		rep.Name = entry.path().filename().string();
 		rep.Name = rep.Name.substr(0, rep.Name.length() - 4);
+		// TODO.NW: Save these in the textureBank? Might be impossible with animated thumbnails. Figure out ownership
 		rep.TextureRef = ResourceManager->RenderAssetTexure(rep.AssetType, filePath);
 
 		AssetRepresentations.emplace_back(std::make_unique<SEditorAssetRepresentation>(rep));
 
 		delete[] data;
+	}
+
+	void CEditorManager::RemoveAssetRep(const std::filesystem::directory_entry& sourceEntry)
+	{
+		auto& rep = GetAssetRepFromDirEntry(sourceEntry);
+		auto it = std::ranges::find(AssetRepresentations, rep);
+		if (it != AssetRepresentations.end())
+			AssetRepresentations.erase(it);	
 	}
 
 	void CEditorManager::SetEditorTheme(EEditorColorTheme colorTheme, EEditorStyleTheme styleTheme)
