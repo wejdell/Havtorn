@@ -41,5 +41,7 @@ namespace Havtorn
 		SGuiTextFilter Filter = SGuiTextFilter();
 		bool IsCurrentlySelected = false;
 		std::optional<std::vector<std::string>> FilePathsToImport;
+
+		std::optional<std::filesystem::directory_entry> SelectedAsset;
 	};
 }

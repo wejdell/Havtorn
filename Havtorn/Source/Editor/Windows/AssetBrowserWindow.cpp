@@ -36,7 +36,7 @@ namespace Havtorn
 		{
 			intptr_t folderIconID = (intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::FolderIcon);
 
-			{
+			{ // Folder Tree
 				GUI::BeginChild("FolderTree", SVector2<F32>(150.0f, 0.0f), { EChildFlag::Borders, EChildFlag::ResizeX });
 				GUI::Text("Project Name");
 				GUI::Separator();
@@ -97,6 +97,14 @@ namespace Havtorn
 			GUI::SetNextWindowPos(GUI::GetViewportCenter(), EWindowCondition::Appearing, SVector2<F32>(0.5f, 0.5f));
 			AssetImportModal();
 		}
+
+		//if (GUI::IsDoubleClick() && SelectedAsset.has_value())
+		//{
+		//	// NW: Open Tool depending on asset type?
+		//	auto& rep = Manager->GetAssetRepFromDirEntry(SelectedAsset.value());
+		//	HV_LOG_INFO("Clicked asset: %s", rep->Name.c_str());
+		//	SelectedAsset.reset();
+		//}
 
 		GUI::End();
 		
@@ -299,6 +307,40 @@ namespace Havtorn
 			std::string filenameString = relativePath.filename().string();
 
 			const bool isOpen = GUI::TreeNode(filenameString.c_str());
+
+			if (GUI::BeginDragDropTarget())
+			{
+				SGuiPayload payload = GUI::AcceptDragDropPayload("AssetDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
+				if (payload.Data != nullptr)
+				{
+					// NW: Respond to target, check type
+					SEditorAssetRepresentation* payloadAssetRep = reinterpret_cast<SEditorAssetRepresentation*>(payload.Data);
+					// TODO.NW: Figure out what's wrong with formatted text
+						//GUI::SetTooltip("Move '%s' to %s", payloadAssetRep->Name.c_str(), entry.path().string().c_str());
+					GUI::SetTooltip("Move asset to folder?");
+
+					if (payload.IsDelivery)
+					{
+						// TODO.NW: Should we move to the destination directory when moving things? Maybe auto-select the new asset rep?
+						CurrentDirectory = entry.path();
+
+						std::string oldPath = payloadAssetRep->DirectoryEntry.path().string().c_str();
+						std::string newPath = (entry.path() / payloadAssetRep->DirectoryEntry.path().filename()).string().c_str();
+						Manager->RemoveAssetRep(payloadAssetRep->DirectoryEntry);
+						std::filesystem::rename(oldPath, newPath);
+						// TODO.NW: Figre out how to draw correct thumbnails when they're rendered last, must be some state persisting from ImGui
+						Manager->CreateAssetRep(newPath);
+					}
+				}
+
+				GUI::EndDragDropTarget();
+			}
+
+			if (GUI::IsItemClicked())
+			{
+				CurrentDirectory = entry.path();
+			}
+
 			GUI::SameLine();
 			GUI::Image(folderIconID, SVector2<F32>(12.0f));
 
@@ -346,10 +388,67 @@ namespace Havtorn
 			if (!rep->TextureRef)
 				rep->TextureRef = Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::FileIcon);
 
-			if (GUI::ImageButton("AssetIcon", (intptr_t)rep->TextureRef, { GUI::ThumbnailSizeX, GUI::ThumbnailSizeY }))
+			const bool isSelected = SelectedAsset.has_value() && entry == SelectedAsset.value();
+			
+			SVector2<F32> selectablePos = GUI::GetCursorPos();
+			SVector2<F32> framePadding = GUI::GetStyleVar(EStyleVar::FramePadding);
+
+			// TODO.NW: Figure out strange size diff between Selectable and ImageButton. Button looks nicer with a more appealing padding
+			// - Make asset cards like in UE, looks pretty good to combine into rectangular portraits with thumbnail, colored stripe for asset type,
+			// - and label.
+			if (GUI::Selectable("", isSelected, { ESelectableFlag::AllowDoubleClick, ESelectableFlag::AllowOverlap }, { GUI::ThumbnailSizeX + framePadding.X * 0.5f, GUI::ThumbnailSizeY + framePadding.Y * 0.5f }))
 			{
-				// NR: Open Tool depending on asset type
+				SelectedAsset = entry;
+				if (GUI::IsDoubleClick())
+				{
+					// NW: Open Tool depending on asset type?
+					HV_LOG_INFO("Clicked asset: %s", rep->Name.c_str());
+					SelectedAsset.reset();
+				}
 			}
+
+			if (GUI::BeginDragDropSource())
+			{
+				SGuiPayload payload = GUI::GetDragDropPayload();
+				if (payload.Data == nullptr)
+				{
+					GUI::SetDragDropPayload("AssetDrag", rep.get(), sizeof(SEditorAssetRepresentation));
+				}
+				payload = GUI::GetDragDropPayload();
+				SEditorAssetRepresentation* payloadAssetRep = reinterpret_cast<SEditorAssetRepresentation*>(payload.Data);
+				GUI::Text(payloadAssetRep->Name.c_str());
+
+				GUI::EndDragDropSource();
+			}
+
+			SVector2<F32> nextPos = GUI::GetCursorPos();
+			GUI::SetCursorPos(selectablePos);
+		
+			SColor imageBorderColor = SColor::White;
+			switch (rep->AssetType)
+			{
+			case EAssetType::Animation:
+				imageBorderColor = SColor::Blue;
+				break;
+			case EAssetType::Material:
+				imageBorderColor = SColor::Green;
+				break;
+			case EAssetType::SkeletalMesh:
+				imageBorderColor = SColor::Magenta;
+				break;
+			case EAssetType::StaticMesh:
+				imageBorderColor = SColor::Teal;
+				break;
+			case EAssetType::Texture:
+				imageBorderColor = SColor::Red;
+				break;
+			default:
+				break;
+			}
+			imageBorderColor.A = SColor::ToU8Range(0.5f);
+
+			GUI::Image((intptr_t)rep->TextureRef, { GUI::ThumbnailSizeX, GUI::ThumbnailSizeY }, SVector2<F32>(0.0f), SVector2<F32>(1.0f), SColor::White, imageBorderColor);
+			GUI::SetCursorPos(nextPos);
 
 			GUI::Text(rep->Name.c_str());
 			if (GUI::IsItemHovered())
