@@ -36,6 +36,26 @@ namespace Havtorn
 		{
 			intptr_t folderIconID = (intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::FolderIcon);
 
+			{ // Menu Bar
+				GUI::BeginChild("MenuBar", SVector2<F32>(0.0f, 30.0f));
+				GUI::Image(folderIconID, SVector2<F32>(12.0f));
+				GUI::SameLine();
+				GUI::Text(CurrentDirectory.string().c_str());
+				
+				// TODO.NW: Move search bar?
+				GUI::SameLine();
+				if (GUI::ArrowButton("GoBackDir", EGUIDirection::Left))
+				{
+					if (CurrentDirectory != std::filesystem::path(DefaultAssetPath))
+						CurrentDirectory = CurrentDirectory.parent_path();
+				}
+				GUI::SameLine();
+				Filter.Draw("Search", 180);
+				GUI::Separator();
+				
+				GUI::EndChild();
+			}
+
 			{ // Folder Tree
 				GUI::BeginChild("FolderTree", SVector2<F32>(150.0f, 0.0f), { EChildFlag::Borders, EChildFlag::ResizeX });
 				GUI::Text("Project Name");
@@ -51,16 +71,6 @@ namespace Havtorn
 			}
 
 			GUI::BeginChild("Browser");
-			if (GUI::ArrowButton("GoBackDir", EGUIDirection::Left))
-			{
-				if (CurrentDirectory != std::filesystem::path(DefaultAssetPath))
-					CurrentDirectory = CurrentDirectory.parent_path();
-			}
-
-			GUI::SameLine();
-			Filter.Draw("Search", 180);
-
-			GUI::Separator();
 
 			// TODO.NR: Another magic number here, 10 cuts off the right border. 11 seems to work but feels too odd.
 			F32 thumbnailPadding = 12.0f;
