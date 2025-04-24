@@ -396,7 +396,7 @@ namespace Havtorn
 		return World->GetWorldPlayState() == EWorldPlayState::Playing;
 	}
 
-	const CRenderManager* CEditorManager::GetRenderManager() const
+	CRenderManager* CEditorManager::GetRenderManager() const
 	{
 		return RenderManager;
 	}

@@ -270,8 +270,6 @@ namespace Havtorn
 	void CRenderManager::LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent)
 	{
 		SStaticMeshAsset asset;
-		SVector boundsMin = SVector(FLT_MAX);
-		SVector boundsMax = SVector(-FLT_MAX);
 
 		// TODO.NR: Probably need to extract the filename here??
 		if (!LoadedStaticMeshes.contains(filePath))
@@ -299,17 +297,16 @@ namespace Havtorn
 
 				for (const SStaticMeshVertex& vertex : mesh.Vertices)
 				{
-					boundsMin.X = UMath::Min(vertex.x, boundsMin.X);
-					boundsMin.Y = UMath::Min(vertex.y, boundsMin.Y);
-					boundsMin.Z = UMath::Min(vertex.z, boundsMin.Z);
+					asset.BoundsMin.X = UMath::Min(vertex.x, asset.BoundsMin.X);
+					asset.BoundsMin.Y = UMath::Min(vertex.y, asset.BoundsMin.Y);
+					asset.BoundsMin.Z = UMath::Min(vertex.z, asset.BoundsMin.Z);
 					
-					boundsMax.X = UMath::Max(vertex.x, boundsMax.X);
-					boundsMax.Y = UMath::Max(vertex.y, boundsMax.Y);
-					boundsMax.Z = UMath::Max(vertex.z, boundsMax.Z);
+					asset.BoundsMax.X = UMath::Max(vertex.x, asset.BoundsMax.X);
+					asset.BoundsMax.Y = UMath::Max(vertex.y, asset.BoundsMax.Y);
+					asset.BoundsMax.Z = UMath::Max(vertex.z, asset.BoundsMax.Z);
 				}
 			}
 
-			// NR: Mesh name will be much easier to handle
 			LoadedStaticMeshes.emplace(UGeneralUtils::ExtractFileNameFromPath(filePath), asset);
 			delete[] data;
 		}
@@ -322,9 +319,9 @@ namespace Havtorn
 		outStaticMeshComponent->Name = UGeneralUtils::ExtractFileNameFromPath(filePath);
 		outStaticMeshComponent->NumberOfMaterials = asset.NumberOfMaterials;
 
-		outStaticMeshComponent->BoundsMin = boundsMin;
-		outStaticMeshComponent->BoundsMax = boundsMax;
-		outStaticMeshComponent->BoundsCenter = boundsMin + (boundsMax - boundsMin) * 0.5f;
+		outStaticMeshComponent->BoundsMin = asset.BoundsMin;
+		outStaticMeshComponent->BoundsMax = asset.BoundsMax;
+		outStaticMeshComponent->BoundsCenter = asset.BoundsMin + (asset.BoundsMax - asset.BoundsMin) * 0.5f;
 
 		// Geometry
 		outStaticMeshComponent->DrawCallData = asset.DrawCallData;
@@ -333,8 +330,6 @@ namespace Havtorn
 	void CRenderManager::LoadSkeletalMeshComponent(const std::string& filePath, SSkeletalMeshComponent* outSkeletalMeshComponent)
 	{
 		SSkeletalMeshAsset asset;
-		SVector boundsMin = SVector(FLT_MAX);
-		SVector boundsMax = SVector(-FLT_MAX);
 
 		// TODO.NR: Probably need to extract the filename here??
 		if (!LoadedSkeletalMeshes.contains(filePath))
@@ -362,13 +357,13 @@ namespace Havtorn
 
 				for (const SSkeletalMeshVertex& vertex : mesh.Vertices)
 				{
-					boundsMin.X = UMath::Min(vertex.x, boundsMin.X);
-					boundsMin.Y = UMath::Min(vertex.y, boundsMin.Y);
-					boundsMin.Z = UMath::Min(vertex.z, boundsMin.Z);
+					asset.BoundsMin.X = UMath::Min(vertex.x, asset.BoundsMin.X);
+					asset.BoundsMin.Y = UMath::Min(vertex.y, asset.BoundsMin.Y);
+					asset.BoundsMin.Z = UMath::Min(vertex.z, asset.BoundsMin.Z);
 
-					boundsMax.X = UMath::Max(vertex.x, boundsMax.X);
-					boundsMax.Y = UMath::Max(vertex.y, boundsMax.Y);
-					boundsMax.Z = UMath::Max(vertex.z, boundsMax.Z);
+					asset.BoundsMax.X = UMath::Max(vertex.x, asset.BoundsMax.X);
+					asset.BoundsMax.Y = UMath::Max(vertex.y, asset.BoundsMax.Y);
+					asset.BoundsMax.Z = UMath::Max(vertex.z, asset.BoundsMax.Z);
 				}
 			}
 
@@ -388,9 +383,9 @@ namespace Havtorn
 		outSkeletalMeshComponent->BindPose = asset.BindPoseBones;
 		outSkeletalMeshComponent->Nodes = asset.Nodes;
 
-		outSkeletalMeshComponent->BoundsMin = boundsMin;
-		outSkeletalMeshComponent->BoundsMax = boundsMax;
-		outSkeletalMeshComponent->BoundsCenter = boundsMin + (boundsMax - boundsMin) * 0.5f;
+		outSkeletalMeshComponent->BoundsMin = asset.BoundsMin;
+		outSkeletalMeshComponent->BoundsMax = asset.BoundsMax;
+		outSkeletalMeshComponent->BoundsCenter = asset.BoundsMin + (asset.BoundsMax - asset.BoundsMin) * 0.5f;
 
 		// Geometry
 		outSkeletalMeshComponent->DrawCallData = asset.DrawCallData;

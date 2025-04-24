@@ -29,6 +29,8 @@ namespace Havtorn
 		std::string Name = "";
 		U8 NumberOfMaterials = 0;
 		std::vector<SDrawCallData> DrawCallData = {};
+		SVector BoundsMin = SVector(FLT_MAX);
+		SVector BoundsMax = SVector(-FLT_MAX);
 	};
 
 	struct SSkeletalMeshAsset
@@ -55,6 +57,8 @@ namespace Havtorn
 		std::vector<SDrawCallData> DrawCallData = {};
 		std::vector<SSkeletalMeshBone> BindPoseBones = {};
 		std::vector<SSkeletalMeshNode> Nodes = {};
+		SVector BoundsMin = SVector(FLT_MAX);
+		SVector BoundsMax = SVector(-FLT_MAX);
 	};
 
 	struct SSkeletalAnimationAsset

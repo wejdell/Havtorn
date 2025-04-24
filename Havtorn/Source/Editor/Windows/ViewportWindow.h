@@ -10,6 +10,8 @@ struct ID3D11Texture2D;
 namespace Havtorn
 {
 	class CRenderTexture;
+	class CScene;
+	struct SEditorAssetRepresentation;
 
 	class CViewportWindow : public CWindow
 	{
@@ -22,6 +24,8 @@ namespace Havtorn
 
 		const SVector2<F32> GetRenderedSceneDimensions() const;
 		const SVector2<F32> GetRenderedScenePosition() const;
+
+		void UpdatePreviewEntity(CScene* scene, const SEditorAssetRepresentation* assetRepresentation);
 
 	private:
 		const CRenderTexture* RenderedSceneTextureReference;

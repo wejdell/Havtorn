@@ -112,7 +112,7 @@ namespace Havtorn
 		template<class TEditorWindowType>
 		inline TEditorWindowType* const GetEditorWindow() const;
 
-		[[nodiscard]] const CRenderManager* GetRenderManager() const;
+		[[nodiscard]] CRenderManager* GetRenderManager() const;
 		[[nodiscard]] const CEditorResourceManager* GetResourceManager() const;
 		[[nodiscard]] CPlatformManager* GetPlatformManager() const;
 
@@ -138,7 +138,7 @@ namespace Havtorn
 		[[nodiscard]] std::string GetDrawCalls() const;
 
 	private:
-		const CRenderManager* RenderManager = nullptr;
+		CRenderManager* RenderManager = nullptr;
 		CPlatformManager* PlatformManager = nullptr;
 		CEditorResourceManager* ResourceManager = nullptr;
 

@@ -340,6 +340,7 @@ namespace Havtorn
 		CHavtornStaticString<255> SceneName = std::string("SceneName");
 
 		SEntity MainCameraEntity = SEntity::Null;
+		SEntity PreviewEntity = SEntity::Null;
 
 		// TODO.NR/AG: Try to remove this
 		CRenderManager* RenderManager = nullptr;
