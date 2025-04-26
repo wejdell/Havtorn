@@ -49,15 +49,18 @@ namespace Havtorn
 		[[nodiscard]] bool IsKeyPressed(WPARAM wParam) const;
 		[[nodiscard]] bool IsKeyReleased(WPARAM wParam) const;
 		
-		[[nodiscard]] U16 GetMouseX() const; // X coordiantes in application window
-		[[nodiscard]] U16 GetMouseY() const; // Y coordiantes in application window
+		// X coordiantes in application window
+		[[nodiscard]] ENGINE_API U16 GetMouseX() const; 
+		// Y coordiantes in application window
+		[[nodiscard]] ENGINE_API U16 GetMouseY() const; 
 		[[nodiscard]] ENGINE_API U16 GetMouseScreenX() const;
 		[[nodiscard]] ENGINE_API U16 GetMouseScreenY() const;
 		[[nodiscard]] I16 GetMouseDeltaX() const;
 		[[nodiscard]] I16 GetMouseDeltaY() const;
 		[[nodiscard]] I16 GetMouseRawDeltaX() const;
 		[[nodiscard]] I16 GetMouseRawDeltaY() const;
-		[[nodiscard]] I16 GetMouseWheelDelta() const; // Positive = away from user, negative = towards user
+		// Positive = away from user, negative = towards user
+		[[nodiscard]] I16 GetMouseWheelDelta() const; 
 		[[nodiscard]] bool IsMouseDown(EMouseButton mouseButton) const;
 		[[nodiscard]] bool IsMousePressed(EMouseButton mouseButton) const;
 		[[nodiscard]] bool IsMouseReleased(EMouseButton mouseButton) const;

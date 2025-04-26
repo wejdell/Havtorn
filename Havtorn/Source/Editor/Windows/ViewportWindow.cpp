@@ -129,11 +129,13 @@ namespace Havtorn
 					SGuiPayload payload = GUI::AcceptDragDropPayload("AssetDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
 					if (payload.Data != nullptr)
 					{
-						GUI::SetTooltip("Create Entity?");
-
-						// NW: Respond to target, check type
 						SEditorAssetRepresentation* payloadAssetRep = reinterpret_cast<SEditorAssetRepresentation*>(payload.Data);
 						UpdatePreviewEntity(firstActiveScene, payloadAssetRep);
+						
+						if (firstActiveScene->PreviewEntity.IsValid())
+							GUI::SetTooltip("Create Entity?");
+						else
+							GUI::SetTooltip("Asset type not supported yet!");
 
 						if (payload.IsDelivery)
 						{
@@ -141,12 +143,17 @@ namespace Havtorn
 							firstActiveScene->PreviewEntity = SEntity::Null;
 						}
 					}
-					else
-					{
-						firstActiveScene->RemoveEntity(firstActiveScene->PreviewEntity);
-					}
 
 					GUI::EndDragDropTarget();
+				}
+				else
+				{
+					if (firstActiveScene->PreviewEntity.IsValid())
+					{
+						// TODO.NW: Figure out mismatch that happens with other components when we remove the preview, suddenly entity component indices are one too big. Is it a race condition or something?
+						firstActiveScene->RemoveEntity(firstActiveScene->PreviewEntity);
+						firstActiveScene->PreviewEntity = SEntity::Null;
+					}
 				}
 			}
 		}
@@ -179,22 +186,19 @@ namespace Havtorn
 		{
 			// Handle transform
 			
-			// TODO.NW: Map properly to editor window, these are in Windows window space
-			F32 screenX = STATIC_F32(CInput::GetInstance()->GetMouseScreenX());
-			F32 screenY = STATIC_F32(CInput::GetInstance()->GetMouseScreenY());
-
-			//CPlatformManager* platformManager = Manager->GetPlatformManager();
-			//SVector2<U16> resolution = platformManager->GetResolution();
-			//SVector2<U16> windowPos = platformManager->GetCenterPosition();
-			//SVector2<F32> rectRelativeMousePos = SVector2((screenX - windowPos.X) / resolution.X, (screenY - windowPos.Y) / resolution.Y);
+			CInput* input = CInput::GetInstance();
+			F32 mouseX = STATIC_F32(input->GetMouseX());
+			F32 mouseY = STATIC_F32(input->GetMouseY());
 
 			SMatrix viewMatrix = scene->GetComponent<STransformComponent>(scene->MainCameraEntity)->Transform.GetMatrix();
 			SMatrix projectionMatrix = scene->GetComponent<SCameraComponent>(scene->MainCameraEntity)->ProjectionMatrix;
-			SRay worldRay = UMathUtilities::RaycastWorld({ screenX, screenY }, RenderedSceneDimensions, RenderedScenePosition, viewMatrix, projectionMatrix);
+			SRay worldRay = UMathUtilities::RaycastWorld({ mouseX, mouseY }, RenderedSceneDimensions, RenderedScenePosition, viewMatrix, projectionMatrix);
 
+			// TODO.NW: This is too annoying, we should have an easy time of setting the transform of entities
 			STransformComponent& previewTransform = *scene->GetComponent<STransformComponent>(scene->PreviewEntity);
 			SMatrix transformCopy = previewTransform.Transform.GetMatrix();
-			transformCopy.SetTranslation(worldRay.GetPointOnRay(3.0f));
+			constexpr F32 dragDistanceFromEditorCamera = 3.0f;
+			transformCopy.SetTranslation(worldRay.GetPointOnRay(dragDistanceFromEditorCamera));
 			previewTransform.Transform.SetMatrix(transformCopy);
 			return;
 		}
@@ -218,7 +222,7 @@ namespace Havtorn
 			staticMesh->AssetRegistryKey = assetRegistry->Register(staticMeshPath);
 
 			std::vector<std::string> previewMaterials;
-			previewMaterials.resize(staticMesh->NumberOfMaterials, "Assets/Materials/M_Checkboard_128x128.hva");
+			previewMaterials.resize(staticMesh->NumberOfMaterials, CEditorManager::PreviewMaterial);
 			renderManager->LoadMaterialComponent(previewMaterials, scene->AddComponent<SMaterialComponent>(scene->PreviewEntity));
 			scene->AddComponentEditorContext(scene->PreviewEntity, &SMaterialComponentEditorContext::Context);
 			scene->GetComponent<SMaterialComponent>(scene->PreviewEntity)->AssetRegistryKeys = assetRegistry->Register(previewMaterials);
@@ -236,7 +240,7 @@ namespace Havtorn
 			// TODO.NW: Deal with different asset types, and figure out bind pose for skeletal meshes
 
 			std::vector<std::string> previewMaterials;
-			previewMaterials.resize(skeletalMesh->NumberOfMaterials, "Assets/Materials/M_Checkboard_128x128.hva");
+			previewMaterials.resize(skeletalMesh->NumberOfMaterials, CEditorManager::PreviewMaterial);
 			renderManager->LoadMaterialComponent(previewMaterials, scene->AddComponent<SMaterialComponent>(scene->PreviewEntity));
 			scene->AddComponentEditorContext(scene->PreviewEntity, &SMaterialComponentEditorContext::Context);
 			scene->GetComponent<SMaterialComponent>(scene->PreviewEntity)->AssetRegistryKeys = assetRegistry->Register(previewMaterials);

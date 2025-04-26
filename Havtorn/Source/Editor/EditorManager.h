@@ -119,6 +119,8 @@ namespace Havtorn
 		void ToggleDebugInfo();
 		void ToggleDemo();
 
+		static std::string PreviewMaterial;
+
 	private:
 		void InitEditorLayout(); 
 		void InitAssetRepresentations();

@@ -156,6 +156,14 @@ namespace Havtorn
 		return hvaPath;
 	}
 
+	void CEditorResourceManager::CreateMaterial(const std::string& destinationPath, const SMaterialAssetFileHeader& fileHeader)
+	{
+		const auto data = new char[fileHeader.GetSize()];
+		fileHeader.Serialize(data);
+		GEngine::GetFileSystem()->Serialize(destinationPath, &data[0], fileHeader.GetSize());
+		delete[] data;
+	}
+
 	void CEditorResourceManager::CreateMaterial(const std::string& destinationPath)
 	{
 		SMaterialAssetFileHeader asset;
@@ -179,11 +187,7 @@ namespace Havtorn
 		asset.Material.Properties[10] = { -1.0f, materialTextures[1], 2 };
 		asset.Material.RecreateZ = true;
 
-		const auto data = new char[asset.GetSize()];
-
-		asset.Serialize(data);
-		GEngine::GetFileSystem()->Serialize(destinationPath, &data[0], asset.GetSize());
-		delete[] data;
+		CreateMaterial(destinationPath, asset);
 	}
 
 	std::string CEditorResourceManager::GetFileName(EEditorTexture texture)
@@ -234,6 +238,18 @@ namespace Havtorn
 		}
 	}
 
+//#define ALBEDO_R            0
+//#define ALBEDO_G            1
+//#define ALBEDO_B            2
+//#define ALBEDO_A            3
+//#define NORMAL_X            4
+//#define NORMAL_Y            5
+//#define NORMAL_Z            6
+//#define AMBIENT_OCCLUSION   7
+//#define METALNESS           8
+//#define ROUGHNESS           9
+//#define EMISSIVE            10
+
 	bool CEditorResourceManager::Init(CRenderManager* renderManager, const CGraphicsFramework* framework)
 	{
 		RenderManager = renderManager;
@@ -243,6 +259,30 @@ namespace Havtorn
 		Textures.assign(textureCount, nullptr);
 
 		CreateMaterial("Assets/Materials/M_Checkboard_128x128.hva");
+
+		//SMaterialAssetFileHeader previewMaterial;
+		//previewMaterial.MaterialName = "M_MeshPreview";
+
+		///*
+		//* 	F32 ConstantValue = -1.0f;
+		//*	std::string TexturePath;
+		//*	I16 TextureChannelIndex = -1;
+		//*/
+
+		//previewMaterial.Material.Properties[ALBEDO_R] = { 0.8f, "", -1 };
+		//previewMaterial.Material.Properties[ALBEDO_G] = { 0.8f, "", -1 };
+		//previewMaterial.Material.Properties[ALBEDO_B] = { 0.8f, "", -1 };
+		//previewMaterial.Material.Properties[ALBEDO_A] = { 1.0f, "", -1 };
+		//previewMaterial.Material.Properties[NORMAL_X] = { 0.0f, "", -1 };
+		//previewMaterial.Material.Properties[NORMAL_Y] = { 0.0f, "", -1 };
+		//previewMaterial.Material.Properties[NORMAL_Z] = { 1.0f, "", -1 };
+		//previewMaterial.Material.Properties[AMBIENT_OCCLUSION] = { 0.0f, "", -1 };
+		//previewMaterial.Material.Properties[METALNESS] = { 0.0f, "", -1 };
+		//previewMaterial.Material.Properties[ROUGHNESS] = { 1.0f, "", -1 };
+		//previewMaterial.Material.Properties[EMISSIVE] = { 0.0f, "", -1 };
+		//previewMaterial.Material.RecreateZ = true;
+
+		//CreateMaterial("Resources/" + previewMaterial.MaterialName + ".hva", previewMaterial);
 
 		for (I64 index = 0; index < textureCount; index++)
 		{

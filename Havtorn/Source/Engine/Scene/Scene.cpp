@@ -957,6 +957,8 @@ namespace Havtorn
 			}
 		}
 
+		RemoveComponentEditorContexts(entity);
+
 		auto& endValue = *(--EntityIndices.end());
 		EntityIndices.at(endValue.first) = EntityIndices.at(entity.GUID);
 

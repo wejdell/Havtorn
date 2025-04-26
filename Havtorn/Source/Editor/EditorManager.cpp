@@ -29,6 +29,8 @@
 
 namespace Havtorn
 {
+	std::string CEditorManager::PreviewMaterial = "Resources/M_MeshPreview.hva";
+
 	CEditorManager::CEditorManager()
 	{
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::TranslateTransform).AddMember(this, &CEditorManager::OnInputSetTransformGizmo);
