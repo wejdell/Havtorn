@@ -17,7 +17,7 @@ namespace Havtorn
 	public:
 		friend CInputMapper;
 
-		static CInput* GetInstance();
+		static ENGINE_API CInput* GetInstance();
 
 		enum class EMouseButton
 		{
@@ -51,8 +51,8 @@ namespace Havtorn
 		
 		[[nodiscard]] U16 GetMouseX() const; // X coordiantes in application window
 		[[nodiscard]] U16 GetMouseY() const; // Y coordiantes in application window
-		[[nodiscard]] U16 GetMouseScreenX() const;
-		[[nodiscard]] U16 GetMouseScreenY() const;
+		[[nodiscard]] ENGINE_API U16 GetMouseScreenX() const;
+		[[nodiscard]] ENGINE_API U16 GetMouseScreenY() const;
 		[[nodiscard]] I16 GetMouseDeltaX() const;
 		[[nodiscard]] I16 GetMouseDeltaY() const;
 		[[nodiscard]] I16 GetMouseRawDeltaX() const;
