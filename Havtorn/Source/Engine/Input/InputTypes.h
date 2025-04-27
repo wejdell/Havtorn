@@ -143,6 +143,7 @@ namespace Havtorn
 		CycleRenderPassReset,
 		PickEditorEntity,
 		FocusEditorEntity,
+		DeleteEvent,
 		Count
 	};
 

@@ -67,6 +67,9 @@ namespace Havtorn
 		const SInputAction focusEntity = { EInputKey::KeyF, EInputContext::Editor };
 		MapEvent(EInputActionEvent::FocusEditorEntity, focusEntity);
 
+		const SInputAction deleteAction = { EInputKey::Delete, EInputContext::Editor };
+		MapEvent(EInputActionEvent::DeleteEvent, deleteAction);
+
 		return true;
 	}
 

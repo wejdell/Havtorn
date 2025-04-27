@@ -38,6 +38,7 @@ namespace Havtorn
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ScaleTransform).AddMember(this, &CEditorManager::OnInputSetTransformGizmo);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ToggleFreeCam).AddMember(this, &CEditorManager::OnInputToggleFreeCam);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::FocusEditorEntity).AddMember(this, &CEditorManager::OnInputFocusSelection);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::DeleteEvent).AddMember(this, &CEditorManager::OnDeleteEvent);
 	}
 
 	CEditorManager::~CEditorManager()
@@ -582,6 +583,18 @@ namespace Havtorn
 		newTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(10.0f, 10.0f, 0.0f));
 		newTransform.Translate(worldPos + SVector(center.X, center.Y, -UMathUtilities::GetFocusDistanceForBounds(center, bounds, fov, focusMarginPercentage)));
 		CurrentScene->GetComponent<STransformComponent>(cameraEntity)->Transform = newTransform;
+	}
+
+	void CEditorManager::OnDeleteEvent(const SInputActionPayload payload)
+	{
+		if (!payload.IsPressed)
+			return;
+
+		if (SelectedEntity.IsValid())
+		{
+			CurrentScene->RemoveEntity(SelectedEntity);
+			SelectedEntity = SEntity::Null;
+		}
 	}
 
 	void CEditorManager::OnResolutionChanged(SVector2<U16> newResolution)
