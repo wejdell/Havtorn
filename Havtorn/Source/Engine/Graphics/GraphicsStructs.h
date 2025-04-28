@@ -136,6 +136,32 @@ namespace Havtorn
 		}
 	};
 
+	struct SSkeletalPosedNode
+	{
+		SMatrix localTransform;
+		SMatrix globalTransform;
+		CHavtornStaticString<255> Name;
+	};
+
+	struct SBoneAnimationClip
+	{
+		std::vector<SBoneAnimationTrack> tracks;
+		std::string AssetName;
+		U32 DurationInTicks = 0;
+		U32 TickRate = 0;
+
+		U32 GetSize() const
+		{
+			U32 size = 0;
+			for (U32 i = 0; i < tracks.size(); i++)
+				size += tracks[i].GetSize();
+
+			size += GetDataSize(AssetName);
+			size += GetDataSize(DurationInTicks);
+			size += GetDataSize(TickRate);
+		}
+	};
+
 	struct SBoneAnimDataTransform
 	{
 		SVector4 Row1TX;

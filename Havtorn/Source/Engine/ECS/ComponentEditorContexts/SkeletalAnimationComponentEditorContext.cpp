@@ -27,12 +27,20 @@ namespace Havtorn
 		GUI::DragFloat("Animation Time", skeletalAnimationComp->CurrentAnimationTime, 0.01f, 0.0f, skeletalAnimationComp->DurationInTicks / STATIC_F32(skeletalAnimationComp->TickRate));
 		GUI::Checkbox("Is Playing", skeletalAnimationComp->IsPlaying);
 
-		for (SMatrix& bone : skeletalAnimationComp->Bones)
-		{
-			SMatrix parentTransform = scene->GetComponent<STransformComponent>(entityOwner)->Transform.GetMatrix();
-			SMatrix worldTransform = bone * parentTransform;
-			GDebugDraw::AddAxis(worldTransform.GetTranslation(), worldTransform.GetEuler(), worldTransform.GetScale() * 0.5f);
-		}
+
+		I32 animIndex = Havtorn::UMath::Max(0, static_cast<I32>(skeletalAnimationComp->CurrentAnimationIndex));
+		I32 maxCount = STATIC_I32(skeletalAnimationComp->CurrentAnimation.size() - 1);
+		GUI::SliderInt("AnimationClip", animIndex, 0, maxCount);
+		skeletalAnimationComp->CurrentAnimationIndex = animIndex;
+
+		GUI::SliderFloat("Blend", skeletalAnimationComp->BlendValue, 0.0f, 1.0f);
+
+		//for (SMatrix& bone : skeletalAnimationComp->Bones)
+		//{
+		//	SMatrix parentTransform = scene->GetComponent<STransformComponent>(entityOwner)->Transform.GetMatrix();
+		//	SMatrix worldTransform = bone /** parentTransform*/;
+		//	GDebugDraw::AddAxis(worldTransform.GetTranslation(), worldTransform.GetEuler(), worldTransform.GetScale() * 0.5f);
+		//}
 
 		return SComponentViewResult();
 	}
