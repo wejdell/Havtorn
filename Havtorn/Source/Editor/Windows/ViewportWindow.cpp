@@ -9,6 +9,9 @@
 
 #include <Scene/Scene.h>
 #include <Scene/AssetRegistry.h>
+#include <MathTypes/MathUtilities.h>
+#include <PlatformManager.h>
+#include <Input/Input.h>
 
 namespace Havtorn
 {
@@ -126,11 +129,13 @@ namespace Havtorn
 					SGuiPayload payload = GUI::AcceptDragDropPayload("AssetDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
 					if (payload.Data != nullptr)
 					{
-						GUI::SetTooltip("Create Entity?");
-
-						// NW: Respond to target, check type
 						SEditorAssetRepresentation* payloadAssetRep = reinterpret_cast<SEditorAssetRepresentation*>(payload.Data);
 						UpdatePreviewEntity(firstActiveScene, payloadAssetRep);
+						
+						if (firstActiveScene->PreviewEntity.IsValid())
+							GUI::SetTooltip("Create Entity?");
+						else
+							GUI::SetTooltip("Asset type not supported yet!");
 
 						if (payload.IsDelivery)
 						{
@@ -138,12 +143,17 @@ namespace Havtorn
 							firstActiveScene->PreviewEntity = SEntity::Null;
 						}
 					}
-					else
-					{
-						firstActiveScene->RemoveEntity(firstActiveScene->PreviewEntity);
-					}
 
 					GUI::EndDragDropTarget();
+				}
+				else
+				{
+					if (firstActiveScene->PreviewEntity.IsValid())
+					{
+						// TODO.NW: Figure out mismatch that happens with other components when we remove the preview, suddenly entity component indices are one too big. Is it a race condition or something?
+						firstActiveScene->RemoveEntity(firstActiveScene->PreviewEntity);
+						firstActiveScene->PreviewEntity = SEntity::Null;
+					}
 				}
 			}
 		}
@@ -169,10 +179,27 @@ namespace Havtorn
 
 	void CViewportWindow::UpdatePreviewEntity(CScene* scene, const SEditorAssetRepresentation* assetRepresentation)
 	{
+		if (assetRepresentation->AssetType != EAssetType::StaticMesh && assetRepresentation->AssetType != EAssetType::SkeletalMesh)
+			return;
+
 		if (scene->PreviewEntity.IsValid())
 		{
 			// Handle transform
-			//scene->GetComponent<STransformComponent>(scene->PreviewEntity)
+			
+			CInput* input = CInput::GetInstance();
+			F32 mouseX = STATIC_F32(input->GetMouseX());
+			F32 mouseY = STATIC_F32(input->GetMouseY());
+
+			SMatrix viewMatrix = scene->GetComponent<STransformComponent>(scene->MainCameraEntity)->Transform.GetMatrix();
+			SMatrix projectionMatrix = scene->GetComponent<SCameraComponent>(scene->MainCameraEntity)->ProjectionMatrix;
+			SRay worldRay = UMathUtilities::RaycastWorld({ mouseX, mouseY }, RenderedSceneDimensions, RenderedScenePosition, viewMatrix, projectionMatrix);
+
+			// TODO.NW: This is too annoying, we should have an easy time of setting the transform of entities
+			STransformComponent& previewTransform = *scene->GetComponent<STransformComponent>(scene->PreviewEntity);
+			SMatrix transformCopy = previewTransform.Transform.GetMatrix();
+			constexpr F32 dragDistanceFromEditorCamera = 3.0f;
+			transformCopy.SetTranslation(worldRay.GetPointOnRay(dragDistanceFromEditorCamera));
+			previewTransform.Transform.SetMatrix(transformCopy);
 			return;
 		}
 
@@ -184,33 +211,51 @@ namespace Havtorn
 		CAssetRegistry* assetRegistry = GEngine::GetWorld()->GetAssetRegistry();
 		CRenderManager* renderManager = Manager->GetRenderManager();
 
-		// Static Mesh
-		//std::string staticMeshPath = "Assets/Tests/CH_Enemy.hva";
-		std::string staticMeshPath = assetRepresentation->Name + ".hva";
-		renderManager->LoadStaticMeshComponent(staticMeshPath, scene->AddComponent<SStaticMeshComponent>(scene->PreviewEntity));
-		scene->AddComponentEditorContext(scene->PreviewEntity, &SStaticMeshComponentEditorContext::Context);
-		SStaticMeshComponent* staticMesh = scene->GetComponent<SStaticMeshComponent>(scene->PreviewEntity);
-		staticMesh->AssetRegistryKey = assetRegistry->Register(staticMeshPath);
+		switch (assetRepresentation->AssetType)
+		{
+		case EAssetType::StaticMesh:
+		{
+			std::string staticMeshPath = assetRepresentation->Name + ".hva";
+			renderManager->LoadStaticMeshComponent(staticMeshPath, scene->AddComponent<SStaticMeshComponent>(scene->PreviewEntity));
+			scene->AddComponentEditorContext(scene->PreviewEntity, &SStaticMeshComponentEditorContext::Context);
+			SStaticMeshComponent* staticMesh = scene->GetComponent<SStaticMeshComponent>(scene->PreviewEntity);
+			staticMesh->AssetRegistryKey = assetRegistry->Register(staticMeshPath);
 
-		//// Skeletal Mesh
-		//std::string meshPath = "Assets/Tests/CH_Enemy_SK.hva";
-		////std::string meshPath = "Assets/Tests/MaleDefault.hva";
-		////std::string meshPath = "Assets/Tests/DebugAnimMesh.hva";
-		//renderManager->LoadSkeletalMeshComponent(meshPath, scene->AddComponent<SSkeletalMeshComponent>(scene->PreviewEntity));
-		//scene->AddComponentEditorContext(scene->PreviewEntity, &SSkeletalMeshComponentEditorContext::Context);
-		//scene->GetComponent<SSkeletalMeshComponent>(scene->PreviewEntity)->AssetRegistryKey = assetRegistry->Register(meshPath);
+			std::vector<std::string> previewMaterials;
+			previewMaterials.resize(staticMesh->NumberOfMaterials, CEditorManager::PreviewMaterial);
+			renderManager->LoadMaterialComponent(previewMaterials, scene->AddComponent<SMaterialComponent>(scene->PreviewEntity));
+			scene->AddComponentEditorContext(scene->PreviewEntity, &SMaterialComponentEditorContext::Context);
+			scene->GetComponent<SMaterialComponent>(scene->PreviewEntity)->AssetRegistryKeys = assetRegistry->Register(previewMaterials);
+		}
+			break;
 
+		case EAssetType::SkeletalMesh:
+		{
+			std::string meshPath = assetRepresentation->Name + ".hva";;
+			renderManager->LoadSkeletalMeshComponent(meshPath, scene->AddComponent<SSkeletalMeshComponent>(scene->PreviewEntity));
+			scene->AddComponentEditorContext(scene->PreviewEntity, &SSkeletalMeshComponentEditorContext::Context);
+			SSkeletalMeshComponent* skeletalMesh = scene->GetComponent<SSkeletalMeshComponent>(scene->PreviewEntity);
+			skeletalMesh->AssetRegistryKey = assetRegistry->Register(meshPath);
+			
+			// TODO.NW: Deal with different asset types, and figure out bind pose for skeletal meshes
+
+			std::vector<std::string> previewMaterials;
+			previewMaterials.resize(skeletalMesh->NumberOfMaterials, CEditorManager::PreviewMaterial);
+			renderManager->LoadMaterialComponent(previewMaterials, scene->AddComponent<SMaterialComponent>(scene->PreviewEntity));
+			scene->AddComponentEditorContext(scene->PreviewEntity, &SMaterialComponentEditorContext::Context);
+			scene->GetComponent<SMaterialComponent>(scene->PreviewEntity)->AssetRegistryKeys = assetRegistry->Register(previewMaterials);
+		}
+			break;
+
+		default :
+			break;
 		//std::string animationPath = "Assets/Tests/CH_Enemy_Walk.hva";
 		////std::string animationPath = "Assets/Tests/MaleWave.hva";
 		////std::string animationPath = "Assets/Tests/TestWalk.hva";
 		////std::string animationPath = "Assets/Tests/DebugAnimAnim.hva";
 		//renderManager->LoadSkeletalAnimationComponent(animationPath, scene->AddComponent<SSkeletalAnimationComponent>(scene->PreviewEntity));
 		//scene->AddComponentEditorContext(scene->PreviewEntity, &SSkeletalAnimationComponentEditorContext::Context);
+		}
 
-		std::vector<std::string> previewMaterials;
-		previewMaterials.resize(staticMesh->NumberOfMaterials, "Assets/Materials/M_Checkboard_128x128.hva");
-		renderManager->LoadMaterialComponent(previewMaterials, scene->AddComponent<SMaterialComponent>(scene->PreviewEntity));
-		scene->AddComponentEditorContext(scene->PreviewEntity, &SMaterialComponentEditorContext::Context);
-		scene->GetComponent<SMaterialComponent>(scene->PreviewEntity)->AssetRegistryKeys = assetRegistry->Register(previewMaterials);
 	}
 }

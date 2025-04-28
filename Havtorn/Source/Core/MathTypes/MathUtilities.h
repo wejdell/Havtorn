@@ -30,8 +30,8 @@ namespace Havtorn
 			//origin = viewMatrix * origin;
 			//SVector4 dir = (viewMatrix * rayEye).GetNormalized();
 
-			HV_LOG_WARN("Mouse pos: %s", mouseWindowPos.ToString().c_str());
-			HV_LOG_WARN("Rect relative pos: %s", rectRelativeMousePos.ToString().c_str());
+			//HV_LOG_WARN("Mouse pos: %s", mouseWindowPos.ToString().c_str());
+			//HV_LOG_WARN("Rect relative pos: %s", rectRelativeMousePos.ToString().c_str());
 
 			// NR: No way to distinguish between SRay(origin, pointOnRay) and SRay(origin, direction).
 			// The former seems nice to have still so doing this for now

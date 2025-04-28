@@ -25,7 +25,7 @@ namespace Havtorn
 
 		PLATFORM_API static LRESULT CALLBACK WinProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam);
 		PLATFORM_API SVector2<U16> GetResolution() const;
-		SVector2<U16> GetCenterPosition() const;
+		PLATFORM_API SVector2<U16> GetCenterPosition() const;
 		const float GetResolutionScale() const;
 
 		// TODO.AG: reconsider access rights.

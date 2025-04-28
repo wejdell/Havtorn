@@ -119,6 +119,8 @@ namespace Havtorn
 		void ToggleDebugInfo();
 		void ToggleDemo();
 
+		static std::string PreviewMaterial;
+
 	private:
 		void InitEditorLayout(); 
 		void InitAssetRepresentations();
@@ -127,6 +129,7 @@ namespace Havtorn
 		void OnInputSetTransformGizmo(const SInputActionPayload payload);
 		void OnInputToggleFreeCam(const SInputActionPayload payload);
 		void OnInputFocusSelection(const SInputActionPayload payload);
+		void OnDeleteEvent(const SInputActionPayload payload);
 
 		void OnResolutionChanged(SVector2<U16> newResolution);
 		void OnBeginPlay(CScene* scene);
