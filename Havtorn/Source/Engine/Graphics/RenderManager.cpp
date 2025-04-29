@@ -457,7 +457,12 @@ namespace Havtorn
 			asset = LoadedSkeletalAnims.at(assetName);
 		}
 
-		outSkeletalAnimationComponent->CurrentAnimation = asset.BoneAnimationTracks;
+		outSkeletalAnimationComponent->CurrentAnimation.emplace_back();
+		outSkeletalAnimationComponent->CurrentAnimation.back().tracks = asset.BoneAnimationTracks;
+		outSkeletalAnimationComponent->CurrentAnimation.back().AssetName = assetName;
+		outSkeletalAnimationComponent->CurrentAnimation.back().DurationInTicks = asset.DurationInTicks;
+		outSkeletalAnimationComponent->CurrentAnimation.back().TickRate = asset.TickRate;
+		
 		outSkeletalAnimationComponent->AssetName = assetName;
 		outSkeletalAnimationComponent->DurationInTicks = asset.DurationInTicks;
 		outSkeletalAnimationComponent->TickRate = asset.TickRate;

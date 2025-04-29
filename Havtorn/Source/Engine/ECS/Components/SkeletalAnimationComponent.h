@@ -20,7 +20,9 @@ namespace Havtorn
 
 		// TODO.NR: This should be some of the only runtime data this component needs.
 		//SVector2<U32> AnimationData; // X = animationIndex, Y = frameIndex
-		std::vector<SBoneAnimationTrack> CurrentAnimation = {};
+		std::vector <SBoneAnimationClip> CurrentAnimation = {};
+		U32 CurrentAnimationIndex = 0;
+
 		std::vector<SMatrix> Bones = {};
 		F32 CurrentAnimationTime = 0.0f;
 
@@ -29,6 +31,7 @@ namespace Havtorn
 		std::string AssetName;
 		U32 DurationInTicks = 0;
 		U32 TickRate = 0;
+		F32 BlendValue = 0.0f;
 		bool IsPlaying = true;
 	};
 }
