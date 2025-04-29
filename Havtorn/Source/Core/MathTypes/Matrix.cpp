@@ -92,7 +92,7 @@ namespace Havtorn
 		SMatrix::Decompose(b, targetTranslation, targetRotation, targetScale);
 
 		SVector intermediateTranslation = SVector::Lerp(startTranslation, targetTranslation, t);
-		SQuaternion intermediateRotation = SQuaternion::Slerp(startRotation, targetRotation, t);
+		SQuaternion intermediateRotation = SQuaternion::Slerp(startRotation, targetRotation, t).GetNormalized();
 		SVector intermediateScale = SVector::Lerp(startScale, targetScale, t);
 
 		SMatrix intermediateMatrix = SMatrix::Identity;

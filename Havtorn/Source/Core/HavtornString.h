@@ -116,6 +116,8 @@ namespace Havtorn
             return true;
         }
 
+       // bool operator<(const CHavtornStaticString<maxSize>& other) const;
+
         inline const U32 Length() const { return Size; }
         inline const std::string AsString() const { return std::string(std::begin(Characters), std::begin(Characters) + STATIC_U64(Size)); }
         char* Data() { return Characters.data(); }
@@ -127,4 +129,9 @@ namespace Havtorn
         std::array<char, maxSize> Characters = {};
         U8 Size = 0;
     };
+    //template<U8 maxSize>
+    //inline bool CHavtornStaticString<maxSize>::operator<(const CHavtornStaticString<maxSize>& other) const
+    //{
+    //    return AsString() < other.AsString();
+    //}
 }
