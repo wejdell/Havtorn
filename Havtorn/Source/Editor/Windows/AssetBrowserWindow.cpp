@@ -249,6 +249,7 @@ namespace Havtorn
 		if (GUI::Button("Import"))
 		{
 			std::string hvaFilePath = Manager->GetResourceManager()->ConvertToHVA(filePath, CurrentDirectory.string() + "/", ImportOptions);
+			// TODO.NW: Make sure thumbnail is re-rendered?
 			Manager->CreateAssetRep(hvaFilePath);
 			closePopup();
 		}
