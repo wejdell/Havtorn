@@ -191,18 +191,9 @@ add_dependencies(GUI Core Platform)
 set(ENGINE_FILES
     ${ENGINE_FOLDER}Application/EngineProcess.cpp
     ${ENGINE_FOLDER}Application/EngineProcess.h
-    #${ENGINE_FOLDER}Application/ImGuiCrossProjectSetup.h
-    #${ENGINE_FOLDER}Application/ImGuiManager.cpp
-    #${ENGINE_FOLDER}Application/ImGuiManager.h
-    #${ENGINE_FOLDER}Application/ImGuiProcess.cpp
-    #${ENGINE_FOLDER}Application/ImGuiProcess.h
-    #${ENGINE_FOLDER}Application/WindowHandler.cpp
-    #${ENGINE_FOLDER}Application/WindowHandler.h
     ${ENGINE_FOLDER}Assets/SequencerAsset.cpp
     ${ENGINE_FOLDER}Assets/SequencerAsset.h
     ${ENGINE_FOLDER}Core/GeneralUtilities.h
-    #${ENGINE_FOLDER}Core/ImGuiTypeUtil.cpp
-    #${ENGINE_FOLDER}Core/ImGuiTypeUtil.h
     ${ENGINE_FOLDER}Core/RuntimeAssetDeclarations.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraComponentEditorContext.cpp
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraComponentEditorContext.h
@@ -388,6 +379,7 @@ set(VERTEX_SHADERS
     ${SHADER_FOLDER}DeferredStaticMesh_VS.hlsl
     ${SHADER_FOLDER}DeferredVertexPaint_VS.hlsl
     ${SHADER_FOLDER}EditorPreview_VS.hlsl
+    ${SHADER_FOLDER}EditorPreviewSkeletal_VS.hlsl
     ${SHADER_FOLDER}FullscreenVertexShader_VS.hlsl
     ${SHADER_FOLDER}Line_VS.hlsl
     ${SHADER_FOLDER}PointLight_VS.hlsl

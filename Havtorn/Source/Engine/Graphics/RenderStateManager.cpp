@@ -57,7 +57,8 @@ namespace Havtorn
             initData[STATIC_U64(EVertexShaders::StaticMeshInstanced)]           = { "Shaders/DeferredInstancedMesh_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans };
             initData[STATIC_U64(EVertexShaders::Decal)]                         = { "Shaders/Decal_VS.cso", false };
             initData[STATIC_U64(EVertexShaders::PointAndSpotLight)]             = { "Shaders/PointLight_VS.cso", true, EInputLayoutType::Position4 };
-            initData[STATIC_U64(EVertexShaders::EditorPreview)]                 = { "Shaders/EditorPreview_VS.cso", false };
+            initData[STATIC_U64(EVertexShaders::EditorPreviewStaticMesh)]       = { "Shaders/EditorPreview_VS.cso", false };
+            initData[STATIC_U64(EVertexShaders::EditorPreviewSkeletalMesh)]     = { "Shaders/EditorPreviewSkeletal_VS.cso", false };
             initData[STATIC_U64(EVertexShaders::Line)]                          = { "Shaders/Line_VS.cso", false };
             initData[STATIC_U64(EVertexShaders::SpriteInstanced)]               = { "Shaders/SpriteInstanced_VS.cso", true, EInputLayoutType::TransUVRectColor };
             initData[STATIC_U64(EVertexShaders::StaticMeshInstancedEditor)]     = { "Shaders/DeferredInstancedMeshEditor_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Entity2Trans };

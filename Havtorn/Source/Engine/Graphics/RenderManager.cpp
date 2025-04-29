@@ -557,7 +557,7 @@ namespace Havtorn
 		RenderStateManager.IASetTopology(ETopologies::TriangleList);
 		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2);
 
-		RenderStateManager.VSSetShader(EVertexShaders::EditorPreview);
+		RenderStateManager.VSSetShader(EVertexShaders::EditorPreviewStaticMesh);
 		RenderStateManager.PSSetShader(EPixelShaders::EditorPreview);
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
@@ -608,6 +608,10 @@ namespace Havtorn
 		FrameBufferData.ToCameraFromProjection = camProjection.Inverse();
 		FrameBufferData.CameraPosition = camTransform.GetMatrix().GetTranslation4();
 		FrameBuffer.BindBuffer(FrameBufferData);
+		
+		std::vector<SMatrix> bones;
+		bones.resize(64, SMatrix::Identity);
+		BoneBuffer.BindBuffer(bones);
 
 		RenderStateManager.VSSetConstantBuffer(0, FrameBuffer);
 		RenderStateManager.PSSetConstantBuffer(0, FrameBuffer);
@@ -617,9 +621,9 @@ namespace Havtorn
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
 		RenderStateManager.IASetTopology(ETopologies::TriangleList);
-		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2);
+		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans);
 
-		RenderStateManager.VSSetShader(EVertexShaders::EditorPreview);
+		RenderStateManager.VSSetShader(EVertexShaders::EditorPreviewSkeletalMesh);
 		RenderStateManager.PSSetShader(EPixelShaders::EditorPreview);
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
@@ -701,6 +705,7 @@ namespace Havtorn
 		RenderStateManager.VSSetShader(EVertexShaders::StaticMesh);
 		RenderStateManager.PSSetShader(EPixelShaders::GBuffer);
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
+		RenderStateManager.PSSetSampler(1, ESamplers::DefaultBorder);
 
 		RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[STATIC_U8(EVertexBufferPrimitives::Icosphere)], RenderStateManager.MeshVertexStrides[0], RenderStateManager.MeshVertexOffsets[0]);
 		RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[STATIC_U8(EIndexBufferPrimitives::Icosphere)]);
