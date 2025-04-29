@@ -28,13 +28,16 @@ namespace Havtorn
 		void CopyFromTexture(ID3D11Texture2D* texture);
 		void WriteToCPUTexture(void* data, U64 size);
 		void UnmapFromCPU();
+		void Release();
 		void ReleaseTexture();
 		void ReleaseDepth();
 		
 		ENGINE_API ID3D11Texture2D* const GetTexture() const;
 		ENGINE_API ID3D11ShaderResourceView* const GetShaderResourceView() const;
+		ENGINE_API ID3D11ShaderResourceView* MoveShaderResourceView();
 		ENGINE_API ID3D11RenderTargetView* const GetRenderTargetView() const;
 		ENGINE_API ID3D11DepthStencilView* const GetDepthStencilView() const;
+		ENGINE_API D3D11_VIEWPORT* const GetViewport() const;
 
 		friend CFullscreenTextureFactory;
 		friend class CGBuffer;
@@ -51,6 +54,7 @@ namespace Havtorn
 		ID3D11ShaderResourceView* ShaderResource = nullptr;
 		D3D11_VIEWPORT* Viewport = nullptr;
 
+		bool IsRenderTexture = true;
 		bool CPUAccess = true;
 	};
 }

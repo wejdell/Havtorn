@@ -118,6 +118,8 @@ namespace Havtorn
 		void SetAllStates(EBlendStates blendState, EDepthStencilStates depthStencilState, ERasterizerStates rasterizerState) const;
 		void SetAllDefault() const;
 
+		void ClearState();
+
 		void Release();
 
 	private:

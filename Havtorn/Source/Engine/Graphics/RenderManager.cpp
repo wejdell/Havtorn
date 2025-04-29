@@ -520,62 +520,6 @@ namespace Havtorn
 
 	void* CRenderManager::RenderStaticMeshAssetTexture(const std::string& filePath)
 	{
-		D3D11_TEXTURE2D_DESC textureDesc = { 0 };
-		textureDesc.Width = STATIC_U16(256.0f);
-		textureDesc.Height = STATIC_U16(256.0f);
-		textureDesc.MipLevels = 1;
-		textureDesc.ArraySize = 1;
-		textureDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-		textureDesc.SampleDesc.Count = 1;
-		textureDesc.SampleDesc.Quality = 0;
-		textureDesc.Usage = D3D11_USAGE_DEFAULT;
-		textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-		textureDesc.CPUAccessFlags = 0;
-		textureDesc.MiscFlags = 0;
-
-		D3D11_TEXTURE2D_DESC depthStencilDesc = { 0 };
-		depthStencilDesc.Width = STATIC_U16(256.0f);
-		depthStencilDesc.Height = STATIC_U16(256.0f);
-		depthStencilDesc.MipLevels = 1;
-		depthStencilDesc.ArraySize = 1;
-		depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
-		depthStencilDesc.SampleDesc.Count = 1;
-		depthStencilDesc.SampleDesc.Quality = 0;
-		depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
-		depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-		depthStencilDesc.CPUAccessFlags = 0;
-		depthStencilDesc.MiscFlags = 0;
-
-		D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
-		depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
-		depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-		depthStencilViewDesc.Texture2D.MipSlice = 0;
-		depthStencilViewDesc.Flags = 0;
-
-		ID3D11Texture2D* depthStencilBuffer;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateTexture2D(&depthStencilDesc, nullptr, &depthStencilBuffer), "Texture could not be created.");
-		
-		ID3D11DepthStencilView* depthStencilView;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateDepthStencilView(depthStencilBuffer, &depthStencilViewDesc, &depthStencilView), "Depth could not be created.");
-
-		ID3D11Texture2D* texture;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateTexture2D(&textureDesc, nullptr, &texture), "Could not create Fullscreen Texture2D");
-
-		ID3D11ShaderResourceView* shaderResource;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateShaderResourceView(texture, nullptr, &shaderResource), "Could not create Fullscreen Shader Resource View.");
-
-		ID3D11RenderTargetView* renderTarget;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateRenderTargetView(texture, nullptr, &renderTarget), "Could not create Fullcreen Render Target View.");
-
-		D3D11_VIEWPORT* viewport;
-		D3D11_TEXTURE2D_DESC textureDescription;
-		texture->GetDesc(&textureDescription);
-		viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(textureDescription.Width), STATIC_F32(textureDescription.Height), 0.0f, 1.0f });
-
-		// TODO.NR: Figure out why the depth doesn't work
-		RenderStateManager.OMSetRenderTargets(1, &renderTarget, nullptr);
-		RenderStateManager.RSSetViewports(1, viewport);
-
 		SStaticMeshComponent* staticMeshComp = new SStaticMeshComponent();
 		LoadStaticMeshComponent(filePath, staticMeshComp);
 
@@ -587,6 +531,14 @@ namespace Havtorn
 		camTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(30.0f, 30.0f, 0.0f));
 		camTransform.Translate(SVector(staticMeshComp->BoundsCenter.X, staticMeshComp->BoundsCenter.Y, -UMathUtilities::GetFocusDistanceForBounds(staticMeshComp->BoundsCenter, SVector::GetAbsMaxKeepValue(staticMeshComp->BoundsMax, staticMeshComp->BoundsMin), fov, marginPercentage)));
 		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(fov.Y), aspectRatio, 0.001f, 100.0f);
+
+		CRenderTexture renderTexture = FullscreenTextureFactory.CreateTexture(SVector2<U16>(256), DXGI_FORMAT_R16G16B16A16_FLOAT);
+		CRenderTexture renderDepth = FullscreenTextureFactory.CreateDepth(SVector2<U16>(256), DXGI_FORMAT_R32_TYPELESS);
+		
+		// TODO.NW: Figure out why the depth doesn't work
+		ID3D11RenderTargetView* renderTargets[1] = { renderTexture.GetRenderTargetView() };
+		RenderStateManager.OMSetRenderTargets(1, renderTargets, nullptr/*renderDepth.GetDepthStencilView()*/);
+		RenderStateManager.RSSetViewports(1, renderDepth.GetViewport());
 
 		FrameBufferData.ToCameraFromWorld = camTransform.GetMatrix().FastInverse();
 		FrameBufferData.ToWorldFromCamera = camTransform.GetMatrix();
@@ -618,74 +570,18 @@ namespace Havtorn
 			CRenderManager::NumberOfDrawCallsThisFrame++;
 		}
 
-		delete staticMeshComp;
-		delete viewport;
-		renderTarget->Release();
-		texture->Release();
-		depthStencilView->Release();
-		depthStencilBuffer->Release();
+		RenderStateManager.ClearState();
 
-		return std::move((void*)shaderResource);
+		void* resource = renderTexture.MoveShaderResourceView();
+		renderTexture.Release();
+		renderDepth.Release();
+		delete staticMeshComp;
+
+		return resource;
 	}
 
 	void* CRenderManager::RenderSkeletalMeshAssetTexture(const std::string& filePath)
 	{
-		D3D11_TEXTURE2D_DESC textureDesc = { 0 };
-		textureDesc.Width = STATIC_U16(256.0f);
-		textureDesc.Height = STATIC_U16(256.0f);
-		textureDesc.MipLevels = 1;
-		textureDesc.ArraySize = 1;
-		textureDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-		textureDesc.SampleDesc.Count = 1;
-		textureDesc.SampleDesc.Quality = 0;
-		textureDesc.Usage = D3D11_USAGE_DEFAULT;
-		textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-		textureDesc.CPUAccessFlags = 0;
-		textureDesc.MiscFlags = 0;
-
-		D3D11_TEXTURE2D_DESC depthStencilDesc = { 0 };
-		depthStencilDesc.Width = STATIC_U16(256.0f);
-		depthStencilDesc.Height = STATIC_U16(256.0f);
-		depthStencilDesc.MipLevels = 1;
-		depthStencilDesc.ArraySize = 1;
-		depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
-		depthStencilDesc.SampleDesc.Count = 1;
-		depthStencilDesc.SampleDesc.Quality = 0;
-		depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
-		depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-		depthStencilDesc.CPUAccessFlags = 0;
-		depthStencilDesc.MiscFlags = 0;
-
-		D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
-		depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
-		depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-		depthStencilViewDesc.Texture2D.MipSlice = 0;
-		depthStencilViewDesc.Flags = 0;
-
-		ID3D11Texture2D* depthStencilBuffer;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateTexture2D(&depthStencilDesc, nullptr, &depthStencilBuffer), "Texture could not be created.");
-
-		ID3D11DepthStencilView* depthStencilView;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateDepthStencilView(depthStencilBuffer, &depthStencilViewDesc, &depthStencilView), "Depth could not be created.");
-
-		ID3D11Texture2D* texture;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateTexture2D(&textureDesc, nullptr, &texture), "Could not create Fullscreen Texture2D");
-
-		ID3D11ShaderResourceView* shaderResource;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateShaderResourceView(texture, nullptr, &shaderResource), "Could not create Fullscreen Shader Resource View.");
-
-		ID3D11RenderTargetView* renderTarget;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateRenderTargetView(texture, nullptr, &renderTarget), "Could not create Fullcreen Render Target View.");
-
-		D3D11_VIEWPORT* viewport;
-		D3D11_TEXTURE2D_DESC textureDescription;
-		texture->GetDesc(&textureDescription);
-		viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(textureDescription.Width), STATIC_F32(textureDescription.Height), 0.0f, 1.0f });
-
-		// TODO.NR: Figure out why the depth doesn't work
-		RenderStateManager.OMSetRenderTargets(1, &renderTarget, nullptr);
-		RenderStateManager.RSSetViewports(1, viewport);
-
 		SSkeletalMeshComponent* skeletalMeshComp = new SSkeletalMeshComponent();
 		LoadSkeletalMeshComponent(filePath, skeletalMeshComp);
 
@@ -697,6 +593,14 @@ namespace Havtorn
 		camTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(30.0f, 30.0f, 0.0f));
 		camTransform.Translate(SVector(skeletalMeshComp->BoundsCenter.X, skeletalMeshComp->BoundsCenter.Y, -UMathUtilities::GetFocusDistanceForBounds(skeletalMeshComp->BoundsCenter, SVector::GetAbsMaxKeepValue(skeletalMeshComp->BoundsMax, skeletalMeshComp->BoundsMin), fov, marginPercentage)));
 		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(fov.Y), aspectRatio, 0.001f, 100.0f);
+
+		CRenderTexture renderTexture = FullscreenTextureFactory.CreateTexture(SVector2<U16>(256), DXGI_FORMAT_R16G16B16A16_FLOAT);
+		CRenderTexture renderDepth = FullscreenTextureFactory.CreateDepth(SVector2<U16>(256), DXGI_FORMAT_R32_TYPELESS);
+
+		// TODO.NW: Figure out why the depth doesn't work
+		ID3D11RenderTargetView* renderTargets[1] = { renderTexture.GetRenderTargetView() };
+		RenderStateManager.OMSetRenderTargets(1, renderTargets, nullptr/*renderDepth.GetDepthStencilView()*/);
+		RenderStateManager.RSSetViewports(1, renderDepth.GetViewport());
 
 		FrameBufferData.ToCameraFromWorld = camTransform.GetMatrix().FastInverse();
 		FrameBufferData.ToWorldFromCamera = camTransform.GetMatrix();
@@ -728,14 +632,14 @@ namespace Havtorn
 			CRenderManager::NumberOfDrawCallsThisFrame++;
 		}
 
-		delete skeletalMeshComp;
-		delete viewport;
-		renderTarget->Release();
-		texture->Release();
-		depthStencilView->Release();
-		depthStencilBuffer->Release();
+		RenderStateManager.ClearState();
 
-		return std::move((void*)shaderResource);
+		void* resource = renderTexture.MoveShaderResourceView();
+		renderTexture.Release();
+		renderDepth.Release();
+		delete skeletalMeshComp;
+
+		return resource;
 	}
 
 	void* CRenderManager::GetTextureAssetTexture(const std::string& filePath)
@@ -755,63 +659,7 @@ namespace Havtorn
 
 	void* CRenderManager::RenderMaterialAssetTexture(const std::string& filePath)
 	{
-		// TODO.NR: Refactor this to take all the data we need to serialize and then set up the state once: render
-
-		D3D11_TEXTURE2D_DESC textureDesc = { 0 };
-		textureDesc.Width = STATIC_U16(256.0f);
-		textureDesc.Height = STATIC_U16(256.0f);
-		textureDesc.MipLevels = 1;
-		textureDesc.ArraySize = 1;
-		textureDesc.Format = DXGI_FORMAT_R16G16B16A16_FLOAT;
-		textureDesc.SampleDesc.Count = 1;
-		textureDesc.SampleDesc.Quality = 0;
-		textureDesc.Usage = D3D11_USAGE_DEFAULT;
-		textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-		textureDesc.CPUAccessFlags = 0;
-		textureDesc.MiscFlags = 0;
-
-		D3D11_TEXTURE2D_DESC depthStencilDesc = { 0 };
-		depthStencilDesc.Width = STATIC_U16(256.0f);
-		depthStencilDesc.Height = STATIC_U16(256.0f);
-		depthStencilDesc.MipLevels = 1;
-		depthStencilDesc.ArraySize = 1;
-		depthStencilDesc.Format = DXGI_FORMAT_D32_FLOAT;
-		depthStencilDesc.SampleDesc.Count = 1;
-		depthStencilDesc.SampleDesc.Quality = 0;
-		depthStencilDesc.Usage = D3D11_USAGE_DEFAULT;
-		depthStencilDesc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-		depthStencilDesc.CPUAccessFlags = 0;
-		depthStencilDesc.MiscFlags = 0;
-
-		D3D11_DEPTH_STENCIL_VIEW_DESC depthStencilViewDesc;
-		depthStencilViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
-		depthStencilViewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-		depthStencilViewDesc.Texture2D.MipSlice = 0;
-		depthStencilViewDesc.Flags = 0;
-
-		ID3D11Texture2D* depthStencilBuffer;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateTexture2D(&depthStencilDesc, nullptr, &depthStencilBuffer), "Texture could not be created.");
-
-		ID3D11DepthStencilView* depthStencilView;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateDepthStencilView(depthStencilBuffer, &depthStencilViewDesc, &depthStencilView), "Depth could not be created.");
-
-		ID3D11Texture2D* texture;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateTexture2D(&textureDesc, nullptr, &texture), "Could not create Fullscreen Texture2D");
-
-		ID3D11ShaderResourceView* shaderResource;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateShaderResourceView(texture, nullptr, &shaderResource), "Could not create Fullscreen Shader Resource View.");
-
-		ID3D11RenderTargetView* renderTarget;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateRenderTargetView(texture, nullptr, &renderTarget), "Could not create Fullcreen Render Target View.");
-
-		D3D11_VIEWPORT* viewport;
-		D3D11_TEXTURE2D_DESC textureDescription;
-		texture->GetDesc(&textureDescription);
-		viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(textureDescription.Width), STATIC_F32(textureDescription.Height), 0.0f, 1.0f });
-
-		CGBuffer gBuffer = FullscreenTextureFactory.CreateGBuffer({ STATIC_U16(textureDescription.Width), STATIC_U16(textureDescription.Height) });
-		gBuffer.SetAsActiveTarget();
-		RenderStateManager.RSSetViewports(1, viewport);
+		// TODO.NW: Refactor this to take all the data we need to serialize and then set up the state once: render
 
 		STransform camTransform;
 		constexpr F32 zoomMultiplier = 0.72f;
@@ -820,6 +668,13 @@ namespace Havtorn
 		camTransform.Translate(SVector4::Up * 1.2f * zoomMultiplier);
 		camTransform.Rotate({ UMath::DegToRad(-30.0f), UMath::DegToRad(30.0f), 0.0f });
 		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), 1.0f, 0.01f, 10.0f);
+
+		CRenderTexture renderTexture = FullscreenTextureFactory.CreateTexture(SVector2<U16>(256), DXGI_FORMAT_R16G16B16A16_FLOAT);
+		CRenderTexture renderDepth = FullscreenTextureFactory.CreateDepth(SVector2<U16>(256), DXGI_FORMAT_R32_TYPELESS);
+		CGBuffer gBuffer = FullscreenTextureFactory.CreateGBuffer(SVector2<U16>(256));
+
+		gBuffer.SetAsActiveTarget();
+		RenderStateManager.RSSetViewports(1, renderDepth.GetViewport());
 
 		FrameBufferData.ToCameraFromWorld = camTransform.GetMatrix().FastInverse();
 		FrameBufferData.ToWorldFromCamera = camTransform.GetMatrix();
@@ -890,7 +745,8 @@ namespace Havtorn
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 
 		// ======== Lighting =========
-		RenderStateManager.OMSetRenderTargets(1, &renderTarget, nullptr);
+		ID3D11RenderTargetView* renderTargets[1] = { renderTexture.GetRenderTargetView() };
+		RenderStateManager.OMSetRenderTargets(1, renderTargets, nullptr);
 
 		auto environmentLightComp = tempScene.AddComponent<SEnvironmentLightComponent>(entity);
 		auto directionalLightComp = tempScene.AddComponent<SDirectionalLightComponent>(entity);
@@ -951,18 +807,19 @@ namespace Havtorn
 
 		// TODO.NR: Make temp scene outside, in EditorResourceManager and send it in to these functions. Need default lighting
 		tempScene.RemoveEntity(entity);
-		delete viewport;
-		renderTarget->Release();
-		texture->Release();
-		depthStencilView->Release();
-		depthStencilBuffer->Release();
 
 		ID3D11ShaderResourceView* nullView = NULL;
 		RenderStateManager.PSSetResources(21, 1, &nullView);
 		RenderStateManager.PSSetResources(22, 1, &nullView);
 		RenderStateManager.PSSetResources(23, 1, &nullView);
 
-		return std::move((void*)shaderResource);
+		RenderStateManager.ClearState();
+
+		void* resource = renderTexture.MoveShaderResourceView();
+		renderTexture.Release();
+		renderDepth.Release();
+
+		return resource;
 	}
 
 	U64 CRenderManager::GetEntityGUIDFromData(U64 dataIndex) const
