@@ -276,7 +276,7 @@ namespace Havtorn
 				return;
 
 			SMetaDataComponent* otherMetaData = havtornScene->GetComponent<SMetaDataComponent>(*otherEntity);
-			if (otherEntity == nullptr)
+			if (otherMetaData == nullptr)
 				return;
 
 			// TODO.NR: Probably want to notify a System here, to deal with the trigger in gameplay code
