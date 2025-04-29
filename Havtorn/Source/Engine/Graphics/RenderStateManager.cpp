@@ -548,6 +548,11 @@ namespace Havtorn
         RSSetRasterizerState(ERasterizerStates::Default);
     }
 
+    void CRenderStateManager::ClearState()
+    {
+        Context->ClearState();
+    }
+
     void CRenderStateManager::Release()
     {
         for (U8 i = 0; i < STATIC_U8(EBlendStates::Count); ++i)

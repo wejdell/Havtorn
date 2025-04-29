@@ -6,7 +6,7 @@
 
 namespace Havtorn
 {
-	void CRenderTexture::ClearTexture(SVector4 clearColor) 
+	void CRenderTexture::ClearTexture(SVector4 clearColor)
 	{
 		Context->ClearRenderTargetView(RenderTarget, &clearColor.X);
 	}
@@ -95,6 +95,14 @@ namespace Havtorn
 		Context->Unmap(Texture, 0);
 	}
 
+	void CRenderTexture::Release()
+	{
+		if (IsRenderTexture)
+			ReleaseTexture();
+		else
+			ReleaseDepth();
+	}
+
 	void CRenderTexture::ReleaseTexture()
 	{
 		Context = nullptr;
@@ -139,6 +147,13 @@ namespace Havtorn
 		return ShaderResource;
 	}
 
+	ENGINE_API ID3D11ShaderResourceView* CRenderTexture::MoveShaderResourceView()
+	{
+		auto movedResource = std::move(ShaderResource);
+		ShaderResource = nullptr;
+		return movedResource;
+	}
+
 	ID3D11RenderTargetView* const CRenderTexture::GetRenderTargetView() const
 	{
 		return RenderTarget;
@@ -146,5 +161,9 @@ namespace Havtorn
 	ID3D11DepthStencilView* const CRenderTexture::GetDepthStencilView() const
 	{
 		return Depth;
+	}
+	D3D11_VIEWPORT* const CRenderTexture::GetViewport() const
+	{
+		return Viewport;
 	}
 }

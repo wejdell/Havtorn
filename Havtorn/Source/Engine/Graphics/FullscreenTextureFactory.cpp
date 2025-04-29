@@ -155,6 +155,7 @@ namespace Havtorn
 		D3D11_VIEWPORT* viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(size.X), STATIC_F32(size.Y), 0.0f, 1.0f });
 
 		CRenderTexture returnDepth;
+		returnDepth.IsRenderTexture = false;
 		returnDepth.Context = Framework->GetContext();
 		returnDepth.Texture = depthStencilBuffer;
 		returnDepth.Depth = depthStencilView;
