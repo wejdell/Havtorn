@@ -311,6 +311,9 @@ namespace Havtorn
 			// This would be a bad idea if we kept different derived components in the same vectors.
 
 			const SComponentStorage& componentStorage = Storages[ComponentTypeIndices.at(typeIDHashCode)];
+			if (componentStorage.Components.empty())
+				return {};
+
 			std::vector<T*> specializedComponents;
 			specializedComponents.resize(componentStorage.Components.size());
 			memcpy(&specializedComponents[0], componentStorage.Components.data(), sizeof(T*) * componentStorage.Components.size());

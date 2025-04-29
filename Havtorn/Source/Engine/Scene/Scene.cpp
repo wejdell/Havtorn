@@ -939,21 +939,22 @@ namespace Havtorn
 			return;
 		}
 
-		SEntity& entityAtBack = Entities.back();
-
 		for (SComponentStorage& storage : Storages)
 		{
 			// TODO.NW: Fix when entity at back isn't contained in the component storage. Need entity corresponding to 
 			// last component? Maybe that can already be inferred?
 			if (storage.EntityIndices.contains(entity.GUID))
 			{
-				storage.EntityIndices.at(entityAtBack.GUID) = storage.EntityIndices.at(entity.GUID);
-
-				std::swap(storage.Components[storage.EntityIndices.at(entity.GUID)], storage.Components.back());
-
 				SComponent*& componentToBeRemoved = storage.Components.back();
-				delete componentToBeRemoved;
-				componentToBeRemoved = nullptr;
+				if (componentToBeRemoved != nullptr)
+				{
+					storage.EntityIndices.at(componentToBeRemoved->Owner.GUID) = storage.EntityIndices.at(entity.GUID);
+
+					std::swap(storage.Components[storage.EntityIndices.at(entity.GUID)], storage.Components.back());
+
+					delete componentToBeRemoved;
+					componentToBeRemoved = nullptr;
+				}
 
 				storage.Components.pop_back();
 				storage.EntityIndices.erase(entity.GUID);
@@ -962,6 +963,7 @@ namespace Havtorn
 
 		RemoveComponentEditorContexts(entity);
 
+		SEntity& entityAtBack = Entities.back();
 		EntityIndices.at(entityAtBack.GUID) = EntityIndices.at(entity.GUID);
 
 		std::swap(Entities[EntityIndices.at(entity.GUID)], Entities.back());
