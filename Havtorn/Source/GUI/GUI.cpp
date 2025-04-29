@@ -106,7 +106,7 @@ namespace Havtorn
 
 		void TextDisabled(const char* fmt, va_list args)
 		{
-			ImGui::TextDisabled(fmt, args);
+			ImGui::TextDisabledV(fmt, args);
 		}
 
 		void TextUnformatted(const char* text)
@@ -119,12 +119,9 @@ namespace Havtorn
 			ImGui::InputText(label, buf, bufSize, 0, callback, data);
 		}
 
-		void SetTooltip(const char* fmt, ...)
+		void SetTooltip(const char* fmt, va_list args)
 		{
-			va_list args;
-			va_start(args, fmt);
-			ImGui::SetTooltip(fmt, args);
-			va_end(args);
+			ImGui::SetTooltipV(fmt, args);	
 		}
 
 		bool DragFloat(const char* label, F32& value, F32 vSpeed = 1.0f, F32 min = 0.0f, F32 max = 0.0f, const char* format = "%.3f", ImGuiSliderFlags flags = 0)

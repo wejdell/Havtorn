@@ -325,9 +325,7 @@ namespace Havtorn
 				{
 					// NW: Respond to target, check type
 					SEditorAssetRepresentation* payloadAssetRep = reinterpret_cast<SEditorAssetRepresentation*>(payload.Data);
-					// TODO.NW: Figure out what's wrong with formatted text
-						//GUI::SetTooltip("Move '%s' to %s", payloadAssetRep->Name.c_str(), entry.path().string().c_str());
-					GUI::SetTooltip("Move asset to folder?");
+					GUI::SetTooltip("Move '%s' to '%s'?", payloadAssetRep->Name.c_str(), entry.path().string().c_str());
 
 					if (payload.IsDelivery)
 					{
