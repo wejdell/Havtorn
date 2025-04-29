@@ -388,7 +388,7 @@ namespace Havtorn
 	inline std::string SQuaternion::ToString() const
 	{
 		char buffer[64];
-		sprintf_s(buffer, "{X: %.7f, Y: %.7f, Z: %.7f, W: %.7f}", X, Y, Z, W);
+		sprintf_s(buffer, "{X: %.1f, Y: %.1f, Z: %.1f, W: %.1f}", X, Y, Z, W);
 		return buffer;
 	}
 	
