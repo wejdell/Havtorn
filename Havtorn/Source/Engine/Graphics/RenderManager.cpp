@@ -533,7 +533,7 @@ namespace Havtorn
 		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(fov.Y), aspectRatio, 0.001f, 100.0f);
 
 		CRenderTexture renderTexture = FullscreenTextureFactory.CreateTexture(SVector2<U16>(256), DXGI_FORMAT_R16G16B16A16_FLOAT);
-		CRenderTexture renderDepth = FullscreenTextureFactory.CreateDepth(SVector2<U16>(256), DXGI_FORMAT_R32_TYPELESS);
+		CRenderTexture renderDepth = FullscreenTextureFactory.CreateDepth(SVector2<U16>(256), DXGI_FORMAT_R24G8_TYPELESS);
 		
 		// TODO.NW: Figure out why the depth doesn't work
 		ID3D11RenderTargetView* renderTargets[1] = { renderTexture.GetRenderTargetView() };
@@ -595,7 +595,10 @@ namespace Havtorn
 		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(fov.Y), aspectRatio, 0.001f, 100.0f);
 
 		CRenderTexture renderTexture = FullscreenTextureFactory.CreateTexture(SVector2<U16>(256), DXGI_FORMAT_R16G16B16A16_FLOAT);
-		CRenderTexture renderDepth = FullscreenTextureFactory.CreateDepth(SVector2<U16>(256), DXGI_FORMAT_R32_TYPELESS);
+		CRenderTexture renderDepth = FullscreenTextureFactory.CreateDepth(SVector2<U16>(256), DXGI_FORMAT_R24G8_TYPELESS);
+
+		const std::vector<SMatrix>& matrices = { SMatrix::Identity };
+		InstancedTransformBuffer.BindBuffer(matrices);
 
 		// TODO.NW: Figure out why the depth doesn't work
 		ID3D11RenderTargetView* renderTargets[1] = { renderTexture.GetRenderTargetView() };
@@ -626,11 +629,16 @@ namespace Havtorn
 		RenderStateManager.VSSetShader(EVertexShaders::EditorPreviewSkeletalMesh);
 		RenderStateManager.PSSetShader(EPixelShaders::EditorPreview);
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
+		
+		RenderStateManager.VSSetConstantBuffer(2, BoneBuffer);
 
 		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(skeletalMeshComp->DrawCallData.size()); drawCallIndex++)
 		{
 			const SDrawCallData& drawData = skeletalMeshComp->DrawCallData[drawCallIndex];
-			RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[drawData.VertexBufferIndex], RenderStateManager.MeshVertexStrides[drawData.VertexStrideIndex], RenderStateManager.MeshVertexOffsets[drawData.VertexOffsetIndex]);
+			const std::vector<CDataBuffer> buffers = { RenderStateManager.VertexBuffers[drawData.VertexBufferIndex], InstancedAnimationDataBuffer, InstancedTransformBuffer };
+			const U32 strides[3] = { RenderStateManager.MeshVertexStrides[drawData.VertexStrideIndex], sizeof(SVector2<U32>), sizeof(SMatrix) };
+			const U32 offsets[3] = { RenderStateManager.MeshVertexOffsets[drawData.VertexOffsetIndex], 0, 0 };
+			RenderStateManager.IASetVertexBuffers(0, 3, buffers, strides, offsets);
 			RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[drawData.IndexBufferIndex]);
 			RenderStateManager.DrawIndexed(drawData.IndexCount, 0, 0);
 			CRenderManager::NumberOfDrawCallsThisFrame++;

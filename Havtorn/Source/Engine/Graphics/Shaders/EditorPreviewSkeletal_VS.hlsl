@@ -36,7 +36,7 @@ cbuffer ObjectBuffer : register(b1)
     float4x4 ToWorld;
 }
 
-cbuffer BoneBuffer : register(b6)
+cbuffer BoneBuffer : register(b2)
 {
     matrix Bones[64];
 };
