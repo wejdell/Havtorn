@@ -7,6 +7,7 @@
 #include "EditorResourceManager.h"
 
 #include <Engine.h>
+#include <Timer.h>
 #include <MathTypes/EngineMath.h>
 #include <FileSystem/FileSystem.h>
 #include <Graphics/RenderManager.h>
@@ -118,6 +119,11 @@ namespace Havtorn
 
 		GUI::End();
 		
+		if (AnimatedThumbnailTime == LastAnimatedThumbnailTime)
+			AnimatedThumbnailTime = 0.0f;
+
+		LastAnimatedThumbnailTime = AnimatedThumbnailTime;
+
 		//// NR: Keep this here in case we want this to be a subwindow rather than an integrated element
 		//if (GUI::Begin("Asset Browser Folder View", nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
 		//{
@@ -462,6 +468,12 @@ namespace Havtorn
 
 			GUI::Image((intptr_t)rep->TextureRef, { GUI::ThumbnailSizeX, GUI::ThumbnailSizeY }, SVector2<F32>(0.0f), SVector2<F32>(1.0f), SColor::White, imageBorderColor);
 			GUI::SetCursorPos(nextPos);
+
+			if (GUI::IsItemHovered())
+			{
+				if (rep->AssetType == EAssetType::Animation)
+					rep->TextureRef = Manager->GetResourceManager()->RenderAnimatedAssetTexture(rep->AssetType, path.string(), AnimatedThumbnailTime += GTime::Dt());
+			}
 
 			GUI::Text(rep->Name.c_str());
 			if (GUI::IsItemHovered())

@@ -68,7 +68,7 @@ namespace Havtorn
 	void SMatrix::Decompose(const SMatrix& matrix, SVector& translation, SQuaternion& rotation, SVector& scale)
 	{
 		scale = matrix.GetScale();
-		rotation = SQuaternion(matrix);
+		rotation = SQuaternion(matrix).Inverse();
 		translation = matrix.GetTranslation();
 	}
 

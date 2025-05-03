@@ -29,8 +29,10 @@ namespace Havtorn
 		// TODO.NR: Support multiple animations/montages on one component
 		// TODO.NR: Load animations and use registry to serialize component, same as with meshes. The below should be a runtime asset easily written to a texture when needed.
 		std::string AssetName;
+		std::string SkeletonName;
 		U32 DurationInTicks = 0;
 		U32 TickRate = 0;
+		F32 ImportScale = 1.0f;
 		F32 BlendValue = 0.0f;
 		bool IsPlaying = true;
 	};

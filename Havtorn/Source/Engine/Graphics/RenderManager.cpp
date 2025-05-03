@@ -458,14 +458,16 @@ namespace Havtorn
 		}
 
 		outSkeletalAnimationComponent->CurrentAnimation.emplace_back();
-		outSkeletalAnimationComponent->CurrentAnimation.back().tracks = asset.BoneAnimationTracks;
+		outSkeletalAnimationComponent->CurrentAnimation.back().Tracks = asset.BoneAnimationTracks;
 		outSkeletalAnimationComponent->CurrentAnimation.back().AssetName = assetName;
 		outSkeletalAnimationComponent->CurrentAnimation.back().DurationInTicks = asset.DurationInTicks;
 		outSkeletalAnimationComponent->CurrentAnimation.back().TickRate = asset.TickRate;
 		
 		outSkeletalAnimationComponent->AssetName = assetName;
+		outSkeletalAnimationComponent->SkeletonName = asset.SkeletonName;
 		outSkeletalAnimationComponent->DurationInTicks = asset.DurationInTicks;
 		outSkeletalAnimationComponent->TickRate = asset.TickRate;
+		outSkeletalAnimationComponent->ImportScale = asset.ImportScale;
 	}
 
 	SVector2<F32> CRenderManager::GetShadowAtlasResolution() const
@@ -571,6 +573,7 @@ namespace Havtorn
 		}
 
 		RenderStateManager.ClearState();
+		Backbuffer.SetAsActiveTarget();
 
 		void* resource = renderTexture.MoveShaderResourceView();
 		renderTexture.Release();
@@ -612,9 +615,9 @@ namespace Havtorn
 		FrameBufferData.CameraPosition = camTransform.GetMatrix().GetTranslation4();
 		FrameBuffer.BindBuffer(FrameBufferData);
 		
-		std::vector<SMatrix> bones;
-		bones.resize(64, SMatrix::Identity);
-		BoneBuffer.BindBuffer(bones);
+		std::vector<SMatrix> boneTransforms;
+		boneTransforms.resize(64, SMatrix::Identity);
+		BoneBuffer.BindBuffer(boneTransforms);
 
 		RenderStateManager.VSSetConstantBuffer(0, FrameBuffer);
 		RenderStateManager.PSSetConstantBuffer(0, FrameBuffer);
@@ -645,10 +648,91 @@ namespace Havtorn
 		}
 
 		RenderStateManager.ClearState();
+		Backbuffer.SetAsActiveTarget();
 
 		void* resource = renderTexture.MoveShaderResourceView();
 		renderTexture.Release();
 		renderDepth.Release();
+		delete skeletalMeshComp;
+
+		return resource;
+	}
+
+	ENGINE_API void* CRenderManager::RenderSkeletalAnimationAssetTexture(const std::string& filePath, const std::vector<SMatrix>& boneTransforms)
+	{
+		SSkeletalAnimationComponent* skeletalAnimationComp = new SSkeletalAnimationComponent();
+		LoadSkeletalAnimationComponent(filePath, skeletalAnimationComp);
+
+		SSkeletalMeshComponent* skeletalMeshComp = new SSkeletalMeshComponent();
+		LoadSkeletalMeshComponent(skeletalAnimationComp->SkeletonName, skeletalMeshComp);
+
+		F32 aspectRatio = 1.0f;
+		F32 marginPercentage = 1.5f;
+		SVector2<F32> fov = { aspectRatio * 70.0f, 70.0f };
+
+		STransform camTransform;
+		camTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(30.0f, 30.0f, 0.0f));
+		camTransform.Translate(SVector(skeletalMeshComp->BoundsCenter.X, skeletalMeshComp->BoundsCenter.Y, -UMathUtilities::GetFocusDistanceForBounds(skeletalMeshComp->BoundsCenter, SVector::GetAbsMaxKeepValue(skeletalMeshComp->BoundsMax, skeletalMeshComp->BoundsMin), fov, marginPercentage)));
+		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(fov.Y), aspectRatio, 0.001f, 100.0f);
+
+		CRenderTexture renderTexture = FullscreenTextureFactory.CreateTexture(SVector2<U16>(256), DXGI_FORMAT_R16G16B16A16_FLOAT);
+		CRenderTexture renderDepth = FullscreenTextureFactory.CreateDepth(SVector2<U16>(256), DXGI_FORMAT_R24G8_TYPELESS);
+
+		const std::vector<SMatrix>& matrices = { SMatrix::Identity };
+		InstancedTransformBuffer.BindBuffer(matrices);
+
+		// TODO.NW: Figure out why the depth doesn't work
+		ID3D11RenderTargetView* renderTargets[1] = { renderTexture.GetRenderTargetView() };
+		RenderStateManager.OMSetRenderTargets(1, renderTargets, nullptr/*renderDepth.GetDepthStencilView()*/);
+		RenderStateManager.RSSetViewports(1, renderDepth.GetViewport());
+
+		FrameBufferData.ToCameraFromWorld = camTransform.GetMatrix().FastInverse();
+		FrameBufferData.ToWorldFromCamera = camTransform.GetMatrix();
+		FrameBufferData.ToProjectionFromCamera = camProjection;
+		FrameBufferData.ToCameraFromProjection = camProjection.Inverse();
+		FrameBufferData.CameraPosition = camTransform.GetMatrix().GetTranslation4();
+		FrameBuffer.BindBuffer(FrameBufferData);
+
+		std::vector<SMatrix> bones = boneTransforms;
+		if (bones.empty())
+			bones.resize(64, SMatrix::Identity);
+		BoneBuffer.BindBuffer(bones);
+
+		RenderStateManager.VSSetConstantBuffer(0, FrameBuffer);
+		RenderStateManager.PSSetConstantBuffer(0, FrameBuffer);
+
+		ObjectBufferData.ToWorldFromObject = SMatrix();
+		ObjectBuffer.BindBuffer(ObjectBufferData);
+
+		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
+		RenderStateManager.IASetTopology(ETopologies::TriangleList);
+		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans);
+
+		RenderStateManager.VSSetShader(EVertexShaders::EditorPreviewSkeletalMesh);
+		RenderStateManager.PSSetShader(EPixelShaders::EditorPreview);
+		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
+
+		RenderStateManager.VSSetConstantBuffer(2, BoneBuffer);
+
+		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(skeletalMeshComp->DrawCallData.size()); drawCallIndex++)
+		{
+			const SDrawCallData& drawData = skeletalMeshComp->DrawCallData[drawCallIndex];
+			const std::vector<CDataBuffer> buffers = { RenderStateManager.VertexBuffers[drawData.VertexBufferIndex], InstancedAnimationDataBuffer, InstancedTransformBuffer };
+			const U32 strides[3] = { RenderStateManager.MeshVertexStrides[drawData.VertexStrideIndex], sizeof(SVector2<U32>), sizeof(SMatrix) };
+			const U32 offsets[3] = { RenderStateManager.MeshVertexOffsets[drawData.VertexOffsetIndex], 0, 0 };
+			RenderStateManager.IASetVertexBuffers(0, 3, buffers, strides, offsets);
+			RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[drawData.IndexBufferIndex]);
+			RenderStateManager.DrawIndexed(drawData.IndexCount, 0, 0);
+			CRenderManager::NumberOfDrawCallsThisFrame++;
+		}
+
+		RenderStateManager.ClearState();
+		Backbuffer.SetAsActiveTarget();
+
+		void* resource = renderTexture.MoveShaderResourceView();
+		renderTexture.Release();
+		renderDepth.Release();
+		delete skeletalAnimationComp;
 		delete skeletalMeshComp;
 
 		return resource;
@@ -827,6 +911,7 @@ namespace Havtorn
 		RenderStateManager.PSSetResources(23, 1, &nullView);
 
 		RenderStateManager.ClearState();
+		Backbuffer.SetAsActiveTarget();
 
 		void* resource = renderTexture.MoveShaderResourceView();
 		renderTexture.Release();

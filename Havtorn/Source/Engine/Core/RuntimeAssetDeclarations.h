@@ -68,9 +68,11 @@ namespace Havtorn
 		explicit SSkeletalAnimationAsset(const SSkeletalAnimationFileHeader& assetFileData)
 			: AssetType(assetFileData.AssetType)
 			, Name(assetFileData.Name)
+			, SkeletonName(assetFileData.SkeletonName)
 			, DurationInTicks(assetFileData.DurationInTicks)
 			, TickRate(assetFileData.TickRate)
 			, NumberOfTracks(assetFileData.NumberOfBones)
+			, ImportScale(assetFileData.ImportScale)
 			, BoneAnimationTracks(assetFileData.BoneAnimationTracks)
 		{
 			//PreprocessAnimation(assetFileData);
@@ -78,9 +80,11 @@ namespace Havtorn
 
 		EAssetType AssetType = EAssetType::Animation;
 		std::string Name = "";
+		std::string SkeletonName = "";
 		U32 DurationInTicks = 0;
 		U32 TickRate = 0;
 		U32 NumberOfTracks = 0;
+		F32 ImportScale = 1.0f;
 		//std::vector<SBoneAnimDataTransform> EncodedBoneAnimTransforms;
 		std::vector<SBoneAnimationTrack> BoneAnimationTracks;
 

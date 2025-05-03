@@ -28,10 +28,10 @@ namespace Havtorn
 
 		void TestWalkThrough(const SSkeletalMeshComponent* skeleton, const SSkeletalMeshNode& node, const SMatrix& parentTransform);
 
-		//void ReadHierarchy(const SSkeletalAnimationComponent* animationComponent, const SSkeletalMeshComponent* mesh, const F32 animationTime, const SMatrix& parentTransform, const SSkeletalMeshNode& node, std::vector<SMatrix>& posedTransforms);
-
-		void ApplyLocalPoseToHierarchy(const SSkeletalMeshComponent* mesh, std::vector<SSkeletalPosedNode>& in, const SSkeletalMeshNode& node, const SMatrix& parentTransform);
 		void ReadAnimationLocalPose(const SSkeletalAnimationComponent* animationComponent, const SSkeletalMeshComponent* mesh, const F32 animationTime, const SSkeletalMeshNode& node, std::vector<SSkeletalPosedNode>& posedBoneOrder);
+		void ApplyLocalPoseToHierarchy(const SSkeletalMeshComponent* mesh, std::vector<SSkeletalPosedNode>& in, const SSkeletalMeshNode& node, const SMatrix& parentTransform);
+
+		ENGINE_API std::vector<SMatrix> ReadAssetAnimationPose(const std::string& animationFile, const F32 animationTime);
 
 	private:
 		CRenderManager* RenderManager;

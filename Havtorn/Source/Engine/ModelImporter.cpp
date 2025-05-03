@@ -436,11 +436,13 @@ namespace Havtorn
 		fileHeader.Name = UGeneralUtils::ExtractFileNameFromPath(filePath);
 		fileHeader.DurationInTicks = STATIC_U32(animation->mDuration);
 		fileHeader.TickRate = STATIC_U32(animation->mTicksPerSecond);
+		fileHeader.ImportScale = importOptions.Scale;
 			
 		std::vector<SSkeletalMeshBone> bones;
 		{
 			// Need full path here, not just filename
 			std::string rigFilePath = importOptions.AssetRep->DirectoryEntry.path().string();
+			fileHeader.SkeletonName = rigFilePath;
 			const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(rigFilePath);
 			char* data = new char[fileSize];
 
@@ -455,8 +457,6 @@ namespace Havtorn
 		}
 
 		fileHeader.NumberOfBones = STATIC_U32(animation->mNumChannels);
-		
-		const F32 scaleModifier = importOptions.Scale;
 
 		for (U32 i = 0; i < animation->mNumChannels; i++)
 		{
@@ -469,10 +469,7 @@ namespace Havtorn
 			if (channel != nullptr)
 			{
 				for (U32 t = 0; t < channel->mNumPositionKeys; t++)
-				{
 					track.TranslationKeys.emplace_back(ToHavtornVecAnimationKey(channel->mPositionKeys[t]));
-					track.TranslationKeys.back().Value *= scaleModifier;
-				}
 
 				for (U32 q = 0; q < channel->mNumRotationKeys; q++)
 					track.RotationKeys.emplace_back(ToHavtornQuatAnimationKey(channel->mRotationKeys[q]));

@@ -160,7 +160,6 @@ namespace Havtorn
 		DeserializeData(BindPoseBones, fromData, pointerPosition);
 		
 		DeserializeData(NumberOfNodes, fromData, pointerPosition);
-		//DeserializeData(Nodes, fromData, pointerPosition);
 		Nodes.reserve(NumberOfNodes);
 		for (U16 i = 0; i < NumberOfNodes; i++)
 		{
@@ -175,10 +174,11 @@ namespace Havtorn
 	{
 		EAssetType AssetType = EAssetType::Animation;
 		std::string Name;
+		std::string SkeletonName;
 		U32 DurationInTicks = 0;
 		U32 TickRate = 0;
 		U32 NumberOfBones = 0;
-		//std::vector<SSkeletalMeshBone> SequentialPosedBones;
+		F32 ImportScale = 1.0f;
 		std::vector<SBoneAnimationTrack> BoneAnimationTracks;
 
 		[[nodiscard]] U32 GetSize() const;
@@ -191,10 +191,11 @@ namespace Havtorn
 		U32 size = 0;
 		size += GetDataSize(AssetType);
 		size += GetDataSize(Name);
+		size += GetDataSize(SkeletonName);
 		size += GetDataSize(DurationInTicks);
 		size += GetDataSize(TickRate);
 		size += GetDataSize(NumberOfBones);
-		//size += GetDataSize(SequentialPosedBones);
+		size += GetDataSize(ImportScale);
 
 		for (auto& track : BoneAnimationTracks)
 			size += track.GetSize();
@@ -207,17 +208,17 @@ namespace Havtorn
 		U64 pointerPosition = 0;
 		SerializeData(AssetType, toData, pointerPosition);
 		SerializeData(Name, toData, pointerPosition);
+		SerializeData(SkeletonName, toData, pointerPosition);
 		SerializeData(DurationInTicks, toData, pointerPosition);
 		SerializeData(TickRate, toData, pointerPosition);
 		SerializeData(NumberOfBones, toData, pointerPosition);
-		//SerializeData(SequentialPosedBones, toData, pointerPosition);
+		SerializeData(ImportScale, toData, pointerPosition);
 
 		for (auto& track : BoneAnimationTracks)
 		{
 			SerializeData(track.TranslationKeys, toData, pointerPosition);
 			SerializeData(track.RotationKeys, toData, pointerPosition);
 			SerializeData(track.ScaleKeys, toData, pointerPosition);
-			//SerializeData(track.AnimationKeys, toData, pointerPosition);
 			SerializeData(track.TrackName, toData, pointerPosition);
 		}
 	}
@@ -227,19 +228,18 @@ namespace Havtorn
 		U64 pointerPosition = 0;
 		DeserializeData(AssetType, fromData, pointerPosition);
 		DeserializeData(Name, fromData, pointerPosition);
+		DeserializeData(SkeletonName, fromData, pointerPosition);
 		DeserializeData(DurationInTicks, fromData, pointerPosition);
 		DeserializeData(TickRate, fromData, pointerPosition);
 		DeserializeData(NumberOfBones, fromData, pointerPosition);
-		//DeserializeData(SequentialPosedBones, fromData, pointerPosition);
+		DeserializeData(ImportScale, fromData, pointerPosition);
 
-		//SequentialPosedBones.reserve(NumberOfBones);
 		for (U16 i = 0; i < NumberOfBones; i++)
 		{
 			BoneAnimationTracks.emplace_back();
 			DeserializeData(BoneAnimationTracks.back().TranslationKeys, fromData, pointerPosition);
 			DeserializeData(BoneAnimationTracks.back().RotationKeys, fromData, pointerPosition);
 			DeserializeData(BoneAnimationTracks.back().ScaleKeys, fromData, pointerPosition);
-			//DeserializeData(BoneAnimationTracks.back().AnimationKeys, fromData, pointerPosition);
 			DeserializeData(BoneAnimationTracks.back().TrackName, fromData, pointerPosition);
 		}
 	}
