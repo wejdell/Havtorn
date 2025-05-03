@@ -80,8 +80,6 @@ namespace Havtorn
 		std::string Name;
 		std::vector<SSkeletalMeshVertex> Vertices;
 		std::vector<U32> Indices;
-		// NR: We might want to store the matrices in the animation struct instead, should not need default pose data?
-		//std::vector<SMatrix> BoneOffsetMatrices;
 	};
 
 	struct SSkeletalMeshBone
@@ -119,7 +117,6 @@ namespace Havtorn
 	struct SBoneAnimationTrack
 	{
 		CHavtornStaticString<255> TrackName;
-		//std::vector<SBoneAnimationKey> AnimationKeys;
 		std::vector<SVecBoneAnimationKey> TranslationKeys;
 		std::vector<SQuatBoneAnimationKey> RotationKeys;
 		std::vector<SVecBoneAnimationKey> ScaleKeys;
@@ -131,21 +128,20 @@ namespace Havtorn
 			size += GetDataSize(RotationKeys);
 			size += GetDataSize(ScaleKeys);
 			size += GetDataSize(TrackName);
-			//size += GetDataSize(AnimationKeys);
 			return size;
 		}
 	};
 
 	struct SSkeletalPosedNode
 	{
-		SMatrix localTransform;
-		SMatrix globalTransform;
+		SMatrix LocalTransform;
+		SMatrix GlobalTransform;
 		CHavtornStaticString<255> Name;
 	};
 
 	struct SBoneAnimationClip
 	{
-		std::vector<SBoneAnimationTrack> tracks;
+		std::vector<SBoneAnimationTrack> Tracks;
 		std::string AssetName;
 		U32 DurationInTicks = 0;
 		U32 TickRate = 0;
@@ -153,8 +149,8 @@ namespace Havtorn
 		U32 GetSize() const
 		{
 			U32 size = 0;
-			for (U32 i = 0; i < tracks.size(); i++)
-				size += tracks[i].GetSize();
+			for (U32 i = 0; i < Tracks.size(); i++)
+				size += Tracks[i].GetSize();
 
 			size += GetDataSize(AssetName);
 			size += GetDataSize(DurationInTicks);

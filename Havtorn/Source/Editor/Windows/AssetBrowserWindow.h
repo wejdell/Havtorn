@@ -43,5 +43,8 @@ namespace Havtorn
 		std::optional<std::vector<std::string>> FilePathsToImport;
 
 		std::optional<std::filesystem::directory_entry> SelectedAsset;
+
+		F32 LastAnimatedThumbnailTime = 0.0f;
+		F32 AnimatedThumbnailTime = 0.0f;
 	};
 }

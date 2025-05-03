@@ -83,6 +83,7 @@ namespace Havtorn
 
 		ENGINE_API void* RenderStaticMeshAssetTexture(const std::string& filePath);
 		ENGINE_API void* RenderSkeletalMeshAssetTexture(const std::string& filePath);
+		ENGINE_API void* RenderSkeletalAnimationAssetTexture(const std::string& filePath, const std::vector<SMatrix>& boneTransforms = {});
 		ENGINE_API void* GetTextureAssetTexture(const std::string& filePath);
 		ENGINE_API void* RenderMaterialAssetTexture(const std::string& filePath);
 

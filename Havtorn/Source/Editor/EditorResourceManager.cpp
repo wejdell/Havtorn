@@ -5,6 +5,8 @@
 #include "Graphics/RenderManager.h"
 #include "ModelImporter.h"
 
+#include <ECS/Systems/AnimatorGraphSystem.h>
+
 namespace Havtorn
 {
 	ID3D11ShaderResourceView* CEditorResourceManager::GetEditorTexture(EEditorTexture texture) const
@@ -17,7 +19,7 @@ namespace Havtorn
 		return Textures[index];
 	}
 
-	void* CEditorResourceManager::RenderAssetTexure(EAssetType assetType, const std::string& filePath)
+	void* CEditorResourceManager::RenderAssetTexure(EAssetType assetType, const std::string& filePath) const
 	{
 		switch (assetType)
 		{
@@ -30,7 +32,7 @@ namespace Havtorn
 		case EAssetType::Material:
 			return std::move(RenderManager->RenderMaterialAssetTexture(filePath));
 		case EAssetType::Animation:
-			break;
+			return std::move(RenderManager->RenderSkeletalAnimationAssetTexture(filePath));
 		case EAssetType::AudioOneShot:
 			break;
 		case EAssetType::AudioCollection:
@@ -41,6 +43,36 @@ namespace Havtorn
 			break;
 		case EAssetType::Sequencer:
 			return std::move(GetEditorTexture(EEditorTexture::SequencerIcon));
+		case EAssetType::None:
+		default:
+			break;
+		}
+
+		return nullptr;
+	}
+
+	void* CEditorResourceManager::RenderAnimatedAssetTexture(const EAssetType assetType, const std::string& fileName, const F32 animationTime) const
+	{
+		switch (assetType)
+		{
+		case EAssetType::Animation:
+		{
+			std::vector<SMatrix> boneTransforms = GEngine::GetWorld()->GetSystem<CAnimatorGraphSystem>()->ReadAssetAnimationPose(fileName, animationTime);
+			return std::move(RenderManager->RenderSkeletalAnimationAssetTexture(fileName, boneTransforms));
+		}
+		case EAssetType::AudioOneShot:
+			break;
+		case EAssetType::VisualFX:
+			break;
+		case EAssetType::SpriteAnimation:
+			break;
+		case EAssetType::AudioCollection:
+		case EAssetType::StaticMesh:
+		case EAssetType::SkeletalMesh:
+		case EAssetType::Texture:
+		case EAssetType::Material:
+		case EAssetType::Scene:
+		case EAssetType::Sequencer:
 		case EAssetType::None:
 		default:
 			break;

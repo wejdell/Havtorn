@@ -13,6 +13,7 @@ namespace Havtorn
 {
 	class CGraphicsFramework;
 	class CRenderManager;
+	class CEditorManager;
 	struct SEditorAssetRepresentation;
 
 	enum class EEditorTexture
@@ -54,7 +55,8 @@ namespace Havtorn
 		bool Init(CRenderManager* renderManager, const CGraphicsFramework* framework);
 		ID3D11ShaderResourceView* GetEditorTexture(EEditorTexture texture) const;
 
-		void* RenderAssetTexure(EAssetType assetType, const std::string& fileName);
+		void* RenderAssetTexure(EAssetType assetType, const std::string& fileName) const;
+		void* RenderAnimatedAssetTexture(const EAssetType assetType, const std::string& fileName, const F32 animationTime) const;
 
 		EDITOR_API void CreateAsset(const std::string& destinationPath, EAssetType assetType) const;
 		EDITOR_API std::string ConvertToHVA(const std::string& filePath, const std::string& destination, const SAssetImportOptions& importOptions) const;
