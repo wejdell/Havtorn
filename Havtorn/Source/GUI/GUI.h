@@ -405,6 +405,14 @@ namespace Havtorn
 		std::filesystem::directory_entry PickedEntry;
 	};
 
+	struct SRenderAssetCardResult
+	{
+		SRenderAssetCardResult() = default;
+		
+		bool IsDoubleClicked = false;
+		bool IsHovered = false;
+	};
+
 	class GUI_API GUI
 	{
 	public:
@@ -437,6 +445,7 @@ namespace Havtorn
 		static void End();
 
 		static void Text(const char* fmt, ...);
+		static void TextWrapped(const char* fmt, ...);
 		static void TextDisabled(const char* fmt, ...);
 		static void TextUnformatted(const char* text);
 		static void InputText(const char* label, CHavtornStaticString<255>* customString);
@@ -524,6 +533,7 @@ namespace Havtorn
 		static bool Checkbox(const char* label, bool& value);
 
 		static SAssetPickResult AssetPicker(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const std::function<SAssetInspectionData(std::filesystem::directory_entry)>& assetInspector);
+		static SRenderAssetCardResult RenderAssetCard(const char* label, const intptr_t& thumbnailID, const char* typeName, const SColor& color, void* dragDropPayloadToSet, U64 payLoadSize);
 
 		static bool Selectable(const char* label, const bool selected = false, const std::vector<ESelectableFlag>& flags = {}, const SVector2<F32>& size = SVector2<F32>(0.0f));
 
