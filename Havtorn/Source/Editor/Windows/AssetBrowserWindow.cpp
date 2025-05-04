@@ -385,9 +385,6 @@ namespace Havtorn
 		GUI::TableNextColumn();
 		GUI::PushID(outCurrentID++);
 
-		const auto& path = entry.path();
-		auto relativePath = std::filesystem::relative(path);
-		std::string filenameString = relativePath.filename().string();
 
 		if (entry.is_directory())
 		{
@@ -395,6 +392,9 @@ namespace Havtorn
 			{
 				CurrentDirectory = entry.path();
 			}
+
+			auto relativePath = std::filesystem::relative(entry.path());
+			std::string filenameString = relativePath.filename().string();
 
 			GUI::Text(filenameString.c_str());
 			if (GUI::IsItemHovered())
@@ -406,79 +406,50 @@ namespace Havtorn
 			if (!rep->TextureRef.IsShaderResourceValid())
 				rep->TextureRef = Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::FileIcon);
 
-			const bool isSelected = SelectedAsset.has_value() && entry == SelectedAsset.value();
-			
-			SVector2<F32> selectablePos = GUI::GetCursorPos();
-			SVector2<F32> framePadding = GUI::GetStyleVar(EStyleVar::FramePadding);
-
-			// TODO.NW: Figure out strange size diff between Selectable and ImageButton. Button looks nicer with a more appealing padding
-			// - Make asset cards like in UE, looks pretty good to combine into rectangular portraits with thumbnail, colored stripe for asset type,
-			// - and label.
-			if (GUI::Selectable("", isSelected, { ESelectableFlag::AllowDoubleClick, ESelectableFlag::AllowOverlap }, { GUI::ThumbnailSizeX + framePadding.X * 0.5f, GUI::ThumbnailSizeY + framePadding.Y * 0.5f }))
-			{
-				SelectedAsset = entry;
-				if (GUI::IsDoubleClick())
-				{
-					// NW: Open Tool depending on asset type?
-					HV_LOG_INFO("Clicked asset: %s", rep->Name.c_str());
-					SelectedAsset.reset();
-				}
-			}
-
-			if (GUI::BeginDragDropSource())
-			{
-				SGuiPayload payload = GUI::GetDragDropPayload();
-				if (payload.Data == nullptr)
-				{
-					GUI::SetDragDropPayload("AssetDrag", rep.get(), sizeof(SEditorAssetRepresentation));
-				}
-				payload = GUI::GetDragDropPayload();
-				SEditorAssetRepresentation* payloadAssetRep = reinterpret_cast<SEditorAssetRepresentation*>(payload.Data);
-				GUI::Text(payloadAssetRep->Name.c_str());
-
-				GUI::EndDragDropSource();
-			}
-
-			SVector2<F32> nextPos = GUI::GetCursorPos();
-			GUI::SetCursorPos(selectablePos);
-		
-			SColor imageBorderColor = SColor::White;
+			std::string assetTypeName;
+			SColor assetColor = SColor::White;
 			switch (rep->AssetType)
 			{
 			case EAssetType::Animation:
-				imageBorderColor = SColor::Blue;
+				assetTypeName = "SKELETAL ANIMATION";
+				assetColor = SColor::Blue;
 				break;
 			case EAssetType::Material:
-				imageBorderColor = SColor::Green;
+				assetTypeName = "MATERIAL";
+				assetColor = SColor::Green;
 				break;
 			case EAssetType::SkeletalMesh:
-				imageBorderColor = SColor::Magenta;
+				assetTypeName = "SKELETAL MESH";
+				assetColor = SColor::Magenta;
 				break;
 			case EAssetType::StaticMesh:
-				imageBorderColor = SColor::Teal;
+				assetTypeName = "STATIC MESH";
+				assetColor = SColor::Teal;
 				break;
 			case EAssetType::Texture:
-				imageBorderColor = SColor::Red;
+				assetTypeName = "TEXTURE";
+				assetColor = SColor::Red;
 				break;
 			default:
 				break;
 			}
-			imageBorderColor.A = SColor::ToU8Range(0.5f);
 
-			GUI::Image((intptr_t)rep->TextureRef.GetShaderResourceView(), { GUI::ThumbnailSizeX, GUI::ThumbnailSizeY }, SVector2<F32>(0.0f), SVector2<F32>(1.0f), SColor::White, imageBorderColor);
-			GUI::SetCursorPos(nextPos);
+			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), (intptr_t)rep->TextureRef.GetShaderResourceView(), assetTypeName.c_str(), assetColor, rep.get(), sizeof(SEditorAssetRepresentation));
 
-			if (GUI::IsItemHovered())
+			if (result.IsDoubleClicked)
+			{
+				// NW: Open Tool depending on asset type?
+				HV_LOG_INFO("Clicked asset: %s", rep->Name.c_str());
+				SelectedAsset.reset();
+			}
+
+			if (result.IsHovered)
 			{
 				if (rep->AssetType == EAssetType::Animation)
 				{
-					Manager->GetResourceManager()->AnimateAssetTexture(rep->TextureRef, rep->AssetType, path.string(), AnimatedThumbnailTime += GTime::Dt());
+					Manager->GetResourceManager()->AnimateAssetTexture(rep->TextureRef, rep->AssetType, entry.path().string(), AnimatedThumbnailTime += GTime::Dt());
 				}
 			}
-
-			GUI::Text(rep->Name.c_str());
-			if (GUI::IsItemHovered())
-				GUI::SetTooltip(rep->Name.c_str());
 		}
 
 		GUI::PopID();

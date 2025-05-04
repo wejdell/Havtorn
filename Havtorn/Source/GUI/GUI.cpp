@@ -104,6 +104,11 @@ namespace Havtorn
 			ImGui::TextV(fmt, args);
 		}
 
+		void TextWrapped(const char* fmt, va_list args)
+		{
+			ImGui::TextWrappedV(fmt, args);
+		}
+
 		void TextDisabled(const char* fmt, va_list args)
 		{
 			ImGui::TextDisabledV(fmt, args);
@@ -1014,6 +1019,14 @@ namespace Havtorn
 		va_end(args);
 	}
 
+	void GUI::TextWrapped(const char* fmt, ...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		Instance->Impl->TextWrapped(fmt, args);
+		va_end(args);
+	}
+
 	void GUI::TextDisabled(const char* fmt, ...)
 	{
 		va_list args;
@@ -1351,6 +1364,68 @@ namespace Havtorn
 
 		GUI::EndPopup();
 		return SAssetPickResult(EAssetPickerState::Active);
+	}
+
+	SRenderAssetCardResult GUI::RenderAssetCard(const char* label, const intptr_t& thumbnailID, const char* typeName, const SColor& color, void* dragDropPayloadToSet, U64 payLoadSize)
+	{
+		SRenderAssetCardResult result;
+
+		SVector2<F32> cardStartPos = GUI::GetCursorPos();
+		SVector2<F32> framePadding = GUI::GetStyleVar(EStyleVar::FramePadding);
+		
+		SVector2<F32> cardSize = { GUI::ThumbnailSizeX + framePadding.X * 0.5f, GUI::ThumbnailSizeY + framePadding.Y * 0.5f };
+		cardSize.Y *= 1.6f;
+		SVector2<F32> thumbnailSize = { GUI::ThumbnailSizeX + framePadding.X * 0.5f, GUI::ThumbnailSizeY + framePadding.Y * 0.5f + 4.0f };
+
+		GUI::AddRectFilled(GUI::GetCursorScreenPos(), cardSize, SColor(65));
+		GUI::SetCursorPos(cardStartPos);
+		GUI::AddRectFilled(GUI::GetCursorScreenPos(), thumbnailSize, SColor(40));
+		GUI::SetCursorPos(cardStartPos);
+
+		if (GUI::Selectable("", false, { ESelectableFlag::AllowDoubleClick, ESelectableFlag::AllowOverlap }, cardSize))
+		{
+			if (GUI::IsDoubleClick())
+			{
+				result.IsDoubleClicked = true;
+			}
+		}
+
+		if (GUI::BeginDragDropSource())
+		{
+			SGuiPayload payload = GUI::GetDragDropPayload();
+			if (payload.Data == nullptr)
+			{
+				GUI::SetDragDropPayload("AssetDrag", dragDropPayloadToSet, payLoadSize);
+			}
+			GUI::Text(label);
+
+			GUI::EndDragDropSource();
+		}
+
+		SVector2<F32> cardEndPos = GUI::GetCursorPos();
+		GUI::SetCursorPos(cardStartPos + SVector2<F32>(1.0f, 0.0f));
+
+		SColor imageBorderColor = color;
+		imageBorderColor.A = SColor::ToU8Range(0.5f);
+
+		GUI::Image(thumbnailID, { GUI::ThumbnailSizeX, GUI::ThumbnailSizeY }, SVector2<F32>(0.0f), SVector2<F32>(1.0f), SColor::White);
+
+		GUI::AddRectFilled(GUI::GetCursorScreenPos(), SVector2<F32>(cardSize.X, 2.0f), imageBorderColor);
+
+		GUI::SetCursorPos(GUI::GetCursorPos() + SVector2<F32>(0.0f, 4.0f));
+
+		if (GUI::IsItemHovered())
+		{
+			result.IsHovered = true;
+		}
+
+		GUI::TextWrapped(label);
+		if (GUI::IsItemHovered())
+			GUI::SetTooltip(label);
+
+		//GUI::TextDisabled(typeName);
+
+		return result;
 	}
 
 	bool GUI::Selectable(const char* label, const bool selected, const std::vector<ESelectableFlag>& flags, const SVector2<F32>& size)
