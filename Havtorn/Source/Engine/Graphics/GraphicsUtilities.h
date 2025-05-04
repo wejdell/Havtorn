@@ -24,7 +24,7 @@ namespace Havtorn
 	
 		ENGINE_API HRESULT CreateShaderResourceView(ID3D11Device* device, const std::string& filePath, ID3D11ShaderResourceView** outShaderResourceView);
 
-		ENGINE_API HRESULT CreateShaderResourceViewFromResource(ID3D11Device* device, const std::string& filePath, ID3D11ShaderResourceView** outShaderResourceView);
+		ENGINE_API HRESULT CreateShaderResourceViewFromSource(ID3D11Device* device, const std::string& filePath, ID3D11ShaderResourceView** outShaderResourceView);
 
 		ENGINE_API HRESULT CreateShaderResourceView(ID3D11Device* device, const void* data, U64 size, ETextureFormat format, ID3D11ShaderResourceView** outShaderResourceView);
 

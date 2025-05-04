@@ -39,9 +39,9 @@ namespace Havtorn
 		GUI::PushStyleVar(EStyleVar::WindowPadding, SVector2<F32>(0.0f));
 		GUI::PushStyleVar(EStyleVar::ItemSpacing, SVector2<F32>(0.0f));
 
-		intptr_t playButtonID = (intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::PlayIcon);
-		intptr_t pauseButtonID = (intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::PauseIcon);
-		intptr_t stopButtonID = (intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::StopIcon);
+		intptr_t playButtonID = (intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::PlayIcon).GetShaderResourceView();
+		intptr_t pauseButtonID = (intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::PauseIcon).GetShaderResourceView();
+		intptr_t stopButtonID = (intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::StopIcon).GetShaderResourceView();
 
 		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
 		{

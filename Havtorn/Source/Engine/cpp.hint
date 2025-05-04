@@ -4,3 +4,5 @@
 #define HV_ASSERT_BUFFER(x) static_assert((sizeof(x) % 16) == 0, "CB size not padded correctly");
 #define HAVTORN_API __declspec(dllexport)
 #define HAVTORN_API __declspec(dllimport)
+#define ENGINE_API __declspec(dllexport)
+#define ENGINE_API __declspec(dllimport)

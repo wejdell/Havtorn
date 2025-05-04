@@ -7,6 +7,7 @@
 #include <filesystem>
 
 #include <GUI.h>
+#include <Graphics/RenderingPrimitives/FullscreenTexture.h>
 
 struct ID3D11Device;
 struct ID3D11DeviceContext;
@@ -59,7 +60,7 @@ namespace Havtorn
 	{
 		EAssetType AssetType = EAssetType::None;
 		std::filesystem::directory_entry DirectoryEntry = {};
-		void* TextureRef = nullptr;
+		CRenderTexture TextureRef;
 		std::string Name = "";
 	};
 
@@ -84,7 +85,7 @@ namespace Havtorn
 
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry) const;
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromName(const std::string& assetName) const;
-		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromImageRef(void* imageRef) const;
+		//const Ptr<SEditorAssetRepresentation>& GetAssetRepFromImageRef(void* imageRef) const;
 		std::function<SAssetInspectionData(std::filesystem::directory_entry)> GetAssetInspectFunction() const;
 
 		void CreateAssetRep(const std::filesystem::path& destinationPath);

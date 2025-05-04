@@ -6,8 +6,7 @@
 #include <string>	
 
 #include <Havtorn.h>
-
-struct ID3D11ShaderResourceView;
+#include <Graphics/RenderingPrimitives/FullscreenTexture.h>
 
 namespace Havtorn
 {
@@ -30,7 +29,8 @@ namespace Havtorn
 		PointLightIcon,
 		SpotlightIcon,
 		DecalIcon,
-		Count
+		Count,
+		None = Count
 	};
 
 	struct SAssetImportOptions
@@ -53,10 +53,10 @@ namespace Havtorn
 		~CEditorResourceManager() = default;
 
 		bool Init(CRenderManager* renderManager, const CGraphicsFramework* framework);
-		ID3D11ShaderResourceView* GetEditorTexture(EEditorTexture texture) const;
+		const CRenderTexture& GetEditorTexture(EEditorTexture texture) const;
 
-		void* RenderAssetTexure(EAssetType assetType, const std::string& fileName) const;
-		void* RenderAnimatedAssetTexture(const EAssetType assetType, const std::string& fileName, const F32 animationTime) const;
+		CRenderTexture RenderAssetTexure(EAssetType assetType, const std::string& fileName) const;
+		void AnimateAssetTexture(CRenderTexture& assetTexture, const EAssetType assetType, const std::string& fileName, const F32 animationTime) const;
 
 		EDITOR_API void CreateAsset(const std::string& destinationPath, EAssetType assetType) const;
 		EDITOR_API std::string ConvertToHVA(const std::string& filePath, const std::string& destination, const SAssetImportOptions& importOptions) const;
@@ -70,7 +70,7 @@ namespace Havtorn
 		std::string GetFileName(EEditorTexture texture);
 	
 	private:
-		std::vector<ID3D11ShaderResourceView*> Textures;
+		std::vector<CRenderTexture> Textures;
 		CRenderManager* RenderManager = nullptr;
 		std::string ResourceAssetPath = "Resources/";
 	};

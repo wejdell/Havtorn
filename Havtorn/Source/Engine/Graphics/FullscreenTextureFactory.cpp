@@ -10,13 +10,79 @@
 
 namespace Havtorn
 {
-	bool CFullscreenTextureFactory::Init(CGraphicsFramework* framework)
+	HRESULT CreateShaderResourceViewFromAsset(ID3D11Device* device, const std::string& filePath, ID3D11ShaderResourceView** outShaderResourceView)
+	{
+		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
+		char* data = new char[fileSize];
+
+		GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
+
+		STextureFileHeader assetFile;
+		assetFile.Deserialize(data);
+
+		DirectX::ScratchImage scratchImage;
+		DirectX::TexMetadata metaData = {};
+
+		switch (assetFile.OriginalFormat)
+		{
+		case ETextureFormat::DDS:
+			GetMetadataFromDDSMemory(reinterpret_cast<uint8_t*>(assetFile.Data.data()), assetFile.Data.size(), DirectX::DDS_FLAGS_NONE, metaData);
+			LoadFromDDSMemory(reinterpret_cast<uint8_t*>(assetFile.Data.data()), assetFile.Data.size(), DirectX::DDS_FLAGS_NONE, &metaData, scratchImage);
+
+			break;
+		case ETextureFormat::TGA:
+			GetMetadataFromTGAMemory(reinterpret_cast<uint8_t*>(assetFile.Data.data()), assetFile.Data.size(), DirectX::TGA_FLAGS_NONE, metaData);
+			LoadFromTGAMemory(reinterpret_cast<uint8_t*>(assetFile.Data.data()), assetFile.Data.size(), DirectX::TGA_FLAGS_NONE, &metaData, scratchImage);
+			break;
+		}
+
+		delete[] data;
+		const DirectX::Image* image = scratchImage.GetImage(0, 0, 0);
+
+		return DirectX::CreateShaderResourceView(device, image, scratchImage.GetImageCount(), metaData, outShaderResourceView);
+	}
+
+
+	HRESULT CreateShaderResourceViewFromSource(ID3D11Device* device, const std::string& filePath, ID3D11ShaderResourceView** outShaderResourceView)
+	{
+		DirectX::ScratchImage scratchImage;
+		DirectX::TexMetadata metaData = {};
+
+		const auto widePath = new wchar_t[filePath.length() + 1];
+		std::ranges::copy(filePath, widePath);
+		widePath[filePath.length()] = 0;
+
+		ETextureFormat format = {};
+		if (const std::string extension = filePath.substr(filePath.size() - 4); extension == ".dds")
+			format = ETextureFormat::DDS;
+		else if (extension == ".tga")
+			format = ETextureFormat::TGA;
+
+		switch (format)
+		{
+		case ETextureFormat::DDS:
+			GetMetadataFromDDSFile(widePath, DirectX::DDS_FLAGS_NONE, metaData);
+			LoadFromDDSFile(widePath, DirectX::DDS_FLAGS_NONE, &metaData, scratchImage);
+
+			break;
+		case ETextureFormat::TGA:
+			GetMetadataFromTGAFile(widePath, DirectX::TGA_FLAGS_NONE, metaData);
+			LoadFromTGAFile(widePath, DirectX::TGA_FLAGS_NONE, &metaData, scratchImage);
+			break;
+		}
+		delete[] widePath;
+		const DirectX::Image* image = scratchImage.GetImage(0, 0, 0);
+
+		return DirectX::CreateShaderResourceView(device, image, scratchImage.GetImageCount(), metaData, outShaderResourceView);
+	}
+
+	bool CRenderTextureFactory::Init(CGraphicsFramework* framework)
 	{
 		Framework = framework;
 		return true;
 	}
 
-	CRenderTexture CFullscreenTextureFactory::CreateTexture(SVector2<U16> size, DXGI_FORMAT format, bool cpuAccess)
+	CRenderTexture CRenderTextureFactory::CreateTexture(SVector2<U16> size, DXGI_FORMAT format, bool cpuAccess)
 	{
 		D3D11_TEXTURE2D_DESC textureDesc = { 0 };
 		textureDesc.Width = size.X;
@@ -48,7 +114,7 @@ namespace Havtorn
 		return returnTexture;
 	}
 
-	CRenderTexture CFullscreenTextureFactory::CreateTexture(ID3D11Texture2D* texture, bool cpuAccess)
+	CRenderTexture CRenderTextureFactory::CreateTexture(ID3D11Texture2D* texture, bool cpuAccess)
 	{
 		D3D11_VIEWPORT* viewport = nullptr;
 		if (texture)
@@ -74,7 +140,7 @@ namespace Havtorn
 		return returnTexture;
 	}
 
-	CRenderTexture CFullscreenTextureFactory::CreateTexture(SVector2<U16> size, DXGI_FORMAT format, const std::string& filePath)
+	CRenderTexture CRenderTextureFactory::CreateTexture(SVector2<U16> size, DXGI_FORMAT format, const std::string& filePath)
 	{
 		D3D11_TEXTURE2D_DESC textureDesc = { 0 };
 		textureDesc.Width = size.X;
@@ -101,7 +167,7 @@ namespace Havtorn
 		return returnTexture;
 	}
 
-	CRenderTexture CFullscreenTextureFactory::CreateDepth(SVector2<U16> size, DXGI_FORMAT format)
+	CRenderTexture CRenderTextureFactory::CreateDepth(SVector2<U16> size, DXGI_FORMAT format)
 	{
 		DXGI_FORMAT stencilViewFormat = DXGI_FORMAT_UNKNOWN;
 		DXGI_FORMAT shaderResourceViewFormat = DXGI_FORMAT_UNKNOWN;
@@ -164,7 +230,21 @@ namespace Havtorn
 		return returnDepth;
 	}
 
-	CGBuffer CFullscreenTextureFactory::CreateGBuffer(SVector2<U16> size)
+	CRenderTexture CRenderTextureFactory::CreateSRVFromSource(const std::string& fileName)
+	{
+		CRenderTexture returnTexture;
+		ENGINE_HR_MESSAGE(CreateShaderResourceViewFromSource(Framework->GetDevice(), fileName, &returnTexture.ShaderResource), "SRV could not be created from %s", fileName.c_str());
+		return std::move(returnTexture);
+	}
+
+	CRenderTexture CRenderTextureFactory::CreateSRVFromAsset(const std::string& fileName)
+	{
+		CRenderTexture returnTexture;
+		ENGINE_HR_MESSAGE(CreateShaderResourceViewFromAsset(Framework->GetDevice(), fileName, &returnTexture.ShaderResource), "SRV could not be created from %s", fileName.c_str());
+		return std::move(returnTexture);
+	}
+
+	CGBuffer CRenderTextureFactory::CreateGBuffer(SVector2<U16> size)
 	{
 		std::array<DXGI_FORMAT, static_cast<size_t>(CGBuffer::EGBufferTextures::Count)> textureFormats =
 		{

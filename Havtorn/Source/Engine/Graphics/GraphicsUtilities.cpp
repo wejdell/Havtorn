@@ -73,7 +73,7 @@ namespace Havtorn
 		}
 
 
-		HRESULT CreateShaderResourceViewFromResource(ID3D11Device* device, const std::string& filePath, ID3D11ShaderResourceView** outShaderResourceView)
+		HRESULT CreateShaderResourceViewFromSource(ID3D11Device* device, const std::string& filePath, ID3D11ShaderResourceView** outShaderResourceView)
 		{
 			DirectX::ScratchImage scratchImage;
 			DirectX::TexMetadata metaData = {};

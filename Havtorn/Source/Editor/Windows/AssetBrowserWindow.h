@@ -7,6 +7,8 @@
 #include <GUI.h>
 #include <EditorResourceManager.h>
 
+#include <queue>
+
 namespace Havtorn
 {
 	class CFileSystem;

@@ -35,7 +35,7 @@ namespace Havtorn
 	{
 		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
 		{
-			intptr_t folderIconID = (intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::FolderIcon);
+			intptr_t folderIconID = (intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::FolderIcon).GetShaderResourceView();
 
 			{ // Menu Bar
 				GUI::BeginChild("MenuBar", SVector2<F32>(0.0f, 30.0f));
@@ -303,7 +303,7 @@ namespace Havtorn
 		F32 panelWidth = 256.0f;
 		I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
 
-		intptr_t assetPickerThumbnail = ImportOptions.AssetRep != nullptr ? (intptr_t)ImportOptions.AssetRep->TextureRef : intptr_t();
+		intptr_t assetPickerThumbnail = ImportOptions.AssetRep != nullptr ? (intptr_t)ImportOptions.AssetRep->TextureRef.GetShaderResourceView() : intptr_t();
 		SAssetPickResult result = GUI::AssetPicker("Skeletal Rig", "Skeletal Mesh", assetPickerThumbnail, "Assets/Tests", columnCount, Manager->GetAssetInspectFunction());
 
 		if (result.State == EAssetPickerState::AssetPicked)
@@ -347,7 +347,6 @@ namespace Havtorn
 						std::string newPath = (entry.path() / payloadAssetRep->DirectoryEntry.path().filename()).string().c_str();
 						Manager->RemoveAssetRep(payloadAssetRep->DirectoryEntry);
 						std::filesystem::rename(oldPath, newPath);
-						// TODO.NW: Figre out how to draw correct thumbnails when they're rendered last, must be some state persisting from ImGui
 						Manager->CreateAssetRep(newPath);
 					}
 				}
@@ -404,7 +403,7 @@ namespace Havtorn
 		else
 		{
 			const auto& rep = Manager->GetAssetRepFromDirEntry(entry);
-			if (!rep->TextureRef)
+			if (!rep->TextureRef.IsShaderResourceValid())
 				rep->TextureRef = Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::FileIcon);
 
 			const bool isSelected = SelectedAsset.has_value() && entry == SelectedAsset.value();
@@ -466,13 +465,15 @@ namespace Havtorn
 			}
 			imageBorderColor.A = SColor::ToU8Range(0.5f);
 
-			GUI::Image((intptr_t)rep->TextureRef, { GUI::ThumbnailSizeX, GUI::ThumbnailSizeY }, SVector2<F32>(0.0f), SVector2<F32>(1.0f), SColor::White, imageBorderColor);
+			GUI::Image((intptr_t)rep->TextureRef.GetShaderResourceView(), { GUI::ThumbnailSizeX, GUI::ThumbnailSizeY }, SVector2<F32>(0.0f), SVector2<F32>(1.0f), SColor::White, imageBorderColor);
 			GUI::SetCursorPos(nextPos);
 
 			if (GUI::IsItemHovered())
 			{
 				if (rep->AssetType == EAssetType::Animation)
-					rep->TextureRef = Manager->GetResourceManager()->RenderAnimatedAssetTexture(rep->AssetType, path.string(), AnimatedThumbnailTime += GTime::Dt());
+				{
+					Manager->GetResourceManager()->AnimateAssetTexture(rep->TextureRef, rep->AssetType, path.string(), AnimatedThumbnailTime += GTime::Dt());
+				}
 			}
 
 			GUI::Text(rep->Name.c_str());

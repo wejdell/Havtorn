@@ -9,7 +9,7 @@ namespace Havtorn
 	class CGBuffer
 	{
 	public:
-		friend class CFullscreenTextureFactory;
+		friend class CRenderTextureFactory;
 
 	public:
 		enum class EGBufferTextures

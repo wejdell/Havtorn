@@ -193,24 +193,24 @@ namespace Havtorn
 		return AssetRepresentations[0];
 	}
 
-	const Ptr<SEditorAssetRepresentation>& CEditorManager::GetAssetRepFromImageRef(void* imageRef) const
-	{
-		for (const auto& rep : AssetRepresentations)
-		{
-			if (imageRef == rep->TextureRef)
-				return rep;
-		}
+	//const Ptr<SEditorAssetRepresentation>& CEditorManager::GetAssetRepFromImageRef(void* imageRef) const
+	//{
+	//	for (const auto& rep : AssetRepresentations)
+	//	{
+	//		if (imageRef == rep->TextureRef)
+	//			return rep;
+	//	}
 
-		// NR: Return empty rep
-		return AssetRepresentations[0];
-	}
+	//	// NR: Return empty rep
+	//	return AssetRepresentations[0];
+	//}
 
 	std::function<SAssetInspectionData(std::filesystem::directory_entry)> CEditorManager::GetAssetInspectFunction() const
 	{
 		return [this](std::filesystem::directory_entry entry)
 			{
 				const Ptr<SEditorAssetRepresentation>& assetRep = GetAssetRepFromDirEntry(entry);
-				return SAssetInspectionData(assetRep->Name, (intptr_t)assetRep->TextureRef);
+				return SAssetInspectionData(assetRep->Name, (intptr_t)assetRep->TextureRef.GetShaderResourceView());
 			};
 	}
 
@@ -246,7 +246,10 @@ namespace Havtorn
 		auto& rep = GetAssetRepFromDirEntry(sourceEntry);
 		auto it = std::ranges::find(AssetRepresentations, rep);
 		if (it != AssetRepresentations.end())
+		{
+			it->get()->TextureRef.Release();
 			AssetRepresentations.erase(it);	
+		}
 	}
 
 	void CEditorManager::SetEditorTheme(EEditorColorTheme colorTheme, EEditorStyleTheme styleTheme)

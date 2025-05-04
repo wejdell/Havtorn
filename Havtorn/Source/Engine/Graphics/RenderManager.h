@@ -81,11 +81,15 @@ namespace Havtorn
 		ENGINE_API void LoadSpriteComponent(const std::string& filePath, SSpriteComponent* outSpriteComponent);
 		ENGINE_API void LoadSkeletalAnimationComponent(const std::string& filePath, SSkeletalAnimationComponent* outSkeletalAnimationComponent);
 
-		ENGINE_API void* RenderStaticMeshAssetTexture(const std::string& filePath);
-		ENGINE_API void* RenderSkeletalMeshAssetTexture(const std::string& filePath);
-		ENGINE_API void* RenderSkeletalAnimationAssetTexture(const std::string& filePath, const std::vector<SMatrix>& boneTransforms = {});
-		ENGINE_API void* GetTextureAssetTexture(const std::string& filePath);
-		ENGINE_API void* RenderMaterialAssetTexture(const std::string& filePath);
+		ENGINE_API CRenderTexture RenderStaticMeshAssetTexture(const std::string& filePath);
+		ENGINE_API CRenderTexture RenderSkeletalMeshAssetTexture(const std::string& filePath);
+		ENGINE_API CRenderTexture RenderSkeletalAnimationAssetTexture(const std::string& filePath, const std::vector<SMatrix>& boneTransforms = {});
+		ENGINE_API CRenderTexture RenderMaterialAssetTexture(const std::string& filePath);
+
+		ENGINE_API void RenderSkeletalAnimationAssetTexture(CRenderTexture& assetTexture, const std::string& filePath, const std::vector<SMatrix>& boneTransforms = {});
+
+		ENGINE_API CRenderTexture CreateRenderTextureFromSource(const std::string& filePath);
+		ENGINE_API CRenderTexture CreateRenderTextureFromAsset(const std::string& filePath);
 
 		ENGINE_API U64 GetEntityGUIDFromData(U64 dataIndex) const;
 
@@ -319,7 +323,7 @@ namespace Havtorn
 		CRenderStateManager RenderStateManager;
 		CFullscreenRenderer FullscreenRenderer;
 
-		CFullscreenTextureFactory FullscreenTextureFactory;
+		CRenderTextureFactory RenderTextureFactory;
 		CRenderTexture RenderedScene;
 		CRenderTexture Backbuffer;
 		CRenderTexture IntermediateTexture;

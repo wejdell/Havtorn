@@ -9,17 +9,17 @@
 
 namespace Havtorn
 {
-	ID3D11ShaderResourceView* CEditorResourceManager::GetEditorTexture(EEditorTexture texture) const
+	const CRenderTexture& CEditorResourceManager::GetEditorTexture(EEditorTexture texture) const
 	{
 		U64 index = static_cast<I64>(texture);
 		
 		if (index >= Textures.size())
-			return nullptr;
+			return Textures[STATIC_U64(EEditorTexture::None)];
 
 		return Textures[index];
 	}
 
-	void* CEditorResourceManager::RenderAssetTexure(EAssetType assetType, const std::string& filePath) const
+	CRenderTexture CEditorResourceManager::RenderAssetTexure(EAssetType assetType, const std::string& filePath) const
 	{
 		switch (assetType)
 		{
@@ -28,7 +28,8 @@ namespace Havtorn
 		case EAssetType::SkeletalMesh:
 			return std::move(RenderManager->RenderSkeletalMeshAssetTexture(filePath));
 		case EAssetType::Texture:
-			return std::move(RenderManager->GetTextureAssetTexture(filePath));
+			//return std::move(RenderManager->GetTextureAssetTexture(filePath));
+			return std::move(RenderManager->CreateRenderTextureFromAsset(filePath));
 		case EAssetType::Material:
 			return std::move(RenderManager->RenderMaterialAssetTexture(filePath));
 		case EAssetType::Animation:
@@ -48,17 +49,17 @@ namespace Havtorn
 			break;
 		}
 
-		return nullptr;
+		return CRenderTexture();
 	}
 
-	void* CEditorResourceManager::RenderAnimatedAssetTexture(const EAssetType assetType, const std::string& fileName, const F32 animationTime) const
+	void CEditorResourceManager::AnimateAssetTexture(CRenderTexture& assetTexture, const EAssetType assetType, const std::string& fileName, const F32 animationTime) const
 	{
 		switch (assetType)
 		{
 		case EAssetType::Animation:
 		{
 			std::vector<SMatrix> boneTransforms = GEngine::GetWorld()->GetSystem<CAnimatorGraphSystem>()->ReadAssetAnimationPose(fileName, animationTime);
-			return std::move(RenderManager->RenderSkeletalAnimationAssetTexture(fileName, boneTransforms));
+			RenderManager->RenderSkeletalAnimationAssetTexture(assetTexture, fileName, boneTransforms);
 		}
 		case EAssetType::AudioOneShot:
 			break;
@@ -77,8 +78,6 @@ namespace Havtorn
 		default:
 			break;
 		}
-
-		return nullptr;
 	}
 
 	void CEditorResourceManager::CreateAsset(const std::string& destinationPath, EAssetType assetType) const
@@ -282,13 +281,13 @@ namespace Havtorn
 //#define ROUGHNESS           9
 //#define EMISSIVE            10
 
-	bool CEditorResourceManager::Init(CRenderManager* renderManager, const CGraphicsFramework* framework)
+	bool CEditorResourceManager::Init(CRenderManager* renderManager, const CGraphicsFramework* /*framework*/)
 	{
 		RenderManager = renderManager;
-		ID3D11Device* device = framework->GetDevice();
+		//ID3D11Device* device = framework->GetDevice();
 		I64 textureCount = static_cast<I64>(EEditorTexture::Count);
 		
-		Textures.assign(textureCount, nullptr);
+		Textures.resize(textureCount);
 
 		CreateMaterial("Assets/Materials/M_Checkboard_128x128.hva");
 
@@ -318,9 +317,13 @@ namespace Havtorn
 
 		for (I64 index = 0; index < textureCount; index++)
 		{
-			UGraphicsUtils::CreateShaderResourceViewFromResource(device, GetFileName(static_cast<EEditorTexture>(index)), &Textures[index]);
-			GEngine::GetTextureBank()->AddTexture(Textures[index]);
+			//UGraphicsUtils::CreateShaderResourceViewFromSource(device, GetFileName(static_cast<EEditorTexture>(index)), &Textures[index]);
+			Textures[index] = RenderManager->CreateRenderTextureFromSource(GetFileName(static_cast<EEditorTexture>(index)));
+			GEngine::GetTextureBank()->AddTexture(Textures[index].GetShaderResourceView());
 		}
+
+		// Adding None texture at the end
+		Textures.emplace_back(CRenderTexture());
 
 		return true;
 	}

@@ -95,14 +95,6 @@ namespace Havtorn
 		Context->Unmap(Texture, 0);
 	}
 
-	void CRenderTexture::Release()
-	{
-		if (IsRenderTexture)
-			ReleaseTexture();
-		else
-			ReleaseDepth();
-	}
-
 	void CRenderTexture::ReleaseTexture()
 	{
 		Context = nullptr;
@@ -117,7 +109,8 @@ namespace Havtorn
 			ShaderResource = nullptr;
 		}
 
-		SAFE_DELETE(Viewport);
+		if (Viewport)
+			SAFE_DELETE(Viewport);
 	}
 
 	void CRenderTexture::ReleaseDepth()
@@ -134,7 +127,21 @@ namespace Havtorn
 			ShaderResource = nullptr;
 		}
 
-		SAFE_DELETE(Viewport);
+		if (Viewport)
+			SAFE_DELETE(Viewport);
+	}
+
+	bool CRenderTexture::IsShaderResourceValid() const
+	{
+		return ShaderResource != nullptr;
+	}
+
+	void CRenderTexture::Release()
+	{
+		if (IsRenderTexture)
+			ReleaseTexture();
+		else
+			ReleaseDepth();
 	}
 
 	ID3D11Texture2D* const CRenderTexture::GetTexture() const
@@ -144,6 +151,7 @@ namespace Havtorn
 
 	ID3D11ShaderResourceView* const CRenderTexture::GetShaderResourceView() const
 	{
+		// TODO.NW: Make GetSRVAsIntPtr?
 		return ShaderResource;
 	}
 

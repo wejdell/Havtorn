@@ -44,13 +44,13 @@ namespace Havtorn
 		Framework = framework;
 
 		ENGINE_ERROR_BOOL_MESSAGE(FullscreenRenderer.Init(framework, this), "Failed to Init Fullscreen Renderer.");
-		ENGINE_ERROR_BOOL_MESSAGE(FullscreenTextureFactory.Init(framework), "Failed to Init Fullscreen Texture Factory.");
+		ENGINE_ERROR_BOOL_MESSAGE(RenderTextureFactory.Init(framework), "Failed to Init Fullscreen Texture Factory.");
 		ENGINE_ERROR_BOOL_MESSAGE(RenderStateManager.Init(framework), "Failed to Init Render State Manager.");
 
 		ID3D11Texture2D* backbufferTexture = framework->GetBackbufferTexture();
 		ENGINE_ERROR_BOOL_MESSAGE(backbufferTexture, "Backbuffer Texture is null.");
 
-		Backbuffer = FullscreenTextureFactory.CreateTexture(backbufferTexture);
+		Backbuffer = RenderTextureFactory.CreateTexture(backbufferTexture);
 		CurrentWindowResolution = platformManager->GetResolution();
 		InitRenderTextures(CurrentWindowResolution);
 
@@ -73,7 +73,7 @@ namespace Havtorn
 		ID3D11Texture2D* backbufferTexture = framework->GetBackbufferTexture();
 		ENGINE_ERROR_BOOL_MESSAGE(backbufferTexture, "Backbuffer Texture is null.");
 
-		Backbuffer = FullscreenTextureFactory.CreateTexture(backbufferTexture);
+		Backbuffer = RenderTextureFactory.CreateTexture(backbufferTexture);
 		InitRenderTextures(newResolution);
 
 		return true;
@@ -81,42 +81,42 @@ namespace Havtorn
 
 	void CRenderManager::InitRenderTextures(SVector2<U16> windowResolution)
 	{
-		RenderedScene = FullscreenTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
-		LitScene = FullscreenTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
-		IntermediateDepth = FullscreenTextureFactory.CreateDepth(windowResolution, DXGI_FORMAT_R24G8_TYPELESS);
-		EditorWidgetDepth = FullscreenTextureFactory.CreateDepth(windowResolution, DXGI_FORMAT_R24G8_TYPELESS);
+		RenderedScene = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		LitScene = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		IntermediateDepth = RenderTextureFactory.CreateDepth(windowResolution, DXGI_FORMAT_R24G8_TYPELESS);
+		EditorWidgetDepth = RenderTextureFactory.CreateDepth(windowResolution, DXGI_FORMAT_R24G8_TYPELESS);
 
 		ShadowAtlasResolution = { 8192.0f, 8192.0f };
 		InitShadowmapAtlas(ShadowAtlasResolution);
 
-		DepthCopy = FullscreenTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R32_FLOAT);
-		DownsampledDepth = FullscreenTextureFactory.CreateTexture(windowResolution / 2, DXGI_FORMAT_R32_FLOAT);
+		DepthCopy = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R32_FLOAT);
+		DownsampledDepth = RenderTextureFactory.CreateTexture(windowResolution / 2, DXGI_FORMAT_R32_FLOAT);
 		
-		IntermediateTexture = FullscreenTextureFactory.CreateTexture(SVector2<U16>(STATIC_U16(ShadowAtlasResolution.X), STATIC_U16(ShadowAtlasResolution.Y)), DXGI_FORMAT_R16G16B16A16_FLOAT);
+		IntermediateTexture = RenderTextureFactory.CreateTexture(SVector2<U16>(STATIC_U16(ShadowAtlasResolution.X), STATIC_U16(ShadowAtlasResolution.Y)), DXGI_FORMAT_R16G16B16A16_FLOAT);
 
-		HalfSizeTexture = FullscreenTextureFactory.CreateTexture(windowResolution / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
-		QuarterSizeTexture = FullscreenTextureFactory.CreateTexture(windowResolution / 4, DXGI_FORMAT_R16G16B16A16_FLOAT);
-		BlurTexture1 = FullscreenTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
-		BlurTexture2 = FullscreenTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
-		VignetteTexture = FullscreenTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		HalfSizeTexture = RenderTextureFactory.CreateTexture(windowResolution / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		QuarterSizeTexture = RenderTextureFactory.CreateTexture(windowResolution / 4, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		BlurTexture1 = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		BlurTexture2 = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		VignetteTexture = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
 
-		VolumetricAccumulationBuffer = FullscreenTextureFactory.CreateTexture(windowResolution / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
-		VolumetricBlurTexture = FullscreenTextureFactory.CreateTexture(windowResolution / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		VolumetricAccumulationBuffer = RenderTextureFactory.CreateTexture(windowResolution / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		VolumetricBlurTexture = RenderTextureFactory.CreateTexture(windowResolution / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
 
-		SSAOBuffer = FullscreenTextureFactory.CreateTexture(windowResolution / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
-		SSAOBlurTexture = FullscreenTextureFactory.CreateTexture(windowResolution / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		SSAOBuffer = RenderTextureFactory.CreateTexture(windowResolution / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		SSAOBlurTexture = RenderTextureFactory.CreateTexture(windowResolution / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
 
-		TonemappedTexture = FullscreenTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
-		AntiAliasedTexture = FullscreenTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
-		EditorDataTexture = FullscreenTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R32G32_UINT, true);
-		SkeletalAnimationDataTextureCPU = FullscreenTextureFactory.CreateTexture({ 256, 256 }, DXGI_FORMAT_R32G32B32A32_FLOAT, true);
-		SkeletalAnimationDataTextureGPU = FullscreenTextureFactory.CreateTexture({ 256, 256 }, DXGI_FORMAT_R32G32B32A32_FLOAT);
-		GBuffer = FullscreenTextureFactory.CreateGBuffer(windowResolution);
+		TonemappedTexture = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		AntiAliasedTexture = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		EditorDataTexture = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R32G32_UINT, true);
+		SkeletalAnimationDataTextureCPU = RenderTextureFactory.CreateTexture({ 256, 256 }, DXGI_FORMAT_R32G32B32A32_FLOAT, true);
+		SkeletalAnimationDataTextureGPU = RenderTextureFactory.CreateTexture({ 256, 256 }, DXGI_FORMAT_R32G32B32A32_FLOAT);
+		GBuffer = RenderTextureFactory.CreateGBuffer(windowResolution);
 	}
 
 	void CRenderManager::InitShadowmapAtlas(SVector2<F32> atlasResolution)
 	{
-		ShadowAtlasDepth = FullscreenTextureFactory.CreateDepth(SVector2<U16>(STATIC_U16(atlasResolution.X), STATIC_U16(atlasResolution.Y)), DXGI_FORMAT_R32_TYPELESS);
+		ShadowAtlasDepth = RenderTextureFactory.CreateDepth(SVector2<U16>(STATIC_U16(atlasResolution.X), STATIC_U16(atlasResolution.Y)), DXGI_FORMAT_R32_TYPELESS);
 
 		auto initShadowmapLOD = [this, atlasResolution](U16 mapsInLod, U16 startIndex, const SVector2<F32>& topLeftCoordinate)
 			{
@@ -520,10 +520,10 @@ namespace Havtorn
 		return true;
 	}
 
-	void* CRenderManager::RenderStaticMeshAssetTexture(const std::string& filePath)
+	CRenderTexture CRenderManager::RenderStaticMeshAssetTexture(const std::string& filePath)
 	{
-		SStaticMeshComponent* staticMeshComp = new SStaticMeshComponent();
-		LoadStaticMeshComponent(filePath, staticMeshComp);
+		SStaticMeshComponent staticMeshComp = SStaticMeshComponent();
+		LoadStaticMeshComponent(filePath, &staticMeshComp);
 
 		F32 aspectRatio = 1.0f;
 		F32 marginPercentage = 1.5f;
@@ -531,11 +531,11 @@ namespace Havtorn
 
 		STransform camTransform;
 		camTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(30.0f, 30.0f, 0.0f));
-		camTransform.Translate(SVector(staticMeshComp->BoundsCenter.X, staticMeshComp->BoundsCenter.Y, -UMathUtilities::GetFocusDistanceForBounds(staticMeshComp->BoundsCenter, SVector::GetAbsMaxKeepValue(staticMeshComp->BoundsMax, staticMeshComp->BoundsMin), fov, marginPercentage)));
+		camTransform.Translate(SVector(staticMeshComp.BoundsCenter.X, staticMeshComp.BoundsCenter.Y, -UMathUtilities::GetFocusDistanceForBounds(staticMeshComp.BoundsCenter, SVector::GetAbsMaxKeepValue(staticMeshComp.BoundsMax, staticMeshComp.BoundsMin), fov, marginPercentage)));
 		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(fov.Y), aspectRatio, 0.001f, 100.0f);
 
-		CRenderTexture renderTexture = FullscreenTextureFactory.CreateTexture(SVector2<U16>(256), DXGI_FORMAT_R16G16B16A16_FLOAT);
-		CRenderTexture renderDepth = FullscreenTextureFactory.CreateDepth(SVector2<U16>(256), DXGI_FORMAT_R24G8_TYPELESS);
+		CRenderTexture renderTexture = RenderTextureFactory.CreateTexture(SVector2<U16>(256), DXGI_FORMAT_R16G16B16A16_FLOAT);
+		CRenderTexture renderDepth = RenderTextureFactory.CreateDepth(SVector2<U16>(256), DXGI_FORMAT_R24G8_TYPELESS);
 		
 		// TODO.NW: Figure out why the depth doesn't work
 		ID3D11RenderTargetView* renderTargets[1] = { renderTexture.GetRenderTargetView() };
@@ -563,9 +563,9 @@ namespace Havtorn
 		RenderStateManager.PSSetShader(EPixelShaders::EditorPreview);
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
-		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(staticMeshComp->DrawCallData.size()); drawCallIndex++)
+		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(staticMeshComp.DrawCallData.size()); drawCallIndex++)
 		{
-			const SDrawCallData& drawData = staticMeshComp->DrawCallData[drawCallIndex];
+			const SDrawCallData& drawData = staticMeshComp.DrawCallData[drawCallIndex];
 			RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[drawData.VertexBufferIndex], RenderStateManager.MeshVertexStrides[drawData.VertexStrideIndex], RenderStateManager.MeshVertexOffsets[drawData.VertexOffsetIndex]);
 			RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[drawData.IndexBufferIndex]);
 			RenderStateManager.DrawIndexed(drawData.IndexCount, 0, 0);
@@ -575,18 +575,17 @@ namespace Havtorn
 		RenderStateManager.ClearState();
 		Backbuffer.SetAsActiveTarget();
 
-		void* resource = renderTexture.MoveShaderResourceView();
-		renderTexture.Release();
+		//void* resource = renderTexture.MoveShaderResourceView();
+		//renderTexture.Release();
 		renderDepth.Release();
-		delete staticMeshComp;
 
-		return resource;
+		return std::move(renderTexture);
 	}
 
-	void* CRenderManager::RenderSkeletalMeshAssetTexture(const std::string& filePath)
+	CRenderTexture CRenderManager::RenderSkeletalMeshAssetTexture(const std::string& filePath)
 	{
-		SSkeletalMeshComponent* skeletalMeshComp = new SSkeletalMeshComponent();
-		LoadSkeletalMeshComponent(filePath, skeletalMeshComp);
+		SSkeletalMeshComponent skeletalMeshComp = SSkeletalMeshComponent();
+		LoadSkeletalMeshComponent(filePath, &skeletalMeshComp);
 
 		F32 aspectRatio = 1.0f;
 		F32 marginPercentage = 1.5f;
@@ -594,11 +593,11 @@ namespace Havtorn
 
 		STransform camTransform;
 		camTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(30.0f, 30.0f, 0.0f));
-		camTransform.Translate(SVector(skeletalMeshComp->BoundsCenter.X, skeletalMeshComp->BoundsCenter.Y, -UMathUtilities::GetFocusDistanceForBounds(skeletalMeshComp->BoundsCenter, SVector::GetAbsMaxKeepValue(skeletalMeshComp->BoundsMax, skeletalMeshComp->BoundsMin), fov, marginPercentage)));
+		camTransform.Translate(SVector(skeletalMeshComp.BoundsCenter.X, skeletalMeshComp.BoundsCenter.Y, -UMathUtilities::GetFocusDistanceForBounds(skeletalMeshComp.BoundsCenter, SVector::GetAbsMaxKeepValue(skeletalMeshComp.BoundsMax, skeletalMeshComp.BoundsMin), fov, marginPercentage)));
 		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(fov.Y), aspectRatio, 0.001f, 100.0f);
 
-		CRenderTexture renderTexture = FullscreenTextureFactory.CreateTexture(SVector2<U16>(256), DXGI_FORMAT_R16G16B16A16_FLOAT);
-		CRenderTexture renderDepth = FullscreenTextureFactory.CreateDepth(SVector2<U16>(256), DXGI_FORMAT_R24G8_TYPELESS);
+		CRenderTexture renderTexture = RenderTextureFactory.CreateTexture(SVector2<U16>(256), DXGI_FORMAT_R16G16B16A16_FLOAT);
+		CRenderTexture renderDepth = RenderTextureFactory.CreateDepth(SVector2<U16>(256), DXGI_FORMAT_R24G8_TYPELESS);
 
 		const std::vector<SMatrix>& matrices = { SMatrix::Identity };
 		InstancedTransformBuffer.BindBuffer(matrices);
@@ -635,9 +634,9 @@ namespace Havtorn
 		
 		RenderStateManager.VSSetConstantBuffer(2, BoneBuffer);
 
-		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(skeletalMeshComp->DrawCallData.size()); drawCallIndex++)
+		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(skeletalMeshComp.DrawCallData.size()); drawCallIndex++)
 		{
-			const SDrawCallData& drawData = skeletalMeshComp->DrawCallData[drawCallIndex];
+			const SDrawCallData& drawData = skeletalMeshComp.DrawCallData[drawCallIndex];
 			const std::vector<CDataBuffer> buffers = { RenderStateManager.VertexBuffers[drawData.VertexBufferIndex], InstancedAnimationDataBuffer, InstancedTransformBuffer };
 			const U32 strides[3] = { RenderStateManager.MeshVertexStrides[drawData.VertexStrideIndex], sizeof(SVector2<U32>), sizeof(SMatrix) };
 			const U32 offsets[3] = { RenderStateManager.MeshVertexOffsets[drawData.VertexOffsetIndex], 0, 0 };
@@ -650,110 +649,22 @@ namespace Havtorn
 		RenderStateManager.ClearState();
 		Backbuffer.SetAsActiveTarget();
 
-		void* resource = renderTexture.MoveShaderResourceView();
-		renderTexture.Release();
+		//void* resource = renderTexture.MoveShaderResourceView();
+		//renderTexture.Release();
 		renderDepth.Release();
-		delete skeletalMeshComp;
 
-		return resource;
+		return std::move(renderTexture);
 	}
 
-	ENGINE_API void* CRenderManager::RenderSkeletalAnimationAssetTexture(const std::string& filePath, const std::vector<SMatrix>& boneTransforms)
+	CRenderTexture CRenderManager::RenderSkeletalAnimationAssetTexture(const std::string& filePath, const std::vector<SMatrix>& boneTransforms)
 	{
-		SSkeletalAnimationComponent* skeletalAnimationComp = new SSkeletalAnimationComponent();
-		LoadSkeletalAnimationComponent(filePath, skeletalAnimationComp);
+		CRenderTexture renderTexture = RenderTextureFactory.CreateTexture(SVector2<U16>(256), DXGI_FORMAT_R16G16B16A16_FLOAT);
+		RenderSkeletalAnimationAssetTexture(renderTexture, filePath, boneTransforms);
 
-		SSkeletalMeshComponent* skeletalMeshComp = new SSkeletalMeshComponent();
-		LoadSkeletalMeshComponent(skeletalAnimationComp->SkeletonName, skeletalMeshComp);
-
-		F32 aspectRatio = 1.0f;
-		F32 marginPercentage = 1.5f;
-		SVector2<F32> fov = { aspectRatio * 70.0f, 70.0f };
-
-		STransform camTransform;
-		camTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(30.0f, 30.0f, 0.0f));
-		camTransform.Translate(SVector(skeletalMeshComp->BoundsCenter.X, skeletalMeshComp->BoundsCenter.Y, -UMathUtilities::GetFocusDistanceForBounds(skeletalMeshComp->BoundsCenter, SVector::GetAbsMaxKeepValue(skeletalMeshComp->BoundsMax, skeletalMeshComp->BoundsMin), fov, marginPercentage)));
-		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(fov.Y), aspectRatio, 0.001f, 100.0f);
-
-		CRenderTexture renderTexture = FullscreenTextureFactory.CreateTexture(SVector2<U16>(256), DXGI_FORMAT_R16G16B16A16_FLOAT);
-		CRenderTexture renderDepth = FullscreenTextureFactory.CreateDepth(SVector2<U16>(256), DXGI_FORMAT_R24G8_TYPELESS);
-
-		const std::vector<SMatrix>& matrices = { SMatrix::Identity };
-		InstancedTransformBuffer.BindBuffer(matrices);
-
-		// TODO.NW: Figure out why the depth doesn't work
-		ID3D11RenderTargetView* renderTargets[1] = { renderTexture.GetRenderTargetView() };
-		RenderStateManager.OMSetRenderTargets(1, renderTargets, nullptr/*renderDepth.GetDepthStencilView()*/);
-		RenderStateManager.RSSetViewports(1, renderDepth.GetViewport());
-
-		FrameBufferData.ToCameraFromWorld = camTransform.GetMatrix().FastInverse();
-		FrameBufferData.ToWorldFromCamera = camTransform.GetMatrix();
-		FrameBufferData.ToProjectionFromCamera = camProjection;
-		FrameBufferData.ToCameraFromProjection = camProjection.Inverse();
-		FrameBufferData.CameraPosition = camTransform.GetMatrix().GetTranslation4();
-		FrameBuffer.BindBuffer(FrameBufferData);
-
-		std::vector<SMatrix> bones = boneTransforms;
-		if (bones.empty())
-			bones.resize(64, SMatrix::Identity);
-		BoneBuffer.BindBuffer(bones);
-
-		RenderStateManager.VSSetConstantBuffer(0, FrameBuffer);
-		RenderStateManager.PSSetConstantBuffer(0, FrameBuffer);
-
-		ObjectBufferData.ToWorldFromObject = SMatrix();
-		ObjectBuffer.BindBuffer(ObjectBufferData);
-
-		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
-		RenderStateManager.IASetTopology(ETopologies::TriangleList);
-		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans);
-
-		RenderStateManager.VSSetShader(EVertexShaders::EditorPreviewSkeletalMesh);
-		RenderStateManager.PSSetShader(EPixelShaders::EditorPreview);
-		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
-
-		RenderStateManager.VSSetConstantBuffer(2, BoneBuffer);
-
-		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(skeletalMeshComp->DrawCallData.size()); drawCallIndex++)
-		{
-			const SDrawCallData& drawData = skeletalMeshComp->DrawCallData[drawCallIndex];
-			const std::vector<CDataBuffer> buffers = { RenderStateManager.VertexBuffers[drawData.VertexBufferIndex], InstancedAnimationDataBuffer, InstancedTransformBuffer };
-			const U32 strides[3] = { RenderStateManager.MeshVertexStrides[drawData.VertexStrideIndex], sizeof(SVector2<U32>), sizeof(SMatrix) };
-			const U32 offsets[3] = { RenderStateManager.MeshVertexOffsets[drawData.VertexOffsetIndex], 0, 0 };
-			RenderStateManager.IASetVertexBuffers(0, 3, buffers, strides, offsets);
-			RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[drawData.IndexBufferIndex]);
-			RenderStateManager.DrawIndexed(drawData.IndexCount, 0, 0);
-			CRenderManager::NumberOfDrawCallsThisFrame++;
-		}
-
-		RenderStateManager.ClearState();
-		Backbuffer.SetAsActiveTarget();
-
-		void* resource = renderTexture.MoveShaderResourceView();
-		renderTexture.Release();
-		renderDepth.Release();
-		delete skeletalAnimationComp;
-		delete skeletalMeshComp;
-
-		return resource;
+		return std::move(renderTexture);
 	}
 
-	void* CRenderManager::GetTextureAssetTexture(const std::string& filePath)
-	{
-		// Asset Loading
-		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
-		char* data = new char[fileSize];
-
-		GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
-
-		STextureFileHeader assetFile;
-		assetFile.Deserialize(data);
-		STextureAsset asset = STextureAsset(assetFile, Framework->GetDevice());
-
-		return asset.ShaderResourceView;
-	}
-
-	void* CRenderManager::RenderMaterialAssetTexture(const std::string& filePath)
+	CRenderTexture CRenderManager::RenderMaterialAssetTexture(const std::string& filePath)
 	{
 		// TODO.NW: Refactor this to take all the data we need to serialize and then set up the state once: render
 
@@ -765,9 +676,9 @@ namespace Havtorn
 		camTransform.Rotate({ UMath::DegToRad(-30.0f), UMath::DegToRad(30.0f), 0.0f });
 		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), 1.0f, 0.01f, 10.0f);
 
-		CRenderTexture renderTexture = FullscreenTextureFactory.CreateTexture(SVector2<U16>(256), DXGI_FORMAT_R16G16B16A16_FLOAT);
-		CRenderTexture renderDepth = FullscreenTextureFactory.CreateDepth(SVector2<U16>(256), DXGI_FORMAT_R32_TYPELESS);
-		CGBuffer gBuffer = FullscreenTextureFactory.CreateGBuffer(SVector2<U16>(256));
+		CRenderTexture renderTexture = RenderTextureFactory.CreateTexture(SVector2<U16>(256), DXGI_FORMAT_R16G16B16A16_FLOAT);
+		CRenderTexture renderDepth = RenderTextureFactory.CreateDepth(SVector2<U16>(256), DXGI_FORMAT_R32_TYPELESS);
+		CGBuffer gBuffer = RenderTextureFactory.CreateGBuffer(SVector2<U16>(256));
 
 		gBuffer.SetAsActiveTarget();
 		RenderStateManager.RSSetViewports(1, renderDepth.GetViewport());
@@ -913,11 +824,95 @@ namespace Havtorn
 		RenderStateManager.ClearState();
 		Backbuffer.SetAsActiveTarget();
 
-		void* resource = renderTexture.MoveShaderResourceView();
-		renderTexture.Release();
+		//void* resource = renderTexture.MoveShaderResourceView();
+		//renderTexture.Release();
 		renderDepth.Release();
 
-		return resource;
+		return std::move(renderTexture);
+	}
+
+	void CRenderManager::RenderSkeletalAnimationAssetTexture(CRenderTexture& assetTextureTarget, const std::string& filePath, const std::vector<SMatrix>& boneTransforms)
+	{
+		SSkeletalAnimationComponent skeletalAnimationComp = SSkeletalAnimationComponent();
+		LoadSkeletalAnimationComponent(filePath, &skeletalAnimationComp);
+
+		SSkeletalMeshComponent skeletalMeshComp = SSkeletalMeshComponent();
+		LoadSkeletalMeshComponent(skeletalAnimationComp.SkeletonName, &skeletalMeshComp);
+
+		F32 aspectRatio = 1.0f;
+		F32 marginPercentage = 1.5f;
+		SVector2<F32> fov = { aspectRatio * 70.0f, 70.0f };
+
+		STransform camTransform;
+		camTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(30.0f, 30.0f, 0.0f));
+		camTransform.Translate(SVector(skeletalMeshComp.BoundsCenter.X, skeletalMeshComp.BoundsCenter.Y, -UMathUtilities::GetFocusDistanceForBounds(skeletalMeshComp.BoundsCenter, SVector::GetAbsMaxKeepValue(skeletalMeshComp.BoundsMax, skeletalMeshComp.BoundsMin), fov, marginPercentage)));
+		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(fov.Y), aspectRatio, 0.001f, 100.0f);
+
+		CRenderTexture renderDepth = RenderTextureFactory.CreateDepth(SVector2<U16>(256), DXGI_FORMAT_R24G8_TYPELESS);
+
+		const std::vector<SMatrix>& matrices = { SMatrix::Identity };
+		InstancedTransformBuffer.BindBuffer(matrices);
+
+		// TODO.NW: Figure out why the depth doesn't work
+		assetTextureTarget.ClearTexture();
+		ID3D11RenderTargetView* renderTargets[1] = { assetTextureTarget.GetRenderTargetView() };
+		RenderStateManager.OMSetRenderTargets(1, renderTargets, nullptr/*renderDepth.GetDepthStencilView()*/);
+		RenderStateManager.RSSetViewports(1, renderDepth.GetViewport());
+
+		FrameBufferData.ToCameraFromWorld = camTransform.GetMatrix().FastInverse();
+		FrameBufferData.ToWorldFromCamera = camTransform.GetMatrix();
+		FrameBufferData.ToProjectionFromCamera = camProjection;
+		FrameBufferData.ToCameraFromProjection = camProjection.Inverse();
+		FrameBufferData.CameraPosition = camTransform.GetMatrix().GetTranslation4();
+		FrameBuffer.BindBuffer(FrameBufferData);
+
+		std::vector<SMatrix> bones = boneTransforms;
+		if (bones.empty())
+			bones.resize(64, SMatrix::Identity);
+		BoneBuffer.BindBuffer(bones);
+
+		RenderStateManager.VSSetConstantBuffer(0, FrameBuffer);
+		RenderStateManager.PSSetConstantBuffer(0, FrameBuffer);
+
+		ObjectBufferData.ToWorldFromObject = SMatrix();
+		ObjectBuffer.BindBuffer(ObjectBufferData);
+
+		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
+		RenderStateManager.IASetTopology(ETopologies::TriangleList);
+		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans);
+
+		RenderStateManager.VSSetShader(EVertexShaders::EditorPreviewSkeletalMesh);
+		RenderStateManager.PSSetShader(EPixelShaders::EditorPreview);
+		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
+
+		RenderStateManager.VSSetConstantBuffer(2, BoneBuffer);
+
+		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(skeletalMeshComp.DrawCallData.size()); drawCallIndex++)
+		{
+			const SDrawCallData& drawData = skeletalMeshComp.DrawCallData[drawCallIndex];
+			const std::vector<CDataBuffer> buffers = { RenderStateManager.VertexBuffers[drawData.VertexBufferIndex], InstancedAnimationDataBuffer, InstancedTransformBuffer };
+			const U32 strides[3] = { RenderStateManager.MeshVertexStrides[drawData.VertexStrideIndex], sizeof(SVector2<U32>), sizeof(SMatrix) };
+			const U32 offsets[3] = { RenderStateManager.MeshVertexOffsets[drawData.VertexOffsetIndex], 0, 0 };
+			RenderStateManager.IASetVertexBuffers(0, 3, buffers, strides, offsets);
+			RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[drawData.IndexBufferIndex]);
+			RenderStateManager.DrawIndexed(drawData.IndexCount, 0, 0);
+			CRenderManager::NumberOfDrawCallsThisFrame++;
+		}
+
+		RenderStateManager.ClearState();
+		Backbuffer.SetAsActiveTarget();
+
+		renderDepth.Release();
+	}
+
+	CRenderTexture CRenderManager::CreateRenderTextureFromSource(const std::string& filePath)
+	{
+		return std::move(RenderTextureFactory.CreateSRVFromSource(filePath));
+	}
+
+	CRenderTexture CRenderManager::CreateRenderTextureFromAsset(const std::string& filePath)
+	{
+		return std::move(RenderTextureFactory.CreateSRVFromAsset(filePath));
 	}
 
 	U64 CRenderManager::GetEntityGUIDFromData(U64 dataIndex) const
