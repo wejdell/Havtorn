@@ -73,8 +73,11 @@ namespace Havtorn
 
 			GUI::BeginChild("Browser");
 
+			// TODO.NW: Make "OffsetCursor" method?
+			GUI::SetCursorPos(GUI::GetCursorPos() + SVector2<F32>(4.0f, 0.0f));
+
 			// TODO.NR: Another magic number here, 10 cuts off the right border. 11 seems to work but feels too odd.
-			F32 thumbnailPadding = 12.0f;
+			F32 thumbnailPadding = 11.0f;
 			F32 cellWidth = GUI::ThumbnailSizeX + thumbnailPadding;
 			F32 panelWidth = GUI::GetContentRegionAvail().X;
 			I32 columnCount = UMath::Max(static_cast<I32>(panelWidth / cellWidth), 1);
@@ -108,14 +111,6 @@ namespace Havtorn
 			GUI::SetNextWindowPos(GUI::GetViewportCenter(), EWindowCondition::Appearing, SVector2<F32>(0.5f, 0.5f));
 			AssetImportModal();
 		}
-
-		//if (GUI::IsDoubleClick() && SelectedAsset.has_value())
-		//{
-		//	// NW: Open Tool depending on asset type?
-		//	auto& rep = Manager->GetAssetRepFromDirEntry(SelectedAsset.value());
-		//	HV_LOG_INFO("Clicked asset: %s", rep->Name.c_str());
-		//	SelectedAsset.reset();
-		//}
 
 		GUI::End();
 		
