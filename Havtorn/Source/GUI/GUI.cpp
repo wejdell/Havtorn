@@ -1377,6 +1377,11 @@ namespace Havtorn
 		cardSize.Y *= 1.6f;
 		SVector2<F32> thumbnailSize = { GUI::ThumbnailSizeX + framePadding.X * 0.5f, GUI::ThumbnailSizeY + framePadding.Y * 0.5f + 4.0f };
 
+		// TODO.NW: Can't seem to get the leftmost line to show correctly. Maybe need to start the table as usual and then offset inwards?
+		constexpr F32 borderThickness = 1.0f;
+		GUI::SetCursorPos(cardStartPos + SVector2<F32>(-1.0f * borderThickness));
+		GUI::AddRectFilled(GUI::GetCursorScreenPos(), cardSize + SVector2<F32>(2.0f * borderThickness), SColor(10));
+		GUI::SetCursorPos(cardStartPos);
 		GUI::AddRectFilled(GUI::GetCursorScreenPos(), cardSize, SColor(65));
 		GUI::SetCursorPos(cardStartPos);
 		GUI::AddRectFilled(GUI::GetCursorScreenPos(), thumbnailSize, SColor(40));
@@ -1412,7 +1417,7 @@ namespace Havtorn
 
 		GUI::AddRectFilled(GUI::GetCursorScreenPos(), SVector2<F32>(cardSize.X, 2.0f), imageBorderColor);
 
-		GUI::SetCursorPos(GUI::GetCursorPos() + SVector2<F32>(0.0f, 4.0f));
+		GUI::SetCursorPos(GUI::GetCursorPos() + SVector2<F32>(2.0f, 4.0f));
 
 		if (GUI::IsItemHovered())
 		{
