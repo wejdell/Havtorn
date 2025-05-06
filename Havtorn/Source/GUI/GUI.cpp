@@ -754,10 +754,10 @@ namespace Havtorn
 			return ImGui::ImageButton(label, (ImTextureID)(textureID), imSize, imUV0, imUV1, imColorBackground, imColorTint);
 		}
 
-		void AddRectFilled(const SVector2<F32>& cursorPos, const SVector2<F32>& size, const SColor& color)
+		void AddRectFilled(const SVector2<F32>& cursorScreenPos, const SVector2<F32>& size, const SColor& color)
 		{
-			ImVec2 posMin = { cursorPos.X, cursorPos.Y };
-			ImVec2 posMax = { cursorPos.X + size.X, cursorPos.Y + size.Y };
+			ImVec2 posMin = { cursorScreenPos.X, cursorScreenPos.Y };
+			ImVec2 posMax = { cursorScreenPos.X + size.X, cursorScreenPos.Y + size.Y };
 			SVector4 colorFloat = color.AsVector4();
 			ImVec4 imColor = { colorFloat.X, colorFloat.Y, colorFloat.Z, colorFloat.W };
 			ImGui::GetWindowDrawList()->AddRectFilled(posMin, posMax, ImGui::ColorConvertFloat4ToU32(imColor));
@@ -1353,7 +1353,7 @@ namespace Havtorn
 		width += GUI::CalculateTextSize("Cancel").X + GUI::ThumbnailPadding;
 		F32 avail = GUI::GetContentRegionAvail().X;
 		F32 off = (avail - width) * 0.5f;
-		GUI::SetCursorPosX(GUI::GetCursorPosX() + off);
+		GUI::OffsetCursorPos(SVector2<F32>(off, 0.0f));
 
 		if (GUI::Button("Cancel"))
 		{
@@ -1417,7 +1417,7 @@ namespace Havtorn
 
 		GUI::AddRectFilled(GUI::GetCursorScreenPos(), SVector2<F32>(cardSize.X, 2.0f), imageBorderColor);
 
-		GUI::SetCursorPos(GUI::GetCursorPos() + SVector2<F32>(2.0f, 4.0f));
+		GUI::OffsetCursorPos(SVector2<F32>(2.0f, 4.0f));
 
 		if (GUI::IsItemHovered())
 		{
@@ -1486,6 +1486,11 @@ namespace Havtorn
 	void GUI::SetCursorPosX(const F32 cursorPosX)
 	{
 		Instance->Impl->SetCursorPosX(cursorPosX);
+	}
+
+	void GUI::OffsetCursorPos(const SVector2<F32>& cursorOffset)
+	{
+		GUI::SetCursorPos(GUI::GetCursorPos() + cursorOffset);
 	}
 
 	F32 GUI::GetScrollY()
@@ -1659,9 +1664,9 @@ namespace Havtorn
 		return Instance->Impl->GetCurrentWindowSize();
 	}
 
-	void GUI::AddRectFilled(const SVector2<F32>& cursorPos, const SVector2<F32>& size, const SColor& color)
+	void GUI::AddRectFilled(const SVector2<F32>& cursorScreenPos, const SVector2<F32>& size, const SColor& color)
 	{
-		Instance->Impl->AddRectFilled(cursorPos, size, color);
+		Instance->Impl->AddRectFilled(cursorScreenPos, size, color);
 	}
 	
 	void GUI::SetGuiColorProfile(const SGuiColorProfile& profile)

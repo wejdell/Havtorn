@@ -549,6 +549,8 @@ namespace Havtorn
 		static void SetCursorPos(const SVector2<F32>& cursorPos);
 		static F32 GetCursorPosX();
 		static void SetCursorPosX(const F32 cursorPosX);
+		static void OffsetCursorPos(const SVector2<F32>& cursorOffset);
+
 		static F32 GetScrollY();
 		static F32 GetScrollMaxY();
 		static void SetScrollHereY(const F32 centerYRatio);

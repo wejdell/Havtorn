@@ -73,8 +73,7 @@ namespace Havtorn
 
 			GUI::BeginChild("Browser");
 
-			// TODO.NW: Make "OffsetCursor" method?
-			GUI::SetCursorPos(GUI::GetCursorPos() + SVector2<F32>(4.0f, 0.0f));
+			GUI::OffsetCursorPos(SVector2<F32>(4.0f, 0.0f));
 
 			// TODO.NR: Another magic number here, 10 cuts off the right border. 11 seems to work but feels too odd.
 			F32 thumbnailPadding = 11.0f;
@@ -149,7 +148,7 @@ namespace Havtorn
 		F32 avail = GUI::GetContentRegionAvail().X;
 		F32 off = (avail - width) * alignment;
 		if (off > 0.0f)
-			GUI::SetCursorPosX(GUI::GetCursorPosX() + off);
+			GUI::OffsetCursorPos(SVector2<F32>(off, 0.0f));
 	}
 
 	void CAssetBrowserWindow::AssetImportModal()
