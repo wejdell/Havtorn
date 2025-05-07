@@ -9,6 +9,7 @@ namespace Havtorn
 	private:
 		SMatrix LocalMatrix = SMatrix::Identity;
 		SMatrix WorldMatrix = SMatrix::Identity;
+		STransform* Parent = nullptr;
 
 	public:
 		[[nodiscard]] const SMatrix& GetMatrix() const;
@@ -31,13 +32,16 @@ namespace Havtorn
 		inline void Orbit(const STransform& transform, const SMatrix& rotation);
 		inline void Orbit(const SVector& point, const SMatrix& rotation);
 		inline void Orbit(const SVector4& point, const SMatrix& rotation);
+
+		inline bool HasParent() const;
+		inline void SetParent(STransform* parent);
 	};
 
 	inline const SMatrix& STransform::GetMatrix() const
 	{
 		//if (Parent)
 		//{
-		//	WorldMatrix = LocalMatrix * Parent->GetMatrix();
+		//	//WorldMatrix = LocalMatrix * Parent->GetMatrix();
 		//	return WorldMatrix;
 		//}
 
@@ -156,4 +160,14 @@ namespace Havtorn
 		LocalMatrix *= finalRotation;
 	}
 
+	inline bool STransform::HasParent() const
+	{
+		return Parent != nullptr;
+	}
+
+	inline void STransform::SetParent(STransform* parent)
+	{
+		// TODO.NW: Recalculate LocalMatrix so it stays in the same place when reparenting
+		Parent = parent;
+	}
 }

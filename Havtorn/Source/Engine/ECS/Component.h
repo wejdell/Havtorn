@@ -9,7 +9,7 @@ namespace Havtorn
 	{
 		SComponent() = default;
 		SComponent(const SEntity& entity);
-		virtual ~SComponent() = default;
+		virtual ~SComponent() noexcept {};
 
 		bool IsValid() const;
 

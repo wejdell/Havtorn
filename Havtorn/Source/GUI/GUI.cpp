@@ -215,6 +215,62 @@ namespace Havtorn
 			return ImGui::Selectable(label, selected, imFlags, imSize);
 		}
 
+		SGuiMultiSelectIO BeginMultiSelect(const std::vector<EMultiSelectFlag>& flags, I32 selectionSize, I32 itemsCount)
+		{
+			int imFlags = 0;
+			for (const EMultiSelectFlag& flag : flags)
+				imFlags += int(flag);
+
+			const ImGuiMultiSelectIO* imGuiSelectIO = ImGui::BeginMultiSelect(imFlags, selectionSize, itemsCount);
+			if (imGuiSelectIO == nullptr)
+				return {};
+
+			SGuiMultiSelectIO guiSelectIO;
+			for (const ImGuiSelectionRequest& imRequest : imGuiSelectIO->Requests)
+			{
+				SSelectionRequest& guiRequest = guiSelectIO.Requests.emplace_back();
+				guiRequest.Type = static_cast<ESelectionRequestType>(imRequest.Type);
+				guiRequest.IsSelected = imRequest.Selected;
+				guiRequest.RangeDirection = imRequest.RangeDirection;
+				guiRequest.RangeFirstItem = imRequest.RangeFirstItem;
+				guiRequest.RangeLastItem = imRequest.RangeLastItem;
+			}
+
+			guiSelectIO.RangeSourceItem = imGuiSelectIO->RangeSrcItem;
+			guiSelectIO.NavIdItem = imGuiSelectIO->NavIdItem;
+			guiSelectIO.NavIdSelected = imGuiSelectIO->NavIdSelected;
+			guiSelectIO.RangeSourceReset = imGuiSelectIO->RangeSrcReset;
+			guiSelectIO.ItemsCount = imGuiSelectIO->ItemsCount;
+
+			return guiSelectIO;
+		}
+
+		SGuiMultiSelectIO EndMultiSelect()
+		{
+			const ImGuiMultiSelectIO* imGuiSelectIO = ImGui::EndMultiSelect();
+			if (imGuiSelectIO == nullptr)
+				return {};
+
+			SGuiMultiSelectIO guiSelectIO;
+			for (const ImGuiSelectionRequest& imRequest : imGuiSelectIO->Requests)
+			{
+				SSelectionRequest& guiRequest = guiSelectIO.Requests.emplace_back();
+				guiRequest.Type = static_cast<ESelectionRequestType>(imRequest.Type);
+				guiRequest.IsSelected = imRequest.Selected;
+				guiRequest.RangeDirection = imRequest.RangeDirection;
+				guiRequest.RangeFirstItem = imRequest.RangeFirstItem;
+				guiRequest.RangeLastItem = imRequest.RangeLastItem;
+			}
+
+			guiSelectIO.RangeSourceItem = imGuiSelectIO->RangeSrcItem;
+			guiSelectIO.NavIdItem = imGuiSelectIO->NavIdItem;
+			guiSelectIO.NavIdSelected = imGuiSelectIO->NavIdSelected;
+			guiSelectIO.RangeSourceReset = imGuiSelectIO->RangeSrcReset;
+			guiSelectIO.ItemsCount = imGuiSelectIO->ItemsCount;
+
+			return guiSelectIO;
+		}
+
 		void Image(intptr_t textureID, const SVector2<F32>& size, const SVector2<F32>& uv0, const SVector2<F32>& uv1, const SColor& tintColor, const SColor& borderColor)
 		{
 			ImVec2 imSize = { size.X, size.Y };
@@ -1436,6 +1492,16 @@ namespace Havtorn
 	bool GUI::Selectable(const char* label, const bool selected, const std::vector<ESelectableFlag>& flags, const SVector2<F32>& size)
 	{
 		return Instance->Impl->Selectable(label, selected, flags, size);
+	}
+
+	SGuiMultiSelectIO GUI::BeginMultiSelect(const std::vector<EMultiSelectFlag>& flags, I32 selectionSize, I32 itemsCount)
+	{
+		return Instance->Impl->BeginMultiSelect(flags, selectionSize, itemsCount);
+	}
+
+	SGuiMultiSelectIO GUI::EndMultiSelect()
+	{
+		return Instance->Impl->EndMultiSelect();
 	}
 
 	void GUI::Image(intptr_t image, const SVector2<F32>& size, const SVector2<F32>& uv0, const SVector2<F32>& uv1, const SColor& tintColor, const SColor& borderColor)

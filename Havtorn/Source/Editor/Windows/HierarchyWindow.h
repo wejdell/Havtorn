@@ -16,8 +16,9 @@ namespace Havtorn
 		void OnInspectorGUI() override;
 		void OnDisable() override;
 
+		void InspectEntities(const CScene* scene, const std::vector<SEntity>& entities);
+
 	private:
 		SGuiTextFilter Filter = SGuiTextFilter();
-		I32 SelectedIndex = 0;
 	};
 }

@@ -76,11 +76,49 @@ namespace Havtorn
 		Highlight = BIT(5)
 	};
 
+	enum class GUI_API EMultiSelectFlag
+	{
+		None = BIT(0),
+		SingleSelect = BIT(0),   // Disable selecting more than one item. This is available to allow single-selection code to share same code/logic if desired. It essentially disables the main purpose of BeginMultiSelect() tho!
+		NoSelectAll = BIT(1),	 // Disable CTRL+A shortcut to select all.
+		NoRangeSelect = BIT(2),   // Disable Shift+selection mouse/keyboard support (useful for unordered 2D selection). With BoxSelect is also ensure contiguous SetRange requests are not combined into one. This allows not handling interpolation in SetRange requests.
+		NoAutoSelect = BIT(3),   // Disable selecting items when navigating (useful for e.g. supporting range-select in a list of checkboxes).
+		NoAutoClear = BIT(4),   // Disable clearing selection when navigating or selecting another one (generally used with NoAutoSelect. useful for e.g. supporting range-select in a list of checkboxes).
+		NoAutoClearOnReselect = BIT(5),   // Disable clearing selection when clicking/selecting an already selected item.
+		BoxSelect1d = BIT(6),   // Enable box-selection with same width and same x pos items (e.g. full row Selectable()). Box-selection works better with little bit of spacing between items hit-box in order to be able to aim at empty space.
+		BoxSelect2d = BIT(7),   // Enable box-selection with varying width or varying x pos items support (e.g. different width labelBIT(s), or 2D layout/grid). This is slower: alters clipping logic so that e.g. horizontal movements will update selection of normally clipped items.
+		BoxSelectNoScroll = BIT(8),   // Disable scrolling when box-selecting near edges of scope.
+		ClearOnEscape = BIT(9),   // Clear selection when pressing Escape while scope is focused.
+		ClearOnClickVoid = BIT(10),  // Clear selection when clicking on empty location within scope.
+		ScopeWindow = BIT(11),  // Scope for _BoxSelect and _ClearOnClickVoid is whole window (Default). Use if BeginMultiSelect() covers a whole window or used a single time in same window.
+		ScopeRect = BIT(12),  // Scope for _BoxSelect and _ClearOnClickVoid is rectangle encompassing BeginMultiSelect()/EndMultiSelect(). Use if BeginMultiSelect() is called multiple times in same window.
+		SelectOnClick = BIT(13),  // Apply selection on mouse down when clicking on unselected item. (Default)
+		SelectOnClickRelease = BIT(14),  // Apply selection on mouse release when clicking an unselected item. Allow dragging an unselected item without altering selection.
+		// RangeSelect2d       = BIT(15),  // Shift+Selection uses 2d geometry instead of linear sequencBIT(e), so possible to use Shift+up/down to select vertically in grid. Analogous to what BoxSelect does.
+		NavWrapX = BIT(16),  // [Temporary] Enable navigation wrapping on X axis. Provided as a convenience because we don't have a design for the general Nav API for this yet. When the more general feature be public we may obsolete this flag in favor of new one.
+	};
+
 	enum class GUI_API ETreeNodeFlag
 	{
-		NoTreePushOnOpen = BIT(3),
-		Leaf = BIT(8),
-		Bullet = BIT(9),
+		None = 0,
+		Selected = BIT(0),   // Draw as selected
+		Framed = BIT(1),   // Draw frame with background (e.g. for CollapsingHeader)
+		AllowOverlap = BIT(2),   // Hit testing to allow subsequent widgets to overlap this one
+		NoTreePushOnOpen = BIT(3),   // Don't do a TreePush() when open (e.g. for CollapsingHeader) = no extra indent nor pushing on ID stack
+		NoAutoOpenOnLog = BIT(4),   // Don't automatically and temporarily open node when Logging is active (by default logging will automatically open tree nodes)
+		DefaultOpen = BIT(5),   // Default node to be open
+		OpenOnDoubleClick = BIT(6),   // Open on double-click instead of simple click (default for multi-select unless any _OpenOnXXX behavior is set explicitly). Both behaviors may be combined.
+		OpenOnArrow = BIT(7),   // Open when clicking on the arrow part (default for multi-select unless any _OpenOnXXX behavior is set explicitly). Both behaviors may be combined.
+		Leaf = BIT(8),   // No collapsing, no arrow (use as a convenience for leaf nodes).
+		Bullet = BIT(9),   // Display a bullet instead of arrow. IMPORTANT: node can still be marked open/close if you don't set the _Leaf flag!
+		FramePadding = BIT(10),  // Use FramePadding (even for an unframed text node) to vertically align text baseline to regular widget height. Equivalent to calling AlignTextToFramePadding() before the node.
+		SpanAvailWidth = BIT(11),  // Extend hit box to the right-most edge, even if not framed. This is not the default in order to allow adding other items on the same line without using AllowOverlap mode.
+		SpanFullWidth = BIT(12),  // Extend hit box to the left-most and right-most edges (cover the indent area).
+		SpanLabelWidth = BIT(13),  // Narrow hit box + narrow hovering highlight, will only cover the label text.
+		SpanAllColumns = BIT(14),  // Frame will span all columns of its container table (label will still fit in current column)
+		LabelSpanAllColumns = BIT(15),  // Label will span all columns of its container table
+		NavLeftJumpsBackHere = BIT(17),  // (WIP) Nav: left direction may move to this TreeNode() from any of its child (items submitted between TreeNode and TreePop)
+		CollapsingHeader = Framed | NoTreePushOnOpen | NoAutoOpenOnLog,
 	};
 
 	enum class GUI_API EWindowCondition
@@ -224,6 +262,8 @@ namespace Havtorn
 		int                     CountGrep;
 	};
 
+
+
 	struct SGuiPayload
 	{
 		void* Data = nullptr;
@@ -237,6 +277,32 @@ namespace Havtorn
 		bool IsDelivery = false;
 
 		bool IsID(const std::string& id) { return IDTag == id; }
+	};
+
+	enum class ESelectionRequestType
+	{
+		None = 0,
+		SetAll,
+		SetRange
+	};
+
+	struct SSelectionRequest
+	{
+		ESelectionRequestType Type = ESelectionRequestType::None;
+		bool IsSelected = false;
+		I8 RangeDirection = -1;
+		I64 RangeFirstItem = -1;
+		I64 RangeLastItem = -1;
+	};
+	 
+	struct SGuiMultiSelectIO
+	{
+		std::vector<SSelectionRequest> Requests;
+		I64 RangeSourceItem = -1;
+		I64 NavIdItem = -1;
+		bool NavIdSelected = false;
+		bool RangeSourceReset = false;
+		I32 ItemsCount = -1;
 	};
 
 	// Havtorn Default == Struct Default Values
@@ -351,7 +417,7 @@ namespace Havtorn
 	{
 		SVector2<F32> WindowPadding = SVector2<F32>(8.00f, 8.00f);
 		SVector2<F32> FramePadding = SVector2<F32>(5.00f, 2.00f);
-		SVector2<F32> CellPadding = SVector2<F32>(6.00f, 6.00f);
+		SVector2<F32> CellPadding = SVector2<F32>(6.00f, 4.00f);
 		SVector2<F32> ItemSpacing = SVector2<F32>(6.00f, 6.00f);
 		SVector2<F32> ItemInnerSpacing = SVector2<F32>(6.00f, 6.00f);
 		SVector2<F32> TouchExtraPadding = SVector2<F32>(0.00f, 0.00f);
@@ -522,7 +588,7 @@ namespace Havtorn
 		static void EndTable();
 
 		static bool TreeNode(const char* label);
-		static bool TreeNodeEx(const char* label, const std::vector<ETreeNodeFlag>& treeNodeFlags);
+		static bool TreeNodeEx(const char* label, const std::vector<ETreeNodeFlag>& treeNodeFlags = {});
 		static void TreePop();
 
 		static bool ArrowButton(const char* label, const EGUIDirection direction);
@@ -536,6 +602,9 @@ namespace Havtorn
 		static SRenderAssetCardResult RenderAssetCard(const char* label, const intptr_t& thumbnailID, const char* typeName, const SColor& color, void* dragDropPayloadToSet, U64 payLoadSize);
 
 		static bool Selectable(const char* label, const bool selected = false, const std::vector<ESelectableFlag>& flags = {}, const SVector2<F32>& size = SVector2<F32>(0.0f));
+
+		static SGuiMultiSelectIO BeginMultiSelect(const std::vector<EMultiSelectFlag>& flags = {}, I32 selectionSize = -1, I32 itemsCount = -1);
+		static SGuiMultiSelectIO EndMultiSelect();
 
 		static void Image(intptr_t image, const SVector2<F32>& size, const SVector2<F32>& uv0 = SVector2<F32>(0.0f), const SVector2<F32>& uv1 = SVector2<F32>(1.0f), const SColor& tintColor = SColor::White, const SColor& borderColor = SColor(0.0f, 0.0f, 0.0f, 0.0f));
 

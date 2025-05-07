@@ -12,8 +12,16 @@ namespace Havtorn
 			: SComponent(entityOwner)
 		{}
 
-		STransform Transform;
+		~STransformComponent() noexcept override 
+		{
+			AttachedEntities.clear();
+		};
 
-		// TODO.NR: Add Static/Dynamic modifiers
+		STransform Transform;
+		
+		// TODO.NW: Serialize this
+		std::vector<SEntity> AttachedEntities;
+
+		// TODO.NW: Add Static/Dynamic modifiers
 	};
 }
