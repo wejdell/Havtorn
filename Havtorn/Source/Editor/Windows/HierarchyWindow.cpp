@@ -160,6 +160,7 @@ namespace Havtorn
 					}
 					else
 					{
+						// TODO.NW: Fix bug where you attach the same entity to the same parent twice. Unparent in this case? Also unparent if dragged to another entity or to empty space.
 						GUI::SetTooltip("Attach %s to %s?", draggedEntityName.c_str(), entryString.c_str());
 
 						if (payload.IsDelivery)
