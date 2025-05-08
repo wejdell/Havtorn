@@ -82,6 +82,7 @@ namespace Havtorn
 				activeEntities = entities;
 			}
 
+			// Filter out children from main list
 			for (const SEntity& entity : activeEntities)
 			{
 				const STransformComponent* transform = scene->GetComponent<STransformComponent>(entity);
@@ -166,8 +167,11 @@ namespace Havtorn
 						if (payload.IsDelivery)
 						{
 							STransformComponent* draggedTransformComponent = scene->GetComponent<STransformComponent>(*draggedEntity);
+
+							// TODO.NW: Need very clear way to set up attachment and detachment. Have not done detachment yet.
 							draggedTransformComponent->Transform.SetParent(&transformComponent->Transform);
 							transformComponent->AttachedEntities.emplace_back(*draggedEntity);
+							transformComponent->Transform.AddAttachment(&draggedTransformComponent->Transform);
 						}
 					}
 				}

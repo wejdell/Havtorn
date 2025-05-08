@@ -12,11 +12,6 @@ namespace Havtorn
 			: SComponent(entityOwner)
 		{}
 
-		~STransformComponent() noexcept override 
-		{
-			AttachedEntities.clear();
-		};
-
 		STransform Transform;
 		
 		// TODO.NW: Serialize this
