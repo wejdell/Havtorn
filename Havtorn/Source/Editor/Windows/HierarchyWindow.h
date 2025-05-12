@@ -16,6 +16,7 @@ namespace Havtorn
 		void OnInspectorGUI() override;
 		void OnDisable() override;
 
+		void FilterChildrenFromList(const CScene* scene, const std::vector<SEntity>& children, std::vector<SEntity>& filteredEntities);
 		void InspectEntities(const CScene* scene, const std::vector<SEntity>& entities);
 
 	private:

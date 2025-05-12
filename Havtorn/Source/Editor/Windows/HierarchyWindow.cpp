@@ -83,17 +83,23 @@ namespace Havtorn
 			}
 
 			// Filter out children from main list
+			std::vector<SEntity> childEntities;
 			for (const SEntity& entity : activeEntities)
 			{
+				const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(entity);
+				const std::string draggedEntityName = draggedMetaDataComp->IsValid() ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
+
 				const STransformComponent* transform = scene->GetComponent<STransformComponent>(entity);
-				if (transform->IsValid())
-				{
-					for (SEntity child : transform->AttachedEntities)
-					{
-						if (auto it = std::ranges::find(activeEntities, child); it != activeEntities.end())
-							activeEntities.erase(it);
-					}
-				}
+				if (!transform->IsValid())
+					continue;
+
+				if (!transform->AttachedEntities.empty())
+					FilterChildrenFromList(scene, transform->AttachedEntities, childEntities);
+			}
+			for (const SEntity& child : childEntities)
+			{
+				if (auto it = std::ranges::find(activeEntities, child); it != activeEntities.end())
+					activeEntities.erase(it);
 			}
 
 			if (GUI::BeginTable("HierarchyEntityTable", 1))
@@ -103,6 +109,44 @@ namespace Havtorn
 			}
 
 			GUI::EndMultiSelect();
+
+			// Detachment drop
+			if (GUI::BeginDragDropTarget())
+			{
+				SGuiPayload payload = GUI::AcceptDragDropPayload("EntityHierarchyDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNoDrawDefaultRect, EDragDropFlag::AcceptNopreviewTooltip });
+				if (payload.Data != nullptr)
+				{
+					SEntity* draggedEntity = reinterpret_cast<SEntity*>(payload.Data);
+					const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(*draggedEntity);
+					const std::string draggedEntityName = draggedMetaDataComp->IsValid() ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
+					GUI::SetTooltip(draggedEntityName.c_str());
+
+					STransformComponent* draggedTransform = scene->GetComponent<STransformComponent>(*draggedEntity);
+					if (!draggedTransform->IsValid())
+					{
+						GUI::SetTooltip("Cannot detach entity %s, it has no transform!", draggedEntityName.c_str());
+					}
+					else
+					{
+						const SEntity& parentEntity = draggedTransform->ParentEntity;
+						if (parentEntity.IsValid())
+						{
+							STransformComponent* parentTransform = scene->GetComponent<STransformComponent>(parentEntity);
+							if (parentTransform->IsValid())
+							{
+								const SMetaDataComponent* parentMetaDataComp = scene->GetComponent<SMetaDataComponent>(parentEntity);
+								const std::string parentEntityName = parentMetaDataComp->IsValid() ? parentMetaDataComp->Name.AsString() : "UNNAMED";
+								GUI::SetTooltip("Detach %s from %s?", draggedEntityName.c_str(), parentEntityName.c_str());
+
+								if (payload.IsDelivery)
+									parentTransform->Detach(draggedTransform);
+							}
+						}
+					}
+				}
+
+				GUI::EndDragDropTarget();
+			}
 		}
 		GUI::EndChild();
 		GUI::End();
@@ -110,6 +154,25 @@ namespace Havtorn
 
 	void CHierarchyWindow::OnDisable()
 	{
+	}
+
+	void CHierarchyWindow::FilterChildrenFromList(const CScene* scene, const std::vector<SEntity>& children, std::vector<SEntity>& filteredEntities)
+	{
+		for (SEntity child : children)
+		{
+			const STransformComponent* transform = scene->GetComponent<STransformComponent>(child);
+			if (!transform->IsValid())
+				continue;
+
+			if (!transform->AttachedEntities.empty())
+				FilterChildrenFromList(scene, transform->AttachedEntities, filteredEntities);
+
+			if (auto it = std::ranges::find(filteredEntities, child); it == filteredEntities.end())
+				filteredEntities.emplace_back(child);
+
+			//if (auto it = std::ranges::find(filteredEntities, child); it != filteredEntities.end())
+			//	filteredEntities.erase(it);
+		}
 	}
 
 	void CHierarchyWindow::InspectEntities(const CScene* scene, const std::vector<SEntity>& entities)
@@ -154,24 +217,32 @@ namespace Havtorn
 					SEntity* draggedEntity = reinterpret_cast<SEntity*>(payload.Data);
 					const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(*draggedEntity);
 					const std::string draggedEntityName = draggedMetaDataComp->IsValid() ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
-					
+					GUI::SetTooltip(draggedEntityName.c_str());
+
 					if (!transformComponent->IsValid())
 					{
 						GUI::SetTooltip("Cannot attach to entity %s, it has no transform!", entryString.c_str());
 					}
 					else
 					{
-						// TODO.NW: Fix bug where you attach the same entity to the same parent twice. Unparent in this case? Also unparent if dragged to another entity or to empty space.
-						GUI::SetTooltip("Attach %s to %s?", draggedEntityName.c_str(), entryString.c_str());
-
-						if (payload.IsDelivery)
+						STransformComponent* draggedTransform = scene->GetComponent<STransformComponent>(*draggedEntity);
+						if (!draggedTransform->IsValid())
 						{
-							STransformComponent* draggedTransformComponent = scene->GetComponent<STransformComponent>(*draggedEntity);
+							GUI::SetTooltip("Cannot attach %s to entity, it has no transform!", draggedEntityName.c_str());
+						}
+						else
+						{
+							GUI::SetTooltip("Attach %s to %s?", draggedEntityName.c_str(), entryString.c_str());
 
-							// TODO.NW: Need very clear way to set up attachment and detachment. Have not done detachment yet.
-							draggedTransformComponent->Transform.SetParent(&transformComponent->Transform);
-							transformComponent->AttachedEntities.emplace_back(*draggedEntity);
-							transformComponent->Transform.AddAttachment(&draggedTransformComponent->Transform);
+							if (payload.IsDelivery)
+							{
+								if (draggedTransform->Transform.HasParent())
+								{
+									STransformComponent* existingParentComponent = scene->GetComponent<STransformComponent>(draggedTransform->ParentEntity);
+									existingParentComponent->Detach(draggedTransform);
+								}
+								transformComponent->Attach(draggedTransform);
+							}
 						}
 					}
 				}

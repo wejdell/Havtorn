@@ -21,6 +21,7 @@ namespace Havtorn
 
 	void STransform::SetMatrix(const SMatrix& matrix)
 	{
+		// TODO.NW: Fix shrinking bug, floating point error that happens when parenting Lamp->Bed->Clock and then selecting Lamp
 		if (Parent)
 		{
 			WorldMatrix = matrix;
@@ -147,12 +148,18 @@ namespace Havtorn
 
 	void STransform::SetParent(STransform* parent)
 	{
+		// TODO.NW: Handle if already had parent
 		Parent = parent;
-		if (!Parent)
-			return;
-
-		WorldMatrix = LocalMatrix;
-		LocalMatrix *= Parent->GetMatrix().FastInverse();
+		if (Parent)
+		{
+			WorldMatrix = LocalMatrix;
+			LocalMatrix *= Parent->GetMatrix().FastInverse();
+		}
+		else
+		{
+			LocalMatrix = WorldMatrix;
+			WorldMatrix = SMatrix::Identity;
+		}
 	}
 
 	void STransform::AddAttachment(STransform* transform)

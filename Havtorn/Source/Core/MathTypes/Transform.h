@@ -37,6 +37,7 @@ namespace Havtorn
 
 		CORE_API bool HasParent() const;
 		CORE_API void SetParent(STransform* parent);
+		CORE_API STransform* GetParent() const;
 
 		CORE_API void AddAttachment(STransform* transform);
 		CORE_API void RemoveAttachment(STransform* transform);
