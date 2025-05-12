@@ -12,6 +12,6 @@ namespace Havtorn
 		bool RemoveComponent(const SEntity& entity, CScene* scene) const override;
 		U8 GetSortingPriority() const override;
 
-		static  STransformComponentEditorContext Context;
+		static STransformComponentEditorContext Context;
 	};
 }

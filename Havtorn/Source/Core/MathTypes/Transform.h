@@ -16,6 +16,7 @@ namespace Havtorn
 		CORE_API [[nodiscard]] const SMatrix& GetMatrix() const;
 		CORE_API [[nodiscard]] const SMatrix& GetLocalMatrix() const;
 		CORE_API void SetMatrix(const SMatrix& matrix);
+		CORE_API void SetLocalMatrix(const SMatrix& matrix);
 
 		// TODO.NR: Make all use of EulerAngles expect degrees, convert to radians internally, never force radians
 
@@ -37,10 +38,8 @@ namespace Havtorn
 
 		CORE_API bool HasParent() const;
 		CORE_API void SetParent(STransform* parent);
-		CORE_API STransform* GetParent() const;
 
 		CORE_API void AddAttachment(STransform* transform);
 		CORE_API void RemoveAttachment(STransform* transform);
-		CORE_API const std::vector<STransform*>& GetAttachedTransforms() const;
 	};
 }

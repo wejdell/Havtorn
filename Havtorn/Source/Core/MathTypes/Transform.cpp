@@ -34,6 +34,11 @@ namespace Havtorn
 			transform->SetMatrix(transform->GetLocalMatrix() * GetMatrix());
 	}
 
+	void STransform::SetLocalMatrix(const SMatrix& matrix)
+	{
+		LocalMatrix = matrix;
+	}
+
 	void STransform::Rotate(const SMatrix& rotationMatrix)
 	{
 		LocalMatrix *= rotationMatrix;
@@ -172,15 +177,10 @@ namespace Havtorn
 
 	void STransform::RemoveAttachment(STransform* transform)
 	{
-		auto it = std::ranges::find(AttachedTransforms, transform); 
+		auto it = std::ranges::find(AttachedTransforms, transform);
 		if (it == AttachedTransforms.end())
 			return;
 
 		AttachedTransforms.erase(it);
-	}
-
-	const std::vector<STransform*>& STransform::GetAttachedTransforms() const
-	{
-		return AttachedTransforms;
 	}
 }

@@ -12,28 +12,16 @@ namespace Havtorn
 			: SComponent(entityOwner)
 		{}
 
-		void Attach(STransformComponent* child)
-		{
-			child->Transform.SetParent(&Transform);
-			child->ParentEntity = Owner;
+		void Serialize(char* toData, U64& pointerPosition) const;
+		void Deserialize(const char* fromData, U64& pointerPosition);
+		[[nodiscard]] U32 GetSize() const;
 
-			AttachedEntities.emplace_back(child->Owner);
-			Transform.AddAttachment(&child->Transform);
-		}
-		void Detach(STransformComponent* child)
-		{
-			child->Transform.SetParent(nullptr);
-			child->ParentEntity = SEntity::Null;
-
-			if (auto it = std::find(AttachedEntities.begin(), AttachedEntities.end(), child->Owner); it != AttachedEntities.end())
-				AttachedEntities.erase(it);
-			Transform.RemoveAttachment(&child->Transform);
-		}
+		ENGINE_API void Attach(STransformComponent* child);
+		ENGINE_API void Detach(STransformComponent* child);
 
 		STransform Transform;
 		
 		SEntity ParentEntity = SEntity::Null;
-		// TODO.NW: Serialize this
 		std::vector<SEntity> AttachedEntities;
 
 		// TODO.NW: Add Static/Dynamic modifiers

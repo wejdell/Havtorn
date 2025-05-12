@@ -649,8 +649,7 @@ namespace Havtorn
 		size += GetDataSize(MainCameraEntity);
 		size += GetDataSize(Entities);
 
-		size += DefaultSizeAllocator(GetComponents<STransformComponent>());		
-
+		size += SpecializedSizeAllocator(GetComponents<STransformComponent>());
 		size += SpecializedSizeAllocator(GetComponents<SStaticMeshComponent>());
 		size += SpecializedSizeAllocator(GetComponents<SSkeletalMeshComponent>());
 
@@ -691,8 +690,7 @@ namespace Havtorn
 		SerializeData(MainCameraEntity, toData, pointerPosition);
 		SerializeData(Entities, toData, pointerPosition);
 
-		DefaultSerializer(GetComponents<STransformComponent>(), toData, pointerPosition);
-
+		SpecializedSerializer(GetComponents<STransformComponent>(), toData, pointerPosition);
 		SpecializedSerializer(GetComponents<SStaticMeshComponent>(), toData, pointerPosition);
 		SpecializedSerializer(GetComponents<SSkeletalMeshComponent>(), toData, pointerPosition);
 
@@ -734,7 +732,7 @@ namespace Havtorn
 
 		{
 			std::vector<STransformComponent> components;
-			DefaultDeserializer(components, &STransformComponentEditorContext::Context, fromData, pointerPosition);
+			SpecializedDeserializer(components, &STransformComponentEditorContext::Context, fromData, pointerPosition);
 		}
 
 		{
@@ -895,6 +893,13 @@ namespace Havtorn
 				DeserializeData(component, fromData, pointerPosition);
 				AddComponent(component, component.Owner);
 			}
+		}
+
+		// Post pass to set up inter-entity connections
+		for (STransformComponent* transformComponent : GetComponents<STransformComponent>())
+		{
+			for (const SEntity& serializationAttachedEntity : transformComponent->AttachedEntities)
+				transformComponent->Attach(GetComponent<STransformComponent>(serializationAttachedEntity));
 		}
 	}
 

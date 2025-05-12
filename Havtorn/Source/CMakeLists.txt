@@ -263,6 +263,7 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/Components/StaticMeshComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/StaticMeshComponent.h
     ${ENGINE_FOLDER}ECS/Components/Transform2DComponent.h
+    ${ENGINE_FOLDER}ECS/Components/TransformComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/TransformComponent.h
     ${ENGINE_FOLDER}ECS/Components/VolumetricLightComponent.h
     ${ENGINE_FOLDER}ECS/Systems/AnimatorGraphSystem.cpp
