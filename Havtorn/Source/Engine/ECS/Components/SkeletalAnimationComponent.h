@@ -14,13 +14,14 @@ namespace Havtorn
 			: SComponent(entityOwner)
 		{}
 
-		ENGINE_API [[nodiscard]] U32 GetSize() const;
-		ENGINE_API void Serialize(char* toData, U64& pointerPosition) const;
-		ENGINE_API void Deserialize(const char* fromData, U64& pointerPosition);
+		void Serialize(char* toData, U64& pointerPosition) const;
+		void Deserialize(const char* fromData, U64& pointerPosition);
+		[[nodiscard]] U32 GetSize() const;
 
 		// TODO.NR: This should be some of the only runtime data this component needs.
 		//SVector2<U32> AnimationData; // X = animationIndex, Y = frameIndex
-		std::vector <SBoneAnimationClip> CurrentAnimation = {};
+		std::vector<SBoneAnimationClip> CurrentAnimation = {};
+		std::vector<U64> AssetRegistryKeys = {};
 		U32 CurrentAnimationIndex = 0;
 
 		std::vector<SMatrix> Bones = {};

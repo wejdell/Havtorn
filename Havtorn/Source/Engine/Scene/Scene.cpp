@@ -350,8 +350,6 @@ namespace Havtorn
 
 		// Skeletal Mesh
 		std::string meshPath = "Assets/Tests/CH_Enemy_SK.hva";
-		//std::string meshPath = "Assets/Tests/MaleDefault.hva";
-		//std::string meshPath = "Assets/Tests/DebugAnimMesh.hva";
 		renderManager->LoadSkeletalMeshComponent(meshPath, AddComponent<SSkeletalMeshComponent>(playerProxy));
 		AddComponentEditorContext(playerProxy, &SSkeletalMeshComponentEditorContext::Context);
 		GetComponent<SSkeletalMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register(meshPath);
@@ -359,22 +357,17 @@ namespace Havtorn
 		std::string animationPathOne = "Assets/Tests/CH_Enemy_Walk.hva";
 		std::string animationPathTwo = "Assets/Tests/CH_Enemy_Chase.hva";
 
-		//std::string animationPath = "Assets/Tests/MaleWave.hva";
-		//std::string animationPath = "Assets/Tests/TestWalk.hva";
-		//std::string animationPath = "Assets/Tests/DebugAnimAnim.hva";
 		SSkeletalAnimationComponent* playerAnimationComponent = AddComponent<SSkeletalAnimationComponent>(playerProxy);
 		renderManager->LoadSkeletalAnimationComponent(animationPathOne, playerAnimationComponent);
 		renderManager->LoadSkeletalAnimationComponent(animationPathTwo, playerAnimationComponent);
 		AddComponentEditorContext(playerProxy, &SSkeletalAnimationComponentEditorContext::Context);
-		// TODO.NW
-		//GetComponent<SSkeletalAnimationComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register("Assets/Tests/CH_Enemy_SK.hva");
+		GetComponent<SSkeletalAnimationComponent>(playerProxy)->AssetRegistryKeys.emplace_back(assetRegistry->Register(animationPathOne));
+		GetComponent<SSkeletalAnimationComponent>(playerProxy)->AssetRegistryKeys.emplace_back(assetRegistry->Register(animationPathTwo));
 
-		//std::vector<std::string> enemyMaterialPaths = { "Assets/Materials/M_Checkboard_128x128.hva" };
 		std::vector<std::string> enemyMaterialPaths = { "Assets/Materials/M_Enemy.hva" };
 		renderManager->LoadMaterialComponent(enemyMaterialPaths, AddComponent<SMaterialComponent>(playerProxy));
 		AddComponentEditorContext(playerProxy, &SMaterialComponentEditorContext::Context);
-		GetComponent<SMaterialComponent>(playerProxy)->AssetRegistryKeys = assetRegistry->Register(enemyMaterialPaths);
-		
+		GetComponent<SMaterialComponent>(playerProxy)->AssetRegistryKeys = assetRegistry->Register(enemyMaterialPaths);	
 		// === !Player Proxy ===
 
 		// === Crate ===
@@ -858,10 +851,30 @@ namespace Havtorn
 			SpecializedDeserializer(components, &SSpriteAnimatorGraphComponentEditorContext::Context, fromData, pointerPosition);
 		}
 
+		//{
+		//	std::vector<SSkeletalAnimationComponent> components;
+		//	SpecializedDeserializer(components, &SSkeletalAnimationComponentEditorContext::Context, fromData, pointerPosition);
+		//}
+
 		{
+			U32 numberOfcomponents = 0;
+			DeserializeData(numberOfcomponents, fromData, pointerPosition);
 			std::vector<SSkeletalAnimationComponent> components;
-			SpecializedDeserializer(components, &SSkeletalAnimationComponentEditorContext::Context, fromData, pointerPosition);
+			components.resize(numberOfcomponents);
+
+			for (U64 index = 0; index < numberOfcomponents; index++)
+			{
+				SSkeletalAnimationComponent component;
+				component.Deserialize(fromData, pointerPosition);
+				auto comp = AddComponent<SSkeletalAnimationComponent>(component.Owner);
+
+				for (U64 assetRegistryKey : component.AssetRegistryKeys)
+					RenderManager->LoadSkeletalAnimationComponent(assetRegistry->GetAssetPath(assetRegistryKey), comp);
+				
+				AddComponentEditorContext(component.Owner, &SSkeletalAnimationComponentEditorContext::Context);
+			}
 		}
+
 
 		U32 numberOfSequencerComponents = 0;
 		DeserializeData(numberOfSequencerComponents, fromData, pointerPosition);

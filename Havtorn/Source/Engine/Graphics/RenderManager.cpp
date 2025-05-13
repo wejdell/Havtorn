@@ -463,6 +463,7 @@ namespace Havtorn
 		outSkeletalAnimationComponent->CurrentAnimation.back().DurationInTicks = asset.DurationInTicks;
 		outSkeletalAnimationComponent->CurrentAnimation.back().TickRate = asset.TickRate;
 		
+		// TODO.NW: This should probably not be set every time. Figure out values for these depending on all current animation clips?
 		outSkeletalAnimationComponent->AssetName = assetName;
 		outSkeletalAnimationComponent->SkeletonName = asset.SkeletonName;
 		outSkeletalAnimationComponent->DurationInTicks = asset.DurationInTicks;

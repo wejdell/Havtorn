@@ -49,11 +49,6 @@ namespace Havtorn
 
 	bool CEditorManager::Init(CPlatformManager* platformManager, const CGraphicsFramework* framework, CRenderManager* renderManager)
 	{
-		// CROSS_PROJECT_IMGUI_SETUP();
-
-		//GUI::SetGUIContext();
-		//windowHandler->EnableDragDrop();
-
 		PlatformManager = platformManager;
 		if (PlatformManager == nullptr)
 			return false;
