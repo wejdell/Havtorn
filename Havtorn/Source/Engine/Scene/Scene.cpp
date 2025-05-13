@@ -419,6 +419,12 @@ namespace Havtorn
 		GEngine::GetWorld()->Initialize3DPhysicsData(trigger);
 		// === !Trigger ===
 
+		// === Room ===
+		const SEntity& room = AddEntity("Room");
+		STransformComponent* roomTransform = AddComponent<STransformComponent>(room);
+		AddComponentEditorContext(room, &STransformComponentEditorContext::Context);
+		// === !Room ===
+
 		// === Floor/Walls ===
 		struct SWallAndFloorInitData
 		{
@@ -477,7 +483,8 @@ namespace Havtorn
 			if (!entity.IsValid())
 				return false;
 
-			STransform& transform3 = AddComponent<STransformComponent>(entity)->Transform;
+			STransformComponent* transformComponent = AddComponent<STransformComponent>(entity);
+			STransform& transform3 = transformComponent->Transform;
 			AddComponentEditorContext(entity, &STransformComponentEditorContext::Context);
 			SMatrix matrix3 = transform3.GetMatrix();
 			matrix3.SetTranslation(data.Translation);
@@ -498,6 +505,8 @@ namespace Havtorn
 			physicsComponent->BodyType = EPhysics3DBodyType::Static;
 			physicsComponent->ShapeType = EPhysics3DShapeType::Box;
 			physicsComponent->ShapeLocalExtents = SVector(1.0f, 0.1f, 1.f);
+
+			roomTransform->Attach(transformComponent);
 
 			GEngine::GetWorld()->Initialize3DPhysicsData(entity);
 		}
@@ -850,11 +859,6 @@ namespace Havtorn
 			std::vector<SSpriteAnimatorGraphComponent> components;
 			SpecializedDeserializer(components, &SSpriteAnimatorGraphComponentEditorContext::Context, fromData, pointerPosition);
 		}
-
-		//{
-		//	std::vector<SSkeletalAnimationComponent> components;
-		//	SpecializedDeserializer(components, &SSkeletalAnimationComponentEditorContext::Context, fromData, pointerPosition);
-		//}
 
 		{
 			U32 numberOfcomponents = 0;
