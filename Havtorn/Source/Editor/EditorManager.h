@@ -81,7 +81,14 @@ namespace Havtorn
 		CScene* GetCurrentScene() const;
 
 		void SetSelectedEntity(const SEntity& entity);
+		void AddSelectedEntity(const SEntity& entity);
+		void RemoveSelectedEntity(const SEntity& entity);
+		
+		bool IsEntitySelected(const SEntity& entity);
+		void ClearSelectedEntities();
+		
 		const SEntity& GetSelectedEntity() const;
+		std::vector<SEntity> GetSelectedEntities() const;
 
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry) const;
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromName(const std::string& assetName) const;
@@ -148,7 +155,7 @@ namespace Havtorn
 
 		CWorld* World = nullptr;
 		CScene* CurrentScene = nullptr;
-		SEntity SelectedEntity = SEntity::Null;
+		std::vector<SEntity> SelectedEntities = {};
 
 		// TODO.NR: Figure out why we can't use unique ptrs with these namespaced classes
 		std::vector<CWindow*> Windows = {};

@@ -146,7 +146,7 @@ namespace Havtorn
 	void CEditorManager::SetCurrentScene(CScene* scene)
 	{
 		CurrentScene = scene;
-		SelectedEntity = SEntity::Null;
+		SelectedEntities.clear();
 	}
 
 	CScene* CEditorManager::GetCurrentScene() const
@@ -156,12 +156,40 @@ namespace Havtorn
 
 	void CEditorManager::SetSelectedEntity(const SEntity& entity)
 	{
-		SelectedEntity = entity;
+		ClearSelectedEntities();
+		AddSelectedEntity(entity);
+	}
+
+	void CEditorManager::AddSelectedEntity(const SEntity& entity)
+	{
+		SelectedEntities.emplace_back(entity);
+	}
+
+	void CEditorManager::RemoveSelectedEntity(const SEntity& entity)
+	{
+		if (auto it = std::ranges::find(SelectedEntities, entity); it != SelectedEntities.end())
+			SelectedEntities.erase(it);
+	}
+
+	bool CEditorManager::IsEntitySelected(const SEntity& entity)
+	{
+		auto it = std::ranges::find(SelectedEntities, entity);
+		return it != SelectedEntities.end();
+	}
+
+	void CEditorManager::ClearSelectedEntities()
+	{
+		SelectedEntities.clear();
 	}
 
 	const SEntity& CEditorManager::GetSelectedEntity() const
 	{
-		return SelectedEntity;
+		return SelectedEntities.empty() ? SEntity::Null : SelectedEntities[0];
+	}
+
+	std::vector<SEntity> CEditorManager::GetSelectedEntities() const
+	{
+		return SelectedEntities;
 	}
 
 	const Ptr<SEditorAssetRepresentation>& CEditorManager::GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry) const
@@ -526,7 +554,9 @@ namespace Havtorn
 		if (!payload.IsPressed)
 			return;
 
-		if (!SelectedEntity.IsValid())
+		// TODO.NW: Nice to figure out an average bounding box to focus on for all selected entities
+		SEntity firstSelectedEntity = GetSelectedEntity();
+		if (!firstSelectedEntity.IsValid())
 			return;
 
 		if (CurrentScene == nullptr)
@@ -542,7 +572,7 @@ namespace Havtorn
 		SVector2<F32> fov = SVector2<F32>::Zero;
 		bool foundBounds = false;
 
-		if (STransformComponent* transform = CurrentScene->GetComponent<STransformComponent>(SelectedEntity))
+		if (STransformComponent* transform = CurrentScene->GetComponent<STransformComponent>(firstSelectedEntity))
 		{
 			worldPos = transform->Transform.GetMatrix().GetTranslation();
 		}
@@ -562,7 +592,7 @@ namespace Havtorn
 			return;
 		}
 
-		if (SStaticMeshComponent* staticMesh = CurrentScene->GetComponent<SStaticMeshComponent>(SelectedEntity))
+		if (SStaticMeshComponent* staticMesh = CurrentScene->GetComponent<SStaticMeshComponent>(firstSelectedEntity))
 		{
 			center = staticMesh->BoundsCenter;
 			bounds = SVector::GetAbsMaxKeepValue(staticMesh->BoundsMax, staticMesh->BoundsMin);
@@ -588,11 +618,10 @@ namespace Havtorn
 		if (!payload.IsPressed)
 			return;
 
-		if (SelectedEntity.IsValid())
-		{
-			CurrentScene->RemoveEntity(SelectedEntity);
-			SelectedEntity = SEntity::Null;
-		}
+		for (SEntity& selectedEntity : GetSelectedEntities())
+			CurrentScene->RemoveEntity(selectedEntity);
+		
+		ClearSelectedEntities();
 	}
 
 	void CEditorManager::OnResolutionChanged(SVector2<U16> newResolution)

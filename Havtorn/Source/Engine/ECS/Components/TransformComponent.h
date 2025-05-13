@@ -5,6 +5,8 @@
 
 namespace Havtorn
 {
+	class CScene;
+
 	struct STransformComponent : public SComponent
 	{
 		STransformComponent() = default;
@@ -15,6 +17,8 @@ namespace Havtorn
 		void Serialize(char* toData, U64& pointerPosition) const;
 		void Deserialize(const char* fromData, U64& pointerPosition);
 		[[nodiscard]] U32 GetSize() const;
+
+		ENGINE_API void IsDeleted(CScene* fromScene) override;
 
 		ENGINE_API void Attach(STransformComponent* child);
 		ENGINE_API void Detach(STransformComponent* child);

@@ -1,6 +1,7 @@
 // Copyright 2025 Team Havtorn. All Rights Reserved.
 
 #include "TransformComponent.h"
+#include "Scene/Scene.h"
 
 #include <ranges>
 
@@ -38,6 +39,15 @@ namespace Havtorn
 		size += GetDataSize(ParentEntity);
 		size += GetDataSize(AttachedEntities);
 		return size;
+	}
+
+	void STransformComponent::IsDeleted(CScene* fromScene)
+	{
+		if (!ParentEntity.IsValid())
+			return;
+
+		STransformComponent* parentComponent = fromScene->GetComponent<STransformComponent>(ParentEntity);
+		parentComponent->Detach(this);
 	}
 
 	void STransformComponent::Attach(STransformComponent* child)
