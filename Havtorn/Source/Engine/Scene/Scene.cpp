@@ -967,8 +967,6 @@ namespace Havtorn
 
 		for (SComponentStorage& storage : Storages)
 		{
-			// TODO.NW: Fix when entity at back isn't contained in the component storage. Need entity corresponding to 
-			// last component? Maybe that can already be inferred?
 			if (storage.EntityIndices.contains(entity.GUID))
 			{
 				SComponent*& componentToBeRemoved = storage.Components.back();
@@ -978,6 +976,7 @@ namespace Havtorn
 
 					std::swap(storage.Components[storage.EntityIndices.at(entity.GUID)], storage.Components.back());
 
+					componentToBeRemoved->IsDeleted(this);
 					delete componentToBeRemoved;
 					componentToBeRemoved = nullptr;
 				}

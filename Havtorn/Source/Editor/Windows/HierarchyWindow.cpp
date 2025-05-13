@@ -169,9 +169,6 @@ namespace Havtorn
 
 			if (auto it = std::ranges::find(filteredEntities, child); it == filteredEntities.end())
 				filteredEntities.emplace_back(child);
-
-			//if (auto it = std::ranges::find(filteredEntities, child); it != filteredEntities.end())
-			//	filteredEntities.erase(it);
 		}
 	}
 

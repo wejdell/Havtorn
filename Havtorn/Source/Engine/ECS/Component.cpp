@@ -2,6 +2,7 @@
 
 #include "hvpch.h"
 #include "Component.h"
+#include "Scene/Scene.h"
 
 namespace Havtorn
 {
@@ -12,5 +13,9 @@ namespace Havtorn
 	bool SComponent::IsValid() const
 	{
 		return this != nullptr && Owner.IsValid();
-	};
+	}
+
+	void SComponent::IsDeleted(CScene* /*fromScene*/)
+	{
+	}
 }
