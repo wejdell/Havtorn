@@ -36,7 +36,7 @@ namespace Havtorn
 		
 		void OpenAssetTool(const SComponentViewResult& result);
 		
-		void OpenAddComponentModal();
+		void OpenAddComponentModal(const SEntity& entity);
 
 	private:
 		const std::string SelectMeshAssetModalName = "Select Mesh Asset";
@@ -48,7 +48,7 @@ namespace Havtorn
 		const std::string DefaultTextureAssetDirectory = "Assets/Textures";
 
 		CScene* Scene = nullptr;
-		SEntity SelectedEntity = SEntity::Null;
 		U8 AssetPickedIndex = 0;
+		SMatrix DeltaMatrix = SMatrix::Identity;
 	};
 }

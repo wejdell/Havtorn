@@ -643,6 +643,8 @@ namespace Havtorn
 		
 		static bool IsOverGizmo();
 		static bool IsDoubleClick();
+		static bool IsShiftHeld();
+		static bool IsControlHeld();
 
 		static F32 GetTextLineHeight();
 		static SVector2<F32> GetCursorScreenPos();

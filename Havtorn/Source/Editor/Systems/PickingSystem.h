@@ -24,7 +24,7 @@ namespace Havtorn
 	private:
 		void OnMouseClick(const SInputActionPayload payload) const;
 		void OnMouseMove(const SInputAxisPayload payload);
-		void WorldSpacePick() const;
+		void WorldSpacePick(const bool modifierHeld) const;
 
 		CEditorManager* Manager = nullptr;
 		STransformComponent* EditorCameraTransform = nullptr;

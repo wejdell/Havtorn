@@ -187,6 +187,11 @@ namespace Havtorn
 		return SelectedEntities.empty() ? SEntity::Null : SelectedEntities[0];
 	}
 
+	const SEntity& CEditorManager::GetLastSelectedEntity() const
+	{
+		return SelectedEntities.empty() ? SEntity::Null : SelectedEntities.back();
+	}
+
 	std::vector<SEntity> CEditorManager::GetSelectedEntities() const
 	{
 		return SelectedEntities;
@@ -638,6 +643,8 @@ namespace Havtorn
 		SetSelectedEntity(SEntity::Null);
 		SetEditorTheme(EEditorColorTheme::PlayMode);
 		World->BlockSystem<CPickingSystem>(this);
+
+		// TODO.NW: Change input context?
 	}
 
 	void CEditorManager::OnPausePlay(CScene* /*scene*/)

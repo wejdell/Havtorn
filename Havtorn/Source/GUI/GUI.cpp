@@ -478,6 +478,16 @@ namespace Havtorn
 			return ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
 		}
 
+		bool IsShiftHeld()
+		{
+			return ImGui::IsKeyDown(ImGuiKey::ImGuiKey_LeftShift) || ImGui::IsKeyDown(ImGuiKey::ImGuiKey_RightShift);
+		}
+
+		bool IsControlHeld()
+		{
+			return ImGui::IsKeyDown(ImGuiKey::ImGuiKey_LeftCtrl) || ImGui::IsKeyDown(ImGuiKey::ImGuiKey_RightCtrl);
+		}
+
 		F32 GetTextLineHeight()
 		{
 			return ImGui::GetTextLineHeight();
@@ -1663,6 +1673,16 @@ namespace Havtorn
 	bool GUI::IsDoubleClick()
 	{
 		return Instance->Impl->IsDoubleClick();
+	}
+
+	bool GUI::IsShiftHeld()
+	{
+		return Instance->Impl->IsShiftHeld();
+	}
+
+	bool GUI::IsControlHeld()
+	{
+		return Instance->Impl->IsControlHeld();
 	}
 
 	F32 GUI::GetTextLineHeight()

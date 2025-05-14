@@ -50,59 +50,63 @@ namespace Havtorn
 			return;
 		}
 
-		SEntity selection = Manager->GetSelectedEntity();
-		if (!selection.IsValid())
+		std::vector<SEntity> selectedEntities = Manager->GetSelectedEntities();
+
+		if (selectedEntities.empty())
 		{
 			GUI::End();
 			return;
 		}
 
-		SelectedEntity = selection;
-
-		SMetaDataComponent* metaDataComp = Scene->GetComponent<SMetaDataComponent>(SelectedEntity);
-		if (metaDataComp != nullptr)
+		// TODO.NW: Go through and make sure everything in the inspector gets unique ID, maybe based on entity GUID. 
+		// Don't want same IDs over a frame when multiple entities are selected
+		for (const SEntity& selectedEntity : selectedEntities)
 		{
-			GUI::InputText("##MetaDataCompName", &metaDataComp->Name);
-			GUI::SameLine();
-			GUI::TextDisabled("GUID %u", metaDataComp->Owner.GUID);
-			if (GUI::IsItemHovered())
-				GUI::SetTooltip("GUID %u", metaDataComp->Owner.GUID);
-		}
-		GUI::Separator();
-
-		for (SComponentEditorContext* context : Scene->GetComponentEditorContexts(SelectedEntity))
-		{
-			if (context->RemoveComponent(SelectedEntity, Scene))
-				continue;
-
-			GUI::SameLine();
-			SComponentViewResult result = context->View(SelectedEntity, Scene);
-
-			// TODO.NR: Could make this a enum-function map, but would be good to set up clear rules for how this should work.
-			switch (result.Label)
+			SMetaDataComponent* metaDataComp = Scene->GetComponent<SMetaDataComponent>(selectedEntity);
+			if (metaDataComp != nullptr)
 			{
-			case EComponentViewResultLabel::UpdateTransformGizmo:
-				UpdateTransformGizmo(result);
-				break;
-			case EComponentViewResultLabel::InspectAssetComponent:
-				InspectAssetComponent(result);
-				break;
-			case EComponentViewResultLabel::OpenAssetTool:
-				OpenAssetTool(result);
-				break;
-			case EComponentViewResultLabel::PassThrough:
-			default:
-				break;
+				GUI::InputText("##MetaDataCompName", &metaDataComp->Name);
+				GUI::SameLine();
+				GUI::TextDisabled("GUID %u", metaDataComp->Owner.GUID);
+				if (GUI::IsItemHovered())
+					GUI::SetTooltip("GUID %u", metaDataComp->Owner.GUID);
+			}
+			GUI::Separator();
+
+			for (SComponentEditorContext* context : Scene->GetComponentEditorContexts(selectedEntity))
+			{
+				if (context->RemoveComponent(selectedEntity, Scene))
+					continue;
+
+				GUI::SameLine();
+				SComponentViewResult result = context->View(selectedEntity, Scene);
+
+				// TODO.NR: Could make this a enum-function map, but would be good to set up clear rules for how this should work.
+				switch (result.Label)
+				{
+				case EComponentViewResultLabel::UpdateTransformGizmo:
+					UpdateTransformGizmo(result);
+					break;
+				case EComponentViewResultLabel::InspectAssetComponent:
+					InspectAssetComponent(result);
+					break;
+				case EComponentViewResultLabel::OpenAssetTool:
+					OpenAssetTool(result);
+					break;
+				case EComponentViewResultLabel::PassThrough:
+				default:
+					break;
+				}
+
+				GUI::Dummy({ GUI::DummySizeX, GUI::DummySizeY });
 			}
 
-			GUI::Dummy({ GUI::DummySizeX, GUI::DummySizeY });
+			GUI::Separator();
+			if (GUI::Button("Add Component", SVector2<F32>(GUI::GetContentRegionAvail().X, 0)))
+				GUI::OpenPopup("Add Component Modal");
+
+			OpenAddComponentModal(selectedEntity);
 		}
-
-		GUI::Separator();
-		if (GUI::Button("Add Component", SVector2<F32>(GUI::GetContentRegionAvail().X, 0)))
-			GUI::OpenPopup("Add Component Modal");
-
-		OpenAddComponentModal();
 
 		GUI::End();
 	}
@@ -135,7 +139,19 @@ namespace Havtorn
 
 		GUI::PushID(0);
 		SMatrix transformMatrix = viewedTransformComp->Transform.GetMatrix();
-		GUI::GizmoManipulate(inverseView.data, cameraComp->ProjectionMatrix.data, Manager->GetCurrentGizmo(), ETransformGizmoSpace::Local, transformMatrix.data, NULL, NULL);
+
+		// NW: We can choose GetSelectedEntity (which returns the first selected entity) to base the gizmo on if we want. 
+		// I think it feels nicer to get the gizmo on the latest selected entity though, even though it will apply the 
+		// delta matrix one frame later on all the other entities. This probably doesn't matter in editor.
+		if (viewedTransformComp->Owner == Manager->GetSelectedEntities().back())
+		{
+			GUI::GizmoManipulate(inverseView.data, cameraComp->ProjectionMatrix.data, Manager->GetCurrentGizmo(), ETransformGizmoSpace::World, transformMatrix.data, DeltaMatrix.data, NULL);
+		}
+		else
+		{
+			transformMatrix *= DeltaMatrix;
+		}
+		
 		GUI::PopID();
 		
 		viewedTransformComp->Transform.SetMatrix(transformMatrix);
@@ -322,7 +338,7 @@ namespace Havtorn
 		Manager->GetEditorWindow<CSpriteAnimatorGraphNodeWindow>()->Inspect(*component);
 	}
 
-	void CInspectorWindow::OpenAddComponentModal()
+	void CInspectorWindow::OpenAddComponentModal(const SEntity& entity)
 	{
 		if (!GUI::BeginPopupModal("Add Component Modal", NULL, { EWindowFlag::AlwaysAutoResize }))
 			return;
@@ -335,7 +351,7 @@ namespace Havtorn
 			{
 				GUI::TableNextColumn();
 
-				if (context->AddComponent(SelectedEntity, Scene))
+				if (context->AddComponent(entity, Scene))
 				{
 					Manager->SetIsModalOpen(false);
 					GUI::CloseCurrentPopup();
