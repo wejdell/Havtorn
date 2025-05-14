@@ -64,6 +64,12 @@ namespace Havtorn
 		const SInputAction pickEntity = { EInputKey::Mouse1, EInputContext::Editor };
 		MapEvent(EInputActionEvent::PickEditorEntity, pickEntity);
 
+		const SInputAction ctrlPickEntity = { EInputKey::Mouse1, EInputContext::Editor, EInputModifier::Ctrl };
+		MapEvent(EInputActionEvent::ControlPickEditorEntity, ctrlPickEntity);
+
+		const SInputAction shiftPickEntity = { EInputKey::Mouse1, EInputContext::Editor, EInputModifier::Shift };
+		MapEvent(EInputActionEvent::ShiftPickEditorEntity, shiftPickEntity);
+
 		const SInputAction focusEntity = { EInputKey::KeyF, EInputContext::Editor };
 		MapEvent(EInputActionEvent::FocusEditorEntity, focusEntity);
 

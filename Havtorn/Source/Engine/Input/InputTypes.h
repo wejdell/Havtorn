@@ -142,6 +142,8 @@ namespace Havtorn
 		CycleRenderPassBackward,
 		CycleRenderPassReset,
 		PickEditorEntity,
+		ControlPickEditorEntity,
+		ShiftPickEditorEntity,
 		FocusEditorEntity,
 		DeleteEvent,
 		Count

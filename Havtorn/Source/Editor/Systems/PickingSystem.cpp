@@ -26,6 +26,8 @@ namespace Havtorn
 		: Manager(editorManager)
 	{
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::PickEditorEntity).AddMember(this, &CPickingSystem::OnMouseClick);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ControlPickEditorEntity).AddMember(this, &CPickingSystem::OnMouseClick);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ShiftPickEditorEntity).AddMember(this, &CPickingSystem::OnMouseClick);
 		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MousePositionHorizontal).AddMember(this, &CPickingSystem::OnMouseMove);
 		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MousePositionVertical).AddMember(this, &CPickingSystem::OnMouseMove);
 	}
@@ -41,7 +43,7 @@ namespace Havtorn
 	void CPickingSystem::OnMouseClick(const SInputActionPayload payload) const
 	{
 		if (payload.IsPressed)
-			WorldSpacePick();
+			WorldSpacePick(payload.Event == EInputActionEvent::ControlPickEditorEntity || payload.Event == EInputActionEvent::ShiftPickEditorEntity);
 	}
 
 	void CPickingSystem::OnMouseMove(const SInputAxisPayload payload)
@@ -53,7 +55,7 @@ namespace Havtorn
 			MousePosition.Y = payload.AxisValue;
 	}
 
-	void CPickingSystem::WorldSpacePick() const
+	void CPickingSystem::WorldSpacePick(const bool modifierHeld) const
 	{
 		if (Manager->GetIsOverGizmo() || Manager->GetIsWorldPlaying() || Manager->GetIsModalOpen() || EditorCameraComponent == nullptr || EditorCameraTransform == nullptr)
 			return;
@@ -74,9 +76,14 @@ namespace Havtorn
 		const U64 pickedEntityGUID = Manager->GetRenderManager()->GetEntityGUIDFromData(dataIndex);
 
 		SEntity candidate = SEntity(pickedEntityGUID);
-		if (!candidate.IsValid() || candidate == Manager->GetSelectedEntity())
+		if (!candidate.IsValid())
 			return;
 
-		Manager->SetSelectedEntity(candidate);
+		if (modifierHeld && Manager->IsEntitySelected(candidate))
+			Manager->RemoveSelectedEntity(candidate);
+		else if (modifierHeld)
+			Manager->AddSelectedEntity(candidate);
+		else if (!Manager->IsEntitySelected(candidate))
+			Manager->SetSelectedEntity(candidate);
 	}
 }

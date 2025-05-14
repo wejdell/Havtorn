@@ -88,6 +88,7 @@ namespace Havtorn
 		void ClearSelectedEntities();
 		
 		const SEntity& GetSelectedEntity() const;
+		const SEntity& GetLastSelectedEntity() const;
 		std::vector<SEntity> GetSelectedEntities() const;
 
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry) const;

@@ -58,7 +58,6 @@ namespace Havtorn
 			// Hierarchy View
 			GUI::BeginChild("Hierarchy View");
 			const std::vector<SEntity>& entities = GEngine::GetWorld()->GetEntities();
-			SGuiMultiSelectIO io = GUI::BeginMultiSelect({});
 
 			// Filter pre pass
 			std::vector<SEntity> activeEntities = {};
@@ -107,8 +106,6 @@ namespace Havtorn
 				InspectEntities(scene, activeEntities);
 				GUI::EndTable();
 			}
-
-			GUI::EndMultiSelect();
 
 			// Detachment drop
 			if (GUI::BeginDragDropTarget())
@@ -185,7 +182,7 @@ namespace Havtorn
 
 			std::vector<ETreeNodeFlag> flags = { ETreeNodeFlag::SpanAvailWidth, ETreeNodeFlag::DefaultOpen };
 
-			if (entity == Manager->GetSelectedEntity())
+			if (Manager->IsEntitySelected(entity))
 				flags.emplace_back(ETreeNodeFlag::Selected);
 			
 			STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(entity);
@@ -248,7 +245,50 @@ namespace Havtorn
 			}
 
 			if (GUI::IsItemClicked())
-				Manager->SetSelectedEntity(entity);
+			{
+				// TODO.NW: Simplify this
+				if (GUI::IsShiftHeld())
+				{
+					// TODO.NW: Figure out when to clear rest of selection so that shift clicking only selects between
+					// latest selection and current entity.
+					SEntity latestSelection = Manager->GetLastSelectedEntity();
+					if (!latestSelection.IsValid())
+					{
+						Manager->SetSelectedEntity(entity);
+					}
+					else
+					{
+						if (Manager->IsEntitySelected(entity))
+						{
+							auto currentEntityIt = std::ranges::find(entities, entity);
+							auto latestSelectionIt = std::ranges::find(entities, latestSelection);
+							U64 currentEntityIndex = std::ranges::distance(entities.begin(), currentEntityIt);
+							U64 latestSelectionIndex = std::ranges::distance(entities.begin(), latestSelectionIt);
+							U64 startIndex = UMath::Min(currentEntityIndex, latestSelectionIndex);
+							U64 endIndex = UMath::Max(currentEntityIndex, latestSelectionIndex);
+							for (U64 i = startIndex; i != endIndex; i++)
+								Manager->RemoveSelectedEntity(entities[i]);
+						}
+						else
+						{
+							auto currentEntityIt = std::ranges::find(entities, entity);
+							auto latestSelectionIt = std::ranges::find(entities, latestSelection);
+							U64 currentEntityIndex = std::ranges::distance(entities.begin(), currentEntityIt);
+							U64 latestSelectionIndex = std::ranges::distance(entities.begin(), latestSelectionIt);
+							U64 startIndex = UMath::Min(currentEntityIndex, latestSelectionIndex);
+							U64 endIndex = UMath::Max(currentEntityIndex, latestSelectionIndex);
+							for (U64 i = startIndex; i != endIndex; i++)
+								Manager->AddSelectedEntity(entities[i]);
+						}
+					}
+				}
+				else if (GUI::IsControlHeld() && Manager->IsEntitySelected(entity))
+					Manager->RemoveSelectedEntity(entity);
+				else if (GUI::IsControlHeld())
+					Manager->AddSelectedEntity(entity);
+				else if (!Manager->IsEntitySelected(entity))
+					Manager->SetSelectedEntity(entity);
+			}
 
 			if (isOpen)
 			{
