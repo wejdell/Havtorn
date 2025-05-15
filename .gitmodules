@@ -22,3 +22,6 @@
 [submodule "Havtorn/External/ImGuizmo"]
 	path = Havtorn/External/ImGuizmo
 	url = https://github.com/nicolas-risberg/ImGuizmo.git
+[submodule "Havtorn/External/imguiNodeEditor"]
+	path = Havtorn/External/imguiNodeEditor
+	url = https://github.com/thedmd/imgui-node-editor.git
