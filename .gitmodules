@@ -16,3 +16,12 @@
 [submodule "Havtorn/External/DirectXTex"]
 	path = Havtorn/External/DirectXTex
 	url = https://github.com/nicolas-risberg/DirectXTex.git
+[submodule "Havtorn/External/imgui"]
+	path = Havtorn/External/imgui
+	url = https://github.com/nicolas-risberg/imgui.git
+[submodule "Havtorn/External/imgui-node-editor"]
+	path = Havtorn/External/imgui-node-editor
+	url = https://github.com/nicolas-risberg/imgui-node-editor.git
+[submodule "Havtorn/External/ImGuizmo"]
+	path = Havtorn/External/ImGuizmo
+	url = https://github.com/nicolas-risberg/ImGuizmo.git
