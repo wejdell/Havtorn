@@ -16,6 +16,3 @@
 [submodule "Havtorn/External/DirectXTex"]
 	path = Havtorn/External/DirectXTex
 	url = https://github.com/nicolas-risberg/DirectXTex.git
-[submodule "Havtorn/External/ImGuizmo"]
-	path = Havtorn/External/ImGuizmo
-	url = https://github.com/nicolas-risberg/ImGuizmo.git
