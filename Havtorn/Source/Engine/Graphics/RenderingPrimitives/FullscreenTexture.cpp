@@ -98,10 +98,18 @@ namespace Havtorn
 	void CRenderTexture::ReleaseTexture()
 	{
 		Context = nullptr;
-		Texture->Release();
-		Texture = nullptr;
-		RenderTarget->Release();
-		RenderTarget = nullptr;
+		
+		if (Texture != nullptr)
+		{
+			Texture->Release();
+			Texture = nullptr;
+		}
+
+		if (RenderTarget != nullptr)
+		{
+			RenderTarget->Release();
+			RenderTarget = nullptr;
+		}
 		
 		if (ShaderResource)
 		{

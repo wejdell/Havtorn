@@ -10,6 +10,8 @@
 #include "MathTypes/Curve.h"
 #include "Serializable.h"
 
+#define PIN_MATH_TYPES Havtorn::SVector, Havtorn::SMatrix, Havtorn::SQuaternion
+
 namespace Havtorn
 {
 	enum class EAssetType
@@ -25,6 +27,7 @@ namespace Havtorn
 		AudioCollection,
 		VisualFX,
 		Scene,
-		Sequencer
+		Sequencer,
+		Script
 	};
 }

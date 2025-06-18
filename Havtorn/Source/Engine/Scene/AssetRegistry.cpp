@@ -59,6 +59,11 @@ namespace Havtorn
         return assetPaths;
     }
 
+    bool CAssetRegistry::IsAssetRegistered(const std::string& assetPath)
+    {
+        return Registry.contains(assetPath);
+    }
+
     U32 CAssetRegistry::GetSize() const
     {
         U32 size = 0;

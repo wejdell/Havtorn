@@ -113,6 +113,10 @@ namespace Havtorn
 		ENGINE_API void Initialize3DPhysicsData(const SEntity& entity) const;
 		ENGINE_API void Update3DPhysicsData(STransformComponent* transformComponent, SPhysics3DComponent* phys2DComponent) const;
 
+		ENGINE_API void SaveScript(const std::string& filePath);
+		ENGINE_API HexRune::SScript* LoadScript(const std::string& filePath);
+		ENGINE_API void UnloadScript(const std::string& filePath);
+
 	public:
 		CMulticastDelegate<CScene*> OnBeginPlayDelegate;
 		CMulticastDelegate<CScene*> OnPausePlayDelegate;
@@ -148,6 +152,9 @@ namespace Havtorn
 		Ptr<CAssetRegistry> AssetRegistry = nullptr;
 		Ptr<HexPhys2D::CPhysicsWorld2D> PhysicsWorld2D = nullptr;
 		Ptr<HexPhys3D::CPhysicsWorld3D> PhysicsWorld3D = nullptr;
+		
+		std::unordered_map<std::string, Ptr<HexRune::SScript>> LoadedScripts;
+
 		CRenderManager* RenderManager = nullptr;
 
 		CMulticastDelegate<CScene*> OnSceneCreatedDelegate;

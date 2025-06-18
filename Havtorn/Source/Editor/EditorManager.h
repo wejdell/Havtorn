@@ -62,6 +62,7 @@ namespace Havtorn
 		std::filesystem::directory_entry DirectoryEntry = {};
 		CRenderTexture TextureRef;
 		std::string Name = "";
+		bool UsingEditorTexture = false;
 	};
 
 	class CEditorManager
@@ -98,6 +99,8 @@ namespace Havtorn
 
 		void CreateAssetRep(const std::filesystem::path& destinationPath);
 		void RemoveAssetRep(const std::filesystem::directory_entry& sourceEntry);
+
+		void OpenAssetTool(SEditorAssetRepresentation* asset);
 
 		void SetEditorTheme(EEditorColorTheme colorTheme = EEditorColorTheme::HavtornDark, EEditorStyleTheme styleTheme = EEditorStyleTheme::Havtorn);
 		std::string GetEditorColorThemeName(const EEditorColorTheme colorTheme);

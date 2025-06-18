@@ -7,12 +7,14 @@
 #include <vector>
 #include <filesystem>
 #include <functional>
+#include <variant>
 
 #include <Core.h>
 #include <CoreTypes.h>
 #include <HavtornString.h>
 #include <Color.h>
 #include <MathTypes/Vector.h>
+#include <EngineTypes.h>
 
 struct ID3D11Device;
 struct ID3D11DeviceContext;
@@ -479,6 +481,108 @@ namespace Havtorn
 		bool IsHovered = false;
 	};
 
+	// TODO.NW: static asserts to make sure they're equal in length to code based enums?
+	enum class EGUIPinType
+	{
+		Unknown,
+		Flow,
+		Bool,
+		Int,
+		Float,
+		String,
+		Vector,
+		IntArray,
+		FloatArray,
+		StringArray,
+		Object,
+		ObjectArray,
+		Function,
+		Delegate,
+	};
+
+	enum class EGUIIconType 
+	{ 
+		Flow,
+		Circle, 
+		Square, 
+		Grid, 
+		RoundSquare, 
+		Diamond 
+	};
+
+	enum class EGUIPinDirection
+	{
+		Input,
+		Output
+	};
+
+	enum class EGUINodeType
+	{
+		Execution,
+		Simple,
+		Tree,
+		Comment,
+	};
+
+	struct SGUILink
+	{
+		U64 UID = 0;
+		U64 StartPinID = 0;
+		U64 EndPinID = 0;
+	};
+
+	struct SGUINode;
+	struct SGUIPin
+	{
+		SGUIPin(U64 id, EGUIPinType type, EGUIPinDirection direction, SGUINode* node, const std::string& name)
+			: UID(id)
+			, Type(type)
+			, Direction(direction)
+			, Node(node)
+			, Name(name)
+		{}
+		SGUIPin() = default;
+
+		U64 UID = 0;
+		EGUIPinType Type = EGUIPinType::Flow;
+		EGUIPinDirection Direction = EGUIPinDirection::Input;
+		SGUINode* Node = nullptr;
+		std::variant<PIN_LITERAL_TYPES, PIN_MATH_TYPES> Data; // NW: Only literal data types need to set data from GUI->Engine, when they are unpinned.
+		std::string Name = "";
+
+		bool IsDataUnset() const { return std::holds_alternative<std::monostate>(Data); }
+	};
+
+	struct SGUINode
+	{
+		U64 UID = 0;
+		EGUINodeType Type = EGUINodeType::Execution;
+		std::vector<SGUIPin> Inputs = {};
+		std::vector<SGUIPin> Outputs = {};
+		
+		std::string Name = "";
+		SColor Color = SColor::White;
+		SVector2<F32> Position = SVector2<F32>();
+		bool HasBeenInitialized = false;
+	};
+
+	struct SGUINodeContext
+	{
+		std::string Name = "";
+		std::string Category = "General";
+		I64 Index = -1;
+	};
+
+	struct SNodeOperation
+	{
+		SGUIPin ModifiedLiteralValuePin;
+		SGUINodeContext NewNodeContext;
+		SVector2<F32> NewNodePosition = SVector2<F32>::Zero;
+		SGUILink NewLink;
+		std::vector<SGUINode> RemovedNodes;
+		std::vector<SGUILink> RemovedLinks;
+	};
+
 	class GUI_API GUI
 	{
 	public:
@@ -682,6 +786,10 @@ namespace Havtorn
 		static void DockBuilderSetNodeSize(U32 id, const SVector2<F32>& size);
 		static void DockBuilderDockWindow(const char* label, U32 id);
 		static void DockBuilderFinish(U32 id);
+
+		static void OpenScript(const std::vector<SGUINode>& nodes, const std::vector<SGUILink>& links);
+		static SNodeOperation RenderScript(std::vector<SGUINode>& nodes, std::vector<SGUILink>& links, const std::vector<SGUINodeContext>& registeredContexts);
+		static void CloseScript(std::vector<SGUINode>& nodes, std::vector<SGUILink>& links);
 
 		static void LogToClipboard();
 		static void LogFinish();

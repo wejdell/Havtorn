@@ -70,6 +70,7 @@ namespace Havtorn
 		Windows.emplace_back(new CInspectorWindow("Inspector", this));
 		Windows.emplace_back(new CSpriteAnimatorGraphNodeWindow("Sprite Animator", this));
 		Windows.back()->SetEnabled(false);
+		Windows.emplace_back(new CScriptTool("Script Editor", this));
 
 		ResourceManager = new CEditorResourceManager();
 		bool success = ResourceManager->Init(renderManager, framework);
@@ -264,6 +265,19 @@ namespace Havtorn
 		// TODO.NW: Save these in the textureBank? Might be impossible with animated thumbnails. Figure out ownership
 		rep.TextureRef = ResourceManager->RenderAssetTexure(rep.AssetType, filePath);
 
+		switch (rep.AssetType)
+		{
+		case EAssetType::StaticMesh:
+		case EAssetType::SkeletalMesh:
+		case EAssetType::Texture:
+		case EAssetType::Material:
+		case EAssetType::Animation:
+			rep.UsingEditorTexture = false;
+			break;
+		default:
+			rep.UsingEditorTexture = true;
+		}
+
 		AssetRepresentations.emplace_back(std::make_unique<SEditorAssetRepresentation>(rep));
 
 		delete[] data;
@@ -272,11 +286,26 @@ namespace Havtorn
 	void CEditorManager::RemoveAssetRep(const std::filesystem::directory_entry& sourceEntry)
 	{
 		auto& rep = GetAssetRepFromDirEntry(sourceEntry);
+		if (rep == AssetRepresentations[0])
+			return;
+
 		auto it = std::ranges::find(AssetRepresentations, rep);
 		if (it != AssetRepresentations.end())
 		{
-			it->get()->TextureRef.Release();
+			if (!it->get()->UsingEditorTexture)
+				it->get()->TextureRef.Release();
+
 			AssetRepresentations.erase(it);	
+		}
+	}
+
+	void CEditorManager::OpenAssetTool(SEditorAssetRepresentation* asset)
+	{
+		// Edit mesh, texture, anim montage, material?
+		if (asset->AssetType == EAssetType::Script)
+		{
+			// Load asset, held somewhere? RenderManager and World
+			GetEditorWindow<CScriptTool>()->OpenScript(GEngine::GetWorld()->LoadScript(asset->DirectoryEntry.path().string()));
 		}
 	}
 

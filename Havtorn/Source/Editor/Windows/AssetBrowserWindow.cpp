@@ -424,6 +424,10 @@ namespace Havtorn
 				assetTypeName = "TEXTURE";
 				assetColor = SColor::Red;
 				break;
+			case EAssetType::Script:
+				assetTypeName = "SCRIPT";
+				assetColor = SColor::Blue;
+				break;
 			default:
 				break;
 			}
@@ -434,6 +438,7 @@ namespace Havtorn
 			{
 				// NW: Open Tool depending on asset type?
 				HV_LOG_INFO("Clicked asset: %s", rep->Name.c_str());
+				Manager->OpenAssetTool(rep.get());
 				SelectedAsset.reset();
 			}
 

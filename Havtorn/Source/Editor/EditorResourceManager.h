@@ -29,6 +29,8 @@ namespace Havtorn
 		PointLightIcon,
 		SpotlightIcon,
 		DecalIcon,
+		ScriptIcon,
+		NodeBackground,
 		Count,
 		None = Count
 	};
@@ -53,7 +55,7 @@ namespace Havtorn
 		~CEditorResourceManager() = default;
 
 		bool Init(CRenderManager* renderManager, const CGraphicsFramework* framework);
-		const CRenderTexture& GetEditorTexture(EEditorTexture texture) const;
+		CRenderTexture GetEditorTexture(EEditorTexture texture) const;
 
 		CRenderTexture RenderAssetTexure(EAssetType assetType, const std::string& fileName) const;
 		void AnimateAssetTexture(CRenderTexture& assetTexture, const EAssetType assetType, const std::string& fileName, const F32 animationTime) const;

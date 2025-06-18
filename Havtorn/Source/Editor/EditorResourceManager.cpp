@@ -9,7 +9,7 @@
 
 namespace Havtorn
 {
-	const CRenderTexture& CEditorResourceManager::GetEditorTexture(EEditorTexture texture) const
+	CRenderTexture CEditorResourceManager::GetEditorTexture(EEditorTexture texture) const
 	{
 		U64 index = static_cast<I64>(texture);
 		
@@ -44,6 +44,8 @@ namespace Havtorn
 			break;
 		case EAssetType::Sequencer:
 			return std::move(GetEditorTexture(EEditorTexture::SequencerIcon));
+		case EAssetType::Script:
+			return std::move(GetEditorTexture(EEditorTexture::ScriptIcon));
 		case EAssetType::None:
 		default:
 			break;
@@ -262,6 +264,12 @@ namespace Havtorn
 
 		case EEditorTexture::DecalIcon:
 			return ResourceAssetPath + "DecalIcon" + extension;
+
+		case EEditorTexture::ScriptIcon:
+			return ResourceAssetPath + "ScriptIcon" + extension;
+
+		case EEditorTexture::NodeBackground:
+			return ResourceAssetPath + "NodeBackground" + extension;
 		
 		case EEditorTexture::Count:
 		default:

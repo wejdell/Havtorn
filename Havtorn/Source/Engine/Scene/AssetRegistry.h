@@ -28,6 +28,8 @@ namespace Havtorn
 		const std::string& GetAssetPath(const U64& guid);
 		std::vector<std::string> GetAssetPaths(const std::vector<U64>& guids);
 
+		bool IsAssetRegistered(const std::string& assetPath);
+
 		[[nodiscard]] U32 GetSize() const;
 		void Serialize(char* toData, U64& pointerPosition) const;
 		void Deserialize(const char* fromData, U64& pointerPosition);

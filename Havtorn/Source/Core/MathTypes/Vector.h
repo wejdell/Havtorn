@@ -411,6 +411,8 @@ namespace Havtorn
 
 	inline std::string SVector::ToString() const
 	{
+		// TODO.NW: Is this a memory leak? Probably tried but can we not memcpy into a string copy here and delete the buffer?
+		// 
 		// AG: Regarding buffer size:
 		// "{X: , Y: , Z: }" => 15 chars, Leaves 49 chars for float values X, Y & Z to be pasted into %.1f.
 		// With 49 chars to share: X, Y & Z each should get 16 chars. Which allows values up to 13 digits.

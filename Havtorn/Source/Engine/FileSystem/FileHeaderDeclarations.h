@@ -7,6 +7,7 @@
 #include "Scene/Scene.h"
 #include "Scene/AssetRegistry.h"
 #include "Assets/SequencerAsset.h"
+#include "HexRune/HexRune.h"
 
 namespace Havtorn
 {
@@ -471,5 +472,38 @@ namespace Havtorn
 			EntityReferences.emplace_back();
 			EntityReferences.back().Deserialize(fromData, pointerPosition);
 		}
+	}
+
+	struct SScriptFileHeader
+	{
+		EAssetType AssetType = EAssetType::Script;
+		HexRune::SScript* Script = nullptr;
+
+		[[nodiscard]] U32 GetSize() const;
+		void Serialize(char* toData) const;
+		void Deserialize(const char* fromData, HexRune::SScript* outScript);
+	};
+
+	inline U32 SScriptFileHeader::GetSize() const
+	{
+		U32 size = 0;
+		size += GetDataSize(AssetType);
+		size += Script->GetSize();
+
+		return size;
+	}
+
+	inline void SScriptFileHeader::Serialize(char* toData) const
+	{
+		U64 pointerPosition = 0;
+		SerializeData(AssetType, toData, pointerPosition);
+		Script->Serialize(toData, pointerPosition);
+	}
+
+	inline void SScriptFileHeader::Deserialize(const char* fromData, HexRune::SScript* outScript)
+	{
+		U64 pointerPosition = 0;
+		DeserializeData(AssetType, fromData, pointerPosition);
+		outScript->Deserialize(fromData, pointerPosition);
 	}
 }

@@ -39,5 +39,9 @@ namespace Havtorn
 	#define STATIC_U32(x) static_cast<U32>(x)
 	#define STATIC_U16(x) static_cast<U16>(x)
 	#define STATIC_U8(x) static_cast<U8>(x)
+	#define STATIC_I64(x) static_cast<I64>(x)
 	#define STATIC_I32(x) static_cast<I32>(x)
+	#define STATIC_I8(x) static_cast<I8>(x)
+
+	#define PIN_LITERAL_TYPES std::monostate, bool, I32, F32, std::string
 }

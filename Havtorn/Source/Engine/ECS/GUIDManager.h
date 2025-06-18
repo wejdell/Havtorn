@@ -4,7 +4,7 @@
 
 namespace Havtorn
 {
-	class UGUIDManager
+	class ENGINE_API UGUIDManager
 	{
 	public:
 		static U64 Generate();

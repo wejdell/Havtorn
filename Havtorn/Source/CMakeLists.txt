@@ -162,6 +162,23 @@ set(IMGUI_FILES
    ${EXTERNAL_FOLDER}ImGuizmo/ImSequencer.cpp
    ${EXTERNAL_FOLDER}ImGuizmo/ImSequencer.h
    ${EXTERNAL_FOLDER}ImGuizmo/ImZoomSlider.h
+   ${EXTERNAL_FOLDER}imgui-node-editor/crude_json.cpp
+   ${EXTERNAL_FOLDER}imgui-node-editor/crude_json.h
+   ${EXTERNAL_FOLDER}imgui-node-editor/imgui_bezier_math.h
+   ${EXTERNAL_FOLDER}imgui-node-editor/imgui_canvas.cpp
+   ${EXTERNAL_FOLDER}imgui-node-editor/imgui_canvas.h
+   ${EXTERNAL_FOLDER}imgui-node-editor/imgui_extra_math.h
+   ${EXTERNAL_FOLDER}imgui-node-editor/imgui_node_editor.cpp
+   ${EXTERNAL_FOLDER}imgui-node-editor/imgui_node_editor.h
+   ${EXTERNAL_FOLDER}imgui-node-editor/imgui_node_editor.h
+   ${EXTERNAL_FOLDER}imgui-node-editor/imgui_node_editor_api.cpp
+   ${EXTERNAL_FOLDER}imgui-node-editor/imgui_node_editor_internal.h
+   ${EXTERNAL_FOLDER}imgui-node-editor/utilities/builders.cpp
+   ${EXTERNAL_FOLDER}imgui-node-editor/utilities/builders.h
+   ${EXTERNAL_FOLDER}imgui-node-editor/utilities/drawing.cpp
+   ${EXTERNAL_FOLDER}imgui-node-editor/utilities/drawing.h
+   ${EXTERNAL_FOLDER}imgui-node-editor/utilities/widgets.cpp
+   ${EXTERNAL_FOLDER}imgui-node-editor/utilities/widgets.h
 )
 add_library(GUI SHARED ${GUI_FILES} ${IMGUI_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GUI_FILES})
@@ -169,6 +186,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}"/../External" FILES ${IMGUI_FILES}
 target_link_libraries(GUI PRIVATE
     Core
     Platform
+    DirectXTex
 )
 target_include_directories(GUI PRIVATE
 	"${GUI_FOLDER}"
@@ -176,8 +194,11 @@ target_include_directories(GUI PRIVATE
 	"${CORE_FOLDER}"
     "${EXTERNAL_FOLDER}imgui"
     "${EXTERNAL_FOLDER}ImGuizmo"
+    "${EXTERNAL_FOLDER}imgui-node-editor"
+    "${EXTERNAL_FOLDER}DirectXTex"
 )
 target_link_directories(GUI PRIVATE
+    "${EXTERNAL_FOLDER}Lib"    
     ${CMAKE_BINARY_DIR}
 )
 target_compile_definitions(GUI PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_GUI_DLL)
@@ -216,6 +237,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/Physics3DControllerComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/PointLightComponentEditorContext.cpp
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/PointLightComponentEditorContext.h
+    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/ScriptComponentEditorContext.cpp
+    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/ScriptComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/SequencerComponentEditorContext.cpp
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/SequencerComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/SkeletalAnimationComponentEditorContext.cpp
@@ -250,6 +273,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/Components/Physics3DControllerComponent.h
     ${ENGINE_FOLDER}ECS/Components/PointLightComponent.h
     ${ENGINE_FOLDER}ECS/Components/SequencerComponent.h
+    ${ENGINE_FOLDER}ECS/Components/ScriptComponent.cpp
+    ${ENGINE_FOLDER}ECS/Components/ScriptComponent.h
     ${ENGINE_FOLDER}ECS/Components/SkeletalAnimationComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/SkeletalAnimationComponent.h
     ${ENGINE_FOLDER}ECS/Components/SkeletalMeshComponent.cpp
@@ -323,6 +348,15 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Graphics/TextureBank.h
     ${ENGINE_FOLDER}HexPhys/HexPhys.cpp
     ${ENGINE_FOLDER}HexPhys/HexPhys.h
+    ${ENGINE_FOLDER}HexRune/CoreNodes/CoreNodes.cpp
+    ${ENGINE_FOLDER}HexRune/CoreNodes/CoreNodes.h
+    ${ENGINE_FOLDER}HexRune/NodeEditorContexts/CoreNodeEditorContexts.cpp
+    ${ENGINE_FOLDER}HexRune/NodeEditorContexts/CoreNodeEditorContexts.h
+    ${ENGINE_FOLDER}HexRune/HexRune.cpp
+    ${ENGINE_FOLDER}HexRune/HexRune.h
+    ${ENGINE_FOLDER}HexRune/NodeEditorContext.h
+    ${ENGINE_FOLDER}HexRune/Pin.cpp
+    ${ENGINE_FOLDER}HexRune/Pin.h
     "${ENGINE_FOLDER}Input/Input.cpp"
     "${ENGINE_FOLDER}Input/Input.h"
     "${ENGINE_FOLDER}Input/InputMapper.cpp"
@@ -485,8 +519,6 @@ target_include_directories(Engine PRIVATE
     "${EXTERNAL_FOLDER}box2d/include/box2d"
     "${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
     "${EXTERNAL_FOLDER}PhysX/physx/include"
-    #"${EXTERNAL_FOLDER}imgui"
-    #"${EXTERNAL_FOLDER}ImGuizmo"
     "Core"
     "Platform"
     "GUI"
@@ -561,6 +593,8 @@ add_dependencies(Game Core Platform GUI Engine)
 
 # ==================== EDITOR ====================
 set(EDITOR_FILES
+    ${EDITOR_FOLDER}AuthoringTools/ScriptTool.cpp
+    ${EDITOR_FOLDER}AuthoringTools/ScriptTool.h
     ${EDITOR_FOLDER}Systems/PickingSystem.cpp
     ${EDITOR_FOLDER}Systems/PickingSystem.h
     ${EDITOR_FOLDER}Toggleables/EditMenu.cpp

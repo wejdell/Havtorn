@@ -321,12 +321,29 @@ namespace Havtorn
 			return specializedComponents;
 		}
 		
+		template<typename T>
+		std::vector<SComponent*> GetBaseComponents()
+		{
+			const U64 typeIDHashCode = typeid(T).hash_code();
+			if (!ComponentTypeIndices.contains(typeIDHashCode))
+			{
+				// TODO.NR: Make a toggle for this, keep for now
+				//std::string templateName = typeid(T).name();
+				//HV_LOG_WARN(__FUNCTION__" with T=[%s]: Tried to get all components of a type that does not have any storage. Returning empty vector.", templateName.c_str());
+				return {};
+			}
+
+			const SComponentStorage& componentStorage = Storages[ComponentTypeIndices.at(typeIDHashCode)];
+			return componentStorage.Components;
+		}
+
 		ENGINE_API void AddComponentEditorContext(const SEntity& owner, SComponentEditorContext* context);
 		ENGINE_API void RemoveComponentEditorContext(const SEntity& owner, SComponentEditorContext* context);
 
 		ENGINE_API void RemoveComponentEditorContexts(const SEntity& owner);
 		ENGINE_API std::vector<SComponentEditorContext*> GetComponentEditorContexts(const SEntity& owner);
 
+		// TODO.NW: Move this to World, so that it persists over scenes. Same as with Nodes
 		ENGINE_API const std::vector<SComponentEditorContext*>& GetComponentEditorContexts() const;
 		
 		std::unordered_map<U64, std::vector<SComponentEditorContext*>> EntityComponentEditorContexts;

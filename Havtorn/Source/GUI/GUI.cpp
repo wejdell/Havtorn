@@ -6,7 +6,12 @@
 #include <backends/imgui_impl_win32.h>
 #include <backends/imgui_impl_dx11.h>
 #include <ImGuizmo.h>
+#include <imgui_node_editor.h>
+#include <utilities/builders.h>
+#include <utilities/widgets.h>
+#include <utilities/drawing.h>
 #include <d3d11.h>
+#include <DirectXTex/DirectXTex.h>
 
 #include <CoreTypes.h>
 #include <MathTypes/Vector.h>
@@ -33,8 +38,15 @@ namespace Havtorn
 		return 0;
 	}
 
+	namespace NE = ax::NodeEditor;
+
 	class GUI::ImGuiImpl
 	{
+		NE::EditorContext* NodeEditorContext = nullptr;
+		NE::Utilities::BlueprintNodeBuilder NodeBuilder;
+		ID3D11ShaderResourceView* BlueprintBackgroundSRV = nullptr;
+		ImTextureID BlueprintBackgroundImage = 0;
+
 	public:
 		ImGuiImpl() = default;
 		~ImGuiImpl() = default;
@@ -52,6 +64,25 @@ namespace Havtorn
 
 			ImGui_ImplWin32_Init(hwnd);
 			ImGui_ImplDX11_Init(device, context);
+
+			NE::Config config;
+			config.SettingsFile = "Simple.json";
+			config.UserPointer = this;
+			NodeEditorContext = NE::CreateEditor(&config);
+
+			std::string filePath = "Resources/NodeBackground.dds";
+			DirectX::ScratchImage scratchImage;
+			DirectX::TexMetadata metaData = {};
+			const auto widePath = new wchar_t[filePath.length() + 1];
+			std::ranges::copy(filePath, widePath);
+			widePath[filePath.length()] = 0;
+			GetMetadataFromDDSFile(widePath, DirectX::DDS_FLAGS_NONE, metaData);
+			LoadFromDDSFile(widePath, DirectX::DDS_FLAGS_NONE, &metaData, scratchImage);
+			delete[] widePath;
+			const DirectX::Image* image = scratchImage.GetImage(0, 0, 0);
+			DirectX::CreateShaderResourceView(device, image, scratchImage.GetImageCount(), metaData, &BlueprintBackgroundSRV);
+
+			BlueprintBackgroundImage = (ImTextureID)BlueprintBackgroundSRV;
 		}
 
 		void BeginFrame()
@@ -60,6 +91,23 @@ namespace Havtorn
 			ImGui_ImplWin32_NewFrame();
 			ImGui::NewFrame();
 			ImGuizmo::BeginFrame();
+
+			//NE::SetCurrentEditor(NodeEditorContext);
+			//NE::Begin("My Editor", ImVec2(0.0, 0.0f));
+			//int uniqueId = 1;
+			//// Start drawing nodes.
+			//	NE::BeginNode(uniqueId++);
+			//		ImGui::Text("Node A");
+			//			NE::BeginPin(uniqueId++, NE::PinKind::Input);
+			//				ImGui::Text("-> In");
+			//			NE::EndPin();
+			//		ImGui::SameLine();
+			//			NE::BeginPin(uniqueId++, NE::PinKind::Output);
+			//				ImGui::Text("Out ->");
+			//			NE::EndPin();
+			//	NE::EndNode();
+			//NE::End();
+			//NE::SetCurrentEditor(nullptr);
 		}
 
 		LRESULT WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
@@ -419,10 +467,13 @@ namespace Havtorn
 			{
 			case ImGuiStyleVar_WindowPadding:
 				value = ImGui::GetStyle().WindowPadding;
+				break;
 			case ImGuiStyleVar_FramePadding:
 				value = ImGui::GetStyle().FramePadding;
+				break;
 			case ImGuiStyleVar_ItemSpacing:
 				value = ImGui::GetStyle().ItemSpacing;
+				break;
 			}
 			
 			return SVector2<F32>(value.x, value.y);
@@ -973,6 +1024,888 @@ namespace Havtorn
 		void DockBuilderFinish(U32 id)
 		{
 			ImGui::DockBuilderFinish(id);
+		}
+
+		// TODO.NW: Move to script asset editor
+		ImColor GetPinTypeColor(EGUIPinType type)
+		{
+			switch (type)
+			{
+			default:
+			case EGUIPinType::Flow:     return ImColor(255, 255, 255);
+			case EGUIPinType::Bool:     return ImColor(220, 48, 48);
+			case EGUIPinType::Int:      return ImColor(68, 201, 156);
+			case EGUIPinType::Float:    return ImColor(147, 226, 74);
+			case EGUIPinType::String:   return ImColor(124, 21, 153);
+			case EGUIPinType::Vector:   return ImColor(255, 206, 27);
+			case EGUIPinType::Object:   return ImColor(51, 150, 215);
+			case EGUIPinType::ObjectArray:   return ImColor(51, 150, 215);
+			case EGUIPinType::Function: return ImColor(218, 0, 183);
+			case EGUIPinType::Delegate: return ImColor(255, 48, 48);
+			}
+		};
+
+		// TODO.NW: Make context action for splitting objects? e.g. in vector
+		void DrawPinIcon(const SGUIPin& pin, bool connected, int alpha)
+		{
+			EGUIIconType iconType;
+			ImColor color = GetPinTypeColor(pin.Type);
+			color.Value.w = alpha / 255.0f;
+			switch (pin.Type)
+			{
+			case EGUIPinType::Flow:     iconType = EGUIIconType::Flow;   break;
+			case EGUIPinType::Bool:     iconType = EGUIIconType::Circle; break;
+			case EGUIPinType::Int:      iconType = EGUIIconType::Circle; break;
+			case EGUIPinType::Float:    iconType = EGUIIconType::Circle; break;
+			case EGUIPinType::String:   iconType = EGUIIconType::Circle; break;
+			case EGUIPinType::Vector:   iconType = EGUIIconType::Circle; break;
+			case EGUIPinType::Object:   iconType = EGUIIconType::Circle; break;
+			case EGUIPinType::ObjectArray:   iconType = EGUIIconType::Grid; break;
+			case EGUIPinType::Function: iconType = EGUIIconType::Circle; break;
+			case EGUIPinType::Delegate: iconType = EGUIIconType::Square; break;
+			default:
+				return;
+			}
+
+			ax::Widgets::Icon(ImVec2(static_cast<float>(24.0f), static_cast<float>(24.0f)), static_cast<ax::Drawing::IconType>(iconType), connected, color, ImColor(32, 32, 32, alpha));
+		};
+
+		bool CanCreateLink(SGUIPin* a, SGUIPin* b)
+		{
+			if (!a || !b || a == b || a->Direction == b->Direction || a->Type != b->Type || a->Node == b->Node)
+				return false;
+
+			return true;
+		}
+
+		bool IsPinLinked(U64 id, const std::vector<SGUILink>& links)
+		{
+			if (!id)
+				return false;
+
+			for (auto& link : links)
+				if (link.StartPinID == id || link.EndPinID == id)
+					return true;
+
+			return false;
+		}
+
+		void ShowStyleEditor(bool* show = nullptr)
+		{
+			if (!ImGui::Begin("Style", show))
+			{
+				ImGui::End();
+				return;
+			}
+
+			auto paneWidth = ImGui::GetContentRegionAvail().x;
+
+			auto& editorStyle = NE::GetStyle();
+			ImGui::BeginHorizontal("Style buttons", ImVec2(paneWidth, 0), 1.0f);
+			ImGui::TextUnformatted("Values");
+			ImGui::Spring();
+			if (ImGui::Button("Reset to defaults"))
+				editorStyle = NE::Style();
+			ImGui::EndHorizontal();
+			ImGui::Spacing();
+			ImGui::DragFloat4("Node Padding", &editorStyle.NodePadding.x, 0.1f, 0.0f, 40.0f);
+			ImGui::DragFloat("Node Rounding", &editorStyle.NodeRounding, 0.1f, 0.0f, 40.0f);
+			ImGui::DragFloat("Node Border Width", &editorStyle.NodeBorderWidth, 0.1f, 0.0f, 15.0f);
+			ImGui::DragFloat("Hovered Node Border Width", &editorStyle.HoveredNodeBorderWidth, 0.1f, 0.0f, 15.0f);
+			ImGui::DragFloat("Hovered Node Border Offset", &editorStyle.HoverNodeBorderOffset, 0.1f, -40.0f, 40.0f);
+			ImGui::DragFloat("Selected Node Border Width", &editorStyle.SelectedNodeBorderWidth, 0.1f, 0.0f, 15.0f);
+			ImGui::DragFloat("Selected Node Border Offset", &editorStyle.SelectedNodeBorderOffset, 0.1f, -40.0f, 40.0f);
+			ImGui::DragFloat("Pin Rounding", &editorStyle.PinRounding, 0.1f, 0.0f, 40.0f);
+			ImGui::DragFloat("Pin Border Width", &editorStyle.PinBorderWidth, 0.1f, 0.0f, 15.0f);
+			ImGui::DragFloat("Link Strength", &editorStyle.LinkStrength, 1.0f, 0.0f, 500.0f);
+			//ImVec2  SourceDirection;
+			//ImVec2  TargetDirection;
+			ImGui::DragFloat("Scroll Duration", &editorStyle.ScrollDuration, 0.001f, 0.0f, 2.0f);
+			ImGui::DragFloat("Flow Marker Distance", &editorStyle.FlowMarkerDistance, 1.0f, 1.0f, 200.0f);
+			ImGui::DragFloat("Flow Speed", &editorStyle.FlowSpeed, 1.0f, 1.0f, 2000.0f);
+			ImGui::DragFloat("Flow Duration", &editorStyle.FlowDuration, 0.001f, 0.0f, 5.0f);
+			//ImVec2  PivotAlignment;
+			//ImVec2  PivotSize;
+			//ImVec2  PivotScale;
+			//float   PinCorners;
+			//float   PinRadius;
+			//float   PinArrowSize;
+			//float   PinArrowWidth;
+			ImGui::DragFloat("Group Rounding", &editorStyle.GroupRounding, 0.1f, 0.0f, 40.0f);
+			ImGui::DragFloat("Group Border Width", &editorStyle.GroupBorderWidth, 0.1f, 0.0f, 15.0f);
+
+			ImGui::Separator();
+
+			static ImGuiColorEditFlags edit_mode = ImGuiColorEditFlags_DisplayRGB;
+			ImGui::BeginHorizontal("Color Mode", ImVec2(paneWidth, 0), 1.0f);
+			ImGui::TextUnformatted("Filter Colors");
+			ImGui::Spring();
+			ImGui::RadioButton("RGB", &edit_mode, ImGuiColorEditFlags_DisplayRGB);
+			ImGui::Spring(0);
+			ImGui::RadioButton("HSV", &edit_mode, ImGuiColorEditFlags_DisplayHSV);
+			ImGui::Spring(0);
+			ImGui::RadioButton("HEX", &edit_mode, ImGuiColorEditFlags_DisplayHex);
+			ImGui::EndHorizontal();
+
+			static ImGuiTextFilter filter;
+			filter.Draw("##filter", paneWidth);
+
+			ImGui::Spacing();
+
+			ImGui::PushItemWidth(-160);
+			for (int i = 0; i < NE::StyleColor_Count; ++i)
+			{
+				auto name = NE::GetStyleColorName((NE::StyleColor)i);
+				if (!filter.PassFilter(name))
+					continue;
+
+				ImGui::ColorEdit4(name, &editorStyle.Colors[i].x, edit_mode);
+			}
+			ImGui::PopItemWidth();
+
+			ImGui::End();
+		}
+
+		void ShowLeftPane(float paneWidth)
+		{
+			auto& io = ImGui::GetIO();
+
+			ImGui::BeginChild("Selection", ImVec2(paneWidth, 0));
+
+			static bool showStyleEditor = true;
+			ShowStyleEditor(&showStyleEditor);
+
+			ImGui::EndChild();
+		}
+
+		static bool Splitter(bool split_vertically, float thickness, float* size1, float* size2, float min_size1, float min_size2, float splitter_long_axis_size = -1.0f)
+		{
+			using namespace ImGui;
+			ImGuiContext& g = *GImGui;
+			ImGuiWindow* window = g.CurrentWindow;
+			ImGuiID id = window->GetID("##Splitter");
+			ImRect bb;
+			bb.Min = ImVec2(window->DC.CursorPos.x + (split_vertically ? ImVec2(*size1, 0.0f).x : ImVec2(0.0f, *size1).x), window->DC.CursorPos.y + (split_vertically ? ImVec2(*size1, 0.0f).y : ImVec2(0.0f, *size1).y));
+			bb.Max = ImVec2(bb.Min.x + CalcItemSize(split_vertically ? ImVec2(thickness, splitter_long_axis_size) : ImVec2(splitter_long_axis_size, thickness), 0.0f, 0.0f).x, bb.Min.y + CalcItemSize(split_vertically ? ImVec2(thickness, splitter_long_axis_size) : ImVec2(splitter_long_axis_size, thickness), 0.0f, 0.0f).y);
+			return SplitterBehavior(bb, id, split_vertically ? ImGuiAxis_X : ImGuiAxis_Y, size1, size2, min_size1, min_size2, 0.0f);
+		}
+
+		bool IsPinTypeLiteral(SGUIPin& pin)
+		{
+			return pin.Type == EGUIPinType::String || pin.Type == EGUIPinType::Bool || pin.Type == EGUIPinType::Int || pin.Type == EGUIPinType::Float;
+		}
+
+		bool DrawLiteralTypePin(SGUIPin& pin)
+		{
+			bool wasPinValueModified = false;
+			constexpr float emptyItemWidth = 50.0f;
+
+			float cursorPosY = ImGui::GetCursorPosY();
+			ImGui::SetCursorPosY(cursorPosY + 2.0f);
+
+			switch (pin.Type)
+			{
+			case EGUIPinType::String:
+			{
+				if (pin.IsDataUnset())
+					pin.Data = "";
+
+				ImGui::PushID(pin.UID);
+				ImGui::PushItemWidth(emptyItemWidth);
+				wasPinValueModified = ImGui::InputText("##edit", (char*)std::get<std::string>(pin.Data).c_str(), 127);
+				ImGui::PopItemWidth();
+				ImGui::PopID();
+				break;
+			}
+			case EGUIPinType::Int:
+			{
+				if (pin.IsDataUnset())
+					pin.Data = 0;
+
+				ImGui::PushID(pin.UID);
+				ImGui::PushItemWidth(emptyItemWidth);
+				wasPinValueModified = ImGui::InputInt("##edit", &std::get<I32>(pin.Data));
+				ImGui::PopItemWidth();
+				ImGui::PopID();
+				break;
+			}
+			case EGUIPinType::Bool:
+			{
+				if (pin.IsDataUnset())
+					pin.Data = false;
+
+				ImGui::PushID(pin.UID);
+				ImGui::PushItemWidth(emptyItemWidth);
+				wasPinValueModified = ImGui::Checkbox("##edit", &std::get<bool>(pin.Data));
+				ImGui::PopItemWidth();
+				ImGui::PopID();
+				break;
+			}
+			case EGUIPinType::Float:
+			{
+				if (pin.IsDataUnset())
+					pin.Data = 0.0f;
+
+				ImGui::PushID(pin.UID);
+				ImGui::PushItemWidth(emptyItemWidth);
+				wasPinValueModified = ImGui::InputFloat("##edit", &std::get<F32>(pin.Data));
+				ImGui::PopItemWidth();
+				ImGui::PopID();
+				break;
+			}
+			default:
+				assert(0);
+			}
+
+			return wasPinValueModified;
+		}
+			
+		SGUINode* GetNodeFromPinID(U64 id, std::vector<SGUINode>& nodes)
+		{
+			for (auto& node : nodes)
+			{
+				for (auto& pin : node.Inputs)
+				{
+					if (pin.UID == id)
+					{
+						return &node;
+					}
+				}
+
+				for (auto& pin : node.Outputs)
+				{
+					if (pin.UID == id)
+					{
+						return &node;
+					}
+				}
+
+			}
+			return nullptr;
+		}
+
+		SGUIPin* GetPinFromID(U64 id, SGUINode& node)
+		{
+			for (auto& pin : node.Inputs)
+			{
+				if (pin.UID == id)
+					return &pin;
+			}
+			for (auto& pin : node.Outputs)
+			{
+				if (pin.UID == id)
+					return &pin;
+			}
+			return nullptr;
+		}
+
+		SGUIPin* GetPinFromID(U64 id, std::vector<SGUINode>& nodes)
+		{
+			for (auto& node : nodes)
+			{
+				for (auto& pin : node.Inputs)
+				{
+					if (pin.UID == id)
+						return &pin;
+				}
+				for (auto& pin : node.Outputs)
+				{
+					if (pin.UID == id)
+						return &pin;
+				}
+			}
+			return nullptr;
+		}
+
+		ImVec2 CalculateRequiredSize(const SGUINode& node)
+		{
+			constexpr float iconSize = 24.0f;
+			constexpr float iconNamePadding = 6.0f;
+			constexpr float iconPadding = iconSize + iconNamePadding * 1.5f;
+			constexpr float headerHeight = 12.0f;
+
+			int maxPinColumnLength = UMath::Max(node.Inputs.size(), node.Outputs.size());
+			float inputMaxRequired = 0.0f;
+			float outputMaxRequired = 0.0f;
+			for (auto& pin : node.Inputs)
+			{
+				float nameWidth = ImGui::CalcTextSize(pin.Name.c_str()).x;
+				if (nameWidth > inputMaxRequired)
+					inputMaxRequired = nameWidth + iconPadding;
+			}
+			for (auto& pin : node.Outputs)
+			{
+				float nameWidth = ImGui::CalcTextSize(pin.Name.c_str()).x;
+				if (nameWidth > outputMaxRequired)
+					outputMaxRequired = nameWidth + iconPadding;
+			}
+			float requiredWidth = UMath::Max(ImGui::CalcTextSize(node.Name.c_str()).x, inputMaxRequired + outputMaxRequired);
+			if (node.Type == EGUINodeType::Simple)
+				requiredWidth += 50.0f;
+			return ImVec2(requiredWidth, headerHeight + 1.5f * iconNamePadding + iconPadding * float(maxPinColumnLength));
+		}
+
+		void OpenScript(const std::vector<SGUINode>& nodes, const std::vector<SGUILink>& links)
+		{
+			auto toImVec = [](const SVector2<F32>& position) { return ImVec2(position.X, position.Y); };
+
+			for (const SGUINode& node : nodes)
+				NE::SetNodePosition(node.UID, toImVec(node.Position));
+		}
+
+		void CloseScript(std::vector<SGUINode>& nodes, std::vector<SGUILink>& links)
+		{
+			auto fromImVec = [](const ImVec2& position) { return SVector2<F32>(position.x, position.y); };
+
+			for (SGUILink& link : links)
+				NE::DeleteLink(link.UID);
+
+			for (SGUINode& node : nodes)
+			{
+				node.Position = fromImVec(NE::GetNodePosition(node.UID));
+				NE::DeleteNode(node.UID);
+			}
+		}
+
+		SNodeOperation RenderScript(std::vector<SGUINode>& nodes, std::vector<SGUILink>& links, const std::vector<SGUINodeContext>& registeredContexts)
+		{
+			NE::SetCurrentEditor(NodeEditorContext);
+			//static float leftPaneWidth = 400.0f;
+			//static float rightPaneWidth = 800.0f;
+			//Splitter(true, 4.0f, &leftPaneWidth, &rightPaneWidth, 50.0f, 50.0f);
+
+			//ShowLeftPane(leftPaneWidth - 4.0f);
+
+			//ImGui::SameLine(0.0f, 12.0f);
+
+			NE::Begin("ScriptEditor", ImVec2(0.0f, 0.0f));
+			auto toImColor = [](const SColor& color) { return ImColor(color.R, color.G, color.B, color.A); };
+			auto toImVec = [](const SVector2<F32>& position) { return ImVec2(position.X, position.Y); };
+
+			SNodeOperation result;
+
+			constexpr float headerHeight = 12.0f;
+			constexpr float nodeNameIndent = 6.0f;
+			constexpr float pinNameOffset = 4.0f;
+			constexpr float outputIndent = 0.0f;
+
+			//NE::PushStyleColor(NE::StyleColor_Bg, toImColor(SColor(20)));
+			for (SGUINode& node : nodes)
+			{	
+				ImVec2 requiredSize = CalculateRequiredSize(node);
+
+				// Start drawing nodes.
+				NE::PushStyleVar(NE::StyleVar_NodePadding, ImVec4(8, 4, 8, 8));
+				NE::BeginNode(node.UID);
+				
+				if (!node.HasBeenInitialized)
+					NE::SetNodePosition(node.UID, toImVec(node.Position));
+
+				ImGui::PushID(node.UID);
+				ImGui::BeginVertical("node", requiredSize);
+
+				ImRect headerRect = ImRect();
+
+				ImGui::BeginHorizontal("header", ImVec2(requiredSize.x, headerHeight));
+				ImVec2 nodeNameCursorStart = ImGui::GetCursorPos();
+				nodeNameCursorStart.y += 2.0f;
+				ImGui::SetCursorPos(nodeNameCursorStart);
+				ImGui::TextUnformatted(node.Name.c_str());
+				ImGui::EndHorizontal();
+				headerRect = GImGui->LastItemData.Rect;
+				ImGui::Spring(0, ImGui::GetStyle().ItemSpacing.y * 3.0f);
+
+				int maxPinColumnLength = UMath::Max(node.Inputs.size(), node.Outputs.size());
+				for (int i = 0; i < maxPinColumnLength; i++)
+				{
+					SGUIPin* inputPin = node.Inputs.size() > i ? &node.Inputs[i] : nullptr;
+					SGUIPin* outputPin = node.Outputs.size() > i ? &node.Outputs[i] : nullptr;
+
+					if (inputPin != nullptr && inputPin->Direction == EGUIPinDirection::Input)
+					{
+						NE::PushStyleVar(NE::StyleVar_PivotAlignment, ImVec2(0.1f, 0.5f));
+						NE::BeginPin(inputPin->UID, NE::PinKind::Input);
+
+						const bool isPinLinked = IsPinLinked(inputPin->UID, links);
+
+						if (IsPinTypeLiteral(*inputPin) && !isPinLinked)
+						{
+							bool wasPinValueModified = DrawLiteralTypePin(*inputPin);
+							if (wasPinValueModified)
+								result.ModifiedLiteralValuePin = *inputPin;
+						}
+						else
+						{
+							DrawPinIcon(*inputPin, isPinLinked, 255);
+						}
+
+						ImGui::SameLine(0, 0);
+						float cursorY = ImGui::GetCursorPosY();
+						ImGui::SetCursorPosY(cursorY + pinNameOffset);
+						ImGui::Text(inputPin->Name.c_str());
+						ImGui::SetCursorPosY(cursorY - pinNameOffset);
+
+						NE::EndPin();
+						NE::PopStyleVar();
+					}
+					
+					if (outputPin != nullptr && outputPin->Direction == EGUIPinDirection::Output)
+					{
+						if (inputPin != nullptr)
+							ImGui::SameLine();
+
+						float nameWidth = ImGui::CalcTextSize(outputPin->Name.c_str()).x;
+						constexpr float iconSize = 24.0f;
+						float indent = requiredSize.x - nameWidth - iconSize;
+						ImGui::Indent(indent);
+
+						NE::PushStyleVar(NE::StyleVar_PivotAlignment, ImVec2(0.9f, 0.5));
+						NE::BeginPin(outputPin->UID, NE::PinKind::Output);
+
+						float cursorX = ImGui::GetCursorPosX();
+						float cursorY = ImGui::GetCursorPosY();
+						ImGui::SetCursorPosY(cursorY + pinNameOffset);
+						ImGui::Text(outputPin->Name.c_str());
+						ImGui::SetCursorPos(ImVec2(cursorX + nameWidth, cursorY));
+
+						DrawPinIcon(*outputPin, IsPinLinked(outputPin->UID, links), 255);
+						NE::EndPin();
+						NE::PopStyleVar();
+						ImGui::Unindent(indent);
+					}
+				}
+
+				ImGui::EndVertical();
+				ImRect contentRect = GImGui->LastItemData.Rect;
+				NE::EndNode();
+
+				if (ImGui::IsItemVisible())
+				{
+					auto drawList = NE::GetNodeBackgroundDrawList(node.UID);
+
+					const auto halfBorderWidth = NE::GetStyle().NodeBorderWidth * 0.5f;
+					const auto uv = ImVec2(
+						headerRect.GetWidth() / (float)(4.0f * 64.0f),
+						headerRect.GetHeight() / (float)(4.0f * 64.0f));
+
+					ImVec2 imagePadding = ImVec2(8 - halfBorderWidth, 4 - halfBorderWidth);
+					ImVec2 imagePaddingMax = ImVec2(8 - halfBorderWidth, 10 - halfBorderWidth);
+					ImVec2 imageMin = ImVec2(headerRect.Min.x - imagePadding.x, headerRect.Min.y - imagePadding.y);
+					ImVec2 imageMax = ImVec2(headerRect.Max.x + imagePaddingMax.x, headerRect.Max.y + imagePaddingMax.y);
+					drawList->AddImageRounded(BlueprintBackgroundImage, imageMin, imageMax, ImVec2(0.0f, 0.0f), uv, toImColor(node.Color), NE::GetStyle().NodeRounding, ImDrawFlags_RoundCornersAll);
+				}
+				ImGui::PopID();
+				NE::PopStyleVar();
+			}
+
+			for (auto& linkInfo : links)
+			{
+				SGUIPin* startPin = GetPinFromID(linkInfo.StartPinID, nodes);
+				NE::Link(linkInfo.UID, linkInfo.StartPinID, linkInfo.EndPinID, startPin != nullptr ? GetPinTypeColor(startPin->Type).Value : ImVec4(1,1,1,1));
+			}
+
+			// Handle creation action, returns true if editor want to create new object (node or link)
+			if (NE::BeginCreate())
+			{
+				NE::PinId inputPinId, outputPinId;
+				if (NE::QueryNewLink(&inputPinId, &outputPinId))
+				{
+					if (inputPinId && outputPinId)
+					{
+						if (NE::AcceptNewItem())
+						{
+							SGUINode* firstNode = GetNodeFromPinID(inputPinId.Get(), nodes);
+							SGUINode* secondNode = GetNodeFromPinID(outputPinId.Get(), nodes);
+							assert(firstNode);
+							assert(secondNode);
+
+							if (firstNode != secondNode)
+							{						
+								SGUIPin* firstPin = GetPinFromID(inputPinId.Get(), *firstNode);
+								SGUIPin* secondPin = GetPinFromID(outputPinId.Get(), *secondNode);
+
+								bool canAddlink = true;
+								if (firstPin && secondPin)
+								{
+									if (firstPin->Direction == EGUIPinDirection::Input && secondPin->Direction == EGUIPinDirection::Input)
+									{
+										canAddlink = false;
+									}
+								}
+
+								if (firstPin->Type != secondPin->Type)
+								{
+									canAddlink = false;
+								}
+
+								// TODO.NW: Think about these, certain rules apply to flows vs nonflows/inputs vs outputs
+								//if (!firstNode->CanAddLink(inputPinId.Get()))
+								//{
+								//	canAddlink = false;
+								//}
+								//if (!secondNode->CanAddLink(outputPinId.Get()))
+								//{
+								//	canAddlink = false;
+								//}
+
+								//if (firstNode->HasLinkBetween(inputPinId.Get(), outputPinId.Get()))
+								//{
+								//	canAddlink = false;
+								//}
+
+								if (canAddlink)
+								{
+									// TODO.NW: Add functions to populate this with function call
+									static U64 linkID = 99;
+									result.NewLink.UID = linkID++;
+									result.NewLink.StartPinID = firstPin->UID;
+									result.NewLink.EndPinID = secondPin->UID;
+
+									//if (secondPin->Type == EGUIPinType::Unknown)
+									//{
+									//	secondNode->ChangPinTypes(firstPin->Type);
+									//}
+									//int linkId = myNextLinkIdCounter++;
+									//firstNode->AddLinkToVia(secondNode, inputPinId.Get(), outputPinId.Get(), linkId);
+									//secondNode->AddLinkToVia(firstNode, outputPinId.Get(), inputPinId.Get(), linkId);
+
+									//bool aIsCyclic = false;
+									//WillBeCyclic(firstNode, secondNode, aIsCyclic, firstNode);
+									//if (aIsCyclic || !canAddlink)
+									//{
+									//	firstNode->RemoveLinkToVia(secondNode, inputPinId.Get());
+									//	secondNode->RemoveLinkToVia(firstNode, outputPinId.Get());
+									//}
+									//else
+									//{
+									//	// Depending on if you drew the new link from the output to the input we need to create the link as the flow FROM->TO to visualize the correct flow
+									//	if (firstPin->Direction == EGUIPinDirection::Input)
+									//	{
+									//		myLinks.push_back({ NE::LinkId(linkId), outputPinId, inputPinId });
+									//	}
+									//	else
+									//	{
+									//		myLinks.push_back({ NE::LinkId(linkId), inputPinId, outputPinId });
+									//	}		
+
+									//	std::cout << "push add link command!" << std::endl;
+									//	myUndoCommands.push({ CommandAction::AddLink, firstNode, secondNode, myLinks.back(), 0});
+									//
+									//	ReTriggerTree();
+									//}
+								}
+								
+							}
+						}
+					}
+				}
+			}
+			NE::EndCreate(); 
+
+			if (NE::BeginDelete())
+			{
+				NE::LinkId deletedLinkId = 0;
+				while (NE::QueryDeletedLink(&deletedLinkId))
+				{
+					if (NE::AcceptDeletedItem())
+					{
+						for (SGUILink& link : links)
+						{
+							if (link.UID == deletedLinkId.Get())
+							{
+								result.RemovedLinks.emplace_back(link);
+
+								//if (myShouldPushCommand)
+								//{
+								//	std::cout << "push remove link action!" << std::endl;
+								//	myUndoCommands.push({ CommandAction::RemoveLink, firstNode, secondNode, link, 0/*static_cast<unsigned int>(link.Id.Get())*//*, static_cast<unsigned int>(link.UID.Get()), static_cast<unsigned int>(link.OutputId.Get())*/ });
+								//}
+							}
+						}
+					}
+				}
+				NE::NodeId nodeId = 0;
+				while (NE::QueryDeletedNode(&nodeId))
+				{
+					if (NE::AcceptDeletedItem())
+					{
+						for (SGUINode& node : nodes)
+						{
+							if (node.UID == nodeId.Get())
+							{
+								result.RemovedNodes.emplace_back(node);
+
+								//if (myShouldPushCommand) 
+								//{
+								//	std::cout << "Push delete command!" << std::endl;
+								//	myUndoCommands.push({ CommandAction::Delete, (*it), nullptr,  {0,0,0}, (*it)->UID });
+								//}
+							}
+						}
+					}
+				}
+			}
+			NE::EndDelete(); 
+	
+			auto openPopupPosition = ImGui::GetMousePos();
+			NE::Suspend();
+
+			if (NE::ShowBackgroundContextMenu())
+			{
+				ImGui::OpenPopup("Create New Node");
+			}
+			NE::Resume();
+
+			NE::Suspend();
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(8, 8));
+	
+			if (ImGui::BeginPopup("Create New Node"))
+			{
+				auto newNodePostion = openPopupPosition;
+				//CNodeType** types = CNodeTypeCollector::GetAllNodeTypes();
+				//unsigned short noOfTypes = CNodeTypeCollector::GetNodeTypeCount();
+
+				//std::map<std::string, std::vector<CNodeType*>> cats;
+
+				//for (int i = 0; i < noOfTypes; i++)
+				//{
+				//	cats[types[i]->GetNodeTypeCategory()].push_back(types[i]);
+				//}
+
+				//ImGui::PushItemWidth(100.0f);
+				//ImGui::InputText("##edit", (char*)myMenuSeachField, 127);
+				//if (mySetSearchFokus)
+				//{
+				//	ImGui::SetKeyboardFocusHere(0);
+				//}
+				//mySetSearchFokus = false;
+				//ImGui::PopItemWidth();
+
+				//if (myMenuSeachField[0] != '\0')
+				//{
+
+				//	std::vector<SDistBestResult> distanceResults;
+				//	for (int i = 0; i < noOfTypes; i++)
+				//	{
+				//		distanceResults.push_back(SDistBestResult());
+				//		SDistBestResult& dist = distanceResults.back();
+				//		dist.ourInstance = types[i];
+				//		dist.myScore = uiLevenshteinDistance<std::string>(types[i]->Name, myMenuSeachField);
+				//	}
+
+				//	std::sort(distanceResults.begin(), distanceResults.end(), less_than_key());
+
+				//	int firstCost = distanceResults[0].myScore;
+				//	for (int i = 0; i < distanceResults.size(); i++)
+				//	{
+				//		CNodeInstance* node = nullptr;
+				//		if (ImGui::MenuItem(distanceResults[i].ourInstance->Name.c_str()))
+				//		{
+				//			node = new CNodeInstance();
+
+				//			int nodeType = i;
+				//			node.myNodeType = distanceResults[i].ourInstance;
+				//			node.ConstructUniquePins();
+				//			NE::SetNodePosition(node.UID, newNodePostion);
+				//			node.myHasSetEditorPos = true;
+
+				//			myNodeInstancesInGraph.push_back(node);
+
+				//			if (myShouldPushCommand)
+				//			{
+				//				std::cout << "Push create command!" << std::endl;
+				//				myUndoCommands.push({ CommandAction::Create, node, nullptr, {0,0,0}, node.UID});
+				//			}
+				//		}
+				//		int distance = distanceResults[i].myScore - firstCost;
+				//		if (distance > 3)
+				//		{
+				//			break;
+				//		}
+				//	}
+
+				//}
+				//else
+				//{
+					//for (auto& category : cats)
+					//{
+					//	std::string theCatName = category.first;
+					//	if (theCatName.empty())
+					//	{
+					//		theCatName = "General";
+					//	}
+
+					//	if (ImGui::BeginMenu(theCatName.c_str()))
+					//	{
+					//		CNodeInstance* node = nullptr;
+					//		for (int i = 0; i < category.second.size(); i++)
+					//		{
+					//			CNodeType* type = category.second[i];
+					//			if (ImGui::MenuItem(type->Name.c_str()))
+					//			{
+					//				node = new CNodeInstance();
+
+					//				int nodeType = i;
+					//				node.myNodeType = type;
+					//				node.ConstructUniquePins();
+					//				NE::SetNodePosition(node.UID, newNodePostion);
+					//				node.myHasSetEditorPos = true;
+
+					//				myNodeInstancesInGraph.push_back(node);
+					//		
+					//				if (myShouldPushCommand)
+					//				{
+					//					std::cout << "Push create command!" << std::endl;
+					//					myUndoCommands.push({CommandAction::Create, node, nullptr, {0,0,0}, node.UID});
+					//				}
+					//			}
+					//		}
+					//		ImGui::EndMenu();
+					//	}
+					//}
+					
+					for (auto& context : registeredContexts)
+					{
+						if (ImGui::BeginMenu(context.Category.c_str()))
+						{
+							if (ImGui::MenuItem(context.Name.c_str()))
+							{
+								result.NewNodeContext = context;
+								result.NewNodePosition = { openPopupPosition.x, openPopupPosition.y	};
+							}
+							ImGui::EndMenu();
+						}
+					}
+				//}		
+				ImGui::EndPopup();
+			}
+			else
+			{
+				//mySetSearchFokus = true;
+				//memset(&myMenuSeachField[0], 0, sizeof(myMenuSeachField));
+			}
+
+			ImGui::PopStyleVar();
+			NE::Resume();
+
+			//myShouldPushCommand = true;
+	
+			if (NE::BeginShortcut())
+			{
+				/*if (NE::AcceptCopy())
+				{
+					SaveNodesToClipboard();
+				}
+
+				if (NE::AcceptPaste())
+				{
+					LoadNodesFromClipboard();
+				}
+
+				if (NE::AcceptUndo())
+				{
+					if (!myUndoCommands.empty()) 
+					{
+						myShouldPushCommand = false;
+						NE::ResetShortCutAction();
+						auto& command = myUndoCommands.top();
+						EditorCommand inverseCommand = command;
+						CPin* firstPin;
+						CPin* secondPin;
+
+						switch (command.myAction)
+						{
+						case CGraphManager::CommandAction::Create:
+							inverseCommand.myAction = CommandAction::Delete;
+							NE::DeleteNode(command.myResourceUID);
+							break;
+						case CGraphManager::CommandAction::Delete:
+							inverseCommand.myAction = CommandAction::Create;
+							myNodeInstancesInGraph.push_back(command.myNodeInstance);
+							break;
+						case CGraphManager::CommandAction::AddLink:
+							inverseCommand.myAction = CommandAction::RemoveLink;
+							NE::DeleteLink(command.myEditorLinkInfo.Id);
+							break;
+						case CGraphManager::CommandAction::RemoveLink:
+							inverseCommand.myAction = CommandAction::AddLink;
+							command.myNodeInstance->AddLinkToVia(command.mySecondNodeInstance, command.myEditorLinkInfo.InputId.Get(), command.myEditorLinkInfo.OutputId.Get(), command.myResourceUID);
+							command.mySecondNodeInstance->AddLinkToVia(command.myNodeInstance, command.myEditorLinkInfo.OutputId.Get(), command.myEditorLinkInfo.InputId.Get(), command.myResourceUID);
+
+							firstPin = command.myNodeInstance->GetPinFromID(command.myEditorLinkInfo.InputId.Get());
+							secondPin = command.mySecondNodeInstance->GetPinFromID(command.myEditorLinkInfo.OutputId.Get());
+
+							if (firstPin->Direction == EGUIPinDirection::Input)
+								myLinks.push_back({ command.myEditorLinkInfo.Id, command.myEditorLinkInfo.InputId, command.myEditorLinkInfo.OutputId });
+							else
+								myLinks.push_back({ command.myEditorLinkInfo.Id, command.myEditorLinkInfo.OutputId, command.myEditorLinkInfo.InputId });
+							ReTriggerTree();
+							break;
+						default:
+							break;
+						}
+						std::cout << "undo!" << std::endl;
+						myUndoCommands.pop();
+						std::cout << "Push redo command!" << std::endl;
+						myRedoCommands.push(inverseCommand);
+					}
+				}
+
+				if (NE::AcceptRedo())
+				{
+					if (!myRedoCommands.empty())
+					{
+						myShouldPushCommand = false;
+						NE::ResetShortCutAction();
+						auto& command = myRedoCommands.top();
+						EditorCommand inverseCommand = command;
+						CPin* firstPin;
+						CPin* secondPin;
+
+						switch (command.myAction)
+						{
+						case CGraphManager::CommandAction::Create:
+							inverseCommand.myAction = CommandAction::Delete;
+							NE::DeleteNode(command.myResourceUID);
+							break;
+						case CGraphManager::CommandAction::Delete:
+							inverseCommand.myAction = CommandAction::Create;
+							myNodeInstancesInGraph.push_back(command.myNodeInstance);
+							break;
+						case CGraphManager::CommandAction::AddLink:
+							inverseCommand.myAction = CommandAction::RemoveLink;
+							NE::DeleteLink(command.myEditorLinkInfo.Id);
+							break;
+						case CGraphManager::CommandAction::RemoveLink:
+							inverseCommand.myAction = CommandAction::AddLink;
+							command.myNodeInstance->AddLinkToVia(command.mySecondNodeInstance, command.myEditorLinkInfo.InputId.Get(), command.myEditorLinkInfo.OutputId.Get(), command.myResourceUID);
+							command.mySecondNodeInstance->AddLinkToVia(command.myNodeInstance, command.myEditorLinkInfo.OutputId.Get(), command.myEditorLinkInfo.InputId.Get(), command.myResourceUID);
+
+							firstPin = command.myNodeInstance->GetPinFromID(command.myEditorLinkInfo.InputId.Get());
+							secondPin = command.mySecondNodeInstance->GetPinFromID(command.myEditorLinkInfo.OutputId.Get());
+
+							if (firstPin->Direction == EGUIPinDirection::Input)
+								myLinks.push_back({ command.myEditorLinkInfo.Id, command.myEditorLinkInfo.InputId, command.myEditorLinkInfo.OutputId });
+							else
+								myLinks.push_back({ command.myEditorLinkInfo.Id, command.myEditorLinkInfo.OutputId, command.myEditorLinkInfo.InputId });
+							ReTriggerTree();
+							break;
+						default:
+							break;
+						}
+						std::cout << "redo!" << std::endl;
+						myRedoCommands.pop();
+						std::cout << "Push undo command!" << std::endl;
+						myUndoCommands.push(inverseCommand);
+					}
+				}*/
+			}
+
+			//NE::PopStyleColor(NE::StyleColor_Bg);
+			NE::End();
+			NE::SetCurrentEditor(nullptr);
+
+			return result;
 		}
 
 		void LogToClipboard()
@@ -1808,6 +2741,21 @@ namespace Havtorn
 	void GUI::DockBuilderFinish(U32 id)
 	{
 		Instance->Impl->DockBuilderFinish(id);
+	}
+
+	void GUI::OpenScript(const std::vector<SGUINode>& nodes, const std::vector<SGUILink>& links)
+	{
+		Instance->Impl->OpenScript(nodes, links);
+	}
+
+	SNodeOperation GUI::RenderScript(std::vector<SGUINode>& nodes, std::vector<SGUILink>& links, const std::vector<SGUINodeContext>& registeredContexts)
+	{
+		return Instance->Impl->RenderScript(nodes, links, registeredContexts);
+	}
+
+	void GUI::CloseScript(std::vector<SGUINode>& nodes, std::vector<SGUILink>& links)
+	{
+		Instance->Impl->CloseScript(nodes, links);
 	}
 
 	void GUI::LogToClipboard()

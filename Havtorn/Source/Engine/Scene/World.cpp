@@ -237,6 +237,53 @@ namespace Havtorn
 			PhysicsWorld3D->UpdatePhysicsData(transformComponent, phys3DComponent);
 	}
 
+	void CWorld::SaveScript(const std::string& filePath)
+	{
+		if (!LoadedScripts.contains(filePath))
+			return;
+
+		HexRune::SScript* script = LoadedScripts.at(filePath).get();
+
+		SScriptFileHeader fileHeader;
+		fileHeader.Script = script;
+
+		const U32 fileSize = fileHeader.GetSize();
+		char* data = new char[fileSize];
+
+		fileHeader.Serialize(data);
+		GEngine::GetFileSystem()->Serialize(filePath, data, fileSize);
+
+		delete[] data;
+	}
+
+	HexRune::SScript* CWorld::LoadScript(const std::string& filePath)
+	{
+		if (LoadedScripts.contains(filePath))
+			return LoadedScripts.at(filePath).get();
+
+		const U32 fileSize = STATIC_U32(GEngine::GetFileSystem()->GetFileSize(filePath));
+		char* data = new char[fileSize];
+
+		GEngine::GetFileSystem()->Deserialize(filePath, data, fileSize);
+
+		SScriptFileHeader assetFile;
+		LoadedScripts.emplace(filePath, std::make_unique<HexRune::SScript>());
+		assetFile.Deserialize(data, LoadedScripts.at(filePath).get());
+
+		delete[] data;
+		return LoadedScripts.at(filePath).get();
+	}
+
+	void CWorld::UnloadScript(const std::string& filePath)
+	{
+		// NW: Call only when last asset registry key has been unregistered
+		
+		if (!LoadedScripts.contains(filePath))
+			return;
+
+		LoadedScripts.erase(filePath);
+	}
+
 	CAssetRegistry* CWorld::GetAssetRegistry() const
 	{
 		return AssetRegistry.get();
