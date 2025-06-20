@@ -260,6 +260,8 @@ namespace Havtorn
 				AssetPickedIndex = index;
 				auto pickedAsset = Manager->GetAssetRepFromDirEntry(assetPickResult.PickedEntry).get();
 
+				// TODO.NW: Should figure out if we can send along an editor context function to determine what happens 
+				// if an asset changes, instead of the inspector needing to know how to change the components
 				if (modalNameToOpen == SelectMeshAssetModalName)
 					HandleMeshAssetPicked(result, pickedAsset);
 				else if (modalNameToOpen == SelectMaterialAssetModalName)
