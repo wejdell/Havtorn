@@ -424,6 +424,25 @@ namespace Havtorn
 			}
 		}
 
+		for (const SPhysics3DComponent* physics3DComponent : scene->GetComponents<SPhysics3DComponent>())
+		{
+			if (!physics3DComponent->IsValid())
+				continue;
+
+			if (isInPlayingPlayState || !physics3DComponent->IsTrigger)
+				continue;
+			
+			// TODO.NW: Render boundaries with line drawer?
+
+			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(physics3DComponent);
+			RenderManager->AddSpriteToWorldSpaceInstancedRenderList(physics3DComponent->EditorTextureIndex, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity));
+				
+			SRenderCommand command;
+			command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
+			command.U32s.push_back(physics3DComponent->EditorTextureIndex);
+			RenderManager->PushRenderCommand(command);
+		}
+
 		{
 			SRenderCommand command;
 			command.Type = ERenderCommandType::Bloom;

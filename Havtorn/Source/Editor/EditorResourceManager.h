@@ -30,6 +30,7 @@ namespace Havtorn
 		SpotlightIcon,
 		DecalIcon,
 		ScriptIcon,
+		ColliderIcon,
 		NodeBackground,
 		Count,
 		None = Count

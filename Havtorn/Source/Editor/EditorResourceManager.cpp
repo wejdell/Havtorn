@@ -268,6 +268,9 @@ namespace Havtorn
 		case EEditorTexture::ScriptIcon:
 			return ResourceAssetPath + "ScriptIcon" + extension;
 
+		case EEditorTexture::ColliderIcon:
+			return ResourceAssetPath + "ColliderIcon" + extension;
+
 		case EEditorTexture::NodeBackground:
 			return ResourceAssetPath + "NodeBackground" + extension;
 		
