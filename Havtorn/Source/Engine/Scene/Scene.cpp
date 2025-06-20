@@ -44,6 +44,7 @@ namespace Havtorn
 		RegisterComponent<STransform2DComponent>(10, &STransform2DComponentEditorContext::Context);
 		RegisterComponent<SSpriteAnimatorGraphComponent>(2, &SSpriteAnimatorGraphComponentEditorContext::Context);
 		RegisterComponent<SSequencerComponent>(0, &SSequencerComponentEditorContext::Context);
+		RegisterComponent<SScriptComponent>(2, &SScriptComponentEditorContext::Context);
 		RegisterComponent<SPhysics2DComponent>(10, &SPhysics2DComponentEditorContext::Context);
 		RegisterComponent<SPhysics3DComponent>(40, &SPhysics3DComponentEditorContext::Context);
 		RegisterComponent<SPhysics3DControllerComponent>(1, &SPhysics3DControllerComponentEditorContext::Context);
@@ -678,6 +679,8 @@ namespace Havtorn
 		//size += DefaultSizeAllocator(GetComponents<SSequencerComponent>());
 		size += GetDataSize(STATIC_U32(GetComponents<SSequencerComponent>().size()));
 
+		size += SpecializedSizeAllocator(GetComponents<SScriptComponent>());
+
 		size += DefaultSizeAllocator(GetComponents<SPhysics2DComponent>());
 		size += DefaultSizeAllocator(GetComponents<SPhysics3DComponent>());
 		size += DefaultSizeAllocator(GetComponents<SPhysics3DControllerComponent>());
@@ -719,6 +722,8 @@ namespace Havtorn
 		// TODO.NR: Implement Serialize (since the component is not trivially serializable)
 		const auto& sequencerComponents = GetComponents<SSequencerComponent>();
 		SerializeData(STATIC_U32(sequencerComponents.size()), toData, pointerPosition);
+
+		SpecializedSerializer(GetComponents<SScriptComponent>(), toData, pointerPosition);
 
 		DefaultSerializer(GetComponents<SPhysics2DComponent>(), toData, pointerPosition);
 		DefaultSerializer(GetComponents<SPhysics3DComponent>(), toData, pointerPosition);
@@ -879,9 +884,23 @@ namespace Havtorn
 			}
 		}
 
-
 		U32 numberOfSequencerComponents = 0;
 		DeserializeData(numberOfSequencerComponents, fromData, pointerPosition);
+
+		U32 numberOfScriptComponents = 0;
+		DeserializeData(numberOfScriptComponents, fromData, pointerPosition);
+		std::vector<SScriptComponent> scriptComponents;
+		scriptComponents.resize(numberOfScriptComponents);
+
+		for (U64 index = 0; index < numberOfScriptComponents; index++)
+		{
+			SScriptComponent component;
+			component.Deserialize(fromData, pointerPosition);
+			auto comp = AddComponent<SScriptComponent>(component.Owner);
+			// TODO.NW: Unify asset loading methods
+			comp->Script = GEngine::GetWorld()->LoadScript(assetRegistry->GetAssetPath(component.AssetRegistryKey));
+			AddComponentEditorContext(component.Owner, &SScriptComponentEditorContext::Context);
+		}
 
 		{
 			std::vector<SPhysics2DComponent> components;

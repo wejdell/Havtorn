@@ -33,6 +33,7 @@ namespace Havtorn
 		void HandleMeshAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep);
 		void HandleMaterialAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep);
 		void HandleTextureAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep);
+		void HandleScriptAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep);
 		
 		void OpenAssetTool(const SComponentViewResult& result);
 		
@@ -42,10 +43,12 @@ namespace Havtorn
 		const std::string SelectMeshAssetModalName = "Select Mesh Asset";
 		const std::string SelectMaterialAssetModalName = "Select Material Asset";
 		const std::string SelectTextureAssetModalName = "Select Texture Asset";
+		const std::string SelectScriptAssetModalName = "Select Script Asset";
 
 		const std::string DefaultMeshAssetDirectory = "Assets/Tests";
 		const std::string DefaultMaterialAssetDirectory = "Assets/Materials";
 		const std::string DefaultTextureAssetDirectory = "Assets/Textures";
+		const std::string DefaultScriptAssetDirectory = "Assets/Scripts";
 
 		CScene* Scene = nullptr;
 		U8 AssetPickedIndex = 0;

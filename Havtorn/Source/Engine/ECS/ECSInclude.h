@@ -50,6 +50,8 @@
 #include "ECS/ComponentEditorContexts/SpriteAnimatorGraphComponentEditorContext.h"
 #include "ECS/Components/SequencerComponent.h"
 #include "ECS/ComponentEditorContexts/SequencerComponentEditorContext.h"
+#include "ECS/Components/ScriptComponent.h"
+#include "ECS/ComponentEditorContexts/ScriptComponentEditorContext.h"
 #include "ECS/Components/Physics2DComponent.h"
 #include "ECS/ComponentEditorContexts/Physics2DComponentEditorContext.h"
 #include "ECS/Components/Physics3DComponent.h"

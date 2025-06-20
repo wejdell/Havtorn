@@ -270,6 +270,10 @@ namespace Havtorn
 		LoadedScripts.emplace(filePath, std::make_unique<HexRune::SScript>());
 		assetFile.Deserialize(data, LoadedScripts.at(filePath).get());
 
+		// TODO.NW: When unifying asset loading, should have an abstraction for an asset, maybe only key and file path, and make sure
+		// they are always fully initialized if they exist.
+		LoadedScripts.at(filePath).get()->FileName = filePath;
+
 		delete[] data;
 		return LoadedScripts.at(filePath).get();
 	}

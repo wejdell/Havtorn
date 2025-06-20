@@ -12,6 +12,7 @@
 
 #include "Windows/ViewportWindow.h"
 #include "Windows/SpriteAnimatorGraphNodeWindow.h"
+#include "EditorResourceManager.h"
 
 #include <GUI.h>
 
@@ -216,6 +217,12 @@ namespace Havtorn
 			modalNameToOpen = SelectTextureAssetModalName;
 			defaultAssetDirectory = DefaultTextureAssetDirectory;
 		}
+		else if (SScriptComponent* scriptComponent = dynamic_cast<SScriptComponent*>(result.ComponentViewed))
+		{
+			assetNames.push_back(scriptComponent->Script ? UGeneralUtils::ExtractFileBaseNameFromPath(scriptComponent->Script->FileName) : "Script");
+			modalNameToOpen = SelectScriptAssetModalName;
+			defaultAssetDirectory = DefaultScriptAssetDirectory;
+		}
 
 		IterateAssetRepresentations(result, assetNames, assetLabels, modalNameToOpen, defaultAssetDirectory);
 	}
@@ -259,6 +266,8 @@ namespace Havtorn
 					HandleMaterialAssetPicked(result, pickedAsset);
 				else if (modalNameToOpen == SelectTextureAssetModalName)
 					HandleTextureAssetPicked(result, pickedAsset);
+				else if (modalNameToOpen == SelectScriptAssetModalName)
+					HandleScriptAssetPicked(result, pickedAsset);
 
 				Manager->SetIsModalOpen(false);
 			}
@@ -327,6 +336,15 @@ namespace Havtorn
 
 		if (SSpriteComponent* spriteComponent = dynamic_cast<SSpriteComponent*>(result.ComponentViewed))
 			spriteComponent->TextureIndex = textureReference;
+	}
+
+	void CInspectorWindow::HandleScriptAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep)
+	{
+		SScriptComponent* component = dynamic_cast<SScriptComponent*>(result.ComponentViewed);
+		if (component == nullptr)
+			return;
+
+		component->Script = GEngine::GetWorld()->LoadScript(assetRep->DirectoryEntry.path().string());
 	}
 
 	void CInspectorWindow::OpenAssetTool(const SComponentViewResult& result)

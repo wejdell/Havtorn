@@ -1342,6 +1342,7 @@ namespace Havtorn
 			float requiredWidth = UMath::Max(ImGui::CalcTextSize(node.Name.c_str()).x, inputMaxRequired + outputMaxRequired);
 			if (node.Type == EGUINodeType::Simple)
 				requiredWidth += 50.0f;
+			requiredWidth = UMath::Max(requiredWidth, 100.0f);
 			return ImVec2(requiredWidth, headerHeight + 1.5f * iconNamePadding + iconPadding * float(maxPinColumnLength));
 		}
 
