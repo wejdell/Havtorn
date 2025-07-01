@@ -377,7 +377,7 @@ namespace Havtorn
 	void CAssetBrowserWindow::InspectDirectoryEntry(const std::filesystem::directory_entry& entry, U32& outCurrentID, const intptr_t& folderIconID)
 	{
 		GUI::TableNextColumn();
-		GUI::PushID(outCurrentID++);
+		GUI::PushID(STATIC_I32(outCurrentID++));
 
 
 		if (entry.is_directory())

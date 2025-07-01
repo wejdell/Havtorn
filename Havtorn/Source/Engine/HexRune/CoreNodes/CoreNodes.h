@@ -28,39 +28,48 @@ namespace Havtorn
 {
 	namespace HexRune
 	{
+		struct SDataBindingNode : public SNode
+		{
+			// TODO.NW: How do we deal with setting data bindings? So we have data on the components that persist over frames.
+			ENGINE_API SDataBindingNode(const U64 id, SScript* owningScript, const U64 dataBindingID);
+			virtual ENGINE_API I8 OnExecute() override;
+
+			SScriptDataBinding* DataBinding = nullptr;
+		};
+
 		struct SBranchNode : public SNode
 		{
-			virtual ENGINE_API void Construct() override;
+			ENGINE_API SBranchNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 
 		struct SSequenceNode : public SNode
 		{
-			virtual ENGINE_API void Construct() override;
+			ENGINE_API SSequenceNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 
 		struct SEntityLoopNode : public SNode
 		{
-			virtual ENGINE_API void Construct() override;
+			ENGINE_API SEntityLoopNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 
 		struct SComponentLoopNode : public SNode
 		{
-			virtual ENGINE_API void Construct() override;
+			ENGINE_API SComponentLoopNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 
 		struct SDelayNode : public SNode
 		{
-			virtual ENGINE_API void Construct() override;
+			ENGINE_API SDelayNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 
 		struct SBeginPlayNode : public SNode
 		{
-			virtual ENGINE_API void Construct() override;
+			ENGINE_API SBeginPlayNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 			// TODO.NW Figure out if it's enough that the script System handles these
 			virtual ENGINE_API bool IsStartNode() const override { return true; };
@@ -68,97 +77,97 @@ namespace Havtorn
 
 		struct STickNode : public SNode
 		{
-			virtual ENGINE_API void Construct() override;
+			ENGINE_API STickNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 
 		struct SEndPlayNode : public SNode
 		{
-			virtual ENGINE_API void Construct() override;
+			ENGINE_API SEndPlayNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 
 		struct SPrintStringNode : public SNode
 		{
-			virtual ENGINE_API void Construct() override;
+			ENGINE_API SPrintStringNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 
 		struct SAppendStringNode : public SNode
 		{
-			virtual ENGINE_API void Construct() override;
+			ENGINE_API SAppendStringNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 
 		struct SFloatLessThanNode : public SNode
 		{
-			virtual ENGINE_API void Construct() override;
+			ENGINE_API SFloatLessThanNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 
 		struct SFloatMoreThanNode : public SNode
 		{
-			virtual ENGINE_API void Construct() override;
+			ENGINE_API SFloatMoreThanNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 
 		struct SFloatLessOrEqualNode : public SNode
 		{
-			virtual ENGINE_API void Construct() override;
+			ENGINE_API SFloatLessOrEqualNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 
 		struct SFloatMoreOrEqualNode : public SNode
 		{
-			virtual ENGINE_API void Construct() override;
+			ENGINE_API SFloatMoreOrEqualNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 
 		struct SFloatEqualNode : public SNode
 		{
-			virtual ENGINE_API void Construct() override;
+			ENGINE_API SFloatEqualNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 
 		struct SFloatNotEqualNode : public SNode
 		{
-			virtual ENGINE_API void Construct() override;
+			ENGINE_API SFloatNotEqualNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 
 		struct SIntLessThanNode : public SNode
 		{
-			virtual ENGINE_API void Construct() override;
+			ENGINE_API SIntLessThanNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 
 		struct SIntMoreThanNode : public SNode
 		{
-			virtual ENGINE_API void Construct() override;
+			ENGINE_API SIntMoreThanNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 
 		struct SIntLessOrEqualNode : public SNode
 		{
-			virtual ENGINE_API void Construct() override;
+			ENGINE_API SIntLessOrEqualNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 
 		struct SIntMoreOrEqualNode : public SNode
 		{
-			virtual ENGINE_API void Construct() override;
+			ENGINE_API SIntMoreOrEqualNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 
 		struct SIntEqualNode : public SNode
 		{
-			virtual ENGINE_API void Construct() override;
+			ENGINE_API SIntEqualNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 
 		struct SIntNotEqualNode : public SNode
 		{
-			virtual ENGINE_API void Construct() override;
+			ENGINE_API SIntNotEqualNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 	}

@@ -14,6 +14,55 @@ namespace Havtorn
             Initialize();
         }
 
+        void SScript::AddDataBinding(const char* name, const EPinType type, const EObjectDataType objectType)
+        {
+            std::variant<PIN_DATA_TYPES> data;
+            switch (type)
+            {
+            case EPinType::Bool:
+                data = false;
+                break;
+            case EPinType::Int:
+                data = 0;
+                break;
+            case EPinType::Float:
+                data = 0.0f;
+                break;
+            case EPinType::String:
+                data = "";
+                break;
+            case EPinType::Vector:
+                break;
+            case EPinType::IntArray:
+                break;
+            case EPinType::FloatArray:
+                break;
+            case EPinType::StringArray:
+                break;
+            case EPinType::Object:
+                if (objectType == EObjectDataType::Entity)
+                    data = SEntity::Null;
+                else if (objectType == EObjectDataType::Component)
+                    data = nullptr;
+                break;
+            case EPinType::ObjectArray:
+                if (objectType == EObjectDataType::Entity)
+                    data = { SEntity::Null };
+                else if (objectType == EObjectDataType::Component)
+                    data = { nullptr };
+                break;
+            }
+
+            //DataBindings.emplace_back(new SScriptDataBinding(UGUIDManager::Generate(), std::string(name), type, objectType, data));
+            DataBindings.emplace_back(SScriptDataBinding());
+            DataBindings.back().UID = UGUIDManager::Generate();
+            DataBindings.back().Name = std::string(name);
+            DataBindings.back().Type = type;
+            DataBindings.back().ObjectType = objectType;
+            DataBindings.back().Data = data;
+            RegisteredEditorContexts.emplace_back(new SDataBindingNodeEditorContext(this, DataBindings.back().UID));
+        }
+
         void SScript::RemoveNode(const U64 id)
 		{
             if (!NodeIndices.contains(id))
@@ -279,6 +328,12 @@ namespace Havtorn
         //    return NodeEditorContexts.at(nodeID);
         //}
 
+        SNode::SNode(const U64 id, SScript* owningScript)
+            : UID(id)
+            , OwningScript(owningScript)
+        {
+        }
+
         SPin& SNode::AddInput(const U64 id, const EPinType type, const std::string& name)
         {
             SPin& pin = Inputs.emplace_back();
@@ -339,13 +394,18 @@ namespace Havtorn
             // else if (pinIndex == -2), defer execution
         }
 
-        void SNode::Construct()
-        {
-        }
-
         I8 SNode::OnExecute()
         {
             return -1;
         }   
-    }
+
+        //SScriptDataBinding::SScriptDataBinding(const U64 id, const std::string& name, const EPinType pinType, const EObjectDataType objectType, const std::variant<PIN_DATA_TYPES>& data)
+        //    : UID(id)
+        //    , Name(name)
+        //    , Type(pinType)
+        //    , ObjectType(objectType)
+        //    , Data(data)
+        //{
+        //}
+}
 }

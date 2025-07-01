@@ -9,30 +9,30 @@ namespace Havtorn
 	{
 		struct SScript;
 	
-		struct SComponentsNode : public SNode
-		{
-			virtual void Construct() override;
-			virtual I8 OnExecute() override;
-		};
+		//struct SComponentsNode : public SNode
+		//{
+		//	//virtual void Construct() override;
+		//	virtual I8 OnExecute() override;
+		//};
 
-		struct STestNode : public SNode
-		{
-			virtual void Construct() override;
-			virtual I8 OnExecute() override;
-			virtual bool IsStartNode() const override { return true; }
-		};
+		//struct STestNode : public SNode
+		//{
+		//	//virtual void Construct() override;
+		//	virtual I8 OnExecute() override;
+		//	virtual bool IsStartNode() const override { return true; }
+		//};
 
-		struct SLiteralFloatNode : public SNode
-		{
-			virtual void Construct() override;
-			virtual I8 OnExecute() override;
-		};
+		//struct SLiteralFloatNode : public SNode
+		//{
+		//	//virtual void Construct() override;
+		//	virtual I8 OnExecute() override;
+		//};
 
-		struct SLiteralStringNode : public SNode
-		{
-			virtual void Construct() override;
-			virtual I8 OnExecute() override;
-		};
+		//struct SLiteralStringNode : public SNode
+		//{
+		//	//virtual void Construct() override;
+		//	virtual I8 OnExecute() override;
+		//};
 	}
 
 	class CScriptTool : public CWindow
@@ -51,6 +51,18 @@ namespace Havtorn
 	private:
 		void LoadGUIElements();
 		void CommitEdit(const SNodeOperation& edit);
+
+		SNodeOperation RenderScript();
+
+		SVector2<F32> GetNodeSize(const SGUINode& node);
+		bool IsPinLinked(U64 id, const std::vector<SGUILink>& links);
+		bool IsPinTypeLiteral(SGUIPin& pin);
+		bool DrawLiteralTypePin(SGUIPin& pin);
+		void DrawPinIcon(const SGUIPin& pin, bool connected, U8 alpha);
+		SColor GetPinTypeColor(EGUIPinType type);
+		SGUINode* GetNodeFromPinID(U64 id, std::vector<SGUINode>& nodes);
+		SGUIPin* GetPinFromID(U64 id, SGUINode& node);
+		SGUIPin* GetPinFromID(U64 id, std::vector<SGUINode>& nodes);
 
 		HexRune::SScript* CurrentScript = nullptr;
 		std::vector<SGUINode> GUINodes;

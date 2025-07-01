@@ -14,7 +14,7 @@ namespace Havtorn
 	{
         // TODO.NW: Add functional types, like add node or advanced section?
         // TODO.NW: Figure out enum support
-        enum class EPinType
+        enum class ENGINE_API EPinType : U8
         {
             Unknown,
             Flow,

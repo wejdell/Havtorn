@@ -15,6 +15,7 @@
 #include "ECS/Systems/SpriteAnimatorGraphSystem.h"
 #include "ECS/Systems/SequencerSystem.h"
 #include "../HexPhys/HexPhys.h"
+#include "ECS/Systems/ScriptSystem.h"
 
 #include "ECS/Components/TransformComponent.h"
 #include "ECS/ComponentEditorContexts/TransformComponentEditorContext.h"

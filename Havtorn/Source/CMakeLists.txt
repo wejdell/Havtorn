@@ -301,6 +301,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/Systems/LightSystem.h
     ${ENGINE_FOLDER}ECS/Systems/RenderSystem.cpp
     ${ENGINE_FOLDER}ECS/Systems/RenderSystem.h
+    ${ENGINE_FOLDER}ECS/Systems/ScriptSystem.cpp
+    ${ENGINE_FOLDER}ECS/Systems/ScriptSystem.h
     ${ENGINE_FOLDER}ECS/Systems/SequencerSystem.cpp
     ${ENGINE_FOLDER}ECS/Systems/SequencerSystem.h
     ${ENGINE_FOLDER}ECS/Systems/SpriteAnimatorGraphSystem.cpp

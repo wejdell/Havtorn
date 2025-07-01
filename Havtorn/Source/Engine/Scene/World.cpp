@@ -22,6 +22,7 @@ namespace Havtorn
 		RequestSystem<CLightSystem>(this, RenderManager);
 		RequestSystem<CSequencerSystem>(this);
 		RequestSystem<CAnimatorGraphSystem>(this, RenderManager);
+		RequestSystem<CScriptSystem>(this);
 		RequestSystem<CRenderSystem>(this, RenderManager, this);
 
 		OnSceneCreatedDelegate.AddMember(this, &CWorld::OnSceneCreated);

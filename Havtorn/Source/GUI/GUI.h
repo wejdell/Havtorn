@@ -123,6 +123,24 @@ namespace Havtorn
 		CollapsingHeader = Framed | NoTreePushOnOpen | NoAutoOpenOnLog,
 	};
 
+	enum class GUI_API EDrawFlags
+	{
+		None = 0,
+		Closed = BIT(0), // PathStroke(), AddPolyline(): specify that shape should be closed (Important: this is always == 1 for legacy reason)
+		RoundCornersTopLeft = BIT(4), // AddRect(), AddRectFilled(), PathRect(): enable rounding top-left corner only (when rounding > 0.0f, we default to all corners). Was 0x01.
+		RoundCornersTopRight = BIT(5), // AddRect(), AddRectFilled(), PathRect(): enable rounding top-right corner only (when rounding > 0.0f, we default to all corners). Was 0x02.
+		RoundCornersBottomLeft = BIT(6), // AddRect(), AddRectFilled(), PathRect(): enable rounding bottom-left corner only (when rounding > 0.0f, we default to all corners). Was 0x04.
+		RoundCornersBottomRight = BIT(7), // AddRect(), AddRectFilled(), PathRect(): enable rounding bottom-right corner only (when rounding > 0.0f, we default to all corners). Wax 0x08.
+		RoundCornersNone = BIT(8), // AddRect(), AddRectFilled(), PathRect(): disable rounding on all corners (when rounding > 0.0f). This is NOT zero, NOT an implicit flag!
+		RoundCornersTop = RoundCornersTopLeft | RoundCornersTopRight,
+		RoundCornersBottom = RoundCornersBottomLeft | RoundCornersBottomRight,
+		RoundCornersLeft = RoundCornersBottomLeft | RoundCornersTopLeft,
+		RoundCornersRight = RoundCornersBottomRight | RoundCornersTopRight,
+		RoundCornersAll = RoundCornersTopLeft | RoundCornersTopRight | RoundCornersBottomLeft | RoundCornersBottomRight,
+		RoundCornersDefault_ = RoundCornersAll, // Default to ALL corners if none of the _RoundCornersXX flags are specified.
+		RoundCornersMask_ = RoundCornersAll | RoundCornersNone,
+	};
+
 	enum class GUI_API EWindowCondition
 	{
 		None = 0,				// No condition (always set the variable), same as _Always
@@ -155,6 +173,38 @@ namespace Havtorn
 		WindowBorderSize = 4,
 		FramePadding = 11,
 		ItemSpacing = 14,
+	};
+
+	enum class GUI_API EScriptStyleVar
+	{
+		NodePadding,
+		NodeRounding,
+		NodeBorderWidth,
+		HoveredNodeBorderWidth,
+		SelectedNodeBorderWidth,
+		PinRounding,
+		PinBorderWidth,
+		LinkStrength,
+		SourceDirection,
+		TargetDirection,
+		ScrollDuration,
+		FlowMarkerDistance,
+		FlowSpeed,
+		FlowDuration,
+		PivotAlignment,
+		PivotSize,
+		PivotScale,
+		PinCorners,
+		PinRadius,
+		PinArrowSize,
+		PinArrowWidth,
+		GroupRounding,
+		GroupBorderWidth,
+		HighlightConnectedLinks,
+		SnapLinkToPinDir,
+		HoveredNodeBorderOffset,
+		SelectedNodeBorderOffset,
+		Count
 	};
 
 	enum class GUI_API EStyleColor
@@ -218,6 +268,30 @@ namespace Havtorn
 		NavWindowingDimBg,     // Darken/colorize entire screen behind the CTRL+TAB window list, when active
 		ModalWindowDimBg,      // Darken/colorize entire screen behind a modal window, when one is active
 		Count,
+	};
+
+	enum class GUI_API EScriptStyleColor
+	{
+		Background,
+		Grid,
+		NodeBg,
+		NodeBorder,
+		HovNodeBorder,
+		SelNodeBorder,
+		NodeSelRect,
+		NodeSelRectBorder,
+		HovLinkBorder,
+		SelLinkBorder,
+		HighlightLinkBorder,
+		LinkSelRect,
+		LinkSelRectBorder,
+		PinRect,
+		PinRectBorder,
+		Flow,
+		FlowMarker,
+		GroupBg,
+		GroupBorder,
+		Count
 	};
 
 	enum class GUI_API ETransformGizmo
@@ -482,7 +556,7 @@ namespace Havtorn
 	};
 
 	// TODO.NW: static asserts to make sure they're equal in length to code based enums?
-	enum class EGUIPinType
+	enum class EGUIPinType : U8
 	{
 		Unknown,
 		Flow,
@@ -498,6 +572,13 @@ namespace Havtorn
 		ObjectArray,
 		Function,
 		Delegate,
+	};
+
+	enum class EGUIObjectDataType : U8
+	{
+		None,
+		Entity,
+		Component
 	};
 
 	enum class EGUIIconType 
@@ -573,8 +654,16 @@ namespace Havtorn
 		I64 Index = -1;
 	};
 
+	struct SGUIDataBinding
+	{
+		std::string Name = "";
+		EGUIPinType Type = EGUIPinType::Object;
+		EGUIObjectDataType ObjectType = EGUIObjectDataType::None;
+	};
+
 	struct SNodeOperation
 	{
+		SGUIDataBinding NewBinding;
 		SGUIPin ModifiedLiteralValuePin;
 		SGUINodeContext NewNodeContext;
 		SVector2<F32> NewNodePosition = SVector2<F32>::Zero;
@@ -618,9 +707,11 @@ namespace Havtorn
 		static void TextWrapped(const char* fmt, ...);
 		static void TextDisabled(const char* fmt, ...);
 		static void TextUnformatted(const char* text);
-		static void InputText(const char* label, CHavtornStaticString<255>* customString);
+		static bool InputText(const char* label, CHavtornStaticString<255>* customString);
 
 		static void SetTooltip(const char* fmt, ...);
+
+		static SVector2<F32> CalculateTextSize(const char* text);
 
 		static bool InputFloat(const char* label, F32& value, F32 step = 0.0f, F32 stepFast = 0.0f, const char* format = "%.3f");
 		static bool DragFloat(const char* label, F32& value, F32 speed = 0.1f, F32 min = 0.0f, F32 max = 0.0f, const char* format = "%.3f", EDragMode dragMode = EDragMode::None);
@@ -630,6 +721,7 @@ namespace Havtorn
 		static bool SliderFloat(const char* label, F32& value, F32 min = 0.0f, F32 max = 0.0f, const char* format = "%.3f", EDragMode dragMode = EDragMode::None);
 
 		// TODO.NW: Make unsigned variants
+		static bool InputInt(const char* label, I32& value, I32 step = 0, I32 stepFast = 0);
 		static bool DragInt2(const char* label, SVector2<I32>& value, F32 speed = 1.0f, int min = 0, int max = 0, const char* format = "%d", EDragMode dragMode = EDragMode::None);
 		static bool SliderInt(const char* label, I32& value, int min = 0, int max = 1, const char* format = "%d", EDragMode dragMode = EDragMode::None);
 
@@ -649,8 +741,12 @@ namespace Havtorn
 
 		static void PushID(const char* label);
 		static void PushID(I32 intID);
+		static void PushID(U64 uintID);
 		static void PopID();
 		static I32 GetID(const char* label);
+
+		static void PushItemWidth(const F32 width);
+		static void PopItemWidth();
 
 		static bool BeginMainMenuBar();
 		static void EndMainMenuBar();
@@ -711,23 +807,37 @@ namespace Havtorn
 		static SGuiMultiSelectIO EndMultiSelect();
 
 		static void Image(intptr_t image, const SVector2<F32>& size, const SVector2<F32>& uv0 = SVector2<F32>(0.0f), const SVector2<F32>& uv1 = SVector2<F32>(1.0f), const SColor& tintColor = SColor::White, const SColor& borderColor = SColor(0.0f, 0.0f, 0.0f, 0.0f));
-
+	
 		static void Separator();
 		static void Dummy(const SVector2<F32>& size);
 		static void SameLine(const F32 offsetFromX = 0.0f, const F32 spacing = -1.0f);
 		static bool IsItemClicked();
 		static bool IsItemHovered();
+		static bool IsItemVisible();
+
+		static void BeginVertical(const char* label, const SVector2<F32>& size);
+		static void EndVertical();
+		static void BeginHorizontal(const char* label, const SVector2<F32>& size);
+		static void EndHorizontal();
+
+		static void Indent(const F32 indent);
+		static void Unindent(const F32 indent);
 
 		static SVector2<F32> GetCursorPos();
 		static void SetCursorPos(const SVector2<F32>& cursorPos);
 		static F32 GetCursorPosX();
+		static F32 GetCursorPosY();
 		static void SetCursorPosX(const F32 cursorPosX);
+		static void SetCursorPosY(const F32 cursorPosY);
 		static void OffsetCursorPos(const SVector2<F32>& cursorOffset);
 
 		static F32 GetScrollY();
 		static F32 GetScrollMaxY();
 		static void SetScrollHereY(const F32 centerYRatio);
-		static SVector2<F32> CalculateTextSize(const char* text);
+
+		static SVector4 GetLastRect();
+
+		static void Spring(const F32 weight = 1.0f, const F32 spacing = -1.0f);
 
 		static void SetItemDefaultFocus();
 		static void SetKeyboardFocusHere(const I32 offset = 0);
@@ -736,10 +846,15 @@ namespace Havtorn
 		static void PushStyleVar(const EStyleVar styleVar, const F32 value);
 		static void PopStyleVar(const I32 count = 1);
 		static SVector2<F32> GetStyleVar(const EStyleVar styleVar);
+		static void PushScriptStyleVar(const EScriptStyleVar styleVar, const SVector4& value);
+		static void PushScriptStyleVar(const EScriptStyleVar styleVar, const SVector2<F32>& value);
+		static void PopScriptStyleVar(const I32 count = 1);
 
 		static std::vector<SColor> GetStyleColors();
 		static void PushStyleColor(const EStyleColor styleColor, const SColor& color);
+		static void PushScriptStyleColor(const EScriptStyleColor styleColor, const SColor& color);
 		static void PopStyleColor();
+		static void PopScriptStyleColor();
 
 		static void DecomposeMatrixToComponents(const SMatrix& matrix, SVector& translation, SVector& rotation, SVector& scale);
 		static void RecomposeMatrixFromComponents(SMatrix& matrix, const SVector& translation, const SVector& rotation, const SVector& scale);
@@ -769,6 +884,7 @@ namespace Havtorn
 		static void SetGizmoDrawList();
 
 		static SVector2<F32> GetCurrentWindowSize();
+		static SVector2<F32> GetMousePosition();
 
 		static void AddRectFilled(const SVector2<F32>& cursorPos, const SVector2<F32>& size, const SColor& color);
 
@@ -786,6 +902,40 @@ namespace Havtorn
 		static void DockBuilderSetNodeSize(U32 id, const SVector2<F32>& size);
 		static void DockBuilderDockWindow(const char* label, U32 id);
 		static void DockBuilderFinish(U32 id);
+
+		static void BeginScript(const char* label, const SVector2<F32>& size = SVector2<F32>(0.0f));
+		static void EndScript();
+
+		static void BeginNode(const U64 id);
+		static void EndNode();
+
+		static void SetNodePosition(const U64 id, const SVector2<F32>& position);
+
+		static void BeginPin(const U64 id, const EGUIPinDirection direction);
+		static void EndPin();
+
+		static void DrawPinIcon(const SVector2<F32>& size, const EGUIIconType type, const bool isConnected, const SColor& color);
+		static void DrawNodeHeader(U64 nodeID, intptr_t textureID, const SVector2<F32>& posMin, const SVector2<F32>& posMax, const SVector2<F32>& uvMin, const SVector2<F32>& uvMax, const SColor& color, const F32 rounding);
+
+		static void Link(const U64 linkID, const U64 startPinID, const U64 endPinID, const SColor& color, const F32 thickness = 1.0f);
+
+		static bool BeginScriptCreate();
+		static void EndScriptCreate();
+
+		static bool BeginScriptDelete();
+		static void EndScriptDelete();
+
+		static void SuspendScript();
+		static void ResumeScript();
+
+		static bool QueryNewLink(U64& inputPinID, U64& outputPinID);
+		static bool QueryDeletedLink(U64& linkID);
+		static bool QueryDeletedNode(U64& nodeID);
+
+		static bool AcceptNewScriptItem();
+		static bool AcceptDeletedScriptItem();
+
+		static bool ShowScriptContextMenu();
 
 		static void OpenScript(const std::vector<SGUINode>& nodes, const std::vector<SGUILink>& links);
 		static SNodeOperation RenderScript(std::vector<SGUINode>& nodes, std::vector<SGUILink>& links, const std::vector<SGUINodeContext>& registeredContexts);

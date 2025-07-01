@@ -11,6 +11,25 @@ namespace Havtorn
 {
 	namespace HexRune
 	{
+		SDataBindingNodeEditorContext::SDataBindingNodeEditorContext(SScript* script, const U64 dataBindingID)
+			: DataBindingID(dataBindingID)
+		{
+			auto it = &(*std::ranges::find_if(script->DataBindings, [dataBindingID](SScriptDataBinding& binding) { return binding.UID == dataBindingID; }));
+			Name = it->Name;
+			Category = "Data Bindings";
+			Color = SColor::Orange;
+		}
+
+		SNode* SDataBindingNodeEditorContext::AddNode(SScript* script, const U64 existingID) const
+		{
+			if (script == nullptr)
+				return nullptr;
+
+			SNode* node = script->AddNode<SDataBindingNode>(existingID, DataBindingID);
+			script->AddEditorContext<SDataBindingNodeEditorContext>(node->UID, script, DataBindingID);
+			return node;
+		}
+
 		SBranchNodeEditorContext SBranchNodeEditorContext::Context = {};
 
 		SBranchNodeEditorContext::SBranchNodeEditorContext()

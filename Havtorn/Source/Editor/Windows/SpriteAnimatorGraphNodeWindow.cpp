@@ -44,7 +44,7 @@ namespace Havtorn
 				GUI::PushID(node->Name.Data());
 				for (Havtorn::U32 i = 0; i < animationClip.KeyFrameCount(); i++)
 				{
-					GUI::PushID(i);
+					GUI::PushID(STATIC_I32(i));
 
 					Havtorn::SVector4& rect = Component->AnimationClips[animationClipKey].UVRects[i];
 					GUI::DragFloat4("UVRect", rect, 0.01);

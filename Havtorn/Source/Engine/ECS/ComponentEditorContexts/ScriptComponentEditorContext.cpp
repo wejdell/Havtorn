@@ -18,7 +18,27 @@ namespace Havtorn
 			return SComponentViewResult();
 
 		SScriptComponent* component = scene->GetComponent<SScriptComponent>(entityOwner);
+		if (!component || (component && !component->Owner.IsValid()))
+			return SComponentViewResult();
 
+		HexRune::SScript* script = component->Script;
+		if (!script)
+			return { EComponentViewResultLabel::InspectAssetComponent, component, 0 };
+
+		if (script->DataBindings.empty())
+			GUI::TextDisabled("No Data Bindings");
+		else
+		{
+			GUI::Text("Data Bindings");
+			GUI::Separator();
+		}
+
+		for (const auto& dataBinding : script->DataBindings)
+		{
+			GUI::Text(dataBinding.Name.c_str());
+			// TODO.NW: Make component/entity dropper
+		}
+		
 		return { EComponentViewResultLabel::InspectAssetComponent, component, 0 };
 	}
 

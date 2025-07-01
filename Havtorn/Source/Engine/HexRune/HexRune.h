@@ -24,10 +24,19 @@ namespace Havtorn
             Comment,
         };
 
+        enum class ENGINE_API EObjectDataType : U8
+        {
+            None,
+            Entity,
+            Component
+        };
+
         // TODO.NW: Figure out conversions between similar node types
         // TODO.NW: Add minimum node width?
         struct SNode
         {
+            SNode(const U64 id, SScript* owningScript);
+
             U64 UID = 0;
             //std::string Name = "";
             std::vector<SPin> Inputs;
@@ -39,14 +48,12 @@ namespace Havtorn
 
             // TODO.NW: Could potentially move this to NodeEditorContexts, that map these values to proper node IDs
             //SVector2<F32> EditorPosition = SVector2<F32>();
-            //SColor EditorColor = SColor(1.0f, 1.0f, 1.0f, 0.1f);
 
             ENGINE_API SPin& AddInput(const U64 id, const EPinType type, const std::string& name = "");
             ENGINE_API SPin& AddOutput(const U64 id, const EPinType type, const std::string& name = "");
 
             ENGINE_API void Execute();
 
-            ENGINE_API virtual void Construct();
             // Return output index to continue with, if not all
             ENGINE_API virtual I8 OnExecute(); 
             ENGINE_API virtual bool IsStartNode() const { return false; }
@@ -120,6 +127,17 @@ namespace Havtorn
             std::vector<SNodeEditorContext*> Contexts;
         };
 
+        struct SScriptDataBinding
+        {
+            //SScriptDataBinding(const U64 id, const std::string& name, const EPinType pinType, const EObjectDataType objectType, const std::variant<PIN_DATA_TYPES>& data);
+
+            U64 UID = 0;
+            std::string Name = "";
+            EPinType Type = EPinType::Object;
+            EObjectDataType ObjectType = EObjectDataType::None;
+            std::variant<PIN_DATA_TYPES> Data;
+        };
+
         // TODO.NW: Should be basis for runtime asset? May want script components
         // that have their own editor tool (window) where BP/visual script is shown.
         // An engine script system can deal with starting and running these scripts.
@@ -141,34 +159,35 @@ namespace Havtorn
             std::vector<SNode*> StartNodes;
             
             std::vector<SNodeEditorContext*> RegisteredEditorContexts;
+            std::vector<SScriptDataBinding> DataBindings;
 
             CScene* Scene = nullptr;
             std::string FileName = "";
 
             // TODO.NW: Input params to the script (with connection to owning entity or instance properties) should be loaded from the corresponding component?
 
-            template<typename T/*, typename... Params*/>
-            T* AddNode(U64 id/*, Params... params*/)
+            template<typename T, typename... Params>
+            T* AddNode(U64 id, Params... params)
             {
                 if (id == 0)
                     id = UGUIDManager::Generate();
 
                 NodeIndices.emplace(id, Nodes.size());
-                Nodes.emplace_back(new T());
+                Nodes.emplace_back(new T(id, this, params...));
                 
                 SNode* node = Nodes.back();
                 if (node->IsStartNode())
                     StartNodes.push_back(Nodes.back());
 
-                node->UID = id;
-                node->OwningScript = this;
-                node->Construct();
+                //node->UID = id;
+                //node->OwningScript = this;
+                //node->Construct();
 
                 return dynamic_cast<T*>(node);
             }
 
-            template<typename T>
-            T* AddEditorContext(const U64 nodeID)
+            template<typename T, typename... Params>
+            T* AddEditorContext(const U64 nodeID, Params... params)
             {
                 const U64 typeIDHashCode = typeid(T).hash_code();
                 if (!ContextTypeToStorageIndices.contains(typeIDHashCode))
@@ -181,12 +200,12 @@ namespace Havtorn
 
                 if (contextStorage.NodeIDToContextIndices.contains(nodeID))
                 {
-                    *(dynamic_cast<T*>(contextStorage.Contexts[contextStorage.NodeIDToContextIndices.at(nodeID)])) = T();
+                    *(dynamic_cast<T*>(contextStorage.Contexts[contextStorage.NodeIDToContextIndices.at(nodeID)])) = T(params...);
                 }
                 else
                 {
                     contextStorage.NodeIDToContextIndices.emplace(nodeID, contextStorage.Contexts.size());
-                    contextStorage.Contexts.emplace_back(new T());
+                    contextStorage.Contexts.emplace_back(new T(params...));
                 }
 
                 return dynamic_cast<T*>(contextStorage.Contexts.back());
@@ -264,6 +283,8 @@ namespace Havtorn
                 return specializedContexts;
             }
 
+            // TODO.NW: Deal with serialization?
+            ENGINE_API void AddDataBinding(const char* name, const EPinType type, const EObjectDataType objectType = EObjectDataType::None);
             ENGINE_API void RemoveNode(const U64 id);
 
             ENGINE_API void Initialize();
@@ -275,6 +296,9 @@ namespace Havtorn
             ENGINE_API void Unlink(SPin* leftPin, SPin* rightPin);
 
             ENGINE_API void SetDataOnInput(U64 pinID, const std::variant<PIN_DATA_TYPES>& data);
+
+            // TODO.NW: Make explicit getters for standard entry points? BeginPlay, Tick, EndPlay.
+            // Allow only one per script, and keep a separate pointer to them
             ENGINE_API SNode* GetNode(const U64 id) const;
 
             ENGINE_API [[nodiscard]] U32 GetSize() const;

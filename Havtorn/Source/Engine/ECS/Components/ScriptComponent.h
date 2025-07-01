@@ -2,12 +2,15 @@
 
 #pragma once
 #include "ECS/Component.h"
+#include "HexRune/Pin.h"
+#include "HexRune/HexRune.h"
 
 namespace Havtorn
 {
 	namespace HexRune
 	{
 		struct SScript;
+		struct SScriptDataBinding;
 	}
 
 	struct SScriptComponent : public SComponent
@@ -24,6 +27,9 @@ namespace Havtorn
 		virtual bool IsValid() const override;
 
 		HexRune::SScript* Script = nullptr;
+		std::vector<HexRune::SScriptDataBinding> DataBindings;
 		U64 AssetRegistryKey = 0;
+		U64 TriggeringSourceNode = 0;
+		bool TriggerScript = false;
 	};
 }

@@ -7,7 +7,22 @@ namespace Havtorn
 {
 	namespace HexRune
 	{
-		void SBranchNode::Construct()
+
+		SDataBindingNode::SDataBindingNode(const U64 id, SScript* owningScript, const U64 dataBindingID)
+			: SNode::SNode(id, owningScript)
+		{
+			DataBinding = &(*std::ranges::find_if(OwningScript->DataBindings, [dataBindingID](SScriptDataBinding& binding) { return binding.UID == dataBindingID; }));	
+			AddOutput(UGUIDManager::Generate(), DataBinding->Type, DataBinding->Name);
+		}
+		
+		I8 SDataBindingNode::OnExecute()
+		{
+			SetDataOnPin(EPinDirection::Output, 0, DataBinding->Data);
+			return 0;
+		}
+
+		SBranchNode::SBranchNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
 		{
 			AddInput(UGUIDManager::Generate(), EPinType::Flow);
 			AddInput(UGUIDManager::Generate(), EPinType::Bool, "Condition");
@@ -24,7 +39,8 @@ namespace Havtorn
 			return condition ? 0 : 1;
 		}
 
-		void SSequenceNode::Construct()
+		SSequenceNode::SSequenceNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
 		{
 			AddInput(UGUIDManager::Generate(), EPinType::Flow);
 			
@@ -38,11 +54,12 @@ namespace Havtorn
 			return -1;
 		}
 
-		void SEntityLoopNode::Construct()
+		SEntityLoopNode::SEntityLoopNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
 		{
 			AddInput(UGUIDManager::Generate(), EPinType::Flow);
 			AddInput(UGUIDManager::Generate(), EPinType::ObjectArray, "Array");
-			
+
 			AddOutput(UGUIDManager::Generate(), EPinType::Flow, "Loop Body");
 			AddOutput(UGUIDManager::Generate(), EPinType::Object, "Element");
 			AddOutput(UGUIDManager::Generate(), EPinType::Int, "Index");
@@ -53,7 +70,7 @@ namespace Havtorn
 		{
 			std::vector<SEntity> entities;
 			GetDataOnPin(EPinDirection::Input, 0, entities);
-			
+
 			for (I32 i = 0; i < STATIC_I32(entities.size()); i++)
 			{
 				SEntity& entity = entities[i];
@@ -67,7 +84,8 @@ namespace Havtorn
 			return 3;
 		}
 
-		void SComponentLoopNode::Construct()
+		SComponentLoopNode::SComponentLoopNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
 		{
 			AddInput(UGUIDManager::Generate(), EPinType::Flow);
 			AddInput(UGUIDManager::Generate(), EPinType::ObjectArray, "Array");
@@ -96,7 +114,8 @@ namespace Havtorn
 			return 3;
 		}
 
-		void SDelayNode::Construct()
+		SDelayNode::SDelayNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
 		{
 			AddInput(UGUIDManager::Generate(), EPinType::Flow);
 			AddInput(UGUIDManager::Generate(), EPinType::Float, "Duration");
@@ -112,7 +131,8 @@ namespace Havtorn
 			return -2;
 		}
 
-		void SBeginPlayNode::Construct()
+		SBeginPlayNode::SBeginPlayNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
 		{
 			AddOutput(UGUIDManager::Generate(), EPinType::Flow);
 		}
@@ -122,7 +142,8 @@ namespace Havtorn
 			return 0;
 		}
 
-		void STickNode::Construct()
+		STickNode::STickNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
 		{
 			AddOutput(UGUIDManager::Generate(), EPinType::Flow);
 			AddOutput(UGUIDManager::Generate(), EPinType::Float, "Dt");
@@ -134,7 +155,8 @@ namespace Havtorn
 			return 0;
 		}
 
-		void SEndPlayNode::Construct()
+		SEndPlayNode::SEndPlayNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
 		{
 			AddOutput(UGUIDManager::Generate(), EPinType::Flow);
 			// TODO.NW: End play reason?
@@ -146,7 +168,8 @@ namespace Havtorn
 			return 0;
 		}
 
-		void SPrintStringNode::Construct()
+		SPrintStringNode::SPrintStringNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
 		{
 			AddInput(UGUIDManager::Generate(), EPinType::Flow);
 			AddInput(UGUIDManager::Generate(), EPinType::String, "String");
@@ -164,7 +187,8 @@ namespace Havtorn
 			return 0;
 		}
 
-		void SAppendStringNode::Construct()
+		SAppendStringNode::SAppendStringNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
 		{
 			Type = ENodeType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::String, "A");
@@ -185,12 +209,13 @@ namespace Havtorn
 			return -1;
 		}
 
-		void SFloatLessThanNode::Construct()
+		SFloatLessThanNode::SFloatLessThanNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
 		{
 			Type = ENodeType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Float);
 			AddInput(UGUIDManager::Generate(), EPinType::Float);
-			
+
 			AddOutput(UGUIDManager::Generate(), EPinType::Bool);
 		}
 
@@ -203,7 +228,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		void SFloatMoreThanNode::Construct()
+		SFloatMoreThanNode::SFloatMoreThanNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
 		{
 			Type = ENodeType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Float);
@@ -221,7 +247,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		void SFloatLessOrEqualNode::Construct()
+		SFloatLessOrEqualNode::SFloatLessOrEqualNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
 		{
 			Type = ENodeType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Float);
@@ -239,7 +266,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		void SFloatMoreOrEqualNode::Construct()
+		SFloatMoreOrEqualNode::SFloatMoreOrEqualNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
 		{
 			Type = ENodeType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Float);
@@ -257,7 +285,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		void SFloatEqualNode::Construct()
+		SFloatEqualNode::SFloatEqualNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
 		{
 			Type = ENodeType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Float);
@@ -275,7 +304,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		void SFloatNotEqualNode::Construct()
+		SFloatNotEqualNode::SFloatNotEqualNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
 		{
 			Type = ENodeType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Float);
@@ -293,7 +323,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		void SIntLessThanNode::Construct()
+		SIntLessThanNode::SIntLessThanNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
 		{
 			Type = ENodeType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Int);
@@ -311,7 +342,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		void SIntMoreThanNode::Construct()
+		SIntMoreThanNode::SIntMoreThanNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
 		{
 			Type = ENodeType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Int);
@@ -329,7 +361,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		void SIntLessOrEqualNode::Construct()
+		SIntLessOrEqualNode::SIntLessOrEqualNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
 		{
 			Type = ENodeType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Int);
@@ -347,7 +380,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		void SIntMoreOrEqualNode::Construct()
+		SIntMoreOrEqualNode::SIntMoreOrEqualNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
 		{
 			Type = ENodeType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Int);
@@ -365,7 +399,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		void SIntEqualNode::Construct()
+		SIntEqualNode::SIntEqualNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
 		{
 			Type = ENodeType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Int);
@@ -383,7 +418,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		void SIntNotEqualNode::Construct()
+		SIntNotEqualNode::SIntNotEqualNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
 		{
 			Type = ENodeType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Int);

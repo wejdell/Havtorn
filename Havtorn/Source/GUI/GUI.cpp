@@ -167,14 +167,20 @@ namespace Havtorn
 			ImGui::TextUnformatted(text);
 		}
 
-		void InputText(const char* label, char* buf, size_t bufSize, ImGuiInputTextCallback callback, void* data)
+		bool InputText(const char* label, char* buf, size_t bufSize, ImGuiInputTextCallback callback, void* data)
 		{
-			ImGui::InputText(label, buf, bufSize, 0, callback, data);
+			return ImGui::InputText(label, buf, bufSize, 0, callback, data);
 		}
 
 		void SetTooltip(const char* fmt, va_list args)
 		{
 			ImGui::SetTooltipV(fmt, args);	
+		}
+
+		SVector2<F32> CalculateTextSize(const char* text)
+		{
+			ImVec2 imVec = ImGui::CalcTextSize(text);
+			return { imVec.x, imVec.y };
 		}
 
 		bool DragFloat(const char* label, F32& value, F32 vSpeed = 1.0f, F32 min = 0.0f, F32 max = 0.0f, const char* format = "%.3f", ImGuiSliderFlags flags = 0)
@@ -214,6 +220,11 @@ namespace Havtorn
 		bool SliderFloat(const char* label, F32& value, F32 min, F32 max, const char* format = "%.3f", ImGuiSliderFlags flags = 0)
 		{
 			return ImGui::SliderFloat(label, &value, min, max, format, flags);
+		}
+
+		bool InputInt(const char* label, I32& value, I32 step, I32 stepFast)
+		{
+			return ImGui::InputInt(label, &value, step, stepFast);
 		}
 
 		bool DragInt2(const char* label, SVector2<I32>& value, F32 vSpeed = 1.0f, int min = 0, int max = 0, const char* format = "%d", ImGuiSliderFlags flags = 0)
@@ -357,6 +368,11 @@ namespace Havtorn
 			return ImGui::IsItemHovered();
 		}
 
+		bool IsItemVisible()
+		{
+			return ImGui::IsItemVisible();
+		}
+
 		SVector2<F32> GetCursorPos()
 		{
 			const ImVec2& imCursorPos = ImGui::GetCursorPos();
@@ -374,9 +390,19 @@ namespace Havtorn
 			return ImGui::GetCursorPosX();
 		}
 
+		F32 GetCursorPosY()
+		{
+			return ImGui::GetCursorPosY();
+		}
+
 		void SetCursorPosX(const F32 cursorPosX)
 		{
 			ImGui::SetCursorPosX(cursorPosX);
+		}
+
+		void SetCursorPosY(const F32 cursorPosY)
+		{
+			ImGui::SetCursorPosY(cursorPosY);
 		}
 
 		F32 GetScrollY()
@@ -394,10 +420,15 @@ namespace Havtorn
 			ImGui::SetScrollHereY(centerYRation);
 		}
 
-		SVector2<F32> CalculateTextSize(const char* text)
+		SVector4 GetLastRect()
 		{
-			const ImVec2& imTextSize = ImGui::CalcTextSize(text);
-			return { imTextSize.x, imTextSize.y };
+			const ImRect& imRect = GImGui->LastItemData.Rect;
+			return { imRect.Min.x, imRect.Min.y, imRect.Max.x, imRect.Max.y };
+		}
+
+		void Spring(const F32 weight, const F32 spacing)
+		{
+			ImGui::Spring(weight, spacing);
 		}
 
 		void SetItemDefaultFocus()
@@ -457,6 +488,21 @@ namespace Havtorn
 			ImGui::PopStyleVar(count);
 		}
 
+		void PushScriptStyleVar(const EScriptStyleVar styleVar, const SVector4& value)
+		{
+			NE::PushStyleVar((NE::StyleVar)styleVar, { value.X, value.Y, value.Z, value.W });
+		}
+
+		void PushScriptStyleVar(const EScriptStyleVar styleVar, const SVector2<F32>& value)
+		{
+			NE::PushStyleVar((NE::StyleVar)styleVar, { value.X, value.Y });
+		}
+
+		void PopScriptStyleVar(int count = 1)
+		{
+			NE::PopStyleVar(count);
+		}
+
 		SVector2<F32> GetStyleVar(const EStyleVar styleVar)
 		{
 			int imVar = static_cast<int>(styleVar);
@@ -499,9 +545,21 @@ namespace Havtorn
 			ImGui::PushStyleColor(imVar, imValue);
 		}
 
+		void PushScriptStyleColor(const EScriptStyleColor styleColor, const SColor& color)
+		{
+			SVector4 colorFloat = color.AsVector4();
+			ImVec4 imValue = { colorFloat.X, colorFloat.Y, colorFloat.Z, colorFloat.W };
+			NE::PushStyleColor((NE::StyleColor)styleColor, imValue);
+		}
+
 		void PopStyleColor()
 		{
 			ImGui::PopStyleColor();
+		}
+
+		void PopScriptStyleColor()
+		{
+			NE::PopStyleColor();
 		}
 
 		void DecomposeMatrixToComponents(F32* matrix, F32* translation, F32* rotation, F32* scale)
@@ -615,6 +673,12 @@ namespace Havtorn
 			return { imWindowSize.x, imWindowSize.y };
 		}
 
+		SVector2<F32> GetMousePosition()
+		{
+			ImVec2 imPos = ImGui::GetMousePos();
+			return { imPos.x, imPos.y };
+		}
+
 		void PushID(const char* label)
 		{
 			ImGui::PushID(label);
@@ -633,6 +697,16 @@ namespace Havtorn
 		int GetID(const char* label)
 		{
 			return ImGui::GetID(label);
+		}
+
+		void PushItemWidth(const F32 width)
+		{
+			ImGui::PushItemWidth(width);
+		}
+
+		void PopItemWidth()
+		{
+			ImGui::PopItemWidth();
 		}
 
 		bool BeginMenu(const char* label, bool enabled)
@@ -1026,6 +1100,160 @@ namespace Havtorn
 			ImGui::DockBuilderFinish(id);
 		}
 
+		void BeginScript(const char* label, const SVector2<F32>& size)
+		{
+			NE::SetCurrentEditor(NodeEditorContext);
+			NE::Begin(label, ImVec2(size.X, size.Y));
+		}
+
+		void EndScript()
+		{
+			NE::End();
+			NE::SetCurrentEditor(nullptr);
+		}
+
+		void BeginNode(const U64 id)
+		{
+			NE::BeginNode(id);
+		}
+
+		void EndNode()
+		{
+			NE::EndNode();
+		}
+
+		void SetNodePosition(const U64 id, const SVector2<F32>& position)
+		{
+			NE::SetNodePosition(id, { position.X, position.Y });
+		}
+
+		void BeginPin(const U64 id, const EGUIPinDirection direction)
+		{
+			NE::BeginPin(id, (ax::NodeEditor::PinKind)direction);
+		}
+
+		void EndPin()
+		{
+			NE::EndPin();
+		}
+
+		void DrawPinIcon(const SVector2<F32>& size, const EGUIIconType type, const bool isConnected, const SColor& color)
+		{
+			ax::Widgets::Icon(ImVec2(size.X, size.Y), static_cast<ax::Drawing::IconType>(type), isConnected, ImColor{color.R, color.G, color.B, color.A}, ImColor(32, 32, 32, 255));
+		}
+
+		void DrawNodeHeader(const U64 nodeID, intptr_t textureID, const SVector2<F32>& posMin, const SVector2<F32>& posMax, const SVector2<F32>& uvMin, const SVector2<F32>& uvMax, const SColor& color, const F32 rounding)
+		{
+			NE::GetNodeBackgroundDrawList(nodeID)->AddImageRounded((ImTextureID)textureID, { posMin.X, posMin.Y }, { posMax.X, posMax.Y }, { uvMin.X, uvMin.Y }, { uvMax.X, uvMax.Y }, ImColor{color.R, color.G, color.B, color.A}, rounding, ImDrawFlags_RoundCornersAll);
+		}
+
+		void Link(const U64 linkID, const U64 startPinID, const U64 endPinID, const SColor& color, const F32 thickness)
+		{
+			SVector4 floatColor = color.AsVector4();
+			ImVec4 imColor = { floatColor.X, floatColor.Y, floatColor.Z, floatColor.W };
+			NE::Link(linkID, startPinID, endPinID, imColor, thickness);
+		}
+
+		bool BeginScriptCreate()
+		{
+			return NE::BeginCreate();
+		}
+
+		void EndScriptCreate()
+		{
+			NE::EndCreate();
+		}
+
+		bool BeginScriptDelete()
+		{
+			return NE::BeginDelete();;
+		}
+
+		void EndScriptDelete()
+		{
+			NE::EndDelete();
+		}
+
+		void SuspendScript()
+		{
+			NE::Suspend();
+		}
+
+		void ResumeScript()
+		{
+			NE::Resume();
+		}
+
+		bool QueryNewLink(U64& inputPinID, U64& outputPinID)
+		{
+			NE::PinId inputPinId, outputPinId;
+			const bool returnValue = NE::QueryNewLink(&inputPinId, &outputPinId);
+			inputPinID = inputPinId.Get();
+			outputPinID = outputPinId.Get();
+			return returnValue;
+		}
+
+		bool QueryDeletedLink(U64& linkID)
+		{
+			NE::LinkId linkId;
+			const bool returnValue = NE::QueryDeletedLink(&linkId);
+			linkID = linkId.Get();
+			return returnValue;
+		}
+
+		bool QueryDeletedNode(U64& nodeID)
+		{
+			NE::NodeId nodeId;
+			const bool returnValue = NE::QueryDeletedNode(&nodeId);
+			nodeID = nodeId.Get();
+			return returnValue;
+		}
+
+		bool AcceptNewScriptItem()
+		{
+			return NE::AcceptNewItem();
+		}
+
+		bool AcceptDeletedScriptItem()
+		{
+			return NE::AcceptDeletedItem();
+		}
+
+		bool ShowScriptContextMenu()
+		{
+			return NE::ShowBackgroundContextMenu();
+		}
+
+		void BeginVertical(const char* label, const SVector2<F32>& size)
+		{
+			ImGui::BeginVertical(label, { size.X, size.Y });
+		}
+
+		void EndVertical()
+		{
+			ImGui::EndVertical();
+		}
+
+		void BeginHorizontal(const char* label, const SVector2<F32>& size)
+		{
+			ImGui::BeginHorizontal(label, { size.X, size.Y });
+		}
+
+		void EndHorizontal()
+		{
+			ImGui::EndHorizontal();
+		}
+
+		void Indent(const F32 indent)
+		{
+			ImGui::Indent(indent);
+		}
+
+		void Unindent(const F32 indent)
+		{
+			ImGui::Unindent(indent);
+		}
+
 		// TODO.NW: Move to script asset editor
 		ImColor GetPinTypeColor(EGUIPinType type)
 		{
@@ -1370,16 +1598,16 @@ namespace Havtorn
 
 		SNodeOperation RenderScript(std::vector<SGUINode>& nodes, std::vector<SGUILink>& links, const std::vector<SGUINodeContext>& registeredContexts)
 		{
-			NE::SetCurrentEditor(NodeEditorContext);
-			//static float leftPaneWidth = 400.0f;
-			//static float rightPaneWidth = 800.0f;
-			//Splitter(true, 4.0f, &leftPaneWidth, &rightPaneWidth, 50.0f, 50.0f);
+			//NE::SetCurrentEditor(NodeEditorContext);
+			////static float leftPaneWidth = 400.0f;
+			////static float rightPaneWidth = 800.0f;
+			////Splitter(true, 4.0f, &leftPaneWidth, &rightPaneWidth, 50.0f, 50.0f);
 
-			//ShowLeftPane(leftPaneWidth - 4.0f);
+			////ShowLeftPane(leftPaneWidth - 4.0f);
 
-			//ImGui::SameLine(0.0f, 12.0f);
+			////ImGui::SameLine(0.0f, 12.0f);
 
-			NE::Begin("ScriptEditor", ImVec2(0.0f, 0.0f));
+			//NE::Begin("ScriptEditor", ImVec2(0.0f, 0.0f));
 			auto toImColor = [](const SColor& color) { return ImColor(color.R, color.G, color.B, color.A); };
 			auto toImVec = [](const SVector2<F32>& position) { return ImVec2(position.X, position.Y); };
 
@@ -1390,113 +1618,114 @@ namespace Havtorn
 			constexpr float pinNameOffset = 4.0f;
 			constexpr float outputIndent = 0.0f;
 
-			//NE::PushStyleColor(NE::StyleColor_Bg, toImColor(SColor(20)));
+			NE::PushStyleColor(NE::StyleColor_Bg, toImColor(SColor(60)));
 			for (SGUINode& node : nodes)
 			{	
-				ImVec2 requiredSize = CalculateRequiredSize(node);
-
 				// Start drawing nodes.
-				NE::PushStyleVar(NE::StyleVar_NodePadding, ImVec4(8, 4, 8, 8));
-				NE::BeginNode(node.UID);
-				
-				if (!node.HasBeenInitialized)
-					NE::SetNodePosition(node.UID, toImVec(node.Position));
-
-				ImGui::PushID(node.UID);
-				ImGui::BeginVertical("node", requiredSize);
-
-				ImRect headerRect = ImRect();
-
-				ImGui::BeginHorizontal("header", ImVec2(requiredSize.x, headerHeight));
-				ImVec2 nodeNameCursorStart = ImGui::GetCursorPos();
-				nodeNameCursorStart.y += 2.0f;
-				ImGui::SetCursorPos(nodeNameCursorStart);
-				ImGui::TextUnformatted(node.Name.c_str());
-				ImGui::EndHorizontal();
-				headerRect = GImGui->LastItemData.Rect;
-				ImGui::Spring(0, ImGui::GetStyle().ItemSpacing.y * 3.0f);
-
-				int maxPinColumnLength = UMath::Max(node.Inputs.size(), node.Outputs.size());
-				for (int i = 0; i < maxPinColumnLength; i++)
 				{
-					SGUIPin* inputPin = node.Inputs.size() > i ? &node.Inputs[i] : nullptr;
-					SGUIPin* outputPin = node.Outputs.size() > i ? &node.Outputs[i] : nullptr;
+					ImVec2 requiredSize = CalculateRequiredSize(node);
+					NE::PushStyleVar(NE::StyleVar_NodePadding, ImVec4(8, 4, 8, 8));
+					NE::BeginNode(node.UID);
 
-					if (inputPin != nullptr && inputPin->Direction == EGUIPinDirection::Input)
+					if (!node.HasBeenInitialized)
+						NE::SetNodePosition(node.UID, toImVec(node.Position));
+
+					ImGui::PushID(node.UID);
+					ImGui::BeginVertical("node", requiredSize);
+
+					ImRect headerRect = ImRect();
+
+					ImGui::BeginHorizontal("header", ImVec2(requiredSize.x, headerHeight));
+					ImVec2 nodeNameCursorStart = ImGui::GetCursorPos();
+					nodeNameCursorStart.y += 2.0f;
+					ImGui::SetCursorPos(nodeNameCursorStart);
+					ImGui::TextUnformatted(node.Name.c_str());
+					ImGui::EndHorizontal();
+					headerRect = GImGui->LastItemData.Rect;
+					ImGui::Spring(0, ImGui::GetStyle().ItemSpacing.y * 3.0f);
+
+					int maxPinColumnLength = UMath::Max(node.Inputs.size(), node.Outputs.size());
+					for (int i = 0; i < maxPinColumnLength; i++)
 					{
-						NE::PushStyleVar(NE::StyleVar_PivotAlignment, ImVec2(0.1f, 0.5f));
-						NE::BeginPin(inputPin->UID, NE::PinKind::Input);
+						SGUIPin* inputPin = node.Inputs.size() > i ? &node.Inputs[i] : nullptr;
+						SGUIPin* outputPin = node.Outputs.size() > i ? &node.Outputs[i] : nullptr;
 
-						const bool isPinLinked = IsPinLinked(inputPin->UID, links);
-
-						if (IsPinTypeLiteral(*inputPin) && !isPinLinked)
+						if (inputPin != nullptr && inputPin->Direction == EGUIPinDirection::Input)
 						{
-							bool wasPinValueModified = DrawLiteralTypePin(*inputPin);
-							if (wasPinValueModified)
-								result.ModifiedLiteralValuePin = *inputPin;
+							NE::PushStyleVar(NE::StyleVar_PivotAlignment, ImVec2(0.1f, 0.5f));
+							NE::BeginPin(inputPin->UID, NE::PinKind::Input);
+
+							const bool isPinLinked = IsPinLinked(inputPin->UID, links);
+
+							if (IsPinTypeLiteral(*inputPin) && !isPinLinked)
+							{
+								bool wasPinValueModified = DrawLiteralTypePin(*inputPin);
+								if (wasPinValueModified)
+									result.ModifiedLiteralValuePin = *inputPin;
+							}
+							else
+							{
+								DrawPinIcon(*inputPin, isPinLinked, 255);
+							}
+
+							ImGui::SameLine(0, 0);
+							float cursorY = ImGui::GetCursorPosY();
+							ImGui::SetCursorPosY(cursorY + pinNameOffset);
+							ImGui::Text(inputPin->Name.c_str());
+							ImGui::SetCursorPosY(cursorY - pinNameOffset);
+
+							NE::EndPin();
+							NE::PopStyleVar();
 						}
-						else
+
+						if (outputPin != nullptr && outputPin->Direction == EGUIPinDirection::Output)
 						{
-							DrawPinIcon(*inputPin, isPinLinked, 255);
+							if (inputPin != nullptr)
+								ImGui::SameLine();
+
+							float nameWidth = ImGui::CalcTextSize(outputPin->Name.c_str()).x;
+							constexpr float iconSize = 24.0f;
+							float indent = requiredSize.x - nameWidth - iconSize;
+							ImGui::Indent(indent);
+
+							NE::PushStyleVar(NE::StyleVar_PivotAlignment, ImVec2(0.9f, 0.5));
+							NE::BeginPin(outputPin->UID, NE::PinKind::Output);
+
+							float cursorX = ImGui::GetCursorPosX();
+							float cursorY = ImGui::GetCursorPosY();
+							ImGui::SetCursorPosY(cursorY + pinNameOffset);
+							ImGui::Text(outputPin->Name.c_str());
+							ImGui::SetCursorPos(ImVec2(cursorX + nameWidth, cursorY));
+
+							DrawPinIcon(*outputPin, IsPinLinked(outputPin->UID, links), 255);
+							NE::EndPin();
+							NE::PopStyleVar();
+							ImGui::Unindent(indent);
 						}
-
-						ImGui::SameLine(0, 0);
-						float cursorY = ImGui::GetCursorPosY();
-						ImGui::SetCursorPosY(cursorY + pinNameOffset);
-						ImGui::Text(inputPin->Name.c_str());
-						ImGui::SetCursorPosY(cursorY - pinNameOffset);
-
-						NE::EndPin();
-						NE::PopStyleVar();
 					}
-					
-					if (outputPin != nullptr && outputPin->Direction == EGUIPinDirection::Output)
+
+					ImGui::EndVertical();
+					ImRect contentRect = GImGui->LastItemData.Rect;
+					NE::EndNode();
+
+					if (ImGui::IsItemVisible())
 					{
-						if (inputPin != nullptr)
-							ImGui::SameLine();
+						auto drawList = NE::GetNodeBackgroundDrawList(node.UID);
 
-						float nameWidth = ImGui::CalcTextSize(outputPin->Name.c_str()).x;
-						constexpr float iconSize = 24.0f;
-						float indent = requiredSize.x - nameWidth - iconSize;
-						ImGui::Indent(indent);
+						const auto halfBorderWidth = NE::GetStyle().NodeBorderWidth * 0.5f;
+						const auto uv = ImVec2(
+							headerRect.GetWidth() / (float)(4.0f * 64.0f),
+							headerRect.GetHeight() / (float)(4.0f * 64.0f));
 
-						NE::PushStyleVar(NE::StyleVar_PivotAlignment, ImVec2(0.9f, 0.5));
-						NE::BeginPin(outputPin->UID, NE::PinKind::Output);
-
-						float cursorX = ImGui::GetCursorPosX();
-						float cursorY = ImGui::GetCursorPosY();
-						ImGui::SetCursorPosY(cursorY + pinNameOffset);
-						ImGui::Text(outputPin->Name.c_str());
-						ImGui::SetCursorPos(ImVec2(cursorX + nameWidth, cursorY));
-
-						DrawPinIcon(*outputPin, IsPinLinked(outputPin->UID, links), 255);
-						NE::EndPin();
-						NE::PopStyleVar();
-						ImGui::Unindent(indent);
+						ImVec2 imagePadding = ImVec2(8 - halfBorderWidth, 4 - halfBorderWidth);
+						ImVec2 imagePaddingMax = ImVec2(8 - halfBorderWidth, 10 - halfBorderWidth);
+						ImVec2 imageMin = ImVec2(headerRect.Min.x - imagePadding.x, headerRect.Min.y - imagePadding.y);
+						ImVec2 imageMax = ImVec2(headerRect.Max.x + imagePaddingMax.x, headerRect.Max.y + imagePaddingMax.y);
+						drawList->AddImageRounded(BlueprintBackgroundImage, imageMin, imageMax, ImVec2(0.0f, 0.0f), uv, toImColor(node.Color), NE::GetStyle().NodeRounding, ImDrawFlags_RoundCornersAll);
 					}
+					ImGui::PopID();
+					NE::PopStyleVar();
 				}
-
-				ImGui::EndVertical();
-				ImRect contentRect = GImGui->LastItemData.Rect;
-				NE::EndNode();
-
-				if (ImGui::IsItemVisible())
-				{
-					auto drawList = NE::GetNodeBackgroundDrawList(node.UID);
-
-					const auto halfBorderWidth = NE::GetStyle().NodeBorderWidth * 0.5f;
-					const auto uv = ImVec2(
-						headerRect.GetWidth() / (float)(4.0f * 64.0f),
-						headerRect.GetHeight() / (float)(4.0f * 64.0f));
-
-					ImVec2 imagePadding = ImVec2(8 - halfBorderWidth, 4 - halfBorderWidth);
-					ImVec2 imagePaddingMax = ImVec2(8 - halfBorderWidth, 10 - halfBorderWidth);
-					ImVec2 imageMin = ImVec2(headerRect.Min.x - imagePadding.x, headerRect.Min.y - imagePadding.y);
-					ImVec2 imageMax = ImVec2(headerRect.Max.x + imagePaddingMax.x, headerRect.Max.y + imagePaddingMax.y);
-					drawList->AddImageRounded(BlueprintBackgroundImage, imageMin, imageMax, ImVec2(0.0f, 0.0f), uv, toImColor(node.Color), NE::GetStyle().NodeRounding, ImDrawFlags_RoundCornersAll);
-				}
-				ImGui::PopID();
-				NE::PopStyleVar();
 			}
 
 			for (auto& linkInfo : links)
@@ -1777,13 +2006,44 @@ namespace Havtorn
 							ImGui::EndMenu();
 						}
 					}
+
+					ImGui::Separator();
+					if (ImGui::MenuItem("Create New Data Binding"))
+					{
+						ImGui::CloseCurrentPopup();
+						ImGui::EndPopup();
+						ImGui::OpenPopup("Create Data Binding");
+					}
+					else
+						ImGui::EndPopup();
 				//}		
-				ImGui::EndPopup();
 			}
-			else
+
+			if (ImGui::BeginPopup("Create Data Binding"))
 			{
-				//mySetSearchFokus = true;
-				//memset(&myMenuSeachField[0], 0, sizeof(myMenuSeachField));
+				ImGui::Text("New Data Binding");
+				ImGui::Separator();
+
+				std::string name = "Self";
+				EGUIPinType type = EGUIPinType::Object;
+				EGUIObjectDataType objectType = EGUIObjectDataType::Entity;
+
+				//ImGui::TextDisabled("Name");
+				//ImGui::SameLine();
+				//ImGui::InputText("Name", (char*)name.c_str(), 64);
+			
+				if (ImGui::Button("Create"))
+				{
+					result.NewBinding.Name = name;
+					result.NewBinding.Type = type;
+					result.NewBinding.ObjectType = objectType;
+					ImGui::CloseCurrentPopup();
+				}
+				if (ImGui::Button("Cancel"))
+				{
+					ImGui::CloseCurrentPopup();
+				}
+				ImGui::EndPopup();
 			}
 
 			ImGui::PopStyleVar();
@@ -1903,8 +2163,8 @@ namespace Havtorn
 			}
 
 			//NE::PopStyleColor(NE::StyleColor_Bg);
-			NE::End();
-			NE::SetCurrentEditor(nullptr);
+			//NE::End();
+			//NE::SetCurrentEditor(nullptr);
 
 			return result;
 		}
@@ -2040,7 +2300,7 @@ namespace Havtorn
 		Instance->Impl->TextUnformatted(text);
 	}
 
-	void GUI::InputText(const char* label, CHavtornStaticString<255>* customString)
+	bool GUI::InputText(const char* label, CHavtornStaticString<255>* customString)
 	{
 		return Instance->Impl->InputText(label, customString->Data(), (size_t)customString->Length() + 1, HavtornInputTextResizeCallback, (void*)customString);
 	}
@@ -2051,6 +2311,11 @@ namespace Havtorn
 		va_start(args, fmt);
 		Instance->Impl->SetTooltip(fmt, args);
 		va_end(args);
+	}
+
+	SVector2<F32> GUI::CalculateTextSize(const char* text)
+	{
+		return Instance->Impl->CalculateTextSize(text);
 	}
 
 	bool GUI::InputFloat(const char* label, F32& value, F32 step, F32 stepFast, const char* format)
@@ -2083,6 +2348,11 @@ namespace Havtorn
 		return Instance->Impl->SliderFloat(label, value, min, max, format, static_cast<int>(dragMode));
 	}
 
+	bool GUI::InputInt(const char* label, I32& value, I32 step, I32 stepFast)
+	{
+		return Instance->Impl->InputInt(label, value, step, stepFast);
+	}
+
 	bool GUI::DragInt2(const char* label, SVector2<I32>& value, F32 speed, int min, int max, const char* format, EDragMode dragMode)
 	{
 		return Instance->Impl->DragInt2(label, value, speed, min, max, format, static_cast<int>(dragMode));
@@ -2113,6 +2383,11 @@ namespace Havtorn
 		Instance->Impl->PushID(intID);
 	}
 
+	void GUI::PushID(U64 uintID)
+	{
+		Instance->Impl->PushID(STATIC_I32(uintID));
+	}
+
 	void GUI::PopID()
 	{
 		Instance->Impl->PopID();
@@ -2121,6 +2396,16 @@ namespace Havtorn
 	I32 GUI::GetID(const char* label)
 	{
 		return Instance->Impl->GetID(label);
+	}
+
+	void GUI::PushItemWidth(const F32 width)
+	{
+		Instance->Impl->PushItemWidth(width);
+	}
+
+	void GUI::PopItemWidth()
+	{
+		Instance->Impl->PopItemWidth();
 	}
 
 	bool GUI::BeginMainMenuBar()
@@ -2478,6 +2763,41 @@ namespace Havtorn
 		return Instance->Impl->IsItemHovered();
 	}
 
+	bool GUI::IsItemVisible()
+	{
+		return Instance->Impl->IsItemVisible();
+	}
+
+	void GUI::BeginVertical(const char* label, const SVector2<F32>& size)
+	{
+		Instance->Impl->BeginVertical(label, size);
+	}
+
+	void GUI::EndVertical()
+	{
+		Instance->Impl->EndVertical();
+	}
+
+	void GUI::BeginHorizontal(const char* label, const SVector2<F32>& size)
+	{
+		Instance->Impl->BeginHorizontal(label, size);
+	}
+
+	void GUI::EndHorizontal()
+	{
+		Instance->Impl->EndHorizontal();
+	}
+
+	void GUI::Indent(const F32 indent)
+	{
+		Instance->Impl->Indent(indent);
+	}
+
+	void GUI::Unindent(const F32 indent)
+	{
+		Instance->Impl->Unindent(indent);
+	}
+
 	SVector2<F32> GUI::GetCursorPos()
 	{
 		return Instance->Impl->GetCursorPos();;
@@ -2493,9 +2813,19 @@ namespace Havtorn
 		return Instance->Impl->GetCursorPosX();
 	}
 
+	F32 GUI::GetCursorPosY()
+	{
+		return Instance->Impl->GetCursorPosY();
+	}
+
 	void GUI::SetCursorPosX(const F32 cursorPosX)
 	{
 		Instance->Impl->SetCursorPosX(cursorPosX);
+	}
+
+	void GUI::SetCursorPosY(const F32 cursorPosY)
+	{
+		Instance->Impl->SetCursorPosY(cursorPosY);
 	}
 
 	void GUI::OffsetCursorPos(const SVector2<F32>& cursorOffset)
@@ -2518,9 +2848,14 @@ namespace Havtorn
 		Instance->Impl->SetScrollHereY(scroll);
 	}
 
-	SVector2<F32> GUI::CalculateTextSize(const char* text)
+	SVector4 GUI::GetLastRect()
 	{
-		return Instance->Impl->CalculateTextSize(text);
+		return Instance->Impl->GetLastRect();
+	}
+
+	void GUI::Spring(const F32 weight, const F32 spacing)
+	{
+		return Instance->Impl->Spring(weight, spacing);
 	}
 
 	void GUI::SetItemDefaultFocus()
@@ -2553,6 +2888,21 @@ namespace Havtorn
 		return Instance->Impl->GetStyleVar(styleVar);
 	}
 
+	void GUI::PushScriptStyleVar(const EScriptStyleVar styleVar, const SVector4& value)
+	{
+		Instance->Impl->PushScriptStyleVar(styleVar, value);
+	}
+
+	void GUI::PushScriptStyleVar(const EScriptStyleVar styleVar, const SVector2<F32>& value)
+	{
+		Instance->Impl->PushScriptStyleVar(styleVar, value);
+	}
+
+	void GUI::PopScriptStyleVar(const I32 count)
+	{
+		Instance->Impl->PopScriptStyleVar(count);
+	}
+
 	std::vector<SColor> GUI::GetStyleColors()
 	{
 		return Instance->Impl->GetStyleColors();
@@ -2563,9 +2913,19 @@ namespace Havtorn
 		Instance->Impl->PushStyleColor(styleColor, color);
 	}
 
+	void GUI::PushScriptStyleColor(const EScriptStyleColor styleColor, const SColor& color)
+	{
+		Instance->Impl->PushScriptStyleColor(styleColor, color);
+	}
+
 	void GUI::PopStyleColor()
 	{
 		Instance->Impl->PopStyleColor();
+	}
+
+	void GUI::PopScriptStyleColor()
+	{
+		Instance->Impl->PopScriptStyleColor();
 	}
 
 	void Havtorn::GUI::DecomposeMatrixToComponents(const SMatrix& matrix, SVector& translation, SVector& rotation, SVector& scale)
@@ -2684,6 +3044,11 @@ namespace Havtorn
 		return Instance->Impl->GetCurrentWindowSize();
 	}
 
+	SVector2<F32> GUI::GetMousePosition()
+	{
+		return Instance->Impl->GetMousePosition();
+	}
+
 	void GUI::AddRectFilled(const SVector2<F32>& cursorScreenPos, const SVector2<F32>& size, const SColor& color)
 	{
 		Instance->Impl->AddRectFilled(cursorScreenPos, size, color);
@@ -2742,6 +3107,116 @@ namespace Havtorn
 	void GUI::DockBuilderFinish(U32 id)
 	{
 		Instance->Impl->DockBuilderFinish(id);
+	}
+
+	void GUI::BeginScript(const char* label, const SVector2<F32>& size)
+	{
+		Instance->Impl->BeginScript(label, size);
+	}
+
+	void GUI::EndScript()
+	{
+		Instance->Impl->EndScript();
+	}
+
+	void GUI::BeginNode(const U64 id)
+	{
+		Instance->Impl->BeginNode(id);
+	}
+
+	void GUI::EndNode()
+	{
+		Instance->Impl->EndNode();
+	}
+
+	void GUI::SetNodePosition(const U64 id, const SVector2<F32>& position)
+	{
+		Instance->Impl->SetNodePosition(id, position);
+	}
+
+	void GUI::BeginPin(const U64 id, const EGUIPinDirection direction)
+	{
+		Instance->Impl->BeginPin(id, direction);
+	}
+
+	void GUI::EndPin()
+	{
+		Instance->Impl->EndPin();
+	}
+
+	void GUI::DrawPinIcon(const SVector2<F32>& size, const EGUIIconType type, const bool isConnected, const SColor& color)
+	{
+		Instance->Impl->DrawPinIcon(size, type, isConnected, color);
+	}
+
+	void GUI::DrawNodeHeader(const U64 nodeID, intptr_t textureID, const SVector2<F32>& posMin, const SVector2<F32>& posMax, const SVector2<F32>& uvMin, const SVector2<F32>& uvMax, const SColor& color, const F32 rounding)
+	{
+		Instance->Impl->DrawNodeHeader(nodeID, textureID, posMin, posMax, uvMin, uvMax, color, rounding);
+	}
+
+	void GUI::Link(const U64 linkID, const U64 startPinID, const U64 endPinID, const SColor& color, const F32 thickness)
+	{
+		Instance->Impl->Link(linkID, startPinID, endPinID, color, thickness);
+	}
+
+	bool GUI::BeginScriptCreate()
+	{
+		return Instance->Impl->BeginScriptCreate();
+	}
+
+	void GUI::EndScriptCreate()
+	{
+		Instance->Impl->EndScriptCreate();
+	}
+
+	bool GUI::BeginScriptDelete()
+	{
+		return Instance->Impl->BeginScriptDelete();;
+	}
+
+	void GUI::EndScriptDelete()
+	{
+		Instance->Impl->EndScriptDelete();
+	}
+
+	void GUI::SuspendScript()
+	{
+		Instance->Impl->SuspendScript();
+	}
+
+	void GUI::ResumeScript()
+	{
+		Instance->Impl->ResumeScript();
+	}
+
+	bool GUI::QueryNewLink(U64& inputPinID, U64& outputPinID)
+	{
+		return Instance->Impl->QueryNewLink(inputPinID, outputPinID);
+	}
+	
+	bool GUI::QueryDeletedLink(U64& linkID)
+	{
+		return Instance->Impl->QueryDeletedLink(linkID);
+	}
+	
+	bool GUI::QueryDeletedNode(U64& nodeID)
+	{
+		return Instance->Impl->QueryDeletedNode(nodeID);
+	}
+
+	bool GUI::AcceptNewScriptItem()
+	{
+		return Instance->Impl->AcceptNewScriptItem();
+	}
+	
+	bool GUI::AcceptDeletedScriptItem()
+	{
+		return Instance->Impl->AcceptDeletedScriptItem();
+	}
+
+	bool GUI::ShowScriptContextMenu()
+	{
+		return Instance->Impl->ShowScriptContextMenu();;
 	}
 
 	void GUI::OpenScript(const std::vector<SGUINode>& nodes, const std::vector<SGUILink>& links)
