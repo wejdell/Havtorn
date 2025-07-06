@@ -708,6 +708,7 @@ namespace Havtorn
 		static void TextDisabled(const char* fmt, ...);
 		static void TextUnformatted(const char* text);
 		static bool InputText(const char* label, CHavtornStaticString<255>* customString);
+		static bool InputText(const char* label, char* buffer, U64 bufferSize);
 
 		static void SetTooltip(const char* fmt, ...);
 
@@ -814,6 +815,8 @@ namespace Havtorn
 		static bool IsItemClicked();
 		static bool IsItemHovered();
 		static bool IsItemVisible();
+		static bool IsWindowFocused();
+		static bool IsWindowHovered();
 
 		static void BeginVertical(const char* label, const SVector2<F32>& size);
 		static void EndVertical();
@@ -936,10 +939,6 @@ namespace Havtorn
 		static bool AcceptDeletedScriptItem();
 
 		static bool ShowScriptContextMenu();
-
-		static void OpenScript(const std::vector<SGUINode>& nodes, const std::vector<SGUILink>& links);
-		static SNodeOperation RenderScript(std::vector<SGUINode>& nodes, std::vector<SGUILink>& links, const std::vector<SGUINodeContext>& registeredContexts);
-		static void CloseScript(std::vector<SGUINode>& nodes, std::vector<SGUILink>& links);
 
 		static void LogToClipboard();
 		static void LogFinish();

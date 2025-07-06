@@ -93,7 +93,7 @@ namespace Havtorn
                 for (SPin& input : nodeToBeRemoved->Inputs)
                 {
                     if (input.LinkedPin)
-                        Unlink(&input, input.LinkedPin);
+                        Unlink(input.LinkedPin, &input);
                 }
 
                 for (SPin& output : nodeToBeRemoved->Outputs)

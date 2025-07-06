@@ -52,7 +52,12 @@ namespace Havtorn
 		void LoadGUIElements();
 		void CommitEdit(const SNodeOperation& edit);
 
-		SNodeOperation RenderScript();
+		void RenderScript();
+		void RenderNodes();
+		void HandleCreateAction();
+		void HandleDeleteAction();
+		void ContextMenu();
+		void CommandQueue();
 
 		SVector2<F32> GetNodeSize(const SGUINode& node);
 		bool IsPinLinked(U64 id, const std::vector<SGUILink>& links);
@@ -69,5 +74,9 @@ namespace Havtorn
 		std::vector<SGUILink> GUILinks;
 		std::vector<SGUINodeContext> GUIContexts;
 		SGuiTextFilter Filter;
+		SNodeOperation Edit;
+
+		const F32 HeaderHeight = 12.0f;
+		const F32 PinNameOffset = 4.0f;
 	};
 }

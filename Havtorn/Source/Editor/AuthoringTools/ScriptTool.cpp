@@ -209,8 +209,8 @@ namespace Havtorn
 		LoadGUIElements();
 
 		GUI::BeginScript("Node Script Editor");
-		CommitEdit(RenderScript());
-		//CommitEdit(GUI::RenderScript(GUINodes, GUILinks, GUIContexts));
+		RenderScript();
+		CommitEdit(Edit);
 		GUI::EndScript();
 
 		CurrentScript->TraverseScript(Manager->GetCurrentScene());
@@ -227,20 +227,20 @@ namespace Havtorn
 		CurrentScript = script;
 		SetEnabled(true);
 
-		LoadGUIElements();
-		GUI::OpenScript(GUINodes, GUILinks);
+		//LoadGUIElements();
+		//GUI::OpenScript(GUINodes, GUILinks);
 	}
 
 	void CScriptTool::CloseScript()
 	{
 		SetEnabled(false);
 
-		LoadGUIElements();
-		GUI::CloseScript(GUINodes, GUILinks);
+		//LoadGUIElements();
+		//GUI::CloseScript(GUINodes, GUILinks);
 
-		for (const SGUINode& node : GUINodes)
-			CurrentScript->GetNodeEditorContext(node.UID)->Position = node.Position;
-			//CurrentScript->GetNode(node.UID)->EditorPosition = node.Position;
+		//for (const SGUINode& node : GUINodes)
+		//	CurrentScript->GetNodeEditorContext(node.UID)->Position = node.Position;
+		//	//CurrentScript->GetNode(node.UID)->EditorPosition = node.Position;
 
 		CurrentScript = nullptr;
 	}
@@ -251,6 +251,7 @@ namespace Havtorn
 		GUINodes.clear();
 		GUILinks.clear();
 		GUIContexts.clear();
+		Edit = SNodeOperation();
 
 		for (auto& node : CurrentScript->Nodes)
 		{
@@ -324,30 +325,42 @@ namespace Havtorn
 			CurrentScript->Unlink(removedLink.StartPinID, removedLink.EndPinID);
 	}
 
-	SNodeOperation CScriptTool::RenderScript()
+	void CScriptTool::RenderScript()
 	{
-		constexpr F32 headerHeight = 12.0f;
-		constexpr F32 pinNameOffset = 4.0f;
-
-		SNodeOperation result;
-
 		GUI::PushScriptStyleColor(EScriptStyleColor::Background, SColor(60));
 
+		RenderNodes();
+
+		for (auto& linkInfo : GUILinks)
+		{
+			SGUIPin* startPin = GetPinFromID(linkInfo.StartPinID, GUINodes);
+			GUI::Link(linkInfo.UID, linkInfo.StartPinID, linkInfo.EndPinID, startPin != nullptr ? GetPinTypeColor(startPin->Type) : SColor::White);
+		}
+
+		HandleCreateAction();
+		HandleDeleteAction();
+
+		ContextMenu();
+		CommandQueue();
+	}
+
+	void CScriptTool::RenderNodes()
+	{
 		for (auto& node : GUINodes)
-		{			
+		{
 			SVector2<F32> requiredSize = GetNodeSize(node);
 			GUI::PushScriptStyleVar(EScriptStyleVar::NodePadding, SVector4(8.0f, 4.0f, 8.0f, 8.0f));
 			GUI::BeginNode(node.UID);
 
 			if (!node.HasBeenInitialized)
 				GUI::SetNodePosition(node.UID, node.Position);
-			
+
 			GUI::PushID(node.UID);
 			GUI::BeginVertical("node", requiredSize);
 
 			SVector4 headerRect = SVector4();
 
-			GUI::BeginHorizontal("header", SVector2<F32>(requiredSize.X, headerHeight));
+			GUI::BeginHorizontal("header", SVector2<F32>(requiredSize.X, HeaderHeight));
 			SVector2<F32> nodeNameCursorStart = GUI::GetCursorPos();
 			nodeNameCursorStart.Y += 2.0f;
 			GUI::SetCursorPos(nodeNameCursorStart);
@@ -373,7 +386,7 @@ namespace Havtorn
 					{
 						const bool wasPinValueModified = DrawLiteralTypePin(*inputPin);
 						if (wasPinValueModified)
-							result.ModifiedLiteralValuePin = *inputPin;
+							Edit.ModifiedLiteralValuePin = *inputPin;
 					}
 					else
 					{
@@ -382,9 +395,9 @@ namespace Havtorn
 
 					GUI::SameLine(0, 0);
 					F32 cursorY = GUI::GetCursorPosY();
-					GUI::SetCursorPosY(cursorY + pinNameOffset);
+					GUI::SetCursorPosY(cursorY + PinNameOffset);
 					GUI::Text(inputPin->Name.c_str());
-					GUI::SetCursorPosY(cursorY - pinNameOffset);
+					GUI::SetCursorPosY(cursorY - PinNameOffset);
 
 					GUI::EndPin();
 					GUI::PopScriptStyleVar();
@@ -405,7 +418,7 @@ namespace Havtorn
 
 					F32 cursorX = GUI::GetCursorPosX();
 					F32 cursorY = GUI::GetCursorPosY();
-					GUI::SetCursorPosY(cursorY + pinNameOffset);
+					GUI::SetCursorPosY(cursorY + PinNameOffset);
 					GUI::Text(outputPin->Name.c_str());
 					GUI::SetCursorPos(SVector2<F32>(cursorX + nameWidth, cursorY));
 
@@ -417,7 +430,6 @@ namespace Havtorn
 			}
 
 			GUI::EndVertical();
-			SVector4 contentRect = GUI::GetLastRect();
 			GUI::EndNode();
 
 			if (GUI::IsItemVisible())
@@ -438,163 +450,166 @@ namespace Havtorn
 			GUI::PopID();
 			GUI::PopScriptStyleVar();
 		}
+	}
 
-		for (auto& linkInfo : GUILinks)
-		{
-			SGUIPin* startPin = GetPinFromID(linkInfo.StartPinID, GUINodes);
-			GUI::Link(linkInfo.UID, linkInfo.StartPinID, linkInfo.EndPinID, startPin != nullptr ? GetPinTypeColor(startPin->Type) : SColor::White);
-		}
-
+	void CScriptTool::HandleCreateAction()
+	{
 		// Handle creation action, returns true if editor want to create new object (node or link)
-		if (GUI::BeginScriptCreate())
+		if (!GUI::BeginScriptCreate())
+			return GUI::EndScriptCreate();
+		
+		U64 inputPinId, outputPinId = 0;
+		if (!GUI::QueryNewLink(inputPinId, outputPinId))
+			return GUI::EndScriptCreate();
+		
+		if (inputPinId == 0 || outputPinId == 0)
+			return GUI::EndScriptCreate();
+		
+		if (!GUI::AcceptNewScriptItem())
+			return GUI::EndScriptCreate();
+
+		SGUINode* firstNode = GetNodeFromPinID(inputPinId, GUINodes);
+		SGUINode* secondNode = GetNodeFromPinID(outputPinId, GUINodes);
+		assert(firstNode);
+		assert(secondNode);
+
+		if (firstNode == secondNode)
+			return GUI::EndScriptCreate();
+
+		SGUIPin* firstPin = GetPinFromID(inputPinId, *firstNode);
+		SGUIPin* secondPin = GetPinFromID(outputPinId, *secondNode);
+
+		bool canAddlink = true;
+		if (firstPin && secondPin)
 		{
-			U64 inputPinId, outputPinId = 0;
-			if (GUI::QueryNewLink(inputPinId, outputPinId))
+			if (firstPin->Direction == EGUIPinDirection::Input && secondPin->Direction == EGUIPinDirection::Input)
 			{
-				if (inputPinId && outputPinId)
+				canAddlink = false;
+			}
+		}
+
+		if (firstPin->Type != secondPin->Type)
+		{
+			canAddlink = false;
+		}
+
+		// TODO.NW: Think about these, certain rules apply to flows vs nonflows/inputs vs outputs
+		//if (!firstNode->CanAddLink(inputPinId))
+		//{
+		//	canAddlink = false;
+		//}
+		//if (!secondNode->CanAddLink(outputPinId))
+		//{
+		//	canAddlink = false;
+		//}
+
+		//if (firstNode->HasLinkBetween(inputPinId, outputPinId))
+		//{
+		//	canAddlink = false;
+		//}
+
+		if (canAddlink)
+		{
+			// TODO.NW: Add functions to populate this with function call
+			static U64 linkID = 99;
+			Edit.NewLink.UID = linkID++;
+			Edit.NewLink.StartPinID = firstPin->UID;
+			Edit.NewLink.EndPinID = secondPin->UID;
+
+			//if (secondPin->Type == EGUIPinType::Unknown)
+			//{
+			//	secondNode->ChangPinTypes(firstPin->Type);
+			//}
+			//int linkId = myNextLinkIdCounter++;
+			//firstNode->AddLinkToVia(secondNode, inputPinId, outputPinId, linkId);
+			//secondNode->AddLinkToVia(firstNode, outputPinId, inputPinId, linkId);
+
+			//bool aIsCyclic = false;
+			//WillBeCyclic(firstNode, secondNode, aIsCyclic, firstNode);
+			//if (aIsCyclic || !canAddlink)
+			//{
+			//	firstNode->RemoveLinkToVia(secondNode, inputPinId);
+			//	secondNode->RemoveLinkToVia(firstNode, outputPinId);
+			//}
+			//else
+			//{
+			//	// Depending on if you drew the new link from the output to the input we need to create the link as the flow FROM->TO to visualize the correct flow
+			//	if (firstPin->Direction == EGUIPinDirection::Input)
+			//	{
+			//		myLinks.push_back({ GUI::LinkId(linkId), outputPinId, inputPinId });
+			//	}
+			//	else
+			//	{
+			//		myLinks.push_back({ GUI::LinkId(linkId), inputPinId, outputPinId });
+			//	}		
+
+			//	std::cout << "push add link command!" << std::endl;
+			//	myUndoCommands.push({ CommandAction::AddLink, firstNode, secondNode, myLinks.back(), 0});
+			//
+			//	ReTriggerTree();
+			//}
+		}
+		
+		GUI::EndScriptCreate();
+	}
+
+	void CScriptTool::HandleDeleteAction()
+	{
+		if (!GUI::BeginScriptDelete())
+			return GUI::EndScriptDelete();
+
+		U64 deletedLinkId = 0;
+		while (GUI::QueryDeletedLink(deletedLinkId))
+		{
+			if (GUI::AcceptDeletedScriptItem())
+			{
+				for (SGUILink& link : GUILinks)
 				{
-					if (GUI::AcceptNewScriptItem())
+					if (link.UID == deletedLinkId)
 					{
-						SGUINode* firstNode = GetNodeFromPinID(inputPinId, GUINodes);
-						SGUINode* secondNode = GetNodeFromPinID(outputPinId, GUINodes);
-						assert(firstNode);
-						assert(secondNode);
+						Edit.RemovedLinks.emplace_back(link);
 
-						if (firstNode != secondNode)
-						{
-							SGUIPin* firstPin = GetPinFromID(inputPinId, *firstNode);
-							SGUIPin* secondPin = GetPinFromID(outputPinId, *secondNode);
-
-							bool canAddlink = true;
-							if (firstPin && secondPin)
-							{
-								if (firstPin->Direction == EGUIPinDirection::Input && secondPin->Direction == EGUIPinDirection::Input)
-								{
-									canAddlink = false;
-								}
-							}
-
-							if (firstPin->Type != secondPin->Type)
-							{
-								canAddlink = false;
-							}
-
-							// TODO.NW: Think about these, certain rules apply to flows vs nonflows/inputs vs outputs
-							//if (!firstNode->CanAddLink(inputPinId))
-							//{
-							//	canAddlink = false;
-							//}
-							//if (!secondNode->CanAddLink(outputPinId))
-							//{
-							//	canAddlink = false;
-							//}
-
-							//if (firstNode->HasLinkBetween(inputPinId, outputPinId))
-							//{
-							//	canAddlink = false;
-							//}
-
-							if (canAddlink)
-							{
-								// TODO.NW: Add functions to populate this with function call
-								static U64 linkID = 99;
-								result.NewLink.UID = linkID++;
-								result.NewLink.StartPinID = firstPin->UID;
-								result.NewLink.EndPinID = secondPin->UID;
-
-								//if (secondPin->Type == EGUIPinType::Unknown)
-								//{
-								//	secondNode->ChangPinTypes(firstPin->Type);
-								//}
-								//int linkId = myNextLinkIdCounter++;
-								//firstNode->AddLinkToVia(secondNode, inputPinId, outputPinId, linkId);
-								//secondNode->AddLinkToVia(firstNode, outputPinId, inputPinId, linkId);
-
-								//bool aIsCyclic = false;
-								//WillBeCyclic(firstNode, secondNode, aIsCyclic, firstNode);
-								//if (aIsCyclic || !canAddlink)
-								//{
-								//	firstNode->RemoveLinkToVia(secondNode, inputPinId);
-								//	secondNode->RemoveLinkToVia(firstNode, outputPinId);
-								//}
-								//else
-								//{
-								//	// Depending on if you drew the new link from the output to the input we need to create the link as the flow FROM->TO to visualize the correct flow
-								//	if (firstPin->Direction == EGUIPinDirection::Input)
-								//	{
-								//		myLinks.push_back({ GUI::LinkId(linkId), outputPinId, inputPinId });
-								//	}
-								//	else
-								//	{
-								//		myLinks.push_back({ GUI::LinkId(linkId), inputPinId, outputPinId });
-								//	}		
-
-								//	std::cout << "push add link command!" << std::endl;
-								//	myUndoCommands.push({ CommandAction::AddLink, firstNode, secondNode, myLinks.back(), 0});
-								//
-								//	ReTriggerTree();
-								//}
-							}
-
-						}
+						//if (myShouldPushCommand)
+						//{
+						//	std::cout << "push remove link action!" << std::endl;
+						//	myUndoCommands.push({ CommandAction::RemoveLink, firstNode, secondNode, link, 0/*static_cast<unsigned int>(link.Id)*//*, static_cast<unsigned int>(link.UID), static_cast<unsigned int>(link.OutputId)*/ });
+						//}
 					}
 				}
 			}
 		}
-		GUI::EndScriptCreate();
 
-		if (GUI::BeginScriptDelete())
+		U64 nodeId = 0;
+		while (GUI::QueryDeletedNode(nodeId))
 		{
-			U64 deletedLinkId = 0;
-			while (GUI::QueryDeletedLink(deletedLinkId))
+			if (GUI::AcceptDeletedScriptItem())
 			{
-				if (GUI::AcceptDeletedScriptItem())
+				for (SGUINode& node : GUINodes)
 				{
-					for (SGUILink& link : GUILinks)
+					if (node.UID == nodeId)
 					{
-						if (link.UID == deletedLinkId)
-						{
-							result.RemovedLinks.emplace_back(link);
+						Edit.RemovedNodes.emplace_back(node);
 
-							//if (myShouldPushCommand)
-							//{
-							//	std::cout << "push remove link action!" << std::endl;
-							//	myUndoCommands.push({ CommandAction::RemoveLink, firstNode, secondNode, link, 0/*static_cast<unsigned int>(link.Id)*//*, static_cast<unsigned int>(link.UID), static_cast<unsigned int>(link.OutputId)*/ });
-							//}
-						}
-					}
-				}
-			}
-			U64 nodeId = 0;
-			while (GUI::QueryDeletedNode(nodeId))
-			{
-				if (GUI::AcceptDeletedScriptItem())
-				{
-					for (SGUINode& node : GUINodes)
-					{
-						if (node.UID == nodeId)
-						{
-							result.RemovedNodes.emplace_back(node);
-
-							//if (myShouldPushCommand) 
-							//{
-							//	std::cout << "Push delete command!" << std::endl;
-							//	myUndoCommands.push({ CommandAction::Delete, (*it), nullptr,  {0,0,0}, (*it)->UID });
-							//}
-						}
+						//if (myShouldPushCommand) 
+						//{
+						//	std::cout << "Push delete command!" << std::endl;
+						//	myUndoCommands.push({ CommandAction::Delete, (*it), nullptr,  {0,0,0}, (*it)->UID });
+						//}
 					}
 				}
 			}
 		}
 		GUI::EndScriptDelete();
+	}
 
+	void CScriptTool::ContextMenu()
+	{
 		SVector2<F32> openPopupPosition = GUI::GetMousePosition();
 		GUI::SuspendScript();
 
 		if (GUI::ShowScriptContextMenu())
-		{
 			GUI::OpenPopup("Create New Node");
-		}
+
 		GUI::ResumeScript();
 
 		GUI::SuspendScript();
@@ -711,8 +726,8 @@ namespace Havtorn
 				{
 					if (GUI::MenuItem(context.Name.c_str()))
 					{
-						result.NewNodeContext = context;
-						result.NewNodePosition = { openPopupPosition.X, openPopupPosition.Y };
+						Edit.NewNodeContext = context;
+						Edit.NewNodePosition = { openPopupPosition.X, openPopupPosition.Y };
 					}
 					GUI::EndMenu();
 				}
@@ -745,9 +760,9 @@ namespace Havtorn
 
 			if (GUI::Button("Create"))
 			{
-				result.NewBinding.Name = name;
-				result.NewBinding.Type = type;
-				result.NewBinding.ObjectType = objectType;
+				Edit.NewBinding.Name = name;
+				Edit.NewBinding.Type = type;
+				Edit.NewBinding.ObjectType = objectType;
 				GUI::CloseCurrentPopup();
 			}
 			if (GUI::Button("Cancel"))
@@ -759,7 +774,10 @@ namespace Havtorn
 
 		GUI::PopStyleVar();
 		GUI::ResumeScript();
+	}
 
+	void CScriptTool::CommandQueue()
+	{
 		//myShouldPushCommand = true;
 
 		//if (GUI::BeginShortcut())
@@ -871,12 +889,7 @@ namespace Havtorn
 					myUndoCommands.push(inverseCommand);
 				}
 			}*/
-		
-		//GUI::PopStyleColor(GUI::StyleColor_Bg);
-		//GUI::End();
-		//GUI::SetCurrentEditor(nullptr);
-
-		return result;
+	//}
 	}
 
 	SVector2<F32> CScriptTool::GetNodeSize(const SGUINode& node)
@@ -884,7 +897,6 @@ namespace Havtorn
 		constexpr F32 iconSize = 24.0f;
 		constexpr F32 iconNamePadding = 6.0f;
 		constexpr F32 iconPadding = iconSize + iconNamePadding * 1.5f;
-		constexpr F32 headerHeight = 12.0f;
 
 		I64 maxPinColumnLength = UMath::Max(node.Inputs.size(), node.Outputs.size());
 		F32 inputMaxRequired = 0.0f;
@@ -906,7 +918,7 @@ namespace Havtorn
 		if (node.Type == EGUINodeType::Simple)
 			requiredWidth += 50.0f;
 		requiredWidth = UMath::Max(requiredWidth, 100.0f);
-		return SVector2(requiredWidth, headerHeight + 1.5f * iconNamePadding + iconPadding * F32(maxPinColumnLength));
+		return SVector2(requiredWidth, HeaderHeight + 1.5f * iconNamePadding + iconPadding * F32(maxPinColumnLength));
 	}
 
 	bool CScriptTool::IsPinLinked(U64 id, const std::vector<SGUILink>& links)
@@ -943,9 +955,10 @@ namespace Havtorn
 
 			GUI::PushID(pin.UID);
 			GUI::PushItemWidth(emptyItemWidth);
-			CHavtornStaticString<255> string = std::get<std::string>(pin.Data);
-			wasPinValueModified = GUI::InputText("##edit", &string);
-			pin.Data = string.AsString();
+			std::string value = std::get<std::string>(pin.Data);
+			wasPinValueModified = GUI::InputText("##edit", (char*)value.c_str(), 255);
+			if (wasPinValueModified)
+				pin.Data = value;
 			GUI::PopItemWidth();
 			GUI::PopID();
 			break;
@@ -1054,8 +1067,8 @@ namespace Havtorn
 					return &node;
 				}
 			}
-
 		}
+
 		return nullptr;
 	}
 
@@ -1071,6 +1084,7 @@ namespace Havtorn
 			if (pin.UID == id)
 				return &pin;
 		}
+
 		return nullptr;
 	}
 
@@ -1089,6 +1103,7 @@ namespace Havtorn
 					return &pin;
 			}
 		}
+
 		return nullptr;
 	}
 }
