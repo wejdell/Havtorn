@@ -27,18 +27,12 @@ namespace Havtorn
 
             LinkedPin->OwningNode->Execute();
 
-            if (LinkedPin->IsDataUnset())
-            {
-                HV_LOG_ERROR("Could not derive input even after executing node!");
-                return;
-            }
-
             SetDataFromLinkedPin();
         }
 
         void SPin::SetDataFromLinkedPin()
         {
-            if (LinkedPin == nullptr || LinkedPin->IsDataUnset())
+            if (LinkedPin == nullptr)
                 return;
 
             if (Type != LinkedPin->Type)

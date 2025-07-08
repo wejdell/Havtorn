@@ -656,8 +656,8 @@ namespace Havtorn
 
 	struct SGUIDataBinding
 	{
-		std::string Name = "";
-		EGUIPinType Type = EGUIPinType::Object;
+		CHavtornStaticString<255> Name;
+		EGUIPinType Type = EGUIPinType::Unknown;
 		EGUIObjectDataType ObjectType = EGUIObjectDataType::None;
 	};
 
@@ -813,6 +813,7 @@ namespace Havtorn
 		static void Dummy(const SVector2<F32>& size);
 		static void SameLine(const F32 offsetFromX = 0.0f, const F32 spacing = -1.0f);
 		static bool IsItemClicked();
+		static bool IsMouseReleased(I32 mouseButton = 0);
 		static bool IsItemHovered();
 		static bool IsItemVisible();
 		static bool IsWindowFocused();

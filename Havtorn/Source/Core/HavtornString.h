@@ -117,7 +117,6 @@ namespace Havtorn
         }
 
        // bool operator<(const CHavtornStaticString<maxSize>& other) const;
-
         inline const U32 Length() const { return Size; }
         inline const std::string AsString() const { return std::string(std::begin(Characters), std::begin(Characters) + STATIC_U64(Size)); }
         char* Data() { return Characters.data(); }

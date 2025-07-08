@@ -27,7 +27,7 @@ namespace Havtorn
 				continue;
 
 			if (!component->TriggerScript)
-				return;
+				continue;
 
 			HexRune::SScript* script = component->Script;
 

@@ -140,6 +140,7 @@ namespace Havtorn
             RegisteredEditorContexts.emplace_back(&SIntMoreOrEqualNodeEditorContext::Context);
             RegisteredEditorContexts.emplace_back(&SIntEqualNodeEditorContext::Context);
             RegisteredEditorContexts.emplace_back(&SIntNotEqualNodeEditorContext::Context);
+            RegisteredEditorContexts.emplace_back(&SPrintEntityNameNodeEditorContext::Context);
         }
 
         void SScript::TraverseScript(CScene* owningScene)

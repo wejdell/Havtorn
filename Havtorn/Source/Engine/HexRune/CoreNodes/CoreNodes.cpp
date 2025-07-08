@@ -3,6 +3,9 @@
 #include "CoreNodes.h"
 #include "ECS/GUIDManager.h"
 
+#include "../../Scene/Scene.h"
+#include "../../ECS/Components/MetaDataComponent.h"
+
 namespace Havtorn
 {
 	namespace HexRune
@@ -436,5 +439,32 @@ namespace Havtorn
 			SetDataOnPin(EPinDirection::Output, 0, a != b);
 			return -1;
 		}
-	}
+
+		SPrintEntityNameNode::SPrintEntityNameNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
+		{
+			AddInput(UGUIDManager::Generate(), EPinType::Flow);
+			AddInput(UGUIDManager::Generate(), EPinType::Object);
+		}
+
+		I8 SPrintEntityNameNode::OnExecute()
+		{
+			SEntity entity;
+			GetDataOnPin(EPinDirection::Input, 1, entity);
+			
+			if (OwningScript == nullptr || OwningScript->Scene == nullptr)
+				return 0;
+			
+			if (entity == SEntity::Null)
+			{
+				HV_LOG_INFO("Entity is Null");
+				return 0;
+			}
+
+			SMetaDataComponent* metaData = OwningScript->Scene->GetComponent<SMetaDataComponent>(entity);
+
+			HV_LOG_INFO(metaData->Name.Data());		
+			return 0;
+		}
+}
 }

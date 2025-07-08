@@ -75,6 +75,7 @@ namespace Havtorn
 		std::vector<SGUINodeContext> GUIContexts;
 		SGuiTextFilter Filter;
 		SNodeOperation Edit;
+		SGUIDataBinding DataBindingCandidate;
 
 		const F32 HeaderHeight = 12.0f;
 		const F32 PinNameOffset = 4.0f;

@@ -63,6 +63,18 @@ namespace Havtorn
 		// Don't want same IDs over a frame when multiple entities are selected
 		for (const SEntity& selectedEntity : selectedEntities)
 		{
+			if (GUI::BeginDragDropSource())
+			{
+				SGuiPayload payload = GUI::GetDragDropPayload();
+				if (payload.Data == nullptr)
+				{
+					GUI::SetDragDropPayload("EntityAssignmentDrag", &selectedEntity, sizeof(SEntity));
+				}
+				GUI::Text("entityName");
+
+				GUI::EndDragDropSource();
+			}
+
 			SMetaDataComponent* metaDataComp = Scene->GetComponent<SMetaDataComponent>(selectedEntity);
 			if (metaDataComp != nullptr)
 			{
@@ -347,6 +359,16 @@ namespace Havtorn
 			return;
 
 		component->Script = GEngine::GetWorld()->LoadScript(assetRep->DirectoryEntry.path().string());
+		component->DataBindings.clear();
+		component->DataBindings.resize(component->Script->DataBindings.size());
+
+		for (U64 i = 0; i < component->DataBindings.size(); i++)
+		{
+			auto& scriptBinding = component->Script->DataBindings[i];
+			auto& componentBinding = component->DataBindings[i];
+			componentBinding.ObjectType = scriptBinding.ObjectType;
+			componentBinding.Type = scriptBinding.Type;
+		}
 	}
 
 	void CInspectorWindow::OpenAssetTool(const SComponentViewResult& result)
