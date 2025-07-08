@@ -26,7 +26,8 @@ namespace Havtorn
 		PLATFORM_API static LRESULT CALLBACK WinProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam);
 		PLATFORM_API SVector2<U16> GetResolution() const;
 		PLATFORM_API SVector2<U16> GetCenterPosition() const;
-		const float GetResolutionScale() const;
+
+		PLATFORM_API void UpdateResolution();
 
 		// TODO.AG: reconsider access rights.
 		PLATFORM_API void EnableDragDrop() const;
@@ -58,23 +59,18 @@ namespace Havtorn
 	private:
 		void SetInternalResolution();
 		void SetResolution(SVector2<U16> resolution);
-
 		void InitWindowsImaging();
 
 	private:
 		CPlatformManager::SWindowData WindowData = {};
 		HWND WindowHandle = 0;
 		SVector2<U16> Resolution;
-		F32 ResolutionScale = 1.0f;
-		U16 MaxResX = 1920;
-		U16 MaxResY = 1080;
+		U16 MaxResX = 2560;
+		U16 MaxResY = 1440;
 		bool CursorIsLocked = false;
 		bool WindowIsInEditingMode = false;
 
 	public:
 		SVector2<U16> ResizeTarget = {};
-		/*	UINT ResizeWidth = 0;
-			UINT ResizeHeight = 0;*/
-
 	};
 }

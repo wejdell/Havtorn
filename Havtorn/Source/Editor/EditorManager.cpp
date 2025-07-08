@@ -93,6 +93,7 @@ namespace Havtorn
 
 	void CEditorManager::BeginFrame()
 	{
+		PlatformManager->UpdateResolution();
 	}
 
 	void CEditorManager::Render()

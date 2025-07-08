@@ -351,30 +351,23 @@ namespace Havtorn
 
 	void CPlatformManager::SetInternalResolution()
 	{
-		LPRECT rect = new RECT{ 0, 0, 0, 0 };
-		if (GetClientRect(WindowHandle, rect) != 0)
+		if (ResizeTarget.LengthSquared() > 0)
 		{
-			Resolution.X = STATIC_U16(rect->right);
-			Resolution.Y = STATIC_U16(rect->bottom);
-
-			if (ResizeTarget.LengthSquared() > 0)
-			{
-				SVector2<U16> newResolution = SVector2<U16>(STATIC_U16(ResizeTarget.X), STATIC_U16(ResizeTarget.Y));
-				OnResolutionChanged.Broadcast(Resolution);
-			}
+			SVector2<U16> newResolution = SVector2<U16>(STATIC_U16(ResizeTarget.X), STATIC_U16(ResizeTarget.Y));
+			Resolution = newResolution;
+			OnResolutionChanged.Broadcast(newResolution);
+			ResizeTarget = { 0, 0 };
 		}
-		delete rect;
-		ResolutionScale = STATIC_F32(Resolution.Y / MaxResY);
+	}
+
+	PLATFORM_API void CPlatformManager::UpdateResolution()
+	{
+		SetInternalResolution();
 	}
 
 	void CPlatformManager::SetWindowTitle(const std::string& title)
 	{
 		SetWindowTextA(WindowHandle, title.c_str());
-	}
-
-	const float CPlatformManager::GetResolutionScale() const
-	{
-		return ResolutionScale;
 	}
 
 	void CPlatformManager::EnableDragDrop() const
