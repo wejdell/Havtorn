@@ -40,13 +40,15 @@ namespace Havtorn
 		case WM_SETFOCUS:
 #ifdef _DEBUG
 			//if (false/*platformManager->GameIsInMenu*/)
-			platformManager->ShowAndUnlockCursor();
+			if (platformManager)
+				platformManager->ShowAndUnlockCursor();
 			//else
 				//platformManager->HideAndLockCursor();
 			//platformManager->WindowIsInEditingMode ? platformManager->LockCursor(false) : platformManager->LockCursor(true);
 #else
 			//if (platformManager->myGameIsInMenu)
-			platformManager->ShowAndUnlockCursor();
+			if (platformManager)
+				platformManager->ShowAndUnlockCursor();
 			//else
 				//platformManager->HideAndLockCursor();
 #endif
@@ -102,7 +104,9 @@ namespace Havtorn
 				HV_LOG_INFO(path.c_str());
 
 #pragma endregion
-			platformManager->OnDragDropAccepted.Broadcast(dragDropFilePaths);
+			if (platformManager)
+				platformManager->OnDragDropAccepted.Broadcast(dragDropFilePaths);
+
 			return 0;
 		}break;
 
@@ -112,8 +116,11 @@ namespace Havtorn
 				return 0;
 
 			//AS: Setting Resize Width/Height to != 0 will trigger a Resize in-engine.
-			platformManager->ResizeTarget.X = STATIC_U16((U32)LOWORD(lParam));
-			platformManager->ResizeTarget.Y = STATIC_U16((U32)HIWORD(lParam));
+			if (platformManager)
+			{
+				platformManager->ResizeTarget.X = STATIC_U16((U32)LOWORD(lParam));
+				platformManager->ResizeTarget.Y = STATIC_U16((U32)HIWORD(lParam));
+			}
 			break;
 
 		default:
