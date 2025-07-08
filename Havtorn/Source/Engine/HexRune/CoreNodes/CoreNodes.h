@@ -170,5 +170,11 @@ namespace Havtorn
 			ENGINE_API SIntNotEqualNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
+
+		struct SPrintEntityNameNode : public SNode
+		{
+			ENGINE_API SPrintEntityNameNode(const U64 id, SScript* owningScript);
+			virtual ENGINE_API I8 OnExecute() override;
+		};
 	}
 }

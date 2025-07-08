@@ -7,6 +7,7 @@
 #include "Scene/Scene.h"
 
 #include <GUI.h>
+#include <ECS/Components/MetaDataComponent.h>
 
 namespace Havtorn
 {
@@ -31,14 +32,65 @@ namespace Havtorn
 		{
 			GUI::Text("Data Bindings");
 			GUI::Separator();
+
+			for (auto& db : component->DataBindings)
+			{
+				SVector2 available = GUI::GetContentRegionAvail();
+				GUI::BeginHorizontal(db.Name.c_str(), { available.X, 12.0f });
+				GUI::Text(db.Name.c_str());
+
+				GUI::SameLine();
+
+				GUI::TextDisabled("Type: %s", "Entity");
+				GUI::SameLine();
+
+				SEntity entity{};
+
+				if (std::holds_alternative<SEntity>(db.Data))
+					entity = std::get<SEntity>(db.Data);
+
+				if (auto metaDataComponent = scene->GetComponent<SMetaDataComponent>(entity))
+					GUI::Text("%s", metaDataComponent->Name.Data());
+				else
+					GUI::Text("Not Set");
+
+				if (GUI::BeginDragDropTarget())
+				{
+					SGuiPayload payload = GUI::AcceptDragDropPayload("EntityAssignmentDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNoDrawDefaultRect, EDragDropFlag::AcceptNopreviewTooltip });
+					if (payload.Data != nullptr)
+					{
+						SEntity* draggedEntity = reinterpret_cast<SEntity*>(payload.Data);
+						const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(*draggedEntity);
+						const std::string draggedEntityName = draggedMetaDataComp->IsValid() ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
+						GUI::SetTooltip(draggedEntityName.c_str());
+
+						if (draggedEntity->IsValid())
+						{
+							GUI::SetTooltip("Assign %s to Data Binding '%s'?", draggedEntityName.c_str(), db.Name.c_str());
+
+							if (payload.IsDelivery)
+								db.Data = *draggedEntity;
+						}
+					}
+
+					GUI::EndDragDropTarget();
+				}
+
+
+				/*if (GUI::Button("Get Entity"))
+				{
+					db.Data = component->Owner;
+				}*/
+
+				// TODO.NW: Make component/entity dropper
+				GUI::EndHorizontal();
+			}
 		}
 
-		for (const auto& dataBinding : script->DataBindings)
-		{
-			GUI::Text(dataBinding.Name.c_str());
-			// TODO.NW: Make component/entity dropper
-		}
-		
+
+		GUI::Checkbox("Trigger", component->TriggerScript);
+	
+
 		return { EComponentViewResultLabel::InspectAssetComponent, component, 0 };
 	}
 

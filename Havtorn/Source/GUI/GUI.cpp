@@ -169,7 +169,7 @@ namespace Havtorn
 
 		bool InputText(const char* label, char* buf, size_t bufSize, ImGuiInputTextCallback callback, void* data)
 		{
-			return ImGui::InputText(label, buf, bufSize, 0, callback, data);
+			return ImGui::InputText(label, buf, bufSize, ImGuiInputTextFlags_CallbackResize, callback, data);
 		}
 
 		bool InputText(const char* label, char* buffer, U64 bufferSize)
@@ -364,8 +364,13 @@ namespace Havtorn
 		}
 
 		bool IsItemClicked()
-		{
+		{			
 			return ImGui::IsItemClicked();
+		}
+
+		bool IsMouseReleased(int mouseButton)
+		{
+			return ImGui::IsMouseReleased(mouseButton);
 		}
 
 		bool IsItemHovered()
@@ -1861,6 +1866,11 @@ namespace Havtorn
 	bool GUI::IsItemClicked()
 	{
 		return Instance->Impl->IsItemClicked();
+	}
+
+	bool GUI::IsMouseReleased(I32 mouseButton)
+	{
+		return Instance->Impl->IsMouseReleased(mouseButton);
 	}
 
 	bool GUI::IsItemHovered()

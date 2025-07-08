@@ -431,5 +431,22 @@ namespace Havtorn
 			script->AddEditorContext<SIntNotEqualNodeEditorContext>(node->UID);
 			return node;
 		}
-	}
+
+		SPrintEntityNameNodeEditorContext SPrintEntityNameNodeEditorContext::Context = {};
+		SPrintEntityNameNodeEditorContext::SPrintEntityNameNodeEditorContext()
+		{
+			Name = "Print Entity Name";
+			Category = "General";
+			Color = SColor::Teal;
+		}
+		SNode* SPrintEntityNameNodeEditorContext::AddNode(SScript* script, const U64 existingID) const
+		{
+			if (script == nullptr)
+				return nullptr;
+
+			SNode* node = script->AddNode<SPrintEntityNameNode>(existingID);
+			script->AddEditorContext<SPrintEntityNameNodeEditorContext>(node->UID);
+			return node;
+		}
+}
 }

@@ -187,7 +187,7 @@ namespace Havtorn
 
 				asset.Serialize(data);
 				GEngine::GetFileSystem()->Serialize(CurrentScript->FileName, &data[0], asset.GetSize());
-				
+
 				std::filesystem::directory_entry newDir;
 				newDir.assign(std::filesystem::path(CurrentScript->FileName));
 				Manager->RemoveAssetRep(newDir);
@@ -202,6 +202,39 @@ namespace Havtorn
 			GUI::BeginChild("DataBindings", SVector2<F32>(150.0f, 0.0f), { EChildFlag::Borders, EChildFlag::ResizeX });
 			GUI::Text("Data Bindings");
 			GUI::Separator();
+			for (auto& databinding : CurrentScript->DataBindings)
+			{
+				GUI::Text(databinding.Name.c_str());
+				if (GUI::IsItemHovered())
+				{
+					if (databinding.Type != EPinType::Object)
+					{
+						const char* items[]{
+								"Unknown",
+								"Flow",
+								"Bool",
+								"Int",
+								"Float",
+								"String",
+								"Vector",
+								"Int Array",
+								"Float Array",
+								"String Array",
+								"Object",
+								"Object Array",
+								"Function",
+								"Delegate"
+						};
+						GUI::SetTooltip("%s", items[STATIC_U8(databinding.Type)]);
+					}
+
+					if (databinding.Type == EPinType::Object)
+					{
+						const char* items[]{ "None", "Entity", "Component" };
+						GUI::SetTooltip("%s", items[STATIC_U8(databinding.ObjectType)]);
+					}				
+				}
+			}
 			GUI::EndChild();
 			GUI::SameLine();
 		}
@@ -213,7 +246,7 @@ namespace Havtorn
 		CommitEdit(Edit);
 		GUI::EndScript();
 
-		CurrentScript->TraverseScript(Manager->GetCurrentScene());
+		//CurrentScript->TraverseScript(Manager->GetCurrentScene());
 
 		GUI::End();
 	}
@@ -309,8 +342,8 @@ namespace Havtorn
 			//newContext->HasBeenInitialized = true;
 		}
 
-		if (edit.NewBinding.Name != "")
-			CurrentScript->AddDataBinding(edit.NewBinding.Name.c_str(), static_cast<HexRune::EPinType>(edit.NewBinding.Type), static_cast<HexRune::EObjectDataType>(edit.NewBinding.ObjectType));
+		if (edit.NewBinding.Type != EGUIPinType::Unknown)
+			CurrentScript->AddDataBinding(edit.NewBinding.Name.AsString().c_str(), static_cast<HexRune::EPinType>(edit.NewBinding.Type), static_cast<HexRune::EObjectDataType>(edit.NewBinding.ObjectType));
 
 		if (!edit.ModifiedLiteralValuePin.IsDataUnset())
 			CurrentScript->SetDataOnInput(edit.ModifiedLiteralValuePin.UID, GetEngineTypeData(edit.ModifiedLiteralValuePin.Data));
@@ -457,14 +490,14 @@ namespace Havtorn
 		// Handle creation action, returns true if editor want to create new object (node or link)
 		if (!GUI::BeginScriptCreate())
 			return GUI::EndScriptCreate();
-		
+
 		U64 inputPinId, outputPinId = 0;
 		if (!GUI::QueryNewLink(inputPinId, outputPinId))
 			return GUI::EndScriptCreate();
-		
+
 		if (inputPinId == 0 || outputPinId == 0)
 			return GUI::EndScriptCreate();
-		
+
 		if (!GUI::AcceptNewScriptItem())
 			return GUI::EndScriptCreate();
 
@@ -549,7 +582,7 @@ namespace Havtorn
 			//	ReTriggerTree();
 			//}
 		}
-		
+
 		GUI::EndScriptCreate();
 	}
 
@@ -750,9 +783,36 @@ namespace Havtorn
 			GUI::Text("New Data Binding");
 			GUI::Separator();
 
-			std::string name = "Self";
-			EGUIPinType type = EGUIPinType::Object;
-			EGUIObjectDataType objectType = EGUIObjectDataType::Entity;
+			GUI::InputText("Name", &DataBindingCandidate.Name);
+			GUI::SliderEnum("Type", DataBindingCandidate.Type,
+							{
+								"Unknown",
+								"Flow",
+								"Bool",
+								"Int",
+								"Float",
+								"String",
+								"Vector",
+								"Int Array",
+								"Float Array",
+								"String Array",
+								"Object",
+								"Object Array",
+								"Function",
+								"Delegate"
+							});
+
+			if (DataBindingCandidate.Type == EGUIPinType::Object)
+			{
+				GUI::SliderEnum("Object Type", DataBindingCandidate.ObjectType, { "None", "Entity", "Component" });
+
+				if (DataBindingCandidate.ObjectType == EGUIObjectDataType::None)
+					DataBindingCandidate.ObjectType = EGUIObjectDataType::Entity;
+			}
+			else
+			{
+				DataBindingCandidate.ObjectType = EGUIObjectDataType::None;
+			}
 
 			//GUI::TextDisabled("Name");
 			//GUI::SameLine();
@@ -760,13 +820,15 @@ namespace Havtorn
 
 			if (GUI::Button("Create"))
 			{
-				Edit.NewBinding.Name = name;
-				Edit.NewBinding.Type = type;
-				Edit.NewBinding.ObjectType = objectType;
+				Edit.NewBinding.Name = DataBindingCandidate.Name;
+				Edit.NewBinding.Type = DataBindingCandidate.Type;
+				Edit.NewBinding.ObjectType = DataBindingCandidate.ObjectType;
+				DataBindingCandidate = { };
 				GUI::CloseCurrentPopup();
 			}
 			if (GUI::Button("Cancel"))
 			{
+				DataBindingCandidate = { };
 				GUI::CloseCurrentPopup();
 			}
 			GUI::EndPopup();
@@ -889,7 +951,7 @@ namespace Havtorn
 					myUndoCommands.push(inverseCommand);
 				}
 			}*/
-	//}
+			//}
 	}
 
 	SVector2<F32> CScriptTool::GetNodeSize(const SGUINode& node)

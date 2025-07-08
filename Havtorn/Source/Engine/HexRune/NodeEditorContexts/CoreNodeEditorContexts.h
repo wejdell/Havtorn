@@ -170,5 +170,13 @@ namespace Havtorn
 			virtual SNode* AddNode(SScript* script, const U64 existingID = 0) const override;
 			static SIntNotEqualNodeEditorContext Context;
 		};
+
+		struct SPrintEntityNameNodeEditorContext : public SNodeEditorContext
+		{
+			SPrintEntityNameNodeEditorContext();
+			virtual SNode* AddNode(SScript* script, const U64 existingID = 0) const override;
+			static SPrintEntityNameNodeEditorContext Context;
+		};
+
 	}
 }

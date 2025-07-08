@@ -31,14 +31,14 @@ namespace Havtorn
 	void CHierarchyWindow::OnInspectorGUI()
 	{
 		const SEditorLayout& layout = Manager->GetEditorLayout();
-		
+
 		const SVector2<F32>& viewportWorkPos = GUI::GetViewportWorkPos();
 		GUI::SetNextWindowPos(SVector2<F32>(viewportWorkPos.X + layout.HierarchyViewPosition.X, viewportWorkPos.Y + layout.HierarchyViewPosition.Y));
 		GUI::SetNextWindowSize(SVector2<F32>(layout.HierarchyViewSize.X, layout.HierarchyViewSize.Y));
-		
+
 		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
 		{
-			 // Top Bar
+			// Top Bar
 			GUI::BeginChild("SearchBar", SVector2<F32>(0.0f, 54.0f));
 			Filter.Draw("Search");
 			GUI::Separator();
@@ -184,19 +184,18 @@ namespace Havtorn
 
 			if (Manager->IsEntitySelected(entity))
 				flags.emplace_back(ETreeNodeFlag::Selected);
-			
+
 			STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(entity);
 			if (transformComponent->IsValid() && transformComponent->AttachedEntities.empty())
 				flags.emplace_back(ETreeNodeFlag::Leaf);
 
 			const bool isOpen = GUI::TreeNodeEx(entryString.c_str(), flags);
-
 			if (GUI::BeginDragDropSource())
 			{
 				SGuiPayload payload = GUI::GetDragDropPayload();
 				if (payload.Data == nullptr)
 				{
-					GUI::SetDragDropPayload("EntityHierarchyDrag", &entity, sizeof(SEntity));
+					GUI::SetDragDropPayload("EntityAssignmentDrag", &entity, sizeof(SEntity));				
 				}
 				GUI::Text(entryString.c_str());
 
@@ -205,7 +204,7 @@ namespace Havtorn
 
 			if (GUI::BeginDragDropTarget())
 			{
-				SGuiPayload payload = GUI::AcceptDragDropPayload("EntityHierarchyDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
+				SGuiPayload payload = GUI::AcceptDragDropPayload("EntityAssignmentDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
 				if (payload.Data != nullptr)
 				{
 					SEntity* draggedEntity = reinterpret_cast<SEntity*>(payload.Data);
@@ -244,7 +243,7 @@ namespace Havtorn
 				GUI::EndDragDropTarget();
 			}
 
-			if (GUI::IsItemClicked())
+			if (GUI::IsItemHovered() && GUI::IsMouseReleased(0))
 			{
 				// TODO.NW: Simplify this
 				if (GUI::IsShiftHeld())
