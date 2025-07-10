@@ -28,10 +28,17 @@ namespace Havtorn
 {
 	namespace HexRune
 	{
-		struct SDataBindingNode : public SNode
+		struct SDataBindingGetNode : public SNode
 		{
-			// TODO.NW: How do we deal with setting data bindings? So we have data on the components that persist over frames.
-			ENGINE_API SDataBindingNode(const U64 id, SScript* owningScript, const U64 dataBindingID);
+			ENGINE_API SDataBindingGetNode(const U64 id, SScript* owningScript, const U64 dataBindingID);
+			virtual ENGINE_API I8 OnExecute() override;
+
+			SScriptDataBinding* DataBinding = nullptr;
+		};
+
+		struct SDataBindingSetNode : public SNode
+		{
+			ENGINE_API SDataBindingSetNode(const U64 id, SScript* owningScript, const U64 dataBindingID);
 			virtual ENGINE_API I8 OnExecute() override;
 
 			SScriptDataBinding* DataBinding = nullptr;

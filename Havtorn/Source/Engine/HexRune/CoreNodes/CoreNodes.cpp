@@ -10,17 +10,32 @@ namespace Havtorn
 {
 	namespace HexRune
 	{
-
-		SDataBindingNode::SDataBindingNode(const U64 id, SScript* owningScript, const U64 dataBindingID)
+		SDataBindingGetNode::SDataBindingGetNode(const U64 id, SScript* owningScript, const U64 dataBindingID)
 			: SNode::SNode(id, owningScript)
 		{
 			DataBinding = &(*std::ranges::find_if(OwningScript->DataBindings, [dataBindingID](SScriptDataBinding& binding) { return binding.UID == dataBindingID; }));	
 			AddOutput(UGUIDManager::Generate(), DataBinding->Type, DataBinding->Name);
 		}
 		
-		I8 SDataBindingNode::OnExecute()
+		I8 SDataBindingGetNode::OnExecute()
 		{
 			SetDataOnPin(EPinDirection::Output, 0, DataBinding->Data);
+			return 0;
+		}
+
+		SDataBindingSetNode::SDataBindingSetNode(const U64 id, SScript* owningScript, const U64 dataBindingID)
+			: SNode::SNode(id, owningScript)
+		{
+			DataBinding = &(*std::ranges::find_if(OwningScript->DataBindings, [dataBindingID](SScriptDataBinding& binding) { return binding.UID == dataBindingID; }));
+			AddInput(UGUIDManager::Generate(), DataBinding->Type, DataBinding->Name);
+		}
+
+		I8 SDataBindingSetNode::OnExecute()
+		{
+			if (Inputs[0].IsDataUnset())
+				return 0;
+
+			DataBinding->Data = Inputs[0].Data;
 			return 0;
 		}
 

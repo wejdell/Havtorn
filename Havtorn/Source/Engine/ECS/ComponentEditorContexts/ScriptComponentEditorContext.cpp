@@ -36,6 +36,7 @@ namespace Havtorn
 			for (auto& db : component->DataBindings)
 			{
 				SVector2 available = GUI::GetContentRegionAvail();
+
 				GUI::BeginHorizontal(db.Name.c_str(), { available.X, 12.0f });
 				GUI::Text(db.Name.c_str());
 
@@ -76,21 +77,13 @@ namespace Havtorn
 					GUI::EndDragDropTarget();
 				}
 
-
-				/*if (GUI::Button("Get Entity"))
-				{
-					db.Data = component->Owner;
-				}*/
-
 				// TODO.NW: Make component/entity dropper
 				GUI::EndHorizontal();
 			}
 		}
 
-
 		GUI::Checkbox("Trigger", component->TriggerScript);
 	
-
 		return { EComponentViewResultLabel::InspectAssetComponent, component, 0 };
 	}
 

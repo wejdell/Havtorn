@@ -53,14 +53,58 @@ namespace Havtorn
                 break;
             }
 
-            //DataBindings.emplace_back(new SScriptDataBinding(UGUIDManager::Generate(), std::string(name), type, objectType, data));
             DataBindings.emplace_back(SScriptDataBinding());
             DataBindings.back().UID = UGUIDManager::Generate();
             DataBindings.back().Name = std::string(name);
             DataBindings.back().Type = type;
             DataBindings.back().ObjectType = objectType;
             DataBindings.back().Data = data;
-            RegisteredEditorContexts.emplace_back(new SDataBindingNodeEditorContext(this, DataBindings.back().UID));
+            RegisteredEditorContexts.emplace_back(new SDataBindingGetNodeEditorContext(this, DataBindings.back().UID));
+            RegisteredEditorContexts.emplace_back(new SDataBindingSetNodeEditorContext(this, DataBindings.back().UID));
+        }
+
+        void SScript::RemoveDataBinding(const U64 id)
+        {
+            auto bindingIterator = std::ranges::find_if(DataBindings, [id](const SScriptDataBinding& binding) { return id == binding.UID; });
+            if (bindingIterator == DataBindings.end())
+                return;
+
+            // TODO.NW: Make algo library for find_all_if
+            std::vector<U64> nodesToRemove;
+            for (auto node : Nodes)
+            {
+                if (SDataBindingGetNode* dataBindingNode = static_cast<SDataBindingGetNode*>(node))
+                {
+                    if (dataBindingNode->DataBinding == &(*bindingIterator))
+                        nodesToRemove.push_back(dataBindingNode->UID);
+                }
+            }
+            for (const U64 nodeId : nodesToRemove)
+                RemoveNode(nodeId);
+
+            auto getterContextIterator = std::ranges::find_if(RegisteredEditorContexts, [id](const SNodeEditorContext* registeredContext) 
+                {
+                    if (const SDataBindingGetNodeEditorContext* context = static_cast<const SDataBindingGetNodeEditorContext*>(registeredContext))
+                    {
+                        return context->DataBindingID == id;
+                    }
+                    return false;
+                });
+            if (getterContextIterator != RegisteredEditorContexts.end())
+                RegisteredEditorContexts.erase(getterContextIterator);
+            
+            auto setterContextIterator = std::ranges::find_if(RegisteredEditorContexts, [id](const SNodeEditorContext* registeredContext)
+                {
+                    if (const SDataBindingSetNodeEditorContext* context = static_cast<const SDataBindingSetNodeEditorContext*>(registeredContext))
+                    {
+                        return context->DataBindingID == id;
+                    }
+                    return false;
+                });
+            if (setterContextIterator != RegisteredEditorContexts.end())
+                RegisteredEditorContexts.erase(setterContextIterator);
+
+            DataBindings.erase(bindingIterator);
         }
 
         void SScript::RemoveNode(const U64 id)

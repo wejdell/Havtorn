@@ -8,31 +8,6 @@ namespace Havtorn
 	namespace HexRune
 	{
 		struct SScript;
-	
-		//struct SComponentsNode : public SNode
-		//{
-		//	//virtual void Construct() override;
-		//	virtual I8 OnExecute() override;
-		//};
-
-		//struct STestNode : public SNode
-		//{
-		//	//virtual void Construct() override;
-		//	virtual I8 OnExecute() override;
-		//	virtual bool IsStartNode() const override { return true; }
-		//};
-
-		//struct SLiteralFloatNode : public SNode
-		//{
-		//	//virtual void Construct() override;
-		//	virtual I8 OnExecute() override;
-		//};
-
-		//struct SLiteralStringNode : public SNode
-		//{
-		//	//virtual void Construct() override;
-		//	virtual I8 OnExecute() override;
-		//};
 	}
 
 	class CScriptTool : public CWindow

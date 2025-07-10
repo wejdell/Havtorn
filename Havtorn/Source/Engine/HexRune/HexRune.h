@@ -129,8 +129,6 @@ namespace Havtorn
 
         struct SScriptDataBinding
         {
-            //SScriptDataBinding(const U64 id, const std::string& name, const EPinType pinType, const EObjectDataType objectType, const std::variant<PIN_DATA_TYPES>& data);
-
             U64 UID = 0;
             std::string Name = "";
             EPinType Type = EPinType::Object;
@@ -285,6 +283,7 @@ namespace Havtorn
 
             // TODO.NW: Deal with serialization?
             ENGINE_API void AddDataBinding(const char* name, const EPinType type, const EObjectDataType objectType = EObjectDataType::None);
+            ENGINE_API void RemoveDataBinding(const U64 id);
             ENGINE_API void RemoveNode(const U64 id);
 
             ENGINE_API void Initialize();

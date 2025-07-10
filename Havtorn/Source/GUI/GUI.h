@@ -63,6 +63,7 @@ namespace Havtorn
 		SourceNoPreviewToolTip = BIT(0),
 		SourceNoDisableHover = BIT(1),
 		SourceNoHoldToOpenOthers = BIT(2),
+		SourceAllowNullID = BIT(3),
 		SourceExtern = BIT(4),
 		AcceptBeforeDelivery = BIT(10),
 		AcceptNoDrawDefaultRect = BIT(11),
@@ -292,6 +293,13 @@ namespace Havtorn
 		GroupBg,
 		GroupBorder,
 		Count
+	};
+
+	enum class GUI_API EGUIMouseButton
+	{
+		Left = 0,
+		Right = 1,
+		Middle = 2,
 	};
 
 	enum class GUI_API ETransformGizmo
@@ -664,6 +672,7 @@ namespace Havtorn
 	struct SNodeOperation
 	{
 		SGUIDataBinding NewBinding;
+		U64 RemovedBindingID;
 		SGUIPin ModifiedLiteralValuePin;
 		SGUINodeContext NewNodeContext;
 		SVector2<F32> NewNodePosition = SVector2<F32>::Zero;
@@ -812,7 +821,7 @@ namespace Havtorn
 		static void Separator();
 		static void Dummy(const SVector2<F32>& size);
 		static void SameLine(const F32 offsetFromX = 0.0f, const F32 spacing = -1.0f);
-		static bool IsItemClicked();
+		static bool IsItemClicked(const EGUIMouseButton button = EGUIMouseButton::Left);
 		static bool IsMouseReleased(I32 mouseButton = 0);
 		static bool IsItemHovered();
 		static bool IsItemVisible();
