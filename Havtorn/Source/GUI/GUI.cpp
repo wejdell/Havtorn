@@ -363,9 +363,9 @@ namespace Havtorn
 			ImGui::SameLine(offsetFromStart, spacing);
 		}
 
-		bool IsItemClicked()
+		bool IsItemClicked(const EGUIMouseButton button)
 		{			
-			return ImGui::IsItemClicked();
+			return ImGui::IsItemClicked(static_cast<ImGuiMouseButton>(button));
 		}
 
 		bool IsMouseReleased(int mouseButton)
@@ -1863,9 +1863,9 @@ namespace Havtorn
 		Instance->Impl->SameLine(offsetFromX, spacing);
 	}
 
-	bool GUI::IsItemClicked()
+	bool GUI::IsItemClicked(const EGUIMouseButton button)
 	{
-		return Instance->Impl->IsItemClicked();
+		return Instance->Impl->IsItemClicked(button);
 	}
 
 	bool GUI::IsMouseReleased(I32 mouseButton)
