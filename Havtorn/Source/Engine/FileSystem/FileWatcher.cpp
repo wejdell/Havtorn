@@ -5,6 +5,8 @@
 #include <fstream>
 #include <algorithm>
 
+#include "Engine.h"
+
 //#include "Threading/ThreadManager.h"
 
 namespace fs = std::filesystem;
@@ -143,5 +145,28 @@ namespace Havtorn
 		}
 
 		return true;
+	}
+
+	void CFileWatcher::StopWatchFileChange(const std::string& filePath)
+	{
+		std::string comparableIndexString = filePath;
+		std::replace(comparableIndexString.begin(), comparableIndexString.end(), '\\', '#');
+		std::replace(comparableIndexString.begin(), comparableIndexString.end(), '/', '#');
+		
+		if (!Callbacks.contains(comparableIndexString))
+			return;
+
+		Callbacks.erase(comparableIndexString);
+
+		if (Thread)
+		{
+			AddNewFolderMutex.lock();
+			ThreadedFilesToWatch.erase(filePath);
+			AddNewFolderMutex.unlock();
+		}
+		else
+		{
+			ThreadedFilesToWatch.erase(filePath);
+		}
 	}
 }

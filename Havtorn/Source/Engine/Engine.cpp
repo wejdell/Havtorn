@@ -138,7 +138,7 @@ namespace Havtorn
 
 	CFileWatcher* GEngine::GetFileWatcher()
 	{
-		return nullptr;
+		return Instance->FileWatcher;
 	}
 
 	CTextureBank* GEngine::GetTextureBank()

@@ -25,7 +25,8 @@ namespace Havtorn
 		bool Init(CThreadManager* /*threadManager*/);
 
 		/* Will check the file for includes and add them as well*/
-		bool WatchFileChange(const std::string& fileName, FileChangeCallback callback);
+		bool WatchFileChange(const std::string& filePath, FileChangeCallback callback);
+		void StopWatchFileChange(const std::string& filePath);
 		void FlushChanges();
 
 	private:
@@ -38,7 +39,7 @@ namespace Havtorn
 		std::vector<fs::path> FilesChangedThreaded;
 		std::vector<fs::path> FilesChanged;
 		std::map<std::string, std::vector<FileChangeCallback>> Callbacks;
-		std::map<fs::path, I64> ThreadedFilesToWatch;
+		std::map<fs::path, U64> ThreadedFilesToWatch;
 
 		std::mutex Mutex;
 		std::mutex AddNewFolderMutex;
