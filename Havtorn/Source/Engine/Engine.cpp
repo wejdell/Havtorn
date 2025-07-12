@@ -6,6 +6,7 @@
 
 #include "Engine.h"
 #include "FileSystem/FileSystem.h"
+#include "FileSystem/FileWatcher.h"
 #include "Threading/ThreadManager.h"
 #include "Graphics/GraphicsFramework.h"
 #include "Graphics/TextureBank.h"
@@ -41,11 +42,13 @@ namespace Havtorn
 		RenderManager = new CRenderManager();
 		World = new CWorld();
 		ThreadManager = new CThreadManager();
+		FileWatcher = new CFileWatcher();
 		DebugDraw = new GDebugDraw();
 	}
 
 	GEngine::~GEngine()
 	{
+		SAFE_DELETE(FileWatcher);
 		SAFE_DELETE(ThreadManager);
 		SAFE_DELETE(World);
 		SAFE_DELETE(DebugDraw);
@@ -67,6 +70,7 @@ namespace Havtorn
 		ENGINE_ERROR_BOOL_MESSAGE(RenderManager->Init(Framework, platformManager), "RenderManager could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(World->Init(RenderManager), "World could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(ThreadManager->Init(RenderManager), "Thread Manager could not be initialized.");
+		ENGINE_ERROR_BOOL_MESSAGE(FileWatcher->Init(ThreadManager), "File Watcher could not be initialized.");
 
 		SequencerSystem = World->GetSystem<CSequencerSystem>();
 
@@ -84,6 +88,9 @@ namespace Havtorn
 	{
 		// TODO.AG/AS: Do the empty the editor-changes-queue here
 		GTime::BeginTracking(ETimerCategory::CPU);
+		
+		FileWatcher->FlushChanges();
+		
 		return GTime::Mark();
 	}
 
@@ -114,12 +121,6 @@ namespace Havtorn
 		if (WindowResizeTarget.LengthSquared() > 0)
 		{
 			RenderManager->Release(WindowResizeTarget);
-			
-			//replace w/ Resize To ResizeTarget
-			//WindowHandler->SetResolution(WindowHandler->ResizeTarget);
-			//WindowHandler->SetInternalResolution();
-
-			//WindowHandler->ResizeTarget = { };
 			RenderManager->ReInit(Framework, WindowResizeTarget);
 			WindowResizeTarget = {};
 		}
@@ -133,6 +134,11 @@ namespace Havtorn
 	CFileSystem* GEngine::GetFileSystem()
 	{
 		return Instance->FileSystem;
+	}
+
+	CFileWatcher* GEngine::GetFileWatcher()
+	{
+		return nullptr;
 	}
 
 	CTextureBank* GEngine::GetTextureBank()
@@ -183,21 +189,4 @@ namespace Havtorn
 		//}
 		//CoUninitialize();
 	}
-
-	//void GEngine::SetResolution(SVector2<F32> resolution)
-	//{
-	//	WindowHandler->SetResolution(resolution);
-	//	RenderManager->Release();
-	//	RenderManager->ReInit(Framework, WindowHandler);
-	//}
-
-	//void GEngine::ShowCursor(const bool& isInEditorMode)
-	//{
-	//	WindowHandler->ShowAndUnlockCursor(isInEditorMode);
-	//}
-	//void GEngine::HideCursor(const bool& isInEditorMode)
-	//{
-	//	WindowHandler->HideAndLockCursor(isInEditorMode);
-	//}
-
 }
