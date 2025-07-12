@@ -51,8 +51,7 @@ namespace Havtorn
 		ENGINE_ERROR_BOOL_MESSAGE(backbufferTexture, "Backbuffer Texture is null.");
 
 		Backbuffer = RenderTextureFactory.CreateTexture(backbufferTexture);
-		CurrentWindowResolution = platformManager->GetResolution();
-		InitRenderTextures(CurrentWindowResolution);
+		InitRenderTextures(platformManager->GetResolution());
 
 		InitDataBuffers();
 
@@ -81,6 +80,8 @@ namespace Havtorn
 
 	void CRenderManager::InitRenderTextures(SVector2<U16> windowResolution)
 	{
+		CurrentWindowResolution = windowResolution;
+
 		RenderedScene = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
 		LitScene = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
 		IntermediateDepth = RenderTextureFactory.CreateDepth(windowResolution, DXGI_FORMAT_R24G8_TYPELESS);
