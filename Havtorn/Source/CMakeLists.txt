@@ -321,6 +321,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}FileSystem/FileHeaderDeclarations.h
     ${ENGINE_FOLDER}FileSystem/FileSystem.cpp
     ${ENGINE_FOLDER}FileSystem/FileSystem.h
+    ${ENGINE_FOLDER}FileSystem/FileWatcher.cpp
+    ${ENGINE_FOLDER}FileSystem/FileWatcher.h
     ${ENGINE_FOLDER}Graphics/Debug/DebugDrawUtility.cpp
     ${ENGINE_FOLDER}Graphics/Debug/DebugDrawUtility.h
     ${ENGINE_FOLDER}Graphics/Renderers/FullscreenRenderer.cpp

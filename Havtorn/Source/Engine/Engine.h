@@ -1,7 +1,6 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #pragma once
-//#include "Application/WindowHandler.h"
 
 namespace Havtorn
 {
@@ -11,7 +10,6 @@ namespace Havtorn
 namespace Havtorn
 {
 	class CPlatformManager;
-	//class CWindowHandler;
 	class CThreadManager;
 	class CGraphicsFramework;
 	class CRenderManager;
@@ -20,20 +18,18 @@ namespace Havtorn
 	class CInputMapper;
 	class CAudioManager;
 	class CFileSystem;
+	class CFileWatcher;
 	class CTextureBank;
 	class CSequencerSystem;
 	class CEngineProcess;
 	class IProcess;
-
 
 	class GEngine
 	{
 		friend class CRenderManager;
 		friend class CTextureBank;
 		friend class CEditorProcess;
-		friend class CImGuiProcess;
 		friend class CGameProcess;
-		//friend CWindowHandler;
 
 	public:
 		GEngine();
@@ -44,8 +40,8 @@ namespace Havtorn
 		void RenderFrame();
 		void EndFrame();
 		
-		//static ENGINE_API CWindowHandler* GetWindowHandler();
 		static ENGINE_API CFileSystem* GetFileSystem();
+		static ENGINE_API CFileWatcher* GetFileWatcher();
 		static ENGINE_API CTextureBank* GetTextureBank();
 		static ENGINE_API CThreadManager* GetThreadManager();
 		static ENGINE_API CWorld* GetWorld();
@@ -57,14 +53,11 @@ namespace Havtorn
 	public:
 		void CrashWithScreenShot(std::wstring& subPath);
 
-		//void ShowCursor(const bool& isInEditorMode = true);
-		//void HideCursor(const bool& isInEditorMode = false);
-
 	private:
 		static ENGINE_API GEngine* Instance;
 
 		CFileSystem* FileSystem = nullptr;
-		//CWindowHandler* WindowHandler = nullptr;
+		CFileWatcher* FileWatcher = nullptr;
 		CThreadManager* ThreadManager = nullptr;
 		CGraphicsFramework* Framework = nullptr;
 		CTextureBank* TextureBank = nullptr;
@@ -74,7 +67,7 @@ namespace Havtorn
 		CInputMapper* InputMapper = nullptr;
 		CWorld* World = nullptr;
 
-		// TODO.NR: Figure out how to set up dependencies for Editor systems on Engine ECS Systems
+		// TODO.NW: Figure out how to set up dependencies for Editor systems on Engine ECS Systems
 		CSequencerSystem* SequencerSystem = nullptr;
 
 		SVector2<U16> WindowResizeTarget = {};
