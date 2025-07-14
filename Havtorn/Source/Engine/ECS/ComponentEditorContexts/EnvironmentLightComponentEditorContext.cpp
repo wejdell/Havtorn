@@ -22,6 +22,7 @@ namespace Havtorn
 
 		SEnvironmentLightComponent* environmentLightComp = scene->GetComponent<SEnvironmentLightComponent>(entityOwner);
 
+		GUI::Checkbox("Is Active", environmentLightComp->IsActive);
 		GUI::Text("Ambient Static Cubemap");
 	
 		return { EComponentViewResultLabel::InspectAssetComponent, environmentLightComp, 0 };

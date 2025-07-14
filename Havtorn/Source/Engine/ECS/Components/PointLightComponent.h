@@ -13,6 +13,7 @@ namespace Havtorn
 			: SComponent(entityOwner)
 		{}
 
+		bool IsActive = true;
 		std::array<SShadowmapViewData, 6> ShadowmapViews = {};
 		SVector4 ColorAndIntensity = SVector4(1.0f, 1.0f, 1.0f, 1.0f);
 		F32 Range = 1.0f;

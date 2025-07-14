@@ -66,7 +66,7 @@ namespace Havtorn
 			{		
 				for (const SDirectionalLightComponent* directionalLightComp : directionalLightComponents)
 				{
-					if (directionalLightComp->IsValid())
+					if (directionalLightComp->IsValid() && directionalLightComp->IsActive)
 					{
 						SRenderCommand command;
 						command.Type = ERenderCommandType::ShadowAtlasPrePassDirectional;
@@ -80,7 +80,7 @@ namespace Havtorn
 
 				for (const SPointLightComponent* pointLightComp : pointLightComponents)
 				{
-					if (pointLightComp->IsValid())
+					if (pointLightComp->IsValid() && pointLightComp->IsActive)
 					{
 						SRenderCommand command;
 						command.Type = ERenderCommandType::ShadowAtlasPrePassPoint;
@@ -94,7 +94,7 @@ namespace Havtorn
 
 				for (const SSpotLightComponent* spotLightComp : spotLightComponents)
 				{
-					if (spotLightComp->IsValid())
+					if (spotLightComp->IsValid() && spotLightComp->IsActive)
 					{
 						SRenderCommand command;
 						command.Type = ERenderCommandType::ShadowAtlasPrePassSpot;
@@ -272,12 +272,15 @@ namespace Havtorn
 				continue;
 
 			SRenderCommand command;
-			command.Type = ERenderCommandType::DeferredLightingDirectional;
-			command.U16s.push_back(environmentLightComp->AmbientCubemapReference);
-			command.Vectors.push_back(directionalLightComp->Direction);
-			command.Colors.push_back(directionalLightComp->Color);
-			command.ShadowmapViews.push_back(directionalLightComp->ShadowmapView);
-			RenderManager->PushRenderCommand(command);
+			if (directionalLightComp->IsActive)
+			{
+				command.Type = ERenderCommandType::DeferredLightingDirectional;
+				command.U16s.push_back(environmentLightComp->AmbientCubemapReference);
+				command.Vectors.push_back(directionalLightComp->Direction);
+				command.Colors.push_back(directionalLightComp->Color);
+				command.ShadowmapViews.push_back(directionalLightComp->ShadowmapView);
+				RenderManager->PushRenderCommand(command);
+			}
 
 			if (!isInPlayingPlayState)
 			{
@@ -308,13 +311,16 @@ namespace Havtorn
 			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(pointLightComp);
 
 			SRenderCommand command;
-			command.Type = ERenderCommandType::DeferredLightingPoint;
-			command.Matrices.push_back(transformComp->Transform.GetMatrix());
-			command.Colors.push_back(SColor(pointLightComp->ColorAndIntensity.X, pointLightComp->ColorAndIntensity.Y, pointLightComp->ColorAndIntensity.Z, 1.0f));
-			command.F32s.push_back(pointLightComp->ColorAndIntensity.W);
-			command.F32s.push_back(pointLightComp->Range);
-			command.SetShadowMapViews(pointLightComp->ShadowmapViews);
-			RenderManager->PushRenderCommand(command);
+			if (pointLightComp->IsActive)
+			{
+				command.Type = ERenderCommandType::DeferredLightingPoint;
+				command.Matrices.push_back(transformComp->Transform.GetMatrix());
+				command.Colors.push_back(SColor(pointLightComp->ColorAndIntensity.X, pointLightComp->ColorAndIntensity.Y, pointLightComp->ColorAndIntensity.Z, 1.0f));
+				command.F32s.push_back(pointLightComp->ColorAndIntensity.W);
+				command.F32s.push_back(pointLightComp->Range);
+				command.SetShadowMapViews(pointLightComp->ShadowmapViews);
+				RenderManager->PushRenderCommand(command);
+			}
 
 			if (!isInPlayingPlayState)
 			{
@@ -344,18 +350,21 @@ namespace Havtorn
 			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(spotLightComp);
 
 			SRenderCommand command;
-			command.Type = ERenderCommandType::DeferredLightingSpot;
-			command.Matrices.push_back(transformComp->Transform.GetMatrix());
-			command.Colors.push_back(SColor(spotLightComp->ColorAndIntensity.X, spotLightComp->ColorAndIntensity.Y, spotLightComp->ColorAndIntensity.Z, 1.0f));
-			command.F32s.push_back(spotLightComp->ColorAndIntensity.W);
-			command.F32s.push_back(spotLightComp->Range);
-			command.F32s.push_back(spotLightComp->OuterAngle);
-			command.F32s.push_back(spotLightComp->InnerAngle);
-			command.Vectors.push_back(spotLightComp->Direction);
-			command.Vectors.push_back(spotLightComp->DirectionNormal1);
-			command.Vectors.push_back(spotLightComp->DirectionNormal2);
-			command.ShadowmapViews.push_back(spotLightComp->ShadowmapView);
-			RenderManager->PushRenderCommand(command);
+			if (spotLightComp->IsActive)
+			{
+				command.Type = ERenderCommandType::DeferredLightingSpot;
+				command.Matrices.push_back(transformComp->Transform.GetMatrix());
+				command.Colors.push_back(SColor(spotLightComp->ColorAndIntensity.X, spotLightComp->ColorAndIntensity.Y, spotLightComp->ColorAndIntensity.Z, 1.0f));
+				command.F32s.push_back(spotLightComp->ColorAndIntensity.W);
+				command.F32s.push_back(spotLightComp->Range);
+				command.F32s.push_back(spotLightComp->OuterAngle);
+				command.F32s.push_back(spotLightComp->InnerAngle);
+				command.Vectors.push_back(spotLightComp->Direction);
+				command.Vectors.push_back(spotLightComp->DirectionNormal1);
+				command.Vectors.push_back(spotLightComp->DirectionNormal2);
+				command.ShadowmapViews.push_back(spotLightComp->ShadowmapView);
+				RenderManager->PushRenderCommand(command);
+			}
 
 			if (!isInPlayingPlayState)
 			{

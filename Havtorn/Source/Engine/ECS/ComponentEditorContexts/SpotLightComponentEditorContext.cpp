@@ -20,6 +20,8 @@ namespace Havtorn
 
 		SSpotLightComponent* spotLightComp = scene->GetComponent<SSpotLightComponent>(entityOwner);
 
+		GUI::Checkbox("Is Active", spotLightComp->IsActive);
+
 		SColor color = spotLightComp->ColorAndIntensity;
 		GUI::ColorPicker3("Color", color);
 		SVector colorFloat = color.AsVector();

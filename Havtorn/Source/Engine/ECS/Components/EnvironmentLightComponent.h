@@ -12,6 +12,7 @@ namespace Havtorn
 			: SComponent(entityOwner)
 		{}
 
+		bool IsActive = false;
 		U16 AmbientCubemapReference = 0;
 		U64 AssetRegistryKey = 0;
 	

@@ -19,6 +19,8 @@ namespace Havtorn
 
 		SDirectionalLightComponent* directionalLightComp = scene->GetComponent<SDirectionalLightComponent>(entityOwner);
 
+		GUI::Checkbox("Is Active", directionalLightComp->IsActive);
+
 		SColor color = directionalLightComp->Color;
 		GUI::ColorPicker3("Color", color);
 		SVector colorFloat = color.AsVector();
