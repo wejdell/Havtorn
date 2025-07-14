@@ -379,7 +379,6 @@ namespace Havtorn
 		GUI::TableNextColumn();
 		GUI::PushID(STATIC_I32(outCurrentID++));
 
-
 		if (entry.is_directory())
 		{
 			if (GUI::ImageButton("FolderIcon", folderIconID, { GUI::ThumbnailSizeX, GUI::ThumbnailSizeY }))
@@ -434,20 +433,33 @@ namespace Havtorn
 
 			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), (intptr_t)rep->TextureRef.GetShaderResourceView(), assetTypeName.c_str(), assetColor, rep.get(), sizeof(SEditorAssetRepresentation));
 
-			if (result.IsDoubleClicked)
-			{
-				// NW: Open Tool depending on asset type?
-				HV_LOG_INFO("Clicked asset: %s", rep->Name.c_str());
-				Manager->OpenAssetTool(rep.get());
-				SelectedAsset.reset();
-			}
-
 			if (result.IsHovered)
 			{
 				if (rep->AssetType == EAssetType::Animation)
 				{
 					Manager->GetResourceManager()->AnimateAssetTexture(rep->TextureRef, rep->AssetType, entry.path().string(), AnimatedThumbnailTime += GTime::Dt());
 				}
+
+				SelectedAsset = rep->DirectoryEntry;
+			}
+
+			if (GUI::BeginPopupContextWindow())
+			{
+				if (SelectedAsset.has_value())
+				{
+					if (GUI::MenuItem("Copy Asset Path"))
+						GUI::CopyToClipboard(SelectedAsset->path().string().c_str());
+				}
+
+				GUI::EndPopup();
+			}
+
+			if (result.IsDoubleClicked)
+			{
+				// NW: Open Tool depending on asset type?
+				HV_LOG_INFO("Clicked asset: %s", rep->Name.c_str());
+				Manager->OpenAssetTool(rep.get());
+				SelectedAsset.reset();
 			}
 		}
 

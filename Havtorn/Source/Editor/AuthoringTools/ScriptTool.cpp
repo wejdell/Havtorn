@@ -121,6 +121,7 @@ namespace Havtorn
 								"String Array",
 								"Object",
 								"Object Array",
+								"Asset",
 								"Function",
 								"Delegate"
 						};
@@ -290,7 +291,7 @@ namespace Havtorn
 		}
 
 		if (edit.NewBinding.Type != EGUIPinType::Unknown)
-			CurrentScript->AddDataBinding(edit.NewBinding.Name.AsString().c_str(), static_cast<HexRune::EPinType>(edit.NewBinding.Type), static_cast<HexRune::EObjectDataType>(edit.NewBinding.ObjectType));
+			CurrentScript->AddDataBinding(edit.NewBinding.Name.AsString().c_str(), static_cast<HexRune::EPinType>(edit.NewBinding.Type), static_cast<HexRune::EObjectDataType>(edit.NewBinding.ObjectType), static_cast<EAssetType>(edit.NewBinding.AssetType));
 
 		if (edit.RemovedBindingID != 0)
 			CurrentScript->RemoveDataBinding(edit.RemovedBindingID);
@@ -735,7 +736,7 @@ namespace Havtorn
 
 			GUI::InputText("Name", &DataBindingCandidate.Name);
 			GUI::SliderEnum("Type", DataBindingCandidate.Type,
-							{
+							{ //TODO.NW: See if we can bind these strings at compile time or something, through a static a certain of string amount and enum Count?
 								"Unknown",
 								"Flow",
 								"Bool",
@@ -748,6 +749,7 @@ namespace Havtorn
 								"String Array",
 								"Object",
 								"Object Array",
+								"Asset",
 								"Function",
 								"Delegate"
 							});
@@ -755,6 +757,34 @@ namespace Havtorn
 			// TODO.NW: Add filtering so we can't pick incorrect types e.g. unknown and flow
 			if (DataBindingCandidate.Type == EGUIPinType::Unknown)
 				DataBindingCandidate.Type = EGUIPinType::Bool;
+			 
+			if (DataBindingCandidate.Type == EGUIPinType::Asset)
+			{
+				GUI::SliderEnum("Asset Type", DataBindingCandidate.AssetType,
+					{
+						"None",
+						"StaticMesh",
+						"SkeletalMesh",
+						"Texture",
+						"Material",
+						"Animation",
+						"SpriteAnimation",
+						"AudioOneShot",
+						"AudioCollection",
+						"VisualFX",
+						"Scene",
+						"Sequencer",
+						"Script"
+					});
+
+				if (DataBindingCandidate.AssetType == EGUIAssetType::None)
+					DataBindingCandidate.AssetType = EGUIAssetType::StaticMesh;
+			}
+			else
+			{
+				DataBindingCandidate.AssetType = EGUIAssetType::None;
+			}
+
 
 			if (DataBindingCandidate.Type == EGUIPinType::Object)
 			{
@@ -774,9 +804,7 @@ namespace Havtorn
 
 			if (GUI::Button("Create"))
 			{
-				Edit.NewBinding.Name = DataBindingCandidate.Name;
-				Edit.NewBinding.Type = DataBindingCandidate.Type;
-				Edit.NewBinding.ObjectType = DataBindingCandidate.ObjectType;
+				Edit.NewBinding = DataBindingCandidate;
 				DataBindingCandidate = { };
 				GUI::CloseCurrentPopup();
 			}
@@ -971,10 +999,7 @@ namespace Havtorn
 
 			GUI::PushID(pin.UID);
 			GUI::PushItemWidth(emptyItemWidth);
-			std::string value = std::get<std::string>(pin.Data);
-			wasPinValueModified = GUI::InputText("##edit", (char*)value.c_str(), 255);
-			if (wasPinValueModified)
-				pin.Data = value;
+			wasPinValueModified = GUI::InputText("##edit", std::get<std::string>(pin.Data));
 			GUI::PopItemWidth();
 			GUI::PopID();
 			break;
@@ -1037,6 +1062,7 @@ namespace Havtorn
 		case EGUIPinType::Vector:   iconType = EGUIIconType::Circle; break;
 		case EGUIPinType::Object:   iconType = EGUIIconType::Circle; break;
 		case EGUIPinType::ObjectArray:   iconType = EGUIIconType::Grid; break;
+		case EGUIPinType::Asset:    iconType = EGUIIconType::Circle; break;
 		case EGUIPinType::Function: iconType = EGUIIconType::Circle; break;
 		case EGUIPinType::Delegate: iconType = EGUIIconType::Square; break;
 		default:
@@ -1059,6 +1085,7 @@ namespace Havtorn
 		case EGUIPinType::Vector:   return SColor(255, 206, 27);
 		case EGUIPinType::Object:   return SColor(51, 150, 215);
 		case EGUIPinType::ObjectArray:   return SColor(51, 150, 215);
+		case EGUIPinType::Asset:   return SColor(124, 21, 153);
 		case EGUIPinType::Function: return SColor(218, 0, 183);
 		case EGUIPinType::Delegate: return SColor(255, 48, 48);
 		}

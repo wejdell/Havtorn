@@ -195,7 +195,7 @@ namespace Havtorn
 				SGuiPayload payload = GUI::GetDragDropPayload();
 				if (payload.Data == nullptr)
 				{
-					GUI::SetDragDropPayload("EntityAssignmentDrag", &entity, sizeof(SEntity));				
+					GUI::SetDragDropPayload("EntityDrag", &entity, sizeof(SEntity));				
 				}
 				GUI::Text(entryString.c_str());
 
@@ -204,7 +204,7 @@ namespace Havtorn
 
 			if (GUI::BeginDragDropTarget())
 			{
-				SGuiPayload payload = GUI::AcceptDragDropPayload("EntityAssignmentDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
+				SGuiPayload payload = GUI::AcceptDragDropPayload("EntityDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
 				if (payload.Data != nullptr)
 				{
 					SEntity* draggedEntity = reinterpret_cast<SEntity*>(payload.Data);

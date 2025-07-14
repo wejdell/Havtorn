@@ -213,6 +213,7 @@ add_dependencies(GUI Core Platform)
 set(ENGINE_FILES
     ${ENGINE_FOLDER}Application/EngineProcess.cpp
     ${ENGINE_FOLDER}Application/EngineProcess.h
+    ${ENGINE_FOLDER}Assets/Asset.h
     ${ENGINE_FOLDER}Assets/SequencerAsset.cpp
     ${ENGINE_FOLDER}Assets/SequencerAsset.h
     ${ENGINE_FOLDER}Core/GeneralUtilities.h
@@ -354,8 +355,12 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}HexPhys/HexPhys.h
     ${ENGINE_FOLDER}HexRune/CoreNodes/CoreNodes.cpp
     ${ENGINE_FOLDER}HexRune/CoreNodes/CoreNodes.h
+    ${ENGINE_FOLDER}HexRune/ECSNodes/ECSNodes.cpp
+    ${ENGINE_FOLDER}HexRune/ECSNodes/ECSNodes.h
     ${ENGINE_FOLDER}HexRune/NodeEditorContexts/CoreNodeEditorContexts.cpp
     ${ENGINE_FOLDER}HexRune/NodeEditorContexts/CoreNodeEditorContexts.h
+    ${ENGINE_FOLDER}HexRune/NodeEditorContexts/ECSNodeEditorContexts.cpp
+    ${ENGINE_FOLDER}HexRune/NodeEditorContexts/ECSNodeEditorContexts.h
     ${ENGINE_FOLDER}HexRune/HexRune.cpp
     ${ENGINE_FOLDER}HexRune/HexRune.h
     ${ENGINE_FOLDER}HexRune/NodeEditorContext.h

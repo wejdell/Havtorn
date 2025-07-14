@@ -268,9 +268,10 @@ namespace Havtorn
 		GEngine::Instance->Framework->GetSwapChain()->ResizeBuffers(0, newResolution.X, newResolution.Y, DXGI_FORMAT_UNKNOWN, 0);
 	}
 
-	void CRenderManager::LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent)
+	void CRenderManager::LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent, CScene* scene)
 	{
 		SStaticMeshAsset asset;
+
 
 		// TODO.NR: Probably need to extract the filename here??
 		if (!LoadedStaticMeshes.contains(filePath))
@@ -290,7 +291,8 @@ namespace Havtorn
 				const SStaticMesh& mesh = assetFile.Meshes[i];
 				SDrawCallData& drawCallData = asset.DrawCallData[i];
 
-				// TODO.NR: Check for existing buffers
+				// TODO.NW: Asset Registry should have the responsibility to manage this resource
+				// TODO.NW: Check for existing buffers
 				drawCallData.VertexBufferIndex = RenderStateManager.AddVertexBuffer(mesh.Vertices);
 				drawCallData.IndexBufferIndex = RenderStateManager.AddIndexBuffer(mesh.Indices);
 				drawCallData.VertexStrideIndex = 0;
@@ -326,6 +328,38 @@ namespace Havtorn
 
 		// Geometry
 		outStaticMeshComponent->DrawCallData = asset.DrawCallData;
+
+		// Handle existing material component if necessary
+		if (!scene)
+			return;
+
+		SMaterialComponent* materialComp = scene->GetComponent<SMaterialComponent>(outStaticMeshComponent);
+		if (materialComp != nullptr)
+		{
+			U8 meshMaterialNumber = outStaticMeshComponent->NumberOfMaterials;
+			I8 materialNumberDifference = meshMaterialNumber - static_cast<U8>(materialComp->Materials.size());
+
+			// NR: Add materials to correspond with mesh
+			if (materialNumberDifference > 0)
+			{
+				for (U8 i = 0; i < materialNumberDifference; i++)
+				{
+					materialComp->Materials.emplace_back();
+				}
+			}
+			// NR: Remove materials to correspond with mesh
+			else if (materialNumberDifference < 0)
+			{
+				for (U8 i = 0; i < materialNumberDifference * -1.0f; i++)
+				{
+					materialComp->Materials.pop_back();
+				}
+			}
+			// NR: Do nothing
+			else
+			{
+			}
+		}
 	}
 
 	void CRenderManager::LoadSkeletalMeshComponent(const std::string& filePath, SSkeletalMeshComponent* outSkeletalMeshComponent)

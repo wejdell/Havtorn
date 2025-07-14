@@ -305,6 +305,8 @@ namespace Havtorn
 			if (otherEntity == nullptr)
 				return;
 
+			//SPhysics3DComponent* triggerComponent
+
 			// TODO.NR: Probably want to notify a System here, to deal with the trigger in gameplay code
 			HV_LOG_INFO("%s exited trigger volume with name %s", otherMetaData->Name.Data(), triggerMetaData->Name.Data());
 		}

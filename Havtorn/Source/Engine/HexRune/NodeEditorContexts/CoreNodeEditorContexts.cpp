@@ -85,42 +85,6 @@ namespace Havtorn
 			return node;
 		}
 
-		SEntityLoopNodeEditorContext SEntityLoopNodeEditorContext::Context = {};
-
-		SEntityLoopNodeEditorContext::SEntityLoopNodeEditorContext()
-		{
-			Name = "For Each Loop (Entity)";
-			Category = "General";
-		}
-
-		SNode* SEntityLoopNodeEditorContext::AddNode(SScript* script, const U64 existingID) const
-		{
-			if (script == nullptr)
-				return nullptr;
-
-			SNode* node = script->AddNode<SEntityLoopNode>(existingID);
-			script->AddEditorContext<SEntityLoopNodeEditorContext>(node->UID);
-			return node;
-		}
-
-		SComponentLoopNodeEditorContext SComponentLoopNodeEditorContext::Context = {};
-
-		SComponentLoopNodeEditorContext::SComponentLoopNodeEditorContext()
-		{
-			Name = "For Each Loop (Component)";
-			Category = "General";
-		}
-
-		SNode* SComponentLoopNodeEditorContext::AddNode(SScript* script, const U64 existingID) const
-		{
-			if (script == nullptr)
-				return nullptr;
-
-			SNode* node = script->AddNode<SComponentLoopNode>(existingID);
-			script->AddEditorContext<SComponentLoopNodeEditorContext>(node->UID);
-			return node;
-		}
-
 		SDelayNodeEditorContext SDelayNodeEditorContext::Context = {};
 
 		SDelayNodeEditorContext::SDelayNodeEditorContext()
@@ -450,22 +414,5 @@ namespace Havtorn
 			script->AddEditorContext<SIntNotEqualNodeEditorContext>(node->UID);
 			return node;
 		}
-
-		SPrintEntityNameNodeEditorContext SPrintEntityNameNodeEditorContext::Context = {};
-		SPrintEntityNameNodeEditorContext::SPrintEntityNameNodeEditorContext()
-		{
-			Name = "Print Entity Name";
-			Category = "General";
-			Color = SColor::Teal;
-		}
-		SNode* SPrintEntityNameNodeEditorContext::AddNode(SScript* script, const U64 existingID) const
-		{
-			if (script == nullptr)
-				return nullptr;
-
-			SNode* node = script->AddNode<SPrintEntityNameNode>(existingID);
-			script->AddEditorContext<SPrintEntityNameNodeEditorContext>(node->UID);
-			return node;
-		}
-}
+	}
 }

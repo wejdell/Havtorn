@@ -41,20 +41,6 @@ namespace Havtorn
 			static SSequenceNodeEditorContext Context;
 		};
 
-		struct SEntityLoopNodeEditorContext : public SNodeEditorContext
-		{
-			SEntityLoopNodeEditorContext();
-			virtual SNode* AddNode(SScript* script, const U64 existingID = 0) const override;
-			static SEntityLoopNodeEditorContext Context;
-		};
-
-		struct SComponentLoopNodeEditorContext : public SNodeEditorContext
-		{
-			SComponentLoopNodeEditorContext();
-			virtual SNode* AddNode(SScript* script, const U64 existingID = 0) const override;
-			static SComponentLoopNodeEditorContext Context;
-		};
-
 		struct SDelayNodeEditorContext : public SNodeEditorContext
 		{
 			SDelayNodeEditorContext();
@@ -180,13 +166,5 @@ namespace Havtorn
 			virtual SNode* AddNode(SScript* script, const U64 existingID = 0) const override;
 			static SIntNotEqualNodeEditorContext Context;
 		};
-
-		struct SPrintEntityNameNodeEditorContext : public SNodeEditorContext
-		{
-			SPrintEntityNameNodeEditorContext();
-			virtual SNode* AddNode(SScript* script, const U64 existingID = 0) const override;
-			static SPrintEntityNameNodeEditorContext Context;
-		};
-
 	}
 }

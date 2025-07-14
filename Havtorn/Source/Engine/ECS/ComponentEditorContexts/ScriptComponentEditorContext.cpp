@@ -5,6 +5,7 @@
 
 #include "ECS/Components/ScriptComponent.h"
 #include "Scene/Scene.h"
+#include "Engine.h"
 
 #include <GUI.h>
 #include <ECS/Components/MetaDataComponent.h>
@@ -12,6 +13,155 @@
 namespace Havtorn
 {
 	SScriptComponentEditorContext SScriptComponentEditorContext::Context = {};
+
+	void SScriptComponentEditorContext::ViewDataBinding(CScene* scene, HexRune::SScriptDataBinding& dataBinding) const
+	{
+		GUI::Text(dataBinding.Name.c_str());
+
+		GUI::SameLine();
+		switch (dataBinding.Type)
+		{
+		case HexRune::EPinType::Bool:
+		{
+			GUI::TextDisabled(" |%s| ", "Bool");
+			GUI::SameLine();
+			GUI::Checkbox("", std::get<bool>(dataBinding.Data));
+		}
+		break;
+		case HexRune::EPinType::Int:
+		{
+			GUI::TextDisabled(" |%s| ", "Int");
+			GUI::SameLine();
+			GUI::InputInt("", std::get<I32>(dataBinding.Data));
+		}
+		break;
+		case HexRune::EPinType::Float:
+		{
+			GUI::TextDisabled(" |%s| ", "Float");
+			GUI::SameLine();
+			GUI::InputFloat("", std::get<F32>(dataBinding.Data));
+		}
+		break;
+		case HexRune::EPinType::String:
+		{
+			GUI::TextDisabled(" |%s| ", "String");
+			GUI::SameLine();
+			GUI::InputText("##edit", std::get<std::string>(dataBinding.Data));	
+		}
+		break;
+		case HexRune::EPinType::Vector:
+		{}
+		break;
+		case HexRune::EPinType::IntArray:
+		{}
+		break;
+		case HexRune::EPinType::FloatArray:
+		{}
+		break;
+		case HexRune::EPinType::StringArray:
+		{}
+		break;
+		case HexRune::EPinType::Object:
+		{
+			// TODO.NW: Handle Component type
+
+			GUI::TextDisabled(" |%s| ", "Entity");
+			GUI::SameLine();
+
+			SEntity entity{};
+			if (std::holds_alternative<SEntity>(dataBinding.Data))
+				entity = std::get<SEntity>(dataBinding.Data);
+
+			if (auto metaDataComponent = scene->GetComponent<SMetaDataComponent>(entity))
+				GUI::Text("%s", metaDataComponent->Name.Data());
+			else
+				GUI::Text("Not Set");
+
+			if (GUI::BeginDragDropTarget())
+			{
+				SGuiPayload payload = GUI::AcceptDragDropPayload("EntityDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNoDrawDefaultRect, EDragDropFlag::AcceptNopreviewTooltip });
+				if (payload.Data != nullptr)
+				{
+					SEntity* draggedEntity = reinterpret_cast<SEntity*>(payload.Data);
+					const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(*draggedEntity);
+					const std::string draggedEntityName = draggedMetaDataComp->IsValid() ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
+					GUI::SetTooltip(draggedEntityName.c_str());
+
+					if (draggedEntity->IsValid())
+					{
+						GUI::SetTooltip("Assign %s to Data Binding '%s'?", draggedEntityName.c_str(), dataBinding.Name.c_str());
+
+						if (payload.IsDelivery)
+							dataBinding.Data = *draggedEntity;
+					}
+				}
+
+				GUI::EndDragDropTarget();
+			}
+		}
+		break;
+		case HexRune::EPinType::ObjectArray:
+		{}
+		break;
+		case HexRune::EPinType::Asset:
+		{
+			std::string assetPath = "";
+			// TODO.NW: Need to figure out how to access editor reps from here. Maybe editor reps contain an engine asset and we can drag that instead. 
+			//if (GUI::BeginDragDropTarget())
+			//{
+			//	SGuiPayload payload = GUI::AcceptDragDropPayload("AssetDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
+			//	if (payload.Data != nullptr)
+			//	{
+			//		std::string draggedString = *reinterpret_cast<std::string*>(payload.Data);
+			//		GUI::SetTooltip(draggedString.c_str());
+
+			//		if (!draggedString.empty())
+			//		{
+			//			GUI::SetTooltip("Assign %s to Data Binding '%s'?", draggedString.c_str(), dataBinding.Name.c_str());
+
+			//			if (payload.IsDelivery)
+			//				assetPath = draggedString;
+			//		}
+			//	}
+
+			//	GUI::EndDragDropTarget();
+			//}
+
+			GUI::TextDisabled(" |%s| ", "Asset");
+			GUI::SameLine();
+
+			SAsset asset;
+			if (std::holds_alternative<SAsset>(dataBinding.Data))
+				asset = std::get<SAsset>(dataBinding.Data);
+
+			if (asset.AssetPath.empty())
+				asset.AssetPath = assetPath;
+
+			//GUI::Text(asset.AssetPath.c_str());
+			GUI::InputText("##edit", asset.AssetPath);
+
+			if (GUI::BeginPopupContextWindow())
+			{
+				if (GUI::MenuItem("Paste Asset Path"))
+					asset.AssetPath = GUI::CopyFromClipboard();
+
+				GUI::EndPopup();
+			}
+
+
+			if (!asset.AssetPath.empty())
+				asset.UID = UGUIDManager::Generate();
+
+			dataBinding.Data = asset;
+			// TODO.NW: Simplify flow for assigning assets through a view result
+			//if (dataBinding.AssetType == EAssetType::StaticMesh)
+			//{
+			//	GUI::AssetPicker("##edit", "Static Mesh", );
+			//}
+		}
+		break;
+		}
+	}
 
 	SComponentViewResult SScriptComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
 	{
@@ -34,52 +184,7 @@ namespace Havtorn
 			GUI::Separator();
 
 			for (auto& db : component->DataBindings)
-			{
-				SVector2 available = GUI::GetContentRegionAvail();
-
-				GUI::BeginHorizontal(db.Name.c_str(), { available.X, 12.0f });
-				GUI::Text(db.Name.c_str());
-
-				GUI::SameLine();
-
-				GUI::TextDisabled("Type: %s", "Entity");
-				GUI::SameLine();
-
-				SEntity entity{};
-
-				if (std::holds_alternative<SEntity>(db.Data))
-					entity = std::get<SEntity>(db.Data);
-
-				if (auto metaDataComponent = scene->GetComponent<SMetaDataComponent>(entity))
-					GUI::Text("%s", metaDataComponent->Name.Data());
-				else
-					GUI::Text("Not Set");
-
-				if (GUI::BeginDragDropTarget())
-				{
-					SGuiPayload payload = GUI::AcceptDragDropPayload("EntityAssignmentDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNoDrawDefaultRect, EDragDropFlag::AcceptNopreviewTooltip });
-					if (payload.Data != nullptr)
-					{
-						SEntity* draggedEntity = reinterpret_cast<SEntity*>(payload.Data);
-						const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(*draggedEntity);
-						const std::string draggedEntityName = draggedMetaDataComp->IsValid() ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
-						GUI::SetTooltip(draggedEntityName.c_str());
-
-						if (draggedEntity->IsValid())
-						{
-							GUI::SetTooltip("Assign %s to Data Binding '%s'?", draggedEntityName.c_str(), db.Name.c_str());
-
-							if (payload.IsDelivery)
-								db.Data = *draggedEntity;
-						}
-					}
-
-					GUI::EndDragDropTarget();
-				}
-
-				// TODO.NW: Make component/entity dropper
-				GUI::EndHorizontal();
-			}
+				ViewDataBinding(scene, db);
 		}
 
 		GUI::Checkbox("Trigger", component->TriggerScript);

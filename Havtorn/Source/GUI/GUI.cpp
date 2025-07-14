@@ -3,6 +3,7 @@
 #include "GUI.h"
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <misc/cpp/imgui_stdlib.h>
 #include <backends/imgui_impl_win32.h>
 #include <backends/imgui_impl_dx11.h>
 #include <ImGuizmo.h>
@@ -37,6 +38,17 @@ namespace Havtorn
 		}
 		return 0;
 	}
+
+	//static Havtorn::I32 StandardTextResizeCallback(struct ImGuiInputTextCallbackData* data)
+	//{
+	//	if (data->EventFlag == ImGuiInputTextFlags_CallbackResize)
+	//	{
+	//		char* customString = reinterpret_cast<char*>(data->UserData);
+	//		data->Buf = customString->Data();
+	//		customString->SetLength(static_cast<Havtorn::U8>(data->BufSize) - 1);
+	//	}
+	//	return 0;
+	//}
 
 	namespace NE = ax::NodeEditor;
 
@@ -172,9 +184,9 @@ namespace Havtorn
 			return ImGui::InputText(label, buf, bufSize, ImGuiInputTextFlags_CallbackResize, callback, data);
 		}
 
-		bool InputText(const char* label, char* buffer, U64 bufferSize)
+		bool InputText(const char* label, std::string& buffer)
 		{
-			return ImGui::InputText(label, buffer, bufferSize);
+			return ImGui::InputText(label, &buffer);
 		}
 
 		void SetTooltip(const char* fmt, va_list args)
@@ -1284,6 +1296,16 @@ namespace Havtorn
 			ImGui::LogFinish();
 		}
 
+		void CopyToClipboard(const char* text)
+		{
+			ImGui::SetClipboardText(text);
+		}
+
+		std::string CopyFromClipboard()
+		{
+			return ImGui::GetClipboardText();
+		}
+
 		int ColorConvertFloat4ToU32(const ImVec4& color)
 		{
 			return ImGui::ColorConvertFloat4ToU32(color);
@@ -1410,9 +1432,9 @@ namespace Havtorn
 		return Instance->Impl->InputText(label, customString->Data(), (size_t)customString->Length() + 1, HavtornInputTextResizeCallback, (void*)customString);
 	}
 
-	bool GUI::InputText(const char* label, char* buffer, U64 bufferSize)
+	bool GUI::InputText(const char* label, std::string& buffer)
 	{
-		return Instance->Impl->InputText(label, buffer, bufferSize);
+		return Instance->Impl->InputText(label, buffer);
 	}
 
 	void GUI::SetTooltip(const char* fmt, ...)
@@ -2352,6 +2374,16 @@ namespace Havtorn
 	void GUI::LogFinish()
 	{
 		Instance->Impl->LogFinish();
+	}
+
+	void GUI::CopyToClipboard(const char* text)
+	{
+		Instance->Impl->CopyToClipboard(text);
+	}
+
+	std::string GUI::CopyFromClipboard()
+	{
+		return Instance->Impl->CopyFromClipboard();
 	}
 
 	void GUI::MemFree(void* ptr)

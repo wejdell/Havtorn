@@ -132,15 +132,12 @@ namespace Havtorn
             U64 UID = 0;
             std::string Name = "";
             EPinType Type = EPinType::Object;
+            // TODO.NW: Figure out how to deal with these subtypes. Maybe list them explicitly as pin data types?
             EObjectDataType ObjectType = EObjectDataType::None;
+            EAssetType AssetType = EAssetType::None;
             std::variant<PIN_DATA_TYPES> Data;
         };
 
-        // TODO.NW: Should be basis for runtime asset? May want script components
-        // that have their own editor tool (window) where BP/visual script is shown.
-        // An engine script system can deal with starting and running these scripts.
-        // This struct should mimic a System proper though, deal with its own execution
-        // and so on.
         struct SScript
         {
             ENGINE_API SScript();
@@ -282,7 +279,7 @@ namespace Havtorn
             }
 
             // TODO.NW: Deal with serialization?
-            ENGINE_API void AddDataBinding(const char* name, const EPinType type, const EObjectDataType objectType = EObjectDataType::None);
+            ENGINE_API void AddDataBinding(const char* name, const EPinType type, const EObjectDataType objectType, const EAssetType assetType);
             ENGINE_API void RemoveDataBinding(const U64 id);
             ENGINE_API void RemoveNode(const U64 id);
 

@@ -56,18 +56,6 @@ namespace Havtorn
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 
-		struct SEntityLoopNode : public SNode
-		{
-			ENGINE_API SEntityLoopNode(const U64 id, SScript* owningScript);
-			virtual ENGINE_API I8 OnExecute() override;
-		};
-
-		struct SComponentLoopNode : public SNode
-		{
-			ENGINE_API SComponentLoopNode(const U64 id, SScript* owningScript);
-			virtual ENGINE_API I8 OnExecute() override;
-		};
-
 		struct SDelayNode : public SNode
 		{
 			ENGINE_API SDelayNode(const U64 id, SScript* owningScript);
@@ -175,12 +163,6 @@ namespace Havtorn
 		struct SIntNotEqualNode : public SNode
 		{
 			ENGINE_API SIntNotEqualNode(const U64 id, SScript* owningScript);
-			virtual ENGINE_API I8 OnExecute() override;
-		};
-
-		struct SPrintEntityNameNode : public SNode
-		{
-			ENGINE_API SPrintEntityNameNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 	}

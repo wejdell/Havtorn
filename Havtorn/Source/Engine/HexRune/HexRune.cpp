@@ -3,7 +3,9 @@
 #include "HexRune.h"
 #include "ECS/GUIDManager.h"
 #include "NodeEditorContexts/CoreNodeEditorContexts.h"
+#include "NodeEditorContexts/ECSNodeEditorContexts.h"
 #include "CoreNodes/CoreNodes.h"
+#include "ECSNodes/ECSNodes.h"
 
 namespace Havtorn
 {
@@ -14,7 +16,7 @@ namespace Havtorn
             Initialize();
         }
 
-        void SScript::AddDataBinding(const char* name, const EPinType type, const EObjectDataType objectType)
+        void SScript::AddDataBinding(const char* name, const EPinType type, const EObjectDataType objectType, const EAssetType assetType)
         {
             std::variant<PIN_DATA_TYPES> data;
             switch (type)
@@ -51,6 +53,9 @@ namespace Havtorn
                 else if (objectType == EObjectDataType::Component)
                     data = { nullptr };
                 break;
+            case EPinType::Asset:
+                data = SAsset{ assetType };
+                break;
             }
 
             DataBindings.emplace_back(SScriptDataBinding());
@@ -58,6 +63,7 @@ namespace Havtorn
             DataBindings.back().Name = std::string(name);
             DataBindings.back().Type = type;
             DataBindings.back().ObjectType = objectType;
+            DataBindings.back().AssetType = assetType;
             DataBindings.back().Data = data;
             RegisteredEditorContexts.emplace_back(new SDataBindingGetNodeEditorContext(this, DataBindings.back().UID));
             RegisteredEditorContexts.emplace_back(new SDataBindingSetNodeEditorContext(this, DataBindings.back().UID));
@@ -82,6 +88,7 @@ namespace Havtorn
             for (const U64 nodeId : nodesToRemove)
                 RemoveNode(nodeId);
 
+            // TODO.NW: Make sure contexts get deleted properly
             auto getterContextIterator = std::ranges::find_if(RegisteredEditorContexts, [id](const SNodeEditorContext* registeredContext) 
                 {
                     if (const SDataBindingGetNodeEditorContext* context = static_cast<const SDataBindingGetNodeEditorContext*>(registeredContext))
@@ -185,6 +192,8 @@ namespace Havtorn
             RegisteredEditorContexts.emplace_back(&SIntEqualNodeEditorContext::Context);
             RegisteredEditorContexts.emplace_back(&SIntNotEqualNodeEditorContext::Context);
             RegisteredEditorContexts.emplace_back(&SPrintEntityNameNodeEditorContext::Context);
+            RegisteredEditorContexts.emplace_back(&SSetStaticMeshNodeEditorContext::Context);
+            RegisteredEditorContexts.emplace_back(&STogglePointLightNodeEditorContext::Context);
         }
 
         void SScript::TraverseScript(CScene* owningScene)

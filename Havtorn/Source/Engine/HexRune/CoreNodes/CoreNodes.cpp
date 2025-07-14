@@ -3,9 +3,6 @@
 #include "CoreNodes.h"
 #include "ECS/GUIDManager.h"
 
-#include "../../Scene/Scene.h"
-#include "../../ECS/Components/MetaDataComponent.h"
-
 namespace Havtorn
 {
 	namespace HexRune
@@ -70,66 +67,6 @@ namespace Havtorn
 		I8 SSequenceNode::OnExecute()
 		{
 			return -1;
-		}
-
-		SEntityLoopNode::SEntityLoopNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript)
-		{
-			AddInput(UGUIDManager::Generate(), EPinType::Flow);
-			AddInput(UGUIDManager::Generate(), EPinType::ObjectArray, "Array");
-
-			AddOutput(UGUIDManager::Generate(), EPinType::Flow, "Loop Body");
-			AddOutput(UGUIDManager::Generate(), EPinType::Object, "Element");
-			AddOutput(UGUIDManager::Generate(), EPinType::Int, "Index");
-			AddOutput(UGUIDManager::Generate(), EPinType::Flow, "Completed");
-		}
-
-		I8 SEntityLoopNode::OnExecute()
-		{
-			std::vector<SEntity> entities;
-			GetDataOnPin(EPinDirection::Input, 0, entities);
-
-			for (I32 i = 0; i < STATIC_I32(entities.size()); i++)
-			{
-				SEntity& entity = entities[i];
-				SetDataOnPin(EPinDirection::Output, 1, entity);
-				SetDataOnPin(EPinDirection::Output, 2, i);
-
-				if (Outputs[0].LinkedPin != nullptr)
-					Outputs[0].LinkedPin->OwningNode->Execute();
-			}
-
-			return 3;
-		}
-
-		SComponentLoopNode::SComponentLoopNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript)
-		{
-			AddInput(UGUIDManager::Generate(), EPinType::Flow);
-			AddInput(UGUIDManager::Generate(), EPinType::ObjectArray, "Array");
-
-			AddOutput(UGUIDManager::Generate(), EPinType::Flow, "Loop Body");
-			AddOutput(UGUIDManager::Generate(), EPinType::Object, "Element");
-			AddOutput(UGUIDManager::Generate(), EPinType::Int, "Index");
-			AddOutput(UGUIDManager::Generate(), EPinType::Flow, "Completed");
-		}
-
-		I8 SComponentLoopNode::OnExecute()
-		{
-			std::vector<SComponent*> components;
-			GetDataOnPin(EPinDirection::Input, 0, components);
-
-			for (I32 i = 0; i < STATIC_I32(components.size()); i++)
-			{
-				SComponent* component = components[i];
-				SetDataOnPin(EPinDirection::Output, 1, component);
-				SetDataOnPin(EPinDirection::Output, 2, i);
-
-				if (Outputs[0].LinkedPin != nullptr)
-					Outputs[0].LinkedPin->OwningNode->Execute();
-			}
-
-			return 3;
 		}
 
 		SDelayNode::SDelayNode(const U64 id, SScript* owningScript)
@@ -454,32 +391,5 @@ namespace Havtorn
 			SetDataOnPin(EPinDirection::Output, 0, a != b);
 			return -1;
 		}
-
-		SPrintEntityNameNode::SPrintEntityNameNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript)
-		{
-			AddInput(UGUIDManager::Generate(), EPinType::Flow);
-			AddInput(UGUIDManager::Generate(), EPinType::Object);
-		}
-
-		I8 SPrintEntityNameNode::OnExecute()
-		{
-			SEntity entity;
-			GetDataOnPin(EPinDirection::Input, 1, entity);
-			
-			if (OwningScript == nullptr || OwningScript->Scene == nullptr)
-				return 0;
-			
-			if (entity == SEntity::Null)
-			{
-				HV_LOG_INFO("Entity is Null");
-				return 0;
-			}
-
-			SMetaDataComponent* metaData = OwningScript->Scene->GetComponent<SMetaDataComponent>(entity);
-
-			HV_LOG_INFO(metaData->Name.Data());		
-			return 0;
-		}
-}
+	}
 }

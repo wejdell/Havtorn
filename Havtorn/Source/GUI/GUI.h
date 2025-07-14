@@ -578,6 +578,7 @@ namespace Havtorn
 		StringArray,
 		Object,
 		ObjectArray,
+		Asset,
 		Function,
 		Delegate,
 	};
@@ -587,6 +588,23 @@ namespace Havtorn
 		None,
 		Entity,
 		Component
+	};
+
+	enum class EGUIAssetType : U8
+	{
+		None,
+		StaticMesh,
+		SkeletalMesh,
+		Texture,
+		Material,
+		Animation,
+		SpriteAnimation,
+		AudioOneShot,
+		AudioCollection,
+		VisualFX,
+		Scene,
+		Sequencer,
+		Script
 	};
 
 	enum class EGUIIconType 
@@ -667,6 +685,7 @@ namespace Havtorn
 		CHavtornStaticString<255> Name;
 		EGUIPinType Type = EGUIPinType::Unknown;
 		EGUIObjectDataType ObjectType = EGUIObjectDataType::None;
+		EGUIAssetType AssetType = EGUIAssetType::None;
 	};
 
 	struct SNodeOperation
@@ -717,7 +736,7 @@ namespace Havtorn
 		static void TextDisabled(const char* fmt, ...);
 		static void TextUnformatted(const char* text);
 		static bool InputText(const char* label, CHavtornStaticString<255>* customString);
-		static bool InputText(const char* label, char* buffer, U64 bufferSize);
+		static bool InputText(const char* label, std::string& buffer);
 
 		static void SetTooltip(const char* fmt, ...);
 
@@ -952,6 +971,8 @@ namespace Havtorn
 
 		static void LogToClipboard();
 		static void LogFinish();
+		static void CopyToClipboard(const char* text);
+		static std::string CopyFromClipboard();
 
 		static void MemFree(void* ptr);
 

@@ -68,7 +68,7 @@ namespace Havtorn
 				SGuiPayload payload = GUI::GetDragDropPayload();
 				if (payload.Data == nullptr)
 				{
-					GUI::SetDragDropPayload("EntityAssignmentDrag", &selectedEntity, sizeof(SEntity));
+					GUI::SetDragDropPayload("EntityDrag", &selectedEntity, sizeof(SEntity));
 				}
 				GUI::Text("entityName");
 
@@ -296,35 +296,8 @@ namespace Havtorn
 		if (staticMesh == nullptr)
 			return;
 
-		Manager->GetRenderManager()->TryLoadStaticMeshComponent(assetRep->Name + ".hva", staticMesh);
-
-		SMaterialComponent* materialComp = Scene->GetComponent<SMaterialComponent>(staticMesh);
-		if (materialComp != nullptr)
-		{
-			U8 meshMaterialNumber = staticMesh->NumberOfMaterials;
-			I8 materialNumberDifference = meshMaterialNumber - static_cast<U8>(materialComp->Materials.size());
-
-			// NR: Add materials to correspond with mesh
-			if (materialNumberDifference > 0)
-			{
-				for (U8 i = 0; i < materialNumberDifference; i++)
-				{
-					materialComp->Materials.emplace_back();
-				}
-			}
-			// NR: Remove materials to correspond with mesh
-			else if (materialNumberDifference < 0)
-			{
-				for (U8 i = 0; i < materialNumberDifference * -1.0f; i++)
-				{
-					materialComp->Materials.pop_back();
-				}
-			}
-			// NR: Do nothing
-			else
-			{ 
-			}
-		}
+		// TODO.NW: Figure out why we did TryLoadStaticMeshComponent here before
+		Manager->GetRenderManager()->LoadStaticMeshComponent(assetRep->Name + ".hva", staticMesh, Scene);
 	}
 
 	void CInspectorWindow::HandleMaterialAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep)
@@ -366,8 +339,7 @@ namespace Havtorn
 		{
 			auto& scriptBinding = component->Script->DataBindings[i];
 			auto& componentBinding = component->DataBindings[i];
-			componentBinding.ObjectType = scriptBinding.ObjectType;
-			componentBinding.Type = scriptBinding.Type;
+			componentBinding = scriptBinding;
 		}
 	}
 

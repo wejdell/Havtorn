@@ -61,6 +61,7 @@ namespace Havtorn
 		EAssetType AssetType = EAssetType::None;
 		std::filesystem::directory_entry DirectoryEntry = {};
 		CRenderTexture TextureRef;
+		// TODO.NW: Make static string, figure out relationship to engine asset
 		std::string Name = "";
 		bool UsingEditorTexture = false;
 	};
