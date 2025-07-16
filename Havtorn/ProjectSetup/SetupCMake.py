@@ -2,6 +2,7 @@ import os
 import sys
 import subprocess
 from pathlib import Path
+import pprint
 
 import Utils
 
@@ -24,6 +25,21 @@ class CMakeConfiguration:
 
     @classmethod
     def CheckIfCMakeInstalled(cls):
+        env_var = os.environ
+        path_env_var = env_var["Path"]
+        cmake_filter = "CMake"
+        path_env_var_split = path_env_var.split(";")
+        filtered_path_env_var_split = list(filter(lambda p: cmake_filter in p, path_env_var_split))
+        
+        for path in filtered_path_env_var_split:
+            print(path)
+
+        print(filtered_path_env_var_split)
+
+        for path in path_env_var_split:
+            print(path)
+        #this work if user has env variable with CMake in it
+        #cmakeExe = Path(f"{filtered_path_env_var_split[0]}/cmake.exe");
         cmakeExe = Path(f"{cls.cmakeDirectory}/cmake-{cls.cmakeVersion}-windows-x86_64/bin/cmake.exe");
         if (not cmakeExe.exists()):
             return cls.InstallCMake()
