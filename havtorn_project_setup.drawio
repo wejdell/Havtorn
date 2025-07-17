@@ -1,0 +1,484 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:140.0) Gecko/20100101 Firefox/140.0" version="28.0.5">
+  <diagram name="Sida-1" id="89lRU2nc9r84G0V3kyM3">
+    <mxGraphModel dx="1426" dy="796" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-37" target="d-Ewwdn859IQXF5Fayrs-5" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="120" y="100" as="sourcePoint" />
+            <mxPoint x="160" y="170" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-5" target="d-Ewwdn859IQXF5Fayrs-6" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-5" value="MasterSetup.py" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="60" y="150" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-44" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-6" target="d-Ewwdn859IQXF5Fayrs-7" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-6" value="SetupMSVC using SetupMSVC.py" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="60" y="230" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-34" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-7" target="d-Ewwdn859IQXF5Fayrs-29" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-7" value="Validate MSVC Requirements" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="200" y="290" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-9" value="" style="endArrow=classic;html=1;rounded=0;" parent="1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="40" y="20" as="sourcePoint" />
+            <mxPoint x="140" y="20" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-11" value="Sub process" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="d-Ewwdn859IQXF5Fayrs-9" vertex="1" connectable="0">
+          <mxGeometry x="-0.0107" y="-1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-10" value="" style="endArrow=classic;html=1;rounded=0;" parent="1" edge="1">
+          <mxGeometry width="50" height="50" relative="1" as="geometry">
+            <mxPoint x="40" y="20" as="sourcePoint" />
+            <mxPoint x="40" y="120" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-12" value="Main Process" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];rotation=-90;" parent="d-Ewwdn859IQXF5Fayrs-10" vertex="1" connectable="0">
+          <mxGeometry x="-0.0702" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-83" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-23" target="d-Ewwdn859IQXF5Fayrs-53" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-23" value="SetupPython using SetupPython.py" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="60" y="760" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-49" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-26" target="d-Ewwdn859IQXF5Fayrs-23" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-50" value="Yes" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="d-Ewwdn859IQXF5Fayrs-49" vertex="1" connectable="0">
+          <mxGeometry x="-0.1894" relative="1" as="geometry">
+            <mxPoint x="147" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-51" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0.177;exitY=0.724;exitDx=0;exitDy=0;exitPerimeter=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-26" target="d-Ewwdn859IQXF5Fayrs-70" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="260" y="560" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-52" value="No" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="d-Ewwdn859IQXF5Fayrs-51" vertex="1" connectable="0">
+          <mxGeometry x="-0.3251" y="2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-26" value="&lt;span style=&quot;background-color: light-dark(#ffffff, var(--ge-dark-color, #121212));&quot;&gt;Does Visual Studio installer exist under ProgramFiles(x86)&lt;/span&gt;" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="350" y="470" width="90" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-48" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-29" target="d-Ewwdn859IQXF5Fayrs-26" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-29" value="&lt;span style=&quot;background-color: light-dark(#ffffff, var(--ge-dark-color, #121212));&quot;&gt;Run and check result of VerifyBuildTools.bat&lt;/span&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="200" y="410" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-41" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-70" target="d-Ewwdn859IQXF5Fayrs-36" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="305" y="605" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-42" value="Yes" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="d-Ewwdn859IQXF5Fayrs-41" vertex="1" connectable="0">
+          <mxGeometry x="-0.382" y="2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-67" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-70" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="120" y="760" as="targetPoint" />
+            <mxPoint x="215" y="645" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-68" value="No" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="d-Ewwdn859IQXF5Fayrs-67" vertex="1" connectable="0">
+          <mxGeometry x="-0.4702" y="2" relative="1" as="geometry">
+            <mxPoint x="-12" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-43" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-36" target="d-Ewwdn859IQXF5Fayrs-23" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-36" value="InstallBuildTools.bat" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="335" y="650" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-37" value="SetupProject.bat" style="ellipse;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="60" y="40" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-38" value="End SetupProject.bat" style="ellipse;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="50" y="3610" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-84" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-53" target="d-Ewwdn859IQXF5Fayrs-55" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-53" value="Validate Python Requirements" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="200" y="820" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-59" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-55" target="d-Ewwdn859IQXF5Fayrs-58" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-64" value="&amp;gt;= required version" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="d-Ewwdn859IQXF5Fayrs-59" vertex="1" connectable="0">
+          <mxGeometry x="-0.16" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-79" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-55" target="d-Ewwdn859IQXF5Fayrs-78" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-80" value="&amp;lt;= required version" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="d-Ewwdn859IQXF5Fayrs-79" vertex="1" connectable="0">
+          <mxGeometry x="-0.8354" y="1" relative="1" as="geometry">
+            <mxPoint x="-56" y="34" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-55" value="&lt;span style=&quot;background-color: light-dark(#ffffff, var(--ge-dark-color, #121212));&quot;&gt;Check Python version&amp;nbsp;&lt;/span&gt;" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="215" y="900" width="90" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-65" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-58" target="d-Ewwdn859IQXF5Fayrs-75" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="260" y="1169" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-66" value="Not found" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="d-Ewwdn859IQXF5Fayrs-65" vertex="1" connectable="0">
+          <mxGeometry x="-0.2976" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-87" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="d-Ewwdn859IQXF5Fayrs-58" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="120" y="1319.9999999999998" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="160" y="1085" />
+              <mxPoint x="160" y="1280" />
+              <mxPoint x="120" y="1280" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-88" value="Not found/Not installed" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="d-Ewwdn859IQXF5Fayrs-87" vertex="1" connectable="0">
+          <mxGeometry x="-0.74" y="2" relative="1" as="geometry">
+            <mxPoint x="8" y="43" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-58" value="&lt;span style=&quot;background-color: light-dark(#ffffff, var(--ge-dark-color, #121212));&quot;&gt;Check required &amp;lt;packages&amp;gt;&lt;/span&gt;" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="215" y="1040" width="90" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-70" value="&lt;span style=&quot;background-color: light-dark(#ffffff, var(--ge-dark-color, #121212));&quot;&gt;Permission to install Build Tools&lt;/span&gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
+          <mxGeometry x="210" y="570" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-74" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FF3333;exitX=0.5;exitY=1;exitDx=0;exitDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-73" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="170" y="600" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="190" y="600" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-73" value="&lt;span style=&quot;color: rgb(255, 51, 51);&quot;&gt;Continues without validation !&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="160" y="530" width="60" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-76" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;exitX=1;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-75" target="d-Ewwdn859IQXF5Fayrs-58" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="310" y="1200" />
+              <mxPoint x="350" y="1200" />
+              <mxPoint x="350" y="1085" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-77" value="Yes" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="d-Ewwdn859IQXF5Fayrs-76" vertex="1" connectable="0">
+          <mxGeometry x="0.1134" y="-3" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-85" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-75" target="d-Ewwdn859IQXF5Fayrs-58" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="370" y="1210" />
+              <mxPoint x="370" y="1085" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-86" value="No" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="d-Ewwdn859IQXF5Fayrs-85" vertex="1" connectable="0">
+          <mxGeometry x="-0.1695" y="-1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-75" value="Install &amp;lt;package&amp;gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
+          <mxGeometry x="200" y="1180" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-108" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-78" target="d-Ewwdn859IQXF5Fayrs-91" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-78" value="SetupCMake using SetupCMake.py" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="60" y="1320" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-82" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FF3333;" parent="1" source="d-Ewwdn859IQXF5Fayrs-81" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="120" y="970" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-81" value="&lt;span style=&quot;color: rgb(255, 51, 51);&quot;&gt;Continues without validation !&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="90" y="870" width="60" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-90" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FF3333;" parent="1" source="d-Ewwdn859IQXF5Fayrs-89" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="160" y="1120" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-89" value="&lt;span style=&quot;color: rgb(255, 51, 51);&quot;&gt;Continues without validation !&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="130" y="1020" width="60" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-107" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-91" target="d-Ewwdn859IQXF5Fayrs-92" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-91" value="Validate CMake Installation" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="200" y="1380" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-94" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-92" target="d-Ewwdn859IQXF5Fayrs-93" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-95" value="Found" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="d-Ewwdn859IQXF5Fayrs-94" vertex="1" connectable="0">
+          <mxGeometry x="-0.7847" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-104" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-92" target="d-Ewwdn859IQXF5Fayrs-97" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-105" value="Not found" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="d-Ewwdn859IQXF5Fayrs-104" vertex="1" connectable="0">
+          <mxGeometry x="-0.2603" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-92" value="&lt;span style=&quot;background-color: light-dark(#ffffff, var(--ge-dark-color, #121212));&quot;&gt;Check &amp;lt;directory&amp;gt; for CMake.exe&lt;/span&gt;" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="215" y="1460" width="90" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-110" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-93" target="d-Ewwdn859IQXF5Fayrs-109" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-93" value="Update Git-submodules" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="60" y="1840" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-98" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-97" target="d-Ewwdn859IQXF5Fayrs-93" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-99" value="No" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="d-Ewwdn859IQXF5Fayrs-98" vertex="1" connectable="0">
+          <mxGeometry x="-0.6714" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-101" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-97" target="d-Ewwdn859IQXF5Fayrs-100" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-102" value="Yes" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="d-Ewwdn859IQXF5Fayrs-101" vertex="1" connectable="0">
+          <mxGeometry x="-0.3833" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-97" value="Install CMake &amp;lt;version nr&amp;gt;" style="shape=parallelogram;perimeter=parallelogramPerimeter;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
+          <mxGeometry x="200" y="1590" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-103" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="d-Ewwdn859IQXF5Fayrs-100" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="120" y="1840" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-100" value="Install to &amp;lt;SetupProject.bat-folder&amp;gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="200" y="1693.5" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-112" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-109" target="d-Ewwdn859IQXF5Fayrs-38" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="20" y="1985" />
+              <mxPoint x="20" y="3460" />
+              <mxPoint x="110" y="3460" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-113" value="No" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="d-Ewwdn859IQXF5Fayrs-112" vertex="1" connectable="0">
+          <mxGeometry x="-0.4388" y="-2" relative="1" as="geometry">
+            <mxPoint x="32" y="-439" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-114" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-109" target="d-Ewwdn859IQXF5Fayrs-111" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-115" value="Yes" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" parent="d-Ewwdn859IQXF5Fayrs-114" vertex="1" connectable="0">
+          <mxGeometry x="-0.2259" y="2" relative="1" as="geometry">
+            <mxPoint x="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-109" value="Is CMake installed" style="rhombus;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="75" y="1940" width="90" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-119" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-111" target="d-Ewwdn859IQXF5Fayrs-116" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-111" value="Run CMake" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="60" y="2080" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-120" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-116" target="d-Ewwdn859IQXF5Fayrs-118" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-116" value="GenerateProjectFiles.bat" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="200" y="2140" width="140" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="d-Ewwdn859IQXF5Fayrs-117" target="d-Ewwdn859IQXF5Fayrs-122" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-117" value="CompileDependencies.bat" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="195" y="2330" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-32" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" parent="1" source="d-Ewwdn859IQXF5Fayrs-118" target="d-Ewwdn859IQXF5Fayrs-117" edge="1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="175" y="2260" />
+              <mxPoint x="175" y="2360" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-118" value="&lt;div&gt;Generate using CMake&amp;nbsp;&amp;nbsp;&lt;br&gt;from /Source to /BuildFiles&lt;/div&gt;&lt;div&gt;with our CMakeLists.txt&amp;nbsp;&lt;/div&gt;" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="195" y="2230" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="d-Ewwdn859IQXF5Fayrs-122" target="d-Ewwdn859IQXF5Fayrs-123" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-122" value="Create PhysX Lib Debug &amp;amp; Release directories in External" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="195" y="2410" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="d-Ewwdn859IQXF5Fayrs-123" target="d-Ewwdn859IQXF5Fayrs-124" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-123" value="Change directory to External/Assimp/" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="195" y="2500" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="d-Ewwdn859IQXF5Fayrs-124" target="vyf_GZH-8ZrKq62IMzIk-1" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="d-Ewwdn859IQXF5Fayrs-124" value="Build VS using CMake with its CMakeLists.txt" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="195" y="2590" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-18" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="vyf_GZH-8ZrKq62IMzIk-1" target="vyf_GZH-8ZrKq62IMzIk-2" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-1" value="Copy Assimp DynamicLib and StaticLib files to Bin and Lib folders (Debug only)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="195" y="2670" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-19" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" parent="1" source="vyf_GZH-8ZrKq62IMzIk-2" target="vyf_GZH-8ZrKq62IMzIk-3" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-2" value="Change directory to External/PhysX/physx/" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="195" y="2750" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-20" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="vyf_GZH-8ZrKq62IMzIk-3" target="vyf_GZH-8ZrKq62IMzIk-5" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-3" value="Generate PhysX files" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="195" y="2830" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="vyf_GZH-8ZrKq62IMzIk-4" target="vyf_GZH-8ZrKq62IMzIk-6" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-4" value="Copy PhysX DynamicLibs and StaticLibs to Bin and Lib folders (Debug only)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="195" y="2990" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="vyf_GZH-8ZrKq62IMzIk-5" target="vyf_GZH-8ZrKq62IMzIk-4" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-5" value="Build PhysX using CMake targeting specific version" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="195" y="2910" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-23" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="vyf_GZH-8ZrKq62IMzIk-6" target="vyf_GZH-8ZrKq62IMzIk-7" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-6" value="Change directory to External/box2d/" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="195" y="3070" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="vyf_GZH-8ZrKq62IMzIk-7" target="vyf_GZH-8ZrKq62IMzIk-8" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-7" value="Fully re-create /build/ directory" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="195" y="3150" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-25" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="vyf_GZH-8ZrKq62IMzIk-8" target="vyf_GZH-8ZrKq62IMzIk-9" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-8" value="Build box2d using CMake with settings" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="195" y="3230" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-26" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="vyf_GZH-8ZrKq62IMzIk-9" target="vyf_GZH-8ZrKq62IMzIk-11" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-9" value="Copy box2d StaticLib to Lib folder (Debug only)" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="195" y="3310" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-10" value="To do?&lt;br&gt;Add Release&amp;nbsp;&lt;br&gt;Static- &amp;amp; Dynamic-Libs" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;" parent="1" vertex="1">
+          <mxGeometry x="375" y="2360" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-27" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="vyf_GZH-8ZrKq62IMzIk-11" target="vyf_GZH-8ZrKq62IMzIk-12" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-11" value="Change directory to External/DirectTex/" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="195" y="3390" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="vyf_GZH-8ZrKq62IMzIk-12" target="vyf_GZH-8ZrKq62IMzIk-13" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-12" value="Build DirectTex using CMake with its CMakeLists.txt and settings" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="195" y="3470" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-29" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" parent="1" source="vyf_GZH-8ZrKq62IMzIk-13" target="d-Ewwdn859IQXF5Fayrs-38" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-13" value="Copy DirectTex DynamicLib and StaticLib to Bin and Lib folders" style="rounded=0;whiteSpace=wrap;html=1;" parent="1" vertex="1">
+          <mxGeometry x="195" y="3550" width="150" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-31" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#FF3333;" parent="1" source="vyf_GZH-8ZrKq62IMzIk-30" target="d-Ewwdn859IQXF5Fayrs-118" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="vyf_GZH-8ZrKq62IMzIk-30" value="&lt;span style=&quot;color: rgb(255, 51, 51);&quot;&gt;&lt;span style=&quot;color: rgb(255, 51, 51);&quot;&gt;Error with ImGui in CMakeLists&lt;/span&gt;:&lt;br&gt;CMake Error at CMakeLists.txt:185 (source_group):&lt;br&gt;&amp;nbsp; source_group ROOT:&amp;nbsp;&lt;br&gt;&amp;nbsp; F:/Havtorn/Havtorn/External&quot; is not a prefix of file:&lt;br&gt;&amp;nbsp; F:/Havtorn/Havtorn/External/imgui/imconfig.h&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" parent="1" vertex="1">
+          <mxGeometry x="390" y="2220" width="310" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="5fy0qYa1O1TsZfhHRj1W-1" value="Current" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="190" y="60" width="60" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="5fy0qYa1O1TsZfhHRj1W-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;strokeColor=#FF3333;" edge="1" parent="1" source="5fy0qYa1O1TsZfhHRj1W-2">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="120" y="1510" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="5fy0qYa1O1TsZfhHRj1W-2" value="&lt;span style=&quot;color: rgb(255, 51, 51);&quot;&gt;Does not check version on installed CMake&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="15" y="1490" width="60" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="5fy0qYa1O1TsZfhHRj1W-5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;strokeColor=#FF3333;" edge="1" parent="1" source="5fy0qYa1O1TsZfhHRj1W-4" target="vyf_GZH-8ZrKq62IMzIk-8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="5fy0qYa1O1TsZfhHRj1W-4" value="&lt;span style=&quot;color: rgb(255, 51, 51);&quot;&gt;A lot of errors:&lt;br&gt;error C2085: &#39;something&#39;: not in formal parameter list&lt;br&gt;error C2061: syntax error: identifier &#39;something2&#39;&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+          <mxGeometry x="414" y="3240" width="306" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="5fy0qYa1O1TsZfhHRj1W-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="5fy0qYa1O1TsZfhHRj1W-6" target="d-Ewwdn859IQXF5Fayrs-92">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="5fy0qYa1O1TsZfhHRj1W-6" value="To do?&amp;nbsp;&lt;br&gt;Expand directory search, Environment Variables PATH also an option" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+          <mxGeometry x="375" y="1457.5" width="215" height="95" as="geometry" />
+        </mxCell>
+        <mxCell id="5fy0qYa1O1TsZfhHRj1W-8" value="To do?&amp;nbsp;&lt;br&gt;Change setup-pipeline to Windows-platform folder, if other platforms supported in the future, separate folder" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+          <mxGeometry x="290" y="40" width="235" height="127.5" as="geometry" />
+        </mxCell>
+        <mxCell id="5fy0qYa1O1TsZfhHRj1W-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="5fy0qYa1O1TsZfhHRj1W-9" target="d-Ewwdn859IQXF5Fayrs-26">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="5fy0qYa1O1TsZfhHRj1W-9" value="To do?&amp;nbsp;&lt;br&gt;Is version important?" style="shape=hexagon;perimeter=hexagonPerimeter2;whiteSpace=wrap;html=1;fixedSize=1;" vertex="1" parent="1">
+          <mxGeometry x="500" y="480" width="140" height="70" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
