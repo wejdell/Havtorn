@@ -20,7 +20,7 @@ class CMakeConfiguration:
             print("CMake is not installed.")
             return False
 
-        print(f"Correct CMake located at {os.path.abspath(cls.cmakeDirectory)}")
+        #print(f"Correct CMake located at {os.path.abspath(cls.cmakeDirectory)}")
         return True
 
     @classmethod
@@ -44,6 +44,8 @@ class CMakeConfiguration:
         if (not cmakeExe.exists()):
             return cls.InstallCMake()
 
+        print(f"CMake found: {cmakeExe}")
+        # verify version
         return True
 
     @classmethod
@@ -54,7 +56,7 @@ class CMakeConfiguration:
             if reply == 'n':
                 return False
             permissionGranted = (reply == 'y')
-
+        # does this CMake installtion add PATH Env_Var?
         cmakePath = f"{cls.cmakeDirectory}/cmake-{cls.cmakeVersion}-windows.zip"
         print("Downloading {0:s} to {1:s}".format(cls.cmakeZipUrls, cmakePath))
         Utils.DownloadFile(cls.cmakeZipUrls, cmakePath)
