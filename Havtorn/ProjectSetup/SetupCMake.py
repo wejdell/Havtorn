@@ -39,8 +39,8 @@ class CMakeConfiguration:
         for path in path_env_var_split:
             print(path)
         #this work if user has env variable with CMake in it
-        #cmakeExe = Path(f"{filtered_path_env_var_split[0]}/cmake.exe");
-        cmakeExe = Path(f"{cls.cmakeDirectory}/cmake-{cls.cmakeVersion}-windows-x86_64/bin/cmake.exe");
+        cmakeExe = Path(f"{filtered_path_env_var_split[0]}/cmake.exe");
+        #cmakeExe = Path(f"{cls.cmakeDirectory}/cmake-{cls.cmakeVersion}-windows-x86_64/bin/cmake.exe");
         if (not cmakeExe.exists()):
             return cls.InstallCMake()
 
