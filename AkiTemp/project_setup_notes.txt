@@ -1,0 +1,35 @@
+CMake Error at CMakeLists.txt:185 (source_group):
+  source_group ROOT: 
+  F:/Havtorn/Havtorn/External" is not a prefix of file:
+  F:/Havtorn/Havtorn/External/imgui/imconfig.h
+
+-- Configuring incomplete, errors occurred!
+
+A subdirectory or file -p already exists.
+Error occurred while processing: -p.
+
+
+// a lot of errors in box2d these types:
+F:\Havtorn\Havtorn\External\box2d\src\solver.h(127,17): error C2085: 'workerCount': not in formal parameter list [F:\Ha
+vtorn\Havtorn\External\box2d\build\src\box2d.vcxproj]
+F:\Havtorn\Havtorn\External\box2d\src\solver.h(129,2): error C2061: syntax error: identifier 'b2SolverStage' [F:\Havtor
+n\Havtorn\External\box2d\build\src\box2d.vcxproj]
+
+CMakeLists.txt
+set(EXTERNAL_FOLDER "../External/")
+${EXTERNAL_FOLDER}imgui/imconfig.h => 
+    ../External/imgui/imconfig.h
+
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} "../External/" FILES ${IMGUI_FILES})
+                                                    ^removed -->
+                                                    source_group ROOT: 
+                                                    F:/Havtorn/Havtorn/Source is not a prefix of file:
+                                                    F:/Havtorn/Havtorn/External/imgui/imconfig.h
+Remove EXTERNAL_FOLDER from IMGUI_FILES -->
+
+
+SetupCMake isntalls a version of CMake that does not support
+certain features we use https://cmake.org/cmake/help/latest/command/source_group.html
+e.g TREE    Added in version 3.8.
+
+For Python will likely need a script that sets Env Variables
