@@ -1,3 +1,25 @@
+
+
+07 20
+Clean install from Laptop
+Remove all development related things: 
+O Visual Studio
+O C++
+O Python
+O CMake
+O MSVC Build tools
+X Git
+
+Run SetupProjects.bat
+Python not found -> Please install
+
+We could use winget
+Try manual web-query for pythoninstaller
+https://docs.python.org/3/using/windows.html
+
+
+
+07 17
 CMake Error at CMakeLists.txt:185 (source_group):
   source_group ROOT: 
   F:/Havtorn/Havtorn/External" is not a prefix of file:
