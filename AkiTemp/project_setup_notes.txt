@@ -18,6 +18,7 @@ Try manual web-query for pythoninstaller
 https://docs.python.org/3/using/windows.html
 
 need to force install path for python, ensure PATH & script cont
+https://docs.python.org/3/using/windows.html
 
 
 

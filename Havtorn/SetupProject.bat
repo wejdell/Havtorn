@@ -28,13 +28,16 @@ rem Define the installation directory
 set "downloadDir=SetupRequirements"
 set "installDir=SetupRequirements" 
 
-rem Download Python installer 
-rem bitsadmin.exe /transfer "PythonInstaller" "%pythonDownloadUrl%" "SetupRequirements\python-%pythonVersion%-amd64.exe" 
-echo:Downloading to "%~dp0%downloadDir%\installer-python-%pythonVersion%-amd64.exe"
+rem rem Download Python installer 
+rem rem bitsadmin.exe /transfer "PythonInstaller" "%pythonDownloadUrl%" "SetupRequirements\python-%pythonVersion%-amd64.exe" 
+rem echo:Downloading to "%~dp0%downloadDir%\installer-python-%pythonVersion%-amd64.exe"
+rem PAUSE
+rem bitsadmin /transfer pythonDownload /download /priority high "%pythonDownloadUrl%" "%~dp0%downloadDir%\installer-python-%pythonVersion%-amd64.exe"
+
+if not exist "SetupRequirements//Python//" mkdir SetupRequirements\Python
+echo: "%~dp0SetupRequirements//Python//"
 PAUSE
-bitsadmin /transfer pythonDownload /download /priority high "%pythonDownloadUrl%" "%~dp0%downloadDir%\installer-python-%pythonVersion%-amd64.exe"
-if not exist "SetupRequirements//Python//" mkdir SetupRequirements/Python
-"%~dp0\\%downloadDir%\\installer-python-%pythonVersion%-amd64.exe" InstallAllUsers=1 AssociateFiles=1 PrependPath=1 AppendPath=0 DefaultPath=%installDir% /wait 
+"%~dp0%downloadDir%\installer-python-%pythonVersion%-amd64.exe" InstallAllUsers=0 TargetDir="%~dp0SetupRequirements\Python" AssociateFiles=1 PrependPath=1 AppendPath=0 DefaultPath=%installDir% /wait 
   
 rem Clean up 
 rem del "%TEMP%\python-installer.exe" /f /q 
