@@ -21,6 +21,20 @@ namespace Havtorn
 			static SComponentLoopNodeEditorContext Context;
 		};
 
+		struct SOnBeginOverlapNodeEditorContext : public SNodeEditorContext
+		{
+			SOnBeginOverlapNodeEditorContext();
+			virtual SNode* AddNode(SScript* script, const U64 existingID = 0) const override;
+			static SOnBeginOverlapNodeEditorContext Context;
+		};
+
+		struct SOnEndOverlapNodeEditorContext : public SNodeEditorContext
+		{
+			SOnEndOverlapNodeEditorContext();
+			virtual SNode* AddNode(SScript* script, const U64 existingID = 0) const override;
+			static SOnEndOverlapNodeEditorContext Context;
+		};
+
 		struct SPrintEntityNameNodeEditorContext : public SNodeEditorContext
 		{
 			SPrintEntityNameNodeEditorContext();

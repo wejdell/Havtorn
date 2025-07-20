@@ -30,7 +30,7 @@ namespace Havtorn
 		World = GEngine::GetWorld();
 		World->OnBeginPlayDelegate.AddMember(this, &CGameManager::OnBeginPlay);
 		World->OnPausePlayDelegate.AddMember(this, &CGameManager::OnPausePlay);
-		World->OnStopPlayDelegate.AddMember(this, &CGameManager::OnStopPlay);
+		World->OnEndPlayDelegate.AddMember(this, &CGameManager::OnStopPlay);
 
 		//ImGui::SetCurrentContext(Havtorn::GImGuiManager::GetContext());
 

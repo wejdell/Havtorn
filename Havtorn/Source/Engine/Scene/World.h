@@ -72,6 +72,9 @@ namespace Havtorn
 		ENGINE_API CAssetRegistry* GetAssetRegistry() const;
 		
 		template<typename T>
+		void CreateScene();
+
+		template<typename T>
 		void AddScene(const std::string& filePath);
 
 		template<typename T>
@@ -120,7 +123,10 @@ namespace Havtorn
 	public:
 		CMulticastDelegate<CScene*> OnBeginPlayDelegate;
 		CMulticastDelegate<CScene*> OnPausePlayDelegate;
-		CMulticastDelegate<CScene*> OnStopPlayDelegate;
+		CMulticastDelegate<CScene*> OnEndPlayDelegate;
+
+		CMulticastDelegate<CScene*, const SEntity, const SEntity> OnBeginOverlap;
+		CMulticastDelegate<CScene*, const SEntity, const SEntity> OnEndOverlap;
 
 	private:
 		CWorld() = default;
@@ -164,10 +170,16 @@ namespace Havtorn
 	};
 
 	template<typename T>
-	inline void CWorld::AddScene(const std::string& filePath)
+	inline void CWorld::CreateScene()
 	{
 		Scenes.emplace_back(std::make_unique<T>());
 		OnSceneCreatedDelegate.Broadcast(Scenes.back().get());
+	}
+
+	template<typename T>
+	inline void CWorld::AddScene(const std::string& filePath)
+	{
+		CreateScene<T>();
 		LoadScene(filePath, Scenes.back().get());
 	}
 

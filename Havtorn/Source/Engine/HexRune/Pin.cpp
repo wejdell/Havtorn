@@ -25,9 +25,11 @@ namespace Havtorn
 
             SetDataFromLinkedPin();
 
-            LinkedPin->OwningNode->Execute();
-
-            SetDataFromLinkedPin();
+            if (!LinkedPin->OwningNode->Outputs.empty() && LinkedPin->OwningNode->Outputs[0].Type != EPinType::Flow)
+            {
+                LinkedPin->OwningNode->Execute();
+                SetDataFromLinkedPin();
+            }
         }
 
         void SPin::SetDataFromLinkedPin()

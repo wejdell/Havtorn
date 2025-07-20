@@ -5,6 +5,8 @@
 #include "ECS/Components/Physics2DComponent.h"
 #include "ECS/Components/TransformComponent.h"
 #include "Scene/Scene.h"
+#include "Scene/World.h"
+#include "Engine.h"
 
 #include <pvd/PxPvd.h>
 
@@ -271,16 +273,18 @@ namespace Havtorn
 			if (otherEntity == nullptr)
 				return;
 
-			SMetaDataComponent* triggerMetaData = havtornScene->GetComponent<SMetaDataComponent>(*triggerEntity);
-			if (triggerMetaData == nullptr)
-				return;
+			GEngine::GetWorld()->OnBeginOverlap.Broadcast(havtornScene, *triggerEntity, *otherEntity);
 
-			SMetaDataComponent* otherMetaData = havtornScene->GetComponent<SMetaDataComponent>(*otherEntity);
-			if (otherMetaData == nullptr)
-				return;
+			//SMetaDataComponent* triggerMetaData = havtornScene->GetComponent<SMetaDataComponent>(*triggerEntity);
+			//if (triggerMetaData == nullptr)
+			//	return;
 
-			// TODO.NR: Probably want to notify a System here, to deal with the trigger in gameplay code
-			HV_LOG_INFO("%s entered trigger volume with name %s", otherMetaData->Name.Data(), triggerMetaData->Name.Data());
+			//SMetaDataComponent* otherMetaData = havtornScene->GetComponent<SMetaDataComponent>(*otherEntity);
+			//if (otherMetaData == nullptr)
+			//	return;
+
+			//// TODO.NR: Probably want to notify a System here, to deal with the trigger in gameplay code
+			//HV_LOG_INFO("%s entered trigger volume with name %s", otherMetaData->Name.Data(), triggerMetaData->Name.Data());
 		}
 
 		void CSimulationEventCallback::OnTriggerExit(const physx::PxActor* trigger, const physx::PxActor* otherActor, const physx::PxScene* physicsScene)
@@ -297,18 +301,20 @@ namespace Havtorn
 			if (otherEntity == nullptr)
 				return;
 
-			SMetaDataComponent* triggerMetaData = havtornScene->GetComponent<SMetaDataComponent>(*triggerEntity);
-			if (triggerMetaData == nullptr)
-				return;
+			GEngine::GetWorld()->OnEndOverlap.Broadcast(havtornScene, *triggerEntity, *otherEntity);
 
-			SMetaDataComponent* otherMetaData = havtornScene->GetComponent<SMetaDataComponent>(*otherEntity);
-			if (otherEntity == nullptr)
-				return;
+			//SMetaDataComponent* triggerMetaData = havtornScene->GetComponent<SMetaDataComponent>(*triggerEntity);
+			//if (triggerMetaData == nullptr)
+			//	return;
+
+			//SMetaDataComponent* otherMetaData = havtornScene->GetComponent<SMetaDataComponent>(*otherEntity);
+			//if (otherEntity == nullptr)
+			//	return;
 
 			//SPhysics3DComponent* triggerComponent
 
 			// TODO.NR: Probably want to notify a System here, to deal with the trigger in gameplay code
-			HV_LOG_INFO("%s exited trigger volume with name %s", otherMetaData->Name.Data(), triggerMetaData->Name.Data());
+			//HV_LOG_INFO("%s exited trigger volume with name %s", otherMetaData->Name.Data(), triggerMetaData->Name.Data());
 		}
 
 		physx::PxFilterFlags CSimulationFilterCallback::pairFound(physx::PxU64 /*pairID*/,

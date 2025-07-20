@@ -28,17 +28,17 @@ namespace Havtorn
 	{
 		for (SGhostyComponent* ghostyComponent : scene->GetComponents<SGhostyComponent>())
 		{
-			if (!ghostyComponent->IsValid())
+			if (!SComponent::IsValid(ghostyComponent))
 				continue;
 
 			ghostyComponent->State.Input = input;
 
 			STransformComponent* transform = scene->GetComponent<STransformComponent>(ghostyComponent);
-			if (!transform->IsValid())
+			if (!SComponent::IsValid(transform))
 				continue;
 
 			SPhysics2DComponent* physComponent = scene->GetComponent<SPhysics2DComponent>(ghostyComponent);
-			if (!physComponent->IsValid())
+			if (!SComponent::IsValid(physComponent))
 				continue;
 
 			if (ghostyComponent->State.IsInWalkingAnimationState)

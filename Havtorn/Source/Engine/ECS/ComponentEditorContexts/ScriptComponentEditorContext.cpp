@@ -84,7 +84,7 @@ namespace Havtorn
 				{
 					SEntity* draggedEntity = reinterpret_cast<SEntity*>(payload.Data);
 					const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(*draggedEntity);
-					const std::string draggedEntityName = draggedMetaDataComp->IsValid() ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
+					const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
 					GUI::SetTooltip(draggedEntityName.c_str());
 
 					if (draggedEntity->IsValid())

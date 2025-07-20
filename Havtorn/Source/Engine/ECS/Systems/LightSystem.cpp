@@ -20,7 +20,7 @@ namespace Havtorn
 	{
 		for (SDirectionalLightComponent* directionalLightComp : scene->GetComponents<SDirectionalLightComponent>())
 		{
-			if (!directionalLightComp->IsValid())
+			if (!SComponent::IsValid(directionalLightComp))
 				continue;
 
 			STransformComponent& transformComp = *scene->GetComponent<STransformComponent>(scene->MainCameraEntity);
@@ -57,7 +57,7 @@ namespace Havtorn
 
 		for (SPointLightComponent* pointLightComp : scene->GetComponents<SPointLightComponent>())
 		{
-			if (!pointLightComp->IsValid())
+			if (!SComponent::IsValid(pointLightComp))
 				continue;
 
 			SVector4 constantPosition = scene->GetComponent<STransformComponent>(pointLightComp->Owner)->Transform.GetMatrix().GetTranslation4();
@@ -81,7 +81,7 @@ namespace Havtorn
 
 		for (SSpotLightComponent* spotLightComp : scene->GetComponents<SSpotLightComponent>())
 		{
-			if (!spotLightComp->IsValid())
+			if (!SComponent::IsValid(spotLightComp))
 				continue;
 
 			const SMatrix spotlightProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, spotLightComp->Range);
