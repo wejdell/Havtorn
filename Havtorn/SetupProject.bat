@@ -38,6 +38,23 @@ rem Add-AppxPackage -Path "Setup.msix"
 rem # delete file
 rem Remove-Item "Setup.msix"
 
+set "pythonVersion=3.13.5" 
+set "pythonDownloadUrl=https://www.python.org/ftp/python/%pythonVersion%/python-%pythonVersion%-amd64.exe" 
+  
+rem Define the installation directory 
+set "downloadDir=SetupRequirements"
+set "installDir=SetupRequirements" 
+
+rem Download Python installer 
+rem bitsadmin.exe /transfer "PythonInstaller" "%pythonDownloadUrl%" "SetupRequirements\python-%pythonVersion%-amd64.exe" 
+echo: Downloading to "%~dp0%downloadDir%\python-%pythonVersion%-amd64.exe"
+bitsadmin /transfer pythonDownload /download /priority high "%pythonDownloadUrl%" "%~dp0\\%downloadDir%\\python-%pythonVersion%-amd64.exe"
+rem Install Python silently 
+rem"%TEMP%\python-installer.exe" /quiet InstallAllUsers=1 PrependPath=1 DefaultCustomInstall=1 DefaultPath=%installDir% /wait 
+  
+rem Clean up 
+rem del "%TEMP%\python-installer.exe" /f /q 
+
 rem cmd .\python-3.13.5.exe InstallAllUsers=1 AssociateFiles=1 PrependPath=0 AppendPath=1
 PAUSE
 goto :eof
