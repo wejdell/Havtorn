@@ -19,6 +19,18 @@ namespace Havtorn
 			virtual ENGINE_API I8 OnExecute() override;
 		};
 
+		struct SOnBeginOverlapNode : public SNode
+		{
+			ENGINE_API SOnBeginOverlapNode(const U64 id, SScript* owningScript);
+			virtual ENGINE_API I8 OnExecute() override;
+		};
+
+		struct SOnEndOverlapNode : public SNode
+		{
+			ENGINE_API SOnEndOverlapNode(const U64 id, SScript* owningScript);
+			virtual ENGINE_API I8 OnExecute() override;
+		};
+
 		struct SPrintEntityNameNode : public SNode
 		{
 			ENGINE_API SPrintEntityNameNode(const U64 id, SScript* owningScript);

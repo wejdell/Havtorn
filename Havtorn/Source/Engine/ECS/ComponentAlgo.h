@@ -16,7 +16,7 @@ namespace Havtorn
 	inline SEntity UComponentAlgo::GetClosestEntity3D(const SEntity& toEntity, const std::vector<T*>& fromComponents, const CScene* inScene)
 	{
 		const STransformComponent* transformComponent = inScene->GetComponent<STransformComponent>(toEntity);
-		if (!transformComponent->IsValid())
+		if (!SComponent::IsValid(transformComponent))
 			return SEntity::Null;
 
 		F32 minDistanceSquared = UMath::MaxFloat;
@@ -24,7 +24,7 @@ namespace Havtorn
 		for (const T* component : fromComponents)
 		{
 			const STransformComponent* otherTransformComponent = inScene->GetComponent<STransformComponent>(component);
-			if (!otherTransformComponent->IsValid())
+			if (!SComponent::IsValid(otherTransformComponent))
 				continue;
 
 			const F32 distanceSquared = transformComponent->Transform.GetMatrix().GetTranslation().DistanceSquared(otherTransformComponent->Transform.GetMatrix().GetTranslation());

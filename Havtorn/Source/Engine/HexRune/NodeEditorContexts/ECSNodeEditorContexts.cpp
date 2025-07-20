@@ -97,5 +97,39 @@ namespace Havtorn
 			script->AddEditorContext<STogglePointLightNodeEditorContext>(node->UID);
 			return node;
 		}
+
+		SOnBeginOverlapNodeEditorContext SOnBeginOverlapNodeEditorContext::Context = {};
+		SOnBeginOverlapNodeEditorContext::SOnBeginOverlapNodeEditorContext()
+		{
+			Name = "On Begin Overlap";
+			Category = "ECS";
+			Color = SColor::Red;
+		}
+		SNode* SOnBeginOverlapNodeEditorContext::AddNode(SScript* script, const U64 /*existingID*/) const
+		{
+			if (script == nullptr)
+				return nullptr;
+
+			SNode* node = script->AddNode<SOnBeginOverlapNode>(OnBeginOverlapNodeID);
+			script->AddEditorContext<SOnBeginOverlapNodeEditorContext>(node->UID);
+			return node;
+		}
+
+		SOnEndOverlapNodeEditorContext SOnEndOverlapNodeEditorContext::Context = {};
+		SOnEndOverlapNodeEditorContext::SOnEndOverlapNodeEditorContext()
+		{
+			Name = "On End Overlap";
+			Category = "ECS";
+			Color = SColor::Red;
+		}
+		SNode* SOnEndOverlapNodeEditorContext::AddNode(SScript* script, const U64 /*existingID*/) const
+		{
+			if (script == nullptr)
+				return nullptr;
+
+			SNode* node = script->AddNode<SOnEndOverlapNode>(OnEndOverlapNodeID);
+			script->AddEditorContext<SOnEndOverlapNodeEditorContext>(node->UID);
+			return node;
+		}
 	}
 }

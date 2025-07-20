@@ -70,7 +70,7 @@ namespace Havtorn
 						continue;
 
 					const SMetaDataComponent* metaDataComp = scene->GetComponent<SMetaDataComponent>(entity);
-					const std::string entryString = metaDataComp->IsValid() ? metaDataComp->Name.AsString() : "UNNAMED";
+					const std::string entryString = SComponent::IsValid(metaDataComp) ? metaDataComp->Name.AsString() : "UNNAMED";
 
 					if (Filter.PassFilter(entryString.c_str()))
 						activeEntities.emplace_back(entity);
@@ -86,10 +86,10 @@ namespace Havtorn
 			for (const SEntity& entity : activeEntities)
 			{
 				const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(entity);
-				const std::string draggedEntityName = draggedMetaDataComp->IsValid() ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
+				const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
 
 				const STransformComponent* transform = scene->GetComponent<STransformComponent>(entity);
-				if (!transform->IsValid())
+				if (!SComponent::IsValid(transform))
 					continue;
 
 				if (!transform->AttachedEntities.empty())
@@ -115,11 +115,11 @@ namespace Havtorn
 				{
 					SEntity* draggedEntity = reinterpret_cast<SEntity*>(payload.Data);
 					const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(*draggedEntity);
-					const std::string draggedEntityName = draggedMetaDataComp->IsValid() ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
+					const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
 					GUI::SetTooltip(draggedEntityName.c_str());
 
 					STransformComponent* draggedTransform = scene->GetComponent<STransformComponent>(*draggedEntity);
-					if (!draggedTransform->IsValid())
+					if (!SComponent::IsValid(draggedTransform))
 					{
 						GUI::SetTooltip("Cannot detach entity %s, it has no transform!", draggedEntityName.c_str());
 					}
@@ -129,10 +129,10 @@ namespace Havtorn
 						if (parentEntity.IsValid())
 						{
 							STransformComponent* parentTransform = scene->GetComponent<STransformComponent>(parentEntity);
-							if (parentTransform->IsValid())
+							if (SComponent::IsValid(parentTransform))
 							{
 								const SMetaDataComponent* parentMetaDataComp = scene->GetComponent<SMetaDataComponent>(parentEntity);
-								const std::string parentEntityName = parentMetaDataComp->IsValid() ? parentMetaDataComp->Name.AsString() : "UNNAMED";
+								const std::string parentEntityName = SComponent::IsValid(parentMetaDataComp) ? parentMetaDataComp->Name.AsString() : "UNNAMED";
 								GUI::SetTooltip("Detach %s from %s?", draggedEntityName.c_str(), parentEntityName.c_str());
 
 								if (payload.IsDelivery)
@@ -143,6 +143,14 @@ namespace Havtorn
 				}
 
 				GUI::EndDragDropTarget();
+			}
+
+			if (GUI::BeginPopupContextWindow())
+			{
+				if (GUI::MenuItem("Create New"))
+					scene->AddEntity("New Entity");
+
+				GUI::EndPopup();
 			}
 		}
 		GUI::EndChild();
@@ -158,7 +166,7 @@ namespace Havtorn
 		for (SEntity child : children)
 		{
 			const STransformComponent* transform = scene->GetComponent<STransformComponent>(child);
-			if (!transform->IsValid())
+			if (!SComponent::IsValid(transform))
 				continue;
 
 			if (!transform->AttachedEntities.empty())
@@ -178,7 +186,7 @@ namespace Havtorn
 			GUI::PushID(STATIC_I32(entity.GUID));
 
 			const SMetaDataComponent* metaDataComp = scene->GetComponent<SMetaDataComponent>(entity);
-			const std::string entryString = metaDataComp->IsValid() ? metaDataComp->Name.AsString() : "UNNAMED";
+			const std::string entryString = SComponent::IsValid(metaDataComp) ? metaDataComp->Name.AsString() : "UNNAMED";
 
 			std::vector<ETreeNodeFlag> flags = { ETreeNodeFlag::SpanAvailWidth, ETreeNodeFlag::DefaultOpen };
 
@@ -186,7 +194,10 @@ namespace Havtorn
 				flags.emplace_back(ETreeNodeFlag::Selected);
 
 			STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(entity);
-			if (transformComponent->IsValid() && transformComponent->AttachedEntities.empty())
+
+			if (transformComponent == nullptr)
+				flags.emplace_back(ETreeNodeFlag::Leaf);
+			else if (SComponent::IsValid(transformComponent) && transformComponent->AttachedEntities.empty())
 				flags.emplace_back(ETreeNodeFlag::Leaf);
 
 			const bool isOpen = GUI::TreeNodeEx(entryString.c_str(), flags);
@@ -209,17 +220,17 @@ namespace Havtorn
 				{
 					SEntity* draggedEntity = reinterpret_cast<SEntity*>(payload.Data);
 					const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(*draggedEntity);
-					const std::string draggedEntityName = draggedMetaDataComp->IsValid() ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
+					const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
 					GUI::SetTooltip(draggedEntityName.c_str());
 
-					if (!transformComponent->IsValid())
+					if (!SComponent::IsValid(transformComponent))
 					{
 						GUI::SetTooltip("Cannot attach to entity %s, it has no transform!", entryString.c_str());
 					}
 					else
 					{
 						STransformComponent* draggedTransform = scene->GetComponent<STransformComponent>(*draggedEntity);
-						if (!draggedTransform->IsValid())
+						if (!SComponent::IsValid(draggedTransform))
 						{
 							GUI::SetTooltip("Cannot attach %s to entity, it has no transform!", draggedEntityName.c_str());
 						}
@@ -289,11 +300,13 @@ namespace Havtorn
 					Manager->SetSelectedEntity(entity);
 			}
 
-			if (isOpen)
+			if (isOpen && SComponent::IsValid(transformComponent))
 			{
 				InspectEntities(scene, transformComponent->AttachedEntities);
 				GUI::TreePop();
 			}
+			else
+				GUI::TreePop();
 
 			GUI::PopID();
 		}

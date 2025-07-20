@@ -37,7 +37,7 @@ namespace Havtorn
 
 		for (const SCameraComponent* cameraComponent : scene->GetComponents<SCameraComponent>())
 		{
-			if (!cameraComponent->IsValid())
+			if (!SComponent::IsValid(cameraComponent))
 				continue;
 
 			sceneHasActiveCamera = true;
@@ -59,14 +59,14 @@ namespace Havtorn
 			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(staticMeshComponent);
 			const SMaterialComponent* materialComp = scene->GetComponent<SMaterialComponent>(staticMeshComponent);
 
-			if (!staticMeshComponent->IsValid() || !transformComp->IsValid() || !materialComp->IsValid())
+			if (!SComponent::IsValid(staticMeshComponent) || !SComponent::IsValid(transformComp) || !SComponent::IsValid(materialComp))
 				continue;
 		
 			if (!RenderManager->IsStaticMeshInInstancedRenderList(staticMeshComponent->Name.AsString())) // if static, if instanced
 			{		
 				for (const SDirectionalLightComponent* directionalLightComp : directionalLightComponents)
 				{
-					if (directionalLightComp->IsValid() && directionalLightComp->IsActive)
+					if (SComponent::IsValid(directionalLightComp) && directionalLightComp->IsActive)
 					{
 						SRenderCommand command;
 						command.Type = ERenderCommandType::ShadowAtlasPrePassDirectional;
@@ -80,7 +80,7 @@ namespace Havtorn
 
 				for (const SPointLightComponent* pointLightComp : pointLightComponents)
 				{
-					if (pointLightComp->IsValid() && pointLightComp->IsActive)
+					if (SComponent::IsValid(pointLightComp) && pointLightComp->IsActive)
 					{
 						SRenderCommand command;
 						command.Type = ERenderCommandType::ShadowAtlasPrePassPoint;
@@ -94,7 +94,7 @@ namespace Havtorn
 
 				for (const SSpotLightComponent* spotLightComp : spotLightComponents)
 				{
-					if (spotLightComp->IsValid() && spotLightComp->IsActive)
+					if (SComponent::IsValid(spotLightComp) && spotLightComp->IsActive)
 					{
 						SRenderCommand command;
 						command.Type = ERenderCommandType::ShadowAtlasPrePassSpot;
@@ -136,7 +136,7 @@ namespace Havtorn
 			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(skeletalMeshComponent);
 			const SMaterialComponent* materialComp = scene->GetComponent<SMaterialComponent>(skeletalMeshComponent);
 
-			if (!skeletalMeshComponent->IsValid() || !transformComp->IsValid() || !materialComp->IsValid())
+			if (!SComponent::IsValid(skeletalMeshComponent) || !SComponent::IsValid(transformComp) || !SComponent::IsValid(materialComp))
 				continue;
 
 			if (!RenderManager->IsSkeletalMeshInInstancedRenderList(skeletalMeshComponent->Name.AsString()))
@@ -144,7 +144,7 @@ namespace Havtorn
 				// TODO.NR: Make shadow pass for skeletal meshes possible
 				//for (const SDirectionalLightComponent* directionalLightComp : directionalLightComponents)
 				//{
-				//	if (directionalLightComp->IsValid())
+				//	if (SComponent::IsValid(directionalLightComp))
 				//	{
 				//		SRenderCommand command;
 				//		command.Type = ERenderCommandType::ShadowAtlasPrePassDirectional;
@@ -158,7 +158,7 @@ namespace Havtorn
 
 				//for (const SPointLightComponent* pointLightComp : pointLightComponents)
 				//{
-				//	if (pointLightComp->IsValid())
+				//	if (SComponent::IsValid(pointLightComp))
 				//	{
 				//		SRenderCommand command;
 				//		command.Type = ERenderCommandType::ShadowAtlasPrePassPoint;
@@ -172,7 +172,7 @@ namespace Havtorn
 
 				//for (const SSpotLightComponent* spotLightComp : spotLightComponents)
 				//{
-				//	if (spotLightComp->IsValid())
+				//	if (SComponent::IsValid(spotLightComp))
 				//	{
 				//		SRenderCommand command;
 				//		command.Type = ERenderCommandType::ShadowAtlasPrePassSpot;
@@ -217,7 +217,7 @@ namespace Havtorn
 		
 		for (const SDecalComponent* decalComponent : scene->GetComponents<SDecalComponent>())
 		{
-			if (!decalComponent->IsValid())
+			if (!SComponent::IsValid(decalComponent))
 				continue;
 
 			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(decalComponent);
@@ -263,12 +263,12 @@ namespace Havtorn
 
 		for (const SDirectionalLightComponent* directionalLightComp : directionalLightComponents)
 		{
-			if (!directionalLightComp->IsValid())
+			if (!SComponent::IsValid(directionalLightComp))
 				continue;
 
 			const SEntity& closestEnvironmentLightEntity = UComponentAlgo::GetClosestEntity3D(directionalLightComp->Owner, scene->GetComponents<SEnvironmentLightComponent>(), scene);
 			const SEnvironmentLightComponent* environmentLightComp = scene->GetComponent<SEnvironmentLightComponent>(closestEnvironmentLightEntity);
-			if (!environmentLightComp->IsValid())
+			if (!SComponent::IsValid(environmentLightComp))
 				continue;
 
 			SRenderCommand command;
@@ -305,7 +305,7 @@ namespace Havtorn
 
 		for (const SPointLightComponent* pointLightComp : pointLightComponents)
 		{
-			if (!pointLightComp->IsValid())
+			if (!SComponent::IsValid(pointLightComp))
 				continue;
 
 			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(pointLightComp);
@@ -344,7 +344,7 @@ namespace Havtorn
 
 		for (const SSpotLightComponent* spotLightComp : spotLightComponents)
 		{
-			if (!spotLightComp->IsValid())
+			if (!SComponent::IsValid(spotLightComp))
 				continue;
 
 			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(spotLightComp);
@@ -400,13 +400,13 @@ namespace Havtorn
 
 		for (const SSpriteComponent* spriteComp : scene->GetComponents<SSpriteComponent>())
 		{
-			if (!spriteComp->IsValid())
+			if (!SComponent::IsValid(spriteComp))
 				continue;
 
 			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(spriteComp);
 			const STransform2DComponent* transform2DComp = scene->GetComponent<STransform2DComponent>(spriteComp);
 
-			if (transformComp->IsValid())
+			if (SComponent::IsValid(transformComp))
 			{
 				if (!RenderManager->IsSpriteInWorldSpaceInstancedRenderList(spriteComp->TextureIndex)) 
 				{
@@ -419,7 +419,7 @@ namespace Havtorn
 
 				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(spriteComp->TextureIndex, transformComp, spriteComp);
 			}
-			else if (transform2DComp->IsValid())
+			else if (SComponent::IsValid(transform2DComp))
 			{
 				if (!RenderManager->IsSpriteInScreenSpaceInstancedRenderList(spriteComp->TextureIndex))
 				{
@@ -435,7 +435,7 @@ namespace Havtorn
 
 		for (const SPhysics3DComponent* physics3DComponent : scene->GetComponents<SPhysics3DComponent>())
 		{
-			if (!physics3DComponent->IsValid())
+			if (!SComponent::IsValid(physics3DComponent))
 				continue;
 
 			if (isInPlayingPlayState || !physics3DComponent->IsTrigger)

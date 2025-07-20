@@ -272,7 +272,6 @@ namespace Havtorn
 	{
 		SStaticMeshAsset asset;
 
-
 		// TODO.NR: Probably need to extract the filename here??
 		if (!LoadedStaticMeshes.contains(filePath))
 		{
@@ -328,6 +327,9 @@ namespace Havtorn
 
 		// Geometry
 		outStaticMeshComponent->DrawCallData = asset.DrawCallData;
+
+		// Asset referencing
+		outStaticMeshComponent->AssetRegistryKey = GEngine::GetWorld()->GetAssetRegistry()->Register(filePath);
 
 		// Handle existing material component if necessary
 		if (!scene)
@@ -424,6 +426,9 @@ namespace Havtorn
 
 		// Geometry
 		outSkeletalMeshComponent->DrawCallData = asset.DrawCallData;
+
+		// Asset referencing
+		outSkeletalMeshComponent->AssetRegistryKey = GEngine::GetWorld()->GetAssetRegistry()->Register(filePath);
 	}
 
 	void CRenderManager::LoadMaterialComponent(const std::vector<std::string>& materialPaths, SMaterialComponent* outMaterialComponent)
@@ -443,6 +448,9 @@ namespace Havtorn
 			SEngineGraphicsMaterial& material = outMaterialComponent->Materials.emplace_back();
 			material = asset.Material;
 		}
+
+		// Asset referencing
+		outMaterialComponent->AssetRegistryKeys = GEngine::GetWorld()->GetAssetRegistry()->Register(materialPaths);
 	}
 
 	void CRenderManager::LoadDecalComponent(const std::vector<std::string>& texturePaths, SDecalComponent* outDecalComponent)
@@ -454,56 +462,67 @@ namespace Havtorn
 		{
 			outDecalComponent->TextureReferences.emplace_back(STATIC_U16(textureBank->GetTextureIndex(texturePath)));
 		}
+
+		// Asset referencing
+		outDecalComponent->AssetRegistryKeys = GEngine::GetWorld()->GetAssetRegistry()->Register(texturePaths);
 	}
 
 	void CRenderManager::LoadEnvironmentLightComponent(const std::string& ambientCubemapTexturePath, SEnvironmentLightComponent* outEnvironmentLightComponent)
 	{
 		auto textureBank = GEngine::GetTextureBank();
 		outEnvironmentLightComponent->AmbientCubemapReference = STATIC_U16(textureBank->GetTextureIndex(ambientCubemapTexturePath));
+		outEnvironmentLightComponent->AssetRegistryKey = GEngine::GetWorld()->GetAssetRegistry()->Register(ambientCubemapTexturePath);
 	}
 
 	void CRenderManager::LoadSpriteComponent(const std::string& filePath, SSpriteComponent* outSpriteComponent)
 	{
 		auto textureBank = GEngine::GetTextureBank();
 		outSpriteComponent->TextureIndex = STATIC_U16(textureBank->GetTextureIndex(filePath));
+		outSpriteComponent->AssetRegistryKey = GEngine::GetWorld()->GetAssetRegistry()->Register(filePath);
 	}
 
-	void CRenderManager::LoadSkeletalAnimationComponent(const std::string& filePath, SSkeletalAnimationComponent* outSkeletalAnimationComponent)
+	void CRenderManager::LoadSkeletalAnimationComponent(const std::vector<std::string>& filePaths, SSkeletalAnimationComponent* outSkeletalAnimationComponent)
 	{
-		SSkeletalAnimationAsset asset;
-		std::string assetName = UGeneralUtils::ExtractFileNameFromPath(filePath);
-
-		if (!LoadedSkeletalAnims.contains(assetName))
+		for (const std::string& filePath : filePaths)
 		{
-			const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
-			char* data = new char[fileSize];
+			SSkeletalAnimationAsset asset;
+			std::string assetName = UGeneralUtils::ExtractFileNameFromPath(filePath);
 
-			GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
+			if (!LoadedSkeletalAnims.contains(assetName))
+			{
+				const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
+				char* data = new char[fileSize];
 
-			SSkeletalAnimationFileHeader assetFile;
-			assetFile.Deserialize(data);
-			asset = SSkeletalAnimationAsset(assetFile);
+				GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
 
-			LoadedSkeletalAnims.emplace(assetName, asset);
-			delete[] data;
-		}
-		else
-		{
-			asset = LoadedSkeletalAnims.at(assetName);
-		}
+				SSkeletalAnimationFileHeader assetFile;
+				assetFile.Deserialize(data);
+				asset = SSkeletalAnimationAsset(assetFile);
 
-		outSkeletalAnimationComponent->CurrentAnimation.emplace_back();
-		outSkeletalAnimationComponent->CurrentAnimation.back().Tracks = asset.BoneAnimationTracks;
-		outSkeletalAnimationComponent->CurrentAnimation.back().AssetName = assetName;
-		outSkeletalAnimationComponent->CurrentAnimation.back().DurationInTicks = asset.DurationInTicks;
-		outSkeletalAnimationComponent->CurrentAnimation.back().TickRate = asset.TickRate;
+				LoadedSkeletalAnims.emplace(assetName, asset);
+				delete[] data;
+			}
+			else
+			{
+				asset = LoadedSkeletalAnims.at(assetName);
+			}
+
+			outSkeletalAnimationComponent->CurrentAnimation.emplace_back();
+			outSkeletalAnimationComponent->CurrentAnimation.back().Tracks = asset.BoneAnimationTracks;
+			outSkeletalAnimationComponent->CurrentAnimation.back().AssetName = assetName;
+			outSkeletalAnimationComponent->CurrentAnimation.back().DurationInTicks = asset.DurationInTicks;
+			outSkeletalAnimationComponent->CurrentAnimation.back().TickRate = asset.TickRate;
 		
-		// TODO.NW: This should probably not be set every time. Figure out values for these depending on all current animation clips?
-		outSkeletalAnimationComponent->AssetName = assetName;
-		outSkeletalAnimationComponent->SkeletonName = asset.SkeletonName;
-		outSkeletalAnimationComponent->DurationInTicks = asset.DurationInTicks;
-		outSkeletalAnimationComponent->TickRate = asset.TickRate;
-		outSkeletalAnimationComponent->ImportScale = asset.ImportScale;
+			// TODO.NW: This should probably not be set every time. Figure out values for these depending on all current animation clips?
+			outSkeletalAnimationComponent->AssetName = assetName;
+			outSkeletalAnimationComponent->SkeletonName = asset.SkeletonName;
+			outSkeletalAnimationComponent->DurationInTicks = asset.DurationInTicks;
+			outSkeletalAnimationComponent->TickRate = asset.TickRate;
+			outSkeletalAnimationComponent->ImportScale = asset.ImportScale;
+		}
+
+		// Asset referencing
+		outSkeletalAnimationComponent->AssetRegistryKeys = GEngine::GetWorld()->GetAssetRegistry()->Register(filePaths);
 	}
 
 	SVector2<F32> CRenderManager::GetShadowAtlasResolution() const
@@ -553,6 +572,33 @@ namespace Havtorn
 		SGraphicsMaterialAsset asset(assetFile);
 
 		outMaterialComponent->Materials[materialIndex] = asset.Material;
+
+		U8 materialNumber = STATIC_U8(outMaterialComponent->Materials.size());
+		I8 keys = materialNumber - static_cast<U8>(outMaterialComponent->AssetRegistryKeys.size());
+
+		// NR: Add materials to correspond with mesh
+		if (keys > 0)
+		{
+			for (U8 i = 0; i < keys; i++)
+			{
+				outMaterialComponent->AssetRegistryKeys.emplace_back();
+			}
+		}
+		// NR: Remove materials to correspond with mesh
+		else if (keys < 0)
+		{
+			for (U8 i = 0; i < keys * -1.0f; i++)
+			{
+				outMaterialComponent->AssetRegistryKeys.pop_back();
+			}
+		}
+		// NR: Do nothing
+		else
+		{
+		}
+		
+		outMaterialComponent->AssetRegistryKeys[materialIndex] = GEngine::GetWorld()->GetAssetRegistry()->Register(filePath);
+
 		return true;
 	}
 
@@ -870,7 +916,7 @@ namespace Havtorn
 	void CRenderManager::RenderSkeletalAnimationAssetTexture(CRenderTexture& assetTextureTarget, const std::string& filePath, const std::vector<SMatrix>& boneTransforms)
 	{
 		SSkeletalAnimationComponent skeletalAnimationComp = SSkeletalAnimationComponent();
-		LoadSkeletalAnimationComponent(filePath, &skeletalAnimationComp);
+		LoadSkeletalAnimationComponent({ filePath }, &skeletalAnimationComp);
 
 		SSkeletalMeshComponent skeletalMeshComp = SSkeletalMeshComponent();
 		LoadSkeletalMeshComponent(skeletalAnimationComp.SkeletonName, &skeletalMeshComp);
@@ -1012,7 +1058,7 @@ namespace Havtorn
 		SystemSkeletalMeshInstanceData[meshName].Transforms.emplace_back(transformComponent->Transform.GetMatrix());
 		SystemSkeletalMeshInstanceData[meshName].Entities.emplace_back(transformComponent->Owner);
 
-		if (animationComponent->IsValid())
+		if (SComponent::IsValid(animationComponent))
 			SystemSkeletalMeshInstanceData[meshName].Bones = animationComponent->Bones;
 		//else
 		//	SystemSkeletalMeshInstanceData[meshName].Bones.emplace_back({});

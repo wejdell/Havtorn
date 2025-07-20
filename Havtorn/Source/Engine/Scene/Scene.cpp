@@ -52,18 +52,13 @@ namespace Havtorn
 		return true;
 	}
 
-	bool CScene::Init3DDemoScene(CRenderManager* renderManager)
+	bool CScene::Init3DDefaults(CRenderManager* renderManager)
 	{
-		if (!Init(renderManager, "3DDemoScene"))		
-			return false;
-
 		// === Camera ===
 		MainCameraEntity = AddEntity("Camera");
-		
+
 		if (!MainCameraEntity.IsValid())
 			return false;
-
-		CAssetRegistry* assetRegistry = GEngine::GetWorld()->GetAssetRegistry();
 
 		// Setup entities (create components)
 		STransformComponent& transform = *AddComponent<STransformComponent>(MainCameraEntity);
@@ -91,7 +86,7 @@ namespace Havtorn
 		AddComponentEditorContext(environmentLightEntity, &STransformComponentEditorContext::Context);
 		renderManager->LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/CubemapTheVisit.hva", AddComponent<SEnvironmentLightComponent>(environmentLightEntity));
 		AddComponentEditorContext(environmentLightEntity, &SEnvironmentLightComponentEditorContext::Context);
-		GetComponent<SEnvironmentLightComponent>(environmentLightEntity)->AssetRegistryKey = assetRegistry->Register("Assets/Textures/Cubemaps/CubemapTheVisit.hva");
+		//GetComponent<SEnvironmentLightComponent>(environmentLightEntity)->AssetRegistryKey = assetRegistry->Register("Assets/Textures/Cubemaps/CubemapTheVisit.hva");
 		// === !Environment light ===
 
 		// === Directional light ===
@@ -114,6 +109,19 @@ namespace Havtorn
 		AddComponentEditorContext(directionalLightEntity, &SVolumetricLightComponentEditorContext::Context);
 		volumetricLight.IsActive = false;
 		// === !Directional light ===
+
+		return true;
+	}
+
+	bool CScene::Init3DDemoScene(CRenderManager* renderManager)
+	{
+		if (!Init(renderManager, "3DDemoScene"))
+			return false;
+
+		if (!Init3DDefaults(renderManager))
+			return false;
+
+		//CAssetRegistry* assetRegistry = GEngine::GetWorld()->GetAssetRegistry();
 
 		// === Point light ===
 		const SEntity& pointLightEntity = AddEntity("Point Light");
@@ -234,7 +242,7 @@ namespace Havtorn
 		decalComp.ShouldRenderMaterial = true;
 		decalComp.ShouldRenderNormal = true;
 
-		decalComp.AssetRegistryKeys = assetRegistry->Register(decalTextures);
+		//decalComp.AssetRegistryKeys = assetRegistry->Register(decalTextures);
 		// === !Decal ===
 
 		const std::string modelPath1 = "Assets/Tests/En_P_PendulumClock.hva";
@@ -262,8 +270,8 @@ namespace Havtorn
 		renderManager->LoadMaterialComponent(materialNames1, AddComponent<SMaterialComponent>(pendulum));
 		AddComponentEditorContext(pendulum, &SMaterialComponentEditorContext::Context);
 
-		GetComponent<SStaticMeshComponent>(pendulum)->AssetRegistryKey = assetRegistry->Register(modelPath1);
-		GetComponent<SMaterialComponent>(pendulum)->AssetRegistryKeys = assetRegistry->Register(materialNames1);
+		//GetComponent<SStaticMeshComponent>(pendulum)->AssetRegistryKey = assetRegistry->Register(modelPath1);
+		//GetComponent<SMaterialComponent>(pendulum)->AssetRegistryKeys = assetRegistry->Register(materialNames1);
 
 		SPhysics3DComponent* clockPhysics = AddComponent<SPhysics3DComponent>(pendulum);
 		AddComponentEditorContext(pendulum, &SPhysics3DComponentEditorContext::Context);
@@ -290,8 +298,8 @@ namespace Havtorn
 		renderManager->LoadMaterialComponent(materialNames2, AddComponent<SMaterialComponent>(bed));
 		AddComponentEditorContext(bed, &SMaterialComponentEditorContext::Context);
 
-		GetComponent<SStaticMeshComponent>(bed)->AssetRegistryKey = assetRegistry->Register(modelPath2);
-		GetComponent<SMaterialComponent>(bed)->AssetRegistryKeys = assetRegistry->Register(materialNames2);
+		//GetComponent<SStaticMeshComponent>(bed)->AssetRegistryKey = assetRegistry->Register(modelPath2);
+		//GetComponent<SMaterialComponent>(bed)->AssetRegistryKeys = assetRegistry->Register(materialNames2);
 
 		SPhysics3DComponent* bedPhysics = AddComponent<SPhysics3DComponent>(bed);
 		AddComponentEditorContext(bed, &SPhysics3DComponentEditorContext::Context);
@@ -319,8 +327,8 @@ namespace Havtorn
 		renderManager->LoadMaterialComponent(materialNames4, AddComponent<SMaterialComponent>(lamp));
 		AddComponentEditorContext(lamp, &SMaterialComponentEditorContext::Context);
 
-		GetComponent<SStaticMeshComponent>(lamp)->AssetRegistryKey = assetRegistry->Register(modelPath4);
-		GetComponent<SMaterialComponent>(lamp)->AssetRegistryKeys = assetRegistry->Register(materialNames4);
+	/*	GetComponent<SStaticMeshComponent>(lamp)->AssetRegistryKey = assetRegistry->Register(modelPath4);
+		GetComponent<SMaterialComponent>(lamp)->AssetRegistryKeys = assetRegistry->Register(materialNames4);*/
 		// === !Lamp ===
 
 		// === Player Proxy ===
@@ -353,22 +361,21 @@ namespace Havtorn
 		std::string meshPath = "Assets/Tests/CH_Enemy_SK.hva";
 		renderManager->LoadSkeletalMeshComponent(meshPath, AddComponent<SSkeletalMeshComponent>(playerProxy));
 		AddComponentEditorContext(playerProxy, &SSkeletalMeshComponentEditorContext::Context);
-		GetComponent<SSkeletalMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register(meshPath);
+		//GetComponent<SSkeletalMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register(meshPath);
 
 		std::string animationPathOne = "Assets/Tests/CH_Enemy_Walk.hva";
 		std::string animationPathTwo = "Assets/Tests/CH_Enemy_Chase.hva";
 
 		SSkeletalAnimationComponent* playerAnimationComponent = AddComponent<SSkeletalAnimationComponent>(playerProxy);
-		renderManager->LoadSkeletalAnimationComponent(animationPathOne, playerAnimationComponent);
-		renderManager->LoadSkeletalAnimationComponent(animationPathTwo, playerAnimationComponent);
+		renderManager->LoadSkeletalAnimationComponent({ animationPathOne, animationPathTwo }, playerAnimationComponent);
 		AddComponentEditorContext(playerProxy, &SSkeletalAnimationComponentEditorContext::Context);
-		GetComponent<SSkeletalAnimationComponent>(playerProxy)->AssetRegistryKeys.emplace_back(assetRegistry->Register(animationPathOne));
-		GetComponent<SSkeletalAnimationComponent>(playerProxy)->AssetRegistryKeys.emplace_back(assetRegistry->Register(animationPathTwo));
+		//GetComponent<SSkeletalAnimationComponent>(playerProxy)->AssetRegistryKeys.emplace_back(assetRegistry->Register(animationPathOne));
+		//GetComponent<SSkeletalAnimationComponent>(playerProxy)->AssetRegistryKeys.emplace_back(assetRegistry->Register(animationPathTwo));
 
 		std::vector<std::string> enemyMaterialPaths = { "Assets/Materials/M_Enemy.hva" };
 		renderManager->LoadMaterialComponent(enemyMaterialPaths, AddComponent<SMaterialComponent>(playerProxy));
 		AddComponentEditorContext(playerProxy, &SMaterialComponentEditorContext::Context);
-		GetComponent<SMaterialComponent>(playerProxy)->AssetRegistryKeys = assetRegistry->Register(enemyMaterialPaths);	
+		//GetComponent<SMaterialComponent>(playerProxy)->AssetRegistryKeys = assetRegistry->Register(enemyMaterialPaths);	
 		// === !Player Proxy ===
 
 		// === Crate ===
@@ -387,8 +394,8 @@ namespace Havtorn
 		renderManager->LoadMaterialComponent(materialNames5, AddComponent<SMaterialComponent>(crate));
 		AddComponentEditorContext(crate, &SMaterialComponentEditorContext::Context);
 
-		GetComponent<SStaticMeshComponent>(crate)->AssetRegistryKey = assetRegistry->Register(modelPath5);
-		GetComponent<SMaterialComponent>(crate)->AssetRegistryKeys = assetRegistry->Register(materialNames5);
+		//GetComponent<SStaticMeshComponent>(crate)->AssetRegistryKey = assetRegistry->Register(modelPath5);
+		//GetComponent<SMaterialComponent>(crate)->AssetRegistryKeys = assetRegistry->Register(materialNames5);
 
 		SPhysics3DComponent* cratePhysics = AddComponent<SPhysics3DComponent>(crate);
 		AddComponentEditorContext(crate, &SPhysics3DComponentEditorContext::Context);
@@ -497,8 +504,8 @@ namespace Havtorn
 			renderManager->LoadMaterialComponent(materialNames3, AddComponent<SMaterialComponent>(entity));
 			AddComponentEditorContext(entity, &SMaterialComponentEditorContext::Context);
 
-			GetComponent<SStaticMeshComponent>(entity)->AssetRegistryKey = assetRegistry->Register(modelPath3);
-			GetComponent<SMaterialComponent>(entity)->AssetRegistryKeys = assetRegistry->Register(materialNames3);
+			//GetComponent<SStaticMeshComponent>(entity)->AssetRegistryKey = assetRegistry->Register(modelPath3);
+			//GetComponent<SMaterialComponent>(entity)->AssetRegistryKeys = assetRegistry->Register(materialNames3);
 
 			SPhysics3DComponent* physicsComponent = AddComponent<SPhysics3DComponent>(entity);
 			AddComponentEditorContext(entity, &SPhysics3DComponentEditorContext::Context);
@@ -526,7 +533,7 @@ namespace Havtorn
 		if (!MainCameraEntity.IsValid())
 			return false;
 
-		CAssetRegistry* assetRegistry = GEngine::GetWorld()->GetAssetRegistry();
+		//CAssetRegistry* assetRegistry = GEngine::GetWorld()->GetAssetRegistry();
 
 		// Setup entities (create components)
 		STransformComponent& transform = (*AddComponent<STransformComponent>(MainCameraEntity));
@@ -559,7 +566,7 @@ namespace Havtorn
 		AddComponentEditorContext(environmentLightEntity, &STransformComponentEditorContext::Context);
 		renderManager->LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/CubemapTheVisit.hva", AddComponent<SEnvironmentLightComponent>(environmentLightEntity));
 		AddComponentEditorContext(environmentLightEntity, &SEnvironmentLightComponentEditorContext::Context);
-		GetComponent<SEnvironmentLightComponent>(environmentLightEntity)->AssetRegistryKey = assetRegistry->Register("Assets/Textures/Cubemaps/CubemapTheVisit.hva");
+		//GetComponent<SEnvironmentLightComponent>(environmentLightEntity)->AssetRegistryKey = assetRegistry->Register("Assets/Textures/Cubemaps/CubemapTheVisit.hva");
 		// === !Environment light ===
 
 		// === Directional light ===
@@ -877,8 +884,7 @@ namespace Havtorn
 				component.Deserialize(fromData, pointerPosition);
 				auto comp = AddComponent<SSkeletalAnimationComponent>(component.Owner);
 
-				for (U64 assetRegistryKey : component.AssetRegistryKeys)
-					RenderManager->LoadSkeletalAnimationComponent(assetRegistry->GetAssetPath(assetRegistryKey), comp);
+				RenderManager->LoadSkeletalAnimationComponent(assetRegistry->GetAssetPaths(component.AssetRegistryKeys), comp);
 				
 				AddComponentEditorContext(component.Owner, &SSkeletalAnimationComponentEditorContext::Context);
 			}
