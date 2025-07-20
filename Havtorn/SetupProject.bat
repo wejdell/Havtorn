@@ -9,6 +9,7 @@ echo.
 echo:Python installed, running MasterSetup
 cd %~dp0\ProjectSetup\
 python MasterSetup.py
+PAUSE
 goto :eof
 
 :PYTHON_NOT_INSTALLED
@@ -35,8 +36,7 @@ rem PAUSE
 rem bitsadmin /transfer pythonDownload /download /priority high "%pythonDownloadUrl%" "%~dp0%downloadDir%\installer-python-%pythonVersion%-amd64.exe"
 
 if not exist "SetupRequirements//Python//" mkdir SetupRequirements\Python
-echo: "%~dp0SetupRequirements//Python//"
-PAUSE
+rem Could do silent/quiet install? e.g do not show installer window
 "%~dp0%downloadDir%\installer-python-%pythonVersion%-amd64.exe" InstallAllUsers=0 TargetDir="%~dp0SetupRequirements\Python" AssociateFiles=1 PrependPath=1 AppendPath=0 DefaultPath=%installDir% /wait 
   
 rem Clean up 

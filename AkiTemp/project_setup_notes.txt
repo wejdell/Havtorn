@@ -20,6 +20,14 @@ https://docs.python.org/3/using/windows.html
 need to force install path for python, ensure PATH & script cont
 https://docs.python.org/3/using/windows.html
 
+Complete all requirements
+Then git submodules
+Then setup
+
+Run Executables e.g installers with Python: https://stackoverflow.com/questions/1811691/running-an-outside-program-executable-in-python
+could use for CMake
+
+pip install command is for installing python packackes => pip install cmake means installing cmake-package for python
 
 
 07 17
