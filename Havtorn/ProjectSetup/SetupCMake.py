@@ -25,20 +25,17 @@ class CMakeConfiguration:
 
     @classmethod
     def CheckIfCMakeInstalled(cls):
+        #this work if user has env variable with CMake in it
         env_var = os.environ
         path_env_var = env_var["Path"]
         cmake_filter = "CMake"
         path_env_var_split = path_env_var.split(";")
         filtered_path_env_var_split = list(filter(lambda p: cmake_filter in p, path_env_var_split))
         
-        for path in filtered_path_env_var_split:
-            print(path)
+        if (not filtered_path_env_var_split):
+            return cls.InstallCMake()
 
-        print(filtered_path_env_var_split)
-
-        for path in path_env_var_split:
-            print(path)
-        #this work if user has env variable with CMake in it
+        # Could search custom directory or find using path
         cmakeExe = Path(f"{filtered_path_env_var_split[0]}/cmake.exe");
         #cmakeExe = Path(f"{cls.cmakeDirectory}/cmake-{cls.cmakeVersion}-windows-x86_64/bin/cmake.exe");
         if (not cmakeExe.exists()):
@@ -57,6 +54,7 @@ class CMakeConfiguration:
                 return False
             permissionGranted = (reply == 'y')
         # does this CMake installtion add PATH Env_Var?
+        # if installer is used, PATH is set by default
         cmakePath = f"{cls.cmakeDirectory}/cmake-{cls.cmakeVersion}-windows.zip"
         print("Downloading {0:s} to {1:s}".format(cls.cmakeZipUrls, cmakePath))
         Utils.DownloadFile(cls.cmakeZipUrls, cmakePath)
