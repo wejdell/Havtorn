@@ -32,7 +32,7 @@ namespace Havtorn
 
 		for (SScriptComponent* component : scriptComponents)
 		{
-			if (!SComponent::IsValid(component))
+			if (!SComponent::IsValid(component) || !component->Script)
 				continue;
 
 			HexRune::SScript* script = component->Script;
