@@ -13,6 +13,8 @@
 
 #include <ECS/Systems/DebugShapeSystem.h>
 
+#include <../Game/GameScene.h>
+
 namespace Havtorn
 {
 	CHierarchyWindow::CHierarchyWindow(const char* displayName, CEditorManager* manager)
@@ -38,18 +40,30 @@ namespace Havtorn
 
 		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
 		{
+			CScene* scene = Manager->GetCurrentScene();
+			if (!scene)
+			{
+				if (GUI::Button("Create New Scene"))
+				{
+					GEngine::GetWorld()->RemoveScene(0);
+					GEngine::GetWorld()->CreateScene<CGameScene>();
+					if (GEngine::GetWorld()->GetActiveScenes().size() > 0)
+					{
+						CScene* activeScene = GEngine::GetWorld()->GetActiveScenes()[0].get();
+						activeScene->Init(Manager->GetRenderManager(), "New Scene");
+						activeScene->Init3DDefaults(Manager->GetRenderManager());
+						Manager->SetCurrentScene(activeScene);
+					}
+				}
+
+				GUI::End();
+				return;
+			}
+			
 			// Top Bar
 			GUI::BeginChild("SearchBar", SVector2<F32>(0.0f, 54.0f));
 			Filter.Draw("Search");
 			GUI::Separator();
-
-			CScene* scene = Manager->GetCurrentScene();
-			if (!scene)
-			{
-				GUI::EndChild();
-				GUI::End();
-				return;
-			}
 
 			GUI::Text(scene->GetSceneName().c_str());
 			GUI::Separator();
