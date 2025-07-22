@@ -24,11 +24,11 @@ namespace Havtorn
 
 		for (SSkeletalAnimationComponent* component : scene->GetComponents<SSkeletalAnimationComponent>())
 		{
-			if (!component->IsValid())
+			if (!SComponent::IsValid(component))
 				continue;
 
 			SSkeletalMeshComponent* mesh = scene->GetComponent<SSkeletalMeshComponent>(component->Owner);
-			if (!mesh->IsValid())
+			if (!SComponent::IsValid(mesh))
 				continue;
 
 			if (component->IsPlaying)
@@ -246,7 +246,7 @@ namespace Havtorn
 	std::vector<SMatrix> CAnimatorGraphSystem::ReadAssetAnimationPose(const std::string& animationFile, const F32 animationTime)
 	{
 		SSkeletalAnimationComponent* component = new SSkeletalAnimationComponent();
-		RenderManager->LoadSkeletalAnimationComponent(animationFile, component);
+		RenderManager->LoadSkeletalAnimationComponent({ animationFile }, component);
 
 		SSkeletalMeshComponent* mesh = new SSkeletalMeshComponent();
 		RenderManager->LoadSkeletalMeshComponent(component->SkeletonName, mesh);

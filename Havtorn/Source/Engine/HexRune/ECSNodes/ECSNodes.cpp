@@ -167,5 +167,31 @@ namespace Havtorn
 			lightComponent->IsActive = enable;
 			return 0;
 		}
-	}
+
+		SOnBeginOverlapNode::SOnBeginOverlapNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
+		{
+			AddOutput(UGUIDManager::Generate(), EPinType::Flow);
+			AddOutput(UGUIDManager::Generate(), EPinType::Object, "Triggering Entity");
+			AddOutput(UGUIDManager::Generate(), EPinType::Object, "Other Entity");
+		}
+
+		I8 SOnBeginOverlapNode::OnExecute()
+		{
+			return 0;
+		}
+
+		SOnEndOverlapNode::SOnEndOverlapNode(const U64 id, SScript* owningScript)
+			: SNode::SNode(id, owningScript)
+		{
+			AddOutput(UGUIDManager::Generate(), EPinType::Flow);
+			AddOutput(UGUIDManager::Generate(), EPinType::Object, "Triggering Entity");
+			AddOutput(UGUIDManager::Generate(), EPinType::Object, "Other Entity");
+		}
+
+		I8 SOnEndOverlapNode::OnExecute()
+		{
+			return 0;
+		}
+}
 }

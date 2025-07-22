@@ -79,7 +79,7 @@ namespace Havtorn
 		ENGINE_API void LoadDecalComponent(const std::vector<std::string>& texturePaths, SDecalComponent* outDecalComponent);
 		ENGINE_API void LoadEnvironmentLightComponent(const std::string& ambientCubemapTexturePath, SEnvironmentLightComponent* outEnvironmentLightComponent);
 		ENGINE_API void LoadSpriteComponent(const std::string& filePath, SSpriteComponent* outSpriteComponent);
-		ENGINE_API void LoadSkeletalAnimationComponent(const std::string& filePath, SSkeletalAnimationComponent* outSkeletalAnimationComponent);
+		ENGINE_API void LoadSkeletalAnimationComponent(const std::vector<std::string>& filePaths, SSkeletalAnimationComponent* outSkeletalAnimationComponent);
 
 		ENGINE_API CRenderTexture RenderStaticMeshAssetTexture(const std::string& filePath);
 		ENGINE_API CRenderTexture RenderSkeletalMeshAssetTexture(const std::string& filePath);

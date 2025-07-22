@@ -14,6 +14,12 @@ namespace Havtorn
 
 	namespace HexRune
 	{
+        constexpr U64 BeginPlayNodeID = 1;
+        constexpr U64 TickNodeID = 2;
+        constexpr U64 EndPlayNodeID = 3;
+        constexpr U64 OnBeginOverlapNodeID = 4;
+        constexpr U64 OnEndOverlapNodeID = 5;
+
         struct SScript;
 
         enum class ENodeType
@@ -285,6 +291,8 @@ namespace Havtorn
 
             ENGINE_API void Initialize();
             ENGINE_API void TraverseScript(CScene* owningScene);
+            ENGINE_API void TraverseFromNode(const U64 startNodeID, CScene* owningScene);
+            ENGINE_API void TraverseFromNode(SNode* startNode, CScene* owningScene);
 
             ENGINE_API void Link(U64 leftPinID, U64 rightPinID);
             ENGINE_API void Link(SPin* leftPin, SPin* rightPin);
@@ -293,9 +301,8 @@ namespace Havtorn
 
             ENGINE_API void SetDataOnInput(U64 pinID, const std::variant<PIN_DATA_TYPES>& data);
 
-            // TODO.NW: Make explicit getters for standard entry points? BeginPlay, Tick, EndPlay.
-            // Allow only one per script, and keep a separate pointer to them
             ENGINE_API SNode* GetNode(const U64 id) const;
+            ENGINE_API bool HasNode(const U64 id) const;
 
             ENGINE_API [[nodiscard]] U32 GetSize() const;
             ENGINE_API void Serialize(char* toData, U64& pointerPosition) const;

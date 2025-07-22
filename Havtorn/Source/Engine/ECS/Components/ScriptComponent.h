@@ -24,8 +24,6 @@ namespace Havtorn
 		void Deserialize(const char* fromData, U64& pointerPosition);
 		[[nodiscard]] U32 GetSize() const;
 
-		virtual bool IsValid() const override;
-
 		HexRune::SScript* Script = nullptr;
 		std::vector<HexRune::SScriptDataBinding> DataBindings;
 		U64 AssetRegistryKey = 0;

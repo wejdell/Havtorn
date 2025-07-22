@@ -10,9 +10,9 @@ namespace Havtorn
 		: Owner(entity)
 	{}
 
-	bool SComponent::IsValid() const
+	bool SComponent::IsValid(const SComponent* component)
 	{
-		return this != nullptr && Owner.IsValid();
+		return component != nullptr && component->Owner.IsValid();
 	}
 
 	void SComponent::IsDeleted(CScene* /*fromScene*/)

@@ -194,6 +194,8 @@ namespace Havtorn
             RegisteredEditorContexts.emplace_back(&SPrintEntityNameNodeEditorContext::Context);
             RegisteredEditorContexts.emplace_back(&SSetStaticMeshNodeEditorContext::Context);
             RegisteredEditorContexts.emplace_back(&STogglePointLightNodeEditorContext::Context);
+            RegisteredEditorContexts.emplace_back(&SOnBeginOverlapNodeEditorContext::Context);
+            RegisteredEditorContexts.emplace_back(&SOnEndOverlapNodeEditorContext::Context);
         }
 
         void SScript::TraverseScript(CScene* owningScene)
@@ -205,6 +207,27 @@ namespace Havtorn
 
             for (SNode* node : StartNodes)
                 node->Execute();
+        }
+
+        void SScript::TraverseFromNode(const U64 startNodeID, CScene* owningScene)
+        {
+            if (owningScene == nullptr)
+                return;
+
+            if (SNode* startNode = GetNode(startNodeID))
+            {
+                Scene = owningScene;
+                startNode->Execute();
+            }
+        }
+
+        void SScript::TraverseFromNode(SNode* startNode, CScene* owningScene)
+        {
+            if (owningScene == nullptr)
+                return;
+
+            Scene = owningScene;
+            startNode->Execute();
         }
 
         void SScript::Link(U64 leftPinID, U64 rightPinID)
@@ -326,10 +349,15 @@ namespace Havtorn
 
         SNode* SScript::GetNode(const U64 id) const
         {
-            if (!NodeIndices.contains(id))
+            if (!HasNode(id))
                 return nullptr;
 
             return Nodes[NodeIndices.at(id)];
+        }
+
+        bool SScript::HasNode(const U64 id) const
+        {
+            return NodeIndices.contains(id);
         }
 
         void SScript::RemoveContext(const U64 nodeID)

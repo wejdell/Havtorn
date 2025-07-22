@@ -33,9 +33,13 @@ namespace Havtorn
             if (GUI::MenuItem("New")) 
             {
                 GEngine::GetWorld()->RemoveScene(0);
+                GEngine::GetWorld()->CreateScene<CGameScene>();
                 if (GEngine::GetWorld()->GetActiveScenes().size() > 0)
                 {
-                    Manager->SetCurrentScene(GEngine::GetWorld()->GetActiveScenes()[0].get());
+                    CScene* activeScene = GEngine::GetWorld()->GetActiveScenes()[0].get();
+                    activeScene->Init(Manager->GetRenderManager(), "New Scene");
+                    activeScene->Init3DDefaults(Manager->GetRenderManager());
+                    Manager->SetCurrentScene(activeScene);
                 }
                 else
                 {
