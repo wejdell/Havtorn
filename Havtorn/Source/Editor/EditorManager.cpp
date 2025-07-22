@@ -247,6 +247,12 @@ namespace Havtorn
 
 	void CEditorManager::CreateAssetRep(const std::filesystem::path& path)
 	{
+		if (!CFileSystem::DoesFileExist(path.string()))
+		{
+			HV_LOG_ERROR("CEditorManager::CreateAssetRep failed to create an asset representation! File was not found!");
+			return;
+		}
+
 		std::filesystem::directory_entry entry(path);
 		HV_ASSERT(!entry.is_directory(), "You are trying to create SEditorAssetRepresentation but you're creating a new folder.");
 
