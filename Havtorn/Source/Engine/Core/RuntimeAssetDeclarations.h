@@ -22,6 +22,7 @@ namespace Havtorn
 			{
 				DrawCallData.emplace_back();
 				DrawCallData.back().IndexCount = STATIC_U32(mesh.Indices.size());
+				DrawCallData.back().MaterialIndex = STATIC_U16(mesh.MaterialIndex);
 			}
 		}
 
@@ -48,6 +49,7 @@ namespace Havtorn
 			{
 				DrawCallData.emplace_back();
 				DrawCallData.back().IndexCount = STATIC_U32(mesh.Indices.size());
+				DrawCallData.back().MaterialIndex = STATIC_U16(mesh.MaterialIndex);
 			}
 		}
 
