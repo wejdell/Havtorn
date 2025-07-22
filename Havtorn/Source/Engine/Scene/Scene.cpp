@@ -446,10 +446,10 @@ namespace Havtorn
 		};
 
 		std::vector<SWallAndFloorInitData> initData;
-		SVector floorRotation = SVector{ 0.0f, 0.0f, 0.0f };
-		SVector largeWallRotation = SVector{ -90.0f, 0.0f, 0.0f};
+		SVector floorRotation = SVector{ 90.0f, 0.0f, 0.0f };
+		SVector largeWallRotation = SVector{ 0.0f, 0.0f, 0.0f};
 		// TODO.NR: There's still a singularity happening here, need to figure out why
-		SVector smallWallRotation = SVector{ 0.0f, 0.0f, -90.0f };
+		SVector smallWallRotation = SVector{ 0.0f, -90.0f, 0.0f };
 
 		initData.emplace_back(SVector{ -0.5f, 0.0f, -2.5f }, floorRotation, std::string("Floor"));
 		initData.emplace_back(SVector{ 0.5f, 0.0f, -2.5f }, floorRotation, std::string("Floor"));

@@ -305,7 +305,8 @@ namespace Havtorn
 				InspectEntities(scene, transformComponent->AttachedEntities);
 				GUI::TreePop();
 			}
-			else
+
+			if (!SComponent::IsValid(transformComponent))
 				GUI::TreePop();
 
 			GUI::PopID();

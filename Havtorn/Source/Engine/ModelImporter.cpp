@@ -265,6 +265,8 @@ namespace Havtorn
 			{
 				fileHeaderMesh.Indices.insert(fileHeaderMesh.Indices.end(), std::make_move_iterator(&fbxMesh->mFaces[i].mIndices[0]), std::make_move_iterator(&fbxMesh->mFaces[i].mIndices[fbxMesh->mFaces[i].mNumIndices]));
 			}
+
+			fileHeaderMesh.MaterialIndex = STATIC_U16(fbxMesh->mMaterialIndex);
 		}
 
 		// Material Count
@@ -411,6 +413,8 @@ namespace Havtorn
 			{
 				fileHeaderMesh.Indices.insert(fileHeaderMesh.Indices.end(), std::make_move_iterator(&fbxMesh->mFaces[i].mIndices[0]), std::make_move_iterator(&fbxMesh->mFaces[i].mIndices[fbxMesh->mFaces[i].mNumIndices]));
 			}
+
+			fileHeaderMesh.MaterialIndex = STATIC_U16(fbxMesh->mMaterialIndex);
 		}
 
 		// Material Count

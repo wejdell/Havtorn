@@ -1418,7 +1418,7 @@ namespace Havtorn
 				}
 			};
 
-			MaterialBufferData = SMaterialBufferData(command.Materials[drawCallIndex]);
+			MaterialBufferData = SMaterialBufferData(command.Materials[command.DrawCallData[drawCallIndex].MaterialIndex]);
 			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoR)]);
 			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoG)]);
 			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoB)]);
@@ -1483,7 +1483,7 @@ namespace Havtorn
 					}
 				};
 
-			MaterialBufferData = SMaterialBufferData(command.Materials[drawCallIndex]);
+			MaterialBufferData = SMaterialBufferData(command.Materials[command.DrawCallData[drawCallIndex].MaterialIndex]);
 			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoR)]);
 			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoG)]);
 			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoB)]);
@@ -1551,7 +1551,7 @@ namespace Havtorn
 					}
 				};
 
-			MaterialBufferData = SMaterialBufferData(command.Materials[drawCallIndex]);
+			MaterialBufferData = SMaterialBufferData(command.Materials[command.DrawCallData[drawCallIndex].MaterialIndex]);
 			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoR)]);
 			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoG)]);
 			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoB)]);
@@ -1626,7 +1626,7 @@ namespace Havtorn
 					}
 				};
 
-			MaterialBufferData = SMaterialBufferData(command.Materials[drawCallIndex]);
+			MaterialBufferData = SMaterialBufferData(command.Materials[command.DrawCallData[drawCallIndex].MaterialIndex]);
 			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoR)]);
 			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoG)]);
 			findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoB)]);
