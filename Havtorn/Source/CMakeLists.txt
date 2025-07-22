@@ -128,6 +128,8 @@ set(GUI_FILES
    ${GUI_FOLDER}GUI.h
    ${GUI_FOLDER}GUIProcess.cpp
    ${GUI_FOLDER}GUIProcess.h
+   ${GUI_FOLDER}FuzzySearch.cpp
+   ${GUI_FOLDER}FuzzySearch.h
 )
 set(IMGUI_FILES
    ${EXTERNAL_FOLDER}imgui/imconfig.h
