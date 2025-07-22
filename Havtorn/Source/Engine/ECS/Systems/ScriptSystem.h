@@ -6,11 +6,52 @@
 
 namespace Havtorn
 {
+	class CWorld;
+
 	class CScriptSystem : public ISystem
 	{
 	public:
-		CScriptSystem();
+		CScriptSystem(CWorld* world);
 		~CScriptSystem() override = default;
 		ENGINE_API void Update(CScene* scene) override;
+
+		void OnBeginPlay(CScene* scene);
+		void OnEndPlay(CScene* scene);
+		void OnBeginOverlap(CScene* scene, const SEntity triggerEntity, const SEntity otherEntity);
+		void OnEndOverlap(CScene* scene, const SEntity triggerEntity, const SEntity otherEntity);
+
+	private:
+		struct SChangePlayModeData
+		{
+			SChangePlayModeData() = delete;
+			SChangePlayModeData(CScene* scene, const bool beganPlay)
+				: Scene(scene)
+				, BeganPlay(beganPlay)
+			{}
+			CScene* Scene = nullptr;
+			bool BeganPlay = false;
+
+			auto operator<=>(const SChangePlayModeData& other) const = default;
+		};
+		std::vector<SChangePlayModeData> PlayModeChanges;
+
+		struct SOverlapData
+		{
+			SOverlapData() = delete;
+			SOverlapData(CScene* scene, const SEntity triggerEntity, const SEntity otherEntity, const bool beganOverlapping)
+				: Scene(scene)
+				, TriggerEntity(triggerEntity)
+				, OtherEntity(otherEntity)
+				, BeganOverlap(beganOverlapping)
+			{}
+
+			CScene* Scene = nullptr;
+			SEntity TriggerEntity = SEntity::Null;
+			SEntity OtherEntity = SEntity::Null;
+			bool BeganOverlap = false;
+
+			auto operator<=>(const SOverlapData& other) const = default;
+		};
+		std::vector<SOverlapData> Overlaps;
 	};
 }

@@ -22,7 +22,7 @@ namespace Havtorn
 		RequestSystem<CLightSystem>(this, RenderManager);
 		RequestSystem<CSequencerSystem>(this);
 		RequestSystem<CAnimatorGraphSystem>(this, RenderManager);
-		RequestSystem<CScriptSystem>(this);
+		RequestSystem<CScriptSystem>(this, this);
 		RequestSystem<CRenderSystem>(this, RenderManager, this);
 
 		OnSceneCreatedDelegate.AddMember(this, &CWorld::OnSceneCreated);
@@ -82,7 +82,7 @@ namespace Havtorn
 			return false;
 
 		PlayState = EWorldPlayState::Stopped;
-		OnStopPlayDelegate.Broadcast(Scenes.back().get());
+		OnEndPlayDelegate.Broadcast(Scenes.back().get());
 
 		return true;
 	}
@@ -143,10 +143,7 @@ namespace Havtorn
 		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
 		char* data = new char[fileSize];
 
-		const U64 lastSlashIndex = filePath.find_last_of("/");
-		const U64 lastDotIndex = filePath.find_last_of(".");
-		std::string sceneNameSubstring = filePath.substr(lastSlashIndex, lastDotIndex - lastSlashIndex);
-		outScene->Init(RenderManager, sceneNameSubstring);
+		outScene->Init(RenderManager, UGeneralUtils::ExtractFileBaseNameFromPath(filePath));
 
 		U64 pointerPosition = 0;
 		GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));

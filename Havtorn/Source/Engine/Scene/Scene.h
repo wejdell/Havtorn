@@ -31,7 +31,7 @@ namespace Havtorn
 		ENGINE_API ~CScene();
 
 		ENGINE_API virtual bool Init(CRenderManager* renderManager, const std::string& sceneName);
-
+		ENGINE_API virtual bool Init3DDefaults(CRenderManager* renderManager);
 		ENGINE_API virtual bool Init3DDemoScene(CRenderManager* renderManager);
 		ENGINE_API virtual bool Init2DDemoScene(CRenderManager* renderManager);
 
@@ -345,7 +345,7 @@ namespace Havtorn
 
 		// TODO.NW: Move this to World, so that it persists over scenes. Same as with Nodes
 		ENGINE_API const std::vector<SComponentEditorContext*>& GetComponentEditorContexts() const;
-		
+	
 		std::unordered_map<U64, std::vector<SComponentEditorContext*>> EntityComponentEditorContexts;
 
 		std::unordered_map<U64, U64> EntityIndices;

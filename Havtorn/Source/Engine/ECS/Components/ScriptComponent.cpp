@@ -26,9 +26,4 @@ namespace Havtorn
 
         return size;
     }
-
-    bool SScriptComponent::IsValid() const
-    {
-        return SComponent::IsValid() && Script != nullptr;
-    }
 }

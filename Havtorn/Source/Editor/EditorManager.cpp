@@ -20,6 +20,7 @@
 #include "EditorToggleables.h"
 
 #include "Systems/PickingSystem.h"
+#include <../Game/GameScene.h>
 
 //#include <Application/ImGuiCrossProjectSetup.h>
 #include <MathTypes/MathUtilities.h>
@@ -82,7 +83,7 @@ namespace Havtorn
 		World = GEngine::GetWorld();
 		World->OnBeginPlayDelegate.AddMember(this, &CEditorManager::OnBeginPlay);
 		World->OnPausePlayDelegate.AddMember(this, &CEditorManager::OnPausePlay);
-		World->OnStopPlayDelegate.AddMember(this, &CEditorManager::OnStopPlay);
+		World->OnEndPlayDelegate.AddMember(this, &CEditorManager::OnStopPlay);
 		World->RequestSystem<CPickingSystem>(this, this);
 
 		InitEditorLayout();
@@ -307,6 +308,12 @@ namespace Havtorn
 		{
 			// Load asset, held somewhere? RenderManager and World
 			GetEditorWindow<CScriptTool>()->OpenScript(GEngine::GetWorld()->LoadScript(asset->DirectoryEntry.path().string()));
+		}
+
+		if (asset->AssetType == EAssetType::Scene)
+		{
+			GEngine::GetWorld()->ChangeScene<CGameScene>(asset->DirectoryEntry.path().string());
+			SetCurrentScene(GEngine::GetWorld()->GetActiveScenes()[0].get());
 		}
 	}
 
