@@ -7,6 +7,15 @@ batch variables
 `where python`
 prints python folder -> `where` searches PATH system variables and the current directory
 
+c++vcredist
+https://vcredist.com/get-installedvcredist/ - for powershell
+
+could check registry:
+https://stackoverflow.com/questions/12206314/detect-if-visual-c-redistributable-for-visual-studio-2012-is-installed
+"You can check for the Installed value to be 1 in this registry location: 
+HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\Microsoft\VisualStudio\11.0\VC\Runtimes\x86 
+on 64-bit systems."
+
 07 24
 Additional commands for MSVC
 https://learn.microsoft.com/en-us/visualstudio/install/use-command-line-parameters-to-install-visual-studio?view=vs-2022
