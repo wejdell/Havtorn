@@ -30,13 +30,14 @@ class CMakeConfiguration:
         path_env_var = env_var["Path"]
         cmake_filter = "CMake"
         path_env_var_split = path_env_var.split(";")
-        filtered_path_env_var_split = list(filter(lambda p: cmake_filter in p, path_env_var_split))
+        filtered_cmake_path = list(filter(lambda p: cmake_filter in p, path_env_var_split))
+        os.environ["Path"].add("C:\Users\AkiGonzalez\source\repos\Havtorn\Havtorn\ProjectSetup\SetupCMake.py")
         
-        if (not filtered_path_env_var_split):
+        if (not filtered_cmake_path):
             return cls.InstallCMake()
 
         # Could search custom directory or find using path
-        cmakeExe = Path(f"{filtered_path_env_var_split[0]}/cmake.exe");
+        cmakeExe = Path(f"{filtered_cmake_path[0]}/cmake.exe");
         #cmakeExe = Path(f"{cls.cmakeDirectory}/cmake-{cls.cmakeVersion}-windows-x86_64/bin/cmake.exe");
         if (not cmakeExe.exists()):
             return cls.InstallCMake()

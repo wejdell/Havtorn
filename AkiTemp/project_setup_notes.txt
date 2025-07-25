@@ -1,6 +1,18 @@
 
+07 25
+https://steve-jansen.github.io/guides/windows-batch-scripting/part-2-variables.html
+batch variables
 
-07 20
+`where py`
+`where python`
+prints python folder -> `where` searches PATH system variables and the current directory
+
+07 24
+Additional commands for MSVC
+https://learn.microsoft.com/en-us/visualstudio/install/use-command-line-parameters-to-install-visual-studio?view=vs-2022
+
+
+07 20 & 23
 Clean install from Laptop
 Remove all development related things: 
 O Visual Studio
@@ -29,6 +41,23 @@ could use for CMake
 
 pip install command is for installing python packackes => pip install cmake means installing cmake-package for python
 
+CMake
+https://cmake.org/pipermail/cmake/2008-December/025724.html
+/S command line arg to run silent
+/D to specify install directory
+PATH
+https://discourse.cmake.org/t/cmake-silent-install-with-options-help/1475/2
+msiexec /i cmake-x.y.z-windows-x86_64.msi ALLUSERS=1 ADD_CMAKE_TO_PATH=System /qn
+
+Saving installed requrements to folder inside repo is NOT a good idea.
+Deleting them from there does not properlt uninstall the program.
+
+Probably best:
+Check if CMake is found through PATH
+Check if CMake is found in expected folder
+if not: ask permission to install CMake to folder adjacent to repo <show path>, paste ZIP there
+
+Python should be installed in a default directory, allowing easier uninstall for users
 
 07 17
 CMake Error at CMakeLists.txt:185 (source_group):
