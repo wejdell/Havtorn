@@ -263,7 +263,7 @@ namespace Havtorn
 
 		if (assetNames.size() == 0)
 		{		
-			SAssetPickResult assetPickResult = GUI::AssetPicker("Select", modalNameToOpen.c_str(), 0, defaultSearchDirectory.c_str(), columnCount, Manager->GetAssetInspectFunction(), EAssetType::Material);
+			SAssetPickResult assetPickResult = GUI::AssetPicker("Select", modalNameToOpen.c_str(), 0, defaultSearchDirectory.c_str(), columnCount, Manager->GetAssetInspectFunction());
 			if (assetPickResult.State == EAssetPickerState::Active)
 				Manager->SetIsModalOpen(true);
 			else if (assetPickResult.State == EAssetPickerState::Cancelled)
@@ -306,7 +306,7 @@ namespace Havtorn
 			id.append(std::to_string(index));
 			GUI::PushID(id.c_str());
 
-			SAssetPickResult assetPickResult = GUI::AssetPicker(assetName.c_str(), modalNameToOpen.c_str(), (intptr_t)assetRep->TextureRef.GetShaderResourceView(), defaultSearchDirectory.c_str(), columnCount, Manager->GetAssetInspectFunction(), assetRep->AssetType);
+			SAssetPickResult assetPickResult = GUI::AssetPicker(assetName.c_str(), modalNameToOpen.c_str(), (intptr_t)assetRep->TextureRef.GetShaderResourceView(), defaultSearchDirectory.c_str(), columnCount, Manager->GetAssetInspectFunction());
 
 			if (assetPickResult.State == EAssetPickerState::Active)
 				Manager->SetIsModalOpen(true);
@@ -356,7 +356,7 @@ namespace Havtorn
 			return;
 
 		// TODO.NW: Figure out why we did TryLoadStaticMeshComponent here before
-		Manager->GetRenderManager()->LoadSkeletalMeshComponent(assetRep->Name + ".hva", skeletalMesh, Scene);
+		Manager->GetRenderManager()->LoadSkeletalMeshComponent(assetRep->Name + ".hva", skeletalMesh);
 	}
 
 	void CInspectorWindow::HandleSkeletalAnimationAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep)
