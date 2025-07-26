@@ -24,6 +24,9 @@ namespace Havtorn
 
 		for (SSkeletalAnimationComponent* component : scene->GetComponents<SSkeletalAnimationComponent>())
 		{
+			if (!SComponentView{ *component }.Validate())
+				continue;
+
 			if (!SComponent::IsValid(component))
 				continue;
 
@@ -48,7 +51,7 @@ namespace Havtorn
 			std::vector<SSkeletalPosedNode> walkPosedNodes = {};
 			ReadAnimationLocalPose(component, mesh, animationTime, mesh->Nodes[0], walkPosedNodes);
 
-			component->CurrentAnimationIndex = 1;
+			component->CurrentAnimationIndex = 0;
 			std::vector<SSkeletalPosedNode> runPosedNodes = {};
 			ReadAnimationLocalPose(component, mesh, animationTime, mesh->Nodes[0], runPosedNodes);
 

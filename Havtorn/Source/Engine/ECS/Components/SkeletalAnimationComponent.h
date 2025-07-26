@@ -18,6 +18,11 @@ namespace Havtorn
 		void Deserialize(const char* fromData, U64& pointerPosition);
 		[[nodiscard]] U32 GetSize() const;
 
+		bool Validate() const
+		{
+			return CurrentAnimation.size() > 0;
+		}
+
 		// TODO.NR: This should be some of the only runtime data this component needs.
 		//SVector2<U32> AnimationData; // X = animationIndex, Y = frameIndex
 		std::vector<SBoneAnimationClip> CurrentAnimation = {};
