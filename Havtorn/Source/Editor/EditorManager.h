@@ -163,8 +163,8 @@ namespace Havtorn
 		std::vector<SEntity> SelectedEntities = {};
 
 		// TODO.NR: Figure out why we can't use unique ptrs with these namespaced classes
-		std::vector<CWindow*> Windows = {};
-		std::vector<CToggleable*> MenuElements = {};
+		std::vector<Ptr<CWindow>> Windows;
+		std::vector<Ptr<CToggleable>> MenuElements;
 		std::vector<Ptr<SEditorAssetRepresentation>> AssetRepresentations = {};
 
 		// TODO.NR: Save these in .ini file
@@ -192,7 +192,7 @@ namespace Havtorn
 		{
 			U64 hashCode = typeid(*(Windows[i])).hash_code();
 			if (hashCode == targetHashCode)
-				return static_cast<TEditorWindowType*>(Windows[i]);
+				return static_cast<TEditorWindowType*>(Windows[i].get());
 		}
 		return nullptr;
 	}

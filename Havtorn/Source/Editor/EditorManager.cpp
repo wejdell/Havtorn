@@ -57,21 +57,21 @@ namespace Havtorn
 		SetEditorTheme(EEditorColorTheme::HavtornDark, EEditorStyleTheme::Havtorn);
 
 		// TODO.NR: Figure out why we can't use unique ptrs with these namespaced imgui classes
-		MenuElements.emplace_back(new CFileMenu("File", this));
-		MenuElements.emplace_back(new CEditMenu("Edit", this));
-		MenuElements.emplace_back(new CViewMenu("View", this));
-		MenuElements.emplace_back(new CWindowMenu("Window", this));
-		MenuElements.emplace_back(new CHelpMenu("Help", this));
+		MenuElements.emplace_back(std::make_unique<CFileMenu>("File", this));
+		MenuElements.emplace_back(std::make_unique<CEditMenu>("Edit", this));
+		MenuElements.emplace_back(std::make_unique<CViewMenu>("View", this));
+		MenuElements.emplace_back(std::make_unique<CWindowMenu>("Window", this));
+		MenuElements.emplace_back(std::make_unique<CHelpMenu>("Help", this));
 
-		Windows.emplace_back(new CViewportWindow("Viewport", this));
-		Windows.emplace_back(new CDockSpaceWindow("Dock Space", this));
-		Windows.emplace_back(new CAssetBrowserWindow("Asset Browser", this));
-		Windows.emplace_back(new COutputLogWindow("Output Log", this));
-		Windows.emplace_back(new CHierarchyWindow("Hierarchy", this));
-		Windows.emplace_back(new CInspectorWindow("Inspector", this));
-		Windows.emplace_back(new CSpriteAnimatorGraphNodeWindow("Sprite Animator", this));
+		Windows.emplace_back(std::make_unique<CViewportWindow>("Viewport", this));
+		Windows.emplace_back(std::make_unique<CDockSpaceWindow>("Dock Space", this));
+		Windows.emplace_back(std::make_unique<CAssetBrowserWindow>("Asset Browser", this));
+		Windows.emplace_back(std::make_unique<COutputLogWindow>("Output Log", this));
+		Windows.emplace_back(std::make_unique<CHierarchyWindow>("Hierarchy", this));
+		Windows.emplace_back(std::make_unique<CInspectorWindow>("Inspector", this));
+		Windows.emplace_back(std::make_unique<CSpriteAnimatorGraphNodeWindow>("Sprite Animator", this));
 		Windows.back()->SetEnabled(false);
-		Windows.emplace_back(new CScriptTool("Script Editor", this));
+		Windows.emplace_back(std::make_unique<CScriptTool>("Script Editor", this));
 
 		ResourceManager = new CEditorResourceManager();
 		bool success = ResourceManager->Init(renderManager, framework);
