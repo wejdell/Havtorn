@@ -237,12 +237,23 @@ namespace Havtorn
 	//}
 
 	/*std::function<SAssetInspectionData(std::filesystem::directory_entry, const EAssetType assetTypeFilter)> */
-	DirEntryEAssetTypeFunc CEditorManager::GetAssetInspectFunction() const
+
+
+	DirEntryFunc CEditorManager::GetAssetInspectFunction() const
+	{
+		return [this](std::filesystem::directory_entry entry)
+			{
+				const Ptr<SEditorAssetRepresentation>& assetRep = GetAssetRepFromDirEntry(entry);	
+				return SAssetInspectionData(assetRep->Name, (intptr_t)assetRep->TextureRef.GetShaderResourceView(), assetRep->DirectoryEntry.path().string());
+			};
+	}
+
+	DirEntryEAssetTypeFunc CEditorManager::GetAssetFilteredInspectFunction() const
 	{
 		return [this](std::filesystem::directory_entry entry, const EAssetType assetTypeFilter)
 			{
 				const Ptr<SEditorAssetRepresentation>& assetRep = GetAssetRepFromDirEntry(entry);
-				if(assetRep->AssetType == assetTypeFilter)
+				if (assetRep->AssetType == assetTypeFilter)
 					return SAssetInspectionData(assetRep->Name, (intptr_t)assetRep->TextureRef.GetShaderResourceView(), assetRep->DirectoryEntry.path().string());
 
 				return SAssetInspectionData("", 0, "");
