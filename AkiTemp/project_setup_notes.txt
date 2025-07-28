@@ -1,4 +1,13 @@
 
+07 28
+extract zip from cmd:
+https://www.reddit.com/r/Windows10/comments/71z96c/unzip_from_command_line/
+Expand-Archive "C:\Downloads\file.zip" "C:\Downloads"
+
+https://www.robvanderwoude.com/parameters.php
+startup args cmd
+%1 to %9
+
 07 25
 https://steve-jansen.github.io/guides/windows-batch-scripting/part-2-variables.html
 batch variables

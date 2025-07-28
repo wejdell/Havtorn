@@ -1,0 +1,406 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:141.0) Gecko/20100101 Firefox/141.0" version="28.0.7">
+  <diagram name="Page-1" id="r4JzbXInaPIbsPqSuh-b">
+    <mxGraphModel dx="1796" dy="599" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-1" target="IWkYalxZzcNdLPQKIjsF-2">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-16" value="Call with next process as argument 1" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-7">
+          <mxGeometry x="-0.019" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-1" value="SetupProject.bat" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="120" y="90" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-21" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-2" target="IWkYalxZzcNdLPQKIjsF-17">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-2" value="&lt;div&gt;SetupRequirements.bat&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="240" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-84" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-3" target="IWkYalxZzcNdLPQKIjsF-75">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-3" value="MasterSetup.py" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="1610" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-4" target="IWkYalxZzcNdLPQKIjsF-5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-4" value="Subprocess:&lt;div&gt;git SubModuleUpdate&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="110" y="2540" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-5" target="IWkYalxZzcNdLPQKIjsF-6">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-5" value="&lt;div&gt;Subprocess:&lt;br&gt;GenerateProjectFiles.bat&lt;/div&gt;" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="110" y="2640" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-6" target="IWkYalxZzcNdLPQKIjsF-12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-6" value="Subprocess:&lt;br&gt;CompileDependencies.bat" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="110" y="2730" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-12" value="End" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="130" y="2900" width="120" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-14" value="Setup requirements:&lt;br&gt;Python&lt;br&gt;CMake&lt;br&gt;&lt;br&gt;Build requirements:&lt;br&gt;C++redist&lt;br&gt;MSVC Build Tools&lt;br&gt;&lt;br&gt;SetLongPaths?" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-40" y="80" width="120" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-15" value="Cannot set Environment Variable in sub-script for use in main-script.&lt;br&gt;&lt;br&gt;Variables must be set in script above sub-script&lt;br&gt;&lt;br&gt;In .bat use:&lt;br&gt;set varName=variable" style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-40" y="280" width="120" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-22" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-17" target="IWkYalxZzcNdLPQKIjsF-18">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-23" value="error" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-22">
+          <mxGeometry x="-0.72" y="-1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-66" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-17" target="IWkYalxZzcNdLPQKIjsF-43">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="530" y="270" />
+              <mxPoint x="530" y="910" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-67" value="success" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-66">
+          <mxGeometry x="-0.9244" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-17" value="call python" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="230" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-24" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-18" target="IWkYalxZzcNdLPQKIjsF-20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-25" value="not found" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-24">
+          <mxGeometry x="-0.64" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-33" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-18" target="IWkYalxZzcNdLPQKIjsF-32">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="490" y="380" />
+              <mxPoint x="490" y="785" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-34" value="found" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-33">
+          <mxGeometry x="-0.931" y="-1" relative="1" as="geometry">
+            <mxPoint x="14" y="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-18" value="&lt;span style=&quot;background-color: light-dark(#ffffff, var(--ge-dark-color, #121212));&quot;&gt;check&amp;nbsp;&lt;br&gt;/req-dir/&lt;/span&gt;Python" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="340" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-19" value="/req-dir/ is a directory inside the Havtorn-repo. It contains all requirements installed, if users does not have them already.&lt;br&gt;&lt;br&gt;Structured as:&lt;br&gt;Havtorn/req-dir/&amp;lt;RequirementName&amp;gt;/&lt;br&gt;&lt;br&gt;/req-dir/ is a variable name and not the actual directory name.&lt;br&gt;&lt;br&gt;Is gitignored.&lt;br&gt;&lt;br&gt;Allows users to delete repository and through that delete all requirements." style="rounded=0;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="-40" y="480" width="120" height="330" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-28" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" target="IWkYalxZzcNdLPQKIjsF-59">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="349.7388235294117" y="492.48117647058825" as="sourcePoint" />
+            <mxPoint x="269.74" y="1967.51" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="290" y="493" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-29" value="No" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-28">
+          <mxGeometry x="-0.9554" y="-1" relative="1" as="geometry">
+            <mxPoint x="23" y="-2" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-35" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-20" target="IWkYalxZzcNdLPQKIjsF-30">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-38" value="Yes" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-35">
+          <mxGeometry x="0.5476" y="2" relative="1" as="geometry">
+            <mxPoint x="-2" y="-9" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-20" value="&lt;span style=&quot;background-color: light-dark(#ffffff, var(--ge-dark-color, #121212));&quot;&gt;permission install python&lt;/span&gt;" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="350" y="450" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-36" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-30" target="IWkYalxZzcNdLPQKIjsF-31">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-30" value="create /req-dir/Python/" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="560" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-37" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-31" target="IWkYalxZzcNdLPQKIjsF-32">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-31" value="download and run installer&amp;nbsp;&lt;br&gt;(silent, current user, no PATH)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="650" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-40" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-32" target="IWkYalxZzcNdLPQKIjsF-43">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="390" y="869.9999999999998" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-32" value="Set variable python:&lt;br&gt;set python=/req-dir/Python/.../py.exe&lt;br&gt;and other necessary python variables" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330" y="740" width="120" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-41" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-43" target="IWkYalxZzcNdLPQKIjsF-48">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-42" value="error" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-41">
+          <mxGeometry x="-0.72" y="-1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-43" value="call cmake" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="350.0014285714289" y="870" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-44" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-48" target="IWkYalxZzcNdLPQKIjsF-52">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-45" value="not found" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-44">
+          <mxGeometry x="-0.64" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-46" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-48">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="490.0014285714289" y="1020" />
+              <mxPoint x="490.0014285714289" y="1425" />
+            </Array>
+            <mxPoint x="450.0014285714289" y="1425" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-47" value="found" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-46">
+          <mxGeometry x="-0.931" y="-1" relative="1" as="geometry">
+            <mxPoint x="14" y="-1" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-48" value="&lt;span style=&quot;background-color: light-dark(#ffffff, var(--ge-dark-color, #121212));&quot;&gt;check&amp;nbsp;&lt;br&gt;/req-dir/&lt;/span&gt;CMake" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="350.0014285714289" y="980" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-50" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-52" target="IWkYalxZzcNdLPQKIjsF-54">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="390.0014285714289" y="1200" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-51" value="Yes" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-50">
+          <mxGeometry x="0.5476" y="2" relative="1" as="geometry">
+            <mxPoint x="-2" y="-9" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-61" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-52" target="IWkYalxZzcNdLPQKIjsF-59">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="290" y="1130" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-62" value="No" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-61">
+          <mxGeometry x="-0.9027" y="-2" relative="1" as="geometry">
+            <mxPoint x="22" y="-26" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-52" value="&lt;span style=&quot;background-color: light-dark(#ffffff, var(--ge-dark-color, #121212));&quot;&gt;permission install CMake&lt;/span&gt;" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="350.0014285714289" y="1090" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-53" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="390.0014285714289" y="1260" as="sourcePoint" />
+            <mxPoint x="390.0014285714289" y="1290" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-54" value="create /req-dir/CMake/" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="330.0014285714289" y="1210" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-55" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="390.0014285714289" y="1350" as="sourcePoint" />
+            <mxPoint x="390.0014285714289" y="1380" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-56" value="download zip and extract" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="328.5714285714289" y="1290" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-71" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-58" target="IWkYalxZzcNdLPQKIjsF-63">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-58" value="Set variable cmake:&lt;br&gt;set cmake=/req-dir/CMake/.../cmake.exe&lt;br&gt;and other necessary cmake variables" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="328.5714285714289" y="1380" width="120" height="90" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-60" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;exitX=0;exitY=0.5;exitDx=0;exitDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-59" target="IWkYalxZzcNdLPQKIjsF-12">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-59" value="Error Message: missing requirement. Please install requirement." style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="230" y="2830" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-72" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-63" target="IWkYalxZzcNdLPQKIjsF-3">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="389" y="1640" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-63" value="Run %1&amp;nbsp;&lt;br&gt;Next process from startup argument" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="328.57" y="1510" width="120" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-65" value="Windows only" style="rounded=0;whiteSpace=wrap;html=1;dashed=1;" vertex="1" parent="1">
+          <mxGeometry x="200" y="70" width="120" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-85" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-75" target="IWkYalxZzcNdLPQKIjsF-76">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-75" value="Subprocess:&lt;br&gt;BuildRequirements.bat (?)" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="100" y="1710" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-86" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-76" target="IWkYalxZzcNdLPQKIjsF-77">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-109" value="Not found" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-86">
+          <mxGeometry x="0.5437" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-95" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-76" target="IWkYalxZzcNdLPQKIjsF-80">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="520" y="1740" />
+              <mxPoint x="520" y="2160" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-108" value="Found" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-95">
+          <mxGeometry x="-0.8929" y="3" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-76" value="&lt;span style=&quot;background-color: light-dark(#ffffff, var(--ge-dark-color, #121212));&quot;&gt;MSVC Build tools installed&lt;/span&gt;" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="1700" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-87" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-77" target="IWkYalxZzcNdLPQKIjsF-78">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-111" value="Not found" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-87">
+          <mxGeometry x="0.2005" y="-1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-96" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0.5;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-77" target="IWkYalxZzcNdLPQKIjsF-80">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="520" y="1840" />
+              <mxPoint x="520" y="2160" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-110" value="Found" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-96">
+          <mxGeometry x="-0.8604" y="-1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-77" value="&lt;span style=&quot;background-color: light-dark(#ffffff, var(--ge-dark-color, #121212));&quot;&gt;MSVC Build tools installed&amp;nbsp;/req-dir/&lt;/span&gt;" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="1800" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-89" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-78" target="IWkYalxZzcNdLPQKIjsF-79">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-101" value="Yes" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-89">
+          <mxGeometry x="-0.7476" y="-2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-97" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.611;entryY=0.028;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="349.99882352941216" y="1948.378823529412" as="sourcePoint" />
+            <mxPoint x="293.2599999999997" y="2830" as="targetPoint" />
+            <Array as="points">
+              <mxPoint x="290" y="1948" />
+              <mxPoint x="290" y="2830" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-100" value="No" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-97">
+          <mxGeometry x="-0.9274" y="1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-78" value="&lt;span style=&quot;background-color: light-dark(#ffffff, var(--ge-dark-color, #121212));&quot;&gt;Permission to install?&lt;/span&gt;" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="1910" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-79" value="Download and install MSVC Build tools to /req-dir/BuildTools/" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="2030" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-91" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-80" target="IWkYalxZzcNdLPQKIjsF-81">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-106" value="Not found" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-91">
+          <mxGeometry x="0.1713" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-80" value="&lt;span style=&quot;background-color: light-dark(#ffffff, var(--ge-dark-color, #121212));&quot;&gt;C++ redist installed&lt;/span&gt;" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="2120" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-92" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-81" target="IWkYalxZzcNdLPQKIjsF-82">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-105" value="Not found" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-92">
+          <mxGeometry x="0.1023" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-103" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-81" target="IWkYalxZzcNdLPQKIjsF-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-104" value="Found" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-103">
+          <mxGeometry x="-0.8945" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-81" value="&lt;span style=&quot;background-color: light-dark(#ffffff, var(--ge-dark-color, #121212));&quot;&gt;C++ redist in&amp;nbsp;&lt;br&gt;/req-dir/&lt;/span&gt;" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="2230" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-93" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-82" target="IWkYalxZzcNdLPQKIjsF-83">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-102" value="Yes" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-93">
+          <mxGeometry x="0.0793" y="2" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-82" value="&lt;span style=&quot;background-color: light-dark(#ffffff, var(--ge-dark-color, #121212));&quot;&gt;Permission to install?&lt;/span&gt;" style="rhombus;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="360" y="2340" width="80" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-94" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.5;entryY=0;entryDx=0;entryDy=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-83" target="IWkYalxZzcNdLPQKIjsF-4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-83" value="Download and install C++ redist to /req-dir/cpp/" style="rounded=1;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+          <mxGeometry x="320" y="2460" width="160" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-90" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.498;entryY=-0.039;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-79" target="IWkYalxZzcNdLPQKIjsF-80">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-98" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=0.603;entryY=0.017;entryDx=0;entryDy=0;entryPerimeter=0;" edge="1" parent="1" source="IWkYalxZzcNdLPQKIjsF-82" target="IWkYalxZzcNdLPQKIjsF-59">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="290" y="2380" />
+              <mxPoint x="290" y="2831" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="IWkYalxZzcNdLPQKIjsF-99" value="No" style="edgeLabel;html=1;align=center;verticalAlign=middle;resizable=0;points=[];" vertex="1" connectable="0" parent="IWkYalxZzcNdLPQKIjsF-98">
+          <mxGeometry x="-0.8845" y="-1" relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
