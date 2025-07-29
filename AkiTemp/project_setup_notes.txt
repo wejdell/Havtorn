@@ -1,4 +1,21 @@
 
+TO DO
+c++redist (py)
+  look for
+  install in SetupRequirements
+build tools (py)
+  install in SetupRequirements
+
+make py part of setup script behave like CMake's
+
+combine py-setup & cmake-setup into 1 script
+chain scripts together
+
+docuemnt in each script what things do
+
+test
+
+
 07 29
 extract using `tar`
 https://askubuntu.com/questions/25347/what-command-do-i-need-to-unzip-extract-a-tar-gz-file
