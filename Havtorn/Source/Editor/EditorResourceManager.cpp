@@ -82,7 +82,7 @@ namespace Havtorn
 		}
 	}
 
-	void CEditorResourceManager::CreateAsset(const std::string& destinationPath, EAssetType assetType) const
+	std::string CEditorResourceManager::CreateAsset(const std::string& destinationPath, EAssetType assetType, const SAssetImportOptions& importOptions) const
 	{
 		switch (assetType)
 		{
@@ -189,7 +189,7 @@ namespace Havtorn
 		return hvaPath;
 	}
 
-	void CEditorResourceManager::CreateMaterial(const std::string& destinationPath, const SMaterialAssetFileHeader& fileHeader)
+	void CEditorResourceManager::CreateMaterial(const std::string& destinationPath, const SMaterialAssetFileHeader& fileHeader) const
 	{
 		const auto data = new char[fileHeader.GetSize()];
 		fileHeader.Serialize(data);
@@ -197,27 +197,24 @@ namespace Havtorn
 		delete[] data;
 	}
 
-	void CEditorResourceManager::CreateMaterial(const std::string& destinationPath)
+	void CEditorResourceManager::CreateMaterial(const std::string& destinationPath, const std::array<std::string, 3>& texturePaths) const
 	{
 		SMaterialAssetFileHeader asset;
 
-		size_t startIndex = destinationPath.find_first_of("_") + 1;
-		std::string materialName = destinationPath.substr(startIndex, destinationPath.find_last_of(".") - startIndex);
+		std::string materialName = UGeneralUtils::ExtractFileBaseNameFromPath(destinationPath);
 
 		asset.MaterialName = "M_" + materialName;
-
-		std::vector<std::string> materialTextures = { "Assets/Textures/T_" + materialName + "_c.hva", "Assets/Textures/T_" + materialName + "_m.hva", "Assets/Textures/T_" + materialName + "_n.hva" };
-		asset.Material.Properties[0] = { -1.0f, materialTextures[0], 0 };
-		asset.Material.Properties[1] = { -1.0f, materialTextures[0], 1 };
-		asset.Material.Properties[2] = { -1.0f, materialTextures[0], 2 };
-		asset.Material.Properties[3] = { -1.0f, materialTextures[0], 3 };
-		asset.Material.Properties[4] = { -1.0f, materialTextures[2], 3 };
-		asset.Material.Properties[5] = { -1.0f, materialTextures[2], 1 };
+		asset.Material.Properties[0] = { -1.0f, texturePaths[0], 0 };
+		asset.Material.Properties[1] = { -1.0f, texturePaths[0], 1 };
+		asset.Material.Properties[2] = { -1.0f, texturePaths[0], 2 };
+		asset.Material.Properties[3] = { -1.0f, texturePaths[0], 3 };
+		asset.Material.Properties[4] = { -1.0f, texturePaths[2], 3 };
+		asset.Material.Properties[5] = { -1.0f, texturePaths[2], 1 };
 		asset.Material.Properties[6] = { -1.0f, "", -1 };
-		asset.Material.Properties[7] = { -1.0f, materialTextures[2], 2 };
-		asset.Material.Properties[8] = { -1.0f, materialTextures[1], 0 };
-		asset.Material.Properties[9] = { -1.0f, materialTextures[1], 1 };
-		asset.Material.Properties[10] = { -1.0f, materialTextures[1], 2 };
+		asset.Material.Properties[7] = { -1.0f, texturePaths[2], 2 };
+		asset.Material.Properties[8] = { -1.0f, texturePaths[1], 0 };
+		asset.Material.Properties[9] = { -1.0f, texturePaths[1], 1 };
+		asset.Material.Properties[10] = { -1.0f, texturePaths[1], 2 };
 		asset.Material.RecreateZ = true;
 
 		CreateMaterial(destinationPath, asset);
@@ -300,7 +297,7 @@ namespace Havtorn
 		
 		Textures.resize(textureCount);
 
-		CreateMaterial("Assets/Materials/M_Checkboard_128x128.hva");
+		//CreateMaterial("Assets/Materials/M_Checkboard_128x128.hva");
 
 		//SMaterialAssetFileHeader previewMaterial;
 		//previewMaterial.MaterialName = "M_MeshPreview";

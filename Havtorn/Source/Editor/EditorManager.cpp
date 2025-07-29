@@ -69,9 +69,12 @@ namespace Havtorn
 		Windows.emplace_back(new COutputLogWindow("Output Log", this));
 		Windows.emplace_back(new CHierarchyWindow("Hierarchy", this));
 		Windows.emplace_back(new CInspectorWindow("Inspector", this));
+	
+		// TODO.NW: Deal with floating windows in a nicer way
 		Windows.emplace_back(new CSpriteAnimatorGraphNodeWindow("Sprite Animator", this));
 		Windows.back()->SetEnabled(false);
 		Windows.emplace_back(new CScriptTool("Script Editor", this));
+		Windows.back()->SetEnabled(false);
 
 		ResourceManager = new CEditorResourceManager();
 		bool success = ResourceManager->Init(renderManager, framework);
