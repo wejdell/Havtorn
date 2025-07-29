@@ -64,10 +64,10 @@ namespace Havtorn
 		EDITOR_API void CreateAsset(const std::string& destinationPath, EAssetType assetType) const;
 		EDITOR_API std::string ConvertToHVA(const std::string& filePath, const std::string& destination, const SAssetImportOptions& importOptions) const;
 
-		EDITOR_API void CreateMaterial(const std::string& destinationPath, const SMaterialAssetFileHeader& fileHeader);
+		EDITOR_API void CreateMaterial(const std::string& destinationPath, const SMaterialAssetFileHeader& fileHeader) const;
 		
 		// NW: Based on current material config: albedo, material and normal textures
-		EDITOR_API void CreateMaterial(const std::string& destinationPath);
+		EDITOR_API void CreateMaterial(const std::string& destinationPath, const std::array<std::string, 3>& texturePaths) const;
 
 	private:
 		std::string GetFileName(EEditorTexture texture);

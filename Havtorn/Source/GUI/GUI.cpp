@@ -1783,7 +1783,7 @@ namespace Havtorn
 		return SAssetPickResult(EAssetPickerState::Active);
 	}
 
-	SRenderAssetCardResult GUI::RenderAssetCard(const char* label, const intptr_t& thumbnailID, const char* typeName, const SColor& color, void* dragDropPayloadToSet, U64 payLoadSize)
+	SRenderAssetCardResult GUI::RenderAssetCard(const char* label, const bool isSelected, const intptr_t& thumbnailID, const char* typeName, const SColor& color, void* dragDropPayloadToSet, U64 payLoadSize)
 	{
 		SRenderAssetCardResult result;
 
@@ -1804,12 +1804,12 @@ namespace Havtorn
 		GUI::AddRectFilled(GUI::GetCursorScreenPos(), thumbnailSize, SColor(40));
 		GUI::SetCursorPos(cardStartPos);
 
-		if (GUI::Selectable("", false, { ESelectableFlag::AllowDoubleClick, ESelectableFlag::AllowOverlap }, cardSize))
+		if (GUI::Selectable("", isSelected, { ESelectableFlag::AllowDoubleClick, ESelectableFlag::AllowOverlap}, cardSize))
 		{
+			if (GUI::IsMouseReleased())
+				result.IsClicked = true;
 			if (GUI::IsDoubleClick())
-			{
 				result.IsDoubleClicked = true;
-			}
 		}
 
 		if (GUI::BeginDragDropSource())
