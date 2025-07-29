@@ -9,6 +9,8 @@
 #include "Assets/SequencerAsset.h"
 #include "HexRune/HexRune.h"
 
+#include <variant>
+
 namespace Havtorn
 {
 	struct SStaticModelFileHeader
@@ -298,6 +300,7 @@ namespace Havtorn
 		DeserializeData(Data, fromData, pointerPosition);
 	}
 
+	// TODO.NW: Rename to SMaterialFileHeader?
 	struct SMaterialAssetFileHeader
 	{
 		EAssetType AssetType = EAssetType::Material;
@@ -510,4 +513,7 @@ namespace Havtorn
 		DeserializeData(AssetType, fromData, pointerPosition);
 		outScript->Deserialize(fromData, pointerPosition);
 	}
+
+	// TODO.NW: Make an alias for a reasonable name instead of monostate
+	typedef std::variant<std::monostate, SStaticModelFileHeader, SSkeletalModelFileHeader, SSkeletalAnimationFileHeader, STextureFileHeader, SMaterialAssetFileHeader, SSceneFileHeader, SScriptFileHeader> SAssetFileHeader;
 }

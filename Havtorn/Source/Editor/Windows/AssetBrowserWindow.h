@@ -28,11 +28,12 @@ namespace Havtorn
 		void AssetCreationModal();
 
 		void ImportOptionsTexture();
-		void ImportOptionsMaterial();
 		void ImportOptionsSpriteAnimation();
 		void ImportOptionsStaticMesh();
 		void ImportOptionsSkeletalMesh();
 		void ImportOptionsAnimation();
+		
+		SAssetFileHeader CreateOptionsMaterial();
 
 		void InspectFolderTree(const std::string& folderName, const intptr_t& folderIconID);
 		void InspectDirectoryEntry(const std::filesystem::directory_entry& entry, U32& outCurrentID, const intptr_t& folderIconID);
@@ -50,6 +51,7 @@ namespace Havtorn
 		EAssetType AssetTypeToCreate = EAssetType::None;
 		std::string DirectoryToSaveTo = DefaultAssetPath;
 		std::string NewAssetName = "NewAsset";
+		SAssetFileHeader NewAssetFileHeader = std::monostate();
 
 		// TODO.NW: Rather not store this like this, see if there's a better way
 		std::array<SEditorAssetRepresentation*, 3> NewMaterialTextures = { nullptr, nullptr, nullptr };

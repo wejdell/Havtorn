@@ -82,56 +82,59 @@ namespace Havtorn
 		}
 	}
 
-	std::string CEditorResourceManager::CreateAsset(const std::string& destinationPath, EAssetType assetType, const SAssetImportOptions& importOptions) const
+	std::string CEditorResourceManager::CreateAsset(const std::string& destinationPath, const SAssetFileHeader& fileHeader) const
 	{
-		switch (assetType)
+		// TODO.NW: See if we can make char stream we can then convert to data buffer,
+		// so as to not repeat the logic for every case
+
+		std::string hvaPath = "INVALID_PATH";
+		if (std::holds_alternative<SStaticModelFileHeader>(fileHeader))
 		{
-		case EAssetType::StaticMesh:
-			break;
-		case EAssetType::SkeletalMesh:
-			break;
-		case EAssetType::Texture:
-			break;
-		case EAssetType::Material:
+			SStaticModelFileHeader header = std::get<SStaticModelFileHeader>(fileHeader);
+			const auto data = new char[header.GetSize()];
+			header.Serialize(data);
+			hvaPath = destinationPath + header.Name + ".hva";
+			GEngine::GetFileSystem()->Serialize(hvaPath, &data[0], header.GetSize());
+			delete[] data;
+		}			    
+		else if (std::holds_alternative<SSkeletalModelFileHeader>(fileHeader))
 		{
-			SMaterialAssetFileHeader asset;
-
-			asset.MaterialName = "M_Bed";
-			
-			std::vector<std::string> materialTextures = { "Assets/Textures/T_Bed_c.hva", "Assets/Textures/T_Bed_m.hva", "Assets/Textures/T_Bed_n.hva" };
-			asset.Material.Properties[0] = { -1.0f, materialTextures[0], 0 };
-			asset.Material.Properties[1] = { -1.0f, materialTextures[0], 1 };
-			asset.Material.Properties[2] = { -1.0f, materialTextures[0], 2 };
-			asset.Material.Properties[3] = { -1.0f, materialTextures[0], 3 };
-			asset.Material.Properties[4] = { -1.0f, materialTextures[2], 3 };
-			asset.Material.Properties[5] = { -1.0f, materialTextures[2], 1 };
-			asset.Material.Properties[6] = { -1.0f, "", -1};
-			asset.Material.Properties[7] = { -1.0f, materialTextures[2], 2 };
-			asset.Material.Properties[8] = { -1.0f, materialTextures[1], 0 };
-			asset.Material.Properties[9] = { -1.0f, materialTextures[1], 1 };
-			asset.Material.Properties[10] = { -1.0f, materialTextures[1], 2 };
-			asset.Material.RecreateZ = true;
-
-			const auto data = new char[asset.GetSize()];
-
-			asset.Serialize(data);
-			GEngine::GetFileSystem()->Serialize(destinationPath, &data[0], asset.GetSize());
+			SSkeletalModelFileHeader header = std::get<SSkeletalModelFileHeader>(fileHeader);
+			const auto data = new char[header.GetSize()];
+			header.Serialize(data);
+			hvaPath = destinationPath + header.Name + ".hva";
+			GEngine::GetFileSystem()->Serialize(hvaPath, &data[0], header.GetSize());
+			delete[] data;
+		}		
+		else if (std::holds_alternative<SSkeletalAnimationFileHeader>(fileHeader))
+		{
+			SSkeletalAnimationFileHeader header = std::get<SSkeletalAnimationFileHeader>(fileHeader);
+			const auto data = new char[header.GetSize()];
+			header.Serialize(data);
+			hvaPath = destinationPath + header.Name + ".hva";
+			GEngine::GetFileSystem()->Serialize(hvaPath, &data[0], header.GetSize());
+			delete[] data;
+		}		
+		else if (std::holds_alternative<STextureFileHeader>(fileHeader))
+		{
+			STextureFileHeader header = std::get<STextureFileHeader>(fileHeader);
+			const auto data = new char[header.GetSize()];
+			header.Serialize(data);
+			hvaPath = destinationPath + header.MaterialName + ".hva";
+			GEngine::GetFileSystem()->Serialize(hvaPath, &data[0], header.GetSize());
+			delete[] data;
+		}		
+		else if (std::holds_alternative<SMaterialAssetFileHeader>(fileHeader))
+		{
+			SMaterialAssetFileHeader header = std::get<SMaterialAssetFileHeader>(fileHeader);
+			const auto data = new char[header.GetSize()];
+			header.Serialize(data);
+			hvaPath = destinationPath + header.MaterialName + ".hva";
+			GEngine::GetFileSystem()->Serialize(hvaPath, &data[0], header.GetSize());
 			delete[] data;
 		}
-		break;
-		case EAssetType::Animation:
-			break;
-		case EAssetType::SpriteAnimation:
-			break;
-		case EAssetType::AudioOneShot:
-			break;
-		case EAssetType::AudioCollection:
-			break;
-		case EAssetType::VisualFX:
-			break;
-		default:
-			break;
-		}
+
+		return hvaPath;
 	}
 
 	std::string CEditorResourceManager::ConvertToHVA(const std::string& filePath, const std::string& destination, const SAssetImportOptions& importOptions) const
@@ -143,7 +146,7 @@ namespace Havtorn
 		case EAssetType::SkeletalMesh: // fallthrough
 		case EAssetType::Animation:
 		{
-			hvaPath = UModelImporter::ImportFBX(filePath, destination, importOptions);
+			hvaPath = CreateAsset(destination, UModelImporter::ImportFBX(filePath, importOptions));
 		}
 		break;
 		case EAssetType::Texture:
@@ -157,25 +160,19 @@ namespace Havtorn
 			else if (extension == ".tga")
 				format = ETextureFormat::TGA;
 
-			STextureFileHeader asset;
-			asset.AssetType = EAssetType::Texture;
+			STextureFileHeader fileHeader;
+			fileHeader.AssetType = EAssetType::Texture;
 
-			asset.MaterialName = destination + filePath.substr(filePath.find_last_of('\\'), filePath.find_first_of('.') - filePath.find_last_of('\\'));// destination.substr(0, destination.find_last_of("."));
-			asset.OriginalFormat = format;
-			asset.Suffix = filePath[filePath.find_last_of(".") - 1];
-			asset.Data = std::move(textureFileData);
+			fileHeader.MaterialName = destination + filePath.substr(filePath.find_last_of('\\'), filePath.find_first_of('.') - filePath.find_last_of('\\'));// destination.substr(0, destination.find_last_of("."));
+			fileHeader.OriginalFormat = format;
+			fileHeader.Suffix = filePath[filePath.find_last_of(".") - 1];
+			fileHeader.Data = std::move(textureFileData);
 
-			const auto data = new char[asset.GetSize()];
-
-			asset.Serialize(data);
-			GEngine::GetFileSystem()->Serialize(asset.MaterialName + ".hva", &data[0], asset.GetSize());
-			delete[] data;
-
-			hvaPath = asset.MaterialName + ".hva";
+			hvaPath = CreateAsset(destination, fileHeader);
 		}
 		break;
 		case EAssetType::Material:
-			// NW: Call CreateMaterial?
+			// TODO.NW: Maybe make it clear here that we're expecting CreateAsset calls for this instead
 			break;
 		break;
 		case EAssetType::AudioOneShot:
