@@ -5,6 +5,12 @@ c++redist (py)
   install in SetupRequirements
 build tools (py)
   install in SetupRequirements
+premake
+  is it actually used? --> no, remove it
+  what is it,
+  check for install
+  install in SetupRequirements
+
 
 make py part of setup script behave like CMake's
 
@@ -13,7 +19,12 @@ chain scripts together
 
 docuemnt in each script what things do
 
+cleanup installers through script
+
 test
+  clean pc
+  with installs
+  with manual installs
 
 
 07 29
