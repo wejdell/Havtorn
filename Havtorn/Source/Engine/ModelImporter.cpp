@@ -138,12 +138,12 @@ namespace Havtorn
 		return havtornKey;
 	}
 
-	std::string UModelImporter::ImportFBX(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions)
+	SAssetFileHeader UModelImporter::ImportFBX(const std::string& filePath, const SAssetImportOptions& importOptions)
 	{
 		if (!CFileSystem::DoesFileExist(filePath))
 		{
 			HV_LOG_ERROR("ModelImporter could not import %s. File does not exist!", filePath.c_str());
-			return "ERROR: File does not exist.";
+			return std::monostate();
 		}
 
 		// NW: To make use of destructible meshes, add DontJoinIdentical (vertices)
@@ -152,7 +152,7 @@ namespace Havtorn
 		if (!assimpScene)
 		{
 			HV_LOG_ERROR("ModelImporter failed to import %s! Assimp Error: %s", filePath.c_str(), aiGetErrorString());
-			return "ERROR: Failed to import.";
+			return std::monostate();
 		}
 
 		if (importOptions.AssetType == EAssetType::Animation)
@@ -160,16 +160,16 @@ namespace Havtorn
 			if (!assimpScene->HasAnimations() /*|| assimpScene->HasMeshes()*/)
 			{
 				HV_LOG_ERROR("ModelImporter expected %s to be an animation file, but it either has no animations or contains meshes!", filePath.c_str());
-				return "ERROR: Failed to import.";
+				return std::monostate();
 			}
 
-			return ImportAnimation(filePath, destinationPath, importOptions, assimpScene);
+			return ImportAnimation(assimpScene, importOptions);
 		}
 
 		if (!assimpScene->HasMeshes())
 		{
 			HV_LOG_ERROR("ModelImporter expected %s to be a mesh file, but it has no meshes!", filePath.c_str());
-			return "ERROR: Failed to import";
+			return std::monostate();
 		}
 
 		const aiMesh* fbxMesh = assimpScene->mMeshes[0];
@@ -183,7 +183,7 @@ namespace Havtorn
 		if (!hasPositions || !hasNormals || !hasTangents || !hasTextures)
 		{
 			HV_LOG_ERROR("ModelImporter expected %s to be a mesh file, but it is lacking position, normal, tangent or UV information!", filePath.c_str());
-			return "ERROR: Failed to import";
+			return std::monostate();
 		}
 
 		if (importOptions.AssetType == EAssetType::SkeletalMesh)
@@ -191,20 +191,20 @@ namespace Havtorn
 			if (!hasBones)
 			{
 				HV_LOG_ERROR("ModelImporter expected %s to be a skeletal mesh file, but it lacks bone information!", filePath.c_str());
-				return "ERROR: Failed to import";
+				return std::monostate();
 			}
 
-			return ImportSkeletalMesh(filePath, destinationPath, importOptions, assimpScene);
+			return ImportSkeletalMesh(assimpScene, importOptions);
 		}
 
 		// Static Mesh
 		if (hasBones)
 			HV_LOG_WARN("ModelImporter expected %s to be a static mesh file, but it contains bone information!", filePath.c_str());
 
-		return ImportStaticMesh(filePath, destinationPath, importOptions, assimpScene);
+		return ImportStaticMesh(assimpScene, importOptions);
 	}
 
-	std::string UModelImporter::ImportStaticMesh(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions, const aiScene* assimpScene)
+	SStaticModelFileHeader UModelImporter::ImportStaticMesh(const aiScene* assimpScene, const SAssetImportOptions& importOptions)
 	{
 		SStaticModelFileHeader fileHeader;
 		fileHeader.AssetType = EAssetType::StaticMesh;
@@ -272,11 +272,7 @@ namespace Havtorn
 		// Material Count
 		fileHeader.NumberOfMaterials = STATIC_U8(assimpScene->mNumMaterials);
 
-		std::string newFileName = destinationPath + UGeneralUtils::ExtractFileBaseNameFromPath(filePath) + ".hva";
-		const auto fileData = new char[fileHeader.GetSize()];
-		fileHeader.Serialize(fileData);
-		GEngine::GetFileSystem()->Serialize(newFileName, &fileData[0], fileHeader.GetSize());
-		return newFileName;
+		return fileHeader;
 	}
 
 	void ExtractNodes(const aiScene* scene, const SAssetImportOptions& importOptions, aiNode* node, const std::vector<SSkeletalMeshBone>& bindPose, std::vector<SSkeletalMeshNode>& nodesToPopulate)
@@ -300,7 +296,7 @@ namespace Havtorn
 			ExtractNodes(scene, importOptions, node->mChildren[i], bindPose, nodesToPopulate);
 	}
 
-	std::string UModelImporter::ImportSkeletalMesh(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions, const aiScene* assimpScene)
+	SSkeletalModelFileHeader UModelImporter::ImportSkeletalMesh(const aiScene* assimpScene, const SAssetImportOptions& importOptions)
 	{
 		SSkeletalModelFileHeader fileHeader;
 		fileHeader.AssetType = EAssetType::SkeletalMesh;
@@ -421,14 +417,10 @@ namespace Havtorn
 		fileHeader.NumberOfMaterials = STATIC_U8(assimpScene->mNumMaterials);
 		fileHeader.NumberOfNodes = STATIC_U32(fileHeader.Nodes.size());
 
-		std::string newFileName = destinationPath + UGeneralUtils::ExtractFileBaseNameFromPath(filePath) + ".hva";
-		const auto fileData = new char[fileHeader.GetSize()];
-		fileHeader.Serialize(fileData);
-		GEngine::GetFileSystem()->Serialize(newFileName, &fileData[0], fileHeader.GetSize());
-		return newFileName;
+		return fileHeader;
 	}
 
-	std::string UModelImporter::ImportAnimation(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions, const aiScene* assimpScene)
+	SSkeletalAnimationFileHeader UModelImporter::ImportAnimation(const aiScene* assimpScene, const SAssetImportOptions& importOptions)
 	{
 		const aiAnimation* animation = assimpScene->mAnimations[0];
 
@@ -437,7 +429,7 @@ namespace Havtorn
 		// TODO.NW: Support multiple animations per file? Support montages somehow. Could be separate file using these headers (SSkeletalAnimationMontageFileHeader)
 		SSkeletalAnimationFileHeader fileHeader;
 		fileHeader.AssetType = EAssetType::Animation;
-		fileHeader.Name = UGeneralUtils::ExtractFileNameFromPath(filePath);
+		fileHeader.Name = assimpScene->mName.C_Str();
 		fileHeader.DurationInTicks = STATIC_U32(animation->mDuration);
 		fileHeader.TickRate = STATIC_U32(animation->mTicksPerSecond);
 		fileHeader.ImportScale = importOptions.Scale;
@@ -483,10 +475,6 @@ namespace Havtorn
 			}
 		}
 
-		std::string newFileName = destinationPath + UGeneralUtils::ExtractFileBaseNameFromPath(filePath) + ".hva";
-		const auto fileData = new char[fileHeader.GetSize()];
-		fileHeader.Serialize(fileData);
-		GEngine::GetFileSystem()->Serialize(newFileName, &fileData[0], fileHeader.GetSize());
-		return newFileName;
+		return fileHeader;
 	}
 }

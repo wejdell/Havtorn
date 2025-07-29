@@ -249,7 +249,7 @@ namespace Havtorn
 			ImportOptionsTexture();
 			break;
 		case EAssetType::Material:
-			ImportOptionsMaterial();
+			CreateOptionsMaterial();
 			break;
 		case EAssetType::Animation:
 			ImportOptionsAnimation();
@@ -306,6 +306,7 @@ namespace Havtorn
 		auto closePopup = [&]()
 			{
 				IsCreatingAsset = false;
+				NewAssetFileHeader = std::monostate();
 				Manager->SetIsModalOpen(false);
 				GUI::CloseCurrentPopup();
 			};
@@ -339,7 +340,7 @@ namespace Havtorn
 		switch (AssetTypeToCreate)
 		{
 		case EAssetType::Material:
-			ImportOptionsMaterial();
+			NewAssetFileHeader = CreateOptionsMaterial();
 			break;
 		case EAssetType::Script:
 		{
@@ -359,16 +360,20 @@ namespace Havtorn
 
 		if (GUI::Button("Create"))
 		{
-			// TODO.NW: Guard this properly
-			std::string newFileName = DirectoryToSaveTo + "/" + NewAssetName + ".hva";
-			std::filesystem::directory_entry newDir;
-			newDir.assign(std::filesystem::path(newFileName));
-			Manager->RemoveAssetRep(newDir);
-
-			//std::string hvaFilePath = Manager->GetResourceManager()->ConvertToHVA(filePath, CurrentDirectory.string() + "/", ImportOptions);
-			Manager->GetResourceManager()->CreateMaterial(newFileName, { NewMaterialTextures[0]->DirectoryEntry.path().string(), NewMaterialTextures[1]->DirectoryEntry.path().string(), NewMaterialTextures[2]->DirectoryEntry.path().string() });
-			Manager->CreateAssetRep(newFileName);
-			closePopup();
+			// TODO.NW: Make proper folder navigation element for choosing DirectoryToSaveTo, validate NewAssetName
+			std::string newFilePath = Manager->GetResourceManager()->CreateAsset(DirectoryToSaveTo + "/", NewAssetFileHeader);
+			if (newFilePath != "INVALID_PATH")
+			{
+				std::filesystem::directory_entry newDir;
+				newDir.assign(std::filesystem::path(newFilePath));
+				Manager->RemoveAssetRep(newDir);
+				Manager->CreateAssetRep(newDir);
+				closePopup();
+			}
+			else
+			{
+				HV_LOG_ERROR("Could not create new asset in path: %s", std::string(DirectoryToSaveTo + "/" + NewAssetName + ".hva").c_str());
+			}
 		}
 
 		GUI::SameLine();
@@ -383,35 +388,6 @@ namespace Havtorn
 
 	void CAssetBrowserWindow::ImportOptionsTexture()
 	{
-	}
-
-	void CAssetBrowserWindow::ImportOptionsMaterial()
-	{
-		GUI::TextDisabled("Packing: AlbedoMaterialNormal_Packed");
-
-		F32 thumbnailPadding = 4.0f;
-		F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + thumbnailPadding;
-		F32 panelWidth = 256.0f;
-		I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
-		
-		const std::array<std::string, 3> labels = { "Albedo", "Material", "Normal" };
-		for (U64 i = 0; i < 3; i++)
-		{
-			intptr_t assetPickerThumbnail = NewMaterialTextures[i] != nullptr ? (intptr_t)NewMaterialTextures[i]->TextureRef.GetShaderResourceView() : intptr_t();
-			std::string pickerLabel = labels[i].c_str();
-			if (NewMaterialTextures[i] != nullptr)
-			{
-				pickerLabel.append(": ");
-				pickerLabel.append(NewMaterialTextures[i]->Name);
-			} 
-			GUI::PushID(labels[i].c_str());
-			// TODO.NW: Filter away cubemaps with Axel's filtering
-			SAssetPickResult result = GUI::AssetPicker(pickerLabel.c_str(), "Texture", assetPickerThumbnail, "Assets/Textures", columnCount, Manager->GetAssetInspectFunction());
-			GUI::PopID();
-
-			if (result.State == EAssetPickerState::AssetPicked)
-				NewMaterialTextures[i] = Manager->GetAssetRepFromDirEntry(result.PickedEntry).get();
-		}
 	}
 
 	void CAssetBrowserWindow::ImportOptionsSpriteAnimation()
@@ -442,6 +418,63 @@ namespace Havtorn
 			ImportOptions.AssetRep = Manager->GetAssetRepFromDirEntry(result.PickedEntry).get();
 
 		GUI::DragFloat("Import Scale", ImportOptions.Scale, 0.01f);
+	}
+
+	SAssetFileHeader CAssetBrowserWindow::CreateOptionsMaterial()
+	{
+		GUI::TextDisabled("Packing: AlbedoMaterialNormal_Packed");
+
+		F32 thumbnailPadding = 4.0f;
+		F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + thumbnailPadding;
+		F32 panelWidth = 256.0f;
+		I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
+
+		bool canCreateMaterial = true;
+		const std::array<std::string, 3> labels = { "Albedo", "Material", "Normal" };
+		for (U64 i = 0; i < 3; i++)
+		{
+			intptr_t assetPickerThumbnail = NewMaterialTextures[i] != nullptr ? (intptr_t)NewMaterialTextures[i]->TextureRef.GetShaderResourceView() : intptr_t();
+			std::string pickerLabel = labels[i].c_str();
+			if (NewMaterialTextures[i] != nullptr)
+			{
+				pickerLabel.append(": ");
+				pickerLabel.append(NewMaterialTextures[i]->Name);
+			}
+			GUI::PushID(labels[i].c_str());
+			// TODO.NW: Filter away cubemaps with Axel's filtering
+			SAssetPickResult result = GUI::AssetPicker(pickerLabel.c_str(), "Texture", assetPickerThumbnail, "Assets/Textures", columnCount, Manager->GetAssetInspectFunction());
+			GUI::PopID();
+
+			if (result.State == EAssetPickerState::AssetPicked)
+				NewMaterialTextures[i] = Manager->GetAssetRepFromDirEntry(result.PickedEntry).get();
+
+			if (NewMaterialTextures[i] == nullptr)
+				canCreateMaterial = false;
+		}
+
+		if (!canCreateMaterial)
+			return std::monostate();
+
+		std::string texturePath0 = NewMaterialTextures[0]->DirectoryEntry.path().string();
+		std::string texturePath1 = NewMaterialTextures[1]->DirectoryEntry.path().string();
+		std::string texturePath2 = NewMaterialTextures[2]->DirectoryEntry.path().string();
+
+		SMaterialAssetFileHeader fileHeader;
+		fileHeader.MaterialName = "M_" + NewAssetName;
+		fileHeader.Material.Properties[0] = { -1.0f, texturePath0, 0 };
+		fileHeader.Material.Properties[1] = { -1.0f, texturePath0, 1 };
+		fileHeader.Material.Properties[2] = { -1.0f, texturePath0, 2 };
+		fileHeader.Material.Properties[3] = { -1.0f, texturePath0, 3 };
+		fileHeader.Material.Properties[4] = { -1.0f, texturePath2, 3 };
+		fileHeader.Material.Properties[5] = { -1.0f, texturePath2, 1 };
+		fileHeader.Material.Properties[6] = { -1.0f, "", -1 };
+		fileHeader.Material.Properties[7] = { -1.0f, texturePath2, 2 };
+		fileHeader.Material.Properties[8] = { -1.0f, texturePath1, 0 };
+		fileHeader.Material.Properties[9] = { -1.0f, texturePath1, 1 };
+		fileHeader.Material.Properties[10] = { -1.0f, texturePath1, 2 };
+		fileHeader.Material.RecreateZ = true;
+
+		return fileHeader;
 	}
 
 	void CAssetBrowserWindow::InspectFolderTree(const std::string& folderName, const intptr_t& folderIconID)

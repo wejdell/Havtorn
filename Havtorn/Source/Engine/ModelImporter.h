@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "FileSystem/FileHeaderDeclarations.h"
+
 struct aiScene;
 
 namespace Havtorn
@@ -20,11 +22,11 @@ namespace Havtorn
 	class UModelImporter
 	{
 	public:
-		static ENGINE_API std::string ImportFBX(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions);
+		static ENGINE_API SAssetFileHeader ImportFBX(const std::string& filePath, const SAssetImportOptions& importOptions);
 
 	private:
-		static std::string ImportStaticMesh(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions, const aiScene* assimpScene);
-		static std::string ImportSkeletalMesh(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions, const aiScene* assimpScene);
-		static std::string ImportAnimation(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions, const aiScene* assimpScene);
+		static SStaticModelFileHeader ImportStaticMesh(const aiScene* assimpScene, const SAssetImportOptions& importOptions);
+		static SSkeletalModelFileHeader ImportSkeletalMesh(const aiScene* assimpScene, const SAssetImportOptions& importOptions);
+		static SSkeletalAnimationFileHeader ImportAnimation(const aiScene* assimpScene, const SAssetImportOptions& importOptions);
 	};
 }
