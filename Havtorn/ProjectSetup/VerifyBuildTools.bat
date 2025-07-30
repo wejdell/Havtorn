@@ -1,8 +1,12 @@
 @echo off
 REM setlocal enabledelayedexpansion
-
+echo %ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe
+%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe
+PAUSE
 if exist %ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe 
 (
+	echo "Found VS Build Tools"
+	PAUSE
 	exit 0
 )
 else 

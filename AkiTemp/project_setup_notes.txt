@@ -4,6 +4,7 @@ c++redist (py)
   look for
   install in SetupRequirements
 build tools (py)
+  look for
   install in SetupRequirements
 premake
   is it actually used? --> no, remove it
