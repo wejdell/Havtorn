@@ -27,6 +27,9 @@ test
   with installs
   with manual installs
 
+07 30
+issues with updating git submodules: git is not in PATH
+
 
 07 29
 extract using `tar`
