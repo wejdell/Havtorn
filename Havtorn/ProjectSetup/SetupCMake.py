@@ -31,7 +31,7 @@ class CMakeConfiguration:
         cmake_filter = "CMake"
         path_env_var_split = path_env_var.split(";")
         filtered_cmake_path = list(filter(lambda p: cmake_filter in p, path_env_var_split))
-        os.environ["Path"].add("C:\Users\AkiGonzalez\source\repos\Havtorn\Havtorn\ProjectSetup\SetupCMake.py")
+        #os.environ["Path"].add("C:\Users\AkiGonzalez\source\repos\Havtorn\Havtorn\ProjectSetup\SetupCMake.py")
         
         if (not filtered_cmake_path):
             return cls.InstallCMake()
