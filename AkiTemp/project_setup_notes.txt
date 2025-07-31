@@ -39,6 +39,11 @@ VerifyAndSetProjectRequirements - c++redist & vsbuildtools
 CompileDependencies - complie project dependencies, assumes cmake, git and python are OK and callable
 GenerateProject - generates VS project, assumes cmake, git and python are OK and callable
 
+08 01
+todo assemble!
+don't forget to cleanup in the install scripts
+cmake and python scripts needs to be a base-script so the variables are set right
+
 07 31
 https://learn.microsoft.com/en-us/answers/questions/218042/how-can-i-find-out-which-vc-redist-x86-exe-to-use
 c++ redist to use is based on toolset: vs2022 would be ?
@@ -48,6 +53,8 @@ check registry
 vs_BuildTools.exe silent:
 https://learn.microsoft.com/en-us/answers/questions/192162/visual-studio-build-tools-silent-install
 'vs_buildtools.exe --quiet --add Microsoft.VisualStudio.Workload.VCTools'
+
+https://stackoverflow.com/questions/22575662/filename-too-long-in-git-for-windows
 
 07 30
 issues with updating git submodules: git is not in PATH
