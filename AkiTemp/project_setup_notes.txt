@@ -30,6 +30,11 @@ test
 07 30
 issues with updating git submodules: git is not in PATH
 
+silent install git/ cmd args:
+https://superuser.com/questions/944576/git-for-windows-silent-install-silent-arguments
+https://jrsoftware.org/ishelp/index.php?topic=setupcmdline
+flags: https://gitforwindows.org/silent-or-unattended-installation.html
+
 
 07 29
 extract using `tar`
