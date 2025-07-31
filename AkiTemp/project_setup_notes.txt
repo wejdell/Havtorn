@@ -4,7 +4,6 @@ c++redist (py)
   look for
   install in SetupRequirements
 build tools (py)
-  look for
   install in SetupRequirements
 premake
   is it actually used? --> no, remove it
@@ -40,6 +39,15 @@ VerifyAndSetProjectRequirements - c++redist & vsbuildtools
 CompileDependencies - complie project dependencies, assumes cmake, git and python are OK and callable
 GenerateProject - generates VS project, assumes cmake, git and python are OK and callable
 
+07 31
+https://learn.microsoft.com/en-us/answers/questions/218042/how-can-i-find-out-which-vc-redist-x86-exe-to-use
+c++ redist to use is based on toolset: vs2022 would be ?
+https://stackoverflow.com/questions/46178559/how-to-detect-if-visual-c-2017-redistributable-is-installed
+check registry
+
+vs_BuildTools.exe silent:
+https://learn.microsoft.com/en-us/answers/questions/192162/visual-studio-build-tools-silent-install
+'vs_buildtools.exe --quiet --add Microsoft.VisualStudio.Workload.VCTools'
 
 07 30
 issues with updating git submodules: git is not in PATH
