@@ -27,6 +27,20 @@ test
   with installs
   with manual installs
 
+main scripts:
+SetupProject - git, python & cmake setup scripts-> verify c++redist & build tools -> then CompileDependencies & GenerateProject
+BuildEditor - build editor executable. assumes project generated 
+BuildGame (todo) - build game executable. assumes project generated.
+
+sub scripts:
+GenerateProject - generate project files using cmake
+VerifyAndSetGit - git installed & callable, submodule init, lfs init, longpaths?
+VerifyAndSetSetupRequirements - python & cmake: find, install, set variable
+VerifyAndSetProjectRequirements - c++redist & vsbuildtools
+CompileDependencies - complie project dependencies, assumes cmake, git and python are OK and callable
+GenerateProject - generates VS project, assumes cmake, git and python are OK and callable
+
+
 07 30
 issues with updating git submodules: git is not in PATH
 
