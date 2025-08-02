@@ -101,6 +101,29 @@ namespace Havtorn
 				}
 				GUI::EndTable();
 			}
+
+			if (GUI::BeginPopupContextWindow())
+			{
+				if (IsSelectionHovered)
+				{
+					if (GUI::MenuItem("Copy Asset Path"))
+						GUI::CopyToClipboard(SelectedAsset->path().string().c_str());
+				}
+				else
+				{
+					if (GUI::MenuItem("Create Asset"))
+					{
+						IsCreatingAsset = true;
+						DirectoryToSaveTo = CurrentDirectory.string();
+						NewAssetName = "NewAsset";
+					}
+				}
+
+				GUI::EndPopup();
+			}
+			else
+				IsSelectionHovered = false;
+
 			GUI::EndChild();
 		}
 
@@ -109,6 +132,13 @@ namespace Havtorn
 			GUI::OpenPopup("Asset Import");
 			GUI::SetNextWindowPos(GUI::GetViewportCenter(), EWindowCondition::Appearing, SVector2<F32>(0.5f, 0.5f));
 			AssetImportModal();
+		}
+		
+		if (IsCreatingAsset)
+		{
+			GUI::OpenPopup("Create Asset");
+			GUI::SetNextWindowPos(GUI::GetViewportCenter(), EWindowCondition::Appearing, SVector2<F32>(0.5f, 0.5f));
+			AssetCreationModal();
 		}
 
 		GUI::End();
@@ -219,7 +249,7 @@ namespace Havtorn
 			ImportOptionsTexture();
 			break;
 		case EAssetType::Material:
-			ImportOptionsMaterial();
+			CreateOptionsMaterial();
 			break;
 		case EAssetType::Animation:
 			ImportOptionsAnimation();
@@ -268,11 +298,95 @@ namespace Havtorn
 		GUI::EndPopup();
 	}
 
-	void CAssetBrowserWindow::ImportOptionsTexture()
+	void CAssetBrowserWindow::AssetCreationModal()
 	{
+		if (!GUI::BeginPopupModal("Create Asset", NULL, { EWindowFlag::AlwaysAutoResize }))
+			return;
+
+		auto closePopup = [&]()
+			{
+				IsCreatingAsset = false;
+				NewAssetFileHeader = std::monostate();
+				Manager->SetIsModalOpen(false);
+				GUI::CloseCurrentPopup();
+			};
+
+		Manager->SetIsModalOpen(true);
+
+		GUI::SliderEnum("Asset Type", AssetTypeToCreate, 
+		{
+		"None",
+		"StaticMesh (Not Supported Yet)",
+		"SkeletalMesh (Not Supported Yet)",
+		"Texture (Not Supported Yet)",
+		"Material",
+		"Animation (Not Supported Yet)",
+		"SpriteAnimation (Not Supported Yet)",
+		"AudioOneShot (Not Supported Yet)",
+		"AudioCollection (Not Supported Yet)",
+		"VisualFX (Not Supported Yet)",
+		"Scene (Not Supported Yet)",
+		"Sequencer (Not Supported Yet)",
+		"Script"
+			});
+
+		if (AssetTypeToCreate == EAssetType::None)
+			AssetTypeToCreate = EAssetType::StaticMesh;
+
+		GUI::InputText("Destination Folder", DirectoryToSaveTo);
+		GUI::InputText("Asset Name", NewAssetName);
+		GUI::Separator();
+
+		switch (AssetTypeToCreate)
+		{
+		case EAssetType::Material:
+			NewAssetFileHeader = CreateOptionsMaterial();
+			break;
+		case EAssetType::Script:
+		{
+
+		}
+			break;
+		default:
+			break;
+		}
+
+		// Center buttons
+		F32 width = 0.0f;
+		width += GUI::CalculateTextSize("Create").X + GUI::ThumbnailPadding;
+		width += GUI::GetStyleVar(EStyleVar::ItemSpacing).X;
+		width += GUI::CalculateTextSize("Cancel").X + GUI::ThumbnailPadding;
+		AlignForWidth(width);
+
+		if (GUI::Button("Create"))
+		{
+			// TODO.NW: Make proper folder navigation element for choosing DirectoryToSaveTo, validate NewAssetName
+			std::string newFilePath = Manager->GetResourceManager()->CreateAsset(DirectoryToSaveTo + "/", NewAssetFileHeader);
+			if (newFilePath != "INVALID_PATH")
+			{
+				std::filesystem::directory_entry newDir;
+				newDir.assign(std::filesystem::path(newFilePath));
+				Manager->RemoveAssetRep(newDir);
+				Manager->CreateAssetRep(newDir);
+				closePopup();
+			}
+			else
+			{
+				HV_LOG_ERROR("Could not create new asset in path: %s", std::string(DirectoryToSaveTo + "/" + NewAssetName + ".hva").c_str());
+			}
+		}
+
+		GUI::SameLine();
+
+		if (GUI::Button("Cancel"))
+		{
+			closePopup();
+		}
+
+		GUI::EndPopup();
 	}
 
-	void CAssetBrowserWindow::ImportOptionsMaterial()
+	void CAssetBrowserWindow::ImportOptionsTexture()
 	{
 	}
 
@@ -305,6 +419,63 @@ namespace Havtorn
 			ImportOptions.AssetRep = Manager->GetAssetRepFromDirEntry(result.PickedEntry).get();
 
 		GUI::DragFloat("Import Scale", ImportOptions.Scale, 0.01f);
+	}
+
+	SAssetFileHeader CAssetBrowserWindow::CreateOptionsMaterial()
+	{
+		GUI::TextDisabled("Packing: AlbedoMaterialNormal_Packed");
+
+		F32 thumbnailPadding = 4.0f;
+		F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + thumbnailPadding;
+		F32 panelWidth = 256.0f;
+		I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
+
+		bool canCreateMaterial = true;
+		const std::array<std::string, 3> labels = { "Albedo", "Material", "Normal" };
+		for (U64 i = 0; i < 3; i++)
+		{
+			intptr_t assetPickerThumbnail = NewMaterialTextures[i] != nullptr ? (intptr_t)NewMaterialTextures[i]->TextureRef.GetShaderResourceView() : intptr_t();
+			std::string pickerLabel = labels[i].c_str();
+			if (NewMaterialTextures[i] != nullptr)
+			{
+				pickerLabel.append(": ");
+				pickerLabel.append(NewMaterialTextures[i]->Name);
+			}
+			GUI::PushID(labels[i].c_str());
+			// TODO.NW: Filter away cubemaps with Axel's filtering
+			SAssetPickResult result = GUI::AssetPicker(pickerLabel.c_str(), "Texture", assetPickerThumbnail, "Assets/Textures", columnCount, Manager->GetAssetInspectFunction());
+			GUI::PopID();
+
+			if (result.State == EAssetPickerState::AssetPicked)
+				NewMaterialTextures[i] = Manager->GetAssetRepFromDirEntry(result.PickedEntry).get();
+
+			if (NewMaterialTextures[i] == nullptr)
+				canCreateMaterial = false;
+		}
+
+		if (!canCreateMaterial)
+			return std::monostate();
+
+		std::string texturePath0 = NewMaterialTextures[0]->DirectoryEntry.path().string();
+		std::string texturePath1 = NewMaterialTextures[1]->DirectoryEntry.path().string();
+		std::string texturePath2 = NewMaterialTextures[2]->DirectoryEntry.path().string();
+
+		SMaterialAssetFileHeader fileHeader;
+		fileHeader.MaterialName = "M_" + NewAssetName;
+		fileHeader.Material.Properties[0] = { -1.0f, texturePath0, 0 };
+		fileHeader.Material.Properties[1] = { -1.0f, texturePath0, 1 };
+		fileHeader.Material.Properties[2] = { -1.0f, texturePath0, 2 };
+		fileHeader.Material.Properties[3] = { -1.0f, texturePath0, 3 };
+		fileHeader.Material.Properties[4] = { -1.0f, texturePath2, 3 };
+		fileHeader.Material.Properties[5] = { -1.0f, texturePath2, 1 };
+		fileHeader.Material.Properties[6] = { -1.0f, "", -1 };
+		fileHeader.Material.Properties[7] = { -1.0f, texturePath2, 2 };
+		fileHeader.Material.Properties[8] = { -1.0f, texturePath1, 0 };
+		fileHeader.Material.Properties[9] = { -1.0f, texturePath1, 1 };
+		fileHeader.Material.Properties[10] = { -1.0f, texturePath1, 2 };
+		fileHeader.Material.RecreateZ = true;
+
+		return fileHeader;
 	}
 
 	void CAssetBrowserWindow::InspectFolderTree(const std::string& folderName, const intptr_t& folderIconID)
@@ -432,28 +603,10 @@ namespace Havtorn
 				break;
 			}
 
-			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), (intptr_t)rep->TextureRef.GetShaderResourceView(), assetTypeName.c_str(), assetColor, rep.get(), sizeof(SEditorAssetRepresentation));
+			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), rep->DirectoryEntry == SelectedAsset, (intptr_t)rep->TextureRef.GetShaderResourceView(), assetTypeName.c_str(), assetColor, rep.get(), sizeof(SEditorAssetRepresentation));
 
-			if (result.IsHovered)
-			{
-				if (rep->AssetType == EAssetType::Animation)
-				{
-					Manager->GetResourceManager()->AnimateAssetTexture(rep->TextureRef, rep->AssetType, entry.path().string(), AnimatedThumbnailTime += GTime::Dt());
-				}
-
+			if (result.IsClicked)
 				SelectedAsset = rep->DirectoryEntry;
-			}
-
-			if (GUI::BeginPopupContextWindow())
-			{
-				if (SelectedAsset.has_value())
-				{
-					if (GUI::MenuItem("Copy Asset Path"))
-						GUI::CopyToClipboard(SelectedAsset->path().string().c_str());
-				}
-
-				GUI::EndPopup();
-			}
 
 			if (result.IsDoubleClicked)
 			{
@@ -461,6 +614,19 @@ namespace Havtorn
 				HV_LOG_INFO("Clicked asset: %s", rep->Name.c_str());
 				Manager->OpenAssetTool(rep.get());
 				SelectedAsset.reset();
+			}
+			
+			if (result.IsHovered)
+			{
+				if (rep->AssetType == EAssetType::Animation)
+				{
+					Manager->GetResourceManager()->AnimateAssetTexture(rep->TextureRef, rep->AssetType, entry.path().string(), AnimatedThumbnailTime += GTime::Dt());
+				}
+
+				if (SelectedAsset.has_value() && rep->DirectoryEntry == SelectedAsset)
+				{
+					IsSelectionHovered = true;
+				}
 			}
 		}
 

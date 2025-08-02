@@ -577,6 +577,7 @@ namespace Havtorn
 	{
 		SRenderAssetCardResult() = default;
 		
+		bool IsClicked = false;
 		bool IsDoubleClicked = false;
 		bool IsHovered = false;
 	};

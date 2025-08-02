@@ -25,13 +25,15 @@ namespace Havtorn
 	private:
 		void OnDragDropFiles(std::vector<std::string> filePaths);
 		void AssetImportModal();
+		void AssetCreationModal();
 
 		void ImportOptionsTexture();
-		void ImportOptionsMaterial();
 		void ImportOptionsSpriteAnimation();
 		void ImportOptionsStaticMesh();
 		void ImportOptionsSkeletalMesh();
 		void ImportOptionsAnimation();
+		
+		SAssetFileHeader CreateOptionsMaterial();
 
 		void InspectFolderTree(const std::string& folderName, const intptr_t& folderIconID);
 		void InspectDirectoryEntry(const std::filesystem::directory_entry& entry, U32& outCurrentID, const intptr_t& folderIconID);
@@ -41,10 +43,18 @@ namespace Havtorn
 		const std::string DefaultAssetPath = "Assets";
 		std::filesystem::path CurrentDirectory = "";
 		SGuiTextFilter Filter = SGuiTextFilter();
-		bool IsCurrentlySelected = false;
 		std::optional<std::vector<std::string>> FilePathsToImport;
 
 		std::optional<std::filesystem::directory_entry> SelectedAsset;
+		bool IsSelectionHovered = false;
+		bool IsCreatingAsset = false;
+		EAssetType AssetTypeToCreate = EAssetType::None;
+		std::string DirectoryToSaveTo = DefaultAssetPath;
+		std::string NewAssetName = "NewAsset";
+		SAssetFileHeader NewAssetFileHeader = std::monostate();
+
+		// TODO.NW: Rather not store this like this, see if there's a better way
+		std::array<SEditorAssetRepresentation*, 3> NewMaterialTextures = { nullptr, nullptr, nullptr };
 
 		F32 LastAnimatedThumbnailTime = 0.0f;
 		F32 AnimatedThumbnailTime = 0.0f;

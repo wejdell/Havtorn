@@ -43,6 +43,7 @@ namespace Havtorn
 			CScene* scene = Manager->GetCurrentScene();
 			if (!scene)
 			{
+				// TODO.NW: Center align this. Wrap it in a world function call?
 				if (GUI::Button("Create New Scene"))
 				{
 					GEngine::GetWorld()->RemoveScene(0);

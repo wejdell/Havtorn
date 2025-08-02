@@ -72,6 +72,7 @@ namespace Havtorn
 		Windows.emplace_back(std::make_unique<CSpriteAnimatorGraphNodeWindow>("Sprite Animator", this));
 		Windows.back()->SetEnabled(false);
 		Windows.emplace_back(std::make_unique<CScriptTool>("Script Editor", this));
+		Windows.back()->SetEnabled(false);
 
 		ResourceManager = new CEditorResourceManager();
 		bool success = ResourceManager->Init(renderManager, framework);
