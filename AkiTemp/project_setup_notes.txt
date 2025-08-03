@@ -39,6 +39,19 @@ VerifyAndSetProjectRequirements - c++redist & vsbuildtools
 CompileDependencies - complie project dependencies, assumes cmake, git and python are OK and callable
 GenerateProject - generates VS project, assumes cmake, git and python are OK and callable
 
+08 03
+physX installs packman-repo to C:/
+
+cmake can't find vs version, it is looking for VS 17 2022. But with default setup we are using MSBuildTools.
+Was this tested? Or am I just messing stuff up?
+
+check vs build tools
+vswhere.exe -products Microsoft.VisualStudio.Product.BuildTools
+vswhere.exe -products * <-- this lists all
+
+did cmake actually work for them does it just work for them? Or did they never bother to check.
+GenerateProject.bat doesn't work either without VS 17 2022 installed, gotta figure out how to use build tools
+
 08 01
 todo assemble!
 don't forget to cleanup in the install scripts
