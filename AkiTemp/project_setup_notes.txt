@@ -40,7 +40,9 @@ CompileDependencies - complie project dependencies, assumes cmake, git and pytho
 GenerateProject - generates VS project, assumes cmake, git and python are OK and callable
 
 08 03
-physX installs packman-repo to C:/
+laptop which splits between integrated & dedicated GPU causes <unhandled_exception thread access error> with risk of corruption:
+  D3D11 CORRUPTION: ID3D11DeviceContext::OMSetRenderTargets: Two threads were found to be executing functions associated with the same Device[Context] at the same time. 
+! physX installs packman-repo to C:/
 
 cmake can't find vs version, it is looking for VS 17 2022. But with default setup we are using MSBuildTools.
 Was this tested? Or am I just messing stuff up?
