@@ -204,7 +204,7 @@ namespace Havtorn
         AddLog(color, message.c_str());
     }
 
-	void COutputLogWindow::OnDragDropFiles(const std::vector<std::string> filePaths)
+	void COutputLogWindow::OnDragDropFiles(const std::vector<std::string> /*filePaths*/)
 	{
 	}
 
