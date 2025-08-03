@@ -8,6 +8,7 @@ echo.
 echo Generating assimp CMake files...
 echo.
 cmake -G "Visual Studio 17 2022" CMakeLists.txt
+rem cmake -G "Visual Stduio Build Tools 2022" CMakeLists.txt
 echo.
 echo Building assimp...
 echo.
@@ -15,6 +16,7 @@ cmake --build .
 echo.
 copy bin\Debug\assimp-vc143-mtd.dll ..\..\Bin\
 copy lib\Debug\assimp-vc143-mtd.lib ..\Lib\Debug\
+PAUSE
 cd .. 
 
 cd PhysX\physx

@@ -50,9 +50,12 @@ Was this tested? Or am I just messing stuff up?
 check vs build tools
 vswhere.exe -products Microsoft.VisualStudio.Product.BuildTools
 vswhere.exe -products * <-- this lists all
+but how to read that from .bat?
 
 did cmake actually work for them does it just work for them? Or did they never bother to check.
 GenerateProject.bat doesn't work either without VS 17 2022 installed, gotta figure out how to use build tools
+--> figured out params, but need specific packages when installing build tools, should also be possible to install to specific directory
+
 
 08 01
 todo assemble!
