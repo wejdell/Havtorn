@@ -11,7 +11,9 @@ premake
   check for install
   install in SetupRequirements
 
+python not as installer? but extracted zip to dir
 
+download scripts should check if installer is already downloaded
 make py part of setup script behave like CMake's
 
 combine py-setup & cmake-setup into 1 script
@@ -38,6 +40,13 @@ VerifyAndSetSetupRequirements - python & cmake: find, install, set variable
 VerifyAndSetProjectRequirements - c++redist & vsbuildtools
 CompileDependencies - complie project dependencies, assumes cmake, git and python are OK and callable
 GenerateProject - generates VS project, assumes cmake, git and python are OK and callable
+
+
+08 04
+there is an issue with pip when installing from script? when doing packages dl --> only if improperly uninstalling python by deleting the folder
+assimp can't find vs17 2022 community
+
+with correct packages installed for build tools: no need for custom path to generator_instance?
 
 08 03
 laptop which splits between integrated & dedicated GPU causes <unhandled_exception thread access error> with risk of corruption:
