@@ -11,6 +11,8 @@ premake
   check for install
   install in SetupRequirements
 
+upgrade of requirement is not handled
+
 python not as installer? but extracted zip to dir
 
 download scripts should check if installer is already downloaded
@@ -22,6 +24,9 @@ chain scripts together
 docuemnt in each script what things do
 
 cleanup installers through script
+
+installers are not good for cleanup: deleting the folder causes undefined behavior in windows: it counts program as installed but broken.
+favour: archives
 
 test
   clean pc
@@ -41,10 +46,12 @@ VerifyAndSetProjectRequirements - c++redist & vsbuildtools
 CompileDependencies - complie project dependencies, assumes cmake, git and python are OK and callable
 GenerateProject - generates VS project, assumes cmake, git and python are OK and callable
 
+08 05
+figured out how to direct physx's packman to our local folder
 
 08 04
 there is an issue with pip when installing from script? when doing packages dl --> only if improperly uninstalling python by deleting the folder
-assimp can't find vs17 2022 community
+assimp can't find vs17 2022 community ? ---> CMakeCache issue
 
 with correct packages installed for build tools: no need for custom path to generator_instance?
 
