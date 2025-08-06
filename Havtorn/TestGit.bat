@@ -66,5 +66,6 @@ SetupRequirements\PortableGit-2.50.1-64-bit.7z.exe -y
 :: x - extract, v - verbose, f - target archive, C - extraction directory
 ::tar -xvf "%~dp0%downloadDir%\cmake-%cmakeVersion%-windows-x86_64.zip" -C "%~dp0%extractedDirectory%"
 echo Git portable download complete, continuing with setup
+:: del %~dp0%downloadDir%\PortableGit-2.50.1-64-bit.7z.exe
 PAUSE
 goto :GIT_SET_LOCALEXE
