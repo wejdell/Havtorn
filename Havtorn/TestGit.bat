@@ -9,65 +9,62 @@
 echo Git Submodule Requirement Step 
 echo Looking for git cli availability
 :: -v = version, >NUL 2>&1 = hides output of command
-git -v >NUL 2>&1
-if %errorlevel% NEQ 0 goto :GIT_CLI_NOT_AVAILABLE
+::git -v >NUL 2>&1
+::if %errorlevel% NEQ 0 goto :GIT_CLI_NOT_AVAILABLE
+::goto :GIT_CLI_AVAILABLE
+
+goto :GIT_CLI_NOT_AVAILABLE
+
+:GIT_SET_LOCALEXE
+set git=SetupRequirements\PortableGit\bin\git.exe
 goto :GIT_CLI_AVAILABLE
 
 :GIT_CLI_AVAILABLE
 echo git command available
 echo.
 echo updating submodules
-git submodule update --init --recursive
+%git% submodule update --init --recursive
 echo.
 echo enabling lfs
-git lfs install
+%git% lfs install
 echo.
-echo configure longpaths 
-git config core.longpaths true
+echo configure git longpaths 
+%git% config core.longpaths true
 echo.
 PAUSE
 goto :eof
 
 :GIT_CLI_NOT_AVAILABLE
 echo.
-echo WARNING^: git is not available through the command line, either update the submodules manually before proceeding or install the git command line to allow automatic updates
-echo Would you like to install git for the command line?
-echo give an option here for y/n and then download and run the installer https://github.com/git-for-windows/git/releases/download/v2.50.1.windows.1/Git-2.50.1-64-bit.exe
-echo.
-PAUSE
-goto :eof
+echo Git for the command line not found 
+echo Searching for local portable git...
+if not exist "SetupRequirements/PortableGit/bin//" goto :GIT_INSTALL_PERMISSION
+echo Searching for executable...
+SetupRequirements\PortableGit\bin\git.exe -v >NUL 2>&1
+if %errorlevel% NEQ 0 goto :GIT_INSTALL_PERMISSION
+goto :GIT_SET_LOCALEXE
 
-:GIT_RUN_INSTALL
-:: check if /req-dir/ exists -> yes, continue; no goto CMAKE_INSTALL
-:: check if /req-dir/CMake/?/?/cmake.exe --version -> yes, goto CMAKE_SET_VARIABLE; no goto CMAKE_INSTALL
-if not exist "SetupRequirements/CMake/cmake-%cmakeVersion%-windows-x86_64/bin//" goto :CMAKE_INSTALL_PERMISSION
-echo Local CMake directory found
-echo %~dp0SetupRequirements\CMake\cmake-%cmakeVersion%-windows-x86_64\bin\cmake.exe
-:: cmake-3.31.4-windows-x86_64\bin
-:: Can't validate this check currently, without install: run CMake.exe from a custom path
-%~dp0SetupRequirements/CMake/cmake-%cmakeVersion%-windows-x86_64/bin/cmake.exe --version 3>NUL
-if %errorlevel% == 0 goto :CMAKE_SET_VARIABLE
-goto :CMAKE_INSTALL_PERMISSION
-
-:GIT_PERMISSION
-:: ask permission -> yes, continue; no, goto REQUIREMENT_ERROR_OUT
+:GIT_INSTALL_PERMISSION
 echo.
-echo Error^: CMake installation not found, install CMake?
+echo Permission to download git for the command line?
 choice /C yn /M "Yes/No?"
-if %errorlevel% == 1 goto :CMAKE_INSTALL
+if %errorlevel% == 1 goto :GIT_DOWNLOAD
 goto :REQUIREMENT_ERROR_OUT
 
 :GIT_DOWNLOAD
 if not exist "SetupRequirements//" mkdir SetupRequirements
 set downloadDir=SetupRequirements//
-set extractedDirectory=SetupRequirements//CMake//
-set cmakeZipUrls=https://github.com/Kitware/CMake/releases/download/v%cmakeVersion%/cmake-%cmakeVersion%-windows-x86_64.zip
+set extractedDirectory=SetupRequirements//
+set gitPortableUrl=https://github.com/git-for-windows/git/releases/download/v2.50.1.windows.1/PortableGit-2.50.1-64-bit.7z.exe
 
-:: Download Python installer 
-echo:Downloading to "%~dp0%downloadDir%\cmake-%cmakeVersion%-windows-x86_64.zip" and then extracting to "%~dp0%extractedDirectory%"
-PAUSE
-bitsadmin /transfer cmakeDownload /download /priority high "%cmakeZipUrls%" "%~dp0%downloadDir%\cmake-%cmakeVersion%-windows-x86_64.zip"
+::echo Downloading to "%~dp0%downloadDir%\"...
+::PAUSE
+::bitsadmin /transfer gitDownload /download /priority high "%gitPortableUrl%" "%~dp0%downloadDir%\PortableGit-2.50.1-64-bit.7z.exe"
 
+echo Extracting to "%~dp0%extractedDirectory%\PortableGit" ...
+SetupRequirements\PortableGit-2.50.1-64-bit.7z.exe -y
 :: x - extract, v - verbose, f - target archive, C - extraction directory
-tar -xvf "%~dp0%downloadDir%\cmake-%cmakeVersion%-windows-x86_64.zip" -C "%~dp0%extractedDirectory%"
+::tar -xvf "%~dp0%downloadDir%\cmake-%cmakeVersion%-windows-x86_64.zip" -C "%~dp0%extractedDirectory%"
+echo Git portable download complete, continuing with setup
 PAUSE
+goto :GIT_SET_LOCALEXE
