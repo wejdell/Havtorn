@@ -1,17 +1,11 @@
 @echo off
-:: check git command line
-:: if not found offer to install
-:: download installer for windows to /req-dir/
-:: run silent with settings from havtorn_git_install.ini
-:: submodule init
-:: lfs init
-:: longpath init
 echo Git Submodule Requirement Step 
 echo Looking for git cli availability
 :: -v = version, >NUL 2>&1 = hides output of command
-::git -v >NUL 2>&1
-::if %errorlevel% NEQ 0 goto :GIT_CLI_NOT_AVAILABLE
-::goto :GIT_CLI_AVAILABLE
+git -v >NUL 2>&1
+if %errorlevel% NEQ 0 goto :GIT_CLI_NOT_AVAILABLE
+set git=git
+goto :GIT_CLI_AVAILABLE
 
 goto :GIT_CLI_NOT_AVAILABLE
 
