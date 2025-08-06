@@ -10,20 +10,27 @@ goto :GIT_CLI_AVAILABLE
 goto :GIT_CLI_NOT_AVAILABLE
 
 :GIT_SET_LOCALEXE
-set git=SetupRequirements\PortableGit\bin\git.exe
+::echo %PATH%
+set PATH=%~dp0SetupRequirements\PortableGit\bin\;%PATH%
+::echo.
+::echo %PATH%
+::setx git %~dp0SetupRequirements\PortableGit\bin\git.exe
+::setx PATH "%PATH%;%~dp0SetupRequirements\PortableGit\bin\"
+::echo setx used to set git: 
+::set setxUsed=true
 goto :GIT_CLI_AVAILABLE
 
 :GIT_CLI_AVAILABLE
 echo git command available
 echo.
 echo updating submodules
-%git% submodule update --init --recursive
+git submodule update --init --recursive
 echo.
 echo enabling lfs
-%git% lfs install
+git lfs install
 echo.
 echo configure git longpaths 
-%git% config core.longpaths true
+git config core.longpaths true
 echo.
 PAUSE
 goto :eof
