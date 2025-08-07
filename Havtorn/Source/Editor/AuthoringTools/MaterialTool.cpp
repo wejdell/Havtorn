@@ -153,8 +153,8 @@ namespace Havtorn
 			inspect(MaterialData.NormalX, "Normal X");
 			inspect(MaterialData.NormalY, "Normal Y");
 			
-			GUI::Checkbox("Recreate Normal Z", MaterialData.RecreateNormalZ);
-			if (MaterialData.RecreateNormalZ)
+			GUI::Checkbox("Recreate Normal Z In Shader", MaterialData.RecreateNormalZ);
+			if (!MaterialData.RecreateNormalZ)
 				inspect(MaterialData.NormalZ, "Normal Z");
 			else
 				GUI::Separator();
