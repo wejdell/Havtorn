@@ -54,6 +54,7 @@
 *Havtorn/ProjectSetup/Premake
 *Havtorn/BuildFiles
 *Havtorn/SetupRequirements/
+*Havtorn/ProjectSetup/SetupRequirements/
 
 # Other/Intermediate
 *.ilk

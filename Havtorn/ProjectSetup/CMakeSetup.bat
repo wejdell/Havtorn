@@ -1,7 +1,6 @@
 @echo off
-:: call ProjectSetup/SetVariablesForRequirements.bat <-- sets %reqdir = SetupRequirements/ cmakeversion, etc for Python and all that
-:: TODO actually verify version of installed CMake both for machine & repo check
-call ProjectSetup/SetVariablesForRequirements.bat
+:: This script can be called by itself or from another script, always use absolute path %~dp0
+call %~dp0SetVariablesForRequirements.bat
 
 set cmakeDownloadFile=cmake-%cmakeVersion%-windows-x86_64.zip
 set cmakeUrl=https://github.com/Kitware/CMake/releases/download/v%cmakeVersion%/%cmakeDownloadFile%
@@ -15,6 +14,7 @@ echo %cmakeDownloadFile%
 echo %cmakeExeLocation%
 echo %cmakeExe%
 
+:: TODO actually verify version of installed CMake both for machine & repo check
 cmake --version >NUL 2>&1
 if %errorlevel% NEQ 0 goto :CMAKE_CHECK_REPO_INSTALL
 echo CMake found
@@ -22,8 +22,8 @@ PAUSE
 goto :eof
 
 :CMAKE_CHECK_REPO_INSTALL
-if not exist %cmakeExeLocation%%cmakeExe% goto :CMAKE_INSTALL_PERMISSION
-%cmakeExeLocation%%cmakeExe% --version >NUL 2>&1
+if not exist %~dp0%cmakeExeLocation%%cmakeExe% goto :CMAKE_INSTALL_PERMISSION
+%~dp0%cmakeExeLocation%%cmakeExe% --version >NUL 2>&1
 if %errorlevel% NEQ 0 goto :CMAKE_INSTALL_PERMISSION
 echo CMake found in repository
 goto :CMAKE_SET_VARIABLE
@@ -42,10 +42,9 @@ if %errorlevel% == 1 goto :CMAKE_DO_INSTALL
 goto :REQUIREMENT_ERROR_OUT
 
 :CMAKE_DO_INSTALL
-if not exist %requirementsDirName% mkdir %requirementsDirName%
-if not exist %requirementsDirName%\%cmakeDirName%\ mkdir %requirementsDirName%\%cmakeDirName%\
-echo %~dp0%requirementsDirName%\%cmakeDownloadFile%
-if not exist %requirementsDirName%\%cmakeDownloadFile% (
+if not exist %~dp0%requirementsDirName% mkdir %~dp0%requirementsDirName%
+if not exist %~dp0%requirementsDirName%\%cmakeDirName%\ mkdir %~dp0%requirementsDirName%\%cmakeDirName%\
+if not exist %~dp0%requirementsDirName%\%cmakeDownloadFile% (
     echo Ready to start download %~dp0%requirementsDirName%\%cmakeDownloadFile%
     PAUSE
     bitsadmin /transfer cmakeDownload /download /priority high "%cmakeUrl%" "%~dp0%requirementsDirName%\%cmakeDownloadFile%"
