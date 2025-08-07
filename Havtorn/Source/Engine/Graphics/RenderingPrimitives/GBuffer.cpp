@@ -6,6 +6,12 @@
 
 namespace Havtorn
 {
+	CGBuffer::~CGBuffer()
+	{
+		// TODO.NW: Figure out why this causes a crash in the entity picking texture mapping logic
+		//ReleaseResources();
+	}
+
 	void CGBuffer::ClearTextures(SVector4 clearColor)
 	{
 		for (UINT i = 0; i < STATIC_U64(EGBufferTextures::Count); ++i) 
@@ -24,7 +30,7 @@ namespace Havtorn
 	{
 		auto depthStencilView = depth ? depth->Depth : nullptr;
 		Context->OMSetRenderTargets(isUsingEditor ? STATIC_U64(EGBufferTextures::Count) : STATIC_U64(EGBufferTextures::Count) - 1, &RenderTargets[0], depthStencilView);
-		Context->RSSetViewports(1, Viewport);
+		Context->RSSetViewports(1, &Viewport);
 	}
 
 	void CGBuffer::SetAsPSResourceOnSlot(EGBufferTextures resource, U16 slot)
@@ -34,6 +40,7 @@ namespace Havtorn
 
 	void CGBuffer::SetAllAsResources(U16 startSlot)
 	{
+		// TODO.NW: Figure out why we do this, should the editor texture not be included in this call?
 		Context->PSSetShaderResources(startSlot, STATIC_U64(EGBufferTextures::Count) - 1, &ShaderResources[0]);
 	}
 
@@ -45,6 +52,11 @@ namespace Havtorn
 	ID3D11Texture2D* CGBuffer::GetEditorDataTexture() const
 	{
 		return Textures[STATIC_U64(EGBufferTextures::EditorData)];
+	}
+
+	const D3D11_VIEWPORT& CGBuffer::GetViewport() const
+	{
+		return Viewport;
 	}
 
 	void CGBuffer::ReleaseResources()
@@ -60,7 +72,5 @@ namespace Havtorn
 			ShaderResources[i]->Release();
 			ShaderResources[i] = nullptr;
 		}
-
-		SAFE_DELETE(Viewport);
 	}
 }

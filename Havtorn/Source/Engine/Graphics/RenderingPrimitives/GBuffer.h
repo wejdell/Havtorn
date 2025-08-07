@@ -24,7 +24,7 @@ namespace Havtorn
 
 	public:
 		CGBuffer() = default;
-		~CGBuffer() = default;
+		~CGBuffer();
 
 		void ClearTextures(SVector4 clearColor = (0.0f, 0.0f, 0.0f, 0.0f));
 		void ReleaseRenderTargets();
@@ -34,6 +34,7 @@ namespace Havtorn
 
 		ID3D11RenderTargetView* GetEditorDataRenderTarget() const;
 		ID3D11Texture2D* GetEditorDataTexture() const;
+		const D3D11_VIEWPORT& GetViewport() const;
 
 		void ReleaseResources();
 
@@ -42,6 +43,6 @@ namespace Havtorn
 		std::array<ID3D11Texture2D*, static_cast<U64>(EGBufferTextures::Count)> Textures;
 		std::array<ID3D11RenderTargetView*, static_cast<U64>(EGBufferTextures::Count)> RenderTargets;
 		std::array<ID3D11ShaderResourceView*, static_cast<U64>(EGBufferTextures::Count)> ShaderResources;
-		D3D11_VIEWPORT* Viewport = nullptr;
+		D3D11_VIEWPORT Viewport = {};
 	};
 }

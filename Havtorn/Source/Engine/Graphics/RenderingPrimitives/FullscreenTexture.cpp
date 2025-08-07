@@ -24,19 +24,19 @@ namespace Havtorn
 		else 
 			Context->OMSetRenderTargets(1, &RenderTarget, nullptr);
 		
-		Context->RSSetViewports(1, Viewport);
+		Context->RSSetViewports(1, &Viewport);
 	}
 
 	void CRenderTexture::SetAsDepthTarget()
 	{
 		Context->OMSetRenderTargets(0, NULL, Depth);
-		Context->RSSetViewports(1, Viewport);
+		Context->RSSetViewports(1, &Viewport);
 	}
 
 	void CRenderTexture::SetAsDepthTarget(CRenderTexture* intermediateRenderTarget)
 	{
 		Context->OMSetRenderTargets(1, &intermediateRenderTarget->RenderTarget, Depth);
-		Context->RSSetViewports(1, Viewport);
+		Context->RSSetViewports(1, &Viewport);
 	}
 
 	void CRenderTexture::SetAsPSResourceOnSlot(U16 slot) 
@@ -116,9 +116,6 @@ namespace Havtorn
 			ShaderResource->Release();
 			ShaderResource = nullptr;
 		}
-
-		if (Viewport)
-			SAFE_DELETE(Viewport);
 	}
 
 	void CRenderTexture::ReleaseDepth()
@@ -134,9 +131,6 @@ namespace Havtorn
 			ShaderResource->Release();
 			ShaderResource = nullptr;
 		}
-
-		if (Viewport)
-			SAFE_DELETE(Viewport);
 	}
 
 	bool CRenderTexture::IsShaderResourceValid() const
@@ -178,8 +172,8 @@ namespace Havtorn
 	{
 		return Depth;
 	}
-	D3D11_VIEWPORT* const CRenderTexture::GetViewport() const
+	D3D11_VIEWPORT* const CRenderTexture::GetViewport()
 	{
-		return Viewport;
+		return &Viewport;
 	}
 }

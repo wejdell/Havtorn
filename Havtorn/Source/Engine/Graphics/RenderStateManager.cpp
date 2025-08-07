@@ -517,6 +517,7 @@ namespace Havtorn
 
     void CRenderStateManager::Draw(U32 vertexCount, U32 startVertexLocation)
     {
+        // TODO.NW: Increase draw calls in all the draw functions instead of at the call sites
         Context->Draw(vertexCount, startVertexLocation);
     }
 
