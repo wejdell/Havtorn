@@ -11,6 +11,16 @@ set pyExe=py.exe
 :: set pythonLauncherLocation=
 :: set pythonLauncher=
 
+:: USER
+:: C:\Users\AkiGonzalez\AppData\Local\Programs\Python\Python313\Scripts\
+:: C:\Users\AkiGonzalez\AppData\Local\Programs\Python\Python313\
+:: C:\Users\AkiGonzalez\AppData\Local\Programs\Python\Launcher\
+:: SYSTEM
+::
+:: https://www.python.org/downloads/release/python-3135/
+:: a bit confused what to use
+:: install folder: C:\Users\AkiGonzalez\AppData\Local\Programs\Python\Python313
+
 echo %pythonVersion%
 echo %requirementsDirName%
 echo %pythonDirName%
