@@ -73,6 +73,8 @@ namespace Havtorn
 		// TODO.NW: Deal with floating windows in a nicer way
 		Windows.emplace_back(new CSpriteAnimatorGraphNodeWindow("Sprite Animator", this));
 		Windows.back()->SetEnabled(false);
+		Windows.emplace_back(new CMaterialTool("Material Editor", this));
+		Windows.back()->SetEnabled(false);
 		Windows.emplace_back(new CScriptTool("Script Editor", this));
 		Windows.back()->SetEnabled(false);
 
@@ -312,6 +314,11 @@ namespace Havtorn
 
 	void CEditorManager::OpenAssetTool(SEditorAssetRepresentation* asset)
 	{
+		if (asset->AssetType == EAssetType::Material)
+		{
+			GetEditorWindow<CMaterialTool>()->OpenMaterial(asset);
+		}
+
 		// Edit mesh, texture, anim montage, material?
 		if (asset->AssetType == EAssetType::Script)
 		{

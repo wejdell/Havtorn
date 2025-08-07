@@ -604,6 +604,8 @@ add_dependencies(Game Core Platform GUI Engine)
 
 # ==================== EDITOR ====================
 set(EDITOR_FILES
+    ${EDITOR_FOLDER}AuthoringTools/MaterialTool.cpp
+    ${EDITOR_FOLDER}AuthoringTools/MaterialTool.h
     ${EDITOR_FOLDER}AuthoringTools/ScriptTool.cpp
     ${EDITOR_FOLDER}AuthoringTools/ScriptTool.h
     ${EDITOR_FOLDER}Systems/PickingSystem.cpp
