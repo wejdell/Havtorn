@@ -46,6 +46,15 @@ VerifyAndSetProjectRequirements - c++redist & vsbuildtools
 CompileDependencies - complie project dependencies, assumes cmake, git and python are OK and callable
 GenerateProject - generates VS project, assumes cmake, git and python are OK and callable
 
+08 08
+https://docs.python.org/3/using/windows.html
+installs guide
+https://packaging.python.org/en/latest/tutorials/installing-packages/
+pip
+
+the package we are using with python is "requests" which is a http package, basically allowing scripts to download from https.
+I can't get python embeddable to work with pip, would be nice to skip this step.
+
 08 06
 https://stackoverflow.com/questions/19287379/how-do-i-add-to-the-windows-path-variable-using-setx-having-weird-problems
 PATH
