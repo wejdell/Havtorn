@@ -622,7 +622,6 @@ set(EDITOR_FILES
     ${EDITOR_FOLDER}Toggleables/ViewMenu.h
     ${EDITOR_FOLDER}Toggleables/WindowMenu.cpp
     ${EDITOR_FOLDER}Toggleables/WindowMenu.h
-    ${EDITOR_FOLDER}Utils/ImGuiUtils.h
     ${EDITOR_FOLDER}Windows/AssetBrowserWindow.cpp
     ${EDITOR_FOLDER}Windows/AssetBrowserWindow.h
     ${EDITOR_FOLDER}Windows/DockSpaceWindow.cpp

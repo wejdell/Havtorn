@@ -39,17 +39,6 @@ namespace Havtorn
 		return 0;
 	}
 
-	//static Havtorn::I32 StandardTextResizeCallback(struct ImGuiInputTextCallbackData* data)
-	//{
-	//	if (data->EventFlag == ImGuiInputTextFlags_CallbackResize)
-	//	{
-	//		char* customString = reinterpret_cast<char*>(data->UserData);
-	//		data->Buf = customString->Data();
-	//		customString->SetLength(static_cast<Havtorn::U8>(data->BufSize) - 1);
-	//	}
-	//	return 0;
-	//}
-
 	namespace NE = ax::NodeEditor;
 
 	class GUI::ImGuiImpl
@@ -103,39 +92,11 @@ namespace Havtorn
 			ImGui_ImplWin32_NewFrame();
 			ImGui::NewFrame();
 			ImGuizmo::BeginFrame();
-
-			//NE::SetCurrentEditor(NodeEditorContext);
-			//NE::Begin("My Editor", ImVec2(0.0, 0.0f));
-			//int uniqueId = 1;
-			//// Start drawing nodes.
-			//	NE::BeginNode(uniqueId++);
-			//		ImGui::Text("Node A");
-			//			NE::BeginPin(uniqueId++, NE::PinKind::Input);
-			//				ImGui::Text("-> In");
-			//			NE::EndPin();
-			//		ImGui::SameLine();
-			//			NE::BeginPin(uniqueId++, NE::PinKind::Output);
-			//				ImGui::Text("Out ->");
-			//			NE::EndPin();
-			//	NE::EndNode();
-			//NE::End();
-			//NE::SetCurrentEditor(nullptr);
 		}
 
 		LRESULT WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			return ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
-		}
-
-		void SetGUIContext()
-		{
-			ImGuiMemAllocFunc memAlloc;														
-			ImGuiMemFreeFunc memFree;														
-			void* userData = nullptr;														
-			ImGui::GetAllocatorFunctions(&memAlloc, &memFree, &userData);	
-			ImGui::SetAllocatorFunctions(memAlloc, memFree, userData);						
-			ImGui::SetCurrentContext(ImGui::GetCurrentContext());					
-			ImGuizmo::SetImGuiContext(ImGui::GetCurrentContext());
 		}
 
 		void EndFrame()
@@ -1381,11 +1342,6 @@ namespace Havtorn
 	void GUI::WindowsProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	{
 		Instance->Impl->WindowProc(hwnd, msg, wParam, lParam);
-	}
-
-	void GUI::SetGUIContext()
-	{
-		Instance->Impl->SetGUIContext();
 	}
 
 	bool GUI::Begin(const char* name, bool* open, const std::vector<EWindowFlag>& flags)

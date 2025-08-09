@@ -711,7 +711,6 @@ namespace Havtorn
 		void BeginFrame();
 		void EndFrame();
 		void WindowsProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-		static void SetGUIContext();
 
 	public:
 		static const F32 SliderSpeed;
