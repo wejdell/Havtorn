@@ -163,6 +163,7 @@ namespace Havtorn
 		RenderFunctions[ERenderCommandType::DeferredLightingDirectional] =		std::bind(&CRenderManager::DeferredLightingDirectional, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::DeferredLightingPoint] =			std::bind(&CRenderManager::DeferredLightingPoint, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::DeferredLightingSpot] =				std::bind(&CRenderManager::DeferredLightingSpot, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::Skybox] =							std::bind(&CRenderManager::Skybox, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::PostBaseLightingPass] =				std::bind(&CRenderManager::PostBaseLightingPass, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::VolumetricLightingDirectional] =	std::bind(&CRenderManager::VolumetricLightingDirectional, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::VolumetricLightingPoint] =			std::bind(&CRenderManager::VolumetricLightingPoint, this, std::placeholders::_1);
@@ -1239,7 +1240,7 @@ namespace Havtorn
 	void CRenderManager::Clear(SVector4 /*clearColor*/)
 	{
 		//Backbuffer.ClearTexture(clearColor);
-		//myIntermediateDepth.ClearDepth();
+		//IntermediateDepth.ClearDepth();
 	}
 
 	void CRenderManager::InitDataBuffers()
@@ -1943,7 +1944,7 @@ namespace Havtorn
 
 		RenderStateManager.IASetTopology(ETopologies::TriangleList);
 		RenderStateManager.IASetInputLayout(EInputLayoutType::Position4);
-		RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[1], RenderStateManager.MeshVertexStrides[1], RenderStateManager.MeshVertexOffsets[0]);
+		RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[STATIC_U8(EVertexBufferPrimitives::PointLightCube)], RenderStateManager.MeshVertexStrides[1], RenderStateManager.MeshVertexOffsets[0]);
 		RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[STATIC_U8(EDefaultIndexBuffers::PointLightCube)]);
 
 		RenderStateManager.VSSetShader(EVertexShaders::PointAndSpotLight);
@@ -2007,6 +2008,36 @@ namespace Havtorn
 		RenderStateManager.DrawIndexed(36, 0, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::Default);
+	}
+
+	inline void CRenderManager::Skybox(const SRenderCommand& command)
+	{
+		ID3D11ShaderResourceView* nullView = NULL;
+		RenderStateManager.PSSetResources(21, 1, &nullView);
+
+		LitScene.SetAsActiveTarget(&IntermediateDepth);
+
+		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::Disable);
+		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::DepthFirst);
+		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
+
+		auto cubemapTexture = GEngine::GetTextureBank()->GetTexture(command.U16s[0]);
+		RenderStateManager.PSSetResources(0, 1, &cubemapTexture);
+
+		RenderStateManager.IASetTopology(ETopologies::TriangleList);
+		RenderStateManager.IASetInputLayout(EInputLayoutType::Position4);
+		RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[STATIC_U8(EVertexBufferPrimitives::SkyboxCube)], RenderStateManager.MeshVertexStrides[1], RenderStateManager.MeshVertexOffsets[0]);
+		RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[STATIC_U8(EDefaultIndexBuffers::SkyboxCube)]);
+
+		RenderStateManager.VSSetShader(EVertexShaders::Skybox);
+		RenderStateManager.PSSetShader(EPixelShaders::Skybox);
+
+		RenderStateManager.DrawIndexed(36, 0, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
+		
+		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
+		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::Default);
+		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
 	}
 
 	void CRenderManager::PostBaseLightingPass(const SRenderCommand& /*command*/)

@@ -429,6 +429,7 @@ set(VERTEX_SHADERS
     ${SHADER_FOLDER}EditorPreviewSkeletal_VS.hlsl
     ${SHADER_FOLDER}FullscreenVertexShader_VS.hlsl
     ${SHADER_FOLDER}Line_VS.hlsl
+    ${SHADER_FOLDER}Skybox_VS.hlsl
     ${SHADER_FOLDER}PointLight_VS.hlsl
     ${SHADER_FOLDER}SpriteInstanced_VS.hlsl
     ${SHADER_FOLDER}SpriteInstancedEditor_VS.hlsl
@@ -482,6 +483,7 @@ set(PIXEL_SHADERS
     ${SHADER_FOLDER}GBuffer_PS.hlsl
     ${SHADER_FOLDER}GBufferEditor_PS.hlsl
     ${SHADER_FOLDER}Line_PS.hlsl
+    ${SHADER_FOLDER}Skybox_PS.hlsl
     ${SHADER_FOLDER}SpriteScreenSpace_PS.hlsl
     ${SHADER_FOLDER}SpriteWorldSpace_PS.hlsl
     ${SHADER_FOLDER}SpriteWorldSpaceEditor_PS.hlsl

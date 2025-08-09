@@ -158,6 +158,7 @@ namespace Havtorn
 		inline void DeferredLightingDirectional(const SRenderCommand& command);
 		inline void DeferredLightingPoint(const SRenderCommand& command);
 		inline void DeferredLightingSpot(const SRenderCommand& command);
+		inline void Skybox(const SRenderCommand& command);
 		inline void PostBaseLightingPass(const SRenderCommand& command);
 		inline void VolumetricLightingDirectional(const SRenderCommand& command);
 		inline void VolumetricLightingPoint(const SRenderCommand& command);
