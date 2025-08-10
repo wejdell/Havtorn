@@ -137,7 +137,7 @@ namespace Havtorn
 		return hvaPath;
 	}
 
-	std::string CEditorResourceManager::ConvertToHVA(const std::string& filePath, const std::string& destination, const SAssetImportOptions& importOptions) const
+	std::string CEditorResourceManager::ConvertToHVA(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions) const
 	{
 		std::string hvaPath;
 		switch (importOptions.AssetType)
@@ -146,7 +146,7 @@ namespace Havtorn
 		case EAssetType::SkeletalMesh: // fallthrough
 		case EAssetType::Animation:
 		{
-			hvaPath = CreateAsset(destination, UModelImporter::ImportFBX(filePath, importOptions));
+			hvaPath = CreateAsset(destinationPath, UModelImporter::ImportFBX(filePath, importOptions));
 		}
 		break;
 		case EAssetType::Texture:
@@ -155,20 +155,20 @@ namespace Havtorn
 			GEngine::GetFileSystem()->Deserialize(filePath, textureFileData);
 
 			ETextureFormat format = {};
-			if (const std::string extension = filePath.substr(filePath.size() - 4); extension == ".dds")
+			if (const std::string extension = UGeneralUtils::ExtractFileExtensionFromPath(filePath); extension == "dds")
 				format = ETextureFormat::DDS;
-			else if (extension == ".tga")
+			else if (extension == "tga")
 				format = ETextureFormat::TGA;
 
 			STextureFileHeader fileHeader;
 			fileHeader.AssetType = EAssetType::Texture;
 
-			fileHeader.MaterialName = destination + filePath.substr(filePath.find_last_of('\\'), filePath.find_first_of('.') - filePath.find_last_of('\\'));// destination.substr(0, destination.find_last_of("."));
+			fileHeader.MaterialName = UGeneralUtils::ExtractFileBaseNameFromPath(filePath);
 			fileHeader.OriginalFormat = format;
 			fileHeader.Suffix = filePath[filePath.find_last_of(".") - 1];
 			fileHeader.Data = std::move(textureFileData);
 
-			hvaPath = CreateAsset(destination, fileHeader);
+			hvaPath = CreateAsset(destinationPath, fileHeader);
 		}
 		break;
 		case EAssetType::Material:

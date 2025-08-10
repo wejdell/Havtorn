@@ -83,6 +83,35 @@ namespace Havtorn
 			5,7,6
 		};
 
+		static std::vector<SPositionVertex> SkyboxCube =
+		{
+			// X      Y      Z      W 
+			{ -0.5f, -0.5f, -0.5f,  1.0f },// 0
+			{  0.5f, -0.5f, -0.5f,  1.0f },// 1
+			{ -0.5f,  0.5f, -0.5f,  1.0f },// 2
+			{  0.5f,  0.5f, -0.5f,  1.0f },// 3
+			{ -0.5f, -0.5f,  0.5f,  1.0f },// 4
+			{  0.5f, -0.5f,  0.5f,  1.0f },// 5
+			{ -0.5f,  0.5f,  0.5f,  1.0f },// 6
+			{  0.5f,  0.5f,  0.5f,  1.0f }//  7
+		};
+
+		static std::vector<U32> SkyboxCubeIndices =
+		{
+			0,4,2,
+			4,6,2,
+			1,3,5,
+			3,7,5,
+			0,1,4,
+			1,5,4,
+			2,6,3,
+			6,7,3,
+			0,2,1,
+			2,3,1,
+			4,5,6,
+			5,7,6
+		};
+
 		static std::vector<SStaticMeshVertex> DecalProjector =
 		{
 			// X      Y      Z        nX, nY, nZ    tX, tY, tZ    bX, bY, bZ,    UV	

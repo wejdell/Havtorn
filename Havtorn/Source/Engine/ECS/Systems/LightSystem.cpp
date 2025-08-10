@@ -23,9 +23,12 @@ namespace Havtorn
 			if (!SComponent::IsValid(directionalLightComp))
 				continue;
 
-			STransformComponent& transformComp = *scene->GetComponent<STransformComponent>(scene->MainCameraEntity);
+			//TODO.NW: Think about whether it makes more sense to have many directional lights vs one that follows the main camera, probably many?
+			STransformComponent& directionalLightTransform = *scene->GetComponent<STransformComponent>(directionalLightComp);
+			//STransformComponent& cameraTransform = *scene->GetComponent<STransformComponent>(scene->MainCameraEntity);
+			//directionalLightTransform.Transform = cameraTransform.Transform;
 
-			directionalLightComp->ShadowmapView.ShadowPosition = transformComp.Transform.GetMatrix().GetTranslation4();
+			directionalLightComp->ShadowmapView.ShadowPosition = directionalLightTransform.Transform.GetMatrix().GetTranslation4();
 			directionalLightComp->ShadowmapView.ShadowPosition.Y = 4.0f;
 
 			// Round to pixel positions

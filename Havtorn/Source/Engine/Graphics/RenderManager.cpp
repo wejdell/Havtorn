@@ -163,6 +163,7 @@ namespace Havtorn
 		RenderFunctions[ERenderCommandType::DeferredLightingDirectional] =		std::bind(&CRenderManager::DeferredLightingDirectional, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::DeferredLightingPoint] =			std::bind(&CRenderManager::DeferredLightingPoint, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::DeferredLightingSpot] =				std::bind(&CRenderManager::DeferredLightingSpot, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::Skybox] =							std::bind(&CRenderManager::Skybox, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::PostBaseLightingPass] =				std::bind(&CRenderManager::PostBaseLightingPass, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::VolumetricLightingDirectional] =	std::bind(&CRenderManager::VolumetricLightingDirectional, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::VolumetricLightingPoint] =			std::bind(&CRenderManager::VolumetricLightingPoint, this, std::placeholders::_1);
@@ -748,40 +749,52 @@ namespace Havtorn
 
 	CRenderTexture CRenderManager::RenderMaterialAssetTexture(const std::string& filePath)
 	{
-		// TODO.NW: Refactor this to take all the data we need to serialize and then set up the state once: render
+		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
+		char* data = new char[fileSize];
 
-		STransform camTransform;
-		constexpr F32 zoomMultiplier = 0.72f;
-		camTransform.Translate(SVector4::Backward * 1.8f * zoomMultiplier);
-		camTransform.Translate(SVector4::Right * 1.08f * zoomMultiplier);
-		camTransform.Translate(SVector4::Up * 1.2f * zoomMultiplier);
-		camTransform.Rotate({ UMath::DegToRad(-30.0f), UMath::DegToRad(30.0f), 0.0f });
-		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), 1.0f, 0.01f, 10.0f);
+		GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
+
+		SMaterialAssetFileHeader assetFile;
+		assetFile.Deserialize(data);
+
+		SGraphicsMaterialAsset asset;
+		asset = SGraphicsMaterialAsset(assetFile);
 
 		CRenderTexture renderTexture = RenderTextureFactory.CreateTexture(SVector2<U16>(256), DXGI_FORMAT_R16G16B16A16_FLOAT);
-		CRenderTexture renderDepth = RenderTextureFactory.CreateDepth(SVector2<U16>(256), DXGI_FORMAT_R32_TYPELESS);
-		CGBuffer gBuffer = RenderTextureFactory.CreateGBuffer(SVector2<U16>(256));
+		RenderMaterialTexture(renderTexture, asset.Material);
+		return std::move(renderTexture);
+	}
 
-		gBuffer.SetAsActiveTarget();
-		RenderStateManager.RSSetViewports(1, renderDepth.GetViewport());
+	void CRenderManager::RenderMaterialTexture(CRenderTexture& textureTarget, const SEngineGraphicsMaterial& material, const SVector& objectRotationEuler, const F32 zoomMultiplier)
+	{
+		// CameraDataStorage();
+		const F32 radius = 2.0f * zoomMultiplier;
+		SVector location = SVector(0.0f, 0.0f, radius);
+		SMatrix camMatrix = SMatrix::LookAtLH(location, SVector(), SVector::Up).FastInverse();
+		
+		STransform camViewMatrix;
+		camViewMatrix.SetMatrix(camMatrix);
 
-		FrameBufferData.ToCameraFromWorld = camTransform.GetMatrix().FastInverse();
-		FrameBufferData.ToWorldFromCamera = camTransform.GetMatrix();
+		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), 1.0f, 0.01f, 10.0f);
+
+		FrameBufferData.ToCameraFromWorld = camViewMatrix.GetMatrix().FastInverse();
+		FrameBufferData.ToWorldFromCamera = camViewMatrix.GetMatrix();
 		FrameBufferData.ToProjectionFromCamera = camProjection;
 		FrameBufferData.ToCameraFromProjection = camProjection.Inverse();
-		FrameBufferData.CameraPosition = camTransform.GetMatrix().GetTranslation4();
+		FrameBufferData.CameraPosition = camViewMatrix.GetMatrix().GetTranslation4();
 		FrameBuffer.BindBuffer(FrameBufferData);
 
 		RenderStateManager.VSSetConstantBuffer(0, FrameBuffer);
 		RenderStateManager.PSSetConstantBuffer(0, FrameBuffer);
 
-		ObjectBufferData.ToWorldFromObject = SMatrix();
-		ObjectBuffer.BindBuffer(ObjectBufferData);
+		//GBufferDataInstanced();
+		CGBuffer gBuffer = RenderTextureFactory.CreateGBuffer(SVector2<U16>(256));
+		gBuffer.SetAsActiveTarget();
+		RenderStateManager.RSSetViewports(1, &gBuffer.GetViewport());
 
-		CScene tempScene;
-		auto entity = tempScene.AddEntity();
-		auto materialComp = tempScene.AddComponent<SMaterialComponent>(entity);
-		LoadMaterialComponent({ filePath }, materialComp);
+		SMatrix objectMatrix = SMatrix::CreateRotationFromEuler(SVector(objectRotationEuler.X, objectRotationEuler.Y, 0.0f)).FastInverse();
+		ObjectBufferData.ToWorldFromObject = objectMatrix;
+		ObjectBuffer.BindBuffer(ObjectBufferData);
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
 		RenderStateManager.IASetTopology(ETopologies::TriangleList);
@@ -792,28 +805,25 @@ namespace Havtorn
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 		RenderStateManager.PSSetSampler(1, ESamplers::DefaultBorder);
 
-		RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[STATIC_U8(EVertexBufferPrimitives::Icosphere)], RenderStateManager.MeshVertexStrides[0], RenderStateManager.MeshVertexOffsets[0]);
-		RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[STATIC_U8(EIndexBufferPrimitives::Icosphere)]);
-
 		auto textureBank = GEngine::GetTextureBank();
 		std::vector<ID3D11ShaderResourceView*> resourceViewPointers;
 
 		std::map<F32, F32> textureIndices;
 		auto findTextureByIndex = [&](SRuntimeGraphicsMaterialProperty& bufferProperty)
-		{
-			if (bufferProperty.TextureChannelIndex > -1.0f)
 			{
-				if (!textureIndices.contains(bufferProperty.TextureIndex))
+				if (bufferProperty.TextureChannelIndex > -1.0f)
 				{
-					resourceViewPointers.emplace_back(textureBank->GetTexture(STATIC_U32(bufferProperty.TextureIndex)));
-					textureIndices.emplace(bufferProperty.TextureIndex, STATIC_F32(resourceViewPointers.size() - 1));
+					if (!textureIndices.contains(bufferProperty.TextureIndex))
+					{
+						resourceViewPointers.emplace_back(textureBank->GetTexture(STATIC_U32(bufferProperty.TextureIndex)));
+						textureIndices.emplace(bufferProperty.TextureIndex, STATIC_F32(resourceViewPointers.size() - 1));
+					}
+
+					bufferProperty.TextureIndex = textureIndices[bufferProperty.TextureIndex];
 				}
+			};
 
-				bufferProperty.TextureIndex = textureIndices[bufferProperty.TextureIndex];
-			}
-		};
-
-		MaterialBufferData = SMaterialBufferData(materialComp->Materials[0]);
+		MaterialBufferData = SMaterialBufferData(material);
 		findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoR)]);
 		findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoG)]);
 		findTextureByIndex(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoB)]);
@@ -830,47 +840,59 @@ namespace Havtorn
 
 		RenderStateManager.PSSetResources(5, STATIC_U8(resourceViewPointers.size()), resourceViewPointers.data());
 		RenderStateManager.PSSetConstantBuffer(8, MaterialBuffer);
-		
+
+		RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[STATIC_U8(EVertexBufferPrimitives::Icosphere)], RenderStateManager.MeshVertexStrides[0], RenderStateManager.MeshVertexOffsets[0]);
+		RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[STATIC_U8(EIndexBufferPrimitives::Icosphere)]);
 		RenderStateManager.DrawIndexed(STATIC_U32(GeometryPrimitives::Icosphere.Indices.size()), 0, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 
-		// ======== Lighting =========
-		ID3D11RenderTargetView* renderTargets[1] = { renderTexture.GetRenderTargetView() };
-		RenderStateManager.OMSetRenderTargets(1, renderTargets, nullptr);
+		//PreLightingPass();
+		// === SSAO ===
+		// TODO.NW: As part of next rendering refactor we should make it easier to set up render passes, somehow indicating the necessary resources e.g. render textures
+		SSAOBuffer.SetAsActiveTarget();
+		gBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Normal, 2);
+		IntermediateDepth.SetAsPSResourceOnSlot(21);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::SSAO);
+		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::Disable);
 
-		auto environmentLightComp = tempScene.AddComponent<SEnvironmentLightComponent>(entity);
-		auto directionalLightComp = tempScene.AddComponent<SDirectionalLightComponent>(entity);
+		SSAOBlurTexture.SetAsActiveTarget();
+		SSAOBuffer.SetAsPSResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::SSAOBlur);
+		// === !SSAO ===
 
-		LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/Skybox.hva", environmentLightComp);
+		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
+		RenderStateManager.PSSetSampler(1, ESamplers::DefaultBorder);
 
-		directionalLightComp->Direction = { -1.0f, 0.0f, 0.0f, 0.0f };
-		directionalLightComp->Color = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };
-		directionalLightComp->ShadowmapView.ShadowmapViewportIndex = 0;
-		directionalLightComp->ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLightComp->ShadowViewSize.X, directionalLightComp->ShadowViewSize.Y, directionalLightComp->ShadowNearAndFarPlane.X, directionalLightComp->ShadowNearAndFarPlane.Y);	
+		RenderStateManager.GSSetShader(EGeometryShaders::Null);
 
+		textureTarget.ClearTexture();
+		textureTarget.SetAsActiveTarget();
 		gBuffer.SetAllAsResources(1);
 		IntermediateDepth.SetAsPSResourceOnSlot(21);
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
-
+		
+		//DeferredLightingDirectional();
 		// add Alpha blend PS shader
-
 		ShadowAtlasDepth.SetAsPSResourceOnSlot(22);
 		SSAOBlurTexture.SetAsPSResourceOnSlot(23);
 
-		auto cubemapTexture = GEngine::GetTextureBank()->GetTexture(environmentLightComp->AmbientCubemapReference);
+		auto cubemapTexture = GEngine::GetTextureBank()->GetTexture("Assets/Textures/Cubemaps/Skybox.hva");
 		RenderStateManager.PSSetResources(0, 1, &cubemapTexture);
 
+		const SVector4 directionalLightDirection = { -1.0f, 0.0f, -1.0f, 0.0f };
+		const SVector4 directionalLightColor = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };
+
 		// Update lightbufferdata and fill lightbuffer
-		DirectionalLightBufferData.DirectionalLightDirection = directionalLightComp->Direction;
-		DirectionalLightBufferData.DirectionalLightColor = directionalLightComp->Color;
+		DirectionalLightBufferData.DirectionalLightDirection = directionalLightDirection;
+		DirectionalLightBufferData.DirectionalLightColor = directionalLightColor;
 		DirectionalLightBuffer.BindBuffer(DirectionalLightBufferData);
 		RenderStateManager.PSSetConstantBuffer(2, DirectionalLightBuffer);
 
-		ShadowmapBufferData.ToShadowmapView = directionalLightComp->ShadowmapView.ShadowViewMatrix;
-		ShadowmapBufferData.ToShadowmapProjection = directionalLightComp->ShadowmapView.ShadowProjectionMatrix;
-		ShadowmapBufferData.ShadowmapPosition = directionalLightComp->ShadowmapView.ShadowPosition;
+		ShadowmapBufferData.ToShadowmapView = SMatrix::Identity;
+		ShadowmapBufferData.ToShadowmapProjection = SMatrix::OrthographicLH(8.0f, 8.0f, -8.0f, 8.0f);
+		ShadowmapBufferData.ShadowmapPosition = SVector4::Zero;
 
-		const auto& shadowmapViewport = RenderStateManager.Viewports[directionalLightComp->ShadowmapView.ShadowmapViewportIndex];
+		const auto& shadowmapViewport = RenderStateManager.Viewports[0];
 		ShadowmapBufferData.ShadowmapResolution = { shadowmapViewport.Width, shadowmapViewport.Height };
 		ShadowmapBufferData.ShadowAtlasResolution = ShadowAtlasResolution;
 		ShadowmapBufferData.ShadowmapStartingUV = { shadowmapViewport.TopLeftX / ShadowAtlasResolution.X, shadowmapViewport.TopLeftY / ShadowAtlasResolution.Y };
@@ -895,10 +917,36 @@ namespace Havtorn
 		RenderStateManager.Draw(3, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 
-		// TODO.NR: Make temp scene outside, in EditorResourceManager and send it in to these functions. Need default lighting
-		tempScene.RemoveEntity(entity);
+		//PostBaseLightingPass();
+		CRenderTexture targetCopy = RenderTextureFactory.CreateTexture(SVector2<U16>(256), DXGI_FORMAT_R16G16B16A16_FLOAT);
+		targetCopy.SetAsActiveTarget();
+		textureTarget.SetAsPSResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+
+		//RenderBloom();
+
+		//Tonemapping();
+		textureTarget.SetAsActiveTarget();
+		targetCopy.SetAsPSResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Tonemap);
+		
+		//AntiAliasing();
+		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::Disable);
+		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
+		targetCopy.SetAsActiveTarget();
+		textureTarget.SetAsPSResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::FXAA);
+
+		//GammaCorrection();
+		textureTarget.SetAsActiveTarget();
+		targetCopy.SetAsPSResourceOnSlot(0);
+		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 
 		ID3D11ShaderResourceView* nullView = NULL;
+		RenderStateManager.PSSetResources(1, 1, &nullView);
+		RenderStateManager.PSSetResources(2, 1, &nullView);
+		RenderStateManager.PSSetResources(3, 1, &nullView);
+		RenderStateManager.PSSetResources(4, 1, &nullView);
 		RenderStateManager.PSSetResources(21, 1, &nullView);
 		RenderStateManager.PSSetResources(22, 1, &nullView);
 		RenderStateManager.PSSetResources(23, 1, &nullView);
@@ -906,11 +954,8 @@ namespace Havtorn
 		RenderStateManager.ClearState();
 		Backbuffer.SetAsActiveTarget();
 
-		//void* resource = renderTexture.MoveShaderResourceView();
-		//renderTexture.Release();
-		renderDepth.Release();
-
-		return std::move(renderTexture);
+		gBuffer.ReleaseResources();
+		targetCopy.Release();
 	}
 
 	void CRenderManager::RenderSkeletalAnimationAssetTexture(CRenderTexture& assetTextureTarget, const std::string& filePath, const std::vector<SMatrix>& boneTransforms)
@@ -1195,7 +1240,7 @@ namespace Havtorn
 	void CRenderManager::Clear(SVector4 /*clearColor*/)
 	{
 		//Backbuffer.ClearTexture(clearColor);
-		//myIntermediateDepth.ClearDepth();
+		//IntermediateDepth.ClearDepth();
 	}
 
 	void CRenderManager::InitDataBuffers()
@@ -1899,7 +1944,7 @@ namespace Havtorn
 
 		RenderStateManager.IASetTopology(ETopologies::TriangleList);
 		RenderStateManager.IASetInputLayout(EInputLayoutType::Position4);
-		RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[1], RenderStateManager.MeshVertexStrides[1], RenderStateManager.MeshVertexOffsets[0]);
+		RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[STATIC_U8(EVertexBufferPrimitives::PointLightCube)], RenderStateManager.MeshVertexStrides[1], RenderStateManager.MeshVertexOffsets[0]);
 		RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[STATIC_U8(EDefaultIndexBuffers::PointLightCube)]);
 
 		RenderStateManager.VSSetShader(EVertexShaders::PointAndSpotLight);
@@ -1963,6 +2008,36 @@ namespace Havtorn
 		RenderStateManager.DrawIndexed(36, 0, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::Default);
+	}
+
+	inline void CRenderManager::Skybox(const SRenderCommand& command)
+	{
+		ID3D11ShaderResourceView* nullView = NULL;
+		RenderStateManager.PSSetResources(21, 1, &nullView);
+
+		LitScene.SetAsActiveTarget(&IntermediateDepth);
+
+		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::Disable);
+		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::DepthFirst);
+		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
+
+		auto cubemapTexture = GEngine::GetTextureBank()->GetTexture(command.U16s[0]);
+		RenderStateManager.PSSetResources(0, 1, &cubemapTexture);
+
+		RenderStateManager.IASetTopology(ETopologies::TriangleList);
+		RenderStateManager.IASetInputLayout(EInputLayoutType::Position4);
+		RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[STATIC_U8(EVertexBufferPrimitives::SkyboxCube)], RenderStateManager.MeshVertexStrides[1], RenderStateManager.MeshVertexOffsets[0]);
+		RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[STATIC_U8(EDefaultIndexBuffers::SkyboxCube)]);
+
+		RenderStateManager.VSSetShader(EVertexShaders::Skybox);
+		RenderStateManager.PSSetShader(EPixelShaders::Skybox);
+
+		RenderStateManager.DrawIndexed(36, 0, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
+		
+		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
+		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::Default);
+		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
 	}
 
 	void CRenderManager::PostBaseLightingPass(const SRenderCommand& /*command*/)

@@ -391,6 +391,18 @@ namespace Havtorn
 		}
 
 		{
+			const SEntity& closestEnvironmentLightEntity = UComponentAlgo::GetClosestEntity3D(scene->MainCameraEntity, scene->GetComponents<SEnvironmentLightComponent>(), scene);
+			const SEnvironmentLightComponent* environmentLightComp = scene->GetComponent<SEnvironmentLightComponent>(closestEnvironmentLightEntity);
+			if (SComponent::IsValid(environmentLightComp))
+			{
+				SRenderCommand command;
+				command.U16s.push_back(environmentLightComp->AmbientCubemapReference);
+				command.Type = ERenderCommandType::Skybox;
+				RenderManager->PushRenderCommand(command);
+			}
+		}
+
+		{
 			SRenderCommand command;
 			command.Type = ERenderCommandType::PostBaseLightingPass;
 			RenderManager->PushRenderCommand(command);

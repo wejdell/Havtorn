@@ -278,12 +278,12 @@ namespace Havtorn
 
 		if (GUI::Button("Import"))
 		{
-			std::string newFileName = CurrentDirectory.string() + "/" + UGeneralUtils::ExtractFileBaseNameFromPath(filePath) + ".hva";
+			std::string newFileName = CurrentDirectory.string() + "\\" + UGeneralUtils::ExtractFileBaseNameFromPath(filePath) + ".hva";
 			std::filesystem::directory_entry newDir;
 			newDir.assign(std::filesystem::path(newFileName));
 			Manager->RemoveAssetRep(newDir);
 
-			std::string hvaFilePath = Manager->GetResourceManager()->ConvertToHVA(filePath, CurrentDirectory.string() + "/", ImportOptions);
+			std::string hvaFilePath = Manager->GetResourceManager()->ConvertToHVA(filePath, CurrentDirectory.string() + "\\", ImportOptions);
 			Manager->CreateAssetRep(hvaFilePath);
 			closePopup();
 		}

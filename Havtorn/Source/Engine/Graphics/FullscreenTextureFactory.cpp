@@ -53,9 +53,9 @@ namespace Havtorn
 		widePath[filePath.length()] = 0;
 
 		ETextureFormat format = {};
-		if (const std::string extension = filePath.substr(filePath.size() - 4); extension == ".dds")
+		if (const std::string extension = UGeneralUtils::ExtractFileExtensionFromPath(filePath); extension == "dds")
 			format = ETextureFormat::DDS;
-		else if (extension == ".tga")
+		else if (extension == "tga")
 			format = ETextureFormat::TGA;
 
 		switch (format)
@@ -116,12 +116,12 @@ namespace Havtorn
 
 	CRenderTexture CRenderTextureFactory::CreateTexture(ID3D11Texture2D* texture, bool cpuAccess)
 	{
-		D3D11_VIEWPORT* viewport = nullptr;
+		D3D11_VIEWPORT viewport = {};
 		if (texture)
 		{
 			D3D11_TEXTURE2D_DESC textureDescription;
 			texture->GetDesc(&textureDescription);
-			viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(textureDescription.Width), STATIC_F32(textureDescription.Height), 0.0f, 1.0f });
+			viewport = D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(textureDescription.Width), STATIC_F32(textureDescription.Height), 0.0f, 1.0f });
 		}
 
 		CRenderTexture returnTexture;
@@ -218,7 +218,7 @@ namespace Havtorn
 		ID3D11ShaderResourceView* shaderResource;
 		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateShaderResourceView(depthStencilBuffer, &shaderResourceViewDesc, &shaderResource), "Depth Shader Resource could not be created.");
 
-		D3D11_VIEWPORT* viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(size.X), STATIC_F32(size.Y), 0.0f, 1.0f });
+		D3D11_VIEWPORT viewport = D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(size.X), STATIC_F32(size.Y), 0.0f, 1.0f });
 
 		CRenderTexture returnDepth;
 		returnDepth.IsRenderTexture = false;
@@ -267,7 +267,7 @@ namespace Havtorn
 			renderTargets[i] = texture.RenderTarget;
 			shaderResources[i] = texture.ShaderResource;
 		}
-		D3D11_VIEWPORT* viewport = new D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(size.X), STATIC_F32(size.Y), 0.0f, 1.0f });
+		D3D11_VIEWPORT viewport = D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(size.X), STATIC_F32(size.Y), 0.0f, 1.0f });
 
 		CGBuffer returnGBuffer;
 		returnGBuffer.Context = Framework->GetContext();
