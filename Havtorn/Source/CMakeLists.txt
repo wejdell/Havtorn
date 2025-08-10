@@ -429,6 +429,7 @@ set(VERTEX_SHADERS
     ${SHADER_FOLDER}EditorPreviewSkeletal_VS.hlsl
     ${SHADER_FOLDER}FullscreenVertexShader_VS.hlsl
     ${SHADER_FOLDER}Line_VS.hlsl
+    ${SHADER_FOLDER}Skybox_VS.hlsl
     ${SHADER_FOLDER}PointLight_VS.hlsl
     ${SHADER_FOLDER}SpriteInstanced_VS.hlsl
     ${SHADER_FOLDER}SpriteInstancedEditor_VS.hlsl
@@ -482,6 +483,7 @@ set(PIXEL_SHADERS
     ${SHADER_FOLDER}GBuffer_PS.hlsl
     ${SHADER_FOLDER}GBufferEditor_PS.hlsl
     ${SHADER_FOLDER}Line_PS.hlsl
+    ${SHADER_FOLDER}Skybox_PS.hlsl
     ${SHADER_FOLDER}SpriteScreenSpace_PS.hlsl
     ${SHADER_FOLDER}SpriteWorldSpace_PS.hlsl
     ${SHADER_FOLDER}SpriteWorldSpaceEditor_PS.hlsl
@@ -604,6 +606,8 @@ add_dependencies(Game Core Platform GUI Engine)
 
 # ==================== EDITOR ====================
 set(EDITOR_FILES
+    ${EDITOR_FOLDER}AuthoringTools/MaterialTool.cpp
+    ${EDITOR_FOLDER}AuthoringTools/MaterialTool.h
     ${EDITOR_FOLDER}AuthoringTools/ScriptTool.cpp
     ${EDITOR_FOLDER}AuthoringTools/ScriptTool.h
     ${EDITOR_FOLDER}Systems/PickingSystem.cpp
@@ -618,7 +622,6 @@ set(EDITOR_FILES
     ${EDITOR_FOLDER}Toggleables/ViewMenu.h
     ${EDITOR_FOLDER}Toggleables/WindowMenu.cpp
     ${EDITOR_FOLDER}Toggleables/WindowMenu.h
-    ${EDITOR_FOLDER}Utils/ImGuiUtils.h
     ${EDITOR_FOLDER}Windows/AssetBrowserWindow.cpp
     ${EDITOR_FOLDER}Windows/AssetBrowserWindow.h
     ${EDITOR_FOLDER}Windows/DockSpaceWindow.cpp

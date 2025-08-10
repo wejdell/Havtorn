@@ -71,6 +71,8 @@ namespace Havtorn
 		Windows.emplace_back(std::make_unique<CInspectorWindow>("Inspector", this));
 		Windows.emplace_back(std::make_unique<CSpriteAnimatorGraphNodeWindow>("Sprite Animator", this));
 		Windows.back()->SetEnabled(false);
+		Windows.emplace_back(std::make_unique<CMaterialTool>("Material Editor", this));
+		Windows.back()->SetEnabled(false);
 		Windows.emplace_back(std::make_unique<CScriptTool>("Script Editor", this));
 		Windows.back()->SetEnabled(false);
 
@@ -325,6 +327,11 @@ namespace Havtorn
 
 	void CEditorManager::OpenAssetTool(SEditorAssetRepresentation* asset)
 	{
+		if (asset->AssetType == EAssetType::Material)
+		{
+			GetEditorWindow<CMaterialTool>()->OpenMaterial(asset);
+		}
+
 		// Edit mesh, texture, anim montage, material?
 		if (asset->AssetType == EAssetType::Script)
 		{
