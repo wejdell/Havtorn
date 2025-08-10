@@ -24,9 +24,6 @@ namespace Havtorn
 
 		for (SSkeletalAnimationComponent* component : scene->GetComponents<SSkeletalAnimationComponent>())
 		{
-			if (!SComponentView{ *component }.Validate())
-				continue;
-
 			if (!SComponent::IsValid(component))
 				continue;
 
