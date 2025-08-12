@@ -46,6 +46,14 @@ VerifyAndSetProjectRequirements - c++redist & vsbuildtools
 CompileDependencies - complie project dependencies, assumes cmake, git and python are OK and callable
 GenerateProject - generates VS project, assumes cmake, git and python are OK and callable
 
+08 12
+https://docs.python.org/3/using/windows.html
+
+python<version> cmds are not working for some reason, even with the installer being used
+for some reason, even though python-paths are before the windows store paths, the python command is using the store command
+users may have py available but not python or vice versa
+annoying part is that if the python installer is run, the current cmd-process needs to close to update PATH
+
 08 08
 https://docs.python.org/3/using/windows.html
 installs guide
