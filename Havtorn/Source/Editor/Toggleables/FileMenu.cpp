@@ -47,6 +47,14 @@ namespace Havtorn
                 }
             }
 
+            if (GEngine::GetWorld()->GetActiveScenes().size() > 0)
+            {
+                if (GUI::MenuItem("Save Scene"))
+                {
+                    GEngine::GetWorld()->SaveActiveScene("Assets/Scenes/" + GEngine::GetWorld()->GetActiveScenes()[0]->SceneName.AsString() + ".hva");
+                }
+            }
+
             if (GUI::BeginMenu("Open"))
             {
                 if (GUI::MenuItem("Demo Scene"))

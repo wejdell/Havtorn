@@ -57,25 +57,23 @@ namespace Havtorn
 		SetEditorTheme(EEditorColorTheme::HavtornDark, EEditorStyleTheme::Havtorn);
 
 		// TODO.NR: Figure out why we can't use unique ptrs with these namespaced imgui classes
-		MenuElements.emplace_back(new CFileMenu("File", this));
-		MenuElements.emplace_back(new CEditMenu("Edit", this));
-		MenuElements.emplace_back(new CViewMenu("View", this));
-		MenuElements.emplace_back(new CWindowMenu("Window", this));
-		MenuElements.emplace_back(new CHelpMenu("Help", this));
+		MenuElements.emplace_back(std::make_unique<CFileMenu>("File", this));
+		MenuElements.emplace_back(std::make_unique<CEditMenu>("Edit", this));
+		MenuElements.emplace_back(std::make_unique<CViewMenu>("View", this));
+		MenuElements.emplace_back(std::make_unique<CWindowMenu>("Window", this));
+		MenuElements.emplace_back(std::make_unique<CHelpMenu>("Help", this));
 
-		Windows.emplace_back(new CViewportWindow("Viewport", this));
-		Windows.emplace_back(new CDockSpaceWindow("Dock Space", this));
-		Windows.emplace_back(new CAssetBrowserWindow("Asset Browser", this));
-		Windows.emplace_back(new COutputLogWindow("Output Log", this));
-		Windows.emplace_back(new CHierarchyWindow("Hierarchy", this));
-		Windows.emplace_back(new CInspectorWindow("Inspector", this));
-	
-		// TODO.NW: Deal with floating windows in a nicer way
-		Windows.emplace_back(new CSpriteAnimatorGraphNodeWindow("Sprite Animator", this));
+		Windows.emplace_back(std::make_unique<CViewportWindow>("Viewport", this));
+		Windows.emplace_back(std::make_unique<CDockSpaceWindow>("Dock Space", this));
+		Windows.emplace_back(std::make_unique<CAssetBrowserWindow>("Asset Browser", this));
+		Windows.emplace_back(std::make_unique<COutputLogWindow>("Output Log", this));
+		Windows.emplace_back(std::make_unique<CHierarchyWindow>("Hierarchy", this));
+		Windows.emplace_back(std::make_unique<CInspectorWindow>("Inspector", this));
+		Windows.emplace_back(std::make_unique<CSpriteAnimatorGraphNodeWindow>("Sprite Animator", this));
 		Windows.back()->SetEnabled(false);
-		Windows.emplace_back(new CMaterialTool("Material Editor", this));
+		Windows.emplace_back(std::make_unique<CMaterialTool>("Material Editor", this));
 		Windows.back()->SetEnabled(false);
-		Windows.emplace_back(new CScriptTool("Script Editor", this));
+		Windows.emplace_back(std::make_unique<CScriptTool>("Script Editor", this));
 		Windows.back()->SetEnabled(false);
 
 		ResourceManager = new CEditorResourceManager();
@@ -268,12 +266,27 @@ namespace Havtorn
 	//	return AssetRepresentations[0];
 	//}
 
-	std::function<SAssetInspectionData(std::filesystem::directory_entry)> CEditorManager::GetAssetInspectFunction() const
+	/*std::function<SAssetInspectionData(std::filesystem::directory_entry, const EAssetType assetTypeFilter)> */
+
+
+	DirEntryFunc CEditorManager::GetAssetInspectFunction() const
 	{
 		return [this](std::filesystem::directory_entry entry)
 			{
+				const Ptr<SEditorAssetRepresentation>& assetRep = GetAssetRepFromDirEntry(entry);	
+				return SAssetInspectionData(assetRep->Name, (intptr_t)assetRep->TextureRef.GetShaderResourceView(), assetRep->DirectoryEntry.path().string());
+			};
+	}
+
+	DirEntryEAssetTypeFunc CEditorManager::GetAssetFilteredInspectFunction() const
+	{
+		return [this](std::filesystem::directory_entry entry, const EAssetType assetTypeFilter)
+			{
 				const Ptr<SEditorAssetRepresentation>& assetRep = GetAssetRepFromDirEntry(entry);
-				return SAssetInspectionData(assetRep->Name, (intptr_t)assetRep->TextureRef.GetShaderResourceView());
+				if (assetRep->AssetType == assetTypeFilter)
+					return SAssetInspectionData(assetRep->Name, (intptr_t)assetRep->TextureRef.GetShaderResourceView(), assetRep->DirectoryEntry.path().string());
+
+				return SAssetInspectionData("", 0, "");
 			};
 	}
 

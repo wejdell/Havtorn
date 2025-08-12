@@ -199,6 +199,9 @@ namespace Havtorn
 		}
 		else if (SMaterialComponent* materialComponent = dynamic_cast<SMaterialComponent*>(result.ComponentViewed))
 		{
+			if(materialComponent->Materials.size() == 0)
+				assetNames.push_back("");
+			
 			for (auto& material : materialComponent->Materials)
 				assetNames.push_back(material.Name);
 
@@ -235,6 +238,18 @@ namespace Havtorn
 			modalNameToOpen = SelectScriptAssetModalName;
 			defaultAssetDirectory = DefaultScriptAssetDirectory;
 		}
+		else if (SSkeletalMeshComponent* skeletonComponent = dynamic_cast<SSkeletalMeshComponent*>(result.ComponentViewed))
+		{
+			assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(skeletonComponent->Name.AsString()));
+			modalNameToOpen = SelectSkeletonAssetModalName;
+			defaultAssetDirectory = DefaultMeshAssetDirectory;
+		}
+		else if (SSkeletalAnimationComponent* skeletalAnimationComponent = dynamic_cast<SSkeletalAnimationComponent*>(result.ComponentViewed))
+		{
+			assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(skeletalAnimationComponent->AssetName));
+			modalNameToOpen = SelectSkeletonAssetModalName;
+			defaultAssetDirectory = DefaultMeshAssetDirectory;
+		}
 
 		IterateAssetRepresentations(result, assetNames, assetLabels, modalNameToOpen, defaultAssetDirectory);
 	}
@@ -246,6 +261,37 @@ namespace Havtorn
 		F32 panelWidth = 256.0f;
 		I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
 
+		if (assetNames.size() == 0)
+		{		
+			SAssetPickResult assetPickResult = GUI::AssetPicker("Select", modalNameToOpen.c_str(), 0, defaultSearchDirectory.c_str(), columnCount, Manager->GetAssetInspectFunction());
+			if (assetPickResult.State == EAssetPickerState::Active)
+				Manager->SetIsModalOpen(true);
+			else if (assetPickResult.State == EAssetPickerState::Cancelled)
+				Manager->SetIsModalOpen(false);
+			else if (assetPickResult.State == EAssetPickerState::AssetPicked)
+			{
+				AssetPickedIndex = 0;
+				auto pickedAsset = Manager->GetAssetRepFromDirEntry(assetPickResult.PickedEntry).get();
+
+				// TODO.NW: Should figure out if we can send along an editor context function to determine what happens 
+				// if an asset changes, instead of the inspector needing to know how to change the components
+				if (modalNameToOpen == SelectMeshAssetModalName)
+					HandleMeshAssetPicked(result, pickedAsset);
+				else if (modalNameToOpen == SelectMaterialAssetModalName)
+					HandleMaterialAssetPicked(result, pickedAsset);
+				else if (modalNameToOpen == SelectTextureAssetModalName)
+					HandleTextureAssetPicked(result, pickedAsset);
+				else if (modalNameToOpen == SelectScriptAssetModalName)
+					HandleScriptAssetPicked(result, pickedAsset);
+				else if (modalNameToOpen == SelectSkeletonAssetModalName)
+					HandleSkeletonAssetPicked(result, pickedAsset);
+				else if (modalNameToOpen == SelectSkeletonAnimationAssetModalName)
+					HandleSkeletalAnimationAssetPicked(result, pickedAsset);
+
+				Manager->SetIsModalOpen(false);
+			}
+		}
+
 		for (U8 index = 0; index < static_cast<U8>(assetNames.size()); index++)
 		{
 			std::string assetName = assetNames[index];
@@ -254,7 +300,6 @@ namespace Havtorn
 				assetName = "M_Checkboard_128x128";
 
 			SEditorAssetRepresentation* assetRep = Manager->GetAssetRepFromName(assetName).get();
-
 			GUI::Separator();
 
 			std::string id = assetName;
@@ -282,6 +327,10 @@ namespace Havtorn
 					HandleTextureAssetPicked(result, pickedAsset);
 				else if (modalNameToOpen == SelectScriptAssetModalName)
 					HandleScriptAssetPicked(result, pickedAsset);
+				else if (modalNameToOpen == SelectSkeletonAssetModalName)
+					HandleSkeletonAssetPicked(result, pickedAsset);
+				else if (modalNameToOpen == SelectSkeletonAnimationAssetModalName)
+					HandleSkeletalAnimationAssetPicked(result, pickedAsset);
 
 				Manager->SetIsModalOpen(false);
 			}
@@ -298,6 +347,26 @@ namespace Havtorn
 
 		// TODO.NW: Figure out why we did TryLoadStaticMeshComponent here before
 		Manager->GetRenderManager()->LoadStaticMeshComponent(assetRep->Name + ".hva", staticMesh, Scene);
+	}
+
+	void CInspectorWindow::HandleSkeletonAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep)
+	{
+		SSkeletalMeshComponent* skeletalMesh = static_cast<SSkeletalMeshComponent*>(result.ComponentViewed);
+		if (skeletalMesh == nullptr)
+			return;
+
+		// TODO.NW: Figure out why we did TryLoadStaticMeshComponent here before
+		Manager->GetRenderManager()->LoadSkeletalMeshComponent(assetRep->Name + ".hva", skeletalMesh);
+	}
+
+	void CInspectorWindow::HandleSkeletalAnimationAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep)
+	{
+		SSkeletalAnimationComponent* skeletalMesh = static_cast<SSkeletalAnimationComponent*>(result.ComponentViewed);
+		if (skeletalMesh == nullptr)
+			return;
+
+		// TODO.NW: Figure out why we did TryLoadStaticMeshComponent here before
+		Manager->GetRenderManager()->LoadSkeletalAnimationComponent({ assetRep->Name + ".hva" }, skeletalMesh);
 	}
 
 	void CInspectorWindow::HandleMaterialAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep)

@@ -184,6 +184,9 @@ namespace Havtorn
 				//	}
 				//}
 
+				if (!SComponent::IsValid(scene->GetComponent<SSkeletalAnimationComponent>(transformComp)))
+					continue;
+				
 				if (isInPlayingPlayState)
 				{
 					SRenderCommand command;
@@ -206,7 +209,7 @@ namespace Havtorn
 				}
 			}
 
-			RenderManager->AddSkeletalMeshToInstancedRenderList(skeletalMeshComponent->Name.AsString(), transformComp, scene->GetComponent<SSkeletalAnimationComponent>(transformComp));
+			RenderManager->AddSkeletalMeshToInstancedRenderList(skeletalMeshComponent->Name.AsString(), transformComp, scene->GetComponent<SSkeletalAnimationComponent>(transformComp));		
 		}
 
 		{
@@ -266,6 +269,7 @@ namespace Havtorn
 			if (!SComponent::IsValid(directionalLightComp))
 				continue;
 
+			
 			const SEntity& closestEnvironmentLightEntity = UComponentAlgo::GetClosestEntity3D(directionalLightComp->Owner, scene->GetComponents<SEnvironmentLightComponent>(), scene);
 			const SEnvironmentLightComponent* environmentLightComp = scene->GetComponent<SEnvironmentLightComponent>(closestEnvironmentLightEntity);
 			if (!SComponent::IsValid(environmentLightComp))

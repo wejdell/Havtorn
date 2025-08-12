@@ -96,7 +96,9 @@ namespace Havtorn
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry) const;
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromName(const std::string& assetName) const;
 		//const Ptr<SEditorAssetRepresentation>& GetAssetRepFromImageRef(void* imageRef) const;
-		std::function<SAssetInspectionData(std::filesystem::directory_entry)> GetAssetInspectFunction() const;
+		DirEntryFunc GetAssetInspectFunction() const;
+		DirEntryEAssetTypeFunc GetAssetFilteredInspectFunction() const;
+
 
 		void CreateAssetRep(const std::filesystem::path& destinationPath);
 		void RemoveAssetRep(const std::filesystem::directory_entry& sourceEntry);
@@ -163,8 +165,8 @@ namespace Havtorn
 		std::vector<SEntity> SelectedEntities = {};
 
 		// TODO.NR: Figure out why we can't use unique ptrs with these namespaced classes
-		std::vector<CWindow*> Windows = {};
-		std::vector<CToggleable*> MenuElements = {};
+		std::vector<Ptr<CWindow>> Windows;
+		std::vector<Ptr<CToggleable>> MenuElements;
 		std::vector<Ptr<SEditorAssetRepresentation>> AssetRepresentations = {};
 
 		// TODO.NR: Save these in .ini file
@@ -192,7 +194,7 @@ namespace Havtorn
 		{
 			U64 hashCode = typeid(*(Windows[i])).hash_code();
 			if (hashCode == targetHashCode)
-				return static_cast<TEditorWindowType*>(Windows[i]);
+				return static_cast<TEditorWindowType*>(Windows[i].get());
 		}
 		return nullptr;
 	}

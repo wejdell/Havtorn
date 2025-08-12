@@ -412,7 +412,8 @@ namespace Havtorn
 		I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
 
 		intptr_t assetPickerThumbnail = ImportOptions.AssetRep != nullptr ? (intptr_t)ImportOptions.AssetRep->TextureRef.GetShaderResourceView() : intptr_t();
-		SAssetPickResult result = GUI::AssetPicker("Skeletal Rig", "Skeletal Mesh", assetPickerThumbnail, "Assets/Tests", columnCount, Manager->GetAssetInspectFunction());
+		
+		SAssetPickResult result = GUI::AssetPickerFilter("Skeletal Rig", "Skeletal Mesh", assetPickerThumbnail, "Assets/Tests", columnCount, Manager->GetAssetFilteredInspectFunction(), EAssetType::SkeletalMesh);
 
 		if (result.State == EAssetPickerState::AssetPicked)
 			ImportOptions.AssetRep = Manager->GetAssetRepFromDirEntry(result.PickedEntry).get();
