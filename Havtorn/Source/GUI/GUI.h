@@ -24,6 +24,7 @@ namespace Havtorn
 	struct SMatrix;
 	class CPlatformManager;
 
+
 	enum class GUI_API EWindowFlag
 	{
 		NoTitleBar = BIT(0),
@@ -528,10 +529,27 @@ namespace Havtorn
 		SAssetInspectionData(const std::string& name, const intptr_t textureRef)
 			: Name(name)
 			, TextureRef(textureRef)
+			, AssetPath()
 		{}
+		
+		SAssetInspectionData(const std::string& name, const intptr_t textureRef, const std::string& assetPath)
+			: Name(name)
+			, TextureRef(textureRef)
+			, AssetPath(assetPath)
+		{}
+
+		bool IsValid() const
+		{
+			return Name.size() > 0 && AssetPath.size() > 0 && TextureRef != 0;
+		}
+
 		std::string Name = "";
+		std::string AssetPath = ""; //TODO.AS Replace with AssetRegistry GUID later on
 		intptr_t TextureRef = 0;
 	};
+
+	using DirEntryFunc = const std::function<SAssetInspectionData(std::filesystem::directory_entry)>;
+	using DirEntryEAssetTypeFunc = const std::function<SAssetInspectionData(std::filesystem::directory_entry, const EAssetType assetTypeFilter)>;
 
 	enum class EAssetPickerState
 	{
@@ -827,7 +845,8 @@ namespace Havtorn
 		static bool ImageButton(const char* label, intptr_t image, const SVector2<F32>& size = SVector2<F32>(0.0f), const SVector2<F32>& uv0 = SVector2<F32>(0.0f), const SVector2<F32>& uv1 = SVector2<F32>(1.0f), const SColor& backgroundColor = SColor(0.0f, 0.0f, 0.0f, 0.0f), const SColor& tintColor = SColor::White);
 		static bool Checkbox(const char* label, bool& value);
 
-		static SAssetPickResult AssetPicker(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const std::function<SAssetInspectionData(std::filesystem::directory_entry)>& assetInspector);
+		static SAssetPickResult AssetPicker(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryFunc& assetInspector);
+		static SAssetPickResult AssetPickerFilter(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType);
 		static SRenderAssetCardResult RenderAssetCard(const char* label, const bool isSelected, const intptr_t& thumbnailID, const char* typeName, const SColor& color, void* dragDropPayloadToSet, U64 payLoadSize);
 
 		static bool Selectable(const char* label, const bool selected = false, const std::vector<ESelectableFlag>& flags = {}, const SVector2<F32>& size = SVector2<F32>(0.0f));
