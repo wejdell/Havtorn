@@ -109,11 +109,38 @@ namespace Havtorn
 		{
 			GUI::BeginMainMenuBar();
 
+			GUI::TextDisabled("ICON");
+			GUI::Text("Havtorn Editor - %s", "Project Name");
+			GUI::Separator();
 			for (const auto& element : MenuElements)
 				element->OnInspectorGUI();
 
+			SVector2<F32> windowSize = GUI::GetCurrentWindowSize();
+			GUI::SetCursorPosX(windowSize.X - 92.0f);
+			// TODO.NW: Derive this from style params
+			constexpr F32 menuElementHeight = 16.0f;
+			if (GUI::ImageButton("MinimizeButton", intptr_t(ResourceManager->GetEditorTexture(EEditorTexture::MinimizeWindow).GetShaderResourceView()), SVector2<F32>(menuElementHeight)))
+			{
+				PlatformManager->MinimizeWindow();
+			}
+
+			if (GUI::ImageButton("MazimizeButton", intptr_t(ResourceManager->GetEditorTexture(EEditorTexture::MaximizeWindow).GetShaderResourceView()), SVector2<F32>(menuElementHeight)))
+			{
+				PlatformManager->MaximizeWindow();
+			}
+
+			if (GUI::ImageButton("CloseWindowButton", intptr_t(ResourceManager->GetEditorTexture(EEditorTexture::CloseWindow).GetShaderResourceView()), SVector2<F32>(menuElementHeight)))
+			{
+				PlatformManager->CloseWindow();
+			}
+
 			GUI::EndMainMenuBar();
 		}
+
+		if (GUI::IsLeftMouseHeld())
+			PlatformManager->UpdateWindowPos();
+		else
+			PlatformManager->UpdateRelativeCursorToWindowPos();
 
 		// Windows
 		for (const auto& window : Windows)

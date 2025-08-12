@@ -893,6 +893,7 @@ namespace Havtorn
 		static void SetOrthographic(const bool enabled);
 		
 		static bool IsOverGizmo();
+		static bool IsLeftMouseHeld();
 		static bool IsDoubleClick();
 		static bool IsShiftHeld();
 		static bool IsControlHeld();

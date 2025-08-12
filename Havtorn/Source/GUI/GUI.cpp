@@ -575,6 +575,11 @@ namespace Havtorn
 			return ImGuizmo::IsOver();
 		}
 
+		bool IsLeftMouseHeld()
+		{
+			return ImGui::IsMouseDown(ImGuiMouseButton_::ImGuiMouseButton_Left);
+		}
+
 		bool IsDoubleClick()
 		{
 			return ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left);
@@ -2065,6 +2070,11 @@ namespace Havtorn
 	bool GUI::IsOverGizmo()
 	{
 		return Instance->Impl->IsOverGizmo();
+	}
+
+	bool GUI::IsLeftMouseHeld()
+	{
+		return Instance->Impl->IsLeftMouseHeld();
 	}
 
 	bool GUI::IsDoubleClick()

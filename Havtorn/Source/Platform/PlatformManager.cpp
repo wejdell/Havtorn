@@ -228,8 +228,7 @@ namespace Havtorn
 		{
 			// Start in bordered window
 			WindowHandle = CreateWindowA("HavtornWindowClass", gameName.c_str(),
-				WS_OVERLAPPEDWINDOW | WS_POPUP | WS_VISIBLE,
-				//WS_POPUP | WS_VISIBLE,
+				/*WS_OVERLAPPEDWINDOW | */WS_POPUP | WS_VISIBLE,
 				WindowData.X, WindowData.Y, WindowData.Width, WindowData.Height,
 				nullptr, nullptr, nullptr, this);
 		}
@@ -250,8 +249,6 @@ namespace Havtorn
 
 		Resolution = { WindowData.Width, WindowData.Height };
 		ResizeTarget = {};
-		SetResolution(Resolution);
-		/*SetInternalResolution();*/
 
 		EnableDragDrop();
 
@@ -265,16 +262,25 @@ namespace Havtorn
 		return WindowHandle;
 	}
 
-	SVector2<U16> CPlatformManager::GetCenterPosition() const
+	SVector2<I16> CPlatformManager::GetCenterPosition() const
 	{
-		SVector2<U16> center = {};
+		SVector2<I16> center = {};
 		RECT rect = { 0 };
 		if (GetWindowRect(WindowHandle, &rect))
 		{
-			center.X = STATIC_U16((rect.right - rect.left) / (U16)2);
-			center.Y = STATIC_U16((rect.bottom - rect.top) / (U16)2);
+			center.X = STATIC_U16((rect.right - rect.left) / (I16)2);
+			center.Y = STATIC_U16((rect.bottom - rect.top) / (I16)2);
 		}
 		return center;
+	}
+
+	SVector2<I16> CPlatformManager::GetScreenCursorPos() const
+	{
+		POINT point = { 0 };
+		if (!GetCursorPos(&point))
+			return SVector2<I16>(0);
+
+		return { STATIC_I16(point.x), STATIC_I16(point.y) };
 	}
 
 	SVector2<U16> CPlatformManager::GetResolution() const
@@ -286,7 +292,7 @@ namespace Havtorn
 	{
 		if ((I16)resolution.X <= MaxResX && (I16)resolution.Y <= MaxResY)
 		{
-			::SetWindowPos(WindowHandle, 0, 0, 0, resolution.X, resolution.Y, SWP_NOMOVE | SWP_NOOWNERZORDER | SWP_NOZORDER);
+			::SetWindowPos(WindowHandle, 0, 0, 0, resolution.X, resolution.Y, SWP_NOOWNERZORDER | SWP_NOZORDER);
 			SetInternalResolution();
 		}
 	}
@@ -329,8 +335,8 @@ namespace Havtorn
 		CursorIsLocked = shouldLock;
 		if (shouldLock)
 		{
-			SVector2<U16> center = GetCenterPosition();
-			SetCursorPos(static_cast<I16>(center.X), static_cast<I16>(center.Y));
+			SVector2<I16> center = GetCenterPosition();
+			SetCursorPos(center.X, center.Y);
 		}
 		shouldLock ? static_cast<bool>(SetCapture(WindowHandle)) : static_cast<bool>(ReleaseCapture());
 	}
@@ -343,8 +349,8 @@ namespace Havtorn
 		CursorIsLocked = true;
 		WindowIsInEditingMode = isInEditorMode;
 
-		SVector2<U16> center = GetCenterPosition();
-		SetCursorPos(static_cast<I16>(center.X), static_cast<I16>(center.Y));
+		SVector2<I16> center = GetCenterPosition();
+		SetCursorPos(center.X, center.Y);
 	}
 
 	void CPlatformManager::ShowAndUnlockCursor(const bool& isInEditorMode)
@@ -385,5 +391,58 @@ namespace Havtorn
 	void CPlatformManager::DisableDragDrop() const
 	{
 		DragAcceptFiles(WindowHandle, FALSE);
+	}
+
+	void CPlatformManager::UpdateRelativeCursorToWindowPos()
+	{
+		RECT rect = { 0 };
+		if (!GetWindowRect(WindowHandle, &rect))
+			return;
+
+		CursorPosLastFrame = WindowRelativeCursorPos;
+		SVector2<I16> windowPos = SVector2<I16>(STATIC_U16(rect.left), STATIC_U16(rect.top));
+		WindowRelativeCursorPos = GetScreenCursorPos() - windowPos;
+	}
+
+	void CPlatformManager::UpdateWindowPos()
+	{
+		// TODO.NW: See if this can be done with the move Syscommand instead. Would need a separate solution for multiplatform support anyway.
+		SVector2<I16> currentCursorPos = GetScreenCursorPos();
+		SVector2<I16> delta = CursorPosLastFrame - currentCursorPos;
+
+		if (delta.SizeSquared() == 0 && ResizeTarget.SizeSquared() > 0)
+			return;
+
+		SVector2<I16> newWindowPos = GetScreenCursorPos() - WindowRelativeCursorPos;
+		::SetWindowPos(WindowHandle, 0, newWindowPos.X, newWindowPos.Y, 0, 0, SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOZORDER);
+	}
+
+	void CPlatformManager::SetWindowSize(const SVector2<U16>& size)
+	{
+		SetResolution(size);
+	}
+
+	void CPlatformManager::MinimizeWindow()
+	{
+		PostMessage(WindowHandle, WM_SYSCOMMAND, SC_MINIMIZE, 0);
+	}
+
+	void CPlatformManager::MaximizeWindow()
+	{
+		if (!ToggledMaximize)
+		{
+			PostMessage(WindowHandle, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
+			ToggledMaximize = true;
+		}
+		else
+		{
+			PostMessage(WindowHandle, WM_SYSCOMMAND, SC_RESTORE, 0);
+			ToggledMaximize = false;
+		}
+	}
+
+	void CPlatformManager::CloseWindow()
+	{
+		PostMessage(WindowHandle, WM_SYSCOMMAND, SC_CLOSE, 0);
 	}
 }
