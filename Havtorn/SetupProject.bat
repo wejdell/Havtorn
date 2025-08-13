@@ -14,6 +14,7 @@ goto :eof
 
 :CONTINUE_SETUP
 cd %~dp0\ProjectSetup\
+:: Figure out which cli for python we can use
 python --version>nul 2>&1
 set pythonCmdError=%errorlevel%
 py --version>nul 2>&1
@@ -24,4 +25,4 @@ if %pythonCmdError% NEQ 0 (
         goto :eof
 )
 python MasterSetup.py
-goto :eof
+PAUSE
