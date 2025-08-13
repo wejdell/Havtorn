@@ -35,13 +35,9 @@ goto :eof
 :: Note: python installer is configured to set PATH, however to receive the updated PATH from system the setup-process would need to be restarted.
 :: This is a hack of sorts to get around that, as the temporary modification takes immediate effect.
 set pythonExeLocation=%pythonInstallDir%
-echo %pythonExeLocation%
 set pyLauncherLocation=%pythonInstallDir%\..\Launcher\
-echo %pyLauncherLocation%
 set pipLocation=%pythonInstallDir%\Scripts\
-echo %pipLocation%
 set PATH=%pythonExeLocation%;%pyLauncherLocation%;%pipLocation%;%PATH%
-PAUSE
 goto :eof
 
 :PYTHON_INSTALL_PERMISSION

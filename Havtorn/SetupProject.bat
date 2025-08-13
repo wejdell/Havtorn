@@ -13,6 +13,9 @@ PAUSE
 goto :eof
 
 :CONTINUE_SETUP
+echo.
+echo Requirements checked. Continuing with setup ...
+echo.
 cd %~dp0\ProjectSetup\
 :: Figure out which cli for python we can use
 python --version>nul 2>&1

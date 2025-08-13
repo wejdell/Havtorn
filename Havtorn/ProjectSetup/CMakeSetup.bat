@@ -44,15 +44,12 @@ goto :REQUIREMENT_ERROR_OUT
 :CMAKE_DO_INSTALL
 if not exist %~dp0%requirementsDirName% mkdir %~dp0%requirementsDirName%
 if not exist %~dp0%requirementsDirName%\%cmakeDirName%\ mkdir %~dp0%requirementsDirName%\%cmakeDirName%\
-if not exist %~dp0%requirementsDirName%\%cmakeDownloadFile% (
-    echo Ready to start download %~dp0%requirementsDirName%\%cmakeDownloadFile%
-    PAUSE
-    bitsadmin /transfer cmakeDownload /download /priority high "%cmakeUrl%" "%~dp0%requirementsDirName%\%cmakeDownloadFile%"
-)
-echo Extracting to "%~dp0%requirementsDirName%\%cmakeDirName%\"
+echo Ready to start download %~dp0%requirementsDirName%\%cmakeDownloadFile% ...
+bitsadmin /transfer cmakeDownload /download /priority high "%cmakeUrl%" "%~dp0%requirementsDirName%\%cmakeDownloadFile%"
+echo Extracting to "%~dp0%requirementsDirName%\%cmakeDirName%\" ...
 :: x - extract, v - verbose, f - target archive, C - extract to directory
 tar -xvf "%~dp0%requirementsDirName%\%cmakeDownloadFile%" -C "%~dp0%requirementsDirName%\%cmakeDirName%\\"
-PAUSE
+del %~dp0%requirementsDirName%\%cmakeDownloadFile% /q
 goto :CMAKE_SET_VARIABLE
 
 :REQUIREMENT_ERROR_OUT

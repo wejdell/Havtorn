@@ -54,13 +54,11 @@ goto :REQUIREMENT_ERROR_OUT
 :GIT_DO_INSTALL
 if not exist %~dp0%requirementsDirName% mkdir %~dp0%requirementsDirName%
 if not exist %~dp0%requirementsDirName%\%gitDirName%\ mkdir %~dp0%requirementsDirName%\%gitDirName%\
-if not exist %~dp0%requirementsDirName%\%gitDownloadFile% (
-    echo Ready to start download %~dp0%requirementsDirName%\%gitDownloadFile%
-    PAUSE
-    bitsadmin /transfer gitDownload /download /priority high "%gitUrl%" "%~dp0%requirementsDirName%\%gitDownloadFile%"
-)
+echo Ready to start download %~dp0%requirementsDirName%\%gitDownloadFile% ...
+bitsadmin /transfer gitDownload /download /priority high "%gitUrl%" "%~dp0%requirementsDirName%\%gitDownloadFile%"
 echo Extracting to "%~dp0%requirementsDirName%\%gitDirName%" ...
 %~dp0%requirementsDirName%\%gitDownloadFile% -y
+del %~dp0%requirementsDirName%\%gitDownloadFile% /q
 goto :GIT_SET_VARIABLE
 
 :REQUIREMENT_ERROR_OUT
