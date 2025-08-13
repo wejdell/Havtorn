@@ -19,8 +19,9 @@ set pythonCmdError=%errorlevel%
 py --version>nul 2>&1
 set pyCmdError=%errorlevel%
 if %pythonCmdError% NEQ 0 (
-    py MasterSetup.py
-) else (
-    python MasterSetup.py
+    if %pyCmdError% NEQ 0 goto :ON_REQUIREMENT_ERROR
+        py MasterSetup.py
+        goto :eof
 )
+python MasterSetup.py
 goto :eof
