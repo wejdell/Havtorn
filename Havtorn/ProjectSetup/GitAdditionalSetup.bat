@@ -2,6 +2,7 @@
 :: This script can be called by itself or from another script, always use absolute path %~dp0
 call %~dp0SetVariablesForRequirements.bat
 
+echo.
 set gitVersion=2.50.1
 set gitDownloadFile=PortableGit-%gitVersion%-64-bit.7z.exe
 set gitUrl=https://github.com/git-for-windows/git/releases/download/v%gitVersion%.windows.1/%gitDownloadFile%
@@ -23,17 +24,12 @@ set PATH=%~dp0%gitExeLocation%;%PATH%
 goto :GIT_RUN_COMMANDS
 
 :GIT_RUN_COMMANDS
-echo.
 echo Updating submodules
 git submodule update --init --recursive
-echo.
 echo Enabling lfs
 git lfs install
-echo.
 echo Enabling git longpaths 
 git config core.longpaths true
-echo.
-PAUSE
 goto :eof
 
 :GIT_NOT_FOUND

@@ -2,6 +2,7 @@
 :: This script can be called by itself or from another script, always use absolute path %~dp0
 call %~dp0SetVariablesForRequirements.bat
 
+echo.
 :: TODO: change installer to local python installation through zip+configs
 set pythonDownloadFile=python-%pythonVersion%-amd64.exe
 set pythonUrl=https://www.python.org/ftp/python/%pythonVersion%/%pythonDownloadFile%
@@ -9,12 +10,6 @@ set pythonUrl=https://www.python.org/ftp/python/%pythonVersion%/%pythonDownloadF
 :: LOCALAPPDATA == C:\Users\<user>\AppData\Local
 :: This is the same directory the Python installer uses as its default. 
 set pythonInstallDir=%LOCALAPPDATA%\Programs\Python\Python313
-
-echo %pythonVersion%
-echo %requirementsDirName%
-echo %pythonDownloadFile%
-echo %pythonUrl%
-echo %pythonInstallDir%
 
 echo Looking for Python...
 :: TODO actually verify version of installed Python both for machine & repo
@@ -26,7 +21,6 @@ if %pythonCmdError% NEQ 0 (
     if %pyCmdError% NEQ 0 goto :PYTHON_INSTALL_PERMISSION
 )
 echo Python found
-PAUSE
 goto :eof
 
 :PYTHON_SET_VARIABLE

@@ -1,4 +1,6 @@
 @echo off
+call %~dp0\ProjectSetup\CMakeSetup.bat
+if %errorlevel% NEQ 0 EXIT /B 1
 echo.
 echo Generating CMake files...
 echo.

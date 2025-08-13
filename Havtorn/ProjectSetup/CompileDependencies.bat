@@ -5,7 +5,6 @@ echo.
 echo Generating assimp CMake files...
 echo.
 cmake -G "Visual Studio 17 2022" CMakeLists.txt
-rem cmake -G "Visual Stduio Build Tools 2022" CMakeLists.txt
 echo.
 echo Building assimp...
 echo.
@@ -23,8 +22,8 @@ echo Generating PhysX files...
 echo.
 :: if PM_PACKAGES_ROOT is not set, packman will be installed under C:/
 :: packman init script will only read this path correctly if it is without ""
-set PM_PACKAGES_ROOT=%~dp0/../SetupRequirements/packman
-if not exist "%PM_PACKAGES_ROOT%/" mkdir "%PM_PACKAGES_ROOT%"
+set PM_PACKAGES_ROOT=%~dp0SetupRequirements\packman\
+if not exist %PM_PACKAGES_ROOT%\ mkdir %PM_PACKAGES_ROOT%
 call generate_projects.bat vc17win64 
 echo.
 echo Building PhysX...

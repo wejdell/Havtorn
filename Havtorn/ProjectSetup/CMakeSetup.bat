@@ -2,23 +2,16 @@
 :: This script can be called by itself or from another script, always use absolute path %~dp0
 call %~dp0SetVariablesForRequirements.bat
 
+echo.
 set cmakeDownloadFile=cmake-%cmakeVersion%-windows-x86_64.zip
 set cmakeUrl=https://github.com/Kitware/CMake/releases/download/v%cmakeVersion%/%cmakeDownloadFile%
 set cmakeExeLocation=%requirementsDirName%\%cmakeDirName%\cmake-%cmakeVersion%-windows-x86_64\bin\
 set cmakeExe=cmake.exe
 
-echo %cmakeVersion%
-echo %requirementsDirName%
-echo %cmakeDirName%
-echo %cmakeDownloadFile%
-echo %cmakeExeLocation%
-echo %cmakeExe%
-
 :: TODO actually verify version of installed CMake both for machine & repo check
 cmake --version >NUL 2>&1
 if %errorlevel% NEQ 0 goto :CMAKE_CHECK_REPO_INSTALL
 echo CMake found
-PAUSE
 goto :eof
 
 :CMAKE_CHECK_REPO_INSTALL
