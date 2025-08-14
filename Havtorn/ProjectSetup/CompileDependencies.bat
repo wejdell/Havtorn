@@ -1,4 +1,6 @@
 @echo off
+call %~dp0\SetupCMake.bat
+if %errorlevel% NEQ 0 EXIT /B 1
 
 cd ..\External\assimp
 echo.

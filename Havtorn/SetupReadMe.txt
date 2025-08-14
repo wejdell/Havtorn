@@ -17,7 +17,7 @@ Any red or yellow text is a clear indication of error.
 
 - SetupProject.bat - Required step, initial step
 This is a 1 time step and runs through verification of all requirements and generates the project files.
-Runs GenerateProject. After SetupProject has completed successfully you can run BuildProject.bat
+After SetupProject has completed successfully you can run BuildProject.bat
 If you start from a clean repository you'll need to run this again.
 
 - GenerateProject.bat

@@ -46,6 +46,20 @@ VerifyAndSetProjectRequirements - c++redist & vsbuildtools
 CompileDependencies - complie project dependencies, assumes cmake, git and python are OK and callable
 GenerateProject - generates VS project, assumes cmake, git and python are OK and callable
 
+08 14
+MSBuild version 17.14.18+a338add32 for .NET Framework
+
+  zlibstatic.vcxproj -> C:\Users\AkiGonzalez\source\repos\Havtorn\Havtorn\External\assimp\contrib\zlib\Debug\zlibstatic
+  d.lib
+  assimp.vcxproj -> C:\Users\AkiGonzalez\source\repos\Havtorn\Havtorn\External\assimp\bin\Debug\assimp-vc143-mtd.dll
+  unit.vcxproj -> C:\Users\AkiGonzalez\source\repos\Havtorn\Havtorn\External\assimp\bin\Debug\unit.exe
+
+        1 file(s) copied.
+The system cannot find the path specified.
+        0 file(s) copied.
+A subdirectory or file -p already exists.
+Error occurred while processing: -p.
+
 08 12
 https://docs.python.org/3/using/windows.html
 
