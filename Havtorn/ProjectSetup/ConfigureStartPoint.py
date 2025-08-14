@@ -2,7 +2,7 @@ import os
 import subprocess
 import platform
 
-from SetupMSVC import MSVCConfiguration as MSVCRequirements
+from ConfigureMSVC import MSVCConfiguration as MSVCRequirements
 MSVCRequirements.Validate()
 
 from ConfigurePython import PythonConfiguration as PythonRequirements
