@@ -3,7 +3,9 @@
 #include "HexRune.h"
 #include "ECS/GUIDManager.h"
 #include "NodeEditorContexts/CoreNodeEditorContexts.h"
+#include "NodeEditorContexts/ECSNodeEditorContexts.h"
 #include "CoreNodes/CoreNodes.h"
+#include "ECSNodes/ECSNodes.h"
 
 namespace Havtorn
 {
@@ -14,7 +16,7 @@ namespace Havtorn
             Initialize();
         }
 
-        void SScript::AddDataBinding(const char* name, const EPinType type, const EObjectDataType objectType)
+        void SScript::AddDataBinding(const char* name, const EPinType type, const EObjectDataType objectType, const EAssetType assetType)
         {
             std::variant<PIN_DATA_TYPES> data;
             switch (type)
@@ -51,16 +53,65 @@ namespace Havtorn
                 else if (objectType == EObjectDataType::Component)
                     data = { nullptr };
                 break;
+            case EPinType::Asset:
+                data = SAsset{ assetType };
+                break;
             }
 
-            //DataBindings.emplace_back(new SScriptDataBinding(UGUIDManager::Generate(), std::string(name), type, objectType, data));
             DataBindings.emplace_back(SScriptDataBinding());
             DataBindings.back().UID = UGUIDManager::Generate();
             DataBindings.back().Name = std::string(name);
             DataBindings.back().Type = type;
             DataBindings.back().ObjectType = objectType;
+            DataBindings.back().AssetType = assetType;
             DataBindings.back().Data = data;
-            RegisteredEditorContexts.emplace_back(new SDataBindingNodeEditorContext(this, DataBindings.back().UID));
+            RegisteredEditorContexts.emplace_back(new SDataBindingGetNodeEditorContext(this, DataBindings.back().UID));
+            RegisteredEditorContexts.emplace_back(new SDataBindingSetNodeEditorContext(this, DataBindings.back().UID));
+        }
+
+        void SScript::RemoveDataBinding(const U64 id)
+        {
+            auto bindingIterator = std::ranges::find_if(DataBindings, [id](const SScriptDataBinding& binding) { return id == binding.UID; });
+            if (bindingIterator == DataBindings.end())
+                return;
+
+            // TODO.NW: Make algo library for find_all_if
+            std::vector<U64> nodesToRemove;
+            for (auto node : Nodes)
+            {
+                if (SDataBindingGetNode* dataBindingNode = static_cast<SDataBindingGetNode*>(node))
+                {
+                    if (dataBindingNode->DataBinding == &(*bindingIterator))
+                        nodesToRemove.push_back(dataBindingNode->UID);
+                }
+            }
+            for (const U64 nodeId : nodesToRemove)
+                RemoveNode(nodeId);
+
+            // TODO.NW: Make sure contexts get deleted properly
+            auto getterContextIterator = std::ranges::find_if(RegisteredEditorContexts, [id](const SNodeEditorContext* registeredContext) 
+                {
+                    if (const SDataBindingGetNodeEditorContext* context = static_cast<const SDataBindingGetNodeEditorContext*>(registeredContext))
+                    {
+                        return context->DataBindingID == id;
+                    }
+                    return false;
+                });
+            if (getterContextIterator != RegisteredEditorContexts.end())
+                RegisteredEditorContexts.erase(getterContextIterator);
+            
+            auto setterContextIterator = std::ranges::find_if(RegisteredEditorContexts, [id](const SNodeEditorContext* registeredContext)
+                {
+                    if (const SDataBindingSetNodeEditorContext* context = static_cast<const SDataBindingSetNodeEditorContext*>(registeredContext))
+                    {
+                        return context->DataBindingID == id;
+                    }
+                    return false;
+                });
+            if (setterContextIterator != RegisteredEditorContexts.end())
+                RegisteredEditorContexts.erase(setterContextIterator);
+
+            DataBindings.erase(bindingIterator);
         }
 
         void SScript::RemoveNode(const U64 id)
@@ -140,6 +191,11 @@ namespace Havtorn
             RegisteredEditorContexts.emplace_back(&SIntMoreOrEqualNodeEditorContext::Context);
             RegisteredEditorContexts.emplace_back(&SIntEqualNodeEditorContext::Context);
             RegisteredEditorContexts.emplace_back(&SIntNotEqualNodeEditorContext::Context);
+            RegisteredEditorContexts.emplace_back(&SPrintEntityNameNodeEditorContext::Context);
+            RegisteredEditorContexts.emplace_back(&SSetStaticMeshNodeEditorContext::Context);
+            RegisteredEditorContexts.emplace_back(&STogglePointLightNodeEditorContext::Context);
+            RegisteredEditorContexts.emplace_back(&SOnBeginOverlapNodeEditorContext::Context);
+            RegisteredEditorContexts.emplace_back(&SOnEndOverlapNodeEditorContext::Context);
         }
 
         void SScript::TraverseScript(CScene* owningScene)
@@ -151,6 +207,27 @@ namespace Havtorn
 
             for (SNode* node : StartNodes)
                 node->Execute();
+        }
+
+        void SScript::TraverseFromNode(const U64 startNodeID, CScene* owningScene)
+        {
+            if (owningScene == nullptr)
+                return;
+
+            if (SNode* startNode = GetNode(startNodeID))
+            {
+                Scene = owningScene;
+                startNode->Execute();
+            }
+        }
+
+        void SScript::TraverseFromNode(SNode* startNode, CScene* owningScene)
+        {
+            if (owningScene == nullptr)
+                return;
+
+            Scene = owningScene;
+            startNode->Execute();
         }
 
         void SScript::Link(U64 leftPinID, U64 rightPinID)
@@ -272,10 +349,15 @@ namespace Havtorn
 
         SNode* SScript::GetNode(const U64 id) const
         {
-            if (!NodeIndices.contains(id))
+            if (!HasNode(id))
                 return nullptr;
 
             return Nodes[NodeIndices.at(id)];
+        }
+
+        bool SScript::HasNode(const U64 id) const
+        {
+            return NodeIndices.contains(id);
         }
 
         void SScript::RemoveContext(const U64 nodeID)

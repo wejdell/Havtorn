@@ -8,31 +8,6 @@ namespace Havtorn
 	namespace HexRune
 	{
 		struct SScript;
-	
-		//struct SComponentsNode : public SNode
-		//{
-		//	//virtual void Construct() override;
-		//	virtual I8 OnExecute() override;
-		//};
-
-		//struct STestNode : public SNode
-		//{
-		//	//virtual void Construct() override;
-		//	virtual I8 OnExecute() override;
-		//	virtual bool IsStartNode() const override { return true; }
-		//};
-
-		//struct SLiteralFloatNode : public SNode
-		//{
-		//	//virtual void Construct() override;
-		//	virtual I8 OnExecute() override;
-		//};
-
-		//struct SLiteralStringNode : public SNode
-		//{
-		//	//virtual void Construct() override;
-		//	virtual I8 OnExecute() override;
-		//};
 	}
 
 	class CScriptTool : public CWindow
@@ -75,6 +50,7 @@ namespace Havtorn
 		std::vector<SGUINodeContext> GUIContexts;
 		SGuiTextFilter Filter;
 		SNodeOperation Edit;
+		SGUIDataBinding DataBindingCandidate;
 
 		const F32 HeaderHeight = 12.0f;
 		const F32 PinNameOffset = 4.0f;

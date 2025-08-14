@@ -11,22 +11,41 @@ namespace Havtorn
 {
 	namespace HexRune
 	{
-		SDataBindingNodeEditorContext::SDataBindingNodeEditorContext(SScript* script, const U64 dataBindingID)
+		SDataBindingGetNodeEditorContext::SDataBindingGetNodeEditorContext(SScript* script, const U64 dataBindingID)
 			: DataBindingID(dataBindingID)
 		{
 			auto it = &(*std::ranges::find_if(script->DataBindings, [dataBindingID](SScriptDataBinding& binding) { return binding.UID == dataBindingID; }));
-			Name = it->Name;
+			Name = "Get " + it->Name;
 			Category = "Data Bindings";
 			Color = SColor::Orange;
 		}
 
-		SNode* SDataBindingNodeEditorContext::AddNode(SScript* script, const U64 existingID) const
+		SNode* SDataBindingGetNodeEditorContext::AddNode(SScript* script, const U64 existingID) const
 		{
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SDataBindingNode>(existingID, DataBindingID);
-			script->AddEditorContext<SDataBindingNodeEditorContext>(node->UID, script, DataBindingID);
+			SNode* node = script->AddNode<SDataBindingGetNode>(existingID, DataBindingID);
+			script->AddEditorContext<SDataBindingGetNodeEditorContext>(node->UID, script, DataBindingID);
+			return node;
+		}
+
+		SDataBindingSetNodeEditorContext::SDataBindingSetNodeEditorContext(SScript* script, const U64 dataBindingID)
+			: DataBindingID(dataBindingID)
+		{
+			auto it = &(*std::ranges::find_if(script->DataBindings, [dataBindingID](SScriptDataBinding& binding) { return binding.UID == dataBindingID; }));
+			Name = "Set " + it->Name;
+			Category = "Data Bindings";
+			Color = SColor::Orange;
+		}
+		
+		SNode* SDataBindingSetNodeEditorContext::AddNode(SScript* script, const U64 existingID) const
+		{
+			if (script == nullptr)
+				return nullptr;
+
+			SNode* node = script->AddNode<SDataBindingSetNode>(existingID, DataBindingID);
+			script->AddEditorContext<SDataBindingSetNodeEditorContext>(node->UID, script, DataBindingID);
 			return node;
 		}
 
@@ -66,42 +85,6 @@ namespace Havtorn
 			return node;
 		}
 
-		SEntityLoopNodeEditorContext SEntityLoopNodeEditorContext::Context = {};
-
-		SEntityLoopNodeEditorContext::SEntityLoopNodeEditorContext()
-		{
-			Name = "For Each Loop (Entity)";
-			Category = "General";
-		}
-
-		SNode* SEntityLoopNodeEditorContext::AddNode(SScript* script, const U64 existingID) const
-		{
-			if (script == nullptr)
-				return nullptr;
-
-			SNode* node = script->AddNode<SEntityLoopNode>(existingID);
-			script->AddEditorContext<SEntityLoopNodeEditorContext>(node->UID);
-			return node;
-		}
-
-		SComponentLoopNodeEditorContext SComponentLoopNodeEditorContext::Context = {};
-
-		SComponentLoopNodeEditorContext::SComponentLoopNodeEditorContext()
-		{
-			Name = "For Each Loop (Component)";
-			Category = "General";
-		}
-
-		SNode* SComponentLoopNodeEditorContext::AddNode(SScript* script, const U64 existingID) const
-		{
-			if (script == nullptr)
-				return nullptr;
-
-			SNode* node = script->AddNode<SComponentLoopNode>(existingID);
-			script->AddEditorContext<SComponentLoopNodeEditorContext>(node->UID);
-			return node;
-		}
-
 		SDelayNodeEditorContext SDelayNodeEditorContext::Context = {};
 
 		SDelayNodeEditorContext::SDelayNodeEditorContext()
@@ -130,12 +113,12 @@ namespace Havtorn
 			Color = SColor::Red;
 		}
 
-		SNode* SBeginPlayNodeEditorContext::AddNode(SScript* script, const U64 existingID) const
+		SNode* SBeginPlayNodeEditorContext::AddNode(SScript* script, const U64 /*existingID*/) const
 		{
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SBeginPlayNode>(existingID);
+			SNode* node = script->AddNode<SBeginPlayNode>(BeginPlayNodeID);
 			script->AddEditorContext<SBeginPlayNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -149,12 +132,12 @@ namespace Havtorn
 			Color = SColor::Red;
 		}
 
-		SNode* STickNodeEditorContext::AddNode(SScript* script, const U64 existingID) const
+		SNode* STickNodeEditorContext::AddNode(SScript* script, const U64 /*existingID*/) const
 		{
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<STickNode>(existingID);
+			SNode* node = script->AddNode<STickNode>(TickNodeID);
 			script->AddEditorContext<STickNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -168,12 +151,12 @@ namespace Havtorn
 			Color = SColor::Red;
 		}
 
-		SNode* SEndPlayNodeEditorContext::AddNode(SScript* script, const U64 existingID) const
+		SNode* SEndPlayNodeEditorContext::AddNode(SScript* script, const U64 /*existingID*/) const
 		{
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SEndPlayNode>(existingID);
+			SNode* node = script->AddNode<SEndPlayNode>(EndPlayNodeID);
 			script->AddEditorContext<SEndPlayNodeEditorContext>(node->UID);
 			return node;
 		}

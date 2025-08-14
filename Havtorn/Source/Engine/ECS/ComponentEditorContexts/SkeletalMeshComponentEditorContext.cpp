@@ -22,7 +22,7 @@ namespace Havtorn
 			return SComponentViewResult();
 
 		STransformComponent* transform = scene->GetComponent<STransformComponent>(entityOwner);
-		if (!transform->IsValid())
+		if (!SComponent::IsValid(transform))
 			return SComponentViewResult();
 
 		SSkeletalMeshComponent* skeletalMesh = scene->GetComponent<SSkeletalMeshComponent>(entityOwner);

@@ -73,6 +73,7 @@ namespace Havtorn
 		std::string Name;
 		std::vector<SStaticMeshVertex> Vertices;
 		std::vector<U32> Indices;
+		U16 MaterialIndex = 0;
 	};
 
 	struct SSkeletalMesh
@@ -80,6 +81,7 @@ namespace Havtorn
 		std::string Name;
 		std::vector<SSkeletalMeshVertex> Vertices;
 		std::vector<U32> Indices;
+		U16 MaterialIndex = 0;
 	};
 
 	struct SSkeletalMeshBone
@@ -173,6 +175,7 @@ namespace Havtorn
 		U16 IndexBufferIndex = 0;
 		U16 VertexStrideIndex = 0;
 		U16 VertexOffsetIndex = 0;
+		U16 MaterialIndex = 0;
 	};
 
 	struct SShadowmapViewData

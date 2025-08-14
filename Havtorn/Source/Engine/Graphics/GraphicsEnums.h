@@ -48,6 +48,7 @@ namespace Havtorn
 		SpriteInstancedEditor = 10,
 		SkeletalMeshInstanced = 11,
 		SkeletalMeshInstancedEditor = 12,
+		Skybox = 13,
 		Count,
 		Null = Count
 	};
@@ -71,6 +72,7 @@ namespace Havtorn
 		GBufferInstanceEditor = 14,
 		SpriteWorldSpaceEditor = 15,
 		SpriteWorldSpaceEditorWidget = 16,
+		Skybox = 17,
 		Count,
 		Null = Count
 	};
@@ -120,6 +122,7 @@ namespace Havtorn
 		Octahedron,
 		Square,
 		UVSphere,
+		SkyboxCube,
 		//TODO.ANYONE: add more debug shape primitives.
 	};
 
@@ -143,6 +146,7 @@ namespace Havtorn
 		Octahedron,
 		Square,
 		UVSphere,
+		SkyboxCube,
 		//TODO.ANYONE: add more debug shape primitives.
 	};
 

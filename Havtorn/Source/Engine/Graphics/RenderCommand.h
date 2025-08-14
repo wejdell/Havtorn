@@ -28,6 +28,7 @@ namespace Havtorn
 		DeferredLightingDirectional,
 		DeferredLightingPoint,
 		DeferredLightingSpot,
+		Skybox,
 		PostBaseLightingPass,
 		VolumetricLightingDirectional,
 		VolumetricLightingPoint,

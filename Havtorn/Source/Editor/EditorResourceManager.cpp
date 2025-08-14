@@ -82,59 +82,62 @@ namespace Havtorn
 		}
 	}
 
-	void CEditorResourceManager::CreateAsset(const std::string& destinationPath, EAssetType assetType) const
+	std::string CEditorResourceManager::CreateAsset(const std::string& destinationPath, const SAssetFileHeader& fileHeader) const
 	{
-		switch (assetType)
+		// TODO.NW: See if we can make char stream we can then convert to data buffer,
+		// so as to not repeat the logic for every case
+
+		std::string hvaPath = "INVALID_PATH";
+		if (std::holds_alternative<SStaticModelFileHeader>(fileHeader))
 		{
-		case EAssetType::StaticMesh:
-			break;
-		case EAssetType::SkeletalMesh:
-			break;
-		case EAssetType::Texture:
-			break;
-		case EAssetType::Material:
+			SStaticModelFileHeader header = std::get<SStaticModelFileHeader>(fileHeader);
+			const auto data = new char[header.GetSize()];
+			header.Serialize(data);
+			hvaPath = destinationPath + header.Name + ".hva";
+			GEngine::GetFileSystem()->Serialize(hvaPath, &data[0], header.GetSize());
+			delete[] data;
+		}			    
+		else if (std::holds_alternative<SSkeletalModelFileHeader>(fileHeader))
 		{
-			SMaterialAssetFileHeader asset;
-
-			asset.MaterialName = "M_Bed";
-			
-			std::vector<std::string> materialTextures = { "Assets/Textures/T_Bed_c.hva", "Assets/Textures/T_Bed_m.hva", "Assets/Textures/T_Bed_n.hva" };
-			asset.Material.Properties[0] = { -1.0f, materialTextures[0], 0 };
-			asset.Material.Properties[1] = { -1.0f, materialTextures[0], 1 };
-			asset.Material.Properties[2] = { -1.0f, materialTextures[0], 2 };
-			asset.Material.Properties[3] = { -1.0f, materialTextures[0], 3 };
-			asset.Material.Properties[4] = { -1.0f, materialTextures[2], 3 };
-			asset.Material.Properties[5] = { -1.0f, materialTextures[2], 1 };
-			asset.Material.Properties[6] = { -1.0f, "", -1};
-			asset.Material.Properties[7] = { -1.0f, materialTextures[2], 2 };
-			asset.Material.Properties[8] = { -1.0f, materialTextures[1], 0 };
-			asset.Material.Properties[9] = { -1.0f, materialTextures[1], 1 };
-			asset.Material.Properties[10] = { -1.0f, materialTextures[1], 2 };
-			asset.Material.RecreateZ = true;
-
-			const auto data = new char[asset.GetSize()];
-
-			asset.Serialize(data);
-			GEngine::GetFileSystem()->Serialize(destinationPath, &data[0], asset.GetSize());
+			SSkeletalModelFileHeader header = std::get<SSkeletalModelFileHeader>(fileHeader);
+			const auto data = new char[header.GetSize()];
+			header.Serialize(data);
+			hvaPath = destinationPath + header.Name + ".hva";
+			GEngine::GetFileSystem()->Serialize(hvaPath, &data[0], header.GetSize());
+			delete[] data;
+		}		
+		else if (std::holds_alternative<SSkeletalAnimationFileHeader>(fileHeader))
+		{
+			SSkeletalAnimationFileHeader header = std::get<SSkeletalAnimationFileHeader>(fileHeader);
+			const auto data = new char[header.GetSize()];
+			header.Serialize(data);
+			hvaPath = destinationPath + header.Name + ".hva";
+			GEngine::GetFileSystem()->Serialize(hvaPath, &data[0], header.GetSize());
+			delete[] data;
+		}		
+		else if (std::holds_alternative<STextureFileHeader>(fileHeader))
+		{
+			STextureFileHeader header = std::get<STextureFileHeader>(fileHeader);
+			const auto data = new char[header.GetSize()];
+			header.Serialize(data);
+			hvaPath = destinationPath + header.MaterialName + ".hva";
+			GEngine::GetFileSystem()->Serialize(hvaPath, &data[0], header.GetSize());
+			delete[] data;
+		}		
+		else if (std::holds_alternative<SMaterialAssetFileHeader>(fileHeader))
+		{
+			SMaterialAssetFileHeader header = std::get<SMaterialAssetFileHeader>(fileHeader);
+			const auto data = new char[header.GetSize()];
+			header.Serialize(data);
+			hvaPath = destinationPath + header.MaterialName + ".hva";
+			GEngine::GetFileSystem()->Serialize(hvaPath, &data[0], header.GetSize());
 			delete[] data;
 		}
-		break;
-		case EAssetType::Animation:
-			break;
-		case EAssetType::SpriteAnimation:
-			break;
-		case EAssetType::AudioOneShot:
-			break;
-		case EAssetType::AudioCollection:
-			break;
-		case EAssetType::VisualFX:
-			break;
-		default:
-			break;
-		}
+
+		return hvaPath;
 	}
 
-	std::string CEditorResourceManager::ConvertToHVA(const std::string& filePath, const std::string& destination, const SAssetImportOptions& importOptions) const
+	std::string CEditorResourceManager::ConvertToHVA(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions) const
 	{
 		std::string hvaPath;
 		switch (importOptions.AssetType)
@@ -143,7 +146,7 @@ namespace Havtorn
 		case EAssetType::SkeletalMesh: // fallthrough
 		case EAssetType::Animation:
 		{
-			hvaPath = UModelImporter::ImportFBX(filePath, destination, importOptions);
+			hvaPath = CreateAsset(destinationPath, UModelImporter::ImportFBX(filePath, importOptions));
 		}
 		break;
 		case EAssetType::Texture:
@@ -152,30 +155,24 @@ namespace Havtorn
 			GEngine::GetFileSystem()->Deserialize(filePath, textureFileData);
 
 			ETextureFormat format = {};
-			if (const std::string extension = filePath.substr(filePath.size() - 4); extension == ".dds")
+			if (const std::string extension = UGeneralUtils::ExtractFileExtensionFromPath(filePath); extension == "dds")
 				format = ETextureFormat::DDS;
-			else if (extension == ".tga")
+			else if (extension == "tga")
 				format = ETextureFormat::TGA;
 
-			STextureFileHeader asset;
-			asset.AssetType = EAssetType::Texture;
+			STextureFileHeader fileHeader;
+			fileHeader.AssetType = EAssetType::Texture;
 
-			asset.MaterialName = destination + filePath.substr(filePath.find_last_of('\\'), filePath.find_first_of('.') - filePath.find_last_of('\\'));// destination.substr(0, destination.find_last_of("."));
-			asset.OriginalFormat = format;
-			asset.Suffix = filePath[filePath.find_last_of(".") - 1];
-			asset.Data = std::move(textureFileData);
+			fileHeader.MaterialName = UGeneralUtils::ExtractFileBaseNameFromPath(filePath);
+			fileHeader.OriginalFormat = format;
+			fileHeader.Suffix = filePath[filePath.find_last_of(".") - 1];
+			fileHeader.Data = std::move(textureFileData);
 
-			const auto data = new char[asset.GetSize()];
-
-			asset.Serialize(data);
-			GEngine::GetFileSystem()->Serialize(asset.MaterialName + ".hva", &data[0], asset.GetSize());
-			delete[] data;
-
-			hvaPath = asset.MaterialName + ".hva";
+			hvaPath = CreateAsset(destinationPath, fileHeader);
 		}
 		break;
 		case EAssetType::Material:
-			// NW: Call CreateMaterial?
+			// TODO.NW: Maybe make it clear here that we're expecting CreateAsset calls for this instead
 			break;
 		break;
 		case EAssetType::AudioOneShot:
@@ -189,7 +186,7 @@ namespace Havtorn
 		return hvaPath;
 	}
 
-	void CEditorResourceManager::CreateMaterial(const std::string& destinationPath, const SMaterialAssetFileHeader& fileHeader)
+	void CEditorResourceManager::CreateMaterial(const std::string& destinationPath, const SMaterialAssetFileHeader& fileHeader) const
 	{
 		const auto data = new char[fileHeader.GetSize()];
 		fileHeader.Serialize(data);
@@ -197,27 +194,24 @@ namespace Havtorn
 		delete[] data;
 	}
 
-	void CEditorResourceManager::CreateMaterial(const std::string& destinationPath)
+	void CEditorResourceManager::CreateMaterial(const std::string& destinationPath, const std::array<std::string, 3>& texturePaths) const
 	{
 		SMaterialAssetFileHeader asset;
 
-		size_t startIndex = destinationPath.find_first_of("_") + 1;
-		std::string materialName = destinationPath.substr(startIndex, destinationPath.find_last_of(".") - startIndex);
+		std::string materialName = UGeneralUtils::ExtractFileBaseNameFromPath(destinationPath);
 
 		asset.MaterialName = "M_" + materialName;
-
-		std::vector<std::string> materialTextures = { "Assets/Textures/T_" + materialName + "_c.hva", "Assets/Textures/T_" + materialName + "_m.hva", "Assets/Textures/T_" + materialName + "_n.hva" };
-		asset.Material.Properties[0] = { -1.0f, materialTextures[0], 0 };
-		asset.Material.Properties[1] = { -1.0f, materialTextures[0], 1 };
-		asset.Material.Properties[2] = { -1.0f, materialTextures[0], 2 };
-		asset.Material.Properties[3] = { -1.0f, materialTextures[0], 3 };
-		asset.Material.Properties[4] = { -1.0f, materialTextures[2], 3 };
-		asset.Material.Properties[5] = { -1.0f, materialTextures[2], 1 };
+		asset.Material.Properties[0] = { -1.0f, texturePaths[0], 0 };
+		asset.Material.Properties[1] = { -1.0f, texturePaths[0], 1 };
+		asset.Material.Properties[2] = { -1.0f, texturePaths[0], 2 };
+		asset.Material.Properties[3] = { -1.0f, texturePaths[0], 3 };
+		asset.Material.Properties[4] = { -1.0f, texturePaths[2], 3 };
+		asset.Material.Properties[5] = { -1.0f, texturePaths[2], 1 };
 		asset.Material.Properties[6] = { -1.0f, "", -1 };
-		asset.Material.Properties[7] = { -1.0f, materialTextures[2], 2 };
-		asset.Material.Properties[8] = { -1.0f, materialTextures[1], 0 };
-		asset.Material.Properties[9] = { -1.0f, materialTextures[1], 1 };
-		asset.Material.Properties[10] = { -1.0f, materialTextures[1], 2 };
+		asset.Material.Properties[7] = { -1.0f, texturePaths[2], 2 };
+		asset.Material.Properties[8] = { -1.0f, texturePaths[1], 0 };
+		asset.Material.Properties[9] = { -1.0f, texturePaths[1], 1 };
+		asset.Material.Properties[10] = { -1.0f, texturePaths[1], 2 };
 		asset.Material.RecreateZ = true;
 
 		CreateMaterial(destinationPath, asset);
@@ -273,6 +267,15 @@ namespace Havtorn
 
 		case EEditorTexture::NodeBackground:
 			return ResourceAssetPath + "NodeBackground" + extension;
+
+		case EEditorTexture::MinimizeWindow:
+			return ResourceAssetPath + "MinimizeWindow" + extension;
+
+		case EEditorTexture::MaximizeWindow:
+			return ResourceAssetPath + "MaximizeWindow" + extension;
+
+		case EEditorTexture::CloseWindow:
+			return ResourceAssetPath + "CloseWindow" + extension;
 		
 		case EEditorTexture::Count:
 		default:
@@ -300,7 +303,7 @@ namespace Havtorn
 		
 		Textures.resize(textureCount);
 
-		CreateMaterial("Assets/Materials/M_Checkboard_128x128.hva");
+		//CreateMaterial("Assets/Materials/M_Checkboard_128x128.hva");
 
 		//SMaterialAssetFileHeader previewMaterial;
 		//previewMaterial.MaterialName = "M_MeshPreview";

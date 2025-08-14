@@ -7,9 +7,19 @@ namespace Havtorn
 {
 	namespace HexRune
 	{
-		struct SDataBindingNodeEditorContext : public SNodeEditorContext
+		struct SDataBindingGetNodeEditorContext : public SNodeEditorContext
 		{
-			SDataBindingNodeEditorContext(SScript* script, const U64 dataBindingID);
+			SDataBindingGetNodeEditorContext(SScript* script, const U64 dataBindingID);
+			virtual SNode* AddNode(SScript* script, const U64 existingID = 0) const override;
+
+			// NW: Note lack of static context for data bindings, as they are registered in the script per data binding
+
+			U64 DataBindingID = 0;
+		};
+
+		struct SDataBindingSetNodeEditorContext : public SNodeEditorContext
+		{
+			SDataBindingSetNodeEditorContext(SScript* script, const U64 dataBindingID);
 			virtual SNode* AddNode(SScript* script, const U64 existingID = 0) const override;
 
 			// NW: Note lack of static context for data bindings, as they are registered in the script per data binding
@@ -29,20 +39,6 @@ namespace Havtorn
 			SSequenceNodeEditorContext();
 			virtual SNode* AddNode(SScript* script, const U64 existingID = 0) const override;
 			static SSequenceNodeEditorContext Context;
-		};
-
-		struct SEntityLoopNodeEditorContext : public SNodeEditorContext
-		{
-			SEntityLoopNodeEditorContext();
-			virtual SNode* AddNode(SScript* script, const U64 existingID = 0) const override;
-			static SEntityLoopNodeEditorContext Context;
-		};
-
-		struct SComponentLoopNodeEditorContext : public SNodeEditorContext
-		{
-			SComponentLoopNodeEditorContext();
-			virtual SNode* AddNode(SScript* script, const U64 existingID = 0) const override;
-			static SComponentLoopNodeEditorContext Context;
 		};
 
 		struct SDelayNodeEditorContext : public SNodeEditorContext

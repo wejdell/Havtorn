@@ -65,6 +65,7 @@ namespace Havtorn
             initData[STATIC_U64(EVertexShaders::SpriteInstancedEditor)]         = { "Shaders/SpriteInstancedEditor_VS.cso", true, EInputLayoutType::TransUVRectColorEntity2 };
             initData[STATIC_U64(EVertexShaders::SkeletalMeshInstanced)]         = { "Shaders/DeferredInstancedAnimation_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans };
             initData[STATIC_U64(EVertexShaders::SkeletalMeshInstancedEditor)]   = { "Shaders/DeferredInstancedAnimationEditor_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2AnimDataTrans };
+            initData[STATIC_U64(EVertexShaders::Skybox)]                        = { "Shaders/Skybox_VS.cso", true, EInputLayoutType::Position4 };
         }
 
         for (U64 i = 0; i < STATIC_U64(EVertexShaders::Count); i++)
@@ -101,6 +102,7 @@ namespace Havtorn
             filepaths[STATIC_U64(EPixelShaders::GBufferInstanceEditor)] = "Shaders/GBufferEditor_PS.cso";
             filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpaceEditor)] = "Shaders/SpriteWorldSpaceEditor_PS.cso";
             filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpaceEditorWidget)] = "Shaders/SpriteWorldSpaceEditorWidget_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::Skybox)] = "Shaders/Skybox_PS.cso";
         }
 
         for (U64 i = 0; i < STATIC_U64(EPixelShaders::Count); i++)
@@ -145,6 +147,7 @@ namespace Havtorn
         AddVertexBuffer(GeometryPrimitives::Octahedron.Vertices);
         AddVertexBuffer(GeometryPrimitives::Square.Vertices);
         AddVertexBuffer(GeometryPrimitives::UVSphere.Vertices);
+        AddVertexBuffer(GeometryPrimitives::SkyboxCube);
     }
 
     void CRenderStateManager::InitIndexBuffers()
@@ -165,6 +168,7 @@ namespace Havtorn
         AddIndexBuffer(GeometryPrimitives::Octahedron.Indices);
         AddIndexBuffer(GeometryPrimitives::Square.Indices);
         AddIndexBuffer(GeometryPrimitives::UVSphere.Indices);
+        AddIndexBuffer(GeometryPrimitives::SkyboxCubeIndices);
     }
 
     void CRenderStateManager::InitTopologies()
@@ -517,6 +521,7 @@ namespace Havtorn
 
     void CRenderStateManager::Draw(U32 vertexCount, U32 startVertexLocation)
     {
+        // TODO.NW: Increase draw calls in all the draw functions instead of at the call sites
         Context->Draw(vertexCount, startVertexLocation);
     }
 

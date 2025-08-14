@@ -19,6 +19,7 @@ namespace Havtorn
 
 		SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(entityOwner);
 
+		GUI::PushID("##volumetric");
 		GUI::Checkbox("Is Active", volumetricLightComp->IsActive);
 		GUI::DragFloat("Number Of Samples", volumetricLightComp->NumberOfSamples, GUI::SliderSpeed, 4.0f);
 
@@ -26,6 +27,7 @@ namespace Havtorn
 		GUI::DragFloat("Light Power", volumetricLightComp->LightPower, GUI::SliderSpeed * 10000.0f, 0.0f);
 		GUI::DragFloat("Scattering Probability", volumetricLightComp->ScatteringProbability, GUI::SliderSpeed * 0.1f, 0.0f, 1.0f, "%.4f", EDragMode::Logarithmic);
 		GUI::DragFloat("Henyey-Greenstein G", volumetricLightComp->HenyeyGreensteinGValue);
+		GUI::PopID();
 
         return SComponentViewResult();
     }

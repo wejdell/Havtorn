@@ -67,7 +67,7 @@ namespace Havtorn
 
 		void Release(SVector2<U16> newResolution);
 
-		ENGINE_API void LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent);
+		ENGINE_API void LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent, CScene* scene = nullptr);
 		ENGINE_API void LoadSkeletalMeshComponent(const std::string& filePath, SSkeletalMeshComponent* outSkeletalMeshComponent);
 		ENGINE_API void LoadMaterialComponent(const std::vector<std::string>& materialPaths, SMaterialComponent* outMaterialComponent);
 		// NR: Note that we use the file *name* instead of the full path here, we assume that it already exists in the registry.
@@ -79,12 +79,13 @@ namespace Havtorn
 		ENGINE_API void LoadDecalComponent(const std::vector<std::string>& texturePaths, SDecalComponent* outDecalComponent);
 		ENGINE_API void LoadEnvironmentLightComponent(const std::string& ambientCubemapTexturePath, SEnvironmentLightComponent* outEnvironmentLightComponent);
 		ENGINE_API void LoadSpriteComponent(const std::string& filePath, SSpriteComponent* outSpriteComponent);
-		ENGINE_API void LoadSkeletalAnimationComponent(const std::string& filePath, SSkeletalAnimationComponent* outSkeletalAnimationComponent);
+		ENGINE_API void LoadSkeletalAnimationComponent(const std::vector<std::string>& filePaths, SSkeletalAnimationComponent* outSkeletalAnimationComponent);
 
 		ENGINE_API CRenderTexture RenderStaticMeshAssetTexture(const std::string& filePath);
 		ENGINE_API CRenderTexture RenderSkeletalMeshAssetTexture(const std::string& filePath);
 		ENGINE_API CRenderTexture RenderSkeletalAnimationAssetTexture(const std::string& filePath, const std::vector<SMatrix>& boneTransforms = {});
 		ENGINE_API CRenderTexture RenderMaterialAssetTexture(const std::string& filePath);
+		ENGINE_API void RenderMaterialTexture(CRenderTexture& textureTarget, const SEngineGraphicsMaterial& material, const SVector& objectRotationEuler = SVector(-25.0f, 30.0f), const F32 zoomMultiplier = 1.0f);
 
 		ENGINE_API void RenderSkeletalAnimationAssetTexture(CRenderTexture& assetTexture, const std::string& filePath, const std::vector<SMatrix>& boneTransforms = {});
 
@@ -157,6 +158,7 @@ namespace Havtorn
 		inline void DeferredLightingDirectional(const SRenderCommand& command);
 		inline void DeferredLightingPoint(const SRenderCommand& command);
 		inline void DeferredLightingSpot(const SRenderCommand& command);
+		inline void Skybox(const SRenderCommand& command);
 		inline void PostBaseLightingPass(const SRenderCommand& command);
 		inline void VolumetricLightingDirectional(const SRenderCommand& command);
 		inline void VolumetricLightingPoint(const SRenderCommand& command);

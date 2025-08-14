@@ -13,8 +13,9 @@ namespace Havtorn
 		SComponent(const SEntity& entity);
 		virtual ~SComponent() noexcept {};
 
-		virtual bool IsValid() const;
 		virtual void IsDeleted(CScene* fromScene);
+
+		static bool IsValid(const SComponent* component);
 
 		SEntity Owner = SEntity::Null;
 	};

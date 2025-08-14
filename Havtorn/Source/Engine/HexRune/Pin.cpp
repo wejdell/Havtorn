@@ -25,20 +25,16 @@ namespace Havtorn
 
             SetDataFromLinkedPin();
 
-            LinkedPin->OwningNode->Execute();
-
-            if (LinkedPin->IsDataUnset())
+            if (!LinkedPin->OwningNode->Outputs.empty() && LinkedPin->OwningNode->Outputs[0].Type != EPinType::Flow)
             {
-                HV_LOG_ERROR("Could not derive input even after executing node!");
-                return;
+                LinkedPin->OwningNode->Execute();
+                SetDataFromLinkedPin();
             }
-
-            SetDataFromLinkedPin();
         }
 
         void SPin::SetDataFromLinkedPin()
         {
-            if (LinkedPin == nullptr || LinkedPin->IsDataUnset())
+            if (LinkedPin == nullptr)
                 return;
 
             if (Type != LinkedPin->Type)

@@ -40,6 +40,9 @@ namespace Havtorn
 		const SInputAxis mousePositionVertical = { EInputAxis::MousePositionVertical, EInputContext::Editor };
 		MapEvent(EInputAxisEvent::MousePositionVertical, mousePositionVertical);
 
+		const SInputAxis mouseWheel = { EInputAxis::MouseWheel, EInputContext::Editor };
+		MapEvent(EInputAxisEvent::Zoom, mouseWheel);
+
 		const SInputAction translateTransform = { EInputKey::KeyW, EInputContext::Editor };
 		MapEvent(EInputActionEvent::TranslateTransform, translateTransform);
 

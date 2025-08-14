@@ -24,6 +24,7 @@ namespace Havtorn
 	struct SMatrix;
 	class CPlatformManager;
 
+
 	enum class GUI_API EWindowFlag
 	{
 		NoTitleBar = BIT(0),
@@ -63,6 +64,7 @@ namespace Havtorn
 		SourceNoPreviewToolTip = BIT(0),
 		SourceNoDisableHover = BIT(1),
 		SourceNoHoldToOpenOthers = BIT(2),
+		SourceAllowNullID = BIT(3),
 		SourceExtern = BIT(4),
 		AcceptBeforeDelivery = BIT(10),
 		AcceptNoDrawDefaultRect = BIT(11),
@@ -294,6 +296,13 @@ namespace Havtorn
 		Count
 	};
 
+	enum class GUI_API EGUIMouseButton
+	{
+		Left = 0,
+		Right = 1,
+		Middle = 2,
+	};
+
 	enum class GUI_API ETransformGizmo
 	{
 		Translate = 7,
@@ -520,10 +529,27 @@ namespace Havtorn
 		SAssetInspectionData(const std::string& name, const intptr_t textureRef)
 			: Name(name)
 			, TextureRef(textureRef)
+			, AssetPath()
 		{}
+		
+		SAssetInspectionData(const std::string& name, const intptr_t textureRef, const std::string& assetPath)
+			: Name(name)
+			, TextureRef(textureRef)
+			, AssetPath(assetPath)
+		{}
+
+		bool IsValid() const
+		{
+			return Name.size() > 0 && AssetPath.size() > 0 && TextureRef != 0;
+		}
+
 		std::string Name = "";
+		std::string AssetPath = ""; //TODO.AS Replace with AssetRegistry GUID later on
 		intptr_t TextureRef = 0;
 	};
+
+	using DirEntryFunc = const std::function<SAssetInspectionData(std::filesystem::directory_entry)>;
+	using DirEntryEAssetTypeFunc = const std::function<SAssetInspectionData(std::filesystem::directory_entry, const EAssetType assetTypeFilter)>;
 
 	enum class EAssetPickerState
 	{
@@ -551,6 +577,7 @@ namespace Havtorn
 	{
 		SRenderAssetCardResult() = default;
 		
+		bool IsClicked = false;
 		bool IsDoubleClicked = false;
 		bool IsHovered = false;
 	};
@@ -570,6 +597,7 @@ namespace Havtorn
 		StringArray,
 		Object,
 		ObjectArray,
+		Asset,
 		Function,
 		Delegate,
 	};
@@ -579,6 +607,23 @@ namespace Havtorn
 		None,
 		Entity,
 		Component
+	};
+
+	enum class EGUIAssetType : U8
+	{
+		None,
+		StaticMesh,
+		SkeletalMesh,
+		Texture,
+		Material,
+		Animation,
+		SpriteAnimation,
+		AudioOneShot,
+		AudioCollection,
+		VisualFX,
+		Scene,
+		Sequencer,
+		Script
 	};
 
 	enum class EGUIIconType 
@@ -656,14 +701,16 @@ namespace Havtorn
 
 	struct SGUIDataBinding
 	{
-		std::string Name = "";
-		EGUIPinType Type = EGUIPinType::Object;
+		CHavtornStaticString<255> Name;
+		EGUIPinType Type = EGUIPinType::Unknown;
 		EGUIObjectDataType ObjectType = EGUIObjectDataType::None;
+		EGUIAssetType AssetType = EGUIAssetType::None;
 	};
 
 	struct SNodeOperation
 	{
 		SGUIDataBinding NewBinding;
+		U64 RemovedBindingID;
 		SGUIPin ModifiedLiteralValuePin;
 		SGUINodeContext NewNodeContext;
 		SVector2<F32> NewNodePosition = SVector2<F32>::Zero;
@@ -682,7 +729,6 @@ namespace Havtorn
 		void BeginFrame();
 		void EndFrame();
 		void WindowsProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
-		static void SetGUIContext();
 
 	public:
 		static const F32 SliderSpeed;
@@ -708,7 +754,7 @@ namespace Havtorn
 		static void TextDisabled(const char* fmt, ...);
 		static void TextUnformatted(const char* text);
 		static bool InputText(const char* label, CHavtornStaticString<255>* customString);
-		static bool InputText(const char* label, char* buffer, U64 bufferSize);
+		static bool InputText(const char* label, std::string& buffer);
 
 		static void SetTooltip(const char* fmt, ...);
 
@@ -799,8 +845,9 @@ namespace Havtorn
 		static bool ImageButton(const char* label, intptr_t image, const SVector2<F32>& size = SVector2<F32>(0.0f), const SVector2<F32>& uv0 = SVector2<F32>(0.0f), const SVector2<F32>& uv1 = SVector2<F32>(1.0f), const SColor& backgroundColor = SColor(0.0f, 0.0f, 0.0f, 0.0f), const SColor& tintColor = SColor::White);
 		static bool Checkbox(const char* label, bool& value);
 
-		static SAssetPickResult AssetPicker(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const std::function<SAssetInspectionData(std::filesystem::directory_entry)>& assetInspector);
-		static SRenderAssetCardResult RenderAssetCard(const char* label, const intptr_t& thumbnailID, const char* typeName, const SColor& color, void* dragDropPayloadToSet, U64 payLoadSize);
+		static SAssetPickResult AssetPicker(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryFunc& assetInspector);
+		static SAssetPickResult AssetPickerFilter(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType);
+		static SRenderAssetCardResult RenderAssetCard(const char* label, const bool isSelected, const intptr_t& thumbnailID, const char* typeName, const SColor& color, void* dragDropPayloadToSet, U64 payLoadSize);
 
 		static bool Selectable(const char* label, const bool selected = false, const std::vector<ESelectableFlag>& flags = {}, const SVector2<F32>& size = SVector2<F32>(0.0f));
 
@@ -812,7 +859,8 @@ namespace Havtorn
 		static void Separator();
 		static void Dummy(const SVector2<F32>& size);
 		static void SameLine(const F32 offsetFromX = 0.0f, const F32 spacing = -1.0f);
-		static bool IsItemClicked();
+		static bool IsItemClicked(const EGUIMouseButton button = EGUIMouseButton::Left);
+		static bool IsMouseReleased(I32 mouseButton = 0);
 		static bool IsItemHovered();
 		static bool IsItemVisible();
 		static bool IsWindowFocused();
@@ -864,6 +912,7 @@ namespace Havtorn
 		static void SetOrthographic(const bool enabled);
 		
 		static bool IsOverGizmo();
+		static bool IsLeftMouseHeld();
 		static bool IsDoubleClick();
 		static bool IsShiftHeld();
 		static bool IsControlHeld();
@@ -942,6 +991,8 @@ namespace Havtorn
 
 		static void LogToClipboard();
 		static void LogFinish();
+		static void CopyToClipboard(const char* text);
+		static std::string CopyFromClipboard();
 
 		static void MemFree(void* ptr);
 

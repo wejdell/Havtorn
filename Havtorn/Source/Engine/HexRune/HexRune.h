@@ -14,6 +14,12 @@ namespace Havtorn
 
 	namespace HexRune
 	{
+        constexpr U64 BeginPlayNodeID = 1;
+        constexpr U64 TickNodeID = 2;
+        constexpr U64 EndPlayNodeID = 3;
+        constexpr U64 OnBeginOverlapNodeID = 4;
+        constexpr U64 OnEndOverlapNodeID = 5;
+
         struct SScript;
 
         enum class ENodeType
@@ -129,20 +135,15 @@ namespace Havtorn
 
         struct SScriptDataBinding
         {
-            //SScriptDataBinding(const U64 id, const std::string& name, const EPinType pinType, const EObjectDataType objectType, const std::variant<PIN_DATA_TYPES>& data);
-
             U64 UID = 0;
             std::string Name = "";
             EPinType Type = EPinType::Object;
+            // TODO.NW: Figure out how to deal with these subtypes. Maybe list them explicitly as pin data types?
             EObjectDataType ObjectType = EObjectDataType::None;
+            EAssetType AssetType = EAssetType::None;
             std::variant<PIN_DATA_TYPES> Data;
         };
 
-        // TODO.NW: Should be basis for runtime asset? May want script components
-        // that have their own editor tool (window) where BP/visual script is shown.
-        // An engine script system can deal with starting and running these scripts.
-        // This struct should mimic a System proper though, deal with its own execution
-        // and so on.
         struct SScript
         {
             ENGINE_API SScript();
@@ -284,11 +285,14 @@ namespace Havtorn
             }
 
             // TODO.NW: Deal with serialization?
-            ENGINE_API void AddDataBinding(const char* name, const EPinType type, const EObjectDataType objectType = EObjectDataType::None);
+            ENGINE_API void AddDataBinding(const char* name, const EPinType type, const EObjectDataType objectType, const EAssetType assetType);
+            ENGINE_API void RemoveDataBinding(const U64 id);
             ENGINE_API void RemoveNode(const U64 id);
 
             ENGINE_API void Initialize();
             ENGINE_API void TraverseScript(CScene* owningScene);
+            ENGINE_API void TraverseFromNode(const U64 startNodeID, CScene* owningScene);
+            ENGINE_API void TraverseFromNode(SNode* startNode, CScene* owningScene);
 
             ENGINE_API void Link(U64 leftPinID, U64 rightPinID);
             ENGINE_API void Link(SPin* leftPin, SPin* rightPin);
@@ -297,9 +301,8 @@ namespace Havtorn
 
             ENGINE_API void SetDataOnInput(U64 pinID, const std::variant<PIN_DATA_TYPES>& data);
 
-            // TODO.NW: Make explicit getters for standard entry points? BeginPlay, Tick, EndPlay.
-            // Allow only one per script, and keep a separate pointer to them
             ENGINE_API SNode* GetNode(const U64 id) const;
+            ENGINE_API bool HasNode(const U64 id) const;
 
             ENGINE_API [[nodiscard]] U32 GetSize() const;
             ENGINE_API void Serialize(char* toData, U64& pointerPosition) const;

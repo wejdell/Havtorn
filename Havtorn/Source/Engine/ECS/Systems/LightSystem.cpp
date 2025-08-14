@@ -20,12 +20,15 @@ namespace Havtorn
 	{
 		for (SDirectionalLightComponent* directionalLightComp : scene->GetComponents<SDirectionalLightComponent>())
 		{
-			if (!directionalLightComp->IsValid())
+			if (!SComponent::IsValid(directionalLightComp))
 				continue;
 
-			STransformComponent& transformComp = *scene->GetComponent<STransformComponent>(scene->MainCameraEntity);
+			//TODO.NW: Think about whether it makes more sense to have many directional lights vs one that follows the main camera, probably many?
+			STransformComponent& directionalLightTransform = *scene->GetComponent<STransformComponent>(directionalLightComp);
+			//STransformComponent& cameraTransform = *scene->GetComponent<STransformComponent>(scene->MainCameraEntity);
+			//directionalLightTransform.Transform = cameraTransform.Transform;
 
-			directionalLightComp->ShadowmapView.ShadowPosition = transformComp.Transform.GetMatrix().GetTranslation4();
+			directionalLightComp->ShadowmapView.ShadowPosition = directionalLightTransform.Transform.GetMatrix().GetTranslation4();
 			directionalLightComp->ShadowmapView.ShadowPosition.Y = 4.0f;
 
 			// Round to pixel positions
@@ -57,7 +60,7 @@ namespace Havtorn
 
 		for (SPointLightComponent* pointLightComp : scene->GetComponents<SPointLightComponent>())
 		{
-			if (!pointLightComp->IsValid())
+			if (!SComponent::IsValid(pointLightComp))
 				continue;
 
 			SVector4 constantPosition = scene->GetComponent<STransformComponent>(pointLightComp->Owner)->Transform.GetMatrix().GetTranslation4();
@@ -81,7 +84,7 @@ namespace Havtorn
 
 		for (SSpotLightComponent* spotLightComp : scene->GetComponents<SSpotLightComponent>())
 		{
-			if (!spotLightComp->IsValid())
+			if (!SComponent::IsValid(spotLightComp))
 				continue;
 
 			const SMatrix spotlightProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, spotLightComp->Range);

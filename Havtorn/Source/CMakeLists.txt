@@ -128,6 +128,8 @@ set(GUI_FILES
    ${GUI_FOLDER}GUI.h
    ${GUI_FOLDER}GUIProcess.cpp
    ${GUI_FOLDER}GUIProcess.h
+   ${GUI_FOLDER}FuzzySearch.cpp
+   ${GUI_FOLDER}FuzzySearch.h
 )
 set(IMGUI_FILES
    ${EXTERNAL_FOLDER}imgui/imconfig.h
@@ -213,6 +215,7 @@ add_dependencies(GUI Core Platform)
 set(ENGINE_FILES
     ${ENGINE_FOLDER}Application/EngineProcess.cpp
     ${ENGINE_FOLDER}Application/EngineProcess.h
+    ${ENGINE_FOLDER}Assets/Asset.h
     ${ENGINE_FOLDER}Assets/SequencerAsset.cpp
     ${ENGINE_FOLDER}Assets/SequencerAsset.h
     ${ENGINE_FOLDER}Core/GeneralUtilities.h
@@ -321,6 +324,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}FileSystem/FileHeaderDeclarations.h
     ${ENGINE_FOLDER}FileSystem/FileSystem.cpp
     ${ENGINE_FOLDER}FileSystem/FileSystem.h
+    ${ENGINE_FOLDER}FileSystem/FileWatcher.cpp
+    ${ENGINE_FOLDER}FileSystem/FileWatcher.h
     ${ENGINE_FOLDER}Graphics/Debug/DebugDrawUtility.cpp
     ${ENGINE_FOLDER}Graphics/Debug/DebugDrawUtility.h
     ${ENGINE_FOLDER}Graphics/Renderers/FullscreenRenderer.cpp
@@ -352,8 +357,12 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}HexPhys/HexPhys.h
     ${ENGINE_FOLDER}HexRune/CoreNodes/CoreNodes.cpp
     ${ENGINE_FOLDER}HexRune/CoreNodes/CoreNodes.h
+    ${ENGINE_FOLDER}HexRune/ECSNodes/ECSNodes.cpp
+    ${ENGINE_FOLDER}HexRune/ECSNodes/ECSNodes.h
     ${ENGINE_FOLDER}HexRune/NodeEditorContexts/CoreNodeEditorContexts.cpp
     ${ENGINE_FOLDER}HexRune/NodeEditorContexts/CoreNodeEditorContexts.h
+    ${ENGINE_FOLDER}HexRune/NodeEditorContexts/ECSNodeEditorContexts.cpp
+    ${ENGINE_FOLDER}HexRune/NodeEditorContexts/ECSNodeEditorContexts.h
     ${ENGINE_FOLDER}HexRune/HexRune.cpp
     ${ENGINE_FOLDER}HexRune/HexRune.h
     ${ENGINE_FOLDER}HexRune/NodeEditorContext.h
@@ -420,6 +429,7 @@ set(VERTEX_SHADERS
     ${SHADER_FOLDER}EditorPreviewSkeletal_VS.hlsl
     ${SHADER_FOLDER}FullscreenVertexShader_VS.hlsl
     ${SHADER_FOLDER}Line_VS.hlsl
+    ${SHADER_FOLDER}Skybox_VS.hlsl
     ${SHADER_FOLDER}PointLight_VS.hlsl
     ${SHADER_FOLDER}SpriteInstanced_VS.hlsl
     ${SHADER_FOLDER}SpriteInstancedEditor_VS.hlsl
@@ -473,6 +483,7 @@ set(PIXEL_SHADERS
     ${SHADER_FOLDER}GBuffer_PS.hlsl
     ${SHADER_FOLDER}GBufferEditor_PS.hlsl
     ${SHADER_FOLDER}Line_PS.hlsl
+    ${SHADER_FOLDER}Skybox_PS.hlsl
     ${SHADER_FOLDER}SpriteScreenSpace_PS.hlsl
     ${SHADER_FOLDER}SpriteWorldSpace_PS.hlsl
     ${SHADER_FOLDER}SpriteWorldSpaceEditor_PS.hlsl
@@ -595,6 +606,8 @@ add_dependencies(Game Core Platform GUI Engine)
 
 # ==================== EDITOR ====================
 set(EDITOR_FILES
+    ${EDITOR_FOLDER}AuthoringTools/MaterialTool.cpp
+    ${EDITOR_FOLDER}AuthoringTools/MaterialTool.h
     ${EDITOR_FOLDER}AuthoringTools/ScriptTool.cpp
     ${EDITOR_FOLDER}AuthoringTools/ScriptTool.h
     ${EDITOR_FOLDER}Systems/PickingSystem.cpp
@@ -609,7 +622,6 @@ set(EDITOR_FILES
     ${EDITOR_FOLDER}Toggleables/ViewMenu.h
     ${EDITOR_FOLDER}Toggleables/WindowMenu.cpp
     ${EDITOR_FOLDER}Toggleables/WindowMenu.h
-    ${EDITOR_FOLDER}Utils/ImGuiUtils.h
     ${EDITOR_FOLDER}Windows/AssetBrowserWindow.cpp
     ${EDITOR_FOLDER}Windows/AssetBrowserWindow.h
     ${EDITOR_FOLDER}Windows/DockSpaceWindow.cpp

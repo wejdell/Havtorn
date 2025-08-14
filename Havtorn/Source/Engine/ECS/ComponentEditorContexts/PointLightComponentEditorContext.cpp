@@ -20,6 +20,8 @@ namespace Havtorn
 
 		SPointLightComponent* pointLightComp = scene->GetComponent<SPointLightComponent>(entityOwner);
 
+		GUI::Checkbox("Is Active", pointLightComp->IsActive);
+
 		SColor color = pointLightComp->ColorAndIntensity;
 		GUI::ColorPicker3("Color", color);
 		SVector colorFloat = color.AsVector();

@@ -44,112 +44,9 @@ namespace Havtorn
 {
 	using namespace HexRune;
 
-	//void SComponentsNode::Construct()
-	//{
-	//	//Name = "Transform Components";
-	//	//AddInput(UGUIDManager::Generate(), EPinType::Flow);
-	//	//Inputs.back().Name = "In";
-	//	//AddOutput(UGUIDManager::Generate(), EPinType::Flow);
-	//	//Outputs.back().Name = "Out";
-	//	//EditorColor = SColor::Orange;
-	//	AddOutput(UGUIDManager::Generate(), EPinType::ObjectArray);
-	//	Outputs.back().Name = "Components";
-	//}
-
-	//I8 SComponentsNode::OnExecute()
-	//{
-	//	SetDataOnPin(EPinDirection::Output, 0, OwningScript->Scene->GetBaseComponents<STransformComponent>());
-	//	return 0;
-	//}
-
-	//void STestNode::Construct()
-	//{
-	//	//Name = "Test Node";
-	//	//EditorColor = SColor::Red;
-	//	AddInput(UGUIDManager::Generate(), EPinType::Flow);
-	//	Inputs.back().Name = "In";
-	//	AddOutput(UGUIDManager::Generate(), EPinType::Flow);
-	//	Outputs.back().Name = "Out";
-
-	//	AddInput(UGUIDManager::Generate(), EPinType::Float);
-	//	AddInput(UGUIDManager::Generate(), EPinType::String);
-	//	AddInput(UGUIDManager::Generate(), EPinType::ObjectArray);
-	//}
-
-	//I8 STestNode::OnExecute()
-	//{
-	//	F32 pinData = 0.0f;
-	//	GetDataOnPin(&Inputs[1], pinData);
-
-	//	std::string otherPinData = {};
-	//	GetDataOnPin(&Inputs[2], otherPinData);
-
-	//	std::vector<SComponent*> transforms;
-	//	GetDataOnPin(&Inputs[3], transforms);
-	//	std::vector<STransformComponent*> transformComponents = CastComponents<STransformComponent>(transforms);
-
-
-	//	HV_LOG_INFO("Script says: %s %f", otherPinData.c_str(), pinData);
-
-	//	return 0;
-	//}
-
-	//void SLiteralFloatNode::Construct()
-	//{
-	//	//Name = "Float";
-	//	Type = ENodeType::Simple;
-	//	AddInput(UGUIDManager::Generate(), EPinType::Float);
-	//	AddOutput(UGUIDManager::Generate(), EPinType::Float);
-
-	//	F32 input = 35.0f;
-	//	SetDataOnPin(EPinDirection::Input, 0, input);
-	//}
-
-	//I8 SLiteralFloatNode::OnExecute()
-	//{
-	//	// TODO.NW: Have pin index version that logs errors if outside of range?
-	//	F32 pinData = 0.0f;
-	//	GetDataOnPin(EPinDirection::Input, 0, pinData);
-	//	SetDataOnPin(EPinDirection::Output, 0, pinData);
-	//	return -1;
-	//}
-
-	//void SLiteralStringNode::Construct()
-	//{
-	//	//TODO.NW: String array funkar inte heller, testa int/F32 och senare math types men kolla renderingen nästa gång
-	//	//Name = "String";
-	//	Type = ENodeType::Simple;
-	//	AddInput(UGUIDManager::Generate(), EPinType::String);
-	//	AddOutput(UGUIDManager::Generate(), EPinType::String);
-
-	//	SetDataOnPin(EPinDirection::Input, 0, std::string("Hello:"));
-	//}
-
-	//I8 SLiteralStringNode::OnExecute()
-	//{
-	//	std::string pinData = {};
-	//	GetDataOnPin(EPinDirection::Input, 0, pinData);
-	//	SetDataOnPin(EPinDirection::Output, 0, pinData);
-	//	return -1;
-	//}
-
 	CScriptTool::CScriptTool(const char* displayName, CEditorManager* manager)
 		: CWindow(displayName, manager)
 	{
-		//CurrentScript = new SScript();
-		//CurrentScript->FileName = "Assets/Scripts/Test.hva";
-		//STestNode* testNode = CurrentScript->AddNode<STestNode>(UGUIDManager::Generate());
-		//SLiteralFloatNode* F32Node = CurrentScript->AddNode<SLiteralFloatNode>(UGUIDManager::Generate());
-		//CurrentScript->AddNode<SLiteralFloatNode>(UGUIDManager::Generate());
-		//SLiteralStringNode* stringNode = CurrentScript->AddNode<SLiteralStringNode>(UGUIDManager::Generate());
-		//CurrentScript->Link(&F32Node->Outputs[0], &testNode->Inputs[1]);
-		//CurrentScript->Link(&stringNode->Outputs[0], &testNode->Inputs[2]);
-
-		//SComponentsNode* componentsNode = CurrentScript->AddNode<SComponentsNode>(UGUIDManager::Generate());
-		//CurrentScript->Link(&componentsNode->Outputs[0], &testNode->Inputs[3]);
-
-		//CurrentScript->AddNode<SBranchNode>(UGUIDManager::Generate());
-		//CurrentScript->Link(&F32Node2->Outputs[0], &F32Node->Inputs[0]);
 	}
 
 	void CScriptTool::OnEnable()
@@ -187,7 +84,7 @@ namespace Havtorn
 
 				asset.Serialize(data);
 				GEngine::GetFileSystem()->Serialize(CurrentScript->FileName, &data[0], asset.GetSize());
-				
+
 				std::filesystem::directory_entry newDir;
 				newDir.assign(std::filesystem::path(CurrentScript->FileName));
 				Manager->RemoveAssetRep(newDir);
@@ -198,10 +95,66 @@ namespace Havtorn
 			GUI::EndChild();
 		}
 
+		Edit = SNodeOperation();
+
 		{ // Data Bindings
 			GUI::BeginChild("DataBindings", SVector2<F32>(150.0f, 0.0f), { EChildFlag::Borders, EChildFlag::ResizeX });
 			GUI::Text("Data Bindings");
 			GUI::Separator();
+			for (auto& dataBinding : CurrentScript->DataBindings)
+			{
+				GUI::Text(dataBinding.Name.c_str());
+				if (GUI::IsItemHovered())
+				{
+					if (dataBinding.Type != EPinType::Object)
+					{
+						const char* items[]{
+								"Unknown",
+								"Flow",
+								"Bool",
+								"Int",
+								"Float",
+								"String",
+								"Vector",
+								"Int Array",
+								"Float Array",
+								"String Array",
+								"Object",
+								"Object Array",
+								"Asset",
+								"Function",
+								"Delegate"
+						};
+						GUI::SetTooltip("%s", items[STATIC_U8(dataBinding.Type)]);
+					}
+
+					if (dataBinding.Type == EPinType::Object)
+					{
+						const char* items[]{ "None", "Entity", "Component" };
+						GUI::SetTooltip("%s", items[STATIC_U8(dataBinding.ObjectType)]);
+					}
+				}
+
+				if (GUI::BeginDragDropSource({ EDragDropFlag::SourceAllowNullID }))
+				{
+					SGuiPayload payload = GUI::GetDragDropPayload();
+					if (payload.Data == nullptr)
+					{
+						GUI::SetDragDropPayload("DataBindingDrag", &dataBinding, sizeof(SScriptDataBinding));
+					}
+					GUI::Text(dataBinding.Name.c_str());
+
+					GUI::EndDragDropSource();
+				}
+
+				if (GUI::BeginPopupContextWindow())
+				{
+					if (GUI::MenuItem("Delete"))
+						Edit.RemovedBindingID = dataBinding.UID;
+
+					GUI::EndPopup();
+				}
+			}
 			GUI::EndChild();
 			GUI::SameLine();
 		}
@@ -209,11 +162,41 @@ namespace Havtorn
 		LoadGUIElements();
 
 		GUI::BeginScript("Node Script Editor");
+
+		if (GUI::BeginDragDropTarget())
+		{
+			SGuiPayload payload = GUI::AcceptDragDropPayload("DataBindingDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNoDrawDefaultRect, EDragDropFlag::AcceptNopreviewTooltip });
+			if (payload.Data != nullptr)
+			{
+				// TODO.NW: Make all similar reinterpret_casts static_casts instead
+				SScriptDataBinding* dataBinding = static_cast<SScriptDataBinding*>(payload.Data);
+
+				std::string tooltip = "Add Get ";
+				tooltip.append(dataBinding->Name);
+				tooltip.append(" node?");
+				GUI::SetTooltip(tooltip.c_str());
+
+				if (payload.IsDelivery)
+				{
+					// TODO.NW: Make sure to catch keybinds here
+					for (auto& context : GUIContexts)
+					{
+						// TODO.NW: Maybe remove whitespace from names? Then they need extra care to display properly. Need another ID then, which we may have if we remove the extra GUIContexts/GUINode/GUILink layer
+						if (context.Name == "Get " + dataBinding->Name)
+						{
+							Edit.NewNodeContext = context;
+							Edit.NewNodePosition = GUI::GetMousePosition();
+						}
+					}
+				}
+			}
+
+			GUI::EndDragDropTarget();
+		}
+
 		RenderScript();
 		CommitEdit(Edit);
 		GUI::EndScript();
-
-		CurrentScript->TraverseScript(Manager->GetCurrentScene());
 
 		GUI::End();
 	}
@@ -251,7 +234,6 @@ namespace Havtorn
 		GUINodes.clear();
 		GUILinks.clear();
 		GUIContexts.clear();
-		Edit = SNodeOperation();
 
 		for (auto& node : CurrentScript->Nodes)
 		{
@@ -262,9 +244,9 @@ namespace Havtorn
 			guiNode.Type = static_cast<EGUINodeType>(node->Type);
 
 			SNodeEditorContext* editorContext = CurrentScript->GetNodeEditorContext(node->UID);
-			guiNode.Name = editorContext ? editorContext->Name : /*node->Name*/"Missing Context";
-			guiNode.Color = editorContext ? editorContext->Color : /*node->EditorColor*/SColor::Orange;
-			guiNode.Position = editorContext ? editorContext->Position : /*node->EditorPosition*/SVector2<F32>::Zero;
+			guiNode.Name = editorContext ? editorContext->Name : "Missing Context";
+			guiNode.Color = editorContext ? editorContext->Color : SColor::Orange;
+			guiNode.Position = editorContext ? editorContext->Position : SVector2<F32>::Zero;
 			guiNode.HasBeenInitialized = editorContext ? editorContext->HasBeenInitialized : true;
 
 			for (auto& input : node->Inputs)
@@ -306,11 +288,13 @@ namespace Havtorn
 			SNode* newNode = CurrentScript->RegisteredEditorContexts[edit.NewNodeContext.Index]->AddNode(CurrentScript, 0);
 			SNodeEditorContext* newContext = CurrentScript->GetNodeEditorContext(newNode->UID);
 			newContext->Position = edit.NewNodePosition;
-			//newContext->HasBeenInitialized = true;
 		}
 
-		if (edit.NewBinding.Name != "")
-			CurrentScript->AddDataBinding(edit.NewBinding.Name.c_str(), static_cast<HexRune::EPinType>(edit.NewBinding.Type), static_cast<HexRune::EObjectDataType>(edit.NewBinding.ObjectType));
+		if (edit.NewBinding.Type != EGUIPinType::Unknown)
+			CurrentScript->AddDataBinding(edit.NewBinding.Name.AsString().c_str(), static_cast<HexRune::EPinType>(edit.NewBinding.Type), static_cast<HexRune::EObjectDataType>(edit.NewBinding.ObjectType), static_cast<EAssetType>(edit.NewBinding.AssetType));
+
+		if (edit.RemovedBindingID != 0)
+			CurrentScript->RemoveDataBinding(edit.RemovedBindingID);
 
 		if (!edit.ModifiedLiteralValuePin.IsDataUnset())
 			CurrentScript->SetDataOnInput(edit.ModifiedLiteralValuePin.UID, GetEngineTypeData(edit.ModifiedLiteralValuePin.Data));
@@ -457,14 +441,14 @@ namespace Havtorn
 		// Handle creation action, returns true if editor want to create new object (node or link)
 		if (!GUI::BeginScriptCreate())
 			return GUI::EndScriptCreate();
-		
+
 		U64 inputPinId, outputPinId = 0;
 		if (!GUI::QueryNewLink(inputPinId, outputPinId))
 			return GUI::EndScriptCreate();
-		
+
 		if (inputPinId == 0 || outputPinId == 0)
 			return GUI::EndScriptCreate();
-		
+
 		if (!GUI::AcceptNewScriptItem())
 			return GUI::EndScriptCreate();
 
@@ -549,7 +533,7 @@ namespace Havtorn
 			//	ReTriggerTree();
 			//}
 		}
-		
+
 		GUI::EndScriptCreate();
 	}
 
@@ -750,9 +734,69 @@ namespace Havtorn
 			GUI::Text("New Data Binding");
 			GUI::Separator();
 
-			std::string name = "Self";
-			EGUIPinType type = EGUIPinType::Object;
-			EGUIObjectDataType objectType = EGUIObjectDataType::Entity;
+			GUI::InputText("Name", &DataBindingCandidate.Name);
+			GUI::SliderEnum("Type", DataBindingCandidate.Type,
+							{ //TODO.NW: See if we can bind these strings at compile time or something, through a static a certain of string amount and enum Count?
+								"Unknown",
+								"Flow",
+								"Bool",
+								"Int",
+								"Float",
+								"String",
+								"Vector",
+								"Int Array",
+								"Float Array",
+								"String Array",
+								"Object",
+								"Object Array",
+								"Asset",
+								"Function",
+								"Delegate"
+							});
+
+			// TODO.NW: Add filtering so we can't pick incorrect types e.g. unknown and flow
+			if (DataBindingCandidate.Type == EGUIPinType::Unknown)
+				DataBindingCandidate.Type = EGUIPinType::Bool;
+			 
+			if (DataBindingCandidate.Type == EGUIPinType::Asset)
+			{
+				GUI::SliderEnum("Asset Type", DataBindingCandidate.AssetType,
+					{
+						"None",
+						"StaticMesh",
+						"SkeletalMesh",
+						"Texture",
+						"Material",
+						"Animation",
+						"SpriteAnimation",
+						"AudioOneShot",
+						"AudioCollection",
+						"VisualFX",
+						"Scene",
+						"Sequencer",
+						"Script"
+					});
+
+				if (DataBindingCandidate.AssetType == EGUIAssetType::None)
+					DataBindingCandidate.AssetType = EGUIAssetType::StaticMesh;
+			}
+			else
+			{
+				DataBindingCandidate.AssetType = EGUIAssetType::None;
+			}
+
+
+			if (DataBindingCandidate.Type == EGUIPinType::Object)
+			{
+				GUI::SliderEnum("Object Type", DataBindingCandidate.ObjectType, { "None", "Entity", "Component" });
+
+				if (DataBindingCandidate.ObjectType == EGUIObjectDataType::None)
+					DataBindingCandidate.ObjectType = EGUIObjectDataType::Entity;
+			}
+			else
+			{
+				DataBindingCandidate.ObjectType = EGUIObjectDataType::None;
+			}
 
 			//GUI::TextDisabled("Name");
 			//GUI::SameLine();
@@ -760,13 +804,13 @@ namespace Havtorn
 
 			if (GUI::Button("Create"))
 			{
-				Edit.NewBinding.Name = name;
-				Edit.NewBinding.Type = type;
-				Edit.NewBinding.ObjectType = objectType;
+				Edit.NewBinding = DataBindingCandidate;
+				DataBindingCandidate = { };
 				GUI::CloseCurrentPopup();
 			}
 			if (GUI::Button("Cancel"))
 			{
+				DataBindingCandidate = { };
 				GUI::CloseCurrentPopup();
 			}
 			GUI::EndPopup();
@@ -889,7 +933,7 @@ namespace Havtorn
 					myUndoCommands.push(inverseCommand);
 				}
 			}*/
-	//}
+			//}
 	}
 
 	SVector2<F32> CScriptTool::GetNodeSize(const SGUINode& node)
@@ -955,10 +999,7 @@ namespace Havtorn
 
 			GUI::PushID(pin.UID);
 			GUI::PushItemWidth(emptyItemWidth);
-			std::string value = std::get<std::string>(pin.Data);
-			wasPinValueModified = GUI::InputText("##edit", (char*)value.c_str(), 255);
-			if (wasPinValueModified)
-				pin.Data = value;
+			wasPinValueModified = GUI::InputText("##edit", std::get<std::string>(pin.Data));
 			GUI::PopItemWidth();
 			GUI::PopID();
 			break;
@@ -1021,6 +1062,7 @@ namespace Havtorn
 		case EGUIPinType::Vector:   iconType = EGUIIconType::Circle; break;
 		case EGUIPinType::Object:   iconType = EGUIIconType::Circle; break;
 		case EGUIPinType::ObjectArray:   iconType = EGUIIconType::Grid; break;
+		case EGUIPinType::Asset:    iconType = EGUIIconType::Circle; break;
 		case EGUIPinType::Function: iconType = EGUIIconType::Circle; break;
 		case EGUIPinType::Delegate: iconType = EGUIIconType::Square; break;
 		default:
@@ -1043,6 +1085,7 @@ namespace Havtorn
 		case EGUIPinType::Vector:   return SColor(255, 206, 27);
 		case EGUIPinType::Object:   return SColor(51, 150, 215);
 		case EGUIPinType::ObjectArray:   return SColor(51, 150, 215);
+		case EGUIPinType::Asset:   return SColor(124, 21, 153);
 		case EGUIPinType::Function: return SColor(218, 0, 183);
 		case EGUIPinType::Delegate: return SColor(255, 48, 48);
 		}

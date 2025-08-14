@@ -3,6 +3,7 @@
 #include "GUI.h"
 #include <imgui.h>
 #include <imgui_internal.h>
+#include <misc/cpp/imgui_stdlib.h>
 #include <backends/imgui_impl_win32.h>
 #include <backends/imgui_impl_dx11.h>
 #include <ImGuizmo.h>
@@ -91,39 +92,11 @@ namespace Havtorn
 			ImGui_ImplWin32_NewFrame();
 			ImGui::NewFrame();
 			ImGuizmo::BeginFrame();
-
-			//NE::SetCurrentEditor(NodeEditorContext);
-			//NE::Begin("My Editor", ImVec2(0.0, 0.0f));
-			//int uniqueId = 1;
-			//// Start drawing nodes.
-			//	NE::BeginNode(uniqueId++);
-			//		ImGui::Text("Node A");
-			//			NE::BeginPin(uniqueId++, NE::PinKind::Input);
-			//				ImGui::Text("-> In");
-			//			NE::EndPin();
-			//		ImGui::SameLine();
-			//			NE::BeginPin(uniqueId++, NE::PinKind::Output);
-			//				ImGui::Text("Out ->");
-			//			NE::EndPin();
-			//	NE::EndNode();
-			//NE::End();
-			//NE::SetCurrentEditor(nullptr);
 		}
 
 		LRESULT WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			return ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
-		}
-
-		void SetGUIContext()
-		{
-			ImGuiMemAllocFunc memAlloc;														
-			ImGuiMemFreeFunc memFree;														
-			void* userData = nullptr;														
-			ImGui::GetAllocatorFunctions(&memAlloc, &memFree, &userData);	
-			ImGui::SetAllocatorFunctions(memAlloc, memFree, userData);						
-			ImGui::SetCurrentContext(ImGui::GetCurrentContext());					
-			ImGuizmo::SetImGuiContext(ImGui::GetCurrentContext());
 		}
 
 		void EndFrame()
@@ -169,12 +142,12 @@ namespace Havtorn
 
 		bool InputText(const char* label, char* buf, size_t bufSize, ImGuiInputTextCallback callback, void* data)
 		{
-			return ImGui::InputText(label, buf, bufSize, 0, callback, data);
+			return ImGui::InputText(label, buf, bufSize, ImGuiInputTextFlags_CallbackResize, callback, data);
 		}
 
-		bool InputText(const char* label, char* buffer, U64 bufferSize)
+		bool InputText(const char* label, std::string& buffer)
 		{
-			return ImGui::InputText(label, buffer, bufferSize);
+			return ImGui::InputText(label, &buffer);
 		}
 
 		void SetTooltip(const char* fmt, va_list args)
@@ -363,9 +336,14 @@ namespace Havtorn
 			ImGui::SameLine(offsetFromStart, spacing);
 		}
 
-		bool IsItemClicked()
+		bool IsItemClicked(const EGUIMouseButton button)
+		{			
+			return ImGui::IsItemClicked(static_cast<ImGuiMouseButton>(button));
+		}
+
+		bool IsMouseReleased(int mouseButton)
 		{
-			return ImGui::IsItemClicked();
+			return ImGui::IsMouseReleased(mouseButton);
 		}
 
 		bool IsItemHovered()
@@ -595,6 +573,11 @@ namespace Havtorn
 		bool IsOverGizmo()
 		{
 			return ImGuizmo::IsOver();
+		}
+
+		bool IsLeftMouseHeld()
+		{
+			return ImGui::IsMouseDown(ImGuiMouseButton_::ImGuiMouseButton_Left);
 		}
 
 		bool IsDoubleClick()
@@ -1279,6 +1262,16 @@ namespace Havtorn
 			ImGui::LogFinish();
 		}
 
+		void CopyToClipboard(const char* text)
+		{
+			ImGui::SetClipboardText(text);
+		}
+
+		std::string CopyFromClipboard()
+		{
+			return ImGui::GetClipboardText();
+		}
+
 		int ColorConvertFloat4ToU32(const ImVec4& color)
 		{
 			return ImGui::ColorConvertFloat4ToU32(color);
@@ -1356,11 +1349,6 @@ namespace Havtorn
 		Instance->Impl->WindowProc(hwnd, msg, wParam, lParam);
 	}
 
-	void GUI::SetGUIContext()
-	{
-		Instance->Impl->SetGUIContext();
-	}
-
 	bool GUI::Begin(const char* name, bool* open, const std::vector<EWindowFlag>& flags)
 	{
 		return Instance->Impl->Begin(name, open, flags);
@@ -1405,9 +1393,9 @@ namespace Havtorn
 		return Instance->Impl->InputText(label, customString->Data(), (size_t)customString->Length() + 1, HavtornInputTextResizeCallback, (void*)customString);
 	}
 
-	bool GUI::InputText(const char* label, char* buffer, U64 bufferSize)
+	bool GUI::InputText(const char* label, std::string& buffer)
 	{
-		return Instance->Impl->InputText(label, buffer, bufferSize);
+		return Instance->Impl->InputText(label, buffer);
 	}
 
 	void GUI::SetTooltip(const char* fmt, ...)
@@ -1693,7 +1681,7 @@ namespace Havtorn
 		return Instance->Impl->Checkbox(label, value);
 	}
 
-	SAssetPickResult GUI::AssetPicker(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const std::function<SAssetInspectionData(std::filesystem::directory_entry)>& assetInspector)
+	SAssetPickResult GUI::AssetPicker(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryFunc& assetInspector)
 	{
 		if (GUI::ImageButton("AssetPicker", image, { GUI::TexturePreviewSizeX * 0.75f, GUI::TexturePreviewSizeY * 0.75f }))
 		{
@@ -1711,6 +1699,8 @@ namespace Havtorn
 			GUI::EndPopup();
 			return SAssetPickResult();
 		}
+		
+
 
 		I32 id = 0;
 		for (auto& entry : std::filesystem::recursive_directory_iterator(directory))
@@ -1718,10 +1708,13 @@ namespace Havtorn
 			if (entry.is_directory())
 				continue;
 
+			SAssetInspectionData data = assetInspector(entry);
+			if (!data.IsValid())
+				continue;
+
 			GUI::TableNextColumn();
 			GUI::PushID(id++);
 
-			auto data = assetInspector(entry);
 			if (GUI::ImageButton(data.Name.c_str(), data.TextureRef, { GUI::TexturePreviewSizeX * 0.75f, GUI::TexturePreviewSizeY * 0.75f }))
 			{
 				GUI::PopID();
@@ -1756,7 +1749,76 @@ namespace Havtorn
 		return SAssetPickResult(EAssetPickerState::Active);
 	}
 
-	SRenderAssetCardResult GUI::RenderAssetCard(const char* label, const intptr_t& thumbnailID, const char* typeName, const SColor& color, void* dragDropPayloadToSet, U64 payLoadSize)
+
+	SAssetPickResult GUI::AssetPickerFilter(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType filterByAssetType)
+	{
+		if (GUI::ImageButton("AssetPicker", image, { GUI::TexturePreviewSizeX * 0.75f, GUI::TexturePreviewSizeY * 0.75f }))
+		{
+			GUI::OpenPopup(modalLabel);
+			GUI::SetNextWindowPos(GUI::GetViewportCenter(), EWindowCondition::Appearing, SVector2<F32>(0.5f, 0.5f));
+		}
+
+		GUI::Text(label);
+
+		if (!GUI::BeginPopupModal(modalLabel, NULL, { EWindowFlag::AlwaysAutoResize }))
+			return SAssetPickResult();
+
+		if (!GUI::BeginTable("AssetPickerTable", columns))
+		{
+			GUI::EndPopup();
+			return SAssetPickResult();
+		}
+
+
+
+		I32 id = 0;
+		for (auto& entry : std::filesystem::recursive_directory_iterator(directory))
+		{
+			if (entry.is_directory())
+				continue;
+
+			SAssetInspectionData data = assetInspector(entry, static_cast<EAssetType>(filterByAssetType));
+			if (!data.IsValid())
+				continue;
+
+			GUI::TableNextColumn();
+			GUI::PushID(id++);
+
+			if (GUI::ImageButton(data.Name.c_str(), data.TextureRef, { GUI::TexturePreviewSizeX * 0.75f, GUI::TexturePreviewSizeY * 0.75f }))
+			{
+				GUI::PopID();
+				GUI::EndTable();
+				GUI::CloseCurrentPopup();
+				GUI::EndPopup();
+				return SAssetPickResult(entry);
+			}
+
+			GUI::Text(data.Name.c_str());
+			GUI::PopID();
+		}
+
+		GUI::EndTable();
+
+		// TODO.NW: Make util for centering elements. Look at AssetBrowserWindow for full implementation
+		// Center buttons
+		F32 width = 0.0f;
+		width += GUI::CalculateTextSize("Cancel").X + GUI::ThumbnailPadding;
+		F32 avail = GUI::GetContentRegionAvail().X;
+		F32 off = (avail - width) * 0.5f;
+		GUI::OffsetCursorPos(SVector2<F32>(off, 0.0f));
+
+		if (GUI::Button("Cancel"))
+		{
+			GUI::CloseCurrentPopup();
+			GUI::EndPopup();
+			return SAssetPickResult(EAssetPickerState::Cancelled);
+		}
+
+		GUI::EndPopup();
+		return SAssetPickResult(EAssetPickerState::Active);
+	}
+
+	SRenderAssetCardResult GUI::RenderAssetCard(const char* label, const bool isSelected, const intptr_t& thumbnailID, const char* typeName, const SColor& color, void* dragDropPayloadToSet, U64 payLoadSize)
 	{
 		SRenderAssetCardResult result;
 
@@ -1777,12 +1839,12 @@ namespace Havtorn
 		GUI::AddRectFilled(GUI::GetCursorScreenPos(), thumbnailSize, SColor(40));
 		GUI::SetCursorPos(cardStartPos);
 
-		if (GUI::Selectable("", false, { ESelectableFlag::AllowDoubleClick, ESelectableFlag::AllowOverlap }, cardSize))
+		if (GUI::Selectable("", isSelected, { ESelectableFlag::AllowDoubleClick, ESelectableFlag::AllowOverlap}, cardSize))
 		{
+			if (GUI::IsMouseReleased())
+				result.IsClicked = true;
 			if (GUI::IsDoubleClick())
-			{
 				result.IsDoubleClicked = true;
-			}
 		}
 
 		if (GUI::BeginDragDropSource())
@@ -1858,9 +1920,14 @@ namespace Havtorn
 		Instance->Impl->SameLine(offsetFromX, spacing);
 	}
 
-	bool GUI::IsItemClicked()
+	bool GUI::IsItemClicked(const EGUIMouseButton button)
 	{
-		return Instance->Impl->IsItemClicked();
+		return Instance->Impl->IsItemClicked(button);
+	}
+
+	bool GUI::IsMouseReleased(I32 mouseButton)
+	{
+		return Instance->Impl->IsMouseReleased(mouseButton);
 	}
 
 	bool GUI::IsItemHovered()
@@ -2077,6 +2144,11 @@ namespace Havtorn
 	bool GUI::IsOverGizmo()
 	{
 		return Instance->Impl->IsOverGizmo();
+	}
+
+	bool GUI::IsLeftMouseHeld()
+	{
+		return Instance->Impl->IsLeftMouseHeld();
 	}
 
 	bool GUI::IsDoubleClick()
@@ -2344,6 +2416,16 @@ namespace Havtorn
 		Instance->Impl->LogFinish();
 	}
 
+	void GUI::CopyToClipboard(const char* text)
+	{
+		Instance->Impl->CopyToClipboard(text);
+	}
+
+	std::string GUI::CopyFromClipboard()
+	{
+		return Instance->Impl->CopyFromClipboard();
+	}
+
 	void GUI::MemFree(void* ptr)
 	{
 		Instance->Impl->MemFree(ptr);
@@ -2455,7 +2537,7 @@ namespace Havtorn
 		if (count < 1)
 			return;
 		if (count > 1)
-			strncpy(dst, src, count - 1);
+			strncpy_s(dst, count, src, count - 1);
 		dst[count - 1] = 0;
 	}
 

@@ -20,6 +20,7 @@
 #include "EditorToggleables.h"
 
 #include "Systems/PickingSystem.h"
+#include <../Game/GameScene.h>
 
 //#include <Application/ImGuiCrossProjectSetup.h>
 #include <MathTypes/MathUtilities.h>
@@ -56,21 +57,24 @@ namespace Havtorn
 		SetEditorTheme(EEditorColorTheme::HavtornDark, EEditorStyleTheme::Havtorn);
 
 		// TODO.NR: Figure out why we can't use unique ptrs with these namespaced imgui classes
-		MenuElements.emplace_back(new CFileMenu("File", this));
-		MenuElements.emplace_back(new CEditMenu("Edit", this));
-		MenuElements.emplace_back(new CViewMenu("View", this));
-		MenuElements.emplace_back(new CWindowMenu("Window", this));
-		MenuElements.emplace_back(new CHelpMenu("Help", this));
+		MenuElements.emplace_back(std::make_unique<CFileMenu>("File", this));
+		MenuElements.emplace_back(std::make_unique<CEditMenu>("Edit", this));
+		MenuElements.emplace_back(std::make_unique<CViewMenu>("View", this));
+		MenuElements.emplace_back(std::make_unique<CWindowMenu>("Window", this));
+		MenuElements.emplace_back(std::make_unique<CHelpMenu>("Help", this));
 
-		Windows.emplace_back(new CViewportWindow("Viewport", this));
-		Windows.emplace_back(new CDockSpaceWindow("Dock Space", this));
-		Windows.emplace_back(new CAssetBrowserWindow("Asset Browser", this));
-		Windows.emplace_back(new COutputLogWindow("Output Log", this));
-		Windows.emplace_back(new CHierarchyWindow("Hierarchy", this));
-		Windows.emplace_back(new CInspectorWindow("Inspector", this));
-		Windows.emplace_back(new CSpriteAnimatorGraphNodeWindow("Sprite Animator", this));
+		Windows.emplace_back(std::make_unique<CViewportWindow>("Viewport", this));
+		Windows.emplace_back(std::make_unique<CDockSpaceWindow>("Dock Space", this));
+		Windows.emplace_back(std::make_unique<CAssetBrowserWindow>("Asset Browser", this));
+		Windows.emplace_back(std::make_unique<COutputLogWindow>("Output Log", this));
+		Windows.emplace_back(std::make_unique<CHierarchyWindow>("Hierarchy", this));
+		Windows.emplace_back(std::make_unique<CInspectorWindow>("Inspector", this));
+		Windows.emplace_back(std::make_unique<CSpriteAnimatorGraphNodeWindow>("Sprite Animator", this));
 		Windows.back()->SetEnabled(false);
-		Windows.emplace_back(new CScriptTool("Script Editor", this));
+		Windows.emplace_back(std::make_unique<CMaterialTool>("Material Editor", this));
+		Windows.back()->SetEnabled(false);
+		Windows.emplace_back(std::make_unique<CScriptTool>("Script Editor", this));
+		Windows.back()->SetEnabled(false);
 
 		ResourceManager = new CEditorResourceManager();
 		bool success = ResourceManager->Init(renderManager, framework);
@@ -82,7 +86,7 @@ namespace Havtorn
 		World = GEngine::GetWorld();
 		World->OnBeginPlayDelegate.AddMember(this, &CEditorManager::OnBeginPlay);
 		World->OnPausePlayDelegate.AddMember(this, &CEditorManager::OnPausePlay);
-		World->OnStopPlayDelegate.AddMember(this, &CEditorManager::OnStopPlay);
+		World->OnEndPlayDelegate.AddMember(this, &CEditorManager::OnStopPlay);
 		World->RequestSystem<CPickingSystem>(this, this);
 
 		InitEditorLayout();
@@ -103,11 +107,38 @@ namespace Havtorn
 		{
 			GUI::BeginMainMenuBar();
 
+			GUI::TextDisabled("ICON");
+			GUI::Text("Havtorn Editor - %s", "Project Name");
+			GUI::Separator();
 			for (const auto& element : MenuElements)
 				element->OnInspectorGUI();
 
+			SVector2<F32> windowSize = GUI::GetCurrentWindowSize();
+			GUI::SetCursorPosX(windowSize.X - 92.0f);
+			// TODO.NW: Derive this from style params
+			constexpr F32 menuElementHeight = 16.0f;
+			if (GUI::ImageButton("MinimizeButton", intptr_t(ResourceManager->GetEditorTexture(EEditorTexture::MinimizeWindow).GetShaderResourceView()), SVector2<F32>(menuElementHeight)))
+			{
+				PlatformManager->MinimizeWindow();
+			}
+
+			if (GUI::ImageButton("MazimizeButton", intptr_t(ResourceManager->GetEditorTexture(EEditorTexture::MaximizeWindow).GetShaderResourceView()), SVector2<F32>(menuElementHeight)))
+			{
+				PlatformManager->MaximizeWindow();
+			}
+
+			if (GUI::ImageButton("CloseWindowButton", intptr_t(ResourceManager->GetEditorTexture(EEditorTexture::CloseWindow).GetShaderResourceView()), SVector2<F32>(menuElementHeight)))
+			{
+				PlatformManager->CloseWindow();
+			}
+
 			GUI::EndMainMenuBar();
 		}
+
+		if (GUI::IsLeftMouseHeld())
+			PlatformManager->UpdateWindowPos();
+		else
+			PlatformManager->UpdateRelativeCursorToWindowPos();
 
 		// Windows
 		for (const auto& window : Windows)
@@ -235,17 +266,38 @@ namespace Havtorn
 	//	return AssetRepresentations[0];
 	//}
 
-	std::function<SAssetInspectionData(std::filesystem::directory_entry)> CEditorManager::GetAssetInspectFunction() const
+	/*std::function<SAssetInspectionData(std::filesystem::directory_entry, const EAssetType assetTypeFilter)> */
+
+
+	DirEntryFunc CEditorManager::GetAssetInspectFunction() const
 	{
 		return [this](std::filesystem::directory_entry entry)
 			{
+				const Ptr<SEditorAssetRepresentation>& assetRep = GetAssetRepFromDirEntry(entry);	
+				return SAssetInspectionData(assetRep->Name, (intptr_t)assetRep->TextureRef.GetShaderResourceView(), assetRep->DirectoryEntry.path().string());
+			};
+	}
+
+	DirEntryEAssetTypeFunc CEditorManager::GetAssetFilteredInspectFunction() const
+	{
+		return [this](std::filesystem::directory_entry entry, const EAssetType assetTypeFilter)
+			{
 				const Ptr<SEditorAssetRepresentation>& assetRep = GetAssetRepFromDirEntry(entry);
-				return SAssetInspectionData(assetRep->Name, (intptr_t)assetRep->TextureRef.GetShaderResourceView());
+				if (assetRep->AssetType == assetTypeFilter)
+					return SAssetInspectionData(assetRep->Name, (intptr_t)assetRep->TextureRef.GetShaderResourceView(), assetRep->DirectoryEntry.path().string());
+
+				return SAssetInspectionData("", 0, "");
 			};
 	}
 
 	void CEditorManager::CreateAssetRep(const std::filesystem::path& path)
 	{
+		if (!CFileSystem::DoesFileExist(path.string()))
+		{
+			HV_LOG_ERROR("CEditorManager::CreateAssetRep failed to create an asset representation! File was not found!");
+			return;
+		}
+
 		std::filesystem::directory_entry entry(path);
 		HV_ASSERT(!entry.is_directory(), "You are trying to create SEditorAssetRepresentation but you're creating a new folder.");
 
@@ -302,11 +354,22 @@ namespace Havtorn
 
 	void CEditorManager::OpenAssetTool(SEditorAssetRepresentation* asset)
 	{
+		if (asset->AssetType == EAssetType::Material)
+		{
+			GetEditorWindow<CMaterialTool>()->OpenMaterial(asset);
+		}
+
 		// Edit mesh, texture, anim montage, material?
 		if (asset->AssetType == EAssetType::Script)
 		{
 			// Load asset, held somewhere? RenderManager and World
 			GetEditorWindow<CScriptTool>()->OpenScript(GEngine::GetWorld()->LoadScript(asset->DirectoryEntry.path().string()));
+		}
+
+		if (asset->AssetType == EAssetType::Scene)
+		{
+			GEngine::GetWorld()->ChangeScene<CGameScene>(asset->DirectoryEntry.path().string());
+			SetCurrentScene(GEngine::GetWorld()->GetActiveScenes()[0].get());
 		}
 	}
 

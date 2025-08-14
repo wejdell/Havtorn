@@ -13,6 +13,8 @@
 
 #include <ECS/Systems/DebugShapeSystem.h>
 
+#include <../Game/GameScene.h>
+
 namespace Havtorn
 {
 	CHierarchyWindow::CHierarchyWindow(const char* displayName, CEditorManager* manager)
@@ -31,25 +33,38 @@ namespace Havtorn
 	void CHierarchyWindow::OnInspectorGUI()
 	{
 		const SEditorLayout& layout = Manager->GetEditorLayout();
-		
+
 		const SVector2<F32>& viewportWorkPos = GUI::GetViewportWorkPos();
 		GUI::SetNextWindowPos(SVector2<F32>(viewportWorkPos.X + layout.HierarchyViewPosition.X, viewportWorkPos.Y + layout.HierarchyViewPosition.Y));
 		GUI::SetNextWindowSize(SVector2<F32>(layout.HierarchyViewSize.X, layout.HierarchyViewSize.Y));
-		
+
 		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
 		{
-			 // Top Bar
-			GUI::BeginChild("SearchBar", SVector2<F32>(0.0f, 54.0f));
-			Filter.Draw("Search");
-			GUI::Separator();
-
 			CScene* scene = Manager->GetCurrentScene();
 			if (!scene)
 			{
-				GUI::EndChild();
+				// TODO.NW: Center align this. Wrap it in a world function call?
+				if (GUI::Button("Create New Scene"))
+				{
+					GEngine::GetWorld()->RemoveScene(0);
+					GEngine::GetWorld()->CreateScene<CGameScene>();
+					if (GEngine::GetWorld()->GetActiveScenes().size() > 0)
+					{
+						CScene* activeScene = GEngine::GetWorld()->GetActiveScenes()[0].get();
+						activeScene->Init(Manager->GetRenderManager(), "New Scene");
+						activeScene->Init3DDefaults(Manager->GetRenderManager());
+						Manager->SetCurrentScene(activeScene);
+					}
+				}
+
 				GUI::End();
 				return;
 			}
+			
+			// Top Bar
+			GUI::BeginChild("SearchBar", SVector2<F32>(0.0f, 54.0f));
+			Filter.Draw("Search");
+			GUI::Separator();
 
 			GUI::Text(scene->GetSceneName().c_str());
 			GUI::Separator();
@@ -70,7 +85,7 @@ namespace Havtorn
 						continue;
 
 					const SMetaDataComponent* metaDataComp = scene->GetComponent<SMetaDataComponent>(entity);
-					const std::string entryString = metaDataComp->IsValid() ? metaDataComp->Name.AsString() : "UNNAMED";
+					const std::string entryString = SComponent::IsValid(metaDataComp) ? metaDataComp->Name.AsString() : "UNNAMED";
 
 					if (Filter.PassFilter(entryString.c_str()))
 						activeEntities.emplace_back(entity);
@@ -86,10 +101,10 @@ namespace Havtorn
 			for (const SEntity& entity : activeEntities)
 			{
 				const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(entity);
-				const std::string draggedEntityName = draggedMetaDataComp->IsValid() ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
+				const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
 
 				const STransformComponent* transform = scene->GetComponent<STransformComponent>(entity);
-				if (!transform->IsValid())
+				if (!SComponent::IsValid(transform))
 					continue;
 
 				if (!transform->AttachedEntities.empty())
@@ -115,11 +130,11 @@ namespace Havtorn
 				{
 					SEntity* draggedEntity = reinterpret_cast<SEntity*>(payload.Data);
 					const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(*draggedEntity);
-					const std::string draggedEntityName = draggedMetaDataComp->IsValid() ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
+					const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
 					GUI::SetTooltip(draggedEntityName.c_str());
 
 					STransformComponent* draggedTransform = scene->GetComponent<STransformComponent>(*draggedEntity);
-					if (!draggedTransform->IsValid())
+					if (!SComponent::IsValid(draggedTransform))
 					{
 						GUI::SetTooltip("Cannot detach entity %s, it has no transform!", draggedEntityName.c_str());
 					}
@@ -129,10 +144,10 @@ namespace Havtorn
 						if (parentEntity.IsValid())
 						{
 							STransformComponent* parentTransform = scene->GetComponent<STransformComponent>(parentEntity);
-							if (parentTransform->IsValid())
+							if (SComponent::IsValid(parentTransform))
 							{
 								const SMetaDataComponent* parentMetaDataComp = scene->GetComponent<SMetaDataComponent>(parentEntity);
-								const std::string parentEntityName = parentMetaDataComp->IsValid() ? parentMetaDataComp->Name.AsString() : "UNNAMED";
+								const std::string parentEntityName = SComponent::IsValid(parentMetaDataComp) ? parentMetaDataComp->Name.AsString() : "UNNAMED";
 								GUI::SetTooltip("Detach %s from %s?", draggedEntityName.c_str(), parentEntityName.c_str());
 
 								if (payload.IsDelivery)
@@ -143,6 +158,14 @@ namespace Havtorn
 				}
 
 				GUI::EndDragDropTarget();
+			}
+
+			if (GUI::BeginPopupContextWindow())
+			{
+				if (GUI::MenuItem("Create New"))
+					scene->AddEntity("New Entity");
+
+				GUI::EndPopup();
 			}
 		}
 		GUI::EndChild();
@@ -158,7 +181,7 @@ namespace Havtorn
 		for (SEntity child : children)
 		{
 			const STransformComponent* transform = scene->GetComponent<STransformComponent>(child);
-			if (!transform->IsValid())
+			if (!SComponent::IsValid(transform))
 				continue;
 
 			if (!transform->AttachedEntities.empty())
@@ -178,25 +201,27 @@ namespace Havtorn
 			GUI::PushID(STATIC_I32(entity.GUID));
 
 			const SMetaDataComponent* metaDataComp = scene->GetComponent<SMetaDataComponent>(entity);
-			const std::string entryString = metaDataComp->IsValid() ? metaDataComp->Name.AsString() : "UNNAMED";
+			const std::string entryString = SComponent::IsValid(metaDataComp) ? metaDataComp->Name.AsString() : "UNNAMED";
 
 			std::vector<ETreeNodeFlag> flags = { ETreeNodeFlag::SpanAvailWidth, ETreeNodeFlag::DefaultOpen };
 
 			if (Manager->IsEntitySelected(entity))
 				flags.emplace_back(ETreeNodeFlag::Selected);
-			
+
 			STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(entity);
-			if (transformComponent->IsValid() && transformComponent->AttachedEntities.empty())
+
+			if (transformComponent == nullptr)
+				flags.emplace_back(ETreeNodeFlag::Leaf);
+			else if (SComponent::IsValid(transformComponent) && transformComponent->AttachedEntities.empty())
 				flags.emplace_back(ETreeNodeFlag::Leaf);
 
 			const bool isOpen = GUI::TreeNodeEx(entryString.c_str(), flags);
-
 			if (GUI::BeginDragDropSource())
 			{
 				SGuiPayload payload = GUI::GetDragDropPayload();
 				if (payload.Data == nullptr)
 				{
-					GUI::SetDragDropPayload("EntityHierarchyDrag", &entity, sizeof(SEntity));
+					GUI::SetDragDropPayload("EntityDrag", &entity, sizeof(SEntity));				
 				}
 				GUI::Text(entryString.c_str());
 
@@ -205,22 +230,22 @@ namespace Havtorn
 
 			if (GUI::BeginDragDropTarget())
 			{
-				SGuiPayload payload = GUI::AcceptDragDropPayload("EntityHierarchyDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
+				SGuiPayload payload = GUI::AcceptDragDropPayload("EntityDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
 				if (payload.Data != nullptr)
 				{
 					SEntity* draggedEntity = reinterpret_cast<SEntity*>(payload.Data);
 					const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(*draggedEntity);
-					const std::string draggedEntityName = draggedMetaDataComp->IsValid() ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
+					const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
 					GUI::SetTooltip(draggedEntityName.c_str());
 
-					if (!transformComponent->IsValid())
+					if (!SComponent::IsValid(transformComponent))
 					{
 						GUI::SetTooltip("Cannot attach to entity %s, it has no transform!", entryString.c_str());
 					}
 					else
 					{
 						STransformComponent* draggedTransform = scene->GetComponent<STransformComponent>(*draggedEntity);
-						if (!draggedTransform->IsValid())
+						if (!SComponent::IsValid(draggedTransform))
 						{
 							GUI::SetTooltip("Cannot attach %s to entity, it has no transform!", draggedEntityName.c_str());
 						}
@@ -244,7 +269,7 @@ namespace Havtorn
 				GUI::EndDragDropTarget();
 			}
 
-			if (GUI::IsItemClicked())
+			if (GUI::IsItemHovered() && GUI::IsMouseReleased(0))
 			{
 				// TODO.NW: Simplify this
 				if (GUI::IsShiftHeld())
@@ -290,11 +315,14 @@ namespace Havtorn
 					Manager->SetSelectedEntity(entity);
 			}
 
-			if (isOpen)
+			if (isOpen && SComponent::IsValid(transformComponent))
 			{
 				InspectEntities(scene, transformComponent->AttachedEntities);
 				GUI::TreePop();
 			}
+
+			if (!SComponent::IsValid(transformComponent))
+				GUI::TreePop();
 
 			GUI::PopID();
 		}
