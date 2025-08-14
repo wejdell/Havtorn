@@ -1,12 +1,8 @@
 @echo off
-REM setlocal enabledelayedexpansion
-rem echo %ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe
-rem %ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe
-rem PAUSE
+:: TODO extra verification needed, do we have the required version of VS & the correct packages installed
 set file="%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
 if exist %file% (
 	echo "Found VS Build Tools"
-	PAUSE
 	exit 0
 ) else (
 	echo "Failed to find VS Build Tools"
