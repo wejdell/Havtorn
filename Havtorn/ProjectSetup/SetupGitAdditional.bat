@@ -11,8 +11,8 @@ set gitExe=git.exe
 
 echo Running additional git setup...
 echo Looking for git cli...
-:: -v = version, >NUL 2>&1 = hides output of command
-git -v >NUL 2>&1
+:: >NUL 2>&1 = hides output of command
+git --version >NUL 2>&1
 if %errorlevel% NEQ 0 goto :GIT_NOT_FOUND
 echo Found git
 goto :GIT_RUN_COMMANDS
