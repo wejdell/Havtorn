@@ -48,7 +48,8 @@ echo Installing to %pythonInstallDir%. Please wait...
 :: PrependPath=1: Windows (since 10 update #somethingsomething) has an exectuable linked in PATH named Python that opens the windows-store to install Python, conflicting with Python's exe
 :: Prepending to PATH should execute Python's exe before Windows' allowing intended use use of python as cli. The windows-store association can be removed by users, using windows-store to install also removes it.
 :: py cli should always work, as that is the python-launcher.
-"%~dp0%requirementsDirName%\%pythonDownloadFile%" TargetDir=%pythonInstallDir% AssociateFiles=1 PrependPath=1 /wait /quiet
+:: Use /quiet instead of /passive to hide the installer window
+"%~dp0%requirementsDirName%\%pythonDownloadFile%" TargetDir=%pythonInstallDir% AssociateFiles=1 PrependPath=1 /wait /passive
 del %~dp0%requirementsDirName%\%pythonDownloadFile% /q
 goto :PYTHON_SET_VARIABLE
 

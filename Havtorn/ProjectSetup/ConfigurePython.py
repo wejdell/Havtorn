@@ -40,9 +40,11 @@ class PythonConfiguration:
         
         print(f"Installing {packageName} module...")
         try:
+            print("trying python")
             subprocess.check_call(['python', '-m', 'pip', 'install', packageName])
         except subprocess.CalledProcessError:
             try:
+                print("trying py")
                 subprocess.check_call(['py', '-m', 'pip', 'install', packageName])
             except subprocess.CalledProcessError:
                 return False

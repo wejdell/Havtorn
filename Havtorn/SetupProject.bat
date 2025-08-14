@@ -1,9 +1,9 @@
 @echo off
-call %~dp0\ProjectSetup\GitAdditionalSetup.bat
+call %~dp0\ProjectSetup\SetupGitAdditional.bat
 if %errorlevel% NEQ 0 goto :ON_REQUIREMENT_ERROR
-call %~dp0\ProjectSetup\CMakeSetup.bat
+call %~dp0\ProjectSetup\SetupCMake.bat
 if %errorlevel% NEQ 0 goto :ON_REQUIREMENT_ERROR
-call %~dp0\ProjectSetup\PythonSetup.bat
+call %~dp0\ProjectSetup\SetupPython.bat
 if %errorlevel% NEQ 0 goto :ON_REQUIREMENT_ERROR
 goto :CONTINUE_SETUP
 
@@ -24,10 +24,10 @@ py --version>nul 2>&1
 set pyCmdError=%errorlevel%
 if %pythonCmdError% NEQ 0 (
     if %pyCmdError% NEQ 0 goto :ON_REQUIREMENT_ERROR
-        py MasterSetup.py
+        py ConfigureStartPoint.py
         goto :COMPLETE
 )
-python MasterSetup.py
+python ConfigureStartPoint.py
 
 :COMPLETE
 echo.
