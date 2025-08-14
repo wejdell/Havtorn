@@ -25,7 +25,11 @@ set pyCmdError=%errorlevel%
 if %pythonCmdError% NEQ 0 (
     if %pyCmdError% NEQ 0 goto :ON_REQUIREMENT_ERROR
         py MasterSetup.py
-        goto :eof
+        goto :COMPLETE
 )
 python MasterSetup.py
+
+:COMPLETE
+echo.
+echo Project setup complete
 PAUSE
