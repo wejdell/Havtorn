@@ -16,7 +16,7 @@ A recommendation is to not close the process window once it is done before looki
 Any red or yellow text is a clear indication of error. 
 
 - SetupProject.bat - Required step, initial step
-This is a 1 time step and runs through verification of all requirements and generates the project files.
+This runs through verification of all requirements and generates the project files.
 After SetupProject has completed successfully you can run BuildProject.bat
 If you start from a clean repository you'll need to run this again.
 
@@ -26,4 +26,4 @@ Requirement for: BuildProject.bat
 
 - BuildProject.bat
 Builds an executable of Havtorn. Found inside Havtorn/Bin/ called Launcher.exe.
-NOTE: currently only setup to build the Havtorn Editor.
+NOTE: only builds the Havtorn Editor.
