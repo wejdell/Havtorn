@@ -755,6 +755,7 @@ namespace Havtorn
 		static void TextUnformatted(const char* text);
 		static bool InputText(const char* label, CHavtornStaticString<255>* customString);
 		static bool InputText(const char* label, std::string& buffer);
+		static void CenterText(const std::string& text, SVector2<F32> dimensions, SVector2<F32> alignment = SVector2<F32>(0.5f));
 
 		static void SetTooltip(const char* fmt, ...);
 

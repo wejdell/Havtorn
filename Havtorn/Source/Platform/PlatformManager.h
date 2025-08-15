@@ -34,9 +34,9 @@ namespace Havtorn
 		PLATFORM_API void EnableDragDrop() const;
 		PLATFORM_API void DisableDragDrop() const;
 
+		PLATFORM_API void UpdateWindow(const SVector2<I16>& windowPos, const SVector2<U16>& resolution);
 		PLATFORM_API void UpdateRelativeCursorToWindowPos();
 		PLATFORM_API void UpdateWindowPos();
-		PLATFORM_API void SetWindowSize(const SVector2<U16>& size);
 		PLATFORM_API void MinimizeWindow();
 		PLATFORM_API void MaximizeWindow();
 		PLATFORM_API void CloseWindow();
@@ -53,7 +53,7 @@ namespace Havtorn
 		CPlatformManager();
 		~CPlatformManager();
 
-		bool Init(SWindowData someWindowData);
+		bool Init(SWindowData windowData);
 		void SetWindowTitle(const std::string& title);
 
 		const bool CursorLocked() const;
@@ -65,25 +65,25 @@ namespace Havtorn
 		PLATFORM_API void ShowAndUnlockCursor(const bool& isInEditorMode = true);
 
 	private:
-		void SetInternalResolution();
-		void SetResolution(SVector2<U16> resolution);
 		void InitWindowsImaging();
 
 	private:
 		CPlatformManager::SWindowData WindowData = {};
 		HWND WindowHandle = 0;
-		
-		SVector2<U16> Resolution;
 
-		SVector2<I16> WindowRelativeCursorPos; // Not normalized
-		SVector2<I16> CursorPosLastFrame;
+		SVector2<U16> Resolution = {};
+		SVector2<U16> PreviousResolution = {};
+		SVector2<I16> WindowPos = {};
+		SVector2<I16> PreviousWindowPos = {};
+
+		SVector2<F32> WindowRelativeCursorPos = {}; // Normalized
+		SVector2<I16> CursorPosPreDrag = {};
 		
-		U16 MaxResX = 2560;
-		U16 MaxResY = 1440;
+		SVector2<U16> MaxResolution = {};
 		
 		bool CursorIsLocked = false;
 		bool WindowIsInEditingMode = false;
-		bool ToggledMaximize = false;
+		bool IsFullscreen = false;
 
 		SVector2<U16> ResizeTarget = {};
 	};

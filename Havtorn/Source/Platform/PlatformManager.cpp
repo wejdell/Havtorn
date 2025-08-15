@@ -149,9 +149,9 @@ namespace Havtorn
 		UnregisterClass(L"HavtornWindowClass", GetModuleHandle(nullptr));
 	}
 
-	bool CPlatformManager::Init(CPlatformManager::SWindowData someWindowData)
+	bool CPlatformManager::Init(CPlatformManager::SWindowData windowData)
 	{
-		WindowData = someWindowData;
+		WindowData = windowData;
 
 		//rapidjson::Document document = CJsonReader::Get()->LoadDocument("Json/Settings/WindowSettings.json");
 
@@ -205,8 +205,7 @@ namespace Havtorn
 		//    borderless = document["Borderless Window"].GetBool();
 		//}
 
-		//MaxResX = GetSystemMetrics(SM_CXSCREEN);
-		//MaxResY = GetSystemMetrics(SM_CYSCREEN);
+		MaxResolution = SVector2<U16>(STATIC_U16(GetSystemMetrics(SM_CXSCREEN)), STATIC_U16(GetSystemMetrics(SM_CYSCREEN)));
 
 		if (false/*borderless*/)
 		{
@@ -248,6 +247,7 @@ namespace Havtorn
 		//SetMenuInfo(hMenu, &mi);
 
 		Resolution = { WindowData.Width, WindowData.Height };
+		//PreviousResolution = Resolution;
 		ResizeTarget = {};
 
 		EnableDragDrop();
@@ -286,15 +286,6 @@ namespace Havtorn
 	SVector2<U16> CPlatformManager::GetResolution() const
 	{
 		return Resolution;
-	}
-
-	void CPlatformManager::SetResolution(SVector2<U16> resolution)
-	{
-		if ((I16)resolution.X <= MaxResX && (I16)resolution.Y <= MaxResY)
-		{
-			::SetWindowPos(WindowHandle, 0, 0, 0, resolution.X, resolution.Y, SWP_NOOWNERZORDER | SWP_NOZORDER);
-			SetInternalResolution();
-		}
 	}
 
 	void CPlatformManager::InitWindowsImaging()
@@ -362,20 +353,14 @@ namespace Havtorn
 		WindowIsInEditingMode = isInEditorMode;
 	}
 
-	void CPlatformManager::SetInternalResolution()
+	void CPlatformManager::UpdateResolution()
 	{
+		// NW: ResizeTarget is set through the message pump
 		if (ResizeTarget.LengthSquared() > 0)
 		{
-			SVector2<U16> newResolution = SVector2<U16>(STATIC_U16(ResizeTarget.X), STATIC_U16(ResizeTarget.Y));
-			Resolution = newResolution;
-			OnResolutionChanged.Broadcast(newResolution);
+			OnResolutionChanged.Broadcast(ResizeTarget);
 			ResizeTarget = { 0, 0 };
 		}
-	}
-
-	PLATFORM_API void CPlatformManager::UpdateResolution()
-	{
-		SetInternalResolution();
 	}
 
 	void CPlatformManager::SetWindowTitle(const std::string& title)
@@ -393,33 +378,52 @@ namespace Havtorn
 		DragAcceptFiles(WindowHandle, FALSE);
 	}
 
+	void CPlatformManager::UpdateWindow(const SVector2<I16>& windowPos, const SVector2<U16>& resolution)
+	{
+		if (resolution.X > MaxResolution.X || resolution.Y > MaxResolution.Y)
+			return;
+
+		IsFullscreen = resolution.IsEqual(MaxResolution);
+		if (IsFullscreen && !Resolution.IsEqual(MaxResolution))
+		{
+			PreviousResolution = Resolution;
+			PreviousWindowPos = WindowPos;
+		}
+
+		WindowPos = windowPos;
+		Resolution = resolution;
+		::SetWindowPos(WindowHandle, 0, WindowPos.X, WindowPos.Y, Resolution.X, Resolution.Y, SWP_NOOWNERZORDER | SWP_NOZORDER);
+	}
+
 	void CPlatformManager::UpdateRelativeCursorToWindowPos()
 	{
+		if (ResizeTarget.SizeSquared() > 0)
+			return;
+
 		RECT rect = { 0 };
 		if (!GetWindowRect(WindowHandle, &rect))
 			return;
 
-		CursorPosLastFrame = WindowRelativeCursorPos;
-		SVector2<I16> windowPos = SVector2<I16>(STATIC_U16(rect.left), STATIC_U16(rect.top));
-		WindowRelativeCursorPos = GetScreenCursorPos() - windowPos;
+		const SVector2<I16> windowPos = SVector2<I16>(STATIC_U16(rect.left), STATIC_U16(rect.top));
+		CursorPosPreDrag = GetScreenCursorPos();
+		WindowRelativeCursorPos = SVector2<F32>(STATIC_F32(GetScreenCursorPos().X - windowPos.X), STATIC_F32(GetScreenCursorPos().Y - windowPos.Y)) / SVector2<F32>(STATIC_F32(Resolution.X), STATIC_F32(Resolution.Y));
 	}
 
 	void CPlatformManager::UpdateWindowPos()
 	{
-		// TODO.NW: See if this can be done with the move Syscommand instead. Would need a separate solution for multiplatform support anyway.
-		SVector2<I16> currentCursorPos = GetScreenCursorPos();
-		SVector2<I16> delta = CursorPosLastFrame - currentCursorPos;
+		const SVector2<I16> currentCursorPos = GetScreenCursorPos();
+		const SVector2<I16> delta = CursorPosPreDrag - currentCursorPos;
 
-		if (delta.SizeSquared() == 0 && ResizeTarget.SizeSquared() > 0)
+		constexpr U16 menuBarHeight = 18;
+		if (WindowRelativeCursorPos.Y > menuBarHeight || delta.SizeSquared() == 0 || ResizeTarget.SizeSquared() > 0)
 			return;
 
-		SVector2<I16> newWindowPos = GetScreenCursorPos() - WindowRelativeCursorPos;
-		::SetWindowPos(WindowHandle, 0, newWindowPos.X, newWindowPos.Y, 0, 0, SWP_NOSIZE | SWP_NOOWNERZORDER | SWP_NOZORDER);
-	}
+		// TODO.NW: Finally make mapping functions from one space to the other, also useful in "picking" logic
+		const SVector2<U16> newResolution = IsFullscreen ? PreviousResolution : Resolution;
+		const SVector2<I16> newWindowRelativeCursorPos = SVector2<I16>(STATIC_I16(WindowRelativeCursorPos.X * STATIC_F32(newResolution.X)), STATIC_I16(WindowRelativeCursorPos.Y * STATIC_F32(newResolution.Y)));
+		const SVector2<I16> newPos = (currentCursorPos - newWindowRelativeCursorPos);
 
-	void CPlatformManager::SetWindowSize(const SVector2<U16>& size)
-	{
-		SetResolution(size);
+		UpdateWindow(newPos, newResolution);
 	}
 
 	void CPlatformManager::MinimizeWindow()
@@ -429,16 +433,10 @@ namespace Havtorn
 
 	void CPlatformManager::MaximizeWindow()
 	{
-		if (!ToggledMaximize)
-		{
-			PostMessage(WindowHandle, WM_SYSCOMMAND, SC_MAXIMIZE, 0);
-			ToggledMaximize = true;
-		}
+		if (!IsFullscreen)
+			UpdateWindow(SVector2<I16>(0), MaxResolution);
 		else
-		{
-			PostMessage(WindowHandle, WM_SYSCOMMAND, SC_RESTORE, 0);
-			ToggledMaximize = false;
-		}
+			UpdateWindow(PreviousWindowPos, PreviousResolution);
 	}
 
 	void CPlatformManager::CloseWindow()

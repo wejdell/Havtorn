@@ -1398,6 +1398,17 @@ namespace Havtorn
 		return Instance->Impl->InputText(label, buffer);
 	}
 
+	void GUI::CenterText(const std::string& text, SVector2<F32> dimensions, SVector2<F32> alignment)
+	{
+		GUI::SetCursorPos(SVector2<F32>(0.0f));
+		const SVector2<F32> textWidth = GUI::CalculateTextSize(text.c_str());
+		const SVector2<F32> offset = (dimensions - textWidth) * alignment;
+		if (alignment.SizeSquared() > 0.0f)
+			GUI::OffsetCursorPos(offset);
+
+		return GUI::Text(text.c_str());
+	}
+
 	void GUI::SetTooltip(const char* fmt, ...)
 	{
 		va_list args;
