@@ -35,7 +35,6 @@ if %errorlevel% == 1 goto :CMAKE_DO_INSTALL
 goto :REQUIREMENT_ERROR_OUT
 
 :CMAKE_DO_INSTALL
-if not exist %~dp0%requirementsDirName% mkdir %~dp0%requirementsDirName%
 if not exist %~dp0%requirementsDirName%\%cmakeDirName%\ mkdir %~dp0%requirementsDirName%\%cmakeDirName%\
 echo Ready to start download %~dp0%requirementsDirName%\%cmakeDownloadFile% ...
 bitsadmin /transfer cmakeDownload /download /priority high "%cmakeUrl%" "%~dp0%requirementsDirName%\%cmakeDownloadFile%"
