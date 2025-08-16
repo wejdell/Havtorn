@@ -267,6 +267,15 @@ namespace Havtorn
 
 		case EEditorTexture::NodeBackground:
 			return ResourceAssetPath + "NodeBackground" + extension;
+
+		case EEditorTexture::MinimizeWindow:
+			return ResourceAssetPath + "MinimizeWindow" + extension;
+
+		case EEditorTexture::MaximizeWindow:
+			return ResourceAssetPath + "MaximizeWindow" + extension;
+
+		case EEditorTexture::CloseWindow:
+			return ResourceAssetPath + "CloseWindow" + extension;
 		
 		case EEditorTexture::Count:
 		default:
