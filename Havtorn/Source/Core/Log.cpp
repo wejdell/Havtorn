@@ -108,4 +108,12 @@ namespace Havtorn
 
 		Instance->Contexts.push_back(context);
 	}
+
+	void ULog::RemoveLogContext(ILogContext* context)
+	{
+		if (!Instance)
+			return;
+		
+		std::erase(Instance->Contexts, context);
+	}
 }

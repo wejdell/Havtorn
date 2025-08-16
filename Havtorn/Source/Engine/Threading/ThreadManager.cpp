@@ -86,6 +86,7 @@ namespace Havtorn
 		JobThreads.clear();
 		
 		RunRenderThread = false;
+		RenderCondition.notify_one();
 		RenderThread.join();
 
 		IsTerminated = true; // use this flag in destructor, if not set, call shutdown() 

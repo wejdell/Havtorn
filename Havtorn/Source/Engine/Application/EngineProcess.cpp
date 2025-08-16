@@ -19,7 +19,7 @@ namespace Havtorn
 	CEngineProcess::~CEngineProcess()
 	{
 		SAFE_DELETE(Engine);
-		HV_LOG_WARN("Engine shutdown!");
+		HV_LOG_INFO("Engine shutdown!");
 	}
 
 	bool CEngineProcess::Init(CPlatformManager* platformManager)

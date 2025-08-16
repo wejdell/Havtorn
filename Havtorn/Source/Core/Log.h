@@ -37,6 +37,7 @@ namespace Havtorn
 	{
 		static void CORE_API Print(const ELogCategory category, const char* message, ...);
 		static void CORE_API AddLogContext(ILogContext* context);
+		static void CORE_API RemoveLogContext(ILogContext* context);
 
 	private:
 		// TODO.NR: Figure out another place for this. This is the exact same as the one used in EngineException.h
