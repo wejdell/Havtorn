@@ -29,6 +29,7 @@ namespace Havtorn
 
 	COutputLogWindow::~COutputLogWindow()
 	{
+        ULog::RemoveLogContext(this);
         ClearLog();
         //for (I32 i = 0; i < static_cast<I32>(History.size()); i++)
         //    GUI::MemFree(History[i]);
