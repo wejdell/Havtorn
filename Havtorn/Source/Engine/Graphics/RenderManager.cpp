@@ -190,7 +190,8 @@ namespace Havtorn
 		{
 			std::unique_lock<std::mutex> uniqueLock(CThreadManager::RenderMutex);
 			CThreadManager::RenderCondition.wait(uniqueLock, [] 
-				{ return CThreadManager::RenderThreadStatus == ERenderThreadStatus::ReadyToRender; });
+				{ return CThreadManager::RenderThreadStatus == ERenderThreadStatus::ReadyToRender
+				|| !CThreadManager::RunRenderThread; });
 
 			GTime::BeginTracking(ETimerCategory::GPU);
 
