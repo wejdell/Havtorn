@@ -351,6 +351,13 @@ namespace Havtorn
 			return ImGui::IsItemHovered();
 		}
 
+		bool IsMouseInRect(const SVector2<F32>& topLeft, const SVector2<F32>& bottomRight)
+		{
+			ImVec2 imTopLeft = { topLeft.X, topLeft.Y };
+			ImVec2 imBottomRight = { bottomRight.X, bottomRight.Y };
+			return ImGui::IsMouseHoveringRect(imTopLeft, imBottomRight);
+		}
+
 		bool IsItemVisible()
 		{
 			return ImGui::IsItemVisible();
@@ -1944,6 +1951,22 @@ namespace Havtorn
 	bool GUI::IsItemHovered()
 	{
 		return Instance->Impl->IsItemHovered();
+	}
+
+	bool GUI::IsMouseInRect(const SVector2<F32>& topLeft, const SVector2<F32>& bottomRight)
+	{
+		// TODO.NW: Make general rect functions
+		SVector2<F32> mousePos = GUI::GetMousePosition();
+		bool isOutsideRect = mousePos.X <= topLeft.X || mousePos.X > bottomRight.X || mousePos.Y <= topLeft.Y || mousePos.Y > bottomRight.Y;
+		return !isOutsideRect;
+	}
+
+	bool GUI::IsMouseInRect(const SVector4& rect)
+	{
+		// TODO.NW: Make general rect functions
+		SVector2<F32> mousePos = GUI::GetMousePosition();
+		bool isOutsideRect = mousePos.X <= rect.X || mousePos.X > rect.Z || mousePos.Y <= rect.Y || mousePos.Y > rect.W;
+		return !isOutsideRect;
 	}
 
 	bool GUI::IsItemVisible()

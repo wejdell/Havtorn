@@ -863,6 +863,8 @@ namespace Havtorn
 		static bool IsItemClicked(const EGUIMouseButton button = EGUIMouseButton::Left);
 		static bool IsMouseReleased(I32 mouseButton = 0);
 		static bool IsItemHovered();
+		static bool IsMouseInRect(const SVector2<F32>& topLeft, const SVector2<F32>& bottomRight);
+		static bool IsMouseInRect(const SVector4& rect);
 		static bool IsItemVisible();
 		static bool IsWindowFocused();
 		static bool IsWindowHovered();
