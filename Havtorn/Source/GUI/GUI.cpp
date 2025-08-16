@@ -894,6 +894,16 @@ namespace Havtorn
 			ImGui::TreePop();
 		}
 
+		bool BeginCombo(const char* label, const char* selectedLabel)
+		{
+			return ImGui::BeginCombo(label, selectedLabel);
+		}
+
+		void EndCombo()
+		{
+			ImGui::EndCombo();
+		}
+
 		bool BeginMainMenuBar()
 		{
 			return ImGui::BeginMainMenuBar();
@@ -945,6 +955,15 @@ namespace Havtorn
 			SVector4 colorFloat = color.AsVector4();
 			ImVec4 imColor = { colorFloat.X, colorFloat.Y, colorFloat.Z, colorFloat.W };
 			ImGui::GetWindowDrawList()->AddRectFilled(posMin, posMax, ImGui::ColorConvertFloat4ToU32(imColor));
+			//ImGui::GetBackgroundDrawList()->
+		}
+
+		void HighlightPins(const U64* pinIds)
+		{
+			ImDrawList* drawList = ImGui::GetForegroundDrawList();
+			//ImVec2 position = NE::GetNodePosition(nodeId);
+			
+
 		}
 
 		void SetGuiColorProfile(const SGuiColorProfile& colorProfile)
@@ -1130,9 +1149,11 @@ namespace Havtorn
 			NE::EndPin();
 		}
 
-		void DrawPinIcon(const SVector2<F32>& size, const EGUIIconType type, const bool isConnected, const SColor& color)
+		SVector2<F32> DrawPinIcon(const SVector2<F32>& size, const EGUIIconType type, const bool isConnected, const SColor& color, const bool highlighted)
 		{
-			ax::Widgets::Icon(ImVec2(size.X, size.Y), static_cast<ax::Drawing::IconType>(type), isConnected, ImColor{color.R, color.G, color.B, color.A}, ImColor(32, 32, 32, 255));
+			ImVec2 center = ax::Widgets::Icon(ImVec2(size.X, size.Y), static_cast<ax::Drawing::IconType>(type), isConnected, ImColor{color.R, color.G, color.B, color.A}, ImColor(32, 32, 32, 255), highlighted);
+			ImGui::GetWindowDrawList()->GetClipRectMax();
+			return SVector2<F32>(center.x, center.y);
 		}
 
 		void DrawNodeHeader(const U64 nodeID, intptr_t textureID, const SVector2<F32>& posMin, const SVector2<F32>& posMax, const SVector2<F32>& uvMin, const SVector2<F32>& uvMax, const SColor& color, const F32 rounding)
@@ -1180,7 +1201,7 @@ namespace Havtorn
 		bool QueryNewLink(U64& inputPinID, U64& outputPinID)
 		{
 			NE::PinId inputPinId, outputPinId;
-			const bool returnValue = NE::QueryNewLink(&inputPinId, &outputPinId);
+			const bool returnValue = NE::QueryNewLink(&inputPinId, &outputPinId);		
 			inputPinID = inputPinId.Get();
 			outputPinID = outputPinId.Get();
 			return returnValue;
@@ -1644,6 +1665,16 @@ namespace Havtorn
 	void GUI::TreePop()
 	{
 		Instance->Impl->TreePop();
+	}
+
+	bool GUI::BeginCombo(const char* label, const char* selectedLabel)
+	{
+		return Instance->Impl->BeginCombo(label, selectedLabel);
+	}
+
+	void GUI::EndCombo()
+	{
+		return Instance->Impl->EndCombo();
 	}
 
 	bool GUI::ArrowButton(const char* label, const EGUIDirection direction)
@@ -2321,9 +2352,9 @@ namespace Havtorn
 		Instance->Impl->EndPin();
 	}
 
-	void GUI::DrawPinIcon(const SVector2<F32>& size, const EGUIIconType type, const bool isConnected, const SColor& color)
+	SVector2<F32> GUI::DrawPinIcon(const SVector2<F32>& size, const EGUIIconType type, const bool isConnected, const SColor& color, const bool highlighted)
 	{
-		Instance->Impl->DrawPinIcon(size, type, isConnected, color);
+		return Instance->Impl->DrawPinIcon(size, type, isConnected, color, highlighted);
 	}
 
 	void GUI::DrawNodeHeader(const U64 nodeID, intptr_t textureID, const SVector2<F32>& posMin, const SVector2<F32>& posMax, const SVector2<F32>& uvMin, const SVector2<F32>& uvMax, const SColor& color, const F32 rounding)
