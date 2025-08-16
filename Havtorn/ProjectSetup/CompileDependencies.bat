@@ -1,7 +1,9 @@
 @echo off
+call %~dp0\SetupCMake.bat
+if %errorlevel% NEQ 0 EXIT /B 1
 
-mkdir -p ..\External\Lib\Debug\PhysX\
-mkdir -p ..\External\Lib\Release\PhysX\
+if not exist %~dp0..\External\Lib\Debug\ mkdir -p %~dp0..\External\Lib\Debug\
+if not exist %~dp0..\External\Lib\Release\ mkdir -p %~dp0..\External\Lib\Release\
 
 cd ..\External\assimp
 echo.
@@ -17,10 +19,16 @@ copy bin\Debug\assimp-vc143-mtd.dll ..\..\Bin\
 copy lib\Debug\assimp-vc143-mtd.lib ..\Lib\Debug\
 cd .. 
 
+mkdir -p ..\External\Lib\Debug\PhysX\
+mkdir -p ..\External\Lib\Release\PhysX\
 cd PhysX\physx
 echo.
 echo Generating PhysX files...
 echo.
+:: if PM_PACKAGES_ROOT is not set, packman will be installed under C:/
+:: packman init script will only read this path correctly if it is without ""
+set PM_PACKAGES_ROOT=%~dp0SetupRequirements\packman\
+if not exist %PM_PACKAGES_ROOT%\ mkdir %PM_PACKAGES_ROOT%
 call generate_projects.bat vc17win64 
 echo.
 echo Building PhysX...
@@ -55,8 +63,7 @@ echo Building box2d...
 echo.
 cmake --build .
 copy src\Debug\box2dd.lib ..\..\Lib\Debug\
-cd ..
-cd ..
+cd ..\..
 
 cd DirectXTex
 echo.
@@ -70,3 +77,7 @@ cmake --build .
 copy bin\Debug\DirectXTex.dll ..\..\Bin\
 copy lib\Debug\DirectXTex.lib ..\Lib\Debug\
 cd .. 
+
+echo.
+echo Dependencies compiled
+PAUSE
