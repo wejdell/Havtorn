@@ -152,7 +152,7 @@ namespace Havtorn
 
 		void SetTooltip(const char* fmt, va_list args)
 		{
-			ImGui::SetTooltipV(fmt, args);	
+			ImGui::SetTooltipV(fmt, args);
 		}
 
 		SVector2<F32> CalculateTextSize(const char* text)
@@ -324,7 +324,7 @@ namespace Havtorn
 		{
 			ImGui::Separator();
 		}
-		
+
 		void Dummy(const SVector2<F32>& size)
 		{
 			ImVec2 imSize = { size.X, size.Y };
@@ -337,7 +337,7 @@ namespace Havtorn
 		}
 
 		bool IsItemClicked(const EGUIMouseButton button)
-		{			
+		{
 			return ImGui::IsItemClicked(static_cast<ImGuiMouseButton>(button));
 		}
 
@@ -514,7 +514,7 @@ namespace Havtorn
 				value = ImGui::GetStyle().ItemSpacing;
 				break;
 			}
-			
+
 			return SVector2<F32>(value.x, value.y);
 		}
 
@@ -797,7 +797,7 @@ namespace Havtorn
 			guiPayload.IsDelivery = imGuiPayload->Delivery;
 			return guiPayload;
 		}
-		
+
 		bool SetDragDropPayload(const char* type, const void* data, U64 dataSize)
 		{
 			return ImGui::SetDragDropPayload(type, data, dataSize);
@@ -962,7 +962,7 @@ namespace Havtorn
 		{
 			ImDrawList* drawList = ImGui::GetForegroundDrawList();
 			//ImVec2 position = NE::GetNodePosition(nodeId);
-			
+
 
 		}
 
@@ -1149,16 +1149,15 @@ namespace Havtorn
 			NE::EndPin();
 		}
 
-		SVector2<F32> DrawPinIcon(const SVector2<F32>& size, const EGUIIconType type, const bool isConnected, const SColor& color, const bool highlighted)
+		void DrawPinIcon(const SVector2<F32>& size, const EGUIIconType type, const bool isConnected, const SColor& color, const bool highlighted)
 		{
-			ImVec2 center = ax::Widgets::Icon(ImVec2(size.X, size.Y), static_cast<ax::Drawing::IconType>(type), isConnected, ImColor{color.R, color.G, color.B, color.A}, ImColor(32, 32, 32, 255), highlighted);
+			ax::Widgets::Icon(ImVec2(size.X, size.Y), static_cast<ax::Drawing::IconType>(type), isConnected, ImColor{ color.R, color.G, color.B, color.A }, ImColor(32, 32, 32, 255), highlighted);
 			ImGui::GetWindowDrawList()->GetClipRectMax();
-			return SVector2<F32>(center.x, center.y);
 		}
 
 		void DrawNodeHeader(const U64 nodeID, intptr_t textureID, const SVector2<F32>& posMin, const SVector2<F32>& posMax, const SVector2<F32>& uvMin, const SVector2<F32>& uvMax, const SColor& color, const F32 rounding)
 		{
-			NE::GetNodeBackgroundDrawList(nodeID)->AddImageRounded((ImTextureID)textureID, { posMin.X, posMin.Y }, { posMax.X, posMax.Y }, { uvMin.X, uvMin.Y }, { uvMax.X, uvMax.Y }, ImColor{color.R, color.G, color.B, color.A}, rounding, ImDrawFlags_RoundCornersAll);
+			NE::GetNodeBackgroundDrawList(nodeID)->AddImageRounded((ImTextureID)textureID, { posMin.X, posMin.Y }, { posMax.X, posMax.Y }, { uvMin.X, uvMin.Y }, { uvMax.X, uvMax.Y }, ImColor{ color.R, color.G, color.B, color.A }, rounding, ImDrawFlags_RoundCornersAll);
 		}
 
 		void Link(const U64 linkID, const U64 startPinID, const U64 endPinID, const SColor& color, const F32 thickness)
@@ -1201,7 +1200,7 @@ namespace Havtorn
 		bool QueryNewLink(U64& inputPinID, U64& outputPinID)
 		{
 			NE::PinId inputPinId, outputPinId;
-			const bool returnValue = NE::QueryNewLink(&inputPinId, &outputPinId);		
+			const bool returnValue = NE::QueryNewLink(&inputPinId, &outputPinId);
 			inputPinID = inputPinId.Get();
 			outputPinID = outputPinId.Get();
 			return returnValue;
@@ -1725,7 +1724,7 @@ namespace Havtorn
 			GUI::EndPopup();
 			return SAssetPickResult();
 		}
-		
+
 
 
 		I32 id = 0;
@@ -1850,7 +1849,7 @@ namespace Havtorn
 
 		SVector2<F32> cardStartPos = GUI::GetCursorPos();
 		SVector2<F32> framePadding = GUI::GetStyleVar(EStyleVar::FramePadding);
-		
+
 		SVector2<F32> cardSize = { GUI::ThumbnailSizeX + framePadding.X * 0.5f, GUI::ThumbnailSizeY + framePadding.Y * 0.5f };
 		cardSize.Y *= 1.6f;
 		SVector2<F32> thumbnailSize = { GUI::ThumbnailSizeX + framePadding.X * 0.5f, GUI::ThumbnailSizeY + framePadding.Y * 0.5f + 4.0f };
@@ -1865,7 +1864,7 @@ namespace Havtorn
 		GUI::AddRectFilled(GUI::GetCursorScreenPos(), thumbnailSize, SColor(40));
 		GUI::SetCursorPos(cardStartPos);
 
-		if (GUI::Selectable("", isSelected, { ESelectableFlag::AllowDoubleClick, ESelectableFlag::AllowOverlap}, cardSize))
+		if (GUI::Selectable("", isSelected, { ESelectableFlag::AllowDoubleClick, ESelectableFlag::AllowOverlap }, cardSize))
 		{
 			if (GUI::IsMouseReleased())
 				result.IsClicked = true;
@@ -2261,7 +2260,7 @@ namespace Havtorn
 	{
 		Instance->Impl->AddRectFilled(cursorScreenPos, size, color);
 	}
-	
+
 	void GUI::SetGuiColorProfile(const SGuiColorProfile& profile)
 	{
 		Instance->Impl->SetGuiColorProfile(profile);
@@ -2352,9 +2351,9 @@ namespace Havtorn
 		Instance->Impl->EndPin();
 	}
 
-	SVector2<F32> GUI::DrawPinIcon(const SVector2<F32>& size, const EGUIIconType type, const bool isConnected, const SColor& color, const bool highlighted)
+	void GUI::DrawPinIcon(const SVector2<F32>& size, const EGUIIconType type, const bool isConnected, const SColor& color, const bool highlighted)
 	{
-		return Instance->Impl->DrawPinIcon(size, type, isConnected, color, highlighted);
+		Instance->Impl->DrawPinIcon(size, type, isConnected, color, highlighted);
 	}
 
 	void GUI::DrawNodeHeader(const U64 nodeID, intptr_t textureID, const SVector2<F32>& posMin, const SVector2<F32>& posMax, const SVector2<F32>& uvMin, const SVector2<F32>& uvMax, const SColor& color, const F32 rounding)
@@ -2401,12 +2400,12 @@ namespace Havtorn
 	{
 		return Instance->Impl->QueryNewLink(inputPinID, outputPinID);
 	}
-	
+
 	bool GUI::QueryDeletedLink(U64& linkID)
 	{
 		return Instance->Impl->QueryDeletedLink(linkID);
 	}
-	
+
 	bool GUI::QueryDeletedNode(U64& nodeID)
 	{
 		return Instance->Impl->QueryDeletedNode(nodeID);
@@ -2416,7 +2415,7 @@ namespace Havtorn
 	{
 		return Instance->Impl->AcceptNewScriptItem();
 	}
-	
+
 	bool GUI::AcceptDeletedScriptItem()
 	{
 		return Instance->Impl->AcceptDeletedScriptItem();
@@ -2467,7 +2466,7 @@ namespace Havtorn
 			Build();
 		}
 	}
-	
+
 	bool SGuiTextFilter::Draw(const char* label, F32 width)
 	{
 		if (width != 0.0f)

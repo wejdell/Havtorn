@@ -80,6 +80,7 @@ set(CORE_FILES
     ${CORE_FOLDER}hvpch.h
     "${CORE_FOLDER}Log.cpp"
     "${CORE_FOLDER}Log.h"
+    ${CORE_FOLDER}magic_enum.h
 )
 add_library(Core SHARED ${CORE_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${CORE_FILES})

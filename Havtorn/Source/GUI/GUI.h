@@ -1018,7 +1018,7 @@ namespace Havtorn
 		static void BeginPin(const U64 id, const EGUIPinDirection direction);
 		static void EndPin();
 
-		static SVector2<F32> DrawPinIcon(const SVector2<F32>& size, const EGUIIconType type, const bool isConnected, const SColor& color, const bool highlighted = false);
+		static void DrawPinIcon(const SVector2<F32>& size, const EGUIIconType type, const bool isConnected, const SColor& color, const bool highlighted = false);
 		static void DrawNodeHeader(U64 nodeID, intptr_t textureID, const SVector2<F32>& posMin, const SVector2<F32>& posMax, const SVector2<F32>& uvMin, const SVector2<F32>& uvMax, const SColor& color, const F32 rounding);
 
 		static void Link(const U64 linkID, const U64 startPinID, const U64 endPinID, const SColor& color, const F32 thickness = 1.0f);
