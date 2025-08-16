@@ -76,7 +76,8 @@ namespace Havtorn
 		SVector2<I16> WindowPos = {};
 		SVector2<I16> PreviousWindowPos = {};
 
-		SVector2<F32> WindowRelativeCursorPos = {}; // Normalized
+		SVector2<F32> NormalizedWindowRelativeCursorPos = {};
+		SVector2<I16> WindowRelativeCursorPos = {};
 		SVector2<I16> CursorPosPreDrag = {};
 		
 		SVector2<U16> MaxResolution = {};

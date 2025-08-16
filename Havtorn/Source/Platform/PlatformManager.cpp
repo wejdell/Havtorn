@@ -406,7 +406,8 @@ namespace Havtorn
 
 		const SVector2<I16> windowPos = SVector2<I16>(STATIC_U16(rect.left), STATIC_U16(rect.top));
 		CursorPosPreDrag = GetScreenCursorPos();
-		WindowRelativeCursorPos = SVector2<F32>(STATIC_F32(GetScreenCursorPos().X - windowPos.X), STATIC_F32(GetScreenCursorPos().Y - windowPos.Y)) / SVector2<F32>(STATIC_F32(Resolution.X), STATIC_F32(Resolution.Y));
+		WindowRelativeCursorPos = CursorPosPreDrag - windowPos;
+		NormalizedWindowRelativeCursorPos = SVector2<F32>(STATIC_F32(GetScreenCursorPos().X - windowPos.X), STATIC_F32(GetScreenCursorPos().Y - windowPos.Y)) / SVector2<F32>(STATIC_F32(Resolution.X), STATIC_F32(Resolution.Y));
 	}
 
 	void CPlatformManager::UpdateWindowPos()
@@ -420,7 +421,7 @@ namespace Havtorn
 
 		// TODO.NW: Finally make mapping functions from one space to the other, also useful in "picking" logic
 		const SVector2<U16> newResolution = IsFullscreen ? PreviousResolution : Resolution;
-		const SVector2<I16> newWindowRelativeCursorPos = SVector2<I16>(STATIC_I16(WindowRelativeCursorPos.X * STATIC_F32(newResolution.X)), STATIC_I16(WindowRelativeCursorPos.Y * STATIC_F32(newResolution.Y)));
+		const SVector2<I16> newWindowRelativeCursorPos = SVector2<I16>(STATIC_I16(NormalizedWindowRelativeCursorPos.X * STATIC_F32(newResolution.X)), STATIC_I16(NormalizedWindowRelativeCursorPos.Y * STATIC_F32(newResolution.Y)));
 		const SVector2<I16> newPos = (currentCursorPos - newWindowRelativeCursorPos);
 
 		UpdateWindow(newPos, newResolution);
