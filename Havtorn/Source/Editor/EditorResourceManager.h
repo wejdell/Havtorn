@@ -32,6 +32,9 @@ namespace Havtorn
 		ScriptIcon,
 		ColliderIcon,
 		NodeBackground,
+		MinimizeWindow,
+		MaximizeWindow,
+		CloseWindow,
 		Count,
 		None = Count
 	};

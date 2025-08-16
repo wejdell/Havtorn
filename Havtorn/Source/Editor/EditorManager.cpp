@@ -22,7 +22,6 @@
 #include "Systems/PickingSystem.h"
 #include <../Game/GameScene.h>
 
-//#include <Application/ImGuiCrossProjectSetup.h>
 #include <MathTypes/MathUtilities.h>
 #include <PlatformManager.h>
 #include <Color.h>
@@ -102,16 +101,54 @@ namespace Havtorn
 
 	void CEditorManager::Render()
 	{
+		bool isHoveringMenuBarButton = false;
+
 		// Main Menu bar
 		if (IsEnabled)
 		{
 			GUI::BeginMainMenuBar();
 
+			GUI::TextDisabled("ICON");
 			for (const auto& element : MenuElements)
+			{
 				element->OnInspectorGUI();
+				isHoveringMenuBarButton = GUI::IsItemHovered() ? true : isHoveringMenuBarButton;
+			}
+
+			const std::string projectName = "Project Name";
+			const std::string windowTitle = "Havtorn Editor | " + projectName + " | " + HAVTORN_VERSION;
+			GUI::CenterText(windowTitle, GUI::GetCurrentWindowSize());
+			
+			const F32 windowWidth = GUI::GetCurrentWindowSize().X;
+			GUI::SetCursorPosX(windowWidth - 92.0f);
+
+			// TODO.NW: Derive this from style params
+			constexpr F32 menuElementHeight = 16.0f;
+			if (GUI::ImageButton("MinimizeButton", intptr_t(ResourceManager->GetEditorTexture(EEditorTexture::MinimizeWindow).GetShaderResourceView()), SVector2<F32>(menuElementHeight)))
+			{
+				PlatformManager->MinimizeWindow();
+			}
+			isHoveringMenuBarButton = GUI::IsItemHovered() ? true : isHoveringMenuBarButton;
+
+			if (GUI::ImageButton("MazimizeButton", intptr_t(ResourceManager->GetEditorTexture(EEditorTexture::MaximizeWindow).GetShaderResourceView()), SVector2<F32>(menuElementHeight)))
+			{
+				PlatformManager->MaximizeWindow();
+			}
+			isHoveringMenuBarButton = GUI::IsItemHovered() ? true : isHoveringMenuBarButton;
+
+			if (GUI::ImageButton("CloseWindowButton", intptr_t(ResourceManager->GetEditorTexture(EEditorTexture::CloseWindow).GetShaderResourceView()), SVector2<F32>(menuElementHeight)))
+			{
+				PlatformManager->CloseWindow();
+			}
+			isHoveringMenuBarButton = GUI::IsItemHovered() ? true : isHoveringMenuBarButton;
 
 			GUI::EndMainMenuBar();
 		}
+
+		if (GUI::IsLeftMouseHeld() && !isHoveringMenuBarButton)
+			PlatformManager->UpdateWindowPos();
+		else
+			PlatformManager->UpdateRelativeCursorToWindowPos();
 
 		// Windows
 		for (const auto& window : Windows)

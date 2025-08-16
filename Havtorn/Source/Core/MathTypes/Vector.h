@@ -710,7 +710,7 @@ namespace Havtorn
 	template<typename T>
 	inline T SVector2<T>::SizeSquared() const
 	{
-		return this->SizeSquared();
+		return this->LengthSquared();
 	}
 
 	template<typename T>
