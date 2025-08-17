@@ -1754,19 +1754,14 @@ namespace Havtorn
 			GUI::SameLine(alignWidth * 0.5f - buttonSize.X * 0.5f + position);
 			
 			GUI::PushID(i);
-			if (button.IsIndented)
+			const SVector2<F32> uv0 = { 0.0f, 0.0f };
+			const SVector2<F32> uv1 = { 1.0f, 1.0f };
+			const std::vector<SColor>& colors = GUI::GetStyleColors();
+			const SColor buttonActiveColor = colors[STATIC_U64(EStyleColor::ButtonActive)];
+			const SColor buttonColor = button.IsIndented ? buttonActiveColor : SColor(0.0f, 0.0f, 0.0f, 0.0f);
+			if (GUI::ViewportButton("##Button", button.ImageRef, buttonSize, uv0, uv1, buttonColor))
 			{
-				const std::vector<SColor>& colors = GUI::GetStyleColors();
-				const SColor buttonActiveColor = colors[STATIC_U64(EStyleColor::ButtonActive)];
-				const SVector2<F32> uv0 = { 0.0f, 0.0f };
-				const SVector2<F32> uv1 = { 1.0f, 1.0f };
-				if (GUI::ViewportButton("##Button", button.ImageRef, buttonSize, uv0, uv1, buttonActiveColor))
-					button.Function();
-			}
-			else
-			{
-				if (GUI::ViewportButton("##Button", button.ImageRef, buttonSize))
-					button.Function();
+				button.Function();
 			}
 			GUI::PopID();
 		}
