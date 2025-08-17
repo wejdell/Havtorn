@@ -950,6 +950,46 @@ namespace Havtorn
 			return ImGui::ImageButton(label, (ImTextureID)(textureID), imSize, imUV0, imUV1, imColorBackground, imColorTint);
 		}
 
+		bool ViewportButton(const char* label, intptr_t textureID, const SVector2<F32>& size, const SVector2<F32>& uv0, const SVector2<F32>& uv1, const SColor& backgroundColor, const SColor& tintColor)
+		{
+			ImGuiContext& g = *GImGui;
+			ImGuiWindow* window = g.CurrentWindow;
+			if (window->SkipItems)
+				return false;
+
+			ImVec2 imSize = { size.X, size.Y };
+			ImVec2 imUV0 = { uv0.X, uv0.Y };
+			ImVec2 imUV1 = { uv1.X, uv1.Y };
+			SVector4 backgroundColorFloat = backgroundColor.AsVector4();
+			ImVec4 imColorBackground = { backgroundColorFloat.X, backgroundColorFloat.Y, backgroundColorFloat.Z, backgroundColorFloat.W };
+			SVector4 tintColorFloat = tintColor.AsVector4();
+			ImVec4 imColorTint = { tintColorFloat.X, tintColorFloat.Y, tintColorFloat.Z, tintColorFloat.W };
+
+			auto id = window->GetID(label);
+			const ImVec2 padding = g.Style.FramePadding;
+			const ImRect bb(window->DC.CursorPos, { window->DC.CursorPos.x + imSize.x + padding.x * 2.0f, window->DC.CursorPos.y + imSize.y + padding.y * 2.0f });
+			ImGui::ItemSize(bb);
+			if (!ImGui::ItemAdd(bb, id))
+				return false;
+
+			bool hovered, held;
+			bool pressed = ImGui::ButtonBehavior(bb, id, &hovered, &held, 0);
+
+			// Render
+			const ImU32 col = ImGui::GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+			ImGui::RenderNavCursor(bb, id);
+
+			ImGui::RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)ImMin(padding.x, padding.y), 0.0f, g.Style.FrameRounding));
+			if (imColorBackground.w > 0.0f)
+				window->DrawList->AddRectFilled({ bb.Min.x + 1.0f, bb.Min.y + 1.0f }, { bb.Max.x - 1.0f, bb.Max.y - 1.0f }, ImGui::GetColorU32(imColorBackground));
+
+			ImVec2 pMin = { bb.Min.x + padding.x, bb.Min.y + padding.y };			
+			ImVec2 pMax = { bb.Max.x - padding.x, bb.Max.y - padding.y };
+			window->DrawList->AddImage(textureID, pMin, pMax, imUV0, imUV1, ImGui::GetColorU32(imColorTint));
+
+			return pressed;
+		}
+
 		void AddRectFilled(const SVector2<F32>& cursorScreenPos, const SVector2<F32>& size, const SColor& color)
 		{
 			ImVec2 posMin = { cursorScreenPos.X, cursorScreenPos.Y };
@@ -1694,9 +1734,42 @@ namespace Havtorn
 		return Instance->Impl->ImageButton(label, imageRef, size, uv0, uv1, backgroundColor, tintColor);
 	}
 
+	bool GUI::ViewportButton(const char* label, intptr_t imageRef, const SVector2<F32>& size, const SVector2<F32>& uv0, const SVector2<F32>& uv1, const SColor& backgroundColor, const SColor& tintColor)
+	{
+		return Instance->Impl->ViewportButton(label, imageRef, size, uv0, uv1, backgroundColor, tintColor);
+	}
+
 	bool GUI::Checkbox(const char* label, bool& value)
 	{
 		return Instance->Impl->Checkbox(label, value);
+	}
+
+	void GUI::AddViewportButtons(const std::vector<SAlignedButtonData>& buttons, const SVector2<F32>& buttonSize, const F32 alignWidth)
+	{
+		for (U64 i = 0; i < buttons.size(); i++)
+		{
+			const SAlignedButtonData& button = buttons[i];
+			const F32 evennessOffset = (buttons.size() % 2 == 0) ? buttonSize.X : 0.0f;
+			const F32 position = buttonSize.X * 2.0f * (STATIC_F32(i) - UMath::Floor(STATIC_F32(buttons.size()) * 0.5f)) + evennessOffset;
+			GUI::SameLine(alignWidth * 0.5f - buttonSize.X * 0.5f + position);
+			
+			GUI::PushID(i);
+			if (button.IsIndented)
+			{
+				const std::vector<SColor>& colors = GUI::GetStyleColors();
+				const SColor buttonActiveColor = colors[STATIC_U64(EStyleColor::ButtonActive)];
+				const SVector2<F32> uv0 = { 0.0f, 0.0f };
+				const SVector2<F32> uv1 = { 1.0f, 1.0f };
+				if (GUI::ViewportButton("##Button", button.ImageRef, buttonSize, uv0, uv1, buttonActiveColor))
+					button.Function();
+			}
+			else
+			{
+				if (GUI::ViewportButton("##Button", button.ImageRef, buttonSize))
+					button.Function();
+			}
+			GUI::PopID();
+		}
 	}
 
 	SAssetPickResult GUI::AssetPicker(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryFunc& assetInspector)
