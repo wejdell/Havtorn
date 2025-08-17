@@ -19,7 +19,9 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
+# ==================== FOLDERS ====================
 set(ENGINE_FOLDER "Engine/")
+set(SHADER_FOLDER "Engine/Graphics/Shaders/")
 set(EDITOR_FOLDER "Editor/")
 set(GAME_FOLDER "Game/")
 set(GUI_FOLDER "GUI/")
@@ -28,6 +30,7 @@ set(PLATFORM_FOLDER "Platform/")
 set(LAUNCHER_FOLDER "Launcher/")
 set(EXTERNAL_FOLDER "../External/")
 set(WORKING_FOLDER "${CMAKE_BINARY_DIR}/../Bin/")
+# ==================== FOLDERS ====================
 
 set(COMMON_COMPILE_DEFINITIONS HV_PLATFORM_WINDOWS HV_DEBUG HV_ENABLE_ASSERTS _UNICODE UNICODE)
 set(COMMON_COMPILE_OPTIONS /W4 /WX /MP /ZI /JMC /fp:fast /FC)
@@ -398,9 +401,7 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Timer.h
 )
 
-# shaders
-set(SHADER_FOLDER "Engine/Graphics/Shaders/")
-
+# ==================== SHADERS ====================
 set(SHADER_INCLUDES 
     ${SHADER_FOLDER}Includes/DecalShaderStructs.hlsli
     ${SHADER_FOLDER}Includes/DeferredSamplingFunctions.hlsli
@@ -502,7 +503,7 @@ foreach(FILE ${HLSL_SHADER_FILES})
   get_filename_component(FILE_NAME ${FILE} NAME_WE)
   set_property(SOURCE ${FILE} PROPERTY VS_SHADER_OBJECT_FILE_NAME ${WORKING_FOLDER}Shaders/${FILE_NAME}.cso)
 endforeach(FILE)
-# !shaders
+# ==================== SHADERS ====================
 
 add_library(Engine SHARED ${ENGINE_FILES} ${SHADER_INCLUDES} ${HLSL_SHADER_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_FILES})
