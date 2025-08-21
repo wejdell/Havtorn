@@ -38,7 +38,6 @@ namespace Havtorn
 		Timer = new GTime();
 		InputMapper = new CInputMapper();
 		Framework = new CGraphicsFramework();
-		TextureBank = new CTextureBank();
 		RenderManager = new CRenderManager();
 		World = new CWorld();
 		ThreadManager = new CThreadManager();
@@ -53,7 +52,6 @@ namespace Havtorn
 		SAFE_DELETE(World);
 		SAFE_DELETE(DebugDraw);
 		SAFE_DELETE(RenderManager);
-		SAFE_DELETE(TextureBank);
 		SAFE_DELETE(Framework);
 		SAFE_DELETE(InputMapper);
 		SAFE_DELETE(Timer);
@@ -66,9 +64,8 @@ namespace Havtorn
 	{
 		ENGINE_ERROR_BOOL_MESSAGE(InputMapper->Init(platformManager), "Input Mapper could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(Framework->Init(platformManager), "Framework could not be initialized.");
-		ENGINE_ERROR_BOOL_MESSAGE(TextureBank->Init(Framework), "TextureBank could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(RenderManager->Init(Framework, platformManager), "RenderManager could not be initialized.");
-		ENGINE_ERROR_BOOL_MESSAGE(World->Init(RenderManager), "World could not be initialized.");
+		ENGINE_ERROR_BOOL_MESSAGE(World->Init(RenderManager, Framework), "World could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(ThreadManager->Init(RenderManager), "Thread Manager could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(FileWatcher->Init(ThreadManager), "File Watcher could not be initialized.");
 
@@ -139,11 +136,6 @@ namespace Havtorn
 	CFileWatcher* GEngine::GetFileWatcher()
 	{
 		return Instance->FileWatcher;
-	}
-
-	CTextureBank* GEngine::GetTextureBank()
-	{
-		return Instance->TextureBank;
 	}
 
 	CThreadManager* GEngine::GetThreadManager()

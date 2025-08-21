@@ -7,7 +7,7 @@
 #include <filesystem>
 
 #include <GUI.h>
-#include <Graphics/RenderingPrimitives/FullscreenTexture.h>
+#include <Graphics/RenderingPrimitives/RenderTexture.h>
 
 struct ID3D11Device;
 struct ID3D11DeviceContext;

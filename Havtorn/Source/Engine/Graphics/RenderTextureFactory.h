@@ -8,6 +8,8 @@ namespace Havtorn
 {
 	class CGraphicsFramework;
 	class CRenderTexture;
+	class CStaticRenderTexture;
+	class CGBuffer;
 	
 	class CRenderTextureFactory 
 	{
@@ -20,10 +22,12 @@ namespace Havtorn
 		CRenderTexture CreateTexture(SVector2<U16> size, DXGI_FORMAT format, const std::string& filePath);
 		CRenderTexture CreateDepth(SVector2<U16> size, DXGI_FORMAT format);
 
-		ENGINE_API CRenderTexture CreateSRVFromSource(const std::string& fileName);
-		ENGINE_API CRenderTexture CreateSRVFromAsset(const std::string& fileName);
+		ENGINE_API CRenderTexture CreateSRVFromSource(const std::string& filePath);
+		ENGINE_API CRenderTexture CreateSRVFromAsset(const std::string& filePath);
 
-		class CGBuffer CreateGBuffer(SVector2<U16> size);
+		ENGINE_API CStaticRenderTexture CreateStaticTexture(const std::string& filePath);
+
+		CGBuffer CreateGBuffer(SVector2<U16> size);
 
 	private:
 		CGraphicsFramework* Framework = nullptr;

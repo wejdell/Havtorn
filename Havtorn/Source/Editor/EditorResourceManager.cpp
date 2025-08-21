@@ -1,6 +1,7 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #include "EditorResourceManager.h"
+#include "EditorManager.h"
 #include "Graphics/GraphicsUtilities.h"
 #include "Graphics/RenderManager.h"
 #include "ModelImporter.h"
@@ -146,7 +147,14 @@ namespace Havtorn
 		case EAssetType::SkeletalMesh: // fallthrough
 		case EAssetType::Animation:
 		{
-			hvaPath = CreateAsset(destinationPath, UModelImporter::ImportFBX(filePath, importOptions));
+			// TODO.NW: Use asset registry
+			SSourceAssetData sourceData;
+			sourceData.AssetType = importOptions.AssetType;
+			sourceData.SourcePath = filePath;
+			sourceData.AssetDependencyPath = importOptions.AssetRep->DirectoryEntry.path().string();
+			sourceData.ImportScale = importOptions.Scale;
+		
+			hvaPath = CreateAsset(destinationPath, UModelImporter::ImportFBX(filePath, sourceData));
 		}
 		break;
 		case EAssetType::Texture:

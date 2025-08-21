@@ -19,7 +19,6 @@ namespace Havtorn
 	class CAudioManager;
 	class CFileSystem;
 	class CFileWatcher;
-	class CTextureBank;
 	class CSequencerSystem;
 	class CEngineProcess;
 	class IProcess;
@@ -27,7 +26,6 @@ namespace Havtorn
 	class GEngine
 	{
 		friend class CRenderManager;
-		friend class CTextureBank;
 		friend class CEditorProcess;
 		friend class CGameProcess;
 
@@ -42,7 +40,6 @@ namespace Havtorn
 		
 		static ENGINE_API CFileSystem* GetFileSystem();
 		static ENGINE_API CFileWatcher* GetFileWatcher();
-		static ENGINE_API CTextureBank* GetTextureBank();
 		static ENGINE_API CThreadManager* GetThreadManager();
 		static ENGINE_API CWorld* GetWorld();
 		static ENGINE_API CInputMapper* GetInput();
@@ -60,7 +57,6 @@ namespace Havtorn
 		CFileWatcher* FileWatcher = nullptr;
 		CThreadManager* ThreadManager = nullptr;
 		CGraphicsFramework* Framework = nullptr;
-		CTextureBank* TextureBank = nullptr;
 		CRenderManager* RenderManager = nullptr;
 		GTime* Timer = nullptr;
 		GDebugDraw* DebugDraw = nullptr;

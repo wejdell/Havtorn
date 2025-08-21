@@ -8,7 +8,7 @@ struct aiScene;
 
 namespace Havtorn
 {
-	struct SAssetImportOptions;
+	struct SSourceAssetData;
 
 	enum class EModelProperty
 	{
@@ -22,11 +22,11 @@ namespace Havtorn
 	class UModelImporter
 	{
 	public:
-		static ENGINE_API SAssetFileHeader ImportFBX(const std::string& filePath, const SAssetImportOptions& importOptions);
+		static ENGINE_API SAssetFileHeader ImportFBX(const std::string& filePath, const SSourceAssetData& sourceAssetData);
 
 	private:
-		static SStaticModelFileHeader ImportStaticMesh(const aiScene* assimpScene, const SAssetImportOptions& importOptions);
-		static SSkeletalModelFileHeader ImportSkeletalMesh(const aiScene* assimpScene, const SAssetImportOptions& importOptions);
-		static SSkeletalAnimationFileHeader ImportAnimation(const aiScene* assimpScene, const SAssetImportOptions& importOptions);
+		static SStaticModelFileHeader ImportStaticMesh(const aiScene* assimpScene, const SSourceAssetData& sourceAssetData);
+		static SSkeletalModelFileHeader ImportSkeletalMesh(const aiScene* assimpScene, const SSourceAssetData& sourceAssetData);
+		static SSkeletalAnimationFileHeader ImportAnimation(const aiScene* assimpScene, const SSourceAssetData& sourceAssetData);
 	};
 }

@@ -1,11 +1,11 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #include "hvpch.h"
-#include "FullscreenTextureFactory.h"
+#include "RenderTextureFactory.h"
 #include "GraphicsFramework.h"
 #include "GraphicsUtilities.h"
 
-#include "RenderingPrimitives/FullscreenTexture.h"
+#include "RenderingPrimitives/RenderTexture.h"
 #include "RenderingPrimitives/GBuffer.h"
 
 namespace Havtorn
@@ -230,17 +230,24 @@ namespace Havtorn
 		return returnDepth;
 	}
 
-	CRenderTexture CRenderTextureFactory::CreateSRVFromSource(const std::string& fileName)
+	CRenderTexture CRenderTextureFactory::CreateSRVFromSource(const std::string& filePath)
 	{
 		CRenderTexture returnTexture;
-		ENGINE_HR_MESSAGE(CreateShaderResourceViewFromSource(Framework->GetDevice(), fileName, &returnTexture.ShaderResource), "SRV could not be created from %s", fileName.c_str());
+		ENGINE_HR_MESSAGE(CreateShaderResourceViewFromSource(Framework->GetDevice(), filePath, &returnTexture.ShaderResource), "SRV could not be created from %s", filePath.c_str());
 		return std::move(returnTexture);
 	}
 
-	CRenderTexture CRenderTextureFactory::CreateSRVFromAsset(const std::string& fileName)
+	CRenderTexture CRenderTextureFactory::CreateSRVFromAsset(const std::string& filePath)
 	{
 		CRenderTexture returnTexture;
-		ENGINE_HR_MESSAGE(CreateShaderResourceViewFromAsset(Framework->GetDevice(), fileName, &returnTexture.ShaderResource), "SRV could not be created from %s", fileName.c_str());
+		ENGINE_HR_MESSAGE(CreateShaderResourceViewFromAsset(Framework->GetDevice(), filePath, &returnTexture.ShaderResource), "SRV could not be created from %s", filePath.c_str());
+		return std::move(returnTexture);
+	}
+
+	CStaticRenderTexture CRenderTextureFactory::CreateStaticTexture(const std::string& filePath)
+	{
+		CStaticRenderTexture returnTexture;
+		ENGINE_HR_MESSAGE(CreateShaderResourceViewFromSource(Framework->GetDevice(), filePath, &returnTexture.ShaderResource), "SRV could not be created from %s", filePath.c_str());
 		return std::move(returnTexture);
 	}
 

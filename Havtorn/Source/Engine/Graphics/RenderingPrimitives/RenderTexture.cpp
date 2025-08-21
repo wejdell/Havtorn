@@ -1,11 +1,37 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #include "hvpch.h"
-#include "FullScreenTexture.h"
+#include "RenderTexture.h"
 #include <d3d11.h>
 
 namespace Havtorn
 {
+	void CStaticRenderTexture::SetAsPSResourceOnSlot(U16 slot)
+	{
+		Context->PSSetShaderResources(slot, 1, &ShaderResource);
+	}
+
+	void CStaticRenderTexture::SetAsVSResourceOnSlot(U16 slot)
+	{
+		Context->VSSetShaderResources(slot, 1, &ShaderResource);
+	}
+
+	void CStaticRenderTexture::ReleaseTexture()
+	{
+		Context->Release();
+
+		if (ShaderResource)
+		{
+			ShaderResource->Release();
+			ShaderResource = nullptr;
+		}
+	}
+
+	intptr_t CStaticRenderTexture::GetResource() const
+	{
+		return (intptr_t)ShaderResource;
+	}
+
 	void CRenderTexture::ClearTexture(SVector4 clearColor)
 	{
 		Context->ClearRenderTargetView(RenderTarget, &clearColor.X);

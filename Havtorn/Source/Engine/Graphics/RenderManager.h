@@ -4,7 +4,7 @@
 #include "hvpch.h"
 #include "GraphicsFramework.h"
 #include "Renderers/FullscreenRenderer.h"
-#include "FullscreenTextureFactory.h"
+#include "RenderTextureFactory.h"
 #include "RenderStateManager.h"
 #include "GraphicsEnums.h"
 #include "GraphicsMaterial.h"
@@ -12,7 +12,7 @@
 #include "Scene/World.h"
 
 #include "RenderingPrimitives/DataBuffer.h"
-#include "RenderingPrimitives/FullscreenTexture.h"
+#include "RenderingPrimitives/RenderTexture.h"
 #include "RenderingPrimitives/GBuffer.h"
 
 #include <queue>
@@ -58,6 +58,8 @@ namespace Havtorn
 
 	class CRenderManager
 	{
+		friend CAssetRegistry;
+
 	public:
 		CRenderManager() = default;
 		~CRenderManager();
@@ -382,7 +384,6 @@ namespace Havtorn
 		struct SSkeletalMeshInstanceData
 		{
 			std::vector<SMatrix> Transforms{};
-			//std::vector<SVector2<U32>> AnimationData{};
 			std::vector<SMatrix> Bones{};
 			std::vector<SEntity> Entities{};
 		};

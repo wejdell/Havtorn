@@ -16,6 +16,7 @@ namespace Havtorn
 	struct STransformComponent;
 	class ISystem;
 	class CRenderManager;
+	class CGraphicsFramework;
 	class CAssetRegistry;
 	class CSequencerSystem;
 	class CScene;
@@ -132,7 +133,7 @@ namespace Havtorn
 		CWorld() = default;
 		~CWorld() = default;
 		
-		bool Init(CRenderManager* renderManager);
+		bool Init(CRenderManager* renderManager, CGraphicsFramework* framework);
 		void Update() const;
 
 		ENGINE_API void LoadScene(const std::string& filePath, CScene* outScene) const;
