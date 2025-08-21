@@ -10,10 +10,11 @@
 
 namespace Havtorn
 {
-	bool CWorld::Init(CRenderManager* renderManager)
+	bool CWorld::Init(CRenderManager* renderManager, CGraphicsFramework* framework)
 	{
 		RenderManager = renderManager;
 		AssetRegistry = std::make_unique<CAssetRegistry>();
+		AssetRegistry->Init(framework);
 		PhysicsWorld2D = std::make_unique<HexPhys2D::CPhysicsWorld2D>();
 		PhysicsWorld3D = std::make_unique<HexPhys3D::CPhysicsWorld3D>();
 

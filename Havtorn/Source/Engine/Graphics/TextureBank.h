@@ -10,7 +10,7 @@ namespace Havtorn
 
 	class CTextureBank
 	{
-		friend class GEngine;
+		friend class CAssetRegistry;
 
 	private:
 		CTextureBank() = default;
@@ -23,6 +23,7 @@ namespace Havtorn
 		ENGINE_API ID3D11ShaderResourceView* GetTexture(U32 index);
 		ENGINE_API std::string GetTexturePath(U32 index);
 
+		// Used by resource manager to put editor textures in bank, for use by editor rendering (of entity billboards and stuff)
 		ENGINE_API U32 AddTexture(ID3D11ShaderResourceView* srv);
 
 		ENGINE_API const std::vector<ID3D11ShaderResourceView*>& GetTextures();

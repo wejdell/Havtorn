@@ -8,14 +8,37 @@ struct ID3D11RenderTargetView;
 struct ID3D11DepthStencilView;
 struct ID3D11ShaderResourceView;
 struct D3D11_VIEWPORT;
-class CRenderTextureFactory;
 
 namespace Havtorn
 {
+	class CRenderTextureFactory;
+	class CGBuffer;
+
+	class CStaticRenderTexture
+	{
+		friend CRenderTextureFactory;
+
+	public:
+		CStaticRenderTexture() = default;
+		~CStaticRenderTexture() = default;
+		void SetAsPSResourceOnSlot(U16 slot);
+		void SetAsVSResourceOnSlot(U16 slot);
+		void ReleaseTexture();
+	
+		ENGINE_API intptr_t GetResource() const;
+
+	private:
+		ID3D11DeviceContext* Context = nullptr;
+		ID3D11ShaderResourceView* ShaderResource = nullptr;
+	};
+
 	// TODO.NW: Look over this class again. It's good to have an abstraction but now it's functioning as both SRV and render target/depth.
 	
 	class CRenderTexture
 	{
+		friend CRenderTextureFactory;
+		friend CGBuffer;
+	
 	public:
 		CRenderTexture() = default;
 		~CRenderTexture() = default;
@@ -42,9 +65,6 @@ namespace Havtorn
 		ENGINE_API ID3D11RenderTargetView* const GetRenderTargetView() const;
 		ENGINE_API ID3D11DepthStencilView* const GetDepthStencilView() const;
 		ENGINE_API D3D11_VIEWPORT* const GetViewport();
-
-		friend CRenderTextureFactory;
-		friend class CGBuffer;
 
 	private:
 		ID3D11DeviceContext* Context = nullptr;

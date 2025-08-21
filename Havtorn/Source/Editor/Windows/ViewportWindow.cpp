@@ -5,7 +5,7 @@
 #include "EditorManager.h"
 #include "EditorResourceManager.h"
 #include "Graphics/RenderManager.h"
-#include "Graphics/RenderingPrimitives/FullscreenTexture.h"
+#include "Graphics/RenderingPrimitives/RenderTexture.h"
 
 #include <Scene/Scene.h>
 #include <Scene/AssetRegistry.h>

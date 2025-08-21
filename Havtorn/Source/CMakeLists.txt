@@ -332,12 +332,10 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Graphics/Renderers/FullscreenRenderer.h
     ${ENGINE_FOLDER}Graphics/RenderingPrimitives/DataBuffer.cpp
     ${ENGINE_FOLDER}Graphics/RenderingPrimitives/DataBuffer.h
-    ${ENGINE_FOLDER}Graphics/RenderingPrimitives/FullscreenTexture.cpp
-    ${ENGINE_FOLDER}Graphics/RenderingPrimitives/FullscreenTexture.h
     ${ENGINE_FOLDER}Graphics/RenderingPrimitives/GBuffer.cpp
     ${ENGINE_FOLDER}Graphics/RenderingPrimitives/GBuffer.h
-    ${ENGINE_FOLDER}Graphics/FullscreenTextureFactory.cpp
-    ${ENGINE_FOLDER}Graphics/FullscreenTextureFactory.h
+    ${ENGINE_FOLDER}Graphics/RenderingPrimitives/RenderTexture.cpp
+    ${ENGINE_FOLDER}Graphics/RenderingPrimitives/RenderTexture.h
     ${ENGINE_FOLDER}Graphics/GeometryPrimitives.h
     ${ENGINE_FOLDER}Graphics/GraphicsEnums.h
     ${ENGINE_FOLDER}Graphics/GraphicsFramework.cpp
@@ -351,6 +349,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Graphics/RenderManager.h
     ${ENGINE_FOLDER}Graphics/RenderStateManager.cpp
     ${ENGINE_FOLDER}Graphics/RenderStateManager.h
+    ${ENGINE_FOLDER}Graphics/RenderTextureFactory.cpp
+    ${ENGINE_FOLDER}Graphics/RenderTextureFactory.h
     ${ENGINE_FOLDER}Graphics/TextureBank.cpp
     ${ENGINE_FOLDER}Graphics/TextureBank.h
     ${ENGINE_FOLDER}HexPhys/HexPhys.cpp
