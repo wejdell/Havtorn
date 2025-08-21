@@ -1,7 +1,9 @@
 import os
+import subprocess
 
 havtornLicense="// Copyright 2025 Team Havtorn. All Rights Reserved."
 
+#TODO make these constants
 folderChoices={
     "core",
     "platform",
@@ -56,7 +58,7 @@ choiceToActualFolder={
     'gui':"GUI/",
     'imgui':"../External/",
     'engine':"Engine/",
-    'shaderinclude':shaderFolder,
+    'shaderinclude':shaderFolder + "Includes/",
     'vertexshader':shaderFolder,
     'geometryshader':shaderFolder,
     'pixelshader':shaderFolder,
@@ -121,30 +123,35 @@ while(True):
 print()
 
 # TODO: need actual directory of chosen mainDirectory
-if not os.path.exists(additionalDirectories):
-    os.makedirs(additionalDirectories)
+if not os.path.exists(choiceToActualFolder[chosenMainFolder] + additionalDirectories):
+    os.makedirs(choiceToActualFolder[chosenMainFolder] + additionalDirectories)
 
 for fileName in filesToAdd:
     try:
-        with open(additionalDirectories + fileName, "x") as file:
+        with open(choiceToActualFolder[chosenMainFolder] + additionalDirectories + fileName, "x") as file:
             file.write(havtornLicense)
             print(f'> File "{file}" created')
     except FileExistsError:
         print(f'! "{additionalDirectories + fileName}" already exists')
 
 # TODO: add to CMakeList.txt
-#substring="set(ENGINE_FILES\n"
-#addLine="\t${ENGINE_FOLDER}Application/NewProcess.cpp\n"
-#fileAsLineList=list[str]
-#with open("TestFile.cpp", "r") as file: 
-#    fileAsLineList = file.readlines()
-#    print(fileAsLineList)
-#    fileAsLineList.insert(fileAsLineList.index(substring) + 1, addLine)
-#    # fileAsLineList.insert(len(fileAsLineList)+1, addLine) safe if this happens
-#    file.flush()
-#with open("TestFile.cpp", "w") as file:
-#    file.writelines(fileAsLineList)
+cmakeListFilePath="CMakeLists.txt"
+target=f"set({choiceToCMakeCollection[chosenMainFolder]}\n"
 
+for fileToAdd in filesToAdd:
+    entry=f"\t${{{choiceToCMakeFolderVar[chosenMainFolder]}}}{additionalDirectories}{fileToAdd}\n"
+    fileAsLineList=list[str]
+    with open(cmakeListFilePath, "r") as cmakeFile: 
+        fileAsLineList = cmakeFile.readlines()
+        # print(fileAsLineList)
+        fileAsLineList.insert(fileAsLineList.index(target) + 1, entry)
+        cmakeFile.flush()
+    with open(cmakeListFilePath, "w") as cmakeFile:
+        cmakeFile.writelines(fileAsLineList)
+
+subprocess.call([os.path.abspath("./../ProjectSetup/GenerateProjectFiles.bat"), "nopause"])
+
+input()
 
 # DirectoryMap map with key -> value: DirectoryName -> CMake variable, e.g: GUI -> GUI_FILES
 # ToGenerateList<string>
