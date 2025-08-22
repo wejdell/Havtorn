@@ -49,7 +49,6 @@ choiceToCollection={
     platform:"PLATFORM_FILES",
     gui:"GUI_FILES",
     imgui:"IMGUI_FILES",
-    imgui:"IMGUI_FILES",
     imguizmo:"IMGUI_FILES",
     imguinode:"IMGUI_FILES",
     engine:"ENGINE_FILES",
