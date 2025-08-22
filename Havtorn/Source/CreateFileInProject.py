@@ -10,20 +10,20 @@ from ValidationUtils import ValidationUtil
 havtornLicense="// Copyright 2025 Team Havtorn. All Rights Reserved."
 cmakeListFilePath="CMakeLists.txt"
 
-core = "core"
-platform = "platform"
-gui = "gui"
-imgui = "imgui"
-imguizmo = "imguizmo"
-imguinode = "imguinode"
-engine = "engine"
-shaderinclude = "shaderinclude"
-vertex = "vertexshader"
-geometry = "geometryshader"
-pixel = "pixelshader"
-game = "game"
-editor = "editor"
-launcher = "launcher"
+core = "core"# TEST
+platform = "platform"# TEST
+gui = "gui"# TEST
+imgui = "imgui"# TEST
+imguizmo = "imguizmo"# TEST
+imguinode = "imguinode"# TEST
+engine = "engine"# TEST
+shaderinclude = "shaderinclude"# TEST
+vertex = "vertexshader"# TEST
+geometry = "geometryshader"# TEST
+pixel = "pixelshader"# TEST
+game = "game"# TEST
+editor = "editor"# TEST
+launcher = "launcher"# TEST
 
 folderChoices={
     core,
