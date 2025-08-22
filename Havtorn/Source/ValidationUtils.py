@@ -45,7 +45,7 @@ class ValidationUtil:
 
     @staticmethod
     def validate_directory_name(direcotryname):
-        return validate_file_name(direcotryname)
+        return ValidationUtil.validate_file_name(direcotryname)
 
     @staticmethod
     def validate_file_extension(extension):
