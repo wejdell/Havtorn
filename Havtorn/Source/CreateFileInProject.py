@@ -14,6 +14,8 @@ core = "core"
 platform = "platform"
 gui = "gui"
 imgui = "imgui"
+imguizmo = "imguizmo"
+imguinode = "imguinode"
 engine = "engine"
 shaderinclude = "shaderinclude"
 vertex = "vertexshader"
@@ -28,6 +30,8 @@ folderChoices={
     platform,
     gui,
     imgui,
+    imguizmo,
+    imguinode,
     engine,
     shaderinclude,
     vertex,
@@ -45,6 +49,9 @@ choiceToCollection={
     platform:"PLATFORM_FILES",
     gui:"GUI_FILES",
     imgui:"IMGUI_FILES",
+    imgui:"IMGUI_FILES",
+    imguizmo:"IMGUI_FILES",
+    imguinode:"IMGUI_FILES",
     engine:"ENGINE_FILES",
     shaderinclude:"SHADER_INCLUDES",
     vertex:"VERTEX_SHADERS",
@@ -60,7 +67,9 @@ choiceToPath={
     core:"Core/",
     platform:"Platform/",
     gui:"GUI/",
-    imgui:"../External/",
+    imgui:"../External/imgui/",
+    imguizmo:"../External/ImGuizmo/",
+    imguinode:"../External/imgui-node-editor/",
     engine:"Engine/",
     shaderinclude:shaderFolder + "Includes/",
     vertex:shaderFolder,
@@ -76,9 +85,11 @@ choiceToCMakeFolderVar={
     core:"CORE_FOLDER",
     platform:"PLATFORM_FOLDER",
     gui:"GUI_FOLDER",
-    imgui:"EXTERNAL_FOLDER",
+    imgui:"IMGUI_FOLDER",
+    imguizmo:"IMGUIZMO_FOLDER",
+    imguinode:"IMGUI_NODE_FOLDER",
     engine:"ENGINE_FOLDER",
-    shaderinclude:"SHADER_FOLDER",
+    shaderinclude:"SHADER_INCL_FOLDER",
     vertex:"SHADER_FOLDER",
     geometry:"SHADER_FOLDER",
     pixel:"SHADER_FOLDER",
@@ -91,6 +102,7 @@ print("Pick a main directory:")
 for choice in folderChoices:
     print("\t" + choice)
 
+print()# for readability
 chosenMainFolder=""
 while(True):
     chosenMainFolder=input(">> Choose directory:")
@@ -99,6 +111,7 @@ while(True):
     else:
         print(f'! "{chosenMainFolder}" is not a valid choice')
 
+print()# for readability
 fileCommand = "-f"
 directoryCommand = "-d"
 undoFileCommand = "-uf"
