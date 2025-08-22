@@ -59,7 +59,6 @@ class ValidationUtil:
                 'hlsl',
                 'hlsli',
                 'txt',
-                'py',
                 'cs',
                 ],
             ## No special characters

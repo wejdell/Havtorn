@@ -5,6 +5,8 @@ import re
 from ValidationUtils import ValidationUtil
 
 # TODO: Look over if it is possible to restructure how CMakeLists and this script tracks directories -> Generate CMakeLists through script?
+
+# If more filetypes are added the characters used for the license comment need to be filtered
 havtornLicense="// Copyright 2025 Team Havtorn. All Rights Reserved."
 cmakeListFilePath="CMakeLists.txt"
 
@@ -67,6 +69,22 @@ choiceToPath={
     game:"Game/",
     editor:"Editor/",
     launcher:"Launcher/",
+    }
+
+# TODO: would be nice not to need this, if using a script to generate CMakeLists this could perhaps be avoided
+choiceToCMakeFolderVar={
+    core:"CORE_FOLDER",
+    platform:"PLATFORM_FOLDER",
+    gui:"GUI_FOLDER",
+    imgui:"EXTERNAL_FOLDER",
+    engine:"ENGINE_FOLDER",
+    shaderinclude:"SHADER_FOLDER",
+    vertex:"SHADER_FOLDER",
+    geometry:"SHADER_FOLDER",
+    pixel:"SHADER_FOLDER",
+    game:"GAME_FOLDER",
+    editor:"EDITOR_FOLDER",
+    launcher:"LAUNCHER_FOLDER",
     }
 
 print("Pick a main directory:")
@@ -174,7 +192,7 @@ for fileName in filesToAdd:
 # Read CMakeLists into a list of lines, append new entires and rewrite file
 target=f"set({choiceToCollection[chosenMainFolder]}\n"
 for fileToAdd in filesToAdd:
-    entry=f"\t${choiceToPath[chosenMainFolder]}{subDirectories}{fileToAdd}\n"
+    entry=f"\t${{{choiceToCMakeFolderVar[chosenMainFolder]}}}{subDirectories}{fileToAdd}\n"
     fileAsLineList=list[str]
     with open(cmakeListFilePath, "r") as cmakeFile: 
         fileAsLineList = cmakeFile.readlines()
