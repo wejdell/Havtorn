@@ -402,7 +402,7 @@ set(ENGINE_FILES
 )
 
 # ==================== SHADERS ====================
-set(SHADER_INCLUDES 
+set(SHADER_INCLUDES
     ${SHADER_FOLDER}Includes/DecalShaderStructs.hlsli
     ${SHADER_FOLDER}Includes/DeferredSamplingFunctions.hlsli
     ${SHADER_FOLDER}Includes/DeferredShaderStructs.hlsli
@@ -418,7 +418,7 @@ set(SHADER_INCLUDES
     ${SHADER_FOLDER}Includes/SpriteShaderStructs.hlsli
     ${SHADER_FOLDER}Includes/VolumetricLightShaderStructs.hlsli
 )
-set(VERTEX_SHADERS 
+set(VERTEX_SHADERS
     ${SHADER_FOLDER}Decal_VS.hlsl
     ${SHADER_FOLDER}DeferredInstancedAnimation_VS.hlsl
     ${SHADER_FOLDER}DeferredInstancedAnimationEditor_VS.hlsl
@@ -435,13 +435,13 @@ set(VERTEX_SHADERS
     ${SHADER_FOLDER}SpriteInstanced_VS.hlsl
     ${SHADER_FOLDER}SpriteInstancedEditor_VS.hlsl
 )
-set(GEOMETRY_SHADERS 
+set(GEOMETRY_SHADERS
     ${SHADER_FOLDER}Line_GS.hlsl
     ${SHADER_FOLDER}SpriteScreenSpace_GS.hlsl
     ${SHADER_FOLDER}SpriteWorldSpace_GS.hlsl
     ${SHADER_FOLDER}SpriteWorldSpaceEditor_GS.hlsl
 )
-set(PIXEL_SHADERS 
+set(PIXEL_SHADERS
     ${SHADER_FOLDER}Decal_Albedo_PS.hlsl
     ${SHADER_FOLDER}Decal_Material_PS.hlsl
     ${SHADER_FOLDER}Decal_Normal_PS.hlsl
