@@ -22,6 +22,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 # ==================== FOLDERS ====================
 set(ENGINE_FOLDER "Engine/")
 set(SHADER_FOLDER "Engine/Graphics/Shaders/")
+set(SHADER_INCL_FOLDER "Engine/Graphics/Shaders/Includes/")
 set(EDITOR_FOLDER "Editor/")
 set(GAME_FOLDER "Game/")
 set(GUI_FOLDER "GUI/")
@@ -29,6 +30,9 @@ set(CORE_FOLDER "Core/")
 set(PLATFORM_FOLDER "Platform/")
 set(LAUNCHER_FOLDER "Launcher/")
 set(EXTERNAL_FOLDER "../External/")
+set(IMGUI_FOLDER "../External/imgui/")
+set(IMGUIZMO_FOLDER "../External/ImGuizmo/")
+set(IMGUI_NODE_FOLDER "../External/imgui-node-editor/")
 set(WORKING_FOLDER "${CMAKE_BINARY_DIR}/../Bin/")
 # ==================== FOLDERS ====================
 
@@ -135,55 +139,55 @@ set(GUI_FILES
    ${GUI_FOLDER}FuzzySearch.h
 )
 set(IMGUI_FILES
-   ${EXTERNAL_FOLDER}imgui/imconfig.h
-   ${EXTERNAL_FOLDER}imgui/imgui.cpp
-   ${EXTERNAL_FOLDER}imgui/imgui.h
-   ${EXTERNAL_FOLDER}imgui/imgui_demo.cpp
-   ${EXTERNAL_FOLDER}imgui/imgui_draw.cpp
-   ${EXTERNAL_FOLDER}imgui/imgui_internal.h
-   ${EXTERNAL_FOLDER}imgui/imgui_tables.cpp
-   ${EXTERNAL_FOLDER}imgui/imgui_widgets.cpp
-   ${EXTERNAL_FOLDER}imgui/imstb_rectpack.h
-   ${EXTERNAL_FOLDER}imgui/imstb_textedit.h
-   ${EXTERNAL_FOLDER}imgui/imstb_truetype.h
-   ${EXTERNAL_FOLDER}imgui/backends/imgui_impl_dx11.cpp
-   ${EXTERNAL_FOLDER}imgui/backends/imgui_impl_dx11.h
-   ${EXTERNAL_FOLDER}imgui/backends/imgui_impl_win32.cpp
-   ${EXTERNAL_FOLDER}imgui/backends/imgui_impl_win32.h
-   ${EXTERNAL_FOLDER}imgui/misc/debuggers/imgui.natvis
-   ${EXTERNAL_FOLDER}imgui/misc/debuggers/imgui.natstepfilter
-   ${EXTERNAL_FOLDER}imgui/misc/cpp/imgui_stdlib.cpp
-   ${EXTERNAL_FOLDER}imgui/misc/cpp/imgui_stdlib.h
-   ${EXTERNAL_FOLDER}ImGuizmo/GraphEditor.cpp
-   ${EXTERNAL_FOLDER}ImGuizmo/GraphEditor.h
-   ${EXTERNAL_FOLDER}ImGuizmo/ImCurveEdit.cpp
-   ${EXTERNAL_FOLDER}ImGuizmo/ImCurveEdit.h
-   ${EXTERNAL_FOLDER}ImGuizmo/ImCurveEdit.cpp
-   ${EXTERNAL_FOLDER}ImGuizmo/ImCurveEdit.h
-   ${EXTERNAL_FOLDER}ImGuizmo/ImGradient.cpp
-   ${EXTERNAL_FOLDER}ImGuizmo/ImGradient.h
-   ${EXTERNAL_FOLDER}ImGuizmo/ImGuizmo.cpp
-   ${EXTERNAL_FOLDER}ImGuizmo/ImGuizmo.h
-   ${EXTERNAL_FOLDER}ImGuizmo/ImSequencer.cpp
-   ${EXTERNAL_FOLDER}ImGuizmo/ImSequencer.h
-   ${EXTERNAL_FOLDER}ImGuizmo/ImZoomSlider.h
-   ${EXTERNAL_FOLDER}imgui-node-editor/crude_json.cpp
-   ${EXTERNAL_FOLDER}imgui-node-editor/crude_json.h
-   ${EXTERNAL_FOLDER}imgui-node-editor/imgui_bezier_math.h
-   ${EXTERNAL_FOLDER}imgui-node-editor/imgui_canvas.cpp
-   ${EXTERNAL_FOLDER}imgui-node-editor/imgui_canvas.h
-   ${EXTERNAL_FOLDER}imgui-node-editor/imgui_extra_math.h
-   ${EXTERNAL_FOLDER}imgui-node-editor/imgui_node_editor.cpp
-   ${EXTERNAL_FOLDER}imgui-node-editor/imgui_node_editor.h
-   ${EXTERNAL_FOLDER}imgui-node-editor/imgui_node_editor.h
-   ${EXTERNAL_FOLDER}imgui-node-editor/imgui_node_editor_api.cpp
-   ${EXTERNAL_FOLDER}imgui-node-editor/imgui_node_editor_internal.h
-   ${EXTERNAL_FOLDER}imgui-node-editor/utilities/builders.cpp
-   ${EXTERNAL_FOLDER}imgui-node-editor/utilities/builders.h
-   ${EXTERNAL_FOLDER}imgui-node-editor/utilities/drawing.cpp
-   ${EXTERNAL_FOLDER}imgui-node-editor/utilities/drawing.h
-   ${EXTERNAL_FOLDER}imgui-node-editor/utilities/widgets.cpp
-   ${EXTERNAL_FOLDER}imgui-node-editor/utilities/widgets.h
+   ${IMGUI_FOLDER}imconfig.h
+   ${IMGUI_FOLDER}imgui.cpp
+   ${IMGUI_FOLDER}imgui.h
+   ${IMGUI_FOLDER}imgui_demo.cpp
+   ${IMGUI_FOLDER}imgui_draw.cpp
+   ${IMGUI_FOLDER}imgui_internal.h
+   ${IMGUI_FOLDER}imgui_tables.cpp
+   ${IMGUI_FOLDER}imgui_widgets.cpp
+   ${IMGUI_FOLDER}imstb_rectpack.h
+   ${IMGUI_FOLDER}imstb_textedit.h
+   ${IMGUI_FOLDER}imstb_truetype.h
+   ${IMGUI_FOLDER}backends/imgui_impl_dx11.cpp
+   ${IMGUI_FOLDER}backends/imgui_impl_dx11.h
+   ${IMGUI_FOLDER}backends/imgui_impl_win32.cpp
+   ${IMGUI_FOLDER}backends/imgui_impl_win32.h
+   ${IMGUI_FOLDER}misc/debuggers/imgui.natvis
+   ${IMGUI_FOLDER}misc/debuggers/imgui.natstepfilter
+   ${IMGUI_FOLDER}misc/cpp/imgui_stdlib.cpp
+   ${IMGUI_FOLDER}misc/cpp/imgui_stdlib.h
+   ${IMGUIZMO_FOLDER}GraphEditor.cpp
+   ${IMGUIZMO_FOLDER}GraphEditor.h
+   ${IMGUIZMO_FOLDER}ImCurveEdit.cpp
+   ${IMGUIZMO_FOLDER}ImCurveEdit.h
+   ${IMGUIZMO_FOLDER}ImCurveEdit.cpp
+   ${IMGUIZMO_FOLDER}ImCurveEdit.h
+   ${IMGUIZMO_FOLDER}ImGradient.cpp
+   ${IMGUIZMO_FOLDER}ImGradient.h
+   ${IMGUIZMO_FOLDER}ImGuizmo.cpp
+   ${IMGUIZMO_FOLDER}ImGuizmo.h
+   ${IMGUIZMO_FOLDER}ImSequencer.cpp
+   ${IMGUIZMO_FOLDER}ImSequencer.h
+   ${IMGUIZMO_FOLDER}ImZoomSlider.h
+   ${IMGUI_NODE_FOLDER}crude_json.cpp
+   ${IMGUI_NODE_FOLDER}crude_json.h
+   ${IMGUI_NODE_FOLDER}imgui_bezier_math.h
+   ${IMGUI_NODE_FOLDER}imgui_canvas.cpp
+   ${IMGUI_NODE_FOLDER}imgui_canvas.h
+   ${IMGUI_NODE_FOLDER}imgui_extra_math.h
+   ${IMGUI_NODE_FOLDER}imgui_node_editor.cpp
+   ${IMGUI_NODE_FOLDER}imgui_node_editor.h
+   ${IMGUI_NODE_FOLDER}imgui_node_editor.h
+   ${IMGUI_NODE_FOLDER}imgui_node_editor_api.cpp
+   ${IMGUI_NODE_FOLDER}imgui_node_editor_internal.h
+   ${IMGUI_NODE_FOLDER}utilities/builders.cpp
+   ${IMGUI_NODE_FOLDER}utilities/builders.h
+   ${IMGUI_NODE_FOLDER}utilities/drawing.cpp
+   ${IMGUI_NODE_FOLDER}utilities/drawing.h
+   ${IMGUI_NODE_FOLDER}utilities/widgets.cpp
+   ${IMGUI_NODE_FOLDER}utilities/widgets.h
 )
 add_library(GUI SHARED ${GUI_FILES} ${IMGUI_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GUI_FILES})
@@ -403,20 +407,20 @@ set(ENGINE_FILES
 
 # ==================== SHADERS ====================
 set(SHADER_INCLUDES
-    ${SHADER_FOLDER}Includes/DecalShaderStructs.hlsli
-    ${SHADER_FOLDER}Includes/DeferredSamplingFunctions.hlsli
-    ${SHADER_FOLDER}Includes/DeferredShaderStructs.hlsli
-    ${SHADER_FOLDER}Includes/DetailNormalHelpers.hlsli
-    ${SHADER_FOLDER}Includes/FullscreenShaderStructs.hlsli
-    ${SHADER_FOLDER}Includes/LineShaderStructs.hlsli
-    ${SHADER_FOLDER}Includes/MathHelpers.hlsli
-    ${SHADER_FOLDER}Includes/PBRAmbientLighting.hlsli
-    ${SHADER_FOLDER}Includes/PBRDirectLighting.hlsli
-    ${SHADER_FOLDER}Includes/PointLightShaderStructs.hlsli
-    ${SHADER_FOLDER}Includes/ShadowSampling.hlsli
-    ${SHADER_FOLDER}Includes/SpotLightShaderStructs.hlsli
-    ${SHADER_FOLDER}Includes/SpriteShaderStructs.hlsli
-    ${SHADER_FOLDER}Includes/VolumetricLightShaderStructs.hlsli
+    ${SHADER_INCL_FOLDER}DecalShaderStructs.hlsli
+    ${SHADER_INCL_FOLDER}DeferredSamplingFunctions.hlsli
+    ${SHADER_INCL_FOLDER}DeferredShaderStructs.hlsli
+    ${SHADER_INCL_FOLDER}DetailNormalHelpers.hlsli
+    ${SHADER_INCL_FOLDER}FullscreenShaderStructs.hlsli
+    ${SHADER_INCL_FOLDER}LineShaderStructs.hlsli
+    ${SHADER_INCL_FOLDER}MathHelpers.hlsli
+    ${SHADER_INCL_FOLDER}PBRAmbientLighting.hlsli
+    ${SHADER_INCL_FOLDER}PBRDirectLighting.hlsli
+    ${SHADER_INCL_FOLDER}PointLightShaderStructs.hlsli
+    ${SHADER_INCL_FOLDER}ShadowSampling.hlsli
+    ${SHADER_INCL_FOLDER}SpotLightShaderStructs.hlsli
+    ${SHADER_INCL_FOLDER}SpriteShaderStructs.hlsli
+    ${SHADER_INCL_FOLDER}VolumetricLightShaderStructs.hlsli
 )
 set(VERTEX_SHADERS
     ${SHADER_FOLDER}Decal_VS.hlsl
