@@ -54,7 +54,7 @@ namespace Havtorn
                     data = { nullptr };
                 break;
             case EPinType::Asset:
-                data = SAsset{ assetType };
+                data = "";
                 break;
             }
 

@@ -109,9 +109,6 @@ namespace Havtorn
 		locomotionNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Move Left"), moveLeft);
 		locomotionNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Move Right"), moveRight);
 
-		CAssetRegistry* assetRegistry = GEngine::GetWorld()->GetAssetRegistry();
-		GetComponent<SSpriteComponent>(ghosty)->AssetRegistryKey = assetRegistry->Register(spritePath);
-
 		//SSequencerComponent& sequencerComponent = AddSequencerComponentToEntity(*ghosty);
 		//sequencerComponent.ComponentTracks.push_back({ EComponentType::TransformComponent });
 		//sequencerComponent.ComponentTracks.push_back({ EComponentType::SpriteComponent });
@@ -175,13 +172,10 @@ namespace Havtorn
 		DefaultSerializer(GetComponents<SGhostyComponent>(), toData, pointerPosition);
 	}
 
-	void CGameScene::Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry)
+	void CGameScene::Deserialize(const char* fromData, U64& pointerPosition)
 	{
-		CScene::Deserialize(fromData, pointerPosition, assetRegistry);
+		CScene::Deserialize(fromData, pointerPosition);
 
-		{
-			std::vector<SGhostyComponent> components;
-			DefaultDeserializer(components, &SGhostyComponentEditorContext::Context, fromData, pointerPosition);
-		}
+		DefaultDeserializer<SGhostyComponent>(&SGhostyComponentEditorContext::Context, fromData, pointerPosition);
     }
 }

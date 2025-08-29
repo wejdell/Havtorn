@@ -26,6 +26,7 @@
 #include <PlatformManager.h>
 #include <Color.h>
 #include <Timer.h>
+#include <Scene/AssetRegistry.h>
 
 namespace Havtorn
 {
@@ -708,8 +709,9 @@ namespace Havtorn
 
 		if (SStaticMeshComponent* staticMesh = CurrentScene->GetComponent<SStaticMeshComponent>(firstSelectedEntity))
 		{
-			center = staticMesh->BoundsCenter;
-			bounds = SVector::GetAbsMaxKeepValue(staticMesh->BoundsMax, staticMesh->BoundsMin);
+			SStaticMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMesh->AssetReference, 300);
+			center = meshAsset->BoundsCenter;
+			bounds = SVector::GetAbsMaxKeepValue(meshAsset->BoundsMax, meshAsset->BoundsMin);
 			foundBounds = true;
 		}
 

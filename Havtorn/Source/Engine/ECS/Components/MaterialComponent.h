@@ -3,6 +3,7 @@
 #pragma once
 #include "ECS/Component.h"
 #include "Graphics/GraphicsMaterial.h"
+#include "Filesystem/FileHeaderDeclarations.h"
 
 namespace Havtorn
 {
@@ -17,7 +18,6 @@ namespace Havtorn
 		void Deserialize(const char* fromData, U64& pointerPosition);
 		[[nodiscard]] U32 GetSize() const;
 
-		std::vector<SEngineGraphicsMaterial> Materials;
-		std::vector<U64> AssetRegistryKeys = {};
+		std::vector<SAssetReference> AssetReferences;
 	};
 }

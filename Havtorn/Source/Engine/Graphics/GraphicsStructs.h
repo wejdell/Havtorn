@@ -192,7 +192,7 @@ namespace Havtorn
 	struct SRuntimeGraphicsMaterialProperty
 	{
 		F32 ConstantValue = -1.0f;
-		F32 TextureIndex = 0.0f;
+		F32 TextureUID = 0.0f;
 		F32 TextureChannelIndex = -1.0f;
 		F32 Padding = 0.0f;
 	};
@@ -200,7 +200,7 @@ namespace Havtorn
 	struct SEngineGraphicsMaterialProperty
 	{
 		F32 ConstantValue = -1.0f;
-		U16 TextureIndex = 0;
+		U16 TextureUID = 0;
 		I16 TextureChannelIndex = -1;
 	};
 

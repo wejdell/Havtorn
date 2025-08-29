@@ -461,7 +461,7 @@ namespace Havtorn
 		std::string texturePath2 = NewMaterialTextures[2]->DirectoryEntry.path().string();
 
 		SMaterialAssetFileHeader fileHeader;
-		fileHeader.MaterialName = "M_" + NewAssetName;
+		fileHeader.Name = "M_" + NewAssetName;
 		fileHeader.Material.Properties[0] = { -1.0f, texturePath0, 0 };
 		fileHeader.Material.Properties[1] = { -1.0f, texturePath0, 1 };
 		fileHeader.Material.Properties[2] = { -1.0f, texturePath0, 2 };

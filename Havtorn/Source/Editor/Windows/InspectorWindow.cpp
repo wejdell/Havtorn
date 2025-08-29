@@ -191,44 +191,35 @@ namespace Havtorn
 		std::string modalNameToOpen = "";
 		std::string defaultAssetDirectory = "";
 
-		if (SStaticMeshComponent* staticMeshComponent = dynamic_cast<SStaticMeshComponent*>(result.ComponentViewed))
+		if (result.AssetType == EAssetType::StaticMesh && result.AssetReference != nullptr)
 		{
-			assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(staticMeshComponent->Name.AsString()));
+			assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(result.AssetReference->FilePath));
 			modalNameToOpen = SelectMeshAssetModalName;
 			defaultAssetDirectory = DefaultMeshAssetDirectory;
 		}
-		else if (SMaterialComponent* materialComponent = dynamic_cast<SMaterialComponent*>(result.ComponentViewed))
+		else if (result.AssetType == EAssetType::Material && result.AssetReferences != nullptr)
 		{
-			if(materialComponent->Materials.size() == 0)
-				assetNames.push_back("");
-			
-			for (auto& material : materialComponent->Materials)
-				assetNames.push_back(material.Name);
+			for (const std::string& path : SAssetReference::GetPaths(*result.AssetReferences))
+				assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(path));
 
 			modalNameToOpen = SelectMaterialAssetModalName;
 			defaultAssetDirectory = DefaultMaterialAssetDirectory;
 		}
-		else if (SDecalComponent* decalComponent = dynamic_cast<SDecalComponent*>(result.ComponentViewed))
-		{
-			for (U16 textureRef : decalComponent->TextureReferences)
-				assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(GEngine::GetTextureBank()->GetTexturePath(static_cast<U32>(textureRef))));
+		//else if (result.AssetType == EAssetType:: && result.AssetReferences != nullptr)
+		//{
+		//	for (U16 textureRef : decalComponent->TextureReferences)
+		//		assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(GEngine::GetTextureBank()->GetTexturePath(static_cast<U32>(textureRef))));
 
-			modalNameToOpen = SelectTextureAssetModalName;
-			defaultAssetDirectory = DefaultTextureAssetDirectory;
-			assetLabels.push_back("Albedo");
-			assetLabels.push_back("Material");
-			assetLabels.push_back("Normal");
-			// TODO.NW: Figure out the nicest way to deal with labels vs asset names. Would be cool with a drop down similar to UE. See Notes
-		}
-		else if (SEnvironmentLightComponent* environmentLightComponent = dynamic_cast<SEnvironmentLightComponent*>(result.ComponentViewed))
+		//	modalNameToOpen = SelectTextureAssetModalName;
+		//	defaultAssetDirectory = DefaultTextureAssetDirectory;
+		//	assetLabels.push_back("Albedo");
+		//	assetLabels.push_back("Material");
+		//	assetLabels.push_back("Normal");
+		//	// TODO.NW: Figure out the nicest way to deal with labels vs asset names. Would be cool with a drop down similar to UE. See Notes
+		//}
+		else if (result.AssetType == EAssetType::Texture && result.AssetReference != nullptr)
 		{
-			assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(GEngine::GetTextureBank()->GetTexturePath(static_cast<U32>(environmentLightComponent->AmbientCubemapReference))));
-			modalNameToOpen = SelectTextureAssetModalName;
-			defaultAssetDirectory = DefaultTextureAssetDirectory;
-		}
-		else if (SSpriteComponent* spriteComponent = dynamic_cast<SSpriteComponent*>(result.ComponentViewed))
-		{
-			assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(GEngine::GetTextureBank()->GetTexturePath(static_cast<U32>(spriteComponent->TextureIndex))));
+			assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(result.AssetReference->FilePath));
 			modalNameToOpen = SelectTextureAssetModalName;
 			defaultAssetDirectory = DefaultTextureAssetDirectory;
 		}
@@ -238,15 +229,15 @@ namespace Havtorn
 			modalNameToOpen = SelectScriptAssetModalName;
 			defaultAssetDirectory = DefaultScriptAssetDirectory;
 		}
-		else if (SSkeletalMeshComponent* skeletonComponent = dynamic_cast<SSkeletalMeshComponent*>(result.ComponentViewed))
+		else if (result.AssetType == EAssetType::SkeletalMesh && result.AssetReference != nullptr)
 		{
-			assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(skeletonComponent->Name.AsString()));
+			assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(result.AssetReference->FilePath));
 			modalNameToOpen = SelectSkeletonAssetModalName;
 			defaultAssetDirectory = DefaultMeshAssetDirectory;
 		}
-		else if (SSkeletalAnimationComponent* skeletalAnimationComponent = dynamic_cast<SSkeletalAnimationComponent*>(result.ComponentViewed))
+		else if (result.AssetType == EAssetType::Animation && result.AssetReference != nullptr)
 		{
-			assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(skeletalAnimationComponent->AssetName));
+			assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(result.AssetReference->FilePath));
 			modalNameToOpen = SelectSkeletonAssetModalName;
 			defaultAssetDirectory = DefaultMeshAssetDirectory;
 		}
@@ -375,23 +366,30 @@ namespace Havtorn
 		if (materialComponent == nullptr)
 			return;
 
+		std::vector<std::string> paths = SAssetReference::GetPaths(materialComponent->AssetReferences);
+		paths[AssetPickedIndex] = assetRep->DirectoryEntry.path().string();
+
 		// TODO.NW: This doesn't work for instanced entities yet. Need a solution for that
-		Manager->GetRenderManager()->TryReplaceMaterialOnComponent(assetRep->DirectoryEntry.path().string(), AssetPickedIndex, materialComponent);
+		Manager->GetRenderManager()->LoadMaterialComponent(paths, materialComponent);
 		AssetPickedIndex = 0;
 	}
 
 	void CInspectorWindow::HandleTextureAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep)
 	{
-		U16 textureReference = static_cast<U16>(GEngine::GetTextureBank()->GetTextureIndex(assetRep->DirectoryEntry.path().string()));
+		//U16 textureReference = static_cast<U16>(GEngine::GetTextureBank()->GetTextureIndex(assetRep->DirectoryEntry.path().string()));
 
-		if (SDecalComponent* decalComponent = dynamic_cast<SDecalComponent*>(result.ComponentViewed))
-			decalComponent->TextureReferences[AssetPickedIndex] = textureReference;
+		//if (SDecalComponent* decalComponent = dynamic_cast<SDecalComponent*>(result.ComponentViewed))
+		//	decalComponent->TextureReferences[AssetPickedIndex] = textureReference;
 
-		if (SEnvironmentLightComponent* environmentLightComponent = dynamic_cast<SEnvironmentLightComponent*>(result.ComponentViewed))
-			environmentLightComponent->AmbientCubemapReference = textureReference;
+		//if (SEnvironmentLightComponent* environmentLightComponent = dynamic_cast<SEnvironmentLightComponent*>(result.ComponentViewed))
+		//	environmentLightComponent->AmbientCubemapReference = textureReference;
 
-		if (SSpriteComponent* spriteComponent = dynamic_cast<SSpriteComponent*>(result.ComponentViewed))
-			spriteComponent->TextureIndex = textureReference;
+		//if (SSpriteComponent* spriteComponent = dynamic_cast<SSpriteComponent*>(result.ComponentViewed))
+		//	spriteComponent->TextureUID = textureReference;
+		if (result.AssetReference == nullptr)
+			return;
+
+		*result.AssetReference = SAssetReference(assetRep->DirectoryEntry.path().string());
 	}
 
 	void CInspectorWindow::HandleScriptAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep)

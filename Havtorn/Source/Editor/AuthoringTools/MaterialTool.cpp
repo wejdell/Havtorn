@@ -9,6 +9,7 @@
 #include <Input/InputMapper.h>
 #include <Input/InputTypes.h>
 #include <Timer.h>
+#include <Scene/AssetRegistry.h>
 
 #include "MaterialTool.h"
 
@@ -58,7 +59,7 @@ namespace Havtorn
 			if (GUI::Button("Save"))
 			{
 				SMaterialAssetFileHeader asset;
-				asset.MaterialName = MaterialData.Name;
+				asset.Name = MaterialData.Name;
 				asset.Material.RecreateZ = MaterialData.RecreateNormalZ;
 
 				// TODO.NW: Need better way to transfer between runtime assets and disk, both ways
@@ -67,7 +68,9 @@ namespace Havtorn
 						auto& offlineProperty = asset.Material.Properties[offlinePropertyIndex];
 						offlineProperty.ConstantValue = assetProperty.ConstantValue;
 						offlineProperty.TextureChannelIndex = STATIC_I16(assetProperty.TextureChannelIndex);
-						offlineProperty.TexturePath = GEngine::GetTextureBank()->GetTexturePath(STATIC_U32(assetProperty.TextureIndex));
+						// TODO.NW: List constexpr requesters somewhere
+						SAsset* textureAsset = GEngine::GetAssetRegistry()->RequestAsset(STATIC_U32(assetProperty.TextureUID), 300);
+						offlineProperty.TexturePath = textureAsset->Reference.FilePath;
 					};
 
 				fillProperty(MaterialData.AlbedoR, 0);
@@ -122,7 +125,8 @@ namespace Havtorn
 					
 					if (property.ConstantValue < 0.0f)
 					{
-						auto assetRep = Manager->GetAssetRepFromName(UGeneralUtils::ExtractFileBaseNameFromPath(GEngine::GetTextureBank()->GetTexturePath(STATIC_U32(property.TextureIndex)))).get();
+						std::string assetPath = GEngine::GetAssetRegistry()->RequestAsset(STATIC_U32(property.TextureUID), 300)->Reference.FilePath;
+						auto assetRep = Manager->GetAssetRepFromName(UGeneralUtils::ExtractFileBaseNameFromPath(assetPath)).get();
 
 						intptr_t assetPickerThumbnail = assetRep != nullptr ? (intptr_t)assetRep->TextureRef.GetShaderResourceView() : intptr_t();
 						std::string pickerLabel = "";
@@ -135,7 +139,7 @@ namespace Havtorn
 						if (result.State == EAssetPickerState::AssetPicked)
 						{
 							assetRep = Manager->GetAssetRepFromDirEntry(result.PickedEntry).get();
-							property.TextureIndex = STATIC_F32(GEngine::GetTextureBank()->GetTextureIndex(assetRep->DirectoryEntry.path().string()));
+							property.TextureUID = STATIC_F32(SAssetReference(assetRep->DirectoryEntry.path().string()).UID);
 						}
 						I32 channelIndex = UMath::Clamp(STATIC_I32(property.TextureChannelIndex), 0, 3);
 						GUI::InputInt("Texture Channel Index", channelIndex, 1);

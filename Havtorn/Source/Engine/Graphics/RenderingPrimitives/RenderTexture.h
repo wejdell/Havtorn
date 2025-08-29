@@ -12,11 +12,13 @@ struct D3D11_VIEWPORT;
 namespace Havtorn
 {
 	class CRenderTextureFactory;
+	class CRenderTexture;
 	class CGBuffer;
 
 	class CStaticRenderTexture
 	{
 		friend CRenderTextureFactory;
+		friend CRenderTexture;
 
 	public:
 		CStaticRenderTexture() = default;
@@ -25,7 +27,10 @@ namespace Havtorn
 		void SetAsVSResourceOnSlot(U16 slot);
 		void ReleaseTexture();
 	
+		// TODO.NW: This is silly. We should unify our render calls so they may all take a RenderTexture instead
 		ENGINE_API intptr_t GetResource() const;
+		ENGINE_API ID3D11ShaderResourceView* GetShaderResource() const;
+		ENGINE_API ID3D11ShaderResourceView* const* GetShaderResourceView() const;
 
 	private:
 		ID3D11DeviceContext* Context = nullptr;
@@ -42,6 +47,7 @@ namespace Havtorn
 	public:
 		CRenderTexture() = default;
 		~CRenderTexture() = default;
+		ENGINE_API CRenderTexture(const CStaticRenderTexture& staticTexture);
 		void ClearTexture(SVector4 clearColor = { 0.0f, 0.0f, 0.0f, 0.0f });
 		void ClearDepth(F32 clearDepth = 1.0f, U32 clearStencil = 0);
 		void SetAsActiveTarget(CRenderTexture* depth = nullptr);
@@ -70,7 +76,8 @@ namespace Havtorn
 		ID3D11DeviceContext* Context = nullptr;
 		ID3D11Texture2D* Texture = nullptr;
 
-		union {
+		union 
+		{
 			ID3D11RenderTargetView* RenderTarget = nullptr;
 			ID3D11DepthStencilView* Depth;
 		};
@@ -78,6 +85,8 @@ namespace Havtorn
 		ID3D11ShaderResourceView* ShaderResource = nullptr;
 		D3D11_VIEWPORT Viewport = {};
 
+		// TODO.NW: Keep this now for debugging
+		bool IsFromStaticTexture = false;
 		bool IsRenderTexture = true;
 		bool CPUAccess = true;
 	};

@@ -431,13 +431,11 @@ namespace Havtorn
 		fileHeader.Name = assimpScene->mName.C_Str();
 		fileHeader.DurationInTicks = STATIC_U32(animation->mDuration);
 		fileHeader.TickRate = STATIC_U32(animation->mTicksPerSecond);
-		fileHeader.ImportScale = sourceData.ImportScale;
+		fileHeader.SourceData = sourceData;
 			
 		std::vector<SSkeletalMeshBone> bones;
 		{
-			// Need full path here, not just filename
-			std::string rigFilePath = sourceData.AssetDependencyPath;
-			fileHeader.SkeletonName = rigFilePath;
+			std::string rigFilePath = fileHeader.SourceData.AssetDependencyPath.AsString();
 			const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(rigFilePath);
 			char* data = new char[fileSize];
 

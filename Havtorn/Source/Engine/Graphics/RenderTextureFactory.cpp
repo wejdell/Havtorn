@@ -247,7 +247,7 @@ namespace Havtorn
 	CStaticRenderTexture CRenderTextureFactory::CreateStaticTexture(const std::string& filePath)
 	{
 		CStaticRenderTexture returnTexture;
-		ENGINE_HR_MESSAGE(CreateShaderResourceViewFromSource(Framework->GetDevice(), filePath, &returnTexture.ShaderResource), "SRV could not be created from %s", filePath.c_str());
+		ENGINE_HR_MESSAGE(CreateShaderResourceViewFromAsset(Framework->GetDevice(), filePath, &returnTexture.ShaderResource), "SRV could not be created from %s", filePath.c_str());
 		return std::move(returnTexture);
 	}
 

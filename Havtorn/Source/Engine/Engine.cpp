@@ -39,6 +39,7 @@ namespace Havtorn
 		InputMapper = new CInputMapper();
 		Framework = new CGraphicsFramework();
 		RenderManager = new CRenderManager();
+		AssetRegistry = new CAssetRegistry();
 		World = new CWorld();
 		ThreadManager = new CThreadManager();
 		FileWatcher = new CFileWatcher();
@@ -47,10 +48,11 @@ namespace Havtorn
 
 	GEngine::~GEngine()
 	{
+		SAFE_DELETE(DebugDraw);
 		SAFE_DELETE(FileWatcher);
 		SAFE_DELETE(ThreadManager);
 		SAFE_DELETE(World);
-		SAFE_DELETE(DebugDraw);
+		SAFE_DELETE(AssetRegistry);
 		SAFE_DELETE(RenderManager);
 		SAFE_DELETE(Framework);
 		SAFE_DELETE(InputMapper);
@@ -65,7 +67,8 @@ namespace Havtorn
 		ENGINE_ERROR_BOOL_MESSAGE(InputMapper->Init(platformManager), "Input Mapper could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(Framework->Init(platformManager), "Framework could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(RenderManager->Init(Framework, platformManager), "RenderManager could not be initialized.");
-		ENGINE_ERROR_BOOL_MESSAGE(World->Init(RenderManager, Framework), "World could not be initialized.");
+		ENGINE_ERROR_BOOL_MESSAGE(AssetRegistry->Init(RenderManager), "Asset Registry could not be initialized.");
+		ENGINE_ERROR_BOOL_MESSAGE(World->Init(RenderManager), "World could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(ThreadManager->Init(RenderManager), "Thread Manager could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(FileWatcher->Init(ThreadManager), "File Watcher could not be initialized.");
 
@@ -141,6 +144,11 @@ namespace Havtorn
 	CThreadManager* GEngine::GetThreadManager()
 	{
 		return Instance->ThreadManager;
+	}
+
+	CAssetRegistry* GEngine::GetAssetRegistry()
+	{
+		return Instance->AssetRegistry;
 	}
 
 	CWorld* GEngine::GetWorld()

@@ -267,6 +267,7 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/Components/DecalComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/DecalComponent.h
     ${ENGINE_FOLDER}ECS/Components/DirectionalLightComponent.h
+    ${ENGINE_FOLDER}ECS/Components/EnvironmentLightComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/EnvironmentLightComponent.h
     ${ENGINE_FOLDER}ECS/Components/MaterialComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/MaterialComponent.h
@@ -287,6 +288,7 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/Components/SpriteAnimatorGraphComponent.h
     ${ENGINE_FOLDER}ECS/Components/SpriteAnimatorGraphNode.cpp
     ${ENGINE_FOLDER}ECS/Components/SpriteAnimatorGraphNode.h
+    ${ENGINE_FOLDER}ECS/Components/SpriteComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/SpriteComponent.h
     ${ENGINE_FOLDER}ECS/Components/StaticMeshComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/StaticMeshComponent.h
@@ -340,6 +342,7 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Graphics/GraphicsEnums.h
     ${ENGINE_FOLDER}Graphics/GraphicsFramework.cpp
     ${ENGINE_FOLDER}Graphics/GraphicsFramework.h
+    ${ENGINE_FOLDER}Graphics/GraphicsMaterial.cpp
     ${ENGINE_FOLDER}Graphics/GraphicsMaterial.h
     ${ENGINE_FOLDER}Graphics/GraphicsStructs.h
     ${ENGINE_FOLDER}Graphics/GraphicsUtilities.cpp

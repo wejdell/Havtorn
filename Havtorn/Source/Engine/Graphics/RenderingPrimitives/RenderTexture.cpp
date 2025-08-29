@@ -32,6 +32,23 @@ namespace Havtorn
 		return (intptr_t)ShaderResource;
 	}
 
+	ID3D11ShaderResourceView* CStaticRenderTexture::GetShaderResource() const
+	{
+		return ShaderResource;
+	}
+
+	ID3D11ShaderResourceView* const* CStaticRenderTexture::GetShaderResourceView() const
+	{
+		return &ShaderResource;
+	}
+
+	CRenderTexture::CRenderTexture(const CStaticRenderTexture& staticTexture)
+		: Context(staticTexture.Context)
+		, ShaderResource(staticTexture.ShaderResource)
+		, IsFromStaticTexture(true)
+	{
+	}
+
 	void CRenderTexture::ClearTexture(SVector4 clearColor)
 	{
 		Context->ClearRenderTargetView(RenderTarget, &clearColor.X);

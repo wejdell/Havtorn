@@ -38,7 +38,7 @@ namespace Havtorn
 		// TODO.NR: Rework serialization to decrease amount of boilerplate
 		ENGINE_API virtual [[nodiscard]] U32 GetSize() const;
 		ENGINE_API virtual void Serialize(char* toData, U64& pointerPosition) const;
-		ENGINE_API virtual void Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry);
+		ENGINE_API virtual void Deserialize(const char* fromData, U64& pointerPosition);
 
 		ENGINE_API std::string GetSceneName() const;
 		ENGINE_API U64 GetSceneIndex(const SEntity& entity) const;
@@ -88,11 +88,11 @@ namespace Havtorn
 		}
 
 		template<typename T>
-		void DefaultDeserializer(std::vector<T>& componentVector, SComponentEditorContext* context, const char* fromData, U64& pointerPosition)
+		void DefaultDeserializer(/*std::vector<T>& componentVector, */SComponentEditorContext* context, const char* fromData, U64& pointerPosition)
 		{
 			U32 numberOfComponents = 0;
 			DeserializeData(numberOfComponents, fromData, pointerPosition);
-			componentVector.resize(numberOfComponents);
+			//componentVector.resize(numberOfComponents);
 
 			for (U64 index = 0; index < numberOfComponents; index++)
 			{
@@ -104,11 +104,11 @@ namespace Havtorn
 		}
 
 		template<typename T>
-		void SpecializedDeserializer(std::vector<T>& componentVector, SComponentEditorContext* context, const char* fromData, U64& pointerPosition)
+		void SpecializedDeserializer(/*std::vector<T>& componentVector, */SComponentEditorContext* context, const char* fromData, U64& pointerPosition)
 		{
 			U32 numberOfComponents = 0;
 			DeserializeData(numberOfComponents, fromData, pointerPosition);
-			componentVector.resize(numberOfComponents);
+			//componentVector.resize(numberOfComponents);
 
 			for (U64 index = 0; index < numberOfComponents; index++)
 			{

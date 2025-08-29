@@ -8,8 +8,6 @@ struct aiScene;
 
 namespace Havtorn
 {
-	struct SSourceAssetData;
-
 	enum class EModelProperty
 	{
 		HasPositions				= BIT(0),

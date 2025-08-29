@@ -5,7 +5,6 @@
 #include "Graphics/GraphicsStructs.h"
 #include "Graphics/GraphicsEnums.h"
 #include "Scene/Scene.h"
-#include "Scene/AssetRegistry.h"
 #include "Assets/SequencerAsset.h"
 #include "HexRune/HexRune.h"
 
@@ -13,10 +12,94 @@
 
 namespace Havtorn
 {
+	struct SAssetReference
+	{
+		U32 UID = 0;
+		std::string FilePath = "";
+
+		SAssetReference() = default;
+		explicit SAssetReference(const std::string& filePath)
+		{
+			FilePath = filePath;
+			U32 prime = 0x1000193;
+			UID = 0x811c9dc5;
+
+			for (U64 i = 0; i < filePath.size(); ++i)
+			{
+				U8 value = filePath[i];
+				UID = UID ^ value;
+				UID *= prime;
+			}
+		}
+
+		bool operator==(const SAssetReference& other) const { return UID == other.UID && FilePath == other.FilePath; }
+		
+		const bool IsValid() const { return UID != 0 && FilePath != ""; }
+
+		[[nodiscard]] U32 GetSize() const;
+		void Serialize(char* toData, U64& pointerPosition) const;
+		void Deserialize(const char* fromData, U64& pointerPosition);
+
+		static std::vector<U32> GetIDs(const std::vector<SAssetReference>& references);
+		static std::vector<std::string> GetPaths(const std::vector<SAssetReference>& references);
+	};
+
+	inline U32 SAssetReference::GetSize() const
+	{
+		U32 size = 0;
+		size += GetDataSize(UID);
+		size += GetDataSize(FilePath);
+		return size;
+	}
+
+	inline void SAssetReference::Serialize(char* toData, U64& pointerPosition) const
+	{
+		SerializeData(UID, toData, pointerPosition);
+		SerializeData(FilePath, toData, pointerPosition);
+	}
+
+	inline void SAssetReference::Deserialize(const char* fromData, U64& pointerPosition)
+	{
+		DeserializeData(UID, fromData, pointerPosition);
+		DeserializeData(FilePath, fromData, pointerPosition);
+	}
+
+	inline std::vector<U32> SAssetReference::GetIDs(const std::vector<SAssetReference>& references)
+	{
+		// TODO.NW: Still want an algo library for operations like this
+		std::vector<U32> ids;
+		for (const SAssetReference& ref : references)
+			ids.push_back(ref.UID);
+
+		return ids;
+	}
+
+	inline std::vector<std::string> SAssetReference::GetPaths(const std::vector<SAssetReference>& references)
+	{
+		// TODO.NW: Still want an algo library for operations like this
+		std::vector<std::string> paths;
+		for (const SAssetReference& ref : references)
+			paths.push_back(ref.FilePath);
+
+		return paths;
+	}
+
+	struct SSourceAssetData
+	{
+		EAssetType AssetType = EAssetType::None;
+		CHavtornStaticString<128> SourcePath;
+		CHavtornStaticString<128> AssetDependencyPath;
+		F32 ImportScale = 1.0f;
+
+		const bool IsValid() const { return SourcePath.Length() != 0; }
+	};
+
 	struct SStaticModelFileHeader
 	{
 		EAssetType AssetType = EAssetType::StaticMesh;
 		std::string Name;
+		U32 UID = 0;
+		SSourceAssetData SourceData;
 		U8 NumberOfMaterials = 0;
 		U32 NumberOfMeshes = 0;
 		std::vector<SStaticMesh> Meshes;
@@ -30,6 +113,9 @@ namespace Havtorn
 	{
 		U32 size = 0;
 		size += GetDataSize(AssetType);
+		size += GetDataSize(Name);
+		size += GetDataSize(UID);
+		size += GetDataSize(SourceData);
 		size += GetDataSize(NumberOfMaterials);
 		size += GetDataSize(NumberOfMeshes);
 
@@ -47,6 +133,9 @@ namespace Havtorn
 	{
 		U64 pointerPosition = 0;
 		SerializeData(AssetType, toData, pointerPosition);
+		SerializeData(Name, toData, pointerPosition);
+		SerializeData(UID, toData, pointerPosition);
+		SerializeData(SourceData, toData, pointerPosition);
 		SerializeData(NumberOfMaterials, toData, pointerPosition);
 		SerializeData(NumberOfMeshes, toData, pointerPosition);
 
@@ -63,6 +152,9 @@ namespace Havtorn
 	{
 		U64 pointerPosition = 0;
 		DeserializeData(AssetType, fromData, pointerPosition);
+		DeserializeData(Name, fromData, pointerPosition);
+		DeserializeData(UID, fromData, pointerPosition);
+		DeserializeData(SourceData, fromData, pointerPosition);
 		DeserializeData(NumberOfMaterials, fromData, pointerPosition);
 		DeserializeData(NumberOfMeshes, fromData, pointerPosition);
 
@@ -81,6 +173,8 @@ namespace Havtorn
 	{
 		EAssetType AssetType = EAssetType::SkeletalMesh;
 		std::string Name;
+		U32 UID = 0;
+		SSourceAssetData SourceData;
 		U8 NumberOfMaterials = 0;
 		U32 NumberOfMeshes = 0;
 		std::vector<SSkeletalMesh> Meshes;
@@ -97,6 +191,9 @@ namespace Havtorn
 	{
 		U32 size = 0;
 		size += GetDataSize(AssetType);
+		size += GetDataSize(Name);
+		size += GetDataSize(UID);
+		size += GetDataSize(SourceData);
 		size += GetDataSize(NumberOfMaterials);
 		size += GetDataSize(NumberOfMeshes);
 
@@ -125,6 +222,9 @@ namespace Havtorn
 	{
 		U64 pointerPosition = 0;
 		SerializeData(AssetType, toData, pointerPosition);
+		SerializeData(Name, toData, pointerPosition);
+		SerializeData(UID, toData, pointerPosition);
+		SerializeData(SourceData, toData, pointerPosition);
 		SerializeData(NumberOfMaterials, toData, pointerPosition);
 		SerializeData(NumberOfMeshes, toData, pointerPosition);
 
@@ -151,6 +251,9 @@ namespace Havtorn
 	{
 		U64 pointerPosition = 0;
 		DeserializeData(AssetType, fromData, pointerPosition);
+		DeserializeData(Name, fromData, pointerPosition);
+		DeserializeData(UID, fromData, pointerPosition);
+		DeserializeData(SourceData, fromData, pointerPosition);
 		DeserializeData(NumberOfMaterials, fromData, pointerPosition);
 		DeserializeData(NumberOfMeshes, fromData, pointerPosition);
 
@@ -181,11 +284,11 @@ namespace Havtorn
 	{
 		EAssetType AssetType = EAssetType::Animation;
 		std::string Name;
-		std::string SkeletonName;
+		U32 UID = 0;
+		SSourceAssetData SourceData;
 		U32 DurationInTicks = 0;
 		U32 TickRate = 0;
 		U32 NumberOfBones = 0;
-		F32 ImportScale = 1.0f;
 		std::vector<SBoneAnimationTrack> BoneAnimationTracks;
 
 		[[nodiscard]] U32 GetSize() const;
@@ -198,11 +301,11 @@ namespace Havtorn
 		U32 size = 0;
 		size += GetDataSize(AssetType);
 		size += GetDataSize(Name);
-		size += GetDataSize(SkeletonName);
+		size += GetDataSize(UID);
+		size += GetDataSize(SourceData);
 		size += GetDataSize(DurationInTicks);
 		size += GetDataSize(TickRate);
 		size += GetDataSize(NumberOfBones);
-		size += GetDataSize(ImportScale);
 
 		for (auto& track : BoneAnimationTracks)
 			size += track.GetSize();
@@ -215,11 +318,11 @@ namespace Havtorn
 		U64 pointerPosition = 0;
 		SerializeData(AssetType, toData, pointerPosition);
 		SerializeData(Name, toData, pointerPosition);
-		SerializeData(SkeletonName, toData, pointerPosition);
+		SerializeData(UID, toData, pointerPosition);
+		SerializeData(SourceData, toData, pointerPosition);
 		SerializeData(DurationInTicks, toData, pointerPosition);
 		SerializeData(TickRate, toData, pointerPosition);
 		SerializeData(NumberOfBones, toData, pointerPosition);
-		SerializeData(ImportScale, toData, pointerPosition);
 
 		for (auto& track : BoneAnimationTracks)
 		{
@@ -235,11 +338,11 @@ namespace Havtorn
 		U64 pointerPosition = 0;
 		DeserializeData(AssetType, fromData, pointerPosition);
 		DeserializeData(Name, fromData, pointerPosition);
-		DeserializeData(SkeletonName, fromData, pointerPosition);
+		DeserializeData(UID, fromData, pointerPosition);
+		DeserializeData(SourceData, fromData, pointerPosition);
 		DeserializeData(DurationInTicks, fromData, pointerPosition);
 		DeserializeData(TickRate, fromData, pointerPosition);
 		DeserializeData(NumberOfBones, fromData, pointerPosition);
-		DeserializeData(ImportScale, fromData, pointerPosition);
 
 		for (U16 i = 0; i < NumberOfBones; i++)
 		{
@@ -254,9 +357,10 @@ namespace Havtorn
 	struct STextureFileHeader
 	{
 		EAssetType AssetType = EAssetType::Texture;
-		std::string MaterialName = "";
+		std::string Name = "";
+		U32 UID = 0;
+		SSourceAssetData SourceData;
 		ETextureFormat OriginalFormat = ETextureFormat::DDS;
-		EMaterialConfiguration MaterialConfiguration = EMaterialConfiguration::AlbedoMaterialNormal_Packed;
 		char Suffix = 0;
 		std::string Data = "";
 
@@ -269,9 +373,10 @@ namespace Havtorn
 	{
 		U32 size = 0;
 		size += GetDataSize(AssetType);
-		size += GetDataSize(MaterialName);
+		size += GetDataSize(Name);
+		size += GetDataSize(UID);
+		size += GetDataSize(SourceData);
 		size += GetDataSize(OriginalFormat);
-		size += GetDataSize(MaterialConfiguration);
 		size += GetDataSize(Suffix);
 		size += GetDataSize(Data);
 
@@ -282,9 +387,10 @@ namespace Havtorn
 	{
 		U64 pointerPosition = 0;
 		SerializeData(AssetType, toData, pointerPosition);
-		SerializeData(MaterialName, toData, pointerPosition);
+		SerializeData(Name, toData, pointerPosition);
+		SerializeData(UID, toData, pointerPosition);
+		SerializeData(SourceData, toData, pointerPosition);
 		SerializeData(OriginalFormat, toData, pointerPosition);
-		SerializeData(MaterialConfiguration, toData, pointerPosition);
 		SerializeData(Suffix, toData, pointerPosition);
 		SerializeData(Data, toData, pointerPosition);
 	}
@@ -293,9 +399,10 @@ namespace Havtorn
 	{
 		U64 pointerPosition = 0;
 		DeserializeData(AssetType, fromData, pointerPosition);
-		DeserializeData(MaterialName, fromData, pointerPosition);
+		DeserializeData(Name, fromData, pointerPosition);
+		DeserializeData(UID, fromData, pointerPosition);
+		DeserializeData(SourceData, fromData, pointerPosition);
 		DeserializeData(OriginalFormat, fromData, pointerPosition);
-		DeserializeData(MaterialConfiguration, fromData, pointerPosition);
 		DeserializeData(Suffix, fromData, pointerPosition);
 		DeserializeData(Data, fromData, pointerPosition);
 	}
@@ -304,7 +411,8 @@ namespace Havtorn
 	struct SMaterialAssetFileHeader
 	{
 		EAssetType AssetType = EAssetType::Material;
-		std::string MaterialName = "";
+		std::string Name = "";
+		U32 UID = 0;
 		SOfflineGraphicsMaterial Material;
 
 		[[nodiscard]] U32 GetSize() const;
@@ -316,7 +424,8 @@ namespace Havtorn
 	{
 		U32 size = 0;
 		size += GetDataSize(AssetType);
-		size += GetDataSize(MaterialName);
+		size += GetDataSize(Name);
+		size += GetDataSize(UID);
 		size += Material.GetSize();
 
 		return size;
@@ -326,7 +435,8 @@ namespace Havtorn
 	{
 		U64 pointerPosition = 0;
 		SerializeData(AssetType, toData, pointerPosition);
-		SerializeData(MaterialName, toData, pointerPosition);
+		SerializeData(Name, toData, pointerPosition);
+		SerializeData(UID, toData, pointerPosition);
 
 		for (auto& materialProperty : Material.Properties)
 		{
@@ -342,7 +452,8 @@ namespace Havtorn
 	{
 		U64 pointerPosition = 0;
 		DeserializeData(AssetType, fromData, pointerPosition);
-		DeserializeData(MaterialName, fromData, pointerPosition);
+		DeserializeData(Name, fromData, pointerPosition);
+		DeserializeData(UID, fromData, pointerPosition);
 
 		for (auto& materialProperty : Material.Properties)
 		{
@@ -357,39 +468,43 @@ namespace Havtorn
 	struct SSceneFileHeader
 	{
 		EAssetType AssetType = EAssetType::Scene;
+		U32 UID = 0;
 		CScene* Scene = nullptr;
 
 		[[nodiscard]] U32 GetSize() const;
-		void Serialize(char* toData, U64& pointerPosition, CAssetRegistry* assetRegistry) const;
-		void Deserialize(const char* fromData, U64& pointerPosition, CScene* outScene, CAssetRegistry* assetRegistry);
+		void Serialize(char* toData, U64& pointerPosition) const;
+		void Deserialize(const char* fromData, U64& pointerPosition, CScene* outScene);
 	};
 
 	inline U32 SSceneFileHeader::GetSize() const
 	{
 		U32 size = 0;
-		// NR: Asset Registry size and asset type size is calculated in the call site of this function.
+		size += GetDataSize(AssetType);
+		size += GetDataSize(UID);
 		size += Scene->GetSize();
 
 		return size;
 	}
 
-	inline void SSceneFileHeader::Serialize(char* toData, U64& pointerPosition, CAssetRegistry* assetRegistry) const
+	inline void SSceneFileHeader::Serialize(char* toData, U64& pointerPosition) const
 	{
 		SerializeData(AssetType, toData, pointerPosition);
-		assetRegistry->Serialize(toData, pointerPosition);
+		SerializeData(UID, toData, pointerPosition);
 		Scene->Serialize(toData, pointerPosition);
 	}
 
-	inline void SSceneFileHeader::Deserialize(const char* fromData, U64& pointerPosition, CScene* outScene, CAssetRegistry* assetRegistry)
+	inline void SSceneFileHeader::Deserialize(const char* fromData, U64& pointerPosition, CScene* outScene)
 	{
 		DeserializeData(AssetType, fromData, pointerPosition);
-		assetRegistry->Deserialize(fromData, pointerPosition);
-		outScene->Deserialize(fromData, pointerPosition, assetRegistry);
+		DeserializeData(UID, fromData, pointerPosition);
+		outScene->Deserialize(fromData, pointerPosition);
 	}
 
 	struct SSpriteAnimationClipFileHeader
 	{
 		EAssetType AssetType = EAssetType::SpriteAnimation;
+		std::string Name;
+		U32 UID = 0;
 		std::vector<SVector4> UVRects;
 		std::vector<F32> Durations;
 		bool IsLooping = false;
@@ -403,6 +518,8 @@ namespace Havtorn
 	{
 		U32 size = 0;
 		size += GetDataSize(AssetType);
+		size += GetDataSize(Name);
+		size += GetDataSize(UID);
 		size += GetDataSize(UVRects);
 		size += GetDataSize(Durations);
 		size += GetDataSize(IsLooping);
@@ -413,6 +530,8 @@ namespace Havtorn
 	{
 		U64 pointerPosition = 0;
 		SerializeData(AssetType, toData, pointerPosition);
+		SerializeData(Name, toData, pointerPosition);
+		SerializeData(UID, toData, pointerPosition);
 		SerializeData(UVRects, toData, pointerPosition);
 		SerializeData(Durations, toData, pointerPosition);
 		SerializeData(IsLooping, toData, pointerPosition);
@@ -422,6 +541,8 @@ namespace Havtorn
 	{
 		U64 pointerPosition = 0;
 		DeserializeData(AssetType, fromData, pointerPosition);
+		DeserializeData(Name, fromData, pointerPosition);
+		DeserializeData(UID, fromData, pointerPosition);
 		DeserializeData(UVRects, fromData, pointerPosition);
 		DeserializeData(Durations, fromData, pointerPosition);
 		DeserializeData(IsLooping, fromData, pointerPosition);

@@ -70,7 +70,6 @@ namespace Havtorn
 		ENGINE_API std::vector<SEntity>& GetEntities() const;
 		ENGINE_API void SaveActiveScene(const std::string& destinationPath) const;
 		ENGINE_API void RemoveScene(U64 sceneIndex);
-		ENGINE_API CAssetRegistry* GetAssetRegistry() const;
 		
 		template<typename T>
 		void CreateScene();
@@ -133,7 +132,7 @@ namespace Havtorn
 		CWorld() = default;
 		~CWorld() = default;
 		
-		bool Init(CRenderManager* renderManager, CGraphicsFramework* framework);
+		bool Init(CRenderManager* renderManager);
 		void Update() const;
 
 		ENGINE_API void LoadScene(const std::string& filePath, CScene* outScene) const;
@@ -156,7 +155,6 @@ namespace Havtorn
 		std::vector<SystemTypeCode> SystemsToRemove;
 		std::vector<Ptr<ISystem>> SystemsToAdd;
 
-		Ptr<CAssetRegistry> AssetRegistry = nullptr;
 		Ptr<HexPhys2D::CPhysicsWorld2D> PhysicsWorld2D = nullptr;
 		Ptr<HexPhys3D::CPhysicsWorld3D> PhysicsWorld3D = nullptr;
 		

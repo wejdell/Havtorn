@@ -170,7 +170,7 @@ namespace Havtorn
 		scene->AddComponent<STransformComponent>(scene->PreviewEntity)->Transform;
 		scene->AddComponentEditorContext(scene->PreviewEntity, &STransformComponentEditorContext::Context);
 
-		CAssetRegistry* assetRegistry = GEngine::GetWorld()->GetAssetRegistry();
+		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
 		CRenderManager* renderManager = Manager->GetRenderManager();
 
 		switch (assetRepresentation->AssetType)
@@ -180,14 +180,12 @@ namespace Havtorn
 			std::string staticMeshPath = assetRepresentation->Name + ".hva";
 			renderManager->LoadStaticMeshComponent(staticMeshPath, scene->AddComponent<SStaticMeshComponent>(scene->PreviewEntity));
 			scene->AddComponentEditorContext(scene->PreviewEntity, &SStaticMeshComponentEditorContext::Context);
-			SStaticMeshComponent* staticMesh = scene->GetComponent<SStaticMeshComponent>(scene->PreviewEntity);
-			staticMesh->AssetRegistryKey = assetRegistry->Register(staticMeshPath);
+			SStaticMeshAsset* meshAsset = assetRegistry->RequestAssetData<SStaticMeshAsset>(SAssetReference(staticMeshPath), scene->PreviewEntity.GUID);
 
 			std::vector<std::string> previewMaterials;
-			previewMaterials.resize(staticMesh->NumberOfMaterials, CEditorManager::PreviewMaterial);
+			previewMaterials.resize(meshAsset->NumberOfMaterials, CEditorManager::PreviewMaterial);
 			renderManager->LoadMaterialComponent(previewMaterials, scene->AddComponent<SMaterialComponent>(scene->PreviewEntity));
 			scene->AddComponentEditorContext(scene->PreviewEntity, &SMaterialComponentEditorContext::Context);
-			scene->GetComponent<SMaterialComponent>(scene->PreviewEntity)->AssetRegistryKeys = assetRegistry->Register(previewMaterials);
 		}
 			break;
 
@@ -196,16 +194,14 @@ namespace Havtorn
 			std::string meshPath = assetRepresentation->Name + ".hva";;
 			renderManager->LoadSkeletalMeshComponent(meshPath, scene->AddComponent<SSkeletalMeshComponent>(scene->PreviewEntity));
 			scene->AddComponentEditorContext(scene->PreviewEntity, &SSkeletalMeshComponentEditorContext::Context);
-			SSkeletalMeshComponent* skeletalMesh = scene->GetComponent<SSkeletalMeshComponent>(scene->PreviewEntity);
-			skeletalMesh->AssetRegistryKey = assetRegistry->Register(meshPath);
+			SSkeletalMeshAsset* meshAsset = assetRegistry->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(meshPath), scene->PreviewEntity.GUID);
 			
 			// TODO.NW: Deal with different asset types, and figure out bind pose for skeletal meshes
 
 			std::vector<std::string> previewMaterials;
-			previewMaterials.resize(skeletalMesh->NumberOfMaterials, CEditorManager::PreviewMaterial);
+			previewMaterials.resize(meshAsset->NumberOfMaterials, CEditorManager::PreviewMaterial);
 			renderManager->LoadMaterialComponent(previewMaterials, scene->AddComponent<SMaterialComponent>(scene->PreviewEntity));
 			scene->AddComponentEditorContext(scene->PreviewEntity, &SMaterialComponentEditorContext::Context);
-			scene->GetComponent<SMaterialComponent>(scene->PreviewEntity)->AssetRegistryKeys = assetRegistry->Register(previewMaterials);
 		}
 			break;
 

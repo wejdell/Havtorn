@@ -15,7 +15,7 @@ namespace Havtorn
 
 		GAME_API virtual [[nodiscard]] U32 GetSize() const override;
 		GAME_API virtual void Serialize(char* toData, U64& pointerPosition) const override;
-		GAME_API virtual void Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry) override;
+		GAME_API virtual void Deserialize(const char* fromData, U64& pointerPosition) override;
     };
 }
 

@@ -10,11 +10,9 @@
 
 namespace Havtorn
 {
-	bool CWorld::Init(CRenderManager* renderManager, CGraphicsFramework* framework)
+	bool CWorld::Init(CRenderManager* renderManager)
 	{
 		RenderManager = renderManager;
-		AssetRegistry = std::make_unique<CAssetRegistry>();
-		AssetRegistry->Init(framework);
 		PhysicsWorld2D = std::make_unique<HexPhys2D::CPhysicsWorld2D>();
 		PhysicsWorld3D = std::make_unique<HexPhys3D::CPhysicsWorld3D>();
 
@@ -127,11 +125,11 @@ namespace Havtorn
 		SSceneFileHeader fileHeader;
 		fileHeader.Scene = scene.get();
 
-		const U32 fileSize = GetDataSize(fileHeader.AssetType) + AssetRegistry->GetSize() + fileHeader.GetSize();
+		const U32 fileSize = fileHeader.GetSize();
 		char* data = new char[fileSize];
 
 		U64 pointerPosition = 0;	
-		fileHeader.Serialize(data, pointerPosition, AssetRegistry.get());
+		fileHeader.Serialize(data, pointerPosition);
 		GEngine::GetFileSystem()->Serialize(destinationPath, data, fileSize);
 		
 		delete[] data;
@@ -148,7 +146,7 @@ namespace Havtorn
 
 		U64 pointerPosition = 0;
 		GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
-		sceneFile.Deserialize(data, pointerPosition, outScene, AssetRegistry.get());
+		sceneFile.Deserialize(data, pointerPosition, outScene);
 
 		delete[] data;
 	}
@@ -285,10 +283,5 @@ namespace Havtorn
 			return;
 
 		LoadedScripts.erase(filePath);
-	}
-
-	CAssetRegistry* CWorld::GetAssetRegistry() const
-	{
-		return AssetRegistry.get();
 	}
 }

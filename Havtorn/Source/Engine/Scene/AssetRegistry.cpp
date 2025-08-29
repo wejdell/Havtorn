@@ -1,7 +1,9 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #include "AssetRegistry.h"
+// TODO.NW: Unify these asset files under the same directory
 #include "FileSystem/FileHeaderDeclarations.h"
+#include "Core/RuntimeAssetDeclarations.h"
 #include "ECS/GUIDManager.h"
 
 #include "Graphics/RenderManager.h"
@@ -19,53 +21,75 @@ namespace Havtorn
     {
     }
 
-    bool CAssetRegistry::Init(CGraphicsFramework* framework, CRenderManager* renderManager)
+    bool CAssetRegistry::Init(CRenderManager* renderManager)
     {
         RenderManager = renderManager;
 
         // Add null asset
-        SAsset& asset = Registry[SAssetReference()] = SAsset();
-        asset.Type = EAssetType::None;
+        Registry.emplace(0, SAsset());
+
+        return true;
     }
 
-
-    /// Loading: from serialization using Accessor, should serialize that with UID and Path info so we can extract the path
-    ///          UID for fast access, filepath for initial loading, source asset path for file watching? file watching should be done by asset registry
-    /// Saving:  
-    /// 
-    /// 
-    /// 
-
-    SAsset* CAssetRegistry::RequestAsset(const SAssetReference& reference, const U64 requesterID)
+    SAsset* CAssetRegistry::RequestAsset(const SAssetReference& assetRef, const U64 requesterID)
     {
-        if (Registry.contains(reference))
+        if (Registry.contains(assetRef.UID))
         {
-            SAsset* loadedAsset = &Registry[reference];
-            loadedAsset->References.insert(requesterID);
+            SAsset* loadedAsset = &Registry[assetRef.UID];
+            loadedAsset->Requesters.insert(requesterID);
             return loadedAsset;
         }
-    
+
         // TODO.NW: Load on different thread and return null asset while loading?
-        return LoadAsset(reference, requesterID);
+        return LoadAsset(assetRef, requesterID);
     }
 
-    void CAssetRegistry::UnrequestAsset(const SAssetReference& reference, const U64 requesterID)
+    void CAssetRegistry::UnrequestAsset(const SAssetReference& assetRef, const U64 requesterID)
     {
         // TODO.NW: Check if asset is loading on separate thread, or check if requests are still there when finished loading?
-        if (!Registry.contains(reference))
+        if (!Registry.contains(assetRef.UID))
             return;
 
-        SAsset* loadedAsset = &Registry[reference];
-        loadedAsset->References.erase(requesterID);
+        SAsset* loadedAsset = &Registry[assetRef.UID];
+        loadedAsset->Requesters.erase(requesterID);
 
-        if (loadedAsset->References.empty())
-            UnloadAsset(reference);
+        if (loadedAsset->Requesters.empty())
+            UnloadAsset(assetRef);
     }
 
-    SAsset* CAssetRegistry::LoadAsset(const SAssetReference& reference, const U64 requesterID)
+    SAsset* CAssetRegistry::RequestAsset(const U32 assetUID, const U64 requesterID)
     {
-        std::string filePath = reference.FilePath;
+        if (Registry.contains(assetUID))
+        {
+            SAsset* loadedAsset = &Registry[assetUID];
+            loadedAsset->Requesters.insert(requesterID);
+            return loadedAsset;
+        }
+
+        HV_LOG_ERROR("CAssetRegistry::RequestAsset: Could not request asset with ID: %i, it is not loaded yet. Please use the asset file path instead", assetUID);
+        return nullptr;
+    }
+
+    void CAssetRegistry::UnrequestAsset(const U32 assetUID, const U64 requesterID)
+    {
+        // TODO.NW: Check if asset is loading on separate thread, or check if requests are still there when finished loading?
+        if (!Registry.contains(assetUID))
+            return;
+
+        SAsset* loadedAsset = &Registry[assetUID];
+        loadedAsset->Requesters.erase(requesterID);
+    }
+
+    SAsset* CAssetRegistry::LoadAsset(const SAssetReference& assetRef, const U64 requesterID)
+    {
+        std::string filePath = assetRef.FilePath;
         const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
+        if (fileSize == 0)
+        {
+            HV_LOG_WARN("CAssetRegistry::LoadAsset: Asset file pointed to by %s failed to load, was empty!", assetRef.FilePath.c_str());
+            return &Registry[0];
+        }
+
         char* data = new char[fileSize];
 
         GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
@@ -75,9 +99,8 @@ namespace Havtorn
 
         SAsset asset;
         asset.Type = type;
-        asset.UID = reference.UID;
-        asset.AssetPath = filePath;
-        asset.References.insert(requesterID);
+        asset.Reference = assetRef;
+        asset.Requesters.insert(requesterID);
 
         switch (type)
         {
@@ -108,6 +131,8 @@ namespace Havtorn
                     meshAsset.BoundsMax.Y = UMath::Max(vertex.y, meshAsset.BoundsMax.Y);
                     meshAsset.BoundsMax.Z = UMath::Max(vertex.z, meshAsset.BoundsMax.Z);
                 }
+
+                meshAsset.BoundsCenter = meshAsset.BoundsMin + (meshAsset.BoundsMax - meshAsset.BoundsMin) * 0.5f;
             }
 
             asset.Data = meshAsset;
@@ -140,6 +165,8 @@ namespace Havtorn
                     meshAsset.BoundsMax.Y = UMath::Max(vertex.y, meshAsset.BoundsMax.Y);
                     meshAsset.BoundsMax.Z = UMath::Max(vertex.z, meshAsset.BoundsMax.Z);
                 }
+
+                meshAsset.BoundsCenter = meshAsset.BoundsMin + (meshAsset.BoundsMax - meshAsset.BoundsMin) * 0.5f;
             }
 
             asset.Data = meshAsset;
@@ -178,20 +205,20 @@ namespace Havtorn
             // TODO.NW: Use magic enum to write out enum type
             HV_LOG_WARN("CAssetRegistry: Asset Resolving for asset type SEE_TODO is not yet implemented.");
             delete[] data;
-            return &Registry[SAssetReference()];
+            return &Registry[0];
         }
         delete[] data;
 
         // TODO.NW: Set asset source data and bind filewatchers?
 
-        Registry.emplace(reference, asset);
-        return &Registry[reference];
+        Registry.emplace(assetRef.UID, asset);
+        return &Registry[assetRef.UID];
     }
 
-    void CAssetRegistry::UnloadAsset(const SAssetReference& reference)
+    void CAssetRegistry::UnloadAsset(const SAssetReference& assetRef)
     {
         // TODO.NW: If any filewatchers are watching the source of this asset, remove them now
-        Registry.erase(reference);
+        Registry.erase(assetRef.UID);
     }
 
     std::string CAssetRegistry::ImportAsset(const std::string& filePath, const std::string& destinationPath, const SSourceAssetData& sourceData)
@@ -220,7 +247,7 @@ namespace Havtorn
             STextureFileHeader fileHeader;
             fileHeader.AssetType = EAssetType::Texture;
 
-            fileHeader.MaterialName = UGeneralUtils::ExtractFileBaseNameFromPath(filePath);
+            fileHeader.Name = UGeneralUtils::ExtractFileBaseNameFromPath(filePath);
             fileHeader.OriginalFormat = format;
             fileHeader.Suffix = filePath[filePath.find_last_of(".") - 1];
             fileHeader.Data = std::move(textureFileData);
@@ -280,7 +307,7 @@ namespace Havtorn
             STextureFileHeader header = std::get<STextureFileHeader>(fileHeader);
             const auto data = new char[header.GetSize()];
             header.Serialize(data);
-            hvaPath = destinationPath + header.MaterialName + ".hva";
+            hvaPath = destinationPath + header.Name + ".hva";
             GEngine::GetFileSystem()->Serialize(hvaPath, &data[0], header.GetSize());
             delete[] data;
         }
@@ -289,7 +316,7 @@ namespace Havtorn
             SMaterialAssetFileHeader header = std::get<SMaterialAssetFileHeader>(fileHeader);
             const auto data = new char[header.GetSize()];
             header.Serialize(data);
-            hvaPath = destinationPath + header.MaterialName + ".hva";
+            hvaPath = destinationPath + header.Name + ".hva";
             GEngine::GetFileSystem()->Serialize(hvaPath, &data[0], header.GetSize());
             delete[] data;
         }
@@ -298,106 +325,5 @@ namespace Havtorn
             HV_LOG_WARN("CAssetRegistry::SaveAsset: The chosen file header had no serialization implemented. Could not create asset at %s!", destinationPath.c_str());
 
         return hvaPath;
-    }
-
-    //U64 CAssetRegistry::Register(const std::string& assetPath)
-    //{
-    //    if (!Registry.contains(assetPath))
-    //        Registry.emplace(assetPath, SReferenceCounter(UGUIDManager::Generate()));
-
-    //    SReferenceCounter& counter = Registry[assetPath];
-    //    counter.NumberOfReferences++;
-    //    
-    //    return counter.GUID;
-    //}
-
-    //std::vector<U64> CAssetRegistry::Register(const std::vector<std::string>& assetPaths)
-    //{
-    //    std::vector<U64> guids;
-    //    for (const std::string& assetPath : assetPaths)
-    //        guids.push_back(Register(assetPath));
-
-    //    return guids;
-    //}
-
-    //void CAssetRegistry::Unregister(const std::string& assetPath)
-    //{
-    //    if (!Registry.contains(assetPath))
-    //        return;
-
-    //    SReferenceCounter& counter = Registry[assetPath];
-    //    if (counter.NumberOfReferences > 0)
-    //        counter.NumberOfReferences--;
-
-    //    if (counter.NumberOfReferences == 0)
-    //        Registry.erase(assetPath);
-    //}
-
-    //const std::string& CAssetRegistry::GetAssetPath(const U64& guid)
-    //{
-    //    for (const auto& [assetPath, referenceCounter] : Registry)
-    //    {
-    //        if (referenceCounter.GUID == guid)
-    //            return assetPath;
-    //    }
-
-    //    return InvalidPath;
-    //}
-
-    //std::vector<std::string> CAssetRegistry::GetAssetPaths(const std::vector<U64>& guids)
-    //{
-    //    std::vector<std::string> assetPaths;
-    //    for (U64 guid : guids)
-    //        assetPaths.push_back(GetAssetPath(guid));
-
-    //    return assetPaths;
-    //}
-
-    //bool CAssetRegistry::IsAssetRegistered(const std::string& assetPath)
-    //{
-    //    return Registry.contains(assetPath);
-    //}
-
-    U32 CAssetRegistry::GetSize() const
-    {
-        U32 size = 0;
-        size += GetDataSize(STATIC_U32(Registry.size()));
-
-        for (const auto& [assetPath, referenceCounter] : Registry)
-        {
-            size += GetDataSize(assetPath);
-            size += GetDataSize(referenceCounter);
-        }
-
-        return size;
-    }
-
-    void CAssetRegistry::Serialize(char* toData, U64& pointerPosition) const
-    {   
-        SerializeData(STATIC_U32(Registry.size()), toData, pointerPosition);
-
-        for (const auto& [assetPath, referenceCounter] : Registry)
-        {
-            SerializeData(assetPath, toData, pointerPosition);
-            SerializeData(referenceCounter, toData, pointerPosition);
-        }
-    }
-
-    void CAssetRegistry::Deserialize(const char* fromData, U64& pointerPosition)
-    {
-        Registry.clear();
-
-        U32 numberOfEntries = 0;
-        DeserializeData(numberOfEntries, fromData, pointerPosition);
-
-        for (U32 i = 0; i < numberOfEntries; i++)
-        {
-            std::string assetPath = "";
-            DeserializeData(assetPath, fromData, pointerPosition);
-            SReferenceCounter referenceCounter{0};
-            DeserializeData(referenceCounter, fromData, pointerPosition);
-
-            Registry.emplace(assetPath, referenceCounter);
-        }
     }
 }

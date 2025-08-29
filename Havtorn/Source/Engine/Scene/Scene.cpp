@@ -667,16 +667,16 @@ namespace Havtorn
 		size += DefaultSizeAllocator(GetComponents<SCameraControllerComponent>());
 		
 		size += SpecializedSizeAllocator(GetComponents<SMaterialComponent>());
-		
-		size += DefaultSizeAllocator(GetComponents<SEnvironmentLightComponent>());
+		size += SpecializedSizeAllocator(GetComponents<SEnvironmentLightComponent>());
+
 		size += DefaultSizeAllocator(GetComponents<SDirectionalLightComponent>());
 		size += DefaultSizeAllocator(GetComponents<SPointLightComponent>());
 		size += DefaultSizeAllocator(GetComponents<SSpotLightComponent>());
 		size += DefaultSizeAllocator(GetComponents<SVolumetricLightComponent>());
 
 		size += SpecializedSizeAllocator(GetComponents<SDecalComponent>());
-		
-		size += DefaultSizeAllocator(GetComponents<SSpriteComponent>());
+		size += SpecializedSizeAllocator(GetComponents<SSpriteComponent>());
+
 		size += DefaultSizeAllocator(GetComponents<STransform2DComponent>());
 
 		size += SpecializedSizeAllocator(GetComponents<SSpriteAnimatorGraphComponent>());
@@ -710,17 +710,16 @@ namespace Havtorn
 		DefaultSerializer(GetComponents<SCameraControllerComponent>(), toData, pointerPosition);
 
 		SpecializedSerializer(GetComponents<SMaterialComponent>(), toData, pointerPosition);
+		SpecializedSerializer(GetComponents<SEnvironmentLightComponent>(), toData, pointerPosition);
 
-		DefaultSerializer(GetComponents<SEnvironmentLightComponent>(), toData, pointerPosition);
 		DefaultSerializer(GetComponents<SDirectionalLightComponent>(), toData, pointerPosition);
 		DefaultSerializer(GetComponents<SPointLightComponent>(), toData, pointerPosition);
 		DefaultSerializer(GetComponents<SSpotLightComponent>(), toData, pointerPosition);
 		DefaultSerializer(GetComponents<SVolumetricLightComponent>(), toData, pointerPosition);
 
-		// NR: Texture info Saved and Loaded using AssetRegistry
 		SpecializedSerializer(GetComponents<SDecalComponent>(), toData, pointerPosition);
+		SpecializedSerializer(GetComponents<SSpriteComponent>(), toData, pointerPosition);
 
-		DefaultSerializer(GetComponents<SSpriteComponent>(), toData, pointerPosition);
 		DefaultSerializer(GetComponents<STransform2DComponent>(), toData, pointerPosition);
 
 		SpecializedSerializer(GetComponents<SSpriteAnimatorGraphComponent>(), toData, pointerPosition);
@@ -738,190 +737,43 @@ namespace Havtorn
 		DefaultSerializer(GetComponents<SMetaDataComponent>(), toData, pointerPosition);
 	}
 
-	void CScene::Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry)
+	void CScene::Deserialize(const char* fromData, U64& pointerPosition)
 	{
 		DeserializeData(SceneName, fromData, pointerPosition);
 		DeserializeData(MainCameraEntity, fromData, pointerPosition);
 		DeserializeData(Entities, fromData, pointerPosition);
 
-		{
-			std::vector<STransformComponent> components;
-			SpecializedDeserializer(components, &STransformComponentEditorContext::Context, fromData, pointerPosition);
-		}
+		SpecializedDeserializer<STransformComponent>(&STransformComponentEditorContext::Context, fromData, pointerPosition);
+		SpecializedDeserializer<SStaticMeshComponent>(&SStaticMeshComponentEditorContext::Context, fromData, pointerPosition);
+		SpecializedDeserializer<SSkeletalMeshComponent>(&SSkeletalMeshComponentEditorContext::Context, fromData, pointerPosition);
 
-		{
-			U32 numberOfStaticMeshComponents = 0;
-			DeserializeData(numberOfStaticMeshComponents, fromData, pointerPosition);
-			std::vector<SStaticMeshComponent> staticMeshComponents;
-			staticMeshComponents.resize(numberOfStaticMeshComponents);
+		DefaultDeserializer<SCameraComponent>(&SCameraComponentEditorContext::Context, fromData, pointerPosition);
+		DefaultDeserializer<SCameraControllerComponent>(&SCameraControllerComponentEditorContext::Context, fromData, pointerPosition);
 
-			for (U64 index = 0; index < numberOfStaticMeshComponents; index++)
-			{
-				SStaticMeshComponent component;
-				component.Deserialize(fromData, pointerPosition);
-				RenderManager->LoadStaticMeshComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SStaticMeshComponent>(component.Owner));
-				AddComponentEditorContext(component.Owner, &SStaticMeshComponentEditorContext::Context);
-			}
-		}
+		SpecializedDeserializer<SMaterialComponent>(&SMaterialComponentEditorContext::Context, fromData, pointerPosition);
+		SpecializedDeserializer<SEnvironmentLightComponent>(&SEnvironmentLightComponentEditorContext::Context, fromData, pointerPosition);
 
-		{
-			U32 numberOfSkeletalMeshComponents = 0;
-			DeserializeData(numberOfSkeletalMeshComponents, fromData, pointerPosition);
-			std::vector<SSkeletalMeshComponent> skeletalMeshComponents;
-			skeletalMeshComponents.resize(numberOfSkeletalMeshComponents);
+		DefaultDeserializer<SDirectionalLightComponent>(&SDirectionalLightComponentEditorContext::Context, fromData, pointerPosition);	
+		DefaultDeserializer<SPointLightComponent>(&SPointLightComponentEditorContext::Context, fromData, pointerPosition);		
+		DefaultDeserializer<SSpotLightComponent>(&SSpotLightComponentEditorContext::Context, fromData, pointerPosition);
+		DefaultDeserializer<SVolumetricLightComponent>(&SVolumetricLightComponentEditorContext::Context, fromData, pointerPosition);
 
-			for (U64 index = 0; index < numberOfSkeletalMeshComponents; index++)
-			{
-				SSkeletalMeshComponent component;
-				component.Deserialize(fromData, pointerPosition);
-				auto comp = AddComponent<SSkeletalMeshComponent>(component.Owner);
-				RenderManager->LoadSkeletalMeshComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), comp);
-				AddComponentEditorContext(component.Owner, &SSkeletalMeshComponentEditorContext::Context);
-			}
-		}
+		SpecializedDeserializer<SDecalComponent>(&SDecalComponentEditorContext::Context, fromData, pointerPosition);
+		SpecializedDeserializer<SSpriteComponent>(&SSpriteComponentEditorContext::Context, fromData, pointerPosition);
 
-		{
-			std::vector<SCameraComponent> components;
-			DefaultDeserializer(components, &SCameraComponentEditorContext::Context, fromData, pointerPosition);
-		}
-
-		{
-			std::vector<SCameraControllerComponent> components;
-			DefaultDeserializer(components, &SCameraControllerComponentEditorContext::Context, fromData, pointerPosition);
-		}
-
-		U32 numberOfMaterialComponents = 0;
-		DeserializeData(numberOfMaterialComponents, fromData, pointerPosition);
-		std::vector<SMaterialComponent> materialComponents;
-		materialComponents.resize(numberOfMaterialComponents);
+		DefaultDeserializer<STransform2DComponent>(&STransform2DComponentEditorContext::Context, fromData, pointerPosition);
 		
-		for (U64 index = 0; index < numberOfMaterialComponents; index++)
-		{
-			SMaterialComponent component;
-			component.Deserialize(fromData, pointerPosition);
-			RenderManager->LoadMaterialComponent(assetRegistry->GetAssetPaths(component.AssetRegistryKeys), AddComponent<SMaterialComponent>(component.Owner));
-			AddComponentEditorContext(component.Owner, &SMaterialComponentEditorContext::Context);
-		}
-
-		U32 numberOfEnvironmentLightComponents = 0;
-		DeserializeData(numberOfEnvironmentLightComponents, fromData, pointerPosition);
-		std::vector<SEnvironmentLightComponent> environmentLightComponent;
-		environmentLightComponent.resize(numberOfEnvironmentLightComponents);
-		
-		for (U64 index = 0; index < numberOfEnvironmentLightComponents; index++)
-		{
-			SEnvironmentLightComponent component;
-			DeserializeData(component, fromData, pointerPosition);
-			RenderManager->LoadEnvironmentLightComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SEnvironmentLightComponent>(component.Owner));
-			AddComponentEditorContext(component.Owner, &SEnvironmentLightComponentEditorContext::Context);
-		}
-
-		{
-			std::vector<SDirectionalLightComponent> components;
-			DefaultDeserializer(components, &SDirectionalLightComponentEditorContext::Context, fromData, pointerPosition);
-		}
-
-		{
-			std::vector<SPointLightComponent> components;
-			DefaultDeserializer(components, &SPointLightComponentEditorContext::Context, fromData, pointerPosition);
-		}
-
-		{
-			std::vector<SSpotLightComponent> components;
-			DefaultDeserializer(components, &SSpotLightComponentEditorContext::Context, fromData, pointerPosition);
-		}
-
-		{
-			std::vector<SVolumetricLightComponent> components;
-			DefaultDeserializer(components, &SVolumetricLightComponentEditorContext::Context, fromData, pointerPosition);
-		}
-
-		U32 numberOfDecalComponents = 0;
-		DeserializeData(numberOfDecalComponents, fromData, pointerPosition);
-		std::vector<SDecalComponent> decalComponents;
-		decalComponents.resize(numberOfDecalComponents);
-		
-		for (U64 index = 0; index < numberOfDecalComponents; index++)
-		{
-			SDecalComponent component;
-			component.Deserialize(fromData, pointerPosition);
-			RenderManager->LoadDecalComponent(assetRegistry->GetAssetPaths(component.AssetRegistryKeys), AddComponent<SDecalComponent>(component.Owner));
-			AddComponentEditorContext(component.Owner, &SDecalComponentEditorContext::Context);
-		}
-
-		U32 numberOfSpriteComponents = 0;
-		DeserializeData(numberOfSpriteComponents, fromData, pointerPosition);
-		std::vector<SSpriteComponent> spriteComponents;
-		spriteComponents.resize(numberOfSpriteComponents);
-		
-		for (U64 index = 0; index < numberOfSpriteComponents; index++)
-		{
-			SSpriteComponent component;
-			DeserializeData(component, fromData, pointerPosition);
-			RenderManager->LoadSpriteComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SSpriteComponent>(component.Owner));
-			AddComponentEditorContext(component.Owner, &SSpriteComponentEditorContext::Context);
-		}
-
-		{
-			std::vector<STransform2DComponent> components;
-			DefaultDeserializer(components, &STransform2DComponentEditorContext::Context, fromData, pointerPosition);
-		}
-
-		{
-			std::vector<SSpriteAnimatorGraphComponent> components;
-			SpecializedDeserializer(components, &SSpriteAnimatorGraphComponentEditorContext::Context, fromData, pointerPosition);
-		}
-
-		{
-			U32 numberOfcomponents = 0;
-			DeserializeData(numberOfcomponents, fromData, pointerPosition);
-			std::vector<SSkeletalAnimationComponent> components;
-			components.resize(numberOfcomponents);
-
-			for (U64 index = 0; index < numberOfcomponents; index++)
-			{
-				SSkeletalAnimationComponent component;
-				component.Deserialize(fromData, pointerPosition);
-				auto comp = AddComponent<SSkeletalAnimationComponent>(component.Owner);
-
-				RenderManager->LoadSkeletalAnimationComponent(assetRegistry->GetAssetPaths(component.AssetRegistryKeys), comp);
-				
-				AddComponentEditorContext(component.Owner, &SSkeletalAnimationComponentEditorContext::Context);
-			}
-		}
+		SpecializedDeserializer<SSpriteAnimatorGraphComponent>(&SSpriteAnimatorGraphComponentEditorContext::Context, fromData, pointerPosition);
+		SpecializedDeserializer<SSkeletalAnimationComponent>(&SSkeletalAnimationComponentEditorContext::Context, fromData, pointerPosition);
 
 		U32 numberOfSequencerComponents = 0;
 		DeserializeData(numberOfSequencerComponents, fromData, pointerPosition);
 
-		U32 numberOfScriptComponents = 0;
-		DeserializeData(numberOfScriptComponents, fromData, pointerPosition);
-		std::vector<SScriptComponent> scriptComponents;
-		scriptComponents.resize(numberOfScriptComponents);
-
-		for (U64 index = 0; index < numberOfScriptComponents; index++)
-		{
-			SScriptComponent component;
-			component.Deserialize(fromData, pointerPosition);
-			auto comp = AddComponent<SScriptComponent>(component.Owner);
-			// TODO.NW: Unify asset loading methods
-			comp->Script = GEngine::GetWorld()->LoadScript(assetRegistry->GetAssetPath(component.AssetRegistryKey));
-			AddComponentEditorContext(component.Owner, &SScriptComponentEditorContext::Context);
-		}
-
-		{
-			std::vector<SPhysics2DComponent> components;
-			DefaultDeserializer(components, &SPhysics2DComponentEditorContext::Context, fromData, pointerPosition);
-		}
-
-		{
-			std::vector<SPhysics3DComponent> components;
-			DefaultDeserializer(components, &SPhysics3DComponentEditorContext::Context, fromData, pointerPosition);
-		}
-
-		{
-			std::vector<SPhysics3DControllerComponent> components;
-			DefaultDeserializer(components, &SPhysics3DControllerComponentEditorContext::Context, fromData, pointerPosition);
-		}
+		SpecializedDeserializer<SScriptComponent>(&SScriptComponentEditorContext::Context, fromData, pointerPosition);
+		
+		DefaultDeserializer<SPhysics2DComponent>(&SPhysics2DComponentEditorContext::Context, fromData, pointerPosition);
+		DefaultDeserializer<SPhysics3DComponent>(&SPhysics3DComponentEditorContext::Context, fromData, pointerPosition);
+		DefaultDeserializer<SPhysics3DControllerComponent>(&SPhysics3DControllerComponentEditorContext::Context, fromData, pointerPosition);
 
 		{
 			std::vector<SMetaDataComponent> componentVector;

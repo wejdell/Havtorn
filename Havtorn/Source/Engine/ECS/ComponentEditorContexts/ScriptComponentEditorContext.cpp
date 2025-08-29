@@ -9,6 +9,8 @@
 
 #include <GUI.h>
 #include <ECS/Components/MetaDataComponent.h>
+#include <Core/RuntimeAssetDeclarations.h>
+#include <Scene/AssetRegistry.h>
 
 namespace Havtorn
 {
@@ -131,28 +133,27 @@ namespace Havtorn
 			GUI::SameLine();
 
 			SAsset asset;
-			if (std::holds_alternative<SAsset>(dataBinding.Data))
-				asset = std::get<SAsset>(dataBinding.Data);
+			if (std::holds_alternative<std::string>(dataBinding.Data))
+				asset = *GEngine::GetAssetRegistry()->RequestAsset(SAssetReference(std::get<std::string>(dataBinding.Data)), 100);
 
-			if (asset.AssetPath.empty())
-				asset.AssetPath = assetPath;
+			if (asset.Reference.FilePath.empty())
+				asset.Reference.FilePath = assetPath;
 
 			//GUI::Text(asset.AssetPath.c_str());
-			GUI::InputText("##edit", asset.AssetPath);
+			GUI::InputText("##edit", asset.Reference.FilePath);
 
 			if (GUI::BeginPopupContextWindow())
 			{
 				if (GUI::MenuItem("Paste Asset Path"))
-					asset.AssetPath = GUI::CopyFromClipboard();
+					asset.Reference.FilePath = GUI::CopyFromClipboard();
 
 				GUI::EndPopup();
 			}
 
+			if (!asset.Reference.FilePath.empty())
+				asset.Reference = SAssetReference(asset.Reference.FilePath);
 
-			if (!asset.AssetPath.empty())
-				asset.UID = UGUIDManager::Generate();
-
-			dataBinding.Data = asset;
+			dataBinding.Data = asset.Reference.FilePath;
 			// TODO.NW: Simplify flow for assigning assets through a view result
 			//if (dataBinding.AssetType == EAssetType::StaticMesh)
 			//{

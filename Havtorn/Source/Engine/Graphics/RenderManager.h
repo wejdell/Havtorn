@@ -71,13 +71,7 @@ namespace Havtorn
 
 		ENGINE_API void LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent, CScene* scene = nullptr);
 		ENGINE_API void LoadSkeletalMeshComponent(const std::string& filePath, SSkeletalMeshComponent* outSkeletalMeshComponent);
-		ENGINE_API void LoadMaterialComponent(const std::vector<std::string>& materialPaths, SMaterialComponent* outMaterialComponent);
-		// NR: Note that we use the file *name* instead of the full path here, we assume that it already exists in the registry.
-		ENGINE_API bool TryLoadStaticMeshComponent(const std::string& fileName, SStaticMeshComponent* outStaticMeshComponent) const;
-		ENGINE_API bool TryReplaceMaterialOnComponent(const std::string& filePath, U8 materialIndex, SMaterialComponent* outMaterialComponent) const;
-
-		ENGINE_API SVector2<F32> GetShadowAtlasResolution() const;
-		
+		ENGINE_API void LoadMaterialComponent(const std::vector<std::string>& materialPaths, SMaterialComponent* outMaterialComponent);		
 		ENGINE_API void LoadDecalComponent(const std::vector<std::string>& texturePaths, SDecalComponent* outDecalComponent);
 		ENGINE_API void LoadEnvironmentLightComponent(const std::string& ambientCubemapTexturePath, SEnvironmentLightComponent* outEnvironmentLightComponent);
 		ENGINE_API void LoadSpriteComponent(const std::string& filePath, SSpriteComponent* outSpriteComponent);
@@ -98,13 +92,13 @@ namespace Havtorn
 
 		U32 WriteToAnimationDataTexture(const std::string& animationName);
 
-		bool IsStaticMeshInInstancedRenderList(const std::string& meshName);
-		void AddStaticMeshToInstancedRenderList(const std::string& meshName, const STransformComponent* component);
+		bool IsStaticMeshInInstancedRenderList(const U32 meshUID);
+		void AddStaticMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* component);
 		void SwapStaticMeshInstancedRenderLists();
 		void ClearSystemStaticMeshInstanceData();
 
-		bool IsSkeletalMeshInInstancedRenderList(const std::string& meshName);
-		void AddSkeletalMeshToInstancedRenderList(const std::string& meshName, const STransformComponent* transformComponent, const SSkeletalAnimationComponent* animationComponent);
+		bool IsSkeletalMeshInInstancedRenderList(const U32 meshUID);
+		void AddSkeletalMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* transformComponent, const SSkeletalAnimationComponent* animationComponent);
 		void SwapSkeletalMeshInstancedRenderLists();
 		void ClearSystemSkeletalMeshInstanceData();
 
@@ -127,6 +121,7 @@ namespace Havtorn
 		void SwapRenderCommandBuffers();
 
 		const SVector2<U16>& GetCurrentWindowResolution() const;
+		const SVector2<F32>& GetShadowAtlasResolution() const;
 
 	public:
 		ENGINE_API static U32 NumberOfDrawCallsThisFrame;
@@ -142,8 +137,6 @@ namespace Havtorn
 		void BindRenderFunctions();
 
 	private:
-		std::vector<U16> AddMaterial(const std::string& materialName, EMaterialConfiguration configuration);
-
 		inline void ShadowAtlasPrePassDirectional(const SRenderCommand& command);
 		inline void ShadowAtlasPrePassPoint(const SRenderCommand& command);
 		inline void ShadowAtlasPrePassSpot(const SRenderCommand& command);
@@ -183,6 +176,8 @@ namespace Havtorn
 
 		void CheckIsolatedRenderPass();
 		void CycleRenderPass(const SInputActionPayload payload);
+
+		void MapRuntimeMaterialProperty(SRuntimeGraphicsMaterialProperty& property, std::vector<ID3D11ShaderResourceView*>& runtimeArray, std::map<F32, F32>& runtimeMap);
 
 	private:
 		struct SFrameBufferData
@@ -397,15 +392,15 @@ namespace Havtorn
 		};
 
 		// TODO.NR: Add GUIDs to things like this
-		std::unordered_map<std::string, SStaticMeshAsset> LoadedStaticMeshes;
-		std::unordered_map<std::string, SSkeletalMeshAsset> LoadedSkeletalMeshes;
-		std::unordered_map<std::string, SSkeletalAnimationAsset> LoadedSkeletalAnims;
+		//std::unordered_map<std::string, SStaticMeshAsset> LoadedStaticMeshes;
+		//std::unordered_map<std::string, SSkeletalMeshAsset> LoadedSkeletalMeshes;
+		//std::unordered_map<std::string, SSkeletalAnimationAsset> LoadedSkeletalAnims;
 		// NR: These are used as a way of cross-thread resource management
-		std::unordered_map<std::string, SStaticMeshInstanceData> SystemStaticMeshInstanceData;
-		std::unordered_map<std::string, SStaticMeshInstanceData> RendererStaticMeshInstanceData;
+		std::unordered_map<U32, SStaticMeshInstanceData> SystemStaticMeshInstanceData;
+		std::unordered_map<U32, SStaticMeshInstanceData> RendererStaticMeshInstanceData;
 
-		std::unordered_map<std::string, SSkeletalMeshInstanceData> SystemSkeletalMeshInstanceData;
-		std::unordered_map<std::string, SSkeletalMeshInstanceData> RendererSkeletalMeshInstanceData;
+		std::unordered_map<U32, SSkeletalMeshInstanceData> SystemSkeletalMeshInstanceData;
+		std::unordered_map<U32, SSkeletalMeshInstanceData> RendererSkeletalMeshInstanceData;
 
 		// TODO.NR: Maybe generalize GPU Instancing resources that are kept duplicate like this, combining
 		// the 4 function calls as well somehow. Maybe templated? Could use two template arguments, one for key and 

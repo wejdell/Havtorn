@@ -73,10 +73,10 @@ namespace Havtorn
 		EDITOR_API void CreateMaterial(const std::string& destinationPath, const std::array<std::string, 3>& texturePaths) const;
 
 	private:
-		std::string GetFileName(EEditorTexture texture);
+		std::string GetFileName(EEditorTexture texture, const std::string& extension, const std::string& prefix = "");
 	
 	private:
-		std::vector<CRenderTexture> Textures;
+		std::vector<CStaticRenderTexture> Textures;
 		CRenderManager* RenderManager = nullptr;
 		std::string ResourceAssetPath = "Resources/";
 	};

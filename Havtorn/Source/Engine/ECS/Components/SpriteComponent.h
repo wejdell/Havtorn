@@ -2,6 +2,7 @@
 
 #pragma once
 #include "ECS/Component.h"
+#include "FileSystem/FileHeaderDeclarations.h"
 #include <Color.h>
 
 namespace Havtorn
@@ -13,9 +14,12 @@ namespace Havtorn
 			: SComponent(entityOwner)
 		{}
 
+		void Serialize(char* toData, U64& pointerPosition) const;
+		void Deserialize(const char* fromData, U64& pointerPosition);
+		[[nodiscard]] U32 GetSize() const;
+
 		SColor Color = SColor::White;
 		SVector4 UVRect = { 0.f, 0.f, 1.f, 1.f };
-		U64 AssetRegistryKey = 0;
-		U16 TextureIndex = 0;
+		SAssetReference AssetReference;
 	};
 }

@@ -1,10 +1,10 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include <map>
-// TODO.NW: Unify these asset files under the same directory
+
 #include "FileSystem/FileHeaderDeclarations.h"
-#include "Assets/Asset.h"
+#include "Core/RuntimeAssetDeclarations.h"
+#include <map>
 
 namespace Havtorn
 {
@@ -13,57 +13,99 @@ namespace Havtorn
 
 	class CAssetRegistry
 	{
-		struct SAssetReference
-		{
-			// TODO.NW: Essentially a hashed string. Can we use that instead?
-			U64 UID = 0;
-			std::string FilePath = "";
-
-			bool operator==(const SAssetReference& other)
-			{
-				return UID == other.UID && FilePath == other.FilePath;
-			}
-		};
-
 	public:
 		CAssetRegistry();
 		~CAssetRegistry();
 
-		bool Init(CGraphicsFramework* framework, CRenderManager* renderManager);
-
-		//[[nodiscard]] U32 GetSize() const;
-		//void Serialize(char* toData, U64& pointerPosition) const;
-		//void Deserialize(const char* fromData, U64& pointerPosition);
+		bool Init(CRenderManager* renderManager);
 
 		template<typename T>
-		T& RequestAssetData(const SAssetReference& reference, const U64 requesterID);
+		T* RequestAssetData(const SAssetReference& assetRef, const U64 requesterID);
 
-		SAsset* RequestAsset(const SAssetReference& reference, const U64 requesterID);
-		void UnrequestAsset(const SAssetReference& reference, const U64 requesterID);
+		template<typename T>
+		std::vector<T*> RequestAssetData(const std::vector<SAssetReference>& assetRefs, const U64 requesterID);
+
+		template<typename T>
+		T* RequestAssetData(const U32 assetUID, const U64 requesterID);
+
+		template<typename T>
+		std::vector<T*> RequestAssetData(const std::vector<U32>& assetUIDs, const U64 requesterID);
+
+		ENGINE_API SAsset* RequestAsset(const SAssetReference& assetRef, const U64 requesterID);
+		ENGINE_API void UnrequestAsset(const SAssetReference& assetRef, const U64 requesterID);
+
+		ENGINE_API SAsset* RequestAsset(const U32 assetUID, const U64 requesterID);
+		ENGINE_API void UnrequestAsset(const U32 assetUID, const U64 requesterID);
 
 		// TODO.NW: If we extend our own filePath struct, could be nice to separate full paths from folders
-		std::string ImportAsset(const std::string& filePath, const std::string& destinationPath, const SSourceAssetData& sourceData);
-		std::string SaveAsset(const std::string& destinationPath, const SAssetFileHeader& fileHeader);
-	
+		ENGINE_API std::string ImportAsset(const std::string& filePath, const std::string& destinationPath, const SSourceAssetData& sourceData);
+		ENGINE_API std::string SaveAsset(const std::string& destinationPath, const SAssetFileHeader& fileHeader);
+
 	private:
+		// TODO.NW: Catch asset location changes! Both source and asset itself, as part of file watching? 
+		// At the very least we shouldn't crash if we try to load an asset with an invalid path
+
 		// Load asset synchronously
-		SAsset* LoadAsset(const SAssetReference& reference, const U64 requesterID);
-		void UnloadAsset(const SAssetReference& reference);	
+		SAsset* LoadAsset(const SAssetReference& assetRef, const U64 requesterID);
+		void UnloadAsset(const SAssetReference& assetRef);	
 
 		CRenderManager* RenderManager = nullptr;
-		std::map<SAssetReference, SAsset> Registry;
+		std::map<U32, SAsset> Registry;
 	};
 
 	template<typename T>
-	inline T& CAssetRegistry::RequestAssetData(const SAssetReference& reference, const U64 requesterID)
+	inline T* CAssetRegistry::RequestAssetData(const SAssetReference& assetRef, const U64 requesterID)
 	{
-		SAsset* asset = RequestAsset(reference, requesterID);
+		SAsset* asset = RequestAsset(assetRef, requesterID);
 		if (!std::holds_alternative<T>(asset->Data))
 		{
-			HV_LOG_WARN("CAssetRegistry::RequestAssetData could not provide the requested asset data in %s", reference.FilePath.c_str());
-			return T();
+			HV_LOG_WARN("CAssetRegistry::RequestAssetData could not provide the requested asset data in %s", assetRef.FilePath.c_str());
+			return nullptr;
 		}
 
-		return std::get<T>(asset->Data);
+		return &std::get<T>(asset->Data);
+	}
+
+	template<typename T>
+	inline std::vector<T*> CAssetRegistry::RequestAssetData(const std::vector<SAssetReference>& assetRefs, const U64 requesterID)
+	{
+		std::vector<T*> assets;
+		
+		for (const SAssetReference& ref : assetRefs)
+			assets.emplace_back(RequestAssetData<T>(ref, requesterID));
+		
+		return assets;
+	}
+
+	template<typename T>
+	inline T* CAssetRegistry::RequestAssetData(const U32 assetUID, const U64 requesterID)
+	{
+		if (!Registry.contains(assetUID))
+		{
+			HV_LOG_WARN("CAssetRegistry::RequestAssetData could not provide the requested asset data with ID: %i. No path was provided so it could not be loaded.", assetUID);
+			return nullptr;
+		}
+
+		SAsset* asset = &Registry[assetUID];
+		if (!std::holds_alternative<T>(asset->Data))
+		{
+			HV_LOG_WARN("CAssetRegistry::RequestAssetData could not provide the requested asset data with ID: %i. The data is not of the requested type.", assetUID);
+			return nullptr;
+		}
+		
+		asset->Requesters.insert(requesterID);
+		
+		return &std::get<T>(asset->Data);
+	}
+
+	template<typename T>
+	inline std::vector<T*> CAssetRegistry::RequestAssetData(const std::vector<U32>& assetUIDs, const U64 requesterID)
+	{
+		std::vector<T*> assets;
+
+		for (const U32 uid : assetUIDs)
+			assets.emplace_back(RequestAssetData<T>(uid, requesterID));
+
+		return assets;
 	}
 }

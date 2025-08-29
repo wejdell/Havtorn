@@ -2,33 +2,21 @@
 
 #pragma once
 
+#include "FileSystem/FileHeaderDeclarations.h"
 #include "Core/RuntimeAssetDeclarations.h"
-
-#include <set>
 
 namespace Havtorn
 {
-	struct SSourceAssetData
-	{
-		EAssetType AssetType = EAssetType::None;
-		std::string SourcePath = "";
+	//struct SAsset
+	//{
+	//	EAssetType Type = EAssetType::None;
+	//	U64 UID = 0;
+	//	std::string AssetPath = "";
+	//	SSourceAssetData SourceData;
 
-		std::string AssetDependencyPath = "";
-		F32 ImportScale = 1.0f;
+	//	std::set<U64> References = {};
+	//	SAssetData Data = std::monostate();
 
-		const bool IsValid() const { return SourcePath != ""; }
-	};
-
-	struct SAsset
-	{
-		EAssetType Type = EAssetType::None;
-		U64 UID = 0;
-		std::string AssetPath = "";
-		SSourceAssetData SourceData;
-
-		std::set<U64> References = {};
-		SAssetData Data = std::monostate();
-
-		const bool IsValid() const { return UID != 0 && Type != EAssetType::None && AssetPath != ""; }
-	};
+	//	const bool IsValid() const { return UID != 0 && Type != EAssetType::None && AssetPath != ""; }
+	//};
 }

@@ -121,18 +121,16 @@ namespace Havtorn
 			if (!entity.IsValid())	
 				return 1;
 			
-			SAsset asset;
-			GetDataOnPin(EPinDirection::Input, 2, asset);
-			if (!asset.IsValid())
+			std::string assetPath;
+			GetDataOnPin(EPinDirection::Input, 2, assetPath);
+			if (assetPath == "")
 				return 1;
 
 			SStaticMeshComponent* meshComponent = OwningScript->Scene->GetComponent<SStaticMeshComponent>(entity);
 			if (!meshComponent)
 				return 1;
 
-			// TODO.NW: Route asset switching through AssetRegistry
-			// Update references when changing assets like this
-			OwningScript->Scene->RenderManager->LoadStaticMeshComponent(asset.AssetPath, meshComponent, OwningScript->Scene);
+			OwningScript->Scene->RenderManager->LoadStaticMeshComponent(assetPath, meshComponent, OwningScript->Scene);
 
 			return 0;
 		}

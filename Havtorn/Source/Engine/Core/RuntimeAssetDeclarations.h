@@ -7,6 +7,9 @@
 #include "Graphics/GraphicsUtilities.h"
 #include "Graphics/GraphicsMaterial.h"
 #include "Graphics/RenderingPrimitives/RenderTexture.h"
+#include "ECS/Components/SpriteAnimatorGraphNode.h"
+
+#include <set>
 
 namespace Havtorn
 {
@@ -33,6 +36,7 @@ namespace Havtorn
 		std::vector<SDrawCallData> DrawCallData = {};
 		SVector BoundsMin = SVector(FLT_MAX);
 		SVector BoundsMax = SVector(-FLT_MAX);
+		SVector BoundsCenter = SVector(0.0f);
 	};
 
 	struct SSkeletalMeshAsset
@@ -62,6 +66,7 @@ namespace Havtorn
 		std::vector<SSkeletalMeshNode> Nodes = {};
 		SVector BoundsMin = SVector(FLT_MAX);
 		SVector BoundsMax = SVector(-FLT_MAX);
+		SVector BoundsCenter = SVector(0.0f);
 	};
 
 	struct SSkeletalAnimationAsset
@@ -71,11 +76,11 @@ namespace Havtorn
 		explicit SSkeletalAnimationAsset(const SSkeletalAnimationFileHeader& assetFileData)
 			: AssetType(assetFileData.AssetType)
 			, Name(assetFileData.Name)
-			, SkeletonName(assetFileData.SkeletonName)
+			, SkeletonName(UGeneralUtils::ExtractFileBaseNameFromPath(assetFileData.SourceData.AssetDependencyPath.AsString()))
 			, DurationInTicks(assetFileData.DurationInTicks)
 			, TickRate(assetFileData.TickRate)
 			, NumberOfTracks(assetFileData.NumberOfBones)
-			, ImportScale(assetFileData.ImportScale)
+			, ImportScale(assetFileData.SourceData.ImportScale)
 			, BoneAnimationTracks(assetFileData.BoneAnimationTracks)
 		{
 		}
@@ -94,21 +99,18 @@ namespace Havtorn
 	{
 		STextureAsset() = default;
 
-		explicit STextureAsset(const STextureFileHeader& assetFileData/*, ID3D11Device* graphicsDevice*/)
+		explicit STextureAsset(const STextureFileHeader& assetFileData)
 			: AssetType(assetFileData.AssetType)
-			, MaterialName(assetFileData.MaterialName)
-			, MaterialConfiguration(assetFileData.MaterialConfiguration)
+			, Name(assetFileData.Name)
 			, Suffix(assetFileData.Suffix)
 		{
-			//ShaderResourceView = std::move(UGraphicsUtils::TryGetShaderResourceView(graphicsDevice, assetFileData.Data.data(), assetFileData.Data.size(), assetFileData.OriginalFormat));
+			// NW: RenderTexture is assigned in CAssetRegistry::LoadAsset
 		}
 
 		EAssetType AssetType = EAssetType::Texture;
-		std::string MaterialName = "";
-		EMaterialConfiguration MaterialConfiguration = EMaterialConfiguration::AlbedoMaterialNormal_Packed;
+		std::string Name = "";
 		char Suffix = 0;
 		CStaticRenderTexture RenderTexture;
-		//ID3D11ShaderResourceView* ShaderResourceView = nullptr;
 	};
 
 	struct SGraphicsMaterialAsset
@@ -117,7 +119,7 @@ namespace Havtorn
 
 		explicit SGraphicsMaterialAsset(const SMaterialAssetFileHeader& assetFileData)
 			: AssetType(assetFileData.AssetType)
-			, Material(assetFileData.Material, assetFileData.MaterialName)
+			, Material(assetFileData.Material, assetFileData.Name)
 		{
 		}
 
@@ -140,4 +142,16 @@ namespace Havtorn
 	};
 
 	typedef std::variant<std::monostate, SStaticMeshAsset, SSkeletalMeshAsset, SSkeletalAnimationAsset, STextureAsset, SGraphicsMaterialAsset, SSpriteAninmationClipAsset> SAssetData;
+
+	struct SAsset
+	{
+		EAssetType Type = EAssetType::None;
+		SAssetReference Reference;
+		SSourceAssetData SourceData;
+
+		std::set<U64> Requesters = {};
+		SAssetData Data = std::monostate();
+
+		const bool IsValid() const { return Reference.IsValid() && Type != EAssetType::None; }
+	};
 }

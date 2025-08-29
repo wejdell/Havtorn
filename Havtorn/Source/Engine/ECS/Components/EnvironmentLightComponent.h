@@ -2,6 +2,7 @@
 
 #pragma once
 #include "ECS/Component.h"
+#include "FileSystem/FileHeaderDeclarations.h"
 
 namespace Havtorn
 {
@@ -12,12 +13,11 @@ namespace Havtorn
 			: SComponent(entityOwner)
 		{}
 
+		void Serialize(char* toData, U64& pointerPosition) const;
+		void Deserialize(const char* fromData, U64& pointerPosition);
+		[[nodiscard]] U32 GetSize() const;
+
 		bool IsActive = false;
-		U16 AmbientCubemapReference = 0;
-		U64 AssetRegistryKey = 0;
-	
-		// TODO.NR: If we assume that EEditorResourceTexture won't change order (because we don't expect to have many editor resource textures), this
-		// hard coded index works perfectly fine. We might want to find a cleaner abstraction or way to connect this editor data to the engine though.
-		U32 EditorTextureIndex = 7;
+		SAssetReference AssetReference;
 	};
 }

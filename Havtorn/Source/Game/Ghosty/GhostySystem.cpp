@@ -8,6 +8,8 @@
 #include "ECS/Systems/SpriteAnimatorGraphSystem.h"
 #include "Input/InputMapper.h"
 
+#include <Engine.h>
+
 namespace Havtorn
 {
 	CGhostySystem::CGhostySystem()
