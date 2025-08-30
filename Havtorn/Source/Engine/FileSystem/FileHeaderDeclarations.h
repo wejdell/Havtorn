@@ -20,13 +20,13 @@ namespace Havtorn
 		SAssetReference() = default;
 		explicit SAssetReference(const std::string& filePath)
 		{
-			FilePath = filePath;
+			FilePath = UGeneralUtils::ConvertToPlatformAgnosticPath(filePath);
 			U32 prime = 0x1000193;
 			UID = 0x811c9dc5;
 
-			for (U64 i = 0; i < filePath.size(); ++i)
+			for (U64 i = 0; i < FilePath.size(); ++i)
 			{
-				U8 value = filePath[i];
+				U8 value = FilePath[i];
 				UID = UID ^ value;
 				UID *= prime;
 			}
@@ -42,6 +42,7 @@ namespace Havtorn
 
 		static std::vector<U32> GetIDs(const std::vector<SAssetReference>& references);
 		static std::vector<std::string> GetPaths(const std::vector<SAssetReference>& references);
+		static std::vector<SAssetReference> MakeVectorFromPaths(const std::vector<std::string>& paths);
 	};
 
 	inline U32 SAssetReference::GetSize() const
@@ -82,6 +83,16 @@ namespace Havtorn
 			paths.push_back(ref.FilePath);
 
 		return paths;
+	}
+
+	inline std::vector<SAssetReference> SAssetReference::MakeVectorFromPaths(const std::vector<std::string>& paths)
+	{
+		std::vector<SAssetReference> references;
+		
+		for (const std::string& path : paths)
+			references.emplace_back(path);
+
+		return references;
 	}
 
 	struct SSourceAssetData

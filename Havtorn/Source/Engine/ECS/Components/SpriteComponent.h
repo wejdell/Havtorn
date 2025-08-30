@@ -13,6 +13,10 @@ namespace Havtorn
 		SSpriteComponent(const SEntity& entityOwner)
 			: SComponent(entityOwner)
 		{}
+		SSpriteComponent(const SEntity& entityOwner, const std::string& assetPath)
+			: SComponent(entityOwner)
+			, AssetReference(SAssetReference(assetPath))
+		{}
 
 		void Serialize(char* toData, U64& pointerPosition) const;
 		void Deserialize(const char* fromData, U64& pointerPosition);

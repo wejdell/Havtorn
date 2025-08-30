@@ -26,16 +26,18 @@ namespace Havtorn
         RenderManager = renderManager;
 
         // Add null asset
-        Registry.emplace(0, SAsset());
+        LoadedAssets.emplace(0, SAsset());
+
+        RefreshRegisteredAssets();
 
         return true;
     }
 
     SAsset* CAssetRegistry::RequestAsset(const SAssetReference& assetRef, const U64 requesterID)
     {
-        if (Registry.contains(assetRef.UID))
+        if (LoadedAssets.contains(assetRef.UID))
         {
-            SAsset* loadedAsset = &Registry[assetRef.UID];
+            SAsset* loadedAsset = &LoadedAssets[assetRef.UID];
             loadedAsset->Requesters.insert(requesterID);
             return loadedAsset;
         }
@@ -47,10 +49,10 @@ namespace Havtorn
     void CAssetRegistry::UnrequestAsset(const SAssetReference& assetRef, const U64 requesterID)
     {
         // TODO.NW: Check if asset is loading on separate thread, or check if requests are still there when finished loading?
-        if (!Registry.contains(assetRef.UID))
+        if (!LoadedAssets.contains(assetRef.UID))
             return;
 
-        SAsset* loadedAsset = &Registry[assetRef.UID];
+        SAsset* loadedAsset = &LoadedAssets[assetRef.UID];
         loadedAsset->Requesters.erase(requesterID);
 
         if (loadedAsset->Requesters.empty())
@@ -59,35 +61,48 @@ namespace Havtorn
 
     SAsset* CAssetRegistry::RequestAsset(const U32 assetUID, const U64 requesterID)
     {
-        if (Registry.contains(assetUID))
+        if (LoadedAssets.contains(assetUID))
         {
-            SAsset* loadedAsset = &Registry[assetUID];
+            SAsset* loadedAsset = &LoadedAssets[assetUID];
             loadedAsset->Requesters.insert(requesterID);
             return loadedAsset;
         }
 
-        HV_LOG_ERROR("CAssetRegistry::RequestAsset: Could not request asset with ID: %i, it is not loaded yet. Please use the asset file path instead", assetUID);
+        if (AssetDatabase.contains(assetUID))
+        {
+            SAsset* asset = RequestAsset(SAssetReference(AssetDatabase[assetUID]), requesterID);
+            asset->Requesters.insert(requesterID);
+            return asset;
+        }
+
+        HV_LOG_ERROR("CAssetRegistry::RequestAsset: Could not request asset with ID: %i, it is not loaded yet and has not been found in the database before. Please use the asset file path instead", assetUID);
         return nullptr;
     }
 
     void CAssetRegistry::UnrequestAsset(const U32 assetUID, const U64 requesterID)
     {
         // TODO.NW: Check if asset is loading on separate thread, or check if requests are still there when finished loading?
-        if (!Registry.contains(assetUID))
+        if (!LoadedAssets.contains(assetUID))
             return;
 
-        SAsset* loadedAsset = &Registry[assetUID];
+        SAsset* loadedAsset = &LoadedAssets[assetUID];
         loadedAsset->Requesters.erase(requesterID);
     }
 
     SAsset* CAssetRegistry::LoadAsset(const SAssetReference& assetRef, const U64 requesterID)
     {
         std::string filePath = assetRef.FilePath;
-        const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
+        if (!CFileSystem::DoesFileExist(filePath))
+        {
+            HV_LOG_WARN("CAssetRegistry::LoadAsset: Asset file pointed to by %s failed to load, does not exist!", assetRef.FilePath.c_str());
+            return &LoadedAssets[0];
+        }
+
+        const U64 fileSize = CFileSystem::GetFileSize(filePath);
         if (fileSize == 0)
         {
             HV_LOG_WARN("CAssetRegistry::LoadAsset: Asset file pointed to by %s failed to load, was empty!", assetRef.FilePath.c_str());
-            return &Registry[0];
+            return &LoadedAssets[0];
         }
 
         char* data = new char[fileSize];
@@ -205,20 +220,20 @@ namespace Havtorn
             // TODO.NW: Use magic enum to write out enum type
             HV_LOG_WARN("CAssetRegistry: Asset Resolving for asset type SEE_TODO is not yet implemented.");
             delete[] data;
-            return &Registry[0];
+            return &LoadedAssets[0];
         }
         delete[] data;
 
         // TODO.NW: Set asset source data and bind filewatchers?
 
-        Registry.emplace(assetRef.UID, asset);
-        return &Registry[assetRef.UID];
+        LoadedAssets.emplace(assetRef.UID, asset);
+        return &LoadedAssets[assetRef.UID];
     }
 
     void CAssetRegistry::UnloadAsset(const SAssetReference& assetRef)
     {
         // TODO.NW: If any filewatchers are watching the source of this asset, remove them now
-        Registry.erase(assetRef.UID);
+        LoadedAssets.erase(assetRef.UID);
     }
 
     std::string CAssetRegistry::ImportAsset(const std::string& filePath, const std::string& destinationPath, const SSourceAssetData& sourceData)
@@ -266,6 +281,7 @@ namespace Havtorn
         if (hvaPath == "INVALID_PATH")
             HV_LOG_WARN("CAssetRegistry::ImportAsset: The chosen source data refers to an asset type doesn't have import logic implemented. Could not create asset at %s for %s!", destinationPath.c_str(), filePath.c_str());
 
+        AssetDatabase.emplace(SAssetReference(hvaPath).UID, hvaPath);
         return hvaPath;
     }
 
@@ -325,5 +341,23 @@ namespace Havtorn
             HV_LOG_WARN("CAssetRegistry::SaveAsset: The chosen file header had no serialization implemented. Could not create asset at %s!", destinationPath.c_str());
 
         return hvaPath;
+    }
+
+    void CAssetRegistry::RefreshRegisteredAssets()
+    {
+        AssetDatabase.clear();
+
+        std::vector<std::string> topLevelDirectories = { "Resources/", "Assets/"};
+        for (const std::string& directory : topLevelDirectories)
+        {
+            for (const auto& entry : std::filesystem::recursive_directory_iterator(directory))
+            {
+                std::string path = UGeneralUtils::ConvertToPlatformAgnosticPath(entry.path().string());
+                if (!entry.is_directory() && UGeneralUtils::ExtractFileExtensionFromPath(path) == "hva")
+                {
+                    AssetDatabase.emplace(SAssetReference(path).UID, path);
+                }
+            }
+        }
     }
 }

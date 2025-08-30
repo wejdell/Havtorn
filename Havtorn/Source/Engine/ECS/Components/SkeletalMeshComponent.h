@@ -13,26 +13,15 @@ namespace Havtorn
 		SSkeletalMeshComponent(const SEntity& entityOwner)
 			: SComponent(entityOwner)
 		{}
+		SSkeletalMeshComponent(const SEntity& entityOwner, const std::string& assetPath)
+			: SComponent(entityOwner)
+			, AssetReference(SAssetReference(assetPath))
+		{}
 
 		void Serialize(char* toData, U64& pointerPosition) const;
 		void Deserialize(const char* fromData, U64& pointerPosition);
 		[[nodiscard]] U32 GetSize() const;
 
-		//// Asset Data
-		//// A.G: Could potentially use an index/id to a map within the RenderManager for 'DrawCallData' instead?
-		//std::vector<SDrawCallData> DrawCallData;
-		//// A.G: Could potentially use an index/id to a map within the RenderManager for 'Name' instead?
-		//// Are DrawCallData & Name ever used outside of the RenderManager?
-		//// The map could be owned by some other static object/registry. I think it could reduce the size of components.
-		//CHavtornStaticString<255> Name;
-		//std::vector<SSkeletalMeshBone> BindPose;
-		//std::vector<SSkeletalMeshNode> Nodes;
-
-		//SVector BoundsMin = SVector::Zero;
-		//SVector BoundsMax = SVector::Zero;
-		//SVector BoundsCenter = SVector::Zero;
-
-		//U8 NumberOfMaterials = 0;
 		SAssetReference AssetReference;
 	};
 }

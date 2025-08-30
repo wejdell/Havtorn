@@ -336,8 +336,7 @@ namespace Havtorn
 		if (staticMesh == nullptr)
 			return;
 
-		// TODO.NW: Figure out why we did TryLoadStaticMeshComponent here before
-		Manager->GetRenderManager()->LoadStaticMeshComponent(assetRep->Name + ".hva", staticMesh, Scene);
+		staticMesh->AssetReference = SAssetReference(assetRep->DirectoryEntry.path().string());
 	}
 
 	void CInspectorWindow::HandleSkeletonAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep)
@@ -346,18 +345,17 @@ namespace Havtorn
 		if (skeletalMesh == nullptr)
 			return;
 
-		// TODO.NW: Figure out why we did TryLoadStaticMeshComponent here before
-		Manager->GetRenderManager()->LoadSkeletalMeshComponent(assetRep->Name + ".hva", skeletalMesh);
+		skeletalMesh->AssetReference = SAssetReference(assetRep->DirectoryEntry.path().string());
 	}
 
 	void CInspectorWindow::HandleSkeletalAnimationAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep)
 	{
-		SSkeletalAnimationComponent* skeletalMesh = static_cast<SSkeletalAnimationComponent*>(result.ComponentViewed);
-		if (skeletalMesh == nullptr)
+		SSkeletalAnimationComponent* skeletalAnimationComp = static_cast<SSkeletalAnimationComponent*>(result.ComponentViewed);
+		if (skeletalAnimationComp == nullptr)
 			return;
 
-		// TODO.NW: Figure out why we did TryLoadStaticMeshComponent here before
-		Manager->GetRenderManager()->LoadSkeletalAnimationComponent({ assetRep->Name + ".hva" }, skeletalMesh);
+		// TODO.NW: This should make use of the AssetPickedIndex just like the material below
+		skeletalAnimationComp->AssetReferences = SAssetReference::MakeVectorFromPaths({ assetRep->DirectoryEntry.path().string() });
 	}
 
 	void CInspectorWindow::HandleMaterialAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep)
@@ -370,7 +368,7 @@ namespace Havtorn
 		paths[AssetPickedIndex] = assetRep->DirectoryEntry.path().string();
 
 		// TODO.NW: This doesn't work for instanced entities yet. Need a solution for that
-		Manager->GetRenderManager()->LoadMaterialComponent(paths, materialComponent);
+		materialComponent->AssetReferences = SAssetReference::MakeVectorFromPaths(paths);
 		AssetPickedIndex = 0;
 	}
 

@@ -41,6 +41,8 @@ namespace Havtorn
 		ENGINE_API std::string ImportAsset(const std::string& filePath, const std::string& destinationPath, const SSourceAssetData& sourceData);
 		ENGINE_API std::string SaveAsset(const std::string& destinationPath, const SAssetFileHeader& fileHeader);
 
+		ENGINE_API void RefreshRegisteredAssets();
+
 	private:
 		// TODO.NW: Catch asset location changes! Both source and asset itself, as part of file watching? 
 		// At the very least we shouldn't crash if we try to load an asset with an invalid path
@@ -50,7 +52,8 @@ namespace Havtorn
 		void UnloadAsset(const SAssetReference& assetRef);	
 
 		CRenderManager* RenderManager = nullptr;
-		std::map<U32, SAsset> Registry;
+		std::map<U32, std::string> AssetDatabase;
+		std::map<U32, SAsset> LoadedAssets;
 	};
 
 	template<typename T>
@@ -80,13 +83,20 @@ namespace Havtorn
 	template<typename T>
 	inline T* CAssetRegistry::RequestAssetData(const U32 assetUID, const U64 requesterID)
 	{
-		if (!Registry.contains(assetUID))
+		if (!LoadedAssets.contains(assetUID))
 		{
-			HV_LOG_WARN("CAssetRegistry::RequestAssetData could not provide the requested asset data with ID: %i. No path was provided so it could not be loaded.", assetUID);
-			return nullptr;
+			if (AssetDatabase.contains(assetUID))
+			{
+				RequestAsset(SAssetReference(AssetDatabase[assetUID]), requesterID);
+			}
+			else
+			{
+				HV_LOG_WARN("CAssetRegistry::RequestAssetData could not provide the requested asset data with ID: %i. It is not loaded and is not found in the database.", assetUID);
+				return nullptr;
+			}
 		}
 
-		SAsset* asset = &Registry[assetUID];
+		SAsset* asset = &LoadedAssets[assetUID];
 		if (!std::holds_alternative<T>(asset->Data))
 		{
 			HV_LOG_WARN("CAssetRegistry::RequestAssetData could not provide the requested asset data with ID: %i. The data is not of the requested type.", assetUID);

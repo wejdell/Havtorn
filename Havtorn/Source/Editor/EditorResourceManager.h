@@ -58,7 +58,7 @@ namespace Havtorn
 		CEditorResourceManager() = default;
 		~CEditorResourceManager() = default;
 
-		bool Init(CRenderManager* renderManager, const CGraphicsFramework* framework);
+		bool Init(CRenderManager* renderManager);
 		CRenderTexture GetEditorTexture(EEditorTexture texture) const;
 
 		CRenderTexture RenderAssetTexure(EAssetType assetType, const std::string& fileName) const;

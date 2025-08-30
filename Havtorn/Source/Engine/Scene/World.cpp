@@ -142,7 +142,7 @@ namespace Havtorn
 		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
 		char* data = new char[fileSize];
 
-		outScene->Init(RenderManager, UGeneralUtils::ExtractFileBaseNameFromPath(filePath));
+		outScene->Init(UGeneralUtils::ExtractFileBaseNameFromPath(filePath));
 
 		U64 pointerPosition = 0;
 		GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));

@@ -207,7 +207,7 @@ namespace Havtorn
 	{
 		SStaticModelFileHeader fileHeader;
 		fileHeader.AssetType = EAssetType::StaticMesh;
-		fileHeader.Name = assimpScene->mName.C_Str();
+		fileHeader.Name = UGeneralUtils::ExtractFileBaseNameFromPath(sourceData.SourcePath.AsString());
 		fileHeader.NumberOfMeshes = assimpScene->mNumMeshes;
 		fileHeader.Meshes.reserve(fileHeader.NumberOfMeshes);
 
@@ -299,7 +299,7 @@ namespace Havtorn
 	{
 		SSkeletalModelFileHeader fileHeader;
 		fileHeader.AssetType = EAssetType::SkeletalMesh;
-		fileHeader.Name = assimpScene->mName.C_Str();
+		fileHeader.Name = UGeneralUtils::ExtractFileBaseNameFromPath(sourceData.SourcePath.AsString());
 		fileHeader.NumberOfMeshes = assimpScene->mNumMeshes;
 		fileHeader.Meshes.reserve(fileHeader.NumberOfMeshes);
 
@@ -428,7 +428,7 @@ namespace Havtorn
 		// TODO.NW: Support multiple animations per file? Support montages somehow. Could be separate file using these headers (SSkeletalAnimationMontageFileHeader)
 		SSkeletalAnimationFileHeader fileHeader;
 		fileHeader.AssetType = EAssetType::Animation;
-		fileHeader.Name = assimpScene->mName.C_Str();
+		fileHeader.Name = UGeneralUtils::ExtractFileBaseNameFromPath(sourceData.SourcePath.AsString());
 		fileHeader.DurationInTicks = STATIC_U32(animation->mDuration);
 		fileHeader.TickRate = STATIC_U32(animation->mTicksPerSecond);
 		fileHeader.SourceData = sourceData;

@@ -72,7 +72,7 @@ namespace Havtorn
 		EDITOR_API CEditorManager();
 		EDITOR_API ~CEditorManager();
 
-		bool EDITOR_API Init(CPlatformManager* platformManager, const CGraphicsFramework* framework, CRenderManager* renderManager);
+		bool EDITOR_API Init(CPlatformManager* platformManager, CRenderManager* renderManager);
 		void EDITOR_API BeginFrame();
 		void EDITOR_API Render();
 		void EDITOR_API EndFrame();

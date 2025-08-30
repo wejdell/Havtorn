@@ -139,7 +139,7 @@ namespace Havtorn
 						if (result.State == EAssetPickerState::AssetPicked)
 						{
 							assetRep = Manager->GetAssetRepFromDirEntry(result.PickedEntry).get();
-							property.TextureUID = STATIC_F32(SAssetReference(assetRep->DirectoryEntry.path().string()).UID);
+							property.TextureUID = SAssetReference(assetRep->DirectoryEntry.path().string()).UID;
 						}
 						I32 channelIndex = UMath::Clamp(STATIC_I32(property.TextureChannelIndex), 0, 3);
 						GUI::InputInt("Texture Channel Index", channelIndex, 1);

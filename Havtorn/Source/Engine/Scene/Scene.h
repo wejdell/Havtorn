@@ -21,7 +21,6 @@ namespace Havtorn
 		std::vector<SComponent*> Components;
 	};
 
-	class CRenderManager;
 	class CAssetRegistry;
 
 	class CScene
@@ -30,10 +29,10 @@ namespace Havtorn
 		ENGINE_API CScene();
 		ENGINE_API ~CScene();
 
-		ENGINE_API virtual bool Init(CRenderManager* renderManager, const std::string& sceneName);
-		ENGINE_API virtual bool Init3DDefaults(CRenderManager* renderManager);
-		ENGINE_API virtual bool Init3DDemoScene(CRenderManager* renderManager);
-		ENGINE_API virtual bool Init2DDemoScene(CRenderManager* renderManager);
+		ENGINE_API virtual bool Init(const std::string& sceneName);
+		ENGINE_API virtual bool Init3DDefaults();
+		ENGINE_API virtual bool Init3DDemoScene();
+		ENGINE_API virtual bool Init2DDemoScene();
 
 		// TODO.NR: Rework serialization to decrease amount of boilerplate
 		ENGINE_API virtual [[nodiscard]] U32 GetSize() const;
@@ -361,8 +360,5 @@ namespace Havtorn
 
 		SEntity MainCameraEntity = SEntity::Null;
 		SEntity PreviewEntity = SEntity::Null;
-
-		// TODO.NR/AG: Try to remove this
-		CRenderManager* RenderManager = nullptr;
 	};
 }

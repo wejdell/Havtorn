@@ -76,7 +76,7 @@ namespace Havtorn
 		explicit SSkeletalAnimationAsset(const SSkeletalAnimationFileHeader& assetFileData)
 			: AssetType(assetFileData.AssetType)
 			, Name(assetFileData.Name)
-			, SkeletonName(UGeneralUtils::ExtractFileBaseNameFromPath(assetFileData.SourceData.AssetDependencyPath.AsString()))
+			, RigPath(assetFileData.SourceData.AssetDependencyPath.AsString())
 			, DurationInTicks(assetFileData.DurationInTicks)
 			, TickRate(assetFileData.TickRate)
 			, NumberOfTracks(assetFileData.NumberOfBones)
@@ -87,7 +87,7 @@ namespace Havtorn
 
 		EAssetType AssetType = EAssetType::Animation;
 		std::string Name = "";
-		std::string SkeletonName = "";
+		std::string RigPath = "";
 		U32 DurationInTicks = 0;
 		U32 TickRate = 0;
 		U32 NumberOfTracks = 0;

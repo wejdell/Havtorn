@@ -130,8 +130,7 @@ namespace Havtorn
 			if (!meshComponent)
 				return 1;
 
-			OwningScript->Scene->RenderManager->LoadStaticMeshComponent(assetPath, meshComponent, OwningScript->Scene);
-
+			meshComponent->AssetReference = SAssetReference(assetPath);
 			return 0;
 		}
 

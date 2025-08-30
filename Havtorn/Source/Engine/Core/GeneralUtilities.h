@@ -2,6 +2,7 @@
 
 #pragma once
 #include <string>
+#include <algorithm>
 
 namespace Havtorn
 {
@@ -29,6 +30,13 @@ namespace Havtorn
 			U64 backwardIndex = filePath.find_last_of("\\") + 1;
 			U64 startIndex = UMath::Max(forwardIndex, backwardIndex);
 			return filePath.substr(startIndex, filePath.length() - startIndex - (ExtractFileExtensionFromPath(filePath).length() + 1));
+		}
+
+		static std::string ConvertToPlatformAgnosticPath(const std::string& filePath)
+		{
+			std::string newPath = filePath;
+			std::replace(newPath.begin(), newPath.end(), '\\', '/');
+			return newPath;
 		}
 
 		// Returns a string with the bytes converted to expected unit with symbol: B, KB or MB. I.e: 1024 will return "1 KB"

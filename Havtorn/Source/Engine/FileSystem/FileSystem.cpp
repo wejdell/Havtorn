@@ -22,6 +22,11 @@ namespace Havtorn
 		return infile.good();
 	}
 
+	U64 CFileSystem::GetFileSize(const std::string& fileName)
+	{
+		return std::filesystem::file_size(fileName);
+	}
+
 	void CFileSystem::OpenFile(const std::string& fileName, EFileMode mode)
 	{
 		bool openSuccess = false;
@@ -120,11 +125,6 @@ namespace Havtorn
 		oss << InputStream.rdbuf();
 		outData = oss.str();
 		CloseFile(EFileMode::BinaryRead);
-	}
-
-	U64 CFileSystem::GetFileSize(const std::string& fileName) const
-	{
-		return std::filesystem::file_size(fileName);
 	}
 
 	std::filesystem::recursive_directory_iterator CFileSystem::GetDirectoryIterator(const std::string& root)

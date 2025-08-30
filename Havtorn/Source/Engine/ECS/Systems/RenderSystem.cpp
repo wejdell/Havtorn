@@ -58,13 +58,17 @@ namespace Havtorn
 		for (const SStaticMeshComponent* staticMeshComponent : scene->GetComponents<SStaticMeshComponent>())
 		{
 			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(staticMeshComponent);
-			const SMaterialComponent* materialComp = scene->GetComponent<SMaterialComponent>(staticMeshComponent);
+			SMaterialComponent* materialComp = scene->GetComponent<SMaterialComponent>(staticMeshComponent);
 
 			if (!SComponent::IsValid(staticMeshComponent) || !SComponent::IsValid(transformComp) || !SComponent::IsValid(materialComp))
 				continue;
 		
 			if (!RenderManager->IsStaticMeshInInstancedRenderList(staticMeshComponent->AssetReference.UID)) // if static, if instanced
 			{		
+				SStaticMeshAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMeshComponent->AssetReference.UID, staticMeshComponent->Owner.GUID);
+				if (asset == nullptr)
+					continue;
+
 				for (const SDirectionalLightComponent* directionalLightComp : directionalLightComponents)
 				{
 					if (SComponent::IsValid(directionalLightComp) && directionalLightComp->IsActive)
@@ -75,7 +79,6 @@ namespace Havtorn
 						command.ShadowmapViews.push_back(directionalLightComp->ShadowmapView);
 						command.Matrices.push_back(transformComp->Transform.GetMatrix());
 						command.U32s.push_back(staticMeshComponent->AssetReference.UID);
-						SStaticMeshAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMeshComponent->AssetReference.UID, staticMeshComponent->Owner.GUID);
 						command.DrawCallData = asset->DrawCallData;
 						RenderManager->PushRenderCommand(command);
 					}
@@ -89,7 +92,6 @@ namespace Havtorn
 						command.Type = ERenderCommandType::ShadowAtlasPrePassPoint;
 						command.Matrices.push_back(transformComp->Transform.GetMatrix());
 						command.U32s.push_back(staticMeshComponent->AssetReference.UID);
-						SStaticMeshAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMeshComponent->AssetReference.UID, staticMeshComponent->Owner.GUID);
 						command.DrawCallData = asset->DrawCallData;
 						command.SetShadowMapViews(pointLightComp->ShadowmapViews);
 						RenderManager->PushRenderCommand(command);
@@ -104,12 +106,16 @@ namespace Havtorn
 						command.Type = ERenderCommandType::ShadowAtlasPrePassSpot;
 						command.Matrices.push_back(transformComp->Transform.GetMatrix());
 						command.U32s.push_back(staticMeshComponent->AssetReference.UID);
-						SStaticMeshAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMeshComponent->AssetReference.UID, staticMeshComponent->Owner.GUID);
 						command.DrawCallData = asset->DrawCallData;
 						command.ShadowmapViews.push_back(spotLightComp->ShadowmapView);
 						RenderManager->PushRenderCommand(command);
 					}
 				}
+
+				if (materialComp->AssetReferences.size() != asset->NumberOfMaterials)
+					materialComp->AssetReferences.resize(asset->NumberOfMaterials, SAssetReference("Resources/M_MeshPreview.hva"));
+
+				std::vector<SGraphicsMaterialAsset*> materialAssets = GEngine::GetAssetRegistry()->RequestAssetData<SGraphicsMaterialAsset>(materialComp->AssetReferences, staticMeshComponent->Owner.GUID);
 
 				if (isInPlayingPlayState)
 				{
@@ -117,11 +123,11 @@ namespace Havtorn
 					command.Type = ERenderCommandType::GBufferDataInstanced;
 					command.Matrices.push_back(transformComp->Transform.GetMatrix());
 					command.U32s.push_back(staticMeshComponent->AssetReference.UID);
-					SStaticMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMeshComponent->AssetReference.UID, staticMeshComponent->Owner.GUID);
-					command.DrawCallData = meshAsset->DrawCallData;
-					std::vector<SGraphicsMaterialAsset*> materialAssets = GEngine::GetAssetRegistry()->RequestAssetData<SGraphicsMaterialAsset>(materialComp->AssetReferences, staticMeshComponent->Owner.GUID);
+					command.DrawCallData = asset->DrawCallData;
+
 					for (SGraphicsMaterialAsset* materialAsset : materialAssets)
 						command.Materials.push_back(materialAsset->Material);	
+					
 					RenderManager->PushRenderCommand(command);
 				}
 				else 
@@ -130,11 +136,11 @@ namespace Havtorn
 					command.Type = ERenderCommandType::GBufferDataInstancedEditor;
 					command.Matrices.push_back(transformComp->Transform.GetMatrix());
 					command.U32s.push_back(staticMeshComponent->AssetReference.UID);
-					SStaticMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMeshComponent->AssetReference.UID, staticMeshComponent->Owner.GUID);
-					command.DrawCallData = meshAsset->DrawCallData;
-					std::vector<SGraphicsMaterialAsset*> materialAssets = GEngine::GetAssetRegistry()->RequestAssetData<SGraphicsMaterialAsset>(materialComp->AssetReferences, staticMeshComponent->Owner.GUID);
+					command.DrawCallData = asset->DrawCallData;
+
 					for (SGraphicsMaterialAsset* materialAsset : materialAssets)
 						command.Materials.push_back(materialAsset->Material);
+					
 					RenderManager->PushRenderCommand(command);
 				}
 			}
@@ -145,7 +151,7 @@ namespace Havtorn
 		for (const SSkeletalMeshComponent* skeletalMeshComponent : scene->GetComponents<SSkeletalMeshComponent>())
 		{
 			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(skeletalMeshComponent);
-			const SMaterialComponent* materialComp = scene->GetComponent<SMaterialComponent>(skeletalMeshComponent);
+			SMaterialComponent* materialComp = scene->GetComponent<SMaterialComponent>(skeletalMeshComponent);
 
 			if (!SComponent::IsValid(skeletalMeshComponent) || !SComponent::IsValid(transformComp) || !SComponent::IsValid(materialComp))
 				continue;
@@ -198,17 +204,26 @@ namespace Havtorn
 				if (!SComponent::IsValid(scene->GetComponent<SSkeletalAnimationComponent>(transformComp)))
 					continue;
 				
+				SSkeletalMeshAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalMeshAsset>(skeletalMeshComponent->AssetReference.UID, skeletalMeshComponent->Owner.GUID);
+				if (asset == nullptr)
+					continue;
+
+				if (materialComp->AssetReferences.size() != asset->NumberOfMaterials)
+					materialComp->AssetReferences.resize(asset->NumberOfMaterials, SAssetReference("Resources/M_MeshPreview.hva"));
+
+				std::vector<SGraphicsMaterialAsset*> materialAssets = GEngine::GetAssetRegistry()->RequestAssetData<SGraphicsMaterialAsset>(materialComp->AssetReferences, skeletalMeshComponent->Owner.GUID);
+
 				if (isInPlayingPlayState)
 				{
 					SRenderCommand command;
 					command.Type = ERenderCommandType::GBufferSkeletalInstanced;
 					command.Matrices.push_back(transformComp->Transform.GetMatrix());
 					command.U32s.push_back(skeletalMeshComponent->AssetReference.UID);
-					SSkeletalMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalMeshAsset>(skeletalMeshComponent->AssetReference.UID, skeletalMeshComponent->Owner.GUID);
-					command.DrawCallData = meshAsset->DrawCallData;
-					std::vector<SGraphicsMaterialAsset*> materialAssets = GEngine::GetAssetRegistry()->RequestAssetData<SGraphicsMaterialAsset>(materialComp->AssetReferences, skeletalMeshComponent->Owner.GUID);
+					command.DrawCallData = asset->DrawCallData;
+
 					for (SGraphicsMaterialAsset* materialAsset : materialAssets)
 						command.Materials.push_back(materialAsset->Material);
+
 					RenderManager->PushRenderCommand(command);
 				}
 				else
@@ -217,11 +232,11 @@ namespace Havtorn
 					command.Type = ERenderCommandType::GBufferSkeletalInstancedEditor;
 					command.Matrices.push_back(transformComp->Transform.GetMatrix());
 					command.U32s.push_back(skeletalMeshComponent->AssetReference.UID);
-					SSkeletalMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalMeshAsset>(skeletalMeshComponent->AssetReference.UID, skeletalMeshComponent->Owner.GUID);
-					command.DrawCallData = meshAsset->DrawCallData;
-					std::vector<SGraphicsMaterialAsset*> materialAssets = GEngine::GetAssetRegistry()->RequestAssetData<SGraphicsMaterialAsset>(materialComp->AssetReferences, skeletalMeshComponent->Owner.GUID);
+					command.DrawCallData = asset->DrawCallData;
+					
 					for (SGraphicsMaterialAsset* materialAsset : materialAssets)
 						command.Materials.push_back(materialAsset->Material);
+					
 					RenderManager->PushRenderCommand(command);
 				}
 			}

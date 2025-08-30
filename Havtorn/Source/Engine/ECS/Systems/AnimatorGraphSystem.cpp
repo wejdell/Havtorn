@@ -254,7 +254,7 @@ namespace Havtorn
 	{
 		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
 		SSkeletalAnimationAsset* animationAsset = assetRegistry->RequestAssetData<SSkeletalAnimationAsset>(SAssetReference(animationFile), 200);
-		SSkeletalMeshAsset* meshAsset = assetRegistry->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(animationAsset->SkeletonName), 200);
+		SSkeletalMeshAsset* meshAsset = assetRegistry->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(animationAsset->RigPath), 200);
 
 		// Ticks == Frames
 		F32 ticksPerSecond = STATIC_F32(animationAsset->TickRate);

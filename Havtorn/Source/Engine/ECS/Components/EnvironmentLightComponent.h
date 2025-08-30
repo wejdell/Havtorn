@@ -12,6 +12,10 @@ namespace Havtorn
 		SEnvironmentLightComponent(const SEntity& entityOwner)
 			: SComponent(entityOwner)
 		{}
+		SEnvironmentLightComponent(const SEntity& entityOwner, const std::string& assetPath)
+			: SComponent(entityOwner)
+			, AssetReference(SAssetReference(assetPath))
+		{}
 
 		void Serialize(char* toData, U64& pointerPosition) const;
 		void Deserialize(const char* fromData, U64& pointerPosition);

@@ -15,7 +15,7 @@ namespace Havtorn
 			outProperty.ConstantValue = offlineProperty.ConstantValue;
 				
 			if (!offlineProperty.TexturePath.empty())
-				outProperty.TextureUID = STATIC_F32(SAssetReference(offlineProperty.TexturePath).UID);
+				outProperty.TextureUID = SAssetReference(offlineProperty.TexturePath).UID;
 				
 			outProperty.TextureChannelIndex = STATIC_F32(offlineProperty.TextureChannelIndex);
 		};

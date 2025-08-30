@@ -48,7 +48,7 @@ namespace Havtorn
 		SAFE_DELETE(ResourceManager);
 	}
 
-	bool CEditorManager::Init(CPlatformManager* platformManager, const CGraphicsFramework* framework, CRenderManager* renderManager)
+	bool CEditorManager::Init(CPlatformManager* platformManager, CRenderManager* renderManager)
 	{
 		PlatformManager = platformManager;
 		if (PlatformManager == nullptr)
@@ -77,7 +77,7 @@ namespace Havtorn
 		Windows.back()->SetEnabled(false);
 
 		ResourceManager = new CEditorResourceManager();
-		bool success = ResourceManager->Init(renderManager, framework);
+		bool success = ResourceManager->Init(renderManager);
 		if (!success)
 			return false;
 		RenderManager = renderManager;
@@ -332,7 +332,7 @@ namespace Havtorn
 		rep.DirectoryEntry = entry;
 		rep.Name = entry.path().filename().string();
 		rep.Name = rep.Name.substr(0, rep.Name.length() - 4);
-		// TODO.NW: Save these in the textureBank? Might be impossible with animated thumbnails. Figure out ownership
+
 		rep.TextureRef = ResourceManager->RenderAssetTexure(rep.AssetType, filePath);
 
 		switch (rep.AssetType)

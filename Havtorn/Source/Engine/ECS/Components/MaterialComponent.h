@@ -13,6 +13,10 @@ namespace Havtorn
 		SMaterialComponent(const SEntity& entityOwner)
 			: SComponent(entityOwner)
 		{}
+		SMaterialComponent(const SEntity& entityOwner, const std::vector<std::string>& assetPaths)
+			: SComponent(entityOwner)
+			, AssetReferences(SAssetReference::MakeVectorFromPaths(assetPaths))
+		{}
 
 		void Serialize(char* toData, U64& pointerPosition) const;
 		void Deserialize(const char* fromData, U64& pointerPosition);

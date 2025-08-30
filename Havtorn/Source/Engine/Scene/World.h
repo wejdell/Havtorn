@@ -198,11 +198,11 @@ namespace Havtorn
 
 		if (shouldOpen3DDemo)
 		{
-			ENGINE_BOOL_POPUP(Scenes.back()->Init3DDemoScene(RenderManager), "Demo Scene could not be initialized.");
+			ENGINE_BOOL_POPUP(Scenes.back()->Init3DDemoScene(), "Demo Scene could not be initialized.");
 		}
 		else
 		{
-			ENGINE_BOOL_POPUP(Scenes.back()->Init2DDemoScene(RenderManager), "Demo Scene could not be initialized.");
+			ENGINE_BOOL_POPUP(Scenes.back()->Init2DDemoScene(), "Demo Scene could not be initialized.");
 		}
 	}
 

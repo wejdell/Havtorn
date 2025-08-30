@@ -171,28 +171,27 @@ namespace Havtorn
 		scene->AddComponentEditorContext(scene->PreviewEntity, &STransformComponentEditorContext::Context);
 
 		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
-		CRenderManager* renderManager = Manager->GetRenderManager();
 
 		switch (assetRepresentation->AssetType)
 		{
 		case EAssetType::StaticMesh:
 		{
-			std::string staticMeshPath = assetRepresentation->Name + ".hva";
-			renderManager->LoadStaticMeshComponent(staticMeshPath, scene->AddComponent<SStaticMeshComponent>(scene->PreviewEntity));
+			std::string staticMeshPath = assetRepresentation->DirectoryEntry.path().string();
+			scene->AddComponent<SStaticMeshComponent>(scene->PreviewEntity, staticMeshPath);
 			scene->AddComponentEditorContext(scene->PreviewEntity, &SStaticMeshComponentEditorContext::Context);
 			SStaticMeshAsset* meshAsset = assetRegistry->RequestAssetData<SStaticMeshAsset>(SAssetReference(staticMeshPath), scene->PreviewEntity.GUID);
 
 			std::vector<std::string> previewMaterials;
 			previewMaterials.resize(meshAsset->NumberOfMaterials, CEditorManager::PreviewMaterial);
-			renderManager->LoadMaterialComponent(previewMaterials, scene->AddComponent<SMaterialComponent>(scene->PreviewEntity));
+			scene->AddComponent<SMaterialComponent>(scene->PreviewEntity, previewMaterials);
 			scene->AddComponentEditorContext(scene->PreviewEntity, &SMaterialComponentEditorContext::Context);
 		}
 			break;
 
 		case EAssetType::SkeletalMesh:
 		{
-			std::string meshPath = assetRepresentation->Name + ".hva";;
-			renderManager->LoadSkeletalMeshComponent(meshPath, scene->AddComponent<SSkeletalMeshComponent>(scene->PreviewEntity));
+			std::string meshPath = assetRepresentation->DirectoryEntry.path().string();
+			scene->AddComponent<SSkeletalMeshComponent>(scene->PreviewEntity, meshPath);
 			scene->AddComponentEditorContext(scene->PreviewEntity, &SSkeletalMeshComponentEditorContext::Context);
 			SSkeletalMeshAsset* meshAsset = assetRegistry->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(meshPath), scene->PreviewEntity.GUID);
 			
@@ -200,7 +199,7 @@ namespace Havtorn
 
 			std::vector<std::string> previewMaterials;
 			previewMaterials.resize(meshAsset->NumberOfMaterials, CEditorManager::PreviewMaterial);
-			renderManager->LoadMaterialComponent(previewMaterials, scene->AddComponent<SMaterialComponent>(scene->PreviewEntity));
+			scene->AddComponent<SMaterialComponent>(scene->PreviewEntity, previewMaterials);
 			scene->AddComponentEditorContext(scene->PreviewEntity, &SMaterialComponentEditorContext::Context);
 		}
 			break;
