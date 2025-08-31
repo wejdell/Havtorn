@@ -271,146 +271,9 @@ namespace Havtorn
 		GEngine::Instance->Framework->GetSwapChain()->ResizeBuffers(0, newResolution.X, newResolution.Y, DXGI_FORMAT_UNKNOWN, 0);
 	}
 
-	//void CRenderManager::LoadStaticMeshComponent(const std::string& /*filePath*/, SStaticMeshComponent* /*outStaticMeshComponent*/, CScene* /*scene*/)
-	//{
-	//	//if (outStaticMeshComponent->AssetReference.IsValid())
-	//	//	GEngine::GetAssetRegistry()->UnrequestAsset(outStaticMeshComponent->AssetReference, outStaticMeshComponent->Owner.GUID);
-
-	//	//SAsset* asset = GEngine::GetAssetRegistry()->RequestAsset(SAssetReference(filePath), outStaticMeshComponent->Owner.GUID);
-	//	//if (!asset->IsValid())
-	//	//{
-	//	//	HV_LOG_ERROR("CRenderManager::LoadStaticMeshComponent failed, %s could not be loaded!", filePath.c_str());
-	//	//	return;
-	//	//}
-	//	//
-	//	//outStaticMeshComponent->AssetReference = SAssetReference(filePath);
-
-	//	//// Handle existing material component if necessary
-	//	//if (!scene)
-	//	//	return;
-
-	//	//SStaticMeshAsset* assetData = &std::get<SStaticMeshAsset>(asset->Data);
-	//	//SMaterialComponent* materialComp = scene->GetComponent<SMaterialComponent>(outStaticMeshComponent);
-
-	//	//std::vector<std::string> newPaths = SAssetReference::GetPaths(materialComp->AssetReferences);
-	//	//newPaths.resize(assetData->NumberOfMaterials, "Resources/M_MeshPreview.hva");
-	//	//
-	//	//LoadMaterialComponent(newPaths, materialComp);
-	//}
-
-	//void CRenderManager::LoadSkeletalMeshComponent(const std::string& filePath, SSkeletalMeshComponent* outSkeletalMeshComponent)
-	//{
-	//	if (outSkeletalMeshComponent->AssetReference.IsValid())
-	//		GEngine::GetAssetRegistry()->UnrequestAsset(outSkeletalMeshComponent->AssetReference, outSkeletalMeshComponent->Owner.GUID);
-
-	//	SAsset* asset = GEngine::GetAssetRegistry()->RequestAsset(SAssetReference(filePath), outSkeletalMeshComponent->Owner.GUID);
-	//	if (!asset->IsValid())
-	//	{
-	//		HV_LOG_ERROR("CRenderManager::LoadSkeletalMeshComponent failed, %s could not be loaded!", filePath.c_str());
-	//		return;
-	//	}
-
-	//	outSkeletalMeshComponent->AssetReference = SAssetReference(filePath);
-	//}
-
-	//void CRenderManager::LoadMaterialComponent(const std::vector<std::string>& materialPaths, SMaterialComponent* outMaterialComponent)
-	//{
-	//	// TODO.NW: Could potentially move this functionality to two requesting functions in the registry, taking 
-	//	// a non-const reference to an SAssetReference and a filePath, and a vector version of that. That way we 
-	//	// could remove this responsibility from the RenderManager entirely, who shouldn't have it in the first place.
-
-	//	for (const SAssetReference& existingReference : outMaterialComponent->AssetReferences)
-	//		GEngine::GetAssetRegistry()->UnrequestAsset(existingReference, outMaterialComponent->Owner.GUID);
-
-	//	outMaterialComponent->AssetReferences.clear();
-
-	//	for (const std::string& filePath : materialPaths)
-	//	{
-	//		SAsset* asset = GEngine::GetAssetRegistry()->RequestAsset(SAssetReference(filePath), outMaterialComponent->Owner.GUID);
-	//		if (!asset->IsValid())
-	//		{
-	//			HV_LOG_ERROR("CRenderManager::LoadMaterialComponent failed, %s could not be loaded!", filePath.c_str());
-	//			return;
-	//		}
-	//		
-	//		outMaterialComponent->AssetReferences.emplace_back(SAssetReference(filePath));
-	//	}
-	//}
-
-	//void CRenderManager::LoadDecalComponent(const std::vector<std::string>& texturePaths, SDecalComponent* outDecalComponent)
-	//{
-	//	for (const SAssetReference& existingReference : outDecalComponent->AssetReferences)
-	//		GEngine::GetAssetRegistry()->UnrequestAsset(existingReference, outDecalComponent->Owner.GUID);
-
-	//	outDecalComponent->AssetReferences.clear();
-
-	//	for (const std::string& filePath : texturePaths)
-	//	{
-	//		SAsset* asset = GEngine::GetAssetRegistry()->RequestAsset(SAssetReference(filePath), outDecalComponent->Owner.GUID);
-	//		if (!asset->IsValid())
-	//		{
-	//			HV_LOG_ERROR("CRenderManager::LoadDecalComponent failed, %s could not be loaded!", filePath.c_str());
-	//			return;
-	//		}
-
-	//		outDecalComponent->AssetReferences.emplace_back(SAssetReference(filePath));
-	//	}
-	//}
-
-	//void CRenderManager::LoadEnvironmentLightComponent(const std::string& ambientCubemapTexturePath, SEnvironmentLightComponent* outEnvironmentLightComponent)
-	//{
-	//	if (outEnvironmentLightComponent->AssetReference.IsValid())
-	//		GEngine::GetAssetRegistry()->UnrequestAsset(outEnvironmentLightComponent->AssetReference, outEnvironmentLightComponent->Owner.GUID);
-
-	//	SAsset* asset = GEngine::GetAssetRegistry()->RequestAsset(SAssetReference(ambientCubemapTexturePath), outEnvironmentLightComponent->Owner.GUID);
-	//	if (!asset->IsValid())
-	//	{
-	//		HV_LOG_ERROR("CRenderManager::LoadEnvironmentLightComponent failed, %s could not be loaded!", ambientCubemapTexturePath.c_str());
-	//		return;
-	//	}
-
-	//	outEnvironmentLightComponent->AssetReference = SAssetReference(ambientCubemapTexturePath);
-	//}
-
-	//void CRenderManager::LoadSpriteComponent(const std::string& filePath, SSpriteComponent* outSpriteComponent)
-	//{
-	//	if (outSpriteComponent->AssetReference.IsValid())
-	//		GEngine::GetAssetRegistry()->UnrequestAsset(outSpriteComponent->AssetReference, outSpriteComponent->Owner.GUID);
-
-	//	SAsset* asset = GEngine::GetAssetRegistry()->RequestAsset(SAssetReference(filePath), outSpriteComponent->Owner.GUID);
-	//	if (!asset->IsValid())
-	//	{
-	//		HV_LOG_ERROR("CRenderManager::LoadSpriteComponent failed, %s could not be loaded!", filePath.c_str());
-	//		return;
-	//	}
-
-	//	outSpriteComponent->AssetReference = SAssetReference(filePath);
-	//}
-
-	//void CRenderManager::LoadSkeletalAnimationComponent(const std::vector<std::string>& filePaths, SSkeletalAnimationComponent* outSkeletalAnimationComponent)
-	//{
-	//	for (const SAssetReference& existingReference : outSkeletalAnimationComponent->AssetReferences)
-	//		GEngine::GetAssetRegistry()->UnrequestAsset(existingReference, outSkeletalAnimationComponent->Owner.GUID);
-
-	//	outSkeletalAnimationComponent->AssetReferences.clear();
-
-	//	for (const std::string& filePath : filePaths)
-	//	{
-	//		SAsset* asset = GEngine::GetAssetRegistry()->RequestAsset(SAssetReference(filePath), outSkeletalAnimationComponent->Owner.GUID);
-	//		if (!asset->IsValid())
-	//		{
-	//			HV_LOG_ERROR("CRenderManager::LoadSkeletalAnimationComponent failed, %s could not be loaded!", filePath.c_str());
-	//			return;
-	//		}
-
-	//		outSkeletalAnimationComponent->AssetReferences.emplace_back(SAssetReference(filePath));
-	//	}
-	//}
-
 	CRenderTexture CRenderManager::RenderStaticMeshAssetTexture(const std::string& filePath)
 	{
-		// TODO.NW: List constexpr requesters somewhere
-		SStaticMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(SAssetReference(filePath), 200);
+		SStaticMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(SAssetReference(filePath), CAssetRegistry::RenderManagerRequestID);
 
 		F32 aspectRatio = 1.0f;
 		F32 marginPercentage = 1.5f;
@@ -465,6 +328,7 @@ namespace Havtorn
 		//void* resource = renderTexture.MoveShaderResourceView();
 		//renderTexture.Release();
 		renderDepth.Release();
+		GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(filePath), CAssetRegistry::RenderManagerRequestID);
 
 		return std::move(renderTexture);
 	}
@@ -475,7 +339,7 @@ namespace Havtorn
 		//LoadSkeletalMeshComponent(filePath, &skeletalMeshComp);
 		
 		// TODO.NW: List constexpr requesters somewhere
-		SSkeletalMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(filePath), 200);
+		SSkeletalMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(filePath), CAssetRegistry::RenderManagerRequestID);
 
 		F32 aspectRatio = 1.0f;
 		F32 marginPercentage = 1.5f;
@@ -542,6 +406,7 @@ namespace Havtorn
 		//void* resource = renderTexture.MoveShaderResourceView();
 		//renderTexture.Release();
 		renderDepth.Release();
+		GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(filePath), CAssetRegistry::RenderManagerRequestID);
 
 		return std::move(renderTexture);
 	}
@@ -556,7 +421,7 @@ namespace Havtorn
 
 	CRenderTexture CRenderManager::RenderMaterialAssetTexture(const std::string& filePath)
 	{
-		SGraphicsMaterialAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<SGraphicsMaterialAsset>(SAssetReference(filePath), 200);
+		SGraphicsMaterialAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<SGraphicsMaterialAsset>(SAssetReference(filePath), CAssetRegistry::RenderManagerRequestID);
 		CRenderTexture renderTexture = RenderTextureFactory.CreateTexture(SVector2<U16>(256), DXGI_FORMAT_R16G16B16A16_FLOAT);
 		RenderMaterialTexture(renderTexture, asset->Material);
 		return std::move(renderTexture);
@@ -657,7 +522,7 @@ namespace Havtorn
 		ShadowAtlasDepth.SetAsPSResourceOnSlot(22);
 		SSAOBlurTexture.SetAsPSResourceOnSlot(23);
 
-		STextureAsset* cubemapTexture = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(SAssetReference("Assets/Textures/Cubemaps/Skybox.hva"), 200);
+		STextureAsset* cubemapTexture = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(SAssetReference("Assets/Textures/Cubemaps/Skybox.hva"), CAssetRegistry::RenderManagerRequestID);
 		RenderStateManager.PSSetResources(0, 1, cubemapTexture->RenderTexture.GetShaderResourceView());
 
 		const SVector4 directionalLightDirection = { -1.0f, 0.0f, -1.0f, 0.0f };
@@ -737,12 +602,13 @@ namespace Havtorn
 
 		gBuffer.ReleaseResources();
 		targetCopy.Release();
+		GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference("Assets/Textures/Cubemaps/Skybox.hva"), CAssetRegistry::RenderManagerRequestID);
 	}
 
 	void CRenderManager::RenderSkeletalAnimationAssetTexture(CRenderTexture& assetTextureTarget, const std::string& filePath, const std::vector<SMatrix>& boneTransforms)
 	{
-		SSkeletalAnimationAsset* animationAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalAnimationAsset>(SAssetReference(filePath), 200);
-		SSkeletalMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(animationAsset->RigPath), 200);
+		SSkeletalAnimationAsset* animationAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalAnimationAsset>(SAssetReference(filePath), CAssetRegistry::RenderManagerRequestID);
+		SSkeletalMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(animationAsset->RigPath), CAssetRegistry::RenderManagerRequestID);
 
 		F32 aspectRatio = 1.0f;
 		F32 marginPercentage = 1.5f;
@@ -808,6 +674,9 @@ namespace Havtorn
 		Backbuffer.SetAsActiveTarget();
 
 		renderDepth.Release();
+
+		GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(animationAsset->RigPath), CAssetRegistry::RenderManagerRequestID);
+		GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(filePath), CAssetRegistry::RenderManagerRequestID);
 	}
 
 	CRenderTexture CRenderManager::CreateRenderTextureFromSource(const std::string& filePath)
@@ -1434,7 +1303,7 @@ namespace Havtorn
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
-		STextureAsset* spriteTexture = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(textureUID, 200);
+		STextureAsset* spriteTexture = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(textureUID, CAssetRegistry::RenderManagerRequestID);
 		RenderStateManager.PSSetResources(0, 1, spriteTexture->RenderTexture.GetShaderResourceView());
 
 		const std::vector<CDataBuffer> buffers = { InstancedTransformBuffer, InstancedUVRectBuffer, InstancedColorBuffer };
@@ -1473,7 +1342,7 @@ namespace Havtorn
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
-		STextureAsset* spriteTexture = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(textureUID, 200);
+		STextureAsset* spriteTexture = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(textureUID, CAssetRegistry::RenderManagerRequestID);
 		RenderStateManager.PSSetResources(0, 1, spriteTexture->RenderTexture.GetShaderResourceView());
 
 		const std::vector<CDataBuffer> buffers = { InstancedTransformBuffer, InstancedUVRectBuffer, InstancedColorBuffer, InstancedEntityIDBuffer };
@@ -1520,7 +1389,7 @@ namespace Havtorn
 		const auto shouldRenderAlbedo = command.Flags[0];
 		if (shouldRenderAlbedo)
 		{
-			STextureAsset* texture = assetRegistry->RequestAssetData<STextureAsset>(command.U32s[0], 200);
+			STextureAsset* texture = assetRegistry->RequestAssetData<STextureAsset>(command.U32s[0], CAssetRegistry::RenderManagerRequestID);
 			RenderStateManager.PSSetResources(5, 1, texture->RenderTexture.GetShaderResourceView());
 			RenderStateManager.PSSetShader(EPixelShaders::DecalAlbedo);
 			RenderStateManager.DrawIndexed(36, 0, 0);
@@ -1530,7 +1399,7 @@ namespace Havtorn
 		const auto shouldRenderMaterial = command.Flags[1];
 		if (shouldRenderMaterial)
 		{
-			STextureAsset* texture = assetRegistry->RequestAssetData<STextureAsset>(command.U32s[1], 200);
+			STextureAsset* texture = assetRegistry->RequestAssetData<STextureAsset>(command.U32s[1], CAssetRegistry::RenderManagerRequestID);
 			RenderStateManager.PSSetResources(6, 1, texture->RenderTexture.GetShaderResourceView());
 			RenderStateManager.PSSetShader(EPixelShaders::DecalMaterial);
 			RenderStateManager.DrawIndexed(36, 0, 0);
@@ -1540,7 +1409,7 @@ namespace Havtorn
 		const auto shouldRenderNormal = command.Flags[2];
 		if (shouldRenderNormal)
 		{
-			STextureAsset* texture = assetRegistry->RequestAssetData<STextureAsset>(command.U32s[2], 200);
+			STextureAsset* texture = assetRegistry->RequestAssetData<STextureAsset>(command.U32s[2], CAssetRegistry::RenderManagerRequestID);
 			RenderStateManager.PSSetResources(7, 1, texture->RenderTexture.GetShaderResourceView());
 			RenderStateManager.PSSetShader(EPixelShaders::DecalNormal);
 			RenderStateManager.DrawIndexed(36, 0, 0);
@@ -1575,7 +1444,7 @@ namespace Havtorn
 
 	void CRenderManager::DeferredLightingDirectional(const SRenderCommand& command)
 	{
-		STextureAsset* cubemapTexture = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(command.U32s[0], 200);
+		STextureAsset* cubemapTexture = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(command.U32s[0], CAssetRegistry::RenderManagerRequestID);
 		if (cubemapTexture == nullptr)
 			return;
 
@@ -1725,7 +1594,7 @@ namespace Havtorn
 
 	inline void CRenderManager::Skybox(const SRenderCommand& command)
 	{
-		STextureAsset* cubemapTexture = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(command.U32s[0], 200);
+		STextureAsset* cubemapTexture = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(command.U32s[0], CAssetRegistry::RenderManagerRequestID);
 		if (cubemapTexture == nullptr)
 			return;
 
@@ -2025,7 +1894,7 @@ namespace Havtorn
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
-		STextureAsset* spriteTexture = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(textureUID, 200);
+		STextureAsset* spriteTexture = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(textureUID, CAssetRegistry::RenderManagerRequestID);
 		RenderStateManager.PSSetResources(0, 1, spriteTexture->RenderTexture.GetShaderResourceView());		
 
 		const std::vector<CDataBuffer> buffers = { InstancedTransformBuffer, InstancedUVRectBuffer, InstancedColorBuffer };
@@ -2068,7 +1937,7 @@ namespace Havtorn
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
-		STextureAsset* spriteTexture = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(textureUID, 200);
+		STextureAsset* spriteTexture = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(textureUID, CAssetRegistry::RenderManagerRequestID);
 		RenderStateManager.PSSetResources(0, 1, spriteTexture->RenderTexture.GetShaderResourceView());
 
 		const std::vector<CDataBuffer> buffers = { InstancedTransformBuffer, InstancedUVRectBuffer, InstancedColorBuffer, InstancedEntityIDBuffer };
@@ -2345,7 +2214,7 @@ namespace Havtorn
 
 		if (!runtimeMap.contains(property.TextureUID))
 		{
-			runtimeArray.emplace_back(GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(property.TextureUID, 200)->RenderTexture.GetShaderResource());
+			runtimeArray.emplace_back(GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(property.TextureUID, CAssetRegistry::RenderManagerRequestID)->RenderTexture.GetShaderResource());
 			runtimeMap.emplace(property.TextureUID, STATIC_F32(runtimeArray.size() - 1));
 		}
 

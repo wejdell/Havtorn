@@ -108,6 +108,13 @@ namespace Havtorn
 				{
 					if (GUI::MenuItem("Copy Asset Path"))
 						GUI::CopyToClipboard(SelectedAsset->path().string().c_str());
+					
+					if (GUI::MenuItem("Delete Asset"))
+					{
+						std::filesystem::path pathToRemove = SelectedAsset->path();
+						Manager->RemoveAssetRep(*SelectedAsset);
+						std::filesystem::remove(pathToRemove);
+					}
 				}
 				else
 				{

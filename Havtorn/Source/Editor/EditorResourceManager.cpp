@@ -194,17 +194,17 @@ namespace Havtorn
 		}
 	}
 
-#define ALBEDO_R            0
-#define ALBEDO_G            1
-#define ALBEDO_B            2
-#define ALBEDO_A            3
-#define NORMAL_X            4
-#define NORMAL_Y            5
-#define NORMAL_Z            6
-#define AMBIENT_OCCLUSION   7
-#define METALNESS           8
-#define ROUGHNESS           9
-#define EMISSIVE            10
+//#define ALBEDO_R            0
+//#define ALBEDO_G            1
+//#define ALBEDO_B            2
+//#define ALBEDO_A            3
+//#define NORMAL_X            4
+//#define NORMAL_Y            5
+//#define NORMAL_Z            6
+//#define AMBIENT_OCCLUSION   7
+//#define METALNESS           8
+//#define ROUGHNESS           9
+//#define EMISSIVE            10
 
 	bool CEditorResourceManager::Init(CRenderManager* renderManager)
 	{
@@ -212,27 +212,24 @@ namespace Havtorn
 		U64 textureCount = static_cast<U64>(EEditorTexture::Count);
 		Textures.resize(textureCount);
 
-		//CreateMaterial("Assets/Materials/M_Checkboard_128x128.hva");
+		//SMaterialAssetFileHeader previewMaterial;
+		//previewMaterial.Name = "M_MeshPreview";
+		//previewMaterial.Material.Properties[ALBEDO_R] = { 0.8f, "", -1 };
+		//previewMaterial.Material.Properties[ALBEDO_G] = { 0.8f, "", -1 };
+		//previewMaterial.Material.Properties[ALBEDO_B] = { 0.8f, "", -1 };
+		//previewMaterial.Material.Properties[ALBEDO_A] = { 1.0f, "", -1 };
+		//previewMaterial.Material.Properties[NORMAL_X] = { 0.0f, "", -1 };
+		//previewMaterial.Material.Properties[NORMAL_Y] = { 0.0f, "", -1 };
+		//previewMaterial.Material.Properties[NORMAL_Z] = { 1.0f, "", -1 };
+		//previewMaterial.Material.Properties[AMBIENT_OCCLUSION] = { 0.0f, "", -1 };
+		//previewMaterial.Material.Properties[METALNESS] = { 0.0f, "", -1 };
+		//previewMaterial.Material.Properties[ROUGHNESS] = { 1.0f, "", -1 };
+		//previewMaterial.Material.Properties[EMISSIVE] = { 0.0f, "", -1 };
+		//previewMaterial.Material.RecreateZ = true;
 
-		SMaterialAssetFileHeader previewMaterial;
-		previewMaterial.Name = "M_MeshPreview";
-		previewMaterial.Material.Properties[ALBEDO_R] = { 0.8f, "", -1 };
-		previewMaterial.Material.Properties[ALBEDO_G] = { 0.8f, "", -1 };
-		previewMaterial.Material.Properties[ALBEDO_B] = { 0.8f, "", -1 };
-		previewMaterial.Material.Properties[ALBEDO_A] = { 1.0f, "", -1 };
-		previewMaterial.Material.Properties[NORMAL_X] = { 0.0f, "", -1 };
-		previewMaterial.Material.Properties[NORMAL_Y] = { 0.0f, "", -1 };
-		previewMaterial.Material.Properties[NORMAL_Z] = { 1.0f, "", -1 };
-		previewMaterial.Material.Properties[AMBIENT_OCCLUSION] = { 0.0f, "", -1 };
-		previewMaterial.Material.Properties[METALNESS] = { 0.0f, "", -1 };
-		previewMaterial.Material.Properties[ROUGHNESS] = { 1.0f, "", -1 };
-		previewMaterial.Material.Properties[EMISSIVE] = { 0.0f, "", -1 };
-		previewMaterial.Material.RecreateZ = true;
-
-		CreateMaterial("Resources/" + previewMaterial.Name + ".hva", previewMaterial);
+		//CreateMaterial("Resources/" + previewMaterial.Name + ".hva", previewMaterial);
 
 		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
-		constexpr U64 resourceManagerRequesterID = 300;
 		for (U64 index = 0; index < textureCount; index++)
 		{
 			const EEditorTexture texture = static_cast<EEditorTexture>(index);
@@ -247,7 +244,7 @@ namespace Havtorn
 				assetRegistry->ImportAsset(sourcePath, ResourceAssetPath + assetSubDirectory, sourceData);
 			}
 
-			STextureAsset* assetData = assetRegistry->RequestAssetData<STextureAsset>(SAssetReference(assetPath), resourceManagerRequesterID);
+			STextureAsset* assetData = assetRegistry->RequestAssetData<STextureAsset>(SAssetReference(assetPath), CAssetRegistry::EditorManagerRequestID);
 			Textures[index] = assetData->RenderTexture;
 		}
 

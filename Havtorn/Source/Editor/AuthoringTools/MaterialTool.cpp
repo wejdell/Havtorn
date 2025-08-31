@@ -68,9 +68,8 @@ namespace Havtorn
 						auto& offlineProperty = asset.Material.Properties[offlinePropertyIndex];
 						offlineProperty.ConstantValue = assetProperty.ConstantValue;
 						offlineProperty.TextureChannelIndex = STATIC_I16(assetProperty.TextureChannelIndex);
-						// TODO.NW: List constexpr requesters somewhere
-						SAsset* textureAsset = GEngine::GetAssetRegistry()->RequestAsset(STATIC_U32(assetProperty.TextureUID), 300);
-						offlineProperty.TexturePath = textureAsset->Reference.FilePath;
+						if (assetProperty.TextureUID > 0)
+							offlineProperty.TexturePath = GEngine::GetAssetRegistry()->GetAssetDatabaseEntry(STATIC_U32(assetProperty.TextureUID));
 					};
 
 				fillProperty(MaterialData.AlbedoR, 0);
@@ -125,7 +124,7 @@ namespace Havtorn
 					
 					if (property.ConstantValue < 0.0f)
 					{
-						std::string assetPath = GEngine::GetAssetRegistry()->RequestAsset(STATIC_U32(property.TextureUID), 300)->Reference.FilePath;
+						std::string assetPath = GEngine::GetAssetRegistry()->RequestAsset(STATIC_U32(property.TextureUID), CAssetRegistry::EditorManagerRequestID)->Reference.FilePath;
 						auto assetRep = Manager->GetAssetRepFromName(UGeneralUtils::ExtractFileBaseNameFromPath(assetPath)).get();
 
 						intptr_t assetPickerThumbnail = assetRep != nullptr ? (intptr_t)assetRep->TextureRef.GetShaderResourceView() : intptr_t();

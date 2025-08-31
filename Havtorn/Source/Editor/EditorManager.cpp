@@ -187,6 +187,7 @@ namespace Havtorn
 				GUI::Text(GetFrameRate().c_str());
 				GUI::Text(GetSystemMemory().c_str());
 				GUI::Text(GetDrawCalls().c_str());
+				GUI::Text(GEngine::GetAssetRegistry()->GetDebugString().c_str());
 			}
 
 			GUI::End();
@@ -709,7 +710,7 @@ namespace Havtorn
 
 		if (SStaticMeshComponent* staticMesh = CurrentScene->GetComponent<SStaticMeshComponent>(firstSelectedEntity))
 		{
-			SStaticMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMesh->AssetReference, 300);
+			SStaticMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMesh->AssetReference, CAssetRegistry::EditorManagerRequestID);
 			center = meshAsset->BoundsCenter;
 			bounds = SVector::GetAbsMaxKeepValue(meshAsset->BoundsMax, meshAsset->BoundsMin);
 			foundBounds = true;

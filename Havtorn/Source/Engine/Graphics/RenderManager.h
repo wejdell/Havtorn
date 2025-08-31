@@ -69,14 +69,6 @@ namespace Havtorn
 
 		void Release(SVector2<U16> newResolution);
 
-		//ENGINE_API void LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent, CScene* scene = nullptr);
-		//ENGINE_API void LoadSkeletalMeshComponent(const std::string& filePath, SSkeletalMeshComponent* outSkeletalMeshComponent);
-		//ENGINE_API void LoadMaterialComponent(const std::vector<std::string>& materialPaths, SMaterialComponent* outMaterialComponent);		
-		//ENGINE_API void LoadDecalComponent(const std::vector<std::string>& texturePaths, SDecalComponent* outDecalComponent);
-		//ENGINE_API void LoadEnvironmentLightComponent(const std::string& ambientCubemapTexturePath, SEnvironmentLightComponent* outEnvironmentLightComponent);
-		//ENGINE_API void LoadSpriteComponent(const std::string& filePath, SSpriteComponent* outSpriteComponent);
-		//ENGINE_API void LoadSkeletalAnimationComponent(const std::vector<std::string>& filePaths, SSkeletalAnimationComponent* outSkeletalAnimationComponent);
-
 		ENGINE_API CRenderTexture RenderStaticMeshAssetTexture(const std::string& filePath);
 		ENGINE_API CRenderTexture RenderSkeletalMeshAssetTexture(const std::string& filePath);
 		ENGINE_API CRenderTexture RenderSkeletalAnimationAssetTexture(const std::string& filePath, const std::vector<SMatrix>& boneTransforms = {});
@@ -391,11 +383,6 @@ namespace Havtorn
 			std::vector<SEntity> Entities{};
 		};
 
-		// TODO.NR: Add GUIDs to things like this
-		//std::unordered_map<std::string, SStaticMeshAsset> LoadedStaticMeshes;
-		//std::unordered_map<std::string, SSkeletalMeshAsset> LoadedSkeletalMeshes;
-		//std::unordered_map<std::string, SSkeletalAnimationAsset> LoadedSkeletalAnims;
-		// NR: These are used as a way of cross-thread resource management
 		std::unordered_map<U32, SStaticMeshInstanceData> SystemStaticMeshInstanceData;
 		std::unordered_map<U32, SStaticMeshInstanceData> RendererStaticMeshInstanceData;
 
@@ -422,7 +409,7 @@ namespace Havtorn
 		SVector2<F32> ShadowAtlasResolution = SVector2<F32>::Zero;
 		SVector2<U16> CurrentWindowResolution = SVector2<U16>::Zero;
 
-		// NR: Keep our own property here for use on render thread
+		// NW: Keep our own property here for use on render thread
 		EWorldPlayState WorldPlayState = EWorldPlayState::Stopped;
 
 		void* EntityPerPixelData = nullptr;

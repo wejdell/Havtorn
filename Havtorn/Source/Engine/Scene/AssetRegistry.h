@@ -14,6 +14,9 @@ namespace Havtorn
 	class CAssetRegistry
 	{
 	public:
+		static constexpr U64 RenderManagerRequestID = 100;
+		static constexpr U64 EditorManagerRequestID = 200;
+
 		CAssetRegistry();
 		~CAssetRegistry();
 
@@ -37,11 +40,15 @@ namespace Havtorn
 		ENGINE_API SAsset* RequestAsset(const U32 assetUID, const U64 requesterID);
 		ENGINE_API void UnrequestAsset(const U32 assetUID, const U64 requesterID);
 
+		ENGINE_API std::string GetAssetDatabaseEntry(const U32 uid);
+
 		// TODO.NW: If we extend our own filePath struct, could be nice to separate full paths from folders
 		ENGINE_API std::string ImportAsset(const std::string& filePath, const std::string& destinationPath, const SSourceAssetData& sourceData);
 		ENGINE_API std::string SaveAsset(const std::string& destinationPath, const SAssetFileHeader& fileHeader);
 
-		ENGINE_API void RefreshRegisteredAssets();
+		ENGINE_API void RefreshDatabase();
+
+		ENGINE_API std::string GetDebugString() const;
 
 	private:
 		// TODO.NW: Catch asset location changes! Both source and asset itself, as part of file watching? 

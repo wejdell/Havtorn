@@ -87,11 +87,10 @@ namespace Havtorn
 		}
 
 		template<typename T>
-		void DefaultDeserializer(/*std::vector<T>& componentVector, */SComponentEditorContext* context, const char* fromData, U64& pointerPosition)
+		void DefaultDeserializer(SComponentEditorContext* context, const char* fromData, U64& pointerPosition)
 		{
 			U32 numberOfComponents = 0;
 			DeserializeData(numberOfComponents, fromData, pointerPosition);
-			//componentVector.resize(numberOfComponents);
 
 			for (U64 index = 0; index < numberOfComponents; index++)
 			{
@@ -103,11 +102,10 @@ namespace Havtorn
 		}
 
 		template<typename T>
-		void SpecializedDeserializer(/*std::vector<T>& componentVector, */SComponentEditorContext* context, const char* fromData, U64& pointerPosition)
+		void SpecializedDeserializer(SComponentEditorContext* context, const char* fromData, U64& pointerPosition)
 		{
 			U32 numberOfComponents = 0;
 			DeserializeData(numberOfComponents, fromData, pointerPosition);
-			//componentVector.resize(numberOfComponents);
 
 			for (U64 index = 0; index < numberOfComponents; index++)
 			{

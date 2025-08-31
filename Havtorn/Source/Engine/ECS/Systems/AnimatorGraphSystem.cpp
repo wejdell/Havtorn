@@ -253,8 +253,8 @@ namespace Havtorn
 	std::vector<SMatrix> CAnimatorGraphSystem::ReadAssetAnimationPose(const std::string& animationFile, const F32 animationTime)
 	{
 		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
-		SSkeletalAnimationAsset* animationAsset = assetRegistry->RequestAssetData<SSkeletalAnimationAsset>(SAssetReference(animationFile), 200);
-		SSkeletalMeshAsset* meshAsset = assetRegistry->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(animationAsset->RigPath), 200);
+		SSkeletalAnimationAsset* animationAsset = assetRegistry->RequestAssetData<SSkeletalAnimationAsset>(SAssetReference(animationFile), CAssetRegistry::EditorManagerRequestID);
+		SSkeletalMeshAsset* meshAsset = assetRegistry->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(animationAsset->RigPath), CAssetRegistry::EditorManagerRequestID);
 
 		// Ticks == Frames
 		F32 ticksPerSecond = STATIC_F32(animationAsset->TickRate);

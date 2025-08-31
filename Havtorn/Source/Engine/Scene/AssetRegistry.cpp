@@ -28,7 +28,7 @@ namespace Havtorn
         // Add null asset
         LoadedAssets.emplace(0, SAsset());
 
-        RefreshRegisteredAssets();
+        RefreshDatabase();
 
         return true;
     }
@@ -87,6 +87,17 @@ namespace Havtorn
 
         SAsset* loadedAsset = &LoadedAssets[assetUID];
         loadedAsset->Requesters.erase(requesterID);
+    }
+
+    std::string CAssetRegistry::GetAssetDatabaseEntry(const U32 uid)
+    {
+        if (!AssetDatabase.contains(uid))
+        {
+            HV_LOG_WARN("CAssetRegistry::GetAssetDatabaseEntry: UID %i was not found in the asset database, can't point to valid asset path!", uid);
+            return std::string("INVALID_PATH");
+        }
+        
+        return AssetDatabase[uid];
     }
 
     SAsset* CAssetRegistry::LoadAsset(const SAssetReference& assetRef, const U64 requesterID)
@@ -343,7 +354,7 @@ namespace Havtorn
         return hvaPath;
     }
 
-    void CAssetRegistry::RefreshRegisteredAssets()
+    void CAssetRegistry::RefreshDatabase()
     {
         AssetDatabase.clear();
 
@@ -359,5 +370,10 @@ namespace Havtorn
                 }
             }
         }
+    }
+
+    std::string CAssetRegistry::GetDebugString() const
+    {
+        return "Asset Registry | Loaded Assets: " + std::to_string(LoadedAssets.size()) + " | Database Entries: " + std::to_string(AssetDatabase.size()) + " |";
     }
 }
