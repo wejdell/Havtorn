@@ -571,39 +571,7 @@ namespace Havtorn
 			if (!rep->TextureRef.IsShaderResourceValid())
 				rep->TextureRef = Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::FileIcon);
 
-			std::string assetTypeName;
-			SColor assetColor = SColor::White;
-			switch (rep->AssetType)
-			{
-			case EAssetType::Animation:
-				assetTypeName = "SKELETAL ANIMATION";
-				assetColor = SColor::Blue;
-				break;
-			case EAssetType::Material:
-				assetTypeName = "MATERIAL";
-				assetColor = SColor::Green;
-				break;
-			case EAssetType::SkeletalMesh:
-				assetTypeName = "SKELETAL MESH";
-				assetColor = SColor::Magenta;
-				break;
-			case EAssetType::StaticMesh:
-				assetTypeName = "STATIC MESH";
-				assetColor = SColor::Teal;
-				break;
-			case EAssetType::Texture:
-				assetTypeName = "TEXTURE";
-				assetColor = SColor::Red;
-				break;
-			case EAssetType::Script:
-				assetTypeName = "SCRIPT";
-				assetColor = SColor::Blue;
-				break;
-			default:
-				break;
-			}
-
-			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), rep->DirectoryEntry == SelectedAsset, (intptr_t)rep->TextureRef.GetShaderResourceView(), assetTypeName.c_str(), assetColor, rep.get(), sizeof(SEditorAssetRepresentation));
+			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), rep->DirectoryEntry == SelectedAsset, (intptr_t)rep->TextureRef.GetShaderResourceView(), GetAssetTypeDetailName(rep->AssetType).c_str(), GetAssetTypeColor(rep->AssetType), rep.get(), sizeof(SEditorAssetRepresentation));
 
 			if (result.IsClicked)
 				SelectedAsset = rep->DirectoryEntry;

@@ -1786,8 +1786,6 @@ namespace Havtorn
 			return SAssetPickResult();
 		}
 		
-
-
 		I32 id = 0;
 		for (auto& entry : std::filesystem::recursive_directory_iterator(directory))
 		{
@@ -1835,7 +1833,6 @@ namespace Havtorn
 		return SAssetPickResult(EAssetPickerState::Active);
 	}
 
-
 	SAssetPickResult GUI::AssetPickerFilter(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType filterByAssetType)
 	{
 		if (GUI::ImageButton("AssetPicker", image, { GUI::TexturePreviewSizeX * 0.75f, GUI::TexturePreviewSizeY * 0.75f }))
@@ -1843,7 +1840,12 @@ namespace Havtorn
 			GUI::OpenPopup(modalLabel);
 			GUI::SetNextWindowPos(GUI::GetViewportCenter(), EWindowCondition::Appearing, SVector2<F32>(0.5f, 0.5f));
 		}
+		const F32 thumbnailPadding = 8.0f;
+		const F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + thumbnailPadding;
+		GUI::OffsetCursorPos(SVector2<F32>(1.0f, -4.0f));
+		GUI::AddRectFilled(GUI::GetCursorScreenPos(), SVector2<F32>(cellWidth, 2.0f), GetAssetTypeColor(filterByAssetType));
 
+		GUI::OffsetCursorPos(SVector2<F32>(0.0f, 6.0f));
 		GUI::Text(label);
 
 		if (!GUI::BeginPopupModal(modalLabel, NULL, { EWindowFlag::AlwaysAutoResize }))
@@ -1854,8 +1856,6 @@ namespace Havtorn
 			GUI::EndPopup();
 			return SAssetPickResult();
 		}
-
-
 
 		I32 id = 0;
 		for (auto& entry : std::filesystem::recursive_directory_iterator(directory))

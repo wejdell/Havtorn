@@ -190,7 +190,7 @@ namespace Havtorn
 
 		GUI::Checkbox("Trigger", component->TriggerScript);
 	
-		return { EComponentViewResultLabel::InspectAssetComponent, component, 0 };
+		return { EComponentViewResultLabel::InspectAssetComponent, component, nullptr/*&component->AssetReference*/, nullptr, EAssetType::Script};
 	}
 
 	bool SScriptComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const

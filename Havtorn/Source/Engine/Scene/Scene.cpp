@@ -118,6 +118,9 @@ namespace Havtorn
 		if (!Init3DDefaults())
 			return false;
 
+		SEnvironmentLightComponent* environmentLightComponent = GetComponents<SEnvironmentLightComponent>()[0];
+		environmentLightComponent->AssetReference = SAssetReference("Assets/Textures/Cubemaps/CubemapTheVisit.hva");
+
 		// === Point light ===
 		const SEntity& pointLightEntity = AddEntity("Point Light");
 		if (!pointLightEntity.IsValid())
@@ -128,7 +131,6 @@ namespace Havtorn
 		SMatrix pointLightMatrix = pointLightTransform.Transform.GetMatrix();
 		pointLightMatrix.SetTranslation({ 1.75f, 0.35f, -2.15f });
 		pointLightTransform.Transform.SetMatrix(pointLightMatrix);
-
 
 		SPointLightComponent& pointLightComp = *AddComponent<SPointLightComponent>(pointLightEntity);
 		AddComponentEditorContext(pointLightEntity, &SPointLightComponentEditorContext::Context);

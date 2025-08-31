@@ -63,7 +63,7 @@ namespace Havtorn
 		GDebugDraw::AddLine(g, h, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false);
 		GDebugDraw::AddLine(h, e, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false);
 
-		return { EComponentViewResultLabel::InspectAssetComponent, staticMesh, 0 };
+		return { EComponentViewResultLabel::InspectAssetComponent, staticMesh, &staticMesh->AssetReference, nullptr, EAssetType::StaticMesh };
     }
 
 	bool SStaticMeshComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const

@@ -44,8 +44,7 @@ namespace Havtorn
 		//	GDebugDraw::AddAxis(worldTransform.GetTranslation(), worldTransform.GetEuler(), worldTransform.GetScale() * 0.5f);
 		//}
 
-		GUI::Separator();
-		return SComponentViewResult{ EComponentViewResultLabel::InspectAssetComponent };
+		return { EComponentViewResultLabel::InspectAssetComponent, skeletalAnimationComp, nullptr, &skeletalAnimationComp->AssetReferences, EAssetType::Animation };
 	}
 
 	bool SSkeletalAnimationComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
