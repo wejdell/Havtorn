@@ -184,111 +184,23 @@ namespace Havtorn
 		GUI::ViewManipulate(outCameraView.data, camDistance, SVector2<F32>(viewManipulateRight - size, viewManipulateTop), SVector2<F32>(size, size), SColor::FromPackedU32(backgroundColor));
 	}
 
-	void CInspectorWindow::InspectAssetComponent(const SComponentViewResult& result)
+	void CInspectorWindow::InspectAssetComponent(SComponentViewResult& result)
 	{
 		std::vector<std::string> assetNames = {};
-		std::vector<std::string> assetLabels = {};
-		std::string modalNameToOpen = "";
-		std::string defaultAssetDirectory = "";
 
-		if (result.AssetType == EAssetType::StaticMesh && result.AssetReference != nullptr)
+		if (result.AssetReferences != nullptr)
+		{
+			for (const SAssetReference& ref : *result.AssetReferences)
+				assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(ref.FilePath));
+		}
+		if (result.AssetReference != nullptr)
 		{
 			assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(result.AssetReference->FilePath));
-			modalNameToOpen = SelectMeshAssetModalName;
-			defaultAssetDirectory = DefaultMeshAssetDirectory;
-		}
-		else if (result.AssetType == EAssetType::Material && result.AssetReferences != nullptr)
-		{
-			for (const std::string& path : SAssetReference::GetPaths(*result.AssetReferences))
-				assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(path));
-
-			modalNameToOpen = SelectMaterialAssetModalName;
-			defaultAssetDirectory = DefaultMaterialAssetDirectory;
-		}
-		//else if (result.AssetType == EAssetType:: && result.AssetReferences != nullptr)
-		//{
-		//	for (U16 textureRef : decalComponent->TextureReferences)
-		//		assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(GEngine::GetTextureBank()->GetTexturePath(static_cast<U32>(textureRef))));
-
-		//	modalNameToOpen = SelectTextureAssetModalName;
-		//	defaultAssetDirectory = DefaultTextureAssetDirectory;
-		//	assetLabels.push_back("Albedo");
-		//	assetLabels.push_back("Material");
-		//	assetLabels.push_back("Normal");
-		//	// TODO.NW: Figure out the nicest way to deal with labels vs asset names. Would be cool with a drop down similar to UE. See Notes
-		//}
-		else if (result.AssetType == EAssetType::Texture && result.AssetReference != nullptr)
-		{
-			assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(result.AssetReference->FilePath));
-			modalNameToOpen = SelectTextureAssetModalName;
-			defaultAssetDirectory = DefaultTextureAssetDirectory;
-		}
-		else if (SScriptComponent* scriptComponent = dynamic_cast<SScriptComponent*>(result.ComponentViewed))
-		{
-			assetNames.push_back(scriptComponent->Script ? UGeneralUtils::ExtractFileBaseNameFromPath(scriptComponent->Script->FileName) : "Script");
-			modalNameToOpen = SelectScriptAssetModalName;
-			defaultAssetDirectory = DefaultScriptAssetDirectory;
-		}
-		else if (result.AssetType == EAssetType::SkeletalMesh && result.AssetReference != nullptr)
-		{
-			assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(result.AssetReference->FilePath));
-			modalNameToOpen = SelectSkeletonAssetModalName;
-			defaultAssetDirectory = DefaultMeshAssetDirectory;
-		}
-		else if (result.AssetType == EAssetType::Animation && result.AssetReference != nullptr)
-		{
-			assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(result.AssetReference->FilePath));
-			modalNameToOpen = SelectSkeletonAssetModalName;
-			defaultAssetDirectory = DefaultMeshAssetDirectory;
-		}
-
-		IterateAssetRepresentations(result, assetNames, assetLabels, modalNameToOpen, defaultAssetDirectory);
-	}
-
-	void CInspectorWindow::IterateAssetRepresentations(const SComponentViewResult& result, const std::vector<std::string>& assetNames, const std::vector<std::string>& /*assetLabels*/, const std::string& modalNameToOpen, const std::string& defaultSearchDirectory)
-	{
-		F32 thumbnailPadding = 4.0f;
-		F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + thumbnailPadding;
-		F32 panelWidth = 256.0f;
-		I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
-
-		if (assetNames.size() == 0)
-		{		
-			SAssetPickResult assetPickResult = GUI::AssetPicker("Select", modalNameToOpen.c_str(), 0, defaultSearchDirectory.c_str(), columnCount, Manager->GetAssetInspectFunction());
-			if (assetPickResult.State == EAssetPickerState::Active)
-				Manager->SetIsModalOpen(true);
-			else if (assetPickResult.State == EAssetPickerState::Cancelled)
-				Manager->SetIsModalOpen(false);
-			else if (assetPickResult.State == EAssetPickerState::AssetPicked)
-			{
-				AssetPickedIndex = 0;
-				auto pickedAsset = Manager->GetAssetRepFromDirEntry(assetPickResult.PickedEntry).get();
-
-				// TODO.NW: Should figure out if we can send along an editor context function to determine what happens 
-				// if an asset changes, instead of the inspector needing to know how to change the components
-				if (modalNameToOpen == SelectMeshAssetModalName)
-					HandleMeshAssetPicked(result, pickedAsset);
-				else if (modalNameToOpen == SelectMaterialAssetModalName)
-					HandleMaterialAssetPicked(result, pickedAsset);
-				else if (modalNameToOpen == SelectTextureAssetModalName)
-					HandleTextureAssetPicked(result, pickedAsset);
-				else if (modalNameToOpen == SelectScriptAssetModalName)
-					HandleScriptAssetPicked(result, pickedAsset);
-				else if (modalNameToOpen == SelectSkeletonAssetModalName)
-					HandleSkeletonAssetPicked(result, pickedAsset);
-				else if (modalNameToOpen == SelectSkeletonAnimationAssetModalName)
-					HandleSkeletalAnimationAssetPicked(result, pickedAsset);
-
-				Manager->SetIsModalOpen(false);
-			}
 		}
 
 		for (U8 index = 0; index < static_cast<U8>(assetNames.size()); index++)
 		{
 			std::string assetName = assetNames[index];
-
-			if (assetName.empty())
-				assetName = "M_Checkboard_128x128";
 
 			SEditorAssetRepresentation* assetRep = Manager->GetAssetRepFromName(assetName).get();
 			GUI::Separator();
@@ -297,7 +209,12 @@ namespace Havtorn
 			id.append(std::to_string(index));
 			GUI::PushID(id.c_str());
 
-			SAssetPickResult assetPickResult = GUI::AssetPicker(assetName.c_str(), modalNameToOpen.c_str(), (intptr_t)assetRep->TextureRef.GetShaderResourceView(), defaultSearchDirectory.c_str(), columnCount, Manager->GetAssetInspectFunction());
+			const F32 thumbnailPadding = 4.0f;
+			const F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + thumbnailPadding;
+			const F32 panelWidth = 256.0f;
+			const I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
+			const std::string modalName = "Select " + GetAssetTypeName(result.AssetType) + " Asset";
+			SAssetPickResult assetPickResult = GUI::AssetPickerFilter(assetName.c_str(), modalName.c_str(), (intptr_t)assetRep->TextureRef.GetShaderResourceView(), "Assets", columnCount, Manager->GetAssetFilteredInspectFunction(), result.AssetType);
 
 			if (assetPickResult.State == EAssetPickerState::Active)
 				Manager->SetIsModalOpen(true);
@@ -308,103 +225,23 @@ namespace Havtorn
 				AssetPickedIndex = index;
 				auto pickedAsset = Manager->GetAssetRepFromDirEntry(assetPickResult.PickedEntry).get();
 
-				// TODO.NW: Should figure out if we can send along an editor context function to determine what happens 
-				// if an asset changes, instead of the inspector needing to know how to change the components
-				if (modalNameToOpen == SelectMeshAssetModalName)
-					HandleMeshAssetPicked(result, pickedAsset);
-				else if (modalNameToOpen == SelectMaterialAssetModalName)
-					HandleMaterialAssetPicked(result, pickedAsset);
-				else if (modalNameToOpen == SelectTextureAssetModalName)
-					HandleTextureAssetPicked(result, pickedAsset);
-				else if (modalNameToOpen == SelectScriptAssetModalName)
-					HandleScriptAssetPicked(result, pickedAsset);
-				else if (modalNameToOpen == SelectSkeletonAssetModalName)
-					HandleSkeletonAssetPicked(result, pickedAsset);
-				else if (modalNameToOpen == SelectSkeletonAnimationAssetModalName)
-					HandleSkeletalAnimationAssetPicked(result, pickedAsset);
+				if (result.AssetReferences != nullptr)
+				{
+					std::vector<std::string> paths = SAssetReference::GetPaths(*result.AssetReferences);
+					paths[AssetPickedIndex] = pickedAsset->DirectoryEntry.path().string();
 
+					*result.AssetReferences = SAssetReference::MakeVectorFromPaths(paths);
+				}
+				if (result.AssetReference != nullptr)
+				{
+					*result.AssetReference = SAssetReference(pickedAsset->DirectoryEntry.path().string());
+				}
+
+				AssetPickedIndex = 0;
 				Manager->SetIsModalOpen(false);
 			}
 
 			GUI::PopID();
-		}
-	}
-
-	void CInspectorWindow::HandleMeshAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep)
-	{
-		SStaticMeshComponent* staticMesh = static_cast<SStaticMeshComponent*>(result.ComponentViewed);
-		if (staticMesh == nullptr)
-			return;
-
-		staticMesh->AssetReference = SAssetReference(assetRep->DirectoryEntry.path().string());
-	}
-
-	void CInspectorWindow::HandleSkeletonAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep)
-	{
-		SSkeletalMeshComponent* skeletalMesh = static_cast<SSkeletalMeshComponent*>(result.ComponentViewed);
-		if (skeletalMesh == nullptr)
-			return;
-
-		skeletalMesh->AssetReference = SAssetReference(assetRep->DirectoryEntry.path().string());
-	}
-
-	void CInspectorWindow::HandleSkeletalAnimationAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep)
-	{
-		SSkeletalAnimationComponent* skeletalAnimationComp = static_cast<SSkeletalAnimationComponent*>(result.ComponentViewed);
-		if (skeletalAnimationComp == nullptr)
-			return;
-
-		// TODO.NW: This should make use of the AssetPickedIndex just like the material below
-		skeletalAnimationComp->AssetReferences = SAssetReference::MakeVectorFromPaths({ assetRep->DirectoryEntry.path().string() });
-	}
-
-	void CInspectorWindow::HandleMaterialAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep)
-	{
-		SMaterialComponent* materialComponent = dynamic_cast<SMaterialComponent*>(result.ComponentViewed);
-		if (materialComponent == nullptr)
-			return;
-
-		std::vector<std::string> paths = SAssetReference::GetPaths(materialComponent->AssetReferences);
-		paths[AssetPickedIndex] = assetRep->DirectoryEntry.path().string();
-
-		// TODO.NW: This doesn't work for instanced entities yet. Need a solution for that
-		materialComponent->AssetReferences = SAssetReference::MakeVectorFromPaths(paths);
-		AssetPickedIndex = 0;
-	}
-
-	void CInspectorWindow::HandleTextureAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep)
-	{
-		//U16 textureReference = static_cast<U16>(GEngine::GetTextureBank()->GetTextureIndex(assetRep->DirectoryEntry.path().string()));
-
-		//if (SDecalComponent* decalComponent = dynamic_cast<SDecalComponent*>(result.ComponentViewed))
-		//	decalComponent->TextureReferences[AssetPickedIndex] = textureReference;
-
-		//if (SEnvironmentLightComponent* environmentLightComponent = dynamic_cast<SEnvironmentLightComponent*>(result.ComponentViewed))
-		//	environmentLightComponent->AmbientCubemapReference = textureReference;
-
-		//if (SSpriteComponent* spriteComponent = dynamic_cast<SSpriteComponent*>(result.ComponentViewed))
-		//	spriteComponent->TextureUID = textureReference;
-		if (result.AssetReference == nullptr)
-			return;
-
-		*result.AssetReference = SAssetReference(assetRep->DirectoryEntry.path().string());
-	}
-
-	void CInspectorWindow::HandleScriptAssetPicked(const SComponentViewResult& result, const SEditorAssetRepresentation* assetRep)
-	{
-		SScriptComponent* component = dynamic_cast<SScriptComponent*>(result.ComponentViewed);
-		if (component == nullptr)
-			return;
-
-		component->Script = GEngine::GetWorld()->LoadScript(assetRep->DirectoryEntry.path().string());
-		component->DataBindings.clear();
-		component->DataBindings.resize(component->Script->DataBindings.size());
-
-		for (U64 i = 0; i < component->DataBindings.size(); i++)
-		{
-			auto& scriptBinding = component->Script->DataBindings[i];
-			auto& componentBinding = component->DataBindings[i];
-			componentBinding = scriptBinding;
 		}
 	}
 

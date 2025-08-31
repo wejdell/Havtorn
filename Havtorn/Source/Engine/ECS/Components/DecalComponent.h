@@ -22,7 +22,7 @@ namespace Havtorn
 		[[nodiscard]] U32 GetSize() const;
 
 		// TODO.NW: Figure out what to do about this. Unify with MaterialComp? have single material as property?
-		std::vector<SAssetReference> AssetReferences;
+		std::vector<SAssetReference> AssetReferences = { SAssetReference(), SAssetReference(), SAssetReference() };
 		bool ShouldRenderAlbedo = false;
 		bool ShouldRenderMaterial = false;
 		bool ShouldRenderNormal = false;

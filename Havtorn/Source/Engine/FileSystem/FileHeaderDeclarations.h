@@ -15,7 +15,7 @@ namespace Havtorn
 	struct SAssetReference
 	{
 		U32 UID = 0;
-		std::string FilePath = "";
+		std::string FilePath = "NullAsset";
 
 		SAssetReference() = default;
 		explicit SAssetReference(const std::string& filePath)

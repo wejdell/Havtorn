@@ -19,7 +19,7 @@ namespace Havtorn
 
 		SMaterialComponent* materialComp = scene->GetComponent<SMaterialComponent>(entityOwner);
 
-		return { EComponentViewResultLabel::InspectAssetComponent, materialComp, 0 };
+		return { EComponentViewResultLabel::InspectAssetComponent, materialComp, nullptr, &materialComp->AssetReferences, EAssetType::Material };
     }
 	
 	bool SMaterialComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const

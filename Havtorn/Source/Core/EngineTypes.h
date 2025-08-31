@@ -8,6 +8,7 @@
 #include "MathTypes/Matrix.h"
 #include "MathTypes/Transform.h"
 #include "MathTypes/Curve.h"
+#include "Color.h"
 #include "Serializable.h"
 
 #define PIN_MATH_TYPES Havtorn::SVector, Havtorn::SMatrix, Havtorn::SQuaternion
@@ -30,4 +31,67 @@ namespace Havtorn
 		Sequencer,
 		Script
 	};
+
+	static SColor GetAssetTypeColor(const EAssetType type)
+	{
+		switch (type)
+		{
+		case EAssetType::Animation:
+			return SColor::Blue;
+		case EAssetType::Material:
+			return SColor::Green;
+		case EAssetType::SkeletalMesh:
+			return SColor::Magenta;
+		case EAssetType::StaticMesh:
+			return SColor::Teal;
+		case EAssetType::Texture:
+			return SColor::Red;
+		case EAssetType::Script:
+			return SColor::Blue;
+		default:
+			return SColor::White;
+		}
+	}
+
+	static std::string GetAssetTypeName(const EAssetType type)
+	{
+		switch (type)
+		{
+		case EAssetType::Animation:
+			return "Skeletal Animation";
+		case EAssetType::Material:
+			return "Material";
+		case EAssetType::SkeletalMesh:
+			return "Skeletal Mesh";
+		case EAssetType::StaticMesh:
+			return "Static Mesh";
+		case EAssetType::Texture:
+			return "Texture";
+		case EAssetType::Script:
+			return "Script";
+		default:
+			return "Asset";
+		}
+	}
+
+	static std::string GetAssetTypeDetailName(const EAssetType type)
+	{
+		switch (type)
+		{
+		case EAssetType::Animation:
+			return "SKELETAL ANIMATION";
+		case EAssetType::Material:
+			return "MATERIAL";
+		case EAssetType::SkeletalMesh:
+			return "SKELETAL MESH";
+		case EAssetType::StaticMesh:
+			return "STATIC MESH";
+		case EAssetType::Texture:
+			return "TEXTURE";
+		case EAssetType::Script:
+			return "SCRIPT";
+		default:
+			return "ASSET";
+		}
+	}
 }
