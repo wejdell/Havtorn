@@ -289,6 +289,9 @@ namespace Havtorn
 			transforms[boneIndex] = bone.InverseBindPoseTransform * posedNode.GlobalTransform;
 		}
 
+		assetRegistry->UnrequestAsset(SAssetReference(animationAsset->RigPath), CAssetRegistry::EditorManagerRequestID);
+		assetRegistry->UnrequestAsset(SAssetReference(animationFile), CAssetRegistry::EditorManagerRequestID);
+
 		return transforms;
 	}
 

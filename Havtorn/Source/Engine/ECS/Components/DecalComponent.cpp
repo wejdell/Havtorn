@@ -2,6 +2,7 @@
 
 #include "hvpch.h"
 #include "DecalComponent.h"
+#include "Scene/AssetRegistry.h"
 
 namespace Havtorn
 {
@@ -43,5 +44,11 @@ namespace Havtorn
         for (const SAssetReference& assetRef : AssetReferences)
             size += assetRef.GetSize();
         return size;
+    }
+
+    void SDecalComponent::IsDeleted(CScene* /*fromScene*/)
+    {
+        for (const SAssetReference& assetRef : AssetReferences)
+            GEngine::GetAssetRegistry()->UnrequestAsset(assetRef, Owner.GUID);
     }
 }

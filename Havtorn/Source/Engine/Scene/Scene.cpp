@@ -18,7 +18,8 @@ namespace Havtorn
 
 	CScene::~CScene()
 	{
-		Entities.clear();
+		ClearScene();
+		RegisteredComponentEditorContexts.clear();
 	}
 
 	bool CScene::Init(const std::string& sceneName)
@@ -799,7 +800,7 @@ namespace Havtorn
 		return outEntity;
 	}
 
-	void CScene::RemoveEntity(SEntity& entity)
+	void CScene::RemoveEntity(const SEntity entity)
 	{
 		if (!entity.IsValid())
 		{
@@ -809,9 +810,11 @@ namespace Havtorn
 
 		if (!EntityIndices.contains(entity.GUID))
 		{
-			HV_LOG_ERROR("__FUNCTION__: Tried to remove entity with GUID: %i from a scene that does not contain it.", entity.GUID);
+			HV_LOG_ERROR("__FUNCTION__: Tried to remove entity with GUID: %u from a scene that does not contain it.", entity.GUID);
 			return;
 		}
+
+		OnEntityPreDestroy.Broadcast(entity);
 
 		for (SComponentStorage& storage : Storages)
 		{
@@ -839,10 +842,17 @@ namespace Havtorn
 		SEntity& entityAtBack = Entities.back();
 		EntityIndices.at(entityAtBack.GUID) = EntityIndices.at(entity.GUID);
 
-		std::swap(Entities[EntityIndices.at(entity.GUID)], Entities.back());
+		std::swap(Entities[EntityIndices.at(entity.GUID)], entityAtBack);
 
 		Entities.pop_back();
 		EntityIndices.erase(entity.GUID);
+	}
+
+	void CScene::ClearScene()
+	{
+		std::vector<SEntity> copy = Entities;
+		for (const SEntity entity : copy)
+			RemoveEntity(entity);
 	}
 
 	void CScene::AddComponentEditorContext(const SEntity& owner, SComponentEditorContext* context)

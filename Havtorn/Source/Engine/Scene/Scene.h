@@ -3,6 +3,7 @@
 #pragma once
 
 #include <HavtornString.h>
+#include <HavtornDelegate.h>
 #include "Core/GeneralUtilities.h"
 #include "ECS/Entity.h"
 #include "ECS/Component.h"
@@ -43,6 +44,8 @@ namespace Havtorn
 		ENGINE_API U64 GetSceneIndex(const SEntity& entity) const;
 		ENGINE_API U64 GetSceneIndex(const U64 entityGUID) const;
 		
+		CMulticastDelegate<SEntity> OnEntityPreDestroy;
+
 		template<typename T>
 		U32 DefaultSizeAllocator(const std::vector<T*>& componentVector) const
 		{
@@ -225,6 +228,7 @@ namespace Havtorn
 			std::swap(entityIndices.at(maxIndexEntry.first), entityIndices.at(fromEntity.GUID));
 
 			T* componentToBeRemoved = reinterpret_cast<T*>(components[entityIndices.at(fromEntity.GUID)]);
+			componentToBeRemoved->IsDeleted(this);
 			delete componentToBeRemoved;
 			componentToBeRemoved = nullptr;
 
@@ -240,7 +244,8 @@ namespace Havtorn
 
 		ENGINE_API const SEntity& AddEntity(U64 guid = 0);
 		ENGINE_API const SEntity& AddEntity(const std::string& nameInEditor, U64 guid = 0);
-		ENGINE_API void RemoveEntity(SEntity& entity);
+		ENGINE_API void RemoveEntity(const SEntity entity);
+		ENGINE_API void ClearScene();
 
 		template<typename T>
 		const SEntity& GetEntity(const T* fromComponent) const

@@ -7,6 +7,7 @@ namespace Havtorn
 {
 	class CRenderManager;
 	class CWorld;
+	struct SEntity;
 	struct SComponent;
 
 	class CRenderSystem final : public ISystem
@@ -17,10 +18,11 @@ namespace Havtorn
 
 		void Update(CScene* scene) override;
 
-		U32 GetEditorTextureIndex(const SComponent* component);
+		void OnEntityPreDestroy(const SEntity entity);
 
 	private:
-		CRenderManager* RenderManager;
-		CWorld* World;
+		CRenderManager* RenderManager = nullptr;
+		CWorld* World = nullptr;
+		DelegateHandle Handle = {};
 	};
 }

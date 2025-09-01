@@ -1,6 +1,7 @@
 // Copyright 2025 Team Havtorn. All Rights Reserved.
 
 #include "SpriteComponent.h"
+#include "Scene/AssetRegistry.h"
 
 namespace Havtorn
 {
@@ -29,5 +30,10 @@ namespace Havtorn
         size += AssetReference.GetSize();
 
         return size;
+    }
+
+    void SSpriteComponent::IsDeleted(CScene* /*fromScene*/)
+    {
+        GEngine::GetAssetRegistry()->UnrequestAsset(AssetReference, Owner.GUID);
     }
 }

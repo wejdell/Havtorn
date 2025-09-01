@@ -21,6 +21,8 @@ namespace Havtorn
 		void Deserialize(const char* fromData, U64& pointerPosition);
 		[[nodiscard]] U32 GetSize() const;
 
+		ENGINE_API void IsDeleted(CScene* fromScene) override;
+
 		bool IsActive = false;
 		SAssetReference AssetReference;
 	};

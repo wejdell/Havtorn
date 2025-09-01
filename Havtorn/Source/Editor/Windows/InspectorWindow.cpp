@@ -8,6 +8,7 @@
 #include <Graphics/RenderManager.h>
 #include <Graphics/TextureBank.h>
 #include <Scene/Scene.h>
+#include <Scene/AssetRegistry.h>
 #include <Core/GeneralUtilities.h>
 
 #include "Windows/ViewportWindow.h"
@@ -224,17 +225,24 @@ namespace Havtorn
 			{
 				AssetPickedIndex = index;
 				auto pickedAsset = Manager->GetAssetRepFromDirEntry(assetPickResult.PickedEntry).get();
+				std::string newAssetPath = pickedAsset->DirectoryEntry.path().string();
 
 				if (result.AssetReferences != nullptr)
 				{
 					std::vector<std::string> paths = SAssetReference::GetPaths(*result.AssetReferences);
-					paths[AssetPickedIndex] = pickedAsset->DirectoryEntry.path().string();
-
+					
+					if (paths[AssetPickedIndex] != newAssetPath)
+						GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(paths[AssetPickedIndex]), result.ComponentViewed->Owner.GUID);
+					
+					paths[AssetPickedIndex] = newAssetPath;
 					*result.AssetReferences = SAssetReference::MakeVectorFromPaths(paths);
 				}
 				if (result.AssetReference != nullptr)
 				{
-					*result.AssetReference = SAssetReference(pickedAsset->DirectoryEntry.path().string());
+					if (result.AssetReference->FilePath != newAssetPath)
+						GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(result.AssetReference->FilePath), result.ComponentViewed->Owner.GUID);
+
+					*result.AssetReference = SAssetReference(newAssetPath);
 				}
 
 				AssetPickedIndex = 0;
