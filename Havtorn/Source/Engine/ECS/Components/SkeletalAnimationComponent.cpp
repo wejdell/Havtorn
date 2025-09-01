@@ -1,6 +1,7 @@
 // Copyright 2025 Team Havtorn. All Rights Reserved.
 
 #include "SkeletalAnimationComponent.h"
+#include "Scene/AssetRegistry.h"
 
 namespace Havtorn
 {
@@ -33,5 +34,11 @@ namespace Havtorn
         for (const SAssetReference& assetRef : AssetReferences)
             size += assetRef.GetSize();
         return size;
+    }
+
+    void SSkeletalAnimationComponent::IsDeleted(CScene* /*fromScene*/)
+    {
+        for (const SAssetReference& assetRef : AssetReferences)
+            GEngine::GetAssetRegistry()->UnrequestAsset(assetRef, Owner.GUID);
     }
 }

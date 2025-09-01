@@ -37,6 +37,9 @@ namespace Havtorn
 		ENGINE_API SAsset* RequestAsset(const SAssetReference& assetRef, const U64 requesterID);
 		ENGINE_API void UnrequestAsset(const SAssetReference& assetRef, const U64 requesterID);
 
+		ENGINE_API std::vector<SAsset*> RequestAssets(const std::vector<SAssetReference>& assetRefs, const U64 requesterID);
+		ENGINE_API void UnrequestAssets(const std::vector<SAssetReference>& assetRefs, const U64 requesterID);
+
 		ENGINE_API SAsset* RequestAsset(const U32 assetUID, const U64 requesterID);
 		ENGINE_API void UnrequestAsset(const U32 assetUID, const U64 requesterID);
 
@@ -48,15 +51,20 @@ namespace Havtorn
 
 		ENGINE_API void RefreshDatabase();
 
-		ENGINE_API std::string GetDebugString() const;
+		ENGINE_API std::set<U64> GetReferencers(const SAssetReference& assetRef);
+
+		ENGINE_API std::string GetDebugString(const bool shouldExpand) const;
 
 	private:
 		// TODO.NW: Catch asset location changes! Both source and asset itself, as part of file watching? 
 		// At the very least we shouldn't crash if we try to load an asset with an invalid path
 
+		void RequestDependencies(const U32 assetUID, const U64 requesterID);
+		void UnrequestDependencies(const U32 assetUID, const U64 requesterID);
+
 		// Load asset synchronously
-		SAsset* LoadAsset(const SAssetReference& assetRef, const U64 requesterID);
-		void UnloadAsset(const SAssetReference& assetRef);	
+		bool LoadAsset(const SAssetReference& assetRef);
+		bool UnloadAsset(const SAssetReference& assetRef);	
 
 		CRenderManager* RenderManager = nullptr;
 		std::map<U32, std::string> AssetDatabase;
@@ -111,6 +119,7 @@ namespace Havtorn
 		}
 		
 		asset->Requesters.insert(requesterID);
+		RequestDependencies(assetUID, requesterID);
 		
 		return &std::get<T>(asset->Data);
 	}

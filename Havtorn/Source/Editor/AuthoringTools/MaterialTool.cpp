@@ -37,7 +37,6 @@ namespace Havtorn
 	void CMaterialTool::OnInspectorGUI()
 	{
 		// TODO.NW: Make ON_SCOPE_EXIT equivalent?
-
 		if (!GUI::Begin(Name(), &IsEnabled))
 		{
 			GUI::End();
@@ -124,7 +123,7 @@ namespace Havtorn
 					
 					if (property.ConstantValue < 0.0f)
 					{
-						std::string assetPath = GEngine::GetAssetRegistry()->RequestAsset(STATIC_U32(property.TextureUID), CAssetRegistry::EditorManagerRequestID)->Reference.FilePath;
+						std::string assetPath = GEngine::GetAssetRegistry()->GetAssetDatabaseEntry(property.TextureUID);
 						auto assetRep = Manager->GetAssetRepFromName(UGeneralUtils::ExtractFileBaseNameFromPath(assetPath)).get();
 
 						intptr_t assetPickerThumbnail = assetRep != nullptr ? (intptr_t)assetRep->TextureRef.GetShaderResourceView() : intptr_t();
@@ -184,6 +183,7 @@ namespace Havtorn
 
 	void CMaterialTool::OnDisable()
 	{
+		CloseMaterial();
 	}
 
 	void CMaterialTool::OpenMaterial(SEditorAssetRepresentation* asset)
@@ -200,6 +200,8 @@ namespace Havtorn
 		assetFile.Deserialize(data);
 		delete[] data;
 
+		GEngine::GetAssetRegistry()->RequestAsset(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
+
 		MaterialData = SGraphicsMaterialAsset(assetFile).Material;
 		MaterialRender = Manager->GetRenderManager()->RenderMaterialAssetTexture(filePath);
 
@@ -210,6 +212,9 @@ namespace Havtorn
 
 	void CMaterialTool::CloseMaterial()
 	{
+		if (CurrentMaterial)
+			GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(CurrentMaterial->DirectoryEntry.path().string()), CAssetRegistry::EditorManagerRequestID);
+
 		CurrentMaterial = nullptr;
 		MaterialData = SEngineGraphicsMaterial();
 		MaterialRender.Release();

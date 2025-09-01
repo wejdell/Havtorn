@@ -35,15 +35,15 @@ namespace Havtorn
 
     SAsset* CAssetRegistry::RequestAsset(const SAssetReference& assetRef, const U64 requesterID)
     {
-        if (LoadedAssets.contains(assetRef.UID))
-        {
-            SAsset* loadedAsset = &LoadedAssets[assetRef.UID];
-            loadedAsset->Requesters.insert(requesterID);
-            return loadedAsset;
-        }
-
         // TODO.NW: Load on different thread and return null asset while loading?
-        return LoadAsset(assetRef, requesterID);
+        if (!LoadedAssets.contains(assetRef.UID) && !LoadAsset(assetRef))
+            return &LoadedAssets[0];
+        
+        SAsset* loadedAsset = &LoadedAssets[assetRef.UID];
+        loadedAsset->Requesters.insert(requesterID);
+        RequestDependencies(assetRef.UID, requesterID);
+
+        return loadedAsset;
     }
 
     void CAssetRegistry::UnrequestAsset(const SAssetReference& assetRef, const U64 requesterID)
@@ -54,9 +54,26 @@ namespace Havtorn
 
         SAsset* loadedAsset = &LoadedAssets[assetRef.UID];
         loadedAsset->Requesters.erase(requesterID);
+        UnrequestDependencies(assetRef.UID, requesterID);
 
         if (loadedAsset->Requesters.empty())
             UnloadAsset(assetRef);
+    }
+
+    std::vector<SAsset*> CAssetRegistry::RequestAssets(const std::vector<SAssetReference>& assetRefs, const U64 requesterID)
+    {
+        std::vector<SAsset*> assets;
+
+        for (const SAssetReference& ref : assetRefs)
+            assets.emplace_back(RequestAsset(ref, requesterID));
+
+        return assets;
+    }
+
+    void CAssetRegistry::UnrequestAssets(const std::vector<SAssetReference>& assetRefs, const U64 requesterID)
+    {
+        for (const SAssetReference& ref : assetRefs)
+            UnrequestAsset(ref, requesterID);
     }
 
     SAsset* CAssetRegistry::RequestAsset(const U32 assetUID, const U64 requesterID)
@@ -69,11 +86,7 @@ namespace Havtorn
         }
 
         if (AssetDatabase.contains(assetUID))
-        {
-            SAsset* asset = RequestAsset(SAssetReference(AssetDatabase[assetUID]), requesterID);
-            asset->Requesters.insert(requesterID);
-            return asset;
-        }
+            return RequestAsset(SAssetReference(AssetDatabase[assetUID]), requesterID);
 
         HV_LOG_ERROR("CAssetRegistry::RequestAsset: Could not request asset with ID: %i, it is not loaded yet and has not been found in the database before. Please use the asset file path instead", assetUID);
         return nullptr;
@@ -87,6 +100,13 @@ namespace Havtorn
 
         SAsset* loadedAsset = &LoadedAssets[assetUID];
         loadedAsset->Requesters.erase(requesterID);
+        UnrequestDependencies(assetUID, requesterID);
+
+        if (loadedAsset->Requesters.empty())
+        {
+            if (AssetDatabase.contains(assetUID))
+                UnloadAsset(SAssetReference(AssetDatabase[assetUID]));
+        }
     }
 
     std::string CAssetRegistry::GetAssetDatabaseEntry(const U32 uid)
@@ -100,20 +120,80 @@ namespace Havtorn
         return AssetDatabase[uid];
     }
 
-    SAsset* CAssetRegistry::LoadAsset(const SAssetReference& assetRef, const U64 requesterID)
+    void CAssetRegistry::RequestDependencies(const U32 assetUID, const U64 requesterID)
+    {
+        SAsset* asset = &LoadedAssets[assetUID];
+        if (std::holds_alternative<SGraphicsMaterialAsset>(asset->Data))
+        {
+            SGraphicsMaterialAsset assetData = std::get<SGraphicsMaterialAsset>(asset->Data);
+
+            auto requestAssetDependency = [&](const SRuntimeGraphicsMaterialProperty& property)
+                {
+                    if (property.TextureChannelIndex <= -1.0f)
+                        return;
+
+                    RequestAsset(property.TextureUID, requesterID);
+                };
+
+            requestAssetDependency(assetData.Material.AlbedoA);
+            requestAssetDependency(assetData.Material.AlbedoR);
+            requestAssetDependency(assetData.Material.AlbedoG);
+            requestAssetDependency(assetData.Material.AlbedoB);
+            requestAssetDependency(assetData.Material.AlbedoA);
+            requestAssetDependency(assetData.Material.NormalX);
+            requestAssetDependency(assetData.Material.NormalY);
+            requestAssetDependency(assetData.Material.NormalZ);
+            requestAssetDependency(assetData.Material.AmbientOcclusion);
+            requestAssetDependency(assetData.Material.Metalness);
+            requestAssetDependency(assetData.Material.Roughness);
+            requestAssetDependency(assetData.Material.Emissive);
+        }
+    }
+
+    void CAssetRegistry::UnrequestDependencies(const U32 assetUID, const U64 requesterID)
+    {
+        SAsset* asset = &LoadedAssets[assetUID];
+        if (std::holds_alternative<SGraphicsMaterialAsset>(asset->Data))
+        {
+            SGraphicsMaterialAsset assetData = std::get<SGraphicsMaterialAsset>(asset->Data);
+
+            auto unrequestAssetDependency = [&](const SRuntimeGraphicsMaterialProperty& property)
+                {
+                    if (property.TextureChannelIndex <= -1.0f)
+                        return;
+
+                    UnrequestAsset(property.TextureUID, requesterID);
+                };
+
+            unrequestAssetDependency(assetData.Material.AlbedoA);
+            unrequestAssetDependency(assetData.Material.AlbedoR);
+            unrequestAssetDependency(assetData.Material.AlbedoG);
+            unrequestAssetDependency(assetData.Material.AlbedoB);
+            unrequestAssetDependency(assetData.Material.AlbedoA);
+            unrequestAssetDependency(assetData.Material.NormalX);
+            unrequestAssetDependency(assetData.Material.NormalY);
+            unrequestAssetDependency(assetData.Material.NormalZ);
+            unrequestAssetDependency(assetData.Material.AmbientOcclusion);
+            unrequestAssetDependency(assetData.Material.Metalness);
+            unrequestAssetDependency(assetData.Material.Roughness);
+            unrequestAssetDependency(assetData.Material.Emissive);
+        }
+    }
+
+    bool CAssetRegistry::LoadAsset(const SAssetReference& assetRef)
     {
         std::string filePath = assetRef.FilePath;
         if (!CFileSystem::DoesFileExist(filePath))
         {
             HV_LOG_WARN("CAssetRegistry::LoadAsset: Asset file pointed to by %s failed to load, does not exist!", assetRef.FilePath.c_str());
-            return &LoadedAssets[0];
+            return false;
         }
 
         const U64 fileSize = CFileSystem::GetFileSize(filePath);
         if (fileSize == 0)
         {
             HV_LOG_WARN("CAssetRegistry::LoadAsset: Asset file pointed to by %s failed to load, was empty!", assetRef.FilePath.c_str());
-            return &LoadedAssets[0];
+            return false;
         }
 
         char* data = new char[fileSize];
@@ -126,7 +206,6 @@ namespace Havtorn
         SAsset asset;
         asset.Type = type;
         asset.Reference = assetRef;
-        asset.Requesters.insert(requesterID);
 
         switch (type)
         {
@@ -231,20 +310,24 @@ namespace Havtorn
             // TODO.NW: Use magic enum to write out enum type
             HV_LOG_WARN("CAssetRegistry: Asset Resolving for asset type SEE_TODO is not yet implemented.");
             delete[] data;
-            return &LoadedAssets[0];
+            return false;
         }
         delete[] data;
 
         // TODO.NW: Set asset source data and bind filewatchers?
 
         LoadedAssets.emplace(assetRef.UID, asset);
-        return &LoadedAssets[assetRef.UID];
+        return true;
     }
 
-    void CAssetRegistry::UnloadAsset(const SAssetReference& assetRef)
+    bool CAssetRegistry::UnloadAsset(const SAssetReference& assetRef)
     {
+        if (!LoadedAssets.contains(assetRef.UID))
+            return false;
+
         // TODO.NW: If any filewatchers are watching the source of this asset, remove them now
         LoadedAssets.erase(assetRef.UID);
+        return true;
     }
 
     std::string CAssetRegistry::ImportAsset(const std::string& filePath, const std::string& destinationPath, const SSourceAssetData& sourceData)
@@ -372,8 +455,35 @@ namespace Havtorn
         }
     }
 
-    std::string CAssetRegistry::GetDebugString() const
+    std::set<U64> CAssetRegistry::GetReferencers(const SAssetReference& assetRef)
     {
-        return "Asset Registry | Loaded Assets: " + std::to_string(LoadedAssets.size()) + " | Database Entries: " + std::to_string(AssetDatabase.size()) + " |";
+        if (!LoadedAssets.contains(assetRef.UID))
+            return std::set<U64>();
+
+        SAsset* loadedAsset = &LoadedAssets[assetRef.UID];
+        return loadedAsset->Requesters;
+    }
+
+    std::string CAssetRegistry::GetDebugString(const bool shouldExpand) const
+    {
+        std::string debugString = "Asset Registry | Loaded Assets: " + std::to_string(LoadedAssets.size()) + " | Database Entries: " + std::to_string(AssetDatabase.size()) + " |";
+        
+        if (shouldExpand)
+        {
+            for (auto const& [uid, asset] : LoadedAssets)
+            {
+                debugString.append("\n");
+                debugString.append(std::to_string(asset.Requesters.size()));
+                debugString.append("\t");
+                if (!asset.Requesters.empty())
+                {
+                    debugString.append(std::to_string(*asset.Requesters.begin()));
+                    debugString.append("\t");
+                }
+                debugString.append(asset.Reference.FilePath);
+            }
+        }
+        
+        return debugString;
     }
 }

@@ -22,6 +22,8 @@ namespace Havtorn
 		void Deserialize(const char* fromData, U64& pointerPosition);
 		[[nodiscard]] U32 GetSize() const;
 
+		ENGINE_API void IsDeleted(CScene* fromScene) override;
+
 		SColor Color = SColor::White;
 		SVector4 UVRect = { 0.f, 0.f, 1.f, 1.f };
 		SAssetReference AssetReference;

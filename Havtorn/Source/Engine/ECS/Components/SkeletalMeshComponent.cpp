@@ -3,6 +3,7 @@
 #include "hvpch.h"
 #include "SkeletalMeshComponent.h"
 #include "FileSystem\FileHeaderDeclarations.h"
+#include "Scene/AssetRegistry.h"
 
 namespace Havtorn
 {
@@ -25,5 +26,10 @@ namespace Havtorn
         size += AssetReference.GetSize();
 
         return size;
+    }
+
+    void SSkeletalMeshComponent::IsDeleted(CScene* /*fromScene*/)
+    {
+        GEngine::GetAssetRegistry()->UnrequestAsset(AssetReference, Owner.GUID);
     }
 }

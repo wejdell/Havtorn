@@ -246,6 +246,7 @@ namespace Havtorn
 
 			STextureAsset* assetData = assetRegistry->RequestAssetData<STextureAsset>(SAssetReference(assetPath), CAssetRegistry::EditorManagerRequestID);
 			Textures[index] = assetData->RenderTexture;
+			assetRegistry->UnrequestAsset(SAssetReference(assetPath), CAssetRegistry::EditorManagerRequestID);
 		}
 
 		// Adding None texture at the end
