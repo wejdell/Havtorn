@@ -95,7 +95,6 @@ namespace Havtorn
 
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry) const;
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromName(const std::string& assetName) const;
-		//const Ptr<SEditorAssetRepresentation>& GetAssetRepFromImageRef(void* imageRef) const;
 		DirEntryFunc GetAssetInspectFunction() const;
 		DirEntryEAssetTypeFunc GetAssetFilteredInspectFunction() const;
 
