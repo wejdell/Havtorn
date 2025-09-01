@@ -160,10 +160,15 @@ namespace Havtorn
 		// Windows
 		for (const auto& window : Windows)
 		{
-			if (!window->GetEnabled())
-				continue;
+			if (window->GetEnabled())
+				window->OnInspectorGUI();
 
-			window->OnInspectorGUI();
+			if (!window->WasEnabled && window->GetEnabled())
+				window->OnEnable();
+			if (window->WasEnabled && !window->GetEnabled())
+				window->OnDisable();
+
+			window->WasEnabled = window->GetEnabled();
 		}
 
 		DebugWindow();
@@ -187,7 +192,10 @@ namespace Havtorn
 				GUI::Text(GetFrameRate().c_str());
 				GUI::Text(GetSystemMemory().c_str());
 				GUI::Text(GetDrawCalls().c_str());
-				GUI::Text(GEngine::GetAssetRegistry()->GetDebugString().c_str());
+
+				static bool debugRegistry = false;
+				GUI::Checkbox("Show Registry Details", debugRegistry);
+				GUI::Text(GEngine::GetAssetRegistry()->GetDebugString(debugRegistry).c_str());
 			}
 
 			GUI::End();
@@ -271,21 +279,6 @@ namespace Havtorn
 		// NR: Return empty rep
 		return AssetRepresentations[0];
 	}
-
-	//const Ptr<SEditorAssetRepresentation>& CEditorManager::GetAssetRepFromImageRef(void* imageRef) const
-	//{
-	//	for (const auto& rep : AssetRepresentations)
-	//	{
-	//		if (imageRef == rep->TextureRef)
-	//			return rep;
-	//	}
-
-	//	// NR: Return empty rep
-	//	return AssetRepresentations[0];
-	//}
-
-	/*std::function<SAssetInspectionData(std::filesystem::directory_entry, const EAssetType assetTypeFilter)> */
-
 
 	DirEntryFunc CEditorManager::GetAssetInspectFunction() const
 	{
@@ -713,6 +706,7 @@ namespace Havtorn
 			SStaticMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMesh->AssetReference, CAssetRegistry::EditorManagerRequestID);
 			center = meshAsset->BoundsCenter;
 			bounds = SVector::GetAbsMaxKeepValue(meshAsset->BoundsMax, meshAsset->BoundsMin);
+			GEngine::GetAssetRegistry()->UnrequestAsset(staticMesh->AssetReference, CAssetRegistry::EditorManagerRequestID);
 			foundBounds = true;
 		}
 

@@ -24,6 +24,7 @@ namespace Havtorn
 		inline void SetEnabled(const bool enable) { IsEnabled = enable; }
 		inline const bool GetEnabled() const { return IsEnabled; }
 
+		bool WasEnabled = false;
 	protected:
 		// TODO.AG: Test WeakPtr 
 		/*Havtorn::Ref<Havtorn::CEditorManager>*/CEditorManager* Manager;
