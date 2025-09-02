@@ -25,3 +25,6 @@
 [submodule "Havtorn/External/ImGuizmo"]
 	path = Havtorn/External/ImGuizmo
 	url = https://github.com/nicolas-risberg/ImGuizmo.git
+[submodule "Havtorn/External/rapidjson"]
+	path = Havtorn/External/rapidjson
+	url = https://github.com/nicolas-risberg/rapidjson.git
