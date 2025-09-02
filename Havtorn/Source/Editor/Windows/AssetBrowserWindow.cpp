@@ -9,7 +9,7 @@
 #include <Engine.h>
 #include <Timer.h>
 #include <MathTypes/EngineMath.h>
-#include <FileSystem/FileSystem.h>
+#include <FileSystem.h>
 #include <Graphics/RenderManager.h>
 #include <PlatformManager.h>
 
@@ -17,7 +17,6 @@ namespace Havtorn
 {
 	CAssetBrowserWindow::CAssetBrowserWindow(const char* displayName, CEditorManager* manager)
 		: CWindow(displayName, manager)
-		, FileSystem(GEngine::GetFileSystem())
 	{
 		CurrentDirectory = std::filesystem::path(DefaultAssetPath);		
 		manager->GetPlatformManager()->OnDragDropAccepted.AddMember(this, &CAssetBrowserWindow::OnDragDropFiles);

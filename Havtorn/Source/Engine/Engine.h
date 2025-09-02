@@ -17,7 +17,7 @@ namespace Havtorn
 	class CWorld;
 	class CInputMapper;
 	class CAudioManager;
-	class CFileSystem;
+	class UFileSystem;
 	class CFileWatcher;
 	class CAssetRegistry;
 	class CSequencerSystem;
@@ -39,7 +39,6 @@ namespace Havtorn
 		void RenderFrame();
 		void EndFrame();
 		
-		static ENGINE_API CFileSystem* GetFileSystem();
 		static ENGINE_API CFileWatcher* GetFileWatcher();
 		static ENGINE_API CThreadManager* GetThreadManager();
 		static ENGINE_API CAssetRegistry* GetAssetRegistry();
@@ -56,7 +55,6 @@ namespace Havtorn
 		static ENGINE_API GEngine* Instance;
 
 		// TODO.NW: Might as well make these unique ptrs
-		CFileSystem* FileSystem = nullptr;
 		CFileWatcher* FileWatcher = nullptr;
 		CThreadManager* ThreadManager = nullptr;
 		CGraphicsFramework* Framework = nullptr;

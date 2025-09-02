@@ -2,10 +2,8 @@
 
 #include "hvpch.h"
 #include <wincodec.h>
-#include <document.h>
 
 #include "Engine.h"
-#include "FileSystem/FileSystem.h"
 #include "FileSystem/FileWatcher.h"
 #include "Threading/ThreadManager.h"
 #include "Graphics/GraphicsFramework.h"
@@ -25,6 +23,7 @@
 #include "Application/EngineProcess.h"
 
 #include <../Platform/PlatformManager.h>
+#include <FileSystem.h>
 
 namespace Havtorn
 {
@@ -34,7 +33,6 @@ namespace Havtorn
 	{
 		Instance = this;
 
-		FileSystem = new CFileSystem();
 		Timer = new GTime();
 		InputMapper = new CInputMapper();
 		Framework = new CGraphicsFramework();
@@ -57,7 +55,6 @@ namespace Havtorn
 		SAFE_DELETE(Framework);
 		SAFE_DELETE(InputMapper);
 		SAFE_DELETE(Timer);
-		SAFE_DELETE(FileSystem);
 
 		Instance = nullptr;
 	}
@@ -129,11 +126,6 @@ namespace Havtorn
 		CThreadManager::RenderThreadStatus = ERenderThreadStatus::ReadyToRender;
 		uniqueLock.unlock();
 		CThreadManager::RenderCondition.notify_one();
-	}
-
-	CFileSystem* GEngine::GetFileSystem()
-	{
-		return Instance->FileSystem;
 	}
 
 	CFileWatcher* GEngine::GetFileWatcher()

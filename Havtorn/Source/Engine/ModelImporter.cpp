@@ -8,10 +8,11 @@
 #include <assimp/postprocess.h>
 
 #include "Engine.h"
-#include "FileSystem/FileSystem.h"
 #include "FileSystem/FileHeaderDeclarations.h"
 
 #include "Assets/Asset.h"
+
+#include <FileSystem.h>
 
 #define NUM_BONES_PER_VERTEX 4
 #define ZERO_MEM(a) memset(a, 0, sizeof(a))
@@ -139,7 +140,7 @@ namespace Havtorn
 
 	SAssetFileHeader UModelImporter::ImportFBX(const std::string& filePath, const SSourceAssetData& sourceData)
 	{
-		if (!CFileSystem::DoesFileExist(filePath))
+		if (!UFileSystem::DoesFileExist(filePath))
 		{
 			HV_LOG_ERROR("ModelImporter could not import %s. File does not exist!", filePath.c_str());
 			return std::monostate();
@@ -436,10 +437,10 @@ namespace Havtorn
 		std::vector<SSkeletalMeshBone> bones;
 		{
 			std::string rigFilePath = fileHeader.SourceData.AssetDependencyPath.AsString();
-			const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(rigFilePath);
+			const U64 fileSize = UFileSystem::GetFileSize(rigFilePath);
 			char* data = new char[fileSize];
 
-			GEngine::GetFileSystem()->Deserialize(rigFilePath, data, STATIC_U32(fileSize));
+			UFileSystem::Deserialize(rigFilePath, data, STATIC_U32(fileSize));
 
 			SSkeletalModelFileHeader rigHeader;
 			rigHeader.Deserialize(data);

@@ -11,7 +11,7 @@
 
 namespace Havtorn
 {
-	class CFileSystem;
+	class UFileSystem;
 
 	class CAssetBrowserWindow : public CWindow
 	{
@@ -39,7 +39,6 @@ namespace Havtorn
 		void InspectDirectoryEntry(const std::filesystem::directory_entry& entry, U32& outCurrentID, const intptr_t& folderIconID);
 
 		SAssetImportOptions ImportOptions;
-		CFileSystem* FileSystem = nullptr;
 		const std::string DefaultAssetPath = "Assets";
 		std::filesystem::path CurrentDirectory = "";
 		SGuiTextFilter Filter = SGuiTextFilter();

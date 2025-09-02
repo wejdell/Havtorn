@@ -8,7 +8,7 @@
 #include <ECS/GUIDManager.h>
 #include <ECS/Components/TransformComponent.h>
 #include <HexRune/CoreNodes/CoreNodes.h>
-#include <FileSystem/FileSystem.h>
+#include <FileSystem.h>
 
 #include "ScriptTool.h"
 
@@ -83,7 +83,7 @@ namespace Havtorn
 				const auto data = new char[asset.GetSize()];
 
 				asset.Serialize(data);
-				GEngine::GetFileSystem()->Serialize(CurrentScript->FileName, &data[0], asset.GetSize());
+				UFileSystem::Serialize(CurrentScript->FileName, &data[0], asset.GetSize());
 
 				std::filesystem::directory_entry newDir;
 				newDir.assign(std::filesystem::path(CurrentScript->FileName));

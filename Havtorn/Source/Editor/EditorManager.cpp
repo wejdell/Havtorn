@@ -7,7 +7,7 @@
 #include <format>
 
 #include <Engine.h>
-#include <FileSystem/FileSystem.h>
+#include <FileSystem.h>
 #include <Input/InputMapper.h>
 #include <Input/InputTypes.h>
 
@@ -303,7 +303,7 @@ namespace Havtorn
 
 	void CEditorManager::CreateAssetRep(const std::filesystem::path& path)
 	{
-		if (!CFileSystem::DoesFileExist(path.string()))
+		if (!UFileSystem::DoesFileExist(path.string()))
 		{
 			HV_LOG_ERROR("CEditorManager::CreateAssetRep failed to create an asset representation! File was not found!");
 			return;
@@ -313,10 +313,10 @@ namespace Havtorn
 		HV_ASSERT(!entry.is_directory(), "You are trying to create SEditorAssetRepresentation but you're creating a new folder.");
 
 		std::string filePath = path.string();
-		const U64 fileSize = UMath::Max(GEngine::GetFileSystem()->GetFileSize(filePath), sizeof(EAssetType));
+		const U64 fileSize = UMath::Max(UFileSystem::GetFileSize(filePath), sizeof(EAssetType));
 		char* data = new char[fileSize];
 
-		GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
+		UFileSystem::Deserialize(filePath, data, STATIC_U32(fileSize));
 
 		SEditorAssetRepresentation rep;
 

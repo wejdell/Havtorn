@@ -74,7 +74,6 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	editorProcess->Init(platformProcess->PlatformManager);
 	//application->Setup(platformProcess->PlatformManager); //foreach -> process->Init();
 
-
 	application->Run();
 
 	delete application;

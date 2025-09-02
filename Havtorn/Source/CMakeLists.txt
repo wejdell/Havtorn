@@ -71,6 +71,8 @@ set(CORE_FILES
     ${CORE_FOLDER}Delegate.h
     ${CORE_FOLDER}EngineException.h
     ${CORE_FOLDER}EngineTypes.h
+    ${CORE_FOLDER}FileSystem.cpp
+    ${CORE_FOLDER}FileSystem.h
     ${CORE_FOLDER}HavtornDelegate.h
     ${CORE_FOLDER}HavtornString.cpp
     ${CORE_FOLDER}HavtornString.h
@@ -81,10 +83,52 @@ set(CORE_FILES
     "${CORE_FOLDER}Log.cpp"
     "${CORE_FOLDER}Log.h"
 )
-add_library(Core SHARED ${CORE_FILES})
+set(RAPIDJSON_FILES
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/error/en.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/error/error.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/biginteger.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/clzll.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/diyfp.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/dtoa.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/ieee754.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/itoa.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/meta.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/pow10.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/regex.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/stack.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/strfunc.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/strtod.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/swap.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/msinttypes/inttypes.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/msinttypes/stdint.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/allocators.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/cursorstreamwrapper.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/document.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/encodedstream.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/encodings.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/filereadstream.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/filewritestream.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/fwd.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/istreamwrapper.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/memorybuffer.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/memorystream.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/ostreamwrapper.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/pointer.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/prettywriter.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/rapidjson.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/reader.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/schema.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/stream.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/stringbuffer.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/uri.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/writer.h"
+)
+add_library(Core SHARED ${CORE_FILES} ${RAPIDJSON_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${CORE_FILES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}"/../External/rapidjson/include" FILES ${RAPIDJSON_FILES})
 target_include_directories(Core PRIVATE
     "${CORE_FOLDER}"
+    "${EXTERNAL_FOLDER}rapidjson/include"
 )
 target_compile_definitions(Core PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_CORE_DLL)
 target_compile_options(Core PRIVATE ${COMMON_COMPILE_OPTIONS})
@@ -110,6 +154,7 @@ target_link_libraries(Platform PRIVATE
 target_include_directories(Platform PRIVATE
 	"${PLATFORM_FOLDER}"
     "${CORE_FOLDER}"
+    "${EXTERNAL_FOLDER}rapidjson/include"
 )
 target_link_directories(Platform PRIVATE
     ${CMAKE_BINARY_DIR}
@@ -324,8 +369,6 @@ set(ENGINE_FILES
     "${ENGINE_FOLDER}ECS/System.cpp"
     "${ENGINE_FOLDER}ECS/System.h"
     ${ENGINE_FOLDER}FileSystem/FileHeaderDeclarations.h
-    ${ENGINE_FOLDER}FileSystem/FileSystem.cpp
-    ${ENGINE_FOLDER}FileSystem/FileSystem.h
     ${ENGINE_FOLDER}FileSystem/FileWatcher.cpp
     ${ENGINE_FOLDER}FileSystem/FileWatcher.h
     ${ENGINE_FOLDER}Graphics/Debug/DebugDrawUtility.cpp
@@ -530,7 +573,7 @@ target_include_directories(Engine PRIVATE
     "${EXTERNAL_FOLDER}"
     "${EXTERNAL_FOLDER}assimp/include"
     "${EXTERNAL_FOLDER}FastNoise2/include"
-    "${EXTERNAL_FOLDER}rapidjson"
+    "${EXTERNAL_FOLDER}rapidjson/include"
     "${EXTERNAL_FOLDER}DirectXTex"
     "${EXTERNAL_FOLDER}box2d/include/box2d"
     "${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
@@ -577,7 +620,7 @@ target_include_directories(Game PRIVATE
     "${GAME_FOLDER}"
     "${EXTERNAL_FOLDER}"
     "${EXTERNAL_FOLDER}FastNoise2/include"
-    "${EXTERNAL_FOLDER}rapidjson"
+    "${EXTERNAL_FOLDER}rapidjson/include"
     "${EXTERNAL_FOLDER}DirectXTex"
     "${EXTERNAL_FOLDER}box2d/include/box2d"
     "${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
@@ -660,7 +703,7 @@ add_library(Editor SHARED ${EDITOR_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${EDITOR_FILES})
 target_include_directories(Editor PRIVATE
     "${EDITOR_FOLDER}"
-    "${EXTERNAL_FOLDER}rapidjson"
+    "${EXTERNAL_FOLDER}rapidjson/include"
     "${EXTERNAL_FOLDER}DirectXTex"
     "${EXTERNAL_FOLDER}box2d/include/box2d"
     "${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
