@@ -183,13 +183,13 @@ namespace Havtorn
     bool CAssetRegistry::LoadAsset(const SAssetReference& assetRef)
     {
         std::string filePath = assetRef.FilePath;
-        if (!CFileSystem::DoesFileExist(filePath))
+        if (!UFileSystem::DoesFileExist(filePath))
         {
             HV_LOG_WARN("CAssetRegistry::LoadAsset: Asset file pointed to by %s failed to load, does not exist!", assetRef.FilePath.c_str());
             return false;
         }
 
-        const U64 fileSize = CFileSystem::GetFileSize(filePath);
+        const U64 fileSize = UFileSystem::GetFileSize(filePath);
         if (fileSize == 0)
         {
             HV_LOG_WARN("CAssetRegistry::LoadAsset: Asset file pointed to by %s failed to load, was empty!", assetRef.FilePath.c_str());
@@ -198,7 +198,7 @@ namespace Havtorn
 
         char* data = new char[fileSize];
 
-        GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
+        UFileSystem::Deserialize(filePath, data, STATIC_U32(fileSize));
         EAssetType type = EAssetType::None;
         U64 pointerPosition = 0;
         DeserializeData(type, data, pointerPosition);
@@ -345,7 +345,7 @@ namespace Havtorn
         case EAssetType::Texture:
         {
             std::string textureFileData;
-            GEngine::GetFileSystem()->Deserialize(filePath, textureFileData);
+            UFileSystem::Deserialize(filePath, textureFileData);
 
             ETextureFormat format = {};
             if (const std::string extension = UGeneralUtils::ExtractFileExtensionFromPath(filePath); extension == "dds")
@@ -391,7 +391,7 @@ namespace Havtorn
             const auto data = new char[header.GetSize()];
             header.Serialize(data);
             hvaPath = destinationPath + header.Name + ".hva";
-            GEngine::GetFileSystem()->Serialize(hvaPath, &data[0], header.GetSize());
+            UFileSystem::Serialize(hvaPath, &data[0], header.GetSize());
             delete[] data;
         }
         else if (std::holds_alternative<SSkeletalModelFileHeader>(fileHeader))
@@ -400,7 +400,7 @@ namespace Havtorn
             const auto data = new char[header.GetSize()];
             header.Serialize(data);
             hvaPath = destinationPath + header.Name + ".hva";
-            GEngine::GetFileSystem()->Serialize(hvaPath, &data[0], header.GetSize());
+            UFileSystem::Serialize(hvaPath, &data[0], header.GetSize());
             delete[] data;
         }
         else if (std::holds_alternative<SSkeletalAnimationFileHeader>(fileHeader))
@@ -409,7 +409,7 @@ namespace Havtorn
             const auto data = new char[header.GetSize()];
             header.Serialize(data);
             hvaPath = destinationPath + header.Name + ".hva";
-            GEngine::GetFileSystem()->Serialize(hvaPath, &data[0], header.GetSize());
+            UFileSystem::Serialize(hvaPath, &data[0], header.GetSize());
             delete[] data;
         }
         else if (std::holds_alternative<STextureFileHeader>(fileHeader))
@@ -418,7 +418,7 @@ namespace Havtorn
             const auto data = new char[header.GetSize()];
             header.Serialize(data);
             hvaPath = destinationPath + header.Name + ".hva";
-            GEngine::GetFileSystem()->Serialize(hvaPath, &data[0], header.GetSize());
+            UFileSystem::Serialize(hvaPath, &data[0], header.GetSize());
             delete[] data;
         }
         else if (std::holds_alternative<SMaterialAssetFileHeader>(fileHeader))
@@ -427,7 +427,7 @@ namespace Havtorn
             const auto data = new char[header.GetSize()];
             header.Serialize(data);
             hvaPath = destinationPath + header.Name + ".hva";
-            GEngine::GetFileSystem()->Serialize(hvaPath, &data[0], header.GetSize());
+            UFileSystem::Serialize(hvaPath, &data[0], header.GetSize());
             delete[] data;
         }
 

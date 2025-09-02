@@ -103,7 +103,7 @@ namespace Havtorn
 	{
 		const auto data = new char[fileHeader.GetSize()];
 		fileHeader.Serialize(data);
-		GEngine::GetFileSystem()->Serialize(destinationPath, &data[0], fileHeader.GetSize());
+		UFileSystem::Serialize(destinationPath, &data[0], fileHeader.GetSize());
 		delete[] data;
 	}
 
@@ -235,7 +235,7 @@ namespace Havtorn
 			const EEditorTexture texture = static_cast<EEditorTexture>(index);
 			const std::string assetSubDirectory = "Assets/";
 			const std::string assetPath = GetFileName(texture, ".hva", assetSubDirectory);
-			if (!CFileSystem::DoesFileExist(assetPath))
+			if (!UFileSystem::DoesFileExist(assetPath))
 			{
 				const std::string sourcePath = GetFileName(texture, ".dds");
 				SSourceAssetData sourceData;

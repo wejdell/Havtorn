@@ -130,7 +130,7 @@ namespace Havtorn
 
 		U64 pointerPosition = 0;	
 		fileHeader.Serialize(data, pointerPosition);
-		GEngine::GetFileSystem()->Serialize(destinationPath, data, fileSize);
+		UFileSystem::Serialize(destinationPath, data, fileSize);
 		
 		delete[] data;
 	}
@@ -139,13 +139,13 @@ namespace Havtorn
 	{
 		SSceneFileHeader sceneFile;
 
-		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
+		const U64 fileSize = UFileSystem::GetFileSize(filePath);
 		char* data = new char[fileSize];
 
 		outScene->Init(UGeneralUtils::ExtractFileBaseNameFromPath(filePath));
 
 		U64 pointerPosition = 0;
-		GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
+		UFileSystem::Deserialize(filePath, data, STATIC_U32(fileSize));
 		sceneFile.Deserialize(data, pointerPosition, outScene);
 
 		delete[] data;
@@ -248,7 +248,7 @@ namespace Havtorn
 		char* data = new char[fileSize];
 
 		fileHeader.Serialize(data);
-		GEngine::GetFileSystem()->Serialize(filePath, data, fileSize);
+		UFileSystem::Serialize(filePath, data, fileSize);
 
 		delete[] data;
 	}
@@ -258,10 +258,10 @@ namespace Havtorn
 		if (LoadedScripts.contains(filePath))
 			return LoadedScripts.at(filePath).get();
 
-		const U32 fileSize = STATIC_U32(GEngine::GetFileSystem()->GetFileSize(filePath));
+		const U32 fileSize = STATIC_U32(UFileSystem::GetFileSize(filePath));
 		char* data = new char[fileSize];
 
-		GEngine::GetFileSystem()->Deserialize(filePath, data, fileSize);
+		UFileSystem::Deserialize(filePath, data, fileSize);
 
 		SScriptFileHeader assetFile;
 		LoadedScripts.emplace(filePath, std::make_unique<HexRune::SScript>());

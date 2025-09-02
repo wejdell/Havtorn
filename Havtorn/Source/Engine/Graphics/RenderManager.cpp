@@ -24,7 +24,6 @@
 
 #include <PlatformManager.h>
 
-#include "FileSystem/FileSystem.h"
 #include "Threading/ThreadManager.h"
 #include "TextureBank.h"
 

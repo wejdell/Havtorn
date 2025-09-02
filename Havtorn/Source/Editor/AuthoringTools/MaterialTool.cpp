@@ -4,7 +4,7 @@
 #include "EditorManager.h"
 #include "EditorResourceManager.h"
 
-#include <FileSystem/FileSystem.h>
+#include <FileSystem.h>
 #include <Graphics/RenderManager.h>
 #include <Input/InputMapper.h>
 #include <Input/InputTypes.h>
@@ -91,7 +91,7 @@ namespace Havtorn
 				asset.Serialize(data);
 				const std::string currentMaterialPath = CurrentMaterial->DirectoryEntry.path().string();
 				CurrentMaterial = nullptr;
-				GEngine::GetFileSystem()->Serialize(currentMaterialPath, &data[0], asset.GetSize());
+				UFileSystem::Serialize(currentMaterialPath, &data[0], asset.GetSize());
 
 				std::filesystem::directory_entry newDir;
 				newDir.assign(std::filesystem::path(currentMaterialPath));
@@ -193,9 +193,9 @@ namespace Havtorn
 		// TODO.NW: Want nicer interface for opening assets and closing them when saving
 
 		const std::string filePath = asset->DirectoryEntry.path().string();
-		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
+		const U64 fileSize = UFileSystem::GetFileSize(filePath);
 		char* data = new char[fileSize];
-		GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
+		UFileSystem::Deserialize(filePath, data, STATIC_U32(fileSize));
 		SMaterialAssetFileHeader assetFile;
 		assetFile.Deserialize(data);
 		delete[] data;
