@@ -61,9 +61,9 @@ namespace Havtorn
 		/// Example Usage
 		/// 
 		/// 	CJsonDocument document = UFileSystem::OpenJson("Config/EngineConfig.json");
-		///		document.RemoveValueFromArray("Asset Redirectors", "Tests/StaticMesh.hva");
-		///		document.WriteValueToArray("Asset Redirectors", "Tests/StaticMesh.hva", "Meshes/StaticMesh.hva");
-		///		std::string redirector = document.GetValueFromArray<const char*>("Asset Redirectors", "Tests/StaticMesh.hva");
+		///		document.RemoveValueFromArray("Asset Redirectors", "Meshes/StaticMesh.hva");
+		///		document.WriteValueToArray("Asset Redirectors", "Meshes/StaticMesh.hva", "Meshes/StaticMesh.hva");
+		///		std::string redirector = document.GetValueFromArray<const char*>("Asset Redirectors", "Meshes/StaticMesh.hva");
 		/// 
 
 		friend class UFileSystem;

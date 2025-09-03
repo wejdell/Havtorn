@@ -206,10 +206,10 @@ namespace Havtorn
 
 		default :
 			break;
-		//std::string animationPath = "Assets/Tests/CH_Enemy_Walk.hva";
-		////std::string animationPath = "Assets/Tests/MaleWave.hva";
-		////std::string animationPath = "Assets/Tests/TestWalk.hva";
-		////std::string animationPath = "Assets/Tests/DebugAnimAnim.hva";
+		//std::string animationPath = "Assets/Meshes/CH_Enemy_Walk.hva";
+		////std::string animationPath = "Assets/Meshes/MaleWave.hva";
+		////std::string animationPath = "Assets/Meshes/TestWalk.hva";
+		////std::string animationPath = "Assets/Meshes/DebugAnimAnim.hva";
 		//renderManager->LoadSkeletalAnimationComponent(animationPath, scene->AddComponent<SSkeletalAnimationComponent>(scene->PreviewEntity));
 		//scene->AddComponentEditorContext(scene->PreviewEntity, &SSkeletalAnimationComponentEditorContext::Context);
 		}
