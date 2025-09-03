@@ -112,7 +112,7 @@ namespace Havtorn
 			for (const auto& element : MenuElements)
 			{
 				element->OnInspectorGUI();
-				isHoveringMenuBarButton = GUI::IsItemHovered() ? true : isHoveringMenuBarButton;
+				isHoveringMenuBarButton = GUI::IsMouseInRect(GUI::GetLastRect()) ? true : isHoveringMenuBarButton;
 			}
 
 			const std::string projectName = "Project Name";
@@ -128,19 +128,19 @@ namespace Havtorn
 			{
 				PlatformManager->MinimizeWindow();
 			}
-			isHoveringMenuBarButton = GUI::IsItemHovered() ? true : isHoveringMenuBarButton;
+			isHoveringMenuBarButton = GUI::IsMouseInRect(GUI::GetLastRect()) ? true : isHoveringMenuBarButton;
 
 			if (GUI::ImageButton("MazimizeButton", intptr_t(ResourceManager->GetEditorTexture(EEditorTexture::MaximizeWindow).GetShaderResourceView()), SVector2<F32>(menuElementHeight)))
 			{
 				PlatformManager->MaximizeWindow();
 			}
-			isHoveringMenuBarButton = GUI::IsItemHovered() ? true : isHoveringMenuBarButton;
+			isHoveringMenuBarButton = GUI::IsMouseInRect(GUI::GetLastRect()) ? true : isHoveringMenuBarButton;
 
 			if (GUI::ImageButton("CloseWindowButton", intptr_t(ResourceManager->GetEditorTexture(EEditorTexture::CloseWindow).GetShaderResourceView()), SVector2<F32>(menuElementHeight)))
 			{
 				PlatformManager->CloseWindow();
 			}
-			isHoveringMenuBarButton = GUI::IsItemHovered() ? true : isHoveringMenuBarButton;
+			isHoveringMenuBarButton = GUI::IsMouseInRect(GUI::GetLastRect()) ? true : isHoveringMenuBarButton;
 
 			GUI::EndMainMenuBar();
 		}
@@ -149,6 +149,12 @@ namespace Havtorn
 			PlatformManager->UpdateWindowPos();
 		else
 			PlatformManager->UpdateRelativeCursorToWindowPos();
+
+		// TODO.NW: Get from style
+		constexpr F32 menuBarHeight = 18.0f;
+		const bool isInMenuBarRect = GUI::IsMouseInRect(SVector2<F32>(0.0f), SVector2<F32>(STATIC_F32(PlatformManager->GetResolution().X), menuBarHeight));
+		if (isInMenuBarRect && GUI::IsDoubleClick() && !isHoveringMenuBarButton)
+			PlatformManager->MaximizeWindow();
 
 		// Windows
 		for (const auto& window : Windows)

@@ -584,6 +584,13 @@ namespace Havtorn
 		bool IsHovered = false;
 	};
 
+	struct SAlignedButtonData
+	{
+		std::function<void()> Function;
+		intptr_t ImageRef = 0;
+		bool IsIndented = false;
+	};
+
 	// TODO.NW: static asserts to make sure they're equal in length to code based enums?
 	enum class EGUIPinType : U8
 	{
@@ -899,8 +906,11 @@ namespace Havtorn
 		static bool Button(const char* label, const SVector2<F32>& size = SVector2<F32>(0.0f));
 		static bool SmallButton(const char* label);
 		static bool RadioButton(const char* label, bool active);
-		static bool ImageButton(const char* label, intptr_t image, const SVector2<F32>& size = SVector2<F32>(0.0f), const SVector2<F32>& uv0 = SVector2<F32>(0.0f), const SVector2<F32>& uv1 = SVector2<F32>(1.0f), const SColor& backgroundColor = SColor(0.0f, 0.0f, 0.0f, 0.0f), const SColor& tintColor = SColor::White);
+		static bool ImageButton(const char* label, intptr_t imageRef, const SVector2<F32>& size = SVector2<F32>(0.0f), const SVector2<F32>& uv0 = SVector2<F32>(0.0f), const SVector2<F32>& uv1 = SVector2<F32>(1.0f), const SColor& backgroundColor = SColor(0.0f, 0.0f, 0.0f, 0.0f), const SColor& tintColor = SColor::White);
+		static bool ViewportButton(const char* label, intptr_t imageRef, const SVector2<F32>& size = SVector2<F32>(0.0f), const SVector2<F32>& uv0 = SVector2<F32>(0.0f), const SVector2<F32>& uv1 = SVector2<F32>(1.0f), const SColor& backgroundColor = SColor(0.0f, 0.0f, 0.0f, 0.0f), const SColor& tintColor = SColor::White);
 		static bool Checkbox(const char* label, bool& value);
+
+		static void AddViewportButtons(const std::vector<SAlignedButtonData>& buttons, const SVector2<F32>& buttonSize, const F32 alignWidth);
 
 		static SAssetPickResult AssetPicker(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryFunc& assetInspector);
 		static SAssetPickResult AssetPickerFilter(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType);
@@ -919,6 +929,8 @@ namespace Havtorn
 		static bool IsItemClicked(const EGUIMouseButton button = EGUIMouseButton::Left);
 		static bool IsMouseReleased(I32 mouseButton = 0);
 		static bool IsItemHovered();
+		static bool IsMouseInRect(const SVector2<F32>& topLeft, const SVector2<F32>& bottomRight);
+		static bool IsMouseInRect(const SVector4& rect);
 		static bool IsItemVisible();
 		static bool IsWindowFocused();
 		static bool IsWindowHovered();

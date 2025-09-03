@@ -46,49 +46,11 @@ namespace Havtorn
 		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
 		{
 			SVector2<F32> buttonSize = { 16.0f, 16.0f };
-			const std::vector<SColor>& colors = GUI::GetStyleColors();
-			SColor buttonInactiveColor = colors[STATIC_U64(EStyleColor::Button)];
-			SColor buttonActiveColor = colors[STATIC_U64(EStyleColor::ButtonActive)];
-			SColor buttonHoveredColor = colors[STATIC_U64(EStyleColor::ButtonHovered)];
-			SVector2<F32> uv0 = { 0.0f, 0.0f };
-			SVector2<F32> uv1 = { 1.0f, 1.0f };
-
-			// TODO.NR: Make an abstraction for what's happening inside and to these button blocks
-			// TODO.NR: Make util button function based on GUI::ImageButtonEx that can fill the whole rect (not only image background) with the color we choose
-
-			GUI::SameLine(layout.ViewportSize.X * 0.5f - 8.0f - 32.0f);
-			SColor playButtonColor = IsPlayButtonEngaged ? buttonActiveColor : IsPlayButtonHovered ? buttonHoveredColor : buttonInactiveColor;
-			if (GUI::ImageButton("PlayButton", playButtonID, buttonSize, uv0, uv1, playButtonColor))
-			{
-				if (GEngine::GetWorld()->BeginPlay())
-				{
-					IsPlayButtonEngaged = true;
-					IsPauseButtonEngaged = false;
-				}
-			}
-			IsPlayButtonHovered = GUI::IsItemHovered();
-
-			GUI::SameLine(layout.ViewportSize.X * 0.5f - 8.0f);
-			SColor pauseButtonColor = IsPauseButtonEngaged ? buttonActiveColor : IsPauseButtonHovered ? buttonHoveredColor : buttonInactiveColor;
-			if (GUI::ImageButton("PauseButton", pauseButtonID, buttonSize, uv0, uv1, pauseButtonColor))
-			{
-				if (GEngine::GetWorld()->PausePlay())
-				{
-					IsPlayButtonEngaged = false;
-					IsPauseButtonEngaged = true;
-				}
-			}
-			IsPauseButtonHovered = GUI::IsItemHovered();
-
-			GUI::SameLine(layout.ViewportSize.X * 0.5f - 8.0f + 32.0f);
-			if (GUI::ImageButton("StopButton", stopButtonID, buttonSize))
-			{
-				if (GEngine::GetWorld()->StopPlay())
-				{
-					IsPlayButtonEngaged = false;
-					IsPauseButtonEngaged = false;					
-				}
-			}
+			std::vector<SAlignedButtonData> buttonData;
+			buttonData.push_back({ [&]() { if (GEngine::GetWorld()->BeginPlay()) { IsPlayButtonEngaged = true; IsPauseButtonEngaged = false; } }, playButtonID, IsPlayButtonEngaged });
+			buttonData.push_back({ [&]() { if (GEngine::GetWorld()->PausePlay()) { IsPlayButtonEngaged = false; IsPauseButtonEngaged = true; } }, pauseButtonID, IsPauseButtonEngaged });
+			buttonData.push_back({ [&]() { if (GEngine::GetWorld()->StopPlay()) { IsPlayButtonEngaged = false; IsPauseButtonEngaged = false; } }, stopButtonID, false });
+			GUI::AddViewportButtons(buttonData, buttonSize, layout.ViewportSize.X);
 
 			// TODO.NW: Fix size of this button
 			GUI::SameLine(layout.ViewportSize.X * 0.5f - 8.0f + 64.0f);
