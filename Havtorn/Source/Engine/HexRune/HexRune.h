@@ -97,7 +97,6 @@ namespace Havtorn
 
             // Return output index to continue with, if not all
             ENGINE_API virtual I8 OnExecute(); 
-            ENGINE_API virtual bool IsStartNode() const { return false; }
 
             template<typename T>
             void SetDataOnPin(SPin* pin, const T& data);
@@ -187,7 +186,6 @@ namespace Havtorn
             ENGINE_API void Deserialize(const char* fromData, U64& pointerPosition);
         };
 
-
         struct SScript
         {
             ENGINE_API SScript();
@@ -207,15 +205,11 @@ namespace Havtorn
 
             // NW: Mapping UID to node
             std::unordered_map<U64, U64> NodeIndices;
-            std::vector<SNode*> StartNodes;
             
-
             CScene* Scene = nullptr;
             std::string FileName = "";
 
             // TODO.NW: Input params to the script (with connection to owning entity or instance properties) should be loaded from the corresponding component?
-
-            SNode* AddNodeData(ENodeType nodeType, U64 nodeID);
 
             template<typename T, typename... Params>
             T* AddNode(U64 id, Params... params)
@@ -227,13 +221,6 @@ namespace Havtorn
                 Nodes.emplace_back(new T(id, this, params...));
                 
                 SNode* node = Nodes.back();
-                if (node->IsStartNode())
-                    StartNodes.push_back(Nodes.back());
-
-                //node->UID = id;
-                //node->OwningScript = this;
-                //node->Construct();
-
                 return dynamic_cast<T*>(node);
             }
 
@@ -340,7 +327,6 @@ namespace Havtorn
             ENGINE_API void RemoveNode(const U64 id);
 
             ENGINE_API void Initialize();
-            ENGINE_API void TraverseScript(CScene* owningScene);
             ENGINE_API void TraverseFromNode(const U64 startNodeID, CScene* owningScene);
             ENGINE_API void TraverseFromNode(SNode* startNode, CScene* owningScene);
 
@@ -365,14 +351,15 @@ namespace Havtorn
         struct SNodeFactory
         {
             template<typename TNode, typename TNodeEditorContext>
-            void RegisterNodeType()
+            void RegisterNodeType(SScript* script)
             {
+                script->RegisteredEditorContexts.emplace_back(&TNodeEditorContext::Context);
                 U32 typeId = STATIC_U32(typeid(TNode).hash_code());
                 BasicNodeFactoryMap[typeId] =
                     [](U64 id, SScript* script)
                     {
                         TNode* node = script->AddNode<TNode>(id);
-                        script->AddEditorContext<TNodeEditorContext>(id);
+                        script->AddEditorContext<TNodeEditorContext>(id);              
                         return node;
                     };
             }

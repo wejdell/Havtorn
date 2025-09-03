@@ -148,12 +148,6 @@ namespace Havtorn
 				NodeIndices.at(nodeToBeRemoved->UID) = NodeIndices.at(id);
 				std::swap(Nodes[NodeIndices[id]], Nodes.back());
 
-				if (nodeToBeRemoved->IsStartNode())
-				{
-					if (auto it = std::ranges::find(StartNodes, nodeToBeRemoved); it != StartNodes.end())
-						StartNodes.erase(it);
-				}
-
 				for (SPin& input : nodeToBeRemoved->Inputs)
 				{
 					if (input.LinkedPin)
@@ -182,77 +176,36 @@ namespace Havtorn
 
 		void SScript::Initialize()
 		{
-			RegisteredEditorContexts.emplace_back(&SBranchNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SSequenceNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SEntityLoopNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SComponentLoopNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SDelayNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SBeginPlayNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&STickNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SEndPlayNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SPrintStringNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SAppendStringNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SFloatLessThanNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SFloatMoreThanNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SFloatLessOrEqualNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SFloatMoreOrEqualNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SFloatEqualNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SFloatNotEqualNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SIntLessThanNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SIntMoreThanNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SIntLessOrEqualNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SIntMoreOrEqualNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SIntEqualNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SIntNotEqualNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SPrintEntityNameNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SSetStaticMeshNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&STogglePointLightNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SOnBeginOverlapNodeEditorContext::Context);
-			RegisteredEditorContexts.emplace_back(&SOnEndOverlapNodeEditorContext::Context);
-			//RegisteredEditorContexts.emplace_back(&SDataBindingGetNodeEditorContext::Context);
-
-
 			NodeFactory = new SNodeFactory();
-			NodeFactory->RegisterNodeType<SBranchNode, SBranchNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SSequenceNode, SSequenceNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SEntityLoopNode, SEntityLoopNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SComponentLoopNode, SComponentLoopNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SDelayNode, SDelayNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SBeginPlayNode, SBeginPlayNodeEditorContext>();
-			NodeFactory->RegisterNodeType<STickNode, STickNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SEndPlayNode, SEndPlayNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SPrintStringNode, SPrintStringNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SAppendStringNode, SAppendStringNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SFloatLessThanNode, SFloatLessThanNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SFloatMoreThanNode, SFloatMoreThanNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SFloatLessOrEqualNode, SFloatLessOrEqualNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SFloatMoreOrEqualNode, SFloatMoreOrEqualNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SFloatEqualNode, SFloatEqualNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SFloatNotEqualNode, SFloatNotEqualNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SIntLessThanNode, SIntLessThanNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SIntMoreThanNode, SIntMoreThanNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SIntLessOrEqualNode, SIntLessOrEqualNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SIntMoreOrEqualNode, SIntMoreOrEqualNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SIntEqualNode, SIntEqualNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SIntNotEqualNode, SIntNotEqualNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SPrintEntityNameNode, SPrintEntityNameNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SSetStaticMeshNode, SSetStaticMeshNodeEditorContext>();
-			NodeFactory->RegisterNodeType<STogglePointLightNode, STogglePointLightNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SOnBeginOverlapNode, SOnBeginOverlapNodeEditorContext>();
-			NodeFactory->RegisterNodeType<SOnEndOverlapNode, SOnEndOverlapNodeEditorContext>();
+			NodeFactory->RegisterNodeType<SBranchNode, SBranchNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SSequenceNode, SSequenceNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SEntityLoopNode, SEntityLoopNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SComponentLoopNode, SComponentLoopNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SDelayNode, SDelayNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SBeginPlayNode, SBeginPlayNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<STickNode, STickNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SEndPlayNode, SEndPlayNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SPrintStringNode, SPrintStringNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SAppendStringNode, SAppendStringNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SFloatLessThanNode, SFloatLessThanNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SFloatMoreThanNode, SFloatMoreThanNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SFloatLessOrEqualNode, SFloatLessOrEqualNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SFloatMoreOrEqualNode, SFloatMoreOrEqualNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SFloatEqualNode, SFloatEqualNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SFloatNotEqualNode, SFloatNotEqualNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SIntLessThanNode, SIntLessThanNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SIntMoreThanNode, SIntMoreThanNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SIntLessOrEqualNode, SIntLessOrEqualNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SIntMoreOrEqualNode, SIntMoreOrEqualNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SIntEqualNode, SIntEqualNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SIntNotEqualNode, SIntNotEqualNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SPrintEntityNameNode, SPrintEntityNameNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SSetStaticMeshNode, SSetStaticMeshNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<STogglePointLightNode, STogglePointLightNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SOnBeginOverlapNode, SOnBeginOverlapNodeEditorContext>(this);
+			NodeFactory->RegisterNodeType<SOnEndOverlapNode, SOnEndOverlapNodeEditorContext>(this);
 			NodeFactory->RegisterDatabindingNode<SDataBindingGetNode, SDataBindingGetNodeEditorContext>();
 			NodeFactory->RegisterDatabindingNode<SDataBindingSetNode, SDataBindingSetNodeEditorContext>();
-		}
-
-		void SScript::TraverseScript(CScene* owningScene)
-		{
-			if (owningScene == nullptr)
-				return;
-
-			Scene = owningScene;
-
-			for (SNode* node : StartNodes)
-				node->Execute();
 		}
 
 		void SScript::TraverseFromNode(const U64 startNodeID, CScene* owningScene)
@@ -388,7 +341,6 @@ namespace Havtorn
 			size += GetDataSize(Links);
 			return size;
 		}
-
 		void SScript::Serialize(char* toData, U64& pointerPosition) const
 		{
 			// TODO.NW: Serialize nodes through protocol
@@ -463,9 +415,6 @@ namespace Havtorn
 			}
 
 		}
-
-
-
 		void SScript::Deserialize(const char* fromData, U64& pointerPosition)
 		{
 			// TODO.NW: Serialize nodes through protocol
@@ -597,142 +546,12 @@ namespace Havtorn
 			return nullptr;
 		}
 
-		//SNodeEditorContext* SScript::GetNodeEditorContext(const U64 nodeID)
-		//{
-		//    if (!NodeEditorContexts.contains(nodeID))
-		//        return nullptr;
-
-		//    return NodeEditorContexts.at(nodeID);
-		//}
-
 		SNode::SNode(const U64 id, SScript* owningScript, ENodeType nodeType)
 			: UID(id)
 			, OwningScript(owningScript)
 			, NodeType(nodeType)
 		{
 		}
-
-		SNode* SScript::AddNodeData(ENodeType nodeType, U64 nodeID)
-		{
-			SNode* node = nullptr;
-			switch (nodeType)
-			{
-			case ENodeType::EEntityLoopNode:
-				node = AddNode<SEntityLoopNode>(nodeID);
-				AddEditorContext<SEntityLoopNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::EComponentLoopNode:
-				node = AddNode<SComponentLoopNode>(nodeID);
-				AddEditorContext<SComponentLoopNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::EOnBeginOverlapNode:
-				node = AddNode<SOnBeginOverlapNode>(nodeID);
-				AddEditorContext<SOnBeginOverlapNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::EOnEndOverlapNode:
-				node = AddNode<SOnEndOverlapNode>(nodeID);
-				AddEditorContext<SOnEndOverlapNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::EPrintEntityNameNode:
-				node = AddNode<SPrintEntityNameNode>(nodeID);
-				AddEditorContext<SPrintEntityNameNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::ESetStaticMeshNode:
-				node = AddNode<SSetStaticMeshNode>(nodeID);
-				AddEditorContext<SSetStaticMeshNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::ETogglePointLightNode:
-				node = AddNode<STogglePointLightNode>(nodeID);
-				AddEditorContext<STogglePointLightNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::EBranchNode:
-				node = AddNode<SBranchNode>(nodeID);
-				AddEditorContext<SBranchNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::ESequenceNode:
-				node = AddNode<SSequenceNode>(nodeID);
-				AddEditorContext<SSequenceNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::EDelayNode:
-				node = AddNode<SDelayNode>(nodeID);
-				AddEditorContext<SDelayNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::EBeginPlayNode:
-				node = AddNode<SBeginPlayNode>(nodeID);
-				AddEditorContext<SBeginPlayNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::ETickNode:
-				node = AddNode<STickNode>(nodeID);
-				AddEditorContext<STickNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::EEndPlayNode:
-				node = AddNode<SEndPlayNode>(nodeID);
-				AddEditorContext<SEndPlayNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::EPrintStringNode:
-				node = AddNode<SPrintStringNode>(nodeID);
-				AddEditorContext<SPrintStringNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::EAppendStringNode:
-				node = AddNode<SAppendStringNode>(nodeID);
-				AddEditorContext<SAppendStringNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::EFloatLessThanNode:
-				node = AddNode<SFloatLessThanNode>(nodeID);
-				AddEditorContext<SFloatLessThanNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::EFloatMoreThanNode:
-				node = AddNode<SFloatMoreThanNode>(nodeID);
-				AddEditorContext<SFloatMoreThanNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::EFloatLessOrEqualNode:
-				node = AddNode<SFloatLessOrEqualNode>(nodeID);
-				AddEditorContext<SFloatLessOrEqualNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::EFloatMoreOrEqualNode:
-				node = AddNode<SFloatMoreOrEqualNode>(nodeID);
-				AddEditorContext<SFloatMoreOrEqualNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::EFloatEqualNode:
-				node = AddNode<SFloatEqualNode>(nodeID);
-				AddEditorContext<SFloatEqualNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::EFloatNotEqualNode:
-				node = AddNode<SFloatNotEqualNode>(nodeID);
-				AddEditorContext<SFloatNotEqualNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::EIntLessThanNode:
-				node = AddNode<SIntLessThanNode>(nodeID);
-				AddEditorContext<SIntLessThanNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::EIntMoreThanNode:
-				node = AddNode<SIntMoreThanNode>(nodeID);
-				AddEditorContext<SIntMoreThanNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::EIntLessOrEqualNode:
-				node = AddNode<SIntLessOrEqualNode>(nodeID);
-				AddEditorContext<SIntLessOrEqualNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::EIntMoreOrEqualNode:
-				node = AddNode<SIntMoreOrEqualNode>(nodeID);
-				AddEditorContext<SIntMoreOrEqualNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::EIntEqualNode:
-				node = AddNode<SIntEqualNode>(nodeID);
-				AddEditorContext<SIntEqualNodeEditorContext>(nodeID);
-				break;
-			case ENodeType::EIntNotEqualNode:
-				node = AddNode<SIntNotEqualNode>(nodeID);
-				AddEditorContext<SIntNotEqualNodeEditorContext>(nodeID);
-				break;
-
-			default:
-				return nullptr;
-			}
-
-			return node;
-		}
-
 
 		SPin& SNode::AddInput(const U64 id, const EPinType type, const std::string& name)
 		{
@@ -799,8 +618,6 @@ namespace Havtorn
 			return -1;
 		}
 
-
-
 		U32 SScriptDataBinding::GetSize() const
 		{
 			U32 size = 0;
@@ -846,57 +663,6 @@ namespace Havtorn
 			}
 			return size;
 		}
-
-		//std::variant<PIN_LITERAL_TYPES, PIN_MATH_TYPES> GetLiteralTypeData(const std::variant<PIN_DATA_TYPES>& engineData)
-		//{
-		//	return std::visit(overloaded
-		//					  {
-		//						  [] <IsPinLiteralType T>(const T & x)
-		//							{
-		//									return std::variant<PIN_LITERAL_TYPES, PIN_MATH_TYPES>{x};
-		//							},
-		//
-		//						  [](auto&)
-		//							{
-		//									return std::variant<PIN_LITERAL_TYPES, PIN_MATH_TYPES>{};
-		//							}
-		//					  }, engineData
-		//	);
-		//}
-
-		//template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
-
-		///*template<typename T>
-		//concept IsCurrentType = std::is_same_v<T, std::monostate> || std::is_same_v<T, bool> || std::is_same_v<T, I32> || std::is_same_v<T, F32> || std::is_same_v<T, std::string> || std::is_same_v<T, Havtorn::SVector> || std::is_same_v<T, Havtorn::SMatrix> || std::is_same_v<T, Havtorn::SQuaternion>;*/
-
-		//template<typename T, typename U>
-		//concept IsAlternative = std::is_same_v<T, U>;
-
-		//U32 GetVariantSize(const std::variant<PIN_DATA_TYPES>& variant)
-		//{
-		//	U32 size = 0;
-		//	std::visit(overloaded {
-		//						  [&size, &variant] <IsAlternative<T, variant>>(const T & x)
-		//						  {
-		//							//size = sizeof(T);
-		//							if (std::holds_alternative<T>(variant))
-		//							{
-		//								
-		//							}
-		//							//return std::variant<PIN_LITERAL_TYPES, PIN_MATH_TYPES>{x};
-		//						  },
-		//						  [&size](auto&) {
-		//									return std::variant<PIN_LITERAL_TYPES, PIN_MATH_TYPES>{};
-		//							}
-		//					  }, variant);
-
-		//	return size;
-		//}
-
-				//std::variant<PIN_DATA_TYPES>
-		//template<typename T>
-
-
 		void SScriptDataBinding::Serialize(char* toData, U64& pointerPosition) const
 		{
 			SerializeData(UID, toData, pointerPosition);
@@ -967,7 +733,6 @@ namespace Havtorn
 			break;
 			}
 		}
-
 		void SScriptDataBinding::Deserialize(const char* fromData, U64& pointerPosition)
 		{
 			DeserializeData(UID, fromData, pointerPosition);
@@ -1042,6 +807,7 @@ namespace Havtorn
 
 
 		}
+
 		SNode* SNodeFactory::CreateNode(U32 typeId, U64 id, SScript* script)
 		{
 			return BasicNodeFactoryMap[typeId](id, script);
