@@ -9,11 +9,12 @@
 #include <Graphics/TextureBank.h>
 #include <Scene/Scene.h>
 #include <Core/GeneralUtilities.h>
-
+#include <../Game/GameScript.h>
 #include "Windows/ViewportWindow.h"
 #include "Windows/SpriteAnimatorGraphNodeWindow.h"
 #include "EditorResourceManager.h"
 
+#include <FileSystem/FileSystem.h>
 #include <GUI.h>
 
 namespace Havtorn
@@ -400,7 +401,7 @@ namespace Havtorn
 		if (component == nullptr)
 			return;
 
-		component->Script = GEngine::GetWorld()->LoadScript(assetRep->DirectoryEntry.path().string());
+		component->Script = GEngine::GetWorld()->LoadScript<SGameScript>(assetRep->DirectoryEntry.path().string());
 		component->DataBindings.clear();
 		component->DataBindings.resize(component->Script->DataBindings.size());
 

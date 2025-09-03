@@ -588,20 +588,23 @@ namespace Havtorn
 	enum class EGUIPinType : U8
 	{
 		Unknown,
-		Flow,
 		Bool,
 		Int,
 		Float,
 		String,
 		Vector,
-		IntArray,
-		FloatArray,
-		StringArray,
-		Object,
-		ObjectArray,
+		Matrix,
+		Quaternion,
+		Entity,
+		ComponentPtr,
 		Asset,
-		Function,
+		EntityList,
+		ComponentPtrList,
+
+		//Other stuff
 		Delegate,
+		Function,
+		Flow
 	};
 
 	enum class EGUIObjectDataType : U8
