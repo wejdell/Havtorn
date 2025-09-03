@@ -3,7 +3,7 @@
 #include "hvpch.h"
 #include "RenderManager.h"
 #include "GraphicsUtilities.h"
-#include "Core/GeneralUtilities.h"
+#include <GeneralUtilities.h>
 #include <MathTypes/MathUtilities.h>
 
 #include "Engine.h"

@@ -31,9 +31,14 @@ namespace Havtorn
 		
 		void OpenAddComponentModal(const SEntity& entity);
 
+		void UpdateAssetContextMenu();
+
 	private:
 		CScene* Scene = nullptr;
 		U8 AssetPickedIndex = 0;
 		SMatrix DeltaMatrix = SMatrix::Identity;
+		SAssetReference* ContextMenuAssetRef = nullptr;
+		U64 ContextMenuAssetRequester = 0;
+		bool IsContextMenuRefHovered = false;
 	};
 }

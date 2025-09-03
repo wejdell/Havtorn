@@ -8,6 +8,8 @@
 #include <GUI.h>
 #include <Log.h>
 
+#include <FileSystem.h>
+
 namespace Havtorn
 {
     CFileMenu::CFileMenu(const char* displayName, CEditorManager* manager)
@@ -119,42 +121,13 @@ namespace Havtorn
                 GEngine::GetWorld()->SaveActiveScene("Assets/Scenes/TestScene.hvs");
             }
 
-            //if (GUI::MenuItem("Save As..")) {}
-
             GUI::Separator();
-            //if (GUI::BeginMenu("Options"))
-            //{
-            //    static bool enabled = true;
-            //    GUI::MenuItem("Enabled", "", &enabled);
-            //    GUI::BeginChild("child", SVector2<F32>(0, 60));
-            //    for (int i = 0; i < 10; i++)
-            //        GUI::Text("Scrolling Text %d", i);
-            //    GUI::EndChild();
-            //    static float f = 0.5f;
-            //    static int n = 0;
-            //    GUI::SliderFloat("Value", &f, 0.0f, 1.0f);
-            //    GUI::InputFloat("Input", &f, 0.1f);
-            //    GUI::Combo("Combo", &n, "Yes\0No\0Maybe\0\0");
-            //    GUI::EndMenu();
-            //}
-
-            // Here we demonstrate appending again to the "Options" menu (which we already created above)
-            // Of course in this demo it is a little bit silly that this function calls BeginMenu("Options") twice.
-            // In a real code-base using it would make senses to use this feature from very different code locations.
-            //if (GUI::BeginMenu("Options")) // <-- Append!
-            //{
-            //    //IMGUI_DEMO_MARKER("Examples/Menu/Append to an existing menu");
-            //    static bool b = true;
-            //    GUI::Checkbox("SomeOption", &b);
-            //    GUI::EndMenu();
-            //}
-
-            if (GUI::BeginMenu("Disabled", false)) // Disabled
+            
+            if (GUI::MenuItem("Clear Asset Redirectors"))
             {
-                HV_ASSERT(false, "Menu disabled");
+                CJsonDocument config = UFileSystem::OpenJson(UFileSystem::EngineConfig);
+                config.ClearArray("Asset Redirectors");
             }
-            if (GUI::MenuItem("Checked", nullptr, true)) {}
-            if (GUI::MenuItem("Quit", "Alt+F4")) {}
 
             GUI::EndPopup();
         }

@@ -9,7 +9,7 @@
 #include <Graphics/TextureBank.h>
 #include <Scene/Scene.h>
 #include <Scene/AssetRegistry.h>
-#include <Core/GeneralUtilities.h>
+#include <GeneralUtilities.h>
 
 #include "Windows/ViewportWindow.h"
 #include "Windows/SpriteAnimatorGraphNodeWindow.h"
@@ -115,6 +115,8 @@ namespace Havtorn
 				GUI::Dummy({ GUI::DummySizeX, GUI::DummySizeY });
 			}
 
+			UpdateAssetContextMenu();
+
 			GUI::Separator();
 			if (GUI::Button("Add Component", SVector2<F32>(GUI::GetContentRegionAvail().X, 0)))
 				GUI::OpenPopup("Add Component Modal");
@@ -217,10 +219,27 @@ namespace Havtorn
 			const std::string modalName = "Select " + GetAssetTypeName(result.AssetType) + " Asset";
 			SAssetPickResult assetPickResult = GUI::AssetPickerFilter(assetName.c_str(), modalName.c_str(), (intptr_t)assetRep->TextureRef.GetShaderResourceView(), "Assets", columnCount, Manager->GetAssetFilteredInspectFunction(), result.AssetType);
 
+			SAssetReference* currentReference = nullptr;
+			if (result.AssetReferences != nullptr)
+			{
+				currentReference = &(*result.AssetReferences)[AssetPickedIndex];
+			}
+			else if (result.AssetReference != nullptr)
+			{
+				currentReference = result.AssetReference;
+			}
+
 			if (assetPickResult.State == EAssetPickerState::Active)
 				Manager->SetIsModalOpen(true);
 			else if (assetPickResult.State == EAssetPickerState::Cancelled)
 				Manager->SetIsModalOpen(false);
+			else if (assetPickResult.State == EAssetPickerState::ContextMenu)
+			{
+				ContextMenuAssetRef = currentReference;
+				ContextMenuAssetRequester = result.ComponentViewed->Owner.GUID;
+
+				Manager->SetIsModalOpen(false);
+			}
 			else if (assetPickResult.State == EAssetPickerState::AssetPicked)
 			{
 				AssetPickedIndex = index;
@@ -248,6 +267,9 @@ namespace Havtorn
 				AssetPickedIndex = 0;
 				Manager->SetIsModalOpen(false);
 			}
+
+			if (ContextMenuAssetRef != nullptr && ContextMenuAssetRef == currentReference)
+				IsContextMenuRefHovered = assetPickResult.IsHovered;
 
 			GUI::PopID();
 		}
@@ -292,5 +314,39 @@ namespace Havtorn
 		}
 
 		GUI::EndPopup();
+	}
+
+	void CInspectorWindow::UpdateAssetContextMenu()
+	{
+		if (ContextMenuAssetRef == nullptr)
+			return;
+
+		if (GUI::BeginPopupContextWindow())
+		{
+			if (GUI::MenuItem("Fix up redirectors"))
+			{
+				std::string oldPath = ContextMenuAssetRef->FilePath;
+
+				CJsonDocument config = UFileSystem::OpenJson(UFileSystem::EngineConfig);
+				std::string redirection = config.GetValueFromArray("Asset Redirectors", ContextMenuAssetRef->FilePath, "");
+
+				GEngine::GetAssetRegistry()->UnrequestAsset(*ContextMenuAssetRef, ContextMenuAssetRequester);
+				*ContextMenuAssetRef = SAssetReference(redirection);
+
+				HV_LOG_INFO("Asset Redirector from %s to %s fixed.", oldPath.c_str(), ContextMenuAssetRef->FilePath.c_str());
+				ContextMenuAssetRef = nullptr;
+				ContextMenuAssetRequester = 0;
+			}
+
+			// TODO.NW: This is terrible. It would be nice if we could make a common solution for bringing up smart context menus for specific selectables
+			// This is needed for the Asset Browser as well (IsContextMenuRefHovered is inspired by the Asset Browser solution)
+			if (!GUI::IsItemClicked() && !IsContextMenuRefHovered && (GUI::IsMouseClicked(0) || GUI::IsMouseClicked(1)))
+			{
+				ContextMenuAssetRef = nullptr;
+				ContextMenuAssetRequester = 0;
+			}
+
+			GUI::EndPopup();
+		}		
 	}
 }
