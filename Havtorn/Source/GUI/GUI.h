@@ -16,6 +16,8 @@
 #include <MathTypes/Vector.h>
 #include <EngineTypes.h>
 
+#include <magic_enum.h>
+
 struct ID3D11Device;
 struct ID3D11DeviceContext;
 
@@ -595,20 +597,23 @@ namespace Havtorn
 	enum class EGUIPinType : U8
 	{
 		Unknown,
-		Flow,
 		Bool,
 		Int,
 		Float,
 		String,
 		Vector,
-		IntArray,
-		FloatArray,
-		StringArray,
-		Object,
-		ObjectArray,
+		Matrix,
+		Quaternion,
+		Entity,
+		ComponentPtr,
 		Asset,
-		Function,
+		EntityList,
+		ComponentPtrList,
+
+		//Other stuff
 		Delegate,
+		Function,
+		Flow
 	};
 
 	enum class EGUIObjectDataType : U8
@@ -714,6 +719,9 @@ namespace Havtorn
 		EGUIPinType Type = EGUIPinType::Unknown;
 		EGUIObjectDataType ObjectType = EGUIObjectDataType::None;
 		EGUIAssetType AssetType = EGUIAssetType::None;
+		U8 CurrentPinTypeIndex = 0;
+		U8 CurrentObjectTypeIndex = 0;
+
 	};
 
 	struct SNodeOperation
@@ -793,6 +801,51 @@ namespace Havtorn
 			return returnValue;
 		}
 
+		//Returns -1 as false
+		template<typename T>
+		static U8 ComboEnum(const char* label, U8& currentIndex)
+		{
+			auto enumNames = magic_enum::enum_names<T>();
+			if (GUI::BeginCombo(label, enumNames[currentIndex].data()))
+			{
+				for (U8 i = 0; i < enumNames.size(); i++)
+				{
+					bool isSelected = currentIndex == i;
+					if (GUI::Selectable(enumNames[i].data(), isSelected))
+						currentIndex = i;
+
+					if (isSelected)
+						GUI::SetItemDefaultFocus();
+				}
+				GUI::EndCombo();
+			}
+
+			return currentIndex;
+		}
+
+		template<typename T>
+		static T ComboEnum(const char* label, T& currentValue)
+		{
+			auto enumNames = magic_enum::enum_names<T>();
+			U8 currentIndex = static_cast<U8>(currentValue);
+			if (GUI::BeginCombo(label, enumNames[currentIndex].data()))
+			{
+				for (U8 i = 0; i < enumNames.size(); i++)
+				{
+					bool isSelected = currentIndex == i;
+					if (GUI::Selectable(enumNames[i].data(), isSelected))
+						currentIndex = i;
+
+					if (isSelected)
+						GUI::SetItemDefaultFocus();
+				}
+				GUI::EndCombo();
+			}
+
+			return static_cast<T>(currentIndex);
+		}
+
+
 		static bool ColorPicker3(const char* label, SColor& value);
 		static bool ColorPicker4(const char* label, SColor& value);
 
@@ -848,6 +901,9 @@ namespace Havtorn
 		static bool TreeNode(const char* label);
 		static bool TreeNodeEx(const char* label, const std::vector<ETreeNodeFlag>& treeNodeFlags = {});
 		static void TreePop();
+
+		static bool BeginCombo(const char* label, const char* selectedLabel);
+		static void EndCombo();
 
 		static bool ArrowButton(const char* label, const EGUIDirection direction);
 		static bool Button(const char* label, const SVector2<F32>& size = SVector2<F32>(0.0f));
@@ -984,7 +1040,7 @@ namespace Havtorn
 		static void BeginPin(const U64 id, const EGUIPinDirection direction);
 		static void EndPin();
 
-		static void DrawPinIcon(const SVector2<F32>& size, const EGUIIconType type, const bool isConnected, const SColor& color);
+		static void DrawPinIcon(const SVector2<F32>& size, const EGUIIconType type, const bool isConnected, const SColor& color, const bool highlighted = false);
 		static void DrawNodeHeader(U64 nodeID, intptr_t textureID, const SVector2<F32>& posMin, const SVector2<F32>& posMax, const SVector2<F32>& uvMin, const SVector2<F32>& uvMax, const SColor& color, const F32 rounding);
 
 		static void Link(const U64 linkID, const U64 startPinID, const U64 endPinID, const SColor& color, const F32 thickness = 1.0f);

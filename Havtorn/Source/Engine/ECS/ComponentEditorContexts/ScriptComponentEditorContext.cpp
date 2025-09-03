@@ -54,16 +54,13 @@ namespace Havtorn
 		case HexRune::EPinType::Vector:
 		{}
 		break;
-		case HexRune::EPinType::IntArray:
+		case HexRune::EPinType::Matrix:
 		{}
 		break;
-		case HexRune::EPinType::FloatArray:
+		case HexRune::EPinType::Quaternion:
 		{}
 		break;
-		case HexRune::EPinType::StringArray:
-		{}
-		break;
-		case HexRune::EPinType::Object:
+		case HexRune::EPinType::Entity:
 		{
 			// TODO.NW: Handle Component type
 
@@ -101,9 +98,6 @@ namespace Havtorn
 				GUI::EndDragDropTarget();
 			}
 		}
-		break;
-		case HexRune::EPinType::ObjectArray:
-		{}
 		break;
 		case HexRune::EPinType::Asset:
 		{
@@ -185,7 +179,12 @@ namespace Havtorn
 			GUI::Separator();
 
 			for (auto& db : component->DataBindings)
+			{
+				GUI::PushID(db.UID);
 				ViewDataBinding(scene, db);
+				GUI::PopID();
+
+			}
 		}
 
 		GUI::Checkbox("Trigger", component->TriggerScript);

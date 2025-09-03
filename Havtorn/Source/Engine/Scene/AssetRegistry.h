@@ -112,7 +112,7 @@ namespace Havtorn
 			}
 			else
 			{
-				HV_LOG_WARN("CAssetRegistry::RequestAssetData could not provide the requested asset data with ID: %i. It is not loaded and is not found in the database.", assetUID);
+				HV_LOG_WARN("CAssetRegistry::RequestAssetData could not provide the requested asset data with ID: %u. It is not loaded and is not found in the database.", assetUID);
 				return nullptr;
 			}
 		}
@@ -120,7 +120,7 @@ namespace Havtorn
 		SAsset* asset = &LoadedAssets[assetUID];
 		if (!std::holds_alternative<T>(asset->Data))
 		{
-			HV_LOG_WARN("CAssetRegistry::RequestAssetData could not provide the requested asset data with ID: %i. The data is not of the requested type.", assetUID);
+			HV_LOG_WARN("CAssetRegistry::RequestAssetData could not provide the requested asset data with ID: %u. The data is not of the requested type.", assetUID);
 			return nullptr;
 		}
 		

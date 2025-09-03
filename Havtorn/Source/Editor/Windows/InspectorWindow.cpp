@@ -15,6 +15,7 @@
 #include "Windows/SpriteAnimatorGraphNodeWindow.h"
 #include "EditorResourceManager.h"
 
+#include <FileSystem.h>
 #include <GUI.h>
 
 namespace Havtorn
@@ -268,8 +269,7 @@ namespace Havtorn
 				Manager->SetIsModalOpen(false);
 			}
 
-			if (ContextMenuAssetRef != nullptr && ContextMenuAssetRef == currentReference)
-				IsContextMenuRefHovered = assetPickResult.IsHovered;
+
 
 			GUI::PopID();
 		}
