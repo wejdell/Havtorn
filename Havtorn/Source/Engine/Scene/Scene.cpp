@@ -242,15 +242,15 @@ namespace Havtorn
 
 		// === !Decal ===
 
-		const std::string modelPath1 = "Assets/Tests/En_P_PendulumClock.hva";
+		const std::string modelPath1 = "Assets/Meshes/En_P_PendulumClock.hva";
 		const std::vector<std::string> materialNames1 = { "Assets/Materials/M_PendulumClock.hva", "Assets/Materials/M_Checkboard_128x128.hva" };
-		const std::string modelPath2 = "Assets/Tests/En_P_Bed.hva";
+		const std::string modelPath2 = "Assets/Meshes/En_P_Bed.hva";
 		const std::vector<std::string> materialNames2 = { "Assets/Materials/M_Bed.hva", "Assets/Materials/M_Bedsheet.hva" };
-		const std::string modelPath3 = "Assets/Tests/Plane.hva";
+		const std::string modelPath3 = "Assets/Meshes/Plane.hva";
 		const std::vector<std::string> materialNames3 = { "Assets/Materials/M_Quad.hva" };
-		const std::string modelPath4 = "Assets/Tests/En_P_WallLamp.hva";
+		const std::string modelPath4 = "Assets/Meshes/En_P_WallLamp.hva";
 		const std::vector<std::string> materialNames4 = { "Assets/Materials/M_Quad.hva", "Assets/Materials/M_Emissive.hva", "Assets/Materials/M_Headlamp.hva" };
-		const std::string modelPath5 = "Assets/Tests/Cube_1.hva";
+		const std::string modelPath5 = "Assets/Meshes/Cube_1.hva";
 		const std::vector<std::string> materialNames5 = { "Assets/Materials/M_Quad.hva" };
 
 		// === Pendulum ===
@@ -340,17 +340,17 @@ namespace Havtorn
 		GEngine::GetWorld()->Initialize3DPhysicsData(playerProxy);
 
 		//// Static Mesh
-		//std::string staticMeshPath = "Assets/Tests/CH_Enemy.hva";
+		//std::string staticMeshPath = "Assets/Meshes/CH_Enemy.hva";
 		//renderManager->LoadStaticMeshComponent(staticMeshPath, AddComponent<SStaticMeshComponent>(playerProxy));
 		//AddComponentEditorContext(playerProxy, &SStaticMeshComponentEditorContext::Context);
 		//GetComponent<SStaticMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register(staticMeshPath);
 
 		// Skeletal Mesh
-		std::string meshPath = "Assets/Tests/CH_Enemy_SK.hva";
+		std::string meshPath = "Assets/Meshes/CH_Enemy_SK.hva";
 		AddComponent<SSkeletalMeshComponent>(playerProxy, meshPath);
 		AddComponentEditorContext(playerProxy, &SSkeletalMeshComponentEditorContext::Context);
 
-		const std::vector<std::string> animationPaths = { "Assets/Tests/CH_Enemy_Walk.hva", "Assets/Tests/CH_Enemy_Chase.hva" };
+		const std::vector<std::string> animationPaths = { "Assets/Meshes/CH_Enemy_Walk.hva", "Assets/Meshes/CH_Enemy_Chase.hva" };
 		AddComponent<SSkeletalAnimationComponent>(playerProxy, animationPaths);
 		AddComponentEditorContext(playerProxy, &SSkeletalAnimationComponentEditorContext::Context);
 
