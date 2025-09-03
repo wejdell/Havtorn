@@ -350,17 +350,17 @@ namespace Havtorn
 			for (auto& db : DataBindings)
 				db.Serialize(toData, pointerPosition);
 
-			std::stack<SNode*> databindingNodes;
-			for (SNode* node : Nodes)
-			{
-				if (node->NodeType == ENodeType::EDataBindingGetNode || node->NodeType == ENodeType::EDataBindingSetNode)
-				{
-					databindingNodes.push(node);
-					continue;
-				}
-			}
+			//std::stack<SNode*> databindingNodes;
+			//for (SNode* node : Nodes)
+			//{
+			//	if (node->NodeType == ENodeType::EDataBindingGetNode || node->NodeType == ENodeType::EDataBindingSetNode)
+			//	{
+			//		databindingNodes.push(node);
+			//		continue;
+			//	}
+			//}
 
-			U32 nodeCount = STATIC_U32(Nodes.size() - databindingNodes.size());
+			U32 nodeCount = STATIC_U32(Nodes.size()/* - databindingNodes.size()*/);
 			SerializeData(nodeCount, toData, pointerPosition);
 			for (SNode* node : Nodes)
 			{				
@@ -389,7 +389,7 @@ namespace Havtorn
 					SerializeData(pin.UID, toData, pointerPosition);
 			}
 
-			SerializeData(STATIC_U32(databindingNodes.size()), toData, pointerPosition);
+			/*SerializeData(STATIC_U32(databindingNodes.size()), toData, pointerPosition);
 			while (!databindingNodes.empty())
 			{
 				SNode* node = databindingNodes.top();
@@ -404,7 +404,7 @@ namespace Havtorn
 				SerializeData(STATIC_U32(sizeof(U64) * node->Outputs.size()), toData, pointerPosition);
 				for (auto& pin : node->Outputs)
 					SerializeData(pin.UID, toData, pointerPosition);
-			}
+			}*/
 
 
 			SerializeData(STATIC_U32(Links.size()), toData, pointerPosition);
