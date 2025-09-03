@@ -319,22 +319,24 @@ namespace Havtorn
 
 		Manager->SetIsModalOpen(true);
 
-		GUI::SliderEnum("Asset Type", AssetTypeToCreate, 
-		{
-		"None",
-		"StaticMesh (Not Supported Yet)",
-		"SkeletalMesh (Not Supported Yet)",
-		"Texture (Not Supported Yet)",
-		"Material",
-		"Animation (Not Supported Yet)",
-		"SpriteAnimation (Not Supported Yet)",
-		"AudioOneShot (Not Supported Yet)",
-		"AudioCollection (Not Supported Yet)",
-		"VisualFX (Not Supported Yet)",
-		"Scene (Not Supported Yet)",
-		"Sequencer (Not Supported Yet)",
-		"Script"
-			});
+
+		AssetTypeToCreate = GUI::ComboEnum("Asset Type", AssetTypeToCreate);
+		//GUI::SliderEnum("Asset Type", AssetTypeToCreate, 
+		//{
+		//"None",
+		//"StaticMesh (Not Supported Yet)",
+		//"SkeletalMesh (Not Supported Yet)",
+		//"Texture (Not Supported Yet)",
+		//"Material",
+		//"Animation (Not Supported Yet)",
+		//"SpriteAnimation (Not Supported Yet)",
+		//"AudioOneShot (Not Supported Yet)",
+		//"AudioCollection (Not Supported Yet)",
+		//"VisualFX (Not Supported Yet)",
+		//"Scene (Not Supported Yet)",
+		//"Sequencer (Not Supported Yet)",
+		//"Script"
+		//	});
 
 		if (AssetTypeToCreate == EAssetType::None)
 			AssetTypeToCreate = EAssetType::StaticMesh;
@@ -347,11 +349,6 @@ namespace Havtorn
 		{
 		case EAssetType::Material:
 			NewAssetFileHeader = CreateOptionsMaterial();
-			break;
-		case EAssetType::Script:
-		{
-
-		}
 			break;
 		default:
 			break;
@@ -366,6 +363,15 @@ namespace Havtorn
 
 		if (GUI::Button("Create"))
 		{
+			switch (AssetTypeToCreate)
+			{
+			case EAssetType::Script:
+				NewAssetFileHeader = CreateScript();
+				break;
+			default:
+				break;
+			}
+
 			// TODO.NW: Make proper folder navigation element for choosing DirectoryToSaveTo, validate NewAssetName
 			std::string newFilePath = Manager->GetResourceManager()->CreateAsset(DirectoryToSaveTo + "/", NewAssetFileHeader);
 			if (newFilePath != "INVALID_PATH")
@@ -481,6 +487,15 @@ namespace Havtorn
 		fileHeader.Material.Properties[10] = { -1.0f, texturePath1, 2 };
 		fileHeader.Material.RecreateZ = true;
 
+		return fileHeader;
+	}
+
+	SAssetFileHeader CAssetBrowserWindow::CreateScript()
+	{
+		SScriptFileHeader fileHeader = SScriptFileHeader{};
+		fileHeader.AssetType = EAssetType::Script;
+		fileHeader.Name = NewAssetName;
+		fileHeader.Script = new HexRune::SScript();
 		return fileHeader;
 	}
 

@@ -22,12 +22,47 @@ namespace Havtorn
 
         struct SScript;
 
-        enum class ENodeType
+        enum class EFlowType
         {
             Execution,
             Simple,
             Tree,
             Comment,
+        };
+
+        enum class ENodeType
+        {
+            EEntityLoopNode,
+            EComponentLoopNode,
+            EOnBeginOverlapNode,
+            EOnEndOverlapNode,
+            EPrintEntityNameNode,
+            ESetStaticMeshNode,
+            ETogglePointLightNode,
+            EDataBindingGetNode,
+            EDataBindingSetNode,
+            EBranchNode,
+            ESequenceNode,
+            EDelayNode,
+            EBeginPlayNode,
+            ETickNode,
+            EEndPlayNode,
+            EPrintStringNode,
+            EAppendStringNode,
+            EFloatLessThanNode,
+            EFloatMoreThanNode,
+            EFloatLessOrEqualNode,
+            EFloatMoreOrEqualNode,
+            EFloatEqualNode,
+            EFloatNotEqualNode,
+            EIntLessThanNode,
+            EIntMoreThanNode,
+            EIntLessOrEqualNode,
+            EIntMoreOrEqualNode,
+            EIntEqualNode,
+            EIntNotEqualNode,
+
+            None
         };
 
         enum class ENGINE_API EObjectDataType : U8
@@ -41,14 +76,14 @@ namespace Havtorn
         // TODO.NW: Add minimum node width?
         struct SNode
         {
-            SNode(const U64 id, SScript* owningScript);
-
+            SNode(const U64 id, SScript* owningScript, ENodeType nodeType);
             U64 UID = 0;
             //std::string Name = "";
             std::vector<SPin> Inputs;
             std::vector<SPin> Outputs;
-            ENodeType Type = ENodeType::Execution;
+            EFlowType FlowType = EFlowType::Execution;
             SScript* OwningScript = nullptr;
+            ENodeType NodeType = ENodeType::None;
 
             // TODO.NW: Serialization
 
@@ -62,7 +97,6 @@ namespace Havtorn
 
             // Return output index to continue with, if not all
             ENGINE_API virtual I8 OnExecute(); 
-            ENGINE_API virtual bool IsStartNode() const { return false; }
 
             template<typename T>
             void SetDataOnPin(SPin* pin, const T& data);
@@ -73,6 +107,10 @@ namespace Havtorn
             void GetDataOnPin(SPin* pin, T& destination);
             template<typename T>
             void GetDataOnPin(const EPinDirection direction, const U64 pinIndex, T& destination);
+
+            //ENGINE_API virtual [[nodiscard]] U32 GetSize() const;
+            //ENGINE_API virtual void Serialize(char* toData, U64& pointerPosition) const;
+            //ENGINE_API virtual void Deserialize(const char* fromData, U64& pointerPosition);
         };
 
         template<typename T>
@@ -137,19 +175,29 @@ namespace Havtorn
         {
             U64 UID = 0;
             std::string Name = "";
-            EPinType Type = EPinType::Object;
+            EPinType Type = EPinType::Entity;
             // TODO.NW: Figure out how to deal with these subtypes. Maybe list them explicitly as pin data types?
             EObjectDataType ObjectType = EObjectDataType::None;
             EAssetType AssetType = EAssetType::None;
             std::variant<PIN_DATA_TYPES> Data;
+
+            ENGINE_API [[nodiscard]] U32 GetSize() const;
+            ENGINE_API void Serialize(char* toData, U64& pointerPosition) const;
+            ENGINE_API void Deserialize(const char* fromData, U64& pointerPosition);
         };
 
         struct SScript
         {
             ENGINE_API SScript();
 
+            //Serialize
             std::vector<SNode*> Nodes;
             std::vector<SLink> Links;
+            std::vector<SScriptDataBinding> DataBindings;
+            std::vector<SNodeEditorContext*> RegisteredEditorContexts;
+            //-------
+            
+            struct SNodeFactory* NodeFactory;
             //std::unordered_map<U64, SNodeEditorContext*> NodeEditorContexts;
 
             std::unordered_map<U64, U64> ContextTypeToStorageIndices;
@@ -157,11 +205,7 @@ namespace Havtorn
 
             // NW: Mapping UID to node
             std::unordered_map<U64, U64> NodeIndices;
-            std::vector<SNode*> StartNodes;
             
-            std::vector<SNodeEditorContext*> RegisteredEditorContexts;
-            std::vector<SScriptDataBinding> DataBindings;
-
             CScene* Scene = nullptr;
             std::string FileName = "";
 
@@ -177,13 +221,6 @@ namespace Havtorn
                 Nodes.emplace_back(new T(id, this, params...));
                 
                 SNode* node = Nodes.back();
-                if (node->IsStartNode())
-                    StartNodes.push_back(Nodes.back());
-
-                //node->UID = id;
-                //node->OwningScript = this;
-                //node->Construct();
-
                 return dynamic_cast<T*>(node);
             }
 
@@ -290,7 +327,6 @@ namespace Havtorn
             ENGINE_API void RemoveNode(const U64 id);
 
             ENGINE_API void Initialize();
-            ENGINE_API void TraverseScript(CScene* owningScene);
             ENGINE_API void TraverseFromNode(const U64 startNodeID, CScene* owningScene);
             ENGINE_API void TraverseFromNode(SNode* startNode, CScene* owningScene);
 
@@ -304,12 +340,50 @@ namespace Havtorn
             ENGINE_API SNode* GetNode(const U64 id) const;
             ENGINE_API bool HasNode(const U64 id) const;
 
-            ENGINE_API [[nodiscard]] U32 GetSize() const;
-            ENGINE_API void Serialize(char* toData, U64& pointerPosition) const;
-            ENGINE_API void Deserialize(const char* fromData, U64& pointerPosition);
-            
             ENGINE_API void RemoveContext(const U64 nodeID);
             ENGINE_API SNodeEditorContext* GetNodeEditorContext(const U64 nodeID) const;
+            
+            ENGINE_API virtual [[nodiscard]] U32 GetSize() const;
+            ENGINE_API virtual void Serialize(char* toData, U64& pointerPosition) const;
+            ENGINE_API virtual void Deserialize(const char* fromData, U64& pointerPosition);
         };
+
+        struct SNodeFactory
+        {
+            template<typename TNode, typename TNodeEditorContext>
+            void RegisterNodeType(SScript* script)
+            {
+                script->RegisteredEditorContexts.emplace_back(&TNodeEditorContext::Context);
+                U32 typeId = STATIC_U32(typeid(TNode).hash_code());
+                BasicNodeFactoryMap[typeId] =
+                    [](U64 id, SScript* script)
+                    {
+                        TNode* node = script->AddNode<TNode>(id);
+                        script->AddEditorContext<TNodeEditorContext>(id);              
+                        return node;
+                    };
+            }
+
+            template<typename TNode, typename TNodeEditorContext>
+            void RegisterDatabindingNode()
+            {
+                U32 typeId = STATIC_U32(typeid(TNode).hash_code());
+                DatabindingNodeFactoryMap[typeId] =
+                    [](U64 id, SScript* script, const U64 databindingId)
+                    {
+                        TNode* node = script->AddNode<TNode>(id, databindingId);
+                        script->AddEditorContext<TNodeEditorContext>(id, script, databindingId);
+                        return node;
+                    };
+            }
+
+            SNode* CreateNode(U32 typeId, U64 id, SScript* script);
+            SNode* CreateNode(U32 typeId, U64 id, SScript* script, const U64 databindingId);
+
+        private:
+            std::unordered_map<U32, std::function<SNode* (const U64, SScript*)>> BasicNodeFactoryMap;
+            std::unordered_map<U32, std::function<SNode* (const U64, SScript*, const U64)>> DatabindingNodeFactoryMap;
+        };
+
 	}
 }

@@ -21,7 +21,7 @@
 
 #include "Systems/PickingSystem.h"
 #include <../Game/GameScene.h>
-
+#include <../Game/GameScript.h>
 #include <MathTypes/MathUtilities.h>
 #include <PlatformManager.h>
 #include <Color.h>
@@ -374,7 +374,7 @@ namespace Havtorn
 		if (asset->AssetType == EAssetType::Script)
 		{
 			// Load asset, held somewhere? RenderManager and World
-			GetEditorWindow<CScriptTool>()->OpenScript(GEngine::GetWorld()->LoadScript(asset->DirectoryEntry.path().string()));
+			GetEditorWindow<CScriptTool>()->OpenScript(GEngine::GetWorld()->LoadScript<SGameScript>(asset->DirectoryEntry.path().string()));
 		}
 
 		if (asset->AssetType == EAssetType::Scene)

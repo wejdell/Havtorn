@@ -83,6 +83,7 @@ set(CORE_FILES
     ${CORE_FOLDER}hvpch.h
     "${CORE_FOLDER}Log.cpp"
     "${CORE_FOLDER}Log.h"
+    ${CORE_FOLDER}magic_enum.h
 )
 set(RAPIDJSON_FILES
     "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/error/en.h"
@@ -611,6 +612,8 @@ set(GAME_FILES
     ${GAME_FOLDER}GameProcess.h
     ${GAME_FOLDER}GameScene.cpp
     ${GAME_FOLDER}GameScene.h
+    ${GAME_FOLDER}GameScript.cpp
+    ${GAME_FOLDER}GameScript.h
     ${GAME_FOLDER}hvpch.cpp
     ${GAME_FOLDER}hvpch.h
 )
@@ -745,6 +748,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${LAUNCHER_FILES})
 target_include_directories(Launcher PRIVATE
 	"${LAUNCHER_FOLDER}"
     "${EXTERNAL_FOLDER}box2d/include/box2d"
+    "${EXTERNAL_FOLDER}rapidjson/include"
 	"${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
 	"${EXTERNAL_FOLDER}PhysX/physx/include"
     "Core"

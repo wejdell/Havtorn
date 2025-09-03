@@ -2242,7 +2242,11 @@ namespace Havtorn
 
 		if (!runtimeMap.contains(property.TextureUID))
 		{
-			runtimeArray.emplace_back(GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(property.TextureUID, CAssetRegistry::RenderManagerRequestID)->RenderTexture.GetShaderResource());
+			STextureAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(property.TextureUID, CAssetRegistry::RenderManagerRequestID);
+			if (asset == nullptr)
+				return;
+
+			runtimeArray.emplace_back(asset->RenderTexture.GetShaderResource());
 			runtimeMap.emplace(property.TextureUID, STATIC_F32(runtimeArray.size() - 1));
 		}
 

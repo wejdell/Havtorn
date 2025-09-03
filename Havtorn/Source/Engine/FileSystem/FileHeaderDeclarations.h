@@ -616,7 +616,17 @@ namespace Havtorn
 	struct SScriptFileHeader
 	{
 		EAssetType AssetType = EAssetType::Script;
+		std::string Name;
+
 		HexRune::SScript* Script = nullptr;
+
+		/*
+		std::vector<SNode*> Nodes;
+        std::vector<SLink> Links;
+        std::vector<SScriptDataBinding> DataBindings;
+		*/
+
+
 
 		[[nodiscard]] U32 GetSize() const;
 		void Serialize(char* toData) const;
@@ -627,8 +637,8 @@ namespace Havtorn
 	{
 		U32 size = 0;
 		size += GetDataSize(AssetType);
+		size += GetDataSize(Name);
 		size += Script->GetSize();
-
 		return size;
 	}
 
@@ -636,14 +646,22 @@ namespace Havtorn
 	{
 		U64 pointerPosition = 0;
 		SerializeData(AssetType, toData, pointerPosition);
+		SerializeData(Name, toData, pointerPosition);
 		Script->Serialize(toData, pointerPosition);
+
+		//Script->Serialize(toData, pointerPosition);
 	}
 
 	inline void SScriptFileHeader::Deserialize(const char* fromData, HexRune::SScript* outScript)
 	{
 		U64 pointerPosition = 0;
 		DeserializeData(AssetType, fromData, pointerPosition);
+		DeserializeData(Name, fromData, pointerPosition);
+
+		//outScript = new HexRune::SScript();
 		outScript->Deserialize(fromData, pointerPosition);
+		
+		//outScript->Deserialize(fromData, pointerPosition);
 	}
 
 	// TODO.NW: Make an alias for a reasonable name instead of monostate

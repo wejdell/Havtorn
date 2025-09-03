@@ -66,8 +66,6 @@ namespace Havtorn
 		{
 			ENGINE_API SBeginPlayNode(const U64 id, SScript* owningScript);
 			virtual ENGINE_API I8 OnExecute() override;
-			// TODO.NW Figure out if it's enough that the script System handles these
-			virtual ENGINE_API bool IsStartNode() const override { return true; };
 		};
 
 		struct STickNode : public SNode
