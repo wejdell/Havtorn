@@ -1,6 +1,9 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #pragma once
+#include "CoreTypes.h"
+#include "MathTypes/EngineMath.h"
+
 #include <string>
 #include <algorithm>
 

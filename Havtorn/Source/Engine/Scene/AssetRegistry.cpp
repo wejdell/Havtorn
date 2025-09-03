@@ -35,6 +35,10 @@ namespace Havtorn
 
     SAsset* CAssetRegistry::RequestAsset(const SAssetReference& assetRef, const U64 requesterID)
     {
+        // TODO.NW: If we crash more, we should consider leading the flow through 
+        // one write location (using unique_lock) and one read location (using shared_lock)
+        std::shared_lock lock(RegistryMutex);
+
         // TODO.NW: Load on different thread and return null asset while loading?
         if (!LoadedAssets.contains(assetRef.UID) && !LoadAsset(assetRef))
             return &LoadedAssets[0];
@@ -48,6 +52,8 @@ namespace Havtorn
 
     void CAssetRegistry::UnrequestAsset(const SAssetReference& assetRef, const U64 requesterID)
     {
+        std::shared_lock lock(RegistryMutex);
+
         // TODO.NW: Check if asset is loading on separate thread, or check if requests are still there when finished loading?
         if (!LoadedAssets.contains(assetRef.UID))
             return;
@@ -60,28 +66,14 @@ namespace Havtorn
             UnloadAsset(assetRef);
     }
 
-    std::vector<SAsset*> CAssetRegistry::RequestAssets(const std::vector<SAssetReference>& assetRefs, const U64 requesterID)
-    {
-        std::vector<SAsset*> assets;
-
-        for (const SAssetReference& ref : assetRefs)
-            assets.emplace_back(RequestAsset(ref, requesterID));
-
-        return assets;
-    }
-
-    void CAssetRegistry::UnrequestAssets(const std::vector<SAssetReference>& assetRefs, const U64 requesterID)
-    {
-        for (const SAssetReference& ref : assetRefs)
-            UnrequestAsset(ref, requesterID);
-    }
-
     SAsset* CAssetRegistry::RequestAsset(const U32 assetUID, const U64 requesterID)
     {
         if (LoadedAssets.contains(assetUID))
         {
             SAsset* loadedAsset = &LoadedAssets[assetUID];
             loadedAsset->Requesters.insert(requesterID);
+            RequestDependencies(assetUID, requesterID);
+            
             return loadedAsset;
         }
 
@@ -107,6 +99,22 @@ namespace Havtorn
             if (AssetDatabase.contains(assetUID))
                 UnloadAsset(SAssetReference(AssetDatabase[assetUID]));
         }
+    }
+
+    std::vector<SAsset*> CAssetRegistry::RequestAssets(const std::vector<SAssetReference>& assetRefs, const U64 requesterID)
+    {
+        std::vector<SAsset*> assets;
+
+        for (const SAssetReference& ref : assetRefs)
+            assets.emplace_back(RequestAsset(ref, requesterID));
+
+        return assets;
+    }
+
+    void CAssetRegistry::UnrequestAssets(const std::vector<SAssetReference>& assetRefs, const U64 requesterID)
+    {
+        for (const SAssetReference& ref : assetRefs)
+            UnrequestAsset(ref, requesterID);
     }
 
     std::string CAssetRegistry::GetAssetDatabaseEntry(const U32 uid)
@@ -185,8 +193,21 @@ namespace Havtorn
         std::string filePath = assetRef.FilePath;
         if (!UFileSystem::DoesFileExist(filePath))
         {
-            HV_LOG_WARN("CAssetRegistry::LoadAsset: Asset file pointed to by %s failed to load, does not exist!", assetRef.FilePath.c_str());
-            return false;
+            CJsonDocument config = UFileSystem::OpenJson(UFileSystem::EngineConfig);
+            std::string redirection = config.GetValueFromArray("Asset Redirectors", filePath, "");
+            
+            while (!UFileSystem::DoesFileExist(redirection) && redirection != "")
+            {
+                redirection = config.GetValueFromArray("Asset Redirectors", redirection, "");
+            } 
+
+            if (redirection == "")
+            {
+                HV_LOG_WARN("CAssetRegistry::LoadAsset: Asset file pointed to by %s failed to load, does not exist!", assetRef.FilePath.c_str());
+                return false;
+            }
+
+            filePath = redirection;
         }
 
         const U64 fileSize = UFileSystem::GetFileSize(filePath);
@@ -457,6 +478,8 @@ namespace Havtorn
 
     std::set<U64> CAssetRegistry::GetReferencers(const SAssetReference& assetRef)
     {
+        std::shared_lock lock(RegistryMutex);
+
         if (!LoadedAssets.contains(assetRef.UID))
             return std::set<U64>();
 
@@ -464,8 +487,10 @@ namespace Havtorn
         return loadedAsset->Requesters;
     }
 
-    std::string CAssetRegistry::GetDebugString(const bool shouldExpand) const
+    std::string CAssetRegistry::GetDebugString(const bool shouldExpand)
     {
+        std::shared_lock lock(RegistryMutex);
+
         std::string debugString = "Asset Registry | Loaded Assets: " + std::to_string(LoadedAssets.size()) + " | Database Entries: " + std::to_string(AssetDatabase.size()) + " |";
         
         if (shouldExpand)

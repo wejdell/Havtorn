@@ -501,6 +501,7 @@ namespace Havtorn
 
 			const bool isOpen = GUI::TreeNode(filenameString.c_str());
 
+			// Asset Drag
 			if (GUI::BeginDragDropTarget())
 			{
 				SGuiPayload payload = GUI::AcceptDragDropPayload("AssetDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
@@ -517,6 +518,10 @@ namespace Havtorn
 
 						std::string oldPath = payloadAssetRep->DirectoryEntry.path().string().c_str();
 						std::string newPath = (entry.path() / payloadAssetRep->DirectoryEntry.path().filename()).string().c_str();
+
+						CJsonDocument config = UFileSystem::OpenJson(UFileSystem::EngineConfig);
+						config.WriteValueToArray("Asset Redirectors", oldPath, newPath);
+
 						Manager->RemoveAssetRep(payloadAssetRep->DirectoryEntry);
 						std::filesystem::rename(oldPath, newPath);
 						Manager->CreateAssetRep(newPath);

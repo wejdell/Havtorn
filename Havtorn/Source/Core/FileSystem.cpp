@@ -1,6 +1,7 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #include "FileSystem.h"
+#include "GeneralUtilities.h"
 
 #include "rapidjson/document.h"
 #include "rapidjson/istreamwrapper.h"
@@ -15,6 +16,8 @@ using std::fstream;
 namespace Havtorn
 {
 	using DirectoryIterator = std::filesystem::recursive_directory_iterator;
+
+	const std::string UFileSystem::EngineConfig = "Config/EngineConfig.json";
 
 	bool UFileSystem::DoesFileExist(const std::string& filePath)
 	{
@@ -129,6 +132,60 @@ namespace Havtorn
 		return Document.HasMember(memberName.c_str());
 	}
 
+	void CJsonDocument::WriteValueToArray(const std::string& arrayName, const std::string& valueName, const std::string& value)
+	{
+		if (!HasMember(arrayName) || !Document[arrayName.c_str()].IsArray())
+		{
+			HV_LOG_WARN("Could not add value to %s in %s, it either doesn't have that member or that member is not an array.", arrayName.c_str(), FilePath.c_str());
+			return;
+		}
+
+		std::string sanitizedStringValueName = UGeneralUtils::ConvertToPlatformAgnosticPath(valueName);
+		std::string sanitizedStringValue = UGeneralUtils::ConvertToPlatformAgnosticPath(value);
+
+		auto array = Document[arrayName.c_str()].GetArray();
+		rapidjson::Document::AllocatorType& allocator = Document.GetAllocator();
+
+		rapidjson::Value object(rapidjson::kObjectType);
+		rapidjson::Value key(sanitizedStringValueName.c_str(), allocator);
+		rapidjson::Value keyValue;
+		keyValue = rapidjson::StringRef(sanitizedStringValue.c_str());
+		object.AddMember(key, keyValue, Document.GetAllocator());
+		
+		bool hasValue = false;
+		for (auto& v : array)
+		{
+			if (v.HasMember(sanitizedStringValueName.c_str()))
+			{
+				v.Swap(object);
+				hasValue = true;
+				break;
+			}
+		}
+
+		if (!hasValue)
+			array.PushBack(object.Move(), allocator);
+
+		// TODO.NW: We're saving here instead of the destructor as the Document class is well enclosed, 
+		// should have another look at this.
+		SaveFile();
+	}
+
+	std::string CJsonDocument::GetValueFromArray(const std::string& arrayName, const std::string& valueName, const std::string& defaultValue)
+	{
+		if (!HasMember(arrayName) || !Document[arrayName.c_str()].IsArray())
+			return defaultValue;
+
+		auto array = Document[arrayName.c_str()].GetArray();
+		for (auto& v : array)
+		{
+			if (v.HasMember(valueName.c_str()))
+				return v[valueName.c_str()].GetString();
+		}
+
+		return defaultValue;
+	}
+
 	void CJsonDocument::RemoveValueFromArray(const std::string& arrayName, const std::string& valueName)
 	{
 		if (!HasMember(arrayName) || !Document[arrayName.c_str()].IsArray())
@@ -152,6 +209,19 @@ namespace Havtorn
 			return;
 
 		array.Erase(iterator);
+
+		// TODO.NW: We're saving here instead of the destructor as the Document class is well enclosed, 
+		// should have another look at this.
+		SaveFile();
+	}
+
+	void CJsonDocument::ClearArray(const std::string& arrayName)
+	{
+		if (!HasMember(arrayName) || !Document[arrayName.c_str()].IsArray())
+			return;
+
+		auto array = Document[arrayName.c_str()].GetArray();
+		array.Clear();
 
 		// TODO.NW: We're saving here instead of the destructor as the Document class is well enclosed, 
 		// should have another look at this.

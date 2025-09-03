@@ -4,7 +4,7 @@
 
 #include <HavtornString.h>
 #include <HavtornDelegate.h>
-#include "Core/GeneralUtilities.h"
+#include <GeneralUtilities.h>
 #include "ECS/Entity.h"
 #include "ECS/Component.h"
 #include "ECS/ComponentEditorContext.h"

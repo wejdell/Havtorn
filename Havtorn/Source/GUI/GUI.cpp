@@ -341,7 +341,12 @@ namespace Havtorn
 			return ImGui::IsItemClicked(static_cast<ImGuiMouseButton>(button));
 		}
 
-		bool IsMouseReleased(int mouseButton)
+		bool IsMouseClicked(I32 mouseButton)
+		{
+			return ImGui::IsMouseClicked(mouseButton);
+		}
+
+		bool IsMouseReleased(I32 mouseButton)
 		{
 			return ImGui::IsMouseReleased(mouseButton);
 		}
@@ -371,6 +376,11 @@ namespace Havtorn
 		bool IsWindowHovered()
 		{
 			return ImGui::IsWindowHovered();
+		}
+
+		bool IsPopupOpen(const char* label)
+		{
+			return ImGui::IsPopupOpen(label);
 		}
 
 		SVector2<F32> GetCursorPos()
@@ -860,6 +870,11 @@ namespace Havtorn
 		bool BeginPopupContextWindow()
 		{
 			return ImGui::BeginPopupContextWindow();
+		}
+
+		bool BeginPopupContextItem()
+		{
+			return ImGui::BeginPopupContextItem("ContextItem");
 		}
 
 		void OpenPopup(const char* label)
@@ -1669,6 +1684,11 @@ namespace Havtorn
 		return Instance->Impl->BeginPopupContextWindow();
 	}
 
+	bool GUI::BeginPopupContextItem()
+	{
+		return Instance->Impl->BeginPopupContextItem();
+	}
+
 	void GUI::OpenPopup(const char* label)
 	{
 		Instance->Impl->OpenPopup(label);
@@ -1835,11 +1855,21 @@ namespace Havtorn
 
 	SAssetPickResult GUI::AssetPickerFilter(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType filterByAssetType)
 	{
+		SAssetPickResult result;
+
 		if (GUI::ImageButton("AssetPicker", image, { GUI::TexturePreviewSizeX * 0.75f, GUI::TexturePreviewSizeY * 0.75f }))
 		{
 			GUI::OpenPopup(modalLabel);
 			GUI::SetNextWindowPos(GUI::GetViewportCenter(), EWindowCondition::Appearing, SVector2<F32>(0.5f, 0.5f));
 		}
+		result.IsHovered = GUI::IsMouseInRect(GUI::GetLastRect());
+
+		if (GUI::IsItemClicked(EGUIMouseButton::Right))
+		{
+			result.State = EAssetPickerState::ContextMenu;
+			return result;
+		}
+
 		const F32 thumbnailPadding = 8.0f;
 		const F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + thumbnailPadding;
 		GUI::OffsetCursorPos(SVector2<F32>(1.0f, -4.0f));
@@ -1849,12 +1879,12 @@ namespace Havtorn
 		GUI::Text(label);
 
 		if (!GUI::BeginPopupModal(modalLabel, NULL, { EWindowFlag::AlwaysAutoResize }))
-			return SAssetPickResult();
+			return result;
 
 		if (!GUI::BeginTable("AssetPickerTable", columns))
 		{
 			GUI::EndPopup();
-			return SAssetPickResult();
+			return result;
 		}
 
 		I32 id = 0;
@@ -1876,7 +1906,9 @@ namespace Havtorn
 				GUI::EndTable();
 				GUI::CloseCurrentPopup();
 				GUI::EndPopup();
-				return SAssetPickResult(entry);
+				result.State = EAssetPickerState::AssetPicked;
+				result.PickedEntry = entry;
+				return result;
 			}
 
 			GUI::Text(data.Name.c_str());
@@ -1901,7 +1933,8 @@ namespace Havtorn
 		}
 
 		GUI::EndPopup();
-		return SAssetPickResult(EAssetPickerState::Active);
+		result.State = EAssetPickerState::Active;
+		return result;
 	}
 
 	SRenderAssetCardResult GUI::RenderAssetCard(const char* label, const bool isSelected, const intptr_t& thumbnailID, const char* typeName, const SColor& color, void* dragDropPayloadToSet, U64 payLoadSize)
@@ -2011,6 +2044,11 @@ namespace Havtorn
 		return Instance->Impl->IsItemClicked(button);
 	}
 
+	bool GUI::IsMouseClicked(I32 mouseButton)
+	{
+		return Instance->Impl->IsMouseClicked(mouseButton);
+	}
+
 	bool GUI::IsMouseReleased(I32 mouseButton)
 	{
 		return Instance->Impl->IsMouseReleased(mouseButton);
@@ -2050,6 +2088,11 @@ namespace Havtorn
 	bool GUI::IsWindowHovered()
 	{
 		return Instance->Impl->IsWindowHovered();
+	}
+
+	bool GUI::IsPopupOpen(const char* label)
+	{
+		return Instance->Impl->IsPopupOpen(label);
 	}
 
 	void GUI::BeginVertical(const char* label, const SVector2<F32>& size)

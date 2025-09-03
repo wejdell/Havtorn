@@ -557,6 +557,7 @@ namespace Havtorn
 		Active,
 		AssetPicked,
 		Cancelled,
+		ContextMenu,
 	};
 
 	struct SAssetPickResult
@@ -571,6 +572,7 @@ namespace Havtorn
 		{}
 		EAssetPickerState State = EAssetPickerState::Inactive;
 		std::filesystem::directory_entry PickedEntry;
+		bool IsHovered = false;
 	};
 
 	struct SRenderAssetCardResult
@@ -834,6 +836,7 @@ namespace Havtorn
 		static void EndDragDropTarget();
 
 		static bool BeginPopupContextWindow();
+		static bool BeginPopupContextItem();
 
 		static void OpenPopup(const char* label);
 
@@ -871,6 +874,7 @@ namespace Havtorn
 		static void Dummy(const SVector2<F32>& size);
 		static void SameLine(const F32 offsetFromX = 0.0f, const F32 spacing = -1.0f);
 		static bool IsItemClicked(const EGUIMouseButton button = EGUIMouseButton::Left);
+		static bool IsMouseClicked(I32 mouseButton = 0);
 		static bool IsMouseReleased(I32 mouseButton = 0);
 		static bool IsItemHovered();
 		static bool IsMouseInRect(const SVector2<F32>& topLeft, const SVector2<F32>& bottomRight);
@@ -878,6 +882,7 @@ namespace Havtorn
 		static bool IsItemVisible();
 		static bool IsWindowFocused();
 		static bool IsWindowHovered();
+		static bool IsPopupOpen(const char* label);
 
 		static void BeginVertical(const char* label, const SVector2<F32>& size);
 		static void EndVertical();

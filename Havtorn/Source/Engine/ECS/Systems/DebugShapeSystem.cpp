@@ -11,7 +11,7 @@
 #include "Graphics/RenderManager.h"
 #include "Graphics/RenderCommand.h"
 
-#include "Core/GeneralUtilities.h"
+#include <GeneralUtilities.h>
 
 namespace Havtorn
 {

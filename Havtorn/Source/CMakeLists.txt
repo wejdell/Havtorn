@@ -73,6 +73,7 @@ set(CORE_FILES
     ${CORE_FOLDER}EngineTypes.h
     ${CORE_FOLDER}FileSystem.cpp
     ${CORE_FOLDER}FileSystem.h
+    ${CORE_FOLDER}GeneralUtilities.h
     ${CORE_FOLDER}HavtornDelegate.h
     ${CORE_FOLDER}HavtornString.cpp
     ${CORE_FOLDER}HavtornString.h
@@ -263,7 +264,6 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Assets/Asset.h
     ${ENGINE_FOLDER}Assets/SequencerAsset.cpp
     ${ENGINE_FOLDER}Assets/SequencerAsset.h
-    ${ENGINE_FOLDER}Core/GeneralUtilities.h
     ${ENGINE_FOLDER}Core/RuntimeAssetDeclarations.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraComponentEditorContext.cpp
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraComponentEditorContext.h
