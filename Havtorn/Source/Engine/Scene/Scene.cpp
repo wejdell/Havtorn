@@ -9,6 +9,8 @@
 #include "World.h"
 #include "AssetRegistry.h"
 
+#include "../Game/GameScript.h"
+
 #include <algorithm>
 
 namespace Havtorn
@@ -44,7 +46,7 @@ namespace Havtorn
 		RegisterComponent<STransform2DComponent>(10, &STransform2DComponentEditorContext::Context);
 		RegisterComponent<SSpriteAnimatorGraphComponent>(2, &SSpriteAnimatorGraphComponentEditorContext::Context);
 		RegisterComponent<SSequencerComponent>(0, &SSequencerComponentEditorContext::Context);
-		RegisterComponent<SScriptComponent>(2, &SScriptComponentEditorContext::Context);
+		RegisterComponent<SScriptComponent>(10, &SScriptComponentEditorContext::Context);
 		RegisterComponent<SPhysics2DComponent>(10, &SPhysics2DComponentEditorContext::Context);
 		RegisterComponent<SPhysics3DComponent>(40, &SPhysics3DComponentEditorContext::Context);
 		RegisterComponent<SPhysics3DControllerComponent>(1, &SPhysics3DControllerComponentEditorContext::Context);
@@ -327,11 +329,11 @@ namespace Havtorn
 		renderManager->LoadMaterialComponent(materialNames4, AddComponent<SMaterialComponent>(lamp));
 		AddComponentEditorContext(lamp, &SMaterialComponentEditorContext::Context);
 
-	/*	GetComponent<SStaticMeshComponent>(lamp)->AssetRegistryKey = assetRegistry->Register(modelPath4);
-		GetComponent<SMaterialComponent>(lamp)->AssetRegistryKeys = assetRegistry->Register(materialNames4);*/
-		// === !Lamp ===
+		/*	GetComponent<SStaticMeshComponent>(lamp)->AssetRegistryKey = assetRegistry->Register(modelPath4);
+			GetComponent<SMaterialComponent>(lamp)->AssetRegistryKeys = assetRegistry->Register(materialNames4);*/
+			// === !Lamp ===
 
-		// === Player Proxy ===
+			// === Player Proxy ===
 		const SEntity& playerProxy = AddEntity("Player");
 		if (!playerProxy.IsValid())
 			return false;
@@ -447,7 +449,7 @@ namespace Havtorn
 
 		std::vector<SWallAndFloorInitData> initData;
 		SVector floorRotation = SVector{ 90.0f, 0.0f, 0.0f };
-		SVector largeWallRotation = SVector{ 0.0f, 0.0f, 0.0f};
+		SVector largeWallRotation = SVector{ 0.0f, 0.0f, 0.0f };
 		// TODO.NR: There's still a singularity happening here, need to figure out why
 		SVector smallWallRotation = SVector{ 0.0f, -90.0f, 0.0f };
 
@@ -901,11 +903,27 @@ namespace Havtorn
 		for (U64 index = 0; index < numberOfScriptComponents; index++)
 		{
 			SScriptComponent component;
+			std::string fileName;
+			DeserializeData(fileName, fromData, pointerPosition);
 			component.Deserialize(fromData, pointerPosition);
-			auto comp = AddComponent<SScriptComponent>(component.Owner);
-			// TODO.NW: Unify asset loading methods
-			comp->Script = GEngine::GetWorld()->LoadScript(assetRegistry->GetAssetPath(component.AssetRegistryKey));
+			if(fileName != "NA")
+				component.Script = GEngine::GetWorld()->LoadScript<HexRune::SScript>(fileName);
+			
+			if(component.Script != nullptr)
+				component.Script->Scene = this;
+
+			AddComponent(component, component.Owner);
 			AddComponentEditorContext(component.Owner, &SScriptComponentEditorContext::Context);
+
+
+			////component.Deserialize(fromData, pointerPosition);
+
+
+
+			//AddComponent(component.Owner, &SScriptComponentEditorContext::Context)
+			//auto comp = AddComponent<SScriptComponent>(component.Owner);
+			// TODO.NW: Unify asset loading methods
+			//comp->Script = GEngine::GetWorld()->LoadScript(assetRegistry->GetAssetPath(component.AssetRegistryKey));
 		}
 
 		{

@@ -243,6 +243,8 @@ namespace Havtorn
 		HexRune::SScript* script = LoadedScripts.at(filePath).get();
 
 		SScriptFileHeader fileHeader;
+		fileHeader.AssetType = EAssetType::Script;
+		fileHeader.Name = script->FileName;
 		fileHeader.Script = script;
 
 		const U32 fileSize = fileHeader.GetSize();
@@ -252,28 +254,6 @@ namespace Havtorn
 		GEngine::GetFileSystem()->Serialize(filePath, data, fileSize);
 
 		delete[] data;
-	}
-
-	HexRune::SScript* CWorld::LoadScript(const std::string& filePath)
-	{
-		if (LoadedScripts.contains(filePath))
-			return LoadedScripts.at(filePath).get();
-
-		const U32 fileSize = STATIC_U32(GEngine::GetFileSystem()->GetFileSize(filePath));
-		char* data = new char[fileSize];
-
-		GEngine::GetFileSystem()->Deserialize(filePath, data, fileSize);
-
-		SScriptFileHeader assetFile;
-		LoadedScripts.emplace(filePath, std::make_unique<HexRune::SScript>());
-		assetFile.Deserialize(data, LoadedScripts.at(filePath).get());
-
-		// TODO.NW: When unifying asset loading, should have an abstraction for an asset, maybe only key and file path, and make sure
-		// they are always fully initialized if they exist.
-		LoadedScripts.at(filePath).get()->FileName = filePath;
-
-		delete[] data;
-		return LoadedScripts.at(filePath).get();
 	}
 
 	void CWorld::UnloadScript(const std::string& filePath)

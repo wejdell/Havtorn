@@ -133,6 +133,16 @@ namespace Havtorn
 			GEngine::GetFileSystem()->Serialize(hvaPath, &data[0], header.GetSize());
 			delete[] data;
 		}
+		else if (std::holds_alternative<SScriptFileHeader>(fileHeader))
+		{
+			SScriptFileHeader header = std::get<SScriptFileHeader>(fileHeader);
+
+			const auto data = new char[header.GetSize()];
+			header.Serialize(data);
+			hvaPath = destinationPath + header.Name + ".hva";
+			GEngine::GetFileSystem()->Serialize(hvaPath, &data[0], header.GetSize());
+			delete[] data;
+		}
 
 		return hvaPath;
 	}

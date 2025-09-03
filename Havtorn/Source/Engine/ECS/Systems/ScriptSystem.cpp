@@ -35,6 +35,9 @@ namespace Havtorn
 			if (!SComponent::IsValid(component) || !component->Script)
 				continue;
 
+			if (component->Script->DataBindings.size() != component->DataBindings.size())
+				continue;
+
 			HexRune::SScript* script = component->Script;
 
 			for (U64 i = 0; i < script->DataBindings.size(); i++)

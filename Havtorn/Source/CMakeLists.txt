@@ -566,6 +566,8 @@ set(GAME_FILES
     ${GAME_FOLDER}GameProcess.h
     ${GAME_FOLDER}GameScene.cpp
     ${GAME_FOLDER}GameScene.h
+    ${GAME_FOLDER}GameScript.cpp
+    ${GAME_FOLDER}GameScript.h
     ${GAME_FOLDER}hvpch.cpp
     ${GAME_FOLDER}hvpch.h
 )
