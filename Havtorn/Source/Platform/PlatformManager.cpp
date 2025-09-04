@@ -44,6 +44,10 @@ namespace Havtorn
 						   {
 							   return (char)c;
 						   });
+
+			auto startIndex = str.find("havtorn://", 0) + 10;
+			str = str.substr(startIndex, str.length() - startIndex);
+			std::erase_if(str, [](char c) { return c == '"' || c == '/'; });
 			HV_LOG_INFO(str.c_str());
 		}
 		break;
