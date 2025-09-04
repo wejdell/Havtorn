@@ -69,3 +69,5 @@
 #define ARRAY_SIZE(x) ((int)(sizeof(x) / sizeof(*(x)))) // Size of a static C-style array. Don't use on pointers!
 
 #define HAVTORN_VERSION "0.0.1"
+
+#define HV_DEEPLINK_ENALBED
