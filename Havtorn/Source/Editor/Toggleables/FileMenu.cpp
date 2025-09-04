@@ -4,6 +4,7 @@
 #include "EditorManager.h"
 
 #include <Engine.h>
+#include <Scene/AssetRegistry.h>
 #include <../Game/GameScene.h>
 #include <GUI.h>
 #include <Log.h>
@@ -123,10 +124,9 @@ namespace Havtorn
 
             GUI::Separator();
             
-            if (GUI::MenuItem("Clear Asset Redirectors"))
+            if (GUI::MenuItem("Fix Up Asset Redirectors"))
             {
-                CJsonDocument config = UFileSystem::OpenJson(UFileSystem::EngineConfig);
-                config.ClearArray("Asset Redirectors");
+                GEngine::GetAssetRegistry()->FixUpAssetRedirectors();
             }
 
             GUI::EndPopup();

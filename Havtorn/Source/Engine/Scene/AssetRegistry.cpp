@@ -28,7 +28,8 @@ namespace Havtorn
         RenderManager = renderManager;
 
         // Add null asset
-        LoadedAssets.emplace(0, SAsset());
+        SAsset nullAsset = SAsset();
+        AddAsset(0, nullAsset);
 
         RefreshDatabase();
 
@@ -37,15 +38,11 @@ namespace Havtorn
 
     SAsset* CAssetRegistry::RequestAsset(const SAssetReference& assetRef, const U64 requesterID)
     {
-        // TODO.NW: If we crash more, we should consider leading the flow through 
-        // one write location (using unique_lock) and one read location (using shared_lock)
-        std::shared_lock lock(RegistryMutex);
-
         // TODO.NW: Load on different thread and return null asset while loading?
         if (!LoadedAssets.contains(assetRef.UID) && !LoadAsset(assetRef))
-            return &LoadedAssets[0];
+            return GetAsset(0);
         
-        SAsset* loadedAsset = &LoadedAssets[assetRef.UID];
+        SAsset* loadedAsset = GetAsset(assetRef.UID);
         loadedAsset->Requesters.insert(requesterID);
         RequestDependencies(assetRef.UID, requesterID);
 
@@ -54,13 +51,11 @@ namespace Havtorn
 
     void CAssetRegistry::UnrequestAsset(const SAssetReference& assetRef, const U64 requesterID)
     {
-        std::shared_lock lock(RegistryMutex);
-
         // TODO.NW: Check if asset is loading on separate thread, or check if requests are still there when finished loading?
         if (!LoadedAssets.contains(assetRef.UID))
             return;
 
-        SAsset* loadedAsset = &LoadedAssets[assetRef.UID];
+        SAsset* loadedAsset = GetAsset(assetRef.UID);
         loadedAsset->Requesters.erase(requesterID);
         UnrequestDependencies(assetRef.UID, requesterID);
 
@@ -72,7 +67,7 @@ namespace Havtorn
     {
         if (LoadedAssets.contains(assetUID))
         {
-            SAsset* loadedAsset = &LoadedAssets[assetUID];
+            SAsset* loadedAsset = GetAsset(assetUID);
             loadedAsset->Requesters.insert(requesterID);
             RequestDependencies(assetUID, requesterID);
             
@@ -92,7 +87,7 @@ namespace Havtorn
         if (!LoadedAssets.contains(assetUID))
             return;
 
-        SAsset* loadedAsset = &LoadedAssets[assetUID];
+        SAsset* loadedAsset = GetAsset(assetUID);
         loadedAsset->Requesters.erase(requesterID);
         UnrequestDependencies(assetUID, requesterID);
 
@@ -132,7 +127,7 @@ namespace Havtorn
 
     void CAssetRegistry::RequestDependencies(const U32 assetUID, const U64 requesterID)
     {
-        SAsset* asset = &LoadedAssets[assetUID];
+        SAsset* asset = GetAsset(assetUID);
         if (std::holds_alternative<SGraphicsMaterialAsset>(asset->Data))
         {
             SGraphicsMaterialAsset assetData = std::get<SGraphicsMaterialAsset>(asset->Data);
@@ -162,7 +157,7 @@ namespace Havtorn
 
     void CAssetRegistry::UnrequestDependencies(const U32 assetUID, const U64 requesterID)
     {
-        SAsset* asset = &LoadedAssets[assetUID];
+        SAsset* asset = GetAsset(assetUID);
         if (std::holds_alternative<SGraphicsMaterialAsset>(asset->Data))
         {
             SGraphicsMaterialAsset assetData = std::get<SGraphicsMaterialAsset>(asset->Data);
@@ -264,6 +259,7 @@ namespace Havtorn
             }
 
             asset.Data = meshAsset;
+            asset.SourceData = assetFile.SourceData;
         }
         break;
         case EAssetType::SkeletalMesh:
@@ -298,6 +294,7 @@ namespace Havtorn
             }
 
             asset.Data = meshAsset;
+            asset.SourceData = assetFile.SourceData;
         }
         break;
         case EAssetType::Texture:
@@ -307,6 +304,7 @@ namespace Havtorn
             STextureAsset textureAsset(assetFile);
             textureAsset.RenderTexture = RenderManager->RenderTextureFactory.CreateStaticTexture(filePath);
             asset.Data = textureAsset;
+            asset.SourceData = assetFile.SourceData;
         }
         break;
         case EAssetType::Material:
@@ -321,6 +319,7 @@ namespace Havtorn
             SSkeletalAnimationFileHeader assetFile;
             assetFile.Deserialize(data);
             asset.Data = SSkeletalAnimationAsset(assetFile);
+            asset.SourceData = assetFile.SourceData;
         }
         break;
         case EAssetType::Script:
@@ -342,11 +341,9 @@ namespace Havtorn
         }
         delete[] data;
 
-        // TODO.NW: Set asset source data and bind filewatchers?
+        // TODO.NW: Bind filewatchers?
 
-        // NW: It's important that we move the asset here, otherwise pointers in the assets (e.g. to data bindings in data binding nodes in scripts)
-        // may be left dangling.
-        LoadedAssets.emplace(assetRef.UID, std::move(asset));
+        AddAsset(assetRef.UID, asset);
         return true;
     }
 
@@ -356,8 +353,31 @@ namespace Havtorn
             return false;
 
         // TODO.NW: If any filewatchers are watching the source of this asset, remove them now
-        LoadedAssets.erase(assetRef.UID);
+        RemoveAsset(assetRef.UID);
         return true;
+    }
+
+    SAsset* CAssetRegistry::GetAsset(const U32 assetUID)
+    {
+        std::shared_lock lock(RegistryMutex);
+        return &LoadedAssets[assetUID];
+    }
+
+    void CAssetRegistry::AddAsset(const U32 assetUID, SAsset& asset)
+    {
+        // NW: This combination of locks (shared in get asset and unique in remove asset)
+        // seems stable for now, but if we continue crashing due to asset requesting we
+        // might need to take a proper thread safety pass. Should also get to async loading.
+
+        // NW: It's important that we move the asset here, otherwise pointers in the assets (e.g. to data bindings in data binding nodes in scripts)
+        // may be left dangling.
+        LoadedAssets.emplace(assetUID, std::move(asset));
+    }
+
+    void CAssetRegistry::RemoveAsset(const U32 assetUID)
+    {
+        std::unique_lock lock(RegistryMutex);
+        LoadedAssets.erase(assetUID);
     }
 
     std::string CAssetRegistry::ImportAsset(const std::string& filePath, const std::string& destinationPath, const SSourceAssetData& sourceData)
@@ -494,6 +514,73 @@ namespace Havtorn
         }
     }
 
+    void CAssetRegistry::FixUpAssetRedirectors()
+    {
+        // NW: Go through all assets on disk and if they have AssetDependencies, redirect them
+        for (const auto& entry : std::filesystem::recursive_directory_iterator("Assets/"))
+        {
+            if (entry.is_directory())
+                continue;
+
+            // TODO.NW: Make function of this, following the trail of redirection
+            SAssetReference assetRef = SAssetReference(entry.path().string());
+            if (!UFileSystem::DoesFileExist(assetRef.FilePath))
+            {
+                CJsonDocument config = UFileSystem::OpenJson(UFileSystem::EngineConfig);
+                std::string redirection = config.GetValueFromArray("Asset Redirectors", assetRef.FilePath, "");
+
+                while (!UFileSystem::DoesFileExist(redirection) && redirection != "")
+                {
+                    redirection = config.GetValueFromArray("Asset Redirectors", redirection, "");
+                }
+
+                if (redirection == "")
+                {
+                    HV_LOG_WARN("CAssetRegistry::FixUpAssetRedirectors: Asset file pointed to by %s failed to load, does not exist!", assetRef.FilePath.c_str());
+                    continue;
+                }
+
+                assetRef = SAssetReference(redirection);
+            }
+
+            SAsset* asset = RequestAsset(assetRef, AssetRegistryRequestID);
+            if (asset == nullptr)
+                continue;
+
+            std::string dependencyPath = UGeneralUtils::ConvertToPlatformAgnosticPath(asset->SourceData.AssetDependencyPath.AsString());
+            if (dependencyPath == "N/A" || dependencyPath.length() == 0)
+            {
+                UnrequestAsset(assetRef, AssetRegistryRequestID);
+                continue;
+            }
+
+            if (!UFileSystem::DoesFileExist(dependencyPath))
+            {
+                CJsonDocument config = UFileSystem::OpenJson(UFileSystem::EngineConfig);
+                std::string redirection = config.GetValueFromArray("Asset Redirectors", dependencyPath, "");
+
+                while (!UFileSystem::DoesFileExist(redirection) && redirection != "")
+                {
+                    redirection = config.GetValueFromArray("Asset Redirectors", redirection, "");
+                }
+
+                if (redirection == "")
+                    continue;
+
+                dependencyPath = redirection;
+            }
+
+            HV_LOG_INFO("CAssetRegistry::FixUpAssetRedirectors: Asset file %s changed Asset Dependency Path from %s to %s.", assetRef.FilePath.c_str(), asset->SourceData.AssetDependencyPath.AsString().c_str(), dependencyPath.c_str());
+            asset->SourceData.AssetDependencyPath = dependencyPath;
+            ImportAsset(asset->SourceData.SourcePath.AsString(), UGeneralUtils::ExtractParentDirectoryFromPath(asset->Reference.FilePath), asset->SourceData);
+
+            UnrequestAsset(assetRef, AssetRegistryRequestID);
+        }
+
+        CJsonDocument config = UFileSystem::OpenJson(UFileSystem::EngineConfig);
+        config.ClearArray("Asset Redirectors");
+    }
+
     std::set<U64> CAssetRegistry::GetReferencers(const SAssetReference& assetRef)
     {
         std::shared_lock lock(RegistryMutex);
@@ -501,7 +588,7 @@ namespace Havtorn
         if (!LoadedAssets.contains(assetRef.UID))
             return std::set<U64>();
 
-        SAsset* loadedAsset = &LoadedAssets[assetRef.UID];
+        SAsset* loadedAsset = GetAsset(assetRef.UID);
         return loadedAsset->Requesters;
     }
 

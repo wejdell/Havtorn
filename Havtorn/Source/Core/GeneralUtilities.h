@@ -35,6 +35,14 @@ namespace Havtorn
 			return filePath.substr(startIndex, filePath.length() - startIndex - (ExtractFileExtensionFromPath(filePath).length() + 1));
 		}
 
+		static std::string ExtractParentDirectoryFromPath(const std::string& filePath)
+		{
+			U64 forwardIndex = filePath.find_last_of("/") + 1;
+			U64 backwardIndex = filePath.find_last_of("\\") + 1;
+			U64 endIndex = UMath::Max(forwardIndex, backwardIndex);
+			return filePath.substr(0, endIndex);
+		}
+
 		static std::string ConvertToPlatformAgnosticPath(const std::string& filePath)
 		{
 			std::string newPath = filePath;

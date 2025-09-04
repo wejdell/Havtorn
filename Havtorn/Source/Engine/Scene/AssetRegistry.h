@@ -16,8 +16,9 @@ namespace Havtorn
 	class CAssetRegistry
 	{
 	public:
-		static constexpr U64 RenderManagerRequestID = 100;
-		static constexpr U64 EditorManagerRequestID = 200;
+		static constexpr U64 AssetRegistryRequestID = 100;
+		static constexpr U64 RenderManagerRequestID = 200;
+		static constexpr U64 EditorManagerRequestID = 300;
 
 		CAssetRegistry();
 		~CAssetRegistry();
@@ -52,6 +53,7 @@ namespace Havtorn
 		ENGINE_API std::string SaveAsset(const std::string& destinationPath, const SAssetFileHeader& fileHeader);
 
 		ENGINE_API void RefreshDatabase();
+		ENGINE_API void FixUpAssetRedirectors();
 
 		ENGINE_API std::set<U64> GetReferencers(const SAssetReference& assetRef);
 
@@ -67,6 +69,10 @@ namespace Havtorn
 		// Load asset synchronously
 		bool LoadAsset(const SAssetReference& assetRef);
 		bool UnloadAsset(const SAssetReference& assetRef);	
+
+		inline SAsset* GetAsset(const U32 assetUID);
+		inline void AddAsset(const U32 assetUID, SAsset& asset);
+		inline void RemoveAsset(const U32 assetUID);
 
 		CRenderManager* RenderManager = nullptr;
 		std::map<U32, std::string> AssetDatabase;
@@ -117,7 +123,7 @@ namespace Havtorn
 			}
 		}
 
-		SAsset* asset = &LoadedAssets[assetUID];
+		SAsset* asset = GetAsset(assetUID);
 		if (!std::holds_alternative<T>(asset->Data))
 		{
 			HV_LOG_WARN("CAssetRegistry::RequestAssetData could not provide the requested asset data with ID: %u. The data is not of the requested type.", assetUID);
