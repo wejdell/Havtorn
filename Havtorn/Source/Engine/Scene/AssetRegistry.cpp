@@ -11,6 +11,8 @@
 
 #include "ModelImporter.h"
 
+#include <magic_enum.h>
+
 namespace Havtorn
 {
     CAssetRegistry::CAssetRegistry()
@@ -321,15 +323,20 @@ namespace Havtorn
             asset.Data = SSkeletalAnimationAsset(assetFile);
         }
         break;
+        case EAssetType::Script:
+        {
+            SScriptFileHeader assetFile;
+            asset.Data = HexRune::SScript();
+            assetFile.Deserialize(data, &std::get<HexRune::SScript>(asset.Data));
+        }
+        break;
         case EAssetType::SpriteAnimation:
         case EAssetType::AudioOneShot:
         case EAssetType::AudioCollection:
         case EAssetType::VisualFX:
         case EAssetType::Scene:
         case EAssetType::Sequencer:
-        case EAssetType::Script:
-            // TODO.NW: Use magic enum to write out enum type
-            HV_LOG_WARN("CAssetRegistry: Asset Resolving for asset type SEE_TODO is not yet implemented.");
+            HV_LOG_WARN("CAssetRegistry: Asset Resolving for asset type %s is not yet implemented.", magic_enum::enum_name<EAssetType>(type).data());
             delete[] data;
             return false;
         }
@@ -337,7 +344,9 @@ namespace Havtorn
 
         // TODO.NW: Set asset source data and bind filewatchers?
 
-        LoadedAssets.emplace(assetRef.UID, asset);
+        // NW: It's important that we move the asset here, otherwise pointers in the assets (e.g. to data bindings in data binding nodes in scripts)
+        // may be left dangling.
+        LoadedAssets.emplace(assetRef.UID, std::move(asset));
         return true;
     }
 
@@ -445,6 +454,15 @@ namespace Havtorn
         else if (std::holds_alternative<SMaterialAssetFileHeader>(fileHeader))
         {
             SMaterialAssetFileHeader header = std::get<SMaterialAssetFileHeader>(fileHeader);
+            const auto data = new char[header.GetSize()];
+            header.Serialize(data);
+            hvaPath = destinationPath + header.Name + ".hva";
+            UFileSystem::Serialize(hvaPath, &data[0], header.GetSize());
+            delete[] data;
+        }
+        else if (std::holds_alternative<SScriptFileHeader>(fileHeader))
+        {
+            SScriptFileHeader header = std::get<SScriptFileHeader>(fileHeader);
             const auto data = new char[header.GetSize()];
             header.Serialize(data);
             hvaPath = destinationPath + header.Name + ".hva";

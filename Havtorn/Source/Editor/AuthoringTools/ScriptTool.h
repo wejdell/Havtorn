@@ -20,7 +20,8 @@ namespace Havtorn
 		void OnInspectorGUI() override;
 		void OnDisable() override;
 
-		void OpenScript(HexRune::SScript* script);
+		void OpenScript(SEditorAssetRepresentation* asset);
+		void SaveScript();
 		void CloseScript();
 
 	private:
@@ -34,8 +35,6 @@ namespace Havtorn
 		void ContextMenu();
 		void CommandQueue();
 
-		void Save();
-
 		SVector2<F32> GetNodeSize(const SGUINode& node);
 		bool IsPinLinked(U64 id, const std::vector<SGUILink>& links);
 		bool IsPinTypeLiteral(SGUIPin& pin);
@@ -47,8 +46,9 @@ namespace Havtorn
 		SGUIPin* GetPinFromID(U64 id, std::vector<SGUINode>& nodes);
 		SGUIPin* GetOutputPinFromID(U64 id, std::vector<SGUINode>& nodes);
 
-
+		SEditorAssetRepresentation* CurrentScriptRepresentation = nullptr;
 		HexRune::SScript* CurrentScript = nullptr;
+
 		std::vector<SGUINode> GUINodes;
 		std::vector<SGUILink> GUILinks;
 		std::vector<SGUINodeContext> GUIContexts;

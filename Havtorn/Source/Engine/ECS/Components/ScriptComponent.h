@@ -4,12 +4,12 @@
 #include "ECS/Component.h"
 #include "HexRune/Pin.h"
 #include "HexRune/HexRune.h"
+#include "FileSystem/FileHeaderDeclarations.h"
 
 namespace Havtorn
 {
 	namespace HexRune
 	{
-		struct SScript;
 		struct SScriptDataBinding;
 	}
 
@@ -24,9 +24,10 @@ namespace Havtorn
 		void Deserialize(const char* fromData, U64& pointerPosition);
 		[[nodiscard]] U32 GetSize() const;
 
-		HexRune::SScript* Script = nullptr;
+		ENGINE_API void IsDeleted(CScene* fromScene) override;
+
+		SAssetReference AssetReference;
 		std::vector<HexRune::SScriptDataBinding> DataBindings;
-		U64 AssetRegistryKey = 0;
 		U64 TriggeringSourceNode = 0;
 		bool TriggerScript = false;
 	};

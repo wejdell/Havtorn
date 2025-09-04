@@ -119,9 +119,6 @@ namespace Havtorn
 
 		template<typename T>
 		HexRune::SScript* LoadScript(const std::string& filePath);
-		
-		ENGINE_API void SaveScript(const std::string& filePath);
-		ENGINE_API void UnloadScript(const std::string& filePath);
 
 	public:
 		CMulticastDelegate<CScene*> OnBeginPlayDelegate;
@@ -161,8 +158,6 @@ namespace Havtorn
 		Ptr<HexPhys2D::CPhysicsWorld2D> PhysicsWorld2D = nullptr;
 		Ptr<HexPhys3D::CPhysicsWorld3D> PhysicsWorld3D = nullptr;
 		
-		std::unordered_map<std::string, Ptr<HexRune::SScript>> LoadedScripts;
-
 		CRenderManager* RenderManager = nullptr;
 
 		CMulticastDelegate<CScene*> OnSceneCreatedDelegate;
@@ -284,33 +279,5 @@ namespace Havtorn
 			return;
 			
 		std::erase(holder->Blockers, reinterpret_cast<U64>(requester));
-	}
-
-	template<typename T>
-	HexRune::SScript* CWorld::LoadScript(const std::string& filePath)
-	{
-		if (LoadedScripts.contains(filePath))
-			return LoadedScripts.at(filePath).get();
-
-		if (!std::filesystem::exists(filePath))
-			return nullptr;
-		
-		const U64 fileSize = std::filesystem::file_size(filePath);
-		char* data = new char[fileSize];
-
-		UFileSystem::Deserialize(filePath, data, STATIC_U32(fileSize));
-
-		SScriptFileHeader assetFile;
-		LoadedScripts.emplace(filePath, std::make_unique<T>());
-		assetFile.Script = LoadedScripts.at(filePath).get();
-
-		assetFile.Deserialize(data, LoadedScripts.at(filePath).get());
-
-		// TODO.NW: When unifying asset loading, should have an abstraction for an asset, maybe only key and file path, and make sure
-		// they are always fully initialized if they exist.
-		LoadedScripts.at(filePath).get()->FileName = filePath;
-
-		delete[] data;
-		return LoadedScripts.at(filePath).get();
 	}
 }

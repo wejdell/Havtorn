@@ -3,23 +3,14 @@
 #include "hvpch.h"
 #include "ScriptComponent.h"
 #include "HexRune/HexRune.h"
+#include "Scene/AssetRegistry.h"
 
 namespace Havtorn
 {
 	void SScriptComponent::Serialize(char* toData, U64& pointerPosition) const
 	{
-		if (Script == nullptr)
-		{
-			std::string str = "NA";
-			SerializeData(str, toData, pointerPosition);
-		}
-		else
-		{
-			SerializeData(Script->FileName, toData, pointerPosition);
-		}
-
 		SerializeData(Owner, toData, pointerPosition);
-		SerializeData(AssetRegistryKey, toData, pointerPosition);
+		AssetReference.Serialize(toData, pointerPosition);
 		SerializeData(TriggeringSourceNode, toData, pointerPosition);
 
 		SerializeData(static_cast<U32>(DataBindings.size()), toData, pointerPosition);
@@ -32,10 +23,9 @@ namespace Havtorn
 	void SScriptComponent::Deserialize(const char* fromData, U64& pointerPosition)
 	{
 		DeserializeData(Owner, fromData, pointerPosition);
-		DeserializeData(AssetRegistryKey, fromData, pointerPosition);
-
+		AssetReference.Deserialize(fromData, pointerPosition);
 		DeserializeData(TriggeringSourceNode, fromData, pointerPosition);
-		//GEngine::GetWorld()->LoadScript<SGameScript>(assetRep->DirectoryEntry.path().string());
+
 		U32 databindingCount = 0;
 		DeserializeData(databindingCount, fromData, pointerPosition);
 		for (U32 i = 0; i < databindingCount; i++)
@@ -50,17 +40,19 @@ namespace Havtorn
 	{
 		U32 size = 0;
 
-		if (Script != nullptr)
-			size += GetDataSize(Script->FileName);
-		else
-			size += sizeof(std::string("NA"));
-
 		size += GetDataSize(Owner);
-		size += GetDataSize(AssetRegistryKey);
+		size += AssetReference.GetSize();
 		size += GetDataSize(TriggeringSourceNode);
+		
 		size += sizeof(U32);
 		for (auto& databinding : DataBindings)	
 			size += databinding.GetSize();	
+		
 		return size;
+	}
+		
+	void SScriptComponent::IsDeleted(CScene* /*fromScene*/)
+	{
+		GEngine::GetAssetRegistry()->UnrequestAsset(AssetReference, Owner.GUID);
 	}
 }

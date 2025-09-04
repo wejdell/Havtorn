@@ -233,35 +233,4 @@ namespace Havtorn
 		if (PhysicsWorld3D != nullptr)
 			PhysicsWorld3D->UpdatePhysicsData(transformComponent, phys3DComponent);
 	}
-
-	void CWorld::SaveScript(const std::string& filePath)
-	{
-		if (!LoadedScripts.contains(filePath))
-			return;
-
-		HexRune::SScript* script = LoadedScripts.at(filePath).get();
-
-		SScriptFileHeader fileHeader;
-		fileHeader.AssetType = EAssetType::Script;
-		fileHeader.Name = script->FileName;
-		fileHeader.Script = script;
-
-		const U32 fileSize = fileHeader.GetSize();
-		char* data = new char[fileSize];
-
-		fileHeader.Serialize(data);
-		UFileSystem::Serialize(filePath, data, fileSize);
-
-		delete[] data;
-	}
-
-	void CWorld::UnloadScript(const std::string& filePath)
-	{
-		// NW: Call only when last asset registry key has been unregistered
-		
-		if (!LoadedScripts.contains(filePath))
-			return;
-
-		LoadedScripts.erase(filePath);
-	}
 }

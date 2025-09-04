@@ -167,11 +167,7 @@ namespace Havtorn
 		if (!component || (component && !component->Owner.IsValid()))
 			return SComponentViewResult();
 
-		HexRune::SScript* script = component->Script;
-		if (!script)
-			return { EComponentViewResultLabel::InspectAssetComponent, component, 0 };
-
-		if (script->DataBindings.empty())
+		if (component->DataBindings.empty())
 			GUI::TextDisabled("No Data Bindings");
 		else
 		{
@@ -189,7 +185,7 @@ namespace Havtorn
 
 		GUI::Checkbox("Trigger", component->TriggerScript);
 	
-		return { EComponentViewResultLabel::InspectAssetComponent, component, nullptr/*&component->AssetReference*/, nullptr, EAssetType::Script};
+		return { EComponentViewResultLabel::InspectAssetComponent, component, &component->AssetReference, nullptr, EAssetType::Script};
 	}
 
 	bool SScriptComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
