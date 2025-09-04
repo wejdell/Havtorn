@@ -8,6 +8,7 @@
 #include "Graphics/GraphicsMaterial.h"
 #include "Graphics/RenderingPrimitives/RenderTexture.h"
 #include "ECS/Components/SpriteAnimatorGraphNode.h"
+#include "HexRune/HexRune.h"
 
 #include <set>
 
@@ -141,7 +142,7 @@ namespace Havtorn
 		SSpriteAnimationClip SpriteAnimationClip;
 	};
 
-	typedef std::variant<std::monostate, SStaticMeshAsset, SSkeletalMeshAsset, SSkeletalAnimationAsset, STextureAsset, SGraphicsMaterialAsset, SSpriteAninmationClipAsset> SAssetData;
+	typedef std::variant<std::monostate, SStaticMeshAsset, SSkeletalMeshAsset, SSkeletalAnimationAsset, STextureAsset, SGraphicsMaterialAsset, SSpriteAninmationClipAsset, HexRune::SScript> SAssetData;
 
 	struct SAsset
 	{

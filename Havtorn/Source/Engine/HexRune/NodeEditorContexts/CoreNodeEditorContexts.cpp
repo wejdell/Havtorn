@@ -25,7 +25,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SDataBindingGetNode>(existingID, DataBindingID);
+			SNode* node = script->AddNode<SDataBindingGetNode>(existingID, TypeID, DataBindingID);
 			script->AddEditorContext<SDataBindingGetNodeEditorContext>(node->UID, script, DataBindingID);
 			return node;
 		}
@@ -44,7 +44,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SDataBindingSetNode>(existingID, DataBindingID);
+			SNode* node = script->AddNode<SDataBindingSetNode>(existingID, TypeID, DataBindingID);
 			script->AddEditorContext<SDataBindingSetNodeEditorContext>(node->UID, script, DataBindingID);
 			return node;
 		}
@@ -62,7 +62,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SBranchNode>(existingID);
+			SNode* node = script->AddNode<SBranchNode>(existingID, TypeID);
 			script->AddEditorContext<SBranchNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -80,7 +80,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SSequenceNode>(existingID);
+			SNode* node = script->AddNode<SSequenceNode>(existingID, TypeID);
 			script->AddEditorContext<SSequenceNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -99,7 +99,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SDelayNode>(existingID);
+			SNode* node = script->AddNode<SDelayNode>(existingID, TypeID);
 			script->AddEditorContext<SDelayNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -118,7 +118,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SBeginPlayNode>(BeginPlayNodeID);
+			SNode* node = script->AddNode<SBeginPlayNode>(BeginPlayNodeID, TypeID);
 			script->AddEditorContext<SBeginPlayNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -137,7 +137,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<STickNode>(TickNodeID);
+			SNode* node = script->AddNode<STickNode>(TickNodeID, TypeID);
 			script->AddEditorContext<STickNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -156,7 +156,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SEndPlayNode>(EndPlayNodeID);
+			SNode* node = script->AddNode<SEndPlayNode>(EndPlayNodeID, TypeID);
 			script->AddEditorContext<SEndPlayNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -175,7 +175,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SPrintStringNode>(existingID);
+			SNode* node = script->AddNode<SPrintStringNode>(existingID, TypeID);
 			script->AddEditorContext<SPrintStringNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -194,7 +194,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SAppendStringNode>(existingID);
+			SNode* node = script->AddNode<SAppendStringNode>(existingID, TypeID);
 			script->AddEditorContext<SAppendStringNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -212,7 +212,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SFloatLessThanNode>(existingID);
+			SNode* node = script->AddNode<SFloatLessThanNode>(existingID, TypeID);
 			script->AddEditorContext<SFloatLessThanNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -230,7 +230,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SFloatMoreThanNode>(existingID);
+			SNode* node = script->AddNode<SFloatMoreThanNode>(existingID, TypeID);
 			script->AddEditorContext<SFloatMoreThanNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -248,7 +248,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SFloatLessOrEqualNode>(existingID);
+			SNode* node = script->AddNode<SFloatLessOrEqualNode>(existingID, TypeID);
 			script->AddEditorContext<SFloatLessOrEqualNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -266,7 +266,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SFloatMoreOrEqualNode>(existingID);
+			SNode* node = script->AddNode<SFloatMoreOrEqualNode>(existingID, TypeID);
 			script->AddEditorContext<SFloatMoreOrEqualNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -284,7 +284,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SFloatEqualNode>(existingID);
+			SNode* node = script->AddNode<SFloatEqualNode>(existingID, TypeID);
 			script->AddEditorContext<SFloatEqualNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -302,7 +302,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SFloatNotEqualNode>(existingID);
+			SNode* node = script->AddNode<SFloatNotEqualNode>(existingID, TypeID);
 			script->AddEditorContext<SFloatNotEqualNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -320,7 +320,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SIntLessThanNode>(existingID);
+			SNode* node = script->AddNode<SIntLessThanNode>(existingID, TypeID);
 			script->AddEditorContext<SIntLessThanNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -338,7 +338,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SIntMoreThanNode>(existingID);
+			SNode* node = script->AddNode<SIntMoreThanNode>(existingID, TypeID);
 			script->AddEditorContext<SIntMoreThanNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -356,7 +356,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SIntLessOrEqualNode>(existingID);
+			SNode* node = script->AddNode<SIntLessOrEqualNode>(existingID, TypeID);
 			script->AddEditorContext<SIntLessOrEqualNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -374,7 +374,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SIntMoreOrEqualNode>(existingID);
+			SNode* node = script->AddNode<SIntMoreOrEqualNode>(existingID, TypeID);
 			script->AddEditorContext<SIntMoreOrEqualNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -392,7 +392,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SIntEqualNode>(existingID);
+			SNode* node = script->AddNode<SIntEqualNode>(existingID, TypeID);
 			script->AddEditorContext<SIntEqualNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -410,7 +410,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SIntNotEqualNode>(existingID);
+			SNode* node = script->AddNode<SIntNotEqualNode>(existingID, TypeID);
 			script->AddEditorContext<SIntNotEqualNodeEditorContext>(node->UID);
 			return node;
 		}

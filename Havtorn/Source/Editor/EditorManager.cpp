@@ -370,11 +370,9 @@ namespace Havtorn
 			GetEditorWindow<CMaterialTool>()->OpenMaterial(asset);
 		}
 
-		// Edit mesh, texture, anim montage, material?
 		if (asset->AssetType == EAssetType::Script)
 		{
-			// Load asset, held somewhere? RenderManager and World
-			GetEditorWindow<CScriptTool>()->OpenScript(GEngine::GetWorld()->LoadScript<SGameScript>(asset->DirectoryEntry.path().string()));
+			GetEditorWindow<CScriptTool>()->OpenScript(asset);
 		}
 
 		if (asset->AssetType == EAssetType::Scene)
