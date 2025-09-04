@@ -33,6 +33,24 @@ namespace Havtorn
 			platformManager = reinterpret_cast<CPlatformManager*>(createStruct->lpCreateParams);
 			break;
 
+		case WM_COPYDATA:
+
+		{
+			COPYDATASTRUCT* cds = reinterpret_cast<COPYDATASTRUCT*>(lParam);
+			std::wstring wide(reinterpret_cast<wchar_t*>(cds->lpData), cds->cbData / sizeof(wchar_t));
+			std::string str;
+			std::transform(wide.begin(), wide.end(), std::back_inserter(str), 
+						   [](wchar_t c)
+						   {
+							   return (char)c;
+						   });
+
+			auto startIndex = str.find("havtorn://", 0) + 10;
+			str = str.substr(startIndex, str.length() - startIndex);
+			std::erase_if(str, [](char c) { return c == '"' || c == '/'; });
+			HV_LOG_INFO(str.c_str());
+		}
+		break;
 		case WM_KILLFOCUS:
 			//           platformManager->LockCursor(false); // If we use this here the WindowIsInEditingMode bool will be preserved
 			break;
