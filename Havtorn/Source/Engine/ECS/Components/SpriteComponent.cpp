@@ -1,7 +1,7 @@
 // Copyright 2025 Team Havtorn. All Rights Reserved.
 
 #include "SpriteComponent.h"
-#include "Scene/AssetRegistry.h"
+#include "Assets/AssetRegistry.h"
 
 namespace Havtorn
 {

@@ -8,7 +8,7 @@
 #include <Graphics/RenderManager.h>
 #include <Graphics/TextureBank.h>
 #include <Scene/Scene.h>
-#include <Scene/AssetRegistry.h>
+#include <Assets/AssetRegistry.h>
 #include <GeneralUtilities.h>
 
 #include "Windows/ViewportWindow.h"

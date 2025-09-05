@@ -8,7 +8,7 @@
 
 #include <Graphics/RenderManager.h>
 #include <Scene/World.h>
-#include <Scene/AssetRegistry.h>
+#include <Assets/AssetRegistry.h>
 
 namespace Havtorn
 {

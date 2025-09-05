@@ -3,7 +3,7 @@
 #include "hvpch.h"
 #include "ScriptComponent.h"
 #include "HexRune/HexRune.h"
-#include "Scene/AssetRegistry.h"
+#include "Assets/AssetRegistry.h"
 
 namespace Havtorn
 {

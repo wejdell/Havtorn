@@ -11,7 +11,7 @@
 
 #include <GUI.h>
 #include <Engine.h>
-#include <Scene/AssetRegistry.h>
+#include <Assets/AssetRegistry.h>
 
 namespace Havtorn
 {

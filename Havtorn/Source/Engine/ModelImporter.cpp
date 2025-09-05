@@ -8,9 +8,7 @@
 #include <assimp/postprocess.h>
 
 #include "Engine.h"
-#include "FileSystem/FileHeaderDeclarations.h"
-
-#include "Assets/Asset.h"
+#include "Assets/FileHeaderDeclarations.h"
 
 #include <FileSystem.h>
 

@@ -26,7 +26,7 @@
 #include <PlatformManager.h>
 #include <Color.h>
 #include <Timer.h>
-#include <Scene/AssetRegistry.h>
+#include <Assets/AssetRegistry.h>
 
 namespace Havtorn
 {

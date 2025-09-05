@@ -11,7 +11,7 @@
 
 #include "Scene/World.h"
 #include "Scene/Scene.h"
-#include "Scene/AssetRegistry.h"
+#include "Assets/AssetRegistry.h"
 #include "ECS/ECSInclude.h"
 
 #include "Graphics/RenderManager.h"

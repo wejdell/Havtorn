@@ -2,7 +2,7 @@
 
 #include "hvpch.h"
 #include "MaterialComponent.h"
-#include "Scene/AssetRegistry.h"
+#include "Assets/AssetRegistry.h"
 
 namespace Havtorn
 {

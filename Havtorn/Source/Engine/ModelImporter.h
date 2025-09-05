@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "FileSystem/FileHeaderDeclarations.h"
+#include "Assets/FileHeaderDeclarations.h"
 
 struct aiScene;
 

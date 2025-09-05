@@ -10,7 +10,7 @@
 #include "Graphics/Debug/DebugDrawUtility.h"
 
 #include <GUI.h>
-#include <Scene/AssetRegistry.h>
+#include <Assets/AssetRegistry.h>
 
 namespace Havtorn
 {

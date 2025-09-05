@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "FileSystem/FileHeaderDeclarations.h"
-#include "Core/RuntimeAssetDeclarations.h"
+#include "Assets/FileHeaderDeclarations.h"
+#include "Assets/RuntimeAssetDeclarations.h"
 
 #include <map>
 #include <shared_mutex>

@@ -6,8 +6,8 @@
 #include "ECS/Components/SkeletalAnimationComponent.h"
 #include "ECS/Components/SkeletalMeshComponent.h"
 #include "Scene/Scene.h"
-#include "Scene/AssetRegistry.h"
-#include "Core/RuntimeAssetDeclarations.h"
+#include "Assets/AssetRegistry.h"
+#include "Assets/RuntimeAssetDeclarations.h"
 
 namespace Havtorn
 {

@@ -8,7 +8,7 @@
 #include "Graphics/RenderingPrimitives/RenderTexture.h"
 
 #include <Scene/Scene.h>
-#include <Scene/AssetRegistry.h>
+#include <Assets/AssetRegistry.h>
 #include <MathTypes/MathUtilities.h>
 #include <PlatformManager.h>
 #include <Input/Input.h>

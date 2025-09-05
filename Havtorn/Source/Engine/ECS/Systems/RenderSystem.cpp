@@ -8,7 +8,7 @@
 #include "Graphics/RenderCommand.h"
 #include "ECS/ComponentAlgo.h"
 #include "Input/Input.h"
-#include "Scene/AssetRegistry.h"
+#include "Assets/AssetRegistry.h"
 
 namespace Havtorn
 {

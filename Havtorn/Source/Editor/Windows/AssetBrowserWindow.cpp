@@ -12,7 +12,7 @@
 #include <FileSystem.h>
 #include <Graphics/RenderManager.h>
 #include <PlatformManager.h>
-#include <Scene/AssetRegistry.h>
+#include <Assets/AssetRegistry.h>
 
 namespace Havtorn
 {

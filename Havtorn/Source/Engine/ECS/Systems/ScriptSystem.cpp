@@ -4,7 +4,7 @@
 #include "ScriptSystem.h"
 #include "Scene/World.h"
 #include "Scene/Scene.h"
-#include "Scene/AssetRegistry.h"
+#include "Assets/AssetRegistry.h"
 #include "ECS/Components/ScriptComponent.h"
 #include "HexRune/HexRune.h"
 #include "HexRune/CoreNodes/CoreNodes.h"

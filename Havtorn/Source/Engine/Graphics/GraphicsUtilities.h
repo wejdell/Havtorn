@@ -6,7 +6,7 @@
 #include "GraphicsFramework.h"
 #include "GraphicsEnums.h"
 #include "Engine.h"
-#include "FileSystem/FileHeaderDeclarations.h"
+#include "Assets/FileHeaderDeclarations.h"
 #include <EngineException.h>
 #include <FileSystem.h>
 

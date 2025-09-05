@@ -2,8 +2,8 @@
 
 #include "hvpch.h"
 #include "SkeletalMeshComponent.h"
-#include "FileSystem\FileHeaderDeclarations.h"
-#include "Scene/AssetRegistry.h"
+#include "Assets/FileHeaderDeclarations.h"
+#include "Assets/AssetRegistry.h"
 
 namespace Havtorn
 {

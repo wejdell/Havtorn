@@ -4,7 +4,7 @@
 #include "EditorManager.h"
 
 #include <Engine.h>
-#include <Scene/AssetRegistry.h>
+#include <Assets/AssetRegistry.h>
 #include <../Game/GameScene.h>
 #include <GUI.h>
 #include <Log.h>

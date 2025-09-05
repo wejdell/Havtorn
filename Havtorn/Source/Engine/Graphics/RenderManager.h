@@ -17,7 +17,7 @@
 
 #include <queue>
 
-#include "Core/RuntimeAssetDeclarations.h"
+#include "Assets/RuntimeAssetDeclarations.h"
 #include "Input/InputTypes.h"
 
 namespace Havtorn

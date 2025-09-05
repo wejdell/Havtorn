@@ -3,7 +3,7 @@
 #include "hvpch.h"
 #include "TextureBank.h"
 // TODO.NW: Move asset registry to other folder
-#include "Scene/AssetRegistry.h"
+#include "Assets/AssetRegistry.h"
 #include "GraphicsFramework.h"
 #include "GraphicsUtilities.h"
 

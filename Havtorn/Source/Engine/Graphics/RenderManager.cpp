@@ -9,7 +9,7 @@
 #include "Engine.h"
 #include "Input/InputMapper.h"
 #include "Scene/World.h"
-#include "Scene/AssetRegistry.h"
+#include "Assets/AssetRegistry.h"
 
 #include "Debug/DebugDrawUtility.h"
 
@@ -17,7 +17,7 @@
 
 #include "GraphicsStructs.h"
 #include "GeometryPrimitives.h"
-#include "FileSystem/FileHeaderDeclarations.h"
+#include "Assets/FileHeaderDeclarations.h"
 
 #include <algorithm>
 #include <future>

@@ -3,7 +3,7 @@
 #pragma once
 
 #include "ECS/Entity.h"
-#include "FileSystem/FileHeaderDeclarations.h"
+#include "Assets/FileHeaderDeclarations.h"
 #include "HexPhys/HexPhys.h"
 #include <EngineException.h>
 #include <HavtornDelegate.h>

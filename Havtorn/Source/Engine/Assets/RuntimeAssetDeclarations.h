@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "FileSystem/FileHeaderDeclarations.h"
+#include "Assets/FileHeaderDeclarations.h"
 #include "Graphics/GraphicsStructs.h"
 #include "Graphics/GraphicsUtilities.h"
 #include "Graphics/GraphicsMaterial.h"

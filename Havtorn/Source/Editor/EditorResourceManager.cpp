@@ -5,7 +5,7 @@
 
 #include <Graphics/GraphicsUtilities.h>
 #include <Graphics/RenderManager.h>
-#include <Scene/AssetRegistry.h>
+#include <Assets/AssetRegistry.h>
 
 #include <ECS/Systems/AnimatorGraphSystem.h>
 

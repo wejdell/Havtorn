@@ -4,7 +4,7 @@
 #include "ECS/ECSInclude.h"
 #include "Scene.h"
 #include "Graphics/RenderManager.h"
-#include "AssetRegistry.h"
+#include "Assets/AssetRegistry.h"
 #include "Graphics/Debug/DebugDrawUtility.h"
 #include "HexPhys/HexPhys.h"
 

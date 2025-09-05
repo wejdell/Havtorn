@@ -9,8 +9,8 @@
 #include <GUI.h>
 #include <Graphics/Debug/DebugDrawUtility.h>
 #include <ECS/Components/TransformComponent.h>
-#include <Core/RuntimeAssetDeclarations.h>
-#include "Scene/AssetRegistry.h"
+#include <Assets/RuntimeAssetDeclarations.h>
+#include "Assets/AssetRegistry.h"
 
 namespace Havtorn
 {

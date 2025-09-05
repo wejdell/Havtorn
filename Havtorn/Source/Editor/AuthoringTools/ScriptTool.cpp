@@ -12,7 +12,7 @@
 #include "magic_enum.h"
 #include "ScriptTool.h"
 
-#include <Scene/AssetRegistry.h>
+#include <Assets/AssetRegistry.h>
 
 using Havtorn::I32;
 using Havtorn::F32;

@@ -5,9 +5,9 @@
 #include "ECS/ECSInclude.h"
 #include "ECS/GUIDManager.h"
 #include "Graphics/RenderManager.h"
-#include "FileSystem/FileHeaderDeclarations.h"
+#include "Assets/FileHeaderDeclarations.h"
 #include "World.h"
-#include "AssetRegistry.h"
+#include "Assets/AssetRegistry.h"
 
 #include "../Game/GameScript.h"
 

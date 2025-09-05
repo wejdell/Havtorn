@@ -262,10 +262,12 @@ add_dependencies(GUI Core Platform)
 set(ENGINE_FILES
     ${ENGINE_FOLDER}Application/EngineProcess.cpp
     ${ENGINE_FOLDER}Application/EngineProcess.h
-    ${ENGINE_FOLDER}Assets/Asset.h
+    ${ENGINE_FOLDER}Assets/AssetRegistry.cpp
+    ${ENGINE_FOLDER}Assets/AssetRegistry.h
+    ${ENGINE_FOLDER}Assets/FileHeaderDeclarations.h
+    ${ENGINE_FOLDER}Assets/RuntimeAssetDeclarations.h
     ${ENGINE_FOLDER}Assets/SequencerAsset.cpp
     ${ENGINE_FOLDER}Assets/SequencerAsset.h
-    ${ENGINE_FOLDER}Core/RuntimeAssetDeclarations.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraComponentEditorContext.cpp
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraControllerComponentEditorContext.cpp
@@ -369,7 +371,6 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/GUIDManager.h
     "${ENGINE_FOLDER}ECS/System.cpp"
     "${ENGINE_FOLDER}ECS/System.h"
-    ${ENGINE_FOLDER}FileSystem/FileHeaderDeclarations.h
     ${ENGINE_FOLDER}FileSystem/FileWatcher.cpp
     ${ENGINE_FOLDER}FileSystem/FileWatcher.h
     ${ENGINE_FOLDER}Graphics/Debug/DebugDrawUtility.cpp
@@ -420,8 +421,6 @@ set(ENGINE_FILES
     "${ENGINE_FOLDER}Input/InputMapper.cpp"
     "${ENGINE_FOLDER}Input/InputMapper.h"
     "${ENGINE_FOLDER}Input/InputTypes.h"
-    ${ENGINE_FOLDER}Scene/AssetRegistry.cpp
-    ${ENGINE_FOLDER}Scene/AssetRegistry.h
     ${ENGINE_FOLDER}Scene/Scene.cpp
     ${ENGINE_FOLDER}Scene/Scene.h
     ${ENGINE_FOLDER}Scene/World.cpp

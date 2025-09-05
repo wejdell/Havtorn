@@ -9,7 +9,7 @@
 #include <Input/InputMapper.h>
 #include <Input/InputTypes.h>
 #include <Timer.h>
-#include <Scene/AssetRegistry.h>
+#include <Assets/AssetRegistry.h>
 
 #include "MaterialTool.h"
 

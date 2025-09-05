@@ -3,7 +3,7 @@
 #pragma once
 #include "GraphicsMaterial.h"
 #include "Engine.h"
-#include "FileSystem/FileHeaderDeclarations.h"
+#include "Assets/FileHeaderDeclarations.h"
 
 namespace Havtorn
 {

@@ -1,10 +1,9 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #include "AssetRegistry.h"
-// TODO.NW: Unify these asset files under the same directory
-#include "FileSystem/FileHeaderDeclarations.h"
+#include "Assets/FileHeaderDeclarations.h"
 #include "FileSystem/FileWatcher.h"
-#include "Core/RuntimeAssetDeclarations.h"
+#include "Assets/RuntimeAssetDeclarations.h"
 #include "ECS/GUIDManager.h"
 
 #include "Graphics/RenderManager.h"
