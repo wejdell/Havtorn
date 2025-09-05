@@ -109,6 +109,7 @@ namespace Havtorn
 	{
 		EAssetType AssetType = EAssetType::StaticMesh;
 		std::string Name;
+		// TODO.NW: Remove all UIDs, should not be needed anymore
 		U32 UID = 0;
 		SSourceAssetData SourceData;
 		U8 NumberOfMaterials = 0;
@@ -369,9 +370,11 @@ namespace Havtorn
 	{
 		EAssetType AssetType = EAssetType::Texture;
 		std::string Name = "";
+		// TODO.NW: remove this, should not be needed anymore now that the asset registry handles import
 		U32 UID = 0;
 		SSourceAssetData SourceData;
 		ETextureFormat OriginalFormat = ETextureFormat::DDS;
+		// TODO.NW: remove this, should not be needed anymore now that the asset registry handles import
 		char Suffix = 0;
 		std::string Data = "";
 
@@ -516,6 +519,7 @@ namespace Havtorn
 		EAssetType AssetType = EAssetType::SpriteAnimation;
 		std::string Name;
 		U32 UID = 0;
+		SSourceAssetData SourceData;
 		std::vector<SVector4> UVRects;
 		std::vector<F32> Durations;
 		bool IsLooping = false;

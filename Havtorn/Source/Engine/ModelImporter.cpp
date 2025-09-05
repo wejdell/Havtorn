@@ -211,6 +211,7 @@ namespace Havtorn
 		fileHeader.Name = UGeneralUtils::ExtractFileBaseNameFromPath(sourceData.SourcePath.AsString());
 		fileHeader.NumberOfMeshes = assimpScene->mNumMeshes;
 		fileHeader.Meshes.reserve(fileHeader.NumberOfMeshes);
+		fileHeader.SourceData = sourceData;
 
 		const aiMesh* fbxMesh = assimpScene->mMeshes[0];
 
@@ -303,6 +304,7 @@ namespace Havtorn
 		fileHeader.Name = UGeneralUtils::ExtractFileBaseNameFromPath(sourceData.SourcePath.AsString());
 		fileHeader.NumberOfMeshes = assimpScene->mNumMeshes;
 		fileHeader.Meshes.reserve(fileHeader.NumberOfMeshes);
+		fileHeader.SourceData = sourceData;
 
 		const aiMesh* fbxMesh = nullptr;
 

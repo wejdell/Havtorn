@@ -103,14 +103,12 @@ namespace Havtorn
 		explicit STextureAsset(const STextureFileHeader& assetFileData)
 			: AssetType(assetFileData.AssetType)
 			, Name(assetFileData.Name)
-			, Suffix(assetFileData.Suffix)
 		{
 			// NW: RenderTexture is assigned in CAssetRegistry::LoadAsset
 		}
 
 		EAssetType AssetType = EAssetType::Texture;
 		std::string Name = "";
-		char Suffix = 0;
 		CStaticRenderTexture RenderTexture;
 	};
 
