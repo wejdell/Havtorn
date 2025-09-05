@@ -1967,7 +1967,7 @@ namespace Havtorn
 		return result;
 	}
 
-	SRenderAssetCardResult GUI::RenderAssetCard(const char* label, const bool isSelected, const intptr_t& thumbnailID, const char* typeName, const SColor& color, void* dragDropPayloadToSet, U64 payLoadSize)
+	SRenderAssetCardResult GUI::RenderAssetCard(const char* label, const bool isSelected, const intptr_t& thumbnailID, const char* typeName, const SColor& color, const SColor& borderColor, void* dragDropPayloadToSet, U64 payLoadSize)
 	{
 		SRenderAssetCardResult result;
 
@@ -1981,7 +1981,7 @@ namespace Havtorn
 		// TODO.NW: Can't seem to get the leftmost line to show correctly. Maybe need to start the table as usual and then offset inwards?
 		constexpr F32 borderThickness = 1.0f;
 		GUI::SetCursorPos(cardStartPos + SVector2<F32>(-1.0f * borderThickness));
-		GUI::AddRectFilled(GUI::GetCursorScreenPos(), cardSize + SVector2<F32>(2.0f * borderThickness), SColor(10));
+		GUI::AddRectFilled(GUI::GetCursorScreenPos(), cardSize + SVector2<F32>(2.0f * borderThickness), borderColor);
 		GUI::SetCursorPos(cardStartPos);
 		GUI::AddRectFilled(GUI::GetCursorScreenPos(), cardSize, SColor(65));
 		GUI::SetCursorPos(cardStartPos);

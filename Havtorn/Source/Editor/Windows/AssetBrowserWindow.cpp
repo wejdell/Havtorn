@@ -12,6 +12,7 @@
 #include <FileSystem.h>
 #include <Graphics/RenderManager.h>
 #include <PlatformManager.h>
+#include <Scene/AssetRegistry.h>
 
 namespace Havtorn
 {
@@ -105,14 +106,43 @@ namespace Havtorn
 			{
 				if (IsSelectionHovered)
 				{
+					SEditorAssetRepresentation* selectedAssetRep = SelectedAsset.value();
+					const std::filesystem::directory_entry& directoryEntry = selectedAssetRep->DirectoryEntry;
+
 					if (GUI::MenuItem("Copy Asset Path"))
-						GUI::CopyToClipboard(SelectedAsset->path().string().c_str());
+						GUI::CopyToClipboard(directoryEntry.path().string().c_str());
 					
 					if (GUI::MenuItem("Delete Asset"))
 					{
-						std::filesystem::path pathToRemove = SelectedAsset->path();
-						Manager->RemoveAssetRep(*SelectedAsset);
+						std::filesystem::path pathToRemove = directoryEntry.path();
+						Manager->RemoveAssetRep(directoryEntry);
 						std::filesystem::remove(pathToRemove);
+					}
+
+					// TODO.NW: It would be nice with some sort of attribute to check
+					// the enum value against, may not exist on our current version though
+					if (selectedAssetRep->AssetType != EAssetType::Material
+						&& selectedAssetRep->AssetType != EAssetType::Script
+						&& selectedAssetRep->AssetType != EAssetType::Scene
+						&& selectedAssetRep->AssetType != EAssetType::Sequencer
+						)
+					{
+						if (selectedAssetRep->IsSourceWatched)
+						{
+							if (GUI::MenuItem("Stop Watching Source Changes"))
+							{
+								selectedAssetRep->IsSourceWatched = false;
+								GEngine::GetAssetRegistry()->StopSourceFileWatch(SAssetReference(directoryEntry.path().string()));
+							}
+						}
+						else
+						{
+							if (GUI::MenuItem("Start Watching Source Changes"))
+							{
+								selectedAssetRep->IsSourceWatched = true;
+								GEngine::GetAssetRegistry()->StartSourceFileWatch(SAssetReference(directoryEntry.path().string()));
+							}
+						}
 					}
 				}
 				else
@@ -597,10 +627,10 @@ namespace Havtorn
 			if (!rep->TextureRef.IsShaderResourceValid())
 				rep->TextureRef = Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::FileIcon);
 
-			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), rep->DirectoryEntry == SelectedAsset, (intptr_t)rep->TextureRef.GetShaderResourceView(), GetAssetTypeDetailName(rep->AssetType).c_str(), GetAssetTypeColor(rep->AssetType), rep.get(), sizeof(SEditorAssetRepresentation));
+			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), rep.get() == SelectedAsset.value_or(nullptr), (intptr_t)rep->TextureRef.GetShaderResourceView(), GetAssetTypeDetailName(rep->AssetType).c_str(), GetAssetTypeColor(rep->AssetType), rep->IsSourceWatched ? SColor::Orange : SColor(10), rep.get(), sizeof(SEditorAssetRepresentation));
 
 			if (result.IsClicked)
-				SelectedAsset = rep->DirectoryEntry;
+				SelectedAsset = rep.get();
 
 			if (result.IsDoubleClicked)
 			{
@@ -617,7 +647,7 @@ namespace Havtorn
 					Manager->GetResourceManager()->AnimateAssetTexture(rep->TextureRef, rep->AssetType, entry.path().string(), AnimatedThumbnailTime += GTime::Dt());
 				}
 
-				if (SelectedAsset.has_value() && rep->DirectoryEntry == SelectedAsset)
+				if (SelectedAsset.has_value() && rep.get() == SelectedAsset.value())
 				{
 					IsSelectionHovered = true;
 				}
