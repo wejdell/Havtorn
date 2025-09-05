@@ -57,6 +57,9 @@ namespace Havtorn
 
 		ENGINE_API std::set<U64> GetReferencers(const SAssetReference& assetRef);
 
+		ENGINE_API void StartSourceFileWatch(const SAssetReference& assetRef);
+		ENGINE_API void StopSourceFileWatch(const SAssetReference& assetRef);
+
 		ENGINE_API std::string GetDebugString(const bool shouldExpand);
 
 	private:
@@ -70,6 +73,8 @@ namespace Havtorn
 		bool LoadAsset(const SAssetReference& assetRef);
 		bool UnloadAsset(const SAssetReference& assetRef);	
 
+		void OnSourceFileChanged(const std::string& sourceFilePath);
+
 		inline SAsset* GetAsset(const U32 assetUID);
 		inline void AddAsset(const U32 assetUID, SAsset& asset);
 		inline void RemoveAsset(const U32 assetUID);
@@ -78,6 +83,7 @@ namespace Havtorn
 		std::map<U32, std::string> AssetDatabase;
 		std::map<U32, SAsset> LoadedAssets;
 
+		std::map<std::string, SAsset*> WatchedAssets;
 		std::shared_mutex RegistryMutex;
 	};
 

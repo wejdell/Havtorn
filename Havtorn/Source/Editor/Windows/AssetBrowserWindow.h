@@ -46,7 +46,7 @@ namespace Havtorn
 		SGuiTextFilter Filter = SGuiTextFilter();
 		std::optional<std::vector<std::string>> FilePathsToImport;
 
-		std::optional<std::filesystem::directory_entry> SelectedAsset;
+		std::optional<SEditorAssetRepresentation*> SelectedAsset;
 		bool IsSelectionHovered = false;
 		bool IsCreatingAsset = false;
 		EAssetType AssetTypeToCreate = EAssetType::None;

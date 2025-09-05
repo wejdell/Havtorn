@@ -64,6 +64,7 @@ namespace Havtorn
 		// TODO.NW: Make static string, figure out relationship to engine asset
 		std::string Name = "";
 		bool UsingEditorTexture = false;
+		bool IsSourceWatched = false;
 	};
 
 	class CEditorManager

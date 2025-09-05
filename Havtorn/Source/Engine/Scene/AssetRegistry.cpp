@@ -3,6 +3,7 @@
 #include "AssetRegistry.h"
 // TODO.NW: Unify these asset files under the same directory
 #include "FileSystem/FileHeaderDeclarations.h"
+#include "FileSystem/FileWatcher.h"
 #include "Core/RuntimeAssetDeclarations.h"
 #include "ECS/GUIDManager.h"
 
@@ -544,7 +545,7 @@ namespace Havtorn
             }
 
             SAsset* asset = RequestAsset(assetRef, AssetRegistryRequestID);
-            if (asset == nullptr)
+            if (!asset->IsValid())
                 continue;
 
             std::string dependencyPath = UGeneralUtils::ConvertToPlatformAgnosticPath(asset->SourceData.AssetDependencyPath.AsString());
@@ -590,6 +591,75 @@ namespace Havtorn
 
         SAsset* loadedAsset = GetAsset(assetRef.UID);
         return loadedAsset->Requesters;
+    }
+
+    void CAssetRegistry::StartSourceFileWatch(const SAssetReference& assetRef)
+    {
+        SAsset* asset = RequestAsset(assetRef, AssetRegistryRequestID);
+        if (!asset->IsValid())
+        {
+            UnrequestAsset(assetRef, AssetRegistryRequestID);
+            return;
+        }
+
+        std::string sourcePath = UGeneralUtils::ConvertToPlatformAgnosticPath(asset->SourceData.SourcePath.AsString());
+        if (sourcePath == "N/A" || sourcePath.length() == 0)
+        {
+            UnrequestAsset(assetRef, AssetRegistryRequestID);
+            return;
+        }
+
+        if (!UFileSystem::DoesFileExist(sourcePath))
+        {
+            UnrequestAsset(assetRef, AssetRegistryRequestID);
+            return;
+        }
+        
+        GEngine::GetFileWatcher()->WatchFileChange(sourcePath, std::bind(&CAssetRegistry::OnSourceFileChanged, this, std::placeholders::_1));
+        WatchedAssets.emplace(sourcePath, asset);
+
+        // NW: Only unrequest the asset when stopping file watch, to maintain a live connection in WatchedAssets
+        //UnrequestAsset(assetRef, AssetRegistryRequestID);
+    }
+
+    void CAssetRegistry::StopSourceFileWatch(const SAssetReference& assetRef)
+    {
+        SAsset* asset = RequestAsset(assetRef, AssetRegistryRequestID);
+        if (!asset->IsValid())
+        {
+            UnrequestAsset(assetRef, AssetRegistryRequestID);
+            return;
+        }
+
+        std::string sourcePath = UGeneralUtils::ConvertToPlatformAgnosticPath(asset->SourceData.SourcePath.AsString());
+        if (sourcePath == "N/A" || sourcePath.length() == 0)
+        {
+            UnrequestAsset(assetRef, AssetRegistryRequestID);
+            return;
+        }
+
+        if (!UFileSystem::DoesFileExist(sourcePath))
+        {
+            UnrequestAsset(assetRef, AssetRegistryRequestID);
+            return;
+        }
+
+        GEngine::GetFileWatcher()->StopWatchFileChange(sourcePath);
+        WatchedAssets.erase(sourcePath);
+    }
+
+    void CAssetRegistry::OnSourceFileChanged(const std::string& sourceFilePath)
+    {
+        if (!WatchedAssets.contains(sourceFilePath))
+        {
+            HV_LOG_WARN("CAssetRegistry::OnSourceFileChanged: The list of watched assets does not include %s, cannot reimport the asset that is using this source.", sourceFilePath.c_str());
+            return;
+        }
+
+        SAsset* asset = WatchedAssets[sourceFilePath];
+        ImportAsset(asset->SourceData.SourcePath.AsString(), UGeneralUtils::ExtractParentDirectoryFromPath(asset->Reference.FilePath), asset->SourceData);
+        
+        HV_LOG_INFO("CAssetRegistry::OnSourceFileChanged: Asset file %s was reimported after source change in %s.", asset->Reference.FilePath.c_str(), sourceFilePath.c_str());
     }
 
     std::string CAssetRegistry::GetDebugString(const bool shouldExpand)
