@@ -10,6 +10,7 @@
 #include "MathTypes/Curve.h"
 #include "Color.h"
 #include "Serializable.h"
+#include "magic_enum.h"
 
 #define PIN_MATH_TYPES Havtorn::SVector, Havtorn::SMatrix, Havtorn::SQuaternion
 
@@ -55,7 +56,7 @@ namespace Havtorn
 
 	static std::string GetAssetTypeName(const EAssetType type)
 	{
-		 return magic_enum::enum_name<EAssetType>(type).c_str();
+		 return magic_enum::enum_name<EAssetType>(type).data();
 	}
 
 	static std::string GetAssetTypeDetailName(const EAssetType type)
