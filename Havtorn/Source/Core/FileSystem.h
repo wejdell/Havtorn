@@ -62,23 +62,24 @@ namespace Havtorn
 		/// 
 		/// 	CJsonDocument document = UFileSystem::OpenJson("Config/EngineConfig.json");
 		///		document.RemoveValueFromArray("Asset Redirectors", "Meshes/StaticMesh.hva");
-		///		document.WriteValueToArray("Asset Redirectors", "Meshes/StaticMesh.hva", "Meshes/StaticMesh.hva");
-		///		std::string redirector = document.GetValueFromArray<const char*>("Asset Redirectors", "Meshes/StaticMesh.hva");
+		///		document.WriteValueToArray("Asset Redirectors", "Meshes/StaticMesh.hva", "Meshes2/StaticMesh.hva");
+		///		std::string redirector = document.GetValueFromArray("Asset Redirectors", "Meshes/StaticMesh.hva", "");
 		/// 
 
 		friend class UFileSystem;
 
 	public:
-		CORE_API std::string GetString(const std::string& memberName, const std::string& defaultValue = "");
-		CORE_API I32 GetInt(const std::string& memberName, const I32 defaultValue = 0);
-		CORE_API bool GetBool(const std::string& memberName, const bool defaultValue = false);
-		CORE_API bool HasMember(const std::string& memberName);
+		CORE_API std::string GetString(const std::string& memberName, const std::string& defaultValue = "") const;
+		CORE_API bool HasMember(const std::string& memberName) const;
 	
 		CORE_API void WriteValueToArray(const std::string& arrayName, const std::string& valueName, const std::string& value);
 		CORE_API std::string GetValueFromArray(const std::string& arrayName, const std::string& valueName, const std::string& defaultValue = std::string());
 		CORE_API void RemoveValueFromArray(const std::string& arrayName, const std::string& valueName);
 
 		CORE_API void ClearArray(const std::string& arrayName);
+
+		template<typename T>
+		T Get(const std::string& memberName, const T& defaultValue) const;
 
 	private:
 		CORE_API void SaveFile();
@@ -87,6 +88,15 @@ namespace Havtorn
 		rapidjson::Document Document;
 		std::string FilePath = "";
 	};
+
+	template<typename T>
+	T CJsonDocument::Get(const std::string& memberName, const T& defaultValue) const
+	{
+		if (!HasMember(memberName))
+			return defaultValue;
+
+		return Document[memberName.c_str()].Get<T>();
+	}
 
 	class UFileSystem
 	{

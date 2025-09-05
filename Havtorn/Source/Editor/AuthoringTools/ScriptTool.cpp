@@ -201,11 +201,14 @@ namespace Havtorn
 
 	void CScriptTool::SaveScript()
 	{
+		const std::string directoryEntryPath = UGeneralUtils::ConvertToPlatformAgnosticPath(CurrentScriptRepresentation->DirectoryEntry.path().string());
+		
 		SScriptFileHeader asset;
-		asset.Name = UGeneralUtils::ExtractFileBaseNameFromPath(CurrentScriptRepresentation->DirectoryEntry.path().string());
+		asset.Name = UGeneralUtils::ExtractFileBaseNameFromPath(directoryEntryPath);
 		asset.Script = CurrentScript;
 
-		Manager->GetResourceManager()->CreateAsset(CurrentScriptRepresentation->DirectoryEntry.path().parent_path().string() + "\\", asset);
+		const std::string destinationPath = UGeneralUtils::ExtractParentDirectoryFromPath(directoryEntryPath);
+		Manager->GetResourceManager()->CreateAsset(destinationPath, asset);
 	}
 
 	void CScriptTool::CloseScript()

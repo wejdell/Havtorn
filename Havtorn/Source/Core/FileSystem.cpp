@@ -100,7 +100,7 @@ namespace Havtorn
 		return document;
 	}
 
-	std::string CJsonDocument::GetString(const std::string& memberName, const std::string& defaultValue)
+	std::string CJsonDocument::GetString(const std::string& memberName, const std::string& defaultValue) const
 	{
 		if (!HasMember(memberName))
 			return defaultValue;
@@ -108,23 +108,7 @@ namespace Havtorn
 		return Document[memberName.c_str()].GetString();
 	}
 
-	I32 CJsonDocument::GetInt(const std::string& memberName, const I32 defaultValue)
-	{
-		if (!HasMember(memberName))
-			return defaultValue;
-
-		return Document[memberName.c_str()].GetInt();
-	}
-
-	bool CJsonDocument::GetBool(const std::string& memberName, const bool defaultValue)
-	{
-		if (!HasMember(memberName))
-			return defaultValue;
-
-		return Document[memberName.c_str()].GetBool();
-	}
-
-	bool CJsonDocument::HasMember(const std::string& memberName)
+	bool CJsonDocument::HasMember(const std::string& memberName) const
 	{
 		if (!Document.IsObject())
 			return false;
