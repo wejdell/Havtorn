@@ -55,23 +55,7 @@ namespace Havtorn
 
 	static std::string GetAssetTypeName(const EAssetType type)
 	{
-		switch (type)
-		{
-		case EAssetType::Animation:
-			return "Skeletal Animation";
-		case EAssetType::Material:
-			return "Material";
-		case EAssetType::SkeletalMesh:
-			return "Skeletal Mesh";
-		case EAssetType::StaticMesh:
-			return "Static Mesh";
-		case EAssetType::Texture:
-			return "Texture";
-		case EAssetType::Script:
-			return "Script";
-		default:
-			return "Asset";
-		}
+		 return magic_enum::enum_name<EAssetType>(type).c_str();
 	}
 
 	static std::string GetAssetTypeDetailName(const EAssetType type)
