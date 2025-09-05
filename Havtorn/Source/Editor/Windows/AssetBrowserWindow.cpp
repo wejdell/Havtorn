@@ -21,6 +21,7 @@ namespace Havtorn
 	{
 		CurrentDirectory = std::filesystem::path(DefaultAssetPath);		
 		manager->GetPlatformManager()->OnDragDropAccepted.AddMember(this, &CAssetBrowserWindow::OnDragDropFiles);
+		GEngine::GetAssetRegistry()->OnAssetReloaded.AddMember(this, &CAssetBrowserWindow::OnAssetReloaded);
 	}
 
 	CAssetBrowserWindow::~CAssetBrowserWindow()
@@ -120,7 +121,7 @@ namespace Havtorn
 					}
 
 					// TODO.NW: It would be nice with some sort of attribute to check
-					// the enum value against, may not exist on our current version though
+					// the enum value against (e.g. SourceFileBased), may not exist on our current version though
 					if (selectedAssetRep->AssetType != EAssetType::Material
 						&& selectedAssetRep->AssetType != EAssetType::Script
 						&& selectedAssetRep->AssetType != EAssetType::Scene
@@ -207,6 +208,17 @@ namespace Havtorn
 	void CAssetBrowserWindow::OnDragDropFiles(const std::vector<std::string> filePaths)
 	{
 		FilePathsToImport = filePaths;
+	}
+
+	void CAssetBrowserWindow::OnAssetReloaded(const std::string& assetPath)
+	{
+		// TODO.NW: Maybe add some clearer feedback here that the hot reload was successful?
+
+		std::filesystem::directory_entry assetDir;
+		assetDir.assign(std::filesystem::path(assetPath));
+		auto& assetRep = Manager->GetAssetRepFromDirEntry(assetDir);
+
+		assetRep->TextureRef = Manager->GetResourceManager()->RenderAssetTexure(assetRep->AssetType, assetPath);
 	}
 
 	void AlignForWidth(F32 width, F32 alignment = 0.5f)

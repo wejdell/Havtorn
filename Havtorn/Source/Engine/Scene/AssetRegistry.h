@@ -20,6 +20,8 @@ namespace Havtorn
 		static constexpr U64 RenderManagerRequestID = 200;
 		static constexpr U64 EditorManagerRequestID = 300;
 
+		CMulticastDelegate<const std::string&> OnAssetReloaded;
+
 		CAssetRegistry();
 		~CAssetRegistry();
 
@@ -71,7 +73,7 @@ namespace Havtorn
 
 		// Load asset synchronously
 		bool LoadAsset(const SAssetReference& assetRef);
-		bool UnloadAsset(const SAssetReference& assetRef);	
+		bool UnloadAsset(const SAssetReference& assetRef);
 
 		void OnSourceFileChanged(const std::string& sourceFilePath);
 

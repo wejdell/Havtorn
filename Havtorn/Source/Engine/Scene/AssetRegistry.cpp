@@ -372,6 +372,12 @@ namespace Havtorn
 
         // NW: It's important that we move the asset here, otherwise pointers in the assets (e.g. to data bindings in data binding nodes in scripts)
         // may be left dangling.
+        if (LoadedAssets.contains(assetUID))
+        {
+            LoadedAssets[assetUID] = std::move(asset);
+            return;
+        }
+
         LoadedAssets.emplace(assetUID, std::move(asset));
     }
 
@@ -409,6 +415,7 @@ namespace Havtorn
 
             fileHeader.Name = UGeneralUtils::ExtractFileBaseNameFromPath(filePath);
             fileHeader.OriginalFormat = format;
+            fileHeader.SourceData = sourceData;
             fileHeader.Suffix = filePath[filePath.find_last_of(".") - 1];
             fileHeader.Data = std::move(textureFileData);
 
@@ -426,7 +433,10 @@ namespace Havtorn
         if (hvaPath == "INVALID_PATH")
             HV_LOG_WARN("CAssetRegistry::ImportAsset: The chosen source data refers to an asset type doesn't have import logic implemented. Could not create asset at %s for %s!", destinationPath.c_str(), filePath.c_str());
 
-        AssetDatabase.emplace(SAssetReference(hvaPath).UID, hvaPath);
+        SAssetReference ref(hvaPath);
+        if (!AssetDatabase.contains(ref.UID))
+            AssetDatabase.emplace(ref.UID, hvaPath);
+        
         return hvaPath;
     }
 
@@ -619,7 +629,6 @@ namespace Havtorn
         WatchedAssets.emplace(sourcePath, asset);
 
         // NW: Only unrequest the asset when stopping file watch, to maintain a live connection in WatchedAssets
-        //UnrequestAsset(assetRef, AssetRegistryRequestID);
     }
 
     void CAssetRegistry::StopSourceFileWatch(const SAssetReference& assetRef)
@@ -658,8 +667,13 @@ namespace Havtorn
 
         SAsset* asset = WatchedAssets[sourceFilePath];
         ImportAsset(asset->SourceData.SourcePath.AsString(), UGeneralUtils::ExtractParentDirectoryFromPath(asset->Reference.FilePath), asset->SourceData);
+
+        if (LoadAsset(asset->Reference))
+            HV_LOG_INFO("CAssetRegistry::OnSourceFileChanged: Asset file %s was reimported after source change in %s.", asset->Reference.FilePath.c_str(), sourceFilePath.c_str());
+        else
+            HV_LOG_WARN("CAssetRegistry::OnSourceFileChanged: Asset file %s was reimported after source change in %s, but could not be reloaded! Please reload manually.", asset->Reference.FilePath.c_str(), sourceFilePath.c_str());
         
-        HV_LOG_INFO("CAssetRegistry::OnSourceFileChanged: Asset file %s was reimported after source change in %s.", asset->Reference.FilePath.c_str(), sourceFilePath.c_str());
+        OnAssetReloaded.Broadcast(asset->Reference.FilePath);
     }
 
     std::string CAssetRegistry::GetDebugString(const bool shouldExpand)
