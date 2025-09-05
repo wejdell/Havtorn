@@ -8,11 +8,9 @@
 #include <assimp/postprocess.h>
 
 #include "Engine.h"
-#include "FileSystem/FileSystem.h"
-#include "FileSystem/FileHeaderDeclarations.h"
+#include "Assets/FileHeaderDeclarations.h"
 
-#include <../Editor/EditorManager.h>
-#include <../Editor/EditorResourceManager.h>
+#include <FileSystem.h>
 
 #define NUM_BONES_PER_VERTEX 4
 #define ZERO_MEM(a) memset(a, 0, sizeof(a))
@@ -138,9 +136,9 @@ namespace Havtorn
 		return havtornKey;
 	}
 
-	SAssetFileHeader UModelImporter::ImportFBX(const std::string& filePath, const SAssetImportOptions& importOptions)
+	SAssetFileHeader UModelImporter::ImportFBX(const std::string& filePath, const SSourceAssetData& sourceData)
 	{
-		if (!CFileSystem::DoesFileExist(filePath))
+		if (!UFileSystem::DoesFileExist(filePath))
 		{
 			HV_LOG_ERROR("ModelImporter could not import %s. File does not exist!", filePath.c_str());
 			return std::monostate();
@@ -155,7 +153,7 @@ namespace Havtorn
 			return std::monostate();
 		}
 
-		if (importOptions.AssetType == EAssetType::Animation)
+		if (sourceData.AssetType == EAssetType::Animation)
 		{
 			if (!assimpScene->HasAnimations() /*|| assimpScene->HasMeshes()*/)
 			{
@@ -163,7 +161,7 @@ namespace Havtorn
 				return std::monostate();
 			}
 
-			return ImportAnimation(assimpScene, importOptions);
+			return ImportAnimation(assimpScene, sourceData);
 		}
 
 		if (!assimpScene->HasMeshes())
@@ -186,7 +184,7 @@ namespace Havtorn
 			return std::monostate();
 		}
 
-		if (importOptions.AssetType == EAssetType::SkeletalMesh)
+		if (sourceData.AssetType == EAssetType::SkeletalMesh)
 		{
 			if (!hasBones)
 			{
@@ -194,23 +192,24 @@ namespace Havtorn
 				return std::monostate();
 			}
 
-			return ImportSkeletalMesh(assimpScene, importOptions);
+			return ImportSkeletalMesh(assimpScene, sourceData);
 		}
 
 		// Static Mesh
 		if (hasBones)
 			HV_LOG_WARN("ModelImporter expected %s to be a static mesh file, but it contains bone information!", filePath.c_str());
 
-		return ImportStaticMesh(assimpScene, importOptions);
+		return ImportStaticMesh(assimpScene, sourceData);
 	}
 
-	SStaticModelFileHeader UModelImporter::ImportStaticMesh(const aiScene* assimpScene, const SAssetImportOptions& importOptions)
+	SStaticModelFileHeader UModelImporter::ImportStaticMesh(const aiScene* assimpScene, const SSourceAssetData& sourceData)
 	{
 		SStaticModelFileHeader fileHeader;
 		fileHeader.AssetType = EAssetType::StaticMesh;
-		fileHeader.Name = assimpScene->mName.C_Str();
+		fileHeader.Name = UGeneralUtils::ExtractFileBaseNameFromPath(sourceData.SourcePath.AsString());
 		fileHeader.NumberOfMeshes = assimpScene->mNumMeshes;
 		fileHeader.Meshes.reserve(fileHeader.NumberOfMeshes);
+		fileHeader.SourceData = sourceData;
 
 		const aiMesh* fbxMesh = assimpScene->mMeshes[0];
 
@@ -228,7 +227,7 @@ namespace Havtorn
 			fbxMesh = assimpScene->mMeshes[n];
 
 			// Vertices
-			const F32 scaleModifier = importOptions.Scale;
+			const F32 scaleModifier = sourceData.ImportScale;
 			for (U32 i = 0; i < fbxMesh->mNumVertices; i++)
 			{
 				SStaticMeshVertex newVertex;
@@ -275,7 +274,7 @@ namespace Havtorn
 		return fileHeader;
 	}
 
-	void ExtractNodes(const aiScene* scene, const SAssetImportOptions& importOptions, aiNode* node, const std::vector<SSkeletalMeshBone>& bindPose, std::vector<SSkeletalMeshNode>& nodesToPopulate)
+	void ExtractNodes(const aiScene* scene, const SSourceAssetData& sourceData, aiNode* node, const std::vector<SSkeletalMeshBone>& bindPose, std::vector<SSkeletalMeshNode>& nodesToPopulate)
 	{
 		if (nodesToPopulate.size() > 0)
 		{
@@ -289,20 +288,21 @@ namespace Havtorn
 
 		CHavtornStaticString<255> nodeName = CHavtornStaticString<255>(node->mName.C_Str());
 		SMatrix transform = SMatrix::Transpose(ToHavtornMatrix(node->mTransformation));
-		transform.SetTranslation(transform.GetTranslation() * importOptions.Scale);
+		transform.SetTranslation(transform.GetTranslation() * sourceData.ImportScale);
 		nodesToPopulate.emplace_back(SSkeletalMeshNode(nodeName, transform, {}));
 
 		for (U32 i = 0; i < node->mNumChildren; i++)
-			ExtractNodes(scene, importOptions, node->mChildren[i], bindPose, nodesToPopulate);
+			ExtractNodes(scene, sourceData, node->mChildren[i], bindPose, nodesToPopulate);
 	}
 
-	SSkeletalModelFileHeader UModelImporter::ImportSkeletalMesh(const aiScene* assimpScene, const SAssetImportOptions& importOptions)
+	SSkeletalModelFileHeader UModelImporter::ImportSkeletalMesh(const aiScene* assimpScene, const SSourceAssetData& sourceData)
 	{
 		SSkeletalModelFileHeader fileHeader;
 		fileHeader.AssetType = EAssetType::SkeletalMesh;
-		fileHeader.Name = assimpScene->mName.C_Str();
+		fileHeader.Name = UGeneralUtils::ExtractFileBaseNameFromPath(sourceData.SourcePath.AsString());
 		fileHeader.NumberOfMeshes = assimpScene->mNumMeshes;
 		fileHeader.Meshes.reserve(fileHeader.NumberOfMeshes);
+		fileHeader.SourceData = sourceData;
 
 		const aiMesh* fbxMesh = nullptr;
 
@@ -342,7 +342,7 @@ namespace Havtorn
 
 					// Mesh Space -> Bone Space in Bind Pose, [INVERSE BIND MATRIX]. Use with bone [WORLD SPACE TRANSFORM] to find vertex pos
 					SMatrix inverseBindPose = SMatrix::Transpose(ToHavtornMatrix(fbxMesh->mBones[i]->mOffsetMatrix));
-					inverseBindPose.SetTranslation(inverseBindPose.GetTranslation4() * importOptions.Scale);
+					inverseBindPose.SetTranslation(inverseBindPose.GetTranslation4() * sourceData.ImportScale);
 					fileHeader.BindPoseBones.push_back(SSkeletalMeshBone(boneName, inverseBindPose, parentIndex));
 				}
 				else
@@ -358,10 +358,10 @@ namespace Havtorn
 				}
 			}
 
-			ExtractNodes(assimpScene, importOptions, assimpScene->mRootNode, fileHeader.BindPoseBones, fileHeader.Nodes);
+			ExtractNodes(assimpScene, sourceData, assimpScene->mRootNode, fileHeader.BindPoseBones, fileHeader.Nodes);
 
 			// Vertices
-			const F32 scaleModifier = importOptions.Scale;
+			const F32 scaleModifier = sourceData.ImportScale;
 			for (U32 i = 0; i < fbxMesh->mNumVertices; i++)
 			{
 				SSkeletalMeshVertex newVertex;
@@ -420,7 +420,7 @@ namespace Havtorn
 		return fileHeader;
 	}
 
-	SSkeletalAnimationFileHeader UModelImporter::ImportAnimation(const aiScene* assimpScene, const SAssetImportOptions& importOptions)
+	SSkeletalAnimationFileHeader UModelImporter::ImportAnimation(const aiScene* assimpScene, const SSourceAssetData& sourceData)
 	{
 		const aiAnimation* animation = assimpScene->mAnimations[0];
 
@@ -429,20 +429,18 @@ namespace Havtorn
 		// TODO.NW: Support multiple animations per file? Support montages somehow. Could be separate file using these headers (SSkeletalAnimationMontageFileHeader)
 		SSkeletalAnimationFileHeader fileHeader;
 		fileHeader.AssetType = EAssetType::Animation;
-		fileHeader.Name = assimpScene->mName.C_Str();
+		fileHeader.Name = UGeneralUtils::ExtractFileBaseNameFromPath(sourceData.SourcePath.AsString());
 		fileHeader.DurationInTicks = STATIC_U32(animation->mDuration);
 		fileHeader.TickRate = STATIC_U32(animation->mTicksPerSecond);
-		fileHeader.ImportScale = importOptions.Scale;
+		fileHeader.SourceData = sourceData;
 			
 		std::vector<SSkeletalMeshBone> bones;
 		{
-			// Need full path here, not just filename
-			std::string rigFilePath = importOptions.AssetRep->DirectoryEntry.path().string();
-			fileHeader.SkeletonName = rigFilePath;
-			const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(rigFilePath);
+			std::string rigFilePath = fileHeader.SourceData.AssetDependencyPath.AsString();
+			const U64 fileSize = UFileSystem::GetFileSize(rigFilePath);
 			char* data = new char[fileSize];
 
-			GEngine::GetFileSystem()->Deserialize(rigFilePath, data, STATIC_U32(fileSize));
+			UFileSystem::Deserialize(rigFilePath, data, STATIC_U32(fileSize));
 
 			SSkeletalModelFileHeader rigHeader;
 			rigHeader.Deserialize(data);

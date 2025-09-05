@@ -7,8 +7,8 @@ namespace Havtorn
 {
 	namespace HexRune
 	{
-		SDataBindingGetNode::SDataBindingGetNode(const U64 id, SScript* owningScript, const U64 dataBindingID)
-			: SNode::SNode(id, owningScript, ENodeType::EDataBindingGetNode)
+		SDataBindingGetNode::SDataBindingGetNode(const U64 id, const U32 typeID, SScript* owningScript, const U64 dataBindingID)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::DataBindingGetNode)
 		{
 			DataBinding = &(*std::ranges::find_if(OwningScript->DataBindings, [dataBindingID](SScriptDataBinding& binding) { return binding.UID == dataBindingID; }));
 			AddOutput(UGUIDManager::Generate(), DataBinding->Type, DataBinding->Name);
@@ -20,8 +20,8 @@ namespace Havtorn
 			return 0;
 		}
 
-		SDataBindingSetNode::SDataBindingSetNode(const U64 id, SScript* owningScript, const U64 dataBindingID)
-			: SNode::SNode(id, owningScript, ENodeType::EDataBindingSetNode)
+		SDataBindingSetNode::SDataBindingSetNode(const U64 id, const U32 typeID, SScript* owningScript, const U64 dataBindingID)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::DataBindingSetNode)
 		{
 			DataBinding = &(*std::ranges::find_if(OwningScript->DataBindings, [dataBindingID](SScriptDataBinding& binding) { return binding.UID == dataBindingID; }));
 			AddInput(UGUIDManager::Generate(), DataBinding->Type, DataBinding->Name);
@@ -36,8 +36,8 @@ namespace Havtorn
 			return 0;
 		}
 
-		SBranchNode::SBranchNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript, ENodeType::EBranchNode)
+		SBranchNode::SBranchNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			AddInput(UGUIDManager::Generate(), EPinType::Flow);
 			AddInput(UGUIDManager::Generate(), EPinType::Bool, "Condition");
@@ -54,8 +54,8 @@ namespace Havtorn
 			return condition ? 0 : 1;
 		}
 
-		SSequenceNode::SSequenceNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript, ENodeType::ESequenceNode)
+		SSequenceNode::SSequenceNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			AddInput(UGUIDManager::Generate(), EPinType::Flow);
 
@@ -69,8 +69,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		SDelayNode::SDelayNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript, ENodeType::EDelayNode)
+		SDelayNode::SDelayNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			AddInput(UGUIDManager::Generate(), EPinType::Flow);
 			AddInput(UGUIDManager::Generate(), EPinType::Float, "Duration");
@@ -86,8 +86,8 @@ namespace Havtorn
 			return -2;
 		}
 
-		SBeginPlayNode::SBeginPlayNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript, ENodeType::EBeginPlayNode)
+		SBeginPlayNode::SBeginPlayNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			AddOutput(UGUIDManager::Generate(), EPinType::Flow);
 		}
@@ -97,8 +97,8 @@ namespace Havtorn
 			return 0;
 		}
 
-		STickNode::STickNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript, ENodeType::ETickNode)
+		STickNode::STickNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			AddOutput(UGUIDManager::Generate(), EPinType::Flow);
 			AddOutput(UGUIDManager::Generate(), EPinType::Float, "Dt");
@@ -110,8 +110,8 @@ namespace Havtorn
 			return 0;
 		}
 
-		SEndPlayNode::SEndPlayNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript, ENodeType::EEndPlayNode)
+		SEndPlayNode::SEndPlayNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			AddOutput(UGUIDManager::Generate(), EPinType::Flow);
 			// TODO.NW: End play reason?
@@ -123,8 +123,8 @@ namespace Havtorn
 			return 0;
 		}
 
-		SPrintStringNode::SPrintStringNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript, ENodeType::EPrintStringNode)
+		SPrintStringNode::SPrintStringNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			AddInput(UGUIDManager::Generate(), EPinType::Flow);
 			AddInput(UGUIDManager::Generate(), EPinType::String, "String");
@@ -142,8 +142,8 @@ namespace Havtorn
 			return 0;
 		}
 
-		SAppendStringNode::SAppendStringNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript, ENodeType::EAppendStringNode)
+		SAppendStringNode::SAppendStringNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			FlowType = EFlowType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::String, "A");
@@ -164,8 +164,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		SFloatLessThanNode::SFloatLessThanNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript, ENodeType::EFloatLessThanNode)
+		SFloatLessThanNode::SFloatLessThanNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			FlowType = EFlowType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Float);
@@ -183,8 +183,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		SFloatMoreThanNode::SFloatMoreThanNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript, ENodeType::EFloatMoreThanNode)
+		SFloatMoreThanNode::SFloatMoreThanNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			FlowType = EFlowType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Float);
@@ -202,8 +202,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		SFloatLessOrEqualNode::SFloatLessOrEqualNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript, ENodeType::EFloatLessOrEqualNode)
+		SFloatLessOrEqualNode::SFloatLessOrEqualNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			FlowType = EFlowType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Float);
@@ -221,8 +221,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		SFloatMoreOrEqualNode::SFloatMoreOrEqualNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript, ENodeType::EFloatMoreOrEqualNode)
+		SFloatMoreOrEqualNode::SFloatMoreOrEqualNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			FlowType = EFlowType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Float);
@@ -240,8 +240,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		SFloatEqualNode::SFloatEqualNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript, ENodeType::EFloatEqualNode)
+		SFloatEqualNode::SFloatEqualNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			FlowType = EFlowType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Float);
@@ -259,8 +259,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		SFloatNotEqualNode::SFloatNotEqualNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript, ENodeType::EFloatNotEqualNode)
+		SFloatNotEqualNode::SFloatNotEqualNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			FlowType = EFlowType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Float);
@@ -278,8 +278,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		SIntLessThanNode::SIntLessThanNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript, ENodeType::EIntLessThanNode)
+		SIntLessThanNode::SIntLessThanNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			FlowType = EFlowType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Int);
@@ -297,8 +297,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		SIntMoreThanNode::SIntMoreThanNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript, ENodeType::EIntMoreThanNode)
+		SIntMoreThanNode::SIntMoreThanNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			FlowType = EFlowType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Int);
@@ -316,8 +316,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		SIntLessOrEqualNode::SIntLessOrEqualNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript, ENodeType::EIntLessOrEqualNode)
+		SIntLessOrEqualNode::SIntLessOrEqualNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			FlowType = EFlowType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Int);
@@ -335,8 +335,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		SIntMoreOrEqualNode::SIntMoreOrEqualNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript, ENodeType::EIntMoreOrEqualNode)
+		SIntMoreOrEqualNode::SIntMoreOrEqualNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			FlowType = EFlowType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Int);
@@ -354,8 +354,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		SIntEqualNode::SIntEqualNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript, ENodeType::EIntEqualNode)
+		SIntEqualNode::SIntEqualNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			FlowType = EFlowType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Int);
@@ -373,8 +373,8 @@ namespace Havtorn
 			return -1;
 		}
 
-		SIntNotEqualNode::SIntNotEqualNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript, ENodeType::EIntNotEqualNode)
+		SIntNotEqualNode::SIntNotEqualNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			FlowType = EFlowType::Simple;
 			AddInput(UGUIDManager::Generate(), EPinType::Int);

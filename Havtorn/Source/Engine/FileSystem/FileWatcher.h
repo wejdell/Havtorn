@@ -25,8 +25,8 @@ namespace Havtorn
 		bool Init(CThreadManager* /*threadManager*/);
 
 		/* Will check the file for includes and add them as well*/
-		bool WatchFileChange(const std::string& filePath, FileChangeCallback callback);
-		void StopWatchFileChange(const std::string& filePath);
+		ENGINE_API bool WatchFileChange(const std::string& filePath, FileChangeCallback callback);
+		ENGINE_API void StopWatchFileChange(const std::string& filePath);
 		void FlushChanges();
 
 	private:

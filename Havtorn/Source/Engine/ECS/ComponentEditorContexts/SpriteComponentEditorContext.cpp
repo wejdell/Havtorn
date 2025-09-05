@@ -26,7 +26,7 @@ namespace Havtorn
 
 		GUI::Text("Texture");
 
-		return { EComponentViewResultLabel::InspectAssetComponent, spriteComp, 0 };
+		return { EComponentViewResultLabel::InspectAssetComponent, spriteComp, &spriteComp->AssetReference, nullptr, EAssetType::Texture };
     }
 
 	bool SSpriteComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const

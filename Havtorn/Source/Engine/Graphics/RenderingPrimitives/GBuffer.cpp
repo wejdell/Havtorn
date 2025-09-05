@@ -2,7 +2,7 @@
 
 #include "hvpch.h"
 #include "GBuffer.h"
-#include "FullscreenTexture.h"
+#include "RenderTexture.h"
 
 namespace Havtorn
 {

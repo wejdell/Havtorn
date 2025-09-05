@@ -9,6 +9,8 @@
 #include <GUI.h>
 #include <Graphics/Debug/DebugDrawUtility.h>
 #include <ECS/Components/TransformComponent.h>
+#include <Assets/RuntimeAssetDeclarations.h>
+#include "Assets/AssetRegistry.h"
 
 namespace Havtorn
 {
@@ -24,12 +26,12 @@ namespace Havtorn
 		// TODO.NW: Make separate clamp values for vector types
 		//GUI::DragInt2("Animation Data", data, 1.0f, 0, skeletalAnimationComp->DurationInTicks - 1);
 		//skeletalAnimationComp->AnimationData = { STATIC_U32(data.X), STATIC_U32(data.Y) };
-		GUI::DragFloat("Animation Time", skeletalAnimationComp->CurrentAnimationTime, 0.01f, 0.0f, skeletalAnimationComp->DurationInTicks / STATIC_F32(skeletalAnimationComp->TickRate));
+		const SSkeletalAnimationAsset* assetData = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalAnimationAsset>(skeletalAnimationComp->AssetReferences[skeletalAnimationComp->CurrentAnimationIndex], entityOwner.GUID);
+		GUI::DragFloat("Animation Time", skeletalAnimationComp->CurrentAnimationTime, 0.01f, 0.0f, assetData->DurationInTicks / STATIC_F32(assetData->TickRate));
 		GUI::Checkbox("Is Playing", skeletalAnimationComp->IsPlaying);
 
-
 		I32 animIndex = Havtorn::UMath::Max(0, static_cast<I32>(skeletalAnimationComp->CurrentAnimationIndex));
-		I32 maxCount = STATIC_I32(skeletalAnimationComp->CurrentAnimation.size() - 1);
+		I32 maxCount = STATIC_I32(skeletalAnimationComp->AssetReferences.size() - 1);
 		GUI::SliderInt("AnimationClip", animIndex, 0, maxCount);
 		skeletalAnimationComp->CurrentAnimationIndex = animIndex;
 
@@ -42,8 +44,7 @@ namespace Havtorn
 		//	GDebugDraw::AddAxis(worldTransform.GetTranslation(), worldTransform.GetEuler(), worldTransform.GetScale() * 0.5f);
 		//}
 
-		GUI::Separator();
-		return SComponentViewResult{ EComponentViewResultLabel::InspectAssetComponent };
+		return { EComponentViewResultLabel::InspectAssetComponent, skeletalAnimationComp, nullptr, &skeletalAnimationComp->AssetReferences, EAssetType::Animation };
 	}
 
 	bool SSkeletalAnimationComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const

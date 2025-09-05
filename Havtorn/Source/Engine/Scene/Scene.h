@@ -3,7 +3,8 @@
 #pragma once
 
 #include <HavtornString.h>
-#include "Core/GeneralUtilities.h"
+#include <HavtornDelegate.h>
+#include <GeneralUtilities.h>
 #include "ECS/Entity.h"
 #include "ECS/Component.h"
 #include "ECS/ComponentEditorContext.h"
@@ -21,7 +22,6 @@ namespace Havtorn
 		std::vector<SComponent*> Components;
 	};
 
-	class CRenderManager;
 	class CAssetRegistry;
 
 	class CScene
@@ -30,20 +30,22 @@ namespace Havtorn
 		ENGINE_API CScene();
 		ENGINE_API ~CScene();
 
-		ENGINE_API virtual bool Init(CRenderManager* renderManager, const std::string& sceneName);
-		ENGINE_API virtual bool Init3DDefaults(CRenderManager* renderManager);
-		ENGINE_API virtual bool Init3DDemoScene(CRenderManager* renderManager);
-		ENGINE_API virtual bool Init2DDemoScene(CRenderManager* renderManager);
+		ENGINE_API virtual bool Init(const std::string& sceneName);
+		ENGINE_API virtual bool Init3DDefaults();
+		ENGINE_API virtual bool Init3DDemoScene();
+		ENGINE_API virtual bool Init2DDemoScene();
 
 		// TODO.NR: Rework serialization to decrease amount of boilerplate
 		ENGINE_API virtual [[nodiscard]] U32 GetSize() const;
 		ENGINE_API virtual void Serialize(char* toData, U64& pointerPosition) const;
-		ENGINE_API virtual void Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry);
+		ENGINE_API virtual void Deserialize(const char* fromData, U64& pointerPosition);
 
 		ENGINE_API std::string GetSceneName() const;
 		ENGINE_API U64 GetSceneIndex(const SEntity& entity) const;
 		ENGINE_API U64 GetSceneIndex(const U64 entityGUID) const;
 		
+		CMulticastDelegate<SEntity> OnEntityPreDestroy;
+
 		template<typename T>
 		U32 DefaultSizeAllocator(const std::vector<T*>& componentVector) const
 		{
@@ -88,11 +90,10 @@ namespace Havtorn
 		}
 
 		template<typename T>
-		void DefaultDeserializer(std::vector<T>& componentVector, SComponentEditorContext* context, const char* fromData, U64& pointerPosition)
+		void DefaultDeserializer(SComponentEditorContext* context, const char* fromData, U64& pointerPosition)
 		{
 			U32 numberOfComponents = 0;
 			DeserializeData(numberOfComponents, fromData, pointerPosition);
-			componentVector.resize(numberOfComponents);
 
 			for (U64 index = 0; index < numberOfComponents; index++)
 			{
@@ -104,11 +105,10 @@ namespace Havtorn
 		}
 
 		template<typename T>
-		void SpecializedDeserializer(std::vector<T>& componentVector, SComponentEditorContext* context, const char* fromData, U64& pointerPosition)
+		void SpecializedDeserializer(SComponentEditorContext* context, const char* fromData, U64& pointerPosition)
 		{
 			U32 numberOfComponents = 0;
 			DeserializeData(numberOfComponents, fromData, pointerPosition);
-			componentVector.resize(numberOfComponents);
 
 			for (U64 index = 0; index < numberOfComponents; index++)
 			{
@@ -228,6 +228,7 @@ namespace Havtorn
 			std::swap(entityIndices.at(maxIndexEntry.first), entityIndices.at(fromEntity.GUID));
 
 			T* componentToBeRemoved = reinterpret_cast<T*>(components[entityIndices.at(fromEntity.GUID)]);
+			componentToBeRemoved->IsDeleted(this);
 			delete componentToBeRemoved;
 			componentToBeRemoved = nullptr;
 
@@ -243,7 +244,8 @@ namespace Havtorn
 
 		ENGINE_API const SEntity& AddEntity(U64 guid = 0);
 		ENGINE_API const SEntity& AddEntity(const std::string& nameInEditor, U64 guid = 0);
-		ENGINE_API void RemoveEntity(SEntity& entity);
+		ENGINE_API void RemoveEntity(const SEntity entity);
+		ENGINE_API void ClearScene();
 
 		template<typename T>
 		const SEntity& GetEntity(const T* fromComponent) const
@@ -361,8 +363,5 @@ namespace Havtorn
 
 		SEntity MainCameraEntity = SEntity::Null;
 		SEntity PreviewEntity = SEntity::Null;
-
-		// TODO.NR/AG: Try to remove this
-		CRenderManager* RenderManager = nullptr;
 	};
 }

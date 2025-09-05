@@ -50,21 +50,12 @@ namespace Havtorn
 				break;
 			case EPinType::ComponentPtr:
 				data = nullptr;
-				//if (objectType == EObjectDataType::Entity)
-				//    data = SEntity::Null;
-				//else if (objectType == EObjectDataType::Component)
-				//    data = nullptr;
 				break;
 			case EPinType::Asset:
-				data = SAsset(assetType);
-				/*    if (objectType == EObjectDataType::Entity)
-						data = { SEntity::Null };
-					else if (objectType == EObjectDataType::Component)
-						data = { nullptr };*/
+				data = std::string();
 				break;
 			case EPinType::EntityList:
 				data = std::vector<SEntity>();
-				/*SAsset{ assetType };*/
 				break;
 			case EPinType::ComponentPtrList:
 				data = std::vector<SComponent*>();
@@ -78,8 +69,10 @@ namespace Havtorn
 			DataBindings.back().ObjectType = objectType;
 			DataBindings.back().AssetType = assetType;
 			DataBindings.back().Data = data;
-			RegisteredEditorContexts.emplace_back(new SDataBindingGetNodeEditorContext(this, DataBindings.back().UID));
-			RegisteredEditorContexts.emplace_back(new SDataBindingSetNodeEditorContext(this, DataBindings.back().UID));
+			auto context = RegisteredEditorContexts.emplace_back(new SDataBindingGetNodeEditorContext(this, DataBindings.back().UID));
+			context->TypeID = 0;
+			context = RegisteredEditorContexts.emplace_back(new SDataBindingSetNodeEditorContext(this, DataBindings.back().UID));
+			context->TypeID = 1;
 		}
 
 		void SScript::RemoveDataBinding(const U64 id)
@@ -176,36 +169,37 @@ namespace Havtorn
 
 		void SScript::Initialize()
 		{
+			U32 typeID = 0;
 			NodeFactory = new SNodeFactory();
-			NodeFactory->RegisterNodeType<SBranchNode, SBranchNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SSequenceNode, SSequenceNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SEntityLoopNode, SEntityLoopNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SComponentLoopNode, SComponentLoopNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SDelayNode, SDelayNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SBeginPlayNode, SBeginPlayNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<STickNode, STickNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SEndPlayNode, SEndPlayNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SPrintStringNode, SPrintStringNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SAppendStringNode, SAppendStringNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SFloatLessThanNode, SFloatLessThanNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SFloatMoreThanNode, SFloatMoreThanNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SFloatLessOrEqualNode, SFloatLessOrEqualNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SFloatMoreOrEqualNode, SFloatMoreOrEqualNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SFloatEqualNode, SFloatEqualNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SFloatNotEqualNode, SFloatNotEqualNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SIntLessThanNode, SIntLessThanNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SIntMoreThanNode, SIntMoreThanNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SIntLessOrEqualNode, SIntLessOrEqualNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SIntMoreOrEqualNode, SIntMoreOrEqualNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SIntEqualNode, SIntEqualNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SIntNotEqualNode, SIntNotEqualNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SPrintEntityNameNode, SPrintEntityNameNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SSetStaticMeshNode, SSetStaticMeshNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<STogglePointLightNode, STogglePointLightNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SOnBeginOverlapNode, SOnBeginOverlapNodeEditorContext>(this);
-			NodeFactory->RegisterNodeType<SOnEndOverlapNode, SOnEndOverlapNodeEditorContext>(this);
-			NodeFactory->RegisterDatabindingNode<SDataBindingGetNode, SDataBindingGetNodeEditorContext>();
-			NodeFactory->RegisterDatabindingNode<SDataBindingSetNode, SDataBindingSetNodeEditorContext>();
+			NodeFactory->RegisterDatabindingNode<SDataBindingGetNode, SDataBindingGetNodeEditorContext>(typeID++);
+			NodeFactory->RegisterDatabindingNode<SDataBindingSetNode, SDataBindingSetNodeEditorContext>(typeID++);
+			NodeFactory->RegisterNodeType<SBranchNode, SBranchNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SSequenceNode, SSequenceNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SEntityLoopNode, SEntityLoopNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SComponentLoopNode, SComponentLoopNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SDelayNode, SDelayNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SBeginPlayNode, SBeginPlayNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<STickNode, STickNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SEndPlayNode, SEndPlayNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SPrintStringNode, SPrintStringNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SAppendStringNode, SAppendStringNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SFloatLessThanNode, SFloatLessThanNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SFloatMoreThanNode, SFloatMoreThanNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SFloatLessOrEqualNode, SFloatLessOrEqualNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SFloatMoreOrEqualNode, SFloatMoreOrEqualNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SFloatEqualNode, SFloatEqualNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SFloatNotEqualNode, SFloatNotEqualNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SIntLessThanNode, SIntLessThanNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SIntMoreThanNode, SIntMoreThanNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SIntLessOrEqualNode, SIntLessOrEqualNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SIntMoreOrEqualNode, SIntMoreOrEqualNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SIntEqualNode, SIntEqualNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SIntNotEqualNode, SIntNotEqualNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SPrintEntityNameNode, SPrintEntityNameNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SSetStaticMeshNode, SSetStaticMeshNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<STogglePointLightNode, STogglePointLightNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SOnBeginOverlapNode, SOnBeginOverlapNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterNodeType<SOnEndOverlapNode, SOnEndOverlapNodeEditorContext>(this, typeID++);
 		}
 
 		void SScript::TraverseFromNode(const U64 startNodeID, CScene* owningScene)
@@ -322,16 +316,16 @@ namespace Havtorn
 			size += sizeof(U32);
 			for (auto& node : Nodes)
 			{
-				size += GetDataSize(node->NodeType);
 				size += GetDataSize(node->UID);
-				size += sizeof(U32); //typeid
+				size += GetDataSize(node->TypeID);
+				size += GetDataSize(node->NodeType);
 
-				if (node->NodeType == ENodeType::EDataBindingGetNode || node->NodeType == ENodeType::EDataBindingSetNode)
+				if (node->NodeType == ENodeType::DataBindingGetNode || node->NodeType == ENodeType::DataBindingSetNode)
 				{
-					size += GetDataSize(sizeof(U64));
+					size += sizeof(U64);
 				}
 
-				size += STATIC_U32(sizeof(SVector2<F32>));
+				size += STATIC_U32(sizeof(SVector2<F32>)); // Position
 				size += STATIC_U32(sizeof(U32));
 				size += STATIC_U32(node->Inputs.size() * sizeof(U64));
 				size += STATIC_U32(sizeof(U32));
@@ -343,76 +337,45 @@ namespace Havtorn
 		}
 		void SScript::Serialize(char* toData, U64& pointerPosition) const
 		{
-			// TODO.NW: Serialize nodes through protocol
 			//Databindings -> Nodes -> Links
-			SerializeData(static_cast<U32>(DataBindings.size()), toData, pointerPosition);
+			SerializeData(STATIC_U32(DataBindings.size()), toData, pointerPosition);
 
 			for (auto& db : DataBindings)
 				db.Serialize(toData, pointerPosition);
 
-			//std::stack<SNode*> databindingNodes;
-			//for (SNode* node : Nodes)
-			//{
-			//	if (node->NodeType == ENodeType::EDataBindingGetNode || node->NodeType == ENodeType::EDataBindingSetNode)
-			//	{
-			//		databindingNodes.push(node);
-			//		continue;
-			//	}
-			//}
-
-			U32 nodeCount = STATIC_U32(Nodes.size()/* - databindingNodes.size()*/);
+			U32 nodeCount = STATIC_U32(Nodes.size());
 			SerializeData(nodeCount, toData, pointerPosition);
 			for (SNode* node : Nodes)
 			{				
+				SerializeData(node->UID, toData, pointerPosition);
+				SerializeData(node->TypeID, toData, pointerPosition);
 				SerializeData(node->NodeType, toData, pointerPosition);
-				SerializeData(node->UID, toData, pointerPosition);
-				SerializeData(STATIC_U32(typeid(*node).hash_code()), toData, pointerPosition);
 
-				if (node->NodeType == ENodeType::EDataBindingGetNode)
+				if (node->NodeType == ENodeType::DataBindingGetNode)
 				{
-					SDataBindingGetNode* dbNode = reinterpret_cast<SDataBindingGetNode*>(node);
+					SDataBindingGetNode* dbNode = dynamic_cast<SDataBindingGetNode*>(node);
 					SerializeData(dbNode->DataBinding->UID, toData, pointerPosition);
 				}
-				if (node->NodeType == ENodeType::EDataBindingSetNode)
+				if (node->NodeType == ENodeType::DataBindingSetNode)
 				{
-					SDataBindingSetNode* dbNode = reinterpret_cast<SDataBindingSetNode*>(node);
+					SDataBindingSetNode* dbNode = dynamic_cast<SDataBindingSetNode*>(node);
 					SerializeData(dbNode->DataBinding->UID, toData, pointerPosition);
 				}
 
 				SerializeData(GetNodeEditorContext(node->UID)->Position, toData, pointerPosition);
-				SerializeData(STATIC_U32(sizeof(U64) * node->Inputs.size()), toData, pointerPosition);
-				for (auto& pin : node->Inputs)
-					SerializeData(pin.UID, toData, pointerPosition);
 
-				SerializeData(STATIC_U32(sizeof(U64) * node->Outputs.size()), toData, pointerPosition);
+				std::vector<U64> inputPinIds;
+				for (auto& pin : node->Inputs)
+					inputPinIds.emplace_back(pin.UID);
+				SerializeData(inputPinIds, toData, pointerPosition);
+
+				std::vector<U64> outputPinIds;
 				for (auto& pin : node->Outputs)
-					SerializeData(pin.UID, toData, pointerPosition);
+					outputPinIds.emplace_back(pin.UID);
+				SerializeData(outputPinIds, toData, pointerPosition);
 			}
 
-			/*SerializeData(STATIC_U32(databindingNodes.size()), toData, pointerPosition);
-			while (!databindingNodes.empty())
-			{
-				SNode* node = databindingNodes.top();
-				databindingNodes.pop();
-
-				SerializeData(node->UID, toData, pointerPosition);
-				SerializeData(STATIC_U32(typeid(*node).hash_code()), toData, pointerPosition);
-				SerializeData(GetNodeEditorContext(node->UID)->Position, toData, pointerPosition);
-				SerializeData(STATIC_U32(sizeof(U64) * node->Inputs.size()), toData, pointerPosition);
-				for (auto& pin : node->Inputs)
-					SerializeData(pin.UID, toData, pointerPosition);
-				SerializeData(STATIC_U32(sizeof(U64) * node->Outputs.size()), toData, pointerPosition);
-				for (auto& pin : node->Outputs)
-					SerializeData(pin.UID, toData, pointerPosition);
-			}*/
-
-
-			SerializeData(STATIC_U32(Links.size()), toData, pointerPosition);
-			for (auto& link : Links)
-			{
-				//HV_LOG_INFO("Link %lu \n Start = %lu\n End = %lu", link.UID, link.StartPinUID, link.EndPinUID);
-				SerializeData(link, toData, pointerPosition);
-			}
+			SerializeData(Links, toData, pointerPosition);
 
 		}
 		void SScript::Deserialize(const char* fromData, U64& pointerPosition)
@@ -435,17 +398,17 @@ namespace Havtorn
 
 			for (U32 i = 0; i < nodeCount; i++)
 			{
-				ENodeType nodeType;
-				DeserializeData(nodeType, fromData, pointerPosition);
-
 				U64 uid;
 				DeserializeData(uid, fromData, pointerPosition);
 
 				U32 nodeTypeId;
 				DeserializeData(nodeTypeId, fromData, pointerPosition);
+			
+				ENodeType nodeType;
+				DeserializeData(nodeType, fromData, pointerPosition);
 
 				SNode* node = nullptr;
-				if (nodeType == ENodeType::EDataBindingGetNode || nodeType == ENodeType::EDataBindingSetNode)
+				if (nodeType == ENodeType::DataBindingGetNode || nodeType == ENodeType::DataBindingSetNode)
 				{
 					U64 dbUID;
 					DeserializeData(dbUID, fromData, pointerPosition);
@@ -465,6 +428,10 @@ namespace Havtorn
 				std::vector<U64> inputPinIds;
 				DeserializeData(inputPinIds, fromData, pointerPosition);
 
+				// TODO.NW: This part is a bit sketchy, ideally these vectors should be
+				// the same length but should we change a node implementation somewhere 
+				// then the one saved on disk will be wrong. This might not be handled 
+				// gracefully enough here.
 				node->Inputs.resize(inputPinIds.size());
 				for (U32 pinIndex = 0; pinIndex < inputPinIds.size(); pinIndex++)
 				{
@@ -481,14 +448,7 @@ namespace Havtorn
 				}
 			}
 
-			U32 linkCount = 0;
-			DeserializeData(linkCount, fromData, pointerPosition);
-			for (U32 i = 0; i < linkCount; i++)
-			{
-				SLink link = {};
-				DeserializeData(link, fromData, pointerPosition);
-				Links.emplace_back(link);
-			}
+			DeserializeData(Links, fromData, pointerPosition);
 		}
 
 		SNode* SScript::GetNode(const U64 id) const
@@ -546,10 +506,11 @@ namespace Havtorn
 			return nullptr;
 		}
 
-		SNode::SNode(const U64 id, SScript* owningScript, ENodeType nodeType)
+		SNode::SNode(const U64 id, const U32 typeID, SScript* owningScript, ENodeType nodeType)
 			: UID(id)
-			, OwningScript(owningScript)
+			, TypeID(typeID)
 			, NodeType(nodeType)
+			, OwningScript(owningScript)
 		{
 		}
 
@@ -804,17 +765,15 @@ namespace Havtorn
 			}
 			break;
 			}
-
-
 		}
 
-		SNode* SNodeFactory::CreateNode(U32 typeId, U64 id, SScript* script)
+		SNode* SNodeFactory::CreateNode(U32 typeID, U64 id, SScript* script)
 		{
-			return BasicNodeFactoryMap[typeId](id, script);
+			return BasicNodeFactoryMap[typeID](id, typeID, script);
 		}
-		SNode* SNodeFactory::CreateNode(U32 typeId, U64 id, SScript* script, const U64 databindingId)
+		SNode* SNodeFactory::CreateNode(U32 typeID, U64 id, SScript* script, const U64 databindingId)
 		{
-			return DatabindingNodeFactoryMap[typeId](id, script, databindingId);
+			return DatabindingNodeFactoryMap[typeID](id, typeID, script, databindingId);
 		}
 	}
 }
