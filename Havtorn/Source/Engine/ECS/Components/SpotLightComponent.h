@@ -13,7 +13,7 @@ namespace Havtorn
 			: SComponent(entityOwner)
 		{}
 
-		bool IsActive = false;
+		bool IsActive = true;
 		SShadowmapViewData ShadowmapView = {};
 		SVector4 ColorAndIntensity = SVector4(1.0f, 1.0f, 1.0f, 1.0f);
 		SVector4 Direction = SVector4::Forward;

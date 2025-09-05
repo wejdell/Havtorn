@@ -338,6 +338,16 @@ namespace Havtorn
 				RenderManager->PushRenderCommand(command);
 			}
 
+			if (const SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(directionalLightComp))
+			{
+				if (volumetricLightComp->IsActive)
+				{
+					command.Type = ERenderCommandType::VolumetricLightingDirectional;
+					command.SetVolumetricDataFromComponent(*volumetricLightComp);
+					RenderManager->PushRenderCommand(command);
+				}
+			}
+
 			if (!isInPlayingPlayState)
 			{
 				const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(directionalLightComp);
@@ -348,17 +358,6 @@ namespace Havtorn
 				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
 				command.U32s.push_back(DirectionalLightWidgetReference.UID);
 				RenderManager->PushRenderCommand(command);
-			}
-
-			if (const SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(directionalLightComp))
-			{
-				if (volumetricLightComp->IsActive)
-				{
-					command = {};
-					command.Type = ERenderCommandType::VolumetricLightingDirectional;
-					command.SetVolumetricDataFromComponent(*volumetricLightComp);
-					RenderManager->PushRenderCommand(command);
-				}
 			}
 		}
 
@@ -381,6 +380,16 @@ namespace Havtorn
 				RenderManager->PushRenderCommand(command);
 			}
 
+			if (const SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(pointLightComp))
+			{
+				if (volumetricLightComp->IsActive)
+				{
+					command.Type = ERenderCommandType::VolumetricLightingPoint;
+					command.SetVolumetricDataFromComponent(*volumetricLightComp);
+					RenderManager->PushRenderCommand(command);
+				}
+			}
+
 			if (!isInPlayingPlayState)
 			{
 				GEngine::GetAssetRegistry()->RequestAsset(PointLightWidgetReference.UID, transformComp->Owner.GUID);
@@ -390,17 +399,6 @@ namespace Havtorn
 				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
 				command.U32s.push_back(PointLightWidgetReference.UID);
 				RenderManager->PushRenderCommand(command);
-			}
-
-			if (const SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(pointLightComp))
-			{
-				if (volumetricLightComp->IsActive)
-				{
-					command = {};
-					command.Type = ERenderCommandType::VolumetricLightingPoint;
-					command.SetVolumetricDataFromComponent(*volumetricLightComp);
-					RenderManager->PushRenderCommand(command);
-				}
 			}
 		}
 
@@ -428,6 +426,16 @@ namespace Havtorn
 				RenderManager->PushRenderCommand(command);
 			}
 
+			if (const SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(spotLightComp))
+			{
+				if (volumetricLightComp->IsActive)
+				{
+					command.Type = ERenderCommandType::VolumetricLightingSpot;
+					command.SetVolumetricDataFromComponent(*volumetricLightComp);
+					RenderManager->PushRenderCommand(command);
+				}
+			}
+
 			if (!isInPlayingPlayState)
 			{
 				GEngine::GetAssetRegistry()->RequestAsset(SpotlightWidgetReference.UID, transformComp->Owner.GUID);
@@ -437,17 +445,6 @@ namespace Havtorn
 				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
 				command.U32s.push_back(SpotlightWidgetReference.UID);
 				RenderManager->PushRenderCommand(command);
-			}
-
-			if (const SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(spotLightComp))
-			{
-				if (volumetricLightComp->IsActive)
-				{
-					command = {};
-					command.Type = ERenderCommandType::VolumetricLightingSpot;
-					command.SetVolumetricDataFromComponent(*volumetricLightComp);
-					RenderManager->PushRenderCommand(command);
-				}
 			}
 		}
 
