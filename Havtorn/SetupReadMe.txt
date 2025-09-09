@@ -27,3 +27,14 @@ Requirement for: BuildProject.bat
 - BuildProject.bat
 Builds an executable of Havtorn. Found inside Havtorn/Bin/ called Launcher.exe.
 NOTE: only builds the Havtorn Editor.
+
+- False positives:
+When using Build Tools without Visual Studio:
+    CMake Error:
+    Generator
+        Visual Studio 17 2022
+    could not find specified instance of Visual Studio:
+        C:/Program Files/Microsoft Visual Studio/2022/Community
+
+    If the script continues, everything is fine. This error has something to do with the CMake files used
+
