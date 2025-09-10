@@ -1,6 +1,8 @@
 @echo off
 call %~dp0\SetupCMake.bat
 if %errorlevel% NEQ 0 EXIT /B 1
+call %~dp0\SetupBuildTools.bat
+if %errorlevel% NEQ 0 EXIT /B 1
 
 if not exist %~dp0..\External\Lib\Debug\ mkdir -p %~dp0..\External\Lib\Debug\
 if not exist %~dp0..\External\Lib\Release\ mkdir -p %~dp0..\External\Lib\Release\
