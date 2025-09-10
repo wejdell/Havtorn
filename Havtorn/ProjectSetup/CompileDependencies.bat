@@ -9,8 +9,7 @@ cd ..\External\assimp
 echo.
 echo Generating assimp CMake files...
 echo.
-@REM cmake -G "Visual Studio 17 2022" CMakeLists.txt
-cmake CMakeLists.txt
+cmake -G "Visual Studio 17 2022" CMakeLists.txt
 echo.
 echo Building assimp...
 echo.
@@ -58,8 +57,7 @@ cd build
 echo.
 echo Generating box2d files...
 echo.
-@REM cmake -G "Visual Studio 17 2022" -DBOX2D_SAMPLES=OFF -DBOX2D_UNIT_TESTS=OFF -S ..
-cmake -DBOX2D_SAMPLES=OFF -DBOX2D_UNIT_TESTS=OFF -S ..
+cmake -G "Visual Studio 17 2022" -DBOX2D_SAMPLES=OFF -DBOX2D_UNIT_TESTS=OFF -S ..
 echo.
 echo Building box2d...
 echo.
@@ -71,8 +69,7 @@ cd DirectXTex
 echo.
 echo Generating DirectXTex files...
 echo.
-@REM cmake -G "Visual Studio 17 2022" CMakeLists.txt -DBUILD_TOOLS=OFF -DBUILD_SHARED_LIBS=ON -DBUILD_SAMPLE=OFF
-cmake CMakeLists.txt -DBUILD_TOOLS=OFF -DBUILD_SHARED_LIBS=ON -DBUILD_SAMPLE=OFF
+cmake -G "Visual Studio 17 2022" CMakeLists.txt -DBUILD_TOOLS=OFF -DBUILD_SHARED_LIBS=ON -DBUILD_SAMPLE=OFF
 echo.
 echo Building DirectXTex...
 echo.
