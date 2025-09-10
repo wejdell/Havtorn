@@ -5,10 +5,10 @@
 #include "EditorManager.h"
 #include "EditorResourceManager.h"
 #include "Graphics/RenderManager.h"
-#include "Graphics/RenderingPrimitives/FullscreenTexture.h"
+#include "Graphics/RenderingPrimitives/RenderTexture.h"
 
 #include <Scene/Scene.h>
-#include <Scene/AssetRegistry.h>
+#include <Assets/AssetRegistry.h>
 #include <MathTypes/MathUtilities.h>
 #include <PlatformManager.h>
 #include <Input/Input.h>
@@ -170,51 +170,46 @@ namespace Havtorn
 		scene->AddComponent<STransformComponent>(scene->PreviewEntity)->Transform;
 		scene->AddComponentEditorContext(scene->PreviewEntity, &STransformComponentEditorContext::Context);
 
-		CAssetRegistry* assetRegistry = GEngine::GetWorld()->GetAssetRegistry();
-		CRenderManager* renderManager = Manager->GetRenderManager();
+		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
 
 		switch (assetRepresentation->AssetType)
 		{
 		case EAssetType::StaticMesh:
 		{
-			std::string staticMeshPath = assetRepresentation->Name + ".hva";
-			renderManager->LoadStaticMeshComponent(staticMeshPath, scene->AddComponent<SStaticMeshComponent>(scene->PreviewEntity));
+			std::string staticMeshPath = assetRepresentation->DirectoryEntry.path().string();
+			scene->AddComponent<SStaticMeshComponent>(scene->PreviewEntity, staticMeshPath);
 			scene->AddComponentEditorContext(scene->PreviewEntity, &SStaticMeshComponentEditorContext::Context);
-			SStaticMeshComponent* staticMesh = scene->GetComponent<SStaticMeshComponent>(scene->PreviewEntity);
-			staticMesh->AssetRegistryKey = assetRegistry->Register(staticMeshPath);
+			SStaticMeshAsset* meshAsset = assetRegistry->RequestAssetData<SStaticMeshAsset>(SAssetReference(staticMeshPath), scene->PreviewEntity.GUID);
 
 			std::vector<std::string> previewMaterials;
-			previewMaterials.resize(staticMesh->NumberOfMaterials, CEditorManager::PreviewMaterial);
-			renderManager->LoadMaterialComponent(previewMaterials, scene->AddComponent<SMaterialComponent>(scene->PreviewEntity));
+			previewMaterials.resize(meshAsset->NumberOfMaterials, CEditorManager::PreviewMaterial);
+			scene->AddComponent<SMaterialComponent>(scene->PreviewEntity, previewMaterials);
 			scene->AddComponentEditorContext(scene->PreviewEntity, &SMaterialComponentEditorContext::Context);
-			scene->GetComponent<SMaterialComponent>(scene->PreviewEntity)->AssetRegistryKeys = assetRegistry->Register(previewMaterials);
 		}
 			break;
 
 		case EAssetType::SkeletalMesh:
 		{
-			std::string meshPath = assetRepresentation->Name + ".hva";;
-			renderManager->LoadSkeletalMeshComponent(meshPath, scene->AddComponent<SSkeletalMeshComponent>(scene->PreviewEntity));
+			std::string meshPath = assetRepresentation->DirectoryEntry.path().string();
+			scene->AddComponent<SSkeletalMeshComponent>(scene->PreviewEntity, meshPath);
 			scene->AddComponentEditorContext(scene->PreviewEntity, &SSkeletalMeshComponentEditorContext::Context);
-			SSkeletalMeshComponent* skeletalMesh = scene->GetComponent<SSkeletalMeshComponent>(scene->PreviewEntity);
-			skeletalMesh->AssetRegistryKey = assetRegistry->Register(meshPath);
+			SSkeletalMeshAsset* meshAsset = assetRegistry->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(meshPath), scene->PreviewEntity.GUID);
 			
 			// TODO.NW: Deal with different asset types, and figure out bind pose for skeletal meshes
 
 			std::vector<std::string> previewMaterials;
-			previewMaterials.resize(skeletalMesh->NumberOfMaterials, CEditorManager::PreviewMaterial);
-			renderManager->LoadMaterialComponent(previewMaterials, scene->AddComponent<SMaterialComponent>(scene->PreviewEntity));
+			previewMaterials.resize(meshAsset->NumberOfMaterials, CEditorManager::PreviewMaterial);
+			scene->AddComponent<SMaterialComponent>(scene->PreviewEntity, previewMaterials);
 			scene->AddComponentEditorContext(scene->PreviewEntity, &SMaterialComponentEditorContext::Context);
-			scene->GetComponent<SMaterialComponent>(scene->PreviewEntity)->AssetRegistryKeys = assetRegistry->Register(previewMaterials);
 		}
 			break;
 
 		default :
 			break;
-		//std::string animationPath = "Assets/Tests/CH_Enemy_Walk.hva";
-		////std::string animationPath = "Assets/Tests/MaleWave.hva";
-		////std::string animationPath = "Assets/Tests/TestWalk.hva";
-		////std::string animationPath = "Assets/Tests/DebugAnimAnim.hva";
+		//std::string animationPath = "Assets/Meshes/CH_Enemy_Walk.hva";
+		////std::string animationPath = "Assets/Meshes/MaleWave.hva";
+		////std::string animationPath = "Assets/Meshes/TestWalk.hva";
+		////std::string animationPath = "Assets/Meshes/DebugAnimAnim.hva";
 		//renderManager->LoadSkeletalAnimationComponent(animationPath, scene->AddComponent<SSkeletalAnimationComponent>(scene->PreviewEntity));
 		//scene->AddComponentEditorContext(scene->PreviewEntity, &SSkeletalAnimationComponentEditorContext::Context);
 		}

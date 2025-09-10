@@ -1,6 +1,9 @@
 import os
 import subprocess
 
+from AdditionalConfigRegistry import RegistryConfiguration as RegistryConfig
+RegistryConfig.InstallDeeplink()
+
 from AdditionalConfigPython import PythonConfiguration as PythonRequirements
 PythonRequirements.Validate()
 

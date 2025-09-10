@@ -20,28 +20,33 @@ namespace Havtorn
 		CMulticastDelegate& operator=(const CMulticastDelegate&) = default;
 		CMulticastDelegate& operator=(CMulticastDelegate&&) = default;
 
+		bool IsBoundTo(const DelegateHandle& handle)
+		{
+			return Delegate.IsBoundTo(handle);
+		}
+
 		template<typename LambdaType, typename... LambdaArgs>
-		void AddLambda(LambdaType&& lambda, LambdaArgs&&... args)
+		DelegateHandle AddLambda(LambdaType&& lambda, LambdaArgs&&... args)
 		{
-			Delegate.AddLambda(std::forward<LambdaType>(lambda), std::forward<LambdaArgs>(args)...);
+			return Delegate.AddLambda(std::forward<LambdaType>(lambda), std::forward<LambdaArgs>(args)...);
 		}
 
 		template<typename ObjectType, typename FunctionReturnType>
-		void AddMember(const ObjectType* object, FunctionReturnType(ObjectType::* function)(BroadcastTypes...) const)
+		DelegateHandle AddMember(const ObjectType* object, FunctionReturnType(ObjectType::* function)(BroadcastTypes...) const)
 		{
-			Delegate.AddRaw(object, function);
+			return Delegate.AddRaw(object, function);
 		}
 
 		template<typename ObjectType, typename FunctionReturnType>
-		void AddMember(ObjectType* object, FunctionReturnType(ObjectType::* function)(BroadcastTypes...))
+		DelegateHandle AddMember(ObjectType* object, FunctionReturnType(ObjectType::* function)(BroadcastTypes...))
 		{
-			Delegate.AddRaw(object, function);
+			return Delegate.AddRaw(object, function);
 		}
 
 		template<typename FunctionType, typename... FunctionArgs>
-		void AddStatic(FunctionType&& function, FunctionArgs&&... args)
+		DelegateHandle AddStatic(FunctionType&& function, FunctionArgs&&... args)
 		{
-			Delegate.AddStatic(std::forward<FunctionType>(function), std::forward<FunctionArgs>(args)...);
+			return Delegate.AddStatic(std::forward<FunctionType>(function), std::forward<FunctionArgs>(args)...);
 		}
 
 		void Broadcast(BroadcastTypes... args)

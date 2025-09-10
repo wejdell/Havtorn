@@ -8,13 +8,13 @@
 
 #include <Graphics/RenderManager.h>
 #include <Scene/World.h>
-#include <Scene/AssetRegistry.h>
+#include <Assets/AssetRegistry.h>
 
 namespace Havtorn
 {
-	bool CGameScene::Init(CRenderManager* renderManager, const std::string& sceneName)
+	bool CGameScene::Init(const std::string& sceneName)
 	{
-		if (!CScene::Init(renderManager, sceneName))
+		if (!CScene::Init(sceneName))
 			return false;
 
 		RegisterComponent<SGhostyComponent>(1, &SGhostyComponentEditorContext::Context);
@@ -22,9 +22,9 @@ namespace Havtorn
 		return true;
 	}
 
-	bool CGameScene::Init3DDemoScene(CRenderManager* renderManager)
+	bool CGameScene::Init3DDemoScene()
     {
-        if (!CScene::Init3DDemoScene(renderManager))
+        if (!CScene::Init3DDemoScene())
             return false;
 
         return true;
@@ -48,9 +48,9 @@ namespace Havtorn
 		return uvRects;
 	}
 
-    bool CGameScene::Init2DDemoScene(CRenderManager* renderManager)
+    bool CGameScene::Init2DDemoScene()
     {
-		if (!CScene::Init2DDemoScene(renderManager))
+		if (!CScene::Init2DDemoScene())
 			return false;
 
 		const SEntity& ghosty = AddEntity("Ghosty");
@@ -59,16 +59,14 @@ namespace Havtorn
 
 		STransformComponent& ghostyTransform = *AddComponent<STransformComponent>(ghosty);
 		AddComponentEditorContext(ghosty, &STransformComponentEditorContext::Context);
-		SSpriteComponent& spriteWSComp = *AddComponent<SSpriteComponent>(ghosty);
+		AddComponent<SSpriteComponent>(ghosty, "Assets/Textures/Circle_c.hva");
 		AddComponentEditorContext(ghosty, &SSpriteComponentEditorContext::Context);
 		AddComponent<SGhostyComponent>(ghosty);
 		AddComponentEditorContext(ghosty, &SGhostyComponentEditorContext::Context);
 
 		ghostyTransform.Transform.Move({ 0.0f, 2.0f, 0.0f });
 
-		const std::string spritePath = "Assets/Textures/Circle_c.hva";
 		//spriteWSComp.UVRect = { 0.0f, 0.0f, 0.125f, 0.125f };
-		renderManager->LoadSpriteComponent(spritePath, &spriteWSComp);
 
 		//Define UVRects for Animation Frames on row 0, 1, 2
 		//F32 width = 1152.0f;
@@ -109,9 +107,6 @@ namespace Havtorn
 		locomotionNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Move Left"), moveLeft);
 		locomotionNode.AddClipNode(&spriteAnimatorGraphComponent, std::string("Move Right"), moveRight);
 
-		CAssetRegistry* assetRegistry = GEngine::GetWorld()->GetAssetRegistry();
-		GetComponent<SSpriteComponent>(ghosty)->AssetRegistryKey = assetRegistry->Register(spritePath);
-
 		//SSequencerComponent& sequencerComponent = AddSequencerComponentToEntity(*ghosty);
 		//sequencerComponent.ComponentTracks.push_back({ EComponentType::TransformComponent });
 		//sequencerComponent.ComponentTracks.push_back({ EComponentType::SpriteComponent });
@@ -131,12 +126,10 @@ namespace Havtorn
 		AddComponentEditorContext(floor, &STransformComponentEditorContext::Context);
 		floorTransform.Transform.Move({ 0.f, -2.f, 0.f });
 		floorTransform.Transform.Scale({ 0.4f, 0.5f, 1.f });
-		SSpriteComponent& floorSprite = *AddComponent<SSpriteComponent>(floor);
+		SSpriteComponent& floorSprite = *AddComponent<SSpriteComponent>(floor, "Assets/Textures/T_Checkboard_128x128_c.hva");
 		AddComponentEditorContext(floor, &SSpriteComponentEditorContext::Context);
 
-		const std::string floorSpritePath = "Assets/Textures/T_Checkboard_128x128_c.hva";
 		floorSprite.UVRect = { 0.0f, 0.0f, 1.f, 1.f };
-		renderManager->LoadSpriteComponent(floorSpritePath, &floorSprite);
 
 		SPhysics2DComponent& floorPhys2DComponent = *AddComponent<SPhysics2DComponent>(floor);
 		AddComponentEditorContext(floor, &SPhysics2DComponentEditorContext::Context);
@@ -175,13 +168,10 @@ namespace Havtorn
 		DefaultSerializer(GetComponents<SGhostyComponent>(), toData, pointerPosition);
 	}
 
-	void CGameScene::Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry)
+	void CGameScene::Deserialize(const char* fromData, U64& pointerPosition)
 	{
-		CScene::Deserialize(fromData, pointerPosition, assetRegistry);
+		CScene::Deserialize(fromData, pointerPosition);
 
-		{
-			std::vector<SGhostyComponent> components;
-			DefaultDeserializer(components, &SGhostyComponentEditorContext::Context, fromData, pointerPosition);
-		}
+		DefaultDeserializer<SGhostyComponent>(&SGhostyComponentEditorContext::Context, fromData, pointerPosition);
     }
 }

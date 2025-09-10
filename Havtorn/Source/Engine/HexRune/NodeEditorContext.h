@@ -16,6 +16,8 @@ namespace Havtorn
 			virtual SNode* AddNode(SScript* /*script*/, const U64 /*existingID = 0*/) const { return nullptr; };
 			virtual U8 GetSortingPriority() const { return UMath::MaxU8; };
 
+			U32 TypeID = 0;
+
 			std::string Name = "";
 			std::string Category = "";
 			SColor Color = SColor(1.0f, 1.0f, 1.0f, 0.1f);

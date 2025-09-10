@@ -2,6 +2,7 @@
 
 #pragma once
 #include "ECS/Component.h"
+#include "Assets/FileHeaderDeclarations.h"
 
 namespace Havtorn
 {
@@ -11,13 +12,18 @@ namespace Havtorn
 		SEnvironmentLightComponent(const SEntity& entityOwner)
 			: SComponent(entityOwner)
 		{}
+		SEnvironmentLightComponent(const SEntity& entityOwner, const std::string& assetPath)
+			: SComponent(entityOwner)
+			, AssetReference(SAssetReference(assetPath))
+		{}
+
+		void Serialize(char* toData, U64& pointerPosition) const;
+		void Deserialize(const char* fromData, U64& pointerPosition);
+		[[nodiscard]] U32 GetSize() const;
+
+		ENGINE_API void IsDeleted(CScene* fromScene) override;
 
 		bool IsActive = false;
-		U16 AmbientCubemapReference = 0;
-		U64 AssetRegistryKey = 0;
-	
-		// TODO.NR: If we assume that EEditorResourceTexture won't change order (because we don't expect to have many editor resource textures), this
-		// hard coded index works perfectly fine. We might want to find a cleaner abstraction or way to connect this editor data to the engine though.
-		U32 EditorTextureIndex = 7;
+		SAssetReference AssetReference;
 	};
 }

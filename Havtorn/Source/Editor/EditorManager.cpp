@@ -7,7 +7,7 @@
 #include <format>
 
 #include <Engine.h>
-#include <FileSystem/FileSystem.h>
+#include <FileSystem.h>
 #include <Input/InputMapper.h>
 #include <Input/InputTypes.h>
 
@@ -26,6 +26,7 @@
 #include <PlatformManager.h>
 #include <Color.h>
 #include <Timer.h>
+#include <Assets/AssetRegistry.h>
 
 namespace Havtorn
 {
@@ -47,7 +48,7 @@ namespace Havtorn
 		SAFE_DELETE(ResourceManager);
 	}
 
-	bool CEditorManager::Init(CPlatformManager* platformManager, const CGraphicsFramework* framework, CRenderManager* renderManager)
+	bool CEditorManager::Init(CPlatformManager* platformManager, CRenderManager* renderManager)
 	{
 		PlatformManager = platformManager;
 		if (PlatformManager == nullptr)
@@ -76,7 +77,7 @@ namespace Havtorn
 		Windows.back()->SetEnabled(false);
 
 		ResourceManager = new CEditorResourceManager();
-		bool success = ResourceManager->Init(renderManager, framework);
+		bool success = ResourceManager->Init(renderManager);
 		if (!success)
 			return false;
 		RenderManager = renderManager;
@@ -159,10 +160,15 @@ namespace Havtorn
 		// Windows
 		for (const auto& window : Windows)
 		{
-			if (!window->GetEnabled())
-				continue;
+			if (window->GetEnabled())
+				window->OnInspectorGUI();
 
-			window->OnInspectorGUI();
+			if (!window->WasEnabled && window->GetEnabled())
+				window->OnEnable();
+			if (window->WasEnabled && !window->GetEnabled())
+				window->OnDisable();
+
+			window->WasEnabled = window->GetEnabled();
 		}
 
 		DebugWindow();
@@ -186,6 +192,10 @@ namespace Havtorn
 				GUI::Text(GetFrameRate().c_str());
 				GUI::Text(GetSystemMemory().c_str());
 				GUI::Text(GetDrawCalls().c_str());
+
+				static bool debugRegistry = false;
+				GUI::Checkbox("Show Registry Details", debugRegistry);
+				GUI::Text(GEngine::GetAssetRegistry()->GetDebugString(debugRegistry).c_str());
 			}
 
 			GUI::End();
@@ -270,21 +280,6 @@ namespace Havtorn
 		return AssetRepresentations[0];
 	}
 
-	//const Ptr<SEditorAssetRepresentation>& CEditorManager::GetAssetRepFromImageRef(void* imageRef) const
-	//{
-	//	for (const auto& rep : AssetRepresentations)
-	//	{
-	//		if (imageRef == rep->TextureRef)
-	//			return rep;
-	//	}
-
-	//	// NR: Return empty rep
-	//	return AssetRepresentations[0];
-	//}
-
-	/*std::function<SAssetInspectionData(std::filesystem::directory_entry, const EAssetType assetTypeFilter)> */
-
-
 	DirEntryFunc CEditorManager::GetAssetInspectFunction() const
 	{
 		return [this](std::filesystem::directory_entry entry)
@@ -308,7 +303,7 @@ namespace Havtorn
 
 	void CEditorManager::CreateAssetRep(const std::filesystem::path& path)
 	{
-		if (!CFileSystem::DoesFileExist(path.string()))
+		if (!UFileSystem::DoesFileExist(path.string()))
 		{
 			HV_LOG_ERROR("CEditorManager::CreateAssetRep failed to create an asset representation! File was not found!");
 			return;
@@ -318,10 +313,10 @@ namespace Havtorn
 		HV_ASSERT(!entry.is_directory(), "You are trying to create SEditorAssetRepresentation but you're creating a new folder.");
 
 		std::string filePath = path.string();
-		const U64 fileSize = UMath::Max(GEngine::GetFileSystem()->GetFileSize(filePath), sizeof(EAssetType));
+		const U64 fileSize = UMath::Max(UFileSystem::GetFileSize(filePath), sizeof(EAssetType));
 		char* data = new char[fileSize];
 
-		GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
+		UFileSystem::Deserialize(filePath, data, STATIC_U32(fileSize));
 
 		SEditorAssetRepresentation rep;
 
@@ -331,7 +326,7 @@ namespace Havtorn
 		rep.DirectoryEntry = entry;
 		rep.Name = entry.path().filename().string();
 		rep.Name = rep.Name.substr(0, rep.Name.length() - 4);
-		// TODO.NW: Save these in the textureBank? Might be impossible with animated thumbnails. Figure out ownership
+
 		rep.TextureRef = ResourceManager->RenderAssetTexure(rep.AssetType, filePath);
 
 		switch (rep.AssetType)
@@ -375,11 +370,9 @@ namespace Havtorn
 			GetEditorWindow<CMaterialTool>()->OpenMaterial(asset);
 		}
 
-		// Edit mesh, texture, anim montage, material?
 		if (asset->AssetType == EAssetType::Script)
 		{
-			// Load asset, held somewhere? RenderManager and World
-			GetEditorWindow<CScriptTool>()->OpenScript(GEngine::GetWorld()->LoadScript<SGameScript>(asset->DirectoryEntry.path().string()));
+			GetEditorWindow<CScriptTool>()->OpenScript(asset);
 		}
 
 		if (asset->AssetType == EAssetType::Scene)
@@ -708,8 +701,10 @@ namespace Havtorn
 
 		if (SStaticMeshComponent* staticMesh = CurrentScene->GetComponent<SStaticMeshComponent>(firstSelectedEntity))
 		{
-			center = staticMesh->BoundsCenter;
-			bounds = SVector::GetAbsMaxKeepValue(staticMesh->BoundsMax, staticMesh->BoundsMin);
+			SStaticMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMesh->AssetReference, CAssetRegistry::EditorManagerRequestID);
+			center = meshAsset->BoundsCenter;
+			bounds = SVector::GetAbsMaxKeepValue(meshAsset->BoundsMax, meshAsset->BoundsMin);
+			GEngine::GetAssetRegistry()->UnrequestAsset(staticMesh->AssetReference, CAssetRegistry::EditorManagerRequestID);
 			foundBounds = true;
 		}
 

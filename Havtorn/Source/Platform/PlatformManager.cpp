@@ -4,11 +4,11 @@
 
 #include "PlatformManager.h"
 
-//#include "Input/Input.h"
 #include <string>
 #include <vector>
 
 #include <Log.h>
+#include <FileSystem.h>
 
 namespace Havtorn
 {
@@ -44,6 +44,10 @@ namespace Havtorn
 						   {
 							   return (char)c;
 						   });
+
+			auto startIndex = str.find("havtorn://", 0) + 10;
+			str = str.substr(startIndex, str.length() - startIndex);
+			std::erase_if(str, [](char c) { return c == '"' || c == '/'; });
 			HV_LOG_INFO(str.c_str());
 		}
 		break;
@@ -167,19 +171,7 @@ namespace Havtorn
 	{
 		WindowData = windowData;
 
-		//rapidjson::Document document = CJsonReader::Get()->LoadDocument("Json/Settings/WindowSettings.json");
-
-		//if (document.HasMember("Window Width"))
-		//    WindowData.Width = document["Window Width"].GetInt();
-
-		//if (document.HasMember("Window Height"))
-		//    WindowData.Height = document["Window Height"].GetInt();
-
-		//if (document.HasMember("Window Starting Pos X"))
-		//    WindowData.X = document["Window Starting Pos X"].GetInt();
-
-		//if (document.HasMember("Window Starting Pos Y"))
-		//    WindowData.Y = document["Window Starting Pos Y"].GetInt();
+		CJsonDocument document = UFileSystem::OpenJson("Config/EngineConfig.json");
 
 		//HCURSOR customCursor = NULL;
 		//if (document.HasMember("Cursor Path"))
@@ -188,12 +180,7 @@ namespace Havtorn
 		//if (customCursor == NULL)
 		//    customCursor = LoadCursor(nullptr, IDC_ARROW);
 
-		//HICON customIcon = NULL;
-		//if (document.HasMember("Icon Path"))
-		//    customIcon = (HICON)LoadImageA(NULL, document["Icon Path"].GetString(), IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
-
-		//if (customIcon == NULL)
-		//    customIcon = (HICON)LoadImageA(NULL, "ironwrought.ico", IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
+		HICON customIcon = (HICON)LoadImageA(NULL, document.GetString("Icon Path", "Resources/HavtornIcon.ico").c_str(), IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
 
 		WNDCLASSEX windowclass = {};
 		windowclass.cbSize = sizeof(WNDCLASSEX);
@@ -202,23 +189,12 @@ namespace Havtorn
 		windowclass.cbClsExtra = 0;
 		windowclass.cbWndExtra = 0;
 		windowclass.hInstance = GetModuleHandle(nullptr);
-		//windowclass.hIcon = customIcon;
+		windowclass.hIcon = customIcon;
 		//windowclass.hCursor = customCursor;
 		windowclass.lpszClassName = L"HavtornWindowClass";
 		RegisterClassEx(&windowclass);
 
-		std::string gameName = "Havtorn Editor";
-		//if (document.HasMember("Game Name"))
-		//{
-		//    gameName = document["Game Name"].GetString();
-		//}
-
-		//bool borderless = false;
-		//if (document.HasMember("Borderless Window"))
-		//{
-		//    borderless = document["Borderless Window"].GetBool();
-		//}
-
+		std::string gameName = document.GetString("Game Name", "Havtorn Editor");
 		MaxResolution = SVector2<U16>(STATIC_U16(GetSystemMetrics(SM_CXSCREEN)), STATIC_U16(GetSystemMetrics(SM_CYSCREEN)));
 
 		if (false/*borderless*/)
@@ -248,20 +224,7 @@ namespace Havtorn
 
 		//::SetCursor(customCursor);
 
-		//LockCursor(true);
-
-		//HBRUSH hBrush = CreateSolidBrush(RGB(255, 153, 0));
-
-		//MENUINFO mi = { 0 };
-		//mi.cbSize = sizeof(mi);
-		//mi.fMask = MIM_BACKGROUND | MIM_APPLYTOSUBMENUS;
-		//mi.hbrBack = hBrush;
-
-		//HMENU hMenu = ::GetMenu(WindowHandle);
-		//SetMenuInfo(hMenu, &mi);
-
 		Resolution = { WindowData.Width, WindowData.Height };
-		//PreviousResolution = Resolution;
 		ResizeTarget = {};
 
 		EnableDragDrop();

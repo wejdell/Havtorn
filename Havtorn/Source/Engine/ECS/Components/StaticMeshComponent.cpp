@@ -2,28 +2,34 @@
 
 #include "hvpch.h"
 #include "StaticMeshComponent.h"
-#include "FileSystem\FileHeaderDeclarations.h"
+#include "Assets/FileHeaderDeclarations.h"
+#include "Assets/AssetRegistry.h"
 
 namespace Havtorn
 {
     void SStaticMeshComponent::Serialize(char* toData, U64& pointerPosition) const
     {
         SerializeData(Owner, toData, pointerPosition);
-        SerializeData(AssetRegistryKey, toData, pointerPosition);
+        AssetReference.Serialize(toData, pointerPosition);
     }
 
     void SStaticMeshComponent::Deserialize(const char* fromData, U64& pointerPosition)
     {
         DeserializeData(Owner, fromData, pointerPosition);
-        DeserializeData(AssetRegistryKey, fromData, pointerPosition);
+        AssetReference.Deserialize(fromData, pointerPosition);
     }
 
     U32 SStaticMeshComponent::GetSize() const
     {
         U32 size = 0;
         size += GetDataSize(Owner);
-        size += GetDataSize(AssetRegistryKey);
+        size += AssetReference.GetSize();
 
         return size;
+    }
+
+    void SStaticMeshComponent::IsDeleted(CScene* /*fromScene*/)
+    {
+        GEngine::GetAssetRegistry()->UnrequestAsset(AssetReference, Owner.GUID);
     }
 }

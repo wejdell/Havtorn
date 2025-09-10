@@ -9,18 +9,19 @@
 #include <Engine.h>
 #include <Timer.h>
 #include <MathTypes/EngineMath.h>
-#include <FileSystem/FileSystem.h>
+#include <FileSystem.h>
 #include <Graphics/RenderManager.h>
 #include <PlatformManager.h>
+#include <Assets/AssetRegistry.h>
 
 namespace Havtorn
 {
 	CAssetBrowserWindow::CAssetBrowserWindow(const char* displayName, CEditorManager* manager)
 		: CWindow(displayName, manager)
-		, FileSystem(GEngine::GetFileSystem())
 	{
 		CurrentDirectory = std::filesystem::path(DefaultAssetPath);		
 		manager->GetPlatformManager()->OnDragDropAccepted.AddMember(this, &CAssetBrowserWindow::OnDragDropFiles);
+		GEngine::GetAssetRegistry()->OnAssetReloaded.AddMember(this, &CAssetBrowserWindow::OnAssetReloaded);
 	}
 
 	CAssetBrowserWindow::~CAssetBrowserWindow()
@@ -106,8 +107,44 @@ namespace Havtorn
 			{
 				if (IsSelectionHovered)
 				{
+					SEditorAssetRepresentation* selectedAssetRep = SelectedAsset.value();
+					const std::filesystem::directory_entry& directoryEntry = selectedAssetRep->DirectoryEntry;
+
 					if (GUI::MenuItem("Copy Asset Path"))
-						GUI::CopyToClipboard(SelectedAsset->path().string().c_str());
+						GUI::CopyToClipboard(directoryEntry.path().string().c_str());
+					
+					if (GUI::MenuItem("Delete Asset"))
+					{
+						std::filesystem::path pathToRemove = directoryEntry.path();
+						Manager->RemoveAssetRep(directoryEntry);
+						std::filesystem::remove(pathToRemove);
+					}
+
+					// TODO.NW: It would be nice with some sort of attribute to check
+					// the enum value against (e.g. SourceFileBased), may not exist on our current version though
+					if (selectedAssetRep->AssetType != EAssetType::Material
+						&& selectedAssetRep->AssetType != EAssetType::Script
+						&& selectedAssetRep->AssetType != EAssetType::Scene
+						&& selectedAssetRep->AssetType != EAssetType::Sequencer
+						)
+					{
+						if (selectedAssetRep->IsSourceWatched)
+						{
+							if (GUI::MenuItem("Stop Watching Source Changes"))
+							{
+								selectedAssetRep->IsSourceWatched = false;
+								GEngine::GetAssetRegistry()->StopSourceFileWatch(SAssetReference(directoryEntry.path().string()));
+							}
+						}
+						else
+						{
+							if (GUI::MenuItem("Start Watching Source Changes"))
+							{
+								selectedAssetRep->IsSourceWatched = true;
+								GEngine::GetAssetRegistry()->StartSourceFileWatch(SAssetReference(directoryEntry.path().string()));
+							}
+						}
+					}
 				}
 				else
 				{
@@ -171,6 +208,17 @@ namespace Havtorn
 	void CAssetBrowserWindow::OnDragDropFiles(const std::vector<std::string> filePaths)
 	{
 		FilePathsToImport = filePaths;
+	}
+
+	void CAssetBrowserWindow::OnAssetReloaded(const std::string& assetPath)
+	{
+		// TODO.NW: Maybe add some clearer feedback here that the hot reload was successful?
+
+		std::filesystem::directory_entry assetDir;
+		assetDir.assign(std::filesystem::path(assetPath));
+		auto& assetRep = Manager->GetAssetRepFromDirEntry(assetDir);
+
+		assetRep->TextureRef = Manager->GetResourceManager()->RenderAssetTexure(assetRep->AssetType, assetPath);
 	}
 
 	void AlignForWidth(F32 width, F32 alignment = 0.5f)
@@ -419,7 +467,7 @@ namespace Havtorn
 
 		intptr_t assetPickerThumbnail = ImportOptions.AssetRep != nullptr ? (intptr_t)ImportOptions.AssetRep->TextureRef.GetShaderResourceView() : intptr_t();
 		
-		SAssetPickResult result = GUI::AssetPickerFilter("Skeletal Rig", "Skeletal Mesh", assetPickerThumbnail, "Assets/Tests", columnCount, Manager->GetAssetFilteredInspectFunction(), EAssetType::SkeletalMesh);
+		SAssetPickResult result = GUI::AssetPickerFilter("Skeletal Rig", "Skeletal Mesh", assetPickerThumbnail, "Assets/Meshes", columnCount, Manager->GetAssetFilteredInspectFunction(), EAssetType::SkeletalMesh);
 
 		if (result.State == EAssetPickerState::AssetPicked)
 			ImportOptions.AssetRep = Manager->GetAssetRepFromDirEntry(result.PickedEntry).get();
@@ -467,7 +515,7 @@ namespace Havtorn
 		std::string texturePath2 = NewMaterialTextures[2]->DirectoryEntry.path().string();
 
 		SMaterialAssetFileHeader fileHeader;
-		fileHeader.MaterialName = "M_" + NewAssetName;
+		fileHeader.Name = "M_" + NewAssetName;
 		fileHeader.Material.Properties[0] = { -1.0f, texturePath0, 0 };
 		fileHeader.Material.Properties[1] = { -1.0f, texturePath0, 1 };
 		fileHeader.Material.Properties[2] = { -1.0f, texturePath0, 2 };
@@ -510,6 +558,7 @@ namespace Havtorn
 
 			const bool isOpen = GUI::TreeNode(filenameString.c_str());
 
+			// Asset Drag
 			if (GUI::BeginDragDropTarget())
 			{
 				SGuiPayload payload = GUI::AcceptDragDropPayload("AssetDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
@@ -526,6 +575,10 @@ namespace Havtorn
 
 						std::string oldPath = payloadAssetRep->DirectoryEntry.path().string().c_str();
 						std::string newPath = (entry.path() / payloadAssetRep->DirectoryEntry.path().filename()).string().c_str();
+
+						CJsonDocument config = UFileSystem::OpenJson(UFileSystem::EngineConfig);
+						config.WriteValueToArray("Asset Redirectors", oldPath, newPath);
+
 						Manager->RemoveAssetRep(payloadAssetRep->DirectoryEntry);
 						std::filesystem::rename(oldPath, newPath);
 						Manager->CreateAssetRep(newPath);
@@ -586,42 +639,10 @@ namespace Havtorn
 			if (!rep->TextureRef.IsShaderResourceValid())
 				rep->TextureRef = Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::FileIcon);
 
-			std::string assetTypeName;
-			SColor assetColor = SColor::White;
-			switch (rep->AssetType)
-			{
-			case EAssetType::Animation:
-				assetTypeName = "SKELETAL ANIMATION";
-				assetColor = SColor::Blue;
-				break;
-			case EAssetType::Material:
-				assetTypeName = "MATERIAL";
-				assetColor = SColor::Green;
-				break;
-			case EAssetType::SkeletalMesh:
-				assetTypeName = "SKELETAL MESH";
-				assetColor = SColor::Magenta;
-				break;
-			case EAssetType::StaticMesh:
-				assetTypeName = "STATIC MESH";
-				assetColor = SColor::Teal;
-				break;
-			case EAssetType::Texture:
-				assetTypeName = "TEXTURE";
-				assetColor = SColor::Red;
-				break;
-			case EAssetType::Script:
-				assetTypeName = "SCRIPT";
-				assetColor = SColor::Blue;
-				break;
-			default:
-				break;
-			}
-
-			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), rep->DirectoryEntry == SelectedAsset, (intptr_t)rep->TextureRef.GetShaderResourceView(), assetTypeName.c_str(), assetColor, rep.get(), sizeof(SEditorAssetRepresentation));
+			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), rep.get() == SelectedAsset.value_or(nullptr), (intptr_t)rep->TextureRef.GetShaderResourceView(), GetAssetTypeDetailName(rep->AssetType).c_str(), GetAssetTypeColor(rep->AssetType), rep->IsSourceWatched ? SColor::Orange : SColor(10), rep.get(), sizeof(SEditorAssetRepresentation));
 
 			if (result.IsClicked)
-				SelectedAsset = rep->DirectoryEntry;
+				SelectedAsset = rep.get();
 
 			if (result.IsDoubleClicked)
 			{
@@ -638,7 +659,7 @@ namespace Havtorn
 					Manager->GetResourceManager()->AnimateAssetTexture(rep->TextureRef, rep->AssetType, entry.path().string(), AnimatedThumbnailTime += GTime::Dt());
 				}
 
-				if (SelectedAsset.has_value() && rep->DirectoryEntry == SelectedAsset)
+				if (SelectedAsset.has_value() && rep.get() == SelectedAsset.value())
 				{
 					IsSelectionHovered = true;
 				}

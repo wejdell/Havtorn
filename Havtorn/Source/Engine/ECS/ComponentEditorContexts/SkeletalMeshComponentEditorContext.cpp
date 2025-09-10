@@ -10,7 +10,7 @@
 #include "Graphics/Debug/DebugDrawUtility.h"
 
 #include <GUI.h>
-
+#include <Assets/AssetRegistry.h>
 
 namespace Havtorn
 {
@@ -26,16 +26,17 @@ namespace Havtorn
 			return SComponentViewResult();
 
 		SSkeletalMeshComponent* skeletalMesh = scene->GetComponent<SSkeletalMeshComponent>(entityOwner);
-		GUI::TextDisabled("Number Of Materials: %i", skeletalMesh->NumberOfMaterials);
+		const SSkeletalMeshAsset* skeletalMeshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalMeshAsset>(skeletalMesh->AssetReference, entityOwner.GUID);
+		GUI::TextDisabled("Number Of Materials: %i", skeletalMeshAsset->NumberOfMaterials);
 
-		SVector a = SVector(skeletalMesh->BoundsMin.X, skeletalMesh->BoundsMin.Y, skeletalMesh->BoundsMin.Z);
-		SVector b = SVector(skeletalMesh->BoundsMin.X, skeletalMesh->BoundsMin.Y, skeletalMesh->BoundsMax.Z);
-		SVector c = SVector(skeletalMesh->BoundsMax.X, skeletalMesh->BoundsMin.Y, skeletalMesh->BoundsMax.Z);
-		SVector d = SVector(skeletalMesh->BoundsMax.X, skeletalMesh->BoundsMin.Y, skeletalMesh->BoundsMin.Z);
-		SVector e = SVector(skeletalMesh->BoundsMin.X, skeletalMesh->BoundsMax.Y, skeletalMesh->BoundsMin.Z);
-		SVector f = SVector(skeletalMesh->BoundsMax.X, skeletalMesh->BoundsMax.Y, skeletalMesh->BoundsMin.Z);
-		SVector g = SVector(skeletalMesh->BoundsMax.X, skeletalMesh->BoundsMax.Y, skeletalMesh->BoundsMax.Z);
-		SVector h = SVector(skeletalMesh->BoundsMin.X, skeletalMesh->BoundsMax.Y, skeletalMesh->BoundsMax.Z);
+		SVector a = SVector(skeletalMeshAsset->BoundsMin.X, skeletalMeshAsset->BoundsMin.Y, skeletalMeshAsset->BoundsMin.Z);
+		SVector b = SVector(skeletalMeshAsset->BoundsMin.X, skeletalMeshAsset->BoundsMin.Y, skeletalMeshAsset->BoundsMax.Z);
+		SVector c = SVector(skeletalMeshAsset->BoundsMax.X, skeletalMeshAsset->BoundsMin.Y, skeletalMeshAsset->BoundsMax.Z);
+		SVector d = SVector(skeletalMeshAsset->BoundsMax.X, skeletalMeshAsset->BoundsMin.Y, skeletalMeshAsset->BoundsMin.Z);
+		SVector e = SVector(skeletalMeshAsset->BoundsMin.X, skeletalMeshAsset->BoundsMax.Y, skeletalMeshAsset->BoundsMin.Z);
+		SVector f = SVector(skeletalMeshAsset->BoundsMax.X, skeletalMeshAsset->BoundsMax.Y, skeletalMeshAsset->BoundsMin.Z);
+		SVector g = SVector(skeletalMeshAsset->BoundsMax.X, skeletalMeshAsset->BoundsMax.Y, skeletalMeshAsset->BoundsMax.Z);
+		SVector h = SVector(skeletalMeshAsset->BoundsMin.X, skeletalMeshAsset->BoundsMax.Y, skeletalMeshAsset->BoundsMax.Z);
 
 		SMatrix transformMatrix = transform->Transform.GetMatrix();
 
@@ -61,7 +62,7 @@ namespace Havtorn
 		GDebugDraw::AddLine(g, h, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false);
 		GDebugDraw::AddLine(h, e, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false);
 
-		return { EComponentViewResultLabel::InspectAssetComponent, skeletalMesh, 0 };
+		return { EComponentViewResultLabel::InspectAssetComponent, skeletalMesh, &skeletalMesh->AssetReference, nullptr, EAssetType::SkeletalMesh };
     }
 
 	bool SSkeletalMeshComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
