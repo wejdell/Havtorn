@@ -559,6 +559,7 @@ namespace Havtorn
 		Active,
 		AssetPicked,
 		Cancelled,
+		ContextMenu,
 	};
 
 	struct SAssetPickResult
@@ -573,6 +574,7 @@ namespace Havtorn
 		{}
 		EAssetPickerState State = EAssetPickerState::Inactive;
 		std::filesystem::directory_entry PickedEntry;
+		bool IsHovered = false;
 	};
 
 	struct SRenderAssetCardResult
@@ -887,6 +889,7 @@ namespace Havtorn
 		static void EndDragDropTarget();
 
 		static bool BeginPopupContextWindow();
+		static bool BeginPopupContextItem();
 
 		static void OpenPopup(const char* label);
 
@@ -914,7 +917,7 @@ namespace Havtorn
 
 		static SAssetPickResult AssetPicker(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryFunc& assetInspector);
 		static SAssetPickResult AssetPickerFilter(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType);
-		static SRenderAssetCardResult RenderAssetCard(const char* label, const bool isSelected, const intptr_t& thumbnailID, const char* typeName, const SColor& color, void* dragDropPayloadToSet, U64 payLoadSize);
+		static SRenderAssetCardResult RenderAssetCard(const char* label, const bool isSelected, const intptr_t& thumbnailID, const char* typeName, const SColor& color, const SColor& borderColor, void* dragDropPayloadToSet, U64 payLoadSize);
 
 		static bool Selectable(const char* label, const bool selected = false, const std::vector<ESelectableFlag>& flags = {}, const SVector2<F32>& size = SVector2<F32>(0.0f));
 
@@ -927,6 +930,7 @@ namespace Havtorn
 		static void Dummy(const SVector2<F32>& size);
 		static void SameLine(const F32 offsetFromX = 0.0f, const F32 spacing = -1.0f);
 		static bool IsItemClicked(const EGUIMouseButton button = EGUIMouseButton::Left);
+		static bool IsMouseClicked(I32 mouseButton = 0);
 		static bool IsMouseReleased(I32 mouseButton = 0);
 		static bool IsItemHovered();
 		static bool IsMouseInRect(const SVector2<F32>& topLeft, const SVector2<F32>& bottomRight);
@@ -934,6 +938,7 @@ namespace Havtorn
 		static bool IsItemVisible();
 		static bool IsWindowFocused();
 		static bool IsWindowHovered();
+		static bool IsPopupOpen(const char* label);
 
 		static void BeginVertical(const char* label, const SVector2<F32>& size);
 		static void EndVertical();

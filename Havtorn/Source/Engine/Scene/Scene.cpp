@@ -5,9 +5,9 @@
 #include "ECS/ECSInclude.h"
 #include "ECS/GUIDManager.h"
 #include "Graphics/RenderManager.h"
-#include "FileSystem/FileHeaderDeclarations.h"
+#include "Assets/FileHeaderDeclarations.h"
 #include "World.h"
-#include "AssetRegistry.h"
+#include "Assets/AssetRegistry.h"
 
 #include "../Game/GameScript.h"
 
@@ -20,13 +20,12 @@ namespace Havtorn
 
 	CScene::~CScene()
 	{
-		Entities.clear();
-		RenderManager = nullptr;
+		ClearScene();
+		RegisteredComponentEditorContexts.clear();
 	}
 
-	bool CScene::Init(CRenderManager* renderManager, const std::string& sceneName)
+	bool CScene::Init(const std::string& sceneName)
 	{
-		RenderManager = renderManager;
 		SceneName = sceneName;
 
 		RegisterComponent<STransformComponent>(50, &STransformComponentEditorContext::Context);
@@ -54,7 +53,7 @@ namespace Havtorn
 		return true;
 	}
 
-	bool CScene::Init3DDefaults(CRenderManager* renderManager)
+	bool CScene::Init3DDefaults()
 	{
 		// === Camera ===
 		MainCameraEntity = AddEntity("Camera");
@@ -86,9 +85,8 @@ namespace Havtorn
 
 		AddComponent<STransformComponent>(environmentLightEntity);
 		AddComponentEditorContext(environmentLightEntity, &STransformComponentEditorContext::Context);
-		renderManager->LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/CubemapTheVisit.hva", AddComponent<SEnvironmentLightComponent>(environmentLightEntity));
+		AddComponent<SEnvironmentLightComponent>(environmentLightEntity, "Resources/DefaultSkybox.hva");
 		AddComponentEditorContext(environmentLightEntity, &SEnvironmentLightComponentEditorContext::Context);
-		//GetComponent<SEnvironmentLightComponent>(environmentLightEntity)->AssetRegistryKey = assetRegistry->Register("Assets/Textures/Cubemaps/CubemapTheVisit.hva");
 		// === !Environment light ===
 
 		// === Directional light ===
@@ -115,15 +113,16 @@ namespace Havtorn
 		return true;
 	}
 
-	bool CScene::Init3DDemoScene(CRenderManager* renderManager)
+	bool CScene::Init3DDemoScene()
 	{
-		if (!Init(renderManager, "3DDemoScene"))
+		if (!Init("3DDemoScene"))
 			return false;
 
-		if (!Init3DDefaults(renderManager))
+		if (!Init3DDefaults())
 			return false;
 
-		//CAssetRegistry* assetRegistry = GEngine::GetWorld()->GetAssetRegistry();
+		SEnvironmentLightComponent* environmentLightComponent = GetComponents<SEnvironmentLightComponent>()[0];
+		environmentLightComponent->AssetReference = SAssetReference("Assets/Textures/Cubemaps/CubemapTheVisit.hva");
 
 		// === Point light ===
 		const SEntity& pointLightEntity = AddEntity("Point Light");
@@ -135,7 +134,6 @@ namespace Havtorn
 		SMatrix pointLightMatrix = pointLightTransform.Transform.GetMatrix();
 		pointLightMatrix.SetTranslation({ 1.75f, 0.35f, -2.15f });
 		pointLightTransform.Transform.SetMatrix(pointLightMatrix);
-
 
 		SPointLightComponent& pointLightComp = *AddComponent<SPointLightComponent>(pointLightEntity);
 		AddComponentEditorContext(pointLightEntity, &SPointLightComponentEditorContext::Context);
@@ -235,27 +233,26 @@ namespace Havtorn
 		AddComponentEditorContext(decal, &STransformComponentEditorContext::Context);
 		decalTransform.Translate({ 0.75f, 1.60f, 0.35f });
 
-		SDecalComponent& decalComp = *AddComponent<SDecalComponent>(decal);
+		// TODO.NW: Still want to use a Material in decals instead of this texture setup
+		std::vector<std::string> decalTextures = { "Assets/Textures/T_noscare_AL_c.hva", "Assets/Textures/T_noscare_AL_m.hva", "Assets/Textures/T_noscare_AL_n.hva" };
+		SDecalComponent& decalComp = *AddComponent<SDecalComponent>(decal, decalTextures);
 		AddComponentEditorContext(decal, &SDecalComponentEditorContext::Context);
 
-		std::vector<std::string> decalTextures = { "Assets/Textures/T_noscare_AL_c.hva", "Assets/Textures/T_noscare_AL_m.hva", "Assets/Textures/T_noscare_AL_n.hva" };
-		renderManager->LoadDecalComponent(decalTextures, &decalComp);
 		decalComp.ShouldRenderAlbedo = true;
 		decalComp.ShouldRenderMaterial = true;
 		decalComp.ShouldRenderNormal = true;
 
-		//decalComp.AssetRegistryKeys = assetRegistry->Register(decalTextures);
 		// === !Decal ===
 
-		const std::string modelPath1 = "Assets/Tests/En_P_PendulumClock.hva";
+		const std::string modelPath1 = "Assets/Meshes/En_P_PendulumClock.hva";
 		const std::vector<std::string> materialNames1 = { "Assets/Materials/M_PendulumClock.hva", "Assets/Materials/M_Checkboard_128x128.hva" };
-		const std::string modelPath2 = "Assets/Tests/En_P_Bed.hva";
+		const std::string modelPath2 = "Assets/Meshes/En_P_Bed.hva";
 		const std::vector<std::string> materialNames2 = { "Assets/Materials/M_Bed.hva", "Assets/Materials/M_Bedsheet.hva" };
-		const std::string modelPath3 = "Assets/Tests/Plane.hva";
+		const std::string modelPath3 = "Assets/Meshes/Plane.hva";
 		const std::vector<std::string> materialNames3 = { "Assets/Materials/M_Quad.hva" };
-		const std::string modelPath4 = "Assets/Tests/En_P_WallLamp.hva";
+		const std::string modelPath4 = "Assets/Meshes/En_P_WallLamp.hva";
 		const std::vector<std::string> materialNames4 = { "Assets/Materials/M_Quad.hva", "Assets/Materials/M_Emissive.hva", "Assets/Materials/M_Headlamp.hva" };
-		const std::string modelPath5 = "Assets/Tests/Cube_1.hva";
+		const std::string modelPath5 = "Assets/Meshes/Cube_1.hva";
 		const std::vector<std::string> materialNames5 = { "Assets/Materials/M_Quad.hva" };
 
 		// === Pendulum ===
@@ -267,13 +264,10 @@ namespace Havtorn
 		AddComponentEditorContext(pendulum, &STransformComponentEditorContext::Context);
 		transform1.Translate({ 1.8f, 0.0f, -0.2f });
 
-		renderManager->LoadStaticMeshComponent(modelPath1, AddComponent<SStaticMeshComponent>(pendulum));
+		AddComponent<SStaticMeshComponent>(pendulum, modelPath1);
 		AddComponentEditorContext(pendulum, &SStaticMeshComponentEditorContext::Context);
-		renderManager->LoadMaterialComponent(materialNames1, AddComponent<SMaterialComponent>(pendulum));
+		AddComponent<SMaterialComponent>(pendulum, materialNames1);
 		AddComponentEditorContext(pendulum, &SMaterialComponentEditorContext::Context);
-
-		//GetComponent<SStaticMeshComponent>(pendulum)->AssetRegistryKey = assetRegistry->Register(modelPath1);
-		//GetComponent<SMaterialComponent>(pendulum)->AssetRegistryKeys = assetRegistry->Register(materialNames1);
 
 		SPhysics3DComponent* clockPhysics = AddComponent<SPhysics3DComponent>(pendulum);
 		AddComponentEditorContext(pendulum, &SPhysics3DComponentEditorContext::Context);
@@ -295,13 +289,10 @@ namespace Havtorn
 		AddComponentEditorContext(bed, &STransformComponentEditorContext::Context);
 		transform2.Translate({ 0.2f, 0.0f, 0.0f });
 
-		renderManager->LoadStaticMeshComponent(modelPath2, AddComponent<SStaticMeshComponent>(bed));
+		AddComponent<SStaticMeshComponent>(bed, modelPath2);
 		AddComponentEditorContext(bed, &SStaticMeshComponentEditorContext::Context);
-		renderManager->LoadMaterialComponent(materialNames2, AddComponent<SMaterialComponent>(bed));
+		AddComponent<SMaterialComponent>(bed, materialNames2);
 		AddComponentEditorContext(bed, &SMaterialComponentEditorContext::Context);
-
-		//GetComponent<SStaticMeshComponent>(bed)->AssetRegistryKey = assetRegistry->Register(modelPath2);
-		//GetComponent<SMaterialComponent>(bed)->AssetRegistryKeys = assetRegistry->Register(materialNames2);
 
 		SPhysics3DComponent* bedPhysics = AddComponent<SPhysics3DComponent>(bed);
 		AddComponentEditorContext(bed, &SPhysics3DComponentEditorContext::Context);
@@ -324,14 +315,11 @@ namespace Havtorn
 		lampTransform.Translate({ -1.0f, 1.4f, -1.25f });
 		lampTransform.Rotate({ 0.0f, UMath::DegToRad(90.0f), 0.0f });
 
-		renderManager->LoadStaticMeshComponent(modelPath4, AddComponent<SStaticMeshComponent>(lamp));
+		AddComponent<SStaticMeshComponent>(lamp, modelPath4);
 		AddComponentEditorContext(lamp, &SStaticMeshComponentEditorContext::Context);
-		renderManager->LoadMaterialComponent(materialNames4, AddComponent<SMaterialComponent>(lamp));
+		AddComponent<SMaterialComponent>(lamp, materialNames4);
 		AddComponentEditorContext(lamp, &SMaterialComponentEditorContext::Context);
-
-		/*	GetComponent<SStaticMeshComponent>(lamp)->AssetRegistryKey = assetRegistry->Register(modelPath4);
-			GetComponent<SMaterialComponent>(lamp)->AssetRegistryKeys = assetRegistry->Register(materialNames4);*/
-			// === !Lamp ===
+		// === !Lamp ===
 
 			// === Player Proxy ===
 		const SEntity& playerProxy = AddEntity("Player");
@@ -354,30 +342,23 @@ namespace Havtorn
 		GEngine::GetWorld()->Initialize3DPhysicsData(playerProxy);
 
 		//// Static Mesh
-		//std::string staticMeshPath = "Assets/Tests/CH_Enemy.hva";
+		//std::string staticMeshPath = "Assets/Meshes/CH_Enemy.hva";
 		//renderManager->LoadStaticMeshComponent(staticMeshPath, AddComponent<SStaticMeshComponent>(playerProxy));
 		//AddComponentEditorContext(playerProxy, &SStaticMeshComponentEditorContext::Context);
 		//GetComponent<SStaticMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register(staticMeshPath);
 
 		// Skeletal Mesh
-		std::string meshPath = "Assets/Tests/CH_Enemy_SK.hva";
-		renderManager->LoadSkeletalMeshComponent(meshPath, AddComponent<SSkeletalMeshComponent>(playerProxy));
+		std::string meshPath = "Assets/Meshes/CH_Enemy_SK.hva";
+		AddComponent<SSkeletalMeshComponent>(playerProxy, meshPath);
 		AddComponentEditorContext(playerProxy, &SSkeletalMeshComponentEditorContext::Context);
-		//GetComponent<SSkeletalMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register(meshPath);
 
-		std::string animationPathOne = "Assets/Tests/CH_Enemy_Walk.hva";
-		std::string animationPathTwo = "Assets/Tests/CH_Enemy_Chase.hva";
-
-		SSkeletalAnimationComponent* playerAnimationComponent = AddComponent<SSkeletalAnimationComponent>(playerProxy);
-		renderManager->LoadSkeletalAnimationComponent({ animationPathOne, animationPathTwo }, playerAnimationComponent);
+		const std::vector<std::string> animationPaths = { "Assets/Meshes/CH_Enemy_Walk.hva", "Assets/Meshes/CH_Enemy_Chase.hva" };
+		AddComponent<SSkeletalAnimationComponent>(playerProxy, animationPaths);
 		AddComponentEditorContext(playerProxy, &SSkeletalAnimationComponentEditorContext::Context);
-		//GetComponent<SSkeletalAnimationComponent>(playerProxy)->AssetRegistryKeys.emplace_back(assetRegistry->Register(animationPathOne));
-		//GetComponent<SSkeletalAnimationComponent>(playerProxy)->AssetRegistryKeys.emplace_back(assetRegistry->Register(animationPathTwo));
 
 		std::vector<std::string> enemyMaterialPaths = { "Assets/Materials/M_Enemy.hva" };
-		renderManager->LoadMaterialComponent(enemyMaterialPaths, AddComponent<SMaterialComponent>(playerProxy));
+		AddComponent<SMaterialComponent>(playerProxy, enemyMaterialPaths);
 		AddComponentEditorContext(playerProxy, &SMaterialComponentEditorContext::Context);
-		//GetComponent<SMaterialComponent>(playerProxy)->AssetRegistryKeys = assetRegistry->Register(enemyMaterialPaths);	
 		// === !Player Proxy ===
 
 		// === Crate ===
@@ -391,13 +372,10 @@ namespace Havtorn
 		SMatrix::Recompose(SVector(1.0f, 4.7f, -1.5f), SVector(45.0f, 0.0f, 45.0f), SVector(0.5f), crateMatrix);
 		crateTransform.SetMatrix(crateMatrix);
 
-		renderManager->LoadStaticMeshComponent(modelPath5, AddComponent<SStaticMeshComponent>(crate));
+		AddComponent<SStaticMeshComponent>(crate, modelPath5);
 		AddComponentEditorContext(crate, &SStaticMeshComponentEditorContext::Context);
-		renderManager->LoadMaterialComponent(materialNames5, AddComponent<SMaterialComponent>(crate));
+		AddComponent<SMaterialComponent>(crate, materialNames5);
 		AddComponentEditorContext(crate, &SMaterialComponentEditorContext::Context);
-
-		//GetComponent<SStaticMeshComponent>(crate)->AssetRegistryKey = assetRegistry->Register(modelPath5);
-		//GetComponent<SMaterialComponent>(crate)->AssetRegistryKeys = assetRegistry->Register(materialNames5);
 
 		SPhysics3DComponent* cratePhysics = AddComponent<SPhysics3DComponent>(crate);
 		AddComponentEditorContext(crate, &SPhysics3DComponentEditorContext::Context);
@@ -450,7 +428,7 @@ namespace Havtorn
 		std::vector<SWallAndFloorInitData> initData;
 		SVector floorRotation = SVector{ 90.0f, 0.0f, 0.0f };
 		SVector largeWallRotation = SVector{ 0.0f, 0.0f, 0.0f };
-		// TODO.NR: There's still a singularity happening here, need to figure out why
+		// TODO.NW: There's still a singularity happening here, need to figure out why
 		SVector smallWallRotation = SVector{ 0.0f, -90.0f, 0.0f };
 
 		initData.emplace_back(SVector{ -0.5f, 0.0f, -2.5f }, floorRotation, std::string("Floor"));
@@ -501,13 +479,10 @@ namespace Havtorn
 			matrix3.SetRotation(data.EulerAngles);
 			transform3.SetMatrix(matrix3);
 
-			renderManager->LoadStaticMeshComponent(modelPath3, AddComponent<SStaticMeshComponent>(entity));
+			AddComponent<SStaticMeshComponent>(entity, modelPath3);
 			AddComponentEditorContext(entity, &SStaticMeshComponentEditorContext::Context);
-			renderManager->LoadMaterialComponent(materialNames3, AddComponent<SMaterialComponent>(entity));
+			AddComponent<SMaterialComponent>(entity, materialNames3);
 			AddComponentEditorContext(entity, &SMaterialComponentEditorContext::Context);
-
-			//GetComponent<SStaticMeshComponent>(entity)->AssetRegistryKey = assetRegistry->Register(modelPath3);
-			//GetComponent<SMaterialComponent>(entity)->AssetRegistryKeys = assetRegistry->Register(materialNames3);
 
 			SPhysics3DComponent* physicsComponent = AddComponent<SPhysics3DComponent>(entity);
 			AddComponentEditorContext(entity, &SPhysics3DComponentEditorContext::Context);
@@ -525,17 +500,15 @@ namespace Havtorn
 		return true;
 	}
 
-	bool CScene::Init2DDemoScene(CRenderManager* renderManager)
+	bool CScene::Init2DDemoScene()
 	{
-		if (!Init(renderManager, "2DDemoScene"))
+		if (!Init("2DDemoScene"))
 			return false;
 
 		// === Camera ===
 		MainCameraEntity = AddEntity("Camera");
 		if (!MainCameraEntity.IsValid())
 			return false;
-
-		//CAssetRegistry* assetRegistry = GEngine::GetWorld()->GetAssetRegistry();
 
 		// Setup entities (create components)
 		STransformComponent& transform = (*AddComponent<STransformComponent>(MainCameraEntity));
@@ -566,9 +539,8 @@ namespace Havtorn
 
 		AddComponent<STransformComponent>(environmentLightEntity);
 		AddComponentEditorContext(environmentLightEntity, &STransformComponentEditorContext::Context);
-		renderManager->LoadEnvironmentLightComponent("Assets/Textures/Cubemaps/CubemapTheVisit.hva", AddComponent<SEnvironmentLightComponent>(environmentLightEntity));
+		AddComponent<SEnvironmentLightComponent>(environmentLightEntity, "Assets/Textures/Cubemaps/CubemapTheVisit.hva");
 		AddComponentEditorContext(environmentLightEntity, &SEnvironmentLightComponentEditorContext::Context);
-		//GetComponent<SEnvironmentLightComponent>(environmentLightEntity)->AssetRegistryKey = assetRegistry->Register("Assets/Textures/Cubemaps/CubemapTheVisit.hva");
 		// === !Environment light ===
 
 		// === Directional light ===
@@ -576,7 +548,7 @@ namespace Havtorn
 		if (!directionalLightEntity.IsValid())
 			return false;
 
-		// NR: Add transform to directional light so it can filter environmental lights based on distance
+		// NW: Add transform to directional light so it can filter environmental lights based on distance
 		AddComponent<STransformComponent>(directionalLightEntity);
 		AddComponentEditorContext(directionalLightEntity, &STransformComponentEditorContext::Context);
 
@@ -669,16 +641,16 @@ namespace Havtorn
 		size += DefaultSizeAllocator(GetComponents<SCameraControllerComponent>());
 		
 		size += SpecializedSizeAllocator(GetComponents<SMaterialComponent>());
-		
-		size += DefaultSizeAllocator(GetComponents<SEnvironmentLightComponent>());
+		size += SpecializedSizeAllocator(GetComponents<SEnvironmentLightComponent>());
+
 		size += DefaultSizeAllocator(GetComponents<SDirectionalLightComponent>());
 		size += DefaultSizeAllocator(GetComponents<SPointLightComponent>());
 		size += DefaultSizeAllocator(GetComponents<SSpotLightComponent>());
 		size += DefaultSizeAllocator(GetComponents<SVolumetricLightComponent>());
 
 		size += SpecializedSizeAllocator(GetComponents<SDecalComponent>());
-		
-		size += DefaultSizeAllocator(GetComponents<SSpriteComponent>());
+		size += SpecializedSizeAllocator(GetComponents<SSpriteComponent>());
+
 		size += DefaultSizeAllocator(GetComponents<STransform2DComponent>());
 
 		size += SpecializedSizeAllocator(GetComponents<SSpriteAnimatorGraphComponent>());
@@ -712,17 +684,16 @@ namespace Havtorn
 		DefaultSerializer(GetComponents<SCameraControllerComponent>(), toData, pointerPosition);
 
 		SpecializedSerializer(GetComponents<SMaterialComponent>(), toData, pointerPosition);
+		SpecializedSerializer(GetComponents<SEnvironmentLightComponent>(), toData, pointerPosition);
 
-		DefaultSerializer(GetComponents<SEnvironmentLightComponent>(), toData, pointerPosition);
 		DefaultSerializer(GetComponents<SDirectionalLightComponent>(), toData, pointerPosition);
 		DefaultSerializer(GetComponents<SPointLightComponent>(), toData, pointerPosition);
 		DefaultSerializer(GetComponents<SSpotLightComponent>(), toData, pointerPosition);
 		DefaultSerializer(GetComponents<SVolumetricLightComponent>(), toData, pointerPosition);
 
-		// NR: Texture info Saved and Loaded using AssetRegistry
 		SpecializedSerializer(GetComponents<SDecalComponent>(), toData, pointerPosition);
+		SpecializedSerializer(GetComponents<SSpriteComponent>(), toData, pointerPosition);
 
-		DefaultSerializer(GetComponents<SSpriteComponent>(), toData, pointerPosition);
 		DefaultSerializer(GetComponents<STransform2DComponent>(), toData, pointerPosition);
 
 		SpecializedSerializer(GetComponents<SSpriteAnimatorGraphComponent>(), toData, pointerPosition);
@@ -740,206 +711,43 @@ namespace Havtorn
 		DefaultSerializer(GetComponents<SMetaDataComponent>(), toData, pointerPosition);
 	}
 
-	void CScene::Deserialize(const char* fromData, U64& pointerPosition, CAssetRegistry* assetRegistry)
+	void CScene::Deserialize(const char* fromData, U64& pointerPosition)
 	{
 		DeserializeData(SceneName, fromData, pointerPosition);
 		DeserializeData(MainCameraEntity, fromData, pointerPosition);
 		DeserializeData(Entities, fromData, pointerPosition);
 
-		{
-			std::vector<STransformComponent> components;
-			SpecializedDeserializer(components, &STransformComponentEditorContext::Context, fromData, pointerPosition);
-		}
+		SpecializedDeserializer<STransformComponent>(&STransformComponentEditorContext::Context, fromData, pointerPosition);
+		SpecializedDeserializer<SStaticMeshComponent>(&SStaticMeshComponentEditorContext::Context, fromData, pointerPosition);
+		SpecializedDeserializer<SSkeletalMeshComponent>(&SSkeletalMeshComponentEditorContext::Context, fromData, pointerPosition);
 
-		{
-			U32 numberOfStaticMeshComponents = 0;
-			DeserializeData(numberOfStaticMeshComponents, fromData, pointerPosition);
-			std::vector<SStaticMeshComponent> staticMeshComponents;
-			staticMeshComponents.resize(numberOfStaticMeshComponents);
+		DefaultDeserializer<SCameraComponent>(&SCameraComponentEditorContext::Context, fromData, pointerPosition);
+		DefaultDeserializer<SCameraControllerComponent>(&SCameraControllerComponentEditorContext::Context, fromData, pointerPosition);
 
-			for (U64 index = 0; index < numberOfStaticMeshComponents; index++)
-			{
-				SStaticMeshComponent component;
-				component.Deserialize(fromData, pointerPosition);
-				RenderManager->LoadStaticMeshComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SStaticMeshComponent>(component.Owner));
-				AddComponentEditorContext(component.Owner, &SStaticMeshComponentEditorContext::Context);
-			}
-		}
+		SpecializedDeserializer<SMaterialComponent>(&SMaterialComponentEditorContext::Context, fromData, pointerPosition);
+		SpecializedDeserializer<SEnvironmentLightComponent>(&SEnvironmentLightComponentEditorContext::Context, fromData, pointerPosition);
 
-		{
-			U32 numberOfSkeletalMeshComponents = 0;
-			DeserializeData(numberOfSkeletalMeshComponents, fromData, pointerPosition);
-			std::vector<SSkeletalMeshComponent> skeletalMeshComponents;
-			skeletalMeshComponents.resize(numberOfSkeletalMeshComponents);
+		DefaultDeserializer<SDirectionalLightComponent>(&SDirectionalLightComponentEditorContext::Context, fromData, pointerPosition);	
+		DefaultDeserializer<SPointLightComponent>(&SPointLightComponentEditorContext::Context, fromData, pointerPosition);		
+		DefaultDeserializer<SSpotLightComponent>(&SSpotLightComponentEditorContext::Context, fromData, pointerPosition);
+		DefaultDeserializer<SVolumetricLightComponent>(&SVolumetricLightComponentEditorContext::Context, fromData, pointerPosition);
 
-			for (U64 index = 0; index < numberOfSkeletalMeshComponents; index++)
-			{
-				SSkeletalMeshComponent component;
-				component.Deserialize(fromData, pointerPosition);
-				auto comp = AddComponent<SSkeletalMeshComponent>(component.Owner);
-				RenderManager->LoadSkeletalMeshComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), comp);
-				AddComponentEditorContext(component.Owner, &SSkeletalMeshComponentEditorContext::Context);
-			}
-		}
+		SpecializedDeserializer<SDecalComponent>(&SDecalComponentEditorContext::Context, fromData, pointerPosition);
+		SpecializedDeserializer<SSpriteComponent>(&SSpriteComponentEditorContext::Context, fromData, pointerPosition);
 
-		{
-			std::vector<SCameraComponent> components;
-			DefaultDeserializer(components, &SCameraComponentEditorContext::Context, fromData, pointerPosition);
-		}
-
-		{
-			std::vector<SCameraControllerComponent> components;
-			DefaultDeserializer(components, &SCameraControllerComponentEditorContext::Context, fromData, pointerPosition);
-		}
-
-		U32 numberOfMaterialComponents = 0;
-		DeserializeData(numberOfMaterialComponents, fromData, pointerPosition);
-		std::vector<SMaterialComponent> materialComponents;
-		materialComponents.resize(numberOfMaterialComponents);
+		DefaultDeserializer<STransform2DComponent>(&STransform2DComponentEditorContext::Context, fromData, pointerPosition);
 		
-		for (U64 index = 0; index < numberOfMaterialComponents; index++)
-		{
-			SMaterialComponent component;
-			component.Deserialize(fromData, pointerPosition);
-			RenderManager->LoadMaterialComponent(assetRegistry->GetAssetPaths(component.AssetRegistryKeys), AddComponent<SMaterialComponent>(component.Owner));
-			AddComponentEditorContext(component.Owner, &SMaterialComponentEditorContext::Context);
-		}
-
-		U32 numberOfEnvironmentLightComponents = 0;
-		DeserializeData(numberOfEnvironmentLightComponents, fromData, pointerPosition);
-		std::vector<SEnvironmentLightComponent> environmentLightComponent;
-		environmentLightComponent.resize(numberOfEnvironmentLightComponents);
-		
-		for (U64 index = 0; index < numberOfEnvironmentLightComponents; index++)
-		{
-			SEnvironmentLightComponent component;
-			DeserializeData(component, fromData, pointerPosition);
-			RenderManager->LoadEnvironmentLightComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SEnvironmentLightComponent>(component.Owner));
-			AddComponentEditorContext(component.Owner, &SEnvironmentLightComponentEditorContext::Context);
-		}
-
-		{
-			std::vector<SDirectionalLightComponent> components;
-			DefaultDeserializer(components, &SDirectionalLightComponentEditorContext::Context, fromData, pointerPosition);
-		}
-
-		{
-			std::vector<SPointLightComponent> components;
-			DefaultDeserializer(components, &SPointLightComponentEditorContext::Context, fromData, pointerPosition);
-		}
-
-		{
-			std::vector<SSpotLightComponent> components;
-			DefaultDeserializer(components, &SSpotLightComponentEditorContext::Context, fromData, pointerPosition);
-		}
-
-		{
-			std::vector<SVolumetricLightComponent> components;
-			DefaultDeserializer(components, &SVolumetricLightComponentEditorContext::Context, fromData, pointerPosition);
-		}
-
-		U32 numberOfDecalComponents = 0;
-		DeserializeData(numberOfDecalComponents, fromData, pointerPosition);
-		std::vector<SDecalComponent> decalComponents;
-		decalComponents.resize(numberOfDecalComponents);
-		
-		for (U64 index = 0; index < numberOfDecalComponents; index++)
-		{
-			SDecalComponent component;
-			component.Deserialize(fromData, pointerPosition);
-			RenderManager->LoadDecalComponent(assetRegistry->GetAssetPaths(component.AssetRegistryKeys), AddComponent<SDecalComponent>(component.Owner));
-			AddComponentEditorContext(component.Owner, &SDecalComponentEditorContext::Context);
-		}
-
-		U32 numberOfSpriteComponents = 0;
-		DeserializeData(numberOfSpriteComponents, fromData, pointerPosition);
-		std::vector<SSpriteComponent> spriteComponents;
-		spriteComponents.resize(numberOfSpriteComponents);
-		
-		for (U64 index = 0; index < numberOfSpriteComponents; index++)
-		{
-			SSpriteComponent component;
-			DeserializeData(component, fromData, pointerPosition);
-			RenderManager->LoadSpriteComponent(assetRegistry->GetAssetPath(component.AssetRegistryKey), AddComponent<SSpriteComponent>(component.Owner));
-			AddComponentEditorContext(component.Owner, &SSpriteComponentEditorContext::Context);
-		}
-
-		{
-			std::vector<STransform2DComponent> components;
-			DefaultDeserializer(components, &STransform2DComponentEditorContext::Context, fromData, pointerPosition);
-		}
-
-		{
-			std::vector<SSpriteAnimatorGraphComponent> components;
-			SpecializedDeserializer(components, &SSpriteAnimatorGraphComponentEditorContext::Context, fromData, pointerPosition);
-		}
-
-		{
-			U32 numberOfcomponents = 0;
-			DeserializeData(numberOfcomponents, fromData, pointerPosition);
-			std::vector<SSkeletalAnimationComponent> components;
-			components.resize(numberOfcomponents);
-
-			for (U64 index = 0; index < numberOfcomponents; index++)
-			{
-				SSkeletalAnimationComponent component;
-				component.Deserialize(fromData, pointerPosition);
-				auto comp = AddComponent<SSkeletalAnimationComponent>(component.Owner);
-
-				RenderManager->LoadSkeletalAnimationComponent(assetRegistry->GetAssetPaths(component.AssetRegistryKeys), comp);
-				
-				AddComponentEditorContext(component.Owner, &SSkeletalAnimationComponentEditorContext::Context);
-			}
-		}
+		SpecializedDeserializer<SSpriteAnimatorGraphComponent>(&SSpriteAnimatorGraphComponentEditorContext::Context, fromData, pointerPosition);
+		SpecializedDeserializer<SSkeletalAnimationComponent>(&SSkeletalAnimationComponentEditorContext::Context, fromData, pointerPosition);
 
 		U32 numberOfSequencerComponents = 0;
 		DeserializeData(numberOfSequencerComponents, fromData, pointerPosition);
 
-		U32 numberOfScriptComponents = 0;
-		DeserializeData(numberOfScriptComponents, fromData, pointerPosition);
-		std::vector<SScriptComponent> scriptComponents;
-		scriptComponents.resize(numberOfScriptComponents);
-
-		for (U64 index = 0; index < numberOfScriptComponents; index++)
-		{
-			SScriptComponent component;
-			std::string fileName;
-			DeserializeData(fileName, fromData, pointerPosition);
-			component.Deserialize(fromData, pointerPosition);
-			if(fileName != "NA")
-				component.Script = GEngine::GetWorld()->LoadScript<HexRune::SScript>(fileName);
-			
-			if(component.Script != nullptr)
-				component.Script->Scene = this;
-
-			AddComponent(component, component.Owner);
-			AddComponentEditorContext(component.Owner, &SScriptComponentEditorContext::Context);
-
-
-			////component.Deserialize(fromData, pointerPosition);
-
-
-
-			//AddComponent(component.Owner, &SScriptComponentEditorContext::Context)
-			//auto comp = AddComponent<SScriptComponent>(component.Owner);
-			// TODO.NW: Unify asset loading methods
-			//comp->Script = GEngine::GetWorld()->LoadScript(assetRegistry->GetAssetPath(component.AssetRegistryKey));
-		}
-
-		{
-			std::vector<SPhysics2DComponent> components;
-			DefaultDeserializer(components, &SPhysics2DComponentEditorContext::Context, fromData, pointerPosition);
-		}
-
-		{
-			std::vector<SPhysics3DComponent> components;
-			DefaultDeserializer(components, &SPhysics3DComponentEditorContext::Context, fromData, pointerPosition);
-		}
-
-		{
-			std::vector<SPhysics3DControllerComponent> components;
-			DefaultDeserializer(components, &SPhysics3DControllerComponentEditorContext::Context, fromData, pointerPosition);
-		}
+		SpecializedDeserializer<SScriptComponent>(&SScriptComponentEditorContext::Context, fromData, pointerPosition);
+		
+		DefaultDeserializer<SPhysics2DComponent>(&SPhysics2DComponentEditorContext::Context, fromData, pointerPosition);
+		DefaultDeserializer<SPhysics3DComponent>(&SPhysics3DComponentEditorContext::Context, fromData, pointerPosition);
+		DefaultDeserializer<SPhysics3DControllerComponent>(&SPhysics3DControllerComponentEditorContext::Context, fromData, pointerPosition);
 
 		{
 			std::vector<SMetaDataComponent> componentVector;
@@ -994,7 +802,7 @@ namespace Havtorn
 		return outEntity;
 	}
 
-	void CScene::RemoveEntity(SEntity& entity)
+	void CScene::RemoveEntity(const SEntity entity)
 	{
 		if (!entity.IsValid())
 		{
@@ -1004,9 +812,11 @@ namespace Havtorn
 
 		if (!EntityIndices.contains(entity.GUID))
 		{
-			HV_LOG_ERROR("__FUNCTION__: Tried to remove entity with GUID: %i from a scene that does not contain it.", entity.GUID);
+			HV_LOG_ERROR("__FUNCTION__: Tried to remove entity with GUID: %u from a scene that does not contain it.", entity.GUID);
 			return;
 		}
+
+		OnEntityPreDestroy.Broadcast(entity);
 
 		for (SComponentStorage& storage : Storages)
 		{
@@ -1034,10 +844,17 @@ namespace Havtorn
 		SEntity& entityAtBack = Entities.back();
 		EntityIndices.at(entityAtBack.GUID) = EntityIndices.at(entity.GUID);
 
-		std::swap(Entities[EntityIndices.at(entity.GUID)], Entities.back());
+		std::swap(Entities[EntityIndices.at(entity.GUID)], entityAtBack);
 
 		Entities.pop_back();
 		EntityIndices.erase(entity.GUID);
+	}
+
+	void CScene::ClearScene()
+	{
+		std::vector<SEntity> copy = Entities;
+		for (const SEntity entity : copy)
+			RemoveEntity(entity);
 	}
 
 	void CScene::AddComponentEditorContext(const SEntity& owner, SComponentEditorContext* context)

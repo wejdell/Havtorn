@@ -47,7 +47,8 @@ namespace Havtorn
 			return;
 
 		STransformComponent* parentComponent = fromScene->GetComponent<STransformComponent>(ParentEntity);
-		parentComponent->Detach(this);
+		if (parentComponent)
+			parentComponent->Detach(this);
 	}
 
 	void STransformComponent::Attach(STransformComponent* child)

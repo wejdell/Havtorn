@@ -2,6 +2,7 @@
 
 #pragma once
 #include "ECS/Component.h"
+#include "Assets/FileHeaderDeclarations.h"
 
 namespace Havtorn
 {
@@ -11,21 +12,21 @@ namespace Havtorn
 		SDecalComponent(const SEntity& entityOwner)
 			: SComponent(entityOwner)
 		{}
+		SDecalComponent(const SEntity& entityOwner, const std::vector<std::string>& assetPaths)
+			: SComponent(entityOwner)
+			, AssetReferences(SAssetReference::MakeVectorFromPaths(assetPaths))
+		{}
 
 		void Serialize(char* toData, U64& pointerPosition) const;
 		void Deserialize(const char* fromData, U64& pointerPosition);
 		[[nodiscard]] U32 GetSize() const;
 
-		std::vector<U64> AssetRegistryKeys = {};
-		// TODO.NR: Figure out what to do about this. Unify with MaterialComp? have single material as property?
-		// TODO.NR: Change to U32 so that it matches with TextureBank
-		std::vector<U16> TextureReferences = {0, 0, 0};
+		ENGINE_API void IsDeleted(CScene* fromScene) override;
+
+		// TODO.NW: Figure out what to do about this. Unify with MaterialComp? have single material as property?
+		std::vector<SAssetReference> AssetReferences = { SAssetReference(), SAssetReference(), SAssetReference() };
 		bool ShouldRenderAlbedo = false;
 		bool ShouldRenderMaterial = false;
 		bool ShouldRenderNormal = false;
-		
-		// TODO.NR: If we assume that EEditorResourceTexture won't change order (because we don't expect to have many editor resource textures), this
-		// hard coded index works perfectly fine. We might want to find a cleaner abstraction or way to connect this editor data to the engine though.
-		U32 EditorTextureIndex = 11;
 	};
 }

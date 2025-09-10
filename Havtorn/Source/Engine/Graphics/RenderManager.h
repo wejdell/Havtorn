@@ -4,7 +4,7 @@
 #include "hvpch.h"
 #include "GraphicsFramework.h"
 #include "Renderers/FullscreenRenderer.h"
-#include "FullscreenTextureFactory.h"
+#include "RenderTextureFactory.h"
 #include "RenderStateManager.h"
 #include "GraphicsEnums.h"
 #include "GraphicsMaterial.h"
@@ -12,12 +12,12 @@
 #include "Scene/World.h"
 
 #include "RenderingPrimitives/DataBuffer.h"
-#include "RenderingPrimitives/FullscreenTexture.h"
+#include "RenderingPrimitives/RenderTexture.h"
 #include "RenderingPrimitives/GBuffer.h"
 
 #include <queue>
 
-#include "Core/RuntimeAssetDeclarations.h"
+#include "Assets/RuntimeAssetDeclarations.h"
 #include "Input/InputTypes.h"
 
 namespace Havtorn
@@ -58,6 +58,8 @@ namespace Havtorn
 
 	class CRenderManager
 	{
+		friend CAssetRegistry;
+
 	public:
 		CRenderManager() = default;
 		~CRenderManager();
@@ -66,20 +68,6 @@ namespace Havtorn
 		void Render();
 
 		void Release(SVector2<U16> newResolution);
-
-		ENGINE_API void LoadStaticMeshComponent(const std::string& filePath, SStaticMeshComponent* outStaticMeshComponent, CScene* scene = nullptr);
-		ENGINE_API void LoadSkeletalMeshComponent(const std::string& filePath, SSkeletalMeshComponent* outSkeletalMeshComponent);
-		ENGINE_API void LoadMaterialComponent(const std::vector<std::string>& materialPaths, SMaterialComponent* outMaterialComponent);
-		// NR: Note that we use the file *name* instead of the full path here, we assume that it already exists in the registry.
-		ENGINE_API bool TryLoadStaticMeshComponent(const std::string& fileName, SStaticMeshComponent* outStaticMeshComponent) const;
-		ENGINE_API bool TryReplaceMaterialOnComponent(const std::string& filePath, U8 materialIndex, SMaterialComponent* outMaterialComponent) const;
-
-		ENGINE_API SVector2<F32> GetShadowAtlasResolution() const;
-		
-		ENGINE_API void LoadDecalComponent(const std::vector<std::string>& texturePaths, SDecalComponent* outDecalComponent);
-		ENGINE_API void LoadEnvironmentLightComponent(const std::string& ambientCubemapTexturePath, SEnvironmentLightComponent* outEnvironmentLightComponent);
-		ENGINE_API void LoadSpriteComponent(const std::string& filePath, SSpriteComponent* outSpriteComponent);
-		ENGINE_API void LoadSkeletalAnimationComponent(const std::vector<std::string>& filePaths, SSkeletalAnimationComponent* outSkeletalAnimationComponent);
 
 		ENGINE_API CRenderTexture RenderStaticMeshAssetTexture(const std::string& filePath);
 		ENGINE_API CRenderTexture RenderSkeletalMeshAssetTexture(const std::string& filePath);
@@ -96,13 +84,13 @@ namespace Havtorn
 
 		U32 WriteToAnimationDataTexture(const std::string& animationName);
 
-		bool IsStaticMeshInInstancedRenderList(const std::string& meshName);
-		void AddStaticMeshToInstancedRenderList(const std::string& meshName, const STransformComponent* component);
+		bool IsStaticMeshInInstancedRenderList(const U32 meshUID);
+		void AddStaticMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* component);
 		void SwapStaticMeshInstancedRenderLists();
 		void ClearSystemStaticMeshInstanceData();
 
-		bool IsSkeletalMeshInInstancedRenderList(const std::string& meshName);
-		void AddSkeletalMeshToInstancedRenderList(const std::string& meshName, const STransformComponent* transformComponent, const SSkeletalAnimationComponent* animationComponent);
+		bool IsSkeletalMeshInInstancedRenderList(const U32 meshUID);
+		void AddSkeletalMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* transformComponent, const SSkeletalAnimationComponent* animationComponent);
 		void SwapSkeletalMeshInstancedRenderLists();
 		void ClearSystemSkeletalMeshInstanceData();
 
@@ -125,6 +113,7 @@ namespace Havtorn
 		void SwapRenderCommandBuffers();
 
 		const SVector2<U16>& GetCurrentWindowResolution() const;
+		const SVector2<F32>& GetShadowAtlasResolution() const;
 
 	public:
 		ENGINE_API static U32 NumberOfDrawCallsThisFrame;
@@ -140,8 +129,6 @@ namespace Havtorn
 		void BindRenderFunctions();
 
 	private:
-		std::vector<U16> AddMaterial(const std::string& materialName, EMaterialConfiguration configuration);
-
 		inline void ShadowAtlasPrePassDirectional(const SRenderCommand& command);
 		inline void ShadowAtlasPrePassPoint(const SRenderCommand& command);
 		inline void ShadowAtlasPrePassSpot(const SRenderCommand& command);
@@ -181,6 +168,8 @@ namespace Havtorn
 
 		void CheckIsolatedRenderPass();
 		void CycleRenderPass(const SInputActionPayload payload);
+
+		void MapRuntimeMaterialProperty(SRuntimeGraphicsMaterialProperty& property, std::vector<ID3D11ShaderResourceView*>& runtimeArray, std::map<U32, F32>& runtimeMap);
 
 	private:
 		struct SFrameBufferData
@@ -382,7 +371,6 @@ namespace Havtorn
 		struct SSkeletalMeshInstanceData
 		{
 			std::vector<SMatrix> Transforms{};
-			//std::vector<SVector2<U32>> AnimationData{};
 			std::vector<SMatrix> Bones{};
 			std::vector<SEntity> Entities{};
 		};
@@ -395,16 +383,11 @@ namespace Havtorn
 			std::vector<SEntity> Entities{};
 		};
 
-		// TODO.NR: Add GUIDs to things like this
-		std::unordered_map<std::string, SStaticMeshAsset> LoadedStaticMeshes;
-		std::unordered_map<std::string, SSkeletalMeshAsset> LoadedSkeletalMeshes;
-		std::unordered_map<std::string, SSkeletalAnimationAsset> LoadedSkeletalAnims;
-		// NR: These are used as a way of cross-thread resource management
-		std::unordered_map<std::string, SStaticMeshInstanceData> SystemStaticMeshInstanceData;
-		std::unordered_map<std::string, SStaticMeshInstanceData> RendererStaticMeshInstanceData;
+		std::unordered_map<U32, SStaticMeshInstanceData> SystemStaticMeshInstanceData;
+		std::unordered_map<U32, SStaticMeshInstanceData> RendererStaticMeshInstanceData;
 
-		std::unordered_map<std::string, SSkeletalMeshInstanceData> SystemSkeletalMeshInstanceData;
-		std::unordered_map<std::string, SSkeletalMeshInstanceData> RendererSkeletalMeshInstanceData;
+		std::unordered_map<U32, SSkeletalMeshInstanceData> SystemSkeletalMeshInstanceData;
+		std::unordered_map<U32, SSkeletalMeshInstanceData> RendererSkeletalMeshInstanceData;
 
 		// TODO.NR: Maybe generalize GPU Instancing resources that are kept duplicate like this, combining
 		// the 4 function calls as well somehow. Maybe templated? Could use two template arguments, one for key and 
@@ -426,7 +409,7 @@ namespace Havtorn
 		SVector2<F32> ShadowAtlasResolution = SVector2<F32>::Zero;
 		SVector2<U16> CurrentWindowResolution = SVector2<U16>::Zero;
 
-		// NR: Keep our own property here for use on render thread
+		// NW: Keep our own property here for use on render thread
 		EWorldPlayState WorldPlayState = EWorldPlayState::Stopped;
 
 		void* EntityPerPixelData = nullptr;

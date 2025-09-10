@@ -5,6 +5,7 @@
 namespace Havtorn
 {
 	struct SComponent;
+	struct SAssetReference;
 	struct SEntity;
 	class CScene;
 
@@ -20,7 +21,9 @@ namespace Havtorn
 	{
 		EComponentViewResultLabel Label = EComponentViewResultLabel::PassThrough;
 		SComponent* ComponentViewed = nullptr;
-		U8 ComponentSubIndex = 0;
+		SAssetReference* AssetReference = nullptr;
+		std::vector<SAssetReference>* AssetReferences = nullptr;
+		EAssetType AssetType = EAssetType::None;
 	};
 
 	struct ENGINE_API SComponentEditorContext

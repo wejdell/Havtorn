@@ -11,7 +11,7 @@
 
 namespace Havtorn
 {
-	class CFileSystem;
+	class UFileSystem;
 
 	class CAssetBrowserWindow : public CWindow
 	{
@@ -24,6 +24,8 @@ namespace Havtorn
 
 	private:
 		void OnDragDropFiles(std::vector<std::string> filePaths);
+		void OnAssetReloaded(const std::string& assetPath);
+
 		void AssetImportModal();
 		void AssetCreationModal();
 
@@ -36,18 +38,16 @@ namespace Havtorn
 		SAssetFileHeader CreateOptionsMaterial();
 		SAssetFileHeader CreateScript();
 
-
 		void InspectFolderTree(const std::string& folderName, const intptr_t& folderIconID);
 		void InspectDirectoryEntry(const std::filesystem::directory_entry& entry, U32& outCurrentID, const intptr_t& folderIconID);
 
 		SAssetImportOptions ImportOptions;
-		CFileSystem* FileSystem = nullptr;
 		const std::string DefaultAssetPath = "Assets";
 		std::filesystem::path CurrentDirectory = "";
 		SGuiTextFilter Filter = SGuiTextFilter();
 		std::optional<std::vector<std::string>> FilePathsToImport;
 
-		std::optional<std::filesystem::directory_entry> SelectedAsset;
+		std::optional<SEditorAssetRepresentation*> SelectedAsset;
 		bool IsSelectionHovered = false;
 		bool IsCreatingAsset = false;
 		EAssetType AssetTypeToCreate = EAssetType::None;

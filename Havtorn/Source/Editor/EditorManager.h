@@ -7,7 +7,7 @@
 #include <filesystem>
 
 #include <GUI.h>
-#include <Graphics/RenderingPrimitives/FullscreenTexture.h>
+#include <Graphics/RenderingPrimitives/RenderTexture.h>
 
 struct ID3D11Device;
 struct ID3D11DeviceContext;
@@ -64,6 +64,7 @@ namespace Havtorn
 		// TODO.NW: Make static string, figure out relationship to engine asset
 		std::string Name = "";
 		bool UsingEditorTexture = false;
+		bool IsSourceWatched = false;
 	};
 
 	class CEditorManager
@@ -72,7 +73,7 @@ namespace Havtorn
 		EDITOR_API CEditorManager();
 		EDITOR_API ~CEditorManager();
 
-		bool EDITOR_API Init(CPlatformManager* platformManager, const CGraphicsFramework* framework, CRenderManager* renderManager);
+		bool EDITOR_API Init(CPlatformManager* platformManager, CRenderManager* renderManager);
 		void EDITOR_API BeginFrame();
 		void EDITOR_API Render();
 		void EDITOR_API EndFrame();
@@ -95,7 +96,6 @@ namespace Havtorn
 
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry) const;
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromName(const std::string& assetName) const;
-		//const Ptr<SEditorAssetRepresentation>& GetAssetRepFromImageRef(void* imageRef) const;
 		DirEntryFunc GetAssetInspectFunction() const;
 		DirEntryEAssetTypeFunc GetAssetFilteredInspectFunction() const;
 

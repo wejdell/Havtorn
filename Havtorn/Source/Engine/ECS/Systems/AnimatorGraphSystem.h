@@ -8,13 +8,11 @@ namespace Havtorn
 {
 	struct SVecBoneAnimationKey;
 	struct SQuatBoneAnimationKey;
-	struct SSkeletalAnimationComponent;
-	struct SSkeletalMeshComponent;
+	struct SSkeletalAnimationAsset;
+	struct SSkeletalMeshAsset;
 	struct SSkeletalMeshNode;
 	struct SSkeletalPosedNode;
 	class CRenderManager;
-
-
 
 	class CAnimatorGraphSystem : public ISystem
 	{
@@ -24,12 +22,12 @@ namespace Havtorn
 		ENGINE_API void Update(CScene* scene) override;
 		ENGINE_API void BindEvaluateFunction(std::function<I16(CScene*, const SEntity&)>& function, const std::string& classAndFunctionName);
 
-		std::vector<SSkeletalPosedNode> EvaluateLocalPose(const SSkeletalAnimationComponent* animationComponent, const F32 animationTime);
+		std::vector<SSkeletalPosedNode> EvaluateLocalPose(const SSkeletalAnimationAsset* animation, const F32 animationTime);
 
-		void TestWalkThrough(const SSkeletalMeshComponent* skeleton, const SSkeletalMeshNode& node, const SMatrix& parentTransform);
+		void TestWalkThrough(const SSkeletalMeshAsset* mesh, const SSkeletalMeshNode& node, const SMatrix& parentTransform);
 
-		void ReadAnimationLocalPose(const SSkeletalAnimationComponent* animationComponent, const SSkeletalMeshComponent* mesh, const F32 animationTime, const SSkeletalMeshNode& node, std::vector<SSkeletalPosedNode>& posedBoneOrder);
-		void ApplyLocalPoseToHierarchy(const SSkeletalMeshComponent* mesh, std::vector<SSkeletalPosedNode>& in, const SSkeletalMeshNode& node, const SMatrix& parentTransform);
+		void ReadAnimationLocalPose(const SSkeletalAnimationAsset* animation, const SSkeletalMeshAsset* mesh, const F32 animationTime, const SSkeletalMeshNode& fromNode, std::vector<SSkeletalPosedNode>& posedBoneOrder);
+		void ApplyLocalPoseToHierarchy(const SSkeletalMeshAsset* mesh, std::vector<SSkeletalPosedNode>& in, const SSkeletalMeshNode& node, const SMatrix& parentTransform);
 
 		// TODO.NW: Make static function that additionally takes RenderManager arg?
 		ENGINE_API std::vector<SMatrix> ReadAssetAnimationPose(const std::string& animationFile, const F32 animationTime);

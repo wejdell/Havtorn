@@ -24,7 +24,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SEntityLoopNode>(existingID);
+			SNode* node = script->AddNode<SEntityLoopNode>(existingID, TypeID);
 			script->AddEditorContext<SEntityLoopNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -42,7 +42,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SComponentLoopNode>(existingID);
+			SNode* node = script->AddNode<SComponentLoopNode>(existingID, TypeID);
 			script->AddEditorContext<SComponentLoopNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -59,7 +59,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SPrintEntityNameNode>(existingID);
+			SNode* node = script->AddNode<SPrintEntityNameNode>(existingID, TypeID);
 			script->AddEditorContext<SPrintEntityNameNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -76,7 +76,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SSetStaticMeshNode>(existingID);
+			SNode* node = script->AddNode<SSetStaticMeshNode>(existingID, TypeID);
 			script->AddEditorContext<SSetStaticMeshNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -93,7 +93,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<STogglePointLightNode>(existingID);
+			SNode* node = script->AddNode<STogglePointLightNode>(existingID, TypeID);
 			script->AddEditorContext<STogglePointLightNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -110,7 +110,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SOnBeginOverlapNode>(OnBeginOverlapNodeID);
+			SNode* node = script->AddNode<SOnBeginOverlapNode>(OnBeginOverlapNodeID, TypeID);
 			script->AddEditorContext<SOnBeginOverlapNodeEditorContext>(node->UID);
 			return node;
 		}
@@ -127,7 +127,7 @@ namespace Havtorn
 			if (script == nullptr)
 				return nullptr;
 
-			SNode* node = script->AddNode<SOnEndOverlapNode>(OnEndOverlapNodeID);
+			SNode* node = script->AddNode<SOnEndOverlapNode>(OnEndOverlapNodeID, TypeID);
 			script->AddEditorContext<SOnEndOverlapNodeEditorContext>(node->UID);
 			return node;
 		}

@@ -4,11 +4,12 @@
 #include "EditorManager.h"
 #include "EditorResourceManager.h"
 
-#include <FileSystem/FileSystem.h>
+#include <FileSystem.h>
 #include <Graphics/RenderManager.h>
 #include <Input/InputMapper.h>
 #include <Input/InputTypes.h>
 #include <Timer.h>
+#include <Assets/AssetRegistry.h>
 
 #include "MaterialTool.h"
 
@@ -36,7 +37,6 @@ namespace Havtorn
 	void CMaterialTool::OnInspectorGUI()
 	{
 		// TODO.NW: Make ON_SCOPE_EXIT equivalent?
-
 		if (!GUI::Begin(Name(), &IsEnabled))
 		{
 			GUI::End();
@@ -58,7 +58,7 @@ namespace Havtorn
 			if (GUI::Button("Save"))
 			{
 				SMaterialAssetFileHeader asset;
-				asset.MaterialName = MaterialData.Name;
+				asset.Name = MaterialData.Name;
 				asset.Material.RecreateZ = MaterialData.RecreateNormalZ;
 
 				// TODO.NW: Need better way to transfer between runtime assets and disk, both ways
@@ -67,7 +67,8 @@ namespace Havtorn
 						auto& offlineProperty = asset.Material.Properties[offlinePropertyIndex];
 						offlineProperty.ConstantValue = assetProperty.ConstantValue;
 						offlineProperty.TextureChannelIndex = STATIC_I16(assetProperty.TextureChannelIndex);
-						offlineProperty.TexturePath = GEngine::GetTextureBank()->GetTexturePath(STATIC_U32(assetProperty.TextureIndex));
+						if (assetProperty.TextureUID > 0)
+							offlineProperty.TexturePath = GEngine::GetAssetRegistry()->GetAssetDatabaseEntry(STATIC_U32(assetProperty.TextureUID));
 					};
 
 				fillProperty(MaterialData.AlbedoR, 0);
@@ -90,7 +91,7 @@ namespace Havtorn
 				asset.Serialize(data);
 				const std::string currentMaterialPath = CurrentMaterial->DirectoryEntry.path().string();
 				CurrentMaterial = nullptr;
-				GEngine::GetFileSystem()->Serialize(currentMaterialPath, &data[0], asset.GetSize());
+				UFileSystem::Serialize(currentMaterialPath, &data[0], asset.GetSize());
 
 				std::filesystem::directory_entry newDir;
 				newDir.assign(std::filesystem::path(currentMaterialPath));
@@ -122,7 +123,8 @@ namespace Havtorn
 					
 					if (property.ConstantValue < 0.0f)
 					{
-						auto assetRep = Manager->GetAssetRepFromName(UGeneralUtils::ExtractFileBaseNameFromPath(GEngine::GetTextureBank()->GetTexturePath(STATIC_U32(property.TextureIndex)))).get();
+						std::string assetPath = GEngine::GetAssetRegistry()->GetAssetDatabaseEntry(property.TextureUID);
+						auto assetRep = Manager->GetAssetRepFromName(UGeneralUtils::ExtractFileBaseNameFromPath(assetPath)).get();
 
 						intptr_t assetPickerThumbnail = assetRep != nullptr ? (intptr_t)assetRep->TextureRef.GetShaderResourceView() : intptr_t();
 						std::string pickerLabel = "";
@@ -135,7 +137,7 @@ namespace Havtorn
 						if (result.State == EAssetPickerState::AssetPicked)
 						{
 							assetRep = Manager->GetAssetRepFromDirEntry(result.PickedEntry).get();
-							property.TextureIndex = STATIC_F32(GEngine::GetTextureBank()->GetTextureIndex(assetRep->DirectoryEntry.path().string()));
+							property.TextureUID = SAssetReference(assetRep->DirectoryEntry.path().string()).UID;
 						}
 						I32 channelIndex = UMath::Clamp(STATIC_I32(property.TextureChannelIndex), 0, 3);
 						GUI::InputInt("Texture Channel Index", channelIndex, 1);
@@ -181,6 +183,7 @@ namespace Havtorn
 
 	void CMaterialTool::OnDisable()
 	{
+		CloseMaterial();
 	}
 
 	void CMaterialTool::OpenMaterial(SEditorAssetRepresentation* asset)
@@ -190,12 +193,14 @@ namespace Havtorn
 		// TODO.NW: Want nicer interface for opening assets and closing them when saving
 
 		const std::string filePath = asset->DirectoryEntry.path().string();
-		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
+		const U64 fileSize = UFileSystem::GetFileSize(filePath);
 		char* data = new char[fileSize];
-		GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
+		UFileSystem::Deserialize(filePath, data, STATIC_U32(fileSize));
 		SMaterialAssetFileHeader assetFile;
 		assetFile.Deserialize(data);
 		delete[] data;
+
+		GEngine::GetAssetRegistry()->RequestAsset(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
 
 		MaterialData = SGraphicsMaterialAsset(assetFile).Material;
 		MaterialRender = Manager->GetRenderManager()->RenderMaterialAssetTexture(filePath);
@@ -207,6 +212,9 @@ namespace Havtorn
 
 	void CMaterialTool::CloseMaterial()
 	{
+		if (CurrentMaterial)
+			GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(CurrentMaterial->DirectoryEntry.path().string()), CAssetRegistry::EditorManagerRequestID);
+
 		CurrentMaterial = nullptr;
 		MaterialData = SEngineGraphicsMaterial();
 		MaterialRender.Release();

@@ -8,9 +8,11 @@
 #include <ECS/GUIDManager.h>
 #include <ECS/Components/TransformComponent.h>
 #include <HexRune/CoreNodes/CoreNodes.h>
-#include <FileSystem/FileSystem.h>
+#include <FileSystem.h>
 #include "magic_enum.h"
 #include "ScriptTool.h"
+
+#include <Assets/AssetRegistry.h>
 
 using Havtorn::I32;
 using Havtorn::F32;
@@ -77,9 +79,7 @@ namespace Havtorn
 
 			GUI::SameLine();
 			if (GUI::Button("Save"))
-			{
-				Save();
-			}
+				SaveScript();
 
 			GUI::Separator();
 			GUI::EndChild();
@@ -91,8 +91,6 @@ namespace Havtorn
 			GUI::BeginChild("DataBindings", SVector2<F32>(150.0f, 0.0f), { EChildFlag::Borders, EChildFlag::ResizeX });
 			GUI::Text("Data Bindings");
 			GUI::Separator();
-
-
 
 			for (auto& dataBinding : CurrentScript->DataBindings)
 			{
@@ -191,29 +189,36 @@ namespace Havtorn
 
 	void CScriptTool::OnDisable()
 	{
+		CloseScript();
 	}
 
-	void CScriptTool::OpenScript(SScript* script)
+	void CScriptTool::OpenScript(SEditorAssetRepresentation* asset)
 	{
-		CurrentScript = script;
+		CurrentScriptRepresentation = asset;
+		CurrentScript = GEngine::GetAssetRegistry()->RequestAssetData<HexRune::SScript>(SAssetReference(asset->DirectoryEntry.path().string()), CAssetRegistry::EditorManagerRequestID);
 		SetEnabled(true);
+	}
 
-		//LoadGUIElements();
-		//GUI::OpenScript(GUINodes, GUILinks);
+	void CScriptTool::SaveScript()
+	{
+		const std::string directoryEntryPath = UGeneralUtils::ConvertToPlatformAgnosticPath(CurrentScriptRepresentation->DirectoryEntry.path().string());
+		
+		SScriptFileHeader asset;
+		asset.Name = UGeneralUtils::ExtractFileBaseNameFromPath(directoryEntryPath);
+		asset.Script = CurrentScript;
+
+		const std::string destinationPath = UGeneralUtils::ExtractParentDirectoryFromPath(directoryEntryPath);
+		Manager->GetResourceManager()->CreateAsset(destinationPath, asset);
 	}
 
 	void CScriptTool::CloseScript()
 	{
-		SetEnabled(false);
+		// TODO.NW: Ask user if they want to save?
 
-		//LoadGUIElements();
-		//GUI::CloseScript(GUINodes, GUILinks);
-
-		//for (const SGUINode& node : GUINodes)
-		//	CurrentScript->GetNodeEditorContext(node.UID)->Position = node.Position;
-		//	//CurrentScript->GetNode(node.UID)->EditorPosition = node.Position;
-
+		GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(CurrentScriptRepresentation->DirectoryEntry.path().string()), CAssetRegistry::EditorManagerRequestID);
+		CurrentScriptRepresentation = nullptr;
 		CurrentScript = nullptr;
+		SetEnabled(false);
 	}
 
 	void CScriptTool::LoadGUIElements()
@@ -303,7 +308,6 @@ namespace Havtorn
 
 		RenderNodes();
 		CurrentDragPinType = EGUIPinType::Unknown;
-		//PinIdPositionMap.clear();
 
 		for (auto& linkInfo : GUILinks)
 		{
@@ -929,41 +933,6 @@ namespace Havtorn
 				}
 			}*/
 			//}
-	}
-
-	void CScriptTool::Save()
-	{
-		GEngine::GetWorld()->SaveScript(CurrentScript->FileName);
-
-		//SScriptFileHeader asset;
-		//asset.Name = CurrentScript->FileName;
-		//asset.AssetType = EAssetType::Script;
-		//asset.Script = CurrentScript;
-		////asset.Script = CurrentScript;
-		//const auto data = new char[asset.GetSize()];
-		//asset.Serialize(data);
-		//GEngine::GetFileSystem()->Serialize(CurrentScript->FileName, &data[0], asset.GetSize());
-		//std::filesystem::directory_entry newDir;
-		//newDir.assign(std::filesystem::path(CurrentScript->FileName));
-		//newDir.refresh();
-		//Manager->RemoveAssetRep(newDir);
-		//Manager->CreateAssetRep(newDir);
-		/*
-		if (Scenes.empty())
-		{
-			HV_LOG_ERROR("Tried to save empty Scene.");
-			return;
-		}
-		const Ptr<CScene>& scene = Scenes.back();
-		SSceneFileHeader fileHeader;
-		fileHeader.Scene = scene.get();
-		const U32 fileSize = GetDataSize(fileHeader.AssetType) + AssetRegistry->GetSize() + fileHeader.GetSize();
-		char* data = new char[fileSize];
-		U64 pointerPosition = 0;
-		fileHeader.Serialize(data, pointerPosition, AssetRegistry.get());
-		GEngine::GetFileSystem()->Serialize(destinationPath, data, fileSize);
-		delete[] data;
-		*/
 	}
 
 	SVector2<F32> CScriptTool::GetNodeSize(const SGUINode& node)

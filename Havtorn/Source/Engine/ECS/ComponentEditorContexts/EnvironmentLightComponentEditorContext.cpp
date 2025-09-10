@@ -25,7 +25,7 @@ namespace Havtorn
 		GUI::Checkbox("Is Active", environmentLightComp->IsActive);
 		GUI::Text("Ambient Static Cubemap");
 	
-		return { EComponentViewResultLabel::InspectAssetComponent, environmentLightComp, 0 };
+		return { EComponentViewResultLabel::InspectAssetComponent, environmentLightComp, &environmentLightComp->AssetReference, nullptr, EAssetType::Texture };
     }
 
 	bool SEnvironmentLightComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const

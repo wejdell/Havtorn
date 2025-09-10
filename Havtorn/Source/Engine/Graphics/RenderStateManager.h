@@ -41,6 +41,7 @@ namespace Havtorn
 
 	public:
 		friend class CRenderManager;
+		friend class CAssetRegistry;
 
 		CRenderStateManager() = default;
 		~CRenderStateManager();

@@ -32,36 +32,9 @@ namespace Havtorn
 
         enum class ENodeType
         {
-            EEntityLoopNode,
-            EComponentLoopNode,
-            EOnBeginOverlapNode,
-            EOnEndOverlapNode,
-            EPrintEntityNameNode,
-            ESetStaticMeshNode,
-            ETogglePointLightNode,
-            EDataBindingGetNode,
-            EDataBindingSetNode,
-            EBranchNode,
-            ESequenceNode,
-            EDelayNode,
-            EBeginPlayNode,
-            ETickNode,
-            EEndPlayNode,
-            EPrintStringNode,
-            EAppendStringNode,
-            EFloatLessThanNode,
-            EFloatMoreThanNode,
-            EFloatLessOrEqualNode,
-            EFloatMoreOrEqualNode,
-            EFloatEqualNode,
-            EFloatNotEqualNode,
-            EIntLessThanNode,
-            EIntMoreThanNode,
-            EIntLessOrEqualNode,
-            EIntMoreOrEqualNode,
-            EIntEqualNode,
-            EIntNotEqualNode,
-
+            Standard,
+            DataBindingGetNode,
+            DataBindingSetNode,
             None
         };
 
@@ -76,19 +49,18 @@ namespace Havtorn
         // TODO.NW: Add minimum node width?
         struct SNode
         {
-            SNode(const U64 id, SScript* owningScript, ENodeType nodeType);
+            SNode(const U64 id, const U32 typeID, SScript* owningScript, ENodeType nodeType);
+            
             U64 UID = 0;
-            //std::string Name = "";
+            U32 TypeID = 0;
+            
+            EFlowType FlowType = EFlowType::Execution;
+            ENodeType NodeType = ENodeType::Standard;
+
             std::vector<SPin> Inputs;
             std::vector<SPin> Outputs;
-            EFlowType FlowType = EFlowType::Execution;
+            
             SScript* OwningScript = nullptr;
-            ENodeType NodeType = ENodeType::None;
-
-            // TODO.NW: Serialization
-
-            // TODO.NW: Could potentially move this to NodeEditorContexts, that map these values to proper node IDs
-            //SVector2<F32> EditorPosition = SVector2<F32>();
 
             ENGINE_API SPin& AddInput(const U64 id, const EPinType type, const std::string& name = "");
             ENGINE_API SPin& AddOutput(const U64 id, const EPinType type, const std::string& name = "");
@@ -107,10 +79,6 @@ namespace Havtorn
             void GetDataOnPin(SPin* pin, T& destination);
             template<typename T>
             void GetDataOnPin(const EPinDirection direction, const U64 pinIndex, T& destination);
-
-            //ENGINE_API virtual [[nodiscard]] U32 GetSize() const;
-            //ENGINE_API virtual void Serialize(char* toData, U64& pointerPosition) const;
-            //ENGINE_API virtual void Deserialize(const char* fromData, U64& pointerPosition);
         };
 
         template<typename T>
@@ -212,13 +180,13 @@ namespace Havtorn
             // TODO.NW: Input params to the script (with connection to owning entity or instance properties) should be loaded from the corresponding component?
 
             template<typename T, typename... Params>
-            T* AddNode(U64 id, Params... params)
+            T* AddNode(U64 id, const U32 typeID, Params... params)
             {
                 if (id == 0)
                     id = UGUIDManager::Generate();
 
                 NodeIndices.emplace(id, Nodes.size());
-                Nodes.emplace_back(new T(id, this, params...));
+                Nodes.emplace_back(new T(id, typeID, this, params...));
                 
                 SNode* node = Nodes.back();
                 return dynamic_cast<T*>(node);
@@ -351,38 +319,40 @@ namespace Havtorn
         struct SNodeFactory
         {
             template<typename TNode, typename TNodeEditorContext>
-            void RegisterNodeType(SScript* script)
+            void RegisterNodeType(SScript* script, U32 typeID)
             {
                 script->RegisteredEditorContexts.emplace_back(&TNodeEditorContext::Context);
-                U32 typeId = STATIC_U32(typeid(TNode).hash_code());
-                BasicNodeFactoryMap[typeId] =
-                    [](U64 id, SScript* script)
+                script->RegisteredEditorContexts.back()->TypeID = typeID;
+
+                BasicNodeFactoryMap[typeID] =
+                    [](U64 id, const U32 typeID, SScript* script)
                     {
-                        TNode* node = script->AddNode<TNode>(id);
-                        script->AddEditorContext<TNodeEditorContext>(id);              
+                        TNode* node = script->AddNode<TNode>(id, typeID);
+                        auto context = script->AddEditorContext<TNodeEditorContext>(id);
+                        context->TypeID = typeID;
                         return node;
                     };
             }
 
             template<typename TNode, typename TNodeEditorContext>
-            void RegisterDatabindingNode()
+            void RegisterDatabindingNode(U32 typeID)
             {
-                U32 typeId = STATIC_U32(typeid(TNode).hash_code());
-                DatabindingNodeFactoryMap[typeId] =
-                    [](U64 id, SScript* script, const U64 databindingId)
+                DatabindingNodeFactoryMap[typeID] =
+                    [](U64 id, const U32 typeID, SScript* script, const U64 databindingId)
                     {
-                        TNode* node = script->AddNode<TNode>(id, databindingId);
-                        script->AddEditorContext<TNodeEditorContext>(id, script, databindingId);
+                        TNode* node = script->AddNode<TNode>(id, typeID, databindingId);
+                        auto context = script->AddEditorContext<TNodeEditorContext>(id, script, databindingId);
+                        context->TypeID = typeID;
                         return node;
                     };
             }
 
-            SNode* CreateNode(U32 typeId, U64 id, SScript* script);
-            SNode* CreateNode(U32 typeId, U64 id, SScript* script, const U64 databindingId);
+            SNode* CreateNode(U32 typeID, U64 id, SScript* script);
+            SNode* CreateNode(U32 typeID, U64 id, SScript* script, const U64 databindingId);
 
         private:
-            std::unordered_map<U32, std::function<SNode* (const U64, SScript*)>> BasicNodeFactoryMap;
-            std::unordered_map<U32, std::function<SNode* (const U64, SScript*, const U64)>> DatabindingNodeFactoryMap;
+            std::unordered_map<U32, std::function<SNode* (const U64, const U32, SScript*)>> BasicNodeFactoryMap;
+            std::unordered_map<U32, std::function<SNode* (const U64, const U32, SScript*, const U64)>> DatabindingNodeFactoryMap;
         };
 
 	}

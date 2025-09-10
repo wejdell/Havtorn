@@ -17,9 +17,9 @@ namespace Havtorn
 	class CWorld;
 	class CInputMapper;
 	class CAudioManager;
-	class CFileSystem;
+	class UFileSystem;
 	class CFileWatcher;
-	class CTextureBank;
+	class CAssetRegistry;
 	class CSequencerSystem;
 	class CEngineProcess;
 	class IProcess;
@@ -27,7 +27,6 @@ namespace Havtorn
 	class GEngine
 	{
 		friend class CRenderManager;
-		friend class CTextureBank;
 		friend class CEditorProcess;
 		friend class CGameProcess;
 
@@ -40,10 +39,9 @@ namespace Havtorn
 		void RenderFrame();
 		void EndFrame();
 		
-		static ENGINE_API CFileSystem* GetFileSystem();
 		static ENGINE_API CFileWatcher* GetFileWatcher();
-		static ENGINE_API CTextureBank* GetTextureBank();
 		static ENGINE_API CThreadManager* GetThreadManager();
+		static ENGINE_API CAssetRegistry* GetAssetRegistry();
 		static ENGINE_API CWorld* GetWorld();
 		static ENGINE_API CInputMapper* GetInput();
 		static ENGINE_API CGraphicsFramework* GetGraphicsFramework();
@@ -56,12 +54,12 @@ namespace Havtorn
 	private:
 		static ENGINE_API GEngine* Instance;
 
-		CFileSystem* FileSystem = nullptr;
+		// TODO.NW: Might as well make these unique ptrs
 		CFileWatcher* FileWatcher = nullptr;
 		CThreadManager* ThreadManager = nullptr;
 		CGraphicsFramework* Framework = nullptr;
-		CTextureBank* TextureBank = nullptr;
 		CRenderManager* RenderManager = nullptr;
+		CAssetRegistry* AssetRegistry = nullptr;
 		GTime* Timer = nullptr;
 		GDebugDraw* DebugDraw = nullptr;
 		CInputMapper* InputMapper = nullptr;
