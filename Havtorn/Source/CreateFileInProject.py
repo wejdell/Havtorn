@@ -4,217 +4,241 @@ import re
 
 from ValidationUtils import ValidationUtil
 
+# TODO: make folder operations easier
+# TODO: add havtorn namespace to file generation
+# TODO: create .h if .cpp and .cpp if .h
 # TODO: Look over if it is possible to restructure how CMakeLists and this script tracks directories -> Generate CMakeLists through script?
+# TODO: add to ValidationUtils: / is ok
 
-# If more filetypes are added the characters used for the license comment need to be filtered
-havtornLicense="// Copyright 2025 Team Havtorn. All Rights Reserved."
-cmakeListFilePath="CMakeLists.txt"
-
-core = "core"# TEST
-platform = "platform"# TEST
-gui = "gui"# TEST
-imgui = "imgui"# TEST
-imguizmo = "imguizmo"# TEST
-imguinode = "imguinode"# TEST
-engine = "engine"# TEST
-shaderinclude = "shaderinclude"# TEST
-vertex = "vertexshader"# TEST
-geometry = "geometryshader"# TEST
-pixel = "pixelshader"# TEST
-game = "game"# TEST
-editor = "editor"# TEST
-launcher = "launcher"# TEST
-
-folderChoices={
-    core,
-    platform,
-    gui,
-    imgui,
-    imguizmo,
-    imguinode,
-    engine,
-    shaderinclude,
-    vertex,
-    geometry,
-    pixel,
-    game,
-    editor,
-    launcher
+class FileCreationUtil:
+    # class variables, should not be altered
+    # TODO: If more filetypes are supported the characters used for the license comment need to be filtered
+    havtornLicense="// Copyright 2025 Team Havtorn. All Rights Reserved."
+    havtornNameSpace="namespace Havtorn {\n\n}\n" # TODO: true for all file-types?
+    cmakeListFilePath="CMakeLists.txt"
+    
+    core = "core"# TEST
+    platform = "platform"# TEST
+    gui = "gui"# TEST
+    imgui = "imgui"# TEST
+    imguizmo = "imguizmo"# TEST
+    imguinode = "imguinode"# TEST
+    engine = "engine"# TEST
+    shaderinclude = "shaderinclude"# TEST
+    vertex = "vertexshader"# TEST
+    geometry = "geometryshader"# TEST
+    pixel = "pixelshader"# TEST
+    game = "game"# TEST
+    editor = "editor"# TEST
+    launcher = "launcher"# TEST
+    
+    mainFolderChoices={
+        core,
+        platform,
+        gui,
+        imgui,
+        imguizmo,
+        imguinode,
+        engine,
+        shaderinclude,
+        vertex,
+        geometry,
+        pixel,
+        game,
+        editor,
+        launcher
     }
-# So we always show them in the same order
-folderChoices=sorted(folderChoices)
+    # So we always show them in the same order
+    mainFolderChoices=sorted(mainFolderChoices) # does this work?
 
-choiceToCollection={
-    core:"CORE_FILES",
-    platform:"PLATFORM_FILES",
-    gui:"GUI_FILES",
-    imgui:"IMGUI_FILES",
-    imguizmo:"IMGUI_FILES",
-    imguinode:"IMGUI_FILES",
-    engine:"ENGINE_FILES",
-    shaderinclude:"SHADER_INCLUDES",
-    vertex:"VERTEX_SHADERS",
-    geometry:"GEOMETRY_SHADERS",
-    pixel:"PIXEL_SHADERS",
-    game:"GAME_FILES",
-    editor:"EDITOR_FILES",
-    launcher:"LAUNCHER_FILES",
-    }
-
-shaderFolder = "Engine/Graphics/Shaders/"
-choiceToPath={
-    core:"Core/",
-    platform:"Platform/",
-    gui:"GUI/",
-    imgui:"../External/imgui/",
-    imguizmo:"../External/ImGuizmo/",
-    imguinode:"../External/imgui-node-editor/",
-    engine:"Engine/",
-    shaderinclude:shaderFolder + "Includes/",
-    vertex:shaderFolder,
-    geometry:shaderFolder,
-    pixel:shaderFolder,
-    game:"Game/",
-    editor:"Editor/",
-    launcher:"Launcher/",
+    choiceToCollection={
+        core:"CORE_FILES",
+        platform:"PLATFORM_FILES",
+        gui:"GUI_FILES",
+        imgui:"IMGUI_FILES",
+        imguizmo:"IMGUI_FILES",
+        imguinode:"IMGUI_FILES",
+        engine:"ENGINE_FILES",
+        shaderinclude:"SHADER_INCLUDES",
+        vertex:"VERTEX_SHADERS",
+        geometry:"GEOMETRY_SHADERS",
+        pixel:"PIXEL_SHADERS",
+        game:"GAME_FILES",
+        editor:"EDITOR_FILES",
+        launcher:"LAUNCHER_FILES",
     }
 
-# TODO: would be nice not to need this, if using a script to generate CMakeLists this could perhaps be avoided
-choiceToCMakeFolderVar={
-    core:"CORE_FOLDER",
-    platform:"PLATFORM_FOLDER",
-    gui:"GUI_FOLDER",
-    imgui:"IMGUI_FOLDER",
-    imguizmo:"IMGUIZMO_FOLDER",
-    imguinode:"IMGUI_NODE_FOLDER",
-    engine:"ENGINE_FOLDER",
-    shaderinclude:"SHADER_INCL_FOLDER",
-    vertex:"SHADER_FOLDER",
-    geometry:"SHADER_FOLDER",
-    pixel:"SHADER_FOLDER",
-    game:"GAME_FOLDER",
-    editor:"EDITOR_FOLDER",
-    launcher:"LAUNCHER_FOLDER",
+    shaderFolder = "Engine/Graphics/Shaders/"
+    choiceToPath={
+        core:"Core/",
+        platform:"Platform/",
+        gui:"GUI/",
+        imgui:"../External/imgui/",
+        imguizmo:"../External/ImGuizmo/",
+        imguinode:"../External/imgui-node-editor/",
+        engine:"Engine/",
+        shaderinclude:shaderFolder + "Includes/",
+        vertex:shaderFolder,
+        geometry:shaderFolder,
+        pixel:shaderFolder,
+        game:"Game/",
+        editor:"Editor/",
+        launcher:"Launcher/",
     }
 
-print("Pick a main directory:")
-for choice in folderChoices:
-    print("\t" + choice)
+    # TODO: would be nice not to need this, if using a script to generate CMakeLists this could perhaps be avoided
+    choiceToCMakeFolderVar={
+        core:"CORE_FOLDER",
+        platform:"PLATFORM_FOLDER",
+        gui:"GUI_FOLDER",
+        imgui:"IMGUI_FOLDER",
+        imguizmo:"IMGUIZMO_FOLDER",
+        imguinode:"IMGUI_NODE_FOLDER",
+        engine:"ENGINE_FOLDER",
+        shaderinclude:"SHADER_INCL_FOLDER",
+        vertex:"SHADER_FOLDER",
+        geometry:"SHADER_FOLDER",
+        pixel:"SHADER_FOLDER",
+        game:"GAME_FOLDER",
+        editor:"EDITOR_FOLDER",
+        launcher:"LAUNCHER_FOLDER",
+    }
 
-print()# for readability
-chosenMainFolder=""
-while(True):
-    chosenMainFolder=input(">> Choose directory:")
-    if chosenMainFolder in folderChoices:
-        break
-    else:
-        print(f'! "{chosenMainFolder}" is not a valid choice')
+    fileCommand = "-f"
+    undoFileCommand = "-uf"
+    switchMainDirCommand = "-m"
+    continueCommand = "-c"
 
-print()# for readability
-fileCommand = "-f"
-directoryCommand = "-d"
-undoFileCommand = "-uf"
-undoDirectoryCommand = "-ud"
-continueCommand = "-c"
-print(f' {fileCommand} to add a file, example: "{fileCommand} ExampleFile.cpp"')
-print(f' {directoryCommand} to add a directory for the files, example: "{directoryCommand} ExampleDir"')
-print(f' {undoFileCommand} to undo file, example: {undoFileCommand} 1')
-print(f' {undoDirectoryCommand} to undo last entered directory, example: {undoDirectoryCommand}')
-print(f' {continueCommand} to continue with creating files')
+    def __init__(self):
+        self.mainFolder = ""
+        self.filesToAdd = []
+        return
 
-subDirectories = ""
-filesToAdd = []
-while(True):
-    print()# Empty line, for readability
-    print(f"Full directory: {choiceToPath[chosenMainFolder]}{subDirectories}")
-    print(f"Files:")
-    for file in filesToAdd:
-        print(f'+ [{filesToAdd.index(file) + 1}] {choiceToPath[chosenMainFolder]}{subDirectories}{file}')
+    @classmethod
+    def print_command_separator(self):
+        print()
+
+    @classmethod
+    def select_main_dir(self):
+        self.print_command_separator()
+        print("Pick a main directory:")
+        for choice in self.mainFolderChoices:
+            print("\t" + choice)
+
+        self.print_command_separator()
+        while(True):
+            self.mainFolder=input(">>:")
+            if self.mainFolder in self.mainFolderChoices:
+                break
+            else:
+                print(f'<!> invalid option "{self.mainFolder}"')
     
-    addInput=input(">> ")
-    if continueCommand in addInput:
-        break
-
-    if fileCommand in addInput: 
-        fileToAdd = "".join(addInput.replace(f"{fileCommand}", '').split())
-        if fileToAdd == "":
-            continue
-        
-        filenameSplitForValidation = fileToAdd.split('.')
-        if ValidationUtil.validate_file_name(filenameSplitForValidation[0]) is False:
-            print("Error: filename contains invalid characters")
-            continue
-        if (len(filenameSplitForValidation) == 1 # Missing extension
-            or len(filenameSplitForValidation) > 2 # More than 1 extension
-            or ValidationUtil.validate_file_extension(filenameSplitForValidation[1]) is False):
-            print("Error: invalid extension")
-            continue
-        
-        filesToAdd.append(fileToAdd)
-        continue
+    @classmethod
+    def print_commands_and_info(self):
+        self.print_command_separator()
+        print(f' {self.fileCommand} to add a file, example: "{self.fileCommand} ExampleFile.cpp or FolderName/ExampleFile.cpp"')
+        print(f' {self.undoFileCommand} to undo file, example: {self.undoFileCommand} 1')
+        print(f' {self.switchMainDirCommand} to change main direcotry')
+        print(f' {self.continueCommand} to continue with creating files')
+        print(f' Certain file-extensions have associated files auto-generated, example: adding a "folder/file.h" will also create "folder/file.cpp"')
     
-    if directoryCommand in addInput:
-        directoryToAdd = "".join(addInput.replace(f"{directoryCommand}", '').split())
-        if directoryToAdd == "":
-            continue
-
-        if ValidationUtil.validate_directory_name(directoryToAdd) is False:
-            print("Error: directory name contains invalid characters")
-            continue
-
-        subDirectories += directoryToAdd + "/"
-        continue
+    @classmethod
+    def print_current_files_info(self):
+            self.print_command_separator()
+            print(f"Current main directory: {self.choiceToPath[self.mainFolder]}")
+            print(f"Files:")
+            for file in self.filesToAdd:
+                print(f'+ [{self.filesToAdd.index(file) + 1}] {self.choiceToPath[self.mainFolder]}{file}')
     
-    # TODO: figure out how handle multiple indices at once
-    if undoFileCommand in addInput:
-        filesToUndo = re.findall('[0-9]+', addInput)
-        if len(filesToUndo) == 0:
-            continue
-        undoFileIndex = int(filesToUndo[0]) - 1 # To the user we display them as index+1, meaning input 1 == index 0
-        if (len(filesToAdd) == 0
-            or undoFileIndex >= len(filesToAdd)):
-            continue
+    @classmethod
+    def generate_and_flush(self):
+        # create the files
+        for fileName in self.filesToAdd:
+            # extract folders from fileName
+            if not os.path.exists(self.choiceToPath[self.mainFolder] + subDirectories):
+                os.makedirs(self.choiceToPath[self.mainFolder] + subDirectories)
+            try:
+                with open(self.choiceToPath[self.mainFolder] + subDirectories + fileName, "x") as file:
+                    file.write(self.havtornLicense)
+                    file.write(self.havtornNameSpace)
+                    print(f'> File "{file}" created')
+            except FileExistsError:
+                print(f'<!> "{self.choiceToPath[self.mainFolder] + subDirectories + fileName}" already exists')
 
-        del filesToAdd[undoFileIndex]
-        continue
+        # Read CMakeLists into a list of lines, append new entires and rewrite file
+        target=f"set({self.choiceToCollection[self.mainFolder]}\n"
+        for fileToAdd in self.filesToAdd:
+            entry=f"\t${{{self.choiceToCMakeFolderVar[self.mainFolder]}}}{subDirectories}{fileToAdd}\n"
+            fileAsLineList=list[str]
+            with open(self.cmakeListFilePath, "r") as cmakeFile: 
+                fileAsLineList = cmakeFile.readlines()
+                # for l in fileAsLineList:
+                #     print(l)
+                # input()
+                fileAsLineList.insert(fileAsLineList.index(target) + 1, entry)
+                cmakeFile.flush()
+            with open(self.cmakeListFilePath, "w") as cmakeFile:
+                cmakeFile.writelines(fileAsLineList)
+
+        print("\nRegenerating project ...")
+        subprocess.call([os.path.abspath("./../ProjectSetup/GenerateProjectFiles.bat"), "nopause"])
+        self.filesToAdd = []
+
+    @classmethod
+    def auto_add_associated_file(self, addedFile):
+        # based on file extension determine if an additional file should be added
+        return
+
+    @classmethod
+    def process_commands(self):
+        while(True):
+            userInput=input(">> ")
+
+            if self.continueCommand in userInput:
+                self.generate_and_flush()
+                self.print_command_separator()
+                break
+
+            # TODO: folders!
+            if self.fileCommand in userInput: 
+                fileToAdd = "".join(userInput.replace(f"{self.fileCommand}", '').split())
+                if fileToAdd == "":
+                    continue
+                
+                filenameSplitForValidation = fileToAdd.split('.')
+                if ValidationUtil.validate_file_name(filenameSplitForValidation[0]) is False:
+                    print("<!> filename contains invalid characters")
+                    continue
+                if (len(filenameSplitForValidation) == 1 # Missing extension
+                    or len(filenameSplitForValidation) > 2 # More than 1 extension
+                    or ValidationUtil.validate_file_extension(filenameSplitForValidation[1]) is False):
+                    print("<!> unsupported extension")
+                    continue
+                
+                self.filesToAdd.append(fileToAdd)
+                continue
+            
+            # TODO: figure out how handle multiple indices at once
+            if self.undoFileCommand in userInput:
+                filesToUndo = re.findall('[0-9]+', userInput)
+                if len(filesToUndo) == 0:
+                    continue
+                undoFileIndex = int(filesToUndo[0]) - 1 # To the user we display them as index+1, meaning input 1 == index 0
+                if (len(self.filesToAdd) == 0
+                    or undoFileIndex >= len(self.filesToAdd)):
+                    continue
+
+                del self.filesToAdd[undoFileIndex]
+                continue
+            
+            if self.switchMainDirCommand in userInput:
+                self.select_main_dir()
+                continue
+            
     
-    if undoDirectoryCommand in addInput:
-        try:
-            subDirectories = subDirectories.removesuffix('/')
-            subDirectories = subDirectories[:subDirectories.rindex('/')] + "/"
-        except:
-            subDirectories = ""
-        continue
-
-# Empty line, for readability
-print()
-
-if not os.path.exists(choiceToPath[chosenMainFolder] + subDirectories):
-    os.makedirs(choiceToPath[chosenMainFolder] + subDirectories)
-
-# create the files
-for fileName in filesToAdd:
-    try:
-        with open(choiceToPath[chosenMainFolder] + subDirectories + fileName, "x") as file:
-            file.write(havtornLicense)
-            print(f'> File "{file}" created')
-    except FileExistsError:
-        print(f'! "{choiceToPath[chosenMainFolder] +subDirectories + fileName}" already exists')
-
-# Read CMakeLists into a list of lines, append new entires and rewrite file
-target=f"set({choiceToCollection[chosenMainFolder]}\n"
-for fileToAdd in filesToAdd:
-    entry=f"\t${{{choiceToCMakeFolderVar[chosenMainFolder]}}}{subDirectories}{fileToAdd}\n"
-    fileAsLineList=list[str]
-    with open(cmakeListFilePath, "r") as cmakeFile: 
-        fileAsLineList = cmakeFile.readlines()
-        # for l in fileAsLineList:
-        #     print(l)
-        # input()
-        fileAsLineList.insert(fileAsLineList.index(target) + 1, entry)
-        cmakeFile.flush()
-    with open(cmakeListFilePath, "w") as cmakeFile:
-        cmakeFile.writelines(fileAsLineList)
-
-print("\nRegenerating project ...")
-subprocess.call([os.path.abspath("./../ProjectSetup/GenerateProjectFiles.bat"), "nopause"])
+if __name__ == "__main__":
+    fileCreator = FileCreationUtil()
+    while(True):
+        fileCreator.select_main_dir()
+        fileCreator.print_commands()
+        fileCreator.process_commands()
