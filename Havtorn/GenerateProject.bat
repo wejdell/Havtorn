@@ -1,4 +1,4 @@
 @echo off
 cd %~dp0\ProjectSetup\
-GenerateProjectFiles.bat
-CompileDependencies.bat
+call GenerateProjectFiles.bat
+call CompileDependencies.bat

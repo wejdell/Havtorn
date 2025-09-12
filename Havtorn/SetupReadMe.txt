@@ -27,3 +27,7 @@ Requirement for: BuildProject.bat
 - BuildProject.bat
 Builds an executable of Havtorn. Found inside Havtorn/Bin/ called Launcher.exe.
 NOTE: only builds the Havtorn Editor.
+
+- False positives:
+Error when processing command: -p
+    -p is necessary on some systems when creating directories, but not on modern Windows versions. The command allows creation of the full directory.
