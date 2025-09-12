@@ -5,6 +5,8 @@ call %~dp0\ProjectSetup\SetupCMake.bat
 if %errorlevel% NEQ 0 goto :ON_REQUIREMENT_ERROR
 call %~dp0\ProjectSetup\SetupPython.bat
 if %errorlevel% NEQ 0 goto :ON_REQUIREMENT_ERROR
+call %~dp0\ProjectSetup\SetupBuildTools.bat
+if %errorlevel% NEQ 0 goto :ON_REQUIREMENT_ERROR
 goto :CONTINUE_SETUP
 
 :ON_REQUIREMENT_ERROR
@@ -24,10 +26,10 @@ py --version>nul 2>&1
 set pyCmdError=%errorlevel%
 if %pythonCmdError% NEQ 0 (
     if %pyCmdError% NEQ 0 goto :ON_REQUIREMENT_ERROR
-        py ConfigureStartPoint.py
+        py AdditionalConfigStart.py
         goto :COMPLETE
 )
-python ConfigureStartPoint.py
+python AdditionalConfigStart.py
 
 :COMPLETE
 echo.

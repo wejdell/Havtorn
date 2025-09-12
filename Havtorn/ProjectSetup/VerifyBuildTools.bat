@@ -1,20 +1,16 @@
 @echo off
-:: TODO extra verification needed, do we have the required version of VS & the correct packages installed
-set file="%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
-if exist %file% (
-	echo "Found VS Build Tools"
-	exit 0
-) else (
-	echo "Failed to find VS Build Tools"
-	PAUSE
-	exit 1
-)
-PAUSE
+setlocal enabledelayedexpansion
 
-REM Save this in case we need to check for MSBuild
-REM cd %ProgramFiles(x86)%\Microsoft Visual Studio\Installer\
-REM 
-REM for /f "usebackq tokens=*" %%i in (`vswhere -products * -latest -requires Microsoft.Component.MSBuild -find MSBuild\**\Bin\MSBuild.exe`) do (
-REM   "%%i" %*
-REM   exit /b !errorlevel!
-REM )
+:: Move to guaranteed directory on C
+cd /d "%ProgramFiles(x86)%"
+if exist "%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" (
+	cd /d "%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\"
+	:: "%%i" takes the output of the command in "in ()" and runs it, %* runs it with all startupargs (%1 .. %9)
+	for /f "usebackq tokens=*" %%i in (`vswhere -latest -products * -requires Microsoft.Component.MSBuild -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -find MSBuild\**\Bin\MSBuild.exe`) do (
+    	::"%%i" %* :: runs it if we want to
+    	echo Found Build Tools
+    	exit /b 0
+    )
+) 
+echo Failed to find Build Tools
+exit /b 1

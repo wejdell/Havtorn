@@ -1,11 +1,10 @@
 import os
 import subprocess
-import platform
 
-from ConfigureMSVC import MSVCConfiguration as MSVCRequirements
-MSVCRequirements.Validate()
+from AdditionalConfigRegistry import RegistryConfiguration as RegistryConfig
+RegistryConfig.InstallDeeplink()
 
-from ConfigurePython import PythonConfiguration as PythonRequirements
+from AdditionalConfigPython import PythonConfiguration as PythonRequirements
 PythonRequirements.Validate()
 
 subprocess.call([os.path.abspath("./GenerateProjectFiles.bat"), "nopause"])
