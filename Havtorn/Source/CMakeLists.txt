@@ -658,6 +658,8 @@ set(EDITOR_FILES
     ${EDITOR_FOLDER}AuthoringTools/MaterialTool.h
     ${EDITOR_FOLDER}AuthoringTools/ScriptTool.cpp
     ${EDITOR_FOLDER}AuthoringTools/ScriptTool.h
+    ${EDITOR_FOLDER}Systems/EditorRenderSystem.cpp
+    ${EDITOR_FOLDER}Systems/EditorRenderSystem.h
     ${EDITOR_FOLDER}Systems/PickingSystem.cpp
     ${EDITOR_FOLDER}Systems/PickingSystem.h
     ${EDITOR_FOLDER}Toggleables/EditMenu.cpp

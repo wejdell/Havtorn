@@ -18,8 +18,6 @@ namespace Havtorn
 
 		void Update(CScene* scene) override;
 
-		void OnEntityPreDestroy(const SEntity entity);
-
 	private:
 		CRenderManager* RenderManager = nullptr;
 		CWorld* World = nullptr;

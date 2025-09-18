@@ -19,6 +19,7 @@
 #include "EditorToggleable.h"
 #include "EditorToggleables.h"
 
+#include "Systems/EditorRenderSystem.h"
 #include "Systems/PickingSystem.h"
 #include <../Game/GameScene.h>
 #include <../Game/GameScript.h>
@@ -87,6 +88,7 @@ namespace Havtorn
 		World->OnBeginPlayDelegate.AddMember(this, &CEditorManager::OnBeginPlay);
 		World->OnPausePlayDelegate.AddMember(this, &CEditorManager::OnPausePlay);
 		World->OnEndPlayDelegate.AddMember(this, &CEditorManager::OnStopPlay);
+		World->RequestSystem<CEditorRenderSystem>(this, RenderManager, World, this);
 		World->RequestSystem<CPickingSystem>(this, this);
 
 		InitEditorLayout();

@@ -12,16 +12,6 @@
 
 namespace Havtorn
 {
-	// TODO.NW: Read from config? Would rather not involve editor resource manager here. 
-	// Want to move this anyway to some sort of editor rendering system
-	static const SAssetReference CameraWidgetReference = SAssetReference("Resources/Assets/CameraIcon.hva");
-	static const SAssetReference ColliderWidgetReference = SAssetReference("Resources/Assets/ColliderIcon.hva");
-	static const SAssetReference DecalWidgetReference = SAssetReference("Resources/Assets/DecalIcon.hva");
-	static const SAssetReference DirectionalLightWidgetReference = SAssetReference("Resources/Assets/DirectionalLightIcon.hva");
-	static const SAssetReference EnvironmentLightWidgetReference = SAssetReference("Resources/Assets/EnvironmentLightIcon.hva");
-	static const SAssetReference PointLightWidgetReference = SAssetReference("Resources/Assets/PointLightIcon.hva");
-	static const SAssetReference SpotlightWidgetReference = SAssetReference("Resources/Assets/SpotlightIcon.hva");
-
 	CRenderSystem::CRenderSystem(CRenderManager* renderManager, CWorld* world)
 		: ISystem()
 		, RenderManager(renderManager)
@@ -39,11 +29,6 @@ namespace Havtorn
 		RenderManager->ClearSystemSkeletalMeshInstanceData();
 		RenderManager->ClearSystemWorldSpaceSpriteInstanceData();
 		RenderManager->ClearSystemScreenSpaceSpriteInstanceData();
-
-		if (!scene->OnEntityPreDestroy.IsBoundTo(Handle))
-		{
-			Handle = scene->OnEntityPreDestroy.AddMember(this, &CRenderSystem::OnEntityPreDestroy);
-		}
 
 		bool sceneHasActiveCamera = false;
 		const bool isInPlayingPlayState = World->GetWorldPlayState() == EWorldPlayState::Playing;
@@ -68,16 +53,7 @@ namespace Havtorn
 				command.Matrices.push_back(cameraComponent->ProjectionMatrix);
 				RenderManager->PushRenderCommand(command);
 			}
-			else if (!isInPlayingPlayState)
-			{
-				GEngine::GetAssetRegistry()->RequestAsset(CameraWidgetReference.UID, transformComponent->Owner.GUID);
-				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(CameraWidgetReference.UID, transformComponent, scene->GetComponent<STransformComponent>(scene->MainCameraEntity));
 
-				SRenderCommand command;
-				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
-				command.U32s.push_back(CameraWidgetReference.UID);
-				RenderManager->PushRenderCommand(command);
-			}
 		}
 
 		if (!sceneHasActiveCamera)
@@ -294,39 +270,12 @@ namespace Havtorn
 			command.Flags.push_back(decalComponent->ShouldRenderNormal);
 			command.U32s = SAssetReference::GetIDs(decalComponent->AssetReferences);
 			RenderManager->PushRenderCommand(command);
-
-			// TODO.NW: This really should be living in the editor project, can we move it there to a new system?
-			if (!isInPlayingPlayState)
-			{
-				GEngine::GetAssetRegistry()->RequestAsset(DecalWidgetReference.UID, transformComp->Owner.GUID);
-				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(DecalWidgetReference.UID, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity));
-
-				command = {};
-				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
-				command.U32s.push_back(DecalWidgetReference.UID);
-				RenderManager->PushRenderCommand(command);
-			}
 		}
 
 		{
 			SRenderCommand command;
 			command.Type = ERenderCommandType::PreLightingPass;
 			RenderManager->PushRenderCommand(command);
-		}
-
-		for (const SEnvironmentLightComponent* environmentLightComp : scene->GetComponents<SEnvironmentLightComponent>())
-		{
-			if (!isInPlayingPlayState)
-			{
-				const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(environmentLightComp);
-				GEngine::GetAssetRegistry()->RequestAsset(EnvironmentLightWidgetReference.UID, transformComp->Owner.GUID);
-				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(EnvironmentLightWidgetReference.UID, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity));
-
-				SRenderCommand command;
-				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
-				command.U32s.push_back(EnvironmentLightWidgetReference.UID);
-				RenderManager->PushRenderCommand(command);
-			}
 		}
 
 		for (const SDirectionalLightComponent* directionalLightComp : directionalLightComponents)
@@ -361,18 +310,6 @@ namespace Havtorn
 					RenderManager->PushRenderCommand(command);
 				}
 			}
-
-			if (!isInPlayingPlayState)
-			{
-				const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(directionalLightComp);
-				GEngine::GetAssetRegistry()->RequestAsset(DirectionalLightWidgetReference.UID, transformComp->Owner.GUID);
-				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(DirectionalLightWidgetReference.UID, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity));
-
-				command = {};
-				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
-				command.U32s.push_back(DirectionalLightWidgetReference.UID);
-				RenderManager->PushRenderCommand(command);
-			}
 		}
 
 		for (const SPointLightComponent* pointLightComp : pointLightComponents)
@@ -402,17 +339,6 @@ namespace Havtorn
 					command.SetVolumetricDataFromComponent(*volumetricLightComp);
 					RenderManager->PushRenderCommand(command);
 				}
-			}
-
-			if (!isInPlayingPlayState)
-			{
-				GEngine::GetAssetRegistry()->RequestAsset(PointLightWidgetReference.UID, transformComp->Owner.GUID);
-				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(PointLightWidgetReference.UID, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity));
-
-				command = {};
-				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
-				command.U32s.push_back(PointLightWidgetReference.UID);
-				RenderManager->PushRenderCommand(command);
 			}
 		}
 
@@ -448,17 +374,6 @@ namespace Havtorn
 					command.SetVolumetricDataFromComponent(*volumetricLightComp);
 					RenderManager->PushRenderCommand(command);
 				}
-			}
-
-			if (!isInPlayingPlayState)
-			{
-				GEngine::GetAssetRegistry()->RequestAsset(SpotlightWidgetReference.UID, transformComp->Owner.GUID);
-				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(SpotlightWidgetReference.UID, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity));
-
-				command = {};
-				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
-				command.U32s.push_back(SpotlightWidgetReference.UID);
-				RenderManager->PushRenderCommand(command);
 			}
 		}
 
@@ -522,26 +437,6 @@ namespace Havtorn
 			}
 		}
 
-		for (const SPhysics3DComponent* physics3DComponent : scene->GetComponents<SPhysics3DComponent>())
-		{
-			if (!SComponent::IsValid(physics3DComponent))
-				continue;
-
-			if (isInPlayingPlayState || !physics3DComponent->IsTrigger)
-				continue;
-
-			// TODO.NW: Render boundaries with line drawer?
-
-			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(physics3DComponent);
-			GEngine::GetAssetRegistry()->RequestAsset(ColliderWidgetReference.UID, transformComp->Owner.GUID);
-			RenderManager->AddSpriteToWorldSpaceInstancedRenderList(ColliderWidgetReference.UID, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity));
-
-			SRenderCommand command;
-			command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
-			command.U32s.push_back(ColliderWidgetReference.UID);
-			RenderManager->PushRenderCommand(command);
-		}
-
 		{
 			SRenderCommand command;
 			command.Type = ERenderCommandType::Bloom;
@@ -571,17 +466,5 @@ namespace Havtorn
 			command.Type = ERenderCommandType::RendererDebug;
 			RenderManager->PushRenderCommand(command);
 		}
-	}
-
-	void CRenderSystem::OnEntityPreDestroy(const SEntity entity)
-	{
-		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
-		assetRegistry->UnrequestAsset(CameraWidgetReference, entity.GUID);
-		assetRegistry->UnrequestAsset(ColliderWidgetReference, entity.GUID);
-		assetRegistry->UnrequestAsset(DecalWidgetReference, entity.GUID);
-		assetRegistry->UnrequestAsset(DirectionalLightWidgetReference, entity.GUID);
-		assetRegistry->UnrequestAsset(EnvironmentLightWidgetReference, entity.GUID);
-		assetRegistry->UnrequestAsset(PointLightWidgetReference, entity.GUID);
-		assetRegistry->UnrequestAsset(SpotlightWidgetReference, entity.GUID);
 	}
 }

@@ -96,7 +96,7 @@ namespace Havtorn
 
 		bool IsSpriteInWorldSpaceInstancedRenderList(const U32 textureBankIndex);
 		void AddSpriteToWorldSpaceInstancedRenderList(const U32 textureBankIndex, const STransformComponent* worldSpaceTransform, const SSpriteComponent* spriteComponent);
-		void AddSpriteToWorldSpaceInstancedRenderList(const U32 textureBankIndex, const STransformComponent* worldSpaceTransform, const STransformComponent* cameraTransform);
+		ENGINE_API void AddSpriteToWorldSpaceInstancedRenderList(const U32 textureBankIndex, const STransformComponent* worldSpaceTransform, const STransformComponent* cameraTransform);
 		void SwapSpriteWorldInstancedRenderLists();
 		void ClearSystemWorldSpaceSpriteInstanceData();
 
@@ -109,7 +109,7 @@ namespace Havtorn
 		void SyncCrossThreadResources(const CWorld* world);
 		void SetWorldPlayState(EWorldPlayState playState);
 		[[nodiscard]] ENGINE_API const CRenderTexture& GetRenderedSceneTexture() const;
-		void PushRenderCommand(SRenderCommand command);
+		ENGINE_API void PushRenderCommand(SRenderCommand command);
 		void SwapRenderCommandBuffers();
 
 		const SVector2<U16>& GetCurrentWindowResolution() const;
