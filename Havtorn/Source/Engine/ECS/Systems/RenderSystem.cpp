@@ -14,6 +14,7 @@ namespace Havtorn
 {
 	// TODO.NW: Read from config? Would rather not involve editor resource manager here. 
 	// Want to move this anyway to some sort of editor rendering system
+	static const SAssetReference CameraWidgetReference = SAssetReference("Resources/Assets/CameraIcon.hva");
 	static const SAssetReference ColliderWidgetReference = SAssetReference("Resources/Assets/ColliderIcon.hva");
 	static const SAssetReference DecalWidgetReference = SAssetReference("Resources/Assets/DecalIcon.hva");
 	static const SAssetReference DirectionalLightWidgetReference = SAssetReference("Resources/Assets/DirectionalLightIcon.hva");
@@ -55,15 +56,28 @@ namespace Havtorn
 			if (!SComponent::IsValid(cameraComponent))
 				continue;
 
-			sceneHasActiveCamera = true;
-
 			const STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(cameraComponent);
 
-			SRenderCommand command;
-			command.Type = ERenderCommandType::CameraDataStorage;
-			command.Matrices.push_back(transformComponent->Transform.GetMatrix());
-			command.Matrices.push_back(cameraComponent->ProjectionMatrix);
-			RenderManager->PushRenderCommand(command);
+			if (cameraComponent->Owner == scene->MainCameraEntity)
+			{
+				sceneHasActiveCamera = true;
+
+				SRenderCommand command;
+				command.Type = ERenderCommandType::CameraDataStorage;
+				command.Matrices.push_back(transformComponent->Transform.GetMatrix());
+				command.Matrices.push_back(cameraComponent->ProjectionMatrix);
+				RenderManager->PushRenderCommand(command);
+			}
+			else if (!isInPlayingPlayState)
+			{
+				GEngine::GetAssetRegistry()->RequestAsset(CameraWidgetReference.UID, transformComponent->Owner.GUID);
+				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(CameraWidgetReference.UID, transformComponent, scene->GetComponent<STransformComponent>(scene->MainCameraEntity));
+
+				SRenderCommand command;
+				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
+				command.U32s.push_back(CameraWidgetReference.UID);
+				RenderManager->PushRenderCommand(command);
+			}
 		}
 
 		if (!sceneHasActiveCamera)
@@ -562,6 +576,7 @@ namespace Havtorn
 	void CRenderSystem::OnEntityPreDestroy(const SEntity entity)
 	{
 		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
+		assetRegistry->UnrequestAsset(CameraWidgetReference, entity.GUID);
 		assetRegistry->UnrequestAsset(ColliderWidgetReference, entity.GUID);
 		assetRegistry->UnrequestAsset(DecalWidgetReference, entity.GUID);
 		assetRegistry->UnrequestAsset(DirectionalLightWidgetReference, entity.GUID);

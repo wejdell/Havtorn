@@ -62,21 +62,44 @@ namespace Havtorn
 			return false;
 
 		// Setup entities (create components)
-		STransformComponent& transform = *AddComponent<STransformComponent>(MainCameraEntity);
-		AddComponentEditorContext(MainCameraEntity, &STransformComponentEditorContext::Context);
+		{
+			STransformComponent& transform = *AddComponent<STransformComponent>(MainCameraEntity);
+			AddComponentEditorContext(MainCameraEntity, &STransformComponentEditorContext::Context);
 
-		transform.Transform.Translate({ 2.5f, 1.0f, -3.5f });
-		transform.Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
-		transform.Transform.Translate(SVector::Right * 0.25f);
+			transform.Transform.Translate({ 2.5f, 1.0f, -3.5f });
+			transform.Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
+			transform.Transform.Translate(SVector::Right * 0.25f);
 
-		SCameraComponent& camera = *AddComponent<SCameraComponent>(MainCameraEntity);
-		AddComponentEditorContext(MainCameraEntity, &SCameraComponentEditorContext::Context);
-		camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
+			SCameraComponent& camera = *AddComponent<SCameraComponent>(MainCameraEntity);
+			AddComponentEditorContext(MainCameraEntity, &SCameraComponentEditorContext::Context);
+			camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
 
-		SCameraControllerComponent& controllerComp = *AddComponent<SCameraControllerComponent>(MainCameraEntity);
-		AddComponentEditorContext(MainCameraEntity, &SCameraControllerComponentEditorContext::Context);
-		controllerComp.CurrentYaw = -35.0f;
+			SCameraControllerComponent& controllerComp = *AddComponent<SCameraControllerComponent>(MainCameraEntity);
+			AddComponentEditorContext(MainCameraEntity, &SCameraControllerComponentEditorContext::Context);
+			controllerComp.CurrentYaw = -35.0f;
+		}
 		// === !Camera ===
+
+		// === Game Camera ===
+		{
+			SEntity gameCamera = AddEntity("Game Camera");
+
+			// Setup entities (create components)
+			STransformComponent& transform = *AddComponent<STransformComponent>(gameCamera);
+			AddComponentEditorContext(gameCamera, &STransformComponentEditorContext::Context);
+
+			transform.Transform.Translate({ 2.6f, 1.0f, -1.6f });
+			transform.Transform.Rotate({ 0.0f, UMath::DegToRad(70.0f), 0.0f });
+
+			SCameraComponent& camera = *AddComponent<SCameraComponent>(gameCamera);
+			AddComponentEditorContext(gameCamera, &SCameraComponentEditorContext::Context);
+			camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 6.0f);
+			camera.FarClip = 6.0f;
+
+			SCameraControllerComponent& controllerComp = *AddComponent<SCameraControllerComponent>(gameCamera);
+			AddComponentEditorContext(gameCamera, &SCameraControllerComponentEditorContext::Context);
+			controllerComp.CurrentYaw = -70.0f;
+		}
 
 		// === Environment light ===
 		const SEntity& environmentLightEntity = AddEntity("Environment Light");
@@ -506,31 +529,52 @@ namespace Havtorn
 			return false;
 
 		// === Camera ===
-		MainCameraEntity = AddEntity("Camera");
-		if (!MainCameraEntity.IsValid())
-			return false;
+		{
+			MainCameraEntity = AddEntity("Camera");
+			if (!MainCameraEntity.IsValid())
+				return false;
 
-		// Setup entities (create components)
-		STransformComponent& transform = (*AddComponent<STransformComponent>(MainCameraEntity));
-		AddComponentEditorContext(MainCameraEntity, &STransformComponentEditorContext::Context);
-		transform.Transform.Translate({ 0.0f, 1.0f, -5.0f });
-		//transform.Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
-		transform.Transform.Translate(SVector::Right * 0.25f);
+			// Setup entities (create components)
+			STransformComponent& transform = (*AddComponent<STransformComponent>(MainCameraEntity));
+			AddComponentEditorContext(MainCameraEntity, &STransformComponentEditorContext::Context);
+			transform.Transform.Translate({ 0.0f, 1.0f, -5.0f });
+			//transform.Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
+			transform.Transform.Translate(SVector::Right * 0.25f);
 
-		SCameraComponent& camera = *AddComponent<SCameraComponent>(MainCameraEntity);
-		AddComponentEditorContext(MainCameraEntity, &SCameraComponentEditorContext::Context);
-		camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
-		//camera.ProjectionType = ECameraProjectionType::Orthographic;
-		//camera.ProjectionMatrix = SMatrix::OrthographicLH(5.0f, 5.0f, 0.1f, 1000.0f);
+			SCameraComponent& camera = *AddComponent<SCameraComponent>(MainCameraEntity);
+			AddComponentEditorContext(MainCameraEntity, &SCameraComponentEditorContext::Context);
+			camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
+			//camera.ProjectionType = ECameraProjectionType::Orthographic;
+			//camera.ProjectionMatrix = SMatrix::OrthographicLH(5.0f, 5.0f, 0.1f, 1000.0f);
 
-		//		SCameraControllerComponent& controllerComp = 
-		AddComponent<SCameraControllerComponent>(MainCameraEntity);
-		AddComponentEditorContext(MainCameraEntity, &SCameraControllerComponentEditorContext::Context);
-		//controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
-		// 
-		//SSequencerComponent& cameraSequencerComponent = AddSequencerComponentToEntity(*cameraEntity);
-		//cameraSequencerComponent.ComponentTracks.push_back({ EComponentType::TransformComponent });
+			//		SCameraControllerComponent& controllerComp = 
+			AddComponent<SCameraControllerComponent>(MainCameraEntity);
+			AddComponentEditorContext(MainCameraEntity, &SCameraControllerComponentEditorContext::Context);
+			//controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
+			// 
+			//SSequencerComponent& cameraSequencerComponent = AddSequencerComponentToEntity(*cameraEntity);
+			//cameraSequencerComponent.ComponentTracks.push_back({ EComponentType::TransformComponent });
+		}
 		// === !Camera ===
+
+				// === Game Camera ===
+		{
+			SEntity gameCamera = AddEntity("Game Camera");
+
+			// Setup entities (create components)
+			STransformComponent& transform = *AddComponent<STransformComponent>(gameCamera);
+			AddComponentEditorContext(gameCamera, &STransformComponentEditorContext::Context);
+
+			transform.Transform.Translate({ 1.5f, 1.0f, -3.0f });
+
+			SCameraComponent& camera = *AddComponent<SCameraComponent>(gameCamera);
+			AddComponentEditorContext(gameCamera, &SCameraComponentEditorContext::Context);
+			camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 6.0f);
+			camera.FarClip = 6.0f;
+
+			AddComponent<SCameraControllerComponent>(gameCamera);
+			AddComponentEditorContext(gameCamera, &SCameraControllerComponentEditorContext::Context);
+		}
 
 		// === Environment light ===
 		const SEntity& environmentLightEntity = AddEntity("Environment Light");

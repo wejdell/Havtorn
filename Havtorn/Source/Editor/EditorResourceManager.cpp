@@ -187,6 +187,9 @@ namespace Havtorn
 
 		case EEditorTexture::CloseWindow:
 			return ResourceAssetPath + prefix + "CloseWindow" + extension;
+
+		case EEditorTexture::CameraIcon:
+			return ResourceAssetPath + prefix + "CameraIcon" + extension;
 		
 		case EEditorTexture::Count:
 		default:

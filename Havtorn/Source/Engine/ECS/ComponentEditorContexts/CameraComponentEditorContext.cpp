@@ -4,7 +4,10 @@
 #include "CameraComponentEditorContext.h"
 
 #include "ECS/Components/CameraComponent.h"
+#include "ECS/Components/TransformComponent.h"
 #include "Scene/Scene.h"
+
+#include "Graphics/Debug/DebugDrawUtility.h"
 
 #include <GUI.h>
 
@@ -18,6 +21,12 @@ namespace Havtorn
 			return SComponentViewResult();
 
 		SCameraComponent* cameraComp = scene->GetComponent<SCameraComponent>(entityOwner);
+		if (!SComponent::IsValid(cameraComp))
+			return SComponentViewResult();
+
+		STransformComponent* transform = scene->GetComponent<STransformComponent>(entityOwner);
+		if (!SComponent::IsValid(transform))
+			return SComponentViewResult();
 
 		GUI::SliderEnum("Projection Type", cameraComp->ProjectionType, { "Perspective", "Orthographic" });
 
@@ -45,6 +54,9 @@ namespace Havtorn
 		{
 			cameraComp->ProjectionMatrix = Havtorn::SMatrix::OrthographicLH(cameraComp->ViewWidth, cameraComp->ViewHeight, cameraComp->NearClip, cameraComp->FarClip);
 		}
+
+		SMatrix transformMatrix = transform->Transform.GetMatrix();
+		GDebugDraw::AddCamera(transformMatrix.GetTranslation(), transformMatrix.GetEuler(), cameraComp->FOV, cameraComp->FarClip, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum * 2.0f, false);
 
 		return SComponentViewResult();
 	}
