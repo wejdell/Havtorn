@@ -35,6 +35,7 @@ namespace Havtorn
 		MinimizeWindow,
 		MaximizeWindow,
 		CloseWindow,
+		CameraIcon,
 		Count,
 		None = Count
 	};
