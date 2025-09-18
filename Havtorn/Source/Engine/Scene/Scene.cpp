@@ -557,7 +557,7 @@ namespace Havtorn
 		}
 		// === !Camera ===
 
-				// === Game Camera ===
+		// === Game Camera ===
 		{
 			SEntity gameCamera = AddEntity("Game Camera");
 
