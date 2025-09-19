@@ -4,15 +4,11 @@ import re
 
 from ValidationUtils import ValidationUtil
 
-# TODO: make folder operations easier
-# TODO: add havtorn namespace to file generation
-# TODO: create .h if .cpp and .cpp if .h
 # TODO: Look over if it is possible to restructure how CMakeLists and this script tracks directories -> Generate CMakeLists through script?
-# TODO: add to ValidationUtils: / is ok
 
 class FileCreationUtil:
     # class variables, should not be altered
-    # TODO: If more filetypes are supported the characters used for the license comment need to be filtered
+    # TODO: If more filetypes are supported the characters used for the license comment need to be filtered, same goes for namespace structure
     havtornLicense="// Copyright 2025 Team Havtorn. All Rights Reserved.\n"
     havtornNameSpace="\n\nnamespace Havtorn\n{\n\n}\n" # TODO: true for all file-types?
     cmakeListFilePath="CMakeLists.txt"
@@ -157,16 +153,91 @@ class FileCreationUtil:
                 print(f'+ [{i + 1}] {file}')
     
     @classmethod
+    def try_add_associated_file(self, fileName:str, folderNames:list[str]):
+        # based on file extension determine if an additional file should be added
+        fileNameSplit = fileName.split('.')
+        extension = fileNameSplit[1]
+        checks = [
+            extension.lower() in [
+                'cpp', 
+                'c', 
+                'h', 
+                'hpp', 
+                ],
+        ]
+        if not all(checks):
+            return
+        
+        associatedExtension = ""
+        match extension:
+            case "cpp":
+                associatedExtension = "h"
+            case "c":
+                associatedExtension = "h"
+            case "h":
+                associatedExtension = "cpp"
+            case "hpp":
+                associatedExtension = "cpp"
+                
+        folders = "/".join(folderNames)
+        self.filesToAdd.append((self.mainFolder, self.choiceToPath[self.mainFolder] + folders + "/" + fileNameSplit[0] + "." + associatedExtension))
+        return
+    
+    @classmethod
+    def can_add_namespace(self, fileName:str):
+        # based on file extension determine if namespace can be added
+        extension = fileName.split('.')[1]
+        checks = [
+            extension.lower() in [
+                'cpp', 
+                'c', 
+                'h', 
+                'hpp', 
+                ],
+        ]
+        return all(checks)
+
+    @classmethod
+    def valid_folder(self, folderName:str):
+        if ValidationUtil.validate_folder_name(folderName) is False:
+            self.on_error(f"folder contains invalid characters {folderName}")
+            return False     
+        return True
+    
+    @classmethod
+    def valid_file(self, fileName):
+        filenameSplit = fileName.split('.')
+        if ValidationUtil.validate_file_name(filenameSplit[0]) is False:
+            self.on_error(f"filename contains invalid characters {fileName}")
+            return False
+        
+        if (len(filenameSplit) == 1 # Missing extension
+            or len(filenameSplit) > 2 # More than 1 extension
+            or ValidationUtil.validate_file_extension(filenameSplit[1]) is False):
+            self.on_error(f"unsupported extension {fileName}")
+            return False
+        
+        return True
+
+    @classmethod
+    def extract_folders_and_file(self, fullFile:str):
+        folderNames = fullFile.split('/')
+        fileName = folderNames[-1]
+        folderNames.pop()
+        return (folderNames, fileName)
+
+    @classmethod
     def generate_files(self):
         for (_, fileToAdd) in self.filesToAdd:
-            (folderNames, _) = self.extract_folders_and_file(fileToAdd)
+            (folderNames, fileName) = self.extract_folders_and_file(fileToAdd)
             folders = "/".join(folderNames)
             if not os.path.exists(folders):
                 os.makedirs(folders)
             try:
                 with open(fileToAdd, "x") as file:
                     file.write(self.havtornLicense)
-                    file.write(self.havtornNameSpace)
+                    if self.can_add_namespace(fileName):
+                        file.write(self.havtornNameSpace)
                     print(f'> File "{file}" created')
             except FileExistsError:
                 self.on_error(f'"{fileToAdd}" already exists')
@@ -197,41 +268,6 @@ class FileCreationUtil:
         self.filesToAdd = []
 
     @classmethod
-    def auto_add_associated_file(self, addedFile):
-        # based on file extension determine if an additional file should be added
-        return
-    
-    @classmethod
-    def valid_folder(self, folderName:str):
-        if ValidationUtil.validate_folder_name(folderName) is False:
-            self.on_error(f"folder contains invalid characters {folderName}")
-            return False     
-        return True
-    
-    @classmethod
-    def valid_file(self, fileName):
-        filenameSplit = fileName.split('.')
-        if ValidationUtil.validate_file_name(filenameSplit[0]) is False:
-            self.on_error(f"filename contains invalid characters {fileName}")
-            return False
-        
-        if (len(filenameSplit) == 1 # Missing extension
-            or len(filenameSplit) > 2 # More than 1 extension
-            or ValidationUtil.validate_file_extension(filenameSplit[1]) is False):
-            self.on_error(f"unsupported extension {fileName}")
-            return False
-        
-        return True
-
-    @classmethod
-    def extract_folders_and_file(self, fullFile):
-        folderNames = fullFile.split('/')
-        fileName = folderNames[-1]
-        folderNames.pop()
-
-        return (folderNames, fileName)
-
-    @classmethod
     def process_commands(self):
         while(True):
             self.print_options()
@@ -256,12 +292,11 @@ class FileCreationUtil:
                         foldersValid = False
                 if not foldersValid:
                     continue
-                
                 if not self.valid_file(fileName):
                     continue
                                         
-                # add paired filed type e.g .cpp for .h
                 self.filesToAdd.append((self.mainFolder, self.choiceToPath[self.mainFolder] + fileToAdd))
+                self.try_add_associated_file(fileName, folderNames)
                 continue
             
             # TODO: figure out how handle multiple indices at once
