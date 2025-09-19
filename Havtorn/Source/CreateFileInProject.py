@@ -13,8 +13,8 @@ from ValidationUtils import ValidationUtil
 class FileCreationUtil:
     # class variables, should not be altered
     # TODO: If more filetypes are supported the characters used for the license comment need to be filtered
-    havtornLicense="// Copyright 2025 Team Havtorn. All Rights Reserved."
-    havtornNameSpace="namespace Havtorn {\n\n}\n" # TODO: true for all file-types?
+    havtornLicense="// Copyright 2025 Team Havtorn. All Rights Reserved.\n"
+    havtornNameSpace="\n\nnamespace Havtorn\n{\n\n}\n" # TODO: true for all file-types?
     cmakeListFilePath="CMakeLists.txt"
     
     core = "core"# TEST
@@ -104,8 +104,8 @@ class FileCreationUtil:
         launcher:"LAUNCHER_FOLDER",
     }
 
-    fileCommand = "-f"
-    undoFileCommand = "-uf"
+    addFileCommand = "-f"
+    undoFileCommand = "-u"
     switchMainDirCommand = "-m"
     continueCommand = "-c"
 
@@ -142,50 +142,56 @@ class FileCreationUtil:
     @classmethod
     def print_options(self):
         self.print_command_separator()
-        print(f' {self.fileCommand} to add a file, example: "{self.fileCommand} ExampleFile.cpp or FolderName/ExampleFile.cpp"')
-        print(f' {self.undoFileCommand} to undo file, example: {self.undoFileCommand} 1')
+        print(f' {self.addFileCommand} to add folder & file, e.g: "F1/f2/ex.cpp"')
+        print(f' Some file-extensions have associated files auto-generated, example: "ex.h" gets a "ex.cpp"')
+        print(f' {self.undoFileCommand} to undo, example: {self.undoFileCommand} 1')
         print(f' {self.switchMainDirCommand} to change main direcotry')
-        print(f' {self.continueCommand} to continue with creating files')
-        print(f' Certain file-extensions have associated files auto-generated, example: "ex.h" gets a "ex.cpp"')
+        print(f' {self.continueCommand} to create files')
     
     @classmethod
     def print_status(self):
             self.print_command_separator()
             print(f"Current main directory: {self.choiceToPath[self.mainFolder]}")
             print(f"Files:")
-            for file in self.filesToAdd:
-                print(f'+ [{self.filesToAdd.index(file) + 1}] {self.choiceToPath[self.mainFolder]}{file}')
+            for i, (_, file) in enumerate(self.filesToAdd):
+                print(f'+ [{i + 1}] {file}')
     
     @classmethod
-    def generate_and_flush(self):
-        # create the files
-        for fileName in self.filesToAdd:
-            # extract folders from fileName
-            if not os.path.exists(self.choiceToPath[self.mainFolder] + fileName):
-                os.makedirs(self.choiceToPath[self.mainFolder] + fileName)
+    def generate_files(self):
+        for (_, fileToAdd) in self.filesToAdd:
+            (folderNames, _) = self.extract_folders_and_file(fileToAdd)
+            folders = "/".join(folderNames)
+            if not os.path.exists(folders):
+                os.makedirs(folders)
             try:
-                with open(self.choiceToPath[self.mainFolder] + fileName, "x") as file:
+                with open(fileToAdd, "x") as file:
                     file.write(self.havtornLicense)
                     file.write(self.havtornNameSpace)
                     print(f'> File "{file}" created')
             except FileExistsError:
-                self.on_error(f'"{self.choiceToPath[self.mainFolder] + fileName}" already exists')
+                self.on_error(f'"{fileToAdd}" already exists')
 
-        # Read CMakeLists into a list of lines, append new entires and rewrite file
-        target=f"set({self.choiceToCollection[self.mainFolder]}\n"
-        for fileToAdd in self.filesToAdd:
-            entry=f"\t${{{self.choiceToCMakeFolderVar[self.mainFolder]}}}{fileToAdd}\n"
-            fileAsLineList=list[str]
-            with open(self.cmakeListFilePath, "r") as cmakeFile: 
-                fileAsLineList = cmakeFile.readlines()
-                # for l in fileAsLineList:
-                #     print(l)
-                # input()
-                fileAsLineList.insert(fileAsLineList.index(target) + 1, entry)
-                cmakeFile.flush()
-            with open(self.cmakeListFilePath, "w") as cmakeFile:
-                cmakeFile.writelines(fileAsLineList)
-
+    @classmethod
+    def add_file_to_cmake(self, mainFolder:str, fileToAdd:str):
+        # Read CMakeLists into a list of lines, append entry and rewrite file
+        cmakeTarget=f"set({self.choiceToCollection[mainFolder]}\n"
+        entry=f"\t{fileToAdd}\n"
+        fileAsLineList=list[str]
+        with open(self.cmakeListFilePath, "r") as cmakeFile: 
+            fileAsLineList = cmakeFile.readlines()
+            # for l in fileAsLineList:
+            #     print(l)
+            # input()
+            fileAsLineList.insert(fileAsLineList.index(cmakeTarget) + 1, entry)
+            cmakeFile.flush()
+        with open(self.cmakeListFilePath, "w") as cmakeFile:
+            cmakeFile.writelines(fileAsLineList)
+        
+    @classmethod
+    def generate_and_flush(self):
+        self.generate_files()
+        for (mainFolder, fileToAdd) in self.filesToAdd:
+            self.add_file_to_cmake(mainFolder, fileToAdd)
         print("\nRegenerating project ...")
         subprocess.call([os.path.abspath("./../ProjectSetup/GenerateProjectFiles.bat"), "nopause"])
         self.filesToAdd = []
@@ -194,6 +200,36 @@ class FileCreationUtil:
     def auto_add_associated_file(self, addedFile):
         # based on file extension determine if an additional file should be added
         return
+    
+    @classmethod
+    def valid_folder(self, folderName:str):
+        if ValidationUtil.validate_folder_name(folderName) is False:
+            self.on_error(f"folder contains invalid characters {folderName}")
+            return False     
+        return True
+    
+    @classmethod
+    def valid_file(self, fileName):
+        filenameSplit = fileName.split('.')
+        if ValidationUtil.validate_file_name(filenameSplit[0]) is False:
+            self.on_error(f"filename contains invalid characters {filenameSplit[0]}")
+            return False
+        
+        if (len(filenameSplit) == 1 # Missing extension
+            or len(filenameSplit) > 2 # More than 1 extension
+            or ValidationUtil.validate_file_extension(filenameSplit[1]) is False):
+            self.on_error(f"unsupported extension {filenameSplit[1]}")
+            return False
+        
+        return True
+
+    @classmethod
+    def extract_folders_and_file(self, fullFile):
+        folderNames = fullFile.split('/')
+        fileName = folderNames[-1]
+        folderNames.pop()
+
+        return (folderNames, fileName)
 
     @classmethod
     def process_commands(self):
@@ -208,28 +244,24 @@ class FileCreationUtil:
                 self.print_command_separator()
                 break
 
-            # TODO: folders!
-            if self.fileCommand in userInput: 
-                # split string by /
-                # check
-                fileToAdd = "".join(userInput.replace(f"{self.fileCommand}", '').split())
-                print("fileToAdd: " + fileToAdd)
+            if self.addFileCommand in userInput: 
+                fileToAdd = "".join(userInput.replace(f"{self.addFileCommand}", '').split())
                 if fileToAdd == "":
                     continue
+
+                (folderNames, fileName) = self.extract_folders_and_file(fileToAdd)
+                foldersValid = True
+                for filePart in folderNames:
+                    if not self.valid_folder(filePart):
+                        foldersValid = False
+                if not foldersValid:
+                    continue
                 
-                # validate names on all parts
-                filenameSplitForValidation = fileToAdd.split('.')
-                if ValidationUtil.validate_file_name(filenameSplitForValidation[0]) is False:
-                    self.on_error("filename contains invalid characters")
+                if not self.valid_file(fileName):
                     continue
-                if (len(filenameSplitForValidation) == 1 # Missing extension
-                    or len(filenameSplitForValidation) > 2 # More than 1 extension
-                    or ValidationUtil.validate_file_extension(filenameSplitForValidation[1]) is False):
-                    self.on_error("unsupported extension")
-                    continue
+                                        
                 # add paired filed type e.g .cpp for .h
-                self.filesToAdd.append(fileToAdd)
-                print(self.filesToAdd)
+                self.filesToAdd.append((self.mainFolder, self.choiceToPath[self.mainFolder] + fileToAdd))
                 continue
             
             # TODO: figure out how handle multiple indices at once
