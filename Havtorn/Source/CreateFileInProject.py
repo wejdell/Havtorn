@@ -1,6 +1,7 @@
 import os
 import subprocess
 import re
+import io
 
 from ValidationUtils import ValidationUtil
 
@@ -9,8 +10,8 @@ from ValidationUtils import ValidationUtil
 class FileCreationUtil:
     # class variables, should not be altered
     # TODO: If more filetypes are supported the characters used for the license comment need to be filtered, same goes for namespace structure
-    havtornLicense="// Copyright 2025 Team Havtorn. All Rights Reserved.\n"
-    havtornNameSpace="\n\nnamespace Havtorn\n{\n\n}\n" # TODO: true for all file-types?
+    havtornLicense="// Copyright 2025 Team Havtorn. All Rights Reserved.\n\n"
+    havtornNameSpace="\nnamespace Havtorn\n{\n\n}\n" # TODO: true for all file-types?
     cmakeListFilePath="CMakeLists.txt"
     
     core = "core"
@@ -186,37 +187,23 @@ class FileCreationUtil:
         return
     
     @classmethod
-    def can_add_namespace(self, fileName:str):
-        # based on file extension determine if namespace can be added
-        extension = fileName.split('.')[1]
-        checks = [
-            extension.lower() in [
-                'cpp', 
-                'c', 
-                'h', 
-                'hpp', 
-                ],
-        ]
-        return all(checks)
-
-    @classmethod
     def valid_folder(self, folderName:str):
         if ValidationUtil.validate_folder_name(folderName) is False:
-            self.on_error(f"folder contains invalid characters {folderName}")
+            self.on_error(f'folder contains invalid characters "{folderName}"')
             return False     
         return True
     
     @classmethod
-    def valid_file(self, fileName):
+    def valid_file(self, fileName:str):
         filenameSplit = fileName.split('.')
         if ValidationUtil.validate_file_name(filenameSplit[0]) is False:
-            self.on_error(f"filename contains invalid characters {fileName}")
+            self.on_error(f'filename contains invalid characters "{fileName}"')
             return False
         
         if (len(filenameSplit) == 1 # Missing extension
             or len(filenameSplit) > 2 # More than 1 extension
             or ValidationUtil.validate_file_extension(filenameSplit[1]) is False):
-            self.on_error(f"unsupported extension {fileName}")
+            self.on_error(f'unsupported extension "{fileName}"')
             return False
         
         return True
@@ -229,20 +216,71 @@ class FileCreationUtil:
         return (folderNames, fileName)
 
     @classmethod
+    def try_add_header_prefixes(self, fileName:str, fileStream:io.TextIOWrapper):
+        extension = fileName.split('.')[1]
+        checks = [
+            extension.lower() in [
+                'h', 
+                'hpp', 
+                ],
+        ]
+        if not all(checks):
+            return
+        
+        fileStream.write("#pragma once\n")
+        return
+    
+    @classmethod
+    def try_include_header(self, fileName:str, fileStream:io.TextIOWrapper):
+        fileNameSplit = fileName.split('.')
+        checks = [
+            fileNameSplit[1].lower() in [
+                'c', 
+                'cpp', 
+                ],
+        ]
+        if not all(checks):
+            return
+        
+        fileStream.write(f'#include "{fileNameSplit[0]}.h"\n')
+        return
+    
+    @classmethod
+    def try_add_namespace(self, fileName:str, fileStream:io.TextIOWrapper):
+        # based on file extension determine if namespace can be added
+        extension = fileName.split('.')[1]
+        checks = [
+            extension.lower() in [
+                'cpp', 
+                'c', 
+                'h', 
+                'hpp', 
+                ],
+        ]
+        if not all(checks):
+            return
+        
+        fileStream.write(self.havtornNameSpace)
+        return
+
+    @classmethod
     def generate_files(self):
         for (_, fileToAdd) in self.filesToAdd:
             (folderNames, fileName) = self.extract_folders_and_file(fileToAdd)
             folders = "/".join(folderNames)
             if not os.path.exists(folders):
                 os.makedirs(folders)
+
             try:
                 with open(fileToAdd, "x") as file:
                     file.write(self.havtornLicense)
-                    if self.can_add_namespace(fileName):
-                        file.write(self.havtornNameSpace)
-                    print(f'> File "{file}" created')
+                    self.try_add_header_prefixes(fileName, file)
+                    self.try_include_header(fileName, file)
+                    self.try_add_namespace(fileName, file)    
+                    print(f'> File "{fileToAdd}" created')
             except FileExistsError:
                 self.on_error(f'"{fileToAdd}" already exists')
+        return
 
     @classmethod
     def add_file_to_cmake(self, mainFolder:str, fileToAdd:str):
@@ -252,13 +290,11 @@ class FileCreationUtil:
         fileAsLineList=list[str]
         with open(self.cmakeListFilePath, "r") as cmakeFile: 
             fileAsLineList = cmakeFile.readlines()
-            # for l in fileAsLineList:
-            #     print(l)
-            # input()
             fileAsLineList.insert(fileAsLineList.index(cmakeTarget) + 1, entry)
             cmakeFile.flush()
         with open(self.cmakeListFilePath, "w") as cmakeFile:
             cmakeFile.writelines(fileAsLineList)
+        return
         
     @classmethod
     def generate_and_flush(self):
@@ -268,6 +304,7 @@ class FileCreationUtil:
         print("\nRegenerating project ...")
         subprocess.call([os.path.abspath("./../ProjectSetup/GenerateProjectFiles.bat"), "nopause"])
         self.filesToAdd = []
+        return
 
     @classmethod
     def process_commands(self):
