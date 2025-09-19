@@ -10,6 +10,8 @@
 #include "Graphics/Debug/DebugDrawUtility.h"
 
 #include <GUI.h>
+#include <Engine.h>
+#include <Assets/AssetRegistry.h>
 
 namespace Havtorn
 {
@@ -25,16 +27,17 @@ namespace Havtorn
 			return SComponentViewResult();
 
 		SStaticMeshComponent* staticMesh = scene->GetComponent<SStaticMeshComponent>(entityOwner);
-		GUI::TextDisabled("Number Of Materials: %i", staticMesh->NumberOfMaterials);
+		const SStaticMeshAsset* staticMeshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMesh->AssetReference, entityOwner.GUID);
+		GUI::TextDisabled("Number Of Materials: %i", staticMeshAsset->NumberOfMaterials);
 
-		SVector a = SVector(staticMesh->BoundsMin.X, staticMesh->BoundsMin.Y, staticMesh->BoundsMin.Z);
-		SVector b = SVector(staticMesh->BoundsMin.X, staticMesh->BoundsMin.Y, staticMesh->BoundsMax.Z);
-		SVector c = SVector(staticMesh->BoundsMax.X, staticMesh->BoundsMin.Y, staticMesh->BoundsMax.Z);
-		SVector d = SVector(staticMesh->BoundsMax.X, staticMesh->BoundsMin.Y, staticMesh->BoundsMin.Z);
-		SVector e = SVector(staticMesh->BoundsMin.X, staticMesh->BoundsMax.Y, staticMesh->BoundsMin.Z);
-		SVector f = SVector(staticMesh->BoundsMax.X, staticMesh->BoundsMax.Y, staticMesh->BoundsMin.Z);
-		SVector g = SVector(staticMesh->BoundsMax.X, staticMesh->BoundsMax.Y, staticMesh->BoundsMax.Z);
-		SVector h = SVector(staticMesh->BoundsMin.X, staticMesh->BoundsMax.Y, staticMesh->BoundsMax.Z);
+		SVector a = SVector(staticMeshAsset->BoundsMin.X, staticMeshAsset->BoundsMin.Y, staticMeshAsset->BoundsMin.Z);
+		SVector b = SVector(staticMeshAsset->BoundsMin.X, staticMeshAsset->BoundsMin.Y, staticMeshAsset->BoundsMax.Z);
+		SVector c = SVector(staticMeshAsset->BoundsMax.X, staticMeshAsset->BoundsMin.Y, staticMeshAsset->BoundsMax.Z);
+		SVector d = SVector(staticMeshAsset->BoundsMax.X, staticMeshAsset->BoundsMin.Y, staticMeshAsset->BoundsMin.Z);
+		SVector e = SVector(staticMeshAsset->BoundsMin.X, staticMeshAsset->BoundsMax.Y, staticMeshAsset->BoundsMin.Z);
+		SVector f = SVector(staticMeshAsset->BoundsMax.X, staticMeshAsset->BoundsMax.Y, staticMeshAsset->BoundsMin.Z);
+		SVector g = SVector(staticMeshAsset->BoundsMax.X, staticMeshAsset->BoundsMax.Y, staticMeshAsset->BoundsMax.Z);
+		SVector h = SVector(staticMeshAsset->BoundsMin.X, staticMeshAsset->BoundsMax.Y, staticMeshAsset->BoundsMax.Z);
 
 		SMatrix transformMatrix = transform->Transform.GetMatrix();
 
@@ -60,7 +63,7 @@ namespace Havtorn
 		GDebugDraw::AddLine(g, h, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false);
 		GDebugDraw::AddLine(h, e, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false);
 
-		return { EComponentViewResultLabel::InspectAssetComponent, staticMesh, 0 };
+		return { EComponentViewResultLabel::InspectAssetComponent, staticMesh, &staticMesh->AssetReference, nullptr, EAssetType::StaticMesh };
     }
 
 	bool SStaticMeshComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const

@@ -3,35 +3,37 @@
 #pragma once
 
 #include <variant>
-#include "Assets/Asset.h"
 #include "ECS/Entity.h"
 #include "ECS/Component.h"
 
-#define PIN_DATA_TYPES PIN_LITERAL_TYPES, PIN_MATH_TYPES, Havtorn::SEntity, Havtorn::SComponent*, Havtorn::SAsset, std::vector<Havtorn::SEntity>, std::vector<Havtorn::SComponent*>
+#define PIN_DATA_TYPES PIN_LITERAL_TYPES, PIN_MATH_TYPES, Havtorn::SEntity, Havtorn::SComponent*, std::vector<Havtorn::SEntity>, std::vector<Havtorn::SComponent*>
 
 namespace Havtorn
 {
 	namespace HexRune
 	{
-        // TODO.NW: Add functional types, like add node or advanc§ed section?
+        // TODO.NW: Add functional types, like add node or advanced section?
         // TODO.NW: Figure out enum support
         enum class ENGINE_API EPinType : U8
         {
             Unknown,
-            Flow,
             Bool,
             Int,
             Float,
             String,
             Vector,
-            IntArray,
-            FloatArray,
-            StringArray,
-            Object,
-            ObjectArray,
+            Matrix,
+            Quaternion,
+            Entity,
+            ComponentPtr,
             Asset,
-            Function,
+            EntityList,
+            ComponentPtrList,
+
+            //Other stuff
             Delegate,
+            Function,
+            Flow
         };
 
         enum class EPinDirection

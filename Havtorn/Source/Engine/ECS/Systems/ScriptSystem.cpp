@@ -4,6 +4,7 @@
 #include "ScriptSystem.h"
 #include "Scene/World.h"
 #include "Scene/Scene.h"
+#include "Assets/AssetRegistry.h"
 #include "ECS/Components/ScriptComponent.h"
 #include "HexRune/HexRune.h"
 #include "HexRune/CoreNodes/CoreNodes.h"
@@ -32,10 +33,21 @@ namespace Havtorn
 
 		for (SScriptComponent* component : scriptComponents)
 		{
-			if (!SComponent::IsValid(component) || !component->Script)
+			if (!SComponent::IsValid(component))
 				continue;
 
-			HexRune::SScript* script = component->Script;
+			HexRune::SScript* script = GEngine::GetAssetRegistry()->RequestAssetData<HexRune::SScript>(component->AssetReference, component->Owner.GUID);
+
+			if (component->DataBindings.size() != script->DataBindings.size())
+			{
+				for (U64 i = 0; i < script->DataBindings.size(); i++)
+				{
+					auto& scriptBinding = script->DataBindings[i];
+					if (component->DataBindings.size() <= i)
+						component->DataBindings.emplace_back(scriptBinding);
+				}
+				component->DataBindings.resize(script->DataBindings.size());
+			}
 
 			for (U64 i = 0; i < script->DataBindings.size(); i++)
 			{

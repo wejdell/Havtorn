@@ -16,6 +16,8 @@
 #include <MathTypes/Vector.h>
 #include <EngineTypes.h>
 
+#include <magic_enum.h>
+
 struct ID3D11Device;
 struct ID3D11DeviceContext;
 
@@ -557,6 +559,7 @@ namespace Havtorn
 		Active,
 		AssetPicked,
 		Cancelled,
+		ContextMenu,
 	};
 
 	struct SAssetPickResult
@@ -571,6 +574,7 @@ namespace Havtorn
 		{}
 		EAssetPickerState State = EAssetPickerState::Inactive;
 		std::filesystem::directory_entry PickedEntry;
+		bool IsHovered = false;
 	};
 
 	struct SRenderAssetCardResult
@@ -582,24 +586,34 @@ namespace Havtorn
 		bool IsHovered = false;
 	};
 
+	struct SAlignedButtonData
+	{
+		std::function<void()> Function;
+		intptr_t ImageRef = 0;
+		bool IsIndented = false;
+	};
+
 	// TODO.NW: static asserts to make sure they're equal in length to code based enums?
 	enum class EGUIPinType : U8
 	{
 		Unknown,
-		Flow,
 		Bool,
 		Int,
 		Float,
 		String,
 		Vector,
-		IntArray,
-		FloatArray,
-		StringArray,
-		Object,
-		ObjectArray,
+		Matrix,
+		Quaternion,
+		Entity,
+		ComponentPtr,
 		Asset,
-		Function,
+		EntityList,
+		ComponentPtrList,
+
+		//Other stuff
 		Delegate,
+		Function,
+		Flow
 	};
 
 	enum class EGUIObjectDataType : U8
@@ -705,6 +719,9 @@ namespace Havtorn
 		EGUIPinType Type = EGUIPinType::Unknown;
 		EGUIObjectDataType ObjectType = EGUIObjectDataType::None;
 		EGUIAssetType AssetType = EGUIAssetType::None;
+		U8 CurrentPinTypeIndex = 0;
+		U8 CurrentObjectTypeIndex = 0;
+
 	};
 
 	struct SNodeOperation
@@ -784,6 +801,51 @@ namespace Havtorn
 			return returnValue;
 		}
 
+		//Returns -1 as false
+		template<typename T>
+		static U8 ComboEnum(const char* label, U8& currentIndex)
+		{
+			auto enumNames = magic_enum::enum_names<T>();
+			if (GUI::BeginCombo(label, enumNames[currentIndex].data()))
+			{
+				for (U8 i = 0; i < enumNames.size(); i++)
+				{
+					bool isSelected = currentIndex == i;
+					if (GUI::Selectable(enumNames[i].data(), isSelected))
+						currentIndex = i;
+
+					if (isSelected)
+						GUI::SetItemDefaultFocus();
+				}
+				GUI::EndCombo();
+			}
+
+			return currentIndex;
+		}
+
+		template<typename T>
+		static T ComboEnum(const char* label, T& currentValue)
+		{
+			auto enumNames = magic_enum::enum_names<T>();
+			U8 currentIndex = static_cast<U8>(currentValue);
+			if (GUI::BeginCombo(label, enumNames[currentIndex].data()))
+			{
+				for (U8 i = 0; i < enumNames.size(); i++)
+				{
+					bool isSelected = currentIndex == i;
+					if (GUI::Selectable(enumNames[i].data(), isSelected))
+						currentIndex = i;
+
+					if (isSelected)
+						GUI::SetItemDefaultFocus();
+				}
+				GUI::EndCombo();
+			}
+
+			return static_cast<T>(currentIndex);
+		}
+
+
 		static bool ColorPicker3(const char* label, SColor& value);
 		static bool ColorPicker4(const char* label, SColor& value);
 
@@ -827,6 +889,7 @@ namespace Havtorn
 		static void EndDragDropTarget();
 
 		static bool BeginPopupContextWindow();
+		static bool BeginPopupContextItem();
 
 		static void OpenPopup(const char* label);
 
@@ -839,16 +902,22 @@ namespace Havtorn
 		static bool TreeNodeEx(const char* label, const std::vector<ETreeNodeFlag>& treeNodeFlags = {});
 		static void TreePop();
 
+		static bool BeginCombo(const char* label, const char* selectedLabel);
+		static void EndCombo();
+
 		static bool ArrowButton(const char* label, const EGUIDirection direction);
 		static bool Button(const char* label, const SVector2<F32>& size = SVector2<F32>(0.0f));
 		static bool SmallButton(const char* label);
 		static bool RadioButton(const char* label, bool active);
-		static bool ImageButton(const char* label, intptr_t image, const SVector2<F32>& size = SVector2<F32>(0.0f), const SVector2<F32>& uv0 = SVector2<F32>(0.0f), const SVector2<F32>& uv1 = SVector2<F32>(1.0f), const SColor& backgroundColor = SColor(0.0f, 0.0f, 0.0f, 0.0f), const SColor& tintColor = SColor::White);
+		static bool ImageButton(const char* label, intptr_t imageRef, const SVector2<F32>& size = SVector2<F32>(0.0f), const SVector2<F32>& uv0 = SVector2<F32>(0.0f), const SVector2<F32>& uv1 = SVector2<F32>(1.0f), const SColor& backgroundColor = SColor(0.0f, 0.0f, 0.0f, 0.0f), const SColor& tintColor = SColor::White);
+		static bool ViewportButton(const char* label, intptr_t imageRef, const SVector2<F32>& size = SVector2<F32>(0.0f), const SVector2<F32>& uv0 = SVector2<F32>(0.0f), const SVector2<F32>& uv1 = SVector2<F32>(1.0f), const SColor& backgroundColor = SColor(0.0f, 0.0f, 0.0f, 0.0f), const SColor& tintColor = SColor::White);
 		static bool Checkbox(const char* label, bool& value);
+
+		static void AddViewportButtons(const std::vector<SAlignedButtonData>& buttons, const SVector2<F32>& buttonSize, const F32 alignWidth);
 
 		static SAssetPickResult AssetPicker(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryFunc& assetInspector);
 		static SAssetPickResult AssetPickerFilter(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType);
-		static SRenderAssetCardResult RenderAssetCard(const char* label, const bool isSelected, const intptr_t& thumbnailID, const char* typeName, const SColor& color, void* dragDropPayloadToSet, U64 payLoadSize);
+		static SRenderAssetCardResult RenderAssetCard(const char* label, const bool isSelected, const intptr_t& thumbnailID, const char* typeName, const SColor& color, const SColor& borderColor, void* dragDropPayloadToSet, U64 payLoadSize);
 
 		static bool Selectable(const char* label, const bool selected = false, const std::vector<ESelectableFlag>& flags = {}, const SVector2<F32>& size = SVector2<F32>(0.0f));
 
@@ -861,11 +930,15 @@ namespace Havtorn
 		static void Dummy(const SVector2<F32>& size);
 		static void SameLine(const F32 offsetFromX = 0.0f, const F32 spacing = -1.0f);
 		static bool IsItemClicked(const EGUIMouseButton button = EGUIMouseButton::Left);
+		static bool IsMouseClicked(I32 mouseButton = 0);
 		static bool IsMouseReleased(I32 mouseButton = 0);
 		static bool IsItemHovered();
+		static bool IsMouseInRect(const SVector2<F32>& topLeft, const SVector2<F32>& bottomRight);
+		static bool IsMouseInRect(const SVector4& rect);
 		static bool IsItemVisible();
 		static bool IsWindowFocused();
 		static bool IsWindowHovered();
+		static bool IsPopupOpen(const char* label);
 
 		static void BeginVertical(const char* label, const SVector2<F32>& size);
 		static void EndVertical();
@@ -967,7 +1040,7 @@ namespace Havtorn
 		static void BeginPin(const U64 id, const EGUIPinDirection direction);
 		static void EndPin();
 
-		static void DrawPinIcon(const SVector2<F32>& size, const EGUIIconType type, const bool isConnected, const SColor& color);
+		static void DrawPinIcon(const SVector2<F32>& size, const EGUIIconType type, const bool isConnected, const SColor& color, const bool highlighted = false);
 		static void DrawNodeHeader(U64 nodeID, intptr_t textureID, const SVector2<F32>& posMin, const SVector2<F32>& posMax, const SVector2<F32>& uvMin, const SVector2<F32>& uvMax, const SColor& color, const F32 rounding);
 
 		static void Link(const U64 linkID, const U64 startPinID, const U64 endPinID, const SColor& color, const F32 thickness = 1.0f);

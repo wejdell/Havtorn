@@ -3,10 +3,11 @@
 #pragma once
 
 #include "ECS/Entity.h"
-#include "FileSystem/FileHeaderDeclarations.h"
+#include "Assets/FileHeaderDeclarations.h"
 #include "HexPhys/HexPhys.h"
 #include <EngineException.h>
 #include <HavtornDelegate.h>
+#include <FileSystem.h>
 
 namespace Havtorn
 {
@@ -16,6 +17,7 @@ namespace Havtorn
 	struct STransformComponent;
 	class ISystem;
 	class CRenderManager;
+	class CGraphicsFramework;
 	class CAssetRegistry;
 	class CSequencerSystem;
 	class CScene;
@@ -69,7 +71,6 @@ namespace Havtorn
 		ENGINE_API std::vector<SEntity>& GetEntities() const;
 		ENGINE_API void SaveActiveScene(const std::string& destinationPath) const;
 		ENGINE_API void RemoveScene(U64 sceneIndex);
-		ENGINE_API CAssetRegistry* GetAssetRegistry() const;
 		
 		template<typename T>
 		void CreateScene();
@@ -116,9 +117,8 @@ namespace Havtorn
 		ENGINE_API void Initialize3DPhysicsData(const SEntity& entity) const;
 		ENGINE_API void Update3DPhysicsData(STransformComponent* transformComponent, SPhysics3DComponent* phys2DComponent) const;
 
-		ENGINE_API void SaveScript(const std::string& filePath);
-		ENGINE_API HexRune::SScript* LoadScript(const std::string& filePath);
-		ENGINE_API void UnloadScript(const std::string& filePath);
+		template<typename T>
+		HexRune::SScript* LoadScript(const std::string& filePath);
 
 	public:
 		CMulticastDelegate<CScene*> OnBeginPlayDelegate;
@@ -155,12 +155,9 @@ namespace Havtorn
 		std::vector<SystemTypeCode> SystemsToRemove;
 		std::vector<Ptr<ISystem>> SystemsToAdd;
 
-		Ptr<CAssetRegistry> AssetRegistry = nullptr;
 		Ptr<HexPhys2D::CPhysicsWorld2D> PhysicsWorld2D = nullptr;
 		Ptr<HexPhys3D::CPhysicsWorld3D> PhysicsWorld3D = nullptr;
 		
-		std::unordered_map<std::string, Ptr<HexRune::SScript>> LoadedScripts;
-
 		CRenderManager* RenderManager = nullptr;
 
 		CMulticastDelegate<CScene*> OnSceneCreatedDelegate;
@@ -199,11 +196,11 @@ namespace Havtorn
 
 		if (shouldOpen3DDemo)
 		{
-			ENGINE_BOOL_POPUP(Scenes.back()->Init3DDemoScene(RenderManager), "Demo Scene could not be initialized.");
+			ENGINE_BOOL_POPUP(Scenes.back()->Init3DDemoScene(), "Demo Scene could not be initialized.");
 		}
 		else
 		{
-			ENGINE_BOOL_POPUP(Scenes.back()->Init2DDemoScene(RenderManager), "Demo Scene could not be initialized.");
+			ENGINE_BOOL_POPUP(Scenes.back()->Init2DDemoScene(), "Demo Scene could not be initialized.");
 		}
 	}
 
@@ -280,7 +277,7 @@ namespace Havtorn
 		SSystemData* holder = GetSystemHolder<T>();
 		if (holder == nullptr)
 			return;
-
+			
 		std::erase(holder->Blockers, reinterpret_cast<U64>(requester));
 	}
 }

@@ -13,14 +13,14 @@ namespace Havtorn
 {
 	namespace HexRune
 	{
-		SEntityLoopNode::SEntityLoopNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript)
+		SEntityLoopNode::SEntityLoopNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			AddInput(UGUIDManager::Generate(), EPinType::Flow);
-			AddInput(UGUIDManager::Generate(), EPinType::ObjectArray, "Array");
+			AddInput(UGUIDManager::Generate(), EPinType::EntityList, "Array");
 
 			AddOutput(UGUIDManager::Generate(), EPinType::Flow, "Loop Body");
-			AddOutput(UGUIDManager::Generate(), EPinType::Object, "Element");
+			AddOutput(UGUIDManager::Generate(), EPinType::Entity, "Element");
 			AddOutput(UGUIDManager::Generate(), EPinType::Int, "Index");
 			AddOutput(UGUIDManager::Generate(), EPinType::Flow, "Completed");
 		}
@@ -43,14 +43,14 @@ namespace Havtorn
 			return 3;
 		}
 
-		SComponentLoopNode::SComponentLoopNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript)
+		SComponentLoopNode::SComponentLoopNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			AddInput(UGUIDManager::Generate(), EPinType::Flow);
-			AddInput(UGUIDManager::Generate(), EPinType::ObjectArray, "Array");
+			AddInput(UGUIDManager::Generate(), EPinType::ComponentPtrList, "Array");
 
 			AddOutput(UGUIDManager::Generate(), EPinType::Flow, "Loop Body");
-			AddOutput(UGUIDManager::Generate(), EPinType::Object, "Element");
+			AddOutput(UGUIDManager::Generate(), EPinType::ComponentPtr, "Element");
 			AddOutput(UGUIDManager::Generate(), EPinType::Int, "Index");
 			AddOutput(UGUIDManager::Generate(), EPinType::Flow, "Completed");
 		}
@@ -73,21 +73,21 @@ namespace Havtorn
 			return 3;
 		}
 
-		SPrintEntityNameNode::SPrintEntityNameNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript)
+		SPrintEntityNameNode::SPrintEntityNameNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			AddInput(UGUIDManager::Generate(), EPinType::Flow);
-			AddInput(UGUIDManager::Generate(), EPinType::Object);
+			AddInput(UGUIDManager::Generate(), EPinType::Entity);
 		}
 
 		I8 SPrintEntityNameNode::OnExecute()
 		{
 			SEntity entity;
 			GetDataOnPin(EPinDirection::Input, 1, entity);
-			
+
 			if (OwningScript == nullptr || OwningScript->Scene == nullptr)
 				return 0;
-			
+
 			if (entity == SEntity::Null)
 			{
 				HV_LOG_INFO("Entity is Null");
@@ -96,15 +96,15 @@ namespace Havtorn
 
 			SMetaDataComponent* metaData = OwningScript->Scene->GetComponent<SMetaDataComponent>(entity);
 
-			HV_LOG_INFO(metaData->Name.Data());		
+			HV_LOG_INFO(metaData->Name.Data());
 			return 0;
 		}
 
-		SSetStaticMeshNode::SSetStaticMeshNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript)
+		SSetStaticMeshNode::SSetStaticMeshNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			AddInput(UGUIDManager::Generate(), EPinType::Flow);
-			AddInput(UGUIDManager::Generate(), EPinType::Object, "Entity");
+			AddInput(UGUIDManager::Generate(), EPinType::Entity, "Entity");
 			AddInput(UGUIDManager::Generate(), EPinType::Asset, "Mesh");
 
 			AddOutput(UGUIDManager::Generate(), EPinType::Flow, "Success");
@@ -118,30 +118,27 @@ namespace Havtorn
 
 			SEntity entity;
 			GetDataOnPin(EPinDirection::Input, 1, entity);
-			if (!entity.IsValid())	
+			if (!entity.IsValid())
 				return 1;
 			
-			SAsset asset;
-			GetDataOnPin(EPinDirection::Input, 2, asset);
-			if (!asset.IsValid())
+			std::string assetPath;
+			GetDataOnPin(EPinDirection::Input, 2, assetPath);
+			if (assetPath == "")
 				return 1;
 
 			SStaticMeshComponent* meshComponent = OwningScript->Scene->GetComponent<SStaticMeshComponent>(entity);
 			if (!meshComponent)
 				return 1;
 
-			// TODO.NW: Route asset switching through AssetRegistry
-			// Update references when changing assets like this
-			OwningScript->Scene->RenderManager->LoadStaticMeshComponent(asset.AssetPath, meshComponent, OwningScript->Scene);
-
+			meshComponent->AssetReference = SAssetReference(assetPath);
 			return 0;
 		}
 
-		STogglePointLightNode::STogglePointLightNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript)
+		STogglePointLightNode::STogglePointLightNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			AddInput(UGUIDManager::Generate(), EPinType::Flow);
-			AddInput(UGUIDManager::Generate(), EPinType::Object, "Entity");
+			AddInput(UGUIDManager::Generate(), EPinType::Entity, "Entity");
 			AddInput(UGUIDManager::Generate(), EPinType::Bool, "Enable");
 
 			AddOutput(UGUIDManager::Generate(), EPinType::Flow);
@@ -168,12 +165,12 @@ namespace Havtorn
 			return 0;
 		}
 
-		SOnBeginOverlapNode::SOnBeginOverlapNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript)
+		SOnBeginOverlapNode::SOnBeginOverlapNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			AddOutput(UGUIDManager::Generate(), EPinType::Flow);
-			AddOutput(UGUIDManager::Generate(), EPinType::Object, "Triggering Entity");
-			AddOutput(UGUIDManager::Generate(), EPinType::Object, "Other Entity");
+			AddOutput(UGUIDManager::Generate(), EPinType::Entity, "Triggering Entity");
+			AddOutput(UGUIDManager::Generate(), EPinType::Entity, "Other Entity");
 		}
 
 		I8 SOnBeginOverlapNode::OnExecute()
@@ -181,12 +178,12 @@ namespace Havtorn
 			return 0;
 		}
 
-		SOnEndOverlapNode::SOnEndOverlapNode(const U64 id, SScript* owningScript)
-			: SNode::SNode(id, owningScript)
+		SOnEndOverlapNode::SOnEndOverlapNode(const U64 id, const U32 typeID, SScript* owningScript)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
 		{
 			AddOutput(UGUIDManager::Generate(), EPinType::Flow);
-			AddOutput(UGUIDManager::Generate(), EPinType::Object, "Triggering Entity");
-			AddOutput(UGUIDManager::Generate(), EPinType::Object, "Other Entity");
+			AddOutput(UGUIDManager::Generate(), EPinType::Entity, "Triggering Entity");
+			AddOutput(UGUIDManager::Generate(), EPinType::Entity, "Other Entity");
 		}
 
 		I8 SOnEndOverlapNode::OnExecute()

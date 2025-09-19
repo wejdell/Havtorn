@@ -152,7 +152,7 @@ namespace Havtorn
 
 		void SetTooltip(const char* fmt, va_list args)
 		{
-			ImGui::SetTooltipV(fmt, args);	
+			ImGui::SetTooltipV(fmt, args);
 		}
 
 		SVector2<F32> CalculateTextSize(const char* text)
@@ -324,7 +324,7 @@ namespace Havtorn
 		{
 			ImGui::Separator();
 		}
-		
+
 		void Dummy(const SVector2<F32>& size)
 		{
 			ImVec2 imSize = { size.X, size.Y };
@@ -337,11 +337,16 @@ namespace Havtorn
 		}
 
 		bool IsItemClicked(const EGUIMouseButton button)
-		{			
+		{
 			return ImGui::IsItemClicked(static_cast<ImGuiMouseButton>(button));
 		}
 
-		bool IsMouseReleased(int mouseButton)
+		bool IsMouseClicked(I32 mouseButton)
+		{
+			return ImGui::IsMouseClicked(mouseButton);
+		}
+
+		bool IsMouseReleased(I32 mouseButton)
 		{
 			return ImGui::IsMouseReleased(mouseButton);
 		}
@@ -349,6 +354,13 @@ namespace Havtorn
 		bool IsItemHovered()
 		{
 			return ImGui::IsItemHovered();
+		}
+
+		bool IsMouseInRect(const SVector2<F32>& topLeft, const SVector2<F32>& bottomRight)
+		{
+			ImVec2 imTopLeft = { topLeft.X, topLeft.Y };
+			ImVec2 imBottomRight = { bottomRight.X, bottomRight.Y };
+			return ImGui::IsMouseHoveringRect(imTopLeft, imBottomRight);
 		}
 
 		bool IsItemVisible()
@@ -364,6 +376,11 @@ namespace Havtorn
 		bool IsWindowHovered()
 		{
 			return ImGui::IsWindowHovered();
+		}
+
+		bool IsPopupOpen(const char* label)
+		{
+			return ImGui::IsPopupOpen(label);
 		}
 
 		SVector2<F32> GetCursorPos()
@@ -514,7 +531,7 @@ namespace Havtorn
 				value = ImGui::GetStyle().ItemSpacing;
 				break;
 			}
-			
+
 			return SVector2<F32>(value.x, value.y);
 		}
 
@@ -802,7 +819,7 @@ namespace Havtorn
 			guiPayload.IsDelivery = imGuiPayload->Delivery;
 			return guiPayload;
 		}
-		
+
 		bool SetDragDropPayload(const char* type, const void* data, U64 dataSize)
 		{
 			return ImGui::SetDragDropPayload(type, data, dataSize);
@@ -855,6 +872,11 @@ namespace Havtorn
 			return ImGui::BeginPopupContextWindow();
 		}
 
+		bool BeginPopupContextItem()
+		{
+			return ImGui::BeginPopupContextItem("ContextItem");
+		}
+
 		void OpenPopup(const char* label)
 		{
 			ImGui::OpenPopup(label);
@@ -897,6 +919,16 @@ namespace Havtorn
 		void TreePop()
 		{
 			ImGui::TreePop();
+		}
+
+		bool BeginCombo(const char* label, const char* selectedLabel)
+		{
+			return ImGui::BeginCombo(label, selectedLabel);
+		}
+
+		void EndCombo()
+		{
+			ImGui::EndCombo();
 		}
 
 		bool BeginMainMenuBar()
@@ -943,6 +975,46 @@ namespace Havtorn
 			return ImGui::ImageButton(label, (ImTextureID)(textureID), imSize, imUV0, imUV1, imColorBackground, imColorTint);
 		}
 
+		bool ViewportButton(const char* label, intptr_t textureID, const SVector2<F32>& size, const SVector2<F32>& uv0, const SVector2<F32>& uv1, const SColor& backgroundColor, const SColor& tintColor)
+		{
+			ImGuiContext& g = *GImGui;
+			ImGuiWindow* window = g.CurrentWindow;
+			if (window->SkipItems)
+				return false;
+
+			ImVec2 imSize = { size.X, size.Y };
+			ImVec2 imUV0 = { uv0.X, uv0.Y };
+			ImVec2 imUV1 = { uv1.X, uv1.Y };
+			SVector4 backgroundColorFloat = backgroundColor.AsVector4();
+			ImVec4 imColorBackground = { backgroundColorFloat.X, backgroundColorFloat.Y, backgroundColorFloat.Z, backgroundColorFloat.W };
+			SVector4 tintColorFloat = tintColor.AsVector4();
+			ImVec4 imColorTint = { tintColorFloat.X, tintColorFloat.Y, tintColorFloat.Z, tintColorFloat.W };
+
+			auto id = window->GetID(label);
+			const ImVec2 padding = g.Style.FramePadding;
+			const ImRect bb(window->DC.CursorPos, { window->DC.CursorPos.x + imSize.x + padding.x * 2.0f, window->DC.CursorPos.y + imSize.y + padding.y * 2.0f });
+			ImGui::ItemSize(bb);
+			if (!ImGui::ItemAdd(bb, id))
+				return false;
+
+			bool hovered, held;
+			bool pressed = ImGui::ButtonBehavior(bb, id, &hovered, &held, 0);
+
+			// Render
+			const ImU32 col = ImGui::GetColorU32((held && hovered) ? ImGuiCol_ButtonActive : hovered ? ImGuiCol_ButtonHovered : ImGuiCol_Button);
+			ImGui::RenderNavCursor(bb, id);
+
+			ImGui::RenderFrame(bb.Min, bb.Max, col, true, ImClamp((float)ImMin(padding.x, padding.y), 0.0f, g.Style.FrameRounding));
+			if (imColorBackground.w > 0.0f)
+				window->DrawList->AddRectFilled({ bb.Min.x + 1.0f, bb.Min.y + 1.0f }, { bb.Max.x - 1.0f, bb.Max.y - 1.0f }, ImGui::GetColorU32(imColorBackground));
+
+			ImVec2 pMin = { bb.Min.x + padding.x, bb.Min.y + padding.y };			
+			ImVec2 pMax = { bb.Max.x - padding.x, bb.Max.y - padding.y };
+			window->DrawList->AddImage(textureID, pMin, pMax, imUV0, imUV1, ImGui::GetColorU32(imColorTint));
+
+			return pressed;
+		}
+
 		void AddRectFilled(const SVector2<F32>& cursorScreenPos, const SVector2<F32>& size, const SColor& color)
 		{
 			ImVec2 posMin = { cursorScreenPos.X, cursorScreenPos.Y };
@@ -950,6 +1022,15 @@ namespace Havtorn
 			SVector4 colorFloat = color.AsVector4();
 			ImVec4 imColor = { colorFloat.X, colorFloat.Y, colorFloat.Z, colorFloat.W };
 			ImGui::GetWindowDrawList()->AddRectFilled(posMin, posMax, ImGui::ColorConvertFloat4ToU32(imColor));
+			//ImGui::GetBackgroundDrawList()->
+		}
+
+		void HighlightPins(const U64* pinIds)
+		{
+			ImDrawList* drawList = ImGui::GetForegroundDrawList();
+			//ImVec2 position = NE::GetNodePosition(nodeId);
+
+
 		}
 
 		void SetGuiColorProfile(const SGuiColorProfile& colorProfile)
@@ -1135,14 +1216,15 @@ namespace Havtorn
 			NE::EndPin();
 		}
 
-		void DrawPinIcon(const SVector2<F32>& size, const EGUIIconType type, const bool isConnected, const SColor& color)
+		void DrawPinIcon(const SVector2<F32>& size, const EGUIIconType type, const bool isConnected, const SColor& color, const bool highlighted)
 		{
-			ax::Widgets::Icon(ImVec2(size.X, size.Y), static_cast<ax::Drawing::IconType>(type), isConnected, ImColor{color.R, color.G, color.B, color.A}, ImColor(32, 32, 32, 255));
+			ax::Widgets::Icon(ImVec2(size.X, size.Y), static_cast<ax::Drawing::IconType>(type), isConnected, ImColor{ color.R, color.G, color.B, color.A }, ImColor(32, 32, 32, 255), highlighted);
+			ImGui::GetWindowDrawList()->GetClipRectMax();
 		}
 
 		void DrawNodeHeader(const U64 nodeID, intptr_t textureID, const SVector2<F32>& posMin, const SVector2<F32>& posMax, const SVector2<F32>& uvMin, const SVector2<F32>& uvMax, const SColor& color, const F32 rounding)
 		{
-			NE::GetNodeBackgroundDrawList(nodeID)->AddImageRounded((ImTextureID)textureID, { posMin.X, posMin.Y }, { posMax.X, posMax.Y }, { uvMin.X, uvMin.Y }, { uvMax.X, uvMax.Y }, ImColor{color.R, color.G, color.B, color.A}, rounding, ImDrawFlags_RoundCornersAll);
+			NE::GetNodeBackgroundDrawList(nodeID)->AddImageRounded((ImTextureID)textureID, { posMin.X, posMin.Y }, { posMax.X, posMax.Y }, { uvMin.X, uvMin.Y }, { uvMax.X, uvMax.Y }, ImColor{ color.R, color.G, color.B, color.A }, rounding, ImDrawFlags_RoundCornersAll);
 		}
 
 		void Link(const U64 linkID, const U64 startPinID, const U64 endPinID, const SColor& color, const F32 thickness)
@@ -1622,6 +1704,11 @@ namespace Havtorn
 		return Instance->Impl->BeginPopupContextWindow();
 	}
 
+	bool GUI::BeginPopupContextItem()
+	{
+		return Instance->Impl->BeginPopupContextItem();
+	}
+
 	void GUI::OpenPopup(const char* label)
 	{
 		Instance->Impl->OpenPopup(label);
@@ -1662,6 +1749,16 @@ namespace Havtorn
 		Instance->Impl->TreePop();
 	}
 
+	bool GUI::BeginCombo(const char* label, const char* selectedLabel)
+	{
+		return Instance->Impl->BeginCombo(label, selectedLabel);
+	}
+
+	void GUI::EndCombo()
+	{
+		return Instance->Impl->EndCombo();
+	}
+
 	bool GUI::ArrowButton(const char* label, const EGUIDirection direction)
 	{
 		return Instance->Impl->ArrowButton(label, direction);
@@ -1687,9 +1784,37 @@ namespace Havtorn
 		return Instance->Impl->ImageButton(label, imageRef, size, uv0, uv1, backgroundColor, tintColor);
 	}
 
+	bool GUI::ViewportButton(const char* label, intptr_t imageRef, const SVector2<F32>& size, const SVector2<F32>& uv0, const SVector2<F32>& uv1, const SColor& backgroundColor, const SColor& tintColor)
+	{
+		return Instance->Impl->ViewportButton(label, imageRef, size, uv0, uv1, backgroundColor, tintColor);
+	}
+
 	bool GUI::Checkbox(const char* label, bool& value)
 	{
 		return Instance->Impl->Checkbox(label, value);
+	}
+
+	void GUI::AddViewportButtons(const std::vector<SAlignedButtonData>& buttons, const SVector2<F32>& buttonSize, const F32 alignWidth)
+	{
+		for (U64 i = 0; i < buttons.size(); i++)
+		{
+			const SAlignedButtonData& button = buttons[i];
+			const F32 evennessOffset = (buttons.size() % 2 == 0) ? buttonSize.X : 0.0f;
+			const F32 position = buttonSize.X * 2.0f * (STATIC_F32(i) - UMath::Floor(STATIC_F32(buttons.size()) * 0.5f)) + evennessOffset;
+			GUI::SameLine(alignWidth * 0.5f - buttonSize.X * 0.5f + position);
+			
+			GUI::PushID(i);
+			const SVector2<F32> uv0 = { 0.0f, 0.0f };
+			const SVector2<F32> uv1 = { 1.0f, 1.0f };
+			const std::vector<SColor>& colors = GUI::GetStyleColors();
+			const SColor buttonActiveColor = colors[STATIC_U64(EStyleColor::ButtonActive)];
+			const SColor buttonColor = button.IsIndented ? buttonActiveColor : SColor(0.0f, 0.0f, 0.0f, 0.0f);
+			if (GUI::ViewportButton("##Button", button.ImageRef, buttonSize, uv0, uv1, buttonColor))
+			{
+				button.Function();
+			}
+			GUI::PopID();
+		}
 	}
 
 	SAssetPickResult GUI::AssetPicker(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryFunc& assetInspector)
@@ -1711,8 +1836,6 @@ namespace Havtorn
 			return SAssetPickResult();
 		}
 		
-
-
 		I32 id = 0;
 		for (auto& entry : std::filesystem::recursive_directory_iterator(directory))
 		{
@@ -1760,27 +1883,39 @@ namespace Havtorn
 		return SAssetPickResult(EAssetPickerState::Active);
 	}
 
-
 	SAssetPickResult GUI::AssetPickerFilter(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType filterByAssetType)
 	{
+		SAssetPickResult result;
+
 		if (GUI::ImageButton("AssetPicker", image, { GUI::TexturePreviewSizeX * 0.75f, GUI::TexturePreviewSizeY * 0.75f }))
 		{
 			GUI::OpenPopup(modalLabel);
 			GUI::SetNextWindowPos(GUI::GetViewportCenter(), EWindowCondition::Appearing, SVector2<F32>(0.5f, 0.5f));
 		}
+		result.IsHovered = GUI::IsMouseInRect(GUI::GetLastRect());
 
+		if (GUI::IsItemClicked(EGUIMouseButton::Right))
+		{
+			result.State = EAssetPickerState::ContextMenu;
+			return result;
+		}
+
+		const F32 thumbnailPadding = 8.0f;
+		const F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + thumbnailPadding;
+		GUI::OffsetCursorPos(SVector2<F32>(1.0f, -4.0f));
+		GUI::AddRectFilled(GUI::GetCursorScreenPos(), SVector2<F32>(cellWidth, 2.0f), GetAssetTypeColor(filterByAssetType));
+
+		GUI::OffsetCursorPos(SVector2<F32>(0.0f, 6.0f));
 		GUI::Text(label);
 
 		if (!GUI::BeginPopupModal(modalLabel, NULL, { EWindowFlag::AlwaysAutoResize }))
-			return SAssetPickResult();
+			return result;
 
 		if (!GUI::BeginTable("AssetPickerTable", columns))
 		{
 			GUI::EndPopup();
-			return SAssetPickResult();
+			return result;
 		}
-
-
 
 		I32 id = 0;
 		for (auto& entry : std::filesystem::recursive_directory_iterator(directory))
@@ -1801,7 +1936,9 @@ namespace Havtorn
 				GUI::EndTable();
 				GUI::CloseCurrentPopup();
 				GUI::EndPopup();
-				return SAssetPickResult(entry);
+				result.State = EAssetPickerState::AssetPicked;
+				result.PickedEntry = entry;
+				return result;
 			}
 
 			GUI::Text(data.Name.c_str());
@@ -1826,16 +1963,17 @@ namespace Havtorn
 		}
 
 		GUI::EndPopup();
-		return SAssetPickResult(EAssetPickerState::Active);
+		result.State = EAssetPickerState::Active;
+		return result;
 	}
 
-	SRenderAssetCardResult GUI::RenderAssetCard(const char* label, const bool isSelected, const intptr_t& thumbnailID, const char* typeName, const SColor& color, void* dragDropPayloadToSet, U64 payLoadSize)
+	SRenderAssetCardResult GUI::RenderAssetCard(const char* label, const bool isSelected, const intptr_t& thumbnailID, const char* typeName, const SColor& color, const SColor& borderColor, void* dragDropPayloadToSet, U64 payLoadSize)
 	{
 		SRenderAssetCardResult result;
 
 		SVector2<F32> cardStartPos = GUI::GetCursorPos();
 		SVector2<F32> framePadding = GUI::GetStyleVar(EStyleVar::FramePadding);
-		
+
 		SVector2<F32> cardSize = { GUI::ThumbnailSizeX + framePadding.X * 0.5f, GUI::ThumbnailSizeY + framePadding.Y * 0.5f };
 		cardSize.Y *= 1.6f;
 		SVector2<F32> thumbnailSize = { GUI::ThumbnailSizeX + framePadding.X * 0.5f, GUI::ThumbnailSizeY + framePadding.Y * 0.5f + 4.0f };
@@ -1843,14 +1981,14 @@ namespace Havtorn
 		// TODO.NW: Can't seem to get the leftmost line to show correctly. Maybe need to start the table as usual and then offset inwards?
 		constexpr F32 borderThickness = 1.0f;
 		GUI::SetCursorPos(cardStartPos + SVector2<F32>(-1.0f * borderThickness));
-		GUI::AddRectFilled(GUI::GetCursorScreenPos(), cardSize + SVector2<F32>(2.0f * borderThickness), SColor(10));
+		GUI::AddRectFilled(GUI::GetCursorScreenPos(), cardSize + SVector2<F32>(2.0f * borderThickness), borderColor);
 		GUI::SetCursorPos(cardStartPos);
 		GUI::AddRectFilled(GUI::GetCursorScreenPos(), cardSize, SColor(65));
 		GUI::SetCursorPos(cardStartPos);
 		GUI::AddRectFilled(GUI::GetCursorScreenPos(), thumbnailSize, SColor(40));
 		GUI::SetCursorPos(cardStartPos);
 
-		if (GUI::Selectable("", isSelected, { ESelectableFlag::AllowDoubleClick, ESelectableFlag::AllowOverlap}, cardSize))
+		if (GUI::Selectable("", isSelected, { ESelectableFlag::AllowDoubleClick, ESelectableFlag::AllowOverlap }, cardSize))
 		{
 			if (GUI::IsMouseReleased())
 				result.IsClicked = true;
@@ -1936,6 +2074,11 @@ namespace Havtorn
 		return Instance->Impl->IsItemClicked(button);
 	}
 
+	bool GUI::IsMouseClicked(I32 mouseButton)
+	{
+		return Instance->Impl->IsMouseClicked(mouseButton);
+	}
+
 	bool GUI::IsMouseReleased(I32 mouseButton)
 	{
 		return Instance->Impl->IsMouseReleased(mouseButton);
@@ -1944,6 +2087,22 @@ namespace Havtorn
 	bool GUI::IsItemHovered()
 	{
 		return Instance->Impl->IsItemHovered();
+	}
+
+	bool GUI::IsMouseInRect(const SVector2<F32>& topLeft, const SVector2<F32>& bottomRight)
+	{
+		// TODO.NW: Make general rect functions
+		SVector2<F32> mousePos = GUI::GetMousePosition();
+		bool isOutsideRect = mousePos.X <= topLeft.X || mousePos.X > bottomRight.X || mousePos.Y <= topLeft.Y || mousePos.Y > bottomRight.Y;
+		return !isOutsideRect;
+	}
+
+	bool GUI::IsMouseInRect(const SVector4& rect)
+	{
+		// TODO.NW: Make general rect functions
+		SVector2<F32> mousePos = GUI::GetMousePosition();
+		bool isOutsideRect = mousePos.X <= rect.X || mousePos.X > rect.Z || mousePos.Y <= rect.Y || mousePos.Y > rect.W;
+		return !isOutsideRect;
 	}
 
 	bool GUI::IsItemVisible()
@@ -1959,6 +2118,11 @@ namespace Havtorn
 	bool GUI::IsWindowHovered()
 	{
 		return Instance->Impl->IsWindowHovered();
+	}
+
+	bool GUI::IsPopupOpen(const char* label)
+	{
+		return Instance->Impl->IsPopupOpen(label);
 	}
 
 	void GUI::BeginVertical(const char* label, const SVector2<F32>& size)
@@ -2251,7 +2415,7 @@ namespace Havtorn
 	{
 		Instance->Impl->AddRectFilled(cursorScreenPos, size, color);
 	}
-	
+
 	void GUI::SetGuiColorProfile(const SGuiColorProfile& profile)
 	{
 		Instance->Impl->SetGuiColorProfile(profile);
@@ -2342,9 +2506,9 @@ namespace Havtorn
 		Instance->Impl->EndPin();
 	}
 
-	void GUI::DrawPinIcon(const SVector2<F32>& size, const EGUIIconType type, const bool isConnected, const SColor& color)
+	void GUI::DrawPinIcon(const SVector2<F32>& size, const EGUIIconType type, const bool isConnected, const SColor& color, const bool highlighted)
 	{
-		Instance->Impl->DrawPinIcon(size, type, isConnected, color);
+		Instance->Impl->DrawPinIcon(size, type, isConnected, color, highlighted);
 	}
 
 	void GUI::DrawNodeHeader(const U64 nodeID, intptr_t textureID, const SVector2<F32>& posMin, const SVector2<F32>& posMax, const SVector2<F32>& uvMin, const SVector2<F32>& uvMax, const SColor& color, const F32 rounding)
@@ -2391,12 +2555,12 @@ namespace Havtorn
 	{
 		return Instance->Impl->QueryNewLink(inputPinID, outputPinID);
 	}
-	
+
 	bool GUI::QueryDeletedLink(U64& linkID)
 	{
 		return Instance->Impl->QueryDeletedLink(linkID);
 	}
-	
+
 	bool GUI::QueryDeletedNode(U64& nodeID)
 	{
 		return Instance->Impl->QueryDeletedNode(nodeID);
@@ -2406,7 +2570,7 @@ namespace Havtorn
 	{
 		return Instance->Impl->AcceptNewScriptItem();
 	}
-	
+
 	bool GUI::AcceptDeletedScriptItem()
 	{
 		return Instance->Impl->AcceptDeletedScriptItem();
@@ -2457,7 +2621,7 @@ namespace Havtorn
 			Build();
 		}
 	}
-	
+
 	bool SGuiTextFilter::Draw(const char* label, F32 width)
 	{
 		if (width != 0.0f)

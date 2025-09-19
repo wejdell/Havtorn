@@ -6,6 +6,8 @@
 #include "ECS/Components/SkeletalAnimationComponent.h"
 #include "ECS/Components/SkeletalMeshComponent.h"
 #include "Scene/Scene.h"
+#include "Assets/AssetRegistry.h"
+#include "Assets/RuntimeAssetDeclarations.h"
 
 namespace Havtorn
 {
@@ -31,14 +33,18 @@ namespace Havtorn
 			if (!SComponent::IsValid(mesh))
 				continue;
 
+			CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
+			SSkeletalMeshAsset* meshAsset = assetRegistry->RequestAssetData<SSkeletalMeshAsset>(mesh->AssetReference, component->Owner.GUID);
+			SSkeletalAnimationAsset* currentAnimation = assetRegistry->RequestAssetData<SSkeletalAnimationAsset>(component->AssetReferences[component->CurrentAnimationIndex], component->Owner.GUID);
+
 			if (component->IsPlaying)
-				component->CurrentAnimationTime = fmodf(component->CurrentAnimationTime += deltaTime, component->CurrentAnimation[component->CurrentAnimationIndex].DurationInTicks / STATIC_F32(component->CurrentAnimation[component->CurrentAnimationIndex].TickRate));
+				component->CurrentAnimationTime = fmodf(component->CurrentAnimationTime += deltaTime, currentAnimation->DurationInTicks / STATIC_F32(currentAnimation->TickRate));
 
 			// Ticks == Frames
-			F32 ticksPerSecond = STATIC_F32(component->CurrentAnimation[component->CurrentAnimationIndex].TickRate);
+			F32 ticksPerSecond = STATIC_F32(currentAnimation->TickRate);
 			ticksPerSecond = (ticksPerSecond != 0) ? ticksPerSecond : 24.0f;
 			F32 timeInTicks = component->CurrentAnimationTime * ticksPerSecond;
-			F32 duration = STATIC_F32(component->CurrentAnimation[component->CurrentAnimationIndex].DurationInTicks);
+			F32 duration = STATIC_F32(currentAnimation->DurationInTicks);
 			F32 animationTime = fmodf(timeInTicks, duration);
 
 			// VERSION 2
@@ -46,29 +52,30 @@ namespace Havtorn
 
 			component->CurrentAnimationIndex = 0;
 			std::vector<SSkeletalPosedNode> walkPosedNodes = {};
-			ReadAnimationLocalPose(component, mesh, animationTime, mesh->Nodes[0], walkPosedNodes);
+			ReadAnimationLocalPose(currentAnimation, meshAsset, animationTime, meshAsset->Nodes[0], walkPosedNodes);
 
-			component->CurrentAnimationIndex = 0;
+			//component->CurrentAnimationIndex = 0;
+			//currentAnimation = assetRegistry->RequestAssetData<SSkeletalAnimationAsset>(component->AssetReferences[component->CurrentAnimationIndex], component->Owner.GUID);
 			std::vector<SSkeletalPosedNode> runPosedNodes = {};
-			ReadAnimationLocalPose(component, mesh, animationTime, mesh->Nodes[0], runPosedNodes);
+			ReadAnimationLocalPose(currentAnimation, meshAsset, animationTime, meshAsset->Nodes[0], runPosedNodes);
 
 			component->CurrentAnimationIndex = 0;
 
 			std::vector<SSkeletalPosedNode> blendPosedNodes = {};
-			blendPosedNodes.resize(mesh->Nodes.size());
+			blendPosedNodes.resize(meshAsset->Nodes.size());
 			for (U32 i = 0; i < blendPosedNodes.size(); i++)
 			{
 				auto& walk = walkPosedNodes[i];
 				auto& run = runPosedNodes[i];
-				blendPosedNodes[i].Name = mesh->Nodes[i].Name;
+				blendPosedNodes[i].Name = meshAsset->Nodes[i].Name;
 				blendPosedNodes[i].LocalTransform = SMatrix::Interpolate(walk.LocalTransform, run.LocalTransform, component->BlendValue);
 			}
 
 			SMatrix root;
-			root.SetScale(component->ImportScale);
-			ApplyLocalPoseToHierarchy(mesh, blendPosedNodes, mesh->Nodes[0], root);
+			root.SetScale(currentAnimation->ImportScale);
+			ApplyLocalPoseToHierarchy(meshAsset, blendPosedNodes, meshAsset->Nodes[0], root);
 
-			component->Bones.resize(mesh->BindPose.size());
+			component->Bones.resize(meshAsset->BindPoseBones.size());
 
 			//Apply Inverse Bind Transform
 			for (U32 i = 0; i < blendPosedNodes.size(); i++)
@@ -76,13 +83,13 @@ namespace Havtorn
 				SSkeletalPosedNode& posedNode = blendPosedNodes[i];
 				I32 boneIndex = -1;
 				
-				if (auto it = std::ranges::find(mesh->BindPose, posedNode.Name, &SSkeletalMeshBone::Name); it != mesh->BindPose.end())
-					boneIndex = STATIC_I32(std::distance(mesh->BindPose.begin(), it));
+				if (auto it = std::ranges::find(meshAsset->BindPoseBones, posedNode.Name, &SSkeletalMeshBone::Name); it != meshAsset->BindPoseBones.end())
+					boneIndex = STATIC_I32(std::distance(meshAsset->BindPoseBones.begin(), it));
 
 				if (boneIndex < 0)
 					continue;
 
-				SSkeletalMeshBone& bone = mesh->BindPose[boneIndex];
+				SSkeletalMeshBone& bone = meshAsset->BindPoseBones[boneIndex];
 				component->Bones[boneIndex] = bone.InverseBindPoseTransform * posedNode.GlobalTransform;
 			}
 
@@ -226,7 +233,7 @@ namespace Havtorn
 		return startPosition * (1 - factor) + endPosition * factor;
 	}
 
-	void CAnimatorGraphSystem::ApplyLocalPoseToHierarchy(const SSkeletalMeshComponent* mesh, std::vector<SSkeletalPosedNode>& in, const SSkeletalMeshNode& node, const SMatrix& parentTransform)
+	void CAnimatorGraphSystem::ApplyLocalPoseToHierarchy(const SSkeletalMeshAsset* mesh, std::vector<SSkeletalPosedNode>& in, const SSkeletalMeshNode& node, const SMatrix& parentTransform)
 	{
 		SMatrix nodeTransform = node.NodeTransform;
 
@@ -245,28 +252,26 @@ namespace Havtorn
 
 	std::vector<SMatrix> CAnimatorGraphSystem::ReadAssetAnimationPose(const std::string& animationFile, const F32 animationTime)
 	{
-		SSkeletalAnimationComponent* component = new SSkeletalAnimationComponent();
-		RenderManager->LoadSkeletalAnimationComponent({ animationFile }, component);
-
-		SSkeletalMeshComponent* mesh = new SSkeletalMeshComponent();
-		RenderManager->LoadSkeletalMeshComponent(component->SkeletonName, mesh);
+		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
+		SSkeletalAnimationAsset* animationAsset = assetRegistry->RequestAssetData<SSkeletalAnimationAsset>(SAssetReference(animationFile), CAssetRegistry::EditorManagerRequestID);
+		SSkeletalMeshAsset* meshAsset = assetRegistry->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(animationAsset->RigPath), CAssetRegistry::EditorManagerRequestID);
 
 		// Ticks == Frames
-		F32 ticksPerSecond = STATIC_F32(component->CurrentAnimation[component->CurrentAnimationIndex].TickRate);
+		F32 ticksPerSecond = STATIC_F32(animationAsset->TickRate);
 		ticksPerSecond = (ticksPerSecond != 0) ? ticksPerSecond : 24.0f;
 		F32 timeInTicks = animationTime * ticksPerSecond;
-		F32 duration = STATIC_F32(component->CurrentAnimation[component->CurrentAnimationIndex].DurationInTicks);
+		F32 duration = STATIC_F32(animationAsset->DurationInTicks);
 		F32 time = fmodf(timeInTicks, duration);
 
 		std::vector<SSkeletalPosedNode> posedNodes = {};
 
-		ReadAnimationLocalPose(component, mesh, time, mesh->Nodes[0], posedNodes);
+		ReadAnimationLocalPose(animationAsset, meshAsset, time, meshAsset->Nodes[0], posedNodes);
 		SMatrix root;
-		root.SetScale(component->ImportScale);
-		ApplyLocalPoseToHierarchy(mesh, posedNodes, mesh->Nodes[0], root);
+		root.SetScale(animationAsset->ImportScale);
+		ApplyLocalPoseToHierarchy(meshAsset, posedNodes, meshAsset->Nodes[0], root);
 
 		std::vector<SMatrix> transforms;
-		transforms.resize(mesh->BindPose.size());
+		transforms.resize(meshAsset->BindPoseBones.size());
 
 		//Apply Inverse Bind Transform
 		for (U32 i = 0; i < posedNodes.size(); i++)
@@ -274,37 +279,33 @@ namespace Havtorn
 			SSkeletalPosedNode& posedNode = posedNodes[i];
 			I32 boneIndex = -1;
 
-			if (auto it = std::ranges::find(mesh->BindPose, posedNode.Name, &SSkeletalMeshBone::Name); it != mesh->BindPose.end())
-				boneIndex = STATIC_I32(std::distance(mesh->BindPose.begin(), it));
+			if (auto it = std::ranges::find(meshAsset->BindPoseBones, posedNode.Name, &SSkeletalMeshBone::Name); it != meshAsset->BindPoseBones.end())
+				boneIndex = STATIC_I32(std::distance(meshAsset->BindPoseBones.begin(), it));
 
 			if (boneIndex < 0)
 				continue;
 
-			SSkeletalMeshBone& bone = mesh->BindPose[boneIndex];
+			SSkeletalMeshBone& bone = meshAsset->BindPoseBones[boneIndex];
 			transforms[boneIndex] = bone.InverseBindPoseTransform * posedNode.GlobalTransform;
 		}
 
-		delete component;
-		delete mesh;
+		assetRegistry->UnrequestAsset(SAssetReference(animationAsset->RigPath), CAssetRegistry::EditorManagerRequestID);
+		assetRegistry->UnrequestAsset(SAssetReference(animationFile), CAssetRegistry::EditorManagerRequestID);
 
 		return transforms;
 	}
 
-	void CAnimatorGraphSystem::ReadAnimationLocalPose(const SSkeletalAnimationComponent* animationComponent,
-													  const SSkeletalMeshComponent* mesh,
-													  const F32 animationTime,
-													  const SSkeletalMeshNode& node,
-													  std::vector<SSkeletalPosedNode>& posedNodes)
+	void CAnimatorGraphSystem::ReadAnimationLocalPose(const SSkeletalAnimationAsset* animation, const SSkeletalMeshAsset* mesh, const F32 animationTime, const SSkeletalMeshNode& fromNode, std::vector<SSkeletalPosedNode>& posedNodes)
 	{
-		SMatrix nodeTransform = node.NodeTransform;
+		SMatrix nodeTransform = fromNode.NodeTransform;
 		// TODO.NW: Streamline this so we can read the local pose of different animations at the same time, then combine them at the end
-		std::string nodeName = node.Name.AsString();
+		std::string nodeName = fromNode.Name.AsString();
 
 		SSkeletalPosedNode posedNode = SSkeletalPosedNode{};
 		posedNodes.emplace_back(posedNode);
-		posedNodes.back().Name = node.Name;
+		posedNodes.back().Name = fromNode.Name;
 
-		auto& tracks = animationComponent->CurrentAnimation[animationComponent->CurrentAnimationIndex].Tracks;
+		auto& tracks = animation->BoneAnimationTracks;
 		if (auto it = std::ranges::find(tracks, nodeName, &SBoneAnimationTrack::TrackName); it != tracks.end())
 		{
 			const SBoneAnimationTrack& track = *it;
@@ -321,17 +322,17 @@ namespace Havtorn
 			posedNodes.back().LocalTransform = nodeTransform;
 		}
 
-		for (auto childIndex : node.ChildIndices)
+		for (auto childIndex : fromNode.ChildIndices)
 		{
-			ReadAnimationLocalPose(animationComponent, mesh, animationTime, mesh->Nodes[childIndex], posedNodes);
+			ReadAnimationLocalPose(animation, mesh, animationTime, mesh->Nodes[childIndex], posedNodes);
 		}
 	}
 
-	std::vector<SSkeletalPosedNode> CAnimatorGraphSystem::EvaluateLocalPose(const SSkeletalAnimationComponent* animationComponent, const F32 animationTime)
+	std::vector<SSkeletalPosedNode> CAnimatorGraphSystem::EvaluateLocalPose(const SSkeletalAnimationAsset* animation, const F32 animationTime)
 	{
 		std::vector<SSkeletalPosedNode> posedNodes;
 		std::vector<SMatrix> localPose;
-		for (const SBoneAnimationTrack& track : animationComponent->CurrentAnimation[animationComponent->CurrentAnimationIndex].Tracks)
+		for (const SBoneAnimationTrack& track : animation->BoneAnimationTracks)
 		{
 			//HV_LOG_WARN("bone :%s", track.TrackName.c_str());
 			SVector scaling = CalcInterpolatedScaling(animationTime, track);
@@ -351,12 +352,12 @@ namespace Havtorn
 
 		return posedNodes;
 	}
-	void CAnimatorGraphSystem::TestWalkThrough(const SSkeletalMeshComponent* skeleton, const SSkeletalMeshNode& node, const SMatrix& parentTransform)
+	void CAnimatorGraphSystem::TestWalkThrough(const SSkeletalMeshAsset* mesh, const SSkeletalMeshNode& node, const SMatrix& parentTransform)
 	{
 		SMatrix matrix = node.NodeTransform * parentTransform;
 		for (U32 i = 0; i < node.ChildIndices.size(); i++)
 		{
-			TestWalkThrough(skeleton, skeleton->Nodes[i], matrix);
+			TestWalkThrough(mesh, mesh->Nodes[i], matrix);
 		}
 	}
 }

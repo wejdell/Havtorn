@@ -2,10 +2,8 @@
 
 #include "hvpch.h"
 #include <wincodec.h>
-#include <document.h>
 
 #include "Engine.h"
-#include "FileSystem/FileSystem.h"
 #include "FileSystem/FileWatcher.h"
 #include "Threading/ThreadManager.h"
 #include "Graphics/GraphicsFramework.h"
@@ -13,7 +11,7 @@
 
 #include "Scene/World.h"
 #include "Scene/Scene.h"
-#include "Scene/AssetRegistry.h"
+#include "Assets/AssetRegistry.h"
 #include "ECS/ECSInclude.h"
 
 #include "Graphics/RenderManager.h"
@@ -25,6 +23,7 @@
 #include "Application/EngineProcess.h"
 
 #include <../Platform/PlatformManager.h>
+#include <FileSystem.h>
 
 namespace Havtorn
 {
@@ -34,12 +33,11 @@ namespace Havtorn
 	{
 		Instance = this;
 
-		FileSystem = new CFileSystem();
 		Timer = new GTime();
 		InputMapper = new CInputMapper();
 		Framework = new CGraphicsFramework();
-		TextureBank = new CTextureBank();
 		RenderManager = new CRenderManager();
+		AssetRegistry = new CAssetRegistry();
 		World = new CWorld();
 		ThreadManager = new CThreadManager();
 		FileWatcher = new CFileWatcher();
@@ -48,16 +46,15 @@ namespace Havtorn
 
 	GEngine::~GEngine()
 	{
+		SAFE_DELETE(DebugDraw);
 		SAFE_DELETE(FileWatcher);
 		SAFE_DELETE(ThreadManager);
 		SAFE_DELETE(World);
-		SAFE_DELETE(DebugDraw);
+		SAFE_DELETE(AssetRegistry);
 		SAFE_DELETE(RenderManager);
-		SAFE_DELETE(TextureBank);
 		SAFE_DELETE(Framework);
 		SAFE_DELETE(InputMapper);
 		SAFE_DELETE(Timer);
-		SAFE_DELETE(FileSystem);
 
 		Instance = nullptr;
 	}
@@ -66,8 +63,8 @@ namespace Havtorn
 	{
 		ENGINE_ERROR_BOOL_MESSAGE(InputMapper->Init(platformManager), "Input Mapper could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(Framework->Init(platformManager), "Framework could not be initialized.");
-		ENGINE_ERROR_BOOL_MESSAGE(TextureBank->Init(Framework), "TextureBank could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(RenderManager->Init(Framework, platformManager), "RenderManager could not be initialized.");
+		ENGINE_ERROR_BOOL_MESSAGE(AssetRegistry->Init(RenderManager), "Asset Registry could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(World->Init(RenderManager), "World could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(ThreadManager->Init(RenderManager), "Thread Manager could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(FileWatcher->Init(ThreadManager), "File Watcher could not be initialized.");
@@ -131,24 +128,19 @@ namespace Havtorn
 		CThreadManager::RenderCondition.notify_one();
 	}
 
-	CFileSystem* GEngine::GetFileSystem()
-	{
-		return Instance->FileSystem;
-	}
-
 	CFileWatcher* GEngine::GetFileWatcher()
 	{
 		return Instance->FileWatcher;
 	}
 
-	CTextureBank* GEngine::GetTextureBank()
-	{
-		return Instance->TextureBank;
-	}
-
 	CThreadManager* GEngine::GetThreadManager()
 	{
 		return Instance->ThreadManager;
+	}
+
+	CAssetRegistry* GEngine::GetAssetRegistry()
+	{
+		return Instance->AssetRegistry;
 	}
 
 	CWorld* GEngine::GetWorld()

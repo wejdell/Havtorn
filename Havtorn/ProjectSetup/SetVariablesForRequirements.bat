@@ -11,3 +11,7 @@ set pythonDirName=Python
 
 :: GIT VARIABLES
 set gitDirName=PortableGit
+
+:: BUILD TOOLS VARIABLES
+set btVer=17
+set btReq1="VCTools (C++ development)"

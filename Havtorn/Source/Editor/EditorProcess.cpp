@@ -25,7 +25,7 @@ namespace Havtorn
 		if (!engineInstance)
 			return false;
 	 
-		return EditorManager->Init(platformManager, engineInstance->Framework, engineInstance->RenderManager);
+		return EditorManager->Init(platformManager, engineInstance->RenderManager);
 	}
 
 	void CEditorProcess::BeginFrame()

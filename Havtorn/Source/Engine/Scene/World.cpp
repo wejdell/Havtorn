@@ -4,7 +4,7 @@
 #include "ECS/ECSInclude.h"
 #include "Scene.h"
 #include "Graphics/RenderManager.h"
-#include "AssetRegistry.h"
+#include "Assets/AssetRegistry.h"
 #include "Graphics/Debug/DebugDrawUtility.h"
 #include "HexPhys/HexPhys.h"
 
@@ -13,7 +13,6 @@ namespace Havtorn
 	bool CWorld::Init(CRenderManager* renderManager)
 	{
 		RenderManager = renderManager;
-		AssetRegistry = std::make_unique<CAssetRegistry>();
 		PhysicsWorld2D = std::make_unique<HexPhys2D::CPhysicsWorld2D>();
 		PhysicsWorld3D = std::make_unique<HexPhys3D::CPhysicsWorld3D>();
 
@@ -126,12 +125,12 @@ namespace Havtorn
 		SSceneFileHeader fileHeader;
 		fileHeader.Scene = scene.get();
 
-		const U32 fileSize = GetDataSize(fileHeader.AssetType) + AssetRegistry->GetSize() + fileHeader.GetSize();
+		const U32 fileSize = fileHeader.GetSize();
 		char* data = new char[fileSize];
 
 		U64 pointerPosition = 0;	
-		fileHeader.Serialize(data, pointerPosition, AssetRegistry.get());
-		GEngine::GetFileSystem()->Serialize(destinationPath, data, fileSize);
+		fileHeader.Serialize(data, pointerPosition);
+		UFileSystem::Serialize(destinationPath, data, fileSize);
 		
 		delete[] data;
 	}
@@ -140,14 +139,14 @@ namespace Havtorn
 	{
 		SSceneFileHeader sceneFile;
 
-		const U64 fileSize = GEngine::GetFileSystem()->GetFileSize(filePath);
+		const U64 fileSize = UFileSystem::GetFileSize(filePath);
 		char* data = new char[fileSize];
 
-		outScene->Init(RenderManager, UGeneralUtils::ExtractFileBaseNameFromPath(filePath));
+		outScene->Init(UGeneralUtils::ExtractFileBaseNameFromPath(filePath));
 
 		U64 pointerPosition = 0;
-		GEngine::GetFileSystem()->Deserialize(filePath, data, STATIC_U32(fileSize));
-		sceneFile.Deserialize(data, pointerPosition, outScene, AssetRegistry.get());
+		UFileSystem::Deserialize(filePath, data, STATIC_U32(fileSize));
+		sceneFile.Deserialize(data, pointerPosition, outScene);
 
 		delete[] data;
 	}
@@ -233,61 +232,5 @@ namespace Havtorn
 	{
 		if (PhysicsWorld3D != nullptr)
 			PhysicsWorld3D->UpdatePhysicsData(transformComponent, phys3DComponent);
-	}
-
-	void CWorld::SaveScript(const std::string& filePath)
-	{
-		if (!LoadedScripts.contains(filePath))
-			return;
-
-		HexRune::SScript* script = LoadedScripts.at(filePath).get();
-
-		SScriptFileHeader fileHeader;
-		fileHeader.Script = script;
-
-		const U32 fileSize = fileHeader.GetSize();
-		char* data = new char[fileSize];
-
-		fileHeader.Serialize(data);
-		GEngine::GetFileSystem()->Serialize(filePath, data, fileSize);
-
-		delete[] data;
-	}
-
-	HexRune::SScript* CWorld::LoadScript(const std::string& filePath)
-	{
-		if (LoadedScripts.contains(filePath))
-			return LoadedScripts.at(filePath).get();
-
-		const U32 fileSize = STATIC_U32(GEngine::GetFileSystem()->GetFileSize(filePath));
-		char* data = new char[fileSize];
-
-		GEngine::GetFileSystem()->Deserialize(filePath, data, fileSize);
-
-		SScriptFileHeader assetFile;
-		LoadedScripts.emplace(filePath, std::make_unique<HexRune::SScript>());
-		assetFile.Deserialize(data, LoadedScripts.at(filePath).get());
-
-		// TODO.NW: When unifying asset loading, should have an abstraction for an asset, maybe only key and file path, and make sure
-		// they are always fully initialized if they exist.
-		LoadedScripts.at(filePath).get()->FileName = filePath;
-
-		delete[] data;
-		return LoadedScripts.at(filePath).get();
-	}
-
-	void CWorld::UnloadScript(const std::string& filePath)
-	{
-		// NW: Call only when last asset registry key has been unregistered
-		
-		if (!LoadedScripts.contains(filePath))
-			return;
-
-		LoadedScripts.erase(filePath);
-	}
-
-	CAssetRegistry* CWorld::GetAssetRegistry() const
-	{
-		return AssetRegistry.get();
 	}
 }

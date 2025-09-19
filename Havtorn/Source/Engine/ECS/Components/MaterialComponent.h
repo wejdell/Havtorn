@@ -3,6 +3,7 @@
 #pragma once
 #include "ECS/Component.h"
 #include "Graphics/GraphicsMaterial.h"
+#include "Assets/FileHeaderDeclarations.h"
 
 namespace Havtorn
 {
@@ -12,12 +13,17 @@ namespace Havtorn
 		SMaterialComponent(const SEntity& entityOwner)
 			: SComponent(entityOwner)
 		{}
+		SMaterialComponent(const SEntity& entityOwner, const std::vector<std::string>& assetPaths)
+			: SComponent(entityOwner)
+			, AssetReferences(SAssetReference::MakeVectorFromPaths(assetPaths))
+		{}
 
 		void Serialize(char* toData, U64& pointerPosition) const;
 		void Deserialize(const char* fromData, U64& pointerPosition);
 		[[nodiscard]] U32 GetSize() const;
 
-		std::vector<SEngineGraphicsMaterial> Materials;
-		std::vector<U64> AssetRegistryKeys = {};
+		ENGINE_API void IsDeleted(CScene* fromScene) override;
+
+		std::vector<SAssetReference> AssetReferences;
 	};
 }

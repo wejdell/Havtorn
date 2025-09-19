@@ -8,9 +8,11 @@
 #include <ECS/GUIDManager.h>
 #include <ECS/Components/TransformComponent.h>
 #include <HexRune/CoreNodes/CoreNodes.h>
-#include <FileSystem/FileSystem.h>
-
+#include <FileSystem.h>
+#include "magic_enum.h"
 #include "ScriptTool.h"
+
+#include <Assets/AssetRegistry.h>
 
 using Havtorn::I32;
 using Havtorn::F32;
@@ -77,19 +79,7 @@ namespace Havtorn
 
 			GUI::SameLine();
 			if (GUI::Button("Save"))
-			{
-				SScriptFileHeader asset;
-				asset.Script = CurrentScript;
-				const auto data = new char[asset.GetSize()];
-
-				asset.Serialize(data);
-				GEngine::GetFileSystem()->Serialize(CurrentScript->FileName, &data[0], asset.GetSize());
-
-				std::filesystem::directory_entry newDir;
-				newDir.assign(std::filesystem::path(CurrentScript->FileName));
-				Manager->RemoveAssetRep(newDir);
-				Manager->CreateAssetRep(newDir);
-			}
+				SaveScript();
 
 			GUI::Separator();
 			GUI::EndChild();
@@ -101,12 +91,14 @@ namespace Havtorn
 			GUI::BeginChild("DataBindings", SVector2<F32>(150.0f, 0.0f), { EChildFlag::Borders, EChildFlag::ResizeX });
 			GUI::Text("Data Bindings");
 			GUI::Separator();
+
 			for (auto& dataBinding : CurrentScript->DataBindings)
 			{
 				GUI::Text(dataBinding.Name.c_str());
 				if (GUI::IsItemHovered())
 				{
-					if (dataBinding.Type != EPinType::Object)
+
+					if (dataBinding.Type != EPinType::ComponentPtr)
 					{
 						const char* items[]{
 								"Unknown",
@@ -126,12 +118,6 @@ namespace Havtorn
 								"Delegate"
 						};
 						GUI::SetTooltip("%s", items[STATIC_U8(dataBinding.Type)]);
-					}
-
-					if (dataBinding.Type == EPinType::Object)
-					{
-						const char* items[]{ "None", "Entity", "Component" };
-						GUI::SetTooltip("%s", items[STATIC_U8(dataBinding.ObjectType)]);
 					}
 				}
 
@@ -203,29 +189,36 @@ namespace Havtorn
 
 	void CScriptTool::OnDisable()
 	{
+		CloseScript();
 	}
 
-	void CScriptTool::OpenScript(SScript* script)
+	void CScriptTool::OpenScript(SEditorAssetRepresentation* asset)
 	{
-		CurrentScript = script;
+		CurrentScriptRepresentation = asset;
+		CurrentScript = GEngine::GetAssetRegistry()->RequestAssetData<HexRune::SScript>(SAssetReference(asset->DirectoryEntry.path().string()), CAssetRegistry::EditorManagerRequestID);
 		SetEnabled(true);
+	}
 
-		//LoadGUIElements();
-		//GUI::OpenScript(GUINodes, GUILinks);
+	void CScriptTool::SaveScript()
+	{
+		const std::string directoryEntryPath = UGeneralUtils::ConvertToPlatformAgnosticPath(CurrentScriptRepresentation->DirectoryEntry.path().string());
+		
+		SScriptFileHeader asset;
+		asset.Name = UGeneralUtils::ExtractFileBaseNameFromPath(directoryEntryPath);
+		asset.Script = CurrentScript;
+
+		const std::string destinationPath = UGeneralUtils::ExtractParentDirectoryFromPath(directoryEntryPath);
+		Manager->GetResourceManager()->CreateAsset(destinationPath, asset);
 	}
 
 	void CScriptTool::CloseScript()
 	{
-		SetEnabled(false);
+		// TODO.NW: Ask user if they want to save?
 
-		//LoadGUIElements();
-		//GUI::CloseScript(GUINodes, GUILinks);
-
-		//for (const SGUINode& node : GUINodes)
-		//	CurrentScript->GetNodeEditorContext(node.UID)->Position = node.Position;
-		//	//CurrentScript->GetNode(node.UID)->EditorPosition = node.Position;
-
+		GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(CurrentScriptRepresentation->DirectoryEntry.path().string()), CAssetRegistry::EditorManagerRequestID);
+		CurrentScriptRepresentation = nullptr;
 		CurrentScript = nullptr;
+		SetEnabled(false);
 	}
 
 	void CScriptTool::LoadGUIElements()
@@ -241,7 +234,7 @@ namespace Havtorn
 			GUINodes.emplace_back();
 			auto& guiNode = GUINodes.back();
 			guiNode.UID = node->UID;
-			guiNode.Type = static_cast<EGUINodeType>(node->Type);
+			guiNode.Type = static_cast<EGUINodeType>(node->FlowType);
 
 			SNodeEditorContext* editorContext = CurrentScript->GetNodeEditorContext(node->UID);
 			guiNode.Name = editorContext ? editorContext->Name : "Missing Context";
@@ -314,6 +307,7 @@ namespace Havtorn
 		GUI::PushScriptStyleColor(EScriptStyleColor::Background, SColor(60));
 
 		RenderNodes();
+		CurrentDragPinType = EGUIPinType::Unknown;
 
 		for (auto& linkInfo : GUILinks)
 		{
@@ -366,7 +360,11 @@ namespace Havtorn
 
 					const bool isPinLinked = IsPinLinked(inputPin->UID, GUILinks);
 
-					if (IsPinTypeLiteral(*inputPin) && !isPinLinked)
+					if (!isPinLinked && inputPin->Type == CurrentDragPinType)
+					{
+						DrawPinIcon(*inputPin, isPinLinked, 255, true);
+					}
+					else if (IsPinTypeLiteral(*inputPin) && !isPinLinked)
 					{
 						const bool wasPinValueModified = DrawLiteralTypePin(*inputPin);
 						if (wasPinValueModified)
@@ -374,7 +372,7 @@ namespace Havtorn
 					}
 					else
 					{
-						DrawPinIcon(*inputPin, isPinLinked, 255);
+						DrawPinIcon(*inputPin, isPinLinked, 200, false);
 					}
 
 					GUI::SameLine(0, 0);
@@ -406,7 +404,7 @@ namespace Havtorn
 					GUI::Text(outputPin->Name.c_str());
 					GUI::SetCursorPos(SVector2<F32>(cursorX + nameWidth, cursorY));
 
-					DrawPinIcon(*outputPin, IsPinLinked(outputPin->UID, GUILinks), 255);
+					DrawPinIcon(*outputPin, IsPinLinked(outputPin->UID, GUILinks), 200, false);
 					GUI::EndPin();
 					GUI::PopScriptStyleVar();
 					GUI::Unindent(indent);
@@ -444,7 +442,16 @@ namespace Havtorn
 
 		U64 inputPinId, outputPinId = 0;
 		if (!GUI::QueryNewLink(inputPinId, outputPinId))
+		{
+			SGUIPin* originPin = GetPinFromID(inputPinId, GUINodes);
+			if (originPin->Type != EGUIPinType::Unknown)
+			{
+				CurrentDragPinType = originPin->Type;
+			}
+
+
 			return GUI::EndScriptCreate();
+		}
 
 		if (inputPinId == 0 || outputPinId == 0)
 			return GUI::EndScriptCreate();
@@ -604,14 +611,11 @@ namespace Havtorn
 			auto newNodePostion = openPopupPosition;
 			//CNodeType** types = CNodeTypeCollector::GetAllNodeTypes();
 			//unsigned short noOfTypes = CNodeTypeCollector::GetNodeTypeCount();
-
 			//std::map<std::string, std::vector<CNodeType*>> cats;
-
 			//for (int i = 0; i < noOfTypes; i++)
 			//{
 			//	cats[types[i]->GetNodeTypeCategory()].push_back(types[i]);
 			//}
-
 			//GUI::PushItemWidth(100.0f);
 			//GUI::InputText("##edit", (char*)myMenuSeachField, 127);
 			//if (mySetSearchFokus)
@@ -620,10 +624,8 @@ namespace Havtorn
 			//}
 			//mySetSearchFokus = false;
 			//GUI::PopItemWidth();
-
 			//if (myMenuSeachField[0] != '\0')
 			//{
-
 			//	std::vector<SDistBestResult> distanceResults;
 			//	for (int i = 0; i < noOfTypes; i++)
 			//	{
@@ -632,9 +634,7 @@ namespace Havtorn
 			//		dist.ourInstance = types[i];
 			//		dist.myScore = uiLevenshteinDistance<std::string>(types[i]->Name, myMenuSeachField);
 			//	}
-
 			//	std::sort(distanceResults.begin(), distanceResults.end(), less_than_key());
-
 			//	int firstCost = distanceResults[0].myScore;
 			//	for (int i = 0; i < distanceResults.size(); i++)
 			//	{
@@ -642,15 +642,12 @@ namespace Havtorn
 			//		if (GUI::MenuItem(distanceResults[i].ourInstance->Name.c_str()))
 			//		{
 			//			node = new CNodeInstance();
-
 			//			int nodeType = i;
 			//			node.myNodeType = distanceResults[i].ourInstance;
 			//			node.ConstructUniquePins();
 			//			GUI::SetNodePosition(node.UID, newNodePostion);
 			//			node.myHasSetEditorPos = true;
-
 			//			myNodeInstancesInGraph.push_back(node);
-
 			//			if (myShouldPushCommand)
 			//			{
 			//				std::cout << "Push create command!" << std::endl;
@@ -663,7 +660,6 @@ namespace Havtorn
 			//			break;
 			//		}
 			//	}
-
 			//}
 			//else
 			//{
@@ -674,7 +670,6 @@ namespace Havtorn
 				//	{
 				//		theCatName = "General";
 				//	}
-
 				//	if (GUI::BeginMenu(theCatName.c_str()))
 				//	{
 				//		CNodeInstance* node = nullptr;
@@ -684,13 +679,11 @@ namespace Havtorn
 				//			if (GUI::MenuItem(type->Name.c_str()))
 				//			{
 				//				node = new CNodeInstance();
-
 				//				int nodeType = i;
 				//				node.myNodeType = type;
 				//				node.ConstructUniquePins();
 				//				GUI::SetNodePosition(node.UID, newNodePostion);
 				//				node.myHasSetEditorPos = true;
-
 				//				myNodeInstancesInGraph.push_back(node);
 				//		
 				//				if (myShouldPushCommand)
@@ -733,49 +726,54 @@ namespace Havtorn
 		{
 			GUI::Text("New Data Binding");
 			GUI::Separator();
-
 			GUI::InputText("Name", &DataBindingCandidate.Name);
-			GUI::SliderEnum("Type", DataBindingCandidate.Type,
-							{ //TODO.NW: See if we can bind these strings at compile time or something, through a static a certain of string amount and enum Count?
-								"Unknown",
-								"Flow",
-								"Bool",
-								"Int",
-								"Float",
-								"String",
-								"Vector",
-								"Int Array",
-								"Float Array",
-								"String Array",
-								"Object",
-								"Object Array",
-								"Asset",
-								"Function",
-								"Delegate"
-							});
+
+
+			DataBindingCandidate.Type = GUI::ComboEnum("Pin Type", DataBindingCandidate.Type); // <-- This could replace the commented code below 
+
+			//GUI::SliderEnum("Type", DataBindingCandidate.Type,
+			//				{ //TODO.NW: See if we can bind these strings at compile time or something, through a static a certain of string amount and enum Count?
+			//					"Unknown",
+			//					"Flow",
+			//					"Bool",
+			//					"Int",
+			//					"Float",
+			//					"String",
+			//					"Vector",
+			//					"Int Array",
+			//					"Float Array",
+			//					"String Array",
+			//					"Object",
+			//					"Object Array",
+			//					"Asset",
+			//					"Function",
+			//					"Delegate"
+			//				});
 
 			// TODO.NW: Add filtering so we can't pick incorrect types e.g. unknown and flow
 			if (DataBindingCandidate.Type == EGUIPinType::Unknown)
 				DataBindingCandidate.Type = EGUIPinType::Bool;
-			 
+
 			if (DataBindingCandidate.Type == EGUIPinType::Asset)
 			{
-				GUI::SliderEnum("Asset Type", DataBindingCandidate.AssetType,
-					{
-						"None",
-						"StaticMesh",
-						"SkeletalMesh",
-						"Texture",
-						"Material",
-						"Animation",
-						"SpriteAnimation",
-						"AudioOneShot",
-						"AudioCollection",
-						"VisualFX",
-						"Scene",
-						"Sequencer",
-						"Script"
-					});
+				DataBindingCandidate.AssetType = GUI::ComboEnum("Asset Type", DataBindingCandidate.AssetType);
+
+				//GUI::SliderEnum("Asset Type", DataBindingCandidate.AssetType,
+				//	{
+				//		"None",
+				//		"StaticMesh",
+				//		"SkeletalMesh",
+				//		"Texture",
+				//		"Material",
+				//		"Animation",
+				//		"SpriteAnimation",
+				//		"AudioOneShot",
+				//		"AudioCollection",
+				//		"VisualFX",
+				//		"Scene",
+				//		"Sequencer",
+				//		"Script"
+				//	});
 
 				if (DataBindingCandidate.AssetType == EGUIAssetType::None)
 					DataBindingCandidate.AssetType = EGUIAssetType::StaticMesh;
@@ -786,9 +784,10 @@ namespace Havtorn
 			}
 
 
-			if (DataBindingCandidate.Type == EGUIPinType::Object)
+			if (DataBindingCandidate.Type == EGUIPinType::ComponentPtr)
 			{
-				GUI::SliderEnum("Object Type", DataBindingCandidate.ObjectType, { "None", "Entity", "Component" });
+				DataBindingCandidate.ObjectType = GUI::ComboEnum("Object Type", DataBindingCandidate.ObjectType);
+				//GUI::SliderEnum("Object Type", DataBindingCandidate.ObjectType, { "None", "Entity", "Component" });
 
 				if (DataBindingCandidate.ObjectType == EGUIObjectDataType::None)
 					DataBindingCandidate.ObjectType = EGUIObjectDataType::Entity;
@@ -1047,7 +1046,7 @@ namespace Havtorn
 		return wasPinValueModified;
 	}
 
-	void CScriptTool::DrawPinIcon(const SGUIPin& pin, bool connected, U8 alpha)
+	void CScriptTool::DrawPinIcon(const SGUIPin& pin, bool connected, U8 alpha, bool highlighted)
 	{
 		EGUIIconType iconType;
 		SColor color = GetPinTypeColor(pin.Type);
@@ -1060,16 +1059,21 @@ namespace Havtorn
 		case EGUIPinType::Float:    iconType = EGUIIconType::Circle; break;
 		case EGUIPinType::String:   iconType = EGUIIconType::Circle; break;
 		case EGUIPinType::Vector:   iconType = EGUIIconType::Circle; break;
-		case EGUIPinType::Object:   iconType = EGUIIconType::Circle; break;
-		case EGUIPinType::ObjectArray:   iconType = EGUIIconType::Grid; break;
+		
+		case EGUIPinType::ComponentPtr:   iconType = EGUIIconType::Circle; break;
+		case EGUIPinType::ComponentPtrList:   iconType = EGUIIconType::Grid; break;
+
+		case EGUIPinType::Entity:   iconType = EGUIIconType::Circle; break;
+		case EGUIPinType::EntityList:   iconType = EGUIIconType::Grid; break;
+		
 		case EGUIPinType::Asset:    iconType = EGUIIconType::Circle; break;
 		case EGUIPinType::Function: iconType = EGUIIconType::Circle; break;
 		case EGUIPinType::Delegate: iconType = EGUIIconType::Square; break;
-		default:
-			return;
+			default:
+				return;
 		}
 
-		GUI::DrawPinIcon(SVector2<F32>(24.0f), iconType, connected, color);
+		GUI::DrawPinIcon(SVector2<F32>(24.0f), iconType, connected, color, highlighted);
 	};
 
 	SColor CScriptTool::GetPinTypeColor(EGUIPinType type)
@@ -1083,8 +1087,13 @@ namespace Havtorn
 		case EGUIPinType::Float:    return SColor(147, 226, 74);
 		case EGUIPinType::String:   return SColor(124, 21, 153);
 		case EGUIPinType::Vector:   return SColor(255, 206, 27);
-		case EGUIPinType::Object:   return SColor(51, 150, 215);
-		case EGUIPinType::ObjectArray:   return SColor(51, 150, 215);
+		
+		case EGUIPinType::ComponentPtr:   return SColor(51, 150, 215);
+		case EGUIPinType::ComponentPtrList:   return SColor(51, 150, 215);
+
+		case EGUIPinType::Entity:   return SColor(51, 150, 215);
+		case EGUIPinType::EntityList:   return SColor(51, 150, 215);
+
 		case EGUIPinType::Asset:   return SColor(124, 21, 153);
 		case EGUIPinType::Function: return SColor(218, 0, 183);
 		case EGUIPinType::Delegate: return SColor(255, 48, 48);
@@ -1149,4 +1158,19 @@ namespace Havtorn
 
 		return nullptr;
 	}
+
+	SGUIPin* CScriptTool::GetOutputPinFromID(U64 id, std::vector<SGUINode>& nodes)
+	{
+		for (auto& node : nodes)
+		{
+			for (auto& pin : node.Outputs)
+			{
+				if (pin.UID == id)
+					return &pin;
+			}
+		}
+		return nullptr;
+	}
+
+
 }

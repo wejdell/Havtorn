@@ -78,6 +78,9 @@ set(CORE_FILES
     ${CORE_FOLDER}Delegate.h
     ${CORE_FOLDER}EngineException.h
     ${CORE_FOLDER}EngineTypes.h
+    ${CORE_FOLDER}FileSystem.cpp
+    ${CORE_FOLDER}FileSystem.h
+    ${CORE_FOLDER}GeneralUtilities.h
     ${CORE_FOLDER}HavtornDelegate.h
     ${CORE_FOLDER}HavtornString.cpp
     ${CORE_FOLDER}HavtornString.h
@@ -87,11 +90,54 @@ set(CORE_FILES
     ${CORE_FOLDER}hvpch.h
     "${CORE_FOLDER}Log.cpp"
     "${CORE_FOLDER}Log.h"
+    ${CORE_FOLDER}magic_enum.h
 )
-add_library(Core SHARED ${CORE_FILES})
+set(RAPIDJSON_FILES
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/error/en.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/error/error.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/biginteger.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/clzll.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/diyfp.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/dtoa.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/ieee754.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/itoa.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/meta.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/pow10.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/regex.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/stack.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/strfunc.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/strtod.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/internal/swap.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/msinttypes/inttypes.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/msinttypes/stdint.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/allocators.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/cursorstreamwrapper.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/document.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/encodedstream.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/encodings.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/filereadstream.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/filewritestream.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/fwd.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/istreamwrapper.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/memorybuffer.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/memorystream.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/ostreamwrapper.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/pointer.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/prettywriter.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/rapidjson.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/reader.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/schema.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/stream.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/stringbuffer.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/uri.h"
+    "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/writer.h"
+)
+add_library(Core SHARED ${CORE_FILES} ${RAPIDJSON_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${CORE_FILES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}"/../External/rapidjson/include" FILES ${RAPIDJSON_FILES})
 target_include_directories(Core PRIVATE
     "${CORE_FOLDER}"
+    "${EXTERNAL_FOLDER}rapidjson/include"
 )
 target_compile_definitions(Core PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_CORE_DLL)
 target_compile_options(Core PRIVATE ${COMMON_COMPILE_OPTIONS})
@@ -117,6 +163,7 @@ target_link_libraries(Platform PRIVATE
 target_include_directories(Platform PRIVATE
 	"${PLATFORM_FOLDER}"
     "${CORE_FOLDER}"
+    "${EXTERNAL_FOLDER}rapidjson/include"
 )
 target_link_directories(Platform PRIVATE
     ${CMAKE_BINARY_DIR}
@@ -222,11 +269,12 @@ add_dependencies(GUI Core Platform)
 set(ENGINE_FILES
     ${ENGINE_FOLDER}Application/EngineProcess.cpp
     ${ENGINE_FOLDER}Application/EngineProcess.h
-    ${ENGINE_FOLDER}Assets/Asset.h
+    ${ENGINE_FOLDER}Assets/AssetRegistry.cpp
+    ${ENGINE_FOLDER}Assets/AssetRegistry.h
+    ${ENGINE_FOLDER}Assets/FileHeaderDeclarations.h
+    ${ENGINE_FOLDER}Assets/RuntimeAssetDeclarations.h
     ${ENGINE_FOLDER}Assets/SequencerAsset.cpp
     ${ENGINE_FOLDER}Assets/SequencerAsset.h
-    ${ENGINE_FOLDER}Core/GeneralUtilities.h
-    ${ENGINE_FOLDER}Core/RuntimeAssetDeclarations.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraComponentEditorContext.cpp
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraControllerComponentEditorContext.cpp
@@ -274,6 +322,7 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/Components/DecalComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/DecalComponent.h
     ${ENGINE_FOLDER}ECS/Components/DirectionalLightComponent.h
+    ${ENGINE_FOLDER}ECS/Components/EnvironmentLightComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/EnvironmentLightComponent.h
     ${ENGINE_FOLDER}ECS/Components/MaterialComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/MaterialComponent.h
@@ -294,6 +343,7 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/Components/SpriteAnimatorGraphComponent.h
     ${ENGINE_FOLDER}ECS/Components/SpriteAnimatorGraphNode.cpp
     ${ENGINE_FOLDER}ECS/Components/SpriteAnimatorGraphNode.h
+    ${ENGINE_FOLDER}ECS/Components/SpriteComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/SpriteComponent.h
     ${ENGINE_FOLDER}ECS/Components/StaticMeshComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/StaticMeshComponent.h
@@ -328,9 +378,6 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/GUIDManager.h
     "${ENGINE_FOLDER}ECS/System.cpp"
     "${ENGINE_FOLDER}ECS/System.h"
-    ${ENGINE_FOLDER}FileSystem/FileHeaderDeclarations.h
-    ${ENGINE_FOLDER}FileSystem/FileSystem.cpp
-    ${ENGINE_FOLDER}FileSystem/FileSystem.h
     ${ENGINE_FOLDER}FileSystem/FileWatcher.cpp
     ${ENGINE_FOLDER}FileSystem/FileWatcher.h
     ${ENGINE_FOLDER}Graphics/Debug/DebugDrawUtility.cpp
@@ -339,16 +386,15 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Graphics/Renderers/FullscreenRenderer.h
     ${ENGINE_FOLDER}Graphics/RenderingPrimitives/DataBuffer.cpp
     ${ENGINE_FOLDER}Graphics/RenderingPrimitives/DataBuffer.h
-    ${ENGINE_FOLDER}Graphics/RenderingPrimitives/FullscreenTexture.cpp
-    ${ENGINE_FOLDER}Graphics/RenderingPrimitives/FullscreenTexture.h
     ${ENGINE_FOLDER}Graphics/RenderingPrimitives/GBuffer.cpp
     ${ENGINE_FOLDER}Graphics/RenderingPrimitives/GBuffer.h
-    ${ENGINE_FOLDER}Graphics/FullscreenTextureFactory.cpp
-    ${ENGINE_FOLDER}Graphics/FullscreenTextureFactory.h
+    ${ENGINE_FOLDER}Graphics/RenderingPrimitives/RenderTexture.cpp
+    ${ENGINE_FOLDER}Graphics/RenderingPrimitives/RenderTexture.h
     ${ENGINE_FOLDER}Graphics/GeometryPrimitives.h
     ${ENGINE_FOLDER}Graphics/GraphicsEnums.h
     ${ENGINE_FOLDER}Graphics/GraphicsFramework.cpp
     ${ENGINE_FOLDER}Graphics/GraphicsFramework.h
+    ${ENGINE_FOLDER}Graphics/GraphicsMaterial.cpp
     ${ENGINE_FOLDER}Graphics/GraphicsMaterial.h
     ${ENGINE_FOLDER}Graphics/GraphicsStructs.h
     ${ENGINE_FOLDER}Graphics/GraphicsUtilities.cpp
@@ -358,6 +404,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Graphics/RenderManager.h
     ${ENGINE_FOLDER}Graphics/RenderStateManager.cpp
     ${ENGINE_FOLDER}Graphics/RenderStateManager.h
+    ${ENGINE_FOLDER}Graphics/RenderTextureFactory.cpp
+    ${ENGINE_FOLDER}Graphics/RenderTextureFactory.h
     ${ENGINE_FOLDER}Graphics/TextureBank.cpp
     ${ENGINE_FOLDER}Graphics/TextureBank.h
     ${ENGINE_FOLDER}HexPhys/HexPhys.cpp
@@ -380,8 +428,6 @@ set(ENGINE_FILES
     "${ENGINE_FOLDER}Input/InputMapper.cpp"
     "${ENGINE_FOLDER}Input/InputMapper.h"
     "${ENGINE_FOLDER}Input/InputTypes.h"
-    ${ENGINE_FOLDER}Scene/AssetRegistry.cpp
-    ${ENGINE_FOLDER}Scene/AssetRegistry.h
     ${ENGINE_FOLDER}Scene/Scene.cpp
     ${ENGINE_FOLDER}Scene/Scene.h
     ${ENGINE_FOLDER}Scene/World.cpp
@@ -532,7 +578,7 @@ target_include_directories(Engine PRIVATE
     "${EXTERNAL_FOLDER}"
     "${EXTERNAL_FOLDER}assimp/include"
     "${EXTERNAL_FOLDER}FastNoise2/include"
-    "${EXTERNAL_FOLDER}rapidjson"
+    "${EXTERNAL_FOLDER}rapidjson/include"
     "${EXTERNAL_FOLDER}DirectXTex"
     "${EXTERNAL_FOLDER}box2d/include/box2d"
     "${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
@@ -570,6 +616,8 @@ set(GAME_FILES
     ${GAME_FOLDER}GameProcess.h
     ${GAME_FOLDER}GameScene.cpp
     ${GAME_FOLDER}GameScene.h
+    ${GAME_FOLDER}GameScript.cpp
+    ${GAME_FOLDER}GameScript.h
     ${GAME_FOLDER}hvpch.cpp
     ${GAME_FOLDER}hvpch.h
 )
@@ -579,7 +627,7 @@ target_include_directories(Game PRIVATE
     "${GAME_FOLDER}"
     "${EXTERNAL_FOLDER}"
     "${EXTERNAL_FOLDER}FastNoise2/include"
-    "${EXTERNAL_FOLDER}rapidjson"
+    "${EXTERNAL_FOLDER}rapidjson/include"
     "${EXTERNAL_FOLDER}DirectXTex"
     "${EXTERNAL_FOLDER}box2d/include/box2d"
     "${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
@@ -615,6 +663,8 @@ set(EDITOR_FILES
     ${EDITOR_FOLDER}AuthoringTools/MaterialTool.h
     ${EDITOR_FOLDER}AuthoringTools/ScriptTool.cpp
     ${EDITOR_FOLDER}AuthoringTools/ScriptTool.h
+    ${EDITOR_FOLDER}Systems/EditorRenderSystem.cpp
+    ${EDITOR_FOLDER}Systems/EditorRenderSystem.h
     ${EDITOR_FOLDER}Systems/PickingSystem.cpp
     ${EDITOR_FOLDER}Systems/PickingSystem.h
     ${EDITOR_FOLDER}Toggleables/EditMenu.cpp
@@ -662,7 +712,7 @@ add_library(Editor SHARED ${EDITOR_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${EDITOR_FILES})
 target_include_directories(Editor PRIVATE
     "${EDITOR_FOLDER}"
-    "${EXTERNAL_FOLDER}rapidjson"
+    "${EXTERNAL_FOLDER}rapidjson/include"
     "${EXTERNAL_FOLDER}DirectXTex"
     "${EXTERNAL_FOLDER}box2d/include/box2d"
     "${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
@@ -704,6 +754,7 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${LAUNCHER_FILES})
 target_include_directories(Launcher PRIVATE
 	"${LAUNCHER_FOLDER}"
     "${EXTERNAL_FOLDER}box2d/include/box2d"
+    "${EXTERNAL_FOLDER}rapidjson/include"
 	"${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
 	"${EXTERNAL_FOLDER}PhysX/physx/include"
     "Core"

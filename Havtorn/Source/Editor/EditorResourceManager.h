@@ -6,7 +6,7 @@
 #include <string>	
 
 #include <Havtorn.h>
-#include <Graphics/RenderingPrimitives/FullscreenTexture.h>
+#include <Graphics/RenderingPrimitives/RenderTexture.h>
 
 namespace Havtorn
 {
@@ -35,6 +35,7 @@ namespace Havtorn
 		MinimizeWindow,
 		MaximizeWindow,
 		CloseWindow,
+		CameraIcon,
 		Count,
 		None = Count
 	};
@@ -58,7 +59,7 @@ namespace Havtorn
 		CEditorResourceManager() = default;
 		~CEditorResourceManager() = default;
 
-		bool Init(CRenderManager* renderManager, const CGraphicsFramework* framework);
+		bool Init(CRenderManager* renderManager);
 		CRenderTexture GetEditorTexture(EEditorTexture texture) const;
 
 		CRenderTexture RenderAssetTexure(EAssetType assetType, const std::string& fileName) const;
@@ -73,10 +74,10 @@ namespace Havtorn
 		EDITOR_API void CreateMaterial(const std::string& destinationPath, const std::array<std::string, 3>& texturePaths) const;
 
 	private:
-		std::string GetFileName(EEditorTexture texture);
+		std::string GetFileName(EEditorTexture texture, const std::string& extension, const std::string& prefix = "");
 	
 	private:
-		std::vector<CRenderTexture> Textures;
+		std::vector<CStaticRenderTexture> Textures;
 		CRenderManager* RenderManager = nullptr;
 		std::string ResourceAssetPath = "Resources/";
 	};

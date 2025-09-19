@@ -20,7 +20,8 @@ namespace Havtorn
 		void OnInspectorGUI() override;
 		void OnDisable() override;
 
-		void OpenScript(HexRune::SScript* script);
+		void OpenScript(SEditorAssetRepresentation* asset);
+		void SaveScript();
 		void CloseScript();
 
 	private:
@@ -38,16 +39,21 @@ namespace Havtorn
 		bool IsPinLinked(U64 id, const std::vector<SGUILink>& links);
 		bool IsPinTypeLiteral(SGUIPin& pin);
 		bool DrawLiteralTypePin(SGUIPin& pin);
-		void DrawPinIcon(const SGUIPin& pin, bool connected, U8 alpha);
+		void DrawPinIcon(const SGUIPin& pin, bool connected, U8 alpha, bool highlighted);
 		SColor GetPinTypeColor(EGUIPinType type);
 		SGUINode* GetNodeFromPinID(U64 id, std::vector<SGUINode>& nodes);
 		SGUIPin* GetPinFromID(U64 id, SGUINode& node);
 		SGUIPin* GetPinFromID(U64 id, std::vector<SGUINode>& nodes);
+		SGUIPin* GetOutputPinFromID(U64 id, std::vector<SGUINode>& nodes);
 
+		SEditorAssetRepresentation* CurrentScriptRepresentation = nullptr;
 		HexRune::SScript* CurrentScript = nullptr;
+
 		std::vector<SGUINode> GUINodes;
 		std::vector<SGUILink> GUILinks;
 		std::vector<SGUINodeContext> GUIContexts;
+
+		EGUIPinType CurrentDragPinType = EGUIPinType::Unknown;
 		SGuiTextFilter Filter;
 		SNodeOperation Edit;
 		SGUIDataBinding DataBindingCandidate;
