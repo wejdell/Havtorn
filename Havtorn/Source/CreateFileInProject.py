@@ -109,6 +109,7 @@ class FileCreationUtil:
     switchMainDirCommand = "-m"
     continueCommand = "-c"
 
+    @classmethod
     def __init__(self):
         self.mainFolder = ""
         self.filesToAdd = []
@@ -117,6 +118,11 @@ class FileCreationUtil:
     @classmethod
     def print_command_separator(self):
         print()
+
+    @classmethod
+    def on_error(self, errorMessage):
+        print(f'<!> {errorMessage}')
+        input()
 
     @classmethod
     def select_main_dir(self):
@@ -131,19 +137,19 @@ class FileCreationUtil:
             if self.mainFolder in self.mainFolderChoices:
                 break
             else:
-                print(f'<!> invalid option "{self.mainFolder}"')
+                self.on_error(f'invalid option "{self.mainFolder}"')
     
     @classmethod
-    def print_commands_and_info(self):
+    def print_options(self):
         self.print_command_separator()
         print(f' {self.fileCommand} to add a file, example: "{self.fileCommand} ExampleFile.cpp or FolderName/ExampleFile.cpp"')
         print(f' {self.undoFileCommand} to undo file, example: {self.undoFileCommand} 1')
         print(f' {self.switchMainDirCommand} to change main direcotry')
         print(f' {self.continueCommand} to continue with creating files')
-        print(f' Certain file-extensions have associated files auto-generated, example: adding a "folder/file.h" will also create "folder/file.cpp"')
+        print(f' Certain file-extensions have associated files auto-generated, example: "ex.h" gets a "ex.cpp"')
     
     @classmethod
-    def print_current_files_info(self):
+    def print_status(self):
             self.print_command_separator()
             print(f"Current main directory: {self.choiceToPath[self.mainFolder]}")
             print(f"Files:")
@@ -155,20 +161,20 @@ class FileCreationUtil:
         # create the files
         for fileName in self.filesToAdd:
             # extract folders from fileName
-            if not os.path.exists(self.choiceToPath[self.mainFolder] + subDirectories):
-                os.makedirs(self.choiceToPath[self.mainFolder] + subDirectories)
+            if not os.path.exists(self.choiceToPath[self.mainFolder] + fileName):
+                os.makedirs(self.choiceToPath[self.mainFolder] + fileName)
             try:
-                with open(self.choiceToPath[self.mainFolder] + subDirectories + fileName, "x") as file:
+                with open(self.choiceToPath[self.mainFolder] + fileName, "x") as file:
                     file.write(self.havtornLicense)
                     file.write(self.havtornNameSpace)
                     print(f'> File "{file}" created')
             except FileExistsError:
-                print(f'<!> "{self.choiceToPath[self.mainFolder] + subDirectories + fileName}" already exists')
+                self.on_error(f'"{self.choiceToPath[self.mainFolder] + fileName}" already exists')
 
         # Read CMakeLists into a list of lines, append new entires and rewrite file
         target=f"set({self.choiceToCollection[self.mainFolder]}\n"
         for fileToAdd in self.filesToAdd:
-            entry=f"\t${{{self.choiceToCMakeFolderVar[self.mainFolder]}}}{subDirectories}{fileToAdd}\n"
+            entry=f"\t${{{self.choiceToCMakeFolderVar[self.mainFolder]}}}{fileToAdd}\n"
             fileAsLineList=list[str]
             with open(self.cmakeListFilePath, "r") as cmakeFile: 
                 fileAsLineList = cmakeFile.readlines()
@@ -192,6 +198,9 @@ class FileCreationUtil:
     @classmethod
     def process_commands(self):
         while(True):
+            self.print_options()
+            self.print_status()
+
             userInput=input(">> ")
 
             if self.continueCommand in userInput:
@@ -201,21 +210,26 @@ class FileCreationUtil:
 
             # TODO: folders!
             if self.fileCommand in userInput: 
+                # split string by /
+                # check
                 fileToAdd = "".join(userInput.replace(f"{self.fileCommand}", '').split())
+                print("fileToAdd: " + fileToAdd)
                 if fileToAdd == "":
                     continue
                 
+                # validate names on all parts
                 filenameSplitForValidation = fileToAdd.split('.')
                 if ValidationUtil.validate_file_name(filenameSplitForValidation[0]) is False:
-                    print("<!> filename contains invalid characters")
+                    self.on_error("filename contains invalid characters")
                     continue
                 if (len(filenameSplitForValidation) == 1 # Missing extension
                     or len(filenameSplitForValidation) > 2 # More than 1 extension
                     or ValidationUtil.validate_file_extension(filenameSplitForValidation[1]) is False):
-                    print("<!> unsupported extension")
+                    self.on_error("unsupported extension")
                     continue
-                
+                # add paired filed type e.g .cpp for .h
                 self.filesToAdd.append(fileToAdd)
+                print(self.filesToAdd)
                 continue
             
             # TODO: figure out how handle multiple indices at once
@@ -240,5 +254,4 @@ if __name__ == "__main__":
     fileCreator = FileCreationUtil()
     while(True):
         fileCreator.select_main_dir()
-        fileCreator.print_commands()
         fileCreator.process_commands()
