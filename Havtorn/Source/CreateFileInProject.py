@@ -13,20 +13,20 @@ class FileCreationUtil:
     havtornNameSpace="\n\nnamespace Havtorn\n{\n\n}\n" # TODO: true for all file-types?
     cmakeListFilePath="CMakeLists.txt"
     
-    core = "core"# TEST
-    platform = "platform"# TEST
-    gui = "gui"# TEST
-    imgui = "imgui"# TEST
-    imguizmo = "imguizmo"# TEST
-    imguinode = "imguinode"# TEST
-    engine = "engine"# TEST
-    shaderinclude = "shaderinclude"# TEST
-    vertex = "vertexshader"# TEST
-    geometry = "geometryshader"# TEST
-    pixel = "pixelshader"# TEST
-    game = "game"# TEST
-    editor = "editor"# TEST
-    launcher = "launcher"# TEST
+    core = "core"
+    platform = "platform"
+    gui = "gui"
+    imgui = "imgui"
+    imguizmo = "imguizmo"
+    imguinode = "imguinode"
+    engine = "engine"
+    shaderinclude = "shaderinclude"
+    vertex = "vertexshader"
+    geometry = "geometryshader"
+    pixel = "pixelshader"
+    game = "game"
+    editor = "editor"
+    launcher = "launcher"
     
     mainFolderChoices={
         core,
@@ -101,6 +101,7 @@ class FileCreationUtil:
     }
 
     addFileCommand = "-f"
+    addFileNoExtraCommand = "-sf"
     undoFileCommand = "-u"
     switchMainDirCommand = "-m"
     continueCommand = "-c"
@@ -140,6 +141,7 @@ class FileCreationUtil:
         self.print_command_separator()
         print(f' {self.addFileCommand} to add folder & file, e.g: "F1/f2/ex.cpp"')
         print(f' Some file-extensions have associated files auto-generated, example: "ex.h" gets a "ex.cpp"')
+        print(f' {self.addFileNoExtraCommand} same as {self.addFileCommand} without auto-generated associated file')
         print(f' {self.undoFileCommand} to undo, example: {self.undoFileCommand} 1')
         print(f' {self.switchMainDirCommand} to change main direcotry')
         print(f' {self.continueCommand} to create files')
@@ -297,6 +299,24 @@ class FileCreationUtil:
                                         
                 self.filesToAdd.append((self.mainFolder, self.choiceToPath[self.mainFolder] + fileToAdd))
                 self.try_add_associated_file(fileName, folderNames)
+                continue
+            
+            if self.addFileNoExtraCommand in userInput: 
+                fileToAdd = "".join(userInput.replace(f"{self.addFileNoExtraCommand}", '').split())
+                if fileToAdd == "":
+                    continue
+
+                (folderNames, fileName) = self.extract_folders_and_file(fileToAdd)
+                foldersValid = True
+                for filePart in folderNames:
+                    if not self.valid_folder(filePart):
+                        foldersValid = False
+                if not foldersValid:
+                    continue
+                if not self.valid_file(fileName):
+                    continue
+                                        
+                self.filesToAdd.append((self.mainFolder, self.choiceToPath[self.mainFolder] + fileToAdd))
                 continue
             
             # TODO: figure out how handle multiple indices at once
