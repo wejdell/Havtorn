@@ -44,8 +44,8 @@ class ValidationUtil:
         return all(checks)
 
     @staticmethod
-    def validate_directory_name(direcotryname):
-        return ValidationUtil.validate_file_name(direcotryname)
+    def validate_folder_name(folder):
+        return ValidationUtil.validate_file_name(folder)
 
     @staticmethod
     def validate_file_extension(extension):
