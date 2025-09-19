@@ -212,13 +212,13 @@ class FileCreationUtil:
     def valid_file(self, fileName):
         filenameSplit = fileName.split('.')
         if ValidationUtil.validate_file_name(filenameSplit[0]) is False:
-            self.on_error(f"filename contains invalid characters {filenameSplit[0]}")
+            self.on_error(f"filename contains invalid characters {fileName}")
             return False
         
         if (len(filenameSplit) == 1 # Missing extension
             or len(filenameSplit) > 2 # More than 1 extension
             or ValidationUtil.validate_file_extension(filenameSplit[1]) is False):
-            self.on_error(f"unsupported extension {filenameSplit[1]}")
+            self.on_error(f"unsupported extension {fileName}")
             return False
         
         return True
@@ -283,6 +283,12 @@ class FileCreationUtil:
             
     
 if __name__ == "__main__":
+    print("** File Creation Utility **")
+    print("Instructions:")
+    print(" 1 - Select a main directory (can be changed), any file added will be placed under it")
+    print(" 2 - Add as many files as you want.")
+    print(" 3 - Generate: generation updates CMakeLists and updates the project files")
+    print()
     fileCreator = FileCreationUtil()
     while(True):
         fileCreator.select_main_dir()
