@@ -53,7 +53,7 @@ class FileCreationUtil:
     # So we always show them in the same order
     mainFolderChoices=sorted(mainFolderChoices)
 
-    choiceToCollection={
+    choiceToCMakeCollection={
         core:"CORE_FILES",
         platform:"PLATFORM_FILES",
         gui:"GUI_FILES",
@@ -71,7 +71,7 @@ class FileCreationUtil:
     }
 
     shaderFolder = "Engine/Graphics/Shaders/"
-    choiceToPath={
+    choiceToFolder={
         core:"Core/",
         platform:"Platform/",
         gui:"GUI/",
@@ -92,7 +92,7 @@ class FileCreationUtil:
     addFileSingle = "-sf"
     undoFileCommand = "-u"
     switchMainCommand = "-m"
-    continueCommand = "-c"
+    continueCommand = "-g"
 
     @classmethod
     def __init__(self):
@@ -141,7 +141,7 @@ class FileCreationUtil:
     @classmethod
     def print_status(self):
         self.print_command_separator()
-        print(f"Main folder: {self.choiceToPath[self.mainFolder]}")
+        print(f"Main folder: {self.choiceToFolder[self.mainFolder]}")
         print(f"Files:")
         for i, (_, file) in enumerate(self.filesToAdd):
             print(f'+ [{i + 1}] {file}')
@@ -164,7 +164,7 @@ class FileCreationUtil:
                 associatedExtension = "cpp"
                 
         folders = "/".join(folderNames)
-        self.filesToAdd.append((self.mainFolder, self.choiceToPath[self.mainFolder] + folders + "/" + fileNameSplit[0] + "." + associatedExtension))
+        self.filesToAdd.append((self.mainFolder, self.choiceToFolder[self.mainFolder] + folders + "/" + fileNameSplit[0] + "." + associatedExtension))
         return
     
     @classmethod
@@ -266,7 +266,7 @@ class FileCreationUtil:
     @classmethod
     def add_file_to_cmake(self, mainFolder:str, fileToAdd:str):
         # Read CMakeLists into a list of lines, append entry and rewrite file
-        cmakeTarget=f"set({self.choiceToCollection[mainFolder]}\n"
+        cmakeTarget=f"set({self.choiceToCMakeCollection[mainFolder]}\n"
         entry=f"\t{fileToAdd}\n"
         fileAsLineList=list[str]
         with open(self.cmakeListFilePath, "r") as cmakeFile: 
@@ -301,8 +301,12 @@ class FileCreationUtil:
             return False
         if not self.valid_file(fileName):
             return False
-                                
-        self.filesToAdd.append((self.mainFolder, self.choiceToPath[self.mainFolder] + fileToAdd))
+        
+        pendingAddition = (self.mainFolder, self.choiceToFolder[self.mainFolder] + fileToAdd)                        
+        if pendingAddition in self.filesToAdd:
+            self.on_error(f"trying to add duplicate {fileToAdd}")
+            return False
+        self.filesToAdd.append(pendingAddition)
         return True
 
     @classmethod
@@ -356,6 +360,7 @@ if __name__ == "__main__":
     print(" 1 - Select a main folder (can be changed), any file added will be placed under it")
     print(" 2 - Add as many files as you want.")
     print(" 3 - Generate: generation updates CMakeLists and updates the project files")
+    print(" Use arrow-key up to retrieve previous input")
     print()
     fileCreator = FileCreationUtil()
     while(True):
