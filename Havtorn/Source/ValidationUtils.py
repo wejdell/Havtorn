@@ -2,7 +2,7 @@ import re
 
 class ValidationUtil:
     @staticmethod
-    def validate_file_name(filename):
+    def validate_file_name(filename:str):
         # src: https://labex.io/tutorials/python-how-to-validate-file-and-folder-names-419733
         checks = [
             ## Length check
@@ -44,7 +44,7 @@ class ValidationUtil:
         return all(checks)
 
     @staticmethod
-    def validate_folder_name(folder):
+    def validate_folder_name(folder:str):
         return ValidationUtil.validate_file_name(folder)
 
     @staticmethod
