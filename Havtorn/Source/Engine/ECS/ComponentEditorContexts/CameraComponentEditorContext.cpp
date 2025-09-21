@@ -55,9 +55,26 @@ namespace Havtorn
 			cameraComp->ProjectionMatrix = Havtorn::SMatrix::OrthographicLH(cameraComp->ViewWidth, cameraComp->ViewHeight, cameraComp->NearClip, cameraComp->FarClip);
 		}
 
-		SMatrix transformMatrix = transform->Transform.GetMatrix();
-		GDebugDraw::AddCamera(transformMatrix.GetTranslation(), transformMatrix.GetEuler(), cameraComp->FOV, cameraComp->FarClip, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum * 2.0f, false);
+		GUI::Checkbox("Is Starting Camera", cameraComp->IsStartingCamera);
 
+		if (cameraComp->Owner != scene->MainCameraEntity)
+		{
+			GUI::Checkbox("Is Active", cameraComp->IsActive);
+
+			SMatrix transformMatrix = transform->Transform.GetMatrix();
+			GDebugDraw::AddCamera(transformMatrix.GetTranslation(), transformMatrix.GetEuler(), cameraComp->FOV, cameraComp->AspectRatio, cameraComp->FarClip, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum * 2.0f, false);
+
+			if (cameraComp->IsActive)
+			{
+				SComponentViewResult result;
+				result.ComponentViewed = cameraComp;
+				result.Label = EComponentViewResultLabel::RenderPreview;
+				return result;
+			}
+		}
+		else
+			GUI::TextDisabled("Main Camera");
+		
 		return SComponentViewResult();
 	}
 

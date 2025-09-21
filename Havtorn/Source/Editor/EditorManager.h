@@ -149,7 +149,7 @@ namespace Havtorn
 		void OnResolutionChanged(SVector2<U16> newResolution);
 		void OnBeginPlay(CScene* scene);
 		void OnPausePlay(CScene* scene);
-		void OnStopPlay(CScene* scene);
+		void OnEndPlay(CScene* scene);
 
 		[[nodiscard]] std::string GetFrameRate() const;
 		[[nodiscard]] std::string GetSystemMemory() const;

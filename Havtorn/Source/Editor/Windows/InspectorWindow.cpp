@@ -108,6 +108,9 @@ namespace Havtorn
 				case EComponentViewResultLabel::OpenAssetTool:
 					OpenAssetTool(result);
 					break;
+				case EComponentViewResultLabel::RenderPreview:
+					RenderPreview(result);
+					break;
 				case EComponentViewResultLabel::PassThrough:
 				default:
 					break;
@@ -282,6 +285,19 @@ namespace Havtorn
 			return;
 
 		Manager->GetEditorWindow<CSpriteAnimatorGraphNodeWindow>()->Inspect(*component);
+	}
+
+	void CInspectorWindow::RenderPreview(const SComponentViewResult& /*result*/)
+	{
+		GUI::TextDisabled("Preview");
+		GUI::Separator();
+
+		const SEditorLayout& layout = Manager->GetEditorLayout();
+		// TODO.NW: Centralize layout padding for stuff like this
+		const F32 previewWidth = layout.InspectorSize.X - 16.0f;
+		GUI::Image((intptr_t)Manager->GetRenderManager()->GetRenderedSceneTexture(1).GetShaderResourceView(), SVector2<F32>(previewWidth, previewWidth * (9.0f / 16.0f)));
+		
+		GUI::Separator();
 	}
 
 	void CInspectorWindow::OpenAddComponentModal(const SEntity& entity)

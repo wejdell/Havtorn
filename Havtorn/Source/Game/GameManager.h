@@ -22,7 +22,7 @@ namespace Havtorn
 
 		void OnBeginPlay(CScene* scene);
 		void OnPausePlay(CScene* scene);
-		void OnStopPlay(CScene* scene);
+		void OnEndPlay(CScene* scene);
 
 	public:
 		static GAME_API CGameManager* Instance;

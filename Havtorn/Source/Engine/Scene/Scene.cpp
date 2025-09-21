@@ -73,6 +73,7 @@ namespace Havtorn
 			SCameraComponent& camera = *AddComponent<SCameraComponent>(MainCameraEntity);
 			AddComponentEditorContext(MainCameraEntity, &SCameraComponentEditorContext::Context);
 			camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
+			camera.IsActive = true;
 
 			SCameraControllerComponent& controllerComp = *AddComponent<SCameraControllerComponent>(MainCameraEntity);
 			AddComponentEditorContext(MainCameraEntity, &SCameraControllerComponentEditorContext::Context);
@@ -94,6 +95,7 @@ namespace Havtorn
 			SCameraComponent& camera = *AddComponent<SCameraComponent>(gameCamera);
 			AddComponentEditorContext(gameCamera, &SCameraComponentEditorContext::Context);
 			camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 6.0f);
+			camera.IsStartingCamera = true;
 			camera.FarClip = 6.0f;
 
 			SCameraControllerComponent& controllerComp = *AddComponent<SCameraControllerComponent>(gameCamera);
@@ -546,6 +548,7 @@ namespace Havtorn
 			camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
 			//camera.ProjectionType = ECameraProjectionType::Orthographic;
 			//camera.ProjectionMatrix = SMatrix::OrthographicLH(5.0f, 5.0f, 0.1f, 1000.0f);
+			camera.IsActive = true;
 
 			//		SCameraControllerComponent& controllerComp = 
 			AddComponent<SCameraControllerComponent>(MainCameraEntity);
@@ -892,6 +895,14 @@ namespace Havtorn
 
 		Entities.pop_back();
 		EntityIndices.erase(entity.GUID);
+
+		if (entity == MainCameraEntity)
+		{
+			MainCameraEntity = SEntity::Null;
+			std::vector<SCameraComponent*> cameraComponents = GetComponents<SCameraComponent>();
+			if (!cameraComponents.empty())
+				MainCameraEntity = cameraComponents[0]->Owner;
+		}
 	}
 
 	void CScene::ClearScene()
@@ -943,21 +954,5 @@ namespace Havtorn
 	const std::vector<SComponentEditorContext*>& CScene::GetComponentEditorContexts() const
 	{
 		return RegisteredComponentEditorContexts;
-	}
-
-	U64 CScene::GetSceneIndex(const SEntity& entity) const
-	{
-		return GetSceneIndex(entity.GUID);
-	}
-
-	U64 CScene::GetSceneIndex(const U64 entityGUID) const
-	{
-		if (!EntityIndices.contains(entityGUID))
-		{
-			HV_LOG_ERROR("%s could not resolve entity %u's GUID to a scene index! Returning 0.", __FUNCTION__, entityGUID);
-			return 0;
-		}
-
-		return EntityIndices.at(entityGUID);
 	}
 }

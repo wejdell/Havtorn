@@ -12,11 +12,12 @@ namespace Havtorn
 		//ReleaseResources();
 	}
 
-	void CGBuffer::ClearTextures(SVector4 clearColor)
+	void CGBuffer::ClearTextures(SVector4 clearColor, const bool includingEditorData)
 	{
 		for (UINT i = 0; i < STATIC_U64(EGBufferTextures::Count); ++i) 
 		{
-			Context->ClearRenderTargetView(RenderTargets[i], &clearColor.X);
+			if (i != STATIC_U64(EGBufferTextures::EditorData) || includingEditorData)
+				Context->ClearRenderTargetView(RenderTargets[i], &clearColor.X);
 		}
 	}
 

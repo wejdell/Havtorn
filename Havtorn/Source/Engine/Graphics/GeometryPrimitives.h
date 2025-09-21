@@ -347,7 +347,7 @@ namespace Havtorn
 				// Far plane
 				1, 2, 2, 4, 4, 3, 3, 1,
 				// Arrow above far plane.
-				5, 6, 6, 7, 7, 5 
+				5, 6, 6, 7, 7, 5,
 			}
 		};
 

@@ -51,7 +51,7 @@ namespace Havtorn
 		static ENGINE_API void AddArrow(const SVector& start, const SVector& end, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		// Object aligned bounding box with Width/Height/Depth = 1. Pivot is in center.
 		static ENGINE_API void AddCube(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
-		static ENGINE_API void AddCamera(const SVector& origin, const SVector& eulerRotation, const F32 fov = 70.0f, const F32 farZ = 1.0f, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static ENGINE_API void AddCamera(const SVector& origin, const SVector& eulerRotation, const F32 fov = 70.0f, const F32 aspectRatio = (16.0f/9.0f), const F32 farZ = 1.0f, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		// Adds a circle across the XZ-plane with 8/16/32 segments.
 		static ENGINE_API void AddCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius = 0.5f, const U8 segments = 16, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		// 10x10 grid across the XZ-plane (default).

@@ -87,7 +87,7 @@ namespace Havtorn
 		World = GEngine::GetWorld();
 		World->OnBeginPlayDelegate.AddMember(this, &CEditorManager::OnBeginPlay);
 		World->OnPausePlayDelegate.AddMember(this, &CEditorManager::OnPausePlay);
-		World->OnEndPlayDelegate.AddMember(this, &CEditorManager::OnStopPlay);
+		World->OnEndPlayDelegate.AddMember(this, &CEditorManager::OnEndPlay);
 		World->RequestSystem<CEditorRenderSystem>(this, RenderManager, World, this);
 		World->RequestSystem<CPickingSystem>(this, this);
 
@@ -759,7 +759,7 @@ namespace Havtorn
 		World->UnblockSystem<CPickingSystem>(this);
 	}
 
-	void CEditorManager::OnStopPlay(CScene* /*scene*/)
+	void CEditorManager::OnEndPlay(CScene* /*scene*/)
 	{
 		SetEditorTheme(CachedColorTheme);
 		World->UnblockSystem<CPickingSystem>(this);
