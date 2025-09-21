@@ -30,7 +30,7 @@ namespace Havtorn
 		World = GEngine::GetWorld();
 		World->OnBeginPlayDelegate.AddMember(this, &CGameManager::OnBeginPlay);
 		World->OnPausePlayDelegate.AddMember(this, &CGameManager::OnPausePlay);
-		World->OnEndPlayDelegate.AddMember(this, &CGameManager::OnStopPlay);
+		World->OnEndPlayDelegate.AddMember(this, &CGameManager::OnEndPlay);
 
 		//ImGui::SetCurrentContext(Havtorn::GImGuiManager::GetContext());
 
@@ -75,7 +75,7 @@ namespace Havtorn
 		World->BlockPhysicsSystem(this);
 	}
 
-	void CGameManager::OnStopPlay(CScene* /*scene*/)
+	void CGameManager::OnEndPlay(CScene* /*scene*/)
 	{
 		World->UnrequestSystems(this);
 	}

@@ -13,6 +13,7 @@ namespace Havtorn
 	{
 		PassThrough,
 		UpdateTransformGizmo,
+		RenderPreview,
 		InspectAssetComponent,
 		OpenAssetTool,
 	};

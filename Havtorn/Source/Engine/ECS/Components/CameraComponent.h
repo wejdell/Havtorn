@@ -31,5 +31,7 @@ namespace Havtorn
 		F32 ViewHeight = 10.0f;
 
 		ECameraProjectionType ProjectionType = ECameraProjectionType::Perspective;
+		bool IsStartingCamera = false;
+		bool IsActive = false;
 	};
 }

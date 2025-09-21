@@ -47,11 +47,10 @@ namespace Havtorn
 		ENGINE_ERROR_BOOL_MESSAGE(RenderTextureFactory.Init(framework), "Failed to Init Fullscreen Texture Factory.");
 		ENGINE_ERROR_BOOL_MESSAGE(RenderStateManager.Init(framework), "Failed to Init Render State Manager.");
 
-		ID3D11Texture2D* backbufferTexture = framework->GetBackbufferTexture();
-		ENGINE_ERROR_BOOL_MESSAGE(backbufferTexture, "Backbuffer Texture is null.");
+		GameThreadRenderViews->emplace_back();
+		RenderThreadRenderViews->emplace_back();
 
-		Backbuffer = RenderTextureFactory.CreateTexture(backbufferTexture);
-		InitRenderTextures(platformManager->GetResolution());
+		InitRenderTextures(framework, platformManager->GetResolution());
 
 		InitDataBuffers();
 
@@ -68,21 +67,30 @@ namespace Havtorn
 	bool CRenderManager::ReInit(CGraphicsFramework* framework, SVector2<U16> newResolution)
 	{
 		ENGINE_ERROR_BOOL_MESSAGE(RenderStateManager.Init(framework), "Failed to Init Render State Manager.");
-
-		ID3D11Texture2D* backbufferTexture = framework->GetBackbufferTexture();
-		ENGINE_ERROR_BOOL_MESSAGE(backbufferTexture, "Backbuffer Texture is null.");
-
-		Backbuffer = RenderTextureFactory.CreateTexture(backbufferTexture);
-		InitRenderTextures(newResolution);
+		InitRenderTextures(framework, newResolution);
 
 		return true;
 	}
 
-	void CRenderManager::InitRenderTextures(SVector2<U16> windowResolution)
+	void CRenderManager::InitRenderTextures(CGraphicsFramework* framework, SVector2<U16> windowResolution)
 	{
+		Backbuffer.ReleaseTexture();
+		framework->GetSwapChain()->ResizeBuffers(0, windowResolution.X, windowResolution.Y, DXGI_FORMAT_UNKNOWN, 0);
+
+		ID3D11Texture2D* backbufferTexture = framework->GetBackbufferTexture();
+		Backbuffer = RenderTextureFactory.CreateTexture(backbufferTexture);
+
 		CurrentWindowResolution = windowResolution;
 
-		RenderedScene = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		for (auto& renderView : (*GameThreadRenderViews))
+		{
+			renderView.RenderedScene = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		}
+		for (auto& renderView : (*RenderThreadRenderViews))
+		{
+			renderView.RenderedScene = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+		}
+
 		LitScene = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
 		IntermediateDepth = RenderTextureFactory.CreateDepth(windowResolution, DXGI_FORMAT_R24G8_TYPELESS);
 		EditorWidgetDepth = RenderTextureFactory.CreateDepth(windowResolution, DXGI_FORMAT_R24G8_TYPELESS);
@@ -92,7 +100,7 @@ namespace Havtorn
 
 		DepthCopy = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R32_FLOAT);
 		DownsampledDepth = RenderTextureFactory.CreateTexture(windowResolution / 2, DXGI_FORMAT_R32_FLOAT);
-		
+
 		IntermediateTexture = RenderTextureFactory.CreateTexture(SVector2<U16>(STATIC_U16(ShadowAtlasResolution.X), STATIC_U16(ShadowAtlasResolution.Y)), DXGI_FORMAT_R16G16B16A16_FLOAT);
 
 		HalfSizeTexture = RenderTextureFactory.CreateTexture(windowResolution / 2, DXGI_FORMAT_R16G16B16A16_FLOAT);
@@ -189,7 +197,7 @@ namespace Havtorn
 		while (CThreadManager::RunRenderThread)
 		{
 			std::unique_lock<std::mutex> uniqueLock(CThreadManager::RenderMutex);
-			CThreadManager::RenderCondition.wait(uniqueLock, [] 
+			CThreadManager::RenderCondition.wait(uniqueLock, []
 				{ return CThreadManager::RenderThreadStatus == ERenderThreadStatus::ReadyToRender
 				|| !CThreadManager::RunRenderThread; });
 
@@ -197,18 +205,8 @@ namespace Havtorn
 
 			ShouldBlurVolumetricBuffer = false;
 			CRenderManager::NumberOfDrawCallsThisFrame = 0;
-			RenderStateManager.SetAllDefault();
 
 			Backbuffer.ClearTexture();
-			ShadowAtlasDepth.ClearDepth();
-			SSAOBuffer.ClearTexture();
-
-			RenderedScene.ClearTexture();
-			LitScene.ClearTexture();
-			IntermediateTexture.ClearTexture();
-			IntermediateDepth.ClearDepth();
-			EditorWidgetDepth.ClearDepth();
-			VolumetricAccumulationBuffer.ClearTexture();
 
 			if (WorldPlayState != EWorldPlayState::Playing)
 			{
@@ -227,23 +225,39 @@ namespace Havtorn
 			if (RendererSkeletalAnimationBoneData != nullptr)
 				SkeletalAnimationDataTextureCPU.WriteToCPUTexture(RendererSkeletalAnimationBoneData, SkeletalAnimationBoneDataSize);
 
-			GBuffer.ClearTextures(ClearColor);
+			EditorWidgetDepth.ClearDepth();
 
-			ShadowAtlasDepth.SetAsDepthTarget(&IntermediateTexture);
-
-			const U16 commandsInHeap = STATIC_U16(PopFromCommands->size());
-			for (U16 i = 0; i < commandsInHeap; ++i)
+			for (U16 i = STATIC_U16(0); i < STATIC_U16(RenderThreadRenderViews->size()); i++)
 			{
-				SRenderCommand currentCommand = PopFromCommands->top();
-				RenderFunctions[currentCommand.Type](currentCommand);
-				PopFromCommands->pop();
-			}
+				auto& renderView = RenderThreadRenderViews->at(i);
 
-			CheckIsolatedRenderPass();
+				RenderStateManager.SetAllDefault();
+
+				ShadowAtlasDepth.ClearDepth();
+				SSAOBuffer.ClearTexture();
+				renderView.RenderedScene.ClearTexture();
+
+				LitScene.ClearTexture();
+				IntermediateTexture.ClearTexture();
+				IntermediateDepth.ClearDepth();
+				VolumetricAccumulationBuffer.ClearTexture();
+
+				GBuffer.ClearTextures(ClearColor, i == 0);
+				ShadowAtlasDepth.SetAsDepthTarget(&IntermediateTexture);
+
+				while (!renderView.RenderCommands.empty())
+				{
+					SRenderCommand currentCommand = renderView.RenderCommands.top();
+					RenderFunctions[currentCommand.Type](currentCommand);
+					renderView.RenderCommands.pop();
+				}
+				
+				CheckIsolatedRenderPass(i);
+			}
 
 			// RenderedScene should be complete as that is the texture we send to the viewport
 			Backbuffer.SetAsActiveTarget();
-			RenderedScene.SetAsPSResourceOnSlot(0);
+			RenderThreadRenderViews->at(0).RenderedScene.SetAsPSResourceOnSlot(0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 
 			GTime::EndTracking(ETimerCategory::GPU);
@@ -285,7 +299,7 @@ namespace Havtorn
 
 		CRenderTexture renderTexture = RenderTextureFactory.CreateTexture(SVector2<U16>(256), DXGI_FORMAT_R16G16B16A16_FLOAT);
 		CRenderTexture renderDepth = RenderTextureFactory.CreateDepth(SVector2<U16>(256), DXGI_FORMAT_R24G8_TYPELESS);
-		
+
 		// TODO.NW: Figure out why the depth doesn't work
 		ID3D11RenderTargetView* renderTargets[1] = { renderTexture.GetRenderTargetView() };
 		RenderStateManager.OMSetRenderTargets(1, renderTargets, nullptr/*renderDepth.GetDepthStencilView()*/);
@@ -333,7 +347,7 @@ namespace Havtorn
 	}
 
 	CRenderTexture CRenderManager::RenderSkeletalMeshAssetTexture(const std::string& filePath)
-	{		
+	{
 		SSkeletalMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(filePath), CAssetRegistry::RenderManagerRequestID);
 
 		F32 aspectRatio = 1.0f;
@@ -362,7 +376,7 @@ namespace Havtorn
 		FrameBufferData.ToCameraFromProjection = camProjection.Inverse();
 		FrameBufferData.CameraPosition = camTransform.GetMatrix().GetTranslation4();
 		FrameBuffer.BindBuffer(FrameBufferData);
-		
+
 		std::vector<SMatrix> boneTransforms;
 		boneTransforms.resize(64, SMatrix::Identity);
 		BoneBuffer.BindBuffer(boneTransforms);
@@ -380,7 +394,7 @@ namespace Havtorn
 		RenderStateManager.VSSetShader(EVertexShaders::EditorPreviewSkeletalMesh);
 		RenderStateManager.PSSetShader(EPixelShaders::EditorPreview);
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
-		
+
 		RenderStateManager.VSSetConstantBuffer(2, BoneBuffer);
 
 		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(meshAsset->DrawCallData.size()); drawCallIndex++)
@@ -429,7 +443,7 @@ namespace Havtorn
 		const F32 radius = 2.0f * zoomMultiplier;
 		SVector location = SVector(0.0f, 0.0f, radius);
 		SMatrix camMatrix = SMatrix::LookAtLH(location, SVector(), SVector::Up).FastInverse();
-		
+
 		STransform camViewMatrix;
 		camViewMatrix.SetMatrix(camMatrix);
 
@@ -515,7 +529,7 @@ namespace Havtorn
 		gBuffer.SetAllAsResources(1);
 		IntermediateDepth.SetAsPSResourceOnSlot(21);
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
-		
+
 		//DeferredLightingDirectional();
 		// add Alpha blend PS shader
 		ShadowAtlasDepth.SetAsPSResourceOnSlot(22);
@@ -574,7 +588,7 @@ namespace Havtorn
 		textureTarget.SetAsActiveTarget();
 		targetCopy.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Tonemap);
-		
+
 		//AntiAliasing();
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::Disable);
 		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
@@ -712,79 +726,97 @@ namespace Havtorn
 		return 0;
 	}
 
-	bool Havtorn::CRenderManager::IsStaticMeshInInstancedRenderList(const U32 meshUID)
+	bool Havtorn::CRenderManager::IsStaticMeshInInstancedRenderList(const U32 meshUID, const U16 viewIndex)
 	{
-		return SystemStaticMeshInstanceData.contains(meshUID);
+		// TODO.NW: Maybe move this to RenderView class
+		if (UMath::IsWithin(viewIndex, STATIC_U16(0), STATIC_U16(GameThreadRenderViews->size())))
+			return GameThreadRenderViews->at(viewIndex).StaticMeshInstanceData.contains(meshUID);
+
+		return GameThreadRenderViews->at(0).StaticMeshInstanceData.contains(meshUID);
 	}
 
-	void CRenderManager::AddStaticMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* component)
+	void CRenderManager::AddStaticMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* component, const U16 viewIndex)
 	{
-		if (!SystemStaticMeshInstanceData.contains(meshUID))
-			SystemStaticMeshInstanceData.emplace(meshUID, SStaticMeshInstanceData());
+		std::unordered_map<U32, SStaticMeshInstanceData>* renderList = nullptr;
 
-		SystemStaticMeshInstanceData[meshUID].Transforms.emplace_back(component->Transform.GetMatrix());
-		SystemStaticMeshInstanceData[meshUID].Entities.emplace_back(component->Owner);
+		if (UMath::IsWithin(viewIndex, STATIC_U16(0), STATIC_U16(GameThreadRenderViews->size())))
+			renderList = &GameThreadRenderViews->at(viewIndex).StaticMeshInstanceData;
+		else
+			renderList = &GameThreadRenderViews->at(0).StaticMeshInstanceData;
+
+		if (!renderList->contains(meshUID))
+			renderList->emplace(meshUID, SStaticMeshInstanceData());
+
+		renderList->at(meshUID).Transforms.emplace_back(component->Transform.GetMatrix());
+		renderList->at(meshUID).Entities.emplace_back(component->Owner);
 	}
 
-	void CRenderManager::SwapStaticMeshInstancedRenderLists()
+	bool CRenderManager::IsSkeletalMeshInInstancedRenderList(const U32 meshUID, const U16 viewIndex)
 	{
-		std::swap(SystemStaticMeshInstanceData, RendererStaticMeshInstanceData);
+		if (UMath::IsWithin(viewIndex, STATIC_U16(0), STATIC_U16(GameThreadRenderViews->size())))
+			return GameThreadRenderViews->at(viewIndex).SkeletalMeshInstanceData.contains(meshUID);
+
+		return GameThreadRenderViews->at(0).SkeletalMeshInstanceData.contains(meshUID);
 	}
 
-	void CRenderManager::ClearSystemStaticMeshInstanceData()
+	void CRenderManager::AddSkeletalMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* transformComponent, const SSkeletalAnimationComponent* animationComponent, const U16 viewIndex)
 	{
-		SystemStaticMeshInstanceData.clear();
-	}
+		std::unordered_map<U32, SSkeletalMeshInstanceData>* renderList = nullptr;
 
-	bool CRenderManager::IsSkeletalMeshInInstancedRenderList(const U32 meshUID)
-	{
-		return SystemSkeletalMeshInstanceData.contains(meshUID);
-	}
+		if (UMath::IsWithin(viewIndex, STATIC_U16(0), STATIC_U16(GameThreadRenderViews->size())))
+			renderList = &GameThreadRenderViews->at(viewIndex).SkeletalMeshInstanceData;
+		else
+			renderList = &GameThreadRenderViews->at(0).SkeletalMeshInstanceData;
 
-	void CRenderManager::AddSkeletalMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* transformComponent, const SSkeletalAnimationComponent* animationComponent)
-	{
-		if (!SystemSkeletalMeshInstanceData.contains(meshUID))
-			SystemSkeletalMeshInstanceData.emplace(meshUID, SSkeletalMeshInstanceData());
+		if (!renderList->contains(meshUID))
+			renderList->emplace(meshUID, SSkeletalMeshInstanceData());
 
-		SystemSkeletalMeshInstanceData[meshUID].Transforms.emplace_back(transformComponent->Transform.GetMatrix());
-		SystemSkeletalMeshInstanceData[meshUID].Entities.emplace_back(transformComponent->Owner);
+		renderList->at(meshUID).Transforms.emplace_back(transformComponent->Transform.GetMatrix());
+		renderList->at(meshUID).Entities.emplace_back(transformComponent->Owner);
 
 		if (SComponent::IsValid(animationComponent))
-			SystemSkeletalMeshInstanceData[meshUID].Bones = animationComponent->Bones;
+			renderList->at(meshUID).Bones = animationComponent->Bones;
 		//else
 		//	SystemSkeletalMeshInstanceData[meshName].Bones.emplace_back({});
 	}
 
-	void CRenderManager::SwapSkeletalMeshInstancedRenderLists()
+	bool CRenderManager::IsSpriteInWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const U16 viewIndex)
 	{
-		std::swap(SystemSkeletalMeshInstanceData, RendererSkeletalMeshInstanceData);
+		if (UMath::IsWithin(viewIndex, STATIC_U16(0), STATIC_U16(GameThreadRenderViews->size())))
+			return GameThreadRenderViews->at(viewIndex).WorldSpaceSpriteInstanceData.contains(assetReferenceUID);
+
+		return GameThreadRenderViews->at(0).WorldSpaceSpriteInstanceData.contains(assetReferenceUID);
 	}
 
-	void CRenderManager::ClearSystemSkeletalMeshInstanceData()
+	void CRenderManager::AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const SSpriteComponent* spriteComponent, const U16 viewIndex)
 	{
-		SystemSkeletalMeshInstanceData.clear();
+		std::unordered_map<U32, SSpriteInstanceData>* renderList = nullptr;
+
+		if (UMath::IsWithin(viewIndex, STATIC_U16(0), STATIC_U16(GameThreadRenderViews->size())))
+			renderList = &GameThreadRenderViews->at(viewIndex).WorldSpaceSpriteInstanceData;
+		else
+			renderList = &GameThreadRenderViews->at(0).WorldSpaceSpriteInstanceData;
+
+		if (!renderList->contains(assetReferenceUID))
+			renderList->emplace(assetReferenceUID, SSpriteInstanceData());
+
+		renderList->at(assetReferenceUID).Transforms.emplace_back(worldSpaceTransform->Transform.GetMatrix());
+		renderList->at(assetReferenceUID).UVRects.emplace_back(spriteComponent->UVRect);
+		renderList->at(assetReferenceUID).Colors.emplace_back(spriteComponent->Color.AsVector4());
+		renderList->at(assetReferenceUID).Entities.emplace_back(spriteComponent->Owner);
 	}
 
-	bool CRenderManager::IsSpriteInWorldSpaceInstancedRenderList(const U32 textureBankIndex)
+	void CRenderManager::AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const STransformComponent* cameraTransform, const U16 viewIndex)
 	{
-		return SystemWorldSpaceSpriteInstanceData.contains(textureBankIndex);
-	}
+		std::unordered_map<U32, SSpriteInstanceData>* renderList = nullptr;
 
-	void CRenderManager::AddSpriteToWorldSpaceInstancedRenderList(const U32 textureBankIndex, const STransformComponent* worldSpaceTransform, const SSpriteComponent* spriteComponent)
-	{
-		if (!SystemWorldSpaceSpriteInstanceData.contains(textureBankIndex))
-			SystemWorldSpaceSpriteInstanceData.emplace(textureBankIndex, SSpriteInstanceData());
+		if (UMath::IsWithin(viewIndex, STATIC_U16(0), STATIC_U16(GameThreadRenderViews->size())))
+			renderList = &GameThreadRenderViews->at(viewIndex).WorldSpaceSpriteInstanceData;
+		else
+			renderList = &GameThreadRenderViews->at(0).WorldSpaceSpriteInstanceData;
 
-		SystemWorldSpaceSpriteInstanceData[textureBankIndex].Transforms.emplace_back(worldSpaceTransform->Transform.GetMatrix());	
-		SystemWorldSpaceSpriteInstanceData[textureBankIndex].UVRects.emplace_back(spriteComponent->UVRect);
-		SystemWorldSpaceSpriteInstanceData[textureBankIndex].Colors.emplace_back(spriteComponent->Color.AsVector4());
-		SystemWorldSpaceSpriteInstanceData[textureBankIndex].Entities.emplace_back(spriteComponent->Owner);
-	}
-
-	void CRenderManager::AddSpriteToWorldSpaceInstancedRenderList(const U32 textureBankIndex, const STransformComponent* worldSpaceTransform, const STransformComponent* cameraTransform)
-	{
-		if (!SystemWorldSpaceSpriteInstanceData.contains(textureBankIndex))
-			SystemWorldSpaceSpriteInstanceData.emplace(textureBankIndex, SSpriteInstanceData());
+		if (!renderList->contains(assetReferenceUID))
+			renderList->emplace(assetReferenceUID, SSpriteInstanceData());
 
 		const SMatrix cameraMatrix = cameraTransform->Transform.GetMatrix();
 		SMatrix orientedMatrix = worldSpaceTransform->Transform.GetMatrix();
@@ -799,61 +831,47 @@ namespace Havtorn
 		F32 scaling = UMath::Remap(0.0f, 1.0f, scaleMin, scaleMax, eased);
 		SVector scale = SVector(scaling, scaling, 1.0f);
 		SMatrix::Recompose(location, euler, scale, orientedMatrix);
-		
-		SystemWorldSpaceSpriteInstanceData[textureBankIndex].Transforms.emplace_back(orientedMatrix);
-		SystemWorldSpaceSpriteInstanceData[textureBankIndex].UVRects.emplace_back(SVector4(0.0f, 0.0f, 1.0f, 1.0f));
-		SystemWorldSpaceSpriteInstanceData[textureBankIndex].Colors.emplace_back(SVector4(1.0f, 1.0f, 1.0f, 1.0f));
-		SystemWorldSpaceSpriteInstanceData[textureBankIndex].Entities.emplace_back(worldSpaceTransform->Owner);
+
+		renderList->at(assetReferenceUID).Transforms.emplace_back(orientedMatrix);
+		renderList->at(assetReferenceUID).UVRects.emplace_back(SVector4(0.0f, 0.0f, 1.0f, 1.0f));
+		renderList->at(assetReferenceUID).Colors.emplace_back(SVector4(1.0f, 1.0f, 1.0f, 1.0f));
+		renderList->at(assetReferenceUID).Entities.emplace_back(worldSpaceTransform->Owner);
 	}
 
-	void CRenderManager::SwapSpriteWorldInstancedRenderLists()
+	bool CRenderManager::IsSpriteInScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const U16 viewIndex)
 	{
-		std::swap(SystemWorldSpaceSpriteInstanceData, RendererWorldSpaceSpriteInstanceData);
+		if (UMath::IsWithin(viewIndex, STATIC_U16(0), STATIC_U16(GameThreadRenderViews->size())))
+			return GameThreadRenderViews->at(viewIndex).ScreenSpaceSpriteInstanceData.contains(assetReferenceUID);
+
+		return GameThreadRenderViews->at(0).ScreenSpaceSpriteInstanceData.contains(assetReferenceUID);
 	}
 
-	void CRenderManager::ClearSystemWorldSpaceSpriteInstanceData()
+	void CRenderManager::AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SSpriteComponent* spriteComponent, const U16 viewIndex)
 	{
-		SystemWorldSpaceSpriteInstanceData.clear();
-	}
+		std::unordered_map<U32, SSpriteInstanceData>* renderList = nullptr;
 
-	bool CRenderManager::IsSpriteInScreenSpaceInstancedRenderList(const U32 textureBankIndex)
-	{
-		return SystemScreenSpaceSpriteInstanceData.contains(textureBankIndex);
-	}
+		if (UMath::IsWithin(viewIndex, STATIC_U16(0), STATIC_U16(GameThreadRenderViews->size())))
+			renderList = &GameThreadRenderViews->at(viewIndex).ScreenSpaceSpriteInstanceData;
+		else
+			renderList = &GameThreadRenderViews->at(0).ScreenSpaceSpriteInstanceData;
 
-	void CRenderManager::AddSpriteToScreenSpaceInstancedRenderList(const U32 textureBankIndex, const STransform2DComponent* screenSpaceTransform, const SSpriteComponent* spriteComponent)
-	{
-		if (!SystemScreenSpaceSpriteInstanceData.contains(textureBankIndex))
-			SystemScreenSpaceSpriteInstanceData.emplace(textureBankIndex, SSpriteInstanceData());
+		if (!renderList->contains(assetReferenceUID))
+			renderList->emplace(assetReferenceUID, SSpriteInstanceData());
 
 		SMatrix screenSpaceMatrix;
 		screenSpaceMatrix.SetScale(screenSpaceTransform->Scale.X, screenSpaceTransform->Scale.Y, 1.0f);
 		screenSpaceMatrix *= SMatrix::CreateRotationAroundZ(UMath::DegToRad(screenSpaceTransform->DegreesRoll));
 		screenSpaceMatrix.SetTranslation({ screenSpaceTransform->Position.X, screenSpaceTransform->Position.Y, 0.0f });
 
-		SystemScreenSpaceSpriteInstanceData[textureBankIndex].Transforms.emplace_back(screenSpaceMatrix);
-		SystemScreenSpaceSpriteInstanceData[textureBankIndex].UVRects.emplace_back(spriteComponent->UVRect);
-		SystemScreenSpaceSpriteInstanceData[textureBankIndex].Colors.emplace_back(spriteComponent->Color.AsVector4());
-		SystemScreenSpaceSpriteInstanceData[textureBankIndex].Entities.emplace_back(spriteComponent->Owner);
-	}
-
-	void CRenderManager::SwapSpriteScreenInstancedRenderLists()
-	{
-		std::swap(SystemScreenSpaceSpriteInstanceData, RendererScreenSpaceSpriteInstanceData);
-	}
-
-	void CRenderManager::ClearSystemScreenSpaceSpriteInstanceData()
-	{
-		SystemScreenSpaceSpriteInstanceData.clear();
+		renderList->at(assetReferenceUID).Transforms.emplace_back(screenSpaceMatrix);
+		renderList->at(assetReferenceUID).UVRects.emplace_back(spriteComponent->UVRect);
+		renderList->at(assetReferenceUID).Colors.emplace_back(spriteComponent->Color.AsVector4());
+		renderList->at(assetReferenceUID).Entities.emplace_back(spriteComponent->Owner);
 	}
 
 	void CRenderManager::SyncCrossThreadResources(const CWorld* world)
 	{
-		SwapRenderCommandBuffers();
-		SwapStaticMeshInstancedRenderLists();
-		SwapSkeletalMeshInstancedRenderLists();
-		SwapSpriteWorldInstancedRenderLists();
-		SwapSpriteScreenInstancedRenderLists();
+		SwapRenderViews();
 		std::swap(SystemSkeletalAnimationBoneData, RendererSkeletalAnimationBoneData);
 		SetWorldPlayState(world->GetWorldPlayState());
 	}
@@ -863,19 +881,62 @@ namespace Havtorn
 		WorldPlayState = playState;
 	}
 
-	const CRenderTexture& CRenderManager::GetRenderedSceneTexture() const
+	const CRenderTexture& CRenderManager::GetRenderedSceneTexture(const U16 viewIndex) const
 	{
-		return RenderedScene;
+		if (UMath::IsWithin(viewIndex, STATIC_U16(0), STATIC_U16(GameThreadRenderViews->size())))
+			return GameThreadRenderViews->at(viewIndex).RenderedScene;
+
+		return GameThreadRenderViews->at(0).RenderedScene;
 	}
 
-	void CRenderManager::PushRenderCommand(SRenderCommand command)
+	void CRenderManager::PushRenderCommand(SRenderCommand command, const U16 viewIndex)
 	{
-		PushToCommands->push(command);
+		// TODO.NW: Make static U16 called "MainRenderViewIndex"
+		command.RenderViewIndex = viewIndex;
+
+		if (UMath::IsWithin(viewIndex, STATIC_U16(0), STATIC_U16(GameThreadRenderViews->size())))
+		{
+			GameThreadRenderViews->at(viewIndex).RenderCommands.push(command);
+			return;
+		}
+
+		GameThreadRenderViews->at(0).RenderCommands.push(command);
 	}
 
-	void CRenderManager::SwapRenderCommandBuffers()
+	void CRenderManager::SwapRenderViews()
 	{
-		std::swap(PushToCommands, PopFromCommands);
+		std::swap(GameThreadRenderViews, RenderThreadRenderViews);
+	}
+
+	void CRenderManager::ClearRenderViewInstanceData()
+	{
+		for (auto& renderView : (*GameThreadRenderViews))
+		{
+			renderView.StaticMeshInstanceData.clear();
+			renderView.SkeletalMeshInstanceData.clear();
+			renderView.WorldSpaceSpriteInstanceData.clear();
+			renderView.ScreenSpaceSpriteInstanceData.clear();
+		}
+	}
+
+	void CRenderManager::PrepareRenderViews(const U16 numberOfViews)
+	{
+		I32 newCapacity = UMath::Max(STATIC_I32(1), STATIC_I32(numberOfViews));
+		I32 difference = newCapacity - STATIC_U16(GameThreadRenderViews->size());
+
+		for (I32 i = 0; i < UMath::Abs(difference); i++)
+		{
+			// TODO.NW: Move this to destructor and constructor of SRenderView?
+			if (difference < 0)
+			{
+				GameThreadRenderViews->back().RenderedScene.Release();
+				GameThreadRenderViews->pop_back();
+			}
+			else if (difference > 0)
+			{
+				GameThreadRenderViews->emplace_back().RenderedScene = RenderTextureFactory.CreateTexture(CurrentWindowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+			}
+		}
 	}
 
 	const SVector2<U16>& CRenderManager::GetCurrentWindowResolution() const
@@ -933,7 +994,7 @@ namespace Havtorn
 		ObjectBufferData.ToWorldFromObject = command.Matrices[0];
 		ObjectBuffer.BindBuffer(ObjectBufferData);
 
-		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceData[command.U32s[0]].Transforms;
+		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewIndex).StaticMeshInstanceData[command.U32s[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
@@ -962,7 +1023,7 @@ namespace Havtorn
 		ObjectBufferData.ToWorldFromObject = command.Matrices[0];
 		ObjectBuffer.BindBuffer(ObjectBufferData);
 
-		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceData[command.U32s[0]].Transforms;
+		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewIndex).StaticMeshInstanceData[command.U32s[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
@@ -1019,7 +1080,7 @@ namespace Havtorn
 
 		// =============
 
-		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceData[command.U32s[0]].Transforms;
+		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewIndex).StaticMeshInstanceData[command.U32s[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
@@ -1062,7 +1123,7 @@ namespace Havtorn
 
 	void CRenderManager::GBufferDataInstanced(const SRenderCommand& command)
 	{
-		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceData[command.U32s[0]].Transforms;
+		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewIndex).StaticMeshInstanceData[command.U32s[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
@@ -1092,7 +1153,7 @@ namespace Havtorn
 			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Metalness)], resourceViewPointers, textureUIDToShaderIndex);
 			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Roughness)], resourceViewPointers, textureUIDToShaderIndex);
 			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Emissive)], resourceViewPointers, textureUIDToShaderIndex);
-			
+
 			for (auto const& [textureUID, shaderIndex] : textureUIDToShaderIndex)
 				GEngine::GetAssetRegistry()->UnrequestAsset(textureUID, CAssetRegistry::RenderManagerRequestID);
 
@@ -1114,10 +1175,12 @@ namespace Havtorn
 
 	void CRenderManager::GBufferDataInstancedEditor(const SRenderCommand& command)
 	{
-		const std::vector<SMatrix>& matrices = RendererStaticMeshInstanceData[command.U32s[0]].Transforms;
+		SStaticMeshInstanceData& meshData = RenderThreadRenderViews->at(command.RenderViewIndex).StaticMeshInstanceData[command.U32s[0]];
+		
+		const std::vector<SMatrix>& matrices = meshData.Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		const std::vector<SEntity>& entities = RendererStaticMeshInstanceData[command.U32s[0]].Entities;
+		const std::vector<SEntity>& entities = meshData.Entities;
 		InstancedEntityIDBuffer.BindBuffer(entities);
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
@@ -1169,16 +1232,11 @@ namespace Havtorn
 
 	void CRenderManager::GBufferSkeletalInstanced(const SRenderCommand& command)
 	{
-		SkeletalAnimationDataTextureGPU.CopyFromTexture(SkeletalAnimationDataTextureCPU.GetTexture());
-
-		const std::vector<SMatrix>& matrices = RendererSkeletalMeshInstanceData[command.U32s[0]].Transforms;
+		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewIndex).SkeletalMeshInstanceData[command.U32s[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		//const std::vector<SVector2<U32>>& animationData = RendererSkeletalMeshInstanceData[command.U32s[0]].AnimationData;
-		//InstancedAnimationDataBuffer.BindBuffer(animationData);
-
-		SkeletalAnimationDataTextureGPU.SetAsVSResourceOnSlot(24);
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
+		RenderStateManager.VSSetConstantBuffer(6, BoneBuffer);
 		RenderStateManager.IASetTopology(ETopologies::TriangleList);
 		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans);
 
@@ -1227,21 +1285,17 @@ namespace Havtorn
 
 	void CRenderManager::GBufferSkeletalInstancedEditor(const SRenderCommand& command)
 	{
-		//SkeletalAnimationDataTextureGPU.CopyFromTexture(SkeletalAnimationDataTextureCPU.GetTexture());
+		SSkeletalMeshInstanceData& meshData = RenderThreadRenderViews->at(command.RenderViewIndex).SkeletalMeshInstanceData[command.U32s[0]];
 
-		const std::vector<SMatrix>& matrices = RendererSkeletalMeshInstanceData[command.U32s[0]].Transforms;
+		const std::vector<SMatrix>& matrices = meshData.Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		//const std::vector<SVector2<U32>>& animationData = RendererSkeletalMeshInstanceData[command.U32s[0]].AnimationData;
-		//InstancedAnimationDataBuffer.BindBuffer(animationData);
-
-		const std::vector<SEntity>& entities = RendererSkeletalMeshInstanceData[command.U32s[0]].Entities;
+		const std::vector<SEntity>& entities = meshData.Entities;
 		InstancedEntityIDBuffer.BindBuffer(entities);
 
-		const std::vector<SMatrix>& boneMatrices = RendererSkeletalMeshInstanceData[command.U32s[0]].Bones;
+		const std::vector<SMatrix>& boneMatrices = meshData.Bones;
 		BoneBuffer.BindBuffer(boneMatrices);
 
-		//SkeletalAnimationDataTextureGPU.SetAsVSResourceOnSlot(24);
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
 		RenderStateManager.VSSetConstantBuffer(6, BoneBuffer);
 		RenderStateManager.IASetTopology(ETopologies::TriangleList);
@@ -1281,7 +1335,7 @@ namespace Havtorn
 
 			const SDrawCallData& drawData = command.DrawCallData[drawCallIndex];
 			const std::vector<CDataBuffer> buffers = { RenderStateManager.VertexBuffers[drawData.VertexBufferIndex], InstancedEntityIDBuffer, InstancedAnimationDataBuffer, InstancedTransformBuffer };
-			const U32 strides[4] = { RenderStateManager.MeshVertexStrides[drawData.VertexStrideIndex], sizeof(U64), sizeof(SVector2<U32>), sizeof(SMatrix)};
+			const U32 strides[4] = { RenderStateManager.MeshVertexStrides[drawData.VertexStrideIndex], sizeof(U64), sizeof(SVector2<U32>), sizeof(SMatrix) };
 			const U32 offsets[4] = { RenderStateManager.MeshVertexOffsets[drawData.VertexOffsetIndex], 0, 0, 0 };
 			RenderStateManager.IASetVertexBuffers(0, 4, buffers, strides, offsets);
 			RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[drawData.IndexBufferIndex]);
@@ -1296,13 +1350,15 @@ namespace Havtorn
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::GBufferAlphaBlend);
 
 		const auto& textureUID = command.U32s[0];
-		const std::vector<SMatrix>& matrices = RendererWorldSpaceSpriteInstanceData[textureUID].Transforms;
+		SSpriteInstanceData& spriteData = RenderThreadRenderViews->at(command.RenderViewIndex).WorldSpaceSpriteInstanceData[textureUID];
+
+		const std::vector<SMatrix>& matrices = spriteData.Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		const std::vector<SVector4>& uvRects = RendererWorldSpaceSpriteInstanceData[textureUID].UVRects;
+		const std::vector<SVector4>& uvRects = spriteData.UVRects;
 		InstancedUVRectBuffer.BindBuffer(uvRects);
 
-		const std::vector<SVector4>& colors = RendererWorldSpaceSpriteInstanceData[textureUID].Colors;
+		const std::vector<SVector4>& colors = spriteData.Colors;
 		InstancedColorBuffer.BindBuffer(colors);
 
 		RenderStateManager.IASetTopology(ETopologies::PointList);
@@ -1334,16 +1390,18 @@ namespace Havtorn
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::GBufferAlphaBlend);
 
 		const auto& textureUID = command.U32s[0];
-		const std::vector<SMatrix>& matrices = RendererWorldSpaceSpriteInstanceData[textureUID].Transforms;
+		SSpriteInstanceData& spriteData = RenderThreadRenderViews->at(command.RenderViewIndex).WorldSpaceSpriteInstanceData[textureUID];
+
+		const std::vector<SMatrix>& matrices = spriteData.Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		const std::vector<SVector4>& uvRects = RendererWorldSpaceSpriteInstanceData[textureUID].UVRects;
+		const std::vector<SVector4>& uvRects = spriteData.UVRects;
 		InstancedUVRectBuffer.BindBuffer(uvRects);
 
-		const std::vector<SVector4>& colors = RendererWorldSpaceSpriteInstanceData[textureUID].Colors;
+		const std::vector<SVector4>& colors = spriteData.Colors;
 		InstancedColorBuffer.BindBuffer(colors);
 
-		const std::vector<SEntity>& entities = RendererWorldSpaceSpriteInstanceData[textureUID].Entities;
+		const std::vector<SEntity>& entities = spriteData.Entities;
 		InstancedEntityIDBuffer.BindBuffer(entities);
 
 		RenderStateManager.IASetTopology(ETopologies::PointList);
@@ -1641,15 +1699,15 @@ namespace Havtorn
 
 		RenderStateManager.DrawIndexed(36, 0, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
-		
+
 		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
 		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::Default);
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
 	}
 
-	void CRenderManager::PostBaseLightingPass(const SRenderCommand& /*command*/)
+	void CRenderManager::PostBaseLightingPass(const SRenderCommand& command)
 	{
-		RenderedScene.SetAsActiveTarget();
+		RenderThreadRenderViews->at(command.RenderViewIndex).RenderedScene.SetAsActiveTarget();
 		LitScene.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 	}
@@ -1835,7 +1893,7 @@ namespace Havtorn
 		ShouldBlurVolumetricBuffer = true;
 	}
 
-	void CRenderManager::VolumetricBlur(const SRenderCommand& /*command*/)
+	void CRenderManager::VolumetricBlur(const SRenderCommand& command)
 	{
 		if (!ShouldBlurVolumetricBuffer)
 			return;
@@ -1881,7 +1939,7 @@ namespace Havtorn
 
 		// Upsampling
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
-		RenderedScene.SetAsActiveTarget();
+		RenderThreadRenderViews->at(command.RenderViewIndex).RenderedScene.SetAsActiveTarget();
 		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
 		DownsampledDepth.SetAsPSResourceOnSlot(1);
 		IntermediateDepth.SetAsPSResourceOnSlot(2);
@@ -1898,13 +1956,15 @@ namespace Havtorn
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
 
 		const auto textureUID = command.U32s[0];
-		const std::vector<SMatrix>& matrices = RendererScreenSpaceSpriteInstanceData[textureUID].Transforms;
+		SSpriteInstanceData& spriteData = RenderThreadRenderViews->at(command.RenderViewIndex).ScreenSpaceSpriteInstanceData[textureUID];
+
+		const std::vector<SMatrix>& matrices = spriteData.Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		const std::vector<SVector4>& uvRects = RendererScreenSpaceSpriteInstanceData[textureUID].UVRects;
+		const std::vector<SVector4>& uvRects = spriteData.UVRects;
 		InstancedUVRectBuffer.BindBuffer(uvRects);
 
-		const std::vector<SVector4>& colors = RendererScreenSpaceSpriteInstanceData[textureUID].Colors;
+		const std::vector<SVector4>& colors = spriteData.Colors;
 		InstancedColorBuffer.BindBuffer(colors);
 
 		RenderStateManager.IASetTopology(ETopologies::PointList);
@@ -1934,22 +1994,24 @@ namespace Havtorn
 
 	inline void CRenderManager::WorldSpaceSpriteEditorWidget(const SRenderCommand& command)
 	{
-		ID3D11RenderTargetView* renderTargets[2] = { RenderedScene.GetRenderTargetView(), GBuffer.GetEditorDataRenderTarget()};
+		ID3D11RenderTargetView* renderTargets[2] = { RenderThreadRenderViews->at(command.RenderViewIndex).RenderedScene.GetRenderTargetView(), GBuffer.GetEditorDataRenderTarget() };
 		RenderStateManager.OMSetRenderTargets(2, renderTargets, EditorWidgetDepth.GetDepthStencilView());
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
 		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
 
 		const auto& textureUID = command.U32s[0];
-		const std::vector<SMatrix>& matrices = RendererWorldSpaceSpriteInstanceData[textureUID].Transforms;
+		SSpriteInstanceData& spriteData = RenderThreadRenderViews->at(command.RenderViewIndex).WorldSpaceSpriteInstanceData[textureUID];
+
+		const std::vector<SMatrix>& matrices = spriteData.Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		const std::vector<SVector4>& uvRects = RendererWorldSpaceSpriteInstanceData[textureUID].UVRects;
+		const std::vector<SVector4>& uvRects = spriteData.UVRects;
 		InstancedUVRectBuffer.BindBuffer(uvRects);
 
-		const std::vector<SVector4>& colors = RendererWorldSpaceSpriteInstanceData[textureUID].Colors;
+		const std::vector<SVector4>& colors = spriteData.Colors;
 		InstancedColorBuffer.BindBuffer(colors);
 
-		const std::vector<SEntity>& entities = RendererWorldSpaceSpriteInstanceData[textureUID].Entities;
+		const std::vector<SEntity>& entities = spriteData.Entities;
 		InstancedEntityIDBuffer.BindBuffer(entities);
 
 		RenderStateManager.IASetTopology(ETopologies::PointList);
@@ -1977,13 +2039,13 @@ namespace Havtorn
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 	}
 
-	void CRenderManager::RenderBloom(const SRenderCommand& /*command*/)
+	void CRenderManager::RenderBloom(const SRenderCommand& command)
 	{
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::Disable);
 		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
 
 		HalfSizeTexture.SetAsActiveTarget();
-		RenderedScene.SetAsPSResourceOnSlot(0);
+		RenderThreadRenderViews->at(command.RenderViewIndex).RenderedScene.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 
 		QuarterSizeTexture.SetAsActiveTarget();
@@ -2019,19 +2081,19 @@ namespace Havtorn
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 
 		VignetteTexture.SetAsActiveTarget();
-		RenderedScene.SetAsPSResourceOnSlot(0);
+		RenderThreadRenderViews->at(command.RenderViewIndex).RenderedScene.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 
-		RenderedScene.SetAsActiveTarget();
+		RenderThreadRenderViews->at(command.RenderViewIndex).RenderedScene.SetAsActiveTarget();
 		VignetteTexture.SetAsPSResourceOnSlot(0);
 		HalfSizeTexture.SetAsPSResourceOnSlot(1);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Bloom);
 	}
 
-	inline void CRenderManager::Tonemapping(const SRenderCommand& /*command*/)
+	inline void CRenderManager::Tonemapping(const SRenderCommand& command)
 	{
 		TonemappedTexture.SetAsActiveTarget();
-		RenderedScene.SetAsPSResourceOnSlot(0);
+		RenderThreadRenderViews->at(command.RenderViewIndex).RenderedScene.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Tonemap);
 	}
 
@@ -2039,15 +2101,15 @@ namespace Havtorn
 	{
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::Disable);
 		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
-		
+
 		AntiAliasedTexture.SetAsActiveTarget();
 		TonemappedTexture.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::FXAA);
 	}
 
-	inline void CRenderManager::GammaCorrection(const SRenderCommand& /*command*/)
+	inline void CRenderManager::GammaCorrection(const SRenderCommand& command)
 	{
-		RenderedScene.SetAsActiveTarget();
+		RenderThreadRenderViews->at(command.RenderViewIndex).RenderedScene.SetAsActiveTarget();
 		AntiAliasedTexture.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::GammaCorrection);
 	}
@@ -2064,7 +2126,7 @@ namespace Havtorn
 
 		RenderStateManager.IASetTopology(ETopologies::LineList);
 		RenderStateManager.IASetInputLayout(EInputLayoutType::Position4);
-		
+
 		RenderStateManager.GSSetShader(EGeometryShaders::Line);
 		RenderStateManager.VSSetShader(EVertexShaders::Line);
 		RenderStateManager.PSSetShader(EPixelShaders::Line);
@@ -2112,7 +2174,7 @@ namespace Havtorn
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
 	}
 
-	void CRenderManager::CheckIsolatedRenderPass()
+	void CRenderManager::CheckIsolatedRenderPass(const U16 viewIndex)
 	{
 		switch (CurrentRunningRenderPass)
 		{
@@ -2120,56 +2182,56 @@ namespace Havtorn
 			break;
 		case Havtorn::ERenderPass::Depth:
 		{
-			RenderedScene.SetAsActiveTarget();
+			RenderThreadRenderViews->at(viewIndex).RenderedScene.SetAsActiveTarget();
 			DepthCopy.SetAsPSResourceOnSlot(0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
 		}
 		break;
 		case Havtorn::ERenderPass::GBufferAlbedo:
 		{
-			RenderedScene.SetAsActiveTarget();
+			RenderThreadRenderViews->at(viewIndex).RenderedScene.SetAsActiveTarget();
 			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Albedo, 0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 		}
 		break;
 		case Havtorn::ERenderPass::GBufferNormals:
 		{
-			RenderedScene.SetAsActiveTarget();
+			RenderThreadRenderViews->at(viewIndex).RenderedScene.SetAsActiveTarget();
 			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Normal, 0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 		}
 		break;
 		case Havtorn::ERenderPass::GBufferMaterials:
 		{
-			RenderedScene.SetAsActiveTarget();
+			RenderThreadRenderViews->at(viewIndex).RenderedScene.SetAsActiveTarget();
 			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Material, 0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 		}
 		break;
 		case Havtorn::ERenderPass::SSAO:
 		{
-			RenderedScene.SetAsActiveTarget();
+			RenderThreadRenderViews->at(viewIndex).RenderedScene.SetAsActiveTarget();
 			SSAOBlurTexture.SetAsPSResourceOnSlot(0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 		}
 		break;
 		case Havtorn::ERenderPass::DeferredLighting:
 		{
-			RenderedScene.SetAsActiveTarget();
+			RenderThreadRenderViews->at(viewIndex).RenderedScene.SetAsActiveTarget();
 			LitScene.SetAsPSResourceOnSlot(0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 		}
 		break;
 		case Havtorn::ERenderPass::VolumetricLighting:
 		{
-			RenderedScene.SetAsActiveTarget();
+			RenderThreadRenderViews->at(viewIndex).RenderedScene.SetAsActiveTarget();
 			VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 		}
 		break;
 		case Havtorn::ERenderPass::Bloom:
 		{
-			RenderedScene.SetAsActiveTarget();
+			RenderThreadRenderViews->at(viewIndex).RenderedScene.SetAsActiveTarget();
 			VignetteTexture.SetAsPSResourceOnSlot(0);
 			HalfSizeTexture.SetAsPSResourceOnSlot(1);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Difference);
@@ -2177,14 +2239,14 @@ namespace Havtorn
 		break;
 		case Havtorn::ERenderPass::Tonemapping:
 		{
-			RenderedScene.SetAsActiveTarget();
+			RenderThreadRenderViews->at(viewIndex).RenderedScene.SetAsActiveTarget();
 			TonemappedTexture.SetAsPSResourceOnSlot(0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 		}
 		break;
 		case Havtorn::ERenderPass::Antialiasing:
 		{
-			RenderedScene.SetAsActiveTarget();
+			RenderThreadRenderViews->at(viewIndex).RenderedScene.SetAsActiveTarget();
 			AntiAliasedTexture.SetAsPSResourceOnSlot(0);
 			TonemappedTexture.SetAsPSResourceOnSlot(1);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Difference);
@@ -2192,7 +2254,7 @@ namespace Havtorn
 		break;
 		case Havtorn::ERenderPass::EditorData:
 		{
-			RenderedScene.SetAsActiveTarget();
+			RenderThreadRenderViews->at(viewIndex).RenderedScene.SetAsActiveTarget();
 			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::EditorData, 0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::EditorData);
 		}

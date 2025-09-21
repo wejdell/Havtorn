@@ -117,10 +117,8 @@ namespace Havtorn
 		ENGINE_API void Initialize3DPhysicsData(const SEntity& entity) const;
 		ENGINE_API void Update3DPhysicsData(STransformComponent* transformComponent, SPhysics3DComponent* phys2DComponent) const;
 
-		template<typename T>
-		HexRune::SScript* LoadScript(const std::string& filePath);
-
 	public:
+		// TODO.NW: Maybe unify and have Enum arg instead
 		CMulticastDelegate<CScene*> OnBeginPlayDelegate;
 		CMulticastDelegate<CScene*> OnPausePlayDelegate;
 		CMulticastDelegate<CScene*> OnEndPlayDelegate;

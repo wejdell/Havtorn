@@ -31,6 +31,7 @@ namespace Havtorn
 
 	void CWorld::Update() const
 	{
+		// TODO.NW: For multi-scene workflow: Invert this. Send all scenes to all systems
 		for (auto& scene : Scenes)
 		{
 			for (const auto& data : SystemData)

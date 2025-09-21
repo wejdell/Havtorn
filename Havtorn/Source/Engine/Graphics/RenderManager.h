@@ -56,6 +56,38 @@ namespace Havtorn
 
 	using CRenderCommandHeap = std::priority_queue<SRenderCommand, std::vector<SRenderCommand>, SRenderCommandComparer>;
 
+	struct SStaticMeshInstanceData
+	{
+		std::vector<SMatrix> Transforms{};
+		std::vector<SEntity> Entities{};
+	};
+
+	struct SSkeletalMeshInstanceData
+	{
+		std::vector<SMatrix> Transforms{};
+		std::vector<SMatrix> Bones{};
+		std::vector<SEntity> Entities{};
+	};
+
+	struct SSpriteInstanceData
+	{
+		std::vector<SMatrix> Transforms{};
+		std::vector<SVector4> UVRects{};
+		std::vector<SVector4> Colors{};
+		std::vector<SEntity> Entities{};
+	};
+
+	struct SRenderView
+	{
+		CRenderTexture RenderedScene;
+		CRenderCommandHeap RenderCommands;
+
+		std::unordered_map<U32, SStaticMeshInstanceData> StaticMeshInstanceData;
+		std::unordered_map<U32, SSkeletalMeshInstanceData> SkeletalMeshInstanceData;
+		std::unordered_map<U32, SSpriteInstanceData> WorldSpaceSpriteInstanceData;
+		std::unordered_map<U32, SSpriteInstanceData> ScreenSpaceSpriteInstanceData;
+	};
+
 	class CRenderManager
 	{
 		friend CAssetRegistry;
@@ -84,33 +116,29 @@ namespace Havtorn
 
 		U32 WriteToAnimationDataTexture(const std::string& animationName);
 
-		bool IsStaticMeshInInstancedRenderList(const U32 meshUID);
-		void AddStaticMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* component);
-		void SwapStaticMeshInstancedRenderLists();
-		void ClearSystemStaticMeshInstanceData();
+		// TODO.NW: Might want to generalize these render view resources somehow still
+		bool IsStaticMeshInInstancedRenderList(const U32 meshUID, const U16 viewIndex);
+		void AddStaticMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* component, const U16 viewIndex);
 
-		bool IsSkeletalMeshInInstancedRenderList(const U32 meshUID);
-		void AddSkeletalMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* transformComponent, const SSkeletalAnimationComponent* animationComponent);
-		void SwapSkeletalMeshInstancedRenderLists();
-		void ClearSystemSkeletalMeshInstanceData();
+		bool IsSkeletalMeshInInstancedRenderList(const U32 meshUID, const U16 viewIndex);
+		void AddSkeletalMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* transformComponent, const SSkeletalAnimationComponent* animationComponent, const U16 viewIndex);
 
-		bool IsSpriteInWorldSpaceInstancedRenderList(const U32 textureBankIndex);
-		void AddSpriteToWorldSpaceInstancedRenderList(const U32 textureBankIndex, const STransformComponent* worldSpaceTransform, const SSpriteComponent* spriteComponent);
-		ENGINE_API void AddSpriteToWorldSpaceInstancedRenderList(const U32 textureBankIndex, const STransformComponent* worldSpaceTransform, const STransformComponent* cameraTransform);
-		void SwapSpriteWorldInstancedRenderLists();
-		void ClearSystemWorldSpaceSpriteInstanceData();
+		bool IsSpriteInWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const U16 viewIndex);
+		void AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const SSpriteComponent* spriteComponent, const U16 viewIndex);
+		ENGINE_API void AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const STransformComponent* cameraTransform, const U16 viewIndex);
 
-		bool IsSpriteInScreenSpaceInstancedRenderList(const U32 textureBankIndex);
-		void AddSpriteToScreenSpaceInstancedRenderList(const U32 textureBankIndex, const STransform2DComponent* screenSpaceTransform, const SSpriteComponent* spriteComponent);
-		void SwapSpriteScreenInstancedRenderLists();
-		void ClearSystemScreenSpaceSpriteInstanceData();
+		bool IsSpriteInScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const U16 viewIndex);
+		void AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SSpriteComponent* spriteComponent, const U16 viewIndex);
 
 	public:
 		void SyncCrossThreadResources(const CWorld* world);
 		void SetWorldPlayState(EWorldPlayState playState);
-		[[nodiscard]] ENGINE_API const CRenderTexture& GetRenderedSceneTexture() const;
-		ENGINE_API void PushRenderCommand(SRenderCommand command);
-		void SwapRenderCommandBuffers();
+		[[nodiscard]] ENGINE_API const CRenderTexture& GetRenderedSceneTexture(const U16 viewIndex) const;
+		ENGINE_API void PushRenderCommand(SRenderCommand command, const U16 viewIndex);
+		void SwapRenderViews();
+		void ClearRenderViewInstanceData();
+
+		void PrepareRenderViews(const U16 numberOfViews);
 
 		const SVector2<U16>& GetCurrentWindowResolution() const;
 		const SVector2<F32>& GetShadowAtlasResolution() const;
@@ -120,7 +148,7 @@ namespace Havtorn
 
 	private:
 		void Clear(SVector4 clearColor);
-		void InitRenderTextures(SVector2<U16> windowResolution);
+		void InitRenderTextures(CGraphicsFramework* framework, SVector2<U16> windowResolution);
 		void InitShadowmapAtlas(SVector2<F32> atlasResolution);
 		void InitShadowmapLOD(SVector2<F32> topLeftCoordinate, const SVector2<F32>& widthAndHeight, const SVector2<F32>& depth, const SVector2<F32>& atlasResolution, U16 mapsInLod, U16 startIndex);
 		
@@ -166,7 +194,7 @@ namespace Havtorn
 
 		inline void DebugShadowAtlas();
 
-		void CheckIsolatedRenderPass();
+		void CheckIsolatedRenderPass(const U16 viewIndex);
 		void CycleRenderPass(const SInputActionPayload payload);
 
 		void MapRuntimeMaterialProperty(SRuntimeGraphicsMaterialProperty& property, std::vector<ID3D11ShaderResourceView*>& runtimeArray, std::map<U32, F32>& runtimeMap);
@@ -315,7 +343,6 @@ namespace Havtorn
 		CFullscreenRenderer FullscreenRenderer;
 
 		CRenderTextureFactory RenderTextureFactory;
-		CRenderTexture RenderedScene;
 		CRenderTexture Backbuffer;
 		CRenderTexture IntermediateTexture;
 		CRenderTexture IntermediateDepth;
@@ -342,11 +369,11 @@ namespace Havtorn
 		CRenderTexture SkeletalAnimationDataTextureGPU;
 		CGBuffer GBuffer;
 
-		CRenderCommandHeap RenderCommandsA;
-		CRenderCommandHeap RenderCommandsB;
+		std::vector<SRenderView> RenderViewsA;
+		std::vector<SRenderView> RenderViewsB;
 
-		CRenderCommandHeap* PushToCommands = &RenderCommandsA;
-		CRenderCommandHeap* PopFromCommands = &RenderCommandsB;
+		std::vector<SRenderView>* GameThreadRenderViews = &RenderViewsA;
+		std::vector<SRenderView>* RenderThreadRenderViews = &RenderViewsB;
 
 		SVector4 ClearColor = SVector4(0.5f, 0.5f, 0.5f, 1.0f);
 
@@ -361,50 +388,6 @@ namespace Havtorn
 		// NR: Used together with the InstancedTransformBuffer to batch World Space Sprites as well as Screen Space Sprites
 		CDataBuffer InstancedUVRectBuffer;
 		CDataBuffer InstancedColorBuffer;
-
-		struct SStaticMeshInstanceData
-		{
-			std::vector<SMatrix> Transforms{};
-			std::vector<SEntity> Entities{};
-		};
-
-		struct SSkeletalMeshInstanceData
-		{
-			std::vector<SMatrix> Transforms{};
-			std::vector<SMatrix> Bones{};
-			std::vector<SEntity> Entities{};
-		};
-
-		struct SSpriteInstanceData
-		{
-			std::vector<SMatrix> Transforms{};
-			std::vector<SVector4> UVRects{};
-			std::vector<SVector4> Colors{};
-			std::vector<SEntity> Entities{};
-		};
-
-		std::unordered_map<U32, SStaticMeshInstanceData> SystemStaticMeshInstanceData;
-		std::unordered_map<U32, SStaticMeshInstanceData> RendererStaticMeshInstanceData;
-
-		std::unordered_map<U32, SSkeletalMeshInstanceData> SystemSkeletalMeshInstanceData;
-		std::unordered_map<U32, SSkeletalMeshInstanceData> RendererSkeletalMeshInstanceData;
-
-		// TODO.NR: Maybe generalize GPU Instancing resources that are kept duplicate like this, combining
-		// the 4 function calls as well somehow. Maybe templated? Could use two template arguments, one for key and 
-		// one for the value
-
-		/*
-			NR: It's annoying having a separate map for the SMatrix collections, but since sprites
-			reference their texture using an index directly into the TextureBank, it makes sense 
-			to key into these collections using that. We could get the corresponding filepath from
-			the TextureBank in a roundabout way, to use as the key into the above collection, but
-			this seems better for now
-		*/
-		std::unordered_map<U32, SSpriteInstanceData> SystemWorldSpaceSpriteInstanceData;
-		std::unordered_map<U32, SSpriteInstanceData> RendererWorldSpaceSpriteInstanceData;
-
-		std::unordered_map<U32, SSpriteInstanceData> SystemScreenSpaceSpriteInstanceData;
-		std::unordered_map<U32, SSpriteInstanceData> RendererScreenSpaceSpriteInstanceData;
 
 		SVector2<F32> ShadowAtlasResolution = SVector2<F32>::Zero;
 		SVector2<U16> CurrentWindowResolution = SVector2<U16>::Zero;

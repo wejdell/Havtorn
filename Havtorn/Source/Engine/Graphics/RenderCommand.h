@@ -68,6 +68,7 @@ namespace Havtorn
 		std::vector<SEngineGraphicsMaterial> Materials;
 		std::vector<SDrawCallData> DrawCallData;
 		std::vector<SShadowmapViewData> ShadowmapViews;
+		U16 RenderViewIndex = 0;
 
 		~SRenderCommand() = default;
 	

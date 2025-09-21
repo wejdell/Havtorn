@@ -60,7 +60,7 @@ namespace Havtorn
 				GEngine::GetWorld()->ToggleWorldPlayDimensions();
 			}
 
-			RenderedSceneTextureReference = &(Manager->GetRenderManager()->GetRenderedSceneTexture());
+			RenderedSceneTextureReference = &(Manager->GetRenderManager()->GetRenderedSceneTexture(0));
 			
 			if (RenderedSceneTextureReference)
 			{

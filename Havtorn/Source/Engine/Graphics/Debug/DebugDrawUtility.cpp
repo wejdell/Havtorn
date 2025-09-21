@@ -37,13 +37,13 @@ namespace Havtorn
 		{
 			// Push prepass render commands
 			SRenderCommand command(ERenderCommandType::PreDebugShape);
-			RenderManager->PushRenderCommand(command);
+			RenderManager->PushRenderCommand(command, 0);
 
 			command.Type = ERenderCommandType::PostToneMappingIgnoreDepth;
-			RenderManager->PushRenderCommand(command);
+			RenderManager->PushRenderCommand(command, 0);
 
 			command.Type = ERenderCommandType::PostToneMappingUseDepth;
-			RenderManager->PushRenderCommand(command);
+			RenderManager->PushRenderCommand(command, 0);
 		}
 
 		const F32 dt = GTime::Dt();
@@ -59,7 +59,7 @@ namespace Havtorn
 			command.U16s.push_back(data.IndexCount);
 			command.U8s.push_back(data.VertexBufferIndex);
 			command.U8s.push_back(data.IndexBufferIndex);
-			RenderManager->PushRenderCommand(command);
+			RenderManager->PushRenderCommand(command, 0);
 
 			data.LifeTime -= dt;
 		}
@@ -129,17 +129,16 @@ namespace Havtorn
 		}
 	}
 
-	void GDebugDraw::AddCamera(const SVector& origin, const SVector& eulerRotation, const F32 fov, const F32 farZ, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	void GDebugDraw::AddCamera(const SVector& origin, const SVector& eulerRotation, const F32 fov, const F32 aspectRatio, const F32 farZ, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
 	{
 		std::vector<SDebugDrawData> newData = { SDebugDrawData(EVertexBufferPrimitives::Camera, EDefaultIndexBuffers::Camera)};
 		// TODO.AG: Rework this. Does not seem to properly represent fov & farZ. Might have to use aspectratio?
 		F32 y = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
-		F32 x = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f);
+		F32 x = 2.0f * farZ * std::tanf(UMath::DegToRad(fov) * 0.5f) * aspectRatio;
 		SVector vScale(x, y, farZ);
 		SMatrix::Recompose(origin, eulerRotation, vScale, newData[0].TransformMatrix);
-		if (TryAddShapes(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, newData))
-		{
-		}
+		TryAddShapes(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, newData);
+		AddCube(origin + newData[0].TransformMatrix.GetBackward() * 0.02f, eulerRotation, SVector(0.15f, 0.15f, 0.25f), color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth);
 	}
 
 	void GDebugDraw::AddCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius, const U8 segments, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)

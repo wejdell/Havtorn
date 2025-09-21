@@ -28,7 +28,8 @@ namespace Havtorn
 		void ViewManipulation(SMatrix& outCameraView, const SVector2<F32>& windowPosition, const SVector2<F32>& windowSize);
 		void InspectAssetComponent(SComponentViewResult& result);
 		void OpenAssetTool(const SComponentViewResult& result);
-		
+		void RenderPreview(const SComponentViewResult& result);
+
 		void OpenAddComponentModal(const SEntity& entity);
 
 		void UpdateAssetContextMenu();

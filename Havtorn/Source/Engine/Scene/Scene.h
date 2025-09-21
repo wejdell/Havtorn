@@ -41,8 +41,6 @@ namespace Havtorn
 		ENGINE_API virtual void Deserialize(const char* fromData, U64& pointerPosition);
 
 		ENGINE_API std::string GetSceneName() const;
-		ENGINE_API U64 GetSceneIndex(const SEntity& entity) const;
-		ENGINE_API U64 GetSceneIndex(const U64 entityGUID) const;
 		
 		CMulticastDelegate<SEntity> OnEntityPreDestroy;
 

@@ -3,6 +3,7 @@
 #include "hvpch.h"
 #include "CameraSystem.h"
 #include "Engine.h"
+#include "Scene/World.h"
 #include "Scene/Scene.h"
 #include "ECS/Components/TransformComponent.h"
 #include "ECS/Components/CameraComponent.h"
@@ -20,6 +21,9 @@ namespace Havtorn
 		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MouseDeltaHorizontal).AddMember(this, &CCameraSystem::HandleAxisInput);
 		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MouseDeltaVertical).AddMember(this, &CCameraSystem::HandleAxisInput);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ToggleFreeCam).AddMember(this, &CCameraSystem::ToggleFreeCam);
+		GEngine::GetWorld()->OnBeginPlayDelegate.AddMember(this, &CCameraSystem::OnBeginPlay);
+		GEngine::GetWorld()->OnPausePlayDelegate.AddMember(this, &CCameraSystem::OnPausePlay);
+		GEngine::GetWorld()->OnEndPlayDelegate.AddMember(this, &CCameraSystem::OnEndPlay);
 	}
 
 	CCameraSystem::~CCameraSystem()
@@ -104,6 +108,46 @@ namespace Havtorn
 	void CCameraSystem::ToggleFreeCam(const SInputActionPayload payload)
 	{
 		IsFreeCamActive = payload.IsHeld;
+	}
+
+	void CCameraSystem::OnBeginPlay(CScene* scene)
+	{
+		PreviousMainCamera = scene->MainCameraEntity;
+		for (SCameraComponent* camera : scene->GetComponents<SCameraComponent>())
+		{
+			if (camera->IsStartingCamera)
+			{
+				camera->IsActive = true;
+				scene->MainCameraEntity = camera->Owner;
+				break;
+			}
+		}
+
+		if (PreviousMainCamera != scene->MainCameraEntity)
+		{
+			SCameraComponent* camera = scene->GetComponent<SCameraComponent>(PreviousMainCamera);
+			camera->IsActive = false;
+		}
+	}
+
+	void CCameraSystem::OnPausePlay(CScene* /*scene*/)
+	{
+	}
+
+	void CCameraSystem::OnEndPlay(CScene* scene)
+	{
+		if (!PreviousMainCamera.IsValid() || PreviousMainCamera == scene->MainCameraEntity)
+			return;
+		
+		SCameraComponent* gameCamera = scene->GetComponent<SCameraComponent>(scene->MainCameraEntity);
+		gameCamera->IsActive = false;
+
+		SCameraComponent* editorCamera = scene->GetComponent<SCameraComponent>(PreviousMainCamera);
+		editorCamera->IsActive = true;
+
+		scene->MainCameraEntity = editorCamera->Owner;
+
+		PreviousMainCamera = SEntity::Null;
 	}
 	
 	void CCameraSystem::ResetInput()
