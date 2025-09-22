@@ -162,6 +162,8 @@ class FileCreationUtil:
                 associatedExtension = "cpp"
             case "hpp":
                 associatedExtension = "cpp"
+            case _:
+                return
                 
         folders = "/".join(folderNames)
         self.filesToAdd.append((self.mainFolder, self.choiceToFolder[self.mainFolder] + folders + "/" + fileNameSplit[0] + "." + associatedExtension))
