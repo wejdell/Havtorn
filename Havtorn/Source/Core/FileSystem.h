@@ -103,7 +103,7 @@ namespace Havtorn
 		friend class GEngine;
 
 	public:
-		static bool CORE_API DoesFileExist(const std::string& filePath);
+		static bool CORE_API Exists(const std::string& path);
 		static U64 CORE_API GetFileSize(const std::string& filePath);
 		static CORE_API CJsonDocument OpenJson(const std::string& filePath);
 
@@ -111,7 +111,12 @@ namespace Havtorn
 		static void CORE_API Deserialize(const std::string& filePath, char* data, U32 size);
 		static void CORE_API Deserialize(const std::string& filePath, std::string& outData);
 
+		static void CORE_API AddDirectory(const std::string& directoryPath);
+		static void CORE_API Remove(const std::string& path);
+
 		static void CORE_API IterateThroughFiles(const std::string& root);
+		
+		static std::vector<std::string> CORE_API SplitPath(const std::string& path);
 
 		CORE_API static const std::string EngineConfig;
 	};
