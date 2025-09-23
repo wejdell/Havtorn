@@ -64,7 +64,7 @@ namespace Havtorn
 		switch (type)
 		{
 		case EAssetType::Animation:
-			return "SKELETAL ANIMATION";
+			return "SKELETAL ANIM";
 		case EAssetType::Material:
 			return "MATERIAL";
 		case EAssetType::SkeletalMesh:

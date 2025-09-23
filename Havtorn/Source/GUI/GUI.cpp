@@ -47,6 +47,8 @@ namespace Havtorn
 		NE::Utilities::BlueprintNodeBuilder NodeBuilder;
 		ID3D11ShaderResourceView* BlueprintBackgroundSRV = nullptr;
 		ImTextureID BlueprintBackgroundImage = 0;
+		ImFont* PrimaryFont = nullptr;
+		ImFont* SecondaryFont = nullptr;
 
 	public:
 		ImGuiImpl() = default;
@@ -60,7 +62,8 @@ namespace Havtorn
 
 			ImGui::CreateContext();
 			ImGui::DebugCheckVersionAndDataLayout(Version, sizeof(ImGuiIO), sizeof(ImGuiStyle), sizeof(ImVec2), sizeof(ImVec4), sizeof(ImDrawVert), sizeof(ImDrawIdx));
-			ImGui::GetIO().Fonts->AddFontFromFileTTF(DefaultFont, DefaultFontSize);
+			PrimaryFont = ImGui::GetIO().Fonts->AddFontFromFileTTF(DefaultFont, DefaultFontSize);
+			SecondaryFont = ImGui::GetIO().Fonts->AddFontFromFileTTF(DefaultFont, 10.0f);
 			ImGuizmo::SetImGuiContext(ImGui::GetCurrentContext());
 
 			ImGui_ImplWin32_Init(hwnd);
@@ -118,6 +121,21 @@ namespace Havtorn
 		void End()
 		{
 			ImGui::End();
+		}
+
+		void SetSecondaryFontActive(const bool enabled)
+		{
+			enabled ? ImGui::SetCurrentFont(SecondaryFont) : ImGui::SetCurrentFont(PrimaryFont);
+		}
+
+		void PushTextWrapPos(F32 wrapPosX)
+		{
+			ImGui::PushTextWrapPos(wrapPosX);
+		}
+
+		void PopTextWrapPos()
+		{
+			ImGui::PopTextWrapPos();
 		}
 
 		void Text(const char* fmt, va_list args)
@@ -1025,6 +1043,18 @@ namespace Havtorn
 			//ImGui::GetBackgroundDrawList()->
 		}
 
+		void PushClipRect(const SVector2<F32>& cursorPos, const SVector2<F32>& size)
+		{
+			ImVec2 posMin = { cursorPos.X, cursorPos.Y };
+			ImVec2 posMax = { cursorPos.X + size.X, cursorPos.Y + size.Y };
+			ImGui::PushClipRect(posMin, posMax, false);
+		}
+
+		void PopClipRect()
+		{
+			ImGui::PopClipRect();
+		}
+
 		void HighlightPins(const U64* pinIds)
 		{
 			ImDrawList* drawList = ImGui::GetForegroundDrawList();
@@ -1439,6 +1469,21 @@ namespace Havtorn
 	void GUI::End()
 	{
 		Instance->Impl->End();
+	}
+
+	void GUI::SetSecondaryFontActive(const bool enabled)
+	{
+		Instance->Impl->SetSecondaryFontActive(enabled);
+	}
+
+	void GUI::PushTextWrapPos(F32 wrapPosX)
+	{
+		Instance->Impl->PushTextWrapPos(wrapPosX);
+	}
+
+	void GUI::PopTextWrapPos()
+	{
+		Instance->Impl->PopTextWrapPos();
 	}
 
 	void GUI::Text(const char* fmt, ...)
@@ -2025,11 +2070,16 @@ namespace Havtorn
 			result.IsHovered = true;
 		}
 
-		GUI::TextWrapped(label);
+		GUI::PushClipRect(GetCursorScreenPos(), cardSize - framePadding);
+		GUI::Text(label);
 		if (GUI::IsItemHovered())
 			GUI::SetTooltip(label);
 
-		//GUI::TextDisabled(typeName);
+		GUI::OffsetCursorPos(SVector2<F32>(2.0f, -2.0f));
+		GUI::SetSecondaryFontActive(true);
+		GUI::TextDisabled(typeName);
+		GUI::SetSecondaryFontActive(false);
+		GUI::PopClipRect();
 
 		return result;
 	}
@@ -2414,6 +2464,16 @@ namespace Havtorn
 	void GUI::AddRectFilled(const SVector2<F32>& cursorScreenPos, const SVector2<F32>& size, const SColor& color)
 	{
 		Instance->Impl->AddRectFilled(cursorScreenPos, size, color);
+	}
+
+	void GUI::PushClipRect(const SVector2<F32>& cursorPos, const SVector2<F32>& size)
+	{
+		Instance->Impl->PushClipRect(cursorPos, size);
+	}
+
+	void GUI::PopClipRect()
+	{
+		Instance->Impl->PopClipRect();
 	}
 
 	void GUI::SetGuiColorProfile(const SGuiColorProfile& profile)

@@ -766,6 +766,9 @@ namespace Havtorn
 		static bool Begin(const char* name, bool* open = 0, const std::vector<EWindowFlag>& flags = {});
 		static void End();
 
+		static void SetSecondaryFontActive(const bool enabled);
+		static void PushTextWrapPos(F32 wrapPosX);
+		static void PopTextWrapPos();
 		static void Text(const char* fmt, ...);
 		static void TextWrapped(const char* fmt, ...);
 		static void TextDisabled(const char* fmt, ...);
@@ -1013,6 +1016,8 @@ namespace Havtorn
 		static SVector2<F32> GetMousePosition();
 
 		static void AddRectFilled(const SVector2<F32>& cursorPos, const SVector2<F32>& size, const SColor& color);
+		static void PushClipRect(const SVector2<F32>& cursorPos, const SVector2<F32>& size);
+		static void PopClipRect();
 
 		static void SetGuiColorProfile(const SGuiColorProfile& profile);
 		static void SetGuiStyleProfile(const SGuiStyleProfile& profile);
