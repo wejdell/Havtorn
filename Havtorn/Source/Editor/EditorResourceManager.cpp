@@ -238,7 +238,7 @@ namespace Havtorn
 			const EEditorTexture texture = static_cast<EEditorTexture>(index);
 			const std::string assetSubDirectory = "Assets/";
 			const std::string assetPath = GetFileName(texture, ".hva", assetSubDirectory);
-			if (!UFileSystem::DoesFileExist(assetPath))
+			if (!UFileSystem::Exists(assetPath))
 			{
 				const std::string sourcePath = GetFileName(texture, ".dds");
 				SSourceAssetData sourceData;

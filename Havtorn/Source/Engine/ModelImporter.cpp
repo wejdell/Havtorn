@@ -138,7 +138,7 @@ namespace Havtorn
 
 	SAssetFileHeader UModelImporter::ImportFBX(const std::string& filePath, const SSourceAssetData& sourceData)
 	{
-		if (!UFileSystem::DoesFileExist(filePath))
+		if (!UFileSystem::Exists(filePath))
 		{
 			HV_LOG_ERROR("ModelImporter could not import %s. File does not exist!", filePath.c_str());
 			return std::monostate();

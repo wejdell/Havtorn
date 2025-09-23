@@ -309,7 +309,7 @@ namespace Havtorn
 
 	void CEditorManager::CreateAssetRep(const std::filesystem::path& path)
 	{
-		if (!UFileSystem::DoesFileExist(path.string()))
+		if (!UFileSystem::Exists(path.string()))
 		{
 			HV_LOG_ERROR("CEditorManager::CreateAssetRep failed to create an asset representation! File was not found!");
 			return;

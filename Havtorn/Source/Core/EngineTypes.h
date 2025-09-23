@@ -49,6 +49,8 @@ namespace Havtorn
 			return SColor::Red;
 		case EAssetType::Script:
 			return SColor::Blue;
+		case EAssetType::Scene:
+			return SColor::Orange;
 		default:
 			return SColor::White;
 		}
@@ -75,6 +77,8 @@ namespace Havtorn
 			return "TEXTURE";
 		case EAssetType::Script:
 			return "SCRIPT";
+		case EAssetType::Scene:
+			return "SCENE";
 		default:
 			return "ASSET";
 		}

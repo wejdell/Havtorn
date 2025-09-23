@@ -19,10 +19,9 @@ namespace Havtorn
 
 	const std::string UFileSystem::EngineConfig = "Config/EngineConfig.json";
 
-	bool UFileSystem::DoesFileExist(const std::string& filePath)
+	bool UFileSystem::Exists(const std::string& path)
 	{
-		const std::ifstream infile(filePath);
-		return infile.good();
+		return std::filesystem::exists(path);
 	}
 
 	U64 UFileSystem::GetFileSize(const std::string& filePath)
@@ -77,6 +76,16 @@ namespace Havtorn
 			HV_LOG_ERROR("FileSystem encountered an operation error after closing the input stream");
 	}
 
+	void CORE_API UFileSystem::AddDirectory(const std::string& directoryPath)
+	{
+		std::filesystem::create_directories(std::filesystem::path{ directoryPath });
+	}
+
+	void CORE_API UFileSystem::Remove(const std::string& directoryPath)
+	{
+		std::filesystem::remove(std::filesystem::path{ directoryPath });
+	}
+
 	void UFileSystem::IterateThroughFiles(const std::string& root)
 	{		
 		for (const auto& dirEntry : DirectoryIterator(root))
@@ -88,6 +97,22 @@ namespace Havtorn
 			HV_LOG_TRACE("Extension: %s", filePath.Extension().c_str());
 			HV_LOG_TRACE("Path: %s", filePath.GetPath().c_str());
 		}
+	}
+
+	std::vector<std::string> UFileSystem::SplitPath(const std::string& path)
+	{
+		std::vector<std::string> result;
+		std::string agnosticPath = UGeneralUtils::ConvertToPlatformAgnosticPath(path);
+		I64 firstIndex = agnosticPath.find_first_of("/");
+		while (firstIndex != -1)
+		{
+			std::string directory = agnosticPath.substr(0, firstIndex);
+			result.emplace_back(directory);
+
+			firstIndex = agnosticPath.find_first_of("/", result.empty() ? 0 : result.back().size() + 1);
+		}
+
+		return result;
 	}
 
 	CJsonDocument UFileSystem::OpenJson(const std::string& filePath)

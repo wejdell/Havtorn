@@ -14,6 +14,8 @@
 #include <PlatformManager.h>
 #include <Assets/AssetRegistry.h>
 
+#include <../Game/GameScene.h>
+
 namespace Havtorn
 {
 	CAssetBrowserWindow::CAssetBrowserWindow(const char* displayName, CEditorManager* manager)
@@ -117,7 +119,8 @@ namespace Havtorn
 					{
 						std::filesystem::path pathToRemove = directoryEntry.path();
 						Manager->RemoveAssetRep(directoryEntry);
-						std::filesystem::remove(pathToRemove);
+						//std::filesystem::remove(pathToRemove);
+						UFileSystem::Remove(pathToRemove.string());
 					}
 
 					// TODO.NW: It would be nice with some sort of attribute to check
@@ -363,22 +366,6 @@ namespace Havtorn
 
 
 		AssetTypeToCreate = GUI::ComboEnum("Asset Type", AssetTypeToCreate);
-		//GUI::SliderEnum("Asset Type", AssetTypeToCreate, 
-		//{
-		//"None",
-		//"StaticMesh (Not Supported Yet)",
-		//"SkeletalMesh (Not Supported Yet)",
-		//"Texture (Not Supported Yet)",
-		//"Material",
-		//"Animation (Not Supported Yet)",
-		//"SpriteAnimation (Not Supported Yet)",
-		//"AudioOneShot (Not Supported Yet)",
-		//"AudioCollection (Not Supported Yet)",
-		//"VisualFX (Not Supported Yet)",
-		//"Scene (Not Supported Yet)",
-		//"Sequencer (Not Supported Yet)",
-		//"Script"
-		//	});
 
 		if (AssetTypeToCreate == EAssetType::None)
 			AssetTypeToCreate = EAssetType::StaticMesh;
@@ -409,6 +396,9 @@ namespace Havtorn
 			{
 			case EAssetType::Script:
 				NewAssetFileHeader = CreateScript();
+				break;
+			case EAssetType::Scene:
+				NewAssetFileHeader = CreateScene();
 				break;
 			default:
 				break;
@@ -538,6 +528,28 @@ namespace Havtorn
 		fileHeader.AssetType = EAssetType::Script;
 		fileHeader.Name = NewAssetName;
 		fileHeader.Script = new HexRune::SScript();
+		return fileHeader;
+	}
+
+	SAssetFileHeader CAssetBrowserWindow::CreateScene()
+	{
+		SSceneFileHeader fileHeader = SSceneFileHeader{};
+		fileHeader.AssetType = EAssetType::Scene;
+		fileHeader.UID = 0;
+
+		CWorld* world = GEngine::GetWorld();
+		world->ClearScenes();
+		world->CreateScene<CGameScene>();
+		if (world->GetActiveScenes().size() > 0)
+		{
+			CScene* activeScene = world->GetActiveScenes()[0].get();
+			activeScene->Init(NewAssetName);
+			activeScene->Init3DDefaults();
+			Manager->SetCurrentScene(activeScene);
+
+			fileHeader.Scene = activeScene;
+		}
+
 		return fileHeader;
 	}
 

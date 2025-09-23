@@ -188,12 +188,12 @@ namespace Havtorn
     bool CAssetRegistry::LoadAsset(const SAssetReference& assetRef)
     {
         std::string filePath = assetRef.FilePath;
-        if (!UFileSystem::DoesFileExist(filePath))
+        if (!UFileSystem::Exists(filePath))
         {
             CJsonDocument config = UFileSystem::OpenJson(UFileSystem::EngineConfig);
             std::string redirection = config.GetValueFromArray("Asset Redirectors", filePath, "");
             
-            while (!UFileSystem::DoesFileExist(redirection) && redirection != "")
+            while (!UFileSystem::Exists(redirection) && redirection != "")
             {
                 redirection = config.GetValueFromArray("Asset Redirectors", redirection, "");
             } 
@@ -444,6 +444,13 @@ namespace Havtorn
         // TODO.NW: See if we can make char stream we can then convert to data buffer,
         // so as to not repeat the logic for every case
 
+        std::vector<std::string> paths = UFileSystem::SplitPath(destinationPath);
+        for (std::string& path : paths)
+        {
+            if (!UFileSystem::Exists(path))
+                UFileSystem::AddDirectory(path);
+        }
+
         std::string hvaPath = "INVALID_PATH";
         if (std::holds_alternative<SStaticModelFileHeader>(fileHeader))
         {
@@ -499,6 +506,16 @@ namespace Havtorn
             UFileSystem::Serialize(hvaPath, &data[0], header.GetSize());
             delete[] data;
         }
+        else if (std::holds_alternative<SSceneFileHeader>(fileHeader))
+        {
+            SSceneFileHeader header = std::get<SSceneFileHeader>(fileHeader);
+            const auto data = new char[header.GetSize()];
+            U64 pointerPosition = 0;
+            header.Serialize(data, pointerPosition);
+            hvaPath = destinationPath + header.Scene->GetSceneName() + ".hva";
+            UFileSystem::Serialize(hvaPath, &data[0], header.GetSize());
+            delete[] data;
+        }
 
         if (hvaPath == "INVALID_PATH")
             HV_LOG_WARN("CAssetRegistry::SaveAsset: The chosen file header had no serialization implemented. Could not create asset at %s!", destinationPath.c_str());
@@ -534,12 +551,12 @@ namespace Havtorn
 
             // TODO.NW: Make function of this, following the trail of redirection
             SAssetReference assetRef = SAssetReference(entry.path().string());
-            if (!UFileSystem::DoesFileExist(assetRef.FilePath))
+            if (!UFileSystem::Exists(assetRef.FilePath))
             {
                 CJsonDocument config = UFileSystem::OpenJson(UFileSystem::EngineConfig);
                 std::string redirection = config.GetValueFromArray("Asset Redirectors", assetRef.FilePath, "");
 
-                while (!UFileSystem::DoesFileExist(redirection) && redirection != "")
+                while (!UFileSystem::Exists(redirection) && redirection != "")
                 {
                     redirection = config.GetValueFromArray("Asset Redirectors", redirection, "");
                 }
@@ -564,12 +581,12 @@ namespace Havtorn
                 continue;
             }
 
-            if (!UFileSystem::DoesFileExist(dependencyPath))
+            if (!UFileSystem::Exists(dependencyPath))
             {
                 CJsonDocument config = UFileSystem::OpenJson(UFileSystem::EngineConfig);
                 std::string redirection = config.GetValueFromArray("Asset Redirectors", dependencyPath, "");
 
-                while (!UFileSystem::DoesFileExist(redirection) && redirection != "")
+                while (!UFileSystem::Exists(redirection) && redirection != "")
                 {
                     redirection = config.GetValueFromArray("Asset Redirectors", redirection, "");
                 }
@@ -618,7 +635,7 @@ namespace Havtorn
             return;
         }
 
-        if (!UFileSystem::DoesFileExist(sourcePath))
+        if (!UFileSystem::Exists(sourcePath))
         {
             UnrequestAsset(assetRef, AssetRegistryRequestID);
             return;
@@ -646,7 +663,7 @@ namespace Havtorn
             return;
         }
 
-        if (!UFileSystem::DoesFileExist(sourcePath))
+        if (!UFileSystem::Exists(sourcePath))
         {
             UnrequestAsset(assetRef, AssetRegistryRequestID);
             return;

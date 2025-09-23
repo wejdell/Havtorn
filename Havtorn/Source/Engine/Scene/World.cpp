@@ -166,6 +166,12 @@ namespace Havtorn
 		Scenes.pop_back();
 	}
 
+	void CWorld::ClearScenes()
+	{
+		// TODO.NW: Figure out mechanism for checking if scenes may close?
+		Scenes.clear();
+	}
+
 	void CWorld::UnrequestSystems(void* requester)
 	{
 		for (SSystemData& data : SystemData)
