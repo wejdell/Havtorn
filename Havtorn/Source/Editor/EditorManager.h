@@ -145,6 +145,7 @@ namespace Havtorn
 		void OnInputToggleFreeCam(const SInputActionPayload payload);
 		void OnInputFocusSelection(const SInputActionPayload payload);
 		void OnDeleteEvent(const SInputActionPayload payload);
+		void OnToggleFullscreen(const SInputActionPayload payload);
 
 		void OnResolutionChanged(SVector2<U16> newResolution);
 		void OnBeginPlay(CScene* scene);
@@ -183,6 +184,7 @@ namespace Havtorn
 		bool IsDemoOpen = false;
 		bool IsFreeCamActive = false;
 		bool IsModalOpen = false;
+		bool IsFullscreen = false;
 	};
 
 	template<class TEditorWindowType>

@@ -79,6 +79,9 @@ namespace Havtorn
 		const SInputAction deleteAction = { EInputKey::Delete, EInputContext::Editor };
 		MapEvent(EInputActionEvent::DeleteEvent, deleteAction);
 
+		const SInputAction toggleFullscreen = { EInputKey::F11, EInputContext::Editor };
+		MapEvent(EInputActionEvent::ToggleFullscreen, toggleFullscreen);
+
 		return true;
 	}
 

@@ -146,6 +146,7 @@ namespace Havtorn
 		ShiftPickEditorEntity,
 		FocusEditorEntity,
 		DeleteEvent,
+		ToggleFullscreen,
 		Count
 	};
 

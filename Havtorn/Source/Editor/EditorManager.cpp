@@ -41,6 +41,7 @@ namespace Havtorn
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ToggleFreeCam).AddMember(this, &CEditorManager::OnInputToggleFreeCam);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::FocusEditorEntity).AddMember(this, &CEditorManager::OnInputFocusSelection);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::DeleteEvent).AddMember(this, &CEditorManager::OnDeleteEvent);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ToggleFullscreen).AddMember(this, &CEditorManager::OnToggleFullscreen);
 	}
 
 	CEditorManager::~CEditorManager()
@@ -104,6 +105,9 @@ namespace Havtorn
 
 	void CEditorManager::Render()
 	{
+		if (IsFullscreen)
+			return;
+
 		bool isHoveringMenuBarButton = false;
 
 		// Main Menu bar
@@ -733,6 +737,12 @@ namespace Havtorn
 			CurrentScene->RemoveEntity(selectedEntity);
 		
 		ClearSelectedEntities();
+	}
+
+	void CEditorManager::OnToggleFullscreen(const SInputActionPayload payload)
+	{
+		if (payload.IsPressed)
+			IsFullscreen = !IsFullscreen;
 	}
 
 	void CEditorManager::OnResolutionChanged(SVector2<U16> newResolution)
