@@ -165,7 +165,9 @@ namespace Havtorn
 		// delta matrix one frame later on all the other entities. This probably doesn't matter in editor.
 		if (viewedTransformComp->Owner == Manager->GetSelectedEntities().back())
 		{
-			GUI::GizmoManipulate(inverseView.data, cameraComp->ProjectionMatrix.data, Manager->GetCurrentGizmo(), ETransformGizmoSpace::World, transformMatrix.data, DeltaMatrix.data, NULL);
+			SVector gizmoSnapping = Manager->GetCurrentGizmoSnapping().Snapping;
+			F32 snappingData[] = { gizmoSnapping.X, gizmoSnapping.Y, gizmoSnapping.Z };
+			GUI::GizmoManipulate(inverseView.data, cameraComp->ProjectionMatrix.data, Manager->GetCurrentGizmo(), Manager->GetCurrentGizmoSpace(), transformMatrix.data, DeltaMatrix.data, snappingData);
 		}
 		else
 		{

@@ -780,6 +780,16 @@ namespace Havtorn
 		return CurrentGizmo;
 	}
 
+	ETransformGizmoSpace CEditorManager::GetCurrentGizmoSpace() const
+	{
+		return CurrentGizmoSpace;
+	}
+
+	const SSnappingOption& CEditorManager::GetCurrentGizmoSnapping() const
+	{
+		return CurrentGizmoSnapping;
+	}
+
 	bool CEditorManager::GetIsFreeCamActive() const
 	{
 		return IsFreeCamActive;
@@ -793,6 +803,16 @@ namespace Havtorn
 	bool CEditorManager::GetIsModalOpen() const
 	{
 		return IsModalOpen;
+	}
+
+	void CEditorManager::SetGizmoSpace(const ETransformGizmoSpace space)
+	{
+		CurrentGizmoSpace = space;
+	}
+
+	void CEditorManager::SetGizmoSnapping(const SSnappingOption& snapping)
+	{
+		CurrentGizmoSnapping = snapping;
 	}
 
 	void CEditorManager::SetIsModalOpen(const bool isModalOpen)
