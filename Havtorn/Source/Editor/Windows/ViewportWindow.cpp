@@ -19,6 +19,12 @@ namespace Havtorn
 		: CWindow(displayName, manager)
 		, RenderedSceneTextureReference(nullptr)
 	{
+		SnappingOptions.push_back({});
+		SnappingOptions.emplace_back(SVector(0.01f), "0.01");
+		SnappingOptions.emplace_back(SVector(0.05f), "0.05");
+		SnappingOptions.emplace_back(SVector(0.1f), "0.1");
+		SnappingOptions.emplace_back(SVector(0.5f), "0.5");
+		SnappingOptions.emplace_back(SVector(1.0f), "1.0");
 	}
 
 	CViewportWindow::~CViewportWindow()
@@ -39,9 +45,11 @@ namespace Havtorn
 		GUI::PushStyleVar(EStyleVar::WindowPadding, SVector2<F32>(0.0f));
 		GUI::PushStyleVar(EStyleVar::ItemSpacing, SVector2<F32>(0.0f));
 
-		intptr_t playButtonID = (intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::PlayIcon).GetShaderResourceView();
-		intptr_t pauseButtonID = (intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::PauseIcon).GetShaderResourceView();
-		intptr_t stopButtonID = (intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::StopIcon).GetShaderResourceView();
+		const CEditorResourceManager* resourceManager = Manager->GetResourceManager();
+		intptr_t playButtonID = (intptr_t)resourceManager->GetEditorTexture(EEditorTexture::PlayIcon).GetShaderResourceView();
+		intptr_t pauseButtonID = (intptr_t)resourceManager->GetEditorTexture(EEditorTexture::PauseIcon).GetShaderResourceView();
+		intptr_t stopButtonID = (intptr_t)resourceManager->GetEditorTexture(EEditorTexture::StopIcon).GetShaderResourceView();
+		intptr_t settingsButtonID = (intptr_t)resourceManager->GetEditorTexture(EEditorTexture::EnvironmentLightIcon).GetShaderResourceView();
 
 		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
 		{
@@ -51,13 +59,54 @@ namespace Havtorn
 			buttonData.push_back({ [&]() { if (GEngine::GetWorld()->PausePlay()) { IsPlayButtonEngaged = false; IsPauseButtonEngaged = true; } }, pauseButtonID, IsPauseButtonEngaged });
 			buttonData.push_back({ [&]() { if (GEngine::GetWorld()->StopPlay()) { IsPlayButtonEngaged = false; IsPauseButtonEngaged = false; } }, stopButtonID, false });
 			GUI::AddViewportButtons(buttonData, buttonSize, layout.ViewportSize.X);
-
+			
 			// TODO.NW: Fix size of this button
 			GUI::SameLine(layout.ViewportSize.X * 0.5f - 8.0f + 64.0f);
 			std::string playDimensionLabel = GEngine::GetWorld()->GetWorldPlayDimensions() == EWorldPlayDimensions::World3D ? "3D" : "2D";
 			if (GUI::Button(playDimensionLabel.c_str(), buttonSize + GUI::GetStyleVar(EStyleVar::FramePadding) * 2.0f))
 			{
 				GEngine::GetWorld()->ToggleWorldPlayDimensions();
+			}
+
+			GUI::SameLine(layout.ViewportSize.X * 0.5f - 8.0f + 96.0f);
+			if (GUI::ImageButton("ViewportSettingsButton", settingsButtonID, buttonSize))
+				GUI::OpenPopup("ViewportSettings");
+
+			if (GUI::BeginPopup("ViewportSettings")) 
+			{
+				auto spaceLabels = magic_enum::enum_names<ETransformGizmoSpace>();
+				auto currentLabel = magic_enum::enum_name(Manager->GetCurrentGizmoSpace());
+				if (GUI::BeginCombo("Gizmo Space", currentLabel.data()))
+				{
+					for (auto label : spaceLabels)
+					{
+						bool isSelected = label == currentLabel;
+						if (GUI::Selectable(label.data(), isSelected))
+							Manager->SetGizmoSpace(magic_enum::enum_cast<ETransformGizmoSpace>(label).value());
+
+						if (isSelected)
+							GUI::SetItemDefaultFocus();
+					}
+					GUI::EndCombo();
+				}
+
+				// TODO.NW: Maybe we'd like to place this somewhere else?
+				SSnappingOption currentSnapping = Manager->GetCurrentGizmoSnapping();
+				if (GUI::BeginCombo("Snapping", currentSnapping.Label.c_str()))
+				{
+					for (auto& option : SnappingOptions)
+					{
+						bool isSelected = option == currentSnapping;
+						if (GUI::Selectable(option.Label.c_str(), isSelected))
+							Manager->SetGizmoSnapping(option);
+
+						if (isSelected)
+							GUI::SetItemDefaultFocus();
+					}
+					GUI::EndCombo();
+				}
+
+				GUI::EndPopup();
 			}
 
 			RenderedSceneTextureReference = &(Manager->GetRenderManager()->GetRenderedSceneTexture(0));

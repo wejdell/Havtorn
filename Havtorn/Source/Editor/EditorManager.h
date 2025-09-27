@@ -26,6 +26,13 @@ namespace Havtorn
 	class CWindow;
 	class CToggleable;
 
+	struct SSnappingOption
+	{
+		SVector Snapping = SVector::Zero;
+		std::string Label = "No Snapping";
+		auto operator<=>(const SSnappingOption& other) const = default;
+	};
+
 	enum class EEditorColorTheme
 	{
 		DefaultDark,
@@ -99,7 +106,6 @@ namespace Havtorn
 		DirEntryFunc GetAssetInspectFunction() const;
 		DirEntryEAssetTypeFunc GetAssetFilteredInspectFunction() const;
 
-
 		void CreateAssetRep(const std::filesystem::path& destinationPath);
 		void RemoveAssetRep(const std::filesystem::directory_entry& sourceEntry);
 
@@ -111,9 +117,14 @@ namespace Havtorn
 		[[nodiscard]] const SEditorLayout& GetEditorLayout() const;
 
 		[[nodiscard]] ETransformGizmo GetCurrentGizmo() const;
+		[[nodiscard]] ETransformGizmoSpace GetCurrentGizmoSpace() const;
+		[[nodiscard]] const SSnappingOption& GetCurrentGizmoSnapping() const;
 		[[nodiscard]] bool GetIsFreeCamActive() const;
 		[[nodiscard]] bool GetIsOverGizmo() const;
 		[[nodiscard]] bool GetIsModalOpen() const;
+
+		void SetGizmoSpace(const ETransformGizmoSpace space);
+		void SetGizmoSnapping(const SSnappingOption& snapping);
 
 		void SetIsModalOpen(const bool isModalOpen);
 
@@ -165,7 +176,6 @@ namespace Havtorn
 		CScene* CurrentScene = nullptr;
 		std::vector<SEntity> SelectedEntities = {};
 
-		// TODO.NR: Figure out why we can't use unique ptrs with these namespaced classes
 		std::vector<Ptr<CWindow>> Windows;
 		std::vector<Ptr<CToggleable>> MenuElements;
 		std::vector<Ptr<SEditorAssetRepresentation>> AssetRepresentations = {};
@@ -177,6 +187,8 @@ namespace Havtorn
 		EEditorColorTheme CachedColorTheme = EEditorColorTheme::HavtornDark;
 
 		ETransformGizmo CurrentGizmo = ETransformGizmo::Translate;
+		ETransformGizmoSpace CurrentGizmoSpace = ETransformGizmoSpace::World;
+		SSnappingOption CurrentGizmoSnapping = {};
 
 		F32 ViewportPadding = 0.2f;
 		bool IsEnabled = true;
