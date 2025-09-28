@@ -18,6 +18,7 @@ namespace Havtorn
 
 		bool Init(CPlatformManager* platformManager) override;
 
+		void OnApplicationReady();
 		void BeginFrame() override;
 		void PreUpdate() override;
 		void Update() override;

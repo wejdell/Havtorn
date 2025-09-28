@@ -33,6 +33,11 @@ namespace Havtorn
 		return PlatformManager->Init(windowData);
 	}
 
+	void CPlatformProcess::OnApplicationReady()
+	{
+		PlatformManager->CloseSplashWindow();
+	}
+
 	void CPlatformProcess::BeginFrame()
 	{
 		//PlatformManager->BeginFrame();

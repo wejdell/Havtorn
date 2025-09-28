@@ -65,7 +65,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	lpCmdLine;
 	nShowCmd;
 
-#ifdef HV_DEEPLINK_ENALBED
+#ifdef HV_DEEPLINK_ENABLED
 	// Note.AS:
 	// Overrides CurrentDirectory to be as if you started this application from the exe's location- which is not true when deeplink-starting this executable
 	wchar_t wideExePath[255];
@@ -80,8 +80,6 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 		return 0;
 	}
 #endif
-
-
 
 #ifdef USE_CONSOLE
 	OpenConsole();
@@ -109,6 +107,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	editorProcess->Init(platformProcess->PlatformManager);
 	//application->Setup(platformProcess->PlatformManager); //foreach -> process->Init();
 
+	platformProcess->OnApplicationReady();
 	application->Run();
 
 	delete application;

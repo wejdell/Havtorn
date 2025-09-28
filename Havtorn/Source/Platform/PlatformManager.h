@@ -8,6 +8,8 @@
 #include <HavtornDelegate.h>
 #include <functional>
 
+#include <wincodec.h>
+
 namespace Havtorn
 {
 	class CPlatformManager
@@ -37,9 +39,10 @@ namespace Havtorn
 		PLATFORM_API void UpdateWindow(const SVector2<I16>& windowPos, const SVector2<U16>& resolution);
 		PLATFORM_API void UpdateRelativeCursorToWindowPos();
 		PLATFORM_API void UpdateWindowPos();
-		PLATFORM_API void MinimizeWindow();
+		PLATFORM_API void MinimizeWindow() const;
 		PLATFORM_API void MaximizeWindow();
 		PLATFORM_API void CloseWindow();
+		PLATFORM_API void CloseSplashWindow();
 
 	public:
 		// TODO.NW: Try figure out if we can bind to and bool returns instead
@@ -54,7 +57,6 @@ namespace Havtorn
 		~CPlatformManager();
 
 		bool Init(SWindowData windowData);
-		void SetWindowTitle(const std::string& title);
 
 		const bool CursorLocked() const;
 
@@ -65,11 +67,20 @@ namespace Havtorn
 		PLATFORM_API void ShowAndUnlockCursor(const bool& isInEditorMode = true);
 
 	private:
+		// Splash Utils
 		void InitWindowsImaging();
+		HBITMAP LoadSplashImage();
+		IStream* CreateStreamOnResource(LPCTSTR lpName, LPCTSTR lpType);
+		IWICBitmapSource* LoadBitmapFromStream(IStream* ipImageStream);
+		HBITMAP CreateBitmap(IWICBitmapSource* ipBitmap);
+		void RegisterSplashWindowClass();
+		HWND CreateSplashWindow();
+		void SetSplashImage(HWND hwndSplash, HBITMAP splashBitmap);
 
 	private:
 		CPlatformManager::SWindowData WindowData = {};
 		HWND WindowHandle = 0;
+		HWND SplashHandle = 0;
 
 		SVector2<U16> Resolution = {};
 		SVector2<U16> PreviousResolution = {};
@@ -87,5 +98,9 @@ namespace Havtorn
 		bool IsFullscreen = false;
 
 		SVector2<U16> ResizeTarget = {};
+
+		const char* HavtornWindowClass = "HavtornWindow";
+		const TCHAR* LHavtornWindowClass = TEXT("HavtornWindow");
+		const TCHAR* SplashScreenWindowClass = TEXT("SplashWindow");
 	};
 }

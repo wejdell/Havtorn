@@ -3,12 +3,18 @@
 #include <hvpch.h>
 
 #include "PlatformManager.h"
+#include "resource.h"
 
 #include <string>
 #include <vector>
 
 #include <Log.h>
 #include <FileSystem.h>
+
+#include <wincodec.h>
+#include <roapi.h>
+#pragma comment(lib, "runtimeobject")
+#pragma comment(lib, "windowscodecs")
 
 namespace Havtorn
 {
@@ -108,7 +114,7 @@ namespace Havtorn
 				// Grab the name of the file associated with index "i" in the list of files dropped.
 				// Be sure you know that the name is attached to the FULL path of the file.
 				DragQueryFile(hDrop, static_cast<UINT>(i), szName, MAX_PATH);
-				char file[MAX_PATH];
+				char file[MAX_PATH] = {};
 				for (I64 index = 0; index < MAX_PATH; index++)
 					file[index] = static_cast<char>(szName[index]);
 
@@ -164,11 +170,17 @@ namespace Havtorn
 		CursorIsLocked = false;
 		WindowIsInEditingMode = false;
 		WindowHandle = 0;
-		UnregisterClass(L"HavtornWindowClass", GetModuleHandle(nullptr));
+		UnregisterClass(LHavtornWindowClass, GetModuleHandle(nullptr));
+		UnregisterClass(SplashScreenWindowClass, GetModuleHandle(TEXT("Platform")));
 	}
 
 	bool CPlatformManager::Init(CPlatformManager::SWindowData windowData)
 	{
+		InitWindowsImaging();
+		RegisterSplashWindowClass();
+		SplashHandle = CreateSplashWindow();
+		SetSplashImage(SplashHandle, LoadSplashImage());
+
 		WindowData = windowData;
 
 		CJsonDocument document = UFileSystem::OpenJson("Config/EngineConfig.json");
@@ -180,6 +192,7 @@ namespace Havtorn
 		//if (customCursor == NULL)
 		//    customCursor = LoadCursor(nullptr, IDC_ARROW);
 
+		// TODO.NW: Use LoadImage instead?
 		HICON customIcon = (HICON)LoadImageA(NULL, document.GetString("Icon Path", "Resources/HavtornIcon.ico").c_str(), IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
 
 		WNDCLASSEX windowclass = {};
@@ -191,7 +204,7 @@ namespace Havtorn
 		windowclass.hInstance = GetModuleHandle(nullptr);
 		windowclass.hIcon = customIcon;
 		//windowclass.hCursor = customCursor;
-		windowclass.lpszClassName = L"HavtornWindowClass";
+		windowclass.lpszClassName = LHavtornWindowClass;
 		RegisterClassEx(&windowclass);
 
 		std::string gameName = document.GetString("Game Name", "Havtorn Editor");
@@ -201,13 +214,13 @@ namespace Havtorn
 		{
 #ifdef _DEBUG
 			// Start in borderless
-			WindowHandle = CreateWindowA("HavtornWindowClass", gameName.c_str(),
+			WindowHandle = CreateWindowA(HavtornWindowClass, gameName.c_str(),
 				WS_POPUP | WS_VISIBLE,
 				0, 0, WindowData.Width, WindowData.Height,
 				NULL, NULL, GetModuleHandle(nullptr), this);
 #else
 			// Start in borderless
-			WindowHandle = CreateWindowA("HavtornWindowClass", gameName.c_str(),
+			WindowHandle = CreateWindowA(HavtornWindowClass, gameName.c_str(),
 				WS_POPUP | WS_VISIBLE,
 				0, 0, MaxResX, MaxResY,
 				NULL, NULL, GetModuleHandle(nullptr), this);
@@ -216,7 +229,7 @@ namespace Havtorn
 		else
 		{
 			// Start in bordered window
-			WindowHandle = CreateWindowA("HavtornWindowClass", gameName.c_str(),
+			WindowHandle = CreateWindowA(HavtornWindowClass, gameName.c_str(),
 				/*WS_OVERLAPPEDWINDOW | */WS_POPUP | WS_VISIBLE,
 				WindowData.X, WindowData.Y, WindowData.Width, WindowData.Height,
 				nullptr, nullptr, nullptr, this);
@@ -228,8 +241,6 @@ namespace Havtorn
 		ResizeTarget = {};
 
 		EnableDragDrop();
-
-		InitWindowsImaging();
 
 		return true;
 	}
@@ -265,19 +276,206 @@ namespace Havtorn
 		return Resolution;
 	}
 
+	HBITMAP CPlatformManager::LoadSplashImage()
+	{
+		HBITMAP bitmapSplash = NULL;
+
+		IStream* imageStream = CreateStreamOnResource(MAKEINTRESOURCE(IDB_PNG1), __TEXT("PNG"));
+		if (imageStream == NULL)
+			return NULL;
+
+		IWICBitmapSource* bitmapSource = LoadBitmapFromStream(imageStream);
+		if (bitmapSource == NULL)
+		{
+			imageStream->Release();
+			return NULL;
+		}
+
+		bitmapSplash = CreateBitmap(bitmapSource);
+		bitmapSource->Release();
+		imageStream->Release();
+		return bitmapSplash;
+	}
+
 	void CPlatformManager::InitWindowsImaging()
 	{
-//#if (_WIN32_WINNT >= 0x0A00 /*_WIN32_WINNT_WIN10*/)
+//#if (_WIN32_WINNT >= _WIN32_WINNT_WIN10)
 //		Microsoft::WRL::Wrappers::RoInitializeWrapper initialize(RO_INIT_MULTITHREADED);
 //		if (FAILED(initialize))
-//			// error
+//			HV_LOG_ERROR("Windows Imaging could not be initialized");
 //
 //#else
-//		HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
-//		if (FAILED(hr))
-//			// error
+		HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+		if (FAILED(hr))
+			HV_LOG_ERROR("Windows Imaging could not be initialized");
 //#endif
-			return;
+	}
+
+	IStream* CPlatformManager::CreateStreamOnResource(LPCTSTR resourceName, LPCTSTR resourceType)
+	{
+		HMODULE platformModule = GetModuleHandle(TEXT("Platform"));
+		HRSRC resource = FindResource(platformModule, resourceName, resourceType);
+		if (resource == NULL)
+			return NULL;
+
+		DWORD resourceSize = SizeofResource(platformModule, resource);
+		HGLOBAL imageGlobal = LoadResource(platformModule, resource);
+		if (imageGlobal == NULL)
+			return NULL;
+
+		LPVOID sourceResourcePointer = LockResource(imageGlobal);
+		if (sourceResourcePointer == NULL)
+			return NULL;
+
+		HGLOBAL resourceData = GlobalAlloc(GMEM_MOVEABLE, resourceSize);
+		if (resourceData == NULL)
+			return NULL;
+
+		LPVOID resourceDataPointer = GlobalLock(resourceData);
+		if (resourceDataPointer == NULL)
+		{
+			GlobalFree(resourceData);
+			return NULL;
+		}
+
+		CopyMemory(resourceDataPointer, sourceResourcePointer, resourceSize);
+		GlobalUnlock(resourceData);
+		
+		IStream* imageStream = NULL;
+		if (SUCCEEDED(CreateStreamOnHGlobal(resourceData, TRUE, &imageStream)))
+			return imageStream;
+
+		return imageStream;
+	}
+
+	IWICBitmapSource* CPlatformManager::LoadBitmapFromStream(IStream* imageStream)
+	{
+		IWICBitmapDecoder* decoder = NULL;
+		HRESULT result = CoCreateInstance(CLSID_WICPngDecoder, NULL, CLSCTX_INPROC_SERVER, __uuidof(decoder), reinterpret_cast<void**>(&decoder));
+		if (FAILED(result))
+			return NULL;
+
+		if (FAILED(decoder->Initialize(imageStream, WICDecodeMetadataCacheOnLoad)))
+		{
+			decoder->Release();
+			return NULL;
+		}
+
+		UINT frameCount = 0;
+		if (FAILED(decoder->GetFrameCount(&frameCount)) || frameCount != 1)
+		{
+			decoder->Release();
+			return NULL;
+		}
+
+		IWICBitmapFrameDecode* bitmapFrame = NULL;
+		if (FAILED(decoder->GetFrame(0, &bitmapFrame)))
+		{
+			decoder->Release();
+			return NULL;
+		}
+
+		IWICBitmapSource* bitmapSource = NULL;
+		WICConvertBitmapSource(GUID_WICPixelFormat32bppPBGRA, bitmapFrame, &bitmapSource);
+		bitmapFrame->Release();
+		decoder->Release();
+		return bitmapSource;
+	}
+
+	HBITMAP CPlatformManager::CreateBitmap(IWICBitmapSource* bitmapSource)
+	{
+		UINT width = 0;
+		UINT height = 0;
+		if (FAILED(bitmapSource->GetSize(&width, &height)) || width == 0 || height == 0)
+			return NULL;
+
+		BITMAPINFO bitmapInfo;
+		ZeroMemory(&bitmapInfo, sizeof(bitmapInfo));
+		bitmapInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+		bitmapInfo.bmiHeader.biWidth = width;
+		bitmapInfo.bmiHeader.biHeight = -((LONG)height);
+		bitmapInfo.bmiHeader.biPlanes = 1;
+		bitmapInfo.bmiHeader.biBitCount = 32;
+		bitmapInfo.bmiHeader.biCompression = BI_RGB;
+
+		HBITMAP bitmap = NULL;
+		void* imageBits = NULL;
+		HDC hdcScreen = GetDC(NULL);
+		bitmap = CreateDIBSection(hdcScreen, &bitmapInfo, DIB_RGB_COLORS, &imageBits, NULL, 0);
+		ReleaseDC(NULL, hdcScreen);
+		if (bitmap == NULL)
+			return NULL;
+
+		const UINT stride = width * 4;
+		const UINT image = stride * height;
+		if (FAILED(bitmapSource->CopyPixels(NULL, stride, image, static_cast<BYTE*>(imageBits))))
+		{
+			DeleteObject(bitmap);
+			bitmap = NULL;
+		}
+
+		return bitmap;
+	}
+
+	void CPlatformManager::RegisterSplashWindowClass()
+	{
+		HINSTANCE instance = GetModuleHandle(nullptr);
+		WNDCLASS windowClass = { 0 };
+		windowClass.lpfnWndProc = DefWindowProc;
+		windowClass.hInstance = instance;
+		windowClass.hIcon = LoadIcon(instance, MAKEINTRESOURCE(IDI_ICON1));
+		windowClass.hCursor = LoadCursor(instance, IDC_ARROW);
+		windowClass.lpszClassName = SplashScreenWindowClass;
+		RegisterClass(&windowClass);
+	}
+
+	HWND CPlatformManager::CreateSplashWindow()
+	{
+		// NW: Invisible owner window so the splash shows up when alt+tabbing, but not in the taskbar. 
+		// To make it appear in the taskbar, we can drop the owner window. 
+		// If we don't want it anywhere, we could use the WS_EX_TOOLWINDOW extended window style.
+		
+		HINSTANCE instance = GetModuleHandle(nullptr);
+		HWND ownerHandle = CreateWindow(SplashScreenWindowClass, NULL, WS_POPUP, 0, 0, 0, 0, NULL, NULL, instance, NULL);
+		return CreateWindowEx(WS_EX_LAYERED, SplashScreenWindowClass, NULL, WS_POPUP | WS_VISIBLE, 0, 0, 0, 0, ownerHandle, NULL, instance, NULL);
+	}
+
+	void CPlatformManager::SetSplashImage(HWND hwndSplash, HBITMAP splashBitmap)
+	{
+		BITMAP bitmapData;
+		GetObject(splashBitmap, sizeof(bitmapData), &bitmapData);
+		SIZE sizeSplash = { bitmapData.bmWidth, bitmapData.bmHeight };
+
+		POINT zeroPoint = { 0 };
+		HMONITOR primaryMonitor = MonitorFromPoint(zeroPoint, MONITOR_DEFAULTTOPRIMARY);
+		MONITORINFO monitorInfo = { 0 };
+		monitorInfo.cbSize = sizeof(monitorInfo);
+		GetMonitorInfo(primaryMonitor, &monitorInfo);
+
+		RECT monitorRect = monitorInfo.rcWork;
+		POINT splashOrigin;
+		splashOrigin.x = monitorRect.left + (monitorRect.right - monitorRect.left - sizeSplash.cx) / 2;
+		splashOrigin.y = monitorRect.top + (monitorRect.bottom - monitorRect.top - sizeSplash.cy) / 2;
+
+		HDC hdcScreen = GetDC(NULL);
+		HDC hdcMem = CreateCompatibleDC(hdcScreen);
+		HBITMAP bitmapOld = (HBITMAP)SelectObject(hdcMem, splashBitmap);
+
+		BLENDFUNCTION blend = { 0 };
+		blend.BlendOp = AC_SRC_OVER;
+		blend.SourceConstantAlpha = 255;
+		blend.AlphaFormat = AC_SRC_ALPHA;
+
+		RECT splashRect = { 0, 0, sizeSplash.cx, sizeSplash.cy };
+		SetTextColor(hdcMem, RGB(20, 20, 20));
+		SetBkMode(hdcMem, TRANSPARENT);
+		DrawText(hdcMem, TEXT("Getting things ready..."), -1, &splashRect, DT_BOTTOM | DT_LEFT | DT_SINGLELINE);
+
+		UpdateLayeredWindow(hwndSplash, hdcScreen, &splashOrigin, &sizeSplash, hdcMem, &zeroPoint, RGB(0, 0, 0), &blend, ULW_ALPHA);
+
+		SelectObject(hdcMem, bitmapOld);
+		DeleteDC(hdcMem);
+		ReleaseDC(NULL, hdcScreen);
 	}
 
 	const bool CPlatformManager::CursorLocked() const
@@ -340,11 +538,6 @@ namespace Havtorn
 		}
 	}
 
-	void CPlatformManager::SetWindowTitle(const std::string& title)
-	{
-		SetWindowTextA(WindowHandle, title.c_str());
-	}
-
 	void CPlatformManager::EnableDragDrop() const
 	{
 		DragAcceptFiles(WindowHandle, TRUE);
@@ -404,7 +597,7 @@ namespace Havtorn
 		UpdateWindow(newPos, newResolution);
 	}
 
-	void CPlatformManager::MinimizeWindow()
+	void CPlatformManager::MinimizeWindow() const
 	{
 		PostMessage(WindowHandle, WM_SYSCOMMAND, SC_MINIMIZE, 0);
 	}
@@ -420,5 +613,10 @@ namespace Havtorn
 	void CPlatformManager::CloseWindow()
 	{
 		PostMessage(WindowHandle, WM_SYSCOMMAND, SC_CLOSE, 0);
+	}
+
+	void CPlatformManager::CloseSplashWindow()
+	{
+		PostMessage(SplashHandle, WM_SYSCOMMAND, SC_CLOSE, 0);
 	}
 }
