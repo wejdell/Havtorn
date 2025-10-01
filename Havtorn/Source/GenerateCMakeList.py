@@ -1,6 +1,39 @@
 import os
 from glob import glob
 
+# this is a bit of a hack to gather the not changing things for CMake in 1 place 
+class CMakeTextsTemplate:
+    @staticmethod
+    def GetProjectSettingsString():
+        # For the purpose of preview
+        string = 'cmake_minimum_required (VERSION 3.31)\n'
+        string += '\n'
+        string += 'project (Havtorn\n  DESCRIPTION "Havtorn"\n  LANGUAGES CXX\n  VERSION 1.0.0)\n'
+        string += '\n'
+        string += '# option(BUILD_TEST_TEMPLATE "Ignore warnings related to TODOs" OFF)\n'
+        string += '\n'
+        string += '# option(ENABLE_CODE_ANALYSIS "Use Static Code Analysis on build" OFF)\n'
+        string += '\n'
+        string += 'set_property(GLOBAL PROPERTY USE_FOLDERS ON)\n'
+        string += '\n'
+        string += 'set(CMAKE_CXX_STANDARD 20)\n'
+        string += 'set(CMAKE_CXX_STANDARD_REQUIRED ON)\n'
+        string += 'set(CMAKE_CXX_EXTENSIONS OFF)\n'
+        string += '\n'
+        string += 'set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")\n'
+        string += 'set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")\n'
+        string += 'set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")\n'
+        string += '\n'     
+        string += 'set(COMMON_COMPILE_DEFINITIONS HV_PLATFORM_WINDOWS HV_DEBUG HV_ENABLE_ASSERTS _UNICODE UNICODE)\n'     
+        string += 'set(COMMON_COMPILE_OPTIONS /W4 /WX /MP /ZI /JMC /fp:fast /FC)\n'     
+        string += 'set(COMMON_LINK_OPTIONS /WX /SUBSYSTEM:WINDOWS)\n'     
+        string += '\n'     
+        return string
+    
+    @staticmethod
+    def GetSectionDividerString(name:str):
+        return f"# ==================== {name} ====================\n"
+
 class CMakeTextsGenerator:
     mainFolders = {
         "Core/",
@@ -18,6 +51,10 @@ class CMakeTextsGenerator:
 
     # do special file filter for e.g Imgui:
     # imgui.cpp, imgui.h, imgui_tables.cpp, etc copy the ones currently used in CMakeList.txt
+    @classmethod
+    def Test(self):
+        print(CMakeTextsTemplate.GetSectionDividerString("FOLDERS"))
+        return
 
     @classmethod
     def Do(self):
@@ -53,4 +90,4 @@ class CMakeTextsGenerator:
 
 if __name__ == "__main__":
     generator = CMakeTextsGenerator()
-    generator.Do()
+    generator.Test()
