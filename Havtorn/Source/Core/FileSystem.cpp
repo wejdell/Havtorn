@@ -29,6 +29,18 @@ namespace Havtorn
 		return std::filesystem::file_size(filePath);
 	}
 
+	std::string UFileSystem::GetExecutableRootPath()
+	{
+		char pBuf[256];
+		U32 len = sizeof(pBuf);
+		I32 bytes = GetModuleFileNameA(NULL, pBuf, len);
+		
+		if (!bytes)
+			return "INVALID_PATH";
+
+		return UGeneralUtils::ConvertToPlatformAgnosticPath(UGeneralUtils::ExtractParentDirectoryFromPath(pBuf));
+	}
+
 	void UFileSystem::Serialize(const std::string& filePath, const char* data, U32 size)
 	{
 		std::ofstream outputStream;

@@ -69,11 +69,14 @@ namespace Havtorn
 	private:
 		// Splash Utils
 		void InitWindowsImaging();
-		HBITMAP LoadSplashImage();
-		IStream* CreateStreamOnResource(LPCTSTR lpName, LPCTSTR lpType);
+		HBITMAP LoadSplashImage(const std::string& filePath);
+		// NW: These were used for loading a png file from a Resource embedded in the executable.
+		// The problem was this would not regenerate the path it was looking at between machines,
+		// which made it unusable. Should find a working solution using CMake to declare resources.
+		IStream* CreateStreamOnResource(LPCSTR lpName, LPCSTR lpType);
 		IWICBitmapSource* LoadBitmapFromStream(IStream* ipImageStream);
 		HBITMAP CreateBitmap(IWICBitmapSource* ipBitmap);
-		void RegisterSplashWindowClass();
+		void RegisterSplashWindowClass(HICON icon);
 		HWND CreateSplashWindow();
 		void SetSplashImage(HWND hwndSplash, HBITMAP splashBitmap);
 

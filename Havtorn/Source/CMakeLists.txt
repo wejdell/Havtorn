@@ -154,13 +154,7 @@ set(PLATFORM_FILES
     ${PLATFORM_FOLDER}PlatformManager.cpp
     ${PLATFORM_FOLDER}PlatformManager.h
     ${PLATFORM_FOLDER}WindowsInclude.h
-    "${PLATFORM_FOLDER}resource.h"
-    ${PLATFORM_FOLDER}Platform.aps
-    ${PLATFORM_FOLDER}Platform.rc
 
-)
-set(RESOURCE_FILES
-    ${WORKING_FOLDER}Resources/HavtornSplash.png
 )
 add_library(Platform SHARED ${PLATFORM_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PLATFORM_FILES})
@@ -179,7 +173,7 @@ target_compile_definitions(Platform PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_PLA
 target_compile_options(Platform PRIVATE ${COMMON_COMPILE_OPTIONS})
 target_link_options(Platform PRIVATE ${COMMON_LINK_OPTIONS})
 set_property(TARGET Platform PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
-set_target_properties(Platform PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER} RESOURCE ${RESOURCE_FILES})
+set_target_properties(Platform PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER})
 add_dependencies(Platform Core)
 # ==================== PLATFORM ====================
 

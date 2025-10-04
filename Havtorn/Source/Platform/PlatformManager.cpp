@@ -3,7 +3,6 @@
 #include <hvpch.h>
 
 #include "PlatformManager.h"
-#include "resource.h"
 
 #include <string>
 #include <vector>
@@ -176,14 +175,17 @@ namespace Havtorn
 
 	bool CPlatformManager::Init(CPlatformManager::SWindowData windowData)
 	{
+		CJsonDocument document = UFileSystem::OpenJson("Config/EngineConfig.json");
+
+		// TODO.NW: Use LoadImage instead?
+		HICON customIcon = (HICON)LoadImageA(NULL, document.GetString("Icon Path", "Resources/HavtornIcon.ico").c_str(), IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
+
 		InitWindowsImaging();
-		RegisterSplashWindowClass();
+		RegisterSplashWindowClass(customIcon);
 		SplashHandle = CreateSplashWindow();
-		SetSplashImage(SplashHandle, LoadSplashImage());
+		SetSplashImage(SplashHandle, LoadSplashImage(document.GetString("Splash Path", "Resources/HavtornSplash.bmp")));
 
 		WindowData = windowData;
-
-		CJsonDocument document = UFileSystem::OpenJson("Config/EngineConfig.json");
 
 		//HCURSOR customCursor = NULL;
 		//if (document.HasMember("Cursor Path"))
@@ -191,9 +193,6 @@ namespace Havtorn
 
 		//if (customCursor == NULL)
 		//    customCursor = LoadCursor(nullptr, IDC_ARROW);
-
-		// TODO.NW: Use LoadImage instead?
-		HICON customIcon = (HICON)LoadImageA(NULL, document.GetString("Icon Path", "Resources/HavtornIcon.ico").c_str(), IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
 
 		WNDCLASSEX windowclass = {};
 		windowclass.cbSize = sizeof(WNDCLASSEX);
@@ -276,25 +275,14 @@ namespace Havtorn
 		return Resolution;
 	}
 
-	HBITMAP CPlatformManager::LoadSplashImage()
-	{
-		HBITMAP bitmapSplash = NULL;
+	HBITMAP CPlatformManager::LoadSplashImage(const std::string& filePath)
+	{ 
+		std::string rootDir = UFileSystem::GetExecutableRootPath();
+		HANDLE handle = LoadImageA(GetModuleHandle(NULL), (rootDir + filePath).c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+		if (handle == NULL)
+			HV_LOG_ERROR("Splash image could not be found. Make sure that EngineConfig.json points to a BMP splash image in 8-bit (or 24-bit?) format.");
 
-		IStream* imageStream = CreateStreamOnResource(MAKEINTRESOURCE(IDB_PNG1), __TEXT("PNG"));
-		if (imageStream == NULL)
-			return NULL;
-
-		IWICBitmapSource* bitmapSource = LoadBitmapFromStream(imageStream);
-		if (bitmapSource == NULL)
-		{
-			imageStream->Release();
-			return NULL;
-		}
-
-		bitmapSplash = CreateBitmap(bitmapSource);
-		bitmapSource->Release();
-		imageStream->Release();
-		return bitmapSplash;
+		return (HBITMAP)handle;
 	}
 
 	void CPlatformManager::InitWindowsImaging()
@@ -311,10 +299,10 @@ namespace Havtorn
 //#endif
 	}
 
-	IStream* CPlatformManager::CreateStreamOnResource(LPCTSTR resourceName, LPCTSTR resourceType)
+	IStream* CPlatformManager::CreateStreamOnResource(LPCSTR resourceName, LPCSTR resourceType)
 	{
 		HMODULE platformModule = GetModuleHandle(TEXT("Platform"));
-		HRSRC resource = FindResource(platformModule, resourceName, resourceType);
+		HRSRC resource = FindResourceA(platformModule, resourceName, resourceType);
 		if (resource == NULL)
 			return NULL;
 
@@ -417,13 +405,13 @@ namespace Havtorn
 		return bitmap;
 	}
 
-	void CPlatformManager::RegisterSplashWindowClass()
+	void CPlatformManager::RegisterSplashWindowClass(HICON icon)
 	{
 		HINSTANCE instance = GetModuleHandle(nullptr);
 		WNDCLASS windowClass = { 0 };
 		windowClass.lpfnWndProc = DefWindowProc;
 		windowClass.hInstance = instance;
-		windowClass.hIcon = LoadIcon(instance, MAKEINTRESOURCE(IDI_ICON1));
+		windowClass.hIcon = icon;
 		windowClass.hCursor = LoadCursor(instance, IDC_ARROW);
 		windowClass.lpszClassName = SplashScreenWindowClass;
 		RegisterClass(&windowClass);

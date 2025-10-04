@@ -1,5 +1,6 @@
 {
     "Icon Path": "Resources/HavtornIcon.ico",
+    "Splash Path": "Resources/HavtornSplash.bmp",
     "Game Name": "Havtorn Editor",
     "Asset Redirectors": []
 }
