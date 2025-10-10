@@ -3,6 +3,7 @@ import re
 from glob import glob
 from enum import Enum
 from enum import auto
+from collections import defaultdict
 
 # repeating the same mistakes: starting before thinking things through
 # what do we want: be able to modify/move files in file-explorer and update CMakeTexts through script
@@ -127,7 +128,7 @@ class CMakeTextsGenerator:
             },
     }
     # put in __init__
-    filesToAdd = dict[HavtornMainFoldersUtility.Keys, set[str]]
+    filesToAdd = defaultdict(list[str])
 
     #
     # _cmakeLists_ = read CMakeListsTemplate.txt as line list
@@ -139,18 +140,15 @@ class CMakeTextsGenerator:
     @classmethod
     def Test(self):
         for target in self.targets:
-            self.filesToAdd = self.filesToAdd.update({target, ()})
-            print(target.name)
+            self.filesToAdd.update({target : list[str]()})
             try:
                 exclusions = ''
                 if target in self.exclusions:
                     exclusions = '|'.join(self.exclusions[target])
-                #print("exclusions for " + target.name + ": " + exclusions)
 
                 fileNameFilters = ''
                 if target in self.fileNameFilters:
                     fileNameFilters = '|'.join(self.fileNameFilters[target])
-                #print("fileNameFilters for " + target.name + ": " + fileNameFilters)
                 
                 for file in glob(os.path.abspath(HavtornMainFoldersUtility.get_folder_path(target)) + '/**', recursive=True):
                     if not os.path.isfile(file):
@@ -159,10 +157,18 @@ class CMakeTextsGenerator:
                         continue
                     if (fileNameFilters and not re.search(fileNameFilters, file)):
                         continue
-                    print("\t" + file.split("Source\\")[1])                       
-                    #self.filesToAdd[target].append(file.split("Source\\")[1])
+                    
+                    self.filesToAdd[target].append(file.split("Source\\")[1])
             except Exception as e:
                 print(e)
+
+        template = "CMakeListsTemplate.txt"
+        cmakeLists = "CMakeListsTest.txt"
+        
+        for target in self.targets:
+            print(target.name)
+            for file in self.filesToAdd[target]:
+                print("\t" + file)
         return
 
     @classmethod
