@@ -1,5 +1,7 @@
 cmake_minimum_required (VERSION 3.31)
 
+set(CMAKE_CONFIGURATION_TYPES GameDebug GameRelease EditorDebug EditorDevelopment)
+
 project (Havtorn
   DESCRIPTION "Havtorn"
   LANGUAGES CXX
@@ -36,9 +38,35 @@ set(IMGUI_NODE_FOLDER "../External/imgui-node-editor/")
 set(WORKING_FOLDER "${CMAKE_BINARY_DIR}/../Bin/")
 # ==================== FOLDERS ====================
 
-set(COMMON_COMPILE_DEFINITIONS HV_PLATFORM_WINDOWS HV_DEBUG HV_ENABLE_ASSERTS _UNICODE UNICODE)
-set(COMMON_COMPILE_OPTIONS /W4 /WX /MP /ZI /JMC /fp:fast /FC)
-set(COMMON_LINK_OPTIONS /WX /SUBSYSTEM:WINDOWS)
+set(COMMON_COMPILE_DEFINITIONS 
+HV_PLATFORM_WINDOWS 
+$<$<CONFIG:EditorDebug>:HV_EDITOR_BUILD _DEBUG HV_DEBUG_INFO HV_ENABLE_DEBUG HV_ENABLE_ASSERTS _ITERATOR_DEBUG_LEVEL=2> 
+$<$<CONFIG:GameDebug>:HV_GAME_BUILD _DEBUG HV_DEBUG_INFO HV_ENABLE_DEBUG HV_ENABLE_ASSERTS _ITERATOR_DEBUG_LEVEL=2> 
+$<$<CONFIG:EditorDevelopment>:HV_EDITOR_BUILD NDEBUG HV_ENABLE_DEBUG _ITERATOR_DEBUG_LEVEL=0> 
+$<$<CONFIG:GameRelease>:HV_GAME_BUILD NDEBUG _ITERATOR_DEBUG_LEVEL=0> 
+_UNICODE 
+UNICODE
+)
+#TODO: Look closely at Use Debug Libraries
+set(COMMON_COMPILE_OPTIONS
+$<$<CONFIG:EditorDebug>:/W4 /WX /MP /ZI /JMC /fp:fast "/MDd" /FC>
+$<$<CONFIG:GameDebug>:/W4 /WX /MP /ZI /JMC /fp:fast "/MDd" /FC>
+$<$<CONFIG:EditorDevelopment>:/W4 /WX /MP /fp:fast "/MD" /FC /GL /O2 /Oi>
+$<$<CONFIG:GameRelease>:/W4 /WX /MP /fp:fast "/MD" /FC /GL /O2 /Oi>
+)
+set(COMMON_LINK_OPTIONS
+/WX /SUBSYSTEM:WINDOWS
+$<$<CONFIG:EditorDebug>:/WX /SUBSYSTEM:WINDOWS /DEBUG>
+$<$<CONFIG:GameDebug>:/WX /SUBSYSTEM:WINDOWS /DEBUG>
+$<$<CONFIG:EditorDevelopment>:/WX /SUBSYSTEM:WINDOWS "/INCREMENTAL:NO" /OPT:REF /OPT:ICF /LTCG:incremental>
+$<$<CONFIG:GameRelease>:/WX /SUBSYSTEM:WINDOWS "/INCREMENTAL:NO" /OPT:REF /OPT:ICF /LTCG:incremental>
+)
+set(COMMON_TARGET_PROPERTIES
+RUNTIME_OUTPUT_DIRECTORY_EDITORDEBUG ${WORKING_FOLDER}
+RUNTIME_OUTPUT_DIRECTORY_EDITORDEVELOPMENT ${WORKING_FOLDER}
+RUNTIME_OUTPUT_DIRECTORY_GAMEDEBUG ${WORKING_FOLDER}
+RUNTIME_OUTPUT_DIRECTORY_GAMERELEASE ${WORKING_FOLDER}
+)
 
 # ==================== CORE ====================
 set(CORE_FILES
@@ -144,7 +172,7 @@ target_compile_options(Core PRIVATE ${COMMON_COMPILE_OPTIONS})
 target_link_options(Core PRIVATE ${COMMON_LINK_OPTIONS})
 target_precompile_headers(Core PRIVATE ${CORE_FOLDER}hvpch.h)
 set_property(TARGET Core PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
-set_target_properties(Core PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER})
+set_target_properties(Core PROPERTIES ${COMMON_TARGET_PROPERTIES})
 # ==================== CORE ====================
 
 # ==================== PLATFORM ====================
@@ -173,7 +201,7 @@ target_compile_definitions(Platform PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_PLA
 target_compile_options(Platform PRIVATE ${COMMON_COMPILE_OPTIONS})
 target_link_options(Platform PRIVATE ${COMMON_LINK_OPTIONS})
 set_property(TARGET Platform PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
-set_target_properties(Platform PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER})
+set_target_properties(Platform PROPERTIES ${COMMON_TARGET_PROPERTIES})
 add_dependencies(Platform Core)
 # ==================== PLATFORM ====================
 
@@ -243,7 +271,10 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}"/../External" FILES ${IMGUI_FILES}
 target_link_libraries(GUI PRIVATE
     Core
     Platform
-    DirectXTex
+    $<$<CONFIG:EditorDebug>:DirectXTexd>
+    $<$<CONFIG:GameDebug>:DirectXTexd>
+    $<$<CONFIG:EditorDevelopment>:DirectXTex>
+    $<$<CONFIG:GameRelease>:DirectXTex>
 )
 target_include_directories(GUI PRIVATE
 	"${GUI_FOLDER}"
@@ -255,14 +286,20 @@ target_include_directories(GUI PRIVATE
     "${EXTERNAL_FOLDER}DirectXTex"
 )
 target_link_directories(GUI PRIVATE
-    "${EXTERNAL_FOLDER}Lib"    
+    "${EXTERNAL_FOLDER}Lib/Debug"
+    "${EXTERNAL_FOLDER}Lib/Release"
     ${CMAKE_BINARY_DIR}
 )
 target_compile_definitions(GUI PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_GUI_DLL)
-target_compile_options(GUI PRIVATE /W3 /MP /ZI /JMC /fp:fast /FC)
+target_compile_options(GUI PRIVATE 
+$<$<CONFIG:EditorDebug>:/W3 /MP /ZI /JMC /fp:fast "/MDd" /FC>
+$<$<CONFIG:GameDebug>:/W3 /MP /ZI /JMC /fp:fast "/MDd" /FC>
+$<$<CONFIG:EditorDevelopment>:/W3 /MP /fp:fast "/MD" /FC /GL /O2 /Oi>
+$<$<CONFIG:GameRelease>:/W3 /MP /fp:fast "/MD" /FC /GL /O2 /Oi>
+)
 target_link_options(GUI PRIVATE ${COMMON_LINK_OPTIONS})
 set_property(TARGET GUI PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
-set_target_properties(GUI PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER})
+set_target_properties(GUI PROPERTIES ${COMMON_TARGET_PROPERTIES})
 add_dependencies(GUI Core Platform)
 # ==================== GUI ====================
 
@@ -561,15 +598,10 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SHADER_INCLUDES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${HLSL_SHADER_FILES})
 target_link_libraries(Engine PRIVATE
-    assimp-vc143-mtd
-    DirectXTex
-    box2dd
-    PhysX/PhysX_64
-    PhysX/PhysXCommon_64
-    PhysX/PhysXExtensions_static_64
-    PhysX/PhysXFoundation_64
-    PhysX/PhysXPvdSDK_static_64
-    PhysX/PhysXCharacterKinematic_static_64
+    $<$<CONFIG:EditorDebug>:assimp-vc143-mtd DirectXTexd box2dd PhysX/PhysX_64d PhysX/PhysXCommon_64d PhysX/PhysXExtensions_static_64d PhysX/PhysXFoundation_64d PhysX/PhysXPvdSDK_static_64d PhysX/PhysXCharacterKinematic_static_64d>
+    $<$<CONFIG:GameDebug>:assimp-vc143-mtd DirectXTexd box2dd PhysX/PhysX_64d PhysX/PhysXCommon_64d PhysX/PhysXExtensions_static_64d PhysX/PhysXFoundation_64d PhysX/PhysXPvdSDK_static_64d PhysX/PhysXCharacterKinematic_static_64d>
+    $<$<CONFIG:EditorDevelopment>:assimp-vc143-mt DirectXTex box2d PhysX/PhysX_64 PhysX/PhysXCommon_64 PhysX/PhysXExtensions_static_64 PhysX/PhysXFoundation_64 PhysX/PhysXPvdSDK_static_64 PhysX/PhysXCharacterKinematic_static_64>
+    $<$<CONFIG:GameRelease>:assimp-vc143-mt DirectXTex box2d PhysX/PhysX_64 PhysX/PhysXCommon_64 PhysX/PhysXExtensions_static_64 PhysX/PhysXFoundation_64 PhysX/PhysXPvdSDK_static_64 PhysX/PhysXCharacterKinematic_static_64>
     Core
     Platform
     GUI
@@ -589,17 +621,23 @@ target_include_directories(Engine PRIVATE
     "GUI"
 )
 target_link_directories(Engine PRIVATE
-    "${EXTERNAL_FOLDER}Lib"
+    "${EXTERNAL_FOLDER}Lib/Debug"
+    "${EXTERNAL_FOLDER}Lib/Release" 
     ${CMAKE_BINARY_DIR}
 )
 target_compile_definitions(Engine PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_ENGINE_DLL)
 target_compile_options(Engine PRIVATE ${COMMON_COMPILE_OPTIONS})
 target_compile_options(Engine PRIVATE "/FI${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/Engine.dir/$<CONFIG>/cmake_pch.hxx")
 target_precompile_headers(Engine PRIVATE ${ENGINE_FOLDER}hvpch.h)
-target_link_options(Engine PRIVATE ${COMMON_LINK_OPTIONS} /NODEFAULTLIB:LIBCMTD.lib)
+target_link_options(Engine PRIVATE ${COMMON_LINK_OPTIONS} 
+$<$<CONFIG:EditorDebug>:/NODEFAULTLIB:LIBCMTD.lib>
+$<$<CONFIG:GameDebug>:/NODEFAULTLIB:LIBCMTD.lib>
+$<$<CONFIG:EditorDevelopment>:/NODEFAULTLIB:LIBCMT /NODEFAULTLIB:MSVCRTD>
+$<$<CONFIG:GameRelease>:/NODEFAULTLIB:LIBCMT /NODEFAULTLIB:MSVCRTD>
+)
 #target_link_options(Engine PRIVATE ${COMMON_LINK_OPTIONS} /NODEFAULTLIB:LIBCMTD.lib /IMPLIB:${CMAKE_CURRENT_BINARY_DIR}/Engine.dir/Engine/Engine_$<CONFIG>.lib)
 set_property(TARGET Engine PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
-set_target_properties(Engine PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER})
+set_target_properties(Engine PROPERTIES ${COMMON_TARGET_PROPERTIES})
 add_dependencies(Engine Core Platform GUI)
 # ==================== ENGINE ====================
 
@@ -653,7 +691,7 @@ target_compile_options(Game PRIVATE "/FI${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/G
 target_precompile_headers(Game PRIVATE ${GAME_FOLDER}hvpch.h)
 target_link_options(Game PRIVATE ${COMMON_LINK_OPTIONS})
 set_property(TARGET Game PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
-set_target_properties(Game PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER})
+set_target_properties(Game PROPERTIES ${COMMON_TARGET_PROPERTIES})
 add_dependencies(Game Core Platform GUI Engine)
 # ==================== GAME ====================
 
@@ -738,7 +776,7 @@ target_compile_options(Editor PRIVATE ${COMMON_COMPILE_OPTIONS})
 target_precompile_headers(Editor PRIVATE ${EDITOR_FOLDER}hvpch.h)
 target_link_options(Editor PRIVATE ${COMMON_LINK_OPTIONS})
 set_property(TARGET Editor PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
-set_target_properties(Editor PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER})
+set_target_properties(Editor PROPERTIES ${COMMON_TARGET_PROPERTIES})
 add_dependencies(Editor Core Platform GUI Engine Game)
 # ==================== EDITOR ====================
 
@@ -781,6 +819,7 @@ target_compile_options(Launcher PRIVATE ${COMMON_COMPILE_OPTIONS})
 target_link_options(Launcher PRIVATE ${COMMON_LINK_OPTIONS})
 set_property(TARGET Launcher PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
 set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT Launcher)
-set_target_properties(Launcher PROPERTIES RUNTIME_OUTPUT_DIRECTORY_DEBUG ${WORKING_FOLDER} RUNTIME_OUTPUT_DIRECTORY_RELEASE ${WORKING_FOLDER})
+set_target_properties(Launcher PROPERTIES ${COMMON_TARGET_PROPERTIES} RUNTIME_OUTPUT_NAME $<CONFIG>)
+#add_custom_command(TARGET Launcher POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Launcher> ${WORKING_FOLDER})
 add_dependencies(Launcher Core Platform GUI Engine Game Editor)
 # ==================== LAUNCHER ====================

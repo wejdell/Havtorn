@@ -52,20 +52,20 @@ namespace Havtorn
 
         std::array<SVertexShaderInitData, STATIC_U64(EVertexShaders::Count)> initData;
         {
-            initData[STATIC_U64(EVertexShaders::Fullscreen)]                    = { "Shaders/FullscreenVertexShader_VS.cso", false };
-            initData[STATIC_U64(EVertexShaders::StaticMesh)]                    = { "Shaders/DeferredStaticMesh_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2 };
-            initData[STATIC_U64(EVertexShaders::StaticMeshInstanced)]           = { "Shaders/DeferredInstancedMesh_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans };
-            initData[STATIC_U64(EVertexShaders::Decal)]                         = { "Shaders/Decal_VS.cso", false };
-            initData[STATIC_U64(EVertexShaders::PointAndSpotLight)]             = { "Shaders/PointLight_VS.cso", true, EInputLayoutType::Position4 };
-            initData[STATIC_U64(EVertexShaders::EditorPreviewStaticMesh)]       = { "Shaders/EditorPreview_VS.cso", false };
-            initData[STATIC_U64(EVertexShaders::EditorPreviewSkeletalMesh)]     = { "Shaders/EditorPreviewSkeletal_VS.cso", false };
-            initData[STATIC_U64(EVertexShaders::Line)]                          = { "Shaders/Line_VS.cso", false };
-            initData[STATIC_U64(EVertexShaders::SpriteInstanced)]               = { "Shaders/SpriteInstanced_VS.cso", true, EInputLayoutType::TransUVRectColor };
-            initData[STATIC_U64(EVertexShaders::StaticMeshInstancedEditor)]     = { "Shaders/DeferredInstancedMeshEditor_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Entity2Trans };
-            initData[STATIC_U64(EVertexShaders::SpriteInstancedEditor)]         = { "Shaders/SpriteInstancedEditor_VS.cso", true, EInputLayoutType::TransUVRectColorEntity2 };
-            initData[STATIC_U64(EVertexShaders::SkeletalMeshInstanced)]         = { "Shaders/DeferredInstancedAnimation_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans };
-            initData[STATIC_U64(EVertexShaders::SkeletalMeshInstancedEditor)]   = { "Shaders/DeferredInstancedAnimationEditor_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2AnimDataTrans };
-            initData[STATIC_U64(EVertexShaders::Skybox)]                        = { "Shaders/Skybox_VS.cso", true, EInputLayoutType::Position4 };
+            initData[STATIC_U64(EVertexShaders::Fullscreen)]                    = { ShaderRoot + "FullscreenVertexShader_VS.cso", false };
+            initData[STATIC_U64(EVertexShaders::StaticMesh)]                    = { ShaderRoot + "DeferredStaticMesh_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2 };
+            initData[STATIC_U64(EVertexShaders::StaticMeshInstanced)]           = { ShaderRoot + "DeferredInstancedMesh_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans };
+            initData[STATIC_U64(EVertexShaders::Decal)]                         = { ShaderRoot + "Decal_VS.cso", false };
+            initData[STATIC_U64(EVertexShaders::PointAndSpotLight)]             = { ShaderRoot + "PointLight_VS.cso", true, EInputLayoutType::Position4 };
+            initData[STATIC_U64(EVertexShaders::EditorPreviewStaticMesh)]       = { ShaderRoot + "EditorPreview_VS.cso", false };
+            initData[STATIC_U64(EVertexShaders::EditorPreviewSkeletalMesh)]     = { ShaderRoot + "EditorPreviewSkeletal_VS.cso", false };
+            initData[STATIC_U64(EVertexShaders::Line)]                          = { ShaderRoot + "Line_VS.cso", false };
+            initData[STATIC_U64(EVertexShaders::SpriteInstanced)]               = { ShaderRoot + "SpriteInstanced_VS.cso", true, EInputLayoutType::TransUVRectColor };
+            initData[STATIC_U64(EVertexShaders::StaticMeshInstancedEditor)]     = { ShaderRoot + "DeferredInstancedMeshEditor_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Entity2Trans };
+            initData[STATIC_U64(EVertexShaders::SpriteInstancedEditor)]         = { ShaderRoot + "SpriteInstancedEditor_VS.cso", true, EInputLayoutType::TransUVRectColorEntity2 };
+            initData[STATIC_U64(EVertexShaders::SkeletalMeshInstanced)]         = { ShaderRoot + "DeferredInstancedAnimation_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans };
+            initData[STATIC_U64(EVertexShaders::SkeletalMeshInstancedEditor)]   = { ShaderRoot + "DeferredInstancedAnimationEditor_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2AnimDataTrans };
+            initData[STATIC_U64(EVertexShaders::Skybox)]                        = { ShaderRoot + "Skybox_VS.cso", true, EInputLayoutType::Position4 };
         }
 
         for (U64 i = 0; i < STATIC_U64(EVertexShaders::Count); i++)
@@ -85,24 +85,24 @@ namespace Havtorn
         std::array<std::string, STATIC_U64(EPixelShaders::Count)> filepaths;
         filepaths.fill("InitPixelShaders::UnmappedShader");
         {
-            filepaths[STATIC_U64(EPixelShaders::GBuffer)] = "Shaders/GBuffer_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::DecalAlbedo)] = "Shaders/Decal_Albedo_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::DecalMaterial)] = "Shaders/Decal_Material_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::DecalNormal)] = "Shaders/Decal_Normal_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::DeferredDirectional)] = "Shaders/DeferredLightDirectionalAndEnvironment_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::DeferredPoint)] = "Shaders/DeferredLightPoint_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::DeferredSpot)] = "Shaders/DeferredLightSpot_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::VolumetricDirectional)] = "Shaders/DeferredLightDirectionalVolumetric_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::VolumetricPoint)] = "Shaders/DeferredLightPointVolumetric_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::VolumetricSpot)] = "Shaders/DeferredLightSpotVolumetric_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::EditorPreview)] = "Shaders/EditorPreview_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::Line)] = "Shaders/Line_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::SpriteScreenSpace)] = "Shaders/SpriteScreenSpace_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpace)] = "Shaders/SpriteWorldSpace_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::GBufferInstanceEditor)] = "Shaders/GBufferEditor_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpaceEditor)] = "Shaders/SpriteWorldSpaceEditor_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpaceEditorWidget)] = "Shaders/SpriteWorldSpaceEditorWidget_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::Skybox)] = "Shaders/Skybox_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::GBuffer)] = ShaderRoot + "GBuffer_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::DecalAlbedo)] = ShaderRoot + "Decal_Albedo_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::DecalMaterial)] = ShaderRoot + "Decal_Material_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::DecalNormal)] = ShaderRoot + "Decal_Normal_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::DeferredDirectional)] = ShaderRoot + "DeferredLightDirectionalAndEnvironment_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::DeferredPoint)] = ShaderRoot + "DeferredLightPoint_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::DeferredSpot)] = ShaderRoot + "DeferredLightSpot_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::VolumetricDirectional)] = ShaderRoot + "DeferredLightDirectionalVolumetric_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::VolumetricPoint)] = ShaderRoot + "DeferredLightPointVolumetric_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::VolumetricSpot)] = ShaderRoot + "DeferredLightSpotVolumetric_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::EditorPreview)] = ShaderRoot + "EditorPreview_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::Line)] = ShaderRoot + "Line_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::SpriteScreenSpace)] = ShaderRoot + "SpriteScreenSpace_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpace)] = ShaderRoot + "SpriteWorldSpace_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::GBufferInstanceEditor)] = ShaderRoot + "GBufferEditor_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpaceEditor)] = ShaderRoot + "SpriteWorldSpaceEditor_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpaceEditorWidget)] = ShaderRoot + "SpriteWorldSpaceEditorWidget_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::Skybox)] = ShaderRoot + "Skybox_PS.cso";
         }
 
         for (U64 i = 0; i < STATIC_U64(EPixelShaders::Count); i++)
@@ -114,10 +114,10 @@ namespace Havtorn
 
     void CRenderStateManager::InitGeometryShaders()
     {
-        AddShader("Shaders/Line_GS.cso", EShaderType::Geometry);
-        AddShader("Shaders/SpriteScreenSpace_GS.cso", EShaderType::Geometry);
-        AddShader("Shaders/SpriteWorldSpace_GS.cso", EShaderType::Geometry);
-        AddShader("Shaders/SpriteWorldSpaceEditor_GS.cso", EShaderType::Geometry);
+        AddShader(ShaderRoot + "Line_GS.cso", EShaderType::Geometry);
+        AddShader(ShaderRoot + "SpriteScreenSpace_GS.cso", EShaderType::Geometry);
+        AddShader(ShaderRoot + "SpriteWorldSpace_GS.cso", EShaderType::Geometry);
+        AddShader(ShaderRoot + "SpriteWorldSpaceEditor_GS.cso", EShaderType::Geometry);
 
         // NR: Null shader. Adding this to avoid branching in state setting functions
         GeometryShaders.emplace_back(nullptr);

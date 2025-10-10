@@ -17,8 +17,11 @@ echo Building assimp...
 echo.
 cmake --build .
 echo.
-copy bin\Debug\assimp-vc143-mtd.dll ..\..\Bin\
-copy lib\Debug\assimp-vc143-mtd.lib ..\Lib\Debug\
+copy /y bin\Debug\assimp-vc143-mtd.dll ..\..\Bin\assimp-vc143-mtd.dll
+echo.
+cmake --build . --config Release
+echo.
+copy /y bin\Release\assimp-vc143-mt.dll ..\..\Bin\assimp-vc143-mt.dll
 cd .. 
 
 mkdir -p ..\External\Lib\Debug\PhysX\
@@ -36,19 +39,36 @@ echo.
 echo Building PhysX...
 echo.
 cmake --build compiler/vc17win64 
-copy bin\win.x86_64.vc143.md\debug\PhysX_64.dll ..\..\..\Bin\
-copy bin\win.x86_64.vc143.md\debug\PhysX_64.lib ..\..\Lib\Debug\PhysX\
-copy bin\win.x86_64.vc143.md\debug\PhysXCommon_64.dll ..\..\..\Bin\
-copy bin\win.x86_64.vc143.md\debug\PhysXCommon_64.lib ..\..\Lib\Debug\PhysX\
-copy bin\win.x86_64.vc143.md\debug\PhysXExtensions_static_64.lib ..\..\Lib\Debug\PhysX\
-copy bin\win.x86_64.vc143.md\debug\PhysXCooking_64.dll ..\..\..\Bin\
-copy bin\win.x86_64.vc143.md\debug\PhysXCooking_64.lib ..\..\Lib\Debug\PhysX\
-copy bin\win.x86_64.vc143.md\debug\PhysXDevice64.dll ..\..\..\Bin\
-copy bin\win.x86_64.vc143.md\debug\PhysXFoundation_64.dll ..\..\..\Bin\
-copy bin\win.x86_64.vc143.md\debug\PhysXFoundation_64.lib ..\..\Lib\Debug\PhysX\
-copy bin\win.x86_64.vc143.md\debug\PhysXPvdSDK_static_64.lib ..\..\Lib\Debug\PhysX\
-copy bin\win.x86_64.vc143.md\debug\PhysXCharacterKinematic_static_64.lib ..\..\Lib\Debug\PhysX\
-copy bin\win.x86_64.vc143.md\debug\PhysXGpu_64.dll ..\..\..\Bin\
+copy /y bin\win.x86_64.vc143.md\debug\PhysX_64.dll ..\..\..\Bin\PhysX_64d.dll
+copy /y bin\win.x86_64.vc143.md\debug\PhysX_64.lib ..\..\Lib\Debug\PhysX\PhysX_64d.lib
+copy /y bin\win.x86_64.vc143.md\debug\PhysXCommon_64.dll ..\..\..\Bin\PhysXCommon_64d.dll
+copy /y bin\win.x86_64.vc143.md\debug\PhysXCommon_64.lib ..\..\Lib\Debug\PhysX\PhysXCommon_64d.lib
+copy /y bin\win.x86_64.vc143.md\debug\PhysXExtensions_static_64.lib ..\..\Lib\Debug\PhysX\PhysXExtensions_static_64d.lib
+copy /y bin\win.x86_64.vc143.md\debug\PhysXCooking_64.dll ..\..\..\Bin\PhysXCooking_64d.dll
+copy /y bin\win.x86_64.vc143.md\debug\PhysXCooking_64.lib ..\..\Lib\Debug\PhysX\PhysXCooking_64d.lib
+copy /y bin\win.x86_64.vc143.md\debug\PhysXDevice64.dll ..\..\..\Bin\PhysXDevice64d.dll
+copy /y bin\win.x86_64.vc143.md\debug\PhysXFoundation_64.dll ..\..\..\Bin\PhysXFoundation_64d.dll
+copy /y bin\win.x86_64.vc143.md\debug\PhysXFoundation_64.lib ..\..\Lib\Debug\PhysX\PhysXFoundation_64d.lib
+copy /y bin\win.x86_64.vc143.md\debug\PhysXPvdSDK_static_64.lib ..\..\Lib\Debug\PhysX\PhysXPvdSDK_static_64d.lib
+copy /y bin\win.x86_64.vc143.md\debug\PhysXCharacterKinematic_static_64.lib ..\..\Lib\Debug\PhysX\PhysXCharacterKinematic_static_64d.lib
+copy /y bin\win.x86_64.vc143.md\debug\PhysXGpu_64.dll ..\..\..\Bin\PhysXGpu_64d.dll
+echo.
+call generate_projects.bat vc17win64_release
+echo.
+cmake --build compiler/vc17win64_release --config Release
+copy /y bin\win.x86_64.vc143.md\release\PhysX_64.dll ..\..\..\Bin\PhysX_64.dll
+copy /y bin\win.x86_64.vc143.md\release\PhysX_64.lib ..\..\Lib\Release\PhysX\PhysX_64.lib
+copy /y bin\win.x86_64.vc143.md\release\PhysXCommon_64.dll ..\..\..\Bin\PhysXCommon_64.dll
+copy /y bin\win.x86_64.vc143.md\release\PhysXCommon_64.lib ..\..\Lib\Release\PhysX\PhysXCommon_64.lib
+copy /y bin\win.x86_64.vc143.md\release\PhysXExtensions_static_64.lib ..\..\Lib\Release\PhysX\PhysXExtensions_static_64.lib
+copy /y bin\win.x86_64.vc143.md\release\PhysXCooking_64.dll ..\..\..\Bin\PhysXCooking_64.dll
+copy /y bin\win.x86_64.vc143.md\release\PhysXCooking_64.lib ..\..\Lib\Release\PhysX\PhysXCooking_64.lib
+copy /y bin\win.x86_64.vc143.md\release\PhysXDevice64.dll ..\..\..\Bin\PhysXDevice64.dll
+copy /y bin\win.x86_64.vc143.md\release\PhysXFoundation_64.dll ..\..\..\Bin\PhysXFoundation_64.dll
+copy /y bin\win.x86_64.vc143.md\release\PhysXFoundation_64.lib ..\..\Lib\Release\PhysX\PhysXFoundation_64.lib
+copy /y bin\win.x86_64.vc143.md\release\PhysXPvdSDK_static_64.lib ..\..\Lib\Release\PhysX\PhysXPvdSDK_static_64.lib
+copy /y bin\win.x86_64.vc143.md\release\PhysXCharacterKinematic_static_64.lib ..\..\Lib\Release\PhysX\PhysXCharacterKinematic_static_64.lib
+copy /y bin\win.x86_64.vc143.md\release\PhysXGpu_64.dll ..\..\..\Bin\PhysXGpu_64.dll
 cd ..\..
 
 cd box2d
@@ -64,7 +84,10 @@ echo.
 echo Building box2d...
 echo.
 cmake --build .
-copy src\Debug\box2dd.lib ..\..\Lib\Debug\
+copy /y src\Debug\box2dd.lib ..\..\Lib\Debug\box2dd.lib
+echo.
+cmake --build . --config=Release
+copy /y src\Release\box2d.lib ..\..\Lib\Release\box2d.lib
 cd ..\..
 
 cd DirectXTex
@@ -76,8 +99,12 @@ echo.
 echo Building DirectXTex...
 echo.
 cmake --build . 
-copy bin\Debug\DirectXTex.dll ..\..\Bin\
-copy lib\Debug\DirectXTex.lib ..\Lib\Debug\
+copy /y bin\Debug\DirectXTex.dll ..\..\Bin\DirectXTexd.dll
+copy /y lib\Debug\DirectXTex.lib ..\Lib\Debug\DirectXTexd.lib
+echo.
+cmake --build . --config=Release
+copy /y bin\Release\DirectXTex.dll ..\..\Bin\DirectXTex.dll
+copy /y lib\Release\DirectXTex.lib ..\Lib\Release\DirectXTex.lib
 cd .. 
 
 echo.

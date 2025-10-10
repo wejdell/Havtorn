@@ -221,7 +221,7 @@ namespace Havtorn
 			// Start in borderless
 			WindowHandle = CreateWindowA(HavtornWindowClass, gameName.c_str(),
 				WS_POPUP | WS_VISIBLE,
-				0, 0, MaxResX, MaxResY,
+				0, 0, MaxResolution.X, MaxResolution.Y,
 				NULL, NULL, GetModuleHandle(nullptr), this);
 #endif
 		}

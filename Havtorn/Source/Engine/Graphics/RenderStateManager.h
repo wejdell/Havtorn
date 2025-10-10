@@ -129,6 +129,8 @@ namespace Havtorn
 		bool CreateRasterizerStates(ID3D11Device* device);
 
 	private:
+		const std::string ShaderRoot = "Shaders/";
+
 		CGraphicsFramework* Framework = nullptr;
 		ID3D11DeviceContext* Context = nullptr;
 		std::array<ID3D11BlendState*, (U64)EBlendStates::Count> BlendStates;

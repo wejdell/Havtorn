@@ -7,6 +7,7 @@
 #include <box2cpp.h>
 //#include <debug_imgui_renderer.h>
 
+#include <PxConfig.h>
 #include <PxPhysicsAPI.h>
 
 namespace b2
