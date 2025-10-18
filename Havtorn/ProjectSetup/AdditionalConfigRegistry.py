@@ -10,7 +10,7 @@ class RegistryConfiguration:
 
         PROTOCOL_NAME = "Havtorn"
         ENGINE_PROTOCOL = fr"URL:{PROTOCOL_NAME}"
-        LAUNCHER_PATH = str(os.path.abspath("../Bin/Launcher.exe"))
+        LAUNCHER_PATH = str(os.path.abspath("../Bin/EditorDevelopment/EditorDevelopment.exe"))
 
         base = winreg.CreateKey(winreg.HKEY_CURRENT_USER, fr"Software\Classes\{PROTOCOL_NAME}")
         winreg.SetValueEx(base, None, 0, winreg.REG_SZ, ENGINE_PROTOCOL)

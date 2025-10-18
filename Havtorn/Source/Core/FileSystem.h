@@ -105,7 +105,11 @@ namespace Havtorn
 	public:
 		static bool CORE_API Exists(const std::string& path);
 		static U64 CORE_API GetFileSize(const std::string& filePath);
+		
 		static std::string CORE_API GetExecutableRootPath();
+		static std::string CORE_API GetWorkingPath();
+		static void CORE_API SetWorkingPath(const std::string& folderPath);
+
 		static CORE_API CJsonDocument OpenJson(const std::string& filePath);
 
 		static void CORE_API Serialize(const std::string& filePath, const char* data, U32 size);

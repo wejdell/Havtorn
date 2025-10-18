@@ -33,15 +33,6 @@ namespace Havtorn
 		EditorManager->BeginFrame();
 	}
 
-	void CEditorProcess::PreUpdate()
-	{
-
-	}
-
-	void CEditorProcess::Update()
-	{
-	}
-
 	void CEditorProcess::PostUpdate()
 	{
 		EditorManager->Render();

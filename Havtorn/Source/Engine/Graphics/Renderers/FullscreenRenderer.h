@@ -99,6 +99,8 @@ namespace Havtorn
 		bool Init(CGraphicsFramework* framework, CRenderManager* manager);
 		void Render(EFullscreenShader effect);
 
+		const std::string ShaderRoot = "Shaders/";
+
 		SPostProcessingBufferData PostProcessingBufferData;
 
 		ID3D11DeviceContext* Context = nullptr;

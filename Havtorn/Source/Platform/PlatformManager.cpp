@@ -3,12 +3,15 @@
 #include <hvpch.h>
 
 #include "PlatformManager.h"
+#include "PlatformUtilities.h"
 
 #include <string>
 #include <vector>
+#include <algorithm>
 
 #include <Log.h>
 #include <FileSystem.h>
+#include <GeneralUtilities.h>
 
 #include <wincodec.h>
 #include <roapi.h>
@@ -42,18 +45,8 @@ namespace Havtorn
 
 		{
 			COPYDATASTRUCT* cds = reinterpret_cast<COPYDATASTRUCT*>(lParam);
-			std::wstring wide(reinterpret_cast<wchar_t*>(cds->lpData), cds->cbData / sizeof(wchar_t));
-			std::string str;
-			std::transform(wide.begin(), wide.end(), std::back_inserter(str), 
-						   [](wchar_t c)
-						   {
-							   return (char)c;
-						   });
-
-			auto startIndex = str.find("havtorn://", 0) + 10;
-			str = str.substr(startIndex, str.length() - startIndex);
-			std::erase_if(str, [](char c) { return c == '"' || c == '/'; });
-			HV_LOG_INFO(str.c_str());
+			std::string stringData(reinterpret_cast<char*>(cds->lpData), cds->cbData / sizeof(char));
+			platformManager->ParseCommandLine(stringData);
 		}
 		break;
 		case WM_KILLFOCUS:
@@ -249,6 +242,36 @@ namespace Havtorn
 		return WindowHandle;
 	}
 
+	void CPlatformManager::OnApplicationReady(const std::string& commandLine)
+	{
+		CloseSplashWindow();
+
+		// Create shortcut to executable
+		std::string rootPath = UFileSystem::GetExecutableRootPath();
+		std::string workingPath = UFileSystem::GetWorkingPath();
+		std::string executableName;
+
+#if HV_CONFIG_EDITOR_DEBUG
+		executableName = "EditorDebug";
+#elif HV_CONFIG_EDITOR_DEVELOPMENT
+		executableName = "EditorDevelopment";
+#elif HV_CONFIG_GAME_DEBUG
+		executableName = "GameDebug";
+#elif HV_CONFIG_GAME_RELEASE
+		executableName = "GameRelease";
+#endif
+
+		std::string objectPath = (rootPath + executableName + ".exe");
+		std::string linkPath = (workingPath + executableName + ".lnk");
+
+		// TODO.NW: Add link description?
+		CreateLink(objectPath.c_str(), linkPath.c_str(), 0);
+		HV_LOG_INFO("Created link '%s' for target '%s'", linkPath.c_str(), objectPath.c_str());
+
+		// Propagate command line to platform manager
+		ParseCommandLine(commandLine);
+	}
+
 	SVector2<I16> CPlatformManager::GetCenterPosition() const
 	{
 		SVector2<I16> center = {};
@@ -277,8 +300,8 @@ namespace Havtorn
 
 	HBITMAP CPlatformManager::LoadSplashImage(const std::string& filePath)
 	{ 
-		std::string rootDir = UFileSystem::GetExecutableRootPath();
-		HANDLE handle = LoadImageA(GetModuleHandle(NULL), (rootDir + filePath).c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
+		std::string workingPath = UFileSystem::GetWorkingPath();
+		HANDLE handle = LoadImageA(GetModuleHandle(NULL), (workingPath + filePath).c_str(), IMAGE_BITMAP, 0, 0, LR_LOADFROMFILE);
 		if (handle == NULL)
 			HV_LOG_ERROR("Splash image could not be found. Make sure that EngineConfig.json points to a BMP splash image in 8-bit (or 24-bit?) format.");
 
@@ -514,6 +537,24 @@ namespace Havtorn
 
 		CursorIsLocked = false;
 		WindowIsInEditingMode = isInEditorMode;
+	}
+
+	void CPlatformManager::ParseCommandLine(const std::string& commandLine)
+	{
+		U64 separator = commandLine.find_first_of(" ");
+		std::string command = commandLine.substr(separator, commandLine.size() - separator);
+		
+		// TODO.NW: Take inspiration from UFileSystem::SplitPath to extract commands into vector, generalize.
+		U64 urlSeparator = command.find_first_of("havtorn://");
+		if (urlSeparator == U64(0) - 1)
+			return;
+
+		U64 urlSize = std::string("havtorn://").size();
+		urlSeparator += urlSize;
+		command = command.substr(urlSeparator, command.size() - urlSize);
+		std::erase_if(command, [](char c) { return c == '"' || c == '/'; });
+
+		HV_LOG_INFO(command.c_str());
 	}
 
 	void CPlatformManager::UpdateResolution()

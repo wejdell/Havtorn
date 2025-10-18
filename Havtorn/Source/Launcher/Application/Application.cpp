@@ -3,6 +3,8 @@
 #include "Application.h"
 #include "Process.h"
 
+#include <CoreTypes.h>
+
 #include <WindowsInclude.h>
 
 namespace Havtorn
@@ -14,7 +16,7 @@ namespace Havtorn
 
 	CApplication::~CApplication() 
 	{
-		for (int i = static_cast<int>(Processes.size() - 1); i >= 0; i--)
+		for (I16 i = STATIC_I16(Processes.size() - 1); i >= 0; i--)
 			delete Processes[i];
 	}
 
@@ -23,12 +25,12 @@ namespace Havtorn
 		Processes.push_back(process);
 	}
 
-
-	void CApplication::Run()
+	void CApplication::Run(const std::string& command)
 	{
-		//Setup();
+		for (auto process : Processes)
+			process->OnApplicationReady(command);
 
-		const int processes = static_cast<int>(Processes.size() - 1);
+		const I16 numberOfProcesses = STATIC_I16(Processes.size() - 1);
 
 		MSG windowMessage = { 0 };
 		while (IsRunning)
@@ -47,19 +49,19 @@ namespace Havtorn
 
 			// Processes are run in reverse-order. Dependent to least dependent.
 
-			for (int i = processes; i >= 0; i--)
+			for (I16 i = numberOfProcesses; i >= 0; i--)
 				Processes[i]->BeginFrame();
 
-			for (int i = processes; i >= 0; i--)
+			for (I16 i = numberOfProcesses; i >= 0; i--)
 				Processes[i]->PreUpdate();
 
-			for (int i = processes; i >= 0; i--)
+			for (I16 i = numberOfProcesses; i >= 0; i--)
 				Processes[i]->Update();
 
-			for (int i = processes; i >= 0; i--)
+			for (I16 i = numberOfProcesses; i >= 0; i--)
 				Processes[i]->PostUpdate();
 
-			for (int i = processes; i >= 0; i--)
+			for (I16 i = numberOfProcesses; i >= 0; i--)
 				Processes[i]->EndFrame();
 		}
 	}
@@ -68,9 +70,9 @@ namespace Havtorn
 	{
 		Processes.shrink_to_fit();
 
-		for (int i = 0; i < Processes.size(); i++)
+		for (auto process : Processes)
 		{
-			if (!Processes[i]->Init(platformManager))
+			if (!process->Init(platformManager))
 			{
 				IsRunning = false;
 				break;

@@ -4,6 +4,11 @@ if %errorlevel% NEQ 0 EXIT /B 1
 call %~dp0\SetupBuildTools.bat
 if %errorlevel% NEQ 0 EXIT /B 1
 
+if not exist %~dp0..\Bin\EditorDebug\ mkdir -p %~dp0..\Bin\EditorDebug\
+if not exist %~dp0..\Bin\EditorDevelopment\ mkdir -p %~dp0..\Bin\EditorDevelopment\
+if not exist %~dp0..\Bin\GameDebug\ mkdir -p %~dp0..\Bin\GameDebug\
+if not exist %~dp0..\Bin\GameRelease\ mkdir -p %~dp0..\Bin\GameRelease\
+
 if not exist %~dp0..\External\Lib\Debug\ mkdir -p %~dp0..\External\Lib\Debug\
 if not exist %~dp0..\External\Lib\Release\ mkdir -p %~dp0..\External\Lib\Release\
 
@@ -22,6 +27,10 @@ echo.
 cmake --build . --config Release
 echo.
 copy /y bin\Release\assimp-vc143-mt.dll ..\..\Bin\assimp-vc143-mt.dll
+
+:: Add extra DLLs in DeepLink exe path
+:: TODO: Figure out how to do deep link without going into exe folder, or figure out how to load dll:s in code
+copy /y bin\Release\assimp-vc143-mt.dll ..\..\Bin\EditorDevelopment\assimp-vc143-mt.dll
 cd .. 
 
 mkdir -p ..\External\Lib\Debug\PhysX\
@@ -69,6 +78,16 @@ copy /y bin\win.x86_64.vc143.md\release\PhysXFoundation_64.lib ..\..\Lib\Release
 copy /y bin\win.x86_64.vc143.md\release\PhysXPvdSDK_static_64.lib ..\..\Lib\Release\PhysX\PhysXPvdSDK_static_64.lib
 copy /y bin\win.x86_64.vc143.md\release\PhysXCharacterKinematic_static_64.lib ..\..\Lib\Release\PhysX\PhysXCharacterKinematic_static_64.lib
 copy /y bin\win.x86_64.vc143.md\release\PhysXGpu_64.dll ..\..\..\Bin\PhysXGpu_64.dll
+
+:: Add extra DLLs in DeepLink exe path
+:: TODO: Figure out how to do deep link without going into exe folder, or figure out how to load dll:s in code
+copy /y bin\win.x86_64.vc143.md\release\PhysX_64.dll ..\..\..\Bin\EditorDevelopment\PhysX_64.dll
+copy /y bin\win.x86_64.vc143.md\release\PhysXCommon_64.dll ..\..\..\Bin\EditorDevelopment\PhysXCommon_64.dll
+copy /y bin\win.x86_64.vc143.md\release\PhysXCooking_64.dll ..\..\..\Bin\EditorDevelopment\PhysXCooking_64.dll
+copy /y bin\win.x86_64.vc143.md\release\PhysXDevice64.dll ..\..\..\Bin\EditorDevelopment\PhysXDevice64.dll
+copy /y bin\win.x86_64.vc143.md\release\PhysXFoundation_64.dll ..\..\..\Bin\EditorDevelopment\PhysXFoundation_64.dll
+copy /y bin\win.x86_64.vc143.md\release\PhysXGpu_64.dll ..\..\..\Bin\EditorDevelopment\PhysXGpu_64.dll
+
 cd ..\..
 
 cd box2d

@@ -33,33 +33,8 @@ namespace Havtorn
 		return PlatformManager->Init(windowData);
 	}
 
-	void CPlatformProcess::OnApplicationReady()
+	void CPlatformProcess::OnApplicationReady(const std::string& command)
 	{
-		PlatformManager->CloseSplashWindow();
-	}
-
-	void CPlatformProcess::BeginFrame()
-	{
-		//PlatformManager->BeginFrame();
-	}
-
-	void CPlatformProcess::PreUpdate()
-	{
-		//PlatformManager->PreUpdate();
-	}
-
-	void CPlatformProcess::Update()
-	{
-		//PlatformManager->Update();
-	}
-
-	void CPlatformProcess::PostUpdate()
-	{
-		//PlatformManager->PostUpdate();
-	}
-
-	void CPlatformProcess::EndFrame()
-	{
-		//PlatformManager->EndFrame();
+		PlatformManager->OnApplicationReady(command);
 	}
 }
