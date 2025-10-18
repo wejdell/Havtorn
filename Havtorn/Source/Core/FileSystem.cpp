@@ -41,6 +41,16 @@ namespace Havtorn
 		return UGeneralUtils::ConvertToPlatformAgnosticPath(UGeneralUtils::ExtractParentDirectoryFromPath(pBuf));
 	}
 
+	std::string CORE_API UFileSystem::GetWorkingPath()
+	{
+		return UGeneralUtils::ConvertToPlatformAgnosticPath(std::filesystem::current_path().string() + "/");
+	}
+
+	void CORE_API UFileSystem::SetWorkingPath(const std::string& folderPath)
+	{
+		std::filesystem::current_path(folderPath);
+	}
+
 	void UFileSystem::Serialize(const std::string& filePath, const char* data, U32 size)
 	{
 		std::ofstream outputStream;

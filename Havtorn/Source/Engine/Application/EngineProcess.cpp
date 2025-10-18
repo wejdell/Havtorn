@@ -3,14 +3,11 @@
 #include "hvpch.h"
 
 #include "Engine.h"
-//#include "WindowHandler.h"
 #include "Graphics/GraphicsFramework.h"
 #include "EngineProcess.h"
 
 namespace Havtorn
 {
-	//CEngineProcess::WindowsWindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-	//CEngineProcess::WinProc = nullptr;
 	CEngineProcess::CEngineProcess()
 		: Engine(nullptr)
 	{
@@ -32,11 +29,6 @@ namespace Havtorn
 	void CEngineProcess::BeginFrame()
 	{
 		Engine->BeginFrame();
-	}
-
-	void CEngineProcess::PreUpdate()
-	{
-
 	}
 
 	void CEngineProcess::Update()

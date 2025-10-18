@@ -3,6 +3,7 @@
 #pragma once
 
 #include <vector>
+#include <string>
 
 namespace Havtorn
 {
@@ -19,7 +20,7 @@ namespace Havtorn
 		// Processes are initialized in order of addition, run and destructed in reverse-order.
 		void AddProcess(IProcess* process);
 
-		void Run();
+		void Run(const std::string& commandLine);
 		void Setup(CPlatformManager* platformManager);
 
 	private:

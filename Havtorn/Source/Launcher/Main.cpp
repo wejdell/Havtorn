@@ -43,18 +43,18 @@ void CloseConsole()
 
 using namespace Havtorn;
 
-bool TrySendToRunningInstance(const std::wstring& uri)
+bool TrySendToRunningInstance(const std::string& uri)
 {
-	HWND targetWindowHWND = FindWindowW(L"HavtornWindowClass", L"Havtorn Editor");
+	HWND targetWindowHWND = FindWindowW(L"HavtornWindow", L"Havtorn Editor");
 	if (!targetWindowHWND)
 		return false;
 
 	COPYDATASTRUCT copyDataStruct;
 	copyDataStruct.dwData = 1;
-	copyDataStruct.cbData = (DWORD)(uri.size() + 1) * sizeof(wchar_t);
+	copyDataStruct.cbData = (DWORD)(uri.size() + 1) * sizeof(char);
 	copyDataStruct.lpData = (PVOID)uri.c_str();
-	//LRESULT result = 
-	SendMessageW(targetWindowHWND, WM_COPYDATA, 0, (LPARAM)&copyDataStruct);
+	
+	SendMessageA(targetWindowHWND, WM_COPYDATA, 0, (LPARAM)&copyDataStruct);
 	return true;
 }
 
@@ -68,13 +68,10 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 #ifdef HV_DEEPLINK_ENABLED
 	// Note.AS:
 	// Overrides CurrentDirectory to be as if you started this application from the exe's location- which is not true when deeplink-starting this executable
-	wchar_t wideExePath[255];
-	GetModuleFileNameW(NULL, wideExePath, 255);
-	std::filesystem::path exePath(wideExePath);
-	std::filesystem::path exeDirectory = exePath.parent_path();
-	SetCurrentDirectoryW(exeDirectory.c_str());
+	UFileSystem::SetWorkingPath(UGeneralUtils::ExtractParentDirectoryFromPath(UFileSystem::GetExecutableRootPath()));
 
-	std::wstring cmdLine = GetCommandLineW();
+	// TODO.NW: Add better command line parsing
+	std::string cmdLine = GetCommandLineA();
 	if (TrySendToRunningInstance(cmdLine))
 	{
 		return 0;
@@ -84,37 +81,46 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 #ifdef USE_CONSOLE
 	OpenConsole();
 #endif
+
 	CPlatformProcess* platformProcess = new CPlatformProcess(100, 100, 1280, 720);
-	GUIProcess* guiProcess = new GUIProcess();
 	CEngineProcess* engineProcess = new CEngineProcess();
 	CGameProcess* gameProcess = new CGameProcess();
+
+#ifdef HV_EDITOR_BUILD
+	GUIProcess* guiProcess = new GUIProcess();
 	CEditorProcess* editorProcess = new CEditorProcess();
+#endif
 
 	auto application = new CApplication();
 	application->AddProcess(platformProcess);
 	application->AddProcess(engineProcess);
+#ifdef HV_EDITOR_BUILD
 	application->AddProcess(guiProcess);
+#endif
 	application->AddProcess(gameProcess);
+#ifdef HV_EDITOR_BUILD
 	application->AddProcess(editorProcess);
+#endif
 
 	platformProcess->Init(nullptr);
 	engineProcess->Init(platformProcess->PlatformManager);
+	
+#ifdef HV_EDITOR_BUILD
 	// TODO.NW: guiProcess init should handle InitGUI, need hold of the render backend somehow. maybe still move render backend to platform manager
 	guiProcess->Init(platformProcess->PlatformManager);
 	auto backend = engineProcess->GetRenderBackend();
 	guiProcess->InitGUI(platformProcess->PlatformManager, backend.device, backend.context);
+#endif
 	gameProcess->Init(platformProcess->PlatformManager);
+#ifdef HV_EDITOR_BUILD	
 	editorProcess->Init(platformProcess->PlatformManager);
+#endif
+
 	//application->Setup(platformProcess->PlatformManager); //foreach -> process->Init();
-
-	platformProcess->OnApplicationReady();
-	application->Run();
-
+	application->Run(cmdLine);
 	delete application;
 
 	SetForegroundWindow(GetConsoleWindow());
-
-	system("pause");
 
 #ifdef USE_CONSOLE
 	CloseConsole();
@@ -122,5 +128,4 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 
 	return 0;
 }
-
 #endif

@@ -13,6 +13,7 @@ namespace Havtorn
 		~CGameProcess() override;
 
 		bool Init(CPlatformManager* platformManager) override;
+		void OnApplicationReady(const std::string& commandLine) override;
 
 		void BeginFrame() override;
 		void PreUpdate() override;

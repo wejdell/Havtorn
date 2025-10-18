@@ -2,13 +2,10 @@
 
 #include "GameManager.h"
 #include "Ghosty\GhostySystem.h"
+#include "GameScene.h"
 
 #include <Engine.h>
-//#include <Application/ImGuiManager.h>
-
-//#include <EditorIMGUI/GUIProcess.h>
 #include <GUI.h>
-
 
 namespace Havtorn
 {
@@ -32,9 +29,29 @@ namespace Havtorn
 		World->OnPausePlayDelegate.AddMember(this, &CGameManager::OnPausePlay);
 		World->OnEndPlayDelegate.AddMember(this, &CGameManager::OnEndPlay);
 
-		//ImGui::SetCurrentContext(Havtorn::GImGuiManager::GetContext());
-
 		return true;
+	}
+
+	void CGameManager::OnApplicationReady(const std::string& commandLine)
+	{
+		const U64 separator = commandLine.find_first_of(" ");
+		std::string parsedCommand = commandLine.substr(separator, commandLine.size() - separator);
+		std::erase_if(parsedCommand, [](char c) { return c == ' '; });
+		const bool commandPointsToSceneAsset = UGeneralUtils::ExtractFileExtensionFromPath(parsedCommand) == "hva";
+
+		if (commandPointsToSceneAsset)
+			HV_LOG_INFO("GameManager received command: %s", (UFileSystem::GetWorkingPath() + parsedCommand).c_str());
+
+#ifdef HV_GAME_BUILD
+		std::string levelToLoad = UFileSystem::GetWorkingPath() + parsedCommand;
+
+		if (commandPointsToSceneAsset && UFileSystem::Exists(levelToLoad))
+			World->AddScene<CGameScene>(levelToLoad);
+		else
+			World->OpenDemoScene<CGameScene>(true);
+		
+		World->BeginPlay();
+#endif
 	}
 
 	void CGameManager::BeginFrame()
@@ -47,11 +64,6 @@ namespace Havtorn
 
 	void CGameManager::Update()
 	{
-		//GUI::Begin("Game Window");
-		//GUI::End();
-
-		//GUI::Begin("Another Game Window");
-		//GUI::End();
 	}
 
 	void CGameManager::PostUpdate()
