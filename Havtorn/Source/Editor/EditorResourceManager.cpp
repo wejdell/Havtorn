@@ -42,7 +42,7 @@ namespace Havtorn
 		case EAssetType::VisualFX:
 			break;
 		case EAssetType::Scene:
-			break;
+			return std::move(GetEditorTexture(EEditorTexture::SceneIcon));
 		case EAssetType::Sequencer:
 			return std::move(GetEditorTexture(EEditorTexture::SequencerIcon));
 		case EAssetType::Script:
