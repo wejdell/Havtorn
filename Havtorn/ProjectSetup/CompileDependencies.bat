@@ -64,9 +64,11 @@ copy /y bin\win.x86_64.vc143.md\debug\PhysXPvdSDK_static_64.lib ..\..\Lib\Debug\
 copy /y bin\win.x86_64.vc143.md\debug\PhysXCharacterKinematic_static_64.lib ..\..\Lib\Debug\PhysX\PhysXCharacterKinematic_static_64d.lib
 copy /y bin\win.x86_64.vc143.md\debug\PhysXGpu_64.dll ..\..\..\Bin\PhysXGpu_64d.dll
 echo.
-call generate_projects.bat vc17win64_release
+call generate_projects.bat vc17win64r
+
 echo.
-cmake --build compiler/vc17win64_release --config Release
+cmake --build compiler/vc17win64r --config Release
+
 copy /y bin\win.x86_64.vc143.md\release\PhysX_64.dll ..\..\..\Bin\PhysX_64.dll
 copy /y bin\win.x86_64.vc143.md\release\PhysX_64.lib ..\..\Lib\Release\PhysX\PhysX_64.lib
 copy /y bin\win.x86_64.vc143.md\release\PhysXCommon_64.dll ..\..\..\Bin\PhysXCommon_64.dll
