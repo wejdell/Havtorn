@@ -22,10 +22,12 @@ echo Building assimp...
 echo.
 cmake --build .
 echo.
+copy /y lib\Debug\assimp-vc143-mtd.lib ..\Lib\Debug\
 copy /y bin\Debug\assimp-vc143-mtd.dll ..\..\Bin\assimp-vc143-mtd.dll
 echo.
 cmake --build . --config Release
 echo.
+copy /y lib\Release\assimp-vc143-mt.lib ..\Lib\Release\
 copy /y bin\Release\assimp-vc143-mt.dll ..\..\Bin\assimp-vc143-mt.dll
 
 :: Add extra DLLs in DeepLink exe path
