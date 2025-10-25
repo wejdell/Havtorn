@@ -31,9 +31,9 @@ namespace Havtorn
 		return GameManager->Init();
 	}
 
-	void CGameProcess::OnApplicationReady(const std::string& commandLine)
+	void CGameProcess::OnApplicationReady()
 	{
-		GameManager->OnApplicationReady(commandLine);
+		GameManager->OnApplicationReady();
 	}
 
 	void CGameProcess::BeginFrame()

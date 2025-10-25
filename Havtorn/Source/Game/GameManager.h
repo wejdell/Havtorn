@@ -13,7 +13,7 @@ namespace Havtorn
 		GAME_API ~CGameManager();
 
 		GAME_API bool Init();
-		GAME_API void OnApplicationReady(const std::string& commandLine);
+		GAME_API void OnApplicationReady();
 
 		GAME_API void BeginFrame();
 		GAME_API void PreUpdate();

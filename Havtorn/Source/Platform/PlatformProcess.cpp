@@ -33,8 +33,8 @@ namespace Havtorn
 		return PlatformManager->Init(windowData);
 	}
 
-	void CPlatformProcess::OnApplicationReady(const std::string& command)
+	void CPlatformProcess::OnApplicationReady()
 	{
-		PlatformManager->OnApplicationReady(command);
+		PlatformManager->OnApplicationReady();
 	}
 }

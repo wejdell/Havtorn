@@ -1,7 +1,7 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #include <Havtorn.h>
-#include <iostream>
+#include <CommandLine.h>
 
 #include "Application/Application.h"
 #include <../Platform/PlatformProcess.h>
@@ -9,6 +9,8 @@
 #include <../Game/GameProcess.h>
 #include <../Editor/EditorProcess.h>
 #include <../GUI/GUIProcess.h>
+
+#include <iostream>
 #include <filesystem>
 
 #ifdef HV_PLATFORM_WINDOWS
@@ -65,6 +67,8 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	lpCmdLine;
 	nShowCmd;
 
+	UCommandLine::Parse(GetCommandLineA());
+
 #ifdef HV_DEEPLINK_ENABLED
 	// Note.AS:
 	// Overrides CurrentDirectory to be as if you started this application from the exe's location- which is not true when deeplink-starting this executable
@@ -117,7 +121,7 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 #endif
 
 	//application->Setup(platformProcess->PlatformManager); //foreach -> process->Init();
-	application->Run(cmdLine);
+	application->Run();
 	delete application;
 
 	SetForegroundWindow(GetConsoleWindow());

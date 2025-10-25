@@ -128,6 +128,10 @@ echo.
 cmake --build . --config=Release
 copy /y bin\Release\DirectXTex.dll ..\..\Bin\DirectXTex.dll
 copy /y lib\Release\DirectXTex.lib ..\Lib\Release\DirectXTex.lib
+
+:: Add extra DLLs in DeepLink exe path
+:: TODO: Figure out how to do deep link without going into exe folder, or figure out how to load dll:s in code
+copy /y bin\Release\DirectXTex.dll ..\..\Bin\EditorDevelopment\DirectXTex.dll
 cd .. 
 
 echo.

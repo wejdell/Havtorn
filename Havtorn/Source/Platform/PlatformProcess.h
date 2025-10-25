@@ -17,7 +17,7 @@ namespace Havtorn
 		~CPlatformProcess() override;
 
 		bool Init(CPlatformManager* platformManager) override;
-		void OnApplicationReady(const std::string& commandLine) override;
+		void OnApplicationReady() override;
 
 		class CPlatformManager* PlatformManager = nullptr;
 	private:

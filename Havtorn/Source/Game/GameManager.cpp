@@ -4,6 +4,7 @@
 #include "Ghosty\GhostySystem.h"
 #include "GameScene.h"
 
+#include <CommandLine.h>
 #include <Engine.h>
 #include <GUI.h>
 
@@ -32,11 +33,9 @@ namespace Havtorn
 		return true;
 	}
 
-	void CGameManager::OnApplicationReady(const std::string& commandLine)
+	void CGameManager::OnApplicationReady()
 	{
-		const U64 separator = commandLine.find_first_of(" ");
-		std::string parsedCommand = commandLine.substr(separator, commandLine.size() - separator);
-		std::erase_if(parsedCommand, [](char c) { return c == ' '; });
+		std::string parsedCommand = UCommandLine::GetOptionParameter("StartScene");
 		const bool commandPointsToSceneAsset = UGeneralUtils::ExtractFileExtensionFromPath(parsedCommand) == "hva";
 
 		if (commandPointsToSceneAsset)

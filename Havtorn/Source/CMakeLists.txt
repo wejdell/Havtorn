@@ -101,6 +101,8 @@ set(CORE_FILES
     ${CORE_FOLDER}BitSet.h
     ${CORE_FOLDER}Color.cpp
     ${CORE_FOLDER}Color.h
+    ${CORE_FOLDER}CommandLine.cpp
+    ${CORE_FOLDER}CommandLine.h
     ${CORE_FOLDER}Core.h
     ${CORE_FOLDER}CoreTypes.h
     ${CORE_FOLDER}Delegate.cpp

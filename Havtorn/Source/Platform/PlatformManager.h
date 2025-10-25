@@ -52,7 +52,7 @@ namespace Havtorn
 
 		PLATFORM_API const HWND GetWindowHandle() const;
 
-		PLATFORM_API void OnApplicationReady(const std::string& commandLine);
+		PLATFORM_API void OnApplicationReady();
 
 	private:
 		CPlatformManager();
@@ -67,8 +67,6 @@ namespace Havtorn
 
 		PLATFORM_API void HideAndLockCursor(const bool& isInEditorMode = false);
 		PLATFORM_API void ShowAndUnlockCursor(const bool& isInEditorMode = true);
-
-		PLATFORM_API void ParseCommandLine(const std::string& commandLine);
 
 	private:
 		// Splash Utils

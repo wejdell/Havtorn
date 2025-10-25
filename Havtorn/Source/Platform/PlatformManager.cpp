@@ -10,6 +10,7 @@
 #include <algorithm>
 
 #include <Log.h>
+#include <CommandLine.h>
 #include <FileSystem.h>
 #include <GeneralUtilities.h>
 
@@ -46,7 +47,8 @@ namespace Havtorn
 		{
 			COPYDATASTRUCT* cds = reinterpret_cast<COPYDATASTRUCT*>(lParam);
 			std::string stringData(reinterpret_cast<char*>(cds->lpData), cds->cbData / sizeof(char));
-			platformManager->ParseCommandLine(stringData);
+			UCommandLine::Parse(stringData);
+			HV_LOG_INFO("DeepLink: %s", UCommandLine::GetDeepLinkCommand().c_str());
 		}
 		break;
 		case WM_KILLFOCUS:
@@ -242,7 +244,7 @@ namespace Havtorn
 		return WindowHandle;
 	}
 
-	void CPlatformManager::OnApplicationReady(const std::string& commandLine)
+	void CPlatformManager::OnApplicationReady()
 	{
 		CloseSplashWindow();
 
@@ -268,8 +270,15 @@ namespace Havtorn
 		CreateLink(objectPath.c_str(), linkPath.c_str(), 0);
 		HV_LOG_INFO("Created link '%s' for target '%s'", linkPath.c_str(), objectPath.c_str());
 
-		// Propagate command line to platform manager
-		ParseCommandLine(commandLine);
+		HV_LOG_INFO("DeepLink command: %s", UCommandLine::GetDeepLinkCommand().c_str());
+
+		std::vector<std::string> commandLineParams = UCommandLine::GetFreeParameters();
+		for (auto param : commandLineParams)
+			HV_LOG_INFO("PARAM: %s", param.c_str());
+
+		HV_LOG_INFO("HAS PARAM yeah: %s", UCommandLine::HasFreeParameter("yeah") ? "true" : "false");
+
+		HV_LOG_INFO("OPTION hello: %s", UCommandLine::GetOptionParameter("hello").c_str());
 	}
 
 	SVector2<I16> CPlatformManager::GetCenterPosition() const
@@ -537,24 +546,6 @@ namespace Havtorn
 
 		CursorIsLocked = false;
 		WindowIsInEditingMode = isInEditorMode;
-	}
-
-	void CPlatformManager::ParseCommandLine(const std::string& commandLine)
-	{
-		U64 separator = commandLine.find_first_of(" ");
-		std::string command = commandLine.substr(separator, commandLine.size() - separator);
-		
-		// TODO.NW: Take inspiration from UFileSystem::SplitPath to extract commands into vector, generalize.
-		U64 urlSeparator = command.find_first_of("havtorn://");
-		if (urlSeparator == U64(0) - 1)
-			return;
-
-		U64 urlSize = std::string("havtorn://").size();
-		urlSeparator += urlSize;
-		command = command.substr(urlSeparator, command.size() - urlSize);
-		std::erase_if(command, [](char c) { return c == '"' || c == '/'; });
-
-		HV_LOG_INFO(command.c_str());
 	}
 
 	void CPlatformManager::UpdateResolution()

@@ -25,10 +25,10 @@ namespace Havtorn
 		Processes.push_back(process);
 	}
 
-	void CApplication::Run(const std::string& command)
+	void CApplication::Run()
 	{
 		for (auto process : Processes)
-			process->OnApplicationReady(command);
+			process->OnApplicationReady();
 
 		const I16 numberOfProcesses = STATIC_I16(Processes.size() - 1);
 
