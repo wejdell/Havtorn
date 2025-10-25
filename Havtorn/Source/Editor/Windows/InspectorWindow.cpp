@@ -250,7 +250,7 @@ namespace Havtorn
 			{
 				AssetPickedIndex = index;
 				auto pickedAsset = Manager->GetAssetRepFromDirEntry(assetPickResult.PickedEntry).get();
-				std::string newAssetPath = pickedAsset->DirectoryEntry.path().string();
+				std::string newAssetPath = UGeneralUtils::ConvertToPlatformAgnosticPath(pickedAsset->DirectoryEntry.path().string());
 
 				if (result.AssetReferences != nullptr)
 				{
