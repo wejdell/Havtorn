@@ -36,8 +36,7 @@ namespace Havtorn
 			I64 wrapping = newestParam.find(wrappingSequence);
 			while (wrapping != -1)
 			{
-				std::ranges::erase_if()
-				//newestParam.erase(newestParam.begin() + wrapping, wrappingSequence.size());
+				newestParam.erase(wrapping, wrappingSequence.size());
 				wrapping = newestParam.find(wrappingSequence);
 			}
 
