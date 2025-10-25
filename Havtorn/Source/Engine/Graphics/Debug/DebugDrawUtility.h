@@ -9,7 +9,7 @@
 #include <queue>
 #include <map>
 
-#ifdef _DEBUG
+#if defined _DEBUG || defined HV_EDITOR_BUILD
 
 #ifndef USE_DEBUG_SHAPE
 #define USE_DEBUG_SHAPE

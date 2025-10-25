@@ -358,6 +358,5 @@ namespace Havtorn
             std::unordered_map<U32, std::function<SNode* (const U64, const U32, SScript*)>> BasicNodeFactoryMap;
             std::unordered_map<U32, std::function<SNode* (const U64, const U32, SScript*, const U64)>> DatabindingNodeFactoryMap;
         };
-
 	}
 }
