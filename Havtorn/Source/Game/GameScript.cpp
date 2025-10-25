@@ -3,21 +3,23 @@
 #include "hvpch.h"
 #include "GameScript.h"
 #include <Scene/World.h>
+#include "GhostyNode.h"
+#include "Ghosty/SGhostyNodeEditorContext.h"
+
 namespace Havtorn
 {
-	[[nodiscard]] U32 SGameScript::GetSize() const
+	SGameScript::SGameScript()
+		: SScript()
 	{
-		U32 size = HexRune::SScript::GetSize();
-		return size;
+	}
+	SGameScript::~SGameScript()
+	{
 	}
 
-	void SGameScript::Serialize(char* toData, U64& pointerPosition) const
+	void SGameScript::InitializeGame(U32 typeId)
 	{
-		HexRune::SScript::Serialize(toData, pointerPosition);;
-	}
-
-	void SGameScript::Deserialize(const char* fromData, U64& pointerPosition)
-	{
-		HexRune::SScript::Deserialize(fromData, pointerPosition);
+		NodeFactory->RegisterNodeType<HexRune::SGhostyNode, HexRune::SGhostyNodeEditorContext>(this, typeId++);
+		NodeFactory->RegisterNodeType<HexRune::SGhostyPositionNode, HexRune::SGhostyNodePositionEditorContex>(this, typeId++);
+		
 	}
 }

@@ -11,6 +11,7 @@
 #include "HexRune/HexRune.h"
 
 #include <set>
+#include "../../Game/GameScript.h"
 
 namespace Havtorn
 {
@@ -140,7 +141,7 @@ namespace Havtorn
 		SSpriteAnimationClip SpriteAnimationClip;
 	};
 
-	typedef std::variant<std::monostate, SStaticMeshAsset, SSkeletalMeshAsset, SSkeletalAnimationAsset, STextureAsset, SGraphicsMaterialAsset, SSpriteAninmationClipAsset, HexRune::SScript> SAssetData;
+	typedef std::variant<std::monostate, SStaticMeshAsset, SSkeletalMeshAsset, SSkeletalAnimationAsset, STextureAsset, SGraphicsMaterialAsset, SSpriteAninmationClipAsset, HexRune::SScript*> SAssetData;
 
 	struct SAsset
 	{

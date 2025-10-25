@@ -527,7 +527,7 @@ namespace Havtorn
 		SScriptFileHeader fileHeader = SScriptFileHeader{};
 		fileHeader.AssetType = EAssetType::Script;
 		fileHeader.Name = NewAssetName;
-		fileHeader.Script = new HexRune::SScript();
+		fileHeader.Script = new Havtorn::SGameScript();
 		return fileHeader;
 	}
 

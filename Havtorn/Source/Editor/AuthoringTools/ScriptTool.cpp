@@ -14,6 +14,8 @@
 
 #include <Assets/AssetRegistry.h>
 
+#include <../Game/GameScript.h>
+
 using Havtorn::I32;
 using Havtorn::F32;
 using Havtorn::U64;
@@ -195,7 +197,9 @@ namespace Havtorn
 	void CScriptTool::OpenScript(SEditorAssetRepresentation* asset)
 	{
 		CurrentScriptRepresentation = asset;
-		CurrentScript = GEngine::GetAssetRegistry()->RequestAssetData<HexRune::SScript>(SAssetReference(asset->DirectoryEntry.path().string()), CAssetRegistry::EditorManagerRequestID);
+		CurrentScript = new SGameScript();
+		CurrentScript->Initialize();
+		GEngine::GetAssetRegistry()->RequestGameAssetData<HexRune::SScript>(CurrentScript, SAssetReference(asset->DirectoryEntry.path().string()), CAssetRegistry::EditorManagerRequestID);
 		SetEnabled(true);
 	}
 

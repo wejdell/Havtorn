@@ -648,6 +648,10 @@ add_dependencies(Engine Core Platform GUI)
 
 # ==================== GAME ====================
 set(GAME_FILES
+	Game/Ghosty/SGhostyNodeEditorContext.h
+	Game/Ghosty/SGhostyNodeEditorContext.cpp
+	${GAME_FOLDER}GhostyNode.h
+	${GAME_FOLDER}GhostyNode.cpp
     ${GAME_FOLDER}Ghosty/GhostyComponent.h
     ${GAME_FOLDER}Ghosty/GhostyComponentEditorContext.cpp
     ${GAME_FOLDER}Ghosty/GhostyComponentEditorContext.h

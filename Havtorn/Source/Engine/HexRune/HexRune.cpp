@@ -14,7 +14,12 @@ namespace Havtorn
 	{
 		SScript::SScript()
 		{
-			Initialize();
+
+		}
+
+		SScript::~SScript()
+		{
+
 		}
 
 		void SScript::AddDataBinding(const char* name, const EPinType type, const EObjectDataType objectType, const EAssetType assetType)
@@ -200,6 +205,7 @@ namespace Havtorn
 			NodeFactory->RegisterNodeType<STogglePointLightNode, STogglePointLightNodeEditorContext>(this, typeID++);
 			NodeFactory->RegisterNodeType<SOnBeginOverlapNode, SOnBeginOverlapNodeEditorContext>(this, typeID++);
 			NodeFactory->RegisterNodeType<SOnEndOverlapNode, SOnEndOverlapNodeEditorContext>(this, typeID++);
+			InitializeGame(typeID);
 		}
 
 		void SScript::TraverseFromNode(const U64 startNodeID, CScene* owningScene)

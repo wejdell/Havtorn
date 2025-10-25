@@ -33,10 +33,11 @@ namespace Havtorn
 
 		for (SScriptComponent* component : scriptComponents)
 		{
-			if (!SComponent::IsValid(component))
+			if (!SComponent::IsValid(component) || !component->AssetReference.IsValid())
 				continue;
 
-			HexRune::SScript* script = GEngine::GetAssetRegistry()->RequestAssetData<HexRune::SScript>(component->AssetReference, component->Owner.GUID);
+			HexRune::SScript* script = nullptr;
+			script = GEngine::GetAssetRegistry()->RequestGameAssetData(script, component->AssetReference, component->Owner.GUID);
 
 			if (component->DataBindings.size() != script->DataBindings.size())
 			{
