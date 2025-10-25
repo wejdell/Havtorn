@@ -117,13 +117,22 @@ namespace Havtorn
 			}
 		}
 
-		template<typename T>
-		void RegisterComponent(U32 startingNumberOfInstances, SComponentEditorContext* context)
+		struct SComponentSerializer
 		{
-			const U64 typeIDHashCode = typeid(T).hash_code();
+			std::function<U32(const CScene*)> SizeAllocator;
+			std::function<void(const CScene*, char*, U64&)> Serializer;
+			std::function<void(CScene*, const char*, U64&)> Deserializer;
+		};
+
+		std::unordered_map<U32, SComponentSerializer> ComponentFactory;
+
+		template<typename TComponent, typename TComponentEditorContext>
+		void RegisterTrivialComponent(U32 typeID, U32 startingNumberOfInstances = 10)
+		{
+			const U64 typeIDHashCode = STATIC_U64(typeID)/*typeid(T).hash_code()*/;
 			if (ContextIndices.contains(typeIDHashCode))
 			{
-				HV_LOG_WARN("%s is already registered in the %s scene.", typeid(T).name(), SceneName.AsString().c_str());
+				//HV_LOG_WARN("%s is already registered in the %s scene.", typeid(T).name(), SceneName.AsString().c_str());
 				return;
 			}
 
@@ -135,9 +144,119 @@ namespace Havtorn
 			}
 
 			ContextIndices.emplace(typeIDHashCode, RegisteredComponentEditorContexts.size());
-			RegisteredComponentEditorContexts.emplace_back(context);
+			RegisteredComponentEditorContexts.emplace_back(&TComponentEditorContext::Context);
 
 			std::sort(RegisteredComponentEditorContexts.begin(), RegisteredComponentEditorContexts.end(), [](const SComponentEditorContext* a, const SComponentEditorContext* b) { return a->GetSortingPriority() < b->GetSortingPriority(); });
+
+			SComponentSerializer serializer;
+			serializer.SizeAllocator =
+				[](const CScene* scene)
+				{
+					const std::vector<TComponent*>& componentVector = scene->GetComponents<TComponent>();
+
+					U32 size = 0;
+					size += GetDataSize(STATIC_U32(componentVector.size()));
+					for (const auto component : componentVector)
+					{
+						auto& componentRef = *component;
+						size += GetDataSize(componentRef);
+					}
+					return size;
+				};
+
+			serializer.Serializer =
+				[](const CScene* scene, char* toData, U64& pointerPosition)
+				{
+					const std::vector<TComponent*>& componentVector = scene->GetComponents<TComponent>();
+
+					SerializeData(STATIC_U32(componentVector.size()), toData, pointerPosition);
+					for (const auto component : componentVector)
+					{
+						auto& componentRef = *component;
+						SerializeData(componentRef, toData, pointerPosition);
+					}
+				};
+
+			serializer.Deserializer =
+				[](CScene* scene, const char* fromData, U64& pointerPosition)
+				{
+					U32 numberOfComponents = 0;
+					DeserializeData(numberOfComponents, fromData, pointerPosition);
+
+					for (U64 index = 0; index < numberOfComponents; index++)
+					{
+						TComponent component;
+						DeserializeData(component, fromData, pointerPosition);
+						scene->AddComponent(component, component.Owner);
+						scene->AddComponentEditorContext(component.Owner, &TComponentEditorContext::Context);
+					}
+				};				
+			
+			ComponentFactory[typeID] = serializer;
+		}
+
+		template<typename TComponent, typename TComponentEditorContext>
+		void RegisterNonTrivialComponent(U32 typeID, U32 startingNumberOfInstances = 10)
+		{
+			const U64 typeIDHashCode = STATIC_U64(typeID)/*typeid(T).hash_code()*/;
+			if (ContextIndices.contains(typeIDHashCode))
+			{
+				//HV_LOG_WARN("%s is already registered in the %s scene.", typeid(T).name(), SceneName.AsString().c_str());
+				return;
+			}
+
+			if (ComponentTypeIndices.contains(typeIDHashCode))
+			{
+				ComponentTypeIndices.emplace(typeIDHashCode, Storages.size());
+				Storages.emplace_back();
+				Storages.back().Components.resize(startingNumberOfInstances, nullptr);
+			}
+
+			ContextIndices.emplace(typeIDHashCode, RegisteredComponentEditorContexts.size());
+			RegisteredComponentEditorContexts.emplace_back(&TComponentEditorContext::Context);
+
+			std::sort(RegisteredComponentEditorContexts.begin(), RegisteredComponentEditorContexts.end(), [](const SComponentEditorContext* a, const SComponentEditorContext* b) { return a->GetSortingPriority() < b->GetSortingPriority(); });
+
+			SComponentSerializer serializer;
+			serializer.SizeAllocator =
+				[](const CScene* scene)
+				{
+					const std::vector<TComponent*>& componentVector = scene->GetComponents<TComponent>();
+
+					U32 size = 0;
+					size += GetDataSize(STATIC_U32(componentVector.size()));
+					for (auto component : componentVector)
+						size += component->GetSize();
+
+					return size;
+				};
+
+			serializer.Serializer =
+				[](const CScene* scene, char* toData, U64& pointerPosition)
+				{
+					const std::vector<TComponent*>& componentVector = scene->GetComponents<TComponent>();
+
+					SerializeData(STATIC_U32(componentVector.size()), toData, pointerPosition);
+					for (auto component : componentVector)
+						component->Serialize(toData, pointerPosition);
+				};
+
+			serializer.Deserializer =
+				[](CScene* scene, const char* fromData, U64& pointerPosition)
+				{
+					U32 numberOfComponents = 0;
+					DeserializeData(numberOfComponents, fromData, pointerPosition);
+
+					for (U64 index = 0; index < numberOfComponents; index++)
+					{
+						TComponent component;
+						component.Deserialize(fromData, pointerPosition);
+						scene->AddComponent(component, component.Owner);
+						scene->AddComponentEditorContext(component.Owner, &TComponentEditorContext::Context);
+					}
+				};
+			
+			ComponentFactory[typeID] = serializer;
 		}
 
 		template<typename T>

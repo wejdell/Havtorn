@@ -28,27 +28,28 @@ namespace Havtorn
 	{
 		SceneName = sceneName;
 
-		RegisterComponent<STransformComponent>(50, &STransformComponentEditorContext::Context);
-		RegisterComponent<SStaticMeshComponent>(40, &SStaticMeshComponentEditorContext::Context);
-		RegisterComponent<SSkeletalMeshComponent>(40, &SSkeletalMeshComponentEditorContext::Context);
-		RegisterComponent<SSkeletalAnimationComponent>(40, &SSkeletalAnimationComponentEditorContext::Context);
-		RegisterComponent<SCameraComponent>(2, &SCameraComponentEditorContext::Context);
-		RegisterComponent<SCameraControllerComponent>(2, &SCameraControllerComponentEditorContext::Context);
-		RegisterComponent<SMaterialComponent>(40, &SMaterialComponentEditorContext::Context);
-		RegisterComponent<SEnvironmentLightComponent>(1, &SEnvironmentLightComponentEditorContext::Context);
-		RegisterComponent<SDirectionalLightComponent>(1, &SDirectionalLightComponentEditorContext::Context);
-		RegisterComponent<SPointLightComponent>(1, &SPointLightComponentEditorContext::Context);
-		RegisterComponent<SSpotLightComponent>(1, &SSpotLightComponentEditorContext::Context);
-		RegisterComponent<SVolumetricLightComponent>(3, &SVolumetricLightComponentEditorContext::Context);
-		RegisterComponent<SDecalComponent>(2, &SDecalComponentEditorContext::Context);
-		RegisterComponent<SSpriteComponent>(10, &SSpriteComponentEditorContext::Context);
-		RegisterComponent<STransform2DComponent>(10, &STransform2DComponentEditorContext::Context);
-		RegisterComponent<SSpriteAnimatorGraphComponent>(2, &SSpriteAnimatorGraphComponentEditorContext::Context);
-		RegisterComponent<SSequencerComponent>(0, &SSequencerComponentEditorContext::Context);
-		RegisterComponent<SScriptComponent>(10, &SScriptComponentEditorContext::Context);
-		RegisterComponent<SPhysics2DComponent>(10, &SPhysics2DComponentEditorContext::Context);
-		RegisterComponent<SPhysics3DComponent>(40, &SPhysics3DComponentEditorContext::Context);
-		RegisterComponent<SPhysics3DControllerComponent>(1, &SPhysics3DControllerComponentEditorContext::Context);
+		U32 typeID = 0;
+		RegisterNonTrivialComponent<STransformComponent, STransformComponentEditorContext>(typeID++, 50);
+		RegisterNonTrivialComponent<SStaticMeshComponent, SStaticMeshComponentEditorContext>(typeID++, 40);
+		RegisterNonTrivialComponent<SSkeletalMeshComponent, SSkeletalMeshComponentEditorContext>(typeID++, 40);
+		RegisterTrivialComponent<SCameraComponent, SCameraComponentEditorContext>(typeID++, 2);
+		RegisterTrivialComponent<SCameraControllerComponent, SCameraControllerComponentEditorContext>(typeID++, 2);
+		RegisterNonTrivialComponent<SMaterialComponent, SMaterialComponentEditorContext>(typeID++, 40);
+		RegisterNonTrivialComponent<SEnvironmentLightComponent, SEnvironmentLightComponentEditorContext>(typeID++, 1);
+		RegisterTrivialComponent<SDirectionalLightComponent, SDirectionalLightComponentEditorContext>(typeID++, 1);
+		RegisterTrivialComponent<SPointLightComponent, SPointLightComponentEditorContext>(typeID++, 1);
+		RegisterTrivialComponent<SSpotLightComponent, SSpotLightComponentEditorContext>(typeID++, 1);
+		RegisterTrivialComponent<SVolumetricLightComponent, SVolumetricLightComponentEditorContext>(typeID++, 3);
+		RegisterNonTrivialComponent<SDecalComponent, SDecalComponentEditorContext>(typeID++, 2);
+		RegisterNonTrivialComponent<SSpriteComponent, SSpriteComponentEditorContext>(typeID++, 10);
+		RegisterTrivialComponent<STransform2DComponent, STransform2DComponentEditorContext>(typeID++, 10);
+		RegisterNonTrivialComponent<SSpriteAnimatorGraphComponent, SSpriteAnimatorGraphComponentEditorContext>(typeID++, 2);
+		RegisterNonTrivialComponent<SSkeletalAnimationComponent, SSkeletalAnimationComponentEditorContext>(typeID++, 40);
+		RegisterNonTrivialComponent<SScriptComponent, SScriptComponentEditorContext>(typeID++, 10);
+		RegisterTrivialComponent<SPhysics2DComponent, SPhysics2DComponentEditorContext>(typeID++, 10);
+		RegisterTrivialComponent<SPhysics3DComponent, SPhysics3DComponentEditorContext>(typeID++, 40);
+		RegisterTrivialComponent<SPhysics3DControllerComponent, SPhysics3DControllerComponentEditorContext>(typeID++, 1);
+		//RegisterTrivialComponent<SSequencerComponent, SSequencerComponentEditorContext>(typeID++, 0);
 
 		return true;
 	}
@@ -680,38 +681,11 @@ namespace Havtorn
 		size += GetDataSize(MainCameraEntity);
 		size += GetDataSize(Entities);
 
-		size += SpecializedSizeAllocator(GetComponents<STransformComponent>());
-		size += SpecializedSizeAllocator(GetComponents<SStaticMeshComponent>());
-		size += SpecializedSizeAllocator(GetComponents<SSkeletalMeshComponent>());
+		for (auto [key, val] : ComponentFactory)
+		{
+			size += val.SizeAllocator(this);
+		}
 
-		size += DefaultSizeAllocator(GetComponents<SCameraComponent>());
-		size += DefaultSizeAllocator(GetComponents<SCameraControllerComponent>());
-		
-		size += SpecializedSizeAllocator(GetComponents<SMaterialComponent>());
-		size += SpecializedSizeAllocator(GetComponents<SEnvironmentLightComponent>());
-
-		size += DefaultSizeAllocator(GetComponents<SDirectionalLightComponent>());
-		size += DefaultSizeAllocator(GetComponents<SPointLightComponent>());
-		size += DefaultSizeAllocator(GetComponents<SSpotLightComponent>());
-		size += DefaultSizeAllocator(GetComponents<SVolumetricLightComponent>());
-
-		size += SpecializedSizeAllocator(GetComponents<SDecalComponent>());
-		size += SpecializedSizeAllocator(GetComponents<SSpriteComponent>());
-
-		size += DefaultSizeAllocator(GetComponents<STransform2DComponent>());
-
-		size += SpecializedSizeAllocator(GetComponents<SSpriteAnimatorGraphComponent>());
-		size += SpecializedSizeAllocator(GetComponents<SSkeletalAnimationComponent>());
-
-		// TODO.NR: Implement GetSize (since the component is not trivially serializable)
-		//size += DefaultSizeAllocator(GetComponents<SSequencerComponent>());
-		size += GetDataSize(STATIC_U32(GetComponents<SSequencerComponent>().size()));
-
-		size += SpecializedSizeAllocator(GetComponents<SScriptComponent>());
-
-		size += DefaultSizeAllocator(GetComponents<SPhysics2DComponent>());
-		size += DefaultSizeAllocator(GetComponents<SPhysics3DComponent>());
-		size += DefaultSizeAllocator(GetComponents<SPhysics3DControllerComponent>());
 		size += DefaultSizeAllocator(GetComponents<SMetaDataComponent>());
 
 		return size;
@@ -723,38 +697,11 @@ namespace Havtorn
 		SerializeData(MainCameraEntity, toData, pointerPosition);
 		SerializeData(Entities, toData, pointerPosition);
 
-		SpecializedSerializer(GetComponents<STransformComponent>(), toData, pointerPosition);
-		SpecializedSerializer(GetComponents<SStaticMeshComponent>(), toData, pointerPosition);
-		SpecializedSerializer(GetComponents<SSkeletalMeshComponent>(), toData, pointerPosition);
+		for (auto [key, val] : ComponentFactory)
+		{
+			val.Serializer(this, toData, pointerPosition);
+		}
 
-		DefaultSerializer(GetComponents<SCameraComponent>(), toData, pointerPosition);
-		DefaultSerializer(GetComponents<SCameraControllerComponent>(), toData, pointerPosition);
-
-		SpecializedSerializer(GetComponents<SMaterialComponent>(), toData, pointerPosition);
-		SpecializedSerializer(GetComponents<SEnvironmentLightComponent>(), toData, pointerPosition);
-
-		DefaultSerializer(GetComponents<SDirectionalLightComponent>(), toData, pointerPosition);
-		DefaultSerializer(GetComponents<SPointLightComponent>(), toData, pointerPosition);
-		DefaultSerializer(GetComponents<SSpotLightComponent>(), toData, pointerPosition);
-		DefaultSerializer(GetComponents<SVolumetricLightComponent>(), toData, pointerPosition);
-
-		SpecializedSerializer(GetComponents<SDecalComponent>(), toData, pointerPosition);
-		SpecializedSerializer(GetComponents<SSpriteComponent>(), toData, pointerPosition);
-
-		DefaultSerializer(GetComponents<STransform2DComponent>(), toData, pointerPosition);
-
-		SpecializedSerializer(GetComponents<SSpriteAnimatorGraphComponent>(), toData, pointerPosition);
-		SpecializedSerializer(GetComponents<SSkeletalAnimationComponent>(), toData, pointerPosition);
-
-		// TODO.NR: Implement Serialize (since the component is not trivially serializable)
-		const auto& sequencerComponents = GetComponents<SSequencerComponent>();
-		SerializeData(STATIC_U32(sequencerComponents.size()), toData, pointerPosition);
-
-		SpecializedSerializer(GetComponents<SScriptComponent>(), toData, pointerPosition);
-
-		DefaultSerializer(GetComponents<SPhysics2DComponent>(), toData, pointerPosition);
-		DefaultSerializer(GetComponents<SPhysics3DComponent>(), toData, pointerPosition);
-		DefaultSerializer(GetComponents<SPhysics3DControllerComponent>(), toData, pointerPosition);
 		DefaultSerializer(GetComponents<SMetaDataComponent>(), toData, pointerPosition);
 	}
 
@@ -764,37 +711,10 @@ namespace Havtorn
 		DeserializeData(MainCameraEntity, fromData, pointerPosition);
 		DeserializeData(Entities, fromData, pointerPosition);
 
-		SpecializedDeserializer<STransformComponent>(&STransformComponentEditorContext::Context, fromData, pointerPosition);
-		SpecializedDeserializer<SStaticMeshComponent>(&SStaticMeshComponentEditorContext::Context, fromData, pointerPosition);
-		SpecializedDeserializer<SSkeletalMeshComponent>(&SSkeletalMeshComponentEditorContext::Context, fromData, pointerPosition);
-
-		DefaultDeserializer<SCameraComponent>(&SCameraComponentEditorContext::Context, fromData, pointerPosition);
-		DefaultDeserializer<SCameraControllerComponent>(&SCameraControllerComponentEditorContext::Context, fromData, pointerPosition);
-
-		SpecializedDeserializer<SMaterialComponent>(&SMaterialComponentEditorContext::Context, fromData, pointerPosition);
-		SpecializedDeserializer<SEnvironmentLightComponent>(&SEnvironmentLightComponentEditorContext::Context, fromData, pointerPosition);
-
-		DefaultDeserializer<SDirectionalLightComponent>(&SDirectionalLightComponentEditorContext::Context, fromData, pointerPosition);	
-		DefaultDeserializer<SPointLightComponent>(&SPointLightComponentEditorContext::Context, fromData, pointerPosition);		
-		DefaultDeserializer<SSpotLightComponent>(&SSpotLightComponentEditorContext::Context, fromData, pointerPosition);
-		DefaultDeserializer<SVolumetricLightComponent>(&SVolumetricLightComponentEditorContext::Context, fromData, pointerPosition);
-
-		SpecializedDeserializer<SDecalComponent>(&SDecalComponentEditorContext::Context, fromData, pointerPosition);
-		SpecializedDeserializer<SSpriteComponent>(&SSpriteComponentEditorContext::Context, fromData, pointerPosition);
-
-		DefaultDeserializer<STransform2DComponent>(&STransform2DComponentEditorContext::Context, fromData, pointerPosition);
-		
-		SpecializedDeserializer<SSpriteAnimatorGraphComponent>(&SSpriteAnimatorGraphComponentEditorContext::Context, fromData, pointerPosition);
-		SpecializedDeserializer<SSkeletalAnimationComponent>(&SSkeletalAnimationComponentEditorContext::Context, fromData, pointerPosition);
-
-		U32 numberOfSequencerComponents = 0;
-		DeserializeData(numberOfSequencerComponents, fromData, pointerPosition);
-
-		SpecializedDeserializer<SScriptComponent>(&SScriptComponentEditorContext::Context, fromData, pointerPosition);
-		
-		DefaultDeserializer<SPhysics2DComponent>(&SPhysics2DComponentEditorContext::Context, fromData, pointerPosition);
-		DefaultDeserializer<SPhysics3DComponent>(&SPhysics3DComponentEditorContext::Context, fromData, pointerPosition);
-		DefaultDeserializer<SPhysics3DControllerComponent>(&SPhysics3DControllerComponentEditorContext::Context, fromData, pointerPosition);
+		for (auto [key, val] : ComponentFactory)
+		{
+			val.Deserializer(this, fromData, pointerPosition);
+		}
 
 		{
 			std::vector<SMetaDataComponent> componentVector;
