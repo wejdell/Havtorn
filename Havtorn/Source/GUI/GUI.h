@@ -687,6 +687,7 @@ namespace Havtorn
 		EGUIPinType Type = EGUIPinType::Flow;
 		EGUIPinDirection Direction = EGUIPinDirection::Input;
 		SGUINode* Node = nullptr;
+#pragma warning(suppress : 4324)
 		std::variant<PIN_LITERAL_TYPES, PIN_MATH_TYPES> Data; // NW: Only literal data types need to set data from GUI->Engine, when they are unpinned.
 		std::string Name = "";
 
