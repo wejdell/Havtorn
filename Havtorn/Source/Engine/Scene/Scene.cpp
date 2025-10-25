@@ -29,6 +29,7 @@ namespace Havtorn
 		SceneName = sceneName;
 
 		U32 typeID = 0;
+		TypeHashToTypeID.emplace(typeid(SMetaDataComponent).hash_code(), typeID++);
 		RegisterNonTrivialComponent<STransformComponent, STransformComponentEditorContext>(typeID++, 50);
 		RegisterNonTrivialComponent<SStaticMeshComponent, SStaticMeshComponentEditorContext>(typeID++, 40);
 		RegisterNonTrivialComponent<SSkeletalMeshComponent, SSkeletalMeshComponentEditorContext>(typeID++, 40);
@@ -681,12 +682,12 @@ namespace Havtorn
 		size += GetDataSize(MainCameraEntity);
 		size += GetDataSize(Entities);
 
+		size += DefaultSizeAllocator(GetComponents<SMetaDataComponent>());
+
 		for (auto [key, val] : ComponentFactory)
 		{
 			size += val.SizeAllocator(this);
 		}
-
-		size += DefaultSizeAllocator(GetComponents<SMetaDataComponent>());
 
 		return size;
 	}
@@ -697,12 +698,12 @@ namespace Havtorn
 		SerializeData(MainCameraEntity, toData, pointerPosition);
 		SerializeData(Entities, toData, pointerPosition);
 
+		DefaultSerializer(GetComponents<SMetaDataComponent>(), toData, pointerPosition);
+
 		for (auto [key, val] : ComponentFactory)
 		{
 			val.Serializer(this, toData, pointerPosition);
 		}
-
-		DefaultSerializer(GetComponents<SMetaDataComponent>(), toData, pointerPosition);
 	}
 
 	void CScene::Deserialize(const char* fromData, U64& pointerPosition)
@@ -710,11 +711,6 @@ namespace Havtorn
 		DeserializeData(SceneName, fromData, pointerPosition);
 		DeserializeData(MainCameraEntity, fromData, pointerPosition);
 		DeserializeData(Entities, fromData, pointerPosition);
-
-		for (auto [key, val] : ComponentFactory)
-		{
-			val.Deserializer(this, fromData, pointerPosition);
-		}
 
 		{
 			std::vector<SMetaDataComponent> componentVector;
@@ -730,7 +726,12 @@ namespace Havtorn
 			}
 		}
 
-		// Post pass to set up inter-entity connections
+		for (auto [key, val] : ComponentFactory)
+		{
+			val.Deserializer(this, fromData, pointerPosition);
+		}
+
+		 // Post pass to set up inter-entity connections
 		for (STransformComponent* transformComponent : GetComponents<STransformComponent>())
 		{
 			for (const SEntity& serializationAttachedEntity : transformComponent->AttachedEntities)

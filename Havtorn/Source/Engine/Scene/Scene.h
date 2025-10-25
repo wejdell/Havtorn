@@ -35,7 +35,6 @@ namespace Havtorn
 		ENGINE_API virtual bool Init3DDemoScene();
 		ENGINE_API virtual bool Init2DDemoScene();
 
-		// TODO.NR: Rework serialization to decrease amount of boilerplate
 		ENGINE_API virtual [[nodiscard]] U32 GetSize() const;
 		ENGINE_API virtual void Serialize(char* toData, U64& pointerPosition) const;
 		ENGINE_API virtual void Deserialize(const char* fromData, U64& pointerPosition);
@@ -58,17 +57,6 @@ namespace Havtorn
 		}
 
 		template<typename T>
-		U32 SpecializedSizeAllocator(const std::vector<T*>& componentVector) const
-		{
-			U32 size = 0;
-			size += GetDataSize(STATIC_U32(componentVector.size()));
-			for (auto component : componentVector)
-				size += component->GetSize();
-
-			return size;
-		}
-
-		template<typename T>
 		void DefaultSerializer(const std::vector<T*>& componentVector, char* toData, U64& pointerPosition) const
 		{
 			SerializeData(STATIC_U32(componentVector.size()), toData, pointerPosition);
@@ -76,44 +64,6 @@ namespace Havtorn
 			{
 				auto& componentRef = *component;
 				SerializeData(componentRef, toData, pointerPosition);
-			}
-		}
-
-		template<typename T>
-		void SpecializedSerializer(const std::vector<T*>& componentVector, char* toData, U64& pointerPosition) const
-		{
-			SerializeData(STATIC_U32(componentVector.size()), toData, pointerPosition);
-			for (auto component : componentVector)
-				component->Serialize(toData, pointerPosition);
-		}
-
-		template<typename T>
-		void DefaultDeserializer(SComponentEditorContext* context, const char* fromData, U64& pointerPosition)
-		{
-			U32 numberOfComponents = 0;
-			DeserializeData(numberOfComponents, fromData, pointerPosition);
-
-			for (U64 index = 0; index < numberOfComponents; index++)
-			{
-				T component;
-				DeserializeData(component, fromData, pointerPosition);
-				AddComponent(component, component.Owner);
-				AddComponentEditorContext(component.Owner, context);
-			}
-		}
-
-		template<typename T>
-		void SpecializedDeserializer(SComponentEditorContext* context, const char* fromData, U64& pointerPosition)
-		{
-			U32 numberOfComponents = 0;
-			DeserializeData(numberOfComponents, fromData, pointerPosition);
-
-			for (U64 index = 0; index < numberOfComponents; index++)
-			{
-				T component;
-				component.Deserialize(fromData, pointerPosition);
-				AddComponent(component, component.Owner);
-				AddComponentEditorContext(component.Owner, context);
 			}
 		}
 
@@ -129,21 +79,20 @@ namespace Havtorn
 		template<typename TComponent, typename TComponentEditorContext>
 		void RegisterTrivialComponent(U32 typeID, U32 startingNumberOfInstances = 10)
 		{
-			const U64 typeIDHashCode = STATIC_U64(typeID)/*typeid(T).hash_code()*/;
-			if (ContextIndices.contains(typeIDHashCode))
+			if (ContextIndices.contains(typeID))
 			{
 				//HV_LOG_WARN("%s is already registered in the %s scene.", typeid(T).name(), SceneName.AsString().c_str());
 				return;
 			}
 
-			if (ComponentTypeIndices.contains(typeIDHashCode))
+			if (ComponentTypeIndices.contains(typeID))
 			{
-				ComponentTypeIndices.emplace(typeIDHashCode, Storages.size());
+				ComponentTypeIndices.emplace(typeID, Storages.size());
 				Storages.emplace_back();
 				Storages.back().Components.resize(startingNumberOfInstances, nullptr);
 			}
 
-			ContextIndices.emplace(typeIDHashCode, RegisteredComponentEditorContexts.size());
+			ContextIndices.emplace(typeID, RegisteredComponentEditorContexts.size());
 			RegisteredComponentEditorContexts.emplace_back(&TComponentEditorContext::Context);
 
 			std::sort(RegisteredComponentEditorContexts.begin(), RegisteredComponentEditorContexts.end(), [](const SComponentEditorContext* a, const SComponentEditorContext* b) { return a->GetSortingPriority() < b->GetSortingPriority(); });
@@ -192,27 +141,27 @@ namespace Havtorn
 					}
 				};				
 			
+			TypeHashToTypeID.emplace(typeid(TComponent).hash_code(), typeID);
 			ComponentFactory[typeID] = serializer;
 		}
 
 		template<typename TComponent, typename TComponentEditorContext>
 		void RegisterNonTrivialComponent(U32 typeID, U32 startingNumberOfInstances = 10)
 		{
-			const U64 typeIDHashCode = STATIC_U64(typeID)/*typeid(T).hash_code()*/;
-			if (ContextIndices.contains(typeIDHashCode))
+			if (ContextIndices.contains(typeID))
 			{
 				//HV_LOG_WARN("%s is already registered in the %s scene.", typeid(T).name(), SceneName.AsString().c_str());
 				return;
 			}
 
-			if (ComponentTypeIndices.contains(typeIDHashCode))
+			if (ComponentTypeIndices.contains(typeID))
 			{
-				ComponentTypeIndices.emplace(typeIDHashCode, Storages.size());
+				ComponentTypeIndices.emplace(typeID, Storages.size());
 				Storages.emplace_back();
 				Storages.back().Components.resize(startingNumberOfInstances, nullptr);
 			}
 
-			ContextIndices.emplace(typeIDHashCode, RegisteredComponentEditorContexts.size());
+			ContextIndices.emplace(typeID, RegisteredComponentEditorContexts.size());
 			RegisteredComponentEditorContexts.emplace_back(&TComponentEditorContext::Context);
 
 			std::sort(RegisteredComponentEditorContexts.begin(), RegisteredComponentEditorContexts.end(), [](const SComponentEditorContext* a, const SComponentEditorContext* b) { return a->GetSortingPriority() < b->GetSortingPriority(); });
@@ -256,20 +205,8 @@ namespace Havtorn
 					}
 				};
 			
+			TypeHashToTypeID.emplace(typeid(TComponent).hash_code(), typeID);
 			ComponentFactory[typeID] = serializer;
-		}
-
-		template<typename T>
-		const SComponentEditorContext& GetEditorContext() const
-		{
-			const U64 typeIDHashCode = typeid(T).hash_code();
-			if (ContextIndices.contains(typeIDHashCode))
-			{
-				HV_LOG_WARN("% s is not registered in the %s scene. Returning an empty editor context.", typeid(T).name(), SceneName.AsString().c_str());
-				return SComponentEditorContext();
-			}
-
-			return RegisteredComponentEditorContexts[ContextIndices.at(typeIDHashCode)];
 		}
 
 		template<typename T>
@@ -283,14 +220,14 @@ namespace Havtorn
 		template<typename T, typename... Params>
 		T* AddComponent(const SEntity& toEntity, Params... params)
 		{
-			const U64 typeIDHashCode = typeid(T).hash_code();
-			if (!ComponentTypeIndices.contains(typeIDHashCode))
+			const U32 typeID = TypeHashToTypeID.at(typeid(T).hash_code());
+			if (!ComponentTypeIndices.contains(typeID))
 			{
-				ComponentTypeIndices.emplace(typeIDHashCode, Storages.size());
+				ComponentTypeIndices.emplace(typeID, Storages.size());
 				Storages.emplace_back();
 			}
 
-			SComponentStorage& componentStorage = Storages[ComponentTypeIndices.at(typeIDHashCode)];
+			SComponentStorage& componentStorage = Storages[ComponentTypeIndices.at(typeID)];
 
 			if (componentStorage.EntityIndices.contains(toEntity.GUID))
 			{
@@ -317,8 +254,8 @@ namespace Havtorn
 		template<typename T>
 		void RemoveComponent(const SEntity& fromEntity)
 		{
-			const U64 typeIDHashCode = typeid(T).hash_code();
-			if (!ComponentTypeIndices.contains(typeIDHashCode))
+			const U32 typeID = TypeHashToTypeID.at(typeid(T).hash_code());
+			if (!ComponentTypeIndices.contains(typeID))
 			{
 				// TODO.NR: Make a toggle for this, keep for now
 				//std::string templateName = typeid(T).name();
@@ -326,7 +263,7 @@ namespace Havtorn
 				return;
 			}
 
-			SComponentStorage& componentStorage = Storages[ComponentTypeIndices.at(typeIDHashCode)];
+			SComponentStorage& componentStorage = Storages[ComponentTypeIndices.at(typeID)];
 			std::unordered_map<U64, U64>& entityIndices = componentStorage.EntityIndices;
 			std::vector<SComponent*>& components = componentStorage.Components;
 
@@ -373,8 +310,8 @@ namespace Havtorn
 		template<typename T>
 		T* GetComponent(const SEntity& fromEntity) const
 		{
-			const U64 typeIDHashCode = typeid(T).hash_code();
-			if (!ComponentTypeIndices.contains(typeIDHashCode))
+			const U32 typeID = TypeHashToTypeID.at(typeid(T).hash_code());
+			if (!ComponentTypeIndices.contains(typeID))
 			{
 				// TODO.NR: Make a toggle for this, keep for now
 				//std::string templateName = typeid(T).name();
@@ -382,7 +319,7 @@ namespace Havtorn
 				return nullptr;
 			}
 
-			const SComponentStorage& componentStorage = Storages[ComponentTypeIndices.at(typeIDHashCode)];
+			const SComponentStorage& componentStorage = Storages[ComponentTypeIndices.at(typeID)];
 
 			if (!componentStorage.EntityIndices.contains(fromEntity.GUID))
 			{
@@ -417,8 +354,8 @@ namespace Havtorn
 		template<typename T>
 		std::vector<T*> GetComponents() const
 		{
-			const U64 typeIDHashCode = typeid(T).hash_code();
-			if (!ComponentTypeIndices.contains(typeIDHashCode))
+			const U32 typeID = TypeHashToTypeID.at(typeid(T).hash_code());
+			if (!ComponentTypeIndices.contains(typeID))
 			{
 				// TODO.NR: Make a toggle for this, keep for now
 				//std::string templateName = typeid(T).name();
@@ -429,7 +366,7 @@ namespace Havtorn
 			// NR: This looks problematic but works because we know we only fill buckets with the same component type. 
 			// This would be a bad idea if we kept different derived components in the same vectors.
 
-			const SComponentStorage& componentStorage = Storages[ComponentTypeIndices.at(typeIDHashCode)];
+			const SComponentStorage& componentStorage = Storages[ComponentTypeIndices.at(typeID)];
 			if (componentStorage.Components.empty())
 				return {};
 
@@ -443,8 +380,8 @@ namespace Havtorn
 		template<typename T>
 		std::vector<SComponent*> GetBaseComponents()
 		{
-			const U64 typeIDHashCode = typeid(T).hash_code();
-			if (!ComponentTypeIndices.contains(typeIDHashCode))
+			const U32 typeID = TypeHashToTypeID.at(typeid(T).hash_code());
+			if (!ComponentTypeIndices.contains(typeID))
 			{
 				// TODO.NR: Make a toggle for this, keep for now
 				//std::string templateName = typeid(T).name();
@@ -452,7 +389,7 @@ namespace Havtorn
 				return {};
 			}
 
-			const SComponentStorage& componentStorage = Storages[ComponentTypeIndices.at(typeIDHashCode)];
+			const SComponentStorage& componentStorage = Storages[ComponentTypeIndices.at(typeID)];
 			return componentStorage.Components;
 		}
 
@@ -470,11 +407,13 @@ namespace Havtorn
 		std::unordered_map<U64, U64> EntityIndices;
 		std::vector<SEntity> Entities;
 
-		std::unordered_map<U64, U64> ComponentTypeIndices;
+		std::unordered_map<U32, U64> ComponentTypeIndices;
 		std::vector<SComponentStorage> Storages;
 
-		std::unordered_map<U64, U64> ContextIndices;
+		std::unordered_map<U32, U64> ContextIndices;
 		std::vector<SComponentEditorContext*> RegisteredComponentEditorContexts;
+
+		std::unordered_map<U64, U32> TypeHashToTypeID;
 
 		CHavtornStaticString<255> SceneName = std::string("SceneName");
 
