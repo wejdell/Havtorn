@@ -19,7 +19,7 @@ namespace Havtorn
 	// Left-handed row-major
 	struct CORE_API SMatrix 
 	{	
-		union { __declspec(align(16)) F32 M[4][4]; F32 data[16];  };
+		union alignas(16) { F32 M[4][4]; F32 data[16]; };
 
 		static const SMatrix Identity;
 		static const SMatrix Zero;
