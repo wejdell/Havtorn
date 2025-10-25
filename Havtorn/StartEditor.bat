@@ -1,3 +1,3 @@
 @echo off
-cd %~dp0\Bin\EditorDevelopment\
-call EditorDevelopment.exe
+cd %~dp0\Bin\
+call EditorDevelopment.lnk %*

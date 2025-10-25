@@ -275,10 +275,6 @@ namespace Havtorn
 		std::vector<std::string> commandLineParams = UCommandLine::GetFreeParameters();
 		for (auto param : commandLineParams)
 			HV_LOG_INFO("PARAM: %s", param.c_str());
-
-		HV_LOG_INFO("HAS PARAM yeah: %s", UCommandLine::HasFreeParameter("yeah") ? "true" : "false");
-
-		HV_LOG_INFO("OPTION hello: %s", UCommandLine::GetOptionParameter("hello").c_str());
 	}
 
 	SVector2<I16> CPlatformManager::GetCenterPosition() const
