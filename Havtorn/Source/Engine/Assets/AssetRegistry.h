@@ -8,6 +8,7 @@
 #include <map>
 #include <shared_mutex>
 
+
 namespace Havtorn
 {
 	class CGraphicsFramework;
@@ -29,6 +30,9 @@ namespace Havtorn
 
 		template<typename T>
 		T* RequestAssetData(const SAssetReference& assetRef, const U64 requesterID);
+
+		template<typename T>
+		T* RequestGameAssetData(T* gameInstance, const SAssetReference& assetRef, const U64 requesterID);
 
 		template<typename T>
 		std::vector<T*> RequestAssetData(const std::vector<SAssetReference>& assetRefs, const U64 requesterID);
@@ -77,8 +81,8 @@ namespace Havtorn
 
 		void OnSourceFileChanged(const std::string& sourceFilePath);
 
-		inline SAsset* GetAsset(const U32 assetUID);
-		inline void AddAsset(const U32 assetUID, SAsset& asset);
+		ENGINE_API inline SAsset* GetAsset(const U32 assetUID);
+		ENGINE_API inline void AddAsset(const U32 assetUID, SAsset& asset);
 		inline void RemoveAsset(const U32 assetUID);
 
 		CRenderManager* RenderManager = nullptr;
@@ -100,6 +104,51 @@ namespace Havtorn
 		}
 
 		return &std::get<T>(asset->Data);
+	}
+
+	template<typename T>
+	inline T* CAssetRegistry::RequestGameAssetData(T* gameInstance, const SAssetReference& assetRef, const U64 requesterID)
+	{
+		if (LoadedAssets.contains(assetRef.UID))
+		{
+			SAsset* loadedAsset = GetAsset(assetRef.UID);
+			loadedAsset->Requesters.insert(requesterID);
+			return std::get<T*>(loadedAsset->Data);
+		}
+
+		const U64 fileSize = UFileSystem::GetFileSize(assetRef.FilePath);
+		if (fileSize == 0)
+		{
+			HV_LOG_WARN("CAssetRegistry::LoadAsset: Asset file pointed to by %s failed to load, was empty!", assetRef.FilePath.c_str());
+			return nullptr;
+		}
+		char* data = new char[fileSize];
+		UFileSystem::Deserialize(assetRef.FilePath, data, STATIC_U32(fileSize));
+		EAssetType type = EAssetType::None;
+		U64 pointerPosition = 0;
+		DeserializeData(type, data, pointerPosition);
+
+		SAsset asset;
+		asset.Type = type;
+		asset.Reference = assetRef;
+		switch (type)
+		{
+		case EAssetType::Script:
+			SScriptFileHeader assetFile;
+			assetFile.Deserialize(data, gameInstance);
+			asset.Data = gameInstance;
+
+			
+			break;
+		//TODO.AS 
+			//We could potentially implement Scene here
+		}
+		
+		AddAsset(assetRef.UID, asset);
+		delete[] data;
+
+		asset.Requesters.insert(requesterID);
+		return std::get<T*>(asset.Data);
 	}
 
 	template<typename T>
@@ -154,4 +203,6 @@ namespace Havtorn
 
 		return assets;
 	}
+	
+
 }

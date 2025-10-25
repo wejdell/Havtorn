@@ -323,17 +323,16 @@ namespace Havtorn
         }
         break;
         case EAssetType::Script:
-        {
-            SScriptFileHeader assetFile;
-            asset.Data = HexRune::SScript();
-            assetFile.Deserialize(data, &std::get<HexRune::SScript>(asset.Data));
-        }
+            HV_LOG_ERROR("Use RequestGameAsset Instead");
         break;
         case EAssetType::SpriteAnimation:
         case EAssetType::AudioOneShot:
         case EAssetType::AudioCollection:
         case EAssetType::VisualFX:
+        break;
         case EAssetType::Scene:
+            HV_LOG_ERROR("Use RequestGameAsset Instead");
+        break;
         case EAssetType::Sequencer:
             HV_LOG_WARN("CAssetRegistry: Asset Resolving for asset type %s is not yet implemented.", magic_enum::enum_name<EAssetType>(type).data());
             delete[] data;
