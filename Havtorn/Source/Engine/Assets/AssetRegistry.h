@@ -120,7 +120,7 @@ namespace Havtorn
 		if (fileSize == 0)
 		{
 			HV_LOG_WARN("CAssetRegistry::LoadAsset: Asset file pointed to by %s failed to load, was empty!", assetRef.FilePath.c_str());
-			return false;
+			return nullptr;
 		}
 		char* data = new char[fileSize];
 		UFileSystem::Deserialize(assetRef.FilePath, data, STATIC_U32(fileSize));

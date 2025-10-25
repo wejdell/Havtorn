@@ -17,7 +17,8 @@ namespace Havtorn
 		if (!CScene::Init(sceneName))
 			return false;
 
-		RegisterComponent<SGhostyComponent>(1, &SGhostyComponentEditorContext::Context);
+		U32 typeID = 10000;
+		RegisterTrivialComponent<SGhostyComponent, SGhostyComponentEditorContext>(typeID++, 1);
 
 		return true;
 	}
@@ -140,38 +141,4 @@ namespace Havtorn
 
 		return true;
 	}
-
-	U32 CGameScene::GetSize() const
-	{
-		U32 size = 0;
-		size += CScene::GetSize();
-
-		auto defaultSizeAllocator = [&]<typename T>(const std::vector<T*>&componentVector)
-		{
-			size += GetDataSize(STATIC_U32(componentVector.size()));
-			for (const auto component : componentVector)
-			{
-				auto& componentRef = *component;
-				size += GetDataSize(componentRef);
-			}
-		};
-
-		defaultSizeAllocator(GetComponents<SGhostyComponent>());
-
-		return size;
-	}
-
-	void CGameScene::Serialize(char* toData, U64& pointerPosition) const
-	{
-		CScene::Serialize(toData, pointerPosition);
-
-		DefaultSerializer(GetComponents<SGhostyComponent>(), toData, pointerPosition);
-	}
-
-	void CGameScene::Deserialize(const char* fromData, U64& pointerPosition)
-	{
-		CScene::Deserialize(fromData, pointerPosition);
-
-		DefaultDeserializer<SGhostyComponent>(&SGhostyComponentEditorContext::Context, fromData, pointerPosition);
-    }
 }
