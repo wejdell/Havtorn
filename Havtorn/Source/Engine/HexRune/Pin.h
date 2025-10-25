@@ -53,6 +53,7 @@ namespace Havtorn
             EPinDirection Direction = EPinDirection::Input;
             SNode* OwningNode = nullptr;
             SPin* LinkedPin = nullptr;
+#pragma warning(suppress : 4324)
             std::variant<PIN_DATA_TYPES> Data;
             U64 DataSize = 0;
 

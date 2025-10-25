@@ -49,7 +49,7 @@ namespace Havtorn
         // TODO.NW: Add minimum node width?
         struct SNode
         {
-            SNode(const U64 id, const U32 typeID, SScript* owningScript, ENodeType nodeType);
+            ENGINE_API SNode(const U64 id, const U32 typeID, SScript* owningScript, ENodeType nodeType);
             
             U64 UID = 0;
             U32 TypeID = 0;
@@ -147,6 +147,7 @@ namespace Havtorn
             // TODO.NW: Figure out how to deal with these subtypes. Maybe list them explicitly as pin data types?
             EObjectDataType ObjectType = EObjectDataType::None;
             EAssetType AssetType = EAssetType::None;
+#pragma warning(suppress : 4324)
             std::variant<PIN_DATA_TYPES> Data;
 
             ENGINE_API [[nodiscard]] U32 GetSize() const;
@@ -157,6 +158,7 @@ namespace Havtorn
         struct SScript
         {
             ENGINE_API SScript();
+            ENGINE_API virtual ~SScript();
 
             //Serialize
             std::vector<SNode*> Nodes;
@@ -295,6 +297,8 @@ namespace Havtorn
             ENGINE_API void RemoveNode(const U64 id);
 
             ENGINE_API void Initialize();
+            ENGINE_API virtual void InitializeGame(U32 /*typeId*/) = 0;
+
             ENGINE_API void TraverseFromNode(const U64 startNodeID, CScene* owningScene);
             ENGINE_API void TraverseFromNode(SNode* startNode, CScene* owningScene);
 
