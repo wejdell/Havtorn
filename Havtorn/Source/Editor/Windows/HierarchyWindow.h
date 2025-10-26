@@ -19,6 +19,8 @@ namespace Havtorn
 		void FilterChildrenFromList(const CScene* scene, const std::vector<SEntity>& children, std::vector<SEntity>& filteredEntities);
 		void InspectEntities(const CScene* scene, const std::vector<SEntity>& entities);
 
+		void SceneAssetDrag();
+
 	private:
 		SGuiTextFilter Filter = SGuiTextFilter();
 	};

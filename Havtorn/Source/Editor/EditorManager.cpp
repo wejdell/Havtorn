@@ -219,6 +219,11 @@ namespace Havtorn
 		return CurrentScene;
 	}
 
+	std::vector<Ptr<CScene>>& CEditorManager::GetScenes() const
+	{
+		return World->GetActiveScenes();
+	}
+
 	void CEditorManager::SetSelectedEntity(const SEntity& entity)
 	{
 		ClearSelectedEntities();

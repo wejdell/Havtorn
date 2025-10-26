@@ -38,135 +38,156 @@ namespace Havtorn
 
 		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
 		{
-			CScene* scene = Manager->GetCurrentScene();
-			if (!scene)
+			std::vector<Ptr<CScene>>& scenes = Manager->GetScenes();
+			if (!scenes.empty())
 			{
-				// TODO.NW: Center align this. Wrap it in a world function call?
-				if (GUI::Button("Create New Scene"))
-				{
-					GEngine::GetWorld()->RemoveScene(0);
-					GEngine::GetWorld()->CreateScene<CGameScene>();
-					if (GEngine::GetWorld()->GetActiveScenes().size() > 0)
+				// Top Bar
+				GUI::BeginChild("SearchBar", SVector2<F32>(0.0f, 30.0f));
+				Filter.Draw("Search");
+				GUI::EndChild();
+				GUI::Separator();
+
+				// Hierarchy View
+				GUI::BeginChild("Hierarchy View");
+				for (Ptr<CScene>& scene : scenes)
+				{			
+					const bool isCurrentScene = scene.get() == Manager->GetCurrentScene();
+					GUI::Selectable(scene->GetSceneName().c_str(), isCurrentScene);
+					GUI::Separator();
+
+					const std::vector<SEntity>& entities = GEngine::GetWorld()->GetEntities();
+
+					// Filter pre pass
+					std::vector<SEntity> activeEntities = {};
+
+					if (Filter.IsActive())
 					{
-						CScene* activeScene = GEngine::GetWorld()->GetActiveScenes()[0].get();
-						activeScene->Init("New Scene");
-						activeScene->Init3DDefaults();
-						Manager->SetCurrentScene(activeScene);
-					}
-				}
+						for (const SEntity& entity : entities)
+						{
+							if (!entity.IsValid())
+								continue;
 
-				GUI::End();
-				return;
-			}
-			
-			// Top Bar
-			GUI::BeginChild("SearchBar", SVector2<F32>(0.0f, 54.0f));
-			Filter.Draw("Search");
-			GUI::Separator();
+							const SMetaDataComponent* metaDataComp = scene->GetComponent<SMetaDataComponent>(entity);
+							const std::string entryString = SComponent::IsValid(metaDataComp) ? metaDataComp->Name.AsString() : "UNNAMED";
 
-			GUI::Text(scene->GetSceneName().c_str());
-			GUI::Separator();
-			GUI::EndChild();
-
-			// Hierarchy View
-			GUI::BeginChild("Hierarchy View");
-			const std::vector<SEntity>& entities = GEngine::GetWorld()->GetEntities();
-
-			// Filter pre pass
-			std::vector<SEntity> activeEntities = {};
-
-			if (Filter.IsActive())
-			{
-				for (const SEntity& entity : entities)
-				{
-					if (!entity.IsValid())
-						continue;
-
-					const SMetaDataComponent* metaDataComp = scene->GetComponent<SMetaDataComponent>(entity);
-					const std::string entryString = SComponent::IsValid(metaDataComp) ? metaDataComp->Name.AsString() : "UNNAMED";
-
-					if (Filter.PassFilter(entryString.c_str()))
-						activeEntities.emplace_back(entity);
-				}
-			}
-			else
-			{
-				activeEntities = entities;
-			}
-
-			// Filter out children from main list
-			std::vector<SEntity> childEntities;
-			for (const SEntity& entity : activeEntities)
-			{
-				const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(entity);
-				const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
-
-				const STransformComponent* transform = scene->GetComponent<STransformComponent>(entity);
-				if (!SComponent::IsValid(transform))
-					continue;
-
-				if (!transform->AttachedEntities.empty())
-					FilterChildrenFromList(scene, transform->AttachedEntities, childEntities);
-			}
-			for (const SEntity& child : childEntities)
-			{
-				if (auto it = std::ranges::find(activeEntities, child); it != activeEntities.end())
-					activeEntities.erase(it);
-			}
-
-			if (GUI::BeginTable("HierarchyEntityTable", 1))
-			{
-				InspectEntities(scene, activeEntities);
-				GUI::EndTable();
-			}
-
-			// Detachment drop
-			if (GUI::BeginDragDropTarget())
-			{
-				SGuiPayload payload = GUI::AcceptDragDropPayload("EntityHierarchyDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNoDrawDefaultRect, EDragDropFlag::AcceptNopreviewTooltip });
-				if (payload.Data != nullptr)
-				{
-					SEntity* draggedEntity = reinterpret_cast<SEntity*>(payload.Data);
-					const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(*draggedEntity);
-					const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
-					GUI::SetTooltip(draggedEntityName.c_str());
-
-					STransformComponent* draggedTransform = scene->GetComponent<STransformComponent>(*draggedEntity);
-					if (!SComponent::IsValid(draggedTransform))
-					{
-						GUI::SetTooltip("Cannot detach entity %s, it has no transform!", draggedEntityName.c_str());
+							if (Filter.PassFilter(entryString.c_str()))
+								activeEntities.emplace_back(entity);
+						}
 					}
 					else
 					{
-						const SEntity& parentEntity = draggedTransform->ParentEntity;
-						if (parentEntity.IsValid())
-						{
-							STransformComponent* parentTransform = scene->GetComponent<STransformComponent>(parentEntity);
-							if (SComponent::IsValid(parentTransform))
-							{
-								const SMetaDataComponent* parentMetaDataComp = scene->GetComponent<SMetaDataComponent>(parentEntity);
-								const std::string parentEntityName = SComponent::IsValid(parentMetaDataComp) ? parentMetaDataComp->Name.AsString() : "UNNAMED";
-								GUI::SetTooltip("Detach %s from %s?", draggedEntityName.c_str(), parentEntityName.c_str());
+						activeEntities = entities;
+					}
 
-								if (payload.IsDelivery)
-									parentTransform->Detach(draggedTransform);
+					// Filter out children from main list
+					std::vector<SEntity> childEntities;
+					for (const SEntity& entity : activeEntities)
+					{
+						const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(entity);
+						const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
+
+						const STransformComponent* transform = scene->GetComponent<STransformComponent>(entity);
+						if (!SComponent::IsValid(transform))
+							continue;
+
+						if (!transform->AttachedEntities.empty())
+							FilterChildrenFromList(scene.get(), transform->AttachedEntities, childEntities);
+					}
+					for (const SEntity& child : childEntities)
+					{
+						if (auto it = std::ranges::find(activeEntities, child); it != activeEntities.end())
+							activeEntities.erase(it);
+					}
+
+					if (GUI::BeginTable("HierarchyEntityTable", 1))
+					{
+						InspectEntities(scene.get(), activeEntities);
+						GUI::EndTable();
+					}
+
+					// Detachment drop
+					if (GUI::BeginDragDropTarget())
+					{
+						SGuiPayload payload = GUI::AcceptDragDropPayload("EntityHierarchyDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNoDrawDefaultRect, EDragDropFlag::AcceptNopreviewTooltip });
+						if (payload.Data != nullptr)
+						{
+							SEntity* draggedEntity = reinterpret_cast<SEntity*>(payload.Data);
+							const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(*draggedEntity);
+							const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
+							GUI::SetTooltip(draggedEntityName.c_str());
+
+							STransformComponent* draggedTransform = scene->GetComponent<STransformComponent>(*draggedEntity);
+							if (!SComponent::IsValid(draggedTransform))
+							{
+								GUI::SetTooltip("Cannot detach entity %s, it has no transform!", draggedEntityName.c_str());
 							}
+							else
+							{
+								const SEntity& parentEntity = draggedTransform->ParentEntity;
+								if (parentEntity.IsValid())
+								{
+									STransformComponent* parentTransform = scene->GetComponent<STransformComponent>(parentEntity);
+									if (SComponent::IsValid(parentTransform))
+									{
+										const SMetaDataComponent* parentMetaDataComp = scene->GetComponent<SMetaDataComponent>(parentEntity);
+										const std::string parentEntityName = SComponent::IsValid(parentMetaDataComp) ? parentMetaDataComp->Name.AsString() : "UNNAMED";
+										GUI::SetTooltip("Detach %s from %s?", draggedEntityName.c_str(), parentEntityName.c_str());
+
+										if (payload.IsDelivery)
+											parentTransform->Detach(draggedTransform);
+									}
+								}
+							}
+						}
+
+						GUI::EndDragDropTarget();
+					}
+
+					if (GUI::BeginPopupContextWindow())
+					{
+						if (GUI::MenuItem("Create New"))
+							scene->AddEntity("New Entity");
+
+						GUI::EndPopup();
+					}
+
+					GUI::Separator();
+				}
+				GUI::EndChild();
+
+				SceneAssetDrag();
+			}
+
+			// TODO.NW: Center align this. Wrap it in a world function call?
+			if (GUI::Button("Create New Scene"))
+			{
+				std::string newSceneName = "NewScene";
+				bool foundUnusedSceneName = false;
+				I16 duplicates = 0;
+				while (!foundUnusedSceneName)
+				{
+					foundUnusedSceneName = true;
+					for (Ptr<CScene>& scene : scenes)
+					{
+						if (scene->GetSceneName() == newSceneName)
+						{
+							newSceneName = "NewScene" + std::to_string(++duplicates);
+							foundUnusedSceneName = false;
+							break;
 						}
 					}
 				}
 
-				GUI::EndDragDropTarget();
+				GEngine::GetWorld()->CreateScene<CGameScene>();
+				CScene* activeScene = Manager->GetScenes().back().get();
+				activeScene->Init(newSceneName);
+				activeScene->Init3DDefaults();
+				Manager->SetCurrentScene(activeScene);	
 			}
 
-			if (GUI::BeginPopupContextWindow())
-			{
-				if (GUI::MenuItem("Create New"))
-					scene->AddEntity("New Entity");
-
-				GUI::EndPopup();
-			}
+			SceneAssetDrag();
 		}
-		GUI::EndChild();
+
 		GUI::End();
 	}
 
@@ -323,6 +344,29 @@ namespace Havtorn
 				GUI::TreePop();
 
 			GUI::PopID();
+		}
+	}
+
+	void CHierarchyWindow::SceneAssetDrag()
+	{
+		// Asset drop
+		if (GUI::BeginDragDropTarget())
+		{
+			SGuiPayload payload = GUI::AcceptDragDropPayload("AssetDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNoDrawDefaultRect, EDragDropFlag::AcceptNopreviewTooltip });
+			if (payload.Data != nullptr)
+			{
+				SEditorAssetRepresentation* payloadAssetRep = reinterpret_cast<SEditorAssetRepresentation*>(payload.Data);
+
+				if (payloadAssetRep->AssetType == EAssetType::Scene)
+					GUI::SetTooltip("Add Scene?");
+
+				if (payload.IsDelivery)
+				{
+					GEngine::GetWorld()->AddScene<CGameScene>(payloadAssetRep->DirectoryEntry.path().string());
+				}
+			}
+
+			GUI::EndDragDropTarget();
 		}
 	}
 }

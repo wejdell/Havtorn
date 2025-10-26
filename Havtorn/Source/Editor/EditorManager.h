@@ -89,6 +89,7 @@ namespace Havtorn
 	public:
 		void SetCurrentScene(CScene* scene);
 		CScene* GetCurrentScene() const;
+		std::vector<Ptr<CScene>>& GetScenes() const;
 
 		void SetSelectedEntity(const SEntity& entity);
 		void AddSelectedEntity(const SEntity& entity);

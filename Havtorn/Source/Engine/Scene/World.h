@@ -175,6 +175,16 @@ namespace Havtorn
 	template<typename T>
 	inline void CWorld::AddScene(const std::string& filePath)
 	{
+		std::string sceneName = UGeneralUtils::ExtractFileBaseNameFromPath(UGeneralUtils::ConvertToPlatformAgnosticPath(filePath));
+		for (Ptr<CScene>& scene : Scenes)
+		{
+			if (scene->GetSceneName() == sceneName)
+			{
+				HV_LOG_WARN("Scene '%s' is already loaded!", sceneName.c_str());
+				return;
+			}
+		}
+
 		CreateScene<T>();
 		LoadScene(filePath, Scenes.back().get());
 	}
