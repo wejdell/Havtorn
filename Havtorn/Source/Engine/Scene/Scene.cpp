@@ -28,28 +28,27 @@ namespace Havtorn
 	{
 		SceneName = sceneName;
 
-		U32 typeID = 0;
-		TypeHashToTypeID.emplace(typeid(SMetaDataComponent).hash_code(), typeID++);
-		RegisterNonTrivialComponent<STransformComponent, STransformComponentEditorContext>(typeID++, 50);
-		RegisterNonTrivialComponent<SStaticMeshComponent, SStaticMeshComponentEditorContext>(typeID++, 40);
-		RegisterNonTrivialComponent<SSkeletalMeshComponent, SSkeletalMeshComponentEditorContext>(typeID++, 40);
-		RegisterTrivialComponent<SCameraComponent, SCameraComponentEditorContext>(typeID++, 2);
-		RegisterTrivialComponent<SCameraControllerComponent, SCameraControllerComponentEditorContext>(typeID++, 2);
-		RegisterNonTrivialComponent<SMaterialComponent, SMaterialComponentEditorContext>(typeID++, 40);
-		RegisterNonTrivialComponent<SEnvironmentLightComponent, SEnvironmentLightComponentEditorContext>(typeID++, 1);
-		RegisterTrivialComponent<SDirectionalLightComponent, SDirectionalLightComponentEditorContext>(typeID++, 1);
-		RegisterTrivialComponent<SPointLightComponent, SPointLightComponentEditorContext>(typeID++, 1);
-		RegisterTrivialComponent<SSpotLightComponent, SSpotLightComponentEditorContext>(typeID++, 1);
-		RegisterTrivialComponent<SVolumetricLightComponent, SVolumetricLightComponentEditorContext>(typeID++, 3);
-		RegisterNonTrivialComponent<SDecalComponent, SDecalComponentEditorContext>(typeID++, 2);
-		RegisterNonTrivialComponent<SSpriteComponent, SSpriteComponentEditorContext>(typeID++, 10);
-		RegisterTrivialComponent<STransform2DComponent, STransform2DComponentEditorContext>(typeID++, 10);
-		RegisterNonTrivialComponent<SSpriteAnimatorGraphComponent, SSpriteAnimatorGraphComponentEditorContext>(typeID++, 2);
-		RegisterNonTrivialComponent<SSkeletalAnimationComponent, SSkeletalAnimationComponentEditorContext>(typeID++, 40);
-		RegisterNonTrivialComponent<SScriptComponent, SScriptComponentEditorContext>(typeID++, 10);
-		RegisterTrivialComponent<SPhysics2DComponent, SPhysics2DComponentEditorContext>(typeID++, 10);
-		RegisterTrivialComponent<SPhysics3DComponent, SPhysics3DComponentEditorContext>(typeID++, 40);
-		RegisterTrivialComponent<SPhysics3DControllerComponent, SPhysics3DControllerComponentEditorContext>(typeID++, 1);
+		TypeHashToTypeID.emplace(typeid(SMetaDataComponent).hash_code(), 0);
+		RegisterNonTrivialComponent<STransformComponent, STransformComponentEditorContext>(10, 50);
+		RegisterNonTrivialComponent<SStaticMeshComponent, SStaticMeshComponentEditorContext>(20, 40);
+		RegisterNonTrivialComponent<SSkeletalMeshComponent, SSkeletalMeshComponentEditorContext>(30, 40);
+		RegisterTrivialComponent<SCameraComponent, SCameraComponentEditorContext>(40, 2);
+		RegisterTrivialComponent<SCameraControllerComponent, SCameraControllerComponentEditorContext>(50, 2);
+		RegisterNonTrivialComponent<SMaterialComponent, SMaterialComponentEditorContext>(60, 40);
+		RegisterNonTrivialComponent<SEnvironmentLightComponent, SEnvironmentLightComponentEditorContext>(70, 1);
+		RegisterTrivialComponent<SDirectionalLightComponent, SDirectionalLightComponentEditorContext>(80, 1);
+		RegisterTrivialComponent<SPointLightComponent, SPointLightComponentEditorContext>(90, 1);
+		RegisterTrivialComponent<SSpotLightComponent, SSpotLightComponentEditorContext>(100, 1);
+		RegisterTrivialComponent<SVolumetricLightComponent, SVolumetricLightComponentEditorContext>(110, 3);
+		RegisterNonTrivialComponent<SDecalComponent, SDecalComponentEditorContext>(120, 2);
+		RegisterNonTrivialComponent<SSpriteComponent, SSpriteComponentEditorContext>(130, 10);
+		RegisterTrivialComponent<STransform2DComponent, STransform2DComponentEditorContext>(140, 10);
+		RegisterNonTrivialComponent<SSpriteAnimatorGraphComponent, SSpriteAnimatorGraphComponentEditorContext>(150, 2);
+		RegisterNonTrivialComponent<SSkeletalAnimationComponent, SSkeletalAnimationComponentEditorContext>(160, 40);
+		RegisterNonTrivialComponent<SScriptComponent, SScriptComponentEditorContext>(170, 10);
+		RegisterTrivialComponent<SPhysics2DComponent, SPhysics2DComponentEditorContext>(180, 10);
+		RegisterTrivialComponent<SPhysics3DComponent, SPhysics3DComponentEditorContext>(190, 40);
+		RegisterTrivialComponent<SPhysics3DControllerComponent, SPhysics3DControllerComponentEditorContext>(200, 1);
 		//RegisterTrivialComponent<SSequencerComponent, SSequencerComponentEditorContext>(typeID++, 0);
 
 		return true;
@@ -678,13 +677,19 @@ namespace Havtorn
 	{
 		U32 size = 0;
 
+		// Scene File Size
+		size += GetDataSize(U32());
+
 		size += GetDataSize(SceneName);
 		size += GetDataSize(MainCameraEntity);
 		size += GetDataSize(Entities);
 
+		// MetaData typeID and blob size 
+		size += GetDataSize(U32());
+		size += GetDataSize(U32());
 		size += DefaultSizeAllocator(GetComponents<SMetaDataComponent>());
 
-		for (auto [key, val] : ComponentFactory)
+		for (auto [key, val] : ComponentSerializers)
 		{
 			size += val.SizeAllocator(this);
 		}
@@ -694,13 +699,20 @@ namespace Havtorn
 
 	void CScene::Serialize(char* toData, U64& pointerPosition) const
 	{
+		// Make sure to add pointerPosition here, to take outer data members into account
+		SerializeData(GetSize() + STATIC_U32(pointerPosition), toData, pointerPosition);
+
 		SerializeData(SceneName, toData, pointerPosition);
 		SerializeData(MainCameraEntity, toData, pointerPosition);
 		SerializeData(Entities, toData, pointerPosition);
 
+		U32 typeID = TypeHashToTypeID.at(typeid(SMetaDataComponent).hash_code());
+		SerializeData(typeID, toData, pointerPosition);
+		U32 size = DefaultSizeAllocator(GetComponents<SMetaDataComponent>());
+		SerializeData(size, toData, pointerPosition);
 		DefaultSerializer(GetComponents<SMetaDataComponent>(), toData, pointerPosition);
 
-		for (auto [key, val] : ComponentFactory)
+		for (auto [key, val] : ComponentSerializers)
 		{
 			val.Serializer(this, toData, pointerPosition);
 		}
@@ -708,27 +720,58 @@ namespace Havtorn
 
 	void CScene::Deserialize(const char* fromData, U64& pointerPosition)
 	{
+		U32 sceneFileSize = 0;
+		DeserializeData(sceneFileSize, fromData, pointerPosition);
+
 		DeserializeData(SceneName, fromData, pointerPosition);
 		DeserializeData(MainCameraEntity, fromData, pointerPosition);
 		DeserializeData(Entities, fromData, pointerPosition);
 
 		{
-			std::vector<SMetaDataComponent> componentVector;
-			U32 numberOfComponents = 0;
-			DeserializeData(numberOfComponents, fromData, pointerPosition);
-			componentVector.resize(numberOfComponents);
+			U32 savedTypeID = 0;
+			DeserializeData(savedTypeID, fromData, pointerPosition);
+			U32 savedBlobSize = 0;
+			DeserializeData(savedBlobSize, fromData, pointerPosition);
 
-			for (U64 index = 0; index < numberOfComponents; index++)
+			U32 metaDataTypeID = UMath::MaxU32;
+			if (TypeHashToTypeID.contains(typeid(SMetaDataComponent).hash_code()))
+				metaDataTypeID = TypeHashToTypeID.at(typeid(SMetaDataComponent).hash_code());
+
+			if (metaDataTypeID == savedTypeID) 
 			{
-				SMetaDataComponent component;
-				DeserializeData(component, fromData, pointerPosition);
-				AddComponent(component, component.Owner);
+				std::vector<SMetaDataComponent> componentVector;
+				U32 numberOfComponents = 0;
+				DeserializeData(numberOfComponents, fromData, pointerPosition);
+				componentVector.resize(numberOfComponents);
+
+				for (U64 index = 0; index < numberOfComponents; index++)
+				{
+					SMetaDataComponent component;
+					DeserializeData(component, fromData, pointerPosition);
+					AddComponent(component, component.Owner);
+				}
+			}
+			else
+			{
+				pointerPosition += savedBlobSize;
 			}
 		}
 
-		for (auto [key, val] : ComponentFactory)
+		while (pointerPosition < sceneFileSize)
 		{
-			val.Deserializer(this, fromData, pointerPosition);
+			U32 savedTypeID = 0;
+			DeserializeData(savedTypeID, fromData, pointerPosition);
+			U32 savedBlobSize = 0;
+			DeserializeData(savedBlobSize, fromData, pointerPosition);
+
+			if (!ComponentSerializers.contains(savedTypeID))
+			{
+				pointerPosition += savedBlobSize;
+				continue;
+			} 
+			// TODO.NW: Add check in VersioningService, which can take the blob and convert it from an old version to a new one
+
+			ComponentSerializers.at(savedTypeID).Deserializer(this, fromData, pointerPosition);
 		}
 
 		 // Post pass to set up inter-entity connections
