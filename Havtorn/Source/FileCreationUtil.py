@@ -259,6 +259,9 @@ class FileCreationUtil:
         ]
         if all(checks):
             headerFile = f"""
+            #pragma once
+            #include <HexRune/HexRune.h>
+
             namespace Havtorn
             {{
                 namespace HexRune
@@ -296,8 +299,7 @@ class FileCreationUtil:
                         AddOutput(UGUIDManager::Generate(), EPinType::Flow, "Out");                    
                     }}
 
-                    {name}::OnExecute(const U64 id, const U32 typeID, SScript* owningScript)
-                        : SNode(id, typeID, owningScript, ENodeType::Standard)
+                    I8 {name}::OnExecute()
                     {{
                         return -1;
                     }}
