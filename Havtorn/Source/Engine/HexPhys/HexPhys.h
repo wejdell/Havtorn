@@ -75,7 +75,7 @@ namespace Havtorn
 			CPhysics2DSystem(CPhysicsWorld2D* physicsWorld);
 			~CPhysics2DSystem() override = default;
 
-			void Update(CScene* scene) override;
+			void Update(std::vector<Ptr<CScene>>& scenes) override;
 
 		private:
 			CPhysicsWorld2D* PhysicsWorld = nullptr;
@@ -187,7 +187,7 @@ namespace Havtorn
 			CPhysics3DSystem(CPhysicsWorld3D* physicsWorld);
 			~CPhysics3DSystem() override = default;
 
-			void Update(CScene* scene) override;
+			void Update(std::vector<Ptr<CScene>>& scenes) override;
 
 		private:
 			CPhysicsWorld3D* PhysicsWorld = nullptr;

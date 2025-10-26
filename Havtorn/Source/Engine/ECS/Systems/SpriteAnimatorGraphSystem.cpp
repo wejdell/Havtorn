@@ -8,37 +8,40 @@
 
 namespace Havtorn
 {
-	void CSpriteAnimatorGraphSystem::Update(CScene* scene)
+	void CSpriteAnimatorGraphSystem::Update(std::vector<Ptr<CScene>>& scenes)
 	{
-		const F32 deltaTime = GTime::Dt();
-		const std::vector<SSpriteAnimatorGraphComponent*>& spriteAnimatorGraphComponents = scene->GetComponents<SSpriteAnimatorGraphComponent>();
-
-		for (SSpriteAnimatorGraphComponent* component : spriteAnimatorGraphComponents)
+		for (Ptr<CScene>& scene : scenes)
 		{
-			if (!component)
-				continue;
+			const F32 deltaTime = GTime::Dt();
+			const std::vector<SSpriteAnimatorGraphComponent*>& spriteAnimatorGraphComponents = scene->GetComponents<SSpriteAnimatorGraphComponent>();
 
-			if (component->AnimationClips.size() == 0)
-				continue;
-
-			if (component->Graph.EvaluateFunctionMapKey != 0)
+			for (SSpriteAnimatorGraphComponent* component : spriteAnimatorGraphComponents)
 			{
-				SSpriteAnimatorGraphNode* currentNode = &component->Graph;
-				while (currentNode != nullptr)
-				{
-					if (currentNode->AnimationClipKey != -1)
-					{
-						component->ResolvedAnimationClipKey = currentNode->AnimationClipKey;
-						break;
-					}
-					
-					I16 evaluatedNodeIndex = EvaluateFunctionMap[currentNode->EvaluateFunctionMapKey](scene, component->Owner);
-					if (evaluatedNodeIndex >= 0 && evaluatedNodeIndex < currentNode->Nodes.size())
-						currentNode = &currentNode->Nodes[evaluatedNodeIndex];			
-				}
-			}
+				if (!component)
+					continue;
 
-			scene->GetComponent<SSpriteComponent>(component)->UVRect = TickAnimationClip(*component, deltaTime);
+				if (component->AnimationClips.size() == 0)
+					continue;
+
+				if (component->Graph.EvaluateFunctionMapKey != 0)
+				{
+					SSpriteAnimatorGraphNode* currentNode = &component->Graph;
+					while (currentNode != nullptr)
+					{
+						if (currentNode->AnimationClipKey != -1)
+						{
+							component->ResolvedAnimationClipKey = currentNode->AnimationClipKey;
+							break;
+						}
+					
+						I16 evaluatedNodeIndex = EvaluateFunctionMap[currentNode->EvaluateFunctionMapKey](scene.get(), component->Owner);
+						if (evaluatedNodeIndex >= 0 && evaluatedNodeIndex < currentNode->Nodes.size())
+							currentNode = &currentNode->Nodes[evaluatedNodeIndex];			
+					}
+				}
+
+				scene->GetComponent<SSpriteComponent>(component)->UVRect = TickAnimationClip(*component, deltaTime);
+			}
 		}
 	}
 

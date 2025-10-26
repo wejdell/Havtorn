@@ -19,101 +19,106 @@ namespace Havtorn
 		world->OnEndOverlap.AddMember(this, &CScriptSystem::OnEndOverlap);
 	}
 
-	void CScriptSystem::Update(CScene* scene)
+	void CScriptSystem::Update(std::vector<Ptr<CScene>>& scenes)
 	{
-		const std::vector<SScriptComponent*>& scriptComponents = scene->GetComponents<SScriptComponent>();
-
-		SChangePlayModeData* beginPlayData = nullptr;
-		SChangePlayModeData* endPlayData = nullptr;
-		for (auto& change : PlayModeChanges)
+		for (Ptr<CScene>& scene : scenes)
 		{
-			if (change.Scene == scene)
-				change.BeganPlay ? beginPlayData = &change : endPlayData = &change;
-		}
+			const std::vector<SScriptComponent*>& scriptComponents = scene->GetComponents<SScriptComponent>();
 
-		for (SScriptComponent* component : scriptComponents)
-		{
-			if (!SComponent::IsValid(component) || !component->AssetReference.IsValid())
-				continue;
-
-			HexRune::SScript* script = nullptr;
-			script = GEngine::GetAssetRegistry()->RequestGameAssetData(script, component->AssetReference, component->Owner.GUID);
-
-			if (component->DataBindings.size() != script->DataBindings.size())
+			SChangePlayModeData* beginPlayData = nullptr;
+			SChangePlayModeData* endPlayData = nullptr;
+			for (auto& change : PlayModeChanges)
 			{
+				if (change.Scene == scene.get())
+					change.BeganPlay ? beginPlayData = &change : endPlayData = &change;
+			}
+
+			for (SScriptComponent* component : scriptComponents)
+			{
+				if (!SComponent::IsValid(component) || !component->AssetReference.IsValid())
+					continue;
+
+				HexRune::SScript* script = nullptr;
+				script = GEngine::GetAssetRegistry()->RequestGameAssetData(script, component->AssetReference, component->Owner.GUID);
+
+				if (component->DataBindings.size() != script->DataBindings.size())
+				{
+					for (U64 i = 0; i < script->DataBindings.size(); i++)
+					{
+						auto& scriptBinding = script->DataBindings[i];
+						if (component->DataBindings.size() <= i)
+							component->DataBindings.emplace_back(scriptBinding);
+					}
+					component->DataBindings.resize(script->DataBindings.size());
+				}
+
 				for (U64 i = 0; i < script->DataBindings.size(); i++)
 				{
 					auto& scriptBinding = script->DataBindings[i];
-					if (component->DataBindings.size() <= i)
-						component->DataBindings.emplace_back(scriptBinding);
+					const auto& componentBinding = component->DataBindings[i];
+
+					scriptBinding.Data = componentBinding.Data;
 				}
-				component->DataBindings.resize(script->DataBindings.size());
-			}
 
-			for (U64 i = 0; i < script->DataBindings.size(); i++)
-			{
-				auto& scriptBinding = script->DataBindings[i];
-				const auto& componentBinding = component->DataBindings[i];
+				SOverlapData* beginOverlap = nullptr;
+				SOverlapData* endOverlap = nullptr;
+				for (auto& overlap : Overlaps)
+				{
+					if (overlap.Scene == scene.get() && overlap.TriggerEntity == component->Owner)
+						overlap.BeganOverlap ? beginOverlap = &overlap : endOverlap = &overlap;
+				}
 
-				scriptBinding.Data = componentBinding.Data;
-			}
+				if (beginOverlap != nullptr && script->HasNode(HexRune::OnBeginOverlapNodeID))
+				{
+					HexRune::SNode* node = script->GetNode(HexRune::OnBeginOverlapNodeID);
+					node->SetDataOnPin(&node->Outputs[1], beginOverlap->TriggerEntity);
+					node->SetDataOnPin(&node->Outputs[2], beginOverlap->OtherEntity);
+					script->TraverseFromNode(node, scene.get());
+					std::erase_if(Overlaps, [beginOverlap](SOverlapData& data) { return data == *beginOverlap; });
+				}
 
-			SOverlapData* beginOverlap = nullptr;
-			SOverlapData* endOverlap = nullptr;
-			for (auto& overlap : Overlaps)
-			{
-				if (overlap.Scene == scene && overlap.TriggerEntity == component->Owner)
-					overlap.BeganOverlap ? beginOverlap = &overlap : endOverlap = &overlap;
-			}
+				if (endOverlap != nullptr && script->HasNode(HexRune::OnEndOverlapNodeID))
+				{
+					HexRune::SNode* node = script->GetNode(HexRune::OnEndOverlapNodeID);
+					node->SetDataOnPin(&node->Outputs[1], endOverlap->TriggerEntity);
+					node->SetDataOnPin(&node->Outputs[2], endOverlap->OtherEntity);
+					script->TraverseFromNode(node, scene.get());
+					std::erase_if(Overlaps, [endOverlap](SOverlapData& data) { return data == *endOverlap; });
+				}
 
-			if (beginOverlap != nullptr && script->HasNode(HexRune::OnBeginOverlapNodeID))
-			{
-				HexRune::SNode* node = script->GetNode(HexRune::OnBeginOverlapNodeID);
-				node->SetDataOnPin(&node->Outputs[1], beginOverlap->TriggerEntity);
-				node->SetDataOnPin(&node->Outputs[2], beginOverlap->OtherEntity);
-				script->TraverseFromNode(node, scene);
-				std::erase_if(Overlaps, [beginOverlap](SOverlapData& data) { return data == *beginOverlap; });
-			}
+				if (beginPlayData != nullptr && script->HasNode(HexRune::BeginPlayNodeID))
+					script->TraverseFromNode(HexRune::BeginPlayNodeID, scene.get());
 
-			if (endOverlap != nullptr && script->HasNode(HexRune::OnEndOverlapNodeID))
-			{
-				HexRune::SNode* node = script->GetNode(HexRune::OnEndOverlapNodeID);
-				node->SetDataOnPin(&node->Outputs[1], endOverlap->TriggerEntity);
-				node->SetDataOnPin(&node->Outputs[2], endOverlap->OtherEntity);
-				script->TraverseFromNode(node, scene);
-				std::erase_if(Overlaps, [endOverlap](SOverlapData& data) { return data == *endOverlap; });
-			}
+				if (script->HasNode(HexRune::TickNodeID))
+					script->TraverseFromNode(HexRune::TickNodeID, scene.get());
 
-			if (beginPlayData != nullptr && script->HasNode(HexRune::BeginPlayNodeID))
-				script->TraverseFromNode(HexRune::BeginPlayNodeID, scene);
-
-			if (script->HasNode(HexRune::TickNodeID))
-				script->TraverseFromNode(HexRune::TickNodeID, scene);
-
-			if (endPlayData != nullptr && script->HasNode(HexRune::EndPlayNodeID))
-				script->TraverseFromNode(HexRune::EndPlayNodeID, scene);
+				if (endPlayData != nullptr && script->HasNode(HexRune::EndPlayNodeID))
+					script->TraverseFromNode(HexRune::EndPlayNodeID, scene.get());
 			
-			for (U64 i = 0; i < script->DataBindings.size(); i++)
-			{
-				const auto& scriptBinding = script->DataBindings[i];
-				auto& componentBinding = component->DataBindings[i];
+				for (U64 i = 0; i < script->DataBindings.size(); i++)
+				{
+					const auto& scriptBinding = script->DataBindings[i];
+					auto& componentBinding = component->DataBindings[i];
 
-				componentBinding.Data = scriptBinding.Data;
+					componentBinding.Data = scriptBinding.Data;
+				}
 			}
+
+			std::erase_if(PlayModeChanges, [beginPlayData](SChangePlayModeData& data) { return beginPlayData != nullptr && data == *beginPlayData; });
+			std::erase_if(PlayModeChanges, [endPlayData](SChangePlayModeData& data) { return endPlayData != nullptr && data == *endPlayData; });
 		}
-
-		std::erase_if(PlayModeChanges, [beginPlayData](SChangePlayModeData& data) { return beginPlayData != nullptr && data == *beginPlayData; });
-		std::erase_if(PlayModeChanges, [endPlayData](SChangePlayModeData& data) { return endPlayData != nullptr && data == *endPlayData; });
 	}
 
-	void CScriptSystem::OnBeginPlay(CScene* scene)
+	void CScriptSystem::OnBeginPlay(std::vector<Ptr<CScene>>& scenes)
 	{
-		PlayModeChanges.push_back(SChangePlayModeData(scene, true));
+		for (Ptr<CScene>& scene : scenes)
+			PlayModeChanges.push_back(SChangePlayModeData(scene.get(), true));
 	}
 
-	void CScriptSystem::OnEndPlay(CScene* scene)
+	void CScriptSystem::OnEndPlay(std::vector<Ptr<CScene>>& scenes)
 	{
-		PlayModeChanges.push_back(SChangePlayModeData(scene, false));
+		for (Ptr<CScene>& scene : scenes)
+			PlayModeChanges.push_back(SChangePlayModeData(scene.get(), false));
 	}
 
 	void CScriptSystem::OnBeginOverlap(CScene* scene, const SEntity triggerEntity, const SEntity otherEntity)

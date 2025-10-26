@@ -87,39 +87,32 @@ namespace Havtorn
                 GUI::EndMenu();
             }
 
-            if (GUI::MenuItem("Clear")) 
+            if (GUI::MenuItem("Clear Scenes")) 
             {
-                GEngine::GetWorld()->RemoveScene(0);
-                if (GEngine::GetWorld()->GetActiveScenes().size() > 0)
-                {
-                    Manager->SetCurrentScene(GEngine::GetWorld()->GetActiveScenes()[0].get());
-                }
-                else
-                {
-                    Manager->SetCurrentScene(nullptr);
-                }
+                GEngine::GetWorld()->ClearScenes();
+                Manager->SetCurrentScene(nullptr);
             }
 
             if (GUI::MenuItem("Generate 3D Demo Scene"))
             {
                 GEngine::GetWorld()->OpenDemoScene<CGameScene>(true);
-                Manager->SetCurrentScene(GEngine::GetWorld()->GetActiveScenes()[0].get());
+                Manager->SetCurrentScene(GEngine::GetWorld()->GetActiveScenes().back().get());
             }
 
             if (GUI::MenuItem("Generate 2D Demo Scene"))
             {
                 GEngine::GetWorld()->OpenDemoScene<CGameScene>(false);
-                Manager->SetCurrentScene(GEngine::GetWorld()->GetActiveScenes()[0].get());
+                Manager->SetCurrentScene(GEngine::GetWorld()->GetActiveScenes().back().get());
             }
 
             if (GUI::MenuItem("Save Demo Scene"))
             {
-                GEngine::GetWorld()->SaveActiveScene("Assets/Scenes/DemoScene.hvs");
+                GEngine::GetWorld()->SaveActiveScene("Assets/Scenes/DemoScene.hva");
             }
 
             if (GUI::MenuItem("Save Test Scene", "Ctrl+S")) 
             {
-                GEngine::GetWorld()->SaveActiveScene("Assets/Scenes/TestScene.hvs");
+                GEngine::GetWorld()->SaveActiveScene("Assets/Scenes/TestScene.hva");
             }
 
             GUI::Separator();

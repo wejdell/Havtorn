@@ -18,7 +18,7 @@
 //
 namespace Havtorn
 {
-	void CSequencerSystem::Update(CScene* /*scene*/)
+	void CSequencerSystem::Update(std::vector<Ptr<CScene>>& /*scenes*/)
 	{
 //		// Keyframes. Keyframe components with properties that can be lerped. Per keyframe maybe need to determine blend in and out behavior
 //		// Adding keyframe can be done more than once, basic workflow should be to move around or change values on an entity in the editor to key the 

@@ -29,20 +29,13 @@ namespace Havtorn
 		return true;
 	}
 
-	void CWorld::Update() const
+	void CWorld::Update()
 	{
-		// TODO.NW: For multi-scene workflow: Invert this. Send all scenes to all systems
-		for (auto& scene : Scenes)
+		for (const auto& data : SystemData)
 		{
-			for (const auto& data : SystemData)
-			{
-				if (data.Blockers.empty())
-					data.System->Update(scene.get());
-
-			}
+			if (data.Blockers.empty())
+				data.System->Update(Scenes);			
 		}
-
-		//GDebugDraw::TestAllShapes();
 	}
 
 	bool CWorld::BeginPlay()
@@ -54,7 +47,7 @@ namespace Havtorn
 			return false;
 
 		PlayState = EWorldPlayState::Playing;
-		OnBeginPlayDelegate.Broadcast(Scenes.back().get());
+		OnBeginPlayDelegate.Broadcast(Scenes);
 
 		return true;
 	}
@@ -68,7 +61,7 @@ namespace Havtorn
 			return false;
 
 		PlayState = EWorldPlayState::Paused;
-		OnPausePlayDelegate.Broadcast(Scenes.back().get());
+		OnPausePlayDelegate.Broadcast(Scenes);
 
 		return true;
 	}
@@ -82,7 +75,7 @@ namespace Havtorn
 			return false;
 
 		PlayState = EWorldPlayState::Stopped;
-		OnEndPlayDelegate.Broadcast(Scenes.back().get());
+		OnEndPlayDelegate.Broadcast(Scenes);
 
 		return true;
 	}

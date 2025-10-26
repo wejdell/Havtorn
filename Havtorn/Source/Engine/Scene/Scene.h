@@ -448,6 +448,8 @@ namespace Havtorn
 
 		CHavtornStaticString<255> SceneName = std::string("SceneName");
 
+		// TODO.NW: Try separate editor camera entity from camera entity in each scene. 
+		// Do we need this reference for scenes or is it really used for editor only?
 		SEntity MainCameraEntity = SEntity::Null;
 		SEntity PreviewEntity = SEntity::Null;
 	};

@@ -73,7 +73,7 @@ namespace Havtorn
 	{
 	}
 
-	void CGameManager::OnBeginPlay(CScene* /*scene*/)
+	void CGameManager::OnBeginPlay(std::vector<Ptr<CScene>>& /*scenes*/)
 	{
 		World->RequestSystem<CSpriteAnimatorGraphSystem>(this);
 		World->RequestSystem<CGhostySystem>(this);
@@ -81,12 +81,12 @@ namespace Havtorn
 		World->UnblockPhysicsSystem(this);
 	}
 
-	void CGameManager::OnPausePlay(CScene* /*scene*/)
+	void CGameManager::OnPausePlay(std::vector<Ptr<CScene>>& /*scenes*/)
 	{
 		World->BlockPhysicsSystem(this);
 	}
 
-	void CGameManager::OnEndPlay(CScene* /*scene*/)
+	void CGameManager::OnEndPlay(std::vector<Ptr<CScene>>& /*scenes*/)
 	{
 		World->UnrequestSystems(this);
 	}
