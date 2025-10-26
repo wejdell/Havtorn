@@ -12,6 +12,6 @@ namespace Havtorn
 		ISystem() = default;
 		virtual ~ISystem() = default;
 
-		virtual void Update(CScene* scene) = 0;
+		virtual void Update(std::vector<Ptr<CScene>>& scenes) = 0;
 	};
 }

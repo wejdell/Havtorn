@@ -11,8 +11,6 @@
 #include <ECS/Components/MetaDataComponent.h>
 #include <ECS/Components/TransformComponent.h>
 
-#include <ECS/Systems/DebugShapeSystem.h>
-
 #include <../Game/GameScene.h>
 
 namespace Havtorn

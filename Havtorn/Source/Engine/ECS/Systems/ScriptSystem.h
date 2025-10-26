@@ -13,10 +13,10 @@ namespace Havtorn
 	public:
 		CScriptSystem(CWorld* world);
 		~CScriptSystem() override = default;
-		ENGINE_API void Update(CScene* scene) override;
+		ENGINE_API void Update(std::vector<Ptr<CScene>>& scenes) override;
 
-		void OnBeginPlay(CScene* scene);
-		void OnEndPlay(CScene* scene);
+		void OnBeginPlay(std::vector<Ptr<CScene>>& scenes);
+		void OnEndPlay(std::vector<Ptr<CScene>>& scenes);
 		void OnBeginOverlap(CScene* scene, const SEntity triggerEntity, const SEntity otherEntity);
 		void OnEndOverlap(CScene* scene, const SEntity triggerEntity, const SEntity otherEntity);
 

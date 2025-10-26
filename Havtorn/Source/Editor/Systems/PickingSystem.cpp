@@ -32,12 +32,15 @@ namespace Havtorn
 		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MousePositionVertical).AddMember(this, &CPickingSystem::OnMouseMove);
 	}
 
-	void CPickingSystem::Update(CScene* scene)
+	void CPickingSystem::Update(std::vector<Ptr<CScene>>& scenes)
 	{
-		if (EditorCameraComponent == nullptr)
-			EditorCameraComponent = scene->GetComponent<SCameraComponent>(scene->MainCameraEntity);
-		if (EditorCameraTransform == nullptr)
-			EditorCameraTransform = scene->GetComponent<STransformComponent>(scene->MainCameraEntity);
+		for (Ptr<CScene>& scene : scenes)
+		{
+			if (EditorCameraComponent == nullptr)
+				EditorCameraComponent = scene->GetComponent<SCameraComponent>(scene->MainCameraEntity);
+			if (EditorCameraTransform == nullptr)
+				EditorCameraTransform = scene->GetComponent<STransformComponent>(scene->MainCameraEntity);
+		}
 	}
 
 	void CPickingSystem::OnMouseClick(const SInputActionPayload payload) const

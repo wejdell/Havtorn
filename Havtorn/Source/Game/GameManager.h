@@ -21,9 +21,9 @@ namespace Havtorn
 		GAME_API void PostUpdate();
 		GAME_API void EndFrame();
 
-		void OnBeginPlay(CScene* scene);
-		void OnPausePlay(CScene* scene);
-		void OnEndPlay(CScene* scene);
+		void OnBeginPlay(std::vector<Ptr<CScene>>& scenes);
+		void OnPausePlay(std::vector<Ptr<CScene>>& scenes);
+		void OnEndPlay(std::vector<Ptr<CScene>>& scenes);
 
 	public:
 		static GAME_API CGameManager* Instance;

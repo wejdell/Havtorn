@@ -10,7 +10,7 @@ namespace Havtorn
 	public:
 		CGhostySystem();
 		~CGhostySystem() override = default;
-		void Update(CScene* scene) override;
+		void Update(std::vector<Ptr<CScene>>& scenes) override;
 
 	public:
 		std::function<I16(CScene*, const SEntity&)> EvaluateIdleFunc;

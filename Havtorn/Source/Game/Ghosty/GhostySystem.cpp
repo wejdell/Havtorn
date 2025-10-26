@@ -26,30 +26,33 @@ namespace Havtorn
 		animatorGraphSystem->BindEvaluateFunction(EvaluateLocomotionFunc, "CGhostySystem::EvaluateLocomotion");
 	}
 
-	void CGhostySystem::Update(CScene* scene)
+	void CGhostySystem::Update(std::vector<Ptr<CScene>>& scenes)
 	{
-		for (SGhostyComponent* ghostyComponent : scene->GetComponents<SGhostyComponent>())
+		for (Ptr<CScene>& scene : scenes)
 		{
-			if (!SComponent::IsValid(ghostyComponent))
-				continue;
-
-			ghostyComponent->State.Input = input;
-
-			STransformComponent* transform = scene->GetComponent<STransformComponent>(ghostyComponent);
-			if (!SComponent::IsValid(transform))
-				continue;
-
-			SPhysics2DComponent* physComponent = scene->GetComponent<SPhysics2DComponent>(ghostyComponent);
-			if (!SComponent::IsValid(physComponent))
-				continue;
-
-			if (ghostyComponent->State.IsInWalkingAnimationState)
+			for (SGhostyComponent* ghostyComponent : scene->GetComponents<SGhostyComponent>())
 			{
-				physComponent->Velocity.X = ghostyComponent->State.Input.X * ghostyComponent->State.MoveSpeed;
-				GEngine::GetWorld()->Update2DPhysicsData(transform, physComponent);
+				if (!SComponent::IsValid(ghostyComponent))
+					continue;
+
+				ghostyComponent->State.Input = input;
+
+				STransformComponent* transform = scene->GetComponent<STransformComponent>(ghostyComponent);
+				if (!SComponent::IsValid(transform))
+					continue;
+
+				SPhysics2DComponent* physComponent = scene->GetComponent<SPhysics2DComponent>(ghostyComponent);
+				if (!SComponent::IsValid(physComponent))
+					continue;
+
+				if (ghostyComponent->State.IsInWalkingAnimationState)
+				{
+					physComponent->Velocity.X = ghostyComponent->State.Input.X * ghostyComponent->State.MoveSpeed;
+					GEngine::GetWorld()->Update2DPhysicsData(transform, physComponent);
+				}
 			}
 		}
-
+		
 		ResetInput();
 	}
 

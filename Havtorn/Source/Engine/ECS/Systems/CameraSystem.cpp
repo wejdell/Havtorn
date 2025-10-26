@@ -30,55 +30,58 @@ namespace Havtorn
 	{
 	}
 
-	void CCameraSystem::Update(CScene* scene)
+	void CCameraSystem::Update(std::vector<Ptr<CScene>>& scenes)
 	{	
-		if (!scene->MainCameraEntity.IsValid())
-			return;
-
-		SCameraControllerComponent& controllerComp = *scene->GetComponent<SCameraControllerComponent>(scene->MainCameraEntity);
-		STransformComponent& transformComp = *scene->GetComponent<STransformComponent>(scene->MainCameraEntity);
-
-		const F32 dt = GTime::Dt();
-
-		if (!IsFreeCamActive)
+		for (Ptr<CScene>& scene : scenes)
 		{
-			// Decelerate
-			controllerComp.CurrentAccelerationFactor = UMath::Clamp(controllerComp.CurrentAccelerationFactor - (1.0f / controllerComp.AccelerationDuration) * dt);
-			transformComp.Transform.Translate(controllerComp.AccelerationDirection * controllerComp.CurrentAccelerationFactor * controllerComp.MaxMoveSpeed * dt);
+			if (!scene->MainCameraEntity.IsValid())
+				continue;
 
-			ResetInput();
-			return;
-		}
+			SCameraControllerComponent& controllerComp = *scene->GetComponent<SCameraControllerComponent>(scene->MainCameraEntity);
+			STransformComponent& transformComp = *scene->GetComponent<STransformComponent>(scene->MainCameraEntity);
 
-		// === Rotation ===
-		controllerComp.CurrentPitch = UMath::Clamp(controllerComp.CurrentPitch + (CameraRotateInput.X * controllerComp.RotationSpeed * dt), -SCameraControllerComponent::MaxPitchDegrees + 0.01f, SCameraControllerComponent::MaxPitchDegrees - 0.01f);
-		controllerComp.CurrentYaw = UMath::WrapAngle(controllerComp.CurrentYaw + (CameraRotateInput.Y * controllerComp.RotationSpeed * dt));
-		SMatrix newMatrix = transformComp.Transform.GetMatrix();
-		newMatrix.SetRotation({ controllerComp.CurrentPitch, controllerComp.CurrentYaw, 0.0f });
-		transformComp.Transform.SetMatrix(newMatrix);
+			const F32 dt = GTime::Dt();
 
-		// === Translation ===
-		if (CameraMoveInput.IsNearlyZero())
-		{
-			// Decelerate
-			controllerComp.CurrentAccelerationFactor = UMath::Clamp(controllerComp.CurrentAccelerationFactor - (1.0f / controllerComp.AccelerationDuration) * dt);
-			transformComp.Transform.Translate(controllerComp.AccelerationDirection * controllerComp.CurrentAccelerationFactor * controllerComp.MaxMoveSpeed * dt);
+			if (!IsFreeCamActive)
+			{
+				// Decelerate
+				controllerComp.CurrentAccelerationFactor = UMath::Clamp(controllerComp.CurrentAccelerationFactor - (1.0f / controllerComp.AccelerationDuration) * dt);
+				transformComp.Transform.Translate(controllerComp.AccelerationDirection * controllerComp.CurrentAccelerationFactor * controllerComp.MaxMoveSpeed * dt);
 
-			ResetInput();
-			return;
-		}
+				ResetInput();
+				continue;
+			}
 
-		// Jerk
-		if (controllerComp.AccelerationDirection != CameraMoveInput.GetNormalized())
-			controllerComp.CurrentAccelerationFactor = UMath::Min(controllerComp.CurrentAccelerationFactor, 0.5f);
+			// === Rotation ===
+			controllerComp.CurrentPitch = UMath::Clamp(controllerComp.CurrentPitch + (CameraRotateInput.X * controllerComp.RotationSpeed * dt), -SCameraControllerComponent::MaxPitchDegrees + 0.01f, SCameraControllerComponent::MaxPitchDegrees - 0.01f);
+			controllerComp.CurrentYaw = UMath::WrapAngle(controllerComp.CurrentYaw + (CameraRotateInput.Y * controllerComp.RotationSpeed * dt));
+			SMatrix newMatrix = transformComp.Transform.GetMatrix();
+			newMatrix.SetRotation({ controllerComp.CurrentPitch, controllerComp.CurrentYaw, 0.0f });
+			transformComp.Transform.SetMatrix(newMatrix);
+
+			// === Translation ===
+			if (CameraMoveInput.IsNearlyZero())
+			{
+				// Decelerate
+				controllerComp.CurrentAccelerationFactor = UMath::Clamp(controllerComp.CurrentAccelerationFactor - (1.0f / controllerComp.AccelerationDuration) * dt);
+				transformComp.Transform.Translate(controllerComp.AccelerationDirection * controllerComp.CurrentAccelerationFactor * controllerComp.MaxMoveSpeed * dt);
+
+				ResetInput();
+				continue;
+			}
+
+			// Jerk
+			if (controllerComp.AccelerationDirection != CameraMoveInput.GetNormalized())
+				controllerComp.CurrentAccelerationFactor = UMath::Min(controllerComp.CurrentAccelerationFactor, 0.5f);
 		 
-		// Accelerate
-		controllerComp.CurrentAccelerationFactor = UMath::Clamp(controllerComp.CurrentAccelerationFactor + (1.0f / controllerComp.AccelerationDuration) * dt);
-		controllerComp.AccelerationDirection = CameraMoveInput.GetNormalized();	
+			// Accelerate
+			controllerComp.CurrentAccelerationFactor = UMath::Clamp(controllerComp.CurrentAccelerationFactor + (1.0f / controllerComp.AccelerationDuration) * dt);
+			controllerComp.AccelerationDirection = CameraMoveInput.GetNormalized();	
 		
-		transformComp.Transform.Translate(controllerComp.AccelerationDirection * controllerComp.CurrentAccelerationFactor * controllerComp.MaxMoveSpeed * dt);
+			transformComp.Transform.Translate(controllerComp.AccelerationDirection * controllerComp.CurrentAccelerationFactor * controllerComp.MaxMoveSpeed * dt);
 
-		ResetInput();
+			ResetInput();
+		}
 	}
 
 	void CCameraSystem::HandleAxisInput(const SInputAxisPayload payload)
@@ -110,44 +113,50 @@ namespace Havtorn
 		IsFreeCamActive = payload.IsHeld;
 	}
 
-	void CCameraSystem::OnBeginPlay(CScene* scene)
+	void CCameraSystem::OnBeginPlay(std::vector<Ptr<CScene>>& scenes)
 	{
-		PreviousMainCamera = scene->MainCameraEntity;
-		for (SCameraComponent* camera : scene->GetComponents<SCameraComponent>())
+		for (Ptr<CScene>& scene : scenes)
 		{
-			if (camera->IsStartingCamera)
+			PreviousMainCamera = scene->MainCameraEntity;
+			for (SCameraComponent* camera : scene->GetComponents<SCameraComponent>())
 			{
-				camera->IsActive = true;
-				scene->MainCameraEntity = camera->Owner;
-				break;
+				if (camera->IsStartingCamera)
+				{
+					camera->IsActive = true;
+					scene->MainCameraEntity = camera->Owner;
+					break;
+				}
+			}
+
+			if (PreviousMainCamera != scene->MainCameraEntity)
+			{
+				SCameraComponent* camera = scene->GetComponent<SCameraComponent>(PreviousMainCamera);
+				camera->IsActive = false;
 			}
 		}
+	}
 
-		if (PreviousMainCamera != scene->MainCameraEntity)
+	void CCameraSystem::OnPausePlay(std::vector<Ptr<CScene>>& /*scenes*/)
+	{
+	}
+
+	void CCameraSystem::OnEndPlay(std::vector<Ptr<CScene>>& scenes)
+	{
+		for (Ptr<CScene>& scene : scenes)
 		{
-			SCameraComponent* camera = scene->GetComponent<SCameraComponent>(PreviousMainCamera);
-			camera->IsActive = false;
-		}
-	}
-
-	void CCameraSystem::OnPausePlay(CScene* /*scene*/)
-	{
-	}
-
-	void CCameraSystem::OnEndPlay(CScene* scene)
-	{
-		if (!PreviousMainCamera.IsValid() || PreviousMainCamera == scene->MainCameraEntity)
-			return;
+			if (!PreviousMainCamera.IsValid() || PreviousMainCamera == scene->MainCameraEntity)
+				return;
 		
-		SCameraComponent* gameCamera = scene->GetComponent<SCameraComponent>(scene->MainCameraEntity);
-		gameCamera->IsActive = false;
+			SCameraComponent* gameCamera = scene->GetComponent<SCameraComponent>(scene->MainCameraEntity);
+			gameCamera->IsActive = false;
 
-		SCameraComponent* editorCamera = scene->GetComponent<SCameraComponent>(PreviousMainCamera);
-		editorCamera->IsActive = true;
+			SCameraComponent* editorCamera = scene->GetComponent<SCameraComponent>(PreviousMainCamera);
+			editorCamera->IsActive = true;
 
-		scene->MainCameraEntity = editorCamera->Owner;
+			scene->MainCameraEntity = editorCamera->Owner;
 
-		PreviousMainCamera = SEntity::Null;
+			PreviousMainCamera = SEntity::Null;
+		}
 	}
 	
 	void CCameraSystem::ResetInput()

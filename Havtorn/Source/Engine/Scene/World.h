@@ -120,9 +120,9 @@ namespace Havtorn
 
 	public:
 		// TODO.NW: Maybe unify and have Enum arg instead
-		CMulticastDelegate<CScene*> OnBeginPlayDelegate;
-		CMulticastDelegate<CScene*> OnPausePlayDelegate;
-		CMulticastDelegate<CScene*> OnEndPlayDelegate;
+		CMulticastDelegate<std::vector<Ptr<CScene>>&> OnBeginPlayDelegate;
+		CMulticastDelegate<std::vector<Ptr<CScene>>&> OnPausePlayDelegate;
+		CMulticastDelegate<std::vector<Ptr<CScene>>&> OnEndPlayDelegate;
 
 		CMulticastDelegate<CScene*, const SEntity, const SEntity> OnBeginOverlap;
 		CMulticastDelegate<CScene*, const SEntity, const SEntity> OnEndOverlap;
@@ -132,7 +132,7 @@ namespace Havtorn
 		~CWorld() = default;
 		
 		bool Init(CRenderManager* renderManager);
-		void Update() const;
+		void Update();
 
 		ENGINE_API void LoadScene(const std::string& filePath, CScene* outScene) const;
 

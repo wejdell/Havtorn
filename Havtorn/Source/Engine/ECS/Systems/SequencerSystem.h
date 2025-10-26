@@ -26,7 +26,7 @@ namespace Havtorn
 				CSequencerSystem() = default;
 				~CSequencerSystem() override = default;
 		//
-				void Update(CScene* scene) override;
+				void Update(std::vector<Ptr<CScene>>& scenes) override;
 		//
 		//		ENGINE_API SSequencerContextData GetSequencerContextData() const;
 		//		ENGINE_API void SetSequencerContextData(const SSequencerContextData& data);	

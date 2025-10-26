@@ -16,7 +16,7 @@ namespace Havtorn
 		CRenderSystem(CRenderManager* renderManager, CWorld* world);
 		~CRenderSystem() override = default;
 
-		void Update(CScene* scene) override;
+		void Update(std::vector<Ptr<CScene>>& scenes) override;
 
 	private:
 		CRenderManager* RenderManager = nullptr;

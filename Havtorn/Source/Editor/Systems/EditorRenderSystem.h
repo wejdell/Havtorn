@@ -17,7 +17,7 @@ namespace Havtorn
 		CEditorRenderSystem(CRenderManager* renderManager, CWorld* world, CEditorManager* editorManager);
 		~CEditorRenderSystem() override = default;
 
-		void Update(CScene* scene) override;
+		void Update(std::vector<Ptr<CScene>>& scenes) override;
 
 		void OnEntityPreDestroy(const SEntity entity);
 

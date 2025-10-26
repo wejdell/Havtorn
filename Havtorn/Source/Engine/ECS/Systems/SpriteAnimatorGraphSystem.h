@@ -11,7 +11,7 @@ namespace Havtorn
 	{
 	public:
 		~CSpriteAnimatorGraphSystem() override = default;
-		ENGINE_API void Update(CScene* scene) override;
+		ENGINE_API void Update(std::vector<Ptr<CScene>>& scenes) override;
 
 		ENGINE_API void BindEvaluateFunction(std::function<I16(CScene*, const SEntity&)>& function, const std::string& classAndFunctionName);
 

@@ -751,7 +751,7 @@ namespace Havtorn
 		InitEditorLayout();
 	}
 
-	void CEditorManager::OnBeginPlay(CScene* /*scene*/)
+	void CEditorManager::OnBeginPlay(std::vector<Ptr<CScene>>& /*scenes*/)
 	{
 		if (CurrentColorTheme != EEditorColorTheme::PauseMode)
 			CachedColorTheme = CurrentColorTheme;
@@ -763,13 +763,13 @@ namespace Havtorn
 		// TODO.NW: Change input context?
 	}
 
-	void CEditorManager::OnPausePlay(CScene* /*scene*/)
+	void CEditorManager::OnPausePlay(std::vector<Ptr<CScene>>& /*scenes*/)
 	{
 		SetEditorTheme(EEditorColorTheme::PauseMode);
 		World->UnblockSystem<CPickingSystem>(this);
 	}
 
-	void CEditorManager::OnEndPlay(CScene* /*scene*/)
+	void CEditorManager::OnEndPlay(std::vector<Ptr<CScene>>& /*scenes*/)
 	{
 		SetEditorTheme(CachedColorTheme);
 		World->UnblockSystem<CPickingSystem>(this);

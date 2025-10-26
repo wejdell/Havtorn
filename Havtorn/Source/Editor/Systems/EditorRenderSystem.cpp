@@ -33,59 +33,62 @@ namespace Havtorn
 	{
 	}
 
-	void CEditorRenderSystem::Update(CScene* scene)
+	void CEditorRenderSystem::Update(std::vector<Ptr<CScene>>& scenes)
 	{
-		if (World->GetWorldPlayState() == EWorldPlayState::Playing)
-			return;
-
-		if (!scene->OnEntityPreDestroy.IsBoundTo(Handle))
+		for (Ptr<CScene>& scene : scenes)
 		{
-			Handle = scene->OnEntityPreDestroy.AddMember(this, &CEditorRenderSystem::OnEntityPreDestroy);
-		}
+			if (World->GetWorldPlayState() == EWorldPlayState::Playing)
+				return;
 
-		auto tryAddComponentWidgets = [&]<typename T>(T&& /*emptyComponent*/, const SAssetReference& assetReference)
-		{
-			for (const T* component : scene->GetComponents<T>())
+			if (!scene->OnEntityPreDestroy.IsBoundTo(Handle))
 			{
-				if (!SComponent::IsValid(component))
+				Handle = scene->OnEntityPreDestroy.AddMember(this, &CEditorRenderSystem::OnEntityPreDestroy);
+			}
+
+			auto tryAddComponentWidgets = [&]<typename T>(T&& /*emptyComponent*/, const SAssetReference& assetReference)
+			{
+				for (const T* component : scene->GetComponents<T>())
+				{
+					if (!SComponent::IsValid(component))
+						continue;
+
+					const STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(component);
+
+					GEngine::GetAssetRegistry()->RequestAsset(assetReference.UID, transformComponent->Owner.GUID);
+					RenderManager->AddSpriteToWorldSpaceInstancedRenderList(assetReference.UID, transformComponent, scene->GetComponent<STransformComponent>(scene->MainCameraEntity), 0);
+
+					SRenderCommand command;
+					command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
+					command.U32s.push_back(assetReference.UID);
+					RenderManager->PushRenderCommand(command, 0);
+				}
+			};
+
+			tryAddComponentWidgets(SCameraComponent(), CameraWidgetReference);
+			tryAddComponentWidgets(SDecalComponent(), DecalWidgetReference);
+			tryAddComponentWidgets(SEnvironmentLightComponent(), EnvironmentLightWidgetReference);
+			tryAddComponentWidgets(SDirectionalLightComponent(), DirectionalLightWidgetReference);
+			tryAddComponentWidgets(SPointLightComponent(), PointLightWidgetReference);
+			tryAddComponentWidgets(SSpotLightComponent(), SpotlightWidgetReference);
+
+			for (const SPhysics3DComponent* physics3DComponent : scene->GetComponents<SPhysics3DComponent>())
+			{
+				if (!SComponent::IsValid(physics3DComponent))
 					continue;
 
-				const STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(component);
+				// NW: Write this out by hand so regular colliders don't get this widget
+				if (!physics3DComponent->IsTrigger)
+					continue;
 
-				GEngine::GetAssetRegistry()->RequestAsset(assetReference.UID, transformComponent->Owner.GUID);
-				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(assetReference.UID, transformComponent, scene->GetComponent<STransformComponent>(scene->MainCameraEntity), 0);
+				const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(physics3DComponent);
+				GEngine::GetAssetRegistry()->RequestAsset(ColliderWidgetReference.UID, transformComp->Owner.GUID);
+				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(ColliderWidgetReference.UID, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity), 0);
 
 				SRenderCommand command;
 				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
-				command.U32s.push_back(assetReference.UID);
+				command.U32s.push_back(ColliderWidgetReference.UID);
 				RenderManager->PushRenderCommand(command, 0);
 			}
-		};
-
-		tryAddComponentWidgets(SCameraComponent(), CameraWidgetReference);
-		tryAddComponentWidgets(SDecalComponent(), DecalWidgetReference);
-		tryAddComponentWidgets(SEnvironmentLightComponent(), EnvironmentLightWidgetReference);
-		tryAddComponentWidgets(SDirectionalLightComponent(), DirectionalLightWidgetReference);
-		tryAddComponentWidgets(SPointLightComponent(), PointLightWidgetReference);
-		tryAddComponentWidgets(SSpotLightComponent(), SpotlightWidgetReference);
-
-		for (const SPhysics3DComponent* physics3DComponent : scene->GetComponents<SPhysics3DComponent>())
-		{
-			if (!SComponent::IsValid(physics3DComponent))
-				continue;
-
-			// NW: Write this out by hand so regular colliders don't get this widget
-			if (!physics3DComponent->IsTrigger)
-				continue;
-
-			const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(physics3DComponent);
-			GEngine::GetAssetRegistry()->RequestAsset(ColliderWidgetReference.UID, transformComp->Owner.GUID);
-			RenderManager->AddSpriteToWorldSpaceInstancedRenderList(ColliderWidgetReference.UID, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity), 0);
-
-			SRenderCommand command;
-			command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
-			command.U32s.push_back(ColliderWidgetReference.UID);
-			RenderManager->PushRenderCommand(command, 0);
 		}
 	}
 

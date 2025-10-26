@@ -19,7 +19,7 @@ namespace Havtorn
 	{
 	public:
 		CPickingSystem(CEditorManager* editorManager);
-		void Update(CScene* scene) override;
+		void Update(std::vector<Ptr<CScene>>& scenes) override;
 
 	private:
 		void OnMouseClick(const SInputActionPayload payload) const;

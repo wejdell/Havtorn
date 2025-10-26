@@ -20,80 +20,83 @@ namespace Havtorn
 	static bool once = false;
 	static int nodeNameIndex = 0;
 
-	ENGINE_API void CAnimatorGraphSystem::Update(CScene* scene)
+	void CAnimatorGraphSystem::Update(std::vector<Ptr<CScene>>& scenes)
 	{
 		const F32 deltaTime = GTime::Dt();
 
-		for (SSkeletalAnimationComponent* component : scene->GetComponents<SSkeletalAnimationComponent>())
+		for (Ptr<CScene>& scene : scenes)
 		{
-			if (!SComponent::IsValid(component))
-				continue;
-
-			SSkeletalMeshComponent* mesh = scene->GetComponent<SSkeletalMeshComponent>(component->Owner);
-			if (!SComponent::IsValid(mesh))
-				continue;
-
-			CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
-			SSkeletalMeshAsset* meshAsset = assetRegistry->RequestAssetData<SSkeletalMeshAsset>(mesh->AssetReference, component->Owner.GUID);
-			SSkeletalAnimationAsset* currentAnimation = assetRegistry->RequestAssetData<SSkeletalAnimationAsset>(component->AssetReferences[component->CurrentAnimationIndex], component->Owner.GUID);
-
-			if (component->IsPlaying)
-				component->CurrentAnimationTime = fmodf(component->CurrentAnimationTime += deltaTime, currentAnimation->DurationInTicks / STATIC_F32(currentAnimation->TickRate));
-
-			// Ticks == Frames
-			F32 ticksPerSecond = STATIC_F32(currentAnimation->TickRate);
-			ticksPerSecond = (ticksPerSecond != 0) ? ticksPerSecond : 24.0f;
-			F32 timeInTicks = component->CurrentAnimationTime * ticksPerSecond;
-			F32 duration = STATIC_F32(currentAnimation->DurationInTicks);
-			F32 animationTime = fmodf(timeInTicks, duration);
-
-			// VERSION 2
-			component->Bones.clear();
-
-			component->CurrentAnimationIndex = 0;
-			std::vector<SSkeletalPosedNode> walkPosedNodes = {};
-			ReadAnimationLocalPose(currentAnimation, meshAsset, animationTime, meshAsset->Nodes[0], walkPosedNodes);
-
-			//component->CurrentAnimationIndex = 0;
-			//currentAnimation = assetRegistry->RequestAssetData<SSkeletalAnimationAsset>(component->AssetReferences[component->CurrentAnimationIndex], component->Owner.GUID);
-			std::vector<SSkeletalPosedNode> runPosedNodes = {};
-			ReadAnimationLocalPose(currentAnimation, meshAsset, animationTime, meshAsset->Nodes[0], runPosedNodes);
-
-			component->CurrentAnimationIndex = 0;
-
-			std::vector<SSkeletalPosedNode> blendPosedNodes = {};
-			blendPosedNodes.resize(meshAsset->Nodes.size());
-			for (U32 i = 0; i < blendPosedNodes.size(); i++)
+			for (SSkeletalAnimationComponent* component : scene->GetComponents<SSkeletalAnimationComponent>())
 			{
-				auto& walk = walkPosedNodes[i];
-				auto& run = runPosedNodes[i];
-				blendPosedNodes[i].Name = meshAsset->Nodes[i].Name;
-				blendPosedNodes[i].LocalTransform = SMatrix::Interpolate(walk.LocalTransform, run.LocalTransform, component->BlendValue);
-			}
-
-			SMatrix root;
-			root.SetScale(currentAnimation->ImportScale);
-			ApplyLocalPoseToHierarchy(meshAsset, blendPosedNodes, meshAsset->Nodes[0], root);
-
-			component->Bones.resize(meshAsset->BindPoseBones.size());
-
-			//Apply Inverse Bind Transform
-			for (U32 i = 0; i < blendPosedNodes.size(); i++)
-			{
-				SSkeletalPosedNode& posedNode = blendPosedNodes[i];
-				I32 boneIndex = -1;
-				
-				if (auto it = std::ranges::find(meshAsset->BindPoseBones, posedNode.Name, &SSkeletalMeshBone::Name); it != meshAsset->BindPoseBones.end())
-					boneIndex = STATIC_I32(std::distance(meshAsset->BindPoseBones.begin(), it));
-
-				if (boneIndex < 0)
+				if (!SComponent::IsValid(component))
 					continue;
 
-				SSkeletalMeshBone& bone = meshAsset->BindPoseBones[boneIndex];
-				component->Bones[boneIndex] = bone.InverseBindPoseTransform * posedNode.GlobalTransform;
-			}
+				SSkeletalMeshComponent* mesh = scene->GetComponent<SSkeletalMeshComponent>(component->Owner);
+				if (!SComponent::IsValid(mesh))
+					continue;
 
-			once = true;
+				CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
+				SSkeletalMeshAsset* meshAsset = assetRegistry->RequestAssetData<SSkeletalMeshAsset>(mesh->AssetReference, component->Owner.GUID);
+				SSkeletalAnimationAsset* currentAnimation = assetRegistry->RequestAssetData<SSkeletalAnimationAsset>(component->AssetReferences[component->CurrentAnimationIndex], component->Owner.GUID);
+
+				if (component->IsPlaying)
+					component->CurrentAnimationTime = fmodf(component->CurrentAnimationTime += deltaTime, currentAnimation->DurationInTicks / STATIC_F32(currentAnimation->TickRate));
+
+				// Ticks == Frames
+				F32 ticksPerSecond = STATIC_F32(currentAnimation->TickRate);
+				ticksPerSecond = (ticksPerSecond != 0) ? ticksPerSecond : 24.0f;
+				F32 timeInTicks = component->CurrentAnimationTime * ticksPerSecond;
+				F32 duration = STATIC_F32(currentAnimation->DurationInTicks);
+				F32 animationTime = fmodf(timeInTicks, duration);
+
+				// VERSION 2
+				component->Bones.clear();
+
+				component->CurrentAnimationIndex = 0;
+				std::vector<SSkeletalPosedNode> walkPosedNodes = {};
+				ReadAnimationLocalPose(currentAnimation, meshAsset, animationTime, meshAsset->Nodes[0], walkPosedNodes);
+
+				//component->CurrentAnimationIndex = 0;
+				//currentAnimation = assetRegistry->RequestAssetData<SSkeletalAnimationAsset>(component->AssetReferences[component->CurrentAnimationIndex], component->Owner.GUID);
+				std::vector<SSkeletalPosedNode> runPosedNodes = {};
+				ReadAnimationLocalPose(currentAnimation, meshAsset, animationTime, meshAsset->Nodes[0], runPosedNodes);
+
+				component->CurrentAnimationIndex = 0;
+
+				std::vector<SSkeletalPosedNode> blendPosedNodes = {};
+				blendPosedNodes.resize(meshAsset->Nodes.size());
+				for (U32 i = 0; i < blendPosedNodes.size(); i++)
+				{
+					auto& walk = walkPosedNodes[i];
+					auto& run = runPosedNodes[i];
+					blendPosedNodes[i].Name = meshAsset->Nodes[i].Name;
+					blendPosedNodes[i].LocalTransform = SMatrix::Interpolate(walk.LocalTransform, run.LocalTransform, component->BlendValue);
+				}
+
+				SMatrix root;
+				root.SetScale(currentAnimation->ImportScale);
+				ApplyLocalPoseToHierarchy(meshAsset, blendPosedNodes, meshAsset->Nodes[0], root);
+
+				component->Bones.resize(meshAsset->BindPoseBones.size());
+
+				//Apply Inverse Bind Transform
+				for (U32 i = 0; i < blendPosedNodes.size(); i++)
+				{
+					SSkeletalPosedNode& posedNode = blendPosedNodes[i];
+					I32 boneIndex = -1;
+				
+					if (auto it = std::ranges::find(meshAsset->BindPoseBones, posedNode.Name, &SSkeletalMeshBone::Name); it != meshAsset->BindPoseBones.end())
+						boneIndex = STATIC_I32(std::distance(meshAsset->BindPoseBones.begin(), it));
+
+					if (boneIndex < 0)
+						continue;
+
+					SSkeletalMeshBone& bone = meshAsset->BindPoseBones[boneIndex];
+					component->Bones[boneIndex] = bone.InverseBindPoseTransform * posedNode.GlobalTransform;
+				}
+
+				once = true;
+			}
 		}
 	}
 

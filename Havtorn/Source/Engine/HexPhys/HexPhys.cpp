@@ -180,10 +180,13 @@ namespace Havtorn
 			: PhysicsWorld(physicsWorld)
 		{}
 
-		void CPhysics2DSystem::Update(CScene* scene)
+		void CPhysics2DSystem::Update(std::vector<Ptr<CScene>>& scenes)
 		{
 			if (GTime::FixedTimeStep())
-				PhysicsWorld->Update(scene);
+			{
+				for (Ptr<CScene>& scene : scenes)
+					PhysicsWorld->Update(scene.get());
+			}
 		}
 	}
 
@@ -654,7 +657,7 @@ namespace Havtorn
 			: PhysicsWorld(physicsWorld)
 		{}
 
-		void CPhysics3DSystem::Update(CScene* /*scene*/)
+		void CPhysics3DSystem::Update(std::vector<Ptr<CScene>>& /*scenes*/)
 		{
 			if (GTime::FixedTimeStep())
 				PhysicsWorld->Update();

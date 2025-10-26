@@ -159,9 +159,9 @@ namespace Havtorn
 		void OnToggleFullscreen(const SInputActionPayload payload);
 
 		void OnResolutionChanged(SVector2<U16> newResolution);
-		void OnBeginPlay(CScene* scene);
-		void OnPausePlay(CScene* scene);
-		void OnEndPlay(CScene* scene);
+		void OnBeginPlay(std::vector<Ptr<CScene>>& scenes);
+		void OnPausePlay(std::vector<Ptr<CScene>>& scenes);
+		void OnEndPlay(std::vector<Ptr<CScene>>& scenes);
 
 		[[nodiscard]] std::string GetFrameRate() const;
 		[[nodiscard]] std::string GetSystemMemory() const;
