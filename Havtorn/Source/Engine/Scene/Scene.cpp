@@ -725,7 +725,12 @@ namespace Havtorn
 
 		DeserializeData(SceneName, fromData, pointerPosition);
 		DeserializeData(MainCameraEntity, fromData, pointerPosition);
-		DeserializeData(Entities, fromData, pointerPosition);
+		
+		std::vector<SEntity> entities;
+		DeserializeData(entities, fromData, pointerPosition);
+
+		for (SEntity& entity : entities)
+			AddEntity(entity.GUID);
 
 		{
 			U32 savedTypeID = 0;
