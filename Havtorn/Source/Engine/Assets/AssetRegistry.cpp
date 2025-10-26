@@ -454,65 +454,72 @@ namespace Havtorn
         if (std::holds_alternative<SStaticModelFileHeader>(fileHeader))
         {
             SStaticModelFileHeader header = std::get<SStaticModelFileHeader>(fileHeader);
-            const auto data = new char[header.GetSize()];
+            U32 size = header.GetSize();
+            const auto data = new char[size];
             header.Serialize(data);
             hvaPath = destinationPath + header.Name + ".hva";
-            UFileSystem::Serialize(hvaPath, &data[0], header.GetSize());
+            UFileSystem::Serialize(hvaPath, &data[0], size);
             delete[] data;
         }
         else if (std::holds_alternative<SSkeletalModelFileHeader>(fileHeader))
         {
             SSkeletalModelFileHeader header = std::get<SSkeletalModelFileHeader>(fileHeader);
-            const auto data = new char[header.GetSize()];
+            U32 size = header.GetSize();
+            const auto data = new char[size];
             header.Serialize(data);
             hvaPath = destinationPath + header.Name + ".hva";
-            UFileSystem::Serialize(hvaPath, &data[0], header.GetSize());
+            UFileSystem::Serialize(hvaPath, &data[0], size);
             delete[] data;
         }
         else if (std::holds_alternative<SSkeletalAnimationFileHeader>(fileHeader))
         {
             SSkeletalAnimationFileHeader header = std::get<SSkeletalAnimationFileHeader>(fileHeader);
-            const auto data = new char[header.GetSize()];
+            U32 size = header.GetSize();
+            const auto data = new char[size];
             header.Serialize(data);
             hvaPath = destinationPath + header.Name + ".hva";
-            UFileSystem::Serialize(hvaPath, &data[0], header.GetSize());
+            UFileSystem::Serialize(hvaPath, &data[0], size);
             delete[] data;
         }
         else if (std::holds_alternative<STextureFileHeader>(fileHeader))
         {
             STextureFileHeader header = std::get<STextureFileHeader>(fileHeader);
-            const auto data = new char[header.GetSize()];
+            U32 size = header.GetSize();
+            const auto data = new char[size];
             header.Serialize(data);
             hvaPath = destinationPath + header.Name + ".hva";
-            UFileSystem::Serialize(hvaPath, &data[0], header.GetSize());
+            UFileSystem::Serialize(hvaPath, &data[0], size);
             delete[] data;
         }
         else if (std::holds_alternative<SMaterialAssetFileHeader>(fileHeader))
         {
             SMaterialAssetFileHeader header = std::get<SMaterialAssetFileHeader>(fileHeader);
-            const auto data = new char[header.GetSize()];
+            U32 size = header.GetSize();
+            const auto data = new char[size];
             header.Serialize(data);
             hvaPath = destinationPath + header.Name + ".hva";
-            UFileSystem::Serialize(hvaPath, &data[0], header.GetSize());
+            UFileSystem::Serialize(hvaPath, &data[0], size);
             delete[] data;
         }
         else if (std::holds_alternative<SScriptFileHeader>(fileHeader))
         {
             SScriptFileHeader header = std::get<SScriptFileHeader>(fileHeader);
-            const auto data = new char[header.GetSize()];
+            U32 size = header.GetSize();
+            const auto data = new char[size];
             header.Serialize(data);
             hvaPath = destinationPath + header.Name + ".hva";
-            UFileSystem::Serialize(hvaPath, &data[0], header.GetSize());
+            UFileSystem::Serialize(hvaPath, &data[0], size);
             delete[] data;
         }
         else if (std::holds_alternative<SSceneFileHeader>(fileHeader))
         {
             SSceneFileHeader header = std::get<SSceneFileHeader>(fileHeader);
-            const auto data = new char[header.GetSize()];
+            U32 size = header.GetSize();
+            const auto data = new char[size];
             U64 pointerPosition = 0;
             header.Serialize(data, pointerPosition);
             hvaPath = destinationPath + header.Scene->GetSceneName() + ".hva";
-            UFileSystem::Serialize(hvaPath, &data[0], header.GetSize());
+            UFileSystem::Serialize(hvaPath, &data[0], size);
             delete[] data;
         }
 
