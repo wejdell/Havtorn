@@ -89,6 +89,7 @@ class FileCreationUtil:
     }
 
     addFileCommand = "-f"
+    addNewNodeCommand = "-node"  # -node MyCoolFolder/SickNode
     addFileSingle = "-sf"
     undoFileCommand = "-u"
     switchMainCommand = "-m"
@@ -132,6 +133,7 @@ class FileCreationUtil:
         self.print_command_separator()
         print(f' {self.addFileCommand} to add folder & file, example: "F1/f2/ex.cpp"')
         print(f' Some file-extensions have associated files auto-generated, example: "ex.h" gets a "ex.cpp"')
+        print(f' {self.addNewNodeCommand} Create a new Node and generate base node implementation  Example: -node SubDirectory/NewNodeName')
         print(f' {self.addFileSingle} same as {self.addFileCommand} without auto-generation of associated file')
         print(f' {self.undoFileCommand} to undo, example: {self.undoFileCommand} 1')
         print(f' {self.switchMainCommand} to change main folder')
@@ -245,6 +247,64 @@ class FileCreationUtil:
         
         fileStream.write(self.havtornNameSpace)
         return
+    
+    @classmethod
+    def try_implement_base_node(self, fileName:str, fileStream:io.TextIOWrapper):
+        (name, extension) = fileName.split('.')
+        checks = [
+            extension.lower() in [
+                'h', 
+                'hpp',
+                ],
+        ]
+        if all(checks):
+            headerFile = f"""
+            namespace Havtorn
+            {{
+                namespace HexRune
+                {{
+                    struct {name} : public SNode
+                    {{
+                        GAME_API {name} (const U64 id, const U32 typeID, SScript* owningScript);
+                        virtual GAME_API I8 OnExecute() override;
+                    }}; 
+                }}
+            }}
+            """
+            fileStream.write(headerFile)
+    
+
+        (name, extension) = fileName.split('.')
+        checks = [
+            extension.lower() in [
+                'c', 
+                'cpp',
+                ],
+        ]
+        if all(checks):
+            cppFile = f"""
+            #include "{name}.h"
+
+            namespace Havtorn
+            {{
+                namespace HexRune
+                {{
+                    {name}::{name}(const U64 id, const U32 typeID, SScript* owningScript)
+                        : SNode(id, typeID, owningScript, ENodeType::Standard)
+                    {{
+                        AddInput(UGUIDManager::Generate(), EPinType::Flow, "In");
+                        AddOutput(UGUIDManager::Generate(), EPinType::Flow, "Out");                    
+                    }}
+
+                    {name}::OnExecute(const U64 id, const U32 typeID, SScript* owningScript)
+                        : SNode(id, typeID, owningScript, ENodeType::Standard)
+                    {{
+                        return -1;
+                    }}
+                }}
+            }}
+            """
+            fileStream.write(cppFile)    
 
     @classmethod
     def generate_files(self):
@@ -266,6 +326,25 @@ class FileCreationUtil:
         return
 
     @classmethod
+    def generate_node_files(self, fileToAdd:str):
+        (folderNames, fileName) = self.extract_folders_and_file(fileToAdd)
+        folders = "/".join(folderNames)
+        if not os.path.exists(folders):
+            os.makedirs(folders)
+
+        fileTypes = [".h", ".cpp"]
+        for fileType in fileTypes:
+            try:
+                with open(fileToAdd + fileType, "x") as file:
+                    file.write(self.havtornLicense)
+                    self.try_implement_base_node(fileName + fileType, file)
+                    print(f'> File "{fileToAdd  + fileType}" created')
+            except FileExistsError:
+                self.on_error(f'"{fileToAdd  + fileType}" already exists')
+
+        return
+
+    @classmethod
     def add_file_to_cmake(self, mainFolder:str, fileToAdd:str):
         # Read CMakeLists into a list of lines, append entry and rewrite file
         cmakeTarget=f"set({self.choiceToCMakeCollection[mainFolder]}\n"
@@ -284,6 +363,16 @@ class FileCreationUtil:
         self.generate_files()
         for (mainFolder, fileToAdd) in self.filesToAdd:
             self.add_file_to_cmake(mainFolder, fileToAdd)
+        print("\nRegenerating project ...")
+        subprocess.call([os.path.abspath(self.generatorScriptPath), "nopause"])
+        self.filesToAdd = []
+        return
+    
+    @classmethod
+    def generate_node_and_flush(self, fileToAdd:str):
+        self.generate_node_files(self.choiceToFolder[self.mainFolder] + fileToAdd)
+        self.add_file_to_cmake(self.mainFolder, self.choiceToFolder[self.mainFolder] + fileToAdd + ".h")
+        self.add_file_to_cmake(self.mainFolder, self.choiceToFolder[self.mainFolder] + fileToAdd + ".cpp")
         print("\nRegenerating project ...")
         subprocess.call([os.path.abspath(self.generatorScriptPath), "nopause"])
         self.filesToAdd = []
@@ -332,6 +421,21 @@ class FileCreationUtil:
                 (folderNames, fileName) = self.extract_folders_and_file(fileToAdd)
                 self.try_add_associated_file(fileName, folderNames)
                 continue
+
+            if self.addNewNodeCommand in userInput:
+                fileToAdd = "".join(userInput.replace(f"{self.addNewNodeCommand}", '').split())
+                (folderNames, fileName) = self.extract_folders_and_file(fileToAdd)
+                foldersValid = True
+                for filePart in folderNames:
+                    if not self.valid_folder(filePart):
+                        foldersValid = False
+                if not foldersValid:
+                    break
+                if "." in fileToAdd:
+                    fileToAdd = fileToAdd.split(".")[0] 
+            
+                self.generate_node_and_flush(fileToAdd)
+                self.print_command_separator()
             
             if self.addFileSingle in userInput: 
                 fileToAdd = "".join(userInput.replace(f"{self.addFileSingle}", '').split())
