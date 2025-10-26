@@ -17,8 +17,7 @@ namespace Havtorn
 		if (!CScene::Init(sceneName))
 			return false;
 
-		U32 typeID = 10000;
-		RegisterTrivialComponent<SGhostyComponent, SGhostyComponentEditorContext>(typeID++, 1);
+		RegisterTrivialComponent<SGhostyComponent, SGhostyComponentEditorContext>(100000, 1);
 
 		return true;
 	}

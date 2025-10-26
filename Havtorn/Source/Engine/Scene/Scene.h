@@ -22,6 +22,13 @@ namespace Havtorn
 		std::vector<SComponent*> Components;
 	};
 
+	struct SComponentSerializer
+	{
+		std::function<U32(const CScene*)> SizeAllocator;
+		std::function<void(const CScene*, char*, U64&)> Serializer;
+		std::function<void(CScene*, const char*, U64&)> Deserializer;
+	};
+
 	class CAssetRegistry;
 
 	class CScene
@@ -67,15 +74,6 @@ namespace Havtorn
 			}
 		}
 
-		struct SComponentSerializer
-		{
-			std::function<U32(const CScene*)> SizeAllocator;
-			std::function<void(const CScene*, char*, U64&)> Serializer;
-			std::function<void(CScene*, const char*, U64&)> Deserializer;
-		};
-
-		std::unordered_map<U32, SComponentSerializer> ComponentFactory;
-
 		template<typename TComponent, typename TComponentEditorContext>
 		void RegisterTrivialComponent(U32 typeID, U32 startingNumberOfInstances = 10)
 		{
@@ -97,6 +95,8 @@ namespace Havtorn
 
 			std::sort(RegisteredComponentEditorContexts.begin(), RegisteredComponentEditorContexts.end(), [](const SComponentEditorContext* a, const SComponentEditorContext* b) { return a->GetSortingPriority() < b->GetSortingPriority(); });
 
+			TypeHashToTypeID.emplace(typeid(TComponent).hash_code(), typeID);
+
 			SComponentSerializer serializer;
 			serializer.SizeAllocator =
 				[](const CScene* scene)
@@ -104,6 +104,11 @@ namespace Havtorn
 					const std::vector<TComponent*>& componentVector = scene->GetComponents<TComponent>();
 
 					U32 size = 0;
+
+					// Type ID and blob size
+					size += GetDataSize(U32());
+					size += GetDataSize(U32());
+
 					size += GetDataSize(STATIC_U32(componentVector.size()));
 					for (const auto component : componentVector)
 					{
@@ -117,6 +122,18 @@ namespace Havtorn
 				[](const CScene* scene, char* toData, U64& pointerPosition)
 				{
 					const std::vector<TComponent*>& componentVector = scene->GetComponents<TComponent>();
+
+					// Scene header
+					SerializeData(scene->TypeHashToTypeID.at(typeid(TComponent).hash_code()), toData, pointerPosition);
+					U32 size = 0;
+					size += GetDataSize(STATIC_U32(componentVector.size()));
+					for (const auto component : componentVector)
+					{
+						auto& componentRef = *component;
+						size += GetDataSize(componentRef);
+					}
+					SerializeData(size, toData, pointerPosition);
+					// !Scene header
 
 					SerializeData(STATIC_U32(componentVector.size()), toData, pointerPosition);
 					for (const auto component : componentVector)
@@ -141,8 +158,7 @@ namespace Havtorn
 					}
 				};				
 			
-			TypeHashToTypeID.emplace(typeid(TComponent).hash_code(), typeID);
-			ComponentFactory[typeID] = serializer;
+			ComponentSerializers[typeID] = serializer;
 		}
 
 		template<typename TComponent, typename TComponentEditorContext>
@@ -173,6 +189,11 @@ namespace Havtorn
 					const std::vector<TComponent*>& componentVector = scene->GetComponents<TComponent>();
 
 					U32 size = 0;
+
+					// Type ID and blob size
+					size += GetDataSize(U32());
+					size += GetDataSize(U32());
+
 					size += GetDataSize(STATIC_U32(componentVector.size()));
 					for (auto component : componentVector)
 						size += component->GetSize();
@@ -184,6 +205,15 @@ namespace Havtorn
 				[](const CScene* scene, char* toData, U64& pointerPosition)
 				{
 					const std::vector<TComponent*>& componentVector = scene->GetComponents<TComponent>();
+
+					// Scene header
+					SerializeData(scene->TypeHashToTypeID.at(typeid(TComponent).hash_code()), toData, pointerPosition);
+					U32 size = 0;
+					size += GetDataSize(STATIC_U32(componentVector.size()));
+					for (auto component : componentVector)
+						size += component->GetSize();
+					SerializeData(size, toData, pointerPosition);
+					// !Scene header
 
 					SerializeData(STATIC_U32(componentVector.size()), toData, pointerPosition);
 					for (auto component : componentVector)
@@ -206,7 +236,7 @@ namespace Havtorn
 				};
 			
 			TypeHashToTypeID.emplace(typeid(TComponent).hash_code(), typeID);
-			ComponentFactory[typeID] = serializer;
+			ComponentSerializers[typeID] = serializer;
 		}
 
 		template<typename T>
@@ -402,6 +432,9 @@ namespace Havtorn
 		// TODO.NW: Move this to World, so that it persists over scenes. Same as with Nodes
 		ENGINE_API const std::vector<SComponentEditorContext*>& GetComponentEditorContexts() const;
 	
+		std::unordered_map<U32, SComponentSerializer> ComponentSerializers;
+		std::unordered_map<U64, U32> TypeHashToTypeID;
+
 		std::unordered_map<U64, std::vector<SComponentEditorContext*>> EntityComponentEditorContexts;
 
 		std::unordered_map<U64, U64> EntityIndices;
@@ -412,8 +445,6 @@ namespace Havtorn
 
 		std::unordered_map<U32, U64> ContextIndices;
 		std::vector<SComponentEditorContext*> RegisteredComponentEditorContexts;
-
-		std::unordered_map<U64, U32> TypeHashToTypeID;
 
 		CHavtornStaticString<255> SceneName = std::string("SceneName");
 
