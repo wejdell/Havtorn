@@ -32,16 +32,14 @@ namespace Havtorn
 		{
 			ENGINE_API SDataBindingGetNode(const U64 id, const U32 typeID, SScript* owningScript, const U64 dataBindingID);
 			virtual ENGINE_API I8 OnExecute() override;
-
-			SScriptDataBinding* DataBinding = nullptr;
+			U64 DataBindingID = 0;
 		};
 
 		struct SDataBindingSetNode : public SNode
 		{
 			ENGINE_API SDataBindingSetNode(const U64 id, const U32 typeID, SScript* owningScript, const U64 dataBindingID);
 			virtual ENGINE_API I8 OnExecute() override;
-
-			SScriptDataBinding* DataBinding = nullptr;
+			U64 DataBindingID = 0;
 		};
 
 		struct SBranchNode : public SNode

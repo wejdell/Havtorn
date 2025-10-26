@@ -9,30 +9,38 @@ namespace Havtorn
 	{
 		SDataBindingGetNode::SDataBindingGetNode(const U64 id, const U32 typeID, SScript* owningScript, const U64 dataBindingID)
 			: SNode::SNode(id, typeID, owningScript, ENodeType::DataBindingGetNode)
+			, DataBindingID(dataBindingID)
 		{
-			DataBinding = &(*std::ranges::find_if(OwningScript->DataBindings, [dataBindingID](SScriptDataBinding& binding) { return binding.UID == dataBindingID; }));
-			AddOutput(UGUIDManager::Generate(), DataBinding->Type, DataBinding->Name);
+			SScriptDataBinding* databinding = &(*std::ranges::find_if(OwningScript->DataBindings, [dataBindingID](SScriptDataBinding& binding) { return binding.UID == dataBindingID; }));
+			AddOutput(UGUIDManager::Generate(), databinding->Type, databinding->Name);
 		}
 
 		I8 SDataBindingGetNode::OnExecute()
 		{
-			SetDataOnPin(EPinDirection::Output, 0, DataBinding->Data);
+			SScriptDataBinding* databinding = &(*std::ranges::find_if(OwningScript->DataBindings, [&](SScriptDataBinding& binding) { return binding.UID == DataBindingID; }));
+			SetDataOnPin(EPinDirection::Output, 0, databinding->Data);
 			return 0;
 		}
 
 		SDataBindingSetNode::SDataBindingSetNode(const U64 id, const U32 typeID, SScript* owningScript, const U64 dataBindingID)
 			: SNode::SNode(id, typeID, owningScript, ENodeType::DataBindingSetNode)
+			, DataBindingID(dataBindingID)
 		{
-			DataBinding = &(*std::ranges::find_if(OwningScript->DataBindings, [dataBindingID](SScriptDataBinding& binding) { return binding.UID == dataBindingID; }));
-			AddInput(UGUIDManager::Generate(), DataBinding->Type, DataBinding->Name);
+			AddInput(UGUIDManager::Generate(), EPinType::Flow);
+
+			SScriptDataBinding* databinding = &(*std::ranges::find_if(OwningScript->DataBindings, [dataBindingID](SScriptDataBinding& binding) { return binding.UID == dataBindingID; }));
+			AddInput(UGUIDManager::Generate(), databinding->Type, databinding->Name);
+
+			AddOutput(UGUIDManager::Generate(), EPinType::Flow);
 		}
 
 		I8 SDataBindingSetNode::OnExecute()
 		{
-			if (Inputs[0].IsDataUnset())
+			if (Inputs[1].IsDataUnset())
 				return 0;
 
-			DataBinding->Data = Inputs[0].Data;
+			SScriptDataBinding* databinding = &(*std::ranges::find_if(OwningScript->DataBindings, [&](SScriptDataBinding& binding) { return binding.UID == DataBindingID; }));
+			databinding->Data = Inputs[1].Data;
 			return 0;
 		}
 
@@ -128,6 +136,8 @@ namespace Havtorn
 		{
 			AddInput(UGUIDManager::Generate(), EPinType::Flow);
 			AddInput(UGUIDManager::Generate(), EPinType::String, "String");
+			AddInput(UGUIDManager::Generate(), EPinType::Float, "Float");
+
 			// TODO.NW: log category
 
 			AddOutput(UGUIDManager::Generate(), EPinType::Flow);
@@ -137,7 +147,11 @@ namespace Havtorn
 		{
 			std::string output = "";
 			GetDataOnPin(EPinDirection::Input, 1, output);
+			F32 outputFloat = 0;
+			GetDataOnPin(EPinDirection::Input, 2, outputFloat);
+
 			HV_LOG_INFO("%s", output.c_str());
+			HV_LOG_INFO("%f", outputFloat);
 
 			return 0;
 		}

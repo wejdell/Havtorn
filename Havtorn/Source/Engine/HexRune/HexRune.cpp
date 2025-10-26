@@ -8,6 +8,7 @@
 #include "ECSNodes/ECSNodes.h"
 #include <stack>
 
+
 namespace Havtorn
 {
 	namespace HexRune
@@ -92,7 +93,8 @@ namespace Havtorn
 			{
 				if (SDataBindingGetNode* dataBindingNode = static_cast<SDataBindingGetNode*>(node))
 				{
-					if (dataBindingNode->DataBinding == &(*bindingIterator))
+					SScriptDataBinding* databinding = &(*std::ranges::find_if(DataBindings, [dataBindingNode](SScriptDataBinding& binding) { return binding.UID == dataBindingNode->DataBindingID; }));
+					if (databinding == &(*bindingIterator))
 						nodesToRemove.push_back(dataBindingNode->UID);
 				}
 			}
@@ -261,6 +263,32 @@ namespace Havtorn
 			rightPin->LinkedPin = leftPin;
 		}
 
+		void SScript::LinkSerialized()
+		{
+			for (auto& link : Links)
+			{
+				SPin* leftPin = nullptr;
+				SPin* rightPin = nullptr;
+				for (SNode* node : Nodes)
+				{
+					for (SPin& output : node->Outputs)
+						if (output.UID == link.StartPinUID)
+							leftPin = &output;
+
+					for (SPin& input : node->Inputs)
+						if (input.UID == link.EndPinUID)
+							rightPin = &input;
+				}
+
+				if (leftPin == nullptr || rightPin == nullptr)
+					return;
+
+				leftPin->LinkedPin = rightPin;
+				rightPin->LinkedPin = leftPin;
+
+			}		
+		}
+
 		void SScript::Unlink(U64 leftPinID, U64 rightPinID)
 		{
 			SPin* leftPin = nullptr;
@@ -360,12 +388,14 @@ namespace Havtorn
 				if (node->NodeType == ENodeType::DataBindingGetNode)
 				{
 					SDataBindingGetNode* dbNode = dynamic_cast<SDataBindingGetNode*>(node);
-					SerializeData(dbNode->DataBinding->UID, toData, pointerPosition);
+					const SScriptDataBinding* databinding = &(*std::ranges::find_if(DataBindings, [dbNode](const SScriptDataBinding& binding) { return binding.UID == dbNode->DataBindingID; }));
+					SerializeData(databinding->UID, toData, pointerPosition);
 				}
 				if (node->NodeType == ENodeType::DataBindingSetNode)
 				{
 					SDataBindingSetNode* dbNode = dynamic_cast<SDataBindingSetNode*>(node);
-					SerializeData(dbNode->DataBinding->UID, toData, pointerPosition);
+					const SScriptDataBinding* databinding = &(*std::ranges::find_if(DataBindings, [dbNode](const SScriptDataBinding& binding) { return binding.UID == dbNode->DataBindingID; }));
+					SerializeData(databinding->UID, toData, pointerPosition);
 				}
 
 				SerializeData(GetNodeEditorContext(node->UID)->Position, toData, pointerPosition);
@@ -416,7 +446,7 @@ namespace Havtorn
 				SNode* node = nullptr;
 				if (nodeType == ENodeType::DataBindingGetNode || nodeType == ENodeType::DataBindingSetNode)
 				{
-					U64 dbUID;
+					U64 dbUID{};
 					DeserializeData(dbUID, fromData, pointerPosition);
 					node = NodeFactory->CreateNode(nodeTypeId, uid, this, dbUID);
 				}
@@ -455,6 +485,7 @@ namespace Havtorn
 			}
 
 			DeserializeData(Links, fromData, pointerPosition);
+			LinkSerialized();
 		}
 
 		SNode* SScript::GetNode(const U64 id) const
