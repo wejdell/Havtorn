@@ -397,8 +397,6 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/Systems/AnimatorGraphSystem.h
     ${ENGINE_FOLDER}ECS/Systems/CameraSystem.cpp
     ${ENGINE_FOLDER}ECS/Systems/CameraSystem.h
-    ${ENGINE_FOLDER}ECS/Systems/DebugShapeSystem.cpp
-    ${ENGINE_FOLDER}ECS/Systems/DebugShapeSystem.h
     ${ENGINE_FOLDER}ECS/Systems/LightSystem.cpp
     ${ENGINE_FOLDER}ECS/Systems/LightSystem.h
     ${ENGINE_FOLDER}ECS/Systems/RenderSystem.cpp
