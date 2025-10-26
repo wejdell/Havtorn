@@ -304,6 +304,7 @@ namespace Havtorn
 
             ENGINE_API void Link(U64 leftPinID, U64 rightPinID);
             ENGINE_API void Link(SPin* leftPin, SPin* rightPin);
+            ENGINE_API void LinkSerialized();
             ENGINE_API void Unlink(U64 leftPinID, U64 rightPinID);
             ENGINE_API void Unlink(SPin* leftPin, SPin* rightPin);
 
