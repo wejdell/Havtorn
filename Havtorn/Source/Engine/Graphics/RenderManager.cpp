@@ -276,8 +276,33 @@ namespace Havtorn
 		GEngine::Instance->Framework->GetContext()->ClearState();
 
 		// TODO.NR: Implement this properly for window resizing
+		
+		//Backbuffer.ReleaseTexture();
 
-		Backbuffer.ReleaseTexture();
+		Backbuffer.Release();
+		IntermediateTexture.Release();
+		IntermediateDepth.Release();
+		EditorWidgetDepth.Release();
+		ShadowAtlasDepth.Release();
+		DepthCopy.Release();
+
+		HalfSizeTexture.Release();
+		QuarterSizeTexture.Release();
+		BlurTexture1.Release();
+		BlurTexture2.Release();
+		VignetteTexture.Release();
+
+		LitScene.Release();
+		VolumetricAccumulationBuffer.Release();
+		VolumetricBlurTexture.Release();
+		SSAOBuffer.Release();
+		SSAOBlurTexture.Release();
+		DownsampledDepth.Release();
+		TonemappedTexture.Release();
+		AntiAliasedTexture.Release();
+		EditorDataTexture.Release();
+		SkeletalAnimationDataTextureCPU.Release();
+		SkeletalAnimationDataTextureGPU.Release();
 		//TODO.AS: Is this ultra deep call really neccesary to do here? Context: We need to specifically Resize the SwapChain Buffers Right after we Release
 		//the Backbuffer texture. 
 		// TODO.NW: Sounds like this should be done in the Resize context, not in this function
