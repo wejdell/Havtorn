@@ -1042,6 +1042,7 @@ namespace Havtorn
 		static void EndNode();
 
 		static void SetNodePosition(const U64 id, const SVector2<F32>& position);
+		static SVector2<F32> GetNodePosition(const U64 id);
 
 		static void BeginPin(const U64 id, const EGUIPinDirection direction);
 		static void EndPin();

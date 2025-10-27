@@ -1236,6 +1236,12 @@ namespace Havtorn
 			NE::SetNodePosition(id, { position.X, position.Y });
 		}
 
+		SVector2<F32> GetNodePosition(const U64 id)
+		{
+			ImVec2 pos = NE::GetNodePosition(id);
+			return SVector2<F32>(pos.x, pos.y);
+		}
+
 		void BeginPin(const U64 id, const EGUIPinDirection direction)
 		{
 			NE::BeginPin(id, (ax::NodeEditor::PinKind)direction);
@@ -2554,6 +2560,11 @@ namespace Havtorn
 	void GUI::SetNodePosition(const U64 id, const SVector2<F32>& position)
 	{
 		Instance->Impl->SetNodePosition(id, position);
+	}
+
+	SVector2<F32> GUI::GetNodePosition(const U64 id)
+	{
+		return Instance->Impl->GetNodePosition(id);
 	}
 
 	void GUI::BeginPin(const U64 id, const EGUIPinDirection direction)

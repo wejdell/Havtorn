@@ -275,7 +275,7 @@ namespace Havtorn
 		{
 			if (SNodeEditorContext* context = CurrentScript->GetNodeEditorContext(node.UID))
 			{
-				context->Position = node.Position;
+				context->Position = GUI::GetNodePosition(node.UID);
 				context->HasBeenInitialized = true;
 			}
 		}
