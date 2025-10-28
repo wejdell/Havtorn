@@ -159,6 +159,13 @@ namespace Havtorn
 		Scenes.pop_back();
 	}
 
+	void CWorld::RemoveScene(const Ptr<CScene>& scene)
+	{
+		auto it = std::ranges::find(Scenes, scene);
+		if (it != Scenes.end())
+			Scenes.erase(it);
+	}
+
 	void CWorld::ClearScenes()
 	{
 		// TODO.NW: Figure out mechanism for checking if scenes may close?

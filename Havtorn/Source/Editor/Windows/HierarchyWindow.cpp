@@ -38,6 +38,9 @@ namespace Havtorn
 
 		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
 		{
+			I64 queuedSceneRemovalIndex = -1;
+			I64 doubleClickedIndex = -1;
+
 			std::vector<Ptr<CScene>>& scenes = Manager->GetScenes();
 			if (!scenes.empty())
 			{
@@ -48,11 +51,21 @@ namespace Havtorn
 				GUI::Separator();
 
 				// Hierarchy View
-				GUI::BeginChild("Hierarchy View");
-				for (Ptr<CScene>& scene : scenes)
+				GUI::BeginChild("Hierarchy View", SVector2<F32>(0.0f, GUI::GetContentRegionAvail().Y - 36.0f));
+				for (U64 sceneIndex = 0; sceneIndex < scenes.size(); sceneIndex++)
 				{			
+					Ptr<CScene>& scene = scenes[sceneIndex];
+
 					const bool isCurrentScene = scene.get() == Manager->GetCurrentScene();
 					GUI::Selectable(scene->GetSceneName().c_str(), isCurrentScene);
+
+					// TODO.NW: Need to check if above selection or not, for all interactions with items in the scene loop
+					//if (GUI::IsDoubleClick())
+					//{
+					//	if (doubleClickedIndex == -1)
+					//		doubleClickedIndex = sceneIndex;
+					//}
+
 					GUI::Separator();
 
 					const std::vector<SEntity>& entities = GEngine::GetWorld()->GetEntities();
@@ -145,8 +158,11 @@ namespace Havtorn
 
 					if (GUI::BeginPopupContextWindow())
 					{
-						if (GUI::MenuItem("Create New"))
+						if (GUI::MenuItem("Create New Entity"))
 							scene->AddEntity("New Entity");
+
+						if (GUI::MenuItem("Remove Scene"))
+							queuedSceneRemovalIndex = STATIC_I64(sceneIndex);
 
 						GUI::EndPopup();
 					}
@@ -159,6 +175,7 @@ namespace Havtorn
 			}
 
 			// TODO.NW: Center align this. Wrap it in a world function call?
+			GUI::BeginChild("CreateButton", SVector2<F32>(0.0f, 30.0f));
 			if (GUI::Button("Create New Scene"))
 			{
 				std::string newSceneName = "NewScene";
@@ -184,8 +201,37 @@ namespace Havtorn
 				activeScene->Init3DDefaults();
 				Manager->SetCurrentScene(activeScene);	
 			}
+			if (!scenes.empty())
+			{
+				GUI::SameLine();
+				if (GUI::Button("Clear Scenes"))
+				{
+					queuedSceneRemovalIndex = -1;
+					GEngine::GetWorld()->ClearScenes();
+				}
+			}
+			GUI::EndChild();
 
 			SceneAssetDrag();
+
+			if (queuedSceneRemovalIndex >= 0)
+			{
+				GEngine::GetWorld()->RemoveScene(queuedSceneRemovalIndex);
+				std::vector<Ptr<CScene>>& remainingScenes = Manager->GetScenes();
+				if (!remainingScenes.empty())
+				{
+					CScene* activeScene = remainingScenes.back().get();
+					if (activeScene != nullptr)
+						Manager->SetCurrentScene(activeScene);
+				}
+			}
+
+			if (doubleClickedIndex >= 0)
+			{
+				std::vector<Ptr<CScene>>& remainingScenes = Manager->GetScenes();
+				doubleClickedIndex = UMath::Clamp(doubleClickedIndex, STATIC_I64(0), STATIC_I64(remainingScenes.size() - 1));
+				Manager->SetCurrentScene(remainingScenes[doubleClickedIndex].get());
+			}
 		}
 
 		GUI::End();
