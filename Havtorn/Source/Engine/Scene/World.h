@@ -71,6 +71,7 @@ namespace Havtorn
 		ENGINE_API std::vector<SEntity>& GetEntities() const;
 		ENGINE_API void SaveActiveScene(const std::string& destinationPath) const;
 		ENGINE_API void RemoveScene(U64 sceneIndex);
+		ENGINE_API void RemoveScene(const Ptr<CScene>& scene);
 		ENGINE_API void ClearScenes();
 		
 		template<typename T>
