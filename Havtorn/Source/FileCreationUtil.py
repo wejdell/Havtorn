@@ -11,9 +11,10 @@ from ValidationUtils import ValidationUtil
 class FileCreationUtil:
     # class variables, should not be altered
     # TODO: If more filetypes are supported the characters used for the license comment need to be filtered, same goes for namespace structure
-    havtornLicense="// Copyright 2025 Team Havtorn. All Rights Reserved.\n\n"
-    havtornNameSpace="\nnamespace Havtorn\n{\n\n}\n"
-    cmakeListFilePath="CMakeLists.txt"
+    havtornLicense = "// Copyright 2025 Team Havtorn. All Rights Reserved.\n\n"
+    havtornNameSpace = "\nnamespace Havtorn\n{\n\n}\n"
+    cmakeListFilePath = "CMakeLists.txt"
+    templatesFilePath = "FileTemplates.json"
     
     inputCharacters = ">> "
 
@@ -34,7 +35,7 @@ class FileCreationUtil:
     editor = "editor"
     launcher = "launcher"
     
-    mainFolderChoices={
+    mainFolderChoices = {
         core,
         platform,
         gui,
@@ -51,9 +52,9 @@ class FileCreationUtil:
         launcher
     }
     # So we always show them in the same order
-    mainFolderChoices=sorted(mainFolderChoices)
+    mainFolderChoices = sorted(mainFolderChoices)
 
-    choiceToCMakeCollection={
+    choiceToCMakeCollection = {
         core:"CORE_FILES",
         platform:"PLATFORM_FILES",
         gui:"GUI_FILES",
@@ -71,7 +72,7 @@ class FileCreationUtil:
     }
 
     shaderFolder = "Engine/Graphics/Shaders/"
-    choiceToFolder={
+    choiceToFolder = {
         core:"Core/",
         platform:"Platform/",
         gui:"GUI/",
@@ -97,6 +98,8 @@ class FileCreationUtil:
 
     @classmethod
     def __init__(self):
+        # load templates json file, store as variable
+        # parse commands into array?
         self.mainFolder = ""
         self.filesToAdd = []
         return
@@ -138,6 +141,7 @@ class FileCreationUtil:
         print(f' {self.undoFileCommand} to undo, example: {self.undoFileCommand} 1')
         print(f' {self.switchMainCommand} to change main folder')
         print(f' {self.continueCommand} continue to file generation')
+        # print array of templates
         return
     
     @classmethod
