@@ -1,9 +1,9 @@
 {
-    "node":{
-        "fileTypes":[
+    "node": {
+        "fileTypes": [
             {
-                "extension":"h",
-                "lines":[
+                "extension": "h",
+                "lines": [
                     "#pragma once\n",
                     "#include <HexRune/HexRune.h>\n",
                     "\n",
@@ -18,12 +18,12 @@
                     "\t\t};\n",
                     "\t}\n",
                     "}\n",
-                    "\n"    
+                    "\n"
                 ]
             },
             {
-                "extension":"cpp",
-                "lines":[
+                "extension": "cpp",
+                "lines": [
                     "#pragma once\n",
                     "#include <HexRune/HexRune.h>\n",
                     "\n",
@@ -38,35 +38,26 @@
                     "\t\t};\n",
                     "\t}\n",
                     "}\n",
-                    "\n"    
+                    "\n"
                 ]
             }
         ],
-        "fileNameReplaces":["StructName"],
-        "description":""
-    }
-},
-{
-    "node": 
-    {
+        "fileNameReplaces": [
+            "StructName"
+        ],
+        "description": ""
+    },
+    "ghosty": {
+        "description": "ghosty template",
         "fileTypes": [
             {
-                "extension": "h", 
-                "lines": [
-                    "#pragma once\n", "#include <HexRune/HexRune.h>\n", "\n", "namespace Havtorn\n", "{\n", "\tnamespace HexRune\n", "\t{\n", "\t\tstruct StructName : public SNode\n", "\t\t{\n", "\t\t\tGAME_API StructName (const U64 id, const U32 typeID, SScript* owningScript);\n", "\t\t\tvirtual GAME_API I8 OnExecute() override;\n", "\t\t};\n", "\t}\n", "}\n", "\n"
-                ]
-            }, 
+                "extension": "h",
+                "lines": "// Copyright 2025 Team Havtorn. All Rights Reserved.\n\n#pragma once\n\n#include <HexRune/NodeEditorContext.h>\n\nnamespace Havtorn\n{\n\tnamespace HexRune\n\t{\n\t\tstruct <replace> : public HexRune::SNodeEditorContext\n\t\t{\n\t\t\tGAME_API <replace>();\n\t\t\tGAME_API virtual HexRune::SNode* AddNode(HexRune::SScript* script, const U64 existingID = 0) const override;\n\t\t\tGAME_API static <replace> Context;\n\t\t};\n\n\t\tstruct SGhostyNodePositionEditorContex : public SNodeEditorContext\n\t\t{\n\t\t\tGAME_API SGhostyNodePositionEditorContex();\n\t\t\tGAME_API virtual HexRune::SNode* AddNode(HexRune::SScript* script, const U64 existingID = 0) const override;\n\t\t\tGAME_API static SGhostyNodePositionEditorContex Context;\n\t\t};\n\t}\n}"
+            },
             {
-                "extension": "cpp", 
-                "lines": [
-                    "#pragma once\n", "#include <HexRune/HexRune.h>\n", "\n", "namespace Havtorn\n", "{\n", "\tnamespace HexRune\n", "\t{\n", "\t\tstruct StructName : public SNode\n", "\t\t{\n", "\t\t\tGAME_API StructName (const U64 id, const U32 typeID, SScript* owningScript);\n", "\t\t\tvirtual GAME_API I8 OnExecute() override;\n", "\t\t};\n", "\t}\n", "}\n", "\n"
-                    ]
+                "extension": "cpp",
+                "lines": "// Copyright 2025 Team Havtorn. All Rights Reserved.\n\n#include \"<replace>.h\"\n#include \"GhostyNode.h\"\n\nnamespace Havtorn\n{\n\tnamespace HexRune\n\t{\n\t\t<replace> <replace>::Context = {};\n\t\t<replace>::<replace>()\n\t\t{\n\t\t\tName = \"Ghosty\";\n\t\t\tCategory = \"Game\";\n\t\t}\n\n\t\tHexRune::SNode* <replace>::AddNode(HexRune::SScript* script, const U64 existingID) const\n\t\t{\n\t\t\tif (script == nullptr)\n\t\t\t\treturn nullptr;\n\n\t\t\tSNode* node = script->AddNode<SGhostyNode>(existingID, TypeID);\n\t\t\tscript->AddEditorContext<<replace>>(node->UID);\n\t\t\treturn node;\n\t\t}\n\n\t\tSGhostyNodePositionEditorContex SGhostyNodePositionEditorContex::Context = {};\n\t\tSGhostyNodePositionEditorContex::SGhostyNodePositionEditorContex()\n\t\t{\n\t\t\tName = \"Ghosty Position\";\n\t\t\tCategory = \"Game\";\n\t\t}\n\n\t\tGAME_API HexRune::SNode* SGhostyNodePositionEditorContex::AddNode(HexRune::SScript* script, const U64 existingID) const\n\t\t{\n\t\t\tif (script == nullptr)\n\t\t\t\treturn nullptr;\n\n\t\t\tSNode* node = script->AddNode<SGhostyPositionNode>(existingID, TypeID);\n\t\t\tscript->AddEditorContext<SGhostyNodePositionEditorContex>(node->UID);\n\t\t\treturn node;\n\t\t}\n\t}\n}"
             }
-        ], 
-        "fileNameReplaces": ["StructName"], 
-        "description": ""
-    }, 
-    "ghosty": 
-    {
-        "ghosty": {
-            "description": "Creates file with ghosty editor node context as template", "fileTypes": [
+        ]
+    }
+}

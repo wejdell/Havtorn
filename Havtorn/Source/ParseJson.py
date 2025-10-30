@@ -2,48 +2,31 @@ import json
 import os
 from collections import defaultdict
 
-from ValidationUtils import ValidationUtil
-
-class TemplateJsonUtil:
+class TemplateCreatorUtil:
     @staticmethod
-    def key_file_types_object():
+    def key_file_types():
         return "fileTypes"
     
     @staticmethod
-    def key_file_types_object_extension():
+    def key_extension():
         return "extension"
     
     @staticmethod
-    def key_file_types_object_lines():
+    def key_lines():
         return "lines"
     
     @staticmethod
-    def key_file_types_object_file_name_replaces():
+    def key_replace():
         return "fileNameReplaces"
     
     @staticmethod
-    def value_file_types_object_file_name_replaces():
-        return "fileName"
+    def value_replace():
+        return "<replace>"
     
     @staticmethod
-    def key_file_types_object_description():
+    def key_description():
         return "description"
-    
 
-class TemplateCreatorUtil:
-    # set name/command, e.g: "node" will be used as -node for file generator
-    # enter a description, no return. 
-    # [...] enter full path to template base, -c to continue
-    # Enter keys to replace with file name, e.g: StructName
-    # Show preview example
-    #   command: name
-    #   description: 
-    #   h : blabla with fileNameReplaces
-    #   cpp: blabla
-    #   
-    # y/n to accept: y = add to templates, n = reset
-    # y: Add to FileTemplates.json
-    # n: Reset
     @staticmethod
     def add_to(jsonTemplateFilePath:str):
         print(f"Adding template to: {jsonTemplateFilePath}\n")
@@ -87,13 +70,13 @@ class TemplateCreatorUtil:
             fileNameReplaces.append(replaceKey)
 
         print("\nPreview:")
-        print(f"Name & command: {name}")
+        print(f"Name of command: {name}")
         print(f"Description: {description}")
         for keys in templates:
             template = templates[keys]
             for replaceTarget in fileNameReplaces:
                     if replaceTarget in template:
-                        template = template.replace(replaceTarget, TemplateJsonUtil.value_file_types_object_file_name_replaces())
+                        template = template.replace(replaceTarget, TemplateCreatorUtil.value_replace())
             templates[keys] = template
             print(templates[keys])
 
@@ -107,25 +90,23 @@ class TemplateCreatorUtil:
         
         fileTypes = list()
         for extensionKey in templates:
-            fileTypes += {
-                TemplateJsonUtil.key_file_types_object_extension:extensionKey,
-                TemplateJsonUtil.key_file_types_object_lines:templates[extensionKey]
-            }
-        
-        templateMap = dict()
-        templateMap[name] = {
-            TemplateJsonUtil.key_file_types_object_description():description,
-            TemplateJsonUtil.key_file_types_object():fileTypes
-        }
-        
-        with open(jsonTemplateFilePath, "r+") as templateFile:
+            fileTypes.append({
+                TemplateCreatorUtil.key_extension():extensionKey,
+                TemplateCreatorUtil.key_lines():templates[extensionKey]
+                })
+
+        templateJson = dict()
+        with open(jsonTemplateFilePath, "r") as templateFile:
             templateJson = json.load(templateFile)
-            templateJson[name] = templateMap
-            json.dump(templateJson, templateFile)
-        #try:
- 
-       #except Exception as e:
-        #    print(e)
+            templateFile.flush()
+
+        templateJson[name] = {
+            TemplateCreatorUtil.key_description():description,
+            TemplateCreatorUtil.key_file_types():fileTypes
+        }
+
+        with open(jsonTemplateFilePath, "w") as templateFile:
+            json.dump(templateJson, templateFile, indent = 4)
         
             
 if __name__ == "__main__":

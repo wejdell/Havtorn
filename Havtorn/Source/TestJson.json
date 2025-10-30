@@ -1,0 +1,41 @@
+{
+    "testName": {
+        "description": "someDescription",
+        "fileTypes": [
+            {
+                "extension": "h",
+                "lines": "h fileContents here\n"
+            },
+            {
+                "extension": "cpp",
+                "lines": "cpp fileContents here\n"
+            }
+        ]
+    },
+    "testName2": {
+        "description": "someDescription2",
+        "fileTypes": [
+            {
+                "extension": "h",
+                "lines": "h 2 fileContents here\n"
+            },
+            {
+                "extension": "cpp",
+                "lines": "cpp 2 fileContents here\n"
+            }
+        ]
+    },
+    "testName3": {
+        "description": "someDescription 333",
+        "fileTypes": [
+            {
+                "extension": "h",
+                "lines": "h 333 fileContents here\n"
+            },
+            {
+                "extension": "cpp",
+                "lines": "cpp 333 fileContents here\n"
+            }
+        ]
+    }
+}
