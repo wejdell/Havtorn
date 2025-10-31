@@ -59,5 +59,18 @@
                 "lines": "// Copyright 2025 Team Havtorn. All Rights Reserved.\n\n#include \"<replace>.h\"\n#include \"GhostyNode.h\"\n\nnamespace Havtorn\n{\n\tnamespace HexRune\n\t{\n\t\t<replace> <replace>::Context = {};\n\t\t<replace>::<replace>()\n\t\t{\n\t\t\tName = \"Ghosty\";\n\t\t\tCategory = \"Game\";\n\t\t}\n\n\t\tHexRune::SNode* <replace>::AddNode(HexRune::SScript* script, const U64 existingID) const\n\t\t{\n\t\t\tif (script == nullptr)\n\t\t\t\treturn nullptr;\n\n\t\t\tSNode* node = script->AddNode<SGhostyNode>(existingID, TypeID);\n\t\t\tscript->AddEditorContext<<replace>>(node->UID);\n\t\t\treturn node;\n\t\t}\n\n\t\tSGhostyNodePositionEditorContex SGhostyNodePositionEditorContex::Context = {};\n\t\tSGhostyNodePositionEditorContex::SGhostyNodePositionEditorContex()\n\t\t{\n\t\t\tName = \"Ghosty Position\";\n\t\t\tCategory = \"Game\";\n\t\t}\n\n\t\tGAME_API HexRune::SNode* SGhostyNodePositionEditorContex::AddNode(HexRune::SScript* script, const U64 existingID) const\n\t\t{\n\t\t\tif (script == nullptr)\n\t\t\t\treturn nullptr;\n\n\t\t\tSNode* node = script->AddNode<SGhostyPositionNode>(existingID, TypeID);\n\t\t\tscript->AddEditorContext<SGhostyNodePositionEditorContex>(node->UID);\n\t\t\treturn node;\n\t\t}\n\t}\n}"
             }
         ]
+    },
+    "test": {
+        "description": "test template for test and showcase",
+        "fileTypes": [
+            {
+                "extension": "h",
+                "content": "// Havtorn license 2025\n#pragma once\n#include <vector>\n\nnamespace Havtorn\n{\n    struct {{fileName}}\n    {\n        int Do();\n        int {{fileName}}();\n        {{fileName}}();\n        ~{{fileName}}();\n    }\n}\n"
+            },
+            {
+                "extension": "cpp",
+                "content": "// Havtorn license 2025\n#include \"{{fileName}}.h\"\n\nnamespace Havtorn\n{\n        int {{fileName}}::Do()\n        {\n            return -1;\n        }\n\n        {{fileName}}::{{fileName}}()\n        {\n\n        }\n        \n        {{fileName}}::~{{fileName}}()\n        {\n\n        }\n}\n"
+            }
+        ]
     }
 }
