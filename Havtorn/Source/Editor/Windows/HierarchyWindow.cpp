@@ -59,23 +59,20 @@ namespace Havtorn
 					const bool isCurrentScene = scene.get() == Manager->GetCurrentScene();
 					GUI::Selectable(scene->GetSceneName().c_str(), isCurrentScene);
 
-					// TODO.NW: Need to check if above selection or not, for all interactions with items in the scene loop
-					//if (GUI::IsDoubleClick())
-					//{
-					//	if (doubleClickedIndex == -1)
-					//		doubleClickedIndex = sceneIndex;
-					//}
+					if (GUI::IsDoubleClick() && GUI::IsItemHovered())
+					{
+						if (doubleClickedIndex == -1)
+							doubleClickedIndex = sceneIndex;
+					}
 
 					GUI::Separator();
-
-					const std::vector<SEntity>& entities = GEngine::GetWorld()->GetEntities();
 
 					// Filter pre pass
 					std::vector<SEntity> activeEntities = {};
 
 					if (Filter.IsActive())
 					{
-						for (const SEntity& entity : entities)
+						for (const SEntity& entity : scene->Entities)
 						{
 							if (!entity.IsValid())
 								continue;
@@ -89,7 +86,7 @@ namespace Havtorn
 					}
 					else
 					{
-						activeEntities = entities;
+						activeEntities = scene->Entities;
 					}
 
 					// Filter out children from main list
@@ -176,6 +173,7 @@ namespace Havtorn
 
 			// TODO.NW: Center align this. Wrap it in a world function call?
 			GUI::BeginChild("CreateButton", SVector2<F32>(0.0f, 30.0f));
+			GUI::Separator();
 			if (GUI::Button("Create New Scene"))
 			{
 				std::string newSceneName = "NewScene";
@@ -199,7 +197,7 @@ namespace Havtorn
 				CScene* activeScene = Manager->GetScenes().back().get();
 				activeScene->Init(newSceneName);
 				activeScene->Init3DDefaults();
-				Manager->SetCurrentScene(activeScene);	
+				Manager->SetCurrentScene(STATIC_I64(Manager->GetScenes().size()) - 1);
 			}
 			if (!scenes.empty())
 			{
@@ -208,6 +206,7 @@ namespace Havtorn
 				{
 					queuedSceneRemovalIndex = -1;
 					GEngine::GetWorld()->ClearScenes();
+					Manager->SetCurrentScene(-1);
 				}
 			}
 			GUI::EndChild();
@@ -220,17 +219,15 @@ namespace Havtorn
 				std::vector<Ptr<CScene>>& remainingScenes = Manager->GetScenes();
 				if (!remainingScenes.empty())
 				{
-					CScene* activeScene = remainingScenes.back().get();
-					if (activeScene != nullptr)
-						Manager->SetCurrentScene(activeScene);
+					Manager->SetCurrentScene(0);
 				}
 			}
 
 			if (doubleClickedIndex >= 0)
 			{
 				std::vector<Ptr<CScene>>& remainingScenes = Manager->GetScenes();
-				doubleClickedIndex = UMath::Clamp(doubleClickedIndex, STATIC_I64(0), STATIC_I64(remainingScenes.size() - 1));
-				Manager->SetCurrentScene(remainingScenes[doubleClickedIndex].get());
+				doubleClickedIndex = UMath::Clamp(doubleClickedIndex, STATIC_I64(0), STATIC_I64(remainingScenes.size()) - 1);
+				Manager->SetCurrentScene(doubleClickedIndex);
 			}
 		}
 
@@ -409,6 +406,7 @@ namespace Havtorn
 				if (payload.IsDelivery)
 				{
 					GEngine::GetWorld()->AddScene<CGameScene>(payloadAssetRep->DirectoryEntry.path().string());
+					Manager->SetCurrentScene(STATIC_I64(Manager->GetScenes().size()) - 1);
 				}
 			}
 

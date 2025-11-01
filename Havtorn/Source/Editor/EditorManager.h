@@ -87,7 +87,7 @@ namespace Havtorn
 		void EDITOR_API DebugWindow();
 
 	public:
-		void SetCurrentScene(CScene* scene);
+		void SetCurrentScene(const I64 sceneIndex);
 		CScene* GetCurrentScene() const;
 		std::vector<Ptr<CScene>>& GetScenes() const;
 

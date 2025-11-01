@@ -35,6 +35,13 @@ namespace Havtorn
 
 	void CEditorRenderSystem::Update(std::vector<Ptr<CScene>>& scenes)
 	{
+		SEntity mainCamera = World->GetMainCamera();
+		SCameraData mainCameraData = UComponentAlgo::GetCameraData(mainCamera, scenes);
+
+		// TODO: consider color coding or fading out widgets in scenes other than CurrentScene // Aki
+		if (!mainCameraData.IsValid())
+			return;
+
 		for (Ptr<CScene>& scene : scenes)
 		{
 			if (World->GetWorldPlayState() == EWorldPlayState::Playing)
@@ -55,12 +62,12 @@ namespace Havtorn
 					const STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(component);
 
 					GEngine::GetAssetRegistry()->RequestAsset(assetReference.UID, transformComponent->Owner.GUID);
-					RenderManager->AddSpriteToWorldSpaceInstancedRenderList(assetReference.UID, transformComponent, scene->GetComponent<STransformComponent>(scene->MainCameraEntity), 0);
+					RenderManager->AddSpriteToWorldSpaceInstancedRenderList(assetReference.UID, transformComponent, mainCameraData.TransformComponent, mainCamera.GUID);
 
 					SRenderCommand command;
 					command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
 					command.U32s.push_back(assetReference.UID);
-					RenderManager->PushRenderCommand(command, 0);
+					RenderManager->PushRenderCommand(command, mainCamera.GUID);
 				}
 			};
 
@@ -82,12 +89,12 @@ namespace Havtorn
 
 				const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(physics3DComponent);
 				GEngine::GetAssetRegistry()->RequestAsset(ColliderWidgetReference.UID, transformComp->Owner.GUID);
-				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(ColliderWidgetReference.UID, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity), 0);
+				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(ColliderWidgetReference.UID, transformComp, mainCameraData.TransformComponent, mainCamera.GUID);
 
 				SRenderCommand command;
 				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
 				command.U32s.push_back(ColliderWidgetReference.UID);
-				RenderManager->PushRenderCommand(command, 0);
+				RenderManager->PushRenderCommand(command, mainCamera.GUID);
 			}
 		}
 	}

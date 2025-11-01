@@ -8,6 +8,7 @@
 #include "ECS/Components/TransformComponent.h"
 #include "ECS/Components/CameraComponent.h"
 #include "ECS/Components/CameraControllerComponent.h"
+#include "ECS/ComponentAlgo.h"
 #include "Input/InputMapper.h"
 
 namespace Havtorn
@@ -32,53 +33,55 @@ namespace Havtorn
 
 	void CCameraSystem::Update(std::vector<Ptr<CScene>>& scenes)
 	{	
+		SEntity mainCamera = GEngine::GetWorld()->GetMainCamera();
+
 		for (Ptr<CScene>& scene : scenes)
 		{
-			if (!scene->MainCameraEntity.IsValid())
-				continue;
+			SCameraControllerComponent* controllerComp = scene->GetComponent<SCameraControllerComponent>(mainCamera);
+			STransformComponent* transformComp = scene->GetComponent<STransformComponent>(mainCamera);
 
-			SCameraControllerComponent& controllerComp = *scene->GetComponent<SCameraControllerComponent>(scene->MainCameraEntity);
-			STransformComponent& transformComp = *scene->GetComponent<STransformComponent>(scene->MainCameraEntity);
+			if (controllerComp == nullptr || transformComp == nullptr)
+				continue;
 
 			const F32 dt = GTime::Dt();
 
 			if (!IsFreeCamActive)
 			{
 				// Decelerate
-				controllerComp.CurrentAccelerationFactor = UMath::Clamp(controllerComp.CurrentAccelerationFactor - (1.0f / controllerComp.AccelerationDuration) * dt);
-				transformComp.Transform.Translate(controllerComp.AccelerationDirection * controllerComp.CurrentAccelerationFactor * controllerComp.MaxMoveSpeed * dt);
+				controllerComp->CurrentAccelerationFactor = UMath::Clamp(controllerComp->CurrentAccelerationFactor - (1.0f / controllerComp->AccelerationDuration) * dt);
+				transformComp->Transform.Translate(controllerComp->AccelerationDirection * controllerComp->CurrentAccelerationFactor * controllerComp->MaxMoveSpeed * dt);
 
 				ResetInput();
 				continue;
 			}
 
 			// === Rotation ===
-			controllerComp.CurrentPitch = UMath::Clamp(controllerComp.CurrentPitch + (CameraRotateInput.X * controllerComp.RotationSpeed * dt), -SCameraControllerComponent::MaxPitchDegrees + 0.01f, SCameraControllerComponent::MaxPitchDegrees - 0.01f);
-			controllerComp.CurrentYaw = UMath::WrapAngle(controllerComp.CurrentYaw + (CameraRotateInput.Y * controllerComp.RotationSpeed * dt));
-			SMatrix newMatrix = transformComp.Transform.GetMatrix();
-			newMatrix.SetRotation({ controllerComp.CurrentPitch, controllerComp.CurrentYaw, 0.0f });
-			transformComp.Transform.SetMatrix(newMatrix);
+			controllerComp->CurrentPitch = UMath::Clamp(controllerComp->CurrentPitch + (CameraRotateInput.X * controllerComp->RotationSpeed * dt), -SCameraControllerComponent::MaxPitchDegrees + 0.01f, SCameraControllerComponent::MaxPitchDegrees - 0.01f);
+			controllerComp->CurrentYaw = UMath::WrapAngle(controllerComp->CurrentYaw + (CameraRotateInput.Y * controllerComp->RotationSpeed * dt));
+			SMatrix newMatrix = transformComp->Transform.GetMatrix();
+			newMatrix.SetRotation({ controllerComp->CurrentPitch, controllerComp->CurrentYaw, 0.0f });
+			transformComp->Transform.SetMatrix(newMatrix);
 
 			// === Translation ===
 			if (CameraMoveInput.IsNearlyZero())
 			{
 				// Decelerate
-				controllerComp.CurrentAccelerationFactor = UMath::Clamp(controllerComp.CurrentAccelerationFactor - (1.0f / controllerComp.AccelerationDuration) * dt);
-				transformComp.Transform.Translate(controllerComp.AccelerationDirection * controllerComp.CurrentAccelerationFactor * controllerComp.MaxMoveSpeed * dt);
+				controllerComp->CurrentAccelerationFactor = UMath::Clamp(controllerComp->CurrentAccelerationFactor - (1.0f / controllerComp->AccelerationDuration) * dt);
+				transformComp->Transform.Translate(controllerComp->AccelerationDirection * controllerComp->CurrentAccelerationFactor * controllerComp->MaxMoveSpeed * dt);
 
 				ResetInput();
 				continue;
 			}
 
 			// Jerk
-			if (controllerComp.AccelerationDirection != CameraMoveInput.GetNormalized())
-				controllerComp.CurrentAccelerationFactor = UMath::Min(controllerComp.CurrentAccelerationFactor, 0.5f);
+			if (controllerComp->AccelerationDirection != CameraMoveInput.GetNormalized())
+				controllerComp->CurrentAccelerationFactor = UMath::Min(controllerComp->CurrentAccelerationFactor, 0.5f);
 		 
 			// Accelerate
-			controllerComp.CurrentAccelerationFactor = UMath::Clamp(controllerComp.CurrentAccelerationFactor + (1.0f / controllerComp.AccelerationDuration) * dt);
-			controllerComp.AccelerationDirection = CameraMoveInput.GetNormalized();	
+			controllerComp->CurrentAccelerationFactor = UMath::Clamp(controllerComp->CurrentAccelerationFactor + (1.0f / controllerComp->AccelerationDuration) * dt);
+			controllerComp->AccelerationDirection = CameraMoveInput.GetNormalized();	
 		
-			transformComp.Transform.Translate(controllerComp.AccelerationDirection * controllerComp.CurrentAccelerationFactor * controllerComp.MaxMoveSpeed * dt);
+			transformComp->Transform.Translate(controllerComp->AccelerationDirection * controllerComp->CurrentAccelerationFactor * controllerComp->MaxMoveSpeed * dt);
 
 			ResetInput();
 		}
@@ -115,24 +118,29 @@ namespace Havtorn
 
 	void CCameraSystem::OnBeginPlay(std::vector<Ptr<CScene>>& scenes)
 	{
+		const SEntity& mainCamera = GEngine::GetWorld()->GetMainCamera();
+		SCameraData previousCameraData = UComponentAlgo::GetCameraData(mainCamera, scenes);
+		SEntity startingCamera = SEntity::Null;
+		PreviousMainCamera = mainCamera;
+
 		for (Ptr<CScene>& scene : scenes)
 		{
-			PreviousMainCamera = scene->MainCameraEntity;
 			for (SCameraComponent* camera : scene->GetComponents<SCameraComponent>())
 			{
+				// TODO: Loud errors if multiple cameras are marked as starting cameras
 				if (camera->IsStartingCamera)
 				{
 					camera->IsActive = true;
-					scene->MainCameraEntity = camera->Owner;
+					startingCamera = camera->Owner;
 					break;
 				}
 			}
+		}
 
-			if (PreviousMainCamera != scene->MainCameraEntity)
-			{
-				SCameraComponent* camera = scene->GetComponent<SCameraComponent>(PreviousMainCamera);
-				camera->IsActive = false;
-			}
+		if (mainCamera != startingCamera)
+		{
+			previousCameraData.CameraComponent->IsActive = false;
+			GEngine::GetWorld()->SetMainCamera(startingCamera);
 		}
 	}
 
@@ -142,21 +150,18 @@ namespace Havtorn
 
 	void CCameraSystem::OnEndPlay(std::vector<Ptr<CScene>>& scenes)
 	{
-		for (Ptr<CScene>& scene : scenes)
+		const SEntity& startingCamera = GEngine::GetWorld()->GetMainCamera();
+		SCameraData startingCameraData = UComponentAlgo::GetCameraData(startingCamera, scenes);
+		SCameraData previousCameraData = UComponentAlgo::GetCameraData(PreviousMainCamera, scenes);
+
+		if (PreviousMainCamera != startingCamera)
 		{
-			if (!PreviousMainCamera.IsValid() || PreviousMainCamera == scene->MainCameraEntity)
-				return;
-		
-			SCameraComponent* gameCamera = scene->GetComponent<SCameraComponent>(scene->MainCameraEntity);
-			gameCamera->IsActive = false;
-
-			SCameraComponent* editorCamera = scene->GetComponent<SCameraComponent>(PreviousMainCamera);
-			editorCamera->IsActive = true;
-
-			scene->MainCameraEntity = editorCamera->Owner;
-
-			PreviousMainCamera = SEntity::Null;
+			startingCameraData.CameraComponent->IsActive = false;
+			previousCameraData.CameraComponent->IsActive = true;
+			GEngine::GetWorld()->SetMainCamera(PreviousMainCamera);
 		}
+
+		PreviousMainCamera = SEntity::Null;
 	}
 	
 	void CCameraSystem::ResetInput()

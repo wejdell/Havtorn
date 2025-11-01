@@ -539,16 +539,14 @@ namespace Havtorn
 
 		CWorld* world = GEngine::GetWorld();
 		world->ClearScenes();
-		world->CreateScene<CGameScene>();
-		if (world->GetActiveScenes().size() > 0)
-		{
-			CScene* activeScene = world->GetActiveScenes()[0].get();
-			activeScene->Init(NewAssetName);
-			activeScene->Init3DDefaults();
-			Manager->SetCurrentScene(activeScene);
+		world->CreateScene<CGameScene>();			 
+		CScene* newScene = Manager->GetScenes().back().get();
+		newScene->Init(NewAssetName);
+		newScene->Init3DDefaults();
+		Manager->SetCurrentScene(0);
 
-			fileHeader.Scene = activeScene;
-		}
+		fileHeader.Scene = newScene;
+		
 
 		return fileHeader;
 	}

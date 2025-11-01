@@ -100,24 +100,17 @@ namespace Havtorn
 	{
 		return Scenes;
 	}
-
-	std::vector<SEntity>& CWorld::GetEntities() const
-	{
-		return Scenes.back()->Entities;
-	}
 	
-	void CWorld::SaveActiveScene(const std::string& destinationPath) const
+	void CWorld::SaveActiveScene(const std::string& destinationPath, CScene* scene) const
 	{
-		if (Scenes.empty())
+		if (scene == nullptr)
 		{
-			HV_LOG_ERROR("Tried to save empty Scene.");
+			HV_LOG_ERROR("CWorld::SaveActiveScene: Provided scene pointer was nullptr, cannot save scene to %s", destinationPath.c_str());
 			return;
 		}
 
-		const Ptr<CScene>& scene = Scenes.back();
-
 		SSceneFileHeader fileHeader;
-		fileHeader.Scene = scene.get();
+		fileHeader.Scene = scene;
 
 		const U32 fileSize = fileHeader.GetSize();
 		char* data = new char[fileSize];
@@ -150,7 +143,7 @@ namespace Havtorn
 		PhysicsWorld3D->CreateScene(scene);
 	}
 
-	void CWorld::RemoveScene(U64 sceneIndex)
+	void CWorld::RemoveScene(const U64 sceneIndex)
 	{
 		if (sceneIndex >= Scenes.size())
 			return;
@@ -170,6 +163,16 @@ namespace Havtorn
 	{
 		// TODO.NW: Figure out mechanism for checking if scenes may close?
 		Scenes.clear();
+	}
+
+	void CWorld::SetMainCamera(const SEntity& entity)
+	{
+		MainCameraEntity = entity;
+	}
+
+	SEntity CWorld::GetMainCamera() const
+	{
+		return MainCameraEntity;
 	}
 
 	void CWorld::UnrequestSystems(void* requester)

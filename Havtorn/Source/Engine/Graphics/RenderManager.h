@@ -117,28 +117,29 @@ namespace Havtorn
 		U32 WriteToAnimationDataTexture(const std::string& animationName);
 
 		// TODO.NW: Might want to generalize these render view resources somehow still
-		bool IsStaticMeshInInstancedRenderList(const U32 meshUID, const U16 viewIndex);
-		void AddStaticMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* component, const U16 viewIndex);
+		bool IsStaticMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewEntity);
+		void AddStaticMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* component, const U64 renderViewEntity);
 
-		bool IsSkeletalMeshInInstancedRenderList(const U32 meshUID, const U16 viewIndex);
-		void AddSkeletalMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* transformComponent, const SSkeletalAnimationComponent* animationComponent, const U16 viewIndex);
+		bool IsSkeletalMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewEntity);
+		void AddSkeletalMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* transformComponent, const SSkeletalAnimationComponent* animationComponent, const U64 renderViewEntity);
 
-		bool IsSpriteInWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const U16 viewIndex);
-		void AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const SSpriteComponent* spriteComponent, const U16 viewIndex);
-		ENGINE_API void AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const STransformComponent* cameraTransform, const U16 viewIndex);
+		bool IsSpriteInWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewEntity);
+		void AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewEntity);
+		ENGINE_API void AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const STransformComponent* cameraTransform, const U64 renderViewEntity);
 
-		bool IsSpriteInScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const U16 viewIndex);
-		void AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SSpriteComponent* spriteComponent, const U16 viewIndex);
+		bool IsSpriteInScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewEntity);
+		void AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewEntity);
 
 	public:
 		void SyncCrossThreadResources(const CWorld* world);
+		void SetWorldMainCameraEntity(const SEntity& entity);
 		void SetWorldPlayState(EWorldPlayState playState);
-		[[nodiscard]] ENGINE_API const CRenderTexture& GetRenderedSceneTexture(const U16 viewIndex) const;
-		ENGINE_API void PushRenderCommand(SRenderCommand command, const U16 viewIndex);
+		[[nodiscard]] ENGINE_API CRenderTexture* GetRenderedSceneTexture(const U64 renderViewEntity) const;
+		ENGINE_API void PushRenderCommand(SRenderCommand command, const U64 renderViewEntity);
 		void SwapRenderViews();
 		void ClearRenderViewInstanceData();
 
-		void PrepareRenderViews(const U16 numberOfViews);
+		void PrepareRenderViews(const std::vector<U64>& renderViewEntities);
 
 		const SVector2<U16>& GetCurrentWindowResolution() const;
 		const SVector2<F32>& GetShadowAtlasResolution() const;
@@ -194,7 +195,7 @@ namespace Havtorn
 
 		inline void DebugShadowAtlas();
 
-		void CheckIsolatedRenderPass(const U16 viewIndex);
+		void CheckIsolatedRenderPass(const U64 renderViewEntity);
 		void CycleRenderPass(const SInputActionPayload payload);
 
 		void MapRuntimeMaterialProperty(SRuntimeGraphicsMaterialProperty& property, std::vector<ID3D11ShaderResourceView*>& runtimeArray, std::map<U32, F32>& runtimeMap);
@@ -369,11 +370,11 @@ namespace Havtorn
 		CRenderTexture SkeletalAnimationDataTextureGPU;
 		CGBuffer GBuffer;
 
-		std::vector<SRenderView> RenderViewsA;
-		std::vector<SRenderView> RenderViewsB;
+		std::map<U64, SRenderView> RenderViewsA;
+		std::map<U64, SRenderView> RenderViewsB;
 
-		std::vector<SRenderView>* GameThreadRenderViews = &RenderViewsA;
-		std::vector<SRenderView>* RenderThreadRenderViews = &RenderViewsB;
+		std::map<U64, SRenderView>* GameThreadRenderViews = &RenderViewsA;
+		std::map<U64, SRenderView>* RenderThreadRenderViews = &RenderViewsB;
 
 		SVector4 ClearColor = SVector4(0.5f, 0.5f, 0.5f, 1.0f);
 
@@ -385,14 +386,15 @@ namespace Havtorn
 		CDataBuffer InstancedEntityIDBuffer;
 		CDataBuffer InstancedAnimationDataBuffer;
 
-		// NR: Used together with the InstancedTransformBuffer to batch World Space Sprites as well as Screen Space Sprites
+		// NW: Used together with the InstancedTransformBuffer to batch World Space Sprites as well as Screen Space Sprites
 		CDataBuffer InstancedUVRectBuffer;
 		CDataBuffer InstancedColorBuffer;
 
 		SVector2<F32> ShadowAtlasResolution = SVector2<F32>::Zero;
 		SVector2<U16> CurrentWindowResolution = SVector2<U16>::Zero;
 
-		// NW: Keep our own property here for use on render thread
+		// NW: Keep our own properties here for use on render thread
+		SEntity WorldMainCameraEntity = SEntity::Null;
 		EWorldPlayState WorldPlayState = EWorldPlayState::Stopped;
 
 		void* EntityPerPixelData = nullptr;
