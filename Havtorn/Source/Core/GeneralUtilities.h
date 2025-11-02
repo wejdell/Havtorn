@@ -81,5 +81,28 @@ namespace Havtorn
 			}
 			return s;
 		}
+
+		template<typename T, typename P>
+		static std::string GetNonCollidingString(const std::string& startingString, const std::vector<T>& collection, P projection)
+		{
+			std::string newString = startingString;
+			bool foundNoCollision = false;
+			I64 duplicates = 0;
+			while (!foundNoCollision)
+			{
+				foundNoCollision = true;
+				for (const T& element : collection)
+				{
+					if (std::invoke(projection, element) == newString)
+					{
+						newString = startingString + std::to_string(++duplicates);
+						foundNoCollision = false;
+						break;
+					}
+				}
+			}
+
+			return newString;
+		}
 	}
 }

@@ -224,7 +224,13 @@ namespace Havtorn
 			return;
 		}
 
-		scene->PreviewEntity = scene->AddEntity("NewEntity");
+		std::string newEntityName = UGeneralUtils::GetNonCollidingString("NewEntity", scene->Entities, [scene](const SEntity& entity)
+			{
+				const SMetaDataComponent* metaDataComp = scene->GetComponent<SMetaDataComponent>(entity);
+				return SComponent::IsValid(metaDataComp) ? metaDataComp->Name.AsString() : "UNNAMED";
+			}
+		);
+		scene->PreviewEntity = scene->AddEntity(newEntityName);
 
 		scene->AddComponent<STransformComponent>(scene->PreviewEntity)->Transform;
 		scene->AddComponentEditorContext(scene->PreviewEntity, &STransformComponentEditorContext::Context);
