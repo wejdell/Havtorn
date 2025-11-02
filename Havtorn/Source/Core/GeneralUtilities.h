@@ -86,17 +86,17 @@ namespace Havtorn
 		static std::string GetNonCollidingString(const std::string& startingString, const std::vector<T>& collection, P projection)
 		{
 			std::string newString = startingString;
-			bool foundNoCollision = false;
+			bool foundCollision = true;
 			I64 duplicates = 0;
-			while (!foundNoCollision)
+			while (foundCollision)
 			{
-				foundNoCollision = true;
+				foundCollision = false;
 				for (const T& element : collection)
 				{
 					if (std::invoke(projection, element) == newString)
 					{
 						newString = startingString + std::to_string(++duplicates);
-						foundNoCollision = false;
+						foundCollision = true;
 						break;
 					}
 				}
