@@ -328,6 +328,7 @@ namespace Havtorn
 
 		ENGINE_API const SEntity& AddEntity(U64 guid = 0);
 		ENGINE_API const SEntity& AddEntity(const std::string& nameInEditor, U64 guid = 0);
+		ENGINE_API bool HasEntity(U64 guid);
 		ENGINE_API void RemoveEntity(const SEntity entity);
 		ENGINE_API void ClearScene();
 

@@ -47,13 +47,6 @@ namespace Havtorn
 			return;
 		}
 
-		CScene* currentScene = Manager->GetCurrentScene();
-		if (!currentScene)
-		{
-			GUI::End();
-			return;
-		}
-
 		std::vector<SEntity> selectedEntities = Manager->GetSelectedEntities();
 
 		if (selectedEntities.empty())
@@ -78,6 +71,13 @@ namespace Havtorn
 				GUI::EndDragDropSource();
 			}
 
+			CScene* currentScene = Manager->GetCurrentScene();
+			if (!currentScene->HasEntity(selectedEntity.GUID))
+			{
+				GUI::TextDisabled("Not contained in scene '%s'", currentScene->GetSceneName().c_str());
+				continue;
+			}
+
 			SMetaDataComponent* metaDataComp = currentScene->GetComponent<SMetaDataComponent>(selectedEntity);
 			if (metaDataComp != nullptr)
 			{
@@ -87,10 +87,11 @@ namespace Havtorn
 				if (GUI::IsItemHovered())
 					GUI::SetTooltip("GUID %u", metaDataComp->Owner.GUID);
 			}
-			GUI::Separator();
 
 			for (SComponentEditorContext* context : currentScene->GetComponentEditorContexts(selectedEntity))
 			{
+				GUI::Separator();
+
 				if (context->RemoveComponent(selectedEntity, currentScene))
 					continue;
 

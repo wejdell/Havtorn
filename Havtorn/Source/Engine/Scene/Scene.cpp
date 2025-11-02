@@ -815,6 +815,11 @@ namespace Havtorn
 		return outEntity;
 	}
 
+	bool CScene::HasEntity(U64 guid)
+	{
+		return EntityIndices.contains(guid);
+	}
+
 	void CScene::RemoveEntity(const SEntity entity)
 	{
 		if (!entity.IsValid())
@@ -823,7 +828,7 @@ namespace Havtorn
 			return;
 		}
 
-		if (!EntityIndices.contains(entity.GUID))
+		if (!HasEntity(entity.GUID))
 		{
 			HV_LOG_ERROR("__FUNCTION__: Tried to remove entity with GUID: %u from a scene that does not contain it.", entity.GUID);
 			return;
