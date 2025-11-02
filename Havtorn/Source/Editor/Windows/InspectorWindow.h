@@ -35,7 +35,6 @@ namespace Havtorn
 		void UpdateAssetContextMenu();
 
 	private:
-		CScene* Scene = nullptr;
 		U8 AssetPickedIndex = 0;
 		SMatrix DeltaMatrix = SMatrix::Identity;
 		SAssetReference* ContextMenuAssetRef = nullptr;

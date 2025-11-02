@@ -47,8 +47,8 @@ namespace Havtorn
 			return;
 		}
 
-		Scene = Manager->GetCurrentScene();
-		if (!Scene)
+		CScene* currentScene = Manager->GetCurrentScene();
+		if (!currentScene)
 		{
 			GUI::End();
 			return;
@@ -78,7 +78,7 @@ namespace Havtorn
 				GUI::EndDragDropSource();
 			}
 
-			SMetaDataComponent* metaDataComp = Scene->GetComponent<SMetaDataComponent>(selectedEntity);
+			SMetaDataComponent* metaDataComp = currentScene->GetComponent<SMetaDataComponent>(selectedEntity);
 			if (metaDataComp != nullptr)
 			{
 				GUI::InputText("##MetaDataCompName", &metaDataComp->Name);
@@ -89,13 +89,13 @@ namespace Havtorn
 			}
 			GUI::Separator();
 
-			for (SComponentEditorContext* context : Scene->GetComponentEditorContexts(selectedEntity))
+			for (SComponentEditorContext* context : currentScene->GetComponentEditorContexts(selectedEntity))
 			{
-				if (context->RemoveComponent(selectedEntity, Scene))
+				if (context->RemoveComponent(selectedEntity, currentScene))
 					continue;
 
 				GUI::SameLine();
-				SComponentViewResult result = context->View(selectedEntity, Scene);
+				SComponentViewResult result = context->View(selectedEntity, currentScene);
 
 				// TODO.NR: Could make this a enum-function map, but would be good to set up clear rules for how this should work.
 				switch (result.Label)
@@ -316,14 +316,15 @@ namespace Havtorn
 			return;
 
 		Manager->SetIsModalOpen(true);
+		CScene* currentScene = Manager->GetCurrentScene();
 
 		if (GUI::BeginTable("NewComponentTypeTable", 1))
 		{
-			for (const SComponentEditorContext* context : Scene->GetComponentEditorContexts())
+			for (const SComponentEditorContext* context : currentScene->GetComponentEditorContexts())
 			{
 				GUI::TableNextColumn();
 
-				if (context->AddComponent(entity, Scene))
+				if (context->AddComponent(entity, currentScene))
 				{
 					Manager->SetIsModalOpen(false);
 					GUI::CloseCurrentPopup();

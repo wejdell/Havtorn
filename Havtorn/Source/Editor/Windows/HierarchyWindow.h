@@ -12,7 +12,7 @@ namespace Havtorn
 		struct SEditData
 		{
 			I64 QueuedRemovalIndex = -1;
-			I64 DoubleClickIndex = -1;
+			I64 HoveredIndex = -1;
 		};
 
 	public:
@@ -31,9 +31,10 @@ namespace Havtorn
 		void Footer(std::vector<Ptr<CScene>>& scenes, SEditData& editData);
 		void SceneAssetDrag();
 
-		void Edit(const SEditData& editData);
+		void Edit(SEditData& editData);
 
 	private:
 		SGuiTextFilter Filter = SGuiTextFilter();
+		I64 SelectedIndex = -1;
 	};
 }

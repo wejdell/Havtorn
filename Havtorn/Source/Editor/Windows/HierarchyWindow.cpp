@@ -228,11 +228,8 @@ namespace Havtorn
 			const bool isCurrentScene = scene.get() == Manager->GetCurrentScene();
 			GUI::Selectable(scene->GetSceneName().c_str(), isCurrentScene);
 
-			if (GUI::IsDoubleClick() && GUI::IsItemHovered())
-			{
-				if (editData.DoubleClickIndex == -1)
-					editData.DoubleClickIndex = sceneIndex;
-			}
+			if (GUI::IsItemHovered())
+				editData.HoveredIndex = sceneIndex;
 
 			GUI::Separator();
 
@@ -322,27 +319,30 @@ namespace Havtorn
 				GUI::EndDragDropTarget();
 			}
 
+			GUI::Separator();
+		}
+		
+		if (SelectedIndex >= 0)
+		{
 			if (GUI::BeginPopupContextWindow())
 			{
 				if (GUI::MenuItem("Create New Entity"))
 				{
-					CScene* scenePointer = scene.get();
+					CScene* scenePointer = scenes[SelectedIndex].get();
 					std::string newEntityName = UGeneralUtils::GetNonCollidingString("NewEntity", scenePointer->Entities, [scenePointer](const SEntity& entity)
 						{
 							const SMetaDataComponent* metaDataComp = scenePointer->GetComponent<SMetaDataComponent>(entity);
 							return SComponent::IsValid(metaDataComp) ? metaDataComp->Name.AsString() : "UNNAMED";
 						}
 					);
-					scene->AddEntity(newEntityName);
+					scenePointer->AddEntity(newEntityName);
 				}
 
 				if (GUI::MenuItem("Remove Scene"))
-					editData.QueuedRemovalIndex = STATIC_I64(sceneIndex);
-
+					editData.QueuedRemovalIndex = STATIC_I64(SelectedIndex);
+				
 				GUI::EndPopup();
 			}
-
-			GUI::Separator();
 		}
 		GUI::EndChild();
 		SceneAssetDrag();
@@ -413,8 +413,20 @@ namespace Havtorn
 		}
 	}
 
-	void CHierarchyWindow::Edit(const SEditData& editData)
+	void CHierarchyWindow::Edit(SEditData& editData)
 	{
+		if (GUI::IsDoubleClick() && editData.HoveredIndex >= 0)
+		{
+			std::vector<Ptr<CScene>>& remainingScenes = Manager->GetScenes();
+			I64 sceneIndex = UMath::Clamp(editData.HoveredIndex, STATIC_I64(0), STATIC_I64(remainingScenes.size()) - 1);
+			Manager->SetCurrentScene(sceneIndex);
+		}
+
+		if (GUI::IsMouseClicked(1))
+		{
+			SelectedIndex = editData.HoveredIndex;
+		}
+
 		if (editData.QueuedRemovalIndex >= 0)
 		{
 			GEngine::GetWorld()->RemoveScene(editData.QueuedRemovalIndex);
@@ -423,13 +435,10 @@ namespace Havtorn
 			{
 				Manager->SetCurrentScene(0);
 			}
-		}
-
-		if (editData.DoubleClickIndex >= 0)
-		{
-			std::vector<Ptr<CScene>>& remainingScenes = Manager->GetScenes();
-			I64 sceneIndex = UMath::Clamp(editData.DoubleClickIndex, STATIC_I64(0), STATIC_I64(remainingScenes.size()) - 1);
-			Manager->SetCurrentScene(sceneIndex);
+			else
+			{
+				Manager->SetCurrentScene(-1);
+			}
 		}
 	}
 }
