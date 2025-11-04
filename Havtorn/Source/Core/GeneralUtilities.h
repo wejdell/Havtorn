@@ -94,7 +94,7 @@ namespace Havtorn
 				foundCollision = false;
 				for (const T& element : collection)
 				{
-					if (std::invoke(projection, element) == newString)
+					if (std::invoke(std::forward<P>(projection), element) == newString)
 					{
 						newString = startingString + std::to_string(++duplicates);
 						foundCollision = true;
