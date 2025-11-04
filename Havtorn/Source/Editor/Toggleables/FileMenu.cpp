@@ -40,12 +40,12 @@ namespace Havtorn
                 CScene* newScene = Manager->GetScenes().back().get();
                 newScene->Init("New Scene");
                 newScene->Init3DDefaults();
-                Manager->SetCurrentScene(0);
+                Manager->SetCurrentWorkingScene(0);
             }
 
-            if (GUI::MenuItem("Save Scene", 0, false, !GEngine::GetWorld()->GetActiveScenes().empty() && Manager->GetCurrentScene() != nullptr))
+            if (GUI::MenuItem("Save Current Scene", 0, false, !GEngine::GetWorld()->GetActiveScenes().empty() && Manager->GetCurrentWorkingScene() != nullptr))
             {
-                CScene* currentScene = Manager->GetCurrentScene();
+                CScene* currentScene = Manager->GetCurrentWorkingScene();
                 if (currentScene != nullptr)
                     GEngine::GetWorld()->SaveActiveScene("Assets/Scenes/" + currentScene->SceneName.AsString() + ".hva", currentScene);     
             }
@@ -53,19 +53,19 @@ namespace Havtorn
             if (GUI::MenuItem("Clear Scenes")) 
             {
                 GEngine::GetWorld()->ClearScenes();
-                Manager->SetCurrentScene(-1);
+                Manager->SetCurrentWorkingScene(-1);
             }
 
             if (GUI::MenuItem("Generate 3D Demo Scene"))
             {
                 GEngine::GetWorld()->OpenDemoScene<CGameScene>(true);
-                Manager->SetCurrentScene(0);
+                Manager->SetCurrentWorkingScene(0);
             }
 
             if (GUI::MenuItem("Generate 2D Demo Scene"))
             {
                 GEngine::GetWorld()->OpenDemoScene<CGameScene>(false);
-                Manager->SetCurrentScene(0);
+                Manager->SetCurrentWorkingScene(0);
             }
 
             GUI::Separator();

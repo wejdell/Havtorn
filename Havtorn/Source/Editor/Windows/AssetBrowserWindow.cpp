@@ -543,7 +543,7 @@ namespace Havtorn
 		CScene* newScene = Manager->GetScenes().back().get();
 		newScene->Init(NewAssetName);
 		newScene->Init3DDefaults();
-		Manager->SetCurrentScene(0);
+		Manager->SetCurrentWorkingScene(0);
 
 		fileHeader.Scene = newScene;
 		

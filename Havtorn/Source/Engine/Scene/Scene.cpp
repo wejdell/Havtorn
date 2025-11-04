@@ -78,7 +78,10 @@ namespace Havtorn
 
 			SCameraControllerComponent& controllerComp = *AddComponent<SCameraControllerComponent>(mainCamera);
 			AddComponentEditorContext(mainCamera, &SCameraControllerComponentEditorContext::Context);
-			controllerComp.CurrentYaw = -35.0f;
+
+			SVector currentEuler = transform.Transform.GetMatrix().GetEuler();
+			controllerComp.CurrentPitch = UMath::Clamp(currentEuler.X, -SCameraControllerComponent::MaxPitchDegrees + 0.01f, SCameraControllerComponent::MaxPitchDegrees - 0.01f);;
+			controllerComp.CurrentYaw = UMath::WrapAngle(currentEuler.Y);
 		}
 		// === !Camera ===
 
@@ -101,7 +104,10 @@ namespace Havtorn
 
 			SCameraControllerComponent& controllerComp = *AddComponent<SCameraControllerComponent>(gameCamera);
 			AddComponentEditorContext(gameCamera, &SCameraControllerComponentEditorContext::Context);
-			controllerComp.CurrentYaw = -70.0f;
+			
+			SVector currentEuler = transform.Transform.GetMatrix().GetEuler();
+			controllerComp.CurrentPitch = UMath::Clamp(currentEuler.X, -SCameraControllerComponent::MaxPitchDegrees + 0.01f, SCameraControllerComponent::MaxPitchDegrees - 0.01f);;
+			controllerComp.CurrentYaw = UMath::WrapAngle(currentEuler.Y);
 		}
 
 		// === Environment light ===
@@ -554,6 +560,10 @@ namespace Havtorn
 			//		SCameraControllerComponent& controllerComp = 
 			AddComponent<SCameraControllerComponent>(mainCamera);
 			AddComponentEditorContext(mainCamera, &SCameraControllerComponentEditorContext::Context);
+
+			//SVector currentEuler = transform.Transform.GetMatrix().GetEuler();
+			//controllerComp.CurrentPitch = UMath::Clamp(currentEuler.X, -SCameraControllerComponent::MaxPitchDegrees + 0.01f, SCameraControllerComponent::MaxPitchDegrees - 0.01f);;
+			//controllerComp.CurrentYaw = UMath::WrapAngle(currentEuler.Y);
 			//controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
 			// 
 			//SSequencerComponent& cameraSequencerComponent = AddSequencerComponentToEntity(*cameraEntity);

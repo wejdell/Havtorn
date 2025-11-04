@@ -51,9 +51,12 @@ namespace Havtorn
 
 		if (selectedEntities.empty())
 		{
+			GUI::TextDisabled("Select an Entity to modify");
 			GUI::End();
 			return;
 		}
+
+		const std::vector<Ptr<CScene>>& scenes = GEngine::GetWorld()->GetActiveScenes();
 
 		// TODO.NW: Go through and make sure everything in the inspector gets unique ID, maybe based on entity GUID. 
 		// Don't want same IDs over a frame when multiple entities are selected
@@ -71,10 +74,10 @@ namespace Havtorn
 				GUI::EndDragDropSource();
 			}
 
-			CScene* currentScene = Manager->GetCurrentScene();
-			if (!currentScene->HasEntity(selectedEntity.GUID))
+			CScene* currentScene = UComponentAlgo::GetContainingScene(selectedEntity, scenes);
+			if (currentScene == nullptr)
 			{
-				GUI::TextDisabled("Not contained in scene '%s'", currentScene->GetSceneName().c_str());
+				GUI::TextDisabled("Could not find scene of selected entity");
 				continue;
 			}
 
@@ -317,7 +320,9 @@ namespace Havtorn
 			return;
 
 		Manager->SetIsModalOpen(true);
-		CScene* currentScene = Manager->GetCurrentScene();
+		CScene* currentScene = UComponentAlgo::GetContainingScene(entity, GEngine::GetWorld()->GetActiveScenes());
+		if (currentScene == nullptr)
+			return;
 
 		if (GUI::BeginTable("NewComponentTypeTable", 1))
 		{

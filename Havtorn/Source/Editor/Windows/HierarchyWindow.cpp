@@ -225,8 +225,8 @@ namespace Havtorn
 		{
 			Ptr<CScene>& scene = scenes[sceneIndex];
 
-			const bool isCurrentScene = scene.get() == Manager->GetCurrentScene();
-			GUI::Selectable(scene->GetSceneName().c_str(), isCurrentScene);
+			const bool isCurrentWorkingScene = scene.get() == Manager->GetCurrentWorkingScene();
+			GUI::Selectable(scene->GetSceneName().c_str(), isCurrentWorkingScene);
 
 			if (GUI::IsItemHovered())
 				editData.HoveredIndex = sceneIndex;
@@ -362,14 +362,14 @@ namespace Havtorn
 				GEngine::GetWorld()->CreateScene<CGameScene>();
 				CScene* activeScene = Manager->GetScenes().back().get();
 				activeScene->Init(newSceneName);
-				Manager->SetCurrentScene(STATIC_I64(Manager->GetScenes().size()) - 1);
+				Manager->SetCurrentWorkingScene(STATIC_I64(Manager->GetScenes().size()) - 1);
 			}
 			GUI::SameLine();
 			if (GUI::Button("Clear Scenes"))
 			{
 				editData.QueuedRemovalIndex = -1;
 				GEngine::GetWorld()->ClearScenes();
-				Manager->SetCurrentScene(-1);
+				Manager->SetCurrentWorkingScene(-1);
 			}
 		}
 		else
@@ -382,7 +382,7 @@ namespace Havtorn
 				CScene* activeScene = Manager->GetScenes().back().get();
 				activeScene->Init(newSceneName);
 				activeScene->Init3DDefaults();
-				Manager->SetCurrentScene(STATIC_I64(Manager->GetScenes().size()) - 1);
+				Manager->SetCurrentWorkingScene(STATIC_I64(Manager->GetScenes().size()) - 1);
 			}
 		}
 		GUI::EndChild();
@@ -405,7 +405,7 @@ namespace Havtorn
 				if (payload.IsDelivery)
 				{
 					GEngine::GetWorld()->AddScene<CGameScene>(payloadAssetRep->DirectoryEntry.path().string());
-					Manager->SetCurrentScene(STATIC_I64(Manager->GetScenes().size()) - 1);
+					Manager->SetCurrentWorkingScene(STATIC_I64(Manager->GetScenes().size()) - 1);
 				}
 			}
 
@@ -419,7 +419,7 @@ namespace Havtorn
 		{
 			std::vector<Ptr<CScene>>& remainingScenes = Manager->GetScenes();
 			I64 sceneIndex = UMath::Clamp(editData.HoveredIndex, STATIC_I64(0), STATIC_I64(remainingScenes.size()) - 1);
-			Manager->SetCurrentScene(sceneIndex);
+			Manager->SetCurrentWorkingScene(sceneIndex);
 		}
 
 		if (GUI::IsMouseClicked(1))
@@ -433,11 +433,11 @@ namespace Havtorn
 			std::vector<Ptr<CScene>>& remainingScenes = Manager->GetScenes();
 			if (!remainingScenes.empty())
 			{
-				Manager->SetCurrentScene(0);
+				Manager->SetCurrentWorkingScene(0);
 			}
 			else
 			{
-				Manager->SetCurrentScene(-1);
+				Manager->SetCurrentWorkingScene(-1);
 			}
 		}
 	}

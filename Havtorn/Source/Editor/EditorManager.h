@@ -87,8 +87,8 @@ namespace Havtorn
 		void EDITOR_API DebugWindow();
 
 	public:
-		void SetCurrentScene(const I64 sceneIndex);
-		CScene* GetCurrentScene() const;
+		void SetCurrentWorkingScene(const I64 sceneIndex);
+		CScene* GetCurrentWorkingScene() const;
 		std::vector<Ptr<CScene>>& GetScenes() const;
 
 		void SetSelectedEntity(const SEntity& entity);
@@ -174,7 +174,11 @@ namespace Havtorn
 		CEditorResourceManager* ResourceManager = nullptr;
 
 		CWorld* World = nullptr;
-		CScene* CurrentScene = nullptr;
+
+		// NW: The current working scene is the one used when dragging entities into the viewport, and currently the one we save when "saving current scene".
+		// I see no reason currently we shouldn't minimize usage of this, for the benefit of working in a multi-scene workflow with a bunch of open "containers".
+		CScene* CurrentWorkingScene = nullptr;
+		
 		std::vector<SEntity> SelectedEntities = {};
 
 		std::vector<Ptr<CWindow>> Windows;

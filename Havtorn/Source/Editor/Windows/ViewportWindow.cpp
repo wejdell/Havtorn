@@ -135,7 +135,7 @@ namespace Havtorn
 			GUI::SetGizmoDrawList();
 
 			// TODO.NW: Unnestle these ifs
-			CScene* currentScene = Manager->GetCurrentScene();
+			CScene* currentScene = Manager->GetCurrentWorkingScene();
 			if (currentScene != nullptr)
 			{
 				if (GUI::BeginDragDropTarget())

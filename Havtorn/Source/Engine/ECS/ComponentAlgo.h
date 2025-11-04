@@ -22,6 +22,8 @@ namespace Havtorn
 		static SEntity GetClosestEntity3D(const SEntity& toEntity, const std::vector<T*>& fromComponents, const CScene* inScene);
 
 		static SCameraData GetCameraData(const SEntity& cameraEntity, const std::vector<Ptr<CScene>>& scenes);
+
+		static CScene* GetContainingScene(const SEntity& entity, const std::vector<Ptr<CScene>>& scenes);
 	};
 
 	template<typename T>
@@ -68,5 +70,16 @@ namespace Havtorn
 		}
 
 		return data;
+	}
+
+	inline CScene* UComponentAlgo::GetContainingScene(const SEntity& entity, const std::vector<Ptr<CScene>>& scenes)
+	{
+		for (const Ptr<CScene>& scene : scenes)
+		{
+			if (scene->HasEntity(entity.GUID))
+				return scene.get();
+		}
+
+		return nullptr;
 	}
 }

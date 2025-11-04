@@ -209,11 +209,11 @@ namespace Havtorn
 		}
 	}
 
-	void CEditorManager::SetCurrentScene(const I64 sceneIndex)
+	void CEditorManager::SetCurrentWorkingScene(const I64 sceneIndex)
 	{
 		if (sceneIndex < 0)
 		{
-			CurrentScene = nullptr;
+			CurrentWorkingScene = nullptr;
 			SelectedEntities.clear();
 			World->SetMainCamera(SEntity::Null);
 			return;
@@ -222,7 +222,7 @@ namespace Havtorn
 		std::vector<Ptr<CScene>>& scenes = World->GetActiveScenes();
 		if (scenes.empty())
 		{
-			CurrentScene = nullptr;
+			CurrentWorkingScene = nullptr;
 			SelectedEntities.clear();
 			World->SetMainCamera(SEntity::Null);
 			return;
@@ -230,9 +230,9 @@ namespace Havtorn
 
 		I64 activeSceneIndex = UMath::Clamp(sceneIndex, STATIC_I64(0), STATIC_I64(scenes.size()) - 1);
 
-		CurrentScene = scenes[activeSceneIndex].get();
+		CurrentWorkingScene = scenes[activeSceneIndex].get();
 		
-		std::vector<SCameraComponent*> cameras = CurrentScene->GetComponents<SCameraComponent>();
+		std::vector<SCameraComponent*> cameras = CurrentWorkingScene->GetComponents<SCameraComponent>();
 		for (SCameraComponent* camera : cameras)
 		{
 			if (camera->IsActive)
@@ -244,9 +244,9 @@ namespace Havtorn
 		SelectedEntities.clear();
 	}
 
-	CScene* CEditorManager::GetCurrentScene() const
+	CScene* CEditorManager::GetCurrentWorkingScene() const
 	{
-		return CurrentScene;
+		return CurrentWorkingScene;
 	}
 
 	std::vector<Ptr<CScene>>& CEditorManager::GetScenes() const
@@ -419,7 +419,7 @@ namespace Havtorn
 		if (asset->AssetType == EAssetType::Scene)
 		{
 			GEngine::GetWorld()->ChangeScene<CGameScene>(asset->DirectoryEntry.path().string());
-			SetCurrentScene(0);
+			SetCurrentWorkingScene(0);
 		}
 	}
 
@@ -707,11 +707,14 @@ namespace Havtorn
 		if (!firstSelectedEntity.IsValid())
 			return;
 
-		if (CurrentScene == nullptr)
+		const std::vector<Ptr<CScene>>& scenes = World->GetActiveScenes();
+		CScene* currentScene = UComponentAlgo::GetContainingScene(firstSelectedEntity, scenes);
+		if (currentScene == nullptr)
 			return;
 
 		CWorld* world = GEngine::GetWorld();
-		SCameraData mainCameraData = UComponentAlgo::GetCameraData(world->GetMainCamera(), world->GetActiveScenes());
+		const SEntity& mainCamera = world->GetMainCamera();
+		SCameraData mainCameraData = UComponentAlgo::GetCameraData(mainCamera, world->GetActiveScenes());
 
 		if (!mainCameraData.IsValid())
 		{
@@ -725,7 +728,7 @@ namespace Havtorn
 		SVector2<F32> fov = SVector2<F32>::Zero;
 		bool foundBounds = false;
 
-		if (STransformComponent* transform = CurrentScene->GetComponent<STransformComponent>(firstSelectedEntity))
+		if (STransformComponent* transform = currentScene->GetComponent<STransformComponent>(firstSelectedEntity))
 		{
 			worldPos = transform->Transform.GetMatrix().GetTranslation();
 		}
@@ -737,7 +740,7 @@ namespace Havtorn
 
 		fov = { mainCameraData.CameraComponent->AspectRatio * mainCameraData.CameraComponent->FOV, mainCameraData.CameraComponent->FOV };
 
-		if (SStaticMeshComponent* staticMesh = CurrentScene->GetComponent<SStaticMeshComponent>(firstSelectedEntity))
+		if (SStaticMeshComponent* staticMesh = currentScene->GetComponent<SStaticMeshComponent>(firstSelectedEntity))
 		{
 			SStaticMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMesh->AssetReference, CAssetRegistry::EditorManagerRequestID);
 			center = meshAsset->BoundsCenter;
@@ -758,6 +761,14 @@ namespace Havtorn
 		newTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(10.0f, 10.0f, 0.0f));
 		newTransform.Translate(worldPos + SVector(center.X, center.Y, -UMathUtilities::GetFocusDistanceForBounds(center, bounds, fov, focusMarginPercentage)));
 		mainCameraData.TransformComponent->Transform = newTransform;
+
+		CScene* mainCameraScene = UComponentAlgo::GetContainingScene(mainCamera, scenes);
+		if (SCameraControllerComponent* controllerComp = mainCameraScene->GetComponent<SCameraControllerComponent>(mainCamera))
+		{
+			SVector currentEuler = mainCameraData.TransformComponent->Transform.GetMatrix().GetEuler();
+			controllerComp->CurrentPitch = UMath::Clamp(currentEuler.X, -SCameraControllerComponent::MaxPitchDegrees + 0.01f, SCameraControllerComponent::MaxPitchDegrees - 0.01f);;
+			controllerComp->CurrentYaw = UMath::WrapAngle(currentEuler.Y);
+		}
 	}
 
 	void CEditorManager::OnDeleteEvent(const SInputActionPayload payload)
@@ -765,8 +776,15 @@ namespace Havtorn
 		if (!payload.IsPressed)
 			return;
 
+		const std::vector<Ptr<CScene>>& scenes = World->GetActiveScenes();
 		for (SEntity& selectedEntity : GetSelectedEntities())
-			CurrentScene->RemoveEntity(selectedEntity);
+		{
+			CScene* currentScene = UComponentAlgo::GetContainingScene(selectedEntity, scenes);
+			if (currentScene == nullptr)
+				continue;
+
+			currentScene->RemoveEntity(selectedEntity);
+		}
 		
 		ClearSelectedEntities();
 	}

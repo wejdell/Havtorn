@@ -38,7 +38,7 @@ namespace Havtorn
 		SEntity mainCamera = World->GetMainCamera();
 		SCameraData mainCameraData = UComponentAlgo::GetCameraData(mainCamera, scenes);
 
-		// TODO: consider color coding or fading out widgets in scenes other than CurrentScene // Aki
+		// TODO: consider color coding or fading out widgets in scenes other than CurrentWorkingScene // Aki
 		if (!mainCameraData.IsValid())
 			return;
 
