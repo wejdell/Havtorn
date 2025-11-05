@@ -24,6 +24,9 @@ namespace Havtorn
 
 	struct SComponentSerializer
 	{
+		std::function<U32(const SEntity&, const CScene*)> SingleSizeAllocator;
+		std::function<void(const SEntity&, const CScene*, char*, U64&)> SingleSerializer;
+		std::function<void(const SEntity&, CScene*, const char*, U64&)> SingleDeserializer;
 		std::function<U32(const CScene*)> SizeAllocator;
 		std::function<void(const CScene*, char*, U64&)> Serializer;
 		std::function<void(CScene*, const char*, U64&)> Deserializer;
@@ -98,6 +101,30 @@ namespace Havtorn
 			TypeHashToTypeID.emplace(typeid(TComponent).hash_code(), typeID);
 
 			SComponentSerializer serializer;
+			serializer.SingleSizeAllocator =
+				[](const SEntity& entity, const CScene* scene)
+				{
+					TComponent* component = scene->GetComponent<TComponent>(entity);
+					U32 size = component != nullptr ? GetDataSize(component) : 0;
+					return size;
+				};
+
+			serializer.SingleSerializer =
+				[](const SEntity& entity, const CScene* scene, char* toData, U64& pointerPosition)
+				{
+					auto& componentRef = *scene->GetComponent<TComponent>(entity);
+					SerializeData(componentRef, toData, pointerPosition);
+				};
+
+			serializer.SingleDeserializer =
+				[](const SEntity& entity, CScene* scene, const char* fromData, U64& pointerPosition)
+				{					
+					TComponent component;
+					DeserializeData(component, fromData, pointerPosition);
+					scene->AddComponent(component, entity);
+					scene->AddComponentEditorContext(entity, &TComponentEditorContext::Context);	
+				};
+
 			serializer.SizeAllocator =
 				[](const CScene* scene)
 				{
@@ -183,6 +210,29 @@ namespace Havtorn
 			std::sort(RegisteredComponentEditorContexts.begin(), RegisteredComponentEditorContexts.end(), [](const SComponentEditorContext* a, const SComponentEditorContext* b) { return a->GetSortingPriority() < b->GetSortingPriority(); });
 
 			SComponentSerializer serializer;
+			serializer.SingleSizeAllocator =
+				[](const SEntity& entity, const CScene* scene)
+				{
+					TComponent* component = scene->GetComponent<TComponent>(entity);
+					U32 size = component != nullptr ? component->GetSize() : 0;
+					return size;
+				};
+
+			serializer.SingleSerializer =
+				[](const SEntity& entity, const CScene* scene, char* toData, U64& pointerPosition)
+				{
+					scene->GetComponent<TComponent>(entity)->Serialize(toData, pointerPosition);
+				};
+
+			serializer.SingleDeserializer =
+				[](const SEntity& entity, CScene* scene, const char* fromData, U64& pointerPosition)
+				{
+					TComponent component;
+					component.Deserialize(fromData, pointerPosition);
+					scene->AddComponent(component, entity);
+					scene->AddComponentEditorContext(entity, &TComponentEditorContext::Context);
+				};
+
 			serializer.SizeAllocator =
 				[](const CScene* scene)
 				{
@@ -331,6 +381,7 @@ namespace Havtorn
 		ENGINE_API bool HasEntity(U64 guid);
 		ENGINE_API void RemoveEntity(const SEntity entity);
 		ENGINE_API void ClearScene();
+		ENGINE_API void MoveEntityToScene(const SEntity& entity, CScene* fromScene);
 
 		template<typename T>
 		const SEntity& GetEntity(const T* fromComponent) const

@@ -885,6 +885,55 @@ namespace Havtorn
 			RemoveEntity(entity);
 	}
 
+	void CScene::MoveEntityToScene(const SEntity& entity, CScene* fromScene)
+	{
+		if (!entity.IsValid() || fromScene == nullptr)
+		{
+			if (entity.IsValid())
+				HV_LOG_ERROR("CScene::MoveEntityToScene: Could not move entity %ull to %s from other scene.", entity.GUID, SceneName.AsString().c_str());
+			else
+				HV_LOG_ERROR("CScene::MoveEntityToScene: Could not move entity to %s from other scene.", SceneName.AsString().c_str());
+
+			return;
+		}
+
+		if (fromScene == this)
+			return;
+
+		if (HasEntity(entity.GUID))
+		{
+			HV_LOG_ERROR("CScene::MoveEntityToScene: %s already has entity %ull", SceneName.AsString().c_str(), entity.GUID);
+			return;
+		}
+
+		AddEntity(entity.GUID);
+
+		if (SMetaDataComponent* metaDataComponent = fromScene->GetComponent<SMetaDataComponent>(entity))
+			AddComponent<SMetaDataComponent>(*metaDataComponent, entity);
+
+		for (auto& [typeID, storageIndex] : fromScene->ComponentTypeIndices)
+		{
+			SComponentStorage& storage = fromScene->Storages[storageIndex];
+			if (!storage.EntityIndices.contains(entity.GUID))
+				continue;
+
+			if (!ComponentSerializers.contains(typeID))
+				continue;
+
+			U32 size = ComponentSerializers.at(typeID).SingleSizeAllocator(entity, fromScene);
+			const auto data = new char[size];
+			U64 pointerPosition = 0;
+			ComponentSerializers.at(typeID).SingleSerializer(entity, fromScene, data, pointerPosition);
+
+			pointerPosition = 0;
+			ComponentSerializers.at(typeID).SingleDeserializer(entity, this, data, pointerPosition);
+
+			delete[] data;
+		}
+
+		fromScene->RemoveEntity(entity);
+	}
+
 	void CScene::AddComponentEditorContext(const SEntity& owner, SComponentEditorContext* context)
 	{
 		if (!EntityComponentEditorContexts.contains(owner.GUID))

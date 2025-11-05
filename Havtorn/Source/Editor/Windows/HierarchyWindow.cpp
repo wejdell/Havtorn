@@ -10,6 +10,7 @@
 #include <CoreTypes.h>
 #include <ECS/Components/MetaDataComponent.h>
 #include <ECS/Components/TransformComponent.h>
+#include <ECS/ComponentAlgo.h>
 
 #include <../Game/GameScene.h>
 
@@ -74,7 +75,7 @@ namespace Havtorn
 		}
 	}
 
-	void CHierarchyWindow::InspectEntities(const CScene* scene, const std::vector<SEntity>& entities)
+	void CHierarchyWindow::InspectEntities(CScene* scene, const std::vector<SEntity>& entities)
 	{
 		for (const SEntity& entity : entities)
 		{
@@ -116,7 +117,9 @@ namespace Havtorn
 				if (payload.Data != nullptr)
 				{
 					SEntity* draggedEntity = reinterpret_cast<SEntity*>(payload.Data);
-					const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(*draggedEntity);
+					CScene* draggedEntityScene = UComponentAlgo::GetContainingScene(*draggedEntity, GEngine::GetWorld()->GetActiveScenes());
+
+					const SMetaDataComponent* draggedMetaDataComp = draggedEntityScene->GetComponent<SMetaDataComponent>(*draggedEntity);
 					const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
 					GUI::SetTooltip(draggedEntityName.c_str());
 
@@ -126,23 +129,34 @@ namespace Havtorn
 					}
 					else
 					{
-						STransformComponent* draggedTransform = scene->GetComponent<STransformComponent>(*draggedEntity);
+						STransformComponent* draggedTransform = draggedEntityScene->GetComponent<STransformComponent>(*draggedEntity);
 						if (!SComponent::IsValid(draggedTransform))
 						{
 							GUI::SetTooltip("Cannot attach %s to entity, it has no transform!", draggedEntityName.c_str());
 						}
 						else
 						{
-							GUI::SetTooltip("Attach %s to %s?", draggedEntityName.c_str(), entryString.c_str());
+							if (scene != draggedEntityScene)
+								GUI::SetTooltip("Move to %s and attach %s to %s?", scene->GetSceneName().c_str(), draggedEntityName.c_str(), entryString.c_str());
+							else
+								GUI::SetTooltip("Attach %s to %s?", draggedEntityName.c_str(), entryString.c_str());
 
 							if (payload.IsDelivery)
 							{
 								if (draggedTransform->Transform.HasParent())
 								{
-									STransformComponent* existingParentComponent = scene->GetComponent<STransformComponent>(draggedTransform->ParentEntity);
+									STransformComponent* existingParentComponent = draggedEntityScene->GetComponent<STransformComponent>(draggedTransform->ParentEntity);
 									existingParentComponent->Detach(draggedTransform);
 								}
-								transformComponent->Attach(draggedTransform);
+
+								U64 draggedEntityGUID = draggedEntity->GUID;
+								if (scene != draggedEntityScene)
+								{
+									scene->MoveEntityToScene(*draggedEntity, draggedEntityScene);
+								}
+
+								if (STransformComponent* newTransform = scene->GetComponent<STransformComponent>(SEntity(draggedEntityGUID)))
+									transformComponent->Attach(newTransform);								
 							}
 						}
 					}
@@ -230,6 +244,32 @@ namespace Havtorn
 
 			if (GUI::IsItemHovered())
 				editData.HoveredIndex = sceneIndex;
+
+			if (GUI::BeginDragDropTarget())
+			{
+				SGuiPayload payload = GUI::AcceptDragDropPayload("EntityDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
+				if (payload.Data != nullptr)
+				{
+					SEntity* draggedEntity = reinterpret_cast<SEntity*>(payload.Data);
+					CScene* draggedEntityScene = UComponentAlgo::GetContainingScene(*draggedEntity, GEngine::GetWorld()->GetActiveScenes());
+
+					const SMetaDataComponent* draggedMetaDataComp = draggedEntityScene->GetComponent<SMetaDataComponent>(*draggedEntity);
+					const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
+					GUI::SetTooltip(draggedEntityName.c_str());
+
+					if (scene.get() != draggedEntityScene)
+					{
+						GUI::SetTooltip("Move %s to %s?", draggedEntityName.c_str(), scene->GetSceneName().c_str());
+
+						if (payload.IsDelivery)
+						{
+							scene->MoveEntityToScene(*draggedEntity, draggedEntityScene);
+						}
+					}
+				}
+
+				GUI::EndDragDropTarget();
+			}
 
 			GUI::Separator();
 
