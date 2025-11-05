@@ -24,7 +24,7 @@ namespace Havtorn
 
 	private:
 		void FilterChildrenFromList(const CScene* scene, const std::vector<SEntity>& children, std::vector<SEntity>& filteredEntities);
-		void InspectEntities(const CScene* scene, const std::vector<SEntity>& entities);
+		void InspectEntities(CScene* scene, const std::vector<SEntity>& entities);
 
 		void Header();
 		void Body(std::vector<Ptr<CScene>>& scenes, SEditData& editData);
