@@ -9,6 +9,8 @@
 #include "HexRune/HexRune.h"
 #include "HexRune/CoreNodes/CoreNodes.h"
 
+#include "../Game/GameScript.h"
+
 namespace Havtorn
 {
 	CScriptSystem::CScriptSystem(CWorld* world)

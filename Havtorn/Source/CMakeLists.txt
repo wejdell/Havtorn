@@ -646,6 +646,10 @@ add_dependencies(Engine Core Platform GUI)
 
 # ==================== GAME ====================
 set(GAME_FILES
+	Game/HexRune/NodeEditorContext/SetPositionNodeEditorContext.cpp
+	Game/HexRune/NodeEditorContext/SetPositionNodeEditorContext.h
+	Game/HexRune/SetPositionNode.cpp
+	Game/HexRune/SetPositionNode.h
 	${GAME_FOLDER}NodeInclude.h
 	${GAME_FOLDER}HexRune/NodeEditorContext/TimerNodeEditorContext.cpp
 	${GAME_FOLDER}HexRune/NodeEditorContext/TimerNodeEditorContext.h

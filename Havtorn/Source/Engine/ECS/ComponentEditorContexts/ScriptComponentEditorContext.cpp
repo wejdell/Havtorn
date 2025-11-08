@@ -52,7 +52,11 @@ namespace Havtorn
 		}
 		break;
 		case HexRune::EPinType::Vector:
-		{}
+		{
+			GUI::TextDisabled(" |%s| ", "Vector");
+			GUI::SameLine();
+			GUI::DragFloat3("##edit", std::get<SVector>(dataBinding.Data));
+		}
 		break;
 		case HexRune::EPinType::Matrix:
 		{}

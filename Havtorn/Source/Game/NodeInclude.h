@@ -8,3 +8,6 @@
 #include "HexRune/NodeEditorContext/InterpolatePositionNodeEditorContext.h"
 #include "HexRune/TimerNode.h"
 #include "HexRune/NodeEditorContext/TimerNodeEditorContext.h"
+
+#include "HexRune/SetPositionNode.h"
+#include "HexRune/NodeEditorContext/SetPositionNodeEditorContext.h"
