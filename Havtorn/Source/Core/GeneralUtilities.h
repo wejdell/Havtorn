@@ -6,6 +6,7 @@
 
 #include <string>
 #include <algorithm>
+#include <concepts>
 
 namespace Havtorn
 {
@@ -80,6 +81,29 @@ namespace Havtorn
 				s.append(" B");
 			}
 			return s;
+		}
+
+		template<typename T, std::invocable<const T&> P>
+		static std::string GetNonCollidingString(const std::string& startingString, const std::vector<T>& collection, P&& projection)
+		{
+			std::string newString = startingString;
+			bool foundCollision = true;
+			I64 duplicates = 0;
+			while (foundCollision)
+			{
+				foundCollision = false;
+				for (const T& element : collection)
+				{
+					if (std::invoke(std::forward<P>(projection), element) == newString)
+					{
+						newString = startingString + std::to_string(++duplicates);
+						foundCollision = true;
+						break;
+					}
+				}
+			}
+
+			return newString;
 		}
 	}
 }

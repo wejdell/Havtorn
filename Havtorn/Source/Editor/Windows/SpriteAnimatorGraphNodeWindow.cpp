@@ -75,10 +75,10 @@ namespace Havtorn
 		// AS: Want to experiment with creating/saving SpriteAnimationClips
 		if (GUI::Button("Save Asset"))
 		{
-			Havtorn::CScene* scene = Manager->GetCurrentScene();
+			Havtorn::CScene* scene = Manager->GetCurrentWorkingScene();
 			scene;
 			//scene->GetEntities()[]
-			//Manager->GetCurrentScene()->GetSpriteAnimatorGraphComponents()
+			//Manager->GetCurrentWorkingScene()->GetSpriteAnimatorGraphComponents()
 			//Manager->GetResourceManager()->CreateAsset(Component)
 		}
 

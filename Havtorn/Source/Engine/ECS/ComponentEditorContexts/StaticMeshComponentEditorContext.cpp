@@ -5,6 +5,8 @@
 
 #include "ECS/Components/StaticMeshComponent.h"
 #include "ECS/Components/TransformComponent.h"
+#include "ECS/Components/MaterialComponent.h"
+#include "ECS/ComponentEditorContexts/MaterialComponentEditorContext.h"
 #include "Scene/Scene.h"
 
 #include "Graphics/Debug/DebugDrawUtility.h"
@@ -28,6 +30,9 @@ namespace Havtorn
 
 		SStaticMeshComponent* staticMesh = scene->GetComponent<SStaticMeshComponent>(entityOwner);
 		const SStaticMeshAsset* staticMeshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMesh->AssetReference, entityOwner.GUID);
+		if (staticMeshAsset == nullptr)
+			return { EComponentViewResultLabel::InspectAssetComponent, staticMesh, &staticMesh->AssetReference, nullptr, EAssetType::StaticMesh };
+
 		GUI::TextDisabled("Number Of Materials: %i", staticMeshAsset->NumberOfMaterials);
 
 		SVector a = SVector(staticMeshAsset->BoundsMin.X, staticMeshAsset->BoundsMin.Y, staticMeshAsset->BoundsMin.Z);
@@ -76,6 +81,15 @@ namespace Havtorn
 
 		scene->AddComponent<SStaticMeshComponent>(entity);
 		scene->AddComponentEditorContext(entity, &SStaticMeshComponentEditorContext::Context);
+
+		// TODO.NW: Deal with component dependencies systemically? Or let it be more strictly modular without real dependencies?
+		SMaterialComponent* materialComponent = scene->GetComponent<SMaterialComponent>(entity);
+		if (materialComponent == nullptr)
+		{
+			scene->AddComponent<SMaterialComponent>(entity);
+			scene->AddComponentEditorContext(entity, &SMaterialComponentEditorContext::Context);
+		}
+
 		return true;
 	}
 

@@ -3,6 +3,7 @@
 #include "InspectorWindow.h"
 
 #include <ECS/ECSInclude.h>
+#include <ECS/ComponentAlgo.h>
 #include <Engine.h>
 #include <EditorManager.h>
 #include <Graphics/RenderManager.h>
@@ -46,20 +47,16 @@ namespace Havtorn
 			return;
 		}
 
-		Scene = Manager->GetCurrentScene();
-		if (!Scene)
-		{
-			GUI::End();
-			return;
-		}
-
 		std::vector<SEntity> selectedEntities = Manager->GetSelectedEntities();
 
 		if (selectedEntities.empty())
 		{
+			GUI::TextDisabled("Select an Entity to modify");
 			GUI::End();
 			return;
 		}
+
+		const std::vector<Ptr<CScene>>& scenes = GEngine::GetWorld()->GetActiveScenes();
 
 		// TODO.NW: Go through and make sure everything in the inspector gets unique ID, maybe based on entity GUID. 
 		// Don't want same IDs over a frame when multiple entities are selected
@@ -77,7 +74,14 @@ namespace Havtorn
 				GUI::EndDragDropSource();
 			}
 
-			SMetaDataComponent* metaDataComp = Scene->GetComponent<SMetaDataComponent>(selectedEntity);
+			CScene* currentScene = UComponentAlgo::GetContainingScene(selectedEntity, scenes);
+			if (currentScene == nullptr)
+			{
+				GUI::TextDisabled("Could not find scene of selected entity");
+				continue;
+			}
+
+			SMetaDataComponent* metaDataComp = currentScene->GetComponent<SMetaDataComponent>(selectedEntity);
 			if (metaDataComp != nullptr)
 			{
 				GUI::InputText("##MetaDataCompName", &metaDataComp->Name);
@@ -86,15 +90,16 @@ namespace Havtorn
 				if (GUI::IsItemHovered())
 					GUI::SetTooltip("GUID %u", metaDataComp->Owner.GUID);
 			}
-			GUI::Separator();
 
-			for (SComponentEditorContext* context : Scene->GetComponentEditorContexts(selectedEntity))
+			for (SComponentEditorContext* context : currentScene->GetComponentEditorContexts(selectedEntity))
 			{
-				if (context->RemoveComponent(selectedEntity, Scene))
+				GUI::Separator();
+
+				if (context->RemoveComponent(selectedEntity, currentScene))
 					continue;
 
 				GUI::SameLine();
-				SComponentViewResult result = context->View(selectedEntity, Scene);
+				SComponentViewResult result = context->View(selectedEntity, currentScene);
 
 				// TODO.NR: Could make this a enum-function map, but would be good to set up clear rules for how this should work.
 				switch (result.Label)
@@ -144,15 +149,20 @@ namespace Havtorn
 		if (viewedTransformComp == nullptr)
 			return;
 
+		CWorld* world = GEngine::GetWorld();
+		SEntity mainCamera = world->GetMainCamera();
+		SCameraData mainCameraData = UComponentAlgo::GetCameraData(mainCamera, world->GetActiveScenes());
+
+		if (!mainCameraData.IsValid())
+			return;
+
 		CViewportWindow* viewportWindow = Manager->GetEditorWindow<CViewportWindow>();
 		SVector2<F32> viewportWindowDimensions = viewportWindow->GetRenderedSceneDimensions();
 		SVector2<F32> viewportWindowPosition = viewportWindow->GetRenderedScenePosition();
 
 		GUI::SetRect(viewportWindowPosition, viewportWindowDimensions);
 		
-		SCameraComponent* cameraComp = Scene->GetComponent<SCameraComponent>(Scene->MainCameraEntity);
-		STransformComponent* cameraTransformComp = Scene->GetComponent<STransformComponent>(Scene->MainCameraEntity);
-		SMatrix viewMatrix = cameraTransformComp->Transform.GetMatrix();
+		SMatrix viewMatrix = mainCameraData.TransformComponent->Transform.GetMatrix();
 		SMatrix inverseView = viewMatrix.Inverse();
 
 		ViewManipulation(viewMatrix, viewportWindowPosition, viewportWindowDimensions);
@@ -167,7 +177,7 @@ namespace Havtorn
 		{
 			SVector gizmoSnapping = Manager->GetCurrentGizmoSnapping().Snapping;
 			F32 snappingData[] = { gizmoSnapping.X, gizmoSnapping.Y, gizmoSnapping.Z };
-			GUI::GizmoManipulate(inverseView.data, cameraComp->ProjectionMatrix.data, Manager->GetCurrentGizmo(), Manager->GetCurrentGizmoSpace(), transformMatrix.data, DeltaMatrix.data, snappingData);
+			GUI::GizmoManipulate(inverseView.data, mainCameraData.CameraComponent->ProjectionMatrix.data, Manager->GetCurrentGizmo(), Manager->GetCurrentGizmoSpace(), transformMatrix.data, DeltaMatrix.data, snappingData);
 		}
 		else
 		{
@@ -177,7 +187,7 @@ namespace Havtorn
 		GUI::PopID();
 		
 		viewedTransformComp->Transform.SetMatrix(transformMatrix);
-		cameraTransformComp->Transform.SetMatrix(viewMatrix);
+		mainCameraData.TransformComponent->Transform.SetMatrix(viewMatrix);
 	}
 
 	void CInspectorWindow::ViewManipulation(SMatrix& outCameraView, const SVector2<F32>& windowPosition, const SVector2<F32>& windowSize)
@@ -289,7 +299,7 @@ namespace Havtorn
 		Manager->GetEditorWindow<CSpriteAnimatorGraphNodeWindow>()->Inspect(*component);
 	}
 
-	void CInspectorWindow::RenderPreview(const SComponentViewResult& /*result*/)
+	void CInspectorWindow::RenderPreview(const SComponentViewResult& result)
 	{
 		GUI::TextDisabled("Preview");
 		GUI::Separator();
@@ -297,7 +307,9 @@ namespace Havtorn
 		const SEditorLayout& layout = Manager->GetEditorLayout();
 		// TODO.NW: Centralize layout padding for stuff like this
 		const F32 previewWidth = layout.InspectorSize.X - 16.0f;
-		GUI::Image((intptr_t)Manager->GetRenderManager()->GetRenderedSceneTexture(1).GetShaderResourceView(), SVector2<F32>(previewWidth, previewWidth * (9.0f / 16.0f)));
+		CRenderTexture* previewRenderTexture = Manager->GetRenderManager()->GetRenderedSceneTexture(result.ComponentViewed->Owner.GUID);
+		if (previewRenderTexture != nullptr)
+			GUI::Image((intptr_t)previewRenderTexture->GetShaderResourceView(), SVector2<F32>(previewWidth, previewWidth * (9.0f / 16.0f)));
 		
 		GUI::Separator();
 	}
@@ -308,14 +320,17 @@ namespace Havtorn
 			return;
 
 		Manager->SetIsModalOpen(true);
+		CScene* currentScene = UComponentAlgo::GetContainingScene(entity, GEngine::GetWorld()->GetActiveScenes());
+		if (currentScene == nullptr)
+			return;
 
 		if (GUI::BeginTable("NewComponentTypeTable", 1))
 		{
-			for (const SComponentEditorContext* context : Scene->GetComponentEditorContexts())
+			for (const SComponentEditorContext* context : currentScene->GetComponentEditorContexts())
 			{
 				GUI::TableNextColumn();
 
-				if (context->AddComponent(entity, Scene))
+				if (context->AddComponent(entity, currentScene))
 				{
 					Manager->SetIsModalOpen(false);
 					GUI::CloseCurrentPopup();

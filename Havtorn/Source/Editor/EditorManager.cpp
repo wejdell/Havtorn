@@ -13,6 +13,7 @@
 
 #include <Graphics/RenderManager.h>
 #include <ECS/ECSInclude.h>
+#include <ECS/ComponentAlgo.h>
 
 #include "EditorResourceManager.h"
 #include "EditorWindows.h"
@@ -208,15 +209,44 @@ namespace Havtorn
 		}
 	}
 
-	void CEditorManager::SetCurrentScene(CScene* scene)
+	void CEditorManager::SetCurrentWorkingScene(const I64 sceneIndex)
 	{
-		CurrentScene = scene;
+		if (sceneIndex < 0)
+		{
+			CurrentWorkingScene = nullptr;
+			SelectedEntities.clear();
+			World->SetMainCamera(SEntity::Null);
+			return;
+		}
+
+		std::vector<Ptr<CScene>>& scenes = World->GetActiveScenes();
+		if (scenes.empty())
+		{
+			CurrentWorkingScene = nullptr;
+			SelectedEntities.clear();
+			World->SetMainCamera(SEntity::Null);
+			return;
+		}
+
+		I64 activeSceneIndex = UMath::Clamp(sceneIndex, STATIC_I64(0), STATIC_I64(scenes.size()) - 1);
+
+		CurrentWorkingScene = scenes[activeSceneIndex].get();
+		
+		std::vector<SCameraComponent*> cameras = CurrentWorkingScene->GetComponents<SCameraComponent>();
+		for (SCameraComponent* camera : cameras)
+		{
+			if (camera->IsActive)
+			{
+				World->SetMainCamera(camera->Owner);
+				break;
+			}
+		}
 		SelectedEntities.clear();
 	}
 
-	CScene* CEditorManager::GetCurrentScene() const
+	CScene* CEditorManager::GetCurrentWorkingScene() const
 	{
-		return CurrentScene;
+		return CurrentWorkingScene;
 	}
 
 	std::vector<Ptr<CScene>>& CEditorManager::GetScenes() const
@@ -389,7 +419,7 @@ namespace Havtorn
 		if (asset->AssetType == EAssetType::Scene)
 		{
 			GEngine::GetWorld()->ChangeScene<CGameScene>(asset->DirectoryEntry.path().string());
-			SetCurrentScene(GEngine::GetWorld()->GetActiveScenes()[0].get());
+			SetCurrentWorkingScene(0);
 		}
 	}
 
@@ -677,12 +707,20 @@ namespace Havtorn
 		if (!firstSelectedEntity.IsValid())
 			return;
 
-		if (CurrentScene == nullptr)
+		const std::vector<Ptr<CScene>>& scenes = World->GetActiveScenes();
+		CScene* currentScene = UComponentAlgo::GetContainingScene(firstSelectedEntity, scenes);
+		if (currentScene == nullptr)
 			return;
 
-		SEntity cameraEntity = CurrentScene->MainCameraEntity;
-		if (!cameraEntity.IsValid())
+		CWorld* world = GEngine::GetWorld();
+		const SEntity& mainCamera = world->GetMainCamera();
+		SCameraData mainCameraData = UComponentAlgo::GetCameraData(mainCamera, world->GetActiveScenes());
+
+		if (!mainCameraData.IsValid())
+		{
+			HV_LOG_WARN("OnInputFocusSelection: could not find a camera component to move. Cannot focus current selection.");
 			return;
+		}
 
 		SVector worldPos = SVector::Zero;
 		SVector center = SVector::Zero;
@@ -690,7 +728,7 @@ namespace Havtorn
 		SVector2<F32> fov = SVector2<F32>::Zero;
 		bool foundBounds = false;
 
-		if (STransformComponent* transform = CurrentScene->GetComponent<STransformComponent>(firstSelectedEntity))
+		if (STransformComponent* transform = currentScene->GetComponent<STransformComponent>(firstSelectedEntity))
 		{
 			worldPos = transform->Transform.GetMatrix().GetTranslation();
 		}
@@ -700,17 +738,9 @@ namespace Havtorn
 			return;
 		}
 
-		if (SCameraComponent* camera = CurrentScene->GetComponent<SCameraComponent>(cameraEntity))
-		{
-			fov = { camera->AspectRatio * camera->FOV, camera->FOV };
-		}
-		else
-		{
-			HV_LOG_WARN("OnInputFocusSelection: could not find a camera component to move. Cannot focus current selection.");
-			return;
-		}
+		fov = { mainCameraData.CameraComponent->AspectRatio * mainCameraData.CameraComponent->FOV, mainCameraData.CameraComponent->FOV };
 
-		if (SStaticMeshComponent* staticMesh = CurrentScene->GetComponent<SStaticMeshComponent>(firstSelectedEntity))
+		if (SStaticMeshComponent* staticMesh = currentScene->GetComponent<SStaticMeshComponent>(firstSelectedEntity))
 		{
 			SStaticMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMesh->AssetReference, CAssetRegistry::EditorManagerRequestID);
 			center = meshAsset->BoundsCenter;
@@ -730,7 +760,15 @@ namespace Havtorn
 		STransform newTransform;
 		newTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(10.0f, 10.0f, 0.0f));
 		newTransform.Translate(worldPos + SVector(center.X, center.Y, -UMathUtilities::GetFocusDistanceForBounds(center, bounds, fov, focusMarginPercentage)));
-		CurrentScene->GetComponent<STransformComponent>(cameraEntity)->Transform = newTransform;
+		mainCameraData.TransformComponent->Transform = newTransform;
+
+		CScene* mainCameraScene = UComponentAlgo::GetContainingScene(mainCamera, scenes);
+		if (SCameraControllerComponent* controllerComp = mainCameraScene->GetComponent<SCameraControllerComponent>(mainCamera))
+		{
+			SVector currentEuler = mainCameraData.TransformComponent->Transform.GetMatrix().GetEuler();
+			controllerComp->CurrentPitch = UMath::Clamp(currentEuler.X, -SCameraControllerComponent::MaxPitchDegrees + 0.01f, SCameraControllerComponent::MaxPitchDegrees - 0.01f);;
+			controllerComp->CurrentYaw = UMath::WrapAngle(currentEuler.Y);
+		}
 	}
 
 	void CEditorManager::OnDeleteEvent(const SInputActionPayload payload)
@@ -738,8 +776,15 @@ namespace Havtorn
 		if (!payload.IsPressed)
 			return;
 
+		const std::vector<Ptr<CScene>>& scenes = World->GetActiveScenes();
 		for (SEntity& selectedEntity : GetSelectedEntities())
-			CurrentScene->RemoveEntity(selectedEntity);
+		{
+			CScene* currentScene = UComponentAlgo::GetContainingScene(selectedEntity, scenes);
+			if (currentScene == nullptr)
+				continue;
+
+			currentScene->RemoveEntity(selectedEntity);
+		}
 		
 		ClearSelectedEntities();
 	}

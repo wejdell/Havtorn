@@ -34,16 +34,18 @@ namespace Havtorn
 		if (LiveData.empty())
 			return;
 
+		const SEntity& mainCamera = GEngine::GetWorld()->GetMainCamera();
+
 		{
 			// Push prepass render commands
 			SRenderCommand command(ERenderCommandType::PreDebugShape);
-			RenderManager->PushRenderCommand(command, 0);
+			RenderManager->PushRenderCommand(command, mainCamera.GUID);
 
 			command.Type = ERenderCommandType::PostToneMappingIgnoreDepth;
-			RenderManager->PushRenderCommand(command, 0);
+			RenderManager->PushRenderCommand(command, mainCamera.GUID);
 
 			command.Type = ERenderCommandType::PostToneMappingUseDepth;
-			RenderManager->PushRenderCommand(command, 0);
+			RenderManager->PushRenderCommand(command, mainCamera.GUID);
 		}
 
 		const F32 dt = GTime::Dt();
@@ -59,7 +61,7 @@ namespace Havtorn
 			command.U16s.push_back(data.IndexCount);
 			command.U8s.push_back(data.VertexBufferIndex);
 			command.U8s.push_back(data.IndexBufferIndex);
-			RenderManager->PushRenderCommand(command, 0);
+			RenderManager->PushRenderCommand(command, mainCamera.GUID);
 
 			data.LifeTime -= dt;
 		}

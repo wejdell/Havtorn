@@ -57,28 +57,31 @@ namespace Havtorn
 	bool CScene::Init3DDefaults()
 	{
 		// === Camera ===
-		MainCameraEntity = AddEntity("Camera");
+		SEntity mainCamera = AddEntity("Camera");
 
-		if (!MainCameraEntity.IsValid())
+		if (!mainCamera.IsValid())
 			return false;
 
 		// Setup entities (create components)
 		{
-			STransformComponent& transform = *AddComponent<STransformComponent>(MainCameraEntity);
-			AddComponentEditorContext(MainCameraEntity, &STransformComponentEditorContext::Context);
+			STransformComponent& transform = *AddComponent<STransformComponent>(mainCamera);
+			AddComponentEditorContext(mainCamera, &STransformComponentEditorContext::Context);
 
 			transform.Transform.Translate({ 2.5f, 1.0f, -3.5f });
 			transform.Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
 			transform.Transform.Translate(SVector::Right * 0.25f);
 
-			SCameraComponent& camera = *AddComponent<SCameraComponent>(MainCameraEntity);
-			AddComponentEditorContext(MainCameraEntity, &SCameraComponentEditorContext::Context);
+			SCameraComponent& camera = *AddComponent<SCameraComponent>(mainCamera);
+			AddComponentEditorContext(mainCamera, &SCameraComponentEditorContext::Context);
 			camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
 			camera.IsActive = true;
 
-			SCameraControllerComponent& controllerComp = *AddComponent<SCameraControllerComponent>(MainCameraEntity);
-			AddComponentEditorContext(MainCameraEntity, &SCameraControllerComponentEditorContext::Context);
-			controllerComp.CurrentYaw = -35.0f;
+			SCameraControllerComponent& controllerComp = *AddComponent<SCameraControllerComponent>(mainCamera);
+			AddComponentEditorContext(mainCamera, &SCameraControllerComponentEditorContext::Context);
+
+			SVector currentEuler = transform.Transform.GetMatrix().GetEuler();
+			controllerComp.CurrentPitch = UMath::Clamp(currentEuler.X, -SCameraControllerComponent::MaxPitchDegrees + 0.01f, SCameraControllerComponent::MaxPitchDegrees - 0.01f);;
+			controllerComp.CurrentYaw = UMath::WrapAngle(currentEuler.Y);
 		}
 		// === !Camera ===
 
@@ -101,7 +104,10 @@ namespace Havtorn
 
 			SCameraControllerComponent& controllerComp = *AddComponent<SCameraControllerComponent>(gameCamera);
 			AddComponentEditorContext(gameCamera, &SCameraControllerComponentEditorContext::Context);
-			controllerComp.CurrentYaw = -70.0f;
+			
+			SVector currentEuler = transform.Transform.GetMatrix().GetEuler();
+			controllerComp.CurrentPitch = UMath::Clamp(currentEuler.X, -SCameraControllerComponent::MaxPitchDegrees + 0.01f, SCameraControllerComponent::MaxPitchDegrees - 0.01f);;
+			controllerComp.CurrentYaw = UMath::WrapAngle(currentEuler.Y);
 		}
 
 		// === Environment light ===
@@ -533,27 +539,31 @@ namespace Havtorn
 
 		// === Camera ===
 		{
-			MainCameraEntity = AddEntity("Camera");
-			if (!MainCameraEntity.IsValid())
+			SEntity mainCamera = AddEntity("Camera");
+			if (!mainCamera.IsValid())
 				return false;
 
 			// Setup entities (create components)
-			STransformComponent& transform = (*AddComponent<STransformComponent>(MainCameraEntity));
-			AddComponentEditorContext(MainCameraEntity, &STransformComponentEditorContext::Context);
+			STransformComponent& transform = (*AddComponent<STransformComponent>(mainCamera));
+			AddComponentEditorContext(mainCamera, &STransformComponentEditorContext::Context);
 			transform.Transform.Translate({ 0.0f, 1.0f, -5.0f });
 			//transform.Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
 			transform.Transform.Translate(SVector::Right * 0.25f);
 
-			SCameraComponent& camera = *AddComponent<SCameraComponent>(MainCameraEntity);
-			AddComponentEditorContext(MainCameraEntity, &SCameraComponentEditorContext::Context);
+			SCameraComponent& camera = *AddComponent<SCameraComponent>(mainCamera);
+			AddComponentEditorContext(mainCamera, &SCameraComponentEditorContext::Context);
 			camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
 			//camera.ProjectionType = ECameraProjectionType::Orthographic;
 			//camera.ProjectionMatrix = SMatrix::OrthographicLH(5.0f, 5.0f, 0.1f, 1000.0f);
 			camera.IsActive = true;
 
 			//		SCameraControllerComponent& controllerComp = 
-			AddComponent<SCameraControllerComponent>(MainCameraEntity);
-			AddComponentEditorContext(MainCameraEntity, &SCameraControllerComponentEditorContext::Context);
+			AddComponent<SCameraControllerComponent>(mainCamera);
+			AddComponentEditorContext(mainCamera, &SCameraControllerComponentEditorContext::Context);
+
+			//SVector currentEuler = transform.Transform.GetMatrix().GetEuler();
+			//controllerComp.CurrentPitch = UMath::Clamp(currentEuler.X, -SCameraControllerComponent::MaxPitchDegrees + 0.01f, SCameraControllerComponent::MaxPitchDegrees - 0.01f);;
+			//controllerComp.CurrentYaw = UMath::WrapAngle(currentEuler.Y);
 			//controllerComp.CurrentYaw = UMath::DegToRad(-35.0f);
 			// 
 			//SSequencerComponent& cameraSequencerComponent = AddSequencerComponentToEntity(*cameraEntity);
@@ -681,7 +691,6 @@ namespace Havtorn
 		size += GetDataSize(U32());
 
 		size += GetDataSize(SceneName);
-		size += GetDataSize(MainCameraEntity);
 		size += GetDataSize(Entities);
 
 		// MetaData typeID and blob size 
@@ -703,7 +712,6 @@ namespace Havtorn
 		SerializeData(GetSize() + STATIC_U32(pointerPosition), toData, pointerPosition);
 
 		SerializeData(SceneName, toData, pointerPosition);
-		SerializeData(MainCameraEntity, toData, pointerPosition);
 		SerializeData(Entities, toData, pointerPosition);
 
 		U32 typeID = TypeHashToTypeID.at(typeid(SMetaDataComponent).hash_code());
@@ -724,7 +732,6 @@ namespace Havtorn
 		DeserializeData(sceneFileSize, fromData, pointerPosition);
 
 		DeserializeData(SceneName, fromData, pointerPosition);
-		DeserializeData(MainCameraEntity, fromData, pointerPosition);
 		
 		std::vector<SEntity> entities;
 		DeserializeData(entities, fromData, pointerPosition);
@@ -818,6 +825,11 @@ namespace Havtorn
 		return outEntity;
 	}
 
+	bool CScene::HasEntity(U64 guid)
+	{
+		return EntityIndices.contains(guid);
+	}
+
 	void CScene::RemoveEntity(const SEntity entity)
 	{
 		if (!entity.IsValid())
@@ -826,7 +838,7 @@ namespace Havtorn
 			return;
 		}
 
-		if (!EntityIndices.contains(entity.GUID))
+		if (!HasEntity(entity.GUID))
 		{
 			HV_LOG_ERROR("__FUNCTION__: Tried to remove entity with GUID: %u from a scene that does not contain it.", entity.GUID);
 			return;
@@ -864,14 +876,6 @@ namespace Havtorn
 
 		Entities.pop_back();
 		EntityIndices.erase(entity.GUID);
-
-		if (entity == MainCameraEntity)
-		{
-			MainCameraEntity = SEntity::Null;
-			std::vector<SCameraComponent*> cameraComponents = GetComponents<SCameraComponent>();
-			if (!cameraComponents.empty())
-				MainCameraEntity = cameraComponents[0]->Owner;
-		}
 	}
 
 	void CScene::ClearScene()
@@ -879,6 +883,55 @@ namespace Havtorn
 		std::vector<SEntity> copy = Entities;
 		for (const SEntity entity : copy)
 			RemoveEntity(entity);
+	}
+
+	void CScene::MoveEntityToScene(const SEntity& entity, CScene* fromScene)
+	{
+		if (!entity.IsValid() || fromScene == nullptr)
+		{
+			if (entity.IsValid())
+				HV_LOG_ERROR("CScene::MoveEntityToScene: Could not move entity %ull to %s from other scene.", entity.GUID, SceneName.AsString().c_str());
+			else
+				HV_LOG_ERROR("CScene::MoveEntityToScene: Could not move entity to %s from other scene.", SceneName.AsString().c_str());
+
+			return;
+		}
+
+		if (fromScene == this)
+			return;
+
+		if (HasEntity(entity.GUID))
+		{
+			HV_LOG_ERROR("CScene::MoveEntityToScene: %s already has entity %ull", SceneName.AsString().c_str(), entity.GUID);
+			return;
+		}
+
+		AddEntity(entity.GUID);
+
+		if (SMetaDataComponent* metaDataComponent = fromScene->GetComponent<SMetaDataComponent>(entity))
+			AddComponent<SMetaDataComponent>(*metaDataComponent, entity);
+
+		for (auto& [typeID, storageIndex] : fromScene->ComponentTypeIndices)
+		{
+			SComponentStorage& storage = fromScene->Storages[storageIndex];
+			if (!storage.EntityIndices.contains(entity.GUID))
+				continue;
+
+			if (!ComponentSerializers.contains(typeID))
+				continue;
+
+			U32 size = ComponentSerializers.at(typeID).SingleSizeAllocator(entity, fromScene);
+			const auto data = new char[size];
+			U64 pointerPosition = 0;
+			ComponentSerializers.at(typeID).SingleSerializer(entity, fromScene, data, pointerPosition);
+
+			pointerPosition = 0;
+			ComponentSerializers.at(typeID).SingleDeserializer(entity, this, data, pointerPosition);
+
+			delete[] data;
+		}
+
+		fromScene->RemoveEntity(entity);
 	}
 
 	void CScene::AddComponentEditorContext(const SEntity& owner, SComponentEditorContext* context)
