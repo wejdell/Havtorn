@@ -29,11 +29,18 @@ namespace Havtorn
 		void HandleAxisInput(const SInputAxisPayload payload);
 		void ToggleFreeCam(const SInputActionPayload payload);
 
+		void RenderMaterial();
+
 	private:
 		SEditorAssetRepresentation* CurrentMaterial = nullptr;
 		SEngineGraphicsMaterial MaterialData;
-		CRenderTexture MaterialRender;
+		CRenderTexture* MaterialRender = nullptr;
 
+		SAssetReference PreviewSkylightAssetRef = SAssetReference("Assets/Textures/Cubemaps/CubemapTheVisit.hva");
+		STextureAsset* PreviewSkylight = nullptr;
+
+		U64 MaterialToolRenderID = 80090;
+		U32 MaterialToolPreviewAssetID = 80100;
 		SVector RotationInput = SVector::Zero;
 		F32 CurrentZoom = StartingZoom;
 		bool IsOrbiting = false;

@@ -45,10 +45,8 @@ namespace Havtorn
 			}
 		}
 
-		if (renderViewEntities.empty())
+		if (!RenderManager->PrepareRenderViews(renderViewEntities))
 			return;
-
-		RenderManager->PrepareRenderViews(renderViewEntities);
 
 		// TODO.NW: Would be cool to explore a render graph solution for this, now that it is more clear what need to happen for every rendered frame
 		for (const SCameraData& cameraData : activeCameras)

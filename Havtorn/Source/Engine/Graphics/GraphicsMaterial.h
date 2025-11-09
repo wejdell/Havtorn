@@ -12,7 +12,7 @@ namespace Havtorn
 		SEngineGraphicsMaterial() = default;
 		ENGINE_API SEngineGraphicsMaterial(const SOfflineGraphicsMaterial& offlineMaterial, const std::string& materialName);
 
-		std::map<U32, CStaticRenderTexture> GetRenderTextures(const U64 requesterID) const;
+		ENGINE_API std::map<U32, CStaticRenderTexture> GetRenderTextures(const U64 requesterID) const;
 
 		SRuntimeGraphicsMaterialProperty AlbedoR = {};
 		SRuntimeGraphicsMaterialProperty AlbedoG = {};

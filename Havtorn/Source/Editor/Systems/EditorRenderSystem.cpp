@@ -15,8 +15,7 @@
 
 namespace Havtorn
 {
-	// TODO.NW: Read from config? Would rather not involve editor resource manager here. 
-	// Want to move this anyway to some sort of editor rendering system
+	// TODO.NW: Read from config?
 	static const SAssetReference CameraWidgetReference = SAssetReference("Resources/Assets/CameraIcon.hva");
 	static const SAssetReference ColliderWidgetReference = SAssetReference("Resources/Assets/ColliderIcon.hva");
 	static const SAssetReference DecalWidgetReference = SAssetReference("Resources/Assets/DecalIcon.hva");

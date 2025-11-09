@@ -6,6 +6,7 @@
 
 #include <FileSystem.h>
 #include <Graphics/RenderManager.h>
+#include <Graphics/GeometryPrimitives.h>
 #include <Input/InputMapper.h>
 #include <Input/InputTypes.h>
 #include <Timer.h>
@@ -50,7 +51,7 @@ namespace Havtorn
 		}
 
 		{ // Menu Bar
-			GUI::BeginChild("MaterialOptions", SVector2<F32>(0.0f, 30.0f));
+			GUI::BeginChild("MaterialOptions", SVector2<F32>(0.0f, 110.0f));
 			GUI::Text(CurrentMaterial->Name.c_str());
 			GUI::SameLine();
 
@@ -101,6 +102,28 @@ namespace Havtorn
 			}
 
 			GUI::Separator();
+
+			{
+				auto skyboxAssetRep = Manager->GetAssetRepFromName(UGeneralUtils::ExtractFileBaseNameFromPath(PreviewSkylightAssetRef.FilePath)).get();
+
+				intptr_t assetPickerThumbnail = skyboxAssetRep != nullptr ? (intptr_t)skyboxAssetRep->TextureRef.GetShaderResourceView() : intptr_t();
+				std::string pickerLabel = "Preview Skybox | ";
+				if (skyboxAssetRep != nullptr)
+					pickerLabel.append(skyboxAssetRep->Name);
+
+				// TODO.NW: Filter away cubemaps with Axel's filtering
+				SAssetPickResult result = GUI::AssetPicker(pickerLabel.c_str(), "Preview Skybox", assetPickerThumbnail, "Assets/Textures/Cubemaps", 4, Manager->GetAssetInspectFunction());
+
+				if (result.State == EAssetPickerState::AssetPicked)
+				{
+					CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
+					assetRegistry->UnrequestAsset(PreviewSkylightAssetRef, MaterialToolRenderID);
+					skyboxAssetRep = Manager->GetAssetRepFromDirEntry(result.PickedEntry).get();
+					PreviewSkylightAssetRef = SAssetReference(skyboxAssetRep->DirectoryEntry.path().string());
+					PreviewSkylight = assetRegistry->RequestAssetData<STextureAsset>(PreviewSkylightAssetRef, MaterialToolRenderID);
+				}
+			}
+
 			GUI::EndChild();
 		}
 
@@ -174,8 +197,11 @@ namespace Havtorn
 			RotationInput.X = UMath::WrapAngle(RotationInput.X); // Pitch
 			RotationInput.Y = UMath::WrapAngle(RotationInput.Y); // Yaw
 
-			Manager->GetRenderManager()->RenderMaterialTexture(MaterialRender, MaterialData, RotationInput, CurrentZoom);
-			GUI::Image((intptr_t)MaterialRender.GetShaderResourceView(), SVector2<F32>(512.0f));
+			RenderMaterial();
+
+			MaterialRender = Manager->GetRenderManager()->GetRenderTargetTexture(MaterialToolRenderID);
+			if (MaterialRender != nullptr)
+				GUI::Image((intptr_t)MaterialRender->GetShaderResourceView(), SVector2<F32>(512.0f));
 		}
 
 		GUI::End();
@@ -200,10 +226,12 @@ namespace Havtorn
 		assetFile.Deserialize(data);
 		delete[] data;
 
-		GEngine::GetAssetRegistry()->RequestAsset(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
+		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
+		assetRegistry->RequestAsset(SAssetReference(filePath), MaterialToolRenderID);
+		PreviewSkylight = assetRegistry->RequestAssetData<STextureAsset>(PreviewSkylightAssetRef, MaterialToolRenderID);
 
 		MaterialData = SGraphicsMaterialAsset(assetFile).Material;
-		MaterialRender = Manager->GetRenderManager()->RenderMaterialAssetTexture(filePath);
+		Manager->GetRenderManager()->RequestRenderView(MaterialToolRenderID);
 
 		CurrentZoom = StartingZoom;
 		RotationInput = SVector();
@@ -212,12 +240,16 @@ namespace Havtorn
 
 	void CMaterialTool::CloseMaterial()
 	{
+		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
 		if (CurrentMaterial)
-			GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(CurrentMaterial->DirectoryEntry.path().string()), CAssetRegistry::EditorManagerRequestID);
+			assetRegistry->UnrequestAsset(SAssetReference(CurrentMaterial->DirectoryEntry.path().string()), CAssetRegistry::EditorManagerRequestID);
+
+		assetRegistry->UnrequestAsset(PreviewSkylightAssetRef, MaterialToolRenderID);
 
 		CurrentMaterial = nullptr;
 		MaterialData = SEngineGraphicsMaterial();
-		MaterialRender.Release();
+		Manager->GetRenderManager()->UnrequestRenderView(MaterialToolRenderID);
+
 		SetEnabled(false);
 	}
 
@@ -250,5 +282,108 @@ namespace Havtorn
 	void CMaterialTool::ToggleFreeCam(const SInputActionPayload payload)
 	{
 		IsOrbiting = payload.IsHeld;
+	}
+
+	void CMaterialTool::RenderMaterial()
+	{
+		CRenderManager* renderManager = Manager->GetRenderManager();
+
+		if (PreviewSkylight == nullptr)
+			return;
+
+		{
+			const F32 radius = 2.0f * CurrentZoom;
+			SVector location = SVector(0.0f, 0.0f, radius);
+			SMatrix camView = SMatrix::LookAtLH(location, SVector(), SVector::Up).FastInverse();
+			SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), 1.0f, 0.01f, 10.0f);
+
+			SRenderCommand command = SRenderCommand(ERenderCommandType::CameraDataStorage);
+			command.Matrices.emplace_back(camView);
+			command.Matrices.emplace_back(camProjection);
+			renderManager->PushRenderCommand(command, MaterialToolRenderID);
+		}
+
+		{
+			STransformComponent component;
+			SMatrix objectMatrix = SMatrix::CreateRotationFromEuler(SVector(RotationInput.X, RotationInput.Y, 0.0f)).FastInverse();
+			component.Transform.SetMatrix(objectMatrix);
+			component.Owner = SEntity(MaterialToolRenderID);
+
+			SDrawCallData data;
+			data.IndexCount = STATIC_U32(GeometryPrimitives::Icosphere.Indices.size());
+			data.VertexBufferIndex = STATIC_U8(EVertexBufferPrimitives::Icosphere);
+			data.IndexBufferIndex = STATIC_U8(EIndexBufferPrimitives::Icosphere);
+			data.VertexStrideIndex = 0;
+			data.VertexOffsetIndex = 0;
+			data.MaterialIndex = 0;
+
+			SRenderCommand command;
+			command.Type = ERenderCommandType::GBufferDataInstanced;
+			command.U32s.push_back(MaterialToolPreviewAssetID);
+			command.DrawCallData.emplace_back(data);
+			command.Materials.push_back(MaterialData);
+			command.MaterialRenderTextures.push_back(MaterialData.GetRenderTextures(MaterialToolRenderID));
+			renderManager->AddStaticMeshToInstancedRenderList(MaterialToolPreviewAssetID, &component, MaterialToolRenderID);
+			renderManager->PushRenderCommand(command, MaterialToolRenderID);
+		}
+
+		{
+			const SVector4 directionalLightDirection = { 1.0f, 0.0f, 1.0f, 0.0f };
+			const SVector4 directionalLightColor = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };
+
+			SShadowmapViewData shadowmapView;
+			shadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(8.0f, 8.0f, -8.0f, 8.0f);
+
+			SRenderCommand command;
+			command.Type = ERenderCommandType::DeferredLightingDirectional;
+			command.Vectors.push_back(directionalLightDirection);
+			command.Colors.push_back(directionalLightColor);
+			command.ShadowmapViews.push_back(shadowmapView);
+			command.RenderTextures.push_back(PreviewSkylight->RenderTexture);
+			renderManager->PushRenderCommand(command, MaterialToolRenderID);			
+		}
+
+		{
+			SRenderCommand command;
+			command.RenderTextures.push_back(PreviewSkylight->RenderTexture);
+			command.Type = ERenderCommandType::Skybox;
+			renderManager->PushRenderCommand(command, MaterialToolRenderID);
+		}
+
+		{
+			SRenderCommand command;
+			command.Type = ERenderCommandType::PreLightingPass;
+			renderManager->PushRenderCommand(command, MaterialToolRenderID);
+		}
+
+		{
+			SRenderCommand command;
+			command.Type = ERenderCommandType::PostBaseLightingPass;
+			renderManager->PushRenderCommand(command, MaterialToolRenderID);
+		}
+
+		{
+			SRenderCommand command;
+			command.Type = ERenderCommandType::Bloom;
+			renderManager->PushRenderCommand(command, MaterialToolRenderID);
+		}
+
+		{
+			SRenderCommand command;
+			command.Type = ERenderCommandType::Tonemapping;
+			renderManager->PushRenderCommand(command, MaterialToolRenderID);
+		}
+
+		{
+			SRenderCommand command;
+			command.Type = ERenderCommandType::AntiAliasing;
+			renderManager->PushRenderCommand(command, MaterialToolRenderID);
+		}
+
+		{
+			SRenderCommand command;
+			command.Type = ERenderCommandType::GammaCorrection;
+			renderManager->PushRenderCommand(command, MaterialToolRenderID);
+		}
 	}
 }

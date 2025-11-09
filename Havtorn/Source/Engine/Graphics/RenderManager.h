@@ -117,18 +117,18 @@ namespace Havtorn
 		U32 WriteToAnimationDataTexture(const std::string& animationName);
 
 		// TODO.NW: Might want to generalize these render view resources somehow still
-		bool IsStaticMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewEntity);
-		void AddStaticMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* component, const U64 renderViewEntity);
+		ENGINE_API bool IsStaticMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewEntity);
+		ENGINE_API void AddStaticMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* component, const U64 renderViewEntity);
 
-		bool IsSkeletalMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewEntity);
-		void AddSkeletalMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* transformComponent, const SSkeletalAnimationComponent* animationComponent, const U64 renderViewEntity);
+		ENGINE_API bool IsSkeletalMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewEntity);
+		ENGINE_API void AddSkeletalMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* transformComponent, const SSkeletalAnimationComponent* animationComponent, const U64 renderViewEntity);
 
-		bool IsSpriteInWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewEntity);
-		void AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewEntity);
+		ENGINE_API bool IsSpriteInWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewEntity);
+		ENGINE_API void AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewEntity);
 		ENGINE_API void AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const STransformComponent* cameraTransform, const U64 renderViewEntity);
 
-		bool IsSpriteInScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewEntity);
-		void AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewEntity);
+		ENGINE_API bool IsSpriteInScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewEntity);
+		ENGINE_API void AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewEntity);
 
 	public:
 		void SyncCrossThreadResources(const CWorld* world);
@@ -140,7 +140,9 @@ namespace Havtorn
 		void SwapRenderViews();
 		void ClearRenderViewInstanceData();
 
-		void PrepareRenderViews(const std::vector<U64>& renderViewEntities);
+		ENGINE_API void RequestRenderView(const U64& id);
+		ENGINE_API void UnrequestRenderView(const U64& id);
+		bool PrepareRenderViews(const std::vector<U64>& renderViewEntities);
 
 		const SVector2<U16>& GetCurrentWindowResolution() const;
 		const SVector2<F32>& GetShadowAtlasResolution() const;
@@ -377,7 +379,7 @@ namespace Havtorn
 		std::map<U64, SRenderView>* GameThreadRenderViews = &RenderViewsA;
 		std::map<U64, SRenderView>* RenderThreadRenderViews = &RenderViewsB;
 
-		std::vector<U64> GameThreadOneFrameRenderViewIDs;
+		std::vector<U64> RenderViewRequesters;
 
 		SVector4 ClearColor = SVector4(0.5f, 0.5f, 0.5f, 1.0f);
 

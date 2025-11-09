@@ -954,9 +954,29 @@ namespace Havtorn
 		}
 	}
 
-	void CRenderManager::PrepareRenderViews(const std::vector<U64>& renderViewEntities)
+	void CRenderManager::RequestRenderView(const U64& id)
 	{
-		for (const U64& renderViewID : renderViewEntities)
+		if (auto it = std::ranges::find(RenderViewRequesters, id); it != RenderViewRequesters.end())
+			return;
+
+		RenderViewRequesters.push_back(id);
+	}
+
+	void CRenderManager::UnrequestRenderView(const U64& id)
+	{
+		if (auto it = std::ranges::find(RenderViewRequesters, id); it != RenderViewRequesters.end())
+		{
+			RenderViewRequesters.erase(it);
+		}
+	}
+
+	bool CRenderManager::PrepareRenderViews(const std::vector<U64>& renderViewEntities)
+	{
+		std::vector<U64> renderViewIDs = renderViewEntities;
+		for (const U64& requester : RenderViewRequesters)
+			renderViewIDs.push_back(requester);
+
+		for (const U64& renderViewID : renderViewIDs)
 		{
 			// TODO.NW: Move this to destructor and constructor of SRenderView?
 			if (!GameThreadRenderViews->contains(renderViewID))
@@ -969,9 +989,8 @@ namespace Havtorn
 		std::vector<U64> viewEntitiesToErase = {};
 		for (auto& [renderViewID, view] : (*GameThreadRenderViews))
 		{
-			auto it = std::ranges::find(renderViewEntities, renderViewID);
-			auto tempIt = std::ranges::find(GameThreadOneFrameRenderViewIDs, renderViewID);
-			if (it == renderViewEntities.end() && tempIt == GameThreadOneFrameRenderViewIDs.end())
+			auto it = std::ranges::find(renderViewIDs, renderViewID);
+			if (it == renderViewIDs.end())
 			{
 				view.RenderTarget.Release();
 				viewEntitiesToErase.push_back(renderViewID);
@@ -982,6 +1001,8 @@ namespace Havtorn
 			GameThreadRenderViews->erase(renderViewID);
 
 		ClearRenderViewInstanceData();
+
+		return GameThreadRenderViews->size() > 0;
 	}
 
 	const SVector2<U16>& CRenderManager::GetCurrentWindowResolution() const
