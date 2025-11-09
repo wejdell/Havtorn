@@ -19,11 +19,11 @@ namespace Havtorn
 		I8 SInterpolatePosition::OnExecute()
 		{
 			SVector a{};
-			GetDataOnPin(EPinDirection::Input, 1, a);
+			GetDataOnPin(EPinDirection::Input, 0, a);
 			SVector b{};
-			GetDataOnPin(EPinDirection::Input, 2, b);
+			GetDataOnPin(EPinDirection::Input, 1, b);
 			F32 t{};
-			GetDataOnPin(EPinDirection::Input, 3, t);
+			GetDataOnPin(EPinDirection::Input, 2, t);
 
 			SVector out = SVector::Lerp(a, b, t);
 			SetDataOnPin(EPinDirection::Output, 0, out);

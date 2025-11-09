@@ -25,13 +25,16 @@ namespace Havtorn
 			GetDataOnPin(EPinDirection::Input, 2, duration);
 
 			if (duration == 0.0f)
+			{
+				HV_LOG_ERROR("STimerNode::Duration must be larger than Zero.");
 				return -1;
+			}
 
 			F32 time{};
 			GetDataOnPin(EPinDirection::Input, 1, time);
 	
 			F32 newTime{};
-			newTime = time + GTime::Dt();
+			newTime = UMath::Clamp(time + GTime::Dt(), 0.0f, duration);
 			SetDataOnPin(EPinDirection::Output, 1, newTime);
 
 			F32 normalizedTime{};
