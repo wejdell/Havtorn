@@ -79,7 +79,7 @@ namespace Havtorn
 
 	struct SRenderView
 	{
-		CRenderTexture RenderedScene;
+		CRenderTexture RenderTarget;
 		CRenderCommandHeap RenderCommands;
 
 		std::unordered_map<U32, SStaticMeshInstanceData> StaticMeshInstanceData;
@@ -134,7 +134,8 @@ namespace Havtorn
 		void SyncCrossThreadResources(const CWorld* world);
 		void SetWorldMainCameraEntity(const SEntity& entity);
 		void SetWorldPlayState(EWorldPlayState playState);
-		[[nodiscard]] ENGINE_API CRenderTexture* GetRenderedSceneTexture(const U64 renderViewEntity) const;
+		[[nodiscard]] ENGINE_API CRenderTexture* GetRenderTargetTexture(const U64 renderViewID) const;
+		[[nodiscard]] ENGINE_API CRenderTexture MoveRenderTargetTexture(const U64 renderViewID);
 		ENGINE_API void PushRenderCommand(SRenderCommand command, const U64 renderViewEntity);
 		void SwapRenderViews();
 		void ClearRenderViewInstanceData();
@@ -198,7 +199,7 @@ namespace Havtorn
 		void CheckIsolatedRenderPass(const U64 renderViewEntity);
 		void CycleRenderPass(const SInputActionPayload payload);
 
-		void MapRuntimeMaterialProperty(SRuntimeGraphicsMaterialProperty& property, std::vector<ID3D11ShaderResourceView*>& runtimeArray, std::map<U32, F32>& runtimeMap);
+		void MapRuntimeMaterialProperty(SRuntimeGraphicsMaterialProperty& property, std::vector<ID3D11ShaderResourceView*>& runtimeArray, std::map<U32, F32>& runtimeMap, const std::map<U32, CStaticRenderTexture>& textureMap);
 
 	private:
 		struct SFrameBufferData
@@ -375,6 +376,8 @@ namespace Havtorn
 
 		std::map<U64, SRenderView>* GameThreadRenderViews = &RenderViewsA;
 		std::map<U64, SRenderView>* RenderThreadRenderViews = &RenderViewsB;
+
+		std::vector<U64> GameThreadOneFrameRenderViewIDs;
 
 		SVector4 ClearColor = SVector4(0.5f, 0.5f, 0.5f, 1.0f);
 

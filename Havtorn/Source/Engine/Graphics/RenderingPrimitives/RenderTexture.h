@@ -27,7 +27,7 @@ namespace Havtorn
 		void SetAsVSResourceOnSlot(U16 slot);
 		void ReleaseTexture();
 	
-		// TODO.NW: This is silly. We should unify our render calls so they may all take a RenderTexture instead
+		// TODO.NW: This is silly. We should unify our render calls so they may all take a RenderTarget instead
 		ENGINE_API intptr_t GetResource() const;
 		ENGINE_API ID3D11ShaderResourceView* GetShaderResource() const;
 		ENGINE_API ID3D11ShaderResourceView* const* GetShaderResourceView() const;

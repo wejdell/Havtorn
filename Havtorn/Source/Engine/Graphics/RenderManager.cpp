@@ -82,11 +82,11 @@ namespace Havtorn
 		// TODO.NW: Release all of these as we reinit?
 		for (auto& renderView : (*GameThreadRenderViews))
 		{
-			renderView.second.RenderedScene = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+			renderView.second.RenderTarget = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
 		}
 		for (auto& renderView : (*RenderThreadRenderViews))
 		{
-			renderView.second.RenderedScene = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+			renderView.second.RenderTarget = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
 		}
 
 		LitScene = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
@@ -225,20 +225,20 @@ namespace Havtorn
 
 			EditorWidgetDepth.ClearDepth();
 
-			for (auto& [entity, view] : (*RenderThreadRenderViews))
+			for (auto& [renderViewID, view] : (*RenderThreadRenderViews))
 			{
 				RenderStateManager.SetAllDefault();
 
 				ShadowAtlasDepth.ClearDepth();
 				SSAOBuffer.ClearTexture();
-				view.RenderedScene.ClearTexture();
+				view.RenderTarget.ClearTexture();
 
 				LitScene.ClearTexture();
 				IntermediateTexture.ClearTexture();
 				IntermediateDepth.ClearDepth();
 				VolumetricAccumulationBuffer.ClearTexture();
 
-				GBuffer.ClearTextures(ClearColor, entity == WorldMainCameraEntity.GUID);
+				GBuffer.ClearTextures(ClearColor, renderViewID == WorldMainCameraEntity.GUID);
 				ShadowAtlasDepth.SetAsDepthTarget(&IntermediateTexture);
 
 				while (!view.RenderCommands.empty())
@@ -248,14 +248,14 @@ namespace Havtorn
 					view.RenderCommands.pop();
 				}
 				
-				CheckIsolatedRenderPass(entity);
+				CheckIsolatedRenderPass(renderViewID);
 			}
 
-			// RenderedScene should be complete as that is the texture we send to the viewport
+			// RenderTarget should be complete as that is the texture we send to the viewport
 			Backbuffer.SetAsActiveTarget();
 			if (RenderThreadRenderViews->contains(WorldMainCameraEntity.GUID))
 			{
-				RenderThreadRenderViews->at(WorldMainCameraEntity.GUID).RenderedScene.SetAsPSResourceOnSlot(0);
+				RenderThreadRenderViews->at(WorldMainCameraEntity.GUID).RenderTarget.SetAsPSResourceOnSlot(0);
 				FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 			}
 
@@ -504,17 +504,18 @@ namespace Havtorn
 		MaterialBufferData = SMaterialBufferData(material);
 		std::vector<ID3D11ShaderResourceView*> resourceViewPointers;
 		std::map<U32, F32> textureUIDToShaderIndex;
-		MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoR)], resourceViewPointers, textureUIDToShaderIndex);
-		MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoG)], resourceViewPointers, textureUIDToShaderIndex);
-		MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoB)], resourceViewPointers, textureUIDToShaderIndex);
-		MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoA)], resourceViewPointers, textureUIDToShaderIndex);
-		MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalX)], resourceViewPointers, textureUIDToShaderIndex);
-		MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalY)], resourceViewPointers, textureUIDToShaderIndex);
-		MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalZ)], resourceViewPointers, textureUIDToShaderIndex);
-		MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AmbientOcclusion)], resourceViewPointers, textureUIDToShaderIndex);
-		MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Metalness)], resourceViewPointers, textureUIDToShaderIndex);
-		MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Roughness)], resourceViewPointers, textureUIDToShaderIndex);
-		MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Emissive)], resourceViewPointers, textureUIDToShaderIndex);
+		const std::map<U32, CStaticRenderTexture>& textureMap = material.GetRenderTextures(CAssetRegistry::RenderManagerRequestID);
+		MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoR)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+		MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoG)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+		MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoB)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+		MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoA)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+		MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalX)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+		MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalY)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+		MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalZ)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+		MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AmbientOcclusion)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+		MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Metalness)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+		MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Roughness)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+		MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Emissive)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
 
 		for (auto const& [textureUID, shaderIndex] : textureUIDToShaderIndex)
 			GEngine::GetAssetRegistry()->UnrequestAsset(textureUID, CAssetRegistry::RenderManagerRequestID);
@@ -750,23 +751,23 @@ namespace Havtorn
 		return 0;
 	}
 
-	bool Havtorn::CRenderManager::IsStaticMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewEntity)
+	bool Havtorn::CRenderManager::IsStaticMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewID)
 	{
 		// TODO.NW: Maybe move this to RenderView class
-		if (GameThreadRenderViews->contains(renderViewEntity))
-			return GameThreadRenderViews->at(renderViewEntity).StaticMeshInstanceData.contains(meshUID);
+		if (GameThreadRenderViews->contains(renderViewID))
+			return GameThreadRenderViews->at(renderViewID).StaticMeshInstanceData.contains(meshUID);
 
 		return false;
 	}
 
-	void CRenderManager::AddStaticMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* component, const U64 renderViewEntity)
+	void CRenderManager::AddStaticMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* component, const U64 renderViewID)
 	{
 		std::unordered_map<U32, SStaticMeshInstanceData>* renderList = nullptr;
 
-		if (!GameThreadRenderViews->contains(renderViewEntity))
+		if (!GameThreadRenderViews->contains(renderViewID))
 			return;
 
-		renderList = &GameThreadRenderViews->at(renderViewEntity).StaticMeshInstanceData;
+		renderList = &GameThreadRenderViews->at(renderViewID).StaticMeshInstanceData;
 
 		if (!renderList->contains(meshUID))
 			renderList->emplace(meshUID, SStaticMeshInstanceData());
@@ -775,22 +776,22 @@ namespace Havtorn
 		renderList->at(meshUID).Entities.emplace_back(component->Owner);
 	}
 
-	bool CRenderManager::IsSkeletalMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewEntity)
+	bool CRenderManager::IsSkeletalMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewID)
 	{
-		if (GameThreadRenderViews->contains(renderViewEntity))
-			return GameThreadRenderViews->at(renderViewEntity).SkeletalMeshInstanceData.contains(meshUID);
+		if (GameThreadRenderViews->contains(renderViewID))
+			return GameThreadRenderViews->at(renderViewID).SkeletalMeshInstanceData.contains(meshUID);
 
 		return false;
 	}
 
-	void CRenderManager::AddSkeletalMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* transformComponent, const SSkeletalAnimationComponent* animationComponent, const U64 renderViewEntity)
+	void CRenderManager::AddSkeletalMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* transformComponent, const SSkeletalAnimationComponent* animationComponent, const U64 renderViewID)
 	{
 		std::unordered_map<U32, SSkeletalMeshInstanceData>* renderList = nullptr;
 
-		if (!GameThreadRenderViews->contains(renderViewEntity))
+		if (!GameThreadRenderViews->contains(renderViewID))
 			return;
 
-		renderList = &GameThreadRenderViews->at(renderViewEntity).SkeletalMeshInstanceData;
+		renderList = &GameThreadRenderViews->at(renderViewID).SkeletalMeshInstanceData;
 		
 
 		if (!renderList->contains(meshUID))
@@ -805,22 +806,22 @@ namespace Havtorn
 		//	SystemSkeletalMeshInstanceData[meshName].Bones.emplace_back({});
 	}
 
-	bool CRenderManager::IsSpriteInWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewEntity)
+	bool CRenderManager::IsSpriteInWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewID)
 	{
-		if (GameThreadRenderViews->contains(renderViewEntity))
-			return GameThreadRenderViews->at(renderViewEntity).WorldSpaceSpriteInstanceData.contains(assetReferenceUID);
+		if (GameThreadRenderViews->contains(renderViewID))
+			return GameThreadRenderViews->at(renderViewID).WorldSpaceSpriteInstanceData.contains(assetReferenceUID);
 
 		return false;
 	}
 
-	void CRenderManager::AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewEntity)
+	void CRenderManager::AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewID)
 	{
 		std::unordered_map<U32, SSpriteInstanceData>* renderList = nullptr;
 
-		if (!GameThreadRenderViews->contains(renderViewEntity))
+		if (!GameThreadRenderViews->contains(renderViewID))
 			return;
 
-		renderList = &GameThreadRenderViews->at(renderViewEntity).WorldSpaceSpriteInstanceData;
+		renderList = &GameThreadRenderViews->at(renderViewID).WorldSpaceSpriteInstanceData;
 
 		if (!renderList->contains(assetReferenceUID))
 			renderList->emplace(assetReferenceUID, SSpriteInstanceData());
@@ -831,14 +832,14 @@ namespace Havtorn
 		renderList->at(assetReferenceUID).Entities.emplace_back(spriteComponent->Owner);
 	}
 
-	void CRenderManager::AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const STransformComponent* cameraTransform, const U64 renderViewEntity)
+	void CRenderManager::AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const STransformComponent* cameraTransform, const U64 renderViewID)
 	{
 		std::unordered_map<U32, SSpriteInstanceData>* renderList = nullptr;
 
-		if (!GameThreadRenderViews->contains(renderViewEntity))
+		if (!GameThreadRenderViews->contains(renderViewID))
 			return;
 
-		renderList = &GameThreadRenderViews->at(renderViewEntity).WorldSpaceSpriteInstanceData;
+		renderList = &GameThreadRenderViews->at(renderViewID).WorldSpaceSpriteInstanceData;
 
 		if (!renderList->contains(assetReferenceUID))
 			renderList->emplace(assetReferenceUID, SSpriteInstanceData());
@@ -863,22 +864,22 @@ namespace Havtorn
 		renderList->at(assetReferenceUID).Entities.emplace_back(worldSpaceTransform->Owner);
 	}
 
-	bool CRenderManager::IsSpriteInScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewEntity)
+	bool CRenderManager::IsSpriteInScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewID)
 	{
-		if (GameThreadRenderViews->contains(renderViewEntity))
-			return GameThreadRenderViews->at(renderViewEntity).ScreenSpaceSpriteInstanceData.contains(assetReferenceUID);
+		if (GameThreadRenderViews->contains(renderViewID))
+			return GameThreadRenderViews->at(renderViewID).ScreenSpaceSpriteInstanceData.contains(assetReferenceUID);
 
 		return false;
 	}
 
-	void CRenderManager::AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewEntity)
+	void CRenderManager::AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewID)
 	{
 		std::unordered_map<U32, SSpriteInstanceData>* renderList = nullptr;
 
-		if (!GameThreadRenderViews->contains(renderViewEntity))
+		if (!GameThreadRenderViews->contains(renderViewID))
 			return;
 
-		renderList = &GameThreadRenderViews->at(renderViewEntity).ScreenSpaceSpriteInstanceData;
+		renderList = &GameThreadRenderViews->at(renderViewID).ScreenSpaceSpriteInstanceData;
 
 		if (!renderList->contains(assetReferenceUID))
 			renderList->emplace(assetReferenceUID, SSpriteInstanceData());
@@ -912,22 +913,29 @@ namespace Havtorn
 		WorldPlayState = playState;
 	}
 
-	CRenderTexture* CRenderManager::GetRenderedSceneTexture(const U64 renderViewEntity) const
+	CRenderTexture* CRenderManager::GetRenderTargetTexture(const U64 renderViewID) const
 	{
-		if (GameThreadRenderViews->contains(renderViewEntity))
-			return &GameThreadRenderViews->at(renderViewEntity).RenderedScene;
+		if (GameThreadRenderViews->contains(renderViewID))
+			return &GameThreadRenderViews->at(renderViewID).RenderTarget;
 
 		return nullptr;
 	}
 
-	void CRenderManager::PushRenderCommand(SRenderCommand command, const U64 renderViewEntity)
+	CRenderTexture CRenderManager::MoveRenderTargetTexture(const U64 renderViewID)
 	{
-		command.RenderViewEntity = renderViewEntity;
+		CRenderTexture renderTarget = GameThreadRenderViews->at(renderViewID).RenderTarget;
+		GameThreadRenderViews->erase(renderViewID);
+		return std::move(renderTarget);
+	}
 
-		if (!GameThreadRenderViews->contains(renderViewEntity))
+	void CRenderManager::PushRenderCommand(SRenderCommand command, const U64 renderViewID)
+	{
+		command.RenderViewID = renderViewID;
+
+		if (!GameThreadRenderViews->contains(renderViewID))
 			return;
 		
-		GameThreadRenderViews->at(renderViewEntity).RenderCommands.push(command);
+		GameThreadRenderViews->at(renderViewID).RenderCommands.push(command);
 	}
 
 	void CRenderManager::SwapRenderViews()
@@ -948,29 +956,30 @@ namespace Havtorn
 
 	void CRenderManager::PrepareRenderViews(const std::vector<U64>& renderViewEntities)
 	{
-		for (const U64& renderViewEntity : renderViewEntities)
+		for (const U64& renderViewID : renderViewEntities)
 		{
 			// TODO.NW: Move this to destructor and constructor of SRenderView?
-			if (!GameThreadRenderViews->contains(renderViewEntity))
+			if (!GameThreadRenderViews->contains(renderViewID))
 			{
-				GameThreadRenderViews->emplace(renderViewEntity, SRenderView());
-				GameThreadRenderViews->at(renderViewEntity).RenderedScene = RenderTextureFactory.CreateTexture(CurrentWindowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+				GameThreadRenderViews->emplace(renderViewID, SRenderView());
+				GameThreadRenderViews->at(renderViewID).RenderTarget = RenderTextureFactory.CreateTexture(CurrentWindowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
 			}
 		}
 
 		std::vector<U64> viewEntitiesToErase = {};
-		for (auto& [entity, view] : (*GameThreadRenderViews))
+		for (auto& [renderViewID, view] : (*GameThreadRenderViews))
 		{
-			auto it = std::ranges::find(renderViewEntities, entity);
-			if (it == renderViewEntities.end())
+			auto it = std::ranges::find(renderViewEntities, renderViewID);
+			auto tempIt = std::ranges::find(GameThreadOneFrameRenderViewIDs, renderViewID);
+			if (it == renderViewEntities.end() && tempIt == GameThreadOneFrameRenderViewIDs.end())
 			{
-				view.RenderedScene.Release();
-				viewEntitiesToErase.push_back(entity);
+				view.RenderTarget.Release();
+				viewEntitiesToErase.push_back(renderViewID);
 			}
 		}
 
-		for (const U64& renderViewEntity : viewEntitiesToErase)
-			GameThreadRenderViews->erase(renderViewEntity);
+		for (const U64& renderViewID : viewEntitiesToErase)
+			GameThreadRenderViews->erase(renderViewID);
 
 		ClearRenderViewInstanceData();
 	}
@@ -1016,7 +1025,7 @@ namespace Havtorn
 
 	void CRenderManager::ShadowAtlasPrePassDirectional(const SRenderCommand& command)
 	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewEntity))
+		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
 		const auto& shadowViewData = command.ShadowmapViews[0];
@@ -1030,13 +1039,14 @@ namespace Havtorn
 		RenderStateManager.RSSetViewports(1, &RenderStateManager.Viewports[shadowViewData.ShadowmapViewportIndex]);
 
 		// =============
-		ObjectBufferData.ToWorldFromObject = command.Matrices[0];
-		ObjectBuffer.BindBuffer(ObjectBufferData);
+		// TODO.NW: Clean up object buffer in shader path?
+		//ObjectBufferData.ToWorldFromObject = command.Matrices[0];
+		//ObjectBuffer.BindBuffer(ObjectBufferData);
 
-		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewEntity).StaticMeshInstanceData[command.U32s[0]].Transforms;
+		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewID).StaticMeshInstanceData[command.U32s[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
+		//RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
 		RenderStateManager.IASetTopology(ETopologies::TriangleList);
 		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans);
 
@@ -1058,17 +1068,17 @@ namespace Havtorn
 
 	void CRenderManager::ShadowAtlasPrePassPoint(const SRenderCommand& command)
 	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewEntity))
+		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
 		// TODO.NR: Not needed for instanced rendering?
-		ObjectBufferData.ToWorldFromObject = command.Matrices[0];
-		ObjectBuffer.BindBuffer(ObjectBufferData);
+		//ObjectBufferData.ToWorldFromObject = command.Matrices[0];
+		//ObjectBuffer.BindBuffer(ObjectBufferData);
 
-		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewEntity).StaticMeshInstanceData[command.U32s[0]].Transforms;
+		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewID).StaticMeshInstanceData[command.U32s[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
+		//RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
 		RenderStateManager.IASetTopology(ETopologies::TriangleList);
 		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans);
 
@@ -1106,7 +1116,7 @@ namespace Havtorn
 
 	void CRenderManager::ShadowAtlasPrePassSpot(const SRenderCommand& command)
 	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewEntity))
+		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
 		const auto& shadowViewData = command.ShadowmapViews[0];
@@ -1117,18 +1127,18 @@ namespace Havtorn
 		FrameBufferData.CameraPosition = shadowViewData.ShadowPosition;
 		FrameBuffer.BindBuffer(FrameBufferData);
 
-		ObjectBufferData.ToWorldFromObject = command.Matrices[0];
-		ObjectBuffer.BindBuffer(ObjectBufferData);
+		//ObjectBufferData.ToWorldFromObject = command.Matrices[0];
+		//ObjectBuffer.BindBuffer(ObjectBufferData);
 
 		RenderStateManager.VSSetConstantBuffer(0, FrameBuffer);
 		RenderStateManager.RSSetViewports(1, &RenderStateManager.Viewports[shadowViewData.ShadowmapViewportIndex]);
 
 		// =============
 
-		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewEntity).StaticMeshInstanceData[command.U32s[0]].Transforms;
+		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewID).StaticMeshInstanceData[command.U32s[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
+		//RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
 		RenderStateManager.IASetTopology(ETopologies::TriangleList);
 		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans);
 
@@ -1150,7 +1160,7 @@ namespace Havtorn
 
 	void CRenderManager::CameraDataStorage(const SRenderCommand& command)
 	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewEntity))
+		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
 		GBuffer.SetAsActiveTarget(&IntermediateDepth, true);
@@ -1171,13 +1181,13 @@ namespace Havtorn
 
 	void CRenderManager::GBufferDataInstanced(const SRenderCommand& command)
 	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewEntity))
+		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
-		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewEntity).StaticMeshInstanceData[command.U32s[0]].Transforms;
+		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewID).StaticMeshInstanceData[command.U32s[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
+		//RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
 		RenderStateManager.IASetTopology(ETopologies::TriangleList);
 		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans);
 
@@ -1193,20 +1203,18 @@ namespace Havtorn
 			MaterialBufferData = SMaterialBufferData(command.Materials[command.DrawCallData[drawCallIndex].MaterialIndex]);
 			std::vector<ID3D11ShaderResourceView*> resourceViewPointers;
 			std::map<U32, F32> textureUIDToShaderIndex;
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoR)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoG)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoB)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoA)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalX)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalY)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalZ)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AmbientOcclusion)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Metalness)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Roughness)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Emissive)], resourceViewPointers, textureUIDToShaderIndex);
-
-			for (auto const& [textureUID, shaderIndex] : textureUIDToShaderIndex)
-				GEngine::GetAssetRegistry()->UnrequestAsset(textureUID, CAssetRegistry::RenderManagerRequestID);
+			const std::map<U32, CStaticRenderTexture>& textureMap = command.MaterialRenderTextures[command.DrawCallData[drawCallIndex].MaterialIndex];
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoR)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoG)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoB)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoA)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalX)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalY)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalZ)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AmbientOcclusion)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Metalness)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Roughness)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Emissive)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
 
 			MaterialBuffer.BindBuffer(MaterialBufferData);
 
@@ -1226,10 +1234,10 @@ namespace Havtorn
 
 	void CRenderManager::GBufferDataInstancedEditor(const SRenderCommand& command)
 	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewEntity))
+		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
-		SStaticMeshInstanceData& meshData = RenderThreadRenderViews->at(command.RenderViewEntity).StaticMeshInstanceData[command.U32s[0]];
+		SStaticMeshInstanceData& meshData = RenderThreadRenderViews->at(command.RenderViewID).StaticMeshInstanceData[command.U32s[0]];
 		
 		const std::vector<SMatrix>& matrices = meshData.Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
@@ -1253,20 +1261,18 @@ namespace Havtorn
 			MaterialBufferData = SMaterialBufferData(command.Materials[command.DrawCallData[drawCallIndex].MaterialIndex]);
 			std::vector<ID3D11ShaderResourceView*> resourceViewPointers;
 			std::map<U32, F32> textureUIDToShaderIndex;
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoR)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoG)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoB)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoA)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalX)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalY)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalZ)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AmbientOcclusion)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Metalness)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Roughness)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Emissive)], resourceViewPointers, textureUIDToShaderIndex);
-
-			for (auto const& [textureUID, shaderIndex] : textureUIDToShaderIndex)
-				GEngine::GetAssetRegistry()->UnrequestAsset(textureUID, CAssetRegistry::RenderManagerRequestID);
+			const std::map<U32, CStaticRenderTexture>& textureMap = command.MaterialRenderTextures[command.DrawCallData[drawCallIndex].MaterialIndex];
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoR)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoG)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoB)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoA)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalX)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalY)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalZ)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AmbientOcclusion)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Metalness)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Roughness)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Emissive)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
 
 			MaterialBuffer.BindBuffer(MaterialBufferData);
 
@@ -1286,10 +1292,10 @@ namespace Havtorn
 
 	void CRenderManager::GBufferSkeletalInstanced(const SRenderCommand& command)
 	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewEntity))
+		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
-		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewEntity).SkeletalMeshInstanceData[command.U32s[0]].Transforms;
+		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewID).SkeletalMeshInstanceData[command.U32s[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
@@ -1309,20 +1315,18 @@ namespace Havtorn
 			MaterialBufferData = SMaterialBufferData(command.Materials[command.DrawCallData[drawCallIndex].MaterialIndex]);
 			std::vector<ID3D11ShaderResourceView*> resourceViewPointers;
 			std::map<U32, F32> textureUIDToShaderIndex;
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoR)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoG)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoB)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoA)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalX)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalY)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalZ)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AmbientOcclusion)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Metalness)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Roughness)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Emissive)], resourceViewPointers, textureUIDToShaderIndex);
-
-			for (auto const& [textureUID, shaderIndex] : textureUIDToShaderIndex)
-				GEngine::GetAssetRegistry()->UnrequestAsset(textureUID, CAssetRegistry::RenderManagerRequestID);
+			const std::map<U32, CStaticRenderTexture>& textureMap = command.MaterialRenderTextures[command.DrawCallData[drawCallIndex].MaterialIndex];
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoR)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoG)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoB)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoA)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalX)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalY)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalZ)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AmbientOcclusion)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Metalness)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Roughness)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Emissive)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
 
 			MaterialBuffer.BindBuffer(MaterialBufferData);
 
@@ -1342,10 +1346,10 @@ namespace Havtorn
 
 	void CRenderManager::GBufferSkeletalInstancedEditor(const SRenderCommand& command)
 	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewEntity))
+		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
-		SSkeletalMeshInstanceData& meshData = RenderThreadRenderViews->at(command.RenderViewEntity).SkeletalMeshInstanceData[command.U32s[0]];
+		SSkeletalMeshInstanceData& meshData = RenderThreadRenderViews->at(command.RenderViewID).SkeletalMeshInstanceData[command.U32s[0]];
 
 		const std::vector<SMatrix>& matrices = meshData.Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
@@ -1373,20 +1377,18 @@ namespace Havtorn
 			MaterialBufferData = SMaterialBufferData(command.Materials[command.DrawCallData[drawCallIndex].MaterialIndex]);
 			std::vector<ID3D11ShaderResourceView*> resourceViewPointers;
 			std::map<U32, F32> textureUIDToShaderIndex;
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoR)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoG)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoB)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoA)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalX)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalY)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalZ)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AmbientOcclusion)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Metalness)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Roughness)], resourceViewPointers, textureUIDToShaderIndex);
-			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Emissive)], resourceViewPointers, textureUIDToShaderIndex);
-
-			for (auto const& [textureUID, shaderIndex] : textureUIDToShaderIndex)
-				GEngine::GetAssetRegistry()->UnrequestAsset(textureUID, CAssetRegistry::RenderManagerRequestID);
+			const std::map<U32, CStaticRenderTexture>& textureMap = command.MaterialRenderTextures[command.DrawCallData[drawCallIndex].MaterialIndex];
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoR)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoG)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoB)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoA)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalX)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalY)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalZ)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AmbientOcclusion)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Metalness)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Roughness)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Emissive)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
 
 			MaterialBuffer.BindBuffer(MaterialBufferData);
 
@@ -1406,14 +1408,14 @@ namespace Havtorn
 
 	void CRenderManager::GBufferSpriteInstanced(const SRenderCommand& command)
 	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewEntity))
+		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
-		// TODO.NR: Fix transparency
+		// TODO.NW: Fix transparency
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::GBufferAlphaBlend);
 
 		const auto& textureUID = command.U32s[0];
-		SSpriteInstanceData& spriteData = RenderThreadRenderViews->at(command.RenderViewEntity).WorldSpaceSpriteInstanceData[textureUID];
+		SSpriteInstanceData& spriteData = RenderThreadRenderViews->at(command.RenderViewID).WorldSpaceSpriteInstanceData[textureUID];
 
 		const std::vector<SMatrix>& matrices = spriteData.Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
@@ -1432,11 +1434,7 @@ namespace Havtorn
 		RenderStateManager.PSSetShader(EPixelShaders::SpriteWorldSpace);
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
-
-		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
-		STextureAsset* spriteTexture = assetRegistry->RequestAssetData<STextureAsset>(textureUID, CAssetRegistry::RenderManagerRequestID);
-		RenderStateManager.PSSetResources(0, 1, spriteTexture->RenderTexture.GetShaderResourceView());
-		assetRegistry->UnrequestAsset(textureUID, CAssetRegistry::RenderManagerRequestID);
+		RenderStateManager.PSSetResources(0, 1, command.RenderTextures[0].GetShaderResourceView());
 
 		const std::vector<CDataBuffer> buffers = { InstancedTransformBuffer, InstancedUVRectBuffer, InstancedColorBuffer };
 		constexpr U32 strides[3] = { sizeof(SMatrix), sizeof(SVector4), sizeof(SVector4) };
@@ -1449,14 +1447,14 @@ namespace Havtorn
 
 	void CRenderManager::GBufferSpriteInstancedEditor(const SRenderCommand& command)
 	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewEntity))
+		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
-		// TODO.NR: Fix transparency
+		// TODO.NW: Fix transparency
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::GBufferAlphaBlend);
 
 		const auto& textureUID = command.U32s[0];
-		SSpriteInstanceData& spriteData = RenderThreadRenderViews->at(command.RenderViewEntity).WorldSpaceSpriteInstanceData[textureUID];
+		SSpriteInstanceData& spriteData = RenderThreadRenderViews->at(command.RenderViewID).WorldSpaceSpriteInstanceData[textureUID];
 
 		const std::vector<SMatrix>& matrices = spriteData.Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
@@ -1478,11 +1476,7 @@ namespace Havtorn
 		RenderStateManager.PSSetShader(EPixelShaders::SpriteWorldSpaceEditor);
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
-
-		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
-		STextureAsset* spriteTexture = assetRegistry->RequestAssetData<STextureAsset>(textureUID, CAssetRegistry::RenderManagerRequestID);
-		RenderStateManager.PSSetResources(0, 1, spriteTexture->RenderTexture.GetShaderResourceView());
-		assetRegistry->UnrequestAsset(textureUID, CAssetRegistry::RenderManagerRequestID);
+		RenderStateManager.PSSetResources(0, 1, command.RenderTextures[0].GetShaderResourceView());
 
 		const std::vector<CDataBuffer> buffers = { InstancedTransformBuffer, InstancedUVRectBuffer, InstancedColorBuffer, InstancedEntityIDBuffer };
 		constexpr U32 strides[4] = { sizeof(SMatrix), sizeof(SVector4), sizeof(SVector4), sizeof(SEntity) };
@@ -1524,13 +1518,10 @@ namespace Havtorn
 		RenderStateManager.VSSetShader(EVertexShaders::Decal);
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
-		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
 		const auto shouldRenderAlbedo = command.Flags[0];
 		if (shouldRenderAlbedo)
 		{
-			STextureAsset* texture = assetRegistry->RequestAssetData<STextureAsset>(command.U32s[0], CAssetRegistry::RenderManagerRequestID);
-			RenderStateManager.PSSetResources(5, 1, texture->RenderTexture.GetShaderResourceView());
-			assetRegistry->UnrequestAsset(command.U32s[0], CAssetRegistry::RenderManagerRequestID);
+			RenderStateManager.PSSetResources(5, 1, command.RenderTextures[0].GetShaderResourceView());
 			RenderStateManager.PSSetShader(EPixelShaders::DecalAlbedo);
 			RenderStateManager.DrawIndexed(36, 0, 0);
 			CRenderManager::NumberOfDrawCallsThisFrame++;
@@ -1539,9 +1530,7 @@ namespace Havtorn
 		const auto shouldRenderMaterial = command.Flags[1];
 		if (shouldRenderMaterial)
 		{
-			STextureAsset* texture = assetRegistry->RequestAssetData<STextureAsset>(command.U32s[1], CAssetRegistry::RenderManagerRequestID);
-			RenderStateManager.PSSetResources(6, 1, texture->RenderTexture.GetShaderResourceView());
-			assetRegistry->UnrequestAsset(command.U32s[1], CAssetRegistry::RenderManagerRequestID);
+			RenderStateManager.PSSetResources(6, 1, command.RenderTextures[1].GetShaderResourceView());
 			RenderStateManager.PSSetShader(EPixelShaders::DecalMaterial);
 			RenderStateManager.DrawIndexed(36, 0, 0);
 			CRenderManager::NumberOfDrawCallsThisFrame++;
@@ -1550,9 +1539,7 @@ namespace Havtorn
 		const auto shouldRenderNormal = command.Flags[2];
 		if (shouldRenderNormal)
 		{
-			STextureAsset* texture = assetRegistry->RequestAssetData<STextureAsset>(command.U32s[2], CAssetRegistry::RenderManagerRequestID);
-			RenderStateManager.PSSetResources(7, 1, texture->RenderTexture.GetShaderResourceView());
-			assetRegistry->UnrequestAsset(command.U32s[2], CAssetRegistry::RenderManagerRequestID);
+			RenderStateManager.PSSetResources(7, 1, command.RenderTextures[2].GetShaderResourceView());
 			RenderStateManager.PSSetShader(EPixelShaders::DecalNormal);
 			RenderStateManager.DrawIndexed(36, 0, 0);
 			CRenderManager::NumberOfDrawCallsThisFrame++;
@@ -1586,18 +1573,12 @@ namespace Havtorn
 
 	void CRenderManager::DeferredLightingDirectional(const SRenderCommand& command)
 	{
-		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
-		STextureAsset* cubemapTexture = assetRegistry->RequestAssetData<STextureAsset>(command.U32s[0], CAssetRegistry::RenderManagerRequestID);
-		if (cubemapTexture == nullptr)
-			return;
-
 		// add Alpha blend PS shader
 
 		ShadowAtlasDepth.SetAsPSResourceOnSlot(22);
 		SSAOBlurTexture.SetAsPSResourceOnSlot(23);
 
-		RenderStateManager.PSSetResources(0, 1, cubemapTexture->RenderTexture.GetShaderResourceView());
-		assetRegistry->UnrequestAsset(command.U32s[0], CAssetRegistry::RenderManagerRequestID);
+		RenderStateManager.PSSetResources(0, 1, command.RenderTextures[0].GetShaderResourceView());
 
 		// Update lightbufferdata and fill lightbuffer
 		DirectionalLightBufferData.DirectionalLightDirection = command.Vectors[0];
@@ -1738,11 +1719,6 @@ namespace Havtorn
 
 	inline void CRenderManager::Skybox(const SRenderCommand& command)
 	{
-		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
-		STextureAsset* cubemapTexture = assetRegistry->RequestAssetData<STextureAsset>(command.U32s[0], CAssetRegistry::RenderManagerRequestID);
-		if (cubemapTexture == nullptr)
-			return;
-
 		ID3D11ShaderResourceView* nullView = NULL;
 		RenderStateManager.PSSetResources(21, 1, &nullView);
 
@@ -1752,8 +1728,7 @@ namespace Havtorn
 		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::DepthFirst);
 		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
 
-		RenderStateManager.PSSetResources(0, 1, cubemapTexture->RenderTexture.GetShaderResourceView());
-		assetRegistry->UnrequestAsset(command.U32s[0], CAssetRegistry::RenderManagerRequestID);
+		RenderStateManager.PSSetResources(0, 1, command.RenderTextures[0].GetShaderResourceView());
 
 		RenderStateManager.IASetTopology(ETopologies::TriangleList);
 		RenderStateManager.IASetInputLayout(EInputLayoutType::Position4);
@@ -1773,10 +1748,10 @@ namespace Havtorn
 
 	void CRenderManager::PostBaseLightingPass(const SRenderCommand& command)
 	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewEntity))
+		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
-		RenderThreadRenderViews->at(command.RenderViewEntity).RenderedScene.SetAsActiveTarget();
+		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsActiveTarget();
 		LitScene.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 	}
@@ -2008,7 +1983,7 @@ namespace Havtorn
 
 		// Upsampling
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
-		RenderThreadRenderViews->at(command.RenderViewEntity).RenderedScene.SetAsActiveTarget();
+		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsActiveTarget();
 		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
 		DownsampledDepth.SetAsPSResourceOnSlot(1);
 		IntermediateDepth.SetAsPSResourceOnSlot(2);
@@ -2022,13 +1997,13 @@ namespace Havtorn
 
 	void CRenderManager::ScreenSpaceSprite(const SRenderCommand& command)
 	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewEntity))
+		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
 
 		const auto textureUID = command.U32s[0];
-		SSpriteInstanceData& spriteData = RenderThreadRenderViews->at(command.RenderViewEntity).ScreenSpaceSpriteInstanceData[textureUID];
+		SSpriteInstanceData& spriteData = RenderThreadRenderViews->at(command.RenderViewID).ScreenSpaceSpriteInstanceData[textureUID];
 
 		const std::vector<SMatrix>& matrices = spriteData.Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
@@ -2047,11 +2022,7 @@ namespace Havtorn
 		RenderStateManager.PSSetShader(EPixelShaders::SpriteScreenSpace);
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
-
-		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
-		STextureAsset* spriteTexture = assetRegistry->RequestAssetData<STextureAsset>(textureUID, CAssetRegistry::RenderManagerRequestID);
-		RenderStateManager.PSSetResources(0, 1, spriteTexture->RenderTexture.GetShaderResourceView());
-		assetRegistry->UnrequestAsset(textureUID, CAssetRegistry::RenderManagerRequestID);
+		RenderStateManager.PSSetResources(0, 1, command.RenderTextures[0].GetShaderResourceView());
 
 		const std::vector<CDataBuffer> buffers = { InstancedTransformBuffer, InstancedUVRectBuffer, InstancedColorBuffer };
 		constexpr U32 strides[3] = { sizeof(SMatrix), sizeof(SVector4), sizeof(SVector4) };
@@ -2066,16 +2037,16 @@ namespace Havtorn
 
 	inline void CRenderManager::WorldSpaceSpriteEditorWidget(const SRenderCommand& command)
 	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewEntity))
+		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
-		ID3D11RenderTargetView* renderTargets[2] = { RenderThreadRenderViews->at(command.RenderViewEntity).RenderedScene.GetRenderTargetView(), GBuffer.GetEditorDataRenderTarget() };
+		ID3D11RenderTargetView* renderTargets[2] = { RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.GetRenderTargetView(), GBuffer.GetEditorDataRenderTarget() };
 		RenderStateManager.OMSetRenderTargets(2, renderTargets, EditorWidgetDepth.GetDepthStencilView());
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
 		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
 
 		const auto& textureUID = command.U32s[0];
-		SSpriteInstanceData& spriteData = RenderThreadRenderViews->at(command.RenderViewEntity).WorldSpaceSpriteInstanceData[textureUID];
+		SSpriteInstanceData& spriteData = RenderThreadRenderViews->at(command.RenderViewID).WorldSpaceSpriteInstanceData[textureUID];
 
 		const std::vector<SMatrix>& matrices = spriteData.Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
@@ -2097,13 +2068,7 @@ namespace Havtorn
 		RenderStateManager.PSSetShader(EPixelShaders::SpriteWorldSpaceEditorWidget);
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
-
-		// TODO.NW: We have requested the asset be loaded in the RenderSystem, so it should already be loaded here. We're using RenderManagerRequestID
-		// in this scope so that we don't get sticky requests between threads
-		CAssetRegistry* registry = GEngine::GetAssetRegistry();
-		STextureAsset* spriteTexture = registry->RequestAssetData<STextureAsset>(textureUID, CAssetRegistry::RenderManagerRequestID);
-		RenderStateManager.PSSetResources(0, 1, spriteTexture->RenderTexture.GetShaderResourceView());
-		registry->UnrequestAsset(textureUID, CAssetRegistry::RenderManagerRequestID);
+		RenderStateManager.PSSetResources(0, 1, command.RenderTextures[0].GetShaderResourceView());
 
 		const std::vector<CDataBuffer> buffers = { InstancedTransformBuffer, InstancedUVRectBuffer, InstancedColorBuffer, InstancedEntityIDBuffer };
 		constexpr U32 strides[4] = { sizeof(SMatrix), sizeof(SVector4), sizeof(SVector4), sizeof(SEntity) };
@@ -2116,14 +2081,14 @@ namespace Havtorn
 
 	void CRenderManager::RenderBloom(const SRenderCommand& command)
 	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewEntity))
+		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::Disable);
 		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
 
 		HalfSizeTexture.SetAsActiveTarget();
-		RenderThreadRenderViews->at(command.RenderViewEntity).RenderedScene.SetAsPSResourceOnSlot(0);
+		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 
 		QuarterSizeTexture.SetAsActiveTarget();
@@ -2159,10 +2124,10 @@ namespace Havtorn
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 
 		VignetteTexture.SetAsActiveTarget();
-		RenderThreadRenderViews->at(command.RenderViewEntity).RenderedScene.SetAsPSResourceOnSlot(0);
+		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 
-		RenderThreadRenderViews->at(command.RenderViewEntity).RenderedScene.SetAsActiveTarget();
+		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsActiveTarget();
 		VignetteTexture.SetAsPSResourceOnSlot(0);
 		HalfSizeTexture.SetAsPSResourceOnSlot(1);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Bloom);
@@ -2170,11 +2135,11 @@ namespace Havtorn
 
 	inline void CRenderManager::Tonemapping(const SRenderCommand& command)
 	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewEntity))
+		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
 		TonemappedTexture.SetAsActiveTarget();
-		RenderThreadRenderViews->at(command.RenderViewEntity).RenderedScene.SetAsPSResourceOnSlot(0);
+		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Tonemap);
 	}
 
@@ -2190,10 +2155,10 @@ namespace Havtorn
 
 	inline void CRenderManager::GammaCorrection(const SRenderCommand& command)
 	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewEntity))
+		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
-		RenderThreadRenderViews->at(command.RenderViewEntity).RenderedScene.SetAsActiveTarget();
+		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsActiveTarget();
 		AntiAliasedTexture.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::GammaCorrection);
 	}
@@ -2258,9 +2223,9 @@ namespace Havtorn
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
 	}
 
-	void CRenderManager::CheckIsolatedRenderPass(const U64 renderViewEntity)
+	void CRenderManager::CheckIsolatedRenderPass(const U64 renderViewID)
 	{
-		if (!RenderThreadRenderViews->contains(renderViewEntity))
+		if (!RenderThreadRenderViews->contains(renderViewID))
 			return;
 
 		switch (CurrentRunningRenderPass)
@@ -2269,56 +2234,56 @@ namespace Havtorn
 			break;
 		case Havtorn::ERenderPass::Depth:
 		{
-			RenderThreadRenderViews->at(renderViewEntity).RenderedScene.SetAsActiveTarget();
+			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			DepthCopy.SetAsPSResourceOnSlot(0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
 		}
 		break;
 		case Havtorn::ERenderPass::GBufferAlbedo:
 		{
-			RenderThreadRenderViews->at(renderViewEntity).RenderedScene.SetAsActiveTarget();
+			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Albedo, 0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 		}
 		break;
 		case Havtorn::ERenderPass::GBufferNormals:
 		{
-			RenderThreadRenderViews->at(renderViewEntity).RenderedScene.SetAsActiveTarget();
+			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Normal, 0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 		}
 		break;
 		case Havtorn::ERenderPass::GBufferMaterials:
 		{
-			RenderThreadRenderViews->at(renderViewEntity).RenderedScene.SetAsActiveTarget();
+			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Material, 0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 		}
 		break;
 		case Havtorn::ERenderPass::SSAO:
 		{
-			RenderThreadRenderViews->at(renderViewEntity).RenderedScene.SetAsActiveTarget();
+			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			SSAOBlurTexture.SetAsPSResourceOnSlot(0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 		}
 		break;
 		case Havtorn::ERenderPass::DeferredLighting:
 		{
-			RenderThreadRenderViews->at(renderViewEntity).RenderedScene.SetAsActiveTarget();
+			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			LitScene.SetAsPSResourceOnSlot(0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 		}
 		break;
 		case Havtorn::ERenderPass::VolumetricLighting:
 		{
-			RenderThreadRenderViews->at(renderViewEntity).RenderedScene.SetAsActiveTarget();
+			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 		}
 		break;
 		case Havtorn::ERenderPass::Bloom:
 		{
-			RenderThreadRenderViews->at(renderViewEntity).RenderedScene.SetAsActiveTarget();
+			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			VignetteTexture.SetAsPSResourceOnSlot(0);
 			HalfSizeTexture.SetAsPSResourceOnSlot(1);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Difference);
@@ -2326,14 +2291,14 @@ namespace Havtorn
 		break;
 		case Havtorn::ERenderPass::Tonemapping:
 		{
-			RenderThreadRenderViews->at(renderViewEntity).RenderedScene.SetAsActiveTarget();
+			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			TonemappedTexture.SetAsPSResourceOnSlot(0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
 		}
 		break;
 		case Havtorn::ERenderPass::Antialiasing:
 		{
-			RenderThreadRenderViews->at(renderViewEntity).RenderedScene.SetAsActiveTarget();
+			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			AntiAliasedTexture.SetAsPSResourceOnSlot(0);
 			TonemappedTexture.SetAsPSResourceOnSlot(1);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Difference);
@@ -2341,7 +2306,7 @@ namespace Havtorn
 		break;
 		case Havtorn::ERenderPass::EditorData:
 		{
-			RenderThreadRenderViews->at(renderViewEntity).RenderedScene.SetAsActiveTarget();
+			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::EditorData, 0);
 			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::EditorData);
 		}
@@ -2384,18 +2349,17 @@ namespace Havtorn
 		CurrentRunningRenderPass = static_cast<ERenderPass>(currentRunningRenderPassIndex);
 	}
 
-	void CRenderManager::MapRuntimeMaterialProperty(SRuntimeGraphicsMaterialProperty& property, std::vector<ID3D11ShaderResourceView*>& runtimeArray, std::map<U32, F32>& runtimeMap)
+	void CRenderManager::MapRuntimeMaterialProperty(SRuntimeGraphicsMaterialProperty& property, std::vector<ID3D11ShaderResourceView*>& runtimeArray, std::map<U32, F32>& runtimeMap, const std::map<U32, CStaticRenderTexture>& textureMap)
 	{
 		if (property.TextureChannelIndex <= -1.0f)
 			return;
 
 		if (!runtimeMap.contains(property.TextureUID))
 		{
-			STextureAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(property.TextureUID, CAssetRegistry::RenderManagerRequestID);
-			if (asset == nullptr)
+			if (!textureMap.contains(property.TextureUID))
 				return;
 
-			runtimeArray.emplace_back(asset->RenderTexture.GetShaderResource());
+			runtimeArray.emplace_back(textureMap.at(property.TextureUID).GetShaderResource());
 			runtimeMap.emplace(property.TextureUID, STATIC_F32(runtimeArray.size() - 1));
 		}
 

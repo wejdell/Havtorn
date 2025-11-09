@@ -4,6 +4,7 @@
 #include "GraphicsMaterial.h"
 #include "Engine.h"
 #include "Assets/FileHeaderDeclarations.h"
+#include "Assets/AssetRegistry.h"
 
 namespace Havtorn
 {
@@ -33,5 +34,39 @@ namespace Havtorn
 		fillProperty(offlineMaterial.Properties[STATIC_U8(EMaterialProperty::Emissive)], Emissive);
 
 		RecreateNormalZ = offlineMaterial.RecreateZ;
+	}
+
+	std::map<U32, CStaticRenderTexture> SEngineGraphicsMaterial::GetRenderTextures(const U64 requesterID) const
+	{
+		std::map<U32, CStaticRenderTexture> textures;
+
+		auto extractRenderTexture = [&](const SRuntimeGraphicsMaterialProperty& property, std::map<U32, CStaticRenderTexture>& outMap)
+			{
+				if (property.TextureUID == 0 || property.ConstantValue >= 0.0f)
+					return;
+
+				if (outMap.contains(property.TextureUID))
+					return;
+
+				STextureAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(property.TextureUID, requesterID);
+				if (asset == nullptr)
+					return;
+
+				outMap.emplace(property.TextureUID, asset->RenderTexture);
+			};
+
+		extractRenderTexture(AlbedoR, textures);
+		extractRenderTexture(AlbedoG, textures);
+		extractRenderTexture(AlbedoB, textures);
+		extractRenderTexture(AlbedoA, textures);
+		extractRenderTexture(NormalX, textures);
+		extractRenderTexture(NormalY, textures);
+		extractRenderTexture(NormalZ, textures);
+		extractRenderTexture(AmbientOcclusion, textures);
+		extractRenderTexture(Metalness, textures);
+		extractRenderTexture(Roughness, textures);
+		extractRenderTexture(Emissive, textures);
+
+		return std::move(textures);
 	}
 }

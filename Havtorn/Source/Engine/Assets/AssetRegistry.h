@@ -72,7 +72,7 @@ namespace Havtorn
 		// TODO.NW: Catch asset location changes! Both source and asset itself, as part of file watching? 
 		// At the very least we shouldn't crash if we try to load an asset with an invalid path
 
-		void RequestDependencies(const U32 assetUID, const U64 requesterID);
+		ENGINE_API void RequestDependencies(const U32 assetUID, const U64 requesterID);
 		void UnrequestDependencies(const U32 assetUID, const U64 requesterID);
 
 		// Load asset synchronously

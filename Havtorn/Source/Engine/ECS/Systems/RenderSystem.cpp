@@ -141,7 +141,10 @@ namespace Havtorn
 							command.DrawCallData = asset->DrawCallData;
 
 							for (SGraphicsMaterialAsset* materialAsset : materialAssets)
+							{
 								command.Materials.push_back(materialAsset->Material);
+								command.MaterialRenderTextures.push_back(std::move(materialAsset->Material.GetRenderTextures(materialComp->Owner.GUID)));
+							}
 
 							RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 						}
@@ -153,7 +156,10 @@ namespace Havtorn
 							command.DrawCallData = asset->DrawCallData;
 
 							for (SGraphicsMaterialAsset* materialAsset : materialAssets)
+							{
 								command.Materials.push_back(materialAsset->Material);
+								command.MaterialRenderTextures.push_back(std::move(materialAsset->Material.GetRenderTextures(materialComp->Owner.GUID)));
+							}
 
 							RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 						}
@@ -236,7 +242,10 @@ namespace Havtorn
 							command.DrawCallData = asset->DrawCallData;
 
 							for (SGraphicsMaterialAsset* materialAsset : materialAssets)
+							{
 								command.Materials.push_back(materialAsset->Material);
+								command.MaterialRenderTextures.push_back(std::move(materialAsset->Material.GetRenderTextures(materialComp->Owner.GUID)));
+							}
 
 							RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 						}
@@ -249,7 +258,10 @@ namespace Havtorn
 							command.DrawCallData = asset->DrawCallData;
 
 							for (SGraphicsMaterialAsset* materialAsset : materialAssets)
+							{
 								command.Materials.push_back(materialAsset->Material);
+								command.MaterialRenderTextures.push_back(std::move(materialAsset->Material.GetRenderTextures(materialComp->Owner.GUID)));
+							}
 
 							RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 						}
@@ -264,15 +276,45 @@ namespace Havtorn
 						continue;
 
 					const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(decalComponent);
-					GEngine::GetAssetRegistry()->RequestAssets(decalComponent->AssetReferences, transformComp->Owner.GUID);
+					std::vector<STextureAsset*> assets = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(decalComponent->AssetReferences, transformComp->Owner.GUID);
 
 					SRenderCommand command;
 					command.Type = ERenderCommandType::DeferredDecal;
 					command.Matrices.push_back(transformComp->Transform.GetMatrix());
-					command.Flags.push_back(decalComponent->ShouldRenderAlbedo);
-					command.Flags.push_back(decalComponent->ShouldRenderMaterial);
-					command.Flags.push_back(decalComponent->ShouldRenderNormal);
-					command.U32s = SAssetReference::GetIDs(decalComponent->AssetReferences);
+					
+					if (assets[0] != nullptr)
+					{
+						command.Flags.push_back(decalComponent->ShouldRenderAlbedo);
+						command.RenderTextures.push_back(assets[0]->RenderTexture);
+					}
+					else
+					{
+						command.Flags.push_back(false);
+						command.RenderTextures.push_back(CStaticRenderTexture());
+					}
+					
+					if (assets[1] != nullptr)
+					{
+						command.Flags.push_back(decalComponent->ShouldRenderMaterial);
+						command.RenderTextures.push_back(assets[1]->RenderTexture);
+					}
+					else
+					{
+						command.Flags.push_back(false);
+						command.RenderTextures.push_back(CStaticRenderTexture());
+					}
+
+					if (assets[2] != nullptr)
+					{
+						command.Flags.push_back(decalComponent->ShouldRenderNormal);
+						command.RenderTextures.push_back(assets[2]->RenderTexture);
+					}
+					else
+					{
+						command.Flags.push_back(false);
+						command.RenderTextures.push_back(CStaticRenderTexture());
+					}
+
 					RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 				}
 
@@ -286,16 +328,18 @@ namespace Havtorn
 					if (!SComponent::IsValid(environmentLightComp))
 						continue;
 
-					GEngine::GetAssetRegistry()->RequestAsset(environmentLightComp->AssetReference, environmentLightComp->Owner.GUID);
+					STextureAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(environmentLightComp->AssetReference, environmentLightComp->Owner.GUID);
+					if (asset == nullptr)
+						continue;
 
 					SRenderCommand command;
 					if (directionalLightComp->IsActive)
 					{
 						command.Type = ERenderCommandType::DeferredLightingDirectional;
-						command.U32s.push_back(environmentLightComp->AssetReference.UID);
 						command.Vectors.push_back(directionalLightComp->Direction);
 						command.Colors.push_back(directionalLightComp->Color);
 						command.ShadowmapViews.push_back(directionalLightComp->ShadowmapView);
+						command.RenderTextures.push_back(asset->RenderTexture);
 						RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 					}
 
@@ -381,10 +425,14 @@ namespace Havtorn
 					const SEnvironmentLightComponent* environmentLightComp = scene->GetComponent<SEnvironmentLightComponent>(closestEnvironmentLightEntity);
 					if (SComponent::IsValid(environmentLightComp))
 					{
-						SRenderCommand command;
-						command.U32s.push_back(environmentLightComp->AssetReference.UID);
-						command.Type = ERenderCommandType::Skybox;
-						RenderManager->PushRenderCommand(command, cameraEntity.GUID);
+						STextureAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(environmentLightComp->AssetReference, environmentLightComp->Owner.GUID);
+						if (asset != nullptr)
+						{
+							SRenderCommand command;
+							command.RenderTextures.push_back(asset->RenderTexture);
+							command.Type = ERenderCommandType::Skybox;
+							RenderManager->PushRenderCommand(command, cameraEntity.GUID);
+						}
 					}
 				}
 
@@ -395,7 +443,9 @@ namespace Havtorn
 
 					const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(spriteComp);
 					const STransform2DComponent* transform2DComp = scene->GetComponent<STransform2DComponent>(spriteComp);
-					GEngine::GetAssetRegistry()->RequestAsset(spriteComp->AssetReference, spriteComp->Owner.GUID);
+					STextureAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(spriteComp->AssetReference, spriteComp->Owner.GUID);
+					if (asset == nullptr)
+						continue;
 
 					if (SComponent::IsValid(transformComp))
 					{
@@ -405,6 +455,7 @@ namespace Havtorn
 							SRenderCommand command;
 							command.Type = ERenderCommandType::GBufferSpriteInstanced;
 							command.U32s.push_back(spriteComp->AssetReference.UID);
+							command.RenderTextures.push_back(asset->RenderTexture);
 							RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 						}
 
@@ -417,6 +468,7 @@ namespace Havtorn
 							SRenderCommand command;
 							command.Type = ERenderCommandType::ScreenSpaceSprite;
 							command.U32s.push_back(spriteComp->AssetReference.UID);
+							command.RenderTextures.push_back(asset->RenderTexture);
 							RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 						}
 
