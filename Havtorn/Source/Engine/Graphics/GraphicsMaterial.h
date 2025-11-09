@@ -3,6 +3,7 @@
 #pragma once
 #include "hvpch.h"
 #include "GraphicsStructs.h"
+#include "RenderingPrimitives/RenderTexture.h"
 
 namespace Havtorn
 {
@@ -10,6 +11,8 @@ namespace Havtorn
 	{
 		SEngineGraphicsMaterial() = default;
 		ENGINE_API SEngineGraphicsMaterial(const SOfflineGraphicsMaterial& offlineMaterial, const std::string& materialName);
+
+		std::map<U32, CStaticRenderTexture> GetRenderTextures(const U64 requesterID) const;
 
 		SRuntimeGraphicsMaterialProperty AlbedoR = {};
 		SRuntimeGraphicsMaterialProperty AlbedoG = {};

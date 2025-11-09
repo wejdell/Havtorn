@@ -112,7 +112,7 @@ namespace Havtorn
 
 			const SEntity& mainCamera = GEngine::GetWorld()->GetMainCamera();
 			if (mainCamera.IsValid())
-				RenderedSceneTextureReference = Manager->GetRenderManager()->GetRenderedSceneTexture(mainCamera.GUID);
+				RenderedSceneTextureReference = Manager->GetRenderManager()->GetRenderTargetTexture(mainCamera.GUID);
 			
 			if (RenderedSceneTextureReference)
 			{

@@ -307,7 +307,7 @@ namespace Havtorn
 		const SEditorLayout& layout = Manager->GetEditorLayout();
 		// TODO.NW: Centralize layout padding for stuff like this
 		const F32 previewWidth = layout.InspectorSize.X - 16.0f;
-		CRenderTexture* previewRenderTexture = Manager->GetRenderManager()->GetRenderedSceneTexture(result.ComponentViewed->Owner.GUID);
+		CRenderTexture* previewRenderTexture = Manager->GetRenderManager()->GetRenderTargetTexture(result.ComponentViewed->Owner.GUID);
 		if (previewRenderTexture != nullptr)
 			GUI::Image((intptr_t)previewRenderTexture->GetShaderResourceView(), SVector2<F32>(previewWidth, previewWidth * (9.0f / 16.0f)));
 		

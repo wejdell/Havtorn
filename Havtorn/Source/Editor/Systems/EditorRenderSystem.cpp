@@ -60,13 +60,19 @@ namespace Havtorn
 						continue;
 
 					const STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(component);
+					if (!SComponent::IsValid(transformComponent))
+						continue;
 
-					GEngine::GetAssetRegistry()->RequestAsset(assetReference.UID, transformComponent->Owner.GUID);
+					STextureAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(assetReference.UID, transformComponent->Owner.GUID);
+					if (asset == nullptr)
+						continue;
+
 					RenderManager->AddSpriteToWorldSpaceInstancedRenderList(assetReference.UID, transformComponent, mainCameraData.TransformComponent, mainCamera.GUID);
 
 					SRenderCommand command;
 					command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
 					command.U32s.push_back(assetReference.UID);
+					command.RenderTextures.push_back(asset->RenderTexture);
 					RenderManager->PushRenderCommand(command, mainCamera.GUID);
 				}
 			};
@@ -88,12 +94,19 @@ namespace Havtorn
 					continue;
 
 				const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(physics3DComponent);
-				GEngine::GetAssetRegistry()->RequestAsset(ColliderWidgetReference.UID, transformComp->Owner.GUID);
+				if (!SComponent::IsValid(transformComp))
+					continue;
+
+				STextureAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(ColliderWidgetReference.UID, transformComp->Owner.GUID);
+				if (asset == nullptr)
+					continue;
+
 				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(ColliderWidgetReference.UID, transformComp, mainCameraData.TransformComponent, mainCamera.GUID);
 
 				SRenderCommand command;
 				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
 				command.U32s.push_back(ColliderWidgetReference.UID);
+				command.RenderTextures.push_back(asset->RenderTexture);
 				RenderManager->PushRenderCommand(command, mainCamera.GUID);
 			}
 		}

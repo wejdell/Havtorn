@@ -5,6 +5,7 @@
 #include "ECS/ECSInclude.h"
 
 #include "GraphicsStructs.h"
+#include "RenderingPrimitives/RenderTexture.h"
 
 namespace Havtorn
 {
@@ -65,10 +66,12 @@ namespace Havtorn
 		std::vector<U32> U32s;
 		std::vector<bool> Flags;
 		std::vector<std::string> Strings;
-		std::vector<SEngineGraphicsMaterial> Materials;
 		std::vector<SDrawCallData> DrawCallData;
+		std::vector<CStaticRenderTexture> RenderTextures;
 		std::vector<SShadowmapViewData> ShadowmapViews;
-		U64 RenderViewEntity = 0;
+		std::vector<SEngineGraphicsMaterial> Materials;
+		std::vector<std::map<U32, CStaticRenderTexture>> MaterialRenderTextures;
+		U64 RenderViewID = 0;
 
 		~SRenderCommand() = default;
 	
