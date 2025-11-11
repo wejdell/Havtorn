@@ -71,14 +71,16 @@ class TemplateCreatorUtil:
             templates[extension] = contents
 
         print()
-        print("Enter words that will be replaced with file name when template is used")
-        print("Multiple can be added. Return to continue")
-        fileNameReplaces = []
+        print("Enter class name, struct name, etc")
+        print("Return to continue")
+        fileNameReplaces = ""
         while (True):
             replaceKey = input("> ")
             if replaceKey == "":
-                break
-            fileNameReplaces.append(replaceKey)  
+                print("! must enter name to replace, such as class or struct name")
+                continue
+            fileNameReplaces = replaceKey  
+            break
         templates = TemplateCreatorUtil.update_templates_with_replace_value(fileNameReplaces, TemplateCreatorUtil.value_replace(), templates)
 
         print()
@@ -124,14 +126,13 @@ class TemplateCreatorUtil:
         return fileTypes
 
     @staticmethod
-    def update_templates_with_replace_value(replaceTargets:list[str], replaceValue:str, templates:dict[str,str]):
+    def update_templates_with_replace_value(replaceTarget:str, replaceValue:str, templates:dict[str,str]):
         updatedTemplates = templates
-        for keys in updatedTemplates:
-            template = updatedTemplates[keys]
-            for replaceTarget in replaceTargets:
-                    if replaceTarget in template:
-                        template = template.replace(replaceTarget, replaceValue)
-            updatedTemplates[keys] = template
+        for key in updatedTemplates:
+            template = updatedTemplates[key]
+            if replaceTarget in template:
+                    template = template.replace(replaceTarget, replaceValue)
+            updatedTemplates[key] = template
         return updatedTemplates
     
     @staticmethod
