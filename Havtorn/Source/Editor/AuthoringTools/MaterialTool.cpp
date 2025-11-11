@@ -51,7 +51,7 @@ namespace Havtorn
 		}
 
 		{ // Menu Bar
-			GUI::BeginChild("MaterialOptions", SVector2<F32>(0.0f, 110.0f));
+			GUI::BeginChild("MaterialOptions", SVector2<F32>(0.0f, 168.0f));
 			GUI::Text(CurrentMaterial->Name.c_str());
 			GUI::SameLine();
 
@@ -103,7 +103,10 @@ namespace Havtorn
 
 			GUI::Separator();
 
-			{
+			{ // Preview Settings
+				const SVector2<F32> settingsPropertySize = SVector2<F32>(256.0f, 136.0f);
+
+				GUI::BeginChild("Cubemap", settingsPropertySize);
 				auto skyboxAssetRep = Manager->GetAssetRepFromName(UGeneralUtils::ExtractFileBaseNameFromPath(PreviewSkylightAssetRef.FilePath)).get();
 
 				intptr_t assetPickerThumbnail = skyboxAssetRep != nullptr ? (intptr_t)skyboxAssetRep->TextureRef.GetShaderResourceView() : intptr_t();
@@ -122,30 +125,52 @@ namespace Havtorn
 					PreviewSkylightAssetRef = SAssetReference(skyboxAssetRep->DirectoryEntry.path().string());
 					PreviewSkylight = assetRegistry->RequestAssetData<STextureAsset>(PreviewSkylightAssetRef, MaterialToolRenderID);
 				}
+				
+				GUI::PushItemWidth(78.0f);
+				GUI::DragFloat("Preview Light Intensity", PreviewLightIntensity, 0.01f);
+				GUI::PopItemWidth();
+				GUI::EndChild();
+				
+				GUI::SameLine();
+
+				GUI::BeginChild("Light", settingsPropertySize);
+				GUI::PushItemWidth(78.0f);
+				GUI::ColorPicker3("Preview Light Color", PreviewLightColor);
+				GUI::PopItemWidth();
+				GUI::EndChild();
 			}
 
 			GUI::EndChild();
 		}
 
 		{ // Properties
-			GUI::BeginChild("Properties", SVector2<F32>(150.0f, 0.0f), { EChildFlag::Borders, EChildFlag::ResizeX });
+			GUI::BeginChild("Properties", SVector2<F32>(212.0f, 0.0f), { EChildFlag::Borders, EChildFlag::ResizeX });
 			GUI::Text("Properties");
 			GUI::Separator();
 
 			auto inspect = [this](SRuntimeGraphicsMaterialProperty& property, const std::string& label) 
 				{
-					F32 thumbnailPadding = 4.0f;
-					F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + thumbnailPadding;
-					F32 panelWidth = 256.0f;
-					I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
+					constexpr F32 materialPropertyWidth = 32.0f;
+					const F32 thumbnailPadding = 4.0f;
+					const F32 cellWidth = materialPropertyWidth + thumbnailPadding;
+					const F32 panelWidth = 256.0f;
+					const I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
 
 					GUI::PushID(label.c_str());
 
 					GUI::TextDisabled(label.c_str());
+					GUI::PushItemWidth(72.0f);
 					GUI::DragFloat("Constant Value", property.ConstantValue, 0.01f, -1.0f, 1.0f, "%.2f");
-					
+					GUI::PopItemWidth();
+
 					if (property.ConstantValue < 0.0f)
 					{
+						I32 channelIndex = UMath::Clamp(STATIC_I32(property.TextureChannelIndex), 0, 3);
+						GUI::PushItemWidth(72.0f);
+						GUI::InputInt("Texture Channel", channelIndex, 1);
+						GUI::PopItemWidth();
+						property.TextureChannelIndex = STATIC_F32(channelIndex);
+
 						std::string assetPath = GEngine::GetAssetRegistry()->GetAssetDatabaseEntry(property.TextureUID);
 						auto assetRep = Manager->GetAssetRepFromName(UGeneralUtils::ExtractFileBaseNameFromPath(assetPath)).get();
 
@@ -155,16 +180,13 @@ namespace Havtorn
 							pickerLabel.append(assetRep->Name);
 						
 						// TODO.NW: Filter away cubemaps with Axel's filtering
-						SAssetPickResult result = GUI::AssetPicker(pickerLabel.c_str(), "Texture", assetPickerThumbnail, "Assets/Textures", columnCount, Manager->GetAssetInspectFunction());
+						SAssetPickResult result = GUI::AssetPicker(pickerLabel.c_str(), "Texture", assetPickerThumbnail, "Assets/Textures", columnCount, Manager->GetAssetInspectFunction(), SVector2<F32>(materialPropertyWidth));
 
 						if (result.State == EAssetPickerState::AssetPicked)
 						{
 							assetRep = Manager->GetAssetRepFromDirEntry(result.PickedEntry).get();
 							property.TextureUID = SAssetReference(assetRep->DirectoryEntry.path().string()).UID;
 						}
-						I32 channelIndex = UMath::Clamp(STATIC_I32(property.TextureChannelIndex), 0, 3);
-						GUI::InputInt("Texture Channel Index", channelIndex, 1);
-						property.TextureChannelIndex = STATIC_F32(channelIndex);
 					}
 
 					GUI::PopID();
@@ -201,7 +223,12 @@ namespace Havtorn
 
 			MaterialRender = Manager->GetRenderManager()->GetRenderTargetTexture(MaterialToolRenderID);
 			if (MaterialRender != nullptr)
+			{
 				GUI::Image((intptr_t)MaterialRender->GetShaderResourceView(), SVector2<F32>(512.0f));
+				IsHoveringViewport = GUI::IsItemHovered();
+			}
+			else
+				IsHoveringViewport = false;
 		}
 
 		GUI::End();
@@ -255,6 +282,9 @@ namespace Havtorn
 
 	void CMaterialTool::OnZoomInput(const SInputAxisPayload payload)
 	{
+		if (!IsHoveringViewport)
+			return;
+
 		const F32 zoomSpeed = -20.0f * GTime::Dt();
 		CurrentZoom += payload.AxisValue * zoomSpeed;
 		CurrentZoom = UMath::Clamp(CurrentZoom, 0.6f, 2.0f);
@@ -281,7 +311,10 @@ namespace Havtorn
 
 	void CMaterialTool::ToggleFreeCam(const SInputActionPayload payload)
 	{
-		IsOrbiting = payload.IsHeld;
+		if (IsHoveringViewport && payload.IsHeld)
+			IsOrbiting = true;
+		else if (!payload.IsHeld)
+			IsOrbiting = false;
 	}
 
 	void CMaterialTool::RenderMaterial()
@@ -329,7 +362,7 @@ namespace Havtorn
 
 		{
 			const SVector4 directionalLightDirection = { 1.0f, 0.0f, 1.0f, 0.0f };
-			const SVector4 directionalLightColor = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 0.25f };
+			const SVector4 directionalLightColor = { PreviewLightColor.AsVector(), PreviewLightIntensity };
 
 			SShadowmapViewData shadowmapView;
 			shadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(8.0f, 8.0f, -8.0f, 8.0f);

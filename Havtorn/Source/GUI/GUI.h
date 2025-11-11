@@ -919,8 +919,8 @@ namespace Havtorn
 
 		static void AddViewportButtons(const std::vector<SAlignedButtonData>& buttons, const SVector2<F32>& buttonSize, const F32 alignWidth);
 
-		static SAssetPickResult AssetPicker(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryFunc& assetInspector);
-		static SAssetPickResult AssetPickerFilter(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType);
+		static SAssetPickResult AssetPicker(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryFunc& assetInspector, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
+		static SAssetPickResult AssetPickerFilter(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
 		static SRenderAssetCardResult RenderAssetCard(const char* label, const bool isSelected, const intptr_t& thumbnailID, const char* typeName, const SColor& color, const SColor& borderColor, void* dragDropPayloadToSet, U64 payLoadSize);
 
 		static bool Selectable(const char* label, const bool selected = false, const std::vector<ESelectableFlag>& flags = {}, const SVector2<F32>& size = SVector2<F32>(0.0f));
