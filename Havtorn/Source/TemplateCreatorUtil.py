@@ -36,6 +36,17 @@ class TemplateCreatorUtil:
         return "description"
 
     @staticmethod
+    def get_templates_map_from(jsonPath:str):
+        templateJson = dict()
+        with open(jsonPath, "r") as templateFile:
+            templateJson = json.load(templateFile)
+        return templateJson
+        
+    @staticmethod
+    def get_default_file_templates_path():
+        return "FileTemplates.json"
+
+    @staticmethod
     def print_name_replace_example():
         print(f"Example - Class Name: <ExampleClass> will be replaced with {TemplateCreatorUtil.value_replace()}:")
         print(f"  class ExampleClass --> class {TemplateCreatorUtil.value_replace()}")
@@ -165,6 +176,9 @@ class TemplateCreatorUtil:
                 print(e)
             return ("", "")
         
+        # TODO Strip the havtorn license (from file) from fileSingleString
+        # replace(license, "")
+        
         return (extension, fileSingleString)
         
     @staticmethod
@@ -177,4 +191,4 @@ class TemplateCreatorUtil:
         return
             
 if __name__ == "__main__":
-    TemplateCreatorUtil.create_and_add_from_input("FileTemplates.json")
+    TemplateCreatorUtil.create_and_add_from_input(TemplateCreatorUtil.get_default_file_templates_path())
