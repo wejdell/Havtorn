@@ -36,6 +36,15 @@ class TemplateCreatorUtil:
         return "description"
 
     @staticmethod
+    def print_name_replace_example():
+        print(f"Example - Class Name: <ExampleClass> will be replaced with {TemplateCreatorUtil.value_replace()}:")
+        print(f"  class ExampleClass --> class {TemplateCreatorUtil.value_replace()}")
+        print("  {")
+        print(f"    ~ExampleClass(); --> ~{TemplateCreatorUtil.value_replace()}();")
+        print("    DoSomething();")
+        print("  }")
+
+    @staticmethod
     def create_and_add_from_input(jsonTemplateFilePath:str):
         if not os.path.isfile(jsonTemplateFilePath):
             print(f"! Error with {jsonTemplateFilePath}")
@@ -48,7 +57,7 @@ class TemplateCreatorUtil:
         while (True):
             name = input("> ")
             if name == "":
-                print("! must give a name")
+                print("<!> must give a name")
                 continue
             break
 
@@ -58,8 +67,8 @@ class TemplateCreatorUtil:
 
         print()
         print('Enter full path of file to extract template from, e.g: "c:/repos/Havtorn/File.h"')
-        print("\\ is automatically replaced by /")
-        print("Multiple files can be added. Return to continue")
+        print("Accepts path with '/' and '\\'")
+        print("1 file can be added per extension-type. Empty input/Return to continue")
         templates = defaultdict(str)
         while (True):
             extractionTarget = input("> ")
@@ -69,15 +78,17 @@ class TemplateCreatorUtil:
             if extension == "" or contents == "":
                 continue
             templates[extension] = contents
+            print("File added")
 
         print()
         print("Enter class name, struct name, etc")
+        TemplateCreatorUtil.print_name_replace_example()
         print("Return to continue")
         fileNameReplaces = ""
         while (True):
             replaceKey = input("> ")
             if replaceKey == "":
-                print("! must enter name to replace, such as class or struct name")
+                print("<!> must enter name to replace, such as class or struct name")
                 continue
             fileNameReplaces = replaceKey  
             break
@@ -88,10 +99,10 @@ class TemplateCreatorUtil:
         time.sleep(0.77)
         TemplateCreatorUtil.display_preview(name, description, templates)
 
-        print("\nProceed to add template to file? y = proceed, anything else = exit")
+        print("\nProceed to add template to file? Return to proceed or 'n' to exit")
         while (True):
             proceed = input("> ")
-            if "Y" in proceed.capitalize():
+            if proceed == "":
                 break
             else: 
                 return
@@ -141,7 +152,7 @@ class TemplateCreatorUtil:
         try:
             (_, extension) = extractionTargetPath.split('.')
         except Exception as e:
-            print(f"! Incompatible file")
+            print(f"<!> Incompatible file")
             return ("", "")
         
         try:
@@ -149,7 +160,7 @@ class TemplateCreatorUtil:
                 fileSingleString = file.read()
         except Exception as e:
             if e is FileNotFoundError:
-                print(f"! File does not exist")
+                print(f"<!> File does not exist")
             else:
                 print(e)
             return ("", "")
