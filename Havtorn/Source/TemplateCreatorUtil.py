@@ -62,7 +62,7 @@ class TemplateCreatorUtil:
             break
 
         print()
-        print('Provide a short description, e.g: "Class-template for inheriting from Node"')
+        print('Provide a short description, e.g: "Class-template for inheriting from ..."')
         description = input("> ")
 
         print()
