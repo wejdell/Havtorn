@@ -221,7 +221,7 @@ namespace Havtorn
 		assetDir.assign(std::filesystem::path(assetPath));
 		auto& assetRep = Manager->GetAssetRepFromDirEntry(assetDir);
 
-		assetRep->TextureRef = Manager->GetResourceManager()->RenderAssetTexure(assetRep->AssetType, assetPath);
+		assetRep->TextureRef = Manager->GetResourceManager()->RenderAssetTexture(assetRep->AssetType, assetPath);
 	}
 
 	void AlignForWidth(F32 width, F32 alignment = 0.5f)

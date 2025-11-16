@@ -757,6 +757,9 @@ namespace Havtorn
 		if (GameThreadRenderViews->contains(renderViewID))
 			return GameThreadRenderViews->at(renderViewID).StaticMeshInstanceData.contains(meshUID);
 
+		if (RenderViewRequests.contains(renderViewID))
+			return RenderViewRequests.at(renderViewID).StaticMeshInstanceData.contains(meshUID);
+
 		return false;
 	}
 
@@ -764,10 +767,12 @@ namespace Havtorn
 	{
 		std::unordered_map<U32, SStaticMeshInstanceData>* renderList = nullptr;
 
-		if (!GameThreadRenderViews->contains(renderViewID))
+		if (GameThreadRenderViews->contains(renderViewID))
+			renderList = &GameThreadRenderViews->at(renderViewID).StaticMeshInstanceData;
+		else if (RenderViewRequests.contains(renderViewID))
+			renderList = &RenderViewRequests.at(renderViewID).StaticMeshInstanceData;
+		else
 			return;
-
-		renderList = &GameThreadRenderViews->at(renderViewID).StaticMeshInstanceData;
 
 		if (!renderList->contains(meshUID))
 			renderList->emplace(meshUID, SStaticMeshInstanceData());
@@ -781,6 +786,9 @@ namespace Havtorn
 		if (GameThreadRenderViews->contains(renderViewID))
 			return GameThreadRenderViews->at(renderViewID).SkeletalMeshInstanceData.contains(meshUID);
 
+		if (RenderViewRequests.contains(renderViewID))
+			return RenderViewRequests.at(renderViewID).SkeletalMeshInstanceData.contains(meshUID);
+
 		return false;
 	}
 
@@ -788,11 +796,12 @@ namespace Havtorn
 	{
 		std::unordered_map<U32, SSkeletalMeshInstanceData>* renderList = nullptr;
 
-		if (!GameThreadRenderViews->contains(renderViewID))
+		if (GameThreadRenderViews->contains(renderViewID))
+			renderList = &GameThreadRenderViews->at(renderViewID).SkeletalMeshInstanceData;
+		else if (RenderViewRequests.contains(renderViewID))
+			renderList = &RenderViewRequests.at(renderViewID).SkeletalMeshInstanceData;
+		else
 			return;
-
-		renderList = &GameThreadRenderViews->at(renderViewID).SkeletalMeshInstanceData;
-		
 
 		if (!renderList->contains(meshUID))
 			renderList->emplace(meshUID, SSkeletalMeshInstanceData());
@@ -811,6 +820,9 @@ namespace Havtorn
 		if (GameThreadRenderViews->contains(renderViewID))
 			return GameThreadRenderViews->at(renderViewID).WorldSpaceSpriteInstanceData.contains(assetReferenceUID);
 
+		if (RenderViewRequests.contains(renderViewID))
+			return RenderViewRequests.at(renderViewID).WorldSpaceSpriteInstanceData.contains(assetReferenceUID);
+
 		return false;
 	}
 
@@ -818,10 +830,12 @@ namespace Havtorn
 	{
 		std::unordered_map<U32, SSpriteInstanceData>* renderList = nullptr;
 
-		if (!GameThreadRenderViews->contains(renderViewID))
+		if (GameThreadRenderViews->contains(renderViewID))
+			renderList = &GameThreadRenderViews->at(renderViewID).WorldSpaceSpriteInstanceData;
+		else if (RenderViewRequests.contains(renderViewID))
+			renderList = &RenderViewRequests.at(renderViewID).WorldSpaceSpriteInstanceData;
+		else
 			return;
-
-		renderList = &GameThreadRenderViews->at(renderViewID).WorldSpaceSpriteInstanceData;
 
 		if (!renderList->contains(assetReferenceUID))
 			renderList->emplace(assetReferenceUID, SSpriteInstanceData());
@@ -836,10 +850,12 @@ namespace Havtorn
 	{
 		std::unordered_map<U32, SSpriteInstanceData>* renderList = nullptr;
 
-		if (!GameThreadRenderViews->contains(renderViewID))
+		if (GameThreadRenderViews->contains(renderViewID))
+			renderList = &GameThreadRenderViews->at(renderViewID).WorldSpaceSpriteInstanceData;
+		else if (RenderViewRequests.contains(renderViewID))
+			renderList = &RenderViewRequests.at(renderViewID).WorldSpaceSpriteInstanceData;
+		else
 			return;
-
-		renderList = &GameThreadRenderViews->at(renderViewID).WorldSpaceSpriteInstanceData;
 
 		if (!renderList->contains(assetReferenceUID))
 			renderList->emplace(assetReferenceUID, SSpriteInstanceData());
@@ -869,6 +885,9 @@ namespace Havtorn
 		if (GameThreadRenderViews->contains(renderViewID))
 			return GameThreadRenderViews->at(renderViewID).ScreenSpaceSpriteInstanceData.contains(assetReferenceUID);
 
+		if (RenderViewRequests.contains(renderViewID))
+			return RenderViewRequests.at(renderViewID).ScreenSpaceSpriteInstanceData.contains(assetReferenceUID);
+
 		return false;
 	}
 
@@ -876,10 +895,12 @@ namespace Havtorn
 	{
 		std::unordered_map<U32, SSpriteInstanceData>* renderList = nullptr;
 
-		if (!GameThreadRenderViews->contains(renderViewID))
+		if (GameThreadRenderViews->contains(renderViewID))
+			renderList = &GameThreadRenderViews->at(renderViewID).ScreenSpaceSpriteInstanceData;
+		else if (RenderViewRequests.contains(renderViewID))
+			renderList = &RenderViewRequests.at(renderViewID).ScreenSpaceSpriteInstanceData;
+		else
 			return;
-
-		renderList = &GameThreadRenderViews->at(renderViewID).ScreenSpaceSpriteInstanceData;
 
 		if (!renderList->contains(assetReferenceUID))
 			renderList->emplace(assetReferenceUID, SSpriteInstanceData());
@@ -921,25 +942,46 @@ namespace Havtorn
 		return nullptr;
 	}
 
-	CRenderTexture CRenderManager::MoveRenderTargetTexture(const U64 renderViewID)
+	bool CRenderManager::GetRenderTargetFromRequest(const U64 renderViewID, CRenderTexture& renderTexture)
 	{
-		CRenderTexture renderTarget = GameThreadRenderViews->at(renderViewID).RenderTarget;
-		GameThreadRenderViews->erase(renderViewID);
-		return std::move(renderTarget);
+		if (!RenderViewRequests.contains(renderViewID))
+			return false;
+
+		CRenderTexture& requestedTexture = RenderViewRequests.at(renderViewID).RenderTarget;
+		if (!requestedTexture.IsShaderResourceValid())
+			return false;
+
+		renderTexture = requestedTexture;
+		RenderViewRequests.erase(renderViewID);
+		return true;
 	}
 
 	void CRenderManager::PushRenderCommand(SRenderCommand command, const U64 renderViewID)
 	{
 		command.RenderViewID = renderViewID;
 
-		if (!GameThreadRenderViews->contains(renderViewID))
+		if (GameThreadRenderViews->contains(renderViewID))
+		{
+			GameThreadRenderViews->at(renderViewID).RenderCommands.push(command);
 			return;
-		
-		GameThreadRenderViews->at(renderViewID).RenderCommands.push(command);
+		}
+
+		if (RenderViewRequests.contains(renderViewID))
+			RenderViewRequests.at(renderViewID).RenderCommands.push(command);
 	}
 
 	void CRenderManager::SwapRenderViews()
 	{
+		for (auto& [id, view] : RenderViewRequests)
+		{
+			if (RenderThreadRenderViews->contains(id))
+			{
+				// NW: Don't assign this until it's ready (has rendered)
+				view.RenderTarget = RenderThreadRenderViews->at(id).RenderTarget;
+				RenderThreadRenderViews->erase(id);
+			}
+		}
+
 		std::swap(GameThreadRenderViews, RenderThreadRenderViews);
 	}
 
@@ -970,9 +1012,18 @@ namespace Havtorn
 		}
 	}
 
+	void CRenderManager::RequestRendering(const U64& id)
+	{
+		if (auto it = std::ranges::find(RenderViewRequesters, id); it != RenderViewRequesters.end())
+			return;
+
+		RenderViewRequests.emplace(id, SRenderView());
+	}
+
 	bool CRenderManager::PrepareRenderViews(const std::vector<U64>& renderViewEntities)
 	{
 		std::vector<U64> renderViewIDs = renderViewEntities;
+		
 		for (const U64& requester : RenderViewRequesters)
 			renderViewIDs.push_back(requester);
 
@@ -1001,6 +1052,21 @@ namespace Havtorn
 			GameThreadRenderViews->erase(renderViewID);
 
 		ClearRenderViewInstanceData();
+
+		for (auto& [renderViewID, view] : RenderViewRequests)
+		{
+			if (!GameThreadRenderViews->contains(renderViewID))
+			{
+				GameThreadRenderViews->emplace(renderViewID, SRenderView());
+				auto& newRenderView = GameThreadRenderViews->at(renderViewID);
+				newRenderView.RenderTarget = RenderTextureFactory.CreateTexture(CurrentWindowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+				newRenderView.RenderCommands = view.RenderCommands;
+				newRenderView.StaticMeshInstanceData = view.StaticMeshInstanceData;
+				newRenderView.SkeletalMeshInstanceData = view.SkeletalMeshInstanceData;
+				newRenderView.WorldSpaceSpriteInstanceData = view.WorldSpaceSpriteInstanceData;
+				newRenderView.ScreenSpaceSpriteInstanceData = view.ScreenSpaceSpriteInstanceData;
+			}
+		}
 
 		return GameThreadRenderViews->size() > 0;
 	}

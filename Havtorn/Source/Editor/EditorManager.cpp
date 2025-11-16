@@ -29,6 +29,7 @@
 #include <Color.h>
 #include <Timer.h>
 #include <Assets/AssetRegistry.h>
+#include <Graphics/GeometryPrimitives.h>
 
 namespace Havtorn
 {
@@ -102,6 +103,12 @@ namespace Havtorn
 	void CEditorManager::BeginFrame()
 	{
 		PlatformManager->UpdateResolution();
+
+		for (auto& assetRep : AssetRepresentations)
+		{
+			if (!assetRep->TextureRef.IsShaderResourceValid())
+				RenderManager->GetRenderTargetFromRequest(SAssetReference(assetRep->Name).UID, assetRep->TextureRef);
+		}
 	}
 
 	void CEditorManager::Render()
@@ -368,7 +375,125 @@ namespace Havtorn
 		rep.Name = entry.path().filename().string();
 		rep.Name = rep.Name.substr(0, rep.Name.length() - 4);
 
-		rep.TextureRef = ResourceManager->RenderAssetTexure(rep.AssetType, filePath);
+		// TODO.NW: Move to EditorResourceManager::RenderAssetTexture, but move all rendering at once and change signature
+		if (rep.AssetType == EAssetType::Material)
+		{
+			U32 assetID = SAssetReference(rep.Name).UID;
+			RenderManager->RequestRendering(assetID);
+			
+			{
+				const F32 radius = 2.0f;
+				SVector location = SVector(0.0f, 0.0f, radius);
+				SMatrix camView = SMatrix::LookAtLH(location, SVector(), SVector::Up).FastInverse();
+				SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), 1.0f, 0.01f, 10.0f);
+
+				SRenderCommand command = SRenderCommand(ERenderCommandType::CameraDataStorage);
+				command.Matrices.emplace_back(camView);
+				command.Matrices.emplace_back(camProjection);
+				RenderManager->PushRenderCommand(command, assetID);
+			}
+
+			{
+				STransformComponent component;
+				SMatrix objectMatrix = SMatrix::CreateRotationFromEuler(SVector(-25.0f, 30.0f, 0.0f)).FastInverse();
+				component.Transform.SetMatrix(objectMatrix);
+				component.Owner = SEntity(assetID);
+
+				SDrawCallData drawCallData;
+				drawCallData.IndexCount = STATIC_U32(GeometryPrimitives::Icosphere.Indices.size());
+				drawCallData.VertexBufferIndex = STATIC_U8(EVertexBufferPrimitives::Icosphere);
+				drawCallData.IndexBufferIndex = STATIC_U8(EIndexBufferPrimitives::Icosphere);
+				drawCallData.VertexStrideIndex = 0;
+				drawCallData.VertexOffsetIndex = 0;
+				drawCallData.MaterialIndex = 0;
+
+				SGraphicsMaterialAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<SGraphicsMaterialAsset>(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
+
+				SRenderCommand command;
+				command.Type = ERenderCommandType::GBufferDataInstanced;
+				command.U32s.push_back(assetID);
+				command.DrawCallData.emplace_back(drawCallData);
+				command.Materials.push_back(asset->Material);
+				command.MaterialRenderTextures.push_back(asset->Material.GetRenderTextures(assetID));
+				RenderManager->AddStaticMeshToInstancedRenderList(assetID, &component, assetID);
+				RenderManager->PushRenderCommand(command, assetID);
+				
+				GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
+			}
+
+
+			STextureAsset* skybox = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(SAssetReference("Resources/DefaultSkybox.hva"), assetID);
+			CStaticRenderTexture skyboxTexture = CStaticRenderTexture();
+
+			if (!skybox)
+				HV_LOG_ERROR("No Default Skylight found for rendering material asset thumbnails");
+			else
+				skyboxTexture = skybox->RenderTexture;
+
+			{
+				const SVector4 directionalLightDirection = { 1.0f, 0.0f, 1.0f, 0.0f };
+				const SVector4 directionalLightColor = SVector4(1.0f);
+
+				SShadowmapViewData shadowmapView;
+				shadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(8.0f, 8.0f, -8.0f, 8.0f);
+
+				SRenderCommand command;
+				command.Type = ERenderCommandType::DeferredLightingDirectional;
+				command.Vectors.push_back(directionalLightDirection);
+				command.Colors.push_back(directionalLightColor);
+				command.ShadowmapViews.push_back(shadowmapView);
+				command.RenderTextures.push_back(skyboxTexture);
+				RenderManager->PushRenderCommand(command, assetID);
+			}
+
+			{
+				SRenderCommand command;
+				command.RenderTextures.push_back(skyboxTexture);
+				command.Type = ERenderCommandType::Skybox;
+				RenderManager->PushRenderCommand(command, assetID);
+			}
+			GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference("Resources/DefaultSkybox.hva"), assetID);
+
+			{
+				SRenderCommand command;
+				command.Type = ERenderCommandType::PreLightingPass;
+				RenderManager->PushRenderCommand(command, assetID);
+			}
+
+			{
+				SRenderCommand command;
+				command.Type = ERenderCommandType::PostBaseLightingPass;
+				RenderManager->PushRenderCommand(command, assetID);
+			}
+
+			{
+				SRenderCommand command;
+				command.Type = ERenderCommandType::Bloom;
+				RenderManager->PushRenderCommand(command, assetID);
+			}
+
+			{
+				SRenderCommand command;
+				command.Type = ERenderCommandType::Tonemapping;
+				RenderManager->PushRenderCommand(command, assetID);
+			}
+
+			{
+				SRenderCommand command;
+				command.Type = ERenderCommandType::AntiAliasing;
+				RenderManager->PushRenderCommand(command, assetID);
+			}
+
+			{
+				SRenderCommand command;
+				command.Type = ERenderCommandType::GammaCorrection;
+				RenderManager->PushRenderCommand(command, assetID);
+			}
+		}
+		else
+		{
+			rep.TextureRef = ResourceManager->RenderAssetTexture(rep.AssetType, filePath);
+		}
 
 		switch (rep.AssetType)
 		{

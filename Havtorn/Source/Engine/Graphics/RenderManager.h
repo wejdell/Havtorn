@@ -135,13 +135,14 @@ namespace Havtorn
 		void SetWorldMainCameraEntity(const SEntity& entity);
 		void SetWorldPlayState(EWorldPlayState playState);
 		[[nodiscard]] ENGINE_API CRenderTexture* GetRenderTargetTexture(const U64 renderViewID) const;
-		[[nodiscard]] ENGINE_API CRenderTexture MoveRenderTargetTexture(const U64 renderViewID);
+		ENGINE_API bool GetRenderTargetFromRequest(const U64 renderViewID, CRenderTexture& renderTexture);
 		ENGINE_API void PushRenderCommand(SRenderCommand command, const U64 renderViewEntity);
 		void SwapRenderViews();
 		void ClearRenderViewInstanceData();
 
 		ENGINE_API void RequestRenderView(const U64& id);
 		ENGINE_API void UnrequestRenderView(const U64& id);
+		ENGINE_API void RequestRendering(const U64& id);
 		bool PrepareRenderViews(const std::vector<U64>& renderViewEntities);
 
 		const SVector2<U16>& GetCurrentWindowResolution() const;
@@ -379,7 +380,11 @@ namespace Havtorn
 		std::map<U64, SRenderView>* GameThreadRenderViews = &RenderViewsA;
 		std::map<U64, SRenderView>* RenderThreadRenderViews = &RenderViewsB;
 
+		// TODO.NW: Figure out better naming for these. The former is used for looser requesting where the target is not owned by the requester,
+		// but the former is intended to be requested once and persist until is has been rendered to, so ownership can transfer back outside of
+		// the render manager
 		std::vector<U64> RenderViewRequesters;
+		std::map<U64, SRenderView> RenderViewRequests;
 
 		SVector4 ClearColor = SVector4(0.5f, 0.5f, 0.5f, 1.0f);
 
