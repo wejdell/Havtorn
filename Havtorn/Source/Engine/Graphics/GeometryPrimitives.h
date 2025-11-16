@@ -275,7 +275,7 @@ namespace Havtorn
 			return {vertices, indices};
 		}
 
-		static SMeshData Icosphere = CreateIcosphere(2);
+		static SMeshData Icosphere = CreateIcosphere(3);
 
 #pragma region SPRIMITIVES_FOR_DEBUG_SHAPES
 
