@@ -15,6 +15,7 @@ class FileCreatorResources:
         time.sleep(1)
         return
 
+    # TODO add way to change the comment-char used e.g replace "//" with language appropriate
     @staticmethod
     def get_havtorn_license():
         # No exception handling: 

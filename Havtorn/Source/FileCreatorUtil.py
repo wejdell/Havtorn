@@ -6,100 +6,42 @@ import time
 
 from ValidationUtils import ValidationUtil
 from TemplateCreatorUtil import TemplateCreatorUtil
+from FileCreatorResources import FileCreatorResources
+from FileCreatorResources import HavtornFolders
+from FileCreatorResources import HavtornFolderUtil
 
 # TODO: Look over if it is possible to restructure how CMakeLists and this script tracks directories -> Generate CMakeLists through script?
 
 class FileCreatorUtil:
-    # class variables, should not be altered
-    # TODO: If more filetypes are supported the characters used for the license comment need to be filtered, same goes for namespace structure
-    INPUT_CHARACTERS = ">> "
-    CMAKE_LIST_PATH = "CMakeLists.txt"
-    GENERATOR_SCRIPT_PATH = "./../ProjectSetup/GenerateProjectFiles.bat"
-    LICENSE_PATH = "./../ProjectSetup/License.txt"
-    
-    core = "core"
-    platform = "platform"
-    gui = "gui"
-    imgui = "imgui"
-    imguizmo = "imguizmo"
-    imguinode = "imguinode"
-    engine = "engine"
-    shaderinclude = "shaderinclude"
-    vertex = "vertexshader"
-    geometry = "geometryshader"
-    pixel = "pixelshader"
-    game = "game"
-    editor = "editor"
-    launcher = "launcher"
-    
-    mainFolderChoices = {
-        core,
-        platform,
-        gui,
-        imgui,
-        imguizmo,
-        imguinode,
-        engine,
-        shaderinclude,
-        vertex,
-        geometry,
-        pixel,
-        game,
-        editor,
-        launcher
-    }
-    # So we always show them in the same order
-    mainFolderChoices = sorted(mainFolderChoices)
+    FOLDER_CHOICES = [
+        HavtornFolders.Core,
+        HavtornFolders.Platform,
+        HavtornFolders.GUI,
+        HavtornFolders.ImGui,
+        HavtornFolders.ImGuizmo,
+        HavtornFolders.ImGuiNode,
+        HavtornFolders.Engine,
+        HavtornFolders.ShaderIncludes,
+        HavtornFolders.VertexShaders,
+        HavtornFolders.GeometryShaders,
+        HavtornFolders.PixelShaders,
+        HavtornFolders.Game,
+        HavtornFolders.Editor,
+        HavtornFolders.Launcher,
+    ]
 
-    choiceToCMakeCollection = {
-        core:"CORE_FILES",
-        platform:"PLATFORM_FILES",
-        gui:"GUI_FILES",
-        imgui:"IMGUI_FILES",
-        imguizmo:"IMGUI_FILES",
-        imguinode:"IMGUI_FILES",
-        engine:"ENGINE_FILES",
-        shaderinclude:"SHADER_INCLUDES",
-        vertex:"VERTEX_SHADERS",
-        geometry:"GEOMETRY_SHADERS",
-        pixel:"PIXEL_SHADERS",
-        game:"GAME_FILES",
-        editor:"EDITOR_FILES",
-        launcher:"LAUNCHER_FILES",
-    }
-
-    shaderFolder = "Engine/Graphics/Shaders/"
-    choiceToFolder = {
-        core:"Core/",
-        platform:"Platform/",
-        gui:"GUI/",
-        imgui:"../External/imgui/",
-        imguizmo:"../External/ImGuizmo/",
-        imguinode:"../External/imgui-node-editor/",
-        engine:"Engine/",
-        shaderinclude:shaderFolder + "Includes/",
-        vertex:shaderFolder,
-        geometry:shaderFolder,
-        pixel:shaderFolder,
-        game:"Game/",
-        editor:"Editor/",
-        launcher:"Launcher/",
-    }
-
-    addFileSingle = "-f"
-    undoFileCommand = "-u"
-    switchMainCommand = "-m"
-    exitCommand = "-e"
+    CMD_ADD_EMPTY = "-f"
+    CMD_UNDO = "-u"
+    CMD_SWITCH_FOLDER = "-m"
+    CMD_EXIT = "-e"
 
     @classmethod
     def __init__(self):
-        self.mainFolder = ""
-        # (mainFolder, template, subFoldersAndFile> 
+        self.mainFolder = HavtornFolders.Core
+        # (HavtornFolders, template, subFoldersAndFile> 
         self.filesToAdd = []
         self.templatesMap = TemplateCreatorUtil.get_templates_map_from(TemplateCreatorUtil.get_default_file_templates_path())
-        # No exception handling: it should blow up if we can't access the license file
-        with open(self.LICENSE_PATH, "r") as file:
-            self.havtornLicense = file.read()
+        self.havtornLicense = FileCreatorResources.get_havtorn_license()
         return
 
     @classmethod
@@ -108,25 +50,24 @@ class FileCreatorUtil:
         return
 
     @classmethod
-    def on_error(self, errorMessage:str):
-        print(f'<!> {errorMessage}')
-        time.sleep(1)
-        return
-
-    @classmethod
     def select_main_folder(self):
         self.print_command_separator()
         print("Pick a main folder:")
-        for choice in self.mainFolderChoices:
-            print("\t" + choice)
+        for choice in self.FOLDER_CHOICES:
+            print("\t" + choice.name)
 
         self.print_command_separator()
         while(True):
-            self.mainFolder=input(self.INPUT_CHARACTERS)
-            if self.mainFolder in self.mainFolderChoices:
-                break
-            else:
-                self.on_error(f'invalid option "{self.mainFolder}"')
+            userChoice = input(FileCreatorResources.INPUT_CHARACTERS)
+            # TODO some pythonic way of doing this check should exist
+            for choice in self.FOLDER_CHOICES:
+                if choice.name.lower() != userChoice.lower():
+                    continue
+                
+                self.mainFolder = choice
+                return
+            
+            FileCreatorResources.print_error(f'invalid option "{userChoice}"')
         return
     
     @classmethod
@@ -134,14 +75,14 @@ class FileCreatorUtil:
         self.print_command_separator()
         print(f' Run command to add folder(s) & file, example: "-<command> F1/f2/File"')
         print(f' Commands:')
-        print(f'  {self.addFileSingle} add an empty file, requires specifying extension e.g: "{self.addFileSingle} F1/f2/File.h"')
-        print(f'  {self.undoFileCommand} to undo, example: {self.undoFileCommand} 1')
-        print(f'  {self.switchMainCommand} to change main folder')
-        print(f'  {self.exitCommand} close without generating')
+        print(f'  {self.CMD_ADD_EMPTY} add an empty file, requires extension e.g: "{self.CMD_ADD_EMPTY} F1/f2/File.h"')
+        print(f'  {self.CMD_UNDO} to undo, example: {self.CMD_UNDO} 1')
+        print(f'  {self.CMD_SWITCH_FOLDER} to change main folder')
+        print(f'  {self.CMD_EXIT} close without generating')
         print(f' Commands with templates:')
         for command in self.templatesMap:
             print(f'  -{command} {self.templatesMap[command][TemplateCreatorUtil.key_description()]}')
-        print(f' Run TemplateCreatorUtil to add new template(s)')
+        print(f' Run {TemplateCreatorUtil.__name__} to add new template(s)')
         print()
         print(f'  Return/ empty input to continue with generation')
         return
@@ -149,7 +90,7 @@ class FileCreatorUtil:
     @classmethod
     def print_status(self):
         self.print_command_separator()
-        print(f"Main folder: {self.choiceToFolder[self.mainFolder]}")
+        print(f"Main folder: {self.mainFolder.name} - {HavtornFolderUtil.safe_get_folder_path(self.mainFolder)}")
         print(f"Files:")
         for i, (_, _, file) in enumerate(self.filesToAdd):
             print(f'+ [{i + 1}] {file}')
@@ -194,7 +135,7 @@ class FileCreatorUtil:
 
             try:
                 with open(fileToAdd, "x") as file:
-                    file.write(self.havtornLicense)
+                    file.write(self.havtornLicense + "\n")
                     
                     if template in self.templatesMap:
                         for fileTypes in self.templatesMap[template][TemplateCreatorUtil.key_file_types()]:
@@ -212,16 +153,16 @@ class FileCreatorUtil:
         return
 
     @classmethod
-    def add_file_to_cmake(self, mainFolder:str, fileToAdd:str):
+    def add_file_to_cmake(self, mainFolder:HavtornFolders, fileToAdd:str):
+        cmakeTarget = HavtornFolderUtil.CMAKE_KEYS[mainFolder]
+        entry = f"\t{fileToAdd}\n"
+        fileAsLineList = list[str]
         # Read CMakeLists into a list of lines, append entry and rewrite file
-        cmakeTarget=f"set({self.choiceToCMakeCollection[mainFolder]}\n"
-        entry=f"\t{fileToAdd}\n"
-        fileAsLineList=list[str]
-        with open(self.CMAKE_LIST_PATH, "r") as cmakeFile: 
+        with open(FileCreatorResources.CMAKE_LIST_PATH, "r") as cmakeFile: 
             fileAsLineList = cmakeFile.readlines()
             fileAsLineList.insert(fileAsLineList.index(cmakeTarget) + 1, entry)
             cmakeFile.flush()
-        with open(self.CMAKE_LIST_PATH, "w") as cmakeFile:
+        with open(FileCreatorResources.CMAKE_LIST_PATH, "w") as cmakeFile:
             cmakeFile.writelines(fileAsLineList)
         return
         
@@ -230,8 +171,9 @@ class FileCreatorUtil:
         self.generate_files()
         for (mainFolder, _, fileToAdd) in self.filesToAdd:
             self.add_file_to_cmake(mainFolder, fileToAdd)
+        
         print("\nRegenerating project ...")
-        subprocess.call([os.path.abspath(self.GENERATOR_SCRIPT_PATH), "nopause"])
+        subprocess.call([os.path.abspath(FileCreatorResources.GENERATOR_PATH), "nopause"])
         self.filesToAdd = []
         return
 
@@ -250,7 +192,7 @@ class FileCreatorUtil:
         if not self.valid_file_and_extension(fileName):
             return False
         
-        pendingAddition = (self.mainFolder, "custom", self.choiceToFolder[self.mainFolder] + fileToAdd)                        
+        pendingAddition = (self.mainFolder, "custom", HavtornFolderUtil.FOLDER_PATHS[self.mainFolder] + fileToAdd)                        
         if pendingAddition in self.filesToAdd:
             self.on_error(f"trying to add duplicate {fileToAdd}")
             return False
@@ -276,9 +218,9 @@ class FileCreatorUtil:
             return False
         
         for fileType in self.templatesMap[template][TemplateCreatorUtil.key_file_types()]:
-            pendingAddition = (self.mainFolder, template, self.choiceToFolder[self.mainFolder] + fileToAddSplit + "." + fileType[TemplateCreatorUtil.key_extension()])                        
+            pendingAddition = (self.mainFolder, template,  HavtornFolderUtil.FOLDER_PATHS[self.mainFolder] + fileToAddSplit + "." + fileType[TemplateCreatorUtil.key_extension()])                        
             if pendingAddition in self.filesToAdd:
-                self.on_error(f"trying to add duplicate {fileToAdd}")
+                FileCreatorResources.print_error(f"trying to add duplicate {fileToAdd}")
                 continue
             self.filesToAdd.append(pendingAddition)
 
@@ -290,10 +232,10 @@ class FileCreatorUtil:
             self.print_options()
             self.print_status()
 
-            userInput = input(self.INPUT_CHARACTERS)
+            userInput = input(FileCreatorResources.INPUT_CHARACTERS)
 
             # Process commands without args
-            if userInput == self.switchMainCommand:
+            if userInput == self.CMD_SWITCH_FOLDER:
                 self.select_main_folder()
                 continue 
             
@@ -302,14 +244,14 @@ class FileCreatorUtil:
                 self.print_command_separator()
                 return
             
-            if userInput == self.exitCommand:
+            if userInput == self.CMD_EXIT:
                 return
 
             # Process commands with args
             try:
                 (command, args) = userInput.split(" ")
             except:
-                self.on_error("Error processing input, expected: -<command> <folder/file>")
+                FileCreatorResources.print_error("Error processing input, expected: -<command> <folder/file>")
                 continue
 
             for templateName in self.templatesMap:
@@ -317,12 +259,12 @@ class FileCreatorUtil:
                     if not self.try_add_file_for_template(args, templateName):
                         break
             
-            if command == self.addFileSingle: 
+            if command == self.CMD_ADD_EMPTY: 
                 self.try_add_file_with_extension(args)
                 continue
             
             # TODO: nice to have - handle multiple indices at once
-            if command == self.undoFileCommand:
+            if command == self.CMD_UNDO:
                 filesToUndo = re.findall('[0-9]+', args)
                 if len(filesToUndo) == 0:
                     continue

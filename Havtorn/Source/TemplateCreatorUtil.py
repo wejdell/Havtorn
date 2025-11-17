@@ -3,6 +3,7 @@ import os.path
 import time
 from collections import defaultdict
 from ValidationUtils import ValidationUtil
+from FileCreatorResources import FileCreatorResources
 
 class TemplateCreatorUtil:
     # Json object example:
@@ -66,15 +67,15 @@ class TemplateCreatorUtil:
         print()
         print('Enter name for template. Recommended to use single word, e.g: "node"')
         while (True):
-            name = input("> ")
+            name = input(FileCreatorResources.INPUT_CHARACTERS)
             if name == "":
-                print("<!> must give a name")
+                FileCreatorResources.print_error("must give a name")
                 continue
             break
 
         print()
         print('Provide a short description, e.g: "Class-template for inheriting from ..."')
-        description = input("> ")
+        description = input(FileCreatorResources.INPUT_CHARACTERS)
 
         print()
         print('Enter full path of file to extract template from, e.g: "c:/repos/Havtorn/File.h"')
@@ -82,7 +83,7 @@ class TemplateCreatorUtil:
         print("1 file can be added per extension-type. Empty input/Return to continue")
         templates = defaultdict(str)
         while (True):
-            extractionTarget = input("> ")
+            extractionTarget = input(FileCreatorResources.INPUT_CHARACTERS)
             if extractionTarget == "":
                 break
             (extension, contents) = TemplateCreatorUtil.extract_extension_and_contents(extractionTarget)
@@ -97,9 +98,9 @@ class TemplateCreatorUtil:
         print("Return to continue")
         fileNameReplaces = ""
         while (True):
-            replaceKey = input("> ")
+            replaceKey = input(FileCreatorResources.INPUT_CHARACTERS)
             if replaceKey == "":
-                print("<!> must enter name to replace, such as class or struct name")
+                FileCreatorResources.print_error("must enter name to replace, such as class or struct name")
                 continue
             fileNameReplaces = replaceKey  
             break
@@ -112,7 +113,7 @@ class TemplateCreatorUtil:
 
         print("\nProceed to add template to file? Return to proceed or 'n' to exit")
         while (True):
-            proceed = input("> ")
+            proceed = input(FileCreatorResources.INPUT_CHARACTERS)
             if proceed == "":
                 break
             else: 
@@ -163,15 +164,18 @@ class TemplateCreatorUtil:
         try:
             (_, extension) = extractionTargetPath.split('.')
         except Exception as e:
-            print(f"<!> Incompatible file")
+            FileCreatorResources.print_error("Incompatible file")
             return ("", "")
         
+        havtornLicense = FileCreatorResources.get_havtorn_license()
+
         try:
             with open(extractionTargetPath, "r") as file:
                 fileSingleString = file.read()
+                fileSingleString = fileSingleString.replace(havtornLicense, "")
         except Exception as e:
             if e is FileNotFoundError:
-                print(f"<!> File does not exist")
+                FileCreatorResources.print_error("File does not exist")
             else:
                 print(e)
             return ("", "")
