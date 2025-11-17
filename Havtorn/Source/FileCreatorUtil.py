@@ -309,12 +309,10 @@ class FileCreatorUtil:
 if __name__ == "__main__":
     fileCreator = FileCreatorUtil()
     print("-- File Creation Utility --")
-    print("Select a main folder")
     fileCreator.select_main_folder()
     print()
-    print("Add files and then generate")
+    print("Add any number of files and then generate")
     print("Use arrow-keys up/down to scroll between previous input, arrow-keys left/right to move the cursor")
     fileCreator.process_commands()
     print("Closing ...")
     time.sleep(0.5)
-    
