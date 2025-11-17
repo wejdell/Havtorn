@@ -30,6 +30,23 @@ class FileCreatorUtil:
         HavtornFolders.Launcher,
     ]
 
+    ALT_CMD_FOLDER_CHOICES = {
+        HavtornFolders.Core:["c"],
+        HavtornFolders.Platform:["p", "pl", "pt"],
+        HavtornFolders.GUI:["g"],
+        HavtornFolders.ImGui:["im"],
+        HavtornFolders.ImGuizmo:["izmo"],
+        HavtornFolders.ImGuiNode:["node"],
+        HavtornFolders.Engine:["engi", "ngn"],
+        HavtornFolders.ShaderIncludes:["si"],
+        HavtornFolders.VertexShaders:["vx", "vs"],
+        HavtornFolders.GeometryShaders:["gs"],
+        HavtornFolders.PixelShaders:["px", "ps"],
+        HavtornFolders.Game:["g"],
+        HavtornFolders.Editor:["e"],
+        HavtornFolders.Launcher:["l"],
+    }
+
     CMD_ADD_EMPTY = "-f"
     CMD_UNDO = "-u"
     CMD_SWITCH_FOLDER = "-m"
@@ -54,15 +71,23 @@ class FileCreatorUtil:
         self.print_command_separator()
         print("Pick a main folder:")
         for choice in self.FOLDER_CHOICES:
-            print("\t" + choice.name)
+            text = "  " + choice.name
+            if choice in self.ALT_CMD_FOLDER_CHOICES:
+                blankCount = 20 - len(choice.name)
+                text += " " * blankCount + "alt: " 
+                for alt in self.ALT_CMD_FOLDER_CHOICES[choice]:
+                    text += alt + ", "
+            print(text)
 
         self.print_command_separator()
         while(True):
             userChoice = input(FileCreatorResources.INPUT_CHARACTERS)
             # TODO some pythonic way of doing this check should exist
             for choice in self.FOLDER_CHOICES:
-                if choice.name.lower() != userChoice.lower():
-                    continue
+                userChoice = userChoice.lower()
+                if choice.name.lower() != userChoice:
+                    if choice not in self.ALT_CMD_FOLDER_CHOICES or userChoice not in self.ALT_CMD_FOLDER_CHOICES[choice]:
+                        continue
                 
                 self.mainFolder = choice
                 return
@@ -282,16 +307,13 @@ class FileCreatorUtil:
             continue
 
 if __name__ == "__main__":
-    print("** File Creation Utility **")
-    print("Instructions:")
-    print(" 1 - Select a main folder")
-    print(" 2 - Add files")
-    print(" 3 - Generate files and update project files")
-    print(" Use arrow-keys up/down to scroll between previous input, arrow-keys left/right to move the cursor")
-    print()
-    time.sleep(0.75)
     fileCreator = FileCreatorUtil()
+    print("-- File Creation Utility --")
+    print("Select a main folder")
     fileCreator.select_main_folder()
+    print()
+    print("Add files and then generate")
+    print("Use arrow-keys up/down to scroll between previous input, arrow-keys left/right to move the cursor")
     fileCreator.process_commands()
     print("Closing ...")
     time.sleep(0.5)

@@ -12,10 +12,9 @@ class FileCreatorResources:
     @staticmethod
     def print_error(errorMessage:str):
         print(f'<!> {errorMessage}')
-        time.sleep(1)
+        time.sleep(1) # attempt at improving visibility of error
         return
 
-    # TODO add way to change the comment-char used e.g replace "//" with language appropriate
     @staticmethod
     def get_havtorn_license():
         # No exception handling: 
@@ -24,6 +23,7 @@ class FileCreatorResources:
         with open(FileCreatorResources.LICENSE_PATH, "r") as file:
             havtornLicence = file.read()
         
+        # TODO add way to change the comment-char used e.g replace "//" with language appropriate char
         return havtornLicence
 
 class HavtornFolders(Enum):
@@ -153,7 +153,6 @@ if __name__ == "__main__":
     
     FileCreatorResources.get_havtorn_license()
     FileCreatorResources.print_error("test error")
-
 
     print()
     

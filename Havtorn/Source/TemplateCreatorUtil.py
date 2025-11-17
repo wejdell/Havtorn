@@ -180,9 +180,6 @@ class TemplateCreatorUtil:
                 print(e)
             return ("", "")
         
-        # TODO Strip the havtorn license (from file) from fileSingleString
-        # replace(license, "")
-        
         return (extension, fileSingleString)
         
     @staticmethod
