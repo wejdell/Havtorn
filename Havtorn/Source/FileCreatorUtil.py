@@ -33,7 +33,6 @@ class FileCreatorUtil:
     ALT_CMD_FOLDER_CHOICES = {
         HavtornFolders.Core:["c"],
         HavtornFolders.Platform:["p", "pl", "pt"],
-        HavtornFolders.GUI:["g"],
         HavtornFolders.ImGui:["im"],
         HavtornFolders.ImGuizmo:["izmo"],
         HavtornFolders.ImGuiNode:["node"],
