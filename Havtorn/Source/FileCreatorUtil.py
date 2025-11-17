@@ -317,3 +317,4 @@ if __name__ == "__main__":
     fileCreator.process_commands()
     print("Closing ...")
     time.sleep(0.5)
+    
