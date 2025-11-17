@@ -33,86 +33,39 @@ namespace Havtorn
 
         if (GUI::BeginPopup(PopupName))
         {
-            if (GUI::MenuItem("New")) 
+            if (GUI::MenuItem("New Scene")) 
             {
-                GEngine::GetWorld()->RemoveScene(0);
+                GEngine::GetWorld()->ClearScenes();
                 GEngine::GetWorld()->CreateScene<CGameScene>();
-                if (GEngine::GetWorld()->GetActiveScenes().size() > 0)
-                {
-                    CScene* activeScene = GEngine::GetWorld()->GetActiveScenes()[0].get();
-                    activeScene->Init("New Scene");
-                    activeScene->Init3DDefaults();
-                    Manager->SetCurrentScene(activeScene);
-                }
-                else
-                {
-                    Manager->SetCurrentScene(nullptr);
-                }
+                CScene* newScene = Manager->GetScenes().back().get();
+                newScene->Init("New Scene");
+                newScene->Init3DDefaults();
+                Manager->SetCurrentWorkingScene(0);
             }
 
-            if (GEngine::GetWorld()->GetActiveScenes().size() > 0)
+            if (GUI::MenuItem("Save Current Scene", 0, false, !GEngine::GetWorld()->GetActiveScenes().empty() && Manager->GetCurrentWorkingScene() != nullptr))
             {
-                if (GUI::MenuItem("Save Scene"))
-                {
-                    GEngine::GetWorld()->SaveActiveScene("Assets/Scenes/" + GEngine::GetWorld()->GetActiveScenes()[0]->SceneName.AsString() + ".hva");
-                }
-            }
-
-            if (GUI::BeginMenu("Open"))
-            {
-                if (GUI::MenuItem("Demo Scene"))
-                {
-                    GEngine::GetWorld()->ChangeScene<CGameScene>("Assets/Scenes/DemoScene.hvs");
-                    Manager->SetCurrentScene(GEngine::GetWorld()->GetActiveScenes()[0].get());
-                }
-
-                if (GUI::MenuItem("Test Scene"))
-                {
-                    GEngine::GetWorld()->ChangeScene<CGameScene>("Assets/Scenes/TestScene.hvs");
-                    Manager->SetCurrentScene(GEngine::GetWorld()->GetActiveScenes()[0].get());
-                }
-
-                //GUI::MenuItem("fish_hat.c");
-                //GUI::MenuItem("fish_hat.inl");
-                //GUI::MenuItem("fish_hat.h");
-                //if (GUI::BeginMenu("More.."))
-                //{
-                //    GUI::MenuItem("Hello");
-                //    GUI::MenuItem("Sailor");
-                //    //if (GUI::BeginMenu("Recurse.."))
-                //    //{
-                //    //}
-                //    GUI::EndMenu();
-                //}
-                GUI::EndMenu();
+                CScene* currentScene = Manager->GetCurrentWorkingScene();
+                if (currentScene != nullptr)
+                    GEngine::GetWorld()->SaveActiveScene("Assets/Scenes/" + currentScene->SceneName.AsString() + ".hva", currentScene);     
             }
 
             if (GUI::MenuItem("Clear Scenes")) 
             {
                 GEngine::GetWorld()->ClearScenes();
-                Manager->SetCurrentScene(nullptr);
+                Manager->SetCurrentWorkingScene(-1);
             }
 
             if (GUI::MenuItem("Generate 3D Demo Scene"))
             {
                 GEngine::GetWorld()->OpenDemoScene<CGameScene>(true);
-                Manager->SetCurrentScene(GEngine::GetWorld()->GetActiveScenes().back().get());
+                Manager->SetCurrentWorkingScene(0);
             }
 
             if (GUI::MenuItem("Generate 2D Demo Scene"))
             {
                 GEngine::GetWorld()->OpenDemoScene<CGameScene>(false);
-                Manager->SetCurrentScene(GEngine::GetWorld()->GetActiveScenes().back().get());
-            }
-
-            if (GUI::MenuItem("Save Demo Scene"))
-            {
-                GEngine::GetWorld()->SaveActiveScene("Assets/Scenes/DemoScene.hva");
-            }
-
-            if (GUI::MenuItem("Save Test Scene", "Ctrl+S")) 
-            {
-                GEngine::GetWorld()->SaveActiveScene("Assets/Scenes/TestScene.hva");
+                Manager->SetCurrentWorkingScene(0);
             }
 
             GUI::Separator();

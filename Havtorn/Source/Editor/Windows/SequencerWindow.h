@@ -204,7 +204,7 @@
 //    inline void CSequencerWindow::AddKeyframe(Havtorn::EComponentType componentType)
 //    {
 //        Havtorn::SEntity* entity = Manager->GetSelectedEntity();
-//        Havtorn::CScene* scene = Manager->GetCurrentScene();
+//        Havtorn::CScene* scene = Manager->GetCurrentWorkingScene();
 //
 //        if (entity == nullptr || scene == nullptr)
 //            return;

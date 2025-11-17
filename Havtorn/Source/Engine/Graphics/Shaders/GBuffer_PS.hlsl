@@ -32,6 +32,7 @@ GBufferOutput main(VertexModelToPixel input)
         RecreateZ(normal);
     else
         normal.z = DetermineProperty(MaterialProperties[NORMAL_Z], vertToPixel.UV);
+    normal = normalize(normal);
     
     float ambientOcclusion = DetermineProperty(MaterialProperties[AMBIENT_OCCLUSION], vertToPixel.UV);
     float metalness = DetermineProperty(MaterialProperties[METALNESS], vertToPixel.UV);

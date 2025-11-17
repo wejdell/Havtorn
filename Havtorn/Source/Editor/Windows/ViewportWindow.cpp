@@ -8,6 +8,7 @@
 #include "Graphics/RenderingPrimitives/RenderTexture.h"
 
 #include <Scene/Scene.h>
+#include <ECS/ComponentAlgo.h>
 #include <Assets/AssetRegistry.h>
 #include <MathTypes/MathUtilities.h>
 #include <PlatformManager.h>
@@ -109,7 +110,9 @@ namespace Havtorn
 				GUI::EndPopup();
 			}
 
-			RenderedSceneTextureReference = &(Manager->GetRenderManager()->GetRenderedSceneTexture(0));
+			const SEntity& mainCamera = GEngine::GetWorld()->GetMainCamera();
+			if (mainCamera.IsValid())
+				RenderedSceneTextureReference = Manager->GetRenderManager()->GetRenderTargetTexture(mainCamera.GUID);
 			
 			if (RenderedSceneTextureReference)
 			{
@@ -132,8 +135,8 @@ namespace Havtorn
 			GUI::SetGizmoDrawList();
 
 			// TODO.NW: Unnestle these ifs
-			CScene* firstActiveScene = GEngine::GetWorld()->GetActiveScenes().empty() ? nullptr : GEngine::GetWorld()->GetActiveScenes()[0].get();
-			if (firstActiveScene != nullptr)
+			CScene* currentScene = Manager->GetCurrentWorkingScene();
+			if (currentScene != nullptr)
 			{
 				if (GUI::BeginDragDropTarget())
 				{
@@ -141,17 +144,17 @@ namespace Havtorn
 					if (payload.Data != nullptr)
 					{
 						SEditorAssetRepresentation* payloadAssetRep = reinterpret_cast<SEditorAssetRepresentation*>(payload.Data);
-						UpdatePreviewEntity(firstActiveScene, payloadAssetRep);
+						UpdatePreviewEntity(currentScene, payloadAssetRep);
 						
-						if (firstActiveScene->PreviewEntity.IsValid())
+						if (currentScene->PreviewEntity.IsValid())
 							GUI::SetTooltip("Create Entity?");
 						else
 							GUI::SetTooltip("Asset type not supported yet!");
 
 						if (payload.IsDelivery)
 						{
-							Manager->SetSelectedEntity(firstActiveScene->PreviewEntity);
-							firstActiveScene->PreviewEntity = SEntity::Null;
+							Manager->SetSelectedEntity(currentScene->PreviewEntity);
+							currentScene->PreviewEntity = SEntity::Null;
 						}
 					}
 
@@ -159,11 +162,11 @@ namespace Havtorn
 				}
 				else
 				{
-					if (firstActiveScene->PreviewEntity.IsValid())
+					if (currentScene->PreviewEntity.IsValid())
 					{
 						// TODO.NW: Figure out mismatch that happens with other components when we remove the preview, suddenly entity component indices are one too big. Is it a race condition or something?
-						firstActiveScene->RemoveEntity(firstActiveScene->PreviewEntity);
-						firstActiveScene->PreviewEntity = SEntity::Null;
+						currentScene->RemoveEntity(currentScene->PreviewEntity);
+						currentScene->PreviewEntity = SEntity::Null;
 					}
 				}
 			}
@@ -197,12 +200,19 @@ namespace Havtorn
 		{
 			// Handle transform
 			
+			CWorld* world = GEngine::GetWorld();
+			const std::vector<Ptr<CScene>>& scenes = world->GetActiveScenes();
+			SCameraData mainCameraData = UComponentAlgo::GetCameraData(world->GetMainCamera(), scenes);
+
+			if (!mainCameraData.IsValid())
+				return;
+
 			CInput* input = CInput::GetInstance();
 			F32 mouseX = STATIC_F32(input->GetMouseX());
 			F32 mouseY = STATIC_F32(input->GetMouseY());
 
-			SMatrix viewMatrix = scene->GetComponent<STransformComponent>(scene->MainCameraEntity)->Transform.GetMatrix();
-			SMatrix projectionMatrix = scene->GetComponent<SCameraComponent>(scene->MainCameraEntity)->ProjectionMatrix;
+			SMatrix viewMatrix = mainCameraData.TransformComponent->Transform.GetMatrix();
+			SMatrix projectionMatrix = mainCameraData.CameraComponent->ProjectionMatrix;
 			SRay worldRay = UMathUtilities::RaycastWorld({ mouseX, mouseY }, RenderedSceneDimensions, RenderedScenePosition, viewMatrix, projectionMatrix);
 
 			// TODO.NW: This is too annoying, we should have an easy time of setting the transform of entities
@@ -214,7 +224,13 @@ namespace Havtorn
 			return;
 		}
 
-		scene->PreviewEntity = scene->AddEntity("NewEntity");
+		std::string newEntityName = UGeneralUtils::GetNonCollidingString("NewEntity", scene->Entities, [scene](const SEntity& entity)
+			{
+				const SMetaDataComponent* metaDataComp = scene->GetComponent<SMetaDataComponent>(entity);
+				return SComponent::IsValid(metaDataComp) ? metaDataComp->Name.AsString() : "UNNAMED";
+			}
+		);
+		scene->PreviewEntity = scene->AddEntity(newEntityName);
 
 		scene->AddComponent<STransformComponent>(scene->PreviewEntity)->Transform;
 		scene->AddComponentEditorContext(scene->PreviewEntity, &STransformComponentEditorContext::Context);

@@ -34,12 +34,17 @@ namespace Havtorn
 
 	void CPickingSystem::Update(std::vector<Ptr<CScene>>& scenes)
 	{
+		SEntity mainCamera = GEngine::GetWorld()->GetMainCamera();
 		for (Ptr<CScene>& scene : scenes)
 		{
-			if (EditorCameraComponent == nullptr)
-				EditorCameraComponent = scene->GetComponent<SCameraComponent>(scene->MainCameraEntity);
-			if (EditorCameraTransform == nullptr)
-				EditorCameraTransform = scene->GetComponent<STransformComponent>(scene->MainCameraEntity);
+			SCameraComponent* sceneCamera = scene->GetComponent<SCameraComponent>(mainCamera);
+			STransformComponent* sceneCameraTransform = scene->GetComponent<STransformComponent>(mainCamera);
+
+			if (sceneCamera != nullptr && sceneCameraTransform != nullptr)
+			{
+				EditorCameraComponent = sceneCamera;
+				EditorCameraTransform = sceneCameraTransform;
+			}
 		}
 	}
 

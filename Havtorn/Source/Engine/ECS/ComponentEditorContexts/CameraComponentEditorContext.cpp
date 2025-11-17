@@ -6,6 +6,8 @@
 #include "ECS/Components/CameraComponent.h"
 #include "ECS/Components/TransformComponent.h"
 #include "Scene/Scene.h"
+#include "Scene/World.h"
+#include "Engine.h"
 
 #include "Graphics/Debug/DebugDrawUtility.h"
 
@@ -57,7 +59,7 @@ namespace Havtorn
 
 		GUI::Checkbox("Is Starting Camera", cameraComp->IsStartingCamera);
 
-		if (cameraComp->Owner != scene->MainCameraEntity)
+		if (cameraComp->Owner != GEngine::GetWorld()->GetMainCamera())
 		{
 			GUI::Checkbox("Is Active", cameraComp->IsActive);
 

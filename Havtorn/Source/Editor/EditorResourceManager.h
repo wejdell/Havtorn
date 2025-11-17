@@ -62,7 +62,7 @@ namespace Havtorn
 		bool Init(CRenderManager* renderManager);
 		CRenderTexture GetEditorTexture(EEditorTexture texture) const;
 
-		CRenderTexture RenderAssetTexure(EAssetType assetType, const std::string& fileName) const;
+		CRenderTexture RenderAssetTexture(EAssetType assetType, const std::string& fileName) const;
 		void AnimateAssetTexture(CRenderTexture& assetTexture, const EAssetType assetType, const std::string& fileName, const F32 animationTime) const;
 
 		EDITOR_API std::string CreateAsset(const std::string& destinationPath, const SAssetFileHeader& fileHeader) const;

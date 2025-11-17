@@ -21,47 +21,53 @@ namespace Havtorn
 
 	void CRenderSystem::Update(std::vector<Ptr<CScene>>& scenes)
 	{
+		const bool isInPlayingPlayState = World->GetWorldPlayState() == EWorldPlayState::Playing;
+		
+		// Render View Pre-Pass
+		// TODO.NW: Unify?
+		std::vector<U64> renderViewEntities = {};
+		std::vector<SCameraData> activeCameras = {};
 		for (Ptr<CScene>& scene : scenes)
 		{
-			const std::vector<SDirectionalLightComponent*>& directionalLightComponents = scene->GetComponents<SDirectionalLightComponent>();
-			const std::vector<SPointLightComponent*>& pointLightComponents = scene->GetComponents<SPointLightComponent>();
-			const std::vector<SSpotLightComponent*>& spotLightComponents = scene->GetComponents<SSpotLightComponent>();
-
-			RenderManager->ClearRenderViewInstanceData();
-
-			const bool isInPlayingPlayState = World->GetWorldPlayState() == EWorldPlayState::Playing;
-
-			// TODO.NR: Could probably merge all of these loops into one
-			// NR: Not worth doing right now
-
-			std::vector<SCameraComponent*> allCameras = scene->GetComponents<SCameraComponent>();
-			std::vector<SCameraComponent*> activeCameras;
-			for (auto& camera : allCameras)
+			std::vector<SCameraComponent*> cameraComponents = scene->GetComponents<SCameraComponent>();
+			
+			for (SCameraComponent* cameraComponent : cameraComponents)
 			{
-				if (camera->IsActive)
-					activeCameras.emplace_back(camera);
+				if (cameraComponent->IsActive)
+				{
+					renderViewEntities.push_back(cameraComponent->Owner.GUID);
+					
+					SCameraData data;
+					data.TransformComponent = scene->GetComponent<STransformComponent>(cameraComponent->Owner);
+					data.CameraComponent = cameraComponent;
+					activeCameras.push_back(data);
+				}
+			}
+		}
+
+		if (!RenderManager->PrepareRenderViews(renderViewEntities))
+			return;
+
+		// TODO.NW: Would be cool to explore a render graph solution for this, now that it is more clear what need to happen for every rendered frame
+		for (const SCameraData& cameraData : activeCameras)
+		{
+			SEntity& cameraEntity = cameraData.CameraComponent->Owner;				
+
+			{
+				SRenderCommand command;
+				command.Type = ERenderCommandType::CameraDataStorage;
+				command.Matrices.push_back(cameraData.TransformComponent->Transform.GetMatrix());
+				command.Matrices.push_back(cameraData.CameraComponent->ProjectionMatrix);
+				RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 			}
 
-			U16 numberOfActiveCameras = STATIC_U16(activeCameras.size());
-			RenderManager->PrepareRenderViews(numberOfActiveCameras);
-
-			for (U16 i = STATIC_U16(0); i < numberOfActiveCameras; i++)
+			for (Ptr<CScene>& scene : scenes)
 			{
-				SCameraComponent* cameraComponent = activeCameras[i];
-				SEntity& cameraEntity = cameraComponent->Owner;
-
-				if (!SComponent::IsValid(cameraComponent) || !cameraComponent->IsActive)
-					continue;
-
-				const STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(cameraComponent);
-
-				{
-					SRenderCommand command;
-					command.Type = ERenderCommandType::CameraDataStorage;
-					command.Matrices.push_back(transformComponent->Transform.GetMatrix());
-					command.Matrices.push_back(cameraComponent->ProjectionMatrix);
-					RenderManager->PushRenderCommand(command, i);
-				}
+				const std::vector<SDirectionalLightComponent*>& directionalLightComponents = scene->GetComponents<SDirectionalLightComponent>();
+				const std::vector<SPointLightComponent*>& pointLightComponents = scene->GetComponents<SPointLightComponent>();
+				const std::vector<SSpotLightComponent*>& spotLightComponents = scene->GetComponents<SSpotLightComponent>();
+	
+				// TODO.NW: Add frustum culling - send all meshes in all scenes to all active cameras, let the cameras decide whether they are visible
 
 				for (const SStaticMeshComponent* staticMeshComponent : scene->GetComponents<SStaticMeshComponent>())
 				{
@@ -71,7 +77,7 @@ namespace Havtorn
 					if (!SComponent::IsValid(staticMeshComponent) || !SComponent::IsValid(transformComp) || !SComponent::IsValid(materialComp))
 						continue;
 
-					if (!RenderManager->IsStaticMeshInInstancedRenderList(staticMeshComponent->AssetReference.UID, i)) // if static, if instanced
+					if (!RenderManager->IsStaticMeshInInstancedRenderList(staticMeshComponent->AssetReference.UID, cameraEntity.GUID)) // if static, if instanced
 					{
 						SStaticMeshAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMeshComponent->AssetReference, staticMeshComponent->Owner.GUID);
 						if (asset == nullptr)
@@ -88,7 +94,7 @@ namespace Havtorn
 								command.Matrices.push_back(transformComp->Transform.GetMatrix());
 								command.U32s.push_back(staticMeshComponent->AssetReference.UID);
 								command.DrawCallData = asset->DrawCallData;
-								RenderManager->PushRenderCommand(command, i);
+								RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 							}
 						}
 
@@ -102,7 +108,7 @@ namespace Havtorn
 								command.U32s.push_back(staticMeshComponent->AssetReference.UID);
 								command.DrawCallData = asset->DrawCallData;
 								command.SetShadowMapViews(pointLightComp->ShadowmapViews);
-								RenderManager->PushRenderCommand(command, i);
+								RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 							}
 						}
 
@@ -116,7 +122,7 @@ namespace Havtorn
 								command.U32s.push_back(staticMeshComponent->AssetReference.UID);
 								command.DrawCallData = asset->DrawCallData;
 								command.ShadowmapViews.push_back(spotLightComp->ShadowmapView);
-								RenderManager->PushRenderCommand(command, i);
+								RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 							}
 						}
 
@@ -125,7 +131,7 @@ namespace Havtorn
 
 						std::vector<SGraphicsMaterialAsset*> materialAssets = GEngine::GetAssetRegistry()->RequestAssetData<SGraphicsMaterialAsset>(materialComp->AssetReferences, materialComp->Owner.GUID);
 
-						if (isInPlayingPlayState || i > 0)
+						if (isInPlayingPlayState || cameraEntity != World->GetMainCamera())
 						{
 							SRenderCommand command;
 							command.Type = ERenderCommandType::GBufferDataInstanced;
@@ -133,9 +139,12 @@ namespace Havtorn
 							command.DrawCallData = asset->DrawCallData;
 
 							for (SGraphicsMaterialAsset* materialAsset : materialAssets)
+							{
 								command.Materials.push_back(materialAsset->Material);
+								command.MaterialRenderTextures.push_back(std::move(materialAsset->Material.GetRenderTextures(materialComp->Owner.GUID)));
+							}
 
-							RenderManager->PushRenderCommand(command, i);
+							RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 						}
 						else
 						{
@@ -145,13 +154,16 @@ namespace Havtorn
 							command.DrawCallData = asset->DrawCallData;
 
 							for (SGraphicsMaterialAsset* materialAsset : materialAssets)
+							{
 								command.Materials.push_back(materialAsset->Material);
+								command.MaterialRenderTextures.push_back(std::move(materialAsset->Material.GetRenderTextures(materialComp->Owner.GUID)));
+							}
 
-							RenderManager->PushRenderCommand(command, i);
+							RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 						}
 					}
 
-					RenderManager->AddStaticMeshToInstancedRenderList(staticMeshComponent->AssetReference.UID, transformComp, i);
+					RenderManager->AddStaticMeshToInstancedRenderList(staticMeshComponent->AssetReference.UID, transformComp, cameraEntity.GUID);
 				}
 
 				for (const SSkeletalMeshComponent* skeletalMeshComponent : scene->GetComponents<SSkeletalMeshComponent>())
@@ -162,7 +174,7 @@ namespace Havtorn
 					if (!SComponent::IsValid(skeletalMeshComponent) || !SComponent::IsValid(transformComp) || !SComponent::IsValid(materialComp))
 						continue;
 
-					if (!RenderManager->IsSkeletalMeshInInstancedRenderList(skeletalMeshComponent->AssetReference.UID, i))
+					if (!RenderManager->IsSkeletalMeshInInstancedRenderList(skeletalMeshComponent->AssetReference.UID, cameraEntity.GUID))
 					{
 						// TODO.NR: Make shadow pass for skeletal meshes possible
 						//for (const SDirectionalLightComponent* directionalLightComp : directionalLightComponents)
@@ -175,7 +187,7 @@ namespace Havtorn
 						//		command.Matrices.push_back(transformComp->Transform.GetMatrix());
 						//		command.U64s.push_back(skeletalMeshComponent->AssetUID);
 						//		command.DrawCallData = skeletalMeshComponent->DrawCallData;
-						//		RenderManager->PushRenderCommand(command, i);
+						//		RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 						//	}
 						//}
 
@@ -189,7 +201,7 @@ namespace Havtorn
 						//		command.U64s.push_back(skeletalMeshComponent->AssetUID);
 						//		command.DrawCallData = skeletalMeshComponent->DrawCallData;
 						//		command.SetShadowMapViews(pointLightComp->ShadowmapViews);
-						//		RenderManager->PushRenderCommand(command, i);
+						//		RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 						//	}
 						//}
 
@@ -203,7 +215,7 @@ namespace Havtorn
 						//		command.U64s.push_back(skeletalMeshComponent->AssetUID);
 						//		command.DrawCallData = skeletalMeshComponent->DrawCallData;
 						//		command.ShadowmapViews.push_back(spotLightComp->ShadowmapView);
-						//		RenderManager->PushRenderCommand(command, i);
+						//		RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 						//	}
 						//}
 
@@ -219,7 +231,7 @@ namespace Havtorn
 
 						std::vector<SGraphicsMaterialAsset*> materialAssets = GEngine::GetAssetRegistry()->RequestAssetData<SGraphicsMaterialAsset>(materialComp->AssetReferences, materialComp->Owner.GUID);
 
-						if (isInPlayingPlayState || i > 0)
+						if (isInPlayingPlayState || cameraEntity != World->GetMainCamera())
 						{
 							SRenderCommand command;
 							command.Type = ERenderCommandType::GBufferSkeletalInstanced;
@@ -228,9 +240,12 @@ namespace Havtorn
 							command.DrawCallData = asset->DrawCallData;
 
 							for (SGraphicsMaterialAsset* materialAsset : materialAssets)
+							{
 								command.Materials.push_back(materialAsset->Material);
+								command.MaterialRenderTextures.push_back(std::move(materialAsset->Material.GetRenderTextures(materialComp->Owner.GUID)));
+							}
 
-							RenderManager->PushRenderCommand(command, i);
+							RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 						}
 						else
 						{
@@ -241,19 +256,16 @@ namespace Havtorn
 							command.DrawCallData = asset->DrawCallData;
 
 							for (SGraphicsMaterialAsset* materialAsset : materialAssets)
+							{
 								command.Materials.push_back(materialAsset->Material);
+								command.MaterialRenderTextures.push_back(std::move(materialAsset->Material.GetRenderTextures(materialComp->Owner.GUID)));
+							}
 
-							RenderManager->PushRenderCommand(command, i);
+							RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 						}
 					}
 
-					RenderManager->AddSkeletalMeshToInstancedRenderList(skeletalMeshComponent->AssetReference.UID, transformComp, scene->GetComponent<SSkeletalAnimationComponent>(transformComp), i);
-				}
-
-				{
-					SRenderCommand command;
-					command.Type = ERenderCommandType::DecalDepthCopy;
-					RenderManager->PushRenderCommand(command, i);
+					RenderManager->AddSkeletalMeshToInstancedRenderList(skeletalMeshComponent->AssetReference.UID, transformComp, scene->GetComponent<SSkeletalAnimationComponent>(transformComp), cameraEntity.GUID);
 				}
 
 				for (const SDecalComponent* decalComponent : scene->GetComponents<SDecalComponent>())
@@ -262,22 +274,46 @@ namespace Havtorn
 						continue;
 
 					const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(decalComponent);
-					GEngine::GetAssetRegistry()->RequestAssets(decalComponent->AssetReferences, transformComp->Owner.GUID);
+					std::vector<STextureAsset*> assets = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(decalComponent->AssetReferences, transformComp->Owner.GUID);
 
 					SRenderCommand command;
 					command.Type = ERenderCommandType::DeferredDecal;
 					command.Matrices.push_back(transformComp->Transform.GetMatrix());
-					command.Flags.push_back(decalComponent->ShouldRenderAlbedo);
-					command.Flags.push_back(decalComponent->ShouldRenderMaterial);
-					command.Flags.push_back(decalComponent->ShouldRenderNormal);
-					command.U32s = SAssetReference::GetIDs(decalComponent->AssetReferences);
-					RenderManager->PushRenderCommand(command, i);
-				}
+					
+					if (assets[0] != nullptr)
+					{
+						command.Flags.push_back(decalComponent->ShouldRenderAlbedo);
+						command.RenderTextures.push_back(assets[0]->RenderTexture);
+					}
+					else
+					{
+						command.Flags.push_back(false);
+						command.RenderTextures.push_back(CStaticRenderTexture());
+					}
+					
+					if (assets[1] != nullptr)
+					{
+						command.Flags.push_back(decalComponent->ShouldRenderMaterial);
+						command.RenderTextures.push_back(assets[1]->RenderTexture);
+					}
+					else
+					{
+						command.Flags.push_back(false);
+						command.RenderTextures.push_back(CStaticRenderTexture());
+					}
 
-				{
-					SRenderCommand command;
-					command.Type = ERenderCommandType::PreLightingPass;
-					RenderManager->PushRenderCommand(command, i);
+					if (assets[2] != nullptr)
+					{
+						command.Flags.push_back(decalComponent->ShouldRenderNormal);
+						command.RenderTextures.push_back(assets[2]->RenderTexture);
+					}
+					else
+					{
+						command.Flags.push_back(false);
+						command.RenderTextures.push_back(CStaticRenderTexture());
+					}
+
+					RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 				}
 
 				for (const SDirectionalLightComponent* directionalLightComp : directionalLightComponents)
@@ -290,17 +326,19 @@ namespace Havtorn
 					if (!SComponent::IsValid(environmentLightComp))
 						continue;
 
-					GEngine::GetAssetRegistry()->RequestAsset(environmentLightComp->AssetReference, environmentLightComp->Owner.GUID);
+					STextureAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(environmentLightComp->AssetReference, environmentLightComp->Owner.GUID);
+					if (asset == nullptr)
+						continue;
 
 					SRenderCommand command;
 					if (directionalLightComp->IsActive)
 					{
 						command.Type = ERenderCommandType::DeferredLightingDirectional;
-						command.U32s.push_back(environmentLightComp->AssetReference.UID);
 						command.Vectors.push_back(directionalLightComp->Direction);
 						command.Colors.push_back(directionalLightComp->Color);
 						command.ShadowmapViews.push_back(directionalLightComp->ShadowmapView);
-						RenderManager->PushRenderCommand(command, i);
+						command.RenderTextures.push_back(asset->RenderTexture);
+						RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 					}
 
 					if (const SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(directionalLightComp))
@@ -309,7 +347,7 @@ namespace Havtorn
 						{
 							command.Type = ERenderCommandType::VolumetricLightingDirectional;
 							command.SetVolumetricDataFromComponent(*volumetricLightComp);
-							RenderManager->PushRenderCommand(command, i);
+							RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 						}
 					}
 				}
@@ -330,7 +368,7 @@ namespace Havtorn
 						command.F32s.push_back(pointLightComp->ColorAndIntensity.W);
 						command.F32s.push_back(pointLightComp->Range);
 						command.SetShadowMapViews(pointLightComp->ShadowmapViews);
-						RenderManager->PushRenderCommand(command, i);
+						RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 					}
 
 					if (const SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(pointLightComp))
@@ -339,7 +377,7 @@ namespace Havtorn
 						{
 							command.Type = ERenderCommandType::VolumetricLightingPoint;
 							command.SetVolumetricDataFromComponent(*volumetricLightComp);
-							RenderManager->PushRenderCommand(command, i);
+							RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 						}
 					}
 				}
@@ -365,7 +403,7 @@ namespace Havtorn
 						command.Vectors.push_back(spotLightComp->DirectionNormal1);
 						command.Vectors.push_back(spotLightComp->DirectionNormal2);
 						command.ShadowmapViews.push_back(spotLightComp->ShadowmapView);
-						RenderManager->PushRenderCommand(command, i);
+						RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 					}
 
 					if (const SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(spotLightComp))
@@ -374,33 +412,26 @@ namespace Havtorn
 						{
 							command.Type = ERenderCommandType::VolumetricLightingSpot;
 							command.SetVolumetricDataFromComponent(*volumetricLightComp);
-							RenderManager->PushRenderCommand(command, i);
+							RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 						}
 					}
 				}
 
+				// TODO.NW: Do we need to find just one closest environmentlight from all of the scenes?
 				{
 					const SEntity& closestEnvironmentLightEntity = UComponentAlgo::GetClosestEntity3D(cameraEntity, scene->GetComponents<SEnvironmentLightComponent>(), scene.get());
 					const SEnvironmentLightComponent* environmentLightComp = scene->GetComponent<SEnvironmentLightComponent>(closestEnvironmentLightEntity);
 					if (SComponent::IsValid(environmentLightComp))
 					{
-						SRenderCommand command;
-						command.U32s.push_back(environmentLightComp->AssetReference.UID);
-						command.Type = ERenderCommandType::Skybox;
-						RenderManager->PushRenderCommand(command, i);
+						STextureAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(environmentLightComp->AssetReference, environmentLightComp->Owner.GUID);
+						if (asset != nullptr)
+						{
+							SRenderCommand command;
+							command.RenderTextures.push_back(asset->RenderTexture);
+							command.Type = ERenderCommandType::Skybox;
+							RenderManager->PushRenderCommand(command, cameraEntity.GUID);
+						}
 					}
-				}
-
-				{
-					SRenderCommand command;
-					command.Type = ERenderCommandType::PostBaseLightingPass;
-					RenderManager->PushRenderCommand(command, i);
-				}
-
-				{
-					SRenderCommand command;
-					command.Type = ERenderCommandType::VolumetricBufferBlurPass;
-					RenderManager->PushRenderCommand(command, i);
 				}
 
 				for (const SSpriteComponent* spriteComp : scene->GetComponents<SSpriteComponent>())
@@ -410,64 +441,94 @@ namespace Havtorn
 
 					const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(spriteComp);
 					const STransform2DComponent* transform2DComp = scene->GetComponent<STransform2DComponent>(spriteComp);
-					GEngine::GetAssetRegistry()->RequestAsset(spriteComp->AssetReference, spriteComp->Owner.GUID);
+					STextureAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(spriteComp->AssetReference, spriteComp->Owner.GUID);
+					if (asset == nullptr)
+						continue;
 
 					if (SComponent::IsValid(transformComp))
 					{
-						if (!RenderManager->IsSpriteInWorldSpaceInstancedRenderList(spriteComp->AssetReference.UID, i))
+						if (!RenderManager->IsSpriteInWorldSpaceInstancedRenderList(spriteComp->AssetReference.UID, cameraEntity.GUID))
 						{
-							// NR: Don't push a command every time
+							// NW: Don't push a command every time
 							SRenderCommand command;
 							command.Type = ERenderCommandType::GBufferSpriteInstanced;
 							command.U32s.push_back(spriteComp->AssetReference.UID);
-							RenderManager->PushRenderCommand(command, i);
+							command.RenderTextures.push_back(asset->RenderTexture);
+							RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 						}
 
-						RenderManager->AddSpriteToWorldSpaceInstancedRenderList(spriteComp->AssetReference.UID, transformComp, spriteComp, i);
+						RenderManager->AddSpriteToWorldSpaceInstancedRenderList(spriteComp->AssetReference.UID, transformComp, spriteComp, cameraEntity.GUID);
 					}
 					else if (SComponent::IsValid(transform2DComp))
 					{
-						if (!RenderManager->IsSpriteInScreenSpaceInstancedRenderList(spriteComp->AssetReference.UID, i))
+						if (!RenderManager->IsSpriteInScreenSpaceInstancedRenderList(spriteComp->AssetReference.UID, cameraEntity.GUID))
 						{
 							SRenderCommand command;
 							command.Type = ERenderCommandType::ScreenSpaceSprite;
 							command.U32s.push_back(spriteComp->AssetReference.UID);
-							RenderManager->PushRenderCommand(command, i);
+							command.RenderTextures.push_back(asset->RenderTexture);
+							RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 						}
 
-						RenderManager->AddSpriteToScreenSpaceInstancedRenderList(spriteComp->AssetReference.UID, transform2DComp, spriteComp, i);
+						RenderManager->AddSpriteToScreenSpaceInstancedRenderList(spriteComp->AssetReference.UID, transform2DComp, spriteComp, cameraEntity.GUID);
 					}
 				}
+			}
 
-				{
-					SRenderCommand command;
-					command.Type = ERenderCommandType::Bloom;
-					RenderManager->PushRenderCommand(command, i);
-				}
+			// NW: Unique commands that are added once per active camera - automatically sorted into heap
 
-				{
-					SRenderCommand command;
-					command.Type = ERenderCommandType::Tonemapping;
-					RenderManager->PushRenderCommand(command, i);
-				}
+			{
+				SRenderCommand command;
+				command.Type = ERenderCommandType::DecalDepthCopy;
+				RenderManager->PushRenderCommand(command, cameraEntity.GUID);
+			}
 
-				{
-					SRenderCommand command;
-					command.Type = ERenderCommandType::AntiAliasing;
-					RenderManager->PushRenderCommand(command, i);
-				}
+			{
+				SRenderCommand command;
+				command.Type = ERenderCommandType::PreLightingPass;
+				RenderManager->PushRenderCommand(command, cameraEntity.GUID);
+			}
 
-				{
-					SRenderCommand command;
-					command.Type = ERenderCommandType::GammaCorrection;
-					RenderManager->PushRenderCommand(command, i);
-				}
+			{
+				SRenderCommand command;
+				command.Type = ERenderCommandType::PostBaseLightingPass;
+				RenderManager->PushRenderCommand(command, cameraEntity.GUID);
+			}
 
-				{
-					SRenderCommand command;
-					command.Type = ERenderCommandType::RendererDebug;
-					RenderManager->PushRenderCommand(command, i);
-				}
+			{
+				SRenderCommand command;
+				command.Type = ERenderCommandType::VolumetricBufferBlurPass;
+				RenderManager->PushRenderCommand(command, cameraEntity.GUID);
+			}
+
+			{
+				SRenderCommand command;
+				command.Type = ERenderCommandType::Bloom;
+				RenderManager->PushRenderCommand(command, cameraEntity.GUID);
+			}
+
+			{
+				SRenderCommand command;
+				command.Type = ERenderCommandType::Tonemapping;
+				RenderManager->PushRenderCommand(command, cameraEntity.GUID);
+			}
+
+			{
+				SRenderCommand command;
+				command.Type = ERenderCommandType::AntiAliasing;
+				RenderManager->PushRenderCommand(command, cameraEntity.GUID);
+			}
+
+			{
+				SRenderCommand command;
+				command.Type = ERenderCommandType::GammaCorrection;
+				RenderManager->PushRenderCommand(command, cameraEntity.GUID);
+			}
+
+			{
+				SRenderCommand command;
+				command.Type = ERenderCommandType::RendererDebug;
+				RenderManager->PushRenderCommand(command, cameraEntity.GUID);
 			}
 		}
 	}

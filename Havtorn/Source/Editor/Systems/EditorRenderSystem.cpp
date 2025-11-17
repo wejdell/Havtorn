@@ -15,8 +15,7 @@
 
 namespace Havtorn
 {
-	// TODO.NW: Read from config? Would rather not involve editor resource manager here. 
-	// Want to move this anyway to some sort of editor rendering system
+	// TODO.NW: Read from config?
 	static const SAssetReference CameraWidgetReference = SAssetReference("Resources/Assets/CameraIcon.hva");
 	static const SAssetReference ColliderWidgetReference = SAssetReference("Resources/Assets/ColliderIcon.hva");
 	static const SAssetReference DecalWidgetReference = SAssetReference("Resources/Assets/DecalIcon.hva");
@@ -35,6 +34,13 @@ namespace Havtorn
 
 	void CEditorRenderSystem::Update(std::vector<Ptr<CScene>>& scenes)
 	{
+		SEntity mainCamera = World->GetMainCamera();
+		SCameraData mainCameraData = UComponentAlgo::GetCameraData(mainCamera, scenes);
+
+		// TODO: consider color coding or fading out widgets in scenes other than CurrentWorkingScene // Aki
+		if (!mainCameraData.IsValid())
+			return;
+
 		for (Ptr<CScene>& scene : scenes)
 		{
 			if (World->GetWorldPlayState() == EWorldPlayState::Playing)
@@ -53,14 +59,20 @@ namespace Havtorn
 						continue;
 
 					const STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(component);
+					if (!SComponent::IsValid(transformComponent))
+						continue;
 
-					GEngine::GetAssetRegistry()->RequestAsset(assetReference.UID, transformComponent->Owner.GUID);
-					RenderManager->AddSpriteToWorldSpaceInstancedRenderList(assetReference.UID, transformComponent, scene->GetComponent<STransformComponent>(scene->MainCameraEntity), 0);
+					STextureAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(assetReference.UID, transformComponent->Owner.GUID);
+					if (asset == nullptr)
+						continue;
+
+					RenderManager->AddSpriteToWorldSpaceInstancedRenderList(assetReference.UID, transformComponent, mainCameraData.TransformComponent, mainCamera.GUID);
 
 					SRenderCommand command;
 					command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
 					command.U32s.push_back(assetReference.UID);
-					RenderManager->PushRenderCommand(command, 0);
+					command.RenderTextures.push_back(asset->RenderTexture);
+					RenderManager->PushRenderCommand(command, mainCamera.GUID);
 				}
 			};
 
@@ -81,13 +93,20 @@ namespace Havtorn
 					continue;
 
 				const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(physics3DComponent);
-				GEngine::GetAssetRegistry()->RequestAsset(ColliderWidgetReference.UID, transformComp->Owner.GUID);
-				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(ColliderWidgetReference.UID, transformComp, scene->GetComponent<STransformComponent>(scene->MainCameraEntity), 0);
+				if (!SComponent::IsValid(transformComp))
+					continue;
+
+				STextureAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(ColliderWidgetReference.UID, transformComp->Owner.GUID);
+				if (asset == nullptr)
+					continue;
+
+				RenderManager->AddSpriteToWorldSpaceInstancedRenderList(ColliderWidgetReference.UID, transformComp, mainCameraData.TransformComponent, mainCamera.GUID);
 
 				SRenderCommand command;
 				command.Type = ERenderCommandType::WorldSpaceSpriteEditorWidget;
 				command.U32s.push_back(ColliderWidgetReference.UID);
-				RenderManager->PushRenderCommand(command, 0);
+				command.RenderTextures.push_back(asset->RenderTexture);
+				RenderManager->PushRenderCommand(command, mainCamera.GUID);
 			}
 		}
 	}

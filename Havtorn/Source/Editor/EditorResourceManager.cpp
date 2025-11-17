@@ -21,7 +21,7 @@ namespace Havtorn
 		return CRenderTexture(Textures[index]);
 	}
 
-	CRenderTexture CEditorResourceManager::RenderAssetTexure(EAssetType assetType, const std::string& filePath) const
+	CRenderTexture CEditorResourceManager::RenderAssetTexture(EAssetType assetType, const std::string& filePath) const
 	{
 		switch (assetType)
 		{

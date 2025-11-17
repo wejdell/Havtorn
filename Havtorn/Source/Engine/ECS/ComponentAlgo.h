@@ -6,10 +6,24 @@
 
 namespace Havtorn
 {
+	struct SCameraData
+	{
+		bool IsValid() 
+		{
+			return CameraComponent != nullptr && TransformComponent != nullptr;
+		}
+		SCameraComponent* CameraComponent = nullptr;
+		STransformComponent* TransformComponent = nullptr;
+	};
+
 	struct UComponentAlgo
 	{
 		template<typename T>
 		static SEntity GetClosestEntity3D(const SEntity& toEntity, const std::vector<T*>& fromComponents, const CScene* inScene);
+
+		static SCameraData GetCameraData(const SEntity& cameraEntity, const std::vector<Ptr<CScene>>& scenes);
+
+		static CScene* GetContainingScene(const SEntity& entity, const std::vector<Ptr<CScene>>& scenes);
 	};
 
 	template<typename T>
@@ -36,5 +50,36 @@ namespace Havtorn
 		}
 
 		return closestEntity;
+	}
+
+	inline SCameraData UComponentAlgo::GetCameraData(const SEntity& cameraEntity, const std::vector<Ptr<CScene>>& scenes)
+	{
+		SCameraData data;
+
+		for (const Ptr<CScene>& scene : scenes)
+		{
+			SCameraComponent* cameraComponent = scene->GetComponent<SCameraComponent>(cameraEntity);
+			STransformComponent* cameraTransform = scene->GetComponent<STransformComponent>(cameraEntity);
+			
+			if (cameraComponent != nullptr && cameraTransform != nullptr)
+			{
+				data.CameraComponent = cameraComponent;
+				data.TransformComponent = cameraTransform;
+				return data;
+			}
+		}
+
+		return data;
+	}
+
+	inline CScene* UComponentAlgo::GetContainingScene(const SEntity& entity, const std::vector<Ptr<CScene>>& scenes)
+	{
+		for (const Ptr<CScene>& scene : scenes)
+		{
+			if (scene->HasEntity(entity.GUID))
+				return scene.get();
+		}
+
+		return nullptr;
 	}
 }

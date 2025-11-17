@@ -268,7 +268,7 @@
 //		if (!SelectedKeyframeMetaData.IsValid(this))
 //			return;
 //
-//		Havtorn::CScene* const scene = Manager->GetCurrentScene();
+//		Havtorn::CScene* const scene = Manager->GetCurrentWorkingScene();
 //		if (scene == nullptr)
 //			return;
 //
@@ -288,7 +288,7 @@
 //		if (!SelectedKeyframeMetaData.IsValid(this))
 //			return;
 //
-//		Havtorn::CScene* const scene = Manager->GetCurrentScene();
+//		Havtorn::CScene* const scene = Manager->GetCurrentWorkingScene();
 //		if (scene == nullptr)
 //			return;
 //
@@ -308,7 +308,7 @@
 //		if (!SelectedKeyframeMetaData.IsValid(this))
 //			return;
 //
-//		Havtorn::CScene* const scene = Manager->GetCurrentScene();
+//		Havtorn::CScene* const scene = Manager->GetCurrentWorkingScene();
 //		if (scene == nullptr)
 //			return;
 //
@@ -325,7 +325,7 @@
 //
 //	void CSequencerWindow::FillSequencer()
 //	{
-//		Havtorn::CScene* const scene = Manager->GetCurrentScene();
+//		Havtorn::CScene* const scene = Manager->GetCurrentWorkingScene();
 //		if (scene == nullptr)
 //			return;
 //
@@ -1236,7 +1236,7 @@
 //		if (!SelectedKeyframeMetaData.IsValid(this))
 //			return;
 //
-//		Havtorn::CScene* const scene = Manager->GetCurrentScene();
+//		Havtorn::CScene* const scene = Manager->GetCurrentWorkingScene();
 //		if (scene == nullptr)
 //			return;
 //

@@ -68,11 +68,13 @@ namespace Havtorn
 		ENGINE_API void ToggleWorldPlayDimensions();
 
 		ENGINE_API std::vector<Ptr<CScene>>& GetActiveScenes();
-		ENGINE_API std::vector<SEntity>& GetEntities() const;
-		ENGINE_API void SaveActiveScene(const std::string& destinationPath) const;
-		ENGINE_API void RemoveScene(U64 sceneIndex);
+		ENGINE_API void SaveActiveScene(const std::string& destinationPath, CScene* scene) const;
+		ENGINE_API void RemoveScene(const U64 sceneIndex);
 		ENGINE_API void RemoveScene(const Ptr<CScene>& scene);
 		ENGINE_API void ClearScenes();
+
+		ENGINE_API void SetMainCamera(const SEntity& entity);
+		ENGINE_API SEntity GetMainCamera() const;
 		
 		template<typename T>
 		void CreateScene();
@@ -160,6 +162,8 @@ namespace Havtorn
 		
 		CRenderManager* RenderManager = nullptr;
 
+		SEntity MainCameraEntity = SEntity::Null;
+
 		CMulticastDelegate<CScene*> OnSceneCreatedDelegate;
 
 		EWorldPlayState PlayState = EWorldPlayState::Stopped;
@@ -169,6 +173,7 @@ namespace Havtorn
 	template<typename T>
 	inline void CWorld::CreateScene()
 	{
+		static_assert(std::derived_from<T, CScene> == true);
 		Scenes.emplace_back(std::make_unique<T>());
 		OnSceneCreatedDelegate.Broadcast(Scenes.back().get());
 	}

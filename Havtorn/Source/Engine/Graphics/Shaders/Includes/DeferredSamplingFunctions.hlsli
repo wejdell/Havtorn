@@ -238,8 +238,7 @@ float DetermineProperty(GPUMaterialProperty property, float2 uv)
     const float textureExists = property.TextureChannelIndex >= 0.0f;
     const float constantValueExists = property.ConstantValue >= 0.0f;
     
-    return SampleMaterialTexture(property.TextureIndex, property.TextureChannelIndex, uv) * textureExists
-            + property.ConstantValue * saturate(constantValueExists - textureExists);
+    return lerp(SampleMaterialTexture(property.TextureIndex, property.TextureChannelIndex, uv), property.ConstantValue, constantValueExists);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////
