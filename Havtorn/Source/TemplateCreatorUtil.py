@@ -5,6 +5,7 @@ from collections import defaultdict
 from ValidationUtils import ValidationUtil
 from FileCreatorResources import FileCreatorResources
 
+# TODO add support for updating a template with a "fileTypes"
 class TemplateCreatorUtil:
     # Json object example:
     #  "command-name":{ # object key is the name used for the template and command
@@ -190,6 +191,21 @@ class TemplateCreatorUtil:
             print(f"--- .{key} ---")
             print(f"{templates[key]}", end = "")
         return
+    
+    @staticmethod
+    def print_templates(jsonTemplateFilePath:str):
+        templateJson = dict()
+        with open(jsonTemplateFilePath, "r") as templateFile:
+           templateJson = json.load(templateFile)
+
+        print("Current Templates:")
+        for template in templateJson:
+            fileTypes = ""
+            for types in templateJson[template][TemplateCreatorUtil.key_file_types()]:
+                fileTypes += f"{types[TemplateCreatorUtil.key_extension()]},"
+            print(f"  name: {template}, desc: {templateJson[template][TemplateCreatorUtil.key_description()]}, file types: [{fileTypes}]")
+        
             
 if __name__ == "__main__":
+    TemplateCreatorUtil.print_templates(TemplateCreatorUtil.get_default_file_templates_path())
     TemplateCreatorUtil.create_and_add_from_input(TemplateCreatorUtil.get_default_file_templates_path())
