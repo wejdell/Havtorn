@@ -9,13 +9,13 @@ from TemplateCreatorUtil import TemplateCreatorUtil
 
 # TODO: Look over if it is possible to restructure how CMakeLists and this script tracks directories -> Generate CMakeLists through script?
 
-class FileCreationUtil:
+class FileCreatorUtil:
     # class variables, should not be altered
     # TODO: If more filetypes are supported the characters used for the license comment need to be filtered, same goes for namespace structure
     INPUT_CHARACTERS = ">> "
     CMAKE_LIST_PATH = "CMakeLists.txt"
     GENERATOR_SCRIPT_PATH = "./../ProjectSetup/GenerateProjectFiles.bat"
-    LICENSE_PATH ="./../ProjectSetup/License.txt"
+    LICENSE_PATH = "./../ProjectSetup/License.txt"
     
     core = "core"
     platform = "platform"
@@ -344,7 +344,7 @@ if __name__ == "__main__":
     print(" Use arrow-keys up/down to scroll between previous input, arrow-keys left/right to move the cursor")
     print()
     time.sleep(0.75)
-    fileCreator = FileCreationUtil()
+    fileCreator = FileCreatorUtil()
     fileCreator.select_main_folder()
     fileCreator.process_commands()
     print("Closing ...")
