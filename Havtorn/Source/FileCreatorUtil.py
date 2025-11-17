@@ -99,7 +99,7 @@ class FileCreatorUtil:
     @classmethod
     def valid_folder(self, folderName:str):
         if ValidationUtil.validate_folder_name(folderName) is False:
-            self.on_error(f'"{folderName}" contains invalid characters')
+            FileCreatorResources.print_error(f'"{folderName}" contains invalid characters')
             return False     
         return True
     
@@ -107,13 +107,13 @@ class FileCreatorUtil:
     def valid_file_and_extension(self, fileName:str):
         filenameSplit = fileName.split('.')
         if ValidationUtil.validate_file_name(filenameSplit[0]) is False:
-            self.on_error(f'"{fileName}" contains invalid characters')
+            FileCreatorResources.print_error(f'"{fileName}" contains invalid characters')
             return False
         
         if (len(filenameSplit) == 1 # Missing extension
             or len(filenameSplit) > 2 # More than 1 extension
             or ValidationUtil.validate_file_extension(filenameSplit[1]) is False):
-            self.on_error(f'unsupported extension in "{fileName}"')
+            FileCreatorResources.print_error(f'unsupported extension in "{fileName}"')
             return False
         
         return True
@@ -149,7 +149,7 @@ class FileCreatorUtil:
 
                     print(f'> File "{fileToAdd}" created')
             except FileExistsError:
-                self.on_error(f'"{fileToAdd}" already exists')
+                FileCreatorResources.print_error(f'"{fileToAdd}" already exists')
         return
 
     @classmethod
@@ -192,9 +192,11 @@ class FileCreatorUtil:
         if not self.valid_file_and_extension(fileName):
             return False
         
+        fileToAdd = HavtornFolderUtil.try_append_nomenclature_suffix(self.mainFolder, fileToAdd)
+
         pendingAddition = (self.mainFolder, "custom", HavtornFolderUtil.FOLDER_PATHS[self.mainFolder] + fileToAdd)                        
         if pendingAddition in self.filesToAdd:
-            self.on_error(f"trying to add duplicate {fileToAdd}")
+            FileCreatorResources.print_error(f"trying to add duplicate {fileToAdd}")
             return False
         self.filesToAdd.append(pendingAddition)
         return True
@@ -214,9 +216,11 @@ class FileCreatorUtil:
         if not foldersValid:
             return False
         if ValidationUtil.validate_file_name(fileName) is False:
-            self.on_error(f'"{fileName}" contains invalid characters')
+            FileCreatorResources.print_error(f'"{fileName}" contains invalid characters')
             return False
         
+        fileToAddSplit = HavtornFolderUtil.try_append_nomenclature_suffix(self.mainFolder, fileToAddSplit)
+
         for fileType in self.templatesMap[template][TemplateCreatorUtil.key_file_types()]:
             pendingAddition = (self.mainFolder, template,  HavtornFolderUtil.FOLDER_PATHS[self.mainFolder] + fileToAddSplit + "." + fileType[TemplateCreatorUtil.key_extension()])                        
             if pendingAddition in self.filesToAdd:
@@ -255,7 +259,7 @@ class FileCreatorUtil:
                 continue
 
             for templateName in self.templatesMap:
-                if command == "-"+templateName:
+                if command == "-" + templateName:
                     if not self.try_add_file_for_template(args, templateName):
                         break
             

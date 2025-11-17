@@ -110,7 +110,28 @@ class HavtornFolderUtil:
         except:
             print("No nomenclature suffix for " + key.name)
             return ""
+        
+    @staticmethod
+    def try_append_nomenclature_suffix(key:HavtornFolders, target:str):
+        suffix = HavtornFolderUtil.safe_get_nomenclature_suffix(key)
+        if suffix == "":
+            return target
 
+        if suffix in target:
+            target = target.replace(suffix, "")
+
+        (name, extension) = (target, "")
+        if "." in target:
+            (name, extension) = target.split(".")
+    
+        if extension != "":
+            target = name + suffix + "." + extension
+        else:
+            target = name + suffix
+            
+        print(f"Verified suffix {suffix} for {target}")
+        return target
+    
 if __name__ == "__main__":
     print("FileCreatorResources - TESTS")
     print(FileCreatorResources.INPUT_CHARACTERS)
@@ -132,7 +153,19 @@ if __name__ == "__main__":
     
     FileCreatorResources.get_havtorn_license()
     FileCreatorResources.print_error("test error")
+
+
     print()
+    
+    HavtornFolderUtil.try_append_nomenclature_suffix(HavtornFolders.Core, "CoreShouldHaveNone.WithExtension")
+    HavtornFolderUtil.try_append_nomenclature_suffix(HavtornFolders.Core, "CoreShouldHaveNone")
+    HavtornFolderUtil.try_append_nomenclature_suffix(HavtornFolders.PixelShaders, "PixelShaderShouldHave.WithExtension")
+    HavtornFolderUtil.try_append_nomenclature_suffix(HavtornFolders.PixelShaders, "PixelShaderShouldHave")
+    HavtornFolderUtil.try_append_nomenclature_suffix(HavtornFolders.VertexShaders, "VertexShaderAlreadyHas_VS")
+    HavtornFolderUtil.try_append_nomenclature_suffix(HavtornFolders.VertexShaders, "VertexShaderAlreadyHas_VS.WithExtension")
+    HavtornFolderUtil.try_append_nomenclature_suffix(HavtornFolders.GeometryShaders, "GeometryShaderShouldHave.WithExtension")
+    HavtornFolderUtil.try_append_nomenclature_suffix(HavtornFolders.ShaderIncludes, "ShaderInclShouldHaveNone.WithExtension")
+
     for folder in HavtornFolders:
         print(folder.name)
         
