@@ -87,3 +87,4 @@ if __name__ == "__main__":
                 ext=input()
                 print(f">> {ValidationUtil.validate_file_extension(ext)}")
                 print()
+                
