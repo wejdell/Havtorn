@@ -182,11 +182,50 @@ namespace Havtorn
 		}
 
 		GUI::End();
-		
+
+		// ANIMATED THUMBNAILS
+		//if (AnimatingThumbnailAsset.has_value())
+		//{
+		//	SEditorAssetRepresentation* animatingThumbnailAsset = AnimatingThumbnailAsset.value();
+		//	U32 assetID = SAssetReference(animatingThumbnailAsset->Name).UID;
+
+		//	// Start hover animated thumbnail
+		//	if (!WasAnimatingThumbnail)
+		//	{
+		//		HV_LOG_INFO("Start hover animated thumbnail");
+
+		//		if (!animatingThumbnailAsset->TextureRef.IsShaderResourceValid())
+		//			Manager->GetRenderManager()->GetRenderTargetFromRequest(assetID, animatingThumbnailAsset->TextureRef);
+
+		//		//animatingThumbnailAsset->TextureRef.Release();
+		//		Manager->GetRenderManager()->RequestRenderView(assetID);
+		//		PreviouslyAnimatingThumbnailAsset = animatingThumbnailAsset;
+		//	}
+
+		//	Manager->GetResourceManager()->AnimateAssetTexture(animatingThumbnailAsset, animatingThumbnailAsset->DirectoryEntry.path().string(), AnimatedThumbnailTime += GTime::Dt());
+		//	CRenderTexture* animatedThumbnail = Manager->GetRenderManager()->GetRenderTargetTexture(assetID);
+		//	if (animatedThumbnail != nullptr)
+		//		animatingThumbnailAsset->TextureRef = *animatedThumbnail;
+		//}
+		//else if (!AnimatingThumbnailAsset.has_value() && WasAnimatingThumbnail)
+		//{
+		//	HV_ASSERT(PreviouslyAnimatingThumbnailAsset, "When we stop hovering a thumbnail asset, we expect the PreviouslyAnimatingThumbnailAsset to be set!");
+
+		//	// End hover animated thumbnail
+		//	HV_LOG_INFO("End hover animated thumbnail");
+		//	U32 assetID = SAssetReference(PreviouslyAnimatingThumbnailAsset->Name).UID;
+		//	Manager->GetRenderManager()->UnrequestRenderView(assetID);
+		//	//PreviouslyAnimatingThumbnailAsset->TextureRef.Release();
+		//	Manager->GetResourceManager()->RequestThumbnailRender(PreviouslyAnimatingThumbnailAsset, PreviouslyAnimatingThumbnailAsset->DirectoryEntry.path().string());
+		//	PreviouslyAnimatingThumbnailAsset = nullptr;
+		//}
+
 		if (AnimatedThumbnailTime == LastAnimatedThumbnailTime)
 			AnimatedThumbnailTime = 0.0f;
 
 		LastAnimatedThumbnailTime = AnimatedThumbnailTime;
+		WasAnimatingThumbnail = AnimatingThumbnailAsset.has_value();
+		AnimatingThumbnailAsset.reset();
 
 		//// NR: Keep this here in case we want this to be a subwindow rather than an integrated element
 		//if (GUI::Begin("Asset Browser Folder View", nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
@@ -221,7 +260,7 @@ namespace Havtorn
 		assetDir.assign(std::filesystem::path(assetPath));
 		auto& assetRep = Manager->GetAssetRepFromDirEntry(assetDir);
 
-		assetRep->TextureRef = Manager->GetResourceManager()->RenderAssetTexture(assetRep->AssetType, assetPath);
+		Manager->GetResourceManager()->RequestThumbnailRender(assetRep.get(), assetPath);
 	}
 
 	void AlignForWidth(F32 width, F32 alignment = 0.5f)
@@ -666,7 +705,7 @@ namespace Havtorn
 			{
 				if (rep->AssetType == EAssetType::Animation)
 				{
-					Manager->GetResourceManager()->AnimateAssetTexture(rep->TextureRef, rep->AssetType, entry.path().string(), AnimatedThumbnailTime += GTime::Dt());
+					AnimatingThumbnailAsset = rep.get();
 				}
 
 				if (SelectedAsset.has_value() && rep.get() == SelectedAsset.value())

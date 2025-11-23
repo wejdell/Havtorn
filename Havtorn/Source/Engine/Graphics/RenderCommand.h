@@ -19,8 +19,10 @@ namespace Havtorn
 		CameraDataStorage,
 		GBufferDataInstanced,
 		GBufferDataInstancedEditor,
+		StaticMeshAssetThumbnail,
 		GBufferSkeletalInstanced,
 		GBufferSkeletalInstancedEditor,
+		SkeletalMeshAssetThumbnail,
 		GBufferSpriteInstanced,
 		GBufferSpriteInstancedEditor,
 		DecalDepthCopy,
@@ -58,6 +60,7 @@ namespace Havtorn
 		ERenderCommandType Type;
 
 		std::vector<SMatrix> Matrices;
+		std::vector<SMatrix> BoneMatrices;
 		std::vector<SVector4> Vectors;
 		std::vector<SColor> Colors;
 		std::vector<F32> F32s;

@@ -158,9 +158,11 @@ namespace Havtorn
 		RenderFunctions[ERenderCommandType::ShadowAtlasPrePassSpot] =			std::bind(&CRenderManager::ShadowAtlasPrePassSpot, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::CameraDataStorage] =				std::bind(&CRenderManager::CameraDataStorage, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::GBufferDataInstanced] =				std::bind(&CRenderManager::GBufferDataInstanced, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::StaticMeshAssetThumbnail] =			std::bind(&CRenderManager::StaticMeshAssetThumbnail, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::GBufferSkeletalInstanced] =			std::bind(&CRenderManager::GBufferSkeletalInstanced, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::GBufferDataInstancedEditor] =		std::bind(&CRenderManager::GBufferDataInstancedEditor, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::GBufferSkeletalInstancedEditor] =	std::bind(&CRenderManager::GBufferSkeletalInstancedEditor, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::SkeletalMeshAssetThumbnail] =		std::bind(&CRenderManager::SkeletalMeshAssetThumbnail, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::GBufferSpriteInstanced] =			std::bind(&CRenderManager::GBufferSpriteInstanced, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::GBufferSpriteInstancedEditor] =		std::bind(&CRenderManager::GBufferSpriteInstancedEditor, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::DecalDepthCopy] =					std::bind(&CRenderManager::DecalDepthCopy, this, std::placeholders::_1);
@@ -1377,6 +1379,52 @@ namespace Havtorn
 		}
 	}
 
+	inline void CRenderManager::StaticMeshAssetThumbnail(const SRenderCommand& command)
+	{
+		if (!RenderThreadRenderViews->contains(command.RenderViewID))
+			return;
+
+		// TODO.NW: Figure out why the depth doesn't work
+		CRenderTexture& renderTarget = RenderThreadRenderViews->at(command.RenderViewID).RenderTarget;
+		ID3D11RenderTargetView* renderTargets[1] = { renderTarget.GetRenderTargetView()};
+		RenderStateManager.OMSetRenderTargets(1, renderTargets, nullptr/*renderDepth.GetDepthStencilView()*/);
+		RenderStateManager.RSSetViewports(1, renderTarget.GetViewport());
+
+		const auto& objectMatrix = command.Matrices[0];
+		const auto& projectionMatrix = command.Matrices[1];
+		FrameBufferData.ToWorldFromCamera = objectMatrix;
+		FrameBufferData.ToCameraFromWorld = objectMatrix.FastInverse();
+		FrameBufferData.ToProjectionFromCamera = projectionMatrix;
+		FrameBufferData.ToCameraFromProjection = projectionMatrix.Inverse();
+		FrameBufferData.CameraPosition = objectMatrix.GetTranslation4();
+		FrameBuffer.BindBuffer(FrameBufferData);
+
+		RenderStateManager.VSSetConstantBuffer(0, FrameBuffer);
+		RenderStateManager.PSSetConstantBuffer(0, FrameBuffer);
+
+		ObjectBufferData.ToWorldFromObject = SMatrix();
+		ObjectBuffer.BindBuffer(ObjectBufferData);
+
+		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
+		RenderStateManager.IASetTopology(ETopologies::TriangleList);
+		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2);
+
+		RenderStateManager.VSSetShader(EVertexShaders::EditorPreviewStaticMesh);
+		RenderStateManager.PSSetShader(EPixelShaders::EditorPreview);
+		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
+
+		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(command.DrawCallData.size()); drawCallIndex++)
+		{
+			const SDrawCallData& drawData = command.DrawCallData[drawCallIndex];
+			RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[drawData.VertexBufferIndex], RenderStateManager.MeshVertexStrides[drawData.VertexStrideIndex], RenderStateManager.MeshVertexOffsets[drawData.VertexOffsetIndex]);
+			RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[drawData.IndexBufferIndex]);
+			RenderStateManager.DrawIndexed(drawData.IndexCount, 0, 0);
+			CRenderManager::NumberOfDrawCallsThisFrame++;
+		}
+
+		// TODO.NW: Try add anti aliasing
+	}
+
 	void CRenderManager::GBufferSkeletalInstanced(const SRenderCommand& command)
 	{
 		if (!RenderThreadRenderViews->contains(command.RenderViewID))
@@ -1491,6 +1539,65 @@ namespace Havtorn
 			RenderStateManager.DrawIndexedInstanced(drawData.IndexCount, STATIC_U32(matrices.size()), 0, 0, 0);
 			CRenderManager::NumberOfDrawCallsThisFrame++;
 		}
+	}
+
+	void CRenderManager::SkeletalMeshAssetThumbnail(const SRenderCommand& command)
+	{
+		if (!RenderThreadRenderViews->contains(command.RenderViewID))
+			return;
+
+		// TODO.NW: Figure out why the depth doesn't work
+		CRenderTexture& renderTarget = RenderThreadRenderViews->at(command.RenderViewID).RenderTarget;
+		ID3D11RenderTargetView* renderTargets[1] = { renderTarget.GetRenderTargetView() };
+		RenderStateManager.OMSetRenderTargets(1, renderTargets, nullptr/*renderDepth.GetDepthStencilView()*/);
+		RenderStateManager.RSSetViewports(1, renderTarget.GetViewport());
+
+		const auto& objectMatrix = command.Matrices[0];
+		const auto& projectionMatrix = command.Matrices[1];
+		FrameBufferData.ToWorldFromCamera = objectMatrix;
+		FrameBufferData.ToCameraFromWorld = objectMatrix.FastInverse();
+		FrameBufferData.ToProjectionFromCamera = projectionMatrix;
+		FrameBufferData.ToCameraFromProjection = projectionMatrix.Inverse();
+		FrameBufferData.CameraPosition = objectMatrix.GetTranslation4();
+		FrameBuffer.BindBuffer(FrameBufferData);
+
+		RenderStateManager.VSSetConstantBuffer(0, FrameBuffer);
+		RenderStateManager.PSSetConstantBuffer(0, FrameBuffer);
+
+		const std::vector<SMatrix>& matrices = { SMatrix::Identity };
+		InstancedTransformBuffer.BindBuffer(matrices);
+
+		std::vector<SMatrix> boneTransforms = command.BoneMatrices;
+		if (boneTransforms.empty())
+			boneTransforms.resize(64, SMatrix::Identity);
+		BoneBuffer.BindBuffer(boneTransforms);
+		
+		RenderStateManager.VSSetConstantBuffer(2, BoneBuffer);
+
+		ObjectBufferData.ToWorldFromObject = SMatrix();
+		ObjectBuffer.BindBuffer(ObjectBufferData);
+
+		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
+		RenderStateManager.IASetTopology(ETopologies::TriangleList);
+		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans);
+
+		RenderStateManager.VSSetShader(EVertexShaders::EditorPreviewSkeletalMesh);
+		RenderStateManager.PSSetShader(EPixelShaders::EditorPreview);
+		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
+
+		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(command.DrawCallData.size()); drawCallIndex++)
+		{
+			const SDrawCallData& drawData = command.DrawCallData[drawCallIndex];
+			const std::vector<CDataBuffer> buffers = { RenderStateManager.VertexBuffers[drawData.VertexBufferIndex], InstancedAnimationDataBuffer, InstancedTransformBuffer };
+			const U32 strides[3] = { RenderStateManager.MeshVertexStrides[drawData.VertexStrideIndex], sizeof(SVector2<U32>), sizeof(SMatrix) };
+			const U32 offsets[3] = { RenderStateManager.MeshVertexOffsets[drawData.VertexOffsetIndex], 0, 0 };
+			RenderStateManager.IASetVertexBuffers(0, 3, buffers, strides, offsets);
+			RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[drawData.IndexBufferIndex]);
+			RenderStateManager.DrawIndexed(drawData.IndexCount, 0, 0);
+			CRenderManager::NumberOfDrawCallsThisFrame++;
+		}
+
+		// TODO.NW: Try add anti aliasing
 	}
 
 	void CRenderManager::GBufferSpriteInstanced(const SRenderCommand& command)

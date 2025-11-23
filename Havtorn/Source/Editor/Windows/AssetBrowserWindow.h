@@ -49,7 +49,10 @@ namespace Havtorn
 		std::optional<std::vector<std::string>> FilePathsToImport;
 
 		std::optional<SEditorAssetRepresentation*> SelectedAsset;
+		std::optional<SEditorAssetRepresentation*> AnimatingThumbnailAsset;
+		SEditorAssetRepresentation* PreviouslyAnimatingThumbnailAsset;
 		bool IsSelectionHovered = false;
+		bool WasAnimatingThumbnail = false;
 		bool IsCreatingAsset = false;
 		EAssetType AssetTypeToCreate = EAssetType::None;
 		std::string DirectoryToSaveTo = DefaultAssetPath;

@@ -62,8 +62,9 @@ namespace Havtorn
 		bool Init(CRenderManager* renderManager);
 		CRenderTexture GetEditorTexture(EEditorTexture texture) const;
 
-		CRenderTexture RenderAssetTexture(EAssetType assetType, const std::string& fileName) const;
-		void AnimateAssetTexture(CRenderTexture& assetTexture, const EAssetType assetType, const std::string& fileName, const F32 animationTime) const;
+		EDITOR_API void RequestThumbnailRender(SEditorAssetRepresentation* assetRep, const std::string& filePath) const;
+		EDITOR_API CRenderTexture GetImmediateThumbnailRender(SEditorAssetRepresentation* assetRep, const std::string& filePath) const;
+		EDITOR_API void AnimateAssetTexture(SEditorAssetRepresentation* assetRep, const std::string& filePath, const F32 animationTime) const;
 
 		EDITOR_API std::string CreateAsset(const std::string& destinationPath, const SAssetFileHeader& fileHeader) const;
 		EDITOR_API std::string ConvertToHVA(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions) const;

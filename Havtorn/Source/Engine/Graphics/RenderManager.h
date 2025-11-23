@@ -168,8 +168,10 @@ namespace Havtorn
 		inline void CameraDataStorage(const SRenderCommand& command);
 		inline void GBufferDataInstanced(const SRenderCommand& command);
 		inline void GBufferDataInstancedEditor(const SRenderCommand& command);
+		inline void StaticMeshAssetThumbnail(const SRenderCommand& command);
 		inline void GBufferSkeletalInstanced(const SRenderCommand& command);
 		inline void GBufferSkeletalInstancedEditor(const SRenderCommand& command);
+		inline void SkeletalMeshAssetThumbnail(const SRenderCommand& command);
 		inline void GBufferSpriteInstanced(const SRenderCommand& command);
 		inline void GBufferSpriteInstancedEditor(const SRenderCommand& command);
 		inline void DecalDepthCopy(const SRenderCommand& command);
