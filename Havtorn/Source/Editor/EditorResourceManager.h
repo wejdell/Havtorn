@@ -59,11 +59,10 @@ namespace Havtorn
 		CEditorResourceManager() = default;
 		~CEditorResourceManager() = default;
 
-		bool Init(CRenderManager* renderManager);
-		CRenderTexture GetEditorTexture(EEditorTexture texture) const;
+		bool Init(CEditorManager* editorManager, CRenderManager* renderManager);
+		intptr_t GetStaticEditorTextureResource(const EEditorTexture texture) const;
 
 		EDITOR_API void RequestThumbnailRender(SEditorAssetRepresentation* assetRep, const std::string& filePath) const;
-		EDITOR_API CRenderTexture GetImmediateThumbnailRender(SEditorAssetRepresentation* assetRep, const std::string& filePath) const;
 		EDITOR_API void AnimateAssetTexture(SEditorAssetRepresentation* assetRep, const std::string& filePath, const F32 animationTime) const;
 
 		EDITOR_API std::string CreateAsset(const std::string& destinationPath, const SAssetFileHeader& fileHeader) const;
@@ -79,6 +78,7 @@ namespace Havtorn
 	
 	private:
 		std::vector<CStaticRenderTexture> Textures;
+		CEditorManager* Manager = nullptr;
 		CRenderManager* RenderManager = nullptr;
 		std::string ResourceAssetPath = "Resources/";
 	};

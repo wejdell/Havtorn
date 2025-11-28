@@ -36,11 +36,16 @@ namespace Havtorn
 				if (cameraComponent->IsActive)
 				{
 					renderViewEntities.push_back(cameraComponent->Owner.GUID);
+					RenderManager->RequestRenderView(cameraComponent->Owner.GUID);
 					
 					SCameraData data;
 					data.TransformComponent = scene->GetComponent<STransformComponent>(cameraComponent->Owner);
 					data.CameraComponent = cameraComponent;
 					activeCameras.push_back(data);
+				}
+				else
+				{
+					RenderManager->UnrequestRenderView(cameraComponent->Owner.GUID);
 				}
 			}
 		}

@@ -167,6 +167,9 @@ namespace Havtorn
 
 	void CWorld::SetMainCamera(const SEntity& entity)
 	{
+		if (MainCameraEntity.IsValid())
+			RenderManager->UnrequestRenderView(MainCameraEntity.GUID);
+
 		MainCameraEntity = entity;
 	}
 

@@ -18,7 +18,6 @@ namespace Havtorn
 {
 	CViewportWindow::CViewportWindow(const char* displayName, CEditorManager* manager)
 		: CWindow(displayName, manager)
-		, RenderedSceneTextureReference(nullptr)
 	{
 		SnappingOptions.push_back({});
 		SnappingOptions.emplace_back(SVector(0.01f), "0.01");
@@ -47,10 +46,10 @@ namespace Havtorn
 		GUI::PushStyleVar(EStyleVar::ItemSpacing, SVector2<F32>(0.0f));
 
 		const CEditorResourceManager* resourceManager = Manager->GetResourceManager();
-		intptr_t playButtonID = (intptr_t)resourceManager->GetEditorTexture(EEditorTexture::PlayIcon).GetShaderResourceView();
-		intptr_t pauseButtonID = (intptr_t)resourceManager->GetEditorTexture(EEditorTexture::PauseIcon).GetShaderResourceView();
-		intptr_t stopButtonID = (intptr_t)resourceManager->GetEditorTexture(EEditorTexture::StopIcon).GetShaderResourceView();
-		intptr_t settingsButtonID = (intptr_t)resourceManager->GetEditorTexture(EEditorTexture::EnvironmentLightIcon).GetShaderResourceView();
+		intptr_t playButtonID = resourceManager->GetStaticEditorTextureResource(EEditorTexture::PlayIcon);
+		intptr_t pauseButtonID = resourceManager->GetStaticEditorTextureResource(EEditorTexture::PauseIcon);
+		intptr_t stopButtonID = resourceManager->GetStaticEditorTextureResource(EEditorTexture::StopIcon);
+		intptr_t settingsButtonID = resourceManager->GetStaticEditorTextureResource(EEditorTexture::EnvironmentLightIcon);
 
 		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
 		{
@@ -111,10 +110,11 @@ namespace Havtorn
 			}
 
 			const SEntity& mainCamera = GEngine::GetWorld()->GetMainCamera();
+			CRenderTexture* mainRenderTexture = nullptr;
 			if (mainCamera.IsValid())
-				RenderedSceneTextureReference = Manager->GetRenderManager()->GetRenderTargetTexture(mainCamera.GUID);
+				mainRenderTexture = Manager->GetRenderManager()->GetRenderTargetTexture(mainCamera.GUID);
 			
-			if (RenderedSceneTextureReference)
+			if (mainRenderTexture && mainRenderTexture->IsShaderResourceValid())
 			{
 				SVector2<F32> vMin = GUI::GetWindowContentRegionMin();
 				SVector2<F32> vMax = GUI::GetWindowContentRegionMax();
@@ -129,7 +129,7 @@ namespace Havtorn
 				RenderedScenePosition.Y = windowPos.Y;
 				RenderedSceneDimensions = { width, height };
 
-				GUI::Image((intptr_t)RenderedSceneTextureReference->GetShaderResourceView(), SVector2<F32>(width, height));
+				GUI::Image((intptr_t)mainRenderTexture->GetShaderResourceView(), SVector2<F32>(width, height));
 			}
 		
 			GUI::SetGizmoDrawList();

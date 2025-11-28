@@ -13,20 +13,25 @@
 
 namespace Havtorn
 {
-	CRenderTexture CEditorResourceManager::GetEditorTexture(EEditorTexture texture) const
+	intptr_t CEditorResourceManager::GetStaticEditorTextureResource(const EEditorTexture texture) const
 	{
 		U64 index = static_cast<I64>(texture);
-		
-		if (index >= Textures.size())
-			return CRenderTexture(Textures[STATIC_U64(EEditorTexture::None)]);
 
-		return CRenderTexture(Textures[index]);
+		if (index >= Textures.size())
+			return Textures[STATIC_U64(EEditorTexture::None)].GetResource();
+
+		return Textures[index].GetResource();
 	}
 
 	void CEditorResourceManager::RequestThumbnailRender(SEditorAssetRepresentation* assetRep, const std::string& filePath) const
 	{
 		U32 assetID = SAssetReference(assetRep->Name).UID;
-		RenderManager->RequestRendering(assetID);
+		// TODO.NW: Set up ownership using smart pointers, use weak ptr to capture 'this' here. 
+		auto replaceTexture = [this, filePath](CRenderTexture finishedCopy)
+			{
+				Manager->GetAssetRepFromDirEntry(std::filesystem::directory_entry(filePath))->TextureRef = std::move(finishedCopy);
+			};
+		RenderManager->RequestRenderView(assetID, replaceTexture);
 
 		switch (assetRep->AssetType)
 		{
@@ -217,26 +222,22 @@ namespace Havtorn
 			RenderManager->PushRenderCommand(command, assetID);
 		}
 			break;
+		case EAssetType::Texture:
+		{
+			// TODO.NW: Add cubemap
+			STextureAsset* textureAsset = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
+
+			SRenderCommand command;
+			command.Type = ERenderCommandType::TextureDraw;
+			command.RenderTextures.push_back(textureAsset->RenderTexture);
+			
+			GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
+
+			RenderManager->PushRenderCommand(command, assetID);
+		}
+			break;
 		default:
 			break;
-		}
-	}
-
-	CRenderTexture CEditorResourceManager::GetImmediateThumbnailRender(SEditorAssetRepresentation* assetRep, const std::string& filePath) const
-	{
-		switch (assetRep->AssetType)
-		{
-		case EAssetType::Texture:
-			return std::move(RenderManager->CreateRenderTextureFromAsset(filePath));
-		case EAssetType::Scene:
-			return std::move(GetEditorTexture(EEditorTexture::SceneIcon));
-		case EAssetType::Sequencer:
-			return std::move(GetEditorTexture(EEditorTexture::SequencerIcon));
-		case EAssetType::Script:
-			return std::move(GetEditorTexture(EEditorTexture::ScriptIcon));
-		case EAssetType::None:
-		default:
-			return CRenderTexture();
 		}
 	}
 
@@ -420,8 +421,9 @@ namespace Havtorn
 //#define ROUGHNESS           9
 //#define EMISSIVE            10
 
-	bool CEditorResourceManager::Init(CRenderManager* renderManager)
+	bool CEditorResourceManager::Init(CEditorManager* editorManager, CRenderManager* renderManager)
 	{
+		Manager = editorManager;
 		RenderManager = renderManager;
 		U64 textureCount = static_cast<U64>(EEditorTexture::Count);
 		Textures.resize(textureCount);

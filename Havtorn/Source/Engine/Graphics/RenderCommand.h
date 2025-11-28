@@ -52,6 +52,7 @@ namespace Havtorn
 		DebugShapeIgnoreDepth,
 		AntiAliasing,
 		GammaCorrection,
+		TextureDraw,
 		RendererDebug
 	};
 

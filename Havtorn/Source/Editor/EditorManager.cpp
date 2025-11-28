@@ -80,7 +80,7 @@ namespace Havtorn
 		Windows.back()->SetEnabled(false);
 
 		ResourceManager = new CEditorResourceManager();
-		bool success = ResourceManager->Init(renderManager);
+		bool success = ResourceManager->Init(this, renderManager);
 		if (!success)
 			return false;
 		RenderManager = renderManager;
@@ -102,12 +102,6 @@ namespace Havtorn
 	void CEditorManager::BeginFrame()
 	{
 		PlatformManager->UpdateResolution();
-
-		for (auto& assetRep : AssetRepresentations)
-		{
-			if (!assetRep->TextureRef.IsShaderResourceValid())
-				RenderManager->GetRenderTargetFromRequest(SAssetReference(assetRep->Name).UID, assetRep->TextureRef);
-		}
 	}
 
 	void CEditorManager::Render()
@@ -138,19 +132,19 @@ namespace Havtorn
 
 			// TODO.NW: Derive this from style params
 			constexpr F32 menuElementHeight = 16.0f;
-			if (GUI::ImageButton("MinimizeButton", intptr_t(ResourceManager->GetEditorTexture(EEditorTexture::MinimizeWindow).GetShaderResourceView()), SVector2<F32>(menuElementHeight)))
+			if (GUI::ImageButton("MinimizeButton", ResourceManager->GetStaticEditorTextureResource(EEditorTexture::MinimizeWindow), SVector2<F32>(menuElementHeight)))
 			{
 				PlatformManager->MinimizeWindow();
 			}
 			isHoveringMenuBarButton = GUI::IsMouseInRect(GUI::GetLastRect()) ? true : isHoveringMenuBarButton;
 
-			if (GUI::ImageButton("MazimizeButton", intptr_t(ResourceManager->GetEditorTexture(EEditorTexture::MaximizeWindow).GetShaderResourceView()), SVector2<F32>(menuElementHeight)))
+			if (GUI::ImageButton("MazimizeButton", ResourceManager->GetStaticEditorTextureResource(EEditorTexture::MaximizeWindow), SVector2<F32>(menuElementHeight)))
 			{
 				PlatformManager->MaximizeWindow();
 			}
 			isHoveringMenuBarButton = GUI::IsMouseInRect(GUI::GetLastRect()) ? true : isHoveringMenuBarButton;
 
-			if (GUI::ImageButton("CloseWindowButton", intptr_t(ResourceManager->GetEditorTexture(EEditorTexture::CloseWindow).GetShaderResourceView()), SVector2<F32>(menuElementHeight)))
+			if (GUI::ImageButton("CloseWindowButton", ResourceManager->GetStaticEditorTextureResource(EEditorTexture::CloseWindow), SVector2<F32>(menuElementHeight)))
 			{
 				PlatformManager->CloseWindow();
 			}
@@ -204,7 +198,7 @@ namespace Havtorn
 			{
 				GUI::Text(GetFrameRate().c_str());
 				GUI::Text(GetSystemMemory().c_str());
-				GUI::Text(GetDrawCalls().c_str());
+				GUI::Text(GetRenderInfo().c_str());
 
 				static bool debugRegistry = false;
 				GUI::Checkbox("Show Registry Details", debugRegistry);
@@ -380,14 +374,13 @@ namespace Havtorn
 		case EAssetType::SkeletalMesh:
 		case EAssetType::Material:
 		case EAssetType::Animation:
+		case EAssetType::Texture:
 			rep.UsingEditorTexture = false;
 			ResourceManager->RequestThumbnailRender(&rep, filePath);
 			break;
-		case EAssetType::Texture:
-			rep.UsingEditorTexture = false;
 		default:
 			rep.UsingEditorTexture = true;
-			rep.TextureRef = ResourceManager->GetImmediateThumbnailRender(&rep, filePath);
+			break;
 		}
 
 		AssetRepresentations.emplace_back(std::make_unique<SEditorAssetRepresentation>(rep));
@@ -405,7 +398,7 @@ namespace Havtorn
 		if (it != AssetRepresentations.end())
 		{
 			if (!it->get()->UsingEditorTexture)
-				it->get()->TextureRef.Release();
+				RenderManager->UnrequestRenderView(SAssetReference(it->get()->Name).UID);
 
 			AssetRepresentations.erase(it);	
 		}
@@ -926,10 +919,12 @@ namespace Havtorn
 		return "";
 	}
 
-	std::string CEditorManager::GetDrawCalls() const
+	std::string CEditorManager::GetRenderInfo() const
 	{
-		std::string drawCalls = "Draw Calls: ";
-		drawCalls.append(std::to_string(CRenderManager::NumberOfDrawCallsThisFrame));
-		return drawCalls;
+		std::string info = "Draw Calls: ";
+		info.append(std::to_string(CRenderManager::NumberOfDrawCallsThisFrame));
+		info.append("\nRender Views: ");
+		info.append(std::to_string(RenderManager->GetNumberOfRenderViews()));
+		return info;
 	}
 }
