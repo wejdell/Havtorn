@@ -233,6 +233,7 @@ namespace Havtorn
 	CRenderTexture CRenderTextureFactory::CreateSRVFromSource(const std::string& filePath)
 	{
 		CRenderTexture returnTexture;
+		returnTexture.Context = Framework->GetContext();
 		ENGINE_HR_MESSAGE(CreateShaderResourceViewFromSource(Framework->GetDevice(), filePath, &returnTexture.ShaderResource), "SRV could not be created from %s", filePath.c_str());
 		return std::move(returnTexture);
 	}
@@ -240,6 +241,7 @@ namespace Havtorn
 	CRenderTexture CRenderTextureFactory::CreateSRVFromAsset(const std::string& filePath)
 	{
 		CRenderTexture returnTexture;
+		returnTexture.Context = Framework->GetContext();
 		ENGINE_HR_MESSAGE(CreateShaderResourceViewFromAsset(Framework->GetDevice(), filePath, &returnTexture.ShaderResource), "SRV could not be created from %s", filePath.c_str());
 		return std::move(returnTexture);
 	}
@@ -247,6 +249,7 @@ namespace Havtorn
 	CStaticRenderTexture CRenderTextureFactory::CreateStaticTexture(const std::string& filePath)
 	{
 		CStaticRenderTexture returnTexture;
+		returnTexture.Context = Framework->GetContext();
 		ENGINE_HR_MESSAGE(CreateShaderResourceViewFromAsset(Framework->GetDevice(), filePath, &returnTexture.ShaderResource), "SRV could not be created from %s", filePath.c_str());
 		return std::move(returnTexture);
 	}

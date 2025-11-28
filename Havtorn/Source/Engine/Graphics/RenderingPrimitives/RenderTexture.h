@@ -23,8 +23,8 @@ namespace Havtorn
 	public:
 		CStaticRenderTexture() = default;
 		~CStaticRenderTexture() = default;
-		void SetAsPSResourceOnSlot(U16 slot);
-		void SetAsVSResourceOnSlot(U16 slot);
+		void SetAsPSResourceOnSlot(U16 slot) const;
+		void SetAsVSResourceOnSlot(U16 slot) const;
 		void ReleaseTexture();
 	
 		// TODO.NW: This is silly. We should unify our render calls so they may all take a RenderTarget instead

@@ -6,12 +6,12 @@
 
 namespace Havtorn
 {
-	void CStaticRenderTexture::SetAsPSResourceOnSlot(U16 slot)
+	void CStaticRenderTexture::SetAsPSResourceOnSlot(U16 slot) const
 	{
 		Context->PSSetShaderResources(slot, 1, &ShaderResource);
 	}
 
-	void CStaticRenderTexture::SetAsVSResourceOnSlot(U16 slot)
+	void CStaticRenderTexture::SetAsVSResourceOnSlot(U16 slot) const
 	{
 		Context->VSSetShaderResources(slot, 1, &ShaderResource);
 	}

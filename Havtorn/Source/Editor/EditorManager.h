@@ -166,7 +166,7 @@ namespace Havtorn
 
 		[[nodiscard]] std::string GetFrameRate() const;
 		[[nodiscard]] std::string GetSystemMemory() const;
-		[[nodiscard]] std::string GetDrawCalls() const;
+		[[nodiscard]] std::string GetRenderInfo() const;
 
 	private:
 		CRenderManager* RenderManager = nullptr;

@@ -38,7 +38,7 @@ namespace Havtorn
 	{
 		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
 		{
-			intptr_t folderIconID = (intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::FolderIcon).GetShaderResourceView();
+			intptr_t folderIconID = Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::FolderIcon);
 
 			{ // Menu Bar
 				GUI::BeginChild("MenuBar", SVector2<F32>(0.0f, 30.0f));
@@ -184,41 +184,33 @@ namespace Havtorn
 		GUI::End();
 
 		// ANIMATED THUMBNAILS
-		//if (AnimatingThumbnailAsset.has_value())
-		//{
-		//	SEditorAssetRepresentation* animatingThumbnailAsset = AnimatingThumbnailAsset.value();
-		//	U32 assetID = SAssetReference(animatingThumbnailAsset->Name).UID;
+		if (AnimatingThumbnailAsset.has_value())
+		{
+			SEditorAssetRepresentation* animatingThumbnailAsset = AnimatingThumbnailAsset.value();
+			U32 assetID = SAssetReference(animatingThumbnailAsset->Name).UID;
 
-		//	// Start hover animated thumbnail
-		//	if (!WasAnimatingThumbnail)
-		//	{
-		//		HV_LOG_INFO("Start hover animated thumbnail");
+			// Start hover animated thumbnail
+			if (!WasAnimatingThumbnail)
+			{
+				Manager->GetRenderManager()->RequestRenderView(assetID);
+				PreviouslyAnimatingThumbnailAsset = animatingThumbnailAsset;
+			}
 
-		//		if (!animatingThumbnailAsset->TextureRef.IsShaderResourceValid())
-		//			Manager->GetRenderManager()->GetRenderTargetFromRequest(assetID, animatingThumbnailAsset->TextureRef);
+			Manager->GetResourceManager()->AnimateAssetTexture(animatingThumbnailAsset, animatingThumbnailAsset->DirectoryEntry.path().string(), AnimatedThumbnailTime += GTime::Dt());
+			CRenderTexture* animatedThumbnail = Manager->GetRenderManager()->GetRenderTargetTexture(assetID);
+			if (animatedThumbnail != nullptr)
+				animatingThumbnailAsset->TextureRef = *animatedThumbnail;
+		}
+		else if (!AnimatingThumbnailAsset.has_value() && WasAnimatingThumbnail)
+		{
+			HV_ASSERT(PreviouslyAnimatingThumbnailAsset, "When we stop hovering a thumbnail asset, we expect the PreviouslyAnimatingThumbnailAsset to be set!");
 
-		//		//animatingThumbnailAsset->TextureRef.Release();
-		//		Manager->GetRenderManager()->RequestRenderView(assetID);
-		//		PreviouslyAnimatingThumbnailAsset = animatingThumbnailAsset;
-		//	}
-
-		//	Manager->GetResourceManager()->AnimateAssetTexture(animatingThumbnailAsset, animatingThumbnailAsset->DirectoryEntry.path().string(), AnimatedThumbnailTime += GTime::Dt());
-		//	CRenderTexture* animatedThumbnail = Manager->GetRenderManager()->GetRenderTargetTexture(assetID);
-		//	if (animatedThumbnail != nullptr)
-		//		animatingThumbnailAsset->TextureRef = *animatedThumbnail;
-		//}
-		//else if (!AnimatingThumbnailAsset.has_value() && WasAnimatingThumbnail)
-		//{
-		//	HV_ASSERT(PreviouslyAnimatingThumbnailAsset, "When we stop hovering a thumbnail asset, we expect the PreviouslyAnimatingThumbnailAsset to be set!");
-
-		//	// End hover animated thumbnail
-		//	HV_LOG_INFO("End hover animated thumbnail");
-		//	U32 assetID = SAssetReference(PreviouslyAnimatingThumbnailAsset->Name).UID;
-		//	Manager->GetRenderManager()->UnrequestRenderView(assetID);
-		//	//PreviouslyAnimatingThumbnailAsset->TextureRef.Release();
-		//	Manager->GetResourceManager()->RequestThumbnailRender(PreviouslyAnimatingThumbnailAsset, PreviouslyAnimatingThumbnailAsset->DirectoryEntry.path().string());
-		//	PreviouslyAnimatingThumbnailAsset = nullptr;
-		//}
+			// End hover animated thumbnail
+			U32 assetID = SAssetReference(PreviouslyAnimatingThumbnailAsset->Name).UID;
+			Manager->GetRenderManager()->UnrequestRenderView(assetID);
+			Manager->GetResourceManager()->RequestThumbnailRender(PreviouslyAnimatingThumbnailAsset, PreviouslyAnimatingThumbnailAsset->DirectoryEntry.path().string());
+			PreviouslyAnimatingThumbnailAsset = nullptr;
+		}
 
 		if (AnimatedThumbnailTime == LastAnimatedThumbnailTime)
 			AnimatedThumbnailTime = 0.0f;
@@ -685,10 +677,39 @@ namespace Havtorn
 		else
 		{
 			const auto& rep = Manager->GetAssetRepFromDirEntry(entry);
-			if (!rep->TextureRef.IsShaderResourceValid())
-				rep->TextureRef = Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::FileIcon);
+			intptr_t repRenderTexture = 0;
+			
+			const CEditorResourceManager* resourceManager = Manager->GetResourceManager();
+			switch (rep->AssetType)
+			{
+			case EAssetType::StaticMesh:
+			case EAssetType::SkeletalMesh:
+			case EAssetType::Material:
+			case EAssetType::Animation:
+			case EAssetType::Texture:
+			{
+				CRenderTexture* renderTexture = &rep->TextureRef;
 
-			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), rep.get() == SelectedAsset.value_or(nullptr), (intptr_t)rep->TextureRef.GetShaderResourceView(), GetAssetTypeDetailName(rep->AssetType).c_str(), GetAssetTypeColor(rep->AssetType), rep->IsSourceWatched ? SColor::Orange : SColor(10), rep.get(), sizeof(SEditorAssetRepresentation));
+				if (renderTexture->IsShaderResourceValid())
+					repRenderTexture = (intptr_t)renderTexture->GetShaderResourceView();
+				else
+					repRenderTexture = resourceManager->GetStaticEditorTextureResource(EEditorTexture::FileIcon);
+			}
+				break;
+			case EAssetType::Scene:
+				repRenderTexture = resourceManager->GetStaticEditorTextureResource(EEditorTexture::SceneIcon);
+				break;
+			case EAssetType::Sequencer:
+				repRenderTexture = resourceManager->GetStaticEditorTextureResource(EEditorTexture::SequencerIcon);
+				break;
+			case EAssetType::Script:
+				repRenderTexture = resourceManager->GetStaticEditorTextureResource(EEditorTexture::ScriptIcon);
+				break;
+			default:
+				break;
+			}
+
+			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), rep.get() == SelectedAsset.value_or(nullptr), repRenderTexture, GetAssetTypeDetailName(rep->AssetType).c_str(), GetAssetTypeColor(rep->AssetType), rep->IsSourceWatched ? SColor::Orange : SColor(10), rep.get(), sizeof(SEditorAssetRepresentation));
 
 			if (result.IsClicked)
 				SelectedAsset = rep.get();

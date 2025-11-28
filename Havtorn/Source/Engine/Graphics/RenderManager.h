@@ -135,18 +135,17 @@ namespace Havtorn
 		void SetWorldMainCameraEntity(const SEntity& entity);
 		void SetWorldPlayState(EWorldPlayState playState);
 		[[nodiscard]] ENGINE_API CRenderTexture* GetRenderTargetTexture(const U64 renderViewID) const;
-		ENGINE_API bool GetRenderTargetFromRequest(const U64 renderViewID, CRenderTexture& renderTexture);
-		ENGINE_API void PushRenderCommand(SRenderCommand command, const U64 renderViewEntity);
+		ENGINE_API void PushRenderCommand(SRenderCommand command, const U64 renderViewID);
 		void SwapRenderViews();
 		void ClearRenderViewInstanceData();
 
-		ENGINE_API void RequestRenderView(const U64& id);
-		ENGINE_API void UnrequestRenderView(const U64& id);
-		ENGINE_API void RequestRendering(const U64& id);
-		bool PrepareRenderViews(const std::vector<U64>& renderViewEntities);
+		// If a callback is provided, the request will be unrequested after executing the callback
+		ENGINE_API void RequestRenderView(const U64& renderViewID, std::optional<std::function<void(CRenderTexture)>> callback = {});
+		ENGINE_API void UnrequestRenderView(const U64& renderViewID);
 
 		const SVector2<U16>& GetCurrentWindowResolution() const;
 		const SVector2<F32>& GetShadowAtlasResolution() const;
+		ENGINE_API U32 GetNumberOfRenderViews() const;
 
 	public:
 		ENGINE_API static U32 NumberOfDrawCallsThisFrame;
@@ -197,6 +196,7 @@ namespace Havtorn
 		inline void PreDebugShapes(const SRenderCommand& command);
 		inline void PostTonemappingUseDepth(const SRenderCommand& command);
 		inline void PostTonemappingIgnoreDepth(const SRenderCommand& command);
+		inline void TextureDraw(const SRenderCommand& command);
 		inline void DebugShapes(const SRenderCommand& command);
 
 		inline void DebugShadowAtlas();
@@ -381,12 +381,7 @@ namespace Havtorn
 
 		std::map<U64, SRenderView>* GameThreadRenderViews = &RenderViewsA;
 		std::map<U64, SRenderView>* RenderThreadRenderViews = &RenderViewsB;
-
-		// TODO.NW: Figure out better naming for these. The former is used for looser requesting where the target is not owned by the requester,
-		// but the former is intended to be requested once and persist until is has been rendered to, so ownership can transfer back outside of
-		// the render manager
-		std::vector<U64> RenderViewRequesters;
-		std::map<U64, SRenderView> RenderViewRequests;
+		std::map<U64, std::function<void(CRenderTexture&)>> RenderViewCallbacks;
 
 		SVector4 ClearColor = SVector4(0.5f, 0.5f, 0.5f, 1.0f);
 

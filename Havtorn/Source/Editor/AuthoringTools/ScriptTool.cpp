@@ -431,7 +431,7 @@ namespace Havtorn
 				SVector2<F32> imagePaddingMax = SVector2<F32>(8 - halfBorderWidth, 10 - halfBorderWidth);
 				SVector2<F32> imageMin = SVector2<F32>(headerRect.X - imagePadding.X, headerRect.Y - imagePadding.Y);
 				SVector2<F32> imageMax = SVector2<F32>(headerRect.Z + imagePaddingMax.X, headerRect.W + imagePaddingMax.Y);
-				GUI::DrawNodeHeader(node.UID, (intptr_t)Manager->GetResourceManager()->GetEditorTexture(EEditorTexture::NodeBackground).GetShaderResourceView(), imageMin, imageMax, SVector2<F32>(0.0f), uv, node.Color, nodeRounding);
+				GUI::DrawNodeHeader(node.UID, Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::NodeBackground), imageMin, imageMax, SVector2<F32>(0.0f), uv, node.Color, nodeRounding);
 			}
 			GUI::PopID();
 			GUI::PopScriptStyleVar();
