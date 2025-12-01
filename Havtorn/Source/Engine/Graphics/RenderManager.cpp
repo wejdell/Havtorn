@@ -954,6 +954,7 @@ namespace Havtorn
 		for (const U64& id : idsToErase)
 		{
 			GameThreadRenderViews->erase(id);
+			RenderThreadRenderViews->at(id).RenderTarget.Release();
 			RenderThreadRenderViews->erase(id);
 		}
 
