@@ -934,6 +934,44 @@ namespace Havtorn
 		fromScene->RemoveEntity(entity);
 	}
 
+	SEntity CScene::CopyEntity(const SEntity& fromEntity)
+	{
+		std::string newEntityName = "UNNAMED";
+		if (SMetaDataComponent* metaDataComponent = GetComponent<SMetaDataComponent>(fromEntity))
+		{
+			newEntityName = UGeneralUtils::GetNonCollidingString(metaDataComponent->Name.AsString(), Entities, [this](const SEntity& entity)
+				{
+					const SMetaDataComponent* metaDataComp = GetComponent<SMetaDataComponent>(entity);
+					return SComponent::IsValid(metaDataComp) ? metaDataComp->Name.AsString() : "UNNAMED";
+				}
+			);
+		}
+
+		SEntity newEntity = AddEntity(newEntityName);
+
+		for (auto& [typeID, storageIndex] : ComponentTypeIndices)
+		{
+			SComponentStorage& storage = Storages[storageIndex];
+			if (!storage.EntityIndices.contains(fromEntity.GUID))
+				continue;
+
+			if (!ComponentSerializers.contains(typeID))
+				continue;
+
+			U32 size = ComponentSerializers.at(typeID).SingleSizeAllocator(fromEntity, this);
+			const auto data = new char[size];
+			U64 pointerPosition = 0;
+			ComponentSerializers.at(typeID).SingleSerializer(fromEntity, this, data, pointerPosition);
+
+			pointerPosition = 0;
+			ComponentSerializers.at(typeID).SingleDeserializer(newEntity, this, data, pointerPosition);
+
+			delete[] data;
+		}
+
+		return newEntity;
+	}
+
 	void CScene::AddComponentEditorContext(const SEntity& owner, SComponentEditorContext* context)
 	{
 		if (!EntityComponentEditorContexts.contains(owner.GUID))

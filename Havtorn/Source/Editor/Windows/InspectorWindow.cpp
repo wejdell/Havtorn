@@ -167,9 +167,24 @@ namespace Havtorn
 
 		ViewManipulation(viewMatrix, viewportWindowPosition, viewportWindowDimensions);
 
-		GUI::PushID(0);
+		CScene* currentScene = Manager->GetCurrentWorkingScene();
+		if (Manager->GetIsDragCopyActive() && viewedTransformComp->Owner != currentScene->CopiedEntity && DeltaMatrix != SMatrix::Identity)
+		{
+			if (currentScene != nullptr && !currentScene->CopiedEntity.IsValid())
+			{
+				// TODO.NW: Make multi copy?
+				SEntity newEntity = currentScene->CopyEntity(viewedTransformComp->Owner);
+				Manager->SetSelectedEntity(newEntity);
+				currentScene->CopiedEntity = newEntity;
+			}
+		}
+
+		if (!Manager->GetIsDragCopyActive() && currentScene != nullptr)
+			currentScene->CopiedEntity = SEntity::Null;
+
 		SMatrix transformMatrix = viewedTransformComp->Transform.GetMatrix();
 
+		GUI::PushID(0);
 		// NW: We can choose GetSelectedEntity (which returns the first selected entity) to base the gizmo on if we want. 
 		// I think it feels nicer to get the gizmo on the latest selected entity though, even though it will apply the 
 		// delta matrix one frame later on all the other entities. This probably doesn't matter in editor.
@@ -183,10 +198,11 @@ namespace Havtorn
 		{
 			transformMatrix *= DeltaMatrix;
 		}
+		viewedTransformComp->Transform.SetMatrix(transformMatrix);
 		
 		GUI::PopID();
 		
-		viewedTransformComp->Transform.SetMatrix(transformMatrix);
+		
 		mainCameraData.TransformComponent->Transform.SetMatrix(viewMatrix);
 	}
 

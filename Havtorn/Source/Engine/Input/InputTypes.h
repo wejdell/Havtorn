@@ -147,6 +147,10 @@ namespace Havtorn
 		FocusEditorEntity,
 		DeleteEvent,
 		ToggleFullscreen,
+		AltPress,
+		AltRelease,
+		Copy,
+		Paste,
 		Count
 	};
 

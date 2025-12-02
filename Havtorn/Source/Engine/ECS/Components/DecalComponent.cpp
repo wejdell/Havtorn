@@ -26,6 +26,7 @@ namespace Havtorn
         DeserializeData(ShouldRenderNormal, fromData, pointerPosition); 
         U32 numberOfRefs = 0;
         DeserializeData(numberOfRefs, fromData, pointerPosition);
+        AssetReferences.clear();
         for (U32 i = 0; i < numberOfRefs; i++)
         {
             SAssetReference& newRef = AssetReferences.emplace_back();

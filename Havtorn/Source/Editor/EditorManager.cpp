@@ -43,6 +43,10 @@ namespace Havtorn
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::FocusEditorEntity).AddMember(this, &CEditorManager::OnInputFocusSelection);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::DeleteEvent).AddMember(this, &CEditorManager::OnDeleteEvent);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ToggleFullscreen).AddMember(this, &CEditorManager::OnToggleFullscreen);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::AltPress).AddMember(this, &CEditorManager::OnDragCopyEvent);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::AltRelease).AddMember(this, &CEditorManager::OnDragCopyEvent);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::Copy).AddMember(this, &CEditorManager::OnCopyEvent);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::Paste).AddMember(this, &CEditorManager::OnCopyEvent);
 	}
 
 	CEditorManager::~CEditorManager()
@@ -795,6 +799,25 @@ namespace Havtorn
 			IsFullscreen = !IsFullscreen;
 	}
 
+	void CEditorManager::OnCopyEvent(const SInputActionPayload payload)
+	{
+		if (!payload.IsPressed)
+			return;
+
+		//if (payload.Event == EInputActionEvent::Copy)
+		//	// copy
+		//else if (payload.Event == EInputActionEvent::Paste)
+		//	// paste
+	}
+
+	void CEditorManager::OnDragCopyEvent(const SInputActionPayload payload)
+	{
+		if (payload.IsPressed)
+			IsDragCopyActive = true;
+		if (payload.IsReleased)
+			IsDragCopyActive = false;
+	}
+
 	void CEditorManager::OnResolutionChanged(SVector2<U16> newResolution)
 	{
 		HV_LOG_INFO("EditorMananger -> New Res X: %i, New Res Y: %i", newResolution.X, newResolution.Y);
@@ -853,6 +876,11 @@ namespace Havtorn
 	bool CEditorManager::GetIsModalOpen() const
 	{
 		return IsModalOpen;
+	}
+
+	bool CEditorManager::GetIsDragCopyActive() const
+	{
+		return IsDragCopyActive;
 	}
 
 	void CEditorManager::SetGizmoSpace(const ETransformGizmoSpace space)
