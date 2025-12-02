@@ -123,6 +123,7 @@ namespace Havtorn
 		[[nodiscard]] bool GetIsFreeCamActive() const;
 		[[nodiscard]] bool GetIsOverGizmo() const;
 		[[nodiscard]] bool GetIsModalOpen() const;
+		[[nodiscard]] bool GetIsDragCopyActive() const;
 
 		void SetGizmoSpace(const ETransformGizmoSpace space);
 		void SetGizmoSnapping(const SSnappingOption& snapping);
@@ -158,6 +159,8 @@ namespace Havtorn
 		void OnInputFocusSelection(const SInputActionPayload payload);
 		void OnDeleteEvent(const SInputActionPayload payload);
 		void OnToggleFullscreen(const SInputActionPayload payload);
+		void OnCopyEvent(const SInputActionPayload payload);
+		void OnDragCopyEvent(const SInputActionPayload payload);
 
 		void OnResolutionChanged(SVector2<U16> newResolution);
 		void OnBeginPlay(std::vector<Ptr<CScene>>& scenes);
@@ -202,6 +205,7 @@ namespace Havtorn
 		bool IsFreeCamActive = false;
 		bool IsModalOpen = false;
 		bool IsFullscreen = false;
+		bool IsDragCopyActive = false;
 	};
 
 	template<class TEditorWindowType>

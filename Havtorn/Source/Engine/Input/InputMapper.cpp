@@ -82,6 +82,19 @@ namespace Havtorn
 		const SInputAction toggleFullscreen = { EInputKey::F11, EInputContext::Editor };
 		MapEvent(EInputActionEvent::ToggleFullscreen, toggleFullscreen);
 
+		// NW: the Sys key is a bit different. We might need this workaround on other modifier keys as well
+		const SInputAction altPress = { EInputKey::Alt, EInputContext::Editor, EInputModifier::Alt };
+		MapEvent(EInputActionEvent::AltPress, altPress);
+
+		const SInputAction altRelease = { EInputKey::Alt, EInputContext::Editor };
+		MapEvent(EInputActionEvent::AltRelease, altRelease);
+
+		const SInputAction copy = { EInputKey::KeyC, EInputContext::Editor, EInputModifier::Ctrl };
+		MapEvent(EInputActionEvent::Copy, copy);
+
+		const SInputAction paste = { EInputKey::KeyV, EInputContext::Editor, EInputModifier::Ctrl };
+		MapEvent(EInputActionEvent::Paste, paste);
+
 		return true;
 	}
 

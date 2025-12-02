@@ -105,7 +105,10 @@ namespace Havtorn
 				[](const SEntity& entity, const CScene* scene)
 				{
 					TComponent* component = scene->GetComponent<TComponent>(entity);
-					U32 size = component != nullptr ? GetDataSize(component) : 0;
+					if (component == nullptr)
+						return U32(0);
+
+					U32 size = GetDataSize(*component);
 					return size;
 				};
 
@@ -121,6 +124,7 @@ namespace Havtorn
 				{					
 					TComponent component;
 					DeserializeData(component, fromData, pointerPosition);
+					component.Owner = entity;
 					scene->AddComponent(component, entity);
 					scene->AddComponentEditorContext(entity, &TComponentEditorContext::Context);	
 				};
@@ -229,6 +233,7 @@ namespace Havtorn
 				{
 					TComponent component;
 					component.Deserialize(fromData, pointerPosition);
+					component.Owner = entity;
 					scene->AddComponent(component, entity);
 					scene->AddComponentEditorContext(entity, &TComponentEditorContext::Context);
 				};
@@ -382,6 +387,7 @@ namespace Havtorn
 		ENGINE_API void RemoveEntity(const SEntity entity);
 		ENGINE_API void ClearScene();
 		ENGINE_API void MoveEntityToScene(const SEntity& entity, CScene* fromScene);
+		ENGINE_API SEntity CopyEntity(const SEntity& fromEntity);
 
 		template<typename T>
 		const SEntity& GetEntity(const T* fromComponent) const
@@ -501,5 +507,6 @@ namespace Havtorn
 		CHavtornStaticString<255> SceneName = std::string("SceneName");
 
 		SEntity PreviewEntity = SEntity::Null;
+		SEntity CopiedEntity = SEntity::Null;
 	};
 }
