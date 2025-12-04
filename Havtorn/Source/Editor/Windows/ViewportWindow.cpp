@@ -193,7 +193,7 @@ namespace Havtorn
 
 	void CViewportWindow::UpdatePreviewEntity(CScene* scene, const SEditorAssetRepresentation* assetRepresentation)
 	{
-		if (assetRepresentation->AssetType != EAssetType::StaticMesh && assetRepresentation->AssetType != EAssetType::SkeletalMesh)
+		if (assetRepresentation->AssetType != EAssetType::StaticMesh && assetRepresentation->AssetType != EAssetType::SkeletalMesh && assetRepresentation->AssetType != EAssetType::Animation)
 			return;
 
 		if (scene->PreviewEntity.IsValid())
@@ -261,6 +261,26 @@ namespace Havtorn
 			SSkeletalMeshAsset* meshAsset = assetRegistry->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(meshPath), scene->PreviewEntity.GUID);
 			
 			// TODO.NW: Deal with different asset types, and figure out bind pose for skeletal meshes
+
+			std::vector<std::string> previewMaterials;
+			previewMaterials.resize(meshAsset->NumberOfMaterials, CEditorManager::PreviewMaterial);
+			scene->AddComponent<SMaterialComponent>(scene->PreviewEntity, previewMaterials);
+			scene->AddComponentEditorContext(scene->PreviewEntity, &SMaterialComponentEditorContext::Context);
+		}
+			break;
+
+		case EAssetType::Animation:
+		{
+			const std::string animationPath = assetRepresentation->DirectoryEntry.path().string();
+			SSkeletalAnimationAsset* animationAsset = assetRegistry->RequestAssetData<SSkeletalAnimationAsset>(SAssetReference(animationPath), scene->PreviewEntity.GUID);
+			const std::vector<std::string> animationPaths = { animationPath };
+			scene->AddComponent<SSkeletalAnimationComponent>(scene->PreviewEntity, animationPaths);
+			scene->AddComponentEditorContext(scene->PreviewEntity, &SSkeletalAnimationComponentEditorContext::Context);
+
+			const std::string meshPath = animationAsset->RigPath;
+			scene->AddComponent<SSkeletalMeshComponent>(scene->PreviewEntity, meshPath);
+			scene->AddComponentEditorContext(scene->PreviewEntity, &SSkeletalMeshComponentEditorContext::Context);
+			SSkeletalMeshAsset* meshAsset = assetRegistry->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(meshPath), scene->PreviewEntity.GUID);
 
 			std::vector<std::string> previewMaterials;
 			previewMaterials.resize(meshAsset->NumberOfMaterials, CEditorManager::PreviewMaterial);
