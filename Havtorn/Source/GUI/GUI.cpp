@@ -393,7 +393,9 @@ namespace Havtorn
 
 		bool IsWindowHovered()
 		{
-			return ImGui::IsWindowHovered();
+			// TODO.NW: Extend coordinates to include window header and scrollbar
+			ImRect windowRect = ImGui::GetCurrentWindow()->Rect();
+			return ImGui::IsMouseHoveringRect(windowRect.Min, windowRect.Max);
 		}
 
 		bool IsPopupOpen(const char* label)

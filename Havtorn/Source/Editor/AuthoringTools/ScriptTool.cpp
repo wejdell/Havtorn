@@ -7,6 +7,7 @@
 #include <HexRune/HexRune.h>
 #include <ECS/GUIDManager.h>
 #include <ECS/Components/TransformComponent.h>
+#include <ECS/Systems/CameraSystem.h>
 #include <HexRune/CoreNodes/CoreNodes.h>
 #include <FileSystem.h>
 #include "magic_enum.h"
@@ -72,6 +73,14 @@ namespace Havtorn
 			GUI::End();
 			return;
 		}
+
+		const bool isWindowHovered = GUI::IsWindowHovered();
+		if (!IsHoveringWindow && isWindowHovered)
+			GEngine::GetWorld()->BlockSystem<CCameraSystem>(this);
+		else if (IsHoveringWindow && !isWindowHovered)
+			GEngine::GetWorld()->UnblockSystem<CCameraSystem>(this);
+
+		IsHoveringWindow = isWindowHovered;
 
 		{ // Menu Bar
 			GUI::BeginChild("ScriptMenuBar", SVector2<F32>(0.0f, 30.0f));
