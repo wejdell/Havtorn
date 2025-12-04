@@ -224,7 +224,7 @@ namespace Havtorn
 			return;
 		}
 
-		std::string newEntityName = UGeneralUtils::GetNonCollidingString("NewEntity", scene->Entities, [scene](const SEntity& entity)
+		std::string newEntityName = UGeneralUtils::GetNonCollidingString(assetRepresentation->Name, scene->Entities, [scene](const SEntity& entity)
 			{
 				const SMetaDataComponent* metaDataComp = scene->GetComponent<SMetaDataComponent>(entity);
 				return SComponent::IsValid(metaDataComp) ? metaDataComp->Name.AsString() : "UNNAMED";
