@@ -96,7 +96,7 @@ namespace Havtorn
 				{
 					if (std::invoke(std::forward<P>(projection), element) == newString)
 					{
-						newString = startingString + std::to_string(++duplicates);
+						newString = startingString + "_" + std::to_string(++duplicates);
 						foundCollision = true;
 						break;
 					}
