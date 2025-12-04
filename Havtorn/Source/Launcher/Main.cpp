@@ -10,6 +10,8 @@
 #include <../Editor/EditorProcess.h>
 #include <../GUI/GUIProcess.h>
 
+#include <../Platform/PlatformManager.h>
+
 #include <iostream>
 #include <filesystem>
 
@@ -82,10 +84,6 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	}
 #endif
 
-#ifdef USE_CONSOLE
-	OpenConsole();
-#endif
-
 	CPlatformProcess* platformProcess = new CPlatformProcess(100, 100, 1280, 720);
 	CEngineProcess* engineProcess = new CEngineProcess();
 	CGameProcess* gameProcess = new CGameProcess();
@@ -119,6 +117,12 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 #ifdef HV_EDITOR_BUILD	
 	editorProcess->Init(platformProcess->PlatformManager);
 #endif
+
+#ifdef USE_CONSOLE
+	OpenConsole();
+#endif
+
+	SetForegroundWindow(platformProcess->PlatformManager->GetWindowHandle());
 
 	//application->Setup(platformProcess->PlatformManager); //foreach -> process->Init();
 	application->Run();
