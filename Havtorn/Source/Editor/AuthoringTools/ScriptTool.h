@@ -60,5 +60,7 @@ namespace Havtorn
 
 		const F32 HeaderHeight = 12.0f;
 		const F32 PinNameOffset = 4.0f;
+
+		bool IsHoveringWindow = false;
 	};
 }

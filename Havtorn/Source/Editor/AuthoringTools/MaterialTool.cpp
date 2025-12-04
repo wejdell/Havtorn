@@ -11,6 +11,7 @@
 #include <Input/InputTypes.h>
 #include <Timer.h>
 #include <Assets/AssetRegistry.h>
+#include <ECS/Systems/CameraSystem.h>
 
 #include "MaterialTool.h"
 
@@ -49,6 +50,14 @@ namespace Havtorn
 			GUI::End();
 			return;
 		}
+
+		const bool isWindowHovered = GUI::IsWindowHovered();
+		if (!IsHoveringWindow && isWindowHovered)
+			GEngine::GetWorld()->BlockSystem<CCameraSystem>(this);
+		else if (IsHoveringWindow && !isWindowHovered)
+			GEngine::GetWorld()->UnblockSystem<CCameraSystem>(this);
+
+		IsHoveringWindow = isWindowHovered;
 
 		{ // Menu Bar
 			GUI::BeginChild("MaterialOptions", SVector2<F32>(0.0f, 168.0f));

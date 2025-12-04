@@ -47,5 +47,6 @@ namespace Havtorn
 		F32 CurrentZoom = StartingZoom;
 		bool IsOrbiting = false;
 		bool IsHoveringViewport = false;
+		bool IsHoveringWindow = false;
 	};
 }
