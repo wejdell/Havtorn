@@ -23,9 +23,9 @@ namespace Havtorn
 		CRenderTexture CreateDepth(SVector2<U16> size, DXGI_FORMAT format);
 
 		ENGINE_API CRenderTexture CreateSRVFromSource(const std::string& filePath);
-		ENGINE_API CRenderTexture CreateSRVFromAsset(const std::string& filePath);
+		ENGINE_API CRenderTexture CreateSRVFromAsset(const std::string& filePath, const EAssetType assetType);
 
-		ENGINE_API CStaticRenderTexture CreateStaticTexture(const std::string& filePath);
+		ENGINE_API CStaticRenderTexture CreateStaticTexture(const std::string& filePath, const EAssetType assetType);
 
 		CGBuffer CreateGBuffer(SVector2<U16> size);
 

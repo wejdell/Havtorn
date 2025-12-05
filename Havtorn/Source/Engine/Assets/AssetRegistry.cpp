@@ -302,7 +302,17 @@ namespace Havtorn
             STextureFileHeader assetFile;
             assetFile.Deserialize(data);
             STextureAsset textureAsset(assetFile);
-            textureAsset.RenderTexture = RenderManager->RenderTextureFactory.CreateStaticTexture(filePath);
+            textureAsset.RenderTexture = RenderManager->RenderTextureFactory.CreateStaticTexture(filePath, assetFile.AssetType);
+            asset.Data = textureAsset;
+            asset.SourceData = assetFile.SourceData;
+        }
+        break;
+        case EAssetType::TextureCube:
+        {
+            STextureCubeFileHeader assetFile;
+            assetFile.Deserialize(data);
+            STextureCubeAsset textureAsset(assetFile);
+            textureAsset.RenderTexture = RenderManager->RenderTextureFactory.CreateStaticTexture(filePath, assetFile.AssetType);
             asset.Data = textureAsset;
             asset.SourceData = assetFile.SourceData;
         }
@@ -422,6 +432,30 @@ namespace Havtorn
             hvaPath = SaveAsset(destinationPath, fileHeader);
         }
         break;
+        case EAssetType::TextureCube:
+        {
+            std::string textureFileData;
+            UFileSystem::Deserialize(filePath, textureFileData);
+
+            ETextureFormat format = {};
+            if (const std::string extension = UGeneralUtils::ExtractFileExtensionFromPath(filePath); extension == "dds")
+                format = ETextureFormat::DDS;
+            else if (extension == "tga")
+                format = ETextureFormat::TGA;
+
+            STextureCubeFileHeader fileHeader;
+            fileHeader.AssetType = EAssetType::TextureCube;
+
+            fileHeader.Name = UGeneralUtils::ExtractFileBaseNameFromPath(filePath);
+            fileHeader.OriginalFormat = format;
+            fileHeader.SourceData = sourceData;
+            fileHeader.Data = std::move(textureFileData);
+
+            // TODO.NW: Make sure file header gets source data set, in ModelImport as well
+
+            hvaPath = SaveAsset(destinationPath, fileHeader);
+        }
+        break;
         case EAssetType::AudioOneShot:
             break;
         case EAssetType::AudioCollection:
@@ -484,6 +518,16 @@ namespace Havtorn
         else if (std::holds_alternative<STextureFileHeader>(fileHeader))
         {
             STextureFileHeader header = std::get<STextureFileHeader>(fileHeader);
+            U32 size = header.GetSize();
+            const auto data = new char[size];
+            header.Serialize(data);
+            hvaPath = destinationPath + header.Name + ".hva";
+            UFileSystem::Serialize(hvaPath, &data[0], size);
+            delete[] data;
+        }
+        else if (std::holds_alternative<STextureCubeFileHeader>(fileHeader))
+        {
+            STextureCubeFileHeader header = std::get<STextureCubeFileHeader>(fileHeader);
             U32 size = header.GetSize();
             const auto data = new char[size];
             header.Serialize(data);

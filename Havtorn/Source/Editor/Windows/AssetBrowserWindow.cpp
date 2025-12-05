@@ -294,6 +294,9 @@ namespace Havtorn
 			if (GUI::RadioButton("Texture", ImportOptions.AssetType == EAssetType::Texture))
 				ImportOptions.AssetType = EAssetType::Texture;
 			GUI::SameLine();
+			if (GUI::RadioButton("TextureCube", ImportOptions.AssetType == EAssetType::TextureCube))
+				ImportOptions.AssetType = EAssetType::TextureCube;
+			GUI::SameLine();
 			if (GUI::RadioButton("Material", ImportOptions.AssetType == EAssetType::Material))
 				ImportOptions.AssetType = EAssetType::Material;
 			GUI::SameLine();
@@ -329,6 +332,9 @@ namespace Havtorn
 			break;
 		case EAssetType::Texture:
 			ImportOptionsTexture();
+			break;
+		case EAssetType::TextureCube:
+			ImportOptionsTextureCube();
 			break;
 		case EAssetType::Material:
 			CreateOptionsMaterial();
@@ -462,6 +468,10 @@ namespace Havtorn
 	}
 
 	void CAssetBrowserWindow::ImportOptionsTexture()
+	{
+	}
+
+	void CAssetBrowserWindow::ImportOptionsTextureCube()
 	{
 	}
 
@@ -687,6 +697,7 @@ namespace Havtorn
 			case EAssetType::Material:
 			case EAssetType::Animation:
 			case EAssetType::Texture:
+			case EAssetType::TextureCube:
 			{
 				CRenderTexture* renderTexture = &rep->TextureRef;
 

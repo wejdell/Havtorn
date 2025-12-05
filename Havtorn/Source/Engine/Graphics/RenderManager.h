@@ -110,7 +110,7 @@ namespace Havtorn
 		ENGINE_API void RenderSkeletalAnimationAssetTexture(CRenderTexture& assetTexture, const std::string& filePath, const std::vector<SMatrix>& boneTransforms = {});
 
 		ENGINE_API CRenderTexture CreateRenderTextureFromSource(const std::string& filePath);
-		ENGINE_API CRenderTexture CreateRenderTextureFromAsset(const std::string& filePath);
+		ENGINE_API CRenderTexture CreateRenderTextureFromAsset(const std::string& filePath, const EAssetType assetType);
 
 		ENGINE_API U64 GetEntityGUIDFromData(U64 dataIndex) const;
 
@@ -197,6 +197,7 @@ namespace Havtorn
 		inline void PostTonemappingUseDepth(const SRenderCommand& command);
 		inline void PostTonemappingIgnoreDepth(const SRenderCommand& command);
 		inline void TextureDraw(const SRenderCommand& command);
+		inline void TextureCubeDraw(const SRenderCommand& command);
 		inline void DebugShapes(const SRenderCommand& command);
 
 		inline void DebugShadowAtlas();

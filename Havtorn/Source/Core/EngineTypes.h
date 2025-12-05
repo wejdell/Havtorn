@@ -30,7 +30,8 @@ namespace Havtorn
 		VisualFX,
 		Scene,
 		Sequencer,
-		Script
+		Script,
+		TextureCube,
 	};
 
 	static SColor GetAssetTypeColor(const EAssetType type)
@@ -46,6 +47,8 @@ namespace Havtorn
 		case EAssetType::StaticMesh:
 			return SColor::Teal;
 		case EAssetType::Texture:
+			return SColor::Red;
+		case EAssetType::TextureCube:
 			return SColor::Red;
 		case EAssetType::Script:
 			return SColor::Blue;
@@ -75,6 +78,8 @@ namespace Havtorn
 			return "STATIC MESH";
 		case EAssetType::Texture:
 			return "TEXTURE";
+		case EAssetType::TextureCube:
+			return "TEXTURE CUBE";
 		case EAssetType::Script:
 			return "SCRIPT";
 		case EAssetType::Scene:

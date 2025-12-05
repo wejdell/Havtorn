@@ -125,8 +125,7 @@ namespace Havtorn
 				GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
 			}
 
-
-			STextureAsset* skybox = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(SAssetReference("Resources/DefaultSkybox.hva"), assetID);
+			STextureCubeAsset* skybox = GEngine::GetAssetRegistry()->RequestAssetData<STextureCubeAsset>(SAssetReference("Resources/DefaultSkybox.hva"), assetID);
 			CStaticRenderTexture skyboxTexture = CStaticRenderTexture();
 
 			if (!skybox)
@@ -224,7 +223,6 @@ namespace Havtorn
 			break;
 		case EAssetType::Texture:
 		{
-			// TODO.NW: Add cubemap
 			STextureAsset* textureAsset = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
 
 			SRenderCommand command;
@@ -234,6 +232,32 @@ namespace Havtorn
 			GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
 
 			RenderManager->PushRenderCommand(command, assetID);
+		}
+			break;
+		case EAssetType::TextureCube:
+		{
+			STextureCubeAsset* textureAsset = GEngine::GetAssetRegistry()->RequestAssetData<STextureCubeAsset>(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
+
+			{
+				SVector location = SVector(0.0f, 0.0f, 1.0f);
+				SMatrix camView = SMatrix::LookAtLH(location, SVector(), SVector::Up).FastInverse();
+				SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), 1.0f, 0.01f, 10.0f);
+
+				SRenderCommand command = SRenderCommand(ERenderCommandType::CameraDataStorage);
+				command.Matrices.emplace_back(camView);
+				command.Matrices.emplace_back(camProjection);
+				RenderManager->PushRenderCommand(command, assetID);
+			}
+
+			{
+				SRenderCommand command;
+				command.Type = ERenderCommandType::TextureCubeDraw;
+				command.RenderTextures.push_back(textureAsset->RenderTexture);
+
+				GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
+
+				RenderManager->PushRenderCommand(command, assetID);
+			}
 		}
 			break;
 		default:
@@ -286,6 +310,7 @@ namespace Havtorn
 		case EAssetType::StaticMesh:
 		case EAssetType::SkeletalMesh:
 		case EAssetType::Texture:
+		case EAssetType::TextureCube:
 		case EAssetType::Material:
 		case EAssetType::Scene:
 		case EAssetType::Sequencer:

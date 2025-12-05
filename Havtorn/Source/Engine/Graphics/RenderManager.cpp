@@ -190,6 +190,7 @@ namespace Havtorn
 		RenderFunctions[ERenderCommandType::AntiAliasing] =						std::bind(&CRenderManager::AntiAliasing, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::GammaCorrection] =					std::bind(&CRenderManager::GammaCorrection, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::TextureDraw] =						std::bind(&CRenderManager::TextureDraw, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::TextureCubeDraw] =						std::bind(&CRenderManager::TextureCubeDraw, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::RendererDebug] =					std::bind(&CRenderManager::RendererDebug, this, std::placeholders::_1);
 	}
 
@@ -728,9 +729,9 @@ namespace Havtorn
 		return std::move(RenderTextureFactory.CreateSRVFromSource(filePath));
 	}
 
-	CRenderTexture CRenderManager::CreateRenderTextureFromAsset(const std::string& filePath)
+	CRenderTexture CRenderManager::CreateRenderTextureFromAsset(const std::string& filePath, const EAssetType assetType)
 	{
-		return std::move(RenderTextureFactory.CreateSRVFromAsset(filePath));
+		return std::move(RenderTextureFactory.CreateSRVFromAsset(filePath, assetType));
 	}
 
 	U64 CRenderManager::GetEntityGUIDFromData(U64 dataIndex) const
@@ -2342,6 +2343,35 @@ namespace Havtorn
 		command.RenderTextures[0].SetAsPSResourceOnSlot(0);
 		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsActiveTarget();
 		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+	}
+
+	inline void CRenderManager::TextureCubeDraw(const SRenderCommand& command)
+	{
+		ID3D11ShaderResourceView* nullView = NULL;
+		RenderStateManager.PSSetResources(21, 1, &nullView);
+
+		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsActiveTarget();
+
+		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::Disable);
+		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::DepthFirst);
+		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
+
+		RenderStateManager.PSSetResources(0, 1, command.RenderTextures[0].GetShaderResourceView());
+
+		RenderStateManager.IASetTopology(ETopologies::TriangleList);
+		RenderStateManager.IASetInputLayout(EInputLayoutType::Position4);
+		RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[STATIC_U8(EVertexBufferPrimitives::SkyboxCube)], RenderStateManager.MeshVertexStrides[1], RenderStateManager.MeshVertexOffsets[0]);
+		RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[STATIC_U8(EDefaultIndexBuffers::SkyboxCube)]);
+
+		RenderStateManager.VSSetShader(EVertexShaders::Skybox);
+		RenderStateManager.PSSetShader(EPixelShaders::Skybox);
+
+		RenderStateManager.DrawIndexed(36, 0, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
+
+		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
+		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::Default);
+		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
 	}
 
 	inline void CRenderManager::DebugShapes(const SRenderCommand& command)
