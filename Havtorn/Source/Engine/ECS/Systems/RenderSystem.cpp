@@ -328,7 +328,7 @@ namespace Havtorn
 					if (!SComponent::IsValid(environmentLightComp))
 						continue;
 
-					STextureAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(environmentLightComp->AssetReference, environmentLightComp->Owner.GUID);
+					STextureCubeAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<STextureCubeAsset>(environmentLightComp->AssetReference, environmentLightComp->Owner.GUID);
 					if (asset == nullptr)
 						continue;
 
@@ -425,7 +425,7 @@ namespace Havtorn
 					const SEnvironmentLightComponent* environmentLightComp = scene->GetComponent<SEnvironmentLightComponent>(closestEnvironmentLightEntity);
 					if (SComponent::IsValid(environmentLightComp))
 					{
-						STextureAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(environmentLightComp->AssetReference, environmentLightComp->Owner.GUID);
+						STextureCubeAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<STextureCubeAsset>(environmentLightComp->AssetReference, environmentLightComp->Owner.GUID);
 						if (asset != nullptr)
 						{
 							SRenderCommand command;

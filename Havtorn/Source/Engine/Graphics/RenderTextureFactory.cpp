@@ -10,29 +10,44 @@
 
 namespace Havtorn
 {
-	HRESULT CreateShaderResourceViewFromAsset(ID3D11Device* device, const std::string& filePath, ID3D11ShaderResourceView** outShaderResourceView)
+	HRESULT CreateShaderResourceViewFromAsset(ID3D11Device* device, const std::string& filePath, const EAssetType assetType, ID3D11ShaderResourceView** outShaderResourceView)
 	{
 		const U64 fileSize = UFileSystem::GetFileSize(filePath);
 		char* data = new char[fileSize];
 
 		UFileSystem::Deserialize(filePath, data, STATIC_U32(fileSize));
 
-		STextureFileHeader assetFile;
-		assetFile.Deserialize(data);
+		ETextureFormat format = ETextureFormat::DDS;
+		std::string fileData = {};
+
+		if (assetType == EAssetType::Texture)
+		{
+			STextureFileHeader assetFile;
+			assetFile.Deserialize(data);
+			format = assetFile.OriginalFormat;
+			fileData = assetFile.Data;
+		}
+		else if (assetType == EAssetType::TextureCube)
+		{
+			STextureCubeFileHeader assetFile;
+			assetFile.Deserialize(data);
+			format = assetFile.OriginalFormat;
+			fileData = assetFile.Data;
+		}
 
 		DirectX::ScratchImage scratchImage;
 		DirectX::TexMetadata metaData = {};
 
-		switch (assetFile.OriginalFormat)
+		switch (format)
 		{
 		case ETextureFormat::DDS:
-			GetMetadataFromDDSMemory(reinterpret_cast<uint8_t*>(assetFile.Data.data()), assetFile.Data.size(), DirectX::DDS_FLAGS_NONE, metaData);
-			LoadFromDDSMemory(reinterpret_cast<uint8_t*>(assetFile.Data.data()), assetFile.Data.size(), DirectX::DDS_FLAGS_NONE, &metaData, scratchImage);
+			GetMetadataFromDDSMemory(reinterpret_cast<uint8_t*>(fileData.data()), fileData.size(), DirectX::DDS_FLAGS_NONE, metaData);
+			LoadFromDDSMemory(reinterpret_cast<uint8_t*>(fileData.data()), fileData.size(), DirectX::DDS_FLAGS_NONE, &metaData, scratchImage);
 
 			break;
 		case ETextureFormat::TGA:
-			GetMetadataFromTGAMemory(reinterpret_cast<uint8_t*>(assetFile.Data.data()), assetFile.Data.size(), DirectX::TGA_FLAGS_NONE, metaData);
-			LoadFromTGAMemory(reinterpret_cast<uint8_t*>(assetFile.Data.data()), assetFile.Data.size(), DirectX::TGA_FLAGS_NONE, &metaData, scratchImage);
+			GetMetadataFromTGAMemory(reinterpret_cast<uint8_t*>(fileData.data()), fileData.size(), DirectX::TGA_FLAGS_NONE, metaData);
+			LoadFromTGAMemory(reinterpret_cast<uint8_t*>(fileData.data()), fileData.size(), DirectX::TGA_FLAGS_NONE, &metaData, scratchImage);
 			break;
 		}
 
@@ -238,19 +253,19 @@ namespace Havtorn
 		return std::move(returnTexture);
 	}
 
-	CRenderTexture CRenderTextureFactory::CreateSRVFromAsset(const std::string& filePath)
+	CRenderTexture CRenderTextureFactory::CreateSRVFromAsset(const std::string& filePath, const EAssetType assetType)
 	{
 		CRenderTexture returnTexture;
 		returnTexture.Context = Framework->GetContext();
-		ENGINE_HR_MESSAGE(CreateShaderResourceViewFromAsset(Framework->GetDevice(), filePath, &returnTexture.ShaderResource), "SRV could not be created from %s", filePath.c_str());
+		ENGINE_HR_MESSAGE(CreateShaderResourceViewFromAsset(Framework->GetDevice(), filePath, assetType, &returnTexture.ShaderResource), "SRV could not be created from %s", filePath.c_str());
 		return std::move(returnTexture);
 	}
 
-	CStaticRenderTexture CRenderTextureFactory::CreateStaticTexture(const std::string& filePath)
+	CStaticRenderTexture CRenderTextureFactory::CreateStaticTexture(const std::string& filePath, const EAssetType assetType)
 	{
 		CStaticRenderTexture returnTexture;
 		returnTexture.Context = Framework->GetContext();
-		ENGINE_HR_MESSAGE(CreateShaderResourceViewFromAsset(Framework->GetDevice(), filePath, &returnTexture.ShaderResource), "SRV could not be created from %s", filePath.c_str());
+		ENGINE_HR_MESSAGE(CreateShaderResourceViewFromAsset(Framework->GetDevice(), filePath, assetType, &returnTexture.ShaderResource), "SRV could not be created from %s", filePath.c_str());
 		return std::move(returnTexture);
 	}
 

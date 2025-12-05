@@ -30,6 +30,7 @@ namespace Havtorn
 		void AssetCreationModal();
 
 		void ImportOptionsTexture();
+		void ImportOptionsTextureCube();
 		void ImportOptionsSpriteAnimation();
 		void ImportOptionsStaticMesh();
 		void ImportOptionsSkeletalMesh();

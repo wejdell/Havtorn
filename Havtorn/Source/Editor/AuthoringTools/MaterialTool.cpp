@@ -114,8 +114,7 @@ namespace Havtorn
 				if (skyboxAssetRep != nullptr)
 					pickerLabel.append(skyboxAssetRep->Name);
 
-				// TODO.NW: Filter away cubemaps with Axel's filtering
-				SAssetPickResult result = GUI::AssetPicker(pickerLabel.c_str(), "Preview Skybox", assetPickerThumbnail, "Assets/Textures/Cubemaps", 4, Manager->GetAssetInspectFunction());
+				SAssetPickResult result = GUI::AssetPickerFilter(pickerLabel.c_str(), "Preview Skybox", assetPickerThumbnail, "Assets/Textures/Cubemaps", 4, Manager->GetAssetFilteredInspectFunction(), EAssetType::TextureCube);
 
 				if (result.State == EAssetPickerState::AssetPicked)
 				{
@@ -123,7 +122,7 @@ namespace Havtorn
 					assetRegistry->UnrequestAsset(PreviewSkylightAssetRef, MaterialToolRenderID);
 					skyboxAssetRep = Manager->GetAssetRepFromDirEntry(result.PickedEntry).get();
 					PreviewSkylightAssetRef = SAssetReference(skyboxAssetRep->DirectoryEntry.path().string());
-					PreviewSkylight = assetRegistry->RequestAssetData<STextureAsset>(PreviewSkylightAssetRef, MaterialToolRenderID);
+					PreviewSkylight = assetRegistry->RequestAssetData<STextureCubeAsset>(PreviewSkylightAssetRef, MaterialToolRenderID);
 				}
 				
 				GUI::PushItemWidth(78.0f);
@@ -179,8 +178,7 @@ namespace Havtorn
 						if (assetRep != nullptr)
 							pickerLabel.append(assetRep->Name);
 						
-						// TODO.NW: Filter away cubemaps with Axel's filtering
-						SAssetPickResult result = GUI::AssetPicker(pickerLabel.c_str(), "Texture", assetPickerThumbnail, "Assets/Textures", columnCount, Manager->GetAssetInspectFunction(), SVector2<F32>(materialPropertyWidth));
+						SAssetPickResult result = GUI::AssetPickerFilter(pickerLabel.c_str(), "Texture", assetPickerThumbnail, "Assets/Textures", columnCount, Manager->GetAssetFilteredInspectFunction(), EAssetType::Texture, SVector2<F32>(materialPropertyWidth));
 
 						if (result.State == EAssetPickerState::AssetPicked)
 						{
@@ -255,7 +253,7 @@ namespace Havtorn
 
 		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
 		assetRegistry->RequestAsset(SAssetReference(filePath), MaterialToolRenderID);
-		PreviewSkylight = assetRegistry->RequestAssetData<STextureAsset>(PreviewSkylightAssetRef, MaterialToolRenderID);
+		PreviewSkylight = assetRegistry->RequestAssetData<STextureCubeAsset>(PreviewSkylightAssetRef, MaterialToolRenderID);
 
 		MaterialData = SGraphicsMaterialAsset(assetFile).Material;
 		Manager->GetRenderManager()->RequestRenderView(MaterialToolRenderID);

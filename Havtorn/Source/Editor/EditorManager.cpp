@@ -379,6 +379,7 @@ namespace Havtorn
 		case EAssetType::Material:
 		case EAssetType::Animation:
 		case EAssetType::Texture:
+		case EAssetType::TextureCube:
 			rep.UsingEditorTexture = false;
 			ResourceManager->RequestThumbnailRender(&rep, filePath);
 			break;

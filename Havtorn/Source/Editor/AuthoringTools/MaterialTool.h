@@ -37,7 +37,7 @@ namespace Havtorn
 		CRenderTexture* MaterialRender = nullptr;
 
 		SAssetReference PreviewSkylightAssetRef = SAssetReference("Assets/Textures/Cubemaps/CubemapTheVisit.hva");
-		STextureAsset* PreviewSkylight = nullptr;
+		STextureCubeAsset* PreviewSkylight = nullptr;
 		SColor PreviewLightColor = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 1.0f };
 		F32 PreviewLightIntensity = 0.25f;
 

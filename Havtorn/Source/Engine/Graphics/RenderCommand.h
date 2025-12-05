@@ -53,6 +53,7 @@ namespace Havtorn
 		AntiAliasing,
 		GammaCorrection,
 		TextureDraw,
+		TextureCubeDraw,
 		RendererDebug
 	};
 

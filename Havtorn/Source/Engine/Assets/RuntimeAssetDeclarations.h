@@ -112,6 +112,21 @@ namespace Havtorn
 		CStaticRenderTexture RenderTexture;
 	};
 
+	struct STextureCubeAsset
+	{
+		STextureCubeAsset() = default;
+		explicit STextureCubeAsset(const STextureCubeFileHeader& assetFileData)
+			: AssetType(assetFileData.AssetType)
+			, Name(assetFileData.Name)
+		{
+			// NW: RenderTarget is assigned in CAssetRegistry::LoadAsset
+		}
+
+		EAssetType AssetType = EAssetType::TextureCube;
+		std::string Name = "";
+		CStaticRenderTexture RenderTexture;
+	};
+
 	struct SGraphicsMaterialAsset
 	{
 		SGraphicsMaterialAsset() = default;
@@ -140,7 +155,7 @@ namespace Havtorn
 		SSpriteAnimationClip SpriteAnimationClip;
 	};
 
-	typedef std::variant<std::monostate, SStaticMeshAsset, SSkeletalMeshAsset, SSkeletalAnimationAsset, STextureAsset, SGraphicsMaterialAsset, SSpriteAninmationClipAsset, HexRune::SScript*> SAssetData;
+	typedef std::variant<std::monostate, SStaticMeshAsset, SSkeletalMeshAsset, SSkeletalAnimationAsset, STextureAsset, STextureCubeAsset, SGraphicsMaterialAsset, SSpriteAninmationClipAsset, HexRune::SScript*> SAssetData;
 
 	struct SAsset
 	{
