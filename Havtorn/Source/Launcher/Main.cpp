@@ -105,6 +105,11 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 #endif
 
 	platformProcess->Init(nullptr);
+
+#ifdef USE_CONSOLE
+	OpenConsole();
+#endif
+
 	engineProcess->Init(platformProcess->PlatformManager);
 	
 #ifdef HV_EDITOR_BUILD
@@ -116,10 +121,6 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	gameProcess->Init(platformProcess->PlatformManager);
 #ifdef HV_EDITOR_BUILD	
 	editorProcess->Init(platformProcess->PlatformManager);
-#endif
-
-#ifdef USE_CONSOLE
-	OpenConsole();
 #endif
 
 	SetForegroundWindow(platformProcess->PlatformManager->GetWindowHandle());
