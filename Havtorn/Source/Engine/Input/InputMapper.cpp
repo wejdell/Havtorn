@@ -95,6 +95,9 @@ namespace Havtorn
 		const SInputAction paste = { EInputKey::KeyV, EInputContext::Editor, EInputModifier::Ctrl };
 		MapEvent(EInputActionEvent::Paste, paste);
 
+		const SInputAction rename = { EInputKey::F2, EInputContext::Editor };
+		MapEvent(EInputActionEvent::Rename, rename);
+
 		return true;
 	}
 

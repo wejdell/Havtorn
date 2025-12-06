@@ -7,6 +7,8 @@
 #include <GUI.h>
 #include <EditorResourceManager.h>
 
+#include <Input/InputTypes.h>
+
 #include <queue>
 
 namespace Havtorn
@@ -25,6 +27,8 @@ namespace Havtorn
 	private:
 		void OnDragDropFiles(std::vector<std::string> filePaths);
 		void OnAssetReloaded(const std::string& assetPath);
+		
+		void OnRenameEvent(const SInputActionPayload payload);
 
 		void AssetImportModal();
 		void AssetCreationModal();
