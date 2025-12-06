@@ -179,6 +179,21 @@ namespace Havtorn
 			return { imVec.x, imVec.y };
 		}
 
+		bool IsItemDeactivatedAfterEdit()
+		{
+			return ImGui::IsItemDeactivatedAfterEdit();
+		}
+
+		bool IsItemDeactivated()
+		{
+			return ImGui::IsItemDeactivated();
+		}
+
+		void SetKeyboardFocusHere()
+		{
+			ImGui::SetKeyboardFocusHere();
+		}
+
 		bool DragFloat(const char* label, F32& value, F32 vSpeed = 1.0f, F32 min = 0.0f, F32 max = 0.0f, const char* format = "%.3f", ImGuiSliderFlags flags = 0)
 		{
 			return ImGui::DragFloat(label, &value, vSpeed, min, max, format, flags);
@@ -1557,6 +1572,17 @@ namespace Havtorn
 		return Instance->Impl->CalculateTextSize(text);
 	}
 
+	bool GUI::IsItemDeactivatedAfterEdit()
+	{
+		// TODO.NW: Consider using this by default on InputText functions
+		return Instance->Impl->IsItemDeactivatedAfterEdit();
+	}
+
+	bool GUI::IsItemDeactivated()
+	{
+		return Instance->Impl->IsItemDeactivated();
+	}
+
 	bool GUI::InputFloat(const char* label, F32& value, F32 step, F32 stepFast, const char* format)
 	{
 		return Instance->Impl->InputFloat(label, value, step, stepFast, format);
@@ -2020,7 +2046,7 @@ namespace Havtorn
 		return result;
 	}
 
-	SRenderAssetCardResult GUI::RenderAssetCard(const char* label, const bool isSelected, const intptr_t& thumbnailID, const char* typeName, const SColor& color, const SColor& borderColor, void* dragDropPayloadToSet, U64 payLoadSize)
+	SRenderAssetCardResult GUI::RenderAssetCard(const char* label, const bool isSelected, const bool isBeingNamed, const intptr_t& thumbnailID, const char* typeName, const SColor& color, const SColor& borderColor, void* dragDropPayloadToSet, U64 payLoadSize)
 	{
 		SRenderAssetCardResult result;
 
@@ -2079,7 +2105,27 @@ namespace Havtorn
 		}
 
 		GUI::PushClipRect(GetCursorScreenPos(), cardSize - framePadding);
-		GUI::Text(label);
+		
+		if (isBeingNamed)
+		{
+			GUI::SetKeyboardFocusHere();
+
+			std::string newAssetName = label;
+			GUI::PushID(label);
+			if (GUI::InputText("", newAssetName))
+			{
+				if (GUI::IsItemDeactivatedAfterEdit())
+					result.NewAssetName = newAssetName;
+			}
+
+			if (GUI::IsItemDeactivated() && !result.NewAssetName.has_value())
+				result.NewAssetName = label;
+
+			GUI::PopID();
+		}
+		else
+			GUI::Text(label);
+		
 		if (GUI::IsItemHovered())
 			GUI::SetTooltip(label);
 

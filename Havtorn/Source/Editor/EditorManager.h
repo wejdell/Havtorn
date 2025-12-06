@@ -72,6 +72,7 @@ namespace Havtorn
 		std::string Name = "";
 		bool UsingEditorTexture = false;
 		bool IsSourceWatched = false;
+		bool IsBeingNamed = false;
 	};
 
 	class CEditorManager

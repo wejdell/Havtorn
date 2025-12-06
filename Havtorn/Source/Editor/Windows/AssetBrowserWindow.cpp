@@ -14,6 +14,9 @@
 #include <PlatformManager.h>
 #include <Assets/AssetRegistry.h>
 
+#include <Input/InputMapper.h>
+#include <Input/InputTypes.h>
+
 #include <../Game/GameScene.h>
 
 namespace Havtorn
@@ -24,6 +27,7 @@ namespace Havtorn
 		CurrentDirectory = std::filesystem::path(DefaultAssetPath);		
 		manager->GetPlatformManager()->OnDragDropAccepted.AddMember(this, &CAssetBrowserWindow::OnDragDropFiles);
 		GEngine::GetAssetRegistry()->OnAssetReloaded.AddMember(this, &CAssetBrowserWindow::OnAssetReloaded);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::Rename).AddMember(this, &CAssetBrowserWindow::OnRenameEvent);
 	}
 
 	CAssetBrowserWindow::~CAssetBrowserWindow()
@@ -111,6 +115,9 @@ namespace Havtorn
 				{
 					SEditorAssetRepresentation* selectedAssetRep = SelectedAsset.value();
 					const std::filesystem::directory_entry& directoryEntry = selectedAssetRep->DirectoryEntry;
+
+					if (GUI::MenuItem("Rename", "F2"))
+						selectedAssetRep->IsBeingNamed = true;
 
 					if (GUI::MenuItem("Copy Asset Path"))
 						GUI::CopyToClipboard(directoryEntry.path().string().c_str());
@@ -253,6 +260,15 @@ namespace Havtorn
 		auto& assetRep = Manager->GetAssetRepFromDirEntry(assetDir);
 
 		Manager->GetResourceManager()->RequestThumbnailRender(assetRep.get(), assetPath);
+	}
+
+	void CAssetBrowserWindow::OnRenameEvent(const SInputActionPayload payload)
+	{
+		if (payload.IsPressed && SelectedAsset.has_value())
+		{
+			SelectedAsset.value()->IsBeingNamed = true;
+			// TODO.NW: Figure out a way to close the context menu
+		}
 	}
 
 	void AlignForWidth(F32 width, F32 alignment = 0.5f)
@@ -720,7 +736,7 @@ namespace Havtorn
 				break;
 			}
 
-			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), rep.get() == SelectedAsset.value_or(nullptr), repRenderTexture, GetAssetTypeDetailName(rep->AssetType).c_str(), GetAssetTypeColor(rep->AssetType), rep->IsSourceWatched ? SColor::Orange : SColor(10), rep.get(), sizeof(SEditorAssetRepresentation));
+			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), rep.get() == SelectedAsset.value_or(nullptr), rep->IsBeingNamed, repRenderTexture, GetAssetTypeDetailName(rep->AssetType).c_str(), GetAssetTypeColor(rep->AssetType), rep->IsSourceWatched ? SColor::Orange : SColor(10), rep.get(), sizeof(SEditorAssetRepresentation));
 
 			if (result.IsClicked)
 				SelectedAsset = rep.get();
@@ -743,6 +759,26 @@ namespace Havtorn
 				if (SelectedAsset.has_value() && rep.get() == SelectedAsset.value())
 				{
 					IsSelectionHovered = true;
+				}
+			}
+
+			if (result.NewAssetName.has_value())
+			{
+				rep->IsBeingNamed = false;
+
+				if (result.NewAssetName.value() != rep->Name)
+				{
+					// TODO.NW: This is basically the same as moving an asset from one directory to the other. Figure out how to unify this?
+
+					std::string oldPath = UGeneralUtils::ConvertToPlatformAgnosticPath(rep->DirectoryEntry.path().string().c_str());
+					std::string newPath = UGeneralUtils::ConvertToPlatformAgnosticPath(CurrentDirectory.string()) + "/" + result.NewAssetName.value() + ".hva";
+
+					CJsonDocument config = UFileSystem::OpenJson(UFileSystem::EngineConfig);
+					config.WriteValueToArray("Asset Redirectors", oldPath, newPath);
+
+					Manager->RemoveAssetRep(rep->DirectoryEntry);
+					std::filesystem::rename(oldPath, newPath);
+					Manager->CreateAssetRep(newPath);
 				}
 			}
 		}

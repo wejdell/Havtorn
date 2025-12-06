@@ -581,6 +581,7 @@ namespace Havtorn
 	{
 		SRenderAssetCardResult() = default;
 		
+		std::optional<std::string> NewAssetName;
 		bool IsClicked = false;
 		bool IsDoubleClicked = false;
 		bool IsHovered = false;
@@ -782,6 +783,9 @@ namespace Havtorn
 
 		static SVector2<F32> CalculateTextSize(const char* text);
 
+		static bool IsItemDeactivatedAfterEdit();
+		static bool IsItemDeactivated();
+
 		static bool InputFloat(const char* label, F32& value, F32 step = 0.0f, F32 stepFast = 0.0f, const char* format = "%.3f");
 		static bool DragFloat(const char* label, F32& value, F32 speed = 0.1f, F32 min = 0.0f, F32 max = 0.0f, const char* format = "%.3f", EDragMode dragMode = EDragMode::None);
 		static bool DragFloat2(const char* label, SVector2<F32>& value, F32 speed = 0.1f, F32 min = 0.0f, F32 max = 0.0f, const char* format = "%.3f", EDragMode dragMode = EDragMode::None);
@@ -921,7 +925,7 @@ namespace Havtorn
 
 		static SAssetPickResult AssetPicker(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryFunc& assetInspector, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
 		static SAssetPickResult AssetPickerFilter(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
-		static SRenderAssetCardResult RenderAssetCard(const char* label, const bool isSelected, const intptr_t& thumbnailID, const char* typeName, const SColor& color, const SColor& borderColor, void* dragDropPayloadToSet, U64 payLoadSize);
+		static SRenderAssetCardResult RenderAssetCard(const char* label, const bool isSelected, const bool isBeingNamed, const intptr_t& thumbnailID, const char* typeName, const SColor& color, const SColor& borderColor, void* dragDropPayloadToSet, U64 payLoadSize);
 
 		static bool Selectable(const char* label, const bool selected = false, const std::vector<ESelectableFlag>& flags = {}, const SVector2<F32>& size = SVector2<F32>(0.0f));
 

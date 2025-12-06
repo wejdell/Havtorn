@@ -151,6 +151,7 @@ namespace Havtorn
 		AltRelease,
 		Copy,
 		Paste,
+		Rename,
 		Count
 	};
 
