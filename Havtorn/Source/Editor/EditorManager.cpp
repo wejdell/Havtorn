@@ -753,6 +753,14 @@ namespace Havtorn
 			GEngine::GetAssetRegistry()->UnrequestAsset(staticMesh->AssetReference, CAssetRegistry::EditorManagerRequestID);
 			foundBounds = true;
 		}
+		else if (SSkeletalMeshComponent* skeletalMesh = currentScene->GetComponent<SSkeletalMeshComponent>(firstSelectedEntity))
+		{
+			SSkeletalMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalMeshAsset>(skeletalMesh->AssetReference, CAssetRegistry::EditorManagerRequestID);
+			center = meshAsset->BoundsCenter;
+			bounds = SVector::GetAbsMaxKeepValue(meshAsset->BoundsMax, meshAsset->BoundsMin);
+			GEngine::GetAssetRegistry()->UnrequestAsset(skeletalMesh->AssetReference, CAssetRegistry::EditorManagerRequestID);
+			foundBounds = true;
+		}
 
 		if (!foundBounds)
 		{
@@ -762,11 +770,14 @@ namespace Havtorn
 
 		constexpr F32 focusMarginPercentage = 1.1f;
 
-		STransform newTransform;
-		newTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(10.0f, 10.0f, 0.0f));
-		newTransform.Translate(worldPos + SVector(center.X, center.Y, -UMathUtilities::GetFocusDistanceForBounds(center, bounds, fov, focusMarginPercentage)));
-		mainCameraData.TransformComponent->Transform = newTransform;
+		const SVector worldSpaceFocusPoint = worldPos + center;
+		const SVector cameraLocation = mainCameraData.TransformComponent->Transform.GetMatrix().GetTranslation();
+		const SVector targetToCamera = (cameraLocation - worldSpaceFocusPoint).GetNormalized();
+		SMatrix newMatrix = SMatrix::LookAtLH(cameraLocation, worldSpaceFocusPoint, SVector::Up).FastInverse();
+		newMatrix.SetTranslation(worldSpaceFocusPoint + targetToCamera * UMathUtilities::GetFocusDistanceForBounds(center, bounds, fov, focusMarginPercentage));
 
+		mainCameraData.TransformComponent->Transform.SetMatrix(newMatrix);
+		
 		CScene* mainCameraScene = UComponentAlgo::GetContainingScene(mainCamera, scenes);
 		if (SCameraControllerComponent* controllerComp = mainCameraScene->GetComponent<SCameraControllerComponent>(mainCamera))
 		{
