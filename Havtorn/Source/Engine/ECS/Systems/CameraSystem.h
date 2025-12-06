@@ -26,6 +26,7 @@ namespace Havtorn
 	private:
 		SVector CameraMoveInput = SVector::Zero;
 		SVector CameraRotateInput = SVector::Zero;
+		F32 CameraSpeedInput = 0.0f;
 
 		SEntity PreviousMainCamera = SEntity::Null;
 		bool IsFreeCamActive = false;

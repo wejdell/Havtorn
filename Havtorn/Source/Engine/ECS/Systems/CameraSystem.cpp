@@ -21,6 +21,7 @@ namespace Havtorn
 		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Forward).AddMember(this, &CCameraSystem::HandleAxisInput);
 		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MouseDeltaHorizontal).AddMember(this, &CCameraSystem::HandleAxisInput);
 		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MouseDeltaVertical).AddMember(this, &CCameraSystem::HandleAxisInput);
+		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Zoom).AddMember(this, &CCameraSystem::HandleAxisInput);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ToggleFreeCam).AddMember(this, &CCameraSystem::ToggleFreeCam);
 		GEngine::GetWorld()->OnBeginPlayDelegate.AddMember(this, &CCameraSystem::OnBeginPlay);
 		GEngine::GetWorld()->OnPausePlayDelegate.AddMember(this, &CCameraSystem::OnPausePlay);
@@ -44,6 +45,12 @@ namespace Havtorn
 				continue;
 
 			const F32 dt = GTime::Dt();
+
+			// === Speed ===
+			if (CameraSpeedInput < 0.0f)
+				controllerComp->MaxMoveSpeed = UMath::Remap(-5.0f, -1.0f, 0.2f, 2.0f, CameraSpeedInput);
+			else
+				controllerComp->MaxMoveSpeed = UMath::Remap(0.0f, 5.0f, 3.0f, 10.0f, CameraSpeedInput);
 
 			if (!IsFreeCamActive)
 			{
@@ -105,6 +112,9 @@ namespace Havtorn
 				return;
 			case EInputAxisEvent::MouseDeltaHorizontal:
 				CameraRotateInput.Y += 90.0f * payload.AxisValue;
+				return;
+			case EInputAxisEvent::Zoom:
+				CameraSpeedInput = UMath::Clamp(CameraSpeedInput + payload.AxisValue, -5.0f, 5.0f);
 				return;
 			default: 
 				return;
