@@ -369,6 +369,7 @@ namespace Havtorn
 
 	std::string CEditorResourceManager::GetFileName(EEditorTexture texture, const std::string& extension, const std::string& prefix)
 	{
+		// TODO.NW: Use magic enum?
 		switch (texture)
 		{
 		case EEditorTexture::FolderIcon:
@@ -427,6 +428,9 @@ namespace Havtorn
 
 		case EEditorTexture::CameraIcon:
 			return ResourceAssetPath + prefix + "CameraIcon" + extension;
+
+		case EEditorTexture::GetFromSource:
+			return ResourceAssetPath + prefix + "GetFromSource" + extension;
 		
 		case EEditorTexture::Count:
 		default:

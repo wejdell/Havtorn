@@ -113,45 +113,48 @@ namespace Havtorn
 			{
 				if (IsSelectionHovered)
 				{
-					SEditorAssetRepresentation* selectedAssetRep = SelectedAsset.value();
-					const std::filesystem::directory_entry& directoryEntry = selectedAssetRep->DirectoryEntry;
+					SEditorAssetRepresentation* selectedAssetRep = Manager->GetSelectedAsset();
+					if (selectedAssetRep != nullptr)
+					{
+						const std::filesystem::directory_entry& directoryEntry = selectedAssetRep->DirectoryEntry;
 
-					if (GUI::MenuItem("Rename", "F2"))
-						selectedAssetRep->IsBeingNamed = true;
+						if (GUI::MenuItem("Rename", "F2"))
+							selectedAssetRep->IsBeingNamed = true;
 
-					if (GUI::MenuItem("Copy Asset Path"))
-						GUI::CopyToClipboard(directoryEntry.path().string().c_str());
+						if (GUI::MenuItem("Copy Asset Path"))
+							GUI::CopyToClipboard(directoryEntry.path().string().c_str());
 					
-					if (GUI::MenuItem("Delete Asset"))
-					{
-						std::filesystem::path pathToRemove = directoryEntry.path();
-						Manager->RemoveAssetRep(directoryEntry);
-						//std::filesystem::remove(pathToRemove);
-						UFileSystem::Remove(pathToRemove.string());
-					}
-
-					// TODO.NW: It would be nice with some sort of attribute to check
-					// the enum value against (e.g. SourceFileBased), may not exist on our current version though
-					if (selectedAssetRep->AssetType != EAssetType::Material
-						&& selectedAssetRep->AssetType != EAssetType::Script
-						&& selectedAssetRep->AssetType != EAssetType::Scene
-						&& selectedAssetRep->AssetType != EAssetType::Sequencer
-						)
-					{
-						if (selectedAssetRep->IsSourceWatched)
+						if (GUI::MenuItem("Delete Asset"))
 						{
-							if (GUI::MenuItem("Stop Watching Source Changes"))
-							{
-								selectedAssetRep->IsSourceWatched = false;
-								GEngine::GetAssetRegistry()->StopSourceFileWatch(SAssetReference(directoryEntry.path().string()));
-							}
+							std::filesystem::path pathToRemove = directoryEntry.path();
+							Manager->RemoveAssetRep(directoryEntry);
+							//std::filesystem::remove(pathToRemove);
+							UFileSystem::Remove(pathToRemove.string());
 						}
-						else
+
+						// TODO.NW: It would be nice with some sort of attribute to check
+						// the enum value against (e.g. SourceFileBased), may not exist on our current version though
+						if (selectedAssetRep->AssetType != EAssetType::Material
+							&& selectedAssetRep->AssetType != EAssetType::Script
+							&& selectedAssetRep->AssetType != EAssetType::Scene
+							&& selectedAssetRep->AssetType != EAssetType::Sequencer
+							)
 						{
-							if (GUI::MenuItem("Start Watching Source Changes"))
+							if (selectedAssetRep->IsSourceWatched)
 							{
-								selectedAssetRep->IsSourceWatched = true;
-								GEngine::GetAssetRegistry()->StartSourceFileWatch(SAssetReference(directoryEntry.path().string()));
+								if (GUI::MenuItem("Stop Watching Source Changes"))
+								{
+									selectedAssetRep->IsSourceWatched = false;
+									GEngine::GetAssetRegistry()->StopSourceFileWatch(SAssetReference(directoryEntry.path().string()));
+								}
+							}
+							else
+							{
+								if (GUI::MenuItem("Start Watching Source Changes"))
+								{
+									selectedAssetRep->IsSourceWatched = true;
+									GEngine::GetAssetRegistry()->StartSourceFileWatch(SAssetReference(directoryEntry.path().string()));
+								}
 							}
 						}
 					}
@@ -264,9 +267,9 @@ namespace Havtorn
 
 	void CAssetBrowserWindow::OnRenameEvent(const SInputActionPayload payload)
 	{
-		if (payload.IsPressed && SelectedAsset.has_value())
+		if (payload.IsPressed && Manager->GetSelectedAsset() != nullptr)
 		{
-			SelectedAsset.value()->IsBeingNamed = true;
+			Manager->GetSelectedAsset()->IsBeingNamed = true;
 			// TODO.NW: Figure out a way to close the context menu
 		}
 	}
@@ -736,17 +739,21 @@ namespace Havtorn
 				break;
 			}
 
-			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), rep.get() == SelectedAsset.value_or(nullptr), rep->IsBeingNamed, repRenderTexture, GetAssetTypeDetailName(rep->AssetType).c_str(), GetAssetTypeColor(rep->AssetType), rep->IsSourceWatched ? SColor::Orange : SColor(10), rep.get(), sizeof(SEditorAssetRepresentation));
+			SEditorAssetRepresentation* selectedAsset = Manager->GetSelectedAsset();
+			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), rep.get() == selectedAsset, rep->IsBeingNamed, repRenderTexture, GetAssetTypeDetailName(rep->AssetType).c_str(), GetAssetTypeColor(rep->AssetType), rep->IsSourceWatched ? SColor::Orange : SColor(10), rep.get(), sizeof(SEditorAssetRepresentation));
 
 			if (result.IsClicked)
-				SelectedAsset = rep.get();
+			{
+				Manager->SetSelectedAsset(rep.get());
+				selectedAsset = rep.get();
+			}
 
 			if (result.IsDoubleClicked)
 			{
 				// NW: Open Tool depending on asset type?
 				HV_LOG_INFO("Clicked asset: %s", rep->Name.c_str());
 				Manager->OpenAssetTool(rep.get());
-				SelectedAsset.reset();
+				Manager->ClearSelectedAssets();
 			}
 			
 			if (result.IsHovered)
@@ -756,7 +763,7 @@ namespace Havtorn
 					AnimatingThumbnailAsset = rep.get();
 				}
 
-				if (SelectedAsset.has_value() && rep.get() == SelectedAsset.value())
+				if (rep.get() == selectedAsset)
 				{
 					IsSelectionHovered = true;
 				}

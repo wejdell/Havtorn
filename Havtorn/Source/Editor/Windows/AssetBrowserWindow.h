@@ -53,7 +53,6 @@ namespace Havtorn
 		SGuiTextFilter Filter = SGuiTextFilter();
 		std::optional<std::vector<std::string>> FilePathsToImport;
 
-		std::optional<SEditorAssetRepresentation*> SelectedAsset;
 		std::optional<SEditorAssetRepresentation*> AnimatingThumbnailAsset;
 		SEditorAssetRepresentation* PreviouslyAnimatingThumbnailAsset;
 		bool IsSelectionHovered = false;

@@ -301,6 +301,49 @@ namespace Havtorn
 		return SelectedEntities;
 	}
 
+	void CEditorManager::SetSelectedAsset(SEditorAssetRepresentation* asset)
+	{
+		ClearSelectedAssets();
+		AddSelectedAsset(asset);
+	}
+
+	void CEditorManager::AddSelectedAsset(SEditorAssetRepresentation* asset)
+	{
+		SelectedAssets.emplace_back(asset);
+	}
+
+	void CEditorManager::RemoveSelectedAsset(SEditorAssetRepresentation* asset)
+	{
+		if (auto it = std::ranges::find(SelectedAssets, asset); it != SelectedAssets.end())
+			SelectedAssets.erase(it);
+	}
+
+	bool CEditorManager::IsAssetSelected(SEditorAssetRepresentation* asset) const
+	{
+		auto it = std::ranges::find(SelectedAssets, asset);
+		return it != SelectedAssets.end();
+	}
+
+	void CEditorManager::ClearSelectedAssets()
+	{
+		SelectedAssets.clear();
+	}
+
+	SEditorAssetRepresentation* CEditorManager::GetSelectedAsset() const
+	{
+		return SelectedAssets.empty() ? nullptr : SelectedAssets[0];
+	}
+
+	SEditorAssetRepresentation* CEditorManager::GetLastSelectedAsset() const
+	{
+		return SelectedAssets.empty() ? nullptr : SelectedAssets.back();
+	}
+
+	std::vector<SEditorAssetRepresentation*> CEditorManager::GetSelectedAssets() const
+	{
+		return SelectedAssets;
+	}
+
 	const Ptr<SEditorAssetRepresentation>& CEditorManager::GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry) const
 	{
 		for (const auto& rep : AssetRepresentations)
@@ -354,6 +397,8 @@ namespace Havtorn
 			return;
 		}
 
+		ClearSelectedAssets();
+
 		std::filesystem::directory_entry entry(path);
 		HV_ASSERT(!entry.is_directory(), "You are trying to create SEditorAssetRepresentation but you're creating a new folder.");
 
@@ -395,6 +440,8 @@ namespace Havtorn
 
 	void CEditorManager::RemoveAssetRep(const std::filesystem::directory_entry& sourceEntry)
 	{
+		SelectedAssets.clear();
+
 		auto& rep = GetAssetRepFromDirEntry(sourceEntry);
 		if (rep == AssetRepresentations[0])
 			return;

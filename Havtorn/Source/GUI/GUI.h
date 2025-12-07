@@ -45,6 +45,9 @@ namespace Havtorn
 		Borders = BIT(0),
 		ResizeX = BIT(2),
 		ResizeY = BIT(3),
+		AutoResizeX = BIT(4),
+		AutoResizeY = BIT(5),
+		AlwaysAutoResize = BIT(6),
 		NavFlattened = BIT(8),
 	};
 
@@ -560,6 +563,7 @@ namespace Havtorn
 		AssetPicked,
 		Cancelled,
 		ContextMenu,
+		GetFromSelected,
 	};
 
 	struct SAssetPickResult
@@ -925,6 +929,7 @@ namespace Havtorn
 
 		static SAssetPickResult AssetPicker(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryFunc& assetInspector, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
 		static SAssetPickResult AssetPickerFilter(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
+		static SAssetPickResult AssetPickerDropdownFilter(const char* label, const char* assetDetailLabel, intptr_t image, intptr_t sourceButtonImage, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
 		static SRenderAssetCardResult RenderAssetCard(const char* label, const bool isSelected, const bool isBeingNamed, const intptr_t& thumbnailID, const char* typeName, const SColor& color, const SColor& borderColor, void* dragDropPayloadToSet, U64 payLoadSize);
 
 		static bool Selectable(const char* label, const bool selected = false, const std::vector<ESelectableFlag>& flags = {}, const SVector2<F32>& size = SVector2<F32>(0.0f));
