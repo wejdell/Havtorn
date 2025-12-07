@@ -2132,7 +2132,7 @@ namespace Havtorn
 
 			GUI::OffsetCursorPos(SVector2<F32>(0.0f, -2.5f));
 			GUI::PushID("GetSelectedButton");
-			if (GUI::ImageButton("##", sourceButtonImage, SVector2<F32>(16.0f)))
+			if (GUI::ImageButton("##", sourceButtonImage, SVector2<F32>(12.0f, 14.0f)))
 			{
 				result.State = EAssetPickerState::GetFromSelected;
 			}
