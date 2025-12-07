@@ -2046,6 +2046,106 @@ namespace Havtorn
 		return result;
 	}
 
+	SAssetPickResult GUI::AssetPickerDropdownFilter(const char* label, const char* assetDetailLabel, intptr_t image, intptr_t sourceButtonImage, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize)
+	{
+		SAssetPickResult result;
+
+		GUI::Image(image, pickerSize, SVector2<F32>(0.0f), SVector2<F32>(1.0f), SColor::White, SColor::Black);
+		result.IsHovered = GUI::IsMouseInRect(GUI::GetLastRect());
+
+		if (GUI::IsItemClicked(EGUIMouseButton::Right))
+		{
+			result.State = EAssetPickerState::ContextMenu;
+			return result;
+		}
+
+		constexpr F32 thumbnailPadding = 8.0f;
+		const F32 cellWidth = pickerSize.X * 0.85f + thumbnailPadding;
+		GUI::OffsetCursorPos(SVector2<F32>(1.0f, -4.0f));
+		GUI::AddRectFilled(GUI::GetCursorScreenPos(), SVector2<F32>(cellWidth, 2.0f), GetAssetTypeColor(assetType));
+		GUI::OffsetCursorPos(SVector2<F32>(0.0f, 6.0f));
+
+
+		// TODO.NW: Figure out the sizing of these elements. The child holding the combo and text under it makes it so that the combo arrow doesn't get displayed when minimized.
+		SVector2<F32> contentRegionAvail = GUI::GetContentRegionAvail() - SVector2<F32>(cellWidth, 0.0f);
+		GUI::SameLine();
+		constexpr F32 maxWidth = 0.0f;
+		constexpr F32 maxDropDownSize = 200.0f; // Max vertical size of the combo popup box.
+		{ // Details next to image
+			//ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 0.0f), ImVec2(-FLT_MIN, maxDropDownSize));
+			GUI::BeginChild("Details", SVector2<F32>(maxWidth, 0.0f), { EChildFlag::AutoResizeY, EChildFlag::AlwaysAutoResize });
+
+			// NW: Need this to keep the search bar floating and without scrolling between filter and options child
+			ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 0.0f), ImVec2(FLT_MAX, FLT_MAX));
+			if (GUI::BeginCombo("##", label))
+			{
+				result.State = EAssetPickerState::Active;
+
+				SGuiTextFilter filter = SGuiTextFilter();
+				filter.Draw("Search", 0); // TODO.NW: Figure out a nicer way of setting the width
+
+				ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 0.0f), ImVec2(FLT_MAX, maxDropDownSize));
+				if (GUI::BeginChild("##ComboOptionsChild", SVector2<F32>(maxWidth, 0.0f), { EChildFlag::AutoResizeY, EChildFlag::AlwaysAutoResize }))
+				{
+					I32 id = 0;
+					for (auto& entry : std::filesystem::recursive_directory_iterator(directory))
+					{
+						if (entry.is_directory())
+							continue;
+
+						SAssetInspectionData data = assetInspector(entry, static_cast<EAssetType>(assetType));
+						if (!data.IsValid())
+							continue;
+
+						if (!filter.PassFilter(data.Name.c_str()))
+							continue;
+
+						GUI::PushID(id++);
+
+						if (GUI::ImageButton("", data.TextureRef, { GUI::TexturePreviewSizeX * 0.5f, GUI::TexturePreviewSizeY * 0.5f }))
+						{
+							// TODO.NW: Make combo close when selecting the same asset again
+							GUI::PopID();
+							GUI::EndChild();
+							GUI::EndCombo();
+							GUI::EndChild();
+							GUI::CloseCurrentPopup();
+							result.State = EAssetPickerState::AssetPicked;
+							result.PickedEntry = entry;
+							return result;
+						}
+
+						GUI::SameLine();
+						GUI::Text(data.Name.c_str());
+						GUI::PopID();
+					}
+				}
+
+				GUI::EndChild();
+				GUI::EndCombo();
+			}
+
+			GUI::OffsetCursorPos(SVector2<F32>(2.0f, -2.5f));
+			GUI::SetSecondaryFontActive(true);
+			GUI::TextDisabled(assetDetailLabel);
+			GUI::SetSecondaryFontActive(false);
+
+			GUI::OffsetCursorPos(SVector2<F32>(0.0f, -2.5f));
+			GUI::PushID("GetSelectedButton");
+			if (GUI::ImageButton("##", sourceButtonImage, SVector2<F32>(16.0f)))
+			{
+				result.State = EAssetPickerState::GetFromSelected;
+			}
+			if (GUI::IsItemHovered())
+				GUI::SetTooltip("Use Selected Asset from Browser");
+			GUI::PopID();
+
+			GUI::EndChild();
+		}
+
+		return result;
+	}
+
 	SRenderAssetCardResult GUI::RenderAssetCard(const char* label, const bool isSelected, const bool isBeingNamed, const intptr_t& thumbnailID, const char* typeName, const SColor& color, const SColor& borderColor, void* dragDropPayloadToSet, U64 payLoadSize)
 	{
 		SRenderAssetCardResult result;
@@ -2745,7 +2845,7 @@ namespace Havtorn
 	{
 		if (width != 0.0f)
 			ImGui::SetNextItemWidth(width);
-		bool valueChanged = ImGui::InputText(label, InputBuf, ARRAY_SIZE(InputBuf));
+		bool valueChanged = ImGui::InputTextWithHint("##", label, InputBuf, ARRAY_SIZE(InputBuf));
 		if (valueChanged)
 			Build();
 		return valueChanged;

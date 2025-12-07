@@ -249,7 +249,8 @@ namespace Havtorn
 			const F32 panelWidth = 256.0f;
 			const I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
 			const std::string modalName = "Select " + GetAssetTypeName(result.AssetType) + " Asset";
-			SAssetPickResult assetPickResult = GUI::AssetPickerFilter(assetName.c_str(), modalName.c_str(), (intptr_t)assetRep->TextureRef.GetShaderResourceView(), "Assets", columnCount, Manager->GetAssetFilteredInspectFunction(), result.AssetType);
+			//SAssetPickResult assetPickResult = GUI::AssetPickerFilter(assetName.c_str(), modalName.c_str(), (intptr_t)assetRep->TextureRef.GetShaderResourceView(), "Assets", columnCount, Manager->GetAssetFilteredInspectFunction(), result.AssetType);
+			SAssetPickResult assetPickResult = GUI::AssetPickerDropdownFilter(assetName.c_str(), GetAssetTypeDetailName(result.AssetType).c_str(), (intptr_t)assetRep->TextureRef.GetShaderResourceView(), Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::GetFromSource), "Assets", columnCount, Manager->GetAssetFilteredInspectFunction(), result.AssetType);
 
 			SAssetReference* currentReference = nullptr;
 			if (result.AssetReferences != nullptr)
@@ -272,35 +273,48 @@ namespace Havtorn
 
 				Manager->SetIsModalOpen(false);
 			}
-			else if (assetPickResult.State == EAssetPickerState::AssetPicked)
+			else if (assetPickResult.State == EAssetPickerState::AssetPicked || assetPickResult.State == EAssetPickerState::GetFromSelected)
 			{
 				AssetPickedIndex = index;
-				auto pickedAsset = Manager->GetAssetRepFromDirEntry(assetPickResult.PickedEntry).get();
-				std::string newAssetPath = UGeneralUtils::ConvertToPlatformAgnosticPath(pickedAsset->DirectoryEntry.path().string());
 
-				if (result.AssetReferences != nullptr)
+				SEditorAssetRepresentation* pickedAsset = nullptr;
+				if (assetPickResult.State == EAssetPickerState::AssetPicked)
+					pickedAsset = Manager->GetAssetRepFromDirEntry(assetPickResult.PickedEntry).get();
+				else if (assetPickResult.State == EAssetPickerState::GetFromSelected)
 				{
-					std::vector<std::string> paths = SAssetReference::GetPaths(*result.AssetReferences);
-					
-					if (paths[AssetPickedIndex] != newAssetPath)
-						GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(paths[AssetPickedIndex]), result.ComponentViewed->Owner.GUID);
-					
-					paths[AssetPickedIndex] = newAssetPath;
-					*result.AssetReferences = SAssetReference::MakeVectorFromPaths(paths);
+					SEditorAssetRepresentation* selectedAssetInBrowser = Manager->GetSelectedAsset();
+					if (selectedAssetInBrowser != nullptr && selectedAssetInBrowser->AssetType == assetRep->AssetType)
+						pickedAsset = Manager->GetSelectedAsset();
 				}
-				if (result.AssetReference != nullptr)
-				{
-					if (result.AssetReference->FilePath != newAssetPath)
-						GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(result.AssetReference->FilePath), result.ComponentViewed->Owner.GUID);
 
-					*result.AssetReference = SAssetReference(newAssetPath);
+				if (pickedAsset != nullptr)
+				{
+					std::string newAssetPath = UGeneralUtils::ConvertToPlatformAgnosticPath(pickedAsset->DirectoryEntry.path().string());
+
+					if (result.AssetReferences != nullptr)
+					{
+						std::vector<std::string> paths = SAssetReference::GetPaths(*result.AssetReferences);
+
+						if (paths[AssetPickedIndex] != newAssetPath)
+							GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(paths[AssetPickedIndex]), result.ComponentViewed->Owner.GUID);
+
+						paths[AssetPickedIndex] = newAssetPath;
+						*result.AssetReferences = SAssetReference::MakeVectorFromPaths(paths);
+					}
+					if (result.AssetReference != nullptr)
+					{
+						if (result.AssetReference->FilePath != newAssetPath)
+							GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(result.AssetReference->FilePath), result.ComponentViewed->Owner.GUID);
+
+						*result.AssetReference = SAssetReference(newAssetPath);
+					}
 				}
 
 				AssetPickedIndex = 0;
 				Manager->SetIsModalOpen(false);
 			}
-
-
+			else if (assetPickResult.State == EAssetPickerState::Inactive)
+				Manager->SetIsModalOpen(false);
 
 			GUI::PopID();
 		}

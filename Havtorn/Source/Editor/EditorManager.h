@@ -103,6 +103,20 @@ namespace Havtorn
 		const SEntity& GetLastSelectedEntity() const;
 		std::vector<SEntity> GetSelectedEntities() const;
 
+		// TODO.NW: I'd much rather figure out how to manage non-owned resources similar to how unreal does it. Those weak ptrs are managed and 
+		// reset when things are garbage collected and so can be checked for validity, but by default, c++ weak ptrs must be converted into shared
+		// ptrs in order to be used. Can we make our own version?
+		void SetSelectedAsset(SEditorAssetRepresentation* asset);
+		void AddSelectedAsset(SEditorAssetRepresentation* asset);
+		void RemoveSelectedAsset(SEditorAssetRepresentation* asset);
+
+		bool IsAssetSelected(SEditorAssetRepresentation* asset) const;
+		void ClearSelectedAssets();
+
+		SEditorAssetRepresentation* GetSelectedAsset() const;
+		SEditorAssetRepresentation* GetLastSelectedAsset() const;
+		std::vector<SEditorAssetRepresentation*> GetSelectedAssets() const;
+
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry) const;
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromName(const std::string& assetName) const;
 		DirEntryFunc GetAssetInspectFunction() const;
@@ -188,6 +202,8 @@ namespace Havtorn
 		std::vector<Ptr<CWindow>> Windows;
 		std::vector<Ptr<CToggleable>> MenuElements;
 		std::vector<Ptr<SEditorAssetRepresentation>> AssetRepresentations = {};
+		
+		std::vector<SEditorAssetRepresentation*> SelectedAssets = {};
 
 		// TODO.NR: Save these in .ini file
 		SEditorLayout EditorLayout;
