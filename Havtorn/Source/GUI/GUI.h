@@ -511,7 +511,7 @@ namespace Havtorn
 		SVector2<F32> ItemSpacing = SVector2<F32>(6.00f, 6.00f);
 		SVector2<F32> ItemInnerSpacing = SVector2<F32>(6.00f, 6.00f);
 		SVector2<F32> TouchExtraPadding = SVector2<F32>(0.00f, 0.00f);
-		F32 IndentSpacing = 25.f;
+		F32 IndentSpacing = 20.f;
 		F32 ScrollbarSize = 15.f;
 		F32 GrabMinSize = 10.f;
 		F32 WindowBorderSize = 1.f;
