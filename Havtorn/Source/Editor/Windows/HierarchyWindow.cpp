@@ -2,6 +2,7 @@
 
 #include "HierarchyWindow.h"
 #include "EditorManager.h"
+#include "EditorResourceManager.h"
 
 #include <Engine.h>
 #include <Scene/Scene.h>
@@ -27,6 +28,10 @@ namespace Havtorn
 
 	void CHierarchyWindow::OnEnable()
 	{
+		constexpr const char* componentIconTextOffsetToken = " ";
+		const F32 whiteSpaceTextWidth = GUI::CalculateTextSize(componentIconTextOffsetToken).X;
+		for (U64 i = 0; i < STATIC_U64(ComponentIconCursorOffsetX / whiteSpaceTextWidth) + 1; i++)
+			PerComponentIconTextOffset.append(componentIconTextOffsetToken);
 	}
 
 	void CHierarchyWindow::OnInspectorGUI()
@@ -98,7 +103,16 @@ namespace Havtorn
 			else if (SComponent::IsValid(transformComponent) && transformComponent->AttachedEntities.empty())
 				flags.emplace_back(ETreeNodeFlag::Leaf);
 
-			const bool isOpen = GUI::TreeNodeEx(entryString.c_str(), flags);
+			auto cursorPos = GUI::GetCursorPos();
+
+			std::string listName = "";
+			const std::vector<EEditorTexture> iconsToAdd = GetRelevantComponentIcons(scene, entity);
+			const U64 numberIconsToAdd = UMath::Min(iconsToAdd.size(), MaxComponentIconsToAdd);
+			for (U64 i = 0; i < numberIconsToAdd; i++)
+				listName.append(PerComponentIconTextOffset);
+
+			listName.append(entryString);
+			const bool isOpen = GUI::TreeNodeEx(listName.c_str(), flags);
 			if (GUI::BeginDragDropSource())
 			{
 				SGuiPayload payload = GUI::GetDragDropPayload();
@@ -209,6 +223,15 @@ namespace Havtorn
 					Manager->AddSelectedEntity(entity);
 				else if (!Manager->IsEntitySelected(entity))
 					Manager->SetSelectedEntity(entity);
+			}
+
+			// Component icons
+			for (U64 i = 0; i < numberIconsToAdd; i++)
+			{
+				const EEditorTexture icon = iconsToAdd[i];
+				GUI::SameLine();
+				GUI::SetCursorPos(cursorPos + SVector2<F32>(ComponentIconCursorOffsetX * (i + 1), 0.0f));
+				GUI::Image(Manager->GetResourceManager()->GetStaticEditorTextureResource(icon), ComponentIconSize);
 			}
 
 			if (isOpen && SComponent::IsValid(transformComponent))
@@ -480,5 +503,36 @@ namespace Havtorn
 				Manager->SetCurrentWorkingScene(-1);
 			}
 		}
+	}
+
+	std::vector<EEditorTexture> CHierarchyWindow::GetRelevantComponentIcons(const CScene* scene, const SEntity& entity)
+	{
+		if (scene == nullptr || !entity.IsValid())
+			return {};
+
+		std::vector<EEditorTexture> icons;
+
+		if (scene->GetComponent<SCameraComponent>(entity) != nullptr)
+			icons.push_back(EEditorTexture::CameraIcon);
+
+		if (scene->GetComponent<SDecalComponent>(entity) != nullptr)
+			icons.push_back(EEditorTexture::DecalIcon);
+
+		if (scene->GetComponent<SDirectionalLightComponent>(entity) != nullptr)
+			icons.push_back(EEditorTexture::DirectionalLightIcon);
+
+		if (scene->GetComponent<SEnvironmentLightComponent>(entity) != nullptr)
+			icons.push_back(EEditorTexture::EnvironmentLightIcon);
+
+		if (scene->GetComponent<SPointLightComponent>(entity) != nullptr)
+			icons.push_back(EEditorTexture::PointLightIcon);
+
+		if (scene->GetComponent<SScriptComponent>(entity) != nullptr)
+			icons.push_back(EEditorTexture::ScriptIcon);
+
+		if (scene->GetComponent<SSpotLightComponent>(entity) != nullptr)
+			icons.push_back(EEditorTexture::SpotlightIcon);
+
+		return icons;
 	}
 }

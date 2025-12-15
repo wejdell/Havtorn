@@ -7,6 +7,8 @@
 
 namespace Havtorn
 {
+	enum class EEditorTexture;
+
 	class CHierarchyWindow : public CWindow
 	{
 		struct SEditData
@@ -33,8 +35,14 @@ namespace Havtorn
 
 		void Edit(SEditData& editData);
 
+		std::vector<EEditorTexture> GetRelevantComponentIcons(const CScene* scene, const SEntity& entity);
 	private:
 		SGuiTextFilter Filter = SGuiTextFilter();
 		I64 SelectedIndex = -1;
+		
+		const SVector2<F32> ComponentIconSize = SVector2<F32>(12.0f, 14.0f);
+		const U64 MaxComponentIconsToAdd = 3llu;
+		const F32 ComponentIconCursorOffsetX = 20.0f;
+		std::string PerComponentIconTextOffset = "";
 	};
 }

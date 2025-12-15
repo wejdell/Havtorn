@@ -282,8 +282,9 @@ namespace Havtorn
 					pickedAsset = Manager->GetAssetRepFromDirEntry(assetPickResult.PickedEntry).get();
 				else if (assetPickResult.State == EAssetPickerState::GetFromSelected)
 				{
+					// TODO.NW: Figure out what to do about new script components. With an invalid asset ref to begin with they seem to not load in correctly
 					SEditorAssetRepresentation* selectedAssetInBrowser = Manager->GetSelectedAsset();
-					if (selectedAssetInBrowser != nullptr && selectedAssetInBrowser->AssetType == assetRep->AssetType)
+					if (selectedAssetInBrowser != nullptr && (selectedAssetInBrowser->AssetType == assetRep->AssetType || selectedAssetInBrowser->AssetType == result.AssetType))
 						pickedAsset = Manager->GetSelectedAsset();
 				}
 
