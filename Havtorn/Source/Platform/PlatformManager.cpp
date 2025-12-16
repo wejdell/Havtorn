@@ -42,8 +42,31 @@ namespace Havtorn
 			platformManager = reinterpret_cast<CPlatformManager*>(createStruct->lpCreateParams);
 			break;
 
-		case WM_COPYDATA:
+		case WM_MOVE:
+		{
+			const HMONITOR primaryMonitor = MonitorFromPoint({ 0 }, MONITOR_DEFAULTTOPRIMARY);
+			MONITORINFO monitorInfo = { 0 };
+			monitorInfo.cbSize = sizeof(monitorInfo);
+			GetMonitorInfo(primaryMonitor, &monitorInfo);
 
+			const RECT monitorRect = monitorInfo.rcWork;
+			POINT point = { 0 };
+			if (!GetCursorPos(&point))
+				break;
+
+			// TODO.NW: Add non-snapping shortcut, so it's possible to move from one monitor to the other
+			if (point.x <= monitorRect.left)
+				platformManager->SnapWindow(EWindowSnapPosition::Left);
+			else if (point.x >= monitorRect.right - 1)
+				platformManager->SnapWindow(EWindowSnapPosition::Right);
+			else if (point.y <= monitorRect.top)
+				platformManager->SnapWindow(EWindowSnapPosition::Maximized);
+			else if (platformManager->SnapPosition != EWindowSnapPosition::Unsnapped)
+				platformManager->SnapWindow(EWindowSnapPosition::Unsnapped);
+		}
+		break;
+
+		case WM_COPYDATA:
 		{
 			COPYDATASTRUCT* cds = reinterpret_cast<COPYDATASTRUCT*>(lParam);
 			std::string stringData(reinterpret_cast<char*>(cds->lpData), cds->cbData / sizeof(char));
@@ -578,7 +601,7 @@ namespace Havtorn
 
 		WindowPos = windowPos;
 		Resolution = resolution;
-		::SetWindowPos(WindowHandle, 0, WindowPos.X, WindowPos.Y, Resolution.X, Resolution.Y, SWP_NOOWNERZORDER | SWP_NOZORDER);
+		::MoveWindow(WindowHandle, WindowPos.X, WindowPos.Y, Resolution.X, Resolution.Y, true);
 	}
 
 	void CPlatformManager::UpdateRelativeCursorToWindowPos()
@@ -634,5 +657,40 @@ namespace Havtorn
 	void CPlatformManager::CloseSplashWindow()
 	{
 		PostMessage(SplashHandle, WM_SYSCOMMAND, SC_CLOSE, 0);
+	}
+
+	// TODO.NW: It doesn't seem like there's a windows API for snapping windows yet?
+	void CPlatformManager::SnapWindow(const EWindowSnapPosition position)
+	{
+		SVector2<I16> windowPos = WindowPos;
+		SVector2<U16> resolution = Resolution;
+
+		switch (position)
+		{
+		case EWindowSnapPosition::Unsnapped:
+			windowPos = PreviousWindowPos;
+			resolution = PreviousResolution;
+			SnapPosition = EWindowSnapPosition::Unsnapped;
+			break;
+		case EWindowSnapPosition::Left:
+			windowPos = { 0 };
+			resolution = SVector2<U16>(MaxResolution.X / 2, MaxResolution.Y);
+			SnapPosition = EWindowSnapPosition::Left;
+			break;
+		case EWindowSnapPosition::Right:
+			windowPos = SVector2<I16>(STATIC_I16(MaxResolution.X / 2), 0);
+			resolution = SVector2<U16>(MaxResolution.X / 2, MaxResolution.Y);
+			SnapPosition = EWindowSnapPosition::Right;
+			break;
+		case EWindowSnapPosition::Maximized:
+			windowPos = { 0 };
+			resolution = MaxResolution;
+			SnapPosition = EWindowSnapPosition::Maximized;
+			break;
+		default:
+			break;
+		}
+
+		UpdateWindow(windowPos, resolution);
 	}
 }
