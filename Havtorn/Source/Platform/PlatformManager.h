@@ -12,6 +12,14 @@
 
 namespace Havtorn
 {
+	enum class EWindowSnapPosition
+	{
+		Unsnapped,
+		Left,
+		Right,
+		Maximized
+	};
+
 	class CPlatformManager
 	{
 		friend class CPlatformProcess;
@@ -43,6 +51,8 @@ namespace Havtorn
 		PLATFORM_API void MaximizeWindow();
 		PLATFORM_API void CloseWindow();
 		PLATFORM_API void CloseSplashWindow();
+
+		PLATFORM_API void SnapWindow(const EWindowSnapPosition position);
 
 	public:
 		// TODO.NW: Try figure out if we can bind to and bool returns instead
@@ -98,6 +108,8 @@ namespace Havtorn
 		
 		SVector2<U16> MaxResolution = {};
 		
+		EWindowSnapPosition SnapPosition = EWindowSnapPosition::Unsnapped;
+
 		bool CursorIsLocked = false;
 		bool WindowIsInEditingMode = false;
 		bool IsFullscreen = false;
