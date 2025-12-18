@@ -35,11 +35,12 @@ namespace Havtorn
 
 	void CInspectorWindow::OnInspectorGUI()
 	{
-		const SEditorLayout& layout = Manager->GetEditorLayout();
+		SEditorLayout& layout = Manager->GetEditorLayout();
 
-		const SVector2<F32>& viewportWorkPos = GUI::GetViewportWorkPos();
-		GUI::SetNextWindowPos(SVector2<F32>(viewportWorkPos.X + layout.InspectorPosition.X, viewportWorkPos.Y + layout.InspectorPosition.Y));
-		GUI::SetNextWindowSize(SVector2<F32>(layout.InspectorSize.X, layout.InspectorSize.Y));
+		const SVector2<F32> layoutPosition = SVector2<F32>(layout.InspectorPosition.X, layout.InspectorPosition.Y);
+		const SVector2<F32> layoutSize = SVector2<F32>(layout.InspectorSize.X, layout.InspectorSize.Y);
+		GUI::SetNextWindowPos(layoutPosition);
+		GUI::SetNextWindowSize(layoutSize);
 
 		if (!GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
 		{
@@ -131,6 +132,17 @@ namespace Havtorn
 				GUI::OpenPopup("Add Component Modal");
 
 			OpenAddComponentModal(selectedEntity);
+		}
+
+		const SVector2<F32> newPosition = GUI::GetWindowPos();
+		const SVector2<F32> newSize = GUI::GetWindowSize();
+		if (layoutPosition != newPosition || layoutPosition != newSize)
+		{
+			layout.InspectorPosition.X = STATIC_I16(newPosition.X);
+			layout.InspectorPosition.Y = STATIC_I16(newPosition.Y);
+			layout.InspectorSize.X = STATIC_U16(newSize.X);
+			layout.InspectorSize.Y = STATIC_U16(newSize.Y);
+			layout.InspectorChanged = true;
 		}
 
 		GUI::End();

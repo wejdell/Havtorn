@@ -182,6 +182,8 @@ namespace Havtorn
 			window->WasEnabled = window->GetEnabled();
 		}
 
+		ReinitEditorLayout();
+
 		DebugWindow();
 	}
 
@@ -604,7 +606,7 @@ namespace Havtorn
 		return {};
 	}
 
-	const SEditorLayout& CEditorManager::GetEditorLayout() const
+	SEditorLayout& CEditorManager::GetEditorLayout()
 	{
 		return EditorLayout;
 	}
@@ -658,24 +660,68 @@ namespace Havtorn
 
 		constexpr F32 viewportAspectRatioInv = (9.0f / 16.0f);
 		const F32 viewportPaddingX = ViewportPadding;
-		constexpr F32 viewportPaddingY = 0.0f;
 
-		I16 viewportPosX = static_cast<I16>(resolution.X * viewportPaddingX);
-		I16 viewportPosY = static_cast<I16>(viewportPaddingY);
+		I16 viewportPosX = STATIC_I16(resolution.X * viewportPaddingX);
+		I16 viewportPosY = STATIC_I16(19);
 		U16 viewportSizeX = STATIC_U16(resolution.X - (2.0f * STATIC_F32(viewportPosX)));
 		U16 viewportSizeY = STATIC_U16(STATIC_F32(viewportSizeX) * viewportAspectRatioInv);
 
-		// NR: This might be windows menu bar height?
-		U16 sizeOffsetY = 18;
-
-		EditorLayout.ViewportPosition = { viewportPosX, viewportPosY };
-		EditorLayout.ViewportSize = { viewportSizeX, viewportSizeY };
-		EditorLayout.AssetBrowserPosition = { viewportPosX, static_cast<I16>(viewportPosY + viewportSizeY) };
-		EditorLayout.AssetBrowserSize = { viewportSizeX, STATIC_U16(resolution.Y - STATIC_F32(viewportSizeY) - sizeOffsetY) };
 		EditorLayout.HierarchyViewPosition = { 0, viewportPosY };
-		EditorLayout.HierarchyViewSize = { STATIC_U16(viewportPosX), STATIC_U16(resolution.Y - sizeOffsetY) };
-		EditorLayout.InspectorPosition = { static_cast<I16>(resolution.X - STATIC_F32(viewportPosX)), viewportPosY };
-		EditorLayout.InspectorSize = { STATIC_U16(viewportPosX), STATIC_U16(resolution.Y - sizeOffsetY) };
+		EditorLayout.ViewportPosition = { viewportPosX, viewportPosY };
+		EditorLayout.InspectorPosition = { STATIC_I16(viewportPosX + STATIC_I16(viewportSizeX)), viewportPosY };
+		EditorLayout.DockSpacePosition = { viewportPosX, STATIC_I16(viewportPosY + viewportSizeY) };
+		
+		EditorLayout.HierarchyViewSize = { STATIC_U16(viewportPosX), STATIC_U16(resolution.Y - viewportPosY) };
+		EditorLayout.ViewportSize = { viewportSizeX, viewportSizeY };
+		EditorLayout.InspectorSize = { STATIC_U16(viewportPosX), STATIC_U16(resolution.Y - viewportPosY) };
+		EditorLayout.DockSpaceSize = { viewportSizeX, STATIC_U16(resolution.Y - STATIC_F32(viewportSizeY) - viewportPosY) };
+	}
+
+	void CEditorManager::ReinitEditorLayout()
+	{
+		if (!EditorLayout.HasLayoutChanged())
+			return;
+
+		const SVector2<U16> resolution = PlatformManager->GetResolution();
+		const SVector2<F32>& viewportWorkPos = GUI::GetViewportWorkPos();
+
+		I16 viewportPosY = STATIC_I16(viewportWorkPos.Y);
+
+		I16 viewportPosX = EditorLayout.ViewportPosition.X;
+		if (EditorLayout.HierarchyViewChanged)
+			viewportPosX = STATIC_I16(EditorLayout.HierarchyViewSize.X);
+
+		I16 inspectorPosX = EditorLayout.InspectorPosition.X;
+		if (EditorLayout.ViewportChanged)
+			inspectorPosX = EditorLayout.ViewportPosition.X + STATIC_I16(EditorLayout.ViewportSize.X);
+
+		I16 dockSpacePosY = EditorLayout.DockSpacePosition.Y;
+		if (EditorLayout.ViewportChanged)
+			dockSpacePosY = EditorLayout.ViewportPosition.Y + STATIC_I16(EditorLayout.ViewportSize.Y);
+
+		EditorLayout.HierarchyViewPosition = { 0, viewportPosY };
+		EditorLayout.ViewportPosition = { viewportPosX, viewportPosY };
+		EditorLayout.InspectorPosition = { inspectorPosX, viewportPosY };
+		EditorLayout.DockSpacePosition = { viewportPosX, dockSpacePosY };
+
+		EditorLayout.HierarchyViewSize = { STATIC_U16(viewportPosX), STATIC_U16(resolution.Y - STATIC_U16(viewportPosY)) };
+		EditorLayout.ViewportSize = { STATIC_U16(inspectorPosX - viewportPosX), STATIC_U16(dockSpacePosY - viewportPosY) };
+		EditorLayout.InspectorSize = { STATIC_U16(resolution.X - STATIC_U16(inspectorPosX)), STATIC_U16(resolution.Y - STATIC_U16(viewportPosY)) };
+		EditorLayout.DockSpaceSize = { STATIC_U16(inspectorPosX - viewportPosX), STATIC_U16(resolution.Y - STATIC_U16(dockSpacePosY)) };
+
+		EditorLayout.ViewportChanged = false;
+		EditorLayout.HierarchyViewChanged = false;
+		EditorLayout.InspectorChanged = false;
+		EditorLayout.DockSpaceChanged = false;
+
+		GUI::SetWindowPos("Viewport", { STATIC_F32(EditorLayout.ViewportPosition.X), STATIC_F32(EditorLayout.ViewportPosition.Y) });
+		GUI::SetWindowSize("Viewport", { STATIC_F32(EditorLayout.ViewportSize.X), STATIC_F32(EditorLayout.ViewportSize.Y) });
+		GUI::SetWindowPos("Hierarchy", { STATIC_F32(EditorLayout.HierarchyViewPosition.X), STATIC_F32(EditorLayout.HierarchyViewPosition.Y) });
+		GUI::SetWindowSize("Hierarchy", { STATIC_F32(EditorLayout.HierarchyViewSize.X), STATIC_F32(EditorLayout.HierarchyViewSize.Y) });
+		GUI::SetWindowPos("Inspector", { STATIC_F32(EditorLayout.InspectorPosition.X), STATIC_F32(EditorLayout.InspectorPosition.Y) });
+		GUI::SetWindowSize("Inspector", { STATIC_F32(EditorLayout.InspectorSize.X), STATIC_F32(EditorLayout.InspectorSize.Y) });
+		GUI::SetWindowPos("Dock Space", { STATIC_F32(EditorLayout.DockSpacePosition.X), STATIC_F32(EditorLayout.DockSpacePosition.Y) });
+		GUI::SetWindowSize("Dock Space", { STATIC_F32(EditorLayout.DockSpaceSize.X), STATIC_F32(EditorLayout.DockSpaceSize.Y) });
 	}
 
 	void CEditorManager::InitAssetRepresentations()

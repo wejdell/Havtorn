@@ -693,6 +693,18 @@ namespace Havtorn
 			return ImGui::GetFrameHeightWithSpacing();
 		}
 
+		SVector2<F32> GetWindowPos()
+		{
+			auto pos = ImGui::GetWindowPos();
+			return SVector2<F32>(pos.x, pos.y);
+		}
+
+		SVector2<F32> GetWindowSize()
+		{
+			auto size = ImGui::GetWindowSize();
+			return SVector2<F32>(size.x, size.y);
+		}
+
 		void SetNextWindowPos(const SVector2<F32>& pos, const EWindowCondition condition, const SVector2<F32>& pivot)
 		{
 			ImVec2 imPos = { pos.X, pos.Y };
@@ -705,6 +717,18 @@ namespace Havtorn
 		{
 			ImVec2 imSize = { size.X, size.Y };
 			ImGui::SetNextWindowSize(imSize);
+		}
+
+		void SetWindowPos(const char* label, const SVector2<F32>& pos)
+		{
+			ImVec2 imPos = { pos.X, pos.Y };
+			ImGui::SetWindowPos(label, imPos);
+		}
+
+		void SetWindowSize(const char* label, const SVector2<F32>& size)
+		{
+			ImVec2 imSize = { size.X, size.Y };
+			ImGui::SetWindowSize(label, imSize);
 		}
 
 		void SetRect(const SVector2<F32>& position, const SVector2<F32>& dimensions)
@@ -2585,6 +2609,16 @@ namespace Havtorn
 		return Instance->Impl->GetFrameHeightWithSpacing();
 	}
 
+	SVector2<F32> GUI::GetWindowPos()
+	{
+		return Instance->Impl->GetWindowPos();
+	}
+
+	SVector2<F32> GUI::GetWindowSize()
+	{
+		return Instance->Impl->GetWindowSize();
+	}
+
 	void GUI::SetNextWindowPos(const SVector2<F32>& pos, const EWindowCondition condition, const SVector2<F32>& pivot)
 	{
 		Instance->Impl->SetNextWindowPos(pos, condition, pivot);
@@ -2593,6 +2627,16 @@ namespace Havtorn
 	void GUI::SetNextWindowSize(const SVector2<F32>& size)
 	{
 		Instance->Impl->SetNextWindowSize(size);
+	}
+
+	void GUI::SetWindowPos(const char* label, const SVector2<F32>& pos)
+	{
+		Instance->Impl->SetWindowPos(label, pos);
+	}
+
+	void GUI::SetWindowSize(const char* label, const SVector2<F32>& size)
+	{
+		Instance->Impl->SetWindowSize(label, size);
 	}
 
 	void GUI::SetRect(const SVector2<F32>& position, const SVector2<F32>& dimensions)

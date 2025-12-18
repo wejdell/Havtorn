@@ -37,11 +37,15 @@ namespace Havtorn
 
 	void CViewportWindow::OnInspectorGUI()
 	{
-		const SEditorLayout& layout = Manager->GetEditorLayout();
+		SEditorLayout& layout = Manager->GetEditorLayout();
 
 		SVector2<F32> viewportWorkPos = GUI::GetViewportWorkPos();
-		GUI::SetNextWindowPos(SVector2<F32>(viewportWorkPos.X + layout.ViewportPosition.X, viewportWorkPos.Y + layout.ViewportPosition.Y));
-		GUI::SetNextWindowSize(SVector2<F32>(layout.ViewportSize.X, layout.ViewportSize.Y));
+		
+		const SVector2<F32> layoutPosition = SVector2<F32>(layout.ViewportPosition.X, layout.ViewportPosition.Y);
+		const SVector2<F32> layoutSize = SVector2<F32>(layout.ViewportSize.X, layout.ViewportSize.Y);
+		GUI::SetNextWindowPos(layoutPosition);
+		GUI::SetNextWindowSize(layoutSize);
+
 		GUI::PushStyleVar(EStyleVar::WindowPadding, SVector2<F32>(0.0f));
 		GUI::PushStyleVar(EStyleVar::ItemSpacing, SVector2<F32>(0.0f));
 
@@ -51,7 +55,10 @@ namespace Havtorn
 		intptr_t stopButtonID = resourceManager->GetStaticEditorTextureResource(EEditorTexture::StopIcon);
 		intptr_t settingsButtonID = resourceManager->GetStaticEditorTextureResource(EEditorTexture::EnvironmentLightIcon);
 
-		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
+		// TODO.NW: Make toggle to unlock windows (allow moving)
+		// TODO.NW: Make button to snap back to 16:9 aspect ratio (offer black bars?)
+		// TODO.NW: Make button to reset to default layout, save layouts
+		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
 		{
 			SVector2<F32> buttonSize = { 16.0f, 16.0f };
 			std::vector<SAlignedButtonData> buttonData;
@@ -174,6 +181,18 @@ namespace Havtorn
 
 		GUI::PopStyleVar();
 		GUI::PopStyleVar();
+
+		const SVector2<F32> newPosition = GUI::GetWindowPos();
+		const SVector2<F32> newSize = GUI::GetWindowSize();
+		if (layoutPosition != newPosition || layoutSize != newSize)
+		{
+			layout.ViewportPosition.X = STATIC_I16(newPosition.X);
+			layout.ViewportPosition.Y = STATIC_I16(newPosition.Y);
+			layout.ViewportSize.X = STATIC_U16(newSize.X);
+			layout.ViewportSize.Y = STATIC_U16(newSize.Y);
+			layout.ViewportChanged = true;
+		}
+
 		GUI::End();
 	}
 

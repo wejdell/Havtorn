@@ -22,13 +22,14 @@ namespace Havtorn
 
 	void CDockSpaceWindow::OnInspectorGUI()
 	{
-		const SEditorLayout& layout = Manager->GetEditorLayout();
+		SEditorLayout& layout = Manager->GetEditorLayout();
 
-		const SVector2<F32>& viewportWorkPos = GUI::GetViewportWorkPos();
-		GUI::SetNextWindowPos(SVector2<F32>(viewportWorkPos.X + layout.AssetBrowserPosition.X, viewportWorkPos.Y + layout.AssetBrowserPosition.Y));
-		GUI::SetNextWindowSize(SVector2<F32>(layout.AssetBrowserSize.X, layout.AssetBrowserSize.Y));
+		const SVector2<F32> layoutPosition = SVector2<F32>(layout.DockSpacePosition.X, layout.DockSpacePosition.Y);
+		const SVector2<F32> layoutSize = SVector2<F32>(layout.DockSpaceSize.X, layout.DockSpaceSize.Y);
+		GUI::SetNextWindowPos(layoutPosition);
+		GUI::SetNextWindowSize(layoutSize);
 
-		// NR: Remove padding and similar around the docking area
+		// NW: Remove padding and similar around the docking area
 		GUI::PushStyleVar(EStyleVar::WindowRounding, 0.0f);
 		GUI::PushStyleVar(EStyleVar::WindowBorderSize, 0.0f);
 		GUI::PushStyleVar(EStyleVar::WindowPadding, SVector2<F32>(0.0f, 0.0f));
@@ -63,6 +64,17 @@ namespace Havtorn
 				GUI::DockBuilderDockWindow("Output Log", dockSpaceIDCopy);
 				GUI::DockBuilderFinish(dockSpaceID);
 			}
+		}
+
+		const SVector2<F32> newPosition = GUI::GetWindowPos();
+		const SVector2<F32> newSize = GUI::GetWindowSize();
+		if (layoutPosition != newPosition || layoutPosition != newSize)
+		{
+			layout.DockSpacePosition.X = STATIC_I16(newPosition.X);
+			layout.DockSpacePosition.Y = STATIC_I16(newPosition.Y);
+			layout.DockSpaceSize.X = STATIC_U16(newSize.X);
+			layout.DockSpaceSize.Y = STATIC_U16(newSize.Y);
+			layout.DockSpaceChanged = true;
 		}
 
 		GUI::End();

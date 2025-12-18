@@ -36,13 +36,15 @@ namespace Havtorn
 
 	void CHierarchyWindow::OnInspectorGUI()
 	{
-		const SEditorLayout& layout = Manager->GetEditorLayout();
+		SEditorLayout& layout = Manager->GetEditorLayout();
 
-		const SVector2<F32>& viewportWorkPos = GUI::GetViewportWorkPos();
-		GUI::SetNextWindowPos(SVector2<F32>(viewportWorkPos.X + layout.HierarchyViewPosition.X, viewportWorkPos.Y + layout.HierarchyViewPosition.Y));
-		GUI::SetNextWindowSize(SVector2<F32>(layout.HierarchyViewSize.X, layout.HierarchyViewSize.Y));
+		const SVector2<F32> layoutPosition = SVector2<F32>(layout.HierarchyViewPosition.X, layout.HierarchyViewPosition.Y);
+		const SVector2<F32> layoutSize = SVector2<F32>(layout.HierarchyViewSize.X, layout.HierarchyViewSize.Y);
+		GUI::SetNextWindowPos(layoutPosition);
+		GUI::SetNextWindowSize(layoutSize);
 
-		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
+		// TODO.NW: Maybe make all windows resizeable? Currently only the viewport that's resizeable. Makes it so that you can't drag away into nothingness
+		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus}))
 		{
 			SEditData editData;
 
@@ -55,6 +57,17 @@ namespace Havtorn
 
 			Footer(scenes, editData);
 			Edit(editData);
+		}
+
+		const SVector2<F32> newPosition = GUI::GetWindowPos();
+		const SVector2<F32> newSize = GUI::GetWindowSize();
+		if (layoutPosition != newPosition || layoutSize != newSize)
+		{
+			layout.HierarchyViewPosition.X = STATIC_I16(newPosition.X);
+			layout.HierarchyViewPosition.Y = STATIC_I16(newPosition.Y);
+			layout.HierarchyViewSize.X = STATIC_U16(newSize.X);
+			layout.HierarchyViewSize.Y = STATIC_U16(newSize.Y);
+			layout.HierarchyViewChanged = true;
 		}
 
 		GUI::End();

@@ -42,7 +42,7 @@ namespace Havtorn
 
 	void COutputLogWindow::OnInspectorGUI()
 	{
-        if (!GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
+        if (!GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, /*EWindowFlag::NoResize,*/ EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
         {
             GUI::End();
             return;

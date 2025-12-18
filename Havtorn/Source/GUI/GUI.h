@@ -1017,8 +1017,13 @@ namespace Havtorn
 
 		static F32 GetFrameHeightWithSpacing();
 
+		static SVector2<F32> GetWindowPos();
+		static SVector2<F32> GetWindowSize();
+
 		static void SetNextWindowPos(const SVector2<F32>& pos, const EWindowCondition condition = EWindowCondition::None, const SVector2<F32>& pivot = SVector2<F32>(0.0f));
 		static void SetNextWindowSize(const SVector2<F32>& size);
+		static void SetWindowPos(const char* label, const SVector2<F32>& pos);
+		static void SetWindowSize(const char* label, const SVector2<F32>& size);
 		static void SetRect(const SVector2<F32>& position, const SVector2<F32>& dimensions);
 		static void SetGizmoDrawList();
 

@@ -55,12 +55,22 @@ namespace Havtorn
 	{
 		SVector2<I16> ViewportPosition		= SVector2<I16>::Zero;
 		SVector2<U16> ViewportSize			= SVector2<U16>::Zero;
-		SVector2<I16> AssetBrowserPosition	= SVector2<I16>::Zero;
-		SVector2<U16> AssetBrowserSize		= SVector2<U16>::Zero;
+		SVector2<I16> DockSpacePosition		= SVector2<I16>::Zero;
+		SVector2<U16> DockSpaceSize			= SVector2<U16>::Zero;
 		SVector2<I16> HierarchyViewPosition	= SVector2<I16>::Zero;
 		SVector2<U16> HierarchyViewSize		= SVector2<U16>::Zero;
 		SVector2<I16> InspectorPosition		= SVector2<I16>::Zero;
 		SVector2<U16> InspectorSize			= SVector2<U16>::Zero;
+
+		bool ViewportChanged = false;
+		bool DockSpaceChanged = false;
+		bool HierarchyViewChanged = false;
+		bool InspectorChanged = false;
+
+		bool HasLayoutChanged() const
+		{
+			return ViewportChanged || DockSpaceChanged || HierarchyViewChanged || InspectorChanged;
+		}
 	};
 
 	struct SEditorAssetRepresentation
@@ -130,7 +140,7 @@ namespace Havtorn
 		void SetEditorTheme(EEditorColorTheme colorTheme = EEditorColorTheme::HavtornDark, EEditorStyleTheme styleTheme = EEditorStyleTheme::Havtorn);
 		std::string GetEditorColorThemeName(const EEditorColorTheme colorTheme);
 		SColor GetEditorColorThemeRepColor(const EEditorColorTheme colorTheme);
-		[[nodiscard]] const SEditorLayout& GetEditorLayout() const;
+		[[nodiscard]] SEditorLayout& GetEditorLayout();
 
 		[[nodiscard]] ETransformGizmo GetCurrentGizmo() const;
 		[[nodiscard]] ETransformGizmoSpace GetCurrentGizmoSpace() const;
@@ -166,6 +176,7 @@ namespace Havtorn
 
 	private:
 		void InitEditorLayout(); 
+		void ReinitEditorLayout();
 		void InitAssetRepresentations();
 		void PreProcessAssets();
 

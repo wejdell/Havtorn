@@ -40,7 +40,7 @@ namespace Havtorn
 
 	void CAssetBrowserWindow::OnInspectorGUI()
 	{
-		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
+		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, /*EWindowFlag::NoResize, */EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus}))
 		{
 			intptr_t folderIconID = Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::FolderIcon);
 
