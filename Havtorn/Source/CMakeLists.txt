@@ -600,10 +600,10 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SHADER_INCLUDES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${HLSL_SHADER_FILES})
 target_link_libraries(Engine PRIVATE
-    $<$<CONFIG:EditorDebug>:assimp-vc143-mtd DirectXTexd box2dd PhysX/PhysX_64d PhysX/PhysXCommon_64d PhysX/PhysXExtensions_static_64d PhysX/PhysXFoundation_64d PhysX/PhysXPvdSDK_static_64d PhysX/PhysXCharacterKinematic_static_64d>
-    $<$<CONFIG:GameDebug>:assimp-vc143-mtd DirectXTexd box2dd PhysX/PhysX_64d PhysX/PhysXCommon_64d PhysX/PhysXExtensions_static_64d PhysX/PhysXFoundation_64d PhysX/PhysXPvdSDK_static_64d PhysX/PhysXCharacterKinematic_static_64d>
-    $<$<CONFIG:EditorDevelopment>:assimp-vc143-mt DirectXTex box2d PhysX/PhysX_64 PhysX/PhysXCommon_64 PhysX/PhysXExtensions_static_64 PhysX/PhysXFoundation_64 PhysX/PhysXPvdSDK_static_64 PhysX/PhysXCharacterKinematic_static_64>
-    $<$<CONFIG:GameRelease>:assimp-vc143-mt DirectXTex box2d PhysX/PhysX_64 PhysX/PhysXCommon_64 PhysX/PhysXExtensions_static_64 PhysX/PhysXFoundation_64 PhysX/PhysXPvdSDK_static_64 PhysX/PhysXCharacterKinematic_static_64>
+    $<$<CONFIG:EditorDebug>:assimp-vc143-mtd DirectXTexd freetyped box2dd PhysX/PhysX_64d PhysX/PhysXCommon_64d PhysX/PhysXExtensions_static_64d PhysX/PhysXFoundation_64d PhysX/PhysXPvdSDK_static_64d PhysX/PhysXCharacterKinematic_static_64d>
+    $<$<CONFIG:GameDebug>:assimp-vc143-mtd DirectXTexd freetyped box2dd PhysX/PhysX_64d PhysX/PhysXCommon_64d PhysX/PhysXExtensions_static_64d PhysX/PhysXFoundation_64d PhysX/PhysXPvdSDK_static_64d PhysX/PhysXCharacterKinematic_static_64d>
+    $<$<CONFIG:EditorDevelopment>:assimp-vc143-mt DirectXTex freetype box2d PhysX/PhysX_64 PhysX/PhysXCommon_64 PhysX/PhysXExtensions_static_64 PhysX/PhysXFoundation_64 PhysX/PhysXPvdSDK_static_64 PhysX/PhysXCharacterKinematic_static_64>
+    $<$<CONFIG:GameRelease>:assimp-vc143-mt DirectXTex freetype box2d PhysX/PhysX_64 PhysX/PhysXCommon_64 PhysX/PhysXExtensions_static_64 PhysX/PhysXFoundation_64 PhysX/PhysXPvdSDK_static_64 PhysX/PhysXCharacterKinematic_static_64>
     Core
     Platform
     GUI
@@ -614,6 +614,7 @@ target_include_directories(Engine PRIVATE
     "${EXTERNAL_FOLDER}assimp/include"
     "${EXTERNAL_FOLDER}FastNoise2/include"
     "${EXTERNAL_FOLDER}rapidjson/include"
+    "${EXTERNAL_FOLDER}freetype/include"
     "${EXTERNAL_FOLDER}DirectXTex"
     "${EXTERNAL_FOLDER}box2d/include/box2d"
     "${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
