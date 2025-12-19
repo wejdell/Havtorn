@@ -134,6 +134,28 @@ copy /y lib\Release\DirectXTex.lib ..\Lib\Release\DirectXTex.lib
 copy /y bin\Release\DirectXTex.dll ..\..\Bin\EditorDevelopment\DirectXTex.dll
 cd .. 
 
+cd freetype
+echo.
+echo Generating freetype files...
+echo.
+cmake -E make_directory build
+cmake -G "Visual Studio 17 2022" CMakeLists.txt -B build -DBUILD_SHARED_LIBS=ON
+echo.
+echo Building freetype...
+echo.
+cmake --build build  
+copy /y build\Debug\freetyped.dll ..\..\Bin\freetyped.dll
+copy /y build\Debug\freetyped.lib ..\Lib\Debug\freetyped.lib
+echo.
+cmake --build build --config Release
+copy /y build\Release\freetype.dll ..\..\Bin\freetype.dll
+copy /y build\Release\freetype.lib ..\Lib\Release\freetype.lib
+
+:: Add extra DLLs in DeepLink exe path
+:: TODO: Figure out how to do deep link without going into exe folder, or figure out how to load dll:s in code
+copy /y build\Release\freetype.dll ..\..\Bin\EditorDevelopment\freetype.dll
+cd .. 
+
 echo.
 echo Dependencies compiled
 PAUSE

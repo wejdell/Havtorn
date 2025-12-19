@@ -28,3 +28,6 @@
 [submodule "Havtorn/External/rapidjson"]
 	path = Havtorn/External/rapidjson
 	url = https://github.com/nicolas-risberg/rapidjson.git
+[submodule "Havtorn/External/freetype"]
+	path = Havtorn/External/freetype
+	url = https://gitlab.freedesktop.org/freetype/freetype.git
