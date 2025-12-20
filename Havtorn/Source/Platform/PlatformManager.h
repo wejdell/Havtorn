@@ -107,6 +107,7 @@ namespace Havtorn
 		SVector2<I16> CursorPosPreDrag = {};
 		
 		SVector2<U16> MaxResolution = {};
+		SVector2<U16> MinResolution = SVector2<U16>{128,72};
 		
 		EWindowSnapPosition SnapPosition = EWindowSnapPosition::Unsnapped;
 

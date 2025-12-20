@@ -592,6 +592,12 @@ namespace Havtorn
 		if (resolution.X > MaxResolution.X || resolution.Y > MaxResolution.Y)
 			return;
 
+		if (resolution.X <= MinResolution.X || resolution.Y <= MinResolution.Y)
+		{
+			HV_LOG_WARN("Tried to set a resolution lower than the minimum (minimizing does not count). May be good to investigate.");
+			return;
+		}
+
 		IsFullscreen = resolution.IsEqual(MaxResolution);
 		if (IsFullscreen && !Resolution.IsEqual(MaxResolution))
 		{
