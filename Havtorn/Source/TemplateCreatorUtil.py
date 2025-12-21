@@ -1,6 +1,7 @@
 import json
 import os.path
 import time
+from datetime import datetime
 from collections import defaultdict
 from ValidationUtils import ValidationUtil
 from FileCreatorResources import FileCreatorResources
@@ -168,12 +169,20 @@ class TemplateCreatorUtil:
             FileCreatorResources.print_error("Incompatible file")
             return ("", "")
         
+        # License should use current year
         havtornLicense = FileCreatorResources.get_havtorn_license()
+        currentYear = datetime.now().year
+        yearSymbol = "[[year]]"
+        havtornLicense = havtornLicense.replace(str(currentYear), yearSymbol)
 
         try:
             with open(extractionTargetPath, "r") as file:
                 fileSingleString = file.read()
-                fileSingleString = fileSingleString.replace(havtornLicense, "")
+                for y in range(2020, currentYear + 1):
+                    licenseAdjustedForYear = havtornLicense.replace(yearSymbol, str(y))
+                    print(licenseAdjustedForYear)
+                    fileSingleString = fileSingleString.replace(licenseAdjustedForYear, "")
+
         except Exception as e:
             if e is FileNotFoundError:
                 FileCreatorResources.print_error("File does not exist")
