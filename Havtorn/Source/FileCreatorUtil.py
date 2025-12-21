@@ -11,7 +11,7 @@ from FileCreatorResources import HavtornFolders
 from FileCreatorResources import HavtornFolderUtil
 
 # TODO: Look over if it is possible to restructure how CMakeLists and this script tracks directories -> Generate CMakeLists through script?
-
+# TODO: Add support for adding <config>_API, e.g: GAME_API, etc; files that should have it
 class FileCreatorUtil:
     FOLDER_CHOICES = [
         HavtornFolders.Core,
