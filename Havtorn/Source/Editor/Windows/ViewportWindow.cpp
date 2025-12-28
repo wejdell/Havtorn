@@ -60,19 +60,24 @@ namespace Havtorn
 		// TODO.NW: Make button to reset to default layout, save layouts
 		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
 		{
+			CWorld* world = GEngine::GetWorld();
+			EWorldPlayState playState = world->GetWorldPlayState();
+			IsPlayButtonEngaged = playState == EWorldPlayState::Playing;
+			IsPauseButtonEngaged = playState == EWorldPlayState::Paused;
+
 			SVector2<F32> buttonSize = { 16.0f, 16.0f };
 			std::vector<SAlignedButtonData> buttonData;
-			buttonData.push_back({ [&]() { if (GEngine::GetWorld()->BeginPlay()) { IsPlayButtonEngaged = true; IsPauseButtonEngaged = false; } }, playButtonID, IsPlayButtonEngaged });
-			buttonData.push_back({ [&]() { if (GEngine::GetWorld()->PausePlay()) { IsPlayButtonEngaged = false; IsPauseButtonEngaged = true; } }, pauseButtonID, IsPauseButtonEngaged });
-			buttonData.push_back({ [&]() { if (GEngine::GetWorld()->StopPlay()) { IsPlayButtonEngaged = false; IsPauseButtonEngaged = false; } }, stopButtonID, false });
+			buttonData.push_back({ [&]() { world->BeginPlay(); }, playButtonID, IsPlayButtonEngaged });
+			buttonData.push_back({ [&]() { world->PausePlay(); }, pauseButtonID, IsPauseButtonEngaged });
+			buttonData.push_back({ [&]() { world->StopPlay(); }, stopButtonID, false });
 			GUI::AddViewportButtons(buttonData, buttonSize, layout.ViewportSize.X);
 			
 			// TODO.NW: Fix size of this button
 			GUI::SameLine(layout.ViewportSize.X * 0.5f - 8.0f + 64.0f);
-			std::string playDimensionLabel = GEngine::GetWorld()->GetWorldPlayDimensions() == EWorldPlayDimensions::World3D ? "3D" : "2D";
+			std::string playDimensionLabel = world->GetWorldPlayDimensions() == EWorldPlayDimensions::World3D ? "3D" : "2D";
 			if (GUI::Button(playDimensionLabel.c_str(), buttonSize + GUI::GetStyleVar(EStyleVar::FramePadding) * 2.0f))
 			{
-				GEngine::GetWorld()->ToggleWorldPlayDimensions();
+				world->ToggleWorldPlayDimensions();
 			}
 
 			GUI::SameLine(layout.ViewportSize.X * 0.5f - 8.0f + 96.0f);
@@ -116,7 +121,7 @@ namespace Havtorn
 				GUI::EndPopup();
 			}
 
-			const SEntity& mainCamera = GEngine::GetWorld()->GetMainCamera();
+			const SEntity& mainCamera = world->GetMainCamera();
 			CRenderTexture* mainRenderTexture = nullptr;
 			if (mainCamera.IsValid())
 				mainRenderTexture = Manager->GetRenderManager()->GetRenderTargetTexture(mainCamera.GUID);
