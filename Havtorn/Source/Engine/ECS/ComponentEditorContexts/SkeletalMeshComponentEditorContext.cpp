@@ -62,7 +62,7 @@ namespace Havtorn
 		GDebugDraw::AddLine(g, h, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false);
 		GDebugDraw::AddLine(h, e, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false);
 
-		return { EComponentViewResultLabel::InspectAssetComponent, skeletalMesh, &skeletalMesh->AssetReference, nullptr, EAssetType::SkeletalMesh };
+		return { EComponentViewResultLabel::InspectAssetComponent, skeletalMesh, SAssetReference::ConvertToPointers(skeletalMesh->AssetReference), EAssetType::SkeletalMesh };
     }
 
 	bool SSkeletalMeshComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const

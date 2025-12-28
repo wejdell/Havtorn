@@ -40,6 +40,8 @@ namespace Havtorn
 
 		I32 elementToRemoveIndex = -1;
 
+		std::vector<SAssetReference*> assetReferences;
+		
 		// TODO.NW: Need preview for collision rect and UV
 		// TODO.NW: Maybe calculate bounds for whole canvas?
 		for (I32 i = 0; i < STATIC_I32(canvasComponent->Elements.size()); i++)
@@ -56,7 +58,11 @@ namespace Havtorn
 			elementName.append(std::to_string(i));
 			if (GUI::TreeNode(elementName.c_str()))
 			{
-				// TODO.NW: Add references to list, but only if not marked for delete
+				if (elementToRemoveIndex != i)
+				{
+					for (SAssetReference& ref : element.StateAssetReferences)
+						assetReferences.push_back(&ref);
+				}
 
 				element.State = GUI::ComboEnum("Preview State", element.State);
 				if (element.State == EUIElementState::Count)
@@ -128,9 +134,7 @@ namespace Havtorn
 		if (elementToRemoveIndex != -1)
 			canvasComponent->Elements.erase(canvasComponent->Elements.begin() + elementToRemoveIndex);
 
-		// TODO.NW: This is not a nice solution for these ui elements. 
-		// Can we figure out a way to send a bunch raw pointers to asset refs instead?
-		return { EComponentViewResultLabel::InspectAssetComponent, canvasComponent, nullptr, &canvasComponent->Elements[0].StateAssetReferences, EAssetType::Texture };
+		return { EComponentViewResultLabel::InspectAssetComponent, canvasComponent, assetReferences, EAssetType::Texture };
 	}
 
 	bool SUICanvasComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const

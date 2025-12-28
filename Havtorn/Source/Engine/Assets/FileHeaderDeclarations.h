@@ -42,6 +42,9 @@ namespace Havtorn
 
 		static std::vector<U32> GetIDs(const std::vector<SAssetReference>& references);
 		static std::vector<std::string> GetPaths(const std::vector<SAssetReference>& references);
+		static std::vector<std::string> GetPaths(const std::vector<SAssetReference*>& references);
+		static std::vector<SAssetReference*> ConvertToPointers(SAssetReference& reference);
+		static std::vector<SAssetReference*> ConvertToPointers(std::vector<SAssetReference>& references);
 		static std::vector<SAssetReference> MakeVectorFromPaths(const std::vector<std::string>& paths);
 	};
 
@@ -83,6 +86,33 @@ namespace Havtorn
 			paths.push_back(ref.FilePath);
 
 		return paths;
+	}
+
+	inline std::vector<std::string> SAssetReference::GetPaths(const std::vector<SAssetReference*>& references)
+	{
+		// TODO.NW: Still want an algo library for operations like this
+		std::vector<std::string> paths;
+		for (const SAssetReference* ref : references)
+		{
+			if (ref != nullptr)
+				paths.push_back(ref->FilePath);
+		}
+
+		return paths;
+	}
+
+	inline std::vector<SAssetReference*> SAssetReference::ConvertToPointers(SAssetReference& reference)
+	{
+		return { &reference };
+	}
+
+	inline std::vector<SAssetReference*> SAssetReference::ConvertToPointers(std::vector<SAssetReference>& references)
+	{
+		std::vector<SAssetReference*> pointers;
+		for (SAssetReference& ref : references)
+			pointers.push_back(&ref);
+
+		return pointers;
 	}
 
 	inline std::vector<SAssetReference> SAssetReference::MakeVectorFromPaths(const std::vector<std::string>& paths)

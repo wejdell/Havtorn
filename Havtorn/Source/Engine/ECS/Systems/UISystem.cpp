@@ -53,31 +53,33 @@ namespace Havtorn
 				if (canvas == nullptr || transformComp == nullptr)
 					continue;
 
-				SUIElement& element = canvas->Elements[0];
-				const F32 left = (element.LocalPosition.X + element.CollisionRect.X);
-				const F32 right = (element.LocalPosition.X + element.CollisionRect.Z);
-				const F32 bottom = (element.LocalPosition.Y + element.CollisionRect.Y);
-				const F32 top = (element.LocalPosition.Y + element.CollisionRect.W);
-				bool isInRect = UMath::IsWithin(MousePosition.X, transformComp->Position.X + left, transformComp->Position.X + right);
-				isInRect = isInRect && UMath::IsWithin(MousePosition.Y, transformComp->Position.Y + bottom, transformComp->Position.Y + top);
-
-				EUIElementState newState = (isInRect && !IsMouseClicked) ? EUIElementState::Hovered : EUIElementState::Idle;
-
-				if ((element.State == EUIElementState::Hovered || element.State == EUIElementState::Active) && isInRect && IsMouseClicked)
-					newState = EUIElementState::Active;
-
-				// Release on element to click
-				if (element.State == EUIElementState::Active && newState == EUIElementState::Hovered)
+				for (SUIElement& element : canvas->Elements)
 				{
-					HV_LOG_INFO("Clicked");
+					const F32 left = (element.LocalPosition.X + element.CollisionRect.X);
+					const F32 right = (element.LocalPosition.X + element.CollisionRect.Z);
+					const F32 bottom = (element.LocalPosition.Y + element.CollisionRect.Y);
+					const F32 top = (element.LocalPosition.Y + element.CollisionRect.W);
+					bool isInRect = UMath::IsWithin(MousePosition.X, transformComp->Position.X + left, transformComp->Position.X + right);
+					isInRect = isInRect && UMath::IsWithin(MousePosition.Y, transformComp->Position.Y + bottom, transformComp->Position.Y + top);
 
-					if (element.BindingType == EUIBindingType::GenericFunction && FunctionMap.contains(element.BoundData))
-						FunctionMap[element.BoundData]();
-					else if (element.BindingType == EUIBindingType::OtherCanvas && scene->HasEntity(element.BoundData))
-						FocusedCanvas = SEntity{ element.BoundData };
+					EUIElementState newState = (isInRect && !IsMouseClicked) ? EUIElementState::Hovered : EUIElementState::Idle;
+
+					if ((element.State == EUIElementState::Hovered || element.State == EUIElementState::Active) && isInRect && IsMouseClicked)
+						newState = EUIElementState::Active;
+
+					// Release on element to click
+					if (element.State == EUIElementState::Active && newState == EUIElementState::Hovered)
+					{
+						HV_LOG_INFO("Clicked");
+
+						if (element.BindingType == EUIBindingType::GenericFunction && FunctionMap.contains(element.BoundData))
+							FunctionMap[element.BoundData]();
+						else if (element.BindingType == EUIBindingType::OtherCanvas && scene->HasEntity(element.BoundData))
+							FocusedCanvas = SEntity{ element.BoundData };
+					}
+
+					element.State = newState;
 				}
-
-				element.State = newState;
 			}
 		}
 	}
