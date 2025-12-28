@@ -62,5 +62,6 @@ namespace Havtorn
 		ENGINE_API void IsDeleted(CScene* fromScene) override;
 
 		std::vector<SUIElement> Elements;
+		bool IsActive = false;
 	};
 }

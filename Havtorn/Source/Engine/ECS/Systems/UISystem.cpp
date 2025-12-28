@@ -43,12 +43,18 @@ namespace Havtorn
 		{
 			for (SUICanvasComponent* canvas : scene->GetComponents<SUICanvasComponent>())
 			{
-				if (!FocusedCanvas.IsValid())
+				if (!FocusedCanvas.IsValid() && canvas->IsActive)
 					FocusedCanvas = canvas->Owner;
 
-				if (canvas->Owner != FocusedCanvas)
-					continue;
+				if (FocusedCanvas.IsValid() && canvas->Owner == FocusedCanvas && canvas->IsActive == false)
+					canvas->IsActive = true;
 
+				if (canvas->Owner != FocusedCanvas)
+					canvas->IsActive = false;
+				
+				if (!canvas->IsActive)
+					continue;
+				
 				STransform2DComponent* transformComp = scene->GetComponent<STransform2DComponent>(canvas);
 				if (canvas == nullptr || transformComp == nullptr)
 					continue;
@@ -75,7 +81,10 @@ namespace Havtorn
 						if (element.BindingType == EUIBindingType::GenericFunction && FunctionMap.contains(element.BoundData))
 							FunctionMap[element.BoundData]();
 						else if (element.BindingType == EUIBindingType::OtherCanvas && scene->HasEntity(element.BoundData))
+						{
+							canvas->IsActive = false;
 							FocusedCanvas = SEntity{ element.BoundData };
+						}
 					}
 
 					element.State = newState;

@@ -478,7 +478,7 @@ namespace Havtorn
 
 				for (const SUICanvasComponent* uiCanvasComp : scene->GetComponents<SUICanvasComponent>())
 				{
-					if (!SComponent::IsValid(uiCanvasComp))
+					if (!SComponent::IsValid(uiCanvasComp) || !uiCanvasComp->IsActive)
 						continue;
 
 					const STransform2DComponent* transform2DComp = scene->GetComponent<STransform2DComponent>(uiCanvasComp);

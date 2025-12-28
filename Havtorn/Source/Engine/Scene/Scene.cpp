@@ -530,37 +530,81 @@ namespace Havtorn
 		}
 		// === !Floor/Walls ===
 
-		const SEntity& canvas = AddEntity("Canvas");
-		if (!canvas.IsValid())
+		// === Main Menu ===
+		const SEntity& mainMenuCanvas = AddEntity("Main Menu Canvas");
+		const SEntity& settingsMenuCanvas = AddEntity("Settings Canvas");
+
+		if (!mainMenuCanvas.IsValid() || !settingsMenuCanvas.IsValid())
 			return false;
 
-		STransform2DComponent& canvasTransformComp = *AddComponent<STransform2DComponent>(canvas);
-		AddComponentEditorContext(canvas, &STransform2DComponentEditorContext::Context);
+		STransform2DComponent& mainMenuCanvasTransformComp = *AddComponent<STransform2DComponent>(mainMenuCanvas);
+		AddComponentEditorContext(mainMenuCanvas, &STransform2DComponentEditorContext::Context);
 
-		canvasTransformComp.Position = { 0.5f, 0.5f };
+		mainMenuCanvasTransformComp.Position = { 0.5f, 0.5f };
 
-		SUICanvasComponent& canvasComponent = *AddComponent<SUICanvasComponent>(canvas);
-		AddComponentEditorContext(canvas, &SUICanvasComponentEditorContext::Context);
-		
+		SUICanvasComponent& mainMenuCanvasComponent = *AddComponent<SUICanvasComponent>(mainMenuCanvas);
+		AddComponentEditorContext(mainMenuCanvas, &SUICanvasComponentEditorContext::Context);
+		mainMenuCanvasComponent.IsActive = true;
+
 		const std::vector<SAssetReference> assets = { SAssetReference("Assets/Textures/UITextures.hva"), SAssetReference("Assets/Textures/UITextures.hva"), SAssetReference("Assets/Textures/UITextures.hva") };
 		const SVector2<F32> buttonScale = SVector2<F32>(0.3f, 0.1f);
 		const F32 halfHeight = 0.5f * buttonScale.Y;
 		const F32 halfWidth = 0.5f * buttonScale.X * (9.0f / 16.0f);
 		const SVector4 collisionRect = { -halfWidth, -halfHeight, halfWidth, halfHeight };
 
-		SUIElement& playButton = canvasComponent.Elements.emplace_back();
+		SUIElement& playButton = mainMenuCanvasComponent.Elements.emplace_back();
 		playButton.StateAssetReferences = assets;
 		playButton.LocalPosition = SVector2<F32>(0.0f, 0.3f);
 		playButton.LocalScale = buttonScale;
 		playButton.CollisionRect = collisionRect;
 		playButton.UVRects = { SVector4(0.0f, 0.0f, 0.5f, 1 / 8.0f), SVector4(0.5f, 0.0f, 1.0f, 1 / 8.0f), SVector4(0.0f, 1 / 8.0f, 0.5f, 2 / 8.0f) };
 		
-		SUIElement& settingsButton = canvasComponent.Elements.emplace_back();
+		SUIElement& settingsButton = mainMenuCanvasComponent.Elements.emplace_back();
 		settingsButton.StateAssetReferences = assets;
 		settingsButton.LocalPosition = SVector2<F32>(0.0f, 0.1f);
 		settingsButton.LocalScale = buttonScale;
 		settingsButton.CollisionRect = collisionRect;
 		settingsButton.UVRects = { SVector4(0.5f, 1 / 8.0f, 1.0f, 2 / 8.0f), SVector4(0.0f, 2 / 8.0f, 0.5f, 3 / 8.0f), SVector4(0.5f, 2 / 8.0f, 1.0f, 3 / 8.0f) };
+		settingsButton.BindingType = EUIBindingType::OtherCanvas;
+		settingsButton.BoundData = settingsMenuCanvas.GUID;
+
+		SUIElement& quitButton = mainMenuCanvasComponent.Elements.emplace_back();
+		quitButton.StateAssetReferences = assets;
+		quitButton.LocalPosition = SVector2<F32>(0.0f, -0.1f);
+		quitButton.LocalScale = buttonScale;
+		quitButton.CollisionRect = collisionRect;
+		quitButton.UVRects = { SVector4(0.0f, 3 / 8.0f, 0.5f, 4 / 8.0f), SVector4(0.5f, 3 / 8.0f, 1.0f, 4 / 8.0f), SVector4(0.0f, 4 / 8.0f, 0.5f, 5 / 8.0f) };
+		// === !Main Menu ===
+
+		// === Settings Menu ===
+		if (!settingsMenuCanvas.IsValid())
+			return false;
+
+		STransform2DComponent& settingsMenuCanvasTransformComp = *AddComponent<STransform2DComponent>(settingsMenuCanvas);
+		AddComponentEditorContext(settingsMenuCanvas, &STransform2DComponentEditorContext::Context);
+
+		settingsMenuCanvasTransformComp.Position = { 0.5f, 0.5f };
+
+		SUICanvasComponent& settingsMenuCanvasComponent = *AddComponent<SUICanvasComponent>(settingsMenuCanvas);
+		AddComponentEditorContext(settingsMenuCanvas, &SUICanvasComponentEditorContext::Context);
+
+		SUIElement& muteButton = settingsMenuCanvasComponent.Elements.emplace_back();
+		muteButton.StateAssetReferences = assets;
+		muteButton.LocalPosition = SVector2<F32>(0.0f, 0.3f);
+		muteButton.LocalScale = buttonScale;
+		muteButton.CollisionRect = collisionRect;
+		muteButton.UVRects = { SVector4(0.5f, 4 / 8.0f, 1.0f, 5 / 8.0f), SVector4(0.0f, 5 / 8.0f, 0.5f, 6 / 8.0f), SVector4(0.5f, 5 / 8.0f, 1.0f, 6 / 8.0f) };
+
+		SUIElement& backButton = settingsMenuCanvasComponent.Elements.emplace_back();
+		backButton.StateAssetReferences = assets;
+		backButton.LocalPosition = SVector2<F32>(0.0f, 0.1f);
+		backButton.LocalScale = buttonScale;
+		backButton.CollisionRect = collisionRect;
+		backButton.UVRects = { SVector4(0.0f, 6 / 8.0f, 0.5f, 7 / 8.0f), SVector4(0.5f, 6 / 8.0f, 1.0f, 7 / 8.0f), SVector4(0.0f, 7 / 8.0f, 0.5f, 8 / 8.0f) };
+		backButton.BindingType = EUIBindingType::OtherCanvas;
+		backButton.BoundData = mainMenuCanvas.GUID;
+		// === !Settings Menu ===
+
 		return true;
 	}
 
