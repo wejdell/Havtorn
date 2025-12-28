@@ -492,6 +492,32 @@ namespace Havtorn
 		renderList->at(assetReferenceUID).Entities.emplace_back(spriteComponent->Owner);
 	}
 
+	void CRenderManager::AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SUIElement& uiElement, const U64 renderViewID)
+	{
+		if (uiElement.UVRects.size() != STATIC_U64(EUIElementState::Count))
+			return;
+
+		std::unordered_map<U32, SSpriteInstanceData>* renderList = nullptr;
+
+		if (GameThreadRenderViews->contains(renderViewID))
+			renderList = &GameThreadRenderViews->at(renderViewID).ScreenSpaceSpriteInstanceData;
+		else
+			return;
+
+		if (!renderList->contains(assetReferenceUID))
+			renderList->emplace(assetReferenceUID, SSpriteInstanceData());
+
+		SMatrix screenSpaceMatrix;
+		screenSpaceMatrix.SetScale(screenSpaceTransform->Scale.X * uiElement.LocalScale.X, screenSpaceTransform->Scale.Y * uiElement.LocalScale.Y, 1.0f);
+		screenSpaceMatrix *= SMatrix::CreateRotationAroundZ(UMath::DegToRad(screenSpaceTransform->DegreesRoll + uiElement.LocalDegreesRoll));
+		screenSpaceMatrix.SetTranslation({ screenSpaceTransform->Position.X + uiElement.LocalPosition.X, screenSpaceTransform->Position.Y + uiElement.LocalPosition.Y, 0.0f });
+
+		renderList->at(assetReferenceUID).Transforms.emplace_back(screenSpaceMatrix);
+		renderList->at(assetReferenceUID).UVRects.emplace_back(uiElement.UVRects[STATIC_U8(uiElement.State)]);
+		renderList->at(assetReferenceUID).Colors.emplace_back(uiElement.Color.AsVector4());
+		renderList->at(assetReferenceUID).Entities.emplace_back(screenSpaceTransform->Owner);
+	}
+
 	void CRenderManager::SyncCrossThreadResources(const CWorld* world)
 	{
 		SwapRenderViews();

@@ -309,6 +309,12 @@ add_dependencies(GUI Core Platform)
 
 # ==================== ENGINE ====================
 set(ENGINE_FILES
+	Engine/ECS/Systems/UISystem.cpp
+	Engine/ECS/Systems/UISystem.h
+	Engine/ECS/ComponentEditorContexts/UICanvasComponentEditorContext.cpp
+	Engine/ECS/ComponentEditorContexts/UICanvasComponentEditorContext.h
+	Engine/ECS/Components/UICanvasComponent.cpp
+	Engine/ECS/Components/UICanvasComponent.h
     ${ENGINE_FOLDER}Application/EngineProcess.cpp
     ${ENGINE_FOLDER}Application/EngineProcess.h
     ${ENGINE_FOLDER}Assets/AssetRegistry.cpp

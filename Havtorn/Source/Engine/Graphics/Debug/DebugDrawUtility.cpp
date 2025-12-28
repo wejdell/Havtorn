@@ -8,6 +8,8 @@
 #include "Graphics/RenderManager.h"
 #include "Graphics/RenderCommand.h"
 
+#include "ECS/ComponentAlgo.h"
+
 namespace Havtorn
 {
 	GDebugDraw* GDebugDraw::Instance = nullptr;
@@ -101,6 +103,24 @@ namespace Havtorn
 
 		TransformToFaceAndReach(start, end, newData[0].TransformMatrix);
 
+		TryAddShapes(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, newData);
+	}
+
+	void GDebugDraw::AddLine2D(const SVector2<F32>& start, const SVector2<F32>& end, const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth)
+	{
+		if (start.IsEqual(end))
+			return;
+
+		CWorld* world = GEngine::GetWorld();
+		const SCameraData mainCameraData = UComponentAlgo::GetCameraData(world->GetMainCamera(), world->GetActiveScenes());
+		if (!mainCameraData.IsValid())
+			return;
+
+		std::vector<SDebugDrawData> newData = { SDebugDrawData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line) };
+
+		TransformToFaceAndReach(start, end, newData[0].TransformMatrix);
+		//SMatrix::Recompose(pyramidPos, lineTransform.GetEuler() + SVector(90.0f, 0.0f, 0.0f), scale, newData[0].TransformMatrix);
+		//newData[0].TransformMatrix *= mainCameraData.TransformComponent->Transform.GetMatrix().FastInverse();
 		TryAddShapes(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, newData);
 	}
 
@@ -300,6 +320,17 @@ namespace Havtorn
 		const SVector scale = SVector(1.0f, 1.0f, start.Distance(end));
 		transform = SMatrix::Face(start, direction, up);
 		SMatrix::Recompose(start, transform.GetEuler(), scale, transform);
+	}
+
+	void GDebugDraw::TransformToFaceAndReach(const SVector2<F32>& start, const SVector2<F32>& end, SMatrix& transform)
+	{
+		const SVector up = SVector::Forward; // SVector::Up: breaks up == direction.
+		const SVector2<F32> direction2D = (end - start).GetNormalized();
+		const SVector direction = SVector(direction2D.X, direction2D.Y, 0.0f);
+		const SVector scale = SVector(1.0f, 1.0f, start.Distance(end));
+		const SVector start3D = SVector(start.X, start.Y, 1.0f);
+		transform = SMatrix::Face(start3D, direction, up);
+		SMatrix::Recompose(start3D, transform.GetEuler(), scale, transform);
 	}
 
 #if _DEBUG
