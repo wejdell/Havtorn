@@ -34,8 +34,6 @@ namespace Havtorn
 
 	void CUISystem::Update(std::vector<Ptr<CScene>>& scenes)
 	{
-		HV_LOG_INFO("Mouse pos: %s", MousePosition.ToString().c_str());
-
 		if (GEngine::GetWorld()->GetWorldPlayState() != EWorldPlayState::Playing)
 			return;
 
