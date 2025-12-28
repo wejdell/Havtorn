@@ -85,24 +85,44 @@ namespace Havtorn
         std::array<std::string, STATIC_U64(EPixelShaders::Count)> filepaths;
         filepaths.fill("InitPixelShaders::UnmappedShader");
         {
-            filepaths[STATIC_U64(EPixelShaders::GBuffer)] = ShaderRoot + "GBuffer_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::DecalAlbedo)] = ShaderRoot + "Decal_Albedo_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::DecalMaterial)] = ShaderRoot + "Decal_Material_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::DecalNormal)] = ShaderRoot + "Decal_Normal_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::DeferredDirectional)] = ShaderRoot + "DeferredLightDirectionalAndEnvironment_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::DeferredPoint)] = ShaderRoot + "DeferredLightPoint_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::DeferredSpot)] = ShaderRoot + "DeferredLightSpot_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::VolumetricDirectional)] = ShaderRoot + "DeferredLightDirectionalVolumetric_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::VolumetricPoint)] = ShaderRoot + "DeferredLightPointVolumetric_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::VolumetricSpot)] = ShaderRoot + "DeferredLightSpotVolumetric_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::EditorPreview)] = ShaderRoot + "EditorPreview_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::Line)] = ShaderRoot + "Line_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::SpriteScreenSpace)] = ShaderRoot + "SpriteScreenSpace_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpace)] = ShaderRoot + "SpriteWorldSpace_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::GBufferInstanceEditor)] = ShaderRoot + "GBufferEditor_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpaceEditor)] = ShaderRoot + "SpriteWorldSpaceEditor_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpaceEditorWidget)] = ShaderRoot + "SpriteWorldSpaceEditorWidget_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::Skybox)] = ShaderRoot + "Skybox_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::GBuffer)]                           = ShaderRoot + "GBuffer_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::DecalAlbedo)]                       = ShaderRoot + "Decal_Albedo_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::DecalMaterial)]                     = ShaderRoot + "Decal_Material_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::DecalNormal)]                       = ShaderRoot + "Decal_Normal_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::DeferredDirectional)]               = ShaderRoot + "DeferredLightDirectionalAndEnvironment_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::DeferredPoint)]                     = ShaderRoot + "DeferredLightPoint_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::DeferredSpot)]                      = ShaderRoot + "DeferredLightSpot_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::VolumetricDirectional)]             = ShaderRoot + "DeferredLightDirectionalVolumetric_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::VolumetricPoint)]                   = ShaderRoot + "DeferredLightPointVolumetric_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::VolumetricSpot)]                    = ShaderRoot + "DeferredLightSpotVolumetric_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::EditorPreview)]                     = ShaderRoot + "EditorPreview_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::Line)]                              = ShaderRoot + "Line_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::SpriteScreenSpace)]                 = ShaderRoot + "SpriteScreenSpace_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpace)]                  = ShaderRoot + "SpriteWorldSpace_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::GBufferInstanceEditor)]             = ShaderRoot + "GBufferEditor_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpaceEditor)]            = ShaderRoot + "SpriteWorldSpaceEditor_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpaceEditorWidget)]      = ShaderRoot + "SpriteWorldSpaceEditorWidget_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::Skybox)]                            = ShaderRoot + "Skybox_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenMultiply)]                = ShaderRoot + "FullscreenMultiply_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenCopy)]                    = ShaderRoot + "FullscreenCopy_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenCopyDepth)]               = ShaderRoot + "FullscreenCopyDepth_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenCopyGBuffer)]             = ShaderRoot + "FullscreenCopyGBuffer_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenDifference)]              = ShaderRoot + "FullscreenDifference_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenLuminance)]               = ShaderRoot + "FullscreenLuminance_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenGaussianHorizontal)]      = ShaderRoot + "FullscreenGaussianBlurHorizontal_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenGaussianVertical)]        = ShaderRoot + "FullscreenGaussianBlurVertical_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenBilateralHorizontal)]     = ShaderRoot + "FullscreenBilateralBlurHorizontal_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenBilateralVertical)]       = ShaderRoot + "FullscreenBilateralBlurVertical_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenBloom)]                   = ShaderRoot + "FullscreenBloom_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenVignette)]                = ShaderRoot + "FullscreenVignette_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenTonemap)]                 = ShaderRoot + "FullscreenTonemap_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenGammaCorrection)]         = ShaderRoot + "FullscreenGammaCorrection_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenFXAA)]                    = ShaderRoot + "FullscreenFXAA_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenSSAO)]                    = ShaderRoot + "FullscreenSSAO_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenSSAOBlur)]                = ShaderRoot + "FullscreenSSAOBlur_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenDownsampleDepth)]         = ShaderRoot + "FullscreenDepthDownSample_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenDepthAwareUpsampling)]    = ShaderRoot + "FullscreenDepthAwareUpsample_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenEditorData)]              = ShaderRoot + "FullscreenEditorData_PS.cso";
         }
 
         for (U64 i = 0; i < STATIC_U64(EPixelShaders::Count); i++)
@@ -127,6 +147,7 @@ namespace Havtorn
     {
         AddSampler(ESamplerType::Wrap);
         AddSampler(ESamplerType::Border);
+        AddSampler(ESamplerType::Clamp);
     }
 
     void CRenderStateManager::InitVertexBuffers()
@@ -519,23 +540,23 @@ namespace Havtorn
         Context->OMSetRenderTargets(numberOfTargets, targetViews, depthStencilView);
     }
 
-    void CRenderStateManager::Draw(U32 vertexCount, U32 startVertexLocation)
+    void CRenderStateManager::Draw(U32 vertexCount, U32 startVertexLocation) const
     {
         // TODO.NW: Increase draw calls in all the draw functions instead of at the call sites
         Context->Draw(vertexCount, startVertexLocation);
     }
 
-    void CRenderStateManager::DrawIndexed(U32 indexCount, U32 startIndexLocation, U32 baseVertexLocation)
+    void CRenderStateManager::DrawIndexed(U32 indexCount, U32 startIndexLocation, U32 baseVertexLocation) const
     {
         Context->DrawIndexed(indexCount, startIndexLocation, baseVertexLocation);
     }
 
-    void CRenderStateManager::DrawInstanced(U32 vertexCountPerInstance, U32 numberOfInstances, U32 startVertexLocation, U32 startInstanceLocation)
+    void CRenderStateManager::DrawInstanced(U32 vertexCountPerInstance, U32 numberOfInstances, U32 startVertexLocation, U32 startInstanceLocation) const
     {
         Context->DrawInstanced(vertexCountPerInstance, numberOfInstances, startVertexLocation, startInstanceLocation);
     }
 
-    void CRenderStateManager::DrawIndexedInstanced(U32 indexCountPerInstance, U32 instanceCount, U32 startIndexLocation, U32 baseVertexLocation, U32 startInstanceLocation)
+    void CRenderStateManager::DrawIndexedInstanced(U32 indexCountPerInstance, U32 instanceCount, U32 startIndexLocation, U32 baseVertexLocation, U32 startInstanceLocation) const
     {
         Context->DrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
     }
@@ -557,6 +578,20 @@ namespace Havtorn
     void CRenderStateManager::ClearState()
     {
         Context->ClearState();
+    }
+
+    void CRenderStateManager::ClearShaderResources() const
+    {
+        ID3D11ShaderResourceView* nullView = NULL;
+        Context->PSSetShaderResources(0, 1, &nullView);
+        Context->PSSetShaderResources(1, 1, &nullView);
+        Context->PSSetShaderResources(2, 1, &nullView);
+        Context->PSSetShaderResources(3, 1, &nullView);
+        Context->PSSetShaderResources(4, 1, &nullView);
+        Context->PSSetShaderResources(8, 1, &nullView);
+        Context->PSSetShaderResources(9, 1, &nullView);
+        Context->PSSetShaderResources(21, 1, &nullView);
+        Context->PSSetShaderResources(22, 1, &nullView);
     }
 
     void CRenderStateManager::Release()

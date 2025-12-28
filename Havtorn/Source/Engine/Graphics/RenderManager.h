@@ -103,6 +103,7 @@ namespace Havtorn
 
 		ENGINE_API CRenderTexture CreateRenderTextureFromSource(const std::string& filePath);
 		ENGINE_API CRenderTexture CreateRenderTextureFromAsset(const std::string& filePath, const EAssetType assetType);
+		ENGINE_API CRenderTexture CreateRenderTextureFromData(const SVector2<U16> size, const DXGI_FORMAT format, void* data, const U64 elementSize);
 
 		ENGINE_API U64 GetEntityGUIDFromData(U64 dataIndex) const;
 

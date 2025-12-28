@@ -261,6 +261,42 @@ namespace Havtorn
 		return std::move(returnTexture);
 	}
 
+	CRenderTexture CRenderTextureFactory::CreateTextureFromData(const SVector2<U16> size, const DXGI_FORMAT format, void* data, const U64 elementSize)
+	{
+		D3D11_TEXTURE2D_DESC textureDesc = { 0 };
+		textureDesc.Width = size.X;
+		textureDesc.Height = size.Y;
+		textureDesc.MipLevels = 1;
+		textureDesc.ArraySize = 1;
+		textureDesc.Format = format;
+		textureDesc.SampleDesc.Count = 1;
+		textureDesc.SampleDesc.Quality = 0;
+		textureDesc.Usage = D3D11_USAGE_DEFAULT;
+		textureDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;;
+		textureDesc.CPUAccessFlags = 0;
+		textureDesc.MiscFlags = 0;
+
+		D3D11_SUBRESOURCE_DATA textureData = { 0 };
+		textureData.pSysMem = data;
+		textureData.SysMemPitch = size.X * STATIC_U32(elementSize);
+		textureData.SysMemSlicePitch = 0;
+
+		D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
+		srvDesc.Format = format;
+		srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MostDetailedMip = 0;
+		srvDesc.Texture2D.MipLevels = 1;
+
+		ID3D11Texture2D* textureBuffer;
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateTexture2D(&textureDesc, &textureData, &textureBuffer), "Texture could not be created.");
+		ID3D11ShaderResourceView* shaderResource;
+		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateShaderResourceView(textureBuffer, &srvDesc, &shaderResource), "Noise Shader Resource View could not be created.");
+
+		CRenderTexture returnTexture = CreateTexture(textureBuffer);
+		returnTexture.ShaderResource = shaderResource;
+		return returnTexture;
+	}
+
 	CStaticRenderTexture CRenderTextureFactory::CreateStaticTexture(const std::string& filePath, const EAssetType assetType)
 	{
 		CStaticRenderTexture returnTexture;
