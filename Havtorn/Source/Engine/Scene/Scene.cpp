@@ -278,7 +278,7 @@ namespace Havtorn
 		// === !Decal ===
 
 		const std::string modelPath1 = "Assets/Meshes/En_P_PendulumClock.hva";
-		const std::vector<std::string> materialNames1 = { "Assets/Materials/M_PendulumClock.hva", "Assets/Materials/M_Checkboard_128x128.hva" };
+		const std::vector<std::string> materialNames1 = { "Assets/Materials/M_PendulumClock.hva", "Assets/Materials/M_Misc.hva" };
 		const std::string modelPath2 = "Assets/Meshes/En_P_Bed.hva";
 		const std::vector<std::string> materialNames2 = { "Assets/Materials/M_Bed.hva", "Assets/Materials/M_Bedsheet.hva" };
 		const std::string modelPath3 = "Assets/Meshes/Plane.hva";
