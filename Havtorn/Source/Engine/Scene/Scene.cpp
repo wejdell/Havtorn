@@ -49,6 +49,7 @@ namespace Havtorn
 		RegisterTrivialComponent<SPhysics2DComponent, SPhysics2DComponentEditorContext>(180, 10);
 		RegisterTrivialComponent<SPhysics3DComponent, SPhysics3DComponentEditorContext>(190, 40);
 		RegisterTrivialComponent<SPhysics3DControllerComponent, SPhysics3DControllerComponentEditorContext>(200, 1);
+		RegisterNonTrivialComponent<SUICanvasComponent, SUICanvasComponentEditorContext>(210, 5);
 		//RegisterTrivialComponent<SSequencerComponent, SSequencerComponentEditorContext>(typeID++, 0);
 
 		return true;
@@ -529,6 +530,37 @@ namespace Havtorn
 		}
 		// === !Floor/Walls ===
 
+		const SEntity& canvas = AddEntity("Canvas");
+		if (!canvas.IsValid())
+			return false;
+
+		STransform2DComponent& canvasTransformComp = *AddComponent<STransform2DComponent>(canvas);
+		AddComponentEditorContext(canvas, &STransform2DComponentEditorContext::Context);
+
+		canvasTransformComp.Position = { 0.5f, 0.5f };
+
+		SUICanvasComponent& canvasComponent = *AddComponent<SUICanvasComponent>(canvas);
+		AddComponentEditorContext(canvas, &SUICanvasComponentEditorContext::Context);
+		
+		const std::vector<SAssetReference> assets = { SAssetReference("Assets/Textures/UITextures.hva"), SAssetReference("Assets/Textures/UITextures.hva"), SAssetReference("Assets/Textures/UITextures.hva") };
+		const SVector2<F32> buttonScale = SVector2<F32>(0.3f, 0.1f);
+		const F32 halfHeight = 0.5f * buttonScale.Y;
+		const F32 halfWidth = 0.5f * buttonScale.X * (9.0f / 16.0f);
+		const SVector4 collisionRect = { -halfWidth, -halfHeight, halfWidth, halfHeight };
+
+		SUIElement& playButton = canvasComponent.Elements.emplace_back();
+		playButton.StateAssetReferences = assets;
+		playButton.LocalPosition = SVector2<F32>(0.0f, 0.3f);
+		playButton.LocalScale = buttonScale;
+		playButton.CollisionRect = collisionRect;
+		playButton.UVRects = { SVector4(0.0f, 0.0f, 0.5f, 1 / 8.0f), SVector4(0.5f, 0.0f, 1.0f, 1 / 8.0f), SVector4(0.0f, 1 / 8.0f, 0.5f, 2 / 8.0f) };
+		
+		SUIElement& settingsButton = canvasComponent.Elements.emplace_back();
+		settingsButton.StateAssetReferences = assets;
+		settingsButton.LocalPosition = SVector2<F32>(0.0f, 0.1f);
+		settingsButton.LocalScale = buttonScale;
+		settingsButton.CollisionRect = collisionRect;
+		settingsButton.UVRects = { SVector4(0.5f, 1 / 8.0f, 1.0f, 2 / 8.0f), SVector4(0.0f, 2 / 8.0f, 0.5f, 3 / 8.0f), SVector4(0.5f, 2 / 8.0f, 1.0f, 3 / 8.0f) };
 		return true;
 	}
 

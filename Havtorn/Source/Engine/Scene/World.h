@@ -16,6 +16,7 @@ namespace Havtorn
 	struct SPhysics3DComponent;
 	struct STransformComponent;
 	class ISystem;
+	class CPlatformManager;
 	class CRenderManager;
 	class CGraphicsFramework;
 	class CAssetRegistry;
@@ -134,7 +135,7 @@ namespace Havtorn
 		CWorld() = default;
 		~CWorld() = default;
 		
-		bool Init(CRenderManager* renderManager);
+		bool Init(CPlatformManager* platformManager, CRenderManager* renderManager);
 		void Update();
 
 		ENGINE_API void LoadScene(const std::string& filePath, CScene* outScene) const;

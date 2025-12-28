@@ -8,9 +8,11 @@
 #include "Graphics/Debug/DebugDrawUtility.h"
 #include "HexPhys/HexPhys.h"
 
+#include <PlatformManager.h>
+
 namespace Havtorn
 {
-	bool CWorld::Init(CRenderManager* renderManager)
+	bool CWorld::Init(CPlatformManager* platformManager, CRenderManager* renderManager)
 	{
 		RenderManager = renderManager;
 		PhysicsWorld2D = std::make_unique<HexPhys2D::CPhysicsWorld2D>();
@@ -22,6 +24,7 @@ namespace Havtorn
 		RequestSystem<CSequencerSystem>(this);
 		RequestSystem<CAnimatorGraphSystem>(this, RenderManager);
 		RequestSystem<CScriptSystem>(this, this);
+		RequestSystem<CUISystem>(this, platformManager);
 		RequestSystem<CRenderSystem>(this, RenderManager, this);
 
 		OnSceneCreatedDelegate.AddMember(this, &CWorld::OnSceneCreated);

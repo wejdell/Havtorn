@@ -15,6 +15,7 @@
 #include "ECS/Systems/SequencerSystem.h"
 #include "../HexPhys/HexPhys.h"
 #include "ECS/Systems/ScriptSystem.h"
+#include "ECS/Systems/UISystem.h"
 
 #include "ECS/Components/TransformComponent.h"
 #include "ECS/ComponentEditorContexts/TransformComponentEditorContext.h"
@@ -58,5 +59,7 @@
 #include "ECS/ComponentEditorContexts/Physics3DComponentEditorContext.h"
 #include "ECS/Components/Physics3DControllerComponent.h"
 #include "ECS/ComponentEditorContexts/Physics3DControllerComponentEditorContext.h"
+#include "ECS/Components/UICanvasComponent.h"
+#include "ECS/ComponentEditorContexts/UICanvasComponentEditorContext.h"
 #include "ECS/Components/DebugShapeComponent.h"
 #include "ECS/Components/MetaDataComponent.h"
