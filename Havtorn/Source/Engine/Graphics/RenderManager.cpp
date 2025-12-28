@@ -43,8 +43,9 @@ namespace Havtorn
 	{
 		Framework = framework;
 
-		ENGINE_ERROR_BOOL_MESSAGE(FullscreenRenderer.Init(framework, this), "Failed to Init Fullscreen Renderer.");
+		// Init renderer with texture factory, create noise texture as rendertexture
 		ENGINE_ERROR_BOOL_MESSAGE(RenderTextureFactory.Init(framework), "Failed to Init Fullscreen Texture Factory.");
+		ENGINE_ERROR_BOOL_MESSAGE(FullscreenRenderer.Init(framework, this), "Failed to Init Fullscreen Renderer.");
 		ENGINE_ERROR_BOOL_MESSAGE(RenderStateManager.Init(framework), "Failed to Init Render State Manager.");
 
 		InitRenderTextures(framework, platformManager->GetResolution());
@@ -263,7 +264,7 @@ namespace Havtorn
 			if (RenderThreadRenderViews->contains(WorldMainCameraEntity.GUID))
 			{
 				RenderThreadRenderViews->at(WorldMainCameraEntity.GUID).RenderTarget.SetAsPSResourceOnSlot(0);
-				FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+				FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, RenderStateManager);
 			}
 
 			GTime::EndTracking(ETimerCategory::GPU);
@@ -282,7 +283,7 @@ namespace Havtorn
 		GEngine::Instance->Framework->GetContext()->ClearState();
 
 		// TODO.NR: Implement this properly for window resizing
-		
+
 		//Backbuffer.ReleaseTexture();
 
 		Backbuffer.Release();
@@ -323,6 +324,11 @@ namespace Havtorn
 	CRenderTexture CRenderManager::CreateRenderTextureFromAsset(const std::string& filePath, const EAssetType assetType)
 	{
 		return std::move(RenderTextureFactory.CreateSRVFromAsset(filePath, assetType));
+	}
+
+	CRenderTexture CRenderManager::CreateRenderTextureFromData(const SVector2<U16> size, const DXGI_FORMAT format, void* data, const U64 elementSize)
+	{
+		return std::move(RenderTextureFactory.CreateTextureFromData(size, format, data, elementSize));
 	}
 
 	U64 CRenderManager::GetEntityGUIDFromData(U64 dataIndex) const
@@ -587,11 +593,11 @@ namespace Havtorn
 			}
 			return;
 		}
-		
+
 		// TODO.NW: Add size/dimensions to requests
 		GameThreadRenderViews->emplace(renderViewID, SRenderView());
-		GameThreadRenderViews->at(renderViewID).RenderTarget = RenderTextureFactory.CreateTexture(CurrentWindowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);	
-		
+		GameThreadRenderViews->at(renderViewID).RenderTarget = RenderTextureFactory.CreateTexture(CurrentWindowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
+
 		if (callback.has_value())
 		{
 			if (RenderViewCallbacks.contains(renderViewID))
@@ -871,7 +877,7 @@ namespace Havtorn
 			return;
 
 		SStaticMeshInstanceData& meshData = RenderThreadRenderViews->at(command.RenderViewID).StaticMeshInstanceData[command.U32s[0]];
-		
+
 		const std::vector<SMatrix>& matrices = meshData.Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
@@ -930,7 +936,7 @@ namespace Havtorn
 
 		// TODO.NW: Figure out why the depth doesn't work
 		CRenderTexture& renderTarget = RenderThreadRenderViews->at(command.RenderViewID).RenderTarget;
-		ID3D11RenderTargetView* renderTargets[1] = { renderTarget.GetRenderTargetView()};
+		ID3D11RenderTargetView* renderTargets[1] = { renderTarget.GetRenderTargetView() };
 		RenderStateManager.OMSetRenderTargets(1, renderTargets, nullptr/*renderDepth.GetDepthStencilView()*/);
 		RenderStateManager.RSSetViewports(1, renderTarget.GetViewport());
 
@@ -1115,7 +1121,7 @@ namespace Havtorn
 		if (boneTransforms.empty())
 			boneTransforms.resize(64, SMatrix::Identity);
 		BoneBuffer.BindBuffer(boneTransforms);
-		
+
 		RenderStateManager.VSSetConstantBuffer(2, BoneBuffer);
 
 		ObjectBufferData.ToWorldFromObject = SMatrix();
@@ -1229,7 +1235,7 @@ namespace Havtorn
 	{
 		DepthCopy.SetAsActiveTarget();
 		IntermediateDepth.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenCopyDepth, RenderStateManager);
 	}
 
 	void CRenderManager::DeferredDecal(const SRenderCommand& command)
@@ -1290,12 +1296,12 @@ namespace Havtorn
 		SSAOBuffer.SetAsActiveTarget();
 		GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Normal, 2);
 		IntermediateDepth.SetAsPSResourceOnSlot(21);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::SSAO);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenSSAO, RenderStateManager);
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::Disable);
 
 		SSAOBlurTexture.SetAsActiveTarget();
 		SSAOBuffer.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::SSAOBlur);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenSSAOBlur, RenderStateManager);
 		// === !SSAO ===
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
@@ -1491,7 +1497,7 @@ namespace Havtorn
 
 		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsActiveTarget();
 		LitScene.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, RenderStateManager);
 	}
 
 	void CRenderManager::VolumetricLightingDirectional(const SRenderCommand& command)
@@ -1684,40 +1690,40 @@ namespace Havtorn
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::Disable);
 		DownsampledDepth.SetAsActiveTarget();
 		IntermediateDepth.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::DownsampleDepth);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenDownsampleDepth, RenderStateManager);
 
 		// Blur
 		VolumetricBlurTexture.SetAsActiveTarget();
 		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralHorizontal);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenBilateralHorizontal, RenderStateManager);
 
 		VolumetricAccumulationBuffer.SetAsActiveTarget();
 		VolumetricBlurTexture.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralVertical);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenBilateralVertical, RenderStateManager);
 
 		VolumetricBlurTexture.SetAsActiveTarget();
 		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralHorizontal);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenBilateralHorizontal, RenderStateManager);
 
 		VolumetricAccumulationBuffer.SetAsActiveTarget();
 		VolumetricBlurTexture.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralVertical);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenBilateralVertical, RenderStateManager);
 
 		VolumetricBlurTexture.SetAsActiveTarget();
 		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralHorizontal);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenBilateralHorizontal, RenderStateManager);
 
 		VolumetricAccumulationBuffer.SetAsActiveTarget();
 		VolumetricBlurTexture.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralVertical);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenBilateralVertical, RenderStateManager);
 
 		VolumetricBlurTexture.SetAsActiveTarget();
 		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralHorizontal);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenBilateralHorizontal, RenderStateManager);
 
 		VolumetricAccumulationBuffer.SetAsActiveTarget();
 		VolumetricBlurTexture.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::BilateralVertical);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenBilateralVertical, RenderStateManager);
 
 		// Upsampling
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
@@ -1725,7 +1731,7 @@ namespace Havtorn
 		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
 		DownsampledDepth.SetAsPSResourceOnSlot(1);
 		IntermediateDepth.SetAsPSResourceOnSlot(2);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::DepthAwareUpsampling);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenDepthAwareUpsampling, RenderStateManager);
 	}
 
 	inline void CRenderManager::ForwardTransparency(const SRenderCommand& /*command*/)
@@ -1827,48 +1833,48 @@ namespace Havtorn
 
 		HalfSizeTexture.SetAsActiveTarget();
 		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, RenderStateManager);
 
 		QuarterSizeTexture.SetAsActiveTarget();
 		HalfSizeTexture.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, RenderStateManager);
 
 		BlurTexture1.SetAsActiveTarget();
 		QuarterSizeTexture.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, RenderStateManager);
 
 		BlurTexture2.SetAsActiveTarget();
 		BlurTexture1.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::GaussianHorizontal);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenGaussianHorizontal, RenderStateManager);
 
 		BlurTexture1.SetAsActiveTarget();
 		BlurTexture2.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::GaussianVertical);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenGaussianVertical, RenderStateManager);
 
 		BlurTexture2.SetAsActiveTarget();
 		BlurTexture1.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::GaussianHorizontal);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenGaussianHorizontal, RenderStateManager);
 
 		BlurTexture1.SetAsActiveTarget();
 		BlurTexture2.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::GaussianVertical);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenGaussianVertical, RenderStateManager);
 
 		QuarterSizeTexture.SetAsActiveTarget();
 		BlurTexture1.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, RenderStateManager);
 
 		HalfSizeTexture.SetAsActiveTarget();
 		QuarterSizeTexture.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, RenderStateManager);
 
 		VignetteTexture.SetAsActiveTarget();
 		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, RenderStateManager);
 
 		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsActiveTarget();
 		VignetteTexture.SetAsPSResourceOnSlot(0);
 		HalfSizeTexture.SetAsPSResourceOnSlot(1);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Bloom);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenBloom, RenderStateManager);
 	}
 
 	inline void CRenderManager::Tonemapping(const SRenderCommand& command)
@@ -1878,7 +1884,7 @@ namespace Havtorn
 
 		TonemappedTexture.SetAsActiveTarget();
 		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Tonemap);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenTonemap, RenderStateManager);
 	}
 
 	inline void CRenderManager::AntiAliasing(const SRenderCommand& /*command*/)
@@ -1888,7 +1894,7 @@ namespace Havtorn
 
 		AntiAliasedTexture.SetAsActiveTarget();
 		TonemappedTexture.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::FXAA);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenFXAA, RenderStateManager);
 	}
 
 	inline void CRenderManager::GammaCorrection(const SRenderCommand& command)
@@ -1898,7 +1904,7 @@ namespace Havtorn
 
 		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsActiveTarget();
 		AntiAliasedTexture.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::GammaCorrection);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenGammaCorrection, RenderStateManager);
 	}
 
 	inline void CRenderManager::RendererDebug(const SRenderCommand& /*command*/)
@@ -1933,7 +1939,7 @@ namespace Havtorn
 	{
 		command.RenderTextures[0].SetAsPSResourceOnSlot(0);
 		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsActiveTarget();
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, RenderStateManager);
 	}
 
 	inline void CRenderManager::TextureCubeDraw(const SRenderCommand& command)
@@ -1994,7 +2000,7 @@ namespace Havtorn
 		viewport.MaxDepth = 1.0f;
 		RenderStateManager.RSSetViewports(1, &viewport);
 		ShadowAtlasDepth.SetAsPSResourceOnSlot(0);
-		FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
+		FullscreenRenderer.Render(EPixelShaders::FullscreenCopyDepth, RenderStateManager);
 	}
 
 	void CRenderManager::CheckIsolatedRenderPass(const U64 renderViewID)
@@ -2010,49 +2016,49 @@ namespace Havtorn
 		{
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			DepthCopy.SetAsPSResourceOnSlot(0);
-			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::CopyDepth);
+			FullscreenRenderer.Render(EPixelShaders::FullscreenCopyDepth, RenderStateManager);
 		}
 		break;
 		case Havtorn::ERenderPass::GBufferAlbedo:
 		{
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Albedo, 0);
-			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+			FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, RenderStateManager);
 		}
 		break;
 		case Havtorn::ERenderPass::GBufferNormals:
 		{
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Normal, 0);
-			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+			FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, RenderStateManager);
 		}
 		break;
 		case Havtorn::ERenderPass::GBufferMaterials:
 		{
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Material, 0);
-			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+			FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, RenderStateManager);
 		}
 		break;
 		case Havtorn::ERenderPass::SSAO:
 		{
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			SSAOBlurTexture.SetAsPSResourceOnSlot(0);
-			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+			FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, RenderStateManager);
 		}
 		break;
 		case Havtorn::ERenderPass::DeferredLighting:
 		{
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			LitScene.SetAsPSResourceOnSlot(0);
-			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+			FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, RenderStateManager);
 		}
 		break;
 		case Havtorn::ERenderPass::VolumetricLighting:
 		{
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
-			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+			FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, RenderStateManager);
 		}
 		break;
 		case Havtorn::ERenderPass::Bloom:
@@ -2060,14 +2066,14 @@ namespace Havtorn
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			VignetteTexture.SetAsPSResourceOnSlot(0);
 			HalfSizeTexture.SetAsPSResourceOnSlot(1);
-			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Difference);
+			FullscreenRenderer.Render(EPixelShaders::FullscreenDifference, RenderStateManager);
 		}
 		break;
 		case Havtorn::ERenderPass::Tonemapping:
 		{
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			TonemappedTexture.SetAsPSResourceOnSlot(0);
-			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Copy);
+			FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, RenderStateManager);
 		}
 		break;
 		case Havtorn::ERenderPass::Antialiasing:
@@ -2075,14 +2081,14 @@ namespace Havtorn
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			AntiAliasedTexture.SetAsPSResourceOnSlot(0);
 			TonemappedTexture.SetAsPSResourceOnSlot(1);
-			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::Difference);
+			FullscreenRenderer.Render(EPixelShaders::FullscreenDifference, RenderStateManager);
 		}
 		break;
 		case Havtorn::ERenderPass::EditorData:
 		{
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::EditorData, 0);
-			FullscreenRenderer.Render(CFullscreenRenderer::EFullscreenShader::EditorData);
+			FullscreenRenderer.Render(EPixelShaders::FullscreenEditorData, RenderStateManager);
 		}
 		break;
 		case Havtorn::ERenderPass::Count:

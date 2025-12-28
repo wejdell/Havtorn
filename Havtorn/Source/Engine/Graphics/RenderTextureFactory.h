@@ -24,6 +24,8 @@ namespace Havtorn
 
 		ENGINE_API CRenderTexture CreateSRVFromSource(const std::string& filePath);
 		ENGINE_API CRenderTexture CreateSRVFromAsset(const std::string& filePath, const EAssetType assetType);
+		
+		CRenderTexture CreateTextureFromData(const SVector2<U16> size, const DXGI_FORMAT format, void* data, const U64 elementSize);
 
 		ENGINE_API CStaticRenderTexture CreateStaticTexture(const std::string& filePath, const EAssetType assetType);
 

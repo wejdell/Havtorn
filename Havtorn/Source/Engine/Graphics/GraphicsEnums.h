@@ -73,6 +73,26 @@ namespace Havtorn
 		SpriteWorldSpaceEditor = 15,
 		SpriteWorldSpaceEditorWidget = 16,
 		Skybox = 17,
+		FullscreenMultiply = 18,
+		FullscreenCopy = 19,
+		FullscreenCopyDepth = 20,
+		FullscreenCopyGBuffer = 21,
+		FullscreenDifference = 22,
+		FullscreenLuminance = 23,
+		FullscreenGaussianHorizontal = 24,
+		FullscreenGaussianVertical = 25,
+		FullscreenBilateralHorizontal = 26,
+		FullscreenBilateralVertical = 27,
+		FullscreenBloom = 28,
+		FullscreenVignette = 29,
+		FullscreenTonemap = 30,
+		FullscreenGammaCorrection = 31,
+		FullscreenFXAA = 32,
+		FullscreenSSAO = 33,
+		FullscreenSSAOBlur = 34,
+		FullscreenDownsampleDepth = 35,
+		FullscreenDepthAwareUpsampling = 36,
+		FullscreenEditorData = 37,
 		Count,
 		Null = Count
 	};
@@ -91,6 +111,7 @@ namespace Havtorn
 	{
 		DefaultWrap = 0,
 		DefaultBorder = 1,
+		DefaultClamp = 2,
 	};
 
 	enum class ETopologies

@@ -110,16 +110,18 @@ namespace Havtorn
 		void OMSetDepthStencilState(EDepthStencilStates depthStencilState, U32 stencilRef = 0) const;
 		void OMSetRenderTargets(U8 numberOfTargets, ID3D11RenderTargetView* const* targetViews, ID3D11DepthStencilView* depthStencilView) const;
 
-		void Draw(U32 vertexCount, U32 startVertexLocation);
-		void DrawIndexed(U32 indexCount, U32 startIndexLocation, U32 baseVertexLocation);
-		void DrawInstanced(U32 vertexCountPerInstance, U32 numberOfInstances, U32 startVertexLocation, U32 startInstanceLocation);
-		void DrawIndexedInstanced(U32 indexCountPerInstance, U32 instanceCount, U32 startIndexLocation, U32 baseVertexLocation, U32 startInstanceLocation);
+		void Draw(U32 vertexCount, U32 startVertexLocation) const;
+		void DrawIndexed(U32 indexCount, U32 startIndexLocation, U32 baseVertexLocation) const;
+		void DrawInstanced(U32 vertexCountPerInstance, U32 numberOfInstances, U32 startVertexLocation, U32 startInstanceLocation) const;
+		void DrawIndexedInstanced(U32 indexCountPerInstance, U32 instanceCount, U32 startIndexLocation, U32 baseVertexLocation, U32 startInstanceLocation) const;
 
 		// TODO.NR: Rename these to fit the naming of the above
 		void SetAllStates(EBlendStates blendState, EDepthStencilStates depthStencilState, ERasterizerStates rasterizerState) const;
 		void SetAllDefault() const;
 
 		void ClearState();
+
+		void ClearShaderResources() const;
 
 		void Release();
 
