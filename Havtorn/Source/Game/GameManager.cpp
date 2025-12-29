@@ -30,6 +30,12 @@ namespace Havtorn
 		World->OnPausePlayDelegate.AddMember(this, &CGameManager::OnPausePlay);
 		World->OnEndPlayDelegate.AddMember(this, &CGameManager::OnEndPlay);
 
+		CUISystem* uiSystem = World->GetSystem<CUISystem>();
+		PlayGameFunction = std::bind(&CGameManager::PlayGame, this);
+		uiSystem->BindEvaluateFunction(PlayGameFunction, "CGameManager::PlayGame");
+		QuitGameFunction = std::bind(&CGameManager::QuitGame, this);
+		uiSystem->BindEvaluateFunction(QuitGameFunction, "CGameManager::QuitGame");
+
 		return true;
 	}
 
@@ -89,5 +95,19 @@ namespace Havtorn
 	void CGameManager::OnEndPlay(std::vector<Ptr<CScene>>& /*scenes*/)
 	{
 		World->UnrequestSystems(this);
+	}
+
+
+	void CGameManager::PlayGame()
+	{
+	}
+
+	void CGameManager::QuitGame()
+	{
+#ifdef HV_GAME_BUILD
+
+#elif HV_EDITOR_BUILD
+		World->StopPlay();
+#endif //  HV_GAME_BUILD
 	}
 }

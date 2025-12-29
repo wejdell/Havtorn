@@ -25,8 +25,15 @@ namespace Havtorn
 		void OnPausePlay(std::vector<Ptr<CScene>>& scenes);
 		void OnEndPlay(std::vector<Ptr<CScene>>& scenes);
 
+		GAME_API void PlayGame();
+		GAME_API void QuitGame();
+
 	public:
 		static GAME_API CGameManager* Instance;
 		CWorld* World = nullptr;
+
+	private:
+		std::function<void()> PlayGameFunction;
+		std::function<void()> QuitGameFunction;
 	};
 }
