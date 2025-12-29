@@ -500,7 +500,7 @@ namespace Havtorn
 							if (!RenderManager->IsSpriteInScreenSpaceInstancedRenderList(assetReference.UID, cameraEntity.GUID))
 							{
 								SRenderCommand command;
-								command.Type = ERenderCommandType::ScreenSpaceSprite;
+								command.Type = ERenderCommandType::ScreenSpaceUISprite;
 								command.U32s.push_back(assetReference.UID);
 								command.RenderTextures.push_back(asset->RenderTexture);
 								RenderManager->PushRenderCommand(command, cameraEntity.GUID);

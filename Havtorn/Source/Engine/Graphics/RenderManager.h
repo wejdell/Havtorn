@@ -184,6 +184,7 @@ namespace Havtorn
 		inline void WorldSpaceSpriteEditorWidget(const SRenderCommand& command);
 		inline void RenderBloom(const SRenderCommand& command);
 		inline void Tonemapping(const SRenderCommand& command);
+		inline void ScreenSpaceUISprite(const SRenderCommand& command);
 		inline void AntiAliasing(const SRenderCommand& command);
 		inline void GammaCorrection(const SRenderCommand& command);
 		inline void RendererDebug(const SRenderCommand& command);

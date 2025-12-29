@@ -23,9 +23,6 @@ namespace Havtorn
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::PickEditorEntity).AddMember(this, &CUISystem::HandleMouseInput);
 
 		PlatformManager = platformManager;
-
-		PlayGameFunction = std::bind(&CUISystem::PlayGame, this);
-		BindEvaluateFunction(PlayGameFunction, "CUISystem::PlayGame");
 	}
 
 	CUISystem::~CUISystem()
@@ -37,6 +34,7 @@ namespace Havtorn
 		if (GEngine::GetWorld()->GetWorldPlayState() != EWorldPlayState::Playing)
 			return;
 
+		std::vector<U64> functionHashesToProcess;
 		for (Ptr<CScene>& scene : scenes)
 		{
 			for (SUICanvasComponent* canvas : scene->GetComponents<SUICanvasComponent>())
@@ -77,17 +75,27 @@ namespace Havtorn
 						HV_LOG_INFO("Clicked");
 
 						if (element.BindingType == EUIBindingType::GenericFunction && FunctionMap.contains(element.BoundData))
-							FunctionMap[element.BoundData]();
+							functionHashesToProcess.push_back(element.BoundData);
 						else if (element.BindingType == EUIBindingType::OtherCanvas && scene->HasEntity(element.BoundData))
 						{
 							canvas->IsActive = false;
 							FocusedCanvas = SEntity{ element.BoundData };
 						}
-					}
 
-					element.State = newState;
+						element.State = EUIElementState::Idle;
+					}
+					else
+					{
+						element.State = newState;
+					}
 				}
 			}
+		}
+
+		for (const U64 hash : functionHashesToProcess)
+		{
+			if (FunctionMap.contains(hash))
+				FunctionMap[hash]();
 		}
 	}
 
@@ -111,10 +119,6 @@ namespace Havtorn
 			return IdentifierMap.at(boundFunctionHash);
 
 		return "Function Not Found";
-	}
-
-	void CUISystem::PlayGame()
-	{
 	}
 
 	void CUISystem::HandleAxisInput(const SInputAxisPayload payload)

@@ -50,6 +50,7 @@ namespace Havtorn
 		DebugShapeUseDepth,
 		PostToneMappingIgnoreDepth,
 		DebugShapeIgnoreDepth,
+		ScreenSpaceUISprite,
 		AntiAliasing,
 		GammaCorrection,
 		TextureDraw,
@@ -59,7 +60,7 @@ namespace Havtorn
 
 	struct SRenderCommand
 	{
-		ERenderCommandType Type;
+		ERenderCommandType Type = ERenderCommandType::ShadowAtlasPrePassDirectional;
 
 		std::vector<SMatrix> Matrices;
 		std::vector<SMatrix> BoneMatrices;

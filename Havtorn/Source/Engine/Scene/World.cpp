@@ -39,6 +39,18 @@ namespace Havtorn
 			if (data.Blockers.empty())
 				data.System->Update(Scenes);			
 		}
+
+		while (!QueuedSystemUnrequests.empty())
+		{
+			const U64 unrequest = QueuedSystemUnrequests.front();
+
+			for (SSystemData& data : SystemData)
+				std::erase(data.Requesters, unrequest);
+
+			std::erase_if(SystemData, [](const SSystemData& data) { return data.Requesters.empty(); });
+
+			QueuedSystemUnrequests.pop();
+		}
 	}
 
 	bool CWorld::BeginPlay()
@@ -183,10 +195,7 @@ namespace Havtorn
 
 	void CWorld::UnrequestSystems(void* requester)
 	{
-		for (SSystemData& data : SystemData)
-			std::erase(data.Requesters, reinterpret_cast<U64>(requester));
-
-		std::erase_if(SystemData, [](const SSystemData& data) { return data.Requesters.empty(); });
+		QueuedSystemUnrequests.push(reinterpret_cast<U64>(requester));
 	}
 
 	void CWorld::RequestPhysicsSystem(void* requester)
