@@ -118,9 +118,11 @@ namespace Havtorn
 
 		std::vector<SDebugDrawData> newData = { SDebugDrawData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line) };
 
-		TransformToFaceAndReach(start, end, newData[0].TransformMatrix);
+		SMatrix localMatrix = SMatrix::Identity;
+		TransformToFaceAndReach(start, end, localMatrix);
 		//SMatrix::Recompose(pyramidPos, lineTransform.GetEuler() + SVector(90.0f, 0.0f, 0.0f), scale, newData[0].TransformMatrix);
-		//newData[0].TransformMatrix *= mainCameraData.TransformComponent->Transform.GetMatrix().FastInverse();
+		//newData[0].TransformMatrix = localMatrix * mainCameraData.TransformComponent->Transform.GetMatrix();
+		//newData[0].TransformMatrix.SetTranslation(newData[0].TransformMatrix.GetTranslation() + mainCameraData.TransformComponent->Transform.GetMatrix().GetTranslation());
 		TryAddShapes(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, newData);
 	}
 
@@ -324,11 +326,11 @@ namespace Havtorn
 
 	void GDebugDraw::TransformToFaceAndReach(const SVector2<F32>& start, const SVector2<F32>& end, SMatrix& transform)
 	{
-		const SVector up = SVector::Forward; // SVector::Up: breaks up == direction.
+		const SVector up = SVector::Up; // SVector::Up: breaks up == direction.
 		const SVector2<F32> direction2D = (end - start).GetNormalized();
 		const SVector direction = SVector(direction2D.X, direction2D.Y, 0.0f);
 		const SVector scale = SVector(1.0f, 1.0f, start.Distance(end));
-		const SVector start3D = SVector(start.X, start.Y, 1.0f);
+		const SVector start3D = SVector(start.X, start.Y, 0.0f);
 		transform = SMatrix::Face(start3D, direction, up);
 		SMatrix::Recompose(start3D, transform.GetEuler(), scale, transform);
 	}

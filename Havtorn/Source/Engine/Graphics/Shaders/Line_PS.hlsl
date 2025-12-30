@@ -2,7 +2,7 @@
 
 #include "Includes/LineShaderStructs.hlsli"
 
-LinePixelOutput main(LineVertexToPixel input)
+LinePixelOutput main(LineGeometryToPixel input)
 {
     LinePixelOutput returnValue;
 	returnValue.Color = input.Color;
