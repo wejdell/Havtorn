@@ -429,10 +429,15 @@ namespace Havtorn
 		if (!renderList->contains(assetReferenceUID))
 			renderList->emplace(assetReferenceUID, SSpriteInstanceData());
 
-		renderList->at(assetReferenceUID).Transforms.emplace_back(worldSpaceTransform->Transform.GetMatrix());
-		renderList->at(assetReferenceUID).UVRects.emplace_back(spriteComponent->UVRect);
-		renderList->at(assetReferenceUID).Colors.emplace_back(spriteComponent->Color.AsVector4());
-		renderList->at(assetReferenceUID).Entities.emplace_back(spriteComponent->Owner);
+		SSpriteInstanceData& instanceData = renderList->at(assetReferenceUID);
+
+		if (auto it = std::ranges::find(instanceData.Entities, spriteComponent->Owner); it != instanceData.Entities.end())
+			return;
+
+		instanceData.Transforms.emplace_back(worldSpaceTransform->Transform.GetMatrix());
+		instanceData.UVRects.emplace_back(spriteComponent->UVRect);
+		instanceData.Colors.emplace_back(spriteComponent->Color.AsVector4());
+		instanceData.Entities.emplace_back(spriteComponent->Owner);
 	}
 
 	void CRenderManager::AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const STransformComponent* cameraTransform, const U64 renderViewID)
@@ -461,10 +466,12 @@ namespace Havtorn
 		SVector scale = SVector(scaling, scaling, 1.0f);
 		SMatrix::Recompose(location, euler, scale, orientedMatrix);
 
-		renderList->at(assetReferenceUID).Transforms.emplace_back(orientedMatrix);
-		renderList->at(assetReferenceUID).UVRects.emplace_back(SVector4(0.0f, 0.0f, 1.0f, 1.0f));
-		renderList->at(assetReferenceUID).Colors.emplace_back(SVector4(1.0f, 1.0f, 1.0f, 1.0f));
-		renderList->at(assetReferenceUID).Entities.emplace_back(worldSpaceTransform->Owner);
+		SSpriteInstanceData& instanceData = renderList->at(assetReferenceUID);
+
+		instanceData.Transforms.emplace_back(orientedMatrix);
+		instanceData.UVRects.emplace_back(SVector4(0.0f, 0.0f, 1.0f, 1.0f));
+		instanceData.Colors.emplace_back(SVector4(1.0f, 1.0f, 1.0f, 1.0f));
+		instanceData.Entities.emplace_back(worldSpaceTransform->Owner);
 	}
 
 	bool CRenderManager::IsSpriteInScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewID)
@@ -492,10 +499,15 @@ namespace Havtorn
 		screenSpaceMatrix *= SMatrix::CreateRotationAroundZ(UMath::DegToRad(screenSpaceTransform->DegreesRoll));
 		screenSpaceMatrix.SetTranslation({ screenSpaceTransform->Position.X, screenSpaceTransform->Position.Y, 0.0f });
 
-		renderList->at(assetReferenceUID).Transforms.emplace_back(screenSpaceMatrix);
-		renderList->at(assetReferenceUID).UVRects.emplace_back(spriteComponent->UVRect);
-		renderList->at(assetReferenceUID).Colors.emplace_back(spriteComponent->Color.AsVector4());
-		renderList->at(assetReferenceUID).Entities.emplace_back(spriteComponent->Owner);
+		SSpriteInstanceData& instanceData = renderList->at(assetReferenceUID);
+
+		if (auto it = std::ranges::find(instanceData.Entities, spriteComponent->Owner); it != instanceData.Entities.end())
+			return;
+
+		instanceData.Transforms.emplace_back(screenSpaceMatrix);
+		instanceData.UVRects.emplace_back(spriteComponent->UVRect);
+		instanceData.Colors.emplace_back(spriteComponent->Color.AsVector4());
+		instanceData.Entities.emplace_back(spriteComponent->Owner);
 	}
 
 	void CRenderManager::AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SUIElement& uiElement, const U64 renderViewID)
@@ -518,10 +530,15 @@ namespace Havtorn
 		screenSpaceMatrix *= SMatrix::CreateRotationAroundZ(UMath::DegToRad(screenSpaceTransform->DegreesRoll + uiElement.LocalDegreesRoll));
 		screenSpaceMatrix.SetTranslation({ screenSpaceTransform->Position.X + uiElement.LocalPosition.X, screenSpaceTransform->Position.Y + uiElement.LocalPosition.Y, 0.0f });
 
-		renderList->at(assetReferenceUID).Transforms.emplace_back(screenSpaceMatrix);
-		renderList->at(assetReferenceUID).UVRects.emplace_back(uiElement.UVRects[STATIC_U8(uiElement.State)]);
-		renderList->at(assetReferenceUID).Colors.emplace_back(uiElement.Color.AsVector4());
-		renderList->at(assetReferenceUID).Entities.emplace_back(screenSpaceTransform->Owner);
+		SSpriteInstanceData& instanceData = renderList->at(assetReferenceUID);
+
+		if (auto it = std::ranges::find(instanceData.Entities, screenSpaceTransform->Owner); it != instanceData.Entities.end())
+			return;
+
+		instanceData.Transforms.emplace_back(screenSpaceMatrix);
+		instanceData.UVRects.emplace_back(uiElement.UVRects[STATIC_U8(uiElement.State)]);
+		instanceData.Colors.emplace_back(uiElement.Color.AsVector4());
+		instanceData.Entities.emplace_back(screenSpaceTransform->Owner);
 	}
 
 	void CRenderManager::SyncCrossThreadResources(const CWorld* world)
