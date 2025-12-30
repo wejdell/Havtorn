@@ -2,15 +2,18 @@
 
 #include "Includes/LineShaderStructs.hlsli"
 
-LineVertexToPixel main(LineVertexInput input)
+LineVertexToGeometry main(LineVertexInput input)
 {
-    float4 vertexObjectPos      = input.Position.xyzw;
-    float4 vertexWorldPos       = mul(ToWorld, vertexObjectPos);
-    float4 vertexViewPos        = mul(ToCameraSpace, vertexWorldPos);
-    float4 vertexProjectionPos  = mul(ToProjectionSpace, vertexViewPos);
+    //float4 vertexObjectPos      = input.Position.xyzw;
+    //float4 vertexWorldPos       = mul(ToWorld, vertexObjectPos);
+    //float4 vertexViewPos        = mul(ToCameraSpace, vertexWorldPos);
+    //float4 vertexProjectionPos  = mul(ToProjectionSpace, vertexViewPos);
     
-    LineVertexToPixel returnValue;
-    returnValue.Position = vertexProjectionPos;
+    //LineVertexToPixel returnValue;
+    //returnValue.Position = vertexProjectionPos;
+    LineVertexToGeometry returnValue;
+    //returnValue.Position = input.Position.xyzw;
+    returnValue.Transform = ToWorld;
     returnValue.Color = Color;
     return returnValue;
 }

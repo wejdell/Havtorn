@@ -574,6 +574,8 @@ namespace Havtorn
 		quitButton.LocalScale = buttonScale;
 		quitButton.CollisionRect = collisionRect;
 		quitButton.UVRects = { SVector4(0.0f, 3 / 8.0f, 0.5f, 4 / 8.0f), SVector4(0.5f, 3 / 8.0f, 1.0f, 4 / 8.0f), SVector4(0.0f, 4 / 8.0f, 0.5f, 5 / 8.0f) };
+		quitButton.BindingType = EUIBindingType::GenericFunction;
+		quitButton.BoundData = std::hash<std::string>{}("CGameManager::QuitGame");
 		// === !Main Menu ===
 
 		// === Settings Menu ===

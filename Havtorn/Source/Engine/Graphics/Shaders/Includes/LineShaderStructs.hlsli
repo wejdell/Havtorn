@@ -5,7 +5,13 @@ struct LineVertexInput
     float4 Position   : POSITION;
 };
 
-struct LineVertexToPixel
+struct LineVertexToGeometry
+{
+    float4x4 Transform : TRANSFORM;
+    float4 Color : COLOR;
+};
+
+struct LineGeometryToPixel
 {
     float4 Position   : SV_POSITION;
     float4 Color      : COLOR;

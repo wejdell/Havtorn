@@ -135,6 +135,7 @@ namespace Havtorn
     void CRenderStateManager::InitGeometryShaders()
     {
         AddShader(ShaderRoot + "Line_GS.cso", EShaderType::Geometry);
+        AddShader(ShaderRoot + "LineScreenSpace_GS.cso", EShaderType::Geometry);
         AddShader(ShaderRoot + "SpriteScreenSpace_GS.cso", EShaderType::Geometry);
         AddShader(ShaderRoot + "SpriteWorldSpace_GS.cso", EShaderType::Geometry);
         AddShader(ShaderRoot + "SpriteWorldSpaceEditor_GS.cso", EShaderType::Geometry);

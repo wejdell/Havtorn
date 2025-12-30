@@ -9,6 +9,8 @@
 #include <HavtornDelegate.h>
 #include <FileSystem.h>
 
+#include <queue>
+
 namespace Havtorn
 {
 	struct SEntity;
@@ -143,20 +145,10 @@ namespace Havtorn
 		void OnSceneCreated(CScene* scene) const;
 
 	private:
-		struct SystemTypeCode
-		{
-			const U64 HashCode = 0;
-
-			SystemTypeCode(U64 hashCode) 
-				: HashCode(hashCode)
-			{}
-		};
-
 		std::vector<Ptr<CScene>> Scenes;
 		std::vector<SSystemData> SystemData;
 
-		std::vector<SystemTypeCode> SystemsToRemove;
-		std::vector<Ptr<ISystem>> SystemsToAdd;
+		std::queue<U64> QueuedSystemUnrequests;
 
 		Ptr<HexPhys2D::CPhysicsWorld2D> PhysicsWorld2D = nullptr;
 		Ptr<HexPhys3D::CPhysicsWorld3D> PhysicsWorld3D = nullptr;
