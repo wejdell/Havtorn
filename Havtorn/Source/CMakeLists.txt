@@ -532,6 +532,7 @@ set(VERTEX_SHADERS
     ${SHADER_FOLDER}SpriteInstancedEditor_VS.hlsl
 )
 set(GEOMETRY_SHADERS
+	Engine/Graphics/Shaders/LineScreenSpace_GS.hlsl
     ${SHADER_FOLDER}Line_GS.hlsl
     ${SHADER_FOLDER}SpriteScreenSpace_GS.hlsl
     ${SHADER_FOLDER}SpriteWorldSpace_GS.hlsl

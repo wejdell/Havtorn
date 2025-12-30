@@ -100,9 +100,10 @@ namespace Havtorn
 	enum class EGeometryShaders
 	{
 		Line = 0,
-		SpriteScreenSpace = 1,
-		SpriteWorldSpace = 2,
-		SpriteWorldSpaceEditor = 3,
+		Line2D = 1,
+		SpriteScreenSpace = 2,
+		SpriteWorldSpace = 3,
+		SpriteWorldSpaceEditor = 4,
 		Count,
 		Null = Count
 	};

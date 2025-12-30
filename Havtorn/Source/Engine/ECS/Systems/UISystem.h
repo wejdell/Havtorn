@@ -22,8 +22,6 @@ namespace Havtorn
 		ENGINE_API void BindEvaluateFunction(std::function<void()>& function, const std::string& classAndFunctionName);
 		ENGINE_API std::string GetFunctionName(const U64 boundFunctionHash);
 
-		void PlayGame();
-
 	private:
 		std::map<U64, std::function<void()>> FunctionMap;
 		std::map<U64, std::string> IdentifierMap;
@@ -32,7 +30,5 @@ namespace Havtorn
 		SEntity FocusedCanvas = SEntity::Null;
 		I8 FocusedElementIndex = -1;
 		bool IsMouseClicked = false;
-
-		std::function<void()> PlayGameFunction;
 	};
 }

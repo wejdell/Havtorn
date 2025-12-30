@@ -188,10 +188,11 @@ namespace Havtorn
 		RenderFunctions[ERenderCommandType::PostToneMappingIgnoreDepth] =		std::bind(&CRenderManager::PostTonemappingIgnoreDepth, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::DebugShapeUseDepth] =				std::bind(&CRenderManager::DebugShapes, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::DebugShapeIgnoreDepth] =			std::bind(&CRenderManager::DebugShapes, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::ScreenSpaceUISprite] =				std::bind(&CRenderManager::ScreenSpaceUISprite, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::AntiAliasing] =						std::bind(&CRenderManager::AntiAliasing, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::GammaCorrection] =					std::bind(&CRenderManager::GammaCorrection, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::TextureDraw] =						std::bind(&CRenderManager::TextureDraw, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::TextureCubeDraw] =						std::bind(&CRenderManager::TextureCubeDraw, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::TextureCubeDraw] =					std::bind(&CRenderManager::TextureCubeDraw, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::RendererDebug] =					std::bind(&CRenderManager::RendererDebug, this, std::placeholders::_1);
 	}
 
@@ -1928,6 +1929,46 @@ namespace Havtorn
 		TonemappedTexture.SetAsActiveTarget();
 		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(EPixelShaders::FullscreenTonemap, RenderStateManager);
+	}
+
+	inline void CRenderManager::ScreenSpaceUISprite(const SRenderCommand& command)
+	{
+		if (!RenderThreadRenderViews->contains(command.RenderViewID))
+			return;
+
+		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
+
+		const auto textureUID = command.U32s[0];
+		SSpriteInstanceData& spriteData = RenderThreadRenderViews->at(command.RenderViewID).ScreenSpaceSpriteInstanceData[textureUID];
+
+		const std::vector<SMatrix>& matrices = spriteData.Transforms;
+		InstancedTransformBuffer.BindBuffer(matrices);
+
+		const std::vector<SVector4>& uvRects = spriteData.UVRects;
+		InstancedUVRectBuffer.BindBuffer(uvRects);
+
+		const std::vector<SVector4>& colors = spriteData.Colors;
+		InstancedColorBuffer.BindBuffer(colors);
+
+		RenderStateManager.IASetTopology(ETopologies::PointList);
+		RenderStateManager.IASetInputLayout(EInputLayoutType::TransUVRectColor);
+
+		RenderStateManager.VSSetShader(EVertexShaders::SpriteInstanced);
+		RenderStateManager.GSSetShader(EGeometryShaders::SpriteScreenSpace);
+		RenderStateManager.PSSetShader(EPixelShaders::SpriteScreenSpace);
+
+		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
+		RenderStateManager.PSSetResources(0, 1, command.RenderTextures[0].GetShaderResourceView());
+
+		const std::vector<CDataBuffer> buffers = { InstancedTransformBuffer, InstancedUVRectBuffer, InstancedColorBuffer };
+		constexpr U32 strides[3] = { sizeof(SMatrix), sizeof(SVector4), sizeof(SVector4) };
+		constexpr U32 offsets[3] = { 0, 0, 0 };
+		RenderStateManager.IASetVertexBuffers(0, 3, buffers, strides, offsets);
+		RenderStateManager.IASetIndexBuffer(CDataBuffer::Null);
+		RenderStateManager.DrawInstanced(1, STATIC_U32(matrices.size()), 0, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
+
+		RenderStateManager.VSSetConstantBuffer(0, CDataBuffer::Null);
 	}
 
 	inline void CRenderManager::AntiAliasing(const SRenderCommand& /*command*/)
