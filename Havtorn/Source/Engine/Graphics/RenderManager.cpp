@@ -431,10 +431,6 @@ namespace Havtorn
 			renderList->emplace(assetReferenceUID, SSpriteInstanceData());
 
 		SSpriteInstanceData& instanceData = renderList->at(assetReferenceUID);
-
-		if (auto it = std::ranges::find(instanceData.Entities, spriteComponent->Owner); it != instanceData.Entities.end())
-			return;
-
 		instanceData.Transforms.emplace_back(worldSpaceTransform->Transform.GetMatrix());
 		instanceData.UVRects.emplace_back(spriteComponent->UVRect);
 		instanceData.Colors.emplace_back(spriteComponent->Color.AsVector4());
@@ -468,7 +464,6 @@ namespace Havtorn
 		SMatrix::Recompose(location, euler, scale, orientedMatrix);
 
 		SSpriteInstanceData& instanceData = renderList->at(assetReferenceUID);
-
 		instanceData.Transforms.emplace_back(orientedMatrix);
 		instanceData.UVRects.emplace_back(SVector4(0.0f, 0.0f, 1.0f, 1.0f));
 		instanceData.Colors.emplace_back(SVector4(1.0f, 1.0f, 1.0f, 1.0f));
@@ -501,10 +496,6 @@ namespace Havtorn
 		screenSpaceMatrix.SetTranslation({ screenSpaceTransform->Position.X, screenSpaceTransform->Position.Y, 0.0f });
 
 		SSpriteInstanceData& instanceData = renderList->at(assetReferenceUID);
-
-		if (auto it = std::ranges::find(instanceData.Entities, spriteComponent->Owner); it != instanceData.Entities.end())
-			return;
-
 		instanceData.Transforms.emplace_back(screenSpaceMatrix);
 		instanceData.UVRects.emplace_back(spriteComponent->UVRect);
 		instanceData.Colors.emplace_back(spriteComponent->Color.AsVector4());
@@ -532,10 +523,6 @@ namespace Havtorn
 		screenSpaceMatrix.SetTranslation({ screenSpaceTransform->Position.X + uiElement.LocalPosition.X, screenSpaceTransform->Position.Y + uiElement.LocalPosition.Y, 0.0f });
 
 		SSpriteInstanceData& instanceData = renderList->at(assetReferenceUID);
-
-		if (auto it = std::ranges::find(instanceData.Entities, screenSpaceTransform->Owner); it != instanceData.Entities.end())
-			return;
-
 		instanceData.Transforms.emplace_back(screenSpaceMatrix);
 		instanceData.UVRects.emplace_back(uiElement.UVRects[STATIC_U8(uiElement.State)]);
 		instanceData.Colors.emplace_back(uiElement.Color.AsVector4());
@@ -548,6 +535,7 @@ namespace Havtorn
 		std::swap(SystemSkeletalAnimationBoneData, RendererSkeletalAnimationBoneData);
 		SetWorldMainCameraEntity(world->GetMainCamera());
 		SetWorldPlayState(world->GetWorldPlayState());
+		RenderStateManager.FlushShaderChanges();
 	}
 
 	void CRenderManager::SetWorldMainCameraEntity(const SEntity& entity)

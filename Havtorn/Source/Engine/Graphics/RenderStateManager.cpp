@@ -7,6 +7,10 @@
 #include "GraphicsFramework.h"
 #include "GraphicsUtilities.h"
 
+#include "FileSystem/FileWatcher.h"
+
+#include <d3dcompiler.h>
+
 namespace Havtorn
 {
     CRenderStateManager::~CRenderStateManager()
@@ -70,13 +74,13 @@ namespace Havtorn
 
         for (U64 i = 0; i < STATIC_U64(EVertexShaders::Count); i++)
         {
-            std::string vsData = AddShader(initData[i].FileName, EShaderType::Vertex);
+            std::string vsData = AddShader(initData[i].FileName, i, EShaderType::Vertex);
             if (initData[i].ShouldAddLayout)
                 AddInputLayout(vsData, initData[i].InputLayout);
         }
 
-        // NR: Null shader. Adding this to avoid branching in state setting functions
-        VertexShaders.emplace_back(nullptr);
+        // NW: Null shader. Adding this to avoid branching in state setting functions
+        VertexShaders[STATIC_U64(EVertexShaders::Count)] = nullptr;
         InputLayouts.emplace_back(nullptr);
     }
 
@@ -126,22 +130,22 @@ namespace Havtorn
         }
 
         for (U64 i = 0; i < STATIC_U64(EPixelShaders::Count); i++)
-            AddShader(filepaths[i], EShaderType::Pixel);
+            AddShader(filepaths[i], i, EShaderType::Pixel);
 
-        // NR: Null shader. Adding this to avoid branching in state setting functions
-        PixelShaders.emplace_back(nullptr);
+        // NW: Null shader. Adding this to avoid branching in state setting functions
+        PixelShaders[STATIC_U64(EPixelShaders::Count)] = nullptr;
     }
 
     void CRenderStateManager::InitGeometryShaders()
     {
-        AddShader(ShaderRoot + "Line_GS.cso", EShaderType::Geometry);
-        AddShader(ShaderRoot + "LineScreenSpace_GS.cso", EShaderType::Geometry);
-        AddShader(ShaderRoot + "SpriteScreenSpace_GS.cso", EShaderType::Geometry);
-        AddShader(ShaderRoot + "SpriteWorldSpace_GS.cso", EShaderType::Geometry);
-        AddShader(ShaderRoot + "SpriteWorldSpaceEditor_GS.cso", EShaderType::Geometry);
+        AddShader(ShaderRoot + "Line_GS.cso", 0, EShaderType::Geometry);
+        AddShader(ShaderRoot + "LineScreenSpace_GS.cso", 1, EShaderType::Geometry);
+        AddShader(ShaderRoot + "SpriteScreenSpace_GS.cso", 2, EShaderType::Geometry);
+        AddShader(ShaderRoot + "SpriteWorldSpace_GS.cso", 3, EShaderType::Geometry);
+        AddShader(ShaderRoot + "SpriteWorldSpaceEditor_GS.cso", 4, EShaderType::Geometry);
 
-        // NR: Null shader. Adding this to avoid branching in state setting functions
-        GeometryShaders.emplace_back(nullptr);
+        // NW: Null shader. Adding this to avoid branching in state setting functions
+        GeometryShaders[STATIC_U64(EGeometryShaders::Count)] = nullptr;
     }
 
     void CRenderStateManager::InitSamplers()
@@ -232,7 +236,7 @@ namespace Havtorn
         return STATIC_U16(MeshVertexOffsets.size() - 1);
     }
 
-    std::string CRenderStateManager::AddShader(const std::string& fileName, EShaderType shaderType)
+    std::string CRenderStateManager::AddShader(const std::string& fileName, const U64 index, const EShaderType shaderType)
     {
         std::string outShaderData;
 
@@ -240,26 +244,44 @@ namespace Havtorn
         {
         case EShaderType::Vertex:
         {
+            if (VertexShaders[index] != nullptr)
+                VertexShaders[index]->Release();
+
             ID3D11VertexShader* vertexShader;
             UGraphicsUtils::CreateVertexShader(fileName, Framework, &vertexShader, outShaderData);
-            VertexShaders.emplace_back(vertexShader);
+            VertexShaders[index] = vertexShader;
         }
         break;
         case EShaderType::Compute:
         case EShaderType::Geometry:
         {
+            if (GeometryShaders[index] != nullptr)
+                GeometryShaders[index]->Release();
+
             ID3D11GeometryShader* geometryShader;
             UGraphicsUtils::CreateGeometryShader(fileName, Framework, &geometryShader);
-            GeometryShaders.emplace_back(geometryShader);
+            GeometryShaders[index] = geometryShader;
         }
         break;
         case EShaderType::Pixel:
         {
+            if (PixelShaders[index] != nullptr)
+                PixelShaders[index]->Release();
+
             ID3D11PixelShader* pixelShader;
             UGraphicsUtils::CreatePixelShader(fileName, Framework, &pixelShader);
-            PixelShaders.emplace_back(pixelShader);
+            PixelShaders[index] = pixelShader;
         }
         break;
+        }
+
+        const std::string prefix = UGeneralUtils::ExtractParentDirectoryFromPath(UFileSystem::GetWorkingPath()) + "Source/Engine/Graphics/";
+        const std::string extension = "hlsl";
+        const std::string sourceFile = prefix + fileName.substr(0, fileName.size() - UGeneralUtils::ExtractFileExtensionFromPath(fileName).size()) + extension;
+        if (!ShaderInitData.contains(sourceFile))
+        {
+            GEngine::GetFileWatcher()->WatchFileChange(sourceFile, std::bind(&CRenderStateManager::OnShaderSourceChange, this, std::placeholders::_1));
+            ShaderInitData.emplace(sourceFile, SShaderInitData{ fileName, shaderType, index });
         }
 
         return outShaderData;
@@ -610,6 +632,74 @@ namespace Havtorn
         for (U8 i = 0; i < STATIC_U8(ERasterizerStates::Count); ++i)
         {
             RasterizerStates[i]->Release();
+        }
+    }
+
+    void CRenderStateManager::OnShaderSourceChange(const std::string& filePath)
+    {
+        std::lock_guard<std::mutex> lock(ShaderRecompileMutex);
+        QueuedShaderRecompiles.push(filePath);
+    }
+
+    void CRenderStateManager::FlushShaderChanges()
+    {
+        // NW: Use DXC.exe for shader models 6 and above 
+        // https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-part1
+
+        std::lock_guard<std::mutex> lock(ShaderRecompileMutex);
+        while (!QueuedShaderRecompiles.empty())
+        {
+            const std::string recompiledSourceFile = QueuedShaderRecompiles.front();
+
+            const SShaderInitData initData = ShaderInitData.at(recompiledSourceFile);
+            const std::wstring wideSourceFilePath = { recompiledSourceFile.begin(), recompiledSourceFile.end() };
+            const std::wstring wideOutputFilePath = { initData.OutputFileName.begin(), initData.OutputFileName.end() };
+
+            ID3DBlob* blob = nullptr;
+            ID3DBlob* errorMessages = nullptr;
+
+            std::string shaderModel;
+            switch (initData.ShaderType)
+            {
+            case EShaderType::Pixel:
+                shaderModel = "ps_5_0";
+                break;
+            case EShaderType::Geometry:
+                shaderModel = "gs_5_0";
+                break;
+            case EShaderType::Compute:
+                shaderModel = "cs_5_0";
+                break;
+            case EShaderType::Vertex:
+                [[fallthrough]];
+            default:
+                shaderModel = "vs_5_0";
+            }
+
+            const HRESULT compileResult = D3DCompileFromFile(wideSourceFilePath.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", shaderModel.c_str(), 0, 0, &blob, &errorMessages);
+            if (compileResult != S_OK)
+            {
+                HV_LOG_ERROR("CRenderStateManager::OnShaderSourceChange: Shader %s could not be recompiled: %s", recompiledSourceFile.c_str(), (char*)errorMessages->GetBufferPointer());
+                QueuedShaderRecompiles.pop();
+                errorMessages->Release();
+                break;
+            }
+
+            const HRESULT rewriteResult = D3DWriteBlobToFile(blob, wideOutputFilePath.c_str(), TRUE);
+            if (rewriteResult != S_OK)
+            {
+                HV_LOG_ERROR("CRenderStateManager::OnShaderSourceChange: Shader %s was successfully recompiled, but output file could not be overwritten.", recompiledSourceFile.c_str());
+                QueuedShaderRecompiles.pop();
+                blob->Release();
+                break;
+            }
+
+            blob->Release();
+            AddShader(initData.OutputFileName, initData.ShaderIndex, initData.ShaderType);
+
+            HV_LOG_INFO("Shader source file %s recompiled.", recompiledSourceFile.c_str());
+
+            QueuedShaderRecompiles.pop();
         }
     }
 
