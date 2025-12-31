@@ -2,6 +2,8 @@
 
 #pragma once
 #include <array>
+#include <queue>
+#include <mutex>
 
 #include "GraphicsEnums.h"
 #include "RenderingPrimitives/DataBuffer.h"
@@ -72,7 +74,7 @@ namespace Havtorn
 		U16 AddMeshVertexStride(U32 stride);
 		U16 AddMeshVertexOffset(U32 offset);
 
-		std::string AddShader(const std::string& fileName, EShaderType shaderType);
+		std::string AddShader(const std::string& fileName, const U64 index, const EShaderType shaderType);
 		void AddInputLayout(const std::string& vsData, EInputLayoutType layoutType);
 		void AddSampler(ESamplerType samplerType);
 		void AddTopology(D3D11_PRIMITIVE_TOPOLOGY topology);
@@ -125,6 +127,9 @@ namespace Havtorn
 
 		void Release();
 
+		void OnShaderSourceChange(const std::string& filePath);
+		void FlushShaderChanges();
+
 	private:
 		bool CreateBlendStates(ID3D11Device* device);
 		bool CreateDepthStencilStates(ID3D11Device* device);
@@ -135,13 +140,14 @@ namespace Havtorn
 
 		CGraphicsFramework* Framework = nullptr;
 		ID3D11DeviceContext* Context = nullptr;
-		std::array<ID3D11BlendState*, (U64)EBlendStates::Count> BlendStates;
-		std::array<ID3D11DepthStencilState*, (U64)EDepthStencilStates::Count> DepthStencilStates;
-		std::array<ID3D11RasterizerState*, (U64)ERasterizerStates::Count> RasterizerStates;
+		std::array<ID3D11BlendState*, STATIC_U64(EBlendStates::Count)> BlendStates;
+		std::array<ID3D11DepthStencilState*, STATIC_U64(EDepthStencilStates::Count)> DepthStencilStates;
+		std::array<ID3D11RasterizerState*, STATIC_U64(ERasterizerStates::Count)> RasterizerStates;
 
-		std::vector<ID3D11VertexShader*> VertexShaders;
-		std::vector<ID3D11PixelShader*> PixelShaders;
-		std::vector<ID3D11GeometryShader*> GeometryShaders;
+		std::array<ID3D11VertexShader*, STATIC_U64(EVertexShaders::Count) + 1> VertexShaders;
+		std::array<ID3D11PixelShader*, STATIC_U64(EPixelShaders::Count) + 1> PixelShaders;
+		std::array<ID3D11GeometryShader*, STATIC_U64(EGeometryShaders::Count) + 1> GeometryShaders;
+
 		std::vector<ID3D11SamplerState*> Samplers;
 		std::vector<CDataBuffer> VertexBuffers;
 		std::vector<CDataBuffer> IndexBuffers;
@@ -150,6 +156,16 @@ namespace Havtorn
 		std::vector<D3D11_VIEWPORT> Viewports;
 		std::vector<U32> MeshVertexStrides;
 		std::vector<U32> MeshVertexOffsets;
+
+		struct SShaderInitData
+		{
+			const std::string OutputFileName;
+			const EShaderType ShaderType = EShaderType::Vertex;
+			const U64 ShaderIndex = 0; 
+		};
+		std::map<std::string, SShaderInitData> ShaderInitData;
+		std::queue<std::string> QueuedShaderRecompiles;
+		std::mutex ShaderRecompileMutex;
 	};
 
 	template <typename T>
