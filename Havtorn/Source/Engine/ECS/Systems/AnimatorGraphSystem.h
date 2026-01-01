@@ -22,10 +22,6 @@ namespace Havtorn
 		ENGINE_API void Update(std::vector<Ptr<CScene>>& scenes) override;
 		ENGINE_API void BindEvaluateFunction(std::function<I16(CScene*, const SEntity&)>& function, const std::string& classAndFunctionName);
 
-		std::vector<SSkeletalPosedNode> EvaluateLocalPose(const SSkeletalAnimationAsset* animation, const F32 animationTime);
-
-		void TestWalkThrough(const SSkeletalMeshAsset* mesh, const SSkeletalMeshNode& node, const SMatrix& parentTransform);
-
 		void ReadAnimationLocalPose(const SSkeletalAnimationAsset* animation, const SSkeletalMeshAsset* mesh, const F32 animationTime, const SSkeletalMeshNode& fromNode, std::vector<SSkeletalPosedNode>& posedBoneOrder);
 		void ApplyLocalPoseToHierarchy(const SSkeletalMeshAsset* mesh, std::vector<SSkeletalPosedNode>& in, const SSkeletalMeshNode& node, const SMatrix& parentTransform);
 

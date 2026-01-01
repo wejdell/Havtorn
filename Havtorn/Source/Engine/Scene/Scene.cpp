@@ -374,20 +374,17 @@ namespace Havtorn
 
 		GEngine::GetWorld()->Initialize3DPhysicsData(playerProxy);
 
-		//// Static Mesh
-		//std::string staticMeshPath = "Assets/Meshes/CH_Enemy.hva";
-		//renderManager->LoadStaticMeshComponent(staticMeshPath, AddComponent<SStaticMeshComponent>(playerProxy));
-		//AddComponentEditorContext(playerProxy, &SStaticMeshComponentEditorContext::Context);
-		//GetComponent<SStaticMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register(staticMeshPath);
-
 		// Skeletal Mesh
 		std::string meshPath = "Assets/Meshes/CH_Enemy_SK.hva";
 		AddComponent<SSkeletalMeshComponent>(playerProxy, meshPath);
 		AddComponentEditorContext(playerProxy, &SSkeletalMeshComponentEditorContext::Context);
 
 		const std::vector<std::string> animationPaths = { "Assets/Meshes/CH_Enemy_Walk.hva", "Assets/Meshes/CH_Enemy_Chase.hva" };
-		AddComponent<SSkeletalAnimationComponent>(playerProxy, animationPaths);
+		SSkeletalAnimationComponent* animationComponent = AddComponent<SSkeletalAnimationComponent>(playerProxy, animationPaths);
 		AddComponentEditorContext(playerProxy, &SSkeletalAnimationComponentEditorContext::Context);
+
+		animationComponent->PlayData.emplace_back(SSkeletalAnimationPlayData());
+		animationComponent->PlayData.emplace_back(SSkeletalAnimationPlayData(1));
 
 		std::vector<std::string> enemyMaterialPaths = { "Assets/Materials/M_Enemy.hva" };
 		AddComponent<SMaterialComponent>(playerProxy, enemyMaterialPaths);
