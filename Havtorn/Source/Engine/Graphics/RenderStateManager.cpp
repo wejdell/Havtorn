@@ -51,7 +51,7 @@ namespace Havtorn
         {
             std::string FileName = "InitVertexShadersAndInputLayouts::UnmappedShader";
             bool ShouldAddLayout = false;
-            EInputLayoutType InputLayout;
+            EInputLayoutType InputLayout = EInputLayoutType::Null;
         };
 
         std::array<SVertexShaderInitData, STATIC_U64(EVertexShaders::Count)> initData;
@@ -641,6 +641,35 @@ namespace Havtorn
         QueuedShaderRecompiles.push(filePath);
     }
 
+    class UShaderIncludeHandler : public ID3DInclude
+    {
+        HRESULT Open(D3D_INCLUDE_TYPE /*includeType*/, LPCSTR pFileName, LPCVOID /*pParentData*/, LPCVOID* ppData, UINT* pBytes) override
+        {
+            // NW: Only include files in the Shaders/Includes folder in shaders.
+            const std::string shaderIncludeSource = UGeneralUtils::ExtractParentDirectoryFromPath(UFileSystem::GetWorkingPath()) + "Source/Engine/Graphics/Shaders/Includes/";
+            const std::string inputFileName = UGeneralUtils::ExtractFileNameFromPath(pFileName);
+            const std::string filePath = shaderIncludeSource + inputFileName;
+
+            if (!UFileSystem::Exists(filePath))
+                return E_FAIL;
+
+            U32 fileSize = STATIC_U32(UFileSystem::GetFileSize(filePath));
+            char* data = new char[fileSize];
+            UFileSystem::Deserialize(filePath, data, fileSize);
+
+            *pBytes = fileSize;
+            *ppData = data;
+            
+            return S_OK;
+        }
+
+        HRESULT Close(LPCVOID pData) override
+        {
+            delete[] pData;
+            return S_OK;
+        }
+    };
+
     void CRenderStateManager::FlushShaderChanges()
     {
         // NW: Use DXC.exe for shader models 6 and above 
@@ -676,7 +705,8 @@ namespace Havtorn
                 shaderModel = "vs_5_0";
             }
 
-            const HRESULT compileResult = D3DCompileFromFile(wideSourceFilePath.c_str(), nullptr, D3D_COMPILE_STANDARD_FILE_INCLUDE, "main", shaderModel.c_str(), 0, 0, &blob, &errorMessages);
+            UShaderIncludeHandler includeHandler;
+            const HRESULT compileResult = D3DCompileFromFile(wideSourceFilePath.c_str(), nullptr, &includeHandler, "main", shaderModel.c_str(), 0, 0, &blob, &errorMessages);
             if (compileResult != S_OK)
             {
                 HV_LOG_ERROR("CRenderStateManager::OnShaderSourceChange: Shader %s could not be recompiled: %s", recompiledSourceFile.c_str(), (char*)errorMessages->GetBufferPointer());
