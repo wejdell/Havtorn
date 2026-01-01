@@ -307,20 +307,19 @@ namespace Havtorn
 	{
 		SMatrix nodeTransform = fromNode.NodeTransform;
 		// TODO.NW: Streamline this so we can read the local pose of different animations at the same time, then combine them at the end
-		std::string nodeName = fromNode.Name.AsString();
+		const std::string nodeName = fromNode.Name.AsString();
 
-		SSkeletalPosedNode posedNode = SSkeletalPosedNode{};
-		posedNodes.emplace_back(posedNode);
+		posedNodes.emplace_back(SSkeletalPosedNode{});
 		posedNodes.back().Name = fromNode.Name;
 
-		auto& tracks = animation->BoneAnimationTracks;
+		const std::vector<SBoneAnimationTrack>& tracks = animation->BoneAnimationTracks;
 		if (auto it = std::ranges::find(tracks, nodeName, &SBoneAnimationTrack::TrackName); it != tracks.end())
 		{
 			const SBoneAnimationTrack& track = *it;
 
-			SVector scaling = CalcInterpolatedScaling(animationTime, track);
-			SQuaternion rotation = CalcInterpolatedRotation(animationTime, track);
-			SVector translation = CalcInterpolatedPosition(animationTime, track);
+			const SVector scaling = CalcInterpolatedScaling(animationTime, track);
+			const SQuaternion rotation = CalcInterpolatedRotation(animationTime, track);
+			const SVector translation = CalcInterpolatedPosition(animationTime, track);
 
 			SMatrix::Recompose(translation, rotation, scaling, nodeTransform);
 			posedNodes.back().LocalTransform = nodeTransform;
@@ -330,7 +329,7 @@ namespace Havtorn
 			posedNodes.back().LocalTransform = nodeTransform;
 		}
 
-		for (auto childIndex : fromNode.ChildIndices)
+		for (const U32 childIndex : fromNode.ChildIndices)
 		{
 			ReadAnimationLocalPose(animation, mesh, animationTime, mesh->Nodes[childIndex], posedNodes);
 		}
