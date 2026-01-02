@@ -25,6 +25,8 @@ namespace Havtorn
 		RequestSystem<CRenderSystem>(this, RenderManager, this);
 
 		OnSceneCreatedDelegate.AddMember(this, &CWorld::OnSceneCreated);
+		OnBeginPlayDelegate.AddMember(this, &CWorld::InitializePhysics3D);
+		OnEndPlayDelegate.AddMember(this, &CWorld::DeInitializePhysics3D);
 
 		return true;
 	}
@@ -138,9 +140,9 @@ namespace Havtorn
 		delete[] data;
 	}
 
-	void CWorld::OnSceneCreated(CScene* scene) const
+	void CWorld::OnSceneCreated(CScene* /*scene*/) const
 	{
-		PhysicsWorld3D->CreateScene(scene);
+		//PhysicsWorld3D->CreateScene(scene);
 	}
 
 	void CWorld::RemoveScene(const U64 sceneIndex)
@@ -205,6 +207,16 @@ namespace Havtorn
 	void CWorld::UnblockPhysicsSystem(void* requester)
 	{
 		PlayDimensions == EWorldPlayDimensions::World3D ? UnblockSystem<HexPhys3D::CPhysics3DSystem>(requester) : UnblockSystem<HexPhys2D::CPhysics2DSystem>(requester);
+	}
+
+	void CWorld::InitializePhysics3D(std::vector<Ptr<CScene>>& scenes)
+	{
+		PhysicsWorld3D->InitializeScene(scenes);
+	}
+
+	void CWorld::DeInitializePhysics3D(std::vector<Ptr<CScene>>& scenes)
+	{
+		PhysicsWorld3D->DeInitializeScene(scenes);
 	}
 
 	void CWorld::Initialize2DPhysicsData(const SEntity& entity) const

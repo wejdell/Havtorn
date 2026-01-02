@@ -14,7 +14,7 @@ namespace Havtorn
 
     SComponentViewResult SPhysics3DControllerComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!GUI::TryOpenComponentView("Physics3D"))
+		if (!GUI::TryOpenComponentView("Physics3D Controller"))
 			return {};
 
 		SPhysics3DControllerComponent* physicsComponent = scene->GetComponent<SPhysics3DControllerComponent>(entityOwner);
@@ -35,7 +35,9 @@ namespace Havtorn
 			break;
 		}
 
+		GUI::DragFloat3("Displacement:", physicsComponent->Displacement);
 		GUI::Text("Velocity: %s", physicsComponent->Velocity.ToString().c_str());
+
 
 		// TODO.NR: Most of these should only be changed during setup, but if we want a truly responsive editor we can pause
 		// during play and unpause, we should probably handle setting the data on physics wrapper entity if we make modifications here.

@@ -115,6 +115,9 @@ namespace Havtorn
 		ENGINE_API void BlockPhysicsSystem(void* requester);
 		ENGINE_API void UnblockPhysicsSystem(void* requester);
 
+		ENGINE_API void InitializePhysics3D(std::vector<Ptr<CScene>>& scenes);
+		ENGINE_API void DeInitializePhysics3D(std::vector<Ptr<CScene>>& scenes);
+
 		ENGINE_API void Initialize2DPhysicsData(const SEntity& entity) const;
 		ENGINE_API void Update2DPhysicsData(STransformComponent* transformComponent, SPhysics2DComponent* phys2DComponent) const;
 
@@ -129,6 +132,24 @@ namespace Havtorn
 
 		CMulticastDelegate<CScene*, const SEntity, const SEntity> OnBeginOverlap;
 		CMulticastDelegate<CScene*, const SEntity, const SEntity> OnEndOverlap;
+		CMulticastDelegate<const SEntity, const SEntity> OnBeginOverlapWorld;
+		CMulticastDelegate<const SEntity, const SEntity> OnEndOverlapWorld;
+
+		template<typename T>
+		T* GetComponent(const SEntity& fromEntity) const
+		{
+			for (auto& scene : Scenes)
+			{
+				if (!scene->HasEntity(fromEntity.GUID))
+					continue;
+
+				return scene->GetComponent<T>(fromEntity);
+			}
+
+			return nullptr;
+		}
+
+
 
 	private:
 		CWorld() = default;

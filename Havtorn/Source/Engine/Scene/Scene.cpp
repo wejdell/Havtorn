@@ -310,6 +310,7 @@ namespace Havtorn
 		clockPhysics->ShapeLocalOffset = SVector(0.0f, 0.95f, 0.0f);
 
 		GEngine::GetWorld()->Initialize3DPhysicsData(pendulum);
+		//GEngine::GetWorld()->Initialize3DPhysicsData(pendulum);
 		// === !Pendulum ===
 
 		// === Bed ===
@@ -335,6 +336,7 @@ namespace Havtorn
 		bedPhysics->ShapeLocalOffset = SVector(0.0f, bedPhysics->ShapeLocalExtents.Y * 0.5f, -bedPhysics->ShapeLocalExtents.Z * 0.5f);
 
 		GEngine::GetWorld()->Initialize3DPhysicsData(bed);
+		//GEngine::GetWorld()->Initialize3DPhysicsData(bed);
 		// === !Bed ===
 
 		// === Lamp ===
@@ -372,6 +374,7 @@ namespace Havtorn
 		controllerComponent->ShapeLocalRadiusAndHeight = SVector2(0.25f, 1.0f);
 
 		GEngine::GetWorld()->Initialize3DPhysicsData(playerProxy);
+		//GEngine::GetWorld()->Initialize3DPhysicsData(playerProxy);
 
 		//// Static Mesh
 		//std::string staticMeshPath = "Assets/Meshes/CH_Enemy.hva";
@@ -417,6 +420,7 @@ namespace Havtorn
 		cratePhysics->ShapeLocalExtents = SVector(0.5f);
 
 		GEngine::GetWorld()->Initialize3DPhysicsData(crate);
+		//GEngine::GetWorld()->Initialize3DPhysicsData(crate);
 		// === !Crate ===
 
 		// === Trigger ===
@@ -437,6 +441,7 @@ namespace Havtorn
 		triggerPhysics->IsTrigger = true;
 
 		GEngine::GetWorld()->Initialize3DPhysicsData(trigger);
+		//GEngine::GetWorld()->Initialize3DPhysicsData(trigger);
 		// === !Trigger ===
 
 		// === Room ===
@@ -526,6 +531,7 @@ namespace Havtorn
 			roomTransform->Attach(transformComponent);
 
 			GEngine::GetWorld()->Initialize3DPhysicsData(entity);
+			//GEngine::GetWorld()->Initialize3DPhysicsData(entity);
 		}
 		// === !Floor/Walls ===
 
@@ -825,7 +831,7 @@ namespace Havtorn
 		return outEntity;
 	}
 
-	bool CScene::HasEntity(U64 guid)
+	bool CScene::HasEntity(U64 guid) const
 	{
 		return EntityIndices.contains(guid);
 	}

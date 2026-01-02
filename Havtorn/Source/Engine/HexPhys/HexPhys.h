@@ -29,11 +29,14 @@ namespace physx
 	class PxDefaultErrorCallback;
 	class PxDefaultCpuDispatcher;
 	class PxTolerancesScale;
+
+	class PxController;
 }
 
 namespace Havtorn
 {
 	class CScene;
+	
 	struct SEntity;
 	struct STransformComponent;
 	struct SPhysics2DComponent;
@@ -84,6 +87,7 @@ namespace Havtorn
 
 	namespace HexPhys3D
 	{
+		class CPhysicsWorld3D;
 		// NR: Might want to move these out to another file. I think it's fine for now.
 		class CErrorCallback : public physx::PxErrorCallback
 		{
@@ -103,8 +107,8 @@ namespace Havtorn
 
 			void OnTriggerEnter(const physx::PxActor* trigger, const physx::PxActor* otherActor, const physx::PxScene* physicsScene);
 			void OnTriggerExit(const physx::PxActor* trigger, const physx::PxActor* otherActor, const physx::PxScene* physicsScene);
+			CPhysicsWorld3D* PhysicsWorld;
 		};
-
 
 		// NR: Keep these for now even though they are empty, they're good to keep as reference.
 		class CSimulationFilterCallback : public physx::PxSimulationFilterCallback
@@ -123,10 +127,10 @@ namespace Havtorn
 		class CUserControllerHitReport : public physx::PxUserControllerHitReport
 		{
 		public:
-
 			void onShapeHit(const physx::PxControllerShapeHit& hit) override;
 			void onControllerHit(const physx::PxControllersHit& hit) override;
 			void onObstacleHit(const physx::PxControllerObstacleHit& hit) override;
+			CPhysicsWorld3D* PhysicsWorld;
 		};
 
 		class CPhysicsWorld3D
@@ -135,12 +139,18 @@ namespace Havtorn
 			CPhysicsWorld3D();
 			~CPhysicsWorld3D();
 
-			void CreateScene(CScene* havtornScene);
+			void CreateScene();
+		
+			void Update(std::vector<Ptr<CScene>>& scenes);
 
-			void Update();
+			void ApplyResultGlobalPose(Havtorn::CScene* havtornScene, const Havtorn::SEntity& entity, const physx::PxTransform& globalPose);
+			void ApplyResultController(Havtorn::CScene* havtornScene, const Havtorn::SEntity& entity, physx::PxController* controller);
 
-			void InitializePhysicsData(STransformComponent* transform, SPhysics3DComponent* component) const;
-			void InitializePhysicsData(STransformComponent* transform, SPhysics3DControllerComponent* controller) const;
+			void InitializeScene(std::vector<Ptr<CScene>>& scenes);
+			void DeInitializeScene(std::vector<Ptr<CScene>>& scenes);
+			
+			void InitializePhysicsData(STransformComponent* transform, SPhysics3DComponent* component);
+			void InitializePhysicsData(STransformComponent* transform, SPhysics3DControllerComponent* controller);
 			void SetPhysicsDataOnComponents(STransformComponent* transform, SPhysics3DComponent* component) const;
 
 			void UpdatePhysicsData(STransformComponent* transform, SPhysics3DComponent* component) const;
@@ -151,11 +161,14 @@ namespace Havtorn
 			physx::PxActor* MakeRigidDynamic(const STransformComponent* transform, const SPhysics3DComponent* component) const;
 			physx::PxShape* CreateShapeFromComponent(const SPhysics3DComponent* component) const;
 			physx::PxMaterial* GetMaterialFromComponent(const SPhysics3DComponent* component) const;
-
+		
+		public:
 			static physx::PxVec3T<F32> Convert(const SVector& from);
 			static SVector Convert(const physx::PxVec3T<F32>& from);
 			static physx::PxQuatT<F32> Convert(const SQuaternion& from);
 			static SQuaternion Convert(const physx::PxQuatT<F32>& from);
+
+			physx::PxControllerManager* GetControllerManager() { return ControllerManager; }
 
 		private:
 			physx::PxFoundation* Foundation = nullptr;
@@ -173,12 +186,22 @@ namespace Havtorn
 			CUserControllerHitReport* UserControllerHitReport = nullptr;
 
 			physx::PxTolerancesScale TolerancesScale = physx::PxTolerancesScale();
-			physx::PxScene* CurrentScene = nullptr;
-
 			// TODO.NR: Do we need to store different materials?
 			physx::PxMaterial* MainMaterial = nullptr;
-
+			
+			physx::PxScene* CurrentScene = nullptr;
 			physx::PxControllerManager* ControllerManager = nullptr;
+
+
+		//Managing Physx -> Havtorn and Havtorn -> Physx
+		private:
+			std::vector<Ptr<U64>> UserDataEntityGUIDs; //Owns lifetime for PxActor*'s UserData
+		public:
+			std::unordered_map<const physx::PxActor*, U64> ActorToGUIDMap;			//Get an Entity GUID from a PxActor*
+			std::unordered_map<U64, physx::PxController*> GUIDToControllerActorMap; //Get a PxController* from a GUID
+			std::unordered_map<U64, physx::PxActor*> GUIDToPxActorMap;			//Get a PxActor* from a GUID
+
+			std::unordered_map<U64, STransform> ResetTransformMap; //Temporary way to store Transforms upon BeginPlay, used to restore transforms in Scene OnStopPlay
 		};
 
 		class CPhysics3DSystem : public ISystem

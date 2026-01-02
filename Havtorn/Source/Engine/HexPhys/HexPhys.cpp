@@ -194,6 +194,7 @@ namespace Havtorn
 	{
 		using namespace physx;
 
+#pragma region Runtime PhysX Callbacks
 		void CErrorCallback::reportError(physx::PxErrorCode::Enum code, const char* message, const char* file, int line)
 		{
 			switch (code)
@@ -264,6 +265,12 @@ namespace Havtorn
 
 		void CSimulationEventCallback::OnTriggerEnter(const physx::PxActor* trigger, const physx::PxActor* otherActor, const physx::PxScene* physicsScene)
 		{
+			//AS. Using the new stuff
+			U64 triggerGUID = PhysicsWorld->ActorToGUIDMap.at(trigger);
+			U64 otherGUID = PhysicsWorld->ActorToGUIDMap.at(otherActor);
+			GEngine::GetWorld()->OnBeginOverlapWorld.Broadcast(SEntity(triggerGUID), SEntity(otherGUID));
+
+			//AS. Previous solution
 			CScene* havtornScene = static_cast<CScene*>(physicsScene->userData);
 			if (havtornScene == nullptr)
 				return;
@@ -292,6 +299,12 @@ namespace Havtorn
 
 		void CSimulationEventCallback::OnTriggerExit(const physx::PxActor* trigger, const physx::PxActor* otherActor, const physx::PxScene* physicsScene)
 		{
+			//AS. Using the new stuff
+			U64 triggerGUID = PhysicsWorld->ActorToGUIDMap.at(trigger);
+			U64 otherGUID = PhysicsWorld->ActorToGUIDMap.at(otherActor);
+			GEngine::GetWorld()->OnEndOverlapWorld.Broadcast(SEntity(triggerGUID), SEntity(otherGUID));
+
+			//AS. Previous solution
 			CScene* havtornScene = static_cast<CScene*>(physicsScene->userData);
 			if (havtornScene == nullptr)
 				return;
@@ -340,8 +353,26 @@ namespace Havtorn
 			return false;
 		}
 
-		void CUserControllerHitReport::onShapeHit(const physx::PxControllerShapeHit& /*hit*/)
+
+		void CUserControllerHitReport::onShapeHit(const physx::PxControllerShapeHit& hit)
 		{
+			if (hit.actor->is<PxRigidDynamic>())
+			{
+				U64 hitGUID = PhysicsWorld->ActorToGUIDMap[hit.actor];
+				SMetaDataComponent* metaDataComponent = GEngine::GetWorld()->GetComponent<SMetaDataComponent>(SEntity(hitGUID));
+				HV_LOG_INFO("Hit: %s", metaDataComponent->Name.Data());
+
+				//AS. We will likely only need to modify / work with PhysX in this scope.
+
+				/*AS. This is where handled PlayerController bumping into Dynamic Bodies pushing them away In IronWrought
+				//Roughly what we did, see below:
+				PxRigidDynamic* dynamic = static_cast<PxRigidDynamic*>(hit.actor);
+				PxVec3 v = hit.controller->getActor()->getLinearVelocity();
+				PxVec3 n = { hit.worldNormal.x, hit.worldNormal.y, hit.worldNormal.z };
+				F32 m = dynamic->getMass();
+				PxVec3 f = PxVec3((m * ((v - n) / GTime::FixedDt())));		
+				*/
+			}
 		}
 
 		void CUserControllerHitReport::onControllerHit(const physx::PxControllersHit& /*hit*/)
@@ -352,48 +383,44 @@ namespace Havtorn
 		{
 		}
 
+#pragma endregion
+
 		CPhysicsWorld3D::CPhysicsWorld3D()
 		{
 			Foundation = PxCreateFoundation(PX_PHYSICS_VERSION, DefaultAllocatorCallback, ErrorCallback);
-
-			// TODO.NR: Add support for remote debugging?
-			static const char* pvdPort = "127.0.0.1";
 			PVD = PxCreatePvd(*Foundation);
-			PxPvdTransport* transport = PxDefaultPvdSocketTransportCreate(pvdPort, 5425, 10);
-			PVD->connect(*transport, PxPvdInstrumentationFlag::eALL);
-
 			Physics = PxCreatePhysics(PX_PHYSICS_VERSION, *Foundation, PxTolerancesScale(), true, PVD);
-
 			DefaultCPUDispatcher = PxDefaultCpuDispatcherCreate(2);
+
+			PxPvdTransport* transport = PxDefaultPvdSocketTransportCreate("localhost", 5425, 10);
+			PxPvdInstrumentationFlags flags = PxPvdInstrumentationFlag::eALL;
+			bool pvdConnectionSuccess = PVD->connect(*transport, flags);
+			HV_LOG_INFO("PVD Connected %s", pvdConnectionSuccess ? "Sucessful" : "Failed");
+
+
 			SimulationEventCallback = new CSimulationEventCallback();
 			SimulationFilterCallback = new CSimulationFilterCallback();
 			UserControllerHitReport = new CUserControllerHitReport();
 
+			SimulationEventCallback->PhysicsWorld = this;
+			UserControllerHitReport->PhysicsWorld = this;
+
+
+
 			MainMaterial = Physics->createMaterial(0.5f, 0.5f, 0.6f);
+
+			UserDataEntityGUIDs.reserve(500);
 		}
 
 		CPhysicsWorld3D::~CPhysicsWorld3D()
 		{
 			SAFE_DELETE(SimulationEventCallback)
-			SAFE_DELETE(SimulationFilterCallback)
-			SAFE_DELETE(UserControllerHitReport)
 
-			PX_RELEASE(MainMaterial)
-			PX_RELEASE(ControllerManager)
-			PX_RELEASE(CurrentScene)
 
-			PX_RELEASE(DefaultCPUDispatcher)
-			PX_RELEASE(Physics)
-			if (PVD)
-			{
-				PxPvdTransport* transport = PVD->getTransport();
-				PX_RELEASE(PVD)
-				PX_RELEASE(transport)
-			}
 			PX_RELEASE(Foundation)
 		}
 
-		void CPhysicsWorld3D::CreateScene(CScene* havtornScene)
+		void CPhysicsWorld3D::CreateScene()
 		{
 			PxSceneDesc sceneDesc(Physics->getTolerancesScale());
 			sceneDesc.gravity = PxVec3(0.0f, -9.81f, 0.0f);
@@ -403,10 +430,7 @@ namespace Havtorn
 			sceneDesc.filterCallback = SimulationFilterCallback;
 			sceneDesc.flags = PxSceneFlag::eENABLE_ACTIVE_ACTORS | PxSceneFlag::eENABLE_CCD;
 
-			// TODO.NR: Need to make a new scene for each new Havtorn Scene
 			CurrentScene = Physics->createScene(sceneDesc);
-
-			CurrentScene->userData = havtornScene;
 
 			if (PxPvdSceneClient* pvdClient = CurrentScene->getScenePvdClient())
 			{
@@ -418,21 +442,34 @@ namespace Havtorn
 			ControllerManager = PxCreateControllerManager(*CurrentScene);
 		}
 
-		void CPhysicsWorld3D::Update()
+		void CPhysicsWorld3D::Update(std::vector<Ptr<CScene>>& scenes)
 		{
 			if (CurrentScene == nullptr)
 				return;
 
-			CurrentScene->simulate(1.0f / 60.0f);
+
+			CurrentScene->simulate(GTime::FixedDt());
 			CurrentScene->fetchResults(true);
+
+			//CScene* havtornScene = static_cast<CScene*>(CurrentScene->userData);
+
+			CScene* havtornScene = scenes[0].get();
+
+			PxU32 numControllers = 0;
+			numControllers = ControllerManager->getNbControllers();
+			for (U32 i = 0; i < numControllers; i++)
+			{
+				PxController* controller = ControllerManager->getController(i);
+				U64 entityGUID = ActorToGUIDMap[controller->getActor()];
+				ApplyResultController(havtornScene, SEntity(entityGUID), controller);
+				//ApplyResultGlobalPose(havtornScene, SEntity(entityGUID), controller->getActor()->getGlobalPose());
+			}
 
 			PxU32 numActiveActors = 0;
 			PxActor** activeActors = CurrentScene->getActiveActors(numActiveActors);
-
 			if (numActiveActors == 0)
 				return;
 
-			CScene* havtornScene = static_cast<CScene*>(CurrentScene->userData);
 			if (havtornScene == nullptr)
 				return;
 
@@ -442,36 +479,103 @@ namespace Havtorn
 				if (rigidActor == nullptr)
 					continue;
 
-				const SEntity& entity = *static_cast<SEntity*>(rigidActor->userData);
+				U64 entityGUID = ActorToGUIDMap[rigidActor];
+				const SEntity& entity = SEntity(entityGUID);
+				ApplyResultGlobalPose(havtornScene, entity, rigidActor->getGlobalPose());
+			}
+		}
 
-				STransformComponent* transform = havtornScene->GetComponent<STransformComponent>(entity);
-				if (transform == nullptr)
-					continue;
 
-				SVector translation = SVector::Zero;
-				SVector eulerAngles = SVector::Zero;
-				SVector scale = SVector::Zero;
-				SMatrix matrix = transform->Transform.GetMatrix();
 
-				SMatrix::Decompose(matrix, translation, eulerAngles, scale);
-				translation = Convert(rigidActor->getGlobalPose().p);
-				eulerAngles = Convert(rigidActor->getGlobalPose().q).ToEuler();
-				SMatrix::Recompose(translation, eulerAngles, scale, matrix);
+		void CPhysicsWorld3D::ApplyResultGlobalPose(Havtorn::CScene* havtornScene, const Havtorn::SEntity& entity, const physx::PxTransform& globalPose)
+		{
+			STransformComponent* transform = havtornScene->GetComponent<STransformComponent>(entity);
+			if (transform == nullptr)
+				return;
 
-				transform->Transform.SetMatrix(matrix);
+			SVector translation = SVector::Zero;
+			SVector eulerAngles = SVector::Zero;
+			SVector scale = SVector::Zero;
+			SMatrix matrix = transform->Transform.GetMatrix();
 
-				SPhysics3DComponent* component = havtornScene->GetComponent<SPhysics3DComponent>(entity);
-				SPhysics3DControllerComponent* controller = havtornScene->GetComponent<SPhysics3DControllerComponent>(entity);
-				if (component != nullptr)
+			SMatrix::Decompose(matrix, translation, eulerAngles, scale);
+			translation = Convert(globalPose.p);
+			eulerAngles = Convert(globalPose.q).ToEuler();
+			SMatrix::Recompose(translation, eulerAngles, scale, matrix);
+
+			transform->Transform.SetMatrix(matrix);
+		}
+
+		void CPhysicsWorld3D::ApplyResultController(Havtorn::CScene* havtornScene, const Havtorn::SEntity& entity, physx::PxController* controller)
+		{
+			PxRigidDynamic* dynamic = controller->getActor();
+			SPhysics3DControllerComponent* component = havtornScene->GetComponent<SPhysics3DControllerComponent>(entity);
+			if (!SComponent::IsValid(component))
+				return;
+
+			component->Velocity = Convert(dynamic->getLinearVelocity());
+			//component->Displacement = SVector::Zero;
+		}
+
+		void CPhysicsWorld3D::InitializeScene(std::vector<Ptr<CScene>>& scenes)
+		{
+			if (CurrentScene == nullptr)
+				CreateScene();
+
+
+			//CurrentScene->userData = &scenes;
+
+			for (auto& scene : scenes)
+			{
+				for (auto& physComponent : scene->GetComponents<SPhysics3DComponent>())
 				{
+					STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(physComponent);
+
+					if (!SComponent::IsValid(transformComponent))
+						continue;
+
+					InitializePhysicsData(transformComponent, physComponent);
 				}
-				else if (controller != nullptr)
+
+				for (auto& physComponent : scene->GetComponents<SPhysics3DControllerComponent>())
 				{
+					STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(physComponent);
+
+					if (!SComponent::IsValid(transformComponent))
+						continue;
+
+					InitializePhysicsData(transformComponent, physComponent);
 				}
 			}
 		}
 
-		void CPhysicsWorld3D::InitializePhysicsData(STransformComponent* transform, SPhysics3DComponent* component) const
+		void CPhysicsWorld3D::DeInitializeScene(std::vector<Ptr<CScene>>& scenes)
+		{
+			PX_RELEASE(ControllerManager);
+			PX_RELEASE(CurrentScene);
+
+			//nedan är temp-lösning
+
+			for (auto& guidPtr : UserDataEntityGUIDs)
+			{
+				U64& guid = *guidPtr;
+				for (auto& scene : scenes)
+				{
+					if (!scene->HasEntity(guid))
+						continue;
+
+					STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(SEntity(guid));
+					if (!SComponent::IsValid(transformComponent))
+						continue;
+
+					transformComponent->Transform = ResetTransformMap[guid];
+				}
+			}
+
+			UserDataEntityGUIDs.clear();
+		}
+
+		void CPhysicsWorld3D::InitializePhysicsData(STransformComponent* transform, SPhysics3DComponent* component)
 		{
 			std::function<PxActor* (const STransformComponent*, const SPhysics3DComponent*)> creationFunction;
 
@@ -497,22 +601,31 @@ namespace Havtorn
 				break;
 			}
 
+			UserDataEntityGUIDs.emplace_back(new U64(component->Owner.GUID));
+			ResetTransformMap[component->Owner.GUID] = transform->Transform;
+
 			PxActor* newActor = creationFunction(transform, component);
 			newActor->userData = &component->Owner;
 			CurrentScene->addActor(*newActor);
+			ActorToGUIDMap[newActor] = component->Owner.GUID;
+			GUIDToPxActorMap[component->Owner.GUID] = newActor;
 		}
 
-		void CPhysicsWorld3D::InitializePhysicsData(STransformComponent* transform, SPhysics3DControllerComponent* controller) const
+		void CPhysicsWorld3D::InitializePhysicsData(STransformComponent* transform, SPhysics3DControllerComponent* controller)
 		{
+
 			PxVec3T<F32> position = Convert(transform->Transform.GetMatrix().GetTranslation());
 			PxVec3T<F32> upDirection = Convert(transform->Transform.GetMatrix().GetUp());
-
+			PxController* pxController = nullptr;
 			switch (controller->ControllerType)
 			{
 			case EPhysics3DControllerType::Box:
 			{
+				UserDataEntityGUIDs.emplace_back(std::make_unique<U64>(controller->Owner.GUID));
+				ResetTransformMap[controller->Owner.GUID] = transform->Transform;
+
 				PxBoxControllerDesc desc;
-				desc.userData = controller;
+				desc.userData = UserDataEntityGUIDs.back().get();
 				desc.halfSideExtent = controller->ShapeLocalExtents.X * 0.5f;
 				desc.halfHeight = controller->ShapeLocalExtents.Y * 0.5f;
 				desc.halfForwardExtent = controller->ShapeLocalExtents.Z * 0.5f;
@@ -521,13 +634,20 @@ namespace Havtorn
 				desc.position = { position.x, position.y, position.z };
 				desc.upDirection = { upDirection.x, upDirection.y, upDirection.z };
 				desc.material = MainMaterial;
-				ControllerManager->createController(desc);
+				pxController = ControllerManager->createController(desc);
+
+				ActorToGUIDMap[pxController->getActor()] = controller->Owner.GUID;
+				GUIDToControllerActorMap[controller->Owner.GUID] = pxController;
 			}
-				break;
+			break;
 			case EPhysics3DControllerType::Capsule:
 			{
+				UserDataEntityGUIDs.emplace_back(new U64(controller->Owner.GUID));
+				ResetTransformMap[controller->Owner.GUID] = transform->Transform;
+
+
 				PxCapsuleControllerDesc desc;
-				desc.userData = controller;
+				desc.userData = UserDataEntityGUIDs.back().get();
 				desc.height = controller->ShapeLocalExtents.Y;
 				desc.radius = UMath::Max(controller->ShapeLocalExtents.X, controller->ShapeLocalExtents.Z);
 				desc.reportCallback = UserControllerHitReport;
@@ -535,9 +655,12 @@ namespace Havtorn
 				desc.position = { position.x, position.y, position.z };
 				desc.upDirection = { upDirection.x, upDirection.y, upDirection.z };
 				desc.material = MainMaterial;
-				ControllerManager->createController(desc);
+				pxController = ControllerManager->createController(desc);
+
+				ActorToGUIDMap[pxController->getActor()] = controller->Owner.GUID;
+				GUIDToControllerActorMap[controller->Owner.GUID] = pxController;
 			}
-				break;
+			break;
 			}
 		}
 
@@ -591,8 +714,7 @@ namespace Havtorn
 			PxTransform worldTransform(Convert(transformMatrix.GetTranslation()), Convert(SQuaternion(transformMatrix.GetEuler())));
 			PxTransform localTransform(Convert(component->ShapeLocalOffset), PxQuatT<F32>(PxIdentity));
 
-			PxRigidDynamic* body = Physics->createRigidDynamic(worldTransform.transform(localTransform));
-
+			PxRigidDynamic* body = Physics->createRigidDynamic(worldTransform.transform(localTransform));	
 			body->attachShape(*CreateShapeFromComponent(component));
 
 			PxRigidBodyExt::updateMassAndInertia(*body, component->Density);
@@ -653,14 +775,56 @@ namespace Havtorn
 			return { from.x, from.y, from.z, from.w };
 		}
 
+		// System ------------------------------------------------------------------------------
 		CPhysics3DSystem::CPhysics3DSystem(CPhysicsWorld3D* physicsWorld)
 			: PhysicsWorld(physicsWorld)
-		{}
-
-		void CPhysics3DSystem::Update(std::vector<Ptr<CScene>>& /*scenes*/)
 		{
+		}
+
+		void CPhysics3DSystem::Update(std::vector<Ptr<CScene>>& scenes)
+		{
+			physx::PxControllerFilters filters{};
+			F32 deltaTime = GTime::FixedDt();
+
+			for (auto& scene : scenes)
+			{
+				std::vector<SPhysics3DControllerComponent*> controllerComponents = scene->GetComponents<SPhysics3DControllerComponent>();
+				for (auto& component : controllerComponents)
+				{
+					//Havtorn -> PhysX
+					PxController* pxController = PhysicsWorld->GUIDToControllerActorMap[component->Owner.GUID];
+					PxVec3 displacement = PhysicsWorld->Convert(component->Displacement * deltaTime);
+					pxController->move(displacement, 0.001f, deltaTime, filters);
+				}
+
+
+				//std::vector<SPhysics3DComponent*> physicsComponents = scene->GetComponents<SPhysics3DComponent>();
+				//for (auto& component : physicsComponents)
+				//{
+				//	if (component->BodyType != EPhysics3DBodyType::Dynamic)
+				//		continue;
+
+				//	if (component->Velocity.LengthSquared() < 0.01f)
+				//		continue;
+
+				//	PxActor* actor = PhysicsWorld->GUIDToPxActorMap[component->Owner.GUID];
+				//	if (actor->is<PxRigidDynamic>())
+				//	{
+				//		PxRigidDynamic* dynamicActor = static_cast<PxRigidDynamic*>(actor);
+				//		dynamicActor->addForce(PhysicsWorld->Convert(component->Velocity));
+				//	}
+
+				//	//Havtorn -> PhysX
+				//	//PxController* pxController = PhysicsWorld->GUIDToControllerActorMap[component->Owner.GUID];
+				//	//PxVec3 displacement = PhysicsWorld->Convert(component->Displacement * deltaTime);
+				//	//pxController->move(displacement, 0.001f, deltaTime, filters);
+				//}
+
+
+			}
+
 			if (GTime::FixedTimeStep())
-				PhysicsWorld->Update();
+				PhysicsWorld->Update(scenes);
 		}
 	}
 }

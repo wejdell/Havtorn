@@ -26,6 +26,7 @@ namespace Havtorn
 			SVector2<F32> ShapeLocalRadiusAndHeight;
 		};
 
-		SVector Velocity = SVector::Zero;
+		SVector Displacement = SVector::Zero; //This should be set to Zero in physx::Move
+		SVector Velocity = SVector::Zero; //Read Only
 	};
 }

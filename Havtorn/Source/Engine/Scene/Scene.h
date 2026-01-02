@@ -383,7 +383,7 @@ namespace Havtorn
 
 		ENGINE_API const SEntity& AddEntity(U64 guid = 0);
 		ENGINE_API const SEntity& AddEntity(const std::string& nameInEditor, U64 guid = 0);
-		ENGINE_API bool HasEntity(U64 guid);
+		ENGINE_API bool HasEntity(U64 guid) const;
 		ENGINE_API void RemoveEntity(const SEntity entity);
 		ENGINE_API void ClearScene();
 		ENGINE_API void MoveEntityToScene(const SEntity& entity, CScene* fromScene);
@@ -394,6 +394,7 @@ namespace Havtorn
 		{
 			return fromComponent->Owner;
 		}
+
 
 		template<typename T>
 		T* GetComponent(const SEntity& fromEntity) const
@@ -438,7 +439,7 @@ namespace Havtorn
 		{
 			return std::make_tuple(GetComponent<Ts>(fromOtherComponent->Owner) ...);
 		}
-
+		
 		template<typename T>
 		std::vector<T*> GetComponents() const
 		{
