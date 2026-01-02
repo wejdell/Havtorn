@@ -635,6 +635,7 @@ namespace Havtorn
 			//camera.ProjectionType = ECameraProjectionType::Orthographic;
 			//camera.ProjectionMatrix = SMatrix::OrthographicLH(5.0f, 5.0f, 0.1f, 1000.0f);
 			camera.IsActive = true;
+			camera.IsStartingCamera = true;
 
 			//		SCameraControllerComponent& controllerComp = 
 			AddComponent<SCameraControllerComponent>(mainCamera);
