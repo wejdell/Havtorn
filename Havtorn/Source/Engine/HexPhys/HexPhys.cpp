@@ -551,9 +551,6 @@ namespace Havtorn
 
 		void CPhysicsWorld3D::DeInitializeScene(std::vector<Ptr<CScene>>& scenes)
 		{
-			PX_RELEASE(ControllerManager);
-			PX_RELEASE(CurrentScene);
-
 			//nedan är temp-lösning
 
 			for (auto& guidPtr : UserDataEntityGUIDs)
@@ -573,6 +570,13 @@ namespace Havtorn
 			}
 
 			UserDataEntityGUIDs.clear();
+			ActorToGUIDMap.clear();
+			GUIDToControllerActorMap.clear();
+			GUIDToPxActorMap.clear();
+			ResetTransformMap.clear();
+
+			PX_RELEASE(ControllerManager);
+			PX_RELEASE(CurrentScene);
 		}
 
 		void CPhysicsWorld3D::InitializePhysicsData(STransformComponent* transform, SPhysics3DComponent* component)
