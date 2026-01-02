@@ -28,6 +28,8 @@ namespace Havtorn
 		RequestSystem<CRenderSystem>(this, RenderManager, this);
 
 		OnSceneCreatedDelegate.AddMember(this, &CWorld::OnSceneCreated);
+
+		//Would like to Setup these Listeners in CPhysicsSystem3D instead.
 		OnBeginPlayDelegate.AddMember(this, &CWorld::InitializePhysics3D);
 		OnEndPlayDelegate.AddMember(this, &CWorld::DeInitializePhysics3D);
 
