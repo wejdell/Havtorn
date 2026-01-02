@@ -43,6 +43,18 @@ namespace Havtorn
 			return Delegate.AddRaw(object, function);
 		}
 
+		//AS. Didnt quite work, need to figure out how to specialize so we correctly resolve T to DelegateBase (?) /2026-01-02
+		//template<typename ObjectType>
+		//void RemoveObject(ObjectType* object, BroadcastTypes...)
+		//{
+		//	Delegate.RemoveObject(object);
+		//}
+
+		void RemoveHandle(DelegateHandle& handle)
+		{
+			Delegate.Remove(handle);
+		}
+
 		template<typename FunctionType, typename... FunctionArgs>
 		DelegateHandle AddStatic(FunctionType&& function, FunctionArgs&&... args)
 		{

@@ -15,7 +15,7 @@ namespace Havtorn
 	CGhostySystem::CGhostySystem()
 		: ISystem()
 	{
-		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Right).AddMember(this, &CGhostySystem::HandleAxisInput);
+		DelegateAxisRightHandle = GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Right).AddMember(this, &CGhostySystem::HandleAxisInput);
 
 		EvaluateIdleFunc = std::bind(&CGhostySystem::EvaluateIdle, this, std::placeholders::_1, std::placeholders::_2);
 		EvaluateLocomotionFunc = std::bind(&CGhostySystem::EvaluateLocomotion, this, std::placeholders::_1, std::placeholders::_2);
@@ -24,6 +24,11 @@ namespace Havtorn
 		
 		animatorGraphSystem->BindEvaluateFunction(EvaluateIdleFunc, "CGhostySystem::EvaluateIdle");
 		animatorGraphSystem->BindEvaluateFunction(EvaluateLocomotionFunc, "CGhostySystem::EvaluateLocomotion");
+	}
+
+	CGhostySystem::~CGhostySystem()
+	{
+		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Right).RemoveHandle(DelegateAxisRightHandle);
 	}
 
 	void CGhostySystem::Update(std::vector<Ptr<CScene>>& scenes)

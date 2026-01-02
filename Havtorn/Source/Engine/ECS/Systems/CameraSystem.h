@@ -30,5 +30,16 @@ namespace Havtorn
 
 		SEntity PreviousMainCamera = SEntity::Null;
 		bool IsFreeCamActive = false;
+
+		DelegateHandle DelegateAxisUpHandle;
+		DelegateHandle DelegateAxisRightHandle;
+		DelegateHandle DelegateAxisForwardHandle;
+		DelegateHandle DelegateAxisMouseHorizontalHandle;
+		DelegateHandle DelegateAxisMouseVerticalHandle;
+		DelegateHandle DelegateAxisZoomHandle;
+		DelegateHandle DelegateInputToggleFreeCamHandle;
+		DelegateHandle DelegateBeginPlayHandle;
+		DelegateHandle DelegatePausePlayHandle;
+		DelegateHandle DelegateEndPlayHandle;
 	};
 }
