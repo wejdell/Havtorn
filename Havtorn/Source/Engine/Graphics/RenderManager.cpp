@@ -606,12 +606,12 @@ namespace Havtorn
 
 	void CRenderManager::ClearRenderViewInstanceData()
 	{
-		for (auto& renderViewPair : (*GameThreadRenderViews))
+		for (auto& [id, view] : (*GameThreadRenderViews))
 		{
-			renderViewPair.second.StaticMeshInstanceData.clear();
-			renderViewPair.second.SkeletalMeshInstanceData.clear();
-			renderViewPair.second.WorldSpaceSpriteInstanceData.clear();
-			renderViewPair.second.ScreenSpaceSpriteInstanceData.clear();
+			view.StaticMeshInstanceData.clear();
+			view.SkeletalMeshInstanceData.clear();
+			view.WorldSpaceSpriteInstanceData.clear();
+			view.ScreenSpaceSpriteInstanceData.clear();
 		}
 	}
 
