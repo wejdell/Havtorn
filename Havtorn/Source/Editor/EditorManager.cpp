@@ -43,6 +43,8 @@ namespace Havtorn
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::FocusEditorEntity).AddMember(this, &CEditorManager::OnInputFocusSelection);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::DeleteEvent).AddMember(this, &CEditorManager::OnDeleteEvent);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ToggleFullscreen).AddMember(this, &CEditorManager::OnToggleFullscreen);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::StartPlay).AddMember(this, &CEditorManager::OnPlayStateEvent);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::StopPlay).AddMember(this, &CEditorManager::OnPlayStateEvent);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::AltPress).AddMember(this, &CEditorManager::OnDragCopyEvent);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::AltRelease).AddMember(this, &CEditorManager::OnDragCopyEvent);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::Copy).AddMember(this, &CEditorManager::OnCopyEvent);
@@ -921,6 +923,16 @@ namespace Havtorn
 			IsDragCopyActive = true;
 		if (payload.IsReleased)
 			IsDragCopyActive = false;
+	}
+
+	void CEditorManager::OnPlayStateEvent(const SInputActionPayload payload)
+	{
+		CWorld* world = GEngine::GetWorld();
+
+		if (payload.Event == EInputActionEvent::StartPlay && payload.IsPressed)
+			world->BeginPlay();
+		else if (payload.Event == EInputActionEvent::StopPlay && payload.IsPressed)
+			world->StopPlay();
 	}
 
 	void CEditorManager::OnResolutionChanged(SVector2<U16> newResolution)

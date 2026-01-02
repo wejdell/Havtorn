@@ -460,6 +460,12 @@ namespace Havtorn
 				activeScene->Init3DDefaults();
 				Manager->SetCurrentWorkingScene(STATIC_I64(Manager->GetScenes().size()) - 1);
 			}
+			GUI::SameLine();
+			if (GUI::Button("3D Demo Scene"))
+			{
+				GEngine::GetWorld()->OpenDemoScene<CGameScene>(true);
+				Manager->SetCurrentWorkingScene(0);
+			}
 		}
 		GUI::EndChild();
 		SceneAssetDrag();

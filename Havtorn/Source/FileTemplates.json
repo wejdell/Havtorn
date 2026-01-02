@@ -3,11 +3,11 @@
         "description": "Empty c++ class, supports .h- and .cpp-files",
         "fileTypes": [
             {
-                "extension": "h",
+                "extension": ".h",
                 "content": "#pragma once\n\nnamespace Havtorn\n{\n\tclass {{fileName}}\n\t{\n\tpublic:\n\t\t{{fileName}}();\n\t\t~{{fileName}}();\n\n\tprivate:\n\t};\n}\n"
             },
             {
-                "extension": "cpp",
+                "extension": ".cpp",
                 "content": "#include \"{{fileName}}.h\"\n\nnamespace Havtorn \n{\n\t{{fileName}}::{{fileName}}() \n\t{}\n\n\t{{fileName}}::~{{fileName}}() \n\t{}\n}\n"
             }
         ]
@@ -16,11 +16,11 @@
         "description": "Empty c++ struct, supports .h- and .cpp-files",
         "fileTypes": [
             {
-                "extension": "h",
+                "extension": ".h",
                 "content": "#pragma once\n\nnamespace Havtorn\n{\n\tstruct {{fileName}}\n\t{\n\t};\n}\n"
             },
             {
-                "extension": "cpp",
+                "extension": ".cpp",
                 "content": "#include \"{{fileName}}.h\"\n\nnamespace Havtorn \n{\n\n}\n"
             }
         ]
@@ -29,11 +29,11 @@
         "description": "Empty node for Havtorn visual scripting, supports .h and .cpp-files",
         "fileTypes": [
             {
-                "extension": "h",
+                "extension": ".h",
                 "content": "#pragma once\n\n#include <HexRune/HexRune.h>\n\nnamespace Havtorn\n{\n    namespace HexRune\n    {\n        struct {{fileName}} : public SNode\n        {\n            {{fileName}} (const U64 id, const U32 typeID, SScript* owningScript);\n            virtual I8 OnExecute() override;\n        }; \n    }\n}\n"
             },
             {
-                "extension": "cpp",
+                "extension": ".cpp",
                 "content": "#include \"{{fileName}}.h\"\n\nnamespace Havtorn\n{\n    namespace HexRune\n    {\n        {{fileName}}::{{fileName}}(const U64 id, const U32 typeID, SScript* owningScript)\n            : SNode(id, typeID, owningScript, ENodeType::Standard)\n        {\n            AddInput(UGUIDManager::Generate(), EPinType::Flow, \"In\");\n            AddOutput(UGUIDManager::Generate(), EPinType::Flow, \"Out\");                    \n        }\n\n        I8 {{fileName}}::OnExecute()\n        {\n            return -1;\n        }\n    }\n}\n"
             }
         ]
@@ -42,7 +42,7 @@
         "description": "Empty .h file",
         "fileTypes": [
             {
-                "extension": "h",
+                "extension": ".h",
                 "content": "#pragma once\n\nnamespace Havtorn\n{\n}\n"
             }
         ]

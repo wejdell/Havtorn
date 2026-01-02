@@ -31,7 +31,7 @@ namespace Havtorn
 		SStaticMeshComponent* staticMesh = scene->GetComponent<SStaticMeshComponent>(entityOwner);
 		const SStaticMeshAsset* staticMeshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMesh->AssetReference, entityOwner.GUID);
 		if (staticMeshAsset == nullptr)
-			return { EComponentViewResultLabel::InspectAssetComponent, staticMesh, &staticMesh->AssetReference, nullptr, EAssetType::StaticMesh };
+			return { EComponentViewResultLabel::InspectAssetComponent, staticMesh, SAssetReference::ConvertToPointers(staticMesh->AssetReference), EAssetType::StaticMesh };
 
 		GUI::TextDisabled("Number Of Materials: %i", staticMeshAsset->NumberOfMaterials);
 
@@ -68,7 +68,7 @@ namespace Havtorn
 		GDebugDraw::AddLine(g, h, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false);
 		GDebugDraw::AddLine(h, e, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false);
 
-		return { EComponentViewResultLabel::InspectAssetComponent, staticMesh, &staticMesh->AssetReference, nullptr, EAssetType::StaticMesh };
+		return { EComponentViewResultLabel::InspectAssetComponent, staticMesh, SAssetReference::ConvertToPointers(staticMesh->AssetReference), EAssetType::StaticMesh };
     }
 
 	bool SStaticMeshComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const

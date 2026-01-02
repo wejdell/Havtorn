@@ -82,6 +82,14 @@ namespace Havtorn
 		const SInputAction toggleFullscreen = { EInputKey::F11, EInputContext::Editor };
 		MapEvent(EInputActionEvent::ToggleFullscreen, toggleFullscreen);
 
+		const SInputAction startPlay = { EInputKey::KeyP, EInputContext::Editor, EInputModifier::Alt };
+		MapEvent(EInputActionEvent::StartPlay, startPlay);
+
+		// TODO.NW: Figure out how to deal with editor vs in game context here, and how to construct the input action.
+		// Esc by default in UE is end play. Shift+Esc could be used to Pause, or we decide to shift the role of those two.
+		const SInputAction stopPlay = { EInputKey::Esc, EInputContext::Editor };
+		MapEvent(EInputActionEvent::StopPlay, stopPlay);
+
 		// NW: the Sys key is a bit different. We might need this workaround on other modifier keys as well
 		const SInputAction altPress = { EInputKey::Alt, EInputContext::Editor, EInputModifier::Alt };
 		MapEvent(EInputActionEvent::AltPress, altPress);

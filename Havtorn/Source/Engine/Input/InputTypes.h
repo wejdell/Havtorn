@@ -147,6 +147,8 @@ namespace Havtorn
 		FocusEditorEntity,
 		DeleteEvent,
 		ToggleFullscreen,
+		StartPlay,
+		StopPlay,
 		AltPress,
 		AltRelease,
 		Copy,

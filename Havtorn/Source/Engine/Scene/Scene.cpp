@@ -49,6 +49,7 @@ namespace Havtorn
 		RegisterTrivialComponent<SPhysics2DComponent, SPhysics2DComponentEditorContext>(180, 10);
 		RegisterTrivialComponent<SPhysics3DComponent, SPhysics3DComponentEditorContext>(190, 40);
 		RegisterTrivialComponent<SPhysics3DControllerComponent, SPhysics3DControllerComponentEditorContext>(200, 1);
+		RegisterNonTrivialComponent<SUICanvasComponent, SUICanvasComponentEditorContext>(210, 5);
 		//RegisterTrivialComponent<SSequencerComponent, SSequencerComponentEditorContext>(typeID++, 0);
 
 		return true;
@@ -277,7 +278,7 @@ namespace Havtorn
 		// === !Decal ===
 
 		const std::string modelPath1 = "Assets/Meshes/En_P_PendulumClock.hva";
-		const std::vector<std::string> materialNames1 = { "Assets/Materials/M_PendulumClock.hva", "Assets/Materials/M_Checkboard_128x128.hva" };
+		const std::vector<std::string> materialNames1 = { "Assets/Materials/M_PendulumClock.hva", "Assets/Materials/M_Misc.hva" };
 		const std::string modelPath2 = "Assets/Meshes/En_P_Bed.hva";
 		const std::vector<std::string> materialNames2 = { "Assets/Materials/M_Bed.hva", "Assets/Materials/M_Bedsheet.hva" };
 		const std::string modelPath3 = "Assets/Meshes/Plane.hva";
@@ -376,20 +377,17 @@ namespace Havtorn
 		GEngine::GetWorld()->Initialize3DPhysicsData(playerProxy);
 		//GEngine::GetWorld()->Initialize3DPhysicsData(playerProxy);
 
-		//// Static Mesh
-		//std::string staticMeshPath = "Assets/Meshes/CH_Enemy.hva";
-		//renderManager->LoadStaticMeshComponent(staticMeshPath, AddComponent<SStaticMeshComponent>(playerProxy));
-		//AddComponentEditorContext(playerProxy, &SStaticMeshComponentEditorContext::Context);
-		//GetComponent<SStaticMeshComponent>(playerProxy)->AssetRegistryKey = assetRegistry->Register(staticMeshPath);
-
 		// Skeletal Mesh
 		std::string meshPath = "Assets/Meshes/CH_Enemy_SK.hva";
 		AddComponent<SSkeletalMeshComponent>(playerProxy, meshPath);
 		AddComponentEditorContext(playerProxy, &SSkeletalMeshComponentEditorContext::Context);
 
 		const std::vector<std::string> animationPaths = { "Assets/Meshes/CH_Enemy_Walk.hva", "Assets/Meshes/CH_Enemy_Chase.hva" };
-		AddComponent<SSkeletalAnimationComponent>(playerProxy, animationPaths);
+		SSkeletalAnimationComponent* animationComponent = AddComponent<SSkeletalAnimationComponent>(playerProxy, animationPaths);
 		AddComponentEditorContext(playerProxy, &SSkeletalAnimationComponentEditorContext::Context);
+
+		animationComponent->PlayData.emplace_back(SSkeletalAnimationPlayData());
+		animationComponent->PlayData.emplace_back(SSkeletalAnimationPlayData(1));
 
 		std::vector<std::string> enemyMaterialPaths = { "Assets/Materials/M_Enemy.hva" };
 		AddComponent<SMaterialComponent>(playerProxy, enemyMaterialPaths);
@@ -534,6 +532,83 @@ namespace Havtorn
 			//GEngine::GetWorld()->Initialize3DPhysicsData(entity);
 		}
 		// === !Floor/Walls ===
+
+		// === Main Menu ===
+		const SEntity& mainMenuCanvas = AddEntity("Main Menu Canvas");
+		const SEntity& settingsMenuCanvas = AddEntity("Settings Canvas");
+
+		if (!mainMenuCanvas.IsValid() || !settingsMenuCanvas.IsValid())
+			return false;
+
+		STransform2DComponent& mainMenuCanvasTransformComp = *AddComponent<STransform2DComponent>(mainMenuCanvas);
+		AddComponentEditorContext(mainMenuCanvas, &STransform2DComponentEditorContext::Context);
+
+		mainMenuCanvasTransformComp.Position = { 0.5f, 0.5f };
+
+		SUICanvasComponent& mainMenuCanvasComponent = *AddComponent<SUICanvasComponent>(mainMenuCanvas);
+		AddComponentEditorContext(mainMenuCanvas, &SUICanvasComponentEditorContext::Context);
+		mainMenuCanvasComponent.IsActive = true;
+
+		const std::vector<SAssetReference> assets = { SAssetReference("Assets/Textures/UITextures.hva"), SAssetReference("Assets/Textures/UITextures.hva"), SAssetReference("Assets/Textures/UITextures.hva") };
+		const SVector2<F32> buttonScale = SVector2<F32>(0.3f, 0.1f);
+		const F32 halfHeight = 0.5f * buttonScale.Y;
+		const F32 halfWidth = 0.5f * buttonScale.X * (9.0f / 16.0f);
+		const SVector4 collisionRect = { -halfWidth, -halfHeight, halfWidth, halfHeight };
+
+		SUIElement& playButton = mainMenuCanvasComponent.Elements.emplace_back();
+		playButton.StateAssetReferences = assets;
+		playButton.LocalPosition = SVector2<F32>(0.0f, 0.3f);
+		playButton.LocalScale = buttonScale;
+		playButton.CollisionRect = collisionRect;
+		playButton.UVRects = { SVector4(0.0f, 0.0f, 0.5f, 1 / 8.0f), SVector4(0.5f, 0.0f, 1.0f, 1 / 8.0f), SVector4(0.0f, 1 / 8.0f, 0.5f, 2 / 8.0f) };
+		
+		SUIElement& settingsButton = mainMenuCanvasComponent.Elements.emplace_back();
+		settingsButton.StateAssetReferences = assets;
+		settingsButton.LocalPosition = SVector2<F32>(0.0f, 0.1f);
+		settingsButton.LocalScale = buttonScale;
+		settingsButton.CollisionRect = collisionRect;
+		settingsButton.UVRects = { SVector4(0.5f, 1 / 8.0f, 1.0f, 2 / 8.0f), SVector4(0.0f, 2 / 8.0f, 0.5f, 3 / 8.0f), SVector4(0.5f, 2 / 8.0f, 1.0f, 3 / 8.0f) };
+		settingsButton.BindingType = EUIBindingType::OtherCanvas;
+		settingsButton.BoundData = settingsMenuCanvas.GUID;
+
+		SUIElement& quitButton = mainMenuCanvasComponent.Elements.emplace_back();
+		quitButton.StateAssetReferences = assets;
+		quitButton.LocalPosition = SVector2<F32>(0.0f, -0.1f);
+		quitButton.LocalScale = buttonScale;
+		quitButton.CollisionRect = collisionRect;
+		quitButton.UVRects = { SVector4(0.0f, 3 / 8.0f, 0.5f, 4 / 8.0f), SVector4(0.5f, 3 / 8.0f, 1.0f, 4 / 8.0f), SVector4(0.0f, 4 / 8.0f, 0.5f, 5 / 8.0f) };
+		quitButton.BindingType = EUIBindingType::GenericFunction;
+		quitButton.BoundData = std::hash<std::string>{}("CGameManager::QuitGame");
+		// === !Main Menu ===
+
+		// === Settings Menu ===
+		if (!settingsMenuCanvas.IsValid())
+			return false;
+
+		STransform2DComponent& settingsMenuCanvasTransformComp = *AddComponent<STransform2DComponent>(settingsMenuCanvas);
+		AddComponentEditorContext(settingsMenuCanvas, &STransform2DComponentEditorContext::Context);
+
+		settingsMenuCanvasTransformComp.Position = { 0.5f, 0.5f };
+
+		SUICanvasComponent& settingsMenuCanvasComponent = *AddComponent<SUICanvasComponent>(settingsMenuCanvas);
+		AddComponentEditorContext(settingsMenuCanvas, &SUICanvasComponentEditorContext::Context);
+
+		SUIElement& muteButton = settingsMenuCanvasComponent.Elements.emplace_back();
+		muteButton.StateAssetReferences = assets;
+		muteButton.LocalPosition = SVector2<F32>(0.0f, 0.3f);
+		muteButton.LocalScale = buttonScale;
+		muteButton.CollisionRect = collisionRect;
+		muteButton.UVRects = { SVector4(0.5f, 4 / 8.0f, 1.0f, 5 / 8.0f), SVector4(0.0f, 5 / 8.0f, 0.5f, 6 / 8.0f), SVector4(0.5f, 5 / 8.0f, 1.0f, 6 / 8.0f) };
+
+		SUIElement& backButton = settingsMenuCanvasComponent.Elements.emplace_back();
+		backButton.StateAssetReferences = assets;
+		backButton.LocalPosition = SVector2<F32>(0.0f, 0.1f);
+		backButton.LocalScale = buttonScale;
+		backButton.CollisionRect = collisionRect;
+		backButton.UVRects = { SVector4(0.0f, 6 / 8.0f, 0.5f, 7 / 8.0f), SVector4(0.5f, 6 / 8.0f, 1.0f, 7 / 8.0f), SVector4(0.0f, 7 / 8.0f, 0.5f, 8 / 8.0f) };
+		backButton.BindingType = EUIBindingType::OtherCanvas;
+		backButton.BoundData = mainMenuCanvas.GUID;
+		// === !Settings Menu ===
 
 		return true;
 	}

@@ -103,6 +103,7 @@ namespace Havtorn
 
 		ENGINE_API CRenderTexture CreateRenderTextureFromSource(const std::string& filePath);
 		ENGINE_API CRenderTexture CreateRenderTextureFromAsset(const std::string& filePath, const EAssetType assetType);
+		ENGINE_API CRenderTexture CreateRenderTextureFromData(const SVector2<U16> size, const DXGI_FORMAT format, void* data, const U64 elementSize);
 
 		ENGINE_API U64 GetEntityGUIDFromData(U64 dataIndex) const;
 
@@ -121,6 +122,7 @@ namespace Havtorn
 
 		ENGINE_API bool IsSpriteInScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewEntity);
 		ENGINE_API void AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewEntity);
+		ENGINE_API void AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SUIElement& uiElement, const U64 renderViewEntity);
 
 	public:
 		void SyncCrossThreadResources(const CWorld* world);
@@ -182,6 +184,7 @@ namespace Havtorn
 		inline void WorldSpaceSpriteEditorWidget(const SRenderCommand& command);
 		inline void RenderBloom(const SRenderCommand& command);
 		inline void Tonemapping(const SRenderCommand& command);
+		inline void ScreenSpaceUISprite(const SRenderCommand& command);
 		inline void AntiAliasing(const SRenderCommand& command);
 		inline void GammaCorrection(const SRenderCommand& command);
 		inline void RendererDebug(const SRenderCommand& command);

@@ -4,18 +4,16 @@
 #include "hvpch.h"
 #include <array>
 
-struct ID3D11DeviceContext;
-struct ID3D11VertexShader;
-struct ID3D11PixelShader;
-struct ID3D11Buffer;
-struct ID3D11SamplerState;
-struct ID3D11ShaderResourceView;
-struct D3D11_MAPPED_SUBRESOURCE;
+#include "Graphics/RenderStateManager.h"
+#include "Graphics/GraphicsEnums.h"
+#include "Graphics/RenderingPrimitives/DataBuffer.h"
+#include "Graphics/RenderingPrimitives/RenderTexture.h"
 
 namespace Havtorn
 {
 	class CGraphicsFramework;
 	class CRenderManager;
+	class CRenderStateManager;
 
 	class CFullscreenRenderer 
 	{
@@ -44,31 +42,6 @@ namespace Havtorn
 		HV_ASSERT_BUFFER(SPostProcessingBufferData)
 
 	public:
-		enum class EFullscreenShader 
-		{
-			Multiply,
-			Copy,
-			CopyDepth,
-			CopyGBuffer,
-			Difference,
-			Luminance,
-			GaussianHorizontal,
-			GaussianVertical,
-			BilateralHorizontal,
-			BilateralVertical,
-			Bloom,
-			Vignette,
-			Tonemap,
-			GammaCorrection,
-			FXAA,
-			SSAO,
-			SSAOBlur,
-			DownsampleDepth,
-			DepthAwareUpsampling,
-			EditorData,
-			Count
-		};
-
 		friend CRenderManager;
 
 	private:
@@ -97,23 +70,17 @@ namespace Havtorn
 		CFullscreenRenderer() = default;
 		~CFullscreenRenderer();
 		bool Init(CGraphicsFramework* framework, CRenderManager* manager);
-		void Render(EFullscreenShader effect);
+		void Render(const EPixelShaders effect, const CRenderStateManager& stateManager);
 
 		const std::string ShaderRoot = "Shaders/";
 
 		SPostProcessingBufferData PostProcessingBufferData;
 
-		ID3D11DeviceContext* Context = nullptr;
-		ID3D11Buffer* FullscreenDataBuffer = nullptr;
-		ID3D11Buffer* FrameBuffer = nullptr;
-		ID3D11Buffer* PostProcessingBuffer = nullptr;
-		ID3D11VertexShader* VertexShader = nullptr;
-		ID3D11SamplerState* ClampSampler = nullptr;
-		ID3D11SamplerState* WrapSampler = nullptr;
+		CDataBuffer FullscreenDataBuffer;
+		CDataBuffer FrameBuffer;
+		CDataBuffer PostProcessingBuffer;
 
-		std::array<ID3D11PixelShader*, static_cast<size_t>(EFullscreenShader::Count)> PixelShaders;
-
-		ID3D11ShaderResourceView* NoiseTexture = nullptr;
+		CRenderTexture NoiseTexture;
 		SVector4 Kernel[KernelSize];
 
 		CRenderManager* Manager = nullptr;

@@ -114,7 +114,10 @@ namespace Havtorn
 				CameraRotateInput.Y += 90.0f * payload.AxisValue;
 				return;
 			case EInputAxisEvent::Zoom:
-				CameraSpeedInput = UMath::Clamp(CameraSpeedInput + payload.AxisValue, -5.0f, 5.0f);
+			{
+				if (IsFreeCamActive)
+					CameraSpeedInput = UMath::Clamp(CameraSpeedInput + payload.AxisValue, -5.0f, 5.0f);
+			}
 				return;
 			default: 
 				return;

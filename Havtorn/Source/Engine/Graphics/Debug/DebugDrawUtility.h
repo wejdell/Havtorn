@@ -48,6 +48,7 @@ namespace Havtorn
 		static constexpr F32 ThicknessMaximum = 0.05f;
 
 		static ENGINE_API void AddLine(const SVector& start, const SVector& end, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static ENGINE_API void AddLine2D(const SVector2<F32>& start, const SVector2<F32>& end, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		static ENGINE_API void AddArrow(const SVector& start, const SVector& end, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
 		// Object aligned bounding box with Width/Height/Depth = 1. Pivot is in center.
 		static ENGINE_API void AddCube(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
@@ -103,6 +104,7 @@ namespace Havtorn
 
 		static bool TryAddShapes(const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, std::vector<SDebugDrawData>& outData);
 		static void TransformToFaceAndReach(const SVector& start, const SVector& end, SMatrix& transform);
+		static void TransformToFaceAndReach(const SVector2<F32>& start, const SVector2<F32>& end, SMatrix& transform);
 
 #if _DEBUG
 	public:

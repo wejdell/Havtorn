@@ -7,6 +7,10 @@
 #include "GraphicsFramework.h"
 #include "GraphicsUtilities.h"
 
+#include "FileSystem/FileWatcher.h"
+
+#include <d3dcompiler.h>
+
 namespace Havtorn
 {
     CRenderStateManager::~CRenderStateManager()
@@ -47,7 +51,7 @@ namespace Havtorn
         {
             std::string FileName = "InitVertexShadersAndInputLayouts::UnmappedShader";
             bool ShouldAddLayout = false;
-            EInputLayoutType InputLayout;
+            EInputLayoutType InputLayout = EInputLayoutType::Null;
         };
 
         std::array<SVertexShaderInitData, STATIC_U64(EVertexShaders::Count)> initData;
@@ -70,13 +74,13 @@ namespace Havtorn
 
         for (U64 i = 0; i < STATIC_U64(EVertexShaders::Count); i++)
         {
-            std::string vsData = AddShader(initData[i].FileName, EShaderType::Vertex);
+            std::string vsData = AddShader(initData[i].FileName, i, EShaderType::Vertex);
             if (initData[i].ShouldAddLayout)
                 AddInputLayout(vsData, initData[i].InputLayout);
         }
 
-        // NR: Null shader. Adding this to avoid branching in state setting functions
-        VertexShaders.emplace_back(nullptr);
+        // NW: Null shader. Adding this to avoid branching in state setting functions
+        VertexShaders[STATIC_U64(EVertexShaders::Count)] = nullptr;
         InputLayouts.emplace_back(nullptr);
     }
 
@@ -85,48 +89,70 @@ namespace Havtorn
         std::array<std::string, STATIC_U64(EPixelShaders::Count)> filepaths;
         filepaths.fill("InitPixelShaders::UnmappedShader");
         {
-            filepaths[STATIC_U64(EPixelShaders::GBuffer)] = ShaderRoot + "GBuffer_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::DecalAlbedo)] = ShaderRoot + "Decal_Albedo_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::DecalMaterial)] = ShaderRoot + "Decal_Material_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::DecalNormal)] = ShaderRoot + "Decal_Normal_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::DeferredDirectional)] = ShaderRoot + "DeferredLightDirectionalAndEnvironment_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::DeferredPoint)] = ShaderRoot + "DeferredLightPoint_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::DeferredSpot)] = ShaderRoot + "DeferredLightSpot_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::VolumetricDirectional)] = ShaderRoot + "DeferredLightDirectionalVolumetric_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::VolumetricPoint)] = ShaderRoot + "DeferredLightPointVolumetric_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::VolumetricSpot)] = ShaderRoot + "DeferredLightSpotVolumetric_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::EditorPreview)] = ShaderRoot + "EditorPreview_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::Line)] = ShaderRoot + "Line_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::SpriteScreenSpace)] = ShaderRoot + "SpriteScreenSpace_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpace)] = ShaderRoot + "SpriteWorldSpace_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::GBufferInstanceEditor)] = ShaderRoot + "GBufferEditor_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpaceEditor)] = ShaderRoot + "SpriteWorldSpaceEditor_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpaceEditorWidget)] = ShaderRoot + "SpriteWorldSpaceEditorWidget_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::Skybox)] = ShaderRoot + "Skybox_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::GBuffer)]                           = ShaderRoot + "GBuffer_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::DecalAlbedo)]                       = ShaderRoot + "Decal_Albedo_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::DecalMaterial)]                     = ShaderRoot + "Decal_Material_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::DecalNormal)]                       = ShaderRoot + "Decal_Normal_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::DeferredDirectional)]               = ShaderRoot + "DeferredLightDirectionalAndEnvironment_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::DeferredPoint)]                     = ShaderRoot + "DeferredLightPoint_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::DeferredSpot)]                      = ShaderRoot + "DeferredLightSpot_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::VolumetricDirectional)]             = ShaderRoot + "DeferredLightDirectionalVolumetric_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::VolumetricPoint)]                   = ShaderRoot + "DeferredLightPointVolumetric_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::VolumetricSpot)]                    = ShaderRoot + "DeferredLightSpotVolumetric_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::EditorPreview)]                     = ShaderRoot + "EditorPreview_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::Line)]                              = ShaderRoot + "Line_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::SpriteScreenSpace)]                 = ShaderRoot + "SpriteScreenSpace_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpace)]                  = ShaderRoot + "SpriteWorldSpace_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::GBufferInstanceEditor)]             = ShaderRoot + "GBufferEditor_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpaceEditor)]            = ShaderRoot + "SpriteWorldSpaceEditor_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::SpriteWorldSpaceEditorWidget)]      = ShaderRoot + "SpriteWorldSpaceEditorWidget_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::Skybox)]                            = ShaderRoot + "Skybox_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenMultiply)]                = ShaderRoot + "FullscreenMultiply_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenCopy)]                    = ShaderRoot + "FullscreenCopy_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenCopyDepth)]               = ShaderRoot + "FullscreenCopyDepth_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenCopyGBuffer)]             = ShaderRoot + "FullscreenCopyGBuffer_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenDifference)]              = ShaderRoot + "FullscreenDifference_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenLuminance)]               = ShaderRoot + "FullscreenLuminance_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenGaussianHorizontal)]      = ShaderRoot + "FullscreenGaussianBlurHorizontal_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenGaussianVertical)]        = ShaderRoot + "FullscreenGaussianBlurVertical_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenBilateralHorizontal)]     = ShaderRoot + "FullscreenBilateralBlurHorizontal_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenBilateralVertical)]       = ShaderRoot + "FullscreenBilateralBlurVertical_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenBloom)]                   = ShaderRoot + "FullscreenBloom_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenVignette)]                = ShaderRoot + "FullscreenVignette_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenTonemap)]                 = ShaderRoot + "FullscreenTonemap_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenGammaCorrection)]         = ShaderRoot + "FullscreenGammaCorrection_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenFXAA)]                    = ShaderRoot + "FullscreenFXAA_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenSSAO)]                    = ShaderRoot + "FullscreenSSAO_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenSSAOBlur)]                = ShaderRoot + "FullscreenSSAOBlur_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenDownsampleDepth)]         = ShaderRoot + "FullscreenDepthDownSample_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenDepthAwareUpsampling)]    = ShaderRoot + "FullscreenDepthAwareUpsample_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenEditorData)]              = ShaderRoot + "FullscreenEditorData_PS.cso";
         }
 
         for (U64 i = 0; i < STATIC_U64(EPixelShaders::Count); i++)
-            AddShader(filepaths[i], EShaderType::Pixel);
+            AddShader(filepaths[i], i, EShaderType::Pixel);
 
-        // NR: Null shader. Adding this to avoid branching in state setting functions
-        PixelShaders.emplace_back(nullptr);
+        // NW: Null shader. Adding this to avoid branching in state setting functions
+        PixelShaders[STATIC_U64(EPixelShaders::Count)] = nullptr;
     }
 
     void CRenderStateManager::InitGeometryShaders()
     {
-        AddShader(ShaderRoot + "Line_GS.cso", EShaderType::Geometry);
-        AddShader(ShaderRoot + "SpriteScreenSpace_GS.cso", EShaderType::Geometry);
-        AddShader(ShaderRoot + "SpriteWorldSpace_GS.cso", EShaderType::Geometry);
-        AddShader(ShaderRoot + "SpriteWorldSpaceEditor_GS.cso", EShaderType::Geometry);
+        AddShader(ShaderRoot + "Line_GS.cso", 0, EShaderType::Geometry);
+        AddShader(ShaderRoot + "LineScreenSpace_GS.cso", 1, EShaderType::Geometry);
+        AddShader(ShaderRoot + "SpriteScreenSpace_GS.cso", 2, EShaderType::Geometry);
+        AddShader(ShaderRoot + "SpriteWorldSpace_GS.cso", 3, EShaderType::Geometry);
+        AddShader(ShaderRoot + "SpriteWorldSpaceEditor_GS.cso", 4, EShaderType::Geometry);
 
-        // NR: Null shader. Adding this to avoid branching in state setting functions
-        GeometryShaders.emplace_back(nullptr);
+        // NW: Null shader. Adding this to avoid branching in state setting functions
+        GeometryShaders[STATIC_U64(EGeometryShaders::Count)] = nullptr;
     }
 
     void CRenderStateManager::InitSamplers()
     {
         AddSampler(ESamplerType::Wrap);
         AddSampler(ESamplerType::Border);
+        AddSampler(ESamplerType::Clamp);
     }
 
     void CRenderStateManager::InitVertexBuffers()
@@ -210,7 +236,7 @@ namespace Havtorn
         return STATIC_U16(MeshVertexOffsets.size() - 1);
     }
 
-    std::string CRenderStateManager::AddShader(const std::string& fileName, EShaderType shaderType)
+    std::string CRenderStateManager::AddShader(const std::string& fileName, const U64 index, const EShaderType shaderType)
     {
         std::string outShaderData;
 
@@ -218,26 +244,44 @@ namespace Havtorn
         {
         case EShaderType::Vertex:
         {
+            if (VertexShaders[index] != nullptr)
+                VertexShaders[index]->Release();
+
             ID3D11VertexShader* vertexShader;
             UGraphicsUtils::CreateVertexShader(fileName, Framework, &vertexShader, outShaderData);
-            VertexShaders.emplace_back(vertexShader);
+            VertexShaders[index] = vertexShader;
         }
         break;
         case EShaderType::Compute:
         case EShaderType::Geometry:
         {
+            if (GeometryShaders[index] != nullptr)
+                GeometryShaders[index]->Release();
+
             ID3D11GeometryShader* geometryShader;
             UGraphicsUtils::CreateGeometryShader(fileName, Framework, &geometryShader);
-            GeometryShaders.emplace_back(geometryShader);
+            GeometryShaders[index] = geometryShader;
         }
         break;
         case EShaderType::Pixel:
         {
+            if (PixelShaders[index] != nullptr)
+                PixelShaders[index]->Release();
+
             ID3D11PixelShader* pixelShader;
             UGraphicsUtils::CreatePixelShader(fileName, Framework, &pixelShader);
-            PixelShaders.emplace_back(pixelShader);
+            PixelShaders[index] = pixelShader;
         }
         break;
+        }
+
+        const std::string prefix = UGeneralUtils::ExtractParentDirectoryFromPath(UFileSystem::GetWorkingPath()) + "Source/Engine/Graphics/";
+        const std::string extension = "hlsl";
+        const std::string sourceFile = prefix + fileName.substr(0, fileName.size() - UGeneralUtils::ExtractFileExtensionFromPath(fileName).size()) + extension;
+        if (!ShaderInitData.contains(sourceFile))
+        {
+            GEngine::GetFileWatcher()->WatchFileChange(sourceFile, std::bind(&CRenderStateManager::OnShaderSourceChange, this, std::placeholders::_1));
+            ShaderInitData.emplace(sourceFile, SShaderInitData{ fileName, shaderType, index });
         }
 
         return outShaderData;
@@ -519,23 +563,23 @@ namespace Havtorn
         Context->OMSetRenderTargets(numberOfTargets, targetViews, depthStencilView);
     }
 
-    void CRenderStateManager::Draw(U32 vertexCount, U32 startVertexLocation)
+    void CRenderStateManager::Draw(U32 vertexCount, U32 startVertexLocation) const
     {
         // TODO.NW: Increase draw calls in all the draw functions instead of at the call sites
         Context->Draw(vertexCount, startVertexLocation);
     }
 
-    void CRenderStateManager::DrawIndexed(U32 indexCount, U32 startIndexLocation, U32 baseVertexLocation)
+    void CRenderStateManager::DrawIndexed(U32 indexCount, U32 startIndexLocation, U32 baseVertexLocation) const
     {
         Context->DrawIndexed(indexCount, startIndexLocation, baseVertexLocation);
     }
 
-    void CRenderStateManager::DrawInstanced(U32 vertexCountPerInstance, U32 numberOfInstances, U32 startVertexLocation, U32 startInstanceLocation)
+    void CRenderStateManager::DrawInstanced(U32 vertexCountPerInstance, U32 numberOfInstances, U32 startVertexLocation, U32 startInstanceLocation) const
     {
         Context->DrawInstanced(vertexCountPerInstance, numberOfInstances, startVertexLocation, startInstanceLocation);
     }
 
-    void CRenderStateManager::DrawIndexedInstanced(U32 indexCountPerInstance, U32 instanceCount, U32 startIndexLocation, U32 baseVertexLocation, U32 startInstanceLocation)
+    void CRenderStateManager::DrawIndexedInstanced(U32 indexCountPerInstance, U32 instanceCount, U32 startIndexLocation, U32 baseVertexLocation, U32 startInstanceLocation) const
     {
         Context->DrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
     }
@@ -559,6 +603,20 @@ namespace Havtorn
         Context->ClearState();
     }
 
+    void CRenderStateManager::ClearShaderResources() const
+    {
+        ID3D11ShaderResourceView* nullView = NULL;
+        Context->PSSetShaderResources(0, 1, &nullView);
+        Context->PSSetShaderResources(1, 1, &nullView);
+        Context->PSSetShaderResources(2, 1, &nullView);
+        Context->PSSetShaderResources(3, 1, &nullView);
+        Context->PSSetShaderResources(4, 1, &nullView);
+        Context->PSSetShaderResources(8, 1, &nullView);
+        Context->PSSetShaderResources(9, 1, &nullView);
+        Context->PSSetShaderResources(21, 1, &nullView);
+        Context->PSSetShaderResources(22, 1, &nullView);
+    }
+
     void CRenderStateManager::Release()
     {
         for (U8 i = 0; i < STATIC_U8(EBlendStates::Count); ++i)
@@ -574,6 +632,104 @@ namespace Havtorn
         for (U8 i = 0; i < STATIC_U8(ERasterizerStates::Count); ++i)
         {
             RasterizerStates[i]->Release();
+        }
+    }
+
+    void CRenderStateManager::OnShaderSourceChange(const std::string& filePath)
+    {
+        std::lock_guard<std::mutex> lock(ShaderRecompileMutex);
+        QueuedShaderRecompiles.push(filePath);
+    }
+
+    class UShaderIncludeHandler : public ID3DInclude
+    {
+        HRESULT Open(D3D_INCLUDE_TYPE /*includeType*/, LPCSTR pFileName, LPCVOID /*pParentData*/, LPCVOID* ppData, UINT* pBytes) override
+        {
+            // NW: Only include files in the Shaders/Includes folder in shaders.
+            const std::string shaderIncludeSource = UGeneralUtils::ExtractParentDirectoryFromPath(UFileSystem::GetWorkingPath()) + "Source/Engine/Graphics/Shaders/Includes/";
+            const std::string inputFileName = UGeneralUtils::ExtractFileNameFromPath(pFileName);
+            const std::string filePath = shaderIncludeSource + inputFileName;
+
+            if (!UFileSystem::Exists(filePath))
+                return E_FAIL;
+
+            U32 fileSize = STATIC_U32(UFileSystem::GetFileSize(filePath));
+            char* data = new char[fileSize];
+            UFileSystem::Deserialize(filePath, data, fileSize);
+
+            *pBytes = fileSize;
+            *ppData = data;
+            
+            return S_OK;
+        }
+
+        HRESULT Close(LPCVOID pData) override
+        {
+            delete[] pData;
+            return S_OK;
+        }
+    };
+
+    void CRenderStateManager::FlushShaderChanges()
+    {
+        // NW: Use DXC.exe for shader models 6 and above 
+        // https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-part1
+
+        std::lock_guard<std::mutex> lock(ShaderRecompileMutex);
+        while (!QueuedShaderRecompiles.empty())
+        {
+            const std::string recompiledSourceFile = QueuedShaderRecompiles.front();
+
+            const SShaderInitData initData = ShaderInitData.at(recompiledSourceFile);
+            const std::wstring wideSourceFilePath = { recompiledSourceFile.begin(), recompiledSourceFile.end() };
+            const std::wstring wideOutputFilePath = { initData.OutputFileName.begin(), initData.OutputFileName.end() };
+
+            ID3DBlob* blob = nullptr;
+            ID3DBlob* errorMessages = nullptr;
+
+            std::string shaderModel;
+            switch (initData.ShaderType)
+            {
+            case EShaderType::Pixel:
+                shaderModel = "ps_5_0";
+                break;
+            case EShaderType::Geometry:
+                shaderModel = "gs_5_0";
+                break;
+            case EShaderType::Compute:
+                shaderModel = "cs_5_0";
+                break;
+            case EShaderType::Vertex:
+                [[fallthrough]];
+            default:
+                shaderModel = "vs_5_0";
+            }
+
+            UShaderIncludeHandler includeHandler;
+            const HRESULT compileResult = D3DCompileFromFile(wideSourceFilePath.c_str(), nullptr, &includeHandler, "main", shaderModel.c_str(), 0, 0, &blob, &errorMessages);
+            if (compileResult != S_OK)
+            {
+                HV_LOG_ERROR("CRenderStateManager::OnShaderSourceChange: Shader %s could not be recompiled: %s", recompiledSourceFile.c_str(), (char*)errorMessages->GetBufferPointer());
+                QueuedShaderRecompiles.pop();
+                errorMessages->Release();
+                break;
+            }
+
+            const HRESULT rewriteResult = D3DWriteBlobToFile(blob, wideOutputFilePath.c_str(), TRUE);
+            if (rewriteResult != S_OK)
+            {
+                HV_LOG_ERROR("CRenderStateManager::OnShaderSourceChange: Shader %s was successfully recompiled, but output file could not be overwritten.", recompiledSourceFile.c_str());
+                QueuedShaderRecompiles.pop();
+                blob->Release();
+                break;
+            }
+
+            blob->Release();
+            AddShader(initData.OutputFileName, initData.ShaderIndex, initData.ShaderType);
+
+            HV_LOG_INFO("Shader source file %s recompiled.", recompiledSourceFile.c_str());
+
+            QueuedShaderRecompiles.pop();
         }
     }
 

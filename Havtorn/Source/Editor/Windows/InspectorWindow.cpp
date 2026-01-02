@@ -235,15 +235,8 @@ namespace Havtorn
 	{
 		std::vector<std::string> assetNames = {};
 
-		if (result.AssetReferences != nullptr)
-		{
-			for (const SAssetReference& ref : *result.AssetReferences)
-				assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(ref.FilePath));
-		}
-		if (result.AssetReference != nullptr)
-		{
-			assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(result.AssetReference->FilePath));
-		}
+		for (const SAssetReference* ref : result.AssetReferences)
+			assetNames.push_back(UGeneralUtils::ExtractFileBaseNameFromPath(ref->FilePath));
 
 		for (U8 index = 0; index < static_cast<U8>(assetNames.size()); index++)
 		{
@@ -263,16 +256,7 @@ namespace Havtorn
 			const std::string modalName = "Select " + GetAssetTypeName(result.AssetType) + " Asset";
 			//SAssetPickResult assetPickResult = GUI::AssetPickerFilter(assetName.c_str(), modalName.c_str(), (intptr_t)assetRep->TextureRef.GetShaderResourceView(), "Assets", columnCount, Manager->GetAssetFilteredInspectFunction(), result.AssetType);
 			SAssetPickResult assetPickResult = GUI::AssetPickerDropdownFilter(assetName.c_str(), GetAssetTypeDetailName(result.AssetType).c_str(), (intptr_t)assetRep->TextureRef.GetShaderResourceView(), Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::GetFromSource), "Assets", columnCount, Manager->GetAssetFilteredInspectFunction(), result.AssetType);
-
-			SAssetReference* currentReference = nullptr;
-			if (result.AssetReferences != nullptr)
-			{
-				currentReference = &(*result.AssetReferences)[AssetPickedIndex];
-			}
-			else if (result.AssetReference != nullptr)
-			{
-				currentReference = result.AssetReference;
-			}
+			SAssetReference* currentReference = (result.AssetReferences)[AssetPickedIndex];
 
 			if (assetPickResult.State == EAssetPickerState::Active)
 				Manager->SetIsModalOpen(true);
@@ -304,23 +288,12 @@ namespace Havtorn
 				{
 					std::string newAssetPath = UGeneralUtils::ConvertToPlatformAgnosticPath(pickedAsset->DirectoryEntry.path().string());
 
-					if (result.AssetReferences != nullptr)
-					{
-						std::vector<std::string> paths = SAssetReference::GetPaths(*result.AssetReferences);
+					std::vector<std::string> paths = SAssetReference::GetPaths(result.AssetReferences);
 
-						if (paths[AssetPickedIndex] != newAssetPath)
-							GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(paths[AssetPickedIndex]), result.ComponentViewed->Owner.GUID);
+					if (paths[AssetPickedIndex] != newAssetPath)
+						GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(paths[AssetPickedIndex]), result.ComponentViewed->Owner.GUID);
 
-						paths[AssetPickedIndex] = newAssetPath;
-						*result.AssetReferences = SAssetReference::MakeVectorFromPaths(paths);
-					}
-					if (result.AssetReference != nullptr)
-					{
-						if (result.AssetReference->FilePath != newAssetPath)
-							GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(result.AssetReference->FilePath), result.ComponentViewed->Owner.GUID);
-
-						*result.AssetReference = SAssetReference(newAssetPath);
-					}
+					*(result.AssetReferences)[AssetPickedIndex] = SAssetReference(newAssetPath);
 				}
 
 				AssetPickedIndex = 0;

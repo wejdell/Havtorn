@@ -21,7 +21,7 @@
 // 
 // BeginPlay
 // Tick
-// EndPlay
+// StopPlay
 //
 
 namespace Havtorn

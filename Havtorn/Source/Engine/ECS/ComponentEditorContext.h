@@ -18,12 +18,11 @@ namespace Havtorn
 		OpenAssetTool,
 	};
 
-	struct ENGINE_API SComponentViewResult
+	struct SComponentViewResult
 	{
 		EComponentViewResultLabel Label = EComponentViewResultLabel::PassThrough;
 		SComponent* ComponentViewed = nullptr;
-		SAssetReference* AssetReference = nullptr;
-		std::vector<SAssetReference>* AssetReferences = nullptr;
+		std::vector<SAssetReference*> AssetReferences;
 		EAssetType AssetType = EAssetType::None;
 	};
 

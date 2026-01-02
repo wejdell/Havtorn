@@ -17,9 +17,6 @@ namespace Havtorn
 	{
 	}
 
-	static bool once = false;
-	static int nodeNameIndex = 0;
-
 	void CAnimatorGraphSystem::Update(std::vector<Ptr<CScene>>& scenes)
 	{
 		const F32 deltaTime = GTime::Dt();
@@ -36,53 +33,63 @@ namespace Havtorn
 					continue;
 
 				CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
-				SSkeletalMeshAsset* meshAsset = assetRegistry->RequestAssetData<SSkeletalMeshAsset>(mesh->AssetReference, component->Owner.GUID);
-				SSkeletalAnimationAsset* currentAnimation = assetRegistry->RequestAssetData<SSkeletalAnimationAsset>(component->AssetReferences[component->CurrentAnimationIndex], component->Owner.GUID);
+				const SSkeletalMeshAsset* meshAsset = assetRegistry->RequestAssetData<SSkeletalMeshAsset>(mesh->AssetReference, component->Owner.GUID);
 
-				if (component->IsPlaying)
-					component->CurrentAnimationTime = fmodf(component->CurrentAnimationTime += deltaTime, currentAnimation->DurationInTicks / STATIC_F32(currentAnimation->TickRate));
-
-				// Ticks == Frames
-				F32 ticksPerSecond = STATIC_F32(currentAnimation->TickRate);
-				ticksPerSecond = (ticksPerSecond != 0) ? ticksPerSecond : 24.0f;
-				F32 timeInTicks = component->CurrentAnimationTime * ticksPerSecond;
-				F32 duration = STATIC_F32(currentAnimation->DurationInTicks);
-				F32 animationTime = fmodf(timeInTicks, duration);
-
-				// VERSION 2
 				component->Bones.clear();
+				F32 importScale = 1.0f;
 
-				component->CurrentAnimationIndex = 0;
-				std::vector<SSkeletalPosedNode> walkPosedNodes = {};
-				ReadAnimationLocalPose(currentAnimation, meshAsset, animationTime, meshAsset->Nodes[0], walkPosedNodes);
-
-				//component->CurrentAnimationIndex = 0;
-				//currentAnimation = assetRegistry->RequestAssetData<SSkeletalAnimationAsset>(component->AssetReferences[component->CurrentAnimationIndex], component->Owner.GUID);
-				std::vector<SSkeletalPosedNode> runPosedNodes = {};
-				ReadAnimationLocalPose(currentAnimation, meshAsset, animationTime, meshAsset->Nodes[0], runPosedNodes);
-
-				component->CurrentAnimationIndex = 0;
-
-				std::vector<SSkeletalPosedNode> blendPosedNodes = {};
-				blendPosedNodes.resize(meshAsset->Nodes.size());
-				for (U32 i = 0; i < blendPosedNodes.size(); i++)
+				// Read local poses of playing animations
+				for (SSkeletalAnimationPlayData& playData : component->PlayData)
 				{
-					auto& walk = walkPosedNodes[i];
-					auto& run = runPosedNodes[i];
-					blendPosedNodes[i].Name = meshAsset->Nodes[i].Name;
-					blendPosedNodes[i].LocalTransform = SMatrix::Interpolate(walk.LocalTransform, run.LocalTransform, component->BlendValue);
+					if (!UMath::IsWithin(playData.AssetReferenceIndex, 0u, STATIC_U32(component->AssetReferences.size())))
+						continue;
+
+					const SSkeletalAnimationAsset* animationAsset = assetRegistry->RequestAssetData<SSkeletalAnimationAsset>(component->AssetReferences[playData.AssetReferenceIndex], component->Owner.GUID);
+					if (animationAsset == nullptr)
+						continue;
+
+					importScale = animationAsset->ImportScale;
+
+					playData.CurrentAnimationTime = fmodf(playData.CurrentAnimationTime += deltaTime, animationAsset->DurationInTicks / STATIC_F32(animationAsset->TickRate));
+
+					const F32 tickRate = animationAsset->TickRate != 0 ? STATIC_F32(animationAsset->TickRate): 24.0f;
+					const F32 animationTime = fmodf(playData.CurrentAnimationTime * tickRate, STATIC_F32(animationAsset->DurationInTicks));
+
+					playData.LocalPosedNodes = {};
+					ReadAnimationLocalPose(animationAsset, meshAsset, animationTime, meshAsset->Nodes[0], playData.LocalPosedNodes);
+				}
+				
+				std::vector<SSkeletalPosedNode> posedNodes = {};
+				posedNodes.resize(meshAsset->Nodes.size());
+				
+				// Blend animations
+				if (component->PlayData.size() > 1)
+				{
+					// TODO.NW: Barycentric interpolation for more than 2 animations
+
+					for (U32 i = 0; i < posedNodes.size(); i++)
+					{
+						const SSkeletalPosedNode& posedNodeA = component->PlayData[0].LocalPosedNodes[i];
+						const SSkeletalPosedNode& posedNodeB = component->PlayData[1].LocalPosedNodes[i];
+
+						posedNodes[i].Name = meshAsset->Nodes[i].Name;
+						posedNodes[i].LocalTransform = SMatrix::Interpolate(posedNodeA.LocalTransform, posedNodeB.LocalTransform, component->BlendValue);
+					}
+				}
+				else if (component->PlayData.size() > 0)
+				{
+					posedNodes = component->PlayData[0].LocalPosedNodes;
 				}
 
-				SMatrix root;
-				root.SetScale(currentAnimation->ImportScale);
-				ApplyLocalPoseToHierarchy(meshAsset, blendPosedNodes, meshAsset->Nodes[0], root);
+				// Apply local pose and inverse bind transform
+				SMatrix root = SMatrix::Identity;
+				root.SetScale(importScale);
+				ApplyLocalPoseToHierarchy(meshAsset, posedNodes, meshAsset->Nodes[0], root);
 
-				component->Bones.resize(meshAsset->BindPoseBones.size());
-
-				//Apply Inverse Bind Transform
-				for (U32 i = 0; i < blendPosedNodes.size(); i++)
+				component->Bones.resize(meshAsset->BindPoseBones.size(), SMatrix::Identity);
+				for (U32 i = 0; i < posedNodes.size(); i++)
 				{
-					SSkeletalPosedNode& posedNode = blendPosedNodes[i];
+					SSkeletalPosedNode& posedNode = posedNodes[i];
 					I32 boneIndex = -1;
 				
 					if (auto it = std::ranges::find(meshAsset->BindPoseBones, posedNode.Name, &SSkeletalMeshBone::Name); it != meshAsset->BindPoseBones.end())
@@ -91,11 +98,9 @@ namespace Havtorn
 					if (boneIndex < 0)
 						continue;
 
-					SSkeletalMeshBone& bone = meshAsset->BindPoseBones[boneIndex];
+					const SSkeletalMeshBone& bone = meshAsset->BindPoseBones[boneIndex];
 					component->Bones[boneIndex] = bone.InverseBindPoseTransform * posedNode.GlobalTransform;
 				}
-
-				once = true;
 			}
 		}
 	}
@@ -302,20 +307,19 @@ namespace Havtorn
 	{
 		SMatrix nodeTransform = fromNode.NodeTransform;
 		// TODO.NW: Streamline this so we can read the local pose of different animations at the same time, then combine them at the end
-		std::string nodeName = fromNode.Name.AsString();
+		const std::string nodeName = fromNode.Name.AsString();
 
-		SSkeletalPosedNode posedNode = SSkeletalPosedNode{};
-		posedNodes.emplace_back(posedNode);
+		posedNodes.emplace_back(SSkeletalPosedNode{});
 		posedNodes.back().Name = fromNode.Name;
 
-		auto& tracks = animation->BoneAnimationTracks;
+		const std::vector<SBoneAnimationTrack>& tracks = animation->BoneAnimationTracks;
 		if (auto it = std::ranges::find(tracks, nodeName, &SBoneAnimationTrack::TrackName); it != tracks.end())
 		{
 			const SBoneAnimationTrack& track = *it;
 
-			SVector scaling = CalcInterpolatedScaling(animationTime, track);
-			SQuaternion rotation = CalcInterpolatedRotation(animationTime, track);
-			SVector translation = CalcInterpolatedPosition(animationTime, track);
+			const SVector scaling = CalcInterpolatedScaling(animationTime, track);
+			const SQuaternion rotation = CalcInterpolatedRotation(animationTime, track);
+			const SVector translation = CalcInterpolatedPosition(animationTime, track);
 
 			SMatrix::Recompose(translation, rotation, scaling, nodeTransform);
 			posedNodes.back().LocalTransform = nodeTransform;
@@ -325,42 +329,9 @@ namespace Havtorn
 			posedNodes.back().LocalTransform = nodeTransform;
 		}
 
-		for (auto childIndex : fromNode.ChildIndices)
+		for (const U32 childIndex : fromNode.ChildIndices)
 		{
 			ReadAnimationLocalPose(animation, mesh, animationTime, mesh->Nodes[childIndex], posedNodes);
-		}
-	}
-
-	std::vector<SSkeletalPosedNode> CAnimatorGraphSystem::EvaluateLocalPose(const SSkeletalAnimationAsset* animation, const F32 animationTime)
-	{
-		std::vector<SSkeletalPosedNode> posedNodes;
-		std::vector<SMatrix> localPose;
-		for (const SBoneAnimationTrack& track : animation->BoneAnimationTracks)
-		{
-			//HV_LOG_WARN("bone :%s", track.TrackName.c_str());
-			SVector scaling = CalcInterpolatedScaling(animationTime, track);
-			SQuaternion rotation = CalcInterpolatedRotation(animationTime, track);
-			SVector translation = CalcInterpolatedPosition(animationTime, track);
-
-			SMatrix currentLocalPose = SMatrix::Identity;
-			SMatrix::Recompose(translation, rotation, scaling, currentLocalPose);
-			localPose.emplace_back(currentLocalPose);
-
-
-			SSkeletalPosedNode pBone;
-			pBone.Name = track.TrackName;
-			pBone.LocalTransform = currentLocalPose;
-			posedNodes.emplace_back(pBone);
-		}
-
-		return posedNodes;
-	}
-	void CAnimatorGraphSystem::TestWalkThrough(const SSkeletalMeshAsset* mesh, const SSkeletalMeshNode& node, const SMatrix& parentTransform)
-	{
-		SMatrix matrix = node.NodeTransform * parentTransform;
-		for (U32 i = 0; i < node.ChildIndices.size(); i++)
-		{
-			TestWalkThrough(mesh, mesh->Nodes[i], matrix);
 		}
 	}
 }
