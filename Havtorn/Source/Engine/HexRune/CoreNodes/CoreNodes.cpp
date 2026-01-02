@@ -57,7 +57,7 @@ namespace Havtorn
 		I8 SBranchNode::OnExecute()
 		{
 			bool condition = false;
-			GetDataOnPin(EPinDirection::Input, 0, condition);
+			GetDataOnPin(EPinDirection::Input, 1, condition);
 
 			return condition ? 0 : 1;
 		}
