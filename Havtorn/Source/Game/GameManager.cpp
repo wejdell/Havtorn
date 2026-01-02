@@ -94,6 +94,7 @@ namespace Havtorn
 
 	void CGameManager::OnEndPlay(std::vector<Ptr<CScene>>& /*scenes*/)
 	{
+		World->BlockPhysicsSystem(this);
 		World->UnrequestSystems(this);
 	}
 
