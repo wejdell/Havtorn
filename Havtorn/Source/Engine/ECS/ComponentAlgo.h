@@ -8,7 +8,7 @@ namespace Havtorn
 {
 	struct SCameraData
 	{
-		bool IsValid() 
+		bool IsValid() const
 		{
 			return CameraComponent != nullptr && TransformComponent != nullptr;
 		}

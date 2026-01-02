@@ -169,7 +169,8 @@ class TemplateCreatorUtil:
             FileCreatorResources.print_error("Incompatible file")
             return ("", "")
         
-        # License should use current year
+        # Limitation: License should use current year
+        # TODO: handle year as a number 20XX
         havtornLicense = FileCreatorResources.get_havtorn_license()
         currentYear = datetime.now().year
         yearSymbol = "[[year]]"
@@ -180,7 +181,6 @@ class TemplateCreatorUtil:
                 fileSingleString = file.read()
                 for y in range(2020, currentYear + 1):
                     licenseAdjustedForYear = havtornLicense.replace(yearSymbol, str(y))
-                    print(licenseAdjustedForYear)
                     fileSingleString = fileSingleString.replace(licenseAdjustedForYear, "")
 
         except Exception as e:
@@ -190,14 +190,14 @@ class TemplateCreatorUtil:
                 print(e)
             return ("", "")
         
-        return (extension, fileSingleString)
+        return (f'.{extension}', fileSingleString)
         
     @staticmethod
     def display_preview(name:str, description:str, templates:dict[str,str]):
         print(f"----- Preview -----")
         print(f"{name} - {description}")
         for key in templates:
-            print(f"--- .{key} ---")
+            print(f"--- {key} ---")
             print(f"{templates[key]}", end = "")
         return
     
@@ -218,3 +218,5 @@ class TemplateCreatorUtil:
 if __name__ == "__main__":
     TemplateCreatorUtil.print_templates(TemplateCreatorUtil.get_default_file_templates_path())
     TemplateCreatorUtil.create_and_add_from_input(TemplateCreatorUtil.get_default_file_templates_path())
+    print("Closing ...")
+    time.sleep(0.5)

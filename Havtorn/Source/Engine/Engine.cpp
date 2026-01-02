@@ -65,7 +65,7 @@ namespace Havtorn
 		ENGINE_ERROR_BOOL_MESSAGE(Framework->Init(platformManager), "Framework could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(RenderManager->Init(Framework, platformManager), "RenderManager could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(AssetRegistry->Init(RenderManager), "Asset Registry could not be initialized.");
-		ENGINE_ERROR_BOOL_MESSAGE(World->Init(RenderManager), "World could not be initialized.");
+		ENGINE_ERROR_BOOL_MESSAGE(World->Init(platformManager, RenderManager), "World could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(ThreadManager->Init(RenderManager), "Thread Manager could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(FileWatcher->Init(ThreadManager), "File Watcher could not be initialized.");
 

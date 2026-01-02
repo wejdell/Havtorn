@@ -309,6 +309,12 @@ add_dependencies(GUI Core Platform)
 
 # ==================== ENGINE ====================
 set(ENGINE_FILES
+	Engine/ECS/Systems/UISystem.cpp
+	Engine/ECS/Systems/UISystem.h
+	Engine/ECS/ComponentEditorContexts/UICanvasComponentEditorContext.cpp
+	Engine/ECS/ComponentEditorContexts/UICanvasComponentEditorContext.h
+	Engine/ECS/Components/UICanvasComponent.cpp
+	Engine/ECS/Components/UICanvasComponent.h
     ${ENGINE_FOLDER}Application/EngineProcess.cpp
     ${ENGINE_FOLDER}Application/EngineProcess.h
     ${ENGINE_FOLDER}Assets/AssetRegistry.cpp
@@ -526,6 +532,7 @@ set(VERTEX_SHADERS
     ${SHADER_FOLDER}SpriteInstancedEditor_VS.hlsl
 )
 set(GEOMETRY_SHADERS
+	Engine/Graphics/Shaders/LineScreenSpace_GS.hlsl
     ${SHADER_FOLDER}Line_GS.hlsl
     ${SHADER_FOLDER}SpriteScreenSpace_GS.hlsl
     ${SHADER_FOLDER}SpriteWorldSpace_GS.hlsl
@@ -600,10 +607,10 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SHADER_INCLUDES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${HLSL_SHADER_FILES})
 target_link_libraries(Engine PRIVATE
-    $<$<CONFIG:EditorDebug>:assimp-vc143-mtd DirectXTexd freetyped box2dd PhysX/PhysX_64d PhysX/PhysXCommon_64d PhysX/PhysXExtensions_static_64d PhysX/PhysXFoundation_64d PhysX/PhysXPvdSDK_static_64d PhysX/PhysXCharacterKinematic_static_64d>
-    $<$<CONFIG:GameDebug>:assimp-vc143-mtd DirectXTexd freetyped box2dd PhysX/PhysX_64d PhysX/PhysXCommon_64d PhysX/PhysXExtensions_static_64d PhysX/PhysXFoundation_64d PhysX/PhysXPvdSDK_static_64d PhysX/PhysXCharacterKinematic_static_64d>
-    $<$<CONFIG:EditorDevelopment>:assimp-vc143-mt DirectXTex freetype box2d PhysX/PhysX_64 PhysX/PhysXCommon_64 PhysX/PhysXExtensions_static_64 PhysX/PhysXFoundation_64 PhysX/PhysXPvdSDK_static_64 PhysX/PhysXCharacterKinematic_static_64>
-    $<$<CONFIG:GameRelease>:assimp-vc143-mt DirectXTex freetype box2d PhysX/PhysX_64 PhysX/PhysXCommon_64 PhysX/PhysXExtensions_static_64 PhysX/PhysXFoundation_64 PhysX/PhysXPvdSDK_static_64 PhysX/PhysXCharacterKinematic_static_64>
+    $<$<CONFIG:EditorDebug>:assimp-vc143-mtd DirectXTexd d3dcompiler freetyped box2dd PhysX/PhysX_64d PhysX/PhysXCommon_64d PhysX/PhysXExtensions_static_64d PhysX/PhysXFoundation_64d PhysX/PhysXPvdSDK_static_64d PhysX/PhysXCharacterKinematic_static_64d>
+    $<$<CONFIG:GameDebug>:assimp-vc143-mtd DirectXTexd d3dcompiler freetyped box2dd PhysX/PhysX_64d PhysX/PhysXCommon_64d PhysX/PhysXExtensions_static_64d PhysX/PhysXFoundation_64d PhysX/PhysXPvdSDK_static_64d PhysX/PhysXCharacterKinematic_static_64d>
+    $<$<CONFIG:EditorDevelopment>:assimp-vc143-mt DirectXTex d3dcompiler freetype box2d PhysX/PhysX_64 PhysX/PhysXCommon_64 PhysX/PhysXExtensions_static_64 PhysX/PhysXFoundation_64 PhysX/PhysXPvdSDK_static_64 PhysX/PhysXCharacterKinematic_static_64>
+    $<$<CONFIG:GameRelease>:assimp-vc143-mt DirectXTex d3dcompiler freetype box2d PhysX/PhysX_64 PhysX/PhysXCommon_64 PhysX/PhysXExtensions_static_64 PhysX/PhysXFoundation_64 PhysX/PhysXPvdSDK_static_64 PhysX/PhysXCharacterKinematic_static_64>
     Core
     Platform
     GUI

@@ -138,6 +138,8 @@ namespace Havtorn
 	{
 		SMatrix LocalTransform;
 		SMatrix GlobalTransform;
+
+		// TODO.NW: Probably want to just hash the name assuming this doesn't need to be serialized. Harder to debug though
 		CHavtornStaticString<255> Name;
 	};
 

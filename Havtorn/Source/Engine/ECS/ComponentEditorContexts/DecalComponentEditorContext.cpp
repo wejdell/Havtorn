@@ -26,7 +26,7 @@ namespace Havtorn
 		GUI::Checkbox("Render Material", decalComp->ShouldRenderMaterial);
 		GUI::Checkbox("Render Normal", decalComp->ShouldRenderNormal);
 
-		return { EComponentViewResultLabel::InspectAssetComponent, decalComp, nullptr, &decalComp->AssetReferences, EAssetType::Texture };
+		return { EComponentViewResultLabel::InspectAssetComponent, decalComp, SAssetReference::ConvertToPointers(decalComp->AssetReferences), EAssetType::Texture};
 	}
 
 	bool SDecalComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const

@@ -159,7 +159,7 @@ class FileCreatorUtil:
 
             try:
                 with open(fileToAdd, "x") as file:
-                    file.write(self.havtornLicense + "\n")
+                    file.write(self.havtornLicense)
                     
                     if template in self.templatesMap:
                         for fileTypes in self.templatesMap[template][TemplateCreatorUtil.key_file_types()]:
@@ -169,6 +169,9 @@ class FileCreatorUtil:
                             fileName = fileName.split('.')[0]
                             fileTemplate:str = fileTypes[TemplateCreatorUtil.key_template_content()]
                             fileTemplate = fileTemplate.replace(TemplateCreatorUtil.value_replace(), fileName)
+                            first2Chars = fileTemplate[0:1]
+                            if first2Chars is not "\n":
+                                fileTemplate = "\n" + fileTemplate
                             file.write(fileTemplate)
 
                     print(f'> File "{fileToAdd}" created')
@@ -246,7 +249,7 @@ class FileCreatorUtil:
         fileToAddSplit = HavtornFolderUtil.try_append_nomenclature_suffix(self.mainFolder, fileToAddSplit)
 
         for fileType in self.templatesMap[template][TemplateCreatorUtil.key_file_types()]:
-            pendingAddition = (self.mainFolder, template,  HavtornFolderUtil.FOLDER_PATHS[self.mainFolder] + fileToAddSplit + "." + fileType[TemplateCreatorUtil.key_extension()])                        
+            pendingAddition = (self.mainFolder, template,  HavtornFolderUtil.FOLDER_PATHS[self.mainFolder] + fileToAddSplit + fileType[TemplateCreatorUtil.key_extension()])                        
             if pendingAddition in self.filesToAdd:
                 FileCreatorResources.print_error(f"trying to add duplicate {fileToAdd}")
                 continue

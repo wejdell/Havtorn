@@ -475,6 +475,41 @@ namespace Havtorn
 						RenderManager->AddSpriteToScreenSpaceInstancedRenderList(spriteComp->AssetReference.UID, transform2DComp, spriteComp, cameraEntity.GUID);
 					}
 				}
+
+				for (const SUICanvasComponent* uiCanvasComp : scene->GetComponents<SUICanvasComponent>())
+				{
+					if (!SComponent::IsValid(uiCanvasComp) || !uiCanvasComp->IsActive)
+						continue;
+
+					const STransform2DComponent* transform2DComp = scene->GetComponent<STransform2DComponent>(uiCanvasComp);
+					if (SComponent::IsValid(transform2DComp))
+					{
+						for (const SUIElement& element : uiCanvasComp->Elements)
+						{
+							if (element.StateAssetReferences.size() != STATIC_U64(EUIElementState::Count))
+								continue;
+
+							const SAssetReference& assetReference = element.StateAssetReferences[STATIC_U8(element.State)];
+							if (!assetReference.IsValid())
+								continue;
+
+							STextureAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(assetReference, uiCanvasComp->Owner.GUID);
+							if (asset == nullptr)
+								continue;
+
+							if (!RenderManager->IsSpriteInScreenSpaceInstancedRenderList(assetReference.UID, cameraEntity.GUID))
+							{
+								SRenderCommand command;
+								command.Type = ERenderCommandType::ScreenSpaceUISprite;
+								command.U32s.push_back(assetReference.UID);
+								command.RenderTextures.push_back(asset->RenderTexture);
+								RenderManager->PushRenderCommand(command, cameraEntity.GUID);
+							}
+
+							RenderManager->AddSpriteToScreenSpaceInstancedRenderList(assetReference.UID, transform2DComp, element, cameraEntity.GUID);
+						}
+					}
+				}
 			}
 
 			// NW: Unique commands that are added once per active camera - automatically sorted into heap

@@ -187,6 +187,7 @@ namespace Havtorn
 		void OnToggleFullscreen(const SInputActionPayload payload);
 		void OnCopyEvent(const SInputActionPayload payload);
 		void OnDragCopyEvent(const SInputActionPayload payload);
+		void OnPlayStateEvent(const SInputActionPayload payload);
 
 		void OnResolutionChanged(SVector2<U16> newResolution);
 		void OnBeginPlay(std::vector<Ptr<CScene>>& scenes);
