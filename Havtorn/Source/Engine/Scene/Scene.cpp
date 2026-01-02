@@ -310,8 +310,8 @@ namespace Havtorn
 		clockPhysics->ShapeLocalExtents = SVector(0.6f, 1.9f, 0.3f);
 		clockPhysics->ShapeLocalOffset = SVector(0.0f, 0.95f, 0.0f);
 
-		GEngine::GetWorld()->Initialize3DPhysicsData(pendulum);
-		//GEngine::GetWorld()->Initialize3DPhysicsData(pendulum);
+		
+		
 		// === !Pendulum ===
 
 		// === Bed ===
@@ -336,8 +336,7 @@ namespace Havtorn
 		bedPhysics->ShapeLocalExtents = SVector(1.8f, 0.7f, 2.5f);
 		bedPhysics->ShapeLocalOffset = SVector(0.0f, bedPhysics->ShapeLocalExtents.Y * 0.5f, -bedPhysics->ShapeLocalExtents.Z * 0.5f);
 
-		GEngine::GetWorld()->Initialize3DPhysicsData(bed);
-		//GEngine::GetWorld()->Initialize3DPhysicsData(bed);
+		
 		// === !Bed ===
 
 		// === Lamp ===
@@ -374,8 +373,7 @@ namespace Havtorn
 		controllerComponent->ControllerType = EPhysics3DControllerType::Capsule;
 		controllerComponent->ShapeLocalRadiusAndHeight = SVector2(0.25f, 1.0f);
 
-		GEngine::GetWorld()->Initialize3DPhysicsData(playerProxy);
-		//GEngine::GetWorld()->Initialize3DPhysicsData(playerProxy);
+		
 
 		// Skeletal Mesh
 		std::string meshPath = "Assets/Meshes/CH_Enemy_SK.hva";
@@ -417,8 +415,8 @@ namespace Havtorn
 		cratePhysics->ShapeType = EPhysics3DShapeType::Box;
 		cratePhysics->ShapeLocalExtents = SVector(0.5f);
 
-		GEngine::GetWorld()->Initialize3DPhysicsData(crate);
-		//GEngine::GetWorld()->Initialize3DPhysicsData(crate);
+		
+		
 		// === !Crate ===
 
 		// === Trigger ===
@@ -438,8 +436,8 @@ namespace Havtorn
 		triggerPhysics->ShapeLocalExtents = SVector(1.6f, 0.5f, 2.3f);
 		triggerPhysics->IsTrigger = true;
 
-		GEngine::GetWorld()->Initialize3DPhysicsData(trigger);
-		//GEngine::GetWorld()->Initialize3DPhysicsData(trigger);
+		
+		
 		// === !Trigger ===
 
 		// === Room ===
@@ -528,8 +526,8 @@ namespace Havtorn
 
 			roomTransform->Attach(transformComponent);
 
-			GEngine::GetWorld()->Initialize3DPhysicsData(entity);
-			//GEngine::GetWorld()->Initialize3DPhysicsData(entity);
+			
+			
 		}
 		// === !Floor/Walls ===
 
