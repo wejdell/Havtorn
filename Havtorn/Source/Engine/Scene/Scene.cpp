@@ -15,6 +15,8 @@
 
 namespace Havtorn
 {
+	U64 CScene::MainMenuEntityGUID = std::hash<std::string>{}("MainMenu");
+
 	CScene::CScene()
 	{}
 
@@ -309,9 +311,6 @@ namespace Havtorn
 		clockPhysics->ShapeType = EPhysics3DShapeType::Box;
 		clockPhysics->ShapeLocalExtents = SVector(0.6f, 1.9f, 0.3f);
 		clockPhysics->ShapeLocalOffset = SVector(0.0f, 0.95f, 0.0f);
-
-		
-		
 		// === !Pendulum ===
 
 		// === Bed ===
@@ -335,8 +334,6 @@ namespace Havtorn
 		bedPhysics->ShapeType = EPhysics3DShapeType::Box;
 		bedPhysics->ShapeLocalExtents = SVector(1.8f, 0.7f, 2.5f);
 		bedPhysics->ShapeLocalOffset = SVector(0.0f, bedPhysics->ShapeLocalExtents.Y * 0.5f, -bedPhysics->ShapeLocalExtents.Z * 0.5f);
-
-		
 		// === !Bed ===
 
 		// === Lamp ===
@@ -355,7 +352,7 @@ namespace Havtorn
 		AddComponentEditorContext(lamp, &SMaterialComponentEditorContext::Context);
 		// === !Lamp ===
 
-			// === Player Proxy ===
+		// === Player Proxy ===
 		const SEntity& playerProxy = AddEntity("Player");
 		if (!playerProxy.IsValid())
 			return false;
@@ -372,8 +369,6 @@ namespace Havtorn
 
 		controllerComponent->ControllerType = EPhysics3DControllerType::Capsule;
 		controllerComponent->ShapeLocalRadiusAndHeight = SVector2(0.25f, 1.0f);
-
-		
 
 		// Skeletal Mesh
 		std::string meshPath = "Assets/Meshes/CH_Enemy_SK.hva";
@@ -414,9 +409,6 @@ namespace Havtorn
 		cratePhysics->BodyType = EPhysics3DBodyType::Dynamic;
 		cratePhysics->ShapeType = EPhysics3DShapeType::Box;
 		cratePhysics->ShapeLocalExtents = SVector(0.5f);
-
-		
-		
 		// === !Crate ===
 
 		// === Trigger ===
@@ -435,9 +427,6 @@ namespace Havtorn
 		triggerPhysics->ShapeType = EPhysics3DShapeType::Box;
 		triggerPhysics->ShapeLocalExtents = SVector(1.6f, 0.5f, 2.3f);
 		triggerPhysics->IsTrigger = true;
-
-		
-		
 		// === !Trigger ===
 
 		// === Room ===
@@ -524,15 +513,12 @@ namespace Havtorn
 			physicsComponent->ShapeType = EPhysics3DShapeType::Box;
 			physicsComponent->ShapeLocalExtents = SVector(1.0f, 0.1f, 1.f);
 
-			roomTransform->Attach(transformComponent);
-
-			
-			
+			roomTransform->Attach(transformComponent);	
 		}
 		// === !Floor/Walls ===
 
 		// === Main Menu ===
-		const SEntity& mainMenuCanvas = AddEntity("Main Menu Canvas");
+		const SEntity& mainMenuCanvas = AddEntity("Main Menu Canvas", MainMenuEntityGUID);
 		const SEntity& settingsMenuCanvas = AddEntity("Settings Canvas");
 
 		if (!mainMenuCanvas.IsValid() || !settingsMenuCanvas.IsValid())
@@ -545,7 +531,6 @@ namespace Havtorn
 
 		SUICanvasComponent& mainMenuCanvasComponent = *AddComponent<SUICanvasComponent>(mainMenuCanvas);
 		AddComponentEditorContext(mainMenuCanvas, &SUICanvasComponentEditorContext::Context);
-		mainMenuCanvasComponent.IsActive = true;
 
 		const std::vector<SAssetReference> assets = { SAssetReference("Assets/Textures/UITextures.hva"), SAssetReference("Assets/Textures/UITextures.hva"), SAssetReference("Assets/Textures/UITextures.hva") };
 		const SVector2<F32> buttonScale = SVector2<F32>(0.3f, 0.1f);
@@ -559,6 +544,8 @@ namespace Havtorn
 		playButton.LocalScale = buttonScale;
 		playButton.CollisionRect = collisionRect;
 		playButton.UVRects = { SVector4(0.0f, 0.0f, 0.5f, 1 / 8.0f), SVector4(0.5f, 0.0f, 1.0f, 1 / 8.0f), SVector4(0.0f, 1 / 8.0f, 0.5f, 2 / 8.0f) };
+		playButton.BindingType = EUIBindingType::NamedFunction;
+		playButton.BoundData = std::hash<std::string>{}("CGameManager::PlayGame");
 		
 		SUIElement& settingsButton = mainMenuCanvasComponent.Elements.emplace_back();
 		settingsButton.StateAssetReferences = assets;
@@ -575,7 +562,7 @@ namespace Havtorn
 		quitButton.LocalScale = buttonScale;
 		quitButton.CollisionRect = collisionRect;
 		quitButton.UVRects = { SVector4(0.0f, 3 / 8.0f, 0.5f, 4 / 8.0f), SVector4(0.5f, 3 / 8.0f, 1.0f, 4 / 8.0f), SVector4(0.0f, 4 / 8.0f, 0.5f, 5 / 8.0f) };
-		quitButton.BindingType = EUIBindingType::GenericFunction;
+		quitButton.BindingType = EUIBindingType::NamedFunction;
 		quitButton.BoundData = std::hash<std::string>{}("CGameManager::QuitGame");
 		// === !Main Menu ===
 

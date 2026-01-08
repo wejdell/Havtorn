@@ -22,6 +22,8 @@ namespace Havtorn
 		ENGINE_API void BindEvaluateFunction(std::function<void()>& function, const std::string& classAndFunctionName);
 		ENGINE_API std::string GetFunctionName(const U64 boundFunctionHash);
 
+		ENGINE_API void ClearFocus();
+
 	private:
 		std::map<U64, std::function<void()>> FunctionMap;
 		std::map<U64, std::string> IdentifierMap;

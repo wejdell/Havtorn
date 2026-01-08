@@ -4,6 +4,7 @@
 #include "UICanvasComponentEditorContext.h"
 
 #include "ECS/Components/UICanvasComponent.h"
+#include "ECS/Components/Transform2DComponent.h"
 #include "ECS/Components/MetaDataComponent.h"
 #include "ECS/Systems/UISystem.h"
 #include "Scene/Scene.h"
@@ -24,6 +25,8 @@ namespace Havtorn
 			return SComponentViewResult();
 
 		SUICanvasComponent* canvasComponent = scene->GetComponent<SUICanvasComponent>(entityOwner);
+
+		GUI::Checkbox("Is Active", canvasComponent->IsActive);
 
 		GUI::TextDisabled("Elements");
 
@@ -73,8 +76,22 @@ namespace Havtorn
 				GUI::DragFloat("Local Rotation (Degrees)", element.LocalDegreesRoll, GUI::SliderSpeed);
 				GUI::DragFloat4("Collision Rect", element.CollisionRect, GUI::SliderSpeed);
 
+				if (STransform2DComponent* canvasTransform = scene->GetComponent<STransform2DComponent>(canvasComponent))
+				{
+					if (canvasComponent->IsActive)
+					{
+						const SVector2<F32> bottomLeft = canvasTransform->Position + element.LocalPosition + SVector2<F32>(element.CollisionRect.X, element.CollisionRect.Y);
+						const SVector2<F32> upperRight = canvasTransform->Position + element.LocalPosition + SVector2<F32>(element.CollisionRect.Z, element.CollisionRect.W);
+
+						GDebugDraw::AddLine2D(bottomLeft, SVector2<F32>(bottomLeft.X, upperRight.Y), SColor::Magenta, -1.0f, false, 0.01f);
+						GDebugDraw::AddLine2D(bottomLeft, SVector2<F32>(upperRight.X, bottomLeft.Y), SColor::Magenta, -1.0f, false, 0.01f);
+						GDebugDraw::AddLine2D(upperRight, SVector2<F32>(bottomLeft.X, upperRight.Y), SColor::Magenta, -1.0f, false, 0.01f);
+						GDebugDraw::AddLine2D(upperRight, SVector2<F32>(upperRight.X, bottomLeft.Y), SColor::Magenta, -1.0f, false, 0.01f);
+					}
+				}
+
 				element.BindingType = GUI::ComboEnum("Binding Type", element.BindingType);
-				if (element.BindingType == EUIBindingType::GenericFunction)
+				if (element.BindingType == EUIBindingType::NamedFunction)
 				{
 					std::string boundFunctionName = "Function Not Found";
 					if (CUISystem* uiSystem = GEngine::GetWorld()->GetSystem<CUISystem>())
@@ -123,8 +140,6 @@ namespace Havtorn
 				GUI::DragFloat4("Idle UVRect", element.UVRects[0], GUI::SliderSpeed);
 				GUI::DragFloat4("Hover UVRect", element.UVRects[1], GUI::SliderSpeed);
 				GUI::DragFloat4("Active UVRect", element.UVRects[2], GUI::SliderSpeed);
-
-				GDebugDraw::AddLine2D(SVector2<F32>(0.0f), SVector2<F32>(1.0f), SColor::Magenta, 1.0f, true, 0.1f);
 
 				GUI::TreePop();
 			}

@@ -53,6 +53,7 @@ namespace Havtorn
 		const F32 dt = GTime::Dt();
 		for (SDebugDrawData& data : LiveData)
 		{
+			// TODO.NW: Support 2D lines with their own passes? The vast majority will be 3D lines for a while, so the "IsScreenSpace" flag is probably ok for a bit.
 			ERenderCommandType commandType = (data.IgnoreDepth) ? ERenderCommandType::DebugShapeIgnoreDepth : ERenderCommandType::DebugShapeUseDepth;
 
 			SRenderCommand command;
@@ -63,6 +64,7 @@ namespace Havtorn
 			command.U16s.push_back(data.IndexCount);
 			command.U8s.push_back(data.VertexBufferIndex);
 			command.U8s.push_back(data.IndexBufferIndex);
+			command.Flags.push_back(data.IsScreenSpace);
 			RenderManager->PushRenderCommand(command, mainCamera.GUID);
 
 			data.LifeTime -= dt;
@@ -111,18 +113,11 @@ namespace Havtorn
 		if (start.IsEqual(end))
 			return;
 
-		CWorld* world = GEngine::GetWorld();
-		const SCameraData mainCameraData = UComponentAlgo::GetCameraData(world->GetMainCamera(), world->GetActiveScenes());
-		if (!mainCameraData.IsValid())
-			return;
-
 		std::vector<SDebugDrawData> newData = { SDebugDrawData(EVertexBufferPrimitives::Line, EDefaultIndexBuffers::Line) };
+		newData.back().IsScreenSpace = true;
 
-		SMatrix localMatrix = SMatrix::Identity;
-		TransformToFaceAndReach(start, end, localMatrix);
-		//SMatrix::Recompose(pyramidPos, lineTransform.GetEuler() + SVector(90.0f, 0.0f, 0.0f), scale, newData[0].TransformMatrix);
-		//newData[0].TransformMatrix = localMatrix * mainCameraData.TransformComponent->Transform.GetMatrix();
-		//newData[0].TransformMatrix.SetTranslation(newData[0].TransformMatrix.GetTranslation() + mainCameraData.TransformComponent->Transform.GetMatrix().GetTranslation());
+		TransformToFaceAndReach(start, end, newData[0].TransformMatrix);
+
 		TryAddShapes(color, lifeTimeSeconds, useLifeTime, thickness, ignoreDepth, newData);
 	}
 
@@ -326,13 +321,10 @@ namespace Havtorn
 
 	void GDebugDraw::TransformToFaceAndReach(const SVector2<F32>& start, const SVector2<F32>& end, SMatrix& transform)
 	{
-		const SVector up = SVector::Up; // SVector::Up: breaks up == direction.
-		const SVector2<F32> direction2D = (end - start).GetNormalized();
-		const SVector direction = SVector(direction2D.X, direction2D.Y, 0.0f);
-		const SVector scale = SVector(1.0f, 1.0f, start.Distance(end));
-		const SVector start3D = SVector(start.X, start.Y, 0.0f);
-		transform = SMatrix::Face(start3D, direction, up);
-		SMatrix::Recompose(start3D, transform.GetEuler(), scale, transform);
+		// TODO.NW: Figure out why the math leading to 2d lines is wrong. Lines along the diagonal end up too short, but most others work. It's like there's a max length to them
+		SMatrix lookAt = SMatrix::LookAtLH(SVector(start.X, start.Y), SVector(end.X, end.Y), SVector::Backward).FastInverse();
+		lookAt.SetScale(1.0f / start.Distance(end));
+		transform = lookAt;
 	}
 
 #if _DEBUG
@@ -417,6 +409,18 @@ namespace Havtorn
 		//LineFollowingAxis(90.0f, 0.5f, SVector(0.0f, 1.5f * cosTime, 1.5f * sinTime), SColor::Red, SColor::Red);
 		//LineFollowingAxis(90.0f, 0.5f, SVector(1.5f * cosTime, 0.0f, 1.5f * sinTime), SColor::Green, SColor::Green);
 		//LineFollowingAxis(90.0f, 0.5f, SVector(1.5f * sinTime, 1.5f * cosTime, 0.0f), SColor::Blue, SColor::Blue);
+
+		constexpr F32 min = 0.25f;
+		constexpr F32 max = 0.75f;
+		AddLine2D(SVector2<F32>(min, min), SVector2<F32>(max, max), SColor::Magenta, 1.0f, true);
+		AddLine2D(SVector2<F32>(max, min), SVector2<F32>(min, max), SColor::Teal, 1.0f, true);
+		AddLine2D(SVector2<F32>(0.0f, 0.5f), SVector2<F32>(1.0f, 0.5f), SColor::Green, 1.0f, true);
+		AddLine2D(SVector2<F32>(0.5f, 0.0f), SVector2<F32>(0.5f, 1.0f), SColor::Red, 1.0f, true);
+
+		AddLine2D(SVector2<F32>(min, max), SVector2<F32>(max, max), SColor::Yellow, 1.0f, true);
+		AddLine2D(SVector2<F32>(max, max), SVector2<F32>(max, min), SColor::Blue, 1.0f, true);
+		AddLine2D(SVector2<F32>(max, min), SVector2<F32>(min, min), SColor::Orange, 1.0f, true);
+		AddLine2D(SVector2<F32>(min, max), SVector2<F32>(min, min), SColor::Grey, 1.0f, true);
 	}
 
 	void GDebugDraw::AddMaxShapes()

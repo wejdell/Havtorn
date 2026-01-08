@@ -7,8 +7,8 @@ struct LineVertexInput
 
 struct LineVertexToGeometry
 {
-    float4x4 Transform : TRANSFORM;
-    float4 Color : COLOR;
+    float4 Position : SV_POSITION;
+    float4 Color    : COLOR;
 };
 
 struct LineGeometryToPixel

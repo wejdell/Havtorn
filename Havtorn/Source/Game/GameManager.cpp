@@ -30,12 +30,14 @@ namespace Havtorn
 		World->OnPausePlayDelegate.AddMember(this, &CGameManager::OnPausePlay);
 		World->OnEndPlayDelegate.AddMember(this, &CGameManager::OnEndPlay);
 
-		CUISystem* uiSystem = World->GetSystem<CUISystem>();
-		PlayGameFunction = std::bind(&CGameManager::PlayGame, this);
-		uiSystem->BindEvaluateFunction(PlayGameFunction, "CGameManager::PlayGame");
-		QuitGameFunction = std::bind(&CGameManager::QuitGame, this);
-		uiSystem->BindEvaluateFunction(QuitGameFunction, "CGameManager::QuitGame");
-
+		if (CUISystem* uiSystem = World->GetSystem<CUISystem>())
+		{
+			PlayGameFunction = std::bind(&CGameManager::PlayGame, this);
+			uiSystem->BindEvaluateFunction(PlayGameFunction, "CGameManager::PlayGame");
+			QuitGameFunction = std::bind(&CGameManager::QuitGame, this);
+			uiSystem->BindEvaluateFunction(QuitGameFunction, "CGameManager::QuitGame");
+		}
+		
 		return true;
 	}
 
@@ -85,6 +87,12 @@ namespace Havtorn
 		World->RequestSystem<CGhostySystem>(this);
 		World->RequestPhysicsSystem(this);
 		World->UnblockPhysicsSystem(this);
+
+		if (CUISystem* uiSystem = World->GetSystem<CUISystem>())
+			uiSystem->ClearFocus();
+
+		if (SUICanvasComponent* mainMenuCanvas = World->GetComponent<SUICanvasComponent>(SEntity(CScene::MainMenuEntityGUID)))
+			mainMenuCanvas->IsActive = true;
 	}
 
 	void CGameManager::OnPausePlay(std::vector<Ptr<CScene>>& /*scenes*/)
@@ -101,6 +109,8 @@ namespace Havtorn
 
 	void CGameManager::PlayGame()
 	{
+		if (CUISystem* uiSystem = World->GetSystem<CUISystem>())
+			uiSystem->ClearFocus();
 	}
 
 	void CGameManager::QuitGame()
