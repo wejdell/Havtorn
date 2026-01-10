@@ -57,6 +57,7 @@ namespace Havtorn
 
 				for (SUIElement& element : canvas->Elements)
 				{
+					// TODO.NW: Does collision need support for rotation?
 					const F32 left = (element.LocalPosition.X + element.CollisionRect.X);
 					const F32 right = (element.LocalPosition.X + element.CollisionRect.Z);
 					const F32 bottom = (element.LocalPosition.Y + element.CollisionRect.Y);
@@ -74,7 +75,7 @@ namespace Havtorn
 					{
 						HV_LOG_INFO("Clicked");
 
-						if (element.BindingType == EUIBindingType::GenericFunction && FunctionMap.contains(element.BoundData))
+						if (element.BindingType == EUIBindingType::NamedFunction && FunctionMap.contains(element.BoundData))
 							functionHashesToProcess.push_back(element.BoundData);
 						else if (element.BindingType == EUIBindingType::OtherCanvas && scene->HasEntity(element.BoundData))
 						{
@@ -119,6 +120,18 @@ namespace Havtorn
 			return IdentifierMap.at(boundFunctionHash);
 
 		return "Function Not Found";
+	}
+
+	void CUISystem::ClearFocus()
+	{
+		if (FocusedCanvas.IsValid())
+		{
+			CWorld* world = GEngine::GetWorld();
+			if (SUICanvasComponent* focusedCanvasComponent = world->GetComponent<SUICanvasComponent>(FocusedCanvas))
+				focusedCanvasComponent->IsActive = false;
+		}
+
+		FocusedCanvas = SEntity::Null;
 	}
 
 	void CUISystem::HandleAxisInput(const SInputAxisPayload payload)

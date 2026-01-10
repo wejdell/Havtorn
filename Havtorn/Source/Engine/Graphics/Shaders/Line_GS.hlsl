@@ -27,28 +27,16 @@ void main(line LineVertexToGeometry input[2], inout TriangleStream<LineGeometryT
         b = inputPos - vIncrement
         l = inputPos - hIncrement
     */
-
-    //float4 vertexObjectPos = input[0].Position.xyzw / input[0].Position.w;
-    float4 vertexObjectPos = float4(0, 0, 0, 1);
-    float4 vertexWorldPos = mul(ToWorld, vertexObjectPos);
-    float4 vertexViewPos = mul(ToCameraSpace, vertexWorldPos);
-    float4 vertexProjectionPos = mul(ToProjectionSpace, vertexViewPos);
     
-    const float4 vertexPos1Top   = vertexProjectionPos + vIncrement;
-    const float4 vertexPos1Right = vertexProjectionPos + hIncrement;
-    const float4 vertexPos1Bot   = vertexProjectionPos - vIncrement;
-    const float4 vertexPos1Left  = vertexProjectionPos - hIncrement;
-
-    //float4 vertexObjectPos2 = input[1].Position.xyzw / input[1].Position.w;
-    float4 vertexObjectPos2 = float4(0, 0, 1, 1);
-    float4 vertexWorldPos2 = mul(ToWorld, vertexObjectPos2);
-    float4 vertexViewPos2 = mul(ToCameraSpace, vertexWorldPos2);
-    float4 vertexProjectionPos2 = mul(ToProjectionSpace, vertexViewPos2);
+    const float4 vertexPos1Top   = input[0].Position + vIncrement;
+    const float4 vertexPos1Right = input[0].Position + hIncrement;
+    const float4 vertexPos1Bot   = input[0].Position - vIncrement;
+    const float4 vertexPos1Left  = input[0].Position - hIncrement;
     
-    const float4 vertexPos2Top   = vertexProjectionPos2 + vIncrement;
-    const float4 vertexPos2Right = vertexProjectionPos2 + hIncrement;
-    const float4 vertexPos2Bot   = vertexProjectionPos2 - vIncrement;
-    const float4 vertexPos2Left = vertexProjectionPos2 - hIncrement;
+    const float4 vertexPos2Top   = input[1].Position + vIncrement;
+    const float4 vertexPos2Right = input[1].Position + hIncrement;
+    const float4 vertexPos2Bot   = input[1].Position - vIncrement;
+    const float4 vertexPos2Left = input[1].Position - hIncrement;
         
     // Plane on Point 1 verts:[5]
     output.Position = vertexPos1Left;
@@ -83,7 +71,7 @@ void main(line LineVertexToGeometry input[2], inout TriangleStream<LineGeometryT
     outputStream.Append(output);
     
     // verts:[1]
-    output.Position = vertexProjectionPos;
+    output.Position = input[0].Position;
     outputStream.Append(output);
     
     // Tri1 of Plane: Top - Bot verts:[4]

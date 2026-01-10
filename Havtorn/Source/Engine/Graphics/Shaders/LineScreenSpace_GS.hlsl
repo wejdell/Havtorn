@@ -27,19 +27,19 @@ void main(line LineVertexToGeometry input[2], inout TriangleStream<LineGeometryT
         b = inputPos - vIncrement
         l = inputPos - hIncrement
     */
-
-    //float4 vertexObjectPos = input[0].Position.xyzw / input[0].Position.w;
+        
     float4 vertexObjectPos = float4(0, 0, 0, 1);
     float4 vertexWorldPos = mul(ToWorld, vertexObjectPos);
+    vertexWorldPos.xy = (vertexWorldPos.xy * 2.0f) - 1.0f;
     
     const float4 vertexPos1Top = vertexWorldPos + vIncrement;
     const float4 vertexPos1Right = vertexWorldPos + hIncrement;
     const float4 vertexPos1Bot = vertexWorldPos - vIncrement;
     const float4 vertexPos1Left = vertexWorldPos - hIncrement;
-
-    //float4 vertexWorldPos2 = input[1].Position.xyzw / input[1].Position.w;
+    
     float4 vertexObjectPos2 = float4(0, 0, 1, 1);
     float4 vertexWorldPos2 = mul(ToWorld, vertexObjectPos2);
+    vertexWorldPos2.xy = (vertexWorldPos2.xy * 2.0f) - 1.0f;
     
     const float4 vertexPos2Top = vertexWorldPos2 + vIncrement;
     const float4 vertexPos2Right = vertexWorldPos2 + hIncrement;

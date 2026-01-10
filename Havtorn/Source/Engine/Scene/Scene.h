@@ -509,5 +509,8 @@ namespace Havtorn
 
 		SEntity PreviewEntity = SEntity::Null;
 		SEntity CopiedEntity = SEntity::Null;
+
+		// TODO.NW: Eventually want a proper solution instead of this
+		ENGINE_API static U64 MainMenuEntityGUID;
 	};
 }

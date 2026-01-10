@@ -1844,7 +1844,7 @@ namespace Havtorn
 		RenderStateManager.PSSetShader(EPixelShaders::SpriteWorldSpaceEditorWidget);
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
-		RenderStateManager.PSSetResources(0, 1, command.RenderTextures[0].GetShaderResourceView());
+		command.RenderTextures[0].SetAsPSResourceOnSlot(0);
 
 		const std::vector<CDataBuffer> buffers = { InstancedTransformBuffer, InstancedUVRectBuffer, InstancedColorBuffer, InstancedEntityIDBuffer };
 		constexpr U32 strides[4] = { sizeof(SMatrix), sizeof(SVector4), sizeof(SVector4), sizeof(SEntity) };
@@ -1946,7 +1946,7 @@ namespace Havtorn
 		RenderStateManager.PSSetShader(EPixelShaders::SpriteScreenSpace);
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
-		RenderStateManager.PSSetResources(0, 1, command.RenderTextures[0].GetShaderResourceView());
+		command.RenderTextures[0].SetAsPSResourceOnSlot(0);
 
 		const std::vector<CDataBuffer> buffers = { InstancedTransformBuffer, InstancedUVRectBuffer, InstancedColorBuffer };
 		constexpr U32 strides[3] = { sizeof(SMatrix), sizeof(SVector4), sizeof(SVector4) };
@@ -1955,8 +1955,6 @@ namespace Havtorn
 		RenderStateManager.IASetIndexBuffer(CDataBuffer::Null);
 		RenderStateManager.DrawInstanced(1, STATIC_U32(matrices.size()), 0, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
-
-		RenderStateManager.VSSetConstantBuffer(0, CDataBuffer::Null);
 	}
 
 	inline void CRenderManager::AntiAliasing(const SRenderCommand& /*command*/)
@@ -2056,9 +2054,16 @@ namespace Havtorn
 
 		RenderStateManager.GSSetConstantBuffer(1, DebugShapeObjectBuffer);
 
+		// IsScreenSpace
+		if (command.Flags[0])
+			RenderStateManager.GSSetShader(EGeometryShaders::Line2D);
+
 		RenderStateManager.VSSetConstantBuffer(1, DebugShapeObjectBuffer);
 		RenderStateManager.DrawIndexed(command.U16s[0], 0, 0);
 		NumberOfDrawCallsThisFrame++;
+
+		if (command.Flags[0])
+			RenderStateManager.GSSetShader(EGeometryShaders::Line);
 	}
 
 	void CRenderManager::DebugShadowAtlas()
