@@ -58,7 +58,7 @@ namespace Havtorn
 		}
 	}
 
-	void CThreadManager::PushJob(const std::function<void()>& job)
+	void CThreadManager::PushJob(JobSignature job)
 	{
 		{
 			std::unique_lock<std::mutex> lock(QueueMutex);

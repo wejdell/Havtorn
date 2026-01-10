@@ -16,6 +16,8 @@ namespace Havtorn
 
 	class CRenderManager;
 
+	typedef std::function<void()> JobSignature;
+
 	class CThreadManager
 	{
 	public:
@@ -28,7 +30,7 @@ namespace Havtorn
 
 		bool Init(CRenderManager* renderManager);
 		[[noreturn]] void WaitAndPerformJobs();
-		void PushJob(const std::function<void()>& job);
+		void PushJob(JobSignature job);
 		void Shutdown();
 
 		static std::mutex RenderMutex;
@@ -40,12 +42,12 @@ namespace Havtorn
 		static bool RunRenderThread;
 		
 		std::vector<std::thread> JobThreads;
-		std::queue<std::function<void()>> JobQueue;
+		std::queue<JobSignature> JobQueue;
 		std::thread RenderThread;
 		std::mutex QueueMutex;
 		std::mutex ThreadPoolMutex;
 		std::condition_variable Condition;
-		std::function<void()> Job;
+		JobSignature Job;
 
 		U8 NumberOfThreads;
 		bool Terminate;

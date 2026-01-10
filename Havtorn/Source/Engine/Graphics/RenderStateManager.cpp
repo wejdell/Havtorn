@@ -672,7 +672,7 @@ namespace Havtorn
 
     void CRenderStateManager::FlushShaderChanges()
     {
-        // NW: Use DXC.exe for shader models 6 and above 
+        // NW: Use DXC.exe for shader models 6 and above, or one of the vulkan shader compilers to compile into SPIR-V, e.g. glslc.exe or glslang https://github.com/KhronosGroup/glslang
         // https://learn.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-part1
 
         std::lock_guard<std::mutex> lock(ShaderRecompileMutex);
