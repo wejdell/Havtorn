@@ -719,7 +719,7 @@ namespace Havtorn
             return;
         }
 
-        GEngine::GetFileWatcher()->StopWatchFileChange(sourcePath);
+        GEngine::GetFileWatcher()->StopWatchFileChange(sourcePath, std::bind(&CAssetRegistry::OnSourceFileChanged, this, std::placeholders::_1));
         WatchedAssets.erase(sourcePath);
     }
 

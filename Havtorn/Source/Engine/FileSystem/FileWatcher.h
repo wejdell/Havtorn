@@ -7,6 +7,7 @@
 #include <thread>
 #include <mutex>
 #include <filesystem>
+#include <queue>
 
 namespace fs = std::filesystem;
 
@@ -14,7 +15,7 @@ namespace Havtorn
 {
 	class CThreadManager;
 
-	typedef std::function<void(const std::string&)> FileChangeCallback;
+	typedef std::function<void(const std::string&)> CFileChangeCallback;
 	
 	class CFileWatcher
 	{
@@ -22,29 +23,23 @@ namespace Havtorn
 		CFileWatcher() = default;
 		~CFileWatcher();
 
-		bool Init(CThreadManager* /*threadManager*/);
+		bool Init(CThreadManager* threadManager);
 
-		/* Will check the file for includes and add them as well*/
-		ENGINE_API bool WatchFileChange(const std::string& filePath, FileChangeCallback callback);
-		ENGINE_API void StopWatchFileChange(const std::string& filePath);
-		void FlushChanges();
+		ENGINE_API bool WatchFileChange(const std::string& filePath, CFileChangeCallback callback); 
+		ENGINE_API void StopWatchFileChange(const std::string& filePath, CFileChangeCallback callback);
+		
+		void FlushChanges(); 
 
 	private:
-		void UpdateChanges();
-		void CheckFileChanges(const fs::path& filePath, const U64 timeStampLastChanged);
-		void OnFileChange(const fs::path& filePath);
+		void UpdateChanges(); 
 
-		std::thread* Thread = nullptr;
-
-		std::vector<fs::path> FilesChangedThreaded;
-		std::vector<fs::path> FilesChanged;
-		std::map<std::string, std::vector<FileChangeCallback>> Callbacks;
-		std::map<fs::path, U64> ThreadedFilesToWatch;
+		std::map<fs::path, U64> WatchedFiles;
+		
+		std::map<fs::path, std::vector<CFileChangeCallback>> StoredCallbacks;
+		std::queue<fs::path> QueuedFileChanges;
 
 		std::mutex Mutex;
-		std::mutex AddNewFolderMutex;
-		U64 PeriodMilliseconds = 32;
+		U16 SleepDurationMilliseconds = 32;
 		bool ShouldEndThread = false;
-		bool ThreadIsDone = false;
 	};
 }
