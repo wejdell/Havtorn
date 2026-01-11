@@ -16,6 +16,7 @@
 #include "../HexPhys/HexPhys.h"
 #include "ECS/Systems/ScriptSystem.h"
 #include "ECS/Systems/UISystem.h"
+#include "ECS/Systems/InputSystem.h"
 
 #include "ECS/Components/TransformComponent.h"
 #include "ECS/ComponentEditorContexts/TransformComponentEditorContext.h"
@@ -32,6 +33,8 @@
 #include "ECS/Components/MaterialComponent.h"
 #include "ECS/ComponentEditorContexts/MaterialComponentEditorContext.h"
 #include "ECS/Components/EnvironmentLightComponent.h"
+#include "ECS/Components/InputComponent.h"
+#include "ECS/ComponentEditorContexts/InputComponentEditorContext.h"
 #include "ECS/ComponentEditorContexts/EnvironmentLightComponentEditorContext.h"
 #include "ECS/Components/DirectionalLightComponent.h"
 #include "ECS/ComponentEditorContexts/DirectionalLightComponentEditorContext.h"

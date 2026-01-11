@@ -13,11 +13,13 @@ namespace Havtorn
 	SPhysics3DControllerComponentEditorContext SPhysics3DControllerComponentEditorContext::Context = {};
 
     SComponentViewResult SPhysics3DControllerComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
-    {
+	{
+
 		if (!GUI::TryOpenComponentView("Physics3D Controller"))
 			return {};
 
 		SPhysics3DControllerComponent* physicsComponent = scene->GetComponent<SPhysics3DControllerComponent>(entityOwner);
+		physicsComponent->DebugOnce = false;
 
 		GUI::SliderEnum("Controller Type", physicsComponent->ControllerType, { "Box", "Capsule" });
 
@@ -37,6 +39,7 @@ namespace Havtorn
 
 		GUI::DragFloat3("Displacement:", physicsComponent->Displacement);
 		GUI::Text("Velocity: %s", physicsComponent->Velocity.ToString().c_str());
+		GUI::Checkbox("IsGrounded: %s", physicsComponent->IsGrounded);
 
 
 		// TODO.NR: Most of these should only be changed during setup, but if we want a truly responsive editor we can pause

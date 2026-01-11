@@ -30,14 +30,16 @@ namespace Havtorn
 		OnSceneCreatedDelegate.AddMember(this, &CWorld::OnSceneCreated);
 
 		//Would like to Setup these Listeners in CPhysicsSystem3D instead.
-		OnBeginPlayDelegate.AddMember(this, &CWorld::InitializePhysics3D);
-		OnEndPlayDelegate.AddMember(this, &CWorld::DeInitializePhysics3D);
+
+
+
 
 		return true;
 	}
 
 	void CWorld::Update()
 	{
+
 		for (const auto& data : SystemData)
 		{
 			if (data.Blockers.empty())
@@ -221,16 +223,6 @@ namespace Havtorn
 	void CWorld::UnblockPhysicsSystem(void* requester)
 	{
 		PlayDimensions == EWorldPlayDimensions::World3D ? UnblockSystem<HexPhys3D::CPhysics3DSystem>(requester) : UnblockSystem<HexPhys2D::CPhysics2DSystem>(requester);
-	}
-
-	void CWorld::InitializePhysics3D(std::vector<Ptr<CScene>>& scenes)
-	{
-		PhysicsWorld3D->InitializeScene(scenes);
-	}
-
-	void CWorld::DeInitializePhysics3D(std::vector<Ptr<CScene>>& scenes)
-	{
-		PhysicsWorld3D->DeInitializeScene(scenes);
 	}
 
 	void CWorld::Initialize2DPhysicsData(const SEntity& entity) const

@@ -169,6 +169,7 @@ namespace Havtorn
 			static SQuaternion Convert(const physx::PxQuatT<F32>& from);
 
 			physx::PxControllerManager* GetControllerManager() { return ControllerManager; }
+			physx::PxScene* GetScene() { return CurrentScene; }
 
 		private:
 			physx::PxFoundation* Foundation = nullptr;
@@ -208,12 +209,17 @@ namespace Havtorn
 		{
 		public:
 			CPhysics3DSystem(CPhysicsWorld3D* physicsWorld);
-			~CPhysics3DSystem() override = default;
-
+			~CPhysics3DSystem() override;
+		
 			void Update(std::vector<Ptr<CScene>>& scenes) override;
 
 		private:
+			void InitializePhysics(std::vector<Ptr<CScene>>& scenes);
+			void DeInitializePhysics(std::vector<Ptr<CScene>>& scenes);
+
 			CPhysicsWorld3D* PhysicsWorld = nullptr;
+			DelegateHandle InitializePhysicsHandle;
+			DelegateHandle DeInitializePhysicsHandle;
 		};
 	}
 }

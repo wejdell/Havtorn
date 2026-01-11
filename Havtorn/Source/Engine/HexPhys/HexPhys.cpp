@@ -519,9 +519,11 @@ namespace Havtorn
 
 		void CPhysicsWorld3D::InitializeScene(std::vector<Ptr<CScene>>& scenes)
 		{
-			if (CurrentScene == nullptr)
-				CreateScene();
+			if (CurrentScene != nullptr)
+				return;
 
+
+			CreateScene();
 
 			//CurrentScene->userData = &scenes;
 
@@ -783,10 +785,33 @@ namespace Havtorn
 		CPhysics3DSystem::CPhysics3DSystem(CPhysicsWorld3D* physicsWorld)
 			: PhysicsWorld(physicsWorld)
 		{
+			CWorld* world = GEngine::GetWorld();
+			InitializePhysicsHandle = world->OnBeginPlayDelegate.AddMember(this, &CPhysics3DSystem::InitializePhysics);
+			DeInitializePhysicsHandle = world->OnEndPlayDelegate.AddMember(this, &CPhysics3DSystem::DeInitializePhysics);
+		}
+
+		CPhysics3DSystem::~CPhysics3DSystem()
+		{
+			CWorld* world = GEngine::GetWorld();
+			world->OnBeginPlayDelegate.RemoveHandle(InitializePhysicsHandle);
+			world->OnEndPlayDelegate.RemoveHandle(DeInitializePhysicsHandle);
+		}
+
+		void CPhysics3DSystem::InitializePhysics(std::vector<Ptr<CScene>>& scenes)
+		{
+			PhysicsWorld->InitializeScene(scenes);
+		}
+
+		void CPhysics3DSystem::DeInitializePhysics(std::vector<Ptr<CScene>>& scenes)
+		{
+			PhysicsWorld->InitializeScene(scenes);
 		}
 
 		void CPhysics3DSystem::Update(std::vector<Ptr<CScene>>& scenes)
 		{
+			if (PhysicsWorld->GetScene() == nullptr)
+				return;
+
 			physx::PxControllerFilters filters{};
 			F32 deltaTime = GTime::FixedDt();
 
@@ -797,34 +822,20 @@ namespace Havtorn
 				{
 					//Havtorn -> PhysX
 					PxController* pxController = PhysicsWorld->GUIDToControllerActorMap[component->Owner.GUID];
-					PxVec3 displacement = PhysicsWorld->Convert(component->Displacement * deltaTime);
-					pxController->move(displacement, 0.001f, deltaTime, filters);
+					PxVec3 displacement = PhysicsWorld->Convert(component->Displacement);
+
+					PxControllerState state;
+					pxController->getState(state);
+
+					bool wasGrounded = state.collisionFlags & PxControllerCollisionFlag::eCOLLISION_DOWN;
+					if (!wasGrounded)
+						displacement += PhysicsWorld->GetScene()->getGravity();
+
+					PxControllerCollisionFlags collisionFlags = pxController->move(displacement, 0.001f, deltaTime, filters);
+
+					bool grounded = collisionFlags & PxControllerCollisionFlag::eCOLLISION_DOWN;
+					component->IsGrounded = grounded;
 				}
-
-
-				//std::vector<SPhysics3DComponent*> physicsComponents = scene->GetComponents<SPhysics3DComponent>();
-				//for (auto& component : physicsComponents)
-				//{
-				//	if (component->BodyType != EPhysics3DBodyType::Dynamic)
-				//		continue;
-
-				//	if (component->Velocity.LengthSquared() < 0.01f)
-				//		continue;
-
-				//	PxActor* actor = PhysicsWorld->GUIDToPxActorMap[component->Owner.GUID];
-				//	if (actor->is<PxRigidDynamic>())
-				//	{
-				//		PxRigidDynamic* dynamicActor = static_cast<PxRigidDynamic*>(actor);
-				//		dynamicActor->addForce(PhysicsWorld->Convert(component->Velocity));
-				//	}
-
-				//	//Havtorn -> PhysX
-				//	//PxController* pxController = PhysicsWorld->GUIDToControllerActorMap[component->Owner.GUID];
-				//	//PxVec3 displacement = PhysicsWorld->Convert(component->Displacement * deltaTime);
-				//	//pxController->move(displacement, 0.001f, deltaTime, filters);
-				//}
-
-
 			}
 
 			if (GTime::FixedTimeStep())

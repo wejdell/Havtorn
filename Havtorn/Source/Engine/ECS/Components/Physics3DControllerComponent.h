@@ -28,5 +28,6 @@ namespace Havtorn
 
 		SVector Displacement = SVector::Zero; //This should be set to Zero in physx::Move
 		SVector Velocity = SVector::Zero; //Read Only
+		bool IsGrounded = false;
 	};
 }

@@ -118,9 +118,6 @@ namespace Havtorn
 		ENGINE_API void BlockPhysicsSystem(void* requester);
 		ENGINE_API void UnblockPhysicsSystem(void* requester);
 
-		ENGINE_API void InitializePhysics3D(std::vector<Ptr<CScene>>& scenes);
-		ENGINE_API void DeInitializePhysics3D(std::vector<Ptr<CScene>>& scenes);
-
 		ENGINE_API void Initialize2DPhysicsData(const SEntity& entity) const;
 		ENGINE_API void Update2DPhysicsData(STransformComponent* transformComponent, SPhysics2DComponent* phys2DComponent) const;
 

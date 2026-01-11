@@ -1,7 +1,8 @@
 // Copyright 2023 Team Havtorn. All Rights Reserved.
 
 #include "GameManager.h"
-#include "Ghosty\GhostySystem.h"
+#include "Ghosty/GhostySystem.h"
+#include "Player/PlayerControllerSystem.h"
 #include "GameScene.h"
 
 #include <CommandLine.h>
@@ -83,18 +84,20 @@ namespace Havtorn
 	{
 		World->RequestSystem<CSpriteAnimatorGraphSystem>(this);
 		World->RequestSystem<CGhostySystem>(this);
-		World->RequestPhysicsSystem(this);
-		World->UnblockPhysicsSystem(this);
+		
+		World->UnblockSystem<Havtorn::HexPhys3D::CPhysics3DSystem>(this);
+		World->RequestSystem<CPlayerControllerSystem>(this);
+		World->UnblockSystem<CPlayerControllerSystem>(this);
 	}
 
 	void CGameManager::OnPausePlay(std::vector<Ptr<CScene>>& /*scenes*/)
 	{
-		World->BlockPhysicsSystem(this);
+		World->BlockSystem<Havtorn::HexPhys3D::CPhysics3DSystem>(this);
+		World->BlockSystem<CPlayerControllerSystem>(this);
 	}
 
 	void CGameManager::OnEndPlay(std::vector<Ptr<CScene>>& /*scenes*/)
 	{
-		World->BlockPhysicsSystem(this);
 		World->UnrequestSystems(this);
 	}
 

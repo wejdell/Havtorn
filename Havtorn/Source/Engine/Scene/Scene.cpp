@@ -50,6 +50,8 @@ namespace Havtorn
 		RegisterTrivialComponent<SPhysics3DComponent, SPhysics3DComponentEditorContext>(190, 40);
 		RegisterTrivialComponent<SPhysics3DControllerComponent, SPhysics3DControllerComponentEditorContext>(200, 1);
 		RegisterNonTrivialComponent<SUICanvasComponent, SUICanvasComponentEditorContext>(210, 5);
+		RegisterTrivialComponent<SInputComponent, SInputComponentEditorContext>(220, 5);
+
 		//RegisterTrivialComponent<SSequencerComponent, SSequencerComponentEditorContext>(typeID++, 0);
 
 		return true;

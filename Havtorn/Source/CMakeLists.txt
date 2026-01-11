@@ -333,6 +333,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/DirectionalLightComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/EnvironmentLightComponentEditorContext.cpp
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/EnvironmentLightComponentEditorContext.h
+    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/InputComponentEditorContext.cpp
+    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/InputComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/MaterialComponentEditorContext.cpp
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/MaterialComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/Physics2DComponentEditorContext.cpp
@@ -372,6 +374,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/Components/DirectionalLightComponent.h
     ${ENGINE_FOLDER}ECS/Components/EnvironmentLightComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/EnvironmentLightComponent.h
+    ${ENGINE_FOLDER}ECS/Components/InputComponent.cpp
+    ${ENGINE_FOLDER}ECS/Components/InputComponent.h
     ${ENGINE_FOLDER}ECS/Components/MaterialComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/MaterialComponent.h
     ${ENGINE_FOLDER}ECS/Components/MetaDataComponent.h
@@ -403,6 +407,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/Systems/AnimatorGraphSystem.h
     ${ENGINE_FOLDER}ECS/Systems/CameraSystem.cpp
     ${ENGINE_FOLDER}ECS/Systems/CameraSystem.h
+    ${ENGINE_FOLDER}ECS/Systems/InputSystem.cpp
+    ${ENGINE_FOLDER}ECS/Systems/InputSystem.h
     ${ENGINE_FOLDER}ECS/Systems/LightSystem.cpp
     ${ENGINE_FOLDER}ECS/Systems/LightSystem.h
     ${ENGINE_FOLDER}ECS/Systems/RenderSystem.cpp
@@ -654,6 +660,8 @@ add_dependencies(Engine Core Platform GUI)
 
 # ==================== GAME ====================
 set(GAME_FILES
+	Game/Player/PlayerControllerSystem.cpp
+	Game/Player/PlayerControllerSystem.h
 	Game/HexRune/NodeEditorContext/SetPositionNodeEditorContext.cpp
 	Game/HexRune/NodeEditorContext/SetPositionNodeEditorContext.h
 	Game/HexRune/SetPositionNode.cpp
