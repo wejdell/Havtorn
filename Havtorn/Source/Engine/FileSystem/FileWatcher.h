@@ -15,6 +15,18 @@ namespace Havtorn
 {
 	class CThreadManager;
 
+	struct SFileChangeCallback
+	{
+		SFileChangeCallback() = delete;
+		explicit SFileChangeCallback(const std::function<void(const std::string&)>& function, const U64& handle)
+			: Function(function)
+			, Handle(handle)
+		{}
+
+		std::function<void(const std::string&)> Function;
+		U64 Handle = 0;
+	};
+
 	typedef std::function<void(const std::string&)> CFileChangeCallback;
 	
 	class CFileWatcher
@@ -25,8 +37,8 @@ namespace Havtorn
 
 		bool Init(CThreadManager* threadManager);
 
-		ENGINE_API bool WatchFileChange(const std::string& filePath, CFileChangeCallback callback); 
-		ENGINE_API void StopWatchFileChange(const std::string& filePath, CFileChangeCallback callback);
+		ENGINE_API bool WatchFileChange(const std::string& filePath, SFileChangeCallback callback);
+		ENGINE_API void StopWatchFileChange(const std::string& filePath, const U64 callbackHandle);
 		
 		void FlushChanges(); 
 
@@ -35,7 +47,7 @@ namespace Havtorn
 
 		std::map<fs::path, U64> WatchedFiles;
 		
-		std::map<fs::path, std::vector<CFileChangeCallback>> StoredCallbacks;
+		std::map<fs::path, std::vector<SFileChangeCallback>> StoredCallbacks;
 		std::queue<fs::path> QueuedFileChanges;
 
 		std::mutex Mutex;

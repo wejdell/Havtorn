@@ -127,10 +127,12 @@ namespace Havtorn
 
 		void Release();
 
-		void OnShaderSourceChange(const std::string& filePath);
 		void FlushShaderChanges();
 
 	private:
+		void OnShaderSourceChange(const std::string& filePath);
+		const U64 OnShaderSourceChangeFunctionHandle = 200;
+
 		bool CreateBlendStates(ID3D11Device* device);
 		bool CreateDepthStencilStates(ID3D11Device* device);
 		bool CreateRasterizerStates(ID3D11Device* device);
