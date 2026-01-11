@@ -80,6 +80,7 @@ namespace Havtorn
 		bool UnloadAsset(const SAssetReference& assetRef);
 
 		void OnSourceFileChanged(const std::string& sourceFilePath);
+		const U64 OnSourceFileChangedFunctionHandle = 100;
 
 		ENGINE_API inline SAsset* GetAsset(const U32 assetUID);
 		ENGINE_API inline void AddAsset(const U32 assetUID, SAsset& asset);

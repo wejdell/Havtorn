@@ -40,9 +40,9 @@ namespace Havtorn
 				continue;
 			}
 
-			std::vector<CFileChangeCallback>& callbacks = StoredCallbacks[filePath];
-			for (const CFileChangeCallback& callback : callbacks)
-				callback(filePath.string());
+			std::vector<SFileChangeCallback>& callbacks = StoredCallbacks[filePath];
+			for (const SFileChangeCallback& callback : callbacks)
+				callback.Function(filePath.string());
 			
 			QueuedFileChanges.pop();
 		}
@@ -77,7 +77,7 @@ namespace Havtorn
 		}
 	}
 
-	bool CFileWatcher::WatchFileChange(const std::string& filePath, CFileChangeCallback functionToCallOnChange)
+	bool CFileWatcher::WatchFileChange(const std::string& filePath, SFileChangeCallback callback)
 	{
 		// TODO.NW: Maybe add feature for turning on and off file watcher? Shouldn't be active while playing
 
@@ -87,7 +87,7 @@ namespace Havtorn
 			return false;
 
 		std::lock_guard<std::mutex> lock(Mutex);
-		StoredCallbacks[newPath].push_back(functionToCallOnChange);
+		StoredCallbacks[newPath].push_back(callback);
 
 		if (!WatchedFiles.contains(newPath))
 			WatchedFiles.emplace(newPath, GetFileTimestamp(newPath));
@@ -95,8 +95,8 @@ namespace Havtorn
 		return true;
 	}
 
-	void CFileWatcher::StopWatchFileChange(const std::string& filePath, CFileChangeCallback callback)
-	{	
+	void CFileWatcher::StopWatchFileChange(const std::string& filePath, const U64 callbackHandle)
+	{
 		const fs::path existingPath = filePath.c_str();
 
 		if (!std::filesystem::exists(existingPath))
@@ -106,25 +106,10 @@ namespace Havtorn
 			return;
 
 		std::lock_guard<std::mutex> lock(Mutex);
-		std::vector<CFileChangeCallback>& callbackContainer = StoredCallbacks.at(existingPath);
+		std::vector<SFileChangeCallback>& callbackContainer = StoredCallbacks.at(existingPath);
 
-		auto callbackPointer = std::make_shared<CFileChangeCallback>(callback);
-		
-		bool foundExistingCallback = false;
-		auto it = callbackContainer.begin();
-		for (; it != callbackContainer.end();)
-		{
-			auto existingCallbackPointer = std::make_shared<CFileChangeCallback>(*it);
-			if (callbackPointer == existingCallbackPointer)
-			{
-				foundExistingCallback = true;
-				break;
-			}
-
-			it++;
-		}
-
-		if (!foundExistingCallback)
+		auto it = std::ranges::find(callbackContainer, callbackHandle, &SFileChangeCallback::Handle);
+		if (it == callbackContainer.end())
 			return;
 
 		callbackContainer.erase(it);
