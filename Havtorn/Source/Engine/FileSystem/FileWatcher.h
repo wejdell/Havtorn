@@ -17,6 +17,12 @@ namespace Havtorn
 
 	struct SFileChangeCallback
 	{
+		SFileChangeCallback() = delete;
+		explicit SFileChangeCallback(const std::function<void(const std::string&)>& function, const U64& handle)
+			: Function(function)
+			, Handle(handle)
+		{}
+
 		std::function<void(const std::string&)> Function;
 		U64 Handle = 0;
 	};
