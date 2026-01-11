@@ -19,7 +19,7 @@ namespace Havtorn
 	{
 		None,
 		OtherCanvas,
-		GenericFunction,
+		NamedFunction,
 	};
 
 	struct SUIElement

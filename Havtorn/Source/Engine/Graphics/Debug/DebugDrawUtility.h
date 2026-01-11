@@ -92,6 +92,7 @@ namespace Havtorn
 			U8 VertexBufferIndex = 0;
 			U8 IndexBufferIndex = 0;
 			bool IgnoreDepth = true;
+			bool IsScreenSpace = false;
 
 			SDebugDrawData() = delete;
 			SDebugDrawData(EVertexBufferPrimitives vertexBuffer, EDefaultIndexBuffers indexBuffer)
