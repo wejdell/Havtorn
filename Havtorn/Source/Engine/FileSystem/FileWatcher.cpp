@@ -40,7 +40,7 @@ namespace Havtorn
 				continue;
 			}
 
-			std::vector<SFileChangeCallback>& callbacks = StoredCallbacks[filePath];
+			const std::vector<SFileChangeCallback>& callbacks = StoredCallbacks[filePath];
 			for (const SFileChangeCallback& callback : callbacks)
 				callback.Function(filePath.string());
 			

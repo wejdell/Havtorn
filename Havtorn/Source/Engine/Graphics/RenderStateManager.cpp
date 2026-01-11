@@ -280,7 +280,7 @@ namespace Havtorn
         const std::string sourceFile = prefix + fileName.substr(0, fileName.size() - UGeneralUtils::ExtractFileExtensionFromPath(fileName).size()) + extension;
         if (!ShaderInitData.contains(sourceFile))
         {
-            GEngine::GetFileWatcher()->WatchFileChange(sourceFile, { std::bind(&CRenderStateManager::OnShaderSourceChange, this, std::placeholders::_1), OnShaderSourceChangeFunctionHandle });
+            GEngine::GetFileWatcher()->WatchFileChange(sourceFile, SFileChangeCallback(std::bind(&CRenderStateManager::OnShaderSourceChange, this, std::placeholders::_1), OnShaderSourceChangeFunctionHandle));
             ShaderInitData.emplace(sourceFile, SShaderInitData{ fileName, shaderType, index });
         }
 
@@ -678,7 +678,7 @@ namespace Havtorn
         std::lock_guard<std::mutex> lock(ShaderRecompileMutex);
         while (!QueuedShaderRecompiles.empty())
         {
-            const std::string recompiledSourceFile = QueuedShaderRecompiles.front();
+            const std::string& recompiledSourceFile = QueuedShaderRecompiles.front();
 
             const SShaderInitData initData = ShaderInitData.at(recompiledSourceFile);
             const std::wstring wideSourceFilePath = { recompiledSourceFile.begin(), recompiledSourceFile.end() };
