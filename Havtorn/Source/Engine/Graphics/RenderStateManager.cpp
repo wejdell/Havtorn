@@ -280,7 +280,7 @@ namespace Havtorn
         const std::string sourceFile = prefix + fileName.substr(0, fileName.size() - UGeneralUtils::ExtractFileExtensionFromPath(fileName).size()) + extension;
         if (!ShaderInitData.contains(sourceFile))
         {
-            GEngine::GetFileWatcher()->WatchFileChange(sourceFile, std::bind(&CRenderStateManager::OnShaderSourceChange, this, std::placeholders::_1));
+            GEngine::GetFileWatcher()->WatchFileChange(sourceFile, { std::bind(&CRenderStateManager::OnShaderSourceChange, this, std::placeholders::_1), OnShaderSourceChangeFunctionHandle });
             ShaderInitData.emplace(sourceFile, SShaderInitData{ fileName, shaderType, index });
         }
 

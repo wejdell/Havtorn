@@ -691,7 +691,7 @@ namespace Havtorn
             return;
         }
         
-        GEngine::GetFileWatcher()->WatchFileChange(sourcePath, std::bind(&CAssetRegistry::OnSourceFileChanged, this, std::placeholders::_1));
+        GEngine::GetFileWatcher()->WatchFileChange(sourcePath, { std::bind(&CAssetRegistry::OnSourceFileChanged, this, std::placeholders::_1), OnSourceFileChangedFunctionHandle });
         WatchedAssets.emplace(sourcePath, asset);
 
         // NW: Only unrequest the asset when stopping file watch, to maintain a live connection in WatchedAssets
@@ -719,7 +719,7 @@ namespace Havtorn
             return;
         }
 
-        GEngine::GetFileWatcher()->StopWatchFileChange(sourcePath, std::bind(&CAssetRegistry::OnSourceFileChanged, this, std::placeholders::_1));
+        GEngine::GetFileWatcher()->StopWatchFileChange(sourcePath, OnSourceFileChangedFunctionHandle);
         WatchedAssets.erase(sourcePath);
     }
 
