@@ -26,54 +26,40 @@ namespace Havtorn
 		Count = 2
 	};
 
+	enum class EMouseButton
+	{
+		Left = 1,
+		Right = 2,
+		Middle = 4,
+		Mouse4 = 5,
+		Mouse5 = 6
+	};
+
 	class CInput
 	{
 	public:
 		friend CInputMapper;
 
-		static ENGINE_API CInput* GetInstance();
+		void MonitorDeviceConnectionChanges() noexcept;
+		[[nodiscard]] std::array<std::array<IGameInputDevice*, STATIC_U8(EInputDeviceType::Count)>, MaxNumUsers>& GetActiveInputDevices();
 
-		enum class EMouseButton
-		{
-			Left = 1,
-			Right = 2,
-			Middle = 4,
-			Mouse4 = 5,
-			Mouse5 = 6
-		};
-
+	private:
 		CInput();
 		~CInput();
+		
+		static CInput* GetInstance();
 		bool Init(CPlatformManager* platformManager);
 
 		void UpdateEvents(HWND handle, UINT message, WPARAM wParam, LPARAM lParam);
 		void UpdateState();
 
 		[[nodiscard]] const std::bitset<3>& GetKeyInputModifiers() const;
-
-		bool IsKeyDown(WPARAM wParam);
-		[[nodiscard]] bool IsKeyPressed(WPARAM wParam) const;
-		[[nodiscard]] bool IsKeyReleased(WPARAM wParam) const;
 		
-		// X coordiantes in application window
-		[[nodiscard]] ENGINE_API U16 GetMouseX() const; 
-		// Y coordiantes in application window
-		[[nodiscard]] ENGINE_API U16 GetMouseY() const; 
-		[[nodiscard]] ENGINE_API U16 GetMouseScreenX() const;
-		[[nodiscard]] ENGINE_API U16 GetMouseScreenY() const;
+		[[nodiscard]] U16 GetMouseX() const; 
+		[[nodiscard]] U16 GetMouseY() const; 
 		[[nodiscard]] I16 GetMouseDeltaX() const;
 		[[nodiscard]] I16 GetMouseDeltaY() const;
-		[[nodiscard]] I16 GetMouseRawDeltaX() const;
-		[[nodiscard]] I16 GetMouseRawDeltaY() const;
-		// Positive = away from user, negative = towards user
 		[[nodiscard]] I16 GetMouseWheelDelta() const;
-
-		static void SetMouseScreenPosition(U16 x, U16 y);
-
-		void MonitorDeviceConnectionChanges() noexcept;
-
-		std::array<std::array<IGameInputDevice*, STATIC_U8(EInputDeviceType::Count)>, MaxNumUsers> ActiveInputDevices;
-	private:
 		[[nodiscard]] std::map<WPARAM, SInputActionPayload>& GetKeyInputBuffer();
 
 		void HandleKeyDown(const WPARAM& wParam);
@@ -81,32 +67,31 @@ namespace Havtorn
 
 	private:
 		std::map<WPARAM, SInputActionPayload> KeyInputBuffer;
-		std::bitset<3> KeyInputModifiers;
-		IGameInput* GameInputInstance = nullptr;
-		GameInputCallbackToken KeyboardConnectionChangeHandle;
-		GameInputCallbackToken GamepadConnectionChangeHandle;
-		//std::bitset<5> MouseButtonLast;
-		//std::bitset<5> MouseButton;
+		std::array<std::array<IGameInputDevice*, STATIC_U8(EInputDeviceType::Count)>, MaxNumUsers> ActiveInputDevices;
 
-		GameInputGamepadState PreviousPrimaryUserGamepadState;
-		GameInputGamepadState PrimaryUserGamepadState;
+		GameInputGamepadState PreviousPrimaryUserGamepadState = {};
+		GameInputGamepadState PrimaryUserGamepadState = {};
+		GameInputCallbackToken KeyboardConnectionChangeHandle = 0;
+		GameInputCallbackToken GamepadConnectionChangeHandle = 0;
+		IGameInput* GameInputInstance = nullptr;
 
 		std::bitset<256> KeyDownLast;
 		std::bitset<256> KeyDown;
+		std::bitset<3> KeyInputModifiers;
 
-		U16 MouseX;
-		U16 MouseY;
-		U16 MouseScreenX;
-		U16 MouseScreenY;
-		U16 MouseLastX;
-		U16 MouseLastY;
-		U16 MouseRawDeltaX;
-		U16 MouseRawDeltaY;
-		I16 MouseWheelDelta;
+		U16 MouseX = 0;
+		U16 MouseY = 0;
+		U16 MouseScreenX = 0;
+		U16 MouseScreenY = 0;
+		U16 MouseLastX = 0;
+		U16 MouseLastY = 0;
+		U16 MouseRawDeltaX = 0;
+		U16 MouseRawDeltaY = 0;
+		I16 MouseWheelDelta = 0;
 
-		F32 Horizontal;
-		F32 Vertical;
-		bool HorizontalPressed;
-		bool VerticalPressed;
+		F32 Horizontal = 0.0f;
+		F32 Vertical = 0.0f;
+		bool HorizontalPressed = false;
+		bool VerticalPressed = false;
 	};
 }

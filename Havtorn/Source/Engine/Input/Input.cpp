@@ -20,21 +20,7 @@ namespace Havtorn
 	}
 
 	CInput::CInput()
-		: MouseX(0)
-		, MouseY(0)
-		, MouseScreenX(0)
-		, MouseScreenY(0)
-		, MouseLastX(0)
-		, MouseLastY(0)
-		, MouseRawDeltaX(0)
-		, MouseRawDeltaY(0)
-		, MouseWheelDelta(0)
-		, Horizontal(0)
-		, Vertical(0)
-		, HorizontalPressed(false)
-		, VerticalPressed(false)
 	{
-
 		// TODO.NW: Move all raw input stuff to using GameInput
 		RAWINPUTDEVICE rid;
 		rid.usUsagePage = 0x01; // For mouse
@@ -93,7 +79,7 @@ namespace Havtorn
 			CInput* inputInstance = reinterpret_cast<CInput*>(context);
 			if (inputInstance != nullptr)
 			{
-				inputInstance->ActiveInputDevices[PrimaryUser][STATIC_U8(EInputDeviceType::Keyboard)] = device;
+				inputInstance->GetActiveInputDevices()[PrimaryUser][STATIC_U8(EInputDeviceType::Keyboard)] = device;
 			}
 		}
 		else
@@ -103,11 +89,11 @@ namespace Havtorn
 			CInput* inputInstance = reinterpret_cast<CInput*>(context);
 			if (inputInstance != nullptr)
 			{
-				IGameInputDevice* existingDevice = inputInstance->ActiveInputDevices[PrimaryUser][STATIC_U8(EInputDeviceType::Keyboard)];
+				IGameInputDevice* existingDevice = inputInstance->GetActiveInputDevices()[PrimaryUser][STATIC_U8(EInputDeviceType::Keyboard)];
 				if (device == existingDevice && existingDevice != nullptr)
 				{
 					existingDevice->Release();
-					inputInstance->ActiveInputDevices[PrimaryUser][STATIC_U8(EInputDeviceType::Keyboard)] = nullptr;
+					inputInstance->GetActiveInputDevices()[PrimaryUser][STATIC_U8(EInputDeviceType::Keyboard)] = nullptr;
 					HV_LOG_WARN("Primary User keyboard disconnected!");
 				}
 			}
@@ -141,7 +127,7 @@ namespace Havtorn
 			CInput* inputInstance = reinterpret_cast<CInput*>(context);
 			if (inputInstance != nullptr)
 			{
-				inputInstance->ActiveInputDevices[PrimaryUser][STATIC_U8(EInputDeviceType::Gamepad)] = device;
+				inputInstance->GetActiveInputDevices()[PrimaryUser][STATIC_U8(EInputDeviceType::Gamepad)] = device;
 			}
 		}
 		else
@@ -151,11 +137,11 @@ namespace Havtorn
 			CInput* inputInstance = reinterpret_cast<CInput*>(context);
 			if (inputInstance != nullptr)
 			{
-				IGameInputDevice* existingDevice = inputInstance->ActiveInputDevices[PrimaryUser][STATIC_U8(EInputDeviceType::Gamepad)];
+				IGameInputDevice* existingDevice = inputInstance->GetActiveInputDevices()[PrimaryUser][STATIC_U8(EInputDeviceType::Gamepad)];
 				if (device == existingDevice && existingDevice != nullptr)
 				{
 					existingDevice->Release();
-					inputInstance->ActiveInputDevices[PrimaryUser][STATIC_U8(EInputDeviceType::Gamepad)] = nullptr;
+					inputInstance->GetActiveInputDevices()[PrimaryUser][STATIC_U8(EInputDeviceType::Gamepad)] = nullptr;
 					HV_LOG_WARN("Primary User gamepad disconnected!");
 				}
 			}
@@ -187,6 +173,11 @@ namespace Havtorn
 		{
 			HV_LOG_ERROR("CInput::MonitorDeviceConnectionChanges: Could not register GameInput device callback for keyboard!");
 		}
+	}
+
+	std::array<std::array<IGameInputDevice*, STATIC_U8(EInputDeviceType::Count)>, MaxNumUsers>& CInput::GetActiveInputDevices()
+	{
+		return ActiveInputDevices;
 	}
 
 	bool CInput::Init(CPlatformManager* platformManager)
@@ -469,21 +460,6 @@ namespace Havtorn
 		return KeyInputModifiers;
 	}
 
-	bool CInput::IsKeyDown(WPARAM wParam) 
-	{
-		return KeyDown[wParam];
-	}
-
-	bool CInput::IsKeyPressed(WPARAM wParam) const
-	{
-		return KeyDown[wParam] && (!KeyDownLast[wParam]);
-	}
-
-	bool CInput::IsKeyReleased(WPARAM wParam) const
-	{
-		return (!KeyDown[wParam]) && KeyDownLast[wParam];
-	}
-
 	U16 CInput::GetMouseX() const
 	{
 		return MouseX;
@@ -492,16 +468,6 @@ namespace Havtorn
 	U16 CInput::GetMouseY() const
 	{
 		return MouseY;
-	}
-
-	U16 CInput::GetMouseScreenX() const
-	{
-		return MouseScreenX;
-	}
-
-	U16 CInput::GetMouseScreenY() const
-	{
-		return MouseScreenY;
 	}
 
 	I16 CInput::GetMouseDeltaX() const
@@ -514,24 +480,9 @@ namespace Havtorn
 		return static_cast<I16>(MouseY - MouseLastY);
 	}
 
-	I16 CInput::GetMouseRawDeltaX() const
-	{
-		return static_cast<I16>(MouseRawDeltaX);
-	}
-
-	I16 CInput::GetMouseRawDeltaY() const
-	{
-		return static_cast<I16>(MouseRawDeltaY);
-	}
-
 	I16 CInput::GetMouseWheelDelta() const
 	{
 		return MouseWheelDelta;
-	}
-
-	void CInput::SetMouseScreenPosition(U16 x, U16 y)
-	{
-		SetCursorPos(x, y);
 	}
 
 	void CInput::HandleKeyDown(const WPARAM& wParam)
