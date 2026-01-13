@@ -12,7 +12,7 @@
 #include <Assets/AssetRegistry.h>
 #include <MathTypes/MathUtilities.h>
 #include <PlatformManager.h>
-#include <Input/Input.h>
+#include <Input/InputMapper.h>
 
 namespace Havtorn
 {
@@ -25,6 +25,9 @@ namespace Havtorn
 		SnappingOptions.emplace_back(SVector(0.1f), "0.1");
 		SnappingOptions.emplace_back(SVector(0.5f), "0.5");
 		SnappingOptions.emplace_back(SVector(1.0f), "1.0");
+
+		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MousePositionHorizontal).AddMember(this, &CViewportWindow::OnMouseMove);
+		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MousePositionVertical).AddMember(this, &CViewportWindow::OnMouseMove);
 	}
 
 	CViewportWindow::~CViewportWindow()
@@ -231,13 +234,9 @@ namespace Havtorn
 			if (!mainCameraData.IsValid())
 				return;
 
-			CInput* input = CInput::GetInstance();
-			F32 mouseX = STATIC_F32(input->GetMouseX());
-			F32 mouseY = STATIC_F32(input->GetMouseY());
-
 			SMatrix viewMatrix = mainCameraData.TransformComponent->Transform.GetMatrix();
 			SMatrix projectionMatrix = mainCameraData.CameraComponent->ProjectionMatrix;
-			SRay worldRay = UMathUtilities::RaycastWorld({ mouseX, mouseY }, RenderedSceneDimensions, RenderedScenePosition, viewMatrix, projectionMatrix);
+			SRay worldRay = UMathUtilities::RaycastWorld(MousePosition, RenderedSceneDimensions, RenderedScenePosition, viewMatrix, projectionMatrix);
 
 			// TODO.NW: This is too annoying, we should have an easy time of setting the transform of entities
 			STransformComponent& previewTransform = *scene->GetComponent<STransformComponent>(scene->PreviewEntity);
@@ -323,5 +322,14 @@ namespace Havtorn
 		//scene->AddComponentEditorContext(scene->PreviewEntity, &SSkeletalAnimationComponentEditorContext::Context);
 		}
 
+	}
+
+	void CViewportWindow::OnMouseMove(const SInputAxisPayload payload)
+	{
+		if (payload.Event == EInputAxisEvent::MousePositionHorizontal)
+			MousePosition.X = payload.AxisValue;
+
+		if (payload.Event == EInputAxisEvent::MousePositionVertical)
+			MousePosition.Y = payload.AxisValue;
 	}
 }

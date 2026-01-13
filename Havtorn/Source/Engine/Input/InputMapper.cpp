@@ -13,6 +13,11 @@ namespace Havtorn
 		, CurrentInputContext(EInputContext::Editor)
 	{}
 
+	CInputMapper::~CInputMapper()
+	{
+		delete Input;
+	}
+
 	bool CInputMapper::Init(CPlatformManager* platformManager)
 	{
 		Input->Init(platformManager);
@@ -27,6 +32,9 @@ namespace Havtorn
 
 		const SInputAxis upAxis = { EInputAxis::Key, EInputKey::KeyE, EInputKey::KeyQ, EInputContext::Editor };
 		MapEvent(EInputAxisEvent::Up, upAxis);
+
+		const SInputAxis upAxisGamepad = { EInputAxis::Key, EInputKey::GamepadR1, EInputKey::GamepadL1, EInputContext::InGame };
+		MapEvent(EInputAxisEvent::Up, upAxisGamepad);
 
 		const SInputAxis mouseDeltaHorizontal = { EInputAxis::MouseDeltaHorizontal, EInputContext::Editor };
 		MapEvent(EInputAxisEvent::MouseDeltaHorizontal, mouseDeltaHorizontal);
@@ -54,6 +62,9 @@ namespace Havtorn
 
 		const SInputAction toggleFreeCam = { EInputKey::Mouse2, EInputContext::Editor };
 		MapEvent(EInputActionEvent::ToggleFreeCam, toggleFreeCam);
+
+		const SInputAction toggleFreeCamGamepad = { EInputKey::GamepadX, EInputContext::InGame };
+		MapEvent(EInputActionEvent::ToggleFreeCam, toggleFreeCamGamepad);
 
 		const SInputAction renderPassForward = { EInputKey::F8, EInputContext::Editor };
 		MapEvent(EInputActionEvent::CycleRenderPassForward, renderPassForward);
@@ -156,27 +167,27 @@ namespace Havtorn
 		const auto& modifiers = Input->GetKeyInputModifiers().to_ulong();
 		const auto& context = STATIC_U32(CurrentInputContext);
 
-		for (auto& param : Input->GetKeyInputBuffer())
+		for (auto& [param, actionPayload] : Input->GetKeyInputBuffer())
 		{
-			for (auto& val : BoundActionEvents)
+			for (auto& [event, data] : BoundActionEvents)
 			{
-				if (val.second.Has(static_cast<EInputKey>(param.first), context, modifiers))
+				if (data.Has(static_cast<EInputKey>(param), context, modifiers))
 				{
-					param.second.Event = val.first;
-					val.second.Delegate.Broadcast(param.second);
+					actionPayload.Event = event;
+					data.Delegate.Broadcast(actionPayload);
 				}
 			}
 
 			// Key Axes
-			for (auto& val : BoundAxisEvents)
+			for (auto& [event, data] : BoundAxisEvents)
 			{
-				if (val.second.HasKeyAxis())
+				if (data.HasKeyAxis())
 				{
 					F32 axisValue = 0.0f;
-					if (val.second.Has(static_cast<EInputKey>(param.first), context, modifiers, axisValue))
+					if (data.Has(static_cast<EInputKey>(param), context, modifiers, axisValue))
 					{
-						const SInputAxisPayload payload = { val.first, axisValue };
-						val.second.Delegate.Broadcast(payload);
+						const SInputAxisPayload axisPayload = { event, axisValue };
+						data.Delegate.Broadcast(axisPayload);
 					}
 				}
 			}
@@ -189,41 +200,41 @@ namespace Havtorn
 		SVector2<F32> rawMousePosition = { STATIC_F32(Input->GetMouseX()), STATIC_F32(Input->GetMouseY()) };
 		F32 mouseWheelDelta = STATIC_F32(Input->GetMouseWheelDelta());
 
-		for (auto& val : BoundAxisEvents)
+		for (auto& [event, data] : BoundAxisEvents)
 		{
-			if (rawMouseMovement.X != 0.0f && val.second.Has(EInputAxis::MouseDeltaHorizontal, rawMouseMovement.X))
+			if (rawMouseMovement.X != 0.0f && data.Has(EInputAxis::MouseDeltaHorizontal, rawMouseMovement.X))
 			{
 				const F32 axisValue = rawMouseMovement.X;
-				const SInputAxisPayload payload = { val.first, axisValue };
-				val.second.Delegate.Broadcast(payload);
+				const SInputAxisPayload payload = { event, axisValue };
+				data.Delegate.Broadcast(payload);
 			}
 
-			if (rawMouseMovement.Y != 0.0f && val.second.Has(EInputAxis::MouseDeltaVertical, rawMouseMovement.Y))
+			if (rawMouseMovement.Y != 0.0f && data.Has(EInputAxis::MouseDeltaVertical, rawMouseMovement.Y))
 			{
 				const F32 axisValue = rawMouseMovement.Y;
-				const SInputAxisPayload payload = { val.first, axisValue };
-				val.second.Delegate.Broadcast(payload);
+				const SInputAxisPayload payload = { event, axisValue };
+				data.Delegate.Broadcast(payload);
 			}
 
-			if (val.second.Has(EInputAxis::MousePositionHorizontal, rawMousePosition.X))
+			if (data.Has(EInputAxis::MousePositionHorizontal, rawMousePosition.X))
 			{
 				const F32 axisValue = rawMousePosition.X;
-				const SInputAxisPayload payload = { val.first, axisValue };
-				val.second.Delegate.Broadcast(payload);
+				const SInputAxisPayload payload = { event, axisValue };
+				data.Delegate.Broadcast(payload);
 			}
 
-			if (val.second.Has(EInputAxis::MousePositionVertical, rawMousePosition.Y))
+			if (data.Has(EInputAxis::MousePositionVertical, rawMousePosition.Y))
 			{
 				const F32 axisValue = rawMousePosition.Y;
-				const SInputAxisPayload payload = { val.first, axisValue };
-				val.second.Delegate.Broadcast(payload);
+				const SInputAxisPayload payload = { event, axisValue };
+				data.Delegate.Broadcast(payload);
 			}
 
-			if (mouseWheelDelta != 0.0f && val.second.Has(EInputAxis::MouseWheel, mouseWheelDelta))
+			if (mouseWheelDelta != 0.0f && data.Has(EInputAxis::MouseWheel, mouseWheelDelta))
 			{
 				const F32 axisValue = mouseWheelDelta;
-				const SInputAxisPayload payload = { val.first, axisValue };
-				val.second.Delegate.Broadcast(payload);
+				const SInputAxisPayload payload = { event, axisValue };
+				data.Delegate.Broadcast(payload);
 			}
 		}
 	}

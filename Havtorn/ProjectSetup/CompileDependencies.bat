@@ -157,5 +157,16 @@ copy /y build\Release\freetype.dll ..\..\Bin\EditorDevelopment\freetype.dll
 cd .. 
 
 echo.
+echo Installing Nuget
+echo.
+winget install Microsoft.Nuget
+
+echo.
+echo Installing GameInput
+echo.
+winget install Microsoft.GameInput
+nuget install Microsoft.GameInput -Version 3.1.26100.6879
+
+echo.
 echo Dependencies compiled
 PAUSE
