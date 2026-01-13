@@ -50,6 +50,7 @@
 *Havtorn/Source/_ReSharper.Caches
 *Havtorn/Source/out
 *Havtorn/External/DirectXTex
+*Havtorn/External/Microsoft.GameInput.*
 *Havtorn/ProjectSetup/__pycache__
 *Havtorn/ProjectSetup/CMake
 *Havtorn/ProjectSetup/Premake

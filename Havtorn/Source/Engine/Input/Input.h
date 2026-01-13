@@ -1,16 +1,30 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include <bitset>
-
-//#define INPUT_AXIS_USES_FALLOFF
-
 #include "InputTypes.h"
+
+#include <bitset>
+#include <thread>
+#include <mutex>
+
+#include <GameInput.h>
 
 namespace Havtorn
 {
+	constexpr U8 MaxNumUsers = 1;
+	constexpr U8 PrimaryUser = 0;
+
+	using namespace GameInput::v3;
+
 	class CInputMapper;
 	class CPlatformManager;
+
+	enum class EInputDeviceType
+	{
+		Keyboard = 0,
+		Gamepad = 1,
+		Count = 2
+	};
 
 	class CInput
 	{
@@ -28,13 +42,8 @@ namespace Havtorn
 			Mouse5 = 6
 		};
 
-		enum class EAxis
-		{
-			Horizontal = 0,
-			Vertical = 1
-		};
-
 		CInput();
+		~CInput();
 		bool Init(CPlatformManager* platformManager);
 
 		void UpdateEvents(HWND handle, UINT message, WPARAM wParam, LPARAM lParam);
@@ -42,9 +51,6 @@ namespace Havtorn
 
 		[[nodiscard]] const std::bitset<3>& GetKeyInputModifiers() const;
 
-		//static SVector2<F32> GetAxisRaw();
-
-		F32 GetAxis(const EAxis& axis);
 		bool IsKeyDown(WPARAM wParam);
 		[[nodiscard]] bool IsKeyPressed(WPARAM wParam) const;
 		[[nodiscard]] bool IsKeyReleased(WPARAM wParam) const;
@@ -60,29 +66,30 @@ namespace Havtorn
 		[[nodiscard]] I16 GetMouseRawDeltaX() const;
 		[[nodiscard]] I16 GetMouseRawDeltaY() const;
 		// Positive = away from user, negative = towards user
-		[[nodiscard]] I16 GetMouseWheelDelta() const; 
-		[[nodiscard]] bool IsMouseDown(EMouseButton mouseButton) const;
-		[[nodiscard]] bool IsMousePressed(EMouseButton mouseButton) const;
-		[[nodiscard]] bool IsMouseReleased(EMouseButton mouseButton) const;
+		[[nodiscard]] I16 GetMouseWheelDelta() const;
 
 		static void SetMouseScreenPosition(U16 x, U16 y);
 
+		void MonitorDeviceConnectionChanges() noexcept;
+
+		std::array<std::array<IGameInputDevice*, STATIC_U8(EInputDeviceType::Count)>, MaxNumUsers> ActiveInputDevices;
 	private:
 		[[nodiscard]] std::map<WPARAM, SInputActionPayload>& GetKeyInputBuffer();
 
 		void HandleKeyDown(const WPARAM& wParam);
 		void HandleKeyUp(const WPARAM& wParam);
-		void UpdateAxisUsingFallOff();
-		void UpdateAxisUsingNoFallOff();
-		F32 GetAxisUsingFallOff(const EAxis& axis);
-		F32 GetAxisUsingNoFallOff(const EAxis& axis);
 
 	private:
 		std::map<WPARAM, SInputActionPayload> KeyInputBuffer;
 		std::bitset<3> KeyInputModifiers;
-
+		IGameInput* GameInputInstance = nullptr;
+		GameInputCallbackToken KeyboardConnectionChangeHandle;
+		GameInputCallbackToken GamepadConnectionChangeHandle;
 		//std::bitset<5> MouseButtonLast;
 		//std::bitset<5> MouseButton;
+
+		GameInputGamepadState PreviousPrimaryUserGamepadState;
+		GameInputGamepadState PrimaryUserGamepadState;
 
 		std::bitset<256> KeyDownLast;
 		std::bitset<256> KeyDown;

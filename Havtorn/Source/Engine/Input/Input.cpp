@@ -35,6 +35,7 @@ namespace Havtorn
 		, VerticalPressed(false)
 	{
 
+		// TODO.NW: Move all raw input stuff to using GameInput
 		RAWINPUTDEVICE rid;
 		rid.usUsagePage = 0x01; // For mouse
 		rid.usUsage = 0x02; // For mouse
@@ -44,13 +45,216 @@ namespace Havtorn
 		{
 			ENGINE_BOOL_POPUP(false, "Mouse could not be registered as Raw Input Device")
 		}
+
+		for (U8 userIndex = 0; userIndex < MaxNumUsers; userIndex++)
+		{
+			for (U8 deviceTypeIndex = 0; deviceTypeIndex < STATIC_U8(EInputDeviceType::Count); deviceTypeIndex++)
+				ActiveInputDevices[userIndex][deviceTypeIndex] = nullptr;
+		}
+	}
+
+	CInput::~CInput()
+	{
+		GameInputInstance->UnregisterCallback(KeyboardConnectionChangeHandle);
+		GameInputInstance->UnregisterCallback(GamepadConnectionChangeHandle);
+
+		// TODO.NW: Figure out why we crash if we try to release all resources.
+		// It seems to be something internal to the Release call on the instance 
+		// where it accesses invalid memory
+		
+		//for (U8 userIndex = 0; userIndex < MaxNumUsers; userIndex++)
+		//{
+		//	for (U8 deviceTypeIndex = 0; deviceTypeIndex < STATIC_U8(EInputDeviceType::Count); deviceTypeIndex++)
+		//	{
+		//		if (ActiveInputDevices[userIndex][deviceTypeIndex] != nullptr)
+		//			ActiveInputDevices[userIndex][deviceTypeIndex]->Release();
+
+		//		ActiveInputDevices[userIndex][deviceTypeIndex] = nullptr;
+		//	}
+		//}
+
+		if (GameInputInstance != nullptr)
+			GameInputInstance->Release();
+	}
+
+	void CALLBACK OnAnyKeyboardDeviceConnectionChanged(
+		_In_ GameInputCallbackToken /*callbackToken*/,
+		_In_ void* context,
+		_In_ IGameInputDevice* device,
+		_In_ uint64_t /*timestamp*/,
+		_In_ GameInputDeviceStatus currentStatus,
+		_In_ GameInputDeviceStatus /*previousStatus*/
+	)
+	{
+		if (currentStatus & GameInputDeviceConnected)
+		{
+			HV_LOG_TRACE("Keyboard device connected!");
+
+			CInput* inputInstance = reinterpret_cast<CInput*>(context);
+			if (inputInstance != nullptr)
+			{
+				inputInstance->ActiveInputDevices[PrimaryUser][STATIC_U8(EInputDeviceType::Keyboard)] = device;
+			}
+		}
+		else
+		{
+			HV_LOG_TRACE("Keyboard device disconnected!");
+
+			CInput* inputInstance = reinterpret_cast<CInput*>(context);
+			if (inputInstance != nullptr)
+			{
+				IGameInputDevice* existingDevice = inputInstance->ActiveInputDevices[PrimaryUser][STATIC_U8(EInputDeviceType::Keyboard)];
+				if (device == existingDevice && existingDevice != nullptr)
+				{
+					existingDevice->Release();
+					inputInstance->ActiveInputDevices[PrimaryUser][STATIC_U8(EInputDeviceType::Keyboard)] = nullptr;
+					HV_LOG_WARN("Primary User keyboard disconnected!");
+				}
+			}
+		}
+	}
+
+	void CALLBACK OnAnyGamepadDeviceConnectionChanged(
+		_In_ GameInputCallbackToken /*callbackToken*/,
+		_In_ void* context,
+		_In_ IGameInputDevice* device,
+		_In_ uint64_t /*timestamp*/,
+		_In_ GameInputDeviceStatus currentStatus,
+		_In_ GameInputDeviceStatus /*previousStatus*/
+		)
+	{
+		if (currentStatus & GameInputDeviceConnected)
+		{
+			const GameInputDeviceInfo* info = nullptr;
+			device->GetDeviceInfo(&info);
+
+			if (info != nullptr)
+			{
+				if (info->gamepadInfo->aButtonLabel == GameInputLabelIconCross)
+					HV_LOG_TRACE("Device connected! Playstation Gamepad");
+				else
+					HV_LOG_TRACE("Device connected! Xbox Gamepad");
+			}
+			else
+				HV_LOG_TRACE("Device connected! Unknown Gamepad type");
+
+			CInput* inputInstance = reinterpret_cast<CInput*>(context);
+			if (inputInstance != nullptr)
+			{
+				inputInstance->ActiveInputDevices[PrimaryUser][STATIC_U8(EInputDeviceType::Gamepad)] = device;
+			}
+		}
+		else
+		{
+			HV_LOG_TRACE("Device disconnected!");
+
+			CInput* inputInstance = reinterpret_cast<CInput*>(context);
+			if (inputInstance != nullptr)
+			{
+				IGameInputDevice* existingDevice = inputInstance->ActiveInputDevices[PrimaryUser][STATIC_U8(EInputDeviceType::Gamepad)];
+				if (device == existingDevice && existingDevice != nullptr)
+				{
+					existingDevice->Release();
+					inputInstance->ActiveInputDevices[PrimaryUser][STATIC_U8(EInputDeviceType::Gamepad)] = nullptr;
+					HV_LOG_WARN("Primary User gamepad disconnected!");
+				}
+			}
+		}
+	}
+
+	void CInput::MonitorDeviceConnectionChanges() noexcept
+	{
+		if (FAILED(GameInputInstance->RegisterDeviceCallback(
+			nullptr,                              // Don't filter to events from a specific device
+			GameInputKindGamepad,				  // Listen for Gamepad changes
+			GameInputDeviceConnected,             // Notify on changes to GameInputDeviceConnected status
+			GameInputAsyncEnumeration,            // Enumerate initial devices asynchronously
+			this,								  // Context
+			OnAnyGamepadDeviceConnectionChanged,  // Callback function
+			&GamepadConnectionChangeHandle)))
+		{
+			HV_LOG_ERROR("CInput::MonitorDeviceConnectionChanges: Could not register GameInput device callback for gamepads!");
+		}
+
+		if (FAILED(GameInputInstance->RegisterDeviceCallback(
+			nullptr,                              // Don't filter to events from a specific device
+			GameInputKindKeyboard,				  // Listen for Keyboard changes
+			GameInputDeviceConnected,             // Notify on changes to GameInputDeviceConnected status
+			GameInputAsyncEnumeration,            // Enumerate initial devices asynchronously
+			this,								  // Context
+			OnAnyKeyboardDeviceConnectionChanged, // Callback function
+			&KeyboardConnectionChangeHandle)))                                    		
+		{
+			HV_LOG_ERROR("CInput::MonitorDeviceConnectionChanges: Could not register GameInput device callback for keyboard!");
+		}
 	}
 
 	bool CInput::Init(CPlatformManager* platformManager)
 	{
 		platformManager->OnMessageHandled.AddMember(this, &CInput::UpdateEvents);
+		
+		ENGINE_HR_BOOL(GameInputCreate(&GameInputInstance));
+		MonitorDeviceConnectionChanges();
+		
 		return true;
 	}
+
+	WPARAM GetWParamFromGameInputButton(const GameInputGamepadButtons button)
+	{
+		if (button & GameInputGamepadMenu)
+			return static_cast<WPARAM>(EInputKey::GamepadMenu);
+		if (button & GameInputGamepadView)
+			return static_cast<WPARAM>(EInputKey::GamepadView);
+		if (button & GameInputGamepadA)
+			return static_cast<WPARAM>(EInputKey::GamepadA);
+		if (button & GameInputGamepadB)
+			return static_cast<WPARAM>(EInputKey::GamepadB);
+		//if (button & GameInputGamepadC)
+		//	return static_cast<WPARAM>(EInputKey::GamepadX);
+		if (button & GameInputGamepadX)
+			return static_cast<WPARAM>(EInputKey::GamepadX);
+		if (button & GameInputGamepadY)
+			return static_cast<WPARAM>(EInputKey::GamepadY);
+		//if (button & GameInputGamepadZ)
+		//	return static_cast<WPARAM>(EInputKey::GamepadZ);
+		if (button & GameInputGamepadDPadUp)
+			return static_cast<WPARAM>(EInputKey::GamepadDPadUp);
+		if (button & GameInputGamepadDPadDown)
+			return static_cast<WPARAM>(EInputKey::GamepadDPadDown);
+		if (button & GameInputGamepadDPadLeft)
+			return static_cast<WPARAM>(EInputKey::GamepadDPadLeft);
+		if (button & GameInputGamepadDPadRight)
+			return static_cast<WPARAM>(EInputKey::GamepadDPadRight);
+		if (button & GameInputGamepadLeftShoulder)
+			return static_cast<WPARAM>(EInputKey::GamepadL1);
+		if (button & GameInputGamepadRightShoulder)
+			return static_cast<WPARAM>(EInputKey::GamepadR1);
+		if (button & GameInputGamepadLeftTriggerButton)
+			return static_cast<WPARAM>(EInputKey::GamepadL2);
+		if (button & GameInputGamepadRightTriggerButton)
+			return static_cast<WPARAM>(EInputKey::GamepadR2);
+		if (button & GameInputGamepadLeftThumbstick)
+			return static_cast<WPARAM>(EInputKey::GamepadL3);
+		if (button & GameInputGamepadRightThumbstick)
+			return static_cast<WPARAM>(EInputKey::GamepadR3);
+		//if (button & GameInputGamepadRightThumbstickUp)
+		//	return static_cast<WPARAM>(EInputKey::GamepadView);
+		//if (button & GameInputGamepadRightThumbstickDown)
+		//	return static_cast<WPARAM>(EInputKey::GamepadView);
+		//if (button & GameInputGamepadRightThumbstickLeft)
+		//	return static_cast<WPARAM>(EInputKey::GamepadView);
+		//if (button & GameInputGamepadRightThumbstickRight)
+		//	return static_cast<WPARAM>(EInputKey::GamepadView);
+		//if (button & GameInputGamepadPaddleLeft1)
+		//	return static_cast<WPARAM>(EInputKey::GamepadView);
+		//if (button & GameInputGamepadPaddleLeft2)
+		//	return static_cast<WPARAM>(EInputKey::GamepadView);
+		//if (button & GameInputGamepadPaddleRight1)
+		//	return static_cast<WPARAM>(EInputKey::GamepadView);
+		//if (button & GameInputGamepadPaddleRight2)
+		//	return static_cast<WPARAM>(EInputKey::GamepadView);
+		return 0;
+	};
 
 	void CInput::UpdateEvents(HWND /*handle*/, UINT message, WPARAM wParam, LPARAM lParam)
 	{
@@ -61,83 +265,60 @@ namespace Havtorn
 		case WM_SYSKEYDOWN:
 		case WM_KEYDOWN:
 			KeyDown[wParam] = true;
-
 			HandleKeyDown(wParam);
 			break;
-			//return true;
 
 		case WM_SYSKEYUP:
 		case WM_KEYUP:
 			KeyDown[wParam] = false;
-
 			HandleKeyUp(wParam);
 			break;
-			//return true;
 
 		case WM_MOUSEMOVE:
 			MouseX = GET_X_LPARAM(lParam); // Returns x coordiante
 			MouseY = GET_Y_LPARAM(lParam); // Returns y coordinate
-			//return true;
 			break;
+
 		case WM_MOUSEWHEEL:
 			MouseWheelDelta += GET_WHEEL_DELTA_WPARAM(wParam); // Returns difference in mouse wheel position
-			//return true;
 			break;
+
 		case WM_LBUTTONDOWN:
-			//MouseButton[STATIC_U32(EMouseButton::Left)] = true;
 			HandleKeyDown(STATIC_U32(EMouseButton::Left));
-			//return true;
 			break;
+
 		case WM_LBUTTONUP:
-			//MouseButton[STATIC_U32(EMouseButton::Left)] = false;
 			HandleKeyUp(STATIC_U32(EMouseButton::Left));
-			//return true;
 			break;
+
 		case WM_RBUTTONDOWN:
-			//MouseButton[STATIC_U32(EMouseButton::Right)] = true;
 			HandleKeyDown(STATIC_U32(EMouseButton::Right));
-			//return true;
 			break;
+
 		case WM_RBUTTONUP:
-			//MouseButton[STATIC_U32(EMouseButton::Right)] = false;
 			HandleKeyUp(STATIC_U32(EMouseButton::Right));
-			//return true;
 			break;
+
 		case WM_MBUTTONDOWN:
-			//MouseButton[STATIC_U32(EMouseButton::Middle)] = true;
 			HandleKeyDown(STATIC_U32(EMouseButton::Middle));
-			//return true;
 			break;
+
 		case WM_MBUTTONUP:
-			//MouseButton[STATIC_U32(EMouseButton::Middle)] = false;
 			HandleKeyUp(STATIC_U32(EMouseButton::Middle));
-			//return true;
 			break;
+
 		case WM_XBUTTONDOWN:
 			if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1) 
-			{
-				//MouseButton[MouseButton[STATIC_U32(EMouseButton::Mouse4)]] = true;
 				HandleKeyDown(STATIC_U32(EMouseButton::Mouse4));
-			}
 			else if (GET_XBUTTON_WPARAM(wParam) == XBUTTON2) 
-			{
-				//MouseButton[MouseButton[STATIC_U32(EMouseButton::Mouse5)]] = true;
 				HandleKeyDown(STATIC_U32(EMouseButton::Mouse5));
-			}
-			//return true;
 			break;
+
 		case WM_XBUTTONUP:
 			if (GET_XBUTTON_WPARAM(wParam) == XBUTTON1)
-			{
-				//MouseButton[MouseButton[STATIC_U32(EMouseButton::Mouse4)]] = false;
 				HandleKeyUp(STATIC_U32(EMouseButton::Mouse4));
-
-			}
 			else if (GET_XBUTTON_WPARAM(wParam) == XBUTTON2)
-			{
-				//MouseButton[MouseButton[STATIC_U32(EMouseButton::Mouse5)]] = false;
 				HandleKeyUp(STATIC_U32(EMouseButton::Mouse5));
-			}
 			break;
 
 		// Raw Input
@@ -182,7 +363,61 @@ namespace Havtorn
 			break;
 		}
 
-		//return false;
+		// Ask for the latest reading from devices that provide fixed-format
+		// gamepad state. If a device has been assigned to GamepadInputDevice, filter
+		// readings to just the ones coming from that device. Otherwise, if
+		// GamepadInputDevice is null, it will allow readings from any device.
+		IGameInputReading* reading = nullptr;
+		IGameInputDevice* primaryGamepad = ActiveInputDevices[PrimaryUser][STATIC_U8(EInputDeviceType::Gamepad)];
+		if (primaryGamepad != nullptr)
+		{
+			if (SUCCEEDED(GameInputInstance->GetCurrentReading(GameInputKindGamepad, primaryGamepad, &reading)))
+			{
+				GameInputGamepadState state;
+				reading->GetGamepadState(&state);
+				reading->Release();
+		
+				PrimaryUserGamepadState = state;
+			}
+		}
+	
+		{
+			auto checkButtonState = [&](const GameInputGamepadButtons button)
+			{
+				if ((PrimaryUserGamepadState.buttons & button) != 0 && (PreviousPrimaryUserGamepadState.buttons & button) == 0)
+				{
+					WPARAM wParam = GetWParamFromGameInputButton(button);
+					KeyDown[wParam] = true;
+					HandleKeyDown(wParam);
+				}
+
+				if ((PrimaryUserGamepadState.buttons & button) == 0 && (PreviousPrimaryUserGamepadState.buttons & button) != 0)
+				{
+					WPARAM wParam = GetWParamFromGameInputButton(button);
+					KeyDown[wParam] = false;
+					HandleKeyUp(wParam);
+				}
+			};
+
+			checkButtonState(GameInputGamepadMenu);
+			checkButtonState(GameInputGamepadView);
+			checkButtonState(GameInputGamepadA);
+			checkButtonState(GameInputGamepadB);
+			checkButtonState(GameInputGamepadX);
+			checkButtonState(GameInputGamepadY);
+			checkButtonState(GameInputGamepadDPadUp);
+			checkButtonState(GameInputGamepadDPadDown);
+			checkButtonState(GameInputGamepadDPadLeft);
+			checkButtonState(GameInputGamepadDPadRight);
+			checkButtonState(GameInputGamepadLeftShoulder);
+			checkButtonState(GameInputGamepadRightShoulder);
+			checkButtonState(GameInputGamepadLeftTriggerButton);
+			checkButtonState(GameInputGamepadRightTriggerButton);
+			checkButtonState(GameInputGamepadLeftThumbstick);
+			checkButtonState(GameInputGamepadRightThumbstick);
+		}
+		PreviousPrimaryUserGamepadState = PrimaryUserGamepadState;
+
 	}
 
 	void CInput::UpdateState()
@@ -202,12 +437,6 @@ namespace Havtorn
 			MouseScreenX = STATIC_U16(point.x);
 			MouseScreenY = STATIC_U16(point.y);
 		}
-
-#ifdef INPUT_AXIS_USES_FALLOFF
-		UpdateAxisUsingFallOff();
-#else
-		UpdateAxisUsingNoFallOff();
-#endif
 
 		for (auto& keyInput : KeyInputBuffer | std::views::values)
 		{
@@ -240,23 +469,8 @@ namespace Havtorn
 		return KeyInputModifiers;
 	}
 
-	F32 CInput::GetAxis(const EAxis& axis)
+	bool CInput::IsKeyDown(WPARAM wParam) 
 	{
-#ifdef INPUT_AXIS_USES_FALLOFF
-		return GetAxisUsingFallOff(axis);
-#else
-		return GetAxisUsingNoFallOff(axis);
-#endif
-	}
-
-	bool CInput::IsKeyDown(WPARAM wParam) {
-
-
-		//if (ImguiInput.WantCaptureMouse)
-		//{
-		//	return false;
-		//}
-
 		return KeyDown[wParam];
 	}
 
@@ -269,17 +483,6 @@ namespace Havtorn
 	{
 		return (!KeyDown[wParam]) && KeyDownLast[wParam];
 	}
-
-	//SVector2<F32> CInput::GetAxisRaw()
-	//{
-	//	POINT p;
-	//	GetCursorPos(&p);
-	//	const SVector2<U16> currentPos = { STATIC_U16(p.x), STATIC_U16(p.y) };
-	//	const SVector2<U16> center = Instance->PlatformManager->GetCenterPosition();
-	//	const SVector2<U16> result = currentPos - center;
-
-	//	return SVector2<F32>(result.X, result.Y);
-	//}
 
 	U16 CInput::GetMouseX() const
 	{
@@ -326,21 +529,6 @@ namespace Havtorn
 		return MouseWheelDelta;
 	}
 
-	//bool CInput::IsMouseDown(EMouseButton mouseButton) const
-	//{
-	//	return MouseButton[STATIC_U32(mouseButton)];
-	//}
-
-	//bool CInput::IsMousePressed(EMouseButton mouseButton) const
-	//{
-	//	return MouseButton[STATIC_U32(mouseButton)] && (!MouseButtonLast[STATIC_U32(mouseButton)]);
-	//}
-
-	//bool CInput::IsMouseReleased(EMouseButton mouseButton) const
-	//{
-	//	return (!MouseButton[STATIC_U32(mouseButton)]) && MouseButtonLast[STATIC_U32(mouseButton)];
-	//}
-
 	void CInput::SetMouseScreenPosition(U16 x, U16 y)
 	{
 		SetCursorPos(x, y);
@@ -379,137 +567,5 @@ namespace Havtorn
 		KeyInputBuffer[wParam].IsPressed = false;
 		KeyInputBuffer[wParam].IsHeld = false;
 		KeyInputBuffer[wParam].IsReleased = true;
-	}
-
-	void CInput::UpdateAxisUsingFallOff()
-	{
-		if (!HorizontalPressed) 
-		{
-			if (Horizontal >= (0.0f + GTime::FixedDt())) 
-			{
-				Horizontal -= GTime::FixedDt();
-			}
-			else if (Horizontal <= (0.0f - GTime::FixedDt())) 
-			{
-				Horizontal += GTime::FixedDt();
-			}
-			else 
-			{
-				Horizontal = 0.0f;
-			}
-		}
-		if (VerticalPressed == false) 
-		{
-			if (Vertical >= (0.0f + GTime::FixedDt())) 
-			{
-				Vertical -= GTime::FixedDt();
-			}
-			else if (Vertical <= (0.0f - GTime::FixedDt())) 
-			{
-				Vertical += GTime::FixedDt();
-			}
-			else {
-				Vertical = 0.0f;
-			}
-		}
-	}
-
-	void CInput::UpdateAxisUsingNoFallOff()
-	{
-		if (!HorizontalPressed)
-		{
-			Horizontal = 0.0f;
-		}
-		if (!VerticalPressed) 
-		{
-			Vertical = 0.0f;
-		}
-	}
-
-	F32 CInput::GetAxisUsingFallOff(const EAxis& axis)
-	{
-		if (axis == EAxis::Horizontal) 
-		{
-			HorizontalPressed = false;
-			if (IsKeyDown('A')) 
-			{
-				HorizontalPressed = true;
-				Horizontal += GTime::FixedDt(); // For falloff/deceleration
-				if (Horizontal >= 1.0f)
-				{
-					Horizontal = 1.0f;
-				}
-			}
-			if (IsKeyDown('D')) 
-			{
-				HorizontalPressed = true;
-				Horizontal -= GTime::FixedDt(); // For falloff/deceleration
-				if (Horizontal <= -1.0f)
-				{
-					Horizontal = -1.0f;
-				}
-			}
-			return Horizontal;
-		}
-		if (axis == EAxis::Vertical) 
-		{
-			VerticalPressed = false;
-			if (IsKeyDown('W')) 
-			{
-				VerticalPressed = true;
-				Vertical += GTime::FixedDt(); // For falloff/deceleration
-				if (Vertical >= 1.0f) 
-				{
-					Vertical = 1.0f;
-				}
-			}
-			if (IsKeyDown('S')) 
-			{
-				VerticalPressed = true;
-				Vertical -= GTime::FixedDt(); // For falloff/deceleration
-				if (Vertical <= -1.0f)
-				{
-					Vertical = -1.0f;
-				}
-			}
-			return Vertical;
-		}
-		return 0.0f;
-	}
-
-	F32 CInput::GetAxisUsingNoFallOff(const EAxis& axis)
-	{
-		if (axis == EAxis::Horizontal) 
-		{
-			HorizontalPressed = false;
-			if (IsKeyDown('A')) 
-			{
-				HorizontalPressed = true;
-				Horizontal = 1.0f;
-			}
-			if (IsKeyDown('D')) 
-			{
-				HorizontalPressed = true;
-				Horizontal = -1.f;
-			}
-			return Horizontal;
-		}
-		if (axis == EAxis::Vertical) 
-		{
-			VerticalPressed = false;
-			if (IsKeyDown('W'))
-			{
-				VerticalPressed = true;
-				Vertical = 1.f;
-			}
-			if (IsKeyDown('S')) 
-			{
-				VerticalPressed = true;
-				Vertical = -1.f;
-
-			}
-			return Vertical;
-		}
-		return 0.0f;
 	}
 }

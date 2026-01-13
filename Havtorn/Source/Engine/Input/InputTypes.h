@@ -33,7 +33,7 @@ namespace Havtorn
 		Return		= 0x0D,	// Enter
 		Shift		= 0x10,
 		Ctrl		= 0x11,
-		Alt			= 0x12,
+		Alt			= 0x12, // TODO.NW: See if we get inconsistent behavior here because we don't use the higher valued keycodes?
 		Pause		= 0x13,
 		Caps		= 0x14,	// Caps Lock
 		Esc			= 0x1B,	// Escape
@@ -117,6 +117,30 @@ namespace Havtorn
 		F12			= 0x7B,
 		NumLk		= 0x90,	// Num Lock key
 		ScrLk		= 0x91,	// Scroll Lock key
+		GamepadA	= 0xC3,
+		GamepadB	= 0xC4,
+		GamepadX	= 0xC5,
+		GamepadY	= 0xC6,
+		GamepadR1	= 0xC7,
+		GamepadL1	= 0xC8,
+		GamepadL2	= 0xC9,
+		GamepadR2	= 0xCA,
+		GamepadDPadUp = 0xCB,
+		GamepadDPadDown = 0xCC,
+		GamepadDPadLeft = 0xCD,
+		GamepadDPadRight = 0xCE,
+		GamepadMenu	= 0xCF,
+		GamepadView	= 0xD0,
+		GamepadL3	= 0xD1,
+		GamepadR3   = 0xD2,
+		//GamepadLEFT_THUMBSTICK_UP	= 0xD3,
+		//GamepadLEFT_THUMBSTICK_DOWN	= 0xD4,
+		//GamepadLEFT_THUMBSTICK_RIGHT	= 0xD5,
+		//GamepadLEFT_THUMBSTICK_LEFT	= 0xD6,
+		//GamepadRIGHT_THUMBSTICK_UP	= 0xD7,
+		//GamepadRIGHT_THUMBSTICK_DOWN	= 0xD8,
+		//GamepadRIGHT_THUMBSTICK_RIGHT	= 0xD9,
+		//GamepadRIGHT_THUMBSTICK_LEFT	= 0xDA,
 	};
 
 	enum class EInputAxis
@@ -128,7 +152,13 @@ namespace Havtorn
 		MousePositionHorizontal,
 		MousePositionVertical,
 		AnalogHorizontal,
-		AnalogVertical
+		AnalogVertical,
+		GamepadLeftStickHorizontal,
+		GamepadLeftStickVertical,
+		GamepadRightStickHorizontal,
+		GamepadRightStickVertical,
+		GamepadLeftTrigger,
+		GamepadRightTrigger
 	};
 
 	enum class EInputActionEvent
