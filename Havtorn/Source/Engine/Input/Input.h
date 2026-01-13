@@ -51,7 +51,7 @@ namespace Havtorn
 		bool Init(CPlatformManager* platformManager);
 
 		void UpdateEvents(HWND handle, UINT message, WPARAM wParam, LPARAM lParam);
-		void UpdateState();
+		void EndFrameUpdate();
 
 		[[nodiscard]] const std::bitset<3>& GetKeyInputModifiers() const;
 		
@@ -60,6 +60,8 @@ namespace Havtorn
 		[[nodiscard]] I16 GetMouseDeltaX() const;
 		[[nodiscard]] I16 GetMouseDeltaY() const;
 		[[nodiscard]] I16 GetMouseWheelDelta() const;
+		[[nodiscard]] SVector4 GetGamepadThumbstickAxes() const;
+		[[nodiscard]] SVector2<F32> GetGamepadTriggerAxes() const;
 		[[nodiscard]] std::map<WPARAM, SInputActionPayload>& GetKeyInputBuffer();
 
 		void HandleKeyDown(const WPARAM& wParam);

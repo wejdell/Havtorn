@@ -421,10 +421,15 @@ namespace Havtorn
 				case EInputAxis::MouseDeltaVertical: 
 				case EInputAxis::MousePositionHorizontal:
 				case EInputAxis::MousePositionVertical:
+				case EInputAxis::GamepadLeftStickHorizontal:
+				case EInputAxis::GamepadLeftStickVertical:
+				case EInputAxis::GamepadRightStickHorizontal:
+				case EInputAxis::GamepadRightStickVertical:
+				case EInputAxis::GamepadLeftTrigger:
+				case EInputAxis::GamepadRightTrigger:					
 					return rawValue;
 
 				case EInputAxis::AnalogHorizontal: 
-
 				case EInputAxis::AnalogVertical: 
 
 				// Do not handle this here, call GetAxisValue(const EInputKey&) instead

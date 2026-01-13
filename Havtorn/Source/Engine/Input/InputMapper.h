@@ -34,8 +34,9 @@ namespace Havtorn
 	private:
 		void MapEvent(EInputActionEvent event, SInputAction action);
 		void MapEvent(EInputAxisEvent event, SInputAxis axisAction);
-		void UpdateKeyboardInput();
-		void UpdateMouseInput();
+		void UpdateKeyInput();
+		void UpdateMouseAxisInput();
+		void UpdateGamepadAxisInput();
 
 		std::map<EInputActionEvent, SInputActionEvent> BoundActionEvents;
 		std::map<EInputAxisEvent, SInputAxisEvent> BoundAxisEvents;

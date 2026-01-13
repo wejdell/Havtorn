@@ -22,13 +22,19 @@ namespace Havtorn
 	{
 		Input->Init(platformManager);
 
-		// TODO.NR: Load from .ini file
+		// TODO.NW: Load from .ini file
 
 		const SInputAxis forwardAxis = { EInputAxis::Key, EInputKey::KeyW, EInputKey::KeyS, EInputContext::Editor };
 		MapEvent(EInputAxisEvent::Forward, forwardAxis);
 
+		const SInputAxis forwardAxisGamepad = { EInputAxis::GamepadLeftStickVertical, EInputContext::InGame };
+		MapEvent(EInputAxisEvent::Forward, forwardAxisGamepad);
+
 		const SInputAxis rightAxis = { EInputAxis::Key, EInputKey::KeyD, EInputKey::KeyA, EInputContext::Editor };
 		MapEvent(EInputAxisEvent::Right, rightAxis);
+
+		const SInputAxis rightAxisGamepad = { EInputAxis::GamepadLeftStickHorizontal, EInputContext::InGame };
+		MapEvent(EInputAxisEvent::Right, rightAxisGamepad);
 
 		const SInputAxis upAxis = { EInputAxis::Key, EInputKey::KeyE, EInputKey::KeyQ, EInputContext::Editor };
 		MapEvent(EInputAxisEvent::Up, upAxis);
@@ -39,8 +45,14 @@ namespace Havtorn
 		const SInputAxis mouseDeltaHorizontal = { EInputAxis::MouseDeltaHorizontal, EInputContext::Editor };
 		MapEvent(EInputAxisEvent::MouseDeltaHorizontal, mouseDeltaHorizontal);
 
+		const SInputAxis gamepadDeltaHorizontal = { EInputAxis::GamepadRightStickHorizontal, EInputContext::InGame};
+		MapEvent(EInputAxisEvent::MouseDeltaHorizontal, gamepadDeltaHorizontal);
+
 		const SInputAxis mouseDeltaVertical = { EInputAxis::MouseDeltaVertical, EInputContext::Editor };
 		MapEvent(EInputAxisEvent::MouseDeltaVertical, mouseDeltaVertical);
+
+		const SInputAxis gamepadDeltaVertical = { EInputAxis::GamepadRightStickVertical, EInputContext::InGame };
+		MapEvent(EInputAxisEvent::MouseDeltaVertical, gamepadDeltaVertical);
 
 		const SInputAxis mousePositionHorizontal = { EInputAxis::MousePositionHorizontal, EInputContext::Editor };
 		MapEvent(EInputAxisEvent::MousePositionHorizontal, mousePositionHorizontal);
@@ -122,9 +134,10 @@ namespace Havtorn
 
 	void CInputMapper::Update()
 	{
-		UpdateKeyboardInput();
-		UpdateMouseInput();
-		Input->UpdateState();
+		UpdateKeyInput();
+		UpdateMouseAxisInput();
+		UpdateGamepadAxisInput();
+		Input->EndFrameUpdate();
 	}
 
 	CMulticastDelegate<const SInputActionPayload>& CInputMapper::GetActionDelegate(EInputActionEvent event)
@@ -162,7 +175,7 @@ namespace Havtorn
 			BoundAxisEvents[event].Axes.push_back(axisAction);
 	}
 
-	void CInputMapper::UpdateKeyboardInput()
+	void CInputMapper::UpdateKeyInput()
 	{
 		const auto& modifiers = Input->GetKeyInputModifiers().to_ulong();
 		const auto& context = STATIC_U32(CurrentInputContext);
@@ -194,7 +207,7 @@ namespace Havtorn
 		}
 	}
 
-	void CInputMapper::UpdateMouseInput()
+	void CInputMapper::UpdateMouseAxisInput()
 	{
 		SVector2<F32> rawMouseMovement = { STATIC_F32(Input->GetMouseDeltaX()), STATIC_F32(Input->GetMouseDeltaY()) };
 		SVector2<F32> rawMousePosition = { STATIC_F32(Input->GetMouseX()), STATIC_F32(Input->GetMouseY()) };
@@ -233,6 +246,63 @@ namespace Havtorn
 			if (mouseWheelDelta != 0.0f && data.Has(EInputAxis::MouseWheel, mouseWheelDelta))
 			{
 				const F32 axisValue = mouseWheelDelta;
+				const SInputAxisPayload payload = { event, axisValue };
+				data.Delegate.Broadcast(payload);
+			}
+		}
+	}
+
+	void CInputMapper::UpdateGamepadAxisInput()
+	{
+		SVector4 primaryThumbstickInput = Input->GetGamepadThumbstickAxes();
+		SVector2<F32> primaryTriggerInput = Input->GetGamepadTriggerAxes();
+		
+		// TODO.NW: Add deadzone to config?
+		constexpr F32 thumbstickDeadzone = 0.07f;
+		constexpr F32 triggerDeadzone = 0.07f;
+
+		for (auto& [event, data] : BoundAxisEvents)
+		{
+			if ((UMath::Abs(primaryThumbstickInput.X) > thumbstickDeadzone) && data.Has(EInputAxis::GamepadLeftStickHorizontal, primaryThumbstickInput.X))
+			{
+				const F32 axisValue = primaryThumbstickInput.X;
+				const SInputAxisPayload payload = { event, axisValue };
+				data.Delegate.Broadcast(payload);
+			}
+
+			if ((UMath::Abs(primaryThumbstickInput.Y) > thumbstickDeadzone) && data.Has(EInputAxis::GamepadLeftStickVertical, primaryThumbstickInput.Y))
+			{
+				const F32 axisValue = primaryThumbstickInput.Y;
+				const SInputAxisPayload payload = { event, axisValue };
+				data.Delegate.Broadcast(payload);
+			}
+
+			if ((UMath::Abs(primaryThumbstickInput.Z) > thumbstickDeadzone) && data.Has(EInputAxis::GamepadRightStickHorizontal, primaryThumbstickInput.Z))
+			{
+				const F32 axisValue = primaryThumbstickInput.Z;
+				const SInputAxisPayload payload = { event, axisValue };
+				data.Delegate.Broadcast(payload);
+			}
+
+			if ((UMath::Abs(primaryThumbstickInput.W) > thumbstickDeadzone) && data.Has(EInputAxis::GamepadRightStickVertical, primaryThumbstickInput.W))
+			{
+				// TODO.NW: Add Invert Y axis option to config
+				const F32 axisValue = -1.0f * primaryThumbstickInput.W;
+				const SInputAxisPayload payload = { event, axisValue };
+				data.Delegate.Broadcast(payload);
+			}
+
+			// TODO.NW: Add some sort of key option to triggers as well? If we don't have it covered yet
+			if ((UMath::Abs(primaryTriggerInput.X) > triggerDeadzone) && data.Has(EInputAxis::GamepadLeftTrigger, primaryTriggerInput.X))
+			{
+				const F32 axisValue = primaryTriggerInput.X;
+				const SInputAxisPayload payload = { event, axisValue };
+				data.Delegate.Broadcast(payload);
+			}
+
+			if ((UMath::Abs(primaryTriggerInput.Y) > triggerDeadzone) && data.Has(EInputAxis::GamepadRightTrigger, primaryTriggerInput.Y))
+			{
+				const F32 axisValue = primaryTriggerInput.Y;
 				const SInputAxisPayload payload = { event, axisValue };
 				data.Delegate.Broadcast(payload);
 			}

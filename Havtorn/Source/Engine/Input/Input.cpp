@@ -407,11 +407,9 @@ namespace Havtorn
 			checkButtonState(GameInputGamepadLeftThumbstick);
 			checkButtonState(GameInputGamepadRightThumbstick);
 		}
-		PreviousPrimaryUserGamepadState = PrimaryUserGamepadState;
-
 	}
 
-	void CInput::UpdateState()
+	void CInput::EndFrameUpdate()
 	{
 		KeyDownLast = KeyDown;
 
@@ -420,14 +418,6 @@ namespace Havtorn
 		MouseRawDeltaX = 0;
 		MouseRawDeltaY = 0;
 		MouseWheelDelta = 0;
-		//MouseButtonLast = MouseButton;
-
-		POINT point;
-		if (GetCursorPos(&point)) 
-		{
-			MouseScreenX = STATIC_U16(point.x);
-			MouseScreenY = STATIC_U16(point.y);
-		}
 
 		for (auto& keyInput : KeyInputBuffer | std::views::values)
 		{
@@ -448,6 +438,8 @@ namespace Havtorn
 			else
 				++it;
 		}
+
+		PreviousPrimaryUserGamepadState = PrimaryUserGamepadState;
 	}
 
 	std::map<WPARAM, SInputActionPayload>& CInput::GetKeyInputBuffer()
@@ -483,6 +475,16 @@ namespace Havtorn
 	I16 CInput::GetMouseWheelDelta() const
 	{
 		return MouseWheelDelta;
+	}
+
+	SVector4 CInput::GetGamepadThumbstickAxes() const
+	{
+		return SVector4(PrimaryUserGamepadState.leftThumbstickX, PrimaryUserGamepadState.leftThumbstickY, PrimaryUserGamepadState.rightThumbstickX, PrimaryUserGamepadState.rightThumbstickY);
+	}
+
+	SVector2<F32> CInput::GetGamepadTriggerAxes() const
+	{
+		return SVector2<F32>(PrimaryUserGamepadState.leftTrigger, PrimaryUserGamepadState.rightTrigger);
 	}
 
 	void CInput::HandleKeyDown(const WPARAM& wParam)
