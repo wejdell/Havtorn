@@ -69,7 +69,7 @@ namespace Havtorn
 		// TODO.NW: Go through mappings and cover all contexts, or even better
 		// fix assigning multiple contexts (bitset for combining contexts) so 
 		// we can toggle it correctly here
-		//GEngine::GetInput()->SetInputContext(EInputContext::InGame);
+		GEngine::GetInput()->SetInputContext(EInputContext::InGame);
 
 		PlayState = EWorldPlayState::Playing;
 		OnBeginPlayDelegate.Broadcast(Scenes);
@@ -102,9 +102,9 @@ namespace Havtorn
 		// TODO.NW: Go through mappings and cover all contexts, or even better
 		// fix assigning multiple contexts (bitset for combining contexts) so 
 		// we can toggle it correctly here
-//#ifdef HV_EDITOR_BUILD
-//		GEngine::GetInput()->SetInputContext(EInputContext::Editor);
-//#endif // TODO.NW: Introduce MainMenu context?
+#ifdef HV_EDITOR_BUILD
+		GEngine::GetInput()->SetInputContext(EInputContext::Editor);
+#endif // TODO.NW: Introduce MainMenu context?
 
 		PlayState = EWorldPlayState::Stopped;
 		OnEndPlayDelegate.Broadcast(Scenes);

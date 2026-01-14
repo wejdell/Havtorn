@@ -24,43 +24,43 @@ namespace Havtorn
 
 		// TODO.NW: Load from .ini file
 
-		const SInputAxis forwardAxis = { EInputAxis::Key, EInputKey::KeyW, EInputKey::KeyS, EInputContext::Editor };
+		const SInputAxis forwardAxis = { EInputAxis::Key, EInputKey::KeyW, EInputKey::KeyS, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputAxisEvent::Forward, forwardAxis);
 
 		const SInputAxis forwardAxisGamepad = { EInputAxis::GamepadLeftStickVertical, EInputContext::InGame };
 		MapEvent(EInputAxisEvent::Forward, forwardAxisGamepad);
 
-		const SInputAxis rightAxis = { EInputAxis::Key, EInputKey::KeyD, EInputKey::KeyA, EInputContext::Editor };
+		const SInputAxis rightAxis = { EInputAxis::Key, EInputKey::KeyD, EInputKey::KeyA, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputAxisEvent::Right, rightAxis);
 
 		const SInputAxis rightAxisGamepad = { EInputAxis::GamepadLeftStickHorizontal, EInputContext::InGame };
 		MapEvent(EInputAxisEvent::Right, rightAxisGamepad);
 
-		const SInputAxis upAxis = { EInputAxis::Key, EInputKey::KeyE, EInputKey::KeyQ, EInputContext::Editor };
+		const SInputAxis upAxis = { EInputAxis::Key, EInputKey::KeyE, EInputKey::KeyQ, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputAxisEvent::Up, upAxis);
 
 		const SInputAxis upAxisGamepad = { EInputAxis::Key, EInputKey::GamepadR1, EInputKey::GamepadL1, EInputContext::InGame };
 		MapEvent(EInputAxisEvent::Up, upAxisGamepad);
 
-		const SInputAxis mouseDeltaHorizontal = { EInputAxis::MouseDeltaHorizontal, EInputContext::Editor };
+		const SInputAxis mouseDeltaHorizontal = { EInputAxis::MouseDeltaHorizontal, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputAxisEvent::MouseDeltaHorizontal, mouseDeltaHorizontal);
 
 		const SInputAxis gamepadDeltaHorizontal = { EInputAxis::GamepadRightStickHorizontal, EInputContext::InGame};
 		MapEvent(EInputAxisEvent::MouseDeltaHorizontal, gamepadDeltaHorizontal);
 
-		const SInputAxis mouseDeltaVertical = { EInputAxis::MouseDeltaVertical, EInputContext::Editor };
+		const SInputAxis mouseDeltaVertical = { EInputAxis::MouseDeltaVertical, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputAxisEvent::MouseDeltaVertical, mouseDeltaVertical);
 
 		const SInputAxis gamepadDeltaVertical = { EInputAxis::GamepadRightStickVertical, EInputContext::InGame };
 		MapEvent(EInputAxisEvent::MouseDeltaVertical, gamepadDeltaVertical);
 
-		const SInputAxis mousePositionHorizontal = { EInputAxis::MousePositionHorizontal, EInputContext::Editor };
+		const SInputAxis mousePositionHorizontal = { EInputAxis::MousePositionHorizontal, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputAxisEvent::MousePositionHorizontal, mousePositionHorizontal);
 
-		const SInputAxis mousePositionVertical = { EInputAxis::MousePositionVertical, EInputContext::Editor };
+		const SInputAxis mousePositionVertical = { EInputAxis::MousePositionVertical, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputAxisEvent::MousePositionVertical, mousePositionVertical);
 
-		const SInputAxis mouseWheel = { EInputAxis::MouseWheel, EInputContext::Editor };
+		const SInputAxis mouseWheel = { EInputAxis::MouseWheel, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputAxisEvent::Zoom, mouseWheel);
 
 		const SInputAction translateTransform = { EInputKey::KeyW, EInputContext::Editor };
@@ -72,19 +72,19 @@ namespace Havtorn
 		const SInputAction scaleTransform = { EInputKey::KeyR, EInputContext::Editor };
 		MapEvent(EInputActionEvent::ScaleTransform, scaleTransform);
 
-		const SInputAction toggleFreeCam = { EInputKey::Mouse2, EInputContext::Editor };
+		const SInputAction toggleFreeCam = { EInputKey::Mouse2, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputActionEvent::ToggleFreeCam, toggleFreeCam);
 
 		const SInputAction toggleFreeCamGamepad = { EInputKey::GamepadX, EInputContext::InGame };
 		MapEvent(EInputActionEvent::ToggleFreeCam, toggleFreeCamGamepad);
 
-		const SInputAction renderPassForward = { EInputKey::F8, EInputContext::Editor };
+		const SInputAction renderPassForward = { EInputKey::F8, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputActionEvent::CycleRenderPassForward, renderPassForward);
 
-		const SInputAction renderPassBackward = { EInputKey::F7, EInputContext::Editor };
+		const SInputAction renderPassBackward = { EInputKey::F7, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputActionEvent::CycleRenderPassBackward, renderPassBackward);
 
-		const SInputAction renderPassReset = { EInputKey::F9, EInputContext::Editor };
+		const SInputAction renderPassReset = { EInputKey::F9, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputActionEvent::CycleRenderPassReset, renderPassReset);
 
 		const SInputAction pickEntity = { EInputKey::Mouse1, EInputContext::Editor };
@@ -110,7 +110,7 @@ namespace Havtorn
 
 		// TODO.NW: Figure out how to deal with editor vs in game context here, and how to construct the input action.
 		// Esc by default in UE is end play. Shift+Esc could be used to Pause, or we decide to shift the role of those two.
-		const SInputAction stopPlay = { EInputKey::Esc, EInputContext::Editor };
+		const SInputAction stopPlay = { EInputKey::Esc, EInputContext::InGame };
 		MapEvent(EInputActionEvent::StopPlay, stopPlay);
 
 		// NW: the Sys key is a bit different. We might need this workaround on other modifier keys as well

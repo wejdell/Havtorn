@@ -20,6 +20,49 @@ namespace Havtorn
 		InGame		= BIT(1),
 	};
 
+	inline constexpr U32 operator&(U32 mask, EInputContext context)
+	{
+		return mask & STATIC_U32(context);
+	}
+
+	inline constexpr U32 operator&(EInputContext context, U32 mask)
+	{
+		return mask & context;
+	}
+
+	inline constexpr U32 operator|(EInputContext x, EInputContext y)
+	{
+		return (STATIC_U32(x) | STATIC_U32(y));
+	}
+
+	inline constexpr U32 operator^(EInputContext x, EInputContext y)
+	{
+		return (STATIC_U32(x) ^ STATIC_U32(y));
+	}
+
+	inline constexpr U32 operator~(EInputContext x)
+	{
+		return ~STATIC_U32(x);
+	}
+
+	inline U32& operator&=(U32& mask, EInputContext context)
+	{
+		mask &= STATIC_U32(context);
+		return mask;
+	}
+
+	inline U32& operator|=(U32& mask, EInputContext context)
+	{
+		mask |= context;
+		return mask;
+	}
+
+	inline U32& operator^=(U32& mask, EInputContext context)
+	{
+		mask ^= context;
+		return mask;
+	}
+
 	enum class EInputKey
 	{
 		None		= 0x00,
@@ -226,6 +269,12 @@ namespace Havtorn
 			, Modifiers(STATIC_U32(modifier))
 		{}
 
+		SInputAction(EInputKey key, U32 contexts, EInputModifier modifier)
+			: Key(key)
+			, Contexts(STATIC_U32(contexts))
+			, Modifiers(STATIC_U32(modifier))
+		{}
+
 		SInputAction(EInputKey key, std::initializer_list<EInputContext> contexts, std::initializer_list<EInputModifier> modifiers = {})
 			: Key(key)
 			, Contexts(STATIC_U32(EInputContext::Editor))
@@ -238,6 +287,12 @@ namespace Havtorn
 		SInputAction(EInputKey key, EInputContext context)
 			: Key(key)
 			, Contexts(STATIC_U32(context))
+			, Modifiers(0)
+		{}
+
+		SInputAction(EInputKey key, U32 contexts)
+			: Key(key)
+			, Contexts(contexts)
 			, Modifiers(0)
 		{}
 
@@ -328,6 +383,14 @@ namespace Havtorn
 			, Modifiers(0)
 		{}
 
+		SInputAxis(EInputAxis axis, U32 contexts)
+			: Axis(axis)
+			, AxisPositiveKey(EInputKey::KeyW)
+			, AxisNegativeKey(EInputKey::KeyS)
+			, Contexts(contexts)
+			, Modifiers(0)
+		{}
+
 		SInputAxis(EInputAxis axis, EInputContext context, EInputModifier modifier)
 			: Axis(axis)
 			, AxisPositiveKey(EInputKey::KeyW)
@@ -341,6 +404,14 @@ namespace Havtorn
 			, AxisPositiveKey(axisPositiveKey)
 			, AxisNegativeKey(axisNegativeKey)
 			, Contexts(STATIC_U32(context))
+			, Modifiers(0)
+		{}
+
+		SInputAxis(EInputAxis axis, EInputKey axisPositiveKey, EInputKey axisNegativeKey, U32 contexts)
+			: Axis(axis)
+			, AxisPositiveKey(axisPositiveKey)
+			, AxisNegativeKey(axisNegativeKey)
+			, Contexts(contexts)
 			, Modifiers(0)
 		{}
 
