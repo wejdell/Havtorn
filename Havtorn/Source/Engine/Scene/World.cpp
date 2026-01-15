@@ -99,9 +99,6 @@ namespace Havtorn
 		if (Scenes.empty())
 			return false;
 
-		// TODO.NW: Go through mappings and cover all contexts, or even better
-		// fix assigning multiple contexts (bitset for combining contexts) so 
-		// we can toggle it correctly here
 #ifdef HV_EDITOR_BUILD
 		GEngine::GetInput()->SetInputContext(EInputContext::Editor);
 #endif // TODO.NW: Introduce MainMenu context?
