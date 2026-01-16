@@ -541,6 +541,7 @@ set(GEOMETRY_SHADERS
     ${SHADER_FOLDER}SpriteWorldSpaceEditor_GS.hlsl
 )
 set(PIXEL_SHADERS
+	Engine/Graphics/Shaders/FullscreenWorldPosition_PS.hlsl
     ${SHADER_FOLDER}Decal_Albedo_PS.hlsl
     ${SHADER_FOLDER}Decal_Material_PS.hlsl
     ${SHADER_FOLDER}Decal_Normal_PS.hlsl

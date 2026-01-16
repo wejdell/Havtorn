@@ -16,14 +16,14 @@ namespace Havtorn
 	{
 		for (UINT i = 0; i < STATIC_U64(EGBufferTextures::Count); ++i) 
 		{
-			if (i != STATIC_U64(EGBufferTextures::EditorData) || includingEditorData)
+			if ((i != STATIC_U64(EGBufferTextures::EditorData) && i != STATIC_U64(EGBufferTextures::WorldPosition)) || includingEditorData)
 				Context->ClearRenderTargetView(RenderTargets[i], &clearColor.X);
 		}
 	}
 
 	void CGBuffer::ReleaseRenderTargets()
 	{
-		std::array<ID3D11RenderTargetView*, STATIC_U64(EGBufferTextures::Count)> nullViews = { NULL, NULL, NULL, NULL, NULL };
+		std::array<ID3D11RenderTargetView*, STATIC_U64(EGBufferTextures::Count)> nullViews = { NULL, NULL, NULL, NULL, NULL, NULL };
 		Context->OMSetRenderTargets(STATIC_U64(EGBufferTextures::Count), &nullViews[0], nullptr);
 	}
 
@@ -53,6 +53,16 @@ namespace Havtorn
 	ID3D11Texture2D* CGBuffer::GetEditorDataTexture() const
 	{
 		return Textures[STATIC_U64(EGBufferTextures::EditorData)];
+	}
+
+	ID3D11RenderTargetView* CGBuffer::GetEditorWorldPositionRenderTarget() const
+	{
+		return RenderTargets[STATIC_U64(EGBufferTextures::WorldPosition)];
+	}
+
+	ID3D11Texture2D* CGBuffer::GetEditorWorldPositionTexture() const
+	{
+		return Textures[STATIC_U64(EGBufferTextures::WorldPosition)];
 	}
 
 	const D3D11_VIEWPORT& CGBuffer::GetViewport() const

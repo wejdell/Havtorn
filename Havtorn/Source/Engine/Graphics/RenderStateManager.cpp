@@ -127,6 +127,7 @@ namespace Havtorn
             filepaths[STATIC_U64(EPixelShaders::FullscreenDownsampleDepth)]         = ShaderRoot + "FullscreenDepthDownSample_PS.cso";
             filepaths[STATIC_U64(EPixelShaders::FullscreenDepthAwareUpsampling)]    = ShaderRoot + "FullscreenDepthAwareUpsample_PS.cso";
             filepaths[STATIC_U64(EPixelShaders::FullscreenEditorData)]              = ShaderRoot + "FullscreenEditorData_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::FullscreenWorldPosition)]           = ShaderRoot + "FullscreenWorldPosition_PS.cso";
         }
 
         for (U64 i = 0; i < STATIC_U64(EPixelShaders::Count); i++)
@@ -611,6 +612,7 @@ namespace Havtorn
         Context->PSSetShaderResources(2, 1, &nullView);
         Context->PSSetShaderResources(3, 1, &nullView);
         Context->PSSetShaderResources(4, 1, &nullView);
+        Context->PSSetShaderResources(5, 1, &nullView);
         Context->PSSetShaderResources(8, 1, &nullView);
         Context->PSSetShaderResources(9, 1, &nullView);
         Context->PSSetShaderResources(21, 1, &nullView);

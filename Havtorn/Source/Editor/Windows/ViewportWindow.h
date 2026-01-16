@@ -30,6 +30,9 @@ namespace Havtorn
 
 		void OnMouseMove(const SInputAxisPayload payload);
 	private:
+		SVector4 GetWorldPositionOnPixel() const;
+
+	private:
 		F32 ViewportMenuHeight = 16.0f;
 		SVector2<F32> RenderedSceneDimensions = SVector2<F32>::Zero;
 		SVector2<F32> RenderedScenePosition = SVector2<F32>::Zero;

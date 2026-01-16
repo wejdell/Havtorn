@@ -46,6 +46,7 @@ namespace Havtorn
 		Tonemapping,
 		Antialiasing,
 		EditorData,
+		WorldPosition,
 		Count
 	};
 
@@ -106,6 +107,7 @@ namespace Havtorn
 		ENGINE_API CRenderTexture CreateRenderTextureFromData(const SVector2<U16> size, const DXGI_FORMAT format, void* data, const U64 elementSize);
 
 		ENGINE_API U64 GetEntityGUIDFromData(U64 dataIndex) const;
+		ENGINE_API SVector4 GetWorldPositionFromData(U64 dataIndex) const;
 
 		U32 WriteToAnimationDataTexture(const std::string& animationName);
 
@@ -368,6 +370,7 @@ namespace Havtorn
 		CRenderTexture TonemappedTexture;
 		CRenderTexture AntiAliasedTexture;
 		CRenderTexture EditorDataTexture;
+		CRenderTexture WorldPositionTexture;
 		CRenderTexture SkeletalAnimationDataTextureCPU;
 		CRenderTexture SkeletalAnimationDataTextureGPU;
 		CGBuffer GBuffer;
@@ -402,6 +405,9 @@ namespace Havtorn
 
 		void* EntityPerPixelData = nullptr;
 		U64 EntityPerPixelDataSize = 0;
+
+		void* WorldPositionPerPixelData = nullptr;
+		U64 WorldPositionPerPixelDataSize = 0;
 
 		void* SystemSkeletalAnimationBoneData = nullptr;
 		void* RendererSkeletalAnimationBoneData = nullptr;
