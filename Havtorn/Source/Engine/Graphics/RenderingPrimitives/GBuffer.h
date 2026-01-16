@@ -18,6 +18,7 @@ namespace Havtorn
 			Normal,
 			VertexNormal,
 			Material,
+			WorldPosition,
 			EditorData,
 			Count
 		};
@@ -34,6 +35,8 @@ namespace Havtorn
 
 		ID3D11RenderTargetView* GetEditorDataRenderTarget() const;
 		ID3D11Texture2D* GetEditorDataTexture() const;
+		ID3D11RenderTargetView* GetEditorWorldPositionRenderTarget() const;
+		ID3D11Texture2D* GetEditorWorldPositionTexture() const;
 		const D3D11_VIEWPORT& GetViewport() const;
 
 		void ReleaseResources();

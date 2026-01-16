@@ -229,20 +229,21 @@ namespace Havtorn
 			
 			CWorld* world = GEngine::GetWorld();
 			const std::vector<Ptr<CScene>>& scenes = world->GetActiveScenes();
-			SCameraData mainCameraData = UComponentAlgo::GetCameraData(world->GetMainCamera(), scenes);
+			const SCameraData mainCameraData = UComponentAlgo::GetCameraData(world->GetMainCamera(), scenes);
 
 			if (!mainCameraData.IsValid())
 				return;
 
-			SMatrix viewMatrix = mainCameraData.TransformComponent->Transform.GetMatrix();
-			SMatrix projectionMatrix = mainCameraData.CameraComponent->ProjectionMatrix;
-			SRay worldRay = UMathUtilities::RaycastWorld(MousePosition, RenderedSceneDimensions, RenderedScenePosition, viewMatrix, projectionMatrix);
+			const SMatrix viewMatrix = mainCameraData.TransformComponent->Transform.GetMatrix();
+			const SMatrix projectionMatrix = mainCameraData.CameraComponent->ProjectionMatrix;
+			//SRay worldRay = UMathUtilities::RaycastWorld(MousePosition, RenderedSceneDimensions, RenderedScenePosition, viewMatrix, projectionMatrix);
 
 			// TODO.NW: This is too annoying, we should have an easy time of setting the transform of entities
 			STransformComponent& previewTransform = *scene->GetComponent<STransformComponent>(scene->PreviewEntity);
 			SMatrix transformCopy = previewTransform.Transform.GetMatrix();
-			constexpr F32 dragDistanceFromEditorCamera = 3.0f;
-			transformCopy.SetTranslation(worldRay.GetPointOnRay(dragDistanceFromEditorCamera));
+			//constexpr F32 dragDistanceFromEditorCamera = 3.0f;
+			//transformCopy.SetTranslation(worldRay.GetPointOnRay(dragDistanceFromEditorCamera));
+			transformCopy.SetTranslation(GetWorldPositionOnPixel());
 			previewTransform.Transform.SetMatrix(transformCopy);
 			return;
 		}
@@ -331,5 +332,23 @@ namespace Havtorn
 
 		if (payload.Event == EInputAxisEvent::MousePositionVertical)
 			MousePosition.Y = payload.AxisValue;
+	}
+
+	SVector4 CViewportWindow::GetWorldPositionOnPixel() const
+	{
+		const SVector2<F32> renderedScenePosition = RenderedScenePosition + SVector2<F32>(0.0f, 18.0f);
+
+		const SVector2<U16> resolution = Manager->GetPlatformManager()->GetResolution();
+		const SVector2<F32> rectRelativeMousePos = SVector2((MousePosition.X - renderedScenePosition.X) / RenderedSceneDimensions.X, (MousePosition.Y - renderedScenePosition.Y) / RenderedSceneDimensions.Y);
+
+		const SVector2<F32> fullscreenMousePos = { UMath::Ceil(STATIC_F32(resolution.X) * rectRelativeMousePos.X), UMath::Ceil(STATIC_F32(resolution.Y) * rectRelativeMousePos.Y - 12.0f) };
+
+		if (!UMath::IsWithin(fullscreenMousePos.X, 0.0f, STATIC_F32(resolution.X)) || !UMath::IsWithin(fullscreenMousePos.Y, 0.0f, STATIC_F32(resolution.Y)))
+			return SVector4::Zero;
+
+		const U64 dataIndex = STATIC_U64(fullscreenMousePos.X) + STATIC_U64(fullscreenMousePos.Y) * STATIC_U64(resolution.X);		
+		const SVector4 worldPos = Manager->GetRenderManager()->GetWorldPositionFromData(dataIndex);
+
+		return worldPos;
 	}
 }

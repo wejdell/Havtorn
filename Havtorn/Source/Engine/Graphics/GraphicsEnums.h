@@ -93,6 +93,7 @@ namespace Havtorn
 		FullscreenDownsampleDepth = 35,
 		FullscreenDepthAwareUpsampling = 36,
 		FullscreenEditorData = 37,
+		FullscreenWorldPosition = 38,
 		Count,
 		Null = Count
 	};
