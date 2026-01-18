@@ -108,8 +108,8 @@ VertexModelToPixelEditor main(SkeletalMeshInstancedEditorVertexInput input)
     skinnedPos += weights.y * mul(Bones[boneIndices.y], pos);
     skinnedPos += weights.z * mul(Bones[boneIndices.z], pos);
     skinnedPos += weights.w * mul(Bones[boneIndices.w], pos);
-
-    const float4 vertexWorldPos = mul(input.Transform, skinnedPos);
+    
+    float4 vertexWorldPos = mul(input.Transform, skinnedPos);
     const float4 vertexViewPos = mul(ToCameraSpace, vertexWorldPos);
     const float4 vertexProjectionPos = mul(ToProjectionSpace, vertexViewPos);
 
@@ -119,7 +119,7 @@ VertexModelToPixelEditor main(SkeletalMeshInstancedEditorVertexInput input)
     float3 vertexWorldBinormal = mul(toWorldRotation, input.Bitangent.xyz);
 
     returnValue.Position = vertexProjectionPos;
-    returnValue.WorldPosition = vertexWorldPos;
+    returnValue.WorldPosition = vertexWorldPos / vertexWorldPos.w;
     returnValue.Normal = float4(vertexWorldNormal, 0);
     returnValue.Tangent = float4(vertexWorldTangent, 0);
     returnValue.Bitangent = float4(vertexWorldBinormal, 0);

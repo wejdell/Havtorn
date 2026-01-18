@@ -42,5 +42,7 @@ namespace Havtorn
 
 		bool IsPlayButtonEngaged = false;
 		bool IsPauseButtonEngaged = false;
+		bool WasPreviewPositionValid = true;
+		SVector4 PreviousPreviewPosition = SVector4::Zero;
 	};
 }

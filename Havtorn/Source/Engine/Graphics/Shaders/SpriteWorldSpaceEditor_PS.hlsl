@@ -9,7 +9,8 @@ struct GBufferOutputEditor
     float4 Normal             : SV_TARGET1;
     float4 VertexNormal       : SV_TARGET2;
     float4 MetalRoughEmAO     : SV_TARGET3;
-    uint2 Entity              : SV_TARGET4;
+    float4 WorldPosition      : SV_TARGET4;
+    uint2 Entity              : SV_TARGET5;
 };
 
 GBufferOutputEditor main(EditorGeometryToPixelWorldSpace input)
@@ -37,6 +38,7 @@ GBufferOutputEditor main(EditorGeometryToPixelWorldSpace input)
     output.VertexNormal = float4(input.Normal.xyz, 1.0f);
     output.MetalRoughEmAO = float4(metalness, perceptualRoughness, emissive, ambientOcclusion);
     output.Entity = input.Entity;
+    output.WorldPosition = input.WorldPosition;
     
     return output;
 }

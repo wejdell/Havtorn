@@ -45,6 +45,7 @@ void main(point InstancedEditorVertexToGeometry input[1], inout TriangleStream<E
         vertex.Color = inputVertex.Color;
         vertex.UV = uv[index];
         vertex.Entity = inputVertex.Entity;
+        vertex.WorldPosition = vertexWorldPos;
         output.Append(vertex);
     }
 }

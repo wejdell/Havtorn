@@ -168,7 +168,9 @@ namespace Havtorn
 
 						if (payload.IsDelivery)
 						{
-							Manager->SetSelectedEntity(currentScene->PreviewEntity);
+							SEntity copiedEntity = currentScene->CopyEntity(currentScene->PreviewEntity);
+							currentScene->RemoveEntity(currentScene->PreviewEntity);
+							Manager->SetSelectedEntity(copiedEntity);
 							currentScene->PreviewEntity = SEntity::Null;
 						}
 					}
@@ -236,15 +238,31 @@ namespace Havtorn
 
 			const SMatrix viewMatrix = mainCameraData.TransformComponent->Transform.GetMatrix();
 			const SMatrix projectionMatrix = mainCameraData.CameraComponent->ProjectionMatrix;
-			//SRay worldRay = UMathUtilities::RaycastWorld(MousePosition, RenderedSceneDimensions, RenderedScenePosition, viewMatrix, projectionMatrix);
 
 			// TODO.NW: This is too annoying, we should have an easy time of setting the transform of entities
 			STransformComponent& previewTransform = *scene->GetComponent<STransformComponent>(scene->PreviewEntity);
 			SMatrix transformCopy = previewTransform.Transform.GetMatrix();
-			//constexpr F32 dragDistanceFromEditorCamera = 3.0f;
-			//transformCopy.SetTranslation(worldRay.GetPointOnRay(dragDistanceFromEditorCamera));
-			transformCopy.SetTranslation(GetWorldPositionOnPixel());
+
+			const SVector4 worldPosOnPixel = GetWorldPositionOnPixel();
+			const bool isPreviewPositionValid = worldPosOnPixel.W != 0.0f;
+			if (isPreviewPositionValid && WasPreviewPositionValid)
+			{
+				transformCopy.SetTranslation(worldPosOnPixel);
+			}
+			else if (!isPreviewPositionValid && WasPreviewPositionValid)
+			{
+				transformCopy.SetTranslation(PreviousPreviewPosition);
+			}
+			else
+			{
+				SRay worldRay = UMathUtilities::RaycastWorld(MousePosition, RenderedSceneDimensions, RenderedScenePosition, viewMatrix, projectionMatrix);
+				constexpr F32 dragDistanceFromEditorCamera = 3.0f;
+				transformCopy.SetTranslation(worldRay.GetPointOnRay(dragDistanceFromEditorCamera));
+			}
+
 			previewTransform.Transform.SetMatrix(transformCopy);
+			WasPreviewPositionValid = isPreviewPositionValid;
+			PreviousPreviewPosition = worldPosOnPixel;
 			return;
 		}
 
@@ -254,7 +272,7 @@ namespace Havtorn
 				return SComponent::IsValid(metaDataComp) ? metaDataComp->Name.AsString() : "UNNAMED";
 			}
 		);
-		scene->PreviewEntity = scene->AddEntity(newEntityName);
+		scene->PreviewEntity = scene->AddEntity(newEntityName, 8000);
 
 		scene->AddComponent<STransformComponent>(scene->PreviewEntity)->Transform;
 		scene->AddComponentEditorContext(scene->PreviewEntity, &STransformComponentEditorContext::Context);

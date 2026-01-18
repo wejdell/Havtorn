@@ -44,41 +44,10 @@ float4 PixelShader_Exists(float2 uv)
     return float4(depth, 0.0f, 0.0f, 0.0f);
 }
 
-float4 PixelShader_Albedo(float2 uv)
-{
-    return albedoTexture.Sample(defaultSampler, uv).rgba;
-}
-
 float4 PixelShader_Albedo(Texture2D anAlbedoTexture, float2 uv)
 {
     float4 color = anAlbedoTexture.Sample(defaultSampler, uv).rgba;
     return color;
-}
-
-// This function is used for renderpasses to isolate the normal texture.
-float4 PixelShader_NormalForIsolatedRendering(float2 uv)
-{
-    float3 normal;
-    normal.xy = normalTexture.Sample(defaultSampler, uv).ag;
-    // Recreate z
-    normal.z = 0.0f;
-    normal.z = sqrt(1 - saturate((normal.x * normal.x) + (normal.y * normal.y)));
-    normal = normalize(normal);
-    
-    return float4(normal.x, normal.y, normal.z, 1.0f);
-}
-
-float4 PixelShader_Normal(float2 uv)
-{
-    float3 normal;
-    normal.xy = normalTexture.Sample(defaultSampler, uv).ag;
-    // Recreate z
-    normal.z = 0.0f;
-    normal = (normal * 2.0f) - 1.0f; // Comment this for Normal shader render pass
-    normal.z = sqrt(1 - saturate((normal.x * normal.x) + (normal.y * normal.y)));
-    normal = normalize(normal);
-    
-    return float4(normal.x, normal.y, normal.z, 1.0f);
 }
 
 void RecreateZ(inout float3 normal)
@@ -103,11 +72,6 @@ float4 PixelShader_Normal(Texture2D aNormalTexture, float2 uv)
     return float4(normal.x, normal.y, normal.z, 1.0f);
 }
 
-float PixelShader_DetailNormalStrength(float2 uv)
-{
-	const float output = materialTexture.Sample(defaultSampler, uv).a;
-    return output;
-}
 float4 PixelShader_DetailNormal(float2 uv, int index)
 {
 	const float tilingModifier = DETAILNORMAL_TILING; // eq to scale
@@ -123,20 +87,10 @@ float4 PixelShader_DetailNormal(float2 uv, int index)
     return float4(normal.x, normal.y, normal.z, 1.0f);
 }
 
-float4 PixelShader_Material(float2 uv)
-{
-    return materialTexture.Sample(defaultSampler, uv).rgba;
-}
-
 float4 PixelShader_Material(Texture2D aMaterialTexture, float2 uv)
 {
     float4 material = aMaterialTexture.Sample(defaultSampler, uv).rgba;
     return material;
-}
-
-float PixelShader_AmbientOcclusion(float2 uv)
-{
-	return normalTexture.Sample(defaultSampler, uv).b;
 }
 
 float PixelShader_AmbientOcclusion(Texture2D aNormalTexture, float2 uv)
@@ -145,32 +99,15 @@ float PixelShader_AmbientOcclusion(Texture2D aNormalTexture, float2 uv)
     return ao;
 }
 
-float PixelShader_Metalness(float2 uv)
-{
-	return PixelShader_Material(uv).r;
-}
-
 float PixelShader_Metalness(Texture2D aMaterialTexture, float2 uv)
 {
 	const float metalness = PixelShader_Material(aMaterialTexture, uv).r;
     return metalness;
 }
 
-float PixelShader_PerceptualRoughness(float2 uv)
-{
-	const float roughness = PixelShader_Material(uv).g;
-    return roughness;
-}
-
 float PixelShader_PerceptualRoughness(Texture2D aMaterialTexture, float2 uv)
 {
 	return PixelShader_Material(aMaterialTexture, uv).g;
-}
-
-float PixelShader_Emissive(float2 uv)
-{
-	const float emissive = PixelShader_Material(uv).b;
-    return emissive;
 }
 
 float PixelShader_Emissive(Texture2D aMaterialTexture, float2 uv)

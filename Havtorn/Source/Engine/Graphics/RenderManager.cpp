@@ -938,6 +938,14 @@ namespace Havtorn
 		const std::vector<SEntity>& entities = meshData.Entities;
 		InstancedEntityIDBuffer.BindBuffer(entities);
 
+		// TODO.NW: Figure out a place for this hard coded preview entity GUID (8000);
+		const bool renderingPreviewEntity = std::ranges::find(entities, SEntity(8000)) != entities.end();
+		if (renderingPreviewEntity)
+		{
+			GBufferDataInstanced(command);
+			return;
+		}
+
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
 		RenderStateManager.IASetTopology(ETopologies::TriangleList);
 		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Entity2Trans);

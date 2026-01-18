@@ -50,7 +50,7 @@ GBufferOutputEditor main(VertexModelToPixelEditor input)
     output.Normal = float4(normal.xyz, 1.0f);
     output.VertexNormal = float4(input.Normal.xyz, 1.0f);
     output.MetalRoughEmAO = float4(metalness, perceptualRoughness, emissive, ambientOcclusion);
-    output.WorldPosition = PixelShader_WorldPosition(vertToPixel.UV);
+    output.WorldPosition = input.WorldPosition;
     output.Entity = input.Entity;
     
     return output;

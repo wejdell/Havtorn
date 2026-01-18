@@ -14,18 +14,21 @@ struct GBufferOutput
     //float myEmissive            : SV_TARGET7;
 };
 
+// TODO.NW: REMOVE THESE SHADERS - these deferred render passes are all fullscreen shaders now
+
 GBufferOutput main(VertexModelToPixel input)
 {
     VertexToPixel vertToPixel;
     //vertToPixel.myPosition  = input.myPosition;
     vertToPixel.UV        = input.UV;
     
-    float3 albedo = PixelShader_Albedo(vertToPixel.UV).rgb;
-    float3 normal = PixelShader_NormalForIsolatedRendering(vertToPixel.UV).xyz;
+    float3 albedo = GBuffer_Albedo(vertToPixel.UV).rgb;
+    float3 normal = GBuffer_Normal(vertToPixel.UV).xyz;
     
     if (NumberOfDetailNormals > 0)
     {
-        float detailNormalStrength = PixelShader_DetailNormalStrength(vertToPixel.UV);
+        //float detailNormalStrength = PixelShader_DetailNormalStrength(vertToPixel.UV);
+        float detailNormalStrength = 0.5f;
         const float strengthMultiplier = DetailStrengthDistanceMultiplier(CameraPosition.xyz, input.WorldPosition.xyz);
         float3 detailNormal;
 
@@ -77,10 +80,10 @@ GBufferOutput main(VertexModelToPixel input)
         //}
     } // End of if
     
-    float ambientOcclusion      = PixelShader_AmbientOcclusion(vertToPixel.UV);
-    float metalness             = PixelShader_Metalness(vertToPixel.UV);
-    float perceptualRoughness   = PixelShader_PerceptualRoughness(vertToPixel.UV);
-    float emissive              = PixelShader_Emissive(vertToPixel.UV);
+    float ambientOcclusion      = GBuffer_AmbientOcclusion(vertToPixel.UV);
+    float metalness             = GBuffer_Metalness(vertToPixel.UV);
+    float perceptualRoughness   = GBuffer_PerceptualRoughness(vertToPixel.UV);
+    float emissive              = GBuffer_Emissive(vertToPixel.UV);
     
     // Original, using 8 textures
     //GBufferOutput output;

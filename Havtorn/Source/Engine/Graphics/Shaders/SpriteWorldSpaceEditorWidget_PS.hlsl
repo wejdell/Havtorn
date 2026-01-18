@@ -35,8 +35,8 @@ PixelOutputEditorWidget main(EditorGeometryToPixelWorldSpace input)
    
     PixelOutputEditorWidget output;
     output.Color = albedo;
+    output.WorldPosition = input.WorldPosition;
     output.Entity = input.Entity;
-    output.WorldPosition = PixelShader_WorldPosition(input.UV);
     
     return output;
 }

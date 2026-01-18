@@ -14,9 +14,12 @@ namespace Havtorn
 
 	void CGBuffer::ClearTextures(SVector4 clearColor, const bool includingEditorData)
 	{
+		SVector4 editorTextureClearColor = SVector4::Zero;
 		for (UINT i = 0; i < STATIC_U64(EGBufferTextures::Count); ++i) 
 		{
-			if ((i != STATIC_U64(EGBufferTextures::EditorData) && i != STATIC_U64(EGBufferTextures::WorldPosition)) || includingEditorData)
+			if (includingEditorData && (i == STATIC_U64(EGBufferTextures::WorldPosition) || i == STATIC_U64(EGBufferTextures::EditorData)))
+				Context->ClearRenderTargetView(RenderTargets[i], &editorTextureClearColor.X);
+			else
 				Context->ClearRenderTargetView(RenderTargets[i], &clearColor.X);
 		}
 	}
@@ -29,8 +32,9 @@ namespace Havtorn
 
 	void CGBuffer::SetAsActiveTarget(CRenderTexture* depth, bool isUsingEditor)
 	{
+		// TODO.NW: Introduce EditorCount (6 currently) and GameCount (4)
 		auto depthStencilView = depth ? depth->Depth : nullptr;
-		Context->OMSetRenderTargets(isUsingEditor ? STATIC_U64(EGBufferTextures::Count) : STATIC_U64(EGBufferTextures::Count) - 1, &RenderTargets[0], depthStencilView);
+		Context->OMSetRenderTargets(isUsingEditor ? STATIC_U64(EGBufferTextures::Count) : STATIC_U64(EGBufferTextures::Count) - 2, &RenderTargets[0], depthStencilView);
 		Context->RSSetViewports(1, &Viewport);
 	}
 
@@ -42,7 +46,7 @@ namespace Havtorn
 	void CGBuffer::SetAllAsResources(U16 startSlot)
 	{
 		// TODO.NW: Figure out why we do this, should the editor texture not be included in this call?
-		Context->PSSetShaderResources(startSlot, STATIC_U64(EGBufferTextures::Count) - 1, &ShaderResources[0]);
+		Context->PSSetShaderResources(startSlot, STATIC_U64(EGBufferTextures::Count) - 2, &ShaderResources[0]);
 	}
 
 	ID3D11RenderTargetView* CGBuffer::GetEditorDataRenderTarget() const
