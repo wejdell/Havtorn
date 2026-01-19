@@ -1848,7 +1848,7 @@ namespace Havtorn
 
 		ID3D11RenderTargetView* renderTargets[3] = { RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.GetRenderTargetView(), GBuffer.GetEditorWorldPositionRenderTarget(), GBuffer.GetEditorDataRenderTarget() };
 		RenderStateManager.OMSetRenderTargets(3, renderTargets, EditorWidgetDepth.GetDepthStencilView());
-		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
+		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::Disable);
 		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
 
 		const auto& textureUID = command.U32s[0];
