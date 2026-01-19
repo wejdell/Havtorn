@@ -167,6 +167,27 @@ echo.
 winget install Microsoft.GameInput
 nuget install Microsoft.GameInput -Version 3.1.26100.6879
 
+cd SDL
+echo.
+echo Generating SDL files...
+echo.
+cmake -S . -B build
+echo.
+echo Building SDL...
+echo.
+cmake --build build
+copy /y build\Debug\SDL3.dll ..\..\Bin\SDL3d.dll
+copy /y build\Debug\SDL3.lib ..\Lib\Debug\SDL3d.lib
+echo.
+cmake --build build --config Release
+copy /y build\Release\SDL3.dll ..\..\Bin\SDL3.dll
+copy /y build\Release\SDL3.lib ..\Lib\Release\SDL3.lib
+
+:: Add extra DLLs in DeepLink exe path
+:: TODO: Figure out how to do deep link without going into exe folder, or figure out how to load dll:s in code
+copy /y build\Release\SDL3.dll ..\..\Bin\EditorDevelopment\SDL3.dll
+cd .. 
+
 echo.
 echo Dependencies compiled
 PAUSE

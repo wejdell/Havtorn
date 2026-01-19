@@ -194,13 +194,20 @@ add_library(Platform SHARED ${PLATFORM_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PLATFORM_FILES})
 target_link_libraries(Platform PRIVATE
     Core
+    $<$<CONFIG:EditorDebug>:SDL3d>
+    $<$<CONFIG:GameDebug>:SDL3d>
+    $<$<CONFIG:EditorDevelopment>:SDL3>
+    $<$<CONFIG:GameRelease>:SDL3>
 )
 target_include_directories(Platform PRIVATE
 	"${PLATFORM_FOLDER}"
     "${CORE_FOLDER}"
     "${EXTERNAL_FOLDER}rapidjson/include"
+    "${EXTERNAL_FOLDER}SDL/include"
 )
 target_link_directories(Platform PRIVATE
+    "${EXTERNAL_FOLDER}Lib/Debug"
+    "${EXTERNAL_FOLDER}Lib/Release"
     ${CMAKE_BINARY_DIR}
 )
 target_compile_definitions(Platform PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_PLATFORM_DLL)
