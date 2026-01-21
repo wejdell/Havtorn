@@ -942,7 +942,11 @@ namespace Havtorn
 		const bool renderingPreviewEntity = std::ranges::find(entities, SEntity(8000)) != entities.end();
 		if (renderingPreviewEntity)
 		{
+			// TODO.NW: Need to defer this render call to after the GBuffer is finished so we can draw it on top, without writing to the depth
+			//GBuffer.ReleaseRenderTargets();
+			//GBuffer.SetAsActiveTarget(nullptr, false);
 			GBufferDataInstanced(command);
+			//GBuffer.SetAsActiveTarget(&IntermediateDepth, true);
 			return;
 		}
 
