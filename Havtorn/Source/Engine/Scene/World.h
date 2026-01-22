@@ -149,8 +149,6 @@ namespace Havtorn
 			return nullptr;
 		}
 
-
-
 	private:
 		CWorld() = default;
 		~CWorld() = default;

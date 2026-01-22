@@ -209,16 +209,12 @@ Texture2D normalTextureGBuffer        : register(t2);
 Texture2D vertexNormalTextureGBuffer  : register(t3);
 Texture2D materialTextureGBuffer      : register(t4);
 
-// Model textures (used to create GBuffer textures )
-Texture2D albedoTexture     : register(t5);
-Texture2D materialTexture   : register(t6);
-Texture2D normalTexture     : register(t7);
+Texture2D materialChannelTextures[11] : register(t5);
+
 // Detail normals
 Texture2D detailNormals[4] : register(t8);
 // Vertex Paint Materials
 Texture2D vertexPaintTextures[9] : register(t12);
-
-Texture2D materialChannelTextures[11] : register(t5);
 
 Texture2D depthTexture          : register(t21);
 Texture2D shadowDepthTexture    : register(t22);

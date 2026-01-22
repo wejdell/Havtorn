@@ -28,14 +28,21 @@ namespace Havtorn
 
 		void UpdatePreviewEntity(CScene* scene, const SEditorAssetRepresentation* assetRepresentation);
 
+		void OnMouseMove(const SInputAxisPayload payload);
+	private:
+		SVector4 GetWorldPositionOnPixel() const;
+
 	private:
 		F32 ViewportMenuHeight = 16.0f;
 		SVector2<F32> RenderedSceneDimensions = SVector2<F32>::Zero;
 		SVector2<F32> RenderedScenePosition = SVector2<F32>::Zero;
+		SVector2<F32> MousePosition = SVector2<F32>::Zero;
 
 		std::vector<SSnappingOption> SnappingOptions;
 
 		bool IsPlayButtonEngaged = false;
 		bool IsPauseButtonEngaged = false;
+		bool WasPreviewPositionValid = true;
+		SVector4 PreviousPreviewPosition = SVector4::Zero;
 	};
 }

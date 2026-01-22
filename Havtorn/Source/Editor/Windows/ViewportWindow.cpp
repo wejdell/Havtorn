@@ -12,7 +12,7 @@
 #include <Assets/AssetRegistry.h>
 #include <MathTypes/MathUtilities.h>
 #include <PlatformManager.h>
-#include <Input/Input.h>
+#include <Input/InputMapper.h>
 
 namespace Havtorn
 {
@@ -25,6 +25,9 @@ namespace Havtorn
 		SnappingOptions.emplace_back(SVector(0.1f), "0.1");
 		SnappingOptions.emplace_back(SVector(0.5f), "0.5");
 		SnappingOptions.emplace_back(SVector(1.0f), "1.0");
+
+		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MousePositionHorizontal).AddMember(this, &CViewportWindow::OnMouseMove);
+		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MousePositionVertical).AddMember(this, &CViewportWindow::OnMouseMove);
 	}
 
 	CViewportWindow::~CViewportWindow()
@@ -165,7 +168,9 @@ namespace Havtorn
 
 						if (payload.IsDelivery)
 						{
-							Manager->SetSelectedEntity(currentScene->PreviewEntity);
+							SEntity copiedEntity = currentScene->CopyEntity(currentScene->PreviewEntity);
+							currentScene->RemoveEntity(currentScene->PreviewEntity);
+							Manager->SetSelectedEntity(copiedEntity);
 							currentScene->PreviewEntity = SEntity::Null;
 						}
 					}
@@ -226,25 +231,38 @@ namespace Havtorn
 			
 			CWorld* world = GEngine::GetWorld();
 			const std::vector<Ptr<CScene>>& scenes = world->GetActiveScenes();
-			SCameraData mainCameraData = UComponentAlgo::GetCameraData(world->GetMainCamera(), scenes);
+			const SCameraData mainCameraData = UComponentAlgo::GetCameraData(world->GetMainCamera(), scenes);
 
 			if (!mainCameraData.IsValid())
 				return;
 
-			CInput* input = CInput::GetInstance();
-			F32 mouseX = STATIC_F32(input->GetMouseX());
-			F32 mouseY = STATIC_F32(input->GetMouseY());
-
-			SMatrix viewMatrix = mainCameraData.TransformComponent->Transform.GetMatrix();
-			SMatrix projectionMatrix = mainCameraData.CameraComponent->ProjectionMatrix;
-			SRay worldRay = UMathUtilities::RaycastWorld({ mouseX, mouseY }, RenderedSceneDimensions, RenderedScenePosition, viewMatrix, projectionMatrix);
+			const SMatrix viewMatrix = mainCameraData.TransformComponent->Transform.GetMatrix();
+			const SMatrix projectionMatrix = mainCameraData.CameraComponent->ProjectionMatrix;
 
 			// TODO.NW: This is too annoying, we should have an easy time of setting the transform of entities
 			STransformComponent& previewTransform = *scene->GetComponent<STransformComponent>(scene->PreviewEntity);
 			SMatrix transformCopy = previewTransform.Transform.GetMatrix();
-			constexpr F32 dragDistanceFromEditorCamera = 3.0f;
-			transformCopy.SetTranslation(worldRay.GetPointOnRay(dragDistanceFromEditorCamera));
+
+			const SVector4 worldPosOnPixel = GetWorldPositionOnPixel();
+			const bool isPreviewPositionValid = worldPosOnPixel.W != 0.0f;
+			if (isPreviewPositionValid && WasPreviewPositionValid)
+			{
+				transformCopy.SetTranslation(worldPosOnPixel);
+			}
+			else if (!isPreviewPositionValid && WasPreviewPositionValid)
+			{
+				transformCopy.SetTranslation(PreviousPreviewPosition);
+			}
+			else
+			{
+				SRay worldRay = UMathUtilities::RaycastWorld(MousePosition, RenderedSceneDimensions, RenderedScenePosition, viewMatrix, projectionMatrix);
+				constexpr F32 dragDistanceFromEditorCamera = 3.0f;
+				transformCopy.SetTranslation(worldRay.GetPointOnRay(dragDistanceFromEditorCamera));
+			}
+
 			previewTransform.Transform.SetMatrix(transformCopy);
+			WasPreviewPositionValid = isPreviewPositionValid;
+			PreviousPreviewPosition = worldPosOnPixel;
 			return;
 		}
 
@@ -254,7 +272,7 @@ namespace Havtorn
 				return SComponent::IsValid(metaDataComp) ? metaDataComp->Name.AsString() : "UNNAMED";
 			}
 		);
-		scene->PreviewEntity = scene->AddEntity(newEntityName);
+		scene->PreviewEntity = scene->AddEntity(newEntityName, 8000);
 
 		scene->AddComponent<STransformComponent>(scene->PreviewEntity)->Transform;
 		scene->AddComponentEditorContext(scene->PreviewEntity, &STransformComponentEditorContext::Context);
@@ -323,5 +341,32 @@ namespace Havtorn
 		//scene->AddComponentEditorContext(scene->PreviewEntity, &SSkeletalAnimationComponentEditorContext::Context);
 		}
 
+	}
+
+	void CViewportWindow::OnMouseMove(const SInputAxisPayload payload)
+	{
+		if (payload.Event == EInputAxisEvent::MousePositionHorizontal)
+			MousePosition.X = payload.AxisValue;
+
+		if (payload.Event == EInputAxisEvent::MousePositionVertical)
+			MousePosition.Y = payload.AxisValue;
+	}
+
+	SVector4 CViewportWindow::GetWorldPositionOnPixel() const
+	{
+		const SVector2<F32> renderedScenePosition = RenderedScenePosition + SVector2<F32>(0.0f, 18.0f);
+
+		const SVector2<U16> resolution = Manager->GetPlatformManager()->GetResolution();
+		const SVector2<F32> rectRelativeMousePos = SVector2((MousePosition.X - renderedScenePosition.X) / RenderedSceneDimensions.X, (MousePosition.Y - renderedScenePosition.Y) / RenderedSceneDimensions.Y);
+
+		const SVector2<F32> fullscreenMousePos = { UMath::Ceil(STATIC_F32(resolution.X) * rectRelativeMousePos.X), UMath::Ceil(STATIC_F32(resolution.Y) * rectRelativeMousePos.Y - 12.0f) };
+
+		if (!UMath::IsWithin(fullscreenMousePos.X, 0.0f, STATIC_F32(resolution.X)) || !UMath::IsWithin(fullscreenMousePos.Y, 0.0f, STATIC_F32(resolution.Y)))
+			return SVector4::Zero;
+
+		const U64 dataIndex = STATIC_U64(fullscreenMousePos.X) + STATIC_U64(fullscreenMousePos.Y) * STATIC_U64(resolution.X);		
+		const SVector4 worldPos = Manager->GetRenderManager()->GetWorldPositionFromData(dataIndex);
+
+		return worldPos;
 	}
 }

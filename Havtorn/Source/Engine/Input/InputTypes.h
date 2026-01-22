@@ -20,6 +20,49 @@ namespace Havtorn
 		InGame		= BIT(1),
 	};
 
+	inline constexpr U32 operator&(U32 mask, EInputContext context)
+	{
+		return mask & STATIC_U32(context);
+	}
+
+	inline constexpr U32 operator&(EInputContext context, U32 mask)
+	{
+		return mask & context;
+	}
+
+	inline constexpr U32 operator|(EInputContext x, EInputContext y)
+	{
+		return (STATIC_U32(x) | STATIC_U32(y));
+	}
+
+	inline constexpr U32 operator^(EInputContext x, EInputContext y)
+	{
+		return (STATIC_U32(x) ^ STATIC_U32(y));
+	}
+
+	inline constexpr U32 operator~(EInputContext x)
+	{
+		return ~STATIC_U32(x);
+	}
+
+	inline U32& operator&=(U32& mask, EInputContext context)
+	{
+		mask &= STATIC_U32(context);
+		return mask;
+	}
+
+	inline U32& operator|=(U32& mask, EInputContext context)
+	{
+		mask |= context;
+		return mask;
+	}
+
+	inline U32& operator^=(U32& mask, EInputContext context)
+	{
+		mask ^= context;
+		return mask;
+	}
+
 	enum class EInputKey
 	{
 		None		= 0x00,
@@ -33,7 +76,7 @@ namespace Havtorn
 		Return		= 0x0D,	// Enter
 		Shift		= 0x10,
 		Ctrl		= 0x11,
-		Alt			= 0x12,
+		Alt			= 0x12, // TODO.NW: See if we get inconsistent behavior here because we don't use the higher valued keycodes?
 		Pause		= 0x13,
 		Caps		= 0x14,	// Caps Lock
 		Esc			= 0x1B,	// Escape
@@ -117,6 +160,30 @@ namespace Havtorn
 		F12			= 0x7B,
 		NumLk		= 0x90,	// Num Lock key
 		ScrLk		= 0x91,	// Scroll Lock key
+		GamepadA	= 0xC3,
+		GamepadB	= 0xC4,
+		GamepadX	= 0xC5,
+		GamepadY	= 0xC6,
+		GamepadR1	= 0xC7,
+		GamepadL1	= 0xC8,
+		GamepadL2	= 0xC9,
+		GamepadR2	= 0xCA,
+		GamepadDPadUp = 0xCB,
+		GamepadDPadDown = 0xCC,
+		GamepadDPadLeft = 0xCD,
+		GamepadDPadRight = 0xCE,
+		GamepadMenu	= 0xCF,
+		GamepadView	= 0xD0,
+		GamepadL3	= 0xD1,
+		GamepadR3   = 0xD2,
+		//GamepadLEFT_THUMBSTICK_UP	= 0xD3,
+		//GamepadLEFT_THUMBSTICK_DOWN	= 0xD4,
+		//GamepadLEFT_THUMBSTICK_RIGHT	= 0xD5,
+		//GamepadLEFT_THUMBSTICK_LEFT	= 0xD6,
+		//GamepadRIGHT_THUMBSTICK_UP	= 0xD7,
+		//GamepadRIGHT_THUMBSTICK_DOWN	= 0xD8,
+		//GamepadRIGHT_THUMBSTICK_RIGHT	= 0xD9,
+		//GamepadRIGHT_THUMBSTICK_LEFT	= 0xDA,
 	};
 
 	enum class EInputAxis
@@ -128,7 +195,13 @@ namespace Havtorn
 		MousePositionHorizontal,
 		MousePositionVertical,
 		AnalogHorizontal,
-		AnalogVertical
+		AnalogVertical,
+		GamepadLeftStickHorizontal,
+		GamepadLeftStickVertical,
+		GamepadRightStickHorizontal,
+		GamepadRightStickVertical,
+		GamepadLeftTrigger,
+		GamepadRightTrigger
 	};
 
 	enum class EInputActionEvent
@@ -196,6 +269,12 @@ namespace Havtorn
 			, Modifiers(STATIC_U32(modifier))
 		{}
 
+		SInputAction(EInputKey key, U32 contexts, EInputModifier modifier)
+			: Key(key)
+			, Contexts(STATIC_U32(contexts))
+			, Modifiers(STATIC_U32(modifier))
+		{}
+
 		SInputAction(EInputKey key, std::initializer_list<EInputContext> contexts, std::initializer_list<EInputModifier> modifiers = {})
 			: Key(key)
 			, Contexts(STATIC_U32(EInputContext::Editor))
@@ -208,6 +287,12 @@ namespace Havtorn
 		SInputAction(EInputKey key, EInputContext context)
 			: Key(key)
 			, Contexts(STATIC_U32(context))
+			, Modifiers(0)
+		{}
+
+		SInputAction(EInputKey key, U32 contexts)
+			: Key(key)
+			, Contexts(contexts)
 			, Modifiers(0)
 		{}
 
@@ -298,6 +383,14 @@ namespace Havtorn
 			, Modifiers(0)
 		{}
 
+		SInputAxis(EInputAxis axis, U32 contexts)
+			: Axis(axis)
+			, AxisPositiveKey(EInputKey::KeyW)
+			, AxisNegativeKey(EInputKey::KeyS)
+			, Contexts(contexts)
+			, Modifiers(0)
+		{}
+
 		SInputAxis(EInputAxis axis, EInputContext context, EInputModifier modifier)
 			: Axis(axis)
 			, AxisPositiveKey(EInputKey::KeyW)
@@ -311,6 +404,14 @@ namespace Havtorn
 			, AxisPositiveKey(axisPositiveKey)
 			, AxisNegativeKey(axisNegativeKey)
 			, Contexts(STATIC_U32(context))
+			, Modifiers(0)
+		{}
+
+		SInputAxis(EInputAxis axis, EInputKey axisPositiveKey, EInputKey axisNegativeKey, U32 contexts)
+			: Axis(axis)
+			, AxisPositiveKey(axisPositiveKey)
+			, AxisNegativeKey(axisNegativeKey)
+			, Contexts(contexts)
 			, Modifiers(0)
 		{}
 
@@ -391,10 +492,15 @@ namespace Havtorn
 				case EInputAxis::MouseDeltaVertical: 
 				case EInputAxis::MousePositionHorizontal:
 				case EInputAxis::MousePositionVertical:
+				case EInputAxis::GamepadLeftStickHorizontal:
+				case EInputAxis::GamepadLeftStickVertical:
+				case EInputAxis::GamepadRightStickHorizontal:
+				case EInputAxis::GamepadRightStickVertical:
+				case EInputAxis::GamepadLeftTrigger:
+				case EInputAxis::GamepadRightTrigger:					
 					return rawValue;
 
 				case EInputAxis::AnalogHorizontal: 
-
 				case EInputAxis::AnalogVertical: 
 
 				// Do not handle this here, call GetAxisValue(const EInputKey&) instead

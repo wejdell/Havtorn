@@ -117,6 +117,7 @@ namespace Havtorn
 		TonemappedTexture = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
 		AntiAliasedTexture = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
 		EditorDataTexture = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R32G32_UINT, true);
+		WorldPositionTexture = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R32G32B32A32_FLOAT, true);
 		SkeletalAnimationDataTextureCPU = RenderTextureFactory.CreateTexture({ 256, 256 }, DXGI_FORMAT_R32G32B32A32_FLOAT, true);
 		SkeletalAnimationDataTextureGPU = RenderTextureFactory.CreateTexture({ 256, 256 }, DXGI_FORMAT_R32G32B32A32_FLOAT);
 		GBuffer = RenderTextureFactory.CreateGBuffer(windowResolution);
@@ -224,6 +225,15 @@ namespace Havtorn
 				}
 
 				EditorDataTexture.UnmapFromCPU();
+
+				void* worldPositionData = WorldPositionTexture.MapToCPUFromGPUTexture(GBuffer.GetEditorWorldPositionTexture());
+				if (worldPositionData != nullptr)
+				{
+					WorldPositionPerPixelData = std::move(worldPositionData);
+					WorldPositionPerPixelDataSize = size;
+				}
+
+				WorldPositionTexture.UnmapFromCPU();
 			}
 
 			if (RendererSkeletalAnimationBoneData != nullptr)
@@ -309,6 +319,7 @@ namespace Havtorn
 		TonemappedTexture.Release();
 		AntiAliasedTexture.Release();
 		EditorDataTexture.Release();
+		WorldPositionTexture.Release();
 		SkeletalAnimationDataTextureCPU.Release();
 		SkeletalAnimationDataTextureGPU.Release();
 		//TODO.AS: Is this ultra deep call really neccesary to do here? Context: We need to specifically Resize the SwapChain Buffers Right after we Release
@@ -341,6 +352,17 @@ namespace Havtorn
 		}
 
 		return 0;
+	}
+
+	SVector4 CRenderManager::GetWorldPositionFromData(U64 dataIndex) const
+	{
+		if (dataIndex < WorldPositionPerPixelDataSize)
+		{
+			SVector4* dataCopy = reinterpret_cast<SVector4*>(WorldPositionPerPixelData);
+			return dataCopy[dataIndex];
+		}
+
+		return SVector4::Zero;
 	}
 
 	U32 CRenderManager::WriteToAnimationDataTexture(const std::string& /*animationName*/)
@@ -915,6 +937,18 @@ namespace Havtorn
 
 		const std::vector<SEntity>& entities = meshData.Entities;
 		InstancedEntityIDBuffer.BindBuffer(entities);
+
+		// TODO.NW: Figure out a place for this hard coded preview entity GUID (8000);
+		const bool renderingPreviewEntity = std::ranges::find(entities, SEntity(8000)) != entities.end();
+		if (renderingPreviewEntity)
+		{
+			// TODO.NW: Need to defer this render call to after the GBuffer is finished so we can draw it on top, without writing to the depth
+			//GBuffer.ReleaseRenderTargets();
+			//GBuffer.SetAsActiveTarget(nullptr, false);
+			GBufferDataInstanced(command);
+			//GBuffer.SetAsActiveTarget(&IntermediateDepth, true);
+			return;
+		}
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
 		RenderStateManager.IASetTopology(ETopologies::TriangleList);
@@ -1816,9 +1850,9 @@ namespace Havtorn
 		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
-		ID3D11RenderTargetView* renderTargets[2] = { RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.GetRenderTargetView(), GBuffer.GetEditorDataRenderTarget() };
-		RenderStateManager.OMSetRenderTargets(2, renderTargets, EditorWidgetDepth.GetDepthStencilView());
-		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
+		ID3D11RenderTargetView* renderTargets[3] = { RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.GetRenderTargetView(), GBuffer.GetEditorWorldPositionRenderTarget(), GBuffer.GetEditorDataRenderTarget() };
+		RenderStateManager.OMSetRenderTargets(3, renderTargets, EditorWidgetDepth.GetDepthStencilView());
+		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::Disable);
 		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
 
 		const auto& textureUID = command.U32s[0];
@@ -2166,6 +2200,13 @@ namespace Havtorn
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::EditorData, 0);
 			FullscreenRenderer.Render(EPixelShaders::FullscreenEditorData, RenderStateManager);
+		}
+		break;
+		case Havtorn::ERenderPass::WorldPosition:
+		{
+			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
+			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::WorldPosition, 0);
+			FullscreenRenderer.Render(EPixelShaders::FullscreenWorldPosition, RenderStateManager);
 		}
 		break;
 		case Havtorn::ERenderPass::Count:

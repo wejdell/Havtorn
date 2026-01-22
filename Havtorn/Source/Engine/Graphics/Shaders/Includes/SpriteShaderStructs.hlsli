@@ -65,6 +65,7 @@ struct GeometryToPixelWorldSpace
 struct EditorGeometryToPixelWorldSpace
 {
     float4 Position : SV_POSITION;
+    float4 WorldPosition : WORLDPOS;
     float4 Color : COLOR;
     float4 Normal : NORMAL;
     float4 Tangent : TANGENT;

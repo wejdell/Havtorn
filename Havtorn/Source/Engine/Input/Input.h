@@ -1,105 +1,99 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include <bitset>
-
-//#define INPUT_AXIS_USES_FALLOFF
-
 #include "InputTypes.h"
+
+#include <bitset>
+#include <thread>
+#include <mutex>
+
+#include <GameInput.h>
 
 namespace Havtorn
 {
+	constexpr U8 MaxNumUsers = 1;
+	constexpr U8 PrimaryUser = 0;
+
+	using namespace GameInput::v3;
+
 	class CInputMapper;
 	class CPlatformManager;
+
+	enum class EInputDeviceType
+	{
+		Keyboard = 0,
+		Gamepad = 1,
+		Count = 2
+	};
+
+	enum class EMouseButton
+	{
+		Left = 1,
+		Right = 2,
+		Middle = 4,
+		Mouse4 = 5,
+		Mouse5 = 6
+	};
 
 	class CInput
 	{
 	public:
 		friend CInputMapper;
 
-		static ENGINE_API CInput* GetInstance();
+		void MonitorDeviceConnectionChanges() noexcept;
+		[[nodiscard]] std::array<std::array<IGameInputDevice*, STATIC_U8(EInputDeviceType::Count)>, MaxNumUsers>& GetActiveInputDevices();
 
-		enum class EMouseButton
-		{
-			Left = 1,
-			Right = 2,
-			Middle = 4,
-			Mouse4 = 5,
-			Mouse5 = 6
-		};
-
-		enum class EAxis
-		{
-			Horizontal = 0,
-			Vertical = 1
-		};
-
+	private:
 		CInput();
+		~CInput();
+		
+		static CInput* GetInstance();
 		bool Init(CPlatformManager* platformManager);
 
 		void UpdateEvents(HWND handle, UINT message, WPARAM wParam, LPARAM lParam);
-		void UpdateState();
+		void EndFrameUpdate();
 
 		[[nodiscard]] const std::bitset<3>& GetKeyInputModifiers() const;
-
-		//static SVector2<F32> GetAxisRaw();
-
-		F32 GetAxis(const EAxis& axis);
-		bool IsKeyDown(WPARAM wParam);
-		[[nodiscard]] bool IsKeyPressed(WPARAM wParam) const;
-		[[nodiscard]] bool IsKeyReleased(WPARAM wParam) const;
 		
-		// X coordiantes in application window
-		[[nodiscard]] ENGINE_API U16 GetMouseX() const; 
-		// Y coordiantes in application window
-		[[nodiscard]] ENGINE_API U16 GetMouseY() const; 
-		[[nodiscard]] ENGINE_API U16 GetMouseScreenX() const;
-		[[nodiscard]] ENGINE_API U16 GetMouseScreenY() const;
+		[[nodiscard]] U16 GetMouseX() const; 
+		[[nodiscard]] U16 GetMouseY() const; 
 		[[nodiscard]] I16 GetMouseDeltaX() const;
 		[[nodiscard]] I16 GetMouseDeltaY() const;
-		[[nodiscard]] I16 GetMouseRawDeltaX() const;
-		[[nodiscard]] I16 GetMouseRawDeltaY() const;
-		// Positive = away from user, negative = towards user
-		[[nodiscard]] I16 GetMouseWheelDelta() const; 
-		[[nodiscard]] bool IsMouseDown(EMouseButton mouseButton) const;
-		[[nodiscard]] bool IsMousePressed(EMouseButton mouseButton) const;
-		[[nodiscard]] bool IsMouseReleased(EMouseButton mouseButton) const;
-
-		static void SetMouseScreenPosition(U16 x, U16 y);
-
-	private:
+		[[nodiscard]] I16 GetMouseWheelDelta() const;
+		[[nodiscard]] SVector4 GetGamepadThumbstickAxes() const;
+		[[nodiscard]] SVector2<F32> GetGamepadTriggerAxes() const;
 		[[nodiscard]] std::map<WPARAM, SInputActionPayload>& GetKeyInputBuffer();
 
 		void HandleKeyDown(const WPARAM& wParam);
 		void HandleKeyUp(const WPARAM& wParam);
-		void UpdateAxisUsingFallOff();
-		void UpdateAxisUsingNoFallOff();
-		F32 GetAxisUsingFallOff(const EAxis& axis);
-		F32 GetAxisUsingNoFallOff(const EAxis& axis);
 
 	private:
 		std::map<WPARAM, SInputActionPayload> KeyInputBuffer;
-		std::bitset<3> KeyInputModifiers;
+		std::array<std::array<IGameInputDevice*, STATIC_U8(EInputDeviceType::Count)>, MaxNumUsers> ActiveInputDevices;
 
-		//std::bitset<5> MouseButtonLast;
-		//std::bitset<5> MouseButton;
+		GameInputGamepadState PreviousPrimaryUserGamepadState = {};
+		GameInputGamepadState PrimaryUserGamepadState = {};
+		GameInputCallbackToken KeyboardConnectionChangeHandle = 0;
+		GameInputCallbackToken GamepadConnectionChangeHandle = 0;
+		IGameInput* GameInputInstance = nullptr;
 
 		std::bitset<256> KeyDownLast;
 		std::bitset<256> KeyDown;
+		std::bitset<3> KeyInputModifiers;
 
-		U16 MouseX;
-		U16 MouseY;
-		U16 MouseScreenX;
-		U16 MouseScreenY;
-		U16 MouseLastX;
-		U16 MouseLastY;
-		U16 MouseRawDeltaX;
-		U16 MouseRawDeltaY;
-		I16 MouseWheelDelta;
+		U16 MouseX = 0;
+		U16 MouseY = 0;
+		U16 MouseScreenX = 0;
+		U16 MouseScreenY = 0;
+		U16 MouseLastX = 0;
+		U16 MouseLastY = 0;
+		U16 MouseRawDeltaX = 0;
+		U16 MouseRawDeltaY = 0;
+		I16 MouseWheelDelta = 0;
 
-		F32 Horizontal;
-		F32 Vertical;
-		bool HorizontalPressed;
-		bool VerticalPressed;
+		F32 Horizontal = 0.0f;
+		F32 Vertical = 0.0f;
+		bool HorizontalPressed = false;
+		bool VerticalPressed = false;
 	};
 }

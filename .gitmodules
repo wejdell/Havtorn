@@ -31,3 +31,6 @@
 [submodule "Havtorn/External/freetype"]
 	path = Havtorn/External/freetype
 	url = https://gitlab.freedesktop.org/freetype/freetype.git
+[submodule "Havtorn/External/SDL"]
+	path = Havtorn/External/SDL
+	url = https://github.com/wejdell/SDL.git

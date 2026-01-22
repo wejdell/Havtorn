@@ -7,6 +7,7 @@
 #include "Assets/AssetRegistry.h"
 #include "Graphics/Debug/DebugDrawUtility.h"
 #include "HexPhys/HexPhys.h"
+#include "Input/InputMapper.h"
 
 #include <PlatformManager.h>
 
@@ -67,6 +68,11 @@ namespace Havtorn
 		if (Scenes.empty())
 			return false;
 
+		// TODO.NW: Go through mappings and cover all contexts, or even better
+		// fix assigning multiple contexts (bitset for combining contexts) so 
+		// we can toggle it correctly here
+		GEngine::GetInput()->SetInputContext(EInputContext::InGame);
+
 		PlayState = EWorldPlayState::Playing;
 		OnBeginPlayDelegate.Broadcast(Scenes);
 
@@ -94,6 +100,10 @@ namespace Havtorn
 
 		if (Scenes.empty())
 			return false;
+
+#ifdef HV_EDITOR_BUILD
+		GEngine::GetInput()->SetInputContext(EInputContext::Editor);
+#endif // TODO.NW: Introduce MainMenu context?
 
 		PlayState = EWorldPlayState::Stopped;
 		OnEndPlayDelegate.Broadcast(Scenes);

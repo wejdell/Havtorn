@@ -13,34 +13,54 @@ namespace Havtorn
 		, CurrentInputContext(EInputContext::Editor)
 	{}
 
+	CInputMapper::~CInputMapper()
+	{
+		delete Input;
+	}
+
 	bool CInputMapper::Init(CPlatformManager* platformManager)
 	{
 		Input->Init(platformManager);
 
-		// TODO.NR: Load from .ini file
+		// TODO.NW: Load from .ini file
 
-		const SInputAxis forwardAxis = { EInputAxis::Key, EInputKey::KeyW, EInputKey::KeyS, EInputContext::Editor };
+		const SInputAxis forwardAxis = { EInputAxis::Key, EInputKey::KeyW, EInputKey::KeyS, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputAxisEvent::Forward, forwardAxis);
 
-		const SInputAxis rightAxis = { EInputAxis::Key, EInputKey::KeyD, EInputKey::KeyA, EInputContext::Editor };
+		const SInputAxis forwardAxisGamepad = { EInputAxis::GamepadLeftStickVertical, EInputContext::InGame };
+		MapEvent(EInputAxisEvent::Forward, forwardAxisGamepad);
+
+		const SInputAxis rightAxis = { EInputAxis::Key, EInputKey::KeyD, EInputKey::KeyA, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputAxisEvent::Right, rightAxis);
 
-		const SInputAxis upAxis = { EInputAxis::Key, EInputKey::KeyE, EInputKey::KeyQ, EInputContext::Editor };
+		const SInputAxis rightAxisGamepad = { EInputAxis::GamepadLeftStickHorizontal, EInputContext::InGame };
+		MapEvent(EInputAxisEvent::Right, rightAxisGamepad);
+
+		const SInputAxis upAxis = { EInputAxis::Key, EInputKey::KeyE, EInputKey::KeyQ, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputAxisEvent::Up, upAxis);
 
-		const SInputAxis mouseDeltaHorizontal = { EInputAxis::MouseDeltaHorizontal, EInputContext::Editor };
+		const SInputAxis upAxisGamepad = { EInputAxis::Key, EInputKey::GamepadR1, EInputKey::GamepadL1, EInputContext::InGame };
+		MapEvent(EInputAxisEvent::Up, upAxisGamepad);
+
+		const SInputAxis mouseDeltaHorizontal = { EInputAxis::MouseDeltaHorizontal, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputAxisEvent::MouseDeltaHorizontal, mouseDeltaHorizontal);
 
-		const SInputAxis mouseDeltaVertical = { EInputAxis::MouseDeltaVertical, EInputContext::Editor };
+		const SInputAxis gamepadDeltaHorizontal = { EInputAxis::GamepadRightStickHorizontal, EInputContext::InGame};
+		MapEvent(EInputAxisEvent::MouseDeltaHorizontal, gamepadDeltaHorizontal);
+
+		const SInputAxis mouseDeltaVertical = { EInputAxis::MouseDeltaVertical, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputAxisEvent::MouseDeltaVertical, mouseDeltaVertical);
 
-		const SInputAxis mousePositionHorizontal = { EInputAxis::MousePositionHorizontal, EInputContext::Editor };
+		const SInputAxis gamepadDeltaVertical = { EInputAxis::GamepadRightStickVertical, EInputContext::InGame };
+		MapEvent(EInputAxisEvent::MouseDeltaVertical, gamepadDeltaVertical);
+
+		const SInputAxis mousePositionHorizontal = { EInputAxis::MousePositionHorizontal, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputAxisEvent::MousePositionHorizontal, mousePositionHorizontal);
 
-		const SInputAxis mousePositionVertical = { EInputAxis::MousePositionVertical, EInputContext::Editor };
+		const SInputAxis mousePositionVertical = { EInputAxis::MousePositionVertical, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputAxisEvent::MousePositionVertical, mousePositionVertical);
 
-		const SInputAxis mouseWheel = { EInputAxis::MouseWheel, EInputContext::Editor };
+		const SInputAxis mouseWheel = { EInputAxis::MouseWheel, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputAxisEvent::Zoom, mouseWheel);
 
 		const SInputAction translateTransform = { EInputKey::KeyW, EInputContext::Editor };
@@ -52,16 +72,19 @@ namespace Havtorn
 		const SInputAction scaleTransform = { EInputKey::KeyR, EInputContext::Editor };
 		MapEvent(EInputActionEvent::ScaleTransform, scaleTransform);
 
-		const SInputAction toggleFreeCam = { EInputKey::Mouse2, EInputContext::Editor };
+		const SInputAction toggleFreeCam = { EInputKey::Mouse2, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputActionEvent::ToggleFreeCam, toggleFreeCam);
 
-		const SInputAction renderPassForward = { EInputKey::F8, EInputContext::Editor };
+		const SInputAction toggleFreeCamGamepad = { EInputKey::GamepadX, EInputContext::InGame };
+		MapEvent(EInputActionEvent::ToggleFreeCam, toggleFreeCamGamepad);
+
+		const SInputAction renderPassForward = { EInputKey::F8, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputActionEvent::CycleRenderPassForward, renderPassForward);
 
-		const SInputAction renderPassBackward = { EInputKey::F7, EInputContext::Editor };
+		const SInputAction renderPassBackward = { EInputKey::F7, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputActionEvent::CycleRenderPassBackward, renderPassBackward);
 
-		const SInputAction renderPassReset = { EInputKey::F9, EInputContext::Editor };
+		const SInputAction renderPassReset = { EInputKey::F9, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputActionEvent::CycleRenderPassReset, renderPassReset);
 
 		const SInputAction pickEntity = { EInputKey::Mouse1, EInputContext::Editor };
@@ -87,7 +110,7 @@ namespace Havtorn
 
 		// TODO.NW: Figure out how to deal with editor vs in game context here, and how to construct the input action.
 		// Esc by default in UE is end play. Shift+Esc could be used to Pause, or we decide to shift the role of those two.
-		const SInputAction stopPlay = { EInputKey::Esc, EInputContext::Editor };
+		const SInputAction stopPlay = { EInputKey::Esc, EInputContext::InGame };
 		MapEvent(EInputActionEvent::StopPlay, stopPlay);
 
 		// NW: the Sys key is a bit different. We might need this workaround on other modifier keys as well
@@ -111,9 +134,10 @@ namespace Havtorn
 
 	void CInputMapper::Update()
 	{
-		UpdateKeyboardInput();
-		UpdateMouseInput();
-		Input->UpdateState();
+		UpdateKeyInput();
+		UpdateMouseAxisInput();
+		UpdateGamepadAxisInput();
+		Input->EndFrameUpdate();
 	}
 
 	CMulticastDelegate<const SInputActionPayload>& CInputMapper::GetActionDelegate(EInputActionEvent event)
@@ -151,79 +175,136 @@ namespace Havtorn
 			BoundAxisEvents[event].Axes.push_back(axisAction);
 	}
 
-	void CInputMapper::UpdateKeyboardInput()
+	void CInputMapper::UpdateKeyInput()
 	{
 		const auto& modifiers = Input->GetKeyInputModifiers().to_ulong();
 		const auto& context = STATIC_U32(CurrentInputContext);
 
-		for (auto& param : Input->GetKeyInputBuffer())
+		for (auto& [param, actionPayload] : Input->GetKeyInputBuffer())
 		{
-			for (auto& val : BoundActionEvents)
+			for (auto& [event, data] : BoundActionEvents)
 			{
-				if (val.second.Has(static_cast<EInputKey>(param.first), context, modifiers))
+				if (data.Has(static_cast<EInputKey>(param), context, modifiers))
 				{
-					param.second.Event = val.first;
-					val.second.Delegate.Broadcast(param.second);
+					actionPayload.Event = event;
+					data.Delegate.Broadcast(actionPayload);
 				}
 			}
 
 			// Key Axes
-			for (auto& val : BoundAxisEvents)
+			for (auto& [event, data] : BoundAxisEvents)
 			{
-				if (val.second.HasKeyAxis())
+				if (data.HasKeyAxis())
 				{
 					F32 axisValue = 0.0f;
-					if (val.second.Has(static_cast<EInputKey>(param.first), context, modifiers, axisValue))
+					if (data.Has(static_cast<EInputKey>(param), context, modifiers, axisValue))
 					{
-						const SInputAxisPayload payload = { val.first, axisValue };
-						val.second.Delegate.Broadcast(payload);
+						const SInputAxisPayload axisPayload = { event, axisValue };
+						data.Delegate.Broadcast(axisPayload);
 					}
 				}
 			}
 		}
 	}
 
-	void CInputMapper::UpdateMouseInput()
+	void CInputMapper::UpdateMouseAxisInput()
 	{
 		SVector2<F32> rawMouseMovement = { STATIC_F32(Input->GetMouseDeltaX()), STATIC_F32(Input->GetMouseDeltaY()) };
 		SVector2<F32> rawMousePosition = { STATIC_F32(Input->GetMouseX()), STATIC_F32(Input->GetMouseY()) };
 		F32 mouseWheelDelta = STATIC_F32(Input->GetMouseWheelDelta());
 
-		for (auto& val : BoundAxisEvents)
+		for (auto& [event, data] : BoundAxisEvents)
 		{
-			if (rawMouseMovement.X != 0.0f && val.second.Has(EInputAxis::MouseDeltaHorizontal, rawMouseMovement.X))
+			if (rawMouseMovement.X != 0.0f && data.Has(EInputAxis::MouseDeltaHorizontal, rawMouseMovement.X))
 			{
 				const F32 axisValue = rawMouseMovement.X;
-				const SInputAxisPayload payload = { val.first, axisValue };
-				val.second.Delegate.Broadcast(payload);
+				const SInputAxisPayload payload = { event, axisValue };
+				data.Delegate.Broadcast(payload);
 			}
 
-			if (rawMouseMovement.Y != 0.0f && val.second.Has(EInputAxis::MouseDeltaVertical, rawMouseMovement.Y))
+			if (rawMouseMovement.Y != 0.0f && data.Has(EInputAxis::MouseDeltaVertical, rawMouseMovement.Y))
 			{
 				const F32 axisValue = rawMouseMovement.Y;
-				const SInputAxisPayload payload = { val.first, axisValue };
-				val.second.Delegate.Broadcast(payload);
+				const SInputAxisPayload payload = { event, axisValue };
+				data.Delegate.Broadcast(payload);
 			}
 
-			if (val.second.Has(EInputAxis::MousePositionHorizontal, rawMousePosition.X))
+			if (data.Has(EInputAxis::MousePositionHorizontal, rawMousePosition.X))
 			{
 				const F32 axisValue = rawMousePosition.X;
-				const SInputAxisPayload payload = { val.first, axisValue };
-				val.second.Delegate.Broadcast(payload);
+				const SInputAxisPayload payload = { event, axisValue };
+				data.Delegate.Broadcast(payload);
 			}
 
-			if (val.second.Has(EInputAxis::MousePositionVertical, rawMousePosition.Y))
+			if (data.Has(EInputAxis::MousePositionVertical, rawMousePosition.Y))
 			{
 				const F32 axisValue = rawMousePosition.Y;
-				const SInputAxisPayload payload = { val.first, axisValue };
-				val.second.Delegate.Broadcast(payload);
+				const SInputAxisPayload payload = { event, axisValue };
+				data.Delegate.Broadcast(payload);
 			}
 
-			if (mouseWheelDelta != 0.0f && val.second.Has(EInputAxis::MouseWheel, mouseWheelDelta))
+			if (mouseWheelDelta != 0.0f && data.Has(EInputAxis::MouseWheel, mouseWheelDelta))
 			{
 				const F32 axisValue = mouseWheelDelta;
-				const SInputAxisPayload payload = { val.first, axisValue };
-				val.second.Delegate.Broadcast(payload);
+				const SInputAxisPayload payload = { event, axisValue };
+				data.Delegate.Broadcast(payload);
+			}
+		}
+	}
+
+	void CInputMapper::UpdateGamepadAxisInput()
+	{
+		SVector4 primaryThumbstickInput = Input->GetGamepadThumbstickAxes();
+		SVector2<F32> primaryTriggerInput = Input->GetGamepadTriggerAxes();
+		
+		// TODO.NW: Add deadzone to config?
+		constexpr F32 thumbstickDeadzone = 0.07f;
+		constexpr F32 triggerDeadzone = 0.07f;
+
+		for (auto& [event, data] : BoundAxisEvents)
+		{
+			if ((UMath::Abs(primaryThumbstickInput.X) > thumbstickDeadzone) && data.Has(EInputAxis::GamepadLeftStickHorizontal, primaryThumbstickInput.X))
+			{
+				const F32 axisValue = primaryThumbstickInput.X;
+				const SInputAxisPayload payload = { event, axisValue };
+				data.Delegate.Broadcast(payload);
+			}
+
+			if ((UMath::Abs(primaryThumbstickInput.Y) > thumbstickDeadzone) && data.Has(EInputAxis::GamepadLeftStickVertical, primaryThumbstickInput.Y))
+			{
+				const F32 axisValue = primaryThumbstickInput.Y;
+				const SInputAxisPayload payload = { event, axisValue };
+				data.Delegate.Broadcast(payload);
+			}
+
+			if ((UMath::Abs(primaryThumbstickInput.Z) > thumbstickDeadzone) && data.Has(EInputAxis::GamepadRightStickHorizontal, primaryThumbstickInput.Z))
+			{
+				const F32 axisValue = primaryThumbstickInput.Z;
+				const SInputAxisPayload payload = { event, axisValue };
+				data.Delegate.Broadcast(payload);
+			}
+
+			if ((UMath::Abs(primaryThumbstickInput.W) > thumbstickDeadzone) && data.Has(EInputAxis::GamepadRightStickVertical, primaryThumbstickInput.W))
+			{
+				// TODO.NW: Add Invert Y axis option to config
+				const F32 axisValue = -1.0f * primaryThumbstickInput.W;
+				const SInputAxisPayload payload = { event, axisValue };
+				data.Delegate.Broadcast(payload);
+			}
+
+			// TODO.NW: Add some sort of key option to triggers as well? If we don't have it covered yet
+			if ((UMath::Abs(primaryTriggerInput.X) > triggerDeadzone) && data.Has(EInputAxis::GamepadLeftTrigger, primaryTriggerInput.X))
+			{
+				const F32 axisValue = primaryTriggerInput.X;
+				const SInputAxisPayload payload = { event, axisValue };
+				data.Delegate.Broadcast(payload);
+			}
+
+			if ((UMath::Abs(primaryTriggerInput.Y) > triggerDeadzone) && data.Has(EInputAxis::GamepadRightTrigger, primaryTriggerInput.Y))
+			{
+				const F32 axisValue = primaryTriggerInput.Y;
+				const SInputAxisPayload payload = { event, axisValue };
+				data.Delegate.Broadcast(payload);
 			}
 		}
 	}
