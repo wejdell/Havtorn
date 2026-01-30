@@ -318,12 +318,36 @@ add_dependencies(GUI Core Platform)
 
 # ==================== ENGINE ====================
 set(ENGINE_FILES
-	Engine/ECS/Systems/UISystem.cpp
-	Engine/ECS/Systems/UISystem.h
-	Engine/ECS/ComponentEditorContexts/UICanvasComponentEditorContext.cpp
-	Engine/ECS/ComponentEditorContexts/UICanvasComponentEditorContext.h
-	Engine/ECS/Components/UICanvasComponent.cpp
-	Engine/ECS/Components/UICanvasComponent.h
+	${ENGINE_FOLDER}Assets/AssetFileHeader.h
+	${ENGINE_FOLDER}Assets/Asset.h
+	${ENGINE_FOLDER}Assets/RuntimeAssetInclude.h
+	${ENGINE_FOLDER}Assets/RuntimeAssets/SkeletalAnimationAsset.h
+	${ENGINE_FOLDER}Assets/RuntimeAssets/SpriteAnimationClipAsset.h
+	${ENGINE_FOLDER}Assets/RuntimeAssets/GraphicsMaterialAsset.h
+	${ENGINE_FOLDER}Assets/RuntimeAssets/TextureCubeAsset.h
+	${ENGINE_FOLDER}Assets/RuntimeAssets/TextureAsset.h
+	${ENGINE_FOLDER}Assets/RuntimeAssets/SkeletalMeshAsset.h
+	${ENGINE_FOLDER}Assets/RuntimeAssets/StaticMeshAsset.h
+	${ENGINE_FOLDER}Assets/FileHeaders/ScriptFileHeader.h
+	${ENGINE_FOLDER}Assets/FileHeaders/SequencerFileHeader.h
+	${ENGINE_FOLDER}Assets/FileHeaders/SpriteAnimationClipFileHeader.h
+	${ENGINE_FOLDER}Assets/FileHeaders/SceneFileHeader.h
+	${ENGINE_FOLDER}Assets/FileHeaders/TextureCubeFileHeader.h
+	${ENGINE_FOLDER}Assets/FileHeaders/TextureFileHeader.h
+	${ENGINE_FOLDER}Assets/FileHeaders/MaterialAssetFileHeader.h
+	${ENGINE_FOLDER}Assets/FileHeaders/SkeletalAnimationFileHeader.h
+	${ENGINE_FOLDER}Assets/FileHeaders/SkeletalModelFileHeader.h
+	${ENGINE_FOLDER}Assets/FileHeaders/StaticModelFileHeader.h
+	${ENGINE_FOLDER}Assets/FileHeaders/InputAssetFileHeader.h
+	${ENGINE_FOLDER}Assets/FileHeaderInclude.h
+	${ENGINE_FOLDER}Assets/AssetReference.h
+	${ENGINE_FOLDER}Assets/SourceAssetData.h
+	${ENGINE_FOLDER}ECS/Systems/UISystem.cpp
+	${ENGINE_FOLDER}ECS/Systems/UISystem.h
+	${ENGINE_FOLDER}ECS/ComponentEditorContexts/UICanvasComponentEditorContext.cpp
+	${ENGINE_FOLDER}ECS/ComponentEditorContexts/UICanvasComponentEditorContext.h
+	${ENGINE_FOLDER}ECS/Components/UICanvasComponent.cpp
+	${ENGINE_FOLDER}ECS/Components/UICanvasComponent.h
     ${ENGINE_FOLDER}Application/EngineProcess.cpp
     ${ENGINE_FOLDER}Application/EngineProcess.h
     ${ENGINE_FOLDER}Assets/AssetRegistry.cpp
@@ -541,14 +565,14 @@ set(VERTEX_SHADERS
     ${SHADER_FOLDER}SpriteInstancedEditor_VS.hlsl
 )
 set(GEOMETRY_SHADERS
-	Engine/Graphics/Shaders/LineScreenSpace_GS.hlsl
+	${SHADER_FOLDER}LineScreenSpace_GS.hlsl
     ${SHADER_FOLDER}Line_GS.hlsl
     ${SHADER_FOLDER}SpriteScreenSpace_GS.hlsl
     ${SHADER_FOLDER}SpriteWorldSpace_GS.hlsl
     ${SHADER_FOLDER}SpriteWorldSpaceEditor_GS.hlsl
 )
 set(PIXEL_SHADERS
-	Engine/Graphics/Shaders/FullscreenWorldPosition_PS.hlsl
+	${SHADER_FOLDER}FullscreenWorldPosition_PS.hlsl
     ${SHADER_FOLDER}Decal_Albedo_PS.hlsl
     ${SHADER_FOLDER}Decal_Material_PS.hlsl
     ${SHADER_FOLDER}Decal_Normal_PS.hlsl
@@ -666,10 +690,10 @@ add_dependencies(Engine Core Platform GUI)
 
 # ==================== GAME ====================
 set(GAME_FILES
-	Game/HexRune/NodeEditorContext/SetPositionNodeEditorContext.cpp
-	Game/HexRune/NodeEditorContext/SetPositionNodeEditorContext.h
-	Game/HexRune/SetPositionNode.cpp
-	Game/HexRune/SetPositionNode.h
+	${GAME_FOLDER}HexRune/NodeEditorContext/SetPositionNodeEditorContext.cpp
+	${GAME_FOLDER}HexRune/NodeEditorContext/SetPositionNodeEditorContext.h
+	${GAME_FOLDER}HexRune/SetPositionNode.cpp
+	${GAME_FOLDER}HexRune/SetPositionNode.h
 	${GAME_FOLDER}NodeInclude.h
 	${GAME_FOLDER}HexRune/NodeEditorContext/TimerNodeEditorContext.cpp
 	${GAME_FOLDER}HexRune/NodeEditorContext/TimerNodeEditorContext.h

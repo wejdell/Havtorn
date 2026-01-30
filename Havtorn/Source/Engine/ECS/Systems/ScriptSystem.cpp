@@ -2,6 +2,7 @@
 
 #include "hvpch.h"
 #include "ScriptSystem.h"
+#include "Engine.h"
 #include "Scene/World.h"
 #include "Scene/Scene.h"
 #include "Assets/AssetRegistry.h"

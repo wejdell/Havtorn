@@ -1,9 +1,9 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
-
+#include "hvpch.h"
 #include "AssetRegistry.h"
-#include "Assets/FileHeaderDeclarations.h"
+//#include "Assets/FileHeaderDeclarations.h"
+//#include "Assets/RuntimeAssetDeclarations.h"
 #include "FileSystem/FileWatcher.h"
-#include "Assets/RuntimeAssetDeclarations.h"
 #include "ECS/GUIDManager.h"
 
 #include "Graphics/RenderManager.h"

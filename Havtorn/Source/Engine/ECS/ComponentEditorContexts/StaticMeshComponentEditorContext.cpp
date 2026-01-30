@@ -15,6 +15,8 @@
 #include <Engine.h>
 #include <Assets/AssetRegistry.h>
 
+#include "Assets/AssetReference.h"
+
 namespace Havtorn
 {
 	SStaticMeshComponentEditorContext SStaticMeshComponentEditorContext::Context = {};

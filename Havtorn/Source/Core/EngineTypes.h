@@ -32,6 +32,7 @@ namespace Havtorn
 		Sequencer,
 		Script,
 		TextureCube,
+		InputAsset,
 	};
 
 	static SColor GetAssetTypeColor(const EAssetType type)
