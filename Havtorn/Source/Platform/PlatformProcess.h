@@ -18,6 +18,9 @@ namespace Havtorn
 
 		bool Init(CPlatformManager* platformManager) override;
 		void OnApplicationReady() override;
+		bool ShouldRun() override;
+
+		void BeginFrame() override;
 
 		class CPlatformManager* PlatformManager = nullptr;
 	private:

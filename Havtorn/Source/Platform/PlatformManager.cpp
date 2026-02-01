@@ -19,6 +19,9 @@
 #pragma comment(lib, "runtimeobject")
 #pragma comment(lib, "windowscodecs")
 
+#include <SDL3/SDL_init.h>
+#include <SDL3/SDL_video.h>
+
 namespace Havtorn
 {
 	LRESULT CPlatformManager::WinProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam)
@@ -187,77 +190,117 @@ namespace Havtorn
 		CursorIsLocked = false;
 		WindowIsInEditingMode = false;
 		WindowHandle = 0;
-		UnregisterClass(LHavtornWindowClass, GetModuleHandle(nullptr));
-		UnregisterClass(SplashScreenWindowClass, GetModuleHandle(TEXT("Platform")));
+
+		if (SplashWindow != nullptr)
+			SDL_DestroyWindow(SplashWindow);
+
+		SDL_DestroySurface(SplashSurface);
+		SDL_DestroyWindow(Window);
+
+		//UnregisterClass(LHavtornWindowClass, GetModuleHandle(nullptr));
+		//UnregisterClass(SplashScreenWindowClass, GetModuleHandle(TEXT("Platform")));
 	}
+
+	//bool CPlatformManager::Init(CPlatformManager::SWindowData windowData)
+//	{
+//		CJsonDocument document = UFileSystem::OpenJson("Config/EngineConfig.json");
+//
+//		// TODO.NW: Use LoadImage instead?
+//		HICON customIcon = (HICON)LoadImageA(NULL, document.GetString("Icon Path", "Resources/HavtornIcon.ico").c_str(), IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
+//
+//		InitWindowsImaging();
+//		RegisterSplashWindowClass(customIcon);
+//		SplashHandle = CreateSplashWindow();
+//		SetSplashImage(SplashHandle, LoadSplashImage(document.GetString("Splash Path", "Resources/HavtornSplash.bmp")));
+//
+//		WindowData = windowData;
+//
+//		//HCURSOR customCursor = NULL;
+//		//if (document.HasMember("Cursor Path"))
+//		//    customCursor = LoadCursorFromFileA(document["Cursor Path"].GetString());
+//
+//		//if (customCursor == NULL)
+//		//    customCursor = LoadCursor(nullptr, IDC_ARROW);
+//
+//		WNDCLASSEX windowclass = {};
+//		windowclass.cbSize = sizeof(WNDCLASSEX);
+//		windowclass.style = CS_VREDRAW | CS_HREDRAW | CS_OWNDC;
+//		windowclass.lpfnWndProc = CPlatformManager::WinProc;
+//		windowclass.cbClsExtra = 0;
+//		windowclass.cbWndExtra = 0;
+//		windowclass.hInstance = GetModuleHandle(nullptr);
+//		windowclass.hIcon = customIcon;
+//		//windowclass.hCursor = customCursor;
+//		windowclass.lpszClassName = LHavtornWindowClass;
+//		RegisterClassEx(&windowclass);
+//
+//		std::string gameName = document.GetString("Game Name", "Havtorn Editor");
+//		MaxResolution = SVector2<U16>(STATIC_U16(GetSystemMetrics(SM_CXSCREEN)), STATIC_U16(GetSystemMetrics(SM_CYSCREEN)));
+//
+//		if (false/*borderless*/)
+//		{
+//#ifdef _DEBUG
+//			// Start in borderless
+//			WindowHandle = CreateWindowA(HavtornWindowClass, gameName.c_str(),
+//				WS_POPUP | WS_VISIBLE,
+//				0, 0, WindowData.Width, WindowData.Height,
+//				NULL, NULL, GetModuleHandle(nullptr), this);
+//#else
+//			// Start in borderless
+//			WindowHandle = CreateWindowA(HavtornWindowClass, gameName.c_str(),
+//				WS_POPUP | WS_VISIBLE,
+//				0, 0, MaxResolution.X, MaxResolution.Y,
+//				NULL, NULL, GetModuleHandle(nullptr), this);
+//#endif
+//		}
+//		else
+//		{
+//			// Start in bordered window
+//			WindowHandle = CreateWindowA(HavtornWindowClass, gameName.c_str(),
+//				/*WS_OVERLAPPEDWINDOW | */WS_POPUP | WS_VISIBLE,
+//				WindowData.X, WindowData.Y, WindowData.Width, WindowData.Height,
+//				nullptr, nullptr, nullptr, this);
+//		}
+//
+//		//::SetCursor(customCursor);
+//
+//		Resolution = { WindowData.Width, WindowData.Height };
+//		ResizeTarget = {};
+//
+//		EnableDragDrop();
+//
+//		return true;
+//	}
 
 	bool CPlatformManager::Init(CPlatformManager::SWindowData windowData)
 	{
-		CJsonDocument document = UFileSystem::OpenJson("Config/EngineConfig.json");
+		const CJsonDocument document = UFileSystem::OpenJson("Config/EngineConfig.json");
+		const std::string gameName = document.GetString("Game Name", "Havtorn Editor");
+		SplashSurface = SDL_LoadBMP(document.GetString("Splash Path", "Resources/HavtornSplash.bmp").c_str());
+		
+		// NW: SteamAPI_InitEx goes here
 
-		// TODO.NW: Use LoadImage instead?
-		HICON customIcon = (HICON)LoadImageA(NULL, document.GetString("Icon Path", "Resources/HavtornIcon.ico").c_str(), IMAGE_ICON, 0, 0, LR_LOADFROMFILE | LR_DEFAULTSIZE);
+		SDL_SetAppMetadata(gameName.c_str(), HAVTORN_VERSION, NULL);
+		SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD | SDL_INIT_HAPTIC);
+		
+		SplashWindow = SDL_CreateWindow(gameName.c_str(), SplashSurface->w, SplashSurface->h, SDL_WINDOW_BORDERLESS);
+		const SDL_Rect defaultRect = { .x = 0, .y = 0, .w = SplashSurface->w, .h = SplashSurface->h };
+		SDL_BlitSurface(SplashSurface, &defaultRect, SDL_GetWindowSurface(SplashWindow), &defaultRect);
+		SDL_UpdateWindowSurface(SplashWindow);
+		SDL_SetWindowIcon(SplashWindow, SplashSurface);
 
-		InitWindowsImaging();
-		RegisterSplashWindowClass(customIcon);
-		SplashHandle = CreateSplashWindow();
-		SetSplashImage(SplashHandle, LoadSplashImage(document.GetString("Splash Path", "Resources/HavtornSplash.bmp")));
+		Window = SDL_CreateWindow(gameName.c_str(), windowData.Width, windowData.Height, SDL_WINDOW_BORDERLESS | SDL_WINDOW_RESIZABLE);
+		SDL_UpdateWindowSurface(Window);
+		SDL_SetWindowIcon(Window, SplashSurface);
+		// Windows-specific
+		WindowHandle = (HWND)SDL_GetPointerProperty(SDL_GetWindowProperties(Window), SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);
 
-		WindowData = windowData;
-
-		//HCURSOR customCursor = NULL;
-		//if (document.HasMember("Cursor Path"))
-		//    customCursor = LoadCursorFromFileA(document["Cursor Path"].GetString());
-
-		//if (customCursor == NULL)
-		//    customCursor = LoadCursor(nullptr, IDC_ARROW);
-
-		WNDCLASSEX windowclass = {};
-		windowclass.cbSize = sizeof(WNDCLASSEX);
-		windowclass.style = CS_VREDRAW | CS_HREDRAW | CS_OWNDC;
-		windowclass.lpfnWndProc = CPlatformManager::WinProc;
-		windowclass.cbClsExtra = 0;
-		windowclass.cbWndExtra = 0;
-		windowclass.hInstance = GetModuleHandle(nullptr);
-		windowclass.hIcon = customIcon;
-		//windowclass.hCursor = customCursor;
-		windowclass.lpszClassName = LHavtornWindowClass;
-		RegisterClassEx(&windowclass);
-
-		std::string gameName = document.GetString("Game Name", "Havtorn Editor");
-		MaxResolution = SVector2<U16>(STATIC_U16(GetSystemMetrics(SM_CXSCREEN)), STATIC_U16(GetSystemMetrics(SM_CYSCREEN)));
-
-		if (false/*borderless*/)
-		{
-#ifdef _DEBUG
-			// Start in borderless
-			WindowHandle = CreateWindowA(HavtornWindowClass, gameName.c_str(),
-				WS_POPUP | WS_VISIBLE,
-				0, 0, WindowData.Width, WindowData.Height,
-				NULL, NULL, GetModuleHandle(nullptr), this);
-#else
-			// Start in borderless
-			WindowHandle = CreateWindowA(HavtornWindowClass, gameName.c_str(),
-				WS_POPUP | WS_VISIBLE,
-				0, 0, MaxResolution.X, MaxResolution.Y,
-				NULL, NULL, GetModuleHandle(nullptr), this);
-#endif
-		}
-		else
-		{
-			// Start in bordered window
-			WindowHandle = CreateWindowA(HavtornWindowClass, gameName.c_str(),
-				/*WS_OVERLAPPEDWINDOW | */WS_POPUP | WS_VISIBLE,
-				WindowData.X, WindowData.Y, WindowData.Width, WindowData.Height,
-				nullptr, nullptr, nullptr, this);
-		}
-
-		//::SetCursor(customCursor);
-
+		const SDL_DisplayMode* mode = SDL_GetCurrentDisplayMode(SDL_GetDisplayForWindow(Window));
+		MaxResolution = SVector2<U16>(STATIC_U16(mode->w), STATIC_U16(mode->h));
 		Resolution = { WindowData.Width, WindowData.Height };
 		ResizeTarget = {};
 
-		EnableDragDrop();
+		ShouldRun = true;
 
 		return true;
 	}
@@ -265,6 +308,11 @@ namespace Havtorn
 	const HWND CPlatformManager::GetWindowHandle() const
 	{
 		return WindowHandle;
+	}
+
+	SDL_Window* CPlatformManager::GetMainWindow() const
+	{
+		return Window;
 	}
 
 	void CPlatformManager::OnApplicationReady()
@@ -319,6 +367,125 @@ namespace Havtorn
 			return SVector2<I16>(0);
 
 		return { STATIC_I16(point.x), STATIC_I16(point.y) };
+	}
+
+	void CPlatformManager::BeginFrame()
+	{
+		EventLoop();
+	}
+
+	void CPlatformManager::EventLoop()
+	{
+		SDL_Event currentEvent;
+		while (SDL_PollEvent(&currentEvent))
+		{
+			OnProcessEvent.Broadcast(&currentEvent);
+
+			switch (currentEvent.type)
+			{
+			case SDL_EVENT_QUIT:
+			{
+				ShouldRun = false;
+			}
+			break;
+			case SDL_EVENT_TERMINATING:
+			{
+				// Quit app (report back to CApplication? Don't peek in CApplication)
+			}
+			break;
+
+			case SDL_EVENT_WINDOW_MOVED:
+			{
+				//const HMONITOR primaryMonitor = MonitorFromPoint({ 0 }, MONITOR_DEFAULTTOPRIMARY);
+				//MONITORINFO monitorInfo = { 0 };
+				//monitorInfo.cbSize = sizeof(monitorInfo);
+				//GetMonitorInfo(primaryMonitor, &monitorInfo);
+
+				//const RECT monitorRect = monitorInfo.rcWork;
+				//POINT point = { 0 };
+				//if (!GetCursorPos(&point))
+				//	break;
+
+				//// TODO.NW: Add non-snapping shortcut, so it's possible to move from one monitor to the other
+				//if (point.x <= monitorRect.left)
+				//	platformManager->SnapWindow(EWindowSnapPosition::Left);
+				//else if (point.x >= monitorRect.right - 1)
+				//	platformManager->SnapWindow(EWindowSnapPosition::Right);
+				//else if (point.y <= monitorRect.top)
+				//	platformManager->SnapWindow(EWindowSnapPosition::Maximized);
+				//else if (platformManager->SnapPosition != EWindowSnapPosition::Unsnapped)
+				//	platformManager->SnapWindow(EWindowSnapPosition::Unsnapped);
+			}
+			break;
+			
+			// TODO.NW: Figure out flow of deeplink commandline with this new SDL layer
+			//case WM_COPYDATA:
+			//{
+			//	COPYDATASTRUCT* cds = reinterpret_cast<COPYDATASTRUCT*>(lParam);
+			//	std::string stringData(reinterpret_cast<char*>(cds->lpData), cds->cbData / sizeof(char));
+			//	UCommandLine::Parse(stringData);
+			//	HV_LOG_INFO("DeepLink: %s", UCommandLine::GetDeepLinkCommand().c_str());
+			//}
+			//break;
+
+			case SDL_EVENT_WINDOW_FOCUS_LOST:
+			{
+				//           platformManager->LockCursor(false); // If we use this here the WindowIsInEditingMode bool will be preserved
+			}
+			break;
+
+			case SDL_EVENT_WINDOW_FOCUS_GAINED:
+			{
+#ifdef _DEBUG
+				//if (false/*platformManager->GameIsInMenu*/)
+				ShowAndUnlockCursor();
+				//else
+					//platformManager->HideAndLockCursor();
+				//platformManager->WindowIsInEditingMode ? platformManager->LockCursor(false) : platformManager->LockCursor(true);
+#else
+				//if (platformManager->myGameIsInMenu)
+				ShowAndUnlockCursor();
+				//else
+					//platformManager->HideAndLockCursor();
+#endif
+			}
+			break;
+
+			//	// The following cases suppresses the following effects (by hindering DefWindowProc from running):
+			//	// The windows help menu popup, which pauses the application when pressing the Alt key
+			//	// The handling of the Alt key input in general (still picked up by WM_KEYDOWN etc. in our own loop)
+			//	// The windows sound played when pressing Alt+(any other key)
+			//	//
+			//	// This means that default Alt+(other key) bindings won't be caught, such as Alt+F4, Alt+Space etc.
+			//	// Alt+Enter still works but it might still be worth figuring out what to do about these.
+			//	//
+			//	// This needs more testing.
+			//case WM_ENTERIDLE:
+			//	//case WM_SYSKEYDOWN:
+			//case WM_SYSKEYUP:
+			//case WM_SYSCHAR:
+			//	return true;
+
+			case SDL_EVENT_DROP_FILE:
+			{
+				const std::string droppedFilePath = currentEvent.drop.data;
+				HV_LOG_INFO(droppedFilePath.c_str());
+				OnDragDropAccepted.Broadcast({ droppedFilePath });
+			}
+			break;
+
+			case SDL_EVENT_WINDOW_RESIZED:
+			{
+				//AS: Setting Resize Width/Height to != 0 will trigger a Resize in-engine.
+				ResizeTarget.X = STATIC_U16(currentEvent.window.data1);
+				ResizeTarget.Y = STATIC_U16(currentEvent.window.data2);
+			}
+			break;
+
+			default:
+				break;
+			}
+		}
 	}
 
 	SVector2<U16> CPlatformManager::GetResolution() const
@@ -456,28 +623,28 @@ namespace Havtorn
 		return bitmap;
 	}
 
-	void CPlatformManager::RegisterSplashWindowClass(HICON icon)
-	{
-		HINSTANCE instance = GetModuleHandle(nullptr);
-		WNDCLASS windowClass = { 0 };
-		windowClass.lpfnWndProc = DefWindowProc;
-		windowClass.hInstance = instance;
-		windowClass.hIcon = icon;
-		windowClass.hCursor = LoadCursor(instance, IDC_ARROW);
-		windowClass.lpszClassName = SplashScreenWindowClass;
-		RegisterClass(&windowClass);
-	}
+	//void CPlatformManager::RegisterSplashWindowClass(HICON icon)
+	//{
+	//	HINSTANCE instance = GetModuleHandle(nullptr);
+	//	WNDCLASS windowClass = { 0 };
+	//	windowClass.lpfnWndProc = DefWindowProc;
+	//	windowClass.hInstance = instance;
+	//	windowClass.hIcon = icon;
+	//	windowClass.hCursor = LoadCursor(instance, IDC_ARROW);
+	//	windowClass.lpszClassName = SplashScreenWindowClass;
+	//	RegisterClass(&windowClass);
+	//}
 
-	HWND CPlatformManager::CreateSplashWindow()
-	{
-		// NW: Invisible owner window so the splash shows up when alt+tabbing, but not in the taskbar. 
-		// To make it appear in the taskbar, we can drop the owner window. 
-		// If we don't want it anywhere, we could use the WS_EX_TOOLWINDOW extended window style.
-		
-		HINSTANCE instance = GetModuleHandle(nullptr);
-		HWND ownerHandle = CreateWindow(SplashScreenWindowClass, NULL, WS_POPUP, 0, 0, 0, 0, NULL, NULL, instance, NULL);
-		return CreateWindowEx(WS_EX_LAYERED, SplashScreenWindowClass, NULL, WS_POPUP | WS_VISIBLE, 0, 0, 0, 0, ownerHandle, NULL, instance, NULL);
-	}
+	//HWND CPlatformManager::CreateSplashWindow()
+	//{
+	//	// NW: Invisible owner window so the splash shows up when alt+tabbing, but not in the taskbar. 
+	//	// To make it appear in the taskbar, we can drop the owner window. 
+	//	// If we don't want it anywhere, we could use the WS_EX_TOOLWINDOW extended window style.
+	//	
+	//	HINSTANCE instance = GetModuleHandle(nullptr);
+	//	HWND ownerHandle = CreateWindow(SplashScreenWindowClass, NULL, WS_POPUP, 0, 0, 0, 0, NULL, NULL, instance, NULL);
+	//	return CreateWindowEx(WS_EX_LAYERED, SplashScreenWindowClass, NULL, WS_POPUP | WS_VISIBLE, 0, 0, 0, 0, ownerHandle, NULL, instance, NULL);
+	//}
 
 	void CPlatformManager::SetSplashImage(HWND hwndSplash, HBITMAP splashBitmap)
 	{
@@ -644,7 +811,9 @@ namespace Havtorn
 
 	void CPlatformManager::MinimizeWindow() const
 	{
-		PostMessage(WindowHandle, WM_SYSCOMMAND, SC_MINIMIZE, 0);
+		SDL_Event minimizeEvent;
+		minimizeEvent.window.type = SDL_EVENT_WINDOW_MINIMIZED;
+		SDL_PushEvent(&minimizeEvent);
 	}
 
 	void CPlatformManager::MaximizeWindow()
@@ -657,12 +826,15 @@ namespace Havtorn
 
 	void CPlatformManager::CloseWindow()
 	{
-		PostMessage(WindowHandle, WM_SYSCOMMAND, SC_CLOSE, 0);
+		SDL_Event quitEvent;
+		quitEvent.window.type = SDL_EVENT_QUIT;
+		SDL_PushEvent(&quitEvent);
 	}
 
 	void CPlatformManager::CloseSplashWindow()
 	{
-		PostMessage(SplashHandle, WM_SYSCOMMAND, SC_CLOSE, 0);
+		SDL_DestroyWindow(SplashWindow);
+		SDL_RaiseWindow(Window);
 	}
 
 	// TODO.NW: It doesn't seem like there's a windows API for snapping windows yet?

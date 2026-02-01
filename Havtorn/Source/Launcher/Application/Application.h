@@ -27,6 +27,6 @@ namespace Havtorn
 
 	private:
 		std::vector<IProcess*> Processes;
-		bool IsRunning;
+		bool IsRunning = true;
 	};
 }

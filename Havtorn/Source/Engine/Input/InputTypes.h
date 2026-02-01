@@ -67,125 +67,185 @@ namespace Havtorn
 	{
 		None		= 0x00,
 		Mouse1		= 0x01, // Left
-		Mouse2		= 0x02, // Right
-		Mouse3		= 0x04, // Middle
-		Mouse4		= 0x05,
-		Mouse5		= 0x06,
-		Backspace	= 0x08,
-		Tab			= 0x09,
-		Return		= 0x0D,	// Enter
-		Shift		= 0x10,
-		Ctrl		= 0x11,
-		Alt			= 0x12, // TODO.NW: See if we get inconsistent behavior here because we don't use the higher valued keycodes?
-		Pause		= 0x13,
-		Caps		= 0x14,	// Caps Lock
-		Esc			= 0x1B,	// Escape
-		Space		= 0x20,
-		PageUp		= 0x21,
-		PageDown	= 0x22,
-		End			= 0x23,
-		Home		= 0x24,
-		Left		= 0x25, // Left Arrow
-		Up			= 0x26, // Up Arrow
-		Right		= 0x27, // Right Arrow
-		Down		= 0x28, // Down
-		PrtSc		= 0x2C, // Print Screen
-		Insert		= 0x2D,
-		Delete		= 0x2E, 
-		Key0		= 0x30,
-		Key1		= 0x31,
-		Key2		= 0x32,
-		Key3		= 0x33,
-		Key4		= 0x34,
-		Key5		= 0x35,
-		Key6		= 0x36,
-		Key7		= 0x37,
-		Key8		= 0x38,
-		Key9		= 0x39,
-		KeyA		= 0x41,
-		KeyB		= 0x42,
-		KeyC		= 0x43,
-		KeyD		= 0x44,
-		KeyE		= 0x45,
-		KeyF		= 0x46,
-		KeyG		= 0x47,
-		KeyH		= 0x48,
-		KeyI		= 0x49,
-		KeyJ		= 0x4A,
-		KeyK		= 0x4B,
-		KeyL		= 0x4C,
-		KeyM		= 0x4D,
-		KeyN		= 0x4E,
-		KeyO		= 0x4F,
-		KeyP		= 0x50,
-		KeyQ		= 0x51,
-		KeyR		= 0x52,
-		KeyS		= 0x53,
-		KeyT		= 0x54,
-		KeyU		= 0x55,
-		KeyV		= 0x56,
-		KeyW		= 0x57,
-		KeyX		= 0x58,
-		KeyY		= 0x59,
-		KeyZ		= 0x5A,
-		LWin		= 0x5B, // Left Windows key
-		RWin		= 0x5C, // Right Windows key
-		KeyNum0		= 0x60, // Numeric keypad 0 key
-		KeyNum1		= 0x61, // Numeric keypad 1 key
-		KeyNum2		= 0x62, // Numeric keypad 2 key
-		KeyNum3		= 0x63, // Numeric keypad 3 key
-		KeyNum4		= 0x64, // Numeric keypad 4 key
-		KeyNum5		= 0x65, // Numeric keypad 5 key
-		KeyNum6		= 0x66, // Numeric keypad 6 key
-		KeyNum7		= 0x67, // Numeric keypad 7 key
-		KeyNum8		= 0x68, // Numeric keypad 8 key
-		KeyNum9		= 0x69, // Numeric keypad 9 key
-		KeyNumMult	= 0x6A, // Numeric keypad Multiply key
-		KeyNumAdd	= 0x6B, // Numeric keypad Add key
-		Pipe		= 0x6C, // Separator key
-		KeyNumSub	= 0x6D,	// Numeric keypad Subtract key
-		KeyNumDec	= 0x6E,	// Numeric keypad Decimal key
-		KeyNumDiv	= 0x6F,	// Numeric keypad Divide key
-		F1			= 0x70,
-		F2			= 0x71,
-		F3			= 0x72,
-		F4			= 0x73,
-		F5			= 0x74,
-		F6			= 0x75,
-		F7			= 0x76,
-		F8			= 0x77,
-		F9			= 0x78,
-		F10			= 0x79,
-		F11			= 0x7A,
-		F12			= 0x7B,
-		NumLk		= 0x90,	// Num Lock key
-		ScrLk		= 0x91,	// Scroll Lock key
-		GamepadA	= 0xC3,
-		GamepadB	= 0xC4,
-		GamepadX	= 0xC5,
-		GamepadY	= 0xC6,
-		GamepadR1	= 0xC7,
-		GamepadL1	= 0xC8,
-		GamepadL2	= 0xC9,
-		GamepadR2	= 0xCA,
-		GamepadDPadUp = 0xCB,
-		GamepadDPadDown = 0xCC,
-		GamepadDPadLeft = 0xCD,
-		GamepadDPadRight = 0xCE,
-		GamepadMenu	= 0xCF,
-		GamepadView	= 0xD0,
-		GamepadL3	= 0xD1,
-		GamepadR3   = 0xD2,
-		//GamepadLEFT_THUMBSTICK_UP	= 0xD3,
-		//GamepadLEFT_THUMBSTICK_DOWN	= 0xD4,
-		//GamepadLEFT_THUMBSTICK_RIGHT	= 0xD5,
-		//GamepadLEFT_THUMBSTICK_LEFT	= 0xD6,
-		//GamepadRIGHT_THUMBSTICK_UP	= 0xD7,
-		//GamepadRIGHT_THUMBSTICK_DOWN	= 0xD8,
-		//GamepadRIGHT_THUMBSTICK_RIGHT	= 0xD9,
-		//GamepadRIGHT_THUMBSTICK_LEFT	= 0xDA,
+		Mouse3		= 0x02, // Middle
+		Mouse2		= 0x03, // Right
+		Mouse4		= 0x04,
+		Mouse5		= 0x05,
+		Return		= 0x0000000du,	// Enter
+		Esc			= 0x0000001bu,	// Escape
+		Backspace	= 0x00000008u,
+		Tab			= 0x00000009u,
+		Space		= 0x00000020u,
+		Key0		= 0x00000030u,
+		Key1		= 0x00000031u,
+		Key2		= 0x00000032u,
+		Key3		= 0x00000033u,
+		Key4		= 0x00000034u,
+		Key5		= 0x00000035u,
+		Key6		= 0x00000036u,
+		Key7		= 0x00000037u,
+		Key8		= 0x00000038u,
+		Key9		= 0x00000039u,
+		Shift		= 0x400000e1u,
+		Ctrl		= 0x400000e0u,
+		Alt			= 0x400000e2u, // TODO.NW: See if we get inconsistent behavior here because we don't use the higher valued keycodes?
+		Pause		= 0x40000048u,
+		Caps		= 0x40000039u,	// Caps Lock
+		PageUp		= 0x4000004bu,
+		PageDown	= 0x4000004eu,
+		End			= 0x4000004du,
+		Home		= 0x4000004au,
+		Left		= 0x40000050u, // Left Arrow
+		Up			= 0x40000052u, // Up Arrow
+		Right		= 0x4000004fu, // Right Arrow
+		Down		= 0x40000051u, // Down
+		PrtSc		= 0x40000046u, // Print Screen
+		Insert		= 0x40000049u,
+		Delete		= 0x0000007fu,
+		KeyA		= 0x00000061u,
+		KeyB		= 0x00000062u,
+		KeyC		= 0x00000063u,
+		KeyD		= 0x00000064u,
+		KeyE		= 0x00000065u,
+		KeyF		= 0x00000066u,
+		KeyG		= 0x00000067u,
+		KeyH		= 0x00000068u,
+		KeyI		= 0x00000069u,
+		KeyJ		= 0x0000006au,
+		KeyK		= 0x0000006bu,
+		KeyL		= 0x0000006cu,
+		KeyM		= 0x0000006du,
+		KeyN		= 0x0000006eu,
+		KeyO		= 0x0000006fu,
+		KeyP		= 0x00000070u,
+		KeyQ		= 0x00000071u,
+		KeyR		= 0x00000072u,
+		KeyS		= 0x00000073u,
+		KeyT		= 0x00000074u,
+		KeyU		= 0x00000075u,
+		KeyV		= 0x00000076u,
+		KeyW		= 0x00000077u,
+		KeyX		= 0x00000078u,
+		KeyY		= 0x00000079u,
+		KeyZ		= 0x0000007au,
+		LWin		= 0x400000e3u, // Left Windows key
+		RWin		= 0x400000e7u, // Right Windows key
+		KeyNum0		= 0x40000062u, // Numeric keypad 0 key
+		KeyNum1		= 0x40000059u, // Numeric keypad 1 key
+		KeyNum2		= 0x4000005au, // Numeric keypad 2 key
+		KeyNum3		= 0x4000005bu, // Numeric keypad 3 key
+		KeyNum4		= 0x4000005cu, // Numeric keypad 4 key
+		KeyNum5		= 0x4000005du, // Numeric keypad 5 key
+		KeyNum6		= 0x4000005eu, // Numeric keypad 6 key
+		KeyNum7		= 0x4000005fu, // Numeric keypad 7 key
+		KeyNum8		= 0x40000060u, // Numeric keypad 8 key
+		KeyNum9		= 0x40000061u, // Numeric keypad 9 key
+		KeyNumMult	= 0x40000055u, // Numeric keypad Multiply key
+		KeyNumAdd	= 0x40000057u, // Numeric keypad Add key
+		Pipe		= 0x4000009fu, // Separator key
+		KeyNumSub	= 0x40000056u, // Numeric keypad Subtract key
+		KeyNumDec	= 0x40000063u, // Numeric keypad Decimal key
+		KeyNumDiv	= 0x40000054u, // Numeric keypad Divide key
+		KeyNumEnter = 0x40000058u, // Numeric keypad Enter key
+		F1			= 0x4000003au,
+		F2			= 0x4000003bu,
+		F3			= 0x4000003cu,
+		F4			= 0x4000003du,
+		F5			= 0x4000003eu,
+		F6			= 0x4000003fu,
+		F7			= 0x40000040u,
+		F8			= 0x40000041u,
+		F9			= 0x40000042u,
+		F10			= 0x40000043u,
+		F11			= 0x40000044u,
+		F12			= 0x40000045u,
+		NumLk		= 0x40000053u,	// Num Lock key
+		ScrLk		= 0x40000047u,	// Scroll Lock key
+		GamepadInvalid = 257,
+		GamepadSouth,				/**< Bottom face button (e.g. Xbox A button) */
+		GamepadEast,				/**< Right face button (e.g. Xbox B button) */
+		GamepadWest,				/**< Left face button (e.g. Xbox X button) */
+		GamepadNorth,				/**< Top face button (e.g. Xbox Y button) */
+		GamepadBack,
+		GamepadGuide,
+		GamepadStart,
+		GamepadL3,
+		GamepadR3,
+		GamepadL1,
+		GamepadR1,
+		GamepadDPadUp,
+		GamepadDPadDown,
+		GamepadDPadLeft,
+		GamepadDPadRight,
+		GamepadMisc1,				/**< Additional button (e.g. Xbox Series X share button, PS5 microphone button, Nintendo Switch Pro capture button, Amazon Luna microphone button, Google Stadia capture button) */
+		GamepadR4,				/**< Upper or primary paddle, under your right hand (e.g. Xbox Elite paddle P1, DualSense Edge RB button, Right Joy-Con SR button) */
+		GamepadL4,				/**< Upper or primary paddle, under your left hand (e.g. Xbox Elite paddle P3, DualSense Edge LB button, Left Joy-Con SL button) */
+		GamepadR5,				/**< Lower or secondary paddle, under your right hand (e.g. Xbox Elite paddle P2, DualSense Edge right Fn button, Right Joy-Con SL button) */
+		GamepadL5,				/**< Lower or secondary paddle, under your left hand (e.g. Xbox Elite paddle P4, DualSense Edge left Fn button, Left Joy-Con SR button) */
+		GamepadTouchPad,			/**< PS4/PS5 touchpad button */
+		GamepadMisc2,				/**< Additional button */
+		GamepadMisc3,				/**< Additional button (e.g. Nintendo GameCube left trigger click) */
+		GamepadMisc4,				/**< Additional button (e.g. Nintendo GameCube right trigger click) */
+		GamepadMisc5,				/**< Additional button */
+		GamepadMisc6,				/**< Additional button */
+		GamepadRegionStart = GamepadSouth
 	};
 
+	enum class EGamepadType
+	{
+		Unknown = 0,
+		Standard,
+		Xbox360,
+		XboxOne,
+		PS3,
+		PS4,
+		PS5,
+		NintendoSwitchPro,
+		NintendoSwitchJoyconLeft,
+		NintendoSwitchJoyconRight,
+		NintendoSwitchJoyconPair,
+		GameCube,
+		Count
+	};
+
+	/**
+	 * The set of gamepad button labels
+	 *
+	 * This isn't a complete set, just the face buttons to make it easy to show
+	 * button prompts.
+	 *
+	 * For a complete set, you should look at the button and gamepad type and have
+	 * a set of symbols that work well with your art style.
+	 *
+	 * \since This enum is available since SDL 3.2.0.
+	 */
+	enum class EGamepadButtonLabel
+	{
+		Unknown,
+		A,
+		B,
+		X,
+		Y,
+		Cross,
+		Circle,
+		Square,
+		Triangle
+	};
+
+	/**
+	 * The list of axes available on a gamepad
+	 *
+	 * Thumbstick axis values range from SDL_JOYSTICK_AXIS_MIN to
+	 * SDL_JOYSTICK_AXIS_MAX, and are centered within ~8000 of zero, though
+	 * advanced UI will allow users to set or autodetect the dead zone, which
+	 * varies between gamepads.
+	 *
+	 * Trigger axis values range from 0 (released) to SDL_JOYSTICK_AXIS_MAX (fully
+	 * pressed) when reported by SDL_GetGamepadAxis(). Note that this is not the
+	 * same range that will be reported by the lower-level SDL_GetJoystickAxis().
+	 *
+	 * \since This enum is available since SDL 3.2.0.
+	 */
 	enum class EInputAxis
 	{
 		Key,
@@ -194,16 +254,18 @@ namespace Havtorn
 		MouseDeltaVertical,
 		MousePositionHorizontal,
 		MousePositionVertical,
-		AnalogHorizontal,
-		AnalogVertical,
+		GamepadInvalid,
 		GamepadLeftStickHorizontal,
 		GamepadLeftStickVertical,
 		GamepadRightStickHorizontal,
 		GamepadRightStickVertical,
 		GamepadLeftTrigger,
-		GamepadRightTrigger
+		GamepadRightTrigger,
+		Count = GamepadRightTrigger + 1,
+		GamepadRegionStart = GamepadLeftStickHorizontal
 	};
 
+	// TODO.NW: Events and onward should be extendable in a game project
 	enum class EInputActionEvent
 	{
 		None,
@@ -479,37 +541,6 @@ namespace Havtorn
 			return 0.0f;
 		}
 
-		[[nodiscard]] F32 GetAxisValue(const F32 rawValue) const
-		{
-			switch (Axis)
-			{
-				// Mouse Wheel scroll threshold is capped at 120
-				case EInputAxis::MouseWheel:
-					return rawValue / 120.0f;
-
-				// Return raw value for now
-				case EInputAxis::MouseDeltaHorizontal: 
-				case EInputAxis::MouseDeltaVertical: 
-				case EInputAxis::MousePositionHorizontal:
-				case EInputAxis::MousePositionVertical:
-				case EInputAxis::GamepadLeftStickHorizontal:
-				case EInputAxis::GamepadLeftStickVertical:
-				case EInputAxis::GamepadRightStickHorizontal:
-				case EInputAxis::GamepadRightStickVertical:
-				case EInputAxis::GamepadLeftTrigger:
-				case EInputAxis::GamepadRightTrigger:					
-					return rawValue;
-
-				case EInputAxis::AnalogHorizontal: 
-				case EInputAxis::AnalogVertical: 
-
-				// Do not handle this here, call GetAxisValue(const EInputKey&) instead
-				case EInputAxis::Key:
-				default:
-					return 0.0f;
-			}
-		}
-
 		EInputAxis Axis = EInputAxis::Key;
 		EInputKey AxisPositiveKey = EInputKey::None; // Optional
 		EInputKey AxisNegativeKey = EInputKey::None; // Optional
@@ -533,7 +564,7 @@ namespace Havtorn
 				[](const SInputAxis& axis) {return axis.Axis == EInputAxis::Key; });
 		}
 
-		[[nodiscard]] bool Has(const EInputKey& key, U32 context, U32 modifiers, F32& outAxisValue) const
+		[[nodiscard]] bool Has(const EInputKey& key, const U32 context, const U32 modifiers, F32& outAxisValue) const
 		{
 			return std::ranges::any_of(Axes.begin(), Axes.end(),
 				[key, context, modifiers, &outAxisValue](const SInputAxis& axisAction)
@@ -548,17 +579,15 @@ namespace Havtorn
 				});
 		}
 
-		[[nodiscard]] bool Has(const EInputAxis& axis, F32& outAxisValue) const
+		[[nodiscard]] bool Has(const EInputAxis& axis, const U32 context, const U32 modifiers) const
 		{
 			return std::ranges::any_of(Axes.begin(), Axes.end(),
-				[axis, &outAxisValue](const SInputAxis& axisAction)
+				[axis, context, modifiers](const SInputAxis& axisAction)
 				{
-					if (axisAction.Axis == axis)
+					if (axisAction.Axis == axis && (axisAction.Contexts & context) != 0 && (axisAction.Modifiers ^ modifiers) == 0)
 					{
-						outAxisValue = axisAction.GetAxisValue(outAxisValue);
 						return true;
 					}
-
 					return false;
 				});
 		}

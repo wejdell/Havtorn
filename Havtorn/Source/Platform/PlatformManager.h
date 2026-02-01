@@ -10,6 +10,10 @@
 
 #include <wincodec.h>
 
+struct SDL_Window;
+struct SDL_Surface;
+union SDL_Event;
+
 namespace Havtorn
 {
 	enum class EWindowSnapPosition
@@ -32,6 +36,9 @@ namespace Havtorn
 			U16 Width = 1280;
 			U16 Height = 720;
 		};
+
+		void BeginFrame();
+		void EventLoop();
 
 		PLATFORM_API static LRESULT CALLBACK WinProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam);
 		PLATFORM_API SVector2<U16> GetResolution() const;
@@ -57,10 +64,12 @@ namespace Havtorn
 	public:
 		// TODO.NW: Try figure out if we can bind to and bool returns instead
 		CMulticastDelegate<HWND, UINT, WPARAM, LPARAM> OnMessageHandled;
+		CMulticastDelegate<const SDL_Event*> OnProcessEvent;
 		CMulticastDelegate<std::vector<std::string>> OnDragDropAccepted;
 		CMulticastDelegate<SVector2<U16>> OnResolutionChanged;
 
 		PLATFORM_API const HWND GetWindowHandle() const;
+		PLATFORM_API SDL_Window* GetMainWindow() const;
 
 		PLATFORM_API void OnApplicationReady();
 
@@ -88,14 +97,18 @@ namespace Havtorn
 		IStream* CreateStreamOnResource(LPCSTR lpName, LPCSTR lpType);
 		IWICBitmapSource* LoadBitmapFromStream(IStream* ipImageStream);
 		HBITMAP CreateBitmap(IWICBitmapSource* ipBitmap);
-		void RegisterSplashWindowClass(HICON icon);
-		HWND CreateSplashWindow();
+		//void RegisterSplashWindowClass(HICON icon);
+		//HWND CreateSplashWindow();
 		void SetSplashImage(HWND hwndSplash, HBITMAP splashBitmap);
 
 	private:
 		CPlatformManager::SWindowData WindowData = {};
 		HWND WindowHandle = 0;
-		HWND SplashHandle = 0;
+		//HWND SplashHandle = 0;
+
+		SDL_Window* Window = nullptr;
+		SDL_Window* SplashWindow = nullptr;
+		SDL_Surface* SplashSurface = nullptr;
 
 		SVector2<U16> Resolution = {};
 		SVector2<U16> PreviousResolution = {};
@@ -114,11 +127,12 @@ namespace Havtorn
 		bool CursorIsLocked = false;
 		bool WindowIsInEditingMode = false;
 		bool IsFullscreen = false;
+		bool ShouldRun = false;
 
 		SVector2<U16> ResizeTarget = {};
 
-		const char* HavtornWindowClass = "HavtornWindow";
-		const TCHAR* LHavtornWindowClass = TEXT("HavtornWindow");
-		const TCHAR* SplashScreenWindowClass = TEXT("SplashWindow");
+		//const char* HavtornWindowClass = "HavtornWindow";
+		//const TCHAR* LHavtornWindowClass = TEXT("HavtornWindow");
+		//const TCHAR* SplashScreenWindowClass = TEXT("SplashWindow");
 	};
 }

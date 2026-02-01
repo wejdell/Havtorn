@@ -20,6 +20,7 @@
 
 struct ID3D11Device;
 struct ID3D11DeviceContext;
+union SDL_Event;
 
 namespace Havtorn
 {
@@ -752,6 +753,7 @@ namespace Havtorn
 		void BeginFrame();
 		void EndFrame();
 		void WindowsProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
+		void ProcessEvent(const SDL_Event* event);
 
 	public:
 		static const F32 SliderSpeed;

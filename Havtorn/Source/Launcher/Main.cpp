@@ -15,6 +15,9 @@
 #include <iostream>
 #include <filesystem>
 
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
+
 #ifdef HV_PLATFORM_WINDOWS
 
 #pragma region Console
@@ -22,7 +25,6 @@
 #ifdef _DEBUG
 #define USE_CONSOLE
 #endif
-
 
 void OpenConsole()
 {
@@ -62,23 +64,21 @@ bool TrySendToRunningInstance(const std::string& uri)
 	return true;
 }
 
-int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nShowCmd)
+I32 main(I32 argc, char* argv[])
 {
-	hInstance;
-	hPrevInstance;
-	lpCmdLine;
-	nShowCmd;
-
-	UCommandLine::Parse(GetCommandLineA());
+	std::string commandLine;
+	for (I32 index = 0; index < argc; index++)
+	{
+		commandLine.append(argv[index]);
+		commandLine.append(" ");
+	}
+	UCommandLine::Parse(commandLine);
 
 #ifdef HV_DEEPLINK_ENABLED
 	// Note.AS:
 	// Overrides CurrentDirectory to be as if you started this application from the exe's location- which is not true when deeplink-starting this executable
 	UFileSystem::SetWorkingPath(UGeneralUtils::ExtractParentDirectoryFromPath(UFileSystem::GetExecutableRootPath()));
-
-	// TODO.NW: Add better command line parsing
-	std::string cmdLine = GetCommandLineA();
-	if (TrySendToRunningInstance(cmdLine))
+	if (TrySendToRunningInstance(commandLine))
 	{
 		return 0;
 	}
@@ -123,13 +123,13 @@ int WINAPI wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, 
 	editorProcess->Init(platformProcess->PlatformManager);
 #endif
 
-	SetForegroundWindow(platformProcess->PlatformManager->GetWindowHandle());
+	//SetForegroundWindow(platformProcess->PlatformManager->GetWindowHandle());
 
 	//application->Setup(platformProcess->PlatformManager); //foreach -> process->Init();
 	application->Run();
 	delete application;
 
-	SetForegroundWindow(GetConsoleWindow());
+	//SetForegroundWindow(GetConsoleWindow());
 
 #ifdef USE_CONSOLE
 	CloseConsole();
