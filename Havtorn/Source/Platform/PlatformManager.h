@@ -8,22 +8,12 @@
 #include <HavtornDelegate.h>
 #include <functional>
 
-#include <wincodec.h>
-
 struct SDL_Window;
 struct SDL_Surface;
 union SDL_Event;
 
 namespace Havtorn
 {
-	enum class EWindowSnapPosition
-	{
-		Unsnapped,
-		Left,
-		Right,
-		Maximized
-	};
-
 	class CPlatformManager
 	{
 		friend class CPlatformProcess;
@@ -40,7 +30,6 @@ namespace Havtorn
 		void BeginFrame();
 		void EventLoop();
 
-		PLATFORM_API static LRESULT CALLBACK WinProc(_In_ HWND hwnd, _In_ UINT uMsg, _In_ WPARAM wParam, _In_ LPARAM lParam);
 		PLATFORM_API SVector2<U16> GetResolution() const;
 		PLATFORM_API SVector2<I16> GetCenterPosition() const;
 		PLATFORM_API SVector2<I16> GetScreenCursorPos() const;
@@ -51,15 +40,10 @@ namespace Havtorn
 		PLATFORM_API void EnableDragDrop() const;
 		PLATFORM_API void DisableDragDrop() const;
 
-		PLATFORM_API void UpdateWindow(const SVector2<I16>& windowPos, const SVector2<U16>& resolution);
-		PLATFORM_API void UpdateRelativeCursorToWindowPos();
-		PLATFORM_API void UpdateWindowPos();
 		PLATFORM_API void MinimizeWindow() const;
 		PLATFORM_API void MaximizeWindow();
 		PLATFORM_API void CloseWindow();
 		PLATFORM_API void CloseSplashWindow();
-
-		PLATFORM_API void SnapWindow(const EWindowSnapPosition position);
 
 	public:
 		// TODO.NW: Try figure out if we can bind to and bool returns instead
@@ -79,60 +63,21 @@ namespace Havtorn
 
 		bool Init(SWindowData windowData);
 
-		const bool CursorLocked() const;
-
-		PLATFORM_API void LockCursor(bool shouldLock);
-		PLATFORM_API void HidLockCursor(bool shouldLock);
-
-		PLATFORM_API void HideAndLockCursor(const bool& isInEditorMode = false);
-		PLATFORM_API void ShowAndUnlockCursor(const bool& isInEditorMode = true);
-
-	private:
-		// Splash Utils
-		void InitWindowsImaging();
-		HBITMAP LoadSplashImage(const std::string& filePath);
-		// NW: These were used for loading a png file from a Resource embedded in the executable.
-		// The problem was this would not regenerate the path it was looking at between machines,
-		// which made it unusable. Should find a working solution using CMake to declare resources.
-		IStream* CreateStreamOnResource(LPCSTR lpName, LPCSTR lpType);
-		IWICBitmapSource* LoadBitmapFromStream(IStream* ipImageStream);
-		HBITMAP CreateBitmap(IWICBitmapSource* ipBitmap);
-		//void RegisterSplashWindowClass(HICON icon);
-		//HWND CreateSplashWindow();
-		void SetSplashImage(HWND hwndSplash, HBITMAP splashBitmap);
-
 	private:
 		CPlatformManager::SWindowData WindowData = {};
 		HWND WindowHandle = 0;
-		//HWND SplashHandle = 0;
 
 		SDL_Window* Window = nullptr;
 		SDL_Window* SplashWindow = nullptr;
 		SDL_Surface* SplashSurface = nullptr;
 
-		SVector2<U16> Resolution = {};
-		SVector2<U16> PreviousResolution = {};
-		SVector2<I16> WindowPos = {};
-		SVector2<I16> PreviousWindowPos = {};
-
-		SVector2<F32> NormalizedWindowRelativeCursorPos = {};
-		SVector2<I16> WindowRelativeCursorPos = {};
-		SVector2<I16> CursorPosPreDrag = {};
+		SVector2<U16> ResizeTarget = SVector2<U16>::Zero;
+		SVector2<U16> Resolution = SVector2<U16>::Zero;
 		
-		SVector2<U16> MaxResolution = {};
-		SVector2<U16> MinResolution = SVector2<U16>{128,72};
-		
-		EWindowSnapPosition SnapPosition = EWindowSnapPosition::Unsnapped;
+		SVector2<U16> MaxResolution = SVector2<U16>::Zero;
+		SVector2<U16> MinResolution = SVector2<U16>{ 128, 72 };
 
-		bool CursorIsLocked = false;
-		bool WindowIsInEditingMode = false;
-		bool IsFullscreen = false;
 		bool ShouldRun = false;
 
-		SVector2<U16> ResizeTarget = {};
-
-		//const char* HavtornWindowClass = "HavtornWindow";
-		//const TCHAR* LHavtornWindowClass = TEXT("HavtornWindow");
-		//const TCHAR* SplashScreenWindowClass = TEXT("SplashWindow");
 	};
 }

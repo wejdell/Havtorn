@@ -107,7 +107,6 @@ namespace Havtorn
 
 	void CEditorManager::BeginFrame()
 	{
-		PlatformManager->UpdateResolution();
 	}
 
 	void CEditorManager::Render()
@@ -158,17 +157,6 @@ namespace Havtorn
 
 			GUI::EndMainMenuBar();
 		}
-
-		if (GUI::IsLeftMouseHeld() && !isHoveringMenuBarButton)
-			PlatformManager->UpdateWindowPos();
-		else
-			PlatformManager->UpdateRelativeCursorToWindowPos();
-
-		// TODO.NW: Get from style
-		constexpr F32 menuBarHeight = 18.0f;
-		const bool isInMenuBarRect = GUI::IsMouseInRect(SVector2<F32>(0.0f), SVector2<F32>(STATIC_F32(PlatformManager->GetResolution().X), menuBarHeight));
-		if (isInMenuBarRect && GUI::IsDoubleClick() && !isHoveringMenuBarButton)
-			PlatformManager->MaximizeWindow();
 
 		// Windows
 		for (const auto& window : Windows)
