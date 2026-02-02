@@ -3,8 +3,6 @@
 #include "hvpch.h"
 #include "Input.h"
 
-#include <windowsx.h>
-
 #include "Engine.h"
 
 #include <ranges>

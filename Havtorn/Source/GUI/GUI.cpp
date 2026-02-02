@@ -26,8 +26,6 @@
 #include <PlatformManager.h>
 #include <SDL3/SDL.h>
 
-IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
 namespace Havtorn
 {
 	static Havtorn::I32 HavtornInputTextResizeCallback(struct ImGuiInputTextCallbackData* data)
@@ -68,7 +66,6 @@ namespace Havtorn
 			SecondaryFont = ImGui::GetIO().Fonts->AddFontFromFileTTF(DefaultFont, 10.0f);
 			ImGuizmo::SetImGuiContext(ImGui::GetCurrentContext());
 
-			//ImGui_ImplWin32_Init(hwnd);
 			ImGui_ImplSDL3_InitForD3D(window);
 			ImGui_ImplDX11_Init(device, context);
 
@@ -95,7 +92,6 @@ namespace Havtorn
 		void BeginFrame()
 		{
 			ImGui_ImplDX11_NewFrame();
-			//ImGui_ImplWin32_NewFrame();
 			ImGui_ImplSDL3_NewFrame();
 			ImGui::NewFrame();
 			ImGuizmo::BeginFrame();
@@ -104,11 +100,6 @@ namespace Havtorn
 		bool ProcessEvent(const SDL_Event* event)
 		{
 			return ImGui_ImplSDL3_ProcessEvent(event);
-		}
-
-		LRESULT WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
-		{
-			return ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
 		}
 
 		void EndFrame()
@@ -1512,11 +1503,6 @@ namespace Havtorn
 	void GUI::EndFrame()
 	{
 		Instance->Impl->EndFrame();
-	}
-
-	void GUI::WindowsProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-	{
-		Instance->Impl->WindowProc(hwnd, msg, wParam, lParam);
 	}
 
 	void GUI::ProcessEvent(const SDL_Event* event)

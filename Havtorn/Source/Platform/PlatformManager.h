@@ -31,14 +31,7 @@ namespace Havtorn
 		void EventLoop();
 
 		PLATFORM_API SVector2<U16> GetResolution() const;
-		PLATFORM_API SVector2<I16> GetCenterPosition() const;
-		PLATFORM_API SVector2<I16> GetScreenCursorPos() const;
-
 		PLATFORM_API void UpdateResolution();
-
-		// TODO.AG: reconsider access rights.
-		PLATFORM_API void EnableDragDrop() const;
-		PLATFORM_API void DisableDragDrop() const;
 
 		PLATFORM_API void MinimizeWindow() const;
 		PLATFORM_API void MaximizeWindow();
@@ -46,8 +39,6 @@ namespace Havtorn
 		PLATFORM_API void CloseSplashWindow();
 
 	public:
-		// TODO.NW: Try figure out if we can bind to and bool returns instead
-		CMulticastDelegate<HWND, UINT, WPARAM, LPARAM> OnMessageHandled;
 		CMulticastDelegate<const SDL_Event*> OnProcessEvent;
 		CMulticastDelegate<std::vector<std::string>> OnDragDropAccepted;
 		CMulticastDelegate<SVector2<U16>> OnResolutionChanged;
@@ -75,9 +66,7 @@ namespace Havtorn
 		SVector2<U16> Resolution = SVector2<U16>::Zero;
 		
 		SVector2<U16> MaxResolution = SVector2<U16>::Zero;
-		SVector2<U16> MinResolution = SVector2<U16>{ 128, 72 };
 
 		bool ShouldRun = false;
-
 	};
 }

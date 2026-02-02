@@ -21,8 +21,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-set(GAMEINPUT_VERSION "Microsoft.GameInput.3.1.26100.6879")
-
 # ==================== FOLDERS ====================
 set(ENGINE_FOLDER "Engine/")
 set(SHADER_FOLDER "Engine/Graphics/Shaders/")
@@ -620,10 +618,10 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SHADER_INCLUDES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${HLSL_SHADER_FILES})
 target_link_libraries(Engine PRIVATE
-    $<$<CONFIG:EditorDebug>:assimp-vc143-mtd DirectXTexd d3dcompiler freetyped box2dd GameInput PhysX/PhysX_64d PhysX/PhysXCommon_64d PhysX/PhysXExtensions_static_64d PhysX/PhysXFoundation_64d PhysX/PhysXPvdSDK_static_64d PhysX/PhysXCharacterKinematic_static_64d>
-    $<$<CONFIG:GameDebug>:assimp-vc143-mtd DirectXTexd d3dcompiler freetyped box2dd GameInput PhysX/PhysX_64d PhysX/PhysXCommon_64d PhysX/PhysXExtensions_static_64d PhysX/PhysXFoundation_64d PhysX/PhysXPvdSDK_static_64d PhysX/PhysXCharacterKinematic_static_64d>
-    $<$<CONFIG:EditorDevelopment>:assimp-vc143-mt DirectXTex d3dcompiler freetype box2d GameInput PhysX/PhysX_64 PhysX/PhysXCommon_64 PhysX/PhysXExtensions_static_64 PhysX/PhysXFoundation_64 PhysX/PhysXPvdSDK_static_64 PhysX/PhysXCharacterKinematic_static_64>
-    $<$<CONFIG:GameRelease>:assimp-vc143-mt DirectXTex d3dcompiler freetype box2d GameInput PhysX/PhysX_64 PhysX/PhysXCommon_64 PhysX/PhysXExtensions_static_64 PhysX/PhysXFoundation_64 PhysX/PhysXPvdSDK_static_64 PhysX/PhysXCharacterKinematic_static_64>
+    $<$<CONFIG:EditorDebug>:assimp-vc143-mtd DirectXTexd d3dcompiler box2dd PhysX/PhysX_64d PhysX/PhysXCommon_64d PhysX/PhysXExtensions_static_64d PhysX/PhysXFoundation_64d PhysX/PhysXPvdSDK_static_64d PhysX/PhysXCharacterKinematic_static_64d>
+    $<$<CONFIG:GameDebug>:assimp-vc143-mtd DirectXTexd d3dcompiler box2dd PhysX/PhysX_64d PhysX/PhysXCommon_64d PhysX/PhysXExtensions_static_64d PhysX/PhysXFoundation_64d PhysX/PhysXPvdSDK_static_64d PhysX/PhysXCharacterKinematic_static_64d>
+    $<$<CONFIG:EditorDevelopment>:assimp-vc143-mt DirectXTex d3dcompiler box2d PhysX/PhysX_64 PhysX/PhysXCommon_64 PhysX/PhysXExtensions_static_64 PhysX/PhysXFoundation_64 PhysX/PhysXPvdSDK_static_64 PhysX/PhysXCharacterKinematic_static_64>
+    $<$<CONFIG:GameRelease>:assimp-vc143-mt DirectXTex d3dcompiler box2d PhysX/PhysX_64 PhysX/PhysXCommon_64 PhysX/PhysXExtensions_static_64 PhysX/PhysXFoundation_64 PhysX/PhysXPvdSDK_static_64 PhysX/PhysXCharacterKinematic_static_64>
     $<$<CONFIG:EditorDebug>:SDL3d>
     $<$<CONFIG:GameDebug>:SDL3d>
     $<$<CONFIG:EditorDevelopment>:SDL3>
@@ -638,12 +636,10 @@ target_include_directories(Engine PRIVATE
     "${EXTERNAL_FOLDER}assimp/include"
     "${EXTERNAL_FOLDER}FastNoise2/include"
     "${EXTERNAL_FOLDER}rapidjson/include"
-    "${EXTERNAL_FOLDER}freetype/include"
     "${EXTERNAL_FOLDER}DirectXTex"
     "${EXTERNAL_FOLDER}box2d/include/box2d"
     "${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
     "${EXTERNAL_FOLDER}PhysX/physx/include"
-    "${EXTERNAL_FOLDER}/${GAMEINPUT_VERSION}/native/include"
     "${EXTERNAL_FOLDER}SDL/include"
     "Core"
     "Platform"
@@ -652,7 +648,6 @@ target_include_directories(Engine PRIVATE
 target_link_directories(Engine PRIVATE
     "${EXTERNAL_FOLDER}Lib/Debug"
     "${EXTERNAL_FOLDER}Lib/Release"
-    "${EXTERNAL_FOLDER}/${GAMEINPUT_VERSION}/native/lib/x64"
     ${CMAKE_BINARY_DIR}
 )
 target_compile_definitions(Engine PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_ENGINE_DLL)

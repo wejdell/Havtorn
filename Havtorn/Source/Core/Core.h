@@ -70,4 +70,4 @@
 
 #define HAVTORN_VERSION "0.0.1"
 
-//#define HV_DEEPLINK_ENABLED
+#define HV_DEEPLINK_ENABLED

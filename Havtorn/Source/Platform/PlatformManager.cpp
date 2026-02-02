@@ -87,30 +87,58 @@ namespace Havtorn
 		return SDL_HITTEST_NORMAL;
 	}
 
+#ifdef HV_PLATFORM_WINDOWS
+	LRESULT CALLBACK CustomWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) 
+	{
+		WNDPROC ogProc = (WNDPROC)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+		LRESULT res = CallWindowProc(ogProc, hwnd, msg, wParam, lParam);
+
+		switch (msg) 
+		{
+		case WM_COPYDATA:
+		{
+			COPYDATASTRUCT* cds = reinterpret_cast<COPYDATASTRUCT*>(lParam);
+			std::string stringData(reinterpret_cast<char*>(cds->lpData), cds->cbData / sizeof(char));
+			UCommandLine::Parse(stringData);
+			HV_LOG_INFO("DeepLink: %s", UCommandLine::GetDeepLinkCommand().c_str());
+		} break;
+		}
+
+		return res;
+	}
+#endif // HV_PLATFORM_WINDOWS
+
 	bool CPlatformManager::Init(CPlatformManager::SWindowData windowData)
 	{
 		const CJsonDocument document = UFileSystem::OpenJson("Config/EngineConfig.json");
-		const std::string gameName = document.GetString("Game Name", "Havtorn Editor");
+#ifdef HV_EDITOR_BUILD
+		const std::string windowTitle = "Havtorn Editor";
+#else
+		const std::string windowTitle = document.GetString("Game Name", "Havtorn Editor");
+#endif
+
 		SplashSurface = SDL_LoadBMP(document.GetString("Splash Path", "Resources/HavtornSplash.bmp").c_str());
 		
 		// NW: SteamAPI_InitEx goes here
-
-		SDL_SetAppMetadata(gameName.c_str(), HAVTORN_VERSION, NULL);
+		SDL_SetAppMetadata(windowTitle.c_str(), HAVTORN_VERSION, NULL);
 		SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD | SDL_INIT_HAPTIC);
-		
-		SplashWindow = SDL_CreateWindow(gameName.c_str(), SplashSurface->w, SplashSurface->h, SDL_WINDOW_BORDERLESS);
+		SplashWindow = SDL_CreateWindow(windowTitle.c_str(), SplashSurface->w, SplashSurface->h, SDL_WINDOW_BORDERLESS);
 		const SDL_Rect defaultRect = { .x = 0, .y = 0, .w = SplashSurface->w, .h = SplashSurface->h };
 		SDL_BlitSurface(SplashSurface, &defaultRect, SDL_GetWindowSurface(SplashWindow), &defaultRect);
 		SDL_UpdateWindowSurface(SplashWindow);
 		SDL_SetWindowIcon(SplashWindow, SplashSurface);
 		SDL_SetWindowHitTest(SplashWindow, SplashHitTest, nullptr);
 
-		Window = SDL_CreateWindow(gameName.c_str(), windowData.Width, windowData.Height, SDL_WINDOW_BORDERLESS | SDL_WINDOW_RESIZABLE);
+		Window = SDL_CreateWindow(windowTitle.c_str(), windowData.Width, windowData.Height, SDL_WINDOW_BORDERLESS | SDL_WINDOW_RESIZABLE);
 		SDL_UpdateWindowSurface(Window);
-		SDL_SetWindowIcon(Window, SplashSurface);
 		SDL_SetWindowHitTest(Window, WindowHitTest, nullptr);
-		// Windows-specific
+
+#ifdef HV_PLATFORM_WINDOWS
 		WindowHandle = (HWND)SDL_GetPointerProperty(SDL_GetWindowProperties(Window), SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);
+		
+		WNDPROC ogProc = (WNDPROC)SetWindowLongPtr(WindowHandle, GWLP_WNDPROC, (LONG_PTR)CustomWndProc);
+		SetWindowLongPtr(WindowHandle, GWLP_USERDATA, (LONG_PTR)ogProc);
+#endif // HV_PLATFORM_WINDOWS
 
 		const SDL_DisplayMode* mode = SDL_GetCurrentDisplayMode(SDL_GetDisplayForWindow(Window));
 		MaxResolution = SVector2<U16>(STATIC_U16(mode->w), STATIC_U16(mode->h));
@@ -135,6 +163,9 @@ namespace Havtorn
 	void CPlatformManager::OnApplicationReady()
 	{
 		CloseSplashWindow();
+
+		// NW: Not sure if it's an SDL bug or not, but the icon doesn't show correctly in the task manager unless we do this here
+		SDL_SetWindowIcon(Window, SplashSurface);
 
 #if HV_PLATFORM_WINDOWS
 		// Create shortcut to executable
@@ -167,27 +198,6 @@ namespace Havtorn
 			HV_LOG_INFO("PARAM: %s", param.c_str());
 	}
 
-	SVector2<I16> CPlatformManager::GetCenterPosition() const
-	{
-		SVector2<I16> center = {};
-		RECT rect = { 0 };
-		if (GetWindowRect(WindowHandle, &rect))
-		{
-			center.X = STATIC_U16((rect.right - rect.left) / (I16)2);
-			center.Y = STATIC_U16((rect.bottom - rect.top) / (I16)2);
-		}
-		return center;
-	}
-
-	SVector2<I16> CPlatformManager::GetScreenCursorPos() const
-	{
-		POINT point = { 0 };
-		if (!GetCursorPos(&point))
-			return SVector2<I16>(0);
-
-		return { STATIC_I16(point.x), STATIC_I16(point.y) };
-	}
-
 	void CPlatformManager::BeginFrame()
 	{
 		EventLoop();
@@ -208,17 +218,6 @@ namespace Havtorn
 			}
 			break;
 
-			case SDL_EVENT_TERMINATING:
-			{
-				// Quit app (report back to CApplication? Don't peek in CApplication)
-			}
-			break;
-
-			case SDL_EVENT_WINDOW_MOVED:
-			{
-			}
-			break;
-
 			case SDL_EVENT_WINDOW_RESIZED:
 			{
 				//AS: Setting Resize Width/Height to != 0 will trigger a Resize in-engine.
@@ -228,22 +227,6 @@ namespace Havtorn
 				SDL_UpdateWindowSurface(Window);
 			}
 			break;
-
-			case SDL_EVENT_WINDOW_RESTORED:
-			{
-
-			}
-			break;
-			
-			// TODO.NW: Figure out flow of deeplink commandline with this new SDL layer
-			//case WM_COPYDATA:
-			//{
-			//	COPYDATASTRUCT* cds = reinterpret_cast<COPYDATASTRUCT*>(lParam);
-			//	std::string stringData(reinterpret_cast<char*>(cds->lpData), cds->cbData / sizeof(char));
-			//	UCommandLine::Parse(stringData);
-			//	HV_LOG_INFO("DeepLink: %s", UCommandLine::GetDeepLinkCommand().c_str());
-			//}
-			//break;
 
 			case SDL_EVENT_WINDOW_FOCUS_LOST:
 			{

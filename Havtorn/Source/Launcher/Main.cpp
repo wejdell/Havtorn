@@ -47,12 +47,10 @@ void CloseConsole()
 
 #pragma endregion
 
-using namespace Havtorn;
-
 bool TrySendToRunningInstance(const std::string& uri)
 {
-	HWND targetWindowHWND = FindWindowW(L"HavtornWindow", L"Havtorn Editor");
-	if (!targetWindowHWND)
+	HWND targetWindowHandle = FindWindowA("SDL_app", "Havtorn Editor");
+	if (!targetWindowHandle)
 		return false;
 
 	COPYDATASTRUCT copyDataStruct;
@@ -60,9 +58,12 @@ bool TrySendToRunningInstance(const std::string& uri)
 	copyDataStruct.cbData = (DWORD)(uri.size() + 1) * sizeof(char);
 	copyDataStruct.lpData = (PVOID)uri.c_str();
 	
-	SendMessageA(targetWindowHWND, WM_COPYDATA, 0, (LPARAM)&copyDataStruct);
+	SendMessageA(targetWindowHandle, WM_COPYDATA, 0, (LPARAM)&copyDataStruct);
 	return true;
 }
+#endif
+
+using namespace Havtorn;
 
 I32 main(I32 argc, char* argv[])
 {
@@ -74,7 +75,7 @@ I32 main(I32 argc, char* argv[])
 	}
 	UCommandLine::Parse(commandLine);
 
-#ifdef HV_DEEPLINK_ENABLED
+#if defined(HV_DEEPLINK_ENABLED) && defined(HV_PLATFORM_WINDOWS)
 	// Note.AS:
 	// Overrides CurrentDirectory to be as if you started this application from the exe's location- which is not true when deeplink-starting this executable
 	UFileSystem::SetWorkingPath(UGeneralUtils::ExtractParentDirectoryFromPath(UFileSystem::GetExecutableRootPath()));
@@ -123,13 +124,9 @@ I32 main(I32 argc, char* argv[])
 	editorProcess->Init(platformProcess->PlatformManager);
 #endif
 
-	//SetForegroundWindow(platformProcess->PlatformManager->GetWindowHandle());
-
 	//application->Setup(platformProcess->PlatformManager); //foreach -> process->Init();
 	application->Run();
 	delete application;
-
-	//SetForegroundWindow(GetConsoleWindow());
 
 #ifdef USE_CONSOLE
 	CloseConsole();
@@ -137,4 +134,4 @@ I32 main(I32 argc, char* argv[])
 
 	return 0;
 }
-#endif
+

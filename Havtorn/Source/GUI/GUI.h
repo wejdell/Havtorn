@@ -752,7 +752,6 @@ namespace Havtorn
 
 		void BeginFrame();
 		void EndFrame();
-		void WindowsProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 		void ProcessEvent(const SDL_Event* event);
 
 	public:
