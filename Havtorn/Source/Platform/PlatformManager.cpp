@@ -38,8 +38,12 @@ namespace Havtorn
 		return SDL_HITTEST_DRAGGABLE;
 	}
 
-	SDL_HitTestResult WindowHitTest(SDL_Window* window, const SDL_Point* point, void* /*callbackData*/)
+	SDL_HitTestResult WindowHitTest(SDL_Window* window, const SDL_Point* point, void* callbackData)
 	{
+		const bool blockHitTest = callbackData == nullptr ? false : *reinterpret_cast<bool*>(callbackData);
+		if (blockHitTest)
+			return SDL_HITTEST_NORMAL;
+
 		I32 windowWidth = 0;
 		I32 windowHeight = 0;
 		SDL_GetWindowSize(window, &windowWidth, &windowHeight);
@@ -78,10 +82,7 @@ namespace Havtorn
 		if (rightBorder)
 			return SDL_HITTEST_RESIZE_RIGHT;
 
-		constexpr F32 leftMenuButtonsExtent = 260.0f;
-		constexpr F32 rightMenuButtonsExtent = 100.0f;
-
-		if (havtornPoint.Y < titlebarHeight && UMath::IsWithin(havtornPoint.X, leftMenuButtonsExtent, windowSize.X - rightMenuButtonsExtent))
+		if (havtornPoint.Y < titlebarHeight)
 			return SDL_HITTEST_DRAGGABLE;
 
 		return SDL_HITTEST_NORMAL;
@@ -129,9 +130,11 @@ namespace Havtorn
 		SDL_SetWindowIcon(SplashWindow, SplashSurface);
 		SDL_SetWindowHitTest(SplashWindow, SplashHitTest, nullptr);
 
+		// TODO.NW: Set up conditions for pure game build configurations
+
 		Window = SDL_CreateWindow(windowTitle.c_str(), windowData.Width, windowData.Height, SDL_WINDOW_BORDERLESS | SDL_WINDOW_RESIZABLE);
 		SDL_UpdateWindowSurface(Window);
-		SDL_SetWindowHitTest(Window, WindowHitTest, nullptr);
+		SDL_SetWindowHitTest(Window, WindowHitTest, &BlockHitTest);
 
 #ifdef HV_PLATFORM_WINDOWS
 		WindowHandle = (HWND)SDL_GetPointerProperty(SDL_GetWindowProperties(Window), SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);
@@ -140,8 +143,6 @@ namespace Havtorn
 		SetWindowLongPtr(WindowHandle, GWLP_USERDATA, (LONG_PTR)ogProc);
 #endif // HV_PLATFORM_WINDOWS
 
-		const SDL_DisplayMode* mode = SDL_GetCurrentDisplayMode(SDL_GetDisplayForWindow(Window));
-		MaxResolution = SVector2<U16>(STATIC_U16(mode->w), STATIC_U16(mode->h));
 		Resolution = { WindowData.Width, WindowData.Height };
 		ResizeTarget = {};
 
@@ -196,6 +197,11 @@ namespace Havtorn
 		const std::vector<std::string> commandLineParams = UCommandLine::GetFreeParameters();
 		for (auto param : commandLineParams)
 			HV_LOG_INFO("PARAM: %s", param.c_str());
+	}
+
+	void CPlatformManager::SetBlockWindowHitTest(const bool shouldBlock)
+	{
+		BlockHitTest = shouldBlock;
 	}
 
 	void CPlatformManager::BeginFrame()

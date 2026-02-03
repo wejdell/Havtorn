@@ -158,6 +158,8 @@ namespace Havtorn
 			GUI::EndMainMenuBar();
 		}
 
+		PlatformManager->SetBlockWindowHitTest(isHoveringMenuBarButton);
+
 		// Windows
 		for (const auto& window : Windows)
 		{

@@ -48,6 +48,8 @@ namespace Havtorn
 
 		PLATFORM_API void OnApplicationReady();
 
+		PLATFORM_API void SetBlockWindowHitTest(const bool shouldBlock);
+
 	private:
 		CPlatformManager();
 		~CPlatformManager();
@@ -64,9 +66,8 @@ namespace Havtorn
 
 		SVector2<U16> ResizeTarget = SVector2<U16>::Zero;
 		SVector2<U16> Resolution = SVector2<U16>::Zero;
-		
-		SVector2<U16> MaxResolution = SVector2<U16>::Zero;
 
 		bool ShouldRun = false;
+		bool BlockHitTest = false;
 	};
 }
