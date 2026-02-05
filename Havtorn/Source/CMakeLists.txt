@@ -164,8 +164,8 @@ set(RAPIDJSON_FILES
     "${EXTERNAL_FOLDER}rapidjson/include/rapidjson/writer.h"
 )
 add_library(Core SHARED ${CORE_FILES} ${RAPIDJSON_FILES})
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${CORE_FILES})
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}"/../External/rapidjson/include" FILES ${RAPIDJSON_FILES})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${CORE_FILES})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/../External/rapidjson/include" FILES ${RAPIDJSON_FILES})
 target_include_directories(Core PRIVATE
     "${CORE_FOLDER}"
     "${EXTERNAL_FOLDER}rapidjson/include"
@@ -279,8 +279,8 @@ set(IMGUI_FILES
    ${IMGUI_NODE_FOLDER}utilities/widgets.h
 )
 add_library(GUI SHARED ${GUI_FILES} ${IMGUI_FILES})
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GUI_FILES})
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}"/../External" FILES ${IMGUI_FILES})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}" FILES ${GUI_FILES})
+source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/../External" FILES ${IMGUI_FILES})
 target_link_libraries(GUI PRIVATE
     Core
     Platform
