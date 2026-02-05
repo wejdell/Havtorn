@@ -21,8 +21,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 
-set(GAMEINPUT_VERSION "Microsoft.GameInput.3.1.26100.6879")
-
 # ==================== FOLDERS ====================
 set(ENGINE_FOLDER "Engine/")
 set(SHADER_FOLDER "Engine/Graphics/Shaders/")
@@ -59,10 +57,10 @@ $<$<CONFIG:GameRelease>:/W4 /WX /MP /fp:fast "/MD" /FC /GL /O2 /Oi>
 )
 set(COMMON_LINK_OPTIONS
 /WX /SUBSYSTEM:WINDOWS
-$<$<CONFIG:EditorDebug>:/WX /SUBSYSTEM:WINDOWS /DEBUG>
-$<$<CONFIG:GameDebug>:/WX /SUBSYSTEM:WINDOWS /DEBUG>
-$<$<CONFIG:EditorDevelopment>:/WX /SUBSYSTEM:WINDOWS "/INCREMENTAL:NO" /OPT:REF /OPT:ICF /LTCG:incremental>
-$<$<CONFIG:GameRelease>:/WX /SUBSYSTEM:WINDOWS "/INCREMENTAL:NO" /OPT:REF /OPT:ICF /LTCG:incremental>
+$<$<CONFIG:EditorDebug>:/WX /DEBUG>
+$<$<CONFIG:GameDebug>:/WX /DEBUG>
+$<$<CONFIG:EditorDevelopment>:/WX "/INCREMENTAL:NO" /OPT:REF /OPT:ICF /LTCG:incremental>
+$<$<CONFIG:GameRelease>:/WX "/INCREMENTAL:NO" /OPT:REF /OPT:ICF /LTCG:incremental>
 )
 set(COMMON_TARGET_PROPERTIES
 RUNTIME_OUTPUT_DIRECTORY_EDITORDEBUG ${WORKING_FOLDER}/$<CONFIG>
@@ -241,6 +239,8 @@ set(IMGUI_FILES
    ${IMGUI_FOLDER}imstb_truetype.h
    ${IMGUI_FOLDER}backends/imgui_impl_dx11.cpp
    ${IMGUI_FOLDER}backends/imgui_impl_dx11.h
+   ${IMGUI_FOLDER}backends/imgui_impl_sdl3.cpp
+   ${IMGUI_FOLDER}backends/imgui_impl_sdl3.h
    ${IMGUI_FOLDER}backends/imgui_impl_win32.cpp
    ${IMGUI_FOLDER}backends/imgui_impl_win32.h
    ${IMGUI_FOLDER}misc/debuggers/imgui.natvis
@@ -284,10 +284,10 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR}"/../External" FILES ${IMGUI_FILES}
 target_link_libraries(GUI PRIVATE
     Core
     Platform
-    $<$<CONFIG:EditorDebug>:DirectXTexd>
-    $<$<CONFIG:GameDebug>:DirectXTexd>
-    $<$<CONFIG:EditorDevelopment>:DirectXTex>
-    $<$<CONFIG:GameRelease>:DirectXTex>
+    $<$<CONFIG:EditorDebug>:DirectXTexd SDL3d>
+    $<$<CONFIG:GameDebug>:DirectXTexd SDL3d>
+    $<$<CONFIG:EditorDevelopment>:DirectXTex SDL3>
+    $<$<CONFIG:GameRelease>:DirectXTex SDL3>
 )
 target_include_directories(GUI PRIVATE
 	"${GUI_FOLDER}"
@@ -297,6 +297,7 @@ target_include_directories(GUI PRIVATE
     "${EXTERNAL_FOLDER}ImGuizmo"
     "${EXTERNAL_FOLDER}imgui-node-editor"
     "${EXTERNAL_FOLDER}DirectXTex"
+    "${EXTERNAL_FOLDER}SDL/include"
 )
 target_link_directories(GUI PRIVATE
     "${EXTERNAL_FOLDER}Lib/Debug"
@@ -617,10 +618,14 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SHADER_INCLUDES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${HLSL_SHADER_FILES})
 target_link_libraries(Engine PRIVATE
-    $<$<CONFIG:EditorDebug>:assimp-vc143-mtd DirectXTexd d3dcompiler freetyped box2dd GameInput PhysX/PhysX_64d PhysX/PhysXCommon_64d PhysX/PhysXExtensions_static_64d PhysX/PhysXFoundation_64d PhysX/PhysXPvdSDK_static_64d PhysX/PhysXCharacterKinematic_static_64d>
-    $<$<CONFIG:GameDebug>:assimp-vc143-mtd DirectXTexd d3dcompiler freetyped box2dd GameInput PhysX/PhysX_64d PhysX/PhysXCommon_64d PhysX/PhysXExtensions_static_64d PhysX/PhysXFoundation_64d PhysX/PhysXPvdSDK_static_64d PhysX/PhysXCharacterKinematic_static_64d>
-    $<$<CONFIG:EditorDevelopment>:assimp-vc143-mt DirectXTex d3dcompiler freetype box2d GameInput PhysX/PhysX_64 PhysX/PhysXCommon_64 PhysX/PhysXExtensions_static_64 PhysX/PhysXFoundation_64 PhysX/PhysXPvdSDK_static_64 PhysX/PhysXCharacterKinematic_static_64>
-    $<$<CONFIG:GameRelease>:assimp-vc143-mt DirectXTex d3dcompiler freetype box2d GameInput PhysX/PhysX_64 PhysX/PhysXCommon_64 PhysX/PhysXExtensions_static_64 PhysX/PhysXFoundation_64 PhysX/PhysXPvdSDK_static_64 PhysX/PhysXCharacterKinematic_static_64>
+    $<$<CONFIG:EditorDebug>:assimp-vc143-mtd DirectXTexd d3dcompiler box2dd PhysX/PhysX_64d PhysX/PhysXCommon_64d PhysX/PhysXExtensions_static_64d PhysX/PhysXFoundation_64d PhysX/PhysXPvdSDK_static_64d PhysX/PhysXCharacterKinematic_static_64d>
+    $<$<CONFIG:GameDebug>:assimp-vc143-mtd DirectXTexd d3dcompiler box2dd PhysX/PhysX_64d PhysX/PhysXCommon_64d PhysX/PhysXExtensions_static_64d PhysX/PhysXFoundation_64d PhysX/PhysXPvdSDK_static_64d PhysX/PhysXCharacterKinematic_static_64d>
+    $<$<CONFIG:EditorDevelopment>:assimp-vc143-mt DirectXTex d3dcompiler box2d PhysX/PhysX_64 PhysX/PhysXCommon_64 PhysX/PhysXExtensions_static_64 PhysX/PhysXFoundation_64 PhysX/PhysXPvdSDK_static_64 PhysX/PhysXCharacterKinematic_static_64>
+    $<$<CONFIG:GameRelease>:assimp-vc143-mt DirectXTex d3dcompiler box2d PhysX/PhysX_64 PhysX/PhysXCommon_64 PhysX/PhysXExtensions_static_64 PhysX/PhysXFoundation_64 PhysX/PhysXPvdSDK_static_64 PhysX/PhysXCharacterKinematic_static_64>
+    $<$<CONFIG:EditorDebug>:SDL3d>
+    $<$<CONFIG:GameDebug>:SDL3d>
+    $<$<CONFIG:EditorDevelopment>:SDL3>
+    $<$<CONFIG:GameRelease>:SDL3>
     Core
     Platform
     GUI
@@ -631,12 +636,11 @@ target_include_directories(Engine PRIVATE
     "${EXTERNAL_FOLDER}assimp/include"
     "${EXTERNAL_FOLDER}FastNoise2/include"
     "${EXTERNAL_FOLDER}rapidjson/include"
-    "${EXTERNAL_FOLDER}freetype/include"
     "${EXTERNAL_FOLDER}DirectXTex"
     "${EXTERNAL_FOLDER}box2d/include/box2d"
     "${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
     "${EXTERNAL_FOLDER}PhysX/physx/include"
-    "${EXTERNAL_FOLDER}/${GAMEINPUT_VERSION}/native/include"
+    "${EXTERNAL_FOLDER}SDL/include"
     "Core"
     "Platform"
     "GUI"
@@ -644,7 +648,6 @@ target_include_directories(Engine PRIVATE
 target_link_directories(Engine PRIVATE
     "${EXTERNAL_FOLDER}Lib/Debug"
     "${EXTERNAL_FOLDER}Lib/Release"
-    "${EXTERNAL_FOLDER}/${GAMEINPUT_VERSION}/native/lib/x64"
     ${CMAKE_BINARY_DIR}
 )
 target_compile_definitions(Engine PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_ENGINE_DLL)
@@ -835,12 +838,14 @@ target_include_directories(Launcher PRIVATE
     "${EXTERNAL_FOLDER}rapidjson/include"
 	"${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
 	"${EXTERNAL_FOLDER}PhysX/physx/include"
+    "${EXTERNAL_FOLDER}SDL/include"
     "Core"
     "Platform"
 	"GUI"
 	"Engine"
 	"Game"
 	"Editor"
+
 )
 target_link_libraries(Launcher PRIVATE
     Core    
@@ -849,8 +854,14 @@ target_link_libraries(Launcher PRIVATE
     Engine
     Game
     Editor
+    $<$<CONFIG:EditorDebug>:SDL3d>
+    $<$<CONFIG:GameDebug>:SDL3d>
+    $<$<CONFIG:EditorDevelopment>:SDL3>
+    $<$<CONFIG:GameRelease>:SDL3>
 )
 target_link_directories(Launcher PRIVATE
+    "${EXTERNAL_FOLDER}Lib/Debug"
+    "${EXTERNAL_FOLDER}Lib/Release"
     ${CMAKE_BINARY_DIR}
 )
 target_compile_definitions(Launcher PRIVATE ${COMMON_COMPILE_DEFINITIONS})
