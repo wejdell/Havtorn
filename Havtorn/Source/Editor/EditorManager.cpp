@@ -699,7 +699,7 @@ namespace Havtorn
 		EditorLayout.HierarchyViewSize = { STATIC_U16(viewportPosX), STATIC_U16(resolution.Y - STATIC_U16(viewportPosY)) };
 		EditorLayout.ViewportSize = { STATIC_U16(inspectorPosX - viewportPosX), STATIC_U16(dockSpacePosY - viewportPosY) };
 		EditorLayout.InspectorSize = { STATIC_U16(resolution.X - STATIC_U16(inspectorPosX)), STATIC_U16(resolution.Y - STATIC_U16(viewportPosY)) };
-		EditorLayout.DockSpaceSize = { STATIC_U16(inspectorPosX - viewportPosX), STATIC_U16(resolution.Y - STATIC_U16(dockSpacePosY) - STATIC_U16(1)) };
+		EditorLayout.DockSpaceSize = { STATIC_U16(inspectorPosX - viewportPosX), STATIC_U16(resolution.Y - STATIC_U16(dockSpacePosY)) };
 
 		EditorLayout.ViewportChanged = false;
 		EditorLayout.HierarchyViewChanged = false;
