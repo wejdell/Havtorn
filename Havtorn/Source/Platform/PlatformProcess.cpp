@@ -37,4 +37,14 @@ namespace Havtorn
 	{
 		PlatformManager->OnApplicationReady();
 	}
+
+	bool CPlatformProcess::ShouldRun()
+	{
+		return PlatformManager->ShouldRun;
+	}
+
+	void CPlatformProcess::BeginFrame()
+	{
+		PlatformManager->BeginFrame();
+	}
 }

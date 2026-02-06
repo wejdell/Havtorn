@@ -4,7 +4,8 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
-#include <backends/imgui_impl_win32.h>
+//#include <backends/imgui_impl_win32.h>
+#include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_dx11.h>
 #include <ImGuizmo.h>
 #include <imgui_node_editor.h>
@@ -23,8 +24,7 @@
 #include <Log.h>
 
 #include <PlatformManager.h>
-
-IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
+#include <SDL3/SDL.h>
 
 namespace Havtorn
 {
@@ -54,7 +54,7 @@ namespace Havtorn
 		ImGuiImpl() = default;
 		~ImGuiImpl() = default;
 
-		void Init(HWND hwnd, ID3D11Device* device, ID3D11DeviceContext* context)
+		void Init(SDL_Window* window, ID3D11Device* device, ID3D11DeviceContext* context)
 		{
 			const char* Version = IMGUI_VERSION;
 			const char* DefaultFont = "../External/imgui/misc/fonts/Roboto-Medium.ttf";
@@ -66,7 +66,7 @@ namespace Havtorn
 			SecondaryFont = ImGui::GetIO().Fonts->AddFontFromFileTTF(DefaultFont, 10.0f);
 			ImGuizmo::SetImGuiContext(ImGui::GetCurrentContext());
 
-			ImGui_ImplWin32_Init(hwnd);
+			ImGui_ImplSDL3_InitForD3D(window);
 			ImGui_ImplDX11_Init(device, context);
 
 			NE::Config config;
@@ -92,14 +92,14 @@ namespace Havtorn
 		void BeginFrame()
 		{
 			ImGui_ImplDX11_NewFrame();
-			ImGui_ImplWin32_NewFrame();
+			ImGui_ImplSDL3_NewFrame();
 			ImGui::NewFrame();
 			ImGuizmo::BeginFrame();
 		}
 
-		LRESULT WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+		bool ProcessEvent(const SDL_Event* event)
 		{
-			return ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam);
+			return ImGui_ImplSDL3_ProcessEvent(event);
 		}
 
 		void EndFrame()
@@ -1463,10 +1463,12 @@ namespace Havtorn
 
 	void GUI::InitGUI(CPlatformManager* platformManager, ID3D11Device* device, ID3D11DeviceContext* context)
 	{
-		Impl->Init(platformManager->GetWindowHandle(), device, context);
+		// TODO.NW: Still move render backend to platform manager, and take the platform manager as single param here
+		Impl->Init(platformManager->GetMainWindow(), device, context);
 		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-		platformManager->OnMessageHandled.AddMember(this, &GUI::WindowsProc);
+		//platformManager->OnMessageHandled.AddMember(this, &GUI::WindowsProc);
+		platformManager->OnProcessEvent.AddMember(this, &GUI::ProcessEvent);
 	}
 
 	const F32 GUI::SliderSpeed = 0.1f;
@@ -1503,9 +1505,9 @@ namespace Havtorn
 		Instance->Impl->EndFrame();
 	}
 
-	void GUI::WindowsProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
+	void GUI::ProcessEvent(const SDL_Event* event)
 	{
-		Instance->Impl->WindowProc(hwnd, msg, wParam, lParam);
+		Instance->Impl->ProcessEvent(event);
 	}
 
 	bool GUI::Begin(const char* name, bool* open, const std::vector<EWindowFlag>& flags)

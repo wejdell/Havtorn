@@ -32,22 +32,9 @@ namespace Havtorn
 
 		const I16 numberOfProcesses = STATIC_I16(Processes.size() - 1);
 
-		MSG windowMessage = { 0 };
 		while (IsRunning)
 		{
-			while (PeekMessage(&windowMessage, 0, 0, 0, PM_REMOVE))
-			{
-				TranslateMessage(&windowMessage);
-				DispatchMessage(&windowMessage);
-
-				if (windowMessage.message == WM_QUIT)
-				{
-					IsRunning = false;
-					break;
-				}
-			}
-
-			// Processes are run in reverse-order. Dependent to least dependent.
+			// Processes are run in reverse-order here. Dependent to least dependent.
 
 			for (I16 i = numberOfProcesses; i >= 0; i--)
 				Processes[i]->BeginFrame();
@@ -63,6 +50,15 @@ namespace Havtorn
 
 			for (I16 i = numberOfProcesses; i >= 0; i--)
 				Processes[i]->EndFrame();
+
+			for (I16 i = numberOfProcesses; i >= 0; i--)
+			{
+				if (!Processes[i]->ShouldRun())
+				{
+					IsRunning = false;
+					break;
+				}
+			}
 		}
 	}
 
