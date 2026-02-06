@@ -624,11 +624,14 @@ namespace Havtorn
 	{
 		EditorSensitivity = sensitivity;
 		
-		if (!CurrentWorkingScene) return;
-		if (!World || !World->GetMainCamera().IsValid()) return;
+		if (!CurrentWorkingScene) 
+			return;
+		if (!World || !World->GetMainCamera().IsValid()) 
+			return;
 		
 		SCameraControllerComponent* controllerComp = CurrentWorkingScene->GetComponent<SCameraControllerComponent>(World->GetMainCamera());
-		if (!SComponent::IsValid(controllerComp)) return;
+		if (!SComponent::IsValid(controllerComp)) 
+			return;
 		
 		controllerComp->RotationSpeed = GetEditorSensitivity();
 	}
