@@ -157,6 +157,8 @@ namespace Havtorn
 
 		[[nodiscard]] F32 GetViewportPadding() const;
 		void SetViewportPadding(const F32 padding);
+		[[nodiscard]] F32 GetEditorSensitivity() const;
+		void SetEditorSensitivity(F32 sensitivity);
 	
 		bool GetIsWorldPlaying() const;
 
@@ -228,6 +230,7 @@ namespace Havtorn
 		SSnappingOption CurrentGizmoSnapping = {};
 
 		F32 ViewportPadding = 0.2f;
+		F32 EditorSensitivity = 0.5f;
 		bool IsEnabled = true;
 		bool IsDebugInfoOpen = true;
 		bool IsDemoOpen = false;

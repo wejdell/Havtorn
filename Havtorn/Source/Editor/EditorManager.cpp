@@ -236,6 +236,7 @@ namespace Havtorn
 			if (camera->IsActive)
 			{
 				World->SetMainCamera(camera->Owner);
+				SetEditorSensitivity(GetEditorSensitivity());
 				break;
 			}
 		}
@@ -612,6 +613,24 @@ namespace Havtorn
 	{
 		ViewportPadding = padding;
 		InitEditorLayout();
+	}
+
+	F32 CEditorManager::GetEditorSensitivity() const
+	{
+		return EditorSensitivity;
+	}
+
+	void CEditorManager::SetEditorSensitivity(F32 sensitivity)
+	{
+		EditorSensitivity = sensitivity;
+		
+		if (!CurrentWorkingScene) return;
+		if (!World || !World->GetMainCamera().IsValid()) return;
+		
+		SCameraControllerComponent* controllerComp = CurrentWorkingScene->GetComponent<SCameraControllerComponent>(World->GetMainCamera());
+		if (!SComponent::IsValid(controllerComp)) return;
+		
+		controllerComp->RotationSpeed = GetEditorSensitivity();
 	}
 
 	bool CEditorManager::GetIsWorldPlaying() const

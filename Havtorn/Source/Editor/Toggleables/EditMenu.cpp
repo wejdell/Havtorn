@@ -47,6 +47,17 @@ namespace Havtorn
                 }
                 GUI::EndMenu();
             }
+        	
+        	if (GUI::BeginMenu("Editor Preferences"))
+            {
+            	F32 sensitivity = Manager->GetEditorSensitivity();
+            	if (GUI::DragFloat("Editor Sensitivity", sensitivity, 0.01f, 0.01f, 5.0f))
+            	{
+            		Manager->SetEditorSensitivity(sensitivity);
+            	}
+            	
+            	GUI::EndMenu();
+            }
 
 			GUI::EndPopup();
 		}
