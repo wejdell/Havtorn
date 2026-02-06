@@ -318,6 +318,7 @@ add_dependencies(GUI Core Platform)
 
 # ==================== ENGINE ====================
 set(ENGINE_FILES
+	Engine/Assets/RuntimeAssets/InputAsset.h
 	${ENGINE_FOLDER}Assets/AssetFileHeader.h
 	${ENGINE_FOLDER}Assets/Asset.h
 	${ENGINE_FOLDER}Assets/RuntimeAssetInclude.h
@@ -761,6 +762,8 @@ add_dependencies(Game Core Platform GUI Engine)
 
 # ==================== EDITOR ====================
 set(EDITOR_FILES
+	${EDITOR_FOLDER}AuthoringTools/InputTool.cpp
+	${EDITOR_FOLDER}AuthoringTools/InputTool.h
     ${EDITOR_FOLDER}AuthoringTools/MaterialTool.cpp
     ${EDITOR_FOLDER}AuthoringTools/MaterialTool.h
     ${EDITOR_FOLDER}AuthoringTools/ScriptTool.cpp
