@@ -85,6 +85,58 @@ namespace Havtorn
 		Highlight = BIT(5)
 	};
 
+	enum class GUI_API EGuiTableFlags
+	{
+		// Features
+		None = BIT(0),
+		Resizable = BIT(0),   // Enable resizing columns.
+		Reorderable = BIT(1),   // Enable reordering columns in header row (need calling TableSetupColumn() + TableHeadersRow() to display headers)
+		Hideable = BIT(2),   // Enable hiding/disabling columns in context menu.
+		Sortable = BIT(3),   // Enable sorting. Call TableGetSortSpecs() to obtain sort specs. Also see ImGuiTableFlags_SortMulti and ImGuiTableFlags_SortTristate.
+		NoSavedSettings = BIT(4),   // Disable persisting columns order, width and sort settings in the .ini file.
+		ContextMenuInBody = BIT(5),   // Right-click on columns body/contents will display table context menu. By default it is available in TableHeadersRow().
+		// Decorations
+		RowBg = BIT(6),   // Set each RowBg color with ImGuiCol_TableRowBg or ImGuiCol_TableRowBgAlt (equivalent of calling TableSetBgColor with ImGuiTableBgFlags_RowBg0 on each row manually)
+		BordersInnerH = BIT(7),   // Draw horizontal borders between rows.
+		BordersOuterH = BIT(8),   // Draw horizontal borders at the top and bottom.
+		BordersInnerV = BIT(9),   // Draw vertical borders between columns.
+		BordersOuterV = BIT(10),  // Draw vertical borders on the left and right sides.
+		BordersH = BordersInnerH | BordersOuterH, // Draw horizontal borders.
+		BordersV = BordersInnerV | BordersOuterV, // Draw vertical borders.
+		BordersInner = BordersInnerV | BordersInnerH, // Draw inner borders.
+		BordersOuter = BordersOuterV | BordersOuterH, // Draw outer borders.
+		Borders = BordersInner | BordersOuter,   // Draw all borders.
+		NoBordersInBody = BIT(11),  // [ALPHA] Disable vertical borders in columns Body (borders will always appear in Headers). -> May move to style
+		NoBordersInBodyUntilResize = BIT(12),  // [ALPHA] Disable vertical borders in columns Body until hovered for resize (borders will always appear in Headers). -> May move to style
+		// Sizing Policy (read above for defaults)
+		SizingFixedFit = BIT(13),  // Columns default to _WidthFixed or _WidthAuto (if resizable or not resizable), matching contents width.
+		SizingFixedSame = 2 << 13,  // Columns default to _WidthFixed or _WidthAuto (if resizable or not resizable), matching the maximum contents width of all columns. Implicitly enable NoKeepColumnsVisible.
+		SizingStretchProp = 3 << 13,  // Columns default to _WidthStretch with default weights proportional to each columns contents widths.
+		SizingStretchSame = 4 << 13,  // Columns default to _WidthStretch with default weights all equal, unless overridden by TableSetupColumn().
+		// Sizing Extra Options
+		NoHostExtendX = BIT(16),  // Make outer width auto-fit to columns, overriding outer_size.x value. Only available when ScrollX/ScrollY are disabled and Stretch columns are not used.
+		NoHostExtendY = BIT(17),  // Make outer height stop exactly at outer_size.y (prevent auto-extending table past the limit). Only available when ScrollX/ScrollY are disabled. Data below the limit will be clipped and not visible.
+		NoKeepColumnsVisible = BIT(18),  // Disable keeping column always minimally visible when ScrollX is off and table gets too small. Not recommended if columns are resizable.
+		PreciseWidths = BIT(19),  // Disable distributing remainder width to stretched columns (width allocation on a 100-wide table with 3 columns: Without this flag: 33,33,34. With this flag: 33,33,33). With larger number of columns, resizing will appear to be less smooth.
+		// Clipping
+		NoClip = BIT(20),  // Disable clipping rectangle for every individual columns (reduce draw command count, items will be able to overflow into other columns). Generally incompatible with TableSetupScrollFreeze().
+		// Padding
+		PadOuterX = BIT(21),  // Default if BordersOuterV is on. Enable outermost padding. Generally desirable if you have headers.
+		NoPadOuterX = BIT(22),  // Default if BordersOuterV is off. Disable outermost padding.
+		NoPadInnerX = BIT(23),  // Disable inner padding between columns (double inner padding if BordersOuterV is on, single inner padding if BordersOuterV is off).
+		// Scrolling
+		ScrollX = BIT(24),  // Enable horizontal scrolling. Require 'outer_size' parameter of BeginTable() to specify the container size. Changes default sizing policy. Because this creates a child window, ScrollY is currently generally recommended when using ScrollX.
+		ScrollY = BIT(25),  // Enable vertical scrolling. Require 'outer_size' parameter of BeginTable() to specify the container size.
+		// Sorting
+		SortMulti = BIT(26),  // Hold shift when clicking headers to sort on multiple column. TableGetSortSpecs() may return specs where (SpecsCount > 1).
+		SortTristate = BIT(27),  // Allow no sorting, disable default sorting. TableGetSortSpecs() may return specs where (SpecsCount == 0).
+		// Miscellaneous
+		HighlightHoveredColumn = BIT(28),  // Highlight column headers when hovered (may evolve into a fuller highlight)
+
+		// [Internal] Combinations and masks
+		SizingMask_ = SizingFixedFit | SizingFixedSame | SizingStretchProp | SizingStretchSame,
+	};
+
 	enum class GUI_API EMultiSelectFlag
 	{
 		None = BIT(0),
@@ -320,6 +372,11 @@ namespace Havtorn
 		Local,
 		World
 	};
+
+	template<typename TEnum>
+	inline TEnum operator|(TEnum lhs, TEnum rhs) {
+		return static_cast<TEnum>(static_cast<U32>(lhs) | static_cast<U32>(rhs));
+	}
 
 	// Helper: Parse and apply text filters. In format "aaaaa[,bbbb][,ccccc]". Rewrite from ImGui
 	struct SGuiTextFilter
@@ -905,7 +962,7 @@ namespace Havtorn
 
 		static void OpenPopup(const char* label);
 
-		static bool BeginTable(const char* label, const I32 columns);
+		static bool BeginTable(const char* label, const I32 columns, const int flags = 0);
 		static void TableNextRow();
 		static void TableNextColumn();
 		static void EndTable();
