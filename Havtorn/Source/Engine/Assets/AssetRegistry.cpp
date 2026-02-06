@@ -460,6 +460,12 @@ namespace Havtorn
             break;
         case EAssetType::AudioCollection:
             break;
+
+        case EAssetType::InputAsset: 
+        {
+
+        }
+        break;
         }
 
         if (hvaPath == "INVALID_PATH")
@@ -565,6 +571,15 @@ namespace Havtorn
             hvaPath = destinationPath + header.Scene->GetSceneName() + ".hva";
             UFileSystem::Serialize(hvaPath, &data[0], size);
             delete[] data;
+        }
+        else if (std::holds_alternative<SInputAssetFileHeader>(fileHeader)) 
+        {
+            SInputAssetFileHeader header = std::get<SInputAssetFileHeader>(fileHeader);
+            U32 size = header.GetSize();
+            const auto data = new char[size];
+            header.Serialize(data);
+            hvaPath = destinationPath + header.Name + ".hva";
+            UFileSystem::Serialize(hvaPath, &data[0], size);
         }
 
         if (hvaPath == "INVALID_PATH")

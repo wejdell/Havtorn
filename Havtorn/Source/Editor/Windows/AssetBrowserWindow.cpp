@@ -456,6 +456,9 @@ namespace Havtorn
 			case EAssetType::Scene:
 				NewAssetFileHeader = CreateScene();
 				break;
+			case EAssetType::InputAsset:
+				NewAssetFileHeader = CreateInputAsset();
+				break;
 			default:
 				break;
 			}
@@ -608,6 +611,14 @@ namespace Havtorn
 		fileHeader.Scene = newScene;
 		
 
+		return fileHeader;
+	}
+
+	SAssetFileHeader CAssetBrowserWindow::CreateInputAsset()
+	{
+		SInputAssetFileHeader fileHeader = SInputAssetFileHeader{};
+		fileHeader.AssetType = EAssetType::InputAsset;
+		fileHeader.Name = NewAssetName;
 		return fileHeader;
 	}
 

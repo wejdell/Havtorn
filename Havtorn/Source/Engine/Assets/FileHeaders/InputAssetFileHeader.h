@@ -8,7 +8,7 @@ namespace Havtorn
 	{
 		EAssetType AssetType = EAssetType::InputAsset;
 		std::string Name = "";
-		SSourceAssetData SourceData;
+		//SSourceAssetData SourceData;
 
 		[[nodiscard]] U32 GetSize() const;
 		void Serialize(char* toData) const;
@@ -20,24 +20,22 @@ namespace Havtorn
 		U32 size = 0;
 		size += GetDataSize(AssetType);
 		size += GetDataSize(Name);
-		size += GetDataSize(SourceData);
+		//size += GetDataSize(SourceData);
 		return size;
 	}
 
 	inline void SInputAssetFileHeader::Serialize(char* toData) const
 	{
 		U64 pointerPosition = 0;
-		pointerPosition;
-		toData;
-
+		SerializeData(AssetType, toData, pointerPosition);
+		SerializeData(Name, toData, pointerPosition);
 	}
 
 	inline void SInputAssetFileHeader::Deserialize(const char* fromData)
 	{
 		U64 pointerPosition = 0;
-		pointerPosition;
-		fromData;
-
+		DeserializeData(AssetType, fromData, pointerPosition);
+		DeserializeData(Name, fromData, pointerPosition);
 	}
 
 }
