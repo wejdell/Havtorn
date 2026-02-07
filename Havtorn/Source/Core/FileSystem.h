@@ -80,11 +80,12 @@ namespace Havtorn
 
 		template<typename T>
 		T Get(const std::string& memberName, const T& defaultValue) const;
+		template <class T>
+		void Set(const std::string& memberName, const T& newValue);
 
 	private:
 		CORE_API void SaveFile();
 
-	private:
 		rapidjson::Document Document;
 		std::string FilePath = "";
 	};
@@ -96,6 +97,16 @@ namespace Havtorn
 			return defaultValue;
 
 		return Document[memberName.c_str()].Get<T>();
+	}
+	
+	template<typename T>
+	void CJsonDocument::Set(const std::string& memberName, const T& newValue)
+	{
+		if (!HasMember(memberName))	
+			return;
+		
+		Document[memberName.c_str()].Set<T>(newValue);
+		SaveFile();
 	}
 
 	class UFileSystem

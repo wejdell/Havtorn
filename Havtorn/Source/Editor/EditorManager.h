@@ -39,6 +39,10 @@ namespace Havtorn
 		HavtornDark,
 		HavtornRed,
 		HavtornGreen,
+		HavtornDarkBlue,
+		HavtornLightBlue,
+		HavtornPurple,
+		HavtornPink,
 		Count,
 		PlayMode,
 		PauseMode
@@ -83,6 +87,13 @@ namespace Havtorn
 		bool UsingEditorTexture = false;
 		bool IsSourceWatched = false;
 		bool IsBeingNamed = false;
+	};
+	
+	struct SEditorPreferences
+	{
+		F32 Sensitivity = 0.5f;
+		EEditorColorTheme ColorTheme = EEditorColorTheme::HavtornDark;
+		EEditorColorTheme CachedColorTheme = EEditorColorTheme::HavtornDark;
 	};
 
 	class CEditorManager
@@ -173,6 +184,7 @@ namespace Havtorn
 
 		void ToggleDebugInfo();
 		void ToggleDemo();
+		void TogglePreferences();
 
 		static std::string PreviewMaterial;
 
@@ -181,6 +193,7 @@ namespace Havtorn
 		void ReinitEditorLayout();
 		void InitAssetRepresentations();
 		void PreProcessAssets();
+		void InitEditorPreferences();
 
 		void OnInputSetTransformGizmo(const SInputActionPayload payload);
 		void OnInputToggleFreeCam(const SInputActionPayload payload);
@@ -221,19 +234,18 @@ namespace Havtorn
 
 		// TODO.NR: Save these in .ini file
 		SEditorLayout EditorLayout;
-		EEditorColorTheme CurrentColorTheme = EEditorColorTheme::HavtornDark;
-
-		EEditorColorTheme CachedColorTheme = EEditorColorTheme::HavtornDark;
 
 		ETransformGizmo CurrentGizmo = ETransformGizmo::Translate;
 		ETransformGizmoSpace CurrentGizmoSpace = ETransformGizmoSpace::World;
 		SSnappingOption CurrentGizmoSnapping = {};
+		SEditorPreferences EditorPreferences;
+		 CJsonDocument EditorPreferencesDocument;
 
 		F32 ViewportPadding = 0.2f;
-		F32 EditorSensitivity = 0.5f;
 		bool IsEnabled = true;
 		bool IsDebugInfoOpen = true;
 		bool IsDemoOpen = false;
+		bool IsPreferenesOpen = false;
 		bool IsFreeCamActive = false;
 		bool IsModalOpen = false;
 		bool IsFullscreen = false;
