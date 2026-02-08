@@ -1,6 +1,7 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #include "RenderSystem.h"
+#include "Engine.h"
 #include "Scene/World.h"
 #include "Scene/Scene.h"
 #include "ECS/ECSInclude.h"

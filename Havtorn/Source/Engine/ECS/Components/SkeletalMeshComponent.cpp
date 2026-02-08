@@ -3,7 +3,6 @@
 #include "hvpch.h"
 #include "Engine.h"
 #include "SkeletalMeshComponent.h"
-//#include "Assets/FileHeaderDeclarations.h"
 #include "Assets/AssetRegistry.h"
 
 namespace Havtorn

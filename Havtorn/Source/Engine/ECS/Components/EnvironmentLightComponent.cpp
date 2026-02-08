@@ -4,7 +4,6 @@
 #include "Engine.h"
 #include "Assets/AssetRegistry.h"
 
-
 namespace Havtorn
 {
     void SEnvironmentLightComponent::Serialize(char* toData, U64& pointerPosition) const
