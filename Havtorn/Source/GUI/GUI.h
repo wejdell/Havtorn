@@ -86,7 +86,7 @@ namespace Havtorn
 		Highlight = BIT(5)
 	};
 
-	enum class GUI_API EGuiTableFlags
+	enum class GUI_API EGUITableFlags
 	{
 		// Features
 		None = BIT(0),

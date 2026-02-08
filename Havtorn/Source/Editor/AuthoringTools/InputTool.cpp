@@ -21,9 +21,7 @@ namespace Havtorn
 			return;
 		}
 
-		EGuiTableFlags tableFlags = EGuiTableFlags::Resizable | EGuiTableFlags::Borders;
-		
-
+		EGUITableFlags tableFlags = EGUITableFlags::Resizable | EGUITableFlags::Borders;
 		if (GUI::BeginTable("InputColumns", 2, STATIC_I32(tableFlags)))
 		{
 			GUI::TableNextColumn();
@@ -37,6 +35,7 @@ namespace Havtorn
 				if (GUI::TreeNode(names[i]))
 				{
 					selectedIndex = i;
+					GUI::SameLine();
 					if (GUI::Button("Add"))
 					{
 						
