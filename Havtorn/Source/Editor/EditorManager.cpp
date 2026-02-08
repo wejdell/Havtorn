@@ -901,7 +901,14 @@ namespace Havtorn
 
 	void CEditorManager::InitEditorPreferences()
 	{
-		EditorPreferencesDocument = UFileSystem::OpenJson("Config/EditorPreferences.json");
+		if (!UFileSystem::Exists("Config/EditorPreferences.user.json"))
+		{
+			std::filesystem::copy_file(
+				"Config/EditorPreferences.json",
+				"Config/EditorPreferences.user.json");
+		}
+		
+		EditorPreferencesDocument = UFileSystem::OpenJson("Config/EditorPreferences.user.json");
 		
 		EditorPreferences.Sensitivity = EditorPreferencesDocument.Get("Sensitivity", 0.5f);	
 		EditorPreferences.ColorTheme = static_cast<EEditorColorTheme>(EditorPreferencesDocument.Get("Color Theme", 1));
