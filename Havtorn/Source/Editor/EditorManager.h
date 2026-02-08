@@ -169,7 +169,7 @@ namespace Havtorn
 		[[nodiscard]] F32 GetViewportPadding() const;
 		void SetViewportPadding(const F32 padding);
 		[[nodiscard]] F32 GetEditorSensitivity() const;
-		void SetEditorSensitivity(F32 sensitivity);
+		void SetEditorSensitivity(const F32 sensitivity);
 	
 		bool GetIsWorldPlaying() const;
 
@@ -245,11 +245,16 @@ namespace Havtorn
 		bool IsEnabled = true;
 		bool IsDebugInfoOpen = true;
 		bool IsDemoOpen = false;
-		bool IsPreferenesOpen = false;
+		bool IsPreferencesOpen = false;
 		bool IsFreeCamActive = false;
 		bool IsModalOpen = false;
 		bool IsFullscreen = false;
 		bool IsDragCopyActive = false;
+	
+		inline static const std::string DefaultEditorSettingsPath =
+		"Config/EditorPreferences.json";
+		inline static const std::string UserEditorSettingsPath =
+		"Config/EditorPreferences.user.json";
 	};
 
 	template<class TEditorWindowType>

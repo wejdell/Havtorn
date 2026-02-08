@@ -80,7 +80,7 @@ namespace Havtorn
 
 		template<typename T>
 		T Get(const std::string& memberName, const T& defaultValue) const;
-		template <class T>
+		template<typename T>
 		void Set(const std::string& memberName, const T& newValue);
 
 	private:

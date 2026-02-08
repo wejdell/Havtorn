@@ -207,9 +207,9 @@ namespace Havtorn
 			GUI::End();
 		}
 		
-		if (IsPreferenesOpen)
+		if (IsPreferencesOpen)
 		{
-			if (GUI::Begin("Editor Preferences", &IsPreferenesOpen))
+			if (GUI::Begin("Editor Preferences", &IsPreferencesOpen))
 			{
 				F32 sensitivity = GetEditorSensitivity();
 				if (GUI::DragFloat("Editor Sensitivity", sensitivity, 0.01f, 0.01f, 5.0f))
@@ -506,7 +506,7 @@ namespace Havtorn
 	{
 		if (EditorPreferences.ColorTheme != colorTheme)
 		{
-			EditorPreferencesDocument.Set("Color Theme", static_cast<int>(colorTheme));
+			EditorPreferencesDocument.Set("Color Theme", STATIC_I32(colorTheme));
 			
 		}
 		EditorPreferences.ColorTheme = colorTheme;
@@ -730,7 +730,7 @@ namespace Havtorn
 		return EditorPreferences.Sensitivity;
 	}
 
-	void CEditorManager::SetEditorSensitivity(F32 sensitivity)
+	void CEditorManager::SetEditorSensitivity(const F32 sensitivity)
 	{
 		EditorPreferences.Sensitivity = sensitivity;
 		EditorPreferencesDocument.Set("Sensitivity", EditorPreferences.Sensitivity);
@@ -779,7 +779,7 @@ namespace Havtorn
 	
 	void CEditorManager::TogglePreferences()
 	{
-		IsPreferenesOpen = !IsPreferenesOpen;
+		IsPreferencesOpen = !IsPreferencesOpen;
 	}
 
 	void CEditorManager::InitEditorLayout()
@@ -901,14 +901,14 @@ namespace Havtorn
 
 	void CEditorManager::InitEditorPreferences()
 	{
-		if (!UFileSystem::Exists("Config/EditorPreferences.user.json"))
+		if (!UFileSystem::Exists(UserEditorSettingsPath))
 		{
 			std::filesystem::copy_file(
-				"Config/EditorPreferences.json",
-				"Config/EditorPreferences.user.json");
+			DefaultEditorSettingsPath,	
+				UserEditorSettingsPath);
 		}
 		
-		EditorPreferencesDocument = UFileSystem::OpenJson("Config/EditorPreferences.user.json");
+		EditorPreferencesDocument = UFileSystem::OpenJson(UserEditorSettingsPath);
 		
 		EditorPreferences.Sensitivity = EditorPreferencesDocument.Get("Sensitivity", 0.5f);	
 		EditorPreferences.ColorTheme = static_cast<EEditorColorTheme>(EditorPreferencesDocument.Get("Color Theme", 1));
