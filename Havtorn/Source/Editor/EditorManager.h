@@ -39,6 +39,10 @@ namespace Havtorn
 		HavtornDark,
 		HavtornRed,
 		HavtornGreen,
+		HavtornDarkBlue,
+		HavtornLightBlue,
+		HavtornPurple,
+		HavtornPink,
 		Count,
 		PlayMode,
 		PauseMode
@@ -83,6 +87,13 @@ namespace Havtorn
 		bool UsingEditorTexture = false;
 		bool IsSourceWatched = false;
 		bool IsBeingNamed = false;
+	};
+	
+	struct SEditorPreferences
+	{
+		F32 Sensitivity = 0.5f;
+		EEditorColorTheme ColorTheme = EEditorColorTheme::HavtornDark;
+		EEditorColorTheme CachedColorTheme = EEditorColorTheme::HavtornDark;
 	};
 
 	class CEditorManager
@@ -157,6 +168,8 @@ namespace Havtorn
 
 		[[nodiscard]] F32 GetViewportPadding() const;
 		void SetViewportPadding(const F32 padding);
+		[[nodiscard]] F32 GetEditorSensitivity() const;
+		void SetEditorSensitivity(const F32 sensitivity);
 	
 		bool GetIsWorldPlaying() const;
 
@@ -171,6 +184,7 @@ namespace Havtorn
 
 		void ToggleDebugInfo();
 		void ToggleDemo();
+		void TogglePreferences();
 
 		static std::string PreviewMaterial;
 
@@ -179,6 +193,7 @@ namespace Havtorn
 		void ReinitEditorLayout();
 		void InitAssetRepresentations();
 		void PreProcessAssets();
+		void InitEditorPreferences();
 
 		void OnInputSetTransformGizmo(const SInputActionPayload payload);
 		void OnInputToggleFreeCam(const SInputActionPayload payload);
@@ -219,22 +234,27 @@ namespace Havtorn
 
 		// TODO.NR: Save these in .ini file
 		SEditorLayout EditorLayout;
-		EEditorColorTheme CurrentColorTheme = EEditorColorTheme::HavtornDark;
-
-		EEditorColorTheme CachedColorTheme = EEditorColorTheme::HavtornDark;
 
 		ETransformGizmo CurrentGizmo = ETransformGizmo::Translate;
 		ETransformGizmoSpace CurrentGizmoSpace = ETransformGizmoSpace::World;
 		SSnappingOption CurrentGizmoSnapping = {};
+		SEditorPreferences EditorPreferences;
+		 CJsonDocument EditorPreferencesDocument;
 
 		F32 ViewportPadding = 0.2f;
 		bool IsEnabled = true;
 		bool IsDebugInfoOpen = true;
 		bool IsDemoOpen = false;
+		bool IsPreferencesOpen = false;
 		bool IsFreeCamActive = false;
 		bool IsModalOpen = false;
 		bool IsFullscreen = false;
 		bool IsDragCopyActive = false;
+	
+		inline static const std::string DefaultEditorSettingsPath =
+		"Config/EditorPreferences.json";
+		inline static const std::string UserEditorSettingsPath =
+		"Config/EditorPreferences.user.json";
 	};
 
 	template<class TEditorWindowType>

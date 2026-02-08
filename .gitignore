@@ -57,6 +57,7 @@
 *Havtorn/BuildFiles
 *Havtorn/ProjectSetup/SetupRequirements/
 *Havtorn/Source/__pycache__
+*Havtorn/Bin/Config/EditorPreferences.user.json
 
 # Other/Intermediate
 *.ilk
