@@ -140,6 +140,7 @@ namespace Havtorn
 
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry) const;
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromName(const std::string& assetName) const;
+		const intptr_t GetTextureResourceFromAssetRep(SEditorAssetRepresentation* assetRepresentation) const;
 		DirEntryFunc GetAssetInspectFunction() const;
 		DirEntryEAssetTypeFunc GetAssetFilteredInspectFunction() const;
 

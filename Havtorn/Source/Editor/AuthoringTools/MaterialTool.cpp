@@ -118,7 +118,7 @@ namespace Havtorn
 				GUI::BeginChild("Cubemap", settingsPropertySize);
 				auto skyboxAssetRep = Manager->GetAssetRepFromName(UGeneralUtils::ExtractFileBaseNameFromPath(PreviewSkylightAssetRef.FilePath)).get();
 
-				intptr_t assetPickerThumbnail = skyboxAssetRep != nullptr ? (intptr_t)skyboxAssetRep->TextureRef.GetShaderResourceView() : intptr_t();
+				intptr_t assetPickerThumbnail = Manager->GetTextureResourceFromAssetRep(skyboxAssetRep);
 				std::string pickerLabel = "Preview Skybox | ";
 				if (skyboxAssetRep != nullptr)
 					pickerLabel.append(skyboxAssetRep->Name);
@@ -182,7 +182,7 @@ namespace Havtorn
 						std::string assetPath = GEngine::GetAssetRegistry()->GetAssetDatabaseEntry(property.TextureUID);
 						auto assetRep = Manager->GetAssetRepFromName(UGeneralUtils::ExtractFileBaseNameFromPath(assetPath)).get();
 
-						intptr_t assetPickerThumbnail = assetRep != nullptr ? (intptr_t)assetRep->TextureRef.GetShaderResourceView() : intptr_t();
+						intptr_t assetPickerThumbnail = Manager->GetTextureResourceFromAssetRep(assetRep);
 						std::string pickerLabel = "";
 						if (assetRep != nullptr)
 							pickerLabel.append(assetRep->Name);

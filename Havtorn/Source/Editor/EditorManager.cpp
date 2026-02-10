@@ -395,12 +395,51 @@ namespace Havtorn
 		return AssetRepresentations[0];
 	}
 
+	const intptr_t CEditorManager::GetTextureResourceFromAssetRep(SEditorAssetRepresentation* assetRepresentation) const
+	{
+		intptr_t repRenderTexture = 0;
+		if (assetRepresentation == nullptr)
+			return repRenderTexture;
+
+		switch (assetRepresentation->AssetType)
+		{
+		case EAssetType::StaticMesh:
+		case EAssetType::SkeletalMesh:
+		case EAssetType::Material:
+		case EAssetType::Animation:
+		case EAssetType::Texture:
+		case EAssetType::TextureCube:
+		{
+			CRenderTexture* renderTexture = &assetRepresentation->TextureRef;
+
+			if (renderTexture->IsShaderResourceValid())
+				repRenderTexture = (intptr_t)renderTexture->GetShaderResourceView();
+			else
+				repRenderTexture = ResourceManager->GetStaticEditorTextureResource(EEditorTexture::FileIcon);
+		}
+		break;
+		case EAssetType::Scene:
+			repRenderTexture = ResourceManager->GetStaticEditorTextureResource(EEditorTexture::SceneIcon);
+			break;
+		case EAssetType::Sequencer:
+			repRenderTexture = ResourceManager->GetStaticEditorTextureResource(EEditorTexture::SequencerIcon);
+			break;
+		case EAssetType::Script:
+			repRenderTexture = ResourceManager->GetStaticEditorTextureResource(EEditorTexture::ScriptIcon);
+			break;
+		default:
+			break;
+		}
+
+		return repRenderTexture;
+	}
+
 	DirEntryFunc CEditorManager::GetAssetInspectFunction() const
 	{
 		return [this](std::filesystem::directory_entry entry)
 			{
 				const Ptr<SEditorAssetRepresentation>& assetRep = GetAssetRepFromDirEntry(entry);	
-				return SAssetInspectionData(assetRep->Name, (intptr_t)assetRep->TextureRef.GetShaderResourceView(), assetRep->DirectoryEntry.path().string());
+				return SAssetInspectionData(assetRep->Name, GetTextureResourceFromAssetRep(assetRep.get()), assetRep->DirectoryEntry.path().string());
 			};
 	}
 
@@ -410,7 +449,7 @@ namespace Havtorn
 			{
 				const Ptr<SEditorAssetRepresentation>& assetRep = GetAssetRepFromDirEntry(entry);
 				if (assetRep->AssetType == assetTypeFilter)
-					return SAssetInspectionData(assetRep->Name, (intptr_t)assetRep->TextureRef.GetShaderResourceView(), assetRep->DirectoryEntry.path().string());
+					return SAssetInspectionData(assetRep->Name, GetTextureResourceFromAssetRep(assetRep.get()), assetRep->DirectoryEntry.path().string());
 
 				return SAssetInspectionData("", 0, "");
 			};
