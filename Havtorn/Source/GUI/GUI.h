@@ -836,6 +836,7 @@ namespace Havtorn
 			return currentIndex;
 		}
 
+		// TODO.NW: Make sure currentValue is set by the function, instead of returning it.
 		template<typename T>
 		static T ComboEnum(const char* label, T& currentValue)
 		{

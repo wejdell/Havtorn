@@ -35,11 +35,20 @@ namespace Havtorn
 		class CPhysicsWorld3D;
 	}
 
+	enum class ENGINE_API ESystemUpdateOrder
+	{
+		Update,
+		EndFrame
+	};
+
 	struct SSystemData
 	{
 		Ptr<ISystem> System = nullptr;
 		std::vector<U64> Requesters;
 		std::vector<U64> Blockers;
+		// TODO.NW: Decide if we want to store systems in different collections to do this, 
+		// or whether the runtime checks for update order are ok.
+		ESystemUpdateOrder UpdateOrder = ESystemUpdateOrder::Update;
 
 		std::partial_ordering operator<=>(const SSystemData&) const = default;
 	};
@@ -73,17 +82,19 @@ namespace Havtorn
 		ENGINE_API std::vector<Ptr<CScene>>& GetActiveScenes();
 		ENGINE_API void SaveActiveScene(const std::string& destinationPath, CScene* scene) const;
 		ENGINE_API void RemoveScene(const U64 sceneIndex);
-		ENGINE_API void RemoveScene(const Ptr<CScene>& scene);
+		ENGINE_API void RemoveScene(const CHavtornStaticString<255>& sceneName);
 		ENGINE_API void ClearScenes();
 
 		ENGINE_API void SetMainCamera(const SEntity& entity);
 		ENGINE_API SEntity GetMainCamera() const;
 		
+		ENGINE_API void BindSceneLoader(const std::function<bool(const std::string&)>& loadingFunction);
+
 		template<typename T>
 		void CreateScene();
 
 		template<typename T>
-		void AddScene(const std::string& filePath);
+		bool AddScene(const std::string& filePath);
 
 		template<typename T>
 		void ChangeScene(const std::string& filePath);
@@ -158,6 +169,7 @@ namespace Havtorn
 		
 		bool Init(CPlatformManager* platformManager, CRenderManager* renderManager);
 		void Update();
+		void EndFrame();
 
 		ENGINE_API void LoadScene(const std::string& filePath, CScene* outScene) const;
 
@@ -191,20 +203,27 @@ namespace Havtorn
 	}
 
 	template<typename T>
-	inline void CWorld::AddScene(const std::string& filePath)
+	inline bool CWorld::AddScene(const std::string& filePath)
 	{
+		if (!UFileSystem::Exists(filePath))
+		{
+			HV_LOG_WARN("CWorld::AddScene: Scene file '%s' could not be found, aborting load.", filePath.c_str());
+			return false;
+		}
+
 		std::string sceneName = UGeneralUtils::ExtractFileBaseNameFromPath(UGeneralUtils::ConvertToPlatformAgnosticPath(filePath));
 		for (Ptr<CScene>& scene : Scenes)
 		{
 			if (scene->GetSceneName() == sceneName)
 			{
-				HV_LOG_WARN("Scene '%s' is already loaded!", sceneName.c_str());
-				return;
+				HV_LOG_WARN("CWorld::AddScene: Scene '%s' is already loaded!", sceneName.c_str());
+				return false;
 			}
 		}
 
 		CreateScene<T>();
 		LoadScene(filePath, Scenes.back().get());
+		return true;
 	}
 
 	template<typename T>

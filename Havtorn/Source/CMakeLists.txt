@@ -343,6 +343,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/DirectionalLightComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/EnvironmentLightComponentEditorContext.cpp
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/EnvironmentLightComponentEditorContext.h
+    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/LevelStreamingComponentEditorContext.cpp
+    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/LevelStreamingComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/MaterialComponentEditorContext.cpp
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/MaterialComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/Physics2DComponentEditorContext.cpp
@@ -382,6 +384,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/Components/DirectionalLightComponent.h
     ${ENGINE_FOLDER}ECS/Components/EnvironmentLightComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/EnvironmentLightComponent.h
+    ${ENGINE_FOLDER}ECS/Components/LevelStreamingComponent.cpp
+    ${ENGINE_FOLDER}ECS/Components/LevelStreamingComponent.h
     ${ENGINE_FOLDER}ECS/Components/MaterialComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/MaterialComponent.h
     ${ENGINE_FOLDER}ECS/Components/MetaDataComponent.h
@@ -413,6 +417,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/Systems/AnimatorGraphSystem.h
     ${ENGINE_FOLDER}ECS/Systems/CameraSystem.cpp
     ${ENGINE_FOLDER}ECS/Systems/CameraSystem.h
+    ${ENGINE_FOLDER}ECS/Systems/LevelStreamingSystem.cpp
+    ${ENGINE_FOLDER}ECS/Systems/LevelStreamingSystem.h
     ${ENGINE_FOLDER}ECS/Systems/LightSystem.cpp
     ${ENGINE_FOLDER}ECS/Systems/LightSystem.h
     ${ENGINE_FOLDER}ECS/Systems/RenderSystem.cpp
