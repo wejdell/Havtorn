@@ -1,5 +1,11 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
+template<typename T>
+concept Addable = requires(T a, T b)
+{
+	{a + b} noexcept -> std::convertible_to<int>; 
+};
+
 #pragma once
 #include <Havtorn.h>
 #include <Input/InputTypes.h>
@@ -32,20 +38,24 @@ namespace Havtorn
 		std::string Label = "No Snapping";
 		auto operator<=>(const SSnappingOption& other) const = default;
 	};
+	
+	enum class EEditorMode
+	{
+		Default,
+		PlayMode,
+		PauseMode
+	};
 
 	enum class EEditorColorTheme
 	{
-		DefaultDark,
-		HavtornDark,
+		HavtornYellow,
 		HavtornRed,
 		HavtornGreen,
 		HavtornDarkBlue,
 		HavtornLightBlue,
 		HavtornPurple,
 		HavtornPink,
-		Count,
-		PlayMode,
-		PauseMode
+		Count
 	};
 
 	enum class EEditorStyleTheme
@@ -92,8 +102,9 @@ namespace Havtorn
 	struct SEditorPreferences
 	{
 		F32 Sensitivity = 0.5f;
-		EEditorColorTheme ColorTheme = EEditorColorTheme::HavtornDark;
-		EEditorColorTheme CachedColorTheme = EEditorColorTheme::HavtornDark;
+		EEditorColorTheme EditorColorTheme = EEditorColorTheme::HavtornYellow;
+		EEditorColorTheme PlayColorTheme = EEditorColorTheme::HavtornYellow;
+		EEditorColorTheme PauseColorTheme = EEditorColorTheme::HavtornYellow;
 	};
 
 	class CEditorManager
@@ -148,7 +159,7 @@ namespace Havtorn
 
 		void OpenAssetTool(SEditorAssetRepresentation* asset);
 
-		void SetEditorTheme(EEditorColorTheme colorTheme = EEditorColorTheme::HavtornDark, EEditorStyleTheme styleTheme = EEditorStyleTheme::Havtorn);
+		static void SetEditorTheme(EEditorColorTheme colorTheme = EEditorColorTheme::HavtornYellow, EEditorStyleTheme styleTheme = EEditorStyleTheme::Havtorn);
 		std::string GetEditorColorThemeName(const EEditorColorTheme colorTheme);
 		SColor GetEditorColorThemeRepColor(const EEditorColorTheme colorTheme);
 		[[nodiscard]] SEditorLayout& GetEditorLayout();
@@ -170,6 +181,8 @@ namespace Havtorn
 		void SetViewportPadding(const F32 padding);
 		[[nodiscard]] F32 GetEditorSensitivity() const;
 		void SetEditorSensitivity(const F32 sensitivity);
+		
+		void SetEditorModeColorTheme(const EEditorMode targetEditorMode, const EEditorColorTheme newColorTheme);
 	
 		bool GetIsWorldPlaying() const;
 
@@ -239,7 +252,9 @@ namespace Havtorn
 		ETransformGizmoSpace CurrentGizmoSpace = ETransformGizmoSpace::World;
 		SSnappingOption CurrentGizmoSnapping = {};
 		SEditorPreferences EditorPreferences;
-		 CJsonDocument EditorPreferencesDocument;
+		CJsonDocument EditorPreferencesDocument;
+		
+		EEditorMode CurrentEditorMode = EEditorMode::Default;
 
 		F32 ViewportPadding = 0.2f;
 		bool IsEnabled = true;
