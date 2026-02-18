@@ -27,6 +27,9 @@ namespace Havtorn
 		RequestSystem<CScriptSystem>(this, this);
 		RequestSystem<CUISystem>(this, platformManager);
 		RequestSystem<CRenderSystem>(this, RenderManager, this);
+		
+		RequestSystem<CLevelStreamingSystem>(this);
+		SystemData.back().UpdateOrder = ESystemUpdateOrder::EndFrame;
 
 		OnSceneCreatedDelegate.AddMember(this, &CWorld::OnSceneCreated);
 
@@ -41,7 +44,7 @@ namespace Havtorn
 	{
 		for (const auto& data : SystemData)
 		{
-			if (data.Blockers.empty())
+			if (data.Blockers.empty() && data.UpdateOrder == ESystemUpdateOrder::Update)
 				data.System->Update(Scenes);			
 		}
 
@@ -55,6 +58,15 @@ namespace Havtorn
 			std::erase_if(SystemData, [](const SSystemData& data) { return data.Requesters.empty(); });
 
 			QueuedSystemUnrequests.pop();
+		}
+	}
+
+	void CWorld::EndFrame()
+	{
+		for (const auto& data : SystemData)
+		{
+			if (data.UpdateOrder == ESystemUpdateOrder::EndFrame && data.Blockers.empty())
+				data.System->Update(Scenes);
 		}
 	}
 
@@ -181,9 +193,9 @@ namespace Havtorn
 		Scenes.pop_back();
 	}
 
-	void CWorld::RemoveScene(const Ptr<CScene>& scene)
+	void CWorld::RemoveScene(const CHavtornStaticString<255>& sceneName)
 	{
-		auto it = std::ranges::find(Scenes, scene);
+		auto it = std::ranges::find(Scenes, sceneName, &CScene::SceneName);
 		if (it != Scenes.end())
 			Scenes.erase(it);
 	}
@@ -205,6 +217,11 @@ namespace Havtorn
 	SEntity CWorld::GetMainCamera() const
 	{
 		return MainCameraEntity;
+	}
+
+	void CWorld::BindSceneLoader(const std::function<bool(const std::string&)>& loadingFunction)
+	{
+		GetSystem<CLevelStreamingSystem>()->BindSceneLoader(loadingFunction);
 	}
 
 	void CWorld::UnrequestSystems(void* requester)

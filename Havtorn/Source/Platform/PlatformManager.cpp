@@ -40,8 +40,8 @@ namespace Havtorn
 
 	SDL_HitTestResult WindowHitTest(SDL_Window* window, const SDL_Point* point, void* callbackData)
 	{
-		const bool blockHitTest = callbackData == nullptr ? false : *reinterpret_cast<bool*>(callbackData);
-		if (blockHitTest)
+		SHitTestData hitTestData = callbackData == nullptr ? SHitTestData() : *reinterpret_cast<SHitTestData*>(callbackData);
+		if (hitTestData.BlockHitTest || hitTestData.IsFullscreen)
 			return SDL_HITTEST_NORMAL;
 
 		I32 windowWidth = 0;
@@ -58,6 +58,9 @@ namespace Havtorn
 		const bool topBorder = havtornPoint.Y <= borderThickness;
 		const bool bottomBorder = havtornPoint.Y > (windowHeight - borderThickness);
 
+		if (havtornPoint.Y < titlebarHeight)
+			return SDL_HITTEST_DRAGGABLE;
+
 		if (topBorder && leftBorder)
 			return SDL_HITTEST_RESIZE_TOPLEFT;
 
@@ -70,9 +73,6 @@ namespace Havtorn
 		if (bottomBorder && rightBorder)
 			return SDL_HITTEST_RESIZE_BOTTOMRIGHT;
 
-		if (topBorder)
-			return SDL_HITTEST_RESIZE_TOP;
-
 		if (bottomBorder)
 			return SDL_HITTEST_RESIZE_BOTTOM;
 
@@ -82,8 +82,8 @@ namespace Havtorn
 		if (rightBorder)
 			return SDL_HITTEST_RESIZE_RIGHT;
 
-		if (havtornPoint.Y < titlebarHeight)
-			return SDL_HITTEST_DRAGGABLE;
+		if (topBorder)
+			return SDL_HITTEST_RESIZE_TOP;
 
 		return SDL_HITTEST_NORMAL;
 	}
@@ -134,7 +134,7 @@ namespace Havtorn
 
 		Window = SDL_CreateWindow(windowTitle.c_str(), windowData.Width, windowData.Height, SDL_WINDOW_BORDERLESS | SDL_WINDOW_RESIZABLE);
 		SDL_UpdateWindowSurface(Window);
-		SDL_SetWindowHitTest(Window, WindowHitTest, &BlockHitTest);
+		SDL_SetWindowHitTest(Window, WindowHitTest, &HitTestData);
 
 #ifdef HV_PLATFORM_WINDOWS
 		WindowHandle = (HWND)SDL_GetPointerProperty(SDL_GetWindowProperties(Window), SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);
@@ -201,7 +201,7 @@ namespace Havtorn
 
 	void CPlatformManager::SetBlockWindowHitTest(const bool shouldBlock)
 	{
-		BlockHitTest = shouldBlock;
+		HitTestData.BlockHitTest = shouldBlock;
 	}
 
 	void CPlatformManager::BeginFrame()
@@ -231,6 +231,18 @@ namespace Havtorn
 				ResizeTarget.Y = STATIC_U16(currentEvent.window.data2);
 				UpdateResolution();
 				SDL_UpdateWindowSurface(Window);
+			}
+			break;
+
+			case SDL_EVENT_WINDOW_ENTER_FULLSCREEN:
+			{
+				HitTestData.IsFullscreen = true;
+			}
+			break;
+
+			case SDL_EVENT_WINDOW_LEAVE_FULLSCREEN:
+			{
+				HitTestData.IsFullscreen = false;
 			}
 			break;
 

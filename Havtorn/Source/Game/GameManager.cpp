@@ -29,6 +29,9 @@ namespace Havtorn
 		World->OnBeginPlayDelegate.AddMember(this, &CGameManager::OnBeginPlay);
 		World->OnPausePlayDelegate.AddMember(this, &CGameManager::OnPausePlay);
 		World->OnEndPlayDelegate.AddMember(this, &CGameManager::OnEndPlay);
+		
+		auto loadGameScene = [](const std::string& filePath) { return GEngine::GetWorld()->AddScene<CGameScene>(filePath); };
+		World->BindSceneLoader(loadGameScene);
 
 		if (CUISystem* uiSystem = World->GetSystem<CUISystem>())
 		{

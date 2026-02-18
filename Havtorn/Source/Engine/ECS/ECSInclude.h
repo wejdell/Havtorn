@@ -16,6 +16,7 @@
 #include "../HexPhys/HexPhys.h"
 #include "ECS/Systems/ScriptSystem.h"
 #include "ECS/Systems/UISystem.h"
+#include "ECS/Systems/LevelStreamingSystem.h"
 
 #include "ECS/Components/TransformComponent.h"
 #include "ECS/ComponentEditorContexts/TransformComponentEditorContext.h"
@@ -61,5 +62,7 @@
 #include "ECS/ComponentEditorContexts/Physics3DControllerComponentEditorContext.h"
 #include "ECS/Components/UICanvasComponent.h"
 #include "ECS/ComponentEditorContexts/UICanvasComponentEditorContext.h"
+#include "ECS/Components/LevelStreamingComponent.h"
+#include "ECS/ComponentEditorContexts/LevelStreamingComponentEditorContext.h"
 #include "ECS/Components/DebugShapeComponent.h"
 #include "ECS/Components/MetaDataComponent.h"

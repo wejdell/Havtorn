@@ -515,7 +515,7 @@ namespace Havtorn
 		F32 panelWidth = 256.0f;
 		I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
 
-		intptr_t assetPickerThumbnail = ImportOptions.AssetRep != nullptr ? (intptr_t)ImportOptions.AssetRep->TextureRef.GetShaderResourceView() : intptr_t();
+		intptr_t assetPickerThumbnail = Manager->GetTextureResourceFromAssetRep(ImportOptions.AssetRep);
 		
 		SAssetPickResult result = GUI::AssetPickerFilter("Skeletal Rig", "Skeletal Mesh", assetPickerThumbnail, "Assets/Meshes", columnCount, Manager->GetAssetFilteredInspectFunction(), EAssetType::SkeletalMesh);
 
@@ -538,7 +538,7 @@ namespace Havtorn
 		const std::array<std::string, 3> labels = { "Albedo", "Material", "Normal" };
 		for (U64 i = 0; i < 3; i++)
 		{
-			intptr_t assetPickerThumbnail = NewMaterialTextures[i] != nullptr ? (intptr_t)NewMaterialTextures[i]->TextureRef.GetShaderResourceView() : intptr_t();
+			intptr_t assetPickerThumbnail = Manager->GetTextureResourceFromAssetRep(NewMaterialTextures[i]);
 			std::string pickerLabel = labels[i].c_str();
 			if (NewMaterialTextures[i] != nullptr)
 			{
@@ -706,41 +706,8 @@ namespace Havtorn
 		else
 		{
 			const auto& rep = Manager->GetAssetRepFromDirEntry(entry);
-			intptr_t repRenderTexture = 0;
-			
-			const CEditorResourceManager* resourceManager = Manager->GetResourceManager();
-			switch (rep->AssetType)
-			{
-			case EAssetType::StaticMesh:
-			case EAssetType::SkeletalMesh:
-			case EAssetType::Material:
-			case EAssetType::Animation:
-			case EAssetType::Texture:
-			case EAssetType::TextureCube:
-			{
-				CRenderTexture* renderTexture = &rep->TextureRef;
-
-				if (renderTexture->IsShaderResourceValid())
-					repRenderTexture = (intptr_t)renderTexture->GetShaderResourceView();
-				else
-					repRenderTexture = resourceManager->GetStaticEditorTextureResource(EEditorTexture::FileIcon);
-			}
-				break;
-			case EAssetType::Scene:
-				repRenderTexture = resourceManager->GetStaticEditorTextureResource(EEditorTexture::SceneIcon);
-				break;
-			case EAssetType::Sequencer:
-				repRenderTexture = resourceManager->GetStaticEditorTextureResource(EEditorTexture::SequencerIcon);
-				break;
-			case EAssetType::Script:
-				repRenderTexture = resourceManager->GetStaticEditorTextureResource(EEditorTexture::ScriptIcon);
-				break;
-			default:
-				break;
-			}
-
 			SEditorAssetRepresentation* selectedAsset = Manager->GetSelectedAsset();
-			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), rep.get() == selectedAsset, rep->IsBeingNamed, repRenderTexture, GetAssetTypeDetailName(rep->AssetType).c_str(), GetAssetTypeColor(rep->AssetType), rep->IsSourceWatched ? SColor::Orange : SColor(10), rep.get(), sizeof(SEditorAssetRepresentation));
+			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), rep.get() == selectedAsset, rep->IsBeingNamed, Manager->GetTextureResourceFromAssetRep(rep.get()), GetAssetTypeDetailName(rep->AssetType).c_str(), GetAssetTypeColor(rep->AssetType), rep->IsSourceWatched ? SColor::Orange : SColor(10), rep.get(), sizeof(SEditorAssetRepresentation));
 
 			if (result.IsClicked)
 			{

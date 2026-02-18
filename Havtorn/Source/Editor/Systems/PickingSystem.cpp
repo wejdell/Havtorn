@@ -70,7 +70,7 @@ namespace Havtorn
 
 		const CViewportWindow* viewport = Manager->GetEditorWindow<CViewportWindow>();
 		const SVector2<F32> renderedSceneDimensions = viewport->GetRenderedSceneDimensions();
-		const SVector2<F32> renderedScenePosition = viewport->GetRenderedScenePosition() + SVector2<F32>(0.0f, 18.0f);
+		const SVector2<F32> renderedScenePosition = viewport->GetRenderedScenePosition();
 
 		const SVector2<U16> resolution = Manager->GetPlatformManager()->GetResolution();
 		const SVector2<F32> rectRelativeMousePos = SVector2((MousePosition.X - renderedScenePosition.X) / renderedSceneDimensions.X, (MousePosition.Y - renderedScenePosition.Y) / renderedSceneDimensions.Y);

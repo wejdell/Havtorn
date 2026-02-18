@@ -14,6 +14,12 @@ union SDL_Event;
 
 namespace Havtorn
 {
+	struct SHitTestData
+	{
+		bool BlockHitTest = false;
+		bool IsFullscreen = false;
+	};
+
 	class CPlatformManager
 	{
 		friend class CPlatformProcess;
@@ -67,7 +73,8 @@ namespace Havtorn
 		SVector2<U16> ResizeTarget = SVector2<U16>::Zero;
 		SVector2<U16> Resolution = SVector2<U16>::Zero;
 
+		SHitTestData HitTestData;
+
 		bool ShouldRun = false;
-		bool BlockHitTest = false;
 	};
 }
