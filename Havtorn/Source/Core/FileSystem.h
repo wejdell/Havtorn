@@ -133,6 +133,10 @@ namespace Havtorn
 		static void CORE_API IterateThroughFiles(const std::string& root);
 		
 		static std::vector<std::string> CORE_API SplitPath(const std::string& path);
+		
+		static bool CORE_API HasSameMembers(const std::string& firstFilePath, const std::string& secondFilePath);
+		
+		static void CORE_API AdjustFileValues(const std::string& mainFilePath, const std::string& alterFilePath);
 
 		CORE_API static const std::string EngineConfig;
 	};
