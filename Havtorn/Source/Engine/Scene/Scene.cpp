@@ -54,6 +54,7 @@ namespace Havtorn
 		RegisterNonTrivialComponent<SUICanvasComponent, SUICanvasComponentEditorContext>(210, 5);
 		RegisterTrivialComponent<SInputComponent, SInputComponentEditorContext>(220, 5);
 
+		RegisterNonTrivialComponent<SLevelStreamingComponent, SLevelStreamingComponentEditorContext>(220, 10);
 		//RegisterTrivialComponent<SSequencerComponent, SSequencerComponentEditorContext>(typeID++, 0);
 
 		return true;

@@ -16,6 +16,7 @@ namespace Havtorn
 		// Called once to see if Process can be run. Terminates Application if returns false.
 		virtual bool Init(CPlatformManager* platformManager) = 0;
 		virtual void OnApplicationReady() {};
+		virtual bool ShouldRun() { return true; }
 
 		virtual void BeginFrame() {};
 		virtual void PreUpdate() {};

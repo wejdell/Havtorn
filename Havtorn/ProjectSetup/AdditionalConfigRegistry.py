@@ -6,6 +6,13 @@ class RegistryConfiguration:
     
     @classmethod
     def InstallDeeplink(cls):
+        permissionGranted = False
+        while not permissionGranted:
+            reply = str(input("Would you like to install the Havtorn Deeplink solution (this will add Havtorn as a URL protocol to the windows registry)? [Y/N]: ")).lower().strip()[:1]
+            if reply == 'n':
+                return False
+            permissionGranted = (reply == 'y')
+        
         print("Adding Deeplink to Registry")
 
         PROTOCOL_NAME = "Havtorn"
@@ -21,6 +28,8 @@ class RegistryConfiguration:
 
         cmd = winreg.CreateKey(base, r"shell\open\command")
         winreg.SetValueEx(cmd, None, 0, winreg.REG_SZ, f"\"{LAUNCHER_PATH}\" \"%1\"")
+        
+        return True
 
 if __name__ == "__main__":
     RegistryConfiguration.InstallDeeplink()

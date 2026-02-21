@@ -35,13 +35,12 @@ namespace Havtorn
 		void MapEvent(EInputActionEvent event, SInputAction action);
 		void MapEvent(EInputAxisEvent event, SInputAxis axisAction);
 		void UpdateKeyInput();
-		void UpdateMouseAxisInput();
-		void UpdateGamepadAxisInput();
+		void UpdateAxisInput();
 
 		std::map<EInputActionEvent, SInputActionEvent> BoundActionEvents;
 		std::map<EInputAxisEvent, SInputAxisEvent> BoundAxisEvents;
 		CInput* Input = nullptr;
 
-		EInputContext CurrentInputContext;
+		EInputContext CurrentInputContext = EInputContext::InGame;
 	};
 }
