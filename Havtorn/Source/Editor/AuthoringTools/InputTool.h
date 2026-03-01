@@ -1,25 +1,20 @@
 // Copyright 2026 Team Havtorn. All Rights Reserved.
+
 #pragma once
 #include "EditorWindow.h"
 
 namespace Havtorn
 {
-
 	struct SEditorAssetRepresentation;
 
 	enum class EInputDataType 
 	{
 		Button,
-
 	};
 
 	struct SInputToolOperation
 	{
 		EInputDataType InputDataType;
-
-
-
-
 	};
 
 	class CInputTool : public CWindow

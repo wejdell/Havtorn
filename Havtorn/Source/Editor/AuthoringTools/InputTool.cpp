@@ -1,18 +1,19 @@
 // Copyright 2026 Team Havtorn. All Rights Reserved.
+
 #include "InputTool.h"
 #include "EditorManager.h"
 
 namespace Havtorn
 {
-
 	CInputTool::CInputTool(const char* displayName, CEditorManager* manager)
 		: CWindow(displayName, manager)
 	{
-
 	}
+
 	void CInputTool::OnEnable()
 	{
 	}
+
 	void CInputTool::OnInspectorGUI()
 	{
 		if (!GUI::Begin(Name(), &IsEnabled))
@@ -56,6 +57,7 @@ namespace Havtorn
 	void CInputTool::OnDisable()
 	{
 	}
+
 	void CInputTool::OpenInputAsset(SEditorAssetRepresentation* asset)
 	{
 		asset;
