@@ -9,7 +9,6 @@
 
 #include <GUI.h>
 #include <ECS/Components/MetaDataComponent.h>
-#include <Assets/RuntimeAssetDeclarations.h>
 #include <Assets/AssetRegistry.h>
 
 namespace Havtorn
