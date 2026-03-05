@@ -963,7 +963,7 @@ namespace Havtorn
 
 		static void OpenPopup(const char* label);
 
-		static bool BeginTable(const char* label, const I32 columns, const int flags = 0);
+		static bool BeginTable(const char* label, const I32 columns, const I32 flags = 0);
 		static void TableNextRow();
 		static void TableNextColumn();
 		static void EndTable();

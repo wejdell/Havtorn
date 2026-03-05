@@ -941,7 +941,7 @@ namespace Havtorn
 			ImGui::OpenPopup(label);
 		}
 
-		bool BeginTable(const char* label, const I32 columns, const int flags = 0)
+		bool BeginTable(const char* label, const I32 columns, const I32 flags = 0)
 		{
 			return ImGui::BeginTable(label, columns, flags);
 		}
@@ -1819,7 +1819,7 @@ namespace Havtorn
 		Instance->Impl->OpenPopup(label);
 	}
 
-	bool GUI::BeginTable(const char* label, const I32 columns, const int flags)
+	bool GUI::BeginTable(const char* label, const I32 columns, const I32 flags)
 	{
 		return Instance->Impl->BeginTable(label, columns, flags);
 	}
