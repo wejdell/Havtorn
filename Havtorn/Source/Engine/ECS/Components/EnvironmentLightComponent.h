@@ -1,8 +1,9 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #pragma once
+
 #include "ECS/Component.h"
-#include "Assets/FileHeaderDeclarations.h"
+#include "Assets/AssetReference.h"
 
 namespace Havtorn
 {

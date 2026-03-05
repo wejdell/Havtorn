@@ -84,6 +84,8 @@ namespace Havtorn
 		Windows.back()->SetEnabled(false);
 		Windows.emplace_back(std::make_unique<CScriptTool>("Script Editor", this));
 		Windows.back()->SetEnabled(false);
+		Windows.emplace_back(std::make_unique<CInputTool>("Input Editor", this));
+		Windows.back()->SetEnabled(false);
 
 		ResourceManager = new CEditorResourceManager();
 		bool success = ResourceManager->Init(this, renderManager);
@@ -538,6 +540,11 @@ namespace Havtorn
 		{
 			GEngine::GetWorld()->ChangeScene<CGameScene>(asset->DirectoryEntry.path().string());
 			SetCurrentWorkingScene(0);
+		}
+
+		if (asset->AssetType == EAssetType::InputAsset)
+		{
+			GetEditorWindow<CInputTool>()->OpenInputAsset(asset);
 		}
 	}
 

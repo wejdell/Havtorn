@@ -2,6 +2,7 @@
 
 #include "hvpch.h"
 #include "GameScene.h"
+#include "Engine.h"
 #include "Ghosty/GhostySystem.h"
 #include "Ghosty/GhostyComponent.h"
 #include "Ghosty/GhostyComponentEditorContext.h"

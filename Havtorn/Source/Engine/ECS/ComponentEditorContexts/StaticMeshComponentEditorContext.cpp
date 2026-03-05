@@ -8,12 +8,13 @@
 #include "ECS/Components/MaterialComponent.h"
 #include "ECS/ComponentEditorContexts/MaterialComponentEditorContext.h"
 #include "Scene/Scene.h"
+#include "Engine.h"
+#include "Assets/AssetRegistry.h"
+#include "Assets/AssetReference.h"
 
 #include "Graphics/Debug/DebugDrawUtility.h"
 
 #include <GUI.h>
-#include <Engine.h>
-#include <Assets/AssetRegistry.h>
 
 namespace Havtorn
 {

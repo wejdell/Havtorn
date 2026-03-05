@@ -2,12 +2,12 @@
 
 #include "hvpch.h"
 #include "AnimatorGraphSystem.h"
+#include "Engine.h"
 #include "Graphics/RenderManager.h"
 #include "ECS/Components/SkeletalAnimationComponent.h"
 #include "ECS/Components/SkeletalMeshComponent.h"
 #include "Scene/Scene.h"
 #include "Assets/AssetRegistry.h"
-#include "Assets/RuntimeAssetDeclarations.h"
 
 namespace Havtorn
 {

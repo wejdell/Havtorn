@@ -2,12 +2,13 @@
 
 #pragma once
 
-#include "Assets/FileHeaderDeclarations.h"
-#include "Assets/RuntimeAssetDeclarations.h"
+#include "Asset.h"
+#include "Assets/AssetReference.h"
+#include "Assets/AssetFileHeader.h"
+#include "FileSystem.h"
 
 #include <map>
 #include <shared_mutex>
-
 
 namespace Havtorn
 {
@@ -204,6 +205,4 @@ namespace Havtorn
 
 		return assets;
 	}
-	
-
 }

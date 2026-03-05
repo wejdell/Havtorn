@@ -2,6 +2,7 @@
 
 #include "hvpch.h"
 #include "DebugDrawUtility.h"
+#include "Engine.h"
 
 #include "Graphics/GeometryPrimitives.h"
 

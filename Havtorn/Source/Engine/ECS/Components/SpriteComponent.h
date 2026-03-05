@@ -2,7 +2,7 @@
 
 #pragma once
 #include "ECS/Component.h"
-#include "Assets/FileHeaderDeclarations.h"
+#include "Assets/AssetReference.h"
 #include <Color.h>
 
 namespace Havtorn
