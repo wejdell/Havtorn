@@ -375,7 +375,8 @@ namespace Havtorn
 	};
 
 	template<typename TEnum>
-	inline TEnum operator|(TEnum lhs, TEnum rhs) {
+	inline TEnum operator|(TEnum lhs, TEnum rhs)
+	{
 		return static_cast<TEnum>(static_cast<U32>(lhs) | static_cast<U32>(rhs));
 	}
 
