@@ -1,6 +1,7 @@
 // Copyright 2026 Team Havtorn. All Rights Reserved.
 
 #include "LevelStreamingComponent.h"
+#include "Engine.h"
 #include "Assets/AssetRegistry.h"
 
 namespace Havtorn

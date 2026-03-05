@@ -18,6 +18,8 @@
 #include <Input/InputTypes.h>
 
 #include <../Game/GameScene.h>
+#include <../Game/GameScript.h>
+
 
 namespace Havtorn
 {
