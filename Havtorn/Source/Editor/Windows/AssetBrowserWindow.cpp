@@ -20,7 +20,6 @@
 #include <../Game/GameScene.h>
 #include <../Game/GameScript.h>
 
-
 namespace Havtorn
 {
 	CAssetBrowserWindow::CAssetBrowserWindow(const char* displayName, CEditorManager* manager)
