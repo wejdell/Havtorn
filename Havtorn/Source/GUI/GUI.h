@@ -135,7 +135,7 @@ namespace Havtorn
 		HighlightHoveredColumn = BIT(28),  // Highlight column headers when hovered (may evolve into a fuller highlight)
 
 		// [Internal] Combinations and masks
-		SizingMask_ = SizingFixedFit | SizingFixedSame | SizingStretchProp | SizingStretchSame,
+		InternalSizingMask = SizingFixedFit | SizingFixedSame | SizingStretchProp | SizingStretchSame,
 	};
 
 	enum class GUI_API EMultiSelectFlag
