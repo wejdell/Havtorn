@@ -355,7 +355,6 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Assets/AssetRegistry.cpp
     ${ENGINE_FOLDER}Assets/AssetRegistry.h
     ${ENGINE_FOLDER}Assets/FileHeaderDeclarations.h
-    ${ENGINE_FOLDER}Assets/RuntimeAssetDeclarations.h
     ${ENGINE_FOLDER}Assets/SequencerAsset.cpp
     ${ENGINE_FOLDER}Assets/SequencerAsset.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraComponentEditorContext.cpp
