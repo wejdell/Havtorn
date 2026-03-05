@@ -319,7 +319,7 @@ add_dependencies(GUI Core Platform)
 
 # ==================== ENGINE ====================
 set(ENGINE_FILES
-	Engine/Assets/RuntimeAssets/InputAsset.h
+	${ENGINE_FOLDER}Assets/RuntimeAssets/InputAsset.h
 	${ENGINE_FOLDER}Assets/AssetFileHeader.h
 	${ENGINE_FOLDER}Assets/Asset.h
 	${ENGINE_FOLDER}Assets/RuntimeAssetInclude.h
