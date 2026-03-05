@@ -1,4 +1,5 @@
 // Copyright 2026 Team Havtorn. All Rights Reserved.
+
 #pragma once
 #include "Assets/SourceAssetData.h"
 
@@ -8,7 +9,6 @@ namespace Havtorn
 	{
 		EAssetType AssetType = EAssetType::InputAsset;
 		std::string Name = "";
-		//SSourceAssetData SourceData;
 
 		[[nodiscard]] U32 GetSize() const;
 		void Serialize(char* toData) const;
@@ -20,7 +20,6 @@ namespace Havtorn
 		U32 size = 0;
 		size += GetDataSize(AssetType);
 		size += GetDataSize(Name);
-		//size += GetDataSize(SourceData);
 		return size;
 	}
 

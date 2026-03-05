@@ -10,7 +10,6 @@
 #include <map>
 #include <shared_mutex>
 
-
 namespace Havtorn
 {
 	class CGraphicsFramework;
@@ -206,6 +205,4 @@ namespace Havtorn
 
 		return assets;
 	}
-	
-
 }
