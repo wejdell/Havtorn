@@ -225,6 +225,16 @@ namespace Havtorn
 		GetSystem<CLevelStreamingSystem>()->BindSceneLoader(loadingFunction);
 	}
 
+	void CWorld::BindSceneCreator(const std::function<Ptr<CScene>(const std::string&)>& creationFunction)
+	{
+		CreateGameSceneFunction = creationFunction;
+	}
+
+	Ptr<CScene> CWorld::CreateMovableGameScene(const std::string& sceneName)
+	{
+		return CreateGameSceneFunction(sceneName);
+	}
+
 	void CWorld::UnrequestSystems(void* requester)
 	{
 		QueuedSystemUnrequests.push(reinterpret_cast<U64>(requester));

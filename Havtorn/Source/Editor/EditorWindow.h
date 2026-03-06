@@ -17,20 +17,23 @@ namespace Havtorn
 		// NW: Rename to Render?
 		virtual void OnInspectorGUI() = 0;
 		virtual void OnDisable() = 0;
+		void UpdateState();
 
 	public:
 		// AS: Rename "Name()" to "GetDisplayName()" Next time Everyone is merged to Main/Master
 		inline const char* Name() { return DisplayName; }
 		inline void SetEnabled(const bool enable) { IsEnabled = enable; }
 		inline const bool GetEnabled() const { return IsEnabled; }
+		inline const bool GetIsFocused() const { return IsFocused; }
 
-		bool WasEnabled = false;
 	protected:
 		// TODO.AG: Test WeakPtr 
-		/*Havtorn::Ref<Havtorn::CEditorManager>*/CEditorManager* Manager;
+		/*Havtorn::Ref<Havtorn::CEditorManager>*/CEditorManager* Manager = nullptr;
 		bool IsEnabled = true;
+		bool WasEnabled = false;
+		bool IsFocused = false;
 
 	private:
-		const char* DisplayName;
+		const char* DisplayName = "";
 	};
 }

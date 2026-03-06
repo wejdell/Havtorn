@@ -48,6 +48,8 @@ namespace Havtorn
             return;
         }
 
+        IsFocused = IsEnabled && GUI::IsWindowFocused() && GUI::IsWindowHovered();
+
         // TODO: display items starting from the bottom
 
         GUI::SameLine();

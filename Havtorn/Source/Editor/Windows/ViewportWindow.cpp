@@ -42,8 +42,6 @@ namespace Havtorn
 	{
 		SEditorLayout& layout = Manager->GetEditorLayout();
 
-		SVector2<F32> viewportWorkPos = GUI::GetViewportWorkPos();
-		
 		const SVector2<F32> layoutPosition = SVector2<F32>(layout.ViewportPosition.X, layout.ViewportPosition.Y);
 		const SVector2<F32> layoutSize = SVector2<F32>(layout.ViewportSize.X, layout.ViewportSize.Y);
 		GUI::SetNextWindowPos(layoutPosition);
@@ -63,6 +61,8 @@ namespace Havtorn
 		// TODO.NW: Make button to reset to default layout, save layouts
 		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
 		{
+			IsFocused = IsEnabled && GUI::IsWindowFocused() && GUI::IsWindowHovered();
+
 			CWorld* world = GEngine::GetWorld();
 			EWorldPlayState playState = world->GetWorldPlayState();
 			IsPlayButtonEngaged = playState == EWorldPlayState::Playing;
@@ -125,68 +125,7 @@ namespace Havtorn
 			}
 
 			const SEntity& mainCamera = world->GetMainCamera();
-			CRenderTexture* mainRenderTexture = nullptr;
-			if (mainCamera.IsValid())
-				mainRenderTexture = Manager->GetRenderManager()->GetRenderTargetTexture(mainCamera.GUID);
-			
-			if (mainRenderTexture && mainRenderTexture->IsShaderResourceValid())
-			{
-				SVector2<F32> vMin = GUI::GetWindowContentRegionMin();
-				SVector2<F32> vMax = GUI::GetWindowContentRegionMax();
-
-				F32 width = static_cast<F32>(vMax.X - vMin.X);
-				F32 height = static_cast<F32>(vMax.Y - vMin.Y - ViewportMenuHeight - 4.0f);
-
-				viewportWorkPos = GUI::GetViewportWorkPos();
-				SVector2<F32> windowPos = SVector2<F32>(viewportWorkPos.X + layout.ViewportPosition.X, viewportWorkPos.Y + layout.ViewportPosition.Y);
-				windowPos.Y += ViewportMenuHeight - 4.0f;
-				RenderedScenePosition.X = windowPos.X;
-				RenderedScenePosition.Y = windowPos.Y;
-				RenderedSceneDimensions = { width, height };
-
-				GUI::Image((intptr_t)mainRenderTexture->GetShaderResourceView(), SVector2<F32>(width, height));
-			}
-		
-			GUI::SetGizmoDrawList();
-
-			// TODO.NW: Unnestle these ifs
-			CScene* currentScene = Manager->GetCurrentWorkingScene();
-			if (currentScene != nullptr)
-			{
-				if (GUI::BeginDragDropTarget())
-				{
-					SGuiPayload payload = GUI::AcceptDragDropPayload("AssetDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
-					if (payload.Data != nullptr)
-					{
-						SEditorAssetRepresentation* payloadAssetRep = reinterpret_cast<SEditorAssetRepresentation*>(payload.Data);
-						UpdatePreviewEntity(currentScene, payloadAssetRep);
-						
-						if (currentScene->PreviewEntity.IsValid())
-							GUI::SetTooltip("Create Entity?");
-						else
-							GUI::SetTooltip("Asset type not supported yet!");
-
-						if (payload.IsDelivery)
-						{
-							SEntity copiedEntity = currentScene->CopyEntity(currentScene->PreviewEntity);
-							currentScene->RemoveEntity(currentScene->PreviewEntity);
-							Manager->SetSelectedEntity(copiedEntity);
-							currentScene->PreviewEntity = SEntity::Null;
-						}
-					}
-
-					GUI::EndDragDropTarget();
-				}
-				else
-				{
-					if (currentScene->PreviewEntity.IsValid())
-					{
-						// TODO.NW: Figure out mismatch that happens with other components when we remove the preview, suddenly entity component indices are one too big. Is it a race condition or something?
-						currentScene->RemoveEntity(currentScene->PreviewEntity);
-						currentScene->PreviewEntity = SEntity::Null;
-					}
-				}
-			}
+			Render(Manager->GetCurrentWorkingScene(), mainCamera.IsValid() ? mainCamera.GUID : 0);
 		}
 
 		GUI::PopStyleVar();
@@ -218,6 +157,85 @@ namespace Havtorn
 	const SVector2<F32> CViewportWindow::GetRenderedScenePosition() const
 	{
 		return RenderedScenePosition;
+	}
+
+	bool CViewportWindow::Render(CScene* assetDragScene, const U64 renderTargetGUID)
+	{
+		// TODO.NW: All these broken out functions (in viewport, hierarchy, and inspector) that the prefab tool have license to use
+		// should be const or static
+		const bool workingInViewport = assetDragScene == Manager->GetCurrentWorkingScene();
+
+		bool wasRenderHovered = false;
+
+		CRenderTexture* mainRenderTexture = nullptr;
+		if (renderTargetGUID != 0)
+			mainRenderTexture = Manager->GetRenderManager()->GetRenderTargetTexture(renderTargetGUID);
+
+		if (mainRenderTexture && mainRenderTexture->IsShaderResourceValid())
+		{
+			const SVector2<F32> vMin = GUI::GetWindowContentRegionMin();
+			const SVector2<F32> vMax = GUI::GetWindowContentRegionMax();
+
+			const F32 width = static_cast<F32>(vMax.X - vMin.X);
+			const F32 height = static_cast<F32>(vMax.Y - vMin.Y - ViewportMenuHeight - 4.0f);
+
+			if (workingInViewport)
+			{
+				const SVector2<F32> viewportWorkPos = GUI::GetViewportWorkPos();
+				const SEditorLayout& layout = Manager->GetEditorLayout();
+				SVector2<F32> windowPos = SVector2<F32>(viewportWorkPos.X + layout.ViewportPosition.X, viewportWorkPos.Y + layout.ViewportPosition.Y);
+				windowPos.Y += ViewportMenuHeight - 4.0f;
+				RenderedScenePosition.X = windowPos.X;
+				RenderedScenePosition.Y = windowPos.Y;
+				RenderedSceneDimensions = { width, height };
+			}
+
+			GUI::Image((intptr_t)mainRenderTexture->GetShaderResourceView(), SVector2<F32>(width, height));
+			wasRenderHovered = GUI::IsItemHovered();
+		}
+
+		GUI::SetGizmoDrawList();
+
+		// TODO.NW: Unnestle these ifs
+		CScene* currentScene = assetDragScene;
+		if (currentScene != nullptr)
+		{
+			if (GUI::BeginDragDropTarget())
+			{
+				SGuiPayload payload = GUI::AcceptDragDropPayload("AssetDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
+				if (payload.Data != nullptr)
+				{
+					SEditorAssetRepresentation* payloadAssetRep = reinterpret_cast<SEditorAssetRepresentation*>(payload.Data);
+					UpdatePreviewEntity(currentScene, payloadAssetRep);
+
+					if (currentScene->PreviewEntity.IsValid())
+						GUI::SetTooltip("Create Entity?");
+					else
+						GUI::SetTooltip("Asset type not supported yet!");
+
+					if (payload.IsDelivery)
+					{
+						SEntity copiedEntity = currentScene->CopyEntity(currentScene->PreviewEntity);
+						currentScene->RemoveEntity(currentScene->PreviewEntity);
+						Manager->SetSelectedEntity(copiedEntity);
+						currentScene->PreviewEntity = SEntity::Null;
+					}
+				}
+
+				GUI::EndDragDropTarget();
+			}
+			else
+			{
+				if (currentScene->PreviewEntity.IsValid())
+				{
+					// TODO.NW: Figure out mismatch that happens with other components when we remove the preview, suddenly entity component indices are one too big. Is it a race condition or something?
+					currentScene->RemoveEntity(currentScene->PreviewEntity);
+					currentScene->PreviewEntity = SEntity::Null;
+				}
+			}
+		}
+
+		return wasRenderHovered;
 	}
 
 	void CViewportWindow::UpdatePreviewEntity(CScene* scene, const SEditorAssetRepresentation* assetRepresentation)

@@ -50,7 +50,7 @@ namespace Havtorn
 	using namespace HexRune;
 
 	CScriptTool::CScriptTool(const char* displayName, CEditorManager* manager)
-		: CWindow(displayName, manager)
+		: CWindow(displayName, manager, false)
 	{
 	}
 
@@ -67,6 +67,8 @@ namespace Havtorn
 			GUI::End();
 			return;
 		}
+
+		IsFocused = IsEnabled && GUI::IsWindowFocused() && GUI::IsWindowHovered();
 
 		if (CurrentScript == nullptr)
 		{

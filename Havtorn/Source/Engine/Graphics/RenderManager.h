@@ -111,19 +111,20 @@ namespace Havtorn
 		U32 WriteToAnimationDataTexture(const std::string& animationName);
 
 		// TODO.NW: Might want to generalize these render view resources somehow still
-		ENGINE_API bool IsStaticMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewEntity);
-		ENGINE_API void AddStaticMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* component, const U64 renderViewEntity);
+		ENGINE_API bool IsStaticMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewID);
+		ENGINE_API void AddStaticMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* component, const U64 renderViewID);
 
-		ENGINE_API bool IsSkeletalMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewEntity);
-		ENGINE_API void AddSkeletalMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* transformComponent, const SSkeletalAnimationComponent* animationComponent, const U64 renderViewEntity);
+		ENGINE_API bool IsSkeletalMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewID);
+		ENGINE_API void AddSkeletalMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* transformComponent, const SSkeletalAnimationComponent* animationComponent, const U64 renderViewID);
 
-		ENGINE_API bool IsSpriteInWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewEntity);
-		ENGINE_API void AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewEntity);
-		ENGINE_API void AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const STransformComponent* cameraTransform, const U64 renderViewEntity);
+		ENGINE_API bool IsSpriteInWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewID);
+		ENGINE_API void AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewID);
+		ENGINE_API void AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const U64& entityGUID, const SMatrix& entityMatrix, const SMatrix& cameraMatrix, const U64 renderViewID);
+		ENGINE_API void AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const STransformComponent* cameraTransform, const U64 renderViewID);
 
-		ENGINE_API bool IsSpriteInScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewEntity);
-		ENGINE_API void AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewEntity);
-		ENGINE_API void AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SUIElement& uiElement, const U64 renderViewEntity);
+		ENGINE_API bool IsSpriteInScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewID);
+		ENGINE_API void AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewID);
+		ENGINE_API void AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SUIElement& uiElement, const U64 renderViewID);
 
 	public:
 		void SyncCrossThreadResources(const CWorld* world);
@@ -150,9 +151,9 @@ namespace Havtorn
 		void InitRenderTextures(CGraphicsFramework* framework, SVector2<U16> windowResolution);
 		void InitShadowmapAtlas(SVector2<F32> atlasResolution);
 		void InitShadowmapLOD(SVector2<F32> topLeftCoordinate, const SVector2<F32>& widthAndHeight, const SVector2<F32>& depth, const SVector2<F32>& atlasResolution, U16 mapsInLod, U16 startIndex);
-		
+
 		void InitDataBuffers();
-		
+
 		void BindRenderFunctions();
 
 	private:
@@ -198,7 +199,7 @@ namespace Havtorn
 
 		inline void DebugShadowAtlas();
 
-		void CheckIsolatedRenderPass(const U64 renderViewEntity);
+		void CheckIsolatedRenderPass(const U64 renderViewID);
 		void CycleRenderPass(const SInputActionPayload payload);
 
 		void MapRuntimeMaterialProperty(SRuntimeGraphicsMaterialProperty& property, std::vector<ID3D11ShaderResourceView*>& runtimeArray, std::map<U32, F32>& runtimeMap, const std::map<U32, CStaticRenderTexture>& textureMap);

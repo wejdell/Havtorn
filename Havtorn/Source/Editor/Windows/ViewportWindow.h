@@ -6,8 +6,6 @@
 
 #include <GUI.h>
 
-struct ID3D11Texture2D;
-
 namespace Havtorn
 {
 	class CRenderTexture;
@@ -25,6 +23,10 @@ namespace Havtorn
 
 		const SVector2<F32> GetRenderedSceneDimensions() const;
 		const SVector2<F32> GetRenderedScenePosition() const;
+
+		// TODO.NW: Potentially provide render location as well?
+		// Returns whether the image was hovered
+		bool Render(CScene* assetDragScene, const U64 renderTargetGUID);
 
 		void UpdatePreviewEntity(CScene* scene, const SEditorAssetRepresentation* assetRepresentation);
 

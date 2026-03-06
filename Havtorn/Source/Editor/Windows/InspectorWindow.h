@@ -23,6 +23,9 @@ namespace Havtorn
 		void OnInspectorGUI() override;
 		void OnDisable() override;
 
+		// TODO.NW: See if we can remove the owning scene concept somehow
+		void InspectEntity(const SEntity& entity, CScene* owningScene);
+
 	private:
 		void UpdateTransformGizmo(const SComponentViewResult& result);
 		void ViewManipulation(SMatrix& outCameraView, const SVector2<F32>& windowPosition, const SVector2<F32>& windowSize);
@@ -30,7 +33,7 @@ namespace Havtorn
 		void OpenAssetTool(const SComponentViewResult& result);
 		void RenderPreview(const SComponentViewResult& result);
 
-		void OpenAddComponentModal(const SEntity& entity);
+		void OpenAddComponentModal(const SEntity& entity, CScene* owningScene);
 
 		void UpdateAssetContextMenu();
 

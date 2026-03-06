@@ -9,9 +9,6 @@
 #include <GUI.h>
 #include <Graphics/RenderingPrimitives/RenderTexture.h>
 
-struct ID3D11Device;
-struct ID3D11DeviceContext;
-
 namespace Havtorn
 {
 	struct SEntity;
@@ -82,7 +79,8 @@ namespace Havtorn
 		EAssetType AssetType = EAssetType::None;
 		std::filesystem::directory_entry DirectoryEntry = {};
 		CRenderTexture TextureRef;
-		// TODO.NW: Make static string, figure out relationship to engine asset
+		// TODO.NW: Make static string, figure out relationship to engine asset. 
+		// We might want to be able to make more shared ptrs of these, so authoring tools can use them by making a shared ptr to the one we're opening.
 		std::string Name = "";
 		bool UsingEditorTexture = false;
 		bool IsSourceWatched = false;
@@ -112,6 +110,7 @@ namespace Havtorn
 		void SetCurrentWorkingScene(const I64 sceneIndex);
 		CScene* GetCurrentWorkingScene() const;
 		std::vector<Ptr<CScene>>& GetScenes() const;
+		CScene* GetContainingScene(const SEntity& entity) const;
 
 		void SetSelectedEntity(const SEntity& entity);
 		void AddSelectedEntity(const SEntity& entity);

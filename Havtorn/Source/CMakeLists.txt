@@ -355,6 +355,9 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Assets/AssetRegistry.cpp
     ${ENGINE_FOLDER}Assets/AssetRegistry.h
     ${ENGINE_FOLDER}Assets/FileHeaderDeclarations.h
+    ${ENGINE_FOLDER}Assets/FileHeaders/PrefabAssetFileHeader.cpp
+    ${ENGINE_FOLDER}Assets/FileHeaders/PrefabAssetFileHeader.h
+    ${ENGINE_FOLDER}Assets/RuntimeAssets/PrefabAsset.h
     ${ENGINE_FOLDER}Assets/SequencerAsset.cpp
     ${ENGINE_FOLDER}Assets/SequencerAsset.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraComponentEditorContext.cpp
@@ -774,6 +777,8 @@ set(EDITOR_FILES
 	${EDITOR_FOLDER}AuthoringTools/InputTool.h
     ${EDITOR_FOLDER}AuthoringTools/MaterialTool.cpp
     ${EDITOR_FOLDER}AuthoringTools/MaterialTool.h
+    ${EDITOR_FOLDER}AuthoringTools/PrefabTool.cpp
+    ${EDITOR_FOLDER}AuthoringTools/PrefabTool.h
     ${EDITOR_FOLDER}AuthoringTools/ScriptTool.cpp
     ${EDITOR_FOLDER}AuthoringTools/ScriptTool.h
     ${EDITOR_FOLDER}Systems/EditorRenderSystem.cpp

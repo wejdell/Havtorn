@@ -4,12 +4,21 @@
 
 #include "ECS/Entity.h"
 #include "Assets/FileHeaderDeclarations.h"
+#include <HavtornString.h>
 #include "HexPhys/HexPhys.h"
 #include <EngineException.h>
 #include <HavtornDelegate.h>
 #include <FileSystem.h>
 
+#include "Graphics/GraphicsStructs.h"
+#include "Graphics/GraphicsEnums.h"
+#include "Scene/Scene.h"
+#include "Assets/SequencerAsset.h"
+#include "Assets/FileHeaders/PrefabAssetFileHeader.h"
+#include "HexRune/HexRune.h"
+
 #include <queue>
+#include <concepts>
 
 namespace Havtorn
 {
@@ -24,6 +33,12 @@ namespace Havtorn
 	class CAssetRegistry;
 	class CSequencerSystem;
 	class CScene;
+
+	template<typename T>
+	concept SceneType = std::derived_from<T, CScene>;
+
+	template<typename T>
+	concept ScriptType = std::derived_from<T, HexRune::SScript>;
 
 	namespace HexPhys2D
 	{
@@ -89,8 +104,14 @@ namespace Havtorn
 		ENGINE_API SEntity GetMainCamera() const;
 		
 		ENGINE_API void BindSceneLoader(const std::function<bool(const std::string&)>& loadingFunction);
+		ENGINE_API void BindSceneCreator(const std::function<Ptr<CScene>(const std::string&)>& creationFunction);
 
-		template<typename T>
+		ENGINE_API Ptr<CScene> CreateMovableGameScene(const std::string& sceneName);
+
+		template<SceneType T, ScriptType U>
+		void BindGameTypes();
+
+		template<SceneType T>
 		void CreateScene();
 
 		template<typename T>
@@ -102,27 +123,27 @@ namespace Havtorn
 		template<typename T>
 		void OpenDemoScene(const bool shouldOpen3DDemo = true);
 
-		template<class T>
+		template<typename T>
 		inline T* GetSystem();
 
-		template<class T>
+		template<typename T>
 		inline SSystemData* GetSystemHolder();
 
-		template<class T>
+		template<typename T>
 		inline bool HasSystem();
 
-		template<class T, typename... Args>
+		template<typename T, typename... Args>
 		inline void RequestSystem(void* requester, Args&&... args);
 
-		template<class T>
+		template<typename T>
 		inline void UnrequestSystem(void* requester);
 
 		ENGINE_API inline void UnrequestSystems(void* requester);
 
-		template<class T>
+		template<typename T>
 		inline void BlockSystem(void* requester);
 
-		template<class T>
+		template<typename T>
 		inline void UnblockSystem(void* requester);
 
 		ENGINE_API void RequestPhysicsSystem(void* requester);
@@ -192,12 +213,22 @@ namespace Havtorn
 
 		EWorldPlayState PlayState = EWorldPlayState::Stopped;
 		EWorldPlayDimensions PlayDimensions = EWorldPlayDimensions::World3D;
+
+		std::function<Ptr<CScene>(const std::string&)> CreateGameSceneFunction;
 	};
 
-	template<typename T>
+	template<SceneType T, ScriptType U>
+	inline void CWorld::BindGameTypes()
+	{
+		auto createGameScene = [](const std::string& sceneName) { Ptr<T> newScene = std::make_unique<T>(); newScene->Init(sceneName); return std::move(newScene); };
+		BindSceneCreator(createGameScene);
+		auto loadGameScene = [&](const std::string& filePath) { return AddScene<T>(filePath); };
+		BindSceneLoader(loadGameScene);
+	}
+
+	template<SceneType T>
 	inline void CWorld::CreateScene()
 	{
-		static_assert(std::derived_from<T, CScene> == true);
 		Scenes.emplace_back(std::make_unique<T>());
 		OnSceneCreatedDelegate.Broadcast(Scenes.back().get());
 	}
@@ -250,7 +281,7 @@ namespace Havtorn
 		}
 	}
 
-	template<class T>
+	template<typename T>
 	inline T* CWorld::GetSystem()
 	{
 		U64 targetHashCode = typeid(T).hash_code();
@@ -263,7 +294,7 @@ namespace Havtorn
 		return nullptr;
 	}
 
-	template <class T>
+	template<typename T>
 	SSystemData* CWorld::GetSystemHolder()
 	{
 		U64 targetHashCode = typeid(T).hash_code();
@@ -276,13 +307,13 @@ namespace Havtorn
 		return nullptr;
 	}
 
-	template<class T>
+	template<typename T>
 	inline bool CWorld::HasSystem()
 	{
 		return GetSystem<T>() != nullptr;
 	}
 
-	template <class T, typename... Args>
+	template<typename T, typename... Args>
 	void CWorld::RequestSystem(void* requester, Args&&... args)
 	{
 		SSystemData* holder = GetSystemHolder<T>();
@@ -295,7 +326,7 @@ namespace Havtorn
 		holder->Requesters.push_back(reinterpret_cast<U64>(requester));
 	}
 
-	template <class T>
+	template<typename T>
 	void CWorld::UnrequestSystem(void* requester)
 	{
 		SSystemData* holder = GetSystemHolder<T>();
@@ -307,7 +338,7 @@ namespace Havtorn
 			SystemData.erase(std::ranges::find(SystemData, *holder));
 	}
 
-	template <class T>
+	template<typename T>
 	void CWorld::BlockSystem(void* requester)
 	{
 		SSystemData* holder = GetSystemHolder<T>();
@@ -317,7 +348,7 @@ namespace Havtorn
 		holder->Blockers.push_back(reinterpret_cast<U64>(requester));
 	}
 
-	template <class T>
+	template<typename T>
 	void CWorld::UnblockSystem(void* requester)
 	{
 		SSystemData* holder = GetSystemHolder<T>();

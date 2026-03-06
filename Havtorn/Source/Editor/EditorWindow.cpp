@@ -7,9 +7,21 @@
 namespace Havtorn
 {
 	CWindow::CWindow(const char* displayName, CEditorManager* manager, bool isEnabled)
-		: DisplayName(displayName)
-		, Manager(manager)
+		: Manager(manager)
 		, IsEnabled(isEnabled)
+		, DisplayName(displayName)
 	{
+	}
+
+	void CWindow::UpdateState()
+	{
+		IsFocused = IsEnabled ? IsFocused : false;
+
+		if (!WasEnabled && IsEnabled)
+			OnEnable();
+		if (WasEnabled && !IsEnabled)
+			OnDisable();
+
+		WasEnabled = IsEnabled;
 	}
 }

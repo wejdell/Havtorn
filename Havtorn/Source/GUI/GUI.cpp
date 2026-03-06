@@ -403,7 +403,7 @@ namespace Havtorn
 
 		bool IsWindowFocused()
 		{
-			return ImGui::IsWindowFocused();
+			return ImGui::IsWindowFocused(ImGuiFocusedFlags_DockHierarchy | ImGuiFocusedFlags_RootAndChildWindows);
 		}
 
 		bool IsWindowHovered()
@@ -2641,7 +2641,7 @@ namespace Havtorn
 		Instance->Impl->SetWindowSize(label, size);
 	}
 
-	void GUI::SetRect(const SVector2<F32>& position, const SVector2<F32>& dimensions)
+	void GUI::SetGizmoRect(const SVector2<F32>& position, const SVector2<F32>& dimensions)
 	{
 		Instance->Impl->SetRect(position, dimensions);
 	}

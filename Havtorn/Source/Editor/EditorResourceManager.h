@@ -37,6 +37,7 @@ namespace Havtorn
 		CloseWindow,
 		CameraIcon,
 		GetFromSource,
+		PrefabIcon,
 		Count,
 		None = Count
 	};

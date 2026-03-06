@@ -9,3 +9,4 @@
 #include "RuntimeAssets/SpriteAnimationClipAsset.h"
 #include "RuntimeAssets/TextureAsset.h"
 #include "RuntimeAssets/TextureCubeAsset.h"
+#include "RuntimeAssets/PrefabAsset.h"

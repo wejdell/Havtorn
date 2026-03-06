@@ -78,14 +78,12 @@ namespace Havtorn
 		Windows.emplace_back(std::make_unique<COutputLogWindow>("Output Log", this));
 		Windows.emplace_back(std::make_unique<CHierarchyWindow>("Hierarchy", this));
 		Windows.emplace_back(std::make_unique<CInspectorWindow>("Inspector", this));
+
 		Windows.emplace_back(std::make_unique<CSpriteAnimatorGraphNodeWindow>("Sprite Animator", this));
-		Windows.back()->SetEnabled(false);
 		Windows.emplace_back(std::make_unique<CMaterialTool>("Material Editor", this));
-		Windows.back()->SetEnabled(false);
 		Windows.emplace_back(std::make_unique<CScriptTool>("Script Editor", this));
-		Windows.back()->SetEnabled(false);
 		Windows.emplace_back(std::make_unique<CInputTool>("Input Editor", this));
-		Windows.back()->SetEnabled(false);
+		Windows.emplace_back(std::make_unique<CPrefabTool>("Prefab Editor", this));
 
 		ResourceManager = new CEditorResourceManager();
 		bool success = ResourceManager->Init(this, renderManager);
@@ -169,12 +167,7 @@ namespace Havtorn
 			if (window->GetEnabled())
 				window->OnInspectorGUI();
 
-			if (!window->WasEnabled && window->GetEnabled())
-				window->OnEnable();
-			if (window->WasEnabled && !window->GetEnabled())
-				window->OnDisable();
-
-			window->WasEnabled = window->GetEnabled();
+			window->UpdateState();
 		}
 
 		ReinitEditorLayout();
@@ -285,6 +278,24 @@ namespace Havtorn
 	std::vector<Ptr<CScene>>& CEditorManager::GetScenes() const
 	{
 		return World->GetActiveScenes();
+	}
+
+	CScene* CEditorManager::GetContainingScene(const SEntity& entity) const
+	{
+		CScene* containingScene = UComponentAlgo::GetContainingScene(entity, World->GetActiveScenes());
+
+		if (containingScene == nullptr)
+		{
+			CPrefabTool* prefabTool = GetEditorWindow<CPrefabTool>();
+			if (prefabTool != nullptr && prefabTool->GetEnabled())
+			{
+				CScene* prefabScene = prefabTool->GetWorkingScene();
+				if (prefabScene->HasEntity(entity.GUID))
+					return prefabScene;
+			}
+		}
+
+		return containingScene;
 	}
 
 	void CEditorManager::SetSelectedEntity(const SEntity& entity)
@@ -429,6 +440,9 @@ namespace Havtorn
 		case EAssetType::Script:
 			repRenderTexture = ResourceManager->GetStaticEditorTextureResource(EEditorTexture::ScriptIcon);
 			break;
+		case EAssetType::Prefab:
+			repRenderTexture = ResourceManager->GetStaticEditorTextureResource(EEditorTexture::PrefabIcon);
+			break;
 		default:
 			break;
 		}
@@ -545,6 +559,11 @@ namespace Havtorn
 		if (asset->AssetType == EAssetType::InputAsset)
 		{
 			GetEditorWindow<CInputTool>()->OpenInputAsset(asset);
+		}
+
+		if (asset->AssetType == EAssetType::Prefab)
+		{
+			GetEditorWindow<CPrefabTool>()->OpenPrefab(asset);
 		}
 	}
 
@@ -997,8 +1016,7 @@ namespace Havtorn
 		if (!firstSelectedEntity.IsValid())
 			return;
 
-		const std::vector<Ptr<CScene>>& scenes = World->GetActiveScenes();
-		CScene* currentScene = UComponentAlgo::GetContainingScene(firstSelectedEntity, scenes);
+		CScene* currentScene = GetContainingScene(firstSelectedEntity);
 		if (currentScene == nullptr)
 			return;
 
@@ -1063,7 +1081,7 @@ namespace Havtorn
 
 		mainCameraData.TransformComponent->Transform.SetMatrix(newMatrix);
 		
-		CScene* mainCameraScene = UComponentAlgo::GetContainingScene(mainCamera, scenes);
+		CScene* mainCameraScene = GetContainingScene(mainCamera);
 		if (SCameraControllerComponent* controllerComp = mainCameraScene->GetComponent<SCameraControllerComponent>(mainCamera))
 		{
 			SVector currentEuler = mainCameraData.TransformComponent->Transform.GetMatrix().GetEuler();
@@ -1077,10 +1095,9 @@ namespace Havtorn
 		if (!payload.IsPressed)
 			return;
 
-		const std::vector<Ptr<CScene>>& scenes = World->GetActiveScenes();
 		for (SEntity& selectedEntity : GetSelectedEntities())
 		{
-			CScene* currentScene = UComponentAlgo::GetContainingScene(selectedEntity, scenes);
+			CScene* currentScene = GetContainingScene(selectedEntity);
 			if (currentScene == nullptr)
 				continue;
 

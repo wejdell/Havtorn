@@ -4,8 +4,6 @@
 #include "InputTypes.h"
 
 #include <bitset>
-#include <thread>
-#include <mutex>
 
 union SDL_Event;
 struct SDL_Keyboard;
@@ -41,7 +39,7 @@ namespace Havtorn
 		void HandleKeyDown(const U32& keyCode);
 		void HandleKeyUp(const U32& keyCode);
 		void HandleAxisEvent(const EInputAxis axis, const F32 value);
-		void UpdateModifiers(const U32& modifiers, const bool pressedKey);
+		void SetModifiers(const U32& modifiers);
 
 	private:
 		// TODO.NW: Associate these with Users too

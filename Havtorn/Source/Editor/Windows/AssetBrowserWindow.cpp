@@ -43,6 +43,8 @@ namespace Havtorn
 	{
 		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, /*EWindowFlag::NoResize, */EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus}))
 		{
+			IsFocused = IsEnabled && GUI::IsWindowFocused() && GUI::IsWindowHovered();
+
 			intptr_t folderIconID = Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::FolderIcon);
 
 			{ // Menu Bar
@@ -460,6 +462,9 @@ namespace Havtorn
 			case EAssetType::InputAsset:
 				NewAssetFileHeader = CreateInputAsset();
 				break;
+			case EAssetType::Prefab:
+				NewAssetFileHeader = SPrefabFileHeader{};
+				break;
 			default:
 				break;
 			}
@@ -592,11 +597,13 @@ namespace Havtorn
 		fileHeader.AssetType = EAssetType::Script;
 		fileHeader.Name = NewAssetName;
 		fileHeader.Script = new Havtorn::SGameScript();
+		// TODO.NW: Fix this memory leak, asset registry should create assets for file header use (see create prefab)
 		return fileHeader;
 	}
 
 	SAssetFileHeader CAssetBrowserWindow::CreateScene()
 	{
+		// TODO.NW: Move to asset registry? should load the scene after streamlined creation
 		SSceneFileHeader fileHeader = SSceneFileHeader{};
 		fileHeader.AssetType = EAssetType::Scene;
 		fileHeader.UID = 0;
@@ -611,7 +618,6 @@ namespace Havtorn
 
 		fileHeader.Scene = newScene;
 		
-
 		return fileHeader;
 	}
 
@@ -621,6 +627,17 @@ namespace Havtorn
 		fileHeader.AssetType = EAssetType::InputAsset;
 		fileHeader.Name = NewAssetName;
 		return fileHeader;
+	}
+
+	SAssetFileHeader CAssetBrowserWindow::CreatePrefab()
+	{
+		//SPrefabFileHeader fileHeader = SPrefabFileHeader{};
+		//fileHeader.AssetType = EAssetType::Prefab;
+		//CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
+		//assetRegistry.creat
+		////fileHeader.Scene = GEngine::GetWorld()->CreateMovableGameScene("Prefab");
+		//return fileHeader;
+		return {};
 	}
 
 	void CAssetBrowserWindow::InspectFolderTree(const std::string& folderName, const intptr_t& folderIconID)

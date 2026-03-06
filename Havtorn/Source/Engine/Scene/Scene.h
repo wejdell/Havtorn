@@ -395,7 +395,6 @@ namespace Havtorn
 			return fromComponent->Owner;
 		}
 
-
 		template<typename T>
 		T* GetComponent(const SEntity& fromEntity) const
 		{

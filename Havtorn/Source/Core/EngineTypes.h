@@ -33,6 +33,7 @@ namespace Havtorn
 		Script,
 		TextureCube,
 		InputAsset,
+		Prefab
 	};
 
 	static SColor GetAssetTypeColor(const EAssetType type)
@@ -55,6 +56,8 @@ namespace Havtorn
 			return SColor::Blue;
 		case EAssetType::Scene:
 			return SColor::Orange;
+		case EAssetType::Prefab:
+			return SColor::Yellow;
 		default:
 			return SColor::White;
 		}
@@ -85,6 +88,8 @@ namespace Havtorn
 			return "SCRIPT";
 		case EAssetType::Scene:
 			return "SCENE";
+		case EAssetType::Prefab:
+			return "PREFAB";
 		default:
 			return "ASSET";
 		}

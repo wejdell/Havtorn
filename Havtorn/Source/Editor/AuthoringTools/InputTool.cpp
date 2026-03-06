@@ -6,7 +6,7 @@
 namespace Havtorn
 {
 	CInputTool::CInputTool(const char* displayName, CEditorManager* manager)
-		: CWindow(displayName, manager)
+		: CWindow(displayName, manager, false)
 	{
 	}
 
