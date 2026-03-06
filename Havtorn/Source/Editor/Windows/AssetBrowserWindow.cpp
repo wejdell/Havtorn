@@ -606,26 +606,6 @@ namespace Havtorn
 		return fileHeader;
 	}
 
-	SAssetFileHeader CAssetBrowserWindow::CreateScene()
-	{
-		// TODO.NW: Move to asset registry? should load the scene after streamlined creation
-		SSceneFileHeader fileHeader = SSceneFileHeader{};
-		fileHeader.AssetType = EAssetType::Scene;
-		//fileHeader.UID = 0;
-
-		CWorld* world = GEngine::GetWorld();
-		world->ClearScenes();
-		world->CreateScene<CGameScene>();			 
-		CScene* newScene = Manager->GetScenes().back().get();
-		newScene->Init(NewAssetName);
-		newScene->Init3DDefaults();
-		Manager->SetCurrentWorkingScene(0);
-
-		fileHeader.Scene = newScene;
-		
-		return fileHeader;
-	}
-
 	SAssetFileHeader CAssetBrowserWindow::CreateInputAsset()
 	{
 		SInputAssetFileHeader fileHeader = SInputAssetFileHeader{};

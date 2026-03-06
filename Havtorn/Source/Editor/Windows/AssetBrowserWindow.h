@@ -42,7 +42,6 @@ namespace Havtorn
 		
 		SAssetFileHeader CreateOptionsMaterial();
 		SAssetFileHeader CreateScript();
-		SAssetFileHeader CreateScene();
 		SAssetFileHeader CreateInputAsset();
 
 		void InspectFolderTree(const std::string& folderName, const intptr_t& folderIconID);
