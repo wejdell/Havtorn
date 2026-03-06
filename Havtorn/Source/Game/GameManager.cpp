@@ -32,10 +32,6 @@ namespace Havtorn
 		World->OnEndPlayDelegate.AddMember(this, &CGameManager::OnEndPlay);
 
 		World->BindGameTypes<CGameScene, SGameScript>();
-		//auto loadGameScene = [](const std::string& filePath) { return GEngine::GetWorld()->AddScene<CGameScene>(filePath); };
-		//World->BindSceneLoader(loadGameScene);
-		//auto createGameScene = [](const std::string& sceneName) { Ptr<CGameScene> newScene = std::make_unique<CGameScene>(); newScene->Init(sceneName); return std::move(newScene); };
-		//World->BindSceneCreator(createGameScene);
 
 		if (CUISystem* uiSystem = World->GetSystem<CUISystem>())
 		{

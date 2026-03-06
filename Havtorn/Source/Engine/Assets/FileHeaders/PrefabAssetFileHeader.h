@@ -9,6 +9,7 @@ namespace Havtorn
 	struct SPrefabFileHeader
 	{
 		EAssetType AssetType = EAssetType::Prefab;
+		std::string Name = "";
 		CScene* Scene = nullptr;
 
 		[[nodiscard]] U32 GetSize() const;

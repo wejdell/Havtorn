@@ -8,7 +8,7 @@ namespace Havtorn
 	struct SSceneFileHeader
 	{
 		EAssetType AssetType = EAssetType::Scene;
-		U32 UID = 0;
+		std::string Name = "";
 		CScene* Scene = nullptr;
 
 		[[nodiscard]] U32 GetSize() const;
@@ -20,7 +20,7 @@ namespace Havtorn
 	{
 		U32 size = 0;
 		size += GetDataSize(AssetType);
-		size += GetDataSize(UID);
+		size += GetDataSize(Name);
 		size += Scene->GetSize();
 
 		return size;
@@ -29,14 +29,14 @@ namespace Havtorn
 	inline void SSceneFileHeader::Serialize(char* toData, U64& pointerPosition) const
 	{
 		SerializeData(AssetType, toData, pointerPosition);
-		SerializeData(UID, toData, pointerPosition);
+		SerializeData(Name, toData, pointerPosition);
 		Scene->Serialize(toData, pointerPosition);
 	}
 
 	inline void SSceneFileHeader::Deserialize(const char* fromData, U64& pointerPosition, CScene* outScene)
 	{
 		DeserializeData(AssetType, fromData, pointerPosition);
-		DeserializeData(UID, fromData, pointerPosition);
+		DeserializeData(Name, fromData, pointerPosition);
 		outScene->Deserialize(fromData, pointerPosition);
 	}
 }

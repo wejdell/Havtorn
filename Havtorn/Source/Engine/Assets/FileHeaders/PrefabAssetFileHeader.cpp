@@ -14,6 +14,7 @@ namespace Havtorn
 	{
 		U32 size = 0;
 		size += GetDataSize(AssetType);
+		size += GetDataSize(Name);
 		size += Scene->GetSize();
 		return size;
 	}
@@ -22,6 +23,7 @@ namespace Havtorn
 	{
 		U64 pointerPosition = 0;
 		SerializeData(AssetType, toData, pointerPosition);
+		SerializeData(Name, toData, pointerPosition);
 		Scene->Serialize(toData, pointerPosition);
 	}
 
@@ -29,7 +31,7 @@ namespace Havtorn
 	{
 		U64 pointerPosition = 0;
 		DeserializeData(AssetType, fromData, pointerPosition);
-
+		DeserializeData(Name, fromData, pointerPosition);
 		outScene->Deserialize(fromData, pointerPosition);
 	}
 }

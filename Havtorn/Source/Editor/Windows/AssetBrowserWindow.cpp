@@ -457,13 +457,14 @@ namespace Havtorn
 				NewAssetFileHeader = CreateScript();
 				break;
 			case EAssetType::Scene:
-				NewAssetFileHeader = CreateScene();
+				GEngine::GetWorld()->ClearScenes();
+				NewAssetFileHeader = SSceneFileHeader{ .AssetType = EAssetType::Scene, .Name = NewAssetName };
 				break;
 			case EAssetType::InputAsset:
 				NewAssetFileHeader = CreateInputAsset();
 				break;
 			case EAssetType::Prefab:
-				NewAssetFileHeader = SPrefabFileHeader{};
+				NewAssetFileHeader = SPrefabFileHeader{ .AssetType = EAssetType::Prefab, .Name = NewAssetName };
 				break;
 			default:
 				break;
@@ -473,6 +474,10 @@ namespace Havtorn
 			std::string newFilePath = Manager->GetResourceManager()->CreateAsset(DirectoryToSaveTo + "/", NewAssetFileHeader);
 			if (newFilePath != "INVALID_PATH")
 			{
+				// NW: Unclear if clearing the scenes and starting work in the new one is what you want when creating a new asset. But maybe?
+				if (AssetTypeToCreate == EAssetType::Scene)
+					Manager->SetCurrentWorkingScene(0);
+
 				std::filesystem::directory_entry newDir;
 				newDir.assign(std::filesystem::path(newFilePath));
 				Manager->RemoveAssetRep(newDir);
@@ -606,7 +611,7 @@ namespace Havtorn
 		// TODO.NW: Move to asset registry? should load the scene after streamlined creation
 		SSceneFileHeader fileHeader = SSceneFileHeader{};
 		fileHeader.AssetType = EAssetType::Scene;
-		fileHeader.UID = 0;
+		//fileHeader.UID = 0;
 
 		CWorld* world = GEngine::GetWorld();
 		world->ClearScenes();
@@ -627,17 +632,6 @@ namespace Havtorn
 		fileHeader.AssetType = EAssetType::InputAsset;
 		fileHeader.Name = NewAssetName;
 		return fileHeader;
-	}
-
-	SAssetFileHeader CAssetBrowserWindow::CreatePrefab()
-	{
-		//SPrefabFileHeader fileHeader = SPrefabFileHeader{};
-		//fileHeader.AssetType = EAssetType::Prefab;
-		//CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
-		//assetRegistry.creat
-		////fileHeader.Scene = GEngine::GetWorld()->CreateMovableGameScene("Prefab");
-		//return fileHeader;
-		return {};
 	}
 
 	void CAssetBrowserWindow::InspectFolderTree(const std::string& folderName, const intptr_t& folderIconID)

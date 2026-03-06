@@ -13,7 +13,7 @@ namespace Havtorn
 		explicit SPrefabAsset(const SPrefabFileHeader& assetFileData)
 			: AssetType(assetFileData.AssetType)
 		{
-			Scene = GEngine::GetWorld()->CreateMovableGameScene("Prefab");
+			Scene = GEngine::GetWorld()->CreateMovableScene(assetFileData.Name);
 		}
 	
 		EAssetType AssetType = EAssetType::Prefab;

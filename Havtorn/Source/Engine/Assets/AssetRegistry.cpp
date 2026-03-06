@@ -444,23 +444,17 @@ namespace Havtorn
         else if (std::holds_alternative<SMaterialAssetFileHeader>(fileHeader))
         {
             SMaterialAssetFileHeader header = std::get<SMaterialAssetFileHeader>(fileHeader);
-
         }
         else if (std::holds_alternative<SScriptFileHeader>(fileHeader))
         {
             SScriptFileHeader header = std::get<SScriptFileHeader>(fileHeader);
-            
         }
         else if (std::holds_alternative<SSceneFileHeader>(fileHeader))
         {
             SSceneFileHeader header = std::get<SSceneFileHeader>(fileHeader);
-            U32 size = header.GetSize();
-            const auto data = new char[size];
-            U64 pointerPosition = 0;
-            header.Serialize(data, pointerPosition);
-            hvaPath = destinationPath + header.Scene->GetSceneName() + ".hva";
-            UFileSystem::Serialize(hvaPath, &data[0], size);
-            delete[] data;
+            CWorld* world = GEngine::GetWorld();
+            header.Scene = world->CreateNewScene(header.Name);
+            return SaveAsset(destinationPath, header);
         }
         else if (std::holds_alternative<SPrefabFileHeader>(fileHeader))
         {
@@ -669,7 +663,7 @@ namespace Havtorn
             U32 size = header.GetSize();
             const auto data = new char[size];
             header.Serialize(data);
-            hvaPath = destinationPath + header.Scene->GetSceneName() + ".hva";
+            hvaPath = destinationPath + header.Name + ".hva";
             UFileSystem::Serialize(hvaPath, &data[0], size);
             delete[] data;
         }

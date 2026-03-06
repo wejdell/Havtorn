@@ -104,15 +104,16 @@ namespace Havtorn
 		ENGINE_API SEntity GetMainCamera() const;
 		
 		ENGINE_API void BindSceneLoader(const std::function<bool(const std::string&)>& loadingFunction);
-		ENGINE_API void BindSceneCreator(const std::function<Ptr<CScene>(const std::string&)>& creationFunction);
 
-		ENGINE_API Ptr<CScene> CreateMovableGameScene(const std::string& sceneName);
+		ENGINE_API CScene* const CreateNewScene(const std::string& sceneName);
+		ENGINE_API Ptr<CScene> CreateMovableScene(const std::string& sceneName);
 
-		template<SceneType T, ScriptType U>
-		void BindGameTypes();
-
-		template<SceneType T>
+		template<typename SceneType>
 		void CreateScene();
+
+		// Add concepts?
+		template<typename SceneType, typename ScriptType>
+		void BindGameTypes();
 
 		template<typename T>
 		bool AddScene(const std::string& filePath);
@@ -194,7 +195,7 @@ namespace Havtorn
 
 		ENGINE_API void LoadScene(const std::string& filePath, CScene* outScene) const;
 
-		void OnSceneCreated(CScene* scene) const;
+		void OnSceneCreated(CScene* const scene) const;
 
 	private:
 		std::vector<Ptr<CScene>> Scenes;
@@ -209,28 +210,40 @@ namespace Havtorn
 
 		SEntity MainCameraEntity = SEntity::Null;
 
-		CMulticastDelegate<CScene*> OnSceneCreatedDelegate;
+		CMulticastDelegate<CScene* const> OnSceneCreatedDelegate;
 
 		EWorldPlayState PlayState = EWorldPlayState::Stopped;
 		EWorldPlayDimensions PlayDimensions = EWorldPlayDimensions::World3D;
 
-		std::function<Ptr<CScene>(const std::string&)> CreateGameSceneFunction;
+		std::function<Ptr<CScene>(const std::string&)> CreateMovableSceneFunction;
+		std::function<CScene* const(const std::string&)> CreateNewSceneFunction;
 	};
 
-	template<SceneType T, ScriptType U>
-	inline void CWorld::BindGameTypes()
-	{
-		auto createGameScene = [](const std::string& sceneName) { Ptr<T> newScene = std::make_unique<T>(); newScene->Init(sceneName); return std::move(newScene); };
-		BindSceneCreator(createGameScene);
-		auto loadGameScene = [&](const std::string& filePath) { return AddScene<T>(filePath); };
-		BindSceneLoader(loadGameScene);
-	}
-
-	template<SceneType T>
+	template<typename SceneType>
 	inline void CWorld::CreateScene()
 	{
-		Scenes.emplace_back(std::make_unique<T>());
+		Scenes.emplace_back(std::make_unique<SceneType>());
 		OnSceneCreatedDelegate.Broadcast(Scenes.back().get());
+	}
+
+	template<typename SceneType, typename ScriptType>
+	inline void CWorld::BindGameTypes()
+	{
+		CreateNewSceneFunction = [&](const std::string& sceneName) 
+			{
+				CreateScene<SceneType>();
+				CScene* scene = Scenes.back().get();
+				scene->Init(sceneName); 
+				if (GetWorldPlayDimensions() == EWorldPlayDimensions::World3D)
+					scene->Init3DDefaults();
+
+				return scene;
+			};
+
+		CreateMovableSceneFunction = [](const std::string& sceneName) { Ptr<SceneType> newScene = std::make_unique<SceneType>(); newScene->Init(sceneName); return std::move(newScene); };
+		
+		auto loadGameScene = [&](const std::string& filePath) { return AddScene<SceneType>(filePath); };
+		BindSceneLoader(loadGameScene);
 	}
 
 	template<typename T>

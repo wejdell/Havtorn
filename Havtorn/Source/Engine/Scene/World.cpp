@@ -180,7 +180,7 @@ namespace Havtorn
 		delete[] data;
 	}
 
-	void CWorld::OnSceneCreated(CScene* /*scene*/) const
+	void CWorld::OnSceneCreated(CScene* const/*scene*/) const
 	{
 		//PhysicsWorld3D->CreateScene(scene);
 	}
@@ -225,14 +225,14 @@ namespace Havtorn
 		GetSystem<CLevelStreamingSystem>()->BindSceneLoader(loadingFunction);
 	}
 
-	void CWorld::BindSceneCreator(const std::function<Ptr<CScene>(const std::string&)>& creationFunction)
+	CScene* const CWorld::CreateNewScene(const std::string& sceneName)
 	{
-		CreateGameSceneFunction = creationFunction;
+		return CreateNewSceneFunction(sceneName);
 	}
 
-	Ptr<CScene> CWorld::CreateMovableGameScene(const std::string& sceneName)
+	Ptr<CScene> CWorld::CreateMovableScene(const std::string& sceneName)
 	{
-		return CreateGameSceneFunction(sceneName);
+		return CreateMovableSceneFunction(sceneName);
 	}
 
 	void CWorld::UnrequestSystems(void* requester)
