@@ -226,7 +226,6 @@ namespace Havtorn
                 if (!ContextTypeToStorageIndices.contains(typeIDHashCode))
                     return;
                 
-
                 SNodeContextStorage& contextStorage = ContextStorages[ContextTypeToStorageIndices.at(typeIDHashCode)];
                 std::unordered_map<U64, U64>& contextIndices = contextStorage.NodeIDToContextIndices;
                 std::vector<SNodeEditorContext*>& contexts = contextStorage.Contexts;

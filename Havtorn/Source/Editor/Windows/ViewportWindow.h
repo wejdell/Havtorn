@@ -29,6 +29,7 @@ namespace Havtorn
 		bool Render(CScene* assetDragScene, const U64 renderTargetGUID);
 
 		void UpdatePreviewEntity(CScene* scene, const SEditorAssetRepresentation* assetRepresentation);
+		void DeliverAssetDrag(CScene* toScene, const SEditorAssetRepresentation* assetRepresentation);
 
 		void OnMouseMove(const SInputAxisPayload payload);
 	private:

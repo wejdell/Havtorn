@@ -123,6 +123,11 @@ namespace Havtorn
 		const SEntity& GetLastSelectedEntity() const;
 		std::vector<SEntity> GetSelectedEntities() const;
 
+		// NW: Packed prefabs can be attached to other entities but their children can't be modified or extended outside of the asset level. Excludes the prefab entity itself.
+		bool IsEntityInsidePackedPrefab(const SEntity& entity) const;
+		// NW: Excludes the entity going in as parameter itself.
+		SEntity GetPackedPrefabParent(const SEntity& entity) const;
+
 		// TODO.NW: I'd much rather figure out how to manage non-owned resources similar to how unreal does it. Those weak ptrs are managed and 
 		// reset when things are garbage collected and so can be checked for validity, but by default, c++ weak ptrs must be converted into shared
 		// ptrs in order to be used. Can we make our own version?

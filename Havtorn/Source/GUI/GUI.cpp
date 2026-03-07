@@ -582,6 +582,12 @@ namespace Havtorn
 			return colors;
 		}
 
+		SColor GetStyleColor(const EStyleColor styleColor)
+		{
+			ImVec4 imColor = ImGui::GetStyle().Colors[STATIC_U64(styleColor)];
+			return SColor(imColor.x, imColor.y, imColor.z, imColor.w);
+		}
+
 		void PushStyleColor(const EStyleColor styleColor, const SColor& color)
 		{
 			int imVar = static_cast<int>(styleColor);
@@ -2493,6 +2499,11 @@ namespace Havtorn
 	std::vector<SColor> GUI::GetStyleColors()
 	{
 		return Instance->Impl->GetStyleColors();
+	}
+
+	SColor GUI::GetStyleColor(const EStyleColor styleColor)
+	{
+		return Instance->Impl->GetStyleColor(styleColor);
 	}
 
 	void GUI::PushStyleColor(const EStyleColor styleColor, const SColor& color)

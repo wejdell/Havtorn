@@ -215,10 +215,7 @@ namespace Havtorn
 
 					if (payload.IsDelivery)
 					{
-						SEntity copiedEntity = currentScene->CopyEntity(currentScene->PreviewEntity);
-						currentScene->RemoveEntity(currentScene->PreviewEntity);
-						Manager->SetSelectedEntity(copiedEntity);
-						currentScene->PreviewEntity = SEntity::Null;
+						DeliverAssetDrag(currentScene, payloadAssetRep);
 					}
 				}
 
@@ -240,7 +237,12 @@ namespace Havtorn
 
 	void CViewportWindow::UpdatePreviewEntity(CScene* scene, const SEditorAssetRepresentation* assetRepresentation)
 	{
-		if (assetRepresentation->AssetType != EAssetType::StaticMesh && assetRepresentation->AssetType != EAssetType::SkeletalMesh && assetRepresentation->AssetType != EAssetType::Animation)
+		// TODO.NW: Add Material assignment
+
+		if (assetRepresentation->AssetType != EAssetType::StaticMesh && 
+			assetRepresentation->AssetType != EAssetType::SkeletalMesh && 
+			assetRepresentation->AssetType != EAssetType::Animation && 
+			assetRepresentation->AssetType != EAssetType::Prefab)
 			return;
 
 		if (scene->PreviewEntity.IsValid())
@@ -273,7 +275,7 @@ namespace Havtorn
 			}
 			else
 			{
-				SRay worldRay = UMathUtilities::RaycastWorld(MousePosition, RenderedSceneDimensions, RenderedScenePosition, viewMatrix, projectionMatrix);
+				const SRay worldRay = UMathUtilities::RaycastWorld(MousePosition, RenderedSceneDimensions, RenderedScenePosition, viewMatrix, projectionMatrix);
 				constexpr F32 dragDistanceFromEditorCamera = 3.0f;
 				transformCopy.SetTranslation(worldRay.GetPointOnRay(dragDistanceFromEditorCamera));
 			}
@@ -349,16 +351,54 @@ namespace Havtorn
 		}
 			break;
 
+		case EAssetType::Prefab:
+		{
+			// TODO.NW: Handle prefab previs/preview
+			
+			scene->AddComponent<SPrefabComponent>(scene->PreviewEntity, assetRepresentation->DirectoryEntry.path().string());
+			scene->AddComponentEditorContext(scene->PreviewEntity, &SPrefabComponentEditorContext::Context);
+		}
+			break;
+
 		default :
 			break;
-		//std::string animationPath = "Assets/Meshes/CH_Enemy_Walk.hva";
-		////std::string animationPath = "Assets/Meshes/MaleWave.hva";
-		////std::string animationPath = "Assets/Meshes/TestWalk.hva";
-		////std::string animationPath = "Assets/Meshes/DebugAnimAnim.hva";
-		//renderManager->LoadSkeletalAnimationComponent(animationPath, scene->AddComponent<SSkeletalAnimationComponent>(scene->PreviewEntity));
-		//scene->AddComponentEditorContext(scene->PreviewEntity, &SSkeletalAnimationComponentEditorContext::Context);
+		}
+	}
+
+	void CViewportWindow::DeliverAssetDrag(CScene* toScene, const SEditorAssetRepresentation* assetRepresentation)
+	{
+		if (assetRepresentation->AssetType == EAssetType::StaticMesh ||
+			assetRepresentation->AssetType == EAssetType::SkeletalMesh ||
+			assetRepresentation->AssetType == EAssetType::Animation)
+		{
+			SEntity copiedEntity = toScene->CopyEntity(toScene->PreviewEntity);
+			toScene->RemoveEntity(toScene->PreviewEntity);
+			Manager->SetSelectedEntity(copiedEntity);
+			toScene->PreviewEntity = SEntity::Null;
 		}
 
+		if (assetRepresentation->AssetType == EAssetType::Prefab)
+		{
+			const SEntity copiedEntity = toScene->CopyEntity(toScene->PreviewEntity);
+			toScene->RemoveEntity(toScene->PreviewEntity);
+			Manager->SetSelectedEntity(copiedEntity);
+			toScene->PreviewEntity = SEntity::Null;
+
+			const SPrefabAsset* prefab = GEngine::GetAssetRegistry()->RequestAssetData<SPrefabAsset>(SAssetReference(assetRepresentation->DirectoryEntry.path().string()), copiedEntity.GUID);
+			std::vector<SEntity> newEntities = toScene->CopyEntities(prefab->Scene.get());
+
+			STransformComponent* parentTransform = toScene->GetComponent<STransformComponent>(copiedEntity);
+			for (const SEntity& entity : newEntities)
+			{
+				// TODO.NW: Maybe make attachment function taking attachment rules? Keeping absolute position or not
+				// NW: Prefab entities have already been placed in the scene "parented" to the origin. Shift them over to the prefab space before attaching
+				STransformComponent* childTransform = toScene->GetComponent<STransformComponent>(entity);
+				SMatrix matrix = childTransform->Transform.GetMatrix();
+				matrix *= parentTransform->Transform.GetMatrix();
+				childTransform->Transform.SetMatrix(matrix);
+				parentTransform->Attach(childTransform);
+			}
+		}
 	}
 
 	void CViewportWindow::OnMouseMove(const SInputAxisPayload payload)

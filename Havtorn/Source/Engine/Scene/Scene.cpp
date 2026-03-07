@@ -53,6 +53,7 @@ namespace Havtorn
 		RegisterTrivialComponent<SPhysics3DComponent, SPhysics3DComponentEditorContext>(190, 40);
 		RegisterTrivialComponent<SPhysics3DControllerComponent, SPhysics3DControllerComponentEditorContext>(200, 1);
 		RegisterNonTrivialComponent<SUICanvasComponent, SUICanvasComponentEditorContext>(210, 5);
+		RegisterNonTrivialComponent<SPrefabComponent, SPrefabComponentEditorContext>(230, 10);
 		RegisterNonTrivialComponent<SLevelStreamingComponent, SLevelStreamingComponentEditorContext>(220, 10);
 		//RegisterTrivialComponent<SSequencerComponent, SSequencerComponentEditorContext>(typeID++, 0);
 
@@ -915,25 +916,39 @@ namespace Havtorn
 
 		OnEntityPreDestroy.Broadcast(entity);
 
+		auto removeEntityComponentFromStorage = [&](SComponentStorage& storage, const U64 entityGUID)
+		{
+			if (!storage.EntityIndices.contains(entityGUID))
+				return;
+			
+			SComponent*& componentToBeRemoved = storage.Components.back();
+			if (componentToBeRemoved != nullptr)
+			{
+				storage.EntityIndices.at(componentToBeRemoved->Owner.GUID) = storage.EntityIndices.at(entityGUID);
+
+				std::swap(storage.Components[storage.EntityIndices.at(entityGUID)], storage.Components.back());
+
+				componentToBeRemoved->IsDeleted(this);
+				delete componentToBeRemoved;
+				componentToBeRemoved = nullptr;
+			}
+
+			storage.Components.pop_back();
+			storage.EntityIndices.erase(entityGUID);
+			
+		};
+
+		// TODO.NW: Build dependency graph to go through storages. Prefab components must be handled before Transforms for example
+		const U32 typeID = TypeHashToTypeID.at(typeid(SPrefabComponent).hash_code());
+		if (ComponentTypeIndices.contains(typeID)) 
+		{
+			SComponentStorage& prefabComponentStorage = Storages[ComponentTypeIndices.at(typeID)];
+			removeEntityComponentFromStorage(prefabComponentStorage, entity.GUID);
+		}
+
 		for (SComponentStorage& storage : Storages)
 		{
-			if (storage.EntityIndices.contains(entity.GUID))
-			{
-				SComponent*& componentToBeRemoved = storage.Components.back();
-				if (componentToBeRemoved != nullptr)
-				{
-					storage.EntityIndices.at(componentToBeRemoved->Owner.GUID) = storage.EntityIndices.at(entity.GUID);
-
-					std::swap(storage.Components[storage.EntityIndices.at(entity.GUID)], storage.Components.back());
-
-					componentToBeRemoved->IsDeleted(this);
-					delete componentToBeRemoved;
-					componentToBeRemoved = nullptr;
-				}
-
-				storage.Components.pop_back();
-				storage.EntityIndices.erase(entity.GUID);
-			}
+			removeEntityComponentFromStorage(storage, entity.GUID);
 		}
 
 		RemoveComponentEditorContexts(entity);
@@ -975,31 +990,42 @@ namespace Havtorn
 			return;
 		}
 
-		AddEntity(entity.GUID);
+		std::vector<SEntity> entitiesToMove;
+		
+		// TODO.NW: Should this be the default behavior? Not sure. If so, make sure to remove all attached entities from old scene (PrefabComponent logic deals with this now).
+		if (SPrefabComponent* prefabComponent = fromScene->GetComponent<SPrefabComponent>(entity))
+			fromScene->GetAttachedEntities(entity, entitiesToMove);
+		else
+			entitiesToMove = { entity };
 
-		if (SMetaDataComponent* metaDataComponent = fromScene->GetComponent<SMetaDataComponent>(entity))
-			AddComponent<SMetaDataComponent>(*metaDataComponent, entity);
-
-		for (auto& [typeID, storageIndex] : fromScene->ComponentTypeIndices)
+		for (const SEntity& entityToMove : entitiesToMove)
 		{
-			SComponentStorage& storage = fromScene->Storages[storageIndex];
-			if (!storage.EntityIndices.contains(entity.GUID))
-				continue;
+			AddEntity(entityToMove.GUID);
 
-			if (!ComponentSerializers.contains(typeID))
-				continue;
+			if (SMetaDataComponent* metaDataComponent = fromScene->GetComponent<SMetaDataComponent>(entityToMove))
+				AddComponent<SMetaDataComponent>(*metaDataComponent, entityToMove);
 
-			U32 size = ComponentSerializers.at(typeID).SingleSizeAllocator(entity, fromScene);
-			const auto data = new char[size];
-			U64 pointerPosition = 0;
-			ComponentSerializers.at(typeID).SingleSerializer(entity, fromScene, data, pointerPosition);
+			for (auto& [typeID, storageIndex] : fromScene->ComponentTypeIndices)
+			{
+				SComponentStorage& storage = fromScene->Storages[storageIndex];
+				if (!storage.EntityIndices.contains(entityToMove.GUID))
+					continue;
 
-			pointerPosition = 0;
-			ComponentSerializers.at(typeID).SingleDeserializer(entity, this, data, pointerPosition);
+				if (!ComponentSerializers.contains(typeID))
+					continue;
 
-			delete[] data;
+				U32 size = ComponentSerializers.at(typeID).SingleSizeAllocator(entityToMove, fromScene);
+				const auto data = new char[size];
+				U64 pointerPosition = 0;
+				ComponentSerializers.at(typeID).SingleSerializer(entityToMove, fromScene, data, pointerPosition);
+
+				pointerPosition = 0;
+				ComponentSerializers.at(typeID).SingleDeserializer(entityToMove, this, data, pointerPosition);
+
+				delete[] data;
+			}
 		}
-
+		
 		fromScene->RemoveEntity(entity);
 	}
 
@@ -1039,6 +1065,78 @@ namespace Havtorn
 		}
 
 		return newEntity;
+	}
+
+	std::vector<SEntity> CScene::CopyEntities(CScene* fromScene)
+	{
+		if (fromScene == nullptr)
+		{
+			HV_LOG_ERROR("CScene::CopyEntities: Could not copy entities to %s from other scene, other scene is null.", SceneName.AsString().c_str());
+			return {};
+		}
+
+		if (fromScene == this)
+		{
+			HV_LOG_ERROR("CScene::CopyEntities: Can not copy entities to %s from itself.", SceneName.AsString().c_str());
+			return {};
+		}
+
+		// TODO.NW: Might want to figure out another way to access these, rather than returning a vector of them. For small scenes this is fine though.
+		std::vector<SEntity> copiedEntities;
+
+		for (const SEntity& otherSceneEntity : fromScene->Entities)
+		{
+			std::string newEntityName = "UNNAMED";
+			if (SMetaDataComponent* metaDataComponent = fromScene->GetComponent<SMetaDataComponent>(otherSceneEntity))
+			{
+				newEntityName = UGeneralUtils::GetNonCollidingString(metaDataComponent->Name.AsString(), Entities, [this](const SEntity& entity)
+					{
+						const SMetaDataComponent* metaDataComp = GetComponent<SMetaDataComponent>(entity);
+						return SComponent::IsValid(metaDataComp) ? metaDataComp->Name.AsString() : "UNNAMED";
+					}
+				);
+			}
+
+			SEntity newEntity = AddEntity(newEntityName);
+
+			for (auto& [typeID, storageIndex] : fromScene->ComponentTypeIndices)
+			{
+				SComponentStorage& storage = fromScene->Storages[storageIndex];
+				if (!storage.EntityIndices.contains(otherSceneEntity.GUID))
+					continue;
+
+				if (!ComponentSerializers.contains(typeID))
+					continue;
+
+				U32 size = ComponentSerializers.at(typeID).SingleSizeAllocator(otherSceneEntity, fromScene);
+				const auto data = new char[size];
+				U64 pointerPosition = 0;
+				ComponentSerializers.at(typeID).SingleSerializer(otherSceneEntity, fromScene, data, pointerPosition);
+
+				pointerPosition = 0;
+				ComponentSerializers.at(typeID).SingleDeserializer(newEntity, this, data, pointerPosition);
+
+				delete[] data;
+			}
+
+			copiedEntities.push_back(newEntity);
+		}
+
+		return copiedEntities;
+	}
+
+	void CScene::GetAttachedEntities(const SEntity& parentEntity, std::vector<SEntity>& outEntities)
+	{
+		// TODO.NW: Deal with 2D attachment?
+
+		STransformComponent* transformComponent = GetComponent<STransformComponent>(parentEntity);
+		if (!SComponent::IsValid(transformComponent))
+			return;
+
+		for (const SEntity& attachedEntities : transformComponent->AttachedEntities)
+			GetAttachedEntities(attachedEntities, outEntities);
+		
+		outEntities.push_back(parentEntity);
 	}
 
 	void CScene::AddComponentEditorContext(const SEntity& owner, SComponentEditorContext* context)

@@ -1049,6 +1049,7 @@ namespace Havtorn
 		static void PopScriptStyleVar(const I32 count = 1);
 
 		static std::vector<SColor> GetStyleColors();
+		static SColor GetStyleColor(const EStyleColor styleColor);
 		static void PushStyleColor(const EStyleColor styleColor, const SColor& color);
 		static void PushScriptStyleColor(const EScriptStyleColor styleColor, const SColor& color);
 		static void PopStyleColor();

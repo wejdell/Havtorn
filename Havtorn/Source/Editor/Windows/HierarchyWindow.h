@@ -37,6 +37,7 @@ namespace Havtorn
 		void InspectEntities(CScene* scene, const std::vector<SEntity>& entities);
 
 		std::vector<EEditorTexture> GetRelevantComponentIcons(const CScene* scene, const SEntity& entity);
+
 	private:
 		SGuiTextFilter Filter = SGuiTextFilter();
 		I64 SelectedIndex = -1;

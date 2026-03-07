@@ -38,6 +38,8 @@
 #include "ECS/ComponentEditorContexts/DirectionalLightComponentEditorContext.h"
 #include "ECS/Components/PointLightComponent.h"
 #include "ECS/ComponentEditorContexts/PointLightComponentEditorContext.h"
+#include "ECS/Components/PrefabComponent.h"
+#include "ECS/ComponentEditorContexts/PrefabComponentEditorContext.h"
 #include "ECS/Components/SpotLightComponent.h"
 #include "ECS/ComponentEditorContexts/SpotLightComponentEditorContext.h"
 #include "ECS/Components/VolumetricLightComponent.h"

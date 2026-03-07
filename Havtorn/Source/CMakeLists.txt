@@ -382,6 +382,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/Physics3DControllerComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/PointLightComponentEditorContext.cpp
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/PointLightComponentEditorContext.h
+    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/PrefabComponentEditorContext.cpp
+    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/PrefabComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/ScriptComponentEditorContext.cpp
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/ScriptComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/SequencerComponentEditorContext.cpp
@@ -420,6 +422,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/Components/Physics3DComponent.h
     ${ENGINE_FOLDER}ECS/Components/Physics3DControllerComponent.h
     ${ENGINE_FOLDER}ECS/Components/PointLightComponent.h
+    ${ENGINE_FOLDER}ECS/Components/PrefabComponent.cpp
+    ${ENGINE_FOLDER}ECS/Components/PrefabComponent.h
     ${ENGINE_FOLDER}ECS/Components/SequencerComponent.h
     ${ENGINE_FOLDER}ECS/Components/ScriptComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/ScriptComponent.h

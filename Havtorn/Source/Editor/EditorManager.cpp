@@ -306,7 +306,11 @@ namespace Havtorn
 
 	void CEditorManager::AddSelectedEntity(const SEntity& entity)
 	{
-		SelectedEntities.emplace_back(entity);
+		SEntity prefabParent = GetPackedPrefabParent(entity);
+		if (prefabParent.IsValid())
+			SelectedEntities.emplace_back(prefabParent);
+		else
+			SelectedEntities.emplace_back(entity);
 	}
 
 	void CEditorManager::RemoveSelectedEntity(const SEntity& entity)
@@ -339,6 +343,40 @@ namespace Havtorn
 	std::vector<SEntity> CEditorManager::GetSelectedEntities() const
 	{
 		return SelectedEntities;
+	}
+
+	bool CEditorManager::IsEntityInsidePackedPrefab(const SEntity& entity) const
+	{
+		return GetPackedPrefabParent(entity).IsValid();
+	}
+
+	SEntity CEditorManager::GetPackedPrefabParent(const SEntity& entity) const
+	{
+		SEntity currentEntity = entity;
+		CScene* containingScene = GetContainingScene(currentEntity);
+
+		if (containingScene == nullptr)
+			return SEntity::Null;
+
+		// TODO.NW: Check building mode
+		while (currentEntity.IsValid())
+		{
+			STransformComponent* transform = containingScene->GetComponent<STransformComponent>(currentEntity);
+			if (!SComponent::IsValid(transform))
+				return SEntity::Null;
+
+			SEntity parentEntity = transform->ParentEntity;
+			if (!parentEntity.IsValid())
+				return SEntity::Null;
+
+			SPrefabComponent* parentPrefabComponent = containingScene->GetComponent<SPrefabComponent>(parentEntity);
+			if (SComponent::IsValid(parentPrefabComponent))
+				return parentEntity;
+
+			currentEntity = parentEntity;
+		};
+
+		return SEntity::Null;
 	}
 
 	void CEditorManager::SetSelectedAsset(SEditorAssetRepresentation* asset)
@@ -1101,6 +1139,13 @@ namespace Havtorn
 			if (currentScene == nullptr)
 				continue;
 
+			if (IsEntityInsidePackedPrefab(selectedEntity))
+			{
+				SMetaDataComponent* metaDataComponent = currentScene->GetComponent<SMetaDataComponent>(selectedEntity);
+				const std::string entityName = SComponent::IsValid(metaDataComponent) ? metaDataComponent->Name.AsString() : "UNNAMED";
+				HV_LOG_WARN("CEditorManager::OnDeleteEvent: Can't delete entity %s from inside packed prefab! Use Prefab Editor or unpack the prefab.", entityName.c_str());
+				continue;
+			}
 			currentScene->RemoveEntity(selectedEntity);
 		}
 		

@@ -629,7 +629,7 @@ namespace Havtorn
 			auto relativePath = std::filesystem::relative(path);
 			std::string filenameString = relativePath.filename().string();
 
-			const bool isOpen = GUI::TreeNode(filenameString.c_str());
+			const bool isOpen = GUI::TreeNodeEx(filenameString.c_str(), { ETreeNodeFlag::OpenOnDoubleClick });
 
 			// Asset Drag
 			if (GUI::BeginDragDropTarget())

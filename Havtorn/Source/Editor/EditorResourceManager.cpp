@@ -299,6 +299,7 @@ namespace Havtorn
 
 			//std::vector<SMatrix> boneTransforms = GEngine::GetWorld()->GetSystem<CAnimatorGraphSystem>()->ReadAssetAnimationPose(filePath, animationTime);
 			//RenderManager->RenderSkeletalAnimationAssetTexture(assetTexture, filePath, boneTransforms);
+			break;
 		}
 		case EAssetType::AudioOneShot:
 			break;
@@ -434,6 +435,9 @@ namespace Havtorn
 
 		case EEditorTexture::PrefabIcon:
 			return ResourceAssetPath + prefix + "PrefabIcon" + extension;
+
+		case EEditorTexture::PrefabWidgetIcon:
+			return ResourceAssetPath + prefix + "PrefabWidgetIcon" + extension;
 		
 		case EEditorTexture::Count:
 		default:

@@ -22,6 +22,7 @@ namespace Havtorn
 	static const SAssetReference DirectionalLightWidgetReference = SAssetReference("Resources/Assets/DirectionalLightIcon.hva");
 	static const SAssetReference EnvironmentLightWidgetReference = SAssetReference("Resources/Assets/EnvironmentLightIcon.hva");
 	static const SAssetReference PointLightWidgetReference = SAssetReference("Resources/Assets/PointLightIcon.hva");
+	static const SAssetReference PrefabWidgetReference = SAssetReference("Resources/Assets/PrefabWidgetIcon.hva");
 	static const SAssetReference SpotlightWidgetReference = SAssetReference("Resources/Assets/SpotlightIcon.hva");
 
 	CEditorRenderSystem::CEditorRenderSystem(CRenderManager* renderManager, CWorld* world, CEditorManager* editorManager)
@@ -88,6 +89,7 @@ namespace Havtorn
 		tryAddComponentWidgets(SEnvironmentLightComponent(), EnvironmentLightWidgetReference);
 		tryAddComponentWidgets(SDirectionalLightComponent(), DirectionalLightWidgetReference);
 		tryAddComponentWidgets(SPointLightComponent(), PointLightWidgetReference);
+		tryAddComponentWidgets(SPrefabComponent(), PrefabWidgetReference);
 		tryAddComponentWidgets(SSpotLightComponent(), SpotlightWidgetReference);
 
 		for (const SPhysics3DComponent* physics3DComponent : scene->GetComponents<SPhysics3DComponent>())
@@ -126,6 +128,7 @@ namespace Havtorn
 		assetRegistry->UnrequestAsset(DirectionalLightWidgetReference, entity.GUID);
 		assetRegistry->UnrequestAsset(EnvironmentLightWidgetReference, entity.GUID);
 		assetRegistry->UnrequestAsset(PointLightWidgetReference, entity.GUID);
+		assetRegistry->UnrequestAsset(PrefabWidgetReference, entity.GUID);
 		assetRegistry->UnrequestAsset(SpotlightWidgetReference, entity.GUID);
 	}
 }

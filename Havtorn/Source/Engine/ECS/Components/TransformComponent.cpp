@@ -2,6 +2,7 @@
 
 #include "TransformComponent.h"
 #include "Scene/Scene.h"
+#include "PrefabComponent.h"
 
 #include <ranges>
 
@@ -43,12 +44,26 @@ namespace Havtorn
 
 	void STransformComponent::IsDeleted(CScene* fromScene)
 	{
-		if (!ParentEntity.IsValid())
+		// NW: If we are a prefab with attachments, let all children be destroyed when the parent is.
+		// TODO.NW: Check for prefab mode here, if we are spawning we should detach children and parents.
+		if (SPrefabComponent* prefabComponent = fromScene->GetComponent<SPrefabComponent>(Owner))
 			return;
 
-		STransformComponent* parentComponent = fromScene->GetComponent<STransformComponent>(ParentEntity);
-		if (parentComponent)
-			parentComponent->Detach(this);
+		if (ParentEntity.IsValid())
+		{
+			STransformComponent* parentComponent = fromScene->GetComponent<STransformComponent>(ParentEntity);
+			if (parentComponent)
+				parentComponent->Detach(this);
+		}
+		else if (!AttachedEntities.empty())
+		{
+			for (const SEntity& child : AttachedEntities)
+			{
+				STransformComponent* childComponent = fromScene->GetComponent<STransformComponent>(child);
+				if (childComponent)
+					Detach(childComponent);
+			}
+		}
 	}
 
 	void STransformComponent::Attach(STransformComponent* child)

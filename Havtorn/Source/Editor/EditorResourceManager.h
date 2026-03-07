@@ -38,6 +38,7 @@ namespace Havtorn
 		CameraIcon,
 		GetFromSource,
 		PrefabIcon,
+		PrefabWidgetIcon,
 		Count,
 		None = Count
 	};
