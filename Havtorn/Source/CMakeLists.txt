@@ -323,6 +323,7 @@ set(ENGINE_FILES
 	${ENGINE_FOLDER}Assets/AssetFileHeader.h
 	${ENGINE_FOLDER}Assets/Asset.h
 	${ENGINE_FOLDER}Assets/RuntimeAssetInclude.h
+	${ENGINE_FOLDER}Assets/RuntimeAssets/ScriptAsset.h
 	${ENGINE_FOLDER}Assets/RuntimeAssets/SkeletalAnimationAsset.h
 	${ENGINE_FOLDER}Assets/RuntimeAssets/SpriteAnimationClipAsset.h
 	${ENGINE_FOLDER}Assets/RuntimeAssets/GraphicsMaterialAsset.h
@@ -330,6 +331,7 @@ set(ENGINE_FILES
 	${ENGINE_FOLDER}Assets/RuntimeAssets/TextureAsset.h
 	${ENGINE_FOLDER}Assets/RuntimeAssets/SkeletalMeshAsset.h
 	${ENGINE_FOLDER}Assets/RuntimeAssets/StaticMeshAsset.h
+    ${ENGINE_FOLDER}Assets/RuntimeAssets/PrefabAsset.h
 	${ENGINE_FOLDER}Assets/FileHeaders/ScriptFileHeader.h
 	${ENGINE_FOLDER}Assets/FileHeaders/SequencerFileHeader.h
 	${ENGINE_FOLDER}Assets/FileHeaders/SpriteAnimationClipFileHeader.h
@@ -341,6 +343,7 @@ set(ENGINE_FILES
 	${ENGINE_FOLDER}Assets/FileHeaders/SkeletalModelFileHeader.h
 	${ENGINE_FOLDER}Assets/FileHeaders/StaticModelFileHeader.h
 	${ENGINE_FOLDER}Assets/FileHeaders/InputAssetFileHeader.h
+    ${ENGINE_FOLDER}Assets/FileHeaders/PrefabAssetFileHeader.h
 	${ENGINE_FOLDER}Assets/FileHeaderInclude.h
 	${ENGINE_FOLDER}Assets/AssetReference.h
 	${ENGINE_FOLDER}Assets/SourceAssetData.h
@@ -355,9 +358,6 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Assets/AssetRegistry.cpp
     ${ENGINE_FOLDER}Assets/AssetRegistry.h
     ${ENGINE_FOLDER}Assets/FileHeaderDeclarations.h
-    ${ENGINE_FOLDER}Assets/FileHeaders/PrefabAssetFileHeader.cpp
-    ${ENGINE_FOLDER}Assets/FileHeaders/PrefabAssetFileHeader.h
-    ${ENGINE_FOLDER}Assets/RuntimeAssets/PrefabAsset.h
     ${ENGINE_FOLDER}Assets/SequencerAsset.cpp
     ${ENGINE_FOLDER}Assets/SequencerAsset.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraComponentEditorContext.cpp

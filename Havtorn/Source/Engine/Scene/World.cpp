@@ -235,6 +235,11 @@ namespace Havtorn
 		return CreateMovableSceneFunction(sceneName);
 	}
 
+	Ptr<HexRune::SScript> CWorld::CreateMovableScript(const std::string& scriptName)
+	{
+		return CreateMovableScriptFunction(scriptName);
+	}
+
 	void CWorld::UnrequestSystems(void* requester)
 	{
 		QueuedSystemUnrequests.push(reinterpret_cast<U64>(requester));

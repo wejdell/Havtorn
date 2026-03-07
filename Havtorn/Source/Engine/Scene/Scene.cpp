@@ -28,7 +28,8 @@ namespace Havtorn
 
 	bool CScene::Init(const std::string& sceneName)
 	{
-		SceneName = sceneName;
+		if (!sceneName.empty())
+			SceneName = sceneName;
 
 		TypeHashToTypeID.emplace(typeid(SMetaDataComponent).hash_code(), 0);
 		RegisterNonTrivialComponent<STransformComponent, STransformComponentEditorContext>(10, 50);

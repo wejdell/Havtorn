@@ -285,7 +285,6 @@ namespace Havtorn
 
 				leftPin->LinkedPin = rightPin;
 				rightPin->LinkedPin = leftPin;
-
 			}		
 		}
 

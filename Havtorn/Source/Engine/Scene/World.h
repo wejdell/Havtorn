@@ -108,11 +108,12 @@ namespace Havtorn
 		ENGINE_API CScene* const CreateNewScene(const std::string& sceneName);
 		ENGINE_API Ptr<CScene> CreateMovableScene(const std::string& sceneName);
 
-		template<typename SceneType>
+		ENGINE_API Ptr<HexRune::SScript> CreateMovableScript(const std::string& scriptName);
+
+		template<SceneType CSceneType>
 		void CreateScene();
 
-		// Add concepts?
-		template<typename SceneType, typename ScriptType>
+		template<SceneType CSceneType, ScriptType SScriptType>
 		void BindGameTypes();
 
 		template<typename T>
@@ -215,23 +216,25 @@ namespace Havtorn
 		EWorldPlayState PlayState = EWorldPlayState::Stopped;
 		EWorldPlayDimensions PlayDimensions = EWorldPlayDimensions::World3D;
 
-		std::function<Ptr<CScene>(const std::string&)> CreateMovableSceneFunction;
 		std::function<CScene* const(const std::string&)> CreateNewSceneFunction;
+		std::function<Ptr<CScene>(const std::string&)> CreateMovableSceneFunction;
+		
+		std::function<Ptr<HexRune::SScript>(const std::string&)> CreateMovableScriptFunction;
 	};
 
-	template<typename SceneType>
+	template<SceneType CSceneType>
 	inline void CWorld::CreateScene()
 	{
-		Scenes.emplace_back(std::make_unique<SceneType>());
+		Scenes.emplace_back(std::make_unique<CSceneType>());
 		OnSceneCreatedDelegate.Broadcast(Scenes.back().get());
 	}
 
-	template<typename SceneType, typename ScriptType>
+	template<SceneType CSceneType, ScriptType SScriptType>
 	inline void CWorld::BindGameTypes()
 	{
 		CreateNewSceneFunction = [&](const std::string& sceneName) 
 			{
-				CreateScene<SceneType>();
+				CreateScene<CSceneType>();
 				CScene* scene = Scenes.back().get();
 				scene->Init(sceneName); 
 				if (GetWorldPlayDimensions() == EWorldPlayDimensions::World3D)
@@ -240,10 +243,12 @@ namespace Havtorn
 				return scene;
 			};
 
-		CreateMovableSceneFunction = [](const std::string& sceneName) { Ptr<SceneType> newScene = std::make_unique<SceneType>(); newScene->Init(sceneName); return std::move(newScene); };
+		CreateMovableSceneFunction = [](const std::string& sceneName) { Ptr<CSceneType> newScene = std::make_unique<CSceneType>(); newScene->Init(sceneName); return std::move(newScene); };
 		
-		auto loadGameScene = [&](const std::string& filePath) { return AddScene<SceneType>(filePath); };
+		auto loadGameScene = [&](const std::string& filePath) { return AddScene<CSceneType>(filePath); };
 		BindSceneLoader(loadGameScene);
+		
+		CreateMovableScriptFunction = [](const std::string& scriptName) { Ptr<SScriptType> script = std::make_unique<SScriptType>(); script->Initialize(); script->Name = scriptName; return std::move(script); };
 	}
 
 	template<typename T>

@@ -40,5 +40,6 @@ namespace Havtorn
 		DeserializeData(AssetType, fromData, pointerPosition);
 		DeserializeData(Name, fromData, pointerPosition);
 		outScript->Deserialize(fromData, pointerPosition);
+		outScript->Name = Name;
 	}
 }

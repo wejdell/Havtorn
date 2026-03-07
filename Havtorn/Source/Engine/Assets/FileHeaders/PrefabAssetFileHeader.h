@@ -2,6 +2,10 @@
 
 #pragma once
 
+#include "Engine.h"
+#include "Scene/Scene.h"
+#include "Scene/World.h"
+
 namespace Havtorn
 {
 	class CScene;
@@ -16,4 +20,30 @@ namespace Havtorn
 		void Serialize(char* toData) const;
 		void Deserialize(const char* fromData, CScene* outScene);
 	};
+
+	inline [[nodiscard]] U32 SPrefabFileHeader::GetSize() const
+	{
+		U32 size = 0;
+		size += GetDataSize(AssetType);
+		size += GetDataSize(Name);
+		size += Scene->GetSize();
+		return size;
+	}
+
+	inline void SPrefabFileHeader::Serialize(char* toData) const
+	{
+		U64 pointerPosition = 0;
+		SerializeData(AssetType, toData, pointerPosition);
+		SerializeData(Name, toData, pointerPosition);
+		Scene->Serialize(toData, pointerPosition);
+	}
+
+	inline void SPrefabFileHeader::Deserialize(const char* fromData, CScene* outScene)
+	{
+		U64 pointerPosition = 0;
+		DeserializeData(AssetType, fromData, pointerPosition);
+		DeserializeData(Name, fromData, pointerPosition);
+		outScene->Deserialize(fromData, pointerPosition);
+		outScene->SceneName = Name;
+	}
 }

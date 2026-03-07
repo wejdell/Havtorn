@@ -342,6 +342,13 @@ namespace Havtorn
             asset.SourceData = assetFile.SourceData;
         }
         break;
+        case EAssetType::Script:
+        {
+            SScriptFileHeader assetFile;
+            asset.Data = SScriptAsset(assetFile);
+            assetFile.Deserialize(data, std::get<SScriptAsset>(asset.Data).Script.get());
+        }
+        break;
         case EAssetType::Prefab:
         {
             // NW: The prefab asset owns the data and has a unique pointer to it, though it's loaded through the file header object
@@ -349,9 +356,6 @@ namespace Havtorn
             asset.Data = SPrefabAsset(assetFile);
             assetFile.Deserialize(data, std::get<SPrefabAsset>(asset.Data).Scene.get());
         }
-        break;
-        case EAssetType::Script:
-            HV_LOG_ERROR("Use RequestGameAsset Instead");
         break;
         case EAssetType::SpriteAnimation:
         case EAssetType::AudioOneShot:
@@ -448,12 +452,14 @@ namespace Havtorn
         else if (std::holds_alternative<SScriptFileHeader>(fileHeader))
         {
             SScriptFileHeader header = std::get<SScriptFileHeader>(fileHeader);
+            SScriptAsset newAsset = SScriptAsset(header);
+            header.Script = newAsset.Script.get();
+            return SaveAsset(destinationPath, header);
         }
         else if (std::holds_alternative<SSceneFileHeader>(fileHeader))
         {
             SSceneFileHeader header = std::get<SSceneFileHeader>(fileHeader);
-            CWorld* world = GEngine::GetWorld();
-            header.Scene = world->CreateNewScene(header.Name);
+            header.Scene = GEngine::GetWorld()->CreateNewScene(header.Name);
             return SaveAsset(destinationPath, header);
         }
         else if (std::holds_alternative<SPrefabFileHeader>(fileHeader))

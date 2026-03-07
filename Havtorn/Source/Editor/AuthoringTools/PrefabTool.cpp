@@ -91,6 +91,7 @@ namespace Havtorn
 		if (GUI::Button("Save"))
 		{
 			SPrefabFileHeader fileHeader;
+			fileHeader.Name = PrefabData->Scene->GetSceneName();
 			fileHeader.Scene = PrefabData->Scene.get();
 			// TODO.NW: Check redirections?
 			GEngine::GetAssetRegistry()->SaveAsset(UGeneralUtils::ExtractParentDirectoryFromPath(CurrentPrefabAssetRef.FilePath) + "/", fileHeader);			
@@ -193,9 +194,10 @@ namespace Havtorn
 
 	void CPrefabTool::OpenPrefab(SEditorAssetRepresentation* asset)
 	{
-		CurrentPrefabAssetRef = SAssetReference(asset->DirectoryEntry.path().string());
+		if (IsEnabled)
+			ClosePrefab();
 
-		// TODO.NW: Want nicer interface for opening assets and closing them when saving
+		CurrentPrefabAssetRef = SAssetReference(asset->DirectoryEntry.path().string());
 
 		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
 		PrefabData = assetRegistry->RequestAssetData<SPrefabAsset>(CurrentPrefabAssetRef, PrefabToolRenderID);
@@ -209,11 +211,12 @@ namespace Havtorn
 
 	void CPrefabTool::ClosePrefab()
 	{
+		// TODO.NW: Both MaterialTool and this tool can't handle CurrentPrefabAssetRef being invalidated by editor actions, such as
+		// deleting or renaming. We need a solid way of handling this
+
 		if (PrefabData != nullptr && PrefabData->Scene->HasEntity(Manager->GetSelectedEntity().GUID))
 			Manager->ClearSelectedEntities();
 
-		// TODO.NW: Both MaterialTool and this tool can't handle CurrentPrefabAssetRef being invalidated by editor actions, such as
-		// deleting or renaming. We need a solid way of handling this
 		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
 		assetRegistry->UnrequestAsset(CurrentPrefabAssetRef, PrefabToolRenderID);
 		assetRegistry->UnrequestAsset(PreviewSkylightAssetRef, PrefabToolRenderID);
