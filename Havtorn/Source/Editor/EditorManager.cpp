@@ -358,7 +358,6 @@ namespace Havtorn
 		if (containingScene == nullptr)
 			return SEntity::Null;
 
-		// TODO.NW: Check building mode
 		while (currentEntity.IsValid())
 		{
 			STransformComponent* transform = containingScene->GetComponent<STransformComponent>(currentEntity);
@@ -370,7 +369,7 @@ namespace Havtorn
 				return SEntity::Null;
 
 			SPrefabComponent* parentPrefabComponent = containingScene->GetComponent<SPrefabComponent>(parentEntity);
-			if (SComponent::IsValid(parentPrefabComponent))
+			if (SComponent::IsValid(parentPrefabComponent) && parentPrefabComponent->PrefabMode == EPrefabMode::Packed)
 				return parentEntity;
 
 			currentEntity = parentEntity;

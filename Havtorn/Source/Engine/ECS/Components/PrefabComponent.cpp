@@ -13,12 +13,14 @@ namespace Havtorn
     {
         SerializeData(Owner, toData, pointerPosition);
         AssetReference.Serialize(toData, pointerPosition);
+        SerializeData(PrefabMode, toData, pointerPosition);
     }
 
     void SPrefabComponent::Deserialize(const char* fromData, U64& pointerPosition)
     {
         DeserializeData(Owner, fromData, pointerPosition);
         AssetReference.Deserialize(fromData, pointerPosition);
+        DeserializeData(PrefabMode, fromData, pointerPosition);
     }
 
     U32 SPrefabComponent::GetSize() const
@@ -26,6 +28,7 @@ namespace Havtorn
         U32 size = 0;
         size += GetDataSize(Owner);
         size += AssetReference.GetSize();
+        size += GetDataSize(PrefabMode);
 
         return size;
     }
@@ -33,6 +36,10 @@ namespace Havtorn
     void SPrefabComponent::IsDeleted(CScene* fromScene)
     {
         GEngine::GetAssetRegistry()->UnrequestAsset(AssetReference, Owner.GUID);
+
+        // NW: Only handle lifetime of attachments if the prefab is packed
+        if (PrefabMode == EPrefabMode::Spawner)
+            return;
 
         STransformComponent* transformComponent = fromScene->GetComponent<STransformComponent>(Owner);
         if (!SComponent::IsValid(transformComponent))

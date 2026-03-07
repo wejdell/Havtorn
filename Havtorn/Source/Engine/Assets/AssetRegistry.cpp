@@ -186,7 +186,7 @@ namespace Havtorn
             unrequestAssetDependency(assetData.Material.Emissive);
         }
 
-        if (std::holds_alternative<SPrefabAsset>(asset->Data))
+        if (std::holds_alternative<SPrefabAsset>(asset->Data) && asset->Requesters.empty())
         {
             SPrefabAsset* assetData = &std::get<SPrefabAsset>(asset->Data);
             

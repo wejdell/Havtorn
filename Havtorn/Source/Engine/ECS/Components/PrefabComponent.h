@@ -6,6 +6,12 @@
 
 namespace Havtorn
 {
+	enum class EPrefabMode
+	{
+		Packed,
+		Spawner
+	};
+
 	struct SPrefabComponent : public SComponent
 	{
 		SPrefabComponent() = default;
@@ -24,5 +30,6 @@ namespace Havtorn
 		ENGINE_API void IsDeleted(CScene* fromScene) override;
 
 		SAssetReference AssetReference;
+		EPrefabMode PrefabMode = EPrefabMode::Packed;
 	};
 }

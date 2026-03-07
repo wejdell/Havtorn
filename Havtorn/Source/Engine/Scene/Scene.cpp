@@ -935,7 +935,6 @@ namespace Havtorn
 
 			storage.Components.pop_back();
 			storage.EntityIndices.erase(entityGUID);
-			
 		};
 
 		// TODO.NW: Build dependency graph to go through storages. Prefab components must be handled before Transforms for example
@@ -1086,6 +1085,7 @@ namespace Havtorn
 
 		for (const SEntity& otherSceneEntity : fromScene->Entities)
 		{
+			// TODO.NW: Check this name collision resolution, doesn't seem to work.
 			std::string newEntityName = "UNNAMED";
 			if (SMetaDataComponent* metaDataComponent = fromScene->GetComponent<SMetaDataComponent>(otherSceneEntity))
 			{
