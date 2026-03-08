@@ -1,6 +1,7 @@
 // Copyright 2025 Team Havtorn. All Rights Reserved.
 
 #pragma once
+
 #include "ECS/ComponentEditorContext.h"
 #include "HexRune/HexRune.h"
 

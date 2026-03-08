@@ -177,7 +177,7 @@ namespace Havtorn
             std::unordered_map<U64, U64> NodeIndices;
             
             CScene* Scene = nullptr;
-            std::string FileName = "";
+            std::string Name = "";
 
             // TODO.NW: Input params to the script (with connection to owning entity or instance properties) should be loaded from the corresponding component?
 
@@ -226,7 +226,6 @@ namespace Havtorn
                 if (!ContextTypeToStorageIndices.contains(typeIDHashCode))
                     return;
                 
-
                 SNodeContextStorage& contextStorage = ContextStorages[ContextTypeToStorageIndices.at(typeIDHashCode)];
                 std::unordered_map<U64, U64>& contextIndices = contextStorage.NodeIDToContextIndices;
                 std::vector<SNodeEditorContext*>& contexts = contextStorage.Contexts;

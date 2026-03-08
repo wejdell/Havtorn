@@ -22,9 +22,8 @@ namespace Havtorn
 				return nullptr;
 
 			SNode* node = script->AddNode<SSetPositionNode>(existingID, TypeID);
-			script->AddEditorContext<STimerNodeEditorContext>(node->UID);
+			script->AddEditorContext<SSetPositionNodeEditorContext>(node->UID);
 			return node;
 		}
-
 	}
 }

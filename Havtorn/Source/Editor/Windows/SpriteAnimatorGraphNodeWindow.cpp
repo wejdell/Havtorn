@@ -72,6 +72,8 @@ namespace Havtorn
 			RecursiveTree(&Component->Graph);
 		}
 
+		IsFocused = IsEnabled && GUI::IsWindowFocused() && GUI::IsWindowHovered();
+
 		// AS: Want to experiment with creating/saving SpriteAnimationClips
 		if (GUI::Button("Save Asset"))
 		{

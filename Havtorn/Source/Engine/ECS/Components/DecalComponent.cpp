@@ -2,6 +2,7 @@
 
 #include "hvpch.h"
 #include "DecalComponent.h"
+#include "Engine.h"
 #include "Assets/AssetRegistry.h"
 
 namespace Havtorn

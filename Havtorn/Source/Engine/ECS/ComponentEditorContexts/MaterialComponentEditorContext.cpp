@@ -4,6 +4,7 @@
 #include "MaterialComponentEditorContext.h"
 #include "ECS/Components/MaterialComponent.h"
 #include "Scene/Scene.h"
+#include "Assets/AssetReference.h"
 
 #include <GUI.h>
 

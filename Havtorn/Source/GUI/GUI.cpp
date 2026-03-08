@@ -403,7 +403,7 @@ namespace Havtorn
 
 		bool IsWindowFocused()
 		{
-			return ImGui::IsWindowFocused();
+			return ImGui::IsWindowFocused(ImGuiFocusedFlags_DockHierarchy | ImGuiFocusedFlags_RootAndChildWindows);
 		}
 
 		bool IsWindowHovered()
@@ -580,6 +580,12 @@ namespace Havtorn
 				colors.emplace_back(SColor(imColor.x, imColor.y, imColor.z, imColor.w));
 			}
 			return colors;
+		}
+
+		SColor GetStyleColor(const EStyleColor styleColor)
+		{
+			ImVec4 imColor = ImGui::GetStyle().Colors[STATIC_U64(styleColor)];
+			return SColor(imColor.x, imColor.y, imColor.z, imColor.w);
 		}
 
 		void PushStyleColor(const EStyleColor styleColor, const SColor& color)
@@ -941,9 +947,9 @@ namespace Havtorn
 			ImGui::OpenPopup(label);
 		}
 
-		bool BeginTable(const char* label, const I32 columns)
+		bool BeginTable(const char* label, const I32 columns, const I32 flags = 0)
 		{
-			return ImGui::BeginTable(label, columns);
+			return ImGui::BeginTable(label, columns, flags);
 		}
 
 		void TableNextRow()
@@ -1819,9 +1825,9 @@ namespace Havtorn
 		Instance->Impl->OpenPopup(label);
 	}
 
-	bool GUI::BeginTable(const char* label, const I32 columns)
+	bool GUI::BeginTable(const char* label, const I32 columns, const I32 flags)
 	{
-		return Instance->Impl->BeginTable(label, columns);
+		return Instance->Impl->BeginTable(label, columns, flags);
 	}
 
 	void GUI::TableNextRow()
@@ -2495,6 +2501,11 @@ namespace Havtorn
 		return Instance->Impl->GetStyleColors();
 	}
 
+	SColor GUI::GetStyleColor(const EStyleColor styleColor)
+	{
+		return Instance->Impl->GetStyleColor(styleColor);
+	}
+
 	void GUI::PushStyleColor(const EStyleColor styleColor, const SColor& color)
 	{
 		Instance->Impl->PushStyleColor(styleColor, color);
@@ -2641,7 +2652,7 @@ namespace Havtorn
 		Instance->Impl->SetWindowSize(label, size);
 	}
 
-	void GUI::SetRect(const SVector2<F32>& position, const SVector2<F32>& dimensions)
+	void GUI::SetGizmoRect(const SVector2<F32>& position, const SVector2<F32>& dimensions)
 	{
 		Instance->Impl->SetRect(position, dimensions);
 	}

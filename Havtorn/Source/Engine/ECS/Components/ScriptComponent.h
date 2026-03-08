@@ -4,7 +4,7 @@
 #include "ECS/Component.h"
 #include "HexRune/Pin.h"
 #include "HexRune/HexRune.h"
-#include "Assets/FileHeaderDeclarations.h"
+#include "Assets/AssetReference.h"
 
 namespace Havtorn
 {

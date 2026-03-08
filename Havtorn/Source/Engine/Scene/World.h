@@ -4,12 +4,21 @@
 
 #include "ECS/Entity.h"
 #include "Assets/FileHeaderDeclarations.h"
+#include <HavtornString.h>
 #include "HexPhys/HexPhys.h"
 #include <EngineException.h>
 #include <HavtornDelegate.h>
 #include <FileSystem.h>
 
+#include "Graphics/GraphicsStructs.h"
+#include "Graphics/GraphicsEnums.h"
+#include "Scene/Scene.h"
+#include "Assets/SequencerAsset.h"
+#include "Assets/FileHeaders/PrefabAssetFileHeader.h"
+#include "HexRune/HexRune.h"
+
 #include <queue>
+#include <concepts>
 
 namespace Havtorn
 {
@@ -24,6 +33,12 @@ namespace Havtorn
 	class CAssetRegistry;
 	class CSequencerSystem;
 	class CScene;
+
+	template<typename T>
+	concept SceneType = std::derived_from<T, CScene>;
+
+	template<typename T>
+	concept ScriptType = std::derived_from<T, HexRune::SScript>;
 
 	namespace HexPhys2D
 	{
@@ -90,8 +105,16 @@ namespace Havtorn
 		
 		ENGINE_API void BindSceneLoader(const std::function<bool(const std::string&)>& loadingFunction);
 
-		template<typename T>
+		ENGINE_API CScene* const CreateNewScene(const std::string& sceneName);
+		ENGINE_API Ptr<CScene> CreateMovableScene(const std::string& sceneName);
+
+		ENGINE_API Ptr<HexRune::SScript> CreateMovableScript(const std::string& scriptName);
+
+		template<SceneType CSceneType>
 		void CreateScene();
+
+		template<SceneType CSceneType, ScriptType SScriptType>
+		void BindGameTypes();
 
 		template<typename T>
 		bool AddScene(const std::string& filePath);
@@ -102,27 +125,27 @@ namespace Havtorn
 		template<typename T>
 		void OpenDemoScene(const bool shouldOpen3DDemo = true);
 
-		template<class T>
+		template<typename T>
 		inline T* GetSystem();
 
-		template<class T>
+		template<typename T>
 		inline SSystemData* GetSystemHolder();
 
-		template<class T>
+		template<typename T>
 		inline bool HasSystem();
 
-		template<class T, typename... Args>
+		template<typename T, typename... Args>
 		inline void RequestSystem(void* requester, Args&&... args);
 
-		template<class T>
+		template<typename T>
 		inline void UnrequestSystem(void* requester);
 
 		ENGINE_API inline void UnrequestSystems(void* requester);
 
-		template<class T>
+		template<typename T>
 		inline void BlockSystem(void* requester);
 
-		template<class T>
+		template<typename T>
 		inline void UnblockSystem(void* requester);
 
 		ENGINE_API void RequestPhysicsSystem(void* requester);
@@ -173,7 +196,7 @@ namespace Havtorn
 
 		ENGINE_API void LoadScene(const std::string& filePath, CScene* outScene) const;
 
-		void OnSceneCreated(CScene* scene) const;
+		void OnSceneCreated(CScene* const scene) const;
 
 	private:
 		std::vector<Ptr<CScene>> Scenes;
@@ -188,18 +211,44 @@ namespace Havtorn
 
 		SEntity MainCameraEntity = SEntity::Null;
 
-		CMulticastDelegate<CScene*> OnSceneCreatedDelegate;
+		CMulticastDelegate<CScene* const> OnSceneCreatedDelegate;
 
 		EWorldPlayState PlayState = EWorldPlayState::Stopped;
 		EWorldPlayDimensions PlayDimensions = EWorldPlayDimensions::World3D;
+
+		std::function<CScene* const(const std::string&)> CreateNewSceneFunction;
+		std::function<Ptr<CScene>(const std::string&)> CreateMovableSceneFunction;
+		
+		std::function<Ptr<HexRune::SScript>(const std::string&)> CreateMovableScriptFunction;
 	};
 
-	template<typename T>
+	template<SceneType CSceneType>
 	inline void CWorld::CreateScene()
 	{
-		static_assert(std::derived_from<T, CScene> == true);
-		Scenes.emplace_back(std::make_unique<T>());
+		Scenes.emplace_back(std::make_unique<CSceneType>());
 		OnSceneCreatedDelegate.Broadcast(Scenes.back().get());
+	}
+
+	template<SceneType CSceneType, ScriptType SScriptType>
+	inline void CWorld::BindGameTypes()
+	{
+		CreateNewSceneFunction = [&](const std::string& sceneName) 
+			{
+				CreateScene<CSceneType>();
+				CScene* scene = Scenes.back().get();
+				scene->Init(sceneName); 
+				if (GetWorldPlayDimensions() == EWorldPlayDimensions::World3D)
+					scene->Init3DDefaults();
+
+				return scene;
+			};
+
+		CreateMovableSceneFunction = [](const std::string& sceneName) { Ptr<CSceneType> newScene = std::make_unique<CSceneType>(); newScene->Init(sceneName); return std::move(newScene); };
+		
+		auto loadGameScene = [&](const std::string& filePath) { return AddScene<CSceneType>(filePath); };
+		BindSceneLoader(loadGameScene);
+		
+		CreateMovableScriptFunction = [](const std::string& scriptName) { Ptr<SScriptType> script = std::make_unique<SScriptType>(); script->Initialize(); script->Name = scriptName; return std::move(script); };
 	}
 
 	template<typename T>
@@ -250,7 +299,7 @@ namespace Havtorn
 		}
 	}
 
-	template<class T>
+	template<typename T>
 	inline T* CWorld::GetSystem()
 	{
 		U64 targetHashCode = typeid(T).hash_code();
@@ -263,7 +312,7 @@ namespace Havtorn
 		return nullptr;
 	}
 
-	template <class T>
+	template<typename T>
 	SSystemData* CWorld::GetSystemHolder()
 	{
 		U64 targetHashCode = typeid(T).hash_code();
@@ -276,13 +325,13 @@ namespace Havtorn
 		return nullptr;
 	}
 
-	template<class T>
+	template<typename T>
 	inline bool CWorld::HasSystem()
 	{
 		return GetSystem<T>() != nullptr;
 	}
 
-	template <class T, typename... Args>
+	template<typename T, typename... Args>
 	void CWorld::RequestSystem(void* requester, Args&&... args)
 	{
 		SSystemData* holder = GetSystemHolder<T>();
@@ -295,7 +344,7 @@ namespace Havtorn
 		holder->Requesters.push_back(reinterpret_cast<U64>(requester));
 	}
 
-	template <class T>
+	template<typename T>
 	void CWorld::UnrequestSystem(void* requester)
 	{
 		SSystemData* holder = GetSystemHolder<T>();
@@ -307,7 +356,7 @@ namespace Havtorn
 			SystemData.erase(std::ranges::find(SystemData, *holder));
 	}
 
-	template <class T>
+	template<typename T>
 	void CWorld::BlockSystem(void* requester)
 	{
 		SSystemData* holder = GetSystemHolder<T>();
@@ -317,7 +366,7 @@ namespace Havtorn
 		holder->Blockers.push_back(reinterpret_cast<U64>(requester));
 	}
 
-	template <class T>
+	template<typename T>
 	void CWorld::UnblockSystem(void* requester)
 	{
 		SSystemData* holder = GetSystemHolder<T>();

@@ -78,12 +78,12 @@ namespace Havtorn
 		Windows.emplace_back(std::make_unique<COutputLogWindow>("Output Log", this));
 		Windows.emplace_back(std::make_unique<CHierarchyWindow>("Hierarchy", this));
 		Windows.emplace_back(std::make_unique<CInspectorWindow>("Inspector", this));
+
 		Windows.emplace_back(std::make_unique<CSpriteAnimatorGraphNodeWindow>("Sprite Animator", this));
-		Windows.back()->SetEnabled(false);
 		Windows.emplace_back(std::make_unique<CMaterialTool>("Material Editor", this));
-		Windows.back()->SetEnabled(false);
 		Windows.emplace_back(std::make_unique<CScriptTool>("Script Editor", this));
-		Windows.back()->SetEnabled(false);
+		Windows.emplace_back(std::make_unique<CInputTool>("Input Editor", this));
+		Windows.emplace_back(std::make_unique<CPrefabTool>("Prefab Editor", this));
 
 		ResourceManager = new CEditorResourceManager();
 		bool success = ResourceManager->Init(this, renderManager);
@@ -167,12 +167,7 @@ namespace Havtorn
 			if (window->GetEnabled())
 				window->OnInspectorGUI();
 
-			if (!window->WasEnabled && window->GetEnabled())
-				window->OnEnable();
-			if (window->WasEnabled && !window->GetEnabled())
-				window->OnDisable();
-
-			window->WasEnabled = window->GetEnabled();
+			window->UpdateState();
 		}
 
 		ReinitEditorLayout();
@@ -306,6 +301,24 @@ namespace Havtorn
 		return World->GetActiveScenes();
 	}
 
+	CScene* CEditorManager::GetContainingScene(const SEntity& entity) const
+	{
+		CScene* containingScene = UComponentAlgo::GetContainingScene(entity, World->GetActiveScenes());
+
+		if (containingScene == nullptr)
+		{
+			CPrefabTool* prefabTool = GetEditorWindow<CPrefabTool>();
+			if (prefabTool != nullptr && prefabTool->GetEnabled())
+			{
+				CScene* prefabScene = prefabTool->GetWorkingScene();
+				if (prefabScene->HasEntity(entity.GUID))
+					return prefabScene;
+			}
+		}
+
+		return containingScene;
+	}
+
 	void CEditorManager::SetSelectedEntity(const SEntity& entity)
 	{
 		ClearSelectedEntities();
@@ -314,7 +327,11 @@ namespace Havtorn
 
 	void CEditorManager::AddSelectedEntity(const SEntity& entity)
 	{
-		SelectedEntities.emplace_back(entity);
+		SEntity prefabParent = GetPackedPrefabParent(entity);
+		if (prefabParent.IsValid())
+			SelectedEntities.emplace_back(prefabParent);
+		else
+			SelectedEntities.emplace_back(entity);
 	}
 
 	void CEditorManager::RemoveSelectedEntity(const SEntity& entity)
@@ -347,6 +364,39 @@ namespace Havtorn
 	std::vector<SEntity> CEditorManager::GetSelectedEntities() const
 	{
 		return SelectedEntities;
+	}
+
+	bool CEditorManager::IsEntityInsidePackedPrefab(const SEntity& entity) const
+	{
+		return GetPackedPrefabParent(entity).IsValid();
+	}
+
+	SEntity CEditorManager::GetPackedPrefabParent(const SEntity& entity) const
+	{
+		SEntity currentEntity = entity;
+		CScene* containingScene = GetContainingScene(currentEntity);
+
+		if (containingScene == nullptr)
+			return SEntity::Null;
+
+		while (currentEntity.IsValid())
+		{
+			STransformComponent* transform = containingScene->GetComponent<STransformComponent>(currentEntity);
+			if (!SComponent::IsValid(transform))
+				return SEntity::Null;
+
+			SEntity parentEntity = transform->ParentEntity;
+			if (!parentEntity.IsValid())
+				return SEntity::Null;
+
+			SPrefabComponent* parentPrefabComponent = containingScene->GetComponent<SPrefabComponent>(parentEntity);
+			if (SComponent::IsValid(parentPrefabComponent) && parentPrefabComponent->PrefabMode == EPrefabMode::Packed)
+				return parentEntity;
+
+			currentEntity = parentEntity;
+		};
+
+		return SEntity::Null;
 	}
 
 	void CEditorManager::SetSelectedAsset(SEditorAssetRepresentation* asset)
@@ -447,6 +497,9 @@ namespace Havtorn
 			break;
 		case EAssetType::Script:
 			repRenderTexture = ResourceManager->GetStaticEditorTextureResource(EEditorTexture::ScriptIcon);
+			break;
+		case EAssetType::Prefab:
+			repRenderTexture = ResourceManager->GetStaticEditorTextureResource(EEditorTexture::PrefabIcon);
 			break;
 		default:
 			break;
@@ -559,122 +612,17 @@ namespace Havtorn
 		{
 			GEngine::GetWorld()->ChangeScene<CGameScene>(asset->DirectoryEntry.path().string());
 			SetCurrentWorkingScene(0);
-		} 
-	}
+		}
 
-	void CEditorManager::SetEditorTheme(EEditorColorTheme colorTheme, EEditorStyleTheme styleTheme, F32 darknessOffset)
-	{
-	    auto applyDarkness = [darknessOffset](F32 r, F32 g, F32 b, F32 a = 1.0f) -> SColor
-	    {
-	        return SColor(r * darknessOffset, g * darknessOffset, b * darknessOffset, a);
-	    };
+		if (asset->AssetType == EAssetType::InputAsset)
+		{
+			GetEditorWindow<CInputTool>()->OpenInputAsset(asset);
+		}
 
-	    switch (colorTheme)
-	    {
-	    case EEditorColorTheme::HavtornYellow:
-	    {
-	        SGuiColorProfile colorProfile(
-	            applyDarkness(0.11f,  0.11f,  0.11f),
-	            applyDarkness(0.198f, 0.198f, 0.198f),
-	            applyDarkness(0.278f, 0.271f, 0.267f),
-	            applyDarkness(0.694f, 0.573f, 0.129f),
-	            applyDarkness(0.918f, 0.722f, 0.055f),
-	            applyDarkness(1.00f,  0.855f, 0.165f)
-	        );
-	        GUI::SetGuiColorProfile(colorProfile);
-	    }
-	    break;
-	    case EEditorColorTheme::HavtornRed:
-	    {
-	        SGuiColorProfile colorProfile(
-	            applyDarkness(0.11f,  0.11f,  0.11f),
-	            applyDarkness(0.198f, 0.198f, 0.198f),
-	            applyDarkness(0.278f, 0.271f, 0.267f),
-	            applyDarkness(0.478f, 0.188f, 0.188f),
-	            applyDarkness(0.814f, 0.00f,  0.00f),
-	            applyDarkness(1.00f,  0.00f,  0.00f)
-	        );
-	        GUI::SetGuiColorProfile(colorProfile);
-	    }
-	    break;
-	    case EEditorColorTheme::HavtornGreen:
-	    {
-	        SGuiColorProfile colorProfile(
-	            applyDarkness(0.11f,  0.11f,  0.11f),
-	            applyDarkness(0.198f, 0.198f, 0.198f),
-	            applyDarkness(0.278f, 0.271f, 0.267f),
-	            applyDarkness(0.355f, 0.478f, 0.188f),
-	            applyDarkness(0.469f, 0.814f, 0.00f),
-	            applyDarkness(0.576f, 1.00f,  0.00f)
-	        );
-	        GUI::SetGuiColorProfile(colorProfile);
-	    }
-	    break;
-	    case EEditorColorTheme::HavtornDarkBlue:
-	    {
-	        SGuiColorProfile colorProfile(
-	            applyDarkness(0.11f,  0.11f,  0.11f),
-	            applyDarkness(0.198f, 0.198f, 0.198f),
-	            applyDarkness(0.278f, 0.271f, 0.267f),
-	            applyDarkness(0.188f, 0.278f, 0.478f),
-	            applyDarkness(0.00f,  0.314f, 0.814f),
-	            applyDarkness(0.00f,  0.376f, 1.00f)
-	        );
-	        GUI::SetGuiColorProfile(colorProfile);
-	    }
-	    break;
-	    case EEditorColorTheme::HavtornLightBlue:
-	    {
-	        SGuiColorProfile colorProfile(
-	            applyDarkness(0.11f,  0.11f,  0.11f),
-	            applyDarkness(0.198f, 0.198f, 0.198f),
-	            applyDarkness(0.278f, 0.271f, 0.267f),
-	            applyDarkness(0.318f, 0.478f, 0.678f),
-	            applyDarkness(0.469f, 0.714f, 0.914f),
-	            applyDarkness(0.576f, 0.824f, 1.00f)
-	        );
-	        GUI::SetGuiColorProfile(colorProfile);
-	    }
-	    break;
-	    case EEditorColorTheme::HavtornPurple:
-	    {
-	        SGuiColorProfile colorProfile(
-	            applyDarkness(0.11f,  0.11f,  0.11f),
-	            applyDarkness(0.198f, 0.198f, 0.198f),
-	            applyDarkness(0.278f, 0.271f, 0.267f),
-	            applyDarkness(0.361f, 0.278f, 0.478f),
-	            applyDarkness(0.561f, 0.314f, 0.814f),
-	            applyDarkness(0.686f, 0.376f, 1.00f)
-	        );
-	        GUI::SetGuiColorProfile(colorProfile);
-	    }
-	    break;
-	    case EEditorColorTheme::HavtornPink:
-	    {
-	        SGuiColorProfile colorProfile(
-	            applyDarkness(0.11f,  0.11f,  0.11f),
-	            applyDarkness(0.198f, 0.198f, 0.198f),
-	            applyDarkness(0.278f, 0.271f, 0.267f),
-	            applyDarkness(0.478f, 0.278f, 0.361f),
-	            applyDarkness(0.814f, 0.314f, 0.561f),
-	            applyDarkness(1.00f,  0.376f, 0.686f)
-	        );
-	        GUI::SetGuiColorProfile(colorProfile);
-	    }
-	    break;
-	    case EEditorColorTheme::Count:
-	        break;
-	    }
-
-	    switch (styleTheme)
-	    {
-	    case EEditorStyleTheme::Havtorn:
-	        GUI::SetGuiStyleProfile(SGuiStyleProfile());
-	        break;
-	    case EEditorStyleTheme::Count:
-	    case EEditorStyleTheme::Default:
-	        break;
-	    }
+		if (asset->AssetType == EAssetType::Prefab)
+		{
+			GetEditorWindow<CPrefabTool>()->OpenPrefab(asset);
+		}
 	}
 
 
@@ -993,8 +941,7 @@ namespace Havtorn
 		if (!firstSelectedEntity.IsValid())
 			return;
 
-		const std::vector<Ptr<CScene>>& scenes = World->GetActiveScenes();
-		CScene* currentScene = UComponentAlgo::GetContainingScene(firstSelectedEntity, scenes);
+		CScene* currentScene = GetContainingScene(firstSelectedEntity);
 		if (currentScene == nullptr)
 			return;
 
@@ -1059,7 +1006,7 @@ namespace Havtorn
 
 		mainCameraData.TransformComponent->Transform.SetMatrix(newMatrix);
 		
-		CScene* mainCameraScene = UComponentAlgo::GetContainingScene(mainCamera, scenes);
+		CScene* mainCameraScene = GetContainingScene(mainCamera);
 		if (SCameraControllerComponent* controllerComp = mainCameraScene->GetComponent<SCameraControllerComponent>(mainCamera))
 		{
 			SVector currentEuler = mainCameraData.TransformComponent->Transform.GetMatrix().GetEuler();
@@ -1073,13 +1020,19 @@ namespace Havtorn
 		if (!payload.IsPressed)
 			return;
 
-		const std::vector<Ptr<CScene>>& scenes = World->GetActiveScenes();
 		for (SEntity& selectedEntity : GetSelectedEntities())
 		{
-			CScene* currentScene = UComponentAlgo::GetContainingScene(selectedEntity, scenes);
+			CScene* currentScene = GetContainingScene(selectedEntity);
 			if (currentScene == nullptr)
 				continue;
 
+			if (IsEntityInsidePackedPrefab(selectedEntity))
+			{
+				SMetaDataComponent* metaDataComponent = currentScene->GetComponent<SMetaDataComponent>(selectedEntity);
+				const std::string entityName = SComponent::IsValid(metaDataComponent) ? metaDataComponent->Name.AsString() : "UNNAMED";
+				HV_LOG_WARN("CEditorManager::OnDeleteEvent: Can't delete entity %s from inside packed prefab! Use Prefab Editor or unpack the prefab.", entityName.c_str());
+				continue;
+			}
 			currentScene->RemoveEntity(selectedEntity);
 		}
 		

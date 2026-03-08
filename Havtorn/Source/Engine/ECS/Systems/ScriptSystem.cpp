@@ -2,6 +2,7 @@
 
 #include "hvpch.h"
 #include "ScriptSystem.h"
+#include "Engine.h"
 #include "Scene/World.h"
 #include "Scene/Scene.h"
 #include "Assets/AssetRegistry.h"
@@ -40,8 +41,8 @@ namespace Havtorn
 				if (!SComponent::IsValid(component) || !component->AssetReference.IsValid())
 					continue;
 
-				HexRune::SScript* script = nullptr;
-				script = GEngine::GetAssetRegistry()->RequestGameAssetData(script, component->AssetReference, component->Owner.GUID);
+				const SScriptAsset* scriptAsset = GEngine::GetAssetRegistry()->RequestAssetData<SScriptAsset>(component->AssetReference, component->Owner.GUID);
+				HexRune::SScript* script = scriptAsset->Script.get();
 
 				if (component->DataBindings.size() != script->DataBindings.size())
 				{

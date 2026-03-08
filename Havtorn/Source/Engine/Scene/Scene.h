@@ -388,13 +388,16 @@ namespace Havtorn
 		ENGINE_API void ClearScene();
 		ENGINE_API void MoveEntityToScene(const SEntity& entity, CScene* fromScene);
 		ENGINE_API SEntity CopyEntity(const SEntity& fromEntity);
+		ENGINE_API std::vector<SEntity> CopyEntities(CScene* fromScene);
+
+		// NW: Sorted leaf-entities first, INCLUDES parent
+		ENGINE_API void GetAttachedEntities(const SEntity& parentEntity, std::vector<SEntity>& outEntities);
 
 		template<typename T>
 		const SEntity& GetEntity(const T* fromComponent) const
 		{
 			return fromComponent->Owner;
 		}
-
 
 		template<typename T>
 		T* GetComponent(const SEntity& fromEntity) const

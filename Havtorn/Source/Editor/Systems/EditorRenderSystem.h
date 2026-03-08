@@ -19,6 +19,8 @@ namespace Havtorn
 
 		void Update(std::vector<Ptr<CScene>>& scenes) override;
 
+		EDITOR_API void PushCommandsForScene(CScene* scene, const U64& renderViewID, const SMatrix& cameraMatrix);
+
 		void OnEntityPreDestroy(const SEntity entity);
 
 	private:

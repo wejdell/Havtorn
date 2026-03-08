@@ -43,6 +43,8 @@
 //	{
 //		if (ImGui::Begin(Name(), &IsEnabled))
 //		{
+//			IsFocused = IsEnabled && GUI::IsWindowFocused() && GUI::IsWindowHovered();
+// 
 //			FileControls();
 //
 //			Havtorn::SSequencerContextData contextData = SequencerSystem->GetSequencerContextData();

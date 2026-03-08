@@ -22,6 +22,5 @@ namespace Havtorn
 		NodeFactory->RegisterNodeType<HexRune::SInterpolatePosition, HexRune::SInterpolatePositionNodeEditorContext>(this, typeId++);
 		NodeFactory->RegisterNodeType<HexRune::STimerNode, HexRune::STimerNodeEditorContext>(this, typeId++);
 		NodeFactory->RegisterNodeType<HexRune::SSetPositionNode, HexRune::SSetPositionNodeEditorContext>(this, typeId++);
-
 	}
 }

@@ -299,6 +299,7 @@ namespace Havtorn
 
 			//std::vector<SMatrix> boneTransforms = GEngine::GetWorld()->GetSystem<CAnimatorGraphSystem>()->ReadAssetAnimationPose(filePath, animationTime);
 			//RenderManager->RenderSkeletalAnimationAssetTexture(assetTexture, filePath, boneTransforms);
+			break;
 		}
 		case EAssetType::AudioOneShot:
 			break;
@@ -322,7 +323,7 @@ namespace Havtorn
 
 	std::string CEditorResourceManager::CreateAsset(const std::string& destinationPath, const SAssetFileHeader& fileHeader) const
 	{
-		return GEngine::GetAssetRegistry()->SaveAsset(destinationPath, fileHeader);
+		return GEngine::GetAssetRegistry()->CreateNewAsset(destinationPath, fileHeader);
 	}
 
 	std::string CEditorResourceManager::ConvertToHVA(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions) const
@@ -431,6 +432,12 @@ namespace Havtorn
 
 		case EEditorTexture::GetFromSource:
 			return ResourceAssetPath + prefix + "GetFromSource" + extension;
+
+		case EEditorTexture::PrefabIcon:
+			return ResourceAssetPath + prefix + "PrefabIcon" + extension;
+
+		case EEditorTexture::PrefabWidgetIcon:
+			return ResourceAssetPath + prefix + "PrefabWidgetIcon" + extension;
 		
 		case EEditorTexture::Count:
 		default:

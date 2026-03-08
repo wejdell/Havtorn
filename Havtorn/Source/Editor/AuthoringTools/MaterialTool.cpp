@@ -24,7 +24,7 @@ namespace Havtorn
 	using namespace HexRune;
 
 	CMaterialTool::CMaterialTool(const char* displayName, CEditorManager* manager)
-		: CWindow(displayName, manager)
+		: CWindow(displayName, manager, false)
 	{
 		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Zoom).AddMember(this, &CMaterialTool::OnZoomInput);
 		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MouseDeltaHorizontal).AddMember(this, &CMaterialTool::HandleAxisInput);
@@ -44,6 +44,8 @@ namespace Havtorn
 			GUI::End();
 			return;
 		}
+
+		IsFocused = IsEnabled && GUI::IsWindowFocused() && GUI::IsWindowHovered();
 
 		if (CurrentMaterial == nullptr)
 		{

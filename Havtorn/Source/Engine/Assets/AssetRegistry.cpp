@@ -1,9 +1,9 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
+#include "hvpch.h"
 #include "AssetRegistry.h"
-#include "Assets/FileHeaderDeclarations.h"
+#include "Engine.h"
 #include "FileSystem/FileWatcher.h"
-#include "Assets/RuntimeAssetDeclarations.h"
 #include "ECS/GUIDManager.h"
 
 #include "Graphics/RenderManager.h"
@@ -153,6 +153,8 @@ namespace Havtorn
             requestAssetDependency(assetData.Material.Roughness);
             requestAssetDependency(assetData.Material.Emissive);
         }
+
+        // TODO.NW: Request dependencies in internal prefab scene if there are any?
     }
 
     void CAssetRegistry::UnrequestDependencies(const U32 assetUID, const U64 requesterID)
@@ -182,6 +184,14 @@ namespace Havtorn
             unrequestAssetDependency(assetData.Material.Metalness);
             unrequestAssetDependency(assetData.Material.Roughness);
             unrequestAssetDependency(assetData.Material.Emissive);
+        }
+
+        if (std::holds_alternative<SPrefabAsset>(asset->Data) && asset->Requesters.empty())
+        {
+            SPrefabAsset* assetData = &std::get<SPrefabAsset>(asset->Data);
+            
+            // NW: Unload all assets used by the internal scene before unloading the prefab itself. Otherwise we thread lock in RemoveAsset
+            assetData->Scene->ClearScene();
         }
     }
 
@@ -333,7 +343,19 @@ namespace Havtorn
         }
         break;
         case EAssetType::Script:
-            HV_LOG_ERROR("Use RequestGameAsset Instead");
+        {
+            SScriptFileHeader assetFile;
+            asset.Data = SScriptAsset(assetFile);
+            assetFile.Deserialize(data, std::get<SScriptAsset>(asset.Data).Script.get());
+        }
+        break;
+        case EAssetType::Prefab:
+        {
+            // NW: The prefab asset owns the data and has a unique pointer to it, though it's loaded through the file header object
+            SPrefabFileHeader assetFile;
+            asset.Data = SPrefabAsset(assetFile);
+            assetFile.Deserialize(data, std::get<SPrefabAsset>(asset.Data).Scene.get());
+        }
         break;
         case EAssetType::SpriteAnimation:
         case EAssetType::AudioOneShot:
@@ -393,6 +415,65 @@ namespace Havtorn
     {
         std::unique_lock lock(RegistryMutex);
         LoadedAssets.erase(assetUID);
+    }
+
+    std::string CAssetRegistry::CreateNewAsset(const std::string& destinationPath, const SAssetFileHeader& fileHeader)
+    {
+        // TODO.NW: See if we can make char stream we can then convert to data buffer,
+                // so as to not repeat the logic for every case
+
+        //std::vector<std::string> paths = UFileSystem::SplitPath(destinationPath);
+        //for (std::string& path : paths)
+        //{
+        //    if (!UFileSystem::Exists(path))
+        //        UFileSystem::AddDirectory(path);
+        //}
+
+        std::string hvaPath = "INVALID_PATH";
+        if (std::holds_alternative<SStaticModelFileHeader>(fileHeader))
+        {
+        }
+        else if (std::holds_alternative<SSkeletalModelFileHeader>(fileHeader))
+        {
+        }
+        else if (std::holds_alternative<SSkeletalAnimationFileHeader>(fileHeader))
+        {
+        }
+        else if (std::holds_alternative<STextureFileHeader>(fileHeader))
+        {
+        }
+        else if (std::holds_alternative<STextureCubeFileHeader>(fileHeader))
+        {
+        }
+        else if (std::holds_alternative<SMaterialAssetFileHeader>(fileHeader))
+        {
+            SMaterialAssetFileHeader header = std::get<SMaterialAssetFileHeader>(fileHeader);
+        }
+        else if (std::holds_alternative<SScriptFileHeader>(fileHeader))
+        {
+            SScriptFileHeader header = std::get<SScriptFileHeader>(fileHeader);
+            SScriptAsset newAsset = SScriptAsset(header);
+            header.Script = newAsset.Script.get();
+            return SaveAsset(destinationPath, header);
+        }
+        else if (std::holds_alternative<SSceneFileHeader>(fileHeader))
+        {
+            SSceneFileHeader header = std::get<SSceneFileHeader>(fileHeader);
+            header.Scene = GEngine::GetWorld()->CreateNewScene(header.Name);
+            return SaveAsset(destinationPath, header);
+        }
+        else if (std::holds_alternative<SPrefabFileHeader>(fileHeader))
+        {
+            SPrefabFileHeader header = std::get<SPrefabFileHeader>(fileHeader);
+            SPrefabAsset newAsset = SPrefabAsset(header);
+            header.Scene = newAsset.Scene.get();
+            return SaveAsset(destinationPath, header);
+        }
+
+        if (hvaPath == "INVALID_PATH")
+            HV_LOG_WARN("CAssetRegistry::CreateNewAsset: The chosen file header asset type can not be created from the engine. Did you mean to import it? Could not create new asset at %s!", destinationPath.c_str());
+
+        return hvaPath;
     }
 
     std::string CAssetRegistry::ImportAsset(const std::string& filePath, const std::string& destinationPath, const SSourceAssetData& sourceData)
@@ -460,6 +541,12 @@ namespace Havtorn
             break;
         case EAssetType::AudioCollection:
             break;
+
+        case EAssetType::InputAsset: 
+        {
+
+        }
+        break;
         }
 
         if (hvaPath == "INVALID_PATH")
@@ -563,6 +650,26 @@ namespace Havtorn
             U64 pointerPosition = 0;
             header.Serialize(data, pointerPosition);
             hvaPath = destinationPath + header.Scene->GetSceneName() + ".hva";
+            UFileSystem::Serialize(hvaPath, &data[0], size);
+            delete[] data;
+        }
+        else if (std::holds_alternative<SInputAssetFileHeader>(fileHeader)) 
+        {
+            SInputAssetFileHeader header = std::get<SInputAssetFileHeader>(fileHeader);
+            U32 size = header.GetSize();
+            const auto data = new char[size];
+            header.Serialize(data);
+            hvaPath = destinationPath + header.Name + ".hva";
+            UFileSystem::Serialize(hvaPath, &data[0], size);
+            delete[] data;
+        }
+        else if (std::holds_alternative<SPrefabFileHeader>(fileHeader))
+        {
+            SPrefabFileHeader header = std::get<SPrefabFileHeader>(fileHeader);
+            U32 size = header.GetSize();
+            const auto data = new char[size];
+            header.Serialize(data);
+            hvaPath = destinationPath + header.Name + ".hva";
             UFileSystem::Serialize(hvaPath, &data[0], size);
             delete[] data;
         }
