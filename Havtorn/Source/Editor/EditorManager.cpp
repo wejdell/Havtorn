@@ -625,6 +625,120 @@ namespace Havtorn
 		}
 	}
 
+	void CEditorManager::SetEditorTheme(EEditorColorTheme colorTheme, EEditorStyleTheme styleTheme, F32 darknessOffset)
+	{
+	    auto applyDarkness = [darknessOffset](F32 r, F32 g, F32 b, F32 a = 1.0f) -> SColor
+	    {
+	        return SColor(r * darknessOffset, g * darknessOffset, b * darknessOffset, a);
+	    };
+
+	    switch (colorTheme)
+	    {
+	    case EEditorColorTheme::HavtornYellow:
+	    {
+	        SGuiColorProfile colorProfile(
+	            applyDarkness(0.11f,  0.11f,  0.11f),
+	            applyDarkness(0.198f, 0.198f, 0.198f),
+	            applyDarkness(0.278f, 0.271f, 0.267f),
+	            applyDarkness(0.694f, 0.573f, 0.129f),
+	            applyDarkness(0.918f, 0.722f, 0.055f),
+	            applyDarkness(1.00f,  0.855f, 0.165f)
+	        );
+	        GUI::SetGuiColorProfile(colorProfile);
+	    }
+	    break;
+	    case EEditorColorTheme::HavtornRed:
+	    {
+	        SGuiColorProfile colorProfile(
+	            applyDarkness(0.11f,  0.11f,  0.11f),
+	            applyDarkness(0.198f, 0.198f, 0.198f),
+	            applyDarkness(0.278f, 0.271f, 0.267f),
+	            applyDarkness(0.478f, 0.188f, 0.188f),
+	            applyDarkness(0.814f, 0.00f,  0.00f),
+	            applyDarkness(1.00f,  0.00f,  0.00f)
+	        );
+	        GUI::SetGuiColorProfile(colorProfile);
+	    }
+	    break;
+	    case EEditorColorTheme::HavtornGreen:
+	    {
+	        SGuiColorProfile colorProfile(
+	            applyDarkness(0.11f,  0.11f,  0.11f),
+	            applyDarkness(0.198f, 0.198f, 0.198f),
+	            applyDarkness(0.278f, 0.271f, 0.267f),
+	            applyDarkness(0.355f, 0.478f, 0.188f),
+	            applyDarkness(0.469f, 0.814f, 0.00f),
+	            applyDarkness(0.576f, 1.00f,  0.00f)
+	        );
+	        GUI::SetGuiColorProfile(colorProfile);
+	    }
+	    break;
+	    case EEditorColorTheme::HavtornDarkBlue:
+	    {
+	        SGuiColorProfile colorProfile(
+	            applyDarkness(0.11f,  0.11f,  0.11f),
+	            applyDarkness(0.198f, 0.198f, 0.198f),
+	            applyDarkness(0.278f, 0.271f, 0.267f),
+	            applyDarkness(0.188f, 0.278f, 0.478f),
+	            applyDarkness(0.00f,  0.314f, 0.814f),
+	            applyDarkness(0.00f,  0.376f, 1.00f)
+	        );
+	        GUI::SetGuiColorProfile(colorProfile);
+	    }
+	    break;
+	    case EEditorColorTheme::HavtornLightBlue:
+	    {
+	        SGuiColorProfile colorProfile(
+	            applyDarkness(0.11f,  0.11f,  0.11f),
+	            applyDarkness(0.198f, 0.198f, 0.198f),
+	            applyDarkness(0.278f, 0.271f, 0.267f),
+	            applyDarkness(0.318f, 0.478f, 0.678f),
+	            applyDarkness(0.469f, 0.714f, 0.914f),
+	            applyDarkness(0.576f, 0.824f, 1.00f)
+	        );
+	        GUI::SetGuiColorProfile(colorProfile);
+	    }
+	    break;
+	    case EEditorColorTheme::HavtornPurple:
+	    {
+	        SGuiColorProfile colorProfile(
+	            applyDarkness(0.11f,  0.11f,  0.11f),
+	            applyDarkness(0.198f, 0.198f, 0.198f),
+	            applyDarkness(0.278f, 0.271f, 0.267f),
+	            applyDarkness(0.361f, 0.278f, 0.478f),
+	            applyDarkness(0.561f, 0.314f, 0.814f),
+	            applyDarkness(0.686f, 0.376f, 1.00f)
+	        );
+	        GUI::SetGuiColorProfile(colorProfile);
+	    }
+	    break;
+	    case EEditorColorTheme::HavtornPink:
+	    {
+	        SGuiColorProfile colorProfile(
+	            applyDarkness(0.11f,  0.11f,  0.11f),
+	            applyDarkness(0.198f, 0.198f, 0.198f),
+	            applyDarkness(0.278f, 0.271f, 0.267f),
+	            applyDarkness(0.478f, 0.278f, 0.361f),
+	            applyDarkness(0.814f, 0.314f, 0.561f),
+	            applyDarkness(1.00f,  0.376f, 0.686f)
+	        );
+	        GUI::SetGuiColorProfile(colorProfile);
+	    }
+	    break;
+	    case EEditorColorTheme::Count:
+	        break;
+	    }
+
+	    switch (styleTheme)
+	    {
+	    case EEditorStyleTheme::Havtorn:
+	        GUI::SetGuiStyleProfile(SGuiStyleProfile());
+	        break;
+	    case EEditorStyleTheme::Count:
+	    case EEditorStyleTheme::Default:
+	        break;
+	    }
+	}
 
 	std::string CEditorManager::GetEditorColorThemeName(const EEditorColorTheme colorTheme)
 	{
