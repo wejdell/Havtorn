@@ -219,7 +219,7 @@ namespace Havtorn
 				
 				auto ColorSelectTreeNode = [&](EWorldPlayState dedicatedPlayState)
 				{
-					F32 sz = GUI::GetTextLineHeight();
+					const F32 sz = GUI::GetTextLineHeight();
 					for (U16 i = 0; i < static_cast<U16>(EEditorColorTheme::Count); i++)
 					{
 						auto colorTheme = static_cast<EEditorColorTheme>(i);
