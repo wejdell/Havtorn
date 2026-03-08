@@ -217,14 +217,13 @@ namespace Havtorn
 					SetEditorSensitivity(sensitivity);
 				}
 				
-				GUI::Text("Color Theme");
-				if (GUI::TreeNode("Editor Color Themes"))
+				auto ColorSelectTreeNode = [&](EWorldPlayState dedicatedPlayState)
 				{
 					F32 sz = GUI::GetTextLineHeight();
 					for (U16 i = 0; i < static_cast<U16>(EEditorColorTheme::Count); i++)
 					{
 						auto colorTheme = static_cast<EEditorColorTheme>(i);
-						std::string name = GetEditorColorThemeName(colorTheme).c_str();
+						std::string name = GetEditorColorThemeName(colorTheme);
 						SVector2<F32> cursorPos = GUI::GetCursorScreenPos();
 						SColor previewColor = GetEditorColorThemeRepColor(colorTheme);
 						GUI::AddRectFilled(cursorPos, SVector2<F32>(sz), previewColor);
@@ -232,49 +231,27 @@ namespace Havtorn
 						GUI::SameLine();
 						if (GUI::MenuItem(name.c_str()))
 						{
-							SetEditorModeColorTheme(EEditorMode::Default, colorTheme);	
+							SetEditorModeColorTheme(dedicatedPlayState, colorTheme);	
 						}
-					}
+					}	
+				};
+				
+				GUI::Text("Color Theme");
+				if (GUI::TreeNode("Editor Color Themes"))
+				{
+					ColorSelectTreeNode(EWorldPlayState::Stopped);
 					GUI::TreePop();
 				}
 				
 				if (GUI::TreeNode("Play Color Themes"))
 				{
-					F32 sz = GUI::GetTextLineHeight();
-					for (U16 i = 0; i < static_cast<U16>(EEditorColorTheme::Count); i++)
-					{
-						auto colorTheme = static_cast<EEditorColorTheme>(i);
-						std::string name = GetEditorColorThemeName(colorTheme).c_str();
-						SVector2<F32> cursorPos = GUI::GetCursorScreenPos();
-						SColor previewColor = GetEditorColorThemeRepColor(colorTheme);
-						GUI::AddRectFilled(cursorPos, SVector2<F32>(sz), previewColor);
-						GUI::Dummy({ sz, sz });
-						GUI::SameLine();
-						if (GUI::MenuItem(name.c_str()))
-						{
-							SetEditorModeColorTheme(EEditorMode::PlayMode, colorTheme);	
-						}
-					}
+					ColorSelectTreeNode(EWorldPlayState::Playing);
 					GUI::TreePop();
 				}
 				
 				if (GUI::TreeNode("Pause Color Themes"))
 				{
-					F32 sz = GUI::GetTextLineHeight();
-					for (U16 i = 0; i < static_cast<U16>(EEditorColorTheme::Count); i++)
-					{
-						auto colorTheme = static_cast<EEditorColorTheme>(i);
-						std::string name = GetEditorColorThemeName(colorTheme).c_str();
-						SVector2<F32> cursorPos = GUI::GetCursorScreenPos();
-						SColor previewColor = GetEditorColorThemeRepColor(colorTheme);
-						GUI::AddRectFilled(cursorPos, SVector2<F32>(sz), previewColor);
-						GUI::Dummy({ sz, sz });
-						GUI::SameLine();
-						if (GUI::MenuItem(name.c_str()))
-						{
-							SetEditorModeColorTheme(EEditorMode::PauseMode, colorTheme);	
-						}
-					}
+					ColorSelectTreeNode(EWorldPlayState::Paused);
 					GUI::TreePop();
 				}
 			}
@@ -582,118 +559,124 @@ namespace Havtorn
 		{
 			GEngine::GetWorld()->ChangeScene<CGameScene>(asset->DirectoryEntry.path().string());
 			SetCurrentWorkingScene(0);
-		}
+		} 
 	}
 
-	void CEditorManager::SetEditorTheme(EEditorColorTheme colorTheme, EEditorStyleTheme styleTheme)
+	void CEditorManager::SetEditorTheme(EEditorColorTheme colorTheme, EEditorStyleTheme styleTheme, F32 darknessOffset)
 	{
-		switch (colorTheme)
-		{
-		case EEditorColorTheme::HavtornYellow:
-		{
-			GUI::SetGuiColorProfile(SGuiColorProfile());
-		}
-		break;
+	    auto applyDarkness = [darknessOffset](F32 r, F32 g, F32 b, F32 a = 1.0f) -> SColor
+	    {
+	        return SColor(r * darknessOffset, g * darknessOffset, b * darknessOffset, a);
+	    };
 
-		case EEditorColorTheme::HavtornRed:
-		{
-			SGuiColorProfile colorProfile(
-				SColor(0.11f, 0.11f, 0.11f, 1.00f),
-				SColor(0.198f, 0.198f, 0.198f, 1.00f),
-				SColor(0.278f, 0.271f, 0.267f, 1.00f),
-				SColor(0.478f, 0.188f, 0.188f, 1.00f),
-				SColor(0.814f, 0.00f, 0.00f, 1.00f),
-				SColor(1.00f, 0.00f, 0.00f, 1.00f)
-			);
-			GUI::SetGuiColorProfile(colorProfile);
-		}
-		break;
+	    switch (colorTheme)
+	    {
+	    case EEditorColorTheme::HavtornYellow:
+	    {
+	        SGuiColorProfile colorProfile(
+	            applyDarkness(0.11f,  0.11f,  0.11f),
+	            applyDarkness(0.198f, 0.198f, 0.198f),
+	            applyDarkness(0.278f, 0.271f, 0.267f),
+	            applyDarkness(0.694f, 0.573f, 0.129f),
+	            applyDarkness(0.918f, 0.722f, 0.055f),
+	            applyDarkness(1.00f,  0.855f, 0.165f)
+	        );
+	        GUI::SetGuiColorProfile(colorProfile);
+	    }
+	    break;
+	    case EEditorColorTheme::HavtornRed:
+	    {
+	        SGuiColorProfile colorProfile(
+	            applyDarkness(0.11f,  0.11f,  0.11f),
+	            applyDarkness(0.198f, 0.198f, 0.198f),
+	            applyDarkness(0.278f, 0.271f, 0.267f),
+	            applyDarkness(0.478f, 0.188f, 0.188f),
+	            applyDarkness(0.814f, 0.00f,  0.00f),
+	            applyDarkness(1.00f,  0.00f,  0.00f)
+	        );
+	        GUI::SetGuiColorProfile(colorProfile);
+	    }
+	    break;
+	    case EEditorColorTheme::HavtornGreen:
+	    {
+	        SGuiColorProfile colorProfile(
+	            applyDarkness(0.11f,  0.11f,  0.11f),
+	            applyDarkness(0.198f, 0.198f, 0.198f),
+	            applyDarkness(0.278f, 0.271f, 0.267f),
+	            applyDarkness(0.355f, 0.478f, 0.188f),
+	            applyDarkness(0.469f, 0.814f, 0.00f),
+	            applyDarkness(0.576f, 1.00f,  0.00f)
+	        );
+	        GUI::SetGuiColorProfile(colorProfile);
+	    }
+	    break;
+	    case EEditorColorTheme::HavtornDarkBlue:
+	    {
+	        SGuiColorProfile colorProfile(
+	            applyDarkness(0.11f,  0.11f,  0.11f),
+	            applyDarkness(0.198f, 0.198f, 0.198f),
+	            applyDarkness(0.278f, 0.271f, 0.267f),
+	            applyDarkness(0.188f, 0.278f, 0.478f),
+	            applyDarkness(0.00f,  0.314f, 0.814f),
+	            applyDarkness(0.00f,  0.376f, 1.00f)
+	        );
+	        GUI::SetGuiColorProfile(colorProfile);
+	    }
+	    break;
+	    case EEditorColorTheme::HavtornLightBlue:
+	    {
+	        SGuiColorProfile colorProfile(
+	            applyDarkness(0.11f,  0.11f,  0.11f),
+	            applyDarkness(0.198f, 0.198f, 0.198f),
+	            applyDarkness(0.278f, 0.271f, 0.267f),
+	            applyDarkness(0.318f, 0.478f, 0.678f),
+	            applyDarkness(0.469f, 0.714f, 0.914f),
+	            applyDarkness(0.576f, 0.824f, 1.00f)
+	        );
+	        GUI::SetGuiColorProfile(colorProfile);
+	    }
+	    break;
+	    case EEditorColorTheme::HavtornPurple:
+	    {
+	        SGuiColorProfile colorProfile(
+	            applyDarkness(0.11f,  0.11f,  0.11f),
+	            applyDarkness(0.198f, 0.198f, 0.198f),
+	            applyDarkness(0.278f, 0.271f, 0.267f),
+	            applyDarkness(0.361f, 0.278f, 0.478f),
+	            applyDarkness(0.561f, 0.314f, 0.814f),
+	            applyDarkness(0.686f, 0.376f, 1.00f)
+	        );
+	        GUI::SetGuiColorProfile(colorProfile);
+	    }
+	    break;
+	    case EEditorColorTheme::HavtornPink:
+	    {
+	        SGuiColorProfile colorProfile(
+	            applyDarkness(0.11f,  0.11f,  0.11f),
+	            applyDarkness(0.198f, 0.198f, 0.198f),
+	            applyDarkness(0.278f, 0.271f, 0.267f),
+	            applyDarkness(0.478f, 0.278f, 0.361f),
+	            applyDarkness(0.814f, 0.314f, 0.561f),
+	            applyDarkness(1.00f,  0.376f, 0.686f)
+	        );
+	        GUI::SetGuiColorProfile(colorProfile);
+	    }
+	    break;
+	    case EEditorColorTheme::Count:
+	        break;
+	    }
 
-		case EEditorColorTheme::HavtornGreen:
-		{
-			SGuiColorProfile colorProfile(
-				SColor(0.11f, 0.11f, 0.11f, 1.00f),
-				SColor(0.198f, 0.198f, 0.198f, 1.00f),
-				SColor(0.278f, 0.271f, 0.267f, 1.00f),
-				SColor(0.355f, 0.478f, 0.188f, 1.00f),
-				SColor(0.469f, 0.814f, 0.00f, 1.00f),
-				SColor(0.576f, 1.00f, 0.00f, 1.00f)
-			);
-			GUI::SetGuiColorProfile(colorProfile);
-		}
-		break;
-			
-		case EEditorColorTheme::HavtornDarkBlue:
-		{
-		    SGuiColorProfile colorProfile(
-		        SColor(0.11f, 0.11f, 0.11f, 1.00f),
-		        SColor(0.198f, 0.198f, 0.198f, 1.00f),
-		        SColor(0.278f, 0.271f, 0.267f, 1.00f),
-		        SColor(0.188f, 0.278f, 0.478f, 1.00f),
-		        SColor(0.00f, 0.314f, 0.814f, 1.00f),
-		        SColor(0.00f, 0.376f, 1.00f, 1.00f)
-		    );
-		    GUI::SetGuiColorProfile(colorProfile);
-		}
-		break;
-
-		case EEditorColorTheme::HavtornLightBlue:
-		{
-		    SGuiColorProfile colorProfile(
-		        SColor(0.11f, 0.11f, 0.11f, 1.00f),
-		        SColor(0.198f, 0.198f, 0.198f, 1.00f),
-		        SColor(0.278f, 0.271f, 0.267f, 1.00f),
-		        SColor(0.318f, 0.478f, 0.678f, 1.00f),
-		        SColor(0.469f, 0.714f, 0.914f, 1.00f),
-		        SColor(0.576f, 0.824f, 1.00f, 1.00f)
-		    );
-		    GUI::SetGuiColorProfile(colorProfile);
-		}
-		break;
-
-		case EEditorColorTheme::HavtornPurple:
-		{
-			SGuiColorProfile colorProfile(
-				SColor(0.11f, 0.11f, 0.11f, 1.00f),
-				SColor(0.198f, 0.198f, 0.198f, 1.00f),
-				SColor(0.278f, 0.271f, 0.267f, 1.00f),
-				SColor(0.361f, 0.278f, 0.478f, 1.00f),
-				SColor(0.561f, 0.314f, 0.814f, 1.00f),
-				SColor(0.686f, 0.376f, 1.00f, 1.00f)
-			);
-			GUI::SetGuiColorProfile(colorProfile);
-		}
-		break;
-
-		case EEditorColorTheme::HavtornPink:
-		{
-			SGuiColorProfile colorProfile(
-				SColor(0.11f, 0.11f, 0.11f, 1.00f),
-				SColor(0.198f, 0.198f, 0.198f, 1.00f),
-				SColor(0.278f, 0.271f, 0.267f, 1.00f),
-				SColor(0.478f, 0.278f, 0.361f, 1.00f),
-				SColor(0.814f, 0.314f, 0.561f, 1.00f),
-				SColor(1.00f, 0.376f, 0.686f, 1.00f)
-			);
-			GUI::SetGuiColorProfile(colorProfile);
-		}
-		break;
-
-		case EEditorColorTheme::Count:
-			break;
-		}
-
-		switch (styleTheme)
-		{
-		case EEditorStyleTheme::Havtorn:
-
-			GUI::SetGuiStyleProfile(SGuiStyleProfile());
-			break;
-		case EEditorStyleTheme::Count:
-		case EEditorStyleTheme::Default:
-			break;
-		}
+	    switch (styleTheme)
+	    {
+	    case EEditorStyleTheme::Havtorn:
+	        GUI::SetGuiStyleProfile(SGuiStyleProfile());
+	        break;
+	    case EEditorStyleTheme::Count:
+	    case EEditorStyleTheme::Default:
+	        break;
+	    }
 	}
+
 
 	std::string CEditorManager::GetEditorColorThemeName(const EEditorColorTheme colorTheme)
 	{
@@ -781,21 +764,21 @@ namespace Havtorn
 		controllerComp->RotationSpeed = GetEditorSensitivity();
 	}
 
-	void CEditorManager::SetEditorModeColorTheme(const EEditorMode targetEditorMode, const EEditorColorTheme newColorTheme)
+	void CEditorManager::SetEditorModeColorTheme(const EWorldPlayState dedicatedPlayState, const EEditorColorTheme newColorTheme)
 	{
-		switch (targetEditorMode)
+		switch (dedicatedPlayState)
 		{
-			case EEditorMode::Default:
-				EditorPreferencesDocument.Set("Editor Color Theme", STATIC_I32(newColorTheme));
+			case EWorldPlayState::Stopped:
+				EditorPreferencesDocument.Set(EditorColorThemeKey, STATIC_I32(newColorTheme));
 				EditorPreferences.EditorColorTheme = newColorTheme;
 				SetEditorTheme(newColorTheme);
 				break;
-			case EEditorMode::PauseMode:
-				EditorPreferencesDocument.Set("Pause Color Theme", STATIC_I32(newColorTheme));
+			case EWorldPlayState::Paused:
+				EditorPreferencesDocument.Set(PauseColorThemeKey, STATIC_I32(newColorTheme));
 				EditorPreferences.PauseColorTheme = newColorTheme;
 				break;
-			case EEditorMode::PlayMode:
-				EditorPreferencesDocument.Set("Play Color Theme", STATIC_I32(newColorTheme));
+			case EWorldPlayState::Playing:
+				EditorPreferencesDocument.Set(PlayColorThemeKey, STATIC_I32(newColorTheme));
 				EditorPreferences.PlayColorTheme = newColorTheme;
 				break;
 		}
@@ -962,15 +945,14 @@ namespace Havtorn
 				UserEditorSettingsPath);
 		}
 		
-		UFileSystem::AdjustFileValues(DefaultEditorSettingsPath, UserEditorSettingsPath);
+		UFileSystem::ReconcileJsonFiles(DefaultEditorSettingsPath, UserEditorSettingsPath);
 		
 		EditorPreferencesDocument = UFileSystem::OpenJson(UserEditorSettingsPath);
 		
 		EditorPreferences.Sensitivity = EditorPreferencesDocument.Get("Sensitivity", 0.5f);	
-		EditorPreferences.EditorColorTheme = static_cast<EEditorColorTheme>(EditorPreferencesDocument.Get("Editor Color Theme", 1));
-		EditorPreferences.PlayColorTheme = static_cast<EEditorColorTheme>(EditorPreferencesDocument.Get("Play Color Theme", 1));
+		EditorPreferences.EditorColorTheme = static_cast<EEditorColorTheme>(EditorPreferencesDocument.Get(EditorColorThemeKey, 1));
+		EditorPreferences.PlayColorTheme = static_cast<EEditorColorTheme>(EditorPreferencesDocument.Get(PauseColorThemeKey, 1));
 		EditorPreferences.PauseColorTheme = static_cast<EEditorColorTheme>(EditorPreferencesDocument.Get("Pause Color Theme", 1));
-		
 		
 		SetEditorTheme(EditorPreferences.EditorColorTheme);
 	}
@@ -1147,9 +1129,8 @@ namespace Havtorn
 
 	void CEditorManager::OnBeginPlay(std::vector<Ptr<CScene>>& /*scenes*/)
 	{
-		CurrentEditorMode = EEditorMode::PlayMode;
 		SetSelectedEntity(SEntity::Null);
-		SetEditorTheme(EditorPreferences.PlayColorTheme);
+		SetEditorTheme(EditorPreferences.PlayColorTheme, EEditorStyleTheme::Havtorn, DarknessOffsetPlayTheme);
 		World->BlockSystem<CPickingSystem>(this);
 
 		// TODO.NW: Change input context?
@@ -1157,15 +1138,13 @@ namespace Havtorn
 
 	void CEditorManager::OnPausePlay(std::vector<Ptr<CScene>>& /*scenes*/)
 	{
-		CurrentEditorMode = EEditorMode::PauseMode;
-		SetEditorTheme(EditorPreferences.PauseColorTheme);
+		SetEditorTheme(EditorPreferences.PauseColorTheme, EEditorStyleTheme::Havtorn, DarknessOffsetPausedTheme);
 		World->UnblockSystem<CPickingSystem>(this);
 	}
 
 	void CEditorManager::OnEndPlay(std::vector<Ptr<CScene>>& /*scenes*/)
 	{
-		CurrentEditorMode = EEditorMode::Default;
-		SetEditorTheme(EditorPreferences.EditorColorTheme);
+		SetEditorTheme(EditorPreferences.EditorColorTheme, EEditorStyleTheme::Havtorn, DarknessOffsetStoppedTheme);
 		World->UnblockSystem<CPickingSystem>(this);
 	}
 

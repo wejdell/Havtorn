@@ -1,11 +1,5 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
-template<typename T>
-concept Addable = requires(T a, T b)
-{
-	{a + b} noexcept -> std::convertible_to<int>; 
-};
-
 #pragma once
 #include <Havtorn.h>
 #include <Input/InputTypes.h>
@@ -39,13 +33,6 @@ namespace Havtorn
 		auto operator<=>(const SSnappingOption& other) const = default;
 	};
 	
-	enum class EEditorMode
-	{
-		Default,
-		PlayMode,
-		PauseMode
-	};
-
 	enum class EEditorColorTheme
 	{
 		HavtornYellow,
@@ -160,7 +147,7 @@ namespace Havtorn
 
 		void OpenAssetTool(SEditorAssetRepresentation* asset);
 
-		static void SetEditorTheme(EEditorColorTheme colorTheme = EEditorColorTheme::HavtornYellow, EEditorStyleTheme styleTheme = EEditorStyleTheme::Havtorn);
+		void SetEditorTheme(EEditorColorTheme colorTheme = EEditorColorTheme::HavtornYellow, EEditorStyleTheme styleTheme = EEditorStyleTheme::Havtorn, F32 darknessOffset = 1.0f);
 		std::string GetEditorColorThemeName(const EEditorColorTheme colorTheme);
 		SColor GetEditorColorThemeRepColor(const EEditorColorTheme colorTheme);
 		[[nodiscard]] SEditorLayout& GetEditorLayout();
@@ -183,7 +170,7 @@ namespace Havtorn
 		[[nodiscard]] F32 GetEditorSensitivity() const;
 		void SetEditorSensitivity(const F32 sensitivity);
 		
-		void SetEditorModeColorTheme(const EEditorMode targetEditorMode, const EEditorColorTheme newColorTheme);
+		void SetEditorModeColorTheme(const EWorldPlayState dedicatedPlayState, const EEditorColorTheme newColorTheme);
 	
 		bool GetIsWorldPlaying() const;
 
@@ -255,8 +242,6 @@ namespace Havtorn
 		SEditorPreferences EditorPreferences;
 		CJsonDocument EditorPreferencesDocument;
 		
-		EEditorMode CurrentEditorMode = EEditorMode::Default;
-
 		F32 ViewportPadding = 0.2f;
 		bool IsEnabled = true;
 		bool IsDebugInfoOpen = true;
@@ -271,6 +256,14 @@ namespace Havtorn
 		"Config/EditorPreferences.json";
 		inline static const std::string UserEditorSettingsPath =
 		"Config/EditorPreferences.user.json";
+		
+		inline static const std::string EditorColorThemeKey = "Editor Color Theme";
+		inline static const std::string PauseColorThemeKey = "Pause Color Theme";
+		inline static const std::string PlayColorThemeKey = "Play Color Theme";
+		
+		const F32 DarknessOffsetStoppedTheme = 1.0f;
+		const F32 DarknessOffsetPlayTheme = 0.6f;
+		const F32 DarknessOffsetPausedTheme = 0.8f;
 	};
 
 	template<class TEditorWindowType>

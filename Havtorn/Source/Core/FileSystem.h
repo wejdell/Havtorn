@@ -136,7 +136,7 @@ namespace Havtorn
 		
 		static bool CORE_API HasSameMembers(const std::string& firstFilePath, const std::string& secondFilePath);
 		
-		static void CORE_API AdjustFileValues(const std::string& mainFilePath, const std::string& alterFilePath);
+		static void CORE_API ReconcileJsonFiles(const std::string& mainFilePath, const std::string& alterFilePath);
 
 		CORE_API static const std::string EngineConfig;
 	};

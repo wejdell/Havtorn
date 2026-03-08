@@ -153,7 +153,7 @@ namespace Havtorn
 		return true;
 	}
 
-	void UFileSystem::AdjustFileValues(const std::string& mainFilePath, const std::string& alterFilePath)
+	void UFileSystem::ReconcileJsonFiles(const std::string& mainFilePath, const std::string& alterFilePath)
 	{
 		CJsonDocument mainDoc = OpenJson(mainFilePath);
 		CJsonDocument alterDoc = OpenJson(alterFilePath);
