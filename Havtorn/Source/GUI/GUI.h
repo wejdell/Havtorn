@@ -15,6 +15,8 @@
 #include <Color.h>
 #include <MathTypes/Vector.h>
 #include <EngineTypes.h>
+#include <GameplayTags/GameplayTag.h>
+#include <GameplayTags/GameplayTagManager.h>
 
 #include <magic_enum.h>
 
@@ -181,6 +183,9 @@ namespace Havtorn
 		LabelSpanAllColumns = BIT(15),  // Label will span all columns of its container table
 		NavLeftJumpsBackHere = BIT(17),  // (WIP) Nav: left direction may move to this TreeNode() from any of its child (items submitted between TreeNode and TreePop)
 		CollapsingHeader = Framed | NoTreePushOnOpen | NoAutoOpenOnLog,
+		DrawLinesNone = BIT(18),  // No lines drawn
+		DrawLinesFull = BIT(19),  // Horizontal lines to child nodes. Vertical line drawn down to TreePop() position: cover full contents. Faster (for large trees).
+		DrawLinesToNodes = BIT(20),  // Horizontal lines to child nodes. Vertical line drawn down to bottom-most child node. Slower (for large trees).
 	};
 
 	enum class GUI_API EDrawFlags
@@ -990,6 +995,7 @@ namespace Havtorn
 		static SAssetPickResult AssetPicker(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryFunc& assetInspector, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
 		static SAssetPickResult AssetPickerFilter(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
 		static SAssetPickResult AssetPickerDropdownFilter(const char* label, const char* assetDetailLabel, intptr_t image, intptr_t sourceButtonImage, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
+		static void TagPickerDropdown(const char* label, const char* tooltip, SGameplayTagContainer& tags, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
 		static SRenderAssetCardResult RenderAssetCard(const char* label, const bool isSelected, const bool isBeingNamed, const intptr_t& thumbnailID, const char* typeName, const SColor& color, const SColor& borderColor, void* dragDropPayloadToSet, U64 payLoadSize);
 
 		static bool Selectable(const char* label, const bool selected = false, const std::vector<ESelectableFlag>& flags = {}, const SVector2<F32>& size = SVector2<F32>(0.0f));

@@ -60,6 +60,7 @@ namespace Havtorn
 		CGraphicsFramework* Framework = nullptr;
 		CRenderManager* RenderManager = nullptr;
 		CAssetRegistry* AssetRegistry = nullptr;
+		// TODO.NW: Change "G" and "U" standard to something common?
 		GTime* Timer = nullptr;
 		GDebugDraw* DebugDraw = nullptr;
 		CInputMapper* InputMapper = nullptr;

@@ -2178,6 +2178,121 @@ namespace Havtorn
 		return result;
 	}
 
+	void VisitTagNode(Ref<STagNode>& node, SGameplayTagContainer& activeTags, SGameplayTag& clickedTag, const SGuiTextFilter& searchFilter)
+	{
+		if (searchFilter.IsActive() && !searchFilter.PassFilter(node->Tag.Name.c_str()))
+		{
+			for (Ref<STagNode>& child : node->Children)
+			{
+				VisitTagNode(child, activeTags, clickedTag, searchFilter);
+			}
+			return;
+		}
+
+		std::vector<ETreeNodeFlag> flags = { ETreeNodeFlag::SpanAvailWidth, ETreeNodeFlag::DefaultOpen, ETreeNodeFlag::OpenOnArrow, ETreeNodeFlag::DrawLinesToNodes };
+
+		// Explicit
+		bool isSelected = GGameplayTagManager::AnyTagsMatch(node->Tag, activeTags, false);
+		if (!isSelected)
+		{
+			// TODO.NW: Should probably consider left/right parent inclusion, separating what's happening with the depth checks in ContainsTag
+			for (const SGameplayTag& activeTag : activeTags.Tags)
+			{
+				// NW: Highlight parent tags of active tags, but don't highlight child tags of active tags as we're traversing the node graph
+				if (node->Tag.Depth < activeTag.Depth)
+				{
+					if (GGameplayTagManager::ContainsTag(node->Tag, activeTag))
+					{
+						isSelected = true;
+						break;
+					}
+				}
+			}
+		}
+
+		if (isSelected)
+			flags.emplace_back(ETreeNodeFlag::Selected);
+
+		if (node->Children.empty())
+			flags.emplace_back(ETreeNodeFlag::Leaf);
+
+		if (GUI::TreeNodeEx(node->Tag.Name.c_str(), flags))
+		{
+			if (GUI::IsItemClicked())
+			{
+				clickedTag = node->Tag;
+			}
+
+			for (Ref<STagNode>& child : node->Children)
+			{
+				VisitTagNode(child, activeTags, clickedTag, searchFilter);
+			}
+			GUI::TreePop();
+		}
+	};
+
+	void GUI::TagPickerDropdown(const char* label, const char* tooltip, SGameplayTagContainer& tags, const SVector2<F32>& pickerSize)
+	{
+		GUI::Separator();
+		GUI::PushID(label);
+		GUI::TextDisabled(label);
+		if (GUI::IsItemHovered())
+			GUI::SetTooltip(tooltip);
+
+		constexpr F32 pickerMaxHeight = 52.0f;
+		constexpr F32 maxWidthTagLabel = 200.0f;
+		constexpr F32 detailsWidth = 50.0f;
+
+		GUI::SameLine(maxWidthTagLabel);
+		{
+			GUI::BeginChild("Details", SVector2<F32>(detailsWidth, pickerMaxHeight), { EChildFlag::AutoResizeY, EChildFlag::AlwaysAutoResize });
+			if (GUI::Button("Edit"))
+				GUI::OpenPopup("Edit");
+
+			ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 0.0f), ImVec2(FLT_MAX, FLT_MAX));
+			if (GUI::BeginPopup("Edit"))
+			{	
+				SGuiTextFilter filter = SGuiTextFilter();
+				filter.Draw("Search", 0); // TODO.NW: Figure out a nicer way of setting the width
+				
+				GUI::Separator();
+
+				ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 0.0f), ImVec2(FLT_MAX, 200.0f));
+				if (GUI::BeginChild("Graph", SVector2<F32>(0.0f, 0.0f), { EChildFlag::AutoResizeY, EChildFlag::AlwaysAutoResize }))
+				{
+					SGameplayTag clickedTag;
+					Ref<STagNode> currentTagNode = GGameplayTagManager::GetRootNode();
+					VisitTagNode(currentTagNode, tags, clickedTag, filter);
+
+					if (clickedTag.IsValid())
+					{
+						if (GGameplayTagManager::AnyTagsMatch(clickedTag, tags, false))
+							tags.RemoveTag(clickedTag);
+						else
+							tags.AddTag(clickedTag);
+					}
+				}
+				GUI::EndChild();
+				GUI::EndPopup();
+			}
+			if (GUI::Button("Clear"))
+			{
+				tags.ClearTags();
+			}
+			GUI::EndChild();
+
+			GUI::SameLine();
+
+			GUI::BeginChild("List", SVector2<F32>(0.0f, pickerMaxHeight), { EChildFlag::AutoResizeY, EChildFlag::AlwaysAutoResize });
+			for (SGameplayTag& tag : tags.Tags)
+			{
+				GUI::Text(tag.Name.c_str());
+			}
+			GUI::EndChild();
+		}
+		GUI::PopID();
+	}
+
 	SRenderAssetCardResult GUI::RenderAssetCard(const char* label, const bool isSelected, const bool isBeingNamed, const intptr_t& thumbnailID, const char* typeName, const SColor& color, const SColor& borderColor, void* dragDropPayloadToSet, U64 payLoadSize)
 	{
 		SRenderAssetCardResult result;

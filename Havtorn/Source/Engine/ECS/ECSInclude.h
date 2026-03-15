@@ -17,6 +17,7 @@
 #include "ECS/Systems/ScriptSystem.h"
 #include "ECS/Systems/UISystem.h"
 #include "ECS/Systems/LevelStreamingSystem.h"
+#include "ECS/Systems/AbilitySystem.h"
 
 #include "ECS/Components/TransformComponent.h"
 #include "ECS/ComponentEditorContexts/TransformComponentEditorContext.h"
@@ -66,5 +67,7 @@
 #include "ECS/ComponentEditorContexts/UICanvasComponentEditorContext.h"
 #include "ECS/Components/LevelStreamingComponent.h"
 #include "ECS/ComponentEditorContexts/LevelStreamingComponentEditorContext.h"
+#include "ECS/Components/AbilityComponent.h"
+#include "ECS/ComponentEditorContexts/AbilityComponentEditorContext.h"
 #include "ECS/Components/DebugShapeComponent.h"
 #include "ECS/Components/MetaDataComponent.h"
