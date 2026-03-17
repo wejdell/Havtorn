@@ -32,6 +32,7 @@ namespace Havtorn
 	
 	enum class EEditorColorTheme
 	{
+		HavtornDefault,
 		HavtornYellow,
 		HavtornRed,
 		HavtornGreen,

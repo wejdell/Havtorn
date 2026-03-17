@@ -173,7 +173,7 @@ namespace Havtorn
 		for (auto it = alterDoc.Document.MemberBegin(); it != alterDoc.Document.MemberEnd(); )
 		{
 			if (!mainDoc.HasMember(it->name.GetString()))
-				mainDoc.Document.RemoveMember(it);
+				alterDoc.Document.RemoveMember(it);
 			else
 				++it;
 		}

@@ -634,6 +634,19 @@ namespace Havtorn
 
 	    switch (colorTheme)
 	    {
+		case EEditorColorTheme::HavtornDefault:
+		{
+			SGuiColorProfile colorProfile(
+				applyDarkness(0.11f, 0.11f, 0.11f),
+				applyDarkness(0.198f, 0.198f, 0.198f),
+				applyDarkness(0.278f, 0.271f, 0.267f),
+				applyDarkness(0.478f, 0.361f, 0.188f),
+				applyDarkness(0.814f, 0.532f, 0.000f),
+				applyDarkness(1.000f, 0.659f, 0.000f)
+			);
+			GUI::SetGuiColorProfile(colorProfile);
+		}
+		break;
 	    case EEditorColorTheme::HavtornYellow:
 	    {
 	        SGuiColorProfile colorProfile(
@@ -744,6 +757,8 @@ namespace Havtorn
 	{
 		switch (colorTheme)
 		{
+		case EEditorColorTheme::HavtornDefault:
+			return "Havtorn Default";
 		case EEditorColorTheme::HavtornYellow:
 			return "Havtorn Yellow";
 		case EEditorColorTheme::HavtornRed:
@@ -768,8 +783,10 @@ namespace Havtorn
 	{
 		switch (colorTheme)
 		{
-		case EEditorColorTheme::HavtornYellow:
+		case EEditorColorTheme::HavtornDefault:
 			return { 0.478f, 0.361f, 0.188f, 1.00f };
+		case EEditorColorTheme::HavtornYellow:
+			return { 0.694f, 0.573f, 0.129f, 1.00f };
 		case EEditorColorTheme::HavtornRed:
 			return { 0.478f, 0.188f, 0.188f, 1.00f };
 		case EEditorColorTheme::HavtornGreen:
