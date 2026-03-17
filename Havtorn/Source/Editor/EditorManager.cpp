@@ -1013,8 +1013,8 @@ namespace Havtorn
 		
 		EditorPreferences.Sensitivity = EditorPreferencesDocument.Get("Sensitivity", 0.5f);	
 		EditorPreferences.EditorColorTheme = static_cast<EEditorColorTheme>(EditorPreferencesDocument.Get(EditorColorThemeKey, 1));
-		EditorPreferences.PlayColorTheme = static_cast<EEditorColorTheme>(EditorPreferencesDocument.Get(PauseColorThemeKey, 1));
-		EditorPreferences.PauseColorTheme = static_cast<EEditorColorTheme>(EditorPreferencesDocument.Get("Pause Color Theme", 1));
+		EditorPreferences.PlayColorTheme = static_cast<EEditorColorTheme>(EditorPreferencesDocument.Get(PlayColorThemeKey, 1));
+		EditorPreferences.PauseColorTheme = static_cast<EEditorColorTheme>(EditorPreferencesDocument.Get(PauseColorThemeKey, 1));
 		
 		SetEditorTheme(EditorPreferences.EditorColorTheme);
 	}
