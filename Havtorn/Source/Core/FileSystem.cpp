@@ -137,6 +137,63 @@ namespace Havtorn
 		return result;
 	}
 
+	bool UFileSystem::HasSameMembers(const std::string& firstFilePath, const std::string& secondFilePath)
+	{
+		CJsonDocument firstDoc = OpenJson(firstFilePath);
+		CJsonDocument secondDoc = OpenJson(secondFilePath);
+		
+		for (auto it = firstDoc.Document.MemberBegin(); it != firstDoc.Document.MemberEnd(); ++it)
+		{
+			if (!secondDoc.HasMember(it->name.GetString()))
+			{
+				return false;
+			}
+		}
+		
+		return true;
+	}
+
+	void UFileSystem::ReconcileJsonFiles(const std::string& mainFilePath, const std::string& alterFilePath)
+	{
+		CJsonDocument mainDoc = OpenJson(mainFilePath);
+		CJsonDocument alterDoc = OpenJson(alterFilePath);
+		
+		if (!mainDoc.Document.IsObject())
+			return;
+		
+		auto& allocator = alterDoc.Document.GetAllocator();
+		
+		if (!alterDoc.Document.IsObject())
+		{
+			alterDoc.Document.CopyFrom(mainDoc.Document, allocator);	
+			alterDoc.SaveFile();
+			return;
+		}
+		
+		for (auto it = alterDoc.Document.MemberBegin(); it != alterDoc.Document.MemberEnd(); )
+		{
+			if (!mainDoc.HasMember(it->name.GetString()))
+				mainDoc.Document.RemoveMember(it);
+			else
+				++it;
+		}
+		
+		for (auto it = mainDoc.Document.MemberBegin(); it != mainDoc.Document.MemberEnd(); ++it)
+		{
+			if (!alterDoc.HasMember(it->name.GetString()))
+			{
+				rapidjson::Value name(it->name.GetString(), allocator);
+				rapidjson::Value value;
+				
+				value.CopyFrom(it->value, allocator);
+				
+				alterDoc.Document.AddMember(name, value, allocator);
+			}
+		}
+		
+		alterDoc.SaveFile();
+	}
+
 	CJsonDocument UFileSystem::OpenJson(const std::string& filePath)
 	{
 		CJsonDocument document;
