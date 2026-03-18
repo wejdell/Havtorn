@@ -7,18 +7,18 @@ namespace Havtorn
 	class CInput;
 	class CPlatformManager;
 
-	class CInputService
+	class CInputPoller
 	{
 		friend class GEngine;
 
 	private:
-		CInputService();
-		~CInputService();
+		CInputPoller();
+		~CInputPoller();
 
-		CInputService(const CInputService&) = delete;
-		CInputService(CInputService&&) = delete;
-		CInputService operator=(const CInputService&) = delete;
-		CInputService operator=(CInputService&&) = delete;
+		CInputPoller(const CInputPoller&) = delete;
+		CInputPoller(CInputPoller&&) = delete;
+		CInputPoller operator=(const CInputPoller&) = delete;
+		CInputPoller operator=(CInputPoller&&) = delete;
 
 	public:
 		void Update();

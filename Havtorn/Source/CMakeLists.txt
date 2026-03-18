@@ -319,8 +319,7 @@ add_dependencies(GUI Core Platform)
 
 # ==================== ENGINE ====================
 set(ENGINE_FILES
-	Engine/Input/InputService.cpp
-	Engine/Input/InputService.h
+
 	${ENGINE_FOLDER}Assets/RuntimeAssets/InputAsset.h
 	${ENGINE_FOLDER}Assets/AssetFileHeader.h
 	${ENGINE_FOLDER}Assets/Asset.h
@@ -523,6 +522,8 @@ set(ENGINE_FILES
     "${ENGINE_FOLDER}Input/InputMapper.cpp"
     "${ENGINE_FOLDER}Input/InputMapper.h"
     "${ENGINE_FOLDER}Input/InputTypes.h"
+    "${ENGINE_FOLDER}Input/InputPoller.cpp"
+	"${ENGINE_FOLDER}Input/InputPoller.h"
     ${ENGINE_FOLDER}Scene/Scene.cpp
     ${ENGINE_FOLDER}Scene/Scene.h
     ${ENGINE_FOLDER}Scene/World.cpp
