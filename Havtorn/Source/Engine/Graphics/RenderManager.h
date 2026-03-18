@@ -143,6 +143,9 @@ namespace Havtorn
 		const SVector2<F32>& GetShadowAtlasResolution() const;
 		ENGINE_API U32 GetNumberOfRenderViews() const;
 
+		ENGINE_API void SetRenderPass(const ERenderPass renderPass);
+		ENGINE_API ERenderPass GetRenderPass() const;
+
 	public:
 		ENGINE_API static U32 NumberOfDrawCallsThisFrame;
 

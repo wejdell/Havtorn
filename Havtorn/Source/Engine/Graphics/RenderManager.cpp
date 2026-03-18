@@ -692,6 +692,16 @@ namespace Havtorn
 		return STATIC_U32(GameThreadRenderViews->size());
 	}
 
+	void CRenderManager::SetRenderPass(const ERenderPass renderPass)
+	{
+		CurrentRunningRenderPass = renderPass;
+	}
+
+	ERenderPass CRenderManager::GetRenderPass() const
+	{
+		return CurrentRunningRenderPass;
+	}
+
 	void CRenderManager::Clear(SVector4 /*clearColor*/)
 	{
 		//Backbuffer.ClearTexture(clearColor);

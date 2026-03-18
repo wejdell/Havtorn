@@ -872,38 +872,20 @@ namespace Havtorn
 			return returnValue;
 		}
 
-		//Returns -1 as false
 		template<typename T>
-		static U8 ComboEnum(const char* label, U8& currentIndex)
+		static bool ComboEnum(const char* label, T& currentValue, std::vector<T> filter = {})
 		{
-			auto enumNames = magic_enum::enum_names<T>();
-			if (GUI::BeginCombo(label, enumNames[currentIndex].data()))
-			{
-				for (U8 i = 0; i < enumNames.size(); i++)
-				{
-					bool isSelected = currentIndex == i;
-					if (GUI::Selectable(enumNames[i].data(), isSelected))
-						currentIndex = i;
-
-					if (isSelected)
-						GUI::SetItemDefaultFocus();
-				}
-				GUI::EndCombo();
-			}
-
-			return currentIndex;
-		}
-
-		// TODO.NW: Make sure currentValue is set by the function, instead of returning it.
-		template<typename T>
-		static T ComboEnum(const char* label, T& currentValue)
-		{
+			std::vector<U8> filteredIndices;
+			std::ranges::transform(filter, std::back_inserter(filteredIndices), [](const T& filterValue) -> U8 { return static_cast<U8>(filterValue); });
 			auto enumNames = magic_enum::enum_names<T>();
 			U8 currentIndex = static_cast<U8>(currentValue);
 			if (GUI::BeginCombo(label, enumNames[currentIndex].data()))
 			{
 				for (U8 i = 0; i < enumNames.size(); i++)
 				{
+					if (auto it = std::ranges::find(filteredIndices, i); it != filteredIndices.end())
+						continue;
+
 					bool isSelected = currentIndex == i;
 					if (GUI::Selectable(enumNames[i].data(), isSelected))
 						currentIndex = i;
@@ -911,12 +893,18 @@ namespace Havtorn
 					if (isSelected)
 						GUI::SetItemDefaultFocus();
 				}
+				
 				GUI::EndCombo();
 			}
 
-			return static_cast<T>(currentIndex);
-		}
+			if (currentValue != static_cast<T>(currentIndex))
+			{
+				currentValue = static_cast<T>(currentIndex);
+				return true;
+			}
 
+			return false;
+		}
 
 		static bool ColorPicker3(const char* label, SColor& value);
 		static bool ColorPicker4(const char* label, SColor& value);
@@ -1010,6 +998,7 @@ namespace Havtorn
 		static bool IsMouseInRect(const SVector4& rect);
 		static bool IsItemVisible();
 		static bool IsWindowFocused();
+		// TODO.NW: Should check other windows and only consider these hovered if they are top one
 		static bool IsWindowHovered();
 		static bool IsPopupOpen(const char* label);
 

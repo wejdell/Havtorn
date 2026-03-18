@@ -1,4 +1,4 @@
-// Copyright 2022 Team Havtorn. All Rights Reserved.
+// Copyright 202	2 Team Havtorn. All Rights Reserved.
 
 #include "hvpch.h"
 #include "ViewportWindow.h"
@@ -67,6 +67,17 @@ namespace Havtorn
 			EWorldPlayState playState = world->GetWorldPlayState();
 			IsPlayButtonEngaged = playState == EWorldPlayState::Playing;
 			IsPauseButtonEngaged = playState == EWorldPlayState::Paused;
+
+			CRenderManager* renderManager = Manager->GetRenderManager();
+			ERenderPass renderPass = renderManager->GetRenderPass();
+			constexpr F32 renderPassDropdownWidth = 136.0f;
+			GUI::PushItemWidth(renderPassDropdownWidth);
+			if (GUI::ComboEnum("Render Pass", renderPass, { ERenderPass::Count }))
+			{
+				renderManager->SetRenderPass(renderPass);
+				IsFocused = false;
+			}
+			GUI::PopItemWidth();
 
 			SVector2<F32> buttonSize = { 16.0f, 16.0f };
 			std::vector<SAlignedButtonData> buttonData;

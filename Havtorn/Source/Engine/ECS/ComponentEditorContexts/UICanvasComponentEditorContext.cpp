@@ -67,7 +67,7 @@ namespace Havtorn
 						assetReferences.push_back(&ref);
 				}
 
-				element.State = GUI::ComboEnum("Preview State", element.State);
+				GUI::ComboEnum("Preview State", element.State);
 				if (element.State == EUIElementState::Count)
 					element.State = EUIElementState::Idle;
 
@@ -90,7 +90,7 @@ namespace Havtorn
 					}
 				}
 
-				element.BindingType = GUI::ComboEnum("Binding Type", element.BindingType);
+				GUI::ComboEnum("Binding Type", element.BindingType);
 				if (element.BindingType == EUIBindingType::NamedFunction)
 				{
 					std::string boundFunctionName = "Function Not Found";

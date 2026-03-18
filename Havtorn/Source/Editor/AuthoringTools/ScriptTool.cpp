@@ -751,27 +751,7 @@ namespace Havtorn
 			GUI::Separator();
 			GUI::InputText("Name", &DataBindingCandidate.Name);
 
-
-			DataBindingCandidate.Type = GUI::ComboEnum("Pin Type", DataBindingCandidate.Type); // <-- This could replace the commented code below 
-
-			//GUI::SliderEnum("Type", DataBindingCandidate.Type,
-			//				{ //TODO.NW: See if we can bind these strings at compile time or something, through a static a certain of string amount and enum Count?
-			//					"Unknown",
-			//					"Flow",
-			//					"Bool",
-			//					"Int",
-			//					"Float",
-			//					"String",
-			//					"Vector",
-			//					"Int Array",
-			//					"Float Array",
-			//					"String Array",
-			//					"Object",
-			//					"Object Array",
-			//					"Asset",
-			//					"Function",
-			//					"Delegate"
-			//				});
+			GUI::ComboEnum("Pin Type", DataBindingCandidate.Type); // <-- This could replace the commented code below 
 
 			// TODO.NW: Add filtering so we can't pick incorrect types e.g. unknown and flow
 			if (DataBindingCandidate.Type == EGUIPinType::Unknown)
@@ -779,24 +759,7 @@ namespace Havtorn
 
 			if (DataBindingCandidate.Type == EGUIPinType::Asset)
 			{
-				DataBindingCandidate.AssetType = GUI::ComboEnum("Asset Type", DataBindingCandidate.AssetType);
-
-				//GUI::SliderEnum("Asset Type", DataBindingCandidate.AssetType,
-				//	{
-				//		"None",
-				//		"StaticMesh",
-				//		"SkeletalMesh",
-				//		"Texture",
-				//		"Material",
-				//		"Animation",
-				//		"SpriteAnimation",
-				//		"AudioOneShot",
-				//		"AudioCollection",
-				//		"VisualFX",
-				//		"Scene",
-				//		"Sequencer",
-				//		"Script"
-				//	});
+				GUI::ComboEnum("Asset Type", DataBindingCandidate.AssetType);
 
 				if (DataBindingCandidate.AssetType == EGUIAssetType::None)
 					DataBindingCandidate.AssetType = EGUIAssetType::StaticMesh;
@@ -809,8 +772,7 @@ namespace Havtorn
 
 			if (DataBindingCandidate.Type == EGUIPinType::ComponentPtr)
 			{
-				DataBindingCandidate.ObjectType = GUI::ComboEnum("Object Type", DataBindingCandidate.ObjectType);
-				//GUI::SliderEnum("Object Type", DataBindingCandidate.ObjectType, { "None", "Entity", "Component" });
+				GUI::ComboEnum("Object Type", DataBindingCandidate.ObjectType);
 
 				if (DataBindingCandidate.ObjectType == EGUIObjectDataType::None)
 					DataBindingCandidate.ObjectType = EGUIObjectDataType::Entity;

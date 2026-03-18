@@ -424,7 +424,7 @@ namespace Havtorn
 		Manager->SetIsModalOpen(true);
 
 
-		AssetTypeToCreate = GUI::ComboEnum("Asset Type", AssetTypeToCreate);
+		GUI::ComboEnum("Asset Type", AssetTypeToCreate);
 
 		if (AssetTypeToCreate == EAssetType::None)
 			AssetTypeToCreate = EAssetType::StaticMesh;
