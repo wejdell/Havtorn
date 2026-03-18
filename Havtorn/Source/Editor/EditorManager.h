@@ -29,20 +29,18 @@ namespace Havtorn
 		std::string Label = "No Snapping";
 		auto operator<=>(const SSnappingOption& other) const = default;
 	};
-
+	
 	enum class EEditorColorTheme
 	{
-		DefaultDark,
-		HavtornDark,
+		HavtornDefault,
+		HavtornYellow,
 		HavtornRed,
 		HavtornGreen,
 		HavtornDarkBlue,
 		HavtornLightBlue,
 		HavtornPurple,
 		HavtornPink,
-		Count,
-		PlayMode,
-		PauseMode
+		Count
 	};
 
 	enum class EEditorStyleTheme
@@ -90,8 +88,9 @@ namespace Havtorn
 	struct SEditorPreferences
 	{
 		F32 Sensitivity = 0.5f;
-		EEditorColorTheme ColorTheme = EEditorColorTheme::HavtornDark;
-		EEditorColorTheme CachedColorTheme = EEditorColorTheme::HavtornDark;
+		EEditorColorTheme EditorColorTheme = EEditorColorTheme::HavtornYellow;
+		EEditorColorTheme PlayColorTheme = EEditorColorTheme::HavtornYellow;
+		EEditorColorTheme PauseColorTheme = EEditorColorTheme::HavtornYellow;
 	};
 
 	class CEditorManager
@@ -153,7 +152,7 @@ namespace Havtorn
 
 		void OpenAssetTool(SEditorAssetRepresentation* asset);
 
-		void SetEditorTheme(EEditorColorTheme colorTheme = EEditorColorTheme::HavtornDark, EEditorStyleTheme styleTheme = EEditorStyleTheme::Havtorn);
+		void SetEditorTheme(EEditorColorTheme colorTheme = EEditorColorTheme::HavtornYellow, EEditorStyleTheme styleTheme = EEditorStyleTheme::Havtorn, F32 darknessOffset = 1.0f);
 		std::string GetEditorColorThemeName(const EEditorColorTheme colorTheme);
 		SColor GetEditorColorThemeRepColor(const EEditorColorTheme colorTheme);
 		[[nodiscard]] SEditorLayout& GetEditorLayout();
@@ -175,6 +174,8 @@ namespace Havtorn
 		void SetViewportPadding(const F32 padding);
 		[[nodiscard]] F32 GetEditorSensitivity() const;
 		void SetEditorSensitivity(const F32 sensitivity);
+		
+		void SetEditorModeColorTheme(const EWorldPlayState dedicatedPlayState, const EEditorColorTheme newColorTheme);
 	
 		bool GetIsWorldPlaying() const;
 
@@ -244,8 +245,8 @@ namespace Havtorn
 		ETransformGizmoSpace CurrentGizmoSpace = ETransformGizmoSpace::World;
 		SSnappingOption CurrentGizmoSnapping = {};
 		SEditorPreferences EditorPreferences;
-		 CJsonDocument EditorPreferencesDocument;
-
+		CJsonDocument EditorPreferencesDocument;
+		
 		F32 ViewportPadding = 0.2f;
 		bool IsEnabled = true;
 		bool IsDebugInfoOpen = true;
@@ -260,6 +261,14 @@ namespace Havtorn
 		"Config/EditorPreferences.json";
 		inline static const std::string UserEditorSettingsPath =
 		"Config/EditorPreferences.user.json";
+		
+		inline static const std::string EditorColorThemeKey = "Editor Color Theme";
+		inline static const std::string PauseColorThemeKey = "Pause Color Theme";
+		inline static const std::string PlayColorThemeKey = "Play Color Theme";
+		
+		const F32 DarknessOffsetStoppedTheme = 1.0f;
+		const F32 DarknessOffsetPlayTheme = 0.6f;
+		const F32 DarknessOffsetPausedTheme = 0.8f;
 	};
 
 	template<class TEditorWindowType>
