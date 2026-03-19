@@ -18,9 +18,6 @@ namespace Havtorn
 
     SComponentViewResult SEnvironmentLightComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!GUI::TryOpenComponentView("EnvironmentLight"))
-			return SComponentViewResult();
-
 		SEnvironmentLightComponent* environmentLightComp = scene->GetComponent<SEnvironmentLightComponent>(entityOwner);
 
 		GUI::Checkbox("Is Active", environmentLightComp->IsActive);
@@ -31,12 +28,6 @@ namespace Havtorn
 
 	bool SEnvironmentLightComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("Environment Light Component"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->AddComponent<SEnvironmentLightComponent>(entity);
 		scene->AddComponentEditorContext(entity, &SEnvironmentLightComponentEditorContext::Context);
 		return true;
@@ -44,12 +35,6 @@ namespace Havtorn
 
 	bool SEnvironmentLightComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("X##5"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->RemoveComponent<SEnvironmentLightComponent>(entity);
 		scene->RemoveComponentEditorContext(entity, &SEnvironmentLightComponentEditorContext::Context);
 		return true;

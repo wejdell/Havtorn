@@ -64,9 +64,6 @@ namespace Havtorn
 
     SComponentViewResult SPrefabComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!GUI::TryOpenComponentView("Prefab"))
-			return SComponentViewResult();
-
 		SPrefabComponent* prefabComponent = scene->GetComponent<SPrefabComponent>(entityOwner);
 		if (!SComponent::IsValid(prefabComponent))
 			return SComponentViewResult();
@@ -146,26 +143,13 @@ namespace Havtorn
 
 	bool SPrefabComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("Prefab Component"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->AddComponent<SPrefabComponent>(entity);
 		scene->AddComponentEditorContext(entity, &SPrefabComponentEditorContext::Context);
-
 		return true;
 	}
 
 	bool SPrefabComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("X##22"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->RemoveComponent<SPrefabComponent>(entity);
 		scene->RemoveComponentEditorContext(entity, &SPrefabComponentEditorContext::Context);
 		return true;

@@ -33,7 +33,7 @@ namespace Havtorn
 		void OpenAssetTool(const SComponentViewResult& result);
 		void RenderPreview(const SComponentViewResult& result);
 
-		void OpenAddComponentModal(const SEntity& entity, CScene* owningScene);
+		void OpenAddComponentPopup(const SEntity& entity, CScene* owningScene);
 
 		void UpdateAssetContextMenu();
 

@@ -14,9 +14,6 @@ namespace Havtorn
 
     SComponentViewResult SPhysics3DComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!GUI::TryOpenComponentView("Physics3D"))
-			return {};
-
 		SPhysics3DComponent* physicsComponent = scene->GetComponent<SPhysics3DComponent>(entityOwner);
 
 		GUI::SliderEnum("Body Type", physicsComponent->BodyType, { "Static", "Kinematic", "Dynamic" });
@@ -69,12 +66,6 @@ namespace Havtorn
 
 	bool SPhysics3DComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("Physics 3D Component"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->AddComponent<SPhysics3DComponent>(entity);
 		scene->AddComponentEditorContext(entity, &SPhysics3DComponentEditorContext::Context);
 		return true;
@@ -82,12 +73,6 @@ namespace Havtorn
 
 	bool SPhysics3DComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("X##8"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->RemoveComponent<SPhysics3DComponent>(entity);
 		scene->RemoveComponentEditorContext(entity, &SPhysics3DComponentEditorContext::Context);
 		return true;

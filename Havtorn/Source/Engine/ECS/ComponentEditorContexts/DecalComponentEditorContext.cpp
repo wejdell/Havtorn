@@ -18,9 +18,6 @@ namespace Havtorn
 
 	SComponentViewResult SDecalComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
 	{
-		if (!GUI::TryOpenComponentView("Decal"))
-			return SComponentViewResult();
-
 		SDecalComponent* decalComp = scene->GetComponent<SDecalComponent>(entityOwner);
 
 		GUI::Checkbox("Render Albedo", decalComp->ShouldRenderAlbedo);
@@ -32,12 +29,6 @@ namespace Havtorn
 
 	bool SDecalComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("Decal Component"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->AddComponent<SDecalComponent>(entity);
 		scene->AddComponentEditorContext(entity, &SDecalComponentEditorContext::Context);
 		return true;
@@ -45,12 +36,6 @@ namespace Havtorn
 
 	bool SDecalComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("X##3"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->RemoveComponent<SDecalComponent>(entity);
 		scene->RemoveComponentEditorContext(entity, &SDecalComponentEditorContext::Context);
 		return true;

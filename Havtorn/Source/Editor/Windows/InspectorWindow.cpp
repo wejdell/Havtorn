@@ -13,6 +13,7 @@
 #include <GeneralUtilities.h>
 
 #include "Windows/ViewportWindow.h"
+#include "Windows/HierarchyWindow.h"
 #include "AuthoringTools/PrefabTool.h"
 #include "Windows/SpriteAnimatorGraphNodeWindow.h"
 #include "EditorResourceManager.h"
@@ -123,10 +124,26 @@ namespace Havtorn
 		{
 			GUI::Separator();
 
-			if (context->RemoveComponent(entity, owningScene))
-				continue;
+			GUI::PushID(context->GetComponentName());
+			if (GUI::Button("X"))
+			{
+				if (owningScene != nullptr && entity.IsValid())
+				{
+					context->RemoveComponent(entity, owningScene);
+					GUI::PopID();
+					continue;
+				}
+			}
+			GUI::PopID();
 
 			GUI::SameLine();
+
+			if (!GUI::TryOpenComponentView(context->GetComponentName()))
+			{
+				GUI::Dummy({ GUI::DummySizeX, GUI::DummySizeY });
+				continue;
+			}
+
 			SComponentViewResult result = context->View(entity, owningScene);
 
 			// TODO.NR: Could make this a enum-function map, but would be good to set up clear rules for how this should work.
@@ -156,9 +173,9 @@ namespace Havtorn
 
 		GUI::Separator();
 		if (GUI::Button("Add Component", SVector2<F32>(GUI::GetContentRegionAvail().X, 0)))
-			GUI::OpenPopup("Add Component Modal");
+			GUI::OpenPopup("Add Component Popup");
 
-		OpenAddComponentModal(entity, owningScene);
+		OpenAddComponentPopup(entity, owningScene);
 	}
 
 	void CInspectorWindow::UpdateTransformGizmo(const SComponentViewResult& result)
@@ -354,18 +371,27 @@ namespace Havtorn
 		GUI::Separator();
 	}
 
-	void CInspectorWindow::OpenAddComponentModal(const SEntity& entity, CScene* owningScene)
+	void CInspectorWindow::OpenAddComponentPopup(const SEntity& entity, CScene* owningScene)
 	{
-		if (!GUI::BeginPopupModal("Add Component Modal", NULL, { EWindowFlag::AlwaysAutoResize }))
+		if (!GUI::BeginPopup("Add Component Popup"))
 			return;
 
-		Manager->SetIsModalOpen(true);
+		if (owningScene == nullptr || !entity.IsValid())
+			return;
 
-		if (GUI::BeginTable("NewComponentTypeTable", 1))
+		SGuiTextFilter filter = SGuiTextFilter();
+		filter.Draw("Search", 0); // TODO.NW: Figure out a nicer way of setting the width
+
+		if (GUI::BeginChild("NewComponentTypeTable", SVector2<F32>(0.0f, 200.0f)))
 		{
 			for (const SComponentEditorContext* context : owningScene->GetComponentEditorContexts())
 			{
-				GUI::TableNextColumn();
+				const char* componentName = context->GetComponentName();
+				if (!filter.PassFilter(componentName))
+					continue;
+
+				if (!GUI::Button(componentName))
+					continue;
 
 				if (context->AddComponent(entity, owningScene))
 				{
@@ -374,16 +400,10 @@ namespace Havtorn
 				}
 			}
 
-			GUI::EndTable();
+			GUI::EndChild();
 		}
 
-		if (GUI::Button("Cancel", SVector2<F32>(GUI::GetContentRegionAvail().X, 0))) 
-		{
-			Manager->SetIsModalOpen(false);
-			GUI::CloseCurrentPopup(); 
-		}
-
-		GUI::EndPopup();
+		GUI::EndPopup();			
 	}
 
 	void CInspectorWindow::UpdateAssetContextMenu()
