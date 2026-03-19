@@ -34,6 +34,7 @@ namespace Havtorn
 	enum class ERenderPass
 	{
 		All,
+		Game,
 		Depth,
 		GBufferAlbedo,
 		GBufferNormals,

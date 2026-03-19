@@ -1862,7 +1862,7 @@ namespace Havtorn
 
 	inline void CRenderManager::WorldSpaceSpriteEditorWidget(const SRenderCommand& command)
 	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewID))
+		if (!RenderThreadRenderViews->contains(command.RenderViewID) || CurrentRunningRenderPass == ERenderPass::Game)
 			return;
 
 		ID3D11RenderTargetView* renderTargets[3] = { RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.GetRenderTargetView(), GBuffer.GetEditorWorldPositionRenderTarget(), GBuffer.GetEditorDataRenderTarget() };
@@ -2092,6 +2092,9 @@ namespace Havtorn
 
 	inline void CRenderManager::DebugShapes(const SRenderCommand& command)
 	{
+		if (CurrentRunningRenderPass == ERenderPass::Game)
+			return;
+
 		DebugShapeObjectBufferData.ToWorldFromObject = command.Matrices[0];
 		DebugShapeObjectBufferData.Color = command.Vectors[0];
 		DebugShapeObjectBufferData.HalfThickness = command.F32s[0] /** 0.5f?*/;

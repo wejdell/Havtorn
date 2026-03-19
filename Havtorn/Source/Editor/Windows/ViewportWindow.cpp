@@ -72,7 +72,7 @@ namespace Havtorn
 			ERenderPass renderPass = renderManager->GetRenderPass();
 			constexpr F32 renderPassDropdownWidth = 136.0f;
 			GUI::PushItemWidth(renderPassDropdownWidth);
-			if (GUI::ComboEnum("Render Pass", renderPass, { ERenderPass::Count }))
+			if (GUI::ComboEnum("View Mode", renderPass, { ERenderPass::Count }))
 			{
 				renderManager->SetRenderPass(renderPass);
 				IsFocused = false;

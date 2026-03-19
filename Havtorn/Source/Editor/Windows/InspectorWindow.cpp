@@ -163,7 +163,7 @@ namespace Havtorn
 
 	void CInspectorWindow::UpdateTransformGizmo(const SComponentViewResult& result)
 	{
-		if (Manager->GetIsFreeCamActive())
+		if (Manager->GetIsFreeCamActive() || Manager->GetRenderManager()->GetRenderPass() == ERenderPass::Game)
 			return;
 
 		STransformComponent* viewedTransformComp = static_cast<STransformComponent*>(result.ComponentViewed);
