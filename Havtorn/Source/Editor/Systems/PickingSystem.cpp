@@ -68,7 +68,7 @@ namespace Havtorn
 		// TODO.NW: Set up focus and hovering rules. With overlapping windows, only the one in front should be considered hovered. If there's no window in the way, we would like not 
 		// to click twice on the viewport to focus it and then be able to pick on the next click though.
 		const CViewportWindow* viewport = Manager->GetEditorWindow<CViewportWindow>();
-		if (Manager->GetIsOverGizmo() || Manager->GetIsWorldPlaying() || !viewport->GetIsFocused() || Manager->GetIsModalOpen() || EditorCameraComponent == nullptr || EditorCameraTransform == nullptr)
+		if (Manager->GetIsOverGizmo() || Manager->GetIsWorldPlaying() || !viewport->GetIsHovered() || Manager->GetIsModalOpen() || EditorCameraComponent == nullptr || EditorCameraTransform == nullptr)
 			return;
 
 		const SVector2<F32> renderedSceneDimensions = viewport->GetRenderedSceneDimensions();

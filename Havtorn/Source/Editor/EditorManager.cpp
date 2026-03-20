@@ -1059,7 +1059,7 @@ namespace Havtorn
 
 	void CEditorManager::OnInputToggleFreeCam(const SInputActionPayload payload)
 	{
-		IsFreeCamActive = payload.IsHeld;
+		IsFreeCamActive = GetEditorWindow<CViewportWindow>()->GetIsHovered() && payload.IsHeld;
 	}
 
 	void CEditorManager::OnInputFocusSelection(const SInputActionPayload payload)

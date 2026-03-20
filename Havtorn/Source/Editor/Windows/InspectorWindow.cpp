@@ -50,7 +50,7 @@ namespace Havtorn
 			return;
 		}
 
-		IsFocused = IsEnabled && GUI::IsWindowFocused() && GUI::IsWindowHovered();
+		IsHovered = IsEnabled && GUI::IsWindowHovered();
 
 		std::vector<SEntity> selectedEntities = Manager->GetSelectedEntities();
 

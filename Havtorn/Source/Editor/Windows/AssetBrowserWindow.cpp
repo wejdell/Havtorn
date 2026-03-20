@@ -43,7 +43,7 @@ namespace Havtorn
 	{
 		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, /*EWindowFlag::NoResize, */EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus}))
 		{
-			IsFocused = IsEnabled && GUI::IsWindowFocused() && GUI::IsWindowHovered();
+			IsHovered = IsEnabled && GUI::IsWindowHovered();
 
 			intptr_t folderIconID = Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::FolderIcon);
 

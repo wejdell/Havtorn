@@ -69,7 +69,7 @@ namespace Havtorn
 			return;
 		}
 
-		IsFocused = IsEnabled && GUI::IsWindowFocused() && GUI::IsWindowHovered();
+		IsHovered = IsEnabled && GUI::IsWindowHovered();
 
 		if (CurrentScriptAsset == nullptr)
 		{

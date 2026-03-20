@@ -47,7 +47,7 @@ namespace Havtorn
 		// TODO.NW: Maybe make all windows resizeable? Currently only the viewport that's resizeable. Makes it so that you can't drag away into nothingness
 		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus}))
 		{
-			IsFocused = IsEnabled && GUI::IsWindowFocused() && GUI::IsWindowHovered();
+			IsHovered = IsEnabled && GUI::IsWindowHovered();
 
 			SHierarchyEditData editData;
 

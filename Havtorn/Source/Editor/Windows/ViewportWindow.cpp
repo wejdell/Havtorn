@@ -61,7 +61,7 @@ namespace Havtorn
 		// TODO.NW: Make button to reset to default layout, save layouts
 		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus }))
 		{
-			IsFocused = IsEnabled && GUI::IsWindowFocused() && GUI::IsWindowHovered();
+			IsHovered = IsEnabled && GUI::IsWindowHovered();
 
 			CWorld* world = GEngine::GetWorld();
 			EWorldPlayState playState = world->GetWorldPlayState();
@@ -75,7 +75,7 @@ namespace Havtorn
 			if (GUI::ComboEnum("View Mode", renderPass, { ERenderPass::Count }))
 			{
 				renderManager->SetRenderPass(renderPass);
-				IsFocused = false;
+				IsHovered = false;
 			}
 			GUI::PopItemWidth();
 
