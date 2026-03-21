@@ -2,6 +2,8 @@
 
 #pragma once
 
+union SDL_Event;
+
 namespace Havtorn
 {
 	class CInput;
@@ -21,7 +23,9 @@ namespace Havtorn
 		CInputPoller operator=(CInputPoller&&) = delete;
 
 	public:
+		bool Init(CPlatformManager* platformManager);
 		void Update();
+		void ProcessEvent(const SDL_Event* event);
 
 		//[[nodiscard]] ENGINE_API 
 		//[[nodiscard]] ENGINE_API
