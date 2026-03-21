@@ -54,8 +54,10 @@ namespace Havtorn
 		std::optional<std::vector<std::string>> FilePathsToImport;
 
 		std::optional<SEditorAssetRepresentation*> AnimatingThumbnailAsset;
+		std::optional<SEditorAssetRepresentation*> HoveredAsset;
+		std::optional<std::filesystem::directory_entry> HoveredFolder;
+		std::optional<std::filesystem::directory_entry> FolderBeingRenamed;
 		SEditorAssetRepresentation* PreviouslyAnimatingThumbnailAsset = nullptr;
-		bool IsSelectionHovered = false;
 		bool WasAnimatingThumbnail = false;
 		bool IsCreatingAsset = false;
 		EAssetType AssetTypeToCreate = EAssetType::None;

@@ -114,15 +114,15 @@ namespace Havtorn
 
 			if (GUI::BeginPopupContextWindow())
 			{
-				if (IsSelectionHovered)
+				if (HoveredAsset.has_value())
 				{
-					SEditorAssetRepresentation* selectedAssetRep = Manager->GetSelectedAsset();
-					if (selectedAssetRep != nullptr)
+					SEditorAssetRepresentation* hoveredAssetRep = HoveredAsset.value();
+					if (hoveredAssetRep != nullptr)
 					{
-						const std::filesystem::directory_entry& directoryEntry = selectedAssetRep->DirectoryEntry;
+						const std::filesystem::directory_entry& directoryEntry = hoveredAssetRep->DirectoryEntry;
 
 						if (GUI::MenuItem("Rename", "F2"))
-							selectedAssetRep->IsBeingNamed = true;
+							hoveredAssetRep->IsBeingNamed = true;
 
 						if (GUI::MenuItem("Copy Asset Path"))
 							GUI::CopyToClipboard(directoryEntry.path().string().c_str());
@@ -131,23 +131,24 @@ namespace Havtorn
 						{
 							std::filesystem::path pathToRemove = directoryEntry.path();
 							Manager->RemoveAssetRep(directoryEntry);
-							//std::filesystem::remove(pathToRemove);
 							UFileSystem::Remove(pathToRemove.string());
 						}
 
 						// TODO.NW: It would be nice with some sort of attribute to check
 						// the enum value against (e.g. SourceFileBased), may not exist on our current version though
-						if (selectedAssetRep->AssetType != EAssetType::Material
-							&& selectedAssetRep->AssetType != EAssetType::Script
-							&& selectedAssetRep->AssetType != EAssetType::Scene
-							&& selectedAssetRep->AssetType != EAssetType::Sequencer
+						if (hoveredAssetRep->AssetType == EAssetType::Material
+							&& hoveredAssetRep->AssetType != EAssetType::Script
+							&& hoveredAssetRep->AssetType != EAssetType::Scene
+							&& hoveredAssetRep->AssetType != EAssetType::Sequencer
+							&& hoveredAssetRep->AssetType != EAssetType::Prefab
+							&& hoveredAssetRep->AssetType != EAssetType::InputAsset
 							)
 						{
-							if (selectedAssetRep->IsSourceWatched)
+							if (hoveredAssetRep->IsSourceWatched)
 							{
 								if (GUI::MenuItem("Stop Watching Source Changes"))
 								{
-									selectedAssetRep->IsSourceWatched = false;
+									hoveredAssetRep->IsSourceWatched = false;
 									GEngine::GetAssetRegistry()->StopSourceFileWatch(SAssetReference(directoryEntry.path().string()));
 								}
 							}
@@ -155,11 +156,40 @@ namespace Havtorn
 							{
 								if (GUI::MenuItem("Start Watching Source Changes"))
 								{
-									selectedAssetRep->IsSourceWatched = true;
+									hoveredAssetRep->IsSourceWatched = true;
 									GEngine::GetAssetRegistry()->StartSourceFileWatch(SAssetReference(directoryEntry.path().string()));
 								}
 							}
 						}
+					}
+				}
+				else if (HoveredFolder.has_value())
+				{
+					if (!UFileSystem::IsEmpty(HoveredFolder.value().path().string()))
+					{
+						GUI::TextDisabled("Rename");
+						if (GUI::IsItemHovered())
+							GUI::SetTooltip("Can't yet rename folders containing items. Please move or remove the contents so they can be redirected.");
+					}
+					else
+					{
+						if (GUI::MenuItem("Rename", "F2"))
+							FolderBeingRenamed = HoveredFolder;
+					}
+
+					if (GUI::MenuItem("Copy Path"))
+						GUI::CopyToClipboard(HoveredFolder.value().path().string().c_str());
+					
+					if (!UFileSystem::IsEmpty(HoveredFolder.value().path().string()))
+					{
+						GUI::TextDisabled("Delete Folder");
+						if (GUI::IsItemHovered())
+							GUI::SetTooltip("Can't yet delete folders containing items. Please move or remove the contents.");
+					}
+					else
+					{
+						if (GUI::MenuItem("Delete Folder"))
+							UFileSystem::Remove(HoveredFolder.value().path().string());
 					}
 				}
 				else
@@ -170,12 +200,32 @@ namespace Havtorn
 						DirectoryToSaveTo = CurrentDirectory.string();
 						NewAssetName = "NewAsset";
 					}
+
+					if (GUI::MenuItem("Create Folder"))
+					{
+						std::string newFolderName = CurrentDirectory.string() + "/NewFolder";
+
+						std::vector<std::string> folderNames;
+						for (const auto& entry : std::filesystem::directory_iterator(CurrentDirectory))
+						{
+							if (!entry.is_directory())
+								continue;
+
+							folderNames.push_back(UGeneralUtils::ConvertToPlatformAgnosticPath(entry.path().string()));
+						}
+
+						newFolderName = UGeneralUtils::GetNonCollidingString(newFolderName, folderNames, [](const std::string& folderName){ return folderName;});
+						UFileSystem::AddDirectory(newFolderName);
+					}
 				}
 
 				GUI::EndPopup();
 			}
 			else
-				IsSelectionHovered = false;
+			{
+				HoveredAsset.reset();
+				HoveredFolder.reset();
+			}
 
 			GUI::EndChild();
 		}
@@ -698,11 +748,45 @@ namespace Havtorn
 			{
 				CurrentDirectory = entry.path();
 			}
+			if (GUI::IsItemHovered())
+			{
+				HoveredFolder = entry;
+			}
 
 			auto relativePath = std::filesystem::relative(entry.path());
 			std::string filenameString = relativePath.filename().string();
 
-			GUI::Text(filenameString.c_str());
+			if (FolderBeingRenamed.has_value() && FolderBeingRenamed.value() == entry)
+			{
+				GUI::SetKeyboardFocusHere();
+
+				std::optional<std::string> result;
+				std::string newAssetName = filenameString;
+				GUI::PushID(filenameString.c_str());
+				if (GUI::InputText("", newAssetName))
+				{
+					if (GUI::IsItemDeactivatedAfterEdit())
+						result = newAssetName;
+				}
+
+				if (GUI::IsItemDeactivated() && !result.has_value())
+					result = filenameString;
+
+				GUI::PopID();
+
+				if (result.has_value())
+				{
+					FolderBeingRenamed.reset();
+
+					std::string oldPath = UGeneralUtils::ConvertToPlatformAgnosticPath(entry.path().string().c_str());
+					std::string newPath = UGeneralUtils::ConvertToPlatformAgnosticPath(CurrentDirectory.string()) + "/" + result.value();
+
+					std::filesystem::rename(oldPath, newPath);
+				}
+			}
+			else
+				GUI::Text(filenameString.c_str());
+
 			if (GUI::IsItemHovered())
 				GUI::SetTooltip(filenameString.c_str());
 		}
@@ -733,10 +817,7 @@ namespace Havtorn
 					AnimatingThumbnailAsset = rep.get();
 				}
 
-				if (rep.get() == selectedAsset)
-				{
-					IsSelectionHovered = true;
-				}
+				HoveredAsset = rep.get();
 			}
 
 			if (result.NewAssetName.has_value())

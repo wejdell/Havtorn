@@ -24,6 +24,11 @@ namespace Havtorn
 		return std::filesystem::exists(path);
 	}
 
+	bool UFileSystem::IsEmpty(const std::string& path)
+	{
+		return std::filesystem::is_empty(path);
+	}
+
 	U64 UFileSystem::GetFileSize(const std::string& filePath)
 	{
 		return std::filesystem::file_size(filePath);
