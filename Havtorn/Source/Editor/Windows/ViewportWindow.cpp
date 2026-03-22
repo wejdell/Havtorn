@@ -104,7 +104,7 @@ namespace Havtorn
 				auto currentLabel = magic_enum::enum_name(Manager->GetCurrentGizmoSpace());
 				if (GUI::BeginCombo("Gizmo Space", currentLabel.data()))
 				{
-					for (auto label : spaceLabels)
+					for (auto& label : spaceLabels)
 					{
 						bool isSelected = label == currentLabel;
 						if (GUI::Selectable(label.data(), isSelected))

@@ -768,7 +768,7 @@ namespace Havtorn
 		size += GetDataSize(U32());
 		size += DefaultSizeAllocator(GetComponents<SMetaDataComponent>());
 
-		for (auto [key, val] : ComponentSerializers)
+		for (auto& [key, val] : ComponentSerializers)
 		{
 			size += val.SizeAllocator(this);
 		}
@@ -790,7 +790,7 @@ namespace Havtorn
 		SerializeData(size, toData, pointerPosition);
 		DefaultSerializer(GetComponents<SMetaDataComponent>(), toData, pointerPosition);
 
-		for (auto [key, val] : ComponentSerializers)
+		for (auto& [key, val] : ComponentSerializers)
 		{
 			val.Serializer(this, toData, pointerPosition);
 		}

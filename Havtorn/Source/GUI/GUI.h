@@ -425,7 +425,7 @@ namespace Havtorn
 		bool IsPreview = false;
 		bool IsDelivery = false;
 
-		bool IsID(const std::string& id) { return IDTag == id; }
+		bool IsID(const std::string& id) const { return IDTag == id; }
 	};
 
 	enum class ESelectionRequestType
