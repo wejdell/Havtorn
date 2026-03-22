@@ -390,11 +390,28 @@ namespace Havtorn
 		{
 			for (const SComponentEditorContext* context : owningScene->GetComponentEditorContexts())
 			{
-				const char* componentName = context->GetComponentName();
-				if (!filter.PassFilter(componentName))
+				const char* newComponentName = context->GetComponentName();
+				
+				bool hasComponent = false;
+				for (const SComponentEditorContext* existingContext : owningScene->GetComponentEditorContexts(entity))
+				{
+					if (existingContext->GetComponentName() == newComponentName)
+					{
+						hasComponent = true;
+						break;
+					}
+				}
+				
+				// TODO.NW: Should make a choice here whether to allow multiple components of the same type, 
+				// or continue working under the assumption that every component can handle all the data it needs for 
+				// its owning entity.
+				if (hasComponent)
 					continue;
 
-				if (!GUI::Button(componentName))
+				if (!filter.PassFilter(newComponentName))
+					continue;
+
+				if (!GUI::Selectable(newComponentName))
 					continue;
 
 				if (context->AddComponent(entity, owningScene))
