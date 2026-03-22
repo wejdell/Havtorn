@@ -74,12 +74,15 @@ namespace Havtorn
 		NoiseTexture = Manager->CreateRenderTextureFromData(SVector2<U16>(width), DXGI_FORMAT_R32G32B32A32_FLOAT, noise, sizeof(SVector4));
 #pragma endregion
 
+		// TODO.NW: Move to component, or at least save settings in GameConfig
+
 		PostProcessingBufferData.WhitePointColor = { 255.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f, 1.0f };
 		PostProcessingBufferData.WhitePointIntensity = 1.0f;
 		PostProcessingBufferData.Exposure = 1.1f;
 		PostProcessingBufferData.IsReinhard = false;
-		PostProcessingBufferData.IsUncharted = true;
+		PostProcessingBufferData.IsUncharted = false;
 		PostProcessingBufferData.IsACES = false;
+		PostProcessingBufferData.IsAgX = true;
 
 		PostProcessingBufferData.SSAORadius = 0.6f;
 		PostProcessingBufferData.SSAOSampleBias = 0.2420f;
@@ -89,7 +92,6 @@ namespace Havtorn
 		PostProcessingBufferData.EmissiveStrength = 2.1f;
 
 		PostProcessingBufferData.VignetteStrength = 0.35f;
-		PostProcessingBufferData.Padding = 0.0f;
 		PostProcessingBufferData.VignetteColor = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 		return true;
@@ -123,5 +125,15 @@ namespace Havtorn
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 
 		stateManager.ClearShaderResources();
+	}
+
+	SPostProcessingBufferData CFullscreenRenderer::GetPostProcessBuffer() const
+	{
+		return PostProcessingBufferData;
+	}
+
+	void CFullscreenRenderer::SetPostProcessBuffer(const SPostProcessingBufferData& data)
+	{
+		PostProcessingBufferData = data;
 	}
 }

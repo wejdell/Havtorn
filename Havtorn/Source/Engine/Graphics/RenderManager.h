@@ -127,6 +127,9 @@ namespace Havtorn
 		ENGINE_API void AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewID);
 		ENGINE_API void AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SUIElement& uiElement, const U64 renderViewID);
 
+		ENGINE_API SPostProcessingBufferData GetPostProcessingBufferData() const;
+		ENGINE_API void SetPostProcessingBufferData(const SPostProcessingBufferData& data);
+
 	public:
 		void SyncCrossThreadResources(const CWorld* world);
 		void SetWorldMainCameraEntity(const SEntity& entity);

@@ -191,6 +191,7 @@ namespace Havtorn
 		void ToggleDebugInfo();
 		void ToggleDemo();
 		void TogglePreferences();
+		void ToggleGamePreferences();
 
 		static std::string PreviewMaterial;
 
@@ -252,6 +253,7 @@ namespace Havtorn
 		bool IsDebugInfoOpen = true;
 		bool IsDemoOpen = false;
 		bool IsPreferencesOpen = false;
+		bool IsGamePreferencesOpen = false;
 		bool IsFreeCamActive = false;
 		bool IsModalOpen = false;
 		bool IsFullscreen = false;

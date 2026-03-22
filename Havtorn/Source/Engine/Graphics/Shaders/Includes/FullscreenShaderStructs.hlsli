@@ -44,6 +44,7 @@ cbuffer PostProcessingBuffer : register(b2)
     int IsReinhard;
     int IsUncharted;
     int IsACES;
+    int IsAgX;
 
     float EmissiveStrength;
     

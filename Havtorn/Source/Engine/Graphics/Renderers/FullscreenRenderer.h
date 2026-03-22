@@ -15,32 +15,30 @@ namespace Havtorn
 	class CRenderManager;
 	class CRenderStateManager;
 
+	struct SPostProcessingBufferData
+	{
+		SVector4 WhitePointColor = SVector4::Zero;
+		F32 WhitePointIntensity = 1.0f;
+		F32 Exposure = 1.0f;
+		F32 SSAORadius = 0.25f;
+		F32 SSAOSampleBias = 0.2f;
+		F32 SSAOMagnitude = 0.2f;
+		F32 SSAOContrast = 1.0f;
+
+		I32 IsReinhard = 1;
+		I32 IsUncharted = 1;
+		I32 IsACES = 1;
+		I32 IsAgX = 0;
+
+		F32 EmissiveStrength = 20.0f;
+		F32 VignetteStrength = 0.25f;
+
+		SVector4 VignetteColor = SVector4::Zero;
+	};
+	HV_ASSERT_BUFFER(SPostProcessingBufferData)
+
 	class CFullscreenRenderer 
 	{
-	public:
-		struct SPostProcessingBufferData
-		{
-			SVector4 WhitePointColor = SVector4::Zero;
-			F32 WhitePointIntensity = 1.0f;
-			F32 Exposure = 1.0f;
-			F32 SSAORadius = 0.25f;
-			F32 SSAOSampleBias = 0.2f;
-			F32 SSAOMagnitude = 0.2f;
-			F32 SSAOContrast = 1.0f;
-
-			I32 IsReinhard = 0;
-			I32 IsUncharted = 1;
-			I32 IsACES = 1;
-
-			F32 EmissiveStrength = 20.0f;
-
-			F32 VignetteStrength = 0.25f;
-			F32 Padding = FLT_MAX;
-
-			SVector4 VignetteColor = SVector4::Zero;
-		};
-		HV_ASSERT_BUFFER(SPostProcessingBufferData)
-
 	public:
 		friend CRenderManager;
 
@@ -71,6 +69,9 @@ namespace Havtorn
 		~CFullscreenRenderer();
 		bool Init(CGraphicsFramework* framework, CRenderManager* manager);
 		void Render(const EPixelShaders effect, const CRenderStateManager& stateManager);
+
+		SPostProcessingBufferData GetPostProcessBuffer() const;
+		void SetPostProcessBuffer(const SPostProcessingBufferData& data);
 
 		const std::string ShaderRoot = "Shaders/";
 

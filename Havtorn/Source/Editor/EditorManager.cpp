@@ -253,6 +253,85 @@ namespace Havtorn
 			
 			GUI::End();
 		}
+
+		if (IsGamePreferencesOpen)
+		{
+			if (GUI::Begin("Game Preferences", &IsGamePreferencesOpen))
+			{
+				SPostProcessingBufferData bufferData = RenderManager->GetPostProcessingBufferData();
+				bool dataChanged = false;
+				
+				if (GUI::ColorPicker4("White Point Color", bufferData.WhitePointColor))
+					dataChanged = true;
+
+				if (GUI::DragFloat("White Point Intensity", bufferData.WhitePointIntensity))
+					dataChanged = true;
+				
+				if (GUI::DragFloat("Exposure", bufferData.Exposure))
+					dataChanged = true;
+
+				if (GUI::Checkbox("Reinhard", bufferData.IsReinhard))
+				{
+					dataChanged = true;
+					bufferData.IsUncharted = false;
+					bufferData.IsACES = false;
+					bufferData.IsAgX = false;
+				}
+
+				if (GUI::Checkbox("Uncharted", bufferData.IsUncharted))
+				{
+					dataChanged = true;
+					bufferData.IsReinhard = false;
+					bufferData.IsACES = false;
+					bufferData.IsAgX = false;
+				}
+
+				if (GUI::Checkbox("ACES", bufferData.IsACES))
+				{
+					dataChanged = true;
+					bufferData.IsReinhard = false;
+					bufferData.IsUncharted = false;
+					bufferData.IsAgX = false;
+				}
+
+				if (GUI::Checkbox("AgX", bufferData.IsAgX))
+				{
+					dataChanged = true;
+					bufferData.IsReinhard = false;
+					bufferData.IsUncharted = false;
+					bufferData.IsACES = false;
+				}
+
+				if (!bufferData.IsAgX && !bufferData.IsUncharted && !bufferData.IsACES && !bufferData.IsReinhard)
+					bufferData.IsUncharted = true;
+
+				if (GUI::DragFloat("SSAO Radius", bufferData.SSAORadius))
+					dataChanged = true;
+
+				if (GUI::DragFloat("SSAO Sample Bias", bufferData.SSAOSampleBias))
+					dataChanged = true;
+
+				if (GUI::DragFloat("SSAO Magnitude", bufferData.SSAOMagnitude))
+					dataChanged = true;
+
+				if (GUI::DragFloat("SSAO Contrast", bufferData.SSAOContrast))
+					dataChanged = true;
+
+				if (GUI::DragFloat("Emissive Strength", bufferData.EmissiveStrength))
+					dataChanged = true;
+
+				if (GUI::DragFloat("Vignette Strength", bufferData.VignetteStrength))
+					dataChanged = true;
+
+				if (GUI::ColorPicker4("Vignette Color", bufferData.VignetteColor))
+					dataChanged = true;
+				
+				if (dataChanged)
+					RenderManager->SetPostProcessingBufferData(bufferData);
+			}
+
+			GUI::End();
+		}
 	}
 
 	void CEditorManager::SetCurrentWorkingScene(const I64 sceneIndex)
@@ -896,6 +975,11 @@ namespace Havtorn
 	void CEditorManager::TogglePreferences()
 	{
 		IsPreferencesOpen = !IsPreferencesOpen;
+	}
+
+	void CEditorManager::ToggleGamePreferences()
+	{
+		IsGamePreferencesOpen = !IsGamePreferencesOpen;
 	}
 
 	void CEditorManager::InitEditorLayout()

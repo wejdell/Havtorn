@@ -556,6 +556,16 @@ namespace Havtorn
 		instanceData.Entities.emplace_back(screenSpaceTransform->Owner);
 	}
 
+	SPostProcessingBufferData CRenderManager::GetPostProcessingBufferData() const
+	{
+		return FullscreenRenderer.GetPostProcessBuffer();
+	}
+
+	void CRenderManager::SetPostProcessingBufferData(const SPostProcessingBufferData& data)
+	{
+		FullscreenRenderer.SetPostProcessBuffer(data);
+	}
+
 	void CRenderManager::SyncCrossThreadResources(const CWorld* world)
 	{
 		SwapRenderViews();

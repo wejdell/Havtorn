@@ -909,6 +909,7 @@ namespace Havtorn
 
 		static bool ColorPicker3(const char* label, SColor& value);
 		static bool ColorPicker4(const char* label, SColor& value);
+		static bool ColorPicker4(const char* label, SVector4& value);
 
 		static void PushID(const char* label);
 		static void PushID(I32 intID);
@@ -973,6 +974,7 @@ namespace Havtorn
 		static bool ImageButton(const char* label, intptr_t imageRef, const SVector2<F32>& size = SVector2<F32>(0.0f), const SVector2<F32>& uv0 = SVector2<F32>(0.0f), const SVector2<F32>& uv1 = SVector2<F32>(1.0f), const SColor& backgroundColor = SColor(0.0f, 0.0f, 0.0f, 0.0f), const SColor& tintColor = SColor::White);
 		static bool ViewportButton(const char* label, intptr_t imageRef, const SVector2<F32>& size = SVector2<F32>(0.0f), const SVector2<F32>& uv0 = SVector2<F32>(0.0f), const SVector2<F32>& uv1 = SVector2<F32>(1.0f), const SColor& backgroundColor = SColor(0.0f, 0.0f, 0.0f, 0.0f), const SColor& tintColor = SColor::White);
 		static bool Checkbox(const char* label, bool& value);
+		static bool Checkbox(const char* label, I32& value);
 
 		static void AddViewportButtons(const std::vector<SAlignedButtonData>& buttons, const SVector2<F32>& buttonSize, const F32 alignWidth);
 

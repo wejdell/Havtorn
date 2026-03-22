@@ -269,9 +269,25 @@ namespace Havtorn
 			return returnValue;
 		}
 
+		bool ColorPicker4(const char* label, SVector4& color)
+		{
+			F32 valueData[4] = { color.X, color.Y, color.Z, color.W };
+			const bool returnValue = ImGui::ColorPicker4(label, valueData);
+			color = SVector4(valueData[0], valueData[1], valueData[2], valueData[3]);
+			return returnValue;
+		}
+
 		bool Checkbox(const char* label, bool& v)
 		{
 			return ImGui::Checkbox(label, &v);
+		}
+
+		bool Checkbox(const char* label, I32& v)
+		{
+			bool valueData = v;
+			const bool returnValue = ImGui::Checkbox(label, &valueData);
+			v = valueData;
+			return returnValue;
 		}
 
 		bool Selectable(const char* label, const bool selected, const std::vector<ESelectableFlag>& flags, const SVector2<F32>& size)
@@ -1672,6 +1688,11 @@ namespace Havtorn
 		return Instance->Impl->ColorPicker4(label, value);
 	}
 
+	bool GUI::ColorPicker4(const char* label, SVector4& value)
+	{
+		return Instance->Impl->ColorPicker4(label, value);
+	}
+
 	void GUI::PushID(const char* label)
 	{
 		Instance->Impl->PushID(label);
@@ -1903,6 +1924,11 @@ namespace Havtorn
 	}
 
 	bool GUI::Checkbox(const char* label, bool& value)
+	{
+		return Instance->Impl->Checkbox(label, value);
+	}
+
+	bool GUI::Checkbox(const char* label, I32& value)
 	{
 		return Instance->Impl->Checkbox(label, value);
 	}
