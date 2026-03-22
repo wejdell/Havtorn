@@ -135,6 +135,24 @@ namespace Havtorn
 				GUI::EndPopup();
 			}
 
+			CCameraSystem* cameraSystem = GEngine::GetWorld()->GetSystem<CCameraSystem>();
+			if (cameraSystem)
+			{
+				constexpr F32 cameraSpeedDraggerWidth = 100.0f;
+				constexpr F32 spacing = 12.0f;
+				const char* label = "Camera Speed ";
+				const F32 labelWidth = GUI::CalculateTextSize(label).X;
+
+				GUI::SameLine(GUI::GetContentRegionAvail().X - cameraSpeedDraggerWidth - labelWidth - spacing);
+				GUI::PushItemWidth(cameraSpeedDraggerWidth);
+				
+				F32 cameraSpeed = cameraSystem->GetCameraSpeed();
+				if (GUI::DragFloat(label, cameraSpeed, 0.5f, 0.2f, 10.0f, "%.2f"))
+					cameraSystem->SetCameraSpeed(cameraSpeed);
+				
+				GUI::PopItemWidth();
+			}
+
 			const SEntity& mainCamera = world->GetMainCamera();
 			Render(Manager->GetCurrentWorkingScene(), mainCamera.IsValid() ? mainCamera.GUID : 0);
 		}
