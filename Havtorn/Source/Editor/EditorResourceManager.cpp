@@ -438,6 +438,9 @@ namespace Havtorn
 
 		case EEditorTexture::PrefabWidgetIcon:
 			return ResourceAssetPath + prefix + "PrefabWidgetIcon" + extension;
+
+		case EEditorTexture::FindIcon:
+			return ResourceAssetPath + prefix + "FindIcon" + extension;
 		
 		case EEditorTexture::Count:
 		default:

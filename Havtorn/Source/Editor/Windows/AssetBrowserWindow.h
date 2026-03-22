@@ -24,6 +24,8 @@ namespace Havtorn
 		void OnInspectorGUI() override;
 		void OnDisable() override;
 
+		void BrowseTo(SEditorAssetRepresentation* assetRep);
+
 	private:
 		void OnDragDropFiles(std::vector<std::string> filePaths);
 		void OnAssetReloaded(const std::string& assetPath);

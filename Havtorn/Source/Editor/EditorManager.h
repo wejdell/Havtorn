@@ -88,9 +88,9 @@ namespace Havtorn
 	struct SEditorPreferences
 	{
 		F32 Sensitivity = 0.5f;
-		EEditorColorTheme EditorColorTheme = EEditorColorTheme::HavtornYellow;
-		EEditorColorTheme PlayColorTheme = EEditorColorTheme::HavtornYellow;
-		EEditorColorTheme PauseColorTheme = EEditorColorTheme::HavtornYellow;
+		EEditorColorTheme EditorColorTheme = EEditorColorTheme::HavtornDefault;
+		EEditorColorTheme PlayColorTheme = EEditorColorTheme::HavtornDefault;
+		EEditorColorTheme PauseColorTheme = EEditorColorTheme::HavtornDefault;
 	};
 
 	class CEditorManager

@@ -2080,7 +2080,7 @@ namespace Havtorn
 		return result;
 	}
 
-	SAssetPickResult GUI::AssetPickerDropdownFilter(const char* label, const char* assetDetailLabel, intptr_t image, intptr_t sourceButtonImage, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize)
+	SAssetPickResult GUI::AssetPickerDropdownFilter(const char* label, const char* assetDetailLabel, intptr_t image, intptr_t sourceButtonImage, intptr_t findButtonImage, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize)
 	{
 		SAssetPickResult result;
 
@@ -2098,7 +2098,6 @@ namespace Havtorn
 		GUI::OffsetCursorPos(SVector2<F32>(1.0f, -4.0f));
 		GUI::AddRectFilled(GUI::GetCursorScreenPos(), SVector2<F32>(cellWidth, 2.0f), GetAssetTypeColor(assetType));
 		GUI::OffsetCursorPos(SVector2<F32>(0.0f, 6.0f));
-
 
 		// TODO.NW: Figure out the sizing of these elements. The child holding the combo and text under it makes it so that the combo arrow doesn't get displayed when minimized.
 		SVector2<F32> contentRegionAvail = GUI::GetContentRegionAvail() - SVector2<F32>(cellWidth, 0.0f);
@@ -2171,7 +2170,18 @@ namespace Havtorn
 				result.State = EAssetPickerState::GetFromSelected;
 			}
 			if (GUI::IsItemHovered())
-				GUI::SetTooltip("Use Selected Asset from Browser");
+				GUI::SetTooltip("Use Selected Asset from Asset Browser");
+			GUI::PopID();
+
+			GUI::SameLine();
+			GUI::OffsetCursorPos(SVector2<F32>(-2.0f, 0.0f));
+			GUI::PushID("BrowseToAssetButton");
+			if (GUI::ImageButton("##", findButtonImage, SVector2<F32>(12.0f, 14.0f)))
+			{
+				result.State = EAssetPickerState::FindInBrowser;
+			}
+			if (GUI::IsItemHovered())
+				GUI::SetTooltip("Browse to Asset in Asset Browser");
 			GUI::PopID();
 
 			GUI::EndChild();

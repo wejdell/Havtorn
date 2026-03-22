@@ -294,14 +294,15 @@ namespace Havtorn
 	{
 	}
 
-	/*
-	Folder Structure Navigation
-		Open Modal Popup where you can navigate choose where to save thingy or something
+	void CAssetBrowserWindow::BrowseTo(SEditorAssetRepresentation* assetRep)
+	{
+		if (assetRep == nullptr || !UFileSystem::Exists(assetRep->DirectoryEntry.path().parent_path().string()))
+			return;
 
-	Save new file dialoguehtrt
+		CurrentDirectory = assetRep->DirectoryEntry.path().parent_path();
+		Manager->SetSelectedAsset(assetRep);
+	}
 
-	<applause.h>
-	*/
 	void CAssetBrowserWindow::OnDragDropFiles(const std::vector<std::string> filePaths)
 	{
 		FilePathsToImport = filePaths;

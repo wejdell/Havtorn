@@ -14,6 +14,7 @@
 
 #include "Windows/ViewportWindow.h"
 #include "Windows/HierarchyWindow.h"
+#include "Windows/AssetBrowserWindow.h"
 #include "AuthoringTools/PrefabTool.h"
 #include "Windows/SpriteAnimatorGraphNodeWindow.h"
 #include "EditorResourceManager.h"
@@ -296,7 +297,7 @@ namespace Havtorn
 			const I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
 			const std::string modalName = "Select " + GetAssetTypeName(result.AssetType) + " Asset";
 
-			SAssetPickResult assetPickResult = GUI::AssetPickerDropdownFilter(assetName.c_str(), GetAssetTypeDetailName(result.AssetType).c_str(), Manager->GetTextureResourceFromAssetRep(assetRep.get()), Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::GetFromSource), "Assets", columnCount, Manager->GetAssetFilteredInspectFunction(), result.AssetType);
+			SAssetPickResult assetPickResult = GUI::AssetPickerDropdownFilter(assetName.c_str(), GetAssetTypeDetailName(result.AssetType).c_str(), Manager->GetTextureResourceFromAssetRep(assetRep.get()), Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::GetFromSource), Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::FindIcon), "Assets", columnCount, Manager->GetAssetFilteredInspectFunction(), result.AssetType);
 			SAssetReference* currentReference = (result.AssetReferences)[AssetPickedIndex];
 
 			if (assetPickResult.State == EAssetPickerState::Active)
@@ -319,7 +320,6 @@ namespace Havtorn
 					pickedAsset = Manager->GetAssetRepFromDirEntry(assetPickResult.PickedEntry).get();
 				else if (assetPickResult.State == EAssetPickerState::GetFromSelected)
 				{
-					// TODO.NW: Figure out what to do about new script components. With an invalid asset ref to begin with they seem to not load in correctly
 					SEditorAssetRepresentation* selectedAssetInBrowser = Manager->GetSelectedAsset();
 					if (selectedAssetInBrowser != nullptr && (selectedAssetInBrowser->AssetType == assetRep->AssetType || selectedAssetInBrowser->AssetType == result.AssetType))
 						pickedAsset = Manager->GetSelectedAsset();
@@ -339,6 +339,10 @@ namespace Havtorn
 
 				AssetPickedIndex = 0;
 				Manager->SetIsModalOpen(false);
+			}
+			else if (assetPickResult.State == EAssetPickerState::FindInBrowser)
+			{
+				Manager->GetEditorWindow<CAssetBrowserWindow>()->BrowseTo(assetRep.get());
 			}
 			else if (assetPickResult.State == EAssetPickerState::Inactive)
 				Manager->SetIsModalOpen(false);
