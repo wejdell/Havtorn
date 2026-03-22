@@ -277,6 +277,7 @@ namespace Havtorn
 		CycleRenderPassBackward,
 		CycleRenderPassReset,
 		PickEditorEntity,
+		ContextPickEditorEntity,
 		ControlPickEditorEntity,
 		ShiftPickEditorEntity,
 		FocusEditorEntity,

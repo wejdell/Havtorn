@@ -142,6 +142,45 @@ namespace Havtorn
 		GUI::PopStyleVar();
 		GUI::PopStyleVar();
 
+		// Context Menu
+		if (ContextMenuEntity.IsValid())
+		{
+			if (GUI::BeginPopupContextWindow())
+			{
+				OpenedEntityContextMenu = true;
+
+				std::string entityName = "UNNAMED";
+				CScene* containingScene = UComponentAlgo::GetContainingScene(ContextMenuEntity, GEngine::GetWorld()->GetActiveScenes());
+				if (containingScene == nullptr)
+				{
+					GUI::CloseCurrentPopup();
+				}
+				else
+				{
+					SMetaDataComponent* metaData = containingScene->GetComponent<SMetaDataComponent>(ContextMenuEntity);
+					if (SComponent::IsValid(metaData))
+						entityName = metaData->Name.AsString();
+
+					GUI::TextDisabled(entityName.c_str());
+					GUI::Separator();
+
+					GUI::TextDisabled("Copy Focus Entity Link");
+					if (GUI::IsItemHovered())
+						GUI::SetTooltip("Not yet implemented");
+
+					GUI::TextDisabled("Copy Camera View Link");
+					if (GUI::IsItemHovered())
+						GUI::SetTooltip("Not yet implemented");
+				}
+				GUI::EndPopup();
+			}
+			else if (OpenedEntityContextMenu)
+			{
+				ContextMenuEntity = SEntity::Null;
+				OpenedEntityContextMenu = false;
+			}
+		}
+
 		const SVector2<F32> newPosition = GUI::GetWindowPos();
 		const SVector2<F32> newSize = GUI::GetWindowSize();
 		if (layoutPosition != newPosition || layoutSize != newSize)
@@ -419,6 +458,15 @@ namespace Havtorn
 
 		if (payload.Event == EInputAxisEvent::MousePositionVertical)
 			MousePosition.Y = payload.AxisValue;
+	}
+
+	void CViewportWindow::SetContextMenuEntity(const SEntity& entity)
+	{
+		ContextMenuEntity = entity;
+
+		// TODO.NW: Decide what feels best here, to clear all selections or select the picked one
+		//Manager->SetSelectedEntity(entity);
+		Manager->ClearSelectedEntities();
 	}
 
 	SVector4 CViewportWindow::GetWorldPositionOnPixel() const

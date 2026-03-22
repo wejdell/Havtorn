@@ -32,6 +32,9 @@ namespace Havtorn
 		void DeliverAssetDrag(CScene* toScene, const SEditorAssetRepresentation* assetRepresentation);
 
 		void OnMouseMove(const SInputAxisPayload payload);
+
+		void SetContextMenuEntity(const SEntity& entity);
+
 	private:
 		SVector4 GetWorldPositionOnPixel() const;
 
@@ -47,5 +50,7 @@ namespace Havtorn
 		bool IsPauseButtonEngaged = false;
 		bool WasPreviewPositionValid = true;
 		SVector4 PreviousPreviewPosition = SVector4::Zero;
+		SEntity ContextMenuEntity = SEntity::Null;
+		bool OpenedEntityContextMenu = false;
 	};
 }

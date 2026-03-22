@@ -109,6 +109,7 @@ namespace Havtorn
 		inline void OrthoNormalize();
 
 		inline bool operator==(const SMatrix& matrix) const;
+		inline bool NearlyEqual(const SMatrix& matrix, const F32 tolerance = KINDA_SMALL_NUMBER) const;
 
 		static SMatrix PerspectiveFovLH(F32 fovAngleY, F32 aspectRatio, F32 nearZ, F32 farZ);
 		static SMatrix OrthographicLH(F32 viewWidth, F32 viewHeight, F32 nearZ, F32 farZ);
@@ -447,6 +448,22 @@ namespace Havtorn
 			for (U8 column = 0; column < 4; ++column)
 			{
 				if (M[row][column] != matrix(row, column))
+				{
+					equal = false;
+				}
+			}
+		}
+		return equal;
+	}
+
+	bool SMatrix::NearlyEqual(const SMatrix& matrix, const F32 tolerance) const
+	{
+		bool equal = true;
+		for (U8 row = 0; row < 4; ++row)
+		{
+			for (U8 column = 0; column < 4; ++column)
+			{
+				if (!UMath::NearlyEqual(M[row][column], matrix(row, column), tolerance))
 				{
 					equal = false;
 				}

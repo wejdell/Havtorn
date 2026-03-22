@@ -10,6 +10,7 @@
 namespace Havtorn
 {
 	class CEditorManager;
+	struct SEntity;
 	struct STransformComponent;
 	struct SCameraComponent;
 	struct SInputActionPayload;
@@ -22,13 +23,16 @@ namespace Havtorn
 		void Update(std::vector<Ptr<CScene>>& scenes) override;
 
 	private:
-		void OnMouseClick(const SInputActionPayload payload) const;
+		void OnMouseClick(const SInputActionPayload payload);
 		void OnMouseMove(const SInputAxisPayload payload);
+		SEntity FindEntityInViewport() const;
 		void WorldSpacePick(const bool modifierHeld) const;
+		void WorldSpaceContextPick();
 
 		CEditorManager* Manager = nullptr;
 		STransformComponent* EditorCameraTransform = nullptr;
 		SCameraComponent* EditorCameraComponent = nullptr;
 		SVector2<F32> MousePosition = SVector2<F32>::Zero;
+		SMatrix ContextPickStartingCameraMatrix = SMatrix::Identity;
 	};
 }

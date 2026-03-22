@@ -26,6 +26,7 @@ namespace Havtorn
 		: Manager(editorManager)
 	{
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::PickEditorEntity).AddMember(this, &CPickingSystem::OnMouseClick);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ContextPickEditorEntity).AddMember(this, &CPickingSystem::OnMouseClick);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ControlPickEditorEntity).AddMember(this, &CPickingSystem::OnMouseClick);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ShiftPickEditorEntity).AddMember(this, &CPickingSystem::OnMouseClick);
 		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MousePositionHorizontal).AddMember(this, &CPickingSystem::OnMouseMove);
@@ -48,8 +49,27 @@ namespace Havtorn
 		}
 	}
 
-	void CPickingSystem::OnMouseClick(const SInputActionPayload payload) const
+	void CPickingSystem::OnMouseClick(const SInputActionPayload payload)
 	{
+		if (payload.Event == EInputActionEvent::ContextPickEditorEntity)
+		{
+			if (!SComponent::IsValid(EditorCameraTransform))
+				return;
+
+			if (payload.IsPressed)
+				ContextPickStartingCameraMatrix = EditorCameraTransform->Transform.GetMatrix();
+
+			if (payload.IsReleased)
+			{
+				// NW: Track whether FreeCam was meaningfully used during press and release of context pick button
+				SMatrix newCameraMatrix = EditorCameraTransform->Transform.GetMatrix();
+				if (ContextPickStartingCameraMatrix.NearlyEqual(newCameraMatrix))
+					WorldSpaceContextPick();
+			}
+
+			return;
+		}
+
 		if (payload.IsPressed)
 			WorldSpacePick(payload.Event == EInputActionEvent::ControlPickEditorEntity || payload.Event == EInputActionEvent::ShiftPickEditorEntity);
 	}
@@ -63,13 +83,11 @@ namespace Havtorn
 			MousePosition.Y = payload.AxisValue;
 	}
 
-	void CPickingSystem::WorldSpacePick(const bool modifierHeld) const
+	SEntity CPickingSystem::FindEntityInViewport() const
 	{
-		// TODO.NW: Set up focus and hovering rules. With overlapping windows, only the one in front should be considered hovered. If there's no window in the way, we would like not 
-		// to click twice on the viewport to focus it and then be able to pick on the next click though.
 		const CViewportWindow* viewport = Manager->GetEditorWindow<CViewportWindow>();
-		if (Manager->GetIsOverGizmo() || Manager->GetIsWorldPlaying() || !viewport->GetIsHovered() || Manager->GetIsModalOpen() || EditorCameraComponent == nullptr || EditorCameraTransform == nullptr)
-			return;
+		if (Manager->GetIsOverGizmo() || Manager->GetIsWorldPlaying() || !viewport->GetIsHovered() || Manager->GetIsModalOpen() || !SComponent::IsValid(EditorCameraComponent) || !SComponent::IsValid(EditorCameraTransform))
+			return SEntity::Null;
 
 		const SVector2<F32> renderedSceneDimensions = viewport->GetRenderedSceneDimensions();
 		const SVector2<F32> renderedScenePosition = viewport->GetRenderedScenePosition();
@@ -78,14 +96,19 @@ namespace Havtorn
 		const SVector2<F32> rectRelativeMousePos = SVector2((MousePosition.X - renderedScenePosition.X) / renderedSceneDimensions.X, (MousePosition.Y - renderedScenePosition.Y) / renderedSceneDimensions.Y);
 
 		const SVector2<F32> fullscreenMousePos = { UMath::Ceil(STATIC_F32(resolution.X) * rectRelativeMousePos.X), UMath::Ceil(STATIC_F32(resolution.Y) * rectRelativeMousePos.Y - 12.0f) };
-		
+
 		if (!UMath::IsWithin(fullscreenMousePos.X, 0.0f, STATIC_F32(resolution.X)) || !UMath::IsWithin(fullscreenMousePos.Y, 0.0f, STATIC_F32(resolution.Y)))
-			return;
+			return SEntity::Null;
 
 		const U64 dataIndex = STATIC_U64(fullscreenMousePos.X) + STATIC_U64(fullscreenMousePos.Y) * STATIC_U64(resolution.X);
 		const U64 pickedEntityGUID = Manager->GetRenderManager()->GetEntityGUIDFromData(dataIndex);
 
-		SEntity candidate = SEntity(pickedEntityGUID);
+		return SEntity(pickedEntityGUID);
+	}
+
+	void CPickingSystem::WorldSpacePick(const bool modifierHeld) const
+	{
+		SEntity candidate = FindEntityInViewport();
 		if (!candidate.IsValid())
 			return;
 
@@ -95,5 +118,12 @@ namespace Havtorn
 			Manager->AddSelectedEntity(candidate);
 		else if (!Manager->IsEntitySelected(candidate))
 			Manager->SetSelectedEntity(candidate);
+	}
+
+	void CPickingSystem::WorldSpaceContextPick()
+	{
+		// TODO.NW: Might make sense to move the base functionality of this system to the viewport window? And let this system handle the input layer only
+		CViewportWindow* viewport = Manager->GetEditorWindow<CViewportWindow>();
+		viewport->SetContextMenuEntity(FindEntityInViewport());
 	}
 }
