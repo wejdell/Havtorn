@@ -325,7 +325,38 @@ namespace Havtorn
 
 				if (GUI::ColorPicker4("Vignette Color", bufferData.VignetteColor))
 					dataChanged = true;
-				
+
+				GUI::Separator();
+				GUI::Text("AgX Settings");
+
+				if (GUI::DragFloat("Middle Gray", bufferData.AgXMiddleGray, 0.01f, 0.0f, 10.0f))
+					dataChanged = true;
+
+				if (GUI::DragFloat("Slope", bufferData.AgXSlope, 0.01f, -10.0f, 10.0f))
+					dataChanged = true;
+
+				if (GUI::DragFloat("Toe Power", bufferData.AgXToePower, 0.01f, -10.0f, 10.0f))
+					dataChanged = true;
+
+				if (GUI::DragFloat("Shoulder Power", bufferData.AgXShoulderPower, 0.01f, -10.0f, 10.0f))
+					dataChanged = true;
+
+				if (GUI::DragFloat("Compression R", bufferData.AgXCompressionR, 0.01f, 0.0f, 1.0f))
+					dataChanged = true;
+
+				if (GUI::DragFloat("Compression G", bufferData.AgXCompressionG, 0.01f, 0.0f, 1.0f))
+					dataChanged = true;
+
+				if (GUI::DragFloat("Compression B", bufferData.AgXCompressionB, 0.01f, 0.0f, 1.0f))
+					dataChanged = true;
+
+				if (GUI::DragFloat("Saturation", bufferData.AgXSaturation, 0.01f))
+					dataChanged = true;
+
+				if (GUI::DragFloat("Lerp", bufferData.AgXLerp, 0.01f, 0.0f, 1.0f))
+					dataChanged = true;
+
+
 				if (dataChanged)
 					RenderManager->SetPostProcessingBufferData(bufferData);
 			}

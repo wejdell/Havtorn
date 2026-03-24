@@ -90,8 +90,19 @@ namespace Havtorn
 		PostProcessingBufferData.SSAOContrast = 0.6f;
 
 		PostProcessingBufferData.EmissiveStrength = 2.1f;
-
 		PostProcessingBufferData.VignetteStrength = 0.35f;
+
+		// AGX Settings
+		PostProcessingBufferData.AgXMiddleGray = 1.08f;
+		PostProcessingBufferData.AgXSlope = 4.82f;
+		PostProcessingBufferData.AgXToePower = 2.04f;
+		PostProcessingBufferData.AgXShoulderPower = 3.4f;
+		PostProcessingBufferData.AgXCompressionR = 0.14f;
+		PostProcessingBufferData.AgXCompressionG = 0.17f;
+		PostProcessingBufferData.AgXCompressionB = 0.07f;
+		PostProcessingBufferData.AgXSaturation = 1.0f;
+		PostProcessingBufferData.AgXLerp = 1.0f;
+
 		PostProcessingBufferData.VignetteColor = { 0.0f, 0.0f, 0.0f, 1.0f };
 
 		return true;

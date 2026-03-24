@@ -63,25 +63,8 @@ float3 ACESApprox(const float3 x)
 }
 
 // AgX from: https://www.shadertoy.com/view/dtSGD1
-
-//AgX Settings
-const float MIDDLE_GREY = 0.18f;
-const float SLOPE = 2.3f;
-const float TOE_POWER = 1.9f;
-const float SHOULDER_POWER = 3.1f;
-const float COMPRESSION = 0.15; //Better expressed per channel in practice
-
-//"Look" Settings
-//Try 1.3 for a more saturated look. There's nothing wrong with intentionally skewing to develop a look you like,
-//because intention is the entire point. That's why I advocate separate grading from compression, rather
-//than combining them and telling artists to figure it out.
-const float SATURATION = 1.0;
-
-//Demo Settings
-const float EXPOSURE = 0.0;
-const float MIN_EV = -10.0f;
-const float MAX_EV = 6.5f;
-const float AGX_LERP = 1.0;
+static const float MIN_EV = -10.0f;
+static const float MAX_EV = 6.5f;
 
 float3x3 InverseMat(float3x3 m)
 {
@@ -145,12 +128,11 @@ float3x3 PrimariesToMatrix(float2 xy_red, float2 xy_green, float2 xy_blue, float
                 scale.x * XYZ_red.z, scale.y * XYZ_green.z, scale.z * XYZ_blue.z);
 }
 
-float3x3 ComputeCompressionMatrix(float2 xyR, float2 xyG, float2 xyB, float2 xyW, float compression)
+float3x3 ComputeCompressionMatrix(float2 xyR, float2 xyG, float2 xyB, float2 xyW, float3 compression)
 {
-    float scale_factor = 1.0f / (1.0f - compression);
-    float2 R = ((xyR - xyW) * scale_factor) + xyW;
-    float2 G = ((xyG - xyW) * scale_factor) + xyW;
-    float2 B = ((xyB - xyW) * scale_factor) + xyW;
+    float2 R = ((xyR - xyW) * (1.0f / (1.0f - compression.x))) + xyW;
+    float2 G = ((xyG - xyW) * (1.0f / (1.0f - compression.y))) + xyW;
+    float2 B = ((xyB - xyW) * (1.0f / (1.0f - compression.z))) + xyW;
     float2 W = xyW;
 
     return PrimariesToMatrix(R, G, B, W);
@@ -160,7 +142,7 @@ float3 OpenDomainToNormalizedLog2(float3 openDomain, float minimum_ev, float max
 {
     float total_exposure = maximum_ev - minimum_ev;
 
-    float3 output_log = clamp(log2(openDomain / MIDDLE_GREY), minimum_ev, maximum_ev);
+    float3 output_log = clamp(log2(openDomain / AgXMiddleGray), minimum_ev, maximum_ev);
 
     return (output_log - minimum_ev) / total_exposure;
 }
@@ -207,15 +189,7 @@ float AgXFullCurve(float x, float x_pivot, float y_pivot, float slope_pivot, flo
 
 float3 AgX(float3 color)
 {
-    //float h = floor(1.0 + 24.0 * fragCoord.y / resolution.y) / 24.0 * 3.14159265 * 2.;
-    //float L = floor(fragCoord.x * 24.0 / resolution.y) / (24.0 / resolution.y) / resolution.x - 0.4;
-    //float3 color = cos(h + float3(0.0, 1.0, 2.0) * 3.141592 * 2.0 / 3.0);
-    //float maxRGB = max(color.r, max(color.g, color.b));
-    //float minRGB = min(color.r, min(color.g, color.b));
-    
-    //color = exp(15.0 * L) * (color - minRGB) / (maxRGB - minRGB);
-    
-    float3 workingColor = max(color, 0.0f) * pow(2.0f, EXPOSURE);
+    float3 workingColor = max(color, 0.0f) * pow(2.0f, Exposure);
     
     float3x3 sRGB_to_XYZ = PrimariesToMatrix(float2(0.64, 0.33),
                                          float2(0.3, 0.6),
@@ -225,8 +199,7 @@ float3 AgX(float3 color)
     float3x3 adjusted_to_XYZ = ComputeCompressionMatrix(float2(0.64, 0.33),
                                                     float2(0.3, 0.6),
                                                     float2(0.15, 0.06),
-                                                    float2(0.3127, 0.3290), COMPRESSION);
-
+                                                    float2(0.3127, 0.3290), float3(AgXCompressionR, AgXCompressionG, AgXCompressionB));
     								
     float3x3 XYZ_to_adjusted = InverseMat(adjusted_to_XYZ);
 
@@ -238,19 +211,19 @@ float3 AgX(float3 color)
 
     float3 logV = OpenDomainToNormalizedLog2(adjustedRGB, MIN_EV, MAX_EV);
 
-    float outputR = AgXFullCurve(logV.r, x_pivot, y_pivot, SLOPE, TOE_POWER, SHOULDER_POWER);
-    float outputG = AgXFullCurve(logV.g, x_pivot, y_pivot, SLOPE, TOE_POWER, SHOULDER_POWER);
-    float outputB = AgXFullCurve(logV.b, x_pivot, y_pivot, SLOPE, TOE_POWER, SHOULDER_POWER);
+    float outputR = AgXFullCurve(logV.r, x_pivot, y_pivot, AgXSlope, AgXToePower, AgXShoulderPower);
+    float outputG = AgXFullCurve(logV.g, x_pivot, y_pivot, AgXSlope, AgXToePower, AgXShoulderPower);
+    float outputB = AgXFullCurve(logV.b, x_pivot, y_pivot, AgXSlope, AgXToePower, AgXShoulderPower);
 
     workingColor = clamp(float3(outputR, outputG, outputB), 0.0, 1.0);
 
     float3 luminanceWeight = float3(0.2126729f, 0.7151522f, 0.0721750f);
     float3 desaturation = float3(dot(workingColor, luminanceWeight).xxx);
-    workingColor = lerp(desaturation, workingColor, SATURATION);
+    workingColor = lerp(desaturation, workingColor, AgXSaturation);
     workingColor = clamp(workingColor, 0.f, 1.f);
 
     // Lerp between raw and image
-    return lerp(color, workingColor, AGX_LERP);
+    return lerp(color, workingColor, AgXLerp);
 }
 
 PixelOutput main(VertexToPixel input)
@@ -276,8 +249,8 @@ PixelOutput main(VertexToPixel input)
 	// Uncharted 2
     if (IsUncharted)
     {
-	    const float3 whitePoint = (float3)WhitePointColor * WhitePointIntensity; //10.0f;
-	    const float exposure = Exposure; //3.0f;
+	    const float3 whitePoint = (float3)WhitePointColor * WhitePointIntensity;
+	    const float exposure = Exposure;
         returnValue.Color.rgb = Uncharted2Tonemap(resource * exposure) / Uncharted2Tonemap(whitePoint);
     }
 	// Uncharted 2
@@ -285,26 +258,17 @@ PixelOutput main(VertexToPixel input)
     // ACES
     if (IsACES)
     {
-	    const float3 whitePoint = (float3)WhitePointColor * WhitePointIntensity; //10.0f;
-	    const float exposure = Exposure; //3.0f;
+        const float3 whitePoint = (float3) WhitePointColor * WhitePointIntensity;
+        const float exposure = Exposure;
         returnValue.Color.rgb = ACESFitted(resource * exposure) / ACESFitted(whitePoint);
+        //returnValue.Color.rgb = ACESApprox(resource * exposure) / ACESApprox(whitePoint);
     }
     // ACES
-    
-    // ACES approx
-    //{
-    //    float3 whitePoint = 10.0f;
-    //    float exposure = 1.0f;
-    //    returnValue.myColor.rgb = ACESApprox(resource * exposure) / ACESApprox(whitePoint);
-    //}
-    // ACES approx
     
     // AgX
     if (IsAgX)
     {
-        const float3 whitePoint = (float3) WhitePointColor * WhitePointIntensity; //10.0f;
-        const float exposure = Exposure; //3.0f;
-        returnValue.Color.rgb = AgX(resource * exposure) / AgX(whitePoint);
+        returnValue.Color.rgb = AgX(resource);
     }
     // AgX
     

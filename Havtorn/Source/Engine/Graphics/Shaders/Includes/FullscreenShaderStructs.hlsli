@@ -47,9 +47,19 @@ cbuffer PostProcessingBuffer : register(b2)
     int IsAgX;
 
     float EmissiveStrength;
-    
     float VignetteStrength;    
-    float Padding;
+    
+    // AGX Settings
+    float AgXMiddleGray = 0.18f;
+    float AgXSlope = 2.3f;
+    float AgXToePower = 1.9f;
+    float AgXShoulderPower = 3.1f;
+    float AgXCompressionR = 0.15f;
+    float AgXCompressionG = 0.15f;
+    float AgXCompressionB = 0.15f;
+    float AgXSaturation = 1.0f;
+    float AgXLerp = 1.0f;
+    float3 Padding;
     
     float4 VignetteColor;
 }

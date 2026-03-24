@@ -17,23 +17,35 @@ namespace Havtorn
 
 	struct SPostProcessingBufferData
 	{
-		SVector4 WhitePointColor = SVector4::Zero;
-		F32 WhitePointIntensity = 1.0f;
-		F32 Exposure = 1.0f;
-		F32 SSAORadius = 0.25f;
-		F32 SSAOSampleBias = 0.2f;
-		F32 SSAOMagnitude = 0.2f;
-		F32 SSAOContrast = 1.0f;
+		SVector4 WhitePointColor;
+		F32 WhitePointIntensity;
+		F32 Exposure;
+		F32 SSAORadius;
+		F32 SSAOSampleBias;
+		F32 SSAOMagnitude;
+		F32 SSAOContrast;
 
-		I32 IsReinhard = 1;
-		I32 IsUncharted = 1;
-		I32 IsACES = 1;
-		I32 IsAgX = 0;
+		I32 IsReinhard;
+		I32 IsUncharted;
+		I32 IsACES;
+		I32 IsAgX;
 
-		F32 EmissiveStrength = 20.0f;
-		F32 VignetteStrength = 0.25f;
+		F32 EmissiveStrength;
+		F32 VignetteStrength;
 
-		SVector4 VignetteColor = SVector4::Zero;
+		// AGX Settings
+		F32 AgXMiddleGray;
+		F32 AgXSlope;
+		F32 AgXToePower;
+		F32 AgXShoulderPower;
+		F32 AgXCompressionR;
+		F32 AgXCompressionG;
+		F32 AgXCompressionB;
+		F32 AgXSaturation;
+		F32 AgXLerp;
+		SVector Padding;
+
+		SVector4 VignetteColor;
 	};
 	HV_ASSERT_BUFFER(SPostProcessingBufferData)
 
