@@ -49,6 +49,9 @@ namespace Havtorn
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::AltRelease).AddMember(this, &CEditorManager::OnDragCopyEvent);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::Copy).AddMember(this, &CEditorManager::OnCopyEvent);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::Paste).AddMember(this, &CEditorManager::OnCopyEvent);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::MovePivot).AddMember(this, &CEditorManager::OnPivotMoving);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::VertexSnapping).AddMember(this, &CEditorManager::OnVertexSnapping);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::GridSnapping).AddMember(this, &CEditorManager::OnGridSnapping);
 	}
 
 	CEditorManager::~CEditorManager()
@@ -1320,6 +1323,28 @@ namespace Havtorn
 			world->StopPlay();
 	}
 
+	void CEditorManager::OnPivotMoving(const SInputActionPayload payload)
+	{
+		if (payload.IsPressed)
+			IsPivotOffsetSet = !IsPivotOffsetSet;
+
+		if (IsPivotOffsetSet)
+			IsPivotMovingActive = payload.IsHeld;
+
+	}
+
+	void CEditorManager::OnVertexSnapping(const SInputActionPayload payload)
+	{
+		IsVertexSnappingActive = payload.IsHeld;
+		// TODO.NW: Potentially make it a lest of exempt entities, and let the all selected entities be exempt
+		payload.IsHeld ? World->SetEditorRenderExemptEntity(GetLastSelectedEntity()) : World->SetEditorRenderExemptEntity(SEntity::Null);
+	}
+
+	void CEditorManager::OnGridSnapping(const SInputActionPayload payload)
+	{
+		IsGridSnappingActive = payload.IsHeld;
+	}
+
 	void CEditorManager::OnResolutionChanged(SVector2<U16> newResolution)
 	{
 		HV_LOG_INFO("EditorMananger -> New Res X: %i, New Res Y: %i", newResolution.X, newResolution.Y);
@@ -1382,6 +1407,26 @@ namespace Havtorn
 		return IsDragCopyActive;
 	}
 
+	bool CEditorManager::GetIsPivotOffsetSet() const
+	{
+		return IsPivotOffsetSet;
+	}
+
+	bool CEditorManager::GetIsPivotMovingActive() const
+	{
+		return IsPivotMovingActive;
+	}
+
+	bool CEditorManager::GetIsVertexSnappingActive() const
+	{
+		return IsVertexSnappingActive;
+	}
+
+	bool CEditorManager::GetIsGridSnappingActive() const
+	{
+		return IsGridSnappingActive;
+	}
+
 	void CEditorManager::SetGizmoSpace(const ETransformGizmoSpace space)
 	{
 		CurrentGizmoSpace = space;
@@ -1390,6 +1435,22 @@ namespace Havtorn
 	void CEditorManager::SetGizmoSnapping(const SSnappingOption& snapping)
 	{
 		CurrentGizmoSnapping = snapping;
+	}
+
+	void CEditorManager::SetPivotMoving(const bool active)
+	{
+		IsPivotMovingActive = active;
+		IsPivotOffsetSet = IsPivotMovingActive;
+	}
+
+	void CEditorManager::SetVertexSnapping(const bool active)
+	{
+		IsVertexSnappingActive = active;
+	}
+
+	void CEditorManager::SetGridSnapping(const bool active)
+	{
+		IsGridSnappingActive = active;
 	}
 
 	void CEditorManager::SetIsModalOpen(const bool isModalOpen)

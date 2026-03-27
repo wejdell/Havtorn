@@ -11,6 +11,7 @@
 #include <Scene/Scene.h>
 #include <Assets/AssetRegistry.h>
 #include <GeneralUtilities.h>
+#include <Graphics/Debug/DebugDrawUtility.h>
 
 #include "Windows/ViewportWindow.h"
 #include "Windows/HierarchyWindow.h"
@@ -244,9 +245,43 @@ namespace Havtorn
 		// delta matrix one frame later on all the other entities. This probably doesn't matter in editor.
 		if (viewedTransformComp->Owner == Manager->GetSelectedEntities().back())
 		{
+			SMatrix original = transformMatrix;
+			SVector offset = SVector::Zero;
+
+			if (Manager->GetIsPivotMovingActive())
+			{
+				// TODO.NW: Involve the whole transform and not just the translation, so you can rotate around a chosen pivot (which is what it really means) as well
+				
+				// Move pivot
+				CViewportWindow* viewport = Manager->GetEditorWindow<CViewportWindow>();
+				SVector vertexPos = viewport->GetClosestVertexPositionOnPixel(viewedTransformComp->Owner);
+				PivotOffset = transformMatrix.GetTranslation() - vertexPos;
+				transformMatrix.SetTranslation(vertexPos);
+			}
+			else if (Manager->GetIsPivotOffsetSet())
+			{
+				transformMatrix.SetTranslation(transformMatrix.GetTranslation() - PivotOffset);
+			}
+
 			SVector gizmoSnapping = Manager->GetCurrentGizmoSnapping().Snapping;
 			F32 snappingData[] = { gizmoSnapping.X, gizmoSnapping.Y, gizmoSnapping.Z };
 			GUI::GizmoManipulate(viewMatrix.Inverse().data, projectionMatrix.data, Manager->GetCurrentGizmo(), Manager->GetCurrentGizmoSpace(), transformMatrix.data, DeltaMatrix.data, snappingData);
+
+			if (Manager->GetIsVertexSnappingActive())
+			{
+				RunVertexSnapping(transformMatrix, viewedTransformComp->Owner);
+			}
+			else if (Manager->GetIsGridSnappingActive())
+			{
+				// RunGridSnapping
+			}
+			else if (Manager->GetIsPivotOffsetSet())
+			{
+				transformMatrix.SetTranslation(transformMatrix.GetTranslation() + PivotOffset);
+			}
+
+			if (DeltaMatrix == SMatrix::Identity)
+				transformMatrix = original;
 		}
 		else
 		{
@@ -258,6 +293,20 @@ namespace Havtorn
 		
 		if (mainCameraData.IsValid() && !workingInPrefabScene)
 			mainCameraData.TransformComponent->Transform.SetMatrix(viewMatrix);
+	}
+
+	void CInspectorWindow::RunVertexSnapping(SMatrix& gizmoTransform, const SEntity& viewedEntity)
+	{	
+		if (DeltaMatrix != SMatrix::Identity)
+			return;
+		
+		CViewportWindow* viewport = Manager->GetEditorWindow<CViewportWindow>();
+		SEntity hoveredEntity = viewport->GetEntityOnPixel();
+		if (!hoveredEntity.IsValid() || hoveredEntity == viewedEntity)
+			return;
+		
+		SVector vertexPos = viewport->GetClosestVertexPositionOnPixel(hoveredEntity);
+		gizmoTransform.SetTranslation(vertexPos + PivotOffset);		
 	}
 
 	void CInspectorWindow::ViewManipulation(SMatrix& outCameraView, const SVector2<F32>& windowPosition, const SVector2<F32>& windowSize)

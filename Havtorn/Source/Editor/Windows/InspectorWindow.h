@@ -28,7 +28,10 @@ namespace Havtorn
 
 	private:
 		void UpdateTransformGizmo(const SComponentViewResult& result);
+		void RunVertexSnapping(SMatrix& gizmoTransform, const SEntity& viewedEntity);
+		// TODO.NW: Add grid snapping
 		void ViewManipulation(SMatrix& outCameraView, const SVector2<F32>& windowPosition, const SVector2<F32>& windowSize);
+
 		void InspectAssetComponent(SComponentViewResult& result);
 		void OpenAssetTool(const SComponentViewResult& result);
 		void RenderPreview(const SComponentViewResult& result);
@@ -40,6 +43,10 @@ namespace Havtorn
 	private:
 		U8 AssetPickedIndex = 0;
 		SMatrix DeltaMatrix = SMatrix::Identity;
+
+		// TODO.NW: When this common one starts to get annoying, we could explore retaining each offset for a list of entities.
+		SVector PivotOffset = SVector::Zero; 
+
 		SAssetReference* ContextMenuAssetRef = nullptr;
 		U64 ContextMenuAssetRequester = 0;
 		bool IsContextMenuRefHovered = false;

@@ -290,6 +290,9 @@ namespace Havtorn
 		Copy,
 		Paste,
 		Rename,
+		MovePivot,
+		VertexSnapping,
+		GridSnapping,
 		Count
 	};
 

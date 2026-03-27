@@ -133,6 +133,15 @@ namespace Havtorn
 		const SInputAction rename = { EInputKey::F2, EInputContext::Editor };
 		MapEvent(EInputActionEvent::Rename, rename);
 
+		const SInputAction movePivot = { EInputKey::KeyC, EInputContext::Editor };
+		MapEvent(EInputActionEvent::MovePivot, movePivot);
+
+		const SInputAction vertexSnapping = { EInputKey::KeyV, EInputContext::Editor };
+		MapEvent(EInputActionEvent::VertexSnapping, vertexSnapping);
+
+		const SInputAction gridSnapping = { EInputKey::KeyG, EInputContext::Editor };
+		MapEvent(EInputActionEvent::GridSnapping, gridSnapping);
+
 		return true;
 	}
 

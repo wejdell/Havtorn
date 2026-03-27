@@ -164,9 +164,16 @@ namespace Havtorn
 		[[nodiscard]] bool GetIsOverGizmo() const;
 		[[nodiscard]] bool GetIsModalOpen() const;
 		[[nodiscard]] bool GetIsDragCopyActive() const;
+		[[nodiscard]] bool GetIsPivotOffsetSet() const;
+		[[nodiscard]] bool GetIsPivotMovingActive() const;
+		[[nodiscard]] bool GetIsVertexSnappingActive() const;
+		[[nodiscard]] bool GetIsGridSnappingActive() const;
 
 		void SetGizmoSpace(const ETransformGizmoSpace space);
 		void SetGizmoSnapping(const SSnappingOption& snapping);
+		void SetPivotMoving(const bool active);
+		void SetVertexSnapping(const bool active);
+		void SetGridSnapping(const bool active);
 
 		void SetIsModalOpen(const bool isModalOpen);
 
@@ -210,6 +217,9 @@ namespace Havtorn
 		void OnCopyEvent(const SInputActionPayload payload);
 		void OnDragCopyEvent(const SInputActionPayload payload);
 		void OnPlayStateEvent(const SInputActionPayload payload);
+		void OnPivotMoving(const SInputActionPayload payload);
+		void OnVertexSnapping(const SInputActionPayload payload);
+		void OnGridSnapping(const SInputActionPayload payload);
 
 		void OnResolutionChanged(SVector2<U16> newResolution);
 		void OnBeginPlay(std::vector<Ptr<CScene>>& scenes);
@@ -258,7 +268,13 @@ namespace Havtorn
 		bool IsModalOpen = false;
 		bool IsFullscreen = false;
 		bool IsDragCopyActive = false;
-	
+		bool IsPivotOffsetSet = false;
+		bool IsPivotMovingActive = false;
+		bool IsVertexSnappingActive = false;
+		bool IsGridSnappingActive = false;
+		// TODO.NW: Think about whether the above states should be exclusive, 
+		// in which case an enum representation for all of them would be nicer
+
 		inline static const std::string DefaultEditorSettingsPath =
 		"Config/EditorPreferences.json";
 		inline static const std::string UserEditorSettingsPath =

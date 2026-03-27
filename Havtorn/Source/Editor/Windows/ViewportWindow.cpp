@@ -132,6 +132,26 @@ namespace Havtorn
 					GUI::EndCombo();
 				}
 
+				std::string pivotText = "Unlock Pivot (Hold C)";
+				bool isPivotUnlocked = Manager->GetIsPivotMovingActive();
+				if (!isPivotUnlocked && Manager->GetIsPivotOffsetSet())
+					pivotText = "Reset Pivot (C)";
+				else if (isPivotUnlocked)
+					pivotText = "Set Pivot (Release C)";
+				GUI::Text(pivotText.c_str());
+
+				bool isGridSnappingActive = Manager->GetIsGridSnappingActive();
+				if (GUI::Checkbox("Enable Grid Snapping (G)", isGridSnappingActive))
+				{
+					Manager->SetGridSnapping(isGridSnappingActive);
+				}
+
+				bool isVertexSnappingActive = Manager->GetIsVertexSnappingActive();
+				if (GUI::Checkbox("Enable Vertex Snapping (V)", isVertexSnappingActive))
+				{
+					Manager->SetVertexSnapping(isVertexSnappingActive);
+				}
+
 				GUI::EndPopup();
 			}
 
