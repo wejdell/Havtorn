@@ -220,6 +220,16 @@ namespace Havtorn
 		return MainCameraEntity;
 	}
 
+	void CWorld::SetEditorRenderExemptEntity(const SEntity& entity)
+	{
+		EditorRenderExemptEntity = entity;
+	}
+
+	SEntity CWorld::GetEditorRenderExemptEntity() const
+	{
+		return EditorRenderExemptEntity;
+	}
+
 	void CWorld::BindSceneLoader(const std::function<bool(const std::string&)>& loadingFunction)
 	{
 		GetSystem<CLevelStreamingSystem>()->BindSceneLoader(loadingFunction);

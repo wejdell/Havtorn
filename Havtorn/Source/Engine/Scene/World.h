@@ -102,6 +102,8 @@ namespace Havtorn
 
 		ENGINE_API void SetMainCamera(const SEntity& entity);
 		ENGINE_API SEntity GetMainCamera() const;
+		ENGINE_API void SetEditorRenderExemptEntity(const SEntity& entity);
+		ENGINE_API SEntity GetEditorRenderExemptEntity() const;
 		
 		ENGINE_API void BindSceneLoader(const std::function<bool(const std::string&)>& loadingFunction);
 
@@ -210,6 +212,7 @@ namespace Havtorn
 		CRenderManager* RenderManager = nullptr;
 
 		SEntity MainCameraEntity = SEntity::Null;
+		SEntity EditorRenderExemptEntity = SEntity::Null;
 
 		CMulticastDelegate<CScene* const> OnSceneCreatedDelegate;
 

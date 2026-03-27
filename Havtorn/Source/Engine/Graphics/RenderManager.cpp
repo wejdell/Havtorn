@@ -571,6 +571,7 @@ namespace Havtorn
 		SwapRenderViews();
 		std::swap(SystemSkeletalAnimationBoneData, RendererSkeletalAnimationBoneData);
 		SetWorldMainCameraEntity(world->GetMainCamera());
+		SetWorldEditorRenderExemptEntity(world->GetEditorRenderExemptEntity());
 		SetWorldPlayState(world->GetWorldPlayState());
 		RenderStateManager.FlushShaderChanges();
 	}
@@ -578,6 +579,11 @@ namespace Havtorn
 	void CRenderManager::SetWorldMainCameraEntity(const SEntity& entity)
 	{
 		WorldMainCameraEntity = entity;
+	}
+
+	void CRenderManager::SetWorldEditorRenderExemptEntity(const SEntity& entity)
+	{
+		WorldEditorRenderExemptEntity = entity;
 	}
 
 	void CRenderManager::SetWorldPlayState(EWorldPlayState playState)
@@ -963,15 +969,13 @@ namespace Havtorn
 		const std::vector<SEntity>& entities = meshData.Entities;
 		InstancedEntityIDBuffer.BindBuffer(entities);
 
-		// TODO.NW: Figure out a place for this hard coded preview entity GUID (8000);
-		const bool renderingPreviewEntity = std::ranges::find(entities, SEntity(8000)) != entities.end();
+		const bool renderingPreviewEntity = std::ranges::find(entities, WorldEditorRenderExemptEntity) != entities.end();
 		if (renderingPreviewEntity)
 		{
-			// TODO.NW: Need to defer this render call to after the GBuffer is finished so we can draw it on top, without writing to the depth
-			//GBuffer.ReleaseRenderTargets();
-			//GBuffer.SetAsActiveTarget(nullptr, false);
+			GBuffer.ReleaseRenderTargets();
+			GBuffer.SetAsActiveTarget(&IntermediateDepth, false);
 			GBufferDataInstanced(command);
-			//GBuffer.SetAsActiveTarget(&IntermediateDepth, true);
+			GBuffer.SetAsActiveTarget(&IntermediateDepth, true);
 			return;
 		}
 
@@ -1132,6 +1136,18 @@ namespace Havtorn
 
 		const std::vector<SEntity>& entities = meshData.Entities;
 		InstancedEntityIDBuffer.BindBuffer(entities);
+
+		// TODO.NW: Fix this as part of next render fixup pass. Static meshes are highest prio anyway. 
+		// Meshes don't show up so might be issue with non-editor version
+		const bool renderingPreviewEntity = std::ranges::find(entities, WorldEditorRenderExemptEntity) != entities.end();
+		if (renderingPreviewEntity)
+		{
+			GBuffer.ReleaseRenderTargets();
+			GBuffer.SetAsActiveTarget(&IntermediateDepth, false);
+			GBufferSkeletalInstanced(command);
+			GBuffer.SetAsActiveTarget(&IntermediateDepth, true);
+			return;
+		}
 
 		const std::vector<SMatrix>& boneMatrices = meshData.Bones;
 		BoneBuffer.BindBuffer(boneMatrices);
@@ -2294,6 +2310,7 @@ namespace Havtorn
 
 	bool SRenderCommandComparer::operator()(const SRenderCommand& a, const SRenderCommand& b) const
 	{
-		return 	STATIC_U16(a.Type) > STATIC_U16(b.Type);
+
+		return 	STATIC_U16(a.Type) > STATIC_U16(b.Type) || (STATIC_U16(a.Type) == STATIC_U16(b.Type) && a.InternalPriority > b.InternalPriority);
 	}
 }

@@ -78,6 +78,7 @@ namespace Havtorn
 		std::vector<SEngineGraphicsMaterial> Materials;
 		std::vector<std::map<U32, CStaticRenderTexture>> MaterialRenderTextures;
 		U64 RenderViewID = 0;
+		U8 InternalPriority = 0;
 
 		~SRenderCommand() = default;
 	

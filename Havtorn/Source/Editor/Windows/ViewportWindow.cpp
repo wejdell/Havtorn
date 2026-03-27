@@ -360,6 +360,7 @@ namespace Havtorn
 			}
 		);
 		scene->PreviewEntity = scene->AddEntity(newEntityName, 8000);
+		GEngine::GetWorld()->SetEditorRenderExemptEntity(scene->PreviewEntity);
 
 		scene->AddComponent<STransformComponent>(scene->PreviewEntity)->Transform;
 		scene->AddComponentEditorContext(scene->PreviewEntity, &STransformComponentEditorContext::Context);
@@ -442,6 +443,7 @@ namespace Havtorn
 			toScene->RemoveEntity(toScene->PreviewEntity);
 			Manager->SetSelectedEntity(copiedEntity);
 			toScene->PreviewEntity = SEntity::Null;
+			GEngine::GetWorld()->SetEditorRenderExemptEntity(SEntity::Null);
 		}
 
 		if (assetRepresentation->AssetType == EAssetType::Prefab)

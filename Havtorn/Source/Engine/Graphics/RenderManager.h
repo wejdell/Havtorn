@@ -133,6 +133,7 @@ namespace Havtorn
 	public:
 		void SyncCrossThreadResources(const CWorld* world);
 		void SetWorldMainCameraEntity(const SEntity& entity);
+		void SetWorldEditorRenderExemptEntity(const SEntity& entity);
 		void SetWorldPlayState(EWorldPlayState playState);
 		[[nodiscard]] ENGINE_API CRenderTexture* GetRenderTargetTexture(const U64 renderViewID) const;
 		ENGINE_API void PushRenderCommand(SRenderCommand command, const U64 renderViewID);
@@ -408,6 +409,7 @@ namespace Havtorn
 
 		// NW: Keep our own properties here for use on render thread
 		SEntity WorldMainCameraEntity = SEntity::Null;
+		SEntity WorldEditorRenderExemptEntity = SEntity::Null;
 		EWorldPlayState WorldPlayState = EWorldPlayState::Stopped;
 
 		void* EntityPerPixelData = nullptr;
