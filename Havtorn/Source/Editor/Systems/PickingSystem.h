@@ -25,13 +25,11 @@ namespace Havtorn
 	private:
 		void OnMouseClick(const SInputActionPayload payload);
 		void OnMouseMove(const SInputAxisPayload payload);
-		SEntity FindEntityInViewport() const;
 		void WorldSpacePick(const bool modifierHeld) const;
 		void WorldSpaceContextPick();
 
 		CEditorManager* Manager = nullptr;
 		STransformComponent* EditorCameraTransform = nullptr;
-		SCameraComponent* EditorCameraComponent = nullptr;
 		SVector2<F32> MousePosition = SVector2<F32>::Zero;
 		SMatrix ContextPickStartingCameraMatrix = SMatrix::Identity;
 	};

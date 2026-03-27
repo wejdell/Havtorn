@@ -12,6 +12,7 @@
 #include <MathTypes/Matrix.h>
 #include <ECS/Components/TransformComponent.h>
 #include <ECS/Components/CameraComponent.h>
+#include <ECS/ComponentAlgo.h>
 #include <Graphics/Debug/DebugDrawUtility.h>
 #include <Input/InputMapper.h>
 #include <Input/InputTypes.h>
@@ -36,17 +37,11 @@ namespace Havtorn
 	void CPickingSystem::Update(std::vector<Ptr<CScene>>& scenes)
 	{
 		SEntity mainCamera = GEngine::GetWorld()->GetMainCamera();
-		for (Ptr<CScene>& scene : scenes)
-		{
-			SCameraComponent* sceneCamera = scene->GetComponent<SCameraComponent>(mainCamera);
-			STransformComponent* sceneCameraTransform = scene->GetComponent<STransformComponent>(mainCamera);
+		if (SComponent::IsValid(EditorCameraTransform) && EditorCameraTransform->Owner == mainCamera)
+			return;
 
-			if (sceneCamera != nullptr && sceneCameraTransform != nullptr)
-			{
-				EditorCameraComponent = sceneCamera;
-				EditorCameraTransform = sceneCameraTransform;
-			}
-		}
+		SCameraData cameraData = UComponentAlgo::GetCameraData(mainCamera, scenes);
+		EditorCameraTransform = cameraData.TransformComponent;
 	}
 
 	void CPickingSystem::OnMouseClick(const SInputActionPayload payload)
@@ -83,32 +78,16 @@ namespace Havtorn
 			MousePosition.Y = payload.AxisValue;
 	}
 
-	SEntity CPickingSystem::FindEntityInViewport() const
-	{
-		const CViewportWindow* viewport = Manager->GetEditorWindow<CViewportWindow>();
-		if (Manager->GetIsOverGizmo() || Manager->GetIsWorldPlaying() || !viewport->GetIsHovered() || Manager->GetIsModalOpen() || !SComponent::IsValid(EditorCameraComponent) || !SComponent::IsValid(EditorCameraTransform))
-			return SEntity::Null;
-
-		const SVector2<F32> renderedSceneDimensions = viewport->GetRenderedSceneDimensions();
-		const SVector2<F32> renderedScenePosition = viewport->GetRenderedScenePosition();
-
-		const SVector2<U16> resolution = Manager->GetPlatformManager()->GetResolution();
-		const SVector2<F32> rectRelativeMousePos = SVector2((MousePosition.X - renderedScenePosition.X) / renderedSceneDimensions.X, (MousePosition.Y - renderedScenePosition.Y) / renderedSceneDimensions.Y);
-
-		const SVector2<F32> fullscreenMousePos = { UMath::Ceil(STATIC_F32(resolution.X) * rectRelativeMousePos.X), UMath::Ceil(STATIC_F32(resolution.Y) * rectRelativeMousePos.Y - 12.0f) };
-
-		if (!UMath::IsWithin(fullscreenMousePos.X, 0.0f, STATIC_F32(resolution.X)) || !UMath::IsWithin(fullscreenMousePos.Y, 0.0f, STATIC_F32(resolution.Y)))
-			return SEntity::Null;
-
-		const U64 dataIndex = STATIC_U64(fullscreenMousePos.X) + STATIC_U64(fullscreenMousePos.Y) * STATIC_U64(resolution.X);
-		const U64 pickedEntityGUID = Manager->GetRenderManager()->GetEntityGUIDFromData(dataIndex);
-
-		return SEntity(pickedEntityGUID);
-	}
-
 	void CPickingSystem::WorldSpacePick(const bool modifierHeld) const
 	{
-		SEntity candidate = FindEntityInViewport();
+		CWorld* world = GEngine::GetWorld();
+		CViewportWindow* viewport = Manager->GetEditorWindow<CViewportWindow>();
+		SCameraData cameraData = UComponentAlgo::GetCameraData(world->GetMainCamera(), world->GetActiveScenes());
+
+		if (Manager->GetIsOverGizmo() || Manager->GetIsWorldPlaying() || !viewport->GetIsHovered() || Manager->GetIsModalOpen() || !cameraData.IsValid())
+			return;
+
+		SEntity candidate = viewport->GetEntityOnPixel();
 		if (!candidate.IsValid())
 			return;
 
@@ -124,6 +103,6 @@ namespace Havtorn
 	{
 		// TODO.NW: Might make sense to move the base functionality of this system to the viewport window? And let this system handle the input layer only
 		CViewportWindow* viewport = Manager->GetEditorWindow<CViewportWindow>();
-		viewport->SetContextMenuEntity(FindEntityInViewport());
+		viewport->SetContextMenuEntity(viewport->GetEntityOnPixel());
 	}
 }

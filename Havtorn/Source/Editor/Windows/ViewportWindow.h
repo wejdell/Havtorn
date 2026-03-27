@@ -33,10 +33,14 @@ namespace Havtorn
 
 		void OnMouseMove(const SInputAxisPayload payload);
 
+		SEntity GetEntityOnPixel() const;
+		SVector4 GetWorldPositionOnPixel() const;
+		SVector GetClosestVertexPositionOnPixel(const SEntity& forEntity) const;
 		void SetContextMenuEntity(const SEntity& entity);
 
 	private:
-		SVector4 GetWorldPositionOnPixel() const;
+		// Returns U64::Max if invalid
+		U64 GetEditorDataIndexOnPixel() const;
 
 	private:
 		F32 ViewportMenuHeight = 16.0f;
