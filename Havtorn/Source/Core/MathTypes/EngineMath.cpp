@@ -20,6 +20,9 @@ namespace Havtorn
 	CORE_API const U32 UMath::MinU32 = (std::numeric_limits<U32>::min)();
 	CORE_API const U32 UMath::MaxU32 = (std::numeric_limits<U32>::max)();
 
+	CORE_API const U64 UMath::MinU64 = (std::numeric_limits<U64>::min)();
+	CORE_API const U64 UMath::MaxU64 = (std::numeric_limits<U64>::max)();
+
 	CORE_API const I32 UMath::MinI32 = (std::numeric_limits<I32>::min)();
 	CORE_API const I32 UMath::MaxI32 = (std::numeric_limits<I32>::max)();
 }

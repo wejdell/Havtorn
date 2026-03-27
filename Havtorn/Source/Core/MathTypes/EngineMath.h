@@ -38,6 +38,9 @@ namespace Havtorn
 		static const U32 MinU32;
 		static const U32 MaxU32;
 
+		static const U64 MinU64;
+		static const U64 MaxU64;
+
 		static const I32 MinI32;
 		static const I32 MaxI32;
 
