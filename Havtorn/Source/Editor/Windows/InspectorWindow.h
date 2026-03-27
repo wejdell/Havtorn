@@ -29,7 +29,7 @@ namespace Havtorn
 	private:
 		void UpdateTransformGizmo(const SComponentViewResult& result);
 		void RunVertexSnapping(SMatrix& gizmoTransform, const SEntity& viewedEntity);
-		// TODO.NW: Add grid snapping
+		void RunGridSnapping(SMatrix& gizmoTransform);
 		void ViewManipulation(SMatrix& outCameraView, const SVector2<F32>& windowPosition, const SVector2<F32>& windowSize);
 
 		void InspectAssetComponent(SComponentViewResult& result);

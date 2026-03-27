@@ -273,7 +273,7 @@ namespace Havtorn
 			}
 			else if (Manager->GetIsGridSnappingActive())
 			{
-				// RunGridSnapping
+				RunGridSnapping(transformMatrix);
 			}
 			else if (Manager->GetIsPivotOffsetSet())
 			{
@@ -297,7 +297,7 @@ namespace Havtorn
 
 	void CInspectorWindow::RunVertexSnapping(SMatrix& gizmoTransform, const SEntity& viewedEntity)
 	{	
-		if (DeltaMatrix != SMatrix::Identity)
+		if (DeltaMatrix == SMatrix::Identity)
 			return;
 		
 		CViewportWindow* viewport = Manager->GetEditorWindow<CViewportWindow>();
@@ -307,6 +307,17 @@ namespace Havtorn
 		
 		SVector vertexPos = viewport->GetClosestVertexPositionOnPixel(hoveredEntity);
 		gizmoTransform.SetTranslation(vertexPos + PivotOffset);		
+	}
+
+	void CInspectorWindow::RunGridSnapping(SMatrix& gizmoTransform)
+	{
+		if (DeltaMatrix == SMatrix::Identity)
+			return;
+
+		SVector snapping = Manager->GetCurrentGizmoSnapping().Snapping;
+		SVector pos = gizmoTransform.GetTranslation() - PivotOffset;
+		pos = { UMath::Round(pos.X, snapping.X), UMath::Round(pos.Y, snapping.Y), UMath::Round(pos.Z, snapping.Z) };
+		gizmoTransform.SetTranslation(pos + PivotOffset);
 	}
 
 	void CInspectorWindow::ViewManipulation(SMatrix& outCameraView, const SVector2<F32>& windowPosition, const SVector2<F32>& windowSize)

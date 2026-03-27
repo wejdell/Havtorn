@@ -67,6 +67,7 @@ namespace Havtorn
 		static inline bool NearlyEqual(F32 a, F32 b, F32 tolerance = KINDA_SMALL_NUMBER);
 		static inline bool NearlyZero(F32 a, F32 tolerance = KINDA_SMALL_NUMBER);
 		static inline F32 RoundToZero(F32 a, F32 tolerance = KINDA_SMALL_NUMBER);
+		static inline F32 Round(F32 a, F32 precision = 1.0f);
 
 		template<typename T>
 		static inline T Exp(T x);
@@ -338,6 +339,14 @@ namespace Havtorn
 	inline F32 UMath::RoundToZero(F32 a, F32 tolerance)
 	{
 		return UMath::NearlyZero(a, tolerance) ? 0.0f : a;
+	}
+
+	inline F32 UMath::Round(F32 a, F32 precision)
+	{
+		if (UMath::NearlyZero(precision, SMALL_NUMBER))
+			return a;
+
+		return a - abs(fmod(a, precision));
 	}
 
 	inline F32 UMath::FAbs(F32 x)
