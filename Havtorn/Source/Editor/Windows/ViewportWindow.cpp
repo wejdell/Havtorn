@@ -476,7 +476,7 @@ namespace Havtorn
 		SVector4 worldSpacePos = GetWorldPositionOnPixel();
 		SVector localSpaceCursorPos = (worldSpacePos * transform->Transform.GetMatrix().FastInverse()).ToVector3();
 
-		// algo pls
+		// TODO.NW: This would be nice to handle through a standard algorithm
 		F32 minDist = UMath::MaxFloat;
 		U16 closestMaterialIndex = 0;
 		for (const SMaterialVertex& vertexPos : vertices)
@@ -595,7 +595,7 @@ namespace Havtorn
 		SVector4 worldSpacePos = GetWorldPositionOnPixel();
 		SVector localSpaceCursorPos = (worldSpacePos * transform->Transform.GetMatrix().FastInverse()).ToVector3();
 
-		// algo pls
+		// TODO.NW: This would be nice to handle through a standard algorithm
 		F32 minDist = UMath::MaxFloat;
 		SVector closestPos = localSpaceCursorPos;
 		for (const SMaterialVertex& vertexPos : vertices)
