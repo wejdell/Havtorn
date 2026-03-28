@@ -294,10 +294,15 @@ namespace Havtorn
 				if (payload.Data != nullptr)
 				{
 					SEditorAssetRepresentation* payloadAssetRep = reinterpret_cast<SEditorAssetRepresentation*>(payload.Data);
-					UpdatePreviewEntity(currentScene, payloadAssetRep);
+					if (payloadAssetRep->AssetType == EAssetType::Material)
+						UpdatePreviewMaterial(currentScene, payloadAssetRep);
+					else
+						UpdatePreviewEntity(currentScene, payloadAssetRep);
 
 					if (currentScene->PreviewEntity.IsValid())
 						GUI::SetTooltip("Create Entity?");
+					else if (payloadAssetRep->AssetType == EAssetType::Material)
+						GUI::SetTooltip("Assign Material?");
 					else
 						GUI::SetTooltip("Asset type not supported yet!");
 
@@ -317,6 +322,8 @@ namespace Havtorn
 					currentScene->RemoveEntity(currentScene->PreviewEntity);
 					currentScene->PreviewEntity = SEntity::Null;
 				}
+				
+				ClearMaterialRefs(true);
 			}
 		}
 
@@ -325,8 +332,6 @@ namespace Havtorn
 
 	void CViewportWindow::UpdatePreviewEntity(CScene* scene, const SEditorAssetRepresentation* assetRepresentation)
 	{
-		// TODO.NW: Add Material assignment
-
 		if (assetRepresentation->AssetType != EAssetType::StaticMesh && 
 			assetRepresentation->AssetType != EAssetType::SkeletalMesh && 
 			assetRepresentation->AssetType != EAssetType::Animation && 
@@ -453,6 +458,62 @@ namespace Havtorn
 		}
 	}
 
+	void CViewportWindow::UpdatePreviewMaterial(CScene* scene, const SEditorAssetRepresentation* assetRepresentation)
+	{
+		if (assetRepresentation->AssetType != EAssetType::Material)
+			return;
+
+		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
+		SEntity entityOnPixel = GetEntityOnPixel();
+
+		SStaticMeshComponent* meshComponent = scene->GetComponent<SStaticMeshComponent>(entityOnPixel);
+		if (!SComponent::IsValid(meshComponent))
+			return;
+	
+		SMaterialComponent* materialComponent = scene->GetComponent<SMaterialComponent>(entityOnPixel);
+		if (!SComponent::IsValid(materialComponent))
+			return;
+
+		SStaticMeshAsset* meshAsset = assetRegistry->RequestAssetData<SStaticMeshAsset>(meshComponent->AssetReference, 100);
+		if (meshAsset == nullptr)
+			return;
+		
+		STransformComponent* transform = scene->GetComponent<STransformComponent>(entityOnPixel);
+		SVector4 worldSpacePos = GetWorldPositionOnPixel();
+		SVector localSpaceCursorPos = (worldSpacePos * transform->Transform.GetMatrix().FastInverse()).ToVector3();
+
+		// algo pls
+		F32 minDist = UMath::MaxFloat;
+		U16 closestMaterialIndex = 0;
+		for (const SMaterialVertex& vertexPos : meshAsset->LocalVertexPositions)
+		{
+			const F32 currentDist = vertexPos.LocalVertex.DistanceSquared(localSpaceCursorPos);
+			if (currentDist < minDist)
+			{
+				minDist = currentDist;
+				closestMaterialIndex = vertexPos.MaterialIndex;
+			}
+		}
+
+		if (materialComponent->AssetReferences.size() <= closestMaterialIndex)
+			return;
+
+		// Reassignment
+		SAssetReference* hoveredMaterialRef = &materialComponent->AssetReferences[closestMaterialIndex];
+		if (LastMaterialReference != nullptr && LastMaterialReference != hoveredMaterialRef)
+			*LastMaterialReference = LastMaterialReferenceValue;
+		
+		if (LastMaterialReference != hoveredMaterialRef)
+		{
+			LastMaterialReference = hoveredMaterialRef;
+			LastMaterialReferenceValue = *hoveredMaterialRef;
+		}
+		
+		// New assignment
+		SAssetReference assetRepValue = SAssetReference(assetRepresentation->DirectoryEntry.path().string());
+		*hoveredMaterialRef = assetRepValue;
+	}
+
 	void CViewportWindow::DeliverAssetDrag(CScene* toScene, const SEditorAssetRepresentation* assetRepresentation)
 	{
 		if (assetRepresentation->AssetType == EAssetType::StaticMesh ||
@@ -464,6 +525,11 @@ namespace Havtorn
 			Manager->SetSelectedEntity(copiedEntity);
 			toScene->PreviewEntity = SEntity::Null;
 			GEngine::GetWorld()->SetEditorRenderExemptEntity(SEntity::Null);
+		}
+
+		if (assetRepresentation->AssetType == EAssetType::Material)
+		{
+			ClearMaterialRefs(false);
 		}
 
 		if (assetRepresentation->AssetType == EAssetType::Prefab)
@@ -539,13 +605,13 @@ namespace Havtorn
 				// algo pls
 				F32 minDist = UMath::MaxFloat;
 				SVector closestPos = localSpaceCursorPos;
-				for (const SVector& vertexPos : meshAsset->LocalVertexPositions)
+				for (const SMaterialVertex& vertexPos : meshAsset->LocalVertexPositions)
 				{
-					const F32 currentDist = vertexPos.DistanceSquared(localSpaceCursorPos);
+					const F32 currentDist = vertexPos.LocalVertex.DistanceSquared(localSpaceCursorPos);
 					if (currentDist < minDist)
 					{
 						minDist = currentDist;
-						closestPos = vertexPos;
+						closestPos = vertexPos.LocalVertex;
 					}
 				}
 
@@ -577,5 +643,14 @@ namespace Havtorn
 			return UMath::MaxU64;
 
 		return STATIC_U64(fullscreenMousePos.X) + STATIC_U64(fullscreenMousePos.Y) * STATIC_U64(resolution.X);
+	}
+
+	void CViewportWindow::ClearMaterialRefs(const bool reassignLastMaterial)
+	{
+		if (reassignLastMaterial && LastMaterialReference != nullptr)
+			*LastMaterialReference = LastMaterialReferenceValue;
+
+		LastMaterialReference = nullptr;
+		LastMaterialReferenceValue = SAssetReference();
 	}
 }

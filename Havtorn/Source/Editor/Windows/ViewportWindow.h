@@ -4,6 +4,7 @@
 #include "EditorWindow.h"
 #include "EditorManager.h"
 
+#include <Assets/AssetReference.h>
 #include <GUI.h>
 
 namespace Havtorn
@@ -29,6 +30,7 @@ namespace Havtorn
 		bool Render(CScene* assetDragScene, const U64 renderTargetGUID);
 
 		void UpdatePreviewEntity(CScene* scene, const SEditorAssetRepresentation* assetRepresentation);
+		void UpdatePreviewMaterial(CScene* scene, const SEditorAssetRepresentation* assetRepresentation);
 		void DeliverAssetDrag(CScene* toScene, const SEditorAssetRepresentation* assetRepresentation);
 
 		void OnMouseMove(const SInputAxisPayload payload);
@@ -41,6 +43,7 @@ namespace Havtorn
 	private:
 		// Returns U64::Max if invalid
 		U64 GetEditorDataIndexOnPixel() const;
+		void ClearMaterialRefs(const bool reassignLastMaterial);
 
 	private:
 		F32 ViewportMenuHeight = 16.0f;
@@ -55,6 +58,8 @@ namespace Havtorn
 		bool WasPreviewPositionValid = true;
 		SVector4 PreviousPreviewPosition = SVector4::Zero;
 		SEntity ContextMenuEntity = SEntity::Null;
+		SAssetReference* LastMaterialReference = nullptr;
+		SAssetReference LastMaterialReferenceValue;
 		bool OpenedEntityContextMenu = false;
 	};
 }
