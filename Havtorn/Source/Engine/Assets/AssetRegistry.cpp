@@ -300,6 +300,8 @@ namespace Havtorn
                     meshAsset.BoundsMax.X = UMath::Max(vertex.x, meshAsset.BoundsMax.X);
                     meshAsset.BoundsMax.Y = UMath::Max(vertex.y, meshAsset.BoundsMax.Y);
                     meshAsset.BoundsMax.Z = UMath::Max(vertex.z, meshAsset.BoundsMax.Z);
+
+                    meshAsset.LocalVertexPositions.emplace_back(SVector(vertex.x, vertex.y, vertex.z), mesh.MaterialIndex);
                 }
 
                 meshAsset.BoundsCenter = meshAsset.BoundsMin + (meshAsset.BoundsMax - meshAsset.BoundsMin) * 0.5f;

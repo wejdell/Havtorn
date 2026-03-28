@@ -463,21 +463,15 @@ namespace Havtorn
 		if (assetRepresentation->AssetType != EAssetType::Material)
 			return;
 
-		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
 		SEntity entityOnPixel = GetEntityOnPixel();
-
-		SStaticMeshComponent* meshComponent = scene->GetComponent<SStaticMeshComponent>(entityOnPixel);
-		if (!SComponent::IsValid(meshComponent))
-			return;
-	
 		SMaterialComponent* materialComponent = scene->GetComponent<SMaterialComponent>(entityOnPixel);
 		if (!SComponent::IsValid(materialComponent))
 			return;
 
-		SStaticMeshAsset* meshAsset = assetRegistry->RequestAssetData<SStaticMeshAsset>(meshComponent->AssetReference, 100);
-		if (meshAsset == nullptr)
+		std::vector<SMaterialVertex> vertices = FindLocalVertices(scene, entityOnPixel);
+		if (vertices.empty())
 			return;
-		
+	
 		STransformComponent* transform = scene->GetComponent<STransformComponent>(entityOnPixel);
 		SVector4 worldSpacePos = GetWorldPositionOnPixel();
 		SVector localSpaceCursorPos = (worldSpacePos * transform->Transform.GetMatrix().FastInverse()).ToVector3();
@@ -485,7 +479,7 @@ namespace Havtorn
 		// algo pls
 		F32 minDist = UMath::MaxFloat;
 		U16 closestMaterialIndex = 0;
-		for (const SMaterialVertex& vertexPos : meshAsset->LocalVertexPositions)
+		for (const SMaterialVertex& vertexPos : vertices)
 		{
 			const F32 currentDist = vertexPos.LocalVertex.DistanceSquared(localSpaceCursorPos);
 			if (currentDist < minDist)
@@ -593,34 +587,28 @@ namespace Havtorn
 		if (owningScene == nullptr)
 			return SVector::Zero;
 
-		if (SStaticMeshComponent* meshComponent = owningScene->GetComponent<SStaticMeshComponent>(forEntity))
+		std::vector<SMaterialVertex> vertices = FindLocalVertices(owningScene, forEntity);
+		if (vertices.empty())
+			return SVector::Zero;
+
+		STransformComponent* transform = owningScene->GetComponent<STransformComponent>(forEntity);
+		SVector4 worldSpacePos = GetWorldPositionOnPixel();
+		SVector localSpaceCursorPos = (worldSpacePos * transform->Transform.GetMatrix().FastInverse()).ToVector3();
+
+		// algo pls
+		F32 minDist = UMath::MaxFloat;
+		SVector closestPos = localSpaceCursorPos;
+		for (const SMaterialVertex& vertexPos : vertices)
 		{
-			CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
-			if (SStaticMeshAsset* meshAsset = assetRegistry->RequestAssetData<SStaticMeshAsset>(meshComponent->AssetReference, 100))
+			const F32 currentDist = vertexPos.LocalVertex.DistanceSquared(localSpaceCursorPos);
+			if (currentDist < minDist)
 			{
-				STransformComponent* transform = owningScene->GetComponent<STransformComponent>(forEntity);
-				SVector4 worldSpacePos = GetWorldPositionOnPixel();
-				SVector localSpaceCursorPos = (worldSpacePos * transform->Transform.GetMatrix().FastInverse()).ToVector3();
-
-				// algo pls
-				F32 minDist = UMath::MaxFloat;
-				SVector closestPos = localSpaceCursorPos;
-				for (const SMaterialVertex& vertexPos : meshAsset->LocalVertexPositions)
-				{
-					const F32 currentDist = vertexPos.LocalVertex.DistanceSquared(localSpaceCursorPos);
-					if (currentDist < minDist)
-					{
-						minDist = currentDist;
-						closestPos = vertexPos.LocalVertex;
-					}
-				}
-
-				return (SVector4(closestPos, 1.0f) * transform->Transform.GetMatrix()).ToVector3();
+				minDist = currentDist;
+				closestPos = vertexPos.LocalVertex;
 			}
 		}
 
-		// TODO.NW: Check other meshes and bounding boxes
-		return SVector::Zero;
+		return (SVector4(closestPos, 1.0f) * transform->Transform.GetMatrix()).ToVector3();
 	}
 
 	void CViewportWindow::SetContextMenuEntity(const SEntity& entity)
@@ -652,5 +640,34 @@ namespace Havtorn
 
 		LastMaterialReference = nullptr;
 		LastMaterialReferenceValue = SAssetReference();
+	}
+
+	std::vector<SMaterialVertex> CViewportWindow::FindLocalVertices(CScene* scene, const SEntity& entity) const
+	{
+		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
+		std::vector<SMaterialVertex> vertices = {};
+
+		SStaticMeshComponent* staticMeshComponent = scene->GetComponent<SStaticMeshComponent>(entity);
+		SSkeletalMeshComponent* skeletalMeshComponent = scene->GetComponent<SSkeletalMeshComponent>(entity);
+		if (SComponent::IsValid(staticMeshComponent))
+		{
+			SStaticMeshAsset* meshAsset = assetRegistry->RequestAssetData<SStaticMeshAsset>(staticMeshComponent->AssetReference, 100);
+
+			if (meshAsset != nullptr)
+				vertices = meshAsset->LocalVertexPositions;
+
+			assetRegistry->UnrequestAsset(staticMeshComponent->AssetReference, 100);
+		}
+		else if (SComponent::IsValid(skeletalMeshComponent))
+		{
+			SSkeletalMeshAsset* meshAsset = assetRegistry->RequestAssetData<SSkeletalMeshAsset>(skeletalMeshComponent->AssetReference, 100);
+
+			if (meshAsset != nullptr)
+				vertices = meshAsset->LocalVertexPositions;
+
+			assetRegistry->UnrequestAsset(skeletalMeshComponent->AssetReference, 100);
+		}
+
+		return vertices;
 	}
 }

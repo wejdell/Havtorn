@@ -44,6 +44,7 @@ namespace Havtorn
 		// Returns U64::Max if invalid
 		U64 GetEditorDataIndexOnPixel() const;
 		void ClearMaterialRefs(const bool reassignLastMaterial);
+		std::vector<SMaterialVertex> FindLocalVertices(CScene* scene, const SEntity& entity) const;
 
 	private:
 		F32 ViewportMenuHeight = 16.0f;
