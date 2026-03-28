@@ -346,7 +346,8 @@ namespace Havtorn
 		if (UMath::NearlyZero(precision, SMALL_NUMBER))
 			return a;
 
-		return a - abs(fmod(a, precision));
+		const F32 factor = 1.0f / precision;
+		return std::floor((a * factor) + 0.5f) / factor;
 	}
 
 	inline F32 UMath::FAbs(F32 x)

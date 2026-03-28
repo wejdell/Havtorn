@@ -251,7 +251,7 @@ namespace Havtorn
 			if (Manager->GetIsPivotMovingActive())
 			{
 				// TODO.NW: Involve the whole transform and not just the translation, so you can rotate around a chosen pivot (which is what it really means) as well
-				
+
 				// Move pivot
 				CViewportWindow* viewport = Manager->GetEditorWindow<CViewportWindow>();
 				SVector vertexPos = viewport->GetClosestVertexPositionOnPixel(viewedTransformComp->Owner);
@@ -261,6 +261,10 @@ namespace Havtorn
 			else if (Manager->GetIsPivotOffsetSet())
 			{
 				transformMatrix.SetTranslation(transformMatrix.GetTranslation() - PivotOffset);
+			}
+			else
+			{
+				PivotOffset = SVector::Zero;
 			}
 
 			SVector gizmoSnapping = Manager->GetCurrentGizmoSnapping().Snapping;
@@ -274,8 +278,12 @@ namespace Havtorn
 			else if (Manager->GetIsGridSnappingActive())
 			{
 				RunGridSnapping(transformMatrix);
+
+				const SVector pos = transformMatrix.GetTranslation() - PivotOffset;
+				const SVector roundedPos = { UMath::Round(pos.X, 1.0f), UMath::Round(pos.Y, 1.0f), UMath::Round(pos.Z, 1.0f) };
+				GDebugDraw::AddGrid(roundedPos, SVector::Zero, SColor::Grey, -1.0f, false, 0.005f, false);
 			}
-			else if (Manager->GetIsPivotOffsetSet())
+			else
 			{
 				transformMatrix.SetTranslation(transformMatrix.GetTranslation() + PivotOffset);
 			}
@@ -306,16 +314,13 @@ namespace Havtorn
 			return;
 		
 		SVector vertexPos = viewport->GetClosestVertexPositionOnPixel(hoveredEntity);
-		gizmoTransform.SetTranslation(vertexPos + PivotOffset);		
+		gizmoTransform.SetTranslation(vertexPos + PivotOffset);
 	}
 
 	void CInspectorWindow::RunGridSnapping(SMatrix& gizmoTransform)
 	{
-		if (DeltaMatrix == SMatrix::Identity)
-			return;
-
-		SVector snapping = Manager->GetCurrentGizmoSnapping().Snapping;
-		SVector pos = gizmoTransform.GetTranslation() - PivotOffset;
+		const SVector snapping = Manager->GetCurrentGizmoSnapping().Snapping;
+		SVector pos = gizmoTransform.GetTranslation();
 		pos = { UMath::Round(pos.X, snapping.X), UMath::Round(pos.Y, snapping.Y), UMath::Round(pos.Z, snapping.Z) };
 		gizmoTransform.SetTranslation(pos + PivotOffset);
 	}
