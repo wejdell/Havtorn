@@ -107,6 +107,9 @@ namespace Havtorn
 	{
 		World->BlockPhysicsSystem(this);
 		World->UnrequestSystems(this);
+
+		if (CUISystem* uiSystem = World->GetSystem<CUISystem>())
+			uiSystem->ClearFocus();
 	}
 
 
