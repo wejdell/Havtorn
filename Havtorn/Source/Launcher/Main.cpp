@@ -57,7 +57,7 @@ bool TrySendToRunningInstance(const std::string& uri)
 	copyDataStruct.dwData = 1;
 	copyDataStruct.cbData = (DWORD)(uri.size() + 1) * sizeof(char);
 	copyDataStruct.lpData = (PVOID)uri.c_str();
-	
+
 	SendMessageA(targetWindowHandle, WM_COPYDATA, 0, (LPARAM)&copyDataStruct);
 	return true;
 }
@@ -85,7 +85,18 @@ I32 main(I32 argc, char* argv[])
 	}
 #endif
 
-	CPlatformProcess* platformProcess = new CPlatformProcess(100, 100, 1280, 720);
+	I32 resX = 1280;
+	I32 resY = 720;
+
+	if (UCommandLine::IsOptionParameterValid("ResolutionX"))
+		resX = stoi(UCommandLine::GetOptionParameter("ResolutionX"));
+
+	if (UCommandLine::IsOptionParameterValid("ResolutionY"))
+		resY = stoi(UCommandLine::GetOptionParameter("ResolutionY"));
+
+	CPlatformProcess* platformProcess = new CPlatformProcess(100, 100, STATIC_U16(resX), STATIC_U16(resY));
+
+
 	CEngineProcess* engineProcess = new CEngineProcess();
 	CGameProcess* gameProcess = new CGameProcess();
 
@@ -112,7 +123,7 @@ I32 main(I32 argc, char* argv[])
 #endif
 
 	engineProcess->Init(platformProcess->PlatformManager);
-	
+
 #ifdef HV_EDITOR_BUILD
 	// TODO.NW: guiProcess init should handle InitGUI, need hold of the render backend somehow. maybe still move render backend to platform manager
 	guiProcess->Init(platformProcess->PlatformManager);

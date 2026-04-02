@@ -405,5 +405,16 @@ namespace Havtorn
 			SetDataOnPin(EPinDirection::Output, 0, a != b);
 			return -1;
 		}
-	}
+		
+		SInputCallbackNode::SInputCallbackNode(const U64 id, const U32 typeID, SScript* owningScript, const U64 callbackDataBindingID)
+			: SNode::SNode(id, typeID, owningScript, ENodeType::Standard)
+		{
+			callbackDataBindingID;
+		}
+
+		I8 SInputCallbackNode::OnExecute()
+		{
+			return I8();
+		}
+}
 }

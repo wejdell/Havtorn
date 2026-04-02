@@ -6,12 +6,26 @@
 #include "ECS/Entity.h"
 #include "ECS/Component.h"
 
+
 #define PIN_DATA_TYPES PIN_LITERAL_TYPES, PIN_MATH_TYPES, Havtorn::SEntity, Havtorn::SComponent*, std::vector<Havtorn::SEntity>, std::vector<Havtorn::SComponent*>
+
+#define INPUT_PARAM_VARIANTS std::function<void()>, std::function<void(bool)>, std::function<void(Havtorn::I32)>, std::function<void(Havtorn::F32)>, std::function<void(std::string)>, std::function<void(Havtorn::SVector2<Havtorn::F32>)>
 
 namespace Havtorn
 {
+
 	namespace HexRune
 	{
+        enum class ENGINE_API EInputParamType : U8
+        {
+            Void,
+            Bool,
+            Int,
+            Float,
+            String,
+            Vector
+        };
+
         // TODO.NW: Add functional types, like add node or advanced section?
         // TODO.NW: Figure out enum support
         enum class ENGINE_API EPinType : U8

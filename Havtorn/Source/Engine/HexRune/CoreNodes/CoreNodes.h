@@ -28,6 +28,13 @@ namespace Havtorn
 {
 	namespace HexRune
 	{
+		struct SInputCallbackNode : public SNode
+		{
+			ENGINE_API SInputCallbackNode(const U64 id, const U32 typeID, SScript* owningScript, const U64 callbackDataBindingID);
+			virtual ENGINE_API I8 OnExecute() override;
+			U64 CallbackDataBindingID = 0;
+		};
+
 		struct SDataBindingGetNode : public SNode
 		{
 			ENGINE_API SDataBindingGetNode(const U64 id, const U32 typeID, SScript* owningScript, const U64 dataBindingID);

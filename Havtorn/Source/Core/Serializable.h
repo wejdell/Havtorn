@@ -1,7 +1,6 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #pragma once
-
 //#define LOG_SERIALIZATION
 
 #ifdef LOG_SERIALIZATION
@@ -9,6 +8,8 @@
 #else
 #define LOG_SERIALIZE(...)
 #endif
+
+#include <variant>
 
 namespace Havtorn
 {
@@ -43,6 +44,14 @@ namespace Havtorn
 		return numberSize + dataSize;
 	}
 
+	template<typename... Ts>
+	inline U32 GetDataSize(const std::variant<Ts...> data)
+	{
+		U32 size = 0;
+		std::visit([&size](auto& value) { size = GetDataSize(value); }, data);
+		return size;
+	}
+
 	template<>
 	inline U32 GetDataSize(const std::string& object)
 	{
@@ -70,6 +79,12 @@ namespace Havtorn
 		memcpy(&destination[pointerPosition], source.data(), size);
 		LOG_SERIALIZE("Serialized vector data of type %s and size %i at position %i -> %i", typeid(T).name(), size, pointerPosition, pointerPosition + size);
 		pointerPosition += size;
+	}
+
+	template<typename... Ts>
+	inline void SerializeData(const std::variant<Ts...> data, char* destination, U64& pointerPosition)
+	{
+		std::visit([&destination, &pointerPosition](auto& value) { SerializeData(value, destination, pointerPosition); }, data);
 	}
 
 	template<>

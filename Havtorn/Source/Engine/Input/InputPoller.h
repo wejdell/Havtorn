@@ -1,6 +1,7 @@
 // Copyright 2026 Team Havtorn. All Rights Reserved.
 
 #pragma once
+#include "../Engine/HexRune/Pin.h"
 
 union SDL_Event;
 
@@ -8,6 +9,18 @@ namespace Havtorn
 {
 	class CInput;
 	class CPlatformManager;
+
+	struct SInputData
+	{
+		U64 UID;
+
+		HexRune::EInputParamType ParamType;
+		std::variant<INPUT_PARAM_VARIANTS> Func;
+
+		EInputKey Key;
+		EInputAxis Axis;
+
+	};
 
 	class CInputPoller
 	{
@@ -33,6 +46,8 @@ namespace Havtorn
 	private:
 		void UpdateKeyInput();
 		void UpdateAxisInput();
+
+		std::vector<SInputData> InputData;
 
 		CInput* Input = nullptr;
 	};

@@ -7,16 +7,6 @@ namespace Havtorn
 {
 	struct SEditorAssetRepresentation;
 
-	enum class EInputDataType 
-	{
-		Button,
-	};
-
-	struct SInputToolOperation
-	{
-		EInputDataType InputDataType;
-	};
-
 	class CInputTool : public CWindow
 	{
 	public:
@@ -28,5 +18,9 @@ namespace Havtorn
 		void OnDisable() override;
 
 		void OpenInputAsset(SEditorAssetRepresentation* asset);
+
+	private:
+		void DrawInputTable();
+		//std::unordered_map<CHavtornStaticString<255>, Hexstruction::SHexstruction> HexstructionMap;
 	};
 }

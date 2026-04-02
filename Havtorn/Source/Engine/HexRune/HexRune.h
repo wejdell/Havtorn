@@ -139,6 +139,16 @@ namespace Havtorn
             std::vector<SNodeEditorContext*> Contexts;
         };
 
+        struct SInputCallbackBinding
+        {
+            U64 UID = 0;
+            EInputParamType ParamType;
+
+            ENGINE_API [[nodiscard]] U32 GetSize() const;
+            ENGINE_API void Serialize(char* toData, U64& pointerPosition) const;
+            ENGINE_API void Deserialize(const char* fromData, U64& pointerPosition);
+        };
+
         struct SScriptDataBinding
         {
             U64 UID = 0;
@@ -150,9 +160,23 @@ namespace Havtorn
 #pragma warning(suppress : 4324)
             std::variant<PIN_DATA_TYPES> Data;
 
+        private:
+            void DeserializeDataVariant(std::variant<PIN_DATA_TYPES>& data, const EPinType pinType, const char* fromData, Havtorn::U64& pointerPosition);
+
+            template<typename T>
+            void DeserializeVariant(std::variant<PIN_DATA_TYPES>& data, const char* fromData, U64& pointerPosition)
+            {
+                T value;
+                DeserializeData(value, fromData, pointerPosition);
+                data = value;
+            }
+        public:
+
             ENGINE_API [[nodiscard]] U32 GetSize() const;
             ENGINE_API void Serialize(char* toData, U64& pointerPosition) const;
             ENGINE_API void Deserialize(const char* fromData, U64& pointerPosition);
+        
+       
         };
 
         struct SScript
@@ -165,6 +189,7 @@ namespace Havtorn
             std::vector<SLink> Links;
             std::vector<SScriptDataBinding> DataBindings;
             std::vector<SNodeEditorContext*> RegisteredEditorContexts;
+            std::vector<SInputCallbackBinding> InputCallbackDataBindings;
             //-------
             
             struct SNodeFactory* NodeFactory;

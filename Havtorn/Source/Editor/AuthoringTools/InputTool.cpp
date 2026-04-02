@@ -21,7 +21,12 @@ namespace Havtorn
 			GUI::End();
 			return;
 		}
+		
+		GUI::End();
+	}
 
+	void CInputTool::DrawInputTable()
+	{
 		EGUITableFlags tableFlags = EGUITableFlags::Resizable | EGUITableFlags::Borders;
 		if (GUI::BeginTable("InputColumns", 2, STATIC_I32(tableFlags)))
 		{
@@ -39,7 +44,7 @@ namespace Havtorn
 					GUI::SameLine();
 					if (GUI::Button("Add"))
 					{
-						
+
 					}
 					GUI::Text("<No Binding>");
 					GUI::TreePop();
@@ -51,7 +56,6 @@ namespace Havtorn
 
 			GUI::EndTable();
 		}
-		GUI::End();
 	}
 
 	void CInputTool::OnDisable()

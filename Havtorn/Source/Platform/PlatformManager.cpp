@@ -143,7 +143,7 @@ namespace Havtorn
 		SetWindowLongPtr(WindowHandle, GWLP_USERDATA, (LONG_PTR)ogProc);
 #endif // HV_PLATFORM_WINDOWS
 
-		Resolution = { WindowData.Width, WindowData.Height };
+		Resolution = { windowData.Width, windowData.Height };
 		ResizeTarget = {};
 
 		ShouldRun = true;
