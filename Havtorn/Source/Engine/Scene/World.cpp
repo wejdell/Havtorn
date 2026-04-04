@@ -1,6 +1,7 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #include "World.h"
+#include "Engine.h"
 #include "ECS/ECSInclude.h"
 #include "Scene.h"
 #include "Graphics/RenderManager.h"
@@ -181,7 +182,7 @@ namespace Havtorn
 		delete[] data;
 	}
 
-	void CWorld::OnSceneCreated(CScene* /*scene*/) const
+	void CWorld::OnSceneCreated(CScene* const/*scene*/) const
 	{
 		//PhysicsWorld3D->CreateScene(scene);
 	}
@@ -224,6 +225,21 @@ namespace Havtorn
 	void CWorld::BindSceneLoader(const std::function<bool(const std::string&)>& loadingFunction)
 	{
 		GetSystem<CLevelStreamingSystem>()->BindSceneLoader(loadingFunction);
+	}
+
+	CScene* const CWorld::CreateNewScene(const std::string& sceneName)
+	{
+		return CreateNewSceneFunction(sceneName);
+	}
+
+	Ptr<CScene> CWorld::CreateMovableScene(const std::string& sceneName)
+	{
+		return CreateMovableSceneFunction(sceneName);
+	}
+
+	Ptr<HexRune::SScript> CWorld::CreateMovableScript(const std::string& scriptName)
+	{
+		return CreateMovableScriptFunction(scriptName);
 	}
 
 	void CWorld::UnrequestSystems(void* requester)

@@ -47,27 +47,29 @@ namespace Havtorn
 		static constexpr F32 ThicknessMinimum = 0.005f;
 		static constexpr F32 ThicknessMaximum = 0.05f;
 
-		static ENGINE_API void AddLine(const SVector& start, const SVector& end, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
-		static ENGINE_API void AddLine2D(const SVector2<F32>& start, const SVector2<F32>& end, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
-		static ENGINE_API void AddArrow(const SVector& start, const SVector& end, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		// TODO.NW: Would be nice for these to take structs instead
+		// TODO.NW: Surely we can couple lifeTimeSeconds with useLifeTime? And infer useLifeTime == true if lifeTimeSeconds > 0.0f?
+		static ENGINE_API void AddLine(const SVector& start, const SVector& end, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true, const U64& renderViewID = 0);
+		static ENGINE_API void AddLine2D(const SVector2<F32>& start, const SVector2<F32>& end, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true, const U64& renderViewID = 0);
+		static ENGINE_API void AddArrow(const SVector& start, const SVector& end, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true, const U64& renderViewID = 0);
 		// Object aligned bounding box with Width/Height/Depth = 1. Pivot is in center.
-		static ENGINE_API void AddCube(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
-		static ENGINE_API void AddCamera(const SVector& origin, const SVector& eulerRotation, const F32 fov = 70.0f, const F32 aspectRatio = (16.0f/9.0f), const F32 farZ = 1.0f, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static ENGINE_API void AddCube(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true, const U64& renderViewID = 0);
+		static ENGINE_API void AddCamera(const SVector& origin, const SVector& eulerRotation, const F32 fov = 70.0f, const F32 aspectRatio = (16.0f/9.0f), const F32 farZ = 1.0f, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true, const U64& renderViewID = 0);
 		// Adds a circle across the XZ-plane with 8/16/32 segments.
-		static ENGINE_API void AddCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius = 0.5f, const U8 segments = 16, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static ENGINE_API void AddCircle(const SVector& origin, const SVector& eulerRotation, const F32 radius = 0.5f, const U8 segments = 16, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true, const U64& renderViewID = 0);
 		// 10x10 grid across the XZ-plane (default).
-		static ENGINE_API void AddGrid(const SVector& origin, const SVector& eulerRotation = SVector(), const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
-		static ENGINE_API void AddAxis(const SVector& origin, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static ENGINE_API void AddGrid(const SVector& origin, const SVector& eulerRotation = SVector(), const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true, const U64& renderViewID = 0);
+		static ENGINE_API void AddAxis(const SVector& origin, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true, const U64& renderViewID = 0);
 		// Adds a point at 1/10th of world scale.
-		static ENGINE_API void AddPoint(const SVector& origin, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMaximum, const bool ignoreDepth = true);
+		static ENGINE_API void AddPoint(const SVector& origin, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMaximum, const bool ignoreDepth = true, const U64& renderViewID = 0);
 		// Adds a rectangle across the XZ-plane. Default (Scale = 1,1,1) is a square.
-		static ENGINE_API void AddRectangle(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
-		static ENGINE_API void AddSphere(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static ENGINE_API void AddRectangle(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true, const U64& renderViewID = 0);
+		static ENGINE_API void AddSphere(const SVector& center, const SVector& eulerRotation, const SVector& scale, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true, const U64& renderViewID = 0);
 		// Adds a cone with its base facing towards direction.
-		static ENGINE_API void AddConeRadius(const SVector& apexPosition, const SVector& direction, const F32 height, const F32 radius, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static ENGINE_API void AddConeRadius(const SVector& apexPosition, const SVector& direction, const F32 height, const F32 radius, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true, const U64& renderViewID = 0);
 		// Adds a cone with its base facing towards direction. angleRadians: angle between slanted height and height at the apex of the cone.
-		static ENGINE_API void AddConeAngle(const SVector& apexPosition, const SVector& direction, const F32 height, const F32 angleDegrees, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
-		//static void AddCapsule(const SVector& center, const SVector& eulerRotation, const F32 height, const F32 radius, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true);
+		static ENGINE_API void AddConeAngle(const SVector& apexPosition, const SVector& direction, const F32 height, const F32 angleDegrees, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true, const U64& renderViewID = 0);
+		//static void AddCapsule(const SVector& center, const SVector& eulerRotation, const F32 height, const F32 radius, const SColor& color = SColor::White, const F32 lifeTimeSeconds = -1.0f, const bool useLifeTime = true, const F32 thickness = ThicknessMinimum, const bool ignoreDepth = true, const U64& renderViewID = 0);
 
 	private:
 		bool Init(CRenderManager* renderManager);
@@ -86,6 +88,7 @@ namespace Havtorn
 
 			SMatrix TransformMatrix;
 			SColor Color;
+			U64 RenderViewID = 0;
 			F32 LifeTime = 0.0f;
 			F32 Thickness = 1.0f;
 			U16 IndexCount = 0;
@@ -103,7 +106,7 @@ namespace Havtorn
 			std::partial_ordering operator<=>(const SDebugDrawData& rhs) const { return LifeTime <=> rhs.LifeTime; }
 		};
 
-		static bool TryAddShapes(const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, std::vector<SDebugDrawData>& outData);
+		static bool TryAddShapes(const SColor& color, const F32 lifeTimeSeconds, const bool useLifeTime, const F32 thickness, const bool ignoreDepth, std::vector<SDebugDrawData>& outData, const U64& renderViewID = 0);
 		static void TransformToFaceAndReach(const SVector& start, const SVector& end, SMatrix& transform);
 		static void TransformToFaceAndReach(const SVector2<F32>& start, const SVector2<F32>& end, SMatrix& transform);
 

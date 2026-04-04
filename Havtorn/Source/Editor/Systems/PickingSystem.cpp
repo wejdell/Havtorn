@@ -65,10 +65,12 @@ namespace Havtorn
 
 	void CPickingSystem::WorldSpacePick(const bool modifierHeld) const
 	{
-		if (Manager->GetIsOverGizmo() || Manager->GetIsWorldPlaying() || Manager->GetIsModalOpen() || EditorCameraComponent == nullptr || EditorCameraTransform == nullptr)
+		// TODO.NW: Set up focus and hovering rules. With overlapping windows, only the one in front should be considered hovered. If there's no window in the way, we would like not 
+		// to click twice on the viewport to focus it and then be able to pick on the next click though.
+		const CViewportWindow* viewport = Manager->GetEditorWindow<CViewportWindow>();
+		if (Manager->GetIsOverGizmo() || Manager->GetIsWorldPlaying() || !viewport->GetIsFocused() || Manager->GetIsModalOpen() || EditorCameraComponent == nullptr || EditorCameraTransform == nullptr)
 			return;
 
-		const CViewportWindow* viewport = Manager->GetEditorWindow<CViewportWindow>();
 		const SVector2<F32> renderedSceneDimensions = viewport->GetRenderedSceneDimensions();
 		const SVector2<F32> renderedScenePosition = viewport->GetRenderedScenePosition();
 

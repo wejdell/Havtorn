@@ -10,7 +10,8 @@
 #include <ECS/Systems/CameraSystem.h>
 #include <HexRune/CoreNodes/CoreNodes.h>
 #include <FileSystem.h>
-#include "magic_enum.h"
+#include <magic_enum.h>
+
 #include "ScriptTool.h"
 
 #include <Assets/AssetRegistry.h>
@@ -50,7 +51,7 @@ namespace Havtorn
 	using namespace HexRune;
 
 	CScriptTool::CScriptTool(const char* displayName, CEditorManager* manager)
-		: CWindow(displayName, manager)
+		: CWindow(displayName, manager, false)
 	{
 	}
 
@@ -68,7 +69,9 @@ namespace Havtorn
 			return;
 		}
 
-		if (CurrentScript == nullptr)
+		IsFocused = IsEnabled && GUI::IsWindowFocused() && GUI::IsWindowHovered();
+
+		if (CurrentScriptAsset == nullptr)
 		{
 			GUI::End();
 			return;
@@ -82,9 +85,11 @@ namespace Havtorn
 
 		IsHoveringWindow = isWindowHovered;
 
+		HexRune::SScript* script = CurrentScriptAsset->Script.get();
+
 		{ // Menu Bar
 			GUI::BeginChild("ScriptMenuBar", SVector2<F32>(0.0f, 30.0f));
-			GUI::Text(UGeneralUtils::ExtractFileBaseNameFromPath(CurrentScript->FileName).c_str());
+			GUI::Text(script->Name.c_str());
 			GUI::SameLine();
 			Filter.Draw("Search", 180);
 
@@ -103,7 +108,7 @@ namespace Havtorn
 			GUI::Text("Data Bindings");
 			GUI::Separator();
 
-			for (auto& dataBinding : CurrentScript->DataBindings)
+			for (auto& dataBinding : script->DataBindings)
 			{
 				GUI::Text(dataBinding.Name.c_str());
 				if (GUI::IsItemHovered())
@@ -205,43 +210,46 @@ namespace Havtorn
 
 	void CScriptTool::OpenScript(SEditorAssetRepresentation* asset)
 	{
-		CurrentScriptRepresentation = asset;
-		CurrentScript = new SGameScript();
-		CurrentScript->Initialize();
-		GEngine::GetAssetRegistry()->RequestGameAssetData<HexRune::SScript>(CurrentScript, SAssetReference(asset->DirectoryEntry.path().string()), CAssetRegistry::EditorManagerRequestID);
+		// TODO.NW: Add error handling?
+
+		if (IsEnabled)
+			CloseScript();
+
+		CurrentScriptAssetRef = SAssetReference(asset->DirectoryEntry.path().string());
+		CurrentScriptAsset = GEngine::GetAssetRegistry()->RequestAssetData<SScriptAsset>(CurrentScriptAssetRef, CAssetRegistry::EditorManagerRequestID);
 		SetEnabled(true);
 	}
 
 	void CScriptTool::SaveScript()
 	{
-		const std::string directoryEntryPath = UGeneralUtils::ConvertToPlatformAgnosticPath(CurrentScriptRepresentation->DirectoryEntry.path().string());
-		
-		SScriptFileHeader asset;
-		asset.Name = UGeneralUtils::ExtractFileBaseNameFromPath(directoryEntryPath);
-		asset.Script = CurrentScript;
+		// TODO.NW: Check redirections?
 
-		const std::string destinationPath = UGeneralUtils::ExtractParentDirectoryFromPath(directoryEntryPath);
-		Manager->GetResourceManager()->CreateAsset(destinationPath, asset);
+		SScriptFileHeader fileHeader;
+		fileHeader.Name = CurrentScriptAsset->Script->Name;
+		fileHeader.Script = CurrentScriptAsset->Script.get();
+		GEngine::GetAssetRegistry()->SaveAsset(UGeneralUtils::ExtractParentDirectoryFromPath(CurrentScriptAssetRef.FilePath) + "/", fileHeader);
 	}
 
 	void CScriptTool::CloseScript()
 	{
 		// TODO.NW: Ask user if they want to save?
 
-		GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(CurrentScriptRepresentation->DirectoryEntry.path().string()), CAssetRegistry::EditorManagerRequestID);
-		CurrentScriptRepresentation = nullptr;
-		CurrentScript = nullptr;
+		GEngine::GetAssetRegistry()->UnrequestAsset(CurrentScriptAssetRef, CAssetRegistry::EditorManagerRequestID);
+		CurrentScriptAssetRef = SAssetReference();
+		CurrentScriptAsset = nullptr;
 		SetEnabled(false);
 	}
 
 	void CScriptTool::LoadGUIElements()
 	{
-		// Extract elements from CurrentScript
+		// Extract elements from CurrentScriptAsset
 		GUINodes.clear();
 		GUILinks.clear();
 		GUIContexts.clear();
 
-		for (auto& node : CurrentScript->Nodes)
+		HexRune::SScript* script = CurrentScriptAsset->Script.get();
+
+		for (auto& node : script->Nodes)
 		{
 			// TODO.NW: Make constructors for GUI elements that extract info from data elements?
 			GUINodes.emplace_back();
@@ -249,7 +257,7 @@ namespace Havtorn
 			guiNode.UID = node->UID;
 			guiNode.Type = static_cast<EGUINodeType>(node->FlowType);
 
-			SNodeEditorContext* editorContext = CurrentScript->GetNodeEditorContext(node->UID);
+			SNodeEditorContext* editorContext = script->GetNodeEditorContext(node->UID);
 			guiNode.Name = editorContext ? editorContext->Name : "Missing Context";
 			guiNode.Color = editorContext ? editorContext->Color : SColor::Orange;
 			guiNode.Position = editorContext ? editorContext->Position : SVector2<F32>::Zero;
@@ -267,22 +275,24 @@ namespace Havtorn
 			}
 		}
 
-		for (auto& link : CurrentScript->Links)
+		for (auto& link : script->Links)
 			GUILinks.emplace_back(SGUILink{ link.UID, link.StartPinUID, link.EndPinUID });
 
-		for (U64 i = 0; i < CurrentScript->RegisteredEditorContexts.size(); i++)
+		for (U64 i = 0; i < script->RegisteredEditorContexts.size(); i++)
 		{
-			SNodeEditorContext* registeredContext = CurrentScript->RegisteredEditorContexts[i];
+			SNodeEditorContext* registeredContext = script->RegisteredEditorContexts[i];
 			GUIContexts.emplace_back(SGUINodeContext{ registeredContext->Name, registeredContext->Category, STATIC_I64(i) });
 		}
 	}
 
 	void CScriptTool::CommitEdit(const SNodeOperation& edit)
 	{
-		// Edit CurrentScript here
+		HexRune::SScript* script = CurrentScriptAsset->Script.get();
+
+		// Edit CurrentScriptAsset here
 		for (auto& node : GUINodes)
 		{
-			if (SNodeEditorContext* context = CurrentScript->GetNodeEditorContext(node.UID))
+			if (SNodeEditorContext* context = script->GetNodeEditorContext(node.UID))
 			{
 				context->Position = GUI::GetNodePosition(node.UID);
 				context->HasBeenInitialized = true;
@@ -291,28 +301,28 @@ namespace Havtorn
 
 		if (edit.NewNodeContext.Index > -1)
 		{
-			SNode* newNode = CurrentScript->RegisteredEditorContexts[edit.NewNodeContext.Index]->AddNode(CurrentScript, 0);
-			SNodeEditorContext* newContext = CurrentScript->GetNodeEditorContext(newNode->UID);
+			SNode* newNode = script->RegisteredEditorContexts[edit.NewNodeContext.Index]->AddNode(script, 0);
+			SNodeEditorContext* newContext = script->GetNodeEditorContext(newNode->UID);
 			newContext->Position = edit.NewNodePosition;
 		}
 
 		if (edit.NewBinding.Type != EGUIPinType::Unknown)
-			CurrentScript->AddDataBinding(edit.NewBinding.Name.AsString().c_str(), static_cast<HexRune::EPinType>(edit.NewBinding.Type), static_cast<HexRune::EObjectDataType>(edit.NewBinding.ObjectType), static_cast<EAssetType>(edit.NewBinding.AssetType));
+			script->AddDataBinding(edit.NewBinding.Name.AsString().c_str(), static_cast<HexRune::EPinType>(edit.NewBinding.Type), static_cast<HexRune::EObjectDataType>(edit.NewBinding.ObjectType), static_cast<EAssetType>(edit.NewBinding.AssetType));
 
 		if (edit.RemovedBindingID != 0)
-			CurrentScript->RemoveDataBinding(edit.RemovedBindingID);
+			script->RemoveDataBinding(edit.RemovedBindingID);
 
 		if (!edit.ModifiedLiteralValuePin.IsDataUnset())
-			CurrentScript->SetDataOnInput(edit.ModifiedLiteralValuePin.UID, GetEngineTypeData(edit.ModifiedLiteralValuePin.Data));
+			script->SetDataOnInput(edit.ModifiedLiteralValuePin.UID, GetEngineTypeData(edit.ModifiedLiteralValuePin.Data));
 
 		for (auto& removedNode : edit.RemovedNodes)
-			CurrentScript->RemoveNode(removedNode.UID);
+			script->RemoveNode(removedNode.UID);
 
 		if (edit.NewLink.UID != 0)
-			CurrentScript->Link(edit.NewLink.StartPinID, edit.NewLink.EndPinID);
+			script->Link(edit.NewLink.StartPinID, edit.NewLink.EndPinID);
 
 		for (auto& removedLink : edit.RemovedLinks)
-			CurrentScript->Unlink(removedLink.StartPinID, removedLink.EndPinID);
+			script->Unlink(removedLink.StartPinID, removedLink.EndPinID);
 	}
 
 	void CScriptTool::RenderScript()

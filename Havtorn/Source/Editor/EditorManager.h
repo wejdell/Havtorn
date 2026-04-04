@@ -9,9 +9,6 @@
 #include <GUI.h>
 #include <Graphics/RenderingPrimitives/RenderTexture.h>
 
-struct ID3D11Device;
-struct ID3D11DeviceContext;
-
 namespace Havtorn
 {
 	struct SEntity;
@@ -32,20 +29,18 @@ namespace Havtorn
 		std::string Label = "No Snapping";
 		auto operator<=>(const SSnappingOption& other) const = default;
 	};
-
+	
 	enum class EEditorColorTheme
 	{
-		DefaultDark,
-		HavtornDark,
+		HavtornDefault,
+		HavtornYellow,
 		HavtornRed,
 		HavtornGreen,
 		HavtornDarkBlue,
 		HavtornLightBlue,
 		HavtornPurple,
 		HavtornPink,
-		Count,
-		PlayMode,
-		PauseMode
+		Count
 	};
 
 	enum class EEditorStyleTheme
@@ -82,7 +77,8 @@ namespace Havtorn
 		EAssetType AssetType = EAssetType::None;
 		std::filesystem::directory_entry DirectoryEntry = {};
 		CRenderTexture TextureRef;
-		// TODO.NW: Make static string, figure out relationship to engine asset
+		// TODO.NW: Make static string, figure out relationship to engine asset. 
+		// We might want to be able to make more shared ptrs of these, so authoring tools can use them by making a shared ptr to the one we're opening.
 		std::string Name = "";
 		bool UsingEditorTexture = false;
 		bool IsSourceWatched = false;
@@ -92,8 +88,9 @@ namespace Havtorn
 	struct SEditorPreferences
 	{
 		F32 Sensitivity = 0.5f;
-		EEditorColorTheme ColorTheme = EEditorColorTheme::HavtornDark;
-		EEditorColorTheme CachedColorTheme = EEditorColorTheme::HavtornDark;
+		EEditorColorTheme EditorColorTheme = EEditorColorTheme::HavtornYellow;
+		EEditorColorTheme PlayColorTheme = EEditorColorTheme::HavtornYellow;
+		EEditorColorTheme PauseColorTheme = EEditorColorTheme::HavtornYellow;
 	};
 
 	class CEditorManager
@@ -112,6 +109,7 @@ namespace Havtorn
 		void SetCurrentWorkingScene(const I64 sceneIndex);
 		CScene* GetCurrentWorkingScene() const;
 		std::vector<Ptr<CScene>>& GetScenes() const;
+		CScene* GetContainingScene(const SEntity& entity) const;
 
 		void SetSelectedEntity(const SEntity& entity);
 		void AddSelectedEntity(const SEntity& entity);
@@ -123,6 +121,11 @@ namespace Havtorn
 		const SEntity& GetSelectedEntity() const;
 		const SEntity& GetLastSelectedEntity() const;
 		std::vector<SEntity> GetSelectedEntities() const;
+
+		// NW: Packed prefabs can be attached to other entities but their children can't be modified or extended outside of the asset level. Excludes the prefab entity itself.
+		bool IsEntityInsidePackedPrefab(const SEntity& entity) const;
+		// NW: Excludes the entity going in as parameter itself.
+		SEntity GetPackedPrefabParent(const SEntity& entity) const;
 
 		// TODO.NW: I'd much rather figure out how to manage non-owned resources similar to how unreal does it. Those weak ptrs are managed and 
 		// reset when things are garbage collected and so can be checked for validity, but by default, c++ weak ptrs must be converted into shared
@@ -149,7 +152,7 @@ namespace Havtorn
 
 		void OpenAssetTool(SEditorAssetRepresentation* asset);
 
-		void SetEditorTheme(EEditorColorTheme colorTheme = EEditorColorTheme::HavtornDark, EEditorStyleTheme styleTheme = EEditorStyleTheme::Havtorn);
+		void SetEditorTheme(EEditorColorTheme colorTheme = EEditorColorTheme::HavtornYellow, EEditorStyleTheme styleTheme = EEditorStyleTheme::Havtorn, F32 darknessOffset = 1.0f);
 		std::string GetEditorColorThemeName(const EEditorColorTheme colorTheme);
 		SColor GetEditorColorThemeRepColor(const EEditorColorTheme colorTheme);
 		[[nodiscard]] SEditorLayout& GetEditorLayout();
@@ -171,6 +174,8 @@ namespace Havtorn
 		void SetViewportPadding(const F32 padding);
 		[[nodiscard]] F32 GetEditorSensitivity() const;
 		void SetEditorSensitivity(const F32 sensitivity);
+		
+		void SetEditorModeColorTheme(const EWorldPlayState dedicatedPlayState, const EEditorColorTheme newColorTheme);
 	
 		bool GetIsWorldPlaying() const;
 
@@ -240,8 +245,8 @@ namespace Havtorn
 		ETransformGizmoSpace CurrentGizmoSpace = ETransformGizmoSpace::World;
 		SSnappingOption CurrentGizmoSnapping = {};
 		SEditorPreferences EditorPreferences;
-		 CJsonDocument EditorPreferencesDocument;
-
+		CJsonDocument EditorPreferencesDocument;
+		
 		F32 ViewportPadding = 0.2f;
 		bool IsEnabled = true;
 		bool IsDebugInfoOpen = true;
@@ -256,6 +261,14 @@ namespace Havtorn
 		"Config/EditorPreferences.json";
 		inline static const std::string UserEditorSettingsPath =
 		"Config/EditorPreferences.user.json";
+		
+		inline static const std::string EditorColorThemeKey = "Editor Color Theme";
+		inline static const std::string PauseColorThemeKey = "Pause Color Theme";
+		inline static const std::string PlayColorThemeKey = "Play Color Theme";
+		
+		const F32 DarknessOffsetStoppedTheme = 1.0f;
+		const F32 DarknessOffsetPlayTheme = 0.6f;
+		const F32 DarknessOffsetPausedTheme = 0.8f;
 	};
 
 	template<class TEditorWindowType>

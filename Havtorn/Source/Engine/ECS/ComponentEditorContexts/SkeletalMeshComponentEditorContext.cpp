@@ -2,6 +2,7 @@
 
 #include "hvpch.h"
 #include "SkeletalMeshComponentEditorContext.h"
+#include "Engine.h"
 
 #include "ECS/Components/SkeletalMeshComponent.h"
 #include "ECS/Components/TransformComponent.h"
@@ -11,6 +12,7 @@
 
 #include <GUI.h>
 #include <Assets/AssetRegistry.h>
+#include "Assets/AssetReference.h"
 
 namespace Havtorn
 {

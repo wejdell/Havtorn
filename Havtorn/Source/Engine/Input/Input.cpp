@@ -89,12 +89,11 @@ namespace Havtorn
 		break;
 
 		case SDL_EVENT_KEY_DOWN:			
-			UpdateModifiers(event->key.mod, true);
+			SetModifiers(event->key.mod);
 			HandleKeyDown(event->key.key);
 			break;
 
 		case SDL_EVENT_KEY_UP:
-			UpdateModifiers(event->key.mod, false);
 			HandleKeyUp(event->key.key);
 			break;
 
@@ -174,6 +173,8 @@ namespace Havtorn
 				++it;
 		}
 
+		SetModifiers(0);
+
 		HandleAxisEvent(EInputAxis::MouseWheel, 0.0f);
 		HandleAxisEvent(EInputAxis::MouseDeltaHorizontal, 0.0f);
 		HandleAxisEvent(EInputAxis::MouseDeltaVertical, 0.0f);
@@ -239,16 +240,10 @@ namespace Havtorn
 		AxisInputValues[STATIC_U64(axis)] = value;
 	}
 
-	void CInput::UpdateModifiers(const U32& modifiers, const bool pressedKey)
+	void CInput::SetModifiers(const U32& modifiers)
 	{
 		// TODO.NW: Add super (GUI/Windows) key mod
 		const U32 modValue = modifiers - 4096;
-
-		if ((modValue & SDL_KMOD_SHIFT) != 0)
-			KeyInputModifiers[0] = pressedKey;
-		if ((modValue & SDL_KMOD_CTRL) != 0)
-			KeyInputModifiers[1] = pressedKey;
-		if ((modValue & SDL_KMOD_ALT) != 0)
-			KeyInputModifiers[2] = pressedKey;
+		KeyInputModifiers = modValue;
 	}
 }

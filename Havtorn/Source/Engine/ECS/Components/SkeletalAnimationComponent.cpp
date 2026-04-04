@@ -2,6 +2,7 @@
 
 #include "SkeletalAnimationComponent.h"
 #include "Assets/AssetRegistry.h"
+#include "Engine.h"
 
 namespace Havtorn
 {

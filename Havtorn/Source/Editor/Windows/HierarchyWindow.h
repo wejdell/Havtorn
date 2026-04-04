@@ -9,13 +9,14 @@ namespace Havtorn
 {
 	enum class EEditorTexture;
 
+	struct SHierarchyEditData
+	{
+		I64 QueuedRemovalIndex = -1;
+		I64 HoveredIndex = -1;
+	};
+
 	class CHierarchyWindow : public CWindow
 	{
-		struct SEditData
-		{
-			I64 QueuedRemovalIndex = -1;
-			I64 HoveredIndex = -1;
-		};
 
 	public:
 		CHierarchyWindow(const char* displayName, CEditorManager* manager);
@@ -24,18 +25,19 @@ namespace Havtorn
 		void OnInspectorGUI() override;
 		void OnDisable() override;
 
+		void Header();
+		void Body(std::vector<Ptr<CScene>>& scenes, SHierarchyEditData& editData);
+		void InspectScene(CScene* scene);
+		void Footer(std::vector<Ptr<CScene>>& scenes, SHierarchyEditData& editData);
+		void Edit(SHierarchyEditData& editData);
 	private:
+		void SceneAssetDrag();
+		
 		void FilterChildrenFromList(const CScene* scene, const std::vector<SEntity>& children, std::vector<SEntity>& filteredEntities);
 		void InspectEntities(CScene* scene, const std::vector<SEntity>& entities);
 
-		void Header();
-		void Body(std::vector<Ptr<CScene>>& scenes, SEditData& editData);
-		void Footer(std::vector<Ptr<CScene>>& scenes, SEditData& editData);
-		void SceneAssetDrag();
-
-		void Edit(SEditData& editData);
-
 		std::vector<EEditorTexture> GetRelevantComponentIcons(const CScene* scene, const SEntity& entity);
+
 	private:
 		SGuiTextFilter Filter = SGuiTextFilter();
 		I64 SelectedIndex = -1;

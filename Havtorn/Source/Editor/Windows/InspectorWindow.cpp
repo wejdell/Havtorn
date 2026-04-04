@@ -13,6 +13,7 @@
 #include <GeneralUtilities.h>
 
 #include "Windows/ViewportWindow.h"
+#include "AuthoringTools/PrefabTool.h"
 #include "Windows/SpriteAnimatorGraphNodeWindow.h"
 #include "EditorResourceManager.h"
 
@@ -48,6 +49,8 @@ namespace Havtorn
 			return;
 		}
 
+		IsFocused = IsEnabled && GUI::IsWindowFocused() && GUI::IsWindowHovered();
+
 		std::vector<SEntity> selectedEntities = Manager->GetSelectedEntities();
 
 		if (selectedEntities.empty())
@@ -57,7 +60,7 @@ namespace Havtorn
 			return;
 		}
 
-		const std::vector<Ptr<CScene>>& scenes = GEngine::GetWorld()->GetActiveScenes();
+		const std::vector<Ptr<CScene>>& worldScenes = GEngine::GetWorld()->GetActiveScenes();
 
 		// TODO.NW: Go through and make sure everything in the inspector gets unique ID, maybe based on entity GUID. 
 		// Don't want same IDs over a frame when multiple entities are selected
@@ -75,63 +78,9 @@ namespace Havtorn
 				GUI::EndDragDropSource();
 			}
 
-			CScene* currentScene = UComponentAlgo::GetContainingScene(selectedEntity, scenes);
-			if (currentScene == nullptr)
-			{
-				GUI::TextDisabled("Could not find scene of selected entity");
-				continue;
-			}
-
-			SMetaDataComponent* metaDataComp = currentScene->GetComponent<SMetaDataComponent>(selectedEntity);
-			if (metaDataComp != nullptr)
-			{
-				GUI::InputText("##MetaDataCompName", &metaDataComp->Name);
-				GUI::SameLine();
-				GUI::TextDisabled("GUID %u", metaDataComp->Owner.GUID);
-				if (GUI::IsItemHovered())
-					GUI::SetTooltip("GUID %u", metaDataComp->Owner.GUID);
-			}
-
-			for (SComponentEditorContext* context : currentScene->GetComponentEditorContexts(selectedEntity))
-			{
-				GUI::Separator();
-
-				if (context->RemoveComponent(selectedEntity, currentScene))
-					continue;
-
-				GUI::SameLine();
-				SComponentViewResult result = context->View(selectedEntity, currentScene);
-
-				// TODO.NR: Could make this a enum-function map, but would be good to set up clear rules for how this should work.
-				switch (result.Label)
-				{
-				case EComponentViewResultLabel::UpdateTransformGizmo:
-					UpdateTransformGizmo(result);
-					break;
-				case EComponentViewResultLabel::InspectAssetComponent:
-					InspectAssetComponent(result);
-					break;
-				case EComponentViewResultLabel::OpenAssetTool:
-					OpenAssetTool(result);
-					break;
-				case EComponentViewResultLabel::RenderPreview:
-					RenderPreview(result);
-					break;
-				case EComponentViewResultLabel::PassThrough:
-				default:
-					break;
-				}
-
-				GUI::Dummy({ GUI::DummySizeX, GUI::DummySizeY });
-			}
-
-			UpdateAssetContextMenu();
-
-			GUI::Separator();
-			if (GUI::Button("Add Component", SVector2<F32>(GUI::GetContentRegionAvail().X, 0)))
-				GUI::OpenPopup("Add Component Modal");
-
-			OpenAddComponentModal(selectedEntity);
+			// NW: The main inspector logic does not care what gets inspected outside of the world scenes
+			CScene* currentScene = UComponentAlgo::GetContainingScene(selectedEntity, worldScenes);
+			InspectEntity(selectedEntity, currentScene);
 		}
 
 		const SVector2<F32> newPosition = GUI::GetWindowPos();
@@ -152,6 +101,66 @@ namespace Havtorn
 	{
 	}
 
+	void CInspectorWindow::InspectEntity(const SEntity& entity, CScene* owningScene)
+	{
+		if (owningScene == nullptr || !owningScene->HasEntity(entity.GUID))
+		{
+			GUI::TextDisabled("Could not find scene of selected entity");
+			return;
+		}
+
+		SMetaDataComponent* metaDataComp = owningScene->GetComponent<SMetaDataComponent>(entity);
+		if (metaDataComp != nullptr)
+		{
+			GUI::InputText("##MetaDataCompName", &metaDataComp->Name);
+			GUI::SameLine();
+			GUI::TextDisabled("GUID %u", metaDataComp->Owner.GUID);
+			if (GUI::IsItemHovered())
+				GUI::SetTooltip("GUID %u", metaDataComp->Owner.GUID);
+		}
+
+		for (SComponentEditorContext* context : owningScene->GetComponentEditorContexts(entity))
+		{
+			GUI::Separator();
+
+			if (context->RemoveComponent(entity, owningScene))
+				continue;
+
+			GUI::SameLine();
+			SComponentViewResult result = context->View(entity, owningScene);
+
+			// TODO.NR: Could make this a enum-function map, but would be good to set up clear rules for how this should work.
+			switch (result.Label)
+			{
+			case EComponentViewResultLabel::UpdateTransformGizmo:
+				UpdateTransformGizmo(result);
+				break;
+			case EComponentViewResultLabel::InspectAssetComponent:
+				InspectAssetComponent(result);
+				break;
+			case EComponentViewResultLabel::OpenAssetTool:
+				OpenAssetTool(result);
+				break;
+			case EComponentViewResultLabel::RenderPreview:
+				RenderPreview(result);
+				break;
+			case EComponentViewResultLabel::PassThrough:
+			default:
+				break;
+			}
+
+			GUI::Dummy({ GUI::DummySizeX, GUI::DummySizeY });
+		}
+
+		UpdateAssetContextMenu();
+
+		GUI::Separator();
+		if (GUI::Button("Add Component", SVector2<F32>(GUI::GetContentRegionAvail().X, 0)))
+			GUI::OpenPopup("Add Component Modal");
+
+		OpenAddComponentModal(entity, owningScene);
+	}
+
 	void CInspectorWindow::UpdateTransformGizmo(const SComponentViewResult& result)
 	{
 		if (Manager->GetIsFreeCamActive())
@@ -162,24 +171,39 @@ namespace Havtorn
 			return;
 
 		CWorld* world = GEngine::GetWorld();
-		SEntity mainCamera = world->GetMainCamera();
+		const SEntity mainCamera = world->GetMainCamera();
+
+		SMatrix viewMatrix = SMatrix::Identity;
+		SMatrix projectionMatrix = SMatrix::Identity;
+
+		CScene* currentScene = Manager->GetContainingScene(result.ComponentViewed->Owner);
+		const CPrefabTool* prefabTool = Manager->GetEditorWindow<CPrefabTool>();
+		const bool workingInPrefabScene = prefabTool != nullptr && prefabTool->GetWorkingScene() == currentScene;
 		SCameraData mainCameraData = UComponentAlgo::GetCameraData(mainCamera, world->GetActiveScenes());
-
-		if (!mainCameraData.IsValid())
-			return;
-
-		CViewportWindow* viewportWindow = Manager->GetEditorWindow<CViewportWindow>();
-		SVector2<F32> viewportWindowDimensions = viewportWindow->GetRenderedSceneDimensions();
-		SVector2<F32> viewportWindowPosition = viewportWindow->GetRenderedScenePosition();
-
-		GUI::SetRect(viewportWindowPosition, viewportWindowDimensions);
 		
-		SMatrix viewMatrix = mainCameraData.TransformComponent->Transform.GetMatrix();
-		SMatrix inverseView = viewMatrix.Inverse();
+		if (workingInPrefabScene)
+		{
+			viewMatrix = prefabTool->GetViewMatrix();
+			projectionMatrix = prefabTool->GetProjectionMatrix();
+			GUI::SetGizmoRect(prefabTool->GetPreviewWindowPosition(), prefabTool->GetPreviewWindowDimensions());
+		}
+		else if (mainCameraData.IsValid())
+		{
+			viewMatrix = mainCameraData.TransformComponent->Transform.GetMatrix();
+			projectionMatrix = mainCameraData.CameraComponent->ProjectionMatrix;
 
-		ViewManipulation(viewMatrix, viewportWindowPosition, viewportWindowDimensions);
+			CViewportWindow* viewportWindow = Manager->GetEditorWindow<CViewportWindow>();
+			SVector2<F32> viewportWindowDimensions = viewportWindow->GetRenderedSceneDimensions();
+			SVector2<F32> viewportWindowPosition = viewportWindow->GetRenderedScenePosition();
 
-		CScene* currentScene = Manager->GetCurrentWorkingScene();
+			GUI::SetGizmoRect(viewportWindowPosition, viewportWindowDimensions);
+			ViewManipulation(viewMatrix, viewportWindowPosition, viewportWindowDimensions);
+		}
+		else
+		{
+			return;
+		}
+
 		if (Manager->GetIsDragCopyActive() && viewedTransformComp->Owner != currentScene->CopiedEntity && DeltaMatrix != SMatrix::Identity)
 		{
 			if (currentScene != nullptr && !currentScene->CopiedEntity.IsValid())
@@ -204,7 +228,7 @@ namespace Havtorn
 		{
 			SVector gizmoSnapping = Manager->GetCurrentGizmoSnapping().Snapping;
 			F32 snappingData[] = { gizmoSnapping.X, gizmoSnapping.Y, gizmoSnapping.Z };
-			GUI::GizmoManipulate(inverseView.data, mainCameraData.CameraComponent->ProjectionMatrix.data, Manager->GetCurrentGizmo(), Manager->GetCurrentGizmoSpace(), transformMatrix.data, DeltaMatrix.data, snappingData);
+			GUI::GizmoManipulate(viewMatrix.Inverse().data, projectionMatrix.data, Manager->GetCurrentGizmo(), Manager->GetCurrentGizmoSpace(), transformMatrix.data, DeltaMatrix.data, snappingData);
 		}
 		else
 		{
@@ -214,8 +238,8 @@ namespace Havtorn
 		
 		GUI::PopID();
 		
-		
-		mainCameraData.TransformComponent->Transform.SetMatrix(viewMatrix);
+		if (mainCameraData.IsValid() && !workingInPrefabScene)
+			mainCameraData.TransformComponent->Transform.SetMatrix(viewMatrix);
 	}
 
 	void CInspectorWindow::ViewManipulation(SMatrix& outCameraView, const SVector2<F32>& windowPosition, const SVector2<F32>& windowSize)
@@ -330,23 +354,20 @@ namespace Havtorn
 		GUI::Separator();
 	}
 
-	void CInspectorWindow::OpenAddComponentModal(const SEntity& entity)
+	void CInspectorWindow::OpenAddComponentModal(const SEntity& entity, CScene* owningScene)
 	{
 		if (!GUI::BeginPopupModal("Add Component Modal", NULL, { EWindowFlag::AlwaysAutoResize }))
 			return;
 
 		Manager->SetIsModalOpen(true);
-		CScene* currentScene = UComponentAlgo::GetContainingScene(entity, GEngine::GetWorld()->GetActiveScenes());
-		if (currentScene == nullptr)
-			return;
 
 		if (GUI::BeginTable("NewComponentTypeTable", 1))
 		{
-			for (const SComponentEditorContext* context : currentScene->GetComponentEditorContexts())
+			for (const SComponentEditorContext* context : owningScene->GetComponentEditorContexts())
 			{
 				GUI::TableNextColumn();
 
-				if (context->AddComponent(entity, currentScene))
+				if (context->AddComponent(entity, owningScene))
 				{
 					Manager->SetIsModalOpen(false);
 					GUI::CloseCurrentPopup();

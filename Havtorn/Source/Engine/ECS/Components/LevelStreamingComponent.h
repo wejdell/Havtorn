@@ -3,6 +3,7 @@
 #pragma once
 
 #include "ECS/Component.h"
+#include "Assets/AssetReference.h"
 #include "Assets/FileHeaderDeclarations.h"
 
 namespace Havtorn

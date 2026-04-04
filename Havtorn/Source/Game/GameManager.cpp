@@ -4,6 +4,7 @@
 #include "Ghosty/GhostySystem.h"
 #include "Player/PlayerControllerSystem.h"
 #include "GameScene.h"
+#include "GameScript.h"
 
 #include <CommandLine.h>
 #include <Engine.h>
@@ -30,9 +31,8 @@ namespace Havtorn
 		World->OnBeginPlayDelegate.AddMember(this, &CGameManager::OnBeginPlay);
 		World->OnPausePlayDelegate.AddMember(this, &CGameManager::OnPausePlay);
 		World->OnEndPlayDelegate.AddMember(this, &CGameManager::OnEndPlay);
-		
-		auto loadGameScene = [](const std::string& filePath) { return GEngine::GetWorld()->AddScene<CGameScene>(filePath); };
-		World->BindSceneLoader(loadGameScene);
+
+		World->BindGameTypes<CGameScene, SGameScript>();
 
 		if (CUISystem* uiSystem = World->GetSystem<CUISystem>())
 		{
@@ -47,14 +47,14 @@ namespace Havtorn
 
 	void CGameManager::OnApplicationReady()
 	{
-		std::string parsedCommand = UCommandLine::GetOptionParameter("StartScene");
+		const std::string parsedCommand = UCommandLine::GetOptionParameter("StartScene");
 		const bool commandPointsToSceneAsset = UGeneralUtils::ExtractFileExtensionFromPath(parsedCommand) == "hva";
 
 		if (commandPointsToSceneAsset)
 			HV_LOG_INFO("GameManager received command: %s", (UFileSystem::GetWorkingPath() + parsedCommand).c_str());
 
 #ifdef HV_GAME_BUILD
-		std::string levelToLoad = UFileSystem::GetWorkingPath() + parsedCommand;
+		const std::string levelToLoad = UFileSystem::GetWorkingPath() + parsedCommand;
 
 		if (commandPointsToSceneAsset && UFileSystem::Exists(levelToLoad))
 			World->AddScene<CGameScene>(levelToLoad);

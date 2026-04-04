@@ -9,7 +9,6 @@
 
 #include <GUI.h>
 #include <ECS/Components/MetaDataComponent.h>
-#include <Assets/RuntimeAssetDeclarations.h>
 #include <Assets/AssetRegistry.h>
 
 namespace Havtorn
@@ -130,28 +129,28 @@ namespace Havtorn
 			GUI::TextDisabled(" |%s| ", "Asset");
 			GUI::SameLine();
 
-			SAsset asset;
+			SAsset* asset = nullptr;
 			if (std::holds_alternative<std::string>(dataBinding.Data))
-				asset = *GEngine::GetAssetRegistry()->RequestAsset(SAssetReference(std::get<std::string>(dataBinding.Data)), 100);
+				asset = GEngine::GetAssetRegistry()->RequestAsset(SAssetReference(std::get<std::string>(dataBinding.Data)), 100);
 
-			if (asset.Reference.FilePath.empty())
-				asset.Reference.FilePath = assetPath;
+			//if (asset->Reference.FilePath.empty())
+			//	asset->Reference.FilePath = assetPath;
 
 			//GUI::Text(asset.AssetPath.c_str());
-			GUI::InputText("##edit", asset.Reference.FilePath);
+			//GUI::InputText("##edit", asset.Reference.FilePath);
 
-			if (GUI::BeginPopupContextWindow())
-			{
-				if (GUI::MenuItem("Paste Asset Path"))
-					asset.Reference.FilePath = GUI::CopyFromClipboard();
+			//if (GUI::BeginPopupContextWindow())
+			//{
+			//	if (GUI::MenuItem("Paste Asset Path"))
+			//		asset.Reference.FilePath = GUI::CopyFromClipboard();
 
-				GUI::EndPopup();
-			}
+			//	GUI::EndPopup();
+			//}
 
-			if (!asset.Reference.FilePath.empty())
-				asset.Reference = SAssetReference(asset.Reference.FilePath);
+			//if (!asset.Reference.FilePath.empty())
+			//	asset.Reference = SAssetReference(asset.Reference.FilePath);
 
-			dataBinding.Data = asset.Reference.FilePath;
+			//dataBinding.Data = asset.Reference.FilePath;
 			// TODO.NW: Simplify flow for assigning assets through a view result
 			//if (dataBinding.AssetType == EAssetType::StaticMesh)
 			//{

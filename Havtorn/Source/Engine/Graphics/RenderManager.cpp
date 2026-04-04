@@ -215,8 +215,9 @@ namespace Havtorn
 
 			if (WorldPlayState != EWorldPlayState::Playing)
 			{
-				U32 size = (CurrentWindowResolution.X * CurrentWindowResolution.Y);
+				const U32 size = (CurrentWindowResolution.X * CurrentWindowResolution.Y);
 
+				// TODO.NW: Would be very useful to have a set of data per render view. That way we could unlock picking and dragging into the prefab tool window
 				void* editorData = EditorDataTexture.MapToCPUFromGPUTexture(GBuffer.GetEditorDataTexture());
 				if (editorData != nullptr)
 				{
@@ -459,7 +460,7 @@ namespace Havtorn
 		instanceData.Entities.emplace_back(spriteComponent->Owner);
 	}
 
-	void CRenderManager::AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const STransformComponent* cameraTransform, const U64 renderViewID)
+	void CRenderManager::AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const U64& entityGUID, const SMatrix& entityMatrix, const SMatrix& cameraMatrix, const U64 renderViewID)
 	{
 		std::unordered_map<U32, SSpriteInstanceData>* renderList = nullptr;
 
@@ -471,25 +472,29 @@ namespace Havtorn
 		if (!renderList->contains(assetReferenceUID))
 			renderList->emplace(assetReferenceUID, SSpriteInstanceData());
 
-		const SMatrix cameraMatrix = cameraTransform->Transform.GetMatrix();
-		SMatrix orientedMatrix = worldSpaceTransform->Transform.GetMatrix();
+		SMatrix orientedMatrix = entityMatrix;
 
-		SVector location = orientedMatrix.GetTranslation();
-		SVector euler = cameraMatrix.GetEuler();
+		const SVector location = orientedMatrix.GetTranslation();
+		const SVector euler = cameraMatrix.GetEuler();
 		constexpr F32 distanceNormalization = 7.0f;
 		constexpr F32 scaleMin = 0.15f;
 		constexpr F32 scaleMax = 0.5f;
-		F32 dist = cameraMatrix.GetTranslation().Distance(location);
-		F32 eased = UMath::EaseInOutQuad(dist / distanceNormalization);
-		F32 scaling = UMath::Remap(0.0f, 1.0f, scaleMin, scaleMax, eased);
-		SVector scale = SVector(scaling, scaling, 1.0f);
+		const F32 dist = cameraMatrix.GetTranslation().Distance(location);
+		const F32 eased = UMath::EaseInOutQuad(dist / distanceNormalization);
+		const F32 scaling = UMath::Remap(0.0f, 1.0f, scaleMin, scaleMax, eased);
+		const SVector scale = SVector(scaling, scaling, 1.0f);
 		SMatrix::Recompose(location, euler, scale, orientedMatrix);
 
 		SSpriteInstanceData& instanceData = renderList->at(assetReferenceUID);
 		instanceData.Transforms.emplace_back(orientedMatrix);
 		instanceData.UVRects.emplace_back(SVector4(0.0f, 0.0f, 1.0f, 1.0f));
 		instanceData.Colors.emplace_back(SVector4(1.0f, 1.0f, 1.0f, 1.0f));
-		instanceData.Entities.emplace_back(worldSpaceTransform->Owner);
+		instanceData.Entities.emplace_back(entityGUID);
+	}
+
+	void CRenderManager::AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const STransformComponent* cameraTransform, const U64 renderViewID)
+	{
+		AddSpriteToWorldSpaceInstancedRenderList(assetReferenceUID, worldSpaceTransform->Owner.GUID, worldSpaceTransform->Transform.GetMatrix(), cameraTransform->Transform.GetMatrix(), renderViewID);
 	}
 
 	bool CRenderManager::IsSpriteInScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewID)

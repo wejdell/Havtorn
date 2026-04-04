@@ -24,7 +24,7 @@ If you start from a clean repository you'll need to run this again.
 Generates files for a visual studio project as well as files for external libraries.
 Requirement for: BuildProject.bat
 
-- BuildProject.bat
+- BuildEditor.bat
 Builds an executable of Havtorn. Found inside Havtorn/Bin/ called Launcher.exe.
 NOTE: only builds the Havtorn Editor.
 

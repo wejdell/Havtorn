@@ -12,3 +12,5 @@
 #include "Windows/OutputLogWindow.h"
 #include "AuthoringTools/MaterialTool.h"
 #include "AuthoringTools/ScriptTool.h"
+#include "AuthoringTools/InputTool.h"
+#include "AuthoringTools/PrefabTool.h"

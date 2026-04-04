@@ -3,6 +3,9 @@
 #pragma once
 #include "EditorWindow.h"
 
+#include <Assets/AssetReference.h>
+#include <Assets/RuntimeAssets/ScriptAsset.h>
+
 namespace Havtorn
 {
 	namespace HexRune
@@ -46,8 +49,8 @@ namespace Havtorn
 		SGUIPin* GetPinFromID(U64 id, std::vector<SGUINode>& nodes);
 		SGUIPin* GetOutputPinFromID(U64 id, std::vector<SGUINode>& nodes);
 
-		SEditorAssetRepresentation* CurrentScriptRepresentation = nullptr;
-		HexRune::SScript* CurrentScript = nullptr;
+		SAssetReference CurrentScriptAssetRef = SAssetReference();
+		SScriptAsset* CurrentScriptAsset = nullptr;
 
 		std::vector<SGUINode> GUINodes;
 		std::vector<SGUILink> GUILinks;

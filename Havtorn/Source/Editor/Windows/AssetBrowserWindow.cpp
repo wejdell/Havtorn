@@ -18,6 +18,7 @@
 #include <Input/InputTypes.h>
 
 #include <../Game/GameScene.h>
+#include <../Game/GameScript.h>
 
 namespace Havtorn
 {
@@ -42,6 +43,8 @@ namespace Havtorn
 	{
 		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, /*EWindowFlag::NoResize, */EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus}))
 		{
+			IsFocused = IsEnabled && GUI::IsWindowFocused() && GUI::IsWindowHovered();
+
 			intptr_t folderIconID = Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::FolderIcon);
 
 			{ // Menu Bar
@@ -454,7 +457,14 @@ namespace Havtorn
 				NewAssetFileHeader = CreateScript();
 				break;
 			case EAssetType::Scene:
-				NewAssetFileHeader = CreateScene();
+				GEngine::GetWorld()->ClearScenes();
+				NewAssetFileHeader = SSceneFileHeader{ .AssetType = EAssetType::Scene, .Name = NewAssetName };
+				break;
+			case EAssetType::InputAsset:
+				NewAssetFileHeader = CreateInputAsset();
+				break;
+			case EAssetType::Prefab:
+				NewAssetFileHeader = SPrefabFileHeader{ .AssetType = EAssetType::Prefab, .Name = NewAssetName };
 				break;
 			default:
 				break;
@@ -464,6 +474,10 @@ namespace Havtorn
 			std::string newFilePath = Manager->GetResourceManager()->CreateAsset(DirectoryToSaveTo + "/", NewAssetFileHeader);
 			if (newFilePath != "INVALID_PATH")
 			{
+				// NW: Unclear if clearing the scenes and starting work in the new one is what you want when creating a new asset. But maybe?
+				if (AssetTypeToCreate == EAssetType::Scene)
+					Manager->SetCurrentWorkingScene(0);
+
 				std::filesystem::directory_entry newDir;
 				newDir.assign(std::filesystem::path(newFilePath));
 				Manager->RemoveAssetRep(newDir);
@@ -588,26 +602,15 @@ namespace Havtorn
 		fileHeader.AssetType = EAssetType::Script;
 		fileHeader.Name = NewAssetName;
 		fileHeader.Script = new Havtorn::SGameScript();
+		// TODO.NW: Fix this memory leak, asset registry should create assets for file header use (see create prefab)
 		return fileHeader;
 	}
 
-	SAssetFileHeader CAssetBrowserWindow::CreateScene()
+	SAssetFileHeader CAssetBrowserWindow::CreateInputAsset()
 	{
-		SSceneFileHeader fileHeader = SSceneFileHeader{};
-		fileHeader.AssetType = EAssetType::Scene;
-		fileHeader.UID = 0;
-
-		CWorld* world = GEngine::GetWorld();
-		world->ClearScenes();
-		world->CreateScene<CGameScene>();			 
-		CScene* newScene = Manager->GetScenes().back().get();
-		newScene->Init(NewAssetName);
-		newScene->Init3DDefaults();
-		Manager->SetCurrentWorkingScene(0);
-
-		fileHeader.Scene = newScene;
-		
-
+		SInputAssetFileHeader fileHeader = SInputAssetFileHeader{};
+		fileHeader.AssetType = EAssetType::InputAsset;
+		fileHeader.Name = NewAssetName;
 		return fileHeader;
 	}
 
@@ -626,7 +629,7 @@ namespace Havtorn
 			auto relativePath = std::filesystem::relative(path);
 			std::string filenameString = relativePath.filename().string();
 
-			const bool isOpen = GUI::TreeNode(filenameString.c_str());
+			const bool isOpen = GUI::TreeNodeEx(filenameString.c_str(), { ETreeNodeFlag::OpenOnDoubleClick });
 
 			// Asset Drag
 			if (GUI::BeginDragDropTarget())

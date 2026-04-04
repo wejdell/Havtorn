@@ -2,6 +2,7 @@
 
 #include "hvpch.h"
 #include "ScriptComponent.h"
+#include "Engine.h"
 #include "HexRune/HexRune.h"
 #include "Assets/AssetRegistry.h"
 
