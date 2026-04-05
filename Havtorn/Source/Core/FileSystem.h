@@ -81,6 +81,8 @@ namespace Havtorn
 		template<typename T>
 		T Get(const std::string& memberName, const T& defaultValue) const;
 		template<typename T>
+		std::vector<T> GetArray(const std::string& memberName) const;
+		template<typename T>
 		void Set(const std::string& memberName, const T& newValue);
 
 	private:
@@ -95,10 +97,30 @@ namespace Havtorn
 	{
 		if (!HasMember(memberName))
 			return defaultValue;
-
+		
 		return Document[memberName.c_str()].Get<T>();
 	}
 	
+	template<typename T>
+	std::vector<T> CJsonDocument::GetArray(const std::string& memberName) const
+	{
+		if (!HasMember(memberName))
+			return {};
+
+		if (!Document[memberName.c_str()].IsArray())
+			return {};
+
+		auto jsonArray = Document[memberName.c_str()].GetArray();
+
+		std::vector<T> output;
+		for (auto it = jsonArray.Begin(); it != jsonArray.End(); ++it) 
+		{
+			output.push_back(it->Get<T>());
+		}
+
+		return output;
+	}
+
 	template<typename T>
 	void CJsonDocument::Set(const std::string& memberName, const T& newValue)
 	{
@@ -139,5 +161,6 @@ namespace Havtorn
 		static void CORE_API ReconcileJsonFiles(const std::string& mainFilePath, const std::string& alterFilePath);
 
 		CORE_API static const std::string EngineConfig;
+		CORE_API static const std::string GameConfig;
 	};
 }
