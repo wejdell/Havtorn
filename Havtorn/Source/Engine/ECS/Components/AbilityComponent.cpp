@@ -66,9 +66,9 @@ namespace Havtorn
 	{
 		DeserializeData(Owner, fromData, pointerPosition);
 
-		U32 abilitysCount = 0;
-		DeserializeData(abilitysCount, fromData, pointerPosition);
-		for (U32 i = 0; i < abilitysCount; i++)
+		U32 abilityCount = 0;
+		DeserializeData(abilityCount, fromData, pointerPosition);
+		for (U32 i = 0; i < abilityCount; i++)
 		{
 			SAbilityState ability = {};
 			ability.Deserialize(fromData, pointerPosition);

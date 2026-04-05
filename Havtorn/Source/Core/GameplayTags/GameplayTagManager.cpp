@@ -1,5 +1,7 @@
 // Copyright 2026 Team Havtorn. All Rights Reserved.
 
+#include "hvpch.h"
+
 #include "GameplayTagManager.h"
 #include "FileSystem.h"
 
@@ -25,7 +27,7 @@ namespace Havtorn
 
 	SGameplayTag GGameplayTagManager::RequestTag(const std::string& newTag)
 	{
-		U32 hash = Instance->Hash(newTag);
+		const U32 hash = Instance->Hash(newTag);
 
 		// NW: We could choose to only accept tags that are preloaded (registered) from the 
 		// game config file. That way serialized out-of-date tags don't make it back into the manager. Probably.

@@ -24,14 +24,6 @@ namespace Havtorn
 
 		SAbilityComponent* component = scene->GetComponent<SAbilityComponent>(entityOwner);
 
-		// NW: Runtime ability tags, probably don't need to show these?
-		//GUI::TextDisabled("Tags");
-		//for (const SGameplayTag& tag : component->Tags.Tags)
-		//{
-		//	GUI::Text(tag.Name.c_str());
-		//}
-		//GUI::Separator();
-
 		GUI::TextDisabled("Abilities");
 
 		// TODO.NW: Make Array gui element, templated or something
@@ -74,7 +66,7 @@ namespace Havtorn
 				GUI::TagPickerDropdown("Activation Blocking Tags", "If present, block activation", ability.ActivationBlockingTags);
 
 				GUI::Separator();
-				if (GUI::TreeNode("Show Advanced"))
+				if (GUI::TreeNode("Show More"))
 				{
 					GUI::TagPickerDropdown("Activation Required Tags", "Required for activation", ability.ActivationRequiredTags);
 					GUI::TagPickerDropdown("Activation Granted Tags", "When activated, apply these tags", ability.ActivationGrantedTags);

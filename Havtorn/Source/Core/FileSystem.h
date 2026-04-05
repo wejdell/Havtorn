@@ -115,7 +115,7 @@ namespace Havtorn
 		std::vector<T> output;
 		for (auto it = jsonArray.Begin(); it != jsonArray.End(); ++it) 
 		{
-			output.emplace_back(it->Get<T>());
+			output.push_back(it->Get<T>());
 		}
 
 		return output;
