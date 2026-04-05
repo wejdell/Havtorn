@@ -18,6 +18,7 @@ namespace Havtorn
 	using DirectoryIterator = std::filesystem::recursive_directory_iterator;
 
 	const std::string UFileSystem::EngineConfig = "Config/EngineConfig.json";
+	const std::string UFileSystem::GameConfig = "Config/GameConfig.json";
 
 	bool UFileSystem::Exists(const std::string& path)
 	{

@@ -87,6 +87,7 @@ namespace Havtorn
 	void CGameManager::OnBeginPlay(std::vector<Ptr<CScene>>& /*scenes*/)
 	{
 		World->RequestSystem<CSpriteAnimatorGraphSystem>(this);
+		World->RequestSystem<CAbilitySystem>(this);
 		World->RequestSystem<CGhostySystem>(this);
 		World->RequestPhysicsSystem(this);
 		World->UnblockPhysicsSystem(this);
@@ -111,7 +112,6 @@ namespace Havtorn
 		if (CUISystem* uiSystem = World->GetSystem<CUISystem>())
 			uiSystem->ClearFocus();
 	}
-
 
 	void CGameManager::PlayGame()
 	{
