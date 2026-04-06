@@ -424,7 +424,7 @@ namespace Havtorn
 		[[nodiscard]] bool HasModifiers(U32 modifiers) const
 		{
 			return std::ranges::any_of(Actions.begin(), Actions.end(),
-				[modifiers](const SInputAction& action) {return (action.Modifiers & modifiers) != 0; });
+				[modifiers](const SInputAction& action) {return ((action.Modifiers == 0 && modifiers == 0) || (action.Modifiers & modifiers) != 0); });
 		}
 
 		[[nodiscard]] bool Has(const EInputKey& key, U32 context, U32 modifiers) const
@@ -432,7 +432,7 @@ namespace Havtorn
 			return std::ranges::any_of(Actions.begin(), Actions.end(),
 				[key, context, modifiers](const SInputAction& action)
 				{
-					return action.Key == key && (action.Contexts & context) != 0 && (action.Modifiers & modifiers) != 0;
+					return action.Key == key && (action.Contexts & context) != 0 && ((action.Modifiers == 0 && modifiers == 0) || (action.Modifiers & modifiers) != 0);
 				});
 		}
 
