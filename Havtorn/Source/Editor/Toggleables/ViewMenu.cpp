@@ -23,12 +23,12 @@ namespace Havtorn
 
 		if (GUI::BeginPopup(PopupName))
 		{
-			if(GUI::MenuItem("Debug info"))
+			if (GUI::MenuItem("Debug info"))
 			{
 				Manager->ToggleDebugInfo();
 			}
 
-			if(GUI::MenuItem("Dear Imgui Demo"))
+			if (GUI::MenuItem("Dear Imgui Demo"))
 			{
 				Manager->ToggleDemo();
 			}

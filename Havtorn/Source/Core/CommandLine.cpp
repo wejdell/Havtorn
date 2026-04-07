@@ -124,6 +124,14 @@ namespace Havtorn
 		return std::ranges::find(Instance->FreeParameters, parameter) != Instance->FreeParameters.end();
 	}
 
+	bool UCommandLine::HasDeepLinkCommand()
+	{
+		if (Instance == nullptr)
+			return false;
+
+		return !Instance->DeepLinkCommand.empty();
+	}
+
 	std::string UCommandLine::GetDeepLinkCommand()
 	{
 		if (Instance == nullptr)

@@ -152,7 +152,9 @@ namespace Havtorn
 
 		if (mainCamera != startingCamera)
 		{
-			previousCameraData.CameraComponent->IsActive = false;
+			if (previousCameraData.IsValid())
+				previousCameraData.CameraComponent->IsActive = false;
+
 			GEngine::GetWorld()->SetMainCamera(startingCamera);
 		}
 	}
@@ -167,10 +169,13 @@ namespace Havtorn
 		SCameraData startingCameraData = UComponentAlgo::GetCameraData(startingCamera, scenes);
 		SCameraData previousCameraData = UComponentAlgo::GetCameraData(PreviousMainCamera, scenes);
 
-		if (PreviousMainCamera != startingCamera)
+		if (PreviousMainCamera != startingCamera && PreviousMainCamera.IsValid())
 		{
-			startingCameraData.CameraComponent->IsActive = false;
-			previousCameraData.CameraComponent->IsActive = true;
+			if (startingCameraData.IsValid())
+				startingCameraData.CameraComponent->IsActive = false;
+			if (previousCameraData.IsValid())
+				previousCameraData.CameraComponent->IsActive = true;
+
 			GEngine::GetWorld()->SetMainCamera(PreviousMainCamera);
 		}
 

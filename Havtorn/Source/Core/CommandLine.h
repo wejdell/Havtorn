@@ -14,6 +14,7 @@ namespace Havtorn
 		CORE_API static std::vector<std::string> GetFreeParameters();
 		CORE_API static bool IsOptionParameterValid(const std::string& parameter);
 		CORE_API static bool HasFreeParameter(const std::string& parameter);
+		CORE_API static bool HasDeepLinkCommand();
 		CORE_API static std::string GetDeepLinkCommand();
 
 	private:
