@@ -5,6 +5,8 @@
 #include "GameplayTagManager.h"
 #include "FileSystem.h"
 
+#include <GeneralUtilities.h>
+
 namespace Havtorn
 {
 	GGameplayTagManager* GGameplayTagManager::Instance = nullptr;
@@ -27,7 +29,7 @@ namespace Havtorn
 
 	SGameplayTag GGameplayTagManager::RequestTag(const std::string& newTag)
 	{
-		const U32 hash = Instance->Hash(newTag);
+		const U32 hash = UGeneralUtils::HashString(newTag);
 
 		// NW: We could choose to only accept tags that are preloaded (registered) from the 
 		// game config file. That way serialized out-of-date tags don't make it back into the manager. Probably.
@@ -89,7 +91,7 @@ namespace Havtorn
 		if (newTag == "")
 			return;
 
-		if (HashToNode.contains(Hash(newTag)))
+		if (HashToNode.contains(UGeneralUtils::HashString(newTag)))
 			return;
 
 		std::vector<std::string> splitTag = SplitTag(newTag);
@@ -104,7 +106,7 @@ namespace Havtorn
 				continue;
 			}
 
-			const U32 hash = Hash(subTag);
+			const U32 hash = UGeneralUtils::HashString(subTag);
 
 			currentNode->Children.push_back(std::make_shared<STagNode>());
 			auto& newNode = currentNode->Children.back();
@@ -128,21 +130,6 @@ namespace Havtorn
 		}
 
 		return splitTag;
-	}
-
-	U32 GGameplayTagManager::Hash(const std::string& tag) const
-	{
-		const U32 prime = 0x1000193;
-		U32 hash = 0x811c9dc5;
-
-		for (U64 i = 0; i < tag.size(); ++i)
-		{
-			U8 value = tag[i];
-			hash = hash ^ value;
-			hash *= prime;
-		}
-
-		return hash;
 	}
 
 	std::vector<SGameplayTag> GGameplayTagManager::GetParentTags(const SGameplayTag& tag) const

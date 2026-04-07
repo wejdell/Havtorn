@@ -33,7 +33,6 @@ namespace Havtorn
 	private:
 		void RegisterTag(const std::string& newTag);
         std::vector<std::string> SplitTag(const std::string& tag) const;
-        U32 Hash(const std::string& tag) const;
         std::vector<SGameplayTag> GetParentTags(const SGameplayTag& tag) const;
         
         static GGameplayTagManager* Instance;
