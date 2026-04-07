@@ -25,6 +25,7 @@ namespace Havtorn
 		void OnDisable() override;
 
 		void BrowseTo(SEditorAssetRepresentation* assetRep);
+		void SetCurrentPath(const std::filesystem::path& path, const bool pushCommand = true);
 
 	private:
 		void OnDragDropFiles(std::vector<std::string> filePaths);

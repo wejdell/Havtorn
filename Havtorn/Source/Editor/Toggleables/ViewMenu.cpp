@@ -33,6 +33,11 @@ namespace Havtorn
 				Manager->ToggleDemo();
 			}
 
+			if (GUI::MenuItem("Edit History"))
+			{
+				Manager->ToggleEditHistory();
+			}
+
 			GUI::EndPopup();
 		}
 	}

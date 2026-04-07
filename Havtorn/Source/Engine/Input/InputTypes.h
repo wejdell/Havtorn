@@ -290,6 +290,8 @@ namespace Havtorn
 		AltRelease,
 		Copy,
 		Paste,
+		Undo,
+		Redo,
 		Rename,
 		MovePivot,
 		VertexSnapping,

@@ -9,6 +9,9 @@
 #include <GUI.h>
 #include <Graphics/RenderingPrimitives/RenderTexture.h>
 
+#include "EditHistory.h"
+#include "EditorDeepLinkParser.h"
+
 namespace Havtorn
 {
 	struct SEntity;
@@ -127,6 +130,10 @@ namespace Havtorn
 		// NW: Excludes the entity going in as parameter itself.
 		SEntity GetPackedPrefabParent(const SEntity& entity) const;
 
+		std::string GetEntityFocusLink(const SEntity& entity) const;
+		std::string GetCameraFocusLink() const;
+		std::string GetAssetFocusLink(SEditorAssetRepresentation* assetRep) const;
+
 		// TODO.NW: I'd much rather figure out how to manage non-owned resources similar to how unreal does it. Those weak ptrs are managed and 
 		// reset when things are garbage collected and so can be checked for validity, but by default, c++ weak ptrs must be converted into shared
 		// ptrs in order to be used. Can we make our own version?
@@ -151,6 +158,8 @@ namespace Havtorn
 		void RemoveAssetRep(const std::filesystem::directory_entry& sourceEntry);
 
 		void OpenAssetTool(SEditorAssetRepresentation* asset);
+
+		void FocusEntity(const SEntity& entity);
 
 		void SetEditorTheme(EEditorColorTheme colorTheme = EEditorColorTheme::HavtornYellow, EEditorStyleTheme styleTheme = EEditorStyleTheme::Havtorn, F32 darknessOffset = 1.0f);
 		std::string GetEditorColorThemeName(const EEditorColorTheme colorTheme);
@@ -199,6 +208,7 @@ namespace Havtorn
 		void ToggleDemo();
 		void TogglePreferences();
 		void ToggleGamePreferences();
+		void ToggleEditHistory();
 
 		static std::string PreviewMaterial;
 
@@ -216,6 +226,7 @@ namespace Havtorn
 		void OnToggleFullscreen(const SInputActionPayload payload);
 		void OnCopyEvent(const SInputActionPayload payload);
 		void OnDragCopyEvent(const SInputActionPayload payload);
+		void OnEditorActionTreeEvent(const SInputActionPayload payload);
 		void OnPlayStateEvent(const SInputActionPayload payload);
 		void OnPivotMoving(const SInputActionPayload payload);
 		void OnVertexSnapping(const SInputActionPayload payload);
@@ -243,6 +254,9 @@ namespace Havtorn
 		
 		std::vector<SEntity> SelectedEntities = {};
 
+		CEditHistory EditHistory;
+		CEditorDeepLinkParser DeepLinkParser;
+
 		std::vector<Ptr<CWindow>> Windows;
 		std::vector<Ptr<CToggleable>> MenuElements;
 		std::vector<Ptr<SEditorAssetRepresentation>> AssetRepresentations = {};
@@ -264,6 +278,7 @@ namespace Havtorn
 		bool IsDemoOpen = false;
 		bool IsPreferencesOpen = false;
 		bool IsGamePreferencesOpen = false;
+		bool IsEditHistoryOpen = false;
 		bool IsFreeCamActive = false;
 		bool IsModalOpen = false;
 		bool IsFullscreen = false;

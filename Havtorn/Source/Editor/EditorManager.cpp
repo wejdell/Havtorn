@@ -35,23 +35,28 @@ namespace Havtorn
 	std::string CEditorManager::PreviewMaterial = "Resources/M_MeshPreview.hva";
 
 	CEditorManager::CEditorManager()
+		: EditHistory(CEditHistory(this))
+		, DeepLinkParser(CEditorDeepLinkParser(this))
 	{
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::TranslateTransform).AddMember(this, &CEditorManager::OnInputSetTransformGizmo);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::RotateTransform).AddMember(this, &CEditorManager::OnInputSetTransformGizmo);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ScaleTransform).AddMember(this, &CEditorManager::OnInputSetTransformGizmo);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ToggleFreeCam).AddMember(this, &CEditorManager::OnInputToggleFreeCam);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::FocusEditorEntity).AddMember(this, &CEditorManager::OnInputFocusSelection);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::DeleteEvent).AddMember(this, &CEditorManager::OnDeleteEvent);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ToggleFullscreen).AddMember(this, &CEditorManager::OnToggleFullscreen);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::StartPlay).AddMember(this, &CEditorManager::OnPlayStateEvent);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::StopPlay).AddMember(this, &CEditorManager::OnPlayStateEvent);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::AltPress).AddMember(this, &CEditorManager::OnDragCopyEvent);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::AltRelease).AddMember(this, &CEditorManager::OnDragCopyEvent);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::Copy).AddMember(this, &CEditorManager::OnCopyEvent);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::Paste).AddMember(this, &CEditorManager::OnCopyEvent);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::MovePivot).AddMember(this, &CEditorManager::OnPivotMoving);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::VertexSnapping).AddMember(this, &CEditorManager::OnVertexSnapping);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::GridSnapping).AddMember(this, &CEditorManager::OnGridSnapping);
+		CInputMapper* mapper = GEngine::GetInput();
+		mapper->GetActionDelegate(EInputActionEvent::TranslateTransform).AddMember(this, &CEditorManager::OnInputSetTransformGizmo);
+		mapper->GetActionDelegate(EInputActionEvent::RotateTransform).AddMember(this, &CEditorManager::OnInputSetTransformGizmo);
+		mapper->GetActionDelegate(EInputActionEvent::ScaleTransform).AddMember(this, &CEditorManager::OnInputSetTransformGizmo);
+		mapper->GetActionDelegate(EInputActionEvent::ToggleFreeCam).AddMember(this, &CEditorManager::OnInputToggleFreeCam);
+		mapper->GetActionDelegate(EInputActionEvent::FocusEditorEntity).AddMember(this, &CEditorManager::OnInputFocusSelection);
+		mapper->GetActionDelegate(EInputActionEvent::DeleteEvent).AddMember(this, &CEditorManager::OnDeleteEvent);
+		mapper->GetActionDelegate(EInputActionEvent::ToggleFullscreen).AddMember(this, &CEditorManager::OnToggleFullscreen);
+		mapper->GetActionDelegate(EInputActionEvent::StartPlay).AddMember(this, &CEditorManager::OnPlayStateEvent);
+		mapper->GetActionDelegate(EInputActionEvent::StopPlay).AddMember(this, &CEditorManager::OnPlayStateEvent);
+		mapper->GetActionDelegate(EInputActionEvent::AltPress).AddMember(this, &CEditorManager::OnDragCopyEvent);
+		mapper->GetActionDelegate(EInputActionEvent::AltRelease).AddMember(this, &CEditorManager::OnDragCopyEvent);
+		mapper->GetActionDelegate(EInputActionEvent::Copy).AddMember(this, &CEditorManager::OnCopyEvent);
+		mapper->GetActionDelegate(EInputActionEvent::Paste).AddMember(this, &CEditorManager::OnCopyEvent);
+		mapper->GetActionDelegate(EInputActionEvent::Undo).AddMember(this, &CEditorManager::OnEditorActionTreeEvent);
+		mapper->GetActionDelegate(EInputActionEvent::Redo).AddMember(this, &CEditorManager::OnEditorActionTreeEvent);
+		mapper->GetActionDelegate(EInputActionEvent::MovePivot).AddMember(this, &CEditorManager::OnPivotMoving);
+		mapper->GetActionDelegate(EInputActionEvent::VertexSnapping).AddMember(this, &CEditorManager::OnVertexSnapping);
+		mapper->GetActionDelegate(EInputActionEvent::GridSnapping).AddMember(this, &CEditorManager::OnGridSnapping);
 	}
 
 	CEditorManager::~CEditorManager()
@@ -147,7 +152,7 @@ namespace Havtorn
 			}
 			isHoveringMenuBarButton = GUI::IsMouseInRect(GUI::GetLastRect()) ? true : isHoveringMenuBarButton;
 
-			if (GUI::ImageButton("MazimizeButton", ResourceManager->GetStaticEditorTextureResource(EEditorTexture::MaximizeWindow), SVector2<F32>(menuElementHeight)))
+			if (GUI::ImageButton("MaximizeButton", ResourceManager->GetStaticEditorTextureResource(EEditorTexture::MaximizeWindow), SVector2<F32>(menuElementHeight)))
 			{
 				PlatformManager->MaximizeWindow();
 			}
@@ -366,6 +371,16 @@ namespace Havtorn
 
 			GUI::End();
 		}
+
+		if (IsEditHistoryOpen)
+		{
+			if (GUI::Begin("Edit History", &IsEditHistoryOpen))
+			{
+				EditHistory.Render();
+			}
+
+			GUI::End();
+		}
 	}
 
 	void CEditorManager::SetCurrentWorkingScene(const I64 sceneIndex)
@@ -510,6 +525,21 @@ namespace Havtorn
 		};
 
 		return SEntity::Null;
+	}
+
+	std::string CEditorManager::GetEntityFocusLink(const SEntity& entity) const
+	{
+		return DeepLinkParser.GetEntityFocusLink(entity);
+	}
+
+	std::string CEditorManager::GetCameraFocusLink() const
+	{
+		return DeepLinkParser.GetCameraFocusLink();
+	}
+
+	std::string CEditorManager::GetAssetFocusLink(SEditorAssetRepresentation* assetRep) const
+	{
+		return DeepLinkParser.GetAssetFocusLink(assetRep);
 	}
 
 	void CEditorManager::SetSelectedAsset(SEditorAssetRepresentation* asset)
@@ -735,6 +765,82 @@ namespace Havtorn
 		if (asset->AssetType == EAssetType::Prefab)
 		{
 			GetEditorWindow<CPrefabTool>()->OpenPrefab(asset);
+		}
+	}
+
+	void CEditorManager::FocusEntity(const SEntity& entity)
+	{
+		CScene* currentScene = GetContainingScene(entity);
+		if (currentScene == nullptr)
+			return;
+
+		CWorld* world = GEngine::GetWorld();
+		const SEntity& mainCamera = world->GetMainCamera();
+		SCameraData mainCameraData = UComponentAlgo::GetCameraData(mainCamera, world->GetActiveScenes());
+
+		if (!mainCameraData.IsValid())
+		{
+			HV_LOG_WARN("OnInputFocusSelection: could not find a camera component to move. Cannot focus current selection.");
+			return;
+		}
+
+		SVector worldPos = SVector::Zero;
+		SVector center = SVector::Zero;
+		SVector bounds = SVector::Zero;
+		SVector2<F32> fov = SVector2<F32>::Zero;
+		bool foundBounds = false;
+
+		if (STransformComponent* transform = currentScene->GetComponent<STransformComponent>(entity))
+		{
+			worldPos = transform->Transform.GetMatrix().GetTranslation();
+		}
+		else
+		{
+			HV_LOG_WARN("OnInputFocusSelection: could not find a transform to go to. Cannot focus current selection.");
+			return;
+		}
+
+		fov = { mainCameraData.CameraComponent->AspectRatio * mainCameraData.CameraComponent->FOV, mainCameraData.CameraComponent->FOV };
+
+		if (SStaticMeshComponent* staticMesh = currentScene->GetComponent<SStaticMeshComponent>(entity))
+		{
+			SStaticMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMesh->AssetReference, CAssetRegistry::EditorManagerRequestID);
+			center = meshAsset->BoundsCenter;
+			bounds = SVector::GetAbsMaxKeepValue(meshAsset->BoundsMax, meshAsset->BoundsMin);
+			GEngine::GetAssetRegistry()->UnrequestAsset(staticMesh->AssetReference, CAssetRegistry::EditorManagerRequestID);
+			foundBounds = true;
+		}
+		else if (SSkeletalMeshComponent* skeletalMesh = currentScene->GetComponent<SSkeletalMeshComponent>(entity))
+		{
+			SSkeletalMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalMeshAsset>(skeletalMesh->AssetReference, CAssetRegistry::EditorManagerRequestID);
+			center = meshAsset->BoundsCenter;
+			bounds = SVector::GetAbsMaxKeepValue(meshAsset->BoundsMax, meshAsset->BoundsMin);
+			GEngine::GetAssetRegistry()->UnrequestAsset(skeletalMesh->AssetReference, CAssetRegistry::EditorManagerRequestID);
+			foundBounds = true;
+		}
+
+		if (!foundBounds)
+		{
+			HV_LOG_WARN("OnInputFocusSelection: could not find component to derive bounds from. Cannot focus current selection.");
+			return;
+		}
+
+		constexpr F32 focusMarginPercentage = 1.1f;
+
+		const SVector worldSpaceFocusPoint = worldPos + center;
+		const SVector cameraLocation = mainCameraData.TransformComponent->Transform.GetMatrix().GetTranslation();
+		const SVector targetToCamera = (cameraLocation - worldSpaceFocusPoint).GetNormalized();
+		SMatrix newMatrix = SMatrix::LookAtLH(cameraLocation, worldSpaceFocusPoint, SVector::Up).FastInverse();
+		newMatrix.SetTranslation(worldSpaceFocusPoint + targetToCamera * UMathUtilities::GetFocusDistanceForBounds(center, bounds, fov, focusMarginPercentage));
+
+		mainCameraData.TransformComponent->Transform.SetMatrix(newMatrix);
+
+		CScene* mainCameraScene = GetContainingScene(mainCamera);
+		if (SCameraControllerComponent* controllerComp = mainCameraScene->GetComponent<SCameraControllerComponent>(mainCamera))
+		{
+			SVector currentEuler = mainCameraData.TransformComponent->Transform.GetMatrix().GetEuler();
+			controllerComp->CurrentPitch = UMath::Clamp(currentEuler.X, -SCameraControllerComponent::MaxPitchDegrees + 0.01f, SCameraControllerComponent::MaxPitchDegrees - 0.01f);;
+			controllerComp->CurrentYaw = UMath::WrapAngle(currentEuler.Y);
 		}
 	}
 
@@ -1016,6 +1122,11 @@ namespace Havtorn
 		IsGamePreferencesOpen = !IsGamePreferencesOpen;
 	}
 
+	void CEditorManager::ToggleEditHistory()
+	{
+		IsEditHistoryOpen = !IsEditHistoryOpen;
+	}
+
 	void CEditorManager::InitEditorLayout()
 	{
 		EditorLayout = SEditorLayout();
@@ -1190,78 +1301,7 @@ namespace Havtorn
 		if (!firstSelectedEntity.IsValid())
 			return;
 
-		CScene* currentScene = GetContainingScene(firstSelectedEntity);
-		if (currentScene == nullptr)
-			return;
-
-		CWorld* world = GEngine::GetWorld();
-		const SEntity& mainCamera = world->GetMainCamera();
-		SCameraData mainCameraData = UComponentAlgo::GetCameraData(mainCamera, world->GetActiveScenes());
-
-		if (!mainCameraData.IsValid())
-		{
-			HV_LOG_WARN("OnInputFocusSelection: could not find a camera component to move. Cannot focus current selection.");
-			return;
-		}
-
-		SVector worldPos = SVector::Zero;
-		SVector center = SVector::Zero;
-		SVector bounds = SVector::Zero;
-		SVector2<F32> fov = SVector2<F32>::Zero;
-		bool foundBounds = false;
-
-		if (STransformComponent* transform = currentScene->GetComponent<STransformComponent>(firstSelectedEntity))
-		{
-			worldPos = transform->Transform.GetMatrix().GetTranslation();
-		}
-		else
-		{
-			HV_LOG_WARN("OnInputFocusSelection: could not find a transform to go to. Cannot focus current selection.");
-			return;
-		}
-
-		fov = { mainCameraData.CameraComponent->AspectRatio * mainCameraData.CameraComponent->FOV, mainCameraData.CameraComponent->FOV };
-
-		if (SStaticMeshComponent* staticMesh = currentScene->GetComponent<SStaticMeshComponent>(firstSelectedEntity))
-		{
-			SStaticMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMesh->AssetReference, CAssetRegistry::EditorManagerRequestID);
-			center = meshAsset->BoundsCenter;
-			bounds = SVector::GetAbsMaxKeepValue(meshAsset->BoundsMax, meshAsset->BoundsMin);
-			GEngine::GetAssetRegistry()->UnrequestAsset(staticMesh->AssetReference, CAssetRegistry::EditorManagerRequestID);
-			foundBounds = true;
-		}
-		else if (SSkeletalMeshComponent* skeletalMesh = currentScene->GetComponent<SSkeletalMeshComponent>(firstSelectedEntity))
-		{
-			SSkeletalMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalMeshAsset>(skeletalMesh->AssetReference, CAssetRegistry::EditorManagerRequestID);
-			center = meshAsset->BoundsCenter;
-			bounds = SVector::GetAbsMaxKeepValue(meshAsset->BoundsMax, meshAsset->BoundsMin);
-			GEngine::GetAssetRegistry()->UnrequestAsset(skeletalMesh->AssetReference, CAssetRegistry::EditorManagerRequestID);
-			foundBounds = true;
-		}
-
-		if (!foundBounds)
-		{
-			HV_LOG_WARN("OnInputFocusSelection: could not find component to derive bounds from. Cannot focus current selection.");
-			return;
-		}
-
-		constexpr F32 focusMarginPercentage = 1.1f;
-
-		const SVector worldSpaceFocusPoint = worldPos + center;
-		const SVector cameraLocation = mainCameraData.TransformComponent->Transform.GetMatrix().GetTranslation();
-		const SVector targetToCamera = (cameraLocation - worldSpaceFocusPoint).GetNormalized();
-		SMatrix newMatrix = SMatrix::LookAtLH(cameraLocation, worldSpaceFocusPoint, SVector::Up).FastInverse();
-		newMatrix.SetTranslation(worldSpaceFocusPoint + targetToCamera * UMathUtilities::GetFocusDistanceForBounds(center, bounds, fov, focusMarginPercentage));
-
-		mainCameraData.TransformComponent->Transform.SetMatrix(newMatrix);
-		
-		CScene* mainCameraScene = GetContainingScene(mainCamera);
-		if (SCameraControllerComponent* controllerComp = mainCameraScene->GetComponent<SCameraControllerComponent>(mainCamera))
-		{
-			SVector currentEuler = mainCameraData.TransformComponent->Transform.GetMatrix().GetEuler();
-			controllerComp->CurrentPitch = UMath::Clamp(currentEuler.X, -SCameraControllerComponent::MaxPitchDegrees + 0.01f, SCameraControllerComponent::MaxPitchDegrees - 0.01f);;
-			controllerComp->CurrentYaw = UMath::WrapAngle(currentEuler.Y);
-		}
+		FocusEntity(firstSelectedEntity);
 	}
 
 	void CEditorManager::OnDeleteEvent(const SInputActionPayload payload)
@@ -1311,6 +1351,17 @@ namespace Havtorn
 			IsDragCopyActive = true;
 		if (payload.IsReleased)
 			IsDragCopyActive = false;
+	}
+
+	void CEditorManager::OnEditorActionTreeEvent(const SInputActionPayload payload)
+	{
+		if (!payload.IsPressed)
+			return;
+
+		if (payload.Key == EInputKey::KeyZ)
+			EditHistory.Undo();
+		else if (payload.Key == EInputKey::KeyY)
+			EditHistory.Redo();
 	}
 
 	void CEditorManager::OnPlayStateEvent(const SInputActionPayload payload)

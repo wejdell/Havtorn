@@ -20,6 +20,8 @@
 #include "Windows/SpriteAnimatorGraphNodeWindow.h"
 #include "EditorResourceManager.h"
 
+#include "EditActions/MoveTransformEditAction.h"
+
 #include <FileSystem.h>
 #include <GUI.h>
 
@@ -285,6 +287,9 @@ namespace Havtorn
 			}
 			else
 			{
+				if (Manager->GetCurrentGizmo() == ETransformGizmo::Rotate)
+					transformMatrix.SetTranslation(transformMatrix.GetTranslation() - PivotOffset);
+
 				transformMatrix.SetTranslation(transformMatrix.GetTranslation() + PivotOffset);
 			}
 
@@ -296,9 +301,24 @@ namespace Havtorn
 			transformMatrix *= DeltaMatrix;
 		}
 		viewedTransformComp->Transform.SetMatrix(transformMatrix);
-		
+
 		GUI::PopID();
 		
+		// TODO.NW: Do this generally, and make links for all selected entities
+		IsTranslating = GUI::IsUsingGizmo();
+		if (IsTranslating && !WasTranslating)
+			FullMoveDeltaMatrix = SMatrix::Identity;
+		
+		if (IsTranslating)
+			FullMoveDeltaMatrix *= DeltaMatrix;
+
+		if (!IsTranslating && WasTranslating && FullMoveDeltaMatrix != SMatrix::Identity)
+		{
+			UMetaCommandRouter::Push(SMoveTransformEditAction::MakeEditActionCommand(Manager, viewedTransformComp, FullMoveDeltaMatrix));
+		}
+
+		WasTranslating = IsTranslating;
+
 		if (mainCameraData.IsValid() && !workingInPrefabScene)
 			mainCameraData.TransformComponent->Transform.SetMatrix(viewMatrix);
 	}

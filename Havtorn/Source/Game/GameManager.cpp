@@ -14,6 +14,7 @@ namespace Havtorn
 	CGameManager* CGameManager::Instance = nullptr;
 
 	CGameManager::CGameManager()
+		: DeepLinkParser(CGameDeepLinkParser(this))
 	{
 		Instance = this;
 	}
@@ -26,6 +27,7 @@ namespace Havtorn
 	bool CGameManager::Init()
 	{
 		HV_LOG_INFO("GameManager Initialized.");
+
 		World = GEngine::GetWorld();
 		World->OnBeginPlayDelegate.AddMember(this, &CGameManager::OnBeginPlay);
 		World->OnPausePlayDelegate.AddMember(this, &CGameManager::OnPausePlay);
@@ -46,21 +48,14 @@ namespace Havtorn
 
 	void CGameManager::OnApplicationReady()
 	{
-		const std::string parsedCommand = UCommandLine::GetOptionParameter("StartScene");
-		const bool commandPointsToSceneAsset = UGeneralUtils::ExtractFileExtensionFromPath(parsedCommand) == "hva";
+		if (!UCommandLine::IsOptionParameterValid("StartScene"))
+			return;
 
-		if (commandPointsToSceneAsset)
-			HV_LOG_INFO("GameManager received command: %s", (UFileSystem::GetWorkingPath() + parsedCommand).c_str());
+		const std::string parsedCommand = UCommandLine::GetOptionParameter("StartScene");
+		HV_LOG_INFO("GameManager received command: %s", (UFileSystem::GetWorkingPath() + parsedCommand).c_str());
 
 #ifdef HV_GAME_BUILD
-		const std::string levelToLoad = UFileSystem::GetWorkingPath() + parsedCommand;
-
-		if (commandPointsToSceneAsset && UFileSystem::Exists(levelToLoad))
-			World->AddScene<CGameScene>(levelToLoad);
-		else
-			World->OpenDemoScene<CGameScene>(true);
-		
-		World->BeginPlay();
+		PlayFromScene(parsedCommand);
 #endif
 	}
 
@@ -111,6 +106,19 @@ namespace Havtorn
 
 		if (CUISystem* uiSystem = World->GetSystem<CUISystem>())
 			uiSystem->ClearFocus();
+	}
+
+	void CGameManager::PlayFromScene(const std::string_view sceneName)
+	{
+		const bool commandPointsToSceneAsset = UGeneralUtils::ExtractFileExtensionFromPath(sceneName.data()) == "hva";
+		const std::string levelToLoad = UFileSystem::GetWorkingPath() + sceneName.data();
+
+		if (commandPointsToSceneAsset && UFileSystem::Exists(levelToLoad))
+			World->AddScene<CGameScene>(levelToLoad);
+		else
+			World->OpenDemoScene<CGameScene>(true);
+		
+		World->BeginPlay();
 	}
 
 	void CGameManager::PlayGame()

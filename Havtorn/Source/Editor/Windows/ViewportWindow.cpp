@@ -133,7 +133,7 @@ namespace Havtorn
 				}
 
 				std::string pivotText = "Unlock Pivot (Hold C)";
-				bool isPivotUnlocked = Manager->GetIsPivotMovingActive();
+				const bool isPivotUnlocked = Manager->GetIsPivotMovingActive();
 				if (!isPivotUnlocked && Manager->GetIsPivotOffsetSet())
 					pivotText = "Reset Pivot (C)";
 				else if (isPivotUnlocked)
@@ -202,13 +202,15 @@ namespace Havtorn
 					GUI::TextDisabled(entityName.c_str());
 					GUI::Separator();
 
-					GUI::TextDisabled("Copy Focus Entity Link");
+					if (GUI::MenuItem("Copy Focus Entity Link"))
+						GUI::CopyToClipboard(Manager->GetEntityFocusLink(ContextMenuEntity).data());
 					if (GUI::IsItemHovered())
-						GUI::SetTooltip("Not yet implemented");
+						GUI::SetTooltip("Copies a shareable link for focusing this entity");
 
-					GUI::TextDisabled("Copy Camera View Link");
+					if (GUI::MenuItem("Copy Camera View Link"))
+						GUI::CopyToClipboard(Manager->GetCameraFocusLink().data());
 					if (GUI::IsItemHovered())
-						GUI::SetTooltip("Not yet implemented");
+						GUI::SetTooltip("Copies a shareable link for focusing the current camera view");
 				}
 				GUI::EndPopup();
 			}
@@ -235,6 +237,7 @@ namespace Havtorn
 
 	void CViewportWindow::OnDisable()
 	{
+		ClearMaterialRefs(false);
 	}
 	
 	const SVector2<F32> CViewportWindow::GetRenderedSceneDimensions() const

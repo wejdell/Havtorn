@@ -44,6 +44,10 @@ namespace Havtorn
 		U8 AssetPickedIndex = 0;
 		SMatrix DeltaMatrix = SMatrix::Identity;
 
+		SMatrix FullMoveDeltaMatrix = SMatrix::Identity;
+		bool WasTranslating = false;
+		bool IsTranslating = false;
+
 		// TODO.NW: When this common one starts to get annoying, we could explore retaining each offset for a list of entities.
 		SVector PivotOffset = SVector::Zero; 
 

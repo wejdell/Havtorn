@@ -6,6 +6,8 @@
 #include "DockSpaceWindow.h"
 #include "EditorResourceManager.h"
 
+#include "EditActions/BrowseFolderEditAction.h"
+
 #include <Engine.h>
 #include <Timer.h>
 #include <MathTypes/EngineMath.h>
@@ -58,7 +60,7 @@ namespace Havtorn
 				if (GUI::ArrowButton("GoBackDir", EGUIDirection::Left))
 				{
 					if (CurrentDirectory != std::filesystem::path(DefaultAssetPath))
-						CurrentDirectory = CurrentDirectory.parent_path();
+						SetCurrentPath(CurrentDirectory.parent_path());
 				}
 				GUI::SameLine();
 				Filter.Draw("Search", 180);
@@ -127,6 +129,11 @@ namespace Havtorn
 						if (GUI::MenuItem("Copy Asset Path"))
 							GUI::CopyToClipboard(directoryEntry.path().string().c_str());
 					
+						if (GUI::MenuItem("Copy Focus Asset Link"))
+							GUI::CopyToClipboard(Manager->GetAssetFocusLink(hoveredAssetRep).data());
+						if (GUI::IsItemHovered())
+							GUI::SetTooltip("Copies a shareable link for focusing this asset");
+
 						if (GUI::MenuItem("Delete Asset"))
 						{
 							std::filesystem::path pathToRemove = directoryEntry.path();
@@ -299,8 +306,16 @@ namespace Havtorn
 		if (assetRep == nullptr || !UFileSystem::Exists(assetRep->DirectoryEntry.path().parent_path().string()))
 			return;
 
-		CurrentDirectory = assetRep->DirectoryEntry.path().parent_path();
+		SetCurrentPath(assetRep->DirectoryEntry.path().parent_path());
 		Manager->SetSelectedAsset(assetRep);
+	}
+
+	void CAssetBrowserWindow::SetCurrentPath(const std::filesystem::path& path, const bool pushCommand)
+	{
+		if (pushCommand)
+			UMetaCommandRouter::Push(SBrowseFolderEditAction::MakeEditActionCommand(CurrentDirectory, path));
+		
+		CurrentDirectory = path;
 	}
 
 	void CAssetBrowserWindow::OnDragDropFiles(const std::vector<std::string> filePaths)
@@ -695,7 +710,7 @@ namespace Havtorn
 					if (payload.IsDelivery)
 					{
 						// TODO.NW: Should we move to the destination directory when moving things? Maybe auto-select the new asset rep?
-						CurrentDirectory = entry.path();
+						SetCurrentPath(entry.path());
 
 						std::string oldPath = payloadAssetRep->DirectoryEntry.path().string().c_str();
 						std::string newPath = (entry.path() / payloadAssetRep->DirectoryEntry.path().filename()).string().c_str();
@@ -714,7 +729,7 @@ namespace Havtorn
 
 			if (GUI::IsItemClicked())
 			{
-				CurrentDirectory = entry.path();
+				SetCurrentPath(entry.path());
 			}
 
 			GUI::SameLine();
@@ -747,7 +762,7 @@ namespace Havtorn
 		{
 			if (GUI::ImageButton("FolderIcon", folderIconID, { GUI::ThumbnailSizeX, GUI::ThumbnailSizeY }))
 			{
-				CurrentDirectory = entry.path();
+				SetCurrentPath(entry.path());
 			}
 			if (GUI::IsItemHovered())
 			{
