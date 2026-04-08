@@ -35,6 +35,11 @@ namespace Havtorn
 
     std::string SBrowseFolderEditAction::GetCompactName()
     {
-        return SEditAction::GetCompactName();
+        std::string compactName = "Navigated from '";
+        compactName.append(Command.Parameters.at("From"));
+        compactName.append("' to '");
+        compactName.append(Command.Parameters.at("To"));
+        compactName.append("'");
+        return compactName;
     }
 }

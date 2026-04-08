@@ -6,6 +6,7 @@
 #include "Windows/AssetBrowserWindow.h"
 
 #include <ECS/Components/TransformComponent.h>
+#include <ECS/Components/MetaDataComponent.h>
 #include <ECS/ComponentAlgo.h>
 
 namespace Havtorn
@@ -58,6 +59,19 @@ namespace Havtorn
 
     std::string SMoveTransformEditAction::GetCompactName()
     {
-        return SEditAction::GetCompactName();
+        const SEntity entity = SEntity{ std::stoull(Command.Parameters.at("Entity")) };
+        if (!entity.IsValid())
+            return SEditAction::GetCompactName();
+
+        const CScene* scene = UComponentAlgo::GetContainingScene(entity, GEngine::GetWorld()->GetActiveScenes());
+        if (scene == nullptr)
+            return SEditAction::GetCompactName();
+
+        SMetaDataComponent* component = scene->GetComponent<SMetaDataComponent>(entity);
+
+        std::string compactName = "Transformed Entity '";
+        compactName.append(component->Name.AsString());
+        compactName.append("'");
+        return compactName;
     }
 }

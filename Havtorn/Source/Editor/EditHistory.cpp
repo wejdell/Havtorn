@@ -125,7 +125,12 @@ namespace Havtorn
             targetFound = node == searchTarget;
 
         if (targetFound)
+        {
+            if (targetFound && node->Parent != nullptr)
+                traversalPath.push_back(STATIC_U8(std::distance(node->Parent->Children.begin(), std::ranges::find(node->Parent->Children, node))));
+            
             return;
+        }
 
         for (Ref<SEditActionTreeNode>& child : node->Children)
         {
@@ -133,10 +138,8 @@ namespace Havtorn
                 DownwardSearch(child, searchTarget, targetFound, traversalPath);
         }
 
-        if (targetFound)
-        {
+        if (targetFound && node->Parent != nullptr)
             traversalPath.push_back(STATIC_U8(std::distance(node->Parent->Children.begin(), std::ranges::find(node->Parent->Children, node))));
-        }
     }
 
     void CEditHistory::GoToNode(Ref<SEditActionTreeNode>& node)
@@ -149,6 +152,8 @@ namespace Havtorn
 
             if (isTargetChild)
             {
+                Undo();
+                std::ranges::reverse(traversalPath);
                 for (const U8 childIndex : traversalPath)
                     Redo(childIndex);
             }
