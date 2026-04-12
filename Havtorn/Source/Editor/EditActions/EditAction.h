@@ -12,9 +12,10 @@ namespace Havtorn
 
 	struct SEditAction
 	{
-		SEditAction(const SMetaCommand& command);
+		SEditAction(const SMetaCommand& command, const std::string& compactName);
 		virtual void ResolveAction(CEditorManager* manager, const bool inverted);
-		virtual std::string GetCompactName();
+		virtual std::string ResolveCompactName(const SMetaCommand& command);
 		SMetaCommand Command;
+		std::string CompactName;
 	};
 }

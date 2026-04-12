@@ -13,6 +13,6 @@ namespace Havtorn
 		static SMetaCommand MakeEditActionCommand(const std::filesystem::path& from, const std::filesystem::path& to);
 		SBrowseFolderEditAction(const SMetaCommand& command);
 		void ResolveAction(CEditorManager* manager, const bool inverted) override;
-		std::string GetCompactName() override;
+		std::string ResolveCompactName(const SMetaCommand& command) override;
 	};
 }

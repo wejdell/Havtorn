@@ -1,4 +1,4 @@
-// Copyright 202	2 Team Havtorn. All Rights Reserved.
+// Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #include "hvpch.h"
 #include "ViewportWindow.h"
@@ -6,6 +6,8 @@
 #include "EditorResourceManager.h"
 #include "Graphics/RenderManager.h"
 #include "Graphics/RenderingPrimitives/RenderTexture.h"
+
+#include "EditActions/RemoveEntityEditAction.h"
 
 #include <Scene/Scene.h>
 #include <ECS/ComponentAlgo.h>
@@ -522,6 +524,7 @@ namespace Havtorn
 			Manager->SetSelectedEntity(copiedEntity);
 			toScene->PreviewEntity = SEntity::Null;
 			GEngine::GetWorld()->SetEditorRenderExemptEntity(SEntity::Null);
+			UMetaCommandRouter::Push(SRemoveEntityEditAction::MakeEditActionCommand(Manager, copiedEntity, false));
 		}
 
 		if (assetRepresentation->AssetType == EAssetType::Material)

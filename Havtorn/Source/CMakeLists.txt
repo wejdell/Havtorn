@@ -807,6 +807,8 @@ set(EDITOR_FILES
     ${EDITOR_FOLDER}EditActions/BrowseFolderEditAction.h
     ${EDITOR_FOLDER}EditActions/MoveTransformEditAction.cpp
     ${EDITOR_FOLDER}EditActions/MoveTransformEditAction.h
+    ${EDITOR_FOLDER}EditActions/RemoveEntityEditAction.cpp
+    ${EDITOR_FOLDER}EditActions/RemoveEntityEditAction.h
     ${EDITOR_FOLDER}Systems/EditorRenderSystem.cpp
     ${EDITOR_FOLDER}Systems/EditorRenderSystem.h
     ${EDITOR_FOLDER}Systems/PickingSystem.cpp

@@ -865,6 +865,100 @@ namespace Havtorn
 		}
 	}
 
+	U32 CScene::GetEntitySize(const SEntity& entity) const
+	{
+		U32 size = 0;
+
+		size += GetDataSize(U32());
+		size += GetDataSize(SEntity());
+		
+		size += GetDataSize(U32()); // Metadata type ID and component size
+		size += GetDataSize(U32());
+		if (SMetaDataComponent* metaData = GetComponent<SMetaDataComponent>(entity))
+			size += GetDataSize(*metaData);
+		
+		for (auto& [key, val] : ComponentSerializers)
+		{
+			size += val.SingleSizeAllocator(entity, this);
+		}
+		return size;
+	}
+
+	void CScene::SerializeEntity(const SEntity& entity, char* toData) const
+	{
+		U64 pointerPosition = 0;
+
+		SerializeData(GetEntitySize(entity), toData, pointerPosition);
+		SerializeData(entity, toData, pointerPosition);
+
+		const U32 metaDataTypeID = TypeHashToTypeID.at(typeid(SMetaDataComponent).hash_code());
+		U32 metaDataComponentSize = 0;
+		if (SMetaDataComponent* metaData = GetComponent<SMetaDataComponent>(entity))
+			metaDataComponentSize = GetDataSize(*metaData);
+		SerializeData(metaDataTypeID, toData, pointerPosition);
+		SerializeData(metaDataComponentSize, toData, pointerPosition);
+		if (SMetaDataComponent* metaData = GetComponent<SMetaDataComponent>(entity))
+			SerializeData(*metaData, toData, pointerPosition);
+
+		for (auto& [key, val] : ComponentSerializers)
+		{
+			val.SingleSerializer(entity, this, toData, pointerPosition);
+		}
+	}
+
+	SEntity CScene::DeserializeEntity(const char* fromData)
+	{
+		U64 pointerPosition = 0;
+
+		U32 bufferSize = 0;
+		DeserializeData(bufferSize, fromData, pointerPosition);
+
+		SEntity entity = SEntity::Null;
+		DeserializeData(entity, fromData, pointerPosition);
+		AddEntity(entity.GUID);
+
+		{
+			U32 savedTypeID = 0;
+			DeserializeData(savedTypeID, fromData, pointerPosition);
+			U32 savedBlobSize = 0;
+			DeserializeData(savedBlobSize, fromData, pointerPosition);
+
+			U32 metaDataTypeID = UMath::MaxU32;
+			if (TypeHashToTypeID.contains(typeid(SMetaDataComponent).hash_code()))
+				metaDataTypeID = TypeHashToTypeID.at(typeid(SMetaDataComponent).hash_code());
+
+			if (metaDataTypeID == savedTypeID)
+			{
+				SMetaDataComponent component;
+				DeserializeData(component, fromData, pointerPosition);
+				AddComponent(component, component.Owner);	
+			}
+			else
+			{
+				pointerPosition += savedBlobSize;
+			}
+		}
+
+		while (pointerPosition < bufferSize)
+		{
+			U32 savedTypeID = 0;
+			DeserializeData(savedTypeID, fromData, pointerPosition);
+			U32 savedBlobSize = 0;
+			DeserializeData(savedBlobSize, fromData, pointerPosition);
+
+			if (!ComponentSerializers.contains(savedTypeID))
+			{
+				pointerPosition += savedBlobSize;
+				continue;
+			}
+			// TODO.NW: Add check in VersioningService, which can take the blob and convert it from an old version to a new one
+
+			ComponentSerializers.at(savedTypeID).SingleDeserializer(entity, this, fromData, pointerPosition);
+		}
+
+		return entity;
+	}
+
 	std::string CScene::GetSceneName() const
 	{
 		return SceneName.AsString();
@@ -1020,6 +1114,10 @@ namespace Havtorn
 				ComponentSerializers.at(typeID).SingleSerializer(entityToMove, fromScene, data, pointerPosition);
 
 				pointerPosition = 0;
+				U32 typeIDInBuffer = 0;
+				U32 componentSizeInBuffer = 0;
+				DeserializeData(typeIDInBuffer, data, pointerPosition);
+				DeserializeData(componentSizeInBuffer, data, pointerPosition);
 				ComponentSerializers.at(typeID).SingleDeserializer(entityToMove, this, data, pointerPosition);
 
 				delete[] data;
@@ -1059,6 +1157,10 @@ namespace Havtorn
 			ComponentSerializers.at(typeID).SingleSerializer(fromEntity, this, data, pointerPosition);
 
 			pointerPosition = 0;
+			U32 typeIDInBuffer = 0;
+			U32 componentSizeInBuffer = 0;
+			DeserializeData(typeIDInBuffer, data, pointerPosition);
+			DeserializeData(componentSizeInBuffer, data, pointerPosition);
 			ComponentSerializers.at(typeID).SingleDeserializer(newEntity, this, data, pointerPosition);
 
 			delete[] data;
@@ -1115,6 +1217,10 @@ namespace Havtorn
 				ComponentSerializers.at(typeID).SingleSerializer(otherSceneEntity, fromScene, data, pointerPosition);
 
 				pointerPosition = 0;
+				U32 typeIDInBuffer = 0;
+				U32 componentSizeInBuffer = 0;
+				DeserializeData(typeIDInBuffer, data, pointerPosition);
+				DeserializeData(componentSizeInBuffer, data, pointerPosition);
 				ComponentSerializers.at(typeID).SingleDeserializer(newEntity, this, data, pointerPosition);
 
 				delete[] data;
@@ -1124,6 +1230,24 @@ namespace Havtorn
 		}
 
 		return copiedEntities;
+	}
+
+	std::string CScene::GetEntityStringBuffer(const SEntity& entity)
+	{
+		const U32 size = GetEntitySize(entity);
+		
+		char* buffer = new char[size];
+		SerializeEntity(entity, buffer);
+		std::string stringBuffer(buffer, size);
+		
+		delete[] buffer;
+		
+		return stringBuffer;
+	}
+
+	void CScene::AddEntityFromStringBuffer(const std::string& buffer)
+	{
+		DeserializeEntity(buffer.data());
 	}
 
 	void CScene::GetAttachedEntities(const SEntity& parentEntity, std::vector<SEntity>& outEntities)

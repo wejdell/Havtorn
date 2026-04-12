@@ -4,6 +4,8 @@
 #include "EditorManager.h"
 #include "EditorResourceManager.h"
 
+#include "EditActions/RemoveEntityEditAction.h"
+
 #include <Engine.h>
 #include <Scene/Scene.h>
 #include <ECS/Entity.h>
@@ -322,7 +324,8 @@ namespace Havtorn
 							return SComponent::IsValid(metaDataComp) ? metaDataComp->Name.AsString() : "UNNAMED";
 						}
 					);
-					scenePointer->AddEntity(newEntityName);
+					SEntity newEntity = scenePointer->AddEntity(newEntityName);
+					UMetaCommandRouter::Push(SRemoveEntityEditAction::MakeEditActionCommand(Manager, newEntity, false));
 				}
 
 				if (GUI::MenuItem("Remove Scene"))

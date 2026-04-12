@@ -24,6 +24,8 @@ namespace Havtorn
 		static SCameraData GetCameraData(const SEntity& cameraEntity, const std::vector<Ptr<CScene>>& scenes);
 
 		static CScene* GetContainingScene(const SEntity& entity, const std::vector<Ptr<CScene>>& scenes);
+
+		static CScene* GetSceneByPath(const std::string& path, const std::vector<Ptr<CScene>>& scenes);
 	};
 
 	template<typename T>
@@ -77,6 +79,18 @@ namespace Havtorn
 		for (const Ptr<CScene>& scene : scenes)
 		{
 			if (scene->HasEntity(entity.GUID))
+				return scene.get();
+		}
+
+		return nullptr;
+	}
+
+	inline CScene* UComponentAlgo::GetSceneByPath(const std::string& path, const std::vector<Ptr<CScene>>& scenes)
+	{
+		std::string name = UGeneralUtils::ExtractFileBaseNameFromPath(path);
+		for (const Ptr<CScene>& scene : scenes)
+		{
+			if (scene->SceneName.AsString() == name.data())
 				return scene.get();
 		}
 

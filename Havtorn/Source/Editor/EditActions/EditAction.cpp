@@ -4,8 +4,9 @@
 
 namespace Havtorn
 {
-    SEditAction::SEditAction(const SMetaCommand& command)
+    SEditAction::SEditAction(const SMetaCommand& command, const std::string& compactName)
         : Command(command)
+        , CompactName(compactName)
     {
     }
 
@@ -13,11 +14,11 @@ namespace Havtorn
     {
     }
 
-    std::string SEditAction::GetCompactName()
+    std::string SEditAction::ResolveCompactName(const SMetaCommand& command)
     {
         // TODO.NW: Make readable names for all handled commands
 
         constexpr U64 parserNameLength = 12;
-        return Command.Name.substr(parserNameLength);
+        return command.Name.substr(parserNameLength);
     }
 }

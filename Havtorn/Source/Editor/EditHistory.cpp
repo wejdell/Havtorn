@@ -7,6 +7,7 @@
 
 #include "EditActions/BrowseFolderEditAction.h"
 #include "EditActions/MoveTransformEditAction.h"
+#include "EditActions/RemoveEntityEditAction.h"
 
 namespace Havtorn
 {
@@ -27,7 +28,7 @@ namespace Havtorn
 
     void CEditHistory::RenderNode(const Ref<SEditActionTreeNode>& node, Ref<SEditActionTreeNode>& newNodeTarget, U16& guiID) const
     {
-        const std::string commandDisplayName = node->Action->GetCompactName();
+        const std::string commandDisplayName = node->Action->CompactName;
 
         if (SearchFilter.IsActive() && !SearchFilter.PassFilter(commandDisplayName.c_str()))
         {
@@ -180,6 +181,11 @@ namespace Havtorn
             {
                 if (command.Parameters.contains("TransformStart"))
                     return std::make_shared<SMoveTransformEditAction>(command);
+            }
+            if (command.Command == ChangeEntityCommand)
+            {
+                if (command.Parameters.contains("StateStart"))
+                    return std::make_shared<SRemoveEntityEditAction>(command);
             }
         }
 

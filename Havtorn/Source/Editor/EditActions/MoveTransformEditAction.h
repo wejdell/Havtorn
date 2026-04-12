@@ -17,6 +17,6 @@ namespace Havtorn
 		static SMetaCommand MakeEditActionCommand(CEditorManager* manager, STransformComponent* transformComp, SMatrix fullDeltaMatrix);
 		SMoveTransformEditAction(const SMetaCommand& command);
 		void ResolveAction(CEditorManager* manager, const bool inverted) override;
-		std::string GetCompactName() override;
+		std::string ResolveCompactName(const SMetaCommand& command) override;
 	};
 }

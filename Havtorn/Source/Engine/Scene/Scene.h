@@ -48,6 +48,9 @@ namespace Havtorn
 		ENGINE_API virtual [[nodiscard]] U32 GetSize() const;
 		ENGINE_API virtual void Serialize(char* toData, U64& pointerPosition) const;
 		ENGINE_API virtual void Deserialize(const char* fromData, U64& pointerPosition);
+		ENGINE_API virtual [[nodiscard]] U32 GetEntitySize(const SEntity& entity) const;
+		ENGINE_API virtual void SerializeEntity(const SEntity& entity, char* toData) const;
+		ENGINE_API virtual SEntity DeserializeEntity(const char* fromData);
 
 		ENGINE_API std::string GetSceneName() const;
 		
@@ -108,14 +111,31 @@ namespace Havtorn
 					if (component == nullptr)
 						return U32(0);
 
-					U32 size = GetDataSize(*component);
+					U32 size = 0;
+
+					// Scene header
+					size += GetDataSize(U32());
+					size += GetDataSize(U32());
+					// !Scene header
+
+					size += GetDataSize(*component);
 					return size;
 				};
 
 			serializer.SingleSerializer =
 				[](const SEntity& entity, const CScene* scene, char* toData, U64& pointerPosition)
 				{
-					auto& componentRef = *scene->GetComponent<TComponent>(entity);
+					TComponent* component = scene->GetComponent<TComponent>(entity);
+					if (component == nullptr)
+						return;
+
+					TComponent& componentRef = *component;
+
+					// Scene header
+					SerializeData(scene->TypeHashToTypeID.at(typeid(TComponent).hash_code()), toData, pointerPosition);
+					SerializeData(GetDataSize(componentRef), toData, pointerPosition);
+					// !Scene header
+
 					SerializeData(componentRef, toData, pointerPosition);
 				};
 
@@ -218,14 +238,33 @@ namespace Havtorn
 				[](const SEntity& entity, const CScene* scene)
 				{
 					TComponent* component = scene->GetComponent<TComponent>(entity);
-					U32 size = component != nullptr ? component->GetSize() : 0;
+					if (component == nullptr)
+						return U32(0);
+
+					U32 size = 0;
+
+					// Scene header
+					size += GetDataSize(U32());
+					size += GetDataSize(U32());
+					// !Scene header
+
+					size += component->GetSize();
 					return size;
 				};
 
 			serializer.SingleSerializer =
 				[](const SEntity& entity, const CScene* scene, char* toData, U64& pointerPosition)
 				{
-					scene->GetComponent<TComponent>(entity)->Serialize(toData, pointerPosition);
+					TComponent* component = scene->GetComponent<TComponent>(entity);
+					if (component == nullptr)
+						return;
+
+					// Scene header
+					SerializeData(scene->TypeHashToTypeID.at(typeid(TComponent).hash_code()), toData, pointerPosition);
+					SerializeData(component->GetSize(), toData, pointerPosition);
+					// !Scene header
+
+					component->Serialize(toData, pointerPosition);
 				};
 
 			serializer.SingleDeserializer =
@@ -389,6 +428,9 @@ namespace Havtorn
 		ENGINE_API void MoveEntityToScene(const SEntity& entity, CScene* fromScene);
 		ENGINE_API SEntity CopyEntity(const SEntity& fromEntity);
 		ENGINE_API std::vector<SEntity> CopyEntities(CScene* fromScene);
+
+		ENGINE_API std::string GetEntityStringBuffer(const SEntity& entity);
+		ENGINE_API void AddEntityFromStringBuffer(const std::string& buffer);
 
 		// NW: Sorted leaf-entities first, INCLUDES parent
 		ENGINE_API void GetAttachedEntities(const SEntity& parentEntity, std::vector<SEntity>& outEntities);

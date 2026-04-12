@@ -20,6 +20,8 @@
 #include "EditorToggleable.h"
 #include "EditorToggleables.h"
 
+#include "EditActions/RemoveEntityEditAction.h"
+
 #include "Systems/EditorRenderSystem.h"
 #include "Systems/PickingSystem.h"
 #include <../Game/GameScene.h>
@@ -1322,6 +1324,8 @@ namespace Havtorn
 				HV_LOG_WARN("CEditorManager::OnDeleteEvent: Can't delete entity %s from inside packed prefab! Use Prefab Editor or unpack the prefab.", entityName.c_str());
 				continue;
 			}
+
+			UMetaCommandRouter::Push(SRemoveEntityEditAction::MakeEditActionCommand(this, selectedEntity, true));
 			currentScene->RemoveEntity(selectedEntity);
 		}
 		

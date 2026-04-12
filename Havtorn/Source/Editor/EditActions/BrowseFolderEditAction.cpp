@@ -20,7 +20,7 @@ namespace Havtorn
     }
 
     SBrowseFolderEditAction::SBrowseFolderEditAction(const SMetaCommand& command)
-        : SEditAction(command)
+        : SEditAction(command, ResolveCompactName(command))
     {
     }
 
@@ -33,12 +33,12 @@ namespace Havtorn
         manager->GetEditorWindow<CAssetBrowserWindow>()->SetCurrentPath(std::filesystem::path(copy.Parameters.at("To")), false);
     }
 
-    std::string SBrowseFolderEditAction::GetCompactName()
+    std::string SBrowseFolderEditAction::ResolveCompactName(const SMetaCommand& command)
     {
         std::string compactName = "Navigated from '";
-        compactName.append(Command.Parameters.at("From"));
+        compactName.append(command.Parameters.at("From"));
         compactName.append("' to '");
-        compactName.append(Command.Parameters.at("To"));
+        compactName.append(command.Parameters.at("To"));
         compactName.append("'");
         return compactName;
     }

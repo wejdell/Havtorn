@@ -32,7 +32,7 @@ namespace Havtorn
     }
 
     SMoveTransformEditAction::SMoveTransformEditAction(const SMetaCommand& command)
-        : SEditAction(command)
+        : SEditAction(command, ResolveCompactName(command))
     {
     }
 
@@ -57,15 +57,15 @@ namespace Havtorn
         component->Transform.SetMatrix(SMatrix(copy.Parameters.at("TransformEnd")));
     }
 
-    std::string SMoveTransformEditAction::GetCompactName()
+    std::string SMoveTransformEditAction::ResolveCompactName(const SMetaCommand& command)
     {
-        const SEntity entity = SEntity{ std::stoull(Command.Parameters.at("Entity")) };
+        const SEntity entity = SEntity{ std::stoull(command.Parameters.at("Entity")) };
         if (!entity.IsValid())
-            return SEditAction::GetCompactName();
+            return SEditAction::ResolveCompactName(command);
 
         const CScene* scene = UComponentAlgo::GetContainingScene(entity, GEngine::GetWorld()->GetActiveScenes());
         if (scene == nullptr)
-            return SEditAction::GetCompactName();
+            return SEditAction::ResolveCompactName(command);
 
         SMetaDataComponent* component = scene->GetComponent<SMetaDataComponent>(entity);
 
