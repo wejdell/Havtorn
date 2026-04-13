@@ -31,6 +31,7 @@
 #include <Color.h>
 #include <Timer.h>
 #include <Assets/AssetRegistry.h>
+#include <GeneralUtilities.h>
 
 namespace Havtorn
 {
@@ -1343,10 +1344,48 @@ namespace Havtorn
 		if (!payload.IsPressed)
 			return;
 
-		//if (payload.Event == EInputActionEvent::Copy)
-		//	// copy
-		//else if (payload.Event == EInputActionEvent::Paste)
-		//	// paste
+		if (payload.Event == EInputActionEvent::Copy)
+		{
+			// NW: May choose to copy multiple entities here but might have to figure out how to store all the buffers then?
+			const SEntity& selectedEntity = GetSelectedEntity();
+			if (!selectedEntity.IsValid())
+				return;
+
+			CScene* scene = UComponentAlgo::GetContainingScene(selectedEntity, World->GetActiveScenes());
+			if (scene == nullptr)
+				return;
+
+			EntityCopyBuffer = scene->GetEntityStringBuffer(selectedEntity);
+		}
+		else if (payload.Event == EInputActionEvent::Paste)
+		{
+			CScene* workingScene = GetCurrentWorkingScene();
+			if (workingScene == nullptr)
+				return;
+			
+			constexpr std::string_view bufferName = "ENTITYBUFFER";
+			if (EntityCopyBuffer.size() <= bufferName.size())
+				return;
+
+			if (EntityCopyBuffer.substr(EntityCopyBuffer.size() - bufferName.size()) != bufferName.data())
+				return;
+
+			SEntity newEntity = workingScene->AddEntityFromStringBuffer(EntityCopyBuffer, true);
+			if (!newEntity.IsValid())
+				return;
+
+			if (STransformComponent* transform = workingScene->GetComponent<STransformComponent>(newEntity))
+			{
+				SMatrix transformCopy = transform->Transform.GetMatrix();
+
+				CViewportWindow* viewport = GetEditorWindow<CViewportWindow>();
+				transformCopy.SetTranslation(viewport->GetWorldPositionOnPixel());
+				
+				transform->Transform.SetMatrix(transformCopy);
+			}
+
+			EntityCopyBuffer.clear();
+		}
 	}
 
 	void CEditorManager::OnDragCopyEvent(const SInputActionPayload payload)

@@ -290,6 +290,8 @@ namespace Havtorn
 		// TODO.NW: Think about whether the above states should be exclusive, 
 		// in which case an enum representation for all of them would be nicer
 
+		std::string EntityCopyBuffer;
+
 		inline static const std::string DefaultEditorSettingsPath =
 		"Config/EditorPreferences.json";
 		inline static const std::string UserEditorSettingsPath =

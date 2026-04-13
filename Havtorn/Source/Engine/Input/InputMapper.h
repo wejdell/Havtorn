@@ -31,6 +31,10 @@ namespace Havtorn
 
 		void SetInputContext(EInputContext context);
 
+		// NW: This is offered as a guaranteed way of getting the current mouse mouse cursor position, regardless of other inputs.
+		// TODO.NW: We may need to expose a more poll-like interface after all. 
+		[[nodiscard]] ENGINE_API SVector2<F32> GetCurrentMousePosition() const;
+
 	private:
 		void MapEvent(EInputActionEvent event, SInputAction action);
 		void MapEvent(EInputAxisEvent event, SInputAxis axisAction);

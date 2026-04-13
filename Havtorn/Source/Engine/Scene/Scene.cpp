@@ -906,7 +906,7 @@ namespace Havtorn
 		}
 	}
 
-	SEntity CScene::DeserializeEntity(const char* fromData)
+	SEntity CScene::DeserializeEntity(const char* fromData, const bool makeUnique)
 	{
 		U64 pointerPosition = 0;
 
@@ -915,7 +915,11 @@ namespace Havtorn
 
 		SEntity entity = SEntity::Null;
 		DeserializeData(entity, fromData, pointerPosition);
-		AddEntity(entity.GUID);
+	
+		if (makeUnique)
+			entity = AddEntity();
+		else
+			AddEntity(entity.GUID);
 
 		{
 			U32 savedTypeID = 0;
@@ -931,7 +935,18 @@ namespace Havtorn
 			{
 				SMetaDataComponent component;
 				DeserializeData(component, fromData, pointerPosition);
-				AddComponent(component, component.Owner);	
+				SMetaDataComponent* metaData = AddComponent(component, entity);
+					
+				if (makeUnique)
+				{
+					std::string newEntityName = UGeneralUtils::GetNonCollidingString(metaData->Name.AsString(), Entities, [this](const SEntity& entity)
+						{
+							const SMetaDataComponent* metaDataComp = GetComponent<SMetaDataComponent>(entity);
+							return SComponent::IsValid(metaDataComp) ? metaDataComp->Name.AsString() : "UNNAMED";
+						}
+					);
+					metaData->Name = newEntityName;
+				}
 			}
 			else
 			{
@@ -1241,13 +1256,14 @@ namespace Havtorn
 		std::string stringBuffer(buffer, size);
 		
 		delete[] buffer;
-		
+
+		stringBuffer.append("ENTITYBUFFER");
 		return stringBuffer;
 	}
 
-	void CScene::AddEntityFromStringBuffer(const std::string& buffer)
+	SEntity CScene::AddEntityFromStringBuffer(const std::string& buffer, const bool makeUnique)
 	{
-		DeserializeEntity(buffer.data());
+		return DeserializeEntity(buffer.data(), makeUnique);
 	}
 
 	void CScene::GetAttachedEntities(const SEntity& parentEntity, std::vector<SEntity>& outEntities)

@@ -50,7 +50,7 @@ namespace Havtorn
 		ENGINE_API virtual void Deserialize(const char* fromData, U64& pointerPosition);
 		ENGINE_API virtual [[nodiscard]] U32 GetEntitySize(const SEntity& entity) const;
 		ENGINE_API virtual void SerializeEntity(const SEntity& entity, char* toData) const;
-		ENGINE_API virtual SEntity DeserializeEntity(const char* fromData);
+		ENGINE_API virtual SEntity DeserializeEntity(const char* fromData, const bool makeUnique = false);
 
 		ENGINE_API std::string GetSceneName() const;
 		
@@ -338,6 +338,7 @@ namespace Havtorn
 		{
 			T& newComponent = (*AddComponent<T>(toEntity));
 			newComponent = componentCopy;
+			newComponent.Owner = toEntity;
 			return &newComponent;
 		}
 
@@ -430,7 +431,7 @@ namespace Havtorn
 		ENGINE_API std::vector<SEntity> CopyEntities(CScene* fromScene);
 
 		ENGINE_API std::string GetEntityStringBuffer(const SEntity& entity);
-		ENGINE_API void AddEntityFromStringBuffer(const std::string& buffer);
+		ENGINE_API SEntity AddEntityFromStringBuffer(const std::string& buffer, const bool makeUnique = false);
 
 		// NW: Sorted leaf-entities first, INCLUDES parent
 		ENGINE_API void GetAttachedEntities(const SEntity& parentEntity, std::vector<SEntity>& outEntities);

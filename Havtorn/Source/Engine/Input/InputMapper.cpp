@@ -175,6 +175,12 @@ namespace Havtorn
 		CurrentInputContext = context;
 	}
 
+	SVector2<F32> CInputMapper::GetCurrentMousePosition() const
+	{
+		const std::array<F32, STATIC_U64(EInputAxis::Count)>& axisInputValues = Input->GetAxisInputValues();
+		return SVector2<F32>(axisInputValues[STATIC_U64(EInputAxis::MousePositionHorizontal)], axisInputValues[STATIC_U64(EInputAxis::MousePositionVertical)]);
+	}
+
 	void CInputMapper::MapEvent(EInputActionEvent event, SInputAction action)
 	{
 		if (!BoundActionEvents.contains(event))
