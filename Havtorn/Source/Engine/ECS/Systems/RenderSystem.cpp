@@ -93,7 +93,7 @@ namespace Havtorn
 				continue;
 
 			const bool deferCommand = staticMeshComponent->Owner == editorRenderExemptEntity;
-			U32 meshID = staticMeshComponent->AssetReference.UID;
+			U32 meshID = staticMeshComponent->AssetReference.UID + UComponentAlgo::CalculateAggregateMaterialID(materialComp);
 			if (deferCommand)
 				meshID += 1000;
 
@@ -201,7 +201,7 @@ namespace Havtorn
 				continue;
 
 			const bool deferCommand = skeletalMeshComponent->Owner == editorRenderExemptEntity;
-			U32 meshID = skeletalMeshComponent->AssetReference.UID;
+			U32 meshID = skeletalMeshComponent->AssetReference.UID + UComponentAlgo::CalculateAggregateMaterialID(materialComp);
 			if (deferCommand)
 				meshID += 1000;
 
