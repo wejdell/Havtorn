@@ -341,6 +341,12 @@ namespace Havtorn
 			Manager->GetSelectedAsset()->IsBeingNamed = true;
 			// TODO.NW: Figure out a way to close the context menu
 		}
+
+		if (payload.IsPressed && SelectedFolder.has_value())
+		{
+			if (UFileSystem::IsEmpty(SelectedFolder.value().path().string()))
+				FolderBeingRenamed = SelectedFolder;
+		}
 	}
 
 	void AlignForWidth(F32 width, F32 alignment = 0.5f)
@@ -760,18 +766,61 @@ namespace Havtorn
 
 		if (entry.is_directory())
 		{
-			if (GUI::ImageButton("FolderIcon", folderIconID, { GUI::ThumbnailSizeX, GUI::ThumbnailSizeY }))
+			// TODO.NW: This is mostly a duplicate of GUI::RenderAssetCard. The logic is slightly different though so will generalize this at a different time
+			SVector2<F32> cardStartPos = GUI::GetCursorPos();
+			SVector2<F32> framePadding = GUI::GetStyleVar(EStyleVar::FramePadding);
+
+			SVector2<F32> cardSize = { GUI::ThumbnailSizeX + framePadding.X * 0.5f, GUI::ThumbnailSizeY + framePadding.Y * 0.5f };
+			cardSize.Y *= 1.6f;
+			SVector2<F32> thumbnailSize = { GUI::ThumbnailSizeX + framePadding.X * 0.5f, GUI::ThumbnailSizeY + framePadding.Y * 0.5f + 4.0f };
+
+			SColor borderColor = SColor(10);
+			if (SelectedFolder.has_value() && entry == SelectedFolder.value())
 			{
-				SetCurrentPath(entry.path());
+				// TODO.NW: Replace with color theme active element color
+				borderColor = SColor(0.814f, 0.532f, 0.00f, 0.75f);
+			}
+
+			// TODO.NW: Can't seem to get the leftmost line to show correctly. Maybe need to start the table as usual and then offset inwards?
+			constexpr F32 borderThickness = 1.0f;
+			GUI::SetCursorPos(cardStartPos + SVector2<F32>(-1.0f * borderThickness));
+			GUI::AddRectFilled(GUI::GetCursorScreenPos(), cardSize + SVector2<F32>(2.0f * borderThickness), borderColor);
+			GUI::SetCursorPos(cardStartPos);
+			GUI::AddRectFilled(GUI::GetCursorScreenPos(), cardSize, SColor(65));
+			GUI::SetCursorPos(cardStartPos);
+			GUI::AddRectFilled(GUI::GetCursorScreenPos(), thumbnailSize, SColor(40));
+			GUI::SetCursorPos(cardStartPos);
+
+			if (GUI::Selectable("", false, {ESelectableFlag::AllowDoubleClick, ESelectableFlag::AllowOverlap}, cardSize))
+			{
+				if (GUI::IsDoubleClick())
+				{
+					SetCurrentPath(entry.path());
+					SelectedFolder.reset();
+				}
+				else
+				{
+					SelectedFolder = entry;
+				}
 			}
 			if (GUI::IsItemHovered())
 			{
 				HoveredFolder = entry;
 			}
 
+			GUI::SetCursorPos(cardStartPos + SVector2<F32>(1.0f, 0.0f));
+			GUI::Image(folderIconID, { GUI::ThumbnailSizeX, GUI::ThumbnailSizeY }, SVector2<F32>(0.0f), SVector2<F32>(1.0f), SColor::White);
+
+			SColor detailColor = SColor::White;
+			detailColor.A = SColor::ToU8Range(0.5f);
+			GUI::AddRectFilled(GUI::GetCursorScreenPos(), SVector2<F32>(cardSize.X, 2.0f), detailColor);
+
+			GUI::OffsetCursorPos(SVector2<F32>(2.0f, 4.0f));
+
 			auto relativePath = std::filesystem::relative(entry.path());
 			std::string filenameString = relativePath.filename().string();
 
+			GUI::PushClipRect(GUI::GetCursorScreenPos(), cardSize - framePadding);
 			if (FolderBeingRenamed.has_value() && FolderBeingRenamed.value() == entry)
 			{
 				GUI::SetKeyboardFocusHere();
@@ -801,8 +850,11 @@ namespace Havtorn
 				}
 			}
 			else
+			{
 				GUI::Text(filenameString.c_str());
+			}
 
+			GUI::PopClipRect();
 			if (GUI::IsItemHovered())
 				GUI::SetTooltip(filenameString.c_str());
 		}
@@ -810,7 +862,19 @@ namespace Havtorn
 		{
 			const auto& rep = Manager->GetAssetRepFromDirEntry(entry);
 			SEditorAssetRepresentation* selectedAsset = Manager->GetSelectedAsset();
-			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), rep.get() == selectedAsset, rep->IsBeingNamed, Manager->GetTextureResourceFromAssetRep(rep.get()), GetAssetTypeDetailName(rep->AssetType).c_str(), GetAssetTypeColor(rep->AssetType), rep->IsSourceWatched ? SColor::Orange : SColor(10), rep.get(), sizeof(SEditorAssetRepresentation));
+			
+			SColor borderColor = SColor(10);
+			if (rep.get() == selectedAsset)
+			{
+				// TODO.NW: Replace with color theme active element color
+				borderColor = SColor(0.814f, 0.532f, 0.00f, 0.75f);
+			}
+			if (rep->IsSourceWatched)
+			{
+				borderColor = SColor::Magenta;
+			}
+			
+			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), false, rep->IsBeingNamed, Manager->GetTextureResourceFromAssetRep(rep.get()), GetAssetTypeDetailName(rep->AssetType).c_str(), GetAssetTypeColor(rep->AssetType), borderColor, rep.get(), sizeof(SEditorAssetRepresentation));
 
 			if (result.IsClicked)
 			{

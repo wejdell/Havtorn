@@ -2377,15 +2377,12 @@ namespace Havtorn
 			GUI::EndDragDropSource();
 		}
 
-		SVector2<F32> cardEndPos = GUI::GetCursorPos();
 		GUI::SetCursorPos(cardStartPos + SVector2<F32>(1.0f, 0.0f));
-
-		SColor imageBorderColor = color;
-		imageBorderColor.A = SColor::ToU8Range(0.5f);
-
 		GUI::Image(thumbnailID, { GUI::ThumbnailSizeX, GUI::ThumbnailSizeY }, SVector2<F32>(0.0f), SVector2<F32>(1.0f), SColor::White);
 
-		GUI::AddRectFilled(GUI::GetCursorScreenPos(), SVector2<F32>(cardSize.X, 2.0f), imageBorderColor);
+		SColor detailColor = color;
+		detailColor.A = SColor::ToU8Range(0.5f);
+		GUI::AddRectFilled(GUI::GetCursorScreenPos(), SVector2<F32>(cardSize.X, 2.0f), detailColor);
 
 		GUI::OffsetCursorPos(SVector2<F32>(2.0f, 4.0f));
 
