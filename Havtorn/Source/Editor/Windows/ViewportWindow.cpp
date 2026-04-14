@@ -80,6 +80,8 @@ namespace Havtorn
 				renderManager->SetRenderPass(renderPass);
 				IsHovered = false;
 			}
+			if (GUI::IsItemHovered())
+				GUI::SetTooltip("The render passes shown in the viewport\n(F7) toggles backwards\n(F8) toggles forwards\n(F9) resets to 'All'");
 			GUI::PopItemWidth();
 
 			SVector2<F32> buttonSize = { 16.0f, 16.0f };
@@ -100,7 +102,7 @@ namespace Havtorn
 				world->ToggleWorldPlayDimensions();
 			}
 			if (GUI::IsItemHovered())
-				GUI::SetTooltip("Physics World Dimensions, determines what physics engine to use");
+				GUI::SetTooltip("Physics World Dimensions\nWhat physics engine to use");
 
 			GUI::SameLine(layout.ViewportSize.X * 0.5f - 8.0f + 96.0f);
 			if (GUI::ImageButton("ViewportSettingsButton", settingsButtonID, buttonSize))
