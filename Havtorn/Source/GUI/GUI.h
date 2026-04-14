@@ -661,6 +661,7 @@ namespace Havtorn
 		std::function<void()> Function;
 		intptr_t ImageRef = 0;
 		bool IsIndented = false;
+		std::string Tooltip = "";
 	};
 
 	// TODO.NW: static asserts to make sure they're equal in length to code based enums?

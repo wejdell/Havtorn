@@ -180,6 +180,7 @@ namespace Havtorn
 		[[nodiscard]] bool GetIsVertexSnappingActive() const;
 		[[nodiscard]] bool GetIsGridSnappingActive() const;
 
+		void SetCurrentGizmo(const ETransformGizmo gizmo);
 		void SetGizmoSpace(const ETransformGizmoSpace space);
 		void SetGizmoSnapping(const SSnappingOption& snapping);
 		void SetPivotMoving(const bool active);

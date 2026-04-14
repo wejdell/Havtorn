@@ -40,6 +40,9 @@ namespace Havtorn
 		PrefabIcon,
 		PrefabWidgetIcon,
 		FindIcon,
+		MoveGizmoIcon,
+		RotateGizmoIcon,
+		ScaleGizmoIcon,
 		Count,
 		None = Count
 	};

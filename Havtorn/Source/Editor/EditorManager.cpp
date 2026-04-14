@@ -1542,6 +1542,11 @@ namespace Havtorn
 		return IsGridSnappingActive;
 	}
 
+	void CEditorManager::SetCurrentGizmo(const ETransformGizmo gizmo)
+	{
+		CurrentGizmo = gizmo;
+	}
+
 	void CEditorManager::SetGizmoSpace(const ETransformGizmoSpace space)
 	{
 		CurrentGizmoSpace = space;

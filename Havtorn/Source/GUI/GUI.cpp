@@ -1940,12 +1940,13 @@ namespace Havtorn
 
 	void GUI::AddViewportButtons(const std::vector<SAlignedButtonData>& buttons, const SVector2<F32>& buttonSize, const F32 alignWidth)
 	{
+		const F32 adjustment = buttonSize.X * -3.0f;
 		for (U64 i = 0; i < buttons.size(); i++)
 		{
 			const SAlignedButtonData& button = buttons[i];
 			const F32 evennessOffset = (buttons.size() % 2 == 0) ? buttonSize.X : 0.0f;
 			const F32 position = buttonSize.X * 2.0f * (STATIC_F32(i) - UMath::Floor(STATIC_F32(buttons.size()) * 0.5f)) + evennessOffset;
-			GUI::SameLine(alignWidth * 0.5f - buttonSize.X * 0.5f + position);
+			GUI::SameLine(alignWidth * 0.5f - buttonSize.X * 0.5f + position + adjustment);
 			
 			GUI::PushID(i);
 			const SVector2<F32> uv0 = { 0.0f, 0.0f };
@@ -1957,6 +1958,8 @@ namespace Havtorn
 			{
 				button.Function();
 			}
+			if (GUI::IsItemHovered() && !button.Tooltip.empty())
+				GUI::SetTooltip(button.Tooltip.c_str());
 			GUI::PopID();
 		}
 	}

@@ -53,6 +53,9 @@ namespace Havtorn
 		intptr_t playButtonID = resourceManager->GetStaticEditorTextureResource(EEditorTexture::PlayIcon);
 		intptr_t pauseButtonID = resourceManager->GetStaticEditorTextureResource(EEditorTexture::PauseIcon);
 		intptr_t stopButtonID = resourceManager->GetStaticEditorTextureResource(EEditorTexture::StopIcon);
+		intptr_t moveButtonID = resourceManager->GetStaticEditorTextureResource(EEditorTexture::MoveGizmoIcon);
+		intptr_t rotateButtonID = resourceManager->GetStaticEditorTextureResource(EEditorTexture::RotateGizmoIcon);
+		intptr_t scaleButtonID = resourceManager->GetStaticEditorTextureResource(EEditorTexture::ScaleGizmoIcon);
 		intptr_t settingsButtonID = resourceManager->GetStaticEditorTextureResource(EEditorTexture::EnvironmentLightIcon);
 
 		// TODO.NW: Make toggle to unlock windows (allow moving)
@@ -66,6 +69,7 @@ namespace Havtorn
 			EWorldPlayState playState = world->GetWorldPlayState();
 			IsPlayButtonEngaged = playState == EWorldPlayState::Playing;
 			IsPauseButtonEngaged = playState == EWorldPlayState::Paused;
+			ETransformGizmo currentGizmo = Manager->GetCurrentGizmo();
 
 			CRenderManager* renderManager = Manager->GetRenderManager();
 			ERenderPass renderPass = renderManager->GetRenderPass();
@@ -80,9 +84,12 @@ namespace Havtorn
 
 			SVector2<F32> buttonSize = { 16.0f, 16.0f };
 			std::vector<SAlignedButtonData> buttonData;
-			buttonData.push_back({ [&]() { world->BeginPlay(); }, playButtonID, IsPlayButtonEngaged });
-			buttonData.push_back({ [&]() { world->PausePlay(); }, pauseButtonID, IsPauseButtonEngaged });
-			buttonData.push_back({ [&]() { world->StopPlay(); }, stopButtonID, false });
+			buttonData.push_back({ [&]() { world->BeginPlay(); }, playButtonID, IsPlayButtonEngaged, "Play (Alt+P)"});
+			buttonData.push_back({ [&]() { world->PausePlay(); }, pauseButtonID, IsPauseButtonEngaged, "Pause"});
+			buttonData.push_back({ [&]() { world->StopPlay(); }, stopButtonID, false, "Stop (Esc)"});
+			buttonData.push_back({ [&]() { Manager->SetCurrentGizmo(ETransformGizmo::Translate); }, moveButtonID, currentGizmo == ETransformGizmo::Translate, "Move (W)"});
+			buttonData.push_back({ [&]() { Manager->SetCurrentGizmo(ETransformGizmo::Rotate); }, rotateButtonID, currentGizmo == ETransformGizmo::Rotate, "Rotate (E)"});
+			buttonData.push_back({ [&]() { Manager->SetCurrentGizmo(ETransformGizmo::Scale); }, scaleButtonID, currentGizmo == ETransformGizmo::Scale, "Scale (R)"});
 			GUI::AddViewportButtons(buttonData, buttonSize, layout.ViewportSize.X);
 			
 			// TODO.NW: Fix size of this button
@@ -92,6 +99,8 @@ namespace Havtorn
 			{
 				world->ToggleWorldPlayDimensions();
 			}
+			if (GUI::IsItemHovered())
+				GUI::SetTooltip("Physics World Dimensions, determines what physics engine to use");
 
 			GUI::SameLine(layout.ViewportSize.X * 0.5f - 8.0f + 96.0f);
 			if (GUI::ImageButton("ViewportSettingsButton", settingsButtonID, buttonSize))
@@ -153,6 +162,9 @@ namespace Havtorn
 
 				GUI::EndPopup();
 			}
+			
+			if (GUI::IsItemHovered())
+				GUI::SetTooltip("Snapping & Gizmo Settings");
 
 			CCameraSystem* cameraSystem = GEngine::GetWorld()->GetSystem<CCameraSystem>();
 			if (cameraSystem)
