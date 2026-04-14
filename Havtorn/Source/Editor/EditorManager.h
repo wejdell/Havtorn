@@ -140,6 +140,7 @@ namespace Havtorn
 		void SetSelectedAsset(SEditorAssetRepresentation* asset);
 		void AddSelectedAsset(SEditorAssetRepresentation* asset);
 		void RemoveSelectedAsset(SEditorAssetRepresentation* asset);
+		void SetSelectedFolder(const std::optional<std::filesystem::directory_entry>& folder);
 
 		bool IsAssetSelected(SEditorAssetRepresentation* asset) const;
 		void ClearSelectedAssets();
@@ -147,6 +148,7 @@ namespace Havtorn
 		SEditorAssetRepresentation* GetSelectedAsset() const;
 		SEditorAssetRepresentation* GetLastSelectedAsset() const;
 		std::vector<SEditorAssetRepresentation*> GetSelectedAssets() const;
+		std::optional<std::filesystem::directory_entry> GetSelectedFolder() const;
 
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry) const;
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromName(const std::string& assetName) const;
@@ -262,6 +264,7 @@ namespace Havtorn
 		std::vector<Ptr<SEditorAssetRepresentation>> AssetRepresentations = {};
 		
 		std::vector<SEditorAssetRepresentation*> SelectedAssets = {};
+		std::optional<std::filesystem::directory_entry> SelectedFolder;
 
 		// TODO.NR: Save these in .ini file
 		SEditorLayout EditorLayout;

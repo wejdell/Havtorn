@@ -554,12 +554,28 @@ namespace Havtorn
 	void CEditorManager::AddSelectedAsset(SEditorAssetRepresentation* asset)
 	{
 		SelectedAssets.emplace_back(asset);
+		SelectedFolder.reset();
 	}
 
 	void CEditorManager::RemoveSelectedAsset(SEditorAssetRepresentation* asset)
 	{
 		if (auto it = std::ranges::find(SelectedAssets, asset); it != SelectedAssets.end())
 			SelectedAssets.erase(it);
+	}
+
+	void CEditorManager::SetSelectedFolder(const std::optional<std::filesystem::directory_entry>& folder)
+	{
+		if (!folder.has_value())
+		{
+			SelectedFolder.reset();
+			return;
+		}
+
+		if (!folder.value().is_directory())
+			return;
+
+		SelectedFolder = folder;
+		ClearSelectedAssets();
 	}
 
 	bool CEditorManager::IsAssetSelected(SEditorAssetRepresentation* asset) const
@@ -586,6 +602,11 @@ namespace Havtorn
 	std::vector<SEditorAssetRepresentation*> CEditorManager::GetSelectedAssets() const
 	{
 		return SelectedAssets;
+	}
+
+	std::optional<std::filesystem::directory_entry> CEditorManager::GetSelectedFolder() const
+	{
+		return SelectedFolder;
 	}
 
 	const Ptr<SEditorAssetRepresentation>& CEditorManager::GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry) const

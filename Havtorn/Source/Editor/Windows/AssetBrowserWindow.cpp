@@ -338,14 +338,16 @@ namespace Havtorn
 	{
 		if (payload.IsPressed && Manager->GetSelectedAsset() != nullptr)
 		{
-			Manager->GetSelectedAsset()->IsBeingNamed = true;
 			// TODO.NW: Figure out a way to close the context menu
+			Manager->GetSelectedAsset()->IsBeingNamed = true;
+			return;
 		}
 
-		if (payload.IsPressed && SelectedFolder.has_value())
+		const std::optional<std::filesystem::directory_entry> selectedFolder = Manager->GetSelectedFolder();
+		if (payload.IsPressed && selectedFolder.has_value())
 		{
-			if (UFileSystem::IsEmpty(SelectedFolder.value().path().string()))
-				FolderBeingRenamed = SelectedFolder;
+			if (UFileSystem::IsEmpty(selectedFolder.value().path().string()))
+				FolderBeingRenamed = selectedFolder;
 			else
 				HV_LOG_WARN("Can't yet rename folders containing items. Please move or remove the contents so they can be redirected.");
 		}
@@ -776,12 +778,10 @@ namespace Havtorn
 			cardSize.Y *= 1.6f;
 			SVector2<F32> thumbnailSize = { GUI::ThumbnailSizeX + framePadding.X * 0.5f, GUI::ThumbnailSizeY + framePadding.Y * 0.5f + 4.0f };
 
+			std::optional<std::filesystem::directory_entry> selectedFolder = Manager->GetSelectedFolder();
 			SColor borderColor = SColor(10);
-			if (SelectedFolder.has_value() && entry == SelectedFolder.value())
-			{
-				// TODO.NW: Replace with color theme active element color
-				borderColor = SColor(0.814f, 0.532f, 0.00f, 0.75f);
-			}
+			if (selectedFolder.has_value() && entry == selectedFolder.value())
+				borderColor = GUI::GetStyleColor(EStyleColor::HeaderHovered);
 
 			// TODO.NW: Can't seem to get the leftmost line to show correctly. Maybe need to start the table as usual and then offset inwards?
 			constexpr F32 borderThickness = 1.0f;
@@ -798,11 +798,11 @@ namespace Havtorn
 				if (GUI::IsDoubleClick())
 				{
 					SetCurrentPath(entry.path());
-					SelectedFolder.reset();
+					Manager->SetSelectedFolder({});
 				}
 				else
 				{
-					SelectedFolder = entry;
+					Manager->SetSelectedFolder(entry);
 				}
 			}
 			if (GUI::IsItemHovered())
@@ -867,14 +867,9 @@ namespace Havtorn
 			
 			SColor borderColor = SColor(10);
 			if (rep.get() == selectedAsset)
-			{
-				// TODO.NW: Replace with color theme active element color
-				borderColor = SColor(0.814f, 0.532f, 0.00f, 0.75f);
-			}
+				borderColor = GUI::GetStyleColor(EStyleColor::HeaderHovered);
 			if (rep->IsSourceWatched)
-			{
 				borderColor = SColor::Magenta;
-			}
 			
 			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), false, rep->IsBeingNamed, Manager->GetTextureResourceFromAssetRep(rep.get()), GetAssetTypeDetailName(rep->AssetType).c_str(), GetAssetTypeColor(rep->AssetType), borderColor, rep.get(), sizeof(SEditorAssetRepresentation));
 
