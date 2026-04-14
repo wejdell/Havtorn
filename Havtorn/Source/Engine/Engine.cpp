@@ -23,6 +23,8 @@
 
 #include "Application/EngineProcess.h"
 
+#include <GameplayTags/GameplayTagManager.h>
+
 #include <../Platform/PlatformManager.h>
 #include <FileSystem.h>
 
@@ -70,6 +72,8 @@ namespace Havtorn
 		ENGINE_ERROR_BOOL_MESSAGE(World->Init(platformManager, RenderManager), "World could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(ThreadManager->Init(RenderManager), "Thread Manager could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(FileWatcher->Init(ThreadManager), "File Watcher could not be initialized.");
+
+		GGameplayTagManager::Init(UFileSystem::GameConfig);
 
 		SequencerSystem = World->GetSystem<CSequencerSystem>();
 

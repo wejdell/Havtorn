@@ -111,6 +111,10 @@ set(CORE_FILES
     ${CORE_FOLDER}EngineTypes.h
     ${CORE_FOLDER}FileSystem.cpp
     ${CORE_FOLDER}FileSystem.h
+    ${CORE_FOLDER}GameplayTags/GameplayTagManager.cpp
+    ${CORE_FOLDER}GameplayTags/GameplayTagManager.h
+    ${CORE_FOLDER}GameplayTags/GameplayTag.cpp
+    ${CORE_FOLDER}GameplayTags/GameplayTag.h
     ${CORE_FOLDER}GeneralUtilities.h
     ${CORE_FOLDER}HavtornDelegate.h
     ${CORE_FOLDER}HavtornString.cpp
@@ -361,6 +365,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Assets/FileHeaderDeclarations.h
     ${ENGINE_FOLDER}Assets/SequencerAsset.cpp
     ${ENGINE_FOLDER}Assets/SequencerAsset.h
+    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/AbilityComponentEditorContext.cpp
+    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/AbilityComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraComponentEditorContext.cpp
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraControllerComponentEditorContext.cpp
@@ -407,6 +413,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/TransformComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/VolumetricLightComponentEditorContext.cpp
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/VolumetricLightComponentEditorContext.h
+    ${ENGINE_FOLDER}ECS/Components/AbilityComponent.cpp
+    ${ENGINE_FOLDER}ECS/Components/AbilityComponent.h
     ${ENGINE_FOLDER}ECS/Components/CameraComponent.h
     ${ENGINE_FOLDER}ECS/Components/CameraControllerComponent.h
     ${ENGINE_FOLDER}ECS/Components/DecalComponent.cpp
@@ -447,6 +455,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/Components/VolumetricLightComponent.h
     ${ENGINE_FOLDER}ECS/Systems/AnimatorGraphSystem.cpp
     ${ENGINE_FOLDER}ECS/Systems/AnimatorGraphSystem.h
+    ${ENGINE_FOLDER}ECS/Systems/AbilitySystem.cpp
+    ${ENGINE_FOLDER}ECS/Systems/AbilitySystem.h
     ${ENGINE_FOLDER}ECS/Systems/CameraSystem.cpp
     ${ENGINE_FOLDER}ECS/Systems/CameraSystem.h
     ${ENGINE_FOLDER}ECS/Systems/LevelStreamingSystem.cpp
