@@ -143,7 +143,7 @@ namespace Havtorn
 
 						// TODO.NW: It would be nice with some sort of attribute to check
 						// the enum value against (e.g. SourceFileBased), may not exist on our current version though
-						if (hoveredAssetRep->AssetType == EAssetType::Material
+						if (hoveredAssetRep->AssetType != EAssetType::Material
 							&& hoveredAssetRep->AssetType != EAssetType::Script
 							&& hoveredAssetRep->AssetType != EAssetType::Scene
 							&& hoveredAssetRep->AssetType != EAssetType::Sequencer
@@ -346,6 +346,8 @@ namespace Havtorn
 		{
 			if (UFileSystem::IsEmpty(SelectedFolder.value().path().string()))
 				FolderBeingRenamed = SelectedFolder;
+			else
+				HV_LOG_WARN("Can't yet rename folders containing items. Please move or remove the contents so they can be redirected.");
 		}
 	}
 
