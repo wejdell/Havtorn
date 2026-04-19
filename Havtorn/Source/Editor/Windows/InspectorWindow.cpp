@@ -247,31 +247,47 @@ namespace Havtorn
 		// delta matrix one frame later on all the other entities. This probably doesn't matter in editor.
 		if (viewedTransformComp->Owner == Manager->GetSelectedEntities().back())
 		{
-			SMatrix original = transformMatrix;
-			SVector offset = SVector::Zero;
+			SMatrix originalTransform = transformMatrix;
 
 			if (Manager->GetIsPivotMovingActive())
 			{
-				// TODO.NW: Involve the whole transform and not just the translation, so you can rotate around a chosen pivot (which is what it really means) as well
-
 				// Move pivot
 				CViewportWindow* viewport = Manager->GetEditorWindow<CViewportWindow>();
-				SVector vertexPos = viewport->GetClosestVertexPositionOnPixel(viewedTransformComp->Owner);
-				PivotOffset = transformMatrix.GetTranslation() - vertexPos;
-				transformMatrix.SetTranslation(vertexPos);
+				const SVector vertexWorldPosition = viewport->GetClosestVertexPositionOnPixel(viewedTransformComp->Owner);
+				PivotWorldSpace = vertexWorldPosition;
+				PivotOffset = PivotWorldSpace - originalTransform.GetTranslation();
 			}
-			else if (Manager->GetIsPivotOffsetSet())
+			else if (!Manager->GetIsPivotOffsetSet())
 			{
-				transformMatrix.SetTranslation(transformMatrix.GetTranslation() - PivotOffset);
-			}
-			else
-			{
+				// No offset pivot
+				PivotWorldSpace = originalTransform.GetTranslation();
 				PivotOffset = SVector::Zero;
 			}
 
-			SVector gizmoSnapping = Manager->GetCurrentGizmoSnapping().Snapping;
-			F32 snappingData[] = { gizmoSnapping.X, gizmoSnapping.Y, gizmoSnapping.Z };
-			GUI::GizmoManipulate(viewMatrix.Inverse().data, projectionMatrix.data, Manager->GetCurrentGizmo(), Manager->GetCurrentGizmoSpace(), transformMatrix.data, DeltaMatrix.data, snappingData);
+			SMatrix gizmoMatrix = transformMatrix;
+			gizmoMatrix.SetTranslation(PivotWorldSpace);
+
+			const SVector gizmoSnapping = Manager->GetCurrentGizmoSnapping().Snapping;
+			const F32 snappingData[] = { gizmoSnapping.X, gizmoSnapping.Y, gizmoSnapping.Z };
+			GUI::GizmoManipulate(viewMatrix.Inverse().data, projectionMatrix.data, Manager->GetCurrentGizmo(), Manager->GetCurrentGizmoSpace(), gizmoMatrix.data, DeltaMatrix.data, snappingData);
+
+			// TODO.NW: Do this generally, and make links for all selected entities
+			IsUsingGizmo = GUI::IsUsingGizmo();
+			if (IsUsingGizmo && !WasUsingGizmo)
+			{
+				// Start accumulating delta
+				FullDeltaMatrix = SMatrix::Identity;
+
+				InitialTranslation = originalTransform.GetTranslation();
+				InitialRotation = SQuaternion(originalTransform.GetRotationMatrix());
+				FullDeltaMatrix.SetScale(originalTransform.GetScale());
+				
+				PivotOffset = InitialRotation * PivotOffset;
+				InitialOffset = PivotOffset;
+			}
+
+			if (IsUsingGizmo)
+				FullDeltaMatrix *= DeltaMatrix;
 
 			if (Manager->GetIsVertexSnappingActive())
 			{
@@ -281,20 +297,49 @@ namespace Havtorn
 			{
 				RunGridSnapping(transformMatrix);
 
-				const SVector pos = transformMatrix.GetTranslation() - PivotOffset;
+				const SVector pos = transformMatrix.GetTranslation() + PivotOffset;
 				const SVector roundedPos = { UMath::Round(pos.X, 1.0f), UMath::Round(pos.Y, 1.0f), UMath::Round(pos.Z, 1.0f) };
 				GDebugDraw::AddGrid(roundedPos, SVector::Zero, SColor::Grey, -1.0f, false, 0.005f, false);
 			}
-			else
+			else if (IsUsingGizmo)
 			{
-				if (Manager->GetCurrentGizmo() == ETransformGizmo::Rotate)
-					transformMatrix.SetTranslation(transformMatrix.GetTranslation() - PivotOffset);
+				// TODO.NW: Let quats be the ground truth of rotation. Move away from Matrices in Transforms and cache them only for sending to the GPU. Transforms should be scale+quat+trans
 
-				transformMatrix.SetTranslation(transformMatrix.GetTranslation() + PivotOffset);
+				// WORKING
+				// TODO.NW: Scale PivotOffset so it follows the vertex on the mesh?
+				const SMatrix rotationMatrix = FullDeltaMatrix.GetRotationMatrix();
+				const SQuaternion newRotation = (SQuaternion(rotationMatrix) * InitialRotation).Inverse();
+				PivotOffset = newRotation * InitialOffset;
+
+				ETransformGizmo gizmo = Manager->GetCurrentGizmo();
+				if (gizmo == ETransformGizmo::Translate)
+				{
+					transformMatrix.SetTranslation(InitialTranslation + FullDeltaMatrix.GetTranslation());
+					PivotWorldSpace = transformMatrix.GetTranslation() + PivotOffset;
+				}
+				else if (gizmo == ETransformGizmo::Rotate)
+				{
+					const SVector newPosition = PivotWorldSpace - PivotOffset;
+					SMatrix::Recompose(newPosition, newRotation, transformMatrix.GetScale(), transformMatrix);
+				}
+				else if (gizmo == ETransformGizmo::Scale)
+				{
+					SMatrix::Recompose(transformMatrix.GetTranslation(), newRotation, FullDeltaMatrix.GetScale(), transformMatrix);
+				}
+				// !WORKING
+
+				// TEST
+				//const SMatrix rotationMatrix = FullDeltaMatrix.GetRotationMatrix();
+				//const SQuaternion newRotation = (SQuaternion(rotationMatrix) * InitialRotation).Inverse();
+				//PivotOffset = newRotation * InitialOffset;
+				//const SVector newPosition = PivotWorldSpace - PivotOffset + FullDeltaMatrix.GetTranslation();
+				//SMatrix::Recompose(newPosition, newRotation, FullDeltaMatrix.GetScale(), transformMatrix);
+				//PivotWorldSpace = transformMatrix.GetTranslation() + PivotOffset;
 			}
 
-			if (DeltaMatrix == SMatrix::Identity)
-				transformMatrix = original;
+			GDebugDraw::AddSphere(PivotWorldSpace, SVector::Zero, SVector(0.1f), SColor::Teal);
+			if (Manager->GetIsPivotOffsetSet())
+				GDebugDraw::AddArrow(transformMatrix.GetTranslation(), transformMatrix.GetTranslation() + PivotOffset, SColor::Magenta);
 		}
 		else
 		{
@@ -303,21 +348,13 @@ namespace Havtorn
 		viewedTransformComp->Transform.SetMatrix(transformMatrix);
 
 		GUI::PopID();
-		
-		// TODO.NW: Do this generally, and make links for all selected entities
-		IsTranslating = GUI::IsUsingGizmo();
-		if (IsTranslating && !WasTranslating)
-			FullMoveDeltaMatrix = SMatrix::Identity;
-		
-		if (IsTranslating)
-			FullMoveDeltaMatrix *= DeltaMatrix;
 
-		if (!IsTranslating && WasTranslating && FullMoveDeltaMatrix != SMatrix::Identity)
+		if (!IsUsingGizmo && WasUsingGizmo && FullDeltaMatrix != SMatrix::Identity)
 		{
-			UMetaCommandRouter::Push(SMoveTransformEditAction::MakeEditActionCommand(Manager, viewedTransformComp, FullMoveDeltaMatrix));
+			UMetaCommandRouter::Push(SMoveTransformEditAction::MakeEditActionCommand(Manager, viewedTransformComp, FullDeltaMatrix));
 		}
 
-		WasTranslating = IsTranslating;
+		WasUsingGizmo = IsUsingGizmo;
 
 		if (mainCameraData.IsValid() && !workingInPrefabScene)
 			mainCameraData.TransformComponent->Transform.SetMatrix(viewMatrix);
@@ -334,7 +371,7 @@ namespace Havtorn
 			return;
 		
 		SVector vertexPos = viewport->GetClosestVertexPositionOnPixel(hoveredEntity);
-		gizmoTransform.SetTranslation(vertexPos + PivotOffset);
+		gizmoTransform.SetTranslation(vertexPos - PivotOffset);
 	}
 
 	void CInspectorWindow::RunGridSnapping(SMatrix& gizmoTransform)
@@ -342,7 +379,7 @@ namespace Havtorn
 		const SVector snapping = Manager->GetCurrentGizmoSnapping().Snapping;
 		SVector pos = gizmoTransform.GetTranslation();
 		pos = { UMath::Round(pos.X, snapping.X), UMath::Round(pos.Y, snapping.Y), UMath::Round(pos.Z, snapping.Z) };
-		gizmoTransform.SetTranslation(pos + PivotOffset);
+		gizmoTransform.SetTranslation(pos - PivotOffset);
 	}
 
 	void CInspectorWindow::ViewManipulation(SMatrix& outCameraView, const SVector2<F32>& windowPosition, const SVector2<F32>& windowSize)

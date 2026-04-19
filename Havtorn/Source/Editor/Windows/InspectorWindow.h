@@ -44,12 +44,17 @@ namespace Havtorn
 		U8 AssetPickedIndex = 0;
 		SMatrix DeltaMatrix = SMatrix::Identity;
 
-		SMatrix FullMoveDeltaMatrix = SMatrix::Identity;
-		bool WasTranslating = false;
-		bool IsTranslating = false;
+		SMatrix FullDeltaMatrix = SMatrix::Identity;
+		bool WasUsingGizmo = false;
+		bool IsUsingGizmo = false;
 
 		// TODO.NW: When this common one starts to get annoying, we could explore retaining each offset for a list of entities.
 		SVector PivotOffset = SVector::Zero; 
+		SVector PivotWorldSpace = SVector::Zero;
+		SVector InitialTranslation = SVector::Zero;
+		SQuaternion InitialRotation = SQuaternion::Identity;
+		SVector InitialScale = SVector(1.0f);
+		SVector InitialOffset = SVector::Zero;
 
 		SAssetReference* ContextMenuAssetRef = nullptr;
 		U64 ContextMenuAssetRequester = 0;

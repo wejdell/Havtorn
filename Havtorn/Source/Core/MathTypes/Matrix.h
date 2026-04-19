@@ -830,8 +830,8 @@ namespace Havtorn
 
 	inline SMatrix SMatrix::LookToLH(const SVector& eyePosition, const SVector& eyeDirection, const SVector& upDirection)
 	{
-		assert(!eyeDirection.IsEqual(SVector::Zero));
-		assert(!upDirection.IsEqual(SVector::Zero));
+		if (eyeDirection.IsEqual(SVector::Zero) || upDirection.IsEqual(SVector::Zero))
+			return SMatrix::Identity;
 
 		// Original
 		SVector r2 = eyeDirection.GetNormalized();

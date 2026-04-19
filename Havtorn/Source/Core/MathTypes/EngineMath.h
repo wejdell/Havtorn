@@ -109,6 +109,9 @@ namespace Havtorn
 		static inline T ATan2(T y, T x);
 
 		template<typename T>
+		static inline T CopySign(T magnitude, T sign);
+
+		template<typename T>
 		static inline T DegToRad(T angleInDegrees);
 		template<typename T>
 		static inline T RadToDeg(T angleInRadians);
@@ -300,6 +303,12 @@ namespace Havtorn
 	inline T UMath::ATan2(T y, T x)
 	{
 		return std::atan2(y, x);
+	}
+
+	template<typename T>
+	inline T UMath::CopySign(T magnitude, T sign)
+	{
+		return std::copysign(magnitude, sign);
 	}
 
 	template<typename T>
