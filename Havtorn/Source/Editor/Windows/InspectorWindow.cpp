@@ -280,9 +280,12 @@ namespace Havtorn
 
 				InitialTranslation = originalTransform.GetTranslation();
 				InitialRotation = SQuaternion(originalTransform.GetRotationMatrix());
-				FullDeltaMatrix.SetScale(originalTransform.GetScale());
 				
-				PivotOffset = InitialRotation * PivotOffset;
+				// NW: Scale is not additive
+				const SVector scale = originalTransform.GetScale();
+				FullDeltaMatrix.SetScale(scale);
+				
+				PivotOffset = InitialRotation * PivotOffset * scale.Reciprocal();
 				InitialOffset = PivotOffset;
 			}
 
@@ -305,11 +308,9 @@ namespace Havtorn
 			{
 				// TODO.NW: Let quats be the ground truth of rotation. Move away from Matrices in Transforms and cache them only for sending to the GPU. Transforms should be scale+quat+trans
 
-				// WORKING
-				// TODO.NW: Scale PivotOffset so it follows the vertex on the mesh?
 				const SMatrix rotationMatrix = FullDeltaMatrix.GetRotationMatrix();
 				const SQuaternion newRotation = (SQuaternion(rotationMatrix) * InitialRotation).Inverse();
-				PivotOffset = newRotation * InitialOffset;
+				PivotOffset = newRotation * InitialOffset * FullDeltaMatrix.GetScale();
 
 				ETransformGizmo gizmo = Manager->GetCurrentGizmo();
 				if (gizmo == ETransformGizmo::Translate)
@@ -326,15 +327,6 @@ namespace Havtorn
 				{
 					SMatrix::Recompose(transformMatrix.GetTranslation(), newRotation, FullDeltaMatrix.GetScale(), transformMatrix);
 				}
-				// !WORKING
-
-				// TEST
-				//const SMatrix rotationMatrix = FullDeltaMatrix.GetRotationMatrix();
-				//const SQuaternion newRotation = (SQuaternion(rotationMatrix) * InitialRotation).Inverse();
-				//PivotOffset = newRotation * InitialOffset;
-				//const SVector newPosition = PivotWorldSpace - PivotOffset + FullDeltaMatrix.GetTranslation();
-				//SMatrix::Recompose(newPosition, newRotation, FullDeltaMatrix.GetScale(), transformMatrix);
-				//PivotWorldSpace = transformMatrix.GetTranslation() + PivotOffset;
 			}
 
 			GDebugDraw::AddSphere(PivotWorldSpace, SVector::Zero, SVector(0.1f), SColor::Teal);
@@ -351,6 +343,8 @@ namespace Havtorn
 
 		if (!IsUsingGizmo && WasUsingGizmo && FullDeltaMatrix != SMatrix::Identity)
 		{
+			PivotWorldSpace = transformMatrix.GetTranslation() + PivotOffset;
+			HV_LOG_INFO("pivot: %s", PivotWorldSpace.ToString().c_str());
 			UMetaCommandRouter::Push(SMoveTransformEditAction::MakeEditActionCommand(Manager, viewedTransformComp, FullDeltaMatrix));
 		}
 

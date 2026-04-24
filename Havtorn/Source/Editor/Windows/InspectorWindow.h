@@ -53,7 +53,6 @@ namespace Havtorn
 		SVector PivotWorldSpace = SVector::Zero;
 		SVector InitialTranslation = SVector::Zero;
 		SQuaternion InitialRotation = SQuaternion::Identity;
-		SVector InitialScale = SVector(1.0f);
 		SVector InitialOffset = SVector::Zero;
 
 		SAssetReference* ContextMenuAssetRef = nullptr;

@@ -95,6 +95,8 @@ namespace Havtorn
 		inline SVector Projection(const SVector& other) const;
 		inline SVector Mirrored(const SVector& mirrorNormal) const;
 
+		inline SVector Reciprocal() const;
+
 		inline static SVector Random(const SVector& lowerBound, const SVector& upperBound);
 
 		// Returns: [-PI >= angle <= PI ], the signed angle  between From and To projected onto Axis.
@@ -371,6 +373,11 @@ namespace Havtorn
 	inline SVector SVector::Mirrored(const SVector& mirrorNormal) const
 	{
 		return *this - mirrorNormal * (2.0f * (this->Dot(mirrorNormal)));
+	}
+
+	inline SVector SVector::Reciprocal() const
+	{
+		return { 1.0f / X, 1.0f / Y, 1.0f / Z };
 	}
 
 	inline SVector operator*(F32 a, const SVector& vector)
