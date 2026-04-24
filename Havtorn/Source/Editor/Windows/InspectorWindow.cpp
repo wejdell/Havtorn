@@ -328,10 +328,6 @@ namespace Havtorn
 					SMatrix::Recompose(transformMatrix.GetTranslation(), newRotation, FullDeltaMatrix.GetScale(), transformMatrix);
 				}
 			}
-
-			GDebugDraw::AddSphere(PivotWorldSpace, SVector::Zero, SVector(0.1f), SColor::Teal);
-			if (Manager->GetIsPivotOffsetSet())
-				GDebugDraw::AddArrow(transformMatrix.GetTranslation(), transformMatrix.GetTranslation() + PivotOffset, SColor::Magenta);
 		}
 		else
 		{
@@ -344,7 +340,6 @@ namespace Havtorn
 		if (!IsUsingGizmo && WasUsingGizmo && FullDeltaMatrix != SMatrix::Identity)
 		{
 			PivotWorldSpace = transformMatrix.GetTranslation() + PivotOffset;
-			HV_LOG_INFO("pivot: %s", PivotWorldSpace.ToString().c_str());
 			UMetaCommandRouter::Push(SMoveTransformEditAction::MakeEditActionCommand(Manager, viewedTransformComp, FullDeltaMatrix));
 		}
 
