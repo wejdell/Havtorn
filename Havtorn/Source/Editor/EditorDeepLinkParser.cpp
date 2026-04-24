@@ -6,6 +6,8 @@
 #include "EditorManager.h"
 #include "Windows/AssetBrowserWindow.h"
 
+#include <CommandLine.h>
+
 #include <ECS/ComponentAlgo.h>
 
 #include <../Game/GameScene.h>
@@ -51,7 +53,7 @@ namespace Havtorn
 
         // TODO.NW: May want to move these to a deep link parser in editor instead. Might want some feedback confirming the copy to clipboard also
         std::string link;
-        link.append(DeepLinkURL);
+        link.append(UCommandLine::GetDeepLinkURL());
         link.append("EditorDeepLink/EditorNavigation/FocusEntity/");
         link.append("Entity=");
         link.append(std::to_string(entity.GUID));
@@ -79,7 +81,7 @@ namespace Havtorn
 
         // TODO.NW: May want to move these to a deep link parser in editor instead. Might want some feedback confirming the copy to clipboard also
         std::string link;
-        link.append(DeepLinkURL);
+        link.append(UCommandLine::GetDeepLinkURL());
         link.append("EditorDeepLink/EditorNavigation/FocusCameraView/");
         link.append("Scene=" + UGeneralUtils::ConvertToPlatformAgnosticPath(assetRep->DirectoryEntry.path().string()));
         link.append("|Transform=");
@@ -99,7 +101,7 @@ namespace Havtorn
 
         // TODO.NW: May want to move these to a deep link parser in editor instead. Might want some feedback confirming the copy to clipboard also
         std::string link;
-        link.append(DeepLinkURL);
+        link.append(UCommandLine::GetDeepLinkURL());
         link.append("EditorDeepLink/EditorNavigation/FocusAsset/");
         link.append("Asset=" + UGeneralUtils::ConvertToPlatformAgnosticPath(assetRep->DirectoryEntry.path().string()));
         

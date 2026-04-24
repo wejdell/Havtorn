@@ -56,8 +56,6 @@ namespace Havtorn
 		const U32 EntityManipulationDomain = UGeneralUtils::HashString("EntityManipulation");
 		const U32 ChangeEntityCommand = UGeneralUtils::HashString("ChangeEntity");
 		const U32 ChangeComponentCommand = UGeneralUtils::HashString("ChangeComponent");
-
-		const std::string DeepLinkURL = "havtorn://";
 	};
 
 	template<typename T, typename ...Params>

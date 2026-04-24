@@ -35,7 +35,5 @@ namespace Havtorn
 		U32 FocusEntityCommand = UGeneralUtils::HashString("FocusEntity");
 		U32 FocusCameraViewCommand = UGeneralUtils::HashString("FocusCameraView");
 		U32 FocusAssetCommand = UGeneralUtils::HashString("FocusAsset");
-
-		const std::string DeepLinkURL = "havtorn://";
 	};
 }
