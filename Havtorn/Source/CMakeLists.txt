@@ -323,7 +323,11 @@ add_dependencies(GUI Core Platform)
 
 # ==================== ENGINE ====================
 set(ENGINE_FILES
-
+	${ENGINE_FOLDER}Hex/SHexCommandComponentEditorContext.cpp
+	${ENGINE_FOLDER}Hex/SHexCommandComponentEditorContext.h
+    ${ENGINE_FOLDER}Hex/SHexCommandComponent.cpp
+	${ENGINE_FOLDER}Hex/SHexCommandComponent.h
+	${ENGINE_FOLDER}Hex/SHexCommand.h
 	${ENGINE_FOLDER}Assets/RuntimeAssets/InputAsset.h
 	${ENGINE_FOLDER}Assets/AssetFileHeader.h
 	${ENGINE_FOLDER}Assets/Asset.h
