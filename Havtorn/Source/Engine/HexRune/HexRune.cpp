@@ -369,6 +369,7 @@ namespace Havtorn
 			size += GetDataSize(Links);
 			return size;
 		}
+
 		void SScript::Serialize(char* toData, U64& pointerPosition) const
 		{
 			//Databindings -> Nodes -> Links

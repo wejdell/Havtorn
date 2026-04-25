@@ -14,9 +14,6 @@ namespace Havtorn
 
     SComponentViewResult STransformComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!GUI::TryOpenComponentView("Transform"))
-			return SComponentViewResult();
-
 		STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(entityOwner);
 		Havtorn::SMatrix transformMatrix = transformComponent->Transform.GetMatrix();
 
@@ -39,12 +36,6 @@ namespace Havtorn
 
 	bool STransformComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("Transform Component"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->AddComponent<STransformComponent>(entity);
 		scene->AddComponentEditorContext(entity, &STransformComponentEditorContext::Context);
 		return true;
@@ -52,12 +43,6 @@ namespace Havtorn
 
 	bool STransformComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("X##18"))
-			return false;
-			
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->RemoveComponent<STransformComponent>(entity);
 		scene->RemoveComponentEditorContext(entity, &STransformComponentEditorContext::Context);
 		return true;

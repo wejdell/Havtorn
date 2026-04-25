@@ -80,6 +80,8 @@ namespace Havtorn
 		const std::vector<SPointLightComponent*>& pointLightComponents = scene->GetComponents<SPointLightComponent>();
 		const std::vector<SSpotLightComponent*>& spotLightComponents = scene->GetComponents<SSpotLightComponent>();
 
+		const SEntity& editorRenderExemptEntity = GEngine::GetWorld()->GetEditorRenderExemptEntity();
+
 		// TODO.NW: Add frustum culling - send all meshes in all scenes to all active cameras, let the cameras decide whether they are visible
 
 		for (const SStaticMeshComponent* staticMeshComponent : scene->GetComponents<SStaticMeshComponent>())
@@ -90,7 +92,12 @@ namespace Havtorn
 			if (!SComponent::IsValid(staticMeshComponent) || !SComponent::IsValid(transformComp) || !SComponent::IsValid(materialComp))
 				continue;
 
-			if (!RenderManager->IsStaticMeshInInstancedRenderList(staticMeshComponent->AssetReference.UID, renderViewID)) // if static, if instanced
+			const bool deferCommand = staticMeshComponent->Owner == editorRenderExemptEntity;
+			U32 meshID = staticMeshComponent->AssetReference.UID + UComponentAlgo::CalculateAggregateMaterialID(materialComp);
+			if (deferCommand)
+				meshID += 1000;
+
+			if (!RenderManager->IsStaticMeshInInstancedRenderList(meshID, renderViewID)) // if static, if instanced
 			{
 				SStaticMeshAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMeshComponent->AssetReference, staticMeshComponent->Owner.GUID);
 				if (asset == nullptr)
@@ -105,7 +112,7 @@ namespace Havtorn
 						command.Type = ERenderCommandType::ShadowAtlasPrePassDirectional;
 						command.ShadowmapViews.push_back(directionalLightComp->ShadowmapView);
 						command.Matrices.push_back(transformComp->Transform.GetMatrix());
-						command.U32s.push_back(staticMeshComponent->AssetReference.UID);
+						command.U32s.push_back(meshID);
 						command.DrawCallData = asset->DrawCallData;
 						RenderManager->PushRenderCommand(command, renderViewID);
 					}
@@ -118,7 +125,7 @@ namespace Havtorn
 						SRenderCommand command;
 						command.Type = ERenderCommandType::ShadowAtlasPrePassPoint;
 						command.Matrices.push_back(transformComp->Transform.GetMatrix());
-						command.U32s.push_back(staticMeshComponent->AssetReference.UID);
+						command.U32s.push_back(meshID);
 						command.DrawCallData = asset->DrawCallData;
 						command.SetShadowMapViews(pointLightComp->ShadowmapViews);
 						RenderManager->PushRenderCommand(command, renderViewID);
@@ -132,7 +139,7 @@ namespace Havtorn
 						SRenderCommand command;
 						command.Type = ERenderCommandType::ShadowAtlasPrePassSpot;
 						command.Matrices.push_back(transformComp->Transform.GetMatrix());
-						command.U32s.push_back(staticMeshComponent->AssetReference.UID);
+						command.U32s.push_back(meshID);
 						command.DrawCallData = asset->DrawCallData;
 						command.ShadowmapViews.push_back(spotLightComp->ShadowmapView);
 						RenderManager->PushRenderCommand(command, renderViewID);
@@ -148,7 +155,7 @@ namespace Havtorn
 				{
 					SRenderCommand command;
 					command.Type = ERenderCommandType::GBufferDataInstanced;
-					command.U32s.push_back(staticMeshComponent->AssetReference.UID);
+					command.U32s.push_back(meshID);
 					command.DrawCallData = asset->DrawCallData;
 
 					for (SGraphicsMaterialAsset* materialAsset : materialAssets)
@@ -157,13 +164,16 @@ namespace Havtorn
 						command.MaterialRenderTextures.push_back(std::move(materialAsset->Material.GetRenderTextures(materialComp->Owner.GUID)));
 					}
 
+					if (deferCommand)
+						command.InternalPriority++;
+					
 					RenderManager->PushRenderCommand(command, renderViewID);
 				}
 				else
 				{
 					SRenderCommand command;
 					command.Type = ERenderCommandType::GBufferDataInstancedEditor;
-					command.U32s.push_back(staticMeshComponent->AssetReference.UID);
+					command.U32s.push_back(meshID);
 					command.DrawCallData = asset->DrawCallData;
 
 					for (SGraphicsMaterialAsset* materialAsset : materialAssets)
@@ -172,11 +182,14 @@ namespace Havtorn
 						command.MaterialRenderTextures.push_back(std::move(materialAsset->Material.GetRenderTextures(materialComp->Owner.GUID)));
 					}
 
+					if (deferCommand)
+						command.InternalPriority++;
+
 					RenderManager->PushRenderCommand(command, renderViewID);
 				}
 			}
 
-			RenderManager->AddStaticMeshToInstancedRenderList(staticMeshComponent->AssetReference.UID, transformComp, renderViewID);
+			RenderManager->AddStaticMeshToInstancedRenderList(meshID, transformComp, renderViewID);
 		}
 
 		for (const SSkeletalMeshComponent* skeletalMeshComponent : scene->GetComponents<SSkeletalMeshComponent>())
@@ -187,7 +200,12 @@ namespace Havtorn
 			if (!SComponent::IsValid(skeletalMeshComponent) || !SComponent::IsValid(transformComp) || !SComponent::IsValid(materialComp))
 				continue;
 
-			if (!RenderManager->IsSkeletalMeshInInstancedRenderList(skeletalMeshComponent->AssetReference.UID, renderViewID))
+			const bool deferCommand = skeletalMeshComponent->Owner == editorRenderExemptEntity;
+			U32 meshID = skeletalMeshComponent->AssetReference.UID + UComponentAlgo::CalculateAggregateMaterialID(materialComp);
+			if (deferCommand)
+				meshID += 1000;
+
+			if (!RenderManager->IsSkeletalMeshInInstancedRenderList(meshID, renderViewID))
 			{
 				// TODO.NR: Make shadow pass for skeletal meshes possible
 				//for (const SDirectionalLightComponent* directionalLightComp : directionalLightComponents)
@@ -249,7 +267,7 @@ namespace Havtorn
 					SRenderCommand command;
 					command.Type = ERenderCommandType::GBufferSkeletalInstanced;
 					command.Matrices.push_back(transformComp->Transform.GetMatrix());
-					command.U32s.push_back(skeletalMeshComponent->AssetReference.UID);
+					command.U32s.push_back(meshID);
 					command.DrawCallData = asset->DrawCallData;
 
 					for (SGraphicsMaterialAsset* materialAsset : materialAssets)
@@ -257,6 +275,9 @@ namespace Havtorn
 						command.Materials.push_back(materialAsset->Material);
 						command.MaterialRenderTextures.push_back(std::move(materialAsset->Material.GetRenderTextures(materialComp->Owner.GUID)));
 					}
+
+					if (deferCommand)
+						command.InternalPriority++;
 
 					RenderManager->PushRenderCommand(command, renderViewID);
 				}
@@ -265,7 +286,7 @@ namespace Havtorn
 					SRenderCommand command;
 					command.Type = ERenderCommandType::GBufferSkeletalInstancedEditor;
 					command.Matrices.push_back(transformComp->Transform.GetMatrix());
-					command.U32s.push_back(skeletalMeshComponent->AssetReference.UID);
+					command.U32s.push_back(meshID);
 					command.DrawCallData = asset->DrawCallData;
 
 					for (SGraphicsMaterialAsset* materialAsset : materialAssets)
@@ -274,11 +295,14 @@ namespace Havtorn
 						command.MaterialRenderTextures.push_back(std::move(materialAsset->Material.GetRenderTextures(materialComp->Owner.GUID)));
 					}
 
+					if (deferCommand)
+						command.InternalPriority++;
+
 					RenderManager->PushRenderCommand(command, renderViewID);
 				}
 			}
 
-			RenderManager->AddSkeletalMeshToInstancedRenderList(skeletalMeshComponent->AssetReference.UID, transformComp, scene->GetComponent<SSkeletalAnimationComponent>(transformComp), renderViewID);
+			RenderManager->AddSkeletalMeshToInstancedRenderList(meshID, transformComp, scene->GetComponent<SSkeletalAnimationComponent>(transformComp), renderViewID);
 		}
 
 		for (const SDecalComponent* decalComponent : scene->GetComponents<SDecalComponent>())

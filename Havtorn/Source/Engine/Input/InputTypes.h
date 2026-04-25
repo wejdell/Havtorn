@@ -9,9 +9,10 @@ namespace Havtorn
 	enum class EInputModifier
 	{
 		None		= 0,
-		Shift		= BIT(0),
-		Ctrl		= BIT(1),
-		Alt			= BIT(2),
+		Shift		= BIT(0) | BIT(1),
+		Ctrl		= BIT(6) | BIT(7),
+		Alt			= BIT(8) | BIT(9),
+		Super		= BIT(10)| BIT(11),
 	};
 
 	enum class EInputContext
@@ -277,6 +278,7 @@ namespace Havtorn
 		CycleRenderPassBackward,
 		CycleRenderPassReset,
 		PickEditorEntity,
+		ContextPickEditorEntity,
 		ControlPickEditorEntity,
 		ShiftPickEditorEntity,
 		FocusEditorEntity,
@@ -288,7 +290,12 @@ namespace Havtorn
 		AltRelease,
 		Copy,
 		Paste,
+		Undo,
+		Redo,
 		Rename,
+		MovePivot,
+		VertexSnapping,
+		GridSnapping,
 		Count
 	};
 
@@ -419,7 +426,7 @@ namespace Havtorn
 		[[nodiscard]] bool HasModifiers(U32 modifiers) const
 		{
 			return std::ranges::any_of(Actions.begin(), Actions.end(),
-				[modifiers](const SInputAction& action) {return (action.Modifiers ^ modifiers) == 0; });
+				[modifiers](const SInputAction& action) {return ((action.Modifiers == 0 && modifiers == 0) || (action.Modifiers & modifiers) != 0); });
 		}
 
 		[[nodiscard]] bool Has(const EInputKey& key, U32 context, U32 modifiers) const
@@ -427,7 +434,7 @@ namespace Havtorn
 			return std::ranges::any_of(Actions.begin(), Actions.end(),
 				[key, context, modifiers](const SInputAction& action)
 				{
-					return action.Key == key && (action.Contexts & context) != 0 && (action.Modifiers ^ modifiers) == 0;
+					return action.Key == key && (action.Contexts & context) != 0 && ((action.Modifiers == 0 && modifiers == 0) || (action.Modifiers & modifiers) != 0);
 				});
 		}
 

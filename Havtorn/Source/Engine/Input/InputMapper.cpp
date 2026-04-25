@@ -108,6 +108,9 @@ namespace Havtorn
 		const SInputAction pickEntity = { EInputKey::Mouse1, EInputContext::Editor };
 		MapEvent(EInputActionEvent::PickEditorEntity, pickEntity);
 
+		const SInputAction contextPickEntity = { EInputKey::Mouse2, EInputContext::Editor };
+		MapEvent(EInputActionEvent::ContextPickEditorEntity, contextPickEntity);
+
 		const SInputAction ctrlPickEntity = { EInputKey::Mouse1, EInputContext::Editor, EInputModifier::Ctrl };
 		MapEvent(EInputActionEvent::ControlPickEditorEntity, ctrlPickEntity);
 
@@ -145,8 +148,23 @@ namespace Havtorn
 		const SInputAction paste = { EInputKey::KeyV, EInputContext::Editor, EInputModifier::Ctrl };
 		MapEvent(EInputActionEvent::Paste, paste);
 
+		const SInputAction undo = { EInputKey::KeyZ, EInputContext::Editor, EInputModifier::Ctrl };
+		MapEvent(EInputActionEvent::Undo, undo);
+
+		const SInputAction redo = { EInputKey::KeyY, EInputContext::Editor, EInputModifier::Ctrl };
+		MapEvent(EInputActionEvent::Redo, redo);
+
 		const SInputAction rename = { EInputKey::F2, EInputContext::Editor };
 		MapEvent(EInputActionEvent::Rename, rename);
+
+		const SInputAction movePivot = { EInputKey::KeyC, EInputContext::Editor };
+		MapEvent(EInputActionEvent::MovePivot, movePivot);
+
+		const SInputAction vertexSnapping = { EInputKey::KeyV, EInputContext::Editor };
+		MapEvent(EInputActionEvent::VertexSnapping, vertexSnapping);
+
+		const SInputAction gridSnapping = { EInputKey::KeyG, EInputContext::Editor };
+		MapEvent(EInputActionEvent::GridSnapping, gridSnapping);
 
 		return true;
 	}
@@ -173,6 +191,12 @@ namespace Havtorn
 	void CInputMapper::SetInputContext(EInputContext context)
 	{
 		CurrentInputContext = context;
+	}
+
+	SVector2<F32> CInputMapper::GetCurrentMousePosition() const
+	{
+		const std::array<F32, STATIC_U64(EInputAxis::Count)>& axisInputValues = Input->GetAxisInputValues();
+		return SVector2<F32>(axisInputValues[STATIC_U64(EInputAxis::MousePositionHorizontal)], axisInputValues[STATIC_U64(EInputAxis::MousePositionVertical)]);
 	}
 
 	void CInputMapper::MapEvent(EInputActionEvent event, SInputAction action)

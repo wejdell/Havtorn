@@ -14,9 +14,6 @@ namespace Havtorn
 
 	SComponentViewResult SGhostyComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
 	{
-		if (!GUI::TryOpenComponentView("Ghosty"))
-			return SComponentViewResult();
-
 		SGhostyComponent* component = scene->GetComponent<SGhostyComponent>(entityOwner);
 
 		GUI::DragFloat3("GhostyState", component->State.Input, 0.0f);
@@ -28,12 +25,6 @@ namespace Havtorn
 
 	bool SGhostyComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("Ghosty Component"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->AddComponent<SGhostyComponent>(entity);
 		scene->AddComponentEditorContext(entity, &SGhostyComponentEditorContext::Context);
 		return true;
@@ -41,12 +32,6 @@ namespace Havtorn
 
 	bool SGhostyComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("X"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->RemoveComponent<SGhostyComponent>(entity);
 		scene->RemoveComponentEditorContext(entity, &SGhostyComponentEditorContext::Context);
 		return true;

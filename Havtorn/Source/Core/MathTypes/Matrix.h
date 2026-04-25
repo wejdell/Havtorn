@@ -7,6 +7,7 @@
 #include "Log.h"
 
 #include <assert.h>
+#include <format>
 
 namespace Havtorn 
 {
@@ -29,6 +30,7 @@ namespace Havtorn
 		// Copy Constructor.
 		inline SMatrix(F32 diagonalElement);
 		inline SMatrix(const SMatrix& matrix);
+		inline SMatrix(const std::string_view commaSeparatedString);
 		// () operator for accessing element (row, column) for read/write or read, respectively.
 		inline F32& operator()(const U8 row, const U8 column);
 		inline const F32& operator()(const U8 row, const U8 column) const;
@@ -109,6 +111,7 @@ namespace Havtorn
 		inline void OrthoNormalize();
 
 		inline bool operator==(const SMatrix& matrix) const;
+		inline bool NearlyEqual(const SMatrix& matrix, const F32 tolerance = KINDA_SMALL_NUMBER) const;
 
 		static SMatrix PerspectiveFovLH(F32 fovAngleY, F32 aspectRatio, F32 nearZ, F32 farZ);
 		static SMatrix OrthographicLH(F32 viewWidth, F32 viewHeight, F32 nearZ, F32 farZ);
@@ -122,6 +125,7 @@ namespace Havtorn
 
 		std::string ToString() const;
 		std::string ToCompactString() const;
+		std::string ToCommaSeparatedString() const;
 	};
 
 	SMatrix::SMatrix()
@@ -151,6 +155,20 @@ namespace Havtorn
 		for (U8 i = 0; i < 16; ++i)
 		{
 			data[i] = matrix.data[i];
+		}
+	}
+
+	inline SMatrix::SMatrix(const std::string_view commaSeparatedString)
+	{
+		constexpr char separator = ',';
+		I64 startIndex = 0;
+		I64 endIndex = commaSeparatedString.find_first_of(separator, startIndex);
+		for (U8 i = 0; i < 16; i++)
+		{
+			std::string_view value = commaSeparatedString.substr(startIndex, endIndex - startIndex);
+			data[i] = std::stof(value.data());
+			startIndex = endIndex + 1;
+			endIndex = commaSeparatedString.find_first_of(separator, startIndex);
 		}
 	}
 
@@ -447,6 +465,22 @@ namespace Havtorn
 			for (U8 column = 0; column < 4; ++column)
 			{
 				if (M[row][column] != matrix(row, column))
+				{
+					equal = false;
+				}
+			}
+		}
+		return equal;
+	}
+
+	bool SMatrix::NearlyEqual(const SMatrix& matrix, const F32 tolerance) const
+	{
+		bool equal = true;
+		for (U8 row = 0; row < 4; ++row)
+		{
+			for (U8 column = 0; column < 4; ++column)
+			{
+				if (!UMath::NearlyEqual(M[row][column], matrix(row, column), tolerance))
 				{
 					equal = false;
 				}
@@ -796,8 +830,8 @@ namespace Havtorn
 
 	inline SMatrix SMatrix::LookToLH(const SVector& eyePosition, const SVector& eyeDirection, const SVector& upDirection)
 	{
-		assert(!eyeDirection.IsEqual(SVector::Zero));
-		assert(!upDirection.IsEqual(SVector::Zero));
+		if (eyeDirection.IsEqual(SVector::Zero) || upDirection.IsEqual(SVector::Zero))
+			return SMatrix::Identity;
 
 		// Original
 		SVector r2 = eyeDirection.GetNormalized();
@@ -862,6 +896,16 @@ namespace Havtorn
 		char buffer[256];
 		sprintf_s(buffer, "Matrix: t: %s, r: %s, s: %s", translation.ToString().c_str(), rotation.ToString().c_str(), scale.ToString().c_str());
 		return buffer;
+	}
+
+	inline std::string SMatrix::ToCommaSeparatedString() const
+	{
+		std::string returnValue;
+		returnValue.append(std::format("{:.2f}", data[0]));
+		for (U8 i = 1; i < 16; i++)
+			returnValue.append(std::format(",{:.2f}", data[i]));
+
+		return returnValue;
 	}
 
 	inline SMatrix SMatrix::PerspectiveFovLH(F32 fovAngleY, F32 aspectRatio, F32 nearZ, F32 farZ)

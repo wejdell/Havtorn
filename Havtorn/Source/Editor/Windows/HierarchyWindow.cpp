@@ -4,6 +4,8 @@
 #include "EditorManager.h"
 #include "EditorResourceManager.h"
 
+#include "EditActions/RemoveEntityEditAction.h"
+
 #include <Engine.h>
 #include <Scene/Scene.h>
 #include <ECS/Entity.h>
@@ -47,7 +49,7 @@ namespace Havtorn
 		// TODO.NW: Maybe make all windows resizeable? Currently only the viewport that's resizeable. Makes it so that you can't drag away into nothingness
 		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, EWindowFlag::NoResize, EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus}))
 		{
-			IsFocused = IsEnabled && GUI::IsWindowFocused() && GUI::IsWindowHovered();
+			IsHovered = IsEnabled && GUI::IsWindowHovered();
 
 			SHierarchyEditData editData;
 
@@ -322,7 +324,8 @@ namespace Havtorn
 							return SComponent::IsValid(metaDataComp) ? metaDataComp->Name.AsString() : "UNNAMED";
 						}
 					);
-					scenePointer->AddEntity(newEntityName);
+					SEntity newEntity = scenePointer->AddEntity(newEntityName);
+					UMetaCommandRouter::Push(SRemoveEntityEditAction::MakeEditActionCommand(Manager, newEntity, false));
 				}
 
 				if (GUI::MenuItem("Remove Scene"))

@@ -21,9 +21,6 @@ namespace Havtorn
 
 	SComponentViewResult SUICanvasComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
 	{
-		if (!GUI::TryOpenComponentView("UI Canvas"))
-			return SComponentViewResult();
-
 		SUICanvasComponent* canvasComponent = scene->GetComponent<SUICanvasComponent>(entityOwner);
 
 		GUI::Checkbox("Is Active", canvasComponent->IsActive);
@@ -67,7 +64,7 @@ namespace Havtorn
 						assetReferences.push_back(&ref);
 				}
 
-				element.State = GUI::ComboEnum("Preview State", element.State);
+				GUI::ComboEnum("Preview State", element.State);
 				if (element.State == EUIElementState::Count)
 					element.State = EUIElementState::Idle;
 
@@ -90,7 +87,7 @@ namespace Havtorn
 					}
 				}
 
-				element.BindingType = GUI::ComboEnum("Binding Type", element.BindingType);
+				GUI::ComboEnum("Binding Type", element.BindingType);
 				if (element.BindingType == EUIBindingType::NamedFunction)
 				{
 					std::string boundFunctionName = "Function Not Found";
@@ -154,12 +151,6 @@ namespace Havtorn
 
 	bool SUICanvasComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("UI Canvas Component"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->AddComponent<SUICanvasComponent>(entity);
 		scene->AddComponentEditorContext(entity, &SUICanvasComponentEditorContext::Context);
 		return true;
@@ -167,12 +158,6 @@ namespace Havtorn
 
 	bool SUICanvasComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("X##17"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->RemoveComponent<SUICanvasComponent>(entity);
 		scene->RemoveComponentEditorContext(entity, &SUICanvasComponentEditorContext::Context);
 		return true;

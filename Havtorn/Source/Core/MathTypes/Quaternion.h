@@ -57,6 +57,8 @@ namespace Havtorn
 		// used for non-uniform scaling transform.
 		inline SMatrix operator*(const SMatrix& matrix) const;
 
+		inline F32 Dot(const SQuaternion& other);
+
 		// Convert this quaternion to a vector of Euler angles in degrees
 		inline SVector ToEuler() const;
 		inline void ToAxisAndAngle(SVector& axis, F32& angle) const;
@@ -117,9 +119,11 @@ namespace Havtorn
 		W = UMath::Cos(halfAngleInRadians);
 	}
 
-	inline SQuaternion::SQuaternion(const SMatrix& M)
+	inline SQuaternion::SQuaternion(const SMatrix& m)
 	{
-		F32 trace = M.GetRotationMatrixTrace();
+		// Ken Shoemake's branching version (from GPU Gems)
+
+		const F32 trace = m.GetRotationMatrixTrace();
 
 		if (trace > 0.0f)
 		{
@@ -127,29 +131,55 @@ namespace Havtorn
 			W = 0.5f * s;
 
 			F32 t = 0.5f / s;
-			X = (M(2, 1) - M(1, 2)) * t;
-			Y = (M(0, 2) - M(2, 0)) * t;
-			Z = (M(1, 0) - M(0, 1)) * t;
+			X = (m(2, 1) - m(1, 2)) * t;
+			Y = (m(0, 2) - m(2, 0)) * t;
+			Z = (m(1, 0) - m(0, 1)) * t;
 		}
 		else
 		{
 			U8 i = 0;
-			if (M(1, 1) > M(0, 0)) i = 1;
-			if (M(2, 2) > M(i, i)) i = 2;
+			if (m(1, 1) > m(0, 0)) i = 1;
+			if (m(2, 2) > m(i, i)) i = 2;
 
 			static const U8 next[3] = { 1, 2, 0 };
 			U8 j = next[i];
 			U8 k = next[j];
 
-			F32 s = UMath::Sqrt((M(i, j) - (M(j, j) + M(k, k))) + 1.0f);
+			F32 s = UMath::Sqrt((m(i, i) - (m(j, j) + m(k, k))) + 1.0f);
 			this->operator[](i) = 0.5f * s;
 
-			F32 t = (s != 0.0f) ? 0.5f / s : s;
+			F32 t = (s > SMALL_NUMBER) ? 0.5f / s : 0.0f;
 
-			this->operator[](3) = (M(k, j) - M(j, k)) * t;
-			this->operator[](j) = (M(j, i) + M(i, j)) * t;
-			this->operator[](k) = (M(k, i) + M(i, k)) * t;
+			this->operator[](3) = (m(k, j) - m(j, k)) * t;
+			this->operator[](j) = (m(j, i) + m(i, j)) * t;
+			this->operator[](k) = (m(k, i) + m(i, k)) * t;
 		}
+
+		// Higher stability, with fewer discontinuities, less performant version
+		//F32 m00 = m(0, 0), m11 = m(1, 1), m22 = m(2, 2);
+
+		//F32 qw = UMath::Sqrt(UMath::Max(0.0f, 1.0f + m00 + m11 + m22)) * 0.5f;
+		//F32 qx = UMath::Sqrt(UMath::Max(0.0f, 1.0f + m00 - m11 - m22)) * 0.5f;
+		//F32 qy = UMath::Sqrt(UMath::Max(0.0f, 1.0f - m00 + m11 - m22)) * 0.5f;
+		//F32 qz = UMath::Sqrt(UMath::Max(0.0f, 1.0f - m00 - m11 + m22)) * 0.5f;
+
+		//// Fix signs using off-diagonal terms
+		//qx = UMath::CopySign(qx, m(2, 1) - m(1, 2));
+		//qy = UMath::CopySign(qy, m(0, 2) - m(2, 0));
+		//qz = UMath::CopySign(qz, m(1, 0) - m(0, 1));
+
+		//X = qx;
+		//Y = qy;
+		//Z = qz;
+		//W = qw;
+
+		//Normalize();
+
+		// To enforce continuity between quats, use 
+		/*if ((Quat.Dot(PrevQuat)) < 0.0f)
+		{
+			Quat = Quat.Inverse();
+		}*/
 	}
 
 	inline F32& SQuaternion::operator[](U8 index)
@@ -281,6 +311,11 @@ namespace Havtorn
 		}
 
 		return result;
+	}
+
+	inline F32 SQuaternion::Dot(const SQuaternion& other)
+	{
+		return (X * other.X) + (Y * other.Y) + (Z * other.Z) + (W * other.W);
 	}
 	
 	inline SVector SQuaternion::ToEuler() const

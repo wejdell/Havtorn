@@ -181,15 +181,15 @@ namespace Havtorn
 		RenderFunctions[ERenderCommandType::VolumetricBufferBlurPass] =			std::bind(&CRenderManager::VolumetricBlur, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::ForwardTransparency] =				std::bind(&CRenderManager::ForwardTransparency, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::ScreenSpaceSprite] =				std::bind(&CRenderManager::ScreenSpaceSprite, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::WorldSpaceSpriteEditorWidget] =		std::bind(&CRenderManager::WorldSpaceSpriteEditorWidget, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::Bloom] =							std::bind(&CRenderManager::RenderBloom, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::Tonemapping] =						std::bind(&CRenderManager::Tonemapping, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::WorldSpaceSpriteEditorWidget] =		std::bind(&CRenderManager::WorldSpaceSpriteEditorWidget, this, std::placeholders::_1);
+		RenderFunctions[ERenderCommandType::ScreenSpaceUISprite] =				std::bind(&CRenderManager::ScreenSpaceUISprite, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::PreDebugShape] =					std::bind(&CRenderManager::PreDebugShapes, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::PostToneMappingUseDepth] =			std::bind(&CRenderManager::PostTonemappingUseDepth, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::PostToneMappingIgnoreDepth] =		std::bind(&CRenderManager::PostTonemappingIgnoreDepth, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::DebugShapeUseDepth] =				std::bind(&CRenderManager::DebugShapes, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::DebugShapeIgnoreDepth] =			std::bind(&CRenderManager::DebugShapes, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::ScreenSpaceUISprite] =				std::bind(&CRenderManager::ScreenSpaceUISprite, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::AntiAliasing] =						std::bind(&CRenderManager::AntiAliasing, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::GammaCorrection] =					std::bind(&CRenderManager::GammaCorrection, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::TextureDraw] =						std::bind(&CRenderManager::TextureDraw, this, std::placeholders::_1);
@@ -556,11 +556,22 @@ namespace Havtorn
 		instanceData.Entities.emplace_back(screenSpaceTransform->Owner);
 	}
 
+	SPostProcessingBufferData CRenderManager::GetPostProcessingBufferData() const
+	{
+		return FullscreenRenderer.GetPostProcessBuffer();
+	}
+
+	void CRenderManager::SetPostProcessingBufferData(const SPostProcessingBufferData& data)
+	{
+		FullscreenRenderer.SetPostProcessBuffer(data);
+	}
+
 	void CRenderManager::SyncCrossThreadResources(const CWorld* world)
 	{
 		SwapRenderViews();
 		std::swap(SystemSkeletalAnimationBoneData, RendererSkeletalAnimationBoneData);
 		SetWorldMainCameraEntity(world->GetMainCamera());
+		SetWorldEditorRenderExemptEntity(world->GetEditorRenderExemptEntity());
 		SetWorldPlayState(world->GetWorldPlayState());
 		RenderStateManager.FlushShaderChanges();
 	}
@@ -568,6 +579,11 @@ namespace Havtorn
 	void CRenderManager::SetWorldMainCameraEntity(const SEntity& entity)
 	{
 		WorldMainCameraEntity = entity;
+	}
+
+	void CRenderManager::SetWorldEditorRenderExemptEntity(const SEntity& entity)
+	{
+		WorldEditorRenderExemptEntity = entity;
 	}
 
 	void CRenderManager::SetWorldPlayState(EWorldPlayState playState)
@@ -690,6 +706,16 @@ namespace Havtorn
 	U32 CRenderManager::GetNumberOfRenderViews() const
 	{
 		return STATIC_U32(GameThreadRenderViews->size());
+	}
+
+	void CRenderManager::SetRenderPass(const ERenderPass renderPass)
+	{
+		CurrentRunningRenderPass = renderPass;
+	}
+
+	ERenderPass CRenderManager::GetRenderPass() const
+	{
+		return CurrentRunningRenderPass;
 	}
 
 	void CRenderManager::Clear(SVector4 /*clearColor*/)
@@ -943,15 +969,13 @@ namespace Havtorn
 		const std::vector<SEntity>& entities = meshData.Entities;
 		InstancedEntityIDBuffer.BindBuffer(entities);
 
-		// TODO.NW: Figure out a place for this hard coded preview entity GUID (8000);
-		const bool renderingPreviewEntity = std::ranges::find(entities, SEntity(8000)) != entities.end();
+		const bool renderingPreviewEntity = std::ranges::find(entities, WorldEditorRenderExemptEntity) != entities.end();
 		if (renderingPreviewEntity)
 		{
-			// TODO.NW: Need to defer this render call to after the GBuffer is finished so we can draw it on top, without writing to the depth
-			//GBuffer.ReleaseRenderTargets();
-			//GBuffer.SetAsActiveTarget(nullptr, false);
+			GBuffer.ReleaseRenderTargets();
+			GBuffer.SetAsActiveTarget(&IntermediateDepth, false);
 			GBufferDataInstanced(command);
-			//GBuffer.SetAsActiveTarget(&IntermediateDepth, true);
+			GBuffer.SetAsActiveTarget(&IntermediateDepth, true);
 			return;
 		}
 
@@ -1112,6 +1136,18 @@ namespace Havtorn
 
 		const std::vector<SEntity>& entities = meshData.Entities;
 		InstancedEntityIDBuffer.BindBuffer(entities);
+
+		// TODO.NW: Fix this as part of next render fixup pass. Static meshes are highest prio anyway. 
+		// Meshes don't show up so might be issue with non-editor version
+		const bool renderingPreviewEntity = std::ranges::find(entities, WorldEditorRenderExemptEntity) != entities.end();
+		if (renderingPreviewEntity)
+		{
+			GBuffer.ReleaseRenderTargets();
+			GBuffer.SetAsActiveTarget(&IntermediateDepth, false);
+			GBufferSkeletalInstanced(command);
+			GBuffer.SetAsActiveTarget(&IntermediateDepth, true);
+			return;
+		}
 
 		const std::vector<SMatrix>& boneMatrices = meshData.Bones;
 		BoneBuffer.BindBuffer(boneMatrices);
@@ -1850,50 +1886,6 @@ namespace Havtorn
 		RenderStateManager.VSSetConstantBuffer(0, CDataBuffer::Null);
 	}
 
-	inline void CRenderManager::WorldSpaceSpriteEditorWidget(const SRenderCommand& command)
-	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewID))
-			return;
-
-		ID3D11RenderTargetView* renderTargets[3] = { RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.GetRenderTargetView(), GBuffer.GetEditorWorldPositionRenderTarget(), GBuffer.GetEditorDataRenderTarget() };
-		RenderStateManager.OMSetRenderTargets(3, renderTargets, EditorWidgetDepth.GetDepthStencilView());
-		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::Disable);
-		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
-
-		const auto& textureUID = command.U32s[0];
-		SSpriteInstanceData& spriteData = RenderThreadRenderViews->at(command.RenderViewID).WorldSpaceSpriteInstanceData[textureUID];
-
-		const std::vector<SMatrix>& matrices = spriteData.Transforms;
-		InstancedTransformBuffer.BindBuffer(matrices);
-
-		const std::vector<SVector4>& uvRects = spriteData.UVRects;
-		InstancedUVRectBuffer.BindBuffer(uvRects);
-
-		const std::vector<SVector4>& colors = spriteData.Colors;
-		InstancedColorBuffer.BindBuffer(colors);
-
-		const std::vector<SEntity>& entities = spriteData.Entities;
-		InstancedEntityIDBuffer.BindBuffer(entities);
-
-		RenderStateManager.IASetTopology(ETopologies::PointList);
-		RenderStateManager.IASetInputLayout(EInputLayoutType::TransUVRectColorEntity2);
-
-		RenderStateManager.VSSetShader(EVertexShaders::SpriteInstancedEditor);
-		RenderStateManager.GSSetShader(EGeometryShaders::SpriteWorldSpaceEditor);
-		RenderStateManager.PSSetShader(EPixelShaders::SpriteWorldSpaceEditorWidget);
-
-		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
-		command.RenderTextures[0].SetAsPSResourceOnSlot(0);
-
-		const std::vector<CDataBuffer> buffers = { InstancedTransformBuffer, InstancedUVRectBuffer, InstancedColorBuffer, InstancedEntityIDBuffer };
-		constexpr U32 strides[4] = { sizeof(SMatrix), sizeof(SVector4), sizeof(SVector4), sizeof(SEntity) };
-		constexpr U32 offsets[4] = { 0, 0, 0, 0 };
-		RenderStateManager.IASetVertexBuffers(0, 4, buffers, strides, offsets);
-		RenderStateManager.IASetIndexBuffer(CDataBuffer::Null);
-		RenderStateManager.DrawInstanced(1, STATIC_U32(matrices.size()), 0, 0);
-		CRenderManager::NumberOfDrawCallsThisFrame++;
-	}
-
 	void CRenderManager::RenderBloom(const SRenderCommand& command)
 	{
 		if (!RenderThreadRenderViews->contains(command.RenderViewID))
@@ -1956,6 +1948,50 @@ namespace Havtorn
 		TonemappedTexture.SetAsActiveTarget();
 		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(EPixelShaders::FullscreenTonemap, RenderStateManager);
+	}
+
+	inline void CRenderManager::WorldSpaceSpriteEditorWidget(const SRenderCommand& command)
+	{
+		if (!RenderThreadRenderViews->contains(command.RenderViewID) || CurrentRunningRenderPass == ERenderPass::Game)
+			return;
+
+		ID3D11RenderTargetView* renderTargets[3] = { TonemappedTexture.GetRenderTargetView(), GBuffer.GetEditorWorldPositionRenderTarget(), GBuffer.GetEditorDataRenderTarget() };
+		RenderStateManager.OMSetRenderTargets(3, renderTargets, EditorWidgetDepth.GetDepthStencilView());
+		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::Disable);
+		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
+
+		const auto& textureUID = command.U32s[0];
+		SSpriteInstanceData& spriteData = RenderThreadRenderViews->at(command.RenderViewID).WorldSpaceSpriteInstanceData[textureUID];
+
+		const std::vector<SMatrix>& matrices = spriteData.Transforms;
+		InstancedTransformBuffer.BindBuffer(matrices);
+
+		const std::vector<SVector4>& uvRects = spriteData.UVRects;
+		InstancedUVRectBuffer.BindBuffer(uvRects);
+
+		const std::vector<SVector4>& colors = spriteData.Colors;
+		InstancedColorBuffer.BindBuffer(colors);
+
+		const std::vector<SEntity>& entities = spriteData.Entities;
+		InstancedEntityIDBuffer.BindBuffer(entities);
+
+		RenderStateManager.IASetTopology(ETopologies::PointList);
+		RenderStateManager.IASetInputLayout(EInputLayoutType::TransUVRectColorEntity2);
+
+		RenderStateManager.VSSetShader(EVertexShaders::SpriteInstancedEditor);
+		RenderStateManager.GSSetShader(EGeometryShaders::SpriteWorldSpaceEditor);
+		RenderStateManager.PSSetShader(EPixelShaders::SpriteWorldSpaceEditorWidget);
+
+		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
+		command.RenderTextures[0].SetAsPSResourceOnSlot(0);
+
+		const std::vector<CDataBuffer> buffers = { InstancedTransformBuffer, InstancedUVRectBuffer, InstancedColorBuffer, InstancedEntityIDBuffer };
+		constexpr U32 strides[4] = { sizeof(SMatrix), sizeof(SVector4), sizeof(SVector4), sizeof(SEntity) };
+		constexpr U32 offsets[4] = { 0, 0, 0, 0 };
+		RenderStateManager.IASetVertexBuffers(0, 4, buffers, strides, offsets);
+		RenderStateManager.IASetIndexBuffer(CDataBuffer::Null);
+		RenderStateManager.DrawInstanced(1, STATIC_U32(matrices.size()), 0, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
 	}
 
 	inline void CRenderManager::ScreenSpaceUISprite(const SRenderCommand& command)
@@ -2082,6 +2118,9 @@ namespace Havtorn
 
 	inline void CRenderManager::DebugShapes(const SRenderCommand& command)
 	{
+		if (CurrentRunningRenderPass == ERenderPass::Game)
+			return;
+
 		DebugShapeObjectBufferData.ToWorldFromObject = command.Matrices[0];
 		DebugShapeObjectBufferData.Color = command.Vectors[0];
 		DebugShapeObjectBufferData.HalfThickness = command.F32s[0] /** 0.5f?*/;
@@ -2271,6 +2310,7 @@ namespace Havtorn
 
 	bool SRenderCommandComparer::operator()(const SRenderCommand& a, const SRenderCommand& b) const
 	{
-		return 	STATIC_U16(a.Type) > STATIC_U16(b.Type);
+
+		return 	STATIC_U16(a.Type) > STATIC_U16(b.Type) || (STATIC_U16(a.Type) == STATIC_U16(b.Type) && a.InternalPriority > b.InternalPriority);
 	}
 }

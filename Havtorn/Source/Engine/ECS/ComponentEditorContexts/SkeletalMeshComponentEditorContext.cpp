@@ -20,9 +20,6 @@ namespace Havtorn
 
     SComponentViewResult SSkeletalMeshComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!GUI::TryOpenComponentView("SkeletalMesh"))
-			return SComponentViewResult();
-
 		STransformComponent* transform = scene->GetComponent<STransformComponent>(entityOwner);
 		if (!SComponent::IsValid(transform))
 			return SComponentViewResult();
@@ -69,12 +66,6 @@ namespace Havtorn
 
 	bool SSkeletalMeshComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("Skeletal Mesh Component"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->AddComponent<SSkeletalMeshComponent>(entity);
 		scene->AddComponentEditorContext(entity, &SSkeletalMeshComponentEditorContext::Context);
 		return true;
@@ -82,12 +73,6 @@ namespace Havtorn
 
 	bool SSkeletalMeshComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("X##12"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->RemoveComponent<SSkeletalMeshComponent>(entity);
 		scene->RemoveComponentEditorContext(entity, &SSkeletalMeshComponentEditorContext::Context);
 		return true;

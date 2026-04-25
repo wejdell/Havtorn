@@ -4,6 +4,7 @@
 #include "EditorWindow.h"
 #include "EditorManager.h"
 
+#include <Assets/AssetReference.h>
 #include <GUI.h>
 
 namespace Havtorn
@@ -29,23 +30,32 @@ namespace Havtorn
 		bool Render(CScene* assetDragScene, const U64 renderTargetGUID);
 
 		void UpdatePreviewEntity(CScene* scene, const SEditorAssetRepresentation* assetRepresentation);
+		void UpdatePreviewMaterial(CScene* scene, const SEditorAssetRepresentation* assetRepresentation);
 		void DeliverAssetDrag(CScene* toScene, const SEditorAssetRepresentation* assetRepresentation);
 
-		void OnMouseMove(const SInputAxisPayload payload);
-	private:
+		SEntity GetEntityOnPixel() const;
 		SVector4 GetWorldPositionOnPixel() const;
+		SVector GetClosestVertexPositionOnPixel(const SEntity& forEntity) const;
+		void SetContextMenuEntity(const SEntity& entity);
+
+	private:
+		// Returns U64::Max if invalid
+		U64 GetEditorDataIndexOnPixel() const;
+		void ClearMaterialRefs(const bool reassignLastMaterial);
+		std::vector<SMaterialVertex> FindLocalVertices(CScene* scene, const SEntity& entity) const;
 
 	private:
 		F32 ViewportMenuHeight = 16.0f;
 		SVector2<F32> RenderedSceneDimensions = SVector2<F32>::Zero;
 		SVector2<F32> RenderedScenePosition = SVector2<F32>::Zero;
-		SVector2<F32> MousePosition = SVector2<F32>::Zero;
 
 		std::vector<SSnappingOption> SnappingOptions;
 
 		bool IsPlayButtonEngaged = false;
 		bool IsPauseButtonEngaged = false;
-		bool WasPreviewPositionValid = true;
-		SVector4 PreviousPreviewPosition = SVector4::Zero;
+		SEntity ContextMenuEntity = SEntity::Null;
+		SAssetReference* LastMaterialReference = nullptr;
+		SAssetReference LastMaterialReferenceValue;
+		bool OpenedEntityContextMenu = false;
 	};
 }

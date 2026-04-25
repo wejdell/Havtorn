@@ -19,9 +19,6 @@ namespace Havtorn
 
 	SComponentViewResult SCameraComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
 	{
-		if (!GUI::TryOpenComponentView("Camera"))
-			return SComponentViewResult();
-
 		SCameraComponent* cameraComp = scene->GetComponent<SCameraComponent>(entityOwner);
 		if (!SComponent::IsValid(cameraComp))
 			return SComponentViewResult();
@@ -82,12 +79,6 @@ namespace Havtorn
 
 	bool SCameraComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("Camera Component"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->AddComponent<SCameraComponent>(entity);
 		scene->AddComponentEditorContext(entity, &SCameraComponentEditorContext::Context);
 		return true;
@@ -95,21 +86,8 @@ namespace Havtorn
 
 	bool SCameraComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("X##1"))
-		{
-			//GUI::PopID();
-			return false;
-		}
-
-		if (scene == nullptr || !entity.IsValid())
-		{
-			//GUI::PopID();
-			return false;
-		}
-
 		scene->RemoveComponent<SCameraComponent>(entity);
 		scene->RemoveComponentEditorContext(entity, &SCameraComponentEditorContext::Context);
-		//GUI::PopID();
 		return true;
 	}
 }

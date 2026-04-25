@@ -14,15 +14,7 @@ namespace Havtorn
 		explicit SAssetReference(const std::string& filePath)
 		{
 			FilePath = UGeneralUtils::ConvertToPlatformAgnosticPath(filePath);
-			U32 prime = 0x1000193;
-			UID = 0x811c9dc5;
-
-			for (U64 i = 0; i < FilePath.size(); ++i)
-			{
-				U8 value = FilePath[i];
-				UID = UID ^ value;
-				UID *= prime;
-			}
+			UID = UGeneralUtils::HashString(FilePath);
 		}
 
 		bool operator==(const SAssetReference& other) const { return UID == other.UID && FilePath == other.FilePath; }

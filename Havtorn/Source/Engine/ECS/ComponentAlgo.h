@@ -24,6 +24,10 @@ namespace Havtorn
 		static SCameraData GetCameraData(const SEntity& cameraEntity, const std::vector<Ptr<CScene>>& scenes);
 
 		static CScene* GetContainingScene(const SEntity& entity, const std::vector<Ptr<CScene>>& scenes);
+
+		static CScene* GetSceneByPath(const std::string& path, const std::vector<Ptr<CScene>>& scenes);
+
+		static U32 CalculateAggregateMaterialID(const SMaterialComponent* materialComponent);
 	};
 
 	template<typename T>
@@ -81,5 +85,26 @@ namespace Havtorn
 		}
 
 		return nullptr;
+	}
+
+	inline CScene* UComponentAlgo::GetSceneByPath(const std::string& path, const std::vector<Ptr<CScene>>& scenes)
+	{
+		std::string name = UGeneralUtils::ExtractFileBaseNameFromPath(path);
+		for (const Ptr<CScene>& scene : scenes)
+		{
+			if (scene->SceneName.AsString() == name.data())
+				return scene.get();
+		}
+
+		return nullptr;
+	}
+
+	inline U32 UComponentAlgo::CalculateAggregateMaterialID(const SMaterialComponent* materialComponent)
+	{
+		U32 materialID = 0;
+		for (const SAssetReference& assetRef : materialComponent->AssetReferences)
+			materialID += assetRef.UID;
+
+		return materialID;
 	}
 }

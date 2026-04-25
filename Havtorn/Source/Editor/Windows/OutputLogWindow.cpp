@@ -8,6 +8,7 @@
 #include <GUI.h>
 #include <Color.h>
 #include <PlatformManager.h>
+#include <CommandLine.h>
 
 namespace Havtorn
 {
@@ -18,7 +19,6 @@ namespace Havtorn
         ULog::AddLogContext(this);
 
         ClearLog();
-        memset(InputBuffer, 0, sizeof(InputBuffer));
 
         // "CLASSIFY" is here to provide the test case where "C"+[tab] completes to "CL" and display multiple matches.
         Commands.push_back("HELP");
@@ -48,7 +48,7 @@ namespace Havtorn
             return;
         }
 
-        IsFocused = IsEnabled && GUI::IsWindowFocused() && GUI::IsWindowHovered();
+        IsHovered = IsEnabled && GUI::IsWindowHovered();
 
         // TODO: display items starting from the bottom
 
@@ -149,23 +149,29 @@ namespace Havtorn
         GUI::EndChild();
         GUI::Separator();
 
+        // TODO.NW: Clean up rest of this class, too much left from ImGui example. Need a closer look at the clipping 
         // Command-line
         bool shouldReclaimFocus = false;
-        //ImGuiInputTextFlags inputTextFlags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_EscapeClearsAll | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
-        //if (GUI::InputText("Input", InputBuffer, ARRAY_SIZE(InputBuffer), inputTextFlags, [](ImGuiInputTextCallbackData* data)
-        //    {
-        //        COutputLogWindow* window = (COutputLogWindow*)data->UserData;
-        //        return window->TextEditCallback(data);
-        //    }, (void*)this))
-        //{
-        //    char* s = InputBuffer;
-        //    Strtrim(s);
-        //    if (s[0])
-        //        ExecCommand(s);
-        //    strcpy_s(s, sizeof(char), "");
-        //    shouldReclaimFocus = true;
-        //}
+        GUI::InputText("Input", InputBuffer);
+        if (GUI::IsItemDeactivatedAfterEdit() && !InputBuffer.empty())
+        {
+            const std::string url = UCommandLine::GetDeepLinkURL();
+            const I64 urlSize = url.size();
+            if (InputBuffer.substr(0, urlSize) == url)
+            {
+                const std::string command = InputBuffer.substr(urlSize, InputBuffer.size() - urlSize);
+                UMetaCommandRouter::Push(SMetaCommand(command));
+            }
+            else
+            {
+                shouldReclaimFocus = true;
+            }
 
+            // TODO.NW: ExecCommand
+
+            InputBuffer.clear();
+        }
+        
         // Auto-focus on window apparition
         GUI::SetItemDefaultFocus();
         if (shouldReclaimFocus)

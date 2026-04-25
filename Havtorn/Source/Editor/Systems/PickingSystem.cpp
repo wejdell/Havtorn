@@ -12,6 +12,7 @@
 #include <MathTypes/Matrix.h>
 #include <ECS/Components/TransformComponent.h>
 #include <ECS/Components/CameraComponent.h>
+#include <ECS/ComponentAlgo.h>
 #include <Graphics/Debug/DebugDrawUtility.h>
 #include <Input/InputMapper.h>
 #include <Input/InputTypes.h>
@@ -26,6 +27,7 @@ namespace Havtorn
 		: Manager(editorManager)
 	{
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::PickEditorEntity).AddMember(this, &CPickingSystem::OnMouseClick);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ContextPickEditorEntity).AddMember(this, &CPickingSystem::OnMouseClick);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ControlPickEditorEntity).AddMember(this, &CPickingSystem::OnMouseClick);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ShiftPickEditorEntity).AddMember(this, &CPickingSystem::OnMouseClick);
 		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MousePositionHorizontal).AddMember(this, &CPickingSystem::OnMouseMove);
@@ -35,21 +37,34 @@ namespace Havtorn
 	void CPickingSystem::Update(std::vector<Ptr<CScene>>& scenes)
 	{
 		SEntity mainCamera = GEngine::GetWorld()->GetMainCamera();
-		for (Ptr<CScene>& scene : scenes)
-		{
-			SCameraComponent* sceneCamera = scene->GetComponent<SCameraComponent>(mainCamera);
-			STransformComponent* sceneCameraTransform = scene->GetComponent<STransformComponent>(mainCamera);
+		if (SComponent::IsValid(EditorCameraTransform) && EditorCameraTransform->Owner == mainCamera)
+			return;
 
-			if (sceneCamera != nullptr && sceneCameraTransform != nullptr)
-			{
-				EditorCameraComponent = sceneCamera;
-				EditorCameraTransform = sceneCameraTransform;
-			}
-		}
+		SCameraData cameraData = UComponentAlgo::GetCameraData(mainCamera, scenes);
+		EditorCameraTransform = cameraData.TransformComponent;
 	}
 
-	void CPickingSystem::OnMouseClick(const SInputActionPayload payload) const
+	void CPickingSystem::OnMouseClick(const SInputActionPayload payload)
 	{
+		if (payload.Event == EInputActionEvent::ContextPickEditorEntity)
+		{
+			if (!SComponent::IsValid(EditorCameraTransform))
+				return;
+
+			if (payload.IsPressed)
+				ContextPickStartingCameraMatrix = EditorCameraTransform->Transform.GetMatrix();
+
+			if (payload.IsReleased)
+			{
+				// NW: Track whether FreeCam was meaningfully used during press and release of context pick button
+				SMatrix newCameraMatrix = EditorCameraTransform->Transform.GetMatrix();
+				if (ContextPickStartingCameraMatrix.NearlyEqual(newCameraMatrix))
+					WorldSpaceContextPick();
+			}
+
+			return;
+		}
+
 		if (payload.IsPressed)
 			WorldSpacePick(payload.Event == EInputActionEvent::ControlPickEditorEntity || payload.Event == EInputActionEvent::ShiftPickEditorEntity);
 	}
@@ -65,27 +80,14 @@ namespace Havtorn
 
 	void CPickingSystem::WorldSpacePick(const bool modifierHeld) const
 	{
-		// TODO.NW: Set up focus and hovering rules. With overlapping windows, only the one in front should be considered hovered. If there's no window in the way, we would like not 
-		// to click twice on the viewport to focus it and then be able to pick on the next click though.
-		const CViewportWindow* viewport = Manager->GetEditorWindow<CViewportWindow>();
-		if (Manager->GetIsOverGizmo() || Manager->GetIsWorldPlaying() || !viewport->GetIsFocused() || Manager->GetIsModalOpen() || EditorCameraComponent == nullptr || EditorCameraTransform == nullptr)
+		CWorld* world = GEngine::GetWorld();
+		CViewportWindow* viewport = Manager->GetEditorWindow<CViewportWindow>();
+		SCameraData cameraData = UComponentAlgo::GetCameraData(world->GetMainCamera(), world->GetActiveScenes());
+
+		if (Manager->GetIsOverGizmo() || Manager->GetIsWorldPlaying() || !viewport->GetIsHovered() || Manager->GetIsModalOpen() || !cameraData.IsValid())
 			return;
 
-		const SVector2<F32> renderedSceneDimensions = viewport->GetRenderedSceneDimensions();
-		const SVector2<F32> renderedScenePosition = viewport->GetRenderedScenePosition();
-
-		const SVector2<U16> resolution = Manager->GetPlatformManager()->GetResolution();
-		const SVector2<F32> rectRelativeMousePos = SVector2((MousePosition.X - renderedScenePosition.X) / renderedSceneDimensions.X, (MousePosition.Y - renderedScenePosition.Y) / renderedSceneDimensions.Y);
-
-		const SVector2<F32> fullscreenMousePos = { UMath::Ceil(STATIC_F32(resolution.X) * rectRelativeMousePos.X), UMath::Ceil(STATIC_F32(resolution.Y) * rectRelativeMousePos.Y - 12.0f) };
-		
-		if (!UMath::IsWithin(fullscreenMousePos.X, 0.0f, STATIC_F32(resolution.X)) || !UMath::IsWithin(fullscreenMousePos.Y, 0.0f, STATIC_F32(resolution.Y)))
-			return;
-
-		const U64 dataIndex = STATIC_U64(fullscreenMousePos.X) + STATIC_U64(fullscreenMousePos.Y) * STATIC_U64(resolution.X);
-		const U64 pickedEntityGUID = Manager->GetRenderManager()->GetEntityGUIDFromData(dataIndex);
-
-		SEntity candidate = SEntity(pickedEntityGUID);
+		SEntity candidate = viewport->GetEntityOnPixel();
 		if (!candidate.IsValid())
 			return;
 
@@ -95,5 +97,12 @@ namespace Havtorn
 			Manager->AddSelectedEntity(candidate);
 		else if (!Manager->IsEntitySelected(candidate))
 			Manager->SetSelectedEntity(candidate);
+	}
+
+	void CPickingSystem::WorldSpaceContextPick()
+	{
+		// TODO.NW: Might make sense to move the base functionality of this system to the viewport window? And let this system handle the input layer only
+		CViewportWindow* viewport = Manager->GetEditorWindow<CViewportWindow>();
+		viewport->SetContextMenuEntity(viewport->GetEntityOnPixel());
 	}
 }

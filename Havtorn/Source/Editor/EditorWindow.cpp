@@ -15,7 +15,7 @@ namespace Havtorn
 
 	void CWindow::UpdateState()
 	{
-		IsFocused = IsEnabled ? IsFocused : false;
+		IsHovered = IsEnabled ? IsHovered : false;
 
 		if (!WasEnabled && IsEnabled)
 			OnEnable();

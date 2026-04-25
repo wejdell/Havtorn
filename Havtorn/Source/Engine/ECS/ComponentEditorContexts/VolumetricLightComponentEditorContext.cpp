@@ -14,9 +14,6 @@ namespace Havtorn
 
     SComponentViewResult SVolumetricLightComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!GUI::TryOpenComponentView("VolumetricLight"))
-			return SComponentViewResult();
-
 		SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(entityOwner);
 
 		GUI::PushID("##volumetric");
@@ -34,12 +31,6 @@ namespace Havtorn
 
 	bool SVolumetricLightComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("Volumetric Light Component"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->AddComponent<SVolumetricLightComponent>(entity);
 		scene->AddComponentEditorContext(entity, &SVolumetricLightComponentEditorContext::Context);
 		return true;
@@ -47,12 +38,6 @@ namespace Havtorn
 
 	bool SVolumetricLightComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("X##19"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->RemoveComponent<SVolumetricLightComponent>(entity);
 		scene->RemoveComponentEditorContext(entity, &SVolumetricLightComponentEditorContext::Context);
 		return true;

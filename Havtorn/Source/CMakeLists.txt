@@ -98,6 +98,10 @@ set(CORE_FILES
     ${CORE_FOLDER}MathTypes/Transform.h
     ${CORE_FOLDER}MathTypes/Vector.cpp
     ${CORE_FOLDER}MathTypes/Vector.h
+    ${CORE_FOLDER}MetaCommand/MetaCommand.cpp
+    ${CORE_FOLDER}MetaCommand/MetaCommand.h
+    ${CORE_FOLDER}MetaCommand/MetaCommandRouter.cpp
+    ${CORE_FOLDER}MetaCommand/MetaCommandRouter.h
     ${CORE_FOLDER}BitSet.h
     ${CORE_FOLDER}Color.cpp
     ${CORE_FOLDER}Color.h
@@ -745,6 +749,8 @@ set(GAME_FILES
     ${GAME_FOLDER}Ghosty/GhostyComponentEditorContext.h
     ${GAME_FOLDER}Ghosty/GhostySystem.cpp
     ${GAME_FOLDER}Ghosty/GhostySystem.h
+    ${GAME_FOLDER}GameDeepLinkParser.cpp
+    ${GAME_FOLDER}GameDeepLinkParser.h
     ${GAME_FOLDER}GameManager.cpp
     ${GAME_FOLDER}GameManager.h
     ${GAME_FOLDER}GameProcess.cpp
@@ -802,6 +808,14 @@ set(EDITOR_FILES
     ${EDITOR_FOLDER}AuthoringTools/PrefabTool.h
     ${EDITOR_FOLDER}AuthoringTools/ScriptTool.cpp
     ${EDITOR_FOLDER}AuthoringTools/ScriptTool.h
+    ${EDITOR_FOLDER}EditActions/EditAction.cpp
+    ${EDITOR_FOLDER}EditActions/EditAction.h
+    ${EDITOR_FOLDER}EditActions/BrowseFolderEditAction.cpp
+    ${EDITOR_FOLDER}EditActions/BrowseFolderEditAction.h
+    ${EDITOR_FOLDER}EditActions/MoveTransformEditAction.cpp
+    ${EDITOR_FOLDER}EditActions/MoveTransformEditAction.h
+    ${EDITOR_FOLDER}EditActions/RemoveEntityEditAction.cpp
+    ${EDITOR_FOLDER}EditActions/RemoveEntityEditAction.h
     ${EDITOR_FOLDER}Systems/EditorRenderSystem.cpp
     ${EDITOR_FOLDER}Systems/EditorRenderSystem.h
     ${EDITOR_FOLDER}Systems/PickingSystem.cpp
@@ -832,6 +846,10 @@ set(EDITOR_FILES
     ${EDITOR_FOLDER}Windows/SpriteAnimatorGraphNodeWindow.h
     ${EDITOR_FOLDER}Windows/ViewportWindow.cpp
     ${EDITOR_FOLDER}Windows/ViewportWindow.h
+    ${EDITOR_FOLDER}EditHistory.cpp
+    ${EDITOR_FOLDER}EditHistory.h
+    ${EDITOR_FOLDER}EditorDeepLinkParser.cpp
+    ${EDITOR_FOLDER}EditorDeepLinkParser.h
     ${EDITOR_FOLDER}EditorManager.cpp
     ${EDITOR_FOLDER}EditorManager.h
     ${EDITOR_FOLDER}EditorProcess.cpp

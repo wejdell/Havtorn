@@ -779,6 +779,7 @@ namespace Havtorn
             gbufferBlendDesc.RenderTarget[i].RenderTargetWriteMask = 0x0f;
         }
         gbufferBlendDesc.RenderTarget[4].BlendEnable = false;
+        gbufferBlendDesc.RenderTarget[5].BlendEnable = false;
 
         ID3D11BlendState* alphaBlendState;
         ENGINE_HR_MESSAGE(device->CreateBlendState(&alphaBlendDesc, &alphaBlendState), "Alpha Blend State could not be created.");

@@ -137,6 +137,7 @@ namespace Havtorn
 
 	public:
 		static bool CORE_API Exists(const std::string& path);
+		static bool CORE_API IsEmpty(const std::string& path);
 		static U64 CORE_API GetFileSize(const std::string& filePath);
 		
 		static std::string CORE_API GetExecutableRootPath();

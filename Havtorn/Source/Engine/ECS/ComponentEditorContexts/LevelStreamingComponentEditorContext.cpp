@@ -17,9 +17,6 @@ namespace Havtorn
 
 	SComponentViewResult SLevelStreamingComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
 	{
-		if (!GUI::TryOpenComponentView("Level Streaming"))
-			return SComponentViewResult();
-
 		SLevelStreamingComponent* component = scene->GetComponent<SLevelStreamingComponent>(entityOwner);
 		if (!component || (component && !component->Owner.IsValid()))
 			return SComponentViewResult();
@@ -83,12 +80,6 @@ namespace Havtorn
 
 	bool SLevelStreamingComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("Level Streaming Component"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->AddComponent<SLevelStreamingComponent>(entity);
 		scene->AddComponentEditorContext(entity, &SLevelStreamingComponentEditorContext::Context);
 		return true;
@@ -96,13 +87,6 @@ namespace Havtorn
 
 	bool SLevelStreamingComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		// TODO.NW: Push IDs here instead of having to this labeling
-		if (!GUI::Button("X##20"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->RemoveComponent<SLevelStreamingComponent>(entity);
 		scene->RemoveComponentEditorContext(entity, &SLevelStreamingComponentEditorContext::Context);
 		return true;
