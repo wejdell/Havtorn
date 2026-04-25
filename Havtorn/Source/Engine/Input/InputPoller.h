@@ -1,6 +1,7 @@
 // Copyright 2026 Team Havtorn. All Rights Reserved.
 
 #pragma once
+#include "InputTypes.h"
 #include "../Engine/HexRune/Pin.h"
 
 union SDL_Event;
@@ -15,11 +16,10 @@ namespace Havtorn
 		U64 UID;
 
 		HexRune::EInputParamType ParamType;
-		std::variant<INPUT_PARAM_VARIANTS> Func;
+		//std::variant<INPUT_PARAM_VARIANTS> Func;
 
 		EInputKey Key;
 		EInputAxis Axis;
-
 	};
 
 	class CInputPoller
