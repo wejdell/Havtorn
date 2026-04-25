@@ -56,6 +56,8 @@ namespace Havtorn
 		RegisterNonTrivialComponent<SLevelStreamingComponent, SLevelStreamingComponentEditorContext>(220, 10);
 		RegisterNonTrivialComponent<SPrefabComponent, SPrefabComponentEditorContext>(230, 10);
 		RegisterNonTrivialComponent<SAbilityComponent, SAbilityComponentEditorContext>(240, 10);
+		RegisterNonTrivialComponent<SHexCommandComponent, SHexCommandComponentEditorContext>(250, 10);
+
 		//RegisterTrivialComponent<SSequencerComponent, SSequencerComponentEditorContext>(typeID++, 0);
 
 		return true;
