@@ -17,5 +17,6 @@ namespace Havtorn
 
 	void SComponent::IsDeleted(CScene* /*fromScene*/)
 	{
+		Owner = SEntity::Null;
 	}
 }

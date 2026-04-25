@@ -15,9 +15,6 @@ namespace Havtorn
 
     SComponentViewResult SSpotLightComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!GUI::TryOpenComponentView("SpotLight"))
-			return SComponentViewResult();
-
 		SSpotLightComponent* spotLightComp = scene->GetComponent<SSpotLightComponent>(entityOwner);
 
 		GUI::Checkbox("Is Active", spotLightComp->IsActive);
@@ -44,12 +41,6 @@ namespace Havtorn
 
 	bool SSpotLightComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("Spotlight Component"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->AddComponent<SSpotLightComponent>(entity);
 		scene->AddComponentEditorContext(entity, &SSpotLightComponentEditorContext::Context);
 		return true;
@@ -57,12 +48,6 @@ namespace Havtorn
 
 	bool SSpotLightComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("X##13"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->RemoveComponent<SSpotLightComponent>(entity);
 		scene->RemoveComponentEditorContext(entity, &SSpotLightComponentEditorContext::Context);
 		return true;

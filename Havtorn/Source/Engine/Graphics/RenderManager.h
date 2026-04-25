@@ -34,6 +34,7 @@ namespace Havtorn
 	enum class ERenderPass
 	{
 		All,
+		Game,
 		Depth,
 		GBufferAlbedo,
 		GBufferNormals,
@@ -126,9 +127,13 @@ namespace Havtorn
 		ENGINE_API void AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewID);
 		ENGINE_API void AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SUIElement& uiElement, const U64 renderViewID);
 
+		ENGINE_API SPostProcessingBufferData GetPostProcessingBufferData() const;
+		ENGINE_API void SetPostProcessingBufferData(const SPostProcessingBufferData& data);
+
 	public:
 		void SyncCrossThreadResources(const CWorld* world);
 		void SetWorldMainCameraEntity(const SEntity& entity);
+		void SetWorldEditorRenderExemptEntity(const SEntity& entity);
 		void SetWorldPlayState(EWorldPlayState playState);
 		[[nodiscard]] ENGINE_API CRenderTexture* GetRenderTargetTexture(const U64 renderViewID) const;
 		ENGINE_API void PushRenderCommand(SRenderCommand command, const U64 renderViewID);
@@ -142,6 +147,9 @@ namespace Havtorn
 		const SVector2<U16>& GetCurrentWindowResolution() const;
 		const SVector2<F32>& GetShadowAtlasResolution() const;
 		ENGINE_API U32 GetNumberOfRenderViews() const;
+
+		ENGINE_API void SetRenderPass(const ERenderPass renderPass);
+		ENGINE_API ERenderPass GetRenderPass() const;
 
 	public:
 		ENGINE_API static U32 NumberOfDrawCallsThisFrame;
@@ -401,6 +409,7 @@ namespace Havtorn
 
 		// NW: Keep our own properties here for use on render thread
 		SEntity WorldMainCameraEntity = SEntity::Null;
+		SEntity WorldEditorRenderExemptEntity = SEntity::Null;
 		EWorldPlayState WorldPlayState = EWorldPlayState::Stopped;
 
 		void* EntityPerPixelData = nullptr;

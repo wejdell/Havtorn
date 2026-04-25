@@ -11,11 +11,16 @@
 #include <Scene/Scene.h>
 #include <Assets/AssetRegistry.h>
 #include <GeneralUtilities.h>
+#include <Graphics/Debug/DebugDrawUtility.h>
 
 #include "Windows/ViewportWindow.h"
+#include "Windows/HierarchyWindow.h"
+#include "Windows/AssetBrowserWindow.h"
 #include "AuthoringTools/PrefabTool.h"
 #include "Windows/SpriteAnimatorGraphNodeWindow.h"
 #include "EditorResourceManager.h"
+
+#include "EditActions/MoveTransformEditAction.h"
 
 #include <FileSystem.h>
 #include <GUI.h>
@@ -49,7 +54,7 @@ namespace Havtorn
 			return;
 		}
 
-		IsFocused = IsEnabled && GUI::IsWindowFocused() && GUI::IsWindowHovered();
+		IsHovered = IsEnabled && GUI::IsWindowHovered();
 
 		std::vector<SEntity> selectedEntities = Manager->GetSelectedEntities();
 
@@ -123,10 +128,26 @@ namespace Havtorn
 		{
 			GUI::Separator();
 
-			if (context->RemoveComponent(entity, owningScene))
-				continue;
+			GUI::PushID(context->GetComponentName());
+			if (GUI::Button("X"))
+			{
+				if (owningScene != nullptr && entity.IsValid())
+				{
+					context->RemoveComponent(entity, owningScene);
+					GUI::PopID();
+					continue;
+				}
+			}
+			GUI::PopID();
 
 			GUI::SameLine();
+
+			if (!GUI::TryOpenComponentView(context->GetComponentName()))
+			{
+				GUI::Dummy({ GUI::DummySizeX, GUI::DummySizeY });
+				continue;
+			}
+
 			SComponentViewResult result = context->View(entity, owningScene);
 
 			// TODO.NR: Could make this a enum-function map, but would be good to set up clear rules for how this should work.
@@ -156,14 +177,14 @@ namespace Havtorn
 
 		GUI::Separator();
 		if (GUI::Button("Add Component", SVector2<F32>(GUI::GetContentRegionAvail().X, 0)))
-			GUI::OpenPopup("Add Component Modal");
+			GUI::OpenPopup("Add Component Popup");
 
-		OpenAddComponentModal(entity, owningScene);
+		OpenAddComponentPopup(entity, owningScene);
 	}
 
 	void CInspectorWindow::UpdateTransformGizmo(const SComponentViewResult& result)
 	{
-		if (Manager->GetIsFreeCamActive())
+		if (Manager->GetIsFreeCamActive() || Manager->GetRenderManager()->GetRenderPass() == ERenderPass::Game)
 			return;
 
 		STransformComponent* viewedTransformComp = static_cast<STransformComponent*>(result.ComponentViewed);
@@ -226,20 +247,128 @@ namespace Havtorn
 		// delta matrix one frame later on all the other entities. This probably doesn't matter in editor.
 		if (viewedTransformComp->Owner == Manager->GetSelectedEntities().back())
 		{
-			SVector gizmoSnapping = Manager->GetCurrentGizmoSnapping().Snapping;
-			F32 snappingData[] = { gizmoSnapping.X, gizmoSnapping.Y, gizmoSnapping.Z };
-			GUI::GizmoManipulate(viewMatrix.Inverse().data, projectionMatrix.data, Manager->GetCurrentGizmo(), Manager->GetCurrentGizmoSpace(), transformMatrix.data, DeltaMatrix.data, snappingData);
+			SMatrix originalTransform = transformMatrix;
+
+			if (Manager->GetIsPivotMovingActive())
+			{
+				// Move pivot
+				CViewportWindow* viewport = Manager->GetEditorWindow<CViewportWindow>();
+				const SVector vertexWorldPosition = viewport->GetClosestVertexPositionOnPixel(viewedTransformComp->Owner);
+				PivotWorldSpace = vertexWorldPosition;
+				PivotOffset = PivotWorldSpace - originalTransform.GetTranslation();
+			}
+			else if (!Manager->GetIsPivotOffsetSet())
+			{
+				// No offset pivot
+				PivotWorldSpace = originalTransform.GetTranslation();
+				PivotOffset = SVector::Zero;
+			}
+
+			SMatrix gizmoMatrix = transformMatrix;
+			gizmoMatrix.SetTranslation(PivotWorldSpace);
+
+			const SVector gizmoSnapping = Manager->GetCurrentGizmoSnapping().Snapping;
+			const F32 snappingData[] = { gizmoSnapping.X, gizmoSnapping.Y, gizmoSnapping.Z };
+			GUI::GizmoManipulate(viewMatrix.Inverse().data, projectionMatrix.data, Manager->GetCurrentGizmo(), Manager->GetCurrentGizmoSpace(), gizmoMatrix.data, DeltaMatrix.data, snappingData);
+
+			// TODO.NW: Do this generally, and make links for all selected entities
+			IsUsingGizmo = GUI::IsUsingGizmo();
+			if (IsUsingGizmo && !WasUsingGizmo)
+			{
+				// Start accumulating delta
+				FullDeltaMatrix = SMatrix::Identity;
+
+				InitialTranslation = originalTransform.GetTranslation();
+				InitialRotation = SQuaternion(originalTransform.GetRotationMatrix());
+				
+				// NW: Scale is not additive
+				const SVector scale = originalTransform.GetScale();
+				FullDeltaMatrix.SetScale(scale);
+				
+				PivotOffset = InitialRotation * PivotOffset * scale.Reciprocal();
+				InitialOffset = PivotOffset;
+			}
+
+			if (IsUsingGizmo)
+				FullDeltaMatrix *= DeltaMatrix;
+
+			if (Manager->GetIsVertexSnappingActive())
+			{
+				RunVertexSnapping(transformMatrix, viewedTransformComp->Owner);
+			}
+			else if (Manager->GetIsGridSnappingActive())
+			{
+				RunGridSnapping(transformMatrix);
+
+				const SVector pos = transformMatrix.GetTranslation() + PivotOffset;
+				const SVector roundedPos = { UMath::Round(pos.X, 1.0f), UMath::Round(pos.Y, 1.0f), UMath::Round(pos.Z, 1.0f) };
+				GDebugDraw::AddGrid(roundedPos, SVector::Zero, SColor::Grey, -1.0f, false, 0.005f, false);
+			}
+			else if (IsUsingGizmo)
+			{
+				// TODO.NW: Let quats be the ground truth of rotation. Move away from Matrices in Transforms and cache them only for sending to the GPU. Transforms should be scale+quat+trans
+
+				const SMatrix rotationMatrix = FullDeltaMatrix.GetRotationMatrix();
+				const SQuaternion newRotation = (SQuaternion(rotationMatrix) * InitialRotation).Inverse();
+				PivotOffset = newRotation * InitialOffset * FullDeltaMatrix.GetScale();
+
+				ETransformGizmo gizmo = Manager->GetCurrentGizmo();
+				if (gizmo == ETransformGizmo::Translate)
+				{
+					transformMatrix.SetTranslation(InitialTranslation + FullDeltaMatrix.GetTranslation());
+					PivotWorldSpace = transformMatrix.GetTranslation() + PivotOffset;
+				}
+				else if (gizmo == ETransformGizmo::Rotate)
+				{
+					const SVector newPosition = PivotWorldSpace - PivotOffset;
+					SMatrix::Recompose(newPosition, newRotation, transformMatrix.GetScale(), transformMatrix);
+				}
+				else if (gizmo == ETransformGizmo::Scale)
+				{
+					SMatrix::Recompose(transformMatrix.GetTranslation(), newRotation, FullDeltaMatrix.GetScale(), transformMatrix);
+				}
+			}
 		}
 		else
 		{
 			transformMatrix *= DeltaMatrix;
 		}
 		viewedTransformComp->Transform.SetMatrix(transformMatrix);
-		
+
 		GUI::PopID();
-		
+
+		if (!IsUsingGizmo && WasUsingGizmo && FullDeltaMatrix != SMatrix::Identity)
+		{
+			PivotWorldSpace = transformMatrix.GetTranslation() + PivotOffset;
+			UMetaCommandRouter::Push(SMoveTransformEditAction::MakeEditActionCommand(Manager, viewedTransformComp, FullDeltaMatrix));
+		}
+
+		WasUsingGizmo = IsUsingGizmo;
+
 		if (mainCameraData.IsValid() && !workingInPrefabScene)
 			mainCameraData.TransformComponent->Transform.SetMatrix(viewMatrix);
+	}
+
+	void CInspectorWindow::RunVertexSnapping(SMatrix& gizmoTransform, const SEntity& viewedEntity)
+	{	
+		if (DeltaMatrix == SMatrix::Identity)
+			return;
+		
+		CViewportWindow* viewport = Manager->GetEditorWindow<CViewportWindow>();
+		SEntity hoveredEntity = viewport->GetEntityOnPixel();
+		if (!hoveredEntity.IsValid() || hoveredEntity == viewedEntity)
+			return;
+		
+		SVector vertexPos = viewport->GetClosestVertexPositionOnPixel(hoveredEntity);
+		gizmoTransform.SetTranslation(vertexPos - PivotOffset);
+	}
+
+	void CInspectorWindow::RunGridSnapping(SMatrix& gizmoTransform)
+	{
+		const SVector snapping = Manager->GetCurrentGizmoSnapping().Snapping;
+		SVector pos = gizmoTransform.GetTranslation();
+		pos = { UMath::Round(pos.X, snapping.X), UMath::Round(pos.Y, snapping.Y), UMath::Round(pos.Z, snapping.Z) };
+		gizmoTransform.SetTranslation(pos - PivotOffset);
 	}
 
 	void CInspectorWindow::ViewManipulation(SMatrix& outCameraView, const SVector2<F32>& windowPosition, const SVector2<F32>& windowSize)
@@ -279,7 +408,7 @@ namespace Havtorn
 			const I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
 			const std::string modalName = "Select " + GetAssetTypeName(result.AssetType) + " Asset";
 
-			SAssetPickResult assetPickResult = GUI::AssetPickerDropdownFilter(assetName.c_str(), GetAssetTypeDetailName(result.AssetType).c_str(), Manager->GetTextureResourceFromAssetRep(assetRep.get()), Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::GetFromSource), "Assets", columnCount, Manager->GetAssetFilteredInspectFunction(), result.AssetType);
+			SAssetPickResult assetPickResult = GUI::AssetPickerDropdownFilter(assetName.c_str(), GetAssetTypeDetailName(result.AssetType).c_str(), Manager->GetTextureResourceFromAssetRep(assetRep.get()), Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::GetFromSource), Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::FindIcon), "Assets", columnCount, Manager->GetAssetFilteredInspectFunction(), result.AssetType);
 			SAssetReference* currentReference = (result.AssetReferences)[AssetPickedIndex];
 
 			if (assetPickResult.State == EAssetPickerState::Active)
@@ -302,7 +431,6 @@ namespace Havtorn
 					pickedAsset = Manager->GetAssetRepFromDirEntry(assetPickResult.PickedEntry).get();
 				else if (assetPickResult.State == EAssetPickerState::GetFromSelected)
 				{
-					// TODO.NW: Figure out what to do about new script components. With an invalid asset ref to begin with they seem to not load in correctly
 					SEditorAssetRepresentation* selectedAssetInBrowser = Manager->GetSelectedAsset();
 					if (selectedAssetInBrowser != nullptr && (selectedAssetInBrowser->AssetType == assetRep->AssetType || selectedAssetInBrowser->AssetType == result.AssetType))
 						pickedAsset = Manager->GetSelectedAsset();
@@ -322,6 +450,10 @@ namespace Havtorn
 
 				AssetPickedIndex = 0;
 				Manager->SetIsModalOpen(false);
+			}
+			else if (assetPickResult.State == EAssetPickerState::FindInBrowser)
+			{
+				Manager->GetEditorWindow<CAssetBrowserWindow>()->BrowseTo(assetRep.get());
 			}
 			else if (assetPickResult.State == EAssetPickerState::Inactive)
 				Manager->SetIsModalOpen(false);
@@ -354,18 +486,44 @@ namespace Havtorn
 		GUI::Separator();
 	}
 
-	void CInspectorWindow::OpenAddComponentModal(const SEntity& entity, CScene* owningScene)
+	void CInspectorWindow::OpenAddComponentPopup(const SEntity& entity, CScene* owningScene)
 	{
-		if (!GUI::BeginPopupModal("Add Component Modal", NULL, { EWindowFlag::AlwaysAutoResize }))
+		if (!GUI::BeginPopup("Add Component Popup"))
 			return;
 
-		Manager->SetIsModalOpen(true);
+		if (owningScene == nullptr || !entity.IsValid())
+			return;
 
-		if (GUI::BeginTable("NewComponentTypeTable", 1))
+		SGuiTextFilter filter = SGuiTextFilter();
+		filter.Draw("Search", 0); // TODO.NW: Figure out a nicer way of setting the width
+
+		if (GUI::BeginChild("NewComponentTypeTable", SVector2<F32>(0.0f, 200.0f)))
 		{
 			for (const SComponentEditorContext* context : owningScene->GetComponentEditorContexts())
 			{
-				GUI::TableNextColumn();
+				const char* newComponentName = context->GetComponentName();
+				
+				bool hasComponent = false;
+				for (const SComponentEditorContext* existingContext : owningScene->GetComponentEditorContexts(entity))
+				{
+					if (existingContext->GetComponentName() == newComponentName)
+					{
+						hasComponent = true;
+						break;
+					}
+				}
+				
+				// TODO.NW: Should make a choice here whether to allow multiple components of the same type, 
+				// or continue working under the assumption that every component can handle all the data it needs for 
+				// its owning entity.
+				if (hasComponent)
+					continue;
+
+				if (!filter.PassFilter(newComponentName))
+					continue;
+
+				if (!GUI::Selectable(newComponentName))
+					continue;
 
 				if (context->AddComponent(entity, owningScene))
 				{
@@ -374,16 +532,10 @@ namespace Havtorn
 				}
 			}
 
-			GUI::EndTable();
+			GUI::EndChild();
 		}
 
-		if (GUI::Button("Cancel", SVector2<F32>(GUI::GetContentRegionAvail().X, 0))) 
-		{
-			Manager->SetIsModalOpen(false);
-			GUI::CloseCurrentPopup(); 
-		}
-
-		GUI::EndPopup();
+		GUI::EndPopup();			
 	}
 
 	void CInspectorWindow::UpdateAssetContextMenu()

@@ -24,14 +24,14 @@ namespace Havtorn
 		inline const char* Name() { return DisplayName; }
 		inline void SetEnabled(const bool enable) { IsEnabled = enable; }
 		inline const bool GetEnabled() const { return IsEnabled; }
-		inline const bool GetIsFocused() const { return IsFocused; }
+		inline const bool GetIsHovered() const { return IsHovered; }
 
 	protected:
 		// TODO.AG: Test WeakPtr 
 		/*Havtorn::Ref<Havtorn::CEditorManager>*/CEditorManager* Manager = nullptr;
 		bool IsEnabled = true;
 		bool WasEnabled = false;
-		bool IsFocused = false;
+		bool IsHovered = false;
 
 	private:
 		const char* DisplayName = "";

@@ -10,6 +10,7 @@
 #include <algorithm>
 
 #include <Log.h>
+#include <MetaCommand/MetaCommandRouter.h>
 #include <CommandLine.h>
 #include <FileSystem.h>
 #include <GeneralUtilities.h>
@@ -101,7 +102,9 @@ namespace Havtorn
 			COPYDATASTRUCT* cds = reinterpret_cast<COPYDATASTRUCT*>(lParam);
 			std::string stringData(reinterpret_cast<char*>(cds->lpData), cds->cbData / sizeof(char));
 			UCommandLine::Parse(stringData);
-			HV_LOG_INFO("DeepLink: %s", UCommandLine::GetDeepLinkCommand().c_str());
+			
+			if (UCommandLine::HasDeepLinkCommand())
+				UMetaCommandRouter::Push(SMetaCommand(UCommandLine::GetDeepLinkCommand()));
 		} break;
 		}
 
@@ -192,7 +195,8 @@ namespace Havtorn
 		HV_LOG_INFO("Created link '%s' for target '%s'", linkPath.c_str(), objectPath.c_str());
 #endif // HV_PLATFORM_WINDOWS
 
-		HV_LOG_INFO("DeepLink command: %s", UCommandLine::GetDeepLinkCommand().c_str());
+		if (UCommandLine::HasDeepLinkCommand())
+			UMetaCommandRouter::Push(SMetaCommand(UCommandLine::GetDeepLinkCommand()));
 
 		const std::vector<std::string> commandLineParams = UCommandLine::GetFreeParameters();
 		for (auto param : commandLineParams)

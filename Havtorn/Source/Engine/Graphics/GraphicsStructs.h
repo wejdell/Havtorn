@@ -170,6 +170,12 @@ namespace Havtorn
 		SVector4 Padding;
 	};
 
+	struct SMaterialVertex
+	{
+		SVector LocalVertex = SVector::Zero;
+		U16 MaterialIndex = 0;
+	};
+
 	struct SDrawCallData
 	{
 		U32 IndexCount = 0;

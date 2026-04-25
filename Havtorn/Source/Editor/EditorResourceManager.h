@@ -39,6 +39,10 @@ namespace Havtorn
 		GetFromSource,
 		PrefabIcon,
 		PrefabWidgetIcon,
+		FindIcon,
+		MoveGizmoIcon,
+		RotateGizmoIcon,
+		ScaleGizmoIcon,
 		Count,
 		None = Count
 	};

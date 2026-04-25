@@ -30,6 +30,7 @@ namespace Havtorn
 		std::vector<SDrawCallData> DrawCallData = {};
 		std::vector<SSkeletalMeshBone> BindPoseBones = {};
 		std::vector<SSkeletalMeshNode> Nodes = {};
+		std::vector<SMaterialVertex> LocalVertexPositions = {};
 		SVector BoundsMin = SVector(FLT_MAX);
 		SVector BoundsMax = SVector(-FLT_MAX);
 		SVector BoundsCenter = SVector(0.0f);

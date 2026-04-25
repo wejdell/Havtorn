@@ -438,7 +438,19 @@ namespace Havtorn
 
 		case EEditorTexture::PrefabWidgetIcon:
 			return ResourceAssetPath + prefix + "PrefabWidgetIcon" + extension;
+
+		case EEditorTexture::FindIcon:
+			return ResourceAssetPath + prefix + "FindIcon" + extension;
+
+		case EEditorTexture::MoveGizmoIcon:
+			return ResourceAssetPath + prefix + "MoveGizmoIcon" + extension;
 		
+		case EEditorTexture::RotateGizmoIcon:
+			return ResourceAssetPath + prefix + "RotateGizmoIcon" + extension;
+
+		case EEditorTexture::ScaleGizmoIcon:
+			return ResourceAssetPath + prefix + "ScaleGizmoIcon" + extension;
+
 		case EEditorTexture::Count:
 		default:
 			return std::string();

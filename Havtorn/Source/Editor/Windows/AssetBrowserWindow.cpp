@@ -6,6 +6,8 @@
 #include "DockSpaceWindow.h"
 #include "EditorResourceManager.h"
 
+#include "EditActions/BrowseFolderEditAction.h"
+
 #include <Engine.h>
 #include <Timer.h>
 #include <MathTypes/EngineMath.h>
@@ -43,7 +45,7 @@ namespace Havtorn
 	{
 		if (GUI::Begin(Name(), nullptr, { EWindowFlag::NoMove, /*EWindowFlag::NoResize, */EWindowFlag::NoCollapse, EWindowFlag::NoBringToFrontOnFocus}))
 		{
-			IsFocused = IsEnabled && GUI::IsWindowFocused() && GUI::IsWindowHovered();
+			IsHovered = IsEnabled && GUI::IsWindowHovered();
 
 			intptr_t folderIconID = Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::FolderIcon);
 
@@ -58,7 +60,7 @@ namespace Havtorn
 				if (GUI::ArrowButton("GoBackDir", EGUIDirection::Left))
 				{
 					if (CurrentDirectory != std::filesystem::path(DefaultAssetPath))
-						CurrentDirectory = CurrentDirectory.parent_path();
+						SetCurrentPath(CurrentDirectory.parent_path());
 				}
 				GUI::SameLine();
 				Filter.Draw("Search", 180);
@@ -114,40 +116,46 @@ namespace Havtorn
 
 			if (GUI::BeginPopupContextWindow())
 			{
-				if (IsSelectionHovered)
+				if (HoveredAsset.has_value())
 				{
-					SEditorAssetRepresentation* selectedAssetRep = Manager->GetSelectedAsset();
-					if (selectedAssetRep != nullptr)
+					SEditorAssetRepresentation* hoveredAssetRep = HoveredAsset.value();
+					if (hoveredAssetRep != nullptr)
 					{
-						const std::filesystem::directory_entry& directoryEntry = selectedAssetRep->DirectoryEntry;
+						const std::filesystem::directory_entry& directoryEntry = hoveredAssetRep->DirectoryEntry;
 
 						if (GUI::MenuItem("Rename", "F2"))
-							selectedAssetRep->IsBeingNamed = true;
+							hoveredAssetRep->IsBeingNamed = true;
 
 						if (GUI::MenuItem("Copy Asset Path"))
 							GUI::CopyToClipboard(directoryEntry.path().string().c_str());
 					
+						if (GUI::MenuItem("Copy Focus Asset Link"))
+							GUI::CopyToClipboard(Manager->GetAssetFocusLink(hoveredAssetRep).data());
+						if (GUI::IsItemHovered())
+							GUI::SetTooltip("Copies a shareable link for focusing this asset");
+
 						if (GUI::MenuItem("Delete Asset"))
 						{
 							std::filesystem::path pathToRemove = directoryEntry.path();
 							Manager->RemoveAssetRep(directoryEntry);
-							//std::filesystem::remove(pathToRemove);
 							UFileSystem::Remove(pathToRemove.string());
 						}
 
 						// TODO.NW: It would be nice with some sort of attribute to check
 						// the enum value against (e.g. SourceFileBased), may not exist on our current version though
-						if (selectedAssetRep->AssetType != EAssetType::Material
-							&& selectedAssetRep->AssetType != EAssetType::Script
-							&& selectedAssetRep->AssetType != EAssetType::Scene
-							&& selectedAssetRep->AssetType != EAssetType::Sequencer
+						if (hoveredAssetRep->AssetType != EAssetType::Material
+							&& hoveredAssetRep->AssetType != EAssetType::Script
+							&& hoveredAssetRep->AssetType != EAssetType::Scene
+							&& hoveredAssetRep->AssetType != EAssetType::Sequencer
+							&& hoveredAssetRep->AssetType != EAssetType::Prefab
+							&& hoveredAssetRep->AssetType != EAssetType::InputAsset
 							)
 						{
-							if (selectedAssetRep->IsSourceWatched)
+							if (hoveredAssetRep->IsSourceWatched)
 							{
 								if (GUI::MenuItem("Stop Watching Source Changes"))
 								{
-									selectedAssetRep->IsSourceWatched = false;
+									hoveredAssetRep->IsSourceWatched = false;
 									GEngine::GetAssetRegistry()->StopSourceFileWatch(SAssetReference(directoryEntry.path().string()));
 								}
 							}
@@ -155,11 +163,40 @@ namespace Havtorn
 							{
 								if (GUI::MenuItem("Start Watching Source Changes"))
 								{
-									selectedAssetRep->IsSourceWatched = true;
+									hoveredAssetRep->IsSourceWatched = true;
 									GEngine::GetAssetRegistry()->StartSourceFileWatch(SAssetReference(directoryEntry.path().string()));
 								}
 							}
 						}
+					}
+				}
+				else if (HoveredFolder.has_value())
+				{
+					if (!UFileSystem::IsEmpty(HoveredFolder.value().path().string()))
+					{
+						GUI::TextDisabled("Rename");
+						if (GUI::IsItemHovered())
+							GUI::SetTooltip("Can't yet rename folders containing items. Please move or remove the contents so they can be redirected.");
+					}
+					else
+					{
+						if (GUI::MenuItem("Rename", "F2"))
+							FolderBeingRenamed = HoveredFolder;
+					}
+
+					if (GUI::MenuItem("Copy Path"))
+						GUI::CopyToClipboard(HoveredFolder.value().path().string().c_str());
+					
+					if (!UFileSystem::IsEmpty(HoveredFolder.value().path().string()))
+					{
+						GUI::TextDisabled("Delete Folder");
+						if (GUI::IsItemHovered())
+							GUI::SetTooltip("Can't yet delete folders containing items. Please move or remove the contents.");
+					}
+					else
+					{
+						if (GUI::MenuItem("Delete Folder"))
+							UFileSystem::Remove(HoveredFolder.value().path().string());
 					}
 				}
 				else
@@ -170,12 +207,32 @@ namespace Havtorn
 						DirectoryToSaveTo = CurrentDirectory.string();
 						NewAssetName = "NewAsset";
 					}
+
+					if (GUI::MenuItem("Create Folder"))
+					{
+						std::string newFolderName = CurrentDirectory.string() + "/NewFolder";
+
+						std::vector<std::string> folderNames;
+						for (const auto& entry : std::filesystem::directory_iterator(CurrentDirectory))
+						{
+							if (!entry.is_directory())
+								continue;
+
+							folderNames.push_back(UGeneralUtils::ConvertToPlatformAgnosticPath(entry.path().string()));
+						}
+
+						newFolderName = UGeneralUtils::GetNonCollidingString(newFolderName, folderNames, [](const std::string& folderName){ return folderName;});
+						UFileSystem::AddDirectory(newFolderName);
+					}
 				}
 
 				GUI::EndPopup();
 			}
 			else
-				IsSelectionHovered = false;
+			{
+				HoveredAsset.reset();
+				HoveredFolder.reset();
+			}
 
 			GUI::EndChild();
 		}
@@ -244,14 +301,23 @@ namespace Havtorn
 	{
 	}
 
-	/*
-	Folder Structure Navigation
-		Open Modal Popup where you can navigate choose where to save thingy or something
+	void CAssetBrowserWindow::BrowseTo(SEditorAssetRepresentation* assetRep)
+	{
+		if (assetRep == nullptr || !UFileSystem::Exists(assetRep->DirectoryEntry.path().parent_path().string()))
+			return;
 
-	Save new file dialoguehtrt
+		SetCurrentPath(assetRep->DirectoryEntry.path().parent_path());
+		Manager->SetSelectedAsset(assetRep);
+	}
 
-	<applause.h>
-	*/
+	void CAssetBrowserWindow::SetCurrentPath(const std::filesystem::path& path, const bool pushCommand)
+	{
+		if (pushCommand)
+			UMetaCommandRouter::Push(SBrowseFolderEditAction::MakeEditActionCommand(CurrentDirectory, path));
+		
+		CurrentDirectory = path;
+	}
+
 	void CAssetBrowserWindow::OnDragDropFiles(const std::vector<std::string> filePaths)
 	{
 		FilePathsToImport = filePaths;
@@ -272,8 +338,18 @@ namespace Havtorn
 	{
 		if (payload.IsPressed && Manager->GetSelectedAsset() != nullptr)
 		{
-			Manager->GetSelectedAsset()->IsBeingNamed = true;
 			// TODO.NW: Figure out a way to close the context menu
+			Manager->GetSelectedAsset()->IsBeingNamed = true;
+			return;
+		}
+
+		const std::optional<std::filesystem::directory_entry> selectedFolder = Manager->GetSelectedFolder();
+		if (payload.IsPressed && selectedFolder.has_value())
+		{
+			if (UFileSystem::IsEmpty(selectedFolder.value().path().string()))
+				FolderBeingRenamed = selectedFolder;
+			else
+				HV_LOG_WARN("Can't yet rename folders containing items. Please move or remove the contents so they can be redirected.");
 		}
 	}
 
@@ -424,7 +500,7 @@ namespace Havtorn
 		Manager->SetIsModalOpen(true);
 
 
-		AssetTypeToCreate = GUI::ComboEnum("Asset Type", AssetTypeToCreate);
+		GUI::ComboEnum("Asset Type", AssetTypeToCreate);
 
 		if (AssetTypeToCreate == EAssetType::None)
 			AssetTypeToCreate = EAssetType::StaticMesh;
@@ -644,7 +720,7 @@ namespace Havtorn
 					if (payload.IsDelivery)
 					{
 						// TODO.NW: Should we move to the destination directory when moving things? Maybe auto-select the new asset rep?
-						CurrentDirectory = entry.path();
+						SetCurrentPath(entry.path());
 
 						std::string oldPath = payloadAssetRep->DirectoryEntry.path().string().c_str();
 						std::string newPath = (entry.path() / payloadAssetRep->DirectoryEntry.path().filename()).string().c_str();
@@ -663,7 +739,7 @@ namespace Havtorn
 
 			if (GUI::IsItemClicked())
 			{
-				CurrentDirectory = entry.path();
+				SetCurrentPath(entry.path());
 			}
 
 			GUI::SameLine();
@@ -694,15 +770,93 @@ namespace Havtorn
 
 		if (entry.is_directory())
 		{
-			if (GUI::ImageButton("FolderIcon", folderIconID, { GUI::ThumbnailSizeX, GUI::ThumbnailSizeY }))
+			// TODO.NW: This is mostly a duplicate of GUI::RenderAssetCard. The logic is slightly different though so will generalize this at a different time
+			SVector2<F32> cardStartPos = GUI::GetCursorPos();
+			SVector2<F32> framePadding = GUI::GetStyleVar(EStyleVar::FramePadding);
+
+			SVector2<F32> cardSize = { GUI::ThumbnailSizeX + framePadding.X * 0.5f, GUI::ThumbnailSizeY + framePadding.Y * 0.5f };
+			cardSize.Y *= 1.6f;
+			SVector2<F32> thumbnailSize = { GUI::ThumbnailSizeX + framePadding.X * 0.5f, GUI::ThumbnailSizeY + framePadding.Y * 0.5f + 4.0f };
+
+			std::optional<std::filesystem::directory_entry> selectedFolder = Manager->GetSelectedFolder();
+			SColor borderColor = SColor(10);
+			if (selectedFolder.has_value() && entry == selectedFolder.value())
+				borderColor = GUI::GetStyleColor(EStyleColor::HeaderHovered);
+
+			// TODO.NW: Can't seem to get the leftmost line to show correctly. Maybe need to start the table as usual and then offset inwards?
+			constexpr F32 borderThickness = 1.0f;
+			GUI::SetCursorPos(cardStartPos + SVector2<F32>(-1.0f * borderThickness));
+			GUI::AddRectFilled(GUI::GetCursorScreenPos(), cardSize + SVector2<F32>(2.0f * borderThickness), borderColor);
+			GUI::SetCursorPos(cardStartPos);
+			GUI::AddRectFilled(GUI::GetCursorScreenPos(), cardSize, SColor(65));
+			GUI::SetCursorPos(cardStartPos);
+			GUI::AddRectFilled(GUI::GetCursorScreenPos(), thumbnailSize, SColor(40));
+			GUI::SetCursorPos(cardStartPos);
+
+			if (GUI::Selectable("", false, {ESelectableFlag::AllowDoubleClick, ESelectableFlag::AllowOverlap}, cardSize))
 			{
-				CurrentDirectory = entry.path();
+				if (GUI::IsDoubleClick())
+				{
+					SetCurrentPath(entry.path());
+					Manager->SetSelectedFolder({});
+				}
+				else
+				{
+					Manager->SetSelectedFolder(entry);
+				}
 			}
+			if (GUI::IsItemHovered())
+			{
+				HoveredFolder = entry;
+			}
+
+			GUI::SetCursorPos(cardStartPos + SVector2<F32>(1.0f, 0.0f));
+			GUI::Image(folderIconID, { GUI::ThumbnailSizeX, GUI::ThumbnailSizeY }, SVector2<F32>(0.0f), SVector2<F32>(1.0f), SColor::White);
+
+			SColor detailColor = SColor::White;
+			detailColor.A = SColor::ToU8Range(0.5f);
+			GUI::AddRectFilled(GUI::GetCursorScreenPos(), SVector2<F32>(cardSize.X, 2.0f), detailColor);
+
+			GUI::OffsetCursorPos(SVector2<F32>(2.0f, 4.0f));
 
 			auto relativePath = std::filesystem::relative(entry.path());
 			std::string filenameString = relativePath.filename().string();
 
-			GUI::Text(filenameString.c_str());
+			GUI::PushClipRect(GUI::GetCursorScreenPos(), cardSize - framePadding);
+			if (FolderBeingRenamed.has_value() && FolderBeingRenamed.value() == entry)
+			{
+				GUI::SetKeyboardFocusHere();
+
+				std::optional<std::string> result;
+				std::string newAssetName = filenameString;
+				GUI::PushID(filenameString.c_str());
+				if (GUI::InputText("", newAssetName))
+				{
+					if (GUI::IsItemDeactivatedAfterEdit())
+						result = newAssetName;
+				}
+
+				if (GUI::IsItemDeactivated() && !result.has_value())
+					result = filenameString;
+
+				GUI::PopID();
+
+				if (result.has_value())
+				{
+					FolderBeingRenamed.reset();
+
+					std::string oldPath = UGeneralUtils::ConvertToPlatformAgnosticPath(entry.path().string().c_str());
+					std::string newPath = UGeneralUtils::ConvertToPlatformAgnosticPath(CurrentDirectory.string()) + "/" + result.value();
+
+					std::filesystem::rename(oldPath, newPath);
+				}
+			}
+			else
+			{
+				GUI::Text(filenameString.c_str());
+			}
+
+			GUI::PopClipRect();
 			if (GUI::IsItemHovered())
 				GUI::SetTooltip(filenameString.c_str());
 		}
@@ -710,7 +864,14 @@ namespace Havtorn
 		{
 			const auto& rep = Manager->GetAssetRepFromDirEntry(entry);
 			SEditorAssetRepresentation* selectedAsset = Manager->GetSelectedAsset();
-			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), rep.get() == selectedAsset, rep->IsBeingNamed, Manager->GetTextureResourceFromAssetRep(rep.get()), GetAssetTypeDetailName(rep->AssetType).c_str(), GetAssetTypeColor(rep->AssetType), rep->IsSourceWatched ? SColor::Orange : SColor(10), rep.get(), sizeof(SEditorAssetRepresentation));
+			
+			SColor borderColor = SColor(10);
+			if (rep.get() == selectedAsset)
+				borderColor = GUI::GetStyleColor(EStyleColor::HeaderHovered);
+			if (rep->IsSourceWatched)
+				borderColor = SColor::Magenta;
+			
+			SRenderAssetCardResult result = GUI::RenderAssetCard(rep->Name.c_str(), false, rep->IsBeingNamed, Manager->GetTextureResourceFromAssetRep(rep.get()), GetAssetTypeDetailName(rep->AssetType).c_str(), GetAssetTypeColor(rep->AssetType), borderColor, rep.get(), sizeof(SEditorAssetRepresentation));
 
 			if (result.IsClicked)
 			{
@@ -733,10 +894,7 @@ namespace Havtorn
 					AnimatingThumbnailAsset = rep.get();
 				}
 
-				if (rep.get() == selectedAsset)
-				{
-					IsSelectionHovered = true;
-				}
+				HoveredAsset = rep.get();
 			}
 
 			if (result.NewAssetName.has_value())

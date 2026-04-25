@@ -26,6 +26,7 @@ namespace Havtorn
 		std::string Name = "";
 		U8 NumberOfMaterials = 0;
 		std::vector<SDrawCallData> DrawCallData = {};
+		std::vector<SMaterialVertex> LocalVertexPositions = {};
 		SVector BoundsMin = SVector(FLT_MAX);
 		SVector BoundsMax = SVector(-FLT_MAX);
 		SVector BoundsCenter = SVector(0.0f);

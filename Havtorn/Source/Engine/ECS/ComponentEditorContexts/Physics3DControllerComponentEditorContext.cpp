@@ -14,9 +14,6 @@ namespace Havtorn
 
     SComponentViewResult SPhysics3DControllerComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!GUI::TryOpenComponentView("Physics3D Controller"))
-			return {};
-
 		SPhysics3DControllerComponent* physicsComponent = scene->GetComponent<SPhysics3DControllerComponent>(entityOwner);
 
 		GUI::SliderEnum("Controller Type", physicsComponent->ControllerType, { "Box", "Capsule" });
@@ -47,12 +44,6 @@ namespace Havtorn
 
 	bool SPhysics3DControllerComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("Physics 3D Controller Component"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->AddComponent<SPhysics3DControllerComponent>(entity);
 		scene->AddComponentEditorContext(entity, &SPhysics3DControllerComponentEditorContext::Context);
 		return true;
@@ -60,12 +51,6 @@ namespace Havtorn
 
 	bool SPhysics3DControllerComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("X##9"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->RemoveComponent<SPhysics3DControllerComponent>(entity);
 		scene->RemoveComponentEditorContext(entity, &SPhysics3DControllerComponentEditorContext::Context);
 		return true;

@@ -30,9 +30,14 @@ namespace Havtorn
 		{
         	GUI::Separator();
         	
-        	if(GUI::MenuItem("Editor Preferences"))
+        	if (GUI::MenuItem("Editor Preferences"))
 			{
 				Manager->TogglePreferences();
+			}
+
+			if (GUI::MenuItem("Temp Game Preferences"))
+			{
+				Manager->ToggleGamePreferences();
 			}
 
 			GUI::EndPopup();

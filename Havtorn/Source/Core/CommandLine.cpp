@@ -52,10 +52,10 @@ namespace Havtorn
 		if (Instance->FreeParameters.size() > 1)
 		{
 			std::string command = Instance->FreeParameters[1];
-			I64 urlSeparator = command.find(Instance->DeepLinkURL);
+			I64 urlSeparator = command.find(GetDeepLinkURL());
 			if (urlSeparator != -1)
 			{
-				U64 urlSize = Instance->DeepLinkURL.size();
+				U64 urlSize = GetDeepLinkURL().size();
 				urlSeparator += urlSize;
 				Instance->DeepLinkCommand = command.substr(urlSeparator, command.size() - urlSize);
 				indicesOfParamsToDelete.push_back(1);
@@ -124,12 +124,25 @@ namespace Havtorn
 		return std::ranges::find(Instance->FreeParameters, parameter) != Instance->FreeParameters.end();
 	}
 
+	bool UCommandLine::HasDeepLinkCommand()
+	{
+		if (Instance == nullptr)
+			return false;
+
+		return !Instance->DeepLinkCommand.empty();
+	}
+
 	std::string UCommandLine::GetDeepLinkCommand()
 	{
 		if (Instance == nullptr)
 			return "";
 
 		return Instance->DeepLinkCommand;
+	}
+
+	std::string UCommandLine::GetDeepLinkURL()
+	{
+		return "havtorn://";
 	}
 
 	I64 UCommandLine::PickIndex(I64 whitespace, I64 nullTermination)

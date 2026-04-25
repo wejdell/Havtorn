@@ -14,9 +14,6 @@ namespace Havtorn
 
     SComponentViewResult SDirectionalLightComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!GUI::TryOpenComponentView("DirectionalLight"))
-			return SComponentViewResult();
-
 		SDirectionalLightComponent* directionalLightComp = scene->GetComponent<SDirectionalLightComponent>(entityOwner);
 
 		GUI::Checkbox("Is Active", directionalLightComp->IsActive);
@@ -39,12 +36,6 @@ namespace Havtorn
 
 	bool SDirectionalLightComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("Directional Light Component"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->AddComponent<SDirectionalLightComponent>(entity);
 		scene->AddComponentEditorContext(entity, &SDirectionalLightComponentEditorContext::Context);
 		return true;
@@ -52,12 +43,6 @@ namespace Havtorn
 
 	bool SDirectionalLightComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("X##4"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->RemoveComponent<SDirectionalLightComponent>(entity);
 		scene->RemoveComponentEditorContext(entity, &SDirectionalLightComponentEditorContext::Context);
 		return true;

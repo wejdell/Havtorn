@@ -40,7 +40,7 @@ namespace Havtorn
 			SColor Color = SColor(0.0f, 0.0f, 0.0f, 0.0f);
 		};
 
-		char                  InputBuffer[256] = "";
+		std::string              InputBuffer = "";
 		std::vector<SLogItem>    Items;
 		std::vector<std::string> Commands;
 		std::vector<std::string> History;

@@ -20,6 +20,9 @@ namespace Havtorn
 		void OnBeginPlay(std::vector<Ptr<CScene>>& scenes);
 		void OnPausePlay(std::vector<Ptr<CScene>>& scenes);
 		void OnEndPlay(std::vector<Ptr<CScene>>& scenes);
+
+		ENGINE_API void SetCameraSpeed(const F32 speed);
+		ENGINE_API F32 GetCameraSpeed() const;
 	private:
 		void ResetInput();
 

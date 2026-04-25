@@ -24,6 +24,9 @@ namespace Havtorn
 		void OnInspectorGUI() override;
 		void OnDisable() override;
 
+		void BrowseTo(SEditorAssetRepresentation* assetRep);
+		void SetCurrentPath(const std::filesystem::path& path, const bool pushCommand = true);
+
 	private:
 		void OnDragDropFiles(std::vector<std::string> filePaths);
 		void OnAssetReloaded(const std::string& assetPath);
@@ -54,8 +57,10 @@ namespace Havtorn
 		std::optional<std::vector<std::string>> FilePathsToImport;
 
 		std::optional<SEditorAssetRepresentation*> AnimatingThumbnailAsset;
+		std::optional<SEditorAssetRepresentation*> HoveredAsset;
+		std::optional<std::filesystem::directory_entry> HoveredFolder;
+		std::optional<std::filesystem::directory_entry> FolderBeingRenamed;
 		SEditorAssetRepresentation* PreviouslyAnimatingThumbnailAsset = nullptr;
-		bool IsSelectionHovered = false;
 		bool WasAnimatingThumbnail = false;
 		bool IsCreatingAsset = false;
 		EAssetType AssetTypeToCreate = EAssetType::None;

@@ -38,6 +38,9 @@ namespace Havtorn
 		static const U32 MinU32;
 		static const U32 MaxU32;
 
+		static const U64 MinU64;
+		static const U64 MaxU64;
+
 		static const I32 MinI32;
 		static const I32 MaxI32;
 
@@ -64,6 +67,7 @@ namespace Havtorn
 		static inline bool NearlyEqual(F32 a, F32 b, F32 tolerance = KINDA_SMALL_NUMBER);
 		static inline bool NearlyZero(F32 a, F32 tolerance = KINDA_SMALL_NUMBER);
 		static inline F32 RoundToZero(F32 a, F32 tolerance = KINDA_SMALL_NUMBER);
+		static inline F32 Round(F32 a, F32 precision = 1.0f);
 
 		template<typename T>
 		static inline T Exp(T x);
@@ -103,6 +107,9 @@ namespace Havtorn
 		static inline T ATan(T angle);
 		template<typename T>
 		static inline T ATan2(T y, T x);
+
+		template<typename T>
+		static inline T CopySign(T magnitude, T sign);
 
 		template<typename T>
 		static inline T DegToRad(T angleInDegrees);
@@ -299,6 +306,12 @@ namespace Havtorn
 	}
 
 	template<typename T>
+	inline T UMath::CopySign(T magnitude, T sign)
+	{
+		return std::copysign(magnitude, sign);
+	}
+
+	template<typename T>
 	inline T UMath::DegToRad(T angleInDegrees)
 	{
 		return angleInDegrees * DEGREES_TO_RADIANS;
@@ -335,6 +348,15 @@ namespace Havtorn
 	inline F32 UMath::RoundToZero(F32 a, F32 tolerance)
 	{
 		return UMath::NearlyZero(a, tolerance) ? 0.0f : a;
+	}
+
+	inline F32 UMath::Round(F32 a, F32 precision)
+	{
+		if (UMath::NearlyZero(precision, SMALL_NUMBER))
+			return a;
+
+		const F32 factor = 1.0f / precision;
+		return std::floor((a * factor) + 0.5f) / factor;
 	}
 
 	inline F32 UMath::FAbs(F32 x)

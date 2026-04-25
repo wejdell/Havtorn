@@ -9,6 +9,9 @@
 #include <GUI.h>
 #include <Graphics/RenderingPrimitives/RenderTexture.h>
 
+#include "EditHistory.h"
+#include "EditorDeepLinkParser.h"
+
 namespace Havtorn
 {
 	struct SEntity;
@@ -88,9 +91,9 @@ namespace Havtorn
 	struct SEditorPreferences
 	{
 		F32 Sensitivity = 0.5f;
-		EEditorColorTheme EditorColorTheme = EEditorColorTheme::HavtornYellow;
-		EEditorColorTheme PlayColorTheme = EEditorColorTheme::HavtornYellow;
-		EEditorColorTheme PauseColorTheme = EEditorColorTheme::HavtornYellow;
+		EEditorColorTheme EditorColorTheme = EEditorColorTheme::HavtornDefault;
+		EEditorColorTheme PlayColorTheme = EEditorColorTheme::HavtornDefault;
+		EEditorColorTheme PauseColorTheme = EEditorColorTheme::HavtornDefault;
 	};
 
 	class CEditorManager
@@ -127,12 +130,17 @@ namespace Havtorn
 		// NW: Excludes the entity going in as parameter itself.
 		SEntity GetPackedPrefabParent(const SEntity& entity) const;
 
+		std::string GetEntityFocusLink(const SEntity& entity) const;
+		std::string GetCameraFocusLink() const;
+		std::string GetAssetFocusLink(SEditorAssetRepresentation* assetRep) const;
+
 		// TODO.NW: I'd much rather figure out how to manage non-owned resources similar to how unreal does it. Those weak ptrs are managed and 
 		// reset when things are garbage collected and so can be checked for validity, but by default, c++ weak ptrs must be converted into shared
 		// ptrs in order to be used. Can we make our own version?
 		void SetSelectedAsset(SEditorAssetRepresentation* asset);
 		void AddSelectedAsset(SEditorAssetRepresentation* asset);
 		void RemoveSelectedAsset(SEditorAssetRepresentation* asset);
+		void SetSelectedFolder(const std::optional<std::filesystem::directory_entry>& folder);
 
 		bool IsAssetSelected(SEditorAssetRepresentation* asset) const;
 		void ClearSelectedAssets();
@@ -140,6 +148,7 @@ namespace Havtorn
 		SEditorAssetRepresentation* GetSelectedAsset() const;
 		SEditorAssetRepresentation* GetLastSelectedAsset() const;
 		std::vector<SEditorAssetRepresentation*> GetSelectedAssets() const;
+		std::optional<std::filesystem::directory_entry> GetSelectedFolder() const;
 
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry) const;
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromName(const std::string& assetName) const;
@@ -151,6 +160,8 @@ namespace Havtorn
 		void RemoveAssetRep(const std::filesystem::directory_entry& sourceEntry);
 
 		void OpenAssetTool(SEditorAssetRepresentation* asset);
+
+		void FocusEntity(const SEntity& entity);
 
 		void SetEditorTheme(EEditorColorTheme colorTheme = EEditorColorTheme::HavtornYellow, EEditorStyleTheme styleTheme = EEditorStyleTheme::Havtorn, F32 darknessOffset = 1.0f);
 		std::string GetEditorColorThemeName(const EEditorColorTheme colorTheme);
@@ -164,9 +175,17 @@ namespace Havtorn
 		[[nodiscard]] bool GetIsOverGizmo() const;
 		[[nodiscard]] bool GetIsModalOpen() const;
 		[[nodiscard]] bool GetIsDragCopyActive() const;
+		[[nodiscard]] bool GetIsPivotOffsetSet() const;
+		[[nodiscard]] bool GetIsPivotMovingActive() const;
+		[[nodiscard]] bool GetIsVertexSnappingActive() const;
+		[[nodiscard]] bool GetIsGridSnappingActive() const;
 
+		void SetCurrentGizmo(const ETransformGizmo gizmo);
 		void SetGizmoSpace(const ETransformGizmoSpace space);
 		void SetGizmoSnapping(const SSnappingOption& snapping);
+		void SetPivotMoving(const bool active);
+		void SetVertexSnapping(const bool active);
+		void SetGridSnapping(const bool active);
 
 		void SetIsModalOpen(const bool isModalOpen);
 
@@ -191,6 +210,8 @@ namespace Havtorn
 		void ToggleDebugInfo();
 		void ToggleDemo();
 		void TogglePreferences();
+		void ToggleGamePreferences();
+		void ToggleEditHistory();
 
 		static std::string PreviewMaterial;
 
@@ -208,7 +229,11 @@ namespace Havtorn
 		void OnToggleFullscreen(const SInputActionPayload payload);
 		void OnCopyEvent(const SInputActionPayload payload);
 		void OnDragCopyEvent(const SInputActionPayload payload);
+		void OnEditorActionTreeEvent(const SInputActionPayload payload);
 		void OnPlayStateEvent(const SInputActionPayload payload);
+		void OnPivotMoving(const SInputActionPayload payload);
+		void OnVertexSnapping(const SInputActionPayload payload);
+		void OnGridSnapping(const SInputActionPayload payload);
 
 		void OnResolutionChanged(SVector2<U16> newResolution);
 		void OnBeginPlay(std::vector<Ptr<CScene>>& scenes);
@@ -232,11 +257,15 @@ namespace Havtorn
 		
 		std::vector<SEntity> SelectedEntities = {};
 
+		CEditHistory EditHistory;
+		CEditorDeepLinkParser DeepLinkParser;
+
 		std::vector<Ptr<CWindow>> Windows;
 		std::vector<Ptr<CToggleable>> MenuElements;
 		std::vector<Ptr<SEditorAssetRepresentation>> AssetRepresentations = {};
 		
 		std::vector<SEditorAssetRepresentation*> SelectedAssets = {};
+		std::optional<std::filesystem::directory_entry> SelectedFolder;
 
 		// TODO.NR: Save these in .ini file
 		SEditorLayout EditorLayout;
@@ -252,11 +281,21 @@ namespace Havtorn
 		bool IsDebugInfoOpen = true;
 		bool IsDemoOpen = false;
 		bool IsPreferencesOpen = false;
+		bool IsGamePreferencesOpen = false;
+		bool IsEditHistoryOpen = false;
 		bool IsFreeCamActive = false;
 		bool IsModalOpen = false;
 		bool IsFullscreen = false;
 		bool IsDragCopyActive = false;
-	
+		bool IsPivotOffsetSet = false;
+		bool IsPivotMovingActive = false;
+		bool IsVertexSnappingActive = false;
+		bool IsGridSnappingActive = false;
+		// TODO.NW: Think about whether the above states should be exclusive, 
+		// in which case an enum representation for all of them would be nicer
+
+		std::string EntityCopyBuffer;
+
 		inline static const std::string DefaultEditorSettingsPath =
 		"Config/EditorPreferences.json";
 		inline static const std::string UserEditorSettingsPath =

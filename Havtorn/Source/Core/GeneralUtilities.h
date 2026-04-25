@@ -105,5 +105,20 @@ namespace Havtorn
 
 			return newString;
 		}
+
+		static U32 HashString(std::string_view input)
+		{
+			U32 prime = 0x1000193;
+			U32 UID = 0x811c9dc5;
+
+			for (U64 i = 0; i < input.size(); ++i)
+			{
+				U8 value = input[i];
+				UID = UID ^ value;
+				UID *= prime;
+			}
+
+			return UID;
+		}
 	}
 }

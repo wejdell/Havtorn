@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Havtorn.h"
+#include "GameDeepLinkParser.h"
 
 namespace Havtorn
 {
@@ -25,6 +26,8 @@ namespace Havtorn
 		void OnPausePlay(std::vector<Ptr<CScene>>& scenes);
 		void OnEndPlay(std::vector<Ptr<CScene>>& scenes);
 
+		void PlayFromScene(const std::string_view sceneName);
+
 		GAME_API void PlayGame();
 		GAME_API void QuitGame();
 
@@ -33,6 +36,8 @@ namespace Havtorn
 		CWorld* World = nullptr;
 
 	private:
+		CGameDeepLinkParser DeepLinkParser;
+
 		std::function<void()> PlayGameFunction;
 		std::function<void()> QuitGameFunction;
 	};

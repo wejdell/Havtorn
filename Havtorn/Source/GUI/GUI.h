@@ -430,7 +430,7 @@ namespace Havtorn
 		bool IsPreview = false;
 		bool IsDelivery = false;
 
-		bool IsID(const std::string& id) { return IDTag == id; }
+		bool IsID(const std::string& id) const { return IDTag == id; }
 	};
 
 	enum class ESelectionRequestType
@@ -628,6 +628,7 @@ namespace Havtorn
 		Cancelled,
 		ContextMenu,
 		GetFromSelected,
+		FindInBrowser
 	};
 
 	struct SAssetPickResult
@@ -660,6 +661,7 @@ namespace Havtorn
 		std::function<void()> Function;
 		intptr_t ImageRef = 0;
 		bool IsIndented = false;
+		std::string Tooltip = "";
 	};
 
 	// TODO.NW: static asserts to make sure they're equal in length to code based enums?
@@ -877,38 +879,20 @@ namespace Havtorn
 			return returnValue;
 		}
 
-		//Returns -1 as false
 		template<typename T>
-		static U8 ComboEnum(const char* label, U8& currentIndex)
+		static bool ComboEnum(const char* label, T& currentValue, std::vector<T> filter = {})
 		{
-			auto enumNames = magic_enum::enum_names<T>();
-			if (GUI::BeginCombo(label, enumNames[currentIndex].data()))
-			{
-				for (U8 i = 0; i < enumNames.size(); i++)
-				{
-					bool isSelected = currentIndex == i;
-					if (GUI::Selectable(enumNames[i].data(), isSelected))
-						currentIndex = i;
-
-					if (isSelected)
-						GUI::SetItemDefaultFocus();
-				}
-				GUI::EndCombo();
-			}
-
-			return currentIndex;
-		}
-
-		// TODO.NW: Make sure currentValue is set by the function, instead of returning it.
-		template<typename T>
-		static T ComboEnum(const char* label, T& currentValue)
-		{
+			std::vector<U8> filteredIndices;
+			std::ranges::transform(filter, std::back_inserter(filteredIndices), [](const T& filterValue) -> U8 { return static_cast<U8>(filterValue); });
 			auto enumNames = magic_enum::enum_names<T>();
 			U8 currentIndex = static_cast<U8>(currentValue);
 			if (GUI::BeginCombo(label, enumNames[currentIndex].data()))
 			{
 				for (U8 i = 0; i < enumNames.size(); i++)
 				{
+					if (auto it = std::ranges::find(filteredIndices, i); it != filteredIndices.end())
+						continue;
+
 					bool isSelected = currentIndex == i;
 					if (GUI::Selectable(enumNames[i].data(), isSelected))
 						currentIndex = i;
@@ -916,15 +900,22 @@ namespace Havtorn
 					if (isSelected)
 						GUI::SetItemDefaultFocus();
 				}
+				
 				GUI::EndCombo();
 			}
 
-			return static_cast<T>(currentIndex);
-		}
+			if (currentValue != static_cast<T>(currentIndex))
+			{
+				currentValue = static_cast<T>(currentIndex);
+				return true;
+			}
 
+			return false;
+		}
 
 		static bool ColorPicker3(const char* label, SColor& value);
 		static bool ColorPicker4(const char* label, SColor& value);
+		static bool ColorPicker4(const char* label, SVector4& value);
 
 		static void PushID(const char* label);
 		static void PushID(I32 intID);
@@ -989,12 +980,13 @@ namespace Havtorn
 		static bool ImageButton(const char* label, intptr_t imageRef, const SVector2<F32>& size = SVector2<F32>(0.0f), const SVector2<F32>& uv0 = SVector2<F32>(0.0f), const SVector2<F32>& uv1 = SVector2<F32>(1.0f), const SColor& backgroundColor = SColor(0.0f, 0.0f, 0.0f, 0.0f), const SColor& tintColor = SColor::White);
 		static bool ViewportButton(const char* label, intptr_t imageRef, const SVector2<F32>& size = SVector2<F32>(0.0f), const SVector2<F32>& uv0 = SVector2<F32>(0.0f), const SVector2<F32>& uv1 = SVector2<F32>(1.0f), const SColor& backgroundColor = SColor(0.0f, 0.0f, 0.0f, 0.0f), const SColor& tintColor = SColor::White);
 		static bool Checkbox(const char* label, bool& value);
+		static bool Checkbox(const char* label, I32& value);
 
 		static void AddViewportButtons(const std::vector<SAlignedButtonData>& buttons, const SVector2<F32>& buttonSize, const F32 alignWidth);
 
 		static SAssetPickResult AssetPicker(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryFunc& assetInspector, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
 		static SAssetPickResult AssetPickerFilter(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
-		static SAssetPickResult AssetPickerDropdownFilter(const char* label, const char* assetDetailLabel, intptr_t image, intptr_t sourceButtonImage, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
+		static SAssetPickResult AssetPickerDropdownFilter(const char* label, const char* assetDetailLabel, intptr_t image, intptr_t sourceButtonImage, intptr_t findButtonImage, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
 		static void TagPickerDropdown(const char* label, const char* tooltip, SGameplayTagContainer& tags, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
 		static SRenderAssetCardResult RenderAssetCard(const char* label, const bool isSelected, const bool isBeingNamed, const intptr_t& thumbnailID, const char* typeName, const SColor& color, const SColor& borderColor, void* dragDropPayloadToSet, U64 payLoadSize);
 
@@ -1016,6 +1008,7 @@ namespace Havtorn
 		static bool IsMouseInRect(const SVector4& rect);
 		static bool IsItemVisible();
 		static bool IsWindowFocused();
+		// TODO.NW: Should check other windows and only consider these hovered if they are top one
 		static bool IsWindowHovered();
 		static bool IsPopupOpen(const char* label);
 
@@ -1066,6 +1059,7 @@ namespace Havtorn
 		static void SetOrthographic(const bool enabled);
 		
 		static bool IsOverGizmo();
+		static bool IsUsingGizmo();
 		static bool IsLeftMouseHeld();
 		static bool IsDoubleClick();
 		static bool IsShiftHeld();

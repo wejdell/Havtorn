@@ -28,18 +28,33 @@ namespace Havtorn
 
 	private:
 		void UpdateTransformGizmo(const SComponentViewResult& result);
+		void RunVertexSnapping(SMatrix& gizmoTransform, const SEntity& viewedEntity);
+		void RunGridSnapping(SMatrix& gizmoTransform);
 		void ViewManipulation(SMatrix& outCameraView, const SVector2<F32>& windowPosition, const SVector2<F32>& windowSize);
+
 		void InspectAssetComponent(SComponentViewResult& result);
 		void OpenAssetTool(const SComponentViewResult& result);
 		void RenderPreview(const SComponentViewResult& result);
 
-		void OpenAddComponentModal(const SEntity& entity, CScene* owningScene);
+		void OpenAddComponentPopup(const SEntity& entity, CScene* owningScene);
 
 		void UpdateAssetContextMenu();
 
 	private:
 		U8 AssetPickedIndex = 0;
 		SMatrix DeltaMatrix = SMatrix::Identity;
+
+		SMatrix FullDeltaMatrix = SMatrix::Identity;
+		bool WasUsingGizmo = false;
+		bool IsUsingGizmo = false;
+
+		// TODO.NW: When this common one starts to get annoying, we could explore retaining each offset for a list of entities.
+		SVector PivotOffset = SVector::Zero; 
+		SVector PivotWorldSpace = SVector::Zero;
+		SVector InitialTranslation = SVector::Zero;
+		SQuaternion InitialRotation = SQuaternion::Identity;
+		SVector InitialOffset = SVector::Zero;
+
 		SAssetReference* ContextMenuAssetRef = nullptr;
 		U64 ContextMenuAssetRequester = 0;
 		bool IsContextMenuRefHovered = false;

@@ -269,9 +269,25 @@ namespace Havtorn
 			return returnValue;
 		}
 
+		bool ColorPicker4(const char* label, SVector4& color)
+		{
+			F32 valueData[4] = { color.X, color.Y, color.Z, color.W };
+			const bool returnValue = ImGui::ColorPicker4(label, valueData);
+			color = SVector4(valueData[0], valueData[1], valueData[2], valueData[3]);
+			return returnValue;
+		}
+
 		bool Checkbox(const char* label, bool& v)
 		{
 			return ImGui::Checkbox(label, &v);
+		}
+
+		bool Checkbox(const char* label, I32& v)
+		{
+			bool valueData = v;
+			const bool returnValue = ImGui::Checkbox(label, &valueData);
+			v = valueData;
+			return returnValue;
 		}
 
 		bool Selectable(const char* label, const bool selected, const std::vector<ESelectableFlag>& flags, const SVector2<F32>& size)
@@ -408,9 +424,11 @@ namespace Havtorn
 
 		bool IsWindowHovered()
 		{
-			// TODO.NW: Extend coordinates to include window header and scrollbar
-			ImRect windowRect = ImGui::GetCurrentWindow()->Rect();
-			return ImGui::IsMouseHoveringRect(windowRect.Min, windowRect.Max);
+			ImGuiWindow* window = nullptr;
+			ImGuiWindow* underMovingWindow = nullptr;
+			ImGui::FindHoveredWindowEx(ImGui::GetMousePos(), true, &window, &underMovingWindow);
+			ImGuiWindow* parent = ImGui::GetCurrentWindow();
+			return parent == window || ImGui::IsWindowChildOf(window, parent, false, true);
 		}
 
 		bool IsPopupOpen(const char* label)
@@ -631,6 +649,11 @@ namespace Havtorn
 		bool IsOverGizmo()
 		{
 			return ImGuizmo::IsOver();
+		}
+
+		bool IsUsingGizmo()
+		{
+			return ImGuizmo::IsUsingAny();
 		}
 
 		bool IsLeftMouseHeld()
@@ -1670,6 +1693,11 @@ namespace Havtorn
 		return Instance->Impl->ColorPicker4(label, value);
 	}
 
+	bool GUI::ColorPicker4(const char* label, SVector4& value)
+	{
+		return Instance->Impl->ColorPicker4(label, value);
+	}
+
 	void GUI::PushID(const char* label)
 	{
 		Instance->Impl->PushID(label);
@@ -1905,14 +1933,20 @@ namespace Havtorn
 		return Instance->Impl->Checkbox(label, value);
 	}
 
+	bool GUI::Checkbox(const char* label, I32& value)
+	{
+		return Instance->Impl->Checkbox(label, value);
+	}
+
 	void GUI::AddViewportButtons(const std::vector<SAlignedButtonData>& buttons, const SVector2<F32>& buttonSize, const F32 alignWidth)
 	{
+		const F32 adjustment = buttonSize.X * -3.0f;
 		for (U64 i = 0; i < buttons.size(); i++)
 		{
 			const SAlignedButtonData& button = buttons[i];
 			const F32 evennessOffset = (buttons.size() % 2 == 0) ? buttonSize.X : 0.0f;
 			const F32 position = buttonSize.X * 2.0f * (STATIC_F32(i) - UMath::Floor(STATIC_F32(buttons.size()) * 0.5f)) + evennessOffset;
-			GUI::SameLine(alignWidth * 0.5f - buttonSize.X * 0.5f + position);
+			GUI::SameLine(alignWidth * 0.5f - buttonSize.X * 0.5f + position + adjustment);
 			
 			GUI::PushID(i);
 			const SVector2<F32> uv0 = { 0.0f, 0.0f };
@@ -1924,6 +1958,8 @@ namespace Havtorn
 			{
 				button.Function();
 			}
+			if (GUI::IsItemHovered() && !button.Tooltip.empty())
+				GUI::SetTooltip(button.Tooltip.c_str());
 			GUI::PopID();
 		}
 	}
@@ -2078,7 +2114,7 @@ namespace Havtorn
 		return result;
 	}
 
-	SAssetPickResult GUI::AssetPickerDropdownFilter(const char* label, const char* assetDetailLabel, intptr_t image, intptr_t sourceButtonImage, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize)
+	SAssetPickResult GUI::AssetPickerDropdownFilter(const char* label, const char* assetDetailLabel, intptr_t image, intptr_t sourceButtonImage, intptr_t findButtonImage, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize)
 	{
 		SAssetPickResult result;
 
@@ -2096,7 +2132,6 @@ namespace Havtorn
 		GUI::OffsetCursorPos(SVector2<F32>(1.0f, -4.0f));
 		GUI::AddRectFilled(GUI::GetCursorScreenPos(), SVector2<F32>(cellWidth, 2.0f), GetAssetTypeColor(assetType));
 		GUI::OffsetCursorPos(SVector2<F32>(0.0f, 6.0f));
-
 
 		// TODO.NW: Figure out the sizing of these elements. The child holding the combo and text under it makes it so that the combo arrow doesn't get displayed when minimized.
 		SVector2<F32> contentRegionAvail = GUI::GetContentRegionAvail() - SVector2<F32>(cellWidth, 0.0f);
@@ -2169,7 +2204,18 @@ namespace Havtorn
 				result.State = EAssetPickerState::GetFromSelected;
 			}
 			if (GUI::IsItemHovered())
-				GUI::SetTooltip("Use Selected Asset from Browser");
+				GUI::SetTooltip("Use Selected Asset from Asset Browser");
+			GUI::PopID();
+
+			GUI::SameLine();
+			GUI::OffsetCursorPos(SVector2<F32>(-2.0f, 0.0f));
+			GUI::PushID("BrowseToAssetButton");
+			if (GUI::ImageButton("##", findButtonImage, SVector2<F32>(12.0f, 14.0f)))
+			{
+				result.State = EAssetPickerState::FindInBrowser;
+			}
+			if (GUI::IsItemHovered())
+				GUI::SetTooltip("Browse to Asset in Asset Browser");
 			GUI::PopID();
 
 			GUI::EndChild();
@@ -2334,15 +2380,12 @@ namespace Havtorn
 			GUI::EndDragDropSource();
 		}
 
-		SVector2<F32> cardEndPos = GUI::GetCursorPos();
 		GUI::SetCursorPos(cardStartPos + SVector2<F32>(1.0f, 0.0f));
-
-		SColor imageBorderColor = color;
-		imageBorderColor.A = SColor::ToU8Range(0.5f);
-
 		GUI::Image(thumbnailID, { GUI::ThumbnailSizeX, GUI::ThumbnailSizeY }, SVector2<F32>(0.0f), SVector2<F32>(1.0f), SColor::White);
 
-		GUI::AddRectFilled(GUI::GetCursorScreenPos(), SVector2<F32>(cardSize.X, 2.0f), imageBorderColor);
+		SColor detailColor = color;
+		detailColor.A = SColor::ToU8Range(0.5f);
+		GUI::AddRectFilled(GUI::GetCursorScreenPos(), SVector2<F32>(cardSize.X, 2.0f), detailColor);
 
 		GUI::OffsetCursorPos(SVector2<F32>(2.0f, 4.0f));
 
@@ -2675,6 +2718,11 @@ namespace Havtorn
 	bool GUI::IsOverGizmo()
 	{
 		return Instance->Impl->IsOverGizmo();
+	}
+
+	bool GUI::IsUsingGizmo()
+	{
+		return Instance->Impl->IsUsingGizmo();
 	}
 
 	bool GUI::IsLeftMouseHeld()

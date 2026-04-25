@@ -17,6 +17,7 @@ namespace Havtorn
 		SComponentViewResult View(const SEntity& entityOwner, CScene* scene) const override;
 		bool AddComponent(const SEntity& entity, CScene* scene) const override;
 		bool RemoveComponent(const SEntity& entity, CScene* scene) const override;
+		virtual const char* GetComponentName() const override { return "Script"; };
 		U8 GetSortingPriority() const override;
 
 		void ViewDataBinding(CScene* scene, HexRune::SScriptDataBinding& dataBinding) const;

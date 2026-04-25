@@ -21,12 +21,6 @@ namespace Havtorn
 
 	bool SSequencerComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("Sequencer Component"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->AddComponent<SSequencerComponent>(entity);
 		scene->AddComponentEditorContext(entity, &SSequencerComponentEditorContext::Context);
 		return true;
@@ -34,12 +28,6 @@ namespace Havtorn
 
 	bool SSequencerComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("X##11"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->RemoveComponent<SSequencerComponent>(entity);
 		scene->RemoveComponentEditorContext(entity, &SSequencerComponentEditorContext::Context);
 		return true;

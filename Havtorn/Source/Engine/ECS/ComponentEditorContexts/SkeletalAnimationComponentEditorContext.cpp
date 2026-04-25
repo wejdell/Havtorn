@@ -17,9 +17,6 @@ namespace Havtorn
 
 	SComponentViewResult Havtorn::SSkeletalAnimationComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
 	{
-		if (!GUI::TryOpenComponentView("SkeletalAnimation"))
-			return SComponentViewResult();
-
 		SSkeletalAnimationComponent* skeletalAnimationComp = scene->GetComponent<SSkeletalAnimationComponent>(entityOwner);
 
 		for (U32 index = 0; index < STATIC_U32(skeletalAnimationComp->AssetReferences.size()); index++)
@@ -84,12 +81,6 @@ namespace Havtorn
 
 	bool SSkeletalAnimationComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("Skeletal Animation Component"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->AddComponent<SSkeletalAnimationComponent>(entity);
 		scene->AddComponentEditorContext(entity, &SSkeletalAnimationComponentEditorContext::Context);
 		return true;
@@ -97,12 +88,6 @@ namespace Havtorn
 
 	bool SSkeletalAnimationComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("X##SkeletalAnim"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->RemoveComponent<SSkeletalAnimationComponent>(entity);
 		scene->RemoveComponentEditorContext(entity, &SSkeletalAnimationComponentEditorContext::Context);
 		return true;

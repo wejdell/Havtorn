@@ -25,9 +25,6 @@ namespace Havtorn
 
     SComponentViewResult SStaticMeshComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-		if (!GUI::TryOpenComponentView("StaticMesh"))
-			return SComponentViewResult();
-
 		STransformComponent* transform = scene->GetComponent<STransformComponent>(entityOwner);
 		if (!SComponent::IsValid(transform))
 			return SComponentViewResult();
@@ -84,12 +81,6 @@ namespace Havtorn
 
 	bool SStaticMeshComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("Static Mesh Component"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->AddComponent<SStaticMeshComponent>(entity);
 		scene->AddComponentEditorContext(entity, &SStaticMeshComponentEditorContext::Context);
 
@@ -106,12 +97,6 @@ namespace Havtorn
 
 	bool SStaticMeshComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("X##16"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->RemoveComponent<SStaticMeshComponent>(entity);
 		scene->RemoveComponentEditorContext(entity, &SStaticMeshComponentEditorContext::Context);
 		return true;

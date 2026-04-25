@@ -152,7 +152,9 @@ namespace Havtorn
 
 		if (mainCamera != startingCamera)
 		{
-			previousCameraData.CameraComponent->IsActive = false;
+			if (previousCameraData.IsValid())
+				previousCameraData.CameraComponent->IsActive = false;
+
 			GEngine::GetWorld()->SetMainCamera(startingCamera);
 		}
 	}
@@ -167,16 +169,37 @@ namespace Havtorn
 		SCameraData startingCameraData = UComponentAlgo::GetCameraData(startingCamera, scenes);
 		SCameraData previousCameraData = UComponentAlgo::GetCameraData(PreviousMainCamera, scenes);
 
-		if (PreviousMainCamera != startingCamera)
+		if (PreviousMainCamera != startingCamera && PreviousMainCamera.IsValid())
 		{
-			startingCameraData.CameraComponent->IsActive = false;
-			previousCameraData.CameraComponent->IsActive = true;
+			if (startingCameraData.IsValid())
+				startingCameraData.CameraComponent->IsActive = false;
+			if (previousCameraData.IsValid())
+				previousCameraData.CameraComponent->IsActive = true;
+
 			GEngine::GetWorld()->SetMainCamera(PreviousMainCamera);
 		}
 
 		PreviousMainCamera = SEntity::Null;
 	}
 	
+	void CCameraSystem::SetCameraSpeed(const F32 speed)
+	{
+		if (speed < 3.0f)
+			CameraSpeedInput = UMath::Remap(0.2f, 2.99f, -5.0f, -0.0f, speed);
+		else
+			CameraSpeedInput = UMath::Remap(3.0f, 10.0f, 0.0f, 5.0f, speed);
+
+		HV_LOG_INFO("Speed Input: %f", CameraSpeedInput);
+	}
+
+	F32 CCameraSystem::GetCameraSpeed() const
+	{
+		if (CameraSpeedInput < 0.0f)
+			return UMath::Remap(-5.0f, -1.0f, 0.2f, 2.0f, CameraSpeedInput);
+		else
+			return UMath::Remap(0.0f, 5.0f, 3.0f, 10.0f, CameraSpeedInput);
+	}
+
 	void CCameraSystem::ResetInput()
 	{
 		CameraMoveInput = SVector::Zero;
