@@ -22,6 +22,7 @@ namespace Havtorn
 			return;
 		}
 		
+
 		GUI::End();
 	}
 

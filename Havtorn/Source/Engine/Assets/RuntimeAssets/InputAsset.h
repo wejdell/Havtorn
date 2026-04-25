@@ -9,9 +9,11 @@ namespace Havtorn
 	{
 		SInputAsset() = default;
 
+		EAssetType AssetType = EAssetType::InputAsset;
+		
 		explicit SInputAsset(const SInputAssetFileHeader& assetFileData) 
 		{
-
+			assetFileData;
 		}
 	};
 }
