@@ -469,6 +469,12 @@ namespace Havtorn
             header.Scene = newAsset.Scene.get();
             return SaveAsset(destinationPath, header);
         }
+        else if (std::holds_alternative<SInputAssetFileHeader>(fileHeader))
+        {
+            SInputAssetFileHeader header = std::get<SInputAssetFileHeader>(fileHeader);
+            //SInputAsset newAsset = SInputAsset(header);
+            return SaveAsset(destinationPath, header);
+        }
 
         if (hvaPath == "INVALID_PATH")
             HV_LOG_WARN("CAssetRegistry::CreateNewAsset: The chosen file header asset type can not be created from the engine. Did you mean to import it? Could not create new asset at %s!", destinationPath.c_str());
@@ -653,9 +659,9 @@ namespace Havtorn
             UFileSystem::Serialize(hvaPath, &data[0], size);
             delete[] data;
         }
-        else if (std::holds_alternative<SInputAssetFileHeader>(fileHeader)) 
+        else if (std::holds_alternative<SPrefabFileHeader>(fileHeader))
         {
-            SInputAssetFileHeader header = std::get<SInputAssetFileHeader>(fileHeader);
+            SPrefabFileHeader header = std::get<SPrefabFileHeader>(fileHeader);
             U32 size = header.GetSize();
             const auto data = new char[size];
             header.Serialize(data);
@@ -663,9 +669,9 @@ namespace Havtorn
             UFileSystem::Serialize(hvaPath, &data[0], size);
             delete[] data;
         }
-        else if (std::holds_alternative<SPrefabFileHeader>(fileHeader))
+        else if (std::holds_alternative<SInputAssetFileHeader>(fileHeader))
         {
-            SPrefabFileHeader header = std::get<SPrefabFileHeader>(fileHeader);
+            SInputAssetFileHeader header = std::get<SInputAssetFileHeader>(fileHeader);
             U32 size = header.GetSize();
             const auto data = new char[size];
             header.Serialize(data);

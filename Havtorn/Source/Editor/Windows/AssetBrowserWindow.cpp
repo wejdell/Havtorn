@@ -461,7 +461,7 @@ namespace Havtorn
 				NewAssetFileHeader = SSceneFileHeader{ .AssetType = EAssetType::Scene, .Name = NewAssetName };
 				break;
 			case EAssetType::InputAsset:
-				NewAssetFileHeader = CreateInputAsset();
+				NewAssetFileHeader = SInputAssetFileHeader{ .AssetType = EAssetType::InputAsset, .Name = NewAssetName };
 				break;
 			case EAssetType::Prefab:
 				NewAssetFileHeader = SPrefabFileHeader{ .AssetType = EAssetType::Prefab, .Name = NewAssetName };
