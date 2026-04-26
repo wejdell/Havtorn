@@ -98,4 +98,20 @@ namespace Havtorn
 			return "ASSET";
 		}
 	}
+
+	static bool IsAssetSourceFileBased(const EAssetType type)
+	{
+		switch (type)
+		{
+		case EAssetType::Animation: [[fallthrough]];
+		case EAssetType::StaticMesh: [[fallthrough]];
+		case EAssetType::SkeletalMesh: [[fallthrough]];
+		case EAssetType::Texture: [[fallthrough]];
+		case EAssetType::TextureCube: [[fallthrough]];
+		case EAssetType::SpriteAnimation:
+			return true;
+		}
+
+		return false;
+	}
 }

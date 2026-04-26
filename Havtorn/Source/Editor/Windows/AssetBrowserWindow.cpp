@@ -141,15 +141,7 @@ namespace Havtorn
 							UFileSystem::Remove(pathToRemove.string());
 						}
 
-						// TODO.NW: It would be nice with some sort of attribute to check
-						// the enum value against (e.g. SourceFileBased), may not exist on our current version though
-						if (hoveredAssetRep->AssetType != EAssetType::Material
-							&& hoveredAssetRep->AssetType != EAssetType::Script
-							&& hoveredAssetRep->AssetType != EAssetType::Scene
-							&& hoveredAssetRep->AssetType != EAssetType::Sequencer
-							&& hoveredAssetRep->AssetType != EAssetType::Prefab
-							&& hoveredAssetRep->AssetType != EAssetType::InputAsset
-							)
+						if (IsAssetSourceFileBased(hoveredAssetRep->AssetType))
 						{
 							if (hoveredAssetRep->IsSourceWatched)
 							{
