@@ -10,6 +10,7 @@ namespace Havtorn
 		SComponentViewResult View(const SEntity& entityOwner, CScene* scene) const override;
 		bool AddComponent(const SEntity& entity, CScene* scene) const override;
 		bool RemoveComponent(const SEntity& entity, CScene* scene) const override;
+		virtual const char* GetComponentName() const { return "Ability"; };
 
 		static SAbilityComponentEditorContext Context;
 	};
