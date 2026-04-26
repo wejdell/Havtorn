@@ -2,6 +2,9 @@
 
 #pragma once
 #include "EditorWindow.h"
+#include <Assets/AssetReference.h>
+#include <Assets/RuntimeAssets/InputAsset.h>
+
 
 namespace Havtorn
 {
@@ -21,6 +24,11 @@ namespace Havtorn
 
 	private:
 		void DrawInputTable();
-		//std::unordered_map<CHavtornStaticString<255>, Hexstruction::SHexstruction> HexstructionMap;
+		
+		std::string AssetName;
+		SAssetReference AssetReference;
+		SInputAsset* InputAsset;
+
+		const U64 InputToolID = 107001; //1Input7Tool
 	};
 }
