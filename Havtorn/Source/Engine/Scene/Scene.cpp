@@ -57,6 +57,7 @@ namespace Havtorn
 		RegisterNonTrivialComponent<SPrefabComponent, SPrefabComponentEditorContext>(230, 10);
 		RegisterNonTrivialComponent<SAbilityComponent, SAbilityComponentEditorContext>(240, 10);
 		RegisterNonTrivialComponent<SHexCommandComponent, SHexCommandComponentEditorContext>(250, 10);
+		RegisterNonTrivialComponent<SInputComponent, SInputComponentEditorContext>(260, 10);
 
 		//RegisterTrivialComponent<SSequencerComponent, SSequencerComponentEditorContext>(typeID++, 0);
 
