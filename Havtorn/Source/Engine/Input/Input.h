@@ -15,14 +15,12 @@ namespace Havtorn
 	constexpr U8 PrimaryUser = 0;
 
 	class CInputMapper;
-	class CInputPoller;
 	class CPlatformManager;
 
 	class CInput
 	{
 	public:
 		friend CInputMapper;
-		friend CInputPoller;
 
 	private:
 		CInput();

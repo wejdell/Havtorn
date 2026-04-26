@@ -16,7 +16,6 @@
 
 #include "Graphics/RenderManager.h"
 #include "Input/InputMapper.h"
-#include "Input/InputPoller.h"
 
 #include "Timer.h"
 #include "Graphics/Debug/DebugDrawUtility.h"
@@ -38,7 +37,6 @@ namespace Havtorn
 
 		Timer = new GTime();
 		InputMapper = new CInputMapper();
-		InputService = new CInputPoller();
 		Framework = new CGraphicsFramework();
 		RenderManager = new CRenderManager();
 		AssetRegistry = new CAssetRegistry();
@@ -158,11 +156,6 @@ namespace Havtorn
 	CInputMapper* GEngine::GetInput()
 	{
 		return Instance->InputMapper;
-	}
-
-	CInputPoller* GEngine::GetInputService()
-	{
-		return Instance->InputService;
 	}
 
 	CGraphicsFramework* GEngine::GetGraphicsFramework()

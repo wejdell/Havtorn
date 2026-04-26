@@ -16,7 +16,6 @@ namespace Havtorn
 	class GTime;
 	class CWorld;
 	class CInputMapper;
-	class CInputPoller;
 	class CAudioManager;
 	class UFileSystem;
 	class CFileWatcher;
@@ -45,7 +44,6 @@ namespace Havtorn
 		static ENGINE_API CAssetRegistry* GetAssetRegistry();
 		static ENGINE_API CWorld* GetWorld();
 		static ENGINE_API CInputMapper* GetInput();
-		static ENGINE_API CInputPoller* GetInputService();
 		static ENGINE_API CGraphicsFramework* GetGraphicsFramework();
 		
 		void OnWindowResolutionChanged(SVector2<U16> newResolution);
@@ -66,7 +64,6 @@ namespace Havtorn
 		GTime* Timer = nullptr;
 		GDebugDraw* DebugDraw = nullptr;
 		CInputMapper* InputMapper = nullptr;
-		CInputPoller* InputService = nullptr;
 
 		CWorld* World = nullptr;
 
