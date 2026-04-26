@@ -43,6 +43,7 @@ namespace Havtorn
 		MoveGizmoIcon,
 		RotateGizmoIcon,
 		ScaleGizmoIcon,
+		InputMapIcon,
 		Count,
 		None = Count
 	};
