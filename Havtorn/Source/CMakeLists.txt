@@ -123,6 +123,7 @@ set(CORE_FILES
     ${CORE_FOLDER}HavtornDelegate.h
     ${CORE_FOLDER}HavtornString.cpp
     ${CORE_FOLDER}HavtornString.h
+	${CORE_FOLDER}InputStructs.h
     ${CORE_FOLDER}Serializable.cpp
     ${CORE_FOLDER}Serializable.h
     ${CORE_FOLDER}hvpch.cpp
@@ -385,6 +386,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/DirectionalLightComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/EnvironmentLightComponentEditorContext.cpp
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/EnvironmentLightComponentEditorContext.h
+    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/InputComponentEditorContext.cpp
+	${ENGINE_FOLDER}ECS/ComponentEditorContexts/InputComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/LevelStreamingComponentEditorContext.cpp
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/LevelStreamingComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/MaterialComponentEditorContext.cpp
@@ -430,6 +433,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/Components/DirectionalLightComponent.h
     ${ENGINE_FOLDER}ECS/Components/EnvironmentLightComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/EnvironmentLightComponent.h
+	${ENGINE_FOLDER}ECS/Components/InputComponent.cpp
+	${ENGINE_FOLDER}ECS/Components/InputComponent.h
     ${ENGINE_FOLDER}ECS/Components/LevelStreamingComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/LevelStreamingComponent.h
     ${ENGINE_FOLDER}ECS/Components/MaterialComponent.cpp
@@ -467,6 +472,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/Systems/AbilitySystem.h
     ${ENGINE_FOLDER}ECS/Systems/CameraSystem.cpp
     ${ENGINE_FOLDER}ECS/Systems/CameraSystem.h
+    ${ENGINE_FOLDER}ECS/Systems/InputSystem.cpp
+	${ENGINE_FOLDER}ECS/Systems/InputSystem.h
     ${ENGINE_FOLDER}ECS/Systems/LevelStreamingSystem.cpp
     ${ENGINE_FOLDER}ECS/Systems/LevelStreamingSystem.h
     ${ENGINE_FOLDER}ECS/Systems/LightSystem.cpp
@@ -540,8 +547,6 @@ set(ENGINE_FILES
     "${ENGINE_FOLDER}Input/InputMapper.cpp"
     "${ENGINE_FOLDER}Input/InputMapper.h"
     "${ENGINE_FOLDER}Input/InputTypes.h"
-    "${ENGINE_FOLDER}Input/InputPoller.cpp"
-	"${ENGINE_FOLDER}Input/InputPoller.h"
     ${ENGINE_FOLDER}Scene/Scene.cpp
     ${ENGINE_FOLDER}Scene/Scene.h
     ${ENGINE_FOLDER}Scene/World.cpp

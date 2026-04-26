@@ -1,0 +1,105 @@
+// Copyright 2026 Team Havtorn. All Rights Reserved.
+
+#include "hvpch.h"
+
+#include "InputSystem.h"
+
+
+#include "Engine.h"
+#include "ECS/ECSInclude.h"
+
+#include "Input/InputMapper.h"
+#include "Scene/Scene.h"
+
+#include "GameplayTags/GameplayTagManager.h"
+
+namespace Havtorn
+{
+	CInputSystem::CInputSystem()
+		: ISystem()
+	{
+	}
+
+	CInputSystem::~CInputSystem()
+	{
+	}
+
+	void CInputSystem::Update(std::vector<Ptr<CScene>>& scenes)
+	{
+		for (auto& scene : scenes)
+		{
+			std::vector<SInputComponent*> inputComponents = scene->GetComponents<SInputComponent>();
+			for (auto& inputComponent : inputComponents)
+			{
+				SHexCommandComponent* hexCommandComponent = scene->GetComponent<SHexCommandComponent>(inputComponent);
+
+				if (!SComponent::IsValid(hexCommandComponent))
+					continue;
+
+				SInputAsset* inputAsset = GEngine::GetAssetRegistry()->RequestAssetData<SInputAsset>(inputComponent->AssetReference, inputComponent->Owner.GUID);
+				if (inputAsset == nullptr)
+					continue;
+		
+				for (auto& inputAction : inputAsset->InputActions)
+				{
+					if (GGameplayTagManager::ContainsTag(inputAction.Tag, hexCommandComponent->TagsToListenFor))
+					{					
+						for (auto& mapping : inputAction.InputMappings)
+						{
+							const CInputMapper* input = GEngine::GetInput();
+							U32 typeIndex = STATIC_U32(mapping.Data.index());
+							switch (typeIndex)
+							{
+							case 0:
+							{
+								SAxis& axis = std::get<SAxis>(mapping.Data);
+
+								const F32 axisValue = input->GetAxisValue(axis.Axis, axis.Modifiers);
+								const bool isPositiveHeld = input->IsPressed(axis.AxisPositiveKey, axis.Modifiers) || input->IsHeld(axis.AxisPositiveKey, axis.Modifiers);
+								const bool isNegativeHeld = input->IsPressed(axis.AxisNegativeKey, axis.Modifiers) || input->IsHeld(axis.AxisNegativeKey, axis.Modifiers);
+
+								F32 finalAxisValue = axisValue;
+								
+								if (isNegativeHeld)
+									finalAxisValue = -1.0f;
+
+								if (isPositiveHeld)
+									finalAxisValue = 1.0f;
+
+								if (UMath::Abs(finalAxisValue) > 0.0f)
+								{
+									SHexCommand axisCommand = { .Tag = inputAction.Tag, .DataType = EHexCommandDataType::Float, .Data = finalAxisValue };
+									hexCommandComponent->HexCommands.push(axisCommand);
+								}
+							}
+							break;
+							case 1:
+							{
+								SKey& key = std::get<SKey>(mapping.Data);
+
+								bool IsPressedOrHeld = input->IsPressed(key.Key, key.Modifiers) || input->IsHeld(key.Key, key.Modifiers);
+								if (IsPressedOrHeld)
+								{
+									SHexCommand keyCommand = { .Tag = inputAction.Tag, .DataType = EHexCommandDataType::Bool, .Data = IsPressedOrHeld };
+									hexCommandComponent->HexCommands.push(keyCommand);
+								}
+							}
+							break;
+							}
+						}
+					}
+				}
+				
+
+				//if( hexCommandComponent->TagsToListenFor)
+
+
+
+			}
+		}
+
+		//GEngine::GetInput()->IsHeld()
+
+
+	}
+}
