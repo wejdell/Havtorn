@@ -15,45 +15,39 @@ namespace Havtorn
 
 	SComponentViewResult SHexCommandComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
 	{
-		if (!GUI::TryOpenComponentView("HexCommand Component"))
-			return SComponentViewResult();
-
 		SHexCommandComponent* component = scene->GetComponent<SHexCommandComponent>(entityOwner);
 		GUI::TagPickerDropdown("Hex Command Tag", "Tag identifying this HexCommand", component->TagsToListenFor);
 
-
-		/*if (GUI::Button("New Hex Command"))
+		std::stack<SHexCommand> hexCommandCopy = component->HexCommands;
+		U64 id = 0;
+		while (!hexCommandCopy.empty())
 		{
-			component->HexCommands.push_back(SHexCommand{});
+			GUI::PushID(id++);
+			SHexCommand& top = hexCommandCopy.top();
+			const std::string& tagName = top.Tag.Name;
+			switch (top.DataType)
+			{
+			case EHexCommandDataType::Bool:
+				GUI::Checkbox(tagName.c_str(), std::get<bool>(top.Data));
+				break;
+			case EHexCommandDataType::Float:
+				GUI::DragFloat(tagName.c_str(), std::get<F32>(top.Data));
+				break;
+			case EHexCommandDataType::Vector2:
+				GUI::DragFloat2(tagName.c_str(), std::get<SVector2<F32>>(top.Data));
+				break;
+			}
+
+			hexCommandCopy.pop();
+			GUI::PopID();
 		}
 
-		for (U32 i = 0; i < STATIC_U32(component->HexCommands.size()); i++)
-		{
-			GUI::PushID(STATIC_U64(i));
-			{
-				SHexCommand& command = component->HexCommands[i];
-				SGameplayTagContainer tagContainer = component->HexCommands[i].Tag;
-				GUI::TagPickerDropdown("Hex Command Tag", "Tag identifying this HexCommand", tagContainer);
-
-				if (!tagContainer.Tags.empty())
-					command.Tag = tagContainer.Tags.back();
-				else 
-					command.Tag = SGameplayTag::None;
-			}
-			GUI::PopID();
-		}*/
 
 		return SComponentViewResult();
 	}
 
 	bool SHexCommandComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("HexCommand Component"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->AddComponent<SHexCommandComponent>(entity);
 		scene->AddComponentEditorContext(entity, &SHexCommandComponentEditorContext::Context);
 		return true;
@@ -61,12 +55,6 @@ namespace Havtorn
 
 	bool SHexCommandComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("X##10"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->RemoveComponent<SHexCommandComponent>(entity);
 		scene->RemoveComponentEditorContext(entity, &SHexCommandComponentEditorContext::Context);
 		return true;
