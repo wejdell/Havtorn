@@ -353,6 +353,13 @@ namespace Havtorn
             assetFile.Deserialize(data, std::get<SScriptAsset>(asset.Data).Script.get());
         }
         break;
+        case EAssetType::InputAsset:
+        {
+            SInputAssetFileHeader assetFile;
+            assetFile.Deserialize(data);    
+            asset.Data = SInputAsset(assetFile);
+        }
+        break;
         case EAssetType::Prefab:
         {
             // NW: The prefab asset owns the data and has a unique pointer to it, though it's loaded through the file header object
@@ -360,6 +367,7 @@ namespace Havtorn
             asset.Data = SPrefabAsset(assetFile);
             assetFile.Deserialize(data, std::get<SPrefabAsset>(asset.Data).Scene.get());
         }
+
         break;
         case EAssetType::SpriteAnimation:
         case EAssetType::AudioOneShot:

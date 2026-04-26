@@ -58,6 +58,8 @@ namespace Havtorn
 			return SColor::Orange;
 		case EAssetType::Prefab:
 			return SColor::Yellow;
+		case EAssetType::InputAsset:
+			return SColor::Teal;
 		default:
 			return SColor::White;
 		}
@@ -90,6 +92,8 @@ namespace Havtorn
 			return "SCENE";
 		case EAssetType::Prefab:
 			return "PREFAB";
+		case EAssetType::InputAsset:
+			return "INPUT MAP";
 		default:
 			return "ASSET";
 		}
