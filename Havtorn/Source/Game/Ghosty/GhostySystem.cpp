@@ -42,7 +42,11 @@ namespace Havtorn
 				newHexCommand.Tag = GGameplayTagManager::RequestTag("Player.Ability.TimeTravel");
 				newHexCommand.DataType = EHexCommandDataType::Bool;
 				newHexCommand.Data = true;
-				hexCommandComponent->HexCommands.push(newHexCommand);
+
+				if (GGameplayTagManager::ContainsTag(newHexCommand.Tag, hexCommandComponent->TagsToListenFor))
+				{
+					hexCommandComponent->HexCommands.push(newHexCommand);
+				}
 
 				while (!hexCommandComponent->HexCommands.empty())
 				{
