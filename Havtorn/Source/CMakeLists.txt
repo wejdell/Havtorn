@@ -11,6 +11,8 @@ project (Havtorn
 
 # option(ENABLE_CODE_ANALYSIS "Use Static Code Analysis on build" OFF)
 
+option(ENABLE_WWISE_AUDIO "Use Wwise as the audio backend" ON)
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 set(CMAKE_CXX_STANDARD 20)
@@ -370,6 +372,10 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Assets/SequencerAsset.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/AbilityComponentEditorContext.cpp
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/AbilityComponentEditorContext.h
+    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/AudioEmitterComponentEditorContext.cpp
+    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/AudioEmitterComponentEditorContext.h
+    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/AudioListenerComponentEditorContext.cpp
+    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/AudioListenerComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraComponentEditorContext.cpp
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraControllerComponentEditorContext.cpp
@@ -418,6 +424,10 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/VolumetricLightComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/Components/AbilityComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/AbilityComponent.h
+    ${ENGINE_FOLDER}ECS/Components/AudioEmitterComponent.cpp
+    ${ENGINE_FOLDER}ECS/Components/AudioEmitterComponent.h
+    ${ENGINE_FOLDER}ECS/Components/AudioListenerComponent.cpp
+    ${ENGINE_FOLDER}ECS/Components/AudioListenerComponent.h
     ${ENGINE_FOLDER}ECS/Components/CameraComponent.h
     ${ENGINE_FOLDER}ECS/Components/CameraControllerComponent.h
     ${ENGINE_FOLDER}ECS/Components/DecalComponent.cpp
@@ -515,6 +525,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Graphics/RenderTextureFactory.h
     ${ENGINE_FOLDER}Graphics/TextureBank.cpp
     ${ENGINE_FOLDER}Graphics/TextureBank.h
+    ${ENGINE_FOLDER}HexAudio/HexAudio.cpp
+    ${ENGINE_FOLDER}HexAudio/HexAudio.h
     ${ENGINE_FOLDER}HexPhys/HexPhys.cpp
     ${ENGINE_FOLDER}HexPhys/HexPhys.h
     ${ENGINE_FOLDER}HexRune/CoreNodes/CoreNodes.cpp
@@ -664,7 +676,39 @@ foreach(FILE ${HLSL_SHADER_FILES})
 endforeach(FILE)
 # ==================== SHADERS ====================
 
-add_library(Engine SHARED ${ENGINE_FILES} ${SHADER_INCLUDES} ${HLSL_SHADER_FILES})
+set(AUDIO_BACKEND_FILES)
+if(ENABLE_WWISE_AUDIO)
+    set(AUDIO_BACKEND_FILES
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkDefaultLowLevelIODispatcher.cpp"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkDefaultLowLevelIODispatcher.h"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkFileHelpersBase.h"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkFileLocationBase.cpp"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkFileLocationBase.h"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkFilePackage.cpp"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkFilePackage.h"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkFilePackageLowLevelIO.inl"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkFilePackageLowLevelIO.h"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkFilePackageLowLevelIODeferred.h"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkFilePackageLUT.cpp"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkFilePackageLUT.h"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkGeneratedSoundBanksResolver.cpp"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkGeneratedSoundBanksResolver.h"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkJobWorkerMgr.cpp"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkJobWorkerMgr.h"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkMultipleFileLocation.cpp"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkMultipleFileLocation.h"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkPlatformProfilerHooks.h"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Win32/AkDefaultIOHookDeferred.cpp"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Win32/AkDefaultIOHookDeferred.h"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Win32/AkFileHelpers.h"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Win32/AkPlatformProfilerHooks.cpp"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Win32/stdafx.cpp"
+        "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Win32/stdafx.h"
+    )
+else()
+endif()
+
+add_library(Engine SHARED ${ENGINE_FILES} ${SHADER_INCLUDES} ${HLSL_SHADER_FILES} ${AUDIO_BACKEND_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SHADER_INCLUDES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${HLSL_SHADER_FILES})
@@ -692,6 +736,7 @@ target_include_directories(Engine PRIVATE
     "${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
     "${EXTERNAL_FOLDER}PhysX/physx/include"
     "${EXTERNAL_FOLDER}SDL/include"
+    "${EXTERNAL_FOLDER}Wwise/include"
     "Core"
     "Platform"
     "GUI"
@@ -702,6 +747,20 @@ target_link_directories(Engine PRIVATE
     ${CMAKE_BINARY_DIR}
 )
 target_compile_definitions(Engine PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_ENGINE_DLL)
+
+if(ENABLE_WWISE_AUDIO)
+    target_compile_definitions(Engine PRIVATE HV_AUDIO_BACKEND=WWISE)
+    target_compile_definitions(Engine PRIVATE $<$<CONFIG:GameRelease>:AK_OPTIMIZED>)
+    target_link_libraries(Engine PRIVATE
+    $<$<CONFIG:EditorDebug>:Wwise/AkSoundEngined Wwise/AkMemoryMgrd Wwise/AkStreamMgrd Wwise/AkSpatialAudiod Wwise/CommunicationCentrald ws2_32>
+    $<$<CONFIG:GameDebug>:Wwise/AkSoundEngined Wwise/AkMemoryMgrd Wwise/AkStreamMgrd Wwise/AkSpatialAudiod Wwise/CommunicationCentrald ws2_32>
+    $<$<CONFIG:EditorDevelopment>:Wwise/AkSoundEngine Wwise/AkMemoryMgr Wwise/AkStreamMgr Wwise/AkSpatialAudio Wwise/CommunicationCentral ws2_32>
+    $<$<CONFIG:GameRelease>:Wwise/AkSoundEngine Wwise/AkMemoeryMgr Wwise/AkStreamMgr Wwise/AkSpatialAudio>
+)
+else()
+    target_compile_definitions(Engine PRIVATE HV_AUDIO_BACKEND=SDL)
+endif()
+
 target_compile_options(Engine PRIVATE ${COMMON_COMPILE_OPTIONS})
 target_compile_options(Engine PRIVATE "/FI${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/Engine.dir/$<CONFIG>/cmake_pch.hxx")
 target_precompile_headers(Engine PRIVATE ${ENGINE_FOLDER}hvpch.h)

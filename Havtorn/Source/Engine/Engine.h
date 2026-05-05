@@ -16,7 +16,6 @@ namespace Havtorn
 	class GTime;
 	class CWorld;
 	class CInputMapper;
-	class CAudioManager;
 	class UFileSystem;
 	class CFileWatcher;
 	class CAssetRegistry;
