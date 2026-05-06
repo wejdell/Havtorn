@@ -1,0 +1,36 @@
+{
+ "ProjectInfo": {
+  "Project": {
+   "Name": "WwiseProject",
+   "GUID": "{E0004C23-5C52-4BC9-AA3E-5D4CB13F458D}",
+   "Generator": "2025.1.7.9143"
+  },
+  "CacheRoot": "../../../WwiseProject/.cache",
+  "Platforms": [
+   {
+    "Name": "Linux",
+    "GUID": "{869DD817-23F0-4229-BDAE-558AA6FE4E0E}",
+    "BasePlatform": "Linux",
+    "BasePlatformGUID": "{BD0BDF13-3125-454F-8BFD-319537169F81}",
+    "Path": "Linux"
+   },
+   {
+    "Name": "Windows",
+    "GUID": "{DFF82909-2C13-4613-B701-D097C3A2C66C}",
+    "BasePlatform": "Windows",
+    "BasePlatformGUID": "{6E0CB257-C6C8-4C5C-8366-2740DFC441EB}",
+    "Path": "Windows"
+   }
+  ],
+  "Languages": [
+   {
+    "Name": "English(US)",
+    "Id": "684519430",
+    "GUID": "{91D87CFE-A8A5-42CF-9A4A-530481B6AFEE}",
+    "Default": "true",
+    "UseAsStandIn": "true"
+   }
+  ],
+  "FileHash": "{6E67FA86-04B3-5900-607C-70AE11A50168}"
+ }
+}

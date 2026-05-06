@@ -101,8 +101,7 @@ namespace Havtorn
 					return false;
 #endif
 
-				// TODO.NW: Put soundbanks closer to Bin when starting to use IDs instead?
-				if (LowLevelIO.SetBasePath(AKTEXT("../External/Wwise/WwiseProject/GeneratedSoundBanks/Windows/")) != AK_Success)
+				if (LowLevelIO.SetBasePath(AKTEXT("GeneratedSoundBanks/Windows/")) != AK_Success)
 					return false;
 
 				AK::StreamMgr::SetCurrentLanguage(AKTEXT("English(US)"));
