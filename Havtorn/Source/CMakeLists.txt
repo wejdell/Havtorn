@@ -677,7 +677,7 @@ endforeach(FILE)
 # ==================== SHADERS ====================
 
 set(AUDIO_BACKEND_FILES)
-if(ENABLE_WWISE_AUDIO)
+if(ENABLE_WWISE_AUDIO STREQUAL "ON")
     set(AUDIO_BACKEND_FILES
         "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkDefaultLowLevelIODispatcher.cpp"
         "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkDefaultLowLevelIODispatcher.h"
@@ -748,8 +748,8 @@ target_link_directories(Engine PRIVATE
 )
 target_compile_definitions(Engine PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_ENGINE_DLL)
 
-if(ENABLE_WWISE_AUDIO)
-    target_compile_definitions(Engine PRIVATE HV_AUDIO_BACKEND=WWISE)
+if(ENABLE_WWISE_AUDIO STREQUAL "ON")
+    target_compile_definitions(Engine PRIVATE HV_AUDIO_BACKEND_WWISE)
     target_compile_definitions(Engine PRIVATE $<$<CONFIG:GameRelease>:AK_OPTIMIZED>)
     target_link_libraries(Engine PRIVATE
     $<$<CONFIG:EditorDebug>:Wwise/AkSoundEngined Wwise/AkMemoryMgrd Wwise/AkStreamMgrd Wwise/AkSpatialAudiod Wwise/CommunicationCentrald ws2_32>
@@ -758,7 +758,7 @@ if(ENABLE_WWISE_AUDIO)
     $<$<CONFIG:GameRelease>:Wwise/AkSoundEngine Wwise/AkMemoeryMgr Wwise/AkStreamMgr Wwise/AkSpatialAudio>
 )
 else()
-    target_compile_definitions(Engine PRIVATE HV_AUDIO_BACKEND=SDL)
+    target_compile_definitions(Engine PRIVATE HV_AUDIO_BACKEND_SDL)
 endif()
 
 target_compile_options(Engine PRIVATE ${COMMON_COMPILE_OPTIONS})

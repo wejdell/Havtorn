@@ -2,7 +2,7 @@
 
 #include "HexAudio.h"
 
-#if HV_AUDIO_BACKEND == WWISE
+#ifdef HV_AUDIO_BACKEND_WWISE
 #include <AK/SoundEngine/Common/AkMemoryMgr.h>
 #include <AK/SoundEngine/Common/AkMemoryMgrModule.h>
 #include <AK/SoundEngine/Common/IAkStreamMgr.h>
@@ -38,7 +38,7 @@ namespace Havtorn
 	{
 		constexpr U64 DefaultListenerID = 1;
 
-#if HV_AUDIO_BACKEND == WWISE
+#ifdef HV_AUDIO_BACKEND_WWISE
 		class CAudioBackend::CAudioImplementation
 		{
 		public:
@@ -213,7 +213,9 @@ namespace Havtorn
 		private:
 			CAkFilePackageLowLevelIODeferred LowLevelIO;
 		};
-#elif HV_AUDIO_BACKEND == SDL
+#endif
+
+#ifdef HV_AUDIO_BACKEND_SDL
 	class CAudioBackend::CAudioImplementation
 	{
 	public:
@@ -241,7 +243,7 @@ namespace Havtorn
 		{
 		}
 
-		U64 RegisterAudioObject(const bool /*isListener*/)
+		U64 RegisterAudioObject(const U64 /*id*/, const bool /*isListener*/)
 		{
 			return U64();
 		}
