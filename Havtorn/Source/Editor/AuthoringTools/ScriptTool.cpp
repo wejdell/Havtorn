@@ -206,6 +206,8 @@ namespace Havtorn
 	void CScriptTool::OnDisable()
 	{
 		CloseScript();
+
+		GEngine::GetWorld()->UnblockSystem<CCameraSystem>(this);
 	}
 
 	void CScriptTool::OpenScript(SEditorAssetRepresentation* asset)

@@ -970,7 +970,7 @@ public:
 				{
 					if (IsLocked())
 					{
-						m_Events[i].Clear();
+						m_Events[i].Callback.Clear();
 					}
 					else
 					{

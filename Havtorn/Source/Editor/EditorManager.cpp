@@ -66,6 +66,26 @@ namespace Havtorn
 	{
 		RenderManager = nullptr;
 		SAFE_DELETE(ResourceManager);
+
+		CInputMapper* mapper = GEngine::GetInput();
+		mapper->GetActionDelegate(EInputActionEvent::TranslateTransform).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::RotateTransform).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::ScaleTransform).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::ToggleFreeCam).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::FocusEditorEntity).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::DeleteEvent).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::ToggleFullscreen).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::StartPlay).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::StopPlay).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::AltPress).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::AltRelease).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::Copy).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::Paste).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::Undo).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::Redo).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::MovePivot).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::VertexSnapping).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::GridSnapping).RemoveObject(this);
 	}
 
 	bool CEditorManager::Init(CPlatformManager* platformManager, CRenderManager* renderManager)

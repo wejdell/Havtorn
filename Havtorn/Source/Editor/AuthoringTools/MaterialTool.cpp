@@ -25,15 +25,15 @@ namespace Havtorn
 
 	CMaterialTool::CMaterialTool(const char* displayName, CEditorManager* manager)
 		: CWindow(displayName, manager, false)
-	{
-		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Zoom).AddMember(this, &CMaterialTool::OnZoomInput);
-		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MouseDeltaHorizontal).AddMember(this, &CMaterialTool::HandleAxisInput);
-		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MouseDeltaVertical).AddMember(this, &CMaterialTool::HandleAxisInput);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ToggleFreeCam).AddMember(this, &CMaterialTool::ToggleFreeCam);
-	}
+	{}
 
 	void CMaterialTool::OnEnable()
 	{
+		CInputMapper* mapper = GEngine::GetInput();
+		mapper->GetAxisDelegate(EInputAxisEvent::Zoom).AddMember(this, &CMaterialTool::OnZoomInput);
+		mapper->GetAxisDelegate(EInputAxisEvent::MouseDeltaHorizontal).AddMember(this, &CMaterialTool::HandleAxisInput);
+		mapper->GetAxisDelegate(EInputAxisEvent::MouseDeltaVertical).AddMember(this, &CMaterialTool::HandleAxisInput);
+		mapper->GetActionDelegate(EInputActionEvent::ToggleFreeCam).AddMember(this, &CMaterialTool::ToggleFreeCam);
 	}
 
 	void CMaterialTool::OnInspectorGUI()
@@ -246,6 +246,14 @@ namespace Havtorn
 	void CMaterialTool::OnDisable()
 	{
 		CloseMaterial();
+
+		GEngine::GetWorld()->UnblockSystem<CCameraSystem>(this);
+
+		CInputMapper* mapper = GEngine::GetInput();
+		mapper->GetAxisDelegate(EInputAxisEvent::Zoom).RemoveObject(this);
+		mapper->GetAxisDelegate(EInputAxisEvent::MouseDeltaHorizontal).RemoveObject(this);
+		mapper->GetAxisDelegate(EInputAxisEvent::MouseDeltaVertical).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::ToggleFreeCam).RemoveObject(this);
 	}
 
 	void CMaterialTool::OpenMaterial(SEditorAssetRepresentation* asset)

@@ -26,6 +26,11 @@ namespace Havtorn
 		animatorGraphSystem->BindEvaluateFunction(EvaluateLocomotionFunc, "CGhostySystem::EvaluateLocomotion");
 	}
 
+	CGhostySystem::~CGhostySystem()
+	{
+		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Right).RemoveObject(this);
+	}
+
 	void CGhostySystem::Update(std::vector<Ptr<CScene>>& scenes)
 	{
 		for (Ptr<CScene>& scene : scenes)
