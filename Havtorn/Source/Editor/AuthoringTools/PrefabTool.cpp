@@ -32,18 +32,18 @@ namespace Havtorn
 
 	CPrefabTool::CPrefabTool(const char* displayName, CEditorManager* manager)
 		: CWindow(displayName, manager, false)
-	{
-		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Up).AddMember(this, &CPrefabTool::HandleAxisInput);
-		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Right).AddMember(this, &CPrefabTool::HandleAxisInput);
-		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Forward).AddMember(this, &CPrefabTool::HandleAxisInput);
-		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MouseDeltaHorizontal).AddMember(this, &CPrefabTool::HandleAxisInput);
-		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MouseDeltaVertical).AddMember(this, &CPrefabTool::HandleAxisInput);
-		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Zoom).AddMember(this, &CPrefabTool::HandleAxisInput);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ToggleFreeCam).AddMember(this, &CPrefabTool::ToggleFreeCam);
-	}
+	{}
 
 	void CPrefabTool::OnEnable()
 	{
+		CInputMapper* mapper = GEngine::GetInput();
+		mapper->GetAxisDelegate(EInputAxisEvent::Up).AddMember(this, &CPrefabTool::HandleAxisInput);
+		mapper->GetAxisDelegate(EInputAxisEvent::Right).AddMember(this, &CPrefabTool::HandleAxisInput);
+		mapper->GetAxisDelegate(EInputAxisEvent::Forward).AddMember(this, &CPrefabTool::HandleAxisInput);
+		mapper->GetAxisDelegate(EInputAxisEvent::MouseDeltaHorizontal).AddMember(this, &CPrefabTool::HandleAxisInput);
+		mapper->GetAxisDelegate(EInputAxisEvent::MouseDeltaVertical).AddMember(this, &CPrefabTool::HandleAxisInput);
+		mapper->GetAxisDelegate(EInputAxisEvent::Zoom).AddMember(this, &CPrefabTool::HandleAxisInput);
+		mapper->GetActionDelegate(EInputActionEvent::ToggleFreeCam).AddMember(this, &CPrefabTool::ToggleFreeCam);
 	}
 
 	void CPrefabTool::OnInspectorGUI()
@@ -190,6 +190,17 @@ namespace Havtorn
 	void CPrefabTool::OnDisable()
 	{
 		ClosePrefab();
+
+		GEngine::GetWorld()->UnblockSystem<CCameraSystem>(this);
+
+		CInputMapper* mapper = GEngine::GetInput();
+		mapper->GetAxisDelegate(EInputAxisEvent::Up).RemoveObject(this);
+		mapper->GetAxisDelegate(EInputAxisEvent::Right).RemoveObject(this);
+		mapper->GetAxisDelegate(EInputAxisEvent::Forward).RemoveObject(this);
+		mapper->GetAxisDelegate(EInputAxisEvent::MouseDeltaHorizontal).RemoveObject(this);
+		mapper->GetAxisDelegate(EInputAxisEvent::MouseDeltaVertical).RemoveObject(this);
+		mapper->GetAxisDelegate(EInputAxisEvent::Zoom).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::ToggleFreeCam).RemoveObject(this);
 	}
 
 	void CPrefabTool::OpenPrefab(SEditorAssetRepresentation* asset)

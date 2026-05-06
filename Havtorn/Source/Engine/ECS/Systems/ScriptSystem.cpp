@@ -22,6 +22,15 @@ namespace Havtorn
 		world->OnEndOverlap.AddMember(this, &CScriptSystem::OnEndOverlap);
 	}
 
+	CScriptSystem::~CScriptSystem()
+	{
+		CWorld* world = GEngine::GetWorld();
+		world->OnBeginPlayDelegate.RemoveObject(this);
+		world->OnEndPlayDelegate.RemoveObject(this);
+		world->OnBeginOverlap.RemoveObject(this);
+		world->OnEndOverlap.RemoveObject(this);
+	}
+
 	void CScriptSystem::Update(std::vector<Ptr<CScene>>& scenes)
 	{
 		for (Ptr<CScene>& scene : scenes)

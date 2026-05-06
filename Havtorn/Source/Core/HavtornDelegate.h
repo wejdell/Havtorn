@@ -49,6 +49,21 @@ namespace Havtorn
 			return Delegate.AddStatic(std::forward<FunctionType>(function), std::forward<FunctionArgs>(args)...);
 		}
 
+		void Remove(DelegateHandle& handle)
+		{
+			Delegate.Remove(handle);
+		}
+
+		void RemoveAll()
+		{
+			Delegate.RemoveAll();
+		}
+
+		void RemoveObject(void* object)
+		{
+			Delegate.RemoveObject(object);
+		}
+
 		void Broadcast(BroadcastTypes... args)
 		{
 			Delegate.Broadcast(std::forward<BroadcastTypes>(args)...);

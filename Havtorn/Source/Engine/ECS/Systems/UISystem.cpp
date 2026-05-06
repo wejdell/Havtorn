@@ -18,15 +18,20 @@ namespace Havtorn
 	CUISystem::CUISystem(CPlatformManager* platformManager)
 		: ISystem()
 	{
-		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MousePositionHorizontal).AddMember(this, &CUISystem::HandleAxisInput);
-		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MousePositionVertical).AddMember(this, &CUISystem::HandleAxisInput);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::PickEditorEntity).AddMember(this, &CUISystem::HandleMouseInput);
+		CInputMapper* mapper = GEngine::GetInput();
+		mapper->GetAxisDelegate(EInputAxisEvent::MousePositionHorizontal).AddMember(this, &CUISystem::HandleAxisInput);
+		mapper->GetAxisDelegate(EInputAxisEvent::MousePositionVertical).AddMember(this, &CUISystem::HandleAxisInput);
+		mapper->GetActionDelegate(EInputActionEvent::PickEditorEntity).AddMember(this, &CUISystem::HandleMouseInput);
 
 		PlatformManager = platformManager;
 	}
 
 	CUISystem::~CUISystem()
 	{
+		CInputMapper* mapper = GEngine::GetInput();
+		mapper->GetAxisDelegate(EInputAxisEvent::MousePositionHorizontal).RemoveObject(this);
+		mapper->GetAxisDelegate(EInputAxisEvent::MousePositionVertical).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::PickEditorEntity).RemoveObject(this);
 	}
 
 	void CUISystem::Update(std::vector<Ptr<CScene>>& scenes)

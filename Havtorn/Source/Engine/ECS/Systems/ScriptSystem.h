@@ -12,7 +12,7 @@ namespace Havtorn
 	{
 	public:
 		CScriptSystem(CWorld* world);
-		~CScriptSystem() override = default;
+		~CScriptSystem() override;
 		ENGINE_API void Update(std::vector<Ptr<CScene>>& scenes) override;
 
 		void OnBeginPlay(std::vector<Ptr<CScene>>& scenes);
