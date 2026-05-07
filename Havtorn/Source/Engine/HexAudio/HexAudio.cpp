@@ -352,8 +352,7 @@ namespace Havtorn
 
 		CAudioSystem::~CAudioSystem()
 		{
-			// TODO.NW: Make unbind function asap
-			//GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderPassForward);
+			GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderPassForward).RemoveObject(this);
 			Backend->UnloadAll();
 		}
 
