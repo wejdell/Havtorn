@@ -21,6 +21,14 @@
 #endif
 #endif
 
+#ifdef HV_AUDIO_BACKEND_FMOD
+#include <fmod_common.h>
+#include <fmod_studio.h>
+#include <fmod_studio.hpp>
+#include <fmod_studio_common.h>
+#include <fmod_errors.h>
+#endif
+
 #ifdef HV_AUDIO_BACKEND_SDL
 #include <SDL3/SDL_audio.h>
 #include <SDL3/SDL_filesystem.h>
@@ -220,6 +228,177 @@ namespace Havtorn
 		};
 #endif
 
+#ifdef HV_AUDIO_BACKEND_FMOD
+
+		using namespace FMOD;
+
+		static std::string FmodError = "";
+		bool FmodCheck(const FMOD_RESULT result)
+		{ 
+			if (result != FMOD_OK) 
+				FmodError = FMOD_ErrorString(result); 
+			
+			return result == FMOD_OK; 
+		}
+
+		class CAudioBackend::CAudioImplementation
+		{
+		public:
+			CAudioImplementation() = default;
+
+			bool Init()
+			{
+				if (!FmodCheck(Studio::System::create(&StudioSystem)))
+				{
+					HV_LOG_ERROR("AudioBackend::Init: %s", FmodError.c_str());
+					return false;
+				}
+
+				FMOD_STUDIO_INITFLAGS initFlags = FMOD_STUDIO_INIT_NORMAL;
+#ifndef HV_RELEASE
+				initFlags |= FMOD_STUDIO_INIT_LIVEUPDATE;
+#endif // HV_RELEASE
+
+				if (!FmodCheck(StudioSystem->initialize(MaxChannels, initFlags, FMOD_INIT_NORMAL | FMOD_INIT_PROFILE_ENABLE, 0)))
+				{
+					HV_LOG_ERROR("AudioBackend::Init: %s", FmodError.c_str());
+					return false;
+				}
+
+				if (!FmodCheck(StudioSystem->getCoreSystem(&CoreSystem)))
+				{
+					HV_LOG_ERROR("AudioBackend::Init: %s", FmodError.c_str());
+					return false;
+				}
+				
+				return true;
+			}
+
+			void Terminate()
+			{
+				if (!FmodCheck(StudioSystem->release()))
+					HV_LOG_ERROR("AudioBackend::Terminate: %s", FmodError.c_str());
+			}
+
+			void Update()
+			{
+				StudioSystem->update();
+			}
+
+			bool LoadAsset(const std::string_view assetName)
+			{
+				if (LoadedSounds.contains(assetName.data()))
+					return false;
+
+				std::string assetPath = UFileSystem::GetWorkingPath();
+				assetPath.append("AudioSource/");
+				assetPath.append(assetName.data());
+				assetPath.append(".wav");
+
+				// TODO.NW: Need some sort of settings structure, for picking 3D, looping etc.
+
+				Sound* newSound = nullptr;
+				if (!FmodCheck(CoreSystem->createSound(assetPath.c_str(), FMOD_3D, nullptr, &newSound)))
+				{
+					HV_LOG_WARN("AudioBackend::LoadAsset: %s", FmodError.c_str());
+					return false;
+				}
+
+				// Sound memory is handled by Fmod, just need to make sure we release it when unloading
+				LoadedSounds.emplace(assetName.data(), newSound);
+				return true;
+			}
+
+			void UnloadAsset(const std::string_view assetName)
+			{
+				if (!LoadedSounds.contains(assetName.data()))
+					return;
+
+				LoadedSounds.at(assetName.data())->release();
+				LoadedSounds.erase(assetName.data());
+			}
+
+			void RegisterAudioObject(const U64 id, const bool isListener)
+			{
+				if (isListener)
+					return;
+
+				Emitters.emplace(id, nullptr);
+			}
+
+			void UnregisterAudioObject(const U64 id)
+			{
+				// TODO.NW: Figure out how to deal with multiple listeners, if we want that.
+				if (id == DefaultListenerID)
+					return;
+
+				if (!Emitters.contains(id))
+					return;
+
+				bool isPlaying = false; 
+				if (!FmodCheck(Emitters.at(id)->isPlaying(&isPlaying)) || !isPlaying)
+				{
+					Emitters.erase(id);
+				}
+			}
+
+			void SetPosition(const U64 id, const STransformComponent* transform, const SVector& localOffset)
+			{
+				const SMatrix transformMatrix = transform->Transform.GetMatrix();
+				const SVector position = transformMatrix.GetTranslation() + (SVector4(localOffset, 1.0f) * transformMatrix).ToVector3();
+				const SVector upVector = transformMatrix.GetUp().GetNormalized();
+				const SVector forwardVector = transformMatrix.GetForward().GetNormalized();
+
+				// TODO.NW: Figure out how to deal with multiple listeners, if we want that.
+				if (id == DefaultListenerID)
+				{
+					FMOD_3D_ATTRIBUTES audioTransform;
+					audioTransform.position = { position.X, position.Y, position.Z };
+					audioTransform.velocity = { 0.0f, 0.0f, 0.0f }; // TODO.NW: Add
+					audioTransform.forward = { forwardVector.X, forwardVector.Y, forwardVector.Z }; 
+					audioTransform.up = { upVector.X, upVector.Y, upVector.Z };
+
+					// NW: Use this to base the attenuation on something else
+					FMOD_VECTOR attenuationPosition = audioTransform.position;
+
+					if (!FmodCheck(StudioSystem->setListenerAttributes(0, &audioTransform, &attenuationPosition)))
+						HV_LOG_WARN("AudioBackend::SetPosition: %s", FmodError.c_str());
+
+					return;
+				}
+
+				if (!Emitters.contains(id))
+					return;
+
+				FMOD_VECTOR emitterPosition = { position.X, position.Y, position.Z };
+				FMOD_VECTOR emitterVelocity = { 0.0f, 0.0f, 0.0f }; // TODO.NW: Add
+				Emitters.at(id)->set3DAttributes(&emitterPosition, &emitterVelocity);
+			}
+
+			void PlayAudio(const std::string_view name, const U64 audioObjectID)
+			{
+				if (!LoadedSounds.contains(name.data()))
+					return;
+
+				if (!Emitters.contains(audioObjectID))
+					return;
+
+				CoreSystem->playSound(LoadedSounds.at(name.data()), nullptr, false, &Emitters.at(audioObjectID));
+			}
+
+			void StopAudio(const std::string_view /*name*/, const U64 /*audioObjectID*/)
+			{
+			}
+
+		private:
+			Studio::System* StudioSystem = nullptr;
+			System* CoreSystem = nullptr;
+			std::map<std::string, Sound*> LoadedSounds;
+			std::map<U64, Channel*> Emitters;
+			U32 MaxChannels = 256;
+		};
+#endif
+
 #ifdef HV_AUDIO_BACKEND_SDL
 	struct SSoundData
 	{
@@ -311,9 +490,8 @@ namespace Havtorn
 			LoadedAssets.erase(assetName.data());
 		}
 
-		U64 RegisterAudioObject(const U64 /*id*/, const bool /*isListener*/)
+		void RegisterAudioObject(const U64 /*id*/, const bool /*isListener*/)
 		{
-			return U64();
 		}
 
 		void UnregisterAudioObject(const U64 /*id*/)
@@ -444,7 +622,6 @@ namespace Havtorn
 				newID = DefaultListenerID;
 				MainListenerID = newID;
 			}
-
 
 			Impl->RegisterAudioObject(newID, isListener);
 			return newID;

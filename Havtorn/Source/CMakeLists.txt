@@ -11,7 +11,13 @@ project (Havtorn
 
 # option(ENABLE_CODE_ANALYSIS "Use Static Code Analysis on build" OFF)
 
-option(ENABLE_WWISE_AUDIO "Use Wwise as the audio backend" OFF)
+set(AUDIO_BACKENDS WWISE FMOD SDL)
+set(AUDIO_BACKEND SDL CACHE STRING "Chosen Audio Backend")
+set_property(CACHE AUDIO_BACKEND PROPERTY STRINGS ${AUDIO_BACKENDS})
+
+if(NOT AUDIO_BACKEND IN_LIST AUDIO_BACKENDS)
+    message(FATAL_ERROR "The audio backend must be one of ${AUDIO_BACKENDS}")
+endif()
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -220,8 +226,7 @@ target_link_directories(Platform PRIVATE
 )
 target_compile_definitions(Platform PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_PLATFORM_DLL)
 
-if(ENABLE_WWISE_AUDIO STREQUAL "ON")
-else()
+if(AUDIO_BACKEND STREQUAL "SDL")
     target_compile_definitions(Platform PRIVATE HV_AUDIO_BACKEND_SDL)
 endif()
 
@@ -682,9 +687,9 @@ foreach(FILE ${HLSL_SHADER_FILES})
 endforeach(FILE)
 # ==================== SHADERS ====================
 
-set(AUDIO_BACKEND_FILES)
-if(ENABLE_WWISE_AUDIO STREQUAL "ON")
-    set(AUDIO_BACKEND_FILES
+set(EXTRA_AUDIO_BACKEND_FILES)
+if(AUDIO_BACKEND STREQUAL "WWISE")
+    set(EXTRA_AUDIO_BACKEND_FILES
         "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkDefaultLowLevelIODispatcher.cpp"
         "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkDefaultLowLevelIODispatcher.h"
         "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Common/AkFileHelpersBase.h"
@@ -711,10 +716,9 @@ if(ENABLE_WWISE_AUDIO STREQUAL "ON")
         "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Win32/stdafx.cpp"
         "${EXTERNAL_FOLDER}Wwise/include/AK/SoundEngine/Win32/stdafx.h"
     )
-else()
 endif()
 
-add_library(Engine SHARED ${ENGINE_FILES} ${SHADER_INCLUDES} ${HLSL_SHADER_FILES} ${AUDIO_BACKEND_FILES})
+add_library(Engine SHARED ${ENGINE_FILES} ${SHADER_INCLUDES} ${HLSL_SHADER_FILES} ${EXTRA_AUDIO_BACKEND_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SHADER_INCLUDES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${HLSL_SHADER_FILES})
@@ -742,11 +746,20 @@ target_include_directories(Engine PRIVATE
     "${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
     "${EXTERNAL_FOLDER}PhysX/physx/include"
     "${EXTERNAL_FOLDER}SDL/include"
-    "${EXTERNAL_FOLDER}Wwise/include"
     "Core"
     "Platform"
     "GUI"
 )
+if(AUDIO_BACKEND STREQUAL "WWISE")
+    target_include_directories(Engine PRIVATE
+        "${EXTERNAL_FOLDER}Wwise/include"
+    )
+elseif(AUDIO_BACKEND STREQUAL "FMOD")
+    target_include_directories(Engine PRIVATE
+        "${EXTERNAL_FOLDER}fmod/include"
+    )
+endif()
+
 target_link_directories(Engine PRIVATE
     "${EXTERNAL_FOLDER}Lib/Debug"
     "${EXTERNAL_FOLDER}Lib/Release"
@@ -754,16 +767,24 @@ target_link_directories(Engine PRIVATE
 )
 target_compile_definitions(Engine PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_ENGINE_DLL)
 
-if(ENABLE_WWISE_AUDIO STREQUAL "ON")
+if(AUDIO_BACKEND STREQUAL "WWISE")
     target_compile_definitions(Engine PRIVATE HV_AUDIO_BACKEND_WWISE)
     target_compile_definitions(Engine PRIVATE $<$<CONFIG:GameRelease>:AK_OPTIMIZED>)
     target_link_libraries(Engine PRIVATE
     $<$<CONFIG:EditorDebug>:Wwise/AkSoundEngined Wwise/AkMemoryMgrd Wwise/AkStreamMgrd Wwise/AkSpatialAudiod Wwise/CommunicationCentrald ws2_32>
     $<$<CONFIG:GameDebug>:Wwise/AkSoundEngined Wwise/AkMemoryMgrd Wwise/AkStreamMgrd Wwise/AkSpatialAudiod Wwise/CommunicationCentrald ws2_32>
     $<$<CONFIG:EditorDevelopment>:Wwise/AkSoundEngine Wwise/AkMemoryMgr Wwise/AkStreamMgr Wwise/AkSpatialAudio Wwise/CommunicationCentral ws2_32>
-    $<$<CONFIG:GameRelease>:Wwise/AkSoundEngine Wwise/AkMemoeryMgr Wwise/AkStreamMgr Wwise/AkSpatialAudio>
-)
-else()
+    $<$<CONFIG:GameRelease>:Wwise/AkSoundEngine Wwise/AkMemoryMgr Wwise/AkStreamMgr Wwise/AkSpatialAudio>
+    )
+elseif(AUDIO_BACKEND STREQUAL "FMOD")
+    target_compile_definitions(Engine PRIVATE HV_AUDIO_BACKEND_FMOD)
+    target_link_libraries(Engine PRIVATE
+    $<$<CONFIG:EditorDebug>:fmod/fmodL_vc fmod/fmodstudioL_vc fmod/fsbank_vc>
+    $<$<CONFIG:GameDebug>:fmod/fmodL_vc fmod/fmodstudioL_vc fmod/fsbank_vc>
+    $<$<CONFIG:EditorDevelopment>:fmod/fmod_vc fmod/fmodstudio_vc fmod/fsbank_vc>
+    $<$<CONFIG:GameRelease>:fmod/fmod_vc fmod/fmodstudio_vc fmod/fsbank_vc>
+    )
+elseif(AUDIO_BACKEND STREQUAL "SDL")
     target_compile_definitions(Engine PRIVATE HV_AUDIO_BACKEND_SDL)
 endif()
 
