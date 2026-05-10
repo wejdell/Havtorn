@@ -21,6 +21,12 @@
 #endif
 #endif
 
+#ifdef HV_AUDIO_BACKEND_SDL
+#include <SDL3/SDL_audio.h>
+#include <SDL3/SDL_filesystem.h>
+// TODO.NW: Add SDL3 Mixer if we end up using SDL audio, for spatialization
+#endif
+
 #include "Scene/Scene.h"
 #include "ECS/Components/TransformComponent.h"
 #include "ECS/Components/AudioEmitterComponent.h"
@@ -215,6 +221,30 @@ namespace Havtorn
 #endif
 
 #ifdef HV_AUDIO_BACKEND_SDL
+	struct SSoundData
+	{
+		~SSoundData()
+		{
+			if (WavData != nullptr)
+				SDL_free(WavData);
+		}
+
+		U8* WavData = nullptr;
+		SDL_AudioSpec Spec = {};
+		U32 DataSize = 0;
+	};
+
+	struct SChannel
+	{
+		~SChannel()
+		{
+			SDL_DestroyAudioStream(Stream);
+		}
+
+		SDL_AudioStream* Stream = nullptr;
+		bool IsUsed = false;
+	};
+
 	class CAudioBackend::CAudioImplementation
 	{
 	public:
@@ -222,24 +252,63 @@ namespace Havtorn
 
 		bool Init()
 		{
+			DeviceID = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, NULL);
+			if (DeviceID == 0)
+			{
+				HV_LOG_WARN("AudioBackend::Init: Failed to open audio device: %s", SDL_GetError());
+				return false;
+			}
+			
 			return true;
 		}
 
 		void Terminate()
 		{
+			SDL_CloseAudioDevice(DeviceID);
+			Channels.clear();
 		}
 
 		void Update()
 		{
+			for (Ptr<SChannel>& channel : Channels)
+			{
+				if (SDL_GetAudioStreamAvailable(channel->Stream) == 0)
+				{
+					SDL_FlushAudioStream(channel->Stream);
+					channel->IsUsed = false;					
+				}
+			}
+
+			std::erase_if(Channels, [](const Ptr<SChannel>& channel) { return !channel->IsUsed; });
 		}
 
-		bool LoadAsset(const std::string_view /*assetName*/)
+		bool LoadAsset(const std::string_view assetName)
 		{
+			if (LoadedAssets.contains(assetName.data()))
+				return false;
+			
+			std::string assetPath = UFileSystem::GetWorkingPath();
+			assetPath.append("AudioSource/");
+			assetPath.append(assetName.data());
+			assetPath.append(".wav");
+
+			Ptr<SSoundData> data = std::make_unique<SSoundData>();
+			if (!SDL_LoadWAV(assetPath.c_str(), &data->Spec, &data->WavData, &data->DataSize))
+			{
+				HV_LOG_WARN("AudioBackend::LoadAsset: Could not load WAV: %s", SDL_GetError());
+				return false;
+			}
+
+			LoadedAssets.emplace(assetName.data(), std::move(data));
 			return true;
 		}
 
-		void UnloadAsset(const std::string_view /*assetName*/)
+		void UnloadAsset(const std::string_view assetName)
 		{
+			if (!LoadedAssets.contains(assetName.data()))
+				return;
+
+			LoadedAssets.erase(assetName.data());
 		}
 
 		U64 RegisterAudioObject(const U64 /*id*/, const bool /*isListener*/)
@@ -255,8 +324,44 @@ namespace Havtorn
 		{
 		}
 
-		void PlayAudio(const std::string_view /*name*/, const U64 /*audioObjectID*/)
+		void PlayAudio(const std::string_view name, const U64 /*audioObjectID*/)
 		{
+			if (!LoadedAssets.contains(name.data()))
+			{
+				HV_LOG_WARN("AudioBackend::PlayAudio: Failed to play '%s', it was not loaded!", name.data());
+				return;
+			}
+
+			SSoundData* data = LoadedAssets.at(name.data()).get();
+
+			SDL_AudioStream* freeStream = nullptr;
+			for (Ptr<SChannel>& channel : Channels)
+			{
+				if (channel->IsUsed)
+					continue;
+
+				freeStream = channel->Stream;
+				channel->IsUsed = true;
+			}
+
+			if (freeStream == nullptr)
+			{
+				if (!InitNewChannel(data->Spec))
+				{
+					HV_LOG_WARN("AudioBackend::PlayAudio: Failed to play '%s', could not create a new channel based on its spec!", name.data());
+					return;
+				}
+
+				freeStream = Channels.back()->Stream;
+			}
+
+			if (!SDL_PutAudioStreamData(freeStream, data->WavData, data->DataSize))
+			{
+				HV_LOG_WARN("AudioBackend::PlayAudio: Failed to play '%s': %s", SDL_GetError());
+				return;
+			}
+
+			Channels.back()->IsUsed = true;
 		}
 
 		void StopAudio(const std::string_view /*name*/, const U64 /*audioObjectID*/)
@@ -264,6 +369,29 @@ namespace Havtorn
 		}
 
 	private:
+		bool InitNewChannel(SDL_AudioSpec& spec)
+		{
+			Channels.emplace_back(std::make_unique<SChannel>(SDL_CreateAudioStream(&spec, nullptr), false));
+			if (Channels.back()->Stream == nullptr)
+			{
+				HV_LOG_WARN("AudioBackend::InitNewChannel: Could not create audio stream: %s", SDL_GetError());
+				Channels.pop_back();
+				return false;
+			}
+
+			if (!SDL_BindAudioStream(DeviceID, Channels.back()->Stream))
+			{
+				HV_LOG_WARN("AudioBackend::InitNewChannel: Failed to bind audio stream to device!");
+				Channels.pop_back();
+				return false;
+			}
+
+			return true;
+		}
+
+		SDL_AudioDeviceID DeviceID = 0;
+		std::map<std::string, Ptr<SSoundData>> LoadedAssets;
+		std::vector<Ptr<SChannel>> Channels;
 	};
 #endif
 

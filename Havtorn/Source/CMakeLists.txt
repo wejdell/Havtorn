@@ -11,7 +11,7 @@ project (Havtorn
 
 # option(ENABLE_CODE_ANALYSIS "Use Static Code Analysis on build" OFF)
 
-option(ENABLE_WWISE_AUDIO "Use Wwise as the audio backend" ON)
+option(ENABLE_WWISE_AUDIO "Use Wwise as the audio backend" OFF)
 
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
@@ -219,6 +219,12 @@ target_link_directories(Platform PRIVATE
     ${CMAKE_BINARY_DIR}
 )
 target_compile_definitions(Platform PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_PLATFORM_DLL)
+
+if(ENABLE_WWISE_AUDIO STREQUAL "ON")
+else()
+    target_compile_definitions(Platform PRIVATE HV_AUDIO_BACKEND_SDL)
+endif()
+
 target_compile_options(Platform PRIVATE ${COMMON_COMPILE_OPTIONS})
 target_link_options(Platform PRIVATE ${COMMON_LINK_OPTIONS})
 set_property(TARGET Platform PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
