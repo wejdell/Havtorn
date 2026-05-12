@@ -5,7 +5,7 @@
 #include "ECS/ECSInclude.h"
 #include "ECS/GUIDManager.h"
 #include "Graphics/RenderManager.h"
-#include "Assets/FileHeaderDeclarations.h"
+#include "Assets/AssetFileHeader.h"
 #include "World.h"
 #include "Assets/AssetRegistry.h"
 

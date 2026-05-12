@@ -3,7 +3,7 @@
 #pragma once
 
 #include "ECS/Entity.h"
-#include "Assets/FileHeaderDeclarations.h"
+#include "Assets/AssetFileHeader.h"
 #include "HexPhys/HexPhys.h"
 #include "HexAudio/HexAudio.h"
 #include "HexRune/HexRune.h"
