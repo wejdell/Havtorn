@@ -13,9 +13,15 @@ namespace Havtorn
 {
     SAudioEmitterComponentEditorContext SAudioEmitterComponentEditorContext::Context = {};
 
-    SComponentViewResult SAudioEmitterComponentEditorContext::View(const SEntity& /*entityOwner*/, CScene* /*scene*/) const
+    SComponentViewResult SAudioEmitterComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
-        return SComponentViewResult();
+        SAudioEmitterComponent* emitterComponent = scene->GetComponent<SAudioEmitterComponent>(entityOwner);
+        if (emitterComponent == nullptr)
+            return {};
+
+        // TODO.NW: Add coming array GUI element for adding multiple sounds. The component is currently constructed with one in the array.
+
+        return { EComponentViewResultLabel::InspectAssetComponent, emitterComponent, SAssetReference::ConvertToPointers(emitterComponent->AssetReferences), EAssetType::AudioClip };
     }
 
     bool SAudioEmitterComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const

@@ -42,6 +42,8 @@
 #include "ECS/GUIDManager.h"
 #include "Engine.h"
 #include "Input/InputMapper.h"
+#include "Assets/RuntimeAssets/AudioClipAsset.h"
+#include "Assets/AssetRegistry.h"
 
 #include <Filesystem.h>
 #include <PlatformUtilities.h>
@@ -149,29 +151,29 @@ namespace Havtorn
 				AK::SoundEngine::RenderAudio();
 			}
 
-			bool LoadAsset(const std::string_view assetName)
+			bool LoadAsset(SAudioClipAsset* engineAsset)
 			{
 				std::string bankPath = "Event/"; 
-				bankPath.append(assetName.data()); 
+				bankPath.append(engineAsset->Name); 
 				bankPath.append(".bnk");
 
 				AkBankID bankID;	
 				if (AK::SoundEngine::LoadBank(bankPath.c_str(), bankID) != AK_Success)
 					return false;
 
-				const char* names[] = { assetName.data() };
+				const char* names[] = { engineAsset->Name.c_str() };
 				AK::SoundEngine::PrepareEvent(AK::SoundEngine::Preparation_Load, names, 1);
 				return true;
 
 			}
 
-			void UnloadAsset(const std::string_view assetName)
+			void UnloadAsset(SAudioClipAsset* engineAsset)
 			{
-				const char* names[] = { assetName.data() };
+				const char* names[] = { engineAsset->Name.c_str() };
 				AK::SoundEngine::PrepareEvent(AK::SoundEngine::Preparation_Unload, names, 1);
 
 				std::string bankPath = "Event/";
-				bankPath.append(assetName.data());
+				bankPath.append(engineAsset->Name);
 				bankPath.append(".bnk");
 				AK::SoundEngine::UnloadBank(bankPath.c_str(), nullptr);
 			}
@@ -285,37 +287,37 @@ namespace Havtorn
 				StudioSystem->update();
 			}
 
-			bool LoadAsset(const std::string_view assetName)
+			bool LoadAsset(SAudioClipAsset* engineAsset)
 			{
-				if (LoadedSounds.contains(assetName.data()))
+				if (LoadedSounds.contains(engineAsset->Name))
 					return false;
 
 				std::string assetPath = UFileSystem::GetWorkingPath();
 				assetPath.append("AudioSource/");
-				assetPath.append(assetName.data());
+				assetPath.append(engineAsset->Name);
 				assetPath.append(".wav");
 
 				// TODO.NW: Need some sort of settings structure, for picking 3D, looping etc.
 
 				Sound* newSound = nullptr;
-				if (!FmodCheck(CoreSystem->createSound(assetPath.c_str(), FMOD_3D, nullptr, &newSound)))
+				if (!FmodCheck(CoreSystem->createSound(assetPath.c_str(), GetModeFromSettings(engineAsset->Settings), nullptr, &newSound)))
 				{
 					HV_LOG_WARN("AudioBackend::LoadAsset: %s", FmodError.c_str());
 					return false;
 				}
 
 				// Sound memory is handled by Fmod, just need to make sure we release it when unloading
-				LoadedSounds.emplace(assetName.data(), newSound);
+				LoadedSounds.emplace(engineAsset->Name, newSound);
 				return true;
 			}
 
-			void UnloadAsset(const std::string_view assetName)
+			void UnloadAsset(SAudioClipAsset* engineAsset)
 			{
-				if (!LoadedSounds.contains(assetName.data()))
+				if (!LoadedSounds.contains(engineAsset->Name))
 					return;
 
-				LoadedSounds.at(assetName.data())->release();
-				LoadedSounds.erase(assetName.data());
+				LoadedSounds.at(engineAsset->Name)->release();
+				LoadedSounds.erase(engineAsset->Name);
 			}
 
 			void RegisterAudioObject(const U64 id, const bool isListener)
@@ -388,9 +390,19 @@ namespace Havtorn
 
 			void StopAudio(const std::string_view /*name*/, const U64 /*audioObjectID*/)
 			{
+				// TODO.NW: Implement
 			}
 
 		private:
+			U32 GetModeFromSettings(const SAudioClipSettings& settings)
+			{
+				U32 mask = FMOD_DEFAULT;
+				mask |= (settings.IsLooping ? FMOD_LOOP_NORMAL : FMOD_LOOP_OFF);
+				mask |= (settings.IsSpatialized ? FMOD_3D : FMOD_2D);
+
+				return mask;
+			}
+
 			Studio::System* StudioSystem = nullptr;
 			System* CoreSystem = nullptr;
 			std::map<std::string, Sound*> LoadedSounds;
@@ -461,14 +473,14 @@ namespace Havtorn
 			std::erase_if(Channels, [](const Ptr<SChannel>& channel) { return !channel->IsUsed; });
 		}
 
-		bool LoadAsset(const std::string_view assetName)
+		bool LoadAsset(SAudioClipAsset* engineAsset)
 		{
-			if (LoadedAssets.contains(assetName.data()))
+			if (LoadedAssets.contains(engineAsset->Name))
 				return false;
 			
 			std::string assetPath = UFileSystem::GetWorkingPath();
 			assetPath.append("AudioSource/");
-			assetPath.append(assetName.data());
+			assetPath.append(engineAsset->Name);
 			assetPath.append(".wav");
 
 			Ptr<SSoundData> data = std::make_unique<SSoundData>();
@@ -478,16 +490,16 @@ namespace Havtorn
 				return false;
 			}
 
-			LoadedAssets.emplace(assetName.data(), std::move(data));
+			LoadedAssets.emplace(engineAsset->Name, std::move(data));
 			return true;
 		}
 
-		void UnloadAsset(const std::string_view assetName)
+		void UnloadAsset(SAudioClipAsset* engineAsset)
 		{
-			if (!LoadedAssets.contains(assetName.data()))
+			if (!LoadedAssets.contains(engineAsset->Name))
 				return;
 
-			LoadedAssets.erase(assetName.data());
+			LoadedAssets.erase(engineAsset->Name);
 		}
 
 		void RegisterAudioObject(const U64 /*id*/, const bool /*isListener*/)
@@ -596,24 +608,36 @@ namespace Havtorn
 			Impl->Update();
 		}
 
-		void CAudioBackend::LoadAsset(const std::string_view assetName)
+		void CAudioBackend::LoadAsset(const SAssetReference& assetRef)
 		{
-			if (Impl->LoadAsset(assetName))
-				LoadedAssets.push_back(assetName.data());
+			SAudioClipAsset* audioAsset = GEngine::GetAssetRegistry()->RequestAssetData<SAudioClipAsset>(assetRef, AudioBackendRequesterID);
+			if (audioAsset == nullptr)
+				return;
+			
+			if (std::ranges::find(LoadedAssets, assetRef) != LoadedAssets.end())
+				return;
+			
+			if (Impl->LoadAsset(audioAsset))
+				LoadedAssets.push_back(assetRef);
 		}
 
-		void CAudioBackend::UnloadAsset(const std::string_view assetName)
+		void CAudioBackend::UnloadAsset(const SAssetReference& assetRef)
 		{
-			Impl->UnloadAsset(assetName);
+			SAudioClipAsset* audioAsset = GEngine::GetAssetRegistry()->RequestAssetData<SAudioClipAsset>(assetRef, AudioBackendRequesterID);
+			if (audioAsset == nullptr)
+				return;
+
+			Impl->UnloadAsset(audioAsset);
+			GEngine::GetAssetRegistry()->UnrequestAsset(assetRef, AudioBackendRequesterID);
 		}
 
 		void CAudioBackend::UnloadAll()
 		{
-			for (const std::string& asset : LoadedAssets)
-				Impl->UnloadAsset(asset);
+			for (const SAssetReference& asset : LoadedAssets)
+				UnloadAsset(asset);
 		}
 
-		U64 CAudioBackend::RegisterAudioObject(const bool isListener)
+		U64 CAudioBackend::RegisterAudioObject(const bool isListener, const std::vector<SAssetReference>& assetReferences)
 		{
 			U64 newID = UGUIDManager::Generate();
 
@@ -624,11 +648,24 @@ namespace Havtorn
 			}
 
 			Impl->RegisterAudioObject(newID, isListener);
+			
+			for (const SAssetReference& assetRef : assetReferences)
+			{
+				if (assetRef.IsValid())
+					LoadAsset(assetRef);
+			}
+
 			return newID;
 		}
 
-		void CAudioBackend::UnregisterAudioObject(const U64 id)
+		void CAudioBackend::UnregisterAudioObject(const U64 id, const std::vector<SAssetReference>& assetReferences)
 		{
+			for (const SAssetReference& assetRef : assetReferences)
+			{
+				if (assetRef.IsValid())
+					UnloadAsset(assetRef);
+			}
+
 			Impl->UnregisterAudioObject(id);
 		}
 
@@ -638,21 +675,43 @@ namespace Havtorn
 			Impl->SetPosition(id, transform, localOffset);
 		}
 
-		void CAudioBackend::PlayAudio(const std::string_view name, const U64 emitterID)
+		void CAudioBackend::PlayAudio(const SAssetReference& assetRef, const U64 emitterID)
 		{
-			Impl->PlayAudio(name, emitterID);
+			SAudioClipAsset* audioAsset = GEngine::GetAssetRegistry()->RequestAssetData<SAudioClipAsset>(assetRef, AudioBackendRequesterID);
+			if (audioAsset == nullptr)
+				return;
+
+			Impl->PlayAudio(audioAsset->Name, emitterID);
 		}
 
-		void CAudioBackend::StopAudio(const std::string_view name, const U64 emitterID)
+		void CAudioBackend::StopAudio(const SAssetReference& assetRef, const U64 emitterID)
 		{
-			Impl->StopAudio(name, emitterID);
+			SAudioClipAsset* audioAsset = GEngine::GetAssetRegistry()->RequestAssetData<SAudioClipAsset>(assetRef, AudioBackendRequesterID);
+			if (audioAsset == nullptr)
+				return;
+
+			Impl->StopAudio(audioAsset->Name, emitterID);
 		}
 
 		CAudioSystem::CAudioSystem(CAudioBackend* backend)
 			: Backend(backend)
 		{
 			GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderPassForward).AddMember(this, &CAudioSystem::DebugAudio);
-			Backend->LoadAsset("PlaySound");
+
+			// NW: AUDIO_ASSET_LOADING: By trying to load referenced assets on begin play (when the audio system is constructed), as well
+			// as when components are constructed, we should handle automatically loading all referenced assets. As long as we don't change
+			// the lists of AssetReferences on a particular component at runtime. This setup will probably show up again so we should try 
+			// to keep it in mind
+
+			std::vector<Ptr<CScene>>& scenes = GEngine::GetWorld()->GetActiveScenes();
+			for (const Ptr<CScene>& scene : scenes)
+			{
+				for (SAudioEmitterComponent* emitter : scene->GetComponents<SAudioEmitterComponent>())
+				{
+					for (const SAssetReference& assetRef : emitter->AssetReferences)
+						Backend->LoadAsset(assetRef);
+				}
+			}
 		}
 
 		CAudioSystem::~CAudioSystem()
@@ -670,7 +729,13 @@ namespace Havtorn
 					STransformComponent* transform = scene->GetComponent<STransformComponent>(emitter->Owner);
 					Backend->SetPosition(emitter->AudioObjectID, transform, emitter->LocalOffset);
 
-					DebugEmitterID = emitter->AudioObjectID;
+					if (QueueDebugAudio)
+					{
+						QueueDebugAudio = false;
+						
+						if (!emitter->AssetReferences.empty())
+							Backend->PlayAudio(emitter->AssetReferences[0], emitter->AudioObjectID);
+					}
 				}
 
 				for (SAudioListenerComponent* listener : scene->GetComponents<SAudioListenerComponent>())
@@ -688,8 +753,7 @@ namespace Havtorn
 			if (!payload.IsPressed)
 				return;
 
-			if (DebugEmitterID != 0)
-				Backend->PlayAudio("PlaySound", DebugEmitterID);
+			QueueDebugAudio = true;
 		}
 	}
 }

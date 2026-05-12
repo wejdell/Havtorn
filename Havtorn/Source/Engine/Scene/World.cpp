@@ -331,13 +331,13 @@ namespace Havtorn
 		RequestSystem<HexAudio::CAudioSystem>(requester, AudioBackend.get());
 	}
 
-	U64 CWorld::RegisterAudioObject(const bool isListener)
+	U64 CWorld::RegisterAudioObject(const bool isListener, const std::vector<SAssetReference>& assetReferences)
 	{
-		return AudioBackend->RegisterAudioObject(isListener);
+		return AudioBackend->RegisterAudioObject(isListener, assetReferences);
 	}
 
-	void CWorld::UnregisterAudioObject(const U64 objectID)
+	void CWorld::UnregisterAudioObject(const U64 objectID, const std::vector<SAssetReference>& assetReferences)
 	{
-		AudioBackend->UnregisterAudioObject(objectID);
+		AudioBackend->UnregisterAudioObject(objectID, assetReferences);
 	}
 }

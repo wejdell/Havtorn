@@ -301,13 +301,12 @@ namespace Havtorn
 			//RenderManager->RenderSkeletalAnimationAssetTexture(assetTexture, filePath, boneTransforms);
 			break;
 		}
-		case EAssetType::AudioOneShot:
+		case EAssetType::AudioClip: // TODO.NW: Play sound? Probably want to do that if selected and pressing play instead
 			break;
 		case EAssetType::VisualFX:
 			break;
 		case EAssetType::SpriteAnimation:
 			break;
-		case EAssetType::AudioCollection:
 		case EAssetType::StaticMesh:
 		case EAssetType::SkeletalMesh:
 		case EAssetType::Texture:
@@ -334,7 +333,7 @@ namespace Havtorn
 		sourceData.AssetDependencyPath = importOptions.AssetRep != nullptr ? importOptions.AssetRep->DirectoryEntry.path().string() : "N/A";
 		sourceData.ImportScale = importOptions.Scale;
 
-		return GEngine::GetAssetRegistry()->ImportAsset(filePath, destinationPath, sourceData);
+		return GEngine::GetAssetRegistry()->ImportAsset(filePath, destinationPath, sourceData, importOptions.AudioClipSettings);
 	}
 
 	void CEditorResourceManager::CreateMaterial(const std::string& destinationPath, const SMaterialAssetFileHeader& fileHeader) const
@@ -370,91 +369,7 @@ namespace Havtorn
 
 	std::string CEditorResourceManager::GetFileName(EEditorTexture texture, const std::string& extension, const std::string& prefix)
 	{
-		// TODO.NW: Use magic enum?
-		switch (texture)
-		{
-		case EEditorTexture::FolderIcon:
-			return ResourceAssetPath + prefix + "FolderIcon" + extension;
-
-		case EEditorTexture::FileIcon:
-			return ResourceAssetPath + prefix + "FileIcon" + extension;
-
-		case EEditorTexture::PlayIcon:
-			return ResourceAssetPath + prefix + "PlayIcon" + extension;
-
-		case EEditorTexture::PauseIcon:
-			return ResourceAssetPath + prefix + "PauseIcon" + extension;
-
-		case EEditorTexture::StopIcon:
-			return ResourceAssetPath + prefix + "StopIcon" + extension;
-
-		case EEditorTexture::SceneIcon:
-			return ResourceAssetPath + prefix + "SceneIcon" + extension;
-
-		case EEditorTexture::SequencerIcon:
-			return ResourceAssetPath + prefix + "SequencerIcon" + extension;
-
-		case EEditorTexture::EnvironmentLightIcon:
-			return ResourceAssetPath + prefix + "EnvironmentLightIcon" + extension;
-
-		case EEditorTexture::DirectionalLightIcon:
-			return ResourceAssetPath + prefix + "DirectionalLightIcon" + extension;
-
-		case EEditorTexture::PointLightIcon:
-			return ResourceAssetPath + prefix + "PointLightIcon" + extension;
-
-		case EEditorTexture::SpotlightIcon:
-			return ResourceAssetPath + prefix + "SpotlightIcon" + extension;
-
-		case EEditorTexture::DecalIcon:
-			return ResourceAssetPath + prefix + "DecalIcon" + extension;
-
-		case EEditorTexture::ScriptIcon:
-			return ResourceAssetPath + prefix + "ScriptIcon" + extension;
-
-		case EEditorTexture::ColliderIcon:
-			return ResourceAssetPath + prefix + "ColliderIcon" + extension;
-
-		case EEditorTexture::NodeBackground:
-			return ResourceAssetPath + prefix + "NodeBackground" + extension;
-
-		case EEditorTexture::MinimizeWindow:
-			return ResourceAssetPath + prefix + "MinimizeWindow" + extension;
-
-		case EEditorTexture::MaximizeWindow:
-			return ResourceAssetPath + prefix + "MaximizeWindow" + extension;
-
-		case EEditorTexture::CloseWindow:
-			return ResourceAssetPath + prefix + "CloseWindow" + extension;
-
-		case EEditorTexture::CameraIcon:
-			return ResourceAssetPath + prefix + "CameraIcon" + extension;
-
-		case EEditorTexture::GetFromSource:
-			return ResourceAssetPath + prefix + "GetFromSource" + extension;
-
-		case EEditorTexture::PrefabIcon:
-			return ResourceAssetPath + prefix + "PrefabIcon" + extension;
-
-		case EEditorTexture::PrefabWidgetIcon:
-			return ResourceAssetPath + prefix + "PrefabWidgetIcon" + extension;
-
-		case EEditorTexture::FindIcon:
-			return ResourceAssetPath + prefix + "FindIcon" + extension;
-
-		case EEditorTexture::MoveGizmoIcon:
-			return ResourceAssetPath + prefix + "MoveGizmoIcon" + extension;
-		
-		case EEditorTexture::RotateGizmoIcon:
-			return ResourceAssetPath + prefix + "RotateGizmoIcon" + extension;
-
-		case EEditorTexture::ScaleGizmoIcon:
-			return ResourceAssetPath + prefix + "ScaleGizmoIcon" + extension;
-
-		case EEditorTexture::Count:
-		default:
-			return std::string();
-		}
+		return ResourceAssetPath + prefix + magic_enum::enum_name(texture).data() + extension;
 	}
 
 //#define ALBEDO_R            0
@@ -505,7 +420,7 @@ namespace Havtorn
 				SSourceAssetData sourceData;
 				sourceData.AssetType = EAssetType::Texture;
 				sourceData.SourcePath = sourcePath;
-				assetRegistry->ImportAsset(sourcePath, ResourceAssetPath + assetSubDirectory, sourceData);
+				assetRegistry->ImportAsset(sourcePath, ResourceAssetPath + assetSubDirectory, sourceData, {});
 			}
 
 			STextureAsset* assetData = assetRegistry->RequestAssetData<STextureAsset>(SAssetReference(assetPath), CAssetRegistry::EditorManagerRequestID);

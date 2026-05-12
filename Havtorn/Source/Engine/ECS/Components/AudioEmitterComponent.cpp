@@ -52,14 +52,16 @@ namespace Havtorn
 
     void SAudioEmitterComponent::IsDeleted(CScene* /*fromScene*/)
     {
-        for (const SAssetReference& assetRef : AssetReferences)
-            GEngine::GetAssetRegistry()->UnrequestAsset(assetRef, Owner.GUID);
-
-        GEngine::GetWorld()->UnregisterAudioObject(AudioObjectID);
+        GEngine::GetWorld()->UnregisterAudioObject(AudioObjectID, AssetReferences);
     }
 
     void SAudioEmitterComponent::Init()
     {
-        AudioObjectID = GEngine::GetWorld()->RegisterAudioObject();
+        // NW: AUDIO_ASSET_LOADING: By trying to load referenced assets on begin play (when the audio system is constructed), as well
+        // as when components are constructed, we should handle automatically loading all referenced assets. As long as we don't change
+        // the lists of AssetReferences on a particular component at play time. This setup will probably show up again so we should try 
+        // to keep it in mind, and consider an asset streaming/multithreaded loading solution
+
+        AudioObjectID = GEngine::GetWorld()->RegisterAudioObject(false, AssetReferences);
     }
 }

@@ -171,8 +171,8 @@ namespace Havtorn
 		ENGINE_API void Update3DPhysicsData(STransformComponent* transformComponent, SPhysics3DComponent* phys2DComponent) const;
 
 		ENGINE_API void RequestAudioSystem(void* requester);
-		ENGINE_API U64 RegisterAudioObject(const bool isListener = false);
-		ENGINE_API void UnregisterAudioObject(const U64 objectID);
+		ENGINE_API U64 RegisterAudioObject(const bool isListener, const std::vector<SAssetReference>& assetReferences);
+		ENGINE_API void UnregisterAudioObject(const U64 objectID, const std::vector<SAssetReference>& assetReferences);
 
 	public:
 		// TODO.NW: Maybe unify and have Enum arg instead

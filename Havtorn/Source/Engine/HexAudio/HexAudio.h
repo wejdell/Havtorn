@@ -4,6 +4,7 @@
 
 #include "ECS/System.h"
 #include "Input/InputTypes.h"
+#include "Assets/AssetReference.h"
 
 namespace Havtorn
 {
@@ -19,23 +20,24 @@ namespace Havtorn
 
 			void Update();
 
-			void LoadAsset(const std::string_view assetName);
-			void UnloadAsset(const std::string_view assetName);
+			void LoadAsset(const SAssetReference& assetRef);
+			void UnloadAsset(const SAssetReference& assetRef);
 			void UnloadAll();
 
-			U64 RegisterAudioObject(const bool isListener);
-			void UnregisterAudioObject(const U64 id);
+			U64 RegisterAudioObject(const bool isListener, const std::vector<SAssetReference>& assetReferences);
+			void UnregisterAudioObject(const U64 id, const std::vector<SAssetReference>& assetReferences);
 
 			void SetPosition(const U64 id, const STransformComponent* transform, const SVector& localOffset);
 
-			void PlayAudio(const std::string_view name, const U64 emitterID);
-			void StopAudio(const std::string_view name, const U64 emitterID);
+			void PlayAudio(const SAssetReference& assetRef, const U64 emitterID);
+			void StopAudio(const SAssetReference& assetRef, const U64 emitterID);
 
 		private:
 			class CAudioImplementation;
 			Ptr<CAudioImplementation> Impl;
 			U64 MainListenerID = 0;
-			std::vector<std::string> LoadedAssets;
+			const U64 AudioBackendRequesterID = 4510;
+			std::vector<SAssetReference> LoadedAssets;
 		};
 
 		class CAudioSystem : public ISystem
@@ -49,7 +51,7 @@ namespace Havtorn
 
 		private:
 			CAudioBackend* Backend = nullptr;
-			U64 DebugEmitterID = 0;
+			bool QueueDebugAudio = false;
 		};
 	}
 }

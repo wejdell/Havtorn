@@ -94,7 +94,7 @@ namespace Havtorn
 		if (PlatformManager == nullptr)
 			return false;
 
-		SetEditorTheme(EEditorColorTheme::HavtornYellow, EEditorStyleTheme::Havtorn);
+		SetEditorTheme(EEditorColorTheme::HavtornDefault, EEditorStyleTheme::Havtorn);
 
 		// TODO.NR: Figure out why we can't use unique ptrs with these namespaced imgui classes
 		MenuElements.emplace_back(std::make_unique<CFileMenu>("File", this));
@@ -687,6 +687,9 @@ namespace Havtorn
 			break;
 		case EAssetType::Prefab:
 			repRenderTexture = ResourceManager->GetStaticEditorTextureResource(EEditorTexture::PrefabIcon);
+			break;
+		case EAssetType::AudioClip:
+			repRenderTexture = ResourceManager->GetStaticEditorTextureResource(EEditorTexture::AudioClipIcon);
 			break;
 		default:
 			break;

@@ -11,3 +11,4 @@
 #include "RuntimeAssets/TextureCubeAsset.h"
 #include "RuntimeAssets/ScriptAsset.h"
 #include "RuntimeAssets/PrefabAsset.h"
+#include "RuntimeAssets/AudioClipAsset.h"

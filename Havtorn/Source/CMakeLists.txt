@@ -344,6 +344,7 @@ set(ENGINE_FILES
 	${ENGINE_FOLDER}Assets/AssetFileHeader.h
 	${ENGINE_FOLDER}Assets/Asset.h
 	${ENGINE_FOLDER}Assets/RuntimeAssetInclude.h
+	${ENGINE_FOLDER}Assets/RuntimeAssets/AudioClipAsset.h
 	${ENGINE_FOLDER}Assets/RuntimeAssets/ScriptAsset.h
 	${ENGINE_FOLDER}Assets/RuntimeAssets/SkeletalAnimationAsset.h
 	${ENGINE_FOLDER}Assets/RuntimeAssets/SpriteAnimationClipAsset.h
@@ -353,6 +354,7 @@ set(ENGINE_FILES
 	${ENGINE_FOLDER}Assets/RuntimeAssets/SkeletalMeshAsset.h
 	${ENGINE_FOLDER}Assets/RuntimeAssets/StaticMeshAsset.h
     ${ENGINE_FOLDER}Assets/RuntimeAssets/PrefabAsset.h
+	${ENGINE_FOLDER}Assets/FileHeaders/AudioClipFileHeader.h
 	${ENGINE_FOLDER}Assets/FileHeaders/ScriptFileHeader.h
 	${ENGINE_FOLDER}Assets/FileHeaders/SequencerFileHeader.h
 	${ENGINE_FOLDER}Assets/FileHeaders/SpriteAnimationClipFileHeader.h
@@ -968,6 +970,16 @@ target_link_libraries(Editor PRIVATE
 target_link_directories(Editor PRIVATE
     ${CMAKE_BINARY_DIR}
 )
+
+if(AUDIO_BACKEND STREQUAL "WWISE")
+    target_compile_definitions(Editor PRIVATE HV_AUDIO_BACKEND_WWISE)
+    target_compile_definitions(Editor PRIVATE $<$<CONFIG:GameRelease>:AK_OPTIMIZED>)
+elseif(AUDIO_BACKEND STREQUAL "FMOD")
+    target_compile_definitions(Editor PRIVATE HV_AUDIO_BACKEND_FMOD)
+elseif(AUDIO_BACKEND STREQUAL "SDL")
+    target_compile_definitions(Editor PRIVATE HV_AUDIO_BACKEND_SDL)
+endif()
+
 target_compile_definitions(Editor PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_EDITOR_DLL)
 target_compile_options(Editor PRIVATE ${COMMON_COMPILE_OPTIONS})
 target_precompile_headers(Editor PRIVATE ${EDITOR_FOLDER}hvpch.h)

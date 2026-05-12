@@ -18,7 +18,7 @@ namespace Havtorn
 
 		ENGINE_API void IsDeleted(CScene* fromScene) override;
 
-		std::vector<SAssetReference> AssetReferences;
+		std::vector<SAssetReference> AssetReferences = { SAssetReference() };
 		SVector LocalOffset = SVector::Zero;
 		U64 AudioObjectID = 0;
 

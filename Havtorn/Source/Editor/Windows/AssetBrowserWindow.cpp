@@ -409,6 +409,15 @@ namespace Havtorn
 			if (GUI::RadioButton("Animation", ImportOptions.AssetType == EAssetType::Animation))
 				ImportOptions.AssetType = EAssetType::Animation;
 		}
+		else if (fileExtension == "bnk" || fileExtension == "bank" || fileExtension == "wav" || fileExtension == "mp3" || fileExtension == "ogg")
+		{
+			if (ImportOptions.AssetType == EAssetType::None)
+				ImportOptions.AssetType = EAssetType::AudioClip;
+
+			GUI::Text("Asset Type");
+			GUI::SameLine();
+			GUI::TextDisabled("Audio Clip");
+		}
 
 		GUI::Separator();
 
@@ -435,9 +444,9 @@ namespace Havtorn
 		case EAssetType::SpriteAnimation:
 			ImportOptionsSpriteAnimation();
 			break;
-
-		case EAssetType::AudioOneShot:
-		case EAssetType::AudioCollection:
+		case EAssetType::AudioClip:
+			ImportOptionsAudioClip(ImportOptions.AudioClipSettings);
+			break;
 		case EAssetType::VisualFX:
 		case EAssetType::Scene:
 		case EAssetType::Sequencer:
@@ -605,6 +614,20 @@ namespace Havtorn
 			ImportOptions.AssetRep = Manager->GetAssetRepFromDirEntry(result.PickedEntry).get();
 
 		GUI::DragFloat("Import Scale", ImportOptions.Scale, 0.01f);
+	}
+
+	void CAssetBrowserWindow::ImportOptionsAudioClip(SAudioClipSettings& settings)
+	{
+#ifdef HV_AUDIO_BACKEND_WWISE
+		settings;
+		GUI::TextDisabled("Note: When using Wwise as the audio backend, looping and spatialization settings are set in Wwise Authoring.");
+#elif defined HV_AUDIO_BACKEND_FMOD
+		GUI::Checkbox("Is Looping", settings.IsLooping);
+		GUI::Checkbox("Is Spatialized", settings.IsSpatialized);
+#elif defined HV_AUDIO_BACKEND_SDL
+		settings;
+		GUI::TextDisabled("Note: The SDL Audio implementation does not yet support looping and spatializing sounds. We'd need a separate plugin for that (pending decision).");
+#endif
 	}
 
 	SAssetFileHeader CAssetBrowserWindow::CreateOptionsMaterial()

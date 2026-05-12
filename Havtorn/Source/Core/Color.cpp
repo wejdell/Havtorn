@@ -21,6 +21,7 @@ namespace Havtorn
 	 const SColor SColor::Orange = SColor(255, 125, 15);
 	 const SColor SColor::Magenta = SColor(200, 0, 225);
 	 const SColor SColor::Yellow = SColor(255, 225, 25);
+	 const SColor SColor::Purple = SColor(127, 0, 255);
 
 	 SColor::SColor(U8 monochrome)
 		 : R(monochrome)

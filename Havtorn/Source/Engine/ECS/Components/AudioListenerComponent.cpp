@@ -11,11 +11,11 @@ namespace Havtorn
     SAudioListenerComponent::SAudioListenerComponent(const SEntity& entityOwner)
         : SComponent(entityOwner)
     {
-        AudioObjectID = GEngine::GetWorld()->RegisterAudioObject(true);
+        AudioObjectID = GEngine::GetWorld()->RegisterAudioObject(true, {});
     }
     
     void SAudioListenerComponent::IsDeleted(CScene* /*fromScene*/)
     {
-        GEngine::GetWorld()->UnregisterAudioObject(AudioObjectID);
+        GEngine::GetWorld()->UnregisterAudioObject(AudioObjectID, {});
     }
 }

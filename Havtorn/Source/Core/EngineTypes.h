@@ -16,6 +16,8 @@
 
 namespace Havtorn
 {
+	// TODO.NW: Might want to add versioning on all assets, should do this and asset type cleanup at the same time
+
 	enum class EAssetType
 	{
 		None,
@@ -25,8 +27,8 @@ namespace Havtorn
 		Material,
 		Animation,
 		SpriteAnimation,
-		AudioOneShot,
-		AudioCollection,
+		AudioClip,
+		AudioPlaceholder, // TODO.NW: Clean up this list and regenerate all assets. If we change the order in any way we break all saved assets
 		VisualFX,
 		Scene,
 		Sequencer,
@@ -58,6 +60,8 @@ namespace Havtorn
 			return SColor::Orange;
 		case EAssetType::Prefab:
 			return SColor::Yellow;
+		case EAssetType::AudioClip:
+			return SColor::Purple;
 		default:
 			return SColor::White;
 		}
@@ -90,6 +94,8 @@ namespace Havtorn
 			return "SCENE";
 		case EAssetType::Prefab:
 			return "PREFAB";
+		case EAssetType::AudioClip:
+			return "AUDIO CLIP";
 		default:
 			return "ASSET";
 		}
@@ -104,6 +110,7 @@ namespace Havtorn
 		case EAssetType::SkeletalMesh: [[fallthrough]];
 		case EAssetType::Texture: [[fallthrough]];
 		case EAssetType::TextureCube: [[fallthrough]];
+		case EAssetType::AudioClip: [[fallthrough]];
 		case EAssetType::SpriteAnimation:
 			return true;
 		}

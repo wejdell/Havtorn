@@ -19,3 +19,5 @@
 #include "FileHeaders/InputAssetFileHeader.h"
 
 #include "FileHeaders/SpriteAnimationClipFileHeader.h"
+
+#include "FileHeaders/AudioClipFileHeader.h"
