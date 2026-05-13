@@ -338,7 +338,7 @@ namespace Havtorn
 
 		GUI::PopID();
 
-		if (!IsUsingGizmo && WasUsingGizmo && FullDeltaMatrix != SMatrix::Identity)
+		if (!IsUsingGizmo && WasUsingGizmo && !FullDeltaMatrix.NearlyEqual(SMatrix::Identity))
 		{
 			PivotWorldSpace = transformMatrix.GetTranslation() + PivotOffset;
 			UMetaCommandRouter::Push(SMoveTransformEditAction::MakeEditActionCommand(Manager, viewedTransformComp, FullDeltaMatrix));
