@@ -12,6 +12,16 @@ namespace Havtorn
 {
 	namespace HexRune
 	{
+        enum class ENGINE_API EInputParamType : U8
+        {
+            Void,
+            Bool,
+            Int,
+            Float,
+            String,
+            Vector
+        };
+
         // TODO.NW: Add functional types, like add node or advanced section?
         // TODO.NW: Figure out enum support
         enum class ENGINE_API EPinType : U8

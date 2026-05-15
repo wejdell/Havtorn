@@ -131,6 +131,7 @@ set(CORE_FILES
     ${CORE_FOLDER}HavtornDelegate.h
     ${CORE_FOLDER}HavtornString.cpp
     ${CORE_FOLDER}HavtornString.h
+	${CORE_FOLDER}InputStructs.h
     ${CORE_FOLDER}Serializable.cpp
     ${CORE_FOLDER}Serializable.h
     ${CORE_FOLDER}hvpch.cpp
@@ -340,6 +341,11 @@ add_dependencies(GUI Core Platform)
 
 # ==================== ENGINE ====================
 set(ENGINE_FILES
+	${ENGINE_FOLDER}Hex/SHexCommandComponentEditorContext.cpp
+	${ENGINE_FOLDER}Hex/SHexCommandComponentEditorContext.h
+    ${ENGINE_FOLDER}Hex/SHexCommandComponent.cpp
+	${ENGINE_FOLDER}Hex/SHexCommandComponent.h
+	${ENGINE_FOLDER}Hex/SHexCommand.h
 	${ENGINE_FOLDER}Assets/RuntimeAssets/InputAsset.h
 	${ENGINE_FOLDER}Assets/AssetFileHeader.h
 	${ENGINE_FOLDER}Assets/Asset.h
@@ -398,6 +404,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/DirectionalLightComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/EnvironmentLightComponentEditorContext.cpp
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/EnvironmentLightComponentEditorContext.h
+    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/InputComponentEditorContext.cpp
+	${ENGINE_FOLDER}ECS/ComponentEditorContexts/InputComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/LevelStreamingComponentEditorContext.cpp
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/LevelStreamingComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/MaterialComponentEditorContext.cpp
@@ -447,6 +455,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/Components/DirectionalLightComponent.h
     ${ENGINE_FOLDER}ECS/Components/EnvironmentLightComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/EnvironmentLightComponent.h
+	${ENGINE_FOLDER}ECS/Components/InputComponent.cpp
+	${ENGINE_FOLDER}ECS/Components/InputComponent.h
     ${ENGINE_FOLDER}ECS/Components/LevelStreamingComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/LevelStreamingComponent.h
     ${ENGINE_FOLDER}ECS/Components/MaterialComponent.cpp
@@ -484,6 +494,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/Systems/AbilitySystem.h
     ${ENGINE_FOLDER}ECS/Systems/CameraSystem.cpp
     ${ENGINE_FOLDER}ECS/Systems/CameraSystem.h
+    ${ENGINE_FOLDER}ECS/Systems/InputSystem.cpp
+	${ENGINE_FOLDER}ECS/Systems/InputSystem.h
     ${ENGINE_FOLDER}ECS/Systems/LevelStreamingSystem.cpp
     ${ENGINE_FOLDER}ECS/Systems/LevelStreamingSystem.h
     ${ENGINE_FOLDER}ECS/Systems/LightSystem.cpp

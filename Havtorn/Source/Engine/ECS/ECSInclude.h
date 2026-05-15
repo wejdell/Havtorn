@@ -19,6 +19,7 @@
 #include "ECS/Systems/UISystem.h"
 #include "ECS/Systems/LevelStreamingSystem.h"
 #include "ECS/Systems/AbilitySystem.h"
+#include "ECS/Systems/InputSystem.h"
 
 #include "ECS/Components/TransformComponent.h"
 #include "ECS/ComponentEditorContexts/TransformComponentEditorContext.h"
@@ -32,6 +33,8 @@
 #include "ECS/ComponentEditorContexts/CameraComponentEditorContext.h"
 #include "ECS/Components/CameraControllerComponent.h"
 #include "ECS/ComponentEditorContexts/CameraControllerComponentEditorContext.h"
+#include "ECS/Components/InputComponent.h"
+#include "ECS/ComponentEditorContexts/InputComponentEditorContext.h"
 #include "ECS/Components/MaterialComponent.h"
 #include "ECS/ComponentEditorContexts/MaterialComponentEditorContext.h"
 #include "ECS/Components/EnvironmentLightComponent.h"
@@ -76,3 +79,6 @@
 #include "ECS/ComponentEditorContexts/AudioListenerComponentEditorContext.h"
 #include "ECS/Components/DebugShapeComponent.h"
 #include "ECS/Components/MetaDataComponent.h"
+
+#include "Hex/SHexCommandComponent.h"
+#include "Hex/SHexCommandComponentEditorContext.h"

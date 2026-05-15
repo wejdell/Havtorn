@@ -60,6 +60,8 @@ namespace Havtorn
 			return SColor::Orange;
 		case EAssetType::Prefab:
 			return SColor::Yellow;
+		case EAssetType::InputAsset:
+			return SColor::Teal;
 		case EAssetType::AudioClip:
 			return SColor::Purple;
 		default:
@@ -94,6 +96,8 @@ namespace Havtorn
 			return "SCENE";
 		case EAssetType::Prefab:
 			return "PREFAB";
+		case EAssetType::InputAsset:
+			return "INPUT MAP";
 		case EAssetType::AudioClip:
 			return "AUDIO CLIP";
 		default:

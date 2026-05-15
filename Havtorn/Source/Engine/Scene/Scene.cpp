@@ -56,8 +56,10 @@ namespace Havtorn
 		RegisterNonTrivialComponent<SLevelStreamingComponent, SLevelStreamingComponentEditorContext>(220, 10);
 		RegisterNonTrivialComponent<SPrefabComponent, SPrefabComponentEditorContext>(230, 10);
 		RegisterNonTrivialComponent<SAbilityComponent, SAbilityComponentEditorContext>(240, 10);
-		RegisterTrivialComponent<SAudioListenerComponent, SAudioListenerComponentEditorContext>(250, 1);
-		RegisterNonTrivialComponent<SAudioEmitterComponent, SAudioEmitterComponentEditorContext>(260, 20);
+		RegisterNonTrivialComponent<SHexCommandComponent, SHexCommandComponentEditorContext>(250, 10);
+		RegisterNonTrivialComponent<SInputComponent, SInputComponentEditorContext>(260, 10);
+		RegisterTrivialComponent<SAudioListenerComponent, SAudioListenerComponentEditorContext>(270, 1);
+		RegisterNonTrivialComponent<SAudioEmitterComponent, SAudioEmitterComponentEditorContext>(280, 20);
 		//RegisterTrivialComponent<SSequencerComponent, SSequencerComponentEditorContext>(typeID++, 0);
 
 		return true;

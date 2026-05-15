@@ -688,6 +688,9 @@ namespace Havtorn
 		case EAssetType::Prefab:
 			repRenderTexture = ResourceManager->GetStaticEditorTextureResource(EEditorTexture::PrefabIcon);
 			break;
+		case EAssetType::InputAsset:
+			repRenderTexture = ResourceManager->GetStaticEditorTextureResource(EEditorTexture::InputMapIcon);
+			break;
 		case EAssetType::AudioClip:
 			repRenderTexture = ResourceManager->GetStaticEditorTextureResource(EEditorTexture::AudioClipIcon);
 			break;

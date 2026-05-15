@@ -882,13 +882,14 @@ namespace Havtorn
 		template<typename T>
 		static bool ComboEnum(const char* label, T& currentValue, std::vector<T> filter = {})
 		{
-			std::vector<U8> filteredIndices;
-			std::ranges::transform(filter, std::back_inserter(filteredIndices), [](const T& filterValue) -> U8 { return static_cast<U8>(filterValue); });
+			std::vector<U64> filteredIndices;
+			std::ranges::transform(filter, std::back_inserter(filteredIndices), [](const T& filterValue) -> U64 { return magic_enum::enum_index<T>(filterValue).value_or(0); });
+
 			auto enumNames = magic_enum::enum_names<T>();
-			U8 currentIndex = static_cast<U8>(currentValue);
+			U64 currentIndex = magic_enum::enum_index<T>(currentValue).value_or(0);
 			if (GUI::BeginCombo(label, enumNames[currentIndex].data()))
 			{
-				for (U8 i = 0; i < enumNames.size(); i++)
+				for (U64 i = 0; i < enumNames.size(); i++)
 				{
 					if (auto it = std::ranges::find(filteredIndices, i); it != filteredIndices.end())
 						continue;
@@ -904,9 +905,9 @@ namespace Havtorn
 				GUI::EndCombo();
 			}
 
-			if (currentValue != static_cast<T>(currentIndex))
+			if (currentValue != magic_enum::enum_value<T>(currentIndex))
 			{
-				currentValue = static_cast<T>(currentIndex);
+				currentValue = magic_enum::enum_value<T>(currentIndex);
 				return true;
 			}
 

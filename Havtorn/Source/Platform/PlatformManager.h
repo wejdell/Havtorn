@@ -63,7 +63,6 @@ namespace Havtorn
 		bool Init(SWindowData windowData);
 
 	private:
-		CPlatformManager::SWindowData WindowData = {};
 		HWND WindowHandle = 0;
 
 		SDL_Window* Window = nullptr;

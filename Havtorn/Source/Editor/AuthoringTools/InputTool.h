@@ -2,20 +2,12 @@
 
 #pragma once
 #include "EditorWindow.h"
+#include <Assets/AssetReference.h>
+#include <Assets/RuntimeAssets/InputAsset.h>
 
 namespace Havtorn
 {
 	struct SEditorAssetRepresentation;
-
-	enum class EInputDataType 
-	{
-		Button,
-	};
-
-	struct SInputToolOperation
-	{
-		EInputDataType InputDataType;
-	};
 
 	class CInputTool : public CWindow
 	{
@@ -28,5 +20,14 @@ namespace Havtorn
 		void OnDisable() override;
 
 		void OpenInputAsset(SEditorAssetRepresentation* asset);
+
+	private:
+		void DrawInputTable();
+		
+		std::string AssetName;
+		SAssetReference AssetReference;
+		SInputAsset* InputAsset = nullptr;
+
+		const U64 InputToolID = 107001; //1Input7Tool
 	};
 }

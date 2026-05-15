@@ -181,6 +181,44 @@ namespace Havtorn
 		return SVector2<F32>(axisInputValues[STATIC_U64(EInputAxis::MousePositionHorizontal)], axisInputValues[STATIC_U64(EInputAxis::MousePositionVertical)]);
 	}
 
+	bool CInputMapper::IsPressed(const EInputKey key, const U32 modifiers) const
+	{
+		const std::map<U32, SInputActionPayload>& keyInputBuffer = Input->GetKeyInputBuffer();
+		if (!keyInputBuffer.contains(STATIC_U32(key)))
+			return false;
+
+		const auto& activeModifiers = Input->GetKeyInputModifiers().to_ulong();
+		return ((activeModifiers == 0 && modifiers == 0) || (activeModifiers & modifiers) != 0) && keyInputBuffer.at(STATIC_U32(key)).IsPressed;
+	}
+
+	bool CInputMapper::IsReleased(const EInputKey key, const U32 modifiers) const
+	{
+		const std::map<U32, SInputActionPayload>& keyInputBuffer = Input->GetKeyInputBuffer();
+		if (!keyInputBuffer.contains(STATIC_U32(key)))
+			return false;
+
+		const auto& activeModifiers = Input->GetKeyInputModifiers().to_ulong();
+		return ((activeModifiers == 0 && modifiers == 0) || (activeModifiers & modifiers) != 0) && keyInputBuffer.at(STATIC_U32(key)).IsReleased;
+	}
+
+	bool CInputMapper::IsHeld(const EInputKey key, const U32 modifiers) const
+	{
+		const std::map<U32, SInputActionPayload>& keyInputBuffer = Input->GetKeyInputBuffer();
+		if (!keyInputBuffer.contains(STATIC_U32(key)))
+			return false;
+
+		const auto& activeModifiers = Input->GetKeyInputModifiers().to_ulong();
+		return ((activeModifiers == 0 && modifiers == 0) || (activeModifiers & modifiers) != 0) && keyInputBuffer.at(STATIC_U32(key)).IsHeld;
+	}
+
+	F32 CInputMapper::GetAxisValue(const EInputAxis axis, const U32 modifiers) const
+	{
+		const std::array<F32, STATIC_U64(EInputAxis::Count)>& axisInputValues = Input->GetAxisInputValues();
+	
+		const auto& activeModifiers = Input->GetKeyInputModifiers().to_ulong();
+		return ((activeModifiers == 0 && modifiers == 0) || (activeModifiers & modifiers) != 0) ? axisInputValues[STATIC_U64(axis)] : F32(0.0f);
+	}
+
 	void CInputMapper::MapEvent(EInputActionEvent event, SInputAction action)
 	{
 		if (!BoundActionEvents.contains(event))

@@ -83,6 +83,7 @@ namespace Havtorn
 
 	void CGameManager::OnBeginPlay(std::vector<Ptr<CScene>>& /*scenes*/)
 	{
+		World->RequestSystem<CInputSystem>(this);
 		World->RequestSystem<CSpriteAnimatorGraphSystem>(this);
 		World->RequestSystem<CAbilitySystem>(this);
 		World->RequestSystem<CGhostySystem>(this);
@@ -99,12 +100,14 @@ namespace Havtorn
 
 	void CGameManager::OnPausePlay(std::vector<Ptr<CScene>>& /*scenes*/)
 	{
+		World->BlockSystem<CInputSystem>(this);
 		World->BlockPhysicsSystem(this);
 		// TODO.NW: Notify audio of pause state?
 	}
 
 	void CGameManager::OnEndPlay(std::vector<Ptr<CScene>>& /*scenes*/)
 	{
+		World->UnrequestSystem<CInputSystem>(this);
 		World->BlockPhysicsSystem(this);
 		World->UnrequestSystems(this);
 

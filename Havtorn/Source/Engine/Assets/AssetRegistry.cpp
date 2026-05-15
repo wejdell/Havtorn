@@ -353,6 +353,13 @@ namespace Havtorn
             assetFile.Deserialize(data, std::get<SScriptAsset>(asset.Data).Script.get());
         }
         break;
+        case EAssetType::InputAsset:
+        {
+            SInputAssetFileHeader assetFile;
+            assetFile.Deserialize(data);    
+            asset.Data = SInputAsset(assetFile);
+        }
+        break;
         case EAssetType::Prefab:
         {
             // NW: The prefab asset owns the data and has a unique pointer to it, though it's loaded through the file header object
@@ -477,6 +484,11 @@ namespace Havtorn
             SPrefabFileHeader header = std::get<SPrefabFileHeader>(fileHeader);
             SPrefabAsset newAsset = SPrefabAsset(header);
             header.Scene = newAsset.Scene.get();
+            return SaveAsset(destinationPath, header);
+        }
+        else if (std::holds_alternative<SInputAssetFileHeader>(fileHeader))
+        {
+            SInputAssetFileHeader header = std::get<SInputAssetFileHeader>(fileHeader);
             return SaveAsset(destinationPath, header);
         }
         else if (std::holds_alternative<SAudioClipFileHeader>(fileHeader))
@@ -677,9 +689,9 @@ namespace Havtorn
             UFileSystem::Serialize(hvaPath, &data[0], size);
             delete[] data;
         }
-        else if (std::holds_alternative<SInputAssetFileHeader>(fileHeader)) 
+        else if (std::holds_alternative<SPrefabFileHeader>(fileHeader))
         {
-            SInputAssetFileHeader header = std::get<SInputAssetFileHeader>(fileHeader);
+            SPrefabFileHeader header = std::get<SPrefabFileHeader>(fileHeader);
             U32 size = header.GetSize();
             const auto data = new char[size];
             header.Serialize(data);
@@ -687,9 +699,9 @@ namespace Havtorn
             UFileSystem::Serialize(hvaPath, &data[0], size);
             delete[] data;
         }
-        else if (std::holds_alternative<SPrefabFileHeader>(fileHeader))
+        else if (std::holds_alternative<SInputAssetFileHeader>(fileHeader))
         {
-            SPrefabFileHeader header = std::get<SPrefabFileHeader>(fileHeader);
+            SInputAssetFileHeader header = std::get<SInputAssetFileHeader>(fileHeader);
             U32 size = header.GetSize();
             const auto data = new char[size];
             header.Serialize(data);

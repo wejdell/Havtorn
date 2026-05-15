@@ -43,6 +43,7 @@ namespace Havtorn
 		MoveGizmoIcon,
 		RotateGizmoIcon,
 		ScaleGizmoIcon,
+		InputMapIcon,
 		AudioClipIcon,
 		Count,
 		None = Count

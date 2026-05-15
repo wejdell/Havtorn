@@ -6,8 +6,8 @@
 #include "NodeEditorContexts/ECSNodeEditorContexts.h"
 #include "CoreNodes/CoreNodes.h"
 #include "ECSNodes/ECSNodes.h"
-#include <stack>
 
+#include <stack>
 
 namespace Havtorn
 {
@@ -15,12 +15,10 @@ namespace Havtorn
 	{
 		SScript::SScript()
 		{
-
 		}
 
 		SScript::~SScript()
 		{
-
 		}
 
 		void SScript::AddDataBinding(const char* name, const EPinType type, const EObjectDataType objectType, const EAssetType assetType)
@@ -30,6 +28,7 @@ namespace Havtorn
 			{
 			case EPinType::Unknown:
 				data = std::monostate{};
+				break;
 			case EPinType::Bool:
 				data = false;
 				break;
@@ -103,24 +102,24 @@ namespace Havtorn
 
 			// TODO.NW: Make sure contexts get deleted properly
 			auto getterContextIterator = std::ranges::find_if(RegisteredEditorContexts, [id](const SNodeEditorContext* registeredContext)
-															  {
-																  if (const SDataBindingGetNodeEditorContext* context = static_cast<const SDataBindingGetNodeEditorContext*>(registeredContext))
-																  {
-																	  return context->DataBindingID == id;
-																  }
-																  return false;
-															  });
+				{
+					if (const SDataBindingGetNodeEditorContext* context = static_cast<const SDataBindingGetNodeEditorContext*>(registeredContext))
+					{
+						return context->DataBindingID == id;
+					}
+					return false;
+				});
 			if (getterContextIterator != RegisteredEditorContexts.end())
 				RegisteredEditorContexts.erase(getterContextIterator);
 
 			auto setterContextIterator = std::ranges::find_if(RegisteredEditorContexts, [id](const SNodeEditorContext* registeredContext)
-															  {
-																  if (const SDataBindingSetNodeEditorContext* context = static_cast<const SDataBindingSetNodeEditorContext*>(registeredContext))
-																  {
-																	  return context->DataBindingID == id;
-																  }
-																  return false;
-															  });
+				{
+					if (const SDataBindingSetNodeEditorContext* context = static_cast<const SDataBindingSetNodeEditorContext*>(registeredContext))
+					{
+						return context->DataBindingID == id;
+					}
+					return false;
+				});
 			if (setterContextIterator != RegisteredEditorContexts.end())
 				RegisteredEditorContexts.erase(setterContextIterator);
 
@@ -285,7 +284,7 @@ namespace Havtorn
 
 				leftPin->LinkedPin = rightPin;
 				rightPin->LinkedPin = leftPin;
-			}		
+			}
 		}
 
 		void SScript::Unlink(U64 leftPinID, U64 rightPinID)
@@ -380,7 +379,7 @@ namespace Havtorn
 			U32 nodeCount = STATIC_U32(Nodes.size());
 			SerializeData(nodeCount, toData, pointerPosition);
 			for (SNode* node : Nodes)
-			{				
+			{
 				SerializeData(node->UID, toData, pointerPosition);
 				SerializeData(node->TypeID, toData, pointerPosition);
 				SerializeData(node->NodeType, toData, pointerPosition);
@@ -439,7 +438,7 @@ namespace Havtorn
 
 				U32 nodeTypeId;
 				DeserializeData(nodeTypeId, fromData, pointerPosition);
-			
+
 				ENodeType nodeType;
 				DeserializeData(nodeType, fromData, pointerPosition);
 
@@ -513,7 +512,7 @@ namespace Havtorn
 				std::vector<SNodeEditorContext*>& contexts = storage.Contexts;
 
 				const std::pair<U64, U64>& maxIndexEntry = *std::ranges::find_if(contextIndices,
-																				 [contexts](const auto& entry) { return entry.second == contexts.size() - 1; });
+					[contexts](const auto& entry) { return entry.second == contexts.size() - 1; });
 
 				std::swap(contexts[contextIndices.at(nodeID)], contexts[contextIndices.at(maxIndexEntry.first)]);
 				std::swap(contextIndices.at(maxIndexEntry.first), contextIndices.at(nodeID));
@@ -616,6 +615,26 @@ namespace Havtorn
 			return -1;
 		}
 
+		U32 SInputCallbackBinding::GetSize() const
+		{
+			U32 size = 0;
+			size += GetDataSize(UID);
+			size += GetDataSize(ParamType);
+			return size;
+		}
+
+		void SInputCallbackBinding::Serialize(char* toData, U64& pointerPosition) const
+		{
+			SerializeData(UID, toData, pointerPosition);
+			SerializeData(ParamType, toData, pointerPosition);
+		}
+
+		void SInputCallbackBinding::Deserialize(const char* fromData, U64& pointerPosition)
+		{
+			DeserializeData(UID, fromData, pointerPosition);
+			DeserializeData(ParamType, fromData, pointerPosition);
+		}
+
 		U32 SScriptDataBinding::GetSize() const
 		{
 			U32 size = 0;
@@ -624,41 +643,7 @@ namespace Havtorn
 			size += GetDataSize(Type);
 			size += GetDataSize(ObjectType);
 			size += GetDataSize(AssetType);
-
-			size += sizeof(EPinType);
-			switch (Type)
-			{
-			case EPinType::Unknown:
-				//size += sizeof(std::monostate);
-				break;
-			case EPinType::Bool:
-				size += sizeof(bool);
-				break;
-			case EPinType::Int:
-				size += sizeof(I32);
-				break;
-			case EPinType::Float:
-				size += sizeof(F32);
-				break;
-			case EPinType::String:
-			{
-				std::string stringData = std::get<std::string>(Data);
-				size += GetDataSize(stringData);
-				break;
-			}
-			case EPinType::Vector:
-				size += sizeof(SVector);
-				break;
-			case EPinType::Matrix:
-				size += sizeof(SMatrix);
-				break;
-			case EPinType::Quaternion:
-				size += sizeof(SQuaternion);
-				break;
-			case EPinType::Entity:
-				size += sizeof(SEntity);
-				break;
-			}
+			size += GetDataSize(Data);
 			return size;
 		}
 		void SScriptDataBinding::Serialize(char* toData, U64& pointerPosition) const
@@ -668,69 +653,9 @@ namespace Havtorn
 			SerializeData(Type, toData, pointerPosition);
 			SerializeData(ObjectType, toData, pointerPosition);
 			SerializeData(AssetType, toData, pointerPosition);
-
-			//EPinType dataType = static_cast<EPinType>(Data.index());
-			//SerializeData(dataType, toData, pointerPosition);
-			switch (Type)
-			{
-			case EPinType::Unknown:
-				break;
-			case EPinType::Bool:
-			{
-				auto value = std::get<bool>(Data);
-				SerializeData(value, toData, pointerPosition);
-			}
-			break;
-			case EPinType::Int:
-			{
-				auto value = std::get<I32>(Data);
-				SerializeData(value, toData, pointerPosition);
-			}
-			break;
-			break;
-			case EPinType::Float:
-			{
-				auto value = std::get<F32>(Data);
-				SerializeData(value, toData, pointerPosition);
-			}
-			break;
-			break;
-			case EPinType::String:
-			{
-				auto value = std::get<std::string>(Data);
-				SerializeData(value, toData, pointerPosition);
-			}
-			break;
-			break;
-			case EPinType::Vector:
-			{
-				auto value = std::get<SVector>(Data);
-				SerializeData(value, toData, pointerPosition);
-			}
-			break;
-			break;
-			case EPinType::Matrix:
-			{
-				auto value = std::get<SMatrix>(Data);
-				SerializeData(value, toData, pointerPosition);
-			}
-			break;
-			break;
-			case EPinType::Quaternion:
-			{
-				auto value = std::get<SQuaternion>(Data);
-				SerializeData(value, toData, pointerPosition);
-			}
-			break;
-			break;
-			case EPinType::Entity:
-			{
-				auto value = std::get<SEntity>(Data);
-				SerializeData(value, toData, pointerPosition);
-			}
-			break;
-			}
+			SerializeData(Data, toData, pointerPosition);			
 		}
+
 		void SScriptDataBinding::Deserialize(const char* fromData, U64& pointerPosition)
 		{
 			DeserializeData(UID, fromData, pointerPosition);
@@ -738,69 +663,22 @@ namespace Havtorn
 			DeserializeData(Type, fromData, pointerPosition);
 			DeserializeData(ObjectType, fromData, pointerPosition);
 			DeserializeData(AssetType, fromData, pointerPosition);
-			switch (Type)
+			DeserializeDataVariant(Data, Type, fromData, pointerPosition);
+		}
+
+		void SScriptDataBinding::DeserializeDataVariant(std::variant<PIN_DATA_TYPES>& data, const EPinType pinType, const char* fromData, Havtorn::U64& pointerPosition)
+		{
+			switch (pinType)
 			{
-			case EPinType::Unknown:
-			{
-				Data = std::monostate{};
-			}
-			break;
-			case EPinType::Bool:
-			{
-				auto value = false;
-				DeserializeData(value, fromData, pointerPosition);
-				Data = value;
-			}
-			break;
-			case EPinType::Int:
-			{
-				auto value = I32{};
-				DeserializeData(value, fromData, pointerPosition);
-				Data = value;
-			}
-			break;
-			case EPinType::Float:
-			{
-				auto value = F32{};
-				DeserializeData(value, fromData, pointerPosition);
-				Data = value;
-			}
-			break;
-			case EPinType::String:
-			{
-				auto value = std::string();
-				DeserializeData(value, fromData, pointerPosition);
-				Data = value;
-			}
-			break;
-			case EPinType::Vector:
-			{
-				auto value = SVector{};
-				DeserializeData(value, fromData, pointerPosition);
-				Data = value;
-			}
-			break;
-			case EPinType::Matrix:
-			{
-				auto value = SMatrix{};
-				DeserializeData(value, fromData, pointerPosition);
-				Data = value;
-			}
-			break;
-			case EPinType::Quaternion:
-			{
-				auto value = SQuaternion{};
-				DeserializeData(value, fromData, pointerPosition);
-				Data = value;
-			}
-			break;
-			case EPinType::Entity:
-			{
-				auto value = SEntity::Null;
-				DeserializeData(value, fromData, pointerPosition);
-				Data = value;
-			}
-			break;
+			case EPinType::Unknown:		data = std::monostate{};											break;
+			case EPinType::Bool:		DeserializeVariant<bool>(data, fromData, pointerPosition);			break;
+			case EPinType::Int:			DeserializeVariant<I32>(data, fromData, pointerPosition);			break;
+			case EPinType::Float:		DeserializeVariant<F32>(data, fromData, pointerPosition);			break;
+			case EPinType::String:		DeserializeVariant<std::string>(data, fromData, pointerPosition);	break;
+			case EPinType::Vector:		DeserializeVariant<SVector>(data, fromData, pointerPosition);		break;
+			case EPinType::Matrix:		DeserializeVariant<SMatrix>(data, fromData, pointerPosition);		break;
+			case EPinType::Quaternion:	DeserializeVariant<SQuaternion>(data, fromData, pointerPosition);	break;
+			case EPinType::Entity:		DeserializeVariant<SEntity>(data, fromData, pointerPosition);		break;
 			}
 		}
 

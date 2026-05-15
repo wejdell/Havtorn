@@ -113,7 +113,7 @@ namespace Havtorn
 		if (Instance == nullptr)
 			return false;
 
-		return parameter != Instance->InvalidParameter;
+		return Instance->Options.contains(parameter);
 	}
 
 	bool UCommandLine::HasFreeParameter(const std::string& parameter)
