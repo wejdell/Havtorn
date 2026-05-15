@@ -30,6 +30,7 @@ namespace Havtorn
 		static const SColor Orange;
 		static const SColor Magenta;
 		static const SColor Yellow;
+		static const SColor Purple;
 		// TODO.AG: Add more color presets
 
 		SColor() = default;

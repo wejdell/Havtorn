@@ -14,7 +14,7 @@
 //#include "Core/HavtornString.h"
 //#include "Engine.h"
 //#include "FileSystem/FileSystem.h"
-//#include "Assets/FileHeaderDeclarations.h"
+//#include "Assets/AssetFileHeader.h"
 //
 namespace Havtorn
 {

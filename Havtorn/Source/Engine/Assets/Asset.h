@@ -9,7 +9,7 @@
 
 namespace Havtorn
 {
-	typedef std::variant<std::monostate, SStaticMeshAsset, SSkeletalMeshAsset, SSkeletalAnimationAsset, STextureAsset, STextureCubeAsset, SGraphicsMaterialAsset, SSpriteAninmationClipAsset, SScriptAsset, SPrefabAsset, SInputAsset> SAssetData;
+	typedef std::variant<std::monostate, SStaticMeshAsset, SSkeletalMeshAsset, SSkeletalAnimationAsset, STextureAsset, STextureCubeAsset, SGraphicsMaterialAsset, SSpriteAninmationClipAsset, SScriptAsset, SPrefabAsset, SInputAsset, SAudioClipAsset> SAssetData;
 	struct SAsset
 	{
 		EAssetType Type = EAssetType::None;

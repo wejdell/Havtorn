@@ -3,19 +3,21 @@
 #pragma once
 
 #include "ECS/Entity.h"
-#include "Assets/FileHeaderDeclarations.h"
-#include <HavtornString.h>
+#include "Assets/AssetFileHeader.h"
 #include "HexPhys/HexPhys.h"
-#include <EngineException.h>
-#include <HavtornDelegate.h>
-#include <FileSystem.h>
+#include "HexAudio/HexAudio.h"
+#include "HexRune/HexRune.h"
 
 #include "Graphics/GraphicsStructs.h"
 #include "Graphics/GraphicsEnums.h"
 #include "Scene/Scene.h"
 #include "Assets/SequencerAsset.h"
 #include "Assets/FileHeaders/PrefabAssetFileHeader.h"
-#include "HexRune/HexRune.h"
+
+#include <HavtornString.h>
+#include <EngineException.h>
+#include <HavtornDelegate.h>
+#include <FileSystem.h>
 
 #include <queue>
 #include <concepts>
@@ -48,6 +50,11 @@ namespace Havtorn
 	namespace HexPhys3D
 	{
 		class CPhysicsWorld3D;
+	}
+
+	namespace HexAudio
+	{
+		class CAudioBackend;
 	}
 
 	enum class ENGINE_API ESystemUpdateOrder
@@ -163,6 +170,10 @@ namespace Havtorn
 		ENGINE_API void Initialize3DPhysicsData(const SEntity& entity) const;
 		ENGINE_API void Update3DPhysicsData(STransformComponent* transformComponent, SPhysics3DComponent* phys2DComponent) const;
 
+		ENGINE_API void RequestAudioSystem(void* requester);
+		ENGINE_API U64 RegisterAudioObject(const bool isListener, const std::vector<SAssetReference>& assetReferences);
+		ENGINE_API void UnregisterAudioObject(const U64 objectID, const std::vector<SAssetReference>& assetReferences);
+
 	public:
 		// TODO.NW: Maybe unify and have Enum arg instead
 		CMulticastDelegate<std::vector<Ptr<CScene>>&> OnBeginPlayDelegate;
@@ -208,6 +219,7 @@ namespace Havtorn
 
 		Ptr<HexPhys2D::CPhysicsWorld2D> PhysicsWorld2D = nullptr;
 		Ptr<HexPhys3D::CPhysicsWorld3D> PhysicsWorld3D = nullptr;
+		Ptr<HexAudio::CAudioBackend> AudioBackend = nullptr;
 		
 		CRenderManager* RenderManager = nullptr;
 

@@ -1,0 +1,48 @@
+{
+ "SoundBanksInfo": {
+  "Platform": "Windows",
+  "BasePlatform": "Windows",
+  "SchemaVersion": "16",
+  "SoundBankVersion": "172",
+  "SoundBanks": [
+   {
+    "Id": "2144309188",
+    "Type": "Event",
+    "GUID": "{4D68B71B-458A-4E56-81F0-B7C798906992}",
+    "Language": "SFX",
+    "Hash": "{2C9391F4-A682-D69C-D018-4C432A63AD95}",
+    "ObjectPath": "PlaySound",
+    "ShortName": "PlaySound",
+    "Path": "Event/PlaySound.bnk",
+    "Media": [
+     {
+      "Id": "965723536",
+      "Language": "SFX",
+      "Streaming": "false",
+      "Location": "Loose",
+      "ShortName": "TestSound.wav",
+      "Path": "Media/965723536.wem",
+      "CachePath": "02/{0228234F-6F5C-EDB0-2836-8B83E4D2D684}.wem"
+     }
+    ],
+    "Events": [
+     {
+      "Id": "2144309188",
+      "Name": "PlaySound",
+      "ObjectPath": "\\Events\\Default Work Unit\\PlaySound",
+      "GUID": "{4D68B71B-458A-4E56-81F0-B7C798906992}",
+      "DurationType": "OneShot",
+      "DurationMin": "1",
+      "DurationMax": "1",
+      "MediaRefs": [
+       {
+        "Id": "965723536"
+       }
+      ]
+     }
+    ]
+   }
+  ],
+  "FileHash": "{FB32E1EE-0A5A-8BD5-C56B-BD073F97C51D}"
+ }
+}

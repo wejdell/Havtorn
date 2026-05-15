@@ -7,7 +7,6 @@
 #include "Graphics/RenderManager.h"
 #include "Assets/AssetRegistry.h"
 #include "Graphics/Debug/DebugDrawUtility.h"
-#include "HexPhys/HexPhys.h"
 #include "Input/InputMapper.h"
 
 #include <PlatformManager.h>
@@ -19,6 +18,7 @@ namespace Havtorn
 		RenderManager = renderManager;
 		PhysicsWorld2D = std::make_unique<HexPhys2D::CPhysicsWorld2D>();
 		PhysicsWorld3D = std::make_unique<HexPhys3D::CPhysicsWorld3D>();
+		AudioBackend = std::make_unique<HexAudio::CAudioBackend>();
 
 		// Setup systems
 		RequestSystem<CCameraSystem>(this);
@@ -324,5 +324,20 @@ namespace Havtorn
 	{
 		if (PhysicsWorld3D != nullptr)
 			PhysicsWorld3D->UpdatePhysicsData(transformComponent, phys3DComponent);
+	}
+
+	void CWorld::RequestAudioSystem(void* requester)
+	{
+		RequestSystem<HexAudio::CAudioSystem>(requester, AudioBackend.get());
+	}
+
+	U64 CWorld::RegisterAudioObject(const bool isListener, const std::vector<SAssetReference>& assetReferences)
+	{
+		return AudioBackend->RegisterAudioObject(isListener, assetReferences);
+	}
+
+	void CWorld::UnregisterAudioObject(const U64 objectID, const std::vector<SAssetReference>& assetReferences)
+	{
+		AudioBackend->UnregisterAudioObject(objectID, assetReferences);
 	}
 }

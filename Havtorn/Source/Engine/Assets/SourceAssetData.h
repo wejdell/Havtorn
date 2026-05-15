@@ -7,6 +7,9 @@ namespace Havtorn
 {
 	struct SSourceAssetData
 	{
+		// TODO.NW: This should be more flexible, and excluding data the asset doesn't need.
+		// May want to use a variant as the parameter to ImportAsset instead
+
 		EAssetType AssetType = EAssetType::None;
 		CHavtornStaticString<128> SourcePath;
 		CHavtornStaticString<128> AssetDependencyPath;

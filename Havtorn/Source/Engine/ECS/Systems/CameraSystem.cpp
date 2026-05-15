@@ -16,20 +16,36 @@ namespace Havtorn
 	CCameraSystem::CCameraSystem()
 		: ISystem()
 	{
-		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Up).AddMember(this, &CCameraSystem::HandleAxisInput);
-		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Right).AddMember(this, &CCameraSystem::HandleAxisInput);
-		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Forward).AddMember(this, &CCameraSystem::HandleAxisInput);
-		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MouseDeltaHorizontal).AddMember(this, &CCameraSystem::HandleAxisInput);
-		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MouseDeltaVertical).AddMember(this, &CCameraSystem::HandleAxisInput);
-		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::Zoom).AddMember(this, &CCameraSystem::HandleAxisInput);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ToggleFreeCam).AddMember(this, &CCameraSystem::ToggleFreeCam);
-		GEngine::GetWorld()->OnBeginPlayDelegate.AddMember(this, &CCameraSystem::OnBeginPlay);
-		GEngine::GetWorld()->OnPausePlayDelegate.AddMember(this, &CCameraSystem::OnPausePlay);
-		GEngine::GetWorld()->OnEndPlayDelegate.AddMember(this, &CCameraSystem::OnEndPlay);
+		CInputMapper* mapper = GEngine::GetInput();
+		mapper->GetAxisDelegate(EInputAxisEvent::Up).AddMember(this, &CCameraSystem::HandleAxisInput);
+		mapper->GetAxisDelegate(EInputAxisEvent::Right).AddMember(this, &CCameraSystem::HandleAxisInput);
+		mapper->GetAxisDelegate(EInputAxisEvent::Forward).AddMember(this, &CCameraSystem::HandleAxisInput);
+		mapper->GetAxisDelegate(EInputAxisEvent::MouseDeltaHorizontal).AddMember(this, &CCameraSystem::HandleAxisInput);
+		mapper->GetAxisDelegate(EInputAxisEvent::MouseDeltaVertical).AddMember(this, &CCameraSystem::HandleAxisInput);
+		mapper->GetAxisDelegate(EInputAxisEvent::Zoom).AddMember(this, &CCameraSystem::HandleAxisInput);
+		mapper->GetActionDelegate(EInputActionEvent::ToggleFreeCam).AddMember(this, &CCameraSystem::ToggleFreeCam);
+		
+		CWorld* world = GEngine::GetWorld();
+		world->OnBeginPlayDelegate.AddMember(this, &CCameraSystem::OnBeginPlay);
+		world->OnPausePlayDelegate.AddMember(this, &CCameraSystem::OnPausePlay);
+		world->OnEndPlayDelegate.AddMember(this, &CCameraSystem::OnEndPlay);
 	}
 
 	CCameraSystem::~CCameraSystem()
 	{
+		CInputMapper* mapper = GEngine::GetInput();
+		mapper->GetAxisDelegate(EInputAxisEvent::Up).RemoveObject(this);
+		mapper->GetAxisDelegate(EInputAxisEvent::Right).RemoveObject(this);
+		mapper->GetAxisDelegate(EInputAxisEvent::Forward).RemoveObject(this);
+		mapper->GetAxisDelegate(EInputAxisEvent::MouseDeltaHorizontal).RemoveObject(this);
+		mapper->GetAxisDelegate(EInputAxisEvent::MouseDeltaVertical).RemoveObject(this);
+		mapper->GetAxisDelegate(EInputAxisEvent::Zoom).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::ToggleFreeCam).RemoveObject(this);
+
+		CWorld* world = GEngine::GetWorld();
+		world->OnBeginPlayDelegate.RemoveObject(this);
+		world->OnPausePlayDelegate.RemoveObject(this);
+		world->OnEndPlayDelegate.RemoveObject(this);
 	}
 
 	void CCameraSystem::Update(std::vector<Ptr<CScene>>& scenes)

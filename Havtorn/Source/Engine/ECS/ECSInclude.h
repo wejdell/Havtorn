@@ -14,6 +14,7 @@
 #include "ECS/Systems/SpriteAnimatorGraphSystem.h"
 #include "ECS/Systems/SequencerSystem.h"
 #include "../HexPhys/HexPhys.h"
+#include "../HexAudio/HexAudio.h"
 #include "ECS/Systems/ScriptSystem.h"
 #include "ECS/Systems/UISystem.h"
 #include "ECS/Systems/LevelStreamingSystem.h"
@@ -72,6 +73,10 @@
 #include "ECS/ComponentEditorContexts/LevelStreamingComponentEditorContext.h"
 #include "ECS/Components/AbilityComponent.h"
 #include "ECS/ComponentEditorContexts/AbilityComponentEditorContext.h"
+#include "ECS/Components/AudioEmitterComponent.h"
+#include "ECS/ComponentEditorContexts/AudioEmitterComponentEditorContext.h"
+#include "ECS/Components/AudioListenerComponent.h"
+#include "ECS/ComponentEditorContexts/AudioListenerComponentEditorContext.h"
 #include "ECS/Components/DebugShapeComponent.h"
 #include "ECS/Components/MetaDataComponent.h"
 

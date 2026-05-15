@@ -5,7 +5,7 @@
 #include "ECS/ECSInclude.h"
 #include "ECS/GUIDManager.h"
 #include "Graphics/RenderManager.h"
-#include "Assets/FileHeaderDeclarations.h"
+#include "Assets/AssetFileHeader.h"
 #include "World.h"
 #include "Assets/AssetRegistry.h"
 
@@ -58,6 +58,8 @@ namespace Havtorn
 		RegisterNonTrivialComponent<SAbilityComponent, SAbilityComponentEditorContext>(240, 10);
 		RegisterNonTrivialComponent<SHexCommandComponent, SHexCommandComponentEditorContext>(250, 10);
 		RegisterNonTrivialComponent<SInputComponent, SInputComponentEditorContext>(260, 10);
+		RegisterTrivialComponent<SAudioListenerComponent, SAudioListenerComponentEditorContext>(270, 1);
+		RegisterNonTrivialComponent<SAudioEmitterComponent, SAudioEmitterComponentEditorContext>(280, 20);
 		//RegisterTrivialComponent<SSequencerComponent, SSequencerComponentEditorContext>(typeID++, 0);
 
 		return true;

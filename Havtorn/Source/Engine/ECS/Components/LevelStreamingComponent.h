@@ -4,7 +4,7 @@
 
 #include "ECS/Component.h"
 #include "Assets/AssetReference.h"
-#include "Assets/FileHeaderDeclarations.h"
+#include "Assets/AssetFileHeader.h"
 
 namespace Havtorn
 {

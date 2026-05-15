@@ -17,7 +17,7 @@
 
 #include "GraphicsStructs.h"
 #include "GeometryPrimitives.h"
-#include "Assets/FileHeaderDeclarations.h"
+#include "Assets/AssetFileHeader.h"
 
 #include <algorithm>
 #include <future>

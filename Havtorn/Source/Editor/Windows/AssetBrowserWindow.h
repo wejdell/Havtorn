@@ -42,6 +42,7 @@ namespace Havtorn
 		void ImportOptionsStaticMesh();
 		void ImportOptionsSkeletalMesh();
 		void ImportOptionsAnimation();
+		void ImportOptionsAudioClip(SAudioClipSettings& settings);
 		
 		SAssetFileHeader CreateOptionsMaterial();
 		SAssetFileHeader CreateScript();

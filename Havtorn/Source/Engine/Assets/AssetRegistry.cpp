@@ -368,9 +368,15 @@ namespace Havtorn
             assetFile.Deserialize(data, std::get<SPrefabAsset>(asset.Data).Scene.get());
         }
         break;
+        case EAssetType::AudioClip:
+        {
+            SAudioClipFileHeader assetFile;
+            assetFile.Deserialize(data);
+            asset.Data = SAudioClipAsset(assetFile);;
+            asset.SourceData = assetFile.SourceData;
+        }
+        break;
         case EAssetType::SpriteAnimation:
-        case EAssetType::AudioOneShot:
-        case EAssetType::AudioCollection:
         case EAssetType::VisualFX:
         break;
         case EAssetType::Scene:
@@ -485,6 +491,9 @@ namespace Havtorn
             SInputAssetFileHeader header = std::get<SInputAssetFileHeader>(fileHeader);
             return SaveAsset(destinationPath, header);
         }
+        else if (std::holds_alternative<SAudioClipFileHeader>(fileHeader))
+        {
+        }
 
         if (hvaPath == "INVALID_PATH")
             HV_LOG_WARN("CAssetRegistry::CreateNewAsset: The chosen file header asset type can not be created from the engine. Did you mean to import it? Could not create new asset at %s!", destinationPath.c_str());
@@ -492,7 +501,7 @@ namespace Havtorn
         return hvaPath;
     }
 
-    std::string CAssetRegistry::ImportAsset(const std::string& filePath, const std::string& destinationPath, const SSourceAssetData& sourceData)
+    std::string CAssetRegistry::ImportAsset(const std::string& filePath, const std::string& destinationPath, const SSourceAssetData& sourceData, const SAudioClipSettings& audioClipSettings)
     {
         std::string hvaPath = "INVALID_PATH";
         switch (sourceData.AssetType)
@@ -553,10 +562,21 @@ namespace Havtorn
             hvaPath = SaveAsset(destinationPath, fileHeader);
         }
         break;
-        case EAssetType::AudioOneShot:
-            break;
-        case EAssetType::AudioCollection:
-            break;
+        case EAssetType::AudioClip:
+        {
+            std::string audioClipFileData;
+            UFileSystem::Deserialize(filePath, audioClipFileData);
+
+            SAudioClipFileHeader fileHeader;
+            fileHeader.AssetType = EAssetType::AudioClip;
+
+            fileHeader.Name = UGeneralUtils::ExtractFileBaseNameFromPath(filePath);
+            fileHeader.SourceData = sourceData;
+
+            fileHeader.Settings = audioClipSettings;
+
+            hvaPath = SaveAsset(destinationPath, fileHeader);
+        }
 
         case EAssetType::InputAsset: 
         {
@@ -689,6 +709,16 @@ namespace Havtorn
             UFileSystem::Serialize(hvaPath, &data[0], size);
             delete[] data;
         }
+        else if (std::holds_alternative<SAudioClipFileHeader>(fileHeader))
+        {
+            SAudioClipFileHeader header = std::get<SAudioClipFileHeader>(fileHeader);
+            U32 size = header.GetSize();
+            const auto data = new char[size];
+            header.Serialize(data);
+            hvaPath = destinationPath + header.Name + ".hva";
+            UFileSystem::Serialize(hvaPath, &data[0], size);
+            delete[] data;
+        }
 
         if (hvaPath == "INVALID_PATH")
             HV_LOG_WARN("CAssetRegistry::SaveAsset: The chosen file header had no serialization implemented. Could not create asset at %s!", destinationPath.c_str());
@@ -772,7 +802,8 @@ namespace Havtorn
 
             HV_LOG_INFO("CAssetRegistry::FixUpAssetRedirectors: Asset file %s changed Asset Dependency Path from %s to %s.", assetRef.FilePath.c_str(), asset->SourceData.AssetDependencyPath.AsString().c_str(), dependencyPath.c_str());
             asset->SourceData.AssetDependencyPath = dependencyPath;
-            ImportAsset(asset->SourceData.SourcePath.AsString(), UGeneralUtils::ExtractParentDirectoryFromPath(asset->Reference.FilePath), asset->SourceData);
+            // TODO.NW: The original audio settings have been lost here, so this won't work until we make a variant of the import settings
+            ImportAsset(asset->SourceData.SourcePath.AsString(), UGeneralUtils::ExtractParentDirectoryFromPath(asset->Reference.FilePath), asset->SourceData, {});
 
             UnrequestAsset(assetRef, AssetRegistryRequestID);
         }
@@ -855,7 +886,8 @@ namespace Havtorn
         }
 
         SAsset* asset = WatchedAssets[sourceFilePath];
-        ImportAsset(asset->SourceData.SourcePath.AsString(), UGeneralUtils::ExtractParentDirectoryFromPath(asset->Reference.FilePath), asset->SourceData);
+        // TODO.NW: The original audio settings have been lost here, so this won't work until we make a variant of the import settings
+        ImportAsset(asset->SourceData.SourcePath.AsString(), UGeneralUtils::ExtractParentDirectoryFromPath(asset->Reference.FilePath), asset->SourceData, {});
 
         if (LoadAsset(asset->Reference))
             HV_LOG_INFO("CAssetRegistry::OnSourceFileChanged: Asset file %s was reimported after source change in %s.", asset->Reference.FilePath.c_str(), sourceFilePath.c_str());

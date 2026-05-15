@@ -26,12 +26,24 @@ namespace Havtorn
 	CPickingSystem::CPickingSystem(CEditorManager* editorManager)
 		: Manager(editorManager)
 	{
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::PickEditorEntity).AddMember(this, &CPickingSystem::OnMouseClick);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ContextPickEditorEntity).AddMember(this, &CPickingSystem::OnMouseClick);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ControlPickEditorEntity).AddMember(this, &CPickingSystem::OnMouseClick);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::ShiftPickEditorEntity).AddMember(this, &CPickingSystem::OnMouseClick);
-		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MousePositionHorizontal).AddMember(this, &CPickingSystem::OnMouseMove);
-		GEngine::GetInput()->GetAxisDelegate(EInputAxisEvent::MousePositionVertical).AddMember(this, &CPickingSystem::OnMouseMove);
+		CInputMapper* mapper = GEngine::GetInput();
+		mapper->GetActionDelegate(EInputActionEvent::PickEditorEntity).AddMember(this, &CPickingSystem::OnMouseClick);
+		mapper->GetActionDelegate(EInputActionEvent::ContextPickEditorEntity).AddMember(this, &CPickingSystem::OnMouseClick);
+		mapper->GetActionDelegate(EInputActionEvent::ControlPickEditorEntity).AddMember(this, &CPickingSystem::OnMouseClick);
+		mapper->GetActionDelegate(EInputActionEvent::ShiftPickEditorEntity).AddMember(this, &CPickingSystem::OnMouseClick);
+		mapper->GetAxisDelegate(EInputAxisEvent::MousePositionHorizontal).AddMember(this, &CPickingSystem::OnMouseMove);
+		mapper->GetAxisDelegate(EInputAxisEvent::MousePositionVertical).AddMember(this, &CPickingSystem::OnMouseMove);
+	}
+
+	CPickingSystem::~CPickingSystem()
+	{
+		CInputMapper* mapper = GEngine::GetInput();
+		mapper->GetActionDelegate(EInputActionEvent::PickEditorEntity).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::ContextPickEditorEntity).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::ControlPickEditorEntity).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::ShiftPickEditorEntity).RemoveObject(this);
+		mapper->GetAxisDelegate(EInputAxisEvent::MousePositionHorizontal).RemoveObject(this);
+		mapper->GetAxisDelegate(EInputAxisEvent::MousePositionVertical).RemoveObject(this);
 	}
 
 	void CPickingSystem::Update(std::vector<Ptr<CScene>>& scenes)

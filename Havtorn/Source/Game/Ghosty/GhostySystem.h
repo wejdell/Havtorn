@@ -9,7 +9,7 @@ namespace Havtorn
 	{
 	public:
 		CGhostySystem();
-		~CGhostySystem() override = default;
+		~CGhostySystem() override;
 		void Update(std::vector<Ptr<CScene>>& scenes) override;
 
 	public:

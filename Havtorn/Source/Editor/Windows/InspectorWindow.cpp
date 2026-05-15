@@ -292,19 +292,7 @@ namespace Havtorn
 			if (IsUsingGizmo)
 				FullDeltaMatrix *= DeltaMatrix;
 
-			if (Manager->GetIsVertexSnappingActive())
-			{
-				RunVertexSnapping(transformMatrix, viewedTransformComp->Owner);
-			}
-			else if (Manager->GetIsGridSnappingActive())
-			{
-				RunGridSnapping(transformMatrix);
-
-				const SVector pos = transformMatrix.GetTranslation() + PivotOffset;
-				const SVector roundedPos = { UMath::Round(pos.X, 1.0f), UMath::Round(pos.Y, 1.0f), UMath::Round(pos.Z, 1.0f) };
-				GDebugDraw::AddGrid(roundedPos, SVector::Zero, SColor::Grey, -1.0f, false, 0.005f, false);
-			}
-			else if (IsUsingGizmo)
+			if (IsUsingGizmo)
 			{
 				// TODO.NW: Let quats be the ground truth of rotation. Move away from Matrices in Transforms and cache them only for sending to the GPU. Transforms should be scale+quat+trans
 
@@ -315,8 +303,14 @@ namespace Havtorn
 				ETransformGizmo gizmo = Manager->GetCurrentGizmo();
 				if (gizmo == ETransformGizmo::Translate)
 				{
-					transformMatrix.SetTranslation(InitialTranslation + FullDeltaMatrix.GetTranslation());
-					PivotWorldSpace = transformMatrix.GetTranslation() + PivotOffset;
+					PivotWorldSpace = InitialTranslation + FullDeltaMatrix.GetTranslation() + PivotOffset;
+
+					if (Manager->GetIsVertexSnappingActive())
+						PivotWorldSpace = VertexSnap(PivotWorldSpace, viewedTransformComp->Owner);
+					else if (Manager->GetIsGridSnappingActive())
+						PivotWorldSpace = GridSnap(PivotWorldSpace);
+
+					transformMatrix.SetTranslation(PivotWorldSpace - PivotOffset);
 				}
 				else if (gizmo == ETransformGizmo::Rotate)
 				{
@@ -328,6 +322,13 @@ namespace Havtorn
 					SMatrix::Recompose(transformMatrix.GetTranslation(), newRotation, FullDeltaMatrix.GetScale(), transformMatrix);
 				}
 			}
+
+			if (Manager->GetIsGridSnappingActive())
+			{
+				const SVector pos = transformMatrix.GetTranslation() + PivotOffset;
+				const SVector roundedPos = { UMath::Round(pos.X, 1.0f), UMath::Round(pos.Y, 1.0f), UMath::Round(pos.Z, 1.0f) };
+				GDebugDraw::AddGrid(roundedPos, SVector::Zero, SColor::Grey, -1.0f, false, 0.005f, false);
+			}
 		}
 		else
 		{
@@ -337,7 +338,7 @@ namespace Havtorn
 
 		GUI::PopID();
 
-		if (!IsUsingGizmo && WasUsingGizmo && FullDeltaMatrix != SMatrix::Identity)
+		if (!IsUsingGizmo && WasUsingGizmo && !FullDeltaMatrix.NearlyEqual(SMatrix::Identity))
 		{
 			PivotWorldSpace = transformMatrix.GetTranslation() + PivotOffset;
 			UMetaCommandRouter::Push(SMoveTransformEditAction::MakeEditActionCommand(Manager, viewedTransformComp, FullDeltaMatrix));
@@ -349,26 +350,24 @@ namespace Havtorn
 			mainCameraData.TransformComponent->Transform.SetMatrix(viewMatrix);
 	}
 
-	void CInspectorWindow::RunVertexSnapping(SMatrix& gizmoTransform, const SEntity& viewedEntity)
-	{	
-		if (DeltaMatrix == SMatrix::Identity)
-			return;
-		
+	SVector CInspectorWindow::VertexSnap(const SVector& pivotPosition, const SEntity& viewedEntity)
+	{
 		CViewportWindow* viewport = Manager->GetEditorWindow<CViewportWindow>();
 		SEntity hoveredEntity = viewport->GetEntityOnPixel();
 		if (!hoveredEntity.IsValid() || hoveredEntity == viewedEntity)
-			return;
-		
+			return pivotPosition;
+
 		SVector vertexPos = viewport->GetClosestVertexPositionOnPixel(hoveredEntity);
-		gizmoTransform.SetTranslation(vertexPos - PivotOffset);
+		if (vertexPos.IsEqual(SVector::Zero))
+			return pivotPosition;
+
+		return vertexPos;
 	}
 
-	void CInspectorWindow::RunGridSnapping(SMatrix& gizmoTransform)
+	SVector CInspectorWindow::GridSnap(const SVector& pivotPosition)
 	{
 		const SVector snapping = Manager->GetCurrentGizmoSnapping().Snapping;
-		SVector pos = gizmoTransform.GetTranslation();
-		pos = { UMath::Round(pos.X, snapping.X), UMath::Round(pos.Y, snapping.Y), UMath::Round(pos.Z, snapping.Z) };
-		gizmoTransform.SetTranslation(pos - PivotOffset);
+		return { UMath::Round(pivotPosition.X, snapping.X), UMath::Round(pivotPosition.Y, snapping.Y), UMath::Round(pivotPosition.Z, snapping.Z) };
 	}
 
 	void CInspectorWindow::ViewManipulation(SMatrix& outCameraView, const SVector2<F32>& windowPosition, const SVector2<F32>& windowSize)

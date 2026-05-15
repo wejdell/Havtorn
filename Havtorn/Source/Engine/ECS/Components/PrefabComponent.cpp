@@ -3,7 +3,7 @@
 #include "hvpch.h"
 #include "PrefabComponent.h"
 #include "Engine.h"
-#include "Assets/FileHeaderDeclarations.h"
+#include "Assets/AssetFileHeader.h"
 #include "Assets/AssetRegistry.h"
 #include "TransformComponent.h"
 

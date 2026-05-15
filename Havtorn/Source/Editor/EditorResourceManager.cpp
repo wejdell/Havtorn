@@ -301,13 +301,12 @@ namespace Havtorn
 			//RenderManager->RenderSkeletalAnimationAssetTexture(assetTexture, filePath, boneTransforms);
 			break;
 		}
-		case EAssetType::AudioOneShot:
+		case EAssetType::AudioClip: // TODO.NW: Play sound? Probably want to do that if selected and pressing play instead
 			break;
 		case EAssetType::VisualFX:
 			break;
 		case EAssetType::SpriteAnimation:
 			break;
-		case EAssetType::AudioCollection:
 		case EAssetType::StaticMesh:
 		case EAssetType::SkeletalMesh:
 		case EAssetType::Texture:
@@ -334,7 +333,7 @@ namespace Havtorn
 		sourceData.AssetDependencyPath = importOptions.AssetRep != nullptr ? importOptions.AssetRep->DirectoryEntry.path().string() : "N/A";
 		sourceData.ImportScale = importOptions.Scale;
 
-		return GEngine::GetAssetRegistry()->ImportAsset(filePath, destinationPath, sourceData);
+		return GEngine::GetAssetRegistry()->ImportAsset(filePath, destinationPath, sourceData, importOptions.AudioClipSettings);
 	}
 
 	void CEditorResourceManager::CreateMaterial(const std::string& destinationPath, const SMaterialAssetFileHeader& fileHeader) const
@@ -421,7 +420,7 @@ namespace Havtorn
 				SSourceAssetData sourceData;
 				sourceData.AssetType = EAssetType::Texture;
 				sourceData.SourcePath = sourcePath;
-				assetRegistry->ImportAsset(sourcePath, ResourceAssetPath + assetSubDirectory, sourceData);
+				assetRegistry->ImportAsset(sourcePath, ResourceAssetPath + assetSubDirectory, sourceData, {});
 			}
 
 			STextureAsset* assetData = assetRegistry->RequestAssetData<STextureAsset>(SAssetReference(assetPath), CAssetRegistry::EditorManagerRequestID);

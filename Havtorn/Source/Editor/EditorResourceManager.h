@@ -44,6 +44,7 @@ namespace Havtorn
 		RotateGizmoIcon,
 		ScaleGizmoIcon,
 		InputMapIcon,
+		AudioClipIcon,
 		Count,
 		None = Count
 	};
@@ -56,8 +57,11 @@ namespace Havtorn
 
 		// TODO.NW: Add destination path here, settable through explorer navigation? Default to the current one in the asset browser
 
+		// TODO.NW: May make use of variant for these import options
+
 		EAssetType AssetType = EAssetType::None;
 		SEditorAssetRepresentation* AssetRep = nullptr;
+		SAudioClipSettings AudioClipSettings;
 		F32 Scale = 1.0f;
 	};
 

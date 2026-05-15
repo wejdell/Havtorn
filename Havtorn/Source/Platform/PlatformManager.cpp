@@ -120,12 +120,16 @@ namespace Havtorn
 #else
 		const std::string windowTitle = document.GetString("Game Name", "Havtorn Editor");
 #endif
-
-		SplashSurface = SDL_LoadBMP(document.GetString("Splash Path", "Resources/HavtornSplash.bmp").c_str());
-		
-		// NW: SteamAPI_InitEx goes here
 		SDL_SetAppMetadata(windowTitle.c_str(), HAVTORN_VERSION, NULL);
-		SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD | SDL_INIT_HAPTIC);
+
+		SDL_InitFlags initFlags = SDL_INIT_VIDEO | SDL_INIT_GAMEPAD;
+#ifdef HV_AUDIO_BACKEND_SDL
+		initFlags |= SDL_INIT_AUDIO;
+#endif
+		// NW: SteamAPI_InitEx goes here
+		SDL_Init(initFlags);
+		
+		SplashSurface = SDL_LoadBMP(document.GetString("Splash Path", "Resources/HavtornSplash.bmp").c_str());
 		SplashWindow = SDL_CreateWindow(windowTitle.c_str(), SplashSurface->w, SplashSurface->h, SDL_WINDOW_BORDERLESS);
 		const SDL_Rect defaultRect = { .x = 0, .y = 0, .w = SplashSurface->w, .h = SplashSurface->h };
 		SDL_BlitSurface(SplashSurface, &defaultRect, SDL_GetWindowSurface(SplashWindow), &defaultRect);

@@ -9,6 +9,8 @@
 #include <Engine.h>
 #include <GUI.h>
 
+#include <HexAudio/HexAudio.h>
+
 namespace Havtorn
 {
 	CGameManager* CGameManager::Instance = nullptr;
@@ -87,6 +89,7 @@ namespace Havtorn
 		World->RequestSystem<CGhostySystem>(this);
 		World->RequestPhysicsSystem(this);
 		World->UnblockPhysicsSystem(this);
+		World->RequestAudioSystem(this);
 
 		if (CUISystem* uiSystem = World->GetSystem<CUISystem>())
 			uiSystem->ClearFocus();
@@ -99,6 +102,7 @@ namespace Havtorn
 	{
 		World->BlockSystem<CInputSystem>(this);
 		World->BlockPhysicsSystem(this);
+		// TODO.NW: Notify audio of pause state?
 	}
 
 	void CGameManager::OnEndPlay(std::vector<Ptr<CScene>>& /*scenes*/)

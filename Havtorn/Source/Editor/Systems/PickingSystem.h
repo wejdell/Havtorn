@@ -20,6 +20,7 @@ namespace Havtorn
 	{
 	public:
 		CPickingSystem(CEditorManager* editorManager);
+		virtual ~CPickingSystem() override;
 		void Update(std::vector<Ptr<CScene>>& scenes) override;
 
 	private:
