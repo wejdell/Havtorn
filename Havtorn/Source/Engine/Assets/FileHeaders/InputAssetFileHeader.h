@@ -29,10 +29,7 @@ namespace Havtorn
 			size += sizeof(U32);
 
 			for (auto& mapping : action.InputMappings)
-			{
 				size += GetDataSize(mapping.Data);
-			}
-
 		}
 		return size;
 	}

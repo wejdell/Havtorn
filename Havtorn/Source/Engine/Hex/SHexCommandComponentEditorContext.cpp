@@ -8,15 +8,14 @@
 
 #include <GUI.h>
 
-
 namespace Havtorn
 {
-	SHexCommandComponentEditorContext SHexCommandComponentEditorContext::Context = { };
+	SHexCommandComponentEditorContext SHexCommandComponentEditorContext::Context = {};
 
 	SComponentViewResult SHexCommandComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
 	{
 		SHexCommandComponent* component = scene->GetComponent<SHexCommandComponent>(entityOwner);
-		GUI::TagPickerDropdown("Hex Command Tag", "Tag identifying this HexCommand", component->TagsToListenFor);
+		GUI::TagPickerDropdown("Hex Command Tags", "Receive commands using one of these tags", component->TagsToListenFor);
 
 		std::stack<SHexCommand> hexCommandCopy = component->HexCommands;
 		U64 id = 0;
@@ -42,7 +41,6 @@ namespace Havtorn
 			GUI::PopID();
 		}
 
-
 		return SComponentViewResult();
 	}
 
@@ -59,5 +57,4 @@ namespace Havtorn
 		scene->RemoveComponentEditorContext(entity, &SHexCommandComponentEditorContext::Context);
 		return true;
 	}
-
 }

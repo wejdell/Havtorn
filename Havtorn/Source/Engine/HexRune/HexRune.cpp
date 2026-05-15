@@ -6,8 +6,8 @@
 #include "NodeEditorContexts/ECSNodeEditorContexts.h"
 #include "CoreNodes/CoreNodes.h"
 #include "ECSNodes/ECSNodes.h"
-#include <stack>
 
+#include <stack>
 
 namespace Havtorn
 {
@@ -15,12 +15,10 @@ namespace Havtorn
 	{
 		SScript::SScript()
 		{
-
 		}
 
 		SScript::~SScript()
 		{
-
 		}
 
 		void SScript::AddDataBinding(const char* name, const EPinType type, const EObjectDataType objectType, const EAssetType assetType)
@@ -629,31 +627,7 @@ namespace Havtorn
 		{
 			SerializeData(UID, toData, pointerPosition);
 			SerializeData(ParamType, toData, pointerPosition);
-			/*std::visit([&](auto& value)
-				{
-					value;
-					[]()
-						{
-						},
-					[](bool value)
-						{
-							value;
-						},
-					[](I32 value)
-						{
-							value;
-						},
-					[](std::string value)
-						{
-							value;
-						},
-					[](SVector2<F32> value)
-						{
-							value;
-						};
-				} , Func);*/
 		}
-
 
 		void SInputCallbackBinding::Deserialize(const char* fromData, U64& pointerPosition)
 		{

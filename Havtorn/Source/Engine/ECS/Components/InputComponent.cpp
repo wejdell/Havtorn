@@ -32,5 +32,4 @@ namespace Havtorn
     {
         GEngine::GetAssetRegistry()->UnrequestAsset(AssetReference, Owner.GUID);
     }
-
 }

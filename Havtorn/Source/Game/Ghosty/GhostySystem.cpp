@@ -3,13 +3,13 @@
 #include "hvpch.h"
 #include "GhostySystem.h"
 #include "GhostyComponent.h"
-#include "Scene/Scene.h"
-#include "Scene/World.h"
-#include "ECS/Systems/SpriteAnimatorGraphSystem.h"
-#include "Input/InputMapper.h"
-#include "GameplayTags\GameplayTagManager.h"
 
 #include <Engine.h>
+#include <Scene/Scene.h>
+#include <Scene/World.h>
+#include <ECS/Systems/SpriteAnimatorGraphSystem.h>
+#include <Input/InputMapper.h>
+#include <GameplayTags/GameplayTagManager.h>
 
 namespace Havtorn
 {
@@ -35,31 +35,6 @@ namespace Havtorn
 			{
 				if (!SComponent::IsValid(ghostyComponent))
 					continue;
-
-				SHexCommandComponent* hexCommandComponent = scene->GetComponent<SHexCommandComponent>(ghostyComponent);
-
-				SHexCommand newHexCommand;
-				newHexCommand.Tag = GGameplayTagManager::RequestTag("Player.Ability.TimeTravel");
-				newHexCommand.DataType = EHexCommandDataType::Bool;
-				newHexCommand.Data = true;
-
-				if (GGameplayTagManager::ContainsTag(newHexCommand.Tag, hexCommandComponent->TagsToListenFor))
-				{
-					hexCommandComponent->HexCommands.push(newHexCommand);
-				}
-
-				while (!hexCommandComponent->HexCommands.empty())
-				{
-					const SHexCommand& command = hexCommandComponent->HexCommands.top();
-					
-					SGameplayTag tag = GGameplayTagManager::RequestTag("Player.Ability.TimeTravel");
-				
-					if (GGameplayTagManager::AllTagsMatch(command.Tag, tag))
-					{
-						HV_LOG_INFO("Has Tag: %s", command.Tag.Name.c_str());
-					}
-					hexCommandComponent->HexCommands.pop();
-				}
 
 				ghostyComponent->State.Input = input;
 

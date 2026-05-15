@@ -367,7 +367,6 @@ namespace Havtorn
             asset.Data = SPrefabAsset(assetFile);
             assetFile.Deserialize(data, std::get<SPrefabAsset>(asset.Data).Scene.get());
         }
-
         break;
         case EAssetType::SpriteAnimation:
         case EAssetType::AudioOneShot:
@@ -484,7 +483,6 @@ namespace Havtorn
         else if (std::holds_alternative<SInputAssetFileHeader>(fileHeader))
         {
             SInputAssetFileHeader header = std::get<SInputAssetFileHeader>(fileHeader);
-            //SInputAsset newAsset = SInputAsset(header);
             return SaveAsset(destinationPath, header);
         }
 

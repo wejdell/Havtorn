@@ -1,7 +1,8 @@
 // Copyright 2026 Team Havtorn. All Rights Reserved.
-#pragma once
-#include <GameplayTags\GameplayTag.h>
 
+#pragma once
+
+#include <GameplayTags\GameplayTag.h>
 
 namespace Havtorn
 {

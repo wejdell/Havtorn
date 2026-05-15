@@ -7,8 +7,6 @@
 
 namespace Havtorn
 {
-	
-
 	// TODO.NW: Events and onward should be extendable in a game project
 	enum class EInputActionEvent
 	{
@@ -345,6 +343,4 @@ namespace Havtorn
 		CMulticastDelegate<const SInputAxisPayload> Delegate;
 		std::vector<SInputAxis> Axes;
 	};
-
-
 }

@@ -5,7 +5,6 @@
 #include <Assets/AssetReference.h>
 #include <Assets/RuntimeAssets/InputAsset.h>
 
-
 namespace Havtorn
 {
 	struct SEditorAssetRepresentation;
@@ -27,7 +26,7 @@ namespace Havtorn
 		
 		std::string AssetName;
 		SAssetReference AssetReference;
-		SInputAsset* InputAsset;
+		SInputAsset* InputAsset = nullptr;
 
 		const U64 InputToolID = 107001; //1Input7Tool
 	};

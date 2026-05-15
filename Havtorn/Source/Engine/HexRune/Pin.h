@@ -6,12 +6,10 @@
 #include "ECS/Entity.h"
 #include "ECS/Component.h"
 
-
 #define PIN_DATA_TYPES PIN_LITERAL_TYPES, PIN_MATH_TYPES, Havtorn::SEntity, Havtorn::SComponent*, std::vector<Havtorn::SEntity>, std::vector<Havtorn::SComponent*>
 
 namespace Havtorn
 {
-
 	namespace HexRune
 	{
         enum class ENGINE_API EInputParamType : U8

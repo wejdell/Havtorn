@@ -64,7 +64,6 @@ namespace Havtorn
 		GTime* Timer = nullptr;
 		GDebugDraw* DebugDraw = nullptr;
 		CInputMapper* InputMapper = nullptr;
-
 		CWorld* World = nullptr;
 
 		// TODO.NW: Figure out how to set up dependencies for Editor systems on Engine ECS Systems

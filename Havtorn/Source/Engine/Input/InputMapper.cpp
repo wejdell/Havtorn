@@ -24,21 +24,6 @@ namespace Havtorn
 
 		// TODO.NW: Load from .ini file
 
-	/*
-		"EditorControlMapping" : [
-		{
-		"Tag" : "Editor.ScaleTransform",
-		"InputAction" :
-			{
-				"InputKey" : "",
-				"Modifier" : "",
-			}
-		},
-		]
-	*/
-
-		//MapEvent(GamePlayTag("Editor.ScaleTransform"), scaleTransform);
-
 		const SInputAxis forwardAxis = { EInputAxis::Key, EInputKey::KeyW, EInputKey::KeyS, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputAxisEvent::Forward, forwardAxis);
 
@@ -86,9 +71,6 @@ namespace Havtorn
 
 		const SInputAction scaleTransform = { EInputKey::KeyR, EInputContext::Editor };
 		MapEvent(EInputActionEvent::ScaleTransform, scaleTransform);
-
-
-
 
 		const SInputAction toggleFreeCam = { EInputKey::Mouse2, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputActionEvent::ToggleFreeCam, toggleFreeCam);

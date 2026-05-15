@@ -16,7 +16,7 @@ namespace Havtorn
 		Super = BIT(10) | BIT(11),
 	};
 
-	 enum class EInputContext
+	enum class EInputContext
 	{
 		Editor = BIT(0),
 		InGame = BIT(1),
@@ -65,7 +65,7 @@ namespace Havtorn
 		return mask;
 	}
 
-	 enum class EInputKey
+	enum class EInputKey
 	{
 		None = 0x00,
 		Mouse1 = 0x01, // Left
@@ -193,7 +193,7 @@ namespace Havtorn
 		GamepadRegionStart = GamepadSouth
 	};
 
-	 enum class EGamepadType
+	enum class EGamepadType
 	{
 		Unknown = 0,
 		Standard,
@@ -221,7 +221,7 @@ namespace Havtorn
 	 *
 	 * \since This enum is available since SDL 3.2.0.
 	 */
-	 enum class EGamepadButtonLabel
+	enum class EGamepadButtonLabel
 	{
 		Unknown,
 		A,
@@ -248,7 +248,7 @@ namespace Havtorn
 	 *
 	 * \since This enum is available since SDL 3.2.0.
 	 */
-	 enum class EInputAxis
+	enum class EInputAxis
 	{
 		Key,
 		MouseWheel,

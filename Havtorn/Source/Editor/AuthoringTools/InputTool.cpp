@@ -4,7 +4,6 @@
 #include "EditorManager.h"
 #include <Assets/AssetRegistry.h>
 
-
 namespace Havtorn
 {
 	CInputTool::CInputTool(const char* displayName, CEditorManager* manager)
@@ -36,8 +35,6 @@ namespace Havtorn
 			GEngine::GetAssetRegistry()->SaveAsset(UGeneralUtils::ExtractParentDirectoryFromPath(AssetReference.FilePath) + "/", fileHeader);
 		}
 
-
-
 		U64 inputActionId = 0;
 		for (auto& inputAction : InputAsset->InputActions)
 		{
@@ -61,7 +58,7 @@ namespace Havtorn
 			{
 				GUI::PushID(mapId++);
 
-				U32 typeIndex = STATIC_U32(mapping.Data.index());
+				const U32 typeIndex = STATIC_U32(mapping.Data.index());
 				switch (typeIndex)
 				{
 				case 0:
@@ -93,7 +90,6 @@ namespace Havtorn
 
 			GUI::PopID();
 		}
-
 
 		if (GUI::Button("New Input Action"))
 		{
@@ -138,7 +134,6 @@ namespace Havtorn
 
 	void CInputTool::OnDisable()
 	{
-
 	}
 
 	void CInputTool::OpenInputAsset(SEditorAssetRepresentation* asset)

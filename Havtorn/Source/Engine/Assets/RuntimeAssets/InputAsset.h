@@ -1,6 +1,7 @@
 // Copyright 2026 Team Havtorn. All Rights Reserved.
 
 #pragma once
+
 #include "Assets/FileHeaders/InputAssetFileHeader.h"
 #include <Input/InputTypes.h>
 #include <GameplayTags/GameplayTag.h>
@@ -10,7 +11,6 @@
 
 namespace Havtorn
 {
-
 	struct SInputAsset 
 	{
 		SInputAsset() = default;

@@ -82,7 +82,6 @@ namespace Havtorn
 	void CGameManager::OnBeginPlay(std::vector<Ptr<CScene>>& /*scenes*/)
 	{
 		World->RequestSystem<CInputSystem>(this);
-
 		World->RequestSystem<CSpriteAnimatorGraphSystem>(this);
 		World->RequestSystem<CAbilitySystem>(this);
 		World->RequestSystem<CGhostySystem>(this);

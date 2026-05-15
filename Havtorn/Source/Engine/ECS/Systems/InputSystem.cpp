@@ -4,7 +4,6 @@
 
 #include "InputSystem.h"
 
-
 #include "Engine.h"
 #include "ECS/ECSInclude.h"
 
@@ -26,6 +25,8 @@ namespace Havtorn
 
 	void CInputSystem::Update(std::vector<Ptr<CScene>>& scenes)
 	{
+		const CInputMapper* input = GEngine::GetInput();
+
 		for (auto& scene : scenes)
 		{
 			std::vector<SInputComponent*> inputComponents = scene->GetComponents<SInputComponent>();
@@ -46,8 +47,7 @@ namespace Havtorn
 					{					
 						for (auto& mapping : inputAction.InputMappings)
 						{
-							const CInputMapper* input = GEngine::GetInput();
-							U32 typeIndex = STATIC_U32(mapping.Data.index());
+							const U32 typeIndex = STATIC_U32(mapping.Data.index());
 							switch (typeIndex)
 							{
 							case 0:
@@ -89,17 +89,7 @@ namespace Havtorn
 						}
 					}
 				}
-				
-
-				//if( hexCommandComponent->TagsToListenFor)
-
-
-
 			}
 		}
-
-		//GEngine::GetInput()->IsHeld()
-
-
 	}
 }
