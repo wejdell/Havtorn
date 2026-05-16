@@ -281,8 +281,16 @@ namespace Havtorn
 		U32 Modifiers = STATIC_U32(EInputModifier::None);
 	};
 
+	enum class EInputActivationType : U8
+	{
+		Continuous,
+		KeyDown,
+		KeyUp,
+	};
+
 	struct SInputMapping
 	{
+		EInputActivationType ActivationType = EInputActivationType::Continuous;
 		std::variant<SAxis, SKey> Data;
 	};
 

@@ -54,6 +54,7 @@ namespace Havtorn
 							{
 								SAxis& axis = std::get<SAxis>(mapping.Data);
 
+								// NW: Only continuous axis detection is allowed for now
 								const F32 axisValue = input->GetAxisValue(axis.Axis, axis.Modifiers);
 								const bool isPositiveHeld = input->IsPressed(axis.AxisPositiveKey, axis.Modifiers) || input->IsHeld(axis.AxisPositiveKey, axis.Modifiers);
 								const bool isNegativeHeld = input->IsPressed(axis.AxisNegativeKey, axis.Modifiers) || input->IsHeld(axis.AxisNegativeKey, axis.Modifiers);
@@ -68,7 +69,7 @@ namespace Havtorn
 
 								if (UMath::Abs(finalAxisValue) > 0.0f)
 								{
-									SHexCommand axisCommand = { .Tag = inputAction.Tag, .DataType = EHexCommandDataType::Float, .Data = finalAxisValue };
+									const SHexCommand axisCommand = { .Tag = inputAction.Tag, .DataType = EHexCommandDataType::Float, .Data = finalAxisValue };
 									hexCommandComponent->HexCommands.push(axisCommand);
 								}
 							}
@@ -77,10 +78,21 @@ namespace Havtorn
 							{
 								SKey& key = std::get<SKey>(mapping.Data);
 
-								bool IsPressedOrHeld = input->IsPressed(key.Key, key.Modifiers) || input->IsHeld(key.Key, key.Modifiers);
-								if (IsPressedOrHeld)
+								const bool isInputPressed = input->IsPressed(key.Key, key.Modifiers);
+								const bool isInputHeld = input->IsHeld(key.Key, key.Modifiers);
+								const bool isInputReleased = input->IsReleased(key.Key, key.Modifiers);
+
+								bool isActivated = false;
+								if (mapping.ActivationType == EInputActivationType::Continuous && (isInputPressed || isInputHeld))
+									isActivated = true;
+								else if (mapping.ActivationType == EInputActivationType::KeyDown && isInputPressed)
+									isActivated = true;
+								else if (mapping.ActivationType == EInputActivationType::KeyUp && isInputReleased)
+									isActivated = true;
+
+								if (isActivated)
 								{
-									SHexCommand keyCommand = { .Tag = inputAction.Tag, .DataType = EHexCommandDataType::Bool, .Data = IsPressedOrHeld };
+									const SHexCommand keyCommand = { .Tag = inputAction.Tag, .DataType = EHexCommandDataType::Bool, .Data = isActivated };
 									hexCommandComponent->HexCommands.push(keyCommand);
 								}
 							}

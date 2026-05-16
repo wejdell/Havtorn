@@ -19,9 +19,6 @@ namespace Havtorn
 
 	SComponentViewResult SAbilityComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
 	{
-		if (!GUI::TryOpenComponentView("Ability"))
-			return SComponentViewResult();
-
 		SAbilityComponent* component = scene->GetComponent<SAbilityComponent>(entityOwner);
 
 		GUI::TextDisabled("Abilities");
@@ -94,12 +91,6 @@ namespace Havtorn
 
 	bool SAbilityComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("Ability Component"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->AddComponent<SAbilityComponent>(entity);
 		scene->AddComponentEditorContext(entity, &SAbilityComponentEditorContext::Context);
 		return true;
@@ -107,12 +98,6 @@ namespace Havtorn
 
 	bool SAbilityComponentEditorContext::RemoveComponent(const SEntity& entity, CScene* scene) const
 	{
-		if (!GUI::Button("X##4"))
-			return false;
-
-		if (scene == nullptr || !entity.IsValid())
-			return false;
-
 		scene->RemoveComponent<SAbilityComponent>(entity);
 		scene->RemoveComponentEditorContext(entity, &SAbilityComponentEditorContext::Context);
 		return true;

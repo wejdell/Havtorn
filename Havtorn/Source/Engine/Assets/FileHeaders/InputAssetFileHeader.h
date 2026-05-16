@@ -29,7 +29,10 @@ namespace Havtorn
 			size += sizeof(U32);
 
 			for (auto& mapping : action.InputMappings)
+			{
+				size += GetDataSize(mapping.ActivationType);
 				size += GetDataSize(mapping.Data);
+			}
 		}
 		return size;
 	}
@@ -48,6 +51,7 @@ namespace Havtorn
 
 			for (auto& mapping : action.InputMappings)
 			{
+				SerializeData(mapping.ActivationType, toData, pointerPosition);
 				SerializeData(STATIC_U32(mapping.Data.index()), toData, pointerPosition);
 				SerializeData(mapping.Data, toData, pointerPosition);
 			}
@@ -73,6 +77,7 @@ namespace Havtorn
 			action.InputMappings.resize(inputMappingCount);
 			for (auto& mapping : action.InputMappings)
 			{
+				DeserializeData(mapping.ActivationType, fromData, pointerPosition);
 				U32 variantIndex = 0;
 				DeserializeData(variantIndex, fromData, pointerPosition);
 
