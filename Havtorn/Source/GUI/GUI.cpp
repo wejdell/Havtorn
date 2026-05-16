@@ -1009,9 +1009,13 @@ namespace Havtorn
 			ImGui::TreePop();
 		}
 
-		bool BeginCombo(const char* label, const char* selectedLabel)
+		bool BeginCombo(const char* label, const char* selectedLabel, const std::vector<EComboFlag>& comboFlags)
 		{
-			return ImGui::BeginCombo(label, selectedLabel);
+			int imComboFlags = 0;
+			for (const EComboFlag& comboFlag : comboFlags)
+				imComboFlags += int(comboFlag);
+
+			return ImGui::BeginCombo(label, selectedLabel, imComboFlags);
 		}
 
 		void EndCombo()
@@ -1888,9 +1892,9 @@ namespace Havtorn
 		Instance->Impl->TreePop();
 	}
 
-	bool GUI::BeginCombo(const char* label, const char* selectedLabel)
+	bool GUI::BeginCombo(const char* label, const char* selectedLabel, const std::vector<EComboFlag>& comboFlags)
 	{
-		return Instance->Impl->BeginCombo(label, selectedLabel);
+		return Instance->Impl->BeginCombo(label, selectedLabel, comboFlags);
 	}
 
 	void GUI::EndCombo()
@@ -2286,10 +2290,10 @@ namespace Havtorn
 			GUI::SetTooltip(tooltip);
 
 		constexpr F32 pickerMaxHeight = 52.0f;
-		constexpr F32 maxWidthTagLabel = 200.0f;
 		constexpr F32 detailsWidth = 50.0f;
+		const F32 width = GUI::CalculateTextSize(label).X + 50.0f;
 
-		GUI::SameLine(maxWidthTagLabel);
+		GUI::SameLine(width);
 		{
 			GUI::BeginChild("Details", SVector2<F32>(detailsWidth, pickerMaxHeight), { EChildFlag::AutoResizeY, EChildFlag::AlwaysAutoResize });
 			if (GUI::Button("Edit"))

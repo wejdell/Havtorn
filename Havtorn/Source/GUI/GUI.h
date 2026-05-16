@@ -29,7 +29,6 @@ namespace Havtorn
 	struct SMatrix;
 	class CPlatformManager;
 
-
 	enum class GUI_API EWindowFlag
 	{
 		NoTitleBar = BIT(0),
@@ -86,6 +85,20 @@ namespace Havtorn
 		Disabled = BIT(3),
 		AllowOverlap = BIT(4),
 		Highlight = BIT(5)
+	};
+
+	enum class GUI_API EComboFlag
+	{
+		None = 0,
+		PopupAlignLeft = BIT(0),   // Align the popup toward the left by default
+		HeightSmall = BIT(1),   // Max ~4 items visible. Tip: If you want your combo popup to be a specific size you can use SetNextWindowSizeConstraints() prior to calling BeginCombo()
+		HeightRegular = BIT(2),   // Max ~8 items visible (default)
+		HeightLarge = BIT(3),   // Max ~20 items visible
+		HeightLargest = BIT(4),   // As many fitting items as possible
+		NoArrowButton = BIT(5),   // Display on the preview box without the square arrow button
+		NoPreview = BIT(6),   // Display only a square arrow button
+		WidthFitPreview = BIT(7),   // Width dynamically calculated from preview contents
+		HeightMask_ = HeightSmall | HeightRegular | HeightLarge | HeightLargest,
 	};
 
 	enum class GUI_API EGUITableFlags
@@ -880,14 +893,14 @@ namespace Havtorn
 		}
 
 		template<typename T>
-		static bool ComboEnum(const char* label, T& currentValue, std::vector<T> filter = {})
+		static bool ComboEnum(const char* label, T& currentValue, std::vector<T> filter = {}, const std::vector<EComboFlag>& comboFlags = {})
 		{
 			std::vector<U64> filteredIndices;
 			std::ranges::transform(filter, std::back_inserter(filteredIndices), [](const T& filterValue) -> U64 { return magic_enum::enum_index<T>(filterValue).value_or(0); });
 
 			auto enumNames = magic_enum::enum_names<T>();
 			U64 currentIndex = magic_enum::enum_index<T>(currentValue).value_or(0);
-			if (GUI::BeginCombo(label, enumNames[currentIndex].data()))
+			if (GUI::BeginCombo(label, enumNames[currentIndex].data(), comboFlags))
 			{
 				for (U64 i = 0; i < enumNames.size(); i++)
 				{
@@ -971,7 +984,7 @@ namespace Havtorn
 		static bool TreeNodeEx(const char* label, const std::vector<ETreeNodeFlag>& treeNodeFlags = {});
 		static void TreePop();
 
-		static bool BeginCombo(const char* label, const char* selectedLabel);
+		static bool BeginCombo(const char* label, const char* selectedLabel, const std::vector<EComboFlag>& comboFlags = {});
 		static void EndCombo();
 
 		static bool ArrowButton(const char* label, const EGUIDirection direction);
