@@ -155,6 +155,10 @@ namespace Havtorn
 	{
 		UpdateKeyInput();
 		UpdateAxisInput();
+	}
+
+	void CInputMapper::EndFrame()
+	{
 		Input->EndFrameUpdate();
 	}
 

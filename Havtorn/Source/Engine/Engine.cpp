@@ -117,6 +117,7 @@ namespace Havtorn
 	void GEngine::EndFrame()
 	{
 		World->EndFrame();
+		InputMapper->EndFrame();
 		RenderManager->SyncCrossThreadResources(World);
 		Framework->EndFrame();
 

@@ -25,6 +25,7 @@ namespace Havtorn
 	
 	public:
 		void Update();
+		void EndFrame();
 
 		[[nodiscard]] ENGINE_API CMulticastDelegate<const SInputActionPayload>& GetActionDelegate(EInputActionEvent event);
 		[[nodiscard]] ENGINE_API CMulticastDelegate<const SInputAxisPayload>& GetAxisDelegate(EInputAxisEvent event);
