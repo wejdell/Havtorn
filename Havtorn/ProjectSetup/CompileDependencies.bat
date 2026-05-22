@@ -4,13 +4,13 @@ if %errorlevel% NEQ 0 EXIT /B 1
 call %~dp0\SetupBuildTools.bat
 if %errorlevel% NEQ 0 EXIT /B 1
 
-if not exist %~dp0..\Bin\EditorDebug\ mkdir -p %~dp0..\Bin\EditorDebug\
-if not exist %~dp0..\Bin\EditorDevelopment\ mkdir -p %~dp0..\Bin\EditorDevelopment\
-if not exist %~dp0..\Bin\GameDebug\ mkdir -p %~dp0..\Bin\GameDebug\
-if not exist %~dp0..\Bin\GameRelease\ mkdir -p %~dp0..\Bin\GameRelease\
+if not exist %~dp0..\Bin\EditorDebug\ mkdir %~dp0..\Bin\EditorDebug\
+if not exist %~dp0..\Bin\EditorDevelopment\ mkdir %~dp0..\Bin\EditorDevelopment\
+if not exist %~dp0..\Bin\GameDebug\ mkdir %~dp0..\Bin\GameDebug\
+if not exist %~dp0..\Bin\GameRelease\ mkdir %~dp0..\Bin\GameRelease\
 
-if not exist %~dp0..\External\Lib\Debug\ mkdir -p %~dp0..\External\Lib\Debug\
-if not exist %~dp0..\External\Lib\Release\ mkdir -p %~dp0..\External\Lib\Release\
+if not exist %~dp0..\External\Lib\Debug\ mkdir %~dp0..\External\Lib\Debug\
+if not exist %~dp0..\External\Lib\Release\ mkdir %~dp0..\External\Lib\Release\
 
 cd ..\External\assimp
 echo.
@@ -23,20 +23,18 @@ echo.
 cmake --build .
 echo.
 copy /y lib\Debug\assimp-vc143-mtd.lib ..\Lib\Debug\
-copy /y bin\Debug\assimp-vc143-mtd.dll ..\..\Bin\assimp-vc143-mtd.dll
+copy /y bin\Debug\assimp-vc143-mtd.dll ..\..\Bin\EditorDebug\assimp-vc143-mtd.dll
+copy /y bin\Debug\assimp-vc143-mtd.dll ..\..\Bin\GameDebug\assimp-vc143-mtd.dll
 echo.
 cmake --build . --config Release
 echo.
 copy /y lib\Release\assimp-vc143-mt.lib ..\Lib\Release\
-copy /y bin\Release\assimp-vc143-mt.dll ..\..\Bin\assimp-vc143-mt.dll
-
-:: Add extra DLLs in DeepLink exe path
-:: TODO: Figure out how to do deep link without going into exe folder, or figure out how to load dll:s in code
 copy /y bin\Release\assimp-vc143-mt.dll ..\..\Bin\EditorDevelopment\assimp-vc143-mt.dll
+copy /y bin\Release\assimp-vc143-mt.dll ..\..\Bin\GameRelease\assimp-vc143-mt.dll
 cd .. 
 
-mkdir -p ..\External\Lib\Debug\PhysX\
-mkdir -p ..\External\Lib\Release\PhysX\
+if not exist ..\External\Lib\Debug\PhysX\ mkdir ..\External\Lib\Debug\PhysX\
+if not exist ..\External\Lib\Release\PhysX\ mkdir ..\External\Lib\Release\PhysX\
 cd PhysX\physx
 echo.
 echo Generating PhysX files...
@@ -45,52 +43,56 @@ echo.
 :: packman init script will only read this path correctly if it is without ""
 set PM_PACKAGES_ROOT=%~dp0SetupRequirements\packman\
 if not exist %PM_PACKAGES_ROOT%\ mkdir %PM_PACKAGES_ROOT%
-call generate_projects.bat vc17win64 
 echo.
 echo Building PhysX...
+
+echo.
+call generate_projects.bat vc17win64 
 echo.
 cmake --build compiler/vc17win64 
-copy /y bin\win.x86_64.vc143.md\debug\PhysX_64.dll ..\..\..\Bin\PhysX_64d.dll
-copy /y bin\win.x86_64.vc143.md\debug\PhysX_64.lib ..\..\Lib\Debug\PhysX\PhysX_64d.lib
-copy /y bin\win.x86_64.vc143.md\debug\PhysXCommon_64.dll ..\..\..\Bin\PhysXCommon_64d.dll
-copy /y bin\win.x86_64.vc143.md\debug\PhysXCommon_64.lib ..\..\Lib\Debug\PhysX\PhysXCommon_64d.lib
-copy /y bin\win.x86_64.vc143.md\debug\PhysXExtensions_static_64.lib ..\..\Lib\Debug\PhysX\PhysXExtensions_static_64d.lib
-copy /y bin\win.x86_64.vc143.md\debug\PhysXCooking_64.dll ..\..\..\Bin\PhysXCooking_64d.dll
-copy /y bin\win.x86_64.vc143.md\debug\PhysXCooking_64.lib ..\..\Lib\Debug\PhysX\PhysXCooking_64d.lib
-copy /y bin\win.x86_64.vc143.md\debug\PhysXDevice64.dll ..\..\..\Bin\PhysXDevice64d.dll
-copy /y bin\win.x86_64.vc143.md\debug\PhysXFoundation_64.dll ..\..\..\Bin\PhysXFoundation_64d.dll
-copy /y bin\win.x86_64.vc143.md\debug\PhysXFoundation_64.lib ..\..\Lib\Debug\PhysX\PhysXFoundation_64d.lib
-copy /y bin\win.x86_64.vc143.md\debug\PhysXPvdSDK_static_64.lib ..\..\Lib\Debug\PhysX\PhysXPvdSDK_static_64d.lib
-copy /y bin\win.x86_64.vc143.md\debug\PhysXCharacterKinematic_static_64.lib ..\..\Lib\Debug\PhysX\PhysXCharacterKinematic_static_64d.lib
-copy /y bin\win.x86_64.vc143.md\debug\PhysXGpu_64.dll ..\..\..\Bin\PhysXGpu_64d.dll
+copy /y bin\win.x86_64.vc143.md\debug\PhysX_64.lib ..\..\Lib\Debug\PhysX\PhysX_64.lib
+copy /y bin\win.x86_64.vc143.md\debug\PhysX_64.dll ..\..\..\Bin\EditorDebug\PhysX_64.dll
+copy /y bin\win.x86_64.vc143.md\debug\PhysX_64.dll ..\..\..\Bin\GameDebug\PhysX_64.dll
+copy /y bin\win.x86_64.vc143.md\debug\PhysXCommon_64.lib ..\..\Lib\Debug\PhysX\PhysXCommon_64.lib
+copy /y bin\win.x86_64.vc143.md\debug\PhysXCommon_64.dll ..\..\..\Bin\EditorDebug\PhysXCommon_64.dll
+copy /y bin\win.x86_64.vc143.md\debug\PhysXCommon_64.dll ..\..\..\Bin\GameDebug\PhysXCommon_64.dll
+copy /y bin\win.x86_64.vc143.md\debug\PhysXExtensions_static_64.lib ..\..\Lib\Debug\PhysX\PhysXExtensions_static_64.lib
+copy /y bin\win.x86_64.vc143.md\debug\PhysXCooking_64.lib ..\..\Lib\Debug\PhysX\PhysXCooking_64.lib
+copy /y bin\win.x86_64.vc143.md\debug\PhysXCooking_64.dll ..\..\..\Bin\EditorDebug\PhysXCooking_64.dll
+copy /y bin\win.x86_64.vc143.md\debug\PhysXCooking_64.dll ..\..\..\Bin\GameDebug\PhysXCooking_64.dll
+copy /y bin\win.x86_64.vc143.md\debug\PhysXDevice64.dll ..\..\..\Bin\EditorDebug\PhysXDevice64.dll
+copy /y bin\win.x86_64.vc143.md\debug\PhysXDevice64.dll ..\..\..\Bin\GameDebug\PhysXDevice64.dll
+copy /y bin\win.x86_64.vc143.md\debug\PhysXFoundation_64.lib ..\..\Lib\Debug\PhysX\PhysXFoundation_64.lib
+copy /y bin\win.x86_64.vc143.md\debug\PhysXFoundation_64.dll ..\..\..\Bin\EditorDebug\PhysXFoundation_64.dll
+copy /y bin\win.x86_64.vc143.md\debug\PhysXFoundation_64.dll ..\..\..\Bin\GameDebug\PhysXFoundation_64.dll
+copy /y bin\win.x86_64.vc143.md\debug\PhysXPvdSDK_static_64.lib ..\..\Lib\Debug\PhysX\PhysXPvdSDK_static_64.lib
+copy /y bin\win.x86_64.vc143.md\debug\PhysXCharacterKinematic_static_64.lib ..\..\Lib\Debug\PhysX\PhysXCharacterKinematic_static_64.lib
+copy /y bin\win.x86_64.vc143.md\debug\PhysXGpu_64.dll ..\..\..\Bin\EditorDebug\PhysXGpu_64.dll
+copy /y bin\win.x86_64.vc143.md\debug\PhysXGpu_64.dll ..\..\..\Bin\GameDebug\PhysXGpu_64.dll
+
 echo.
 call generate_projects.bat vc17win64r
-
 echo.
 cmake --build compiler/vc17win64r --config Release
-
-copy /y bin\win.x86_64.vc143.md\release\PhysX_64.dll ..\..\..\Bin\PhysX_64.dll
 copy /y bin\win.x86_64.vc143.md\release\PhysX_64.lib ..\..\Lib\Release\PhysX\PhysX_64.lib
-copy /y bin\win.x86_64.vc143.md\release\PhysXCommon_64.dll ..\..\..\Bin\PhysXCommon_64.dll
+copy /y bin\win.x86_64.vc143.md\release\PhysX_64.dll ..\..\..\Bin\EditorDevelopment\PhysX_64.dll
+copy /y bin\win.x86_64.vc143.md\release\PhysX_64.dll ..\..\..\Bin\GameRelease\PhysX_64.dll
 copy /y bin\win.x86_64.vc143.md\release\PhysXCommon_64.lib ..\..\Lib\Release\PhysX\PhysXCommon_64.lib
+copy /y bin\win.x86_64.vc143.md\release\PhysXCommon_64.dll ..\..\..\Bin\EditorDevelopment\PhysXCommon_64.dll
+copy /y bin\win.x86_64.vc143.md\release\PhysXCommon_64.dll ..\..\..\Bin\GameRelease\PhysXCommon_64.dll
 copy /y bin\win.x86_64.vc143.md\release\PhysXExtensions_static_64.lib ..\..\Lib\Release\PhysX\PhysXExtensions_static_64.lib
-copy /y bin\win.x86_64.vc143.md\release\PhysXCooking_64.dll ..\..\..\Bin\PhysXCooking_64.dll
 copy /y bin\win.x86_64.vc143.md\release\PhysXCooking_64.lib ..\..\Lib\Release\PhysX\PhysXCooking_64.lib
-copy /y bin\win.x86_64.vc143.md\release\PhysXDevice64.dll ..\..\..\Bin\PhysXDevice64.dll
-copy /y bin\win.x86_64.vc143.md\release\PhysXFoundation_64.dll ..\..\..\Bin\PhysXFoundation_64.dll
+copy /y bin\win.x86_64.vc143.md\release\PhysXCooking_64.dll ..\..\..\Bin\EditorDevelopment\PhysXCooking_64.dll
+copy /y bin\win.x86_64.vc143.md\release\PhysXCooking_64.dll ..\..\..\Bin\GameRelease\PhysXCooking_64.dll
+copy /y bin\win.x86_64.vc143.md\release\PhysXDevice64.dll ..\..\..\Bin\EditorDevelopment\PhysXDevice64.dll
+copy /y bin\win.x86_64.vc143.md\release\PhysXDevice64.dll ..\..\..\Bin\GameRelease\PhysXDevice64.dll
 copy /y bin\win.x86_64.vc143.md\release\PhysXFoundation_64.lib ..\..\Lib\Release\PhysX\PhysXFoundation_64.lib
+copy /y bin\win.x86_64.vc143.md\release\PhysXFoundation_64.dll ..\..\..\Bin\EditorDevelopment\PhysXFoundation_64.dll
+copy /y bin\win.x86_64.vc143.md\release\PhysXFoundation_64.dll ..\..\..\Bin\GameRelease\PhysXFoundation_64.dll
 copy /y bin\win.x86_64.vc143.md\release\PhysXPvdSDK_static_64.lib ..\..\Lib\Release\PhysX\PhysXPvdSDK_static_64.lib
 copy /y bin\win.x86_64.vc143.md\release\PhysXCharacterKinematic_static_64.lib ..\..\Lib\Release\PhysX\PhysXCharacterKinematic_static_64.lib
-copy /y bin\win.x86_64.vc143.md\release\PhysXGpu_64.dll ..\..\..\Bin\PhysXGpu_64.dll
-
-:: Add extra DLLs in DeepLink exe path
-:: TODO: Figure out how to do deep link without going into exe folder, or figure out how to load dll:s in code
-copy /y bin\win.x86_64.vc143.md\release\PhysX_64.dll ..\..\..\Bin\EditorDevelopment\PhysX_64.dll
-copy /y bin\win.x86_64.vc143.md\release\PhysXCommon_64.dll ..\..\..\Bin\EditorDevelopment\PhysXCommon_64.dll
-copy /y bin\win.x86_64.vc143.md\release\PhysXCooking_64.dll ..\..\..\Bin\EditorDevelopment\PhysXCooking_64.dll
-copy /y bin\win.x86_64.vc143.md\release\PhysXDevice64.dll ..\..\..\Bin\EditorDevelopment\PhysXDevice64.dll
-copy /y bin\win.x86_64.vc143.md\release\PhysXFoundation_64.dll ..\..\..\Bin\EditorDevelopment\PhysXFoundation_64.dll
 copy /y bin\win.x86_64.vc143.md\release\PhysXGpu_64.dll ..\..\..\Bin\EditorDevelopment\PhysXGpu_64.dll
+copy /y bin\win.x86_64.vc143.md\release\PhysXGpu_64.dll ..\..\..\Bin\GameRelease\PhysXGpu_64.dll
 
 cd ..\..
 
@@ -122,16 +124,14 @@ echo.
 echo Building DirectXTex...
 echo.
 cmake --build . 
-copy /y bin\Debug\DirectXTex.dll ..\..\Bin\DirectXTexd.dll
-copy /y lib\Debug\DirectXTex.lib ..\Lib\Debug\DirectXTexd.lib
+copy /y lib\Debug\DirectXTex.lib ..\Lib\Debug\DirectXTex.lib
+copy /y bin\Debug\DirectXTex.dll ..\..\Bin\EditorDebug\DirectXTex.dll
+copy /y bin\Debug\DirectXTex.dll ..\..\Bin\GameDebug\DirectXTex.dll
 echo.
 cmake --build . --config=Release
-copy /y bin\Release\DirectXTex.dll ..\..\Bin\DirectXTex.dll
 copy /y lib\Release\DirectXTex.lib ..\Lib\Release\DirectXTex.lib
-
-:: Add extra DLLs in DeepLink exe path
-:: TODO: Figure out how to do deep link without going into exe folder, or figure out how to load dll:s in code
 copy /y bin\Release\DirectXTex.dll ..\..\Bin\EditorDevelopment\DirectXTex.dll
+copy /y bin\Release\DirectXTex.dll ..\..\Bin\GameRelease\DirectXTex.dll
 cd .. 
 
 cd SDL
@@ -143,16 +143,14 @@ echo.
 echo Building SDL...
 echo.
 cmake --build build
-copy /y build\Debug\SDL3.dll ..\..\Bin\SDL3d.dll
-copy /y build\Debug\SDL3.lib ..\Lib\Debug\SDL3d.lib
+copy /y build\Debug\SDL3.lib ..\Lib\Debug\SDL3.lib
+copy /y build\Debug\SDL3.dll ..\..\Bin\EditorDebug\SDL3.dll
+copy /y build\Debug\SDL3.dll ..\..\Bin\GameDebug\SDL3.dll
 echo.
 cmake --build build --config Release
-copy /y build\Release\SDL3.dll ..\..\Bin\SDL3.dll
 copy /y build\Release\SDL3.lib ..\Lib\Release\SDL3.lib
-
-:: Add extra DLLs in DeepLink exe path
-:: TODO: Figure out how to do deep link without going into exe folder, or figure out how to load dll:s in code
 copy /y build\Release\SDL3.dll ..\..\Bin\EditorDevelopment\SDL3.dll
+copy /y build\Release\SDL3.dll ..\..\Bin\GameRelease\SDL3.dll
 cd .. 
 
 echo.
