@@ -304,28 +304,6 @@ namespace Havtorn
 			PhysicsWorld2D->UpdatePhysicsData(transformComponent, phys2DComponent);
 	}
 
-	void CWorld::Initialize3DPhysicsData(const SEntity& entity) const
-	{
-		if (Scenes.empty())
-			return;
-
-		// TODO.NR: Make find-scene-from-entity util? Could be a thing to just take component pointers as params instead, 
-		// but wouldn't be as clean an interface when this is extended to 3D physics. Probably fine with multiple overloads.
-		if (SPhysics3DComponent* phys3DComponent = Scenes.back()->GetComponent<SPhysics3DComponent>(entity))
-			if (STransformComponent* transformComponent = Scenes.back()->GetComponent<STransformComponent>(entity))
-				PhysicsWorld3D->InitializePhysicsData(transformComponent, phys3DComponent);
-
-		if (SPhysics3DControllerComponent* phys3DControllerComponent = Scenes.back()->GetComponent<SPhysics3DControllerComponent>(entity))
-			if (STransformComponent* transformComponent = Scenes.back()->GetComponent<STransformComponent>(entity))
-				PhysicsWorld3D->InitializePhysicsData(transformComponent, phys3DControllerComponent);
-	}
-
-	void CWorld::Update3DPhysicsData(STransformComponent* transformComponent, SPhysics3DComponent* phys3DComponent) const
-	{
-		if (PhysicsWorld3D != nullptr)
-			PhysicsWorld3D->UpdatePhysicsData(transformComponent, phys3DComponent);
-	}
-
 	void CWorld::RequestAudioSystem(void* requester)
 	{
 		RequestSystem<HexAudio::CAudioSystem>(requester, AudioBackend.get());

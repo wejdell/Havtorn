@@ -167,9 +167,6 @@ namespace Havtorn
 		ENGINE_API void Initialize2DPhysicsData(const SEntity& entity) const;
 		ENGINE_API void Update2DPhysicsData(STransformComponent* transformComponent, SPhysics2DComponent* phys2DComponent) const;
 
-		ENGINE_API void Initialize3DPhysicsData(const SEntity& entity) const;
-		ENGINE_API void Update3DPhysicsData(STransformComponent* transformComponent, SPhysics3DComponent* phys2DComponent) const;
-
 		ENGINE_API void RequestAudioSystem(void* requester);
 		ENGINE_API U64 RegisterAudioObject(const bool isListener, const std::vector<SAssetReference>& assetReferences);
 		ENGINE_API void UnregisterAudioObject(const U64 objectID, const std::vector<SAssetReference>& assetReferences);
