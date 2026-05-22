@@ -39,6 +39,7 @@ namespace Havtorn
 		ENGINE_API static F32 Dt(ETimerCategory category = ETimerCategory::Frame);
 		ENGINE_API static F32 FixedDt(ETimerCategory category = ETimerCategory::Frame);
 		ENGINE_API static F32 AverageFrameRate(ETimerCategory category = ETimerCategory::Frame);
+		ENGINE_API static bool FixedTimeStep(ETimerCategory category = ETimerCategory::Frame);
 
 		GTime();
 		~GTime();
@@ -47,8 +48,6 @@ namespace Havtorn
 
 		static void BeginTracking(ETimerCategory category = ETimerCategory::Frame);
 		static void EndTracking(ETimerCategory category = ETimerCategory::Frame);
-
-		static bool FixedTimeStep(ETimerCategory category = ETimerCategory::Frame);
 
 	private:
 		float NewFrame(ETimerCategory category = ETimerCategory::Frame);

@@ -80,6 +80,11 @@ namespace Havtorn
 		return (1.0f / Instance->Timers[category].AverageFrameTime);
 	}
 
+	bool GTime::FixedTimeStep(ETimerCategory category)
+	{
+		return Instance->Timers[category].FixedTime >= Instance->Timers[category].FixedTimeInterval;
+	}
+
 	float GTime::Mark(ETimerCategory category)
 	{
 		return Instance->NewFrame(category);
@@ -93,11 +98,6 @@ namespace Havtorn
 	void GTime::EndTracking(ETimerCategory category)
 	{
 		Instance->NewFrame(category);
-	}
-
-	bool GTime::FixedTimeStep(ETimerCategory category)
-	{
-		return Instance->Timers[category].FixedTime >= Instance->Timers[category].FixedTimeInterval;
 	}
 
 	float GTime::NewFrame(ETimerCategory category)
