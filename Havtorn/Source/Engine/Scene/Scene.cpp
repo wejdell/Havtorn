@@ -519,7 +519,7 @@ namespace Havtorn
 
 			physicsComponent->BodyType = EPhysics3DBodyType::Static;
 			physicsComponent->ShapeType = EPhysics3DShapeType::Box;
-			physicsComponent->ShapeLocalExtents = SVector(1.0f, 0.1f, 1.f);
+			physicsComponent->ShapeLocalExtents = SVector(1.0f, 1.0f, 0.1f);
 
 			roomTransform->Attach(transformComponent);	
 		}
