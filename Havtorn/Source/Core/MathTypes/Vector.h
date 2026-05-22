@@ -75,12 +75,14 @@ namespace Havtorn
 		inline F32 Size2D() const;
 		inline F32 SizeSquared2D() const;
 
-		inline bool IsNearlyZero(F32 tolerance = VECTOR_NORMALIZED_EPSILON) const;
+		inline void ClampToSize(const F32 min, const F32 max);
+		inline SVector GetClampedToSize(const F32 min, const F32 max) const;
 
 		inline void Normalize();
 		inline SVector GetNormalized() const;
 		inline bool IsNormalized() const;
 
+		inline bool IsNearlyZero(F32 tolerance = VECTOR_NORMALIZED_EPSILON) const;
 		inline bool IsEqual(const SVector& other, F32 tolerance = VECTOR_COMPARISON_EPSILON) const;
 
 		inline F32 GetAbsMax() const;
@@ -295,26 +297,46 @@ namespace Havtorn
 		return this->LengthSquared2D();
 	}
 
-	inline bool SVector::IsNearlyZero(F32 tolerance) const
+	inline void SVector::ClampToSize(const F32 min, const F32 max)
 	{
-		return UMath::IsWithin(this->LengthSquared(), -tolerance, tolerance);
+		const F32 length = this->Length();
+		if (UMath::IsWithin(length, min, max))
+			return;
+
+		Normalize();
+		*this *= UMath::Clamp(length, min, max);
+	}
+
+	inline SVector SVector::GetClampedToSize(const F32 min, const F32 max) const
+	{
+		const F32 length = this->Length();
+		if (UMath::IsWithin(length, min, max))
+			return *this;
+
+		SVector returnValue = this->GetNormalized();
+		return returnValue *= UMath::Clamp(length, min, max);
 	}
 
 	inline void SVector::Normalize()
 	{
-		F32 length = this->Length();
+		const F32 length = this->Length();
 		*this /= length;
 	}
 
 	inline SVector SVector::GetNormalized() const
 	{
-		F32 length = this->Length();
+		const F32 length = this->Length();
 		return SVector(*this) / length;
 	}
 
 	inline bool SVector::IsNormalized() const
 	{
 		return UMath::Abs(1 - SizeSquared()) < VECTOR_NORMALIZED_EPSILON;
+	}
+
+	inline bool SVector::IsNearlyZero(F32 tolerance) const
+	{
+		return UMath::IsWithin(this->LengthSquared(), -tolerance, tolerance);
 	}
 
 	inline bool SVector::IsEqual(const SVector& other, F32 tolerance) const
