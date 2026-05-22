@@ -5,7 +5,6 @@
 #include "ECS/System.h"
 
 #include <box2cpp.h>
-//#include <debug_imgui_renderer.h>
 
 #include <PxConfig.h>
 #include <PxPhysicsAPI.h>
@@ -14,7 +13,6 @@ namespace b2
 {
 	class World;
 	class Body;
-	//class DebugImguiRenderer;
 }
 
 namespace physx
@@ -165,6 +163,7 @@ namespace Havtorn
 		public:
 			static physx::PxVec3T<F32> Convert(const SVector& from);
 			static SVector Convert(const physx::PxVec3T<F32>& from);
+			static SVector Convert(const physx::PxExtendedVec3& from);
 			static physx::PxQuatT<F32> Convert(const SQuaternion& from);
 			static SQuaternion Convert(const physx::PxQuatT<F32>& from);
 
@@ -186,12 +185,11 @@ namespace Havtorn
 			CUserControllerHitReport* UserControllerHitReport = nullptr;
 
 			physx::PxTolerancesScale TolerancesScale = physx::PxTolerancesScale();
-			// TODO.NR: Do we need to store different materials?
+			// TODO.NW: Do we need to store different materials?
 			physx::PxMaterial* MainMaterial = nullptr;
 			
 			physx::PxScene* CurrentScene = nullptr;
 			physx::PxControllerManager* ControllerManager = nullptr;
-
 
 		//Managing Physx -> Havtorn and Havtorn -> Physx
 		private:
