@@ -16,7 +16,7 @@ namespace Havtorn
     {
 		SPhysics3DControllerComponent* physicsComponent = scene->GetComponent<SPhysics3DControllerComponent>(entityOwner);
 
-		GUI::SliderEnum("Controller Type", physicsComponent->ControllerType, { "Box", "Capsule" });
+		GUI::ComboEnum("Physics Controller Type", physicsComponent->ControllerType);
 
 		switch (physicsComponent->ControllerType)
     	{

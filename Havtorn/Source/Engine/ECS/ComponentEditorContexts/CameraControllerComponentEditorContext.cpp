@@ -19,6 +19,7 @@ namespace Havtorn
 		GUI::DragFloat("Max Move Speed", cameraControllerComp->MaxMoveSpeed, GUI::SliderSpeed, 0.1f, 10.0f);
 		GUI::DragFloat("Rotation Speed", cameraControllerComp->RotationSpeed, GUI::SliderSpeed, 0.1f, 5.0f);
 		GUI::DragFloat("Acceleration Duration", cameraControllerComp->AccelerationDuration, GUI::SliderSpeed * 0.1f, 0.1f, 5.0f);
+		GUI::ComboEnum("Controller Type", cameraControllerComp->ControllerType);
 
 		return SComponentViewResult();
 	}
