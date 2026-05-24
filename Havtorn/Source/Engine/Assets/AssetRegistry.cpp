@@ -239,11 +239,11 @@ namespace Havtorn
         {
         case EAssetType::StaticMesh:
         {
-            SStaticModelFileHeader assetFile;
+            SStaticMeshFileHeader assetFile;
             assetFile.Deserialize(data);
             SStaticMeshAsset meshAsset(assetFile);
 
-            for (U16 i = 0; i < assetFile.NumberOfMeshes; i++)
+            for (U16 i = 0; i < STATIC_U16(assetFile.Meshes.size()); i++)
             {
                 const SStaticMesh& mesh = assetFile.Meshes[i];
                 SDrawCallData& drawCallData = meshAsset.DrawCallData[i];
@@ -264,7 +264,7 @@ namespace Havtorn
                     meshAsset.BoundsMax.Y = UMath::Max(vertex.y, meshAsset.BoundsMax.Y);
                     meshAsset.BoundsMax.Z = UMath::Max(vertex.z, meshAsset.BoundsMax.Z);
 
-                    meshAsset.LocalVertexPositions.emplace_back(SVector(vertex.x, vertex.y, vertex.z), mesh.MaterialIndex);
+                    meshAsset.MaterialVertexAssociations.emplace_back(SVector(vertex.x, vertex.y, vertex.z), mesh.MaterialIndex);
                 }
 
                 meshAsset.BoundsCenter = meshAsset.BoundsMin + (meshAsset.BoundsMax - meshAsset.BoundsMin) * 0.5f;
@@ -276,11 +276,11 @@ namespace Havtorn
         break;
         case EAssetType::SkeletalMesh:
         {
-            SSkeletalModelFileHeader assetFile;
+            SSkeletalMeshFileHeader assetFile;
             assetFile.Deserialize(data);
             SSkeletalMeshAsset meshAsset(assetFile);
 
-            for (U16 i = 0; i < assetFile.NumberOfMeshes; i++)
+            for (U16 i = 0; i < STATIC_U16(assetFile.Meshes.size()); i++)
             {
                 const SSkeletalMesh& mesh = assetFile.Meshes[i];
                 SDrawCallData& drawCallData = meshAsset.DrawCallData[i];
@@ -301,7 +301,7 @@ namespace Havtorn
                     meshAsset.BoundsMax.Y = UMath::Max(vertex.y, meshAsset.BoundsMax.Y);
                     meshAsset.BoundsMax.Z = UMath::Max(vertex.z, meshAsset.BoundsMax.Z);
 
-                    meshAsset.LocalVertexPositions.emplace_back(SVector(vertex.x, vertex.y, vertex.z), mesh.MaterialIndex);
+                    meshAsset.MaterialVertexAssociations.emplace_back(SVector(vertex.x, vertex.y, vertex.z), mesh.MaterialIndex);
                 }
 
                 meshAsset.BoundsCenter = meshAsset.BoundsMin + (meshAsset.BoundsMax - meshAsset.BoundsMin) * 0.5f;
@@ -338,7 +338,7 @@ namespace Havtorn
             asset.Data = SGraphicsMaterialAsset(assetFile);
         }
         break;
-        case EAssetType::Animation:
+        case EAssetType::SkeletalAnimation:
         {
             SSkeletalAnimationFileHeader assetFile;
             assetFile.Deserialize(data);
@@ -377,11 +377,7 @@ namespace Havtorn
         }
         break;
         case EAssetType::SpriteAnimation:
-        case EAssetType::VisualFX:
-        break;
         case EAssetType::Scene:
-            HV_LOG_ERROR("Use RequestGameAsset Instead");
-        break;
         case EAssetType::Sequencer:
             HV_LOG_WARN("CAssetRegistry: Asset Resolving for asset type %s is not yet implemented.", magic_enum::enum_name<EAssetType>(type).data());
             delete[] data;
@@ -437,34 +433,13 @@ namespace Havtorn
     std::string CAssetRegistry::CreateNewAsset(const std::string& destinationPath, const SAssetFileHeader& fileHeader)
     {
         // TODO.NW: See if we can make char stream we can then convert to data buffer,
-                // so as to not repeat the logic for every case
-
-        //std::vector<std::string> paths = UFileSystem::SplitPath(destinationPath);
-        //for (std::string& path : paths)
-        //{
-        //    if (!UFileSystem::Exists(path))
-        //        UFileSystem::AddDirectory(path);
-        //}
+        // so as to not repeat the logic for every case
 
         std::string hvaPath = "INVALID_PATH";
-        if (std::holds_alternative<SStaticModelFileHeader>(fileHeader))
-        {
-        }
-        else if (std::holds_alternative<SSkeletalModelFileHeader>(fileHeader))
-        {
-        }
-        else if (std::holds_alternative<SSkeletalAnimationFileHeader>(fileHeader))
-        {
-        }
-        else if (std::holds_alternative<STextureFileHeader>(fileHeader))
-        {
-        }
-        else if (std::holds_alternative<STextureCubeFileHeader>(fileHeader))
-        {
-        }
-        else if (std::holds_alternative<SMaterialAssetFileHeader>(fileHeader))
+        if (std::holds_alternative<SMaterialAssetFileHeader>(fileHeader))
         {
             SMaterialAssetFileHeader header = std::get<SMaterialAssetFileHeader>(fileHeader);
+            return SaveAsset(destinationPath, header);
         }
         else if (std::holds_alternative<SScriptFileHeader>(fileHeader))
         {
@@ -491,9 +466,6 @@ namespace Havtorn
             SInputAssetFileHeader header = std::get<SInputAssetFileHeader>(fileHeader);
             return SaveAsset(destinationPath, header);
         }
-        else if (std::holds_alternative<SAudioClipFileHeader>(fileHeader))
-        {
-        }
 
         if (hvaPath == "INVALID_PATH")
             HV_LOG_WARN("CAssetRegistry::CreateNewAsset: The chosen file header asset type can not be created from the engine. Did you mean to import it? Could not create new asset at %s!", destinationPath.c_str());
@@ -501,14 +473,14 @@ namespace Havtorn
         return hvaPath;
     }
 
-    std::string CAssetRegistry::ImportAsset(const std::string& filePath, const std::string& destinationPath, const SSourceAssetData& sourceData, const SAudioClipSettings& audioClipSettings)
+    std::string CAssetRegistry::ImportAsset(const std::string& filePath, const std::string& destinationPath, const SSourceAssetData& sourceData)
     {
         std::string hvaPath = "INVALID_PATH";
         switch (sourceData.AssetType)
         {
-        case EAssetType::StaticMesh: // fallthrough
-        case EAssetType::SkeletalMesh: // fallthrough
-        case EAssetType::Animation:
+        case EAssetType::StaticMesh: [[fallthrough]];
+        case EAssetType::SkeletalMesh: [[fallthrough]];
+        case EAssetType::SkeletalAnimation:
         {
             hvaPath = SaveAsset(destinationPath, UModelImporter::ImportFBX(filePath, sourceData));
         }
@@ -518,22 +490,10 @@ namespace Havtorn
             std::string textureFileData;
             UFileSystem::Deserialize(filePath, textureFileData);
 
-            ETextureFormat format = {};
-            if (const std::string extension = UGeneralUtils::ExtractFileExtensionFromPath(filePath); extension == "dds")
-                format = ETextureFormat::DDS;
-            else if (extension == "tga")
-                format = ETextureFormat::TGA;
-
             STextureFileHeader fileHeader;
-            fileHeader.AssetType = EAssetType::Texture;
-
-            fileHeader.Name = UGeneralUtils::ExtractFileBaseNameFromPath(filePath);
-            fileHeader.OriginalFormat = format;
             fileHeader.SourceData = sourceData;
-            fileHeader.Suffix = filePath[filePath.find_last_of(".") - 1];
+            fileHeader.Name = UGeneralUtils::ExtractFileBaseNameFromPath(filePath);
             fileHeader.Data = std::move(textureFileData);
-
-            // TODO.NW: Make sure file header gets source data set, in ModelImport as well
 
             hvaPath = SaveAsset(destinationPath, fileHeader);
         }
@@ -543,21 +503,10 @@ namespace Havtorn
             std::string textureFileData;
             UFileSystem::Deserialize(filePath, textureFileData);
 
-            ETextureFormat format = {};
-            if (const std::string extension = UGeneralUtils::ExtractFileExtensionFromPath(filePath); extension == "dds")
-                format = ETextureFormat::DDS;
-            else if (extension == "tga")
-                format = ETextureFormat::TGA;
-
             STextureCubeFileHeader fileHeader;
-            fileHeader.AssetType = EAssetType::TextureCube;
-
-            fileHeader.Name = UGeneralUtils::ExtractFileBaseNameFromPath(filePath);
-            fileHeader.OriginalFormat = format;
             fileHeader.SourceData = sourceData;
+            fileHeader.Name = UGeneralUtils::ExtractFileBaseNameFromPath(filePath);
             fileHeader.Data = std::move(textureFileData);
-
-            // TODO.NW: Make sure file header gets source data set, in ModelImport as well
 
             hvaPath = SaveAsset(destinationPath, fileHeader);
         }
@@ -568,19 +517,10 @@ namespace Havtorn
             UFileSystem::Deserialize(filePath, audioClipFileData);
 
             SAudioClipFileHeader fileHeader;
-            fileHeader.AssetType = EAssetType::AudioClip;
-
-            fileHeader.Name = UGeneralUtils::ExtractFileBaseNameFromPath(filePath);
             fileHeader.SourceData = sourceData;
-
-            fileHeader.Settings = audioClipSettings;
+            fileHeader.Name = UGeneralUtils::ExtractFileBaseNameFromPath(filePath);
 
             hvaPath = SaveAsset(destinationPath, fileHeader);
-        }
-
-        case EAssetType::InputAsset: 
-        {
-
         }
         break;
         }
@@ -608,9 +548,9 @@ namespace Havtorn
         }
 
         std::string hvaPath = "INVALID_PATH";
-        if (std::holds_alternative<SStaticModelFileHeader>(fileHeader))
+        if (std::holds_alternative<SStaticMeshFileHeader>(fileHeader))
         {
-            SStaticModelFileHeader header = std::get<SStaticModelFileHeader>(fileHeader);
+            SStaticMeshFileHeader header = std::get<SStaticMeshFileHeader>(fileHeader);
             U32 size = header.GetSize();
             const auto data = new char[size];
             header.Serialize(data);
@@ -618,9 +558,9 @@ namespace Havtorn
             UFileSystem::Serialize(hvaPath, &data[0], size);
             delete[] data;
         }
-        else if (std::holds_alternative<SSkeletalModelFileHeader>(fileHeader))
+        else if (std::holds_alternative<SSkeletalMeshFileHeader>(fileHeader))
         {
-            SSkeletalModelFileHeader header = std::get<SSkeletalModelFileHeader>(fileHeader);
+            SSkeletalMeshFileHeader header = std::get<SSkeletalMeshFileHeader>(fileHeader);
             U32 size = header.GetSize();
             const auto data = new char[size];
             header.Serialize(data);
@@ -777,33 +717,73 @@ namespace Havtorn
             if (!asset->IsValid())
                 continue;
 
-            std::string dependencyPath = UGeneralUtils::ConvertToPlatformAgnosticPath(asset->SourceData.AssetDependencyPath.AsString());
-            if (dependencyPath == "N/A" || dependencyPath.length() == 0)
-            {
-                UnrequestAsset(assetRef, AssetRegistryRequestID);
+            if (!DoesAssetHaveAssetDependencies(asset->Type))
                 continue;
-            }
 
-            if (!UFileSystem::Exists(dependencyPath))
+            SMaterialAssetFileHeader optionalMaterialFileHeader;
+            std::vector<CHavtornStaticString<128>*> dependencies;
+
+            if (asset->Type == EAssetType::SkeletalAnimation)
             {
-                CJsonDocument config = UFileSystem::OpenJson(UFileSystem::EngineConfig);
-                std::string redirection = config.GetValueFromArray("Asset Redirectors", dependencyPath, "");
-
-                while (!UFileSystem::Exists(redirection) && redirection != "")
+                SSkeletalAnimationSourceData& sourceData = std::get<SSkeletalAnimationSourceData>(asset->SourceData.Variant);
+                dependencies.push_back(&sourceData.RigMeshPath);
+            }
+            else if (asset->Type == EAssetType::Material)
+            {
+                const U64 fileSize = UFileSystem::GetFileSize(assetRef.FilePath);
+                if (fileSize == 0)
                 {
-                    redirection = config.GetValueFromArray("Asset Redirectors", redirection, "");
+                    HV_LOG_WARN("CAssetRegistry::FixUpAssetRedirectors: Asset file pointed to by %s failed to load, was empty!", assetRef.FilePath.c_str());
+                    UnrequestAsset(assetRef, AssetRegistryRequestID);
+                    continue;
                 }
 
-                if (redirection == "")
-                    continue;
+                char* data = new char[fileSize];
+                UFileSystem::Deserialize(assetRef.FilePath, data, STATIC_U32(fileSize));
 
-                dependencyPath = redirection;
+                optionalMaterialFileHeader.Deserialize(data);
+
+                delete[] data;
+
+                for (SOfflineGraphicsMaterialProperty& property : optionalMaterialFileHeader.Material.Properties)
+                    dependencies.push_back(&property.TexturePath);
+            }
+                
+            for (CHavtornStaticString<128>* dependency : dependencies)
+            {
+                std::string dependencyPath = UGeneralUtils::ConvertToPlatformAgnosticPath(dependency->AsString());
+                if (dependencyPath == "N/A" || dependencyPath.length() == 0)
+                {
+                    UnrequestAsset(assetRef, AssetRegistryRequestID);
+                    continue;
+                }
+
+                if (!UFileSystem::Exists(dependencyPath))
+                {
+                    CJsonDocument config = UFileSystem::OpenJson(UFileSystem::EngineConfig);
+                    std::string redirection = config.GetValueFromArray("Asset Redirectors", dependencyPath, "");
+
+                    while (!UFileSystem::Exists(redirection) && redirection != "")
+                    {
+                        redirection = config.GetValueFromArray("Asset Redirectors", redirection, "");
+                    }
+
+                    if (redirection == "")
+                        continue;
+
+                    HV_LOG_INFO("CAssetRegistry::FixUpAssetRedirectors: Asset file %s changed Asset Dependency from %s to %s.", assetRef.FilePath.c_str(), dependency->AsString().c_str(), redirection.c_str());
+                    *dependency = CHavtornStaticString<128>(redirection.c_str());
+                }
             }
 
-            HV_LOG_INFO("CAssetRegistry::FixUpAssetRedirectors: Asset file %s changed Asset Dependency Path from %s to %s.", assetRef.FilePath.c_str(), asset->SourceData.AssetDependencyPath.AsString().c_str(), dependencyPath.c_str());
-            asset->SourceData.AssetDependencyPath = dependencyPath;
-            // TODO.NW: The original audio settings have been lost here, so this won't work until we make a variant of the import settings
-            ImportAsset(asset->SourceData.SourcePath.AsString(), UGeneralUtils::ExtractParentDirectoryFromPath(asset->Reference.FilePath), asset->SourceData, {});
+            if (asset->SourceData.AssetType == EAssetType::SkeletalAnimation)
+            {
+                ImportAsset(asset->SourceData.SourcePath.AsString(), UGeneralUtils::ExtractParentDirectoryFromPath(asset->Reference.FilePath), asset->SourceData);
+            }
+            else if (asset->Type == EAssetType::Material)
+            {
+                SaveAsset(UGeneralUtils::ExtractParentDirectoryFromPath(asset->Reference.FilePath), optionalMaterialFileHeader);
+            }
 
             UnrequestAsset(assetRef, AssetRegistryRequestID);
         }
@@ -886,8 +866,7 @@ namespace Havtorn
         }
 
         SAsset* asset = WatchedAssets[sourceFilePath];
-        // TODO.NW: The original audio settings have been lost here, so this won't work until we make a variant of the import settings
-        ImportAsset(asset->SourceData.SourcePath.AsString(), UGeneralUtils::ExtractParentDirectoryFromPath(asset->Reference.FilePath), asset->SourceData, {});
+        ImportAsset(asset->SourceData.SourcePath.AsString(), UGeneralUtils::ExtractParentDirectoryFromPath(asset->Reference.FilePath), asset->SourceData);
 
         if (LoadAsset(asset->Reference))
             HV_LOG_INFO("CAssetRegistry::OnSourceFileChanged: Asset file %s was reimported after source change in %s.", asset->Reference.FilePath.c_str(), sourceFilePath.c_str());

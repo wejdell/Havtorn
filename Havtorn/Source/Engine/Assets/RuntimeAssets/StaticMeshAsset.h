@@ -1,7 +1,7 @@
 // Copyright 2026 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include "Assets/FileHeaders/StaticModelFileHeader.h"
+#include "Assets/FileHeaders/StaticMeshFileHeader.h"
 
 namespace Havtorn 
 {
@@ -9,7 +9,7 @@ namespace Havtorn
 	{
 		SStaticMeshAsset() = default;
 
-		explicit SStaticMeshAsset(const SStaticModelFileHeader& assetFileData)
+		explicit SStaticMeshAsset(const SStaticMeshFileHeader& assetFileData)
 			: AssetType(assetFileData.AssetType)
 			, Name(assetFileData.Name)
 			, NumberOfMaterials(assetFileData.NumberOfMaterials)
@@ -26,7 +26,7 @@ namespace Havtorn
 		std::string Name = "";
 		U8 NumberOfMaterials = 0;
 		std::vector<SDrawCallData> DrawCallData = {};
-		std::vector<SMaterialVertex> LocalVertexPositions = {};
+		std::vector<SMaterialVertex> MaterialVertexAssociations = {};
 		SVector BoundsMin = SVector(FLT_MAX);
 		SVector BoundsMax = SVector(-FLT_MAX);
 		SVector BoundsCenter = SVector(0.0f);

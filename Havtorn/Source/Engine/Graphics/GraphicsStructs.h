@@ -208,7 +208,7 @@ namespace Havtorn
 	struct SOfflineGraphicsMaterialProperty
 	{
 		F32 ConstantValue = -1.0f;
-		std::string TexturePath;
+		CHavtornStaticString<128> TexturePath;
 		I16 TextureChannelIndex = -1;
 
 		U32 GetSize() const

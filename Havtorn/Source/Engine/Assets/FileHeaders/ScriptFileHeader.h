@@ -8,8 +8,8 @@ namespace Havtorn
 	struct SScriptFileHeader
 	{
 		EAssetType AssetType = EAssetType::Script;
-		std::string Name;
-
+		U16 Version = 1;
+		std::string Name = "";
 		HexRune::SScript* Script = nullptr;
 
 		[[nodiscard]] U32 GetSize() const;
@@ -21,6 +21,7 @@ namespace Havtorn
 	{
 		U32 size = 0;
 		size += GetDataSize(AssetType);
+		size += GetDataSize(Version);
 		size += GetDataSize(Name);
 		size += Script->GetSize();
 		return size;
@@ -30,6 +31,7 @@ namespace Havtorn
 	{
 		U64 pointerPosition = 0;
 		SerializeData(AssetType, toData, pointerPosition);
+		SerializeData(Version, toData, pointerPosition);
 		SerializeData(Name, toData, pointerPosition);
 		Script->Serialize(toData, pointerPosition);
 	}
@@ -38,6 +40,7 @@ namespace Havtorn
 	{
 		U64 pointerPosition = 0;
 		DeserializeData(AssetType, fromData, pointerPosition);
+		DeserializeData(Version, fromData, pointerPosition);
 		DeserializeData(Name, fromData, pointerPosition);
 		outScript->Deserialize(fromData, pointerPosition);
 		outScript->Name = Name;

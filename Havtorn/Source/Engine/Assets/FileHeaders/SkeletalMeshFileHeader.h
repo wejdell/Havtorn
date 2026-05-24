@@ -6,17 +6,15 @@
 
 namespace Havtorn
 {
-	struct SSkeletalModelFileHeader
+	struct SSkeletalMeshFileHeader
 	{
 		EAssetType AssetType = EAssetType::SkeletalMesh;
-		std::string Name;
-		U32 UID = 0;
+		U16 Version = 1;
 		SSourceAssetData SourceData;
+		std::string Name = "";
 		U8 NumberOfMaterials = 0;
-		U32 NumberOfMeshes = 0;
 		std::vector<SSkeletalMesh> Meshes;
 		std::vector<SSkeletalMeshBone> BindPoseBones;
-		U32 NumberOfNodes = 0;
 		std::vector<SSkeletalMeshNode> Nodes;
 
 		[[nodiscard]] U32 GetSize() const;
@@ -24,16 +22,16 @@ namespace Havtorn
 		void Deserialize(const char* fromData);
 	};
 
-	inline U32 SSkeletalModelFileHeader::GetSize() const
+	inline U32 SSkeletalMeshFileHeader::GetSize() const
 	{
 		U32 size = 0;
 		size += GetDataSize(AssetType);
+		size += GetDataSize(Version);
+		size += SourceData.GetSize();
 		size += GetDataSize(Name);
-		size += GetDataSize(UID);
-		size += GetDataSize(SourceData);
 		size += GetDataSize(NumberOfMaterials);
-		size += GetDataSize(NumberOfMeshes);
 
+		size += GetDataSize(U32());
 		for (auto& mesh : Meshes)
 		{
 			size += GetDataSize(mesh.Name);
@@ -44,7 +42,7 @@ namespace Havtorn
 
 		size += GetDataSize(BindPoseBones);
 
-		size += GetDataSize(NumberOfNodes);
+		size += GetDataSize(U32());
 		for (auto& node : Nodes)
 		{
 			size += GetDataSize(node.Name);
@@ -55,16 +53,16 @@ namespace Havtorn
 		return size;
 	}
 
-	inline void SSkeletalModelFileHeader::Serialize(char* toData) const
+	inline void SSkeletalMeshFileHeader::Serialize(char* toData) const
 	{
 		U64 pointerPosition = 0;
 		SerializeData(AssetType, toData, pointerPosition);
+		SerializeData(Version, toData, pointerPosition);
+		SourceData.Serialize(toData, pointerPosition);
 		SerializeData(Name, toData, pointerPosition);
-		SerializeData(UID, toData, pointerPosition);
-		SerializeData(SourceData, toData, pointerPosition);
 		SerializeData(NumberOfMaterials, toData, pointerPosition);
-		SerializeData(NumberOfMeshes, toData, pointerPosition);
 
+		SerializeData(STATIC_U32(Meshes.size()), toData, pointerPosition);
 		for (auto& mesh : Meshes)
 		{
 			SerializeData(mesh.Name, toData, pointerPosition);
@@ -75,7 +73,7 @@ namespace Havtorn
 
 		SerializeData(BindPoseBones, toData, pointerPosition);
 
-		SerializeData(NumberOfNodes, toData, pointerPosition);
+		SerializeData(STATIC_U32(Nodes.size()), toData, pointerPosition);
 		for (auto& node : Nodes)
 		{
 			SerializeData(node.Name, toData, pointerPosition);
@@ -84,18 +82,19 @@ namespace Havtorn
 		}
 	}
 
-	inline void SSkeletalModelFileHeader::Deserialize(const char* fromData)
+	inline void SSkeletalMeshFileHeader::Deserialize(const char* fromData)
 	{
 		U64 pointerPosition = 0;
 		DeserializeData(AssetType, fromData, pointerPosition);
+		DeserializeData(Version, fromData, pointerPosition);
+		SourceData.Deserialize(fromData, pointerPosition);
 		DeserializeData(Name, fromData, pointerPosition);
-		DeserializeData(UID, fromData, pointerPosition);
-		DeserializeData(SourceData, fromData, pointerPosition);
 		DeserializeData(NumberOfMaterials, fromData, pointerPosition);
-		DeserializeData(NumberOfMeshes, fromData, pointerPosition);
 
-		Meshes.reserve(NumberOfMeshes);
-		for (U16 i = 0; i < NumberOfMeshes; i++)
+		U32 numberOfMeshes = 0;
+		DeserializeData(numberOfMeshes, fromData, pointerPosition);
+		Meshes.reserve(numberOfMeshes);
+		for (U16 i = 0; i < numberOfMeshes; i++)
 		{
 			Meshes.emplace_back();
 			DeserializeData(Meshes.back().Name, fromData, pointerPosition);
@@ -106,9 +105,10 @@ namespace Havtorn
 
 		DeserializeData(BindPoseBones, fromData, pointerPosition);
 
-		DeserializeData(NumberOfNodes, fromData, pointerPosition);
-		Nodes.reserve(NumberOfNodes);
-		for (U16 i = 0; i < NumberOfNodes; i++)
+		U32 numberOfNodes = 0;
+		DeserializeData(numberOfNodes, fromData, pointerPosition);
+		Nodes.reserve(numberOfNodes);
+		for (U16 i = 0; i < numberOfNodes; i++)
 		{
 			Nodes.emplace_back();
 			DeserializeData(Nodes.back().Name, fromData, pointerPosition);

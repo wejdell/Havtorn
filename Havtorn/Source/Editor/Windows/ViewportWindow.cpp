@@ -350,7 +350,7 @@ namespace Havtorn
 	{
 		if (assetRepresentation->AssetType != EAssetType::StaticMesh && 
 			assetRepresentation->AssetType != EAssetType::SkeletalMesh && 
-			assetRepresentation->AssetType != EAssetType::Animation && 
+			assetRepresentation->AssetType != EAssetType::SkeletalAnimation && 
 			assetRepresentation->AssetType != EAssetType::Prefab)
 			return;
 
@@ -412,7 +412,7 @@ namespace Havtorn
 		}
 			break;
 
-		case EAssetType::Animation:
+		case EAssetType::SkeletalAnimation:
 		{
 			const std::string animationPath = assetRepresentation->DirectoryEntry.path().string();
 			SSkeletalAnimationAsset* animationAsset = assetRegistry->RequestAssetData<SSkeletalAnimationAsset>(SAssetReference(animationPath), scene->PreviewEntity.GUID);
@@ -500,7 +500,7 @@ namespace Havtorn
 	{
 		if (assetRepresentation->AssetType == EAssetType::StaticMesh ||
 			assetRepresentation->AssetType == EAssetType::SkeletalMesh ||
-			assetRepresentation->AssetType == EAssetType::Animation)
+			assetRepresentation->AssetType == EAssetType::SkeletalAnimation)
 		{
 			SEntity copiedEntity = toScene->CopyEntity(toScene->PreviewEntity);
 			toScene->RemoveEntity(toScene->PreviewEntity);
@@ -653,7 +653,7 @@ namespace Havtorn
 			SStaticMeshAsset* meshAsset = assetRegistry->RequestAssetData<SStaticMeshAsset>(staticMeshComponent->AssetReference, 100);
 
 			if (meshAsset != nullptr)
-				vertices = meshAsset->LocalVertexPositions;
+				vertices = meshAsset->MaterialVertexAssociations;
 
 			assetRegistry->UnrequestAsset(staticMeshComponent->AssetReference, 100);
 		}
@@ -662,7 +662,7 @@ namespace Havtorn
 			SSkeletalMeshAsset* meshAsset = assetRegistry->RequestAssetData<SSkeletalMeshAsset>(skeletalMeshComponent->AssetReference, 100);
 
 			if (meshAsset != nullptr)
-				vertices = meshAsset->LocalVertexPositions;
+				vertices = meshAsset->MaterialVertexAssociations;
 
 			assetRegistry->UnrequestAsset(skeletalMeshComponent->AssetReference, 100);
 		}

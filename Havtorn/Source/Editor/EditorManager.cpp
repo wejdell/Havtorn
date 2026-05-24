@@ -664,7 +664,7 @@ namespace Havtorn
 		case EAssetType::StaticMesh:
 		case EAssetType::SkeletalMesh:
 		case EAssetType::Material:
-		case EAssetType::Animation:
+		case EAssetType::SkeletalAnimation:
 		case EAssetType::Texture:
 		case EAssetType::TextureCube:
 		{
@@ -755,7 +755,7 @@ namespace Havtorn
 		case EAssetType::StaticMesh:
 		case EAssetType::SkeletalMesh:
 		case EAssetType::Material:
-		case EAssetType::Animation:
+		case EAssetType::SkeletalAnimation:
 		case EAssetType::Texture:
 		case EAssetType::TextureCube:
 			rep.UsingEditorTexture = false;

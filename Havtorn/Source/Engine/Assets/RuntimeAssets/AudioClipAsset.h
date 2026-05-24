@@ -18,7 +18,8 @@ namespace Havtorn
 			const std::string basePath = UGeneralUtils::ExtractParentDirectoryFromPath(parentPath);
 			SourceLocation = basePath.substr(basePath.rfind("/", basePath.size() - 1), basePath.size());
 			SourceExtension = UGeneralUtils::ExtractFileExtensionFromPath(parentPath);
-			Settings = assetFileData.Settings;
+			const SAudioClipSourceData& sourceData = std::get<SAudioClipSourceData>(assetFileData.SourceData.Variant);
+			Settings = sourceData.Settings;
 		}
 
 		EAssetType AssetType = EAssetType::AudioClip;

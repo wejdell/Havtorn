@@ -12,21 +12,20 @@ namespace Havtorn
 		explicit SSkeletalAnimationAsset(const SSkeletalAnimationFileHeader& assetFileData)
 			: AssetType(assetFileData.AssetType)
 			, Name(assetFileData.Name)
-			, RigPath(assetFileData.SourceData.AssetDependencyPath.AsString())
 			, DurationInTicks(assetFileData.DurationInTicks)
 			, TickRate(assetFileData.TickRate)
-			, NumberOfTracks(assetFileData.NumberOfBones)
-			, ImportScale(assetFileData.SourceData.ImportScale)
 			, BoneAnimationTracks(assetFileData.BoneAnimationTracks)
 		{
+			SSkeletalAnimationSourceData sourceData = std::get<SSkeletalAnimationSourceData>(assetFileData.SourceData.Variant);
+			RigPath = sourceData.RigMeshPath.AsString();
+			ImportScale = sourceData.ImportScale;
 		}
 
-		EAssetType AssetType = EAssetType::Animation;
+		EAssetType AssetType = EAssetType::SkeletalAnimation;
 		std::string Name = "";
 		std::string RigPath = "";
 		U32 DurationInTicks = 0;
 		U32 TickRate = 0;
-		U32 NumberOfTracks = 0;
 		F32 ImportScale = 1.0f;
 		std::vector<SBoneAnimationTrack> BoneAnimationTracks;
 	};

@@ -76,7 +76,7 @@ namespace Havtorn
 		//	GDebugDraw::AddAxis(worldTransform.GetTranslation(), worldTransform.GetEuler(), worldTransform.GetScale() * 0.5f);
 		//}
 
-		return { EComponentViewResultLabel::InspectAssetComponent, skeletalAnimationComp, SAssetReference::ConvertToPointers(skeletalAnimationComp->AssetReferences), EAssetType::Animation };
+		return { EComponentViewResultLabel::InspectAssetComponent, skeletalAnimationComp, SAssetReference::ConvertToPointers(skeletalAnimationComp->AssetReferences), EAssetType::SkeletalAnimation };
 	}
 
 	bool SSkeletalAnimationComponentEditorContext::AddComponent(const SEntity& entity, CScene* scene) const

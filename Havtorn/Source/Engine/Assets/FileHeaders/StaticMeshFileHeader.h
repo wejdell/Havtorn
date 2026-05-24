@@ -6,15 +6,13 @@
 
 namespace Havtorn
 {
-	struct SStaticModelFileHeader
+	struct SStaticMeshFileHeader
 	{
 		EAssetType AssetType = EAssetType::StaticMesh;
-		std::string Name;
-		// TODO.NW: Remove all UIDs, should not be needed anymore
-		U32 UID = 0;
+		U16 Version = 1;
 		SSourceAssetData SourceData;
+		std::string Name = "";
 		U8 NumberOfMaterials = 0;
-		U32 NumberOfMeshes = 0;
 		std::vector<SStaticMesh> Meshes;
 
 		[[nodiscard]] U32 GetSize() const;
@@ -22,16 +20,16 @@ namespace Havtorn
 		void Deserialize(const char* fromData);
 	};
 
-	inline U32 SStaticModelFileHeader::GetSize() const
+	inline U32 SStaticMeshFileHeader::GetSize() const
 	{
 		U32 size = 0;
 		size += GetDataSize(AssetType);
+		size += GetDataSize(Version);
+		size += SourceData.GetSize();
 		size += GetDataSize(Name);
-		size += GetDataSize(UID);
-		size += GetDataSize(SourceData);
 		size += GetDataSize(NumberOfMaterials);
-		size += GetDataSize(NumberOfMeshes);
 
+		size += GetDataSize(U32());
 		for (auto& mesh : Meshes)
 		{
 			size += GetDataSize(mesh.Name);
@@ -42,16 +40,16 @@ namespace Havtorn
 		return size;
 	}
 
-	inline void SStaticModelFileHeader::Serialize(char* toData) const
+	inline void SStaticMeshFileHeader::Serialize(char* toData) const
 	{
 		U64 pointerPosition = 0;
 		SerializeData(AssetType, toData, pointerPosition);
+		SerializeData(Version, toData, pointerPosition);
+		SourceData.Serialize(toData, pointerPosition);
 		SerializeData(Name, toData, pointerPosition);
-		SerializeData(UID, toData, pointerPosition);
-		SerializeData(SourceData, toData, pointerPosition);
 		SerializeData(NumberOfMaterials, toData, pointerPosition);
-		SerializeData(NumberOfMeshes, toData, pointerPosition);
 
+		SerializeData(STATIC_U32(Meshes.size()), toData, pointerPosition);
 		for (auto& mesh : Meshes)
 		{
 			SerializeData(mesh.Name, toData, pointerPosition);
@@ -61,18 +59,19 @@ namespace Havtorn
 		}
 	}
 
-	inline void SStaticModelFileHeader::Deserialize(const char* fromData)
+	inline void SStaticMeshFileHeader::Deserialize(const char* fromData)
 	{
 		U64 pointerPosition = 0;
 		DeserializeData(AssetType, fromData, pointerPosition);
+		DeserializeData(Version, fromData, pointerPosition);
+		SourceData.Deserialize(fromData, pointerPosition);
 		DeserializeData(Name, fromData, pointerPosition);
-		DeserializeData(UID, fromData, pointerPosition);
-		DeserializeData(SourceData, fromData, pointerPosition);
 		DeserializeData(NumberOfMaterials, fromData, pointerPosition);
-		DeserializeData(NumberOfMeshes, fromData, pointerPosition);
 
-		Meshes.reserve(NumberOfMeshes);
-		for (U16 i = 0; i < NumberOfMeshes; i++)
+		U32 numberOfMeshes = 0;
+		DeserializeData(numberOfMeshes, fromData, pointerPosition);
+		Meshes.reserve(numberOfMeshes);
+		for (U16 i = 0; i < numberOfMeshes; i++)
 		{
 			Meshes.emplace_back();
 			DeserializeData(Meshes.back().Name, fromData, pointerPosition);

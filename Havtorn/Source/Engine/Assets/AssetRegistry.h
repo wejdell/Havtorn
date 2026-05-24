@@ -54,8 +54,7 @@ namespace Havtorn
 
 		// TODO.NW: If we extend our own filePath struct, could be nice to separate full paths from folders
 		ENGINE_API std::string CreateNewAsset(const std::string& destinationPath, const SAssetFileHeader& fileHeader);
-		// TODO.NW: Remove audio clip settings and unify import approach, maybe with variant
-		ENGINE_API std::string ImportAsset(const std::string& filePath, const std::string& destinationPath, const SSourceAssetData& sourceData, const SAudioClipSettings& audioClipSettings);
+		ENGINE_API std::string ImportAsset(const std::string& filePath, const std::string& destinationPath, const SSourceAssetData& sourceData);
 		ENGINE_API std::string SaveAsset(const std::string& destinationPath, const SAssetFileHeader& fileHeader);
 
 		ENGINE_API void RefreshDatabase();

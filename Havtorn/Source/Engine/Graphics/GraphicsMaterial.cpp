@@ -15,8 +15,8 @@ namespace Havtorn
 		{
 			outProperty.ConstantValue = offlineProperty.ConstantValue;
 				
-			if (!offlineProperty.TexturePath.empty())
-				outProperty.TextureUID = SAssetReference(offlineProperty.TexturePath).UID;
+			if (offlineProperty.TexturePath.Length() != 0)
+				outProperty.TextureUID = SAssetReference(offlineProperty.TexturePath.AsString()).UID;
 				
 			outProperty.TextureChannelIndex = STATIC_F32(offlineProperty.TextureChannelIndex);
 		};
@@ -67,6 +67,6 @@ namespace Havtorn
 		extractRenderTexture(Roughness, textures);
 		extractRenderTexture(Emissive, textures);
 
-		return std::move(textures);
+		return textures;
 	}
 }

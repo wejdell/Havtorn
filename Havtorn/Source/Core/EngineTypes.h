@@ -16,33 +16,29 @@
 
 namespace Havtorn
 {
-	// TODO.NW: Might want to add versioning on all assets, should do this and asset type cleanup at the same time
-
-	enum class EAssetType
+	enum class EAssetType : U16
 	{
 		None,
 		StaticMesh,
 		SkeletalMesh,
+		SkeletalAnimation,
 		Texture,
-		Material,
-		Animation,
-		SpriteAnimation,
-		AudioClip,
-		AudioPlaceholder, // TODO.NW: Clean up this list and regenerate all assets. If we change the order in any way we break all saved assets
-		VisualFX,
-		Scene,
-		Sequencer,
-		Script,
 		TextureCube,
+		SpriteAnimation,
+		Material,
+		Scene,
+		Script,
+		Prefab,
 		InputAsset,
-		Prefab
+		AudioClip,
+		Sequencer
 	};
 
 	static SColor GetAssetTypeColor(const EAssetType type)
 	{
 		switch (type)
 		{
-		case EAssetType::Animation:
+		case EAssetType::SkeletalAnimation:
 			return SColor::Blue;
 		case EAssetType::Material:
 			return SColor::Green;
@@ -78,7 +74,7 @@ namespace Havtorn
 	{
 		switch (type)
 		{
-		case EAssetType::Animation:
+		case EAssetType::SkeletalAnimation:
 			return "SKELETAL ANIM";
 		case EAssetType::Material:
 			return "MATERIAL";
@@ -109,13 +105,25 @@ namespace Havtorn
 	{
 		switch (type)
 		{
-		case EAssetType::Animation: [[fallthrough]];
+		case EAssetType::SkeletalAnimation: [[fallthrough]];
 		case EAssetType::StaticMesh: [[fallthrough]];
 		case EAssetType::SkeletalMesh: [[fallthrough]];
 		case EAssetType::Texture: [[fallthrough]];
 		case EAssetType::TextureCube: [[fallthrough]];
 		case EAssetType::AudioClip: [[fallthrough]];
 		case EAssetType::SpriteAnimation:
+			return true;
+		}
+
+		return false;
+	}
+
+	static bool DoesAssetHaveAssetDependencies(const EAssetType type)
+	{
+		switch (type)
+		{
+		case EAssetType::SkeletalAnimation: [[fallthrough]];
+		case EAssetType::Material:
 			return true;
 		}
 

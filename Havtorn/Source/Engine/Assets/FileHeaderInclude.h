@@ -2,8 +2,8 @@
 
 #pragma once
 
-#include "FileHeaders/StaticModelFileHeader.h"
-#include "FileHeaders/SkeletalModelFileHeader.h"
+#include "FileHeaders/StaticMeshFileHeader.h"
+#include "FileHeaders/SkeletalMeshFileHeader.h"
 #include "FileHeaders/SkeletalAnimationFileHeader.h"
 
 #include "Fileheaders/TextureFileHeader.h"

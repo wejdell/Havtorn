@@ -1,7 +1,7 @@
 // Copyright 2026 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include "Assets/FileHeaders/SkeletalModelFileHeader.h"
+#include "Assets/FileHeaders/SkeletalMeshFileHeader.h"
 
 namespace Havtorn 
 {
@@ -9,7 +9,7 @@ namespace Havtorn
 	{
 		SSkeletalMeshAsset() = default;
 
-		explicit SSkeletalMeshAsset(const SSkeletalModelFileHeader& assetFileData)
+		explicit SSkeletalMeshAsset(const SSkeletalMeshFileHeader& assetFileData)
 			: AssetType(assetFileData.AssetType)
 			, Name(assetFileData.Name)
 			, NumberOfMaterials(assetFileData.NumberOfMaterials)
@@ -30,7 +30,7 @@ namespace Havtorn
 		std::vector<SDrawCallData> DrawCallData = {};
 		std::vector<SSkeletalMeshBone> BindPoseBones = {};
 		std::vector<SSkeletalMeshNode> Nodes = {};
-		std::vector<SMaterialVertex> LocalVertexPositions = {};
+		std::vector<SMaterialVertex> MaterialVertexAssociations = {};
 		SVector BoundsMin = SVector(FLT_MAX);
 		SVector BoundsMax = SVector(-FLT_MAX);
 		SVector BoundsCenter = SVector(0.0f);

@@ -9,9 +9,10 @@ namespace Havtorn
 	struct SInputAssetFileHeader
 	{
 		EAssetType AssetType = EAssetType::InputAsset;
+		U16 Version = 1;
 		std::string Name = "";
-
 		std::vector<SInputMapAction> InputActions;
+
 		[[nodiscard]] U32 GetSize() const;
 		void Serialize(char* toData) const;
 		void Deserialize(const char* fromData);
@@ -21,19 +22,22 @@ namespace Havtorn
 	{
 		U32 size = 0;
 		size += GetDataSize(AssetType);
+		size += GetDataSize(Version);
 		size += GetDataSize(Name);
-		size += sizeof(U32);
+		
+		size += GetDataSize(U32());
 		for (auto& action : InputActions)
 		{
 			size += GetDataSize(action.Tag);
-			size += sizeof(U32);
 
+			size += GetDataSize(U32());
 			for (auto& mapping : action.InputMappings)
 			{
 				size += GetDataSize(mapping.ActivationType);
 				size += GetDataSize(mapping.Data);
 			}
 		}
+
 		return size;
 	}
 
@@ -41,14 +45,15 @@ namespace Havtorn
 	{
 		U64 pointerPosition = 0;
 		SerializeData(AssetType, toData, pointerPosition);
+		SerializeData(Version, toData, pointerPosition);
 		SerializeData(Name, toData, pointerPosition);
 
 		SerializeData(STATIC_U32(InputActions.size()), toData, pointerPosition);
 		for (auto& action : InputActions)
 		{
 			action.Tag.Serialize(toData, pointerPosition);
-			SerializeData(STATIC_U32(action.InputMappings.size()), toData, pointerPosition);
 
+			SerializeData(STATIC_U32(action.InputMappings.size()), toData, pointerPosition);
 			for (auto& mapping : action.InputMappings)
 			{
 				SerializeData(mapping.ActivationType, toData, pointerPosition);
@@ -62,12 +67,12 @@ namespace Havtorn
 	{
 		U64 pointerPosition = 0;
 		DeserializeData(AssetType, fromData, pointerPosition);
+		DeserializeData(Version, fromData, pointerPosition);
 		DeserializeData(Name, fromData, pointerPosition);
 
 		U32 inputMapCount = 0;
 		DeserializeData(inputMapCount, fromData, pointerPosition);
 		InputActions.resize(inputMapCount);
-
 		for (auto& action : InputActions)
 		{
 			action.Tag.Deserialize(fromData, pointerPosition);
