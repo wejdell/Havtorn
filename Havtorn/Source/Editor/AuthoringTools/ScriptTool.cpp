@@ -753,31 +753,20 @@ namespace Havtorn
 			GUI::Separator();
 			GUI::InputText("Name", &DataBindingCandidate.Name);
 
-			GUI::ComboEnum("Pin Type", DataBindingCandidate.Type); // <-- This could replace the commented code below 
-
-			// TODO.NW: Add filtering so we can't pick incorrect types e.g. unknown and flow
-			if (DataBindingCandidate.Type == EGUIPinType::Unknown)
-				DataBindingCandidate.Type = EGUIPinType::Bool;
+			GUI::ComboEnum("Pin Type", DataBindingCandidate.Type, { EGUIPinType::Unknown, EGUIPinType::Flow });
 
 			if (DataBindingCandidate.Type == EGUIPinType::Asset)
 			{
-				GUI::ComboEnum("Asset Type", DataBindingCandidate.AssetType);
-
-				if (DataBindingCandidate.AssetType == EGUIAssetType::None)
-					DataBindingCandidate.AssetType = EGUIAssetType::StaticMesh;
+				GUI::ComboEnum("Asset Type", DataBindingCandidate.AssetType, { EGUIAssetType::None });
 			}
 			else
 			{
 				DataBindingCandidate.AssetType = EGUIAssetType::None;
 			}
 
-
 			if (DataBindingCandidate.Type == EGUIPinType::ComponentPtr)
 			{
-				GUI::ComboEnum("Object Type", DataBindingCandidate.ObjectType);
-
-				if (DataBindingCandidate.ObjectType == EGUIObjectDataType::None)
-					DataBindingCandidate.ObjectType = EGUIObjectDataType::Entity;
+				GUI::ComboEnum("Object Type", DataBindingCandidate.ObjectType, { EGUIObjectDataType::None });
 			}
 			else
 			{
