@@ -1114,14 +1114,13 @@ namespace Havtorn
 			SVector4 colorFloat = color.AsVector4();
 			ImVec4 imColor = { colorFloat.X, colorFloat.Y, colorFloat.Z, colorFloat.W };
 			ImGui::GetWindowDrawList()->AddRectFilled(posMin, posMax, ImGui::ColorConvertFloat4ToU32(imColor));
-			//ImGui::GetBackgroundDrawList()->
 		}
 
 		void PushClipRect(const SVector2<F32>& cursorPos, const SVector2<F32>& size)
 		{
 			ImVec2 posMin = { cursorPos.X, cursorPos.Y };
 			ImVec2 posMax = { cursorPos.X + size.X, cursorPos.Y + size.Y };
-			ImGui::PushClipRect(posMin, posMax, false);
+			ImGui::PushClipRect(posMin, posMax, true);
 		}
 
 		void PopClipRect()
@@ -1133,8 +1132,6 @@ namespace Havtorn
 		{
 			ImDrawList* drawList = ImGui::GetForegroundDrawList();
 			//ImVec2 position = NE::GetNodePosition(nodeId);
-
-
 		}
 
 		void SetGuiColorProfile(const SGuiColorProfile& colorProfile)
