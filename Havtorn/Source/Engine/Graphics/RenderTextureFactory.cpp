@@ -24,15 +24,19 @@ namespace Havtorn
 		{
 			STextureFileHeader assetFile;
 			assetFile.Deserialize(data);
-			format = assetFile.OriginalFormat;
 			fileData = assetFile.Data;
+
+			const STextureSourceData& sourceData = std::get<STextureSourceData>(assetFile.SourceData.Variant);
+			format = sourceData.OriginalFormat;
 		}
 		else if (assetType == EAssetType::TextureCube)
 		{
 			STextureCubeFileHeader assetFile;
 			assetFile.Deserialize(data);
-			format = assetFile.OriginalFormat;
 			fileData = assetFile.Data;
+			
+			const STextureCubeSourceData& sourceData = std::get<STextureCubeSourceData>(assetFile.SourceData.Variant);
+			format = sourceData.OriginalFormat;
 		}
 
 		DirectX::ScratchImage scratchImage;

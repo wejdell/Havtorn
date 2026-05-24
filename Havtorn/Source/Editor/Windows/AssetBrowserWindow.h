@@ -33,21 +33,20 @@ namespace Havtorn
 		
 		void OnRenameEvent(const SInputActionPayload payload);
 
-		void AssetImportModal();
 		void AssetCreationModal();
 
-		void ImportOptionsTexture();
-		void ImportOptionsTextureCube();
-		void ImportOptionsSpriteAnimation();
-		void ImportOptionsStaticMesh();
-		void ImportOptionsSkeletalMesh();
-		void ImportOptionsAnimation();
-		void ImportOptionsAudioClip(SAudioClipSettings& settings);
-		
 		SAssetFileHeader CreateOptionsMaterial();
-		SAssetFileHeader CreateScript();
-		SAssetFileHeader CreateInputAsset();
 
+		void AssetImportModal();
+
+		void ImportOptionsStaticMesh(const std::string& sourceFilePath);
+		void ImportOptionsSkeletalMesh(const std::string& sourceFilePath);
+		void ImportOptionsSkeletalAnimation(const std::string& sourceFilePath);
+		void ImportOptionsTexture(const std::string& sourceFilePath);
+		void ImportOptionsTextureCube(const std::string& sourceFilePath);
+		void ImportOptionsSpriteAnimation(const std::string& sourceFilePath);
+		void ImportOptionsAudioClip(const std::string& sourceFilePath);
+		
 		void InspectFolderTree(const std::string& folderName, const intptr_t& folderIconID);
 		void InspectDirectoryEntry(const std::filesystem::directory_entry& entry, U32& outCurrentID, const intptr_t& folderIconID);
 

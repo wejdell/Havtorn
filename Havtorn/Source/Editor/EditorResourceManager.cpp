@@ -28,9 +28,9 @@ namespace Havtorn
 		U32 assetID = SAssetReference(assetRep->Name).UID;
 		// TODO.NW: Set up ownership using smart pointers, use weak ptr to capture 'this' here. 
 		auto replaceTexture = [this, filePath](CRenderTexture finishedCopy)
-			{
-				Manager->GetAssetRepFromDirEntry(std::filesystem::directory_entry(filePath))->TextureRef = std::move(finishedCopy);
-			};
+		{
+			Manager->GetAssetRepFromDirEntry(std::filesystem::directory_entry(filePath))->TextureRef = std::move(finishedCopy);
+		};
 		RenderManager->RequestRenderView(assetID, replaceTexture);
 
 		switch (assetRep->AssetType)
@@ -194,7 +194,7 @@ namespace Havtorn
 			}
 		}
 			break;
-		case EAssetType::Animation:
+		case EAssetType::SkeletalAnimation:
 		{
 			SSkeletalAnimationAsset* animationAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalAnimationAsset>(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
 			SSkeletalMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(animationAsset->RigPath), CAssetRegistry::EditorManagerRequestID);
@@ -271,7 +271,7 @@ namespace Havtorn
 
 		switch (assetRep->AssetType)
 		{
-		case EAssetType::Animation:
+		case EAssetType::SkeletalAnimation:
 		{
 			SSkeletalAnimationAsset* animationAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalAnimationAsset>(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
 			SSkeletalMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(animationAsset->RigPath), CAssetRegistry::EditorManagerRequestID);
@@ -296,14 +296,9 @@ namespace Havtorn
 			command.Matrices.emplace_back(camView);
 			command.Matrices.emplace_back(camProjection);
 			RenderManager->PushRenderCommand(command, assetID);
-
-			//std::vector<SMatrix> boneTransforms = GEngine::GetWorld()->GetSystem<CAnimatorGraphSystem>()->ReadAssetAnimationPose(filePath, animationTime);
-			//RenderManager->RenderSkeletalAnimationAssetTexture(assetTexture, filePath, boneTransforms);
 			break;
 		}
 		case EAssetType::AudioClip: // TODO.NW: Play sound? Probably want to do that if selected and pressing play instead
-			break;
-		case EAssetType::VisualFX:
 			break;
 		case EAssetType::SpriteAnimation:
 			break;
@@ -325,15 +320,9 @@ namespace Havtorn
 		return GEngine::GetAssetRegistry()->CreateNewAsset(destinationPath, fileHeader);
 	}
 
-	std::string CEditorResourceManager::ConvertToHVA(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions) const
+	std::string CEditorResourceManager::ConvertToHVA(const std::string& filePath, const std::string& destinationPath, const SSourceAssetData& sourceAssetData) const
 	{
-		SSourceAssetData sourceData;
-		sourceData.AssetType = importOptions.AssetType;
-		sourceData.SourcePath = filePath;
-		sourceData.AssetDependencyPath = importOptions.AssetRep != nullptr ? importOptions.AssetRep->DirectoryEntry.path().string() : "N/A";
-		sourceData.ImportScale = importOptions.Scale;
-
-		return GEngine::GetAssetRegistry()->ImportAsset(filePath, destinationPath, sourceData, importOptions.AudioClipSettings);
+		return GEngine::GetAssetRegistry()->ImportAsset(filePath, destinationPath, sourceAssetData);
 	}
 
 	void CEditorResourceManager::CreateMaterial(const std::string& destinationPath, const SMaterialAssetFileHeader& fileHeader) const
@@ -357,7 +346,7 @@ namespace Havtorn
 		asset.Material.Properties[3] = { -1.0f, texturePaths[0], 3 };
 		asset.Material.Properties[4] = { -1.0f, texturePaths[2], 3 };
 		asset.Material.Properties[5] = { -1.0f, texturePaths[2], 1 };
-		asset.Material.Properties[6] = { -1.0f, "", -1 };
+		asset.Material.Properties[6] = { -1.0f, CHavtornStaticString<128>(), -1 };
 		asset.Material.Properties[7] = { -1.0f, texturePaths[2], 2 };
 		asset.Material.Properties[8] = { -1.0f, texturePaths[1], 0 };
 		asset.Material.Properties[9] = { -1.0f, texturePaths[1], 1 };
@@ -393,17 +382,17 @@ namespace Havtorn
 
 		//SMaterialAssetFileHeader previewMaterial;
 		//previewMaterial.Name = "M_MeshPreview";
-		//previewMaterial.Material.Properties[ALBEDO_R] = { 0.8f, "", -1 };
-		//previewMaterial.Material.Properties[ALBEDO_G] = { 0.8f, "", -1 };
-		//previewMaterial.Material.Properties[ALBEDO_B] = { 0.8f, "", -1 };
-		//previewMaterial.Material.Properties[ALBEDO_A] = { 1.0f, "", -1 };
-		//previewMaterial.Material.Properties[NORMAL_X] = { 0.0f, "", -1 };
-		//previewMaterial.Material.Properties[NORMAL_Y] = { 0.0f, "", -1 };
-		//previewMaterial.Material.Properties[NORMAL_Z] = { 1.0f, "", -1 };
-		//previewMaterial.Material.Properties[AMBIENT_OCCLUSION] = { 0.0f, "", -1 };
-		//previewMaterial.Material.Properties[METALNESS] = { 0.0f, "", -1 };
-		//previewMaterial.Material.Properties[ROUGHNESS] = { 1.0f, "", -1 };
-		//previewMaterial.Material.Properties[EMISSIVE] = { 0.0f, "", -1 };
+		//previewMaterial.Material.Properties[ALBEDO_R] = { 0.8f, {}, -1 };
+		//previewMaterial.Material.Properties[ALBEDO_G] = { 0.8f, {}, -1 };
+		//previewMaterial.Material.Properties[ALBEDO_B] = { 0.8f, {}, -1 };
+		//previewMaterial.Material.Properties[ALBEDO_A] = { 1.0f, {}, -1 };
+		//previewMaterial.Material.Properties[NORMAL_X] = { 0.0f, {}, -1 };
+		//previewMaterial.Material.Properties[NORMAL_Y] = { 0.0f, {}, -1 };
+		//previewMaterial.Material.Properties[NORMAL_Z] = { 1.0f, {}, -1 };
+		//previewMaterial.Material.Properties[AMBIENT_OCCLUSION] = { 0.0f, {}, -1 };
+		//previewMaterial.Material.Properties[METALNESS] = { 0.0f, {}, -1 };
+		//previewMaterial.Material.Properties[ROUGHNESS] = { 1.0f, {}, -1 };
+		//previewMaterial.Material.Properties[EMISSIVE] = { 0.0f, {}, -1 };
 		//previewMaterial.Material.RecreateZ = true;
 
 		//CreateMaterial("Resources/" + previewMaterial.Name + ".hva", previewMaterial);
@@ -419,8 +408,10 @@ namespace Havtorn
 				const std::string sourcePath = GetFileName(texture, ".dds");
 				SSourceAssetData sourceData;
 				sourceData.AssetType = EAssetType::Texture;
+				sourceData.Version = 1;
 				sourceData.SourcePath = sourcePath;
-				assetRegistry->ImportAsset(sourcePath, ResourceAssetPath + assetSubDirectory, sourceData, {});
+				sourceData.Variant = STextureCubeSourceData{ .OriginalFormat = ETextureFormat::DDS };
+				assetRegistry->ImportAsset(sourcePath, ResourceAssetPath + assetSubDirectory, sourceData);
 			}
 
 			STextureAsset* assetData = assetRegistry->RequestAssetData<STextureAsset>(SAssetReference(assetPath), CAssetRegistry::EditorManagerRequestID);

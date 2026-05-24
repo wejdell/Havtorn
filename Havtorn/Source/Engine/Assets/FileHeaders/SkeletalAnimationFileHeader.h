@@ -8,13 +8,12 @@ namespace Havtorn
 {
 	struct SSkeletalAnimationFileHeader
 	{
-		EAssetType AssetType = EAssetType::Animation;
-		std::string Name;
-		U32 UID = 0;
+		EAssetType AssetType = EAssetType::SkeletalAnimation;
+		U16 Version = 1;
 		SSourceAssetData SourceData;
+		std::string Name;
 		U32 DurationInTicks = 0;
 		U32 TickRate = 0;
-		U32 NumberOfBones = 0;
 		std::vector<SBoneAnimationTrack> BoneAnimationTracks;
 
 		[[nodiscard]] U32 GetSize() const;
@@ -26,13 +25,13 @@ namespace Havtorn
 	{
 		U32 size = 0;
 		size += GetDataSize(AssetType);
+		size += GetDataSize(Version);
+		size += SourceData.GetSize();
 		size += GetDataSize(Name);
-		size += GetDataSize(UID);
-		size += GetDataSize(SourceData);
 		size += GetDataSize(DurationInTicks);
 		size += GetDataSize(TickRate);
-		size += GetDataSize(NumberOfBones);
 
+		size += GetDataSize(U32());
 		for (auto& track : BoneAnimationTracks)
 			size += track.GetSize();
 
@@ -43,13 +42,13 @@ namespace Havtorn
 	{
 		U64 pointerPosition = 0;
 		SerializeData(AssetType, toData, pointerPosition);
+		SerializeData(Version, toData, pointerPosition);
+		SourceData.Serialize(toData, pointerPosition);
 		SerializeData(Name, toData, pointerPosition);
-		SerializeData(UID, toData, pointerPosition);
-		SerializeData(SourceData, toData, pointerPosition);
 		SerializeData(DurationInTicks, toData, pointerPosition);
 		SerializeData(TickRate, toData, pointerPosition);
-		SerializeData(NumberOfBones, toData, pointerPosition);
 
+		SerializeData(STATIC_U32(BoneAnimationTracks.size()), toData, pointerPosition);
 		for (auto& track : BoneAnimationTracks)
 		{
 			SerializeData(track.TranslationKeys, toData, pointerPosition);
@@ -63,14 +62,16 @@ namespace Havtorn
 	{
 		U64 pointerPosition = 0;
 		DeserializeData(AssetType, fromData, pointerPosition);
+		DeserializeData(Version, fromData, pointerPosition);
+		SourceData.Deserialize(fromData, pointerPosition);
 		DeserializeData(Name, fromData, pointerPosition);
-		DeserializeData(UID, fromData, pointerPosition);
-		DeserializeData(SourceData, fromData, pointerPosition);
 		DeserializeData(DurationInTicks, fromData, pointerPosition);
 		DeserializeData(TickRate, fromData, pointerPosition);
-		DeserializeData(NumberOfBones, fromData, pointerPosition);
 
-		for (U16 i = 0; i < NumberOfBones; i++)
+		U32 numberOfBoneTracks = 0;
+		DeserializeData(numberOfBoneTracks, fromData, pointerPosition);
+		BoneAnimationTracks.reserve(numberOfBoneTracks);
+		for (U16 i = 0; i < numberOfBoneTracks; i++)
 		{
 			BoneAnimationTracks.emplace_back();
 			DeserializeData(BoneAnimationTracks.back().TranslationKeys, fromData, pointerPosition);

@@ -51,18 +51,8 @@ namespace Havtorn
 
 	struct SAssetImportOptions
 	{
-		// TODO.NW: Maybe just use inheritance here, and send off SImportOptions to whatever tools needs them (for example ModelImporter)
-		// Asset browser should have ownership. Should be fine to just new them here.
-		//void Render() {};
-
-		// TODO.NW: Add destination path here, settable through explorer navigation? Default to the current one in the asset browser
-
-		// TODO.NW: May make use of variant for these import options
-
-		EAssetType AssetType = EAssetType::None;
 		SEditorAssetRepresentation* AssetRep = nullptr;
-		SAudioClipSettings AudioClipSettings;
-		F32 Scale = 1.0f;
+		SSourceAssetData SourceData;
 	};
 
 	class CEditorResourceManager
@@ -78,7 +68,7 @@ namespace Havtorn
 		EDITOR_API void AnimateAssetTexture(SEditorAssetRepresentation* assetRep, const std::string& filePath, const F32 animationTime) const;
 
 		EDITOR_API std::string CreateAsset(const std::string& destinationPath, const SAssetFileHeader& fileHeader) const;
-		EDITOR_API std::string ConvertToHVA(const std::string& filePath, const std::string& destinationPath, const SAssetImportOptions& importOptions) const;
+		EDITOR_API std::string ConvertToHVA(const std::string& filePath, const std::string& destinationPath, const SSourceAssetData& sourceAssetData) const;
 
 		EDITOR_API void CreateMaterial(const std::string& destinationPath, const SMaterialAssetFileHeader& fileHeader) const;
 		

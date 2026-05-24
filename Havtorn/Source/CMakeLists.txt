@@ -341,25 +341,8 @@ add_dependencies(GUI Core Platform)
 
 # ==================== ENGINE ====================
 set(ENGINE_FILES
-	${ENGINE_FOLDER}Hex/SHexCommandComponentEditorContext.cpp
-	${ENGINE_FOLDER}Hex/SHexCommandComponentEditorContext.h
-    ${ENGINE_FOLDER}Hex/SHexCommandComponent.cpp
-	${ENGINE_FOLDER}Hex/SHexCommandComponent.h
-	${ENGINE_FOLDER}Hex/SHexCommand.h
-	${ENGINE_FOLDER}Assets/RuntimeAssets/InputAsset.h
-	${ENGINE_FOLDER}Assets/AssetFileHeader.h
-	${ENGINE_FOLDER}Assets/Asset.h
-	${ENGINE_FOLDER}Assets/RuntimeAssetInclude.h
-	${ENGINE_FOLDER}Assets/RuntimeAssets/AudioClipAsset.h
-	${ENGINE_FOLDER}Assets/RuntimeAssets/ScriptAsset.h
-	${ENGINE_FOLDER}Assets/RuntimeAssets/SkeletalAnimationAsset.h
-	${ENGINE_FOLDER}Assets/RuntimeAssets/SpriteAnimationClipAsset.h
-	${ENGINE_FOLDER}Assets/RuntimeAssets/GraphicsMaterialAsset.h
-	${ENGINE_FOLDER}Assets/RuntimeAssets/TextureCubeAsset.h
-	${ENGINE_FOLDER}Assets/RuntimeAssets/TextureAsset.h
-	${ENGINE_FOLDER}Assets/RuntimeAssets/SkeletalMeshAsset.h
-	${ENGINE_FOLDER}Assets/RuntimeAssets/StaticMeshAsset.h
-    ${ENGINE_FOLDER}Assets/RuntimeAssets/PrefabAsset.h
+    ${ENGINE_FOLDER}Application/EngineProcess.cpp
+    ${ENGINE_FOLDER}Application/EngineProcess.h
 	${ENGINE_FOLDER}Assets/FileHeaders/AudioClipFileHeader.h
 	${ENGINE_FOLDER}Assets/FileHeaders/ScriptFileHeader.h
 	${ENGINE_FOLDER}Assets/FileHeaders/SequencerFileHeader.h
@@ -369,25 +352,45 @@ set(ENGINE_FILES
 	${ENGINE_FOLDER}Assets/FileHeaders/TextureFileHeader.h
 	${ENGINE_FOLDER}Assets/FileHeaders/MaterialAssetFileHeader.h
 	${ENGINE_FOLDER}Assets/FileHeaders/SkeletalAnimationFileHeader.h
-	${ENGINE_FOLDER}Assets/FileHeaders/SkeletalModelFileHeader.h
-	${ENGINE_FOLDER}Assets/FileHeaders/StaticModelFileHeader.h
+	${ENGINE_FOLDER}Assets/FileHeaders/SkeletalMeshFileHeader.h
+	${ENGINE_FOLDER}Assets/FileHeaders/StaticMeshFileHeader.h
 	${ENGINE_FOLDER}Assets/FileHeaders/InputAssetFileHeader.h
     ${ENGINE_FOLDER}Assets/FileHeaders/PrefabAssetFileHeader.h
-	${ENGINE_FOLDER}Assets/FileHeaderInclude.h
+	${ENGINE_FOLDER}Assets/RuntimeAssets/AudioClipAsset.h
+	${ENGINE_FOLDER}Assets/RuntimeAssets/InputAsset.h
+	${ENGINE_FOLDER}Assets/RuntimeAssets/ScriptAsset.h
+	${ENGINE_FOLDER}Assets/RuntimeAssets/SkeletalAnimationAsset.h
+	${ENGINE_FOLDER}Assets/RuntimeAssets/SpriteAnimationClipAsset.h
+	${ENGINE_FOLDER}Assets/RuntimeAssets/GraphicsMaterialAsset.h
+	${ENGINE_FOLDER}Assets/RuntimeAssets/TextureCubeAsset.h
+	${ENGINE_FOLDER}Assets/RuntimeAssets/TextureAsset.h
+	${ENGINE_FOLDER}Assets/RuntimeAssets/SkeletalMeshAsset.h
+	${ENGINE_FOLDER}Assets/RuntimeAssets/StaticMeshAsset.h
+    ${ENGINE_FOLDER}Assets/RuntimeAssets/PrefabAsset.h
+    ${ENGINE_FOLDER}Assets/SourceAssetData/AudioClipSourceData.h
+    ${ENGINE_FOLDER}Assets/SourceAssetData/SkeletalAnimationSourceData.h
+    ${ENGINE_FOLDER}Assets/SourceAssetData/SkeletalMeshSourceData.h
+    ${ENGINE_FOLDER}Assets/SourceAssetData/StaticMeshSourceData.h
+    ${ENGINE_FOLDER}Assets/SourceAssetData/TextureSourceData.h
+    ${ENGINE_FOLDER}Assets/SourceAssetData/TextureCubeSourceData.h
+	${ENGINE_FOLDER}Assets/Asset.h
+	${ENGINE_FOLDER}Assets/AssetFileHeader.h
 	${ENGINE_FOLDER}Assets/AssetReference.h
+    ${ENGINE_FOLDER}Assets/AssetRegistry.cpp
+    ${ENGINE_FOLDER}Assets/AssetRegistry.h
+	${ENGINE_FOLDER}Assets/FileHeaderInclude.h
+	${ENGINE_FOLDER}Assets/RuntimeAssetInclude.h
+    ${ENGINE_FOLDER}Assets/SequencerAsset.cpp
+    ${ENGINE_FOLDER}Assets/SequencerAsset.h
+	${ENGINE_FOLDER}Assets/SourceAssetData.cpp
 	${ENGINE_FOLDER}Assets/SourceAssetData.h
+	${ENGINE_FOLDER}Assets/SourceAssetDataInclude.h
 	${ENGINE_FOLDER}ECS/Systems/UISystem.cpp
 	${ENGINE_FOLDER}ECS/Systems/UISystem.h
 	${ENGINE_FOLDER}ECS/ComponentEditorContexts/UICanvasComponentEditorContext.cpp
 	${ENGINE_FOLDER}ECS/ComponentEditorContexts/UICanvasComponentEditorContext.h
 	${ENGINE_FOLDER}ECS/Components/UICanvasComponent.cpp
 	${ENGINE_FOLDER}ECS/Components/UICanvasComponent.h
-    ${ENGINE_FOLDER}Application/EngineProcess.cpp
-    ${ENGINE_FOLDER}Application/EngineProcess.h
-    ${ENGINE_FOLDER}Assets/AssetRegistry.cpp
-    ${ENGINE_FOLDER}Assets/AssetRegistry.h
-    ${ENGINE_FOLDER}Assets/SequencerAsset.cpp
-    ${ENGINE_FOLDER}Assets/SequencerAsset.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/AbilityComponentEditorContext.cpp
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/AbilityComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ComponentEditorContexts/AudioEmitterComponentEditorContext.cpp
@@ -549,6 +552,11 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Graphics/RenderTextureFactory.h
     ${ENGINE_FOLDER}Graphics/TextureBank.cpp
     ${ENGINE_FOLDER}Graphics/TextureBank.h
+    ${ENGINE_FOLDER}Hex/SHexCommandComponentEditorContext.cpp
+	${ENGINE_FOLDER}Hex/SHexCommandComponentEditorContext.h
+    ${ENGINE_FOLDER}Hex/SHexCommandComponent.cpp
+	${ENGINE_FOLDER}Hex/SHexCommandComponent.h
+	${ENGINE_FOLDER}Hex/SHexCommand.h
     ${ENGINE_FOLDER}HexAudio/HexAudio.cpp
     ${ENGINE_FOLDER}HexAudio/HexAudio.h
     ${ENGINE_FOLDER}HexPhys/HexPhys.cpp

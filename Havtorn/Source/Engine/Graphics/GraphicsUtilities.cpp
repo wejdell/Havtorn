@@ -53,7 +53,8 @@ namespace Havtorn
 			DirectX::ScratchImage scratchImage;
 			DirectX::TexMetadata metaData = {};
 
-			switch (assetFile.OriginalFormat)
+			const STextureSourceData& sourceData = std::get<STextureSourceData>(assetFile.SourceData.Variant);
+			switch (sourceData.OriginalFormat)
 			{
 			case ETextureFormat::DDS:
 				GetMetadataFromDDSMemory(reinterpret_cast<uint8_t*>(assetFile.Data.data()), assetFile.Data.size(), DirectX::DDS_FLAGS_NONE, metaData);

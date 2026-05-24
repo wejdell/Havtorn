@@ -231,13 +231,6 @@ namespace Havtorn
 			GUI::EndChild();
 		}
 
-		if (FilePathsToImport.has_value() && !FilePathsToImport->empty())
-		{
-			GUI::OpenPopup("Asset Import");
-			GUI::SetNextWindowPos(GUI::GetViewportCenter(), EWindowCondition::Appearing, SVector2<F32>(0.5f, 0.5f));
-			AssetImportModal();
-		}
-		
 		if (IsCreatingAsset)
 		{
 			GUI::OpenPopup("Create Asset");
@@ -245,6 +238,13 @@ namespace Havtorn
 			AssetCreationModal();
 		}
 
+		if (FilePathsToImport.has_value() && !FilePathsToImport->empty())
+		{
+			GUI::OpenPopup("Asset Import");
+			GUI::SetNextWindowPos(GUI::GetViewportCenter(), EWindowCondition::Appearing, SVector2<F32>(0.5f, 0.5f));
+			AssetImportModal();
+		}
+		
 		GUI::End();
 
 		// ANIMATED THUMBNAILS
@@ -355,158 +355,31 @@ namespace Havtorn
 			GUI::OffsetCursorPos(SVector2<F32>(off, 0.0f));
 	}
 
-	void CAssetBrowserWindow::AssetImportModal()
-	{
-		if (!GUI::BeginPopupModal("Asset Import", NULL, { EWindowFlag::AlwaysAutoResize }))
-			return;
-
-		auto closePopup = [&]() 
-		{
-			FilePathsToImport->erase(FilePathsToImport->begin());
-			ImportOptions = SAssetImportOptions();
-			Manager->SetIsModalOpen(false);
-			GUI::CloseCurrentPopup();
-		};
-
-		Manager->SetIsModalOpen(true);
-
-		std::string filePath = *FilePathsToImport->begin();
-		GUI::Text("Importing: %s", UGeneralUtils::ExtractFileNameFromPath(filePath).c_str());
-		GUI::Separator();
-
-		std::string fileExtension = UGeneralUtils::ExtractFileExtensionFromPath(filePath);
-		
-		if (fileExtension == "dds" || fileExtension == "tga" || fileExtension == "png")
-		{
-			if (ImportOptions.AssetType == EAssetType::None)
-				ImportOptions.AssetType = EAssetType::Texture;
-
-			GUI::Text("Asset Type");
-			GUI::SameLine();
-			if (GUI::RadioButton("Texture", ImportOptions.AssetType == EAssetType::Texture))
-				ImportOptions.AssetType = EAssetType::Texture;
-			GUI::SameLine();
-			if (GUI::RadioButton("TextureCube", ImportOptions.AssetType == EAssetType::TextureCube))
-				ImportOptions.AssetType = EAssetType::TextureCube;
-			GUI::SameLine();
-			if (GUI::RadioButton("Material", ImportOptions.AssetType == EAssetType::Material))
-				ImportOptions.AssetType = EAssetType::Material;
-			GUI::SameLine();
-			if (GUI::RadioButton("Sprite Animation", ImportOptions.AssetType == EAssetType::SpriteAnimation))
-				ImportOptions.AssetType = EAssetType::SpriteAnimation;
-		}
-		else if (fileExtension == "fbx" || fileExtension == "obj" || fileExtension == "stl")
-		{
-			if (ImportOptions.AssetType == EAssetType::None)
-				ImportOptions.AssetType = EAssetType::StaticMesh;
-
-			GUI::Text("Asset Type");
-			GUI::SameLine();
-			if (GUI::RadioButton("Static Mesh", ImportOptions.AssetType == EAssetType::StaticMesh))
-				ImportOptions.AssetType = EAssetType::StaticMesh;
-			GUI::SameLine();
-			if (GUI::RadioButton("Skeletal Mesh", ImportOptions.AssetType == EAssetType::SkeletalMesh))
-				ImportOptions.AssetType = EAssetType::SkeletalMesh;
-			GUI::SameLine();
-			if (GUI::RadioButton("Animation", ImportOptions.AssetType == EAssetType::Animation))
-				ImportOptions.AssetType = EAssetType::Animation;
-		}
-		else if (fileExtension == "bnk" || fileExtension == "bank" || fileExtension == "wav" || fileExtension == "mp3" || fileExtension == "ogg")
-		{
-			if (ImportOptions.AssetType == EAssetType::None)
-				ImportOptions.AssetType = EAssetType::AudioClip;
-
-			GUI::Text("Asset Type");
-			GUI::SameLine();
-			GUI::TextDisabled("Audio Clip");
-		}
-
-		GUI::Separator();
-
-		switch (ImportOptions.AssetType)
-		{
-		case EAssetType::StaticMesh:
-			ImportOptionsStaticMesh();
-			break;
-		case EAssetType::SkeletalMesh:
-			ImportOptionsSkeletalMesh();
-			break;
-		case EAssetType::Texture:
-			ImportOptionsTexture();
-			break;
-		case EAssetType::TextureCube:
-			ImportOptionsTextureCube();
-			break;
-		case EAssetType::Material:
-			CreateOptionsMaterial();
-			break;
-		case EAssetType::Animation:
-			ImportOptionsAnimation();
-			break;
-		case EAssetType::SpriteAnimation:
-			ImportOptionsSpriteAnimation();
-			break;
-		case EAssetType::AudioClip:
-			ImportOptionsAudioClip(ImportOptions.AudioClipSettings);
-			break;
-		case EAssetType::VisualFX:
-		case EAssetType::Scene:
-		case EAssetType::Sequencer:
-		case EAssetType::None:
-		default:
-			GUI::EndPopup();
-			return;
-		}
-
-		// Center buttons
-		F32 width = 0.0f;
-		width += GUI::CalculateTextSize("Import").X + GUI::ThumbnailPadding;
-		width += GUI::GetStyleVar(EStyleVar::ItemSpacing).X;
-		width += GUI::CalculateTextSize("Cancel").X + GUI::ThumbnailPadding;
-		AlignForWidth(width);
-
-		if (GUI::Button("Import"))
-		{
-			std::string newFileName = CurrentDirectory.string() + "\\" + UGeneralUtils::ExtractFileBaseNameFromPath(filePath) + ".hva";
-			std::filesystem::directory_entry newDir;
-			newDir.assign(std::filesystem::path(newFileName));
-			Manager->RemoveAssetRep(newDir);
-
-			std::string hvaFilePath = Manager->GetResourceManager()->ConvertToHVA(filePath, CurrentDirectory.string() + "\\", ImportOptions);
-			Manager->CreateAssetRep(hvaFilePath);
-			closePopup();
-		}
-
-		GUI::SameLine();
-
-		if (GUI::Button("Cancel"))
-		{
-			closePopup();
-		}
-
-		GUI::EndPopup();
-	}
-
 	void CAssetBrowserWindow::AssetCreationModal()
 	{
 		if (!GUI::BeginPopupModal("Create Asset", NULL, { EWindowFlag::AlwaysAutoResize }))
 			return;
 
 		auto closePopup = [&]()
-			{
-				IsCreatingAsset = false;
-				NewAssetFileHeader = std::monostate();
-				Manager->SetIsModalOpen(false);
-				GUI::CloseCurrentPopup();
-			};
+		{
+			IsCreatingAsset = false;
+			NewAssetFileHeader = NullVariant();
+			Manager->SetIsModalOpen(false);
+			GUI::CloseCurrentPopup();
+		};
 
 		Manager->SetIsModalOpen(true);
 
-
-		GUI::ComboEnum("Asset Type", AssetTypeToCreate);
-
-		if (AssetTypeToCreate == EAssetType::None)
-			AssetTypeToCreate = EAssetType::StaticMesh;
+		GUI::ComboEnum("Asset Type", AssetTypeToCreate, 
+			{ EAssetType::None
+			, EAssetType::StaticMesh
+			, EAssetType::SkeletalMesh
+			, EAssetType::SkeletalAnimation
+			, EAssetType::Texture
+			, EAssetType::TextureCube
+			, EAssetType::SpriteAnimation
+			, EAssetType::AudioClip
+			, EAssetType::Sequencer });
 
 		GUI::InputText("Destination Folder", DirectoryToSaveTo);
 		GUI::InputText("Asset Name", NewAssetName);
@@ -516,8 +389,6 @@ namespace Havtorn
 		{
 		case EAssetType::Material:
 			NewAssetFileHeader = CreateOptionsMaterial();
-			break;
-		default:
 			break;
 		}
 
@@ -533,17 +404,16 @@ namespace Havtorn
 			switch (AssetTypeToCreate)
 			{
 			case EAssetType::Script:
-				NewAssetFileHeader = CreateScript();
+				NewAssetFileHeader = SScriptFileHeader{ .Name = NewAssetName };
 				break;
 			case EAssetType::Scene:
-				GEngine::GetWorld()->ClearScenes();
-				NewAssetFileHeader = SSceneFileHeader{ .AssetType = EAssetType::Scene, .Name = NewAssetName };
+				NewAssetFileHeader = SSceneFileHeader{ .Name = NewAssetName };
 				break;
 			case EAssetType::InputAsset:
-				NewAssetFileHeader = SInputAssetFileHeader{ .AssetType = EAssetType::InputAsset, .Name = NewAssetName };
+				NewAssetFileHeader = SInputAssetFileHeader{ .Name = NewAssetName };
 				break;
 			case EAssetType::Prefab:
-				NewAssetFileHeader = SPrefabFileHeader{ .AssetType = EAssetType::Prefab, .Name = NewAssetName };
+				NewAssetFileHeader = SPrefabFileHeader{ .Name = NewAssetName };
 				break;
 			default:
 				break;
@@ -553,10 +423,6 @@ namespace Havtorn
 			std::string newFilePath = Manager->GetResourceManager()->CreateAsset(DirectoryToSaveTo + "/", NewAssetFileHeader);
 			if (newFilePath != "INVALID_PATH")
 			{
-				// NW: Unclear if clearing the scenes and starting work in the new one is what you want when creating a new asset. But maybe?
-				if (AssetTypeToCreate == EAssetType::Scene)
-					Manager->SetCurrentWorkingScene(0);
-
 				std::filesystem::directory_entry newDir;
 				newDir.assign(std::filesystem::path(newFilePath));
 				Manager->RemoveAssetRep(newDir);
@@ -577,59 +443,6 @@ namespace Havtorn
 		}
 
 		GUI::EndPopup();
-	}
-
-	void CAssetBrowserWindow::ImportOptionsTexture()
-	{
-	}
-
-	void CAssetBrowserWindow::ImportOptionsTextureCube()
-	{
-	}
-
-	void CAssetBrowserWindow::ImportOptionsSpriteAnimation()
-	{
-	}
-
-	void CAssetBrowserWindow::ImportOptionsStaticMesh()
-	{
-		GUI::DragFloat("Import Scale", ImportOptions.Scale, 0.01f);
-	}
-
-	void CAssetBrowserWindow::ImportOptionsSkeletalMesh()
-	{
-		GUI::DragFloat("Import Scale", ImportOptions.Scale, 0.01f);
-	}
-
-	void CAssetBrowserWindow::ImportOptionsAnimation()
-	{
-		F32 thumbnailPadding = 4.0f;
-		F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + thumbnailPadding;
-		F32 panelWidth = 256.0f;
-		I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
-
-		intptr_t assetPickerThumbnail = Manager->GetTextureResourceFromAssetRep(ImportOptions.AssetRep);
-		
-		SAssetPickResult result = GUI::AssetPickerFilter("Skeletal Rig", "Skeletal Mesh", assetPickerThumbnail, "Assets/Meshes", columnCount, Manager->GetAssetFilteredInspectFunction(), EAssetType::SkeletalMesh);
-
-		if (result.State == EAssetPickerState::AssetPicked)
-			ImportOptions.AssetRep = Manager->GetAssetRepFromDirEntry(result.PickedEntry).get();
-
-		GUI::DragFloat("Import Scale", ImportOptions.Scale, 0.01f);
-	}
-
-	void CAssetBrowserWindow::ImportOptionsAudioClip(SAudioClipSettings& settings)
-	{
-#ifdef HV_AUDIO_BACKEND_WWISE
-		settings;
-		GUI::TextDisabled("Note: When using Wwise as the audio backend, looping and spatialization settings are set in Wwise Authoring.");
-#elif defined HV_AUDIO_BACKEND_FMOD
-		GUI::Checkbox("Is Looping", settings.IsLooping);
-		GUI::Checkbox("Is Spatialized", settings.IsSpatialized);
-#elif defined HV_AUDIO_BACKEND_SDL
-		settings;
-		GUI::TextDisabled("Note: The SDL Audio implementation does not yet support looping and spatializing sounds. We'd need a separate plugin for that (pending decision).");
-#endif
 	}
 
 	SAssetFileHeader CAssetBrowserWindow::CreateOptionsMaterial()
@@ -653,8 +466,7 @@ namespace Havtorn
 				pickerLabel.append(NewMaterialTextures[i]->Name);
 			}
 			GUI::PushID(labels[i].c_str());
-			// TODO.NW: Filter away cubemaps with Axel's filtering
-			SAssetPickResult result = GUI::AssetPicker(pickerLabel.c_str(), "Texture", assetPickerThumbnail, "Assets/Textures", columnCount, Manager->GetAssetInspectFunction());
+			SAssetPickResult result = GUI::AssetPickerDropdownFilter(pickerLabel.c_str(), GetAssetTypeDetailName(EAssetType::Texture).c_str(), assetPickerThumbnail, Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::GetFromSource), Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::FindIcon), "Assets", columnCount, Manager->GetAssetFilteredInspectFunction(), EAssetType::Texture);
 			GUI::PopID();
 
 			if (result.State == EAssetPickerState::AssetPicked)
@@ -679,7 +491,7 @@ namespace Havtorn
 		fileHeader.Material.Properties[3] = { -1.0f, texturePath0, 3 };
 		fileHeader.Material.Properties[4] = { -1.0f, texturePath2, 3 };
 		fileHeader.Material.Properties[5] = { -1.0f, texturePath2, 1 };
-		fileHeader.Material.Properties[6] = { -1.0f, "", -1 };
+		fileHeader.Material.Properties[6] = { -1.0f, CHavtornStaticString<128>(), -1 };
 		fileHeader.Material.Properties[7] = { -1.0f, texturePath2, 2 };
 		fileHeader.Material.Properties[8] = { -1.0f, texturePath1, 0 };
 		fileHeader.Material.Properties[9] = { -1.0f, texturePath1, 1 };
@@ -689,22 +501,224 @@ namespace Havtorn
 		return fileHeader;
 	}
 
-	SAssetFileHeader CAssetBrowserWindow::CreateScript()
+	void CAssetBrowserWindow::AssetImportModal()
 	{
-		SScriptFileHeader fileHeader = SScriptFileHeader{};
-		fileHeader.AssetType = EAssetType::Script;
-		fileHeader.Name = NewAssetName;
-		fileHeader.Script = new Havtorn::SGameScript();
-		// TODO.NW: Fix this memory leak, asset registry should create assets for file header use (see create prefab)
-		return fileHeader;
+		if (!GUI::BeginPopupModal("Asset Import", NULL, { EWindowFlag::AlwaysAutoResize }))
+			return;
+
+		auto closePopup = [&]() 
+		{
+			FilePathsToImport->erase(FilePathsToImport->begin());
+			ImportOptions = SAssetImportOptions();
+			Manager->SetIsModalOpen(false);
+			GUI::CloseCurrentPopup();
+		};
+
+		Manager->SetIsModalOpen(true);
+
+		std::string filePath = UGeneralUtils::ConvertToPlatformAgnosticPath(*FilePathsToImport->begin());
+		GUI::Text("Importing: %s", UGeneralUtils::ExtractFileNameFromPath(filePath).c_str());
+		GUI::Separator();
+
+		std::string fileExtension = UGeneralUtils::ExtractFileExtensionFromPath(filePath);
+		
+		if (fileExtension == "dds" || fileExtension == "tga" || fileExtension == "png")
+		{
+			if (ImportOptions.SourceData.AssetType == EAssetType::None)
+				ImportOptions.SourceData.AssetType = EAssetType::Texture;
+
+			GUI::Text("Asset Type");
+			GUI::SameLine();
+			if (GUI::RadioButton("Texture", ImportOptions.SourceData.AssetType == EAssetType::Texture))
+				ImportOptions.SourceData.AssetType = EAssetType::Texture;
+			GUI::SameLine();
+			if (GUI::RadioButton("TextureCube", ImportOptions.SourceData.AssetType == EAssetType::TextureCube))
+				ImportOptions.SourceData.AssetType = EAssetType::TextureCube;
+			GUI::SameLine();
+			if (GUI::RadioButton("Material", ImportOptions.SourceData.AssetType == EAssetType::Material))
+				ImportOptions.SourceData.AssetType = EAssetType::Material;
+			GUI::SameLine();
+			if (GUI::RadioButton("Sprite Animation", ImportOptions.SourceData.AssetType == EAssetType::SpriteAnimation))
+				ImportOptions.SourceData.AssetType = EAssetType::SpriteAnimation;
+		}
+		else if (fileExtension == "fbx" || fileExtension == "obj" || fileExtension == "stl")
+		{
+			if (ImportOptions.SourceData.AssetType == EAssetType::None)
+				ImportOptions.SourceData.AssetType = EAssetType::StaticMesh;
+
+			GUI::Text("Asset Type");
+			GUI::SameLine();
+			if (GUI::RadioButton("Static Mesh", ImportOptions.SourceData.AssetType == EAssetType::StaticMesh))
+				ImportOptions.SourceData.AssetType = EAssetType::StaticMesh;
+			GUI::SameLine();
+			if (GUI::RadioButton("Skeletal Mesh", ImportOptions.SourceData.AssetType == EAssetType::SkeletalMesh))
+				ImportOptions.SourceData.AssetType = EAssetType::SkeletalMesh;
+			GUI::SameLine();
+			if (GUI::RadioButton("Skeletal Animation", ImportOptions.SourceData.AssetType == EAssetType::SkeletalAnimation))
+				ImportOptions.SourceData.AssetType = EAssetType::SkeletalAnimation;
+		}
+		else if (fileExtension == "bnk" || fileExtension == "bank" || fileExtension == "wav" || fileExtension == "mp3" || fileExtension == "ogg")
+		{
+			if (ImportOptions.SourceData.AssetType == EAssetType::None)
+				ImportOptions.SourceData.AssetType = EAssetType::AudioClip;
+
+			GUI::Text("Asset Type");
+			GUI::SameLine();
+			GUI::TextDisabled("Audio Clip");
+		}
+
+		GUI::Separator();
+
+		switch (ImportOptions.SourceData.AssetType)
+		{
+		case EAssetType::StaticMesh:
+			ImportOptionsStaticMesh(filePath);
+			break;
+		case EAssetType::SkeletalMesh:
+			ImportOptionsSkeletalMesh(filePath);
+			break;
+		case EAssetType::Texture:
+			ImportOptionsTexture(filePath);
+			break;
+		case EAssetType::TextureCube:
+			ImportOptionsTextureCube(filePath);
+			break;
+		case EAssetType::Material:
+			CreateOptionsMaterial();
+			break;
+		case EAssetType::SkeletalAnimation:
+			ImportOptionsSkeletalAnimation(filePath);
+			break;
+		case EAssetType::SpriteAnimation:
+			ImportOptionsSpriteAnimation(filePath);
+			break;
+		case EAssetType::AudioClip:
+			ImportOptionsAudioClip(filePath);
+			break;
+		default:
+			GUI::EndPopup();
+			return;
+		}
+
+		// Center buttons
+		F32 width = 0.0f;
+		width += GUI::CalculateTextSize("Import").X + GUI::ThumbnailPadding;
+		width += GUI::GetStyleVar(EStyleVar::ItemSpacing).X;
+		width += GUI::CalculateTextSize("Cancel").X + GUI::ThumbnailPadding;
+		AlignForWidth(width);
+
+		if (GUI::Button("Import"))
+		{
+			std::string newFileName = CurrentDirectory.string() + "\\" + UGeneralUtils::ExtractFileBaseNameFromPath(filePath) + ".hva";
+			std::filesystem::directory_entry newDir;
+			newDir.assign(std::filesystem::path(newFileName));
+			Manager->RemoveAssetRep(newDir);
+
+			std::string hvaFilePath = Manager->GetResourceManager()->ConvertToHVA(filePath, CurrentDirectory.string() + "\\", ImportOptions.SourceData);
+			Manager->CreateAssetRep(hvaFilePath);
+			closePopup();
+		}
+
+		GUI::SameLine();
+
+		if (GUI::Button("Cancel"))
+		{
+			closePopup();
+		}
+
+		GUI::EndPopup();
 	}
 
-	SAssetFileHeader CAssetBrowserWindow::CreateInputAsset()
+	void CAssetBrowserWindow::ImportOptionsTexture(const std::string& sourceFilePath)
 	{
-		SInputAssetFileHeader fileHeader = SInputAssetFileHeader{};
-		fileHeader.AssetType = EAssetType::InputAsset;
-		fileHeader.Name = NewAssetName;
-		return fileHeader;
+		if (!std::holds_alternative<NullVariant>(ImportOptions.SourceData.Variant))
+			return;
+
+		ETextureFormat format = {};
+		if (const std::string extension = UGeneralUtils::ExtractFileExtensionFromPath(sourceFilePath); extension == "dds")
+			format = ETextureFormat::DDS;
+		else if (extension == "tga")
+			format = ETextureFormat::TGA;
+
+		ImportOptions.SourceData = SSourceAssetData{ .AssetType = EAssetType::Texture, .Version = 1, .SourcePath = sourceFilePath, .Variant = STextureSourceData{ .OriginalFormat = format } };
+	}
+
+	void CAssetBrowserWindow::ImportOptionsTextureCube(const std::string& sourceFilePath)
+	{
+		if (!std::holds_alternative<NullVariant>(ImportOptions.SourceData.Variant))
+			return;
+
+		ETextureFormat format = {};
+		if (const std::string extension = UGeneralUtils::ExtractFileExtensionFromPath(sourceFilePath); extension == "dds")
+			format = ETextureFormat::DDS;
+		else if (extension == "tga")
+			format = ETextureFormat::TGA;
+
+		ImportOptions.SourceData = SSourceAssetData{ .AssetType = EAssetType::TextureCube, .Version = 1, .SourcePath = sourceFilePath, .Variant = STextureSourceData{.OriginalFormat = format } };
+	}
+
+	void CAssetBrowserWindow::ImportOptionsSpriteAnimation(const std::string& /*sourceFilePath*/)
+	{
+		GUI::TextDisabled("Sprite Animation importing has not yet been implemented. See CAssetBrowserWindow::AssetImportModal.");
+	}
+
+	void CAssetBrowserWindow::ImportOptionsStaticMesh(const std::string& sourceFilePath)
+	{
+		if (!std::holds_alternative<SStaticMeshSourceData>(ImportOptions.SourceData.Variant))
+			ImportOptions.SourceData = SSourceAssetData{ .AssetType = EAssetType::StaticMesh, .Version = 1, .SourcePath = sourceFilePath, .Variant = SStaticMeshSourceData{} };
+
+		SStaticMeshSourceData& sourceData = std::get<SStaticMeshSourceData>(ImportOptions.SourceData.Variant);
+		GUI::DragFloat("Import Scale", sourceData.ImportScale, 0.01f);
+	}
+
+	void CAssetBrowserWindow::ImportOptionsSkeletalMesh(const std::string& sourceFilePath)
+	{
+		if (!std::holds_alternative<SSkeletalMeshSourceData>(ImportOptions.SourceData.Variant))
+			ImportOptions.SourceData = SSourceAssetData{ .AssetType = EAssetType::SkeletalMesh, .Version = 1, .SourcePath = sourceFilePath, .Variant = SSkeletalMeshSourceData{} };
+
+		SSkeletalMeshSourceData& sourceData = std::get<SSkeletalMeshSourceData>(ImportOptions.SourceData.Variant);
+		GUI::DragFloat("Import Scale", sourceData.ImportScale, 0.01f);
+	}
+
+	void CAssetBrowserWindow::ImportOptionsSkeletalAnimation(const std::string& sourceFilePath)
+	{
+		if (!std::holds_alternative<SSkeletalAnimationSourceData>(ImportOptions.SourceData.Variant))
+			ImportOptions.SourceData = SSourceAssetData{ .AssetType = EAssetType::SkeletalAnimation, .Version = 1, .SourcePath = sourceFilePath, .Variant = SSkeletalAnimationSourceData{} };
+
+		SSkeletalAnimationSourceData& sourceData = std::get<SSkeletalAnimationSourceData>(ImportOptions.SourceData.Variant);
+
+		constexpr F32 thumbnailPadding = 4.0f;
+		const F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + thumbnailPadding;
+		constexpr F32 panelWidth = 256.0f;
+		const I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
+
+		intptr_t assetPickerThumbnail = Manager->GetTextureResourceFromAssetRep(ImportOptions.AssetRep);
+		
+		SAssetPickResult result = GUI::AssetPickerFilter("Skeletal Rig", "Skeletal Mesh", assetPickerThumbnail, "Assets/Meshes", columnCount, Manager->GetAssetFilteredInspectFunction(), EAssetType::SkeletalMesh);
+
+		if (result.State == EAssetPickerState::AssetPicked)
+		{
+			ImportOptions.AssetRep = Manager->GetAssetRepFromDirEntry(result.PickedEntry).get();
+			sourceData.RigMeshPath = UGeneralUtils::ConvertToPlatformAgnosticPath(ImportOptions.AssetRep->DirectoryEntry.path().string());
+		}
+
+		GUI::DragFloat("Import Scale", sourceData.ImportScale, 0.01f);
+	}
+
+	void CAssetBrowserWindow::ImportOptionsAudioClip(const std::string& sourceFilePath)
+	{
+		if (!std::holds_alternative<SAudioClipSourceData>(ImportOptions.SourceData.Variant))
+			ImportOptions.SourceData = SSourceAssetData{ .AssetType = EAssetType::AudioClip, .Version = 1, .SourcePath = sourceFilePath, .Variant = SAudioClipSourceData{} };
+
+#ifdef HV_AUDIO_BACKEND_WWISE
+		GUI::TextDisabled("Note: When using Wwise as the audio backend, looping and spatialization settings are set in Wwise Authoring.");
+#elif defined HV_AUDIO_BACKEND_FMOD
+		SAudioClipSourceData& sourceData = std::get<SAudioClipSourceData>(ImportOptions.SourceData.Variant);
+		GUI::Checkbox("Is Looping", sourceData.Settings.IsLooping);
+		GUI::Checkbox("Is Spatialized", sourceData.Settings.IsSpatialized);
+#elif defined HV_AUDIO_BACKEND_SDL
+		GUI::TextDisabled("Note: The SDL Audio implementation does not yet support looping and spatializing sounds. We'd need a separate plugin for that (pending decision).");
+#endif
 	}
 
 	void CAssetBrowserWindow::InspectFolderTree(const std::string& folderName, const intptr_t& folderIconID)
@@ -906,7 +920,7 @@ namespace Havtorn
 			
 			if (result.IsHovered)
 			{
-				if (rep->AssetType == EAssetType::Animation)
+				if (rep->AssetType == EAssetType::SkeletalAnimation)
 				{
 					AnimatingThumbnailAsset = rep.get();
 				}

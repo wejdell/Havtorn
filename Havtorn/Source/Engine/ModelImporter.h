@@ -23,8 +23,8 @@ namespace Havtorn
 		static ENGINE_API SAssetFileHeader ImportFBX(const std::string& filePath, const SSourceAssetData& sourceAssetData);
 
 	private:
-		static SStaticModelFileHeader ImportStaticMesh(const aiScene* assimpScene, const SSourceAssetData& sourceAssetData);
-		static SSkeletalModelFileHeader ImportSkeletalMesh(const aiScene* assimpScene, const SSourceAssetData& sourceAssetData);
+		static SStaticMeshFileHeader ImportStaticMesh(const aiScene* assimpScene, const SSourceAssetData& sourceAssetData);
+		static SSkeletalMeshFileHeader ImportSkeletalMesh(const aiScene* assimpScene, const SSourceAssetData& sourceAssetData);
 		static SSkeletalAnimationFileHeader ImportAnimation(const aiScene* assimpScene, const SSourceAssetData& sourceAssetData);
 	};
 }
