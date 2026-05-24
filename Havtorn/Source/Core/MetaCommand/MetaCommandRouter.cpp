@@ -14,7 +14,8 @@ namespace Havtorn
             return;
         }
 
-        HV_LOG_TRACE("MetaCommandRouter: pushed command '%s'", command.Name.c_str());
+        // TODO.NW: Add optional logging toggling
+        //HV_LOG_TRACE("MetaCommandRouter: pushed command '%s'", command.Name.c_str());
         Instance->Parsers.at(command.Parser)->Parse(command);
     }
 
