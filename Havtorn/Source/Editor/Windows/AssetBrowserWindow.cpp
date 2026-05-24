@@ -96,6 +96,7 @@ namespace Havtorn
 			U32 id = 0;
 			if (GUI::BeginTable("AssetTable", columnCount))
 			{
+				GUI::PushClipRect(GUI::GetCursorScreenPos(), GUI::GetContentRegionAvail());
 				if (Filter.IsActive())
 				{
 					for (const auto& entry : std::filesystem::recursive_directory_iterator(CurrentDirectory))
@@ -111,6 +112,7 @@ namespace Havtorn
 					for (const auto& entry : std::filesystem::directory_iterator(CurrentDirectory))
 						InspectDirectoryEntry(entry, id, folderIconID);
 				}
+				GUI::PopClipRect();
 				GUI::EndTable();
 			}
 
