@@ -266,9 +266,14 @@ namespace Havtorn
 
 			case SDL_EVENT_DROP_FILE:
 			{
-				const std::string droppedFilePath = currentEvent.drop.data;
-				HV_LOG_INFO(droppedFilePath.c_str());
-				OnDragDropAccepted.Broadcast({ droppedFilePath });
+				DroppedFileBuffer.push_back(currentEvent.drop.data);
+			}
+			break;
+
+			case SDL_EVENT_DROP_COMPLETE:
+			{
+				OnDragDropAccepted.Broadcast(DroppedFileBuffer);
+				DroppedFileBuffer.clear();
 			}
 			break;
 

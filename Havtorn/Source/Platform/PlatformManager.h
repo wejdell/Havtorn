@@ -74,6 +74,8 @@ namespace Havtorn
 
 		SHitTestData HitTestData;
 
+		std::vector<std::string> DroppedFileBuffer;
+
 		bool ShouldRun = false;
 	};
 }
