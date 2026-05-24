@@ -31,6 +31,8 @@ namespace Havtorn
 	template<typename T>
 	using WeakRef = std::weak_ptr<T>;
 
+	using NullVariant = std::monostate;
+
 	template<typename T>
 	using WinComPtr = Microsoft::WRL::ComPtr<T>;
 

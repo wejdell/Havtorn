@@ -67,7 +67,7 @@ namespace Havtorn
 		EAssetType AssetTypeToCreate = EAssetType::None;
 		std::string DirectoryToSaveTo = DefaultAssetPath;
 		std::string NewAssetName = "NewAsset";
-		SAssetFileHeader NewAssetFileHeader = std::monostate();
+		SAssetFileHeader NewAssetFileHeader = NullVariant();
 
 		// TODO.NW: Rather not store this like this, see if there's a better way
 		std::array<SEditorAssetRepresentation*, 3> NewMaterialTextures = { nullptr, nullptr, nullptr };

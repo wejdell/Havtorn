@@ -6,6 +6,5 @@
 
 namespace Havtorn
 {
-	// TODO.NW: Make an alias for a reasonable name instead of monostate
-	typedef std::variant<std::monostate, SStaticModelFileHeader, SSkeletalModelFileHeader, SSkeletalAnimationFileHeader, STextureFileHeader, STextureCubeFileHeader, SMaterialAssetFileHeader, SSceneFileHeader, SScriptFileHeader, SPrefabFileHeader, SInputAssetFileHeader, SAudioClipFileHeader> SAssetFileHeader;
+	typedef std::variant<NullVariant, SStaticMeshFileHeader, SSkeletalMeshFileHeader, SSkeletalAnimationFileHeader, STextureFileHeader, STextureCubeFileHeader, SMaterialAssetFileHeader, SSceneFileHeader, SScriptFileHeader, SPrefabFileHeader, SInputAssetFileHeader, SAudioClipFileHeader> SAssetFileHeader;
 }
