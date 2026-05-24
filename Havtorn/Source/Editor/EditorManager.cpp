@@ -1251,10 +1251,8 @@ namespace Havtorn
 
 	void CEditorManager::InitAssetRepresentations()
 	{
-		// NR: Fill first slot with a null entry
+		// NW: Fill first slot with a null entry
 		AssetRepresentations.emplace_back(std::make_unique<SEditorAssetRepresentation>());
-
-		PreProcessAssets();
 
 		for (const auto& entry : std::filesystem::recursive_directory_iterator(std::filesystem::path("Assets")))
 		{
@@ -1263,35 +1261,6 @@ namespace Havtorn
 
 			CreateAssetRep(entry.path());
 		}
-	}
-
-	void CEditorManager::PreProcessAssets()
-	{
-		// NW: This probably doesn't make sense anymore now that we have import options. May return to this at some point though
-		
-		////Import non-.hva files to .hva
-		//for (const auto& entry : std::filesystem::recursive_directory_iterator(std::filesystem::path("Assets")))
-		//{
-		//	if (entry.path().extension() == ".hva" || entry.is_directory())
-		//		continue;
-
-		//	std::string fileName = entry.path().string();
-		//	std::string extension = entry.path().extension().string();
-		//	for (auto& character : extension)
-		//		character = std::tolower(character, {});
-
-		//	EAssetType assetType = EAssetType::None;
-
-		//	// TODO.NR: Make sure this works for animations as well
-		//	if (extension == ".fbx")
-		//		assetType = EAssetType::StaticMesh;
-		//	else if (extension == ".dds" || extension == ".tga")
-		//		assetType = EAssetType::Texture;
-		//	else
-		//		continue;
-
-		//	ResourceManager->ConvertToHVA(fileName, fileName.substr(0, fileName.find_last_of('\\')), assetType);
-		//}
 	}
 
 	void CEditorManager::InitEditorPreferences()
@@ -1477,7 +1446,7 @@ namespace Havtorn
 	void CEditorManager::OnVertexSnapping(const SInputActionPayload payload)
 	{
 		IsVertexSnappingActive = payload.IsHeld;
-		// TODO.NW: Potentially make it a lest of exempt entities, and let the all selected entities be exempt
+		// TODO.NW: Potentially make it a list of exempt entities, and let all selected entities be exempt
 		payload.IsHeld ? World->SetEditorRenderExemptEntity(GetLastSelectedEntity()) : World->SetEditorRenderExemptEntity(SEntity::Null);
 	}
 

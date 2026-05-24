@@ -219,7 +219,6 @@ namespace Havtorn
 		void InitEditorLayout(); 
 		void ReinitEditorLayout();
 		void InitAssetRepresentations();
-		void PreProcessAssets();
 		void InitEditorPreferences();
 
 		void OnInputSetTransformGizmo(const SInputActionPayload payload);
