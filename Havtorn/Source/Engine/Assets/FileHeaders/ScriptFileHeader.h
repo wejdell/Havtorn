@@ -1,14 +1,14 @@
 // Copyright 2026 Team Havtorn. All Rights Reserved.
 
 #pragma once
+#include "Assets/AssetFileHeaderBase.h"
 #include "HexRune/HexRune.h"
 
 namespace Havtorn
 {
 	struct SScriptFileHeader
 	{
-		EAssetType AssetType = EAssetType::Script;
-		U16 Version = 1;
+		SAssetFileHeaderBase HeaderBase = { .AssetType = EAssetType::Script, .Version = 1 };
 		std::string Name = "";
 		HexRune::SScript* Script = nullptr;
 
@@ -20,8 +20,7 @@ namespace Havtorn
 	inline U32 SScriptFileHeader::GetSize() const
 	{
 		U32 size = 0;
-		size += GetDataSize(AssetType);
-		size += GetDataSize(Version);
+		size += GetDataSize(HeaderBase);
 		size += GetDataSize(Name);
 		size += Script->GetSize();
 		return size;
@@ -30,8 +29,7 @@ namespace Havtorn
 	inline void SScriptFileHeader::Serialize(char* toData) const
 	{
 		U64 pointerPosition = 0;
-		SerializeData(AssetType, toData, pointerPosition);
-		SerializeData(Version, toData, pointerPosition);
+		SerializeData(HeaderBase, toData, pointerPosition);
 		SerializeData(Name, toData, pointerPosition);
 		Script->Serialize(toData, pointerPosition);
 	}
@@ -39,8 +37,7 @@ namespace Havtorn
 	inline void SScriptFileHeader::Deserialize(const char* fromData, HexRune::SScript* outScript)
 	{
 		U64 pointerPosition = 0;
-		DeserializeData(AssetType, fromData, pointerPosition);
-		DeserializeData(Version, fromData, pointerPosition);
+		DeserializeData(HeaderBase, fromData, pointerPosition);
 		DeserializeData(Name, fromData, pointerPosition);
 		outScript->Deserialize(fromData, pointerPosition);
 		outScript->Name = Name;

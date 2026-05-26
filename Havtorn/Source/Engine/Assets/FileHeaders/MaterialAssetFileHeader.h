@@ -1,14 +1,14 @@
 // Copyright 2026 Team Havtorn. All Rights Reserved.
 
 #pragma once
+#include "Assets/AssetFileHeaderBase.h"
 #include "Graphics/GraphicsStructs.h"
 
 namespace Havtorn
 {
 	struct SMaterialAssetFileHeader
 	{
-		EAssetType AssetType = EAssetType::Material;
-		U16 Version = 1;
+		SAssetFileHeaderBase HeaderBase = { .AssetType = EAssetType::Material, .Version = 1 };
 		std::string Name = "";
 		SOfflineGraphicsMaterial Material;
 
@@ -20,8 +20,7 @@ namespace Havtorn
 	inline U32 SMaterialAssetFileHeader::GetSize() const
 	{
 		U32 size = 0;
-		size += GetDataSize(AssetType);
-		size += GetDataSize(Version);
+		size += GetDataSize(HeaderBase);
 		size += GetDataSize(Name);
 		size += Material.GetSize();
 
@@ -31,8 +30,7 @@ namespace Havtorn
 	inline void SMaterialAssetFileHeader::Serialize(char* toData) const
 	{
 		U64 pointerPosition = 0;
-		SerializeData(AssetType, toData, pointerPosition);
-		SerializeData(Version, toData, pointerPosition);
+		SerializeData(HeaderBase, toData, pointerPosition);
 		SerializeData(Name, toData, pointerPosition);
 
 		for (auto& materialProperty : Material.Properties)
@@ -48,8 +46,7 @@ namespace Havtorn
 	inline void SMaterialAssetFileHeader::Deserialize(const char* fromData)
 	{
 		U64 pointerPosition = 0;
-		DeserializeData(AssetType, fromData, pointerPosition);
-		DeserializeData(Version, fromData, pointerPosition);
+		DeserializeData(HeaderBase, fromData, pointerPosition);
 		DeserializeData(Name, fromData, pointerPosition);
 
 		for (auto& materialProperty : Material.Properties)

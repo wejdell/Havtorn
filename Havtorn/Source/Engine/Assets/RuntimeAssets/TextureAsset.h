@@ -10,7 +10,7 @@ namespace Havtorn
 	{
 		STextureAsset() = default;
 		explicit STextureAsset(const STextureFileHeader& assetFileData)
-			: AssetType(assetFileData.AssetType)
+			: AssetType(assetFileData.HeaderBase.AssetType)
 			, Name(assetFileData.Name)
 		{
 			// NW: RenderTarget is assigned in CAssetRegistry::LoadAsset

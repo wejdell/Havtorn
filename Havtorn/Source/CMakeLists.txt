@@ -375,6 +375,7 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Assets/SourceAssetData/TextureCubeSourceData.h
 	${ENGINE_FOLDER}Assets/Asset.h
 	${ENGINE_FOLDER}Assets/AssetFileHeader.h
+	${ENGINE_FOLDER}Assets/AssetFileHeaderBase.h
 	${ENGINE_FOLDER}Assets/AssetReference.h
     ${ENGINE_FOLDER}Assets/AssetRegistry.cpp
     ${ENGINE_FOLDER}Assets/AssetRegistry.h

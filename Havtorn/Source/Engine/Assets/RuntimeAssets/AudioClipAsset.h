@@ -10,7 +10,7 @@ namespace Havtorn
 	{
 		SAudioClipAsset() = default;
 		explicit SAudioClipAsset(const SAudioClipFileHeader& assetFileData)
-			: AssetType(assetFileData.AssetType)
+			: AssetType(assetFileData.HeaderBase.AssetType)
 			, Name(assetFileData.Name)
 		{
 

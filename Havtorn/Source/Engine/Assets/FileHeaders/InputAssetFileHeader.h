@@ -1,15 +1,14 @@
 // Copyright 2026 Team Havtorn. All Rights Reserved.
 
 #pragma once
-
+#include "Assets/AssetFileHeaderBase.h"
 #include <InputStructs.h>
 
 namespace Havtorn
 {
 	struct SInputAssetFileHeader
 	{
-		EAssetType AssetType = EAssetType::InputAsset;
-		U16 Version = 1;
+		SAssetFileHeaderBase HeaderBase = { .AssetType = EAssetType::InputAsset, .Version = 1 };
 		std::string Name = "";
 		std::vector<SInputMapAction> InputActions;
 
@@ -21,8 +20,7 @@ namespace Havtorn
 	inline U32 SInputAssetFileHeader::GetSize() const
 	{
 		U32 size = 0;
-		size += GetDataSize(AssetType);
-		size += GetDataSize(Version);
+		size += GetDataSize(HeaderBase);
 		size += GetDataSize(Name);
 		
 		size += GetDataSize(U32());
@@ -44,8 +42,7 @@ namespace Havtorn
 	inline void SInputAssetFileHeader::Serialize(char* toData) const
 	{
 		U64 pointerPosition = 0;
-		SerializeData(AssetType, toData, pointerPosition);
-		SerializeData(Version, toData, pointerPosition);
+		SerializeData(HeaderBase, toData, pointerPosition);
 		SerializeData(Name, toData, pointerPosition);
 
 		SerializeData(STATIC_U32(InputActions.size()), toData, pointerPosition);
@@ -66,8 +63,7 @@ namespace Havtorn
 	inline void SInputAssetFileHeader::Deserialize(const char* fromData)
 	{
 		U64 pointerPosition = 0;
-		DeserializeData(AssetType, fromData, pointerPosition);
-		DeserializeData(Version, fromData, pointerPosition);
+		DeserializeData(HeaderBase, fromData, pointerPosition);
 		DeserializeData(Name, fromData, pointerPosition);
 
 		U32 inputMapCount = 0;

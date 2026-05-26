@@ -1,14 +1,14 @@
 // Copyright 2026 Team Havtorn. All Rights Reserved.
 
 #pragma once
+#include "Assets/AssetFileHeaderBase.h"
 #include "Scene/Scene.h"
 
 namespace Havtorn
 {
 	struct SSceneFileHeader
 	{
-		EAssetType AssetType = EAssetType::Scene;
-		U16 Version = 1;
+		SAssetFileHeaderBase HeaderBase = { .AssetType = EAssetType::Scene, .Version = 1 };
 		std::string Name = "";
 		CScene* Scene = nullptr;
 
@@ -20,8 +20,7 @@ namespace Havtorn
 	inline U32 SSceneFileHeader::GetSize() const
 	{
 		U32 size = 0;
-		size += GetDataSize(AssetType);
-		size += GetDataSize(Version);
+		size += GetDataSize(HeaderBase);
 		size += GetDataSize(Name);
 		size += Scene->GetSize();
 
@@ -30,16 +29,14 @@ namespace Havtorn
 
 	inline void SSceneFileHeader::Serialize(char* toData, U64& pointerPosition) const
 	{
-		SerializeData(AssetType, toData, pointerPosition);
-		SerializeData(Version, toData, pointerPosition);
+		SerializeData(HeaderBase, toData, pointerPosition);
 		SerializeData(Name, toData, pointerPosition);
 		Scene->Serialize(toData, pointerPosition);
 	}
 
 	inline void SSceneFileHeader::Deserialize(const char* fromData, U64& pointerPosition, CScene* outScene)
 	{
-		DeserializeData(AssetType, fromData, pointerPosition);
-		DeserializeData(Version, fromData, pointerPosition);
+		DeserializeData(HeaderBase, fromData, pointerPosition);
 		DeserializeData(Name, fromData, pointerPosition);
 		outScene->Deserialize(fromData, pointerPosition);
 	}
