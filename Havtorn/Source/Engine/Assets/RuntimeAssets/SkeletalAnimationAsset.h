@@ -10,7 +10,7 @@ namespace Havtorn
 		SSkeletalAnimationAsset() = default;
 
 		explicit SSkeletalAnimationAsset(const SSkeletalAnimationFileHeader& assetFileData)
-			: AssetType(assetFileData.AssetType)
+			: AssetType(assetFileData.HeaderBase.AssetType)
 			, Name(assetFileData.Name)
 			, DurationInTicks(assetFileData.DurationInTicks)
 			, TickRate(assetFileData.TickRate)

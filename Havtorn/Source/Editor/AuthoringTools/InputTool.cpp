@@ -30,7 +30,6 @@ namespace Havtorn
 			SInputAssetFileHeader fileHeader;
 			fileHeader.Name = AssetName;
 			fileHeader.InputActions = InputAsset->InputActions;
-			fileHeader.AssetType = InputAsset->AssetType;
 
 			GEngine::GetAssetRegistry()->SaveAsset(UGeneralUtils::ExtractParentDirectoryFromPath(AssetReference.FilePath) + "/", fileHeader);
 		}

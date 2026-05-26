@@ -10,7 +10,7 @@ namespace Havtorn
 		SSkeletalMeshAsset() = default;
 
 		explicit SSkeletalMeshAsset(const SSkeletalMeshFileHeader& assetFileData)
-			: AssetType(assetFileData.AssetType)
+			: AssetType(assetFileData.HeaderBase.AssetType)
 			, Name(assetFileData.Name)
 			, NumberOfMaterials(assetFileData.NumberOfMaterials)
 			, BindPoseBones(assetFileData.BindPoseBones)

@@ -10,7 +10,7 @@ namespace Havtorn
 		SStaticMeshAsset() = default;
 
 		explicit SStaticMeshAsset(const SStaticMeshFileHeader& assetFileData)
-			: AssetType(assetFileData.AssetType)
+			: AssetType(assetFileData.HeaderBase.AssetType)
 			, Name(assetFileData.Name)
 			, NumberOfMaterials(assetFileData.NumberOfMaterials)
 		{

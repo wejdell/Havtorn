@@ -11,7 +11,7 @@ namespace Havtorn
 	{
 		SScriptAsset() = default;
 		explicit SScriptAsset(const SScriptFileHeader& assetFileData)
-			: AssetType(assetFileData.AssetType)
+			: AssetType(assetFileData.HeaderBase.AssetType)
 		{
 			Script = GEngine::GetWorld()->CreateMovableScript(assetFileData.Name);
 		}

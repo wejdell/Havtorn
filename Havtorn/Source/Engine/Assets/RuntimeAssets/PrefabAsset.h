@@ -11,7 +11,7 @@ namespace Havtorn
 	{
 		SPrefabAsset() = default;
 		explicit SPrefabAsset(const SPrefabFileHeader& assetFileData)
-			: AssetType(assetFileData.AssetType)
+			: AssetType(assetFileData.HeaderBase.AssetType)
 		{
 			Scene = GEngine::GetWorld()->CreateMovableScene(assetFileData.Name);
 		}

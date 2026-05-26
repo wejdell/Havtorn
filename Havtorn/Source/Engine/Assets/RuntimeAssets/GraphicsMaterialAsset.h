@@ -11,7 +11,7 @@ namespace Havtorn
 		SGraphicsMaterialAsset() = default;
 
 		explicit SGraphicsMaterialAsset(const SMaterialAssetFileHeader& assetFileData)
-			: AssetType(assetFileData.AssetType)
+			: AssetType(assetFileData.HeaderBase.AssetType)
 			, Material(assetFileData.Material, assetFileData.Name)
 		{
 		}

@@ -316,7 +316,7 @@ namespace Havtorn
             STextureFileHeader assetFile;
             assetFile.Deserialize(data);
             STextureAsset textureAsset(assetFile);
-            textureAsset.RenderTexture = RenderManager->RenderTextureFactory.CreateStaticTexture(filePath, assetFile.AssetType);
+            textureAsset.RenderTexture = RenderManager->RenderTextureFactory.CreateStaticTexture(filePath, assetFile.HeaderBase.AssetType);
             asset.Data = textureAsset;
             asset.SourceData = assetFile.SourceData;
         }
@@ -326,7 +326,7 @@ namespace Havtorn
             STextureCubeFileHeader assetFile;
             assetFile.Deserialize(data);
             STextureCubeAsset textureAsset(assetFile);
-            textureAsset.RenderTexture = RenderManager->RenderTextureFactory.CreateStaticTexture(filePath, assetFile.AssetType);
+            textureAsset.RenderTexture = RenderManager->RenderTextureFactory.CreateStaticTexture(filePath, assetFile.HeaderBase.AssetType);
             asset.Data = textureAsset;
             asset.SourceData = assetFile.SourceData;
         }
