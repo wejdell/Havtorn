@@ -34,6 +34,8 @@ namespace Havtorn
 
 				CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
 				const SSkeletalMeshAsset* meshAsset = assetRegistry->RequestAssetData<SSkeletalMeshAsset>(mesh->AssetReference, component->Owner.GUID);
+				if (meshAsset == nullptr)
+					continue;
 
 				component->Bones.clear();
 				F32 importScale = 1.0f;
