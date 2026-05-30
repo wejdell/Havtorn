@@ -828,28 +828,6 @@ add_dependencies(Engine Core Platform GUI)
 
 # ==================== GAME ====================
 set(GAME_FILES
-	${GAME_FOLDER}HexRune/NodeEditorContext/SetPositionNodeEditorContext.cpp
-	${GAME_FOLDER}HexRune/NodeEditorContext/SetPositionNodeEditorContext.h
-	${GAME_FOLDER}HexRune/SetPositionNode.cpp
-	${GAME_FOLDER}HexRune/SetPositionNode.h
-	${GAME_FOLDER}NodeInclude.h
-	${GAME_FOLDER}HexRune/NodeEditorContext/TimerNodeEditorContext.cpp
-	${GAME_FOLDER}HexRune/NodeEditorContext/TimerNodeEditorContext.h
-	${GAME_FOLDER}HexRune/TimerNode.cpp
-	${GAME_FOLDER}HexRune/TimerNode.h
-	${GAME_FOLDER}HexRune/NodeEditorContext/InterpolatePositionNodeEditorContext.cpp
-	${GAME_FOLDER}HexRune/NodeEditorContext/InterpolatePositionNodeEditorContext.h
-	${GAME_FOLDER}HexRune/InterpolatePosition.cpp
-	${GAME_FOLDER}HexRune/InterpolatePosition.h
-	${GAME_FOLDER}Ghosty/SGhostyNodeEditorContext.h
-	${GAME_FOLDER}Ghosty/SGhostyNodeEditorContext.cpp
-	${GAME_FOLDER}GhostyNode.h
-	${GAME_FOLDER}GhostyNode.cpp
-    ${GAME_FOLDER}Ghosty/GhostyComponent.h
-    ${GAME_FOLDER}Ghosty/GhostyComponentEditorContext.cpp
-    ${GAME_FOLDER}Ghosty/GhostyComponentEditorContext.h
-    ${GAME_FOLDER}Ghosty/GhostySystem.cpp
-    ${GAME_FOLDER}Ghosty/GhostySystem.h
     ${GAME_FOLDER}GameDeepLinkParser.cpp
     ${GAME_FOLDER}GameDeepLinkParser.h
     ${GAME_FOLDER}GameManager.cpp

@@ -56,18 +56,6 @@ namespace Havtorn
                 Manager->SetCurrentWorkingScene(-1);
             }
 
-            if (GUI::MenuItem("Generate 3D Demo Scene"))
-            {
-                GEngine::GetWorld()->OpenDemoScene<CGameScene>(true);
-                Manager->SetCurrentWorkingScene(0);
-            }
-
-            if (GUI::MenuItem("Generate 2D Demo Scene"))
-            {
-                GEngine::GetWorld()->OpenDemoScene<CGameScene>(false);
-                Manager->SetCurrentWorkingScene(0);
-            }
-
             GUI::Separator();
             
             if (GUI::MenuItem("Fix Up Asset Redirectors"))

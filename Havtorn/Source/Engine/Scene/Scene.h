@@ -42,8 +42,7 @@ namespace Havtorn
 
 		ENGINE_API virtual bool Init(const std::string& sceneName);
 		ENGINE_API virtual bool Init3DDefaults();
-		ENGINE_API virtual bool Init3DDemoScene();
-		ENGINE_API virtual bool Init2DDemoScene();
+		ENGINE_API virtual void OpenDefault();
 
 		ENGINE_API virtual [[nodiscard]] U32 GetSize() const;
 		ENGINE_API virtual void Serialize(char* toData, U64& pointerPosition) const;

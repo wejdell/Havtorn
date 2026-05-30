@@ -1,7 +1,6 @@
 // Copyright 2023 Team Havtorn. All Rights Reserved.
 
 #include "GameManager.h"
-#include "Ghosty\GhostySystem.h"
 #include "GameScene.h"
 #include "GameScript.h"
 
@@ -86,7 +85,6 @@ namespace Havtorn
 		World->RequestSystem<CInputSystem>(this);
 		World->RequestSystem<CSpriteAnimatorGraphSystem>(this);
 		World->RequestSystem<CAbilitySystem>(this);
-		World->RequestSystem<CGhostySystem>(this);
 		World->RequestPhysicsSystem(this);
 		World->UnblockPhysicsSystem(this);
 		World->RequestAudioSystem(this);
@@ -123,7 +121,7 @@ namespace Havtorn
 		if (commandPointsToSceneAsset && UFileSystem::Exists(levelToLoad))
 			World->AddScene<CGameScene>(levelToLoad);
 		else
-			World->OpenDemoScene<CGameScene>(true);
+			World->OpenDefaultScene<CGameScene>();
 		
 		World->BeginPlay();
 	}

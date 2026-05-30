@@ -173,7 +173,7 @@ namespace Havtorn
 			NodeIndices.erase(id);
 		}
 
-		void SScript::Initialize()
+		void SScript::Init()
 		{
 			U32 typeID = 0;
 			NodeFactory = new SNodeFactory();
@@ -206,7 +206,6 @@ namespace Havtorn
 			NodeFactory->RegisterNodeType<STogglePointLightNode, STogglePointLightNodeEditorContext>(this, typeID++);
 			NodeFactory->RegisterNodeType<SOnBeginOverlapNode, SOnBeginOverlapNodeEditorContext>(this, typeID++);
 			NodeFactory->RegisterNodeType<SOnEndOverlapNode, SOnEndOverlapNodeEditorContext>(this, typeID++);
-			InitializeGame(typeID);
 		}
 
 		void SScript::TraverseFromNode(const U64 startNodeID, CScene* owningScene)

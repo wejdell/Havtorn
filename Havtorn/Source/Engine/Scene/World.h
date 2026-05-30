@@ -132,7 +132,7 @@ namespace Havtorn
 		void ChangeScene(const std::string& filePath);
 
 		template<typename T>
-		void OpenDemoScene(const bool shouldOpen3DDemo = true);
+		void OpenDefaultScene();
 
 		template<typename T>
 		inline T* GetSystem();
@@ -260,7 +260,7 @@ namespace Havtorn
 		auto loadGameScene = [&](const std::string& filePath) { return AddScene<CSceneType>(filePath); };
 		BindSceneLoader(loadGameScene);
 		
-		CreateMovableScriptFunction = [](const std::string& scriptName) { Ptr<SScriptType> script = std::make_unique<SScriptType>(); script->Initialize(); script->Name = scriptName; return std::move(script); };
+		CreateMovableScriptFunction = [](const std::string& scriptName) { Ptr<SScriptType> script = std::make_unique<SScriptType>(); script->Init(); script->Name = scriptName; return std::move(script); };
 	}
 
 	template<typename T>
@@ -295,20 +295,12 @@ namespace Havtorn
 	}
 
 	template<typename T>
-	inline void CWorld::OpenDemoScene(const bool shouldOpen3DDemo)
+	inline void CWorld::OpenDefaultScene()
 	{
 		Scenes.clear();
 		Scenes.emplace_back(std::make_unique<T>());
 		OnSceneCreatedDelegate.Broadcast(Scenes.back().get());
-
-		if (shouldOpen3DDemo)
-		{
-			ENGINE_BOOL_POPUP(Scenes.back()->Init3DDemoScene(), "Demo Scene could not be initialized.");
-		}
-		else
-		{
-			ENGINE_BOOL_POPUP(Scenes.back()->Init2DDemoScene(), "Demo Scene could not be initialized.");
-		}
+		Scenes.back()->OpenDefault();
 	}
 
 	template<typename T>

@@ -10,7 +10,6 @@ namespace Havtorn
     public:
         GAME_API SGameScript();
         GAME_API ~SGameScript() override;
-        GAME_API void InitializeGame(U32 typeId) override;
+        GAME_API void Init() override;
     };
 }
-

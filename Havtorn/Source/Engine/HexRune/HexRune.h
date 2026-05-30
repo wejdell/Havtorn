@@ -317,8 +317,7 @@ namespace Havtorn
             ENGINE_API void RemoveDataBinding(const U64 id);
             ENGINE_API void RemoveNode(const U64 id);
 
-            ENGINE_API void Initialize();
-            ENGINE_API virtual void InitializeGame(U32 /*typeId*/) = 0;
+            ENGINE_API virtual void Init();
 
             ENGINE_API void TraverseFromNode(const U64 startNodeID, CScene* owningScene);
             ENGINE_API void TraverseFromNode(SNode* startNode, CScene* owningScene);

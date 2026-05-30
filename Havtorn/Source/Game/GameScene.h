@@ -9,9 +9,7 @@ namespace Havtorn
     {
     public:
 		GAME_API virtual bool Init(const std::string& sceneName) override;
-
-		GAME_API virtual bool Init3DDemoScene() override;
-		GAME_API virtual bool Init2DDemoScene() override;
+		GAME_API virtual void OpenDefault() override;
     };
 }
 

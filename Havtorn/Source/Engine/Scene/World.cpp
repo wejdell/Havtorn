@@ -182,7 +182,6 @@ namespace Havtorn
 
 	void CWorld::OnSceneCreated(CScene* const/*scene*/) const
 	{
-		//PhysicsWorld3D->CreateScene(scene);
 	}
 
 	void CWorld::RemoveScene(const U64 sceneIndex)
