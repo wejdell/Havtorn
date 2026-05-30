@@ -209,10 +209,7 @@ add_library(Platform SHARED ${PLATFORM_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PLATFORM_FILES})
 target_link_libraries(Platform PRIVATE
     Core
-    $<$<CONFIG:EditorDebug>:SDL3d>
-    $<$<CONFIG:GameDebug>:SDL3d>
-    $<$<CONFIG:EditorDevelopment>:SDL3>
-    $<$<CONFIG:GameRelease>:SDL3>
+	SDL3
 )
 target_include_directories(Platform PRIVATE
 	"${PLATFORM_FOLDER}"
@@ -306,10 +303,8 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/../External" FILES ${IMGUI_FILES}
 target_link_libraries(GUI PRIVATE
     Core
     Platform
-    $<$<CONFIG:EditorDebug>:DirectXTexd SDL3d>
-    $<$<CONFIG:GameDebug>:DirectXTexd SDL3d>
-    $<$<CONFIG:EditorDevelopment>:DirectXTex SDL3>
-    $<$<CONFIG:GameRelease>:DirectXTex SDL3>
+	DirectXTex
+	SDL3
 )
 target_include_directories(GUI PRIVATE
 	"${GUI_FOLDER}"
@@ -745,14 +740,19 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SHADER_INCLUDES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${HLSL_SHADER_FILES})
 target_link_libraries(Engine PRIVATE
-    $<$<CONFIG:EditorDebug>:assimp-vc143-mtd DirectXTexd d3dcompiler box2dd PhysX/PhysX_64d PhysX/PhysXCommon_64d PhysX/PhysXExtensions_static_64d PhysX/PhysXFoundation_64d PhysX/PhysXPvdSDK_static_64d PhysX/PhysXCharacterKinematic_static_64d>
-    $<$<CONFIG:GameDebug>:assimp-vc143-mtd DirectXTexd d3dcompiler box2dd PhysX/PhysX_64d PhysX/PhysXCommon_64d PhysX/PhysXExtensions_static_64d PhysX/PhysXFoundation_64d PhysX/PhysXPvdSDK_static_64d PhysX/PhysXCharacterKinematic_static_64d>
-    $<$<CONFIG:EditorDevelopment>:assimp-vc143-mt DirectXTex d3dcompiler box2d PhysX/PhysX_64 PhysX/PhysXCommon_64 PhysX/PhysXExtensions_static_64 PhysX/PhysXFoundation_64 PhysX/PhysXPvdSDK_static_64 PhysX/PhysXCharacterKinematic_static_64>
-    $<$<CONFIG:GameRelease>:assimp-vc143-mt DirectXTex d3dcompiler box2d PhysX/PhysX_64 PhysX/PhysXCommon_64 PhysX/PhysXExtensions_static_64 PhysX/PhysXFoundation_64 PhysX/PhysXPvdSDK_static_64 PhysX/PhysXCharacterKinematic_static_64>
-    $<$<CONFIG:EditorDebug>:SDL3d>
-    $<$<CONFIG:GameDebug>:SDL3d>
-    $<$<CONFIG:EditorDevelopment>:SDL3>
-    $<$<CONFIG:GameRelease>:SDL3>
+    $<$<CONFIG:EditorDebug>:assimp-vc143-mtd box2dd>
+    $<$<CONFIG:GameDebug>:assimp-vc143-mtd box2dd>
+    $<$<CONFIG:EditorDevelopment>:assimp-vc143-mt box2d>
+    $<$<CONFIG:GameRelease>:assimp-vc143-mt box2d>
+    DirectXTex
+	d3dcompiler
+	PhysX/PhysX_64
+	PhysX/PhysXCommon_64
+	PhysX/PhysXExtensions_static_64
+	PhysX/PhysXFoundation_64
+	PhysX/PhysXPvdSDK_static_64
+	PhysX/PhysXCharacterKinematic_static_64
+	SDL3
     Core
     Platform
     GUI
@@ -793,10 +793,13 @@ if(AUDIO_BACKEND STREQUAL "WWISE")
     target_compile_definitions(Engine PRIVATE HV_AUDIO_BACKEND_WWISE)
     target_compile_definitions(Engine PRIVATE $<$<CONFIG:GameRelease>:AK_OPTIMIZED>)
     target_link_libraries(Engine PRIVATE
-    $<$<CONFIG:EditorDebug>:Wwise/AkSoundEngined Wwise/AkMemoryMgrd Wwise/AkStreamMgrd Wwise/AkSpatialAudiod Wwise/CommunicationCentrald ws2_32>
-    $<$<CONFIG:GameDebug>:Wwise/AkSoundEngined Wwise/AkMemoryMgrd Wwise/AkStreamMgrd Wwise/AkSpatialAudiod Wwise/CommunicationCentrald ws2_32>
-    $<$<CONFIG:EditorDevelopment>:Wwise/AkSoundEngine Wwise/AkMemoryMgr Wwise/AkStreamMgr Wwise/AkSpatialAudio Wwise/CommunicationCentral ws2_32>
-    $<$<CONFIG:GameRelease>:Wwise/AkSoundEngine Wwise/AkMemoryMgr Wwise/AkStreamMgr Wwise/AkSpatialAudio>
+	Wwise/AkSoundEngine
+	Wwise/AkMemoryMgr
+	Wwise/AkStreamMgr
+	Wwise/AkSpatialAudio
+    $<$<CONFIG:EditorDebug>:Wwise/CommunicationCentrald ws2_32>
+    $<$<CONFIG:GameDebug>:Wwise/CommunicationCentrald ws2_32>
+    $<$<CONFIG:EditorDevelopment>:Wwise/CommunicationCentral ws2_32>
     )
 elseif(AUDIO_BACKEND STREQUAL "FMOD")
     target_compile_definitions(Engine PRIVATE HV_AUDIO_BACKEND_FMOD)
@@ -1019,10 +1022,7 @@ target_link_libraries(Launcher PRIVATE
     Engine
     Game
     Editor
-    $<$<CONFIG:EditorDebug>:SDL3d>
-    $<$<CONFIG:GameDebug>:SDL3d>
-    $<$<CONFIG:EditorDevelopment>:SDL3>
-    $<$<CONFIG:GameRelease>:SDL3>
+	SDL3
 )
 target_link_directories(Launcher PRIVATE
     "${EXTERNAL_FOLDER}Lib/Debug"
@@ -1035,6 +1035,5 @@ target_link_options(Launcher PRIVATE ${COMMON_LINK_OPTIONS})
 set_property(TARGET Launcher PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
 set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT Launcher)
 set_target_properties(Launcher PROPERTIES ${COMMON_TARGET_PROPERTIES} RUNTIME_OUTPUT_NAME $<CONFIG>)
-#add_custom_command(TARGET Launcher POST_BUILD COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:Launcher> ${WORKING_FOLDER})
 add_dependencies(Launcher Core Platform GUI Engine Game Editor)
 # ==================== LAUNCHER ====================
