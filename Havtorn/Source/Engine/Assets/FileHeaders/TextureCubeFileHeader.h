@@ -22,7 +22,7 @@ namespace Havtorn
 	inline U32 STextureCubeFileHeader::GetSize() const
 	{
 		U32 size = 0;
-		size += GetDataSize(HeaderBase.AssetType);
+		size += GetDataSize(HeaderBase);
 		size += SourceData.GetSize();
 		size += GetDataSize(Name);
 		size += GetDataSize(Data);
