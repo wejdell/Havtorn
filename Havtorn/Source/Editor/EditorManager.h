@@ -213,6 +213,8 @@ namespace Havtorn
 		void ToggleGamePreferences();
 		void ToggleEditHistory();
 
+		[[nodiscard]] std::string_view GetProjectName() const;
+
 		static std::string PreviewMaterial;
 
 	private:
@@ -299,6 +301,8 @@ namespace Havtorn
 		"Config/EditorPreferences.json";
 		inline static const std::string UserEditorSettingsPath =
 		"Config/EditorPreferences.user.json";
+
+		std::string ProjectName = "Project Name";
 		
 		inline static const std::string EditorColorThemeKey = "Editor Color Theme";
 		inline static const std::string PauseColorThemeKey = "Pause Color Theme";

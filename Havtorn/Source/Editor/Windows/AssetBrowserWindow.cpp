@@ -71,7 +71,7 @@ namespace Havtorn
 
 			{ // Folder Tree
 				GUI::BeginChild("FolderTree", SVector2<F32>(150.0f, 0.0f), { EChildFlag::Borders, EChildFlag::ResizeX });
-				GUI::Text("Project Name");
+				GUI::Text(Manager->GetProjectName().data());
 				GUI::Separator();
 
 				if (GUI::BeginTable("FolderTreeTable", 1))
@@ -654,7 +654,7 @@ namespace Havtorn
 		else if (extension == "tga")
 			format = ETextureFormat::TGA;
 
-		ImportOptions.SourceData = SSourceAssetData{ .AssetType = EAssetType::TextureCube, .Version = 1, .SourcePath = sourceFilePath, .Variant = STextureSourceData{.OriginalFormat = format } };
+		ImportOptions.SourceData = SSourceAssetData{ .AssetType = EAssetType::TextureCube, .Version = 1, .SourcePath = sourceFilePath, .Variant = STextureSourceData{ .OriginalFormat = format } };
 	}
 
 	void CAssetBrowserWindow::ImportOptionsSpriteAnimation(const std::string& /*sourceFilePath*/)

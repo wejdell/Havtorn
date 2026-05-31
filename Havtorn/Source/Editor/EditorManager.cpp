@@ -60,6 +60,9 @@ namespace Havtorn
 		mapper->GetActionDelegate(EInputActionEvent::MovePivot).AddMember(this, &CEditorManager::OnPivotMoving);
 		mapper->GetActionDelegate(EInputActionEvent::VertexSnapping).AddMember(this, &CEditorManager::OnVertexSnapping);
 		mapper->GetActionDelegate(EInputActionEvent::GridSnapping).AddMember(this, &CEditorManager::OnGridSnapping);
+
+		const CJsonDocument document = UFileSystem::OpenJson("Config/EngineConfig.json");
+		ProjectName = document.GetString("Game Name", "Project Name");
 	}
 
 	CEditorManager::~CEditorManager()
@@ -160,8 +163,7 @@ namespace Havtorn
 				isHoveringMenuBarButton = GUI::IsMouseInRect(GUI::GetLastRect()) ? true : isHoveringMenuBarButton;
 			}
 
-			const std::string projectName = "Project Name";
-			const std::string windowTitle = "Havtorn Editor | " + projectName + " | " + HAVTORN_VERSION;
+			const std::string windowTitle = "Havtorn Editor | " + ProjectName + " | " + HAVTORN_VERSION;
 			GUI::CenterText(windowTitle, GUI::GetCurrentWindowSize());
 			
 			const F32 windowWidth = GUI::GetCurrentWindowSize().X;
@@ -1175,6 +1177,11 @@ namespace Havtorn
 	void CEditorManager::ToggleEditHistory()
 	{
 		IsEditHistoryOpen = !IsEditHistoryOpen;
+	}
+
+	std::string_view CEditorManager::GetProjectName() const
+	{
+		return ProjectName;
 	}
 
 	void CEditorManager::InitEditorLayout()
