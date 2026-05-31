@@ -209,7 +209,10 @@ add_library(Platform SHARED ${PLATFORM_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PLATFORM_FILES})
 target_link_libraries(Platform PRIVATE
     Core
-	SDL3
+    $<$<CONFIG:EditorDebug>:Debug/SDL3>
+    $<$<CONFIG:GameDebug>:Debug/SDL3>
+    $<$<CONFIG:EditorDevelopment>:Release/SDL3>
+    $<$<CONFIG:GameRelease>:Release/SDL3>
 )
 target_include_directories(Platform PRIVATE
 	"${PLATFORM_FOLDER}"
@@ -218,8 +221,7 @@ target_include_directories(Platform PRIVATE
     "${EXTERNAL_FOLDER}SDL/include"
 )
 target_link_directories(Platform PRIVATE
-    "${EXTERNAL_FOLDER}Lib/Debug"
-    "${EXTERNAL_FOLDER}Lib/Release"
+    "${EXTERNAL_FOLDER}Lib"
     ${CMAKE_BINARY_DIR}
 )
 target_compile_definitions(Platform PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_PLATFORM_DLL)
@@ -303,8 +305,10 @@ source_group(TREE "${CMAKE_CURRENT_SOURCE_DIR}/../External" FILES ${IMGUI_FILES}
 target_link_libraries(GUI PRIVATE
     Core
     Platform
-	DirectXTex
-	SDL3
+	$<$<CONFIG:EditorDebug>:Debug/DirectXTex Debug/SDL3>
+    $<$<CONFIG:GameDebug>:Debug/DirectXTex Debug/SDL3>
+    $<$<CONFIG:EditorDevelopment>:Release/DirectXTex Release/SDL3>
+    $<$<CONFIG:GameRelease>:Release/DirectXTex Release/SDL3>
 )
 target_include_directories(GUI PRIVATE
 	"${GUI_FOLDER}"
@@ -317,8 +321,7 @@ target_include_directories(GUI PRIVATE
     "${EXTERNAL_FOLDER}SDL/include"
 )
 target_link_directories(GUI PRIVATE
-    "${EXTERNAL_FOLDER}Lib/Debug"
-    "${EXTERNAL_FOLDER}Lib/Release"
+    "${EXTERNAL_FOLDER}Lib"
     ${CMAKE_BINARY_DIR}
 )
 target_compile_definitions(GUI PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_GUI_DLL)
@@ -740,19 +743,11 @@ source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${ENGINE_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${SHADER_INCLUDES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${HLSL_SHADER_FILES})
 target_link_libraries(Engine PRIVATE
-    $<$<CONFIG:EditorDebug>:assimp-vc143-mtd box2dd>
-    $<$<CONFIG:GameDebug>:assimp-vc143-mtd box2dd>
-    $<$<CONFIG:EditorDevelopment>:assimp-vc143-mt box2d>
-    $<$<CONFIG:GameRelease>:assimp-vc143-mt box2d>
-    DirectXTex
+    $<$<CONFIG:EditorDebug>:Debug/assimp-vc143-mtd Debug/box2dd Debug/DirectXTex Debug/PhysX/PhysX_64 Debug/PhysX/PhysXCommon_64 Debug/PhysX/PhysXExtensions_static_64 Debug/PhysX/PhysXFoundation_64 Debug/PhysX/PhysXPvdSDK_static_64 Debug/PhysX/PhysXCharacterKinematic_static_64 Debug/SDL3>
+    $<$<CONFIG:GameDebug>:Debug/assimp-vc143-mtd Debug/box2dd Debug/DirectXTex Debug/PhysX/PhysX_64 Debug/PhysX/PhysXCommon_64 Debug/PhysX/PhysXExtensions_static_64 Debug/PhysX/PhysXFoundation_64 Debug/PhysX/PhysXPvdSDK_static_64 Debug/PhysX/PhysXCharacterKinematic_static_64 Debug/SDL3>
+    $<$<CONFIG:EditorDevelopment>:Release/assimp-vc143-mt Release/box2d Release/DirectXTex Release/PhysX/PhysX_64 Release/PhysX/PhysXCommon_64 Release/PhysX/PhysXExtensions_static_64 Release/PhysX/PhysXFoundation_64 Release/PhysX/PhysXPvdSDK_static_64 Release/PhysX/PhysXCharacterKinematic_static_64 Release/SDL3>
+    $<$<CONFIG:GameRelease>:Release/assimp-vc143-mt Release/box2d Release/DirectXTex Release/PhysX/PhysX_64 Release/PhysX/PhysXCommon_64 Release/PhysX/PhysXExtensions_static_64 Release/PhysX/PhysXFoundation_64 Release/PhysX/PhysXPvdSDK_static_64 Release/PhysX/PhysXCharacterKinematic_static_64 Release/SDL3>
 	d3dcompiler
-	PhysX/PhysX_64
-	PhysX/PhysXCommon_64
-	PhysX/PhysXExtensions_static_64
-	PhysX/PhysXFoundation_64
-	PhysX/PhysXPvdSDK_static_64
-	PhysX/PhysXCharacterKinematic_static_64
-	SDL3
     Core
     Platform
     GUI
@@ -783,8 +778,7 @@ elseif(AUDIO_BACKEND STREQUAL "FMOD")
 endif()
 
 target_link_directories(Engine PRIVATE
-    "${EXTERNAL_FOLDER}Lib/Debug"
-    "${EXTERNAL_FOLDER}Lib/Release"
+    "${EXTERNAL_FOLDER}Lib"
     ${CMAKE_BINARY_DIR}
 )
 target_compile_definitions(Engine PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_ENGINE_DLL)
@@ -1022,11 +1016,13 @@ target_link_libraries(Launcher PRIVATE
     Engine
     Game
     Editor
-	SDL3
+    $<$<CONFIG:EditorDebug>:Debug/SDL3>
+    $<$<CONFIG:GameDebug>:Debug/SDL3>
+    $<$<CONFIG:EditorDevelopment>:Release/SDL3>
+    $<$<CONFIG:GameRelease>:Release/SDL3>
 )
 target_link_directories(Launcher PRIVATE
-    "${EXTERNAL_FOLDER}Lib/Debug"
-    "${EXTERNAL_FOLDER}Lib/Release"
+    "${EXTERNAL_FOLDER}Lib"
     ${CMAKE_BINARY_DIR}
 )
 target_compile_definitions(Launcher PRIVATE ${COMMON_COMPILE_DEFINITIONS})
