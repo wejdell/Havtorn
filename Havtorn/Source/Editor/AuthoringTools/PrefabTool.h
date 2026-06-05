@@ -54,7 +54,7 @@ namespace Havtorn
 		static constexpr F32 MaxPitchDegrees = 90.0f;
 
 		SMatrix PreviewCameraViewMatrix = SMatrix::Identity;
-		SMatrix PreviewCameraProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), 1.0f, 0.01f, 10.0f);
+		SMatrix PreviewCameraProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), 1.0f, 0.01f, 1000.0f);
 		SVector2<F32> WindowPos = SVector2<F32>::Zero;
 		SVector2<F32> PreviewWindowPosition = SVector2<F32>::Zero;
 		SVector2<F32> PreviewWindowDimensions = SVector2<F32>::Zero;
