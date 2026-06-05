@@ -66,7 +66,7 @@ namespace Havtorn
 			if (CameraSpeedInput < 0.0f)
 				controllerComp->MaxMoveSpeed = UMath::Remap(-5.0f, -1.0f, 0.2f, 2.0f, CameraSpeedInput);
 			else
-				controllerComp->MaxMoveSpeed = UMath::Remap(0.0f, 5.0f, 3.0f, 10.0f, CameraSpeedInput);
+				controllerComp->MaxMoveSpeed = UMath::Remap(0.0f, 5.0f, 3.0f, 20.0f, CameraSpeedInput);
 
 			if (!IsFreeCamActive)
 			{
@@ -132,7 +132,7 @@ namespace Havtorn
 			case EInputAxisEvent::Zoom:
 			{
 				if (IsFreeCamActive)
-					CameraSpeedInput = UMath::Clamp(CameraSpeedInput + payload.AxisValue, -5.0f, 5.0f);
+					CameraSpeedInput = UMath::Clamp(CameraSpeedInput + payload.AxisValue, -5.0f, 12.5f);
 			}
 				return;
 			default: 

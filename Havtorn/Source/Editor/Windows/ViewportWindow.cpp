@@ -180,7 +180,7 @@ namespace Havtorn
 				GUI::PushItemWidth(cameraSpeedDraggerWidth);
 				
 				F32 cameraSpeed = cameraSystem->GetCameraSpeed();
-				if (GUI::DragFloat(label, cameraSpeed, 0.5f, 0.2f, 10.0f, "%.2f"))
+				if (GUI::DragFloat(label, cameraSpeed, 0.5f, 0.2f, 20.0f, "%.2f"))
 					cameraSystem->SetCameraSpeed(cameraSpeed);
 				
 				GUI::PopItemWidth();
