@@ -145,7 +145,7 @@ namespace Havtorn
 		}
 
 		// NW: To make use of destructible meshes, add DontJoinIdentical (vertices)
-		const aiScene* assimpScene = aiImportFile(filePath.c_str(), aiProcess_PopulateArmatureData | aiProcessPreset_TargetRealtime_Fast | aiProcess_ConvertToLeftHanded);
+		const aiScene* assimpScene = aiImportFile(filePath.c_str(), aiProcess_PopulateArmatureData | aiProcess_PreTransformVertices | aiProcessPreset_TargetRealtime_Fast | aiProcess_ConvertToLeftHanded);
 
 		if (!assimpScene)
 		{
