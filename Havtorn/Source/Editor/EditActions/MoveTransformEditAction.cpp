@@ -15,7 +15,7 @@ namespace Havtorn
     {
         std::string commandString = "EditHistory/EntityManipulation/ChangeComponent/";
 
-        const Ptr<SEditorAssetRepresentation>& assetRep = manager->GetAssetRepFromName(UComponentAlgo::GetContainingScene(transformComp->Owner, GEngine::GetWorld()->GetActiveScenes())->SceneName.AsString());
+        const Ptr<SEditorAssetRepresentation>& assetRep = manager->GetAssetRepFromName(manager->GetContainingScene(transformComp->Owner)->SceneName.AsString());
         commandString.append("Scene=" + UGeneralUtils::ConvertToPlatformAgnosticPath(assetRep->DirectoryEntry.path().string()));
 
         commandString.append("|Entity=");
