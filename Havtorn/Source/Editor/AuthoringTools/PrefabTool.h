@@ -44,7 +44,7 @@ namespace Havtorn
 		const F32 ComponentIconCursorOffsetX = 20.0f;
 		std::string PerComponentIconTextOffset = "";
 		
-		SAssetReference PreviewSkylightAssetRef = SAssetReference("Assets/Textures/Cubemaps/CubemapTheVisit.hva");
+		SAssetReference PreviewSkylightAssetRef = SAssetReference("Resources/DefaultSkybox.hva");
 		STextureCubeAsset* PreviewSkylight = nullptr;
 
 		SVector PreviewLightDirection = { 1.0f, 0.0f, -1.0f };
