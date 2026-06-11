@@ -23,14 +23,8 @@ namespace Havtorn
 		if (PlatformManager != nullptr)
 			return true;
 
-		CPlatformManager::SWindowData windowData;
-		windowData.X = WindowPositionX;
-		windowData.Y = WindowPositionY;
-		windowData.Width = WindowWidth;
-		windowData.Height = WindowHeight;
-
 		PlatformManager = new CPlatformManager();
-		return PlatformManager->Init(windowData);
+		return PlatformManager->Init();
 	}
 
 	void CPlatformProcess::OnApplicationReady()

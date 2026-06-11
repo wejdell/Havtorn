@@ -61,8 +61,8 @@ namespace Havtorn
 		mapper->GetActionDelegate(EInputActionEvent::VertexSnapping).AddMember(this, &CEditorManager::OnVertexSnapping);
 		mapper->GetActionDelegate(EInputActionEvent::GridSnapping).AddMember(this, &CEditorManager::OnGridSnapping);
 
-		const CJsonDocument document = UFileSystem::OpenJson("Config/EngineConfig.json");
-		ProjectName = document.GetString("Game Name", "Project Name");
+		const CJsonDocument document = UFileSystem::OpenJson(UFileSystem::EngineConfig);
+		ProjectName = document.Get("Game Name", "Project Name");
 	}
 
 	CEditorManager::~CEditorManager()

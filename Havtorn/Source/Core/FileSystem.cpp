@@ -19,6 +19,7 @@ namespace Havtorn
 
 	const std::string UFileSystem::EngineConfig = "Config/EngineConfig.json";
 	const std::string UFileSystem::GameConfig = "Config/GameConfig.json";
+	const std::string UFileSystem::LastRunSettings = "LastRunSettings.json";
 
 	bool UFileSystem::Exists(const std::string& path)
 	{
@@ -104,12 +105,32 @@ namespace Havtorn
 			HV_LOG_ERROR("FileSystem encountered an operation error after closing the input stream");
 	}
 
-	void CORE_API UFileSystem::AddDirectory(const std::string& directoryPath)
+	void UFileSystem::AddFile(const std::string& filePath, const std::string_view text)
+	{
+		if (UFileSystem::Exists(filePath))
+		{
+			HV_LOG_ERROR("UFileSystem::AddFile error, path %s already exists!", filePath.c_str());
+			return;
+		}
+
+		const std::string platformAgnosticPath = UGeneralUtils::ConvertToPlatformAgnosticPath(filePath);
+		const std::string directory = UGeneralUtils::ExtractParentDirectoryFromPath(platformAgnosticPath);
+
+		if (!UFileSystem::Exists(directory) && directory != "")
+			AddDirectory(directory);
+
+		std::ofstream outputStream(platformAgnosticPath);
+		if (!text.empty())
+			outputStream << text.data();
+		outputStream.close();
+	}
+
+	void UFileSystem::AddDirectory(const std::string& directoryPath)
 	{
 		std::filesystem::create_directories(std::filesystem::path{ directoryPath });
 	}
 
-	void CORE_API UFileSystem::Remove(const std::string& directoryPath)
+	void UFileSystem::Remove(const std::string& directoryPath)
 	{
 		std::filesystem::remove(std::filesystem::path{ directoryPath });
 	}
@@ -207,15 +228,12 @@ namespace Havtorn
 		rapidjson::IStreamWrapper wrapper(stream);
 		document.Document.ParseStream(wrapper);
 		document.FilePath = filePath;
+		if (!document.Document.IsObject())
+		{
+			document.Document.SetObject();
+			document.SaveFile();
+		}
 		return document;
-	}
-
-	std::string CJsonDocument::GetString(const std::string& memberName, const std::string& defaultValue) const
-	{
-		if (!HasMember(memberName))
-			return defaultValue;
-
-		return Document[memberName.c_str()].GetString();
 	}
 
 	bool CJsonDocument::HasMember(const std::string& memberName) const
@@ -320,6 +338,36 @@ namespace Havtorn
 		// TODO.NW: We're saving here instead of the destructor as the Document class is well enclosed, 
 		// should have another look at this.
 		SaveFile();
+	}
+
+	std::string CJsonDocument::Get(const std::string& memberName, const std::string_view defaultValue) const
+	{
+		return Get(memberName, std::string(defaultValue.data()));
+	}
+
+	std::string CJsonDocument::Get(const std::string& memberName, const char* defaultValue) const
+	{
+		return Get(memberName, std::string(defaultValue));
+	}
+
+	void CJsonDocument::Set(const std::string& memberName, const std::string_view newValue)
+	{
+		Set(memberName, std::string(newValue.data()));
+	}
+
+	void CJsonDocument::Set(const std::string& memberName, const char* newValue)
+	{
+		Set(memberName, std::string(newValue));
+	}
+
+	void CJsonDocument::AddMember(const std::string& memberName, const std::string_view newValue)
+	{	
+		AddMember(memberName, std::string(newValue.data()));
+	}
+
+	void CJsonDocument::AddMember(const std::string& memberName, const char* newValue)
+	{
+		AddMember(memberName, std::string(newValue));
 	}
 
 	void CJsonDocument::SaveFile()

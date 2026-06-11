@@ -25,6 +25,22 @@ namespace Havtorn
 
 	CPlatformManager::~CPlatformManager()
 	{
+#ifdef HV_EDITOR_BUILD
+		if (UFileSystem::Exists(UFileSystem::LastRunSettings))
+		{
+			CJsonDocument document = UFileSystem::OpenJson(UFileSystem::LastRunSettings);
+			if (!document.HasMember("Window Width"))
+				document.AddMember("Window Width", 0);
+			if (!document.HasMember("Window Height"))
+				document.AddMember("Window Height", 0);
+
+			document.Set("Window Width", STATIC_I32(Resolution.X));
+			document.Set("Window Height", STATIC_I32(Resolution.Y));
+		}
+#elif HV_GAME_BUILD
+		// TODO.NW: Set up conditions for pure game build configurations
+#endif
+
 		WindowHandle = 0;
 
 		if (SplashWindow != nullptr)
@@ -112,9 +128,9 @@ namespace Havtorn
 	}
 #endif // HV_PLATFORM_WINDOWS
 
-	bool CPlatformManager::Init(CPlatformManager::SWindowData windowData)
+	bool CPlatformManager::Init()
 	{
-		const CJsonDocument document = UFileSystem::OpenJson("Config/EngineConfig.json");
+		const CJsonDocument document = UFileSystem::OpenJson(UFileSystem::EngineConfig);
 #ifdef HV_EDITOR_BUILD
 		const std::string windowTitle = "Havtorn Editor";
 #else
@@ -129,7 +145,7 @@ namespace Havtorn
 		// NW: SteamAPI_InitEx goes here
 		SDL_Init(initFlags);
 		
-		SplashSurface = SDL_LoadBMP(document.GetString("Splash Path", "Resources/HavtornSplash.bmp").c_str());
+		SplashSurface = SDL_LoadBMP(document.Get("Splash Path", "Resources/HavtornSplash.bmp").c_str());
 		SplashWindow = SDL_CreateWindow(windowTitle.c_str(), SplashSurface->w, SplashSurface->h, SDL_WINDOW_BORDERLESS);
 		const SDL_Rect defaultRect = { .x = 0, .y = 0, .w = SplashSurface->w, .h = SplashSurface->h };
 		SDL_BlitSurface(SplashSurface, &defaultRect, SDL_GetWindowSurface(SplashWindow), &defaultRect);
@@ -137,9 +153,28 @@ namespace Havtorn
 		SDL_SetWindowIcon(SplashWindow, SplashSurface);
 		SDL_SetWindowHitTest(SplashWindow, SplashHitTest, nullptr);
 
-		// TODO.NW: Set up conditions for pure game build configurations
+		SVector2<U16> windowResolution = { 1280, 720 };
+#ifdef HV_EDITOR_BUILD
+		if (!UFileSystem::Exists(UFileSystem::LastRunSettings))
+			UFileSystem::AddFile(UFileSystem::LastRunSettings, "{}");
 
-		Window = SDL_CreateWindow(windowTitle.c_str(), windowData.Width, windowData.Height, SDL_WINDOW_BORDERLESS | SDL_WINDOW_RESIZABLE);
+		const CJsonDocument lastRunSettings = UFileSystem::OpenJson(UFileSystem::LastRunSettings);
+		const U16 lastRunWidth = STATIC_U16(lastRunSettings.Get("Window Width", 0));
+		const U16 lastRunHeight = STATIC_U16(lastRunSettings.Get("Window Height", 0));
+		if (lastRunWidth != 0)
+			windowResolution.X = lastRunWidth;
+		if (lastRunHeight != 0)
+			windowResolution.Y = lastRunHeight;
+#elif HV_GAME_BUILD
+		// TODO.NW: Set up conditions for pure game build configurations
+#endif
+		// TODO.NW: Gather command line options together somewhere they can be viewed, make use of that list to implement a "help" command
+		if (UCommandLine::IsOptionParameterValid("ResX"))
+			windowResolution.X = STATIC_U16(std::stoi(UCommandLine::GetOptionParameter("ResX"))); // TODO.NW: Detect max screen res and clamp to that
+		if (UCommandLine::IsOptionParameterValid("ResY"))
+			windowResolution.X = STATIC_U16(std::stoi(UCommandLine::GetOptionParameter("ResY"))); // TODO.NW: Detect max screen res and clamp to that
+
+		Window = SDL_CreateWindow(windowTitle.c_str(), windowResolution.X, windowResolution.Y, SDL_WINDOW_BORDERLESS | SDL_WINDOW_RESIZABLE);
 		SDL_UpdateWindowSurface(Window);
 		SDL_SetWindowHitTest(Window, WindowHitTest, &HitTestData);
 
@@ -150,7 +185,7 @@ namespace Havtorn
 		SetWindowLongPtr(WindowHandle, GWLP_USERDATA, (LONG_PTR)ogProc);
 #endif // HV_PLATFORM_WINDOWS
 
-		Resolution = { windowData.Width, windowData.Height };
+		Resolution = windowResolution;
 		ResizeTarget = {};
 
 		ShouldRun = true;

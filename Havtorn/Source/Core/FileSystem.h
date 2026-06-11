@@ -69,7 +69,6 @@ namespace Havtorn
 		friend class UFileSystem;
 
 	public:
-		CORE_API std::string GetString(const std::string& memberName, const std::string& defaultValue = "") const;
 		CORE_API bool HasMember(const std::string& memberName) const;
 	
 		CORE_API void WriteValueToArray(const std::string& arrayName, const std::string& valueName, const std::string& value);
@@ -80,10 +79,27 @@ namespace Havtorn
 
 		template<typename T>
 		T Get(const std::string& memberName, const T& defaultValue) const;
+		template<>
+		std::string Get(const std::string& memberName, const std::string& defaultValue) const;
+		CORE_API std::string Get(const std::string& memberName, const std::string_view defaultValue) const;
+		CORE_API std::string Get(const std::string& memberName, const char* defaultValue) const;
+		
 		template<typename T>
 		std::vector<T> GetArray(const std::string& memberName) const;
+		
 		template<typename T>
 		void Set(const std::string& memberName, const T& newValue);
+		template<>
+		void Set(const std::string& memberName, const std::string& newValue);
+		CORE_API void Set(const std::string& memberName, const std::string_view newValue);
+		CORE_API void Set(const std::string& memberName, const char* newValue);
+		
+		template<typename T>
+		void AddMember(const std::string& memberName, const T& newValue);
+		template<>
+		void AddMember(const std::string& memberName, const std::string& newValue);
+		CORE_API void AddMember(const std::string& memberName, const std::string_view newValue);
+		CORE_API void AddMember(const std::string& memberName, const char* newValue);
 
 	private:
 		CORE_API void SaveFile();
@@ -99,6 +115,15 @@ namespace Havtorn
 			return defaultValue;
 		
 		return Document[memberName.c_str()].Get<T>();
+	}
+
+	template<>
+	inline std::string CJsonDocument::Get(const std::string& memberName, const std::string& defaultValue) const
+	{
+		if (!HasMember(memberName))
+			return defaultValue;
+
+		return Document[memberName.c_str()].GetString();
 	}
 	
 	template<typename T>
@@ -131,6 +156,32 @@ namespace Havtorn
 		SaveFile();
 	}
 
+	template<>
+	inline void CJsonDocument::Set(const std::string& memberName, const std::string& newValue)
+	{
+		if (!HasMember(memberName))
+			return;
+
+		Document[memberName.c_str()].SetString(newValue.c_str(), Document.GetAllocator());
+		SaveFile();
+	}
+
+	template<typename T>
+	inline void CJsonDocument::AddMember(const std::string& memberName, const T& newValue)
+	{
+		rapidjson::Value key(memberName.c_str(), Document.GetAllocator());
+		Document.AddMember<T>(key, newValue, Document.GetAllocator());
+		SaveFile();
+	}
+
+	template<>
+	inline void CJsonDocument::AddMember(const std::string& memberName, const std::string& newValue)
+	{
+		rapidjson::Value key(memberName.c_str(), Document.GetAllocator());
+		Document.AddMember(key, rapidjson::StringRef(newValue.c_str()), Document.GetAllocator());
+		SaveFile();
+	}
+
 	class UFileSystem
 	{
 		friend class GEngine;
@@ -150,6 +201,7 @@ namespace Havtorn
 		static void CORE_API Deserialize(const std::string& filePath, char* data, U32 size);
 		static void CORE_API Deserialize(const std::string& filePath, std::string& outData);
 
+		static void CORE_API AddFile(const std::string& filePath, const std::string_view text);
 		static void CORE_API AddDirectory(const std::string& directoryPath);
 		static void CORE_API Remove(const std::string& path);
 
@@ -163,5 +215,6 @@ namespace Havtorn
 
 		CORE_API static const std::string EngineConfig;
 		CORE_API static const std::string GameConfig;
+		CORE_API static const std::string LastRunSettings;
 	};
 }

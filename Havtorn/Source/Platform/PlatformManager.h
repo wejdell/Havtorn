@@ -25,14 +25,6 @@ namespace Havtorn
 		friend class CPlatformProcess;
 
 	public:
-		struct SWindowData
-		{
-			U16 X = 0;
-			U16 Y = 0;
-			U16 Width = 1280;
-			U16 Height = 720;
-		};
-
 		void BeginFrame();
 		void EventLoop();
 
@@ -60,7 +52,7 @@ namespace Havtorn
 		CPlatformManager();
 		~CPlatformManager();
 
-		bool Init(SWindowData windowData);
+		bool Init();
 
 	private:
 		HWND WindowHandle = 0;
