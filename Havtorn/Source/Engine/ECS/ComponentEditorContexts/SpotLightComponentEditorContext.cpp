@@ -36,6 +36,16 @@ namespace Havtorn
 		GUI::DragFloat("Outer Angle", spotLightComp->OuterAngle, GUI::SliderSpeed, spotLightComp->InnerAngle, 180.0f);
 		GUI::DragFloat("InnerAngle", spotLightComp->InnerAngle, GUI::SliderSpeed, 0.0f, spotLightComp->OuterAngle - 0.01f);
       
+		I32 shadowmapStartIndex = STATIC_I32(spotLightComp->ShadowmapView.ShadowmapViewportIndex);
+		if (GUI::InputInt("Shadowmap Index", shadowmapStartIndex))
+		{
+			// NW: Would be nice to pull this directly from the rendermanager, or some form of common settings
+			constexpr U16 maxShadowmapViews = 184;
+
+			shadowmapStartIndex = UMath::Clamp(shadowmapStartIndex, 0, maxShadowmapViews - 1);
+			spotLightComp->ShadowmapView.ShadowmapViewportIndex = STATIC_U16(shadowmapStartIndex);
+		}
+
 		return SComponentViewResult();
     }
 

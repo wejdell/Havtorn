@@ -35,6 +35,16 @@ namespace Havtorn
 		GUI::DragFloat2("Shadow View Size", directionalLightComp->ShadowViewSize);
 		GUI::DragFloat2("Shadow View Near and Far Plane", directionalLightComp->ShadowNearAndFarPlane);
 
+		I32 shadowmapStartIndex = STATIC_I32(directionalLightComp->ShadowmapView.ShadowmapViewportIndex);
+		if (GUI::InputInt("Shadowmap Index", shadowmapStartIndex))
+		{
+			// NW: Would be nice to pull this directly from the rendermanager, or some form of common settings
+			constexpr U16 maxShadowmapViews = 184;
+
+			shadowmapStartIndex = UMath::Clamp(shadowmapStartIndex, 0, maxShadowmapViews - 1);
+			directionalLightComp->ShadowmapView.ShadowmapViewportIndex = STATIC_U16(shadowmapStartIndex);
+		}
+
 		if (STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(directionalLightComp))
 		{
 			SVector pos = transformComponent->Transform.GetMatrix().GetTranslation();
