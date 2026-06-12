@@ -4,10 +4,12 @@
 #include "SpotLightComponentEditorContext.h"
 
 #include "ECS/Components/SpotLightComponent.h"
+#include "ECS/Components/TransformComponent.h"
 #include "Scene/Scene.h"
 
-#include <GUI.h>
+#include "Graphics/Debug/DebugDrawUtility.h"
 
+#include <GUI.h>
 
 namespace Havtorn
 {
@@ -44,6 +46,12 @@ namespace Havtorn
 
 			shadowmapStartIndex = UMath::Clamp(shadowmapStartIndex, 0, maxShadowmapViews - 1);
 			spotLightComp->ShadowmapView.ShadowmapViewportIndex = STATIC_U16(shadowmapStartIndex);
+		}
+
+		if (STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(spotLightComp))
+		{
+			const SVector pos = transformComponent->Transform.GetMatrix().GetTranslation();
+			GDebugDraw::AddConeAngle(pos, spotLightComp->Direction.ToVector3(), spotLightComp->Range, spotLightComp->OuterAngle, SColor::Magenta, 0.0f);
 		}
 
 		return SComponentViewResult();

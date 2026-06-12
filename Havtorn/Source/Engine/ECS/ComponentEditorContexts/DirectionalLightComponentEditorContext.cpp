@@ -47,8 +47,8 @@ namespace Havtorn
 
 		if (STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(directionalLightComp))
 		{
-			SVector pos = transformComponent->Transform.GetMatrix().GetTranslation();
-			GDebugDraw::AddArrow(pos, pos + directionalLightComp->Direction.ToVector3(), SColor::Magenta, 0.0f, true);
+			const SVector pos = transformComponent->Transform.GetMatrix().GetTranslation();
+			GDebugDraw::AddArrow(pos, pos + directionalLightComp->Direction.ToVector3(), SColor::Magenta, 0.0f, true, 0.01f);
 		}
 
 		GUI::DragFloat("Intensity", directionalLightComp->Color.W, GUI::SliderSpeed);

@@ -4,10 +4,12 @@
 #include "PointLightComponentEditorContext.h"
 
 #include "ECS/Components/PointLightComponent.h"
+#include "ECS/Components/TransformComponent.h"
 #include "Scene/Scene.h"
 
-#include <GUI.h>
+#include "Graphics/Debug/DebugDrawUtility.h"
 
+#include <GUI.h>
 
 namespace Havtorn
 {
@@ -40,6 +42,12 @@ namespace Havtorn
 			pointLightComp->ShadowmapViews[3].ShadowmapViewportIndex = STATIC_U16(shadowmapStartIndex++);
 			pointLightComp->ShadowmapViews[4].ShadowmapViewportIndex = STATIC_U16(shadowmapStartIndex++);
 			pointLightComp->ShadowmapViews[5].ShadowmapViewportIndex = STATIC_U16(shadowmapStartIndex);
+		}
+
+		if (STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(pointLightComp))
+		{
+			const SVector pos = transformComponent->Transform.GetMatrix().GetTranslation();
+			GDebugDraw::AddSphere(pos, SVector::Zero, SVector(pointLightComp->Range), SColor::Magenta, 0.0f);
 		}
 
         return SComponentViewResult();
