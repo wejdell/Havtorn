@@ -380,7 +380,7 @@ namespace Havtorn
 
 			if (const SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(directionalLightComp))
 			{
-				if (volumetricLightComp->IsActive)
+				if (directionalLightComp->IsActive && volumetricLightComp->IsActive)
 				{
 					command.Type = ERenderCommandType::VolumetricLightingDirectional;
 					command.SetVolumetricDataFromComponent(*volumetricLightComp);
@@ -410,7 +410,7 @@ namespace Havtorn
 
 			if (const SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(pointLightComp))
 			{
-				if (volumetricLightComp->IsActive)
+				if (pointLightComp->IsActive && volumetricLightComp->IsActive)
 				{
 					command.Type = ERenderCommandType::VolumetricLightingPoint;
 					command.SetVolumetricDataFromComponent(*volumetricLightComp);
@@ -445,7 +445,7 @@ namespace Havtorn
 
 			if (const SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(spotLightComp))
 			{
-				if (volumetricLightComp->IsActive)
+				if (spotLightComp->IsActive && volumetricLightComp->IsActive)
 				{
 					command.Type = ERenderCommandType::VolumetricLightingSpot;
 					command.SetVolumetricDataFromComponent(*volumetricLightComp);
