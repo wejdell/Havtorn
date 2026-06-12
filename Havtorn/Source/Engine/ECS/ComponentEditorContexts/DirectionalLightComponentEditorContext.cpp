@@ -26,12 +26,6 @@ namespace Havtorn
 		SVector colorFloat = color.AsVector();
 		directionalLightComp->Color = { colorFloat.X, colorFloat.Y, colorFloat.Z, directionalLightComp->Color.W };
 
-		SVector direction = SVector(directionalLightComp->Direction.X, directionalLightComp->Direction.Y, directionalLightComp->Direction.Z);
-		GUI::DragFloat3("Direction", direction, GUI::SliderSpeed);
-		directionalLightComp->Direction = { direction.X, direction.Y, direction.Z, 0.0f };
-		if (directionalLightComp->Direction.IsEqual(SVector4::Zero))
-			directionalLightComp->Direction = SVector4(0.0f, 0.0f, 0.01f, 0.0f);
-
 		GUI::DragFloat2("Shadow View Size", directionalLightComp->ShadowViewSize);
 		GUI::DragFloat2("Shadow View Near and Far Plane", directionalLightComp->ShadowNearAndFarPlane);
 

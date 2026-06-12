@@ -16,9 +16,12 @@ namespace Havtorn
 		bool IsActive = true;
 		SShadowmapViewData ShadowmapView = {};
 		SVector4 ColorAndIntensity = SVector4(1.0f, 1.0f, 1.0f, 1.0f);
+		
+		// NW: Directions are not exposed to the user, but derived from the attached TransformComponent in the light system
 		SVector4 Direction = SVector4::Forward;
 		SVector4 DirectionNormal1 = SVector4::Right;
 		SVector4 DirectionNormal2 = SVector4::Up;
+		
 		SVector2<F32> ShadowViewSize = { 8.0f, 8.0f };
 		F32 OuterAngle = 90.0f;
 		F32 InnerAngle = 45.0f;

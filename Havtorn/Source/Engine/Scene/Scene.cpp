@@ -143,7 +143,7 @@ namespace Havtorn
 
 		SDirectionalLightComponent& directionalLight = *AddComponent<SDirectionalLightComponent>(directionalLightEntity);
 		AddComponentEditorContext(directionalLightEntity, &SDirectionalLightComponentEditorContext::Context);
-		directionalLight.Direction = { 1.0f, 1.0f, -1.0f, 0.0f };
+		directionalLight.Direction = { -1.0f, -1.0f, 1.0f, 0.0f };
 		directionalLight.ShadowmapView.ShadowmapViewportIndex = 0;
 		directionalLight.ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLight.ShadowViewSize.X, directionalLight.ShadowViewSize.Y, directionalLight.ShadowNearAndFarPlane.X, directionalLight.ShadowNearAndFarPlane.Y);
 

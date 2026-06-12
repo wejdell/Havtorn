@@ -26,13 +26,7 @@ namespace Havtorn
 		SVector colorFloat = color.AsVector();
 		spotLightComp->ColorAndIntensity = { colorFloat.X, colorFloat.Y, colorFloat.Z, spotLightComp->ColorAndIntensity.W };
 
-		GUI::DragFloat("Intensity", spotLightComp->ColorAndIntensity.W, GUI::SliderSpeed);
-		
-		SVector direction = SVector(spotLightComp->Direction.X, spotLightComp->Direction.Y, spotLightComp->Direction.Z);
-		GUI::DragFloat3("Direction", direction, GUI::SliderSpeed);
-		spotLightComp->Direction = SVector4(direction, 0.0f);
-		if (spotLightComp->Direction.IsEqual(SVector4::Zero))
-			spotLightComp->Direction = SVector4(0.0f, 0.0f, 0.01f, 0.0f);
+		GUI::DragFloat("Intensity", spotLightComp->ColorAndIntensity.W, GUI::SliderSpeed);	
 		
 		GUI::DragFloat("Range", spotLightComp->Range, GUI::SliderSpeed, 0.1f, 100.0f);
 		GUI::DragFloat("Outer Angle", spotLightComp->OuterAngle, GUI::SliderSpeed, spotLightComp->InnerAngle, 180.0f);

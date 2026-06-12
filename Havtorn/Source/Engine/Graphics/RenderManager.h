@@ -276,7 +276,7 @@ namespace Havtorn
 
 		struct SDirectionalLightBufferData
 		{
-			SVector4 DirectionalLightDirection;
+			SVector4 ToDirectionalLight;
 			SVector4 DirectionalLightColor;
 		} DirectionalLightBufferData;
 		HV_ASSERT_BUFFER(SDirectionalLightBufferData)

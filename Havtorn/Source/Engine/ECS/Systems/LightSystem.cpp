@@ -30,6 +30,7 @@ namespace Havtorn
 				//STransformComponent& cameraTransform = *scene->GetComponent<STransformComponent>(scene->MainCameraEntity);
 				//directionalLightTransform.Transform = cameraTransform.Transform;
 
+				directionalLightComp->Direction = SVector4(directionalLightTransform.Transform.GetMatrix().GetForward(), 0.0f);
 				directionalLightComp->ShadowmapView.ShadowPosition = directionalLightTransform.Transform.GetMatrix().GetTranslation4();
 
 				// Round to pixel positions
@@ -37,9 +38,9 @@ namespace Havtorn
 				const SVector2<F32> unitsPerPixel = directionalLightComp->ShadowViewSize / RenderManager->GetShadowAtlasResolution();
 
 				auto shadowTransform = SMatrix();
-				const F32 radiansY = atan2(-directionalLightComp->Direction.X, -directionalLightComp->Direction.Z);
+				const F32 radiansY = atan2(directionalLightComp->Direction.X, directionalLightComp->Direction.Z);
 				const F32 l = sqrt(directionalLightComp->Direction.Z * directionalLightComp->Direction.Z + directionalLightComp->Direction.X * directionalLightComp->Direction.X);
-				const F32 radiansX = atan2(directionalLightComp->Direction.Y, l);
+				const F32 radiansX = atan2(-directionalLightComp->Direction.Y, l);
 				shadowTransform *= SMatrix::CreateRotationAroundY(radiansY);
 				shadowTransform *= SMatrix::CreateRotationFromAxisAngle(shadowTransform.GetRight(), radiansX);
 
@@ -56,7 +57,7 @@ namespace Havtorn
 				directionalLightComp->ShadowmapView.ShadowPosition = SVector4(position.X, position.Y, position.Z, 1.0f);
 
 				const SVector shadowDirection = { directionalLightComp->Direction.X, directionalLightComp->Direction.Y, directionalLightComp->Direction.Z };
-				directionalLightComp->ShadowmapView.ShadowViewMatrix = SMatrix::LookAtLH(position, position - shadowDirection, SVector::Up);
+				directionalLightComp->ShadowmapView.ShadowViewMatrix = SMatrix::LookAtLH(position, position + shadowDirection, SVector::Up);
 				directionalLightComp->ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLightComp->ShadowViewSize.X, directionalLightComp->ShadowViewSize.Y, directionalLightComp->ShadowNearAndFarPlane.X, directionalLightComp->ShadowNearAndFarPlane.Y);
 			}
 
@@ -88,6 +89,15 @@ namespace Havtorn
 				if (!SComponent::IsValid(spotLightComp))
 					continue;
 
+				const STransformComponent* spotLightTransform = scene->GetComponent<STransformComponent>(spotLightComp);
+				if (!SComponent::IsValid(spotLightTransform))
+					continue;
+
+				const SMatrix transformMatrix = spotLightTransform->Transform.GetMatrix();
+				spotLightComp->Direction = SVector4(transformMatrix.GetForward(), 0.0f);
+				spotLightComp->DirectionNormal1 = SVector4(transformMatrix.GetRight(), 0.0f);
+				spotLightComp->DirectionNormal2 = SVector4(transformMatrix.GetUp(), 0.0f);
+				
 				const SMatrix spotlightProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(90.0f), 1.0f, 0.001f, spotLightComp->Range);
 				const SVector4 spotlightPosition = scene->GetComponent<STransformComponent>(spotLightComp->Owner)->Transform.GetMatrix().GetTranslation4();
 

@@ -1432,7 +1432,7 @@ namespace Havtorn
 		RenderStateManager.PSSetResources(0, 1, command.RenderTextures[0].GetShaderResourceView());
 
 		// Update lightbufferdata and fill lightbuffer
-		DirectionalLightBufferData.DirectionalLightDirection = command.Vectors[0];
+		DirectionalLightBufferData.ToDirectionalLight = -command.Vectors[0]; // Negate the direction going into the shaders
 		DirectionalLightBufferData.DirectionalLightColor = command.Colors[0].AsVector4();
 		DirectionalLightBuffer.BindBuffer(DirectionalLightBufferData);
 		RenderStateManager.PSSetConstantBuffer(2, DirectionalLightBuffer);
@@ -1616,7 +1616,7 @@ namespace Havtorn
 		ShadowAtlasDepth.SetAsPSResourceOnSlot(22);
 
 		// Lightbuffer
-		DirectionalLightBufferData.DirectionalLightDirection = command.Vectors[0];
+		DirectionalLightBufferData.ToDirectionalLight = -command.Vectors[0]; // Negate the direction going into the shaders
 		DirectionalLightBufferData.DirectionalLightColor = command.Colors[0].AsVector4();
 		DirectionalLightBuffer.BindBuffer(DirectionalLightBufferData);
 		RenderStateManager.PSSetConstantBuffer(1, DirectionalLightBuffer);
