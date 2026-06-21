@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include "SPlane.h"
+#include "Plane.h"
 
 namespace Havtorn 
 {

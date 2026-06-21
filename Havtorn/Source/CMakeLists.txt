@@ -101,6 +101,7 @@ set(CORE_FILES
     ${CORE_FOLDER}MathTypes/Quaternion.h
     ${CORE_FOLDER}MathTypes/Ray.h
     ${CORE_FOLDER}MathTypes/Rotator.h
+    ${CORE_FOLDER}MathTypes/Sphere.cpp
     ${CORE_FOLDER}MathTypes/Sphere.h
     ${CORE_FOLDER}MathTypes/Transform.cpp
     ${CORE_FOLDER}MathTypes/Transform.h
