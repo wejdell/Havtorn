@@ -2,7 +2,9 @@
 
 #include "InputTool.h"
 #include "EditorManager.h"
+
 #include <Assets/AssetRegistry.h>
+#include <Input/InputMapper.h>
 
 namespace Havtorn
 {
@@ -51,14 +53,14 @@ namespace Havtorn
 
 			if (GUI::Button("Add Axis"))
 			{
-				SInputMapping newMapping = { .ActivationType = EInputActivationType::Continuous, .Data = SAxis{.Axis = EInputAxis::GamepadLeftStickHorizontal,.AxisPositiveKey = EInputKey::KeyD, .AxisNegativeKey = EInputKey::KeyA } };
+				SInputMapping newMapping = { .ActivationType = EInputActivationType::Continuous, .Data = SAxis{.Axis = EInputAxis::GamepadLeftStickHorizontal,.AxisPositiveKey = EInputButton::KeyD, .AxisNegativeKey = EInputButton::KeyA } };
 				inputAction.InputMappings.push_back(newMapping);
 			}
 
 			GUI::SameLine();
 			if (GUI::Button("Add Key"))
 			{
-				SInputMapping newMapping = { .ActivationType = EInputActivationType::KeyDown, .Data = SKey{.Key = EInputKey::Space } };
+				SInputMapping newMapping = { .ActivationType = EInputActivationType::KeyDown, .Data = SKey{.Key = EInputButton::Space } };
 				inputAction.InputMappings.push_back(newMapping);
 			}
 
@@ -78,22 +80,101 @@ namespace Havtorn
 				case 0:
 				{
 					SAxis& axis = std::get<SAxis>(mapping.Data);
-					GUI::ComboEnum("Axis", axis.Axis, { EInputAxis::Count, EInputAxis::GamepadRegionStart }, { EComboFlag::WidthFitPreview });
+					GUI::ComboEnum("Axis", axis.Axis, { EInputAxis::Count, EInputAxis::GamepadInvalid, EInputAxis::GamepadRegionStart }, { EComboFlag::WidthFitPreview });
 					GUI::SameLine();
 					GUI::ComboEnum("Activation Type", mapping.ActivationType, { EInputActivationType::KeyDown, EInputActivationType::KeyUp }, { EComboFlag::WidthFitPreview });
 					if (axis.Axis == EInputAxis::Key)
 					{
 						GUI::Indent(0.0f);
-						GUI::ComboEnum("Axis Button Negative", axis.AxisNegativeKey, { EInputKey::None, EInputKey::GamepadRegionStart });
-						GUI::ComboEnum("Axis Button Positive", axis.AxisPositiveKey, { EInputKey::None, EInputKey::GamepadRegionStart });
+
+						EInputButton* key = &axis.AxisNegativeKey;
+
+						if (CurrentButtonBeingAssigned == key)
+						{
+							GUI::TextDisabled("Waiting For Button Press...");
+						}
+						else
+						{
+							GUI::PushID("AssignNegativeKey");
+							if (GUI::Button("Assign Input"))
+							{
+								CurrentButtonBeingAssigned = key;
+								EInputButton** currentTrackedProperty = &CurrentButtonBeingAssigned;
+								GEngine::GetInput()->StartListenForButtonInput([key, currentTrackedProperty](const EInputButton button)
+									{
+										if (key != nullptr)
+											*key = button;
+
+										if (*currentTrackedProperty != nullptr)
+											*currentTrackedProperty = nullptr;
+									}
+								);
+							}
+							GUI::PopID();
+							GUI::SameLine();
+							GUI::ComboEnum("Axis Button Negative", axis.AxisNegativeKey, { EInputButton::None, EInputButton::GamepadRegionStart });
+						}
+
+						key = &axis.AxisPositiveKey;
+
+						if (CurrentButtonBeingAssigned == key)
+						{
+							GUI::TextDisabled("Waiting For Button Press...");
+						}
+						else
+						{
+							GUI::PushID("AssignPositiveKey");
+							if (GUI::Button("Assign Input"))
+							{
+								CurrentButtonBeingAssigned = key;
+								EInputButton** currentTrackedProperty = &CurrentButtonBeingAssigned;
+								GEngine::GetInput()->StartListenForButtonInput([key, currentTrackedProperty](const EInputButton button)
+									{
+										if (key != nullptr)
+											*key = button;
+
+										if (*currentTrackedProperty != nullptr)
+											*currentTrackedProperty = nullptr;
+									}
+								);
+							}
+							GUI::PopID();
+							GUI::SameLine();
+							GUI::ComboEnum("Axis Button Positive", axis.AxisPositiveKey, { EInputButton::None, EInputButton::GamepadRegionStart });
+						}
+
 						GUI::Unindent(0.0f);
 					}
 				}
 				break;
 				case 1:
 				{
-					SKey& key = std::get<SKey>(mapping.Data);
-					GUI::ComboEnum("Key", key.Key, { EInputKey::None, EInputKey::GamepadRegionStart }, { EComboFlag::WidthFitPreview });
+					EInputButton* key = &std::get<SKey>(mapping.Data).Key;
+
+					if (CurrentButtonBeingAssigned == key)
+					{
+						GUI::TextDisabled("Waiting For Button Press...");
+						GUI::PopID();
+						continue;
+					}
+
+					if (GUI::Button("Assign Input"))
+					{
+						CurrentButtonBeingAssigned = key;
+						EInputButton** currentTrackedProperty = &CurrentButtonBeingAssigned;
+						GEngine::GetInput()->StartListenForButtonInput([key, currentTrackedProperty](const EInputButton button)
+							{
+								if (key != nullptr)
+									*key = button;
+
+								if (*currentTrackedProperty != nullptr)
+									*currentTrackedProperty = nullptr;
+							}
+						);
+					}
+					GUI::SameLine();
+					GUI::ComboEnum("Key", *key, { EInputButton::None, EInputButton::GamepadRegionStart, EInputButton::GamepadInvalid }, { EComboFlag::WidthFitPreview });
+					
 					GUI::SameLine();
 					GUI::ComboEnum("Activation Type", mapping.ActivationType, {}, { EComboFlag::WidthFitPreview });
 				}

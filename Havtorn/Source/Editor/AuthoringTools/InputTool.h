@@ -28,6 +28,8 @@ namespace Havtorn
 		SAssetReference AssetReference;
 		SInputAsset* InputAsset = nullptr;
 
+		EInputButton* CurrentButtonBeingAssigned = nullptr;
+
 		const U64 InputToolID = 107001; //1Input7Tool
 	};
 }
