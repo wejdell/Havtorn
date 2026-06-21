@@ -34,10 +34,12 @@ namespace Havtorn
 
 		// NW: This is offered as a guaranteed way of getting the current mouse mouse cursor position, regardless of other inputs.
 		[[nodiscard]] ENGINE_API SVector2<F32> GetCurrentMousePosition() const;
-		[[nodiscard]] ENGINE_API bool IsPressed(const EInputKey key, const U32 modifiers) const;
-		[[nodiscard]] ENGINE_API bool IsReleased(const EInputKey key, const U32 modifiers) const;
-		[[nodiscard]] ENGINE_API bool IsHeld(const EInputKey key, const U32 modifiers) const;
+		[[nodiscard]] ENGINE_API bool IsPressed(const EInputButton key, const U32 modifiers) const;
+		[[nodiscard]] ENGINE_API bool IsReleased(const EInputButton key, const U32 modifiers) const;
+		[[nodiscard]] ENGINE_API bool IsHeld(const EInputButton key, const U32 modifiers) const;
 		[[nodiscard]] ENGINE_API F32 GetAxisValue(const EInputAxis axis, const U32 modifiers) const;
+
+		ENGINE_API void StartListenForButtonInput(const std::function<void(const EInputButton)>& onNextButtonInput);
 
 	private:
 		void MapEvent(EInputActionEvent event, SInputAction action);

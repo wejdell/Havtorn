@@ -65,105 +65,116 @@ namespace Havtorn
 		return mask;
 	}
 
-	enum class EInputKey
+	enum class EInputButton
 	{
-		None = 0x00,
-		Mouse1 = 0x01, // Left
-		Mouse3 = 0x02, // Middle
-		Mouse2 = 0x03, // Right
-		Mouse4 = 0x04,
-		Mouse5 = 0x05,
-		Return = 0x0000000du,	// Enter
-		Esc = 0x0000001bu,	// Escape
-		Backspace = 0x00000008u,
-		Tab = 0x00000009u,
-		Space = 0x00000020u,
-		Key0 = 0x00000030u,
-		Key1 = 0x00000031u,
-		Key2 = 0x00000032u,
-		Key3 = 0x00000033u,
-		Key4 = 0x00000034u,
-		Key5 = 0x00000035u,
-		Key6 = 0x00000036u,
-		Key7 = 0x00000037u,
-		Key8 = 0x00000038u,
-		Key9 = 0x00000039u,
-		Shift = 0x400000e1u,
-		Ctrl = 0x400000e0u,
-		Alt = 0x400000e2u, // TODO.NW: See if we get inconsistent behavior here because we don't use the higher valued keycodes?
-		Pause = 0x40000048u,
-		Caps = 0x40000039u,	// Caps Lock
-		PageUp = 0x4000004bu,
-		PageDown = 0x4000004eu,
-		End = 0x4000004du,
-		Home = 0x4000004au,
-		Left = 0x40000050u, // Left Arrow
-		Up = 0x40000052u, // Up Arrow
-		Right = 0x4000004fu, // Right Arrow
-		Down = 0x40000051u, // Down
-		PrtSc = 0x40000046u, // Print Screen
-		Insert = 0x40000049u,
-		Delete = 0x0000007fu,
-		KeyA = 0x00000061u,
-		KeyB = 0x00000062u,
-		KeyC = 0x00000063u,
-		KeyD = 0x00000064u,
-		KeyE = 0x00000065u,
-		KeyF = 0x00000066u,
-		KeyG = 0x00000067u,
-		KeyH = 0x00000068u,
-		KeyI = 0x00000069u,
-		KeyJ = 0x0000006au,
-		KeyK = 0x0000006bu,
-		KeyL = 0x0000006cu,
-		KeyM = 0x0000006du,
-		KeyN = 0x0000006eu,
-		KeyO = 0x0000006fu,
-		KeyP = 0x00000070u,
-		KeyQ = 0x00000071u,
-		KeyR = 0x00000072u,
-		KeyS = 0x00000073u,
-		KeyT = 0x00000074u,
-		KeyU = 0x00000075u,
-		KeyV = 0x00000076u,
-		KeyW = 0x00000077u,
-		KeyX = 0x00000078u,
-		KeyY = 0x00000079u,
-		KeyZ = 0x0000007au,
-		LWin = 0x400000e3u, // Left Windows key
-		RWin = 0x400000e7u, // Right Windows key
-		KeyNum0 = 0x40000062u, // Numeric keypad 0 key
-		KeyNum1 = 0x40000059u, // Numeric keypad 1 key
-		KeyNum2 = 0x4000005au, // Numeric keypad 2 key
-		KeyNum3 = 0x4000005bu, // Numeric keypad 3 key
-		KeyNum4 = 0x4000005cu, // Numeric keypad 4 key
-		KeyNum5 = 0x4000005du, // Numeric keypad 5 key
-		KeyNum6 = 0x4000005eu, // Numeric keypad 6 key
-		KeyNum7 = 0x4000005fu, // Numeric keypad 7 key
-		KeyNum8 = 0x40000060u, // Numeric keypad 8 key
-		KeyNum9 = 0x40000061u, // Numeric keypad 9 key
-		KeyNumMult = 0x40000055u, // Numeric keypad Multiply key
-		KeyNumAdd = 0x40000057u, // Numeric keypad Add key
-		Pipe = 0x4000009fu, // Separator key
-		KeyNumSub = 0x40000056u, // Numeric keypad Subtract key
-		KeyNumDec = 0x40000063u, // Numeric keypad Decimal key
-		KeyNumDiv = 0x40000054u, // Numeric keypad Divide key
-		KeyNumEnter = 0x40000058u, // Numeric keypad Enter key
-		F1 = 0x4000003au,
-		F2 = 0x4000003bu,
-		F3 = 0x4000003cu,
-		F4 = 0x4000003du,
-		F5 = 0x4000003eu,
-		F6 = 0x4000003fu,
-		F7 = 0x40000040u,
-		F8 = 0x40000041u,
-		F9 = 0x40000042u,
-		F10 = 0x40000043u,
-		F11 = 0x40000044u,
-		F12 = 0x40000045u,
-		NumLk = 0x40000053u,	// Num Lock key
-		ScrLk = 0x40000047u,	// Scroll Lock key
-		GamepadInvalid = 257,
+		None                = 0,
+		MouseLeft           = 1,
+		MouseMiddle         = 2,
+		MouseRight          = 3, 
+		KeyA                = 4,
+		KeyB                = 5,
+		KeyC                = 6,
+		KeyD                = 7,
+		KeyE                = 8,
+		KeyF                = 9,
+		KeyG                = 10,
+		KeyH                = 11,
+		KeyI                = 12,
+		KeyJ                = 13,
+		KeyK                = 14,
+		KeyL                = 15,
+		KeyM                = 16,
+		KeyN                = 17,
+		KeyO                = 18,
+		KeyP                = 19,
+		KeyQ                = 20,
+		KeyR                = 21,
+		KeyS                = 22,
+		KeyT                = 23,
+		KeyU                = 24,
+		KeyV                = 25,
+		KeyW                = 26,
+		KeyX                = 27,
+		KeyY                = 28,
+		KeyZ                = 29,
+		Key1                = 30,
+		Key2                = 31,
+		Key3                = 32,
+		Key4                = 33,
+		Key5                = 34,
+		Key6                = 35,
+		Key7                = 36,
+		Key8                = 37,
+		Key9                = 38,
+		Key0                = 39,
+		Return              = 40, // Enter
+		Esc                 = 41, // Escape
+		Backspace           = 42,
+		Tab                 = 43,
+		Space               = 44,
+        Minus               = 45, // + on SE keyboard
+        Equals              = 46, // ´ on SE keyboard
+        LBracket            = 47, // Å on SE keyboard
+        RBracket            = 48, // ¨ on SE keyboard
+        Semicolon           = 51, // Ö on SE keyboard
+        AcuteAccent         = 52, // Ä on SE keyboard
+        ANSIGraveAccent     = 53, // § on SE keyboard
+        Comma               = 54,
+        Period              = 55,
+        ForwardSlash        = 56, // - on SE keyboard
+		Caps                = 57, // Caps Lock
+		F1                  = 58,
+		F2                  = 59,
+		F3                  = 60,
+		F4                  = 61,
+		F5                  = 62,
+		F6                  = 63,
+		F7                  = 64,
+		F8                  = 65,
+		F9                  = 66,
+		F10                 = 67,
+		F11                 = 68,
+		F12                 = 69,
+		PrtSc               = 70, // Print Screen
+		ScrLk               = 71, // Scroll Lock key
+		Pause               = 72,
+		Insert              = 73,
+		Home                = 74,
+		PageUp              = 75,
+		Delete              = 76,
+		End                 = 77,
+		PageDown            = 78,
+		Right               = 79, // Right Arrow
+		Left                = 80, // Left Arrow
+		Down                = 81, // Down
+		Up                  = 82, // Up Arrow
+		NumLk               = 83, // Num Lock key
+		KeyNumDiv           = 84, // Numeric keypad Divide key
+		KeyNumMult          = 85, // Numeric keypad Multiply key
+		KeyNumSub           = 86, // Numeric keypad Subtract key
+		KeyNumAdd           = 87, // Numeric keypad Add key
+		KeyNumEnter         = 88, // Numeric keypad Enter key
+		KeyNum1             = 89, // Numeric keypad 1 key
+		KeyNum2             = 90, // Numeric keypad 2 key
+		KeyNum3             = 91, // Numeric keypad 3 key
+		KeyNum4             = 92, // Numeric keypad 4 key
+		KeyNum5             = 93, // Numeric keypad 5 key
+		KeyNum6             = 94, // Numeric keypad 6 key
+		KeyNum7             = 95, // Numeric keypad 7 key
+		KeyNum8             = 96, // Numeric keypad 8 key
+		KeyNum9             = 97, // Numeric keypad 9 key
+		KeyNum0             = 98, // Numeric keypad 0 key
+		KeyNumDec           = 99, // Numeric keypad Decimal key
+        ISOGraveAccent      = 100, // < on SE keyboard
+		LCtrl               = 224,
+		LShift              = 225,
+		LAlt                = 226, // TODO.NW: See if we get inconsistent behavior here because we don't use the higher valued keycodes?
+		LGui                = 227, // Left Windows/Command key
+		RCtrl               = 228,
+		RShift              = 229,
+		RAlt                = 230,
+		RGui                = 231, // Right Windows/Command key
+		GamepadInvalid      = 257,
 		GamepadSouth,				/**< Bottom face button (e.g. Xbox A button) */
 		GamepadEast,				/**< Right face button (e.g. Xbox B button) */
 		GamepadWest,				/**< Left face button (e.g. Xbox X button) */
@@ -270,14 +281,14 @@ namespace Havtorn
 	struct SAxis //Float
 	{
 		EInputAxis Axis = EInputAxis::Key;
-		EInputKey AxisPositiveKey = EInputKey::None; // Optional
-		EInputKey AxisNegativeKey = EInputKey::None; // Optional
+		EInputButton AxisPositiveKey = EInputButton::None; // Optional
+		EInputButton AxisNegativeKey = EInputButton::None; // Optional
 		U32 Modifiers = STATIC_U32(EInputModifier::None);
 	};
 
 	struct SKey //Bool
 	{
-		EInputKey Key = EInputKey::None;
+		EInputButton Key = EInputButton::None;
 		U32 Modifiers = STATIC_U32(EInputModifier::None);
 	};
 
@@ -300,3 +311,10 @@ namespace Havtorn
 		std::vector<SInputMapping> InputMappings;
 	};
 }
+
+template <>
+struct magic_enum::customize::enum_range<Havtorn::EInputButton> 
+{
+	static constexpr Havtorn::I32 min = 0;
+	static constexpr Havtorn::I32 max = 512;
+};

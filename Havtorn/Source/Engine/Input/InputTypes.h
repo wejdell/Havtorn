@@ -59,7 +59,7 @@ namespace Havtorn
 	struct SInputActionPayload
 	{
 		EInputActionEvent Event = EInputActionEvent::Count;
-		EInputKey Key = EInputKey::None;
+		EInputButton Key = EInputButton::None;
 		bool IsPressed = false;
 		bool IsHeld = false;
 		bool IsReleased = false;
@@ -73,19 +73,19 @@ namespace Havtorn
 
 	struct SInputAction
 	{
-		SInputAction(EInputKey key, EInputContext context, EInputModifier modifier)
+		SInputAction(EInputButton key, EInputContext context, EInputModifier modifier)
 			: Key(key)
 			, Contexts(STATIC_U32(context))
 			, Modifiers(STATIC_U32(modifier))
 		{}
 
-		SInputAction(EInputKey key, U32 contexts, EInputModifier modifier)
+		SInputAction(EInputButton key, U32 contexts, EInputModifier modifier)
 			: Key(key)
 			, Contexts(STATIC_U32(contexts))
 			, Modifiers(STATIC_U32(modifier))
 		{}
 
-		SInputAction(EInputKey key, std::initializer_list<EInputContext> contexts, std::initializer_list<EInputModifier> modifiers = {})
+		SInputAction(EInputButton key, std::initializer_list<EInputContext> contexts, std::initializer_list<EInputModifier> modifiers = {})
 			: Key(key)
 			, Contexts(STATIC_U32(EInputContext::Editor))
 			, Modifiers(0)
@@ -94,13 +94,13 @@ namespace Havtorn
 			SetModifiers(modifiers);
 		}
 
-		SInputAction(EInputKey key, EInputContext context)
+		SInputAction(EInputButton key, EInputContext context)
 			: Key(key)
 			, Contexts(STATIC_U32(context))
 			, Modifiers(0)
 		{}
 
-		SInputAction(EInputKey key, U32 contexts)
+		SInputAction(EInputButton key, U32 contexts)
 			: Key(key)
 			, Contexts(contexts)
 			, Modifiers(0)
@@ -137,7 +137,7 @@ namespace Havtorn
 				Contexts += STATIC_U32(context);
 		}
 
-		EInputKey Key = EInputKey::None;
+		EInputButton Key = EInputButton::None;
 		U32 Contexts = STATIC_U32(EInputContext::Editor);
 		U32 Modifiers = STATIC_U32(EInputModifier::None);
 	};
@@ -152,7 +152,7 @@ namespace Havtorn
 			Actions.push_back(action);
 		}
 
-		[[nodiscard]] bool HasKey(const EInputKey& key) const
+		[[nodiscard]] bool HasKey(const EInputButton& key) const
 		{
 			return std::ranges::any_of(Actions.begin(), Actions.end(),
 				[key](const SInputAction& action) {return action.Key == key; });
@@ -170,7 +170,7 @@ namespace Havtorn
 				[modifiers](const SInputAction& action) {return ((action.Modifiers == 0 && modifiers == 0) || (action.Modifiers & modifiers) != 0); });
 		}
 
-		[[nodiscard]] bool Has(const EInputKey& key, U32 context, U32 modifiers) const
+		[[nodiscard]] bool Has(const EInputButton& key, U32 context, U32 modifiers) const
 		{
 			return std::ranges::any_of(Actions.begin(), Actions.end(),
 				[key, context, modifiers](const SInputAction& action)
@@ -187,29 +187,29 @@ namespace Havtorn
 	{
 		SInputAxis(EInputAxis axis, EInputContext context)
 			: Axis(axis)
-			, AxisPositiveKey(EInputKey::KeyW)
-			, AxisNegativeKey(EInputKey::KeyS)
+			, AxisPositiveKey(EInputButton::KeyW)
+			, AxisNegativeKey(EInputButton::KeyS)
 			, Contexts(STATIC_U32(context))
 			, Modifiers(0)
 		{}
 
 		SInputAxis(EInputAxis axis, U32 contexts)
 			: Axis(axis)
-			, AxisPositiveKey(EInputKey::KeyW)
-			, AxisNegativeKey(EInputKey::KeyS)
+			, AxisPositiveKey(EInputButton::KeyW)
+			, AxisNegativeKey(EInputButton::KeyS)
 			, Contexts(contexts)
 			, Modifiers(0)
 		{}
 
 		SInputAxis(EInputAxis axis, EInputContext context, EInputModifier modifier)
 			: Axis(axis)
-			, AxisPositiveKey(EInputKey::KeyW)
-			, AxisNegativeKey(EInputKey::KeyS)
+			, AxisPositiveKey(EInputButton::KeyW)
+			, AxisNegativeKey(EInputButton::KeyS)
 			, Contexts(STATIC_U32(context))
 			, Modifiers(STATIC_U32(modifier))
 		{}
 
-		SInputAxis(EInputAxis axis, EInputKey axisPositiveKey, EInputKey axisNegativeKey, EInputContext context)
+		SInputAxis(EInputAxis axis, EInputButton axisPositiveKey, EInputButton axisNegativeKey, EInputContext context)
 			: Axis(axis)
 			, AxisPositiveKey(axisPositiveKey)
 			, AxisNegativeKey(axisNegativeKey)
@@ -217,7 +217,7 @@ namespace Havtorn
 			, Modifiers(0)
 		{}
 
-		SInputAxis(EInputAxis axis, EInputKey axisPositiveKey, EInputKey axisNegativeKey, U32 contexts)
+		SInputAxis(EInputAxis axis, EInputButton axisPositiveKey, EInputButton axisNegativeKey, U32 contexts)
 			: Axis(axis)
 			, AxisPositiveKey(axisPositiveKey)
 			, AxisNegativeKey(axisNegativeKey)
@@ -227,8 +227,8 @@ namespace Havtorn
 
 		SInputAxis(EInputAxis axis, std::initializer_list<EInputContext> contexts, std::initializer_list<EInputModifier> modifiers = {})
 			: Axis(axis)
-			, AxisPositiveKey(EInputKey::KeyW)
-			, AxisNegativeKey(EInputKey::KeyS)
+			, AxisPositiveKey(EInputButton::KeyW)
+			, AxisNegativeKey(EInputButton::KeyS)
 			, Contexts(STATIC_U32(EInputContext::Editor))
 			, Modifiers(0)
 		{
@@ -236,7 +236,7 @@ namespace Havtorn
 			SetModifiers(modifiers);
 		}
 
-		SInputAxis(EInputAxis axis, EInputKey axisPositiveKey, EInputKey axisNegativeKey, std::initializer_list<EInputContext> contexts, std::initializer_list<EInputModifier> modifiers = {})
+		SInputAxis(EInputAxis axis, EInputButton axisPositiveKey, EInputButton axisNegativeKey, std::initializer_list<EInputContext> contexts, std::initializer_list<EInputModifier> modifiers = {})
 			: Axis(axis)
 			, AxisPositiveKey(axisPositiveKey)
 			, AxisNegativeKey(axisNegativeKey)
@@ -278,7 +278,7 @@ namespace Havtorn
 				Contexts += STATIC_U32(context);
 		}
 
-		[[nodiscard]] F32 GetAxisValue(const EInputKey& key) const
+		[[nodiscard]] F32 GetAxisValue(const EInputButton& key) const
 		{
 			if (AxisPositiveKey == key)
 				return 1.0;
@@ -290,8 +290,8 @@ namespace Havtorn
 		}
 
 		EInputAxis Axis = EInputAxis::Key;
-		EInputKey AxisPositiveKey = EInputKey::None; // Optional
-		EInputKey AxisNegativeKey = EInputKey::None; // Optional
+		EInputButton AxisPositiveKey = EInputButton::None; // Optional
+		EInputButton AxisNegativeKey = EInputButton::None; // Optional
 		U32 Contexts = STATIC_U32(EInputContext::Editor);
 		U32 Modifiers = STATIC_U32(EInputModifier::None);
 	};
@@ -312,7 +312,7 @@ namespace Havtorn
 				[](const SInputAxis& axis) {return axis.Axis == EInputAxis::Key; });
 		}
 
-		[[nodiscard]] bool Has(const EInputKey& key, const U32 context, const U32 modifiers, F32& outAxisValue) const
+		[[nodiscard]] bool Has(const EInputButton& key, const U32 context, const U32 modifiers, F32& outAxisValue) const
 		{
 			return std::ranges::any_of(Axes.begin(), Axes.end(),
 				[key, context, modifiers, &outAxisValue](const SInputAxis& axisAction)
