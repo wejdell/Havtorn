@@ -112,7 +112,7 @@ namespace Havtorn
 							}
 							GUI::PopID();
 							GUI::SameLine();
-							GUI::ComboEnum("Axis Button Negative", axis.AxisNegativeKey, { EInputButton::None, EInputButton::GamepadRegionStart });
+							GUI::ComboEnum("Axis Button Negative", axis.AxisNegativeKey, { EInputButton::None, EInputButton::GamepadRegionStart }, { EComboFlag::WidthFitPreview });
 						}
 
 						key = &axis.AxisPositiveKey;
@@ -140,7 +140,7 @@ namespace Havtorn
 							}
 							GUI::PopID();
 							GUI::SameLine();
-							GUI::ComboEnum("Axis Button Positive", axis.AxisPositiveKey, { EInputButton::None, EInputButton::GamepadRegionStart });
+							GUI::ComboEnum("Axis Button Positive", axis.AxisPositiveKey, { EInputButton::None, EInputButton::GamepadRegionStart }, { EComboFlag::WidthFitPreview });
 						}
 
 						GUI::Unindent(0.0f);
