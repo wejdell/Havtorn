@@ -25,7 +25,7 @@ namespace Havtorn
 
 		GUI::DragFloat3("Shape Local Offset", physicsComponent->ShapeLocalOffset, GUI::SliderSpeed);
 
-		STransformComponent* transform = scene->GetComponent<STransformComponent>(entityOwner);
+		const STransformComponent* transform = scene->GetComponent<STransformComponent>(entityOwner);
 
 		U64 renderViewID = 0;
 		if (CScene* worldScene = UComponentAlgo::GetContainingScene(entityOwner, GEngine::GetWorld()->GetActiveScenes()); worldScene != scene)
