@@ -48,7 +48,7 @@ namespace Havtorn
 				GDebugDraw::AddSphere(transform->Transform.GetMatrix().GetTranslation(), SVector::Zero, SVector(physicsComponent->ShapeLocalRadius), SColor::Green, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
 			}
 		}
-		break;
+			break;
 		case EPhysics3DShapeType::InfinitePlane:
 		{
 			if (SComponent::IsValid(transform))
@@ -56,18 +56,18 @@ namespace Havtorn
 				GDebugDraw::AddGrid(transform->Transform.GetMatrix().GetTranslation(), SVector::Zero, SColor::Green, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
 			}
 		}
-		break;
+			break;
 		case EPhysics3DShapeType::Capsule:
 		{
 			GUI::DragFloat2("Shape Local Radius And Height", physicsComponent->ShapeLocalRadiusAndHeight, GUI::SliderSpeed);
-
+			
 			if (SComponent::IsValid(transform))
 			{
 				const SMatrix transformMatrix = transform->Transform.GetMatrix();
 				const SVector facing = transformMatrix.GetEuler();
 				const SVector center = transformMatrix.GetTranslation();
 
-				const SVector heightOffset = SVector(0.0f, physicsComponent->ShapeLocalRadiusAndHeight.Y - physicsComponent->ShapeLocalRadiusAndHeight.X, 0.0f);
+				const SVector heightOffset = SVector(0.0f, physicsComponent->ShapeLocalRadiusAndHeight.Y * 0.5f - physicsComponent->ShapeLocalRadiusAndHeight.X, 0.0f);
 				GDebugDraw::AddSphere(center + heightOffset, facing, SVector(physicsComponent->ShapeLocalRadiusAndHeight.X), SColor::Green, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
 				GDebugDraw::AddSphere(center - heightOffset, facing, SVector(physicsComponent->ShapeLocalRadiusAndHeight.X), SColor::Green, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
 				GDebugDraw::AddArrow(center, center + transformMatrix.GetForward(), SColor::Green, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
