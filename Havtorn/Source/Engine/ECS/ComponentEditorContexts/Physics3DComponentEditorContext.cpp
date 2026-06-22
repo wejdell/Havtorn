@@ -103,18 +103,18 @@ namespace Havtorn
 				g = (SVector4(g + physicsComponent->ShapeLocalOffset, 1.0f) * transformMatrix).ToVector3();
 				h = (SVector4(h + physicsComponent->ShapeLocalOffset, 1.0f) * transformMatrix).ToVector3();
 
-				GDebugDraw::AddLine(a, b, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
-				GDebugDraw::AddLine(b, c, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
-				GDebugDraw::AddLine(c, d, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
-				GDebugDraw::AddLine(d, a, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
-				GDebugDraw::AddLine(a, e, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
-				GDebugDraw::AddLine(b, h, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
-				GDebugDraw::AddLine(d, f, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
-				GDebugDraw::AddLine(c, g, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
-				GDebugDraw::AddLine(e, f, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
-				GDebugDraw::AddLine(f, g, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
-				GDebugDraw::AddLine(g, h, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
-				GDebugDraw::AddLine(h, e, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
+				GDebugDraw::AddLine(a, b, SColor::Green, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
+				GDebugDraw::AddLine(b, c, SColor::Green, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
+				GDebugDraw::AddLine(c, d, SColor::Green, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
+				GDebugDraw::AddLine(d, a, SColor::Green, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
+				GDebugDraw::AddLine(a, e, SColor::Green, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
+				GDebugDraw::AddLine(b, h, SColor::Green, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
+				GDebugDraw::AddLine(d, f, SColor::Green, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
+				GDebugDraw::AddLine(c, g, SColor::Green, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
+				GDebugDraw::AddLine(e, f, SColor::Green, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
+				GDebugDraw::AddLine(f, g, SColor::Green, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
+				GDebugDraw::AddLine(g, h, SColor::Green, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
+				GDebugDraw::AddLine(h, e, SColor::Green, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
 			}
 		}
 			break;
