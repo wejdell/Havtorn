@@ -67,7 +67,7 @@ namespace Havtorn
 				const SVector facing = transformMatrix.GetEuler();
 				const SVector center = transformMatrix.GetTranslation();
 
-				const SVector heightOffset = SVector(0.0f, 0.0f, physicsComponent->ShapeLocalRadiusAndHeight.Y - physicsComponent->ShapeLocalRadiusAndHeight.X);
+				const SVector heightOffset = SVector(0.0f, physicsComponent->ShapeLocalRadiusAndHeight.Y - physicsComponent->ShapeLocalRadiusAndHeight.X, 0.0f);
 				GDebugDraw::AddSphere(center + heightOffset, facing, SVector(physicsComponent->ShapeLocalRadiusAndHeight.X), SColor::Green, 0.0f);
 				GDebugDraw::AddSphere(center - heightOffset, facing, SVector(physicsComponent->ShapeLocalRadiusAndHeight.X), SColor::Green, 0.0f);
 				GDebugDraw::AddArrow(center, center + transformMatrix.GetForward(), SColor::Green, 0.0f);
