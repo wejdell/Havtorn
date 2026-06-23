@@ -98,6 +98,13 @@ namespace Havtorn
 					mapping.Data = data;
 				}
 				break;
+				case STATIC_U32(2):
+				{
+					S2DAxis data = S2DAxis{};
+					DeserializeData(data, fromData, pointerPosition);
+					mapping.Data = data;
+				}
+				break;
 				}
 			}
 		}
