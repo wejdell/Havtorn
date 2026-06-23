@@ -9,6 +9,8 @@ namespace Havtorn
 {
 	struct SEditorAssetRepresentation;
 
+	struct SAxis;
+
 	class CInputTool : public CWindow
 	{
 	public:
@@ -23,6 +25,9 @@ namespace Havtorn
 
 	private:
 		void DrawInputTable();
+		void DrawAxisGUI(const char* label, SAxis& axisValue, EInputActivationType& mappingActivationType);
+		// Returns true if button press assignment is ongoing
+		bool DrawAssignButtonKeyElement(const char* label, EInputButton* key);
 		
 		std::string AssetName;
 		SAssetReference AssetReference;

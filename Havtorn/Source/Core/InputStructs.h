@@ -292,6 +292,12 @@ namespace Havtorn
 		U32 Modifiers = STATIC_U32(EInputModifier::None);
 	};
 
+	struct S2DAxis //2D Vector
+	{
+		SAxis HorizontalAxis;
+		SAxis VerticalAxis;
+	};
+
 	enum class EInputActivationType : U8
 	{
 		Continuous,
@@ -302,7 +308,7 @@ namespace Havtorn
 	struct SInputMapping
 	{
 		EInputActivationType ActivationType = EInputActivationType::Continuous;
-		std::variant<SAxis, SKey> Data;
+		std::variant<SAxis, SKey, S2DAxis> Data;
 	};
 
 	struct SInputMapAction
