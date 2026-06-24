@@ -1,8 +1,8 @@
 // Copyright 2026 Team Havtorn. All Rights Reserved.
 
 #include "hvpch.h"
-#include "SHexCommandComponentEditorContext.h"
-#include "SHexCommandComponent.h"
+#include "HexCommandComponentEditorContext.h"
+#include "HexCommandComponent.h"
 
 #include "Scene/Scene.h"
 
