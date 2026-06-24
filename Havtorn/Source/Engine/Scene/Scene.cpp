@@ -680,11 +680,11 @@ namespace Havtorn
 		return DeserializeEntity(buffer.data(), makeUnique);
 	}
 
-	void CScene::GetAttachedEntities(const SEntity& parentEntity, std::vector<SEntity>& outEntities)
+	void CScene::GetAttachedEntities(const SEntity& parentEntity, std::vector<SEntity>& outEntities) const
 	{
 		// TODO.NW: Deal with 2D attachment?
 
-		STransformComponent* transformComponent = GetComponent<STransformComponent>(parentEntity);
+		const STransformComponent* transformComponent = GetComponent<STransformComponent>(parentEntity);
 		if (!SComponent::IsValid(transformComponent))
 			return;
 

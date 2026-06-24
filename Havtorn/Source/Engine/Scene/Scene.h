@@ -433,7 +433,7 @@ namespace Havtorn
 		ENGINE_API SEntity AddEntityFromStringBuffer(const std::string& buffer, const bool makeUnique = false);
 
 		// NW: Sorted leaf-entities first, INCLUDES parent
-		ENGINE_API void GetAttachedEntities(const SEntity& parentEntity, std::vector<SEntity>& outEntities);
+		ENGINE_API void GetAttachedEntities(const SEntity& parentEntity, std::vector<SEntity>& outEntities) const;
 
 		template<typename T>
 		const SEntity& GetEntity(const T* fromComponent) const
