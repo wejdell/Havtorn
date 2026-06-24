@@ -551,7 +551,7 @@ namespace Havtorn
 		fromScene->RemoveEntity(entity);
 	}
 
-	SEntity CScene::CopyEntity(const SEntity& fromEntity)
+	SEntity CScene::CopyEntity(const SEntity& fromEntity, U64 guid /*= 0*/)
 	{
 		std::string newEntityName = "UNNAMED";
 		if (SMetaDataComponent* metaDataComponent = GetComponent<SMetaDataComponent>(fromEntity))
@@ -564,7 +564,7 @@ namespace Havtorn
 			);
 		}
 
-		SEntity newEntity = AddEntity(newEntityName);
+		SEntity newEntity = AddEntity(newEntityName, guid);
 
 		for (auto& [typeID, storageIndex] : ComponentTypeIndices)
 		{
