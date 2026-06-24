@@ -17,6 +17,12 @@ namespace Havtorn
 		SHexCommandComponent* component = scene->GetComponent<SHexCommandComponent>(entityOwner);
 		GUI::TagPickerDropdown("Hex Command Tags", "Receive commands using one of these tags", component->TagsToListenFor);
 
+		if (GUI::Button("Debug Clear Stack"))
+		{
+			while (!component->HexCommands.empty())
+				component->HexCommands.pop();
+		}
+
 		std::stack<SHexCommand> hexCommandCopy = component->HexCommands;
 		U64 id = 0;
 		while (!hexCommandCopy.empty())
