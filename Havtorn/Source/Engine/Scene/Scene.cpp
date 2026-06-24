@@ -593,7 +593,7 @@ namespace Havtorn
 		return newEntity;
 	}
 
-	std::vector<SEntity> CScene::CopyEntities(CScene* fromScene)
+	std::vector<SEntity> CScene::CopyEntities(CScene* fromScene, std::vector<U64> requestedGUIDs)
 	{
 		if (fromScene == nullptr)
 		{
@@ -610,8 +610,13 @@ namespace Havtorn
 		// TODO.NW: Might want to figure out another way to access these, rather than returning a vector of them. For small scenes this is fine though.
 		std::vector<SEntity> copiedEntities;
 
-		for (const SEntity& otherSceneEntity : fromScene->Entities)
+		// NW: This probably won't be used a lot and definitely not on tick, so it's probably ok that it's provided as a copy
+		requestedGUIDs.resize(fromScene->Entities.size(), 0);
+
+		for (U64 i = 0; i < fromScene->Entities.size(); i++)
 		{
+			const SEntity& otherSceneEntity = fromScene->Entities[i];
+
 			// TODO.NW: Check this name collision resolution, doesn't seem to work.
 			std::string newEntityName = "UNNAMED";
 			if (SMetaDataComponent* metaDataComponent = fromScene->GetComponent<SMetaDataComponent>(otherSceneEntity))
@@ -624,7 +629,7 @@ namespace Havtorn
 				);
 			}
 
-			SEntity newEntity = AddEntity(newEntityName);
+			SEntity newEntity = AddEntity(newEntityName, requestedGUIDs[i]);
 
 			for (auto& [typeID, storageIndex] : fromScene->ComponentTypeIndices)
 			{

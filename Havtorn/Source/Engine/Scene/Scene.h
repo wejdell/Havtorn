@@ -426,8 +426,8 @@ namespace Havtorn
 		ENGINE_API void RemoveEntity(const SEntity entity);
 		ENGINE_API void ClearScene();
 		ENGINE_API void MoveEntityToScene(const SEntity& entity, CScene* fromScene);
-		ENGINE_API SEntity CopyEntity(const SEntity& fromEntity);
-		ENGINE_API std::vector<SEntity> CopyEntities(CScene* fromScene);
+		ENGINE_API SEntity CopyEntity(const SEntity& fromEntity, U64 guid = 0);
+		ENGINE_API std::vector<SEntity> CopyEntities(CScene* fromScene, std::vector<U64> requestedGUIDs);
 
 		ENGINE_API std::string GetEntityStringBuffer(const SEntity& entity);
 		ENGINE_API SEntity AddEntityFromStringBuffer(const std::string& buffer, const bool makeUnique = false);
