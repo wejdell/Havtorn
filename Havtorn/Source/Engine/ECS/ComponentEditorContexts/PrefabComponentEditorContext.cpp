@@ -48,7 +48,7 @@ namespace Havtorn
 		if (prefabAsset == nullptr)
 			return;
 
-		std::vector<SEntity> newEntities = scene->CopyEntities(prefabAsset->Scene.get());
+		std::vector<SEntity> newEntities = scene->CopyEntities(prefabAsset->Scene.get(), {});
 
 		for (const SEntity& entity : newEntities)
 		{
