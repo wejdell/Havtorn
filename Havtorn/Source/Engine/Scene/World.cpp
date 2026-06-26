@@ -83,9 +83,10 @@ namespace Havtorn
 		// fix assigning multiple contexts (bitset for combining contexts) so 
 		// we can toggle it correctly here
 		GEngine::GetInput()->SetInputContext(EInputContext::InGame);
-
+		
 		PlayState = EWorldPlayState::Playing;
 		OnBeginPlayDelegate.Broadcast(Scenes);
+		OnDeferredBeginPlayDelegate.Broadcast(Scenes);
 
 		return true;
 	}
@@ -100,6 +101,7 @@ namespace Havtorn
 
 		PlayState = EWorldPlayState::Paused;
 		OnPausePlayDelegate.Broadcast(Scenes);
+		OnDeferredPausePlayDelegate.Broadcast(Scenes);
 
 		return true;
 	}
@@ -118,6 +120,7 @@ namespace Havtorn
 
 		PlayState = EWorldPlayState::Stopped;
 		OnEndPlayDelegate.Broadcast(Scenes);
+		OnDeferredEndPlayDelegate.Broadcast(Scenes);
 
 		return true;
 	}

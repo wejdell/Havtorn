@@ -174,8 +174,11 @@ namespace Havtorn
 	public:
 		// TODO.NW: Maybe unify and have Enum arg instead
 		CMulticastDelegate<std::vector<Ptr<CScene>>&> OnBeginPlayDelegate;
+		CMulticastDelegate<std::vector<Ptr<CScene>>&> OnDeferredBeginPlayDelegate;
 		CMulticastDelegate<std::vector<Ptr<CScene>>&> OnPausePlayDelegate;
+		CMulticastDelegate<std::vector<Ptr<CScene>>&> OnDeferredPausePlayDelegate;
 		CMulticastDelegate<std::vector<Ptr<CScene>>&> OnEndPlayDelegate;
+		CMulticastDelegate<std::vector<Ptr<CScene>>&> OnDeferredEndPlayDelegate;
 
 		CMulticastDelegate<CScene*, const SEntity, const SEntity> OnBeginOverlap;
 		CMulticastDelegate<CScene*, const SEntity, const SEntity> OnEndOverlap;
