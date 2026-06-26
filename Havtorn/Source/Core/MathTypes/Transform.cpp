@@ -21,11 +21,10 @@ namespace Havtorn
 
 	void STransform::SetMatrix(const SMatrix& matrix)
 	{
-		// TODO.NW: Fix shrinking bug, floating point error that happens when parenting Lamp->Bed->Clock and then selecting Lamp
 		if (Parent)
 		{
 			WorldMatrix = matrix;
-			LocalMatrix = WorldMatrix * Parent->GetMatrix().FastInverse();
+			LocalMatrix = WorldMatrix * Parent->GetMatrix().Inverse();
 		}
 		else
 			LocalMatrix = matrix;
