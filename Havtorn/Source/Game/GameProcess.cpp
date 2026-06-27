@@ -17,7 +17,7 @@ namespace Havtorn
 		HV_LOG_INFO("Game shutdown!");
 	}
 
-	bool CGameProcess::Init(CPlatformManager* /*platformManager*/)
+	bool CGameProcess::Init(CPlatformManager* platformManager)
 	{
 		GameManager = new CGameManager();
 
@@ -28,7 +28,7 @@ namespace Havtorn
 			return false;
 		}
 
-		return GameManager->Init();
+		return GameManager->Init(platformManager);
 	}
 
 	void CGameProcess::OnApplicationReady()

@@ -247,6 +247,11 @@ namespace Havtorn
 		HitTestData.BlockHitTest = shouldBlock;
 	}
 
+	void CPlatformManager::SetCursorLock(const bool shouldLock)
+	{
+		SDL_SetWindowRelativeMouseMode(Window, shouldLock);
+	}
+
 	void CPlatformManager::BeginFrame()
 	{
 		EventLoop();

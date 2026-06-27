@@ -7,13 +7,15 @@
 
 namespace Havtorn
 {
+	class CPlatformManager;
+
 	class CGameManager
 	{
 	public:
 		GAME_API CGameManager();
 		GAME_API ~CGameManager();
 
-		GAME_API bool Init();
+		GAME_API bool Init(CPlatformManager* platformManager);
 		GAME_API void OnApplicationReady();
 
 		GAME_API void BeginFrame();
@@ -36,6 +38,7 @@ namespace Havtorn
 		CWorld* World = nullptr;
 
 	private:
+		CPlatformManager* PlatformManager = nullptr;
 		CGameDeepLinkParser DeepLinkParser;
 
 		std::function<void()> PlayGameFunction;

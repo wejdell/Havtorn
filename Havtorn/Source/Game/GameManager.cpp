@@ -25,10 +25,14 @@ namespace Havtorn
 		Instance = nullptr;
 	}
 
-	bool CGameManager::Init()
+	bool CGameManager::Init(CPlatformManager* platformManager)
 	{
+		if (platformManager == nullptr)
+			return false;
+
 		HV_LOG_INFO("GameManager Initialized.");
 
+		PlatformManager = platformManager;
 		World = GEngine::GetWorld();
 		World->OnBeginPlayDelegate.AddMember(this, &CGameManager::OnBeginPlay);
 		World->OnPausePlayDelegate.AddMember(this, &CGameManager::OnPausePlay);
