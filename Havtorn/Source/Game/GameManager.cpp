@@ -84,7 +84,7 @@ namespace Havtorn
 	{
 	}
 
-	void CGameManager::OnBeginPlay(std::vector<Ptr<CScene>>& /*scenes*/)
+	void CGameManager::OnBeginPlay(std::vector<Ptr<CScene>>& scenes)
 	{
 		World->RequestSystem<CInputSystem>(this);
 		World->RequestSystem<CSpriteAnimatorGraphSystem>(this);
@@ -98,6 +98,8 @@ namespace Havtorn
 
 		if (SUICanvasComponent* mainMenuCanvas = World->GetComponent<SUICanvasComponent>(SEntity(CScene::MainMenuEntityGUID)))
 			mainMenuCanvas->IsActive = true;
+
+		World->GetSystem<CCameraSystem>()->SetStartingCamera(scenes);
 	}
 
 	void CGameManager::OnPausePlay(std::vector<Ptr<CScene>>& /*scenes*/)
@@ -107,7 +109,7 @@ namespace Havtorn
 		// TODO.NW: Notify audio of pause state?
 	}
 
-	void CGameManager::OnEndPlay(std::vector<Ptr<CScene>>& /*scenes*/)
+	void CGameManager::OnEndPlay(std::vector<Ptr<CScene>>& scenes)
 	{
 		World->UnrequestSystem<CInputSystem>(this);
 		World->BlockPhysicsSystem(this);
@@ -115,6 +117,8 @@ namespace Havtorn
 
 		if (CUISystem* uiSystem = World->GetSystem<CUISystem>())
 			uiSystem->ClearFocus();
+
+		World->GetSystem<CCameraSystem>()->ResetStartingCamera(scenes);
 	}
 
 	void CGameManager::PlayFromScene(const std::string_view sceneName)

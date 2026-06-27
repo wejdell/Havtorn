@@ -1424,9 +1424,9 @@ namespace Havtorn
 		if (!payload.IsPressed)
 			return;
 
-		if (payload.Key == EInputKey::KeyZ)
+		if (payload.Key == EInputButton::KeyZ)
 			EditHistory.Undo();
-		else if (payload.Key == EInputKey::KeyY)
+		else if (payload.Key == EInputButton::KeyY)
 			EditHistory.Redo();
 	}
 

@@ -10,6 +10,8 @@ namespace Havtorn
 	class CWorld;
 	struct SEntity;
 	struct SComponent;
+	struct SSphere;
+	struct SFrustum;
 
 	class CRenderSystem final : public ISystem
 	{
@@ -22,6 +24,8 @@ namespace Havtorn
 		// Camera Entity may be null
 		ENGINE_API void PushCommandsForScene(CScene* scene, const U64& renderViewID, const SEntity& cameraEntity, const bool runEditorDataPasses) const;
 		ENGINE_API void PushUniqueCommands(const U64& renderViewID) const;
+
+		bool IsCulled(CScene* scene, const SSphere& boundingSphere, const SFrustum& cameraFrustum) const;
 
 	private:
 		CRenderManager* RenderManager = nullptr;

@@ -32,20 +32,22 @@ namespace Havtorn
 		void ProcessEvent(const SDL_Event* event);
 		void EndFrameUpdate();
 
-		[[nodiscard]] const std::map<U32, SInputActionPayload>& GetKeyInputBuffer() const;
+		[[nodiscard]] const std::map<U32, SInputActionPayload>& GetButtonInputBuffer() const;
 		[[nodiscard]] const std::array<F32, STATIC_U64(EInputAxis::Count)>& GetAxisInputValues() const;
 		[[nodiscard]] const std::bitset<11>& GetKeyInputModifiers() const;
 
-		void HandleKeyDown(const U32& keyCode);
-		void HandleKeyUp(const U32& keyCode);
+		void HandleButtonDown(const U32& keyCode);
+		void HandleButtonUp(const U32& keyCode);
 		void HandleAxisEvent(const EInputAxis axis, const F32 value);
 		void SetModifiers(const U32& modifiers);
 
 	private:
 		// TODO.NW: Associate these with Users too
-		std::map<U32, SInputActionPayload> KeyInputBuffer;
+		std::map<U32, SInputActionPayload> ButtonInputBuffer;
 		std::array<F32, STATIC_U64(EInputAxis::Count)> AxisInputValues;
 		std::array<SDL_Gamepad*, MaxNumUsers> ActiveGamepadDevices;
 		std::bitset<11> KeyInputModifiers;
+
+		std::optional<std::function<void(const EInputButton)>> ButtonInputListener;
 	};
 }

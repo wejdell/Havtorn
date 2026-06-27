@@ -44,6 +44,8 @@ namespace Havtorn
 
 	void CInput::ProcessEvent(const SDL_Event* event)
 	{
+		constexpr U32 gamepadButtonInvalid = STATIC_U32(EInputButton::GamepadInvalid);
+
 		switch (event->type)
 		{
 		case SDL_EVENT_KEYBOARD_ADDED:
@@ -88,30 +90,42 @@ namespace Havtorn
 		}
 		break;
 
-		case SDL_EVENT_KEY_DOWN:		
+		case SDL_EVENT_KEY_DOWN:
+		{
+			const U32 keyScanCode = STATIC_U32(event->key.scancode);
+			if (keyScanCode >= gamepadButtonInvalid)
+				return;
+
 			SetModifiers(event->key.mod);
-			HandleKeyDown(event->key.key);
-			break;
+			HandleButtonDown(event->key.scancode);
+		}
+		break;
 
 		case SDL_EVENT_KEY_UP:
-			HandleKeyUp(event->key.key);
+		{
+			const U32 keyScanCode = STATIC_U32(event->key.scancode);
+			if (keyScanCode >= gamepadButtonInvalid)
+				return;
+
+			HandleButtonUp(event->key.scancode);
 			SetModifiers(event->key.mod);
-			break;
+		}
+		break;
 
 		case SDL_EVENT_MOUSE_BUTTON_DOWN:
-			HandleKeyDown(STATIC_U32(event->button.button));
+			HandleButtonDown(STATIC_U32(event->button.button));
 			break;
 
 		case SDL_EVENT_MOUSE_BUTTON_UP:
-			HandleKeyUp(STATIC_U32(event->button.button));
+			HandleButtonUp(STATIC_U32(event->button.button));
 			break;
 
 		case SDL_EVENT_GAMEPAD_BUTTON_DOWN:
-			HandleKeyDown(event->gbutton.button + STATIC_U32(EInputKey::GamepadRegionStart));
+			HandleButtonDown(event->gbutton.button + STATIC_U32(EInputButton::GamepadRegionStart));
 			break;
 
 		case SDL_EVENT_GAMEPAD_BUTTON_UP:
-			HandleKeyUp(event->gbutton.button + STATIC_U32(EInputKey::GamepadRegionStart));
+			HandleButtonUp(event->gbutton.button + STATIC_U32(EInputButton::GamepadRegionStart));
 			break;
 
 		case SDL_EVENT_MOUSE_MOTION:
@@ -154,7 +168,7 @@ namespace Havtorn
 
 	void CInput::EndFrameUpdate()
 	{
-		for (auto& keyInput : KeyInputBuffer | std::views::values)
+		for (auto& keyInput : ButtonInputBuffer | std::views::values)
 		{
 			if (keyInput.IsPressed)
 			{
@@ -163,12 +177,12 @@ namespace Havtorn
 			}
 		}
 
-		for (auto it = KeyInputBuffer.cbegin(); it != KeyInputBuffer.cend();)
+		for (auto it = ButtonInputBuffer.cbegin(); it != ButtonInputBuffer.cend();)
 		{
 			auto& keyInput = it->second;
 
 			if (keyInput.IsReleased)
-				it = KeyInputBuffer.erase(it);
+				it = ButtonInputBuffer.erase(it);
 
 			else
 				++it;
@@ -190,9 +204,9 @@ namespace Havtorn
 		}
 	}
 
-	const std::map<U32, SInputActionPayload>& CInput::GetKeyInputBuffer() const
+	const std::map<U32, SInputActionPayload>& CInput::GetButtonInputBuffer() const
 	{
-		return KeyInputBuffer;
+		return ButtonInputBuffer;
 	}
 
 	const std::array<F32, STATIC_U64(EInputAxis::Count)>& CInput::GetAxisInputValues() const
@@ -205,33 +219,39 @@ namespace Havtorn
 		return KeyInputModifiers;
 	}
 
-	void CInput::HandleKeyDown(const U32& keyCode)
+	void CInput::HandleButtonDown(const U32& scanCode)
 	{
-		if (KeyInputBuffer.contains(keyCode))
+		if (ButtonInputListener.has_value())
 		{
-			if (KeyInputBuffer[keyCode].IsPressed)
+			ButtonInputListener.value()(static_cast<EInputButton>(scanCode));
+			ButtonInputListener.reset();
+		}
+
+		if (ButtonInputBuffer.contains(scanCode))
+		{
+			if (ButtonInputBuffer[scanCode].IsPressed)
 			{
-				KeyInputBuffer[keyCode].IsPressed = false;
-				KeyInputBuffer[keyCode].IsHeld = true;
+				ButtonInputBuffer[scanCode].IsPressed = false;
+				ButtonInputBuffer[scanCode].IsHeld = true;
 			}
-			else if (!KeyInputBuffer[keyCode].IsHeld)
+			else if (!ButtonInputBuffer[scanCode].IsHeld)
 			{
-				KeyInputBuffer[keyCode].IsPressed = true;
+				ButtonInputBuffer[scanCode].IsPressed = true;
 			}
 		}
 		else
 		{
-			KeyInputBuffer.emplace(keyCode, SInputActionPayload());
-			KeyInputBuffer[keyCode].Key = static_cast<EInputKey>(keyCode);
-			KeyInputBuffer[keyCode].IsPressed = true;
+			ButtonInputBuffer.emplace(scanCode, SInputActionPayload());
+			ButtonInputBuffer[scanCode].Key = static_cast<EInputButton>(scanCode);
+			ButtonInputBuffer[scanCode].IsPressed = true;
 		}
 	}
 
-	void CInput::HandleKeyUp(const U32& keyCode)
+	void CInput::HandleButtonUp(const U32& scanCode)
 	{
-		KeyInputBuffer[keyCode].IsPressed = false;
-		KeyInputBuffer[keyCode].IsHeld = false;
-		KeyInputBuffer[keyCode].IsReleased = true;
+		ButtonInputBuffer[scanCode].IsPressed = false;
+		ButtonInputBuffer[scanCode].IsHeld = false;
+		ButtonInputBuffer[scanCode].IsReleased = true;
 	}
 
 	void CInput::HandleAxisEvent(const EInputAxis axis, const F32 value)

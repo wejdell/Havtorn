@@ -24,11 +24,6 @@ namespace Havtorn
 		mapper->GetAxisDelegate(EInputAxisEvent::MouseDeltaVertical).AddMember(this, &CCameraSystem::HandleAxisInput);
 		mapper->GetAxisDelegate(EInputAxisEvent::Zoom).AddMember(this, &CCameraSystem::HandleAxisInput);
 		mapper->GetActionDelegate(EInputActionEvent::ToggleFreeCam).AddMember(this, &CCameraSystem::ToggleFreeCam);
-		
-		CWorld* world = GEngine::GetWorld();
-		world->OnBeginPlayDelegate.AddMember(this, &CCameraSystem::OnBeginPlay);
-		world->OnPausePlayDelegate.AddMember(this, &CCameraSystem::OnPausePlay);
-		world->OnEndPlayDelegate.AddMember(this, &CCameraSystem::OnEndPlay);
 	}
 
 	CCameraSystem::~CCameraSystem()
@@ -41,11 +36,6 @@ namespace Havtorn
 		mapper->GetAxisDelegate(EInputAxisEvent::MouseDeltaVertical).RemoveObject(this);
 		mapper->GetAxisDelegate(EInputAxisEvent::Zoom).RemoveObject(this);
 		mapper->GetActionDelegate(EInputActionEvent::ToggleFreeCam).RemoveObject(this);
-
-		CWorld* world = GEngine::GetWorld();
-		world->OnBeginPlayDelegate.RemoveObject(this);
-		world->OnPausePlayDelegate.RemoveObject(this);
-		world->OnEndPlayDelegate.RemoveObject(this);
 	}
 
 	void CCameraSystem::Update(std::vector<Ptr<CScene>>& scenes)
@@ -144,8 +134,26 @@ namespace Havtorn
 	{
 		IsFreeCamActive = payload.IsHeld;
 	}
+	
+	void CCameraSystem::SetCameraSpeed(const F32 speed)
+	{
+		if (speed < 3.0f)
+			CameraSpeedInput = UMath::Remap(0.2f, 2.99f, -5.0f, -0.0f, speed);
+		else
+			CameraSpeedInput = UMath::Remap(3.0f, 10.0f, 0.0f, 5.0f, speed);
 
-	void CCameraSystem::OnBeginPlay(std::vector<Ptr<CScene>>& scenes)
+		HV_LOG_INFO("Speed Input: %f", CameraSpeedInput);
+	}
+
+	F32 CCameraSystem::GetCameraSpeed() const
+	{
+		if (CameraSpeedInput < 0.0f)
+			return UMath::Remap(-5.0f, -1.0f, 0.2f, 2.0f, CameraSpeedInput);
+		else
+			return UMath::Remap(0.0f, 5.0f, 3.0f, 10.0f, CameraSpeedInput);
+	}
+
+	void CCameraSystem::SetStartingCamera(std::vector<Ptr<CScene>>& scenes)
 	{
 		const SEntity& mainCamera = GEngine::GetWorld()->GetMainCamera();
 		SCameraData previousCameraData = UComponentAlgo::GetCameraData(mainCamera, scenes);
@@ -175,11 +183,7 @@ namespace Havtorn
 		}
 	}
 
-	void CCameraSystem::OnPausePlay(std::vector<Ptr<CScene>>& /*scenes*/)
-	{
-	}
-
-	void CCameraSystem::OnEndPlay(std::vector<Ptr<CScene>>& scenes)
+	void CCameraSystem::ResetStartingCamera(std::vector<Ptr<CScene>>& scenes)
 	{
 		const SEntity& startingCamera = GEngine::GetWorld()->GetMainCamera();
 		SCameraData startingCameraData = UComponentAlgo::GetCameraData(startingCamera, scenes);
@@ -196,24 +200,6 @@ namespace Havtorn
 		}
 
 		PreviousMainCamera = SEntity::Null;
-	}
-	
-	void CCameraSystem::SetCameraSpeed(const F32 speed)
-	{
-		if (speed < 3.0f)
-			CameraSpeedInput = UMath::Remap(0.2f, 2.99f, -5.0f, -0.0f, speed);
-		else
-			CameraSpeedInput = UMath::Remap(3.0f, 10.0f, 0.0f, 5.0f, speed);
-
-		HV_LOG_INFO("Speed Input: %f", CameraSpeedInput);
-	}
-
-	F32 CCameraSystem::GetCameraSpeed() const
-	{
-		if (CameraSpeedInput < 0.0f)
-			return UMath::Remap(-5.0f, -1.0f, 0.2f, 2.0f, CameraSpeedInput);
-		else
-			return UMath::Remap(0.0f, 5.0f, 3.0f, 10.0f, CameraSpeedInput);
 	}
 
 	void CCameraSystem::ResetInput()

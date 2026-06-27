@@ -11,6 +11,9 @@
 #include "Input/Input.h"
 #include "Assets/AssetRegistry.h"
 
+#include <MathTypes/Sphere.h>
+#include <MathTypes/Frustum.h>
+
 namespace Havtorn
 {
 	CRenderSystem::CRenderSystem(CRenderManager* renderManager, CWorld* world)
@@ -82,7 +85,16 @@ namespace Havtorn
 
 		const SEntity& editorRenderExemptEntity = GEngine::GetWorld()->GetEditorRenderExemptEntity();
 
-		// TODO.NW: Add frustum culling - send all meshes in all scenes to all active cameras, let the cameras decide whether they are visible
+		// TODO.NW: Consider sending in CameraData instead of entity?
+		const STransformComponent* cameraTransform = scene->GetComponent<STransformComponent>(cameraEntity);
+		if (!SComponent::IsValid(cameraTransform))
+			return;
+
+		const SCameraComponent* cameraComponent = scene->GetComponent<SCameraComponent>(cameraEntity);
+		if (!SComponent::IsValid(cameraComponent))
+			return;
+
+		const SFrustum cameraFrustum = SFrustum(cameraTransform->Transform.GetMatrix(), cameraComponent->ProjectionMatrix);
 
 		for (const SStaticMeshComponent* staticMeshComponent : scene->GetComponents<SStaticMeshComponent>())
 		{
@@ -97,30 +109,46 @@ namespace Havtorn
 			if (deferCommand)
 				meshID += 1000;
 
-			if (!RenderManager->IsStaticMeshInInstancedRenderList(meshID, renderViewID)) // if static, if instanced
-			{
-				SStaticMeshAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMeshComponent->AssetReference, staticMeshComponent->Owner.GUID);
-				if (asset == nullptr)
-					continue;
+			SStaticMeshAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMeshComponent->AssetReference, staticMeshComponent->Owner.GUID);
+			if (asset == nullptr)
+				continue;			
 
+			// TODO.NW: This is still not a super good culling system, would probably want to resolve for every light if a particular instance uses it for shadow casting?
+			// Not very fond of the idea of saving an instance list for each light source. Should probably look more closely at cascaded shadow maps
+			// https://learnopengl.com/Guest-Articles/2021/CSM
+			// https://developer.download.nvidia.com/SDK/10.5/opengl/src/cascaded_shadow_maps/doc/cascaded_shadow_maps.pdf
+
+			const SSphere meshBoundingSphere = SSphere((SVector4(asset->BoundsCenter, 1.0f) * transformComp->Transform.GetMatrix()).ToVector3(), asset->BoundsMin.Distance(asset->BoundsMax) * 0.5f);
+			if (IsCulled(scene, meshBoundingSphere, cameraFrustum))
+				continue;
+
+			// NW: Note that all registered instances of any mesh ID will be used for shadowcasting if that mesh ID has been registered for any light
+			if (!RenderManager->IsMeshShadowCastingForType(meshID, ERenderCommandType::ShadowAtlasPrePassDirectional, renderViewID))
+			{
 				for (const SDirectionalLightComponent* directionalLightComp : directionalLightComponents)
 				{
-					if (SComponent::IsValid(directionalLightComp) && directionalLightComp->IsActive)
+					if (!SComponent::IsValid(directionalLightComp) || !directionalLightComp->IsActive)
+						continue;
+
 					{
-						// TODO.NW: Make these instanced calls? Also really need frustum culling
 						SRenderCommand command;
 						command.Type = ERenderCommandType::ShadowAtlasPrePassDirectional;
 						command.ShadowmapViews.push_back(directionalLightComp->ShadowmapView);
-						command.Matrices.push_back(transformComp->Transform.GetMatrix());
 						command.U32s.push_back(meshID);
 						command.DrawCallData = asset->DrawCallData;
 						RenderManager->PushRenderCommand(command, renderViewID);
 					}
 				}
+				RenderManager->AddMeshShadowCastingForType(meshID, ERenderCommandType::ShadowAtlasPrePassDirectional, renderViewID);
+			}
 
+			if (!RenderManager->IsMeshShadowCastingForType(meshID, ERenderCommandType::ShadowAtlasPrePassPoint, renderViewID))
+			{
 				for (const SPointLightComponent* pointLightComp : pointLightComponents)
 				{
-					if (SComponent::IsValid(pointLightComp) && pointLightComp->IsActive)
+					if (!SComponent::IsValid(pointLightComp) || !pointLightComp->IsActive)
+						continue;
+
 					{
 						SRenderCommand command;
 						command.Type = ERenderCommandType::ShadowAtlasPrePassPoint;
@@ -131,10 +159,16 @@ namespace Havtorn
 						RenderManager->PushRenderCommand(command, renderViewID);
 					}
 				}
+				RenderManager->AddMeshShadowCastingForType(meshID, ERenderCommandType::ShadowAtlasPrePassPoint, renderViewID);
+			}
 
+			if (!RenderManager->IsMeshShadowCastingForType(meshID, ERenderCommandType::ShadowAtlasPrePassSpot, renderViewID))
+			{
 				for (const SSpotLightComponent* spotLightComp : spotLightComponents)
 				{
-					if (SComponent::IsValid(spotLightComp) && spotLightComp->IsActive)
+					if (!SComponent::IsValid(spotLightComp) || !spotLightComp->IsActive)
+						continue;
+
 					{
 						SRenderCommand command;
 						command.Type = ERenderCommandType::ShadowAtlasPrePassSpot;
@@ -145,7 +179,11 @@ namespace Havtorn
 						RenderManager->PushRenderCommand(command, renderViewID);
 					}
 				}
+				RenderManager->AddMeshShadowCastingForType(meshID, ERenderCommandType::ShadowAtlasPrePassSpot, renderViewID);
+			}
 
+			if (!RenderManager->IsStaticMeshInInstancedRenderList(meshID, renderViewID)) // if static, if instanced
+			{
 				if (materialComp->AssetReferences.size() != asset->NumberOfMaterials)
 					materialComp->AssetReferences.resize(asset->NumberOfMaterials, SAssetReference("Resources/M_MeshPreview.hva"));
 
@@ -189,6 +227,8 @@ namespace Havtorn
 				}
 			}
 
+			// TODO.NW: Might want to have two separate instance lists for shadowcasters vs visible instances?
+			// Should we add a boolean property for enabling shadowcasting so we can directly skip culling checks otherwise?
 			RenderManager->AddStaticMeshToInstancedRenderList(meshID, transformComp, renderViewID);
 		}
 
@@ -607,5 +647,49 @@ namespace Havtorn
 			command.Type = ERenderCommandType::RendererDebug;
 			RenderManager->PushRenderCommand(command, renderViewID);
 		}
+	}
+
+	bool CRenderSystem::IsCulled(CScene* scene, const SSphere& boundingSphere, const SFrustum& cameraFrustum) const
+	{
+		if (cameraFrustum.Intersects(boundingSphere))
+			return false;
+
+		// TODO.NW: Lights themselves should be culled in a pass before this, based on camera location and their own bounding geometry,
+		// then the culled set should be used in this function
+
+		for (const SDirectionalLightComponent* directionalLightComp : scene->GetComponents<SDirectionalLightComponent>())
+		{
+			if (!SComponent::IsValid(directionalLightComp) || !directionalLightComp->IsActive)
+				continue;
+
+			const SFrustum lightFrustum = SFrustum(directionalLightComp->ShadowmapView.ShadowViewMatrix, directionalLightComp->ShadowmapView.ShadowProjectionMatrix);
+			if (lightFrustum.Intersects(boundingSphere))
+				return false;
+		}
+
+		for (const SPointLightComponent* pointLightComp : scene->GetComponents<SPointLightComponent>())
+		{
+			if (!SComponent::IsValid(pointLightComp) || !pointLightComp->IsActive)
+				continue;
+
+			const STransformComponent* pointLightTransform = scene->GetComponent<STransformComponent>(pointLightComp);
+			if (!SComponent::IsValid(pointLightTransform))
+				continue;
+
+			if (SSphere(pointLightTransform->Transform.GetMatrix().GetTranslation(), pointLightComp->Range).Intersects(boundingSphere))
+				return false;
+		}
+
+		for (const SSpotLightComponent* spotLightComp : scene->GetComponents<SSpotLightComponent>())
+		{
+			if (!SComponent::IsValid(spotLightComp) || !spotLightComp->IsActive)
+				continue;
+
+			const SFrustum lightFrustum = SFrustum(spotLightComp->ShadowmapView.ShadowViewMatrix, spotLightComp->ShadowmapView.ShadowProjectionMatrix);
+			if (lightFrustum.Intersects(boundingSphere))
+				return false;
+		}
+
+		return true;
 	}
 }

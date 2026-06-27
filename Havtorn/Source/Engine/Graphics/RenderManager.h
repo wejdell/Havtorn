@@ -89,6 +89,12 @@ namespace Havtorn
 		std::unordered_map<U32, SSpriteInstanceData> ScreenSpaceSpriteInstanceData;
 	};
 
+	struct SShadowCasterCategory
+	{
+		ERenderCommandType CommandType = ERenderCommandType::ShadowAtlasPrePassDirectional;
+		std::vector<U32> MeshIDs;
+	};
+
 	class CRenderManager
 	{
 		friend CAssetRegistry;
@@ -110,6 +116,9 @@ namespace Havtorn
 		ENGINE_API SVector4 GetWorldPositionFromData(U64 dataIndex) const;
 
 		U32 WriteToAnimationDataTexture(const std::string& animationName);
+
+		bool IsMeshShadowCastingForType(const U32 meshID, const ERenderCommandType commandType, const U64 renderViewID) const;
+		void AddMeshShadowCastingForType(const U32 meshID, const ERenderCommandType commandType, const U64 renderViewID);
 
 		// TODO.NW: Might want to generalize these render view resources somehow still
 		ENGINE_API bool IsStaticMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewID);
@@ -389,6 +398,8 @@ namespace Havtorn
 		std::map<U64, SRenderView>* GameThreadRenderViews = &RenderViewsA;
 		std::map<U64, SRenderView>* RenderThreadRenderViews = &RenderViewsB;
 		std::map<U64, std::function<void(CRenderTexture&)>> RenderViewCallbacks;
+
+		std::map<U64, std::vector<SShadowCasterCategory>> GameThreadShadowCasters;
 
 		SVector4 ClearColor = SVector4(0.5f, 0.5f, 0.5f, 1.0f);
 

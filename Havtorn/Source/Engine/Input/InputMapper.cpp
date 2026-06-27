@@ -24,22 +24,22 @@ namespace Havtorn
 
 		// TODO.NW: Load from .ini file
 
-		const SInputAxis forwardAxis = { EInputAxis::Key, EInputKey::KeyW, EInputKey::KeyS, EInputContext::Editor | EInputContext::InGame };
+		const SInputAxis forwardAxis = { EInputAxis::Key, EInputButton::KeyW, EInputButton::KeyS, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputAxisEvent::Forward, forwardAxis);
 
 		const SInputAxis forwardAxisGamepad = { EInputAxis::GamepadLeftStickVertical, EInputContext::InGame };
 		MapEvent(EInputAxisEvent::Forward, forwardAxisGamepad);
 
-		const SInputAxis rightAxis = { EInputAxis::Key, EInputKey::KeyD, EInputKey::KeyA, EInputContext::Editor | EInputContext::InGame };
+		const SInputAxis rightAxis = { EInputAxis::Key, EInputButton::KeyD, EInputButton::KeyA, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputAxisEvent::Right, rightAxis);
 
 		const SInputAxis rightAxisGamepad = { EInputAxis::GamepadLeftStickHorizontal, EInputContext::InGame };
 		MapEvent(EInputAxisEvent::Right, rightAxisGamepad);
 
-		const SInputAxis upAxis = { EInputAxis::Key, EInputKey::KeyE, EInputKey::KeyQ, EInputContext::Editor | EInputContext::InGame };
+		const SInputAxis upAxis = { EInputAxis::Key, EInputButton::KeyE, EInputButton::KeyQ, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputAxisEvent::Up, upAxis);
 
-		const SInputAxis upAxisGamepad = { EInputAxis::Key, EInputKey::GamepadR1, EInputKey::GamepadL1, EInputContext::InGame };
+		const SInputAxis upAxisGamepad = { EInputAxis::Key, EInputButton::GamepadR1, EInputButton::GamepadL1, EInputContext::InGame };
 		MapEvent(EInputAxisEvent::Up, upAxisGamepad);
 
 		const SInputAxis mouseDeltaHorizontal = { EInputAxis::MouseDeltaHorizontal, EInputContext::Editor | EInputContext::InGame };
@@ -63,89 +63,89 @@ namespace Havtorn
 		const SInputAxis mouseWheel = { EInputAxis::MouseWheel, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputAxisEvent::Zoom, mouseWheel);
 
-		const SInputAction translateTransform = { EInputKey::KeyW, EInputContext::Editor };
+		const SInputAction translateTransform = { EInputButton::KeyW, EInputContext::Editor };
 		MapEvent(EInputActionEvent::TranslateTransform, translateTransform);
 
-		const SInputAction rotateTransform = { EInputKey::KeyE, EInputContext::Editor };
+		const SInputAction rotateTransform = { EInputButton::KeyE, EInputContext::Editor };
 		MapEvent(EInputActionEvent::RotateTransform, rotateTransform);
 
-		const SInputAction scaleTransform = { EInputKey::KeyR, EInputContext::Editor };
+		const SInputAction scaleTransform = { EInputButton::KeyR, EInputContext::Editor };
 		MapEvent(EInputActionEvent::ScaleTransform, scaleTransform);
 
-		const SInputAction toggleFreeCam = { EInputKey::Mouse2, EInputContext::Editor | EInputContext::InGame };
+		const SInputAction toggleFreeCam = { EInputButton::MouseRight, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputActionEvent::ToggleFreeCam, toggleFreeCam);
 
-		const SInputAction toggleFreeCamGamepad = { EInputKey::GamepadWest, EInputContext::InGame };
+		const SInputAction toggleFreeCamGamepad = { EInputButton::GamepadWest, EInputContext::InGame };
 		MapEvent(EInputActionEvent::ToggleFreeCam, toggleFreeCamGamepad);
 
-		const SInputAction renderPassForward = { EInputKey::F8, EInputContext::Editor | EInputContext::InGame };
+		const SInputAction renderPassForward = { EInputButton::F8, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputActionEvent::CycleRenderPassForward, renderPassForward);
 
-		const SInputAction renderPassBackward = { EInputKey::F7, EInputContext::Editor | EInputContext::InGame };
+		const SInputAction renderPassBackward = { EInputButton::F7, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputActionEvent::CycleRenderPassBackward, renderPassBackward);
 
-		const SInputAction renderPassReset = { EInputKey::F9, EInputContext::Editor | EInputContext::InGame };
+		const SInputAction renderPassReset = { EInputButton::F9, EInputContext::Editor | EInputContext::InGame };
 		MapEvent(EInputActionEvent::CycleRenderPassReset, renderPassReset);
 
-		const SInputAction pickEntity = { EInputKey::Mouse1, EInputContext::Editor };
+		const SInputAction pickEntity = { EInputButton::MouseLeft, EInputContext::Editor };
 		MapEvent(EInputActionEvent::PickEditorEntity, pickEntity);
 
-		const SInputAction contextPickEntity = { EInputKey::Mouse2, EInputContext::Editor };
+		const SInputAction contextPickEntity = { EInputButton::MouseRight, EInputContext::Editor };
 		MapEvent(EInputActionEvent::ContextPickEditorEntity, contextPickEntity);
 
-		const SInputAction ctrlPickEntity = { EInputKey::Mouse1, EInputContext::Editor, EInputModifier::Ctrl };
+		const SInputAction ctrlPickEntity = { EInputButton::MouseLeft, EInputContext::Editor, EInputModifier::Ctrl };
 		MapEvent(EInputActionEvent::ControlPickEditorEntity, ctrlPickEntity);
 
-		const SInputAction shiftPickEntity = { EInputKey::Mouse1, EInputContext::Editor, EInputModifier::Shift };
+		const SInputAction shiftPickEntity = { EInputButton::MouseLeft, EInputContext::Editor, EInputModifier::Shift };
 		MapEvent(EInputActionEvent::ShiftPickEditorEntity, shiftPickEntity);
 
-		const SInputAction focusEntity = { EInputKey::KeyF, EInputContext::Editor };
+		const SInputAction focusEntity = { EInputButton::KeyF, EInputContext::Editor };
 		MapEvent(EInputActionEvent::FocusEditorEntity, focusEntity);
 
-		const SInputAction deleteAction = { EInputKey::Delete, EInputContext::Editor };
+		const SInputAction deleteAction = { EInputButton::Delete, EInputContext::Editor };
 		MapEvent(EInputActionEvent::DeleteEvent, deleteAction);
 
-		const SInputAction toggleFullscreen = { EInputKey::F11, EInputContext::Editor };
+		const SInputAction toggleFullscreen = { EInputButton::F11, EInputContext::Editor };
 		MapEvent(EInputActionEvent::ToggleFullscreen, toggleFullscreen);
 
-		const SInputAction startPlay = { EInputKey::KeyP, EInputContext::Editor, EInputModifier::Alt };
+		const SInputAction startPlay = { EInputButton::KeyP, EInputContext::Editor, EInputModifier::Alt };
 		MapEvent(EInputActionEvent::StartPlay, startPlay);
 
 		// TODO.NW: Figure out how to deal with editor vs in game context here, and how to construct the input action.
 		// Esc by default in UE is end play. Shift+Esc could be used to Pause, or we decide to shift the role of those two.
-		const SInputAction stopPlay = { EInputKey::Esc, EInputContext::InGame };
+		const SInputAction stopPlay = { EInputButton::Esc, EInputContext::InGame };
 		MapEvent(EInputActionEvent::StopPlay, stopPlay);
 
 		// NW: the Sys key is a bit different. We might need this workaround on other modifier keys as well
 		// TODO.NW: See if this is better handled now that we use SDL
-		const SInputAction altPress = { EInputKey::Alt, EInputContext::Editor, EInputModifier::Alt };
+		const SInputAction altPress = { EInputButton::LAlt, EInputContext::Editor, EInputModifier::Alt };
 		MapEvent(EInputActionEvent::AltPress, altPress);
 
-		const SInputAction altRelease = { EInputKey::Alt, EInputContext::Editor };
+		const SInputAction altRelease = { EInputButton::LAlt, EInputContext::Editor };
 		MapEvent(EInputActionEvent::AltRelease, altRelease);
 
-		const SInputAction copy = { EInputKey::KeyC, EInputContext::Editor, EInputModifier::Ctrl };
+		const SInputAction copy = { EInputButton::KeyC, EInputContext::Editor, EInputModifier::Ctrl };
 		MapEvent(EInputActionEvent::Copy, copy);
 
-		const SInputAction paste = { EInputKey::KeyV, EInputContext::Editor, EInputModifier::Ctrl };
+		const SInputAction paste = { EInputButton::KeyV, EInputContext::Editor, EInputModifier::Ctrl };
 		MapEvent(EInputActionEvent::Paste, paste);
 
-		const SInputAction undo = { EInputKey::KeyZ, EInputContext::Editor, EInputModifier::Ctrl };
+		const SInputAction undo = { EInputButton::KeyZ, EInputContext::Editor, EInputModifier::Ctrl };
 		MapEvent(EInputActionEvent::Undo, undo);
 
-		const SInputAction redo = { EInputKey::KeyY, EInputContext::Editor, EInputModifier::Ctrl };
+		const SInputAction redo = { EInputButton::KeyY, EInputContext::Editor, EInputModifier::Ctrl };
 		MapEvent(EInputActionEvent::Redo, redo);
 
-		const SInputAction rename = { EInputKey::F2, EInputContext::Editor };
+		const SInputAction rename = { EInputButton::F2, EInputContext::Editor };
 		MapEvent(EInputActionEvent::Rename, rename);
 
-		const SInputAction movePivot = { EInputKey::KeyC, EInputContext::Editor };
+		const SInputAction movePivot = { EInputButton::KeyC, EInputContext::Editor };
 		MapEvent(EInputActionEvent::MovePivot, movePivot);
 
-		const SInputAction vertexSnapping = { EInputKey::KeyV, EInputContext::Editor };
+		const SInputAction vertexSnapping = { EInputButton::KeyV, EInputContext::Editor };
 		MapEvent(EInputActionEvent::VertexSnapping, vertexSnapping);
 
-		const SInputAction gridSnapping = { EInputKey::KeyG, EInputContext::Editor };
+		const SInputAction gridSnapping = { EInputButton::KeyG, EInputContext::Editor };
 		MapEvent(EInputActionEvent::GridSnapping, gridSnapping);
 
 		return true;
@@ -185,9 +185,9 @@ namespace Havtorn
 		return SVector2<F32>(axisInputValues[STATIC_U64(EInputAxis::MousePositionHorizontal)], axisInputValues[STATIC_U64(EInputAxis::MousePositionVertical)]);
 	}
 
-	bool CInputMapper::IsPressed(const EInputKey key, const U32 modifiers) const
+	bool CInputMapper::IsPressed(const EInputButton key, const U32 modifiers) const
 	{
-		const std::map<U32, SInputActionPayload>& keyInputBuffer = Input->GetKeyInputBuffer();
+		const std::map<U32, SInputActionPayload>& keyInputBuffer = Input->GetButtonInputBuffer();
 		if (!keyInputBuffer.contains(STATIC_U32(key)))
 			return false;
 
@@ -195,9 +195,9 @@ namespace Havtorn
 		return ((activeModifiers == 0 && modifiers == 0) || (activeModifiers & modifiers) != 0) && keyInputBuffer.at(STATIC_U32(key)).IsPressed;
 	}
 
-	bool CInputMapper::IsReleased(const EInputKey key, const U32 modifiers) const
+	bool CInputMapper::IsReleased(const EInputButton key, const U32 modifiers) const
 	{
-		const std::map<U32, SInputActionPayload>& keyInputBuffer = Input->GetKeyInputBuffer();
+		const std::map<U32, SInputActionPayload>& keyInputBuffer = Input->GetButtonInputBuffer();
 		if (!keyInputBuffer.contains(STATIC_U32(key)))
 			return false;
 
@@ -205,9 +205,9 @@ namespace Havtorn
 		return ((activeModifiers == 0 && modifiers == 0) || (activeModifiers & modifiers) != 0) && keyInputBuffer.at(STATIC_U32(key)).IsReleased;
 	}
 
-	bool CInputMapper::IsHeld(const EInputKey key, const U32 modifiers) const
+	bool CInputMapper::IsHeld(const EInputButton key, const U32 modifiers) const
 	{
-		const std::map<U32, SInputActionPayload>& keyInputBuffer = Input->GetKeyInputBuffer();
+		const std::map<U32, SInputActionPayload>& keyInputBuffer = Input->GetButtonInputBuffer();
 		if (!keyInputBuffer.contains(STATIC_U32(key)))
 			return false;
 
@@ -221,6 +221,11 @@ namespace Havtorn
 	
 		const auto& activeModifiers = Input->GetKeyInputModifiers().to_ulong();
 		return ((activeModifiers == 0 && modifiers == 0) || (activeModifiers & modifiers) != 0) ? axisInputValues[STATIC_U64(axis)] : F32(0.0f);
+	}
+
+	void CInputMapper::StartListenForButtonInput(const std::function<void(const EInputButton)>& onNextButtonInput)
+	{
+		Input->ButtonInputListener = onNextButtonInput;
 	}
 
 	void CInputMapper::MapEvent(EInputActionEvent event, SInputAction action)
@@ -246,11 +251,11 @@ namespace Havtorn
 		const auto& modifiers = Input->GetKeyInputModifiers().to_ulong();
 		const auto& context = STATIC_U32(CurrentInputContext);
 
-		for (auto& [param, actionPayload] : Input->GetKeyInputBuffer())
+		for (auto& [param, actionPayload] : Input->GetButtonInputBuffer())
 		{
 			for (auto& [event, data] : BoundActionEvents)
 			{
-				if (data.Has(static_cast<EInputKey>(param), context, modifiers))
+				if (data.Has(static_cast<EInputButton>(param), context, modifiers))
 				{
 					const SInputActionPayload payload = { event, actionPayload.Key, actionPayload.IsPressed, actionPayload.IsHeld, actionPayload.IsReleased };
 					data.Delegate.Broadcast(payload);
@@ -263,7 +268,7 @@ namespace Havtorn
 				if (data.HasKeyAxis())
 				{
 					F32 axisValue = 0.0f;
-					if (data.Has(static_cast<EInputKey>(param), context, modifiers, axisValue))
+					if (data.Has(static_cast<EInputButton>(param), context, modifiers, axisValue))
 					{
 						const SInputAxisPayload axisPayload = { event, axisValue };
 						data.Delegate.Broadcast(axisPayload);

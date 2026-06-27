@@ -23,6 +23,9 @@ namespace Havtorn
 
 		ENGINE_API void SetCameraSpeed(const F32 speed);
 		ENGINE_API F32 GetCameraSpeed() const;
+
+		ENGINE_API void SetStartingCamera(std::vector<Ptr<CScene>>& scenes);
+		ENGINE_API void ResetStartingCamera(std::vector<Ptr<CScene>>& scenes);
 	private:
 		void ResetInput();
 

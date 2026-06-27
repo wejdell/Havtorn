@@ -1,7 +1,7 @@
 // Copyright 2026 Team Havtorn. All Rights Reserved.
 
 #include "hvpch.h"
-#include "SHexCommandComponent.h"
+#include "HexCommandComponent.h"
 
 namespace Havtorn
 {

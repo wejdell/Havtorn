@@ -80,5 +80,5 @@
 #include "ECS/Components/DebugShapeComponent.h"
 #include "ECS/Components/MetaDataComponent.h"
 
-#include "Hex/SHexCommandComponent.h"
-#include "Hex/SHexCommandComponentEditorContext.h"
+#include "Hex/HexCommandComponent.h"
+#include "Hex/HexCommandComponentEditorContext.h"

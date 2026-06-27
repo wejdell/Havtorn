@@ -379,6 +379,31 @@ namespace Havtorn
 		return 0;
 	}
 
+	bool CRenderManager::IsMeshShadowCastingForType(const U32 meshID, const ERenderCommandType commandType, const U64 renderViewID) const
+	{
+		if (!GameThreadShadowCasters.contains(renderViewID))
+			return false;
+
+		return std::ranges::find_if(GameThreadShadowCasters.at(renderViewID), 
+			[meshID, commandType](const SShadowCasterCategory& category) 
+			{ 
+				return category.CommandType == commandType && std::ranges::find(category.MeshIDs, meshID) != category.MeshIDs.end(); 
+			}) != GameThreadShadowCasters.at(renderViewID).end();
+	}
+
+	void CRenderManager::AddMeshShadowCastingForType(const U32 meshID, const ERenderCommandType commandType, const U64 renderViewID)
+	{
+		if (!GameThreadShadowCasters.contains(renderViewID))
+			GameThreadShadowCasters.emplace(renderViewID, std::vector<SShadowCasterCategory>());
+
+		std::vector<SShadowCasterCategory>& categoriesInView = GameThreadShadowCasters.at(renderViewID);
+		auto category = std::ranges::find_if(categoriesInView, [meshID, commandType](const SShadowCasterCategory& category) { return category.CommandType == commandType; });
+		if (category == categoriesInView.end())
+			GameThreadShadowCasters.at(renderViewID).push_back(SShadowCasterCategory{ .CommandType = commandType, .MeshIDs = { meshID } });
+		else
+			category->MeshIDs.push_back(meshID);
+	}
+
 	bool Havtorn::CRenderManager::IsStaticMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewID)
 	{
 		// TODO.NW: Maybe move this to RenderView class
@@ -569,6 +594,7 @@ namespace Havtorn
 	void CRenderManager::SyncCrossThreadResources(const CWorld* world)
 	{
 		SwapRenderViews();
+		GameThreadShadowCasters.clear();
 		std::swap(SystemSkeletalAnimationBoneData, RendererSkeletalAnimationBoneData);
 		SetWorldMainCameraEntity(world->GetMainCamera());
 		SetWorldEditorRenderExemptEntity(world->GetEditorRenderExemptEntity());
@@ -752,6 +778,9 @@ namespace Havtorn
 		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
+		if (!RenderThreadRenderViews->at(command.RenderViewID).StaticMeshInstanceData.contains(command.U32s[0]))
+			return;
+
 		const auto& shadowViewData = command.ShadowmapViews[0];
 		FrameBufferData.ToCameraFromWorld = shadowViewData.ShadowViewMatrix;
 		FrameBufferData.ToWorldFromCamera = shadowViewData.ShadowViewMatrix.FastInverse();
@@ -763,7 +792,7 @@ namespace Havtorn
 		RenderStateManager.RSSetViewports(1, &RenderStateManager.Viewports[shadowViewData.ShadowmapViewportIndex]);
 
 		// =============
-		// TODO.NW: Clean up object buffer in shader path?
+		// TODO.NW: Clean up object buffer in shader path? This has been removed from RenderSystem
 		//ObjectBufferData.ToWorldFromObject = command.Matrices[0];
 		//ObjectBuffer.BindBuffer(ObjectBufferData);
 
@@ -798,6 +827,9 @@ namespace Havtorn
 		// TODO.NR: Not needed for instanced rendering?
 		//ObjectBufferData.ToWorldFromObject = command.Matrices[0];
 		//ObjectBuffer.BindBuffer(ObjectBufferData);
+
+		if (!RenderThreadRenderViews->at(command.RenderViewID).StaticMeshInstanceData.contains(command.U32s[0]))
+			return; 
 
 		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewID).StaticMeshInstanceData[command.U32s[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
@@ -841,6 +873,9 @@ namespace Havtorn
 	void CRenderManager::ShadowAtlasPrePassSpot(const SRenderCommand& command)
 	{
 		if (!RenderThreadRenderViews->contains(command.RenderViewID))
+			return;
+		
+		if (!RenderThreadRenderViews->at(command.RenderViewID).StaticMeshInstanceData.contains(command.U32s[0]))
 			return;
 
 		const auto& shadowViewData = command.ShadowmapViews[0];
@@ -906,6 +941,9 @@ namespace Havtorn
 	void CRenderManager::GBufferDataInstanced(const SRenderCommand& command)
 	{
 		if (!RenderThreadRenderViews->contains(command.RenderViewID))
+			return;
+
+		if (!RenderThreadRenderViews->at(command.RenderViewID).StaticMeshInstanceData.contains(command.U32s[0]))
 			return;
 
 		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewID).StaticMeshInstanceData[command.U32s[0]].Transforms;

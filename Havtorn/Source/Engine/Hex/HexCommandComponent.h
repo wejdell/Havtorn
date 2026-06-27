@@ -2,7 +2,7 @@
 
 #pragma once
 #include "ECS/Component.h"
-#include "SHexCommand.h"
+#include "HexCommand.h"
 #include <stack>
 
 namespace Havtorn

@@ -523,7 +523,7 @@ namespace Havtorn
 			toScene->PreviewEntity = SEntity::Null;
 
 			const SPrefabAsset* prefab = GEngine::GetAssetRegistry()->RequestAssetData<SPrefabAsset>(SAssetReference(assetRepresentation->DirectoryEntry.path().string()), copiedEntity.GUID);
-			std::vector<SEntity> newEntities = toScene->CopyEntities(prefab->Scene.get());
+			std::vector<SEntity> newEntities = toScene->CopyEntities(prefab->Scene.get(), {});
 
 			STransformComponent* parentTransform = toScene->GetComponent<STransformComponent>(copiedEntity);
 			for (const SEntity& entity : newEntities)

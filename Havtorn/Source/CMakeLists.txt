@@ -101,6 +101,7 @@ set(CORE_FILES
     ${CORE_FOLDER}MathTypes/Quaternion.h
     ${CORE_FOLDER}MathTypes/Ray.h
     ${CORE_FOLDER}MathTypes/Rotator.h
+    ${CORE_FOLDER}MathTypes/Sphere.cpp
     ${CORE_FOLDER}MathTypes/Sphere.h
     ${CORE_FOLDER}MathTypes/Transform.cpp
     ${CORE_FOLDER}MathTypes/Transform.h
@@ -551,11 +552,11 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Graphics/RenderTextureFactory.h
     ${ENGINE_FOLDER}Graphics/TextureBank.cpp
     ${ENGINE_FOLDER}Graphics/TextureBank.h
-    ${ENGINE_FOLDER}Hex/SHexCommandComponentEditorContext.cpp
-	${ENGINE_FOLDER}Hex/SHexCommandComponentEditorContext.h
-    ${ENGINE_FOLDER}Hex/SHexCommandComponent.cpp
-	${ENGINE_FOLDER}Hex/SHexCommandComponent.h
-	${ENGINE_FOLDER}Hex/SHexCommand.h
+    ${ENGINE_FOLDER}Hex/HexCommandComponentEditorContext.cpp
+	${ENGINE_FOLDER}Hex/HexCommandComponentEditorContext.h
+    ${ENGINE_FOLDER}Hex/HexCommandComponent.cpp
+	${ENGINE_FOLDER}Hex/HexCommandComponent.h
+	${ENGINE_FOLDER}Hex/HexCommand.h
     ${ENGINE_FOLDER}HexAudio/HexAudio.cpp
     ${ENGINE_FOLDER}HexAudio/HexAudio.h
     ${ENGINE_FOLDER}HexPhys/HexPhys.cpp

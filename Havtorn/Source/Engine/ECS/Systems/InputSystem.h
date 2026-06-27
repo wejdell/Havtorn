@@ -5,6 +5,9 @@
 
 namespace Havtorn
 {
+	struct SAxis;
+	class CInputMapper;
+
 	class CInputSystem final : public ISystem
 	{
 	public:
@@ -12,5 +15,7 @@ namespace Havtorn
 		ENGINE_API ~CInputSystem() override;
 
 		ENGINE_API void Update(std::vector<Ptr<CScene>>& scenes) override;
+
+		F32 GetAxisValue(const SAxis& axis, const CInputMapper* inputMapper) const;
 	};
 }
