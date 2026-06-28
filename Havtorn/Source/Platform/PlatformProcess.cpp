@@ -41,4 +41,9 @@ namespace Havtorn
 	{
 		PlatformManager->BeginFrame();
 	}
+
+	void CPlatformProcess::EndFrame()
+	{
+		PlatformManager->EndFrame();
+	}
 }

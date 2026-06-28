@@ -21,6 +21,7 @@ namespace Havtorn
 		bool ShouldRun() override;
 
 		void BeginFrame() override;
+		void EndFrame() override;
 
 		class CPlatformManager* PlatformManager = nullptr;
 	private:
