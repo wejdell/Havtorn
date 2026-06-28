@@ -72,6 +72,5 @@ namespace Havtorn
 		std::vector<std::string> DroppedFileBuffer;
 
 		bool ShouldRun = false;
-		bool IsCursorLocked = false;
 	};
 }

@@ -250,7 +250,16 @@ namespace Havtorn
 	void CPlatformManager::SetCursorLock(const bool shouldLock)
 	{
 		SDL_SetWindowRelativeMouseMode(Window, shouldLock);
-		IsCursorLocked = shouldLock;
+		SDL_SetWindowMouseGrab(Window, shouldLock);
+		if (shouldLock)
+		{
+			const SDL_Rect rect = { STATIC_U16(Resolution.X * 0.5f), STATIC_U16(Resolution.Y * 0.5f), 1, 1};
+			SDL_SetWindowMouseRect(Window, &rect);
+		}
+		else
+		{
+			SDL_SetWindowMouseRect(Window, nullptr);
+		}
 	}
 
 	void CPlatformManager::BeginFrame()
@@ -260,8 +269,6 @@ namespace Havtorn
 
 	void CPlatformManager::EndFrame()
 	{
-		if (IsCursorLocked)
-			SDL_WarpMouseGlobal(STATIC_F32(Resolution.X), STATIC_F32(Resolution.Y));
 	}
 
 	void CPlatformManager::EventLoop()
