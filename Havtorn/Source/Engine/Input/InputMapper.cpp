@@ -116,6 +116,9 @@ namespace Havtorn
 		const SInputAction stopPlay = { EInputButton::Esc, EInputContext::InGame };
 		MapEvent(EInputActionEvent::StopPlay, stopPlay);
 
+		const SInputAction unlockCursor = { EInputButton::KeyC, EInputContext::InGame, EInputModifier::Alt };
+		MapEvent(EInputActionEvent::ToggleCursor, unlockCursor);
+
 		// NW: the Sys key is a bit different. We might need this workaround on other modifier keys as well
 		// TODO.NW: See if this is better handled now that we use SDL
 		const SInputAction altPress = { EInputButton::LAlt, EInputContext::Editor, EInputModifier::Alt };

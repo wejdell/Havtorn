@@ -37,6 +37,7 @@ namespace Havtorn
 		MovePivot,
 		VertexSnapping,
 		GridSnapping,
+		ToggleCursor,
 		Count
 	};
 

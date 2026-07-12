@@ -232,6 +232,7 @@ namespace Havtorn
 		void OnDragCopyEvent(const SInputActionPayload payload);
 		void OnEditorActionTreeEvent(const SInputActionPayload payload);
 		void OnPlayStateEvent(const SInputActionPayload payload);
+		void OnToggleCursor(const SInputActionPayload payload);
 		void OnPivotMoving(const SInputActionPayload payload);
 		void OnVertexSnapping(const SInputActionPayload payload);
 		void OnGridSnapping(const SInputActionPayload payload);

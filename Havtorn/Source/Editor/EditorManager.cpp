@@ -51,6 +51,7 @@ namespace Havtorn
 		mapper->GetActionDelegate(EInputActionEvent::ToggleFullscreen).AddMember(this, &CEditorManager::OnToggleFullscreen);
 		mapper->GetActionDelegate(EInputActionEvent::StartPlay).AddMember(this, &CEditorManager::OnPlayStateEvent);
 		mapper->GetActionDelegate(EInputActionEvent::StopPlay).AddMember(this, &CEditorManager::OnPlayStateEvent);
+		mapper->GetActionDelegate(EInputActionEvent::ToggleCursor).AddMember(this, &CEditorManager::OnToggleCursor);
 		mapper->GetActionDelegate(EInputActionEvent::AltPress).AddMember(this, &CEditorManager::OnDragCopyEvent);
 		mapper->GetActionDelegate(EInputActionEvent::AltRelease).AddMember(this, &CEditorManager::OnDragCopyEvent);
 		mapper->GetActionDelegate(EInputActionEvent::Copy).AddMember(this, &CEditorManager::OnCopyEvent);
@@ -80,6 +81,7 @@ namespace Havtorn
 		mapper->GetActionDelegate(EInputActionEvent::ToggleFullscreen).RemoveObject(this);
 		mapper->GetActionDelegate(EInputActionEvent::StartPlay).RemoveObject(this);
 		mapper->GetActionDelegate(EInputActionEvent::StopPlay).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::ToggleCursor).RemoveObject(this);
 		mapper->GetActionDelegate(EInputActionEvent::AltPress).RemoveObject(this);
 		mapper->GetActionDelegate(EInputActionEvent::AltRelease).RemoveObject(this);
 		mapper->GetActionDelegate(EInputActionEvent::Copy).RemoveObject(this);
@@ -1438,6 +1440,14 @@ namespace Havtorn
 			world->BeginPlay();
 		else if (payload.Event == EInputActionEvent::StopPlay && payload.IsPressed)
 			world->StopPlay();
+	}
+
+	void CEditorManager::OnToggleCursor(const SInputActionPayload payload)
+	{
+		if (!payload.IsPressed)
+			return;
+
+		PlatformManager->SetCursorLock(!PlatformManager->IsCursorLocked());
 	}
 
 	void CEditorManager::OnPivotMoving(const SInputActionPayload payload)

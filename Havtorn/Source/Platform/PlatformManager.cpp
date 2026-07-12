@@ -262,6 +262,11 @@ namespace Havtorn
 		}
 	}
 
+	bool CPlatformManager::IsCursorLocked() const
+	{
+		return SDL_GetWindowRelativeMouseMode(Window);
+	}
+
 	void CPlatformManager::BeginFrame()
 	{
 		EventLoop();

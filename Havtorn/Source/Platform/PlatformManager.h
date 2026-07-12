@@ -50,6 +50,7 @@ namespace Havtorn
 		PLATFORM_API void SetBlockWindowHitTest(const bool shouldBlock);
 
 		PLATFORM_API void SetCursorLock(const bool shouldLock);
+		PLATFORM_API bool IsCursorLocked() const;
 
 	private:
 		CPlatformManager();
