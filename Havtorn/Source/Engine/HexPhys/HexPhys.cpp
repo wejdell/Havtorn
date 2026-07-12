@@ -829,7 +829,7 @@ namespace Havtorn
 
 					//Havtorn -> PhysX
 					PxController* pxController = PhysicsWorld->GUIDToControllerActorMap[component->Owner.GUID];
-					PxVec3 displacement = PhysicsWorld->Convert(component->Displacement * deltaTime);
+					PxVec3 displacement = PhysicsWorld->Convert(component->Displacement);
 					pxController->move(displacement, 0.001f, deltaTime, filters);
 					component->Displacement = SVector::Zero;
 				}
