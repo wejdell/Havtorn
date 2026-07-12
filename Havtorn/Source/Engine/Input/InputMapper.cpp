@@ -195,7 +195,7 @@ namespace Havtorn
 			return false;
 
 		const auto& activeModifiers = Input->GetKeyInputModifiers().to_ulong();
-		return ((activeModifiers == 0 && modifiers == 0) || (activeModifiers & modifiers) != 0) && keyInputBuffer.at(STATIC_U32(key)).IsPressed;
+		return ((modifiers == 0) || (activeModifiers & modifiers) != 0) && keyInputBuffer.at(STATIC_U32(key)).IsPressed;
 	}
 
 	bool CInputMapper::IsReleased(const EInputButton key, const U32 modifiers) const
@@ -205,7 +205,7 @@ namespace Havtorn
 			return false;
 
 		const auto& activeModifiers = Input->GetKeyInputModifiers().to_ulong();
-		return ((activeModifiers == 0 && modifiers == 0) || (activeModifiers & modifiers) != 0) && keyInputBuffer.at(STATIC_U32(key)).IsReleased;
+		return ((modifiers == 0) || (activeModifiers & modifiers) != 0) && keyInputBuffer.at(STATIC_U32(key)).IsReleased;
 	}
 
 	bool CInputMapper::IsHeld(const EInputButton key, const U32 modifiers) const
@@ -215,7 +215,7 @@ namespace Havtorn
 			return false;
 
 		const auto& activeModifiers = Input->GetKeyInputModifiers().to_ulong();
-		return ((activeModifiers == 0 && modifiers == 0) || (activeModifiers & modifiers) != 0) && keyInputBuffer.at(STATIC_U32(key)).IsHeld;
+		return ((modifiers == 0) || (activeModifiers & modifiers) != 0) && keyInputBuffer.at(STATIC_U32(key)).IsHeld;
 	}
 
 	F32 CInputMapper::GetAxisValue(const EInputAxis axis, const U32 modifiers) const
@@ -223,7 +223,7 @@ namespace Havtorn
 		const std::array<F32, STATIC_U64(EInputAxis::Count)>& axisInputValues = Input->GetAxisInputValues();
 	
 		const auto& activeModifiers = Input->GetKeyInputModifiers().to_ulong();
-		return ((activeModifiers == 0 && modifiers == 0) || (activeModifiers & modifiers) != 0) ? axisInputValues[STATIC_U64(axis)] : F32(0.0f);
+		return ((modifiers == 0) || (activeModifiers & modifiers) != 0) ? axisInputValues[STATIC_U64(axis)] : F32(0.0f);
 	}
 
 	void CInputMapper::StartListenForButtonInput(const std::function<void(const EInputButton)>& onNextButtonInput)
