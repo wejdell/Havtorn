@@ -18,13 +18,12 @@ namespace Havtorn
 		Havtorn::SMatrix transformMatrix = transformComponent->Transform.GetMatrix();
 
 		SVector matrixTranslation, matrixRotation, matrixScale;
-		GUI::DecomposeMatrixToComponents(transformMatrix, matrixTranslation, matrixRotation, matrixScale);
+		SMatrix::Decompose(transformMatrix, matrixTranslation, matrixRotation, matrixScale);
 		GUI::DragFloat3("Position", matrixTranslation, GUI::SliderSpeed);
 		GUI::DragFloat3("Rotation", matrixRotation, GUI::SliderSpeed);
 		GUI::DragFloat3("Scale", matrixScale, GUI::SliderSpeed);
 
-		// TODO.NR: Fix yaw rotation singularity here, using our own math functions. Ref: https://github.com/CedricGuillemet/ImGuizmo/issues/244
-		GUI::RecomposeMatrixFromComponents(transformMatrix, matrixTranslation, matrixRotation, matrixScale);
+		SMatrix::Recompose(matrixTranslation, matrixRotation, matrixScale, transformMatrix);
 		transformComponent->Transform.SetMatrix(transformMatrix);
 
 		SComponentViewResult result;
