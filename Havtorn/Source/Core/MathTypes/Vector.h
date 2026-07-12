@@ -95,6 +95,7 @@ namespace Havtorn
 		inline F32 DistanceSquared2D(const SVector& other) const;
 
 		inline SVector Projection(const SVector& other) const;
+		inline SVector ProjectOntoPlane(const SVector& planeNormal) const;
 		inline SVector Mirrored(const SVector& mirrorNormal) const;
 
 		inline SVector Reciprocal() const;
@@ -390,6 +391,11 @@ namespace Havtorn
 
 		F32 length = this->Dot(direction);
 		return direction * length;
+	}
+
+	inline SVector SVector::ProjectOntoPlane(const SVector& planeNormal) const
+	{
+		return *this - planeNormal * this->Dot(planeNormal);
 	}
 
 	inline SVector SVector::Mirrored(const SVector& mirrorNormal) const
