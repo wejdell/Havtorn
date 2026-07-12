@@ -814,22 +814,22 @@ namespace Havtorn
 		void CPhysics3DSystem::Update(std::vector<Ptr<CScene>>& scenes)
 		{
 			physx::PxControllerFilters filters{};
-			F32 deltaTime = GTime::FixedDt();
+			const F32 deltaTime = GTime::FixedDt();
 
 			if (!GTime::FixedTimeStep())
 				return;
 
 			for (auto& scene : scenes)
 			{
-				std::vector<SPhysics3DControllerComponent*> controllerComponents = scene->GetComponents<SPhysics3DControllerComponent>();
+				const std::vector<SPhysics3DControllerComponent*> controllerComponents = scene->GetComponents<SPhysics3DControllerComponent>();
 				for (auto& component : controllerComponents)
 				{
 					if (!PhysicsWorld->GUIDToControllerActorMap.contains(component->Owner.GUID))
 						continue;
 
 					//Havtorn -> PhysX
-					PxController* pxController = PhysicsWorld->GUIDToControllerActorMap[component->Owner.GUID];
-					PxVec3 displacement = PhysicsWorld->Convert(component->Displacement);
+					const PxController* pxController = PhysicsWorld->GUIDToControllerActorMap[component->Owner.GUID];
+					const PxVec3 displacement = PhysicsWorld->Convert(component->Displacement);
 					pxController->move(displacement, 0.001f, deltaTime, filters);
 					component->Displacement = SVector::Zero;
 				}
