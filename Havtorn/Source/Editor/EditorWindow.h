@@ -17,6 +17,7 @@ namespace Havtorn
 		// NW: Rename to Render?
 		virtual void OnInspectorGUI() = 0;
 		virtual void OnDisable() = 0;
+		virtual void OnDeferredExit();
 		void UpdateState();
 
 	public:
@@ -32,6 +33,7 @@ namespace Havtorn
 		bool IsEnabled = true;
 		bool WasEnabled = false;
 		bool IsHovered = false;
+		bool RunDeferredExit = false;
 
 	private:
 		const char* DisplayName = "";

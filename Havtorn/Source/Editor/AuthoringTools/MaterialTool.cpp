@@ -38,13 +38,6 @@ namespace Havtorn
 
 	void CMaterialTool::OnInspectorGUI()
 	{
-		if (HasQueuedExit)
-		{
-			HasQueuedExit = false;
-			CloseMaterial();
-			return;
-		}
-
 		// TODO.NW: Make ON_SCOPE_EXIT equivalent?
 		if (!GUI::Begin(Name(), &IsEnabled))
 		{
@@ -250,9 +243,14 @@ namespace Havtorn
 		GUI::End();
 	}
 
+	void CMaterialTool::OnDeferredExit()
+	{
+		CloseMaterial();
+	}
+
 	void CMaterialTool::OnDisable()
 	{
-		HasQueuedExit = true;
+		RunDeferredExit = true;
 
 		GEngine::GetWorld()->UnblockSystem<CCameraSystem>(this);
 
@@ -296,7 +294,7 @@ namespace Havtorn
 	{
 		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
 		if (CurrentMaterial)
-			assetRegistry->UnrequestAsset(SAssetReference(CurrentMaterial->DirectoryEntry.path().string()), CAssetRegistry::EditorManagerRequestID);
+			assetRegistry->UnrequestAsset(SAssetReference(CurrentMaterial->DirectoryEntry.path().string()), MaterialToolRenderID);
 
 		assetRegistry->UnrequestAsset(PreviewSkylightAssetRef, MaterialToolRenderID);
 		PreviewSkylight = nullptr;
@@ -304,8 +302,6 @@ namespace Havtorn
 		CurrentMaterial = nullptr;
 		MaterialData = SEngineGraphicsMaterial();
 		Manager->GetRenderManager()->UnrequestRenderView(MaterialToolRenderID);
-
-		SetEnabled(false);
 	}
 
 	void CMaterialTool::OnZoomInput(const SInputAxisPayload payload)

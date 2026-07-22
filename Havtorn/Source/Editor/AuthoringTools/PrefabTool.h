@@ -13,6 +13,7 @@ namespace Havtorn
 
 		void OnEnable() override;
 		void OnInspectorGUI() override;
+		void OnDeferredExit() override;
 		void OnDisable() override;
 
 		void OpenPrefab(SEditorAssetRepresentation* asset);
@@ -77,7 +78,5 @@ namespace Havtorn
 		bool IsFreeCamActive = false;
 		bool IsHoveringViewport = false;
 		bool IsHoveringWindow = false;
-
-		bool HasQueuedExit = false;
 	};
 }

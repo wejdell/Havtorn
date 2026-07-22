@@ -13,9 +13,19 @@ namespace Havtorn
 	{
 	}
 
+	void CWindow::OnDeferredExit()
+	{
+	}
+
 	void CWindow::UpdateState()
 	{
 		IsHovered = IsEnabled ? IsHovered : false;
+
+		if (RunDeferredExit)
+		{
+			RunDeferredExit = false;
+			OnDeferredExit();
+		}
 
 		if (!WasEnabled && IsEnabled)
 			OnEnable();

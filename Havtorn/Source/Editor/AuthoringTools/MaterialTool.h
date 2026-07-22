@@ -20,6 +20,7 @@ namespace Havtorn
 
 		void OnEnable() override;
 		void OnInspectorGUI() override;
+		void OnDeferredExit() override;
 		void OnDisable() override;
 
 		void OpenMaterial(SEditorAssetRepresentation* asset);
@@ -36,7 +37,7 @@ namespace Havtorn
 		SEngineGraphicsMaterial MaterialData;
 		CRenderTexture* MaterialRender = nullptr;
 
-		SAssetReference PreviewSkylightAssetRef = SAssetReference("Assets/Textures/Cubemaps/CubemapTheVisit.hva");
+		SAssetReference PreviewSkylightAssetRef = SAssetReference("Resources/DefaultSkybox.hva");
 		STextureCubeAsset* PreviewSkylight = nullptr;
 		SColor PreviewLightColor = { 212.0f / 255.0f, 175.0f / 255.0f, 55.0f / 255.0f, 1.0f };
 		F32 PreviewLightIntensity = 0.25f;
@@ -48,7 +49,5 @@ namespace Havtorn
 		bool IsOrbiting = false;
 		bool IsHoveringViewport = false;
 		bool IsHoveringWindow = false;
-
-		bool HasQueuedExit = false;
 	};
 }
