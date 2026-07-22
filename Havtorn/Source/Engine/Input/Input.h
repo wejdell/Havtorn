@@ -55,7 +55,7 @@ namespace Havtorn
 		bool HasUpdatedRelativeMouseMovement = false;
 
 		// Read from EngineConfig.json
-		F32 MouseCameraSensitivity = 0.5f;
+		F32 MouseCameraSensitivity = 8.0f;
 		F32 GamepadCameraSensitivity = 150.0f;
 		F32 GamepadDeadzone = 0.17f;
 	};

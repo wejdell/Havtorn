@@ -296,7 +296,7 @@ namespace Havtorn
 	void CInput::UpdateConfigValues()
 	{
 		CJsonDocument engineConfig = UFileSystem::OpenJson(UFileSystem::EngineConfig);
-		MouseCameraSensitivity = engineConfig.Get("Mouse Camera Sensitivity", 0.5f);
+		MouseCameraSensitivity = engineConfig.Get("Mouse Camera Sensitivity", 8.0f);
 		GamepadCameraSensitivity = engineConfig.Get("Gamepad Camera Sensitivity", 150.0f);
 		GamepadDeadzone = engineConfig.Get("Gamepade Deadzone", 0.17f);
 	}
