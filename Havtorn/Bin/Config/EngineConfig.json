@@ -2,5 +2,8 @@
     "Icon Path": "Resources/HavtornIcon.ico",
     "Splash Path": "Resources/HavtornSplash.bmp",
     "Game Name": "Project Name",
-    "Asset Redirectors": []
+    "Asset Redirectors": [],
+	"Mouse Camera Sensitivity": 0.5,
+	"Gamepad Camera Sensitivity": 500.0,
+	"Gamepad Deadzone": 0.17
 }

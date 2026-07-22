@@ -41,6 +41,8 @@ namespace Havtorn
 		void HandleAxisEvent(const EInputAxis axis, const F32 value);
 		void SetModifiers(const U32& modifiers);
 
+		void UpdateConfigValues();
+
 	private:
 		// TODO.NW: Associate these with Users too
 		std::map<U32, SInputActionPayload> ButtonInputBuffer;
@@ -51,5 +53,10 @@ namespace Havtorn
 		std::optional<std::function<void(const EInputButton)>> ButtonInputListener;
 
 		bool HasUpdatedRelativeMouseMovement = false;
+
+		// Read from EngineConfig.json
+		F32 MouseCameraSensitivity = 0.5f;
+		F32 GamepadCameraSensitivity = 150.0f;
+		F32 GamepadDeadzone = 0.17f;
 	};
 }

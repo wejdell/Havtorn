@@ -9,6 +9,8 @@
 
 #include <../Platform/PlatformManager.h>
 
+#include <FileSystem.h>
+
 // TODO.NW: Move this system to core or platform?
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_gamepad.h>
@@ -39,6 +41,9 @@ namespace Havtorn
 			return false;
 
 		platformManager->OnProcessEvent.AddMember(this, &CInput::ProcessEvent);	
+
+		UpdateConfigValues();
+
 		return true;
 	}
 
@@ -136,6 +141,8 @@ namespace Havtorn
 			{
 				SVector2<F32> relativeMouseMove = SVector2<F32>::Zero;
 				SDL_GetRelativeMouseState(&relativeMouseMove.X, &relativeMouseMove.Y);
+				relativeMouseMove *= MouseCameraSensitivity;
+
 				HandleAxisEvent(EInputAxis::MouseDeltaHorizontal, relativeMouseMove.X);
 				HandleAxisEvent(EInputAxis::MouseDeltaVertical, relativeMouseMove.Y);
 				HasUpdatedRelativeMouseMovement = true;
@@ -156,10 +163,11 @@ namespace Havtorn
 			if (axis == EInputAxis::GamepadLeftStickVertical)
 				axisValue *= -1.0f;
 
-			// TODO.NW: Add deadzone to config?
-			constexpr F32 deadzone = 0.17f;
-			if (UMath::Abs(axisValue) < deadzone)
+			if (UMath::Abs(axisValue) < GamepadDeadzone)
 				axisValue = 0.0f;
+
+			if (axis == EInputAxis::GamepadRightStickHorizontal || axis == EInputAxis::GamepadRightStickVertical)
+				axisValue *= GamepadCameraSensitivity;
 
 			HandleAxisEvent(axis, axisValue);
 		}
@@ -283,5 +291,13 @@ namespace Havtorn
 	{
 		const U32 modValue = modifiers - 4096;
 		KeyInputModifiers = modValue;
+	}
+
+	void CInput::UpdateConfigValues()
+	{
+		CJsonDocument engineConfig = UFileSystem::OpenJson(UFileSystem::EngineConfig);
+		MouseCameraSensitivity = engineConfig.Get("Mouse Camera Sensitivity", 0.5f);
+		GamepadCameraSensitivity = engineConfig.Get("Gamepad Camera Sensitivity", 150.0f);
+		GamepadDeadzone = engineConfig.Get("Gamepade Deadzone", 0.17f);
 	}
 }
