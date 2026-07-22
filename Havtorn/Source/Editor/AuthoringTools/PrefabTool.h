@@ -77,5 +77,7 @@ namespace Havtorn
 		bool IsFreeCamActive = false;
 		bool IsHoveringViewport = false;
 		bool IsHoveringWindow = false;
+
+		bool HasQueuedExit = false;
 	};
 }

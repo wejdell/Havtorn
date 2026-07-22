@@ -48,6 +48,13 @@ namespace Havtorn
 
 	void CPrefabTool::OnInspectorGUI()
 	{
+		if (HasQueuedExit)
+		{
+			HasQueuedExit = false;
+			ClosePrefab();
+			return;
+		}
+
 		if (Manager->GetIsOverGizmo())
 			GUI::SetNextWindowPos(WindowPos);
 
@@ -189,7 +196,7 @@ namespace Havtorn
 
 	void CPrefabTool::OnDisable()
 	{
-		ClosePrefab();
+		HasQueuedExit = true;
 
 		GEngine::GetWorld()->UnblockSystem<CCameraSystem>(this);
 
@@ -230,10 +237,12 @@ namespace Havtorn
 
 		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
 		assetRegistry->UnrequestAsset(CurrentPrefabAssetRef, PrefabToolRenderID);
+		PrefabData = nullptr;
+		
 		assetRegistry->UnrequestAsset(PreviewSkylightAssetRef, PrefabToolRenderID);
+		PreviewSkylight = nullptr;
 
 		CurrentPrefabAssetRef = SAssetReference();
-		PrefabData = nullptr;
 		Manager->GetRenderManager()->UnrequestRenderView(PrefabToolRenderID);
 
 		SetEnabled(false);

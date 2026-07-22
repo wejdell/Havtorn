@@ -48,5 +48,7 @@ namespace Havtorn
 		bool IsOrbiting = false;
 		bool IsHoveringViewport = false;
 		bool IsHoveringWindow = false;
+
+		bool HasQueuedExit = false;
 	};
 }

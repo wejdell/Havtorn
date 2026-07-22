@@ -38,6 +38,13 @@ namespace Havtorn
 
 	void CMaterialTool::OnInspectorGUI()
 	{
+		if (HasQueuedExit)
+		{
+			HasQueuedExit = false;
+			CloseMaterial();
+			return;
+		}
+
 		// TODO.NW: Make ON_SCOPE_EXIT equivalent?
 		if (!GUI::Begin(Name(), &IsEnabled))
 		{
@@ -245,7 +252,7 @@ namespace Havtorn
 
 	void CMaterialTool::OnDisable()
 	{
-		CloseMaterial();
+		HasQueuedExit = true;
 
 		GEngine::GetWorld()->UnblockSystem<CCameraSystem>(this);
 
@@ -258,6 +265,9 @@ namespace Havtorn
 
 	void CMaterialTool::OpenMaterial(SEditorAssetRepresentation* asset)
 	{
+		if (IsEnabled)
+			CloseMaterial();
+
 		CurrentMaterial = asset;
 
 		// TODO.NW: Want nicer interface for opening assets and closing them when saving
@@ -289,6 +299,7 @@ namespace Havtorn
 			assetRegistry->UnrequestAsset(SAssetReference(CurrentMaterial->DirectoryEntry.path().string()), CAssetRegistry::EditorManagerRequestID);
 
 		assetRegistry->UnrequestAsset(PreviewSkylightAssetRef, MaterialToolRenderID);
+		PreviewSkylight = nullptr;
 
 		CurrentMaterial = nullptr;
 		MaterialData = SEngineGraphicsMaterial();
