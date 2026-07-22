@@ -49,5 +49,7 @@ namespace Havtorn
 		std::bitset<11> KeyInputModifiers;
 
 		std::optional<std::function<void(const EInputButton)>> ButtonInputListener;
+
+		bool HasUpdatedRelativeMouseMovement = false;
 	};
 }

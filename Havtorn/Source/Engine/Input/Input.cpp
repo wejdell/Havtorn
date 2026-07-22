@@ -131,8 +131,16 @@ namespace Havtorn
 		case SDL_EVENT_MOUSE_MOTION:
 			HandleAxisEvent(EInputAxis::MousePositionHorizontal, event->motion.x);
 			HandleAxisEvent(EInputAxis::MousePositionVertical, event->motion.y);
-			HandleAxisEvent(EInputAxis::MouseDeltaHorizontal, event->motion.xrel);
-			HandleAxisEvent(EInputAxis::MouseDeltaVertical, event->motion.yrel);
+
+			if (!HasUpdatedRelativeMouseMovement)
+			{
+				SVector2<F32> relativeMouseMove = SVector2<F32>::Zero;
+				SDL_GetRelativeMouseState(&relativeMouseMove.X, &relativeMouseMove.Y);
+				HandleAxisEvent(EInputAxis::MouseDeltaHorizontal, relativeMouseMove.X);
+				HandleAxisEvent(EInputAxis::MouseDeltaVertical, relativeMouseMove.Y);
+				HasUpdatedRelativeMouseMovement = true;
+			}
+
 			break;
 
 		case SDL_EVENT_MOUSE_WHEEL:
@@ -191,6 +199,7 @@ namespace Havtorn
 		HandleAxisEvent(EInputAxis::MouseWheel, 0.0f);
 		HandleAxisEvent(EInputAxis::MouseDeltaHorizontal, 0.0f);
 		HandleAxisEvent(EInputAxis::MouseDeltaVertical, 0.0f);
+		HasUpdatedRelativeMouseMovement = false;
 
 		constexpr F32 deadzone = 0.07f;
 		for (EInputAxis axis = EInputAxis::GamepadRegionStart; axis < EInputAxis::Count; axis = static_cast<EInputAxis>(STATIC_U8(axis) + 1))
