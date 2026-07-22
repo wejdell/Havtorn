@@ -288,8 +288,6 @@ namespace Havtorn
 
 		const std::array<F32, STATIC_U64(EInputAxis::Count)>& axisInputValues = Input->GetAxisInputValues();
 
-		// TODO.NW: Add deadzone to config?
-		constexpr F32 deadzone = 0.07f;
 		for (EInputAxis axis = EInputAxis::MouseWheel; axis < EInputAxis::Count; axis = static_cast<EInputAxis>(STATIC_U8(axis) + 1))
 		{
 			for (auto& [event, data] : BoundAxisEvents)
@@ -304,12 +302,8 @@ namespace Havtorn
 						continue;
 					if (axis == EInputAxis::MouseWheel && axisValue == 0.0f)
 						continue;
-					if (axis >= EInputAxis::GamepadRegionStart && UMath::Abs(axisValue) < deadzone)
+					if (axis >= EInputAxis::GamepadRegionStart && axisValue == 0.0f)
 						continue;
-
-					// TODO.NW: Add Invert Y axis option to config
-					if (axis == EInputAxis::GamepadLeftStickVertical)
-						axisValue *= -1.0f;
 
 					const SInputAxisPayload payload = { event, axisValue };
 					data.Delegate.Broadcast(payload);

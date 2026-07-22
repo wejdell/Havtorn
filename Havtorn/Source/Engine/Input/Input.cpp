@@ -149,8 +149,19 @@ namespace Havtorn
 
 		case SDL_EVENT_GAMEPAD_AXIS_MOTION:
 		{
-			const F32 axisValue = STATIC_F32(event->gaxis.value) / 32767.0f;
-			HandleAxisEvent(static_cast<EInputAxis>(event->gaxis.axis + STATIC_U8(EInputAxis::GamepadRegionStart)), axisValue);
+			F32 axisValue = STATIC_F32(event->gaxis.value) / 32767.0f;
+
+			// TODO.NW: Add Invert Y axis option to config
+			const EInputAxis axis = static_cast<EInputAxis>(event->gaxis.axis + STATIC_U8(EInputAxis::GamepadRegionStart));
+			if (axis == EInputAxis::GamepadLeftStickVertical)
+				axisValue *= -1.0f;
+
+			// TODO.NW: Add deadzone to config?
+			constexpr F32 deadzone = 0.17f;
+			if (UMath::Abs(axisValue) < deadzone)
+				axisValue = 0.0f;
+
+			HandleAxisEvent(axis, axisValue);
 		}
 		break;
 
@@ -201,7 +212,7 @@ namespace Havtorn
 		HandleAxisEvent(EInputAxis::MouseDeltaVertical, 0.0f);
 		HasUpdatedRelativeMouseMovement = false;
 
-		constexpr F32 deadzone = 0.07f;
+		constexpr F32 deadzone = 0.17f;
 		for (EInputAxis axis = EInputAxis::GamepadRegionStart; axis < EInputAxis::Count; axis = static_cast<EInputAxis>(STATIC_U8(axis) + 1))
 		{
 			const F32 currentValue = AxisInputValues[STATIC_U64(axis)];
