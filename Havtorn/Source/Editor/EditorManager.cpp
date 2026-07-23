@@ -1457,7 +1457,6 @@ namespace Havtorn
 
 		if (IsPivotOffsetSet)
 			IsPivotMovingActive = payload.IsHeld;
-
 	}
 
 	void CEditorManager::OnVertexSnapping(const SInputActionPayload payload)
