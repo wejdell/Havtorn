@@ -81,8 +81,8 @@ namespace Havtorn
 
 			if (SComponent::IsValid(transform))
 			{
-				const SVector boundsMin = -physicsComponent->ShapeLocalExtents * 0.5f;
-				const SVector boundsMax = physicsComponent->ShapeLocalExtents * 0.5f;
+				const SVector boundsMin = -0.5f;
+				const SVector boundsMax = 0.5f;
 				SVector a = SVector(boundsMin.X, boundsMin.Y, boundsMin.Z);
 				SVector b = SVector(boundsMin.X, boundsMin.Y, boundsMax.Z);
 				SVector c = SVector(boundsMax.X, boundsMin.Y, boundsMax.Z);
@@ -93,15 +93,18 @@ namespace Havtorn
 				SVector h = SVector(boundsMin.X, boundsMax.Y, boundsMax.Z);
 
 				SMatrix transformMatrix = transform->Transform.GetMatrix();
+				const SQuaternion parentRotation = SQuaternion(transformMatrix.GetRotationMatrix()).Inverse();
+				const SVector parentTranslation = transformMatrix.GetTranslation();
+				SMatrix::Recompose(parentTranslation + (SVector4(physicsComponent->ShapeLocalOffset, 1.0f) * transformMatrix.GetRotationMatrix()).ToVector3(), parentRotation, physicsComponent->ShapeLocalExtents, transformMatrix);
 
-				a = (SVector4(a + physicsComponent->ShapeLocalOffset, 1.0f) * transformMatrix).ToVector3();
-				b = (SVector4(b + physicsComponent->ShapeLocalOffset, 1.0f) * transformMatrix).ToVector3();
-				c = (SVector4(c + physicsComponent->ShapeLocalOffset, 1.0f) * transformMatrix).ToVector3();
-				d = (SVector4(d + physicsComponent->ShapeLocalOffset, 1.0f) * transformMatrix).ToVector3();
-				e = (SVector4(e + physicsComponent->ShapeLocalOffset, 1.0f) * transformMatrix).ToVector3();
-				f = (SVector4(f + physicsComponent->ShapeLocalOffset, 1.0f) * transformMatrix).ToVector3();
-				g = (SVector4(g + physicsComponent->ShapeLocalOffset, 1.0f) * transformMatrix).ToVector3();
-				h = (SVector4(h + physicsComponent->ShapeLocalOffset, 1.0f) * transformMatrix).ToVector3();
+				a = (SVector4(a, 1.0f) * transformMatrix).ToVector3();
+				b = (SVector4(b, 1.0f) * transformMatrix).ToVector3();
+				c = (SVector4(c, 1.0f) * transformMatrix).ToVector3();
+				d = (SVector4(d, 1.0f) * transformMatrix).ToVector3();
+				e = (SVector4(e, 1.0f) * transformMatrix).ToVector3();
+				f = (SVector4(f, 1.0f) * transformMatrix).ToVector3();
+				g = (SVector4(g, 1.0f) * transformMatrix).ToVector3();
+				h = (SVector4(h, 1.0f) * transformMatrix).ToVector3();
 
 				GDebugDraw::AddLine(a, b, SColor::Green, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
 				GDebugDraw::AddLine(b, c, SColor::Green, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
