@@ -70,14 +70,14 @@ namespace Havtorn
 			for (Ptr<CScene>& scene : scenes)
 			{
 				// TODO.NW: Skip editor data if Game view mode is active as well
-				PushCommandsForScene(scene.get(), cameraEntity.GUID, cameraEntity, !isInPlayingPlayState && cameraEntity == World->GetMainCamera());
+				PushCommandsForScene(scene.get(), cameraEntity.GUID, cameraEntity, !isInPlayingPlayState && cameraEntity == World->GetMainCamera(), true);
 			}
 
 			PushUniqueCommands(cameraEntity.GUID);
 		}
 	}
 
-	void CRenderSystem::PushCommandsForScene(CScene* scene, const U64& renderViewID, const SEntity& cameraEntity, const bool runEditorDataPasses) const
+	void CRenderSystem::PushCommandsForScene(CScene* scene, const U64& renderViewID, const SEntity& cameraEntity, const bool runEditorDataPasses, const bool doCulling) const
 	{
 		const std::vector<SDirectionalLightComponent*>& directionalLightComponents = scene->GetComponents<SDirectionalLightComponent>();
 		const std::vector<SPointLightComponent*>& pointLightComponents = scene->GetComponents<SPointLightComponent>();
@@ -85,16 +85,20 @@ namespace Havtorn
 
 		const SEntity& editorRenderExemptEntity = GEngine::GetWorld()->GetEditorRenderExemptEntity();
 
-		// TODO.NW: Consider sending in CameraData instead of entity?
-		const STransformComponent* cameraTransform = scene->GetComponent<STransformComponent>(cameraEntity);
-		if (!SComponent::IsValid(cameraTransform))
-			return;
+		SFrustum cameraFrustum = SFrustum(SMatrix::Identity, SMatrix::Identity);
+		if (doCulling)
+		{
+			// TODO.NW: Consider sending in CameraData instead of entity?
+			const STransformComponent* cameraTransform = scene->GetComponent<STransformComponent>(cameraEntity);
+			if (!SComponent::IsValid(cameraTransform))
+				return;
 
-		const SCameraComponent* cameraComponent = scene->GetComponent<SCameraComponent>(cameraEntity);
-		if (!SComponent::IsValid(cameraComponent))
-			return;
+			const SCameraComponent* cameraComponent = scene->GetComponent<SCameraComponent>(cameraEntity);
+			if (!SComponent::IsValid(cameraComponent))
+				return;
 
-		const SFrustum cameraFrustum = SFrustum(cameraTransform->Transform.GetMatrix(), cameraComponent->ProjectionMatrix);
+			cameraFrustum = SFrustum(cameraTransform->Transform.GetMatrix(), cameraComponent->ProjectionMatrix);
+		}
 
 		for (const SStaticMeshComponent* staticMeshComponent : scene->GetComponents<SStaticMeshComponent>())
 		{
@@ -118,8 +122,9 @@ namespace Havtorn
 			// https://learnopengl.com/Guest-Articles/2021/CSM
 			// https://developer.download.nvidia.com/SDK/10.5/opengl/src/cascaded_shadow_maps/doc/cascaded_shadow_maps.pdf
 
+			// TODO need to scale bounding sphere with transform scale
 			const SSphere meshBoundingSphere = SSphere((SVector4(asset->BoundsCenter, 1.0f) * transformComp->Transform.GetMatrix()).ToVector3(), asset->BoundsMin.Distance(asset->BoundsMax) * 0.5f);
-			if (IsCulled(scene, meshBoundingSphere, cameraFrustum))
+			if (doCulling && IsCulled(scene, meshBoundingSphere, cameraFrustum))
 				continue;
 
 			// NW: Note that all registered instances of any mesh ID will be used for shadowcasting if that mesh ID has been registered for any light
