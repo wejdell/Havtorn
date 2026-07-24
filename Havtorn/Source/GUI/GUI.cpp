@@ -4,7 +4,6 @@
 #include <imgui.h>
 #include <imgui_internal.h>
 #include <misc/cpp/imgui_stdlib.h>
-//#include <backends/imgui_impl_win32.h>
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_dx11.h>
 #include <ImGuizmo.h>
@@ -19,12 +18,13 @@
 #include <MathTypes/Vector.h>
 #include <MathTypes/Matrix.h>
 #include <Color.h>
-
-#include <string>
-#include <Log.h>
+#include <FileSystem.h>
 
 #include <PlatformManager.h>
 #include <SDL3/SDL.h>
+
+#include <string>
+#include <Log.h>
 
 namespace Havtorn
 {
@@ -2037,6 +2037,13 @@ namespace Havtorn
 
 		if (GUI::ImageButton("AssetPicker", image, pickerSize))
 		{
+			// TODO.NW: Add own folder type with formal validation
+			if (!UFileSystem::Exists(directory))
+			{
+				HV_LOG_WARN("Could not find assets in %s, that folder doesn't exist!", directory.c_str());
+				return result;
+			}
+
 			GUI::OpenPopup(modalLabel);
 			GUI::SetNextWindowPos(GUI::GetViewportCenter(), EWindowCondition::Appearing, SVector2<F32>(0.5f, 0.5f));
 		}

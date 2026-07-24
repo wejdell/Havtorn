@@ -319,6 +319,7 @@ target_include_directories(GUI PRIVATE
     "${EXTERNAL_FOLDER}ImGuizmo"
     "${EXTERNAL_FOLDER}imgui-node-editor"
     "${EXTERNAL_FOLDER}DirectXTex"
+    "${EXTERNAL_FOLDER}rapidjson/include"
     "${EXTERNAL_FOLDER}SDL/include"
 )
 target_link_directories(GUI PRIVATE
