@@ -611,6 +611,9 @@ namespace Havtorn
 
 	void CViewportWindow::SetContextMenuEntity(const SEntity& entity)
 	{
+		if (!entity.IsValid())
+			return;
+
 		ContextMenuEntity = entity;
 
 		// TODO.NW: Decide what feels best here, to clear all selections or select the picked one
