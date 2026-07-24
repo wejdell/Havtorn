@@ -60,7 +60,7 @@ namespace Havtorn
 		SVector2<F32> PreviewWindowPosition = SVector2<F32>::Zero;
 		SVector2<F32> PreviewWindowDimensions = SVector2<F32>::Zero;
 		F32 PreviewCameraMaxMoveSpeed = 3.0f;
-		F32 PreviewCameraRotationSpeed = 2.0f;
+		F32 PreviewCameraRotationSpeed = 0.2f;
 		F32 PreviewCameraAccelerationDuration = 0.2f;
 
 		SVector PreviewCameraAccelerationDirection = SVector::Zero;

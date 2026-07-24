@@ -148,6 +148,14 @@ namespace Havtorn
 				GUI::ColorPicker3("Preview Light Color", PreviewLightColor);
 				GUI::PopItemWidth();
 				GUI::EndChild();
+
+				GUI::SameLine();
+
+				GUI::BeginChild("Camera", settingsPropertySize);
+				GUI::PushItemWidth(78.0f);
+				GUI::DragFloat("Preview Rotation Speed", PreviewRotationSpeed, 0.01f);
+				GUI::PopItemWidth();
+				GUI::EndChild();
 			}
 
 			GUI::EndChild();
@@ -323,10 +331,10 @@ namespace Havtorn
 		switch (payload.Event)
 		{
 		case EInputAxisEvent::MouseDeltaVertical:
-			RotationInput.X +=  -payload.AxisValue * rotationSpeed * GTime::Dt();
+			RotationInput.X +=  -payload.AxisValue * rotationSpeed * PreviewRotationSpeed * GTime::Dt();
 			return;
 		case EInputAxisEvent::MouseDeltaHorizontal:
-			RotationInput.Y += payload.AxisValue * rotationSpeed * GTime::Dt();
+			RotationInput.Y += payload.AxisValue * rotationSpeed * PreviewRotationSpeed * GTime::Dt();
 			return;
 		default:
 			return;

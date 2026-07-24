@@ -45,6 +45,7 @@ namespace Havtorn
 		U64 MaterialToolRenderID = 80090;
 		U32 MaterialToolPreviewAssetID = 80100;
 		SVector RotationInput = SVector::Zero;
+		F32 PreviewRotationSpeed = 0.2f;
 		F32 CurrentZoom = StartingZoom;
 		bool IsOrbiting = false;
 		bool IsHoveringViewport = false;
