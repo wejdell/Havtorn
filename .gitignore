@@ -60,6 +60,7 @@
 *Havtorn/Bin/Config/EditorPreferences.user.json
 *Havtorn/Bin/ArtSource
 *Havtorn/Bin/LastRunSettings.json
+*Havtorn/Bin/Simple.json
 
 # Other/Intermediate
 *.ilk
