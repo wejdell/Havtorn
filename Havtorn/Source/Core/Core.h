@@ -40,6 +40,12 @@
 #define EDITOR_API __declspec(dllimport)
 #endif
 
+#ifdef HV_GAME_EDITOR_DLL
+#define GAME_EDITOR_API __declspec(dllexport)
+#else
+#define GAME_EDITOR_API __declspec(dllimport)
+#endif
+
 #ifndef HV_DIRECTX_11
 	#define HV_DIRECTX_11
 #endif

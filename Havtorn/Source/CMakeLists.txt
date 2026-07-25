@@ -35,6 +35,7 @@ set(SHADER_FOLDER "Engine/Graphics/Shaders/")
 set(SHADER_INCL_FOLDER "Engine/Graphics/Shaders/Includes/")
 set(EDITOR_FOLDER "Editor/")
 set(GAME_FOLDER "Game/")
+set(GAME_EDITOR_FOLDER "GameEditor/")
 set(GUI_FOLDER "GUI/")
 set(CORE_FOLDER "Core/")
 set(PLATFORM_FOLDER "Platform/")
@@ -825,57 +826,6 @@ add_dependencies(Engine Core Platform GUI)
 # ==================== ENGINE ====================
 
 
-# ==================== GAME ====================
-set(GAME_FILES
-    ${GAME_FOLDER}GameDeepLinkParser.cpp
-    ${GAME_FOLDER}GameDeepLinkParser.h
-    ${GAME_FOLDER}GameManager.cpp
-    ${GAME_FOLDER}GameManager.h
-    ${GAME_FOLDER}GameProcess.cpp
-    ${GAME_FOLDER}GameProcess.h
-    ${GAME_FOLDER}GameScene.cpp
-    ${GAME_FOLDER}GameScene.h
-    ${GAME_FOLDER}GameScript.cpp
-    ${GAME_FOLDER}GameScript.h
-    ${GAME_FOLDER}hvpch.cpp
-    ${GAME_FOLDER}hvpch.h
-)
-add_library(Game SHARED ${GAME_FILES})
-source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GAME_FILES})
-target_include_directories(Game PRIVATE
-    "${GAME_FOLDER}"
-    "${EXTERNAL_FOLDER}"
-    "${EXTERNAL_FOLDER}FastNoise2/include"
-    "${EXTERNAL_FOLDER}rapidjson/include"
-    "${EXTERNAL_FOLDER}DirectXTex"
-    "${EXTERNAL_FOLDER}box2d/include/box2d"
-    "${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
-    "${EXTERNAL_FOLDER}PhysX/physx/include"
-    "Core"
-    "Platform"
-    "GUI"
-    "Engine"
-)
-target_link_libraries(Game PRIVATE
-    Core
-    Platform
-    GUI
-    Engine
-)
-target_link_directories(Game PRIVATE
-    ${CMAKE_BINARY_DIR}
-)
-target_compile_definitions(Game PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_GAME_DLL)
-target_compile_options(Game PRIVATE ${COMMON_COMPILE_OPTIONS})
-target_compile_options(Game PRIVATE "/FI${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/Game.dir/$<CONFIG>/cmake_pch.hxx")
-target_precompile_headers(Game PRIVATE ${GAME_FOLDER}hvpch.h)
-target_link_options(Game PRIVATE ${COMMON_LINK_OPTIONS})
-set_property(TARGET Game PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
-set_target_properties(Game PROPERTIES ${COMMON_TARGET_PROPERTIES})
-add_dependencies(Game Core Platform GUI Engine)
-# ==================== GAME ====================
-
-
 # ==================== EDITOR ====================
 set(EDITOR_FILES
 	${EDITOR_FOLDER}AuthoringTools/InputTool.cpp
@@ -987,6 +937,111 @@ add_dependencies(Editor Core Platform GUI Engine Game)
 # ==================== EDITOR ====================
 
 
+# ==================== GAME ====================
+set(GAME_FILES
+    ${GAME_FOLDER}GameDeepLinkParser.cpp
+    ${GAME_FOLDER}GameDeepLinkParser.h
+    ${GAME_FOLDER}GameManager.cpp
+    ${GAME_FOLDER}GameManager.h
+    ${GAME_FOLDER}GameProcess.cpp
+    ${GAME_FOLDER}GameProcess.h
+    ${GAME_FOLDER}GameScene.cpp
+    ${GAME_FOLDER}GameScene.h
+    ${GAME_FOLDER}GameScript.cpp
+    ${GAME_FOLDER}GameScript.h
+    ${GAME_FOLDER}hvpch.cpp
+    ${GAME_FOLDER}hvpch.h
+)
+add_library(Game SHARED ${GAME_FILES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GAME_FILES})
+target_include_directories(Game PRIVATE
+    "${GAME_FOLDER}"
+    "${EXTERNAL_FOLDER}"
+    "${EXTERNAL_FOLDER}FastNoise2/include"
+    "${EXTERNAL_FOLDER}rapidjson/include"
+    "${EXTERNAL_FOLDER}DirectXTex"
+    "${EXTERNAL_FOLDER}box2d/include/box2d"
+    "${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
+    "${EXTERNAL_FOLDER}PhysX/physx/include"
+    "Core"
+    "Platform"
+    "GUI"
+    "Engine"
+)
+target_link_libraries(Game PRIVATE
+    Core
+    Platform
+    GUI
+    Engine
+)
+target_link_directories(Game PRIVATE
+    ${CMAKE_BINARY_DIR}
+)
+target_compile_definitions(Game PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_GAME_DLL)
+target_compile_options(Game PRIVATE ${COMMON_COMPILE_OPTIONS})
+target_compile_options(Game PRIVATE "/FI${CMAKE_CURRENT_BINARY_DIR}/CMakeFiles/Game.dir/$<CONFIG>/cmake_pch.hxx")
+target_precompile_headers(Game PRIVATE ${GAME_FOLDER}hvpch.h)
+target_link_options(Game PRIVATE ${COMMON_LINK_OPTIONS})
+set_property(TARGET Game PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
+set_target_properties(Game PROPERTIES ${COMMON_TARGET_PROPERTIES})
+add_dependencies(Game Core Platform GUI Engine)
+# ==================== GAME ====================
+
+
+# ==================== GAME_EDITOR ====================
+set(GAME_EDITOR_FILES
+    ${GAME_EDITOR_FOLDER}hvpch.cpp
+    ${GAME_EDITOR_FOLDER}hvpch.h
+    ${GAME_EDITOR_FOLDER}TestContext.cpp
+    ${GAME_EDITOR_FOLDER}TestContext.h
+)
+add_library(GameEditor SHARED ${GAME_EDITOR_FILES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GAME_EDITOR_FILES})
+target_include_directories(GameEditor PRIVATE
+    "${GAME_EDITOR_FOLDER}"
+    "${EXTERNAL_FOLDER}rapidjson/include"
+    "${EXTERNAL_FOLDER}DirectXTex"
+    "${EXTERNAL_FOLDER}box2d/include/box2d"
+    "${EXTERNAL_FOLDER}box2dcpp/include/box2cpp"
+    "${EXTERNAL_FOLDER}PhysX/physx/include"
+    "Core"
+    "Platform"
+    "GUI"
+    "Engine"
+    "Editor"
+    "Game"
+)
+target_link_libraries(GameEditor PRIVATE
+    Core
+    Platform
+    GUI
+    Engine
+    Editor
+    Game
+)
+target_link_directories(GameEditor PRIVATE
+    ${CMAKE_BINARY_DIR}
+)
+
+if(AUDIO_BACKEND STREQUAL "WWISE")
+    target_compile_definitions(GameEditor PRIVATE HV_AUDIO_BACKEND_WWISE)
+    target_compile_definitions(GameEditor PRIVATE $<$<CONFIG:GameRelease>:AK_OPTIMIZED>)
+elseif(AUDIO_BACKEND STREQUAL "FMOD")
+    target_compile_definitions(GameEditor PRIVATE HV_AUDIO_BACKEND_FMOD)
+elseif(AUDIO_BACKEND STREQUAL "SDL")
+    target_compile_definitions(GameEditor PRIVATE HV_AUDIO_BACKEND_SDL)
+endif()
+
+target_compile_definitions(GameEditor PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_GAME_EDITOR_DLL)
+target_compile_options(GameEditor PRIVATE ${COMMON_COMPILE_OPTIONS})
+target_precompile_headers(GameEditor PRIVATE ${GAME_EDITOR_FOLDER}hvpch.h)
+target_link_options(GameEditor PRIVATE ${COMMON_LINK_OPTIONS})
+set_property(TARGET GameEditor PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
+set_target_properties(GameEditor PROPERTIES ${COMMON_TARGET_PROPERTIES})
+add_dependencies(GameEditor Core Platform GUI Engine Editor Game)
+# ==================== GAME_EDITOR ====================
+
+
 # ==================== LAUNCHER ====================
 set(LAUNCHER_FILES
     ${LAUNCHER_FOLDER}Application/Application.cpp
@@ -1007,17 +1062,18 @@ target_include_directories(Launcher PRIVATE
     "Platform"
 	"GUI"
 	"Engine"
-	"Game"
 	"Editor"
-
+	"Game"
+    "GameEditor"
 )
 target_link_libraries(Launcher PRIVATE
     Core    
     Platform
     GUI
     Engine
-    Game
     Editor
+    Game
+    GameEditor
     $<$<CONFIG:EditorDebug>:Debug/SDL3>
     $<$<CONFIG:GameDebug>:Debug/SDL3>
     $<$<CONFIG:EditorDevelopment>:Release/SDL3>
@@ -1033,5 +1089,5 @@ target_link_options(Launcher PRIVATE ${COMMON_LINK_OPTIONS})
 set_property(TARGET Launcher PROPERTY VS_DEBUGGER_WORKING_DIRECTORY ${WORKING_FOLDER})
 set_property(DIRECTORY PROPERTY VS_STARTUP_PROJECT Launcher)
 set_target_properties(Launcher PROPERTIES ${COMMON_TARGET_PROPERTIES} RUNTIME_OUTPUT_NAME $<CONFIG>)
-add_dependencies(Launcher Core Platform GUI Engine Game Editor)
+add_dependencies(Launcher Core Platform GUI Engine Editor Game GameEditor)
 # ==================== LAUNCHER ====================
