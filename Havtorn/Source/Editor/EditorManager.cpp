@@ -171,6 +171,8 @@ namespace Havtorn
 		RegisterComponentView<SAudioEmitterComponentView, SAudioEmitterComponent>();
 
 		SetupComponentDependencies<SStaticMeshComponent, STransformComponent, SMaterialComponent>();
+		SetupComponentDependencies<SSkeletalMeshComponent, STransformComponent, SMaterialComponent>();
+		SetupComponentDependencies<SSkeletalAnimationComponent, STransformComponent, SMaterialComponent, SSkeletalMeshComponent>();
 
 		return success;
 	}
