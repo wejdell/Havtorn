@@ -376,7 +376,6 @@ namespace Havtorn
 		GEngine::GetWorld()->SetEditorRenderExemptEntity(scene->PreviewEntity);
 
 		scene->AddComponent<STransformComponent>(scene->PreviewEntity)->Transform;
-		scene->AddComponentEditorContext(scene->PreviewEntity, &STransformComponentEditorContext::Context);
 
 		CAssetRegistry* assetRegistry = GEngine::GetAssetRegistry();
 
@@ -386,13 +385,11 @@ namespace Havtorn
 		{
 			std::string staticMeshPath = assetRepresentation->DirectoryEntry.path().string();
 			scene->AddComponent<SStaticMeshComponent>(scene->PreviewEntity, staticMeshPath);
-			scene->AddComponentEditorContext(scene->PreviewEntity, &SStaticMeshComponentEditorContext::Context);
 			SStaticMeshAsset* meshAsset = assetRegistry->RequestAssetData<SStaticMeshAsset>(SAssetReference(staticMeshPath), scene->PreviewEntity.GUID);
 
 			std::vector<std::string> previewMaterials;
 			previewMaterials.resize(meshAsset->NumberOfMaterials, CEditorManager::PreviewMaterial);
 			scene->AddComponent<SMaterialComponent>(scene->PreviewEntity, previewMaterials);
-			scene->AddComponentEditorContext(scene->PreviewEntity, &SMaterialComponentEditorContext::Context);
 		}
 			break;
 
@@ -400,7 +397,6 @@ namespace Havtorn
 		{
 			std::string meshPath = assetRepresentation->DirectoryEntry.path().string();
 			scene->AddComponent<SSkeletalMeshComponent>(scene->PreviewEntity, meshPath);
-			scene->AddComponentEditorContext(scene->PreviewEntity, &SSkeletalMeshComponentEditorContext::Context);
 			SSkeletalMeshAsset* meshAsset = assetRegistry->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(meshPath), scene->PreviewEntity.GUID);
 			
 			// TODO.NW: Deal with different asset types, and figure out bind pose for skeletal meshes
@@ -408,7 +404,6 @@ namespace Havtorn
 			std::vector<std::string> previewMaterials;
 			previewMaterials.resize(meshAsset->NumberOfMaterials, CEditorManager::PreviewMaterial);
 			scene->AddComponent<SMaterialComponent>(scene->PreviewEntity, previewMaterials);
-			scene->AddComponentEditorContext(scene->PreviewEntity, &SMaterialComponentEditorContext::Context);
 		}
 			break;
 
@@ -418,17 +413,14 @@ namespace Havtorn
 			SSkeletalAnimationAsset* animationAsset = assetRegistry->RequestAssetData<SSkeletalAnimationAsset>(SAssetReference(animationPath), scene->PreviewEntity.GUID);
 			const std::vector<std::string> animationPaths = { animationPath };
 			scene->AddComponent<SSkeletalAnimationComponent>(scene->PreviewEntity, animationPaths);
-			scene->AddComponentEditorContext(scene->PreviewEntity, &SSkeletalAnimationComponentEditorContext::Context);
 
 			const std::string meshPath = animationAsset->RigPath;
 			scene->AddComponent<SSkeletalMeshComponent>(scene->PreviewEntity, meshPath);
-			scene->AddComponentEditorContext(scene->PreviewEntity, &SSkeletalMeshComponentEditorContext::Context);
 			SSkeletalMeshAsset* meshAsset = assetRegistry->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(meshPath), scene->PreviewEntity.GUID);
 
 			std::vector<std::string> previewMaterials;
 			previewMaterials.resize(meshAsset->NumberOfMaterials, CEditorManager::PreviewMaterial);
 			scene->AddComponent<SMaterialComponent>(scene->PreviewEntity, previewMaterials);
-			scene->AddComponentEditorContext(scene->PreviewEntity, &SMaterialComponentEditorContext::Context);
 		}
 			break;
 
@@ -437,7 +429,6 @@ namespace Havtorn
 			// TODO.NW: Handle prefab previs/preview
 			
 			scene->AddComponent<SPrefabComponent>(scene->PreviewEntity, assetRepresentation->DirectoryEntry.path().string());
-			scene->AddComponentEditorContext(scene->PreviewEntity, &SPrefabComponentEditorContext::Context);
 		}
 			break;
 

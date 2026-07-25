@@ -1,0 +1,16 @@
+// Copyright 2024 Team Havtorn. All Rights Reserved.
+
+#pragma once
+#include "ComponentView.h"
+
+namespace Havtorn
+{
+	struct EDITOR_API SMaterialComponentView : public SComponentView
+	{
+		SComponentViewResult View(const SEntity& entityOwner, CScene* scene) const override;
+		virtual const char* GetComponentName() const override { return "Material"; };
+		U8 GetSortingPriority() const override;
+
+		static SMaterialComponentView Context;
+	};
+}

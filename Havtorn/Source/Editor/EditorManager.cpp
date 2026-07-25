@@ -20,6 +20,8 @@
 #include "EditorToggleable.h"
 #include "EditorToggleables.h"
 
+#include "ComponentViewInclude.h"
+
 #include "EditActions/RemoveEntityEditAction.h"
 
 #include "Systems/EditorRenderSystem.h"
@@ -139,34 +141,34 @@ namespace Havtorn
 		InitAssetRepresentations();
 		InitEditorPreferences();
 
-		RegisterComponentView<STransformComponentEditorContext, STransformComponent>();
-		RegisterComponentView<SStaticMeshComponentEditorContext, SStaticMeshComponent>();
-		RegisterComponentView<SSkeletalMeshComponentEditorContext, SSkeletalMeshComponent>();
-		RegisterComponentView<SCameraComponentEditorContext, SCameraComponent>();
-		RegisterComponentView<SCameraControllerComponentEditorContext, SCameraControllerComponent>();
-		RegisterComponentView<SMaterialComponentEditorContext, SMaterialComponent>();
-		RegisterComponentView<SEnvironmentLightComponentEditorContext, SEnvironmentLightComponent>();
-		RegisterComponentView<SDirectionalLightComponentEditorContext, SDirectionalLightComponent>();
-		RegisterComponentView<SPointLightComponentEditorContext, SPointLightComponent>();
-		RegisterComponentView<SSpotLightComponentEditorContext, SSpotLightComponent>();
-		RegisterComponentView<SVolumetricLightComponentEditorContext, SVolumetricLightComponent>();
-		RegisterComponentView<SDecalComponentEditorContext, SDecalComponent>();
-		RegisterComponentView<SSpriteComponentEditorContext, SSpriteComponent>();
-		RegisterComponentView<STransform2DComponentEditorContext, STransform2DComponent>();
-		RegisterComponentView<SSpriteAnimatorGraphComponentEditorContext, SSpriteAnimatorGraphComponent>();
-		RegisterComponentView<SSkeletalAnimationComponentEditorContext, SSkeletalAnimationComponent>();
-		RegisterComponentView<SScriptComponentEditorContext, SScriptComponent>();
-		RegisterComponentView<SPhysics2DComponentEditorContext, SPhysics2DComponent>();
-		RegisterComponentView<SPhysics3DComponentEditorContext, SPhysics3DComponent>();
-		RegisterComponentView<SPhysics3DControllerComponentEditorContext, SPhysics3DControllerComponent>();
-		RegisterComponentView<SUICanvasComponentEditorContext, SUICanvasComponent>();
-		RegisterComponentView<SLevelStreamingComponentEditorContext, SLevelStreamingComponent>();
-		RegisterComponentView<SPrefabComponentEditorContext, SPrefabComponent>();
-		RegisterComponentView<SAbilityComponentEditorContext, SAbilityComponent>();
-		RegisterComponentView<SHexCommandComponentEditorContext, SHexCommandComponent>();
-		RegisterComponentView<SInputComponentEditorContext, SInputComponent>();
-		RegisterComponentView<SAudioListenerComponentEditorContext, SAudioListenerComponent>();
-		RegisterComponentView<SAudioEmitterComponentEditorContext, SAudioEmitterComponent>();
+		RegisterComponentView<STransformComponentView, STransformComponent>();
+		RegisterComponentView<SStaticMeshComponentView, SStaticMeshComponent>();
+		RegisterComponentView<SSkeletalMeshComponentView, SSkeletalMeshComponent>();
+		RegisterComponentView<SCameraComponentView, SCameraComponent>();
+		RegisterComponentView<SCameraControllerComponentView, SCameraControllerComponent>();
+		RegisterComponentView<SMaterialComponentView, SMaterialComponent>();
+		RegisterComponentView<SEnvironmentLightComponentView, SEnvironmentLightComponent>();
+		RegisterComponentView<SDirectionalLightComponentView, SDirectionalLightComponent>();
+		RegisterComponentView<SPointLightComponentView, SPointLightComponent>();
+		RegisterComponentView<SSpotLightComponentView, SSpotLightComponent>();
+		RegisterComponentView<SVolumetricLightComponentView, SVolumetricLightComponent>();
+		RegisterComponentView<SDecalComponentView, SDecalComponent>();
+		RegisterComponentView<SSpriteComponentView, SSpriteComponent>();
+		RegisterComponentView<STransform2DComponentView, STransform2DComponent>();
+		RegisterComponentView<SSpriteAnimatorGraphComponentView, SSpriteAnimatorGraphComponent>();
+		RegisterComponentView<SSkeletalAnimationComponentView, SSkeletalAnimationComponent>();
+		RegisterComponentView<SScriptComponentView, SScriptComponent>();
+		RegisterComponentView<SPhysics2DComponentView, SPhysics2DComponent>();
+		RegisterComponentView<SPhysics3DComponentView, SPhysics3DComponent>();
+		RegisterComponentView<SPhysics3DControllerComponentView, SPhysics3DControllerComponent>();
+		RegisterComponentView<SUICanvasComponentView, SUICanvasComponent>();
+		RegisterComponentView<SLevelStreamingComponentView, SLevelStreamingComponent>();
+		RegisterComponentView<SPrefabComponentView, SPrefabComponent>();
+		RegisterComponentView<SAbilityComponentView, SAbilityComponent>();
+		RegisterComponentView<SHexCommandComponentView, SHexCommandComponent>();
+		RegisterComponentView<SInputComponentView, SInputComponent>();
+		RegisterComponentView<SAudioListenerComponentView, SAudioListenerComponent>();
+		RegisterComponentView<SAudioEmitterComponentView, SAudioEmitterComponent>();
 
 		return success;
 	}

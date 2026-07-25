@@ -387,66 +387,8 @@ set(ENGINE_FILES
 	${ENGINE_FOLDER}Assets/SourceAssetData.cpp
 	${ENGINE_FOLDER}Assets/SourceAssetData.h
 	${ENGINE_FOLDER}Assets/SourceAssetDataInclude.h
-	${ENGINE_FOLDER}ECS/Systems/UISystem.cpp
-	${ENGINE_FOLDER}ECS/Systems/UISystem.h
-	${ENGINE_FOLDER}ECS/ComponentEditorContexts/UICanvasComponentEditorContext.cpp
-	${ENGINE_FOLDER}ECS/ComponentEditorContexts/UICanvasComponentEditorContext.h
 	${ENGINE_FOLDER}ECS/Components/UICanvasComponent.cpp
 	${ENGINE_FOLDER}ECS/Components/UICanvasComponent.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/AbilityComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/AbilityComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/AudioEmitterComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/AudioEmitterComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/AudioListenerComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/AudioListenerComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraControllerComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/CameraControllerComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/DecalComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/DecalComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/DirectionalLightComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/DirectionalLightComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/EnvironmentLightComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/EnvironmentLightComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/InputComponentEditorContext.cpp
-	${ENGINE_FOLDER}ECS/ComponentEditorContexts/InputComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/LevelStreamingComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/LevelStreamingComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/MaterialComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/MaterialComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/Physics2DComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/Physics2DComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/Physics3DComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/Physics3DComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/Physics3DControllerComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/Physics3DControllerComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/PointLightComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/PointLightComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/PrefabComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/PrefabComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/ScriptComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/ScriptComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/SequencerComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/SequencerComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/SkeletalAnimationComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/SkeletalAnimationComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/SkeletalMeshComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/SkeletalMeshComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/SpotLightComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/SpotLightComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/SpriteAnimatorGraphComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/SpriteAnimatorGraphComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/SpriteComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/SpriteComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/StaticMeshComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/StaticMeshComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/Transform2DComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/Transform2DComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/TransformComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/TransformComponentEditorContext.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/VolumetricLightComponentEditorContext.cpp
-    ${ENGINE_FOLDER}ECS/ComponentEditorContexts/VolumetricLightComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/Components/AbilityComponent.cpp
     ${ENGINE_FOLDER}ECS/Components/AbilityComponent.h
     ${ENGINE_FOLDER}ECS/Components/AudioEmitterComponent.cpp
@@ -513,10 +455,11 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}ECS/Systems/SequencerSystem.h
     ${ENGINE_FOLDER}ECS/Systems/SpriteAnimatorGraphSystem.cpp
     ${ENGINE_FOLDER}ECS/Systems/SpriteAnimatorGraphSystem.h
+	${ENGINE_FOLDER}ECS/Systems/UISystem.cpp
+	${ENGINE_FOLDER}ECS/Systems/UISystem.h
     "${ENGINE_FOLDER}ECS/Component.cpp"
     "${ENGINE_FOLDER}ECS/Component.h"
     ${ENGINE_FOLDER}ECS/ComponentAlgo.h
-    ${ENGINE_FOLDER}ECS/ComponentEditorContext.h
     ${ENGINE_FOLDER}ECS/ECSInclude.h
     ${ENGINE_FOLDER}ECS/Entity.cpp
     ${ENGINE_FOLDER}ECS/Entity.h
@@ -554,8 +497,6 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Graphics/RenderTextureFactory.h
     ${ENGINE_FOLDER}Graphics/TextureBank.cpp
     ${ENGINE_FOLDER}Graphics/TextureBank.h
-    ${ENGINE_FOLDER}Hex/HexCommandComponentEditorContext.cpp
-	${ENGINE_FOLDER}Hex/HexCommandComponentEditorContext.h
     ${ENGINE_FOLDER}Hex/HexCommandComponent.cpp
 	${ENGINE_FOLDER}Hex/HexCommandComponent.h
 	${ENGINE_FOLDER}Hex/HexCommand.h
@@ -844,6 +785,66 @@ set(EDITOR_FILES
     ${EDITOR_FOLDER}EditActions/MoveTransformEditAction.h
     ${EDITOR_FOLDER}EditActions/RemoveEntityEditAction.cpp
     ${EDITOR_FOLDER}EditActions/RemoveEntityEditAction.h
+    ${EDITOR_FOLDER}ComponentView.h
+    ${EDITOR_FOLDER}ComponentViewInclude.h
+    ${EDITOR_FOLDER}ComponentViews/AbilityComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/AbilityComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/AudioEmitterComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/AudioEmitterComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/AudioListenerComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/AudioListenerComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/CameraComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/CameraComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/CameraControllerComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/CameraControllerComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/DecalComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/DecalComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/DirectionalLightComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/DirectionalLightComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/EnvironmentLightComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/EnvironmentLightComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/InputComponentView.cpp
+	${EDITOR_FOLDER}ComponentViews/InputComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/HexCommandComponentView.cpp
+	${EDITOR_FOLDER}ComponentViews/HexCommandComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/LevelStreamingComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/LevelStreamingComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/MaterialComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/MaterialComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/Physics2DComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/Physics2DComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/Physics3DComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/Physics3DComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/Physics3DControllerComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/Physics3DControllerComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/PointLightComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/PointLightComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/PrefabComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/PrefabComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/ScriptComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/ScriptComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/SequencerComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/SequencerComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/SkeletalAnimationComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/SkeletalAnimationComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/SkeletalMeshComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/SkeletalMeshComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/SpotLightComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/SpotLightComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/SpriteAnimatorGraphComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/SpriteAnimatorGraphComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/SpriteComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/SpriteComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/StaticMeshComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/StaticMeshComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/Transform2DComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/Transform2DComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/TransformComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/TransformComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/UICanvasComponentView.cpp
+	${EDITOR_FOLDER}ComponentViews/UICanvasComponentView.h
+    ${EDITOR_FOLDER}ComponentViews/VolumetricLightComponentView.cpp
+    ${EDITOR_FOLDER}ComponentViews/VolumetricLightComponentView.h
     ${EDITOR_FOLDER}Systems/EditorRenderSystem.cpp
     ${EDITOR_FOLDER}Systems/EditorRenderSystem.h
     ${EDITOR_FOLDER}Systems/PickingSystem.cpp
@@ -994,8 +995,6 @@ set(GAME_EDITOR_FILES
     ${GAME_EDITOR_FOLDER}GameEditorManager.h
     ${GAME_EDITOR_FOLDER}hvpch.cpp
     ${GAME_EDITOR_FOLDER}hvpch.h
-    ${GAME_EDITOR_FOLDER}TestContext.cpp
-    ${GAME_EDITOR_FOLDER}TestContext.h
 )
 add_library(GameEditor SHARED ${GAME_EDITOR_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${GAME_EDITOR_FILES})

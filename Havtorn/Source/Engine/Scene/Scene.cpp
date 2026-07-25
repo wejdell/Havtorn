@@ -23,7 +23,6 @@ namespace Havtorn
 	CScene::~CScene()
 	{
 		ClearScene();
-		RegisteredComponentEditorContexts.clear();
 	}
 
 	bool CScene::Init(const std::string& sceneName)
@@ -32,35 +31,35 @@ namespace Havtorn
 			SceneName = sceneName;
 
 		TypeHashToTypeID.emplace(typeid(SMetaDataComponent).hash_code(), 0);
-		RegisterNonTrivialComponent<STransformComponent, STransformComponentEditorContext>(10, 50);
-		RegisterNonTrivialComponent<SStaticMeshComponent, SStaticMeshComponentEditorContext>(20, 40);
-		RegisterNonTrivialComponent<SSkeletalMeshComponent, SSkeletalMeshComponentEditorContext>(30, 40);
-		RegisterTrivialComponent<SCameraComponent, SCameraComponentEditorContext>(40, 2);
-		RegisterTrivialComponent<SCameraControllerComponent, SCameraControllerComponentEditorContext>(50, 2);
-		RegisterNonTrivialComponent<SMaterialComponent, SMaterialComponentEditorContext>(60, 40);
-		RegisterNonTrivialComponent<SEnvironmentLightComponent, SEnvironmentLightComponentEditorContext>(70, 1);
-		RegisterTrivialComponent<SDirectionalLightComponent, SDirectionalLightComponentEditorContext>(80, 1);
-		RegisterTrivialComponent<SPointLightComponent, SPointLightComponentEditorContext>(90, 1);
-		RegisterTrivialComponent<SSpotLightComponent, SSpotLightComponentEditorContext>(100, 1);
-		RegisterTrivialComponent<SVolumetricLightComponent, SVolumetricLightComponentEditorContext>(110, 3);
-		RegisterNonTrivialComponent<SDecalComponent, SDecalComponentEditorContext>(120, 2);
-		RegisterNonTrivialComponent<SSpriteComponent, SSpriteComponentEditorContext>(130, 10);
-		RegisterTrivialComponent<STransform2DComponent, STransform2DComponentEditorContext>(140, 10);
-		RegisterNonTrivialComponent<SSpriteAnimatorGraphComponent, SSpriteAnimatorGraphComponentEditorContext>(150, 2);
-		RegisterNonTrivialComponent<SSkeletalAnimationComponent, SSkeletalAnimationComponentEditorContext>(160, 40);
-		RegisterNonTrivialComponent<SScriptComponent, SScriptComponentEditorContext>(170, 10);
-		RegisterTrivialComponent<SPhysics2DComponent, SPhysics2DComponentEditorContext>(180, 10);
-		RegisterTrivialComponent<SPhysics3DComponent, SPhysics3DComponentEditorContext>(190, 40);
-		RegisterTrivialComponent<SPhysics3DControllerComponent, SPhysics3DControllerComponentEditorContext>(200, 1);
-		RegisterNonTrivialComponent<SUICanvasComponent, SUICanvasComponentEditorContext>(210, 5);
-		RegisterNonTrivialComponent<SLevelStreamingComponent, SLevelStreamingComponentEditorContext>(220, 10);
-		RegisterNonTrivialComponent<SPrefabComponent, SPrefabComponentEditorContext>(230, 10);
-		RegisterNonTrivialComponent<SAbilityComponent, SAbilityComponentEditorContext>(240, 10);
-		RegisterNonTrivialComponent<SHexCommandComponent, SHexCommandComponentEditorContext>(250, 10);
-		RegisterNonTrivialComponent<SInputComponent, SInputComponentEditorContext>(260, 10);
-		RegisterTrivialComponent<SAudioListenerComponent, SAudioListenerComponentEditorContext>(270, 1);
-		RegisterNonTrivialComponent<SAudioEmitterComponent, SAudioEmitterComponentEditorContext>(280, 20);
-		//RegisterTrivialComponent<SSequencerComponent, SSequencerComponentEditorContext>(typeID++, 0);
+		RegisterNonTrivialComponent<STransformComponent>(10, 50);
+		RegisterNonTrivialComponent<SStaticMeshComponent>(20, 40);
+		RegisterNonTrivialComponent<SSkeletalMeshComponent>(30, 40);
+		RegisterTrivialComponent<SCameraComponent>(40, 2);
+		RegisterTrivialComponent<SCameraControllerComponent>(50, 2);
+		RegisterNonTrivialComponent<SMaterialComponent>(60, 40);
+		RegisterNonTrivialComponent<SEnvironmentLightComponent>(70, 1);
+		RegisterTrivialComponent<SDirectionalLightComponent>(80, 1);
+		RegisterTrivialComponent<SPointLightComponent>(90, 1);
+		RegisterTrivialComponent<SSpotLightComponent>(100, 1);
+		RegisterTrivialComponent<SVolumetricLightComponent>(110, 3);
+		RegisterNonTrivialComponent<SDecalComponent>(120, 2);
+		RegisterNonTrivialComponent<SSpriteComponent>(130, 10);
+		RegisterTrivialComponent<STransform2DComponent>(140, 10);
+		RegisterNonTrivialComponent<SSpriteAnimatorGraphComponent>(150, 2);
+		RegisterNonTrivialComponent<SSkeletalAnimationComponent>(160, 40);
+		RegisterNonTrivialComponent<SScriptComponent>(170, 10);
+		RegisterTrivialComponent<SPhysics2DComponent>(180, 10);
+		RegisterTrivialComponent<SPhysics3DComponent>(190, 40);
+		RegisterTrivialComponent<SPhysics3DControllerComponent>(200, 1);
+		RegisterNonTrivialComponent<SUICanvasComponent>(210, 5);
+		RegisterNonTrivialComponent<SLevelStreamingComponent>(220, 10);
+		RegisterNonTrivialComponent<SPrefabComponent>(230, 10);
+		RegisterNonTrivialComponent<SAbilityComponent>(240, 10);
+		RegisterNonTrivialComponent<SHexCommandComponent>(250, 10);
+		RegisterNonTrivialComponent<SInputComponent>(260, 10);
+		RegisterTrivialComponent<SAudioListenerComponent>(270, 1);
+		RegisterNonTrivialComponent<SAudioEmitterComponent>(280, 20);
+		//RegisterTrivialComponent<SSequencerComponent>(typeID++, 0);
 
 		return true;
 	}
@@ -76,20 +75,17 @@ namespace Havtorn
 		// Setup entities (create components)
 		{
 			STransformComponent& transform = *AddComponent<STransformComponent>(mainCamera);
-			AddComponentEditorContext(mainCamera, &STransformComponentEditorContext::Context);
-
+			
 			transform.Transform.Translate({ 2.5f, 1.0f, -3.5f });
 			transform.Transform.Rotate({ 0.0f, UMath::DegToRad(35.0f), 0.0f });
 			transform.Transform.Translate(SVector::Right * 0.25f);
 
 			SCameraComponent& camera = *AddComponent<SCameraComponent>(mainCamera);
-			AddComponentEditorContext(mainCamera, &SCameraComponentEditorContext::Context);
 			camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 1000.0f);
 			camera.IsActive = true;
 
 			SCameraControllerComponent& controllerComp = *AddComponent<SCameraControllerComponent>(mainCamera);
-			AddComponentEditorContext(mainCamera, &SCameraControllerComponentEditorContext::Context);
-
+			
 			SVector currentEuler = transform.Transform.GetMatrix().GetEuler();
 			controllerComp.CurrentPitch = UMath::Clamp(currentEuler.X, -SCameraControllerComponent::MaxPitchDegrees + 0.01f, SCameraControllerComponent::MaxPitchDegrees - 0.01f);;
 			controllerComp.CurrentYaw = UMath::WrapAngle(currentEuler.Y);
@@ -102,20 +98,17 @@ namespace Havtorn
 
 			// Setup entities (create components)
 			STransformComponent& transform = *AddComponent<STransformComponent>(gameCamera);
-			AddComponentEditorContext(gameCamera, &STransformComponentEditorContext::Context);
-
+			
 			transform.Transform.Translate({ 2.6f, 1.0f, -1.6f });
 			transform.Transform.Rotate({ 0.0f, UMath::DegToRad(70.0f), 0.0f });
 
 			SCameraComponent& camera = *AddComponent<SCameraComponent>(gameCamera);
-			AddComponentEditorContext(gameCamera, &SCameraComponentEditorContext::Context);
 			camera.ProjectionMatrix = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), (16.0f / 9.0f), 0.1f, 6.0f);
 			camera.IsStartingCamera = true;
 			camera.FarClip = 6.0f;
 
 			SCameraControllerComponent& controllerComp = *AddComponent<SCameraControllerComponent>(gameCamera);
-			AddComponentEditorContext(gameCamera, &SCameraControllerComponentEditorContext::Context);
-			
+						
 			SVector currentEuler = transform.Transform.GetMatrix().GetEuler();
 			controllerComp.CurrentPitch = UMath::Clamp(currentEuler.X, -SCameraControllerComponent::MaxPitchDegrees + 0.01f, SCameraControllerComponent::MaxPitchDegrees - 0.01f);;
 			controllerComp.CurrentYaw = UMath::WrapAngle(currentEuler.Y);
@@ -127,9 +120,7 @@ namespace Havtorn
 			return false;
 
 		AddComponent<STransformComponent>(environmentLightEntity);
-		AddComponentEditorContext(environmentLightEntity, &STransformComponentEditorContext::Context);
 		AddComponent<SEnvironmentLightComponent>(environmentLightEntity, "Resources/DefaultSkybox.hva");
-		AddComponentEditorContext(environmentLightEntity, &SEnvironmentLightComponentEditorContext::Context);
 		// === !Environment light ===
 
 		// === Directional light ===
@@ -139,16 +130,13 @@ namespace Havtorn
 
 		// NR: Add transform to directional light so it can filter environmental lights based on distance
 		AddComponent<STransformComponent>(directionalLightEntity);
-		AddComponentEditorContext(directionalLightEntity, &STransformComponentEditorContext::Context);
-
+		
 		SDirectionalLightComponent& directionalLight = *AddComponent<SDirectionalLightComponent>(directionalLightEntity);
-		AddComponentEditorContext(directionalLightEntity, &SDirectionalLightComponentEditorContext::Context);
 		directionalLight.Direction = { -1.0f, -1.0f, 1.0f, 0.0f };
 		directionalLight.ShadowmapView.ShadowmapViewportIndex = 0;
 		directionalLight.ShadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(directionalLight.ShadowViewSize.X, directionalLight.ShadowViewSize.Y, directionalLight.ShadowNearAndFarPlane.X, directionalLight.ShadowNearAndFarPlane.Y);
 
 		SVolumetricLightComponent& volumetricLight = *AddComponent<SVolumetricLightComponent>(directionalLightEntity);
-		AddComponentEditorContext(directionalLightEntity, &SVolumetricLightComponentEditorContext::Context);
 		volumetricLight.IsActive = false;
 		// === !Directional light ===
 
@@ -457,6 +445,8 @@ namespace Havtorn
 			storage.EntityIndices.erase(entityGUID);
 		};
 
+		// TODO.NW: Can't we call RemoveComponent instead of doing this work manually?
+
 		// TODO.NW: Build dependency graph to go through storages. Prefab components must be handled before Transforms for example
 		const U32 typeID = TypeHashToTypeID.at(typeid(SPrefabComponent).hash_code());
 		if (ComponentTypeIndices.contains(typeID)) 
@@ -469,8 +459,6 @@ namespace Havtorn
 		{
 			removeEntityComponentFromStorage(storage, entity.GUID);
 		}
-
-		RemoveComponentEditorContexts(entity);
 
 		SEntity& entityAtBack = Entities.back();
 		EntityIndices.at(entityAtBack.GUID) = EntityIndices.at(entity.GUID);
@@ -693,49 +681,5 @@ namespace Havtorn
 			GetAttachedEntities(attachedEntities, outEntities);
 		
 		outEntities.push_back(parentEntity);
-	}
-
-	void CScene::AddComponentEditorContext(const SEntity& owner, SComponentEditorContext* context)
-	{
-		if (!EntityComponentEditorContexts.contains(owner.GUID))
-			EntityComponentEditorContexts.emplace(owner.GUID, std::vector<SComponentEditorContext*>());
-		 
-		auto& contexts = EntityComponentEditorContexts.at(owner.GUID);
-		contexts.push_back(context);
-
-		std::sort(contexts.begin(), contexts.end(), [](const SComponentEditorContext* a, const SComponentEditorContext* b) { return a->GetSortingPriority() < b->GetSortingPriority(); });
-	}
-
-	void CScene::RemoveComponentEditorContext(const SEntity& owner, SComponentEditorContext* context)
-	{
-		if (!EntityComponentEditorContexts.contains(owner.GUID))
-			return;
-
-		auto& contexts = EntityComponentEditorContexts.at(owner.GUID);
-		auto it = std::find(contexts.begin(), contexts.end(), context);
-		if (it != contexts.end())
-			contexts.erase(it);
-	}
-
-	void CScene::RemoveComponentEditorContexts(const SEntity& owner)
-	{
-		if (!EntityComponentEditorContexts.contains(owner.GUID))
-			return;
-
-		EntityComponentEditorContexts.at(owner.GUID).clear();
-		EntityComponentEditorContexts.erase(owner.GUID);
-	}
-
-	std::vector<SComponentEditorContext*> CScene::GetComponentEditorContexts(const SEntity& owner)
-	{
-		if (!EntityComponentEditorContexts.contains(owner.GUID))
-			return {};
-
-		return EntityComponentEditorContexts.at(owner.GUID);
-	}
-
-	const std::vector<SComponentEditorContext*>& CScene::GetComponentEditorContexts() const
-	{
-		return RegisteredComponentEditorContexts;
 	}
 }

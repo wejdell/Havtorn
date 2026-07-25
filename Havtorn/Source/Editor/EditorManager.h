@@ -11,6 +11,7 @@
 
 #include "EditHistory.h"
 #include "EditorDeepLinkParser.h"
+#include "ComponentView.h"
 
 namespace Havtorn
 {
@@ -96,6 +97,9 @@ namespace Havtorn
 		EEditorColorTheme PauseColorTheme = EEditorColorTheme::HavtornDefault;
 	};
 
+	template<typename T>
+	concept ComponentViewType = std::derived_from<T, SComponentView>;
+
 	class CEditorManager
 	{
 	public:
@@ -109,8 +113,8 @@ namespace Havtorn
 		void EDITOR_API DebugWindow();
 
 	public:
-		std::map<U64, SComponentEditorContext*> RegisteredComponentViewsMap;
-		std::vector<SComponentEditorContext*> RegisteredComponentViewsVector;
+		std::map<U64, SComponentView*> RegisteredComponentViewsMap;
+		std::vector<SComponentView*> RegisteredComponentViewsVector;
 		void SetCurrentWorkingScene(const I64 sceneIndex);
 		CScene* GetCurrentWorkingScene() const;
 		std::vector<Ptr<CScene>>& GetScenes() const;
@@ -218,6 +222,22 @@ namespace Havtorn
 		[[nodiscard]] std::string_view GetProjectName() const;
 
 		static std::string PreviewMaterial;
+	
+	protected:
+			template<ComponentViewType TComponentView, typename TComponent>
+			void RegisterComponentView()
+			{
+				const U64 runtimeComponentTypeHash = typeid(TComponent).hash_code();
+				if (RegisteredComponentViewsMap.contains(runtimeComponentTypeHash))
+					return;
+
+				RegisteredComponentViewsMap.emplace(runtimeComponentTypeHash, &TComponentView::Context);
+				RegisteredComponentViewsMap.at(runtimeComponentTypeHash)->RuntimeHash = runtimeComponentTypeHash;
+
+				RegisteredComponentViewsVector.emplace_back(&TComponentView::Context);
+				RegisteredComponentViewsVector.back()->RuntimeHash = runtimeComponentTypeHash;
+				std::sort(RegisteredComponentViewsVector.begin(), RegisteredComponentViewsVector.end(), [](const SComponentView* a, const SComponentView* b) { return a->GetSortingPriority() < b->GetSortingPriority(); });
+			}
 
 	private:
 		void InitEditorLayout(); 
@@ -248,18 +268,6 @@ namespace Havtorn
 		[[nodiscard]] std::string GetSystemMemory() const;
 		[[nodiscard]] std::string GetRenderInfo() const;
 
-		template<typename TComponentView, typename TComponent>
-		void RegisterComponentView()
-		{
-			const U64 runtimeComponentTypeHash = typeid(TComponent).hash_code();
-			if (RegisteredComponentViewsMap.contains(runtimeComponentTypeHash))
-				return;
-
-			RegisteredComponentViewsMap.emplace(runtimeComponentTypeHash, &TComponentView::Context);
-			RegisteredComponentViewsVector.emplace_back(&TComponentView::Context);
-			std::sort(RegisteredComponentViewsVector.begin(), RegisteredComponentViewsVector.end(), [](const SComponentEditorContext* a, const SComponentEditorContext* b) { return a->GetSortingPriority() < b->GetSortingPriority(); });
-		}
-
 	private:
 		CRenderManager* RenderManager = nullptr;
 		CPlatformManager* PlatformManager = nullptr;
@@ -282,8 +290,6 @@ namespace Havtorn
 		
 		std::vector<SEditorAssetRepresentation*> SelectedAssets = {};
 		std::optional<std::filesystem::directory_entry> SelectedFolder;
-
-
 
 		// TODO.NR: Save these in .ini file
 		SEditorLayout EditorLayout;

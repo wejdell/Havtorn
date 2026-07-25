@@ -1,0 +1,16 @@
+// Copyright 2025 Team Havtorn. All Rights Reserved.
+
+#pragma once
+#include "ComponentView.h"
+
+namespace Havtorn
+{
+	struct EDITOR_API SSkeletalMeshComponentView : public SComponentView
+	{
+		SComponentViewResult View(const SEntity& entityOwner, CScene* scene) const override;
+		virtual const char* GetComponentName() const override { return "Skeletal Mesh"; };
+		U8 GetSortingPriority() const override;
+
+		static SSkeletalMeshComponentView Context;
+	};
+}
