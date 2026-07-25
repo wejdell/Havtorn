@@ -126,10 +126,11 @@ namespace Havtorn
 
 		for (const U64& runtimeHash : owningScene->EntityComponentRuntimeHashes.at(entity.GUID))
 		{
-			if (!Manager->RegisteredComponentViewsMap.contains(runtimeHash))
+			const std::map<U64, SComponentView*>& componentViewsMap = Manager->GetComponentViewsMap();
+			if (!componentViewsMap.contains(runtimeHash))
 				continue;
 
-			SComponentView* context = Manager->RegisteredComponentViewsMap.at(runtimeHash);
+			SComponentView* context = componentViewsMap.at(runtimeHash);
 			GUI::Separator();
 
 			GUI::PushID(context->GetComponentName());
@@ -501,14 +502,15 @@ namespace Havtorn
 
 		if (GUI::BeginChild("NewComponentTypeTable", SVector2<F32>(0.0f, 200.0f)))
 		{
-			for (const SComponentView* context : Manager->RegisteredComponentViewsVector)
+			for (const SComponentView* context : Manager->GetComponentViewsVector())
 			{
 				const U64 contextHash = context->GetRuntimeHash();
-
+				const std::vector<U64>& existingComponentHashes = owningScene->EntityComponentRuntimeHashes.at(entity.GUID);
+				
 				bool hasComponent = false;
-				for (const U64& runtimeTypeHash : owningScene->EntityComponentRuntimeHashes.at(entity.GUID))
+				for (const U64& componentHash : existingComponentHashes)
 				{
-					if (contextHash == runtimeTypeHash)
+					if (contextHash == componentHash)
 					{
 						hasComponent = true;
 						break;
@@ -529,10 +531,14 @@ namespace Havtorn
 				if (!GUI::Selectable(newComponentName))
 					continue;
 
-				owningScene->ComponentSerializers.at(owningScene->TypeHashToTypeID.at(contextHash)).ComponentAdder(entity, owningScene);
+				// Add component dependencies if needed
+				for (const U64& dependencyHash : Manager->GetComponentDepencies(contextHash))
+				{
+					if (std::ranges::find(existingComponentHashes, dependencyHash) == existingComponentHashes.end())
+						owningScene->ComponentSerializers.at(owningScene->TypeHashToTypeID.at(dependencyHash)).ComponentAdder(entity, owningScene);
+				}
 
-				// TODO.NW: Check component dependency graph (which we build after registering views in EditorManager), which stores runtime hashes per component. 
-				// Call Add on each nonexisting one
+				owningScene->ComponentSerializers.at(owningScene->TypeHashToTypeID.at(contextHash)).ComponentAdder(entity, owningScene);
 
 				Manager->SetIsModalOpen(false);
 				GUI::CloseCurrentPopup();

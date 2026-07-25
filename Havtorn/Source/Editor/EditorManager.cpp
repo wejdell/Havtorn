@@ -170,6 +170,8 @@ namespace Havtorn
 		RegisterComponentView<SAudioListenerComponentView, SAudioListenerComponent>();
 		RegisterComponentView<SAudioEmitterComponentView, SAudioEmitterComponent>();
 
+		SetupComponentDependencies<SStaticMeshComponent, STransformComponent, SMaterialComponent>();
+
 		return success;
 	}
 
@@ -503,6 +505,24 @@ namespace Havtorn
 		}
 
 		return containingScene;
+	}
+
+	const std::map<U64, SComponentView*>& CEditorManager::GetComponentViewsMap() const
+	{
+		return RegisteredComponentViewsMap;
+	}
+
+	const std::vector<SComponentView*>& CEditorManager::GetComponentViewsVector() const
+	{
+		return RegisteredComponentViewsVector;
+	}
+
+	const std::vector<U64> CEditorManager::GetComponentDepencies(const U64 componentRuntimeHash) const
+	{
+		if (!ComponentDependencies.contains(componentRuntimeHash))
+			return {};
+
+		return ComponentDependencies.at(componentRuntimeHash);
 	}
 
 	void CEditorManager::SetSelectedEntity(const SEntity& entity)

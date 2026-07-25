@@ -113,12 +113,14 @@ namespace Havtorn
 		void EDITOR_API DebugWindow();
 
 	public:
-		std::map<U64, SComponentView*> RegisteredComponentViewsMap;
-		std::vector<SComponentView*> RegisteredComponentViewsVector;
 		void SetCurrentWorkingScene(const I64 sceneIndex);
 		CScene* GetCurrentWorkingScene() const;
 		std::vector<Ptr<CScene>>& GetScenes() const;
 		CScene* GetContainingScene(const SEntity& entity) const;
+
+		const std::map<U64, SComponentView*>& GetComponentViewsMap() const;
+		const std::vector<SComponentView*>& GetComponentViewsVector() const;
+		const std::vector<U64> GetComponentDepencies(const U64 componentRuntimeHash) const;
 
 		void SetSelectedEntity(const SEntity& entity);
 		void AddSelectedEntity(const SEntity& entity);
@@ -224,20 +226,31 @@ namespace Havtorn
 		static std::string PreviewMaterial;
 	
 	protected:
-			template<ComponentViewType TComponentView, typename TComponent>
-			void RegisterComponentView()
-			{
-				const U64 runtimeComponentTypeHash = typeid(TComponent).hash_code();
-				if (RegisteredComponentViewsMap.contains(runtimeComponentTypeHash))
-					return;
+		template<ComponentViewType TComponentView, typename TComponent>
+		void RegisterComponentView()
+		{
+			const U64 runtimeComponentTypeHash = typeid(TComponent).hash_code();
+			if (RegisteredComponentViewsMap.contains(runtimeComponentTypeHash))
+				return;
 
-				RegisteredComponentViewsMap.emplace(runtimeComponentTypeHash, &TComponentView::Context);
-				RegisteredComponentViewsMap.at(runtimeComponentTypeHash)->RuntimeHash = runtimeComponentTypeHash;
+			RegisteredComponentViewsMap.emplace(runtimeComponentTypeHash, &TComponentView::Context);
+			RegisteredComponentViewsMap.at(runtimeComponentTypeHash)->RuntimeHash = runtimeComponentTypeHash;
 
-				RegisteredComponentViewsVector.emplace_back(&TComponentView::Context);
-				RegisteredComponentViewsVector.back()->RuntimeHash = runtimeComponentTypeHash;
-				std::sort(RegisteredComponentViewsVector.begin(), RegisteredComponentViewsVector.end(), [](const SComponentView* a, const SComponentView* b) { return a->GetSortingPriority() < b->GetSortingPriority(); });
-			}
+			RegisteredComponentViewsVector.emplace_back(&TComponentView::Context);
+			RegisteredComponentViewsVector.back()->RuntimeHash = runtimeComponentTypeHash;
+			std::sort(RegisteredComponentViewsVector.begin(), RegisteredComponentViewsVector.end(), [](const SComponentView* a, const SComponentView* b) { return a->GetSortingPriority() < b->GetSortingPriority(); });
+		}
+
+		template<typename TComponent, typename... TComponents>
+		void SetupComponentDependencies()
+		{
+			const U64 runtimeComponentTypeHash = typeid(TComponent).hash_code();
+			if (!ComponentDependencies.contains(runtimeComponentTypeHash))
+				ComponentDependencies.emplace(runtimeComponentTypeHash, std::vector<U64>{});
+
+			std::vector<U64>& dependencies = ComponentDependencies.at(runtimeComponentTypeHash);
+			([&dependencies] { dependencies.push_back(typeid(TComponents).hash_code()); } (), ...);
+		}
 
 	private:
 		void InitEditorLayout(); 
@@ -279,6 +292,10 @@ namespace Havtorn
 		// I see no reason currently we shouldn't minimize usage of this, for the benefit of working in a multi-scene workflow with a bunch of open "containers".
 		CScene* CurrentWorkingScene = nullptr;
 		
+		std::map<U64, SComponentView*> RegisteredComponentViewsMap;
+		std::vector<SComponentView*> RegisteredComponentViewsVector;
+		std::map<U64, std::vector<U64>> ComponentDependencies;
+
 		std::vector<SEntity> SelectedEntities = {};
 
 		CEditHistory EditHistory;
