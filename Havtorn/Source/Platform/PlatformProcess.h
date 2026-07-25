@@ -13,7 +13,7 @@ namespace Havtorn
 	class PLATFORM_API CPlatformProcess : public IProcess
 	{
 	public:
-		CPlatformProcess(U16 windowPosX, U16 windowPosY, U16 windowWidth, U16 windowHeight);
+		CPlatformProcess();
 		~CPlatformProcess() override;
 
 		bool Init(CPlatformManager* platformManager) override;
@@ -24,10 +24,5 @@ namespace Havtorn
 		void EndFrame() override;
 
 		class CPlatformManager* PlatformManager = nullptr;
-	private:
-		U16 WindowPositionX = 100;
-		U16 WindowPositionY = 100;
-		U16 WindowWidth = 1280;
-		U16 WindowHeight = 720;
 	};
 }

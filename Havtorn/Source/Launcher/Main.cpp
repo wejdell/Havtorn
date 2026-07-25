@@ -86,16 +86,7 @@ I32 main(I32 argc, char* argv[])
 	}
 #endif
 
-	I32 resX = 1280;
-	I32 resY = 720;
-
-	if (UCommandLine::IsOptionParameterValid("ResolutionX"))
-		resX = stoi(UCommandLine::GetOptionParameter("ResolutionX"));
-
-	if (UCommandLine::IsOptionParameterValid("ResolutionY"))
-		resY = stoi(UCommandLine::GetOptionParameter("ResolutionY"));
-
-	CPlatformProcess* platformProcess = new CPlatformProcess(100, 100, STATIC_U16(resX), STATIC_U16(resY));
+	CPlatformProcess* platformProcess = new CPlatformProcess();
 
 	CEngineProcess* engineProcess = new CEngineProcess();
 	CGameProcess* gameProcess = new CGameProcess();
