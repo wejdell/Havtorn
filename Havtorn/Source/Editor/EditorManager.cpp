@@ -139,6 +139,35 @@ namespace Havtorn
 		InitAssetRepresentations();
 		InitEditorPreferences();
 
+		RegisterComponentView<STransformComponentEditorContext, STransformComponent>();
+		RegisterComponentView<SStaticMeshComponentEditorContext, SStaticMeshComponent>();
+		RegisterComponentView<SSkeletalMeshComponentEditorContext, SSkeletalMeshComponent>();
+		RegisterComponentView<SCameraComponentEditorContext, SCameraComponent>();
+		RegisterComponentView<SCameraControllerComponentEditorContext, SCameraControllerComponent>();
+		RegisterComponentView<SMaterialComponentEditorContext, SMaterialComponent>();
+		RegisterComponentView<SEnvironmentLightComponentEditorContext, SEnvironmentLightComponent>();
+		RegisterComponentView<SDirectionalLightComponentEditorContext, SDirectionalLightComponent>();
+		RegisterComponentView<SPointLightComponentEditorContext, SPointLightComponent>();
+		RegisterComponentView<SSpotLightComponentEditorContext, SSpotLightComponent>();
+		RegisterComponentView<SVolumetricLightComponentEditorContext, SVolumetricLightComponent>();
+		RegisterComponentView<SDecalComponentEditorContext, SDecalComponent>();
+		RegisterComponentView<SSpriteComponentEditorContext, SSpriteComponent>();
+		RegisterComponentView<STransform2DComponentEditorContext, STransform2DComponent>();
+		RegisterComponentView<SSpriteAnimatorGraphComponentEditorContext, SSpriteAnimatorGraphComponent>();
+		RegisterComponentView<SSkeletalAnimationComponentEditorContext, SSkeletalAnimationComponent>();
+		RegisterComponentView<SScriptComponentEditorContext, SScriptComponent>();
+		RegisterComponentView<SPhysics2DComponentEditorContext, SPhysics2DComponent>();
+		RegisterComponentView<SPhysics3DComponentEditorContext, SPhysics3DComponent>();
+		RegisterComponentView<SPhysics3DControllerComponentEditorContext, SPhysics3DControllerComponent>();
+		RegisterComponentView<SUICanvasComponentEditorContext, SUICanvasComponent>();
+		RegisterComponentView<SLevelStreamingComponentEditorContext, SLevelStreamingComponent>();
+		RegisterComponentView<SPrefabComponentEditorContext, SPrefabComponent>();
+		RegisterComponentView<SAbilityComponentEditorContext, SAbilityComponent>();
+		RegisterComponentView<SHexCommandComponentEditorContext, SHexCommandComponent>();
+		RegisterComponentView<SInputComponentEditorContext, SInputComponent>();
+		RegisterComponentView<SAudioListenerComponentEditorContext, SAudioListenerComponent>();
+		RegisterComponentView<SAudioEmitterComponentEditorContext, SAudioEmitterComponent>();
+
 		return success;
 	}
 

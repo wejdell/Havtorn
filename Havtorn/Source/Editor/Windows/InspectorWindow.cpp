@@ -124,8 +124,12 @@ namespace Havtorn
 				GUI::SetTooltip("GUID %u", metaDataComp->Owner.GUID);
 		}
 
-		for (SComponentEditorContext* context : owningScene->GetComponentEditorContexts(entity))
+		for (const U64& runtimeHash : owningScene->EntityComponentRuntimeHashes.at(entity.GUID))
 		{
+			if (!Manager->RegisteredComponentViewsMap.contains(runtimeHash))
+				continue;
+
+			SComponentEditorContext* context = Manager->RegisteredComponentViewsMap.at(runtimeHash);
 			GUI::Separator();
 
 			GUI::PushID(context->GetComponentName());
@@ -172,7 +176,6 @@ namespace Havtorn
 
 			GUI::Dummy({ GUI::DummySizeX, GUI::DummySizeY });
 		}
-
 		UpdateAssetContextMenu();
 
 		GUI::Separator();
@@ -498,20 +501,24 @@ namespace Havtorn
 
 		if (GUI::BeginChild("NewComponentTypeTable", SVector2<F32>(0.0f, 200.0f)))
 		{
-			for (const SComponentEditorContext* context : owningScene->GetComponentEditorContexts())
+			for (const SComponentEditorContext* context : Manager->RegisteredComponentViewsVector)
 			{
 				const char* newComponentName = context->GetComponentName();
-				
+
 				bool hasComponent = false;
-				for (const SComponentEditorContext* existingContext : owningScene->GetComponentEditorContexts(entity))
+				for (const U64& runtimeHash : owningScene->EntityComponentRuntimeHashes.at(entity.GUID))
 				{
+					if (!Manager->RegisteredComponentViewsMap.contains(runtimeHash))
+						continue;
+
+					SComponentEditorContext* existingContext = Manager->RegisteredComponentViewsMap.at(runtimeHash);
 					if (existingContext->GetComponentName() == newComponentName)
 					{
 						hasComponent = true;
 						break;
 					}
 				}
-				
+
 				// TODO.NW: Should make a choice here whether to allow multiple components of the same type, 
 				// or continue working under the assumption that every component can handle all the data it needs for 
 				// its owning entity.
@@ -530,7 +537,6 @@ namespace Havtorn
 					GUI::CloseCurrentPopup();
 				}
 			}
-
 			GUI::EndChild();
 		}
 

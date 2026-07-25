@@ -402,6 +402,7 @@ namespace Havtorn
 
 		EntityIndices.emplace(newEntity.GUID, Entities.size());
 		Entities.push_back(newEntity);
+		EntityComponentRuntimeHashes.emplace(newEntity.GUID, std::vector<U64>{});
 
 		return Entities.back();
 	}

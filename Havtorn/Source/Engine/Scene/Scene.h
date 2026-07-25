@@ -366,6 +366,7 @@ namespace Havtorn
 				componentStorage.Components.emplace_back(new T(toEntity, params...));
 			}
 
+			EntityComponentRuntimeHashes.at(toEntity.GUID).push_back(typeid(T).hash_code());
 			return dynamic_cast<T*>(componentStorage.Components.back());
 		}
 
@@ -412,6 +413,7 @@ namespace Havtorn
 
 			components.erase(components.begin() + entityIndices.at(fromEntity.GUID));
 			entityIndices.erase(fromEntity.GUID);
+			std::erase(EntityComponentRuntimeHashes.at(fromEntity.GUID), typeid(T).hash_code());
 		}
 
 		template<typename... Ts>
@@ -540,6 +542,7 @@ namespace Havtorn
 		std::unordered_map<U64, U32> TypeHashToTypeID;
 
 		std::unordered_map<U64, std::vector<SComponentEditorContext*>> EntityComponentEditorContexts;
+		std::unordered_map<U64, std::vector<U64>> EntityComponentRuntimeHashes;
 
 		std::unordered_map<U64, U64> EntityIndices;
 		std::vector<SEntity> Entities;

@@ -15,6 +15,9 @@ namespace Havtorn
     SComponentViewResult STransformComponentEditorContext::View(const SEntity& entityOwner, CScene* scene) const
     {
 		STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(entityOwner);
+		if (!SComponent::IsValid(transformComponent))
+			return {};
+
 		Havtorn::SMatrix transformMatrix = transformComponent->Transform.GetMatrix();
 
 		SVector matrixTranslation, matrixRotation, matrixScale;
