@@ -11,6 +11,7 @@
 #include <../GUI/GUIProcess.h>
 
 #include <../Platform/PlatformManager.h>
+#include <../GameEditor/GameEditorManager.h>
 
 #include <iostream>
 #include <filesystem>
@@ -96,13 +97,17 @@ I32 main(I32 argc, char* argv[])
 
 	CPlatformProcess* platformProcess = new CPlatformProcess(100, 100, STATIC_U16(resX), STATIC_U16(resY));
 
-
 	CEngineProcess* engineProcess = new CEngineProcess();
 	CGameProcess* gameProcess = new CGameProcess();
 
 #ifdef HV_EDITOR_BUILD
 	GUIProcess* guiProcess = new GUIProcess();
 	CEditorProcess* editorProcess = new CEditorProcess();
+
+	// TODO.NW: Consider binding all game types (including scene and script types) in this scope,
+	// rather than forcing the others on GameManager implementations. It doesn't seem to bad for 
+	// a user to change to custom types in this class if they want to.
+	editorProcess->BindGameType<CGameEditorManager>();
 #endif
 
 	auto application = new CApplication();

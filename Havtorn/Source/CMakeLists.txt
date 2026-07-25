@@ -990,6 +990,8 @@ add_dependencies(Game Core Platform GUI Engine)
 
 # ==================== GAME_EDITOR ====================
 set(GAME_EDITOR_FILES
+    ${GAME_EDITOR_FOLDER}GameEditorManager.cpp
+    ${GAME_EDITOR_FOLDER}GameEditorManager.h
     ${GAME_EDITOR_FOLDER}hvpch.cpp
     ${GAME_EDITOR_FOLDER}hvpch.h
     ${GAME_EDITOR_FOLDER}TestContext.cpp

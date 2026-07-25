@@ -8,20 +8,37 @@
 namespace Havtorn
 {
 	class CPlatformManager;
+	class CEditorManager;
 
-	class EDITOR_API CEditorProcess : public IProcess
+	template<typename T>
+	concept EditorType = std::derived_from<T, CEditorManager>;
+
+	class CEditorProcess : public IProcess
 	{
 	public:
-		CEditorProcess();
-		~CEditorProcess() override;
+		EDITOR_API CEditorProcess();
+		EDITOR_API ~CEditorProcess() override;
+		
+		template<EditorType T>
+		void BindGameType();
 
-		bool Init(CPlatformManager* platformManager) override;
+		EDITOR_API bool Init(CPlatformManager* platformManager) override;
 
-		void BeginFrame() override;
-		void PostUpdate() override;
-		void EndFrame() override;
+		EDITOR_API void BeginFrame() override;
+		EDITOR_API void PostUpdate() override;
+		EDITOR_API void EndFrame() override;
 
 	private:
 		class CEditorManager* EditorManager = nullptr;
+		std::function<void()> CreateManagerFunction;
 	};
+
+	template<EditorType T>
+	inline void CEditorProcess::BindGameType()
+	{
+		CreateManagerFunction = [&]()
+			{
+				EditorManager = new T();
+			};
+	}
 }

@@ -19,7 +19,13 @@ namespace Havtorn
 
 	bool CEditorProcess::Init(CPlatformManager* platformManager)
 	{
-		EditorManager = new CEditorManager();
+		if (CreateManagerFunction == nullptr)
+			return false;
+
+		CreateManagerFunction();
+
+		if (EditorManager == nullptr)
+			return false;
 
 		GEngine* engineInstance = GEngine::Instance;
 		if (!engineInstance)
