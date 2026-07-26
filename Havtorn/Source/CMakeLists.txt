@@ -508,13 +508,8 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}HexRune/CoreNodes/CoreNodes.h
     ${ENGINE_FOLDER}HexRune/ECSNodes/ECSNodes.cpp
     ${ENGINE_FOLDER}HexRune/ECSNodes/ECSNodes.h
-    ${ENGINE_FOLDER}HexRune/NodeEditorContexts/CoreNodeEditorContexts.cpp
-    ${ENGINE_FOLDER}HexRune/NodeEditorContexts/CoreNodeEditorContexts.h
-    ${ENGINE_FOLDER}HexRune/NodeEditorContexts/ECSNodeEditorContexts.cpp
-    ${ENGINE_FOLDER}HexRune/NodeEditorContexts/ECSNodeEditorContexts.h
     ${ENGINE_FOLDER}HexRune/HexRune.cpp
     ${ENGINE_FOLDER}HexRune/HexRune.h
-    ${ENGINE_FOLDER}HexRune/NodeEditorContext.h
     ${ENGINE_FOLDER}HexRune/Pin.cpp
     ${ENGINE_FOLDER}HexRune/Pin.h
     "${ENGINE_FOLDER}Input/Input.cpp"
@@ -845,6 +840,11 @@ set(EDITOR_FILES
 	${EDITOR_FOLDER}ComponentViews/UICanvasComponentView.h
     ${EDITOR_FOLDER}ComponentViews/VolumetricLightComponentView.cpp
     ${EDITOR_FOLDER}ComponentViews/VolumetricLightComponentView.h
+    ${EDITOR_FOLDER}NodeViews/CoreNodeViews.cpp
+    ${EDITOR_FOLDER}NodeViews/CoreNodeViews.h
+    ${EDITOR_FOLDER}NodeViews/ECSNodeViews.cpp
+    ${EDITOR_FOLDER}NodeViews/ECSNodeViews.h
+    ${EDITOR_FOLDER}NodeView.h
     ${EDITOR_FOLDER}Systems/EditorRenderSystem.cpp
     ${EDITOR_FOLDER}Systems/EditorRenderSystem.h
     ${EDITOR_FOLDER}Systems/PickingSystem.cpp

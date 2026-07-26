@@ -6,12 +6,41 @@
 #include <Assets/AssetReference.h>
 #include <Assets/RuntimeAssets/ScriptAsset.h>
 
+#include <HexRune/Pin.h>
+
 namespace Havtorn
 {
+	struct SNodeView;
+
 	namespace HexRune
 	{
 		struct SScript;
+		struct SNode;
 	}
+
+	struct SDataBindingInitData
+	{
+		CHavtornStaticString<255> Name;
+		HexRune::EPinType Type = HexRune::EPinType::Bool;
+		HexRune::EObjectDataType ObjectType = HexRune::EObjectDataType::None;
+		EAssetType AssetType = EAssetType::None;
+		U8 CurrentPinTypeIndex = 0;
+		U8 CurrentObjectTypeIndex = 0;
+	};
+
+	struct SNodeOperation
+	{
+		std::optional<SDataBindingInitData> NewBinding;
+		U64 RemovedBindingID;
+		HexRune::SPin* ModifiedLiteralValuePin;
+		SNodeView* NewNodeView;
+		SVector2<F32> NewNodePosition = SVector2<F32>::Zero;
+		HexRune::SLink NewLink;
+		std::vector<HexRune::SNode*> RemovedNodes;
+		std::vector<HexRune::SLink> RemovedLinks;
+	};
+
+	using namespace HexRune;
 
 	class CScriptTool : public CWindow
 	{
@@ -28,8 +57,7 @@ namespace Havtorn
 		void CloseScript();
 
 	private:
-		void LoadGUIElements();
-		void CommitEdit(const SNodeOperation& edit);
+		void CommitEdit(SNodeOperation& edit);
 
 		void RenderScript();
 		void RenderNodes();
@@ -38,28 +66,24 @@ namespace Havtorn
 		void ContextMenu();
 		void CommandQueue();
 
-		SVector2<F32> GetNodeSize(const SGUINode& node);
-		bool IsPinLinked(U64 id, const std::vector<SGUILink>& links);
-		bool IsPinTypeLiteral(SGUIPin& pin);
-		bool DrawLiteralTypePin(SGUIPin& pin);
-		void DrawPinIcon(const SGUIPin& pin, bool connected, U8 alpha, bool highlighted);
-		SColor GetPinTypeColor(EGUIPinType type);
-		SGUINode* GetNodeFromPinID(U64 id, std::vector<SGUINode>& nodes);
-		SGUIPin* GetPinFromID(U64 id, SGUINode& node);
-		SGUIPin* GetPinFromID(U64 id, std::vector<SGUINode>& nodes);
-		SGUIPin* GetOutputPinFromID(U64 id, std::vector<SGUINode>& nodes);
+		SVector2<F32> GetNodeSize(const SNode* node, const SNodeView* view);
+		bool IsPinLinked(U64 id, const std::vector<SLink>& links);
+		bool IsPinTypeLiteral(SPin& pin);
+		bool DrawLiteralTypePin(SPin& pin);
+		void DrawPinIcon(const SPin& pin, bool connected, U8 alpha, bool highlighted);
+		SColor GetPinTypeColor(EPinType type);
+		SNode* GetNodeFromPinID(U64 id, std::vector<SNode*>& nodes);
+		SPin* GetPinFromID(U64 id, SNode* node);
+		SPin* GetPinFromID(U64 id, std::vector<SNode*>& nodes);
+		SPin* GetOutputPinFromID(U64 id, std::vector<SNode*>& nodes);
 
 		SAssetReference CurrentScriptAssetRef = SAssetReference();
 		SScriptAsset* CurrentScriptAsset = nullptr;
 
-		std::vector<SGUINode> GUINodes;
-		std::vector<SGUILink> GUILinks;
-		std::vector<SGUINodeContext> GUIContexts;
-
-		EGUIPinType CurrentDragPinType = EGUIPinType::Unknown;
+		HexRune::EPinType CurrentDragPinType = HexRune::EPinType::Unknown;
 		SGuiTextFilter Filter;
 		SNodeOperation Edit;
-		SGUIDataBinding DataBindingCandidate;
+		SDataBindingInitData DataBindingCandidate;
 
 		const F32 HeaderHeight = 12.0f;
 		const F32 PinNameOffset = 4.0f;

@@ -22,6 +22,12 @@
 
 #include "ComponentViewInclude.h"
 
+#include "NodeViews/CoreNodeViews.h"
+#include "NodeViews/ECSNodeViews.h"
+
+#include <HexRune/CoreNodes/CoreNodes.h>
+#include <HexRune/ECSNodes/ECSNodes.h>
+
 #include "EditActions/RemoveEntityEditAction.h"
 
 #include "Systems/EditorRenderSystem.h"
@@ -173,7 +179,37 @@ namespace Havtorn
 		SetupComponentDependencies<SStaticMeshComponent, STransformComponent, SMaterialComponent>();
 		SetupComponentDependencies<SSkeletalMeshComponent, STransformComponent, SMaterialComponent>();
 		SetupComponentDependencies<SSkeletalAnimationComponent, STransformComponent, SMaterialComponent, SSkeletalMeshComponent>();
-
+		
+		//RegisterNodeView<SDataBindingGetNodeEditorContext, HexRune::SDataBindingGetNode>();
+		//RegisterNodeView<SDataBindingSetNodeEditorContext, HexRune::SDataBindingSetNode>();
+		RegisterNodeView<SBranchNodeEditorContext, HexRune::SBranchNode>();
+		RegisterNodeView<SSequenceNodeEditorContext, HexRune::SSequenceNode>();
+		RegisterNodeView<SEntityLoopNodeView, HexRune::SEntityLoopNode>();
+		RegisterNodeView<SComponentLoopNodeView, HexRune::SComponentLoopNode>();
+		RegisterNodeView<SDelayNodeEditorContext, HexRune::SDelayNode>();
+		RegisterNodeView<SBeginPlayNodeEditorContext, HexRune::SBeginPlayNode>();
+		RegisterNodeView<STickNodeEditorContext, HexRune::STickNode>();
+		RegisterNodeView<SEndPlayNodeEditorContext, HexRune::SEndPlayNode>();
+		RegisterNodeView<SPrintStringNodeEditorContext, HexRune::SPrintStringNode>();
+		RegisterNodeView<SAppendStringNodeEditorContext, HexRune::SAppendStringNode>();
+		RegisterNodeView<SFloatLessThanNodeEditorContext, HexRune::SFloatLessThanNode>();
+		RegisterNodeView<SFloatMoreThanNodeEditorContext, HexRune::SFloatMoreThanNode>();
+		RegisterNodeView<SFloatLessOrEqualNodeEditorContext, HexRune::SFloatLessOrEqualNode>();
+		RegisterNodeView<SFloatMoreOrEqualNodeEditorContext, HexRune::SFloatMoreOrEqualNode>();
+		RegisterNodeView<SFloatEqualNodeEditorContext, HexRune::SFloatEqualNode>();
+		RegisterNodeView<SFloatNotEqualNodeEditorContext, HexRune::SFloatNotEqualNode>();
+		RegisterNodeView<SIntLessThanNodeEditorContext, HexRune::SIntLessThanNode>();
+		RegisterNodeView<SIntMoreThanNodeEditorContext, HexRune::SIntMoreThanNode>();
+		RegisterNodeView<SIntLessOrEqualNodeEditorContext, HexRune::SIntLessOrEqualNode>();
+		RegisterNodeView<SIntMoreOrEqualNodeEditorContext, HexRune::SIntMoreOrEqualNode>();
+		RegisterNodeView<SIntEqualNodeEditorContext, HexRune::SIntEqualNode>();
+		RegisterNodeView<SIntNotEqualNodeEditorContext, HexRune::SIntNotEqualNode>();
+		RegisterNodeView<SPrintEntityNameNodeView, HexRune::SPrintEntityNameNode>();
+		RegisterNodeView<SSetStaticMeshNodeView, HexRune::SSetStaticMeshNode>();
+		RegisterNodeView<STogglePointLightNodeView, HexRune::STogglePointLightNode>();
+		RegisterNodeView<SOnBeginOverlapNodeView, HexRune::SOnBeginOverlapNode>();
+		RegisterNodeView<SOnEndOverlapNodeView, HexRune::SOnEndOverlapNode>();
+		
 		return success;
 	}
 
@@ -525,6 +561,16 @@ namespace Havtorn
 			return {};
 
 		return ComponentDependencies.at(componentRuntimeHash);
+	}
+
+	const std::unordered_map<U64, Ptr<SNodeView>>& CEditorManager::GetNodeViewsMap() const
+	{
+		return RegisteredNodeViewsMap;
+	}
+
+	const std::vector<Ptr<SNodeView>>& CEditorManager::GetNodeViewsVector() const
+	{
+		return RegisteredNodeViewsVector;
 	}
 
 	void CEditorManager::SetSelectedEntity(const SEntity& entity)

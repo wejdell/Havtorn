@@ -70,7 +70,7 @@ namespace Havtorn
             void ClearData();
             void DeriveInput();
             void SetDataFromLinkedPin();
-            bool IsDataUnset() const;
+            ENGINE_API bool IsDataUnset() const;
             ENGINE_API bool IsPinTypeLiteral() const;
         };
 

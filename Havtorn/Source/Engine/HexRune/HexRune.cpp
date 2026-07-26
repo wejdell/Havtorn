@@ -2,8 +2,6 @@
 
 #include "HexRune.h"
 #include "ECS/GUIDManager.h"
-#include "NodeEditorContexts/CoreNodeEditorContexts.h"
-#include "NodeEditorContexts/ECSNodeEditorContexts.h"
 #include "CoreNodes/CoreNodes.h"
 #include "ECSNodes/ECSNodes.h"
 
@@ -21,7 +19,7 @@ namespace Havtorn
 		{
 		}
 
-		void SScript::AddDataBinding(const char* name, const EPinType type, const EObjectDataType objectType, const EAssetType assetType)
+		const SScriptDataBinding& SScript::AddDataBinding(const char* name, const EPinType type, const EObjectDataType objectType, const EAssetType assetType)
 		{
 			std::variant<PIN_DATA_TYPES> data;
 			switch (type)
@@ -74,10 +72,7 @@ namespace Havtorn
 			DataBindings.back().ObjectType = objectType;
 			DataBindings.back().AssetType = assetType;
 			DataBindings.back().Data = data;
-			auto context = RegisteredEditorContexts.emplace_back(new SDataBindingGetNodeEditorContext(this, DataBindings.back().UID));
-			context->TypeID = 0;
-			context = RegisteredEditorContexts.emplace_back(new SDataBindingSetNodeEditorContext(this, DataBindings.back().UID));
-			context->TypeID = 1;
+			return DataBindings.back();
 		}
 
 		void SScript::RemoveDataBinding(const U64 id)
@@ -90,7 +85,7 @@ namespace Havtorn
 			std::vector<U64> nodesToRemove;
 			for (auto node : Nodes)
 			{
-				if (SDataBindingGetNode* dataBindingNode = static_cast<SDataBindingGetNode*>(node))
+				if (SDataBindingGetNode* dataBindingNode = dynamic_cast<SDataBindingGetNode*>(node))
 				{
 					SScriptDataBinding* databinding = &(*std::ranges::find_if(DataBindings, [dataBindingNode](SScriptDataBinding& binding) { return binding.UID == dataBindingNode->DataBindingID; }));
 					if (databinding == &(*bindingIterator))
@@ -99,29 +94,6 @@ namespace Havtorn
 			}
 			for (const U64 nodeId : nodesToRemove)
 				RemoveNode(nodeId);
-
-			// TODO.NW: Make sure contexts get deleted properly
-			auto getterContextIterator = std::ranges::find_if(RegisteredEditorContexts, [id](const SNodeEditorContext* registeredContext)
-				{
-					if (const SDataBindingGetNodeEditorContext* context = static_cast<const SDataBindingGetNodeEditorContext*>(registeredContext))
-					{
-						return context->DataBindingID == id;
-					}
-					return false;
-				});
-			if (getterContextIterator != RegisteredEditorContexts.end())
-				RegisteredEditorContexts.erase(getterContextIterator);
-
-			auto setterContextIterator = std::ranges::find_if(RegisteredEditorContexts, [id](const SNodeEditorContext* registeredContext)
-				{
-					if (const SDataBindingSetNodeEditorContext* context = static_cast<const SDataBindingSetNodeEditorContext*>(registeredContext))
-					{
-						return context->DataBindingID == id;
-					}
-					return false;
-				});
-			if (setterContextIterator != RegisteredEditorContexts.end())
-				RegisteredEditorContexts.erase(setterContextIterator);
 
 			DataBindings.erase(bindingIterator);
 		}
@@ -164,48 +136,48 @@ namespace Havtorn
 				nodeToBeRemoved = nullptr;
 			}
 
-			RemoveContext(id);
+			//RemoveContext(id);
 
 			//if (NodeEditorContexts.contains(id))
 			//    NodeEditorContexts.erase(id);
 
 			Nodes.pop_back();
 			NodeIndices.erase(id);
+			NodeIDToRuntimeHash.erase(id);
 		}
 
 		void SScript::Init()
 		{
-			U32 typeID = 0;
 			NodeFactory = new SNodeFactory();
-			NodeFactory->RegisterDatabindingNode<SDataBindingGetNode, SDataBindingGetNodeEditorContext>(typeID++);
-			NodeFactory->RegisterDatabindingNode<SDataBindingSetNode, SDataBindingSetNodeEditorContext>(typeID++);
-			NodeFactory->RegisterNodeType<SBranchNode, SBranchNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SSequenceNode, SSequenceNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SEntityLoopNode, SEntityLoopNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SComponentLoopNode, SComponentLoopNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SDelayNode, SDelayNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SBeginPlayNode, SBeginPlayNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<STickNode, STickNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SEndPlayNode, SEndPlayNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SPrintStringNode, SPrintStringNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SAppendStringNode, SAppendStringNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SFloatLessThanNode, SFloatLessThanNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SFloatMoreThanNode, SFloatMoreThanNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SFloatLessOrEqualNode, SFloatLessOrEqualNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SFloatMoreOrEqualNode, SFloatMoreOrEqualNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SFloatEqualNode, SFloatEqualNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SFloatNotEqualNode, SFloatNotEqualNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SIntLessThanNode, SIntLessThanNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SIntMoreThanNode, SIntMoreThanNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SIntLessOrEqualNode, SIntLessOrEqualNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SIntMoreOrEqualNode, SIntMoreOrEqualNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SIntEqualNode, SIntEqualNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SIntNotEqualNode, SIntNotEqualNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SPrintEntityNameNode, SPrintEntityNameNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SSetStaticMeshNode, SSetStaticMeshNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<STogglePointLightNode, STogglePointLightNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SOnBeginOverlapNode, SOnBeginOverlapNodeEditorContext>(this, typeID++);
-			NodeFactory->RegisterNodeType<SOnEndOverlapNode, SOnEndOverlapNodeEditorContext>(this, typeID++);
+			NodeFactory->RegisterDatabindingNode<SDataBindingGetNode>(10);
+			NodeFactory->RegisterDatabindingNode<SDataBindingSetNode>(20);
+			NodeFactory->RegisterNodeType<SBranchNode>(30);
+			NodeFactory->RegisterNodeType<SSequenceNode>(40);
+			NodeFactory->RegisterNodeType<SEntityLoopNode>(50);
+			NodeFactory->RegisterNodeType<SComponentLoopNode>(60);
+			NodeFactory->RegisterNodeType<SDelayNode>(70);
+			NodeFactory->RegisterNodeType<SBeginPlayNode>(80);
+			NodeFactory->RegisterNodeType<STickNode>(90);
+			NodeFactory->RegisterNodeType<SEndPlayNode>(100);
+			NodeFactory->RegisterNodeType<SPrintStringNode>(110);
+			NodeFactory->RegisterNodeType<SAppendStringNode>(120);
+			NodeFactory->RegisterNodeType<SFloatLessThanNode>(130);
+			NodeFactory->RegisterNodeType<SFloatMoreThanNode>(140);
+			NodeFactory->RegisterNodeType<SFloatLessOrEqualNode>(150);
+			NodeFactory->RegisterNodeType<SFloatMoreOrEqualNode>(160);
+			NodeFactory->RegisterNodeType<SFloatEqualNode>(170);
+			NodeFactory->RegisterNodeType<SFloatNotEqualNode>(180);
+			NodeFactory->RegisterNodeType<SIntLessThanNode>(190);
+			NodeFactory->RegisterNodeType<SIntMoreThanNode>(200);
+			NodeFactory->RegisterNodeType<SIntLessOrEqualNode>(210);
+			NodeFactory->RegisterNodeType<SIntMoreOrEqualNode>(220);
+			NodeFactory->RegisterNodeType<SIntEqualNode>(230);
+			NodeFactory->RegisterNodeType<SIntNotEqualNode>(240);
+			NodeFactory->RegisterNodeType<SPrintEntityNameNode>(250);
+			NodeFactory->RegisterNodeType<SSetStaticMeshNode>(260);
+			NodeFactory->RegisterNodeType<STogglePointLightNode>(270);
+			NodeFactory->RegisterNodeType<SOnBeginOverlapNode>(280);
+			NodeFactory->RegisterNodeType<SOnEndOverlapNode>(290);
 		}
 
 		void SScript::TraverseFromNode(const U64 startNodeID, CScene* owningScene)
@@ -356,7 +328,6 @@ namespace Havtorn
 					size += sizeof(U64);
 				}
 
-				size += STATIC_U32(sizeof(SVector2<F32>)); // Position
 				size += STATIC_U32(sizeof(U32));
 				size += STATIC_U32(node->Inputs.size() * sizeof(U64));
 				size += STATIC_U32(sizeof(U32));
@@ -396,8 +367,6 @@ namespace Havtorn
 					SerializeData(databinding->UID, toData, pointerPosition);
 				}
 
-				SerializeData(GetNodeEditorContext(node->UID)->Position, toData, pointerPosition);
-
 				std::vector<U64> inputPinIds;
 				for (auto& pin : node->Inputs)
 					inputPinIds.emplace_back(pin.UID);
@@ -423,8 +392,6 @@ namespace Havtorn
 				SScriptDataBinding databinding = {};
 				databinding.Deserialize(fromData, pointerPosition);
 				DataBindings.emplace_back(databinding);
-				RegisteredEditorContexts.emplace_back(new SDataBindingGetNodeEditorContext(this, databinding.UID));
-				RegisteredEditorContexts.emplace_back(new SDataBindingSetNodeEditorContext(this, databinding.UID));
 			}
 
 			U32 nodeCount = 0;
@@ -452,12 +419,6 @@ namespace Havtorn
 				{
 					node = NodeFactory->CreateNode(nodeTypeId, uid, this);
 				}
-
-				SVector2<F32> nodeEditorPosition;
-				DeserializeData(nodeEditorPosition, fromData, pointerPosition);
-
-				SNodeEditorContext* editorContext = GetNodeEditorContext(uid);
-				editorContext->Position = nodeEditorPosition;
 
 				std::vector<U64> inputPinIds;
 				DeserializeData(inputPinIds, fromData, pointerPosition);
@@ -497,48 +458,6 @@ namespace Havtorn
 		bool SScript::HasNode(const U64 id) const
 		{
 			return NodeIndices.contains(id);
-		}
-
-		void SScript::RemoveContext(const U64 nodeID)
-		{
-			// TODO.NW: Think about if it's nicer to map node type to context type and access directly here, without looping
-			for (SNodeContextStorage& storage : ContextStorages)
-			{
-				if (!storage.NodeIDToContextIndices.contains(nodeID))
-					continue;
-
-				std::unordered_map<U64, U64>& contextIndices = storage.NodeIDToContextIndices;
-				std::vector<SNodeEditorContext*>& contexts = storage.Contexts;
-
-				const std::pair<U64, U64>& maxIndexEntry = *std::ranges::find_if(contextIndices,
-					[contexts](const auto& entry) { return entry.second == contexts.size() - 1; });
-
-				std::swap(contexts[contextIndices.at(nodeID)], contexts[contextIndices.at(maxIndexEntry.first)]);
-				std::swap(contextIndices.at(maxIndexEntry.first), contextIndices.at(nodeID));
-
-				SNodeEditorContext* contextToBeRemoved = contexts[contextIndices.at(nodeID)];
-				delete contextToBeRemoved;
-				contextToBeRemoved = nullptr;
-
-				contexts.erase(contexts.begin() + contextIndices.at(nodeID));
-				contextIndices.erase(nodeID);
-				break;
-			}
-		}
-
-		SNodeEditorContext* SScript::GetNodeEditorContext(const U64 nodeID) const
-		{
-			// TODO.NW: Think about if it's nicer to map node type to context type and access directly here, without looping
-			for (const SNodeContextStorage& storage : ContextStorages)
-			{
-				if (!storage.NodeIDToContextIndices.contains(nodeID))
-					continue;
-
-				// TODO.NW: Would maybe be nice to make our own Storage data structure for this, as well as ECS components
-				return storage.Contexts[storage.NodeIDToContextIndices.at(nodeID)];
-			}
-
-			return nullptr;
 		}
 
 		SNode::SNode(const U64 id, const U32 typeID, SScript* owningScript, ENodeType nodeType)
@@ -685,9 +604,22 @@ namespace Havtorn
 		{
 			return BasicNodeFactoryMap[typeID](id, typeID, script);
 		}
+
 		SNode* SNodeFactory::CreateNode(U32 typeID, U64 id, SScript* script, const U64 databindingId)
 		{
 			return DatabindingNodeFactoryMap[typeID](id, typeID, script, databindingId);
+		}
+
+		SNode* SNodeFactory::CreateNode(U64 runtimeHash, U64 id, SScript* script)
+		{
+			const U32 typeID = RuntimeHashToTypeID.at(runtimeHash);
+			return CreateNode(typeID, id, script);
+		}
+
+		SNode* SNodeFactory::CreateNode(U64 runtimeHash, U64 id, SScript* script, const U64 databindingId)
+		{
+			const U32 typeID = RuntimeHashToTypeID.at(runtimeHash);
+			return CreateNode(typeID, id, script, databindingId);
 		}
 	}
 }
