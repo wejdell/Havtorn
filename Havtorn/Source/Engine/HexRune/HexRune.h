@@ -5,7 +5,6 @@
 #include <unordered_map>
 #include "Pin.h"
 #include "Color.h"
-#include "NodeEditorContext.h"
 #include "ECS/GUIDManager.h"
 
 namespace Havtorn
@@ -46,13 +45,12 @@ namespace Havtorn
         };
 
         // TODO.NW: Figure out conversions between similar node types
-        // TODO.NW: Add minimum node width?
         struct SNode
         {
             ENGINE_API SNode(const U64 id, const U32 typeID, SScript* owningScript, ENodeType nodeType);
             
             U64 UID = 0;
-            U32 TypeID = 0;
+            U32 TypeID = 0; // NW: TypeID is used to bypass protocol serialization, instead mapping types to serialization functions
             
             EFlowType FlowType = EFlowType::Execution;
             ENodeType NodeType = ENodeType::Standard;
@@ -133,12 +131,6 @@ namespace Havtorn
             }
         };
 
-        struct SNodeContextStorage
-        {
-            std::unordered_map<U64, U64> NodeIDToContextIndices;
-            std::vector<SNodeEditorContext*> Contexts;
-        };
-
         struct SScriptDataBinding
         {
             U64 UID = 0;
@@ -186,87 +178,32 @@ namespace Havtorn
             std::vector<SNode*> Nodes;
             std::vector<SLink> Links;
             std::vector<SScriptDataBinding> DataBindings;
-            std::vector<SNodeEditorContext*> RegisteredEditorContexts;
             std::vector<SInputCallbackBinding> InputCallbackDataBindings;
             //-------
             
             struct SNodeFactory* NodeFactory = nullptr;
 
-            std::unordered_map<U64, U64> ContextTypeToStorageIndices;
-            std::vector<SNodeContextStorage> ContextStorages;
-
             // NW: Mapping UID to node
             std::unordered_map<U64, U64> NodeIndices;
-            
+            std::unordered_map<U64, U64> NodeIDToRuntimeHash;
+
             CScene* Scene = nullptr;
             std::string Name = "";
 
             // TODO.NW: Input params to the script (with connection to owning entity or instance properties) should be loaded from the corresponding component?
 
             template<typename T, typename... Params>
-            T* AddNode(U64 id, const U32 typeID, Params... params)
+            T* AddNode(U64 uid, U32 typeID, Params... params)
             {
-                if (id == 0)
-                    id = UGUIDManager::Generate();
+                if (uid == 0)
+                    uid = UGUIDManager::Generate();
 
-                NodeIndices.emplace(id, Nodes.size());
-                Nodes.emplace_back(new T(id, typeID, this, params...));
+                NodeIndices.emplace(uid, Nodes.size());
+                NodeIDToRuntimeHash.emplace(uid, typeid(T).hash_code());
+                Nodes.emplace_back(new T(uid, typeID, this, params...));
                 
                 SNode* node = Nodes.back();
                 return dynamic_cast<T*>(node);
-            }
-
-            template<typename T, typename... Params>
-            T* AddEditorContext(const U64 nodeID, Params... params)
-            {
-                const U64 typeIDHashCode = typeid(T).hash_code();
-                if (!ContextTypeToStorageIndices.contains(typeIDHashCode))
-                {
-                    ContextTypeToStorageIndices.emplace(typeIDHashCode, ContextStorages.size());
-                    ContextStorages.emplace_back();
-                }
-
-                SNodeContextStorage& contextStorage = ContextStorages[ContextTypeToStorageIndices.at(typeIDHashCode)];
-
-                if (contextStorage.NodeIDToContextIndices.contains(nodeID))
-                {
-                    *(dynamic_cast<T*>(contextStorage.Contexts[contextStorage.NodeIDToContextIndices.at(nodeID)])) = T(params...);
-                }
-                else
-                {
-                    contextStorage.NodeIDToContextIndices.emplace(nodeID, contextStorage.Contexts.size());
-                    contextStorage.Contexts.emplace_back(new T(params...));
-                }
-
-                return dynamic_cast<T*>(contextStorage.Contexts.back());
-            }
-
-            template<typename T>
-            void RemoveContext(const U64 nodeID)
-            {
-                const U64 typeIDHashCode = typeid(T).hash_code();
-                if (!ContextTypeToStorageIndices.contains(typeIDHashCode))
-                    return;
-                
-                SNodeContextStorage& contextStorage = ContextStorages[ContextTypeToStorageIndices.at(typeIDHashCode)];
-                std::unordered_map<U64, U64>& contextIndices = contextStorage.NodeIDToContextIndices;
-                std::vector<SNodeEditorContext*>& contexts = contextStorage.Contexts;
-
-                if (!contextIndices.contains(nodeID))
-                    return;
-
-                const std::pair<U64, U64>& maxIndexEntry = *std::ranges::find_if(contextIndices,
-                    [contexts](const auto& entry) { return entry.second == contexts.size() - 1; });
-
-                std::swap(contexts[contextIndices.at(nodeID)], contexts[contextIndices.at(maxIndexEntry.first)]);
-                std::swap(contextIndices.at(maxIndexEntry.first), contextIndices.at(nodeID));
-
-                T* contextToBeRemoved = reinterpret_cast<T*>(contexts[contextIndices.at(nodeID)]);
-                delete contextToBeRemoved;
-                contextToBeRemoved = nullptr;
-
-                contexts.erase(contexts.begin() + contextIndices.at(nodeID));
-                contextIndices.erase(nodeID);
             }
 
             template<typename T>
@@ -278,42 +215,8 @@ namespace Havtorn
                 return dynamic_cast<T*>(Nodes[NodeIndices.at(id)]);
             }
 
-            template<typename T>
-            T* GetNodeEditorContext(const U64 nodeID) const
-            {
-                const U64 typeIDHashCode = typeid(T).hash_code();
-                if (!ContextTypeToStorageIndices.contains(typeIDHashCode))
-                    return nullptr;
-
-                const SNodeContextStorage& contextStorage = ContextStorages[ContextTypeToStorageIndices.at(typeIDHashCode)];
-
-                if (!contextStorage.NodeIDToContextIndices.contains(nodeID))
-                    return nullptr;
-
-                U64 index = contextStorage.NodeIDToContextIndices.at(nodeID);
-                return dynamic_cast<T*>(contextStorage.Contexts[index]);
-            }
-
-            template<typename T>
-            std::vector<T*> GetNodeEditorContexts() const
-            {
-                const U64 typeIDHashCode = typeid(T).hash_code();
-                if (!ContextTypeToStorageIndices.contains(typeIDHashCode))
-                    return {};
-
-                const SNodeContextStorage& contextStorage = ContextStorages[ContextTypeToStorageIndices.at(typeIDHashCode)];
-                if (contextStorage.Contexts.empty())
-                    return {};
-
-                std::vector<T*> specializedContexts;
-                specializedContexts.resize(contextStorage.Contexts.size());
-                memcpy(&specializedContexts[0], contextStorage.Contexts.data(), sizeof(T*) * contextStorage.Contexts.size());
-
-                return specializedContexts;
-            }
-
             // TODO.NW: Deal with serialization?
-            ENGINE_API void AddDataBinding(const char* name, const EPinType type, const EObjectDataType objectType, const EAssetType assetType);
+            ENGINE_API const SScriptDataBinding& AddDataBinding(const char* name, const EPinType type, const EObjectDataType objectType, const EAssetType assetType);
             ENGINE_API void RemoveDataBinding(const U64 id);
             ENGINE_API void RemoveNode(const U64 id);
 
@@ -333,9 +236,6 @@ namespace Havtorn
             ENGINE_API SNode* GetNode(const U64 id) const;
             ENGINE_API bool HasNode(const U64 id) const;
 
-            ENGINE_API void RemoveContext(const U64 nodeID);
-            ENGINE_API SNodeEditorContext* GetNodeEditorContext(const U64 nodeID) const;
-            
             ENGINE_API virtual [[nodiscard]] U32 GetSize() const;
             ENGINE_API virtual void Serialize(char* toData, U64& pointerPosition) const;
             ENGINE_API virtual void Deserialize(const char* fromData, U64& pointerPosition);
@@ -343,41 +243,39 @@ namespace Havtorn
 
         struct SNodeFactory
         {
-            template<typename TNode, typename TNodeEditorContext>
-            void RegisterNodeType(SScript* script, U32 typeID)
+            template<typename TNode>
+            void RegisterNodeType(U32 typeID)
             {
-                script->RegisteredEditorContexts.emplace_back(&TNodeEditorContext::Context);
-                script->RegisteredEditorContexts.back()->TypeID = typeID;
+                RuntimeHashToTypeID.emplace(typeid(TNode).hash_code(), typeID);
 
                 BasicNodeFactoryMap[typeID] =
-                    [](U64 id, const U32 typeID, SScript* script)
+                    [](U64 id, U32 nodeTypeID, SScript* script)
                     {
-                        TNode* node = script->AddNode<TNode>(id, typeID);
-                        auto context = script->AddEditorContext<TNodeEditorContext>(id);
-                        context->TypeID = typeID;
-                        return node;
+                        return script->AddNode<TNode>(id, nodeTypeID);
                     };
             }
 
-            template<typename TNode, typename TNodeEditorContext>
+            template<typename TNode>
             void RegisterDatabindingNode(U32 typeID)
             {
+                RuntimeHashToTypeID.emplace(typeid(TNode).hash_code(), typeID);
+
                 DatabindingNodeFactoryMap[typeID] =
-                    [](U64 id, const U32 typeID, SScript* script, const U64 databindingId)
+                    [](U64 id, U32 nodeTypeID, SScript* script, const U64 databindingId)
                     {
-                        TNode* node = script->AddNode<TNode>(id, typeID, databindingId);
-                        auto context = script->AddEditorContext<TNodeEditorContext>(id, script, databindingId);
-                        context->TypeID = typeID;
-                        return node;
+                        return script->AddNode<TNode>(id, nodeTypeID, databindingId);;
                     };
             }
 
-            SNode* CreateNode(U32 typeID, U64 id, SScript* script);
-            SNode* CreateNode(U32 typeID, U64 id, SScript* script, const U64 databindingId);
+            ENGINE_API SNode* CreateNode(U32 typeID, U64 id, SScript* script);
+            ENGINE_API SNode* CreateNode(U32 typeID, U64 id, SScript* script, const U64 databindingId);
+            ENGINE_API SNode* CreateNode(U64 runtimeHash, U64 id, SScript* script);
+            ENGINE_API SNode* CreateNode(U64 runtimeHash, U64 id, SScript* script, const U64 databindingId);
 
         private:
-            std::unordered_map<U32, std::function<SNode* (const U64, const U32, SScript*)>> BasicNodeFactoryMap;
-            std::unordered_map<U32, std::function<SNode* (const U64, const U32, SScript*, const U64)>> DatabindingNodeFactoryMap;
+            std::unordered_map<U32, std::function<SNode*(const U64, const U32, SScript*)>> BasicNodeFactoryMap;
+            std::unordered_map<U32, std::function<SNode*(const U64, const U32, SScript*, const U64)>> DatabindingNodeFactoryMap;
+            std::unordered_map<U64, U32> RuntimeHashToTypeID;
         };
 	}
 }

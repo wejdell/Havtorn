@@ -351,6 +351,7 @@ namespace Havtorn
             SScriptFileHeader assetFile;
             asset.Data = SScriptAsset(assetFile);
             assetFile.Deserialize(data, std::get<SScriptAsset>(asset.Data).Script.get());
+            std::get<SScriptAsset>(asset.Data).NodePositionMap = assetFile.NodePositionMap;
         }
         break;
         case EAssetType::InputAsset:

@@ -13,6 +13,9 @@
 #include "EditorDeepLinkParser.h"
 #include "ComponentView.h"
 
+#include "NodeView.h"
+#include "NodeViews/CoreNodeViews.h"
+
 namespace Havtorn
 {
 	struct SEntity;
@@ -122,6 +125,9 @@ namespace Havtorn
 		const std::vector<SComponentView*>& GetComponentViewsVector() const;
 		const std::vector<U64> GetComponentDepencies(const U64 componentRuntimeHash) const;
 
+		const std::unordered_map<U64, Ptr<SNodeView>>& GetNodeViewsMap() const;
+		const std::vector<Ptr<SNodeView>>& GetNodeViewsVector() const;
+
 		void SetSelectedEntity(const SEntity& entity);
 		void AddSelectedEntity(const SEntity& entity);
 		void RemoveSelectedEntity(const SEntity& entity);
@@ -225,6 +231,57 @@ namespace Havtorn
 
 		static std::string PreviewMaterial;
 	
+		template<typename TNodeView, typename TNode>
+		void RegisterDataBindingNodeView(HexRune::SScript* script, U64 dataBindingID)
+		{
+			const U64 runtimeNodeTypeHash = typeid(TNode).hash_code();
+			if (RegisteredNodeViewsMap.contains(runtimeNodeTypeHash))
+				return;
+
+			RegisteredNodeViewsMap.emplace(runtimeNodeTypeHash, std::make_unique<TNodeView>(script, dataBindingID));
+			RegisteredNodeViewsMap.at(runtimeNodeTypeHash)->RuntimeHash = runtimeNodeTypeHash;
+
+			RegisteredNodeViewsVector.emplace_back(std::make_unique<TNodeView>(script, dataBindingID));
+			RegisteredNodeViewsVector.back()->RuntimeHash = runtimeNodeTypeHash;
+			std::sort(RegisteredNodeViewsVector.begin(), RegisteredNodeViewsVector.end(), [](const Ptr<SNodeView>& a, const Ptr<SNodeView>& b) { return a->GetSortingPriority() < b->GetSortingPriority(); });
+		}
+
+		template<typename TNodeView, typename TNode>
+		void RemoveDataBindingNodeView(U64 dataBindingID)
+		{
+			const U64 runtimeNodeTypeHash = typeid(TNode).hash_code();
+			if (!RegisteredNodeViewsMap.contains(runtimeNodeTypeHash))
+				return;
+
+			std::erase_if(RegisteredNodeViewsMap, [dataBindingID](const auto& mapItem)
+				{
+					auto const& [hash, view] = mapItem;
+
+					HexRune::SDataBindingGetNodeEditorContext* getterContext = static_cast<HexRune::SDataBindingGetNodeEditorContext*>(view.get());
+					if (getterContext != nullptr)
+						return getterContext->DataBindingID == dataBindingID;
+
+					HexRune::SDataBindingSetNodeEditorContext* setterContext = static_cast<HexRune::SDataBindingSetNodeEditorContext*>(view.get());
+					if (setterContext != nullptr)
+						return setterContext->DataBindingID == dataBindingID;
+
+					return false;
+				});
+
+			std::erase_if(RegisteredNodeViewsVector, [dataBindingID](const Ptr<SNodeView>& view)
+				{
+					HexRune::SDataBindingGetNodeEditorContext* getterContext = static_cast<HexRune::SDataBindingGetNodeEditorContext*>(view.get());
+					if (getterContext != nullptr)
+						return getterContext->DataBindingID == dataBindingID;
+
+					HexRune::SDataBindingSetNodeEditorContext* setterContext = static_cast<HexRune::SDataBindingSetNodeEditorContext*>(view.get());
+					if (setterContext != nullptr)
+						return setterContext->DataBindingID == dataBindingID;
+
+					return false;
+				});
+		}
+
 	protected:
 		template<ComponentViewType TComponentView, typename TComponent>
 		void RegisterComponentView()
@@ -251,6 +308,21 @@ namespace Havtorn
 			std::vector<U64>& dependencies = ComponentDependencies.at(runtimeComponentTypeHash);
 			([&dependencies] { dependencies.push_back(typeid(TComponents).hash_code()); } (), ...);
 		}
+
+		template<typename TNodeView, typename TNode>
+		void RegisterNodeView()
+		{
+			const U64 runtimeNodeTypeHash = typeid(TNode).hash_code();
+			if (RegisteredNodeViewsMap.contains(runtimeNodeTypeHash))
+				return;
+
+			RegisteredNodeViewsMap.emplace(runtimeNodeTypeHash, std::make_unique<TNodeView>());
+			RegisteredNodeViewsMap.at(runtimeNodeTypeHash)->RuntimeHash = runtimeNodeTypeHash;
+
+			RegisteredNodeViewsVector.emplace_back(std::make_unique<TNodeView>());
+			RegisteredNodeViewsVector.back()->RuntimeHash = runtimeNodeTypeHash;
+			std::sort(RegisteredNodeViewsVector.begin(), RegisteredNodeViewsVector.end(), [](const Ptr<SNodeView>& a, const Ptr<SNodeView>& b) { return a->GetSortingPriority() < b->GetSortingPriority(); });
+		}	
 
 	private:
 		void InitEditorLayout(); 
@@ -292,9 +364,14 @@ namespace Havtorn
 		// I see no reason currently we shouldn't minimize usage of this, for the benefit of working in a multi-scene workflow with a bunch of open "containers".
 		CScene* CurrentWorkingScene = nullptr;
 		
+		// Components
 		std::map<U64, SComponentView*> RegisteredComponentViewsMap;
 		std::vector<SComponentView*> RegisteredComponentViewsVector;
 		std::map<U64, std::vector<U64>> ComponentDependencies;
+
+		// Nodes
+		std::unordered_map<U64, Ptr<SNodeView>> RegisteredNodeViewsMap;
+		std::vector<Ptr<SNodeView>> RegisteredNodeViewsVector;
 
 		std::vector<SEntity> SelectedEntities = {};
 
@@ -337,10 +414,8 @@ namespace Havtorn
 
 		std::string EntityCopyBuffer;
 
-		inline static const std::string DefaultEditorSettingsPath =
-		"Config/EditorPreferences.json";
-		inline static const std::string UserEditorSettingsPath =
-		"Config/EditorPreferences.user.json";
+		inline static const std::string DefaultEditorSettingsPath = "Config/EditorPreferences.json";
+		inline static const std::string UserEditorSettingsPath = "Config/EditorPreferences.user.json";
 
 		std::string ProjectName = "Project Name";
 		

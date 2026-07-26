@@ -9,6 +9,9 @@
 #include <ECS/Components/TransformComponent.h>
 #include <ECS/Systems/CameraSystem.h>
 #include <HexRune/CoreNodes/CoreNodes.h>
+
+#include "NodeViews/CoreNodeViews.h"
+
 #include <FileSystem.h>
 #include <magic_enum.h>
 
@@ -31,7 +34,7 @@ std::variant<PIN_LITERAL_TYPES, PIN_MATH_TYPES> GetLiteralTypeData(const std::va
 {
 	return std::visit(overloaded
 		{
-			[]<IsPinLiteralType T>(const T& x) { return std::variant<PIN_LITERAL_TYPES, PIN_MATH_TYPES>{x}; },
+			[] <IsPinLiteralType T>(const T & x) { return std::variant<PIN_LITERAL_TYPES, PIN_MATH_TYPES>{x}; },
 			[](auto&) { return std::variant<PIN_LITERAL_TYPES, PIN_MATH_TYPES>{}; }
 		}, engineData
 	);
@@ -41,15 +44,13 @@ std::variant<PIN_DATA_TYPES> GetEngineTypeData(const std::variant<PIN_LITERAL_TY
 {
 	return std::visit(overloaded
 		{
-			[] <IsPinLiteralType T>(const T &x) { return std::variant<PIN_DATA_TYPES>{x}; }
+			[] <IsPinLiteralType T>(const T & x) { return std::variant<PIN_DATA_TYPES>{x}; }
 		}, editorData
 	);
 }
 
 namespace Havtorn
 {
-	using namespace HexRune;
-
 	CScriptTool::CScriptTool(const char* displayName, CEditorManager* manager)
 		: CWindow(displayName, manager, false)
 	{
@@ -161,8 +162,6 @@ namespace Havtorn
 			GUI::SameLine();
 		}
 
-		LoadGUIElements();
-
 		GUI::BeginScript("Node Script Editor");
 
 		if (GUI::BeginDragDropTarget())
@@ -181,12 +180,12 @@ namespace Havtorn
 				if (payload.IsDelivery)
 				{
 					// TODO.NW: Make sure to catch keybinds here
-					for (auto& context : GUIContexts)
+					for (const Ptr<SNodeView>& view : Manager->GetNodeViewsVector())
 					{
-						// TODO.NW: Maybe remove whitespace from names? Then they need extra care to display properly. Need another ID then, which we may have if we remove the extra GUIContexts/GUINode/GUILink layer
-						if (context.Name == "Get " + dataBinding->Name)
+						// TODO.NW: Maybe remove whitespace from names? Then they need extra care to display properly.
+						if (view->Name == "Get " + dataBinding->Name)
 						{
-							Edit.NewNodeContext = context;
+							Edit.NewNodeView = view.get();
 							Edit.NewNodePosition = GUI::GetMousePosition();
 						}
 					}
@@ -219,6 +218,13 @@ namespace Havtorn
 
 		CurrentScriptAssetRef = SAssetReference(asset->DirectoryEntry.path().string());
 		CurrentScriptAsset = GEngine::GetAssetRegistry()->RequestAssetData<SScriptAsset>(CurrentScriptAssetRef, CAssetRegistry::EditorManagerRequestID);
+
+		for (auto& binding : CurrentScriptAsset->Script->DataBindings)
+		{
+			Manager->RegisterDataBindingNodeView<SDataBindingGetNodeEditorContext, SDataBindingGetNode>(CurrentScriptAsset->Script.get(), binding.UID);
+			Manager->RegisterDataBindingNodeView<SDataBindingSetNodeEditorContext, SDataBindingSetNode>(CurrentScriptAsset->Script.get(), binding.UID);
+		}
+
 		SetEnabled(true);
 	}
 
@@ -229,6 +235,7 @@ namespace Havtorn
 		SScriptFileHeader fileHeader;
 		fileHeader.Name = CurrentScriptAsset->Script->Name;
 		fileHeader.Script = CurrentScriptAsset->Script.get();
+		fileHeader.NodePositionMap = CurrentScriptAsset->NodePositionMap;
 		GEngine::GetAssetRegistry()->SaveAsset(UGeneralUtils::ExtractParentDirectoryFromPath(CurrentScriptAssetRef.FilePath) + "/", fileHeader);
 	}
 
@@ -236,95 +243,84 @@ namespace Havtorn
 	{
 		// TODO.NW: Ask user if they want to save?
 
+		for (auto& binding : CurrentScriptAsset->Script->DataBindings)
+		{
+			Manager->RemoveDataBindingNodeView<SDataBindingGetNodeEditorContext, SDataBindingGetNode>(binding.UID);
+			Manager->RemoveDataBindingNodeView<SDataBindingSetNodeEditorContext, SDataBindingSetNode>(binding.UID);
+		}
+
 		GEngine::GetAssetRegistry()->UnrequestAsset(CurrentScriptAssetRef, CAssetRegistry::EditorManagerRequestID);
 		CurrentScriptAssetRef = SAssetReference();
 		CurrentScriptAsset = nullptr;
 		SetEnabled(false);
 	}
 
-	void CScriptTool::LoadGUIElements()
-	{
-		// Extract elements from CurrentScriptAsset
-		GUINodes.clear();
-		GUILinks.clear();
-		GUIContexts.clear();
-
-		HexRune::SScript* script = CurrentScriptAsset->Script.get();
-
-		for (auto& node : script->Nodes)
-		{
-			// TODO.NW: Make constructors for GUI elements that extract info from data elements?
-			GUINodes.emplace_back();
-			auto& guiNode = GUINodes.back();
-			guiNode.UID = node->UID;
-			guiNode.Type = static_cast<EGUINodeType>(node->FlowType);
-
-			SNodeEditorContext* editorContext = script->GetNodeEditorContext(node->UID);
-			guiNode.Name = editorContext ? editorContext->Name : "Missing Context";
-			guiNode.Color = editorContext ? editorContext->Color : SColor::Orange;
-			guiNode.Position = editorContext ? editorContext->Position : SVector2<F32>::Zero;
-			guiNode.HasBeenInitialized = editorContext ? editorContext->HasBeenInitialized : true;
-
-			for (auto& input : node->Inputs)
-			{
-				guiNode.Inputs.emplace_back(SGUIPin(input.UID, static_cast<EGUIPinType>(input.Type), static_cast<EGUIPinDirection>(input.Direction), &guiNode, input.Name));
-				if (input.IsPinTypeLiteral())
-					guiNode.Inputs.back().Data = GetLiteralTypeData(input.Data);
-			}
-			for (auto& output : node->Outputs)
-			{
-				guiNode.Outputs.emplace_back(SGUIPin(output.UID, static_cast<EGUIPinType>(output.Type), static_cast<EGUIPinDirection>(output.Direction), &guiNode, output.Name));
-			}
-		}
-
-		for (auto& link : script->Links)
-			GUILinks.emplace_back(SGUILink{ link.UID, link.StartPinUID, link.EndPinUID });
-
-		for (U64 i = 0; i < script->RegisteredEditorContexts.size(); i++)
-		{
-			SNodeEditorContext* registeredContext = script->RegisteredEditorContexts[i];
-			GUIContexts.emplace_back(SGUINodeContext{ registeredContext->Name, registeredContext->Category, STATIC_I64(i) });
-		}
-	}
-
-	void CScriptTool::CommitEdit(const SNodeOperation& edit)
+	void CScriptTool::CommitEdit(SNodeOperation& edit)
 	{
 		HexRune::SScript* script = CurrentScriptAsset->Script.get();
 
 		// Edit CurrentScriptAsset here
-		for (auto& node : GUINodes)
+		for (auto& node : script->Nodes)
 		{
-			if (SNodeEditorContext* context = script->GetNodeEditorContext(node.UID))
+			if (node == nullptr)
+				continue;
+
+			CurrentScriptAsset->NodePositionMap[node->UID] = GUI::GetNodePosition(node->UID);
+		}
+
+		if (edit.NewNodeView != nullptr)
+		{
+			SDataBindingGetNodeEditorContext* getterContext = dynamic_cast<SDataBindingGetNodeEditorContext*>(edit.NewNodeView);
+			SDataBindingSetNodeEditorContext* setterContext = dynamic_cast<SDataBindingSetNodeEditorContext*>(edit.NewNodeView);
+			if (getterContext != nullptr)
 			{
-				context->Position = GUI::GetNodePosition(node.UID);
-				context->HasBeenInitialized = true;
+				SNode* newNode = script->NodeFactory->CreateNode(edit.NewNodeView->GetRuntimeHash(), 0, script, getterContext->DataBindingID);
+				CurrentScriptAsset->NodePositionMap.emplace(newNode->UID, edit.NewNodePosition);
+			}
+			else if (setterContext != nullptr)
+			{
+				SNode* newNode = script->NodeFactory->CreateNode(edit.NewNodeView->GetRuntimeHash(), 0, script, setterContext->DataBindingID);
+				CurrentScriptAsset->NodePositionMap.emplace(newNode->UID, edit.NewNodePosition);
+			}
+			else
+			{
+				SNode* newNode = script->NodeFactory->CreateNode(edit.NewNodeView->GetRuntimeHash(), 0, script);
+				CurrentScriptAsset->NodePositionMap.emplace(newNode->UID, edit.NewNodePosition);
 			}
 		}
 
-		if (edit.NewNodeContext.Index > -1)
+		if (edit.NewBinding.has_value())
 		{
-			SNode* newNode = script->RegisteredEditorContexts[edit.NewNodeContext.Index]->AddNode(script, 0);
-			SNodeEditorContext* newContext = script->GetNodeEditorContext(newNode->UID);
-			newContext->Position = edit.NewNodePosition;
+			SDataBindingInitData newBindingData = edit.NewBinding.value();
+			const SScriptDataBinding& newBinding = script->AddDataBinding(newBindingData.Name.AsString().c_str(), static_cast<HexRune::EPinType>(newBindingData.Type), static_cast<HexRune::EObjectDataType>(newBindingData.ObjectType), static_cast<EAssetType>(newBindingData.AssetType));
+			Manager->RegisterDataBindingNodeView<SDataBindingGetNodeEditorContext, SDataBindingGetNode>(script, newBinding.UID);
+			Manager->RegisterDataBindingNodeView<SDataBindingSetNodeEditorContext, SDataBindingSetNode>(script, newBinding.UID);
+			edit.NewBinding.reset();
 		}
 
-		if (edit.NewBinding.Type != EGUIPinType::Unknown)
-			script->AddDataBinding(edit.NewBinding.Name.AsString().c_str(), static_cast<HexRune::EPinType>(edit.NewBinding.Type), static_cast<HexRune::EObjectDataType>(edit.NewBinding.ObjectType), static_cast<EAssetType>(edit.NewBinding.AssetType));
-
 		if (edit.RemovedBindingID != 0)
+		{
 			script->RemoveDataBinding(edit.RemovedBindingID);
+			Manager->RemoveDataBindingNodeView<SDataBindingGetNodeEditorContext, SDataBindingGetNode>(edit.RemovedBindingID);
+			Manager->RemoveDataBindingNodeView<SDataBindingSetNodeEditorContext, SDataBindingSetNode>(edit.RemovedBindingID);
+		}
 
-		if (!edit.ModifiedLiteralValuePin.IsDataUnset())
-			script->SetDataOnInput(edit.ModifiedLiteralValuePin.UID, GetEngineTypeData(edit.ModifiedLiteralValuePin.Data));
+		if (edit.ModifiedLiteralValuePin != nullptr && !edit.ModifiedLiteralValuePin->IsDataUnset()) // NW: Only literal data types need to set data from GUI->Engine, when they are unpinned.	
+			script->SetDataOnInput(edit.ModifiedLiteralValuePin->UID, GetEngineTypeData(GetLiteralTypeData(edit.ModifiedLiteralValuePin->Data)));
 
 		for (auto& removedNode : edit.RemovedNodes)
-			script->RemoveNode(removedNode.UID);
+		{
+			if (removedNode == nullptr)
+				continue;
+
+			script->RemoveNode(removedNode->UID);
+		}
 
 		if (edit.NewLink.UID != 0)
-			script->Link(edit.NewLink.StartPinID, edit.NewLink.EndPinID);
+			script->Link(edit.NewLink.StartPinUID, edit.NewLink.EndPinUID);
 
 		for (auto& removedLink : edit.RemovedLinks)
-			script->Unlink(removedLink.StartPinID, removedLink.EndPinID);
+			script->Unlink(removedLink.StartPinUID, removedLink.EndPinUID);
 	}
 
 	void CScriptTool::RenderScript()
@@ -332,12 +328,12 @@ namespace Havtorn
 		GUI::PushScriptStyleColor(EScriptStyleColor::Background, SColor(60));
 
 		RenderNodes();
-		CurrentDragPinType = EGUIPinType::Unknown;
-
-		for (auto& linkInfo : GUILinks)
+		CurrentDragPinType = EPinType::Unknown;
+		HexRune::SScript* script = CurrentScriptAsset->Script.get();
+		for (auto& linkInfo : script->Links)
 		{
-			SGUIPin* startPin = GetPinFromID(linkInfo.StartPinID, GUINodes);
-			GUI::Link(linkInfo.UID, linkInfo.StartPinID, linkInfo.EndPinID, startPin != nullptr ? GetPinTypeColor(startPin->Type) : SColor::White);
+			SPin* startPin = GetPinFromID(linkInfo.StartPinUID, script->Nodes);
+			GUI::Link(linkInfo.UID, linkInfo.StartPinUID, linkInfo.EndPinUID, startPin != nullptr ? GetPinTypeColor(startPin->Type) : SColor::White);
 		}
 
 		HandleCreateAction();
@@ -349,16 +345,19 @@ namespace Havtorn
 
 	void CScriptTool::RenderNodes()
 	{
-		for (auto& node : GUINodes)
+		const std::unordered_map<U64, Ptr<SNodeView>>& views = Manager->GetNodeViewsMap();
+		HexRune::SScript* script = CurrentScriptAsset->Script.get();
+			
+		for (SNode* node : script->Nodes)
 		{
-			SVector2<F32> requiredSize = GetNodeSize(node);
+			const U64 runtimeHash = script->NodeIDToRuntimeHash.at(node->UID);
+			SNodeView* view = views.at(runtimeHash).get();
+
+			SVector2<F32> requiredSize = GetNodeSize(node, view);
 			GUI::PushScriptStyleVar(EScriptStyleVar::NodePadding, SVector4(8.0f, 4.0f, 8.0f, 8.0f));
-			GUI::BeginNode(node.UID);
+			GUI::BeginNode(node->UID);
 
-			if (!node.HasBeenInitialized)
-				GUI::SetNodePosition(node.UID, node.Position);
-
-			GUI::PushID(node.UID);
+			GUI::PushID(node->UID);
 			GUI::BeginVertical("node", requiredSize);
 
 			SVector4 headerRect = SVector4();
@@ -367,23 +366,23 @@ namespace Havtorn
 			SVector2<F32> nodeNameCursorStart = GUI::GetCursorPos();
 			nodeNameCursorStart.Y += 2.0f;
 			GUI::SetCursorPos(nodeNameCursorStart);
-			GUI::TextUnformatted(node.Name.c_str());
+			GUI::TextUnformatted(view->Name.c_str());
 			GUI::EndHorizontal();
 			headerRect = GUI::GetLastRect();
 			GUI::Spring(0, GUI::GetStyleVar(EStyleVar::ItemSpacing).Y * 3.0f);
 
-			U64 maxPinColumnLength = UMath::Max(node.Inputs.size(), node.Outputs.size());
+			U64 maxPinColumnLength = UMath::Max(node->Inputs.size(), node->Outputs.size());
 			for (U64 i = 0; i < maxPinColumnLength; i++)
 			{
-				SGUIPin* inputPin = node.Inputs.size() > i ? &node.Inputs[i] : nullptr;
-				SGUIPin* outputPin = node.Outputs.size() > i ? &node.Outputs[i] : nullptr;
+				SPin* inputPin = node->Inputs.size() > i ? &node->Inputs[i] : nullptr;
+				SPin* outputPin = node->Outputs.size() > i ? &node->Outputs[i] : nullptr;
 
-				if (inputPin != nullptr && inputPin->Direction == EGUIPinDirection::Input)
+				if (inputPin != nullptr && inputPin->Direction == EPinDirection::Input)
 				{
 					GUI::PushScriptStyleVar(EScriptStyleVar::PivotAlignment, SVector2<F32>(0.1f, 0.5f));
 					GUI::BeginPin(inputPin->UID, EGUIPinDirection::Input);
 
-					const bool isPinLinked = IsPinLinked(inputPin->UID, GUILinks);
+					const bool isPinLinked = IsPinLinked(inputPin->UID, script->Links);
 
 					if (!isPinLinked && inputPin->Type == CurrentDragPinType)
 					{
@@ -393,7 +392,7 @@ namespace Havtorn
 					{
 						const bool wasPinValueModified = DrawLiteralTypePin(*inputPin);
 						if (wasPinValueModified)
-							Edit.ModifiedLiteralValuePin = *inputPin;
+							Edit.ModifiedLiteralValuePin = inputPin;
 					}
 					else
 					{
@@ -410,7 +409,7 @@ namespace Havtorn
 					GUI::PopScriptStyleVar();
 				}
 
-				if (outputPin != nullptr && outputPin->Direction == EGUIPinDirection::Output)
+				if (outputPin != nullptr && outputPin->Direction == EPinDirection::Output)
 				{
 					if (inputPin != nullptr)
 						GUI::SameLine();
@@ -429,7 +428,7 @@ namespace Havtorn
 					GUI::Text(outputPin->Name.c_str());
 					GUI::SetCursorPos(SVector2<F32>(cursorX + nameWidth, cursorY));
 
-					DrawPinIcon(*outputPin, IsPinLinked(outputPin->UID, GUILinks), 200, false);
+					DrawPinIcon(*outputPin, IsPinLinked(outputPin->UID, script->Links), 200, false);
 					GUI::EndPin();
 					GUI::PopScriptStyleVar();
 					GUI::Unindent(indent);
@@ -452,7 +451,7 @@ namespace Havtorn
 				SVector2<F32> imagePaddingMax = SVector2<F32>(8 - halfBorderWidth, 10 - halfBorderWidth);
 				SVector2<F32> imageMin = SVector2<F32>(headerRect.X - imagePadding.X, headerRect.Y - imagePadding.Y);
 				SVector2<F32> imageMax = SVector2<F32>(headerRect.Z + imagePaddingMax.X, headerRect.W + imagePaddingMax.Y);
-				GUI::DrawNodeHeader(node.UID, Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::NodeBackground), imageMin, imageMax, SVector2<F32>(0.0f), uv, node.Color, nodeRounding);
+				GUI::DrawNodeHeader(node->UID, Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::NodeBackground), imageMin, imageMax, SVector2<F32>(0.0f), uv, view->Color, nodeRounding);
 			}
 			GUI::PopID();
 			GUI::PopScriptStyleVar();
@@ -465,15 +464,16 @@ namespace Havtorn
 		if (!GUI::BeginScriptCreate())
 			return GUI::EndScriptCreate();
 
+		HexRune::SScript* script = CurrentScriptAsset->Script.get();
+
 		U64 inputPinId, outputPinId = 0;
 		if (!GUI::QueryNewLink(inputPinId, outputPinId))
 		{
-			SGUIPin* originPin = GetPinFromID(inputPinId, GUINodes);
-			if (originPin->Type != EGUIPinType::Unknown)
+			SPin* originPin = GetPinFromID(inputPinId, script->Nodes);
+			if (originPin->Type != EPinType::Unknown)
 			{
 				CurrentDragPinType = originPin->Type;
 			}
-
 
 			return GUI::EndScriptCreate();
 		}
@@ -484,29 +484,32 @@ namespace Havtorn
 		if (!GUI::AcceptNewScriptItem())
 			return GUI::EndScriptCreate();
 
-		SGUINode* firstNode = GetNodeFromPinID(inputPinId, GUINodes);
-		SGUINode* secondNode = GetNodeFromPinID(outputPinId, GUINodes);
+		SNode* firstNode = GetNodeFromPinID(inputPinId, script->Nodes);
+		SNode* secondNode = GetNodeFromPinID(outputPinId, script->Nodes);
 		assert(firstNode);
 		assert(secondNode);
 
 		if (firstNode == secondNode)
 			return GUI::EndScriptCreate();
 
-		SGUIPin* firstPin = GetPinFromID(inputPinId, *firstNode);
-		SGUIPin* secondPin = GetPinFromID(outputPinId, *secondNode);
+		SPin* firstPin = GetPinFromID(inputPinId, firstNode);
+		SPin* secondPin = GetPinFromID(outputPinId, secondNode);
 
 		bool canAddlink = true;
 		if (firstPin && secondPin)
 		{
-			if (firstPin->Direction == EGUIPinDirection::Input && secondPin->Direction == EGUIPinDirection::Input)
+			if (firstPin->Direction == EPinDirection::Input && secondPin->Direction == EPinDirection::Input)
 			{
 				canAddlink = false;
 			}
 		}
 
-		if (firstPin->Type != secondPin->Type)
+		if (firstPin && secondPin)
 		{
-			canAddlink = false;
+			if (firstPin->Type != secondPin->Type)
+			{
+				canAddlink = false;
+			}
 		}
 
 		// TODO.NW: Think about these, certain rules apply to flows vs nonflows/inputs vs outputs
@@ -529,10 +532,10 @@ namespace Havtorn
 			// TODO.NW: Add functions to populate this with function call
 			static U64 linkID = 99;
 			Edit.NewLink.UID = linkID++;
-			Edit.NewLink.StartPinID = firstPin->UID;
-			Edit.NewLink.EndPinID = secondPin->UID;
+			Edit.NewLink.StartPinUID = firstPin->UID;
+			Edit.NewLink.EndPinUID = secondPin->UID;
 
-			//if (secondPin->Type == EGUIPinType::Unknown)
+			//if (secondPin->Type == EPinType::Unknown)
 			//{
 			//	secondNode->ChangPinTypes(firstPin->Type);
 			//}
@@ -574,12 +577,14 @@ namespace Havtorn
 		if (!GUI::BeginScriptDelete())
 			return GUI::EndScriptDelete();
 
+		HexRune::SScript* script = CurrentScriptAsset->Script.get();
+			
 		U64 deletedLinkId = 0;
 		while (GUI::QueryDeletedLink(deletedLinkId))
 		{
 			if (GUI::AcceptDeletedScriptItem())
 			{
-				for (SGUILink& link : GUILinks)
+				for (SLink& link : script->Links)
 				{
 					if (link.UID == deletedLinkId)
 					{
@@ -600,9 +605,9 @@ namespace Havtorn
 		{
 			if (GUI::AcceptDeletedScriptItem())
 			{
-				for (SGUINode& node : GUINodes)
+				for (SNode* node : script->Nodes)
 				{
-					if (node.UID == nodeId)
+					if (node->UID == nodeId)
 					{
 						Edit.RemovedNodes.emplace_back(node);
 
@@ -633,7 +638,7 @@ namespace Havtorn
 
 		if (GUI::BeginPopup("Create New Node"))
 		{
-			auto newNodePostion = openPopupPosition;
+			SVector2<F32> newNodePostion = openPopupPosition;
 			//CNodeType** types = CNodeTypeCollector::GetAllNodeTypes();
 			//unsigned short noOfTypes = CNodeTypeCollector::GetNodeTypeCount();
 			//std::map<std::string, std::vector<CNodeType*>> cats;
@@ -722,13 +727,13 @@ namespace Havtorn
 				//	}
 				//}
 
-			for (auto& context : GUIContexts)
+			for (const Ptr<SNodeView>& view : Manager->GetNodeViewsVector())
 			{
-				if (GUI::BeginMenu(context.Category.c_str()))
+				if (GUI::BeginMenu(view->Category.c_str()))
 				{
-					if (GUI::MenuItem(context.Name.c_str()))
+					if (GUI::MenuItem(view->Name.c_str()))
 					{
-						Edit.NewNodeContext = context;
+						Edit.NewNodeView = view.get();
 						Edit.NewNodePosition = { openPopupPosition.X, openPopupPosition.Y };
 					}
 					GUI::EndMenu();
@@ -753,24 +758,24 @@ namespace Havtorn
 			GUI::Separator();
 			GUI::InputText("Name", &DataBindingCandidate.Name);
 
-			GUI::ComboEnum("Pin Type", DataBindingCandidate.Type, { EGUIPinType::Unknown, EGUIPinType::Flow });
+			GUI::ComboEnum("Pin Type", DataBindingCandidate.Type, { EPinType::Unknown, EPinType::Flow });
 
-			if (DataBindingCandidate.Type == EGUIPinType::Asset)
+			if (DataBindingCandidate.Type == EPinType::Asset)
 			{
-				GUI::ComboEnum("Asset Type", DataBindingCandidate.AssetType, { EGUIAssetType::None });
+				GUI::ComboEnum("Asset Type", DataBindingCandidate.AssetType, { EAssetType::None });
 			}
 			else
 			{
-				DataBindingCandidate.AssetType = EGUIAssetType::None;
+				DataBindingCandidate.AssetType = EAssetType::None;
 			}
 
-			if (DataBindingCandidate.Type == EGUIPinType::ComponentPtr)
+			if (DataBindingCandidate.Type == EPinType::ComponentPtr)
 			{
-				GUI::ComboEnum("Object Type", DataBindingCandidate.ObjectType, { EGUIObjectDataType::None });
+				GUI::ComboEnum("Object Type", DataBindingCandidate.ObjectType, { EObjectDataType::None });
 			}
 			else
 			{
-				DataBindingCandidate.ObjectType = EGUIObjectDataType::None;
+				DataBindingCandidate.ObjectType = EObjectDataType::None;
 			}
 
 			//GUI::TextDisabled("Name");
@@ -911,53 +916,53 @@ namespace Havtorn
 			//}
 	}
 
-	SVector2<F32> CScriptTool::GetNodeSize(const SGUINode& node)
+	SVector2<F32> CScriptTool::GetNodeSize(const HexRune::SNode* node, const SNodeView* view)
 	{
 		constexpr F32 iconSize = 24.0f;
 		constexpr F32 iconNamePadding = 6.0f;
 		constexpr F32 iconPadding = iconSize + iconNamePadding * 1.5f;
 
-		I64 maxPinColumnLength = UMath::Max(node.Inputs.size(), node.Outputs.size());
+		I64 maxPinColumnLength = UMath::Max(node->Inputs.size(), node->Outputs.size());
 		F32 inputMaxRequired = 0.0f;
 		F32 outputMaxRequired = 0.0f;
 
-		for (auto& pin : node.Inputs)
+		for (auto& pin : node->Inputs)
 		{
 			F32 nameWidth = GUI::CalculateTextSize(pin.Name.c_str()).X;
 			if (nameWidth > inputMaxRequired)
 				inputMaxRequired = nameWidth + iconPadding;
 		}
-		for (auto& pin : node.Outputs)
+		for (auto& pin : node->Outputs)
 		{
 			F32 nameWidth = GUI::CalculateTextSize(pin.Name.c_str()).X;
 			if (nameWidth > outputMaxRequired)
 				outputMaxRequired = nameWidth + iconPadding;
 		}
-		F32 requiredWidth = UMath::Max(GUI::CalculateTextSize(node.Name.c_str()).X, inputMaxRequired + outputMaxRequired);
-		if (node.Type == EGUINodeType::Simple)
+		F32 requiredWidth = UMath::Max(GUI::CalculateTextSize(view->Name.c_str()).X, inputMaxRequired + outputMaxRequired);
+		if (node->FlowType == EFlowType::Simple)
 			requiredWidth += 50.0f;
 		requiredWidth = UMath::Max(requiredWidth, 100.0f);
 		return SVector2(requiredWidth, HeaderHeight + 1.5f * iconNamePadding + iconPadding * F32(maxPinColumnLength));
 	}
 
-	bool CScriptTool::IsPinLinked(U64 id, const std::vector<SGUILink>& links)
+	bool CScriptTool::IsPinLinked(U64 id, const std::vector<SLink>& links)
 	{
 		if (!id)
 			return false;
 
 		for (auto& link : links)
-			if (link.StartPinID == id || link.EndPinID == id)
+			if (link.StartPinUID == id || link.EndPinUID == id)
 				return true;
 
 		return false;
 	}
 
-	bool CScriptTool::IsPinTypeLiteral(SGUIPin& pin)
+	bool CScriptTool::IsPinTypeLiteral(SPin& pin)
 	{
-		return pin.Type == EGUIPinType::String || pin.Type == EGUIPinType::Bool || pin.Type == EGUIPinType::Int || pin.Type == EGUIPinType::Float;
+		return pin.Type == EPinType::String || pin.Type == EPinType::Bool || pin.Type == EPinType::Int || pin.Type == EPinType::Float;
 	}
 
-	bool CScriptTool::DrawLiteralTypePin(SGUIPin& pin)
+	bool CScriptTool::DrawLiteralTypePin(SPin& pin)
 	{
 		bool wasPinValueModified = false;
 		constexpr F32 emptyItemWidth = 50.0f;
@@ -967,7 +972,7 @@ namespace Havtorn
 
 		switch (pin.Type)
 		{
-		case EGUIPinType::String:
+		case EPinType::String:
 		{
 			if (pin.IsDataUnset())
 				pin.Data = "";
@@ -979,7 +984,7 @@ namespace Havtorn
 			GUI::PopID();
 			break;
 		}
-		case EGUIPinType::Int:
+		case EPinType::Int:
 		{
 			if (pin.IsDataUnset())
 				pin.Data = 0;
@@ -991,7 +996,7 @@ namespace Havtorn
 			GUI::PopID();
 			break;
 		}
-		case EGUIPinType::Bool:
+		case EPinType::Bool:
 		{
 			if (pin.IsDataUnset())
 				pin.Data = false;
@@ -1003,7 +1008,7 @@ namespace Havtorn
 			GUI::PopID();
 			break;
 		}
-		case EGUIPinType::Float:
+		case EPinType::Float:
 		{
 			if (pin.IsDataUnset())
 				pin.Data = 0.0f;
@@ -1022,92 +1027,81 @@ namespace Havtorn
 		return wasPinValueModified;
 	}
 
-	void CScriptTool::DrawPinIcon(const SGUIPin& pin, bool connected, U8 alpha, bool highlighted)
+	void CScriptTool::DrawPinIcon(const SPin& pin, bool connected, U8 alpha, bool highlighted)
 	{
 		EGUIIconType iconType;
 		SColor color = GetPinTypeColor(pin.Type);
 		color.A = alpha;
 		switch (pin.Type)
 		{
-		case EGUIPinType::Flow:     iconType = EGUIIconType::Flow;   break;
-		case EGUIPinType::Bool:     iconType = EGUIIconType::Circle; break;
-		case EGUIPinType::Int:      iconType = EGUIIconType::Circle; break;
-		case EGUIPinType::Float:    iconType = EGUIIconType::Circle; break;
-		case EGUIPinType::String:   iconType = EGUIIconType::Circle; break;
-		case EGUIPinType::Vector:   iconType = EGUIIconType::Circle; break;
-		
-		case EGUIPinType::ComponentPtr:   iconType = EGUIIconType::Circle; break;
-		case EGUIPinType::ComponentPtrList:   iconType = EGUIIconType::Grid; break;
+		case EPinType::Flow:     iconType = EGUIIconType::Flow;   break;
+		case EPinType::Bool:     iconType = EGUIIconType::Circle; break;
+		case EPinType::Int:      iconType = EGUIIconType::Circle; break;
+		case EPinType::Float:    iconType = EGUIIconType::Circle; break;
+		case EPinType::String:   iconType = EGUIIconType::Circle; break;
+		case EPinType::Vector:   iconType = EGUIIconType::Circle; break;
 
-		case EGUIPinType::Entity:   iconType = EGUIIconType::Circle; break;
-		case EGUIPinType::EntityList:   iconType = EGUIIconType::Grid; break;
-		
-		case EGUIPinType::Asset:    iconType = EGUIIconType::Circle; break;
-		case EGUIPinType::Function: iconType = EGUIIconType::Circle; break;
-		case EGUIPinType::Delegate: iconType = EGUIIconType::Square; break;
-			default:
-				return;
+		case EPinType::ComponentPtr:   iconType = EGUIIconType::Circle; break;
+		case EPinType::ComponentPtrList:   iconType = EGUIIconType::Grid; break;
+
+		case EPinType::Entity:   iconType = EGUIIconType::Circle; break;
+		case EPinType::EntityList:   iconType = EGUIIconType::Grid; break;
+
+		case EPinType::Asset:    iconType = EGUIIconType::Circle; break;
+		case EPinType::Function: iconType = EGUIIconType::Circle; break;
+		case EPinType::Delegate: iconType = EGUIIconType::Square; break;
+		default:
+			return;
 		}
 
 		GUI::DrawPinIcon(SVector2<F32>(24.0f), iconType, connected, color, highlighted);
 	};
 
-	SColor CScriptTool::GetPinTypeColor(EGUIPinType type)
+	SColor CScriptTool::GetPinTypeColor(EPinType type)
 	{
 		switch (type)
 		{
 		default:
-		case EGUIPinType::Flow:     return SColor(255, 255, 255);
-		case EGUIPinType::Bool:     return SColor(220, 48, 48);
-		case EGUIPinType::Int:      return SColor(68, 201, 156);
-		case EGUIPinType::Float:    return SColor(147, 226, 74);
-		case EGUIPinType::String:   return SColor(124, 21, 153);
-		case EGUIPinType::Vector:   return SColor(255, 206, 27);
-		
-		case EGUIPinType::ComponentPtr:   return SColor(51, 150, 215);
-		case EGUIPinType::ComponentPtrList:   return SColor(51, 150, 215);
+		case EPinType::Flow:     return SColor(255, 255, 255);
+		case EPinType::Bool:     return SColor(220, 48, 48);
+		case EPinType::Int:      return SColor(68, 201, 156);
+		case EPinType::Float:    return SColor(147, 226, 74);
+		case EPinType::String:   return SColor(124, 21, 153);
+		case EPinType::Vector:   return SColor(255, 206, 27);
 
-		case EGUIPinType::Entity:   return SColor(51, 150, 215);
-		case EGUIPinType::EntityList:   return SColor(51, 150, 215);
+		case EPinType::ComponentPtr:   return SColor(51, 150, 215);
+		case EPinType::ComponentPtrList:   return SColor(51, 150, 215);
 
-		case EGUIPinType::Asset:   return SColor(124, 21, 153);
-		case EGUIPinType::Function: return SColor(218, 0, 183);
-		case EGUIPinType::Delegate: return SColor(255, 48, 48);
+		case EPinType::Entity:   return SColor(51, 150, 215);
+		case EPinType::EntityList:   return SColor(51, 150, 215);
+
+		case EPinType::Asset:   return SColor(124, 21, 153);
+		case EPinType::Function: return SColor(218, 0, 183);
+		case EPinType::Delegate: return SColor(255, 48, 48);
 		}
 	};
 
-	SGUINode* CScriptTool::GetNodeFromPinID(U64 id, std::vector<SGUINode>& nodes)
+	SNode* CScriptTool::GetNodeFromPinID(U64 id, std::vector<SNode*>& nodes)
 	{
-		for (auto& node : nodes)
+		for (SNode* node : nodes)
 		{
-			for (auto& pin : node.Inputs)
-			{
-				if (pin.UID == id)
-				{
-					return &node;
-				}
-			}
-
-			for (auto& pin : node.Outputs)
-			{
-				if (pin.UID == id)
-				{
-					return &node;
-				}
-			}
+			SPin* pin = GetPinFromID(id, node);
+			if (pin != nullptr && pin->UID == id)
+				return node;
 		}
 
 		return nullptr;
 	}
 
-	SGUIPin* CScriptTool::GetPinFromID(U64 id, SGUINode& node)
+	SPin* CScriptTool::GetPinFromID(U64 id, SNode* node)
 	{
-		for (auto& pin : node.Inputs)
+		for (SPin& pin : node->Inputs)
 		{
 			if (pin.UID == id)
 				return &pin;
 		}
-		for (auto& pin : node.Outputs)
+
+		for (SPin& pin : node->Outputs)
 		{
 			if (pin.UID == id)
 				return &pin;
@@ -1116,30 +1110,23 @@ namespace Havtorn
 		return nullptr;
 	}
 
-	SGUIPin* CScriptTool::GetPinFromID(U64 id, std::vector<SGUINode>& nodes)
+	SPin* CScriptTool::GetPinFromID(U64 id, std::vector<SNode*>& nodes)
 	{
 		for (auto& node : nodes)
 		{
-			for (auto& pin : node.Inputs)
-			{
-				if (pin.UID == id)
-					return &pin;
-			}
-			for (auto& pin : node.Outputs)
-			{
-				if (pin.UID == id)
-					return &pin;
-			}
+			SPin* pin = GetPinFromID(id, node);
+			if (pin != nullptr && pin->UID == id)
+				return pin;
 		}
 
 		return nullptr;
 	}
 
-	SGUIPin* CScriptTool::GetOutputPinFromID(U64 id, std::vector<SGUINode>& nodes)
+	SPin* CScriptTool::GetOutputPinFromID(U64 id, std::vector<SNode*>& nodes)
 	{
 		for (auto& node : nodes)
 		{
-			for (auto& pin : node.Outputs)
+			for (auto& pin : node->Outputs)
 			{
 				if (pin.UID == id)
 					return &pin;
@@ -1147,6 +1134,4 @@ namespace Havtorn
 		}
 		return nullptr;
 	}
-
-
 }

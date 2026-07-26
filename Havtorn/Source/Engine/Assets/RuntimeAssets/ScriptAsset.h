@@ -18,5 +18,7 @@ namespace Havtorn
 	
 		EAssetType AssetType = EAssetType::Script;
 		Ptr<HexRune::SScript> Script = nullptr;
+
+		std::unordered_map<U64, SVector2<F32>> NodePositionMap;
 	};
 }
