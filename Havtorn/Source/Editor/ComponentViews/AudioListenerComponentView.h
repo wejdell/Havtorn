@@ -9,7 +9,5 @@ namespace Havtorn
 	{
 		SComponentViewResult View(const SEntity& entityOwner, CScene* scene) const override;
 		virtual const char* GetComponentName() const override { return "Audio Listener"; };
-
-		static SAudioListenerComponentView Context;
 	};
 }

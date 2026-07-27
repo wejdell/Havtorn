@@ -11,11 +11,8 @@
 
 #include <GUI.h>
 
-
 namespace Havtorn
 {
-	SEnvironmentLightComponentView SEnvironmentLightComponentView::Context = {};
-
     SComponentViewResult SEnvironmentLightComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		SEnvironmentLightComponent* environmentLightComp = scene->GetComponent<SEnvironmentLightComponent>(entityOwner);

@@ -16,8 +16,6 @@
 
 namespace Havtorn
 {
-	SSkeletalMeshComponentView SSkeletalMeshComponentView::Context = {};
-
     SComponentViewResult SSkeletalMeshComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		STransformComponent* transform = scene->GetComponent<STransformComponent>(entityOwner);

@@ -17,8 +17,6 @@
 
 namespace Havtorn 
 {
-	SUICanvasComponentView SUICanvasComponentView::Context = {};
-
 	SComponentViewResult SUICanvasComponentView::View(const SEntity& entityOwner, CScene* scene) const
 	{
 		SUICanvasComponent* canvasComponent = scene->GetComponent<SUICanvasComponent>(entityOwner);

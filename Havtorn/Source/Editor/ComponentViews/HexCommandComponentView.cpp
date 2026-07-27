@@ -10,8 +10,6 @@
 
 namespace Havtorn
 {
-	SHexCommandComponentView SHexCommandComponentView::Context = {};
-
 	SComponentViewResult SHexCommandComponentView::View(const SEntity& entityOwner, CScene* scene) const
 	{
 		SHexCommandComponent* component = scene->GetComponent<SHexCommandComponent>(entityOwner);

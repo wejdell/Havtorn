@@ -11,8 +11,6 @@
 
 namespace Havtorn
 {
-    SAudioEmitterComponentView SAudioEmitterComponentView::Context = {};
-
     SComponentViewResult SAudioEmitterComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
         SAudioEmitterComponent* emitterComponent = scene->GetComponent<SAudioEmitterComponent>(entityOwner);

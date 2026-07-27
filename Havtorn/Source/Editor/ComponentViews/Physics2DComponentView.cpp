@@ -10,8 +10,6 @@
 
 namespace Havtorn
 {
-	SPhysics2DComponentView SPhysics2DComponentView::Context = {};
-
     SComponentViewResult SPhysics2DComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		SPhysics2DComponent* physicsComponent = scene->GetComponent<SPhysics2DComponent>(entityOwner);

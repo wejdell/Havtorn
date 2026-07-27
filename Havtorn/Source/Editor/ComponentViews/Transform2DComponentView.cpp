@@ -11,8 +11,6 @@
 
 namespace Havtorn
 {
-	STransform2DComponentView STransform2DComponentView::Context = {};
-
     SComponentViewResult STransform2DComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		// TODO.NR: Make editable with gizmo

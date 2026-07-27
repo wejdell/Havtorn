@@ -9,7 +9,5 @@ namespace Havtorn
 	{
 		SComponentViewResult View(const SEntity& entityOwner, CScene* scene) const override;
 		virtual const char* GetComponentName() const override { return "Transform 2D"; };
-		
-		static STransform2DComponentView Context;
 	};
 }

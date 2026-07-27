@@ -15,8 +15,6 @@
 
 namespace Havtorn 
 {
-	SAbilityComponentView SAbilityComponentView::Context = {};
-
 	SComponentViewResult SAbilityComponentView::View(const SEntity& entityOwner, CScene* scene) const
 	{
 		SAbilityComponent* component = scene->GetComponent<SAbilityComponent>(entityOwner);

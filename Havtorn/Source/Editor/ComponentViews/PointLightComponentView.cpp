@@ -13,8 +13,6 @@
 
 namespace Havtorn
 {
-	SPointLightComponentView SPointLightComponentView::Context = {};
-
     SComponentViewResult Havtorn::SPointLightComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		SPointLightComponent* pointLightComp = scene->GetComponent<SPointLightComponent>(entityOwner);

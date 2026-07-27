@@ -11,7 +11,5 @@ namespace Havtorn
 		virtual const char* GetComponentName() const override { return "Transform"; };
 		
 		U8 GetSortingPriority() const override;
-
-		static STransformComponentView Context;
 	};
 }

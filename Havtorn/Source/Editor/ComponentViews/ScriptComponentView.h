@@ -19,7 +19,5 @@ namespace Havtorn
 		U8 GetSortingPriority() const override;
 
 		void ViewDataBinding(CScene* scene, HexRune::SScriptDataBinding& dataBinding) const;
-
-		static SScriptComponentView Context;
 	};
 }

@@ -12,8 +12,6 @@
 
 namespace Havtorn
 {
-	SSpriteComponentView SSpriteComponentView::Context = {};
-
     SComponentViewResult Havtorn::SSpriteComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		SSpriteComponent* spriteComp = scene->GetComponent<SSpriteComponent>(entityOwner);

@@ -10,8 +10,6 @@
 
 namespace Havtorn
 {
-	SMaterialComponentView SMaterialComponentView::Context = {};
-
     SComponentViewResult Havtorn::SMaterialComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		SMaterialComponent* materialComp = scene->GetComponent<SMaterialComponent>(entityOwner);

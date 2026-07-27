@@ -10,8 +10,6 @@
 
 namespace Havtorn
 {
-    SAudioListenerComponentView SAudioListenerComponentView::Context = {};
-
     SComponentViewResult SAudioListenerComponentView::View(const SEntity& /*entityOwner*/, CScene* /*scene*/) const
     {
         return SComponentViewResult();

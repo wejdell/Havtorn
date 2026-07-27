@@ -13,8 +13,6 @@
 
 namespace Havtorn
 {
-	SSkeletalAnimationComponentView SSkeletalAnimationComponentView::Context = {};
-
 	SComponentViewResult Havtorn::SSkeletalAnimationComponentView::View(const SEntity& entityOwner, CScene* scene) const
 	{
 		SSkeletalAnimationComponent* skeletalAnimationComp = scene->GetComponent<SSkeletalAnimationComponent>(entityOwner);

@@ -21,8 +21,6 @@
 
 namespace Havtorn
 {
-	SStaticMeshComponentView SStaticMeshComponentView::Context = {};
-
     SComponentViewResult SStaticMeshComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		STransformComponent* transform = scene->GetComponent<STransformComponent>(entityOwner);

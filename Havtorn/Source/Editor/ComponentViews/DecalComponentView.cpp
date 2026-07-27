@@ -17,8 +17,6 @@
 
 namespace Havtorn
 {
-	SDecalComponentView SDecalComponentView::Context = {};
-
 	SComponentViewResult SDecalComponentView::View(const SEntity& entityOwner, CScene* scene) const
 	{
 		SDecalComponent* decalComp = scene->GetComponent<SDecalComponent>(entityOwner);

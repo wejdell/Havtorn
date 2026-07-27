@@ -11,7 +11,5 @@ namespace Havtorn
 		SComponentViewResult View(const SEntity& entityOwner, CScene* scene) const override;
 		virtual const char* GetComponentName() const override { return "Level Streaming"; };
 		U8 GetSortingPriority() const override;
-
-		static SLevelStreamingComponentView Context;
 	};
 }

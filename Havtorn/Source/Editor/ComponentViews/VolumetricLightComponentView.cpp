@@ -10,8 +10,6 @@
 
 namespace Havtorn
 {
-	SVolumetricLightComponentView SVolumetricLightComponentView::Context = {};
-
     SComponentViewResult SVolumetricLightComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(entityOwner);

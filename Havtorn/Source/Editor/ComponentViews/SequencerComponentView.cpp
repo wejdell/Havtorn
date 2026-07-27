@@ -11,8 +11,6 @@
 
 namespace Havtorn
 {
-    SSequencerComponentView SSequencerComponentView::Context = {};
-
     SComponentViewResult SSequencerComponentView::View(const SEntity& /*entityOwner*/, CScene* /*scene*/) const
     {
         // TODO.NR: Set up references to SequencerAssets?

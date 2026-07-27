@@ -8,8 +8,6 @@
 
 namespace Havtorn
 {
-	SInputComponentView SInputComponentView::Context = { };
-
 	SComponentViewResult SInputComponentView::View(const SEntity& entityOwner, CScene* scene) const
 	{
 		SInputComponent* component = scene->GetComponent<SInputComponent>(entityOwner);

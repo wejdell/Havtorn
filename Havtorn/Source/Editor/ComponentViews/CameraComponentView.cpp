@@ -15,8 +15,6 @@
 
 namespace Havtorn
 {
-	SCameraComponentView SCameraComponentView::Context = {};
-
 	SComponentViewResult SCameraComponentView::View(const SEntity& entityOwner, CScene* scene) const
 	{
 		SCameraComponent* cameraComp = scene->GetComponent<SCameraComponent>(entityOwner);

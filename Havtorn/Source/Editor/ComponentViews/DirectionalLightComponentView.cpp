@@ -13,8 +13,6 @@
 
 namespace Havtorn
 {
-	SDirectionalLightComponentView SDirectionalLightComponentView::Context = {};
-
     SComponentViewResult SDirectionalLightComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		SDirectionalLightComponent* directionalLightComp = scene->GetComponent<SDirectionalLightComponent>(entityOwner);

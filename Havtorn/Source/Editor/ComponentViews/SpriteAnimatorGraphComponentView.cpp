@@ -8,11 +8,8 @@
 
 #include <GUI.h>
 
-
 namespace Havtorn
 {
-    SSpriteAnimatorGraphComponentView SSpriteAnimatorGraphComponentView::Context = {};
-
     SComponentViewResult SSpriteAnimatorGraphComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
         SSpriteAnimatorGraphComponent* component = scene->GetComponent<SSpriteAnimatorGraphComponent>(entityOwner);

@@ -126,14 +126,14 @@ namespace Havtorn
 
 		for (const U64& runtimeHash : owningScene->EntityComponentRuntimeHashes.at(entity.GUID))
 		{
-			const std::map<U64, SComponentView*>& componentViewsMap = Manager->GetComponentViewsMap();
+			const std::map<U64, Ptr<SComponentView>>& componentViewsMap = Manager->GetComponentViewsMap();
 			if (!componentViewsMap.contains(runtimeHash))
 				continue;
 
-			SComponentView* context = componentViewsMap.at(runtimeHash);
+			const Ptr<SComponentView>& view = componentViewsMap.at(runtimeHash);
 			GUI::Separator();
 
-			GUI::PushID(context->GetComponentName());
+			GUI::PushID(view->GetComponentName());
 			if (GUI::Button("X"))
 			{
 				if (owningScene != nullptr && entity.IsValid())
@@ -147,13 +147,13 @@ namespace Havtorn
 
 			GUI::SameLine();
 
-			if (!GUI::TryOpenComponentView(context->GetComponentName()))
+			if (!GUI::TryOpenComponentView(view->GetComponentName()))
 			{
 				GUI::Dummy({ GUI::DummySizeX, GUI::DummySizeY });
 				continue;
 			}
 
-			SComponentViewResult result = context->View(entity, owningScene);
+			SComponentViewResult result = view->View(entity, owningScene);
 
 			// TODO.NR: Could make this a enum-function map, but would be good to set up clear rules for how this should work.
 			switch (result.Label)
@@ -502,15 +502,15 @@ namespace Havtorn
 
 		if (GUI::BeginChild("NewComponentTypeTable", SVector2<F32>(0.0f, 200.0f)))
 		{
-			for (const SComponentView* context : Manager->GetComponentViewsVector())
+			for (const Ptr<SComponentView>& view : Manager->GetComponentViewsVector())
 			{
-				const U64 contextHash = context->GetRuntimeHash();
+				const U64 viewHash = view->GetRuntimeHash();
 				const std::vector<U64>& existingComponentHashes = owningScene->EntityComponentRuntimeHashes.at(entity.GUID);
 				
 				bool hasComponent = false;
 				for (const U64& componentHash : existingComponentHashes)
 				{
-					if (contextHash == componentHash)
+					if (viewHash == componentHash)
 					{
 						hasComponent = true;
 						break;
@@ -523,7 +523,7 @@ namespace Havtorn
 				if (hasComponent)
 					continue;
 				
-				const char* newComponentName = context->GetComponentName();
+				const char* newComponentName = view->GetComponentName();
 
 				if (!filter.PassFilter(newComponentName))
 					continue;
@@ -532,13 +532,13 @@ namespace Havtorn
 					continue;
 
 				// Add component dependencies if needed
-				for (const U64& dependencyHash : Manager->GetComponentDepencies(contextHash))
+				for (const U64& dependencyHash : Manager->GetComponentDepencies(viewHash))
 				{
 					if (std::ranges::find(existingComponentHashes, dependencyHash) == existingComponentHashes.end())
 						owningScene->ComponentSerializers.at(owningScene->TypeHashToTypeID.at(dependencyHash)).ComponentAdder(entity, owningScene);
 				}
 
-				owningScene->ComponentSerializers.at(owningScene->TypeHashToTypeID.at(contextHash)).ComponentAdder(entity, owningScene);
+				owningScene->ComponentSerializers.at(owningScene->TypeHashToTypeID.at(viewHash)).ComponentAdder(entity, owningScene);
 
 				Manager->SetIsModalOpen(false);
 				GUI::CloseCurrentPopup();

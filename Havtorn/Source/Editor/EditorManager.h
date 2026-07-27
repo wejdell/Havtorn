@@ -103,6 +103,15 @@ namespace Havtorn
 	template<typename T>
 	concept ComponentViewType = std::derived_from<T, SComponentView>;
 
+	template<typename T>
+	concept ComponentType = std::derived_from<T, SComponent>;
+
+	template<typename T>
+	concept NodeViewType = std::derived_from<T, SNodeView>;
+
+	template<typename T>
+	concept NodeType = std::derived_from<T, HexRune::SNode>;
+
 	class CEditorManager
 	{
 	public:
@@ -121,8 +130,8 @@ namespace Havtorn
 		std::vector<Ptr<CScene>>& GetScenes() const;
 		CScene* GetContainingScene(const SEntity& entity) const;
 
-		const std::map<U64, SComponentView*>& GetComponentViewsMap() const;
-		const std::vector<SComponentView*>& GetComponentViewsVector() const;
+		const std::map<U64, Ptr<SComponentView>>& GetComponentViewsMap() const;
+		const std::vector<Ptr<SComponentView>>& GetComponentViewsVector() const;
 		const std::vector<U64> GetComponentDepencies(const U64 componentRuntimeHash) const;
 
 		const std::unordered_map<U64, Ptr<SNodeView>>& GetNodeViewsMap() const;
@@ -283,22 +292,22 @@ namespace Havtorn
 		}
 
 	protected:
-		template<ComponentViewType TComponentView, typename TComponent>
+		template<ComponentViewType TComponentView, ComponentType TComponent>
 		void RegisterComponentView()
 		{
 			const U64 runtimeComponentTypeHash = typeid(TComponent).hash_code();
 			if (RegisteredComponentViewsMap.contains(runtimeComponentTypeHash))
 				return;
 
-			RegisteredComponentViewsMap.emplace(runtimeComponentTypeHash, &TComponentView::Context);
+			RegisteredComponentViewsMap.emplace(runtimeComponentTypeHash, std::make_unique<TComponentView>());
 			RegisteredComponentViewsMap.at(runtimeComponentTypeHash)->RuntimeHash = runtimeComponentTypeHash;
 
-			RegisteredComponentViewsVector.emplace_back(&TComponentView::Context);
+			RegisteredComponentViewsVector.emplace_back(std::make_unique<TComponentView>());
 			RegisteredComponentViewsVector.back()->RuntimeHash = runtimeComponentTypeHash;
-			std::sort(RegisteredComponentViewsVector.begin(), RegisteredComponentViewsVector.end(), [](const SComponentView* a, const SComponentView* b) { return a->GetSortingPriority() < b->GetSortingPriority(); });
+			std::sort(RegisteredComponentViewsVector.begin(), RegisteredComponentViewsVector.end(), [](const Ptr<SComponentView>& a, const Ptr<SComponentView>& b) { return a->GetSortingPriority() < b->GetSortingPriority(); });
 		}
 
-		template<typename TComponent, typename... TComponents>
+		template<ComponentType TComponent, ComponentType... TComponents>
 		void SetupComponentDependencies()
 		{
 			const U64 runtimeComponentTypeHash = typeid(TComponent).hash_code();
@@ -309,7 +318,7 @@ namespace Havtorn
 			([&dependencies] { dependencies.push_back(typeid(TComponents).hash_code()); } (), ...);
 		}
 
-		template<typename TNodeView, typename TNode>
+		template<NodeViewType TNodeView, NodeType TNode>
 		void RegisterNodeView()
 		{
 			const U64 runtimeNodeTypeHash = typeid(TNode).hash_code();
@@ -365,8 +374,8 @@ namespace Havtorn
 		CScene* CurrentWorkingScene = nullptr;
 		
 		// Components
-		std::map<U64, SComponentView*> RegisteredComponentViewsMap;
-		std::vector<SComponentView*> RegisteredComponentViewsVector;
+		std::map<U64, Ptr<SComponentView>> RegisteredComponentViewsMap;
+		std::vector<Ptr<SComponentView>> RegisteredComponentViewsVector;
 		std::map<U64, std::vector<U64>> ComponentDependencies;
 
 		// Nodes

@@ -14,8 +14,6 @@
 
 namespace Havtorn
 {
-	SPrefabComponentView SPrefabComponentView::Context = {};
-
 	void UnloadPrefabEntities(const SEntity& entityOwner, CScene* scene)
 	{
 		STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(entityOwner);

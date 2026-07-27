@@ -545,12 +545,12 @@ namespace Havtorn
 		return containingScene;
 	}
 
-	const std::map<U64, SComponentView*>& CEditorManager::GetComponentViewsMap() const
+	const std::map<U64, Ptr<SComponentView>>& CEditorManager::GetComponentViewsMap() const
 	{
 		return RegisteredComponentViewsMap;
 	}
 
-	const std::vector<SComponentView*>& CEditorManager::GetComponentViewsVector() const
+	const std::vector<Ptr<SComponentView>>& CEditorManager::GetComponentViewsVector() const
 	{
 		return RegisteredComponentViewsVector;
 	}

@@ -10,8 +10,6 @@
 
 namespace Havtorn
 {
-	STransformComponentView STransformComponentView::Context = {};
-
     SComponentViewResult STransformComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(entityOwner);

@@ -14,8 +14,6 @@
 
 namespace Havtorn
 {
-	SPhysics3DControllerComponentView SPhysics3DControllerComponentView::Context = {};
-
     SComponentViewResult SPhysics3DControllerComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		SPhysics3DControllerComponent* physicsComponent = scene->GetComponent<SPhysics3DControllerComponent>(entityOwner);

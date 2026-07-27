@@ -13,8 +13,6 @@
 
 namespace Havtorn
 {
-	SLevelStreamingComponentView SLevelStreamingComponentView::Context = {};
-
 	SComponentViewResult SLevelStreamingComponentView::View(const SEntity& entityOwner, CScene* scene) const
 	{
 		SLevelStreamingComponent* component = scene->GetComponent<SLevelStreamingComponent>(entityOwner);

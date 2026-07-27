@@ -13,8 +13,6 @@
 
 namespace Havtorn
 {
-	SScriptComponentView SScriptComponentView::Context = {};
-
 	void SScriptComponentView::ViewDataBinding(CScene* scene, HexRune::SScriptDataBinding& dataBinding) const
 	{
 		GUI::Text(dataBinding.Name.c_str());
