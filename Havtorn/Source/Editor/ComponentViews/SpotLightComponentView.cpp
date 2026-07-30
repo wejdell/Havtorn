@@ -3,17 +3,17 @@
 #include "hvpch.h"
 #include "SpotLightComponentView.h"
 
-#include "ECS/Components/SpotLightComponent.h"
-#include "ECS/Components/TransformComponent.h"
-#include "Scene/Scene.h"
+#include <ECS/Components/SpotLightComponent.h>
+#include <ECS/Components/TransformComponent.h>
+#include <Scene/Scene.h>
 
-#include "Graphics/Debug/DebugDrawUtility.h"
+#include <Graphics/Debug/DebugDrawUtility.h>
 
 #include <GUI.h>
 
 namespace Havtorn
 {
-    SComponentViewResult SSpotLightComponentView::View(const SEntity& entityOwner, CScene* scene) const
+    void SSpotLightComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		SSpotLightComponent* spotLightComp = scene->GetComponent<SSpotLightComponent>(entityOwner);
 
@@ -45,7 +45,5 @@ namespace Havtorn
 			const SVector pos = transformComponent->Transform.GetMatrix().GetTranslation();
 			GDebugDraw::AddConeAngle(pos, spotLightComp->Direction.ToVector3(), spotLightComp->Range, spotLightComp->OuterAngle, SColor::Magenta, 0.0f);
 		}
-
-		return SComponentViewResult();
     }
 }

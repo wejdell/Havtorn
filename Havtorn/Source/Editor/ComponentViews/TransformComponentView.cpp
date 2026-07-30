@@ -3,19 +3,22 @@
 #include "hvpch.h"
 #include "TransformComponentView.h"
 
-#include "ECS/Components/TransformComponent.h"
-#include "Scene/Scene.h"
+#include "EditorManager.h"
+#include "Windows/InspectorWindow.h"
+
+#include <ECS/Components/TransformComponent.h>
+#include <Scene/Scene.h>
 
 #include <GUI.h>
 
 namespace Havtorn
 {
-    SComponentViewResult STransformComponentView::View(const SEntity& entityOwner, CScene* scene) const
+    void STransformComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		STransformComponent* transformComponent = scene->GetComponent<STransformComponent>(entityOwner);
 		if (!SComponent::IsValid(transformComponent))
-			return {};
-
+			return;
+		
 		Havtorn::SMatrix transformMatrix = transformComponent->Transform.GetMatrix();
 
 		SVector matrixTranslation, matrixRotation, matrixScale;
@@ -27,11 +30,8 @@ namespace Havtorn
 		SMatrix::Recompose(matrixTranslation, matrixRotation, matrixScale, transformMatrix);
 		transformComponent->Transform.SetMatrix(transformMatrix);
 
-		SComponentViewResult result;
-		result.Label = EComponentViewResultLabel::UpdateTransformGizmo;
-		result.ComponentViewed = transformComponent;
-
-		return result;
+		CInspectorWindow* inspector = Manager->GetEditorWindow<CInspectorWindow>();
+		inspector->UpdateTransformGizmo(transformComponent);
     }
 
 	U8 STransformComponentView::GetSortingPriority() const

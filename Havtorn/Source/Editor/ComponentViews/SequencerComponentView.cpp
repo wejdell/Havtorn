@@ -3,17 +3,15 @@
 #include "hvpch.h"
 #include "SequencerComponentView.h"
 
-#include "ECS/Components/SequencerComponent.h"
-#include "Scene/Scene.h"
+#include <ECS/Components/SequencerComponent.h>
+#include <Scene/Scene.h>
 
 #include <GUI.h>
 
-
 namespace Havtorn
 {
-    SComponentViewResult SSequencerComponentView::View(const SEntity& /*entityOwner*/, CScene* /*scene*/) const
+    void SSequencerComponentView::View(const SEntity& /*entityOwner*/, CScene* /*scene*/) const
     {
         // TODO.NR: Set up references to SequencerAssets?
-        return SComponentViewResult();
     }
 }

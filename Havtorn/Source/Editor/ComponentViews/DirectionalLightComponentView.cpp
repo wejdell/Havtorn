@@ -3,17 +3,17 @@
 #include "hvpch.h"
 #include "DirectionalLightComponentView.h"
 
-#include "ECS/Components/DirectionalLightComponent.h"
-#include "ECS/Components/TransformComponent.h"
-#include "Scene/Scene.h"
+#include <ECS/Components/DirectionalLightComponent.h>
+#include <ECS/Components/TransformComponent.h>
+#include <Scene/Scene.h>
 
-#include "Graphics/Debug/DebugDrawUtility.h"
+#include <Graphics/Debug/DebugDrawUtility.h>
 
 #include <GUI.h>
 
 namespace Havtorn
 {
-    SComponentViewResult SDirectionalLightComponentView::View(const SEntity& entityOwner, CScene* scene) const
+    void SDirectionalLightComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		SDirectionalLightComponent* directionalLightComp = scene->GetComponent<SDirectionalLightComponent>(entityOwner);
 
@@ -44,7 +44,5 @@ namespace Havtorn
 		}
 
 		GUI::DragFloat("Intensity", directionalLightComp->Color.W, GUI::SliderSpeed);
-
-        return SComponentViewResult();
     }
 }

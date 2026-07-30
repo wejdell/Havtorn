@@ -3,18 +3,18 @@
 #include "hvpch.h"
 #include "Physics3DComponentView.h"
 
-#include "ECS/Components/Physics3DComponent.h"
-#include "ECS/Components/TransformComponent.h"
-#include "ECS/ComponentAlgo.h"
-#include "Scene/Scene.h"
+#include <ECS/Components/Physics3DComponent.h>
+#include <ECS/Components/TransformComponent.h>
+#include <ECS/ComponentAlgo.h>
+#include <Scene/Scene.h>
 
-#include "Graphics/Debug/DebugDrawUtility.h"
+#include <Graphics/Debug/DebugDrawUtility.h>
 
 #include <GUI.h>
 
 namespace Havtorn
 {
-    SComponentViewResult SPhysics3DComponentView::View(const SEntity& entityOwner, CScene* scene) const
+    void SPhysics3DComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		SPhysics3DComponent* physicsComponent = scene->GetComponent<SPhysics3DComponent>(entityOwner);
 
@@ -136,7 +136,5 @@ namespace Havtorn
 		GUI::DragFloat("Density", physicsComponent->Density);
 
 		GUI::Checkbox("Is Trigger", physicsComponent->IsTrigger);
-
-		return {};
     }
 }

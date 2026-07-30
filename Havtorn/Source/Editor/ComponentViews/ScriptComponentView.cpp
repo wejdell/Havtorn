@@ -3,13 +3,16 @@
 #include "hvpch.h"
 #include "ScriptComponentView.h"
 
-#include "ECS/Components/ScriptComponent.h"
-#include "Scene/Scene.h"
-#include "Engine.h"
+#include "EditorManager.h"
+#include "Windows/InspectorWindow.h"
 
-#include <GUI.h>
+#include <ECS/Components/ScriptComponent.h>
 #include <ECS/Components/MetaDataComponent.h>
 #include <Assets/AssetRegistry.h>
+#include <Scene/Scene.h>
+#include <Engine.h>
+
+#include <GUI.h>
 
 namespace Havtorn
 {
@@ -159,11 +162,14 @@ namespace Havtorn
 		}
 	}
 
-	SComponentViewResult SScriptComponentView::View(const SEntity& entityOwner, CScene* scene) const
+	void SScriptComponentView::View(const SEntity& entityOwner, CScene* scene) const
 	{
 		SScriptComponent* component = scene->GetComponent<SScriptComponent>(entityOwner);
-		if (!component || (component && !component->Owner.IsValid()))
-			return SComponentViewResult();
+		if (!SComponent::IsValid(component))
+			return;
+
+		CInspectorWindow* inspector = Manager->GetEditorWindow<CInspectorWindow>();
+		inspector->InspectAssetComponent(component, EAssetType::Script, SAssetReference::ConvertToPointers(component->AssetReference));
 
 		if (component->DataBindings.empty())
 			GUI::TextDisabled("No Data Bindings");
@@ -177,13 +183,10 @@ namespace Havtorn
 				GUI::PushID(db.UID);
 				ViewDataBinding(scene, db);
 				GUI::PopID();
-
 			}
 		}
 
 		GUI::Checkbox("Trigger", component->TriggerScript);
-	
-		return { EComponentViewResultLabel::InspectAssetComponent, component, SAssetReference::ConvertToPointers(component->AssetReference), EAssetType::Script};
 	}
 
 	U8 SScriptComponentView::GetSortingPriority() const

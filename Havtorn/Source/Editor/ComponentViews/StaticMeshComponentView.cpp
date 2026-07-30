@@ -3,34 +3,39 @@
 #include "hvpch.h"
 #include "StaticMeshComponentView.h"
 
-#include "Engine.h"
-#include "Assets/AssetRegistry.h"
-#include "ECS/ComponentAlgo.h"
-#include "ECS/Components/StaticMeshComponent.h"
-#include "ECS/Components/TransformComponent.h"
-#include "ECS/Components/MaterialComponent.h"
-#include "ComponentViews/MaterialComponentView.h"
-#include "Scene/Scene.h"
-#include "Engine.h"
-#include "Assets/AssetRegistry.h"
-#include "Assets/AssetReference.h"
+#include "EditorManager.h"
+#include "Windows/InspectorWindow.h"
+#include "MaterialComponentView.h"
 
-#include "Graphics/Debug/DebugDrawUtility.h"
+#include <ECS/Components/StaticMeshComponent.h>
+#include <ECS/Components/TransformComponent.h>
+#include <ECS/Components/MaterialComponent.h>
+#include <ECS/ComponentAlgo.h>
+#include <Assets/AssetReference.h>
+#include <Assets/AssetRegistry.h>
+#include <Scene/Scene.h>
+#include <Engine.h>
+
+#include <Graphics/Debug/DebugDrawUtility.h>
 
 #include <GUI.h>
 
 namespace Havtorn
 {
-    SComponentViewResult SStaticMeshComponentView::View(const SEntity& entityOwner, CScene* scene) const
+    void SStaticMeshComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		STransformComponent* transform = scene->GetComponent<STransformComponent>(entityOwner);
 		if (!SComponent::IsValid(transform))
-			return SComponentViewResult();
+			return;
 
 		SStaticMeshComponent* staticMesh = scene->GetComponent<SStaticMeshComponent>(entityOwner);
 		const SStaticMeshAsset* staticMeshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(staticMesh->AssetReference, entityOwner.GUID);
 		if (staticMeshAsset == nullptr)
-			return { EComponentViewResultLabel::InspectAssetComponent, staticMesh, SAssetReference::ConvertToPointers(staticMesh->AssetReference), EAssetType::StaticMesh };
+		{
+			CInspectorWindow* inspector = Manager->GetEditorWindow<CInspectorWindow>();
+			inspector->InspectAssetComponent(staticMesh, EAssetType::StaticMesh, SAssetReference::ConvertToPointers(staticMesh->AssetReference));
+			return;
+		}
 
 		GUI::TextDisabled("Number Of Materials: %i", staticMeshAsset->NumberOfMaterials);
 
@@ -74,7 +79,8 @@ namespace Havtorn
 		GDebugDraw::AddLine(g, h, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
 		GDebugDraw::AddLine(h, e, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
 
-		return { EComponentViewResultLabel::InspectAssetComponent, staticMesh, SAssetReference::ConvertToPointers(staticMesh->AssetReference), EAssetType::StaticMesh };
+		CInspectorWindow* inspector = Manager->GetEditorWindow<CInspectorWindow>();
+		inspector->InspectAssetComponent(staticMesh, EAssetType::StaticMesh, SAssetReference::ConvertToPointers(staticMesh->AssetReference));
     }
 
 	U8 SStaticMeshComponentView::GetSortingPriority() const

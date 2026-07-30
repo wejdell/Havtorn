@@ -3,21 +3,24 @@
 #include "hvpch.h"
 #include "LevelStreamingComponentView.h"
 
-#include "ECS/Components/LevelStreamingComponent.h"
-#include "Scene/Scene.h"
-#include "Engine.h"
+#include "EditorManager.h"
+#include "Windows/InspectorWindow.h"
+
+#include <ECS/Components/LevelStreamingComponent.h>
+#include <ECS/Components/MetaDataComponent.h>
+#include <Scene/Scene.h>
+#include <Assets/AssetRegistry.h>
+#include <Engine.h>
 
 #include <GUI.h>
-#include <ECS/Components/MetaDataComponent.h>
-#include <Assets/AssetRegistry.h>
 
 namespace Havtorn
 {
-	SComponentViewResult SLevelStreamingComponentView::View(const SEntity& entityOwner, CScene* scene) const
+	void SLevelStreamingComponentView::View(const SEntity& entityOwner, CScene* scene) const
 	{
 		SLevelStreamingComponent* component = scene->GetComponent<SLevelStreamingComponent>(entityOwner);
-		if (!component || (component && !component->Owner.IsValid()))
-			return SComponentViewResult();
+		if (!SComponent::IsValid(component))
+			return;
 
 		GUI::TextDisabled("Load Status: %s", magic_enum::enum_name<ELevelLoadState>(component->ComponentLoadState).data());
 		if (component->ComponentLoadState == ELevelLoadState::Unloaded)
@@ -50,7 +53,7 @@ namespace Havtorn
 				component->SceneStates.clear();
 
 			if (component->SceneStates.empty())
-				return SComponentViewResult();
+				return;
 
 			I32 elementToRemoveIndex = -1;
 
@@ -73,7 +76,8 @@ namespace Havtorn
 			}
 		}
 
-		return { EComponentViewResultLabel::InspectAssetComponent, component, assetReferences, EAssetType::Scene };
+		CInspectorWindow* inspector = Manager->GetEditorWindow<CInspectorWindow>();
+		inspector->InspectAssetComponent(component, EAssetType::Scene, assetReferences);
 	}
 
 	U8 SLevelStreamingComponentView::GetSortingPriority() const

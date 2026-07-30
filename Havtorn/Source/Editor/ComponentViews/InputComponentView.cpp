@@ -1,16 +1,22 @@
 // Copyright 2026 Team Havtorn. All Rights Reserved.
 
+#include "hvpch.h"
 #include "InputComponentView.h"
-#include "ECS/Components/InputComponent.h"
-#include "Scene/Scene.h"
+
+#include "EditorManager.h"
+#include "Windows/InspectorWindow.h"
+
+#include <ECS/Components/InputComponent.h>
+#include <Scene/Scene.h>
 
 #include <GUI.h>
 
 namespace Havtorn
 {
-	SComponentViewResult SInputComponentView::View(const SEntity& entityOwner, CScene* scene) const
+	void SInputComponentView::View(const SEntity& entityOwner, CScene* scene) const
 	{
 		SInputComponent* component = scene->GetComponent<SInputComponent>(entityOwner);
-		return SComponentViewResult{ .Label = EComponentViewResultLabel::InspectAssetComponent, .ComponentViewed = component, .AssetReferences = SAssetReference::ConvertToPointers(component->AssetReference), .AssetType = EAssetType::InputAsset };
+		CInspectorWindow* inspector = Manager->GetEditorWindow<CInspectorWindow>();
+		inspector->InspectAssetComponent(component, EAssetType::InputAsset, SAssetReference::ConvertToPointers(component->AssetReference));
 	}
 }

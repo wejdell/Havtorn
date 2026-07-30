@@ -7,8 +7,10 @@
 
 namespace Havtorn
 {
-	struct SComponentViewResult;
 	struct SEditorAssetRepresentation;
+	struct STransformComponent;
+	struct SComponent;
+	struct SAssetReference;
 	class CScene;
 
 	template<typename T = F32>
@@ -26,15 +28,16 @@ namespace Havtorn
 		// TODO.NW: See if we can remove the owning scene concept somehow
 		void InspectEntity(const SEntity& entity, CScene* owningScene);
 
+		// Viewing functions used in SComponentView::View implementations
+		void UpdateTransformGizmo(STransformComponent* viewedTransformComp);
+		void InspectAssetComponent(SComponent* viewedComponent, const EAssetType assetType, std::vector<SAssetReference*> assetReferences);
+		void OpenAssetTool(SComponent* viewedComponent);
+		void RenderPreview(const SComponent* viewedComponent);
+
 	private:
-		void UpdateTransformGizmo(const SComponentViewResult& result);
 		SVector VertexSnap(const SVector& pivotPosition, const SEntity& viewedEntity);
 		SVector GridSnap(const SVector& pivotPosition);
 		void ViewManipulation(SMatrix& outCameraView, const SVector2<F32>& windowPosition, const SVector2<F32>& windowSize);
-
-		void InspectAssetComponent(SComponentViewResult& result);
-		void OpenAssetTool(const SComponentViewResult& result);
-		void RenderPreview(const SComponentViewResult& result);
 
 		void OpenAddComponentPopup(const SEntity& entity, CScene* owningScene);
 

@@ -300,9 +300,11 @@ namespace Havtorn
 				return;
 
 			RegisteredComponentViewsMap.emplace(runtimeComponentTypeHash, std::make_unique<TComponentView>());
+			RegisteredComponentViewsMap.at(runtimeComponentTypeHash)->Manager = this;
 			RegisteredComponentViewsMap.at(runtimeComponentTypeHash)->RuntimeHash = runtimeComponentTypeHash;
 
 			RegisteredComponentViewsVector.emplace_back(std::make_unique<TComponentView>());
+			RegisteredComponentViewsVector.back()->Manager = this;
 			RegisteredComponentViewsVector.back()->RuntimeHash = runtimeComponentTypeHash;
 			std::sort(RegisteredComponentViewsVector.begin(), RegisteredComponentViewsVector.end(), [](const Ptr<SComponentView>& a, const Ptr<SComponentView>& b) { return a->GetSortingPriority() < b->GetSortingPriority(); });
 		}

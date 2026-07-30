@@ -7,7 +7,7 @@ namespace Havtorn
 {
 	struct EDITOR_API STransformComponentView : public SComponentView
 	{
-		SComponentViewResult View(const SEntity& entityOwner, CScene* scene) const override;
+		void View(const SEntity& entityOwner, CScene* scene) const override;
 		virtual const char* GetComponentName() const override { return "Transform"; };
 		
 		U8 GetSortingPriority() const override;

@@ -3,17 +3,21 @@
 #include "hvpch.h"
 #include "SkeletalAnimationComponentView.h"
 
-#include "ECS/Components/SkeletalAnimationComponent.h"
-#include "Scene/Scene.h"
+#include "EditorManager.h"
+#include "Windows/InspectorWindow.h"
+
+#include <ECS/Components/SkeletalAnimationComponent.h>
+#include <ECS/Components/TransformComponent.h>
+#include <Assets/AssetRegistry.h>
+#include <Scene/Scene.h>
+
+#include <Graphics/Debug/DebugDrawUtility.h>
 
 #include <GUI.h>
-#include <Graphics/Debug/DebugDrawUtility.h>
-#include <ECS/Components/TransformComponent.h>
-#include "Assets/AssetRegistry.h"
 
 namespace Havtorn
 {
-	SComponentViewResult Havtorn::SSkeletalAnimationComponentView::View(const SEntity& entityOwner, CScene* scene) const
+	void Havtorn::SSkeletalAnimationComponentView::View(const SEntity& entityOwner, CScene* scene) const
 	{
 		SSkeletalAnimationComponent* skeletalAnimationComp = scene->GetComponent<SSkeletalAnimationComponent>(entityOwner);
 
@@ -67,6 +71,7 @@ namespace Havtorn
 			skeletalAnimationComp->PlayData.clear();
 		}
 
+		// TODO.NW: Skeleton debug draw
 		//for (SMatrix& bone : skeletalAnimationComp->Bones)
 		//{
 		//	SMatrix parentTransform = scene->GetComponent<STransformComponent>(entityOwner)->Transform.GetMatrix();
@@ -74,6 +79,7 @@ namespace Havtorn
 		//	GDebugDraw::AddAxis(worldTransform.GetTranslation(), worldTransform.GetEuler(), worldTransform.GetScale() * 0.5f);
 		//}
 
-		return { EComponentViewResultLabel::InspectAssetComponent, skeletalAnimationComp, SAssetReference::ConvertToPointers(skeletalAnimationComp->AssetReferences), EAssetType::SkeletalAnimation };
+		CInspectorWindow* inspector = Manager->GetEditorWindow<CInspectorWindow>();
+		inspector->InspectAssetComponent(skeletalAnimationComp, EAssetType::SkeletalAnimation, SAssetReference::ConvertToPointers(skeletalAnimationComp->AssetReferences));
 	}
 }

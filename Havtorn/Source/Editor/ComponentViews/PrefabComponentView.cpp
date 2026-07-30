@@ -3,12 +3,15 @@
 #include "hvpch.h"
 #include "PrefabComponentView.h"
 
-#include "Engine.h"
-#include "Assets/AssetRegistry.h"
-#include "Assets/AssetReference.h"
-#include "ECS/Components/PrefabComponent.h"
-#include "ECS/Components/TransformComponent.h"
-#include "Scene/Scene.h"
+#include "EditorManager.h"
+#include "Windows/InspectorWindow.h"
+
+#include <Engine.h>
+#include <Assets/AssetRegistry.h>
+#include <Assets/AssetReference.h>
+#include <ECS/Components/PrefabComponent.h>
+#include <ECS/Components/TransformComponent.h>
+#include <Scene/Scene.h>
 
 #include <GUI.h>
 
@@ -60,11 +63,11 @@ namespace Havtorn
 		}
 	}
 
-    SComponentViewResult SPrefabComponentView::View(const SEntity& entityOwner, CScene* scene) const
+    void SPrefabComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		SPrefabComponent* prefabComponent = scene->GetComponent<SPrefabComponent>(entityOwner);
 		if (!SComponent::IsValid(prefabComponent))
-			return SComponentViewResult();
+			return;
 
 		GUI::Text("Prefab Mode");
 		GUI::SameLine();
@@ -92,7 +95,7 @@ namespace Havtorn
 				}
 
 				scene->RemoveEntity(prefabComponent->Owner);
-				return SComponentViewResult();
+				return;
 			}
 
 			GUI::SameLine();
@@ -136,7 +139,8 @@ namespace Havtorn
 			}
 		}
 
-		return { EComponentViewResultLabel::InspectAssetComponent, prefabComponent, SAssetReference::ConvertToPointers(prefabComponent->AssetReference), EAssetType::Prefab };
+		CInspectorWindow* inspector = Manager->GetEditorWindow<CInspectorWindow>();
+		inspector->InspectAssetComponent(prefabComponent, EAssetType::Prefab, SAssetReference::ConvertToPointers(prefabComponent->AssetReference));
     }
 
 	U8 SPrefabComponentView::GetSortingPriority() const

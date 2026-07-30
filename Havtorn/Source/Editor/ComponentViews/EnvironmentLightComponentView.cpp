@@ -3,23 +3,27 @@
 #include "hvpch.h"
 #include "EnvironmentLightComponentView.h"
 
-#include "ECS/Components/EnvironmentLightComponent.h"
-#include "Scene/Scene.h"
-#include "Engine.h"
-#include "Graphics/TextureBank.h"
-#include "Assets/AssetReference.h"
+#include "EditorManager.h"
+#include "Windows/InspectorWindow.h"
+
+#include <ECS/Components/EnvironmentLightComponent.h>
+#include <Scene/Scene.h>
+#include <Engine.h>
+#include <Graphics/TextureBank.h>
+#include <Assets/AssetReference.h>
 
 #include <GUI.h>
 
 namespace Havtorn
 {
-    SComponentViewResult SEnvironmentLightComponentView::View(const SEntity& entityOwner, CScene* scene) const
+    void SEnvironmentLightComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		SEnvironmentLightComponent* environmentLightComp = scene->GetComponent<SEnvironmentLightComponent>(entityOwner);
 
 		GUI::Checkbox("Is Active", environmentLightComp->IsActive);
 		GUI::Text("Ambient Static Cubemap");
-	
-		return { EComponentViewResultLabel::InspectAssetComponent, environmentLightComp, SAssetReference::ConvertToPointers(environmentLightComp->AssetReference), EAssetType::TextureCube };
+
+		CInspectorWindow* inspector = Manager->GetEditorWindow<CInspectorWindow>();
+		inspector->InspectAssetComponent(environmentLightComp, EAssetType::TextureCube, SAssetReference::ConvertToPointers(environmentLightComp->AssetReference));
     }
 }

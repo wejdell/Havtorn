@@ -3,17 +3,17 @@
 #include "hvpch.h"
 #include "PointLightComponentView.h"
 
-#include "ECS/Components/PointLightComponent.h"
-#include "ECS/Components/TransformComponent.h"
-#include "Scene/Scene.h"
+#include <ECS/Components/PointLightComponent.h>
+#include <ECS/Components/TransformComponent.h>
+#include <Scene/Scene.h>
 
-#include "Graphics/Debug/DebugDrawUtility.h"
+#include <Graphics/Debug/DebugDrawUtility.h>
 
 #include <GUI.h>
 
 namespace Havtorn
 {
-    SComponentViewResult Havtorn::SPointLightComponentView::View(const SEntity& entityOwner, CScene* scene) const
+    void Havtorn::SPointLightComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		SPointLightComponent* pointLightComp = scene->GetComponent<SPointLightComponent>(entityOwner);
 
@@ -47,7 +47,5 @@ namespace Havtorn
 			const SVector pos = transformComponent->Transform.GetMatrix().GetTranslation();
 			GDebugDraw::AddSphere(pos, SVector::Zero, SVector(pointLightComp->Range), SColor::Magenta, 0.0f);
 		}
-
-        return SComponentViewResult();
     }
 }

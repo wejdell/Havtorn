@@ -2,25 +2,28 @@
 
 #include "hvpch.h"
 #include "SkeletalMeshComponentView.h"
-#include "Engine.h"
 
-#include "ECS/Components/SkeletalMeshComponent.h"
-#include "ECS/Components/TransformComponent.h"
-#include "Scene/Scene.h"
+#include "EditorManager.h"
+#include "Windows/InspectorWindow.h"
 
-#include "Graphics/Debug/DebugDrawUtility.h"
+#include <ECS/Components/SkeletalMeshComponent.h>
+#include <ECS/Components/TransformComponent.h>
+#include <Assets/AssetReference.h>
+#include <Assets/AssetRegistry.h>
+#include <Scene/Scene.h>
+#include <Engine.h>
+
+#include <Graphics/Debug/DebugDrawUtility.h>
 
 #include <GUI.h>
-#include <Assets/AssetRegistry.h>
-#include "Assets/AssetReference.h"
 
 namespace Havtorn
 {
-    SComponentViewResult SSkeletalMeshComponentView::View(const SEntity& entityOwner, CScene* scene) const
+    void SSkeletalMeshComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		STransformComponent* transform = scene->GetComponent<STransformComponent>(entityOwner);
 		if (!SComponent::IsValid(transform))
-			return SComponentViewResult();
+			return;
 
 		SSkeletalMeshComponent* skeletalMesh = scene->GetComponent<SSkeletalMeshComponent>(entityOwner);
 		const SSkeletalMeshAsset* skeletalMeshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalMeshAsset>(skeletalMesh->AssetReference, entityOwner.GUID);
@@ -59,7 +62,8 @@ namespace Havtorn
 		GDebugDraw::AddLine(g, h, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false);
 		GDebugDraw::AddLine(h, e, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false);
 
-		return { EComponentViewResultLabel::InspectAssetComponent, skeletalMesh, SAssetReference::ConvertToPointers(skeletalMesh->AssetReference), EAssetType::SkeletalMesh };
+		CInspectorWindow* inspector = Manager->GetEditorWindow<CInspectorWindow>();
+		inspector->InspectAssetComponent(skeletalMesh, EAssetType::SkeletalMesh, SAssetReference::ConvertToPointers(skeletalMesh->AssetReference));
     }
 
 	U8 SSkeletalMeshComponentView::GetSortingPriority() const

@@ -3,14 +3,14 @@
 #include "hvpch.h"
 #include "VolumetricLightComponentView.h"
 
-#include "ECS/Components/VolumetricLightComponent.h"
-#include "Scene/Scene.h"
+#include <ECS/Components/VolumetricLightComponent.h>
+#include <Scene/Scene.h>
 
 #include <GUI.h>
 
 namespace Havtorn
 {
-    SComponentViewResult SVolumetricLightComponentView::View(const SEntity& entityOwner, CScene* scene) const
+    void SVolumetricLightComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		SVolumetricLightComponent* volumetricLightComp = scene->GetComponent<SVolumetricLightComponent>(entityOwner);
 
@@ -23,7 +23,5 @@ namespace Havtorn
 		GUI::DragFloat("Scattering Probability", volumetricLightComp->ScatteringProbability, GUI::SliderSpeed * 0.1f, 0.0f, 1.0f, "%.4f", EDragMode::Logarithmic);
 		GUI::DragFloat("Henyey-Greenstein G", volumetricLightComp->HenyeyGreensteinGValue);
 		GUI::PopID();
-
-        return SComponentViewResult();
     }
 }

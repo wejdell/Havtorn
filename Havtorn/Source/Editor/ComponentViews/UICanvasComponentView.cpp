@@ -3,21 +3,25 @@
 #include "hvpch.h"
 #include "UICanvasComponentView.h"
 
-#include "ECS/Components/UICanvasComponent.h"
-#include "ECS/Components/Transform2DComponent.h"
-#include "ECS/Components/MetaDataComponent.h"
-#include "ECS/Systems/UISystem.h"
-#include "Scene/Scene.h"
-#include "Scene/World.h"
-#include "Engine.h"
-#include "Graphics/TextureBank.h"
-#include "Graphics/Debug/DebugDrawUtility.h"
+#include "EditorManager.h"
+#include "Windows/InspectorWindow.h"
+
+#include <ECS/Components/UICanvasComponent.h>
+#include <ECS/Components/Transform2DComponent.h>
+#include <ECS/Components/MetaDataComponent.h>
+#include <ECS/Systems/UISystem.h>
+#include <Scene/Scene.h>
+#include <Scene/World.h>
+#include <Engine.h>
+#include <Graphics/TextureBank.h>
+
+#include <Graphics/Debug/DebugDrawUtility.h>
 
 #include <GUI.h>
 
 namespace Havtorn 
 {
-	SComponentViewResult SUICanvasComponentView::View(const SEntity& entityOwner, CScene* scene) const
+	void SUICanvasComponentView::View(const SEntity& entityOwner, CScene* scene) const
 	{
 		SUICanvasComponent* canvasComponent = scene->GetComponent<SUICanvasComponent>(entityOwner);
 
@@ -34,7 +38,9 @@ namespace Havtorn
 			canvasComponent->Elements.clear();
 
 		if (canvasComponent->Elements.empty())
-			return SComponentViewResult();
+			return;
+
+		CInspectorWindow* inspector = Manager->GetEditorWindow<CInspectorWindow>();
 
 		I32 elementToRemoveIndex = -1;
 
@@ -60,6 +66,8 @@ namespace Havtorn
 				{
 					for (SAssetReference& ref : element.StateAssetReferences)
 						assetReferences.push_back(&ref);
+
+					inspector->InspectAssetComponent(canvasComponent, EAssetType::Texture, assetReferences);
 				}
 
 				GUI::ComboEnum("Preview State", element.State);
@@ -143,7 +151,5 @@ namespace Havtorn
 
 		if (elementToRemoveIndex != -1)
 			canvasComponent->Elements.erase(canvasComponent->Elements.begin() + elementToRemoveIndex);
-
-		return { EComponentViewResultLabel::InspectAssetComponent, canvasComponent, assetReferences, EAssetType::Texture };
 	}
 }

@@ -3,14 +3,14 @@
 #include "hvpch.h"
 #include "Physics2DComponentView.h"
 
-#include "ECS/Components/Physics2DComponent.h"
-#include "Scene/Scene.h"
+#include <ECS/Components/Physics2DComponent.h>
+#include <Scene/Scene.h>
 
 #include <GUI.h>
 
 namespace Havtorn
 {
-    SComponentViewResult SPhysics2DComponentView::View(const SEntity& entityOwner, CScene* scene) const
+    void SPhysics2DComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		SPhysics2DComponent* physicsComponent = scene->GetComponent<SPhysics2DComponent>(entityOwner);
 
@@ -26,7 +26,5 @@ namespace Havtorn
 
 		// TODO.NR: Most of these should only be changed during setup, but if we want a truly responsive editor we can pause
 		// during play and unpause, we should probably handle setting the data on physics wrapper entity if we make modifications here.
-
-		return {};
     }
 }

@@ -3,19 +3,22 @@
 #include "hvpch.h"
 #include "AbilityComponentView.h"
 
-#include "ECS/Components/AbilityComponent.h"
-#include "ECS/Components/MetaDataComponent.h"
-#include "Scene/Scene.h"
-#include "Scene/World.h"
-#include "Engine.h"
-#include "GameplayTags/GameplayTagManager.h"
-#include "GameplayTags/GameplayTag.h"
+#include "EditorManager.h"
+#include "Windows/InspectorWindow.h"
+
+#include <ECS/Components/AbilityComponent.h>
+#include <ECS/Components/MetaDataComponent.h>
+#include <Scene/Scene.h>
+#include <Scene/World.h>
+#include <Engine.h>
+#include <GameplayTags/GameplayTagManager.h>
+#include <GameplayTags/GameplayTag.h>
 
 #include <GUI.h>
 
 namespace Havtorn 
 {
-	SComponentViewResult SAbilityComponentView::View(const SEntity& entityOwner, CScene* scene) const
+	void SAbilityComponentView::View(const SEntity& entityOwner, CScene* scene) const
 	{
 		SAbilityComponent* component = scene->GetComponent<SAbilityComponent>(entityOwner);
 
@@ -31,12 +34,12 @@ namespace Havtorn
 			component->Abilities.clear();
 
 		if (component->Abilities.empty())
-			return SComponentViewResult();
+			return;
 
 		I32 abilityToRemoveIndex = -1;
 
-		std::vector<SAssetReference*> assetReferences;
-		
+		CInspectorWindow* inspector = Manager->GetEditorWindow<CInspectorWindow>();
+
 		for (I32 i = 0; i < STATIC_I32(component->Abilities.size()); i++)
 		{
 			SAbilityState& ability = component->Abilities[i];
@@ -72,9 +75,7 @@ namespace Havtorn
 				}
 				GUI::Separator();
 
-				// TODO.NW: Would be very nice to be able to display assets in line with array elements like these (e.g. scripts here, and textures for UI elements). 
-				// Not easy to achieve unless we defer all of the rendering in editor contexts to the Inspector, so it can display it in order
-				assetReferences.push_back(&ability.ScriptReference);
+				inspector->InspectAssetComponent(component, EAssetType::Script, { &ability.ScriptReference });
 
 				GUI::TreePop();
 			}
@@ -83,7 +84,5 @@ namespace Havtorn
 
 		if (abilityToRemoveIndex != -1)
 			component->Abilities.erase(component->Abilities.begin() + abilityToRemoveIndex);
-
-		return { EComponentViewResultLabel::InspectAssetComponent, component, assetReferences, EAssetType::Script };
 	}
 }

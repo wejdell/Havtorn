@@ -2,15 +2,15 @@
 
 #include "hvpch.h"
 #include "HexCommandComponentView.h"
-#include <Hex/HexCommandComponent.h>
 
-#include "Scene/Scene.h"
+#include <Hex/HexCommandComponent.h>
+#include <Scene/Scene.h>
 
 #include <GUI.h>
 
 namespace Havtorn
 {
-	SComponentViewResult SHexCommandComponentView::View(const SEntity& entityOwner, CScene* scene) const
+	void SHexCommandComponentView::View(const SEntity& entityOwner, CScene* scene) const
 	{
 		SHexCommandComponent* component = scene->GetComponent<SHexCommandComponent>(entityOwner);
 		GUI::TagPickerDropdown("Hex Command Tags", "Receive commands using one of these tags", component->TagsToListenFor);
@@ -44,7 +44,5 @@ namespace Havtorn
 			hexCommandCopy.pop();
 			GUI::PopID();
 		}
-
-		return SComponentViewResult();
 	}
 }

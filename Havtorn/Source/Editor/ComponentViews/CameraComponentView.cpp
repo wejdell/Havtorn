@@ -3,27 +3,29 @@
 #include "hvpch.h"
 #include "CameraComponentView.h"
 
-#include "ECS/Components/CameraComponent.h"
-#include "ECS/Components/TransformComponent.h"
-#include "Scene/Scene.h"
-#include "Scene/World.h"
-#include "Engine.h"
+#include "EditorManager.h"
+#include "Windows/InspectorWindow.h"
 
-#include "Graphics/Debug/DebugDrawUtility.h"
+#include <ECS/Components/CameraComponent.h>
+#include <ECS/Components/TransformComponent.h>
+#include <Scene/Scene.h>
+#include <Scene/World.h>
+#include <Engine.h>
+#include <Graphics/Debug/DebugDrawUtility.h>
 
 #include <GUI.h>
 
 namespace Havtorn
 {
-	SComponentViewResult SCameraComponentView::View(const SEntity& entityOwner, CScene* scene) const
+	void SCameraComponentView::View(const SEntity& entityOwner, CScene* scene) const
 	{
 		SCameraComponent* cameraComp = scene->GetComponent<SCameraComponent>(entityOwner);
 		if (!SComponent::IsValid(cameraComp))
-			return SComponentViewResult();
+			return;
 
 		STransformComponent* transform = scene->GetComponent<STransformComponent>(entityOwner);
 		if (!SComponent::IsValid(transform))
-			return SComponentViewResult();
+			return;
 
 		GUI::SliderEnum("Projection Type", cameraComp->ProjectionType, { "Perspective", "Orthographic" });
 
@@ -63,15 +65,11 @@ namespace Havtorn
 
 			if (cameraComp->IsActive)
 			{
-				SComponentViewResult result;
-				result.ComponentViewed = cameraComp;
-				result.Label = EComponentViewResultLabel::RenderPreview;
-				return result;
+				CInspectorWindow* inspector = Manager->GetEditorWindow<CInspectorWindow>();
+				inspector->RenderPreview(cameraComp);
 			}
 		}
 		else
 			GUI::TextDisabled("Main Camera");
-		
-		return SComponentViewResult();
 	}
 }

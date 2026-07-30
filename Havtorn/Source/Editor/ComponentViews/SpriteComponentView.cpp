@@ -3,16 +3,20 @@
 #include "hvpch.h"
 #include "SpriteComponentView.h"
 
-#include "ECS/Components/SpriteComponent.h"
-#include "Scene/Scene.h"
-#include "Engine.h"
-#include "Graphics/TextureBank.h"
-#include "Assets/AssetReference.h"
+#include "EditorManager.h"
+#include "Windows/InspectorWindow.h"
+
+#include <ECS/Components/SpriteComponent.h>
+#include <Scene/Scene.h>
+#include <Engine.h>
+#include <Graphics/TextureBank.h>
+#include <Assets/AssetReference.h>
+
 #include <GUI.h>
 
 namespace Havtorn
 {
-    SComponentViewResult Havtorn::SSpriteComponentView::View(const SEntity& entityOwner, CScene* scene) const
+    void Havtorn::SSpriteComponentView::View(const SEntity& entityOwner, CScene* scene) const
     {
 		SSpriteComponent* spriteComp = scene->GetComponent<SSpriteComponent>(entityOwner);
 
@@ -21,6 +25,7 @@ namespace Havtorn
 
 		GUI::Text("Texture");
 
-		return { EComponentViewResultLabel::InspectAssetComponent, spriteComp, SAssetReference::ConvertToPointers(spriteComp->AssetReference), EAssetType::Texture };
+		CInspectorWindow* inspector = Manager->GetEditorWindow<CInspectorWindow>();
+		inspector->InspectAssetComponent(spriteComp, EAssetType::Texture, SAssetReference::ConvertToPointers(spriteComp->AssetReference));
     }
 }

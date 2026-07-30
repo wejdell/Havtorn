@@ -180,8 +180,6 @@ namespace Havtorn
 		SetupComponentDependencies<SSkeletalMeshComponent, STransformComponent, SMaterialComponent>();
 		SetupComponentDependencies<SSkeletalAnimationComponent, STransformComponent, SMaterialComponent, SSkeletalMeshComponent>();
 		
-		//RegisterNodeView<SDataBindingGetNodeEditorContext, HexRune::SDataBindingGetNode>();
-		//RegisterNodeView<SDataBindingSetNodeEditorContext, HexRune::SDataBindingSetNode>();
 		RegisterNodeView<SBranchNodeEditorContext, HexRune::SBranchNode>();
 		RegisterNodeView<SSequenceNodeEditorContext, HexRune::SSequenceNode>();
 		RegisterNodeView<SEntityLoopNodeView, HexRune::SEntityLoopNode>();

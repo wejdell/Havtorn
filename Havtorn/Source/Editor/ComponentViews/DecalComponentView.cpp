@@ -3,21 +3,23 @@
 #include "hvpch.h"
 #include "DecalComponentView.h"
 
-#include "ECS/Components/DecalComponent.h"
-#include "ECS/Components/TransformComponent.h"
-#include "ECS/ComponentAlgo.h"
-#include "Scene/Scene.h"
-#include "Engine.h"
-#include "Graphics/TextureBank.h"
-#include "Assets/AssetReference.h"
-#include "Graphics/Debug/DebugDrawUtility.h"
+#include "EditorManager.h"
+#include "Windows/InspectorWindow.h"
+
+#include <ECS/Components/DecalComponent.h>
+#include <ECS/Components/TransformComponent.h>
+#include <ECS/ComponentAlgo.h>
+#include <Scene/Scene.h>
+#include <Engine.h>
+#include <Graphics/TextureBank.h>
+#include <Assets/AssetReference.h>
+#include <Graphics/Debug/DebugDrawUtility.h>
 
 #include <GUI.h>
 
-
 namespace Havtorn
 {
-	SComponentViewResult SDecalComponentView::View(const SEntity& entityOwner, CScene* scene) const
+	void SDecalComponentView::View(const SEntity& entityOwner, CScene* scene) const
 	{
 		SDecalComponent* decalComp = scene->GetComponent<SDecalComponent>(entityOwner);
 
@@ -25,9 +27,14 @@ namespace Havtorn
 		GUI::Checkbox("Render Material", decalComp->ShouldRenderMaterial);
 		GUI::Checkbox("Render Normal", decalComp->ShouldRenderNormal);
 
+		CInspectorWindow* inspector = Manager->GetEditorWindow<CInspectorWindow>();
+
 		STransformComponent* transform = scene->GetComponent<STransformComponent>(entityOwner);
 		if (!SComponent::IsValid(transform))
-			return { EComponentViewResultLabel::InspectAssetComponent, decalComp, SAssetReference::ConvertToPointers(decalComp->AssetReferences), EAssetType::Texture };
+		{
+			inspector->InspectAssetComponent(decalComp, EAssetType::Texture, SAssetReference::ConvertToPointers(decalComp->AssetReferences));
+			return;
+		}
 
 		constexpr F32 decalProjectorScale = 0.5f;
 		SVector a = SVector(-decalProjectorScale, -decalProjectorScale, -decalProjectorScale);
@@ -70,6 +77,6 @@ namespace Havtorn
 		GDebugDraw::AddLine(g, h, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
 		GDebugDraw::AddLine(h, e, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
 
-		return { EComponentViewResultLabel::InspectAssetComponent, decalComp, SAssetReference::ConvertToPointers(decalComp->AssetReferences), EAssetType::Texture};
+		inspector->InspectAssetComponent(decalComp, EAssetType::Texture, SAssetReference::ConvertToPointers(decalComp->AssetReferences));
 	}
 }
