@@ -43,6 +43,8 @@ namespace Havtorn
 
 		void UpdateAssetContextMenu();
 
+		void ReassignAssetRef(const U64 assetRequester, const std::vector<SAssetReference*>& references, const U8 index, const std::string& newPath);
+
 	private:
 		U8 AssetPickedIndex = 0;
 		SMatrix DeltaMatrix = SMatrix::Identity;

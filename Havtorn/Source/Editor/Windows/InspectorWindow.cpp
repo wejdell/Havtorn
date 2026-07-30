@@ -420,14 +420,7 @@ namespace Havtorn
 
 				if (pickedAsset != nullptr)
 				{
-					std::string newAssetPath = UGeneralUtils::ConvertToPlatformAgnosticPath(pickedAsset->DirectoryEntry.path().string());
-
-					std::vector<std::string> paths = SAssetReference::GetPaths(assetReferences);
-
-					if (paths[AssetPickedIndex] != newAssetPath)
-						GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(paths[AssetPickedIndex]), viewedComponent->Owner.GUID);
-
-					*(assetReferences)[AssetPickedIndex] = SAssetReference(newAssetPath);
+					ReassignAssetRef(viewedComponent->Owner.GUID, assetReferences, AssetPickedIndex, pickedAsset->DirectoryEntry.path().string());
 				}
 
 				AssetPickedIndex = 0;
@@ -438,7 +431,36 @@ namespace Havtorn
 				Manager->GetEditorWindow<CAssetBrowserWindow>()->BrowseTo(assetRep.get());
 			}
 			else if (assetPickResult.State == EAssetPickerState::Inactive)
+			{
 				Manager->SetIsModalOpen(false);
+				
+				if (GUI::BeginDragDropTarget())
+				{
+					SGuiPayload payload = GUI::AcceptDragDropPayload("AssetDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
+					if (payload.Data != nullptr)
+					{
+						// TODO.NW: Would be cool to have a more formal structure for drags, where you can guarantee a certain 
+						// data type is valid for a given drag ID, unless we prefer checking every possible type per ID (probably not).
+
+						SEditorAssetRepresentation* payloadAssetRep = reinterpret_cast<SEditorAssetRepresentation*>(payload.Data);
+						if (payloadAssetRep->AssetType == assetType)
+						{
+							GUI::SetTooltip("Assign %s?", payloadAssetRep->Name.c_str());
+
+							if (payload.IsDelivery)
+							{
+								ReassignAssetRef(viewedComponent->Owner.GUID, assetReferences, index, payloadAssetRep->DirectoryEntry.path().string());
+							}
+						}
+						else
+						{
+							GUI::SetTooltip("Invalid asset type: '%s'", GetAssetTypeName(payloadAssetRep->AssetType).c_str());
+						}
+					}
+
+					GUI::EndDragDropTarget();
+				}
+			}
 
 			GUI::PopID();
 		}
@@ -560,5 +582,17 @@ namespace Havtorn
 
 			GUI::EndPopup();
 		}		
+	}
+
+	void CInspectorWindow::ReassignAssetRef(const U64 assetRequester, const std::vector<SAssetReference*>& references, const U8 index, const std::string& newPath)
+	{
+		std::string newAssetPath = UGeneralUtils::ConvertToPlatformAgnosticPath(newPath);
+
+		std::vector<std::string> paths = SAssetReference::GetPaths(references);
+
+		if (paths[index] != newAssetPath)
+			GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(paths[index]), assetRequester);
+
+		*(references)[index] = SAssetReference(newAssetPath);
 	}
 }
