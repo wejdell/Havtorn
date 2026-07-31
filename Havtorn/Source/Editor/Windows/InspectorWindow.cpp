@@ -377,7 +377,7 @@ namespace Havtorn
 			id.append(std::to_string(index));
 			GUI::PushID(id.c_str());
 
-			SAssetPickResult assetPickResult = Manager->AssetPickerDropdownFilter(assetName.c_str(), GetAssetTypeDetailName(assetType).c_str(), Manager->GetTextureResourceFromAssetRep(assetRep.get()), Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::GetFromSource), Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::FindIcon), "Assets", Manager->GetAssetFilteredInspectFunction(), assetType);
+			SAssetPickResult assetPickResult = Manager->AssetPickerDropdown(assetName.c_str(), assetType, assetRep.get());
 			SAssetReference* currentReference = (assetReferences)[AssetPickedIndex];
 
 			if (assetPickResult.State == EAssetPickerState::Active)

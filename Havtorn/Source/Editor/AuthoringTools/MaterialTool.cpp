@@ -120,12 +120,11 @@ namespace Havtorn
 				GUI::BeginChild("Cubemap", settingsPropertySize);
 				auto skyboxAssetRep = Manager->GetAssetRepFromName(UGeneralUtils::ExtractFileBaseNameFromPath(PreviewSkylightAssetRef.FilePath)).get();
 
-				intptr_t assetPickerThumbnail = Manager->GetTextureResourceFromAssetRep(skyboxAssetRep);
 				std::string pickerLabel = "Preview Skybox | ";
 				if (skyboxAssetRep != nullptr)
 					pickerLabel.append(skyboxAssetRep->Name);
 
-				SAssetPickResult result = Manager->AssetPickerFilter(pickerLabel.c_str(), "Preview Skybox", assetPickerThumbnail, "Assets/Textures/Cubemaps", 4, Manager->GetAssetFilteredInspectFunction(), EAssetType::TextureCube);
+				SAssetPickResult result = Manager->AssetPickerDropdown(pickerLabel.c_str(), EAssetType::TextureCube, skyboxAssetRep);
 
 				if (result.State == EAssetPickerState::AssetPicked)
 				{
@@ -168,12 +167,6 @@ namespace Havtorn
 
 			auto inspect = [this](SRuntimeGraphicsMaterialProperty& property, const std::string& label) 
 				{
-					constexpr F32 materialPropertyWidth = 32.0f;
-					const F32 thumbnailPadding = 4.0f;
-					const F32 cellWidth = materialPropertyWidth + thumbnailPadding;
-					const F32 panelWidth = 256.0f;
-					const I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
-
 					GUI::PushID(label.c_str());
 
 					GUI::TextDisabled(label.c_str());
@@ -192,12 +185,12 @@ namespace Havtorn
 						std::string assetPath = GEngine::GetAssetRegistry()->GetAssetDatabaseEntry(property.TextureUID);
 						auto assetRep = Manager->GetAssetRepFromName(UGeneralUtils::ExtractFileBaseNameFromPath(assetPath)).get();
 
-						intptr_t assetPickerThumbnail = Manager->GetTextureResourceFromAssetRep(assetRep);
 						std::string pickerLabel = "";
 						if (assetRep != nullptr)
 							pickerLabel.append(assetRep->Name);
 						
-						SAssetPickResult result = Manager->AssetPickerFilter(pickerLabel.c_str(), "Texture", assetPickerThumbnail, "Assets/Textures", columnCount, Manager->GetAssetFilteredInspectFunction(), EAssetType::Texture, SVector2<F32>(materialPropertyWidth));
+						constexpr F32 materialPropertyWidth = 32.0f;
+						SAssetPickResult result = Manager->AssetPickerDropdown(pickerLabel.c_str(), EAssetType::Texture, assetRep, SVector2<F32>(materialPropertyWidth));
 
 						if (result.State == EAssetPickerState::AssetPicked)
 						{

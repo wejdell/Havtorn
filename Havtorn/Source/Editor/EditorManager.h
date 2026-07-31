@@ -236,9 +236,7 @@ namespace Havtorn
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromName(const std::string& assetName) const;
 		const intptr_t GetTextureResourceFromAssetRep(SEditorAssetRepresentation* assetRepresentation) const;
 
-		SAssetPickResult AssetPickerFilter(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
-		SAssetPickResult AssetPickerDropdownFilter(const char* label, const char* assetDetailLabel, intptr_t image, intptr_t sourceButtonImage, intptr_t findButtonImage, const std::string& directory, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
-		DirEntryFunc GetAssetInspectFunction() const;
+		SAssetPickResult AssetPickerDropdown(const char* label, const EAssetType assetType, SEditorAssetRepresentation* existingAssetRep, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
 		DirEntryEAssetTypeFunc GetAssetFilteredInspectFunction() const;
 
 		void CreateAssetRep(const std::filesystem::path& destinationPath);

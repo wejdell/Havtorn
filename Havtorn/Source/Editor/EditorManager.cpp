@@ -805,102 +805,11 @@ namespace Havtorn
 		return repRenderTexture;
 	}
 
-	SAssetPickResult CEditorManager::AssetPickerFilter(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType filterByAssetType, const SVector2<F32>& pickerSize)
+	SAssetPickResult CEditorManager::AssetPickerDropdown(const char* label, const EAssetType assetType, SEditorAssetRepresentation* existingAssetRep, const SVector2<F32>& pickerSize)
 	{
 		SAssetPickResult result;
 
-		if (GUI::ImageButton("AssetPicker", image, pickerSize))
-		{
-			// TODO.NW: Add own folder type with formal validation
-			if (!UFileSystem::Exists(directory))
-			{
-				HV_LOG_WARN("Could not find assets in %s, that folder doesn't exist!", directory.c_str());
-				return result;
-			}
-
-			GUI::OpenPopup(modalLabel);
-			GUI::SetNextWindowPos(GUI::GetViewportCenter(), EWindowCondition::Appearing, SVector2<F32>(0.5f, 0.5f));
-		}
-		result.IsHovered = GUI::IsMouseInRect(GUI::GetLastRect());
-
-		if (GUI::IsItemClicked(EGUIMouseButton::Right))
-		{
-			result.State = EAssetPickerState::ContextMenu;
-			return result;
-		}
-
-		const F32 thumbnailPadding = 8.0f;
-		const F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + thumbnailPadding;
-		GUI::OffsetCursorPos(SVector2<F32>(1.0f, -4.0f));
-		GUI::AddRectFilled(GUI::GetCursorScreenPos(), SVector2<F32>(cellWidth, 2.0f), GetAssetTypeColor(filterByAssetType));
-
-		GUI::OffsetCursorPos(SVector2<F32>(0.0f, 6.0f));
-		GUI::Text(label);
-
-		if (!GUI::BeginPopupModal(modalLabel, NULL, { EWindowFlag::AlwaysAutoResize }))
-			return result;
-
-		if (!GUI::BeginTable("AssetPickerTable", columns))
-		{
-			GUI::EndPopup();
-			return result;
-		}
-
-		I32 id = 0;
-		for (auto& entry : std::filesystem::recursive_directory_iterator(directory))
-		{
-			if (entry.is_directory())
-				continue;
-
-			SAssetInspectionData data = assetInspector(entry, static_cast<EAssetType>(filterByAssetType));
-			if (!data.IsValid())
-				continue;
-
-			GUI::TableNextColumn();
-			GUI::PushID(id++);
-
-			if (GUI::ImageButton(data.Name.c_str(), data.TextureRef, { GUI::TexturePreviewSizeX * 0.75f, GUI::TexturePreviewSizeY * 0.75f }))
-			{
-				GUI::PopID();
-				GUI::EndTable();
-				GUI::CloseCurrentPopup();
-				GUI::EndPopup();
-				result.State = EAssetPickerState::AssetPicked;
-				result.PickedEntry = entry;
-				return result;
-			}
-
-			GUI::Text(data.Name.c_str());
-			GUI::PopID();
-		}
-
-		GUI::EndTable();
-
-		// TODO.NW: Make util for centering elements. Look at AssetBrowserWindow for full implementation
-		// Center buttons
-		F32 width = 0.0f;
-		width += GUI::CalculateTextSize("Cancel").X + GUI::ThumbnailPadding;
-		F32 avail = GUI::GetContentRegionAvail().X;
-		F32 off = (avail - width) * 0.5f;
-		GUI::OffsetCursorPos(SVector2<F32>(off, 0.0f));
-
-		if (GUI::Button("Cancel"))
-		{
-			GUI::CloseCurrentPopup();
-			GUI::EndPopup();
-			return SAssetPickResult(EAssetPickerState::Cancelled);
-		}
-
-		GUI::EndPopup();
-		result.State = EAssetPickerState::Active;
-		return result;
-	}
-
-	SAssetPickResult CEditorManager::AssetPickerDropdownFilter(const char* label, const char* assetDetailLabel, intptr_t image, intptr_t sourceButtonImage, intptr_t findButtonImage, const std::string& directory, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize)
-	{
-		SAssetPickResult result;
-
-		GUI::Image(image, pickerSize, SVector2<F32>(0.0f), SVector2<F32>(1.0f), SColor::White, SColor::Black);
+		GUI::Image(GetTextureResourceFromAssetRep(existingAssetRep), pickerSize, SVector2<F32>(0.0f), SVector2<F32>(1.0f), SColor::White, SColor::Black);
 		result.IsHovered = GUI::IsMouseInRect(GUI::GetLastRect());
 
 		if (GUI::IsItemClicked(EGUIMouseButton::Right))
@@ -937,12 +846,12 @@ namespace Havtorn
 				if (GUI::BeginChild("##ComboOptionsChild", SVector2<F32>(maxWidth, 0.0f), { EChildFlag::AutoResizeY, EChildFlag::AlwaysAutoResize }))
 				{
 					I32 id = 0;
-					for (auto& entry : std::filesystem::recursive_directory_iterator(directory))
+					for (auto& entry : std::filesystem::recursive_directory_iterator("Assets"))
 					{
 						if (entry.is_directory())
 							continue;
 
-						SAssetInspectionData data = assetInspector(entry, static_cast<EAssetType>(assetType));
+						SAssetInspectionData data = GetAssetFilteredInspectFunction()(entry, assetType);
 						if (!data.IsValid())
 							continue;
 
@@ -976,12 +885,12 @@ namespace Havtorn
 
 			GUI::OffsetCursorPos(SVector2<F32>(2.0f, -2.5f));
 			GUI::SetSecondaryFontActive(true);
-			GUI::TextDisabled(assetDetailLabel);
+			GUI::TextDisabled(GetAssetTypeDetailName(assetType).c_str());
 			GUI::SetSecondaryFontActive(false);
 
 			GUI::OffsetCursorPos(SVector2<F32>(0.0f, -2.5f));
 			GUI::PushID("GetSelectedButton");
-			if (GUI::ImageButton("##", sourceButtonImage, SVector2<F32>(12.0f, 14.0f)))
+			if (GUI::ImageButton("##", GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::GetFromSource), SVector2<F32>(12.0f, 14.0f)))
 			{
 				result.State = EAssetPickerState::GetFromSelected;
 			}
@@ -992,7 +901,7 @@ namespace Havtorn
 			GUI::SameLine();
 			GUI::OffsetCursorPos(SVector2<F32>(-2.0f, 0.0f));
 			GUI::PushID("BrowseToAssetButton");
-			if (GUI::ImageButton("##", findButtonImage, SVector2<F32>(12.0f, 14.0f)))
+			if (GUI::ImageButton("##", GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::FindIcon), SVector2<F32>(12.0f, 14.0f)))
 			{
 				result.State = EAssetPickerState::FindInBrowser;
 			}
@@ -1004,15 +913,6 @@ namespace Havtorn
 		}
 
 		return result;
-	}
-
-	DirEntryFunc CEditorManager::GetAssetInspectFunction() const
-	{
-		return [this](std::filesystem::directory_entry entry)
-			{
-				const Ptr<SEditorAssetRepresentation>& assetRep = GetAssetRepFromDirEntry(entry);	
-				return SAssetInspectionData(assetRep->Name, GetTextureResourceFromAssetRep(assetRep.get()), assetRep->DirectoryEntry.path().string());
-			};
 	}
 
 	DirEntryEAssetTypeFunc CEditorManager::GetAssetFilteredInspectFunction() const

@@ -319,12 +319,11 @@ namespace Havtorn
 		GUI::TextDisabled("Light Preview Settings");
 		auto skyboxAssetRep = Manager->GetAssetRepFromName(UGeneralUtils::ExtractFileBaseNameFromPath(PreviewSkylightAssetRef.FilePath)).get();
 
-		intptr_t assetPickerThumbnail = Manager->GetTextureResourceFromAssetRep(skyboxAssetRep);
 		std::string pickerLabel = "Preview Skybox | ";
 		if (skyboxAssetRep != nullptr)
 			pickerLabel.append(skyboxAssetRep->Name);
 
-		SAssetPickResult result = Manager->AssetPickerFilter(pickerLabel.c_str(), "Preview Skybox", assetPickerThumbnail, "Assets/Textures/Cubemaps", 4, Manager->GetAssetFilteredInspectFunction(), EAssetType::TextureCube);
+		SAssetPickResult result = Manager->AssetPickerDropdown(pickerLabel.c_str(), EAssetType::TextureCube, skyboxAssetRep);
 
 		if (result.State == EAssetPickerState::AssetPicked)
 		{
