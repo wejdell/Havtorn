@@ -140,81 +140,67 @@ namespace Havtorn
 			if (isInsidePrefab)
 				GUI::PopStyleColor();
 
-			if (GUI::BeginDragDropSource())
+			// Attachment Drop
+			SMetaDataComponent* entityMetaDataComp = scene->GetComponent<SMetaDataComponent>(entity);
+			const std::string entityName = SComponent::IsValid(entityMetaDataComp) ? entityMetaDataComp->Name.AsString() : "UNNAMED";
+			CEditorManager::EntityDragData.TrySet(entityMetaDataComp->Owner, entityName.c_str(), {});
+			
+			auto result = CEditorManager::EntityDragData.TryDeliver({ EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
+			if (result.Payload != nullptr)
 			{
-				SGuiPayload payload = GUI::GetDragDropPayload();
-				if (payload.Data == nullptr)
+				SEntity* draggedEntity = result.Payload;
+				SPrefabComponent* targetPrefabComponent = scene->GetComponent<SPrefabComponent>(entity);
+
+				// TODO.NW: Check prefab settings
+				if (Manager->IsEntityInsidePackedPrefab(*draggedEntity) || Manager->IsEntityInsidePackedPrefab(entity) || SComponent::IsValid(targetPrefabComponent))
 				{
-					GUI::SetDragDropPayload("EntityDrag", &entity, sizeof(SEntity));				
+					GUI::SetTooltip("Cannot change attachment of packed prefab, use Prefab Editor or unpack the prefab!");
 				}
-				GUI::Text(entryString.c_str());
-
-				GUI::EndDragDropSource();
-			}
-
-			// TODO.NW: Would be nice to split some drag functionality out into functions, maybe even functions of the Manager?
-			// Attachment drop 
-			if (GUI::BeginDragDropTarget())
-			{
-				SGuiPayload payload = GUI::AcceptDragDropPayload("EntityDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
-				if (payload.Data != nullptr)
+				else
 				{
-					SEntity* draggedEntity = reinterpret_cast<SEntity*>(payload.Data);
-					SPrefabComponent* targetPrefabComponent = scene->GetComponent<SPrefabComponent>(entity);
+					CScene* draggedEntityScene = Manager->GetContainingScene(*draggedEntity);
+					const SMetaDataComponent* draggedMetaDataComp = draggedEntityScene->GetComponent<SMetaDataComponent>(*draggedEntity);
+					const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
+					GUI::SetTooltip(draggedEntityName.c_str());
 
-					// TODO.NW: Check prefab settings
-					if (Manager->IsEntityInsidePackedPrefab(*draggedEntity) || Manager->IsEntityInsidePackedPrefab(entity) || SComponent::IsValid(targetPrefabComponent))
+					if (!SComponent::IsValid(transformComponent))
 					{
-						GUI::SetTooltip("Cannot change attachment of packed prefab, use Prefab Editor or unpack the prefab!");
+						GUI::SetTooltip("Cannot attach to entity %s, it has no transform!", entryString.c_str());
 					}
 					else
 					{
-						CScene* draggedEntityScene = Manager->GetContainingScene(*draggedEntity);
-						const SMetaDataComponent* draggedMetaDataComp = draggedEntityScene->GetComponent<SMetaDataComponent>(*draggedEntity);
-						const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
-						GUI::SetTooltip(draggedEntityName.c_str());
-
-						if (!SComponent::IsValid(transformComponent))
+						STransformComponent* draggedTransform = draggedEntityScene->GetComponent<STransformComponent>(*draggedEntity);
+						if (!SComponent::IsValid(draggedTransform))
 						{
-							GUI::SetTooltip("Cannot attach to entity %s, it has no transform!", entryString.c_str());
+							GUI::SetTooltip("Cannot attach %s to entity, it has no transform!", draggedEntityName.c_str());
 						}
 						else
 						{
-							STransformComponent* draggedTransform = draggedEntityScene->GetComponent<STransformComponent>(*draggedEntity);
-							if (!SComponent::IsValid(draggedTransform))
-							{
-								GUI::SetTooltip("Cannot attach %s to entity, it has no transform!", draggedEntityName.c_str());
-							}
+							if (scene != draggedEntityScene)
+								GUI::SetTooltip("Move to %s and attach %s to %s?", scene->GetSceneName().c_str(), draggedEntityName.c_str(), entryString.c_str());
 							else
+								GUI::SetTooltip("Attach %s to %s?", draggedEntityName.c_str(), entryString.c_str());
+
+							if (result.Result == EDragDeliverResult::Delivered)
 							{
-								if (scene != draggedEntityScene)
-									GUI::SetTooltip("Move to %s and attach %s to %s?", scene->GetSceneName().c_str(), draggedEntityName.c_str(), entryString.c_str());
-								else
-									GUI::SetTooltip("Attach %s to %s?", draggedEntityName.c_str(), entryString.c_str());
-
-								if (payload.IsDelivery)
+								if (draggedTransform->Transform.HasParent())
 								{
-									if (draggedTransform->Transform.HasParent())
-									{
-										STransformComponent* existingParentComponent = draggedEntityScene->GetComponent<STransformComponent>(draggedTransform->ParentEntity);
-										existingParentComponent->Detach(draggedTransform);
-									}
-
-									U64 draggedEntityGUID = draggedEntity->GUID;
-									if (scene != draggedEntityScene)
-									{
-										scene->MoveEntityToScene(*draggedEntity, draggedEntityScene);
-									}
-
-									if (STransformComponent* newTransform = scene->GetComponent<STransformComponent>(SEntity(draggedEntityGUID)))
-										transformComponent->Attach(newTransform);								
+									STransformComponent* existingParentComponent = draggedEntityScene->GetComponent<STransformComponent>(draggedTransform->ParentEntity);
+									existingParentComponent->Detach(draggedTransform);
 								}
+
+								U64 draggedEntityGUID = draggedEntity->GUID;
+								if (scene != draggedEntityScene)
+								{
+									scene->MoveEntityToScene(*draggedEntity, draggedEntityScene);
+								}
+
+								if (STransformComponent* newTransform = scene->GetComponent<STransformComponent>(SEntity(draggedEntityGUID)))
+									transformComponent->Attach(newTransform);
 							}
 						}
 					}
 				}
-
-				GUI::EndDragDropTarget();
 			}
 
 			if (GUI::IsItemHovered() && GUI::IsMouseReleased(0))
@@ -341,38 +327,33 @@ namespace Havtorn
 	void CHierarchyWindow::InspectScene(CScene* scene)
 	{
 		// Move to scene drop
-		if (GUI::BeginDragDropTarget())
+		auto result = CEditorManager::EntityDragData.TryDeliver({ EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
+		if (result.Payload != nullptr)
 		{
-			SGuiPayload payload = GUI::AcceptDragDropPayload("EntityDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
-			if (payload.Data != nullptr)
+			SEntity* draggedEntity = result.Payload;
+				
+			if (Manager->IsEntityInsidePackedPrefab(*draggedEntity))
 			{
-				SEntity* draggedEntity = reinterpret_cast<SEntity*>(payload.Data);
-			
-				if (Manager->IsEntityInsidePackedPrefab(*draggedEntity))
-				{
-					GUI::SetTooltip("Cannot change attachment of packed prefab, use Prefab Editor or unpack the prefab!");
-				}
-				else
-				{
-					CScene* draggedEntityScene = Manager->GetContainingScene(*draggedEntity);
+				GUI::SetTooltip("Cannot change attachment of packed prefab, use Prefab Editor or unpack the prefab!");
+			}
+			else
+			{
+				CScene* draggedEntityScene = Manager->GetContainingScene(*draggedEntity);
 
-					const SMetaDataComponent* draggedMetaDataComp = draggedEntityScene->GetComponent<SMetaDataComponent>(*draggedEntity);
-					const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
-					GUI::SetTooltip(draggedEntityName.c_str());
+				const SMetaDataComponent* draggedMetaDataComp = draggedEntityScene->GetComponent<SMetaDataComponent>(*draggedEntity);
+				const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
+				GUI::SetTooltip(draggedEntityName.c_str());
 
-					if (scene != draggedEntityScene)
+				if (scene != draggedEntityScene)
+				{
+					GUI::SetTooltip("Move %s to %s?", draggedEntityName.c_str(), scene->GetSceneName().c_str());
+
+					if (result.Result == EDragDeliverResult::Delivered)
 					{
-						GUI::SetTooltip("Move %s to %s?", draggedEntityName.c_str(), scene->GetSceneName().c_str());
-
-						if (payload.IsDelivery)
-						{
-							scene->MoveEntityToScene(*draggedEntity, draggedEntityScene);
-						}
+						scene->MoveEntityToScene(*draggedEntity, draggedEntityScene);
 					}
 				}
 			}
-
-			GUI::EndDragDropTarget();
 		}
 
 		GUI::Separator();
@@ -426,49 +407,44 @@ namespace Havtorn
 		}
 
 		// Detachment drop
-		if (GUI::BeginDragDropTarget())
+		auto dragResult = CEditorManager::EntityDragData.TryDeliver({ EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNoDrawDefaultRect, EDragDropFlag::AcceptNopreviewTooltip });
+		if (dragResult.Payload != nullptr)
 		{
-			SGuiPayload payload = GUI::AcceptDragDropPayload("EntityHierarchyDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNoDrawDefaultRect, EDragDropFlag::AcceptNopreviewTooltip });
-			if (payload.Data != nullptr)
-			{
-				SEntity* draggedEntity = reinterpret_cast<SEntity*>(payload.Data);
+			SEntity* draggedEntity = dragResult.Payload;
 
-				if (Manager->IsEntityInsidePackedPrefab(*draggedEntity))
+			if (Manager->IsEntityInsidePackedPrefab(*draggedEntity))
+			{
+				GUI::SetTooltip("Cannot change attachment of packed prefab, use Prefab Editor or unpack the prefab!");
+			}
+			else
+			{
+				const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(*draggedEntity);
+				const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
+				GUI::SetTooltip(draggedEntityName.c_str());
+
+				STransformComponent* draggedTransform = scene->GetComponent<STransformComponent>(*draggedEntity);
+				if (!SComponent::IsValid(draggedTransform))
 				{
-					GUI::SetTooltip("Cannot change attachment of packed prefab, use Prefab Editor or unpack the prefab!");
+					GUI::SetTooltip("Cannot detach entity %s, it has no transform!", draggedEntityName.c_str());
 				}
 				else
 				{
-					const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(*draggedEntity);
-					const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
-					GUI::SetTooltip(draggedEntityName.c_str());
-
-					STransformComponent* draggedTransform = scene->GetComponent<STransformComponent>(*draggedEntity);
-					if (!SComponent::IsValid(draggedTransform))
+					const SEntity& parentEntity = draggedTransform->ParentEntity;
+					if (parentEntity.IsValid())
 					{
-						GUI::SetTooltip("Cannot detach entity %s, it has no transform!", draggedEntityName.c_str());
-					}
-					else
-					{
-						const SEntity& parentEntity = draggedTransform->ParentEntity;
-						if (parentEntity.IsValid())
+						STransformComponent* parentTransform = scene->GetComponent<STransformComponent>(parentEntity);
+						if (SComponent::IsValid(parentTransform))
 						{
-							STransformComponent* parentTransform = scene->GetComponent<STransformComponent>(parentEntity);
-							if (SComponent::IsValid(parentTransform))
-							{
-								const SMetaDataComponent* parentMetaDataComp = scene->GetComponent<SMetaDataComponent>(parentEntity);
-								const std::string parentEntityName = SComponent::IsValid(parentMetaDataComp) ? parentMetaDataComp->Name.AsString() : "UNNAMED";
-								GUI::SetTooltip("Detach %s from %s?", draggedEntityName.c_str(), parentEntityName.c_str());
+							const SMetaDataComponent* parentMetaDataComp = scene->GetComponent<SMetaDataComponent>(parentEntity);
+							const std::string parentEntityName = SComponent::IsValid(parentMetaDataComp) ? parentMetaDataComp->Name.AsString() : "UNNAMED";
+							GUI::SetTooltip("Detach %s from %s?", draggedEntityName.c_str(), parentEntityName.c_str());
 
-								if (payload.IsDelivery)
-									parentTransform->Detach(draggedTransform);
-							}
+							if (dragResult.Result == EDragDeliverResult::Delivered)
+								parentTransform->Detach(draggedTransform);
 						}
-					}					
-				}
+					}
+				}					
 			}
-
-			GUI::EndDragDropTarget();
 		}
 	}
 
@@ -524,24 +500,16 @@ namespace Havtorn
 	void CHierarchyWindow::SceneAssetDrag()
 	{
 		// Asset drop
-		if (GUI::BeginDragDropTarget())
+		auto result = CEditorManager::AssetDragData.TryDeliver({ EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNoDrawDefaultRect, EDragDropFlag::AcceptNopreviewTooltip });
+		if (result.Payload != nullptr && result.Payload->AssetType == EAssetType::Scene)
 		{
-			SGuiPayload payload = GUI::AcceptDragDropPayload("AssetDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNoDrawDefaultRect, EDragDropFlag::AcceptNopreviewTooltip });
-			if (payload.Data != nullptr)
+			GUI::SetTooltip("Add Scene?");
+
+			if (result.Result == EDragDeliverResult::Delivered)
 			{
-				SEditorAssetRepresentation* payloadAssetRep = reinterpret_cast<SEditorAssetRepresentation*>(payload.Data);
-
-				if (payloadAssetRep->AssetType == EAssetType::Scene)
-					GUI::SetTooltip("Add Scene?");
-
-				if (payload.IsDelivery)
-				{
-					GEngine::GetWorld()->AddScene<CGameScene>(payloadAssetRep->DirectoryEntry.path().string());
-					Manager->SetCurrentWorkingScene(STATIC_I64(Manager->GetScenes().size()) - 1);
-				}
-			}
-
-			GUI::EndDragDropTarget();
+				GEngine::GetWorld()->AddScene<CGameScene>(result.Payload->DirectoryEntry.path().string());
+				Manager->SetCurrentWorkingScene(STATIC_I64(Manager->GetScenes().size()) - 1);
+			}	
 		}
 	}
 

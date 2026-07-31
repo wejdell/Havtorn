@@ -16,6 +16,8 @@
 #include "NodeView.h"
 #include "NodeViews/CoreNodeViews.h"
 
+#include <HexRune/HexRune.h>
+
 namespace Havtorn
 {
 	struct SEntity;
@@ -290,6 +292,10 @@ namespace Havtorn
 					return false;
 				});
 		}
+
+		static SDragDropStruct<HexRune::SScriptDataBinding> DataBindingDragData;
+		static SDragDropStruct<SEditorAssetRepresentation> AssetDragData;
+		static SDragDropStruct<SEntity> EntityDragData;
 
 	protected:
 		template<ComponentViewType TComponentView, ComponentType TComponent>

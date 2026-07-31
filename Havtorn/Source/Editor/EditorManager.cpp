@@ -44,6 +44,9 @@
 namespace Havtorn
 {
 	std::string CEditorManager::PreviewMaterial = "Resources/M_MeshPreview.hva";
+	SDragDropStruct<HexRune::SScriptDataBinding> CEditorManager::DataBindingDragData = SDragDropStruct<HexRune::SScriptDataBinding>("DataBindingDrag");
+	SDragDropStruct<SEditorAssetRepresentation> CEditorManager::AssetDragData = SDragDropStruct<SEditorAssetRepresentation>("AssetDrag");
+	SDragDropStruct<SEntity> CEditorManager::EntityDragData = SDragDropStruct<SEntity>("EntityDrag");
 
 	CEditorManager::CEditorManager()
 		: EditHistory(CEditHistory(this))

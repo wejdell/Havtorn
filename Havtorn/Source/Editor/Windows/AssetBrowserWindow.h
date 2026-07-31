@@ -15,6 +15,16 @@ namespace Havtorn
 {
 	class UFileSystem;
 
+	struct SRenderAssetCardResult
+	{
+		SRenderAssetCardResult() = default;
+
+		std::optional<std::string> NewAssetName;
+		bool IsClicked = false;
+		bool IsDoubleClicked = false;
+		bool IsHovered = false;
+	};
+
 	class CAssetBrowserWindow : public CWindow
 	{
 	public:
@@ -28,6 +38,8 @@ namespace Havtorn
 		void SetCurrentPath(const std::filesystem::path& path, const bool pushCommand = true);
 
 	private:
+		SRenderAssetCardResult RenderAssetCard(SEditorAssetRepresentation* assetRep, const SColor& borderColor);
+
 		void OnDragDropFiles(std::vector<std::string> filePaths);
 		void OnAssetReloaded(const std::string& assetPath);
 		

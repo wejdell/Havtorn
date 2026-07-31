@@ -304,31 +304,27 @@ namespace Havtorn
 		CScene* currentScene = assetDragScene;
 		if (currentScene != nullptr)
 		{
-			if (GUI::BeginDragDropTarget())
+			auto result = CEditorManager::AssetDragData.TryDeliver({ EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
+			if (result.Result != EDragDeliverResult::Invalid && result.Payload != nullptr)
 			{
-				SGuiPayload payload = GUI::AcceptDragDropPayload("AssetDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
-				if (payload.Data != nullptr)
+				SEditorAssetRepresentation* payloadAssetRep = result.Payload;
+
+				if (payloadAssetRep->AssetType == EAssetType::Material)
+					UpdatePreviewMaterial(currentScene, payloadAssetRep);
+				else
+					UpdatePreviewEntity(currentScene, payloadAssetRep);
+
+				if (currentScene->PreviewEntity.IsValid())
+					GUI::SetTooltip("Create Entity?");
+				else if (payloadAssetRep->AssetType == EAssetType::Material)
+					GUI::SetTooltip("Assign Material?");
+				else
+					GUI::SetTooltip("Asset type not supported yet!");
+
+				if (result.Result == EDragDeliverResult::Delivered)
 				{
-					SEditorAssetRepresentation* payloadAssetRep = reinterpret_cast<SEditorAssetRepresentation*>(payload.Data);
-					if (payloadAssetRep->AssetType == EAssetType::Material)
-						UpdatePreviewMaterial(currentScene, payloadAssetRep);
-					else
-						UpdatePreviewEntity(currentScene, payloadAssetRep);
-
-					if (currentScene->PreviewEntity.IsValid())
-						GUI::SetTooltip("Create Entity?");
-					else if (payloadAssetRep->AssetType == EAssetType::Material)
-						GUI::SetTooltip("Assign Material?");
-					else
-						GUI::SetTooltip("Asset type not supported yet!");
-
-					if (payload.IsDelivery)
-					{
-						DeliverAssetDrag(currentScene, payloadAssetRep);
-					}
+					DeliverAssetDrag(currentScene, payloadAssetRep);
 				}
-
-				GUI::EndDragDropTarget();
 			}
 			else
 			{

@@ -71,20 +71,13 @@ namespace Havtorn
 		// Don't want same IDs over a frame when multiple entities are selected
 		for (const SEntity& selectedEntity : selectedEntities)
 		{
-			if (GUI::BeginDragDropSource())
-			{
-				SGuiPayload payload = GUI::GetDragDropPayload();
-				if (payload.Data == nullptr)
-				{
-					GUI::SetDragDropPayload("EntityDrag", &selectedEntity, sizeof(SEntity));
-				}
-				GUI::Text("entityName");
-
-				GUI::EndDragDropSource();
-			}
-
 			// NW: The main inspector logic does not care what gets inspected outside of the world scenes
 			CScene* currentScene = UComponentAlgo::GetContainingScene(selectedEntity, worldScenes);
+
+			SMetaDataComponent* entityMetaDataComp = currentScene->GetComponent<SMetaDataComponent>(selectedEntity);
+			if (SComponent::IsValid(entityMetaDataComp))
+				CEditorManager::EntityDragData.TrySet(entityMetaDataComp->Owner, entityMetaDataComp->Name.AsString().c_str(), {});
+
 			InspectEntity(selectedEntity, currentScene);
 		}
 
@@ -119,9 +112,9 @@ namespace Havtorn
 		{
 			GUI::InputText("##MetaDataCompName", &metaDataComp->Name);
 			GUI::SameLine();
-			GUI::TextDisabled("GUID %u", metaDataComp->Owner.GUID);
+			GUI::TextDisabled("GUID %llu", metaDataComp->Owner.GUID);
 			if (GUI::IsItemHovered())
-				GUI::SetTooltip("GUID %u", metaDataComp->Owner.GUID);
+				GUI::SetTooltip("GUID %llu", metaDataComp->Owner.GUID);
 		}
 
 		for (const U64& runtimeHash : owningScene->EntityComponentRuntimeHashes.at(entity.GUID))
@@ -434,31 +427,23 @@ namespace Havtorn
 			{
 				Manager->SetIsModalOpen(false);
 				
-				if (GUI::BeginDragDropTarget())
+				auto result = CEditorManager::AssetDragData.TryDeliver({ EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
+				if (result.Payload != nullptr)
 				{
-					SGuiPayload payload = GUI::AcceptDragDropPayload("AssetDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
-					if (payload.Data != nullptr)
+					SEditorAssetRepresentation* payloadAssetRep = result.Payload;
+					if (payloadAssetRep->AssetType == assetType)
 					{
-						// TODO.NW: Would be cool to have a more formal structure for drags, where you can guarantee a certain 
-						// data type is valid for a given drag ID, unless we prefer checking every possible type per ID (probably not).
+						GUI::SetTooltip("Assign %s?", payloadAssetRep->Name.c_str());
 
-						SEditorAssetRepresentation* payloadAssetRep = reinterpret_cast<SEditorAssetRepresentation*>(payload.Data);
-						if (payloadAssetRep->AssetType == assetType)
+						if (result.Result == EDragDeliverResult::Delivered)
 						{
-							GUI::SetTooltip("Assign %s?", payloadAssetRep->Name.c_str());
-
-							if (payload.IsDelivery)
-							{
-								ReassignAssetRef(viewedComponent->Owner.GUID, assetReferences, index, payloadAssetRep->DirectoryEntry.path().string());
-							}
-						}
-						else
-						{
-							GUI::SetTooltip("Invalid asset type: '%s'", GetAssetTypeName(payloadAssetRep->AssetType).c_str());
+							ReassignAssetRef(viewedComponent->Owner.GUID, assetReferences, index, payloadAssetRep->DirectoryEntry.path().string());
 						}
 					}
-
-					GUI::EndDragDropTarget();
+					else
+					{
+						GUI::SetTooltip("Invalid asset type: '%s'", GetAssetTypeName(payloadAssetRep->AssetType).c_str());
+					}
 				}
 			}
 

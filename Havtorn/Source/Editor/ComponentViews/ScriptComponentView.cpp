@@ -80,79 +80,76 @@ namespace Havtorn
 			else
 				GUI::Text("Not Set");
 
-			if (GUI::BeginDragDropTarget())
+			auto result = CEditorManager::EntityDragData.TryDeliver({ EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNoDrawDefaultRect, EDragDropFlag::AcceptNopreviewTooltip });
+			if (result.Payload != nullptr)
 			{
-				SGuiPayload payload = GUI::AcceptDragDropPayload("EntityDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNoDrawDefaultRect, EDragDropFlag::AcceptNopreviewTooltip });
-				if (payload.Data != nullptr)
+				SEntity* draggedEntity = result.Payload;
+				const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(*draggedEntity);
+				const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
+				GUI::SetTooltip(draggedEntityName.c_str());
+
+				if (draggedEntity->IsValid())
 				{
-					SEntity* draggedEntity = reinterpret_cast<SEntity*>(payload.Data);
-					const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(*draggedEntity);
-					const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
-					GUI::SetTooltip(draggedEntityName.c_str());
+					GUI::SetTooltip("Assign %s to Data Binding '%s'?", draggedEntityName.c_str(), dataBinding.Name.c_str());
 
-					if (draggedEntity->IsValid())
-					{
-						GUI::SetTooltip("Assign %s to Data Binding '%s'?", draggedEntityName.c_str(), dataBinding.Name.c_str());
-
-						if (payload.IsDelivery)
-							dataBinding.Data = *draggedEntity;
-					}
+					if (result.Result == EDragDeliverResult::Delivered)
+						dataBinding.Data = *draggedEntity;
 				}
-
-				GUI::EndDragDropTarget();
 			}
 		}
 		break;
 		case HexRune::EPinType::Asset:
 		{
 			std::string assetPath = "";
-			// TODO.NW: Need to figure out how to access editor reps from here. Maybe editor reps contain an engine asset and we can drag that instead. 
-			//if (GUI::BeginDragDropTarget())
-			//{
-			//	SGuiPayload payload = GUI::AcceptDragDropPayload("AssetDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
-			//	if (payload.Data != nullptr)
-			//	{
-			//		std::string draggedString = *reinterpret_cast<std::string*>(payload.Data);
-			//		GUI::SetTooltip(draggedString.c_str());
 
-			//		if (!draggedString.empty())
-			//		{
-			//			GUI::SetTooltip("Assign %s to Data Binding '%s'?", draggedString.c_str(), dataBinding.Name.c_str());
+			auto result = CEditorManager::AssetDragData.TryDeliver({ EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
+			if (result.Payload != nullptr)
+			{
+				//std::string draggedString = *reinterpret_cast<std::string*>(payload.Data);
+				//GUI::SetTooltip(draggedString.c_str());
 
-			//			if (payload.IsDelivery)
-			//				assetPath = draggedString;
-			//		}
-			//	}
+				//if (!draggedString.empty())
+				//{
+				//	GUI::SetTooltip("Assign %s to Data Binding '%s'?", draggedString.c_str(), dataBinding.Name.c_str());
 
-			//	GUI::EndDragDropTarget();
-			//}
+				//	if (payload.IsDelivery)
+				//		assetPath = draggedString;
+				//}
+				SEditorAssetRepresentation* payloadAssetRep = result.Payload;
+				GUI::SetTooltip("Assign %s to Data Binding '%s'?", payloadAssetRep->Name.c_str(), dataBinding.Name.c_str());
+
+				if (result.Result == EDragDeliverResult::Delivered)
+				{
+					assetPath = payloadAssetRep->DirectoryEntry.path().string();
+				}
+			}
 
 			GUI::TextDisabled(" |%s| ", "Asset");
 			GUI::SameLine();
 
-			SAsset* asset = nullptr;
-			if (std::holds_alternative<std::string>(dataBinding.Data))
-				asset = GEngine::GetAssetRegistry()->RequestAsset(SAssetReference(std::get<std::string>(dataBinding.Data)), 100);
+			//SAsset* asset = nullptr;
+			//if (std::holds_alternative<std::string>(dataBinding.Data))
+			//	asset = GEngine::GetAssetRegistry()->RequestAsset(SAssetReference(std::get<std::string>(dataBinding.Data)), 100);
 
 			//if (asset->Reference.FilePath.empty())
 			//	asset->Reference.FilePath = assetPath;
 
-			//GUI::Text(asset.AssetPath.c_str());
-			//GUI::InputText("##edit", asset.Reference.FilePath);
+			//GUI::Text(asset->Reference.FilePath.c_str());
+			//GUI::InputText("##edit", asset->Reference.FilePath);
 
 			//if (GUI::BeginPopupContextWindow())
 			//{
 			//	if (GUI::MenuItem("Paste Asset Path"))
-			//		asset.Reference.FilePath = GUI::CopyFromClipboard();
+			//		asset->Reference.FilePath = GUI::CopyFromClipboard();
 
 			//	GUI::EndPopup();
 			//}
 
-			//if (!asset.Reference.FilePath.empty())
-			//	asset.Reference = SAssetReference(asset.Reference.FilePath);
+			//if (!asset->Reference.FilePath.empty())
+			//	asset->Reference = SAssetReference(asset.Reference.FilePath);
 
-			//dataBinding.Data = asset.Reference.FilePath;
-			// TODO.NW: Simplify flow for assigning assets through a view result
+			//dataBinding.Data = asset->Reference.FilePath;
+			//// TODO.NW: Simplify flow for assigning assets through a view result
 			//if (dataBinding.AssetType == EAssetType::StaticMesh)
 			//{
 			//	GUI::AssetPicker("##edit", "Static Mesh", );

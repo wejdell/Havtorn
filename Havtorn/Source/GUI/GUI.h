@@ -659,16 +659,6 @@ namespace Havtorn
 		bool IsHovered = false;
 	};
 
-	struct SRenderAssetCardResult
-	{
-		SRenderAssetCardResult() = default;
-		
-		std::optional<std::string> NewAssetName;
-		bool IsClicked = false;
-		bool IsDoubleClicked = false;
-		bool IsHovered = false;
-	};
-
 	struct SAlignedButtonData
 	{
 		std::function<void()> Function;
@@ -691,6 +681,35 @@ namespace Havtorn
 	{
 		Input,
 		Output
+	};
+
+	enum class EDragDeliverResult
+	{
+		Invalid,
+		Hovering,
+		Delivered
+	};
+	
+	template<typename T>
+	struct SDragDropDelivery
+	{
+		EDragDeliverResult Result = EDragDeliverResult::Invalid;
+		T* Payload = nullptr;
+	};
+
+	template<typename T>
+	struct SDragDropStruct
+	{
+		SDragDropStruct(const std::string_view id);
+
+		bool TrySet(T& data, const std::string_view defaultTooltip, const std::vector<EDragDropFlag>& flags);
+		SDragDropDelivery<T> TryDeliver(const std::vector<EDragDropFlag>& flags);
+
+	private:
+		const char* ID = "";
+
+		// NW: We assign drag-drop data to our own pointer so imgui doesn't free it at the end of the delivery scope
+		T* Data = nullptr;
 	};
 
 	class GUI_API GUI
@@ -874,7 +893,6 @@ namespace Havtorn
 		static SAssetPickResult AssetPickerFilter(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
 		static SAssetPickResult AssetPickerDropdownFilter(const char* label, const char* assetDetailLabel, intptr_t image, intptr_t sourceButtonImage, intptr_t findButtonImage, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
 		static void TagPickerDropdown(const char* label, const char* tooltip, SGameplayTagContainer& tags, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
-		static SRenderAssetCardResult RenderAssetCard(const char* label, const bool isSelected, const bool isBeingNamed, const intptr_t& thumbnailID, const char* typeName, const SColor& color, const SColor& borderColor, void* dragDropPayloadToSet, U64 payLoadSize);
 
 		static bool Selectable(const char* label, const bool selected = false, const std::vector<ESelectableFlag>& flags = {}, const SVector2<F32>& size = SVector2<F32>(0.0f));
 
@@ -1045,4 +1063,61 @@ namespace Havtorn
 		ImGuiImpl* Impl;
 		static GUI* Instance;
 	};
+
+	template<typename T>
+	inline SDragDropStruct<T>::SDragDropStruct(const std::string_view id)
+		: ID(id.data())
+	{
+	}
+
+	template<typename T>
+	inline bool SDragDropStruct<T>::TrySet(T& data, const std::string_view defaultTooltip, const std::vector<EDragDropFlag>& flags)
+	{
+		if (GUI::BeginDragDropSource(flags))
+		{
+			SGuiPayload payload = GUI::GetDragDropPayload();
+			if (payload.Data == nullptr)
+			{
+				Data = &data;
+
+				// NW: Note that we store the payload on the imgui side to keep imgui logic working
+				GUI::SetDragDropPayload(ID, &data, sizeof(T));
+				
+				GUI::Text(defaultTooltip.data());
+				GUI::EndDragDropSource();
+				return true;
+			}
+
+			GUI::Text(defaultTooltip.data());
+			GUI::EndDragDropSource();
+		}
+
+		return false;
+	}
+
+	template<typename T>
+	inline SDragDropDelivery<T> SDragDropStruct<T>::TryDeliver(const std::vector<EDragDropFlag>& flags)
+	{
+		SDragDropDelivery<T> returnValue;
+
+		if (GUI::BeginDragDropTarget())
+		{
+			SGuiPayload payload = GUI::AcceptDragDropPayload(ID, flags);
+			if (payload.Data != nullptr)
+			{
+				returnValue.Payload = Data;
+				
+				if (payload.IsDelivery)
+				{
+					Data = nullptr;
+				}
+
+				returnValue.Result = payload.IsDelivery ? EDragDeliverResult::Delivered : EDragDeliverResult::Hovering;
+			}
+
+			GUI::EndDragDropTarget();
+		}
+
+		return returnValue;
+	}
 }

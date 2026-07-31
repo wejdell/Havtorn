@@ -115,27 +115,21 @@ namespace Havtorn
 					else
 						GUI::Text("Not Set");
 
-					// TODO.NW: Generalize the drag drop functions, this is used (basically) in script component data binding as well.
-					if (GUI::BeginDragDropTarget())
+					auto result = CEditorManager::EntityDragData.TryDeliver({ EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNoDrawDefaultRect, EDragDropFlag::AcceptNopreviewTooltip });
+					if (result.Payload != nullptr)
 					{
-						SGuiPayload payload = GUI::AcceptDragDropPayload("EntityDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNoDrawDefaultRect, EDragDropFlag::AcceptNopreviewTooltip });
-						if (payload.Data != nullptr)
+						SEntity* draggedEntity = result.Payload;
+						const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(*draggedEntity);
+						const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
+						GUI::SetTooltip(draggedEntityName.c_str());
+
+						if (draggedEntity->IsValid())
 						{
-							SEntity* draggedEntity = reinterpret_cast<SEntity*>(payload.Data);
-							const SMetaDataComponent* draggedMetaDataComp = scene->GetComponent<SMetaDataComponent>(*draggedEntity);
-							const std::string draggedEntityName = SComponent::IsValid(draggedMetaDataComp) ? draggedMetaDataComp->Name.AsString() : "UNNAMED";
-							GUI::SetTooltip(draggedEntityName.c_str());
+							GUI::SetTooltip("Assign %s to UI Binding?", draggedEntityName.c_str());
 
-							if (draggedEntity->IsValid())
-							{
-								GUI::SetTooltip("Assign %s to UI Binding?", draggedEntityName.c_str());
-
-								if (payload.IsDelivery)
-									element.BoundData = draggedEntity->GUID;
-							}
+							if (result.Result == EDragDeliverResult::Delivered)
+								element.BoundData = draggedEntity->GUID;
 						}
-
-						GUI::EndDragDropTarget();
 					}
 				}
 

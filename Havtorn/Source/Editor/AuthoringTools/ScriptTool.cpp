@@ -138,17 +138,7 @@ namespace Havtorn
 					}
 				}
 
-				if (GUI::BeginDragDropSource({ EDragDropFlag::SourceAllowNullID }))
-				{
-					SGuiPayload payload = GUI::GetDragDropPayload();
-					if (payload.Data == nullptr)
-					{
-						GUI::SetDragDropPayload("DataBindingDrag", &dataBinding, sizeof(SScriptDataBinding));
-					}
-					GUI::Text(dataBinding.Name.c_str());
-
-					GUI::EndDragDropSource();
-				}
+				CEditorManager::DataBindingDragData.TrySet(dataBinding, dataBinding.Name.c_str(), {EDragDropFlag::SourceAllowNullID});
 
 				if (GUI::BeginPopupContextWindow())
 				{
@@ -164,35 +154,29 @@ namespace Havtorn
 
 		GUI::BeginScript("Node Script Editor");
 
-		if (GUI::BeginDragDropTarget())
+		auto result = CEditorManager::DataBindingDragData.TryDeliver({ EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNoDrawDefaultRect, EDragDropFlag::AcceptNopreviewTooltip });
+		if (result.Payload != nullptr)
 		{
-			SGuiPayload payload = GUI::AcceptDragDropPayload("DataBindingDrag", { EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNoDrawDefaultRect, EDragDropFlag::AcceptNopreviewTooltip });
-			if (payload.Data != nullptr)
+			SScriptDataBinding* dataBinding = result.Payload;
+
+			std::string tooltip = "Add Get ";
+			tooltip.append(dataBinding->Name);
+			tooltip.append(" node?");
+			GUI::SetTooltip(tooltip.c_str());
+
+			if (result.Result == EDragDeliverResult::Delivered)
 			{
-				// TODO.NW: Make all similar reinterpret_casts static_casts instead
-				SScriptDataBinding* dataBinding = static_cast<SScriptDataBinding*>(payload.Data);
-
-				std::string tooltip = "Add Get ";
-				tooltip.append(dataBinding->Name);
-				tooltip.append(" node?");
-				GUI::SetTooltip(tooltip.c_str());
-
-				if (payload.IsDelivery)
+				// TODO.NW: Make sure to catch keybinds here
+				for (const Ptr<SNodeView>& view : Manager->GetNodeViewsVector())
 				{
-					// TODO.NW: Make sure to catch keybinds here
-					for (const Ptr<SNodeView>& view : Manager->GetNodeViewsVector())
+					// TODO.NW: Maybe remove whitespace from names? Then they need extra care to display properly.
+					if (view->Name == "Get " + dataBinding->Name)
 					{
-						// TODO.NW: Maybe remove whitespace from names? Then they need extra care to display properly.
-						if (view->Name == "Get " + dataBinding->Name)
-						{
-							Edit.NewNodeView = view.get();
-							Edit.NewNodePosition = GUI::GetMousePosition();
-						}
+						Edit.NewNodeView = view.get();
+						Edit.NewNodePosition = GUI::GetMousePosition();
 					}
 				}
 			}
-
-			GUI::EndDragDropTarget();
 		}
 
 		RenderScript();

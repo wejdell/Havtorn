@@ -910,7 +910,7 @@ namespace Havtorn
 
 		bool SetDragDropPayload(const char* type, const void* data, U64 dataSize)
 		{
-			return ImGui::SetDragDropPayload(type, data, dataSize);
+			return ImGui::SetDragDropPayload(type, data, dataSize, ImGuiCond_Once);
 		}
 
 		void EndDragDropSource()
@@ -2345,95 +2345,6 @@ namespace Havtorn
 			GUI::EndChild();
 		}
 		GUI::PopID();
-	}
-
-	SRenderAssetCardResult GUI::RenderAssetCard(const char* label, const bool isSelected, const bool isBeingNamed, const intptr_t& thumbnailID, const char* typeName, const SColor& color, const SColor& borderColor, void* dragDropPayloadToSet, U64 payLoadSize)
-	{
-		SRenderAssetCardResult result;
-
-		SVector2<F32> cardStartPos = GUI::GetCursorPos();
-		SVector2<F32> framePadding = GUI::GetStyleVar(EStyleVar::FramePadding);
-
-		SVector2<F32> cardSize = { GUI::ThumbnailSizeX + framePadding.X * 0.5f, GUI::ThumbnailSizeY + framePadding.Y * 0.5f };
-		cardSize.Y *= 1.6f;
-		SVector2<F32> thumbnailSize = { GUI::ThumbnailSizeX + framePadding.X * 0.5f, GUI::ThumbnailSizeY + framePadding.Y * 0.5f + 4.0f };
-
-		// TODO.NW: Can't seem to get the leftmost line to show correctly. Maybe need to start the table as usual and then offset inwards?
-		constexpr F32 borderThickness = 1.0f;
-		GUI::SetCursorPos(cardStartPos + SVector2<F32>(-1.0f * borderThickness));
-		GUI::AddRectFilled(GUI::GetCursorScreenPos(), cardSize + SVector2<F32>(2.0f * borderThickness), borderColor);
-		GUI::SetCursorPos(cardStartPos);
-		GUI::AddRectFilled(GUI::GetCursorScreenPos(), cardSize, SColor(65));
-		GUI::SetCursorPos(cardStartPos);
-		GUI::AddRectFilled(GUI::GetCursorScreenPos(), thumbnailSize, SColor(40));
-		GUI::SetCursorPos(cardStartPos);
-
-		if (GUI::Selectable("", isSelected, { ESelectableFlag::AllowDoubleClick, ESelectableFlag::AllowOverlap }, cardSize))
-		{
-			if (GUI::IsMouseReleased())
-				result.IsClicked = true;
-			if (GUI::IsDoubleClick())
-				result.IsDoubleClicked = true;
-		}
-
-		if (GUI::BeginDragDropSource())
-		{
-			SGuiPayload payload = GUI::GetDragDropPayload();
-			if (payload.Data == nullptr)
-			{
-				GUI::SetDragDropPayload("AssetDrag", dragDropPayloadToSet, payLoadSize);
-			}
-			GUI::Text(label);
-
-			GUI::EndDragDropSource();
-		}
-
-		GUI::SetCursorPos(cardStartPos + SVector2<F32>(1.0f, 0.0f));
-		GUI::Image(thumbnailID, { GUI::ThumbnailSizeX, GUI::ThumbnailSizeY }, SVector2<F32>(0.0f), SVector2<F32>(1.0f), SColor::White);
-
-		SColor detailColor = color;
-		detailColor.A = SColor::ToU8Range(0.5f);
-		GUI::AddRectFilled(GUI::GetCursorScreenPos(), SVector2<F32>(cardSize.X, 2.0f), detailColor);
-
-		GUI::OffsetCursorPos(SVector2<F32>(2.0f, 4.0f));
-
-		if (GUI::IsItemHovered())
-		{
-			result.IsHovered = true;
-		}
-
-		GUI::PushClipRect(GetCursorScreenPos(), cardSize - framePadding);
-		
-		if (isBeingNamed)
-		{
-			GUI::SetKeyboardFocusHere();
-
-			std::string newAssetName = label;
-			GUI::PushID(label);
-			if (GUI::InputText("", newAssetName))
-			{
-				if (GUI::IsItemDeactivatedAfterEdit())
-					result.NewAssetName = newAssetName;
-			}
-
-			if (GUI::IsItemDeactivated() && !result.NewAssetName.has_value())
-				result.NewAssetName = label;
-
-			GUI::PopID();
-		}
-		else
-			GUI::Text(label);
-		
-		if (GUI::IsItemHovered())
-			GUI::SetTooltip(label);
-
-		GUI::OffsetCursorPos(SVector2<F32>(2.0f, -2.0f));
-		GUI::SetSecondaryFontActive(true);
-		GUI::TextDisabled(typeName);
-		GUI::SetSecondaryFontActive(false);
-		GUI::PopClipRect();
-
-		return result;
 	}
 
 	bool GUI::Selectable(const char* label, const bool selected, const std::vector<ESelectableFlag>& flags, const SVector2<F32>& size)
