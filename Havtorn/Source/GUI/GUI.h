@@ -606,59 +606,6 @@ namespace Havtorn
 		F32 TabRounding = 1.f;
 	};
 
-	struct SAssetInspectionData
-	{
-		SAssetInspectionData(const std::string& name, const intptr_t textureRef)
-			: Name(name)
-			, TextureRef(textureRef)
-			, AssetPath()
-		{}
-		
-		SAssetInspectionData(const std::string& name, const intptr_t textureRef, const std::string& assetPath)
-			: Name(name)
-			, TextureRef(textureRef)
-			, AssetPath(assetPath)
-		{}
-
-		bool IsValid() const
-		{
-			return Name.size() > 0 && AssetPath.size() > 0 && TextureRef != 0;
-		}
-
-		std::string Name = "";
-		std::string AssetPath = ""; //TODO.AS Replace with AssetRegistry GUID later on
-		intptr_t TextureRef = 0;
-	};
-
-	using DirEntryFunc = const std::function<SAssetInspectionData(std::filesystem::directory_entry)>;
-	using DirEntryEAssetTypeFunc = const std::function<SAssetInspectionData(std::filesystem::directory_entry, const EAssetType assetTypeFilter)>;
-
-	enum class EAssetPickerState
-	{
-		Inactive,
-		Active,
-		AssetPicked,
-		Cancelled,
-		ContextMenu,
-		GetFromSelected,
-		FindInBrowser
-	};
-
-	struct SAssetPickResult
-	{
-		SAssetPickResult() = default;
-		SAssetPickResult(EAssetPickerState state)
-			: State(state)
-		{}
-		SAssetPickResult(const std::filesystem::directory_entry& entry)
-			: State(EAssetPickerState::AssetPicked)
-			, PickedEntry(entry)
-		{}
-		EAssetPickerState State = EAssetPickerState::Inactive;
-		std::filesystem::directory_entry PickedEntry;
-		bool IsHovered = false;
-	};
-
 	struct SAlignedButtonData
 	{
 		std::function<void()> Function;
@@ -889,9 +836,6 @@ namespace Havtorn
 
 		static void AddViewportButtons(const std::vector<SAlignedButtonData>& buttons, const SVector2<F32>& buttonSize, const F32 alignWidth);
 
-		static SAssetPickResult AssetPicker(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryFunc& assetInspector, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
-		static SAssetPickResult AssetPickerFilter(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
-		static SAssetPickResult AssetPickerDropdownFilter(const char* label, const char* assetDetailLabel, intptr_t image, intptr_t sourceButtonImage, intptr_t findButtonImage, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
 		static void TagPickerDropdown(const char* label, const char* tooltip, SGameplayTagContainer& tags, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
 
 		static bool Selectable(const char* label, const bool selected = false, const std::vector<ESelectableFlag>& flags = {}, const SVector2<F32>& size = SVector2<F32>(0.0f));
@@ -987,6 +931,8 @@ namespace Havtorn
 
 		static void SetNextWindowPos(const SVector2<F32>& pos, const EWindowCondition condition = EWindowCondition::None, const SVector2<F32>& pivot = SVector2<F32>(0.0f));
 		static void SetNextWindowSize(const SVector2<F32>& size);
+		static void SetNextWindowSizeConstraints(const SVector2<F32>& sizeMin, const SVector2<F32>& sizeMax);
+
 		static void SetWindowPos(const char* label, const SVector2<F32>& pos);
 		static void SetWindowSize(const char* label, const SVector2<F32>& size);
 		static void SetGizmoRect(const SVector2<F32>& position, const SVector2<F32>& dimensions);

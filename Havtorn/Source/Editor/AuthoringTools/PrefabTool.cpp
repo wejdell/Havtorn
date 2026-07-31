@@ -324,7 +324,7 @@ namespace Havtorn
 		if (skyboxAssetRep != nullptr)
 			pickerLabel.append(skyboxAssetRep->Name);
 
-		SAssetPickResult result = GUI::AssetPickerFilter(pickerLabel.c_str(), "Preview Skybox", assetPickerThumbnail, "Assets/Textures/Cubemaps", 4, Manager->GetAssetFilteredInspectFunction(), EAssetType::TextureCube);
+		SAssetPickResult result = Manager->AssetPickerFilter(pickerLabel.c_str(), "Preview Skybox", assetPickerThumbnail, "Assets/Textures/Cubemaps", 4, Manager->GetAssetFilteredInspectFunction(), EAssetType::TextureCube);
 
 		if (result.State == EAssetPickerState::AssetPicked)
 		{

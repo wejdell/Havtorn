@@ -102,6 +102,63 @@ namespace Havtorn
 		EEditorColorTheme PauseColorTheme = EEditorColorTheme::HavtornDefault;
 	};
 
+	struct SAssetInspectionData
+	{
+		SAssetInspectionData(const std::string& name, const intptr_t textureRef)
+			: Name(name)
+			, TextureRef(textureRef)
+			, AssetPath()
+		{
+		}
+
+		SAssetInspectionData(const std::string& name, const intptr_t textureRef, const std::string& assetPath)
+			: Name(name)
+			, TextureRef(textureRef)
+			, AssetPath(assetPath)
+		{
+		}
+
+		bool IsValid() const
+		{
+			return Name.size() > 0 && AssetPath.size() > 0 && TextureRef != 0;
+		}
+
+		std::string Name = "";
+		std::string AssetPath = ""; //TODO.AS Replace with AssetRegistry GUID later on
+		intptr_t TextureRef = 0;
+	};
+
+	using DirEntryFunc = const std::function<SAssetInspectionData(std::filesystem::directory_entry)>;
+	using DirEntryEAssetTypeFunc = const std::function<SAssetInspectionData(std::filesystem::directory_entry, const EAssetType assetTypeFilter)>;
+
+	enum class EAssetPickerState
+	{
+		Inactive,
+		Active,
+		AssetPicked,
+		Cancelled,
+		ContextMenu,
+		GetFromSelected,
+		FindInBrowser
+	};
+
+	struct SAssetPickResult
+	{
+		SAssetPickResult() = default;
+		SAssetPickResult(EAssetPickerState state)
+			: State(state)
+		{
+		}
+		SAssetPickResult(const std::filesystem::directory_entry& entry)
+			: State(EAssetPickerState::AssetPicked)
+			, PickedEntry(entry)
+		{
+		}
+		EAssetPickerState State = EAssetPickerState::Inactive;
+		std::filesystem::directory_entry PickedEntry;
+		bool IsHovered = false;
+	};
+
 	template<typename T>
 	concept ComponentViewType = std::derived_from<T, SComponentView>;
 
@@ -178,6 +235,9 @@ namespace Havtorn
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromDirEntry(const std::filesystem::directory_entry& dirEntry) const;
 		const Ptr<SEditorAssetRepresentation>& GetAssetRepFromName(const std::string& assetName) const;
 		const intptr_t GetTextureResourceFromAssetRep(SEditorAssetRepresentation* assetRepresentation) const;
+
+		SAssetPickResult AssetPickerFilter(const char* label, const char* modalLabel, intptr_t image, const std::string& directory, I32 columns, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
+		SAssetPickResult AssetPickerDropdownFilter(const char* label, const char* assetDetailLabel, intptr_t image, intptr_t sourceButtonImage, intptr_t findButtonImage, const std::string& directory, const DirEntryEAssetTypeFunc& assetInspector, EAssetType assetType, const SVector2<F32>& pickerSize = SVector2<F32>(48.0f));
 		DirEntryFunc GetAssetInspectFunction() const;
 		DirEntryEAssetTypeFunc GetAssetFilteredInspectFunction() const;
 

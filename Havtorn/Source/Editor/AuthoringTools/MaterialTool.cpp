@@ -125,7 +125,7 @@ namespace Havtorn
 				if (skyboxAssetRep != nullptr)
 					pickerLabel.append(skyboxAssetRep->Name);
 
-				SAssetPickResult result = GUI::AssetPickerFilter(pickerLabel.c_str(), "Preview Skybox", assetPickerThumbnail, "Assets/Textures/Cubemaps", 4, Manager->GetAssetFilteredInspectFunction(), EAssetType::TextureCube);
+				SAssetPickResult result = Manager->AssetPickerFilter(pickerLabel.c_str(), "Preview Skybox", assetPickerThumbnail, "Assets/Textures/Cubemaps", 4, Manager->GetAssetFilteredInspectFunction(), EAssetType::TextureCube);
 
 				if (result.State == EAssetPickerState::AssetPicked)
 				{
@@ -197,7 +197,7 @@ namespace Havtorn
 						if (assetRep != nullptr)
 							pickerLabel.append(assetRep->Name);
 						
-						SAssetPickResult result = GUI::AssetPickerFilter(pickerLabel.c_str(), "Texture", assetPickerThumbnail, "Assets/Textures", columnCount, Manager->GetAssetFilteredInspectFunction(), EAssetType::Texture, SVector2<F32>(materialPropertyWidth));
+						SAssetPickResult result = Manager->AssetPickerFilter(pickerLabel.c_str(), "Texture", assetPickerThumbnail, "Assets/Textures", columnCount, Manager->GetAssetFilteredInspectFunction(), EAssetType::Texture, SVector2<F32>(materialPropertyWidth));
 
 						if (result.State == EAssetPickerState::AssetPicked)
 						{

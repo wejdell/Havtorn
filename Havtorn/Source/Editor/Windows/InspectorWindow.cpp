@@ -377,13 +377,7 @@ namespace Havtorn
 			id.append(std::to_string(index));
 			GUI::PushID(id.c_str());
 
-			const F32 thumbnailPadding = 4.0f;
-			const F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + thumbnailPadding;
-			const F32 panelWidth = 256.0f;
-			const I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
-			const std::string modalName = "Select " + GetAssetTypeName(assetType) + " Asset";
-
-			SAssetPickResult assetPickResult = GUI::AssetPickerDropdownFilter(assetName.c_str(), GetAssetTypeDetailName(assetType).c_str(), Manager->GetTextureResourceFromAssetRep(assetRep.get()), Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::GetFromSource), Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::FindIcon), "Assets", columnCount, Manager->GetAssetFilteredInspectFunction(), assetType);
+			SAssetPickResult assetPickResult = Manager->AssetPickerDropdownFilter(assetName.c_str(), GetAssetTypeDetailName(assetType).c_str(), Manager->GetTextureResourceFromAssetRep(assetRep.get()), Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::GetFromSource), Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::FindIcon), "Assets", Manager->GetAssetFilteredInspectFunction(), assetType);
 			SAssetReference* currentReference = (assetReferences)[AssetPickedIndex];
 
 			if (assetPickResult.State == EAssetPickerState::Active)

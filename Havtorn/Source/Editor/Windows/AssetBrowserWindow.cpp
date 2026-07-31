@@ -529,11 +529,6 @@ namespace Havtorn
 	{
 		GUI::TextDisabled("Packing: AlbedoMaterialNormal_Packed");
 
-		F32 thumbnailPadding = 4.0f;
-		F32 cellWidth = GUI::TexturePreviewSizeX * 0.75f + thumbnailPadding;
-		F32 panelWidth = 256.0f;
-		I32 columnCount = static_cast<I32>(panelWidth / cellWidth);
-
 		bool canCreateMaterial = true;
 		const std::array<std::string, 3> labels = { "Albedo", "Material", "Normal" };
 		for (U64 i = 0; i < 3; i++)
@@ -546,7 +541,7 @@ namespace Havtorn
 				pickerLabel.append(NewMaterialTextures[i]->Name);
 			}
 			GUI::PushID(labels[i].c_str());
-			SAssetPickResult result = GUI::AssetPickerDropdownFilter(pickerLabel.c_str(), GetAssetTypeDetailName(EAssetType::Texture).c_str(), assetPickerThumbnail, Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::GetFromSource), Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::FindIcon), "Assets", columnCount, Manager->GetAssetFilteredInspectFunction(), EAssetType::Texture);
+			SAssetPickResult result = Manager->AssetPickerDropdownFilter(pickerLabel.c_str(), GetAssetTypeDetailName(EAssetType::Texture).c_str(), assetPickerThumbnail, Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::GetFromSource), Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::FindIcon), "Assets", Manager->GetAssetFilteredInspectFunction(), EAssetType::Texture);
 			GUI::PopID();
 
 			if (result.State == EAssetPickerState::AssetPicked)
@@ -774,7 +769,7 @@ namespace Havtorn
 
 		intptr_t assetPickerThumbnail = Manager->GetTextureResourceFromAssetRep(ImportOptions.AssetRep);
 		
-		SAssetPickResult result = GUI::AssetPickerFilter("Skeletal Rig", "Skeletal Mesh", assetPickerThumbnail, "Assets/Meshes", columnCount, Manager->GetAssetFilteredInspectFunction(), EAssetType::SkeletalMesh);
+		SAssetPickResult result = Manager->AssetPickerFilter("Skeletal Rig", "Skeletal Mesh", assetPickerThumbnail, "Assets/Meshes", columnCount, Manager->GetAssetFilteredInspectFunction(), EAssetType::SkeletalMesh);
 
 		if (result.State == EAssetPickerState::AssetPicked)
 		{
