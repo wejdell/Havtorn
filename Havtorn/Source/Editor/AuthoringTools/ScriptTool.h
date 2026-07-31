@@ -30,14 +30,14 @@ namespace Havtorn
 
 	struct SNodeOperation
 	{
-		std::optional<SDataBindingInitData> NewBinding;
-		U64 RemovedBindingID;
-		HexRune::SPin* ModifiedLiteralValuePin;
-		SNodeView* NewNodeView;
+		std::optional<SDataBindingInitData> NewBinding = {};
+		U64 RemovedBindingID = 0;
+		HexRune::SPin* ModifiedLiteralValuePin = nullptr;
+		SNodeView* NewNodeView = nullptr;
 		SVector2<F32> NewNodePosition = SVector2<F32>::Zero;
-		HexRune::SLink NewLink;
-		std::vector<HexRune::SNode*> RemovedNodes;
-		std::vector<HexRune::SLink> RemovedLinks;
+		HexRune::SLink NewLink = {};
+		std::vector<HexRune::SNode*> RemovedNodes = {};
+		std::vector<HexRune::SLink> RemovedLinks = {};
 	};
 
 	using namespace HexRune;

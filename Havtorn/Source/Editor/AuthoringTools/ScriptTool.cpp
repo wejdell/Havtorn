@@ -102,8 +102,6 @@ namespace Havtorn
 			GUI::EndChild();
 		}
 
-		Edit = SNodeOperation();
-
 		{ // Data Bindings
 			GUI::BeginChild("DataBindings", SVector2<F32>(150.0f, 0.0f), { EChildFlag::Borders, EChildFlag::ResizeX });
 			GUI::Text("Data Bindings");
@@ -135,6 +133,9 @@ namespace Havtorn
 		}
 
 		GUI::BeginScript("Node Script Editor");
+		RenderScript();
+		CommitEdit(Edit);
+		GUI::EndScript();
 
 		auto result = CEditorManager::DataBindingDragData.TryDeliver({ EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNoDrawDefaultRect, EDragDropFlag::AcceptNopreviewTooltip });
 		if (result.Payload != nullptr)
@@ -160,10 +161,6 @@ namespace Havtorn
 				}
 			}
 		}
-
-		RenderScript();
-		CommitEdit(Edit);
-		GUI::EndScript();
 
 		GUI::End();
 	}
@@ -242,16 +239,19 @@ namespace Havtorn
 			{
 				SNode* newNode = script->NodeFactory->CreateNode(edit.NewNodeView->GetRuntimeHash(), 0, script, getterContext->DataBindingID);
 				CurrentScriptAsset->NodePositionMap.emplace(newNode->UID, edit.NewNodePosition);
+				GUI::SetNodePosition(newNode->UID, edit.NewNodePosition);
 			}
 			else if (setterContext != nullptr)
 			{
 				SNode* newNode = script->NodeFactory->CreateNode(edit.NewNodeView->GetRuntimeHash(), 0, script, setterContext->DataBindingID);
 				CurrentScriptAsset->NodePositionMap.emplace(newNode->UID, edit.NewNodePosition);
+				GUI::SetNodePosition(newNode->UID, edit.NewNodePosition);
 			}
 			else
 			{
 				SNode* newNode = script->NodeFactory->CreateNode(edit.NewNodeView->GetRuntimeHash(), 0, script);
 				CurrentScriptAsset->NodePositionMap.emplace(newNode->UID, edit.NewNodePosition);
+				GUI::SetNodePosition(newNode->UID, edit.NewNodePosition);
 			}
 		}
 
@@ -287,6 +287,8 @@ namespace Havtorn
 
 		for (auto& removedLink : edit.RemovedLinks)
 			script->Unlink(removedLink.StartPinUID, removedLink.EndPinUID);
+
+		Edit = SNodeOperation();
 	}
 
 	void CScriptTool::RenderScript()
