@@ -19,7 +19,7 @@ namespace Havtorn
 		{
 		}
 
-		const SScriptDataBinding& SScript::AddDataBinding(const char* name, const EPinType type, const EObjectDataType objectType, const EAssetType assetType)
+		const SScriptDataBinding& SScript::AddDataBinding(const U64 id, const char* name, const EPinType type, const EObjectDataType objectType, const EAssetType assetType)
 		{
 			std::variant<PIN_DATA_TYPES> data;
 			switch (type)
@@ -66,7 +66,7 @@ namespace Havtorn
 			}
 
 			DataBindings.emplace_back(SScriptDataBinding());
-			DataBindings.back().UID = UGUIDManager::Generate();
+			DataBindings.back().UID = id == 0 ? UGUIDManager::Generate() : id;
 			DataBindings.back().Name = std::string(name);
 			DataBindings.back().Type = type;
 			DataBindings.back().ObjectType = objectType;
@@ -80,8 +80,7 @@ namespace Havtorn
 
 		const SScriptDataBinding& SScript::AddDataBinding(const SScriptDataBinding& dataCopy)
 		{
-			AddDataBinding(dataCopy.Name.c_str(), dataCopy.Type, dataCopy.ObjectType, dataCopy.AssetType);
-			DataBindings.back().UID = dataCopy.UID;
+			AddDataBinding(dataCopy.UID, dataCopy.Name.c_str(), dataCopy.Type, dataCopy.ObjectType, dataCopy.AssetType);
 			DataBindings.back().Data = dataCopy.Data;
 			return DataBindings.back();
 		}

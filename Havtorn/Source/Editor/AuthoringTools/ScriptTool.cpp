@@ -258,7 +258,7 @@ namespace Havtorn
 		if (edit.NewBinding.has_value())
 		{
 			SDataBindingInitData newBindingData = edit.NewBinding.value();
-			const SScriptDataBinding& newBinding = script->AddDataBinding(newBindingData.Name.AsString().c_str(), static_cast<HexRune::EPinType>(newBindingData.Type), static_cast<HexRune::EObjectDataType>(newBindingData.ObjectType), static_cast<EAssetType>(newBindingData.AssetType));
+			const SScriptDataBinding& newBinding = script->AddDataBinding(0, newBindingData.Name.AsString().c_str(), static_cast<HexRune::EPinType>(newBindingData.Type), static_cast<HexRune::EObjectDataType>(newBindingData.ObjectType), static_cast<EAssetType>(newBindingData.AssetType));
 			Manager->RegisterDataBindingNodeView<SDataBindingGetNodeEditorContext, SDataBindingGetNode>(script, newBinding.UID);
 			Manager->RegisterDataBindingNodeView<SDataBindingSetNodeEditorContext, SDataBindingSetNode>(script, newBinding.UID);
 			edit.NewBinding.reset();

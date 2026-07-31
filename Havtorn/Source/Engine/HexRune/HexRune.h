@@ -230,7 +230,7 @@ namespace Havtorn
             }
 
             // TODO.NW: Deal with serialization?
-            ENGINE_API const SScriptDataBinding& AddDataBinding(const char* name, const EPinType type, const EObjectDataType objectType, const EAssetType assetType);
+            ENGINE_API const SScriptDataBinding& AddDataBinding(const U64 id, const char* name, const EPinType type, const EObjectDataType objectType, const EAssetType assetType);
             ENGINE_API const SScriptDataBinding& AddDataBinding(const SScriptDataBinding& dataCopy);
             ENGINE_API void RemoveDataBinding(const U64 id);
             ENGINE_API void RemoveNode(const U64 id);
