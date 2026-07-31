@@ -303,7 +303,7 @@ namespace Havtorn
 		template<typename TNodeView, typename TNode>
 		void RegisterDataBindingNodeView(HexRune::SScript* script, U64 dataBindingID)
 		{
-			const U64 runtimeNodeTypeHash = typeid(TNode).hash_code();
+			const U64 runtimeNodeTypeHash = typeid(TNode).hash_code() + dataBindingID;
 			if (RegisteredNodeViewsMap.contains(runtimeNodeTypeHash))
 				return;
 
@@ -318,7 +318,7 @@ namespace Havtorn
 		template<typename TNodeView, typename TNode>
 		void RemoveDataBindingNodeView(U64 dataBindingID)
 		{
-			const U64 runtimeNodeTypeHash = typeid(TNode).hash_code();
+			const U64 runtimeNodeTypeHash = typeid(TNode).hash_code() + dataBindingID;
 			if (!RegisteredNodeViewsMap.contains(runtimeNodeTypeHash))
 				return;
 
@@ -326,11 +326,11 @@ namespace Havtorn
 				{
 					auto const& [hash, view] = mapItem;
 
-					HexRune::SDataBindingGetNodeEditorContext* getterContext = static_cast<HexRune::SDataBindingGetNodeEditorContext*>(view.get());
+					HexRune::SDataBindingGetNodeEditorContext* getterContext = dynamic_cast<HexRune::SDataBindingGetNodeEditorContext*>(view.get());
 					if (getterContext != nullptr)
 						return getterContext->DataBindingID == dataBindingID;
 
-					HexRune::SDataBindingSetNodeEditorContext* setterContext = static_cast<HexRune::SDataBindingSetNodeEditorContext*>(view.get());
+					HexRune::SDataBindingSetNodeEditorContext* setterContext = dynamic_cast<HexRune::SDataBindingSetNodeEditorContext*>(view.get());
 					if (setterContext != nullptr)
 						return setterContext->DataBindingID == dataBindingID;
 
@@ -339,11 +339,11 @@ namespace Havtorn
 
 			std::erase_if(RegisteredNodeViewsVector, [dataBindingID](const Ptr<SNodeView>& view)
 				{
-					HexRune::SDataBindingGetNodeEditorContext* getterContext = static_cast<HexRune::SDataBindingGetNodeEditorContext*>(view.get());
+					HexRune::SDataBindingGetNodeEditorContext* getterContext = dynamic_cast<HexRune::SDataBindingGetNodeEditorContext*>(view.get());
 					if (getterContext != nullptr)
 						return getterContext->DataBindingID == dataBindingID;
 
-					HexRune::SDataBindingSetNodeEditorContext* setterContext = static_cast<HexRune::SDataBindingSetNodeEditorContext*>(view.get());
+					HexRune::SDataBindingSetNodeEditorContext* setterContext = dynamic_cast<HexRune::SDataBindingSetNodeEditorContext*>(view.get());
 					if (setterContext != nullptr)
 						return setterContext->DataBindingID == dataBindingID;
 

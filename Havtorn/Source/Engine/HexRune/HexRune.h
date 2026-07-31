@@ -192,16 +192,30 @@ namespace Havtorn
 
             // TODO.NW: Input params to the script (with connection to owning entity or instance properties) should be loaded from the corresponding component?
 
-            template<typename T, typename... Params>
-            T* AddNode(U64 uid, U32 typeID, Params... params)
+            template<typename T>
+            T* AddNode(U64 uid, U32 typeID)
             {
                 if (uid == 0)
                     uid = UGUIDManager::Generate();
 
                 NodeIndices.emplace(uid, Nodes.size());
                 NodeIDToRuntimeHash.emplace(uid, typeid(T).hash_code());
-                Nodes.emplace_back(new T(uid, typeID, this, params...));
+                Nodes.emplace_back(new T(uid, typeID, this));
                 
+                SNode* node = Nodes.back();
+                return dynamic_cast<T*>(node);
+            }
+
+            template<typename T>
+            T* AddDataBindingNode(U64 uid, U32 typeID, const U64 databindingID)
+            {
+                if (uid == 0)
+                    uid = UGUIDManager::Generate();
+
+                NodeIndices.emplace(uid, Nodes.size());
+                NodeIDToRuntimeHash.emplace(uid, typeid(T).hash_code() + databindingID);
+                Nodes.emplace_back(new T(uid, typeID, this, databindingID));
+
                 SNode* node = Nodes.back();
                 return dynamic_cast<T*>(node);
             }
@@ -217,6 +231,7 @@ namespace Havtorn
 
             // TODO.NW: Deal with serialization?
             ENGINE_API const SScriptDataBinding& AddDataBinding(const char* name, const EPinType type, const EObjectDataType objectType, const EAssetType assetType);
+            ENGINE_API const SScriptDataBinding& AddDataBinding(const SScriptDataBinding& dataCopy);
             ENGINE_API void RemoveDataBinding(const U64 id);
             ENGINE_API void RemoveNode(const U64 id);
 
@@ -256,15 +271,24 @@ namespace Havtorn
             }
 
             template<typename TNode>
-            void RegisterDatabindingNode(U32 typeID)
+            void RegisterDatabindingNode(U32 typeID, const U64 databindingID)
             {
-                RuntimeHashToTypeID.emplace(typeid(TNode).hash_code(), typeID);
+                RuntimeHashToTypeID.emplace(typeid(TNode).hash_code() + databindingID, typeID);
 
                 DatabindingNodeFactoryMap[typeID] =
-                    [](U64 id, U32 nodeTypeID, SScript* script, const U64 databindingId)
+                    [](U64 id, U32 nodeTypeID, SScript* script, const U64 databindingID)
                     {
-                        return script->AddNode<TNode>(id, nodeTypeID, databindingId);;
+                        return script->AddDataBindingNode<TNode>(id, nodeTypeID, databindingID);
                     };
+            }
+
+            template<typename TNode>
+            void RemoveDatabindingNode(const U64 databindingID)
+            {
+                const U32 typeID = RuntimeHashToTypeID.at(typeid(TNode).hash_code() + databindingID);
+                RuntimeHashToTypeID.erase(typeid(TNode).hash_code() + databindingID);
+
+                DatabindingNodeFactoryMap.erase(typeID);
             }
 
             ENGINE_API SNode* CreateNode(U32 typeID, U64 id, SScript* script);

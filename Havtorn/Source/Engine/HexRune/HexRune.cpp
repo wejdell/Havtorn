@@ -72,6 +72,17 @@ namespace Havtorn
 			DataBindings.back().ObjectType = objectType;
 			DataBindings.back().AssetType = assetType;
 			DataBindings.back().Data = data;
+
+			NodeFactory->RegisterDatabindingNode<SDataBindingGetNode>(10, DataBindings.back().UID);
+			NodeFactory->RegisterDatabindingNode<SDataBindingSetNode>(20, DataBindings.back().UID);
+			return DataBindings.back();
+		}
+
+		const SScriptDataBinding& SScript::AddDataBinding(const SScriptDataBinding& dataCopy)
+		{
+			AddDataBinding(dataCopy.Name.c_str(), dataCopy.Type, dataCopy.ObjectType, dataCopy.AssetType);
+			DataBindings.back().UID = dataCopy.UID;
+			DataBindings.back().Data = dataCopy.Data;
 			return DataBindings.back();
 		}
 
@@ -95,6 +106,8 @@ namespace Havtorn
 			for (const U64 nodeId : nodesToRemove)
 				RemoveNode(nodeId);
 
+			NodeFactory->RemoveDatabindingNode<SDataBindingGetNode>(id);
+			NodeFactory->RemoveDatabindingNode<SDataBindingSetNode>(id);
 			DataBindings.erase(bindingIterator);
 		}
 
@@ -136,11 +149,6 @@ namespace Havtorn
 				nodeToBeRemoved = nullptr;
 			}
 
-			//RemoveContext(id);
-
-			//if (NodeEditorContexts.contains(id))
-			//    NodeEditorContexts.erase(id);
-
 			Nodes.pop_back();
 			NodeIndices.erase(id);
 			NodeIDToRuntimeHash.erase(id);
@@ -149,8 +157,7 @@ namespace Havtorn
 		void SScript::Init()
 		{
 			NodeFactory = new SNodeFactory();
-			NodeFactory->RegisterDatabindingNode<SDataBindingGetNode>(10);
-			NodeFactory->RegisterDatabindingNode<SDataBindingSetNode>(20);
+			// NW: Databinding Get and Set nodes are registered in AddDataBinding
 			NodeFactory->RegisterNodeType<SBranchNode>(30);
 			NodeFactory->RegisterNodeType<SSequenceNode>(40);
 			NodeFactory->RegisterNodeType<SEntityLoopNode>(50);
@@ -391,7 +398,7 @@ namespace Havtorn
 			{
 				SScriptDataBinding databinding = {};
 				databinding.Deserialize(fromData, pointerPosition);
-				DataBindings.emplace_back(databinding);
+				AddDataBinding(databinding);
 			}
 
 			U32 nodeCount = 0;
@@ -606,9 +613,9 @@ namespace Havtorn
 			return BasicNodeFactoryMap[typeID](id, typeID, script);
 		}
 
-		SNode* SNodeFactory::CreateNode(U32 typeID, U64 id, SScript* script, const U64 databindingId)
+		SNode* SNodeFactory::CreateNode(U32 typeID, U64 id, SScript* script, const U64 databindingID)
 		{
-			return DatabindingNodeFactoryMap[typeID](id, typeID, script, databindingId);
+			return DatabindingNodeFactoryMap[typeID](id, typeID, script, databindingID);
 		}
 
 		SNode* SNodeFactory::CreateNode(U64 runtimeHash, U64 id, SScript* script)
