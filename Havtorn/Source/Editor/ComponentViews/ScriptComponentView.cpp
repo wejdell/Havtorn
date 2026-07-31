@@ -18,13 +18,15 @@ namespace Havtorn
 {
 	void SScriptComponentView::ViewDataBinding(CScene* scene, HexRune::SScriptDataBinding& dataBinding) const
 	{
-		GUI::Text(dataBinding.Name.c_str());
+		constexpr F32 dataBindingIndentation = 16.0f;
+		GUI::Indent(dataBindingIndentation);
 
-		GUI::SameLine();
 		switch (dataBinding.Type)
 		{
 		case HexRune::EPinType::Bool:
 		{
+			GUI::Text(dataBinding.Name.c_str());
+			GUI::SameLine();
 			GUI::TextDisabled(" |%s| ", "Bool");
 			GUI::SameLine();
 			GUI::Checkbox("", std::get<bool>(dataBinding.Data));
@@ -32,6 +34,8 @@ namespace Havtorn
 		break;
 		case HexRune::EPinType::Int:
 		{
+			GUI::Text(dataBinding.Name.c_str());
+			GUI::SameLine();
 			GUI::TextDisabled(" |%s| ", "Int");
 			GUI::SameLine();
 			GUI::InputInt("", std::get<I32>(dataBinding.Data));
@@ -39,6 +43,8 @@ namespace Havtorn
 		break;
 		case HexRune::EPinType::Float:
 		{
+			GUI::Text(dataBinding.Name.c_str());
+			GUI::SameLine();
 			GUI::TextDisabled(" |%s| ", "Float");
 			GUI::SameLine();
 			GUI::InputFloat("", std::get<F32>(dataBinding.Data));
@@ -46,6 +52,8 @@ namespace Havtorn
 		break;
 		case HexRune::EPinType::String:
 		{
+			GUI::Text(dataBinding.Name.c_str());
+			GUI::SameLine();
 			GUI::TextDisabled(" |%s| ", "String");
 			GUI::SameLine();
 			GUI::InputText("##edit", std::get<std::string>(dataBinding.Data));	
@@ -53,6 +61,8 @@ namespace Havtorn
 		break;
 		case HexRune::EPinType::Vector:
 		{
+			GUI::Text(dataBinding.Name.c_str());
+			GUI::SameLine();
 			GUI::TextDisabled(" |%s| ", "Vector");
 			GUI::SameLine();
 			GUI::DragFloat3("##edit", std::get<SVector>(dataBinding.Data));
@@ -68,6 +78,8 @@ namespace Havtorn
 		{
 			// TODO.NW: Handle Component type
 
+			GUI::Text(dataBinding.Name.c_str());
+			GUI::SameLine();
 			GUI::TextDisabled(" |%s| ", "Entity");
 			GUI::SameLine();
 
@@ -100,63 +112,43 @@ namespace Havtorn
 		break;
 		case HexRune::EPinType::Asset:
 		{
-			std::string assetPath = "";
+			SEditorAssetRepresentation* assetRep = Manager->GetAssetRepFromName(UGeneralUtils::ExtractFileBaseNameFromPath(std::get<std::string>(dataBinding.Data))).get();
+			std::string pickerLabel = dataBinding.Name; 
+			pickerLabel.append(" |Asset| ");
+			pickerLabel.append(assetRep->Name);
+		
+			SAssetPickResult assetPickResult = Manager->AssetPickerDropdown(pickerLabel.c_str(), dataBinding.AssetType, assetRep);
+			
+			if (assetPickResult.State == EAssetPickerState::AssetPicked)
+			{
+				SEditorAssetRepresentation* newAssetRep = Manager->GetAssetRepFromDirEntry(assetPickResult.PickedEntry).get();
+				dataBinding.Data = SAssetReference(newAssetRep->DirectoryEntry.path().string()).FilePath;
+			}
 
 			auto result = CEditorManager::AssetDragData.TryDeliver({ EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNopreviewTooltip });
 			if (result.Payload != nullptr)
 			{
-				//std::string draggedString = *reinterpret_cast<std::string*>(payload.Data);
-				//GUI::SetTooltip(draggedString.c_str());
-
-				//if (!draggedString.empty())
-				//{
-				//	GUI::SetTooltip("Assign %s to Data Binding '%s'?", draggedString.c_str(), dataBinding.Name.c_str());
-
-				//	if (payload.IsDelivery)
-				//		assetPath = draggedString;
-				//}
 				SEditorAssetRepresentation* payloadAssetRep = result.Payload;
-				GUI::SetTooltip("Assign %s to Data Binding '%s'?", payloadAssetRep->Name.c_str(), dataBinding.Name.c_str());
-
-				if (result.Result == EDragDeliverResult::Delivered)
+				if (payloadAssetRep->AssetType == dataBinding.AssetType)
 				{
-					assetPath = payloadAssetRep->DirectoryEntry.path().string();
+					GUI::SetTooltip("Assign %s to Data Binding '%s'?", payloadAssetRep->Name.c_str(), dataBinding.Name.c_str());
+
+					if (result.Result == EDragDeliverResult::Delivered)
+					{
+						dataBinding.Data = SAssetReference(payloadAssetRep->DirectoryEntry.path().string()).FilePath;
+					}
+				}
+				else
+				{
+					GUI::SetTooltip("Can't assign asset of type '%s' to Data Binding '%s'!\nIt is expecting a '%s'.", GetAssetTypeName(payloadAssetRep->AssetType).c_str(), dataBinding.Name.c_str(), GetAssetTypeName(dataBinding.AssetType).c_str());
 				}
 			}
-
-			GUI::TextDisabled(" |%s| ", "Asset");
-			GUI::SameLine();
-
-			//SAsset* asset = nullptr;
-			//if (std::holds_alternative<std::string>(dataBinding.Data))
-			//	asset = GEngine::GetAssetRegistry()->RequestAsset(SAssetReference(std::get<std::string>(dataBinding.Data)), 100);
-
-			//if (asset->Reference.FilePath.empty())
-			//	asset->Reference.FilePath = assetPath;
-
-			//GUI::Text(asset->Reference.FilePath.c_str());
-			//GUI::InputText("##edit", asset->Reference.FilePath);
-
-			//if (GUI::BeginPopupContextWindow())
-			//{
-			//	if (GUI::MenuItem("Paste Asset Path"))
-			//		asset->Reference.FilePath = GUI::CopyFromClipboard();
-
-			//	GUI::EndPopup();
-			//}
-
-			//if (!asset->Reference.FilePath.empty())
-			//	asset->Reference = SAssetReference(asset.Reference.FilePath);
-
-			//dataBinding.Data = asset->Reference.FilePath;
-			//// TODO.NW: Simplify flow for assigning assets through a view result
-			//if (dataBinding.AssetType == EAssetType::StaticMesh)
-			//{
-			//	GUI::AssetPicker("##edit", "Static Mesh", );
-			//}
 		}
 		break;
 		}
+
+		GUI::Separator();
+		GUI::Unindent(dataBindingIndentation);
 	}
 
 	void SScriptComponentView::View(const SEntity& entityOwner, CScene* scene) const

@@ -597,6 +597,7 @@ namespace Havtorn
 			case EPinType::Matrix:		DeserializeVariant<SMatrix>(data, fromData, pointerPosition);		break;
 			case EPinType::Quaternion:	DeserializeVariant<SQuaternion>(data, fromData, pointerPosition);	break;
 			case EPinType::Entity:		DeserializeVariant<SEntity>(data, fromData, pointerPosition);		break;
+			case EPinType::Asset:		DeserializeVariant<std::string>(data, fromData, pointerPosition);	break;
 			}
 		}
 

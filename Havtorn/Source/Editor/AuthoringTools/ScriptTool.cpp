@@ -114,31 +114,13 @@ namespace Havtorn
 				GUI::Text(dataBinding.Name.c_str());
 				if (GUI::IsItemHovered())
 				{
-
-					if (dataBinding.Type != EPinType::ComponentPtr)
-					{
-						const char* items[]{
-								"Unknown",
-								"Flow",
-								"Bool",
-								"Int",
-								"Float",
-								"String",
-								"Vector",
-								"Int Array",
-								"Float Array",
-								"String Array",
-								"Object",
-								"Object Array",
-								"Asset",
-								"Function",
-								"Delegate"
-						};
-						GUI::SetTooltip("%s", items[STATIC_U8(dataBinding.Type)]);
-					}
+					if (dataBinding.Type == EPinType::Asset)
+						GUI::SetTooltip("%s | %s", "Asset", magic_enum::enum_name(dataBinding.AssetType).data());
+					else
+						GUI::SetTooltip("%s", magic_enum::enum_name(dataBinding.Type).data());
 				}
 
-				CEditorManager::DataBindingDragData.TrySet(dataBinding, dataBinding.Name.c_str(), {EDragDropFlag::SourceAllowNullID});
+				CEditorManager::DataBindingDragData.TrySet(dataBinding, dataBinding.Name.c_str(), { EDragDropFlag::SourceAllowNullID });
 
 				if (GUI::BeginPopupContextWindow())
 				{
@@ -742,7 +724,7 @@ namespace Havtorn
 			GUI::Separator();
 			GUI::InputText("Name", &DataBindingCandidate.Name);
 
-			GUI::ComboEnum("Pin Type", DataBindingCandidate.Type, { EPinType::Unknown, EPinType::Flow });
+			GUI::ComboEnum("Pin Type", DataBindingCandidate.Type, { EPinType::Unknown, EPinType::Flow, EPinType::Delegate, EPinType::Function, EPinType::ComponentPtr, EPinType::ComponentPtrList, EPinType::EntityList });
 
 			if (DataBindingCandidate.Type == EPinType::Asset)
 			{
