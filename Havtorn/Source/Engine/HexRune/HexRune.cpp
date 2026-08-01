@@ -93,13 +93,20 @@ namespace Havtorn
 
 			// TODO.NW: Make algo library for find_all_if
 			std::vector<U64> nodesToRemove;
-			for (auto node : Nodes)
+			for (SNode* node : Nodes)
 			{
-				if (SDataBindingGetNode* dataBindingNode = dynamic_cast<SDataBindingGetNode*>(node))
+				if (SDataBindingGetNode* dataBindingGetNode = dynamic_cast<SDataBindingGetNode*>(node))
 				{
-					SScriptDataBinding* databinding = &(*std::ranges::find_if(DataBindings, [dataBindingNode](SScriptDataBinding& binding) { return binding.UID == dataBindingNode->DataBindingID; }));
-					if (databinding == &(*bindingIterator))
-						nodesToRemove.push_back(dataBindingNode->UID);
+					SScriptDataBinding* dataBinding = &(*std::ranges::find_if(DataBindings, [dataBindingGetNode](SScriptDataBinding& binding) { return binding.UID == dataBindingGetNode->DataBindingID; }));
+					if (dataBinding == &(*bindingIterator))
+						nodesToRemove.push_back(dataBindingGetNode->UID);
+				}
+
+				if (SDataBindingSetNode* dataBindingSetNode = dynamic_cast<SDataBindingSetNode*>(node))
+				{
+					SScriptDataBinding* dataBinding = &(*std::ranges::find_if(DataBindings, [dataBindingSetNode](SScriptDataBinding& binding) { return binding.UID == dataBindingSetNode->DataBindingID; }));
+					if (dataBinding == &(*bindingIterator))
+						nodesToRemove.push_back(dataBindingSetNode->UID);
 				}
 			}
 			for (const U64 nodeId : nodesToRemove)
@@ -143,7 +150,6 @@ namespace Havtorn
 						Unlink(&output, output.LinkedPin);
 				}
 
-				//nodeToBeRemoved->IsDeleted(this);
 				delete nodeToBeRemoved;
 				nodeToBeRemoved = nullptr;
 			}
@@ -241,7 +247,7 @@ namespace Havtorn
 
 		void SScript::LinkSerialized()
 		{
-			for (auto& link : Links)
+			for (const SLink& link : Links)
 			{
 				SPin* leftPin = nullptr;
 				SPin* rightPin = nullptr;
@@ -302,7 +308,7 @@ namespace Havtorn
 
 		void SScript::SetDataOnInput(U64 pinID, const std::variant<PIN_DATA_TYPES>& data)
 		{
-			for (auto node : Nodes)
+			for (SNode* node : Nodes)
 			{
 				auto it = std::ranges::find_if(node->Inputs, [pinID](const SPin& pin) { return pin.UID == pinID; });
 				if (it != node->Inputs.end())
@@ -317,13 +323,13 @@ namespace Havtorn
 			//Databindings -> Nodes -> Links
 			U32 size = 0;
 			size += sizeof(U32);
-			for (auto& databinding : DataBindings)
+			for (const SScriptDataBinding& dataBinding : DataBindings)
 			{
-				size += databinding.GetSize();
+				size += dataBinding.GetSize();
 			}
 
 			size += sizeof(U32);
-			for (auto& node : Nodes)
+			for (const SNode* node : Nodes)
 			{
 				size += GetDataSize(node->UID);
 				size += GetDataSize(node->TypeID);
@@ -338,6 +344,12 @@ namespace Havtorn
 				size += STATIC_U32(node->Inputs.size() * sizeof(U64));
 				size += STATIC_U32(sizeof(U32));
 				size += STATIC_U32(node->Outputs.size() * sizeof(U64));
+
+				for (const SPin& input : node->Inputs)
+				{
+					if (input.IsPinTypeLiteral())
+						size += GetDataSize(input.Data);
+				}
 			}
 
 			size += GetDataSize(Links);
@@ -349,8 +361,8 @@ namespace Havtorn
 			//Databindings -> Nodes -> Links
 			SerializeData(STATIC_U32(DataBindings.size()), toData, pointerPosition);
 
-			for (auto& db : DataBindings)
-				db.Serialize(toData, pointerPosition);
+			for (const SScriptDataBinding& dataBinding : DataBindings)
+				dataBinding.Serialize(toData, pointerPosition);
 
 			U32 nodeCount = STATIC_U32(Nodes.size());
 			SerializeData(nodeCount, toData, pointerPosition);
@@ -363,25 +375,31 @@ namespace Havtorn
 				if (node->NodeType == ENodeType::DataBindingGetNode)
 				{
 					SDataBindingGetNode* dbNode = dynamic_cast<SDataBindingGetNode*>(node);
-					const SScriptDataBinding* databinding = &(*std::ranges::find_if(DataBindings, [dbNode](const SScriptDataBinding& binding) { return binding.UID == dbNode->DataBindingID; }));
-					SerializeData(databinding->UID, toData, pointerPosition);
+					const SScriptDataBinding* dataBinding = &(*std::ranges::find_if(DataBindings, [dbNode](const SScriptDataBinding& binding) { return binding.UID == dbNode->DataBindingID; }));
+					SerializeData(dataBinding->UID, toData, pointerPosition);
 				}
 				if (node->NodeType == ENodeType::DataBindingSetNode)
 				{
 					SDataBindingSetNode* dbNode = dynamic_cast<SDataBindingSetNode*>(node);
-					const SScriptDataBinding* databinding = &(*std::ranges::find_if(DataBindings, [dbNode](const SScriptDataBinding& binding) { return binding.UID == dbNode->DataBindingID; }));
-					SerializeData(databinding->UID, toData, pointerPosition);
+					const SScriptDataBinding* dataBinding = &(*std::ranges::find_if(DataBindings, [dbNode](const SScriptDataBinding& binding) { return binding.UID == dbNode->DataBindingID; }));
+					SerializeData(dataBinding->UID, toData, pointerPosition);
 				}
 
 				std::vector<U64> inputPinIds;
-				for (auto& pin : node->Inputs)
+				for (const SPin& pin : node->Inputs)
 					inputPinIds.emplace_back(pin.UID);
 				SerializeData(inputPinIds, toData, pointerPosition);
 
 				std::vector<U64> outputPinIds;
-				for (auto& pin : node->Outputs)
+				for (const SPin& pin : node->Outputs)
 					outputPinIds.emplace_back(pin.UID);
 				SerializeData(outputPinIds, toData, pointerPosition);
+
+				for (const SPin& input : node->Inputs)
+				{
+					if (input.IsPinTypeLiteral())
+						SerializeData(input.Data, toData, pointerPosition);
+				}
 			}
 
 			SerializeData(Links, toData, pointerPosition);
@@ -390,14 +408,14 @@ namespace Havtorn
 		void SScript::Deserialize(const char* fromData, U64& pointerPosition)
 		{
 			// TODO.NW: Serialize nodes through protocol
-			U32 databindingCount = 0;
-			DeserializeData(databindingCount, fromData, pointerPosition);
+			U32 dataBindingCount = 0;
+			DeserializeData(dataBindingCount, fromData, pointerPosition);
 
-			for (U32 i = 0; i < databindingCount; i++)
+			for (U32 i = 0; i < dataBindingCount; i++)
 			{
-				SScriptDataBinding databinding = {};
-				databinding.Deserialize(fromData, pointerPosition);
-				AddDataBinding(databinding);
+				SScriptDataBinding dataBinding = {};
+				dataBinding.Deserialize(fromData, pointerPosition);
+				AddDataBinding(dataBinding);
 			}
 
 			U32 nodeCount = 0;
@@ -446,6 +464,12 @@ namespace Havtorn
 				for (U32 pinIndex = 0; pinIndex < outputPinIds.size(); pinIndex++)
 				{
 					node->Outputs[pinIndex].UID = outputPinIds[pinIndex];
+				}
+
+				for (SPin& input : node->Inputs)
+				{
+					if (input.IsPinTypeLiteral())
+						input.DeserializeLiteralPinData(fromData, pointerPosition);
 				}
 			}
 
@@ -570,6 +594,7 @@ namespace Havtorn
 			size += GetDataSize(Data);
 			return size;
 		}
+
 		void SScriptDataBinding::Serialize(char* toData, U64& pointerPosition) const
 		{
 			SerializeData(UID, toData, pointerPosition);
@@ -612,9 +637,9 @@ namespace Havtorn
 			return BasicNodeFactoryMap[typeID](id, typeID, script);
 		}
 
-		SNode* SNodeFactory::CreateNode(U32 typeID, U64 id, SScript* script, const U64 databindingID)
+		SNode* SNodeFactory::CreateNode(U32 typeID, U64 id, SScript* script, const U64 dataBindingID)
 		{
-			return DatabindingNodeFactoryMap[typeID](id, typeID, script, databindingID);
+			return DataBindingNodeFactoryMap[typeID](id, typeID, script, dataBindingID);
 		}
 
 		SNode* SNodeFactory::CreateNode(U64 runtimeHash, U64 id, SScript* script)
@@ -623,10 +648,10 @@ namespace Havtorn
 			return CreateNode(typeID, id, script);
 		}
 
-		SNode* SNodeFactory::CreateNode(U64 runtimeHash, U64 id, SScript* script, const U64 databindingId)
+		SNode* SNodeFactory::CreateNode(U64 runtimeHash, U64 id, SScript* script, const U64 dataBindingId)
 		{
 			const U32 typeID = RuntimeHashToTypeID.at(runtimeHash);
-			return CreateNode(typeID, id, script, databindingId);
+			return CreateNode(typeID, id, script, dataBindingId);
 		}
 	}
 }

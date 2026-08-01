@@ -65,13 +65,23 @@ namespace Havtorn
             SPin* LinkedPin = nullptr;
 #pragma warning(suppress : 4324)
             std::variant<PIN_DATA_TYPES> Data;
-            U64 DataSize = 0;
 
             void ClearData();
             void DeriveInput();
             void SetDataFromLinkedPin();
             ENGINE_API bool IsDataUnset() const;
             ENGINE_API bool IsPinTypeLiteral() const;
+
+            void DeserializeLiteralPinData(const char* fromData, Havtorn::U64& pointerPosition);
+        
+        private:
+            template<typename T>
+            void DeserializeVariant(std::variant<PIN_DATA_TYPES>& data, const char* fromData, U64& pointerPosition)
+            {
+                T value;
+                DeserializeData(value, fromData, pointerPosition);
+                data = value;
+            }
         };
 
         // TODO.NW: Put in HEX utility or something

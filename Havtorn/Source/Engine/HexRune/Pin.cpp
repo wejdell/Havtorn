@@ -52,5 +52,16 @@ namespace Havtorn
         {
             return Type == EPinType::String || Type == EPinType::Bool || Type == EPinType::Int || Type == EPinType::Float;
         }
+
+        void SPin::DeserializeLiteralPinData(const char* fromData, Havtorn::U64& pointerPosition)
+        {
+            switch (Type)
+            {
+            case EPinType::Bool:		DeserializeVariant<bool>(Data, fromData, pointerPosition);			break;
+            case EPinType::Int:			DeserializeVariant<I32>(Data, fromData, pointerPosition);			break;
+            case EPinType::Float:		DeserializeVariant<F32>(Data, fromData, pointerPosition);			break;
+            case EPinType::String:		DeserializeVariant<std::string>(Data, fromData, pointerPosition);	break;
+            }
+        }
     }
 }

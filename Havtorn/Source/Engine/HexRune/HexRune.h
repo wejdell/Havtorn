@@ -207,14 +207,14 @@ namespace Havtorn
             }
 
             template<typename T>
-            T* AddDataBindingNode(U64 uid, U32 typeID, const U64 databindingID)
+            T* AddDataBindingNode(U64 uid, U32 typeID, const U64 dataBindingID)
             {
                 if (uid == 0)
                     uid = UGUIDManager::Generate();
 
                 NodeIndices.emplace(uid, Nodes.size());
-                NodeIDToRuntimeHash.emplace(uid, typeid(T).hash_code() + databindingID);
-                Nodes.emplace_back(new T(uid, typeID, this, databindingID));
+                NodeIDToRuntimeHash.emplace(uid, typeid(T).hash_code() + dataBindingID);
+                Nodes.emplace_back(new T(uid, typeID, this, dataBindingID));
 
                 SNode* node = Nodes.back();
                 return dynamic_cast<T*>(node);
@@ -271,34 +271,34 @@ namespace Havtorn
             }
 
             template<typename TNode>
-            void RegisterDatabindingNode(U32 typeID, const U64 databindingID)
+            void RegisterDatabindingNode(U32 typeID, const U64 dataBindingID)
             {
-                RuntimeHashToTypeID.emplace(typeid(TNode).hash_code() + databindingID, typeID);
+                RuntimeHashToTypeID.emplace(typeid(TNode).hash_code() + dataBindingID, typeID);
 
-                DatabindingNodeFactoryMap[typeID] =
-                    [](U64 id, U32 nodeTypeID, SScript* script, const U64 databindingID)
+                DataBindingNodeFactoryMap[typeID] =
+                    [](U64 id, U32 nodeTypeID, SScript* script, const U64 dataBindingID)
                     {
-                        return script->AddDataBindingNode<TNode>(id, nodeTypeID, databindingID);
+                        return script->AddDataBindingNode<TNode>(id, nodeTypeID, dataBindingID);
                     };
             }
 
             template<typename TNode>
-            void RemoveDatabindingNode(const U64 databindingID)
+            void RemoveDatabindingNode(const U64 dataBindingID)
             {
-                const U32 typeID = RuntimeHashToTypeID.at(typeid(TNode).hash_code() + databindingID);
-                RuntimeHashToTypeID.erase(typeid(TNode).hash_code() + databindingID);
+                const U32 typeID = RuntimeHashToTypeID.at(typeid(TNode).hash_code() + dataBindingID);
+                RuntimeHashToTypeID.erase(typeid(TNode).hash_code() + dataBindingID);
 
-                DatabindingNodeFactoryMap.erase(typeID);
+                DataBindingNodeFactoryMap.erase(typeID);
             }
 
             ENGINE_API SNode* CreateNode(U32 typeID, U64 id, SScript* script);
-            ENGINE_API SNode* CreateNode(U32 typeID, U64 id, SScript* script, const U64 databindingId);
+            ENGINE_API SNode* CreateNode(U32 typeID, U64 id, SScript* script, const U64 dataBindingId);
             ENGINE_API SNode* CreateNode(U64 runtimeHash, U64 id, SScript* script);
-            ENGINE_API SNode* CreateNode(U64 runtimeHash, U64 id, SScript* script, const U64 databindingId);
+            ENGINE_API SNode* CreateNode(U64 runtimeHash, U64 id, SScript* script, const U64 dataBindingId);
 
         private:
             std::unordered_map<U32, std::function<SNode*(const U64, const U32, SScript*)>> BasicNodeFactoryMap;
-            std::unordered_map<U32, std::function<SNode*(const U64, const U32, SScript*, const U64)>> DatabindingNodeFactoryMap;
+            std::unordered_map<U32, std::function<SNode*(const U64, const U32, SScript*, const U64)>> DataBindingNodeFactoryMap;
             std::unordered_map<U64, U32> RuntimeHashToTypeID;
         };
 	}
