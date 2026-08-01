@@ -2751,6 +2751,7 @@ namespace Havtorn
 	void GUI::CopyToClipboard(const char* text)
 	{
 		Instance->Impl->CopyToClipboard(text);
+		GUI::PushNotification(EGUIToastNotificationType::Success, 3000, "Successfully copied to clipboard!");
 	}
 
 	std::string GUI::CopyFromClipboard()
