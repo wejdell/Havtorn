@@ -72,7 +72,7 @@ namespace Havtorn
 
 		IsHovered = IsEnabled && GUI::IsWindowHovered();
 
-		if (CurrentScriptAsset == nullptr)
+		if (CurrentScriptAsset == nullptr || CurrentScript == nullptr)
 		{
 			GUI::End();
 			return;
@@ -86,11 +86,9 @@ namespace Havtorn
 
 		IsHoveringWindow = isWindowHovered;
 
-		HexRune::SScript* script = CurrentScriptAsset->Script.get();
-
 		{ // Menu Bar
 			GUI::BeginChild("ScriptMenuBar", SVector2<F32>(0.0f, 30.0f));
-			GUI::Text(script->Name.c_str());
+			GUI::Text(CurrentScript->Name.c_str());
 			GUI::SameLine();
 			Filter.Draw("Search", 180);
 
@@ -107,7 +105,7 @@ namespace Havtorn
 			GUI::Text("Data Bindings");
 			GUI::Separator();
 
-			for (auto& dataBinding : script->DataBindings)
+			for (SScriptDataBinding& dataBinding : CurrentScript->DataBindings)
 			{
 				GUI::Text(dataBinding.Name.c_str());
 				if (GUI::IsItemHovered())
@@ -134,7 +132,7 @@ namespace Havtorn
 
 		GUI::BeginScript("Node Script Editor");
 		RenderScript();
-		CommitEdit(Edit);
+		CommitEdit();
 		GUI::EndScript();
 
 		auto result = CEditorManager::DataBindingDragData.TryDeliver({ EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNoDrawDefaultRect, EDragDropFlag::AcceptNopreviewTooltip });
@@ -181,8 +179,9 @@ namespace Havtorn
 
 		CurrentScriptAssetRef = SAssetReference(asset->DirectoryEntry.path().string());
 		CurrentScriptAsset = GEngine::GetAssetRegistry()->RequestAssetData<SScriptAsset>(CurrentScriptAssetRef, CAssetRegistry::EditorManagerRequestID);
+		CurrentScript = CurrentScriptAsset->Script.get();
 
-		for (auto& binding : CurrentScriptAsset->Script->DataBindings)
+		for (const SScriptDataBinding& binding : CurrentScriptAsset->Script->DataBindings)
 		{
 			Manager->RegisterDataBindingNodeView<SDataBindingGetNodeEditorContext, SDataBindingGetNode>(CurrentScriptAsset->Script.get(), binding.UID);
 			Manager->RegisterDataBindingNodeView<SDataBindingSetNodeEditorContext, SDataBindingSetNode>(CurrentScriptAsset->Script.get(), binding.UID);
@@ -206,7 +205,7 @@ namespace Havtorn
 	{
 		// TODO.NW: Ask user if they want to save?
 
-		for (auto& binding : CurrentScriptAsset->Script->DataBindings)
+		for (const SScriptDataBinding& binding : CurrentScriptAsset->Script->DataBindings)
 		{
 			Manager->RemoveDataBindingNodeView<SDataBindingGetNodeEditorContext, SDataBindingGetNode>(binding.UID);
 			Manager->RemoveDataBindingNodeView<SDataBindingSetNodeEditorContext, SDataBindingSetNode>(binding.UID);
@@ -215,15 +214,13 @@ namespace Havtorn
 		GEngine::GetAssetRegistry()->UnrequestAsset(CurrentScriptAssetRef, CAssetRegistry::EditorManagerRequestID);
 		CurrentScriptAssetRef = SAssetReference();
 		CurrentScriptAsset = nullptr;
+		CurrentScript = nullptr;
 		SetEnabled(false);
 	}
 
-	void CScriptTool::CommitEdit(SNodeOperation& edit)
+	void CScriptTool::CommitEdit()
 	{
-		HexRune::SScript* script = CurrentScriptAsset->Script.get();
-
-		// Edit CurrentScriptAsset here
-		for (auto& node : script->Nodes)
+		for (const SNode* node : CurrentScript->Nodes)
 		{
 			if (node == nullptr)
 				continue;
@@ -231,62 +228,52 @@ namespace Havtorn
 			CurrentScriptAsset->NodePositionMap[node->UID] = GUI::GetNodePosition(node->UID);
 		}
 
-		if (edit.NewNodeView != nullptr)
+		if (Edit.NewNodeView != nullptr)
 		{
-			SDataBindingGetNodeEditorContext* getterContext = dynamic_cast<SDataBindingGetNodeEditorContext*>(edit.NewNodeView);
-			SDataBindingSetNodeEditorContext* setterContext = dynamic_cast<SDataBindingSetNodeEditorContext*>(edit.NewNodeView);
+			const SDataBindingGetNodeEditorContext* getterContext = dynamic_cast<SDataBindingGetNodeEditorContext*>(Edit.NewNodeView);
+			const SDataBindingSetNodeEditorContext* setterContext = dynamic_cast<SDataBindingSetNodeEditorContext*>(Edit.NewNodeView);
+			
+			U64 newNodeUID = 0;
 			if (getterContext != nullptr)
-			{
-				SNode* newNode = script->NodeFactory->CreateNode(edit.NewNodeView->GetRuntimeHash(), 0, script, getterContext->DataBindingID);
-				CurrentScriptAsset->NodePositionMap.emplace(newNode->UID, edit.NewNodePosition);
-				GUI::SetNodePosition(newNode->UID, edit.NewNodePosition);
-			}
+				newNodeUID = CurrentScript->NodeFactory->CreateNode(Edit.NewNodeView->GetRuntimeHash(), 0, CurrentScript, getterContext->DataBindingID)->UID;
 			else if (setterContext != nullptr)
-			{
-				SNode* newNode = script->NodeFactory->CreateNode(edit.NewNodeView->GetRuntimeHash(), 0, script, setterContext->DataBindingID);
-				CurrentScriptAsset->NodePositionMap.emplace(newNode->UID, edit.NewNodePosition);
-				GUI::SetNodePosition(newNode->UID, edit.NewNodePosition);
-			}
+				newNodeUID = CurrentScript->NodeFactory->CreateNode(Edit.NewNodeView->GetRuntimeHash(), 0, CurrentScript, setterContext->DataBindingID)->UID;
 			else
-			{
-				SNode* newNode = script->NodeFactory->CreateNode(edit.NewNodeView->GetRuntimeHash(), 0, script);
-				CurrentScriptAsset->NodePositionMap.emplace(newNode->UID, edit.NewNodePosition);
-				GUI::SetNodePosition(newNode->UID, edit.NewNodePosition);
-			}
+				newNodeUID = CurrentScript->NodeFactory->CreateNode(Edit.NewNodeView->GetRuntimeHash(), 0, CurrentScript)->UID;
+			
+			CurrentScriptAsset->NodePositionMap.emplace(newNodeUID, Edit.NewNodePosition);
+			GUI::SetNodePosition(newNodeUID, Edit.NewNodePosition);
 		}
 
-		if (edit.NewBinding.has_value())
+		if (Edit.NewBinding.has_value())
 		{
-			SDataBindingInitData newBindingData = edit.NewBinding.value();
-			const SScriptDataBinding& newBinding = script->AddDataBinding(0, newBindingData.Name.AsString().c_str(), static_cast<HexRune::EPinType>(newBindingData.Type), static_cast<HexRune::EObjectDataType>(newBindingData.ObjectType), static_cast<EAssetType>(newBindingData.AssetType));
-			Manager->RegisterDataBindingNodeView<SDataBindingGetNodeEditorContext, SDataBindingGetNode>(script, newBinding.UID);
-			Manager->RegisterDataBindingNodeView<SDataBindingSetNodeEditorContext, SDataBindingSetNode>(script, newBinding.UID);
-			edit.NewBinding.reset();
+			const SDataBindingInitData newBindingData = Edit.NewBinding.value();
+			const SScriptDataBinding& newBinding = CurrentScript->AddDataBinding(0, newBindingData.Name.AsString().c_str(), newBindingData.Type, newBindingData.ObjectType, newBindingData.AssetType);
+			Manager->RegisterDataBindingNodeView<SDataBindingGetNodeEditorContext, SDataBindingGetNode>(CurrentScript, newBinding.UID);
+			Manager->RegisterDataBindingNodeView<SDataBindingSetNodeEditorContext, SDataBindingSetNode>(CurrentScript, newBinding.UID);
+			Edit.NewBinding.reset();
 		}
 
-		if (edit.RemovedBindingID != 0)
+		if (Edit.RemovedBindingID != 0)
 		{
-			script->RemoveDataBinding(edit.RemovedBindingID);
-			Manager->RemoveDataBindingNodeView<SDataBindingGetNodeEditorContext, SDataBindingGetNode>(edit.RemovedBindingID);
-			Manager->RemoveDataBindingNodeView<SDataBindingSetNodeEditorContext, SDataBindingSetNode>(edit.RemovedBindingID);
+			CurrentScript->RemoveDataBinding(Edit.RemovedBindingID);
+			Manager->RemoveDataBindingNodeView<SDataBindingGetNodeEditorContext, SDataBindingGetNode>(Edit.RemovedBindingID);
+			Manager->RemoveDataBindingNodeView<SDataBindingSetNodeEditorContext, SDataBindingSetNode>(Edit.RemovedBindingID);
 		}
 
-		if (edit.ModifiedLiteralValuePin != nullptr && !edit.ModifiedLiteralValuePin->IsDataUnset()) // NW: Only literal data types need to set data from GUI->Engine, when they are unpinned.	
-			script->SetDataOnInput(edit.ModifiedLiteralValuePin->UID, GetEngineTypeData(GetLiteralTypeData(edit.ModifiedLiteralValuePin->Data)));
+		if (Edit.ModifiedLiteralValuePin != nullptr && !Edit.ModifiedLiteralValuePin->IsDataUnset()) // NW: Only literal data types need to set data from GUI->Engine, when they are unpinned.	
+			CurrentScript->SetDataOnInput(Edit.ModifiedLiteralValuePin->UID, GetEngineTypeData(GetLiteralTypeData(Edit.ModifiedLiteralValuePin->Data)));
 
-		for (auto& removedNode : edit.RemovedNodes)
+		for (const U64& nodeUID : Edit.RemovedNodes)
 		{
-			if (removedNode == nullptr)
-				continue;
-
-			script->RemoveNode(removedNode->UID);
+			CurrentScript->RemoveNode(nodeUID);
 		}
 
-		if (edit.NewLink.UID != 0)
-			script->Link(edit.NewLink.StartPinUID, edit.NewLink.EndPinUID);
+		if (Edit.NewLink.UID != 0)
+			CurrentScript->Link(Edit.NewLink.StartPinUID, Edit.NewLink.EndPinUID);
 
-		for (auto& removedLink : edit.RemovedLinks)
-			script->Unlink(removedLink.StartPinUID, removedLink.EndPinUID);
+		for (const SLink& removedLink : Edit.RemovedLinks)
+			CurrentScript->Unlink(removedLink.StartPinUID, removedLink.EndPinUID);
 
 		Edit = SNodeOperation();
 	}
@@ -296,12 +283,13 @@ namespace Havtorn
 		GUI::PushScriptStyleColor(EScriptStyleColor::Background, SColor(60));
 
 		RenderNodes();
+		
 		CurrentDragPinType = EPinType::Unknown;
-		HexRune::SScript* script = CurrentScriptAsset->Script.get();
-		for (auto& linkInfo : script->Links)
+
+		for (const SLink& link : CurrentScript->Links)
 		{
-			SPin* startPin = GetPinFromID(linkInfo.StartPinUID, script->Nodes);
-			GUI::Link(linkInfo.UID, linkInfo.StartPinUID, linkInfo.EndPinUID, startPin != nullptr ? GetPinTypeColor(startPin->Type) : SColor::White);
+			SPin* startPin = GetPinFromID(link.StartPinUID, CurrentScript->Nodes);
+			GUI::Link(link.UID, link.StartPinUID, link.EndPinUID, startPin != nullptr ? GetPinTypeColor(startPin->Type) : SColor::White);
 		}
 
 		HandleCreateAction();
@@ -314,21 +302,18 @@ namespace Havtorn
 	void CScriptTool::RenderNodes()
 	{
 		const std::unordered_map<U64, Ptr<SNodeView>>& views = Manager->GetNodeViewsMap();
-		HexRune::SScript* script = CurrentScriptAsset->Script.get();
 			
-		for (SNode* node : script->Nodes)
+		for (SNode* node : CurrentScript->Nodes)
 		{
-			const U64 runtimeHash = script->NodeIDToRuntimeHash.at(node->UID);
-			SNodeView* view = views.at(runtimeHash).get();
+			const U64 runtimeHash = CurrentScript->NodeIDToRuntimeHash.at(node->UID);
+			const SNodeView* view = views.at(runtimeHash).get();
 
-			SVector2<F32> requiredSize = GetNodeSize(node, view);
+			const SVector2<F32> requiredSize = GetNodeSize(node, view);
 			GUI::PushScriptStyleVar(EScriptStyleVar::NodePadding, SVector4(8.0f, 4.0f, 8.0f, 8.0f));
 			GUI::BeginNode(node->UID);
 
 			GUI::PushID(node->UID);
 			GUI::BeginVertical("node", requiredSize);
-
-			SVector4 headerRect = SVector4();
 
 			GUI::BeginHorizontal("header", SVector2<F32>(requiredSize.X, HeaderHeight));
 			SVector2<F32> nodeNameCursorStart = GUI::GetCursorPos();
@@ -336,10 +321,11 @@ namespace Havtorn
 			GUI::SetCursorPos(nodeNameCursorStart);
 			GUI::TextUnformatted(view->Name.c_str());
 			GUI::EndHorizontal();
-			headerRect = GUI::GetLastRect();
+
+			const SVector4 headerRect = GUI::GetLastRect();
 			GUI::Spring(0, GUI::GetStyleVar(EStyleVar::ItemSpacing).Y * 3.0f);
 
-			U64 maxPinColumnLength = UMath::Max(node->Inputs.size(), node->Outputs.size());
+			const U64 maxPinColumnLength = UMath::Max(node->Inputs.size(), node->Outputs.size());
 			for (U64 i = 0; i < maxPinColumnLength; i++)
 			{
 				SPin* inputPin = node->Inputs.size() > i ? &node->Inputs[i] : nullptr;
@@ -350,7 +336,7 @@ namespace Havtorn
 					GUI::PushScriptStyleVar(EScriptStyleVar::PivotAlignment, SVector2<F32>(0.1f, 0.5f));
 					GUI::BeginPin(inputPin->UID, EGUIPinDirection::Input);
 
-					const bool isPinLinked = IsPinLinked(inputPin->UID, script->Links);
+					const bool isPinLinked = IsPinLinked(inputPin->UID, CurrentScript->Links);
 
 					if (!isPinLinked && inputPin->Type == CurrentDragPinType)
 					{
@@ -368,7 +354,7 @@ namespace Havtorn
 					}
 
 					GUI::SameLine(0, 0);
-					F32 cursorY = GUI::GetCursorPosY();
+					const F32 cursorY = GUI::GetCursorPosY();
 					GUI::SetCursorPosY(cursorY + PinNameOffset);
 					GUI::Text(inputPin->Name.c_str());
 					GUI::SetCursorPosY(cursorY - PinNameOffset);
@@ -382,21 +368,21 @@ namespace Havtorn
 					if (inputPin != nullptr)
 						GUI::SameLine();
 
-					F32 nameWidth = GUI::CalculateTextSize(outputPin->Name.c_str()).X;
 					constexpr F32 iconSize = 24.0f;
-					F32 indent = requiredSize.X - nameWidth - iconSize;
+					const F32 nameWidth = GUI::CalculateTextSize(outputPin->Name.c_str()).X;
+					const F32 indent = requiredSize.X - nameWidth - iconSize;
 					GUI::Indent(indent);
 
 					GUI::PushScriptStyleVar(EScriptStyleVar::PivotAlignment, SVector2<F32>(0.9f, 0.5f));
 					GUI::BeginPin(outputPin->UID, EGUIPinDirection::Output);
 
-					F32 cursorX = GUI::GetCursorPosX();
-					F32 cursorY = GUI::GetCursorPosY();
+					const F32 cursorX = GUI::GetCursorPosX();
+					const F32 cursorY = GUI::GetCursorPosY();
 					GUI::SetCursorPosY(cursorY + PinNameOffset);
 					GUI::Text(outputPin->Name.c_str());
 					GUI::SetCursorPos(SVector2<F32>(cursorX + nameWidth, cursorY));
 
-					DrawPinIcon(*outputPin, IsPinLinked(outputPin->UID, script->Links), 200, false);
+					DrawPinIcon(*outputPin, IsPinLinked(outputPin->UID, CurrentScript->Links), 200, false);
 					GUI::EndPin();
 					GUI::PopScriptStyleVar();
 					GUI::Unindent(indent);
@@ -410,15 +396,15 @@ namespace Havtorn
 			{
 				constexpr F32 nodeRounding = 2.5f;
 				constexpr F32 nodeBorderWidth = 1.5f;
-				const auto halfBorderWidth = nodeBorderWidth * 0.5f;
-				const auto uv = SVector2<F32>(
+				const F32 halfBorderWidth = nodeBorderWidth * 0.5f;
+				const SVector2<F32> uv = SVector2<F32>(
 					(headerRect.Z - headerRect.X) / (F32)(4.0f * 64.0f),//width
 					(headerRect.W - headerRect.Y) / (F32)(4.0f * 64.0f));//height
 
-				SVector2<F32> imagePadding = SVector2<F32>(8 - halfBorderWidth, 4 - halfBorderWidth);
-				SVector2<F32> imagePaddingMax = SVector2<F32>(8 - halfBorderWidth, 10 - halfBorderWidth);
-				SVector2<F32> imageMin = SVector2<F32>(headerRect.X - imagePadding.X, headerRect.Y - imagePadding.Y);
-				SVector2<F32> imageMax = SVector2<F32>(headerRect.Z + imagePaddingMax.X, headerRect.W + imagePaddingMax.Y);
+				const SVector2<F32> imagePadding = SVector2<F32>(8 - halfBorderWidth, 4 - halfBorderWidth);
+				const SVector2<F32> imagePaddingMax = SVector2<F32>(8 - halfBorderWidth, 10 - halfBorderWidth);
+				const SVector2<F32> imageMin = SVector2<F32>(headerRect.X - imagePadding.X, headerRect.Y - imagePadding.Y);
+				const SVector2<F32> imageMax = SVector2<F32>(headerRect.Z + imagePaddingMax.X, headerRect.W + imagePaddingMax.Y);
 				GUI::DrawNodeHeader(node->UID, Manager->GetResourceManager()->GetStaticEditorTextureResource(EEditorTexture::NodeBackground), imageMin, imageMax, SVector2<F32>(0.0f), uv, view->Color, nodeRounding);
 			}
 			GUI::PopID();
@@ -428,16 +414,13 @@ namespace Havtorn
 
 	void CScriptTool::HandleCreateAction()
 	{
-		// Handle creation action, returns true if editor want to create new object (node or link)
 		if (!GUI::BeginScriptCreate())
 			return GUI::EndScriptCreate();
-
-		HexRune::SScript* script = CurrentScriptAsset->Script.get();
 
 		U64 inputPinId, outputPinId = 0;
 		if (!GUI::QueryNewLink(inputPinId, outputPinId))
 		{
-			SPin* originPin = GetPinFromID(inputPinId, script->Nodes);
+			const SPin* originPin = GetPinFromID(inputPinId, CurrentScript->Nodes);
 			if (originPin->Type != EPinType::Unknown)
 			{
 				CurrentDragPinType = originPin->Type;
@@ -452,16 +435,16 @@ namespace Havtorn
 		if (!GUI::AcceptNewScriptItem())
 			return GUI::EndScriptCreate();
 
-		SNode* firstNode = GetNodeFromPinID(inputPinId, script->Nodes);
-		SNode* secondNode = GetNodeFromPinID(outputPinId, script->Nodes);
+		SNode* firstNode = GetNodeFromPinID(inputPinId, CurrentScript->Nodes);
+		SNode* secondNode = GetNodeFromPinID(outputPinId, CurrentScript->Nodes);
 		assert(firstNode);
 		assert(secondNode);
 
 		if (firstNode == secondNode)
 			return GUI::EndScriptCreate();
 
-		SPin* firstPin = GetPinFromID(inputPinId, firstNode);
-		SPin* secondPin = GetPinFromID(outputPinId, secondNode);
+		const SPin* firstPin = GetPinFromID(inputPinId, firstNode);
+		const SPin* secondPin = GetPinFromID(outputPinId, secondNode);
 
 		bool canAddlink = true;
 		if (firstPin && secondPin)
@@ -545,14 +528,12 @@ namespace Havtorn
 		if (!GUI::BeginScriptDelete())
 			return GUI::EndScriptDelete();
 
-		HexRune::SScript* script = CurrentScriptAsset->Script.get();
-			
 		U64 deletedLinkId = 0;
 		while (GUI::QueryDeletedLink(deletedLinkId))
 		{
 			if (GUI::AcceptDeletedScriptItem())
 			{
-				for (SLink& link : script->Links)
+				for (const SLink& link : CurrentScript->Links)
 				{
 					if (link.UID == deletedLinkId)
 					{
@@ -573,11 +554,11 @@ namespace Havtorn
 		{
 			if (GUI::AcceptDeletedScriptItem())
 			{
-				for (SNode* node : script->Nodes)
+				for (const SNode* node : CurrentScript->Nodes)
 				{
 					if (node->UID == nodeId)
 					{
-						Edit.RemovedNodes.emplace_back(node);
+						Edit.RemovedNodes.emplace_back(node->UID);
 
 						//if (myShouldPushCommand) 
 						//{
@@ -593,7 +574,7 @@ namespace Havtorn
 
 	void CScriptTool::ContextMenu()
 	{
-		SVector2<F32> openPopupPosition = GUI::GetMousePosition();
+		const SVector2<F32> openPopupPosition = GUI::GetMousePosition();
 		GUI::SuspendScript();
 
 		if (GUI::ShowScriptContextMenu())
@@ -606,95 +587,8 @@ namespace Havtorn
 
 		if (GUI::BeginPopup("Create New Node"))
 		{
-			SVector2<F32> newNodePostion = openPopupPosition;
-			//CNodeType** types = CNodeTypeCollector::GetAllNodeTypes();
-			//unsigned short noOfTypes = CNodeTypeCollector::GetNodeTypeCount();
-			//std::map<std::string, std::vector<CNodeType*>> cats;
-			//for (int i = 0; i < noOfTypes; i++)
-			//{
-			//	cats[types[i]->GetNodeTypeCategory()].push_back(types[i]);
-			//}
-			//GUI::PushItemWidth(100.0f);
-			//GUI::InputText("##edit", (char*)myMenuSeachField, 127);
-			//if (mySetSearchFokus)
-			//{
-			//	GUI::SetKeyboardFocusHere(0);
-			//}
-			//mySetSearchFokus = false;
-			//GUI::PopItemWidth();
-			//if (myMenuSeachField[0] != '\0')
-			//{
-			//	std::vector<SDistBestResult> distanceResults;
-			//	for (int i = 0; i < noOfTypes; i++)
-			//	{
-			//		distanceResults.push_back(SDistBestResult());
-			//		SDistBestResult& dist = distanceResults.back();
-			//		dist.ourInstance = types[i];
-			//		dist.myScore = uiLevenshteinDistance<std::string>(types[i]->Name, myMenuSeachField);
-			//	}
-			//	std::sort(distanceResults.begin(), distanceResults.end(), less_than_key());
-			//	int firstCost = distanceResults[0].myScore;
-			//	for (int i = 0; i < distanceResults.size(); i++)
-			//	{
-			//		CNodeInstance* node = nullptr;
-			//		if (GUI::MenuItem(distanceResults[i].ourInstance->Name.c_str()))
-			//		{
-			//			node = new CNodeInstance();
-			//			int nodeType = i;
-			//			node.myNodeType = distanceResults[i].ourInstance;
-			//			node.ConstructUniquePins();
-			//			GUI::SetNodePosition(node.UID, newNodePostion);
-			//			node.myHasSetEditorPos = true;
-			//			myNodeInstancesInGraph.push_back(node);
-			//			if (myShouldPushCommand)
-			//			{
-			//				std::cout << "Push create command!" << std::endl;
-			//				myUndoCommands.push({ CommandAction::Create, node, nullptr, {0,0,0}, node.UID});
-			//			}
-			//		}
-			//		int distance = distanceResults[i].myScore - firstCost;
-			//		if (distance > 3)
-			//		{
-			//			break;
-			//		}
-			//	}
-			//}
-			//else
-			//{
-				//for (auto& category : cats)
-				//{
-				//	std::string theCatName = category.first;
-				//	if (theCatName.empty())
-				//	{
-				//		theCatName = "General";
-				//	}
-				//	if (GUI::BeginMenu(theCatName.c_str()))
-				//	{
-				//		CNodeInstance* node = nullptr;
-				//		for (int i = 0; i < category.second.size(); i++)
-				//		{
-				//			CNodeType* type = category.second[i];
-				//			if (GUI::MenuItem(type->Name.c_str()))
-				//			{
-				//				node = new CNodeInstance();
-				//				int nodeType = i;
-				//				node.myNodeType = type;
-				//				node.ConstructUniquePins();
-				//				GUI::SetNodePosition(node.UID, newNodePostion);
-				//				node.myHasSetEditorPos = true;
-				//				myNodeInstancesInGraph.push_back(node);
-				//		
-				//				if (myShouldPushCommand)
-				//				{
-				//					std::cout << "Push create command!" << std::endl;
-				//					myUndoCommands.push({CommandAction::Create, node, nullptr, {0,0,0}, node.UID});
-				//				}
-				//			}
-				//		}
-				//		GUI::EndMenu();
-				//	}
-				//}
-
+			const SVector2<F32> newNodePostion = openPopupPosition;
+			
 			for (const Ptr<SNodeView>& view : Manager->GetNodeViewsVector())
 			{
 				if (GUI::BeginMenu(view->Category.c_str()))
@@ -717,7 +611,6 @@ namespace Havtorn
 			}
 			else
 				GUI::EndPopup();
-			//}		
 		}
 
 		if (GUI::BeginPopup("Create Data Binding"))
@@ -745,10 +638,6 @@ namespace Havtorn
 			{
 				DataBindingCandidate.ObjectType = EObjectDataType::None;
 			}
-
-			//GUI::TextDisabled("Name");
-			//GUI::SameLine();
-			//GUI::InputText("Name", (char*)name.c_str(), 64);
 
 			if (GUI::Button("Create"))
 			{
@@ -890,7 +779,7 @@ namespace Havtorn
 		constexpr F32 iconNamePadding = 6.0f;
 		constexpr F32 iconPadding = iconSize + iconNamePadding * 1.5f;
 
-		I64 maxPinColumnLength = UMath::Max(node->Inputs.size(), node->Outputs.size());
+		const I64 maxPinColumnLength = UMath::Max(node->Inputs.size(), node->Outputs.size());
 		F32 inputMaxRequired = 0.0f;
 		F32 outputMaxRequired = 0.0f;
 
@@ -906,6 +795,7 @@ namespace Havtorn
 			if (nameWidth > outputMaxRequired)
 				outputMaxRequired = nameWidth + iconPadding;
 		}
+
 		F32 requiredWidth = UMath::Max(GUI::CalculateTextSize(view->Name.c_str()).X, inputMaxRequired + outputMaxRequired);
 		if (node->FlowType == EFlowType::Simple)
 			requiredWidth += 50.0f;
@@ -918,7 +808,7 @@ namespace Havtorn
 		if (!id)
 			return false;
 
-		for (auto& link : links)
+		for (const SLink& link : links)
 			if (link.StartPinUID == id || link.EndPinUID == id)
 				return true;
 
@@ -935,8 +825,11 @@ namespace Havtorn
 		bool wasPinValueModified = false;
 		constexpr F32 emptyItemWidth = 50.0f;
 
-		F32 cursorPosY = GUI::GetCursorPosY();
+		const F32 cursorPosY = GUI::GetCursorPosY();
 		GUI::SetCursorPosY(cursorPosY + 2.0f);
+
+		GUI::PushID(pin.UID);
+		GUI::PushItemWidth(emptyItemWidth);
 
 		switch (pin.Type)
 		{
@@ -945,11 +838,7 @@ namespace Havtorn
 			if (pin.IsDataUnset())
 				pin.Data = "";
 
-			GUI::PushID(pin.UID);
-			GUI::PushItemWidth(emptyItemWidth);
 			wasPinValueModified = GUI::InputText("##edit", std::get<std::string>(pin.Data));
-			GUI::PopItemWidth();
-			GUI::PopID();
 			break;
 		}
 		case EPinType::Int:
@@ -957,11 +846,7 @@ namespace Havtorn
 			if (pin.IsDataUnset())
 				pin.Data = 0;
 
-			GUI::PushID(pin.UID);
-			GUI::PushItemWidth(emptyItemWidth);
 			wasPinValueModified = GUI::InputInt("##edit", std::get<I32>(pin.Data));
-			GUI::PopItemWidth();
-			GUI::PopID();
 			break;
 		}
 		case EPinType::Bool:
@@ -969,11 +854,7 @@ namespace Havtorn
 			if (pin.IsDataUnset())
 				pin.Data = false;
 
-			GUI::PushID(pin.UID);
-			GUI::PushItemWidth(emptyItemWidth);
 			wasPinValueModified = GUI::Checkbox("##edit", std::get<bool>(pin.Data));
-			GUI::PopItemWidth();
-			GUI::PopID();
 			break;
 		}
 		case EPinType::Float:
@@ -981,25 +862,25 @@ namespace Havtorn
 			if (pin.IsDataUnset())
 				pin.Data = 0.0f;
 
-			GUI::PushID(pin.UID);
-			GUI::PushItemWidth(emptyItemWidth);
 			wasPinValueModified = GUI::InputFloat("##edit", std::get<F32>(pin.Data));
-			GUI::PopItemWidth();
-			GUI::PopID();
 			break;
 		}
 		default:
 			assert(0);
 		}
 
+		GUI::PopItemWidth();
+		GUI::PopID();
+
 		return wasPinValueModified;
 	}
 
 	void CScriptTool::DrawPinIcon(const SPin& pin, bool connected, U8 alpha, bool highlighted)
 	{
-		EGUIIconType iconType;
+		EGUIIconType iconType = EGUIIconType::Flow;
 		SColor color = GetPinTypeColor(pin.Type);
 		color.A = alpha;
+		
 		switch (pin.Type)
 		{
 		case EPinType::Flow:     iconType = EGUIIconType::Flow;   break;
@@ -1053,7 +934,7 @@ namespace Havtorn
 	{
 		for (SNode* node : nodes)
 		{
-			SPin* pin = GetPinFromID(id, node);
+			const SPin* pin = GetPinFromID(id, node);
 			if (pin != nullptr && pin->UID == id)
 				return node;
 		}
@@ -1080,7 +961,7 @@ namespace Havtorn
 
 	SPin* CScriptTool::GetPinFromID(U64 id, std::vector<SNode*>& nodes)
 	{
-		for (auto& node : nodes)
+		for (SNode* node : nodes)
 		{
 			SPin* pin = GetPinFromID(id, node);
 			if (pin != nullptr && pin->UID == id)
@@ -1092,9 +973,9 @@ namespace Havtorn
 
 	SPin* CScriptTool::GetOutputPinFromID(U64 id, std::vector<SNode*>& nodes)
 	{
-		for (auto& node : nodes)
+		for (SNode* node : nodes)
 		{
-			for (auto& pin : node->Outputs)
+			for (SPin& pin : node->Outputs)
 			{
 				if (pin.UID == id)
 					return &pin;

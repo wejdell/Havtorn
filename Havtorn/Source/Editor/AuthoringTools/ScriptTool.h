@@ -36,7 +36,7 @@ namespace Havtorn
 		SNodeView* NewNodeView = nullptr;
 		SVector2<F32> NewNodePosition = SVector2<F32>::Zero;
 		HexRune::SLink NewLink = {};
-		std::vector<HexRune::SNode*> RemovedNodes = {};
+		std::vector<U64> RemovedNodes = {};
 		std::vector<HexRune::SLink> RemovedLinks = {};
 	};
 
@@ -57,7 +57,7 @@ namespace Havtorn
 		void CloseScript();
 
 	private:
-		void CommitEdit(SNodeOperation& edit);
+		void CommitEdit();
 
 		void RenderScript();
 		void RenderNodes();
@@ -79,6 +79,7 @@ namespace Havtorn
 
 		SAssetReference CurrentScriptAssetRef = SAssetReference();
 		SScriptAsset* CurrentScriptAsset = nullptr;
+		HexRune::SScript* CurrentScript = nullptr;
 
 		HexRune::EPinType CurrentDragPinType = HexRune::EPinType::Unknown;
 		SGuiTextFilter Filter;
