@@ -40,7 +40,7 @@ namespace Havtorn
 		SVector GridSnap(const SVector& pivotPosition);
 		void ViewManipulation(SMatrix& outCameraView, const SVector2<F32>& windowPosition, const SVector2<F32>& windowSize);
 
-		void AddComponentCombo(const SEntity& entity, CScene* owningScene);
+		void AddComponentPopup(const SEntity& entity, CScene* owningScene);
 
 		void UpdateAssetContextMenu();
 
