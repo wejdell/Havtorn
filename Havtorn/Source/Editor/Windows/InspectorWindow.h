@@ -4,6 +4,7 @@
 #include "EditorWindow.h"
 
 #include <MathTypes/Vector.h>
+#include <GUI.h>
 
 namespace Havtorn
 {
@@ -39,7 +40,7 @@ namespace Havtorn
 		SVector GridSnap(const SVector& pivotPosition);
 		void ViewManipulation(SMatrix& outCameraView, const SVector2<F32>& windowPosition, const SVector2<F32>& windowSize);
 
-		void OpenAddComponentPopup(const SEntity& entity, CScene* owningScene);
+		void AddComponentCombo(const SEntity& entity, CScene* owningScene);
 
 		void UpdateAssetContextMenu();
 
@@ -63,5 +64,7 @@ namespace Havtorn
 		SAssetReference* ContextMenuAssetRef = nullptr;
 		U64 ContextMenuAssetRequester = 0;
 		bool IsContextMenuRefHovered = false;
+
+		SGuiTextFilter ComponentFilter = SGuiTextFilter();
 	};
 }

@@ -153,10 +153,8 @@ namespace Havtorn
 		UpdateAssetContextMenu();
 
 		GUI::Separator();
-		if (GUI::Button("Add Component", SVector2<F32>(GUI::GetContentRegionAvail().X, 0)))
-			GUI::OpenPopup("Add Component Popup");
 
-		OpenAddComponentPopup(entity, owningScene);
+		AddComponentCombo(entity, owningScene);
 	}
 
 	void CInspectorWindow::UpdateTransformGizmo(STransformComponent* viewedTransformComp)
@@ -469,16 +467,21 @@ namespace Havtorn
 		GUI::Separator();
 	}
 
-	void CInspectorWindow::OpenAddComponentPopup(const SEntity& entity, CScene* owningScene)
+	void CInspectorWindow::AddComponentCombo(const SEntity& entity, CScene* owningScene)
 	{
-		if (!GUI::BeginPopup("Add Component Popup"))
-			return;
-
 		if (owningScene == nullptr || !entity.IsValid())
 			return;
 
-		SGuiTextFilter filter = SGuiTextFilter();
-		filter.Draw("Search", 0); // TODO.NW: Figure out a nicer way of setting the width
+		if (GUI::Button("Add Component", SVector2<F32>(GUI::GetContentRegionAvail().X, 0)))
+			GUI::OpenPopup("Add Component Popup");
+
+		if (!GUI::BeginPopup("Add Component Popup"))
+		{
+			ComponentFilter = SGuiTextFilter();
+			return;
+		}
+
+		ComponentFilter.Draw("Search", 0); // TODO.NW: Figure out a nicer way of setting the width
 
 		if (GUI::BeginChild("NewComponentTypeTable", SVector2<F32>(0.0f, 200.0f)))
 		{
@@ -505,23 +508,23 @@ namespace Havtorn
 				
 				const char* newComponentName = view->GetComponentName();
 
-				if (!filter.PassFilter(newComponentName))
+				if (!ComponentFilter.PassFilter(newComponentName))
 					continue;
 
-				if (!GUI::Selectable(newComponentName))
-					continue;
-
-				// Add component dependencies if needed
-				for (const U64& dependencyHash : Manager->GetComponentDepencies(viewHash))
+				if (GUI::Selectable(newComponentName))
 				{
-					if (std::ranges::find(existingComponentHashes, dependencyHash) == existingComponentHashes.end())
-						owningScene->ComponentSerializers.at(owningScene->TypeHashToTypeID.at(dependencyHash)).ComponentAdder(entity, owningScene);
+					// Add component dependencies if needed
+					for (const U64& dependencyHash : Manager->GetComponentDependencies(viewHash))
+					{
+						if (std::ranges::find(existingComponentHashes, dependencyHash) == existingComponentHashes.end())
+							owningScene->ComponentSerializers.at(owningScene->TypeHashToTypeID.at(dependencyHash)).ComponentAdder(entity, owningScene);
+					}
+
+					owningScene->ComponentSerializers.at(owningScene->TypeHashToTypeID.at(viewHash)).ComponentAdder(entity, owningScene);
+
+					Manager->SetIsModalOpen(false);
+					GUI::CloseCurrentPopup();
 				}
-
-				owningScene->ComponentSerializers.at(owningScene->TypeHashToTypeID.at(viewHash)).ComponentAdder(entity, owningScene);
-
-				Manager->SetIsModalOpen(false);
-				GUI::CloseCurrentPopup();
 			}
 			GUI::EndChild();
 		}

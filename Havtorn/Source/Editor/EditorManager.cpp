@@ -556,7 +556,7 @@ namespace Havtorn
 		return RegisteredComponentViewsVector;
 	}
 
-	const std::vector<U64> CEditorManager::GetComponentDepencies(const U64 componentRuntimeHash) const
+	const std::vector<U64> CEditorManager::GetComponentDependencies(const U64 componentRuntimeHash) const
 	{
 		if (!ComponentDependencies.contains(componentRuntimeHash))
 			return {};
@@ -839,8 +839,7 @@ namespace Havtorn
 			{
 				result.State = EAssetPickerState::Active;
 
-				SGuiTextFilter filter = SGuiTextFilter();
-				filter.Draw("Search", 0); // TODO.NW: Figure out a nicer way of setting the width
+				AssetFilter.Draw("Search", 0); // TODO.NW: Figure out a nicer way of setting the width
 
 				GUI::SetNextWindowSizeConstraints(SVector2<F32>(0.0f, 0.0f), SVector2<F32>(UMath::MaxFloat, maxDropDownSize));
 				if (GUI::BeginChild("##ComboOptionsChild", SVector2<F32>(maxWidth, 0.0f), { EChildFlag::AutoResizeY, EChildFlag::AlwaysAutoResize }))
@@ -855,7 +854,7 @@ namespace Havtorn
 						if (!data.IsValid())
 							continue;
 
-						if (!filter.PassFilter(data.Name.c_str()))
+						if (!AssetFilter.PassFilter(data.Name.c_str()))
 							continue;
 
 						GUI::PushID(id++);
@@ -882,6 +881,8 @@ namespace Havtorn
 				GUI::EndChild();
 				GUI::EndCombo();
 			}
+			else
+				AssetFilter = SGuiTextFilter();
 
 			GUI::OffsetCursorPos(SVector2<F32>(2.0f, -2.5f));
 			GUI::SetSecondaryFontActive(true);

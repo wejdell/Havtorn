@@ -191,7 +191,7 @@ namespace Havtorn
 
 		const std::map<U64, Ptr<SComponentView>>& GetComponentViewsMap() const;
 		const std::vector<Ptr<SComponentView>>& GetComponentViewsVector() const;
-		const std::vector<U64> GetComponentDepencies(const U64 componentRuntimeHash) const;
+		const std::vector<U64> GetComponentDependencies(const U64 componentRuntimeHash) const;
 
 		const std::unordered_map<U64, Ptr<SNodeView>>& GetNodeViewsMap() const;
 		const std::vector<Ptr<SNodeView>>& GetNodeViewsVector() const;
@@ -459,6 +459,8 @@ namespace Havtorn
 		
 		std::vector<SEditorAssetRepresentation*> SelectedAssets = {};
 		std::optional<std::filesystem::directory_entry> SelectedFolder;
+
+		SGuiTextFilter AssetFilter = SGuiTextFilter();
 
 		// TODO.NR: Save these in .ini file
 		SEditorLayout EditorLayout;
