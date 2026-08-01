@@ -429,8 +429,6 @@ namespace Havtorn
 		int                     CountGrep;
 	};
 
-
-
 	struct SGuiPayload
 	{
 		void* Data = nullptr;
@@ -637,6 +635,14 @@ namespace Havtorn
 		Delivered
 	};
 	
+	enum class EGUIToastNotificationType
+	{
+		Success,
+		Warning,
+		Error,
+		Info
+	};
+
 	template<typename T>
 	struct SDragDropDelivery
 	{
@@ -701,6 +707,8 @@ namespace Havtorn
 		static void CenterText(const std::string& text, SVector2<F32> dimensions, SVector2<F32> alignment = SVector2<F32>(0.5f));
 
 		static void SetTooltip(const char* fmt, ...);
+
+		static void PushNotification(const EGUIToastNotificationType type, const I32 durationMS, const char* fmt, ...);
 
 		static SVector2<F32> CalculateTextSize(const char* text);
 

@@ -266,6 +266,9 @@ set(IMGUI_FILES
    ${IMGUI_FOLDER}backends/imgui_impl_sdl3.h
    ${IMGUI_FOLDER}backends/imgui_impl_win32.cpp
    ${IMGUI_FOLDER}backends/imgui_impl_win32.h
+   ${IMGUI_FOLDER}backends/ImGuiNotify.h
+   ${IMGUI_FOLDER}backends/IconsFontAwesome6.h
+   ${IMGUI_FOLDER}backends/fa-solid-900.h
    ${IMGUI_FOLDER}misc/debuggers/imgui.natvis
    ${IMGUI_FOLDER}misc/debuggers/imgui.natstepfilter
    ${IMGUI_FOLDER}misc/cpp/imgui_stdlib.cpp

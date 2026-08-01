@@ -6,6 +6,9 @@
 #include <misc/cpp/imgui_stdlib.h>
 #include <backends/imgui_impl_sdl3.h>
 #include <backends/imgui_impl_dx11.h>
+#include <backends/ImGuiNotify.h>
+#include <backends/IconsFontAwesome6.h>
+#include <backends/fa-solid-900.h>
 #include <ImGuizmo.h>
 #include <imgui_node_editor.h>
 #include <utilities/builders.h>
@@ -63,7 +66,6 @@ namespace Havtorn
 			ImGui::CreateContext();
 			ImGui::DebugCheckVersionAndDataLayout(Version, sizeof(ImGuiIO), sizeof(ImGuiStyle), sizeof(ImVec2), sizeof(ImVec4), sizeof(ImDrawVert), sizeof(ImDrawIdx));
 			PrimaryFont = ImGui::GetIO().Fonts->AddFontFromFileTTF(DefaultFont, DefaultFontSize);
-			SecondaryFont = ImGui::GetIO().Fonts->AddFontFromFileTTF(DefaultFont, 10.0f);
 			ImGuizmo::SetImGuiContext(ImGui::GetCurrentContext());
 
 			ImGui_ImplSDL3_InitForD3D(window);
@@ -87,6 +89,19 @@ namespace Havtorn
 			DirectX::CreateShaderResourceView(device, image, scratchImage.GetImageCount(), metaData, &BlueprintBackgroundSRV);
 
 			BlueprintBackgroundImage = (ImTextureID)BlueprintBackgroundSRV;
+
+			// NW: ImGuiNotify is expecting the icon font to be on the 1st font index
+			constexpr F32 baseFontSize = 16.0f;
+			constexpr F32 iconFontSize = baseFontSize * 2.0f / 3.0f; // FontAwesome fonts need to have their sizes reduced by 2.0f/3.0f in order to align correctly
+
+			static constexpr ImWchar iconsRanges[] = { ICON_MIN_FA, ICON_MAX_16_FA, 0 };
+			ImFontConfig iconsConfig;
+			iconsConfig.MergeMode = true;
+			iconsConfig.PixelSnapH = true;
+			iconsConfig.GlyphMinAdvanceX = iconFontSize;
+			ImGui::GetIO().Fonts->AddFontFromMemoryCompressedTTF(fa_solid_900_compressed_data, fa_solid_900_compressed_size, iconFontSize, &iconsConfig, iconsRanges);
+			
+			SecondaryFont = ImGui::GetIO().Fonts->AddFontFromFileTTF(DefaultFont, 10.0f);
 		}
 
 		void BeginFrame()
@@ -104,6 +119,13 @@ namespace Havtorn
 
 		void EndFrame()
 		{
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f); // Disable round borders
+			ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f); // Disable borders
+			ImGui::PushStyleColor(ImGuiCol_WindowBg, ImVec4(0.10f, 0.10f, 0.10f, 1.00f)); // Background color
+			ImGui::RenderNotifications();
+			ImGui::PopStyleVar(2);
+			ImGui::PopStyleColor(1);
+
 			ImGui::Render();
 			ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
 		}
@@ -171,6 +193,30 @@ namespace Havtorn
 		void SetTooltip(const char* fmt, va_list args)
 		{
 			ImGui::SetTooltipV(fmt, args);
+		}
+
+		void PushNotification(const EGUIToastNotificationType type, const I32 durationMS, const char* fmt, va_list args)
+		{
+			ImGuiToastType imguiType = ImGuiToastType::None;
+			switch (type)
+			{
+				case EGUIToastNotificationType::Success:
+					imguiType = ImGuiToastType::Success;
+					break;
+				case EGUIToastNotificationType::Warning:
+					imguiType = ImGuiToastType::Warning;
+					break;
+				case EGUIToastNotificationType::Error:
+					imguiType = ImGuiToastType::Error;
+					break;
+				case EGUIToastNotificationType::Info:
+					imguiType = ImGuiToastType::Info;
+					break;
+			}
+
+			ImGuiToast toast = { imguiType, durationMS };
+			toast.setContent(fmt, args);
+			ImGui::InsertNotification(toast);
 		}
 
 		SVector2<F32> CalculateTextSize(const char* text)
@@ -1627,6 +1673,14 @@ namespace Havtorn
 		va_list args;
 		va_start(args, fmt);
 		Instance->Impl->SetTooltip(fmt, args);
+		va_end(args);
+	}
+
+	void GUI::PushNotification(const EGUIToastNotificationType type, const I32 durationMS, const char* fmt, ...)
+	{
+		va_list args;
+		va_start(args, fmt);
+		Instance->Impl->PushNotification(type, durationMS, fmt, args);
 		va_end(args);
 	}
 
