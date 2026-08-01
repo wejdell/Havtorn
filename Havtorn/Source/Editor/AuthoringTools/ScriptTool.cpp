@@ -574,7 +574,6 @@ namespace Havtorn
 
 	void CScriptTool::ContextMenu()
 	{
-		const SVector2<F32> openPopupPosition = GUI::GetMousePosition();
 		GUI::SuspendScript();
 
 		if (GUI::ShowScriptContextMenu())
@@ -586,9 +585,7 @@ namespace Havtorn
 		GUI::PushStyleVar(EStyleVar::WindowPadding, SVector2<F32>(8.0f, 8.0f));
 
 		if (GUI::BeginPopup("Create New Node"))
-		{
-			const SVector2<F32> newNodePostion = openPopupPosition;
-			
+		{	
 			for (const Ptr<SNodeView>& view : Manager->GetNodeViewsVector())
 			{
 				if (GUI::BeginMenu(view->Category.c_str()))
@@ -596,7 +593,7 @@ namespace Havtorn
 					if (GUI::MenuItem(view->Name.c_str()))
 					{
 						Edit.NewNodeView = view.get();
-						Edit.NewNodePosition = { openPopupPosition.X, openPopupPosition.Y };
+						Edit.NewNodePosition = GUI::GetMousePosition();
 					}
 					GUI::EndMenu();
 				}
