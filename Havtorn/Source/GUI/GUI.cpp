@@ -1311,7 +1311,7 @@ namespace Havtorn
 
 		void SetNodePosition(const U64 id, const SVector2<F32>& position)
 		{
-			NE::SetNodePosition(id, { position.X, position.Y });
+			NE::SetNodePosition(id, NE::ScreenToCanvas({ position.X, position.Y }));
 		}
 
 		SVector2<F32> GetNodePosition(const U64 id)
