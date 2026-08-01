@@ -154,7 +154,7 @@ namespace Havtorn
 
 		GUI::Separator();
 
-		AddComponentCombo(entity, owningScene);
+		AddComponentPopup(entity, owningScene);
 	}
 
 	void CInspectorWindow::UpdateTransformGizmo(STransformComponent* viewedTransformComp)
@@ -467,7 +467,7 @@ namespace Havtorn
 		GUI::Separator();
 	}
 
-	void CInspectorWindow::AddComponentCombo(const SEntity& entity, CScene* owningScene)
+	void CInspectorWindow::AddComponentPopup(const SEntity& entity, CScene* owningScene)
 	{
 		if (owningScene == nullptr || !entity.IsValid())
 			return;
