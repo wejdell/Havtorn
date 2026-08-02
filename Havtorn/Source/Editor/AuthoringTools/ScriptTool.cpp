@@ -215,8 +215,8 @@ namespace Havtorn
 
 		for (const SScriptDataBinding& binding : CurrentScriptAsset->Script->DataBindings)
 		{
-			Manager->RegisterDataBindingNodeView<SDataBindingGetNodeEditorContext, SDataBindingGetNode>(CurrentScriptAsset->Script.get(), binding.UID);
-			Manager->RegisterDataBindingNodeView<SDataBindingSetNodeEditorContext, SDataBindingSetNode>(CurrentScriptAsset->Script.get(), binding.UID);
+			Manager->RegisterDataBindingNodeView<SDataBindingGetNodeView, SDataBindingGetNode>(CurrentScriptAsset->Script.get(), binding.UID);
+			Manager->RegisterDataBindingNodeView<SDataBindingSetNodeView, SDataBindingSetNode>(CurrentScriptAsset->Script.get(), binding.UID);
 		}
 
 		SetEnabled(true);
@@ -239,8 +239,8 @@ namespace Havtorn
 
 		for (const SScriptDataBinding& binding : CurrentScriptAsset->Script->DataBindings)
 		{
-			Manager->RemoveDataBindingNodeView<SDataBindingGetNodeEditorContext, SDataBindingGetNode>(binding.UID);
-			Manager->RemoveDataBindingNodeView<SDataBindingSetNodeEditorContext, SDataBindingSetNode>(binding.UID);
+			Manager->RemoveDataBindingNodeView<SDataBindingGetNodeView, SDataBindingGetNode>(binding.UID);
+			Manager->RemoveDataBindingNodeView<SDataBindingSetNodeView, SDataBindingSetNode>(binding.UID);
 		}
 
 		GEngine::GetAssetRegistry()->UnrequestAsset(CurrentScriptAssetRef, CAssetRegistry::EditorManagerRequestID);
@@ -262,8 +262,8 @@ namespace Havtorn
 
 		if (Edit.NewNodeView != nullptr)
 		{
-			const SDataBindingGetNodeEditorContext* getterContext = dynamic_cast<SDataBindingGetNodeEditorContext*>(Edit.NewNodeView);
-			const SDataBindingSetNodeEditorContext* setterContext = dynamic_cast<SDataBindingSetNodeEditorContext*>(Edit.NewNodeView);
+			const SDataBindingGetNodeView* getterContext = dynamic_cast<SDataBindingGetNodeView*>(Edit.NewNodeView);
+			const SDataBindingSetNodeView* setterContext = dynamic_cast<SDataBindingSetNodeView*>(Edit.NewNodeView);
 			
 			U64 newNodeUID = 0;
 			if (getterContext != nullptr)
@@ -281,16 +281,16 @@ namespace Havtorn
 		{
 			const SDataBindingInitData newBindingData = Edit.NewBinding.value();
 			const SScriptDataBinding& newBinding = CurrentScript->AddDataBinding(0, newBindingData.Name.AsString().c_str(), newBindingData.Type, newBindingData.ObjectType, newBindingData.AssetType);
-			Manager->RegisterDataBindingNodeView<SDataBindingGetNodeEditorContext, SDataBindingGetNode>(CurrentScript, newBinding.UID);
-			Manager->RegisterDataBindingNodeView<SDataBindingSetNodeEditorContext, SDataBindingSetNode>(CurrentScript, newBinding.UID);
+			Manager->RegisterDataBindingNodeView<SDataBindingGetNodeView, SDataBindingGetNode>(CurrentScript, newBinding.UID);
+			Manager->RegisterDataBindingNodeView<SDataBindingSetNodeView, SDataBindingSetNode>(CurrentScript, newBinding.UID);
 			Edit.NewBinding.reset();
 		}
 
 		if (Edit.RemovedBindingID != 0)
 		{
 			CurrentScript->RemoveDataBinding(Edit.RemovedBindingID);
-			Manager->RemoveDataBindingNodeView<SDataBindingGetNodeEditorContext, SDataBindingGetNode>(Edit.RemovedBindingID);
-			Manager->RemoveDataBindingNodeView<SDataBindingSetNodeEditorContext, SDataBindingSetNode>(Edit.RemovedBindingID);
+			Manager->RemoveDataBindingNodeView<SDataBindingGetNodeView, SDataBindingGetNode>(Edit.RemovedBindingID);
+			Manager->RemoveDataBindingNodeView<SDataBindingSetNodeView, SDataBindingSetNode>(Edit.RemovedBindingID);
 		}
 
 		if (Edit.ModifiedLiteralValuePin != nullptr && !Edit.ModifiedLiteralValuePin->IsDataUnset()) // NW: Only literal data types need to set data from GUI->Engine, when they are unpinned.	

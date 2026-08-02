@@ -11,7 +11,7 @@ namespace Havtorn
 {
 	namespace HexRune
 	{
-		SDataBindingGetNodeEditorContext::SDataBindingGetNodeEditorContext(SScript* script, const U64 dataBindingID)
+		SDataBindingGetNodeView::SDataBindingGetNodeView(SScript* script, const U64 dataBindingID)
 			: DataBindingID(dataBindingID)
 		{
 			auto it = &(*std::ranges::find_if(script->DataBindings, [dataBindingID](SScriptDataBinding& binding) { return binding.UID == dataBindingID; }));
@@ -20,7 +20,7 @@ namespace Havtorn
 			Color = SColor::Orange;
 		}
 
-		SDataBindingSetNodeEditorContext::SDataBindingSetNodeEditorContext(SScript* script, const U64 dataBindingID)
+		SDataBindingSetNodeView::SDataBindingSetNodeView(SScript* script, const U64 dataBindingID)
 			: DataBindingID(dataBindingID)
 		{
 			auto it = &(*std::ranges::find_if(script->DataBindings, [dataBindingID](SScriptDataBinding& binding) { return binding.UID == dataBindingID; }));
@@ -29,127 +29,127 @@ namespace Havtorn
 			Color = SColor::Orange;
 		}
 
-		SBranchNodeEditorContext::SBranchNodeEditorContext()
+		SBranchNodeView::SBranchNodeView()
 		{
 			Name = "Branch";
 			Category = "General";
 		}
 
-		SSequenceNodeEditorContext::SSequenceNodeEditorContext()
+		SSequenceNodeView::SSequenceNodeView()
 		{
 			Name = "Sequence";
 			Category = "General";
 		}
 
-		SDelayNodeEditorContext::SDelayNodeEditorContext()
+		SDelayNodeView::SDelayNodeView()
 		{
 			Name = "Delay";
 			Category = "General";
 			Color = SColor::Teal;
 		}
 
-		SBeginPlayNodeEditorContext::SBeginPlayNodeEditorContext()
+		SBeginPlayNodeView::SBeginPlayNodeView()
 		{
 			Name = "Begin Play";
 			Category = "General";
 			Color = SColor::Red;
 		}
 
-		STickNodeEditorContext::STickNodeEditorContext()
+		STickNodeView::STickNodeView()
 		{
 			Name = "Tick";
 			Category = "General";
 			Color = SColor::Red;
 		}
 
-		SEndPlayNodeEditorContext::SEndPlayNodeEditorContext()
+		SEndPlayNodeView::SEndPlayNodeView()
 		{
 			Name = "End Play";
 			Category = "General";
 			Color = SColor::Red;
 		}
 
-		SPrintStringNodeEditorContext::SPrintStringNodeEditorContext()
+		SPrintStringNodeView::SPrintStringNodeView()
 		{
 			Name = "Print String";
 			Category = "General";
 			Color = SColor::Teal;
 		}
 
-		SAppendStringNodeEditorContext::SAppendStringNodeEditorContext()
+		SAppendStringNodeView::SAppendStringNodeView()
 		{
 			Name = "Append String";
 			Category = "General";
 			Color = SColor::Green;
 		}
 
-		SFloatLessThanNodeEditorContext::SFloatLessThanNodeEditorContext()
+		SFloatLessThanNodeView::SFloatLessThanNodeView()
 		{
 			Name = "< (Float)";
 			Category = "Math";
 		}
 
-		SFloatMoreThanNodeEditorContext::SFloatMoreThanNodeEditorContext()
+		SFloatMoreThanNodeView::SFloatMoreThanNodeView()
 		{
 			Name = "> (Float)";
 			Category = "Math";
 		}
 
-		SFloatLessOrEqualNodeEditorContext::SFloatLessOrEqualNodeEditorContext()
+		SFloatLessOrEqualNodeView::SFloatLessOrEqualNodeView()
 		{
 			Name = "<= (Float)";
 			Category = "Math";
 		}
 
-		SFloatMoreOrEqualNodeEditorContext::SFloatMoreOrEqualNodeEditorContext()
+		SFloatMoreOrEqualNodeView::SFloatMoreOrEqualNodeView()
 		{
 			Name = ">= (Float)";
 			Category = "Math";
 		}
 
-		SFloatEqualNodeEditorContext::SFloatEqualNodeEditorContext()
+		SFloatEqualNodeView::SFloatEqualNodeView()
 		{
 			Name = "== (Float)";
 			Category = "Math";
 		}
 
-		SFloatNotEqualNodeEditorContext::SFloatNotEqualNodeEditorContext()
+		SFloatNotEqualNodeView::SFloatNotEqualNodeView()
 		{
 			Name = "!= (Float)";
 			Category = "Math";
 		}
 
-		SIntLessThanNodeEditorContext::SIntLessThanNodeEditorContext()
+		SIntLessThanNodeView::SIntLessThanNodeView()
 		{
 			Name = "< (Int)";
 			Category = "Math";
 		}
 
-		SIntMoreThanNodeEditorContext::SIntMoreThanNodeEditorContext()
+		SIntMoreThanNodeView::SIntMoreThanNodeView()
 		{
 			Name = "> (Int)";
 			Category = "Math";
 		}
 
-		SIntLessOrEqualNodeEditorContext::SIntLessOrEqualNodeEditorContext()
+		SIntLessOrEqualNodeView::SIntLessOrEqualNodeView()
 		{
 			Name = "<= (Int)";
 			Category = "Math";
 		}
 
-		SIntMoreOrEqualNodeEditorContext::SIntMoreOrEqualNodeEditorContext()
+		SIntMoreOrEqualNodeView::SIntMoreOrEqualNodeView()
 		{
 			Name = ">= (Int)";
 			Category = "Math";
 		}
 
-		SIntEqualNodeEditorContext::SIntEqualNodeEditorContext()
+		SIntEqualNodeView::SIntEqualNodeView()
 		{
 			Name = "== (Int)";
 			Category = "Math";
 		}
 
-		SIntNotEqualNodeEditorContext::SIntNotEqualNodeEditorContext()
+		SIntNotEqualNodeView::SIntNotEqualNodeView()
 		{
 			Name = "!= (Int)";
 			Category = "Math";

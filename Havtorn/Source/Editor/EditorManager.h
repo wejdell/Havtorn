@@ -328,11 +328,11 @@ namespace Havtorn
 				{
 					auto const& [hash, view] = mapItem;
 
-					HexRune::SDataBindingGetNodeEditorContext* getterContext = dynamic_cast<HexRune::SDataBindingGetNodeEditorContext*>(view.get());
+					HexRune::SDataBindingGetNodeView* getterContext = dynamic_cast<HexRune::SDataBindingGetNodeView*>(view.get());
 					if (getterContext != nullptr)
 						return getterContext->DataBindingID == dataBindingID;
 
-					HexRune::SDataBindingSetNodeEditorContext* setterContext = dynamic_cast<HexRune::SDataBindingSetNodeEditorContext*>(view.get());
+					HexRune::SDataBindingSetNodeView* setterContext = dynamic_cast<HexRune::SDataBindingSetNodeView*>(view.get());
 					if (setterContext != nullptr)
 						return setterContext->DataBindingID == dataBindingID;
 
@@ -341,11 +341,11 @@ namespace Havtorn
 
 			std::erase_if(RegisteredNodeViewsVector, [dataBindingID](const Ptr<SNodeView>& view)
 				{
-					HexRune::SDataBindingGetNodeEditorContext* getterContext = dynamic_cast<HexRune::SDataBindingGetNodeEditorContext*>(view.get());
+					HexRune::SDataBindingGetNodeView* getterContext = dynamic_cast<HexRune::SDataBindingGetNodeView*>(view.get());
 					if (getterContext != nullptr)
 						return getterContext->DataBindingID == dataBindingID;
 
-					HexRune::SDataBindingSetNodeEditorContext* setterContext = dynamic_cast<HexRune::SDataBindingSetNodeEditorContext*>(view.get());
+					HexRune::SDataBindingSetNodeView* setterContext = dynamic_cast<HexRune::SDataBindingSetNodeView*>(view.get());
 					if (setterContext != nullptr)
 						return setterContext->DataBindingID == dataBindingID;
 
