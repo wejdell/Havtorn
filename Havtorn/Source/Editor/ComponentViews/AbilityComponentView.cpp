@@ -52,6 +52,10 @@ namespace Havtorn
 
 			std::string abilityName = "Ability ";
 			abilityName.append(std::to_string(i));
+
+			if (ability.AbilityTag != SGameplayTag::None)
+				abilityName = ability.AbilityTag.Name;
+
 			if (GUI::TreeNode(abilityName.c_str()))
 			{
 				SGameplayTagContainer singleTagContainer = ability.AbilityTag;
