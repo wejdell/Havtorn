@@ -123,7 +123,9 @@ namespace Havtorn
 			// https://developer.download.nvidia.com/SDK/10.5/opengl/src/cascaded_shadow_maps/doc/cascaded_shadow_maps.pdf
 
 			const SMatrix& transformMatrix = transformComp->Transform.GetMatrix();
-			const SSphere meshBoundingSphere = SSphere((SVector4(asset->BoundsCenter, 1.0f) * transformMatrix).ToVector3(), asset->BoundsMin.Distance(asset->BoundsMax) * 0.5f * transformMatrix.GetScale().GetAbsMax());
+			// NW: This seems to give the right results, notice the Hadamard multiplication between bounds vector and scale
+			const F32 radius = ((asset->BoundsMax - asset->BoundsMin) * transformMatrix.GetScale()).Size();
+			const SSphere meshBoundingSphere = SSphere((SVector4(asset->BoundsCenter, 1.0f) * transformMatrix).ToVector3(), radius);
 			if (doCulling && IsCulled(scene, meshBoundingSphere, cameraFrustum))
 				continue;
 
