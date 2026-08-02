@@ -9,6 +9,8 @@
 #include <ECS/Components/TransformComponent.h>
 #include <ECS/Systems/CameraSystem.h>
 #include <HexRune/CoreNodes/CoreNodes.h>
+#include <HexRune/ECSNodes/ECSNodes.h>
+#include <Input/InputMapper.h>
 
 #include "NodeViews/CoreNodeViews.h"
 
@@ -58,6 +60,13 @@ namespace Havtorn
 
 	void CScriptTool::OnEnable()
 	{
+		const std::unordered_map<U64, Ptr<SNodeView>>& nodeViewsMap = Manager->GetNodeViewsMap();
+		BaseNodeSpawnKeybinds.emplace_back(nodeViewsMap.at(typeid(SBranchNode).hash_code()).get(), EInputButton::KeyB);
+		BaseNodeSpawnKeybinds.emplace_back(nodeViewsMap.at(typeid(SSequenceNode).hash_code()).get(), EInputButton::KeyS);
+		BaseNodeSpawnKeybinds.emplace_back(nodeViewsMap.at(typeid(SDelayNode).hash_code()).get(), EInputButton::KeyD);
+		BaseNodeSpawnKeybinds.emplace_back(nodeViewsMap.at(typeid(SPrintStringNode).hash_code()).get(), EInputButton::KeyP);
+		BaseNodeSpawnKeybinds.emplace_back(nodeViewsMap.at(typeid(SAppendStringNode).hash_code()).get(), EInputButton::KeyA);
+		BaseNodeSpawnKeybinds.emplace_back(nodeViewsMap.at(typeid(SEntityLoopNode).hash_code()).get(), EInputButton::KeyL);
 	}
 
 	void CScriptTool::OnInspectorGUI()
@@ -135,6 +144,27 @@ namespace Havtorn
 		CommitEdit();
 		GUI::EndScript();
 
+		if (GUI::IsItemHovered() && GUI::IsWindowHovered())
+		{
+			CInputMapper* input = GEngine::GetInput();
+			for (const SNodeSpawnKeybind& keybind : BaseNodeSpawnKeybinds)
+			{
+				if (input->IsHeld(keybind.Key, 0))
+				{
+					std::string tooltip = "Add ";
+					tooltip.append(keybind.AssociatedNodeView->Name);
+					tooltip.append(" node? (Left Click)");
+					GUI::SetTooltip(tooltip.c_str());
+
+					if (input->IsPressed(EInputButton::MouseLeft, 0))
+					{
+						Edit.NewNodeView = keybind.AssociatedNodeView;
+						Edit.NewNodePosition = GUI::GetMousePosition();
+					}
+				}
+			}
+		}
+
 		auto result = CEditorManager::DataBindingDragData.TryDeliver({ EDragDropFlag::AcceptBeforeDelivery, EDragDropFlag::AcceptNoDrawDefaultRect, EDragDropFlag::AcceptNopreviewTooltip });
 		if (result.Payload != nullptr)
 		{
@@ -168,6 +198,8 @@ namespace Havtorn
 		CloseScript();
 
 		GEngine::GetWorld()->UnblockSystem<CCameraSystem>(this);
+
+		BaseNodeSpawnKeybinds.clear();
 	}
 
 	void CScriptTool::OpenScript(SEditorAssetRepresentation* asset)

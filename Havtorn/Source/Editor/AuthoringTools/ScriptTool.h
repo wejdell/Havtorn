@@ -40,6 +40,12 @@ namespace Havtorn
 		std::vector<HexRune::SLink> RemovedLinks = {};
 	};
 
+	struct SNodeSpawnKeybind
+	{
+		SNodeView* AssociatedNodeView = nullptr;
+		EInputButton Key = EInputButton::None;
+	};
+
 	using namespace HexRune;
 
 	class CScriptTool : public CWindow
@@ -76,6 +82,8 @@ namespace Havtorn
 		SPin* GetPinFromID(U64 id, SNode* node);
 		SPin* GetPinFromID(U64 id, std::vector<SNode*>& nodes);
 		SPin* GetOutputPinFromID(U64 id, std::vector<SNode*>& nodes);
+
+		std::vector<SNodeSpawnKeybind> BaseNodeSpawnKeybinds;
 
 		SAssetReference CurrentScriptAssetRef = SAssetReference();
 		SScriptAsset* CurrentScriptAsset = nullptr;
