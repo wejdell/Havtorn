@@ -196,6 +196,8 @@ namespace Havtorn
 		const std::unordered_map<U64, Ptr<SNodeView>>& GetNodeViewsMap() const;
 		const std::vector<Ptr<SNodeView>>& GetNodeViewsVector() const;
 
+		void ClearSelections();
+
 		void SetSelectedEntity(const SEntity& entity);
 		void AddSelectedEntity(const SEntity& entity);
 		void RemoveSelectedEntity(const SEntity& entity);
@@ -418,6 +420,7 @@ namespace Havtorn
 		void OnPivotMoving(const SInputActionPayload payload);
 		void OnVertexSnapping(const SInputActionPayload payload);
 		void OnGridSnapping(const SInputActionPayload payload);
+		void OnClearSelection(const SInputActionPayload payload);
 
 		void OnResolutionChanged(SVector2<U16> newResolution);
 		void OnBeginPlay(std::vector<Ptr<CScene>>& scenes);

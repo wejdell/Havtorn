@@ -151,6 +151,9 @@ namespace Havtorn
 		const SInputAction gridSnapping = { EInputButton::KeyG, EInputContext::Editor };
 		MapEvent(EInputActionEvent::GridSnapping, gridSnapping);
 
+		const SInputAction clearSelection = { EInputButton::Esc, EInputContext::Editor };
+		MapEvent(EInputActionEvent::ClearSelection, clearSelection);
+
 		return true;
 	}
 

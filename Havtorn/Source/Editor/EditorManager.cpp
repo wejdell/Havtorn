@@ -72,6 +72,7 @@ namespace Havtorn
 		mapper->GetActionDelegate(EInputActionEvent::MovePivot).AddMember(this, &CEditorManager::OnPivotMoving);
 		mapper->GetActionDelegate(EInputActionEvent::VertexSnapping).AddMember(this, &CEditorManager::OnVertexSnapping);
 		mapper->GetActionDelegate(EInputActionEvent::GridSnapping).AddMember(this, &CEditorManager::OnGridSnapping);
+		mapper->GetActionDelegate(EInputActionEvent::ClearSelection).AddMember(this, &CEditorManager::OnClearSelection);
 
 		const CJsonDocument document = UFileSystem::OpenJson(UFileSystem::EngineConfig);
 		ProjectName = document.Get("Game Name", "Project Name");
@@ -572,6 +573,13 @@ namespace Havtorn
 	const std::vector<Ptr<SNodeView>>& CEditorManager::GetNodeViewsVector() const
 	{
 		return RegisteredNodeViewsVector;
+	}
+
+	void CEditorManager::ClearSelections()
+	{
+		ClearSelectedEntities();
+		ClearSelectedAssets();
+		SelectedFolder.reset();
 	}
 
 	void CEditorManager::SetSelectedEntity(const SEntity& entity)
@@ -1673,6 +1681,11 @@ namespace Havtorn
 		IsGridSnappingActive = payload.IsHeld;
 	}
 
+	void CEditorManager::OnClearSelection(const SInputActionPayload /*payload*/)
+	{
+		ClearSelections();
+	}
+
 	void CEditorManager::OnResolutionChanged(SVector2<U16> newResolution)
 	{
 		HV_LOG_INFO("EditorMananger -> New Res X: %i, New Res Y: %i", newResolution.X, newResolution.Y);
@@ -1681,7 +1694,7 @@ namespace Havtorn
 
 	void CEditorManager::OnBeginPlay(std::vector<Ptr<CScene>>& /*scenes*/)
 	{
-		SetSelectedEntity(SEntity::Null);
+		ClearSelections();
 		SetEditorTheme(EditorPreferences.PlayColorTheme, EEditorStyleTheme::Havtorn, DarknessOffsetPlayTheme);
 		World->BlockSystem<CPickingSystem>(this);
 

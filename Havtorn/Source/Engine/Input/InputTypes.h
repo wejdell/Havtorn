@@ -38,6 +38,7 @@ namespace Havtorn
 		VertexSnapping,
 		GridSnapping,
 		ToggleCursor,
+		ClearSelection,
 		Count
 	};
 
