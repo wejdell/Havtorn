@@ -41,7 +41,7 @@ namespace Havtorn
 	{
 	public:
 		ENGINE_API CScene();
-		ENGINE_API ~CScene();
+		ENGINE_API virtual ~CScene();
 
 		ENGINE_API virtual bool Init(const std::string& sceneName);
 		ENGINE_API virtual bool Init3DDefaults();
