@@ -74,10 +74,6 @@ namespace Havtorn
 			// NW: The main inspector logic does not care what gets inspected outside of the world scenes
 			CScene* currentScene = UComponentAlgo::GetContainingScene(selectedEntity, worldScenes);
 
-			SMetaDataComponent* entityMetaDataComp = currentScene->GetComponent<SMetaDataComponent>(selectedEntity);
-			if (SComponent::IsValid(entityMetaDataComp))
-				CEditorManager::EntityDragData.TrySet(entityMetaDataComp->Owner, entityMetaDataComp->Name.AsString().c_str(), {});
-
 			InspectEntity(selectedEntity, currentScene);
 		}
 
@@ -115,6 +111,8 @@ namespace Havtorn
 			GUI::TextDisabled("GUID %llu", metaDataComp->Owner.GUID);
 			if (GUI::IsItemHovered())
 				GUI::SetTooltip("GUID %llu", metaDataComp->Owner.GUID);
+
+			CEditorManager::EntityDragData.TrySet(metaDataComp->Owner, metaDataComp->Name.AsString().c_str(), { EDragDropFlag::SourceAllowNullID });
 		}
 
 		for (const U64& runtimeHash : owningScene->EntityComponentRuntimeHashes.at(entity.GUID))

@@ -820,6 +820,9 @@ namespace Havtorn
 		GUI::Image(GetTextureResourceFromAssetRep(existingAssetRep), pickerSize, SVector2<F32>(0.0f), SVector2<F32>(1.0f), SColor::White, SColor::Black);
 		result.IsHovered = GUI::IsMouseInRect(GUI::GetLastRect());
 
+		if (existingAssetRep != nullptr)
+			CEditorManager::AssetDragData.TrySet(*existingAssetRep, existingAssetRep->Name.c_str(), { EDragDropFlag::SourceAllowNullID });
+
 		if (GUI::IsItemClicked(EGUIMouseButton::Right))
 		{
 			result.State = EAssetPickerState::ContextMenu;
@@ -840,6 +843,9 @@ namespace Havtorn
 		{ // Details next to image
 			//ImGui::SetNextWindowSizeConstraints(ImVec2(0.0f, 0.0f), ImVec2(-FLT_MIN, maxDropDownSize));
 			GUI::BeginChild("Details", SVector2<F32>(maxWidth, 0.0f), { EChildFlag::AutoResizeY, EChildFlag::AlwaysAutoResize });
+
+			if (existingAssetRep != nullptr)
+				CEditorManager::AssetDragData.TrySet(*existingAssetRep, existingAssetRep->Name.c_str(), {});
 
 			// NW: Need this to keep the search bar floating and without scrolling between filter and options child
 			GUI::SetNextWindowSizeConstraints(SVector2<F32>(0.0f, 0.0f), SVector2<F32>(UMath::MaxFloat, UMath::MaxFloat));
