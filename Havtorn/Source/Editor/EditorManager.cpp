@@ -120,11 +120,17 @@ namespace Havtorn
 		MenuElements.emplace_back(std::make_unique<CWindowMenu>("Window", this));
 		MenuElements.emplace_back(std::make_unique<CHelpMenu>("Help", this));
 
-		Windows.emplace_back(std::make_unique<CViewportWindow>("Viewport", this));
+		Windows.emplace_back(std::make_unique<CHierarchyWindow>("Hierarchy", this));
 		Windows.emplace_back(std::make_unique<CDockSpaceWindow>("Dock Space", this));
 		Windows.emplace_back(std::make_unique<CAssetBrowserWindow>("Asset Browser", this));
 		Windows.emplace_back(std::make_unique<COutputLogWindow>("Output Log", this));
-		Windows.emplace_back(std::make_unique<CHierarchyWindow>("Hierarchy", this));
+		
+		// NW: The Viewport and conditionally inspector and prefab editors make use of render targets 
+		// from the scene. If these are submitted to ImGui and then the underlying memory is destroyed 
+		// by e.g. the Hierarchy, ImGui will crash when rendering. But it does seem isolated to when the
+		// viewport renders by itself. We move the hierarchy up in initialization order to let it work 
+		// on the engine memory before ui work submission for this reason in any case.
+		Windows.emplace_back(std::make_unique<CViewportWindow>("Viewport", this));
 		Windows.emplace_back(std::make_unique<CInspectorWindow>("Inspector", this));
 
 		Windows.emplace_back(std::make_unique<CSpriteAnimatorGraphNodeWindow>("Sprite Animator", this));
