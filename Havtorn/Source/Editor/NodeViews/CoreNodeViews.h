@@ -7,118 +7,118 @@ namespace Havtorn
 {
 	namespace HexRune
 	{
-		struct SDataBindingGetNodeEditorContext : public SNodeView
+		struct SDataBindingGetNodeView : public SNodeView
 		{
-			SDataBindingGetNodeEditorContext(SScript* script, const U64 dataBindingID);
+			SDataBindingGetNodeView(SScript* script, const U64 dataBindingID);
 
 			U64 DataBindingID = 0;
 		};
 
-		struct SDataBindingSetNodeEditorContext : public SNodeView
+		struct SDataBindingSetNodeView : public SNodeView
 		{
-			SDataBindingSetNodeEditorContext(SScript* script, const U64 dataBindingID);
+			SDataBindingSetNodeView(SScript* script, const U64 dataBindingID);
 
 			U64 DataBindingID = 0;
 		};
 
-		struct SBranchNodeEditorContext : public SNodeView
+		struct SBranchNodeView : public SNodeView
 		{
-			SBranchNodeEditorContext();
+			SBranchNodeView();
 		};
 
-		struct SSequenceNodeEditorContext : public SNodeView
+		struct SSequenceNodeView : public SNodeView
 		{
-			SSequenceNodeEditorContext();
+			SSequenceNodeView();
 		};
 
-		struct SDelayNodeEditorContext : public SNodeView
+		struct SDelayNodeView : public SNodeView
 		{
-			SDelayNodeEditorContext();
+			SDelayNodeView();
 		};
 
-		struct SBeginPlayNodeEditorContext : public SNodeView
+		struct SBeginPlayNodeView : public SNodeView
 		{
-			SBeginPlayNodeEditorContext();
+			SBeginPlayNodeView();
 		};
 
-		struct STickNodeEditorContext : public SNodeView
+		struct STickNodeView : public SNodeView
 		{
-			STickNodeEditorContext();
+			STickNodeView();
 		};
 
-		struct SEndPlayNodeEditorContext : public SNodeView
+		struct SEndPlayNodeView : public SNodeView
 		{
-			SEndPlayNodeEditorContext();
+			SEndPlayNodeView();
 		};
 
-		struct SPrintStringNodeEditorContext : public SNodeView
+		struct SPrintStringNodeView : public SNodeView
 		{
-			SPrintStringNodeEditorContext();
+			SPrintStringNodeView();
 		};
 
-		struct SAppendStringNodeEditorContext : public SNodeView
+		struct SAppendStringNodeView : public SNodeView
 		{
-			SAppendStringNodeEditorContext();
+			SAppendStringNodeView();
 		};
 
-		struct SFloatLessThanNodeEditorContext : public SNodeView
+		struct SFloatLessThanNodeView : public SNodeView
 		{
-			SFloatLessThanNodeEditorContext();
+			SFloatLessThanNodeView();
 		};
 
-		struct SFloatMoreThanNodeEditorContext : public SNodeView
+		struct SFloatMoreThanNodeView : public SNodeView
 		{
-			SFloatMoreThanNodeEditorContext();
+			SFloatMoreThanNodeView();
 		};
 
-		struct SFloatLessOrEqualNodeEditorContext : public SNodeView
+		struct SFloatLessOrEqualNodeView : public SNodeView
 		{
-			SFloatLessOrEqualNodeEditorContext();
+			SFloatLessOrEqualNodeView();
 		};
 
-		struct SFloatMoreOrEqualNodeEditorContext : public SNodeView
+		struct SFloatMoreOrEqualNodeView : public SNodeView
 		{
-			SFloatMoreOrEqualNodeEditorContext();
+			SFloatMoreOrEqualNodeView();
 		};
 
-		struct SFloatEqualNodeEditorContext : public SNodeView
+		struct SFloatEqualNodeView : public SNodeView
 		{
-			SFloatEqualNodeEditorContext();
+			SFloatEqualNodeView();
 		};
 
-		struct SFloatNotEqualNodeEditorContext : public SNodeView
+		struct SFloatNotEqualNodeView : public SNodeView
 		{
-			SFloatNotEqualNodeEditorContext();
+			SFloatNotEqualNodeView();
 		};
 
-		struct SIntLessThanNodeEditorContext : public SNodeView
+		struct SIntLessThanNodeView : public SNodeView
 		{
-			SIntLessThanNodeEditorContext();
+			SIntLessThanNodeView();
 		};
 
-		struct SIntMoreThanNodeEditorContext : public SNodeView
+		struct SIntMoreThanNodeView : public SNodeView
 		{
-			SIntMoreThanNodeEditorContext();
+			SIntMoreThanNodeView();
 		};
 
-		struct SIntLessOrEqualNodeEditorContext : public SNodeView
+		struct SIntLessOrEqualNodeView : public SNodeView
 		{
-			SIntLessOrEqualNodeEditorContext();
+			SIntLessOrEqualNodeView();
 		};
 
-		struct SIntMoreOrEqualNodeEditorContext : public SNodeView
+		struct SIntMoreOrEqualNodeView : public SNodeView
 		{
-			SIntMoreOrEqualNodeEditorContext();
+			SIntMoreOrEqualNodeView();
 		};
 
-		struct SIntEqualNodeEditorContext : public SNodeView
+		struct SIntEqualNodeView : public SNodeView
 		{
-			SIntEqualNodeEditorContext();
+			SIntEqualNodeView();
 		};
 
-		struct SIntNotEqualNodeEditorContext : public SNodeView
+		struct SIntNotEqualNodeView : public SNodeView
 		{
-			SIntNotEqualNodeEditorContext();
+			SIntNotEqualNodeView();
 		};
 	}
 }
