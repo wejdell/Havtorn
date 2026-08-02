@@ -122,8 +122,8 @@ namespace Havtorn
 			// https://learnopengl.com/Guest-Articles/2021/CSM
 			// https://developer.download.nvidia.com/SDK/10.5/opengl/src/cascaded_shadow_maps/doc/cascaded_shadow_maps.pdf
 
-			// TODO need to scale bounding sphere with transform scale
-			const SSphere meshBoundingSphere = SSphere((SVector4(asset->BoundsCenter, 1.0f) * transformComp->Transform.GetMatrix()).ToVector3(), asset->BoundsMin.Distance(asset->BoundsMax) * 0.5f);
+			const SMatrix& transformMatrix = transformComp->Transform.GetMatrix();
+			const SSphere meshBoundingSphere = SSphere((SVector4(asset->BoundsCenter, 1.0f) * transformMatrix).ToVector3(), asset->BoundsMin.Distance(asset->BoundsMax) * 0.5f * transformMatrix.GetScale().GetAbsMax());
 			if (doCulling && IsCulled(scene, meshBoundingSphere, cameraFrustum))
 				continue;
 
