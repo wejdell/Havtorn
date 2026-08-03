@@ -568,6 +568,7 @@ set(VERTEX_SHADERS
     ${SHADER_FOLDER}DeferredInstancedMeshEditor_VS.hlsl
     ${SHADER_FOLDER}DeferredStaticMesh_VS.hlsl
     ${SHADER_FOLDER}DeferredVertexPaint_VS.hlsl
+    ${SHADER_FOLDER}DeferredVertexPaintEditor_VS.hlsl
     ${SHADER_FOLDER}EditorPreview_VS.hlsl
     ${SHADER_FOLDER}EditorPreviewSkeletal_VS.hlsl
     ${SHADER_FOLDER}FullscreenVertexShader_VS.hlsl
@@ -604,6 +605,7 @@ set(PIXEL_SHADERS
     ${SHADER_FOLDER}DeferredRenderPassNormal_PS.hlsl
     ${SHADER_FOLDER}DeferredRenderPassRoughness_PS.hlsl
     ${SHADER_FOLDER}DeferredVertexPaint_PS.hlsl
+    ${SHADER_FOLDER}DeferredVertexPaintEditor_PS.hlsl
     ${SHADER_FOLDER}EditorPreview_PS.hlsl
     ${SHADER_FOLDER}FullscreenBilateralBlurHorizontal_PS.hlsl
     ${SHADER_FOLDER}FullscreenBilateralBlurVertical_PS.hlsl

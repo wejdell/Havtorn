@@ -69,7 +69,18 @@ struct VertexPaintedModelInput
     float4 Tangent    : TANGENT;
     float4 Binormal   : BINORMAL;
     float2 UV         : UV;
-    float3 Color      : COLOR;
+    float4 Color      : COLOR;
+};
+
+struct VertexPaintedModelInputEditor
+{
+    float4 Position   : POSITION;
+    float4 Normal     : NORMAL;
+    float4 Tangent    : TANGENT;
+    float4 Binormal   : BINORMAL;
+    float2 UV         : UV;
+    float4 Color      : COLOR;
+    uint2 Entity      : ENTITY;
 };
 
 struct VertexToPixel

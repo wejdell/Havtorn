@@ -70,6 +70,8 @@ namespace Havtorn
             initData[STATIC_U64(EVertexShaders::SkeletalMeshInstanced)]         = { ShaderRoot + "DeferredInstancedAnimation_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans };
             initData[STATIC_U64(EVertexShaders::SkeletalMeshInstancedEditor)]   = { ShaderRoot + "DeferredInstancedAnimationEditor_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2AnimDataTrans };
             initData[STATIC_U64(EVertexShaders::Skybox)]                        = { ShaderRoot + "Skybox_VS.cso", true, EInputLayoutType::Position4 };
+            initData[STATIC_U64(EVertexShaders::StaticMeshVertexPaint)]         = { ShaderRoot + "DeferredVertexPaint_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Color4 };
+            initData[STATIC_U64(EVertexShaders::StaticMeshVertexPaintEditor)]   = { ShaderRoot + "DeferredVertexPaintEditor_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Color4Entity2};
         }
 
         for (U64 i = 0; i < STATIC_U64(EVertexShaders::Count); i++)
@@ -128,6 +130,8 @@ namespace Havtorn
             filepaths[STATIC_U64(EPixelShaders::FullscreenDepthAwareUpsampling)]    = ShaderRoot + "FullscreenDepthAwareUpsample_PS.cso";
             filepaths[STATIC_U64(EPixelShaders::FullscreenEditorData)]              = ShaderRoot + "FullscreenEditorData_PS.cso";
             filepaths[STATIC_U64(EPixelShaders::FullscreenWorldPosition)]           = ShaderRoot + "FullscreenWorldPosition_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::GBufferVertexPaint)]                = ShaderRoot + "DeferredVertexPaint_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::GBufferVertexPaintEditor)]          = ShaderRoot + "DeferredVertexPaintEditor_PS.cso";
         }
 
         for (U64 i = 0; i < STATIC_U64(EPixelShaders::Count); i++)
@@ -401,6 +405,31 @@ namespace Havtorn
                 {"INSTANCEUVRECT",		0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
                 {"INSTANCECOLOR",		0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
                 {"ENTITY"		,       0, DXGI_FORMAT_R32G32_UINT,	       3, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+            };
+            break;
+        
+        case EInputLayoutType::Pos3Nor3Tan3Bit3UV2Color4:
+            layout =
+            {
+                {"POSITION"	,	0, DXGI_FORMAT_R32G32B32_FLOAT,     0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+                {"NORMAL"   ,   0, DXGI_FORMAT_R32G32B32_FLOAT,     0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+                {"TANGENT"  ,   0, DXGI_FORMAT_R32G32B32_FLOAT,     0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+                {"BINORMAL" ,   0, DXGI_FORMAT_R32G32B32_FLOAT,     0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+                {"UV"		,   0, DXGI_FORMAT_R32G32_FLOAT,	    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+                {"COLOR"    ,	0, DXGI_FORMAT_R32G32B32A32_FLOAT,  1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
+            };
+            break;
+
+        case EInputLayoutType::Pos3Nor3Tan3Bit3UV2Color4Entity2:
+            layout =
+            {
+                {"POSITION"	,	0, DXGI_FORMAT_R32G32B32_FLOAT,     0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+                {"NORMAL"   ,   0, DXGI_FORMAT_R32G32B32_FLOAT,     0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+                {"TANGENT"  ,   0, DXGI_FORMAT_R32G32B32_FLOAT,     0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+                {"BINORMAL" ,   0, DXGI_FORMAT_R32G32B32_FLOAT,     0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+                {"UV"		,   0, DXGI_FORMAT_R32G32_FLOAT,	    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+                {"COLOR"    ,	0, DXGI_FORMAT_R32G32B32A32_FLOAT,  1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+                {"ENTITY"	,   0, DXGI_FORMAT_R32G32_UINT,	        2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
             };
             break;
         }

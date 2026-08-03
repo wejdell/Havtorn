@@ -30,6 +30,8 @@ namespace Havtorn
 		TransUVRectColorEntity2,
 		Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans,
 		Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2AnimDataTrans,
+		Pos3Nor3Tan3Bit3UV2Color4,
+		Pos3Nor3Tan3Bit3UV2Color4Entity2,
 		Null
 	};
 
@@ -49,6 +51,8 @@ namespace Havtorn
 		SkeletalMeshInstanced = 11,
 		SkeletalMeshInstancedEditor = 12,
 		Skybox = 13,
+		StaticMeshVertexPaint = 14, // Not instanced
+		StaticMeshVertexPaintEditor = 15, // Not instanced
 		Count,
 		Null = Count
 	};
@@ -94,6 +98,8 @@ namespace Havtorn
 		FullscreenDepthAwareUpsampling = 36,
 		FullscreenEditorData = 37,
 		FullscreenWorldPosition = 38,
+		GBufferVertexPaint = 39,
+		GBufferVertexPaintEditor = 40,
 		Count,
 		Null = Count
 	};

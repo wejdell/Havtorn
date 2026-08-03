@@ -181,6 +181,8 @@ namespace Havtorn
 		inline void GBufferDataInstanced(const SRenderCommand& command);
 		inline void GBufferDataInstancedEditor(const SRenderCommand& command);
 		inline void StaticMeshAssetThumbnail(const SRenderCommand& command);
+		inline void StaticMeshVertexPaint(const SRenderCommand& command);
+		inline void StaticMeshVertexPaintEditor(const SRenderCommand& command);
 		inline void GBufferSkeletalInstanced(const SRenderCommand& command);
 		inline void GBufferSkeletalInstancedEditor(const SRenderCommand& command);
 		inline void SkeletalMeshAssetThumbnail(const SRenderCommand& command);

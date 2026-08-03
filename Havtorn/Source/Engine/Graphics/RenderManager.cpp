@@ -1108,6 +1108,65 @@ namespace Havtorn
 		// TODO.NW: Try add anti aliasing
 	}
 
+	void CRenderManager::StaticMeshVertexPaint(const SRenderCommand& /*command*/)
+	{
+	}
+
+	void CRenderManager::StaticMeshVertexPaintEditor(const SRenderCommand& command)
+	{
+		if (!RenderThreadRenderViews->contains(command.RenderViewID))
+			return;
+
+		SStaticMeshInstanceData& meshData = RenderThreadRenderViews->at(command.RenderViewID).StaticMeshInstanceData[command.U32s[0]];
+
+		const std::vector<SEntity>& entities = meshData.Entities;
+		InstancedEntityIDBuffer.BindBuffer(entities);
+
+		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
+		RenderStateManager.IASetTopology(ETopologies::TriangleList);
+		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Color4Entity2);
+
+		RenderStateManager.VSSetShader(EVertexShaders::StaticMeshVertexPaintEditor);
+		RenderStateManager.PSSetShader(EPixelShaders::GBufferVertexPaintEditor);
+		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
+
+		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(command.DrawCallData.size()); drawCallIndex++)
+		{
+			if (!UMath::IsWithin(command.DrawCallData[drawCallIndex].MaterialIndex, STATIC_U16(0), STATIC_U16(command.Materials.size())))
+				continue;
+
+			MaterialBufferData = SMaterialBufferData(command.Materials[command.DrawCallData[drawCallIndex].MaterialIndex]);
+			std::vector<ID3D11ShaderResourceView*> resourceViewPointers;
+			std::map<U32, F32> textureUIDToShaderIndex;
+			const std::map<U32, CStaticRenderTexture>& textureMap = command.MaterialRenderTextures[command.DrawCallData[drawCallIndex].MaterialIndex];
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoR)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoG)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoB)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AlbedoA)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalX)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalY)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::NormalZ)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::AmbientOcclusion)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Metalness)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Roughness)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+			MapRuntimeMaterialProperty(MaterialBufferData.Properties[STATIC_U8(EMaterialProperty::Emissive)], resourceViewPointers, textureUIDToShaderIndex, textureMap);
+
+			MaterialBuffer.BindBuffer(MaterialBufferData);
+
+			RenderStateManager.PSSetResources(5, STATIC_U8(resourceViewPointers.size()), resourceViewPointers.data());
+			RenderStateManager.PSSetConstantBuffer(8, MaterialBuffer);
+
+			const SDrawCallData& drawData = command.DrawCallData[drawCallIndex];
+			const std::vector<CDataBuffer> buffers = { RenderStateManager.VertexBuffers[drawData.VertexBufferIndex], InstancedColorBuffer, InstancedEntityIDBuffer };
+			const U32 strides[3] = { RenderStateManager.MeshVertexStrides[drawData.VertexStrideIndex], sizeof(SVector4), sizeof(U64)};
+			const U32 offsets[3] = { RenderStateManager.MeshVertexOffsets[drawData.VertexOffsetIndex], 0, 0 };
+			RenderStateManager.IASetVertexBuffers(0, 3, buffers, strides, offsets);
+			RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[drawData.IndexBufferIndex]);
+			RenderStateManager.DrawIndexed(drawData.IndexCount, 0, 0);
+			CRenderManager::NumberOfDrawCallsThisFrame++;
+		}
+	}
+
 	void CRenderManager::GBufferSkeletalInstanced(const SRenderCommand& command)
 	{
 		if (!RenderThreadRenderViews->contains(command.RenderViewID))
