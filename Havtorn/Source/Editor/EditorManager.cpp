@@ -862,47 +862,41 @@ namespace Havtorn
 				AssetFilter.Draw("Search", 0); // TODO.NW: Figure out a nicer way of setting the width
 
 				GUI::SetNextWindowSizeConstraints(SVector2<F32>(0.0f, 0.0f), SVector2<F32>(UMath::MaxFloat, maxDropDownSize));
-				if (GUI::BeginChild("##ComboOptionsChild", SVector2<F32>(maxWidth, 0.0f), { EChildFlag::AutoResizeY, EChildFlag::AlwaysAutoResize }))
+				GUI::BeginChild("##ComboOptionsChild", SVector2<F32>(maxWidth, 0.0f), { EChildFlag::AutoResizeY, EChildFlag::AlwaysAutoResize });
+
+				I32 id = 0;
+				for (auto& entry : std::filesystem::recursive_directory_iterator("Assets"))
 				{
-					I32 id = 0;
-					for (auto& entry : std::filesystem::recursive_directory_iterator("Assets"))
+					if (entry.is_directory())
+						continue;
+
+					SAssetInspectionData data = GetAssetFilteredInspectFunction()(entry, assetType);
+					if (!data.IsValid())
+						continue;
+
+					if (!AssetFilter.PassFilter(data.Name.c_str()))
+						continue;
+
+					GUI::PushID(id++);
+
+					if (GUI::ImageButton("", data.TextureRef, { GUI::TexturePreviewSizeX * 0.5f, GUI::TexturePreviewSizeY * 0.5f }))
 					{
-						if (entry.is_directory())
-							continue;
-
-						SAssetInspectionData data = GetAssetFilteredInspectFunction()(entry, assetType);
-						if (!data.IsValid())
-							continue;
-
-						if (!AssetFilter.PassFilter(data.Name.c_str()))
-							continue;
-
-						GUI::PushID(id++);
-
-						if (GUI::ImageButton("", data.TextureRef, { GUI::TexturePreviewSizeX * 0.5f, GUI::TexturePreviewSizeY * 0.5f }))
-						{
-							// TODO.NW: Make combo close when selecting the same asset again
-							GUI::PopID();
-							GUI::EndChild();
-							GUI::EndCombo();
-							GUI::EndChild();
-							GUI::CloseCurrentPopup();
-							result.State = EAssetPickerState::AssetPicked;
-							result.PickedEntry = entry;
-							return result;
-						}
-
-						GUI::SameLine();
-						GUI::Text(data.Name.c_str());
+						// TODO.NW: Make combo close when selecting the same asset again
 						GUI::PopID();
+						result.State = EAssetPickerState::AssetPicked;
+						result.PickedEntry = entry;
+						AssetFilter.Clear();
+						break;
 					}
+
+					GUI::SameLine();
+					GUI::Text(data.Name.c_str());
+					GUI::PopID();
 				}
 
 				GUI::EndChild();
 				GUI::EndCombo();
 			}
-			else
-				AssetFilter = SGuiTextFilter();
 
 			GUI::OffsetCursorPos(SVector2<F32>(2.0f, -2.5f));
 			GUI::SetSecondaryFontActive(true);
