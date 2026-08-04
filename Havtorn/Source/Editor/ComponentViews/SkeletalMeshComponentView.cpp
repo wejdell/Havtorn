@@ -27,6 +27,13 @@ namespace Havtorn
 
 		SSkeletalMeshComponent* skeletalMesh = scene->GetComponent<SSkeletalMeshComponent>(entityOwner);
 		const SSkeletalMeshAsset* skeletalMeshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalMeshAsset>(skeletalMesh->AssetReference, entityOwner.GUID);
+		if (skeletalMeshAsset == nullptr)
+		{
+			CInspectorWindow* inspector = Manager->GetEditorWindow<CInspectorWindow>();
+			inspector->InspectAssetComponent(skeletalMesh, EAssetType::SkeletalMesh, SAssetReference::ConvertToPointers(skeletalMesh->AssetReference));
+			return;
+		}
+
 		GUI::TextDisabled("Number Of Materials: %i", skeletalMeshAsset->NumberOfMaterials);
 
 		SVector a = SVector(skeletalMeshAsset->BoundsMin.X, skeletalMeshAsset->BoundsMin.Y, skeletalMeshAsset->BoundsMin.Z);
