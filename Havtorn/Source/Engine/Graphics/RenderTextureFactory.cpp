@@ -2,11 +2,13 @@
 
 #include "hvpch.h"
 #include "RenderTextureFactory.h"
-#include "GraphicsFramework.h"
 #include "GraphicsUtilities.h"
+#include "Assets/AssetRegistry.h"
 
 #include "RenderingPrimitives/RenderTexture.h"
 #include "RenderingPrimitives/GBuffer.h"
+
+#include <RHI/RHI.h>
 
 namespace Havtorn
 {
@@ -95,9 +97,9 @@ namespace Havtorn
 		return DirectX::CreateShaderResourceView(device, image, scratchImage.GetImageCount(), metaData, outShaderResourceView);
 	}
 
-	bool CRenderTextureFactory::Init(CGraphicsFramework* framework)
+	bool CRenderTextureFactory::Init(CRHI* rhi)
 	{
-		Framework = framework;
+		RHI = rhi;
 		return true;
 	}
 
@@ -117,7 +119,7 @@ namespace Havtorn
 		textureDesc.MiscFlags = 0;
 
 		ID3D11Texture2D* texture;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateTexture2D(&textureDesc, nullptr, &texture), "Could not create Fullscreen Texture2D");
+		ENGINE_HR_MESSAGE(RHI->GetDevice()->CreateTexture2D(&textureDesc, nullptr, &texture), "Could not create Fullscreen Texture2D");
 
 		CRenderTexture returnTexture;
 		returnTexture = CreateTexture(texture, cpuAccess);
@@ -125,7 +127,7 @@ namespace Havtorn
 		if (!cpuAccess)
 		{
 			ID3D11ShaderResourceView* shaderResource;
-			ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateShaderResourceView(texture, nullptr, &shaderResource), "Could not create Fullscreen Shader Resource View.");
+			ENGINE_HR_MESSAGE(RHI->GetDevice()->CreateShaderResourceView(texture, nullptr, &shaderResource), "Could not create Fullscreen Shader Resource View.");
 			returnTexture.ShaderResource = shaderResource;
 		}
 
@@ -144,13 +146,13 @@ namespace Havtorn
 		}
 
 		CRenderTexture returnTexture;
-		returnTexture.Context = Framework->GetContext();
+		returnTexture.Context = RHI->GetContext();
 		returnTexture.Texture = texture;
 
 		if (!cpuAccess)
 		{
 			ID3D11RenderTargetView* renderTarget;
-			ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateRenderTargetView(texture, nullptr, &renderTarget), "Could not create Fullcreen Render Target View.");
+			ENGINE_HR_MESSAGE(RHI->GetDevice()->CreateRenderTargetView(texture, nullptr, &renderTarget), "Could not create Fullcreen Render Target View.");
 			returnTexture.RenderTarget = renderTarget;
 		}
 
@@ -175,12 +177,12 @@ namespace Havtorn
 		textureDesc.MiscFlags = 0;
 
 		ID3D11Texture2D* texture;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateTexture2D(&textureDesc, nullptr, &texture), "Could not create Fullscreen Texture2D");
+		ENGINE_HR_MESSAGE(RHI->GetDevice()->CreateTexture2D(&textureDesc, nullptr, &texture), "Could not create Fullscreen Texture2D");
 
 		CRenderTexture returnTexture;
 		returnTexture = CreateTexture(texture);
 
-		ID3D11ShaderResourceView* shaderResource = UGraphicsUtils::GetShaderResourceView(Framework->GetDevice(), filePath);
+		ID3D11ShaderResourceView* shaderResource = UGraphicsUtils::GetShaderResourceView(RHI->GetDevice(), filePath);
 
 		returnTexture.ShaderResource = shaderResource;
 		return returnTexture;
@@ -231,17 +233,17 @@ namespace Havtorn
 		shaderResourceViewDesc.Texture2D.MipLevels = 1;
 
 		ID3D11Texture2D* depthStencilBuffer;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateTexture2D(&depthStencilDesc, nullptr, &depthStencilBuffer), "Texture could not be created.");
+		ENGINE_HR_MESSAGE(RHI->GetDevice()->CreateTexture2D(&depthStencilDesc, nullptr, &depthStencilBuffer), "Texture could not be created.");
 		ID3D11DepthStencilView* depthStencilView;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateDepthStencilView(depthStencilBuffer, &depthStencilViewDesc, &depthStencilView), "Depth could not be created.");
+		ENGINE_HR_MESSAGE(RHI->GetDevice()->CreateDepthStencilView(depthStencilBuffer, &depthStencilViewDesc, &depthStencilView), "Depth could not be created.");
 		ID3D11ShaderResourceView* shaderResource;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateShaderResourceView(depthStencilBuffer, &shaderResourceViewDesc, &shaderResource), "Depth Shader Resource could not be created.");
+		ENGINE_HR_MESSAGE(RHI->GetDevice()->CreateShaderResourceView(depthStencilBuffer, &shaderResourceViewDesc, &shaderResource), "Depth Shader Resource could not be created.");
 
 		D3D11_VIEWPORT viewport = D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(size.X), STATIC_F32(size.Y), 0.0f, 1.0f });
 
 		CRenderTexture returnDepth;
 		returnDepth.IsRenderTexture = false;
-		returnDepth.Context = Framework->GetContext();
+		returnDepth.Context = RHI->GetContext();
 		returnDepth.Texture = depthStencilBuffer;
 		returnDepth.Depth = depthStencilView;
 		returnDepth.ShaderResource = shaderResource;
@@ -252,16 +254,16 @@ namespace Havtorn
 	CRenderTexture CRenderTextureFactory::CreateSRVFromSource(const std::string& filePath)
 	{
 		CRenderTexture returnTexture;
-		returnTexture.Context = Framework->GetContext();
-		ENGINE_HR_MESSAGE(CreateShaderResourceViewFromSource(Framework->GetDevice(), filePath, &returnTexture.ShaderResource), "SRV could not be created from %s", filePath.c_str());
+		returnTexture.Context = RHI->GetContext();
+		ENGINE_HR_MESSAGE(CreateShaderResourceViewFromSource(RHI->GetDevice(), filePath, &returnTexture.ShaderResource), "SRV could not be created from %s", filePath.c_str());
 		return std::move(returnTexture);
 	}
 
 	CRenderTexture CRenderTextureFactory::CreateSRVFromAsset(const std::string& filePath, const EAssetType assetType)
 	{
 		CRenderTexture returnTexture;
-		returnTexture.Context = Framework->GetContext();
-		ENGINE_HR_MESSAGE(CreateShaderResourceViewFromAsset(Framework->GetDevice(), filePath, assetType, &returnTexture.ShaderResource), "SRV could not be created from %s", filePath.c_str());
+		returnTexture.Context = RHI->GetContext();
+		ENGINE_HR_MESSAGE(CreateShaderResourceViewFromAsset(RHI->GetDevice(), filePath, assetType, &returnTexture.ShaderResource), "SRV could not be created from %s", filePath.c_str());
 		return std::move(returnTexture);
 	}
 
@@ -292,9 +294,9 @@ namespace Havtorn
 		srvDesc.Texture2D.MipLevels = 1;
 
 		ID3D11Texture2D* textureBuffer;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateTexture2D(&textureDesc, &textureData, &textureBuffer), "Texture could not be created.");
+		ENGINE_HR_MESSAGE(RHI->GetDevice()->CreateTexture2D(&textureDesc, &textureData, &textureBuffer), "Texture could not be created.");
 		ID3D11ShaderResourceView* shaderResource;
-		ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateShaderResourceView(textureBuffer, &srvDesc, &shaderResource), "Noise Shader Resource View could not be created.");
+		ENGINE_HR_MESSAGE(RHI->GetDevice()->CreateShaderResourceView(textureBuffer, &srvDesc, &shaderResource), "Noise Shader Resource View could not be created.");
 
 		CRenderTexture returnTexture = CreateTexture(textureBuffer);
 		returnTexture.ShaderResource = shaderResource;
@@ -304,8 +306,8 @@ namespace Havtorn
 	CStaticRenderTexture CRenderTextureFactory::CreateStaticTexture(const std::string& filePath, const EAssetType assetType)
 	{
 		CStaticRenderTexture returnTexture;
-		returnTexture.Context = Framework->GetContext();
-		ENGINE_HR_MESSAGE(CreateShaderResourceViewFromAsset(Framework->GetDevice(), filePath, assetType, &returnTexture.ShaderResource), "SRV could not be created from %s", filePath.c_str());
+		returnTexture.Context = RHI->GetContext();
+		ENGINE_HR_MESSAGE(CreateShaderResourceViewFromAsset(RHI->GetDevice(), filePath, assetType, &returnTexture.ShaderResource), "SRV could not be created from %s", filePath.c_str());
 		return std::move(returnTexture);
 	}
 
@@ -336,7 +338,7 @@ namespace Havtorn
 		D3D11_VIEWPORT viewport = D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(size.X), STATIC_F32(size.Y), 0.0f, 1.0f });
 
 		CGBuffer returnGBuffer;
-		returnGBuffer.Context = Framework->GetContext();
+		returnGBuffer.Context = RHI->GetContext();
 		returnGBuffer.Textures = std::move(textures);
 		returnGBuffer.RenderTargets = std::move(renderTargets);
 		returnGBuffer.ShaderResources = std::move(shaderResources);

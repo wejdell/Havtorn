@@ -23,6 +23,7 @@
 #include <future>
 
 #include <PlatformManager.h>
+#include <RHI/RHI.h>
 
 #include "Threading/ThreadManager.h"
 #include "TextureBank.h"
@@ -39,16 +40,16 @@ namespace Havtorn
 		Release(SVector2<U16>::Zero);
 	}
 
-	bool CRenderManager::Init(CGraphicsFramework* framework, CPlatformManager* platformManager)
+	bool CRenderManager::Init(CRHI* rhi, CPlatformManager* platformManager)
 	{
-		Framework = framework;
+		RHI = rhi;
 
 		// Init renderer with texture factory, create noise texture as rendertexture
-		ENGINE_ERROR_BOOL_MESSAGE(RenderTextureFactory.Init(framework), "Failed to Init Fullscreen Texture Factory.");
-		ENGINE_ERROR_BOOL_MESSAGE(FullscreenRenderer.Init(framework, this), "Failed to Init Fullscreen Renderer.");
-		ENGINE_ERROR_BOOL_MESSAGE(RenderStateManager.Init(framework), "Failed to Init Render State Manager.");
+		ENGINE_ERROR_BOOL_MESSAGE(RenderTextureFactory.Init(rhi), "Failed to Init Fullscreen Texture Factory.");
+		ENGINE_ERROR_BOOL_MESSAGE(FullscreenRenderer.Init(rhi, this), "Failed to Init Fullscreen Renderer.");
+		ENGINE_ERROR_BOOL_MESSAGE(RenderStateManager.Init(rhi), "Failed to Init Render State Manager.");
 
-		InitRenderTextures(framework, platformManager->GetResolution());
+		InitRenderTextures(rhi, platformManager->GetResolution());
 
 		InitDataBuffers();
 
@@ -62,20 +63,20 @@ namespace Havtorn
 		return true;
 	}
 
-	bool CRenderManager::ReInit(CGraphicsFramework* framework, SVector2<U16> newResolution)
+	bool CRenderManager::ReInit(CRHI* rhi, SVector2<U16> newResolution)
 	{
-		ENGINE_ERROR_BOOL_MESSAGE(RenderStateManager.Init(framework), "Failed to Init Render State Manager.");
-		InitRenderTextures(framework, newResolution);
+		ENGINE_ERROR_BOOL_MESSAGE(RenderStateManager.Init(rhi), "Failed to Init Render State Manager.");
+		InitRenderTextures(rhi, newResolution);
 
 		return true;
 	}
 
-	void CRenderManager::InitRenderTextures(CGraphicsFramework* framework, SVector2<U16> windowResolution)
+	void CRenderManager::InitRenderTextures(CRHI* rhi, SVector2<U16> windowResolution)
 	{
 		Backbuffer.ReleaseTexture();
-		framework->GetSwapChain()->ResizeBuffers(0, windowResolution.X, windowResolution.Y, DXGI_FORMAT_UNKNOWN, 0);
+		rhi->GetSwapChain()->ResizeBuffers(0, windowResolution.X, windowResolution.Y, DXGI_FORMAT_UNKNOWN, 0);
 
-		ID3D11Texture2D* backbufferTexture = framework->GetBackbufferTexture();
+		ID3D11Texture2D* backbufferTexture = rhi->GetBackbufferTexture();
 		Backbuffer = RenderTextureFactory.CreateTexture(backbufferTexture);
 
 		CurrentWindowResolution = windowResolution;
@@ -290,9 +291,9 @@ namespace Havtorn
 	void CRenderManager::Release(SVector2<U16> newResolution)
 	{
 		Clear(ClearColor);
-		GEngine::Instance->Framework->GetContext()->OMSetRenderTargets(0, 0, 0);
-		GEngine::Instance->Framework->GetContext()->OMGetDepthStencilState(0, 0);
-		GEngine::Instance->Framework->GetContext()->ClearState();
+		GEngine::Instance->RHI->GetContext()->OMSetRenderTargets(0, 0, 0);
+		GEngine::Instance->RHI->GetContext()->OMGetDepthStencilState(0, 0);
+		GEngine::Instance->RHI->GetContext()->ClearState();
 
 		// TODO.NR: Implement this properly for window resizing
 
@@ -326,7 +327,7 @@ namespace Havtorn
 		//TODO.AS: Is this ultra deep call really neccesary to do here? Context: We need to specifically Resize the SwapChain Buffers Right after we Release
 		//the Backbuffer texture. 
 		// TODO.NW: Sounds like this should be done in the Resize context, not in this function
-		GEngine::Instance->Framework->GetSwapChain()->ResizeBuffers(0, newResolution.X, newResolution.Y, DXGI_FORMAT_UNKNOWN, 0);
+		GEngine::Instance->RHI->GetSwapChain()->ResizeBuffers(0, newResolution.X, newResolution.Y, DXGI_FORMAT_UNKNOWN, 0);
 	}
 
 	CRenderTexture CRenderManager::CreateRenderTextureFromSource(const std::string& filePath)
@@ -752,25 +753,25 @@ namespace Havtorn
 
 	void CRenderManager::InitDataBuffers()
 	{
-		FrameBuffer.CreateBuffer("Frame Buffer", Framework, sizeof(SFrameBufferData));
-		ObjectBuffer.CreateBuffer("Object Buffer", Framework, sizeof(SObjectBufferData));
-		MaterialBuffer.CreateBuffer("Material Buffer", Framework, sizeof(SMaterialBufferData));
-		DebugShapeObjectBuffer.CreateBuffer("Debug Shape Object Buffer", Framework, sizeof(SDebugShapeObjectBufferData));
-		DecalBuffer.CreateBuffer("Decal Buffer", Framework, sizeof(SDecalBufferData));
-		SpriteBuffer.CreateBuffer("Sprite Buffer", Framework, sizeof(SSpriteBufferData));
-		DirectionalLightBuffer.CreateBuffer("Directional Light Buffer", Framework, sizeof(SDirectionalLightBufferData));
-		PointLightBuffer.CreateBuffer("Point Light Buffer", Framework, sizeof(SPointLightBufferData));
-		SpotLightBuffer.CreateBuffer("Spot Light Buffer", Framework, sizeof(SSpotLightBufferData));
-		ShadowmapBuffer.CreateBuffer("Shadowmap Buffer", Framework, sizeof(SShadowmapBufferData) * 6);
-		VolumetricLightBuffer.CreateBuffer("Volumetric Light Buffer", Framework, sizeof(SVolumetricLightBufferData));
-		EmissiveBuffer.CreateBuffer("Emissive Buffer", Framework, sizeof(SEmissiveBufferData));
-		BoneBuffer.CreateBuffer("Bone Buffer", Framework, sizeof(SBoneBufferData));
+		FrameBuffer.CreateBuffer("Frame Buffer", RHI, sizeof(SFrameBufferData));
+		ObjectBuffer.CreateBuffer("Object Buffer", RHI, sizeof(SObjectBufferData));
+		MaterialBuffer.CreateBuffer("Material Buffer", RHI, sizeof(SMaterialBufferData));
+		DebugShapeObjectBuffer.CreateBuffer("Debug Shape Object Buffer", RHI, sizeof(SDebugShapeObjectBufferData));
+		DecalBuffer.CreateBuffer("Decal Buffer", RHI, sizeof(SDecalBufferData));
+		SpriteBuffer.CreateBuffer("Sprite Buffer", RHI, sizeof(SSpriteBufferData));
+		DirectionalLightBuffer.CreateBuffer("Directional Light Buffer", RHI, sizeof(SDirectionalLightBufferData));
+		PointLightBuffer.CreateBuffer("Point Light Buffer", RHI, sizeof(SPointLightBufferData));
+		SpotLightBuffer.CreateBuffer("Spot Light Buffer", RHI, sizeof(SSpotLightBufferData));
+		ShadowmapBuffer.CreateBuffer("Shadowmap Buffer", RHI, sizeof(SShadowmapBufferData) * 6);
+		VolumetricLightBuffer.CreateBuffer("Volumetric Light Buffer", RHI, sizeof(SVolumetricLightBufferData));
+		EmissiveBuffer.CreateBuffer("Emissive Buffer", RHI, sizeof(SEmissiveBufferData));
+		BoneBuffer.CreateBuffer("Bone Buffer", RHI, sizeof(SBoneBufferData));
 
-		InstancedTransformBuffer.CreateBuffer("Instanced Transform Buffer", Framework, sizeof(SMatrix) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
-		InstancedAnimationDataBuffer.CreateBuffer("Instanced Animation Data Buffer", Framework, sizeof(SVector2<U32>) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
-		InstancedEntityIDBuffer.CreateBuffer("Instanced Entity ID Buffer", Framework, sizeof(U64) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
-		InstancedUVRectBuffer.CreateBuffer("Instanced UV Rect Buffer", Framework, sizeof(SVector4) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
-		InstancedColorBuffer.CreateBuffer("Instanced Color Buffer", Framework, sizeof(SVector4) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
+		InstancedTransformBuffer.CreateBuffer("Instanced Transform Buffer", RHI, sizeof(SMatrix) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
+		InstancedAnimationDataBuffer.CreateBuffer("Instanced Animation Data Buffer", RHI, sizeof(SVector2<U32>) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
+		InstancedEntityIDBuffer.CreateBuffer("Instanced Entity ID Buffer", RHI, sizeof(U64) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
+		InstancedUVRectBuffer.CreateBuffer("Instanced UV Rect Buffer", RHI, sizeof(SVector4) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
+		InstancedColorBuffer.CreateBuffer("Instanced Color Buffer", RHI, sizeof(SVector4) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
 	}
 
 	void CRenderManager::ShadowAtlasPrePassDirectional(const SRenderCommand& command)

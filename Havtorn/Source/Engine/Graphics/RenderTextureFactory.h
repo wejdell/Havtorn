@@ -6,7 +6,7 @@ struct ID3D11Texture2D;
 
 namespace Havtorn
 {
-	class CGraphicsFramework;
+	class CRHI;
 	class CRenderTexture;
 	class CStaticRenderTexture;
 	class CGBuffer;
@@ -16,7 +16,7 @@ namespace Havtorn
 	public:
 		CRenderTextureFactory() = default;
 		~CRenderTextureFactory() = default;
-		bool Init(CGraphicsFramework* framework);
+		bool Init(CRHI* rhi);
 		CRenderTexture CreateTexture(SVector2<U16> size, DXGI_FORMAT format, bool cpuAccess = false);
 		CRenderTexture CreateTexture(ID3D11Texture2D* texture, bool cpuAccess = false);
 		CRenderTexture CreateTexture(SVector2<U16> size, DXGI_FORMAT format, const std::string& filePath);
@@ -32,6 +32,6 @@ namespace Havtorn
 		CGBuffer CreateGBuffer(SVector2<U16> size);
 
 	private:
-		CGraphicsFramework* Framework = nullptr;
+		CRHI* RHI = nullptr;
 	};
 }

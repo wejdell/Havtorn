@@ -2,14 +2,15 @@
 
 #pragma once
 
-//#include "windows.h"
-#include "winnls.h"
-#include "shobjidl.h"
-#include "objbase.h"
-#include "objidl.h"
-#include "shlguid.h"
-#include "strsafe.h"
-#include "stringapiset.h"
+#include <CoreTypes.h>
+
+#include <winnls.h>
+#include <shobjidl.h>
+#include <objbase.h>
+#include <objidl.h>
+#include <shlguid.h>
+#include <strsafe.h>
+#include <stringapiset.h>
 #include <string>
 
 namespace Havtorn

@@ -45,14 +45,4 @@ namespace Havtorn
 	{
 		Engine->EndFrame();
 	}
-
-	SEngineRenderBackend CEngineProcess::GetRenderBackend()
-	{
-		return
-		{
-			0,
-			Engine->GetGraphicsFramework()->GetDevice(),
-			Engine->GetGraphicsFramework()->GetContext()
-		};
-	}
 }

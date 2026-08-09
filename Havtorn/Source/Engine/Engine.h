@@ -10,8 +10,8 @@ namespace Havtorn
 namespace Havtorn
 {
 	class CPlatformManager;
+	class CRHI;
 	class CThreadManager;
-	class CGraphicsFramework;
 	class CRenderManager;
 	class GTime;
 	class CWorld;
@@ -43,7 +43,6 @@ namespace Havtorn
 		static ENGINE_API CAssetRegistry* GetAssetRegistry();
 		static ENGINE_API CWorld* GetWorld();
 		static ENGINE_API CInputMapper* GetInput();
-		static ENGINE_API CGraphicsFramework* GetGraphicsFramework();
 		
 		void OnWindowResolutionChanged(SVector2<U16> newResolution);
 
@@ -53,10 +52,11 @@ namespace Havtorn
 	private:
 		static ENGINE_API GEngine* Instance;
 
+		CRHI* RHI = nullptr; // Not owned by engine
+
 		// TODO.NW: Might as well make these unique ptrs
 		CFileWatcher* FileWatcher = nullptr;
 		CThreadManager* ThreadManager = nullptr;
-		CGraphicsFramework* Framework = nullptr;
 		CRenderManager* RenderManager = nullptr;
 		CAssetRegistry* AssetRegistry = nullptr;
 		// TODO.NW: Change "G" and "U" standard to something common?

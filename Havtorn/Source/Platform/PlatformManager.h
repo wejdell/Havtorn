@@ -3,6 +3,7 @@
 #pragma once
 
 #include "WindowsInclude.h"
+
 #include <Core.h>
 #include <MathTypes/Vector.h>
 #include <HavtornDelegate.h>
@@ -19,6 +20,8 @@ namespace Havtorn
 		bool BlockHitTest = false;
 		bool IsFullscreen = false;
 	};
+
+	class CRHI;
 
 	class CPlatformManager
 	{
@@ -42,8 +45,13 @@ namespace Havtorn
 		CMulticastDelegate<std::vector<std::string>> OnDragDropAccepted;
 		CMulticastDelegate<SVector2<U16>> OnResolutionChanged;
 
+#ifdef HV_PLATFORM_WINDOWS
 		PLATFORM_API const HWND GetWindowHandle() const;
+#endif
+
 		PLATFORM_API SDL_Window* GetMainWindow() const;
+
+		PLATFORM_API CRHI* GetRHI();
 
 		PLATFORM_API void OnApplicationReady();
 
@@ -59,11 +67,15 @@ namespace Havtorn
 		bool Init();
 
 	private:
+#ifdef HV_PLATFORM_WINDOWS
 		HWND WindowHandle = 0;
+#endif
 
 		SDL_Window* Window = nullptr;
 		SDL_Window* SplashWindow = nullptr;
 		SDL_Surface* SplashSurface = nullptr;
+
+		Ptr<CRHI> RHI = nullptr;
 
 		SVector2<U16> ResizeTarget = SVector2<U16>::Zero;
 		SVector2<U16> Resolution = SVector2<U16>::Zero;

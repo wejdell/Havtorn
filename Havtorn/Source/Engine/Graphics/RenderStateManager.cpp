@@ -4,10 +4,12 @@
 #include "RenderStateManager.h"
 
 #include "GeometryPrimitives.h"
-#include "GraphicsFramework.h"
 #include "GraphicsUtilities.h"
 
 #include "FileSystem/FileWatcher.h"
+
+#include <RHI/RHI.h>
+#include <GeneralUtilities.h>
 
 #include <d3dcompiler.h>
 
@@ -18,11 +20,11 @@ namespace Havtorn
         Context = nullptr;
     }
 
-    bool CRenderStateManager::Init(CGraphicsFramework* framework)
+    bool CRenderStateManager::Init(CRHI* rhi)
     {
-        Framework = framework;
-        Context = framework->GetContext();
-        ID3D11Device* device = framework->GetDevice();
+        RHI = rhi;
+        Context = rhi->GetContext();
+        ID3D11Device* device = rhi->GetDevice();
 
         ENGINE_ERROR_BOOL_MESSAGE(Context, "Could not bind context.");
         ENGINE_ERROR_BOOL_MESSAGE(device, "Device is null.");
@@ -224,7 +226,7 @@ namespace Havtorn
     U16 CRenderStateManager::AddIndexBuffer(const std::vector<U32>& indices)
     {
         IndexBuffers.emplace_back(CDataBuffer());
-        IndexBuffers.back().CreateBuffer("Index Buffer", Framework, sizeof(U32) * STATIC_U32(indices.size()), indices.data(), EDataBufferType::Index, EDataBufferUsage::Immutable, EDataBufferCPUAccess::None);
+        IndexBuffers.back().CreateBuffer("Index Buffer", RHI, sizeof(U32) * STATIC_U32(indices.size()), indices.data(), EDataBufferType::Index, EDataBufferUsage::Immutable, EDataBufferCPUAccess::None);
 
         return STATIC_U16(IndexBuffers.size() - 1);
     }
@@ -253,7 +255,7 @@ namespace Havtorn
                 VertexShaders[index]->Release();
 
             ID3D11VertexShader* vertexShader;
-            UGraphicsUtils::CreateVertexShader(fileName, Framework, &vertexShader, outShaderData);
+            UGraphicsUtils::CreateVertexShader(fileName, RHI, &vertexShader, outShaderData);
             VertexShaders[index] = vertexShader;
         }
         break;
@@ -264,7 +266,7 @@ namespace Havtorn
                 GeometryShaders[index]->Release();
 
             ID3D11GeometryShader* geometryShader;
-            UGraphicsUtils::CreateGeometryShader(fileName, Framework, &geometryShader);
+            UGraphicsUtils::CreateGeometryShader(fileName, RHI, &geometryShader);
             GeometryShaders[index] = geometryShader;
         }
         break;
@@ -274,7 +276,7 @@ namespace Havtorn
                 PixelShaders[index]->Release();
 
             ID3D11PixelShader* pixelShader;
-            UGraphicsUtils::CreatePixelShader(fileName, Framework, &pixelShader);
+            UGraphicsUtils::CreatePixelShader(fileName, RHI, &pixelShader);
             PixelShaders[index] = pixelShader;
         }
         break;
@@ -434,7 +436,7 @@ namespace Havtorn
             break;
         }
         ID3D11InputLayout* inputLayout;
-        ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateInputLayout(layout.data(), STATIC_U32(layout.size()), vsData.data(), vsData.size(), &inputLayout), "Input Layout could not be created.")
+        ENGINE_HR_MESSAGE(RHI->GetDevice()->CreateInputLayout(layout.data(), STATIC_U32(layout.size()), vsData.data(), vsData.size(), &inputLayout), "Input Layout could not be created.")
             InputLayouts.emplace_back(inputLayout);
     }
 
@@ -475,7 +477,7 @@ namespace Havtorn
         }
 
         ID3D11SamplerState* samplerState;
-        ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateSamplerState(&samplerDesc, &samplerState), "Sampler could not be created.");
+        ENGINE_HR_MESSAGE(RHI->GetDevice()->CreateSamplerState(&samplerDesc, &samplerState), "Sampler could not be created.");
         Samplers.emplace_back(samplerState);
     }
 

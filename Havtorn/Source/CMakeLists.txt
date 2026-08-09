@@ -11,6 +11,14 @@ project (Havtorn
 
 # option(ENABLE_CODE_ANALYSIS "Use Static Code Analysis on build" OFF)
 
+set(RENDER_BACKENDS DIRECTX11 VULKAN)
+set(RENDER_BACKEND DIRECTX11 CACHE STRING "Chosen Render Backend")
+set_property(CACHE RENDER_BACKEND PROPERTY STRINGS ${RENDER_BACKENDS})
+
+if(NOT RENDER_BACKEND IN_LIST RENDER_BACKENDS)
+    message(FATAL_ERROR "The render backend must be one of ${RENDER_BACKENDS}")
+endif()
+
 set(AUDIO_BACKENDS WWISE FMOD SDL)
 set(AUDIO_BACKEND SDL CACHE STRING "Chosen Audio Backend")
 set_property(CACHE AUDIO_BACKEND PROPERTY STRINGS ${AUDIO_BACKENDS})
@@ -198,7 +206,18 @@ set_target_properties(Core PROPERTIES ${COMMON_TARGET_PROPERTIES})
 # ==================== CORE ====================
 
 # ==================== PLATFORM ====================
+set(RENDER_BACKEND_FILES)
+if(RENDER_BACKEND STREQUAL "DIRECTX11")
+    set(RENDER_BACKEND_FILES
+    ${PLATFORM_FOLDER}RHI/RHIDirectX11.cpp
+    )
+elseif(RENDER_BACKEND STREQUAL "VULKAN")
+    set(RENDER_BACKEND_FILES
+    ${PLATFORM_FOLDER}RHI/RHIVulkan.cpp
+    )
+endif()
 set(PLATFORM_FILES
+    ${PLATFORM_FOLDER}RHI/RHI.h
     ${PLATFORM_FOLDER}PlatformProcess.cpp
     ${PLATFORM_FOLDER}PlatformProcess.h
     ${PLATFORM_FOLDER}PlatformManager.cpp
@@ -207,8 +226,9 @@ set(PLATFORM_FILES
     ${PLATFORM_FOLDER}PlatformUtilities.h
     ${PLATFORM_FOLDER}WindowsInclude.h
 )
-add_library(Platform SHARED ${PLATFORM_FILES})
+add_library(Platform SHARED ${PLATFORM_FILES} ${RENDER_BACKEND_FILES})
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${PLATFORM_FILES})
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${RENDER_BACKEND_FILES})
 target_link_libraries(Platform PRIVATE
     Core
     $<$<CONFIG:EditorDebug>:Debug/SDL3>
@@ -228,6 +248,9 @@ target_link_directories(Platform PRIVATE
 )
 target_compile_definitions(Platform PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_PLATFORM_DLL)
 
+if(RENDER_BACKEND STREQUAL "DIRECTX11")
+    target_compile_definitions(Platform PRIVATE HV_RENDER_BACKEND_DIRECTX11)
+endif()
 if(AUDIO_BACKEND STREQUAL "SDL")
     target_compile_definitions(Platform PRIVATE HV_AUDIO_BACKEND_SDL)
 endif()
@@ -331,6 +354,11 @@ target_link_directories(GUI PRIVATE
     ${CMAKE_BINARY_DIR}
 )
 target_compile_definitions(GUI PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_GUI_DLL)
+
+if(RENDER_BACKEND STREQUAL "DIRECTX11")
+    target_compile_definitions(GUI PRIVATE HV_RENDER_BACKEND_DIRECTX11)
+endif()
+
 target_compile_options(GUI PRIVATE 
 $<$<CONFIG:EditorDebug>:/W3 /MP /ZI /JMC /fp:fast "/MDd" /FC>
 $<$<CONFIG:GameDebug>:/W3 /MP /ZI /JMC /fp:fast "/MDd" /FC>
@@ -484,8 +512,6 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Graphics/RenderingPrimitives/RenderTexture.h
     ${ENGINE_FOLDER}Graphics/GeometryPrimitives.h
     ${ENGINE_FOLDER}Graphics/GraphicsEnums.h
-    ${ENGINE_FOLDER}Graphics/GraphicsFramework.cpp
-    ${ENGINE_FOLDER}Graphics/GraphicsFramework.h
     ${ENGINE_FOLDER}Graphics/GraphicsMaterial.cpp
     ${ENGINE_FOLDER}Graphics/GraphicsMaterial.h
     ${ENGINE_FOLDER}Graphics/GraphicsStructs.h
@@ -726,6 +752,10 @@ target_link_directories(Engine PRIVATE
     ${CMAKE_BINARY_DIR}
 )
 target_compile_definitions(Engine PRIVATE ${COMMON_COMPILE_DEFINITIONS} HV_ENGINE_DLL)
+
+if(RENDER_BACKEND STREQUAL "DIRECTX11")
+    target_compile_definitions(Engine PRIVATE HV_RENDER_BACKEND_DIRECTX11)
+endif()
 
 if(AUDIO_BACKEND STREQUAL "WWISE")
     target_compile_definitions(Engine PRIVATE HV_AUDIO_BACKEND_WWISE)

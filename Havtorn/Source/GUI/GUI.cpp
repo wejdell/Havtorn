@@ -24,6 +24,7 @@
 #include <FileSystem.h>
 
 #include <PlatformManager.h>
+#include <RHI/RHI.h>
 #include <SDL3/SDL.h>
 
 #include <string>
@@ -48,16 +49,18 @@ namespace Havtorn
 	{
 		NE::EditorContext* NodeEditorContext = nullptr;
 		NE::Utilities::BlueprintNodeBuilder NodeBuilder;
-		ID3D11ShaderResourceView* BlueprintBackgroundSRV = nullptr;
 		ImTextureID BlueprintBackgroundImage = 0;
 		ImFont* PrimaryFont = nullptr;
 		ImFont* SecondaryFont = nullptr;
+#ifdef HV_RENDER_BACKEND_DIRECTX11
+		ID3D11ShaderResourceView* BlueprintBackgroundSRV = nullptr;
+#endif
 
 	public:
 		ImGuiImpl() = default;
 		~ImGuiImpl() = default;
 
-		void Init(SDL_Window* window, ID3D11Device* device, ID3D11DeviceContext* context)
+		void Init(CPlatformManager* platformManager)
 		{
 			const char* Version = IMGUI_VERSION;
 			const char* DefaultFont = "../External/imgui/misc/fonts/Roboto-Medium.ttf";
@@ -68,13 +71,11 @@ namespace Havtorn
 			PrimaryFont = ImGui::GetIO().Fonts->AddFontFromFileTTF(DefaultFont, DefaultFontSize);
 			ImGuizmo::SetImGuiContext(ImGui::GetCurrentContext());
 
-			ImGui_ImplSDL3_InitForD3D(window);
-			ImGui_ImplDX11_Init(device, context);
-
-			NE::Config config;
-			config.SettingsFile = "Simple.json";
-			config.UserPointer = this;
-			NodeEditorContext = NE::CreateEditor(&config);
+			ImGui_ImplSDL3_InitForD3D(platformManager->GetMainWindow());
+			
+#ifdef HV_RENDER_BACKEND_DIRECTX11
+			const CRHI* rhi = platformManager->GetRHI();
+			ImGui_ImplDX11_Init(rhi->GetDevice(), rhi->GetContext());
 
 			std::string filePath = "Resources/NodeBackground.dds";
 			DirectX::ScratchImage scratchImage;
@@ -86,9 +87,15 @@ namespace Havtorn
 			LoadFromDDSFile(widePath, DirectX::DDS_FLAGS_NONE, &metaData, scratchImage);
 			delete[] widePath;
 			const DirectX::Image* image = scratchImage.GetImage(0, 0, 0);
-			DirectX::CreateShaderResourceView(device, image, scratchImage.GetImageCount(), metaData, &BlueprintBackgroundSRV);
+			DirectX::CreateShaderResourceView(rhi->GetDevice(), image, scratchImage.GetImageCount(), metaData, &BlueprintBackgroundSRV);
+#endif
 
 			BlueprintBackgroundImage = (ImTextureID)BlueprintBackgroundSRV;
+
+			NE::Config config;
+			config.SettingsFile = "Simple.json";
+			config.UserPointer = this;
+			NodeEditorContext = NE::CreateEditor(&config);
 
 			// NW: ImGuiNotify is expecting the icon font to be on the 1st font index
 			constexpr F32 baseFontSize = 16.0f;
@@ -1544,14 +1551,14 @@ namespace Havtorn
 		Instance = nullptr;
 	}
 
-	void GUI::InitGUI(CPlatformManager* platformManager, ID3D11Device* device, ID3D11DeviceContext* context)
+	bool GUI::InitGUI(CPlatformManager* platformManager)
 	{
-		// TODO.NW: Still move render backend to platform manager, and take the platform manager as single param here
-		Impl->Init(platformManager->GetMainWindow(), device, context);
+		Impl->Init(platformManager);
 		ImGui::GetIO().ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
-		//platformManager->OnMessageHandled.AddMember(this, &GUI::WindowsProc);
 		platformManager->OnProcessEvent.AddMember(this, &GUI::ProcessEvent);
+		
+		return true;
 	}
 
 	const F32 GUI::SliderSpeed = 0.1f;

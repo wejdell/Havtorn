@@ -3,10 +3,12 @@
 #include "hvpch.h"
 #include "FullscreenRenderer.h"
 #include "Engine.h"
-#include "Graphics/GraphicsFramework.h"
 #include "Graphics/RenderManager.h"
 #include "Graphics/RenderStateManager.h" 
 #include "Graphics/GraphicsUtilities.h"
+
+#include <RHI/RHI.h>
+
 #include <d3d11.h>
 
 namespace Havtorn
@@ -26,18 +28,18 @@ namespace Havtorn
 	CFullscreenRenderer::~CFullscreenRenderer() 
 	{}
 
-	bool CFullscreenRenderer::Init(CGraphicsFramework* framework, CRenderManager* renderManager) 
+	bool CFullscreenRenderer::Init(CRHI* rhi, CRenderManager* renderManager) 
 	{
-		if (!framework) 
+		if (!rhi) 
 			return false;
 
 		Manager = renderManager;
 		if (!Manager)
 			return false;
 
-		FullscreenDataBuffer.CreateBuffer("Fullscreen Data Buffer", framework, sizeof(SFullscreenData));
-		FrameBuffer.CreateBuffer("Frame Buffer", framework, sizeof(SFrameBufferData));
-		PostProcessingBuffer.CreateBuffer("Post Processing Buffer", framework, sizeof(SPostProcessingBufferData));
+		FullscreenDataBuffer.CreateBuffer("Fullscreen Data Buffer", rhi, sizeof(SFullscreenData));
+		FrameBuffer.CreateBuffer("Frame Buffer", rhi, sizeof(SFrameBufferData));
+		PostProcessingBuffer.CreateBuffer("Post Processing Buffer", rhi, sizeof(SPostProcessingBufferData));
 
 #pragma region SSAO Setup
 	// Hardcoded Kernel

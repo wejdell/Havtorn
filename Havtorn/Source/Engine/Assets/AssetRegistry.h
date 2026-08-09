@@ -12,7 +12,6 @@
 
 namespace Havtorn
 {
-	class CGraphicsFramework;
 	class CRenderManager;
 
 	class CAssetRegistry

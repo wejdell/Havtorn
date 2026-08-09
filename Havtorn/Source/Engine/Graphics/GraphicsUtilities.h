@@ -3,10 +3,9 @@
 #pragma once
 #include <DirectXTex/DirectXTex.h>
 #include <fstream>
-#include "GraphicsFramework.h"
 #include "GraphicsEnums.h"
 #include "Engine.h"
-#include "Assets/AssetFileHeader.h"
+
 #include <EngineException.h>
 #include <FileSystem.h>
 
@@ -14,13 +13,15 @@
 
 namespace Havtorn
 {
+	class CRHI;
+
 	namespace UGraphicsUtils
 	{
-		ENGINE_API bool CreateVertexShader(const std::string& filepath, const CGraphicsFramework* framework, ID3D11VertexShader** outVertexShader, std::string& outShaderData);
+		ENGINE_API bool CreateVertexShader(const std::string& filepath, const CRHI* rhi, ID3D11VertexShader** outVertexShader, std::string& outShaderData);
 
-		ENGINE_API bool CreatePixelShader(const std::string& filepath, const CGraphicsFramework* framework, ID3D11PixelShader** outPixelShader);
+		ENGINE_API bool CreatePixelShader(const std::string& filepath, const CRHI* rhi, ID3D11PixelShader** outPixelShader);
 
-		ENGINE_API bool CreateGeometryShader(const std::string& filepath, const CGraphicsFramework* framework, ID3D11GeometryShader** outGeometryShader);
+		ENGINE_API bool CreateGeometryShader(const std::string& filepath, const CRHI* rhi, ID3D11GeometryShader** outGeometryShader);
 	
 		ENGINE_API HRESULT CreateShaderResourceView(ID3D11Device* device, const std::string& filePath, ID3D11ShaderResourceView** outShaderResourceView);
 

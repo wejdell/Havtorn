@@ -4,7 +4,7 @@
 
 namespace Havtorn
 {
-	class CGraphicsFramework;
+	class CRHI;
 
 	enum class EDataBufferType : U8
 	{
@@ -38,7 +38,7 @@ namespace Havtorn
 		CDataBuffer() = default;
 		~CDataBuffer() = default;
 
-		void CreateBuffer(const std::string& bufferName, const CGraphicsFramework* framework, U32 byteWidth, const void* subResourceData = nullptr, EDataBufferType bufferType = EDataBufferType::Constant, EDataBufferUsage usage = EDataBufferUsage::Dynamic, EDataBufferCPUAccess cpuAccess = EDataBufferCPUAccess::CPUAccessWrite);
+		void CreateBuffer(const std::string& bufferName, const CRHI* rhi, U32 byteWidth, const void* subResourceData = nullptr, EDataBufferType bufferType = EDataBufferType::Constant, EDataBufferUsage usage = EDataBufferUsage::Dynamic, EDataBufferCPUAccess cpuAccess = EDataBufferCPUAccess::CPUAccessWrite);
 
 		template<class T>
 		void BindBuffer(const T& bufferData)

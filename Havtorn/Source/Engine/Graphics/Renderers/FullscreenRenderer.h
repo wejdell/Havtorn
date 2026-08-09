@@ -11,7 +11,7 @@
 
 namespace Havtorn
 {
-	class CGraphicsFramework;
+	class CRHI;
 	class CRenderManager;
 	class CRenderStateManager;
 
@@ -79,7 +79,7 @@ namespace Havtorn
 	private:
 		CFullscreenRenderer() = default;
 		~CFullscreenRenderer();
-		bool Init(CGraphicsFramework* framework, CRenderManager* manager);
+		bool Init(CRHI* rhi, CRenderManager* manager);
 		void Render(const EPixelShaders effect, const CRenderStateManager& stateManager);
 
 		SPostProcessingBufferData GetPostProcessBuffer() const;

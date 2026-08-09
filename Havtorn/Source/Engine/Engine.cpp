@@ -24,7 +24,8 @@
 
 #include <GameplayTags/GameplayTagManager.h>
 
-#include <../Platform/PlatformManager.h>
+#include <PlatformManager.h>
+#include <RHI/RHI.h>
 #include <FileSystem.h>
 
 namespace Havtorn
@@ -37,7 +38,6 @@ namespace Havtorn
 
 		Timer = new GTime();
 		InputMapper = new CInputMapper();
-		Framework = new CGraphicsFramework();
 		RenderManager = new CRenderManager();
 		AssetRegistry = new CAssetRegistry();
 		World = new CWorld();
@@ -54,7 +54,6 @@ namespace Havtorn
 		SAFE_DELETE(World);
 		SAFE_DELETE(AssetRegistry);
 		SAFE_DELETE(RenderManager);
-		SAFE_DELETE(Framework);
 		SAFE_DELETE(InputMapper);
 		SAFE_DELETE(Timer);
 
@@ -63,9 +62,10 @@ namespace Havtorn
 
 	bool GEngine::Init(CPlatformManager* platformManager) 
 	{
+		RHI = platformManager->GetRHI();
+
 		ENGINE_ERROR_BOOL_MESSAGE(InputMapper->Init(platformManager), "Input Mapper could not be initialized.");
-		ENGINE_ERROR_BOOL_MESSAGE(Framework->Init(platformManager), "Framework could not be initialized.");
-		ENGINE_ERROR_BOOL_MESSAGE(RenderManager->Init(Framework, platformManager), "RenderManager could not be initialized.");
+		ENGINE_ERROR_BOOL_MESSAGE(RenderManager->Init(RHI, platformManager), "RenderManager could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(AssetRegistry->Init(RenderManager), "Asset Registry could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(World->Init(platformManager, RenderManager), "World could not be initialized.");
 		ENGINE_ERROR_BOOL_MESSAGE(ThreadManager->Init(RenderManager), "Thread Manager could not be initialized.");
@@ -119,12 +119,12 @@ namespace Havtorn
 		World->EndFrame();
 		InputMapper->EndFrame();
 		RenderManager->SyncCrossThreadResources(World);
-		Framework->EndFrame();
+		RHI->EndFrame();
 
 		if (WindowResizeTarget.LengthSquared() > 0)
 		{
 			RenderManager->Release(WindowResizeTarget);
-			RenderManager->ReInit(Framework, WindowResizeTarget);
+			RenderManager->ReInit(RHI, WindowResizeTarget);
 			WindowResizeTarget = {};
 		}
 
@@ -157,11 +157,6 @@ namespace Havtorn
 	CInputMapper* GEngine::GetInput()
 	{
 		return Instance->InputMapper;
-	}
-
-	CGraphicsFramework* GEngine::GetGraphicsFramework()
-	{
-		return Instance->Framework;
 	}
 
 	void GEngine::OnWindowResolutionChanged(SVector2<U16> newResolution)

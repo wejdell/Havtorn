@@ -2,7 +2,6 @@
 
 #pragma once
 #include "hvpch.h"
-#include "GraphicsFramework.h"
 #include "Renderers/FullscreenRenderer.h"
 #include "RenderTextureFactory.h"
 #include "RenderStateManager.h"
@@ -21,8 +20,8 @@
 
 namespace Havtorn
 {
-	class CGraphicsFramework;
 	class CPlatformManager;
+	class CRHI;
 	struct SRenderCommand;
 	struct SStaticMeshComponent;
 	struct SSkeletalMeshComponent;
@@ -102,8 +101,8 @@ namespace Havtorn
 	public:
 		CRenderManager() = default;
 		~CRenderManager();
-		bool Init(CGraphicsFramework* framework, CPlatformManager* windowHandler);
-		bool ReInit(CGraphicsFramework* framework, SVector2<U16> newResolution);
+		bool Init(CRHI* rhi, CPlatformManager* windowHandler);
+		bool ReInit(CRHI* rhi, SVector2<U16> newResolution);
 		void Render();
 
 		void Release(SVector2<U16> newResolution);
@@ -165,7 +164,7 @@ namespace Havtorn
 
 	private:
 		void Clear(SVector4 clearColor);
-		void InitRenderTextures(CGraphicsFramework* framework, SVector2<U16> windowResolution);
+		void InitRenderTextures(CRHI* rhi, SVector2<U16> windowResolution);
 		void InitShadowmapAtlas(SVector2<F32> atlasResolution);
 		void InitShadowmapLOD(SVector2<F32> topLeftCoordinate, const SVector2<F32>& widthAndHeight, const SVector2<F32>& depth, const SVector2<F32>& atlasResolution, U16 mapsInLod, U16 startIndex);
 
@@ -349,7 +348,7 @@ namespace Havtorn
 		HV_ASSERT_BUFFER(SBoneBufferData)
 
 	private:
-		CGraphicsFramework* Framework = nullptr;
+		CRHI* RHI = nullptr;
 		CDataBuffer FrameBuffer;
 		CDataBuffer ObjectBuffer;
 		CDataBuffer MaterialBuffer;

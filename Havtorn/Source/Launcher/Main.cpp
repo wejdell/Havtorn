@@ -87,7 +87,6 @@ I32 main(I32 argc, char* argv[])
 #endif
 
 	CPlatformProcess* platformProcess = new CPlatformProcess();
-
 	CEngineProcess* engineProcess = new CEngineProcess();
 	CGameProcess* gameProcess = new CGameProcess();
 
@@ -96,7 +95,7 @@ I32 main(I32 argc, char* argv[])
 	CEditorProcess* editorProcess = new CEditorProcess();
 
 	// TODO.NW: Consider binding all game types (including scene and script types) in this scope,
-	// rather than forcing the others on GameManager implementations. It doesn't seem to bad for 
+	// rather than forcing the others on GameManager implementations. It doesn't seem too bad for 
 	// a user to change to custom types in this class if they want to.
 	editorProcess->BindGameType<CGameEditorManager>();
 #endif
@@ -112,26 +111,12 @@ I32 main(I32 argc, char* argv[])
 	application->AddProcess(editorProcess);
 #endif
 
-	platformProcess->Init(nullptr);
-
 #ifdef USE_CONSOLE
 	OpenConsole();
 #endif
 
-	engineProcess->Init(platformProcess->PlatformManager);
-
-#ifdef HV_EDITOR_BUILD
-	// TODO.NW: guiProcess init should handle InitGUI, need hold of the render backend somehow. maybe still move render backend to platform manager
-	guiProcess->Init(platformProcess->PlatformManager);
-	auto backend = engineProcess->GetRenderBackend();
-	guiProcess->InitGUI(platformProcess->PlatformManager, backend.device, backend.context);
-#endif
-	gameProcess->Init(platformProcess->PlatformManager);
-#ifdef HV_EDITOR_BUILD	
-	editorProcess->Init(platformProcess->PlatformManager);
-#endif
-
-	//application->Setup(platformProcess->PlatformManager); //foreach -> process->Init();
+	platformProcess->Init(nullptr);
+	application->Setup(platformProcess->PlatformManager);
 	application->Run();
 	delete application;
 

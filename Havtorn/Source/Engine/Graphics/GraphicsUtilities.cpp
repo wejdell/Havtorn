@@ -2,40 +2,42 @@
 
 #pragma once
 #include "GraphicsUtilities.h"
-
+#include "Assets/AssetRegistry.h"
 #include "Graphics/GeometryPrimitives.h"
+
+#include <RHI/RHI.h>
 
 namespace Havtorn
 {
 	namespace UGraphicsUtils
 	{
-		bool CreateVertexShader(const std::string& filepath, const CGraphicsFramework* framework, ID3D11VertexShader** outVertexShader, std::string& outShaderData)
+		bool CreateVertexShader(const std::string& filepath, const CRHI* rhi, ID3D11VertexShader** outVertexShader, std::string& outShaderData)
 		{
 			std::ifstream vsFile;
 			vsFile.open(filepath, std::ios::binary);
 			const std::string vsData = { std::istreambuf_iterator<char>(vsFile), std::istreambuf_iterator<char>() };
 			outShaderData = vsData;
-			ENGINE_HR_BOOL_MESSAGE(framework->GetDevice()->CreateVertexShader(vsData.data(), vsData.size(), nullptr, outVertexShader), "Vertex Shader: %s could not be created.", filepath.c_str());
+			ENGINE_HR_BOOL_MESSAGE(rhi->GetDevice()->CreateVertexShader(vsData.data(), vsData.size(), nullptr, outVertexShader), "Vertex Shader: %s could not be created.", filepath.c_str());
 			vsFile.close();
 			return true;
 		}
 
-		bool CreatePixelShader(const std::string& filepath, const CGraphicsFramework* framework, ID3D11PixelShader** outPixelShader)
+		bool CreatePixelShader(const std::string& filepath, const CRHI* rhi, ID3D11PixelShader** outPixelShader)
 		{
 			std::ifstream psFile;
 			psFile.open(filepath, std::ios::binary);
 			const std::string psData = { std::istreambuf_iterator<char>(psFile), std::istreambuf_iterator<char>() };
-			ENGINE_HR_BOOL_MESSAGE(framework->GetDevice()->CreatePixelShader(psData.data(), psData.size(), nullptr, outPixelShader), "Pixel Shader: %s could not be created.", filepath.c_str());
+			ENGINE_HR_BOOL_MESSAGE(rhi->GetDevice()->CreatePixelShader(psData.data(), psData.size(), nullptr, outPixelShader), "Pixel Shader: %s could not be created.", filepath.c_str());
 			psFile.close();
 			return true;
 		}
 
-		bool CreateGeometryShader(const std::string& filepath, const CGraphicsFramework* framework, ID3D11GeometryShader** outGeometryShader)
+		bool CreateGeometryShader(const std::string& filepath, const CRHI* rhi, ID3D11GeometryShader** outGeometryShader)
 		{
 			std::ifstream gsFile;
 			gsFile.open(filepath, std::ios::binary);
 			const std::string gsData = { std::istreambuf_iterator<char>(gsFile), std::istreambuf_iterator<char>() };
-			ENGINE_HR_BOOL_MESSAGE(framework->GetDevice()->CreateGeometryShader(gsData.data(), gsData.size(), nullptr, outGeometryShader), "Geometry Shader: %s could not be created.", filepath.c_str());
+			ENGINE_HR_BOOL_MESSAGE(rhi->GetDevice()->CreateGeometryShader(gsData.data(), gsData.size(), nullptr, outGeometryShader), "Geometry Shader: %s could not be created.", filepath.c_str());
 			gsFile.close();
 			return true;
 		}

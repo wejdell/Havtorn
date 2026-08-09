@@ -28,12 +28,7 @@ namespace Havtorn
 
 	bool GUIProcess::Init(CPlatformManager* platformManager)
 	{
-		return true;
-	}
-
-	void GUIProcess::InitGUI(CPlatformManager* platformManager, ID3D11Device* device, ID3D11DeviceContext* context)
-	{
-		EditorGUI->InitGUI(platformManager, device, context);
+		return EditorGUI->InitGUI(platformManager);
 	}
 
 	void GUIProcess::BeginFrame()

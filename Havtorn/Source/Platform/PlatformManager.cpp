@@ -5,6 +5,8 @@
 #include "PlatformManager.h"
 #include "PlatformUtilities.h"
 
+#include "RHI/RHI.h"
+
 #include <string>
 #include <vector>
 #include <algorithm>
@@ -190,17 +192,26 @@ namespace Havtorn
 
 		ShouldRun = true;
 
+		RHI = std::make_unique<CRHI>(this);
+
 		return true;
 	}
 
+#ifdef HV_PLATFORM_WINDOWS
 	const HWND CPlatformManager::GetWindowHandle() const
 	{
 		return WindowHandle;
 	}
+#endif
 
 	SDL_Window* CPlatformManager::GetMainWindow() const
 	{
 		return Window;
+	}
+
+	CRHI* CPlatformManager::GetRHI()
+	{
+		return RHI.get();
 	}
 
 	void CPlatformManager::OnApplicationReady()

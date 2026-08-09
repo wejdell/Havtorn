@@ -33,9 +33,6 @@ namespace Havtorn
 
 	using NullVariant = std::monostate;
 
-	template<typename T>
-	using WinComPtr = Microsoft::WRL::ComPtr<T>;
-
 	#define STATIC_F32(x) static_cast<F32>(x)
 	#define STATIC_U64(x) static_cast<U64>(x)
 	#define STATIC_U32(x) static_cast<U32>(x)

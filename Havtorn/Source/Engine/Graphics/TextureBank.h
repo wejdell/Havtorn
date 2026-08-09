@@ -6,7 +6,7 @@
 
 namespace Havtorn
 {
-	class CGraphicsFramework;
+	class CRHI;
 
 	class CTextureBank
 	{
@@ -15,7 +15,7 @@ namespace Havtorn
 	private:
 		CTextureBank() = default;
 		~CTextureBank();
-		bool Init(const CGraphicsFramework* framework);
+		bool Init(const CRHI* rhi);
 
 	public:
 		ENGINE_API U32 GetTextureIndex(const std::string& fileName);

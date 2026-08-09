@@ -10,6 +10,8 @@
 
 namespace Havtorn
 {
+	class CRHI;
+
 	class CRenderStateManager
 	{
 	public:
@@ -48,7 +50,7 @@ namespace Havtorn
 		CRenderStateManager() = default;
 		~CRenderStateManager();
 
-		bool Init(class CGraphicsFramework* framework);
+		bool Init(CRHI* rhi);
 
 		// Init order 1:1 to EVertexShaders
 		void InitVertexShadersAndInputLayouts();
@@ -140,7 +142,7 @@ namespace Havtorn
 	private:
 		const std::string ShaderRoot = "Shaders/";
 
-		CGraphicsFramework* Framework = nullptr;
+		CRHI* RHI = nullptr;
 		ID3D11DeviceContext* Context = nullptr;
 		std::array<ID3D11BlendState*, STATIC_U64(EBlendStates::Count)> BlendStates;
 		std::array<ID3D11DepthStencilState*, STATIC_U64(EDepthStencilStates::Count)> DepthStencilStates;
@@ -174,7 +176,7 @@ namespace Havtorn
 	U16 CRenderStateManager::AddVertexBuffer(const std::vector<T>& vertices)
 	{
 		VertexBuffers.emplace_back(CDataBuffer());
-		VertexBuffers.back().CreateBuffer("Vertex Buffer", Framework, sizeof(T) * STATIC_U32(vertices.size()), vertices.data(), EDataBufferType::Vertex, EDataBufferUsage::Immutable, EDataBufferCPUAccess::None);
+		VertexBuffers.back().CreateBuffer("Vertex Buffer", RHI, sizeof(T) * STATIC_U32(vertices.size()), vertices.data(), EDataBufferType::Vertex, EDataBufferUsage::Immutable, EDataBufferCPUAccess::None);
 
 		return STATIC_U16(VertexBuffers.size() - 1);
 	}

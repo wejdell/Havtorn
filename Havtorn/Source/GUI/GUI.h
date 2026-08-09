@@ -670,7 +670,7 @@ namespace Havtorn
 	public:
 		GUI();
 		~GUI();
-		void InitGUI(CPlatformManager* platformManager, ID3D11Device* device, ID3D11DeviceContext* context);
+		bool InitGUI(CPlatformManager* platformManager);
 
 		void BeginFrame();
 		void EndFrame();

@@ -22,10 +22,6 @@
 
 #include <d3d11.h>
 
-//#ifdef HV_PLATFORM_WINDOWS
-//#include "Core/WindowsInclude.h"
-//#endif
-
 #include <EngineTypes.h>
 #include <MathTypes/HavtornMath.h>
 #include <EngineException.h>

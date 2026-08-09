@@ -20,8 +20,6 @@ namespace Havtorn
 		GUI_API ~GUIProcess() override;
 		bool Init(CPlatformManager* platformManager) override;
 
-		GUI_API void InitGUI(CPlatformManager* platformManager, ID3D11Device* device, ID3D11DeviceContext* context);
-
 		void BeginFrame() override;
 		void PostUpdate() override;
 

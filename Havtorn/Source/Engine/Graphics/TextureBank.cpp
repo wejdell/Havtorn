@@ -4,8 +4,9 @@
 #include "TextureBank.h"
 // TODO.NW: Move asset registry to other folder
 #include "Assets/AssetRegistry.h"
-#include "GraphicsFramework.h"
 #include "GraphicsUtilities.h"
+
+#include <RHI/RHI.h>
 
 namespace Havtorn
 {
@@ -63,9 +64,9 @@ namespace Havtorn
 		return Textures;
 	}
 
-	bool CTextureBank::Init(const CGraphicsFramework* framework)
+	bool CTextureBank::Init(const CRHI* rhi)
 	{
-		Device = framework->GetDevice();
+		Device = rhi->GetDevice();
 
 		if (!Device)
 			return false;
