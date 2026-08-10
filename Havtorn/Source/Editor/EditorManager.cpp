@@ -103,6 +103,7 @@ namespace Havtorn
 		mapper->GetActionDelegate(EInputActionEvent::MovePivot).RemoveObject(this);
 		mapper->GetActionDelegate(EInputActionEvent::VertexSnapping).RemoveObject(this);
 		mapper->GetActionDelegate(EInputActionEvent::GridSnapping).RemoveObject(this);
+		mapper->GetActionDelegate(EInputActionEvent::ClearSelection).RemoveObject(this);
 	}
 
 	bool CEditorManager::Init(CPlatformManager* platformManager, CRenderManager* renderManager)
