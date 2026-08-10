@@ -2,9 +2,8 @@
 
 #include "hvpch.h"
 
-#include "Engine.h"
-#include "Graphics/GraphicsFramework.h"
 #include "EngineProcess.h"
+#include "Engine.h"
 
 namespace Havtorn
 {

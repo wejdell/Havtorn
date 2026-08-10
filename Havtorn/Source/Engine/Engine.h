@@ -4,11 +4,6 @@
 
 namespace Havtorn
 {
-	class GDebugDraw;
-}
-
-namespace Havtorn
-{
 	class CPlatformManager;
 	class CRHI;
 	class CThreadManager;
@@ -16,12 +11,10 @@ namespace Havtorn
 	class GTime;
 	class CWorld;
 	class CInputMapper;
-	class UFileSystem;
 	class CFileWatcher;
 	class CAssetRegistry;
 	class CSequencerSystem;
-	class CEngineProcess;
-	class IProcess;
+	class GDebugDraw;
 
 	class GEngine
 	{

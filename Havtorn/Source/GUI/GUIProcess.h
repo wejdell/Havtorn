@@ -3,10 +3,6 @@
 #pragma once
 #include <Core.h>
 #include <../Launcher/Application/Process.h>
-#include <wtypes.h>
-
-struct ID3D11Device;
-struct ID3D11DeviceContext;
 
 namespace Havtorn
 {

@@ -5,8 +5,6 @@
 
 #include <CoreTypes.h>
 
-#include <WindowsInclude.h>
-
 namespace Havtorn
 {
 	CApplication::CApplication() 
@@ -27,7 +25,7 @@ namespace Havtorn
 
 	void CApplication::Run()
 	{
-		for (auto process : Processes)
+		for (IProcess* process : Processes)
 			process->OnApplicationReady();
 
 		const I16 numberOfProcesses = STATIC_I16(Processes.size() - 1);
@@ -66,7 +64,7 @@ namespace Havtorn
 	{
 		Processes.shrink_to_fit();
 
-		for (auto process : Processes)
+		for (IProcess* process : Processes)
 		{
 			if (!process->Init(platformManager))
 			{
