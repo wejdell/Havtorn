@@ -90,8 +90,8 @@ namespace Havtorn
 			{
 				while (!Terminate && !(stopRepeating != nullptr && *stopRepeating))
 				{
-					std::this_thread::sleep_for(interval);
 					Submit(task);
+					std::this_thread::sleep_for(interval);
 				}
 			});
 	}
