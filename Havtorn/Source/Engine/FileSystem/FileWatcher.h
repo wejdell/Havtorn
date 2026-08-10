@@ -52,5 +52,6 @@ namespace Havtorn
 
 		std::mutex Mutex;
 		std::chrono::milliseconds SleepDurationMilliseconds = std::chrono::milliseconds(32);
+		std::atomic<bool> ShouldWatchFiles = true;
 	};
 }

@@ -15,6 +15,12 @@ namespace Havtorn
 {
 	CFileWatcher::~CFileWatcher()
 	{
+		ShouldWatchFiles = false;
+		std::lock_guard<std::mutex> lock(Mutex);
+		WatchedFiles.clear();
+		StoredCallbacks.clear();
+		while (!QueuedFileChanges.empty())
+			QueuedFileChanges.pop();
 	}
 
 	bool CFileWatcher::Init(CThreadManager* threadManager)
@@ -22,7 +28,7 @@ namespace Havtorn
 		if (!threadManager)
 			return false;
  
-		threadManager->ScheduleRepeatingTask(std::bind(&CFileWatcher::CheckForFileUpdates, this), SleepDurationMilliseconds);
+		threadManager->ScheduleRepeatingTask(std::bind(&CFileWatcher::CheckForFileUpdates, this), SleepDurationMilliseconds, &ShouldWatchFiles);
 
 		return true;
 	}
