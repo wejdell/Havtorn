@@ -111,11 +111,12 @@ I32 main(I32 argc, char* argv[])
 	application->AddProcess(editorProcess);
 #endif
 
+	platformProcess->Init(nullptr);
+
 #ifdef USE_CONSOLE
 	OpenConsole();
 #endif
 
-	platformProcess->Init(nullptr);
 	application->Setup(platformProcess->PlatformManager);
 	application->Run();
 	delete application;
