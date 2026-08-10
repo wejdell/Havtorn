@@ -7,7 +7,6 @@
 #include "ECS/GUIDManager.h"
 
 #include "Graphics/RenderManager.h"
-#include "Graphics/TextureBank.h"
 
 #include "ModelImporter.h"
 

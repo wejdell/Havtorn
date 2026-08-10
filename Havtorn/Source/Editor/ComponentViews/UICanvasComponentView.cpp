@@ -13,7 +13,6 @@
 #include <Scene/Scene.h>
 #include <Scene/World.h>
 #include <Engine.h>
-#include <Graphics/TextureBank.h>
 
 #include <Graphics/Debug/DebugDrawUtility.h>
 

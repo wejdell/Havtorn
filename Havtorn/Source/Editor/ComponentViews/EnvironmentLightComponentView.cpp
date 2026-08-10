@@ -9,7 +9,6 @@
 #include <ECS/Components/EnvironmentLightComponent.h>
 #include <Scene/Scene.h>
 #include <Engine.h>
-#include <Graphics/TextureBank.h>
 #include <Assets/AssetReference.h>
 
 #include <GUI.h>

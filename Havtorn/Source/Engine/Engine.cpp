@@ -6,7 +6,6 @@
 #include "Engine.h"
 #include "FileSystem/FileWatcher.h"
 #include "Threading/ThreadManager.h"
-#include "Graphics/TextureBank.h"
 
 #include "Scene/World.h"
 #include "Scene/Scene.h"

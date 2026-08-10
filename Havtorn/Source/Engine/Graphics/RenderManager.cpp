@@ -26,7 +26,6 @@
 #include <RHI/RHI.h>
 
 #include "Threading/ThreadManager.h"
-#include "TextureBank.h"
 
 #include <DirectXTex/DirectXTex.h>
 #include <set>

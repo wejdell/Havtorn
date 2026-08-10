@@ -7,7 +7,6 @@
 #include <Engine.h>
 #include <EditorManager.h>
 #include <Graphics/RenderManager.h>
-#include <Graphics/TextureBank.h>
 #include <Scene/Scene.h>
 #include <Assets/AssetRegistry.h>
 #include <GeneralUtilities.h>

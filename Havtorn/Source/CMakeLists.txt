@@ -524,8 +524,6 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Graphics/RenderStateManager.h
     ${ENGINE_FOLDER}Graphics/RenderTextureFactory.cpp
     ${ENGINE_FOLDER}Graphics/RenderTextureFactory.h
-    ${ENGINE_FOLDER}Graphics/TextureBank.cpp
-    ${ENGINE_FOLDER}Graphics/TextureBank.h
     ${ENGINE_FOLDER}Hex/HexCommandComponent.cpp
 	${ENGINE_FOLDER}Hex/HexCommandComponent.h
 	${ENGINE_FOLDER}Hex/HexCommand.h
