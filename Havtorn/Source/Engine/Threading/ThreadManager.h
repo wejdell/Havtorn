@@ -4,6 +4,8 @@
 #include <thread>
 #include <mutex>
 #include <queue>
+#include <future>
+#include <chrono>
 
 namespace Havtorn
 {
@@ -16,7 +18,7 @@ namespace Havtorn
 
 	class CRenderManager;
 
-	typedef std::function<void()> JobSignature;
+	using TaskSignature = std::function<void()>;
 
 	class CThreadManager
 	{
@@ -29,9 +31,25 @@ namespace Havtorn
 		CThreadManager operator=(const CThreadManager&&) = delete;
 
 		bool Init(CRenderManager* renderManager);
-		[[noreturn]] void WaitAndPerformJobs();
-		void PushJob(JobSignature job);
-		void Shutdown();
+		void WorkerLoop();
+		
+		ENGINE_API void Submit(TaskSignature task);
+
+		template<typename Function, typename... Args>
+		auto SubmitTask(Function&& function, Args&&... args) -> std::future<decltype(function(args...))>
+		{
+			using ReturnType = decltype(function(args...));
+			auto jobPtr = std::make_shared<std::packaged_task<ReturnType()>>(std::bind(std::forward<Function>(function), std::forward<Args>(args)...));
+
+			std::future<ReturnType> result = jobPtr->get_future();
+			Submit([jobPtr]() { (*jobPtr)(); });
+
+			return result;
+		}
+
+		ENGINE_API void ScheduleRepeatingTask(TaskSignature task, std::chrono::milliseconds interval, const std::optional<std::atomic<bool>*>& optionalStopRepeating = {});
+
+		ENGINE_API bool StealTask(const U64& thiefID, TaskSignature& taskOut);
 
 		static std::mutex RenderMutex;
 		static std::condition_variable RenderCondition;
@@ -41,16 +59,15 @@ namespace Havtorn
 		friend class CRenderManager;
 		static bool RunRenderThread;
 		
-		std::vector<std::thread> JobThreads;
-		std::queue<JobSignature> JobQueue;
-		std::thread RenderThread;
-		std::mutex QueueMutex;
-		std::mutex ThreadPoolMutex;
-		std::condition_variable Condition;
-		JobSignature Job;
+		std::vector<std::thread> WorkerThreads;
+		std::queue<TaskSignature> TaskQueue;
 
-		U8 NumberOfThreads;
-		bool Terminate;
-		bool IsTerminated;
+		std::thread RenderThread;
+
+		std::mutex QueueMutex;
+		std::condition_variable Condition;
+		std::atomic<bool> Terminate = false;
+
+		U8 NumberOfThreads = 0;
 	};
 }

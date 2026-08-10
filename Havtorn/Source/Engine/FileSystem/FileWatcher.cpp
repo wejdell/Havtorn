@@ -15,15 +15,14 @@ namespace Havtorn
 {
 	CFileWatcher::~CFileWatcher()
 	{
-		ShouldEndThread = true;
 	}
 
 	bool CFileWatcher::Init(CThreadManager* threadManager)
 	{
 		if (!threadManager)
 			return false;
-
-		threadManager->PushJob(std::bind(&CFileWatcher::UpdateChanges, this));
+ 
+		threadManager->ScheduleRepeatingTask(std::bind(&CFileWatcher::CheckForFileUpdates, this), SleepDurationMilliseconds);
 
 		return true;
 	}
@@ -56,30 +55,26 @@ namespace Havtorn
 		return std::filesystem::last_write_time(filePath).time_since_epoch().count();
 	}
 
-	void CFileWatcher::UpdateChanges()
-	{
-		while (!ShouldEndThread)
-		{	
+	void CFileWatcher::CheckForFileUpdates()
+	{		
+		std::lock_guard<std::mutex> lock(Mutex);
+		for (const auto& [path, currentTimestamp] : WatchedFiles)
+		{
+			const U64 latestTimeStamp = GetFileTimestamp(path);
+			if (latestTimeStamp > currentTimestamp)
 			{
-				std::lock_guard<std::mutex> lock(Mutex);
-				for (const auto& [path, currentTimestamp] : WatchedFiles)
-				{
-					const U64 latestTimeStamp = GetFileTimestamp(path);
-					if (latestTimeStamp > currentTimestamp)
-					{
-						QueuedFileChanges.push(path);
-						WatchedFiles[path] = latestTimeStamp;
-					}
-				}
+				QueuedFileChanges.push(path);
+				WatchedFiles[path] = latestTimeStamp;
 			}
-
-			std::this_thread::sleep_for(std::chrono::milliseconds(SleepDurationMilliseconds));
-		}
+		}	
 	}
 
 	bool CFileWatcher::WatchFileChange(const std::string& filePath, SFileChangeCallback callback)
 	{
-		// TODO.NW: Maybe add feature for turning on and off file watcher? Shouldn't be active while playing
+		// TODO.NW: Maybe add feature for turning on and off file watcher? Shouldn't be active while playing.
+		// Could add atomic bool that we send to ScheduleRepeatingTask in CFileWatcher::Init, and expose a function
+		// to toggle that, setting the bool to true when toggling watching off, and calling ScheduleRepeatingTask 
+		// again when toggling watching on
 
 		const fs::path newPath = filePath.c_str();
 

@@ -43,7 +43,7 @@ namespace Havtorn
 		void FlushChanges(); 
 
 	private:
-		void UpdateChanges(); 
+		void CheckForFileUpdates();
 
 		std::map<fs::path, U64> WatchedFiles;
 		
@@ -51,7 +51,6 @@ namespace Havtorn
 		std::queue<fs::path> QueuedFileChanges;
 
 		std::mutex Mutex;
-		U16 SleepDurationMilliseconds = 32;
-		bool ShouldEndThread = false;
+		std::chrono::milliseconds SleepDurationMilliseconds = std::chrono::milliseconds(32);
 	};
 }
