@@ -2,7 +2,6 @@
 
 #include "hvpch.h"
 #include "RenderTexture.h"
-#include <d3d11.h>
 
 namespace Havtorn
 {
@@ -200,7 +199,7 @@ namespace Havtorn
 		return ShaderResource;
 	}
 
-	ENGINE_API ID3D11ShaderResourceView* CRenderTexture::MoveShaderResourceView()
+	ID3D11ShaderResourceView* CRenderTexture::MoveShaderResourceView()
 	{
 		auto movedResource = std::move(ShaderResource);
 		ShaderResource = nullptr;

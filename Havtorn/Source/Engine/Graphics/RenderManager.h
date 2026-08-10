@@ -10,9 +10,9 @@
 #include "RenderCommand.h"
 #include "Scene/World.h"
 
-#include "RenderingPrimitives/DataBuffer.h"
-#include "RenderingPrimitives/RenderTexture.h"
-#include "RenderingPrimitives/GBuffer.h"
+#include <RHI/RenderingPrimitives/DataBuffer.h>
+#include <RHI/RenderingPrimitives/RenderTexture.h>
+#include <RHI/RenderingPrimitives/GBuffer.h>
 
 #include <queue>
 

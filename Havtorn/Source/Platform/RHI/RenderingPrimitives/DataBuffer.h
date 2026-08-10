@@ -2,6 +2,15 @@
 
 #pragma once
 
+#include <Core.h>
+#include <CoreTypes.h>
+#include <EngineException.h>
+
+#include <vector>
+#include <string>
+
+#include <d3d11.h>
+
 namespace Havtorn
 {
 	class CRHI;
@@ -31,14 +40,14 @@ namespace Havtorn
 	class CDataBuffer
 	{
 	public:
-		const static CDataBuffer Null;
+		PLATFORM_API const static CDataBuffer Null;
 		friend class CRenderStateManager;
 		friend class CRenderManager;
 
 		CDataBuffer() = default;
 		~CDataBuffer() = default;
 
-		void CreateBuffer(const std::string& bufferName, const CRHI* rhi, U32 byteWidth, const void* subResourceData = nullptr, EDataBufferType bufferType = EDataBufferType::Constant, EDataBufferUsage usage = EDataBufferUsage::Dynamic, EDataBufferCPUAccess cpuAccess = EDataBufferCPUAccess::CPUAccessWrite);
+		PLATFORM_API void CreateBuffer(const std::string& bufferName, const CRHI* rhi, U32 byteWidth, const void* subResourceData = nullptr, EDataBufferType bufferType = EDataBufferType::Constant, EDataBufferUsage usage = EDataBufferUsage::Dynamic, EDataBufferCPUAccess cpuAccess = EDataBufferCPUAccess::CPUAccessWrite);
 
 		template<class T>
 		void BindBuffer(const T& bufferData)
@@ -65,7 +74,7 @@ namespace Havtorn
 		}
 
 	private:
-		CDataBuffer(const std::string& name, ID3D11DeviceContext* context, ID3D11Buffer* buffer);
+		PLATFORM_API CDataBuffer(const std::string& name, ID3D11DeviceContext* context, ID3D11Buffer* buffer);
 
 		std::string Name;
 		ID3D11DeviceContext* Context = nullptr;

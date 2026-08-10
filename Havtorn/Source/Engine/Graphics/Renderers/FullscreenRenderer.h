@@ -6,8 +6,8 @@
 
 #include "Graphics/RenderStateManager.h"
 #include "Graphics/GraphicsEnums.h"
-#include "Graphics/RenderingPrimitives/DataBuffer.h"
-#include "Graphics/RenderingPrimitives/RenderTexture.h"
+#include <RHI/RenderingPrimitives/DataBuffer.h>
+#include <RHI/RenderingPrimitives/RenderTexture.h>
 
 namespace Havtorn
 {

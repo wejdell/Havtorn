@@ -6,7 +6,7 @@
 #include <mutex>
 
 #include "GraphicsEnums.h"
-#include "RenderingPrimitives/DataBuffer.h"
+#include <RHI/RenderingPrimitives/DataBuffer.h>
 
 namespace Havtorn
 {

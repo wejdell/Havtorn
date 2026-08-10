@@ -2,7 +2,8 @@
 
 #pragma once 
 #include "Assets/FileHeaders/TextureCubeFileHeader.h"
-#include "Graphics/RenderingPrimitives/RenderTexture.h"
+
+#include <RHI/RenderingPrimitives/RenderTexture.h>
 
 namespace Havtorn
 {

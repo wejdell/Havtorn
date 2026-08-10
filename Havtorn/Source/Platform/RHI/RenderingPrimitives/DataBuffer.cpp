@@ -1,8 +1,9 @@
 // Copyright 2024 Team Havtorn. All Rights Reserved.
 
 #include "DataBuffer.h"
+#include "RHI/RHI.h"
 
-#include <RHI/RHI.h>
+#include <EngineException.h>
 
 namespace Havtorn
 {

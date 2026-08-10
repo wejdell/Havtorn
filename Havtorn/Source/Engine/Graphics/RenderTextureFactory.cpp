@@ -5,8 +5,8 @@
 #include "GraphicsUtilities.h"
 #include "Assets/AssetRegistry.h"
 
-#include "RenderingPrimitives/RenderTexture.h"
-#include "RenderingPrimitives/GBuffer.h"
+#include <RHI/RenderingPrimitives/RenderTexture.h>
+#include <RHI/RenderingPrimitives/GBuffer.h>
 
 #include <RHI/RHI.h>
 

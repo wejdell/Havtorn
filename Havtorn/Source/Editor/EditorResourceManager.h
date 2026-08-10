@@ -6,7 +6,7 @@
 #include <string>	
 
 #include <Havtorn.h>
-#include <Graphics/RenderingPrimitives/RenderTexture.h>
+#include <RHI/RenderingPrimitives/RenderTexture.h>
 
 namespace Havtorn
 {

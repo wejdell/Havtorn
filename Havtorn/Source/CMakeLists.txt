@@ -218,6 +218,12 @@ elseif(RENDER_BACKEND STREQUAL "VULKAN")
 endif()
 set(PLATFORM_FILES
     ${PLATFORM_FOLDER}RHI/RHI.h
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/DataBuffer.cpp
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/DataBuffer.h
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/GBuffer.cpp
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/GBuffer.h
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/RenderTexture.cpp
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/RenderTexture.h
     ${PLATFORM_FOLDER}PlatformProcess.cpp
     ${PLATFORM_FOLDER}PlatformProcess.h
     ${PLATFORM_FOLDER}PlatformManager.cpp
@@ -504,12 +510,6 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Graphics/Debug/DebugDrawUtility.h
     ${ENGINE_FOLDER}Graphics/Renderers/FullscreenRenderer.cpp
     ${ENGINE_FOLDER}Graphics/Renderers/FullscreenRenderer.h
-    ${ENGINE_FOLDER}Graphics/RenderingPrimitives/DataBuffer.cpp
-    ${ENGINE_FOLDER}Graphics/RenderingPrimitives/DataBuffer.h
-    ${ENGINE_FOLDER}Graphics/RenderingPrimitives/GBuffer.cpp
-    ${ENGINE_FOLDER}Graphics/RenderingPrimitives/GBuffer.h
-    ${ENGINE_FOLDER}Graphics/RenderingPrimitives/RenderTexture.cpp
-    ${ENGINE_FOLDER}Graphics/RenderingPrimitives/RenderTexture.h
     ${ENGINE_FOLDER}Graphics/GeometryPrimitives.h
     ${ENGINE_FOLDER}Graphics/GraphicsEnums.h
     ${ENGINE_FOLDER}Graphics/GraphicsMaterial.cpp

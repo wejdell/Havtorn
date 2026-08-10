@@ -7,7 +7,7 @@
 #include <filesystem>
 
 #include <GUI.h>
-#include <Graphics/RenderingPrimitives/RenderTexture.h>
+#include <RHI/RenderingPrimitives/RenderTexture.h>
 
 #include "EditHistory.h"
 #include "EditorDeepLinkParser.h"

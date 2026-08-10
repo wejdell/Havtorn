@@ -3,7 +3,8 @@
 #pragma once
 #include "hvpch.h"
 #include "GraphicsStructs.h"
-#include "RenderingPrimitives/RenderTexture.h"
+
+#include <RHI/RenderingPrimitives/RenderTexture.h>
 
 namespace Havtorn
 {

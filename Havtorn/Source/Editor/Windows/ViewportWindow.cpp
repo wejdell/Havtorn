@@ -4,17 +4,17 @@
 #include "ViewportWindow.h"
 #include "EditorManager.h"
 #include "EditorResourceManager.h"
-#include "Graphics/RenderManager.h"
-#include "Graphics/RenderingPrimitives/RenderTexture.h"
 
 #include "EditActions/RemoveEntityEditAction.h"
 
 #include <Scene/Scene.h>
 #include <ECS/ComponentAlgo.h>
 #include <Assets/AssetRegistry.h>
+#include <Graphics/RenderManager.h>
 #include <MathTypes/MathUtilities.h>
 #include <PlatformManager.h>
 #include <Input/InputMapper.h>
+#include <RHI/RenderingPrimitives/RenderTexture.h>
 
 namespace Havtorn
 {
