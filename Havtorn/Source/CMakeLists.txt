@@ -224,6 +224,8 @@ set(PLATFORM_FILES
     ${PLATFORM_FOLDER}RHI/RenderingPrimitives/GBuffer.h
     ${PLATFORM_FOLDER}RHI/RenderingPrimitives/RenderTexture.cpp
     ${PLATFORM_FOLDER}RHI/RenderingPrimitives/RenderTexture.h
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/Shader.cpp
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/Shader.h
     ${PLATFORM_FOLDER}PlatformProcess.cpp
     ${PLATFORM_FOLDER}PlatformProcess.h
     ${PLATFORM_FOLDER}PlatformManager.cpp

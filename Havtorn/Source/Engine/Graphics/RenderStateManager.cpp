@@ -245,41 +245,49 @@ namespace Havtorn
 
     std::string CRenderStateManager::AddShader(const std::string& fileName, const U64 index, const EShaderType shaderType)
     {
-        std::string outShaderData;
+        std::string outData = "";
 
         switch (shaderType)
         {
         case EShaderType::Vertex:
         {
             if (VertexShaders[index] != nullptr)
+            {
                 VertexShaders[index]->Release();
+                delete VertexShaders[index];
+            }
 
-            ID3D11VertexShader* vertexShader;
-            UGraphicsUtils::CreateVertexShader(fileName, RHI, &vertexShader, outShaderData);
-            VertexShaders[index] = vertexShader;
+            VertexShaders[index] = new CShader(fileName, RHI, shaderType);
+            outData = VertexShaders[index]->GetCompiledData();
         }
         break;
-        case EShaderType::Compute:
         case EShaderType::Geometry:
         {
             if (GeometryShaders[index] != nullptr)
+            {
                 GeometryShaders[index]->Release();
+                delete GeometryShaders[index];
+            }
 
-            ID3D11GeometryShader* geometryShader;
-            UGraphicsUtils::CreateGeometryShader(fileName, RHI, &geometryShader);
-            GeometryShaders[index] = geometryShader;
+            GeometryShaders[index] = new CShader(fileName, RHI, shaderType);
         }
         break;
         case EShaderType::Pixel:
         {
             if (PixelShaders[index] != nullptr)
+            {
                 PixelShaders[index]->Release();
+                delete PixelShaders[index];
+            }
 
-            ID3D11PixelShader* pixelShader;
-            UGraphicsUtils::CreatePixelShader(fileName, RHI, &pixelShader);
-            PixelShaders[index] = pixelShader;
+            PixelShaders[index] = new CShader(fileName, RHI, shaderType);
         }
         break;
+        default:
+        {
+            HV_LOG_ERROR("CRenderStateManager::AddShader: Could not add shader of type '%s', not supported yet!", magic_enum::enum_name(shaderType).data());
+            return "";
+        }
         }
 
         const std::string prefix = UGeneralUtils::ExtractParentDirectoryFromPath(UFileSystem::GetWorkingPath()) + "Source/Engine/Graphics/";
@@ -291,7 +299,7 @@ namespace Havtorn
             ShaderInitData.emplace(sourceFile, SShaderInitData{ fileName, shaderType, index });
         }
 
-        return outShaderData;
+        return outData;
     }
 
     void CRenderStateManager::AddInputLayout(const std::string& vsData, EInputLayoutType layoutType)
@@ -525,7 +533,13 @@ namespace Havtorn
 
     void CRenderStateManager::VSSetShader(EVertexShaders shader) const
     {
-        Context->VSSetShader(VertexShaders[STATIC_U8(shader)], nullptr, 0);
+        if (shader == EVertexShaders::Null)
+        {
+            CShader::ResetShader(RHI, EShaderType::Vertex);
+            return;
+        }
+
+        VertexShaders[STATIC_U8(shader)]->SetShader();
     }
 
     void CRenderStateManager::VSSetConstantBuffer(U8 slot, const CDataBuffer& buffer)
@@ -540,7 +554,13 @@ namespace Havtorn
 
     void CRenderStateManager::GSSetShader(EGeometryShaders shader) const
     {
-        Context->GSSetShader(GeometryShaders[STATIC_U8(shader)], nullptr, 0);
+        if (shader == EGeometryShaders::Null)
+        {
+            CShader::ResetShader(RHI, EShaderType::Geometry);
+            return;
+        }
+
+        GeometryShaders[STATIC_U8(shader)]->SetShader();
     }
 
     void CRenderStateManager::GSSetConstantBuffer(U8 slot, const CDataBuffer& buffer) const
@@ -556,7 +576,13 @@ namespace Havtorn
 
     void CRenderStateManager::PSSetShader(EPixelShaders shader) const
     {
-        Context->PSSetShader(PixelShaders[STATIC_U8(shader)], nullptr, 0);
+        if (shader == EPixelShaders::Null)
+        {
+            CShader::ResetShader(RHI, EShaderType::Pixel);
+            return;
+        }
+
+        PixelShaders[STATIC_U8(shader)]->SetShader();
     }
 
     void CRenderStateManager::PSSetConstantBuffer(U8 slot, const CDataBuffer& buffer) const

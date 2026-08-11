@@ -4,14 +4,6 @@
 
 namespace Havtorn 
 {
-	enum class EShaderType
-	{
-		Vertex,
-		Compute,
-		Geometry,
-		Pixel
-	};
-
 	enum class ESamplerType
 	{
 		Border,

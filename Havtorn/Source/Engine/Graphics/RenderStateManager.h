@@ -7,6 +7,7 @@
 
 #include "GraphicsEnums.h"
 #include <RHI/RenderingPrimitives/DataBuffer.h>
+#include <RHI/RenderingPrimitives/Shader.h>
 
 namespace Havtorn
 {
@@ -148,9 +149,9 @@ namespace Havtorn
 		std::array<ID3D11DepthStencilState*, STATIC_U64(EDepthStencilStates::Count)> DepthStencilStates;
 		std::array<ID3D11RasterizerState*, STATIC_U64(ERasterizerStates::Count)> RasterizerStates;
 
-		std::array<ID3D11VertexShader*, STATIC_U64(EVertexShaders::Count) + 1> VertexShaders;
-		std::array<ID3D11PixelShader*, STATIC_U64(EPixelShaders::Count) + 1> PixelShaders;
-		std::array<ID3D11GeometryShader*, STATIC_U64(EGeometryShaders::Count) + 1> GeometryShaders;
+		std::array<CShader*, STATIC_U64(EVertexShaders::Count) + 1> VertexShaders;
+		std::array<CShader*, STATIC_U64(EPixelShaders::Count) + 1> PixelShaders;
+		std::array<CShader*, STATIC_U64(EGeometryShaders::Count) + 1> GeometryShaders;
 
 		std::vector<ID3D11SamplerState*> Samplers;
 		std::vector<CDataBuffer> VertexBuffers;
