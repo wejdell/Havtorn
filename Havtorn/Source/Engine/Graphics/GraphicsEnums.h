@@ -114,13 +114,6 @@ namespace Havtorn
 		DefaultClamp = 2,
 	};
 
-	enum class ETopologies
-	{
-		TriangleList = 0,
-		LineList = 1,
-		PointList = 2,
-	};
-
 	// Should be 1:1 to RenderManager::InitVertexBufferPrimitives()
 	// Geometries used can be found in GeometryPrimitives.h
 	// GeometryPrimitivesUtility.h has a std::map that simplifies access to the primitives the enum refers to.

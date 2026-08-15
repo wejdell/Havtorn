@@ -40,7 +40,6 @@ namespace Havtorn
         InitSamplers();
         InitVertexBuffers();
         InitIndexBuffers();
-        InitTopologies();
         InitMeshVertexStrides();
         InitMeshVertexOffset();
 
@@ -202,13 +201,6 @@ namespace Havtorn
         AddIndexBuffer(GeometryPrimitives::Square.Indices);
         AddIndexBuffer(GeometryPrimitives::UVSphere.Indices);
         AddIndexBuffer(GeometryPrimitives::SkyboxCubeIndices);
-    }
-
-    void CRenderStateManager::InitTopologies()
-    {
-        AddTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-        AddTopology(D3D11_PRIMITIVE_TOPOLOGY_LINELIST);
-        AddTopology(D3D11_PRIMITIVE_TOPOLOGY_POINTLIST);
     }
 
     void CRenderStateManager::InitMeshVertexStrides()
@@ -489,11 +481,6 @@ namespace Havtorn
         Samplers.emplace_back(samplerState);
     }
 
-    void CRenderStateManager::AddTopology(D3D11_PRIMITIVE_TOPOLOGY topology)
-    {
-        Topologies.emplace_back(topology);
-    }
-
     void CRenderStateManager::AddViewport(SVector2<F32> topLeftCoordinate, SVector2<F32> widthAndHeight, SVector2<F32> depth)
     {
         Viewports.emplace_back(D3D11_VIEWPORT(topLeftCoordinate.X, topLeftCoordinate.Y, widthAndHeight.X, widthAndHeight.Y, depth.X, depth.Y));
@@ -501,7 +488,7 @@ namespace Havtorn
 
     void CRenderStateManager::IASetTopology(ETopologies topology) const
     {
-        Context->IASetPrimitiveTopology(Topologies[STATIC_U8(topology)]);
+        Context->IASetPrimitiveTopology(static_cast<D3D11_PRIMITIVE_TOPOLOGY>(topology));
     }
 
     void CRenderStateManager::IASetInputLayout(EInputLayoutType layout) const

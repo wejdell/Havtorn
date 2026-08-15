@@ -18,6 +18,13 @@ namespace Havtorn
 	using SRenderContext = ID3D11DeviceContext;
 	using SRenderTexture = ID3D11Texture2D;
 	using SRenderSwapChain = IDXGISwapChain;
+
+	enum class ETopologies : U8
+	{
+		TriangleList = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
+		LineList = D3D11_PRIMITIVE_TOPOLOGY_LINELIST,
+		PointList = D3D11_PRIMITIVE_TOPOLOGY_POINTLIST,
+	};
 #endif
 
 	class CRHI

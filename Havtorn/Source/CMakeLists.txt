@@ -218,14 +218,28 @@ elseif(RENDER_BACKEND STREQUAL "VULKAN")
 endif()
 set(PLATFORM_FILES
     ${PLATFORM_FOLDER}RHI/RHI.h
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/BlendState.cpp
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/BlendState.h
     ${PLATFORM_FOLDER}RHI/RenderingPrimitives/DataBuffer.cpp
     ${PLATFORM_FOLDER}RHI/RenderingPrimitives/DataBuffer.h
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/DepthStencilState.cpp
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/DepthStencilState.h
     ${PLATFORM_FOLDER}RHI/RenderingPrimitives/GBuffer.cpp
     ${PLATFORM_FOLDER}RHI/RenderingPrimitives/GBuffer.h
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/PipelineStateObject.cpp
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/PipelineStateObject.h
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/RasterizerState.cpp
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/RasterizerState.h
     ${PLATFORM_FOLDER}RHI/RenderingPrimitives/RenderTexture.cpp
     ${PLATFORM_FOLDER}RHI/RenderingPrimitives/RenderTexture.h
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/RenderViewport.cpp
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/RenderViewport.h
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/RootSignature.cpp
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/RootSignature.h
     ${PLATFORM_FOLDER}RHI/RenderingPrimitives/Shader.cpp
     ${PLATFORM_FOLDER}RHI/RenderingPrimitives/Shader.h
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/VertexInputLayout.cpp
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/VertexInputLayout.h
     ${PLATFORM_FOLDER}PlatformProcess.cpp
     ${PLATFORM_FOLDER}PlatformProcess.h
     ${PLATFORM_FOLDER}PlatformManager.cpp

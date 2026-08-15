@@ -6,13 +6,15 @@
 #include <mutex>
 
 #include "GraphicsEnums.h"
+
+#include <d3d11.h>
+
+#include <RHI/RHI.h>
 #include <RHI/RenderingPrimitives/DataBuffer.h>
 #include <RHI/RenderingPrimitives/Shader.h>
 
 namespace Havtorn
 {
-	class CRHI;
-
 	class CRenderStateManager
 	{
 	public:
@@ -65,8 +67,6 @@ namespace Havtorn
 		void InitVertexBuffers();
 		// Init order 1:1 to EIndexBufferPrimitives
 		void InitIndexBuffers();
-		// Init order 1:1 to ETopologies.
-		void InitTopologies();
 		void InitMeshVertexStrides();
 		void InitMeshVertexOffset();
 
@@ -80,7 +80,6 @@ namespace Havtorn
 		std::string AddShader(const std::string& fileName, const U64 index, const EShaderType shaderType);
 		void AddInputLayout(const std::string& vsData, EInputLayoutType layoutType);
 		void AddSampler(ESamplerType samplerType);
-		void AddTopology(D3D11_PRIMITIVE_TOPOLOGY topology);
 		void AddViewport(SVector2<F32> topLeftCoordinate, SVector2<F32> widthAndHeight, SVector2<F32> depth);
 
 	public:
@@ -157,7 +156,6 @@ namespace Havtorn
 		std::vector<CDataBuffer> VertexBuffers;
 		std::vector<CDataBuffer> IndexBuffers;
 		std::vector<ID3D11InputLayout*> InputLayouts;
-		std::vector<D3D11_PRIMITIVE_TOPOLOGY> Topologies;
 		std::vector<D3D11_VIEWPORT> Viewports;
 		std::vector<U32> MeshVertexStrides;
 		std::vector<U32> MeshVertexOffsets;
