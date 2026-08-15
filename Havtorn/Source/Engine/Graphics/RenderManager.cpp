@@ -1568,7 +1568,7 @@ namespace Havtorn
 	void CRenderManager::DeferredLightingPoint(const SRenderCommand& command)
 	{
 		ShadowAtlasDepth.SetAsPSResourceOnSlot(22);
-		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
+		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontfaceCulling);
 
 		// Update lightbufferdata and fill lightbuffer
 		PointLightBufferData.ToWorldFromObject = command.Matrices[0];
@@ -1613,7 +1613,7 @@ namespace Havtorn
 	void CRenderManager::DeferredLightingSpot(const SRenderCommand& command)
 	{
 		ShadowAtlasDepth.SetAsPSResourceOnSlot(22);
-		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
+		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontfaceCulling);
 
 		// Update lightbufferdata and fill lightbuffer
 		PointLightBufferData.ToWorldFromObject = command.Matrices[0];
@@ -1674,7 +1674,7 @@ namespace Havtorn
 
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::Disable);
 		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::DepthFirst);
-		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
+		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontfaceCulling);
 
 		RenderStateManager.PSSetResources(0, 1, command.RenderTextures[0].GetShaderResourceView());
 
@@ -1760,7 +1760,7 @@ namespace Havtorn
 	{
 		VolumetricAccumulationBuffer.SetAsActiveTarget();
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
-		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
+		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontfaceCulling);
 		IntermediateDepth.SetAsPSResourceOnSlot(21);
 		ShadowAtlasDepth.SetAsPSResourceOnSlot(22);
 
@@ -1820,7 +1820,7 @@ namespace Havtorn
 	{
 		VolumetricAccumulationBuffer.SetAsActiveTarget();
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
-		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
+		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontfaceCulling);
 		IntermediateDepth.SetAsPSResourceOnSlot(21);
 		ShadowAtlasDepth.SetAsPSResourceOnSlot(22);
 
@@ -2193,7 +2193,7 @@ namespace Havtorn
 
 		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::Disable);
 		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::DepthFirst);
-		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontFaceCulling);
+		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontfaceCulling);
 
 		RenderStateManager.PSSetResources(0, 1, command.RenderTextures[0].GetShaderResourceView());
 

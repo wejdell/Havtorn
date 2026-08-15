@@ -31,7 +31,7 @@ namespace Havtorn
 
         ENGINE_ERROR_BOOL_MESSAGE(CreateBlendStates(RHI), "Could not create Blend States.");
         ENGINE_ERROR_BOOL_MESSAGE(CreateDepthStencilStates(RHI), "Could not create Depth Stencil States.");
-        ENGINE_ERROR_BOOL_MESSAGE(CreateRasterizerStates(device), "Could not create Rasterizer States.");
+        ENGINE_ERROR_BOOL_MESSAGE(CreateRasterizerStates(RHI), "Could not create Rasterizer States.");
 
         // Load default resources
         InitVertexShadersAndInputLayouts();
@@ -581,7 +581,13 @@ namespace Havtorn
 
     void CRenderStateManager::RSSetRasterizerState(ERasterizerStates rasterizerState) const
     {
-        Context->RSSetState(RasterizerStates[(size_t)rasterizerState]);
+        if (rasterizerState == ERasterizerStates::Default)
+        {
+            CRasterizerState::ResetRasterizerState(RHI);
+            return;
+        }
+
+        RasterizerStates[STATIC_U8(rasterizerState)]->SetRasterizerState();
     }
 
     void CRenderStateManager::OMSetBlendState(EBlendStates blendState) const
@@ -878,36 +884,26 @@ namespace Havtorn
         return true;
     }
 
-    bool CRenderStateManager::CreateRasterizerStates(ID3D11Device* device)
+    bool CRenderStateManager::CreateRasterizerStates(CRHI* rhi)
     {
-        D3D11_RASTERIZER_DESC wireframeRasterizerDesc = {};
-        wireframeRasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
-        wireframeRasterizerDesc.CullMode = D3D11_CULL_BACK;
-        wireframeRasterizerDesc.DepthClipEnable = true;
+        SRasterizerDescription wireframeRasterizerStateDescription;
+        wireframeRasterizerStateDescription.FillMode = ERasterizerFillMode::Wireframe;
+        wireframeRasterizerStateDescription.CullMode = ERasterizerCullMode::Backface;
 
-        D3D11_RASTERIZER_DESC frontFaceDesc = {};
-        frontFaceDesc.FillMode = D3D11_FILL_SOLID;
-        frontFaceDesc.CullMode = D3D11_CULL_FRONT;
-        frontFaceDesc.DepthClipEnable = true;
+        SRasterizerDescription backfaceRasterizerStateDescription;
 
-        D3D11_RASTERIZER_DESC noCullDesc = {};
-        noCullDesc.FillMode = D3D11_FILL_SOLID;
-        noCullDesc.CullMode = D3D11_CULL_NONE;
-        noCullDesc.DepthClipEnable = true;
+        SRasterizerDescription frontfaceRasterizerStateDescription;
+        frontfaceRasterizerStateDescription.FillMode = ERasterizerFillMode::Solid;
+        frontfaceRasterizerStateDescription.CullMode = ERasterizerCullMode::Frontface;
 
-        ID3D11RasterizerState* wireframeRasterizerState;
-        ENGINE_HR_MESSAGE(device->CreateRasterizerState(&wireframeRasterizerDesc, &wireframeRasterizerState), "Wireframe Rasterizer State could not be created.");
+        SRasterizerDescription noFaceCullingRasterizerStateDescription;
+        noFaceCullingRasterizerStateDescription.FillMode = ERasterizerFillMode::Solid;
+        noFaceCullingRasterizerStateDescription.CullMode = ERasterizerCullMode::None;
 
-        ID3D11RasterizerState* frontFaceState;
-        ENGINE_HR_MESSAGE(device->CreateRasterizerState(&frontFaceDesc, &frontFaceState), "Front face Rasterizer State could not be created.");
-
-        ID3D11RasterizerState* noCullState;
-        ENGINE_HR_MESSAGE(device->CreateRasterizerState(&noCullDesc, &noCullState), "No Face culling Rasterizer State could not be created.");
-
-        RasterizerStates[(U64)ERasterizerStates::Default] = nullptr;
-        RasterizerStates[(U64)ERasterizerStates::Wireframe] = wireframeRasterizerState;
-        RasterizerStates[(U64)ERasterizerStates::FrontFaceCulling] = frontFaceState;
-        RasterizerStates[(U64)ERasterizerStates::NoFaceCulling] = noCullState;
+        RasterizerStates[STATIC_U8(ERasterizerStates::Wireframe)] = new CRasterizerState(rhi, wireframeRasterizerStateDescription);
+        RasterizerStates[STATIC_U8(ERasterizerStates::BackfaceCulling)] = new CRasterizerState(rhi, backfaceRasterizerStateDescription);
+        RasterizerStates[STATIC_U8(ERasterizerStates::FrontfaceCulling)] = new CRasterizerState(rhi, frontfaceRasterizerStateDescription);
+        RasterizerStates[STATIC_U8(ERasterizerStates::NoFaceCulling)] = new CRasterizerState(rhi, noFaceCullingRasterizerStateDescription);
 
         return true;
     }

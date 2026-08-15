@@ -14,6 +14,7 @@
 #include <RHI/RenderingPrimitives/BlendState.h>
 #include <RHI/RenderingPrimitives/DataBuffer.h>
 #include <RHI/RenderingPrimitives/DepthStencilState.h>
+#include <RHI/RenderingPrimitives/RasterizerState.h>
 #include <RHI/RenderingPrimitives/Shader.h>
 
 namespace Havtorn
@@ -42,9 +43,10 @@ namespace Havtorn
 
 		enum class ERasterizerStates
 		{
-			Default,//Uses backface culling.
+			Default,
 			Wireframe,
-			FrontFaceCulling,
+			BackfaceCulling,
+			FrontfaceCulling,
 			NoFaceCulling,
 			Count
 		};
@@ -140,7 +142,7 @@ namespace Havtorn
 
 		bool CreateBlendStates(CRHI* rhi);
 		bool CreateDepthStencilStates(CRHI* rhi);
-		bool CreateRasterizerStates(ID3D11Device* device);
+		bool CreateRasterizerStates(CRHI* rhi);
 
 	private:
 		const std::string ShaderRoot = "Shaders/";
@@ -149,7 +151,7 @@ namespace Havtorn
 		ID3D11DeviceContext* Context = nullptr;
 		std::array<CBlendState*, STATIC_U64(EBlendStates::Count)> BlendStates;
 		std::array<CDepthStencilState*, STATIC_U64(EDepthStencilStates::Count)> DepthStencilStates;
-		std::array<ID3D11RasterizerState*, STATIC_U64(ERasterizerStates::Count)> RasterizerStates;
+		std::array<CRasterizerState*, STATIC_U64(ERasterizerStates::Count)> RasterizerStates;
 
 		std::array<CShader*, STATIC_U64(EVertexShaders::Count)> VertexShaders;
 		std::array<CShader*, STATIC_U64(EPixelShaders::Count)> PixelShaders;

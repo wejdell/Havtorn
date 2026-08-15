@@ -9,40 +9,48 @@
 
 namespace Havtorn
 {
-	/*enum class EShaderType
-	{
-		Vertex,
-		Compute,
-		Geometry,
-		Pixel
-	};
+    class CRHI;
 
-	class CRHI;
+    enum class ERasterizerFillMode
+    {
+        Wireframe = 2, // D3D11_FILL_WIREFRAME
+        Solid = 3 // D3D11_FILL_SOLID
+    };
 
-	class CShader
-	{
-	public:
-		PLATFORM_API CShader(const std::string& filepath, const CRHI* rhi, const EShaderType type);
-		CShader() = delete;
-		~CShader() = default;
+    enum class ERasterizerCullMode
+    {
+        None = 1, // D3D11_CULL_NONE
+        Frontface = 2, // D3D11_CULL_FRONT 
+        Backface = 3 // D3D11_CULL_BACK
+    };
 
-		PLATFORM_API void Release();
-		PLATFORM_API std::string GetCompiledData() const;
-		PLATFORM_API void SetShader() const;
-		PLATFORM_API static void ResetShader(const CRHI* rhi, const EShaderType type);
+    struct SRasterizerDescription
+    {
+        ERasterizerFillMode FillMode = ERasterizerFillMode::Solid;
+        ERasterizerCullMode CullMode = ERasterizerCullMode::Backface;
+        bool FrontCounterClockwise = false;
+        I32 DepthBias = 0;
+        F32 DepthBiasClamp = 0.0f;
+        F32 SlopeScaledDepthBias = 0.0f;
+        bool EnableDepthClip = true;
+        bool EnableScissor = false;
+        bool EnableMultisample = false;
+        bool EnableAntialiasedLine = false;
+    };
 
-	private:
-		ID3D11DeviceContext* Context = nullptr;
+    class CRasterizerState
+    {
+    public:
+        PLATFORM_API CRasterizerState(const CRHI* rhi, const SRasterizerDescription& description);
+        CRasterizerState() = delete;
+        ~CRasterizerState() = default;
 
-		union 
-		{
-			ID3D11VertexShader* VertexShader = nullptr;
-			ID3D11ComputeShader* ComputeShader;
-			ID3D11GeometryShader* GeometryShader;
-			ID3D11PixelShader* PixelShader;
-		};
+        PLATFORM_API void Release();
+        PLATFORM_API void SetRasterizerState() const;
+        PLATFORM_API static void ResetRasterizerState(const CRHI* rhi);
 
-		EShaderType ShaderType = EShaderType::Vertex;
-		std::string CompiledData = "";
-	};*/
+    private:
+        ID3D11DeviceContext* Context = nullptr;
+        ID3D11RasterizerState* RasterizerState = nullptr;
+    };
 }
