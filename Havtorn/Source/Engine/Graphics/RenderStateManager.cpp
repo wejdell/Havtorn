@@ -288,148 +288,148 @@ namespace Havtorn
 
     void CRenderStateManager::AddInputLayout(const std::string& vsData, EInputLayoutType layoutType)
     {
-        std::vector<D3D11_INPUT_ELEMENT_DESC> layout;
+        std::vector<SInputElementDescription> layout;
         switch (layoutType)
         {
         case EInputLayoutType::Pos3Nor3Tan3Bit3UV2:
             layout =
             {
-                {"POSITION"	,	0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"NORMAL"   ,   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"TANGENT"  ,   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"BINORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"UV"		,   0, DXGI_FORMAT_R32G32_FLOAT,	0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
+                { .SemanticName = "POSITION",   .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "NORMAL",     .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "TANGENT",    .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "BINORMAL",   .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "UV",         .Format = ERenderResourceFormat::R32G32_Float }
             };
             break;
 
         case EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans:
             layout =
             {
-                {"POSITION"	,	0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"NORMAL"   ,   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"TANGENT"  ,   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"BINORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"UV"		,   0, DXGI_FORMAT_R32G32_FLOAT,	0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"INSTANCETRANSFORM",	0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	1, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	2, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	3, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1}
+                { .SemanticName = "POSITION",   .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "NORMAL",     .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "TANGENT",    .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "BINORMAL",   .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "UV",         .Format = ERenderResourceFormat::R32G32_Float },
+                { .SemanticName = "INSTANCETRANSFORM", .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 0, .InputSlot = 1, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM", .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 1, .InputSlot = 1, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM", .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 2, .InputSlot = 1, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM", .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 3, .InputSlot = 1, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData }
             };
             break;
 
         case EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans:
             layout =
             {
-                {"POSITION"	,	0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"NORMAL"   ,   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"TANGENT"  ,   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"BINORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"UV"		,   0, DXGI_FORMAT_R32G32_FLOAT,	0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"BONEID",      0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"BONEWEIGHT",  0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"INSTANCEANIMATIONDATA",   0, DXGI_FORMAT_R32G32_UINT,	1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	1, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	2, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	3, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1}
+                { .SemanticName = "POSITION",               .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "NORMAL",                 .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "TANGENT",                .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "BINORMAL",               .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "UV",                     .Format = ERenderResourceFormat::R32G32_Float },
+                { .SemanticName = "BONEID",                 .Format = ERenderResourceFormat::R32G32B32A32_Float },
+                { .SemanticName = "BONEWEIGHT",             .Format = ERenderResourceFormat::R32G32B32A32_Float },
+                { .SemanticName = "INSTANCEANIMATIONDATA",  .Format = ERenderResourceFormat::R32G32_UnsignedInt, .SemanticIndex = 0, .InputSlot = 1, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 0, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 1, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 2, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 3, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData }
             };
             break;
 
         case EInputLayoutType::Pos3Nor3Tan3Bit3UV2Entity2Trans:
             layout =
             {
-                {"POSITION"	,	0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"NORMAL"   ,   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"TANGENT"  ,   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"BINORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"UV"		,   0, DXGI_FORMAT_R32G32_FLOAT,	0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"ENTITY"		,   0, DXGI_FORMAT_R32G32_UINT,	1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	1, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	2, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	3, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1}
+                { .SemanticName = "POSITION",               .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "NORMAL",                 .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "TANGENT",                .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "BINORMAL",               .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "UV",                     .Format = ERenderResourceFormat::R32G32_Float },
+                { .SemanticName = "ENTITY",                 .Format = ERenderResourceFormat::R32G32_UnsignedInt, .SemanticIndex = 0, .InputSlot = 1, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 0, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 1, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 2, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 3, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData }
             };
             break;
 
         case EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2AnimDataTrans:
             layout =
             {
-                {"POSITION"	,	0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"NORMAL"   ,   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"TANGENT"  ,   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"BINORMAL",    0, DXGI_FORMAT_R32G32B32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"UV"		,   0, DXGI_FORMAT_R32G32_FLOAT,	0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"BONEID",      0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"BONEWEIGHT",  0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"ENTITY"		,   0, DXGI_FORMAT_R32G32_UINT,	1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCEANIMATIONDATA",   0, DXGI_FORMAT_R32G32_UINT,	2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	0, DXGI_FORMAT_R32G32B32A32_FLOAT, 3, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	1, DXGI_FORMAT_R32G32B32A32_FLOAT, 3, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	2, DXGI_FORMAT_R32G32B32A32_FLOAT, 3, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	3, DXGI_FORMAT_R32G32B32A32_FLOAT, 3, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1}
+                { .SemanticName = "POSITION",               .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "NORMAL",                 .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "TANGENT",                .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "BINORMAL",               .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "UV",                     .Format = ERenderResourceFormat::R32G32_Float },
+                { .SemanticName = "BONEID",                 .Format = ERenderResourceFormat::R32G32B32A32_Float },
+                { .SemanticName = "BONEWEIGHT",             .Format = ERenderResourceFormat::R32G32B32A32_Float },
+                { .SemanticName = "ENTITY",                 .Format = ERenderResourceFormat::R32G32_UnsignedInt, .SemanticIndex = 0, .InputSlot = 1, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCEANIMATIONDATA",  .Format = ERenderResourceFormat::R32G32_UnsignedInt, .SemanticIndex = 0, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 0, .InputSlot = 3, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 1, .InputSlot = 3, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 2, .InputSlot = 3, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 3, .InputSlot = 3, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData }
             };
             break;
 
         case EInputLayoutType::Position4:
             layout =
             {
-                {"POSITION"	,	0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
+                { .SemanticName = "POSITION", .Format = ERenderResourceFormat::R32G32B32A32_Float }
             };
             break;
 
         case EInputLayoutType::TransUVRectColor:
             layout =
             {
-                {"INSTANCETRANSFORM",	0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	1, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	2, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	3, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCEUVRECT",		0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCECOLOR",		0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1}
+                { .SemanticName = "INSTANCETRANSFORM",  .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 0, .InputSlot = 0, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",  .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 1, .InputSlot = 0, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",  .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 2, .InputSlot = 0, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",  .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 3, .InputSlot = 0, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCEUVRECT",     .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 0, .InputSlot = 1, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCECOLOR",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 0, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData }
             };
             break;
 
         case EInputLayoutType::TransUVRectColorEntity2:
             layout =
             {
-                {"INSTANCETRANSFORM",	0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	1, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	2, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCETRANSFORM",	3, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCEUVRECT",		0, DXGI_FORMAT_R32G32B32A32_FLOAT, 1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"INSTANCECOLOR",		0, DXGI_FORMAT_R32G32B32A32_FLOAT, 2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
-                {"ENTITY"		,       0, DXGI_FORMAT_R32G32_UINT,	       3, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_INSTANCE_DATA, 1},
+                { .SemanticName = "INSTANCETRANSFORM",  .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 0, .InputSlot = 0, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",  .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 1, .InputSlot = 0, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",  .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 2, .InputSlot = 0, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",  .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 3, .InputSlot = 0, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCEUVRECT",     .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 0, .InputSlot = 1, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCECOLOR",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 0, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "ENTITY",             .Format = ERenderResourceFormat::R32G32_UnsignedInt, .SemanticIndex = 0, .InputSlot = 3, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData }
             };
             break;
         
         case EInputLayoutType::Pos3Nor3Tan3Bit3UV2Color4:
             layout =
             {
-                {"POSITION"	,	0, DXGI_FORMAT_R32G32B32_FLOAT,     0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"NORMAL"   ,   0, DXGI_FORMAT_R32G32B32_FLOAT,     0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"TANGENT"  ,   0, DXGI_FORMAT_R32G32B32_FLOAT,     0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"BINORMAL" ,   0, DXGI_FORMAT_R32G32B32_FLOAT,     0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"UV"		,   0, DXGI_FORMAT_R32G32_FLOAT,	    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"COLOR"    ,	0, DXGI_FORMAT_R32G32B32A32_FLOAT,  1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0}
+                { .SemanticName = "POSITION",   .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "NORMAL",     .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "TANGENT",    .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "BINORMAL",   .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "UV",         .Format = ERenderResourceFormat::R32G32_Float },
+                { .SemanticName = "COLOR",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 0, .InputSlot = 1 }
             };
             break;
 
         case EInputLayoutType::Pos3Nor3Tan3Bit3UV2Color4Entity2:
             layout =
             {
-                {"POSITION"	,	0, DXGI_FORMAT_R32G32B32_FLOAT,     0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"NORMAL"   ,   0, DXGI_FORMAT_R32G32B32_FLOAT,     0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"TANGENT"  ,   0, DXGI_FORMAT_R32G32B32_FLOAT,     0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"BINORMAL" ,   0, DXGI_FORMAT_R32G32B32_FLOAT,     0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"UV"		,   0, DXGI_FORMAT_R32G32_FLOAT,	    0, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"COLOR"    ,	0, DXGI_FORMAT_R32G32B32A32_FLOAT,  1, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
-                {"ENTITY"	,   0, DXGI_FORMAT_R32G32_UINT,	        2, D3D11_APPEND_ALIGNED_ELEMENT, D3D11_INPUT_PER_VERTEX_DATA, 0},
+                { .SemanticName = "POSITION",   .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "NORMAL",     .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "TANGENT",    .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "BINORMAL",   .Format = ERenderResourceFormat::R32G32B32_Float },
+                { .SemanticName = "UV",         .Format = ERenderResourceFormat::R32G32_Float },
+                { .SemanticName = "COLOR",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 0, .InputSlot = 1 },
+                { .SemanticName = "ENTITY",     .Format = ERenderResourceFormat::R32G32_UnsignedInt, .SemanticIndex = 0, .InputSlot = 2 }
             };
             break;
         }
-        ID3D11InputLayout* inputLayout;
-        ENGINE_HR_MESSAGE(RHI->GetDevice()->CreateInputLayout(layout.data(), STATIC_U32(layout.size()), vsData.data(), vsData.size(), &inputLayout), "Input Layout could not be created.")
-            InputLayouts.emplace_back(inputLayout);
+
+        SInputLayoutDescription layoutDescription = SInputLayoutDescription{ .Layout = layout };
+        InputLayouts.emplace_back(new CVertexInputLayout(RHI, layoutDescription, vsData));
     }
 
     void CRenderStateManager::AddSampler(ESamplerType samplerType)
@@ -483,7 +483,13 @@ namespace Havtorn
 
     void CRenderStateManager::IASetInputLayout(EInputLayoutType layout) const
     {
-        Context->IASetInputLayout(InputLayouts[STATIC_U8(layout)]);
+        if (layout == EInputLayoutType::Null)
+        {
+            CVertexInputLayout::ResetInputLayout(RHI);
+            return;
+        }
+
+        InputLayouts[STATIC_U8(layout)]->SetInputLayout();
     }
 
     void CRenderStateManager::IASetVertexBuffer(U8 startSlot, const CDataBuffer& buffer, U32 stride, U32 offset) const
@@ -503,7 +509,10 @@ namespace Havtorn
     void CRenderStateManager::IASetIndexBuffer(const CDataBuffer& buffer) const
     {
         if (buffer.Buffer == nullptr)
+        {
 			Context->IASetIndexBuffer(nullptr, DXGI_FORMAT_UNKNOWN, 0);
+            return;
+        }
 
     	Context->IASetIndexBuffer(buffer.Buffer, DXGI_FORMAT_R32_UINT, 0);
     }

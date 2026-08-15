@@ -18,6 +18,7 @@
 #include <RHI/RenderingPrimitives/RenderViewport.h>
 #include <RHI/RenderingPrimitives/SamplerState.h>
 #include <RHI/RenderingPrimitives/Shader.h>
+#include <RHI/RenderingPrimitives/VertexInputLayout.h>
 
 namespace Havtorn
 {
@@ -161,7 +162,7 @@ namespace Havtorn
 		std::vector<CSamplerState*> Samplers;
 		std::vector<CDataBuffer> VertexBuffers;
 		std::vector<CDataBuffer> IndexBuffers;
-		std::vector<ID3D11InputLayout*> InputLayouts;
+		std::vector<CVertexInputLayout*> InputLayouts;
 		std::vector<CRenderViewport> Viewports;
 		std::vector<U32> MeshVertexStrides;
 		std::vector<U32> MeshVertexOffsets;
