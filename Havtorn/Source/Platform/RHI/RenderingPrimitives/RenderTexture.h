@@ -5,6 +5,8 @@
 #include <Core.h>
 #include <CoreTypes.h>
 
+#include "RenderViewport.h"
+
 #include <d3d11.h>
 
 namespace Havtorn
@@ -68,7 +70,7 @@ namespace Havtorn
 		PLATFORM_API ID3D11ShaderResourceView* MoveShaderResourceView();
 		PLATFORM_API ID3D11RenderTargetView* const GetRenderTargetView() const;
 		PLATFORM_API ID3D11DepthStencilView* const GetDepthStencilView() const;
-		PLATFORM_API D3D11_VIEWPORT* const GetViewport();
+		PLATFORM_API const CRenderViewport& GetViewport() const;
 
 	private:
 		ID3D11DeviceContext* Context = nullptr;
@@ -81,7 +83,7 @@ namespace Havtorn
 		};
 
 		ID3D11ShaderResourceView* ShaderResource = nullptr;
-		D3D11_VIEWPORT Viewport = {};
+		CRenderViewport Viewport = {};
 
 		// TODO.NW: Keep this now for debugging
 		bool IsFromStaticTexture = false;

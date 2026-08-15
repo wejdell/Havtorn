@@ -137,12 +137,12 @@ namespace Havtorn
 
 	CRenderTexture CRenderTextureFactory::CreateTexture(ID3D11Texture2D* texture, bool cpuAccess)
 	{
-		D3D11_VIEWPORT viewport = {};
+		CRenderViewport viewport = {};
 		if (texture)
 		{
 			D3D11_TEXTURE2D_DESC textureDescription;
 			texture->GetDesc(&textureDescription);
-			viewport = D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(textureDescription.Width), STATIC_F32(textureDescription.Height), 0.0f, 1.0f });
+			viewport = CRenderViewport(RHI, 0.0f, 0.0f, STATIC_F32(textureDescription.Width), STATIC_F32(textureDescription.Height), 0.0f, 1.0f);
 		}
 
 		CRenderTexture returnTexture;
@@ -239,7 +239,7 @@ namespace Havtorn
 		ID3D11ShaderResourceView* shaderResource;
 		ENGINE_HR_MESSAGE(RHI->GetDevice()->CreateShaderResourceView(depthStencilBuffer, &shaderResourceViewDesc, &shaderResource), "Depth Shader Resource could not be created.");
 
-		D3D11_VIEWPORT viewport = D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(size.X), STATIC_F32(size.Y), 0.0f, 1.0f });
+		CRenderViewport viewport = CRenderViewport(RHI, 0.0f, 0.0f, STATIC_F32(size.X), STATIC_F32(size.Y), 0.0f, 1.0f);
 
 		CRenderTexture returnDepth;
 		returnDepth.IsRenderTexture = false;
@@ -335,7 +335,7 @@ namespace Havtorn
 			renderTargets[i] = texture.RenderTarget;
 			shaderResources[i] = texture.ShaderResource;
 		}
-		D3D11_VIEWPORT viewport = D3D11_VIEWPORT({ 0.0f, 0.0f, STATIC_F32(size.X), STATIC_F32(size.Y), 0.0f, 1.0f });
+		CRenderViewport viewport = CRenderViewport(RHI, 0.0f, 0.0f, STATIC_F32(size.X), STATIC_F32(size.Y), 0.0f, 1.0f);
 
 		CGBuffer returnGBuffer;
 		returnGBuffer.Context = RHI->GetContext();

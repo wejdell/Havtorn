@@ -789,7 +789,7 @@ namespace Havtorn
 		FrameBufferData.CameraPosition = shadowViewData.ShadowPosition;
 		FrameBuffer.BindBuffer(FrameBufferData);
 
-		RenderStateManager.RSSetViewports(1, &RenderStateManager.Viewports[shadowViewData.ShadowmapViewportIndex]);
+		RenderStateManager.Viewports[shadowViewData.ShadowmapViewportIndex].SetViewport();
 
 		// =============
 		// TODO.NW: Clean up object buffer in shader path? This has been removed from RenderSystem
@@ -852,7 +852,7 @@ namespace Havtorn
 			FrameBuffer.BindBuffer(FrameBufferData);
 			RenderStateManager.VSSetConstantBuffer(0, FrameBuffer);
 
-			RenderStateManager.RSSetViewports(1, &RenderStateManager.Viewports[shadowmapView.ShadowmapViewportIndex]);
+			RenderStateManager.Viewports[shadowmapView.ShadowmapViewportIndex].SetViewport();
 
 			// =============
 
@@ -890,7 +890,7 @@ namespace Havtorn
 		//ObjectBuffer.BindBuffer(ObjectBufferData);
 
 		RenderStateManager.VSSetConstantBuffer(0, FrameBuffer);
-		RenderStateManager.RSSetViewports(1, &RenderStateManager.Viewports[shadowViewData.ShadowmapViewportIndex]);
+		RenderStateManager.Viewports[shadowViewData.ShadowmapViewportIndex].SetViewport();
 
 		// =============
 
@@ -1071,7 +1071,7 @@ namespace Havtorn
 		CRenderTexture& renderTarget = RenderThreadRenderViews->at(command.RenderViewID).RenderTarget;
 		ID3D11RenderTargetView* renderTargets[1] = { renderTarget.GetRenderTargetView() };
 		RenderStateManager.OMSetRenderTargets(1, renderTargets, nullptr/*renderDepth.GetDepthStencilView()*/);
-		RenderStateManager.RSSetViewports(1, renderTarget.GetViewport());
+		renderTarget.GetViewport().SetViewport();
 
 		const auto& objectMatrix = command.Matrices[0];
 		const auto& projectionMatrix = command.Matrices[1];
@@ -1304,7 +1304,7 @@ namespace Havtorn
 		CRenderTexture& renderTarget = RenderThreadRenderViews->at(command.RenderViewID).RenderTarget;
 		ID3D11RenderTargetView* renderTargets[1] = { renderTarget.GetRenderTargetView() };
 		RenderStateManager.OMSetRenderTargets(1, renderTargets, nullptr/*renderDepth.GetDepthStencilView()*/);
-		RenderStateManager.RSSetViewports(1, renderTarget.GetViewport());
+		renderTarget.GetViewport().SetViewport();
 
 		const auto& objectMatrix = command.Matrices[0];
 		const auto& projectionMatrix = command.Matrices[1];
@@ -2243,14 +2243,8 @@ namespace Havtorn
 
 	void CRenderManager::DebugShadowAtlas()
 	{
-		D3D11_VIEWPORT viewport = {};
-		viewport.TopLeftX = 0.0f;
-		viewport.TopLeftY = 0.0f;
-		viewport.Width = 256.0f;
-		viewport.Height = 256.0f;
-		viewport.MinDepth = 0.0f;
-		viewport.MaxDepth = 1.0f;
-		RenderStateManager.RSSetViewports(1, &viewport);
+		CRenderViewport viewport = CRenderViewport(RHI, 0.0f, 0.0f, 256.0f, 256.0f, 0.0f, 1.0f);
+		viewport.SetViewport();
 		ShadowAtlasDepth.SetAsPSResourceOnSlot(0);
 		FullscreenRenderer.Render(EPixelShaders::FullscreenCopyDepth, RenderStateManager);
 	}

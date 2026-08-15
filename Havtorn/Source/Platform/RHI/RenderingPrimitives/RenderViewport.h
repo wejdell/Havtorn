@@ -9,40 +9,25 @@
 
 namespace Havtorn
 {
-	/*enum class EShaderType
-	{
-		Vertex,
-		Compute,
-		Geometry,
-		Pixel
-	};
+    class CRHI;
 
-	class CRHI;
+    class CRenderViewport
+    {
+    public:
+        PLATFORM_API CRenderViewport(CRHI* rhi, const F32 topLeftX, const F32 topLeftY, const F32 width, const F32 height, const F32 minDepth, const F32 maxDepth);
+        CRenderViewport() = default;
+        ~CRenderViewport() = default;
+    
+        PLATFORM_API void SetViewport() const;
 
-	class CShader
-	{
-	public:
-		PLATFORM_API CShader(const std::string& filepath, const CRHI* rhi, const EShaderType type);
-		CShader() = delete;
-		~CShader() = default;
+        F32 TopLeftX = 0.0f;
+        F32 TopLeftY = 0.0f;
+        F32 Width = 0.0f;
+        F32 Height = 0.0f;
+        F32 MinDepth = 0.0f;
+        F32 MaxDepth = 0.0f;
 
-		PLATFORM_API void Release();
-		PLATFORM_API std::string GetCompiledData() const;
-		PLATFORM_API void SetShader() const;
-		PLATFORM_API static void ResetShader(const CRHI* rhi, const EShaderType type);
-
-	private:
-		ID3D11DeviceContext* Context = nullptr;
-
-		union 
-		{
-			ID3D11VertexShader* VertexShader = nullptr;
-			ID3D11ComputeShader* ComputeShader;
-			ID3D11GeometryShader* GeometryShader;
-			ID3D11PixelShader* PixelShader;
-		};
-
-		EShaderType ShaderType = EShaderType::Vertex;
-		std::string CompiledData = "";
-	};*/
+    private:
+        ID3D11DeviceContext* Context = nullptr;
+    };
 }

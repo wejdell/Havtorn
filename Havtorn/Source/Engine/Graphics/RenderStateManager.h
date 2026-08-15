@@ -15,6 +15,7 @@
 #include <RHI/RenderingPrimitives/DataBuffer.h>
 #include <RHI/RenderingPrimitives/DepthStencilState.h>
 #include <RHI/RenderingPrimitives/RasterizerState.h>
+#include <RHI/RenderingPrimitives/RenderViewport.h>
 #include <RHI/RenderingPrimitives/SamplerState.h>
 #include <RHI/RenderingPrimitives/Shader.h>
 
@@ -112,7 +113,6 @@ namespace Havtorn
 		void PSSetResources(U8 startSlot, U8 numberOfResources, ID3D11ShaderResourceView* const* resources);
 
 		// RS
-		void RSSetViewports(U8 numberOfViewports, const D3D11_VIEWPORT* viewports);
 		void RSSetRasterizerState(ERasterizerStates rasterizerState) const;
 
 		// OM
@@ -162,7 +162,7 @@ namespace Havtorn
 		std::vector<CDataBuffer> VertexBuffers;
 		std::vector<CDataBuffer> IndexBuffers;
 		std::vector<ID3D11InputLayout*> InputLayouts;
-		std::vector<D3D11_VIEWPORT> Viewports;
+		std::vector<CRenderViewport> Viewports;
 		std::vector<U32> MeshVertexStrides;
 		std::vector<U32> MeshVertexOffsets;
 

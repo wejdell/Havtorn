@@ -473,7 +473,7 @@ namespace Havtorn
 
     void CRenderStateManager::AddViewport(SVector2<F32> topLeftCoordinate, SVector2<F32> widthAndHeight, SVector2<F32> depth)
     {
-        Viewports.emplace_back(D3D11_VIEWPORT(topLeftCoordinate.X, topLeftCoordinate.Y, widthAndHeight.X, widthAndHeight.Y, depth.X, depth.Y));
+        Viewports.emplace_back(CRenderViewport(RHI, topLeftCoordinate.X, topLeftCoordinate.Y, widthAndHeight.X, widthAndHeight.Y, depth.X, depth.Y));
     }
 
     void CRenderStateManager::IASetTopology(ETopologies topology) const
@@ -569,11 +569,6 @@ namespace Havtorn
     void CRenderStateManager::PSSetResources(U8 startSlot, U8 numberOfResources, ID3D11ShaderResourceView* const* resources)
     {
         Context->PSSetShaderResources(startSlot, numberOfResources, resources);
-    }
-
-    void CRenderStateManager::RSSetViewports(U8 numberOfViewports, const D3D11_VIEWPORT* viewports)
-    {
-        Context->RSSetViewports(numberOfViewports, viewports);
     }
 
     void CRenderStateManager::RSSetRasterizerState(ERasterizerStates rasterizerState) const

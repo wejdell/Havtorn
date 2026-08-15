@@ -5,6 +5,8 @@
 #include <Core.h>
 #include <CoreTypes.h>
 
+#include "RenderViewport.h"
+
 #include <d3d11.h>
 
 namespace Havtorn
@@ -42,7 +44,7 @@ namespace Havtorn
 		PLATFORM_API ID3D11Texture2D* GetEditorDataTexture() const;
 		PLATFORM_API ID3D11RenderTargetView* GetEditorWorldPositionRenderTarget() const;
 		PLATFORM_API ID3D11Texture2D* GetEditorWorldPositionTexture() const;
-		PLATFORM_API const D3D11_VIEWPORT& GetViewport() const;
+		PLATFORM_API const CRenderViewport& GetViewport() const;
 
 		PLATFORM_API void ReleaseResources();
 
@@ -51,6 +53,6 @@ namespace Havtorn
 		std::array<ID3D11Texture2D*, static_cast<U64>(EGBufferTextures::Count)> Textures;
 		std::array<ID3D11RenderTargetView*, static_cast<U64>(EGBufferTextures::Count)> RenderTargets;
 		std::array<ID3D11ShaderResourceView*, static_cast<U64>(EGBufferTextures::Count)> ShaderResources;
-		D3D11_VIEWPORT Viewport = {};
+		CRenderViewport Viewport = {};
 	};
 }

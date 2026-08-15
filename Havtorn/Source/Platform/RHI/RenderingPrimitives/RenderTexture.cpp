@@ -66,19 +66,19 @@ namespace Havtorn
 		else 
 			Context->OMSetRenderTargets(1, &RenderTarget, nullptr);
 		
-		Context->RSSetViewports(1, &Viewport);
+		Viewport.SetViewport();
 	}
 
 	void CRenderTexture::SetAsDepthTarget()
 	{
 		Context->OMSetRenderTargets(0, NULL, Depth);
-		Context->RSSetViewports(1, &Viewport);
+		Viewport.SetViewport();
 	}
 
 	void CRenderTexture::SetAsDepthTarget(CRenderTexture* intermediateRenderTarget)
 	{
 		Context->OMSetRenderTargets(1, &intermediateRenderTarget->RenderTarget, Depth);
-		Context->RSSetViewports(1, &Viewport);
+		Viewport.SetViewport();
 	}
 
 	void CRenderTexture::SetAsPSResourceOnSlot(U16 slot) 
@@ -210,12 +210,14 @@ namespace Havtorn
 	{
 		return RenderTarget;
 	}
+
 	ID3D11DepthStencilView* const CRenderTexture::GetDepthStencilView() const
 	{
 		return Depth;
 	}
-	D3D11_VIEWPORT* const CRenderTexture::GetViewport()
+
+	const CRenderViewport& CRenderTexture::GetViewport() const
 	{
-		return &Viewport;
+		return Viewport;
 	}
 }

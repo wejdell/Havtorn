@@ -35,7 +35,7 @@ namespace Havtorn
 		// TODO.NW: Introduce EditorCount (6 currently) and GameCount (4)
 		auto depthStencilView = depth ? depth->Depth : nullptr;
 		Context->OMSetRenderTargets(isUsingEditor ? STATIC_U64(EGBufferTextures::Count) : STATIC_U64(EGBufferTextures::Count) - 2, &RenderTargets[0], depthStencilView);
-		Context->RSSetViewports(1, &Viewport);
+		Viewport.SetViewport();
 	}
 
 	void CGBuffer::SetAsPSResourceOnSlot(EGBufferTextures resource, U16 slot)
@@ -69,7 +69,7 @@ namespace Havtorn
 		return Textures[STATIC_U64(EGBufferTextures::WorldPosition)];
 	}
 
-	const D3D11_VIEWPORT& CGBuffer::GetViewport() const
+	const CRenderViewport& CGBuffer::GetViewport() const
 	{
 		return Viewport;
 	}
