@@ -5,23 +5,13 @@
 #include <Core.h>
 #include <CoreTypes.h>
 
+#include "RHI/RHIEnums.h"
+
 #include <d3d11.h>
 
 namespace Havtorn
 {
     class CRHI;
-
-    enum class EDepthStencilComparisonFunction : U8
-    {
-        Never = 1,
-        Less = 2,
-        Equal = 3,
-        LessOrEqual = 4,
-        Greater = 5,
-        NotEqual = 6,
-        GreaterOrEqual = 7,
-        Always = 8
-    };
 
     enum class EDepthWriteMask : U8
     {
@@ -46,14 +36,14 @@ namespace Havtorn
         EDepthStencilOperation StencilFailOperation = EDepthStencilOperation::Keep;
         EDepthStencilOperation StencilDepthFailOperation = EDepthStencilOperation::Keep;
         EDepthStencilOperation StencilPassOperation = EDepthStencilOperation::Keep;
-        EDepthStencilComparisonFunction StencilFunction = EDepthStencilComparisonFunction::Always;
+        ERenderComparisonFunction StencilFunction = ERenderComparisonFunction::Always;
     };
 
     struct SDepthStencilDescription
     {
         bool EnableDepth = true;
         EDepthWriteMask DepthWriteMask = EDepthWriteMask::All;
-        EDepthStencilComparisonFunction DepthFunction = EDepthStencilComparisonFunction::Less;
+        ERenderComparisonFunction DepthFunction = ERenderComparisonFunction::Less;
         bool EnableStencil = false;
         U8 StencilReadMask = 255; // D3D11_DEFAULT_STENCIL_READ_MASK
         U8 StencilWriteMask = 255; // D3D11_DEFAULT_STENCIL_WRITE_MASK

@@ -4,8 +4,6 @@
 #include "DepthStencilState.h"
 #include "RHI/RHI.h"
 
-#include <fstream>
-
 namespace Havtorn
 {
 	CDepthStencilState::CDepthStencilState(const CRHI* rhi, const SDepthStencilDescription& description)

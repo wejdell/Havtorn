@@ -4,8 +4,6 @@
 #include "RasterizerState.h"
 #include "RHI/RHI.h"
 
-#include <fstream>
-
 namespace Havtorn
 {
 	CRasterizerState::CRasterizerState(const CRHI* rhi, const SRasterizerDescription& description)

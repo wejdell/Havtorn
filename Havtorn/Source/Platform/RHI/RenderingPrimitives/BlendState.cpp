@@ -4,8 +4,6 @@
 #include "BlendState.h"
 #include "RHI/RHI.h"
 
-#include <fstream>
-
 namespace Havtorn
 {
 	CBlendState::CBlendState(const CRHI* rhi, const SBlendStateDescription& description)
