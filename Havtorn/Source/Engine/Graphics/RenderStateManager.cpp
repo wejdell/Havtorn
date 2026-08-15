@@ -435,42 +435,40 @@ namespace Havtorn
     void CRenderStateManager::AddSampler(ESamplerType samplerType)
     {
         // TODO.NR: Extend to different LOD levels and filters
-        D3D11_SAMPLER_DESC samplerDesc = CD3D11_SAMPLER_DESC{ CD3D11_DEFAULT{} };
-        samplerDesc.BorderColor[0] = 1.0f;
-        samplerDesc.BorderColor[1] = 1.0f;
-        samplerDesc.BorderColor[2] = 1.0f;
-        samplerDesc.BorderColor[3] = 1.0f;
-        samplerDesc.Filter = D3D11_FILTER_MIN_MAG_MIP_LINEAR;
-        samplerDesc.MinLOD = 0;
-        samplerDesc.MaxLOD = 10;
+        SSamplerDescription samplerDescription;
+        samplerDescription.BorderColor[0] = 1.0f;
+        samplerDescription.BorderColor[1] = 1.0f;
+        samplerDescription.BorderColor[2] = 1.0f;
+        samplerDescription.BorderColor[3] = 1.0f;
+        samplerDescription.Filter = ESamplerFilter::MinMagMipLinear;
+        samplerDescription.MinLOD = 0;
+        samplerDescription.MaxLOD = 10;
 
         switch (samplerType)
         {
         case ESamplerType::Border:
-            samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_BORDER;
-            samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_BORDER;
-            samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_BORDER;
+            samplerDescription.AddressU = ETextureAddressMode::Border;
+            samplerDescription.AddressV = ETextureAddressMode::Border;
+            samplerDescription.AddressW = ETextureAddressMode::Border;
             break;
         case ESamplerType::Clamp:
-            samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_CLAMP;
-            samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_CLAMP;
-            samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_CLAMP;
+            samplerDescription.AddressU = ETextureAddressMode::Clamp;
+            samplerDescription.AddressV = ETextureAddressMode::Clamp;
+            samplerDescription.AddressW = ETextureAddressMode::Clamp;
             break;
         case ESamplerType::Mirror:
-            samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_MIRROR;
-            samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_MIRROR;
-            samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_MIRROR;
+            samplerDescription.AddressU = ETextureAddressMode::Mirror;
+            samplerDescription.AddressV = ETextureAddressMode::Mirror;
+            samplerDescription.AddressW = ETextureAddressMode::Mirror;
             break;
         case ESamplerType::Wrap:
-            samplerDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
-            samplerDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
-            samplerDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+            samplerDescription.AddressU = ETextureAddressMode::Wrap;
+            samplerDescription.AddressV = ETextureAddressMode::Wrap;
+            samplerDescription.AddressW = ETextureAddressMode::Wrap;
             break;
         }
 
-        ID3D11SamplerState* samplerState;
-        ENGINE_HR_MESSAGE(RHI->GetDevice()->CreateSamplerState(&samplerDesc, &samplerState), "Sampler could not be created.");
-        Samplers.emplace_back(samplerState);
+        Samplers.emplace_back(new CSamplerState(RHI, samplerDescription));
     }
 
     void CRenderStateManager::AddViewport(SVector2<F32> topLeftCoordinate, SVector2<F32> widthAndHeight, SVector2<F32> depth)
@@ -549,8 +547,7 @@ namespace Havtorn
 
     void CRenderStateManager::PSSetSampler(U8 slot, ESamplers sampler) const
     {
-        ID3D11SamplerState* samplerState = Samplers[STATIC_U8(sampler)];
-        Context->PSSetSamplers(slot, 1, &samplerState);
+        Samplers[STATIC_U8(sampler)]->SetSamplerState(slot);
     }
 
     void CRenderStateManager::PSSetShader(EPixelShaders shader) const
@@ -845,20 +842,20 @@ namespace Havtorn
         SDepthStencilDescription onlyReadDepthStencilDescription;
         onlyReadDepthStencilDescription.EnableDepth = true;
         onlyReadDepthStencilDescription.DepthWriteMask = EDepthWriteMask::Zero;
-        onlyReadDepthStencilDescription.DepthFunction = EDepthStencilComparisonFunction::Less;
+        onlyReadDepthStencilDescription.DepthFunction = ERenderComparisonFunction::Less;
         onlyReadDepthStencilDescription.EnableStencil = false;
 
         SDepthStencilDescription stencilWriteDescription;
         stencilWriteDescription.EnableDepth = true;
         stencilWriteDescription.DepthWriteMask = EDepthWriteMask::All;
-        stencilWriteDescription.DepthFunction = EDepthStencilComparisonFunction::Less;
+        stencilWriteDescription.DepthFunction = ERenderComparisonFunction::Less;
         stencilWriteDescription.EnableStencil = true;
         stencilWriteDescription.StencilReadMask = 0xFF;
         stencilWriteDescription.StencilWriteMask = 0xFF;
         stencilWriteDescription.FrontFaceStencilOperation.StencilFailOperation = EDepthStencilOperation::Keep;
         stencilWriteDescription.FrontFaceStencilOperation.StencilDepthFailOperation = EDepthStencilOperation::Keep;
         stencilWriteDescription.FrontFaceStencilOperation.StencilPassOperation = EDepthStencilOperation::Replace;
-        stencilWriteDescription.FrontFaceStencilOperation.StencilFunction = EDepthStencilComparisonFunction::Always;
+        stencilWriteDescription.FrontFaceStencilOperation.StencilFunction = ERenderComparisonFunction::Always;
 
         SDepthStencilDescription stencilMaskDescription;
         stencilMaskDescription.EnableDepth = false;
@@ -868,12 +865,12 @@ namespace Havtorn
         stencilMaskDescription.StencilWriteMask = 0xFF;
         stencilMaskDescription.FrontFaceStencilOperation.StencilPassOperation = EDepthStencilOperation::Keep;
         stencilMaskDescription.FrontFaceStencilOperation.StencilFailOperation = EDepthStencilOperation::Keep;
-        stencilMaskDescription.FrontFaceStencilOperation.StencilFunction = EDepthStencilComparisonFunction::NotEqual;
+        stencilMaskDescription.FrontFaceStencilOperation.StencilFunction = ERenderComparisonFunction::NotEqual;
 
         SDepthStencilDescription depthFirstDescription;
         depthFirstDescription.EnableDepth = true;
         depthFirstDescription.DepthWriteMask = EDepthWriteMask::Zero;
-        depthFirstDescription.DepthFunction = EDepthStencilComparisonFunction::LessOrEqual;
+        depthFirstDescription.DepthFunction = ERenderComparisonFunction::LessOrEqual;
         depthFirstDescription.EnableStencil = false;
 
         DepthStencilStates[STATIC_U8(EDepthStencilStates::OnlyRead)] = new CDepthStencilState(rhi, onlyReadDepthStencilDescription);

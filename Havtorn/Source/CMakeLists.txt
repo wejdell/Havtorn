@@ -237,6 +237,8 @@ set(PLATFORM_FILES
     ${PLATFORM_FOLDER}RHI/RenderingPrimitives/RenderViewport.h
     ${PLATFORM_FOLDER}RHI/RenderingPrimitives/RootSignature.cpp
     ${PLATFORM_FOLDER}RHI/RenderingPrimitives/RootSignature.h
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/SamplerState.cpp
+    ${PLATFORM_FOLDER}RHI/RenderingPrimitives/SamplerState.h
     ${PLATFORM_FOLDER}RHI/RenderingPrimitives/Shader.cpp
     ${PLATFORM_FOLDER}RHI/RenderingPrimitives/Shader.h
     ${PLATFORM_FOLDER}RHI/RenderingPrimitives/VertexInputLayout.cpp

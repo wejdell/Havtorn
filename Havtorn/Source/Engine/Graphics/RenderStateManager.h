@@ -15,6 +15,7 @@
 #include <RHI/RenderingPrimitives/DataBuffer.h>
 #include <RHI/RenderingPrimitives/DepthStencilState.h>
 #include <RHI/RenderingPrimitives/RasterizerState.h>
+#include <RHI/RenderingPrimitives/SamplerState.h>
 #include <RHI/RenderingPrimitives/Shader.h>
 
 namespace Havtorn
@@ -157,7 +158,7 @@ namespace Havtorn
 		std::array<CShader*, STATIC_U64(EPixelShaders::Count)> PixelShaders;
 		std::array<CShader*, STATIC_U64(EGeometryShaders::Count)> GeometryShaders;
 
-		std::vector<ID3D11SamplerState*> Samplers;
+		std::vector<CSamplerState*> Samplers;
 		std::vector<CDataBuffer> VertexBuffers;
 		std::vector<CDataBuffer> IndexBuffers;
 		std::vector<ID3D11InputLayout*> InputLayouts;
