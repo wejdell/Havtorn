@@ -10,6 +10,8 @@
 #include <d3d11.h>
 
 #include <RHI/RHI.h>
+#include <RHI/RHIEnums.h>
+#include <RHI/RenderingPrimitives/BlendState.h>
 #include <RHI/RenderingPrimitives/DataBuffer.h>
 #include <RHI/RenderingPrimitives/Shader.h>
 
@@ -135,7 +137,7 @@ namespace Havtorn
 		void OnShaderSourceChange(const std::string& filePath);
 		const U64 OnShaderSourceChangeFunctionHandle = 200;
 
-		bool CreateBlendStates(ID3D11Device* device);
+		bool CreateBlendStates(CRHI* rhi);
 		bool CreateDepthStencilStates(ID3D11Device* device);
 		bool CreateRasterizerStates(ID3D11Device* device);
 
@@ -144,13 +146,13 @@ namespace Havtorn
 
 		CRHI* RHI = nullptr;
 		ID3D11DeviceContext* Context = nullptr;
-		std::array<ID3D11BlendState*, STATIC_U64(EBlendStates::Count)> BlendStates;
+		std::array<CBlendState*, STATIC_U64(EBlendStates::Count)> BlendStates;
 		std::array<ID3D11DepthStencilState*, STATIC_U64(EDepthStencilStates::Count)> DepthStencilStates;
 		std::array<ID3D11RasterizerState*, STATIC_U64(ERasterizerStates::Count)> RasterizerStates;
 
-		std::array<CShader*, STATIC_U64(EVertexShaders::Count) + 1> VertexShaders;
-		std::array<CShader*, STATIC_U64(EPixelShaders::Count) + 1> PixelShaders;
-		std::array<CShader*, STATIC_U64(EGeometryShaders::Count) + 1> GeometryShaders;
+		std::array<CShader*, STATIC_U64(EVertexShaders::Count)> VertexShaders;
+		std::array<CShader*, STATIC_U64(EPixelShaders::Count)> PixelShaders;
+		std::array<CShader*, STATIC_U64(EGeometryShaders::Count)> GeometryShaders;
 
 		std::vector<ID3D11SamplerState*> Samplers;
 		std::vector<CDataBuffer> VertexBuffers;

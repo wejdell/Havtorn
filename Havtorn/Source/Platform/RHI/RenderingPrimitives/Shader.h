@@ -5,18 +5,12 @@
 #include <Core.h>
 #include <CoreTypes.h>
 
+#include "RHI/RHIEnums.h"
+
 #include <d3d11.h>
 
 namespace Havtorn
 {
-	enum class EShaderType
-	{
-		Vertex,
-		Compute,
-		Geometry,
-		Pixel
-	};
-
 	class CRHI;
 
 	class CShader

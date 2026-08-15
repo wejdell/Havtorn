@@ -218,6 +218,7 @@ elseif(RENDER_BACKEND STREQUAL "VULKAN")
 endif()
 set(PLATFORM_FILES
     ${PLATFORM_FOLDER}RHI/RHI.h
+    ${PLATFORM_FOLDER}RHI/RHIEnums.h
     ${PLATFORM_FOLDER}RHI/RenderingPrimitives/BlendState.cpp
     ${PLATFORM_FOLDER}RHI/RenderingPrimitives/BlendState.h
     ${PLATFORM_FOLDER}RHI/RenderingPrimitives/DataBuffer.cpp
@@ -967,6 +968,10 @@ target_link_libraries(Editor PRIVATE
 target_link_directories(Editor PRIVATE
     ${CMAKE_BINARY_DIR}
 )
+
+if(RENDER_BACKEND STREQUAL "DIRECTX11")
+    target_compile_definitions(Editor PRIVATE HV_RENDER_BACKEND_DIRECTX11)
+endif()
 
 if(AUDIO_BACKEND STREQUAL "WWISE")
     target_compile_definitions(Editor PRIVATE HV_AUDIO_BACKEND_WWISE)

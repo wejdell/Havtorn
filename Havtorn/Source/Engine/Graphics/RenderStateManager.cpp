@@ -29,7 +29,7 @@ namespace Havtorn
         ENGINE_ERROR_BOOL_MESSAGE(Context, "Could not bind context.");
         ENGINE_ERROR_BOOL_MESSAGE(device, "Device is null.");
 
-        ENGINE_ERROR_BOOL_MESSAGE(CreateBlendStates(device), "Could not create Blend States.");
+        ENGINE_ERROR_BOOL_MESSAGE(CreateBlendStates(RHI), "Could not create Blend States.");
         ENGINE_ERROR_BOOL_MESSAGE(CreateDepthStencilStates(device), "Could not create Depth Stencil States.");
         ENGINE_ERROR_BOOL_MESSAGE(CreateRasterizerStates(device), "Could not create Rasterizer States.");
 
@@ -82,8 +82,6 @@ namespace Havtorn
                 AddInputLayout(vsData, initData[i].InputLayout);
         }
 
-        // NW: Null shader. Adding this to avoid branching in state setting functions
-        VertexShaders[STATIC_U64(EVertexShaders::Count)] = nullptr;
         InputLayouts.emplace_back(nullptr);
     }
 
@@ -137,9 +135,6 @@ namespace Havtorn
 
         for (U64 i = 0; i < STATIC_U64(EPixelShaders::Count); i++)
             AddShader(filepaths[i], i, EShaderType::Pixel);
-
-        // NW: Null shader. Adding this to avoid branching in state setting functions
-        PixelShaders[STATIC_U64(EPixelShaders::Count)] = nullptr;
     }
 
     void CRenderStateManager::InitGeometryShaders()
@@ -149,9 +144,6 @@ namespace Havtorn
         AddShader(ShaderRoot + "SpriteScreenSpace_GS.cso", 2, EShaderType::Geometry);
         AddShader(ShaderRoot + "SpriteWorldSpace_GS.cso", 3, EShaderType::Geometry);
         AddShader(ShaderRoot + "SpriteWorldSpaceEditor_GS.cso", 4, EShaderType::Geometry);
-
-        // NW: Null shader. Adding this to avoid branching in state setting functions
-        GeometryShaders[STATIC_U64(EGeometryShaders::Count)] = nullptr;
     }
 
     void CRenderStateManager::InitSamplers()
@@ -594,8 +586,13 @@ namespace Havtorn
 
     void CRenderStateManager::OMSetBlendState(EBlendStates blendState) const
     {
-        std::array<F32, 4> blendFactors = { 0.5f, 0.5f, 0.5f, 0.5f };
-        Context->OMSetBlendState(BlendStates[(U64)blendState], blendFactors.data(), 0xFFFFFFFFu);
+        if (blendState == EBlendStates::Disable)
+        {
+            CBlendState::ResetBlendState(RHI);
+            return;
+        }
+
+        BlendStates[STATIC_U8(blendState)]->SetBlendState();
     }
 
     void CRenderStateManager::OMSetDepthStencilState(EDepthStencilStates depthStencilState, U32 stencilRef) const
@@ -779,65 +776,54 @@ namespace Havtorn
         }
     }
 
-    bool CRenderStateManager::CreateBlendStates(ID3D11Device* device)
+    bool CRenderStateManager::CreateBlendStates(CRHI* rhi)
     {
-        D3D11_BLEND_DESC alphaBlendDesc = { 0 };
-        alphaBlendDesc.RenderTarget[0].BlendEnable = true;
-        alphaBlendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-        alphaBlendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-        alphaBlendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-        alphaBlendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-        alphaBlendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
-        alphaBlendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_MAX;
-        alphaBlendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-        alphaBlendDesc.IndependentBlendEnable = true;
-        alphaBlendDesc.RenderTarget[1].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-        alphaBlendDesc.RenderTarget[1].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-        alphaBlendDesc.RenderTarget[1].BlendOp = D3D11_BLEND_OP_ADD;
-        alphaBlendDesc.RenderTarget[1].SrcBlendAlpha = D3D11_BLEND_ONE;
-        alphaBlendDesc.RenderTarget[1].DestBlendAlpha = D3D11_BLEND_ONE;
-        alphaBlendDesc.RenderTarget[1].BlendOpAlpha = D3D11_BLEND_OP_MAX;
-        alphaBlendDesc.RenderTarget[1].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-
-        D3D11_BLEND_DESC additiveBlendDesc = { 0 };
-        additiveBlendDesc.RenderTarget[0].BlendEnable = true;
-        additiveBlendDesc.RenderTarget[0].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-        additiveBlendDesc.RenderTarget[0].DestBlend = D3D11_BLEND_ONE;
-        additiveBlendDesc.RenderTarget[0].BlendOp = D3D11_BLEND_OP_ADD;
-        additiveBlendDesc.RenderTarget[0].SrcBlendAlpha = D3D11_BLEND_ONE;
-        additiveBlendDesc.RenderTarget[0].DestBlendAlpha = D3D11_BLEND_ONE;
-        additiveBlendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_MAX;
-        additiveBlendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
-
-        CD3D11_BLEND_DESC gbufferBlendDesc{ D3D11_DEFAULT };
-        gbufferBlendDesc.IndependentBlendEnable = true;
-        for (unsigned int i = 0; i < 4; ++i) // 4 targets in GBuffer
+        SBlendStateDescription alphaBlend;
+        alphaBlend.EnableIndependentBlend = true;
+        for (U8 i = 0; i < 8; i++)
         {
-            gbufferBlendDesc.RenderTarget[i].BlendEnable = TRUE;
-            gbufferBlendDesc.RenderTarget[i].SrcBlend = D3D11_BLEND_SRC_ALPHA;
-            gbufferBlendDesc.RenderTarget[i].DestBlend = D3D11_BLEND_INV_SRC_ALPHA;
-            gbufferBlendDesc.RenderTarget[i].BlendOp = D3D11_BLEND_OP_ADD;
-            gbufferBlendDesc.RenderTarget[i].SrcBlendAlpha = D3D11_BLEND_ONE;
-            gbufferBlendDesc.RenderTarget[i].DestBlendAlpha = D3D11_BLEND_ZERO;
-            gbufferBlendDesc.RenderTarget[i].BlendOpAlpha = D3D11_BLEND_OP_ADD;
-            gbufferBlendDesc.RenderTarget[i].RenderTargetWriteMask = 0x0f;
+            SRenderTargetBlendDescription& targetBlendDescription = alphaBlend.RenderTargetDescriptions[i];
+            targetBlendDescription.EnableBlend = true;
+            targetBlendDescription.SourceBlend = EBlendFactor::SourceAlpha;
+            targetBlendDescription.DestinationBlend = EBlendFactor::InverseSourceAlpha;
+            targetBlendDescription.BlendOperation = EBlendOperation::Add;
+            targetBlendDescription.SourceAlphaBlend = EBlendFactor::One;
+            targetBlendDescription.DestinationAlphaBlend = EBlendFactor::One;
+            targetBlendDescription.AlphaBlendOperation = EBlendOperation::Maximum;
+            targetBlendDescription.RenderTargetWriteMask = STATIC_U8(EBlendColorWriteEnable::All);
         }
-        gbufferBlendDesc.RenderTarget[4].BlendEnable = false;
-        gbufferBlendDesc.RenderTarget[5].BlendEnable = false;
 
-        ID3D11BlendState* alphaBlendState;
-        ENGINE_HR_MESSAGE(device->CreateBlendState(&alphaBlendDesc, &alphaBlendState), "Alpha Blend State could not be created.");
+        SBlendStateDescription additiveBlend; 
+        {
+            SRenderTargetBlendDescription& targetBlendDescription = additiveBlend.RenderTargetDescriptions[0];
+            targetBlendDescription.EnableBlend = true;
+            targetBlendDescription.SourceBlend = EBlendFactor::SourceAlpha;
+            targetBlendDescription.DestinationBlend = EBlendFactor::One;
+            targetBlendDescription.BlendOperation = EBlendOperation::Add;
+            targetBlendDescription.SourceAlphaBlend = EBlendFactor::One;
+            targetBlendDescription.DestinationAlphaBlend = EBlendFactor::One;
+            targetBlendDescription.AlphaBlendOperation = EBlendOperation::Maximum;
+            targetBlendDescription.RenderTargetWriteMask = STATIC_U8(EBlendColorWriteEnable::All);
+        }
+        
+        SBlendStateDescription gBufferBlend;
+        gBufferBlend.EnableIndependentBlend = true;
+        for (U8 i = 0; i < 4; i++) // 4 targets in GBuffer
+        {
+            SRenderTargetBlendDescription& targetBlendDescription = gBufferBlend.RenderTargetDescriptions[i];
+            targetBlendDescription.EnableBlend = true;
+            targetBlendDescription.SourceBlend = EBlendFactor::SourceAlpha;
+            targetBlendDescription.DestinationBlend = EBlendFactor::InverseSourceAlpha;
+            targetBlendDescription.BlendOperation = EBlendOperation::Add;
+            targetBlendDescription.SourceAlphaBlend = EBlendFactor::One;
+            targetBlendDescription.DestinationAlphaBlend = EBlendFactor::Zero;
+            targetBlendDescription.AlphaBlendOperation = EBlendOperation::Add;
+            targetBlendDescription.RenderTargetWriteMask = STATIC_U8(EBlendColorWriteEnable::All);
+        }
 
-        ID3D11BlendState* additiveBlendState;
-        ENGINE_HR_MESSAGE(device->CreateBlendState(&additiveBlendDesc, &additiveBlendState), "Additive Blend State could not be created");
-
-        ID3D11BlendState* gbufferBlendState;
-        ENGINE_HR_MESSAGE(device->CreateBlendState(&gbufferBlendDesc, &gbufferBlendState), "GBuffer Alpha Blend State could not be created");
-
-        BlendStates[(U64)EBlendStates::Disable] = nullptr;
-        BlendStates[(U64)EBlendStates::AlphaBlend] = alphaBlendState;
-        BlendStates[(U64)EBlendStates::AdditiveBlend] = additiveBlendState;
-        BlendStates[(U64)EBlendStates::GBufferAlphaBlend] = gbufferBlendState;
+        BlendStates[(U64)EBlendStates::AlphaBlend] = new CBlendState(rhi, alphaBlend);
+        BlendStates[(U64)EBlendStates::AdditiveBlend] = new CBlendState(rhi, additiveBlend);
+        BlendStates[(U64)EBlendStates::GBufferAlphaBlend] = new CBlendState(rhi, gBufferBlend);
 
         return true;
     }
