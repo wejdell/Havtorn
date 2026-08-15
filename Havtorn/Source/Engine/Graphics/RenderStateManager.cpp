@@ -30,7 +30,7 @@ namespace Havtorn
         ENGINE_ERROR_BOOL_MESSAGE(device, "Device is null.");
 
         ENGINE_ERROR_BOOL_MESSAGE(CreateBlendStates(RHI), "Could not create Blend States.");
-        ENGINE_ERROR_BOOL_MESSAGE(CreateDepthStencilStates(device), "Could not create Depth Stencil States.");
+        ENGINE_ERROR_BOOL_MESSAGE(CreateDepthStencilStates(RHI), "Could not create Depth Stencil States.");
         ENGINE_ERROR_BOOL_MESSAGE(CreateRasterizerStates(device), "Could not create Rasterizer States.");
 
         // Load default resources
@@ -597,7 +597,13 @@ namespace Havtorn
 
     void CRenderStateManager::OMSetDepthStencilState(EDepthStencilStates depthStencilState, U32 stencilRef) const
     {
-        Context->OMSetDepthStencilState(DepthStencilStates[(U64)depthStencilState], stencilRef);
+        if (depthStencilState == EDepthStencilStates::Default)
+        {
+            CDepthStencilState::ResetDepthStencilState(RHI);
+            return;
+        }
+
+        DepthStencilStates[STATIC_U8(depthStencilState)]->SetDepthStencilState(stencilRef);
     }
 
     void CRenderStateManager::OMSetRenderTargets(U8 numberOfTargets, ID3D11RenderTargetView* const* targetViews, ID3D11DepthStencilView* depthStencilView) const
@@ -828,59 +834,46 @@ namespace Havtorn
         return true;
     }
 
-    bool CRenderStateManager::CreateDepthStencilStates(ID3D11Device* device)
+    bool CRenderStateManager::CreateDepthStencilStates(CRHI* rhi)
     {
-        D3D11_DEPTH_STENCIL_DESC onlyreadDepthDesc = { 0 };
-        onlyreadDepthDesc.DepthEnable = true;
-        onlyreadDepthDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-        onlyreadDepthDesc.DepthFunc = D3D11_COMPARISON_LESS;
-        onlyreadDepthDesc.StencilEnable = false;
+        SDepthStencilDescription onlyReadDepthStencilDescription;
+        onlyReadDepthStencilDescription.EnableDepth = true;
+        onlyReadDepthStencilDescription.DepthWriteMask = EDepthWriteMask::Zero;
+        onlyReadDepthStencilDescription.DepthFunction = EDepthStencilComparisonFunction::Less;
+        onlyReadDepthStencilDescription.EnableStencil = false;
 
-        D3D11_DEPTH_STENCIL_DESC stencilWriteDesc = CD3D11_DEPTH_STENCIL_DESC{ CD3D11_DEFAULT{} };
-        stencilWriteDesc.DepthEnable = true;
-        stencilWriteDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-        stencilWriteDesc.DepthFunc = D3D11_COMPARISON_LESS;
-        stencilWriteDesc.StencilEnable = TRUE;
-        stencilWriteDesc.StencilReadMask = 0xFF;
-        stencilWriteDesc.StencilWriteMask = 0xFF;
-        stencilWriteDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-        stencilWriteDesc.FrontFace.StencilDepthFailOp = D3D11_STENCIL_OP_KEEP;
-        stencilWriteDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_REPLACE;
-        stencilWriteDesc.FrontFace.StencilFunc = D3D11_COMPARISON_ALWAYS;
+        SDepthStencilDescription stencilWriteDescription;
+        stencilWriteDescription.EnableDepth = true;
+        stencilWriteDescription.DepthWriteMask = EDepthWriteMask::All;
+        stencilWriteDescription.DepthFunction = EDepthStencilComparisonFunction::Less;
+        stencilWriteDescription.EnableStencil = true;
+        stencilWriteDescription.StencilReadMask = 0xFF;
+        stencilWriteDescription.StencilWriteMask = 0xFF;
+        stencilWriteDescription.FrontFaceStencilOperation.StencilFailOperation = EDepthStencilOperation::Keep;
+        stencilWriteDescription.FrontFaceStencilOperation.StencilDepthFailOperation = EDepthStencilOperation::Keep;
+        stencilWriteDescription.FrontFaceStencilOperation.StencilPassOperation = EDepthStencilOperation::Replace;
+        stencilWriteDescription.FrontFaceStencilOperation.StencilFunction = EDepthStencilComparisonFunction::Always;
 
-        D3D11_DEPTH_STENCIL_DESC stencilMaskDesc = CD3D11_DEPTH_STENCIL_DESC{ CD3D11_DEFAULT{} };
-        stencilMaskDesc.DepthEnable = FALSE;
-        stencilMaskDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-        stencilMaskDesc.StencilEnable = TRUE;
-        stencilMaskDesc.StencilReadMask = 0xFF;
-        stencilMaskDesc.StencilWriteMask = 0xFF;
-        stencilMaskDesc.FrontFace.StencilPassOp = D3D11_STENCIL_OP_KEEP;
-        stencilMaskDesc.FrontFace.StencilFailOp = D3D11_STENCIL_OP_KEEP;
-        stencilMaskDesc.FrontFace.StencilFunc = D3D11_COMPARISON_NOT_EQUAL;
+        SDepthStencilDescription stencilMaskDescription;
+        stencilMaskDescription.EnableDepth = false;
+        stencilMaskDescription.DepthWriteMask = EDepthWriteMask::Zero;
+        stencilMaskDescription.EnableStencil = true;
+        stencilMaskDescription.StencilReadMask = 0xFF;
+        stencilMaskDescription.StencilWriteMask = 0xFF;
+        stencilMaskDescription.FrontFaceStencilOperation.StencilPassOperation = EDepthStencilOperation::Keep;
+        stencilMaskDescription.FrontFaceStencilOperation.StencilFailOperation = EDepthStencilOperation::Keep;
+        stencilMaskDescription.FrontFaceStencilOperation.StencilFunction = EDepthStencilComparisonFunction::NotEqual;
 
-        D3D11_DEPTH_STENCIL_DESC depthFirstDesc = CD3D11_DEPTH_STENCIL_DESC{ CD3D11_DEFAULT{} };
-        depthFirstDesc.DepthEnable = TRUE;
-        depthFirstDesc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-        depthFirstDesc.DepthFunc = D3D11_COMPARISON_LESS_EQUAL;
-        depthFirstDesc.StencilEnable = FALSE;
+        SDepthStencilDescription depthFirstDescription;
+        depthFirstDescription.EnableDepth = true;
+        depthFirstDescription.DepthWriteMask = EDepthWriteMask::Zero;
+        depthFirstDescription.DepthFunction = EDepthStencilComparisonFunction::LessOrEqual;
+        depthFirstDescription.EnableStencil = false;
 
-        ID3D11DepthStencilState* onlyreadDepthStencilState;
-        ENGINE_HR_MESSAGE(device->CreateDepthStencilState(&onlyreadDepthDesc, &onlyreadDepthStencilState), "OnlyRead Depth Stencil State could not be created.");
-
-        ID3D11DepthStencilState* writeDepthStencilState;
-        ENGINE_HR_MESSAGE(device->CreateDepthStencilState(&stencilWriteDesc, &writeDepthStencilState), "Write Stencil State could not be created.");
-
-        ID3D11DepthStencilState* maskDepthStencilState;
-        ENGINE_HR_MESSAGE(device->CreateDepthStencilState(&stencilMaskDesc, &maskDepthStencilState), "Mask Stencil State could not be created.");
-
-        ID3D11DepthStencilState* depthFirstStencilState;
-        ENGINE_HR_MESSAGE(device->CreateDepthStencilState(&depthFirstDesc, &depthFirstStencilState), "Depth First Stencil State could not be created.");
-
-        DepthStencilStates[(U64)EDepthStencilStates::Default] = nullptr;
-        DepthStencilStates[(U64)EDepthStencilStates::OnlyRead] = onlyreadDepthStencilState;
-        DepthStencilStates[(U64)EDepthStencilStates::StencilWrite] = writeDepthStencilState;
-        DepthStencilStates[(U64)EDepthStencilStates::StencilMask] = maskDepthStencilState;
-        DepthStencilStates[(U64)EDepthStencilStates::DepthFirst] = depthFirstStencilState;
+        DepthStencilStates[STATIC_U8(EDepthStencilStates::OnlyRead)] = new CDepthStencilState(rhi, onlyReadDepthStencilDescription);
+        DepthStencilStates[STATIC_U8(EDepthStencilStates::StencilWrite)] = new CDepthStencilState(rhi, stencilWriteDescription);
+        DepthStencilStates[STATIC_U8(EDepthStencilStates::StencilMask)] = new CDepthStencilState(rhi, stencilMaskDescription);;
+        DepthStencilStates[STATIC_U8(EDepthStencilStates::DepthFirst)] = new CDepthStencilState(rhi, depthFirstDescription);;
 
         return true;
     }

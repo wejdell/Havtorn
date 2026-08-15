@@ -8,102 +8,40 @@
 
 namespace Havtorn
 {
-	/*CShader::CShader(const std::string& filepath, const CRHI* rhi, const EShaderType type)
+	CDepthStencilState::CDepthStencilState(const CRHI* rhi, const SDepthStencilDescription& description)
 		: Context(rhi->GetContext())
-		, ShaderType(type)
 	{
-		std::ifstream fileData;
-		fileData.open(filepath, std::ios::binary);
-		const std::string data = { std::istreambuf_iterator<char>(fileData), std::istreambuf_iterator<char>() };
-		CompiledData = data;
-		
-		switch (ShaderType)
-		{
-		case EShaderType::Vertex:
-			ENGINE_HR_MESSAGE(rhi->GetDevice()->CreateVertexShader(CompiledData.data(), CompiledData.size(), nullptr, &VertexShader), "Vertex Shader: %s could not be created.", filepath.c_str());
-			break;
-		case EShaderType::Compute:
-			ENGINE_HR_MESSAGE(rhi->GetDevice()->CreateComputeShader(CompiledData.data(), CompiledData.size(), nullptr, &ComputeShader), "Compute Shader: %s could not be created.", filepath.c_str());
-			break;
-		case EShaderType::Geometry:
-			ENGINE_HR_MESSAGE(rhi->GetDevice()->CreateGeometryShader(CompiledData.data(), CompiledData.size(), nullptr, &GeometryShader), "Geometry Shader: %s could not be created.", filepath.c_str());
-			break;
-		case EShaderType::Pixel:
-			ENGINE_HR_MESSAGE(rhi->GetDevice()->CreatePixelShader(CompiledData.data(), CompiledData.size(), nullptr, &PixelShader), "Pixel Shader: %s could not be created.", filepath.c_str());
-			break;
-		default:
-			HV_LOG_ERROR("CShader constructor failed: shader type '%s' is not handled!", magic_enum::enum_name(ShaderType).data());
-			break;
-		}
+        D3D11_DEPTH_STENCIL_DESC depthStencilDesc = CD3D11_DEPTH_STENCIL_DESC{ CD3D11_DEFAULT{} };
+        depthStencilDesc.DepthEnable = description.EnableDepth;
+        depthStencilDesc.DepthWriteMask = static_cast<D3D11_DEPTH_WRITE_MASK>(description.DepthWriteMask);
+        depthStencilDesc.DepthFunc = static_cast<D3D11_COMPARISON_FUNC>(description.DepthFunction);
+        depthStencilDesc.StencilEnable = description.EnableStencil;
+        depthStencilDesc.StencilReadMask = description.StencilReadMask;
+        depthStencilDesc.StencilWriteMask = description.StencilWriteMask;
+        depthStencilDesc.FrontFace.StencilFailOp = static_cast<D3D11_STENCIL_OP>(description.FrontFaceStencilOperation.StencilFailOperation);
+        depthStencilDesc.FrontFace.StencilDepthFailOp = static_cast<D3D11_STENCIL_OP>(description.FrontFaceStencilOperation.StencilDepthFailOperation);
+        depthStencilDesc.FrontFace.StencilPassOp = static_cast<D3D11_STENCIL_OP>(description.FrontFaceStencilOperation.StencilPassOperation);
+        depthStencilDesc.FrontFace.StencilFunc = static_cast<D3D11_COMPARISON_FUNC>(description.FrontFaceStencilOperation.StencilFunction);
+		depthStencilDesc.BackFace.StencilFailOp = static_cast<D3D11_STENCIL_OP>(description.BackFaceStencilOperation.StencilFailOperation);
+		depthStencilDesc.BackFace.StencilDepthFailOp = static_cast<D3D11_STENCIL_OP>(description.BackFaceStencilOperation.StencilDepthFailOperation);
+		depthStencilDesc.BackFace.StencilPassOp = static_cast<D3D11_STENCIL_OP>(description.BackFaceStencilOperation.StencilPassOperation);
+		depthStencilDesc.BackFace.StencilFunc = static_cast<D3D11_COMPARISON_FUNC>(description.BackFaceStencilOperation.StencilFunction);
 
-		fileData.close();
+        ENGINE_HR_MESSAGE(rhi->GetDevice()->CreateDepthStencilState(&depthStencilDesc, &DepthStencilState), "Depth Stencil State could not be created.");
 	}
 
-	void CShader::Release()
+	void CDepthStencilState::Release()
 	{
-		switch (ShaderType)
-		{
-		case EShaderType::Vertex:
-			VertexShader->Release();
-			break;
-		case EShaderType::Compute:
-			ComputeShader->Release();
-			break;
-		case EShaderType::Geometry:
-			GeometryShader->Release();
-			break;
-		case EShaderType::Pixel:
-			PixelShader->Release();
-			break;
-		default:
-			break;
-		}
+		DepthStencilState->Release();
 	}
 
-	std::string CShader::GetCompiledData() const
+	void CDepthStencilState::SetDepthStencilState(const U32 stencilRef) const
 	{
-		return CompiledData;
+		Context->OMSetDepthStencilState(DepthStencilState, stencilRef);
 	}
 
-	void CShader::SetShader() const
+	void CDepthStencilState::ResetDepthStencilState(const CRHI* rhi)
 	{
-		switch (ShaderType)
-		{
-		case EShaderType::Vertex:
-			Context->VSSetShader(VertexShader, nullptr, 0);
-			break;
-		case EShaderType::Compute:
-			Context->CSSetShader(ComputeShader, nullptr, 0);
-			break;
-		case EShaderType::Geometry:
-			Context->GSSetShader(GeometryShader, nullptr, 0);
-			break;
-		case EShaderType::Pixel:
-			Context->PSSetShader(PixelShader, nullptr, 0);
-			break;
-		default:
-			break;
-		}
+		rhi->GetContext()->OMSetDepthStencilState(nullptr, 0);
 	}
-
-	void CShader::ResetShader(const CRHI* rhi, const EShaderType type)
-	{
-		switch (type)
-		{
-		case EShaderType::Vertex:
-			rhi->GetContext()->VSSetShader(nullptr, nullptr, 0);
-			break;
-		case EShaderType::Compute:
-			rhi->GetContext()->CSSetShader(nullptr, nullptr, 0);
-			break;
-		case EShaderType::Geometry:
-			rhi->GetContext()->GSSetShader(nullptr, nullptr, 0);
-			break;
-		case EShaderType::Pixel:
-			rhi->GetContext()->PSSetShader(nullptr, nullptr, 0);
-			break;
-		default:
-			break;
-		}
-	}*/
 }
