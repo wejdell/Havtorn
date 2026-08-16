@@ -227,6 +227,12 @@ namespace Havtorn
         return STATIC_U16(MeshVertexOffsets.size() - 1);
     }
 
+    U16 CRenderStateManager::AddPipelineStateObject(const SPSODescription& description)
+    {
+        PSOs.emplace_back(new CPipelineStateObject(RHI, description));
+        return STATIC_U16(PSOs.size() - 1);
+    }
+
     std::string CRenderStateManager::AddShader(const std::string& fileName, const U64 index, const EShaderType shaderType)
     {
         std::string outData = "";
@@ -637,6 +643,11 @@ namespace Havtorn
     void CRenderStateManager::DrawIndexedInstanced(U32 indexCountPerInstance, U32 instanceCount, U32 startIndexLocation, U32 baseVertexLocation, U32 startInstanceLocation) const
     {
         Context->DrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
+    }
+
+    U64 CRenderStateManager::TrySetPipelineStateObject(const U16 psoIndex, const U64 currentPSOHash)
+    {
+        return PSOs[psoIndex]->TrySetPipelineState(currentPSOHash);
     }
 
     void CRenderStateManager::SetAllStates(EBlendStates blendState, EDepthStencilStates depthStencilState, ERasterizerStates rasterizerState) const

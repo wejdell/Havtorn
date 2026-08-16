@@ -57,7 +57,7 @@ namespace Havtorn
 	U64 CPipelineStateObject::TrySetPipelineState(const U64 currentHash)
 	{
 		if (Hash == currentHash)
-			return 0;
+			return currentHash;
 
 		if (Description.VertexShader != nullptr)
 			Description.VertexShader->SetShader();

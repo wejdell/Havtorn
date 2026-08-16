@@ -195,6 +195,114 @@ namespace Havtorn
 		RenderFunctions[ERenderCommandType::TextureDraw] =						std::bind(&CRenderManager::TextureDraw, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::TextureCubeDraw] =					std::bind(&CRenderManager::TextureCubeDraw, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::RendererDebug] =					std::bind(&CRenderManager::RendererDebug, this, std::placeholders::_1);
+
+		const SPSODescription staticMeshShadowPass =
+		{
+			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::StaticMeshInstanced)],
+			.PixelShader = nullptr,
+			.GeometryShader = nullptr,
+			.ComputeShader = nullptr,
+			.InputLayout = RenderStateManager.InputLayouts[STATIC_U8(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans)],
+			.Topology = ETopologies::TriangleList,
+			.BlendState = RenderStateManager.BlendStates[STATIC_U8(CRenderStateManager::EBlendStates::Disable)],
+			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(CRenderStateManager::ERasterizerStates::BackfaceCulling)],
+			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(CRenderStateManager::EDepthStencilStates::Default)],
+			.RootSignature = nullptr
+		};
+		const U16 staticMeshShadowPassIndex = RenderStateManager.AddPipelineStateObject(staticMeshShadowPass);
+		RenderCommandToPSOIndex.emplace(ERenderCommandType::ShadowAtlasPrePassDirectional, staticMeshShadowPassIndex);
+		RenderCommandToPSOIndex.emplace(ERenderCommandType::ShadowAtlasPrePassPoint, staticMeshShadowPassIndex);
+		RenderCommandToPSOIndex.emplace(ERenderCommandType::ShadowAtlasPrePassSpot, staticMeshShadowPassIndex);
+
+		const SPSODescription staticMeshGame =
+		{
+			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::StaticMeshInstanced)],
+			.PixelShader = RenderStateManager.PixelShaders[STATIC_U8(EPixelShaders::GBuffer)],
+			.GeometryShader = nullptr,
+			.ComputeShader = nullptr,
+			.InputLayout = RenderStateManager.InputLayouts[STATIC_U8(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans)],
+			.Topology = ETopologies::TriangleList,
+			.BlendState = RenderStateManager.BlendStates[STATIC_U8(CRenderStateManager::EBlendStates::Disable)],
+			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(CRenderStateManager::ERasterizerStates::BackfaceCulling)],
+			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(CRenderStateManager::EDepthStencilStates::Default)],
+			.RootSignature = nullptr
+		};
+		RenderCommandToPSOIndex.emplace(ERenderCommandType::GBufferDataInstanced, RenderStateManager.AddPipelineStateObject(staticMeshGame));
+		
+		const SPSODescription staticMeshEditor =
+		{
+			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::StaticMeshInstancedEditor)],
+			.PixelShader = RenderStateManager.PixelShaders[STATIC_U8(EPixelShaders::GBufferInstanceEditor)],
+			.GeometryShader = nullptr,
+			.ComputeShader = nullptr,
+			.InputLayout = RenderStateManager.InputLayouts[STATIC_U8(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Entity2Trans)],
+			.Topology = ETopologies::TriangleList,
+			.BlendState = RenderStateManager.BlendStates[STATIC_U8(CRenderStateManager::EBlendStates::Disable)],
+			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(CRenderStateManager::ERasterizerStates::BackfaceCulling)],
+			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(CRenderStateManager::EDepthStencilStates::Default)],
+			.RootSignature = nullptr
+		};
+		RenderCommandToPSOIndex.emplace(ERenderCommandType::GBufferDataInstancedEditor, RenderStateManager.AddPipelineStateObject(staticMeshEditor));
+
+		const SPSODescription skeletalMeshGame =
+		{
+			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::SkeletalMeshInstanced)],
+			.PixelShader = RenderStateManager.PixelShaders[STATIC_U8(EPixelShaders::GBuffer)],
+			.GeometryShader = nullptr,
+			.ComputeShader = nullptr,
+			.InputLayout = RenderStateManager.InputLayouts[STATIC_U8(EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans)],
+			.Topology = ETopologies::TriangleList,
+			.BlendState = RenderStateManager.BlendStates[STATIC_U8(CRenderStateManager::EBlendStates::Disable)],
+			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(CRenderStateManager::ERasterizerStates::BackfaceCulling)],
+			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(CRenderStateManager::EDepthStencilStates::Default)],
+			.RootSignature = nullptr
+		};
+		RenderCommandToPSOIndex.emplace(ERenderCommandType::GBufferSkeletalInstanced, RenderStateManager.AddPipelineStateObject(skeletalMeshGame));
+
+		const SPSODescription skeletalMeshEditor =
+		{
+			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::SkeletalMeshInstancedEditor)],
+			.PixelShader = RenderStateManager.PixelShaders[STATIC_U8(EPixelShaders::GBufferInstanceEditor)],
+			.GeometryShader = nullptr,
+			.ComputeShader = nullptr,
+			.InputLayout = RenderStateManager.InputLayouts[STATIC_U8(EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2AnimDataTrans)],
+			.Topology = ETopologies::TriangleList,
+			.BlendState = RenderStateManager.BlendStates[STATIC_U8(CRenderStateManager::EBlendStates::Disable)],
+			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(CRenderStateManager::ERasterizerStates::BackfaceCulling)],
+			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(CRenderStateManager::EDepthStencilStates::Default)],
+			.RootSignature = nullptr
+		};
+		RenderCommandToPSOIndex.emplace(ERenderCommandType::GBufferSkeletalInstancedEditor, RenderStateManager.AddPipelineStateObject(skeletalMeshEditor));
+
+		const SPSODescription worldSpriteGame =
+		{
+			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::SpriteInstanced)],
+			.PixelShader = RenderStateManager.PixelShaders[STATIC_U8(EPixelShaders::SpriteWorldSpace)],
+			.GeometryShader = RenderStateManager.GeometryShaders[STATIC_U8(EGeometryShaders::SpriteWorldSpace)],
+			.ComputeShader = nullptr,
+			.InputLayout = RenderStateManager.InputLayouts[STATIC_U8(EInputLayoutType::TransUVRectColor)],
+			.Topology = ETopologies::PointList,
+			.BlendState = RenderStateManager.BlendStates[STATIC_U8(CRenderStateManager::EBlendStates::GBufferAlphaBlend)], // TODO.NW: Fix transparency
+			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(CRenderStateManager::ERasterizerStates::BackfaceCulling)],
+			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(CRenderStateManager::EDepthStencilStates::Default)],
+			.RootSignature = nullptr
+		};
+		RenderCommandToPSOIndex.emplace(ERenderCommandType::GBufferSpriteInstancedEditor, RenderStateManager.AddPipelineStateObject(worldSpriteGame));
+
+		const SPSODescription worldSpriteEditor =
+		{
+			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::SpriteInstancedEditor)],
+			.PixelShader = RenderStateManager.PixelShaders[STATIC_U8(EPixelShaders::SpriteWorldSpaceEditor)],
+			.GeometryShader = RenderStateManager.GeometryShaders[STATIC_U8(EGeometryShaders::SpriteWorldSpaceEditor)],
+			.ComputeShader = nullptr,
+			.InputLayout = RenderStateManager.InputLayouts[STATIC_U8(EInputLayoutType::TransUVRectColorEntity2)],
+			.Topology = ETopologies::PointList,
+			.BlendState = RenderStateManager.BlendStates[STATIC_U8(CRenderStateManager::EBlendStates::GBufferAlphaBlend)], // TODO.NW: Fix transparency
+			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(CRenderStateManager::ERasterizerStates::BackfaceCulling)],
+			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(CRenderStateManager::EDepthStencilStates::Default)],
+			.RootSignature = nullptr
+		};
+		RenderCommandToPSOIndex.emplace(ERenderCommandType::GBufferSpriteInstancedEditor, RenderStateManager.AddPipelineStateObject(worldSpriteEditor));
 	}
 
 	void CRenderManager::Render()
@@ -210,6 +318,7 @@ namespace Havtorn
 
 			ShouldBlurVolumetricBuffer = false;
 			CRenderManager::NumberOfDrawCallsThisFrame = 0;
+			CurrentPSOHash = 0;
 
 			Backbuffer.ClearTexture();
 
@@ -246,8 +355,6 @@ namespace Havtorn
 			{
 				if (view.RenderCommands.empty())
 					continue;
-
-				RenderStateManager.SetAllDefault();
 
 				ShadowAtlasDepth.ClearDepth();
 				SSAOBuffer.ClearTexture();
@@ -799,13 +906,8 @@ namespace Havtorn
 		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewID).StaticMeshInstanceData[command.U32s[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		//RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
-		RenderStateManager.IASetTopology(ETopologies::TriangleList);
-		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans);
-
-		RenderStateManager.VSSetShader(EVertexShaders::StaticMeshInstanced);
-		RenderStateManager.PSSetShader(EPixelShaders::Null);
-
+		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::ShadowAtlasPrePassDirectional), CurrentPSOHash);
+		
 		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(command.DrawCallData.size()); drawCallIndex++)
 		{
 			const SDrawCallData& drawData = command.DrawCallData[drawCallIndex];
@@ -834,12 +936,7 @@ namespace Havtorn
 		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewID).StaticMeshInstanceData[command.U32s[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		//RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
-		RenderStateManager.IASetTopology(ETopologies::TriangleList);
-		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans);
-
-		RenderStateManager.VSSetShader(EVertexShaders::StaticMeshInstanced);
-		RenderStateManager.PSSetShader(EPixelShaders::Null);
+		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::ShadowAtlasPrePassPoint), CurrentPSOHash);
 
 		for (const auto& shadowmapView : command.ShadowmapViews)
 		{
@@ -897,12 +994,7 @@ namespace Havtorn
 		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewID).StaticMeshInstanceData[command.U32s[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		//RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
-		RenderStateManager.IASetTopology(ETopologies::TriangleList);
-		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans);
-
-		RenderStateManager.VSSetShader(EVertexShaders::StaticMeshInstanced);
-		RenderStateManager.PSSetShader(EPixelShaders::Null);
+		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::ShadowAtlasPrePassSpot), CurrentPSOHash);
 
 		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(command.DrawCallData.size()); drawCallIndex++)
 		{
@@ -949,12 +1041,8 @@ namespace Havtorn
 		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewID).StaticMeshInstanceData[command.U32s[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		//RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
-		RenderStateManager.IASetTopology(ETopologies::TriangleList);
-		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans);
+		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::GBufferDataInstanced), CurrentPSOHash);
 
-		RenderStateManager.VSSetShader(EVertexShaders::StaticMeshInstanced);
-		RenderStateManager.PSSetShader(EPixelShaders::GBuffer);
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
 		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(command.DrawCallData.size()); drawCallIndex++)
@@ -1018,11 +1106,9 @@ namespace Havtorn
 		}
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
-		RenderStateManager.IASetTopology(ETopologies::TriangleList);
-		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Entity2Trans);
 
-		RenderStateManager.VSSetShader(EVertexShaders::StaticMeshInstancedEditor);
-		RenderStateManager.PSSetShader(EPixelShaders::GBufferInstanceEditor);
+		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::GBufferDataInstancedEditor), CurrentPSOHash);
+
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
 		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(command.DrawCallData.size()); drawCallIndex++)
@@ -1177,11 +1263,9 @@ namespace Havtorn
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
 		RenderStateManager.VSSetConstantBuffer(6, BoneBuffer);
-		RenderStateManager.IASetTopology(ETopologies::TriangleList);
-		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans);
 
-		RenderStateManager.VSSetShader(EVertexShaders::SkeletalMeshInstanced);
-		RenderStateManager.PSSetShader(EPixelShaders::GBuffer);
+		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::GBufferSkeletalInstanced), CurrentPSOHash);
+
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
 		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(command.DrawCallData.size()); drawCallIndex++)
@@ -1251,11 +1335,9 @@ namespace Havtorn
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
 		RenderStateManager.VSSetConstantBuffer(6, BoneBuffer);
-		RenderStateManager.IASetTopology(ETopologies::TriangleList);
-		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2AnimDataTrans);
 
-		RenderStateManager.VSSetShader(EVertexShaders::SkeletalMeshInstancedEditor);
-		RenderStateManager.PSSetShader(EPixelShaders::GBufferInstanceEditor);
+		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::GBufferSkeletalInstancedEditor), CurrentPSOHash);
+
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
 		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(command.DrawCallData.size()); drawCallIndex++)
@@ -1359,9 +1441,6 @@ namespace Havtorn
 		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
-		// TODO.NW: Fix transparency
-		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::GBufferAlphaBlend);
-
 		const auto& textureUID = command.U32s[0];
 		SSpriteInstanceData& spriteData = RenderThreadRenderViews->at(command.RenderViewID).WorldSpaceSpriteInstanceData[textureUID];
 
@@ -1374,12 +1453,7 @@ namespace Havtorn
 		const std::vector<SVector4>& colors = spriteData.Colors;
 		InstancedColorBuffer.BindBuffer(colors);
 
-		RenderStateManager.IASetTopology(ETopologies::PointList);
-		RenderStateManager.IASetInputLayout(EInputLayoutType::TransUVRectColor);
-
-		RenderStateManager.VSSetShader(EVertexShaders::SpriteInstanced);
-		RenderStateManager.GSSetShader(EGeometryShaders::SpriteWorldSpace);
-		RenderStateManager.PSSetShader(EPixelShaders::SpriteWorldSpace);
+		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::GBufferSpriteInstanced), CurrentPSOHash);
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 		RenderStateManager.PSSetResources(0, 1, command.RenderTextures[0].GetShaderResourceView());
@@ -1398,9 +1472,6 @@ namespace Havtorn
 		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
-		// TODO.NW: Fix transparency
-		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::GBufferAlphaBlend);
-
 		const auto& textureUID = command.U32s[0];
 		SSpriteInstanceData& spriteData = RenderThreadRenderViews->at(command.RenderViewID).WorldSpaceSpriteInstanceData[textureUID];
 
@@ -1416,12 +1487,7 @@ namespace Havtorn
 		const std::vector<SEntity>& entities = spriteData.Entities;
 		InstancedEntityIDBuffer.BindBuffer(entities);
 
-		RenderStateManager.IASetTopology(ETopologies::PointList);
-		RenderStateManager.IASetInputLayout(EInputLayoutType::TransUVRectColorEntity2);
-
-		RenderStateManager.VSSetShader(EVertexShaders::SpriteInstancedEditor);
-		RenderStateManager.GSSetShader(EGeometryShaders::SpriteWorldSpaceEditor);
-		RenderStateManager.PSSetShader(EPixelShaders::SpriteWorldSpaceEditor);
+		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::GBufferSpriteInstancedEditor), CurrentPSOHash);
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 		RenderStateManager.PSSetResources(0, 1, command.RenderTextures[0].GetShaderResourceView());

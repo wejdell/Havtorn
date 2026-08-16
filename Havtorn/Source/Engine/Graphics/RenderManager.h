@@ -408,6 +408,9 @@ namespace Havtorn
 		ERenderPass CurrentRunningRenderPass = ERenderPass::All;
 		bool ShouldBlurVolumetricBuffer = false;
 		
+		std::map<ERenderCommandType, U16> RenderCommandToPSOIndex;
+		U64 CurrentPSOHash = 0;
+
 		CDataBuffer InstancedTransformBuffer;
 		CDataBuffer InstancedEntityIDBuffer;
 		CDataBuffer InstancedAnimationDataBuffer;

@@ -19,6 +19,7 @@
 #include <RHI/RenderingPrimitives/SamplerState.h>
 #include <RHI/RenderingPrimitives/Shader.h>
 #include <RHI/RenderingPrimitives/VertexInputLayout.h>
+#include <RHI/RenderingPrimitives/PipelineStateObject.h>
 
 namespace Havtorn
 {
@@ -85,6 +86,8 @@ namespace Havtorn
 		U16 AddMeshVertexStride(U32 stride);
 		U16 AddMeshVertexOffset(U32 offset);
 
+		U16 AddPipelineStateObject(const SPSODescription& description);
+
 		std::string AddShader(const std::string& fileName, const U64 index, const EShaderType shaderType);
 		void AddInputLayout(const std::string& vsData, EInputLayoutType layoutType);
 		void AddSampler(ESamplerType samplerType);
@@ -126,6 +129,8 @@ namespace Havtorn
 		void DrawInstanced(U32 vertexCountPerInstance, U32 numberOfInstances, U32 startVertexLocation, U32 startInstanceLocation) const;
 		void DrawIndexedInstanced(U32 indexCountPerInstance, U32 instanceCount, U32 startIndexLocation, U32 baseVertexLocation, U32 startInstanceLocation) const;
 
+		U64 TrySetPipelineStateObject(const U16 psoIndex, const U64 currentPSOHash);
+
 		// TODO.NR: Rename these to fit the naming of the above
 		void SetAllStates(EBlendStates blendState, EDepthStencilStates depthStencilState, ERasterizerStates rasterizerState) const;
 		void SetAllDefault() const;
@@ -158,11 +163,13 @@ namespace Havtorn
 		std::array<CShader*, STATIC_U64(EVertexShaders::Count)> VertexShaders;
 		std::array<CShader*, STATIC_U64(EPixelShaders::Count)> PixelShaders;
 		std::array<CShader*, STATIC_U64(EGeometryShaders::Count)> GeometryShaders;
+		std::vector<CVertexInputLayout*> InputLayouts;
+
+		std::vector<CPipelineStateObject*> PSOs;
 
 		std::vector<CSamplerState*> Samplers;
 		std::vector<CDataBuffer> VertexBuffers;
 		std::vector<CDataBuffer> IndexBuffers;
-		std::vector<CVertexInputLayout*> InputLayouts;
 		std::vector<CRenderViewport> Viewports;
 		std::vector<U32> MeshVertexStrides;
 		std::vector<U32> MeshVertexOffsets;
