@@ -289,6 +289,21 @@ namespace Havtorn
 		};
 		RenderCommandToPSOIndex.emplace(ERenderCommandType::DeferredDecal, RenderStateManager.AddPipelineStateObject(deferredDecal));
 
+		const SPSODescription skybox =
+		{
+			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::Skybox)],
+			.PixelShader = RenderStateManager.PixelShaders[STATIC_U8(EPixelShaders::Skybox)],
+			.GeometryShader = nullptr,
+			.ComputeShader = nullptr,
+			.InputLayout = RenderStateManager.InputLayouts[STATIC_U8(EInputLayoutType::Position4)],
+			.Topology = ETopologies::TriangleList,
+			.BlendState = RenderStateManager.BlendStates[STATIC_U8(CRenderStateManager::EBlendStates::Disable)],
+			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(CRenderStateManager::ERasterizerStates::FrontfaceCulling)],
+			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(CRenderStateManager::EDepthStencilStates::DepthFirst)],
+			.RootSignature = nullptr
+		};
+		RenderCommandToPSOIndex.emplace(ERenderCommandType::Skybox, RenderStateManager.AddPipelineStateObject(skybox));
+
 		const SPSODescription worldSpriteGame =
 		{
 			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::SpriteInstanced)],
@@ -1754,30 +1769,23 @@ namespace Havtorn
 
 		LitScene.SetAsActiveTarget(&IntermediateDepth);
 
-		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::Disable);
-		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::DepthFirst);
-		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontfaceCulling);
+		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::Skybox), CurrentPSOHash);
 
 		RenderStateManager.PSSetResources(0, 1, command.RenderTextures[0].GetShaderResourceView());
 
-		RenderStateManager.IASetTopology(ETopologies::TriangleList);
-		RenderStateManager.IASetInputLayout(EInputLayoutType::Position4);
 		RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[STATIC_U8(EVertexBufferPrimitives::SkyboxCube)], RenderStateManager.MeshVertexStrides[1], RenderStateManager.MeshVertexOffsets[0]);
 		RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[STATIC_U8(EDefaultIndexBuffers::SkyboxCube)]);
 
-		RenderStateManager.VSSetShader(EVertexShaders::Skybox);
-		RenderStateManager.PSSetShader(EPixelShaders::Skybox);
-
 		RenderStateManager.DrawIndexed(36, 0, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
-
-		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
-		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::Default);
-		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
 	}
 
 	void CRenderManager::PostBaseLightingPass(const SRenderCommand& command)
 	{
+		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
+		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::Default);
+		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
+
 		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
