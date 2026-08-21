@@ -97,6 +97,8 @@ namespace Havtorn
 		else
 			CDepthStencilState::ResetDepthStencilState(RHI);
 
+		RHI->GetContext()->IASetPrimitiveTopology(static_cast<D3D11_PRIMITIVE_TOPOLOGY>(Description.Topology));
+
 		// NW: We aren't using the root signature object yet so no need to check it right now
 
 		return Hash;
