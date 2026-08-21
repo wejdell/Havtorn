@@ -294,6 +294,9 @@ namespace Havtorn
 
     void CRenderStateManager::AddInputLayout(const std::string& vsData, EInputLayoutType layoutType)
     {
+        if (InputLayouts.size() > STATIC_U64(layoutType))
+            return;
+
         std::vector<D3D11_INPUT_ELEMENT_DESC> layout;
         switch (layoutType)
         {
@@ -435,7 +438,7 @@ namespace Havtorn
         }
         ID3D11InputLayout* inputLayout;
         ENGINE_HR_MESSAGE(Framework->GetDevice()->CreateInputLayout(layout.data(), STATIC_U32(layout.size()), vsData.data(), vsData.size(), &inputLayout), "Input Layout could not be created.")
-            InputLayouts.emplace_back(inputLayout);
+        InputLayouts.emplace_back(inputLayout);
     }
 
     void CRenderStateManager::AddSampler(ESamplerType samplerType)
