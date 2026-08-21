@@ -294,6 +294,9 @@ namespace Havtorn
 
     void CRenderStateManager::AddInputLayout(const std::string& vsData, EInputLayoutType layoutType)
     {
+        if (InputLayouts.size() > STATIC_U64(layoutType))
+            return;
+
         std::vector<SInputElementDescription> layout;
         switch (layoutType)
         {
