@@ -318,14 +318,6 @@ namespace Havtorn
 			.RootSignature = nullptr
 		};
 		RenderCommandToPSOIndex.emplace(ERenderCommandType::GBufferSpriteInstancedEditor, RenderStateManager.AddPipelineStateObject(worldSpriteEditor));
-		
-		//RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::Disable);
-		//RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::Default);
-		//RenderStateManager.IASetTopology(ETopologies::PointList);
-		//RenderStateManager.IASetInputLayout(EInputLayoutType::TransUVRectColorEntity2);
-		//RenderStateManager.VSSetShader(EVertexShaders::SpriteInstancedEditor);
-		//RenderStateManager.GSSetShader(EGeometryShaders::SpriteWorldSpaceEditor);
-		//RenderStateManager.PSSetShader(EPixelShaders::SpriteWorldSpaceEditorWidget);
 
 		worldSpriteEditor.BlendState = RenderStateManager.BlendStates[STATIC_U8(CRenderStateManager::EBlendStates::Disable)];
 		worldSpriteEditor.PixelShader = RenderStateManager.PixelShaders[STATIC_U8(EPixelShaders::SpriteWorldSpaceEditorWidget)];
