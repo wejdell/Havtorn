@@ -274,6 +274,21 @@ namespace Havtorn
 		};
 		RenderCommandToPSOIndex.emplace(ERenderCommandType::GBufferSkeletalInstancedEditor, RenderStateManager.AddPipelineStateObject(skeletalMeshEditor));
 
+		const SPSODescription deferredDecal =
+		{
+			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::Decal)],
+			.PixelShader = nullptr, // Shaders for each set of albedo / material / normal is set in the render command for now
+			.GeometryShader = RenderStateManager.GeometryShaders[STATIC_U8(EGeometryShaders::SpriteWorldSpace)],
+			.ComputeShader = nullptr,
+			.InputLayout = RenderStateManager.InputLayouts[STATIC_U8(EInputLayoutType::Pos3Nor3Tan3Bit3UV2)],
+			.Topology = ETopologies::TriangleList,
+			.BlendState = RenderStateManager.BlendStates[STATIC_U8(CRenderStateManager::EBlendStates::AlphaBlend)], // TODO.NW: See if this should be GBufferAlphaBlend?
+			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(CRenderStateManager::ERasterizerStates::BackfaceCulling)],
+			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(CRenderStateManager::EDepthStencilStates::OnlyRead)],
+			.RootSignature = nullptr
+		};
+		RenderCommandToPSOIndex.emplace(ERenderCommandType::DeferredDecal, RenderStateManager.AddPipelineStateObject(deferredDecal));
+
 		const SPSODescription worldSpriteGame =
 		{
 			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::SpriteInstanced)],
@@ -287,7 +302,7 @@ namespace Havtorn
 			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(CRenderStateManager::EDepthStencilStates::Default)],
 			.RootSignature = nullptr
 		};
-		RenderCommandToPSOIndex.emplace(ERenderCommandType::GBufferSpriteInstancedEditor, RenderStateManager.AddPipelineStateObject(worldSpriteGame));
+		RenderCommandToPSOIndex.emplace(ERenderCommandType::GBufferSpriteInstanced, RenderStateManager.AddPipelineStateObject(worldSpriteGame));
 
 		SPSODescription worldSpriteEditor =
 		{
@@ -1522,8 +1537,6 @@ namespace Havtorn
 
 	void CRenderManager::DeferredDecal(const SRenderCommand& command)
 	{
-		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::OnlyRead);
-		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
 		GBuffer.SetAsActiveTarget(&IntermediateDepth);
 		DepthCopy.SetAsPSResourceOnSlot(21);
 
@@ -1536,12 +1549,11 @@ namespace Havtorn
 		RenderStateManager.VSSetConstantBuffer(1, DecalBuffer);
 		RenderStateManager.PSSetConstantBuffer(1, DecalBuffer);
 
-		RenderStateManager.IASetTopology(ETopologies::TriangleList);
-		RenderStateManager.IASetInputLayout(EInputLayoutType::Pos3Nor3Tan3Bit3UV2);
+		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::DeferredDecal), CurrentPSOHash);
+
 		RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[0], RenderStateManager.MeshVertexStrides[0], RenderStateManager.MeshVertexOffsets[0]);
 		RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[STATIC_U8(EDefaultIndexBuffers::DecalProjector)]);
 
-		RenderStateManager.VSSetShader(EVertexShaders::Decal);
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
 		const auto shouldRenderAlbedo = command.Flags[0];
