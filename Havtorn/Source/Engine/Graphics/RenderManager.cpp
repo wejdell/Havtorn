@@ -304,6 +304,51 @@ namespace Havtorn
 		};
 		RenderCommandToPSOIndex.emplace(ERenderCommandType::Skybox, RenderStateManager.AddPipelineStateObject(skybox));
 
+		const SPSODescription volumetricLightDirectional =
+		{
+			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::Fullscreen)],
+			.PixelShader = RenderStateManager.PixelShaders[STATIC_U8(EPixelShaders::VolumetricDirectional)],
+			.GeometryShader = nullptr,
+			.ComputeShader = nullptr,
+			.InputLayout = RenderStateManager.InputLayouts[STATIC_U8(EInputLayoutType::Null)],
+			.Topology = ETopologies::TriangleList,
+			.BlendState = RenderStateManager.BlendStates[STATIC_U8(CRenderStateManager::EBlendStates::AdditiveBlend)],
+			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(CRenderStateManager::ERasterizerStates::Default)],
+			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(CRenderStateManager::EDepthStencilStates::Default)],
+			.RootSignature = nullptr
+		};
+		RenderCommandToPSOIndex.emplace(ERenderCommandType::VolumetricLightingDirectional, RenderStateManager.AddPipelineStateObject(volumetricLightDirectional));
+
+		const SPSODescription volumetricLightPoint =
+		{
+			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::PointAndSpotLight)],
+			.PixelShader = RenderStateManager.PixelShaders[STATIC_U8(EPixelShaders::VolumetricPoint)],
+			.GeometryShader = nullptr,
+			.ComputeShader = nullptr,
+			.InputLayout = RenderStateManager.InputLayouts[STATIC_U8(EInputLayoutType::Position4)],
+			.Topology = ETopologies::TriangleList,
+			.BlendState = RenderStateManager.BlendStates[STATIC_U8(CRenderStateManager::EBlendStates::AdditiveBlend)],
+			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(CRenderStateManager::ERasterizerStates::FrontfaceCulling)],
+			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(CRenderStateManager::EDepthStencilStates::Default)],
+			.RootSignature = nullptr
+		};
+		RenderCommandToPSOIndex.emplace(ERenderCommandType::VolumetricLightingPoint, RenderStateManager.AddPipelineStateObject(volumetricLightPoint));
+
+		const SPSODescription volumetricLightSpot =
+		{
+			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::PointAndSpotLight)],
+			.PixelShader = RenderStateManager.PixelShaders[STATIC_U8(EPixelShaders::VolumetricSpot)],
+			.GeometryShader = nullptr,
+			.ComputeShader = nullptr,
+			.InputLayout = RenderStateManager.InputLayouts[STATIC_U8(EInputLayoutType::Position4)],
+			.Topology = ETopologies::TriangleList,
+			.BlendState = RenderStateManager.BlendStates[STATIC_U8(CRenderStateManager::EBlendStates::AdditiveBlend)],
+			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(CRenderStateManager::ERasterizerStates::FrontfaceCulling)],
+			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(CRenderStateManager::EDepthStencilStates::Default)],
+			.RootSignature = nullptr
+		};
+		RenderCommandToPSOIndex.emplace(ERenderCommandType::VolumetricLightingSpot, RenderStateManager.AddPipelineStateObject(volumetricLightSpot));
+
 		const SPSODescription worldSpriteGame =
 		{
 			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::SpriteInstanced)],
@@ -1797,10 +1842,11 @@ namespace Havtorn
 	void CRenderManager::VolumetricLightingDirectional(const SRenderCommand& command)
 	{
 		VolumetricAccumulationBuffer.SetAsActiveTarget();
-		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
-		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::Default);
+
 		IntermediateDepth.SetAsPSResourceOnSlot(21);
 		ShadowAtlasDepth.SetAsPSResourceOnSlot(22);
+
+		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::VolumetricLightingDirectional), CurrentPSOHash);
 
 		// Lightbuffer
 		DirectionalLightBufferData.ToDirectionalLight = -command.Vectors[0]; // Negate the direction going into the shaders
@@ -1832,13 +1878,8 @@ namespace Havtorn
 		ShadowmapBuffer.BindBuffer(ShadowmapBufferData);
 		RenderStateManager.PSSetConstantBuffer(5, ShadowmapBuffer);
 
-		RenderStateManager.IASetTopology(ETopologies::TriangleList);
-		RenderStateManager.IASetInputLayout(EInputLayoutType::Null);
 		RenderStateManager.IASetVertexBuffer(0, CDataBuffer::Null, 0, 0);
 		RenderStateManager.IASetIndexBuffer(CDataBuffer::Null);
-
-		RenderStateManager.VSSetShader(EVertexShaders::Fullscreen);
-		RenderStateManager.PSSetShader(EPixelShaders::VolumetricDirectional);
 
 		RenderStateManager.Draw(3, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
@@ -1849,10 +1890,11 @@ namespace Havtorn
 	void CRenderManager::VolumetricLightingPoint(const SRenderCommand& command)
 	{
 		VolumetricAccumulationBuffer.SetAsActiveTarget();
-		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
-		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontfaceCulling);
+
 		IntermediateDepth.SetAsPSResourceOnSlot(21);
 		ShadowAtlasDepth.SetAsPSResourceOnSlot(22);
+
+		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::VolumetricLightingPoint), CurrentPSOHash);
 
 		// Light Buffer
 		PointLightBufferData.ToWorldFromObject = command.Matrices[0];
@@ -1891,13 +1933,8 @@ namespace Havtorn
 		ShadowmapBuffer.BindBuffer(shadowmapBufferData);
 		RenderStateManager.PSSetConstantBuffer(5, ShadowmapBuffer);
 
-		RenderStateManager.IASetTopology(ETopologies::TriangleList);
-		RenderStateManager.IASetInputLayout(EInputLayoutType::Position4);
 		RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[1], RenderStateManager.MeshVertexStrides[1], RenderStateManager.MeshVertexOffsets[0]);
 		RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[STATIC_U8(EDefaultIndexBuffers::PointLightCube)]);
-
-		RenderStateManager.VSSetShader(EVertexShaders::PointAndSpotLight);
-		RenderStateManager.PSSetShader(EPixelShaders::VolumetricPoint);
 
 		RenderStateManager.DrawIndexed(36, 0, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
@@ -1909,10 +1946,11 @@ namespace Havtorn
 	void CRenderManager::VolumetricLightingSpot(const SRenderCommand& command)
 	{
 		VolumetricAccumulationBuffer.SetAsActiveTarget();
-		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AdditiveBlend);
-		RenderStateManager.RSSetRasterizerState(CRenderStateManager::ERasterizerStates::FrontfaceCulling);
+
 		IntermediateDepth.SetAsPSResourceOnSlot(21);
 		ShadowAtlasDepth.SetAsPSResourceOnSlot(22);
+
+		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::VolumetricLightingSpot), CurrentPSOHash);
 
 		// Light Buffer
 		SVector position = command.Matrices[0].GetTranslation();
@@ -1960,13 +1998,8 @@ namespace Havtorn
 		ShadowmapBuffer.BindBuffer(shadowmapBufferData);
 		RenderStateManager.PSSetConstantBuffer(5, ShadowmapBuffer);
 
-		RenderStateManager.IASetTopology(ETopologies::TriangleList);
-		RenderStateManager.IASetInputLayout(EInputLayoutType::Position4);
 		RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[1], RenderStateManager.MeshVertexStrides[1], RenderStateManager.MeshVertexOffsets[0]);
 		RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[STATIC_U8(EDefaultIndexBuffers::PointLightCube)]);
-
-		RenderStateManager.VSSetShader(EVertexShaders::PointAndSpotLight);
-		RenderStateManager.PSSetShader(EPixelShaders::VolumetricSpot);
 
 		RenderStateManager.DrawIndexed(36, 0, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
