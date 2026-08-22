@@ -349,6 +349,21 @@ namespace Havtorn
 		};
 		RenderCommandToPSOIndex.emplace(ERenderCommandType::VolumetricLightingSpot, RenderStateManager.AddPipelineStateObject(volumetricLightSpot));
 
+		const SPSODescription screenSpaceSprite =
+		{
+			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::SpriteInstanced)],
+			.PixelShader = RenderStateManager.PixelShaders[STATIC_U8(EPixelShaders::SpriteScreenSpace)],
+			.GeometryShader = RenderStateManager.GeometryShaders[STATIC_U8(EGeometryShaders::SpriteScreenSpace)],
+			.ComputeShader = nullptr,
+			.InputLayout = RenderStateManager.InputLayouts[STATIC_U8(EInputLayoutType::TransUVRectColor)],
+			.Topology = ETopologies::PointList,
+			.BlendState = RenderStateManager.BlendStates[STATIC_U8(CRenderStateManager::EBlendStates::AlphaBlend)],
+			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(CRenderStateManager::ERasterizerStates::BackfaceCulling)],
+			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(CRenderStateManager::EDepthStencilStates::Default)],
+			.RootSignature = nullptr
+		};
+		RenderCommandToPSOIndex.emplace(ERenderCommandType::ScreenSpaceSprite, RenderStateManager.AddPipelineStateObject(screenSpaceSprite));
+
 		const SPSODescription worldSpriteGame =
 		{
 			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::SpriteInstanced)],
@@ -382,6 +397,36 @@ namespace Havtorn
 		worldSpriteEditor.BlendState = RenderStateManager.BlendStates[STATIC_U8(CRenderStateManager::EBlendStates::Disable)];
 		worldSpriteEditor.PixelShader = RenderStateManager.PixelShaders[STATIC_U8(EPixelShaders::SpriteWorldSpaceEditorWidget)];
 		RenderCommandToPSOIndex.emplace(ERenderCommandType::WorldSpaceSpriteEditorWidget, RenderStateManager.AddPipelineStateObject(worldSpriteEditor));
+		
+		SPSODescription spriteScreenSpaceUI =
+		{
+			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::SpriteInstanced)],
+			.PixelShader = RenderStateManager.PixelShaders[STATIC_U8(EPixelShaders::SpriteScreenSpace)],
+			.GeometryShader = RenderStateManager.GeometryShaders[STATIC_U8(EGeometryShaders::SpriteScreenSpace)],
+			.ComputeShader = nullptr,
+			.InputLayout = RenderStateManager.InputLayouts[STATIC_U8(EInputLayoutType::TransUVRectColor)],
+			.Topology = ETopologies::PointList,
+			.BlendState = RenderStateManager.BlendStates[STATIC_U8(CRenderStateManager::EBlendStates::AlphaBlend)],
+			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(CRenderStateManager::ERasterizerStates::Default)],
+			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(CRenderStateManager::EDepthStencilStates::Default)],
+			.RootSignature = nullptr
+		};
+		RenderCommandToPSOIndex.emplace(ERenderCommandType::ScreenSpaceUISprite, RenderStateManager.AddPipelineStateObject(spriteScreenSpaceUI));
+
+		SPSODescription preDebugShapes =
+		{
+			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::Line)],
+			.PixelShader = RenderStateManager.PixelShaders[STATIC_U8(EPixelShaders::Line)],
+			.GeometryShader = RenderStateManager.GeometryShaders[STATIC_U8(EGeometryShaders::Line)],
+			.ComputeShader = nullptr,
+			.InputLayout = RenderStateManager.InputLayouts[STATIC_U8(EInputLayoutType::Position4)],
+			.Topology = ETopologies::LineList,
+			.BlendState = RenderStateManager.BlendStates[STATIC_U8(CRenderStateManager::EBlendStates::AlphaBlend)],
+			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(CRenderStateManager::ERasterizerStates::Default)],
+			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(CRenderStateManager::EDepthStencilStates::OnlyRead)],
+			.RootSignature = nullptr
+		};
+		RenderCommandToPSOIndex.emplace(ERenderCommandType::PreDebugShape, RenderStateManager.AddPipelineStateObject(preDebugShapes));
 	}
 
 	void CRenderManager::Render()
@@ -2071,8 +2116,6 @@ namespace Havtorn
 		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
-		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
-
 		const auto textureUID = command.U32s[0];
 		SSpriteInstanceData& spriteData = RenderThreadRenderViews->at(command.RenderViewID).ScreenSpaceSpriteInstanceData[textureUID];
 
@@ -2085,12 +2128,7 @@ namespace Havtorn
 		const std::vector<SVector4>& colors = spriteData.Colors;
 		InstancedColorBuffer.BindBuffer(colors);
 
-		RenderStateManager.IASetTopology(ETopologies::PointList);
-		RenderStateManager.IASetInputLayout(EInputLayoutType::TransUVRectColor);
-
-		RenderStateManager.VSSetShader(EVertexShaders::SpriteInstanced);
-		RenderStateManager.GSSetShader(EGeometryShaders::SpriteScreenSpace);
-		RenderStateManager.PSSetShader(EPixelShaders::SpriteScreenSpace);
+		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::ScreenSpaceSprite), CurrentPSOHash);
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 		RenderStateManager.PSSetResources(0, 1, command.RenderTextures[0].GetShaderResourceView());
@@ -2212,8 +2250,6 @@ namespace Havtorn
 		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
 
-		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
-
 		const auto textureUID = command.U32s[0];
 		SSpriteInstanceData& spriteData = RenderThreadRenderViews->at(command.RenderViewID).ScreenSpaceSpriteInstanceData[textureUID];
 
@@ -2226,12 +2262,7 @@ namespace Havtorn
 		const std::vector<SVector4>& colors = spriteData.Colors;
 		InstancedColorBuffer.BindBuffer(colors);
 
-		RenderStateManager.IASetTopology(ETopologies::PointList);
-		RenderStateManager.IASetInputLayout(EInputLayoutType::TransUVRectColor);
-
-		RenderStateManager.VSSetShader(EVertexShaders::SpriteInstanced);
-		RenderStateManager.GSSetShader(EGeometryShaders::SpriteScreenSpace);
-		RenderStateManager.PSSetShader(EPixelShaders::SpriteScreenSpace);
+		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::ScreenSpaceUISprite), CurrentPSOHash);
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 		command.RenderTextures[0].SetAsPSResourceOnSlot(0);
@@ -2272,15 +2303,7 @@ namespace Havtorn
 
 	inline void CRenderManager::PreDebugShapes(const SRenderCommand& /*command*/)
 	{
-		RenderStateManager.OMSetDepthStencilState(CRenderStateManager::EDepthStencilStates::OnlyRead);
-		RenderStateManager.OMSetBlendState(CRenderStateManager::EBlendStates::AlphaBlend);
-
-		RenderStateManager.IASetTopology(ETopologies::LineList);
-		RenderStateManager.IASetInputLayout(EInputLayoutType::Position4);
-
-		RenderStateManager.GSSetShader(EGeometryShaders::Line);
-		RenderStateManager.VSSetShader(EVertexShaders::Line);
-		RenderStateManager.PSSetShader(EPixelShaders::Line);
+		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::PreDebugShape), CurrentPSOHash);
 	}
 
 	inline void CRenderManager::PostTonemappingUseDepth(const SRenderCommand& /*command*/)
