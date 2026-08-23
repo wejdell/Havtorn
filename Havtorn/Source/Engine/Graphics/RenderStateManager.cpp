@@ -648,7 +648,7 @@ namespace Havtorn
         Context->DrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
     }
 
-    U64 CRenderStateManager::TrySetPipelineStateObject(const U16 psoIndex, const U64 currentPSOHash)
+    U64 CRenderStateManager::TrySetPipelineStateObject(const U16 psoIndex, const U64 currentPSOHash) const
     {
         return PSOs[psoIndex]->TrySetPipelineState(currentPSOHash);
     }

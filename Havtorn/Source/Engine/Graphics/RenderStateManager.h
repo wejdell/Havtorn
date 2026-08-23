@@ -99,7 +99,7 @@ namespace Havtorn
 		void DrawInstanced(U32 vertexCountPerInstance, U32 numberOfInstances, U32 startVertexLocation, U32 startInstanceLocation) const;
 		void DrawIndexedInstanced(U32 indexCountPerInstance, U32 instanceCount, U32 startIndexLocation, U32 baseVertexLocation, U32 startInstanceLocation) const;
 
-		U64 TrySetPipelineStateObject(const U16 psoIndex, const U64 currentPSOHash);
+		U64 TrySetPipelineStateObject(const U16 psoIndex, const U64 currentPSOHash) const;
 
 		// TODO.NR: Rename these to fit the naming of the above
 		void SetAllStates(EBlendStates blendState, EDepthStencilStates depthStencilState, ERasterizerStates rasterizerState) const;

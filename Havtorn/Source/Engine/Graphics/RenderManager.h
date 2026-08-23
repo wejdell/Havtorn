@@ -180,8 +180,6 @@ namespace Havtorn
 		inline void GBufferDataInstanced(const SRenderCommand& command);
 		inline void GBufferDataInstancedEditor(const SRenderCommand& command);
 		inline void StaticMeshAssetThumbnail(const SRenderCommand& command);
-		inline void StaticMeshVertexPaint(const SRenderCommand& command);
-		inline void StaticMeshVertexPaintEditor(const SRenderCommand& command);
 		inline void GBufferSkeletalInstanced(const SRenderCommand& command);
 		inline void GBufferSkeletalInstancedEditor(const SRenderCommand& command);
 		inline void SkeletalMeshAssetThumbnail(const SRenderCommand& command);
@@ -409,6 +407,7 @@ namespace Havtorn
 		bool ShouldBlurVolumetricBuffer = false;
 		
 		std::map<ERenderCommandType, U16> RenderCommandToPSOIndex;
+		std::map<EAssetType, U16> AssetTypeToPSOIndex;
 		U64 CurrentPSOHash = 0;
 
 		CDataBuffer InstancedTransformBuffer;
