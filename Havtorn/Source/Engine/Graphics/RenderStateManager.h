@@ -26,36 +26,6 @@ namespace Havtorn
 	class CRenderStateManager
 	{
 	public:
-		enum class EBlendStates
-		{
-			Disable,
-			AlphaBlend,
-			AdditiveBlend,
-			GBufferAlphaBlend,
-			Count
-		};
-
-		enum class EDepthStencilStates
-		{
-			Default,
-			OnlyRead,
-			StencilWrite,
-			StencilMask,
-			DepthFirst,
-			Count
-		};
-
-		enum class ERasterizerStates
-		{
-			Default,
-			Wireframe,
-			BackfaceCulling,
-			FrontfaceCulling,
-			NoFaceCulling,
-			Count
-		};
-
-	public:
 		friend class CRenderManager;
 		friend class CAssetRegistry;
 
