@@ -110,7 +110,7 @@ namespace Havtorn
 		return true;
 	}
 
-	void CFullscreenRenderer::Render(const EPixelShaders effect, const CRenderStateManager& stateManager)
+	U64 CFullscreenRenderer::Render(const EPixelShaders effect, const EBlendStates blendState, const CRenderStateManager& stateManager, const U64 currentPSOHash)
 	{
 		SVector2<U16> resolution = Manager->GetCurrentWindowResolution();
 		FullscreenData.Resolution = SVector2<F32>(resolution.X, resolution.Y);
@@ -120,14 +120,14 @@ namespace Havtorn
 		FullscreenDataBuffer.BindBuffer(FullscreenData);
 		PostProcessingBuffer.BindBuffer(PostProcessingBufferData);
 
-		stateManager.IASetTopology(ETopologies::TriangleList);
-		stateManager.IASetInputLayout(EInputLayoutType::Null);
+		constexpr U16 fullscreenPassPSOIndex = 0;
+		const U64 fullscreenPSOHash = stateManager.TrySetPipelineStateObject(fullscreenPassPSOIndex, currentPSOHash);
+
 		stateManager.IASetVertexBuffer(0, CDataBuffer::Null, 0, 0);
 		stateManager.IASetIndexBuffer(CDataBuffer::Null);
 
-		stateManager.VSSetShader(EVertexShaders::Fullscreen);
+		stateManager.OMSetBlendState(blendState);
 		stateManager.PSSetShader(effect);
-		stateManager.GSSetShader(EGeometryShaders::Null);
 		stateManager.PSSetSampler(0, ESamplers::DefaultClamp);
 		stateManager.PSSetSampler(1, ESamplers::DefaultWrap);
 		stateManager.PSSetConstantBuffer(1, FullscreenDataBuffer);
@@ -138,6 +138,8 @@ namespace Havtorn
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 
 		stateManager.ClearShaderResources();
+
+		return fullscreenPSOHash;
 	}
 
 	SPostProcessingBufferData CFullscreenRenderer::GetPostProcessBuffer() const

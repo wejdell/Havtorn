@@ -196,6 +196,22 @@ namespace Havtorn
 		RenderFunctions[ERenderCommandType::TextureCubeDraw] =					std::bind(&CRenderManager::TextureCubeDraw, this, std::placeholders::_1);
 		RenderFunctions[ERenderCommandType::RendererDebug] =					std::bind(&CRenderManager::RendererDebug, this, std::placeholders::_1);
 
+		const SPSODescription fullscreenPassPSO =
+		{
+			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::Fullscreen)],
+			.PixelShader = nullptr,
+			.GeometryShader = nullptr,
+			.ComputeShader = nullptr,
+			.InputLayout = nullptr,
+			.Topology = ETopologies::TriangleList,
+			.BlendState = RenderStateManager.BlendStates[STATIC_U8(EBlendStates::Disable)],
+			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(ERasterizerStates::BackfaceCulling)],
+			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(EDepthStencilStates::Default)],
+			.RootSignature = nullptr
+		};
+		const U16 fullscreenPassPSOIndex = RenderStateManager.AddPipelineStateObject(fullscreenPassPSO);
+		HV_ASSERT(fullscreenPassPSOIndex == 0, "We are assuming fullscreen passes to use PSO index 0, but the PSO was not placed at index 0!");
+
 		const SPSODescription staticMeshShadowPass =
 		{
 			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::StaticMeshInstanced)],

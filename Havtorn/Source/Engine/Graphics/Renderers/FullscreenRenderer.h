@@ -80,7 +80,7 @@ namespace Havtorn
 		CFullscreenRenderer() = default;
 		~CFullscreenRenderer();
 		bool Init(CRHI* rhi, CRenderManager* manager);
-		void Render(const EPixelShaders effect, const CRenderStateManager& stateManager);
+		U64 Render(const EPixelShaders effect, const EBlendStates blendState, const CRenderStateManager& stateManager, const U64 currentPSOHash);
 
 		SPostProcessingBufferData GetPostProcessBuffer() const;
 		void SetPostProcessBuffer(const SPostProcessingBufferData& data);
