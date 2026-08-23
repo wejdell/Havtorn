@@ -33,7 +33,7 @@ namespace Havtorn
 		Count
 	};
 
-	enum class ESamplerType
+	enum class ESamplerType : U8
 	{
 		Border,
 		Clamp,

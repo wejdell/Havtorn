@@ -210,7 +210,7 @@ namespace Havtorn
     U16 CRenderStateManager::AddIndexBuffer(const std::vector<U32>& indices)
     {
         IndexBuffers.emplace_back(CDataBuffer());
-        IndexBuffers.back().CreateBuffer("Index Buffer", RHI, sizeof(U32) * STATIC_U32(indices.size()), indices.data(), EDataBufferType::Index, EDataBufferUsage::Immutable, EDataBufferCPUAccess::None);
+        IndexBuffers.back().CreateBuffer("Index Buffer", RHI, sizeof(U32) * STATIC_U32(indices.size()), indices.data(), EDataBufferType::Index, EDataBufferUsage::Immutable, EResourceCPUAccess::None);
 
         return STATIC_U16(IndexBuffers.size() - 1);
     }

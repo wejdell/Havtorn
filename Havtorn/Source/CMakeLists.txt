@@ -539,6 +539,10 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Graphics/RenderCommand.h
     ${ENGINE_FOLDER}Graphics/RenderManager.cpp
     ${ENGINE_FOLDER}Graphics/RenderManager.h
+    ${ENGINE_FOLDER}Graphics/RenderGraph.cpp
+    ${ENGINE_FOLDER}Graphics/RenderGraph.h
+    ${ENGINE_FOLDER}Graphics/RenderResourceRegistry.cpp
+    ${ENGINE_FOLDER}Graphics/RenderResourceRegistry.h
     ${ENGINE_FOLDER}Graphics/RenderStateManager.cpp
     ${ENGINE_FOLDER}Graphics/RenderStateManager.h
     ${ENGINE_FOLDER}Graphics/RenderTextureFactory.cpp

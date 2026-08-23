@@ -159,7 +159,7 @@ namespace Havtorn
 	U16 CRenderStateManager::AddVertexBuffer(const std::vector<T>& vertices)
 	{
 		VertexBuffers.emplace_back(CDataBuffer());
-		VertexBuffers.back().CreateBuffer("Vertex Buffer", RHI, sizeof(T) * STATIC_U32(vertices.size()), vertices.data(), EDataBufferType::Vertex, EDataBufferUsage::Immutable, EDataBufferCPUAccess::None);
+		VertexBuffers.back().CreateBuffer("Vertex Buffer", RHI, sizeof(T) * STATIC_U32(vertices.size()), vertices.data(), EDataBufferType::Vertex, EDataBufferUsage::Immutable, EResourceCPUAccess::None);
 
 		return STATIC_U16(VertexBuffers.size() - 1);
 	}
