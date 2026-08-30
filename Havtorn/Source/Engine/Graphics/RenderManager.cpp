@@ -609,12 +609,14 @@ namespace Havtorn
 				CheckIsolatedRenderPass(renderViewID);
 			}
 
+			RenderGraph.Execute(this);
+
 			// RenderTarget should be complete as that is the texture we send to the viewport
 			Backbuffer.SetAsActiveTarget();
 			if (RenderThreadRenderViews->contains(WorldMainCameraEntity.GUID))
 			{
 				RenderThreadRenderViews->at(WorldMainCameraEntity.GUID).RenderTarget.SetAsPSResourceOnSlot(0);
-				CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+				RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
 			}
 
 			GTime::EndTracking(ETimerCategory::GPU);
@@ -973,6 +975,11 @@ namespace Havtorn
 		GameThreadRenderViews->at(renderViewID).RenderCommands.push(command);
 	}
 
+	void CRenderManager::AddRenderGraphPass(CHavtornStaticString<RenderDebugNameMaxSize> name, const std::function<SRenderPassResourceDeclaration()> setup, std::function<void(CRenderManager*)>&& execution)
+	{
+		RenderGraph.AddPass(name, setup, std::move(execution));
+	}
+
 	void CRenderManager::SwapRenderViews()
 	{
 		std::vector<U64> idsToErase = {};
@@ -1082,6 +1089,21 @@ namespace Havtorn
 		return CurrentRunningRenderPass;
 	}
 
+	void CRenderManager::SetPSOFromRenderCommandType(const ERenderCommandType commandType)
+	{
+		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(commandType), CurrentPSOHash);
+	}
+
+	void CRenderManager::SetPSOFromAssetType(const EAssetType assetType)
+	{
+		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(AssetTypeToPSOIndex.at(assetType), CurrentPSOHash);
+	}
+
+	void CRenderManager::RenderFullscreenPass(const EPixelShaders pixelShader, const EBlendStates blendState)
+	{
+		CurrentPSOHash = FullscreenRenderer.Render(pixelShader, blendState, RenderStateManager, CurrentPSOHash);
+	}
+
 	void CRenderManager::Clear(SVector4 /*clearColor*/)
 	{
 		//Backbuffer.ClearTexture(clearColor);
@@ -1137,7 +1159,7 @@ namespace Havtorn
 		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewID).StaticMeshInstanceData[command.U32s[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::ShadowAtlasPrePassDirectional), CurrentPSOHash);
+		SetPSOFromRenderCommandType(ERenderCommandType::ShadowAtlasPrePassDirectional);
 		
 		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(command.DrawCallData.size()); drawCallIndex++)
 		{
@@ -1167,7 +1189,7 @@ namespace Havtorn
 		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewID).StaticMeshInstanceData[command.U32s[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::ShadowAtlasPrePassPoint), CurrentPSOHash);
+		SetPSOFromRenderCommandType(ERenderCommandType::ShadowAtlasPrePassPoint);
 
 		for (const auto& shadowmapView : command.ShadowmapViews)
 		{
@@ -1225,7 +1247,7 @@ namespace Havtorn
 		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewID).StaticMeshInstanceData[command.U32s[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::ShadowAtlasPrePassSpot), CurrentPSOHash);
+		SetPSOFromRenderCommandType(ERenderCommandType::ShadowAtlasPrePassSpot);
 
 		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(command.DrawCallData.size()); drawCallIndex++)
 		{
@@ -1272,7 +1294,7 @@ namespace Havtorn
 		const std::vector<SMatrix>& matrices = RenderThreadRenderViews->at(command.RenderViewID).StaticMeshInstanceData[command.U32s[0]].Transforms;
 		InstancedTransformBuffer.BindBuffer(matrices);
 
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::GBufferDataInstanced), CurrentPSOHash);
+		SetPSOFromRenderCommandType(ERenderCommandType::GBufferDataInstanced);
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
@@ -1338,7 +1360,7 @@ namespace Havtorn
 
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
 
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::GBufferDataInstancedEditor), CurrentPSOHash);
+		SetPSOFromRenderCommandType(ERenderCommandType::GBufferDataInstancedEditor);
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
@@ -1408,7 +1430,7 @@ namespace Havtorn
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(AssetTypeToPSOIndex.at(EAssetType::StaticMesh), CurrentPSOHash);
+		SetPSOFromAssetType(EAssetType::StaticMesh);
 
 		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(command.DrawCallData.size()); drawCallIndex++)
 		{
@@ -1433,7 +1455,7 @@ namespace Havtorn
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
 		RenderStateManager.VSSetConstantBuffer(6, BoneBuffer);
 
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::GBufferSkeletalInstanced), CurrentPSOHash);
+		SetPSOFromRenderCommandType(ERenderCommandType::GBufferSkeletalInstanced);
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
@@ -1505,7 +1527,7 @@ namespace Havtorn
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
 		RenderStateManager.VSSetConstantBuffer(6, BoneBuffer);
 
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::GBufferSkeletalInstancedEditor), CurrentPSOHash);
+		SetPSOFromRenderCommandType(ERenderCommandType::GBufferSkeletalInstancedEditor);
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
@@ -1585,7 +1607,7 @@ namespace Havtorn
 		RenderStateManager.VSSetConstantBuffer(1, ObjectBuffer);
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(AssetTypeToPSOIndex.at(EAssetType::SkeletalMesh), CurrentPSOHash);
+		SetPSOFromAssetType(EAssetType::SkeletalMesh);
 
 		for (U8 drawCallIndex = 0; drawCallIndex < STATIC_U8(command.DrawCallData.size()); drawCallIndex++)
 		{
@@ -1619,7 +1641,7 @@ namespace Havtorn
 		const std::vector<SVector4>& colors = spriteData.Colors;
 		InstancedColorBuffer.BindBuffer(colors);
 
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::GBufferSpriteInstanced), CurrentPSOHash);
+		SetPSOFromRenderCommandType(ERenderCommandType::GBufferSpriteInstanced);
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 		RenderStateManager.PSSetResources(0, 1, command.RenderTextures[0].GetShaderResourceView());
@@ -1653,7 +1675,7 @@ namespace Havtorn
 		const std::vector<SEntity>& entities = spriteData.Entities;
 		InstancedEntityIDBuffer.BindBuffer(entities);
 
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::GBufferSpriteInstancedEditor), CurrentPSOHash);
+		SetPSOFromRenderCommandType(ERenderCommandType::GBufferSpriteInstancedEditor);
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 		RenderStateManager.PSSetResources(0, 1, command.RenderTextures[0].GetShaderResourceView());
@@ -1671,7 +1693,7 @@ namespace Havtorn
 	{
 		DepthCopy.SetAsActiveTarget();
 		IntermediateDepth.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenCopyDepth, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenCopyDepth, EBlendStates::Disable);
 	}
 
 	void CRenderManager::DeferredDecal(const SRenderCommand& command)
@@ -1688,7 +1710,7 @@ namespace Havtorn
 		RenderStateManager.VSSetConstantBuffer(1, DecalBuffer);
 		RenderStateManager.PSSetConstantBuffer(1, DecalBuffer);
 
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::DeferredDecal), CurrentPSOHash);
+		SetPSOFromRenderCommandType(ERenderCommandType::DeferredDecal);
 
 		RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[0], RenderStateManager.MeshVertexStrides[0], RenderStateManager.MeshVertexOffsets[0]);
 		RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[STATIC_U8(EDefaultIndexBuffers::DecalProjector)]);
@@ -1729,11 +1751,11 @@ namespace Havtorn
 		SSAOBuffer.SetAsActiveTarget();
 		GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Normal, 2);
 		IntermediateDepth.SetAsPSResourceOnSlot(21);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenSSAO, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenSSAO, EBlendStates::Disable);
 
 		SSAOBlurTexture.SetAsActiveTarget();
 		SSAOBuffer.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenSSAOBlur, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenSSAOBlur, EBlendStates::Disable);
 
 		// === !SSAO ===
 
@@ -1783,7 +1805,7 @@ namespace Havtorn
 		RenderStateManager.IASetVertexBuffer(0, CDataBuffer::Null, 0, 0);
 		RenderStateManager.IASetIndexBuffer(CDataBuffer::Null);
 
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::DeferredLightingDirectional), CurrentPSOHash);
+		SetPSOFromRenderCommandType(ERenderCommandType::DeferredLightingDirectional);
 
 		RenderStateManager.Draw(3, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
@@ -1823,7 +1845,7 @@ namespace Havtorn
 		RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[STATIC_U8(EVertexBufferPrimitives::PointLightCube)], RenderStateManager.MeshVertexStrides[1], RenderStateManager.MeshVertexOffsets[0]);
 		RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[STATIC_U8(EDefaultIndexBuffers::PointLightCube)]);
 
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::DeferredLightingPoint), CurrentPSOHash);
+		SetPSOFromRenderCommandType(ERenderCommandType::DeferredLightingPoint);
 
 		RenderStateManager.DrawIndexed(36, 0, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
@@ -1872,7 +1894,7 @@ namespace Havtorn
 		RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[1], RenderStateManager.MeshVertexStrides[1], RenderStateManager.MeshVertexOffsets[0]);
 		RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[STATIC_U8(EDefaultIndexBuffers::PointLightCube)]);
 
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::DeferredLightingSpot), CurrentPSOHash);
+		SetPSOFromRenderCommandType(ERenderCommandType::DeferredLightingSpot);
 
 		RenderStateManager.DrawIndexed(36, 0, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
@@ -1882,12 +1904,12 @@ namespace Havtorn
 	inline void CRenderManager::Skybox(const SRenderCommand& command)
 	{
 		ID3D11ShaderResourceView* nullView = NULL;
+
+
+		SetPSOFromRenderCommandType(ERenderCommandType::Skybox);
+
 		RenderStateManager.PSSetResources(21, 1, &nullView);
-
 		LitScene.SetAsActiveTarget(&IntermediateDepth);
-
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::Skybox), CurrentPSOHash);
-
 		RenderStateManager.PSSetResources(0, 1, command.RenderTextures[0].GetShaderResourceView());
 
 		RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[STATIC_U8(EVertexBufferPrimitives::SkyboxCube)], RenderStateManager.MeshVertexStrides[1], RenderStateManager.MeshVertexOffsets[0]);
@@ -1904,7 +1926,7 @@ namespace Havtorn
 
 		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsActiveTarget();
 		LitScene.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, EBlendStates::AdditiveBlend, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::AdditiveBlend);
 	}
 
 	void CRenderManager::VolumetricLightingDirectional(const SRenderCommand& command)
@@ -1914,7 +1936,7 @@ namespace Havtorn
 		IntermediateDepth.SetAsPSResourceOnSlot(21);
 		ShadowAtlasDepth.SetAsPSResourceOnSlot(22);
 
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::VolumetricLightingDirectional), CurrentPSOHash);
+		SetPSOFromRenderCommandType(ERenderCommandType::VolumetricLightingDirectional);
 
 		// Lightbuffer
 		DirectionalLightBufferData.ToDirectionalLight = -command.Vectors[0]; // Negate the direction going into the shaders
@@ -1962,7 +1984,7 @@ namespace Havtorn
 		IntermediateDepth.SetAsPSResourceOnSlot(21);
 		ShadowAtlasDepth.SetAsPSResourceOnSlot(22);
 
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::VolumetricLightingPoint), CurrentPSOHash);
+		SetPSOFromRenderCommandType(ERenderCommandType::VolumetricLightingPoint);
 
 		// Light Buffer
 		PointLightBufferData.ToWorldFromObject = command.Matrices[0];
@@ -2017,7 +2039,7 @@ namespace Havtorn
 		IntermediateDepth.SetAsPSResourceOnSlot(21);
 		ShadowAtlasDepth.SetAsPSResourceOnSlot(22);
 
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::VolumetricLightingSpot), CurrentPSOHash);
+		SetPSOFromRenderCommandType(ERenderCommandType::VolumetricLightingSpot);
 
 		// Light Buffer
 		SVector position = command.Matrices[0].GetTranslation();
@@ -2082,47 +2104,47 @@ namespace Havtorn
 		// Downsampling and Blur
 		DownsampledDepth.SetAsActiveTarget();
 		IntermediateDepth.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenDownsampleDepth, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenDownsampleDepth, EBlendStates::Disable);
 
 		// Blur
 		VolumetricBlurTexture.SetAsActiveTarget();
 		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenBilateralHorizontal, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenBilateralHorizontal, EBlendStates::Disable);
 
 		VolumetricAccumulationBuffer.SetAsActiveTarget();
 		VolumetricBlurTexture.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenBilateralVertical, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenBilateralVertical, EBlendStates::Disable);
 
 		VolumetricBlurTexture.SetAsActiveTarget();
 		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenBilateralHorizontal, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenBilateralHorizontal, EBlendStates::Disable);
 
 		VolumetricAccumulationBuffer.SetAsActiveTarget();
 		VolumetricBlurTexture.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenBilateralVertical, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenBilateralVertical, EBlendStates::Disable);
 
 		VolumetricBlurTexture.SetAsActiveTarget();
 		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenBilateralHorizontal, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenBilateralHorizontal, EBlendStates::Disable);
 
 		VolumetricAccumulationBuffer.SetAsActiveTarget();
 		VolumetricBlurTexture.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenBilateralVertical, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenBilateralVertical, EBlendStates::Disable);
 
 		VolumetricBlurTexture.SetAsActiveTarget();
 		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenBilateralHorizontal, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenBilateralHorizontal, EBlendStates::Disable);
 
 		VolumetricAccumulationBuffer.SetAsActiveTarget();
 		VolumetricBlurTexture.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenBilateralVertical, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenBilateralVertical, EBlendStates::Disable);
 
 		// Upsampling
 		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsActiveTarget();
 		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
 		DownsampledDepth.SetAsPSResourceOnSlot(1);
 		IntermediateDepth.SetAsPSResourceOnSlot(2);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenDepthAwareUpsampling, EBlendStates::AdditiveBlend, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenDepthAwareUpsampling, EBlendStates::AdditiveBlend);
 	}
 
 	inline void CRenderManager::ForwardTransparency(const SRenderCommand& /*command*/)
@@ -2147,7 +2169,7 @@ namespace Havtorn
 		const std::vector<SVector4>& colors = spriteData.Colors;
 		InstancedColorBuffer.BindBuffer(colors);
 
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::ScreenSpaceSprite), CurrentPSOHash);
+		SetPSOFromRenderCommandType(ERenderCommandType::ScreenSpaceSprite);
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 		RenderStateManager.PSSetResources(0, 1, command.RenderTextures[0].GetShaderResourceView());
@@ -2170,48 +2192,48 @@ namespace Havtorn
 
 		HalfSizeTexture.SetAsActiveTarget();
 		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
 
 		QuarterSizeTexture.SetAsActiveTarget();
 		HalfSizeTexture.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
 
 		BlurTexture1.SetAsActiveTarget();
 		QuarterSizeTexture.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
 
 		BlurTexture2.SetAsActiveTarget();
 		BlurTexture1.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenGaussianHorizontal, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenGaussianHorizontal, EBlendStates::Disable);
 
 		BlurTexture1.SetAsActiveTarget();
 		BlurTexture2.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenGaussianVertical, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenGaussianVertical, EBlendStates::Disable);
 
 		BlurTexture2.SetAsActiveTarget();
 		BlurTexture1.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenGaussianHorizontal, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenGaussianHorizontal, EBlendStates::Disable);
 
 		BlurTexture1.SetAsActiveTarget();
 		BlurTexture2.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenGaussianVertical, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenGaussianVertical, EBlendStates::Disable);
 
 		QuarterSizeTexture.SetAsActiveTarget();
 		BlurTexture1.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
 
 		HalfSizeTexture.SetAsActiveTarget();
 		QuarterSizeTexture.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
 
 		VignetteTexture.SetAsActiveTarget();
 		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
 
 		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsActiveTarget();
 		VignetteTexture.SetAsPSResourceOnSlot(0);
 		HalfSizeTexture.SetAsPSResourceOnSlot(1);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenBloom, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenBloom, EBlendStates::Disable);
 	}
 
 	inline void CRenderManager::Tonemapping(const SRenderCommand& command)
@@ -2221,7 +2243,7 @@ namespace Havtorn
 
 		TonemappedTexture.SetAsActiveTarget();
 		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenTonemap, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenTonemap, EBlendStates::Disable);
 	}
 
 	inline void CRenderManager::WorldSpaceSpriteEditorWidget(const SRenderCommand& command)
@@ -2248,7 +2270,7 @@ namespace Havtorn
 		const std::vector<SEntity>& entities = spriteData.Entities;
 		InstancedEntityIDBuffer.BindBuffer(entities);
 
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::WorldSpaceSpriteEditorWidget), CurrentPSOHash);
+		SetPSOFromRenderCommandType(ERenderCommandType::WorldSpaceSpriteEditorWidget);
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 		command.RenderTextures[0].SetAsPSResourceOnSlot(0);
@@ -2279,7 +2301,7 @@ namespace Havtorn
 		const std::vector<SVector4>& colors = spriteData.Colors;
 		InstancedColorBuffer.BindBuffer(colors);
 
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::ScreenSpaceUISprite), CurrentPSOHash);
+		SetPSOFromRenderCommandType(ERenderCommandType::ScreenSpaceUISprite);
 
 		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
 		command.RenderTextures[0].SetAsPSResourceOnSlot(0);
@@ -2297,7 +2319,7 @@ namespace Havtorn
 	{
 		AntiAliasedTexture.SetAsActiveTarget();
 		TonemappedTexture.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenFXAA, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenFXAA, EBlendStates::Disable);
 	}
 
 	inline void CRenderManager::GammaCorrection(const SRenderCommand& command)
@@ -2307,7 +2329,7 @@ namespace Havtorn
 
 		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsActiveTarget();
 		AntiAliasedTexture.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenGammaCorrection, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenGammaCorrection, EBlendStates::Disable);
 	}
 
 	inline void CRenderManager::RendererDebug(const SRenderCommand& /*command*/)
@@ -2317,7 +2339,7 @@ namespace Havtorn
 
 	inline void CRenderManager::PreDebugShapes(const SRenderCommand& /*command*/)
 	{
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(ERenderCommandType::PreDebugShape), CurrentPSOHash);
+		SetPSOFromRenderCommandType(ERenderCommandType::PreDebugShape);
 	}
 
 	inline void CRenderManager::PostTonemappingUseDepth(const SRenderCommand& /*command*/)
@@ -2334,7 +2356,7 @@ namespace Havtorn
 	{
 		command.RenderTextures[0].SetAsPSResourceOnSlot(0);
 		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsActiveTarget();
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
 	}
 
 	inline void CRenderManager::TextureCubeDraw(const SRenderCommand& command)
@@ -2349,7 +2371,7 @@ namespace Havtorn
 		RenderStateManager.IASetVertexBuffer(0, RenderStateManager.VertexBuffers[STATIC_U8(EVertexBufferPrimitives::SkyboxCube)], RenderStateManager.MeshVertexStrides[1], RenderStateManager.MeshVertexOffsets[0]);
 		RenderStateManager.IASetIndexBuffer(RenderStateManager.IndexBuffers[STATIC_U8(EDefaultIndexBuffers::SkyboxCube)]);
 
-		CurrentPSOHash = RenderStateManager.TrySetPipelineStateObject(AssetTypeToPSOIndex.at(EAssetType::TextureCube), CurrentPSOHash);
+		SetPSOFromAssetType(EAssetType::TextureCube);
 
 		RenderStateManager.DrawIndexed(36, 0, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
@@ -2388,7 +2410,7 @@ namespace Havtorn
 		CRenderViewport viewport = CRenderViewport(RHI, 0.0f, 0.0f, 256.0f, 256.0f, 0.0f, 1.0f);
 		viewport.SetViewport();
 		ShadowAtlasDepth.SetAsPSResourceOnSlot(0);
-		CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenCopyDepth, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+		RenderFullscreenPass(EPixelShaders::FullscreenCopyDepth, EBlendStates::Disable);
 	}
 
 	void CRenderManager::CheckIsolatedRenderPass(const U64 renderViewID)
@@ -2404,49 +2426,63 @@ namespace Havtorn
 		{
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			DepthCopy.SetAsPSResourceOnSlot(0);
-			CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenCopyDepth, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+			RenderFullscreenPass(EPixelShaders::FullscreenCopyDepth, EBlendStates::Disable);
 		}
 		break;
 		case Havtorn::ERenderPass::GBufferAlbedo:
 		{
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Albedo, 0);
-			CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+			RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
 		}
 		break;
 		case Havtorn::ERenderPass::GBufferNormals:
 		{
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Normal, 0);
-			CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+			RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
 		}
 		break;
 		case Havtorn::ERenderPass::GBufferMaterials:
 		{
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Material, 0);
-			CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+			RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
 		}
 		break;
 		case Havtorn::ERenderPass::SSAO:
 		{
-			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
-			SSAOBlurTexture.SetAsPSResourceOnSlot(0);
-			CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+			//RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
+			//SSAOBlurTexture.SetAsPSResourceOnSlot(0);
+			//RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
+
+			AddRenderGraphPass(CHavtornStaticString<RenderDebugNameMaxSize>("SSAO Isolated")
+			, [this, renderViewID]()
+			{
+				SRenderPassResourceDeclaration data;
+				data.Inputs.emplace_back(SRenderResourceDescription{ .Name = {"SSAO Blur Texture"}, .PipelineStage = EShaderType::Pixel, .Type = ERenderResourceType::ShaderResourceView, .BindSlot = 0 }, &SSAOBlurTexture);
+				data.Outputs.emplace_back(SRenderResourceDescription{ .Name = {"Main Render Target"}, .Type = ERenderResourceType::RenderTargetView }, &RenderThreadRenderViews->at(renderViewID).RenderTarget);
+				return data;
+			}
+			, [](CRenderManager* renderManager)
+			{
+				renderManager->RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
+			}
+			);
 		}
 		break;
 		case Havtorn::ERenderPass::DeferredLighting:
 		{
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			LitScene.SetAsPSResourceOnSlot(0);
-			CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+			RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
 		}
 		break;
 		case Havtorn::ERenderPass::VolumetricLighting:
 		{
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
-			CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+			RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
 		}
 		break;
 		case Havtorn::ERenderPass::Bloom:
@@ -2454,14 +2490,14 @@ namespace Havtorn
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			VignetteTexture.SetAsPSResourceOnSlot(0);
 			HalfSizeTexture.SetAsPSResourceOnSlot(1);
-			CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenDifference, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+			RenderFullscreenPass(EPixelShaders::FullscreenDifference, EBlendStates::Disable);
 		}
 		break;
 		case Havtorn::ERenderPass::Tonemapping:
 		{
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			TonemappedTexture.SetAsPSResourceOnSlot(0);
-			CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+			RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
 		}
 		break;
 		case Havtorn::ERenderPass::Antialiasing:
@@ -2469,21 +2505,21 @@ namespace Havtorn
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			AntiAliasedTexture.SetAsPSResourceOnSlot(0);
 			TonemappedTexture.SetAsPSResourceOnSlot(1);
-			CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenDifference, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+			RenderFullscreenPass(EPixelShaders::FullscreenDifference, EBlendStates::Disable);
 		}
 		break;
 		case Havtorn::ERenderPass::EditorData:
 		{
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::EditorData, 0);
-			CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenEditorData, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+			RenderFullscreenPass(EPixelShaders::FullscreenEditorData, EBlendStates::Disable);
 		}
 		break;
 		case Havtorn::ERenderPass::WorldPosition:
 		{
 			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
 			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::WorldPosition, 0);
-			CurrentPSOHash = FullscreenRenderer.Render(EPixelShaders::FullscreenWorldPosition, EBlendStates::Disable, RenderStateManager, CurrentPSOHash);
+			RenderFullscreenPass(EPixelShaders::FullscreenWorldPosition, EBlendStates::Disable);
 		}
 		break;
 		case Havtorn::ERenderPass::Count:

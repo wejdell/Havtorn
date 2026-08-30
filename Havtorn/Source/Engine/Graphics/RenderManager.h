@@ -8,6 +8,7 @@
 #include "GraphicsEnums.h"
 #include "GraphicsMaterial.h"
 #include "RenderCommand.h"
+#include "RenderGraph.h"
 #include "Scene/World.h"
 
 #include <RHI/RenderingPrimitives/DataBuffer.h>
@@ -97,6 +98,7 @@ namespace Havtorn
 	class CRenderManager
 	{
 		friend CAssetRegistry;
+		friend CRenderGraph;
 
 	public:
 		CRenderManager() = default;
@@ -145,6 +147,9 @@ namespace Havtorn
 		void SetWorldPlayState(EWorldPlayState playState);
 		[[nodiscard]] ENGINE_API CRenderTexture* GetRenderTargetTexture(const U64 renderViewID) const;
 		ENGINE_API void PushRenderCommand(SRenderCommand command, const U64 renderViewID);
+
+		ENGINE_API void AddRenderGraphPass(CHavtornStaticString<RenderDebugNameMaxSize> name, const std::function<SRenderPassResourceDeclaration()> setup, std::function<void(CRenderManager*)>&& execution);
+
 		void SwapRenderViews();
 		void ClearRenderViewInstanceData();
 
@@ -158,6 +163,10 @@ namespace Havtorn
 
 		ENGINE_API void SetRenderPass(const ERenderPass renderPass);
 		ENGINE_API ERenderPass GetRenderPass() const;
+
+		ENGINE_API void SetPSOFromRenderCommandType(const ERenderCommandType commandType);
+		ENGINE_API void SetPSOFromAssetType(const EAssetType assetType);
+		ENGINE_API void RenderFullscreenPass(const EPixelShaders pixelShader, const EBlendStates blendState);
 
 	public:
 		ENGINE_API static U32 NumberOfDrawCallsThisFrame;
@@ -401,6 +410,8 @@ namespace Havtorn
 		std::map<U64, std::vector<SShadowCasterCategory>> GameThreadShadowCasters;
 
 		SVector4 ClearColor = SVector4(0.5f, 0.5f, 0.5f, 1.0f);
+
+		CRenderGraph RenderGraph;
 
 		std::map<ERenderCommandType, std::function<void(const SRenderCommand& command)>> RenderFunctions;
 		ERenderPass CurrentRunningRenderPass = ERenderPass::All;
