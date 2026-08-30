@@ -7,13 +7,20 @@
 namespace Havtorn
 {
 	class CRHI;
+	class CRenderManager;
+
+	struct SRenderPassResourceDeclaration
+	{
+		std::vector<SRenderResourceDeclaration> Inputs;
+		std::vector<SRenderResourceDeclaration> Outputs;
+	};
 
 	struct SRenderPass
 	{
-		CHavtornStaticString<32> Name;
+		CHavtornStaticString<RenderDebugNameMaxSize> Name;
 		std::vector<SRenderResourceHandle> Inputs;
 		std::vector<SRenderResourceHandle> Outputs;
-		std::function<void(CRHI*, const std::vector<SRenderResource*>&)> Function;
+		std::function<void(CRenderManager*)> ExecutionFunction;
 	};
 
 	class CRenderGraph
@@ -22,10 +29,10 @@ namespace Havtorn
 		CRenderGraph() = default;
 		~CRenderGraph() = default;
 		
-		void AddPass(CHavtornStaticString<32> name, const std::function<void()> setup, const std::function<void(CRHI*, const std::vector<SRenderResource*>&)> execution);
+		void AddPass(CHavtornStaticString<RenderDebugNameMaxSize> name, const std::function<SRenderPassResourceDeclaration()> setup, std::function<void(CRenderManager*)>&& execution);
 
 		void Compile();
-		void Execute();
+		void Execute(CRenderManager* renderManager);
 
 	private:
 		std::vector<SRenderPass> RenderPasses;

@@ -9,6 +9,11 @@ namespace Havtorn
 {
 	const CDataBuffer CDataBuffer::Null = { std::string("Null"), nullptr, nullptr };
 
+	void CDataBuffer::Release()
+	{
+		Buffer->Release();
+	}
+
 	void CDataBuffer::CreateBuffer(const std::string& bufferName, const CRHI* rhi, U32 byteWidth, const void* subResourceData, EDataBufferType bufferType, EDataBufferUsage usage, EResourceCPUAccess cpuAccess)
 	{
 		Name = bufferName;

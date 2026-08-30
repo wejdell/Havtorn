@@ -47,6 +47,8 @@ namespace Havtorn
 		CDataBuffer() = default;
 		~CDataBuffer() = default;
 
+		PLATFORM_API void Release();
+
 		PLATFORM_API void CreateBuffer(const std::string& bufferName, const CRHI* rhi, U32 byteWidth, const void* subResourceData = nullptr, EDataBufferType bufferType = EDataBufferType::Constant, EDataBufferUsage usage = EDataBufferUsage::Dynamic, EResourceCPUAccess cpuAccess = EResourceCPUAccess::CPUAccessWrite);
 
 		template<class T>
