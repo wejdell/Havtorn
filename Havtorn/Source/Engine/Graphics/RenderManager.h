@@ -230,16 +230,8 @@ namespace Havtorn
 		void MapRuntimeMaterialProperty(SRuntimeGraphicsMaterialProperty& property, std::vector<ID3D11ShaderResourceView*>& runtimeArray, std::map<U32, F32>& runtimeMap, const std::map<U32, CStaticRenderTexture>& textureMap);
 
 	private:
-		struct SFrameBufferData
-		{
-			SMatrix ToCameraFromWorld;
-			SMatrix ToWorldFromCamera;
-			SMatrix ToProjectionFromCamera;
-			SMatrix ToCameraFromProjection;
-			SVector4 CameraPosition;
-		} FrameBufferData;
-		HV_ASSERT_BUFFER(SFrameBufferData)
-
+		SFrameBufferData FrameBufferData;
+		
 		struct SObjectBufferData
 		{
 			SMatrix ToWorldFromObject;
@@ -291,34 +283,6 @@ namespace Havtorn
 		} SpriteBufferData;
 		HV_ASSERT_BUFFER(SSpriteBufferData)
 
-		struct SDirectionalLightBufferData
-		{
-			SVector4 ToDirectionalLight;
-			SVector4 DirectionalLightColor;
-		} DirectionalLightBufferData;
-		HV_ASSERT_BUFFER(SDirectionalLightBufferData)
-
-		struct SPointLightBufferData
-		{
-			SMatrix ToWorldFromObject;
-			SVector4 ColorAndIntensity;
-			SVector4 PositionAndRange;
-		} PointLightBufferData;
-		HV_ASSERT_BUFFER(SPointLightBufferData)
-
-		struct SSpotLightBufferData
-		{
-			SVector4 ColorAndIntensity;
-			SVector4 PositionAndRange;
-			SVector4 Direction;
-			SVector4 DirectionNormal1;
-			SVector4 DirectionNormal2;
-			F32 OuterAngle = 0.0f;
-			F32 InnerAngle = 0.0f;
-			SVector2<F32> Padding;
-		} SpotLightBufferData;
-		HV_ASSERT_BUFFER(SSpotLightBufferData)
-
 		struct SShadowmapBufferData
 		{
 			SMatrix ToShadowmapView;
@@ -362,9 +326,6 @@ namespace Havtorn
 		CDataBuffer DebugShapeObjectBuffer;
 		CDataBuffer DecalBuffer;
 		CDataBuffer SpriteBuffer;
-		CDataBuffer DirectionalLightBuffer;
-		CDataBuffer PointLightBuffer;
-		CDataBuffer SpotLightBuffer;
 		CDataBuffer ShadowmapBuffer;
 		CDataBuffer VolumetricLightBuffer;
 		CDataBuffer EmissiveBuffer;
@@ -446,7 +407,5 @@ namespace Havtorn
 		void* SystemSkeletalAnimationBoneData = nullptr;
 		void* RendererSkeletalAnimationBoneData = nullptr;
 		U64 SkeletalAnimationBoneDataSize = 0;
-		
-		const U16 InstancedDrawInstanceLimit = 65535;
 	};
 }

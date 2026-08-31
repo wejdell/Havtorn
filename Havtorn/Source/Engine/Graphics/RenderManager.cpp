@@ -212,24 +212,6 @@ namespace Havtorn
 		const U16 fullscreenPassPSOIndex = RenderStateManager.AddPipelineStateObject(fullscreenPassPSO);
 		HV_ASSERT(fullscreenPassPSOIndex == 0, "We are assuming fullscreen passes to use PSO index 0, but the PSO was not placed at index 0!");
 
-		const SPSODescription staticMeshShadowPass =
-		{
-			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::StaticMeshInstanced)],
-			.PixelShader = nullptr,
-			.GeometryShader = nullptr,
-			.ComputeShader = nullptr,
-			.InputLayout = RenderStateManager.InputLayouts[STATIC_U8(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans)],
-			.Topology = ETopologies::TriangleList,
-			.BlendState = RenderStateManager.BlendStates[STATIC_U8(EBlendStates::Disable)],
-			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(ERasterizerStates::BackfaceCulling)],
-			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(EDepthStencilStates::Default)],
-			.RootSignature = nullptr
-		};
-		const U16 staticMeshShadowPassIndex = RenderStateManager.AddPipelineStateObject(staticMeshShadowPass);
-		RenderCommandToPSOIndex.emplace(ERenderCommandType::ShadowAtlasPrePassDirectional, staticMeshShadowPassIndex);
-		RenderCommandToPSOIndex.emplace(ERenderCommandType::ShadowAtlasPrePassPoint, staticMeshShadowPassIndex);
-		RenderCommandToPSOIndex.emplace(ERenderCommandType::ShadowAtlasPrePassSpot, staticMeshShadowPassIndex);
-
 		const SPSODescription staticMeshGame =
 		{
 			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::StaticMeshInstanced)],
@@ -305,51 +287,6 @@ namespace Havtorn
 		};
 		RenderCommandToPSOIndex.emplace(ERenderCommandType::DeferredDecal, RenderStateManager.AddPipelineStateObject(deferredDecal));
 
-		const SPSODescription lightingDirectional =
-		{
-			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::Fullscreen)],
-			.PixelShader = RenderStateManager.PixelShaders[STATIC_U8(EPixelShaders::DeferredDirectional)],
-			.GeometryShader = nullptr,
-			.ComputeShader = nullptr,
-			.InputLayout = nullptr,
-			.Topology = ETopologies::TriangleList,
-			.BlendState = RenderStateManager.BlendStates[STATIC_U8(EBlendStates::AdditiveBlend)],
-			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(ERasterizerStates::BackfaceCulling)],
-			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(EDepthStencilStates::Default)],
-			.RootSignature = nullptr
-		};
-		RenderCommandToPSOIndex.emplace(ERenderCommandType::DeferredLightingDirectional, RenderStateManager.AddPipelineStateObject(lightingDirectional));
-
-		const SPSODescription lightingPoint =
-		{
-			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::PointAndSpotLight)],
-			.PixelShader = RenderStateManager.PixelShaders[STATIC_U8(EPixelShaders::DeferredPoint)],
-			.GeometryShader = nullptr,
-			.ComputeShader = nullptr,
-			.InputLayout = RenderStateManager.InputLayouts[STATIC_U8(EInputLayoutType::Position4)],
-			.Topology = ETopologies::TriangleList,
-			.BlendState = RenderStateManager.BlendStates[STATIC_U8(EBlendStates::AdditiveBlend)],
-			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(ERasterizerStates::FrontfaceCulling)],
-			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(EDepthStencilStates::Default)],
-			.RootSignature = nullptr
-		};
-		RenderCommandToPSOIndex.emplace(ERenderCommandType::DeferredLightingPoint, RenderStateManager.AddPipelineStateObject(lightingPoint));
-
-		const SPSODescription lightingSpot =
-		{
-			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::PointAndSpotLight)],
-			.PixelShader = RenderStateManager.PixelShaders[STATIC_U8(EPixelShaders::DeferredSpot)],
-			.GeometryShader = nullptr,
-			.ComputeShader = nullptr,
-			.InputLayout = RenderStateManager.InputLayouts[STATIC_U8(EInputLayoutType::Position4)],
-			.Topology = ETopologies::TriangleList,
-			.BlendState = RenderStateManager.BlendStates[STATIC_U8(EBlendStates::AdditiveBlend)],
-			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(ERasterizerStates::FrontfaceCulling)],
-			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(EDepthStencilStates::Default)],
-			.RootSignature = nullptr
-		};
-		RenderCommandToPSOIndex.emplace(ERenderCommandType::DeferredLightingSpot, RenderStateManager.AddPipelineStateObject(lightingSpot));
-
 		const SPSODescription skybox =
 		{
 			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::Skybox)],
@@ -364,51 +301,6 @@ namespace Havtorn
 			.RootSignature = nullptr
 		};
 		RenderCommandToPSOIndex.emplace(ERenderCommandType::Skybox, RenderStateManager.AddPipelineStateObject(skybox));
-
-		const SPSODescription volumetricLightDirectional =
-		{
-			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::Fullscreen)],
-			.PixelShader = RenderStateManager.PixelShaders[STATIC_U8(EPixelShaders::VolumetricDirectional)],
-			.GeometryShader = nullptr,
-			.ComputeShader = nullptr,
-			.InputLayout = RenderStateManager.InputLayouts[STATIC_U8(EInputLayoutType::Null)],
-			.Topology = ETopologies::TriangleList,
-			.BlendState = RenderStateManager.BlendStates[STATIC_U8(EBlendStates::AdditiveBlend)],
-			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(ERasterizerStates::Default)],
-			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(EDepthStencilStates::Default)],
-			.RootSignature = nullptr
-		};
-		RenderCommandToPSOIndex.emplace(ERenderCommandType::VolumetricLightingDirectional, RenderStateManager.AddPipelineStateObject(volumetricLightDirectional));
-
-		const SPSODescription volumetricLightPoint =
-		{
-			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::PointAndSpotLight)],
-			.PixelShader = RenderStateManager.PixelShaders[STATIC_U8(EPixelShaders::VolumetricPoint)],
-			.GeometryShader = nullptr,
-			.ComputeShader = nullptr,
-			.InputLayout = RenderStateManager.InputLayouts[STATIC_U8(EInputLayoutType::Position4)],
-			.Topology = ETopologies::TriangleList,
-			.BlendState = RenderStateManager.BlendStates[STATIC_U8(EBlendStates::AdditiveBlend)],
-			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(ERasterizerStates::FrontfaceCulling)],
-			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(EDepthStencilStates::Default)],
-			.RootSignature = nullptr
-		};
-		RenderCommandToPSOIndex.emplace(ERenderCommandType::VolumetricLightingPoint, RenderStateManager.AddPipelineStateObject(volumetricLightPoint));
-
-		const SPSODescription volumetricLightSpot =
-		{
-			.VertexShader = RenderStateManager.VertexShaders[STATIC_U8(EVertexShaders::PointAndSpotLight)],
-			.PixelShader = RenderStateManager.PixelShaders[STATIC_U8(EPixelShaders::VolumetricSpot)],
-			.GeometryShader = nullptr,
-			.ComputeShader = nullptr,
-			.InputLayout = RenderStateManager.InputLayouts[STATIC_U8(EInputLayoutType::Position4)],
-			.Topology = ETopologies::TriangleList,
-			.BlendState = RenderStateManager.BlendStates[STATIC_U8(EBlendStates::AdditiveBlend)],
-			.RasterizerState = RenderStateManager.RasterizerStates[STATIC_U8(ERasterizerStates::FrontfaceCulling)],
-			.DepthStencilState = RenderStateManager.DepthStencilStates[STATIC_U8(EDepthStencilStates::Default)],
-			.RootSignature = nullptr
-		};
-		RenderCommandToPSOIndex.emplace(ERenderCommandType::VolumetricLightingSpot, RenderStateManager.AddPipelineStateObject(volumetricLightSpot));
 
 		const SPSODescription screenSpaceSprite =
 		{
@@ -1118,9 +1010,6 @@ namespace Havtorn
 		DebugShapeObjectBuffer.CreateBuffer("Debug Shape Object Buffer", RHI, sizeof(SDebugShapeObjectBufferData));
 		DecalBuffer.CreateBuffer("Decal Buffer", RHI, sizeof(SDecalBufferData));
 		SpriteBuffer.CreateBuffer("Sprite Buffer", RHI, sizeof(SSpriteBufferData));
-		DirectionalLightBuffer.CreateBuffer("Directional Light Buffer", RHI, sizeof(SDirectionalLightBufferData));
-		PointLightBuffer.CreateBuffer("Point Light Buffer", RHI, sizeof(SPointLightBufferData));
-		SpotLightBuffer.CreateBuffer("Spot Light Buffer", RHI, sizeof(SSpotLightBufferData));
 		ShadowmapBuffer.CreateBuffer("Shadowmap Buffer", RHI, sizeof(SShadowmapBufferData) * 6);
 		VolumetricLightBuffer.CreateBuffer("Volumetric Light Buffer", RHI, sizeof(SVolumetricLightBufferData));
 		EmissiveBuffer.CreateBuffer("Emissive Buffer", RHI, sizeof(SEmissiveBufferData));

@@ -186,6 +186,8 @@ namespace Havtorn
 		U16 MaterialIndex = 0;
 	};
 
+	constexpr U16 InstancedDrawInstanceLimit = 65535;
+
 	struct SShadowmapViewData
 	{
 		SMatrix ShadowViewMatrix = SMatrix::Identity;
@@ -196,6 +198,16 @@ namespace Havtorn
 
 		U16 ShadowmapViewportIndex = 0;
 	};
+
+	struct SFrameBufferData
+	{
+		SMatrix ToCameraFromWorld;
+		SMatrix ToWorldFromCamera;
+		SMatrix ToProjectionFromCamera;
+		SMatrix ToCameraFromProjection;
+		SVector4 CameraPosition;
+	};
+	HV_ASSERT_BUFFER(SFrameBufferData)
 
 	struct SRuntimeGraphicsMaterialProperty
 	{

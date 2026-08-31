@@ -27,6 +27,10 @@ namespace Havtorn
 	{
 	public:
 		friend class CRenderManager;
+		friend class CCustomRenderer;
+		friend class CFullscreenRenderer;
+		friend class CGeometryRenderer;
+		friend class CLightRenderer;
 		friend class CAssetRegistry;
 
 		CRenderStateManager() = default;
