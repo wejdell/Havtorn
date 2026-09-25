@@ -7,7 +7,7 @@
 
 namespace Havtorn
 {
-	const CDataBuffer CDataBuffer::Null = { std::string("Null"), nullptr, nullptr };
+	const CDataBuffer CDataBuffer::Null = { 0u, 0u, std::string("Null"), nullptr, nullptr };
 
 	void CDataBuffer::Release()
 	{
@@ -35,6 +35,16 @@ namespace Havtorn
 		{
 			ENGINE_HR_MESSAGE(rhi->GetDevice()->CreateBuffer(&bufferDescription, nullptr, &Buffer), "%s could not be created.", Name.c_str());
 		}
+	}
+
+	U32 CDataBuffer::GetStride() const
+	{
+		return U32();
+	}
+
+	U32 CDataBuffer::GetOffset() const
+	{
+		return U32();
 	}
 
 	CDataBuffer::CDataBuffer(const std::string& name, ID3D11DeviceContext* context, ID3D11Buffer* buffer)

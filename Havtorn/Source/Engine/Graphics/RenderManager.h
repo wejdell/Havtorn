@@ -2,7 +2,13 @@
 
 #pragma once
 #include "hvpch.h"
+#include "Renderers/CustomRenderer.h"
+#include "Renderers/DebugRenderer.h"
 #include "Renderers/FullscreenRenderer.h"
+#include "Renderers/GeometryRenderer.h"
+#include "Renderers/LightRenderer.h"
+#include "Renderers/SpriteRenderer.h"
+#include "Renderers/ThumbnailRenderer.h"
 #include "RenderTextureFactory.h"
 #include "RenderStateManager.h"
 #include "GraphicsEnums.h"
@@ -99,6 +105,7 @@ namespace Havtorn
 	{
 		friend CAssetRegistry;
 		friend CRenderGraph;
+		friend CFullscreenRenderer;
 
 	public:
 		CRenderManager() = default;
@@ -149,6 +156,7 @@ namespace Havtorn
 		ENGINE_API void PushRenderCommand(SRenderCommand command, const U64 renderViewID);
 
 		ENGINE_API void AddRenderGraphPass(CHavtornStaticString<RenderDebugNameMaxSize> name, const std::function<SRenderPassResourceDeclaration()> setup, std::function<void(CRenderManager*)>&& execution);
+		ENGINE_API CRenderGraph& GetRenderGraph();
 
 		void SwapRenderViews();
 		void ClearRenderViewInstanceData();
@@ -168,8 +176,21 @@ namespace Havtorn
 		ENGINE_API void SetPSOFromAssetType(const EAssetType assetType);
 		ENGINE_API void RenderFullscreenPass(const EPixelShaders pixelShader, const EBlendStates blendState);
 
+		void MapRuntimeMaterialProperty(SRuntimeGraphicsMaterialProperty& property, std::vector<ID3D11ShaderResourceView*>& runtimeArray, std::map<U32, F32>& runtimeMap, const std::map<U32, CStaticRenderTexture>& textureMap);
+
+		CRenderStateManager& GetRenderStateManager();
+
 	public:
 		ENGINE_API static U32 NumberOfDrawCallsThisFrame;
+		
+		// Render "Modules"
+		CCustomRenderer CustomRenderer;
+		CDebugRenderer DebugRenderer;
+		CFullscreenRenderer FullscreenRenderer;
+		CGeometryRenderer GeometryRenderer;
+		CLightRenderer LightRenderer;
+		CSpriteRenderer SpriteRenderer;
+		CThumbnailRenderer ThumbnailRenderer;
 
 	private:
 		void Clear(SVector4 clearColor);
@@ -182,36 +203,17 @@ namespace Havtorn
 		void BindRenderFunctions();
 
 	private:
-		inline void ShadowAtlasPrePassDirectional(const SRenderCommand& command);
-		inline void ShadowAtlasPrePassPoint(const SRenderCommand& command);
-		inline void ShadowAtlasPrePassSpot(const SRenderCommand& command);
 		inline void CameraDataStorage(const SRenderCommand& command);
-		inline void GBufferDataInstanced(const SRenderCommand& command);
-		inline void GBufferDataInstancedEditor(const SRenderCommand& command);
-		inline void StaticMeshAssetThumbnail(const SRenderCommand& command);
-		inline void GBufferSkeletalInstanced(const SRenderCommand& command);
-		inline void GBufferSkeletalInstancedEditor(const SRenderCommand& command);
-		inline void SkeletalMeshAssetThumbnail(const SRenderCommand& command);
-		inline void GBufferSpriteInstanced(const SRenderCommand& command);
-		inline void GBufferSpriteInstancedEditor(const SRenderCommand& command);
 		inline void DecalDepthCopy(const SRenderCommand& command);
-		inline void DeferredDecal(const SRenderCommand& command);
 		inline void PreLightingPass(const SRenderCommand& command);
-		inline void DeferredLightingDirectional(const SRenderCommand& command);
-		inline void DeferredLightingPoint(const SRenderCommand& command);
-		inline void DeferredLightingSpot(const SRenderCommand& command);
-		inline void Skybox(const SRenderCommand& command);
+		
 		inline void PostBaseLightingPass(const SRenderCommand& command);
-		inline void VolumetricLightingDirectional(const SRenderCommand& command);
-		inline void VolumetricLightingPoint(const SRenderCommand& command);
-		inline void VolumetricLightingSpot(const SRenderCommand& command);
 		inline void VolumetricBlur(const SRenderCommand& command);
 		inline void ForwardTransparency(const SRenderCommand& command);
-		inline void ScreenSpaceSprite(const SRenderCommand& command);
-		inline void WorldSpaceSpriteEditorWidget(const SRenderCommand& command);
+		
 		inline void RenderBloom(const SRenderCommand& command);
 		inline void Tonemapping(const SRenderCommand& command);
-		inline void ScreenSpaceUISprite(const SRenderCommand& command);
+		
 		inline void AntiAliasing(const SRenderCommand& command);
 		inline void GammaCorrection(const SRenderCommand& command);
 		inline void RendererDebug(const SRenderCommand& command);
@@ -219,15 +221,11 @@ namespace Havtorn
 		inline void PostTonemappingUseDepth(const SRenderCommand& command);
 		inline void PostTonemappingIgnoreDepth(const SRenderCommand& command);
 		inline void TextureDraw(const SRenderCommand& command);
-		inline void TextureCubeDraw(const SRenderCommand& command);
-		inline void DebugShapes(const SRenderCommand& command);
 
 		inline void DebugShadowAtlas();
 
 		void CheckIsolatedRenderPass(const U64 renderViewID);
 		void CycleRenderPass(const SInputActionPayload payload);
-
-		void MapRuntimeMaterialProperty(SRuntimeGraphicsMaterialProperty& property, std::vector<ID3D11ShaderResourceView*>& runtimeArray, std::map<U32, F32>& runtimeMap, const std::map<U32, CStaticRenderTexture>& textureMap);
 
 	private:
 		SFrameBufferData FrameBufferData;
@@ -237,24 +235,6 @@ namespace Havtorn
 			SMatrix ToWorldFromObject;
 		} ObjectBufferData;
 		HV_ASSERT_BUFFER(SObjectBufferData)
-
-		struct SMaterialBufferData
-		{
-			SMaterialBufferData() = default;
-
-			SMaterialBufferData(const SEngineGraphicsMaterial& engineGraphicsMaterial)
-				: RecreateZ(engineGraphicsMaterial.RecreateNormalZ)
-			{
-				memcpy(&Properties[0], &engineGraphicsMaterial, sizeof(SRuntimeGraphicsMaterialProperty) * 11);
-			}
-
-			SRuntimeGraphicsMaterialProperty Properties[11];
-
-			bool RecreateZ = true;
-			bool Padding[15] = {};
-
-		} MaterialBufferData;
-		HV_ASSERT_BUFFER(SMaterialBufferData)
 
 		struct SDebugShapeObjectBufferData
 		{
@@ -283,43 +263,11 @@ namespace Havtorn
 		} SpriteBufferData;
 		HV_ASSERT_BUFFER(SSpriteBufferData)
 
-		struct SShadowmapBufferData
-		{
-			SMatrix ToShadowmapView;
-			SMatrix ToShadowmapProjection;
-			SVector4 ShadowmapPosition;
-			SVector2<F32> ShadowmapResolution;
-			SVector2<F32> ShadowAtlasResolution;
-			SVector2<F32> ShadowmapStartingUV;
-			F32 ShadowTestTolerance = 0.0f;
-			F32 Padding = -1.0f;
-		} ShadowmapBufferData;
-		HV_ASSERT_BUFFER(SShadowmapBufferData)
-
-		struct SVolumetricLightBufferData
-		{
-			F32 NumberOfSamplesReciprocal = (1.0f / 16.0f);
-			F32 LightPower = 500000.0f;
-			F32 ScatteringProbability = 0.0001f;
-			F32 HenyeyGreensteinGValue = 0.0f;
-		} VolumetricLightBufferData;
-		HV_ASSERT_BUFFER(SVolumetricLightBufferData)
-
-		struct SEmissiveBufferData
-		{
-			F32 EmissiveStrength = 1.0f;
-			SVector Padding;
-		} EmissiveBufferData;
-		HV_ASSERT_BUFFER(SEmissiveBufferData)
-
-		struct SBoneBufferData
-		{
-			SMatrix Bones[64];
-		} BoneBufferData;
-		HV_ASSERT_BUFFER(SBoneBufferData)
-
 	private:
 		CRHI* RHI = nullptr;
+		CRenderStateManager RenderStateManager;
+		CRenderTextureFactory RenderTextureFactory;
+		
 		CDataBuffer FrameBuffer;
 		CDataBuffer ObjectBuffer;
 		CDataBuffer MaterialBuffer;
@@ -330,10 +278,7 @@ namespace Havtorn
 		CDataBuffer VolumetricLightBuffer;
 		CDataBuffer EmissiveBuffer;
 		CDataBuffer BoneBuffer;
-		CRenderStateManager RenderStateManager;
-		CFullscreenRenderer FullscreenRenderer;
 
-		CRenderTextureFactory RenderTextureFactory;
 		CRenderTexture Backbuffer;
 		CRenderTexture IntermediateTexture;
 		CRenderTexture IntermediateDepth;
@@ -380,7 +325,6 @@ namespace Havtorn
 		
 		std::map<ERenderCommandType, U16> RenderCommandToPSOIndex;
 		std::map<EAssetType, U16> AssetTypeToPSOIndex;
-		U64 CurrentPSOHash = 0;
 
 		CDataBuffer InstancedTransformBuffer;
 		CDataBuffer InstancedEntityIDBuffer;

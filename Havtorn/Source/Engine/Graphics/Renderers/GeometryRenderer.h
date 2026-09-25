@@ -1,101 +1,108 @@
-// Copyright 2022 Team Havtorn. All Rights Reserved.
+// Copyright 2026 Team Havtorn. All Rights Reserved.
 
 #pragma once
-#include "hvpch.h"
-#include <array>
 
-#include "Graphics/RenderStateManager.h"
-#include "Graphics/GraphicsEnums.h"
-#include <RHI/RenderingPrimitives/DataBuffer.h>
-#include <RHI/RenderingPrimitives/RenderTexture.h>
+#include "Graphics/GraphicsStructs.h"
 
 namespace Havtorn
 {
-	class CRHI;
-	class CRenderManager;
 	class CRenderStateManager;
+	struct SRenderResource;
 
-	struct SPostProcessingBufferData
+	struct SMaterialBufferData
 	{
-		SVector4 WhitePointColor;
-		F32 WhitePointIntensity;
-		F32 Exposure;
-		F32 SSAORadius;
-		F32 SSAOSampleBias;
-		F32 SSAOMagnitude;
-		F32 SSAOContrast;
+		SMaterialBufferData() = default;
 
-		I32 IsReinhard;
-		I32 IsUncharted;
-		I32 IsACES;
-		I32 IsAgX;
+		SMaterialBufferData(const SEngineGraphicsMaterial& engineGraphicsMaterial)
+			: RecreateZ(engineGraphicsMaterial.RecreateNormalZ)
+		{
+			memcpy(&Properties[0], &engineGraphicsMaterial, sizeof(SRuntimeGraphicsMaterialProperty) * 11);
+		}
 
-		F32 EmissiveStrength;
-		F32 VignetteStrength;
+		SRuntimeGraphicsMaterialProperty Properties[11];
 
-		// AGX Settings
-		F32 AgXMiddleGray;
-		F32 AgXSlope;
-		F32 AgXToePower;
-		F32 AgXShoulderPower;
-		F32 AgXCompressionR;
-		F32 AgXCompressionG;
-		F32 AgXCompressionB;
-		F32 AgXSaturation;
-		F32 AgXLerp;
-		SVector Padding;
-
-		SVector4 VignetteColor;
+		bool RecreateZ = true;
+		bool Padding[15] = {};
 	};
-	HV_ASSERT_BUFFER(SPostProcessingBufferData)
+	HV_ASSERT_BUFFER(SMaterialBufferData)
 
-	class CGeometryRenderer 
+	struct SBoneBufferData
+	{
+		SMatrix Bones[64];
+	};
+	HV_ASSERT_BUFFER(SBoneBufferData)
+
+	struct SDecalBufferData
+	{
+		SMatrix ToWorld;
+		SMatrix ToObjectSpace;
+	} DecalBufferData;
+	HV_ASSERT_BUFFER(SDecalBufferData)
+
+	struct SEditorGeometryRenderData
+	{
+		SRenderResource* EntityBuffer = nullptr;
+	};
+
+	struct SStaticMeshRenderData
+	{
+		SRenderResource* MaterialBuffer = nullptr;
+		SRenderResource* VertexBuffer = nullptr;
+		SRenderResource* IndexBuffer = nullptr;
+		SRenderResource* TransformBuffer = nullptr;
+		std::vector<SRenderResource*> MaterialTextures;
+		U32 IndexCount = 0;
+		U32 InstanceCount = 0;
+	};
+
+	struct SSkeletalMeshRenderData
+	{
+		SRenderResource* MaterialBuffer = nullptr;
+		SRenderResource* VertexBuffer = nullptr;
+		SRenderResource* IndexBuffer = nullptr;
+		SRenderResource* BoneBuffer = nullptr;
+		SRenderResource* TransformBuffer = nullptr;
+		std::vector<SRenderResource*> MaterialTextures;
+		U32 IndexCount = 0;
+		U32 InstanceCount = 0;
+	};
+
+	struct SDecalRenderData
+	{
+		SRenderResource* DecalBuffer = nullptr;
+		SRenderResource* OptionalAlbedoTexture = nullptr; // TODO.NW: Change this to material
+		SRenderResource* OptionalMaterialTexture = nullptr;
+		SRenderResource* OptionalNormalTexture = nullptr;
+	};
+
+	struct SSkyboxRenderData
+	{
+		SRenderResource* LitSceneTextureWithDepth = nullptr;
+		SRenderResource* CubemapTexture = nullptr;
+	};
+
+	// TODO.NW: Rename to scene renderer?
+	class CGeometryRenderer
 	{
 	public:
-		friend CRenderManager;
+		CGeometryRenderer(CRenderStateManager* stateManager);
+		~CGeometryRenderer() = default;
+
+		void RenderStaticMesh(const SStaticMeshRenderData& passData);
+		void RenderEditorStaticMesh(const SStaticMeshRenderData& passData, const SEditorGeometryRenderData& editorPassData);
+		void RenderSkeletalMesh(const SSkeletalMeshRenderData& passData);
+		void RenderEditorSkeletalMesh(const SSkeletalMeshRenderData& passData, const SEditorGeometryRenderData& editorPassData);
+		void RenderDecal(const SDecalRenderData& passData);
+		void RenderSkybox(const SSkyboxRenderData& passData);
 
 	private:
-		static const U16 KernelSize = 16;
+		U16 StaticMeshGBufferPassPSOIndex = 0;
+		U16 StaticMeshEditorGBufferPassPSOIndex = 0;
+		U16 SkeletalMeshGBufferPassPSOIndex = 0;
+		U16 SkeletalMeshEditorGBufferPassPSOIndex = 0;
+		U16 DecalGBufferPassPSOIndex = 0;
+		U16 SkyboxPassPSOIndex = 0;
 
-	private:
-		struct SFullscreenData 
-		{
-			SVector2<F32> Resolution;
-			SVector2<F32> NoiseScale;
-			SVector4 SampleKernel[KernelSize];
-		} FullscreenData;
-		HV_ASSERT_BUFFER(SFullscreenData)
-
-		struct SFrameBufferData
-		{
-			SMatrix ToCameraSpace;
-			SMatrix ToWorldFromCamera;
-			SMatrix ToProjectionSpace;
-			SMatrix ToCameraFromProjection;
-			SVector4 CameraPosition;
-		} FrameBufferData;
-		HV_ASSERT_BUFFER(SFrameBufferData)
-
-	private:
-		CGeometryRenderer() = default;
-		~CGeometryRenderer();
-		bool Init(CRHI* rhi, CRenderManager* manager);
-		U64 Render(const EPixelShaders effect, const EBlendStates blendState, const CRenderStateManager& stateManager, const U64 currentPSOHash);
-
-		SPostProcessingBufferData GetPostProcessBuffer() const;
-		void SetPostProcessBuffer(const SPostProcessingBufferData& data);
-
-		const std::string ShaderRoot = "Shaders/";
-
-		SPostProcessingBufferData PostProcessingBufferData;
-
-		CDataBuffer FullscreenDataBuffer;
-		CDataBuffer FrameBuffer;
-		CDataBuffer PostProcessingBuffer;
-
-		CRenderTexture NoiseTexture;
-		SVector4 Kernel[KernelSize];
-
-		CRenderManager* Manager = nullptr;
+		CRenderStateManager* RenderStateManager = nullptr;
 	};
 }

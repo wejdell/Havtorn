@@ -529,12 +529,18 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Graphics/Debug/DebugDrawUtility.h
     ${ENGINE_FOLDER}Graphics/Renderers/CustomRenderer.cpp
     ${ENGINE_FOLDER}Graphics/Renderers/CustomRenderer.h
+    ${ENGINE_FOLDER}Graphics/Renderers/DebugRenderer.cpp
+    ${ENGINE_FOLDER}Graphics/Renderers/DebugRenderer.h
     ${ENGINE_FOLDER}Graphics/Renderers/FullscreenRenderer.cpp
     ${ENGINE_FOLDER}Graphics/Renderers/FullscreenRenderer.h
     ${ENGINE_FOLDER}Graphics/Renderers/GeometryRenderer.cpp
     ${ENGINE_FOLDER}Graphics/Renderers/GeometryRenderer.h
     ${ENGINE_FOLDER}Graphics/Renderers/LightRenderer.cpp
     ${ENGINE_FOLDER}Graphics/Renderers/LightRenderer.h
+    ${ENGINE_FOLDER}Graphics/Renderers/SpriteRenderer.cpp
+    ${ENGINE_FOLDER}Graphics/Renderers/SpriteRenderer.h
+    ${ENGINE_FOLDER}Graphics/Renderers/ThumbnailRenderer.cpp
+    ${ENGINE_FOLDER}Graphics/Renderers/ThumbnailRenderer.h
     ${ENGINE_FOLDER}Graphics/GeometryPrimitives.h
     ${ENGINE_FOLDER}Graphics/GraphicsEnums.h
     ${ENGINE_FOLDER}Graphics/GraphicsMaterial.cpp

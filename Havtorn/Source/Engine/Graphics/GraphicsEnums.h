@@ -49,8 +49,8 @@ namespace Havtorn
 		TransUVRectColor,
 		Pos3Nor3Tan3Bit3UV2Entity2Trans,
 		TransUVRectColorEntity2,
-		Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans,
-		Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2AnimDataTrans,
+		Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Trans,
+		Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2Trans,
 		Pos3Nor3Tan3Bit3UV2Color4,
 		Pos3Nor3Tan3Bit3UV2Color4Entity2,
 		Null

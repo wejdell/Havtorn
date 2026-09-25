@@ -47,7 +47,13 @@ namespace Havtorn
 
 		SVector4 VignetteColor;
 	};
-	HV_ASSERT_BUFFER(SPostProcessingBufferData)
+	HV_ASSERT_BUFFER(SPostProcessingBufferData);
+
+	struct SFullscreenRenderPassData
+	{
+		EPixelShaders PixelShader = EPixelShaders::FullscreenCopy;
+		EBlendStates BlendState = EBlendStates::Disable;
+	};
 
 	class CFullscreenRenderer 
 	{
@@ -80,7 +86,9 @@ namespace Havtorn
 		CFullscreenRenderer() = default;
 		~CFullscreenRenderer();
 		bool Init(CRHI* rhi, CRenderManager* manager);
-		U64 Render(const EPixelShaders effect, const EBlendStates blendState, const CRenderStateManager& stateManager, const U64 currentPSOHash);
+		void Render(const EPixelShaders effect, const EBlendStates blendState);
+
+		void Render(const SFullscreenRenderPassData& passData);
 
 		SPostProcessingBufferData GetPostProcessBuffer() const;
 		void SetPostProcessBuffer(const SPostProcessingBufferData& data);
@@ -97,5 +105,8 @@ namespace Havtorn
 		SVector4 Kernel[KernelSize];
 
 		CRenderManager* Manager = nullptr;
+		CRenderStateManager* RenderStateManager = nullptr;
+
+		U16 FullscreenRenderPassPSOIndex = 0;
 	};
 }

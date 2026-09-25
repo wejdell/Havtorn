@@ -5,6 +5,7 @@
 
 #include "GeometryPrimitives.h"
 #include "GraphicsUtilities.h"
+#include "RenderResourceRegistry.h"
 
 #include "FileSystem/FileWatcher.h"
 
@@ -326,7 +327,7 @@ namespace Havtorn
             };
             break;
 
-        case EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans:
+        case EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Trans:
             layout =
             {
                 { .SemanticName = "POSITION",               .Format = ERenderResourceFormat::R32G32B32_Float },
@@ -336,11 +337,10 @@ namespace Havtorn
                 { .SemanticName = "UV",                     .Format = ERenderResourceFormat::R32G32_Float },
                 { .SemanticName = "BONEID",                 .Format = ERenderResourceFormat::R32G32B32A32_Float },
                 { .SemanticName = "BONEWEIGHT",             .Format = ERenderResourceFormat::R32G32B32A32_Float },
-                { .SemanticName = "INSTANCEANIMATIONDATA",  .Format = ERenderResourceFormat::R32G32_UnsignedInt, .SemanticIndex = 0, .InputSlot = 1, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
-                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 0, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
-                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 1, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
-                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 2, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
-                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 3, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData }
+                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 0, .InputSlot = 1, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 1, .InputSlot = 1, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 2, .InputSlot = 1, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 3, .InputSlot = 1, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData }
             };
             break;
 
@@ -360,7 +360,7 @@ namespace Havtorn
             };
             break;
 
-        case EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2AnimDataTrans:
+        case EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2Trans:
             layout =
             {
                 { .SemanticName = "POSITION",               .Format = ERenderResourceFormat::R32G32B32_Float },
@@ -371,11 +371,10 @@ namespace Havtorn
                 { .SemanticName = "BONEID",                 .Format = ERenderResourceFormat::R32G32B32A32_Float },
                 { .SemanticName = "BONEWEIGHT",             .Format = ERenderResourceFormat::R32G32B32A32_Float },
                 { .SemanticName = "ENTITY",                 .Format = ERenderResourceFormat::R32G32_UnsignedInt, .SemanticIndex = 0, .InputSlot = 1, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
-                { .SemanticName = "INSTANCEANIMATIONDATA",  .Format = ERenderResourceFormat::R32G32_UnsignedInt, .SemanticIndex = 0, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
-                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 0, .InputSlot = 3, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
-                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 1, .InputSlot = 3, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
-                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 2, .InputSlot = 3, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
-                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 3, .InputSlot = 3, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData }
+                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 0, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 1, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 2, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                { .SemanticName = "INSTANCETRANSFORM",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 3, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData }
             };
             break;
 
@@ -485,6 +484,11 @@ namespace Havtorn
         Viewports.emplace_back(CRenderViewport(RHI, topLeftCoordinate.X, topLeftCoordinate.Y, widthAndHeight.X, widthAndHeight.Y, depth.X, depth.Y));
     }
 
+    void CRenderStateManager::ResetPSOHash()
+    {
+        CurrentPSOHash = 0;
+    }
+
     void CRenderStateManager::IASetTopology(ETopologies topology) const
     {
         Context->IASetPrimitiveTopology(static_cast<D3D11_PRIMITIVE_TOPOLOGY>(topology));
@@ -501,18 +505,55 @@ namespace Havtorn
         InputLayouts[STATIC_U8(layout)]->SetInputLayout();
     }
 
+    void CRenderStateManager::IASetVertexBuffer(U8 startSlot, const CDataBuffer& buffer) const
+    {
+        Context->IASetVertexBuffers(startSlot, 1, &buffer.Buffer, &buffer.VertexBufferStride, &buffer.VertexBufferOffset);
+    }
+
     void CRenderStateManager::IASetVertexBuffer(U8 startSlot, const CDataBuffer& buffer, U32 stride, U32 offset) const
     {
         Context->IASetVertexBuffers(startSlot, 1, &buffer.Buffer, &stride, &offset);
     }
 
-    void CRenderStateManager::IASetVertexBuffers(U8 startSlot, U8 numberOfBuffers, const std::vector<CDataBuffer>& buffers, const U32* strides, const U32* offsets) const
+    void CRenderStateManager::IASetVertexBuffers(U8 startSlot, const std::vector<CDataBuffer>& buffers, const U32* strides, const U32* offsets) const
     {
         std::vector<ID3D11Buffer*> bufferPointers;
         for (const CDataBuffer& buffer : buffers)
             bufferPointers.emplace_back(buffer.Buffer);
 
-        Context->IASetVertexBuffers(startSlot, numberOfBuffers, bufferPointers.data(), strides, offsets);
+        Context->IASetVertexBuffers(startSlot, bufferPointers.size(), bufferPointers.data(), strides, offsets);
+    }
+
+    void CRenderStateManager::IASetVertexBuffers(U8 startSlot, const std::vector<CDataBuffer*>& buffers) const
+    {
+        std::vector<ID3D11Buffer*> bufferPointers;
+        std::vector<U32> strides;
+        std::vector<U32> offsets;
+
+        for (CDataBuffer* buffer : buffers)
+        {
+            bufferPointers.emplace_back(buffer->Buffer);
+            strides.emplace_back(buffer->VertexBufferStride);
+            offsets.emplace_back(buffer->VertexBufferOffset);
+        }
+
+        Context->IASetVertexBuffers(startSlot, bufferPointers.size(), bufferPointers.data(), strides.data(), offsets.data());
+    }
+
+    void CRenderStateManager::IASetVertexBuffers(U8 startSlot, const std::vector<SRenderResource*>& resources) const
+    {
+        std::vector<ID3D11Buffer*> bufferPointers;
+        std::vector<U32> strides;
+        std::vector<U32> offsets;
+
+        for (SRenderResource* resource : resources)
+        {
+            bufferPointers.emplace_back(resource->DataBuffer->Buffer);
+            strides.emplace_back(resource->DataBuffer->VertexBufferStride);
+            offsets.emplace_back(resource->DataBuffer->VertexBufferOffset);
+        }
+
+        Context->IASetVertexBuffers(startSlot, bufferPointers.size(), bufferPointers.data(), strides.data(), offsets.data());
     }
 
     void CRenderStateManager::IASetIndexBuffer(const CDataBuffer& buffer) const
@@ -545,6 +586,15 @@ namespace Havtorn
     void CRenderStateManager::VSSetResources(U8 startSlot, U8 numberOfResources, ID3D11ShaderResourceView* const* resources)
     {
         Context->VSSetShaderResources(startSlot, numberOfResources, resources);
+    }
+
+    void CRenderStateManager::VSSetResources(U8 startSlot, const std::vector<CRenderTexture*>& resources)
+    {
+        std::vector<ID3D11ShaderResourceView*> srvs;
+        for (CRenderTexture* texture : resources)
+            srvs.emplace_back(texture->GetShaderResourceView());
+
+        Context->VSSetShaderResources(startSlot, srvs.size(), srvs.data());
     }
 
     void CRenderStateManager::GSSetShader(EGeometryShaders shader) const
@@ -587,6 +637,24 @@ namespace Havtorn
     void CRenderStateManager::PSSetResources(U8 startSlot, U8 numberOfResources, ID3D11ShaderResourceView* const* resources)
     {
         Context->PSSetShaderResources(startSlot, numberOfResources, resources);
+    }
+
+    void CRenderStateManager::PSSetResources(U8 startSlot, const std::vector<CRenderTexture*>& resources)
+    {
+        std::vector<ID3D11ShaderResourceView*> srvs;
+        for (CRenderTexture* texture : resources)
+            srvs.emplace_back(texture->GetShaderResourceView());
+
+        Context->PSSetShaderResources(startSlot, srvs.size(), srvs.data());
+    }
+
+    void CRenderStateManager::PSSetResources(U8 startSlot, const std::vector<SRenderResource*>& resources)
+    {
+        std::vector<ID3D11ShaderResourceView*> srvs;
+        for (SRenderResource* resource : resources)
+            srvs.emplace_back(resource->RenderTexture->GetShaderResourceView());
+
+        Context->PSSetShaderResources(startSlot, srvs.size(), srvs.data());
     }
 
     void CRenderStateManager::RSSetRasterizerState(ERasterizerStates rasterizerState) const
@@ -648,9 +716,9 @@ namespace Havtorn
         Context->DrawIndexedInstanced(indexCountPerInstance, instanceCount, startIndexLocation, baseVertexLocation, startInstanceLocation);
     }
 
-    U64 CRenderStateManager::TrySetPipelineStateObject(const U16 psoIndex, const U64 currentPSOHash) const
+    void CRenderStateManager::TrySetPipelineStateObject(const U16 psoIndex)
     {
-        return PSOs[psoIndex]->TrySetPipelineState(currentPSOHash);
+        CurrentPSOHash = PSOs[psoIndex]->TrySetPipelineState(CurrentPSOHash);
     }
 
     void CRenderStateManager::SetAllStates(EBlendStates blendState, EDepthStencilStates depthStencilState, ERasterizerStates rasterizerState) const

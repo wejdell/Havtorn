@@ -7,6 +7,8 @@
 #include "ECS/ECSInclude.h"
 #include "Graphics/RenderManager.h"
 #include "Graphics/RenderCommand.h"
+#include "Graphics/RenderGraph.h"
+#include "Graphics/RenderResourceRegistry.h"
 #include "ECS/ComponentAlgo.h"
 #include "Assets/AssetRegistry.h"
 #include "Scene/Scene.h"
@@ -117,6 +119,51 @@ namespace Havtorn
 			command.RenderTextures.push_back(asset->RenderTexture);
 			RenderManager->PushRenderCommand(command, renderViewID);
 		}
+	}
+
+	void CEditorRenderSystem::AddEditorWidgetPass(STextureAsset* textureAsset, const std::vector<SMatrix>& transforms, const std::vector<SVector4>& uvRects, const std::vector<SVector4>& colors, const std::vector<SEntity>& entities)
+	{
+		struct SEditorWidgetPassData
+		{
+			SRenderResourceHandle TransformBufferHandle;
+			SRenderResourceHandle UVRectBufferHandle;
+			SRenderResourceHandle ColorBufferHandle;
+			SRenderResourceHandle EntityBufferHandle;
+			SRenderResourceHandle SpriteTextureHandle;
+		};
+		RenderManager->GetRenderGraph().AddPass<SEditorWidgetPassData>("EditorWidgetPass",
+			[&](CRenderResourceRegistry& registry)
+			{
+				SEditorWidgetPassData passData;
+				passData.TransformBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
+				passData.UVRectBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SVector4>("Instanced UV Rect Buffer", InstancedDrawInstanceLimit));
+				passData.ColorBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SVector4>("Instanced Color Buffer", InstancedDrawInstanceLimit));
+				passData.EntityBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SEntity>("Instanced Entity Buffer", InstancedDrawInstanceLimit));
+				passData.SpriteTextureHandle = registry.DeclareResource(DeclareRenderTexture("Widget Texture", &textureAsset->RenderTexture));
+				return passData;
+			},
+			[=](const SEditorWidgetPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager)
+			{
+				// TODO.NW: Bind outputs, needs to include gbuffer targets
+				SSpriteRenderData renderData;
+				renderData.TransformBuffer = registry.GetResource(data.TransformBufferHandle);
+				renderData.TransformBuffer->DataBuffer->BindBuffer(transforms);
+
+				renderData.UVRectBuffer = registry.GetResource(data.UVRectBufferHandle);
+				renderData.UVRectBuffer->DataBuffer->BindBuffer(uvRects);
+
+				renderData.ColorBuffer = registry.GetResource(data.ColorBufferHandle);
+				renderData.ColorBuffer->DataBuffer->BindBuffer(colors);
+
+				renderData.SpriteTexture = registry.GetResource(data.SpriteTextureHandle);
+
+				SEditorSpriteRenderData editorRenderData;
+				editorRenderData.EntityBuffer = registry.GetResource(data.EntityBufferHandle);
+				editorRenderData.EntityBuffer->DataBuffer->BindBuffer(entities);
+
+				renderManager->SpriteRenderer.RenderEditorWorldSpaceWidget(renderData, editorRenderData);
+			}
+		);
 	}
 
 	void CEditorRenderSystem::OnEntityPreDestroy(const SEntity entity)

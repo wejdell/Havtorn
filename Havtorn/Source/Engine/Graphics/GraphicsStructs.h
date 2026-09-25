@@ -186,14 +186,12 @@ namespace Havtorn
 		U16 MaterialIndex = 0;
 	};
 
-	constexpr U16 InstancedDrawInstanceLimit = 65535;
+	constexpr U16 InstancedDrawInstanceLimit = 2000;
 
 	struct SShadowmapViewData
 	{
 		SMatrix ShadowViewMatrix = SMatrix::Identity;
 		SMatrix ShadowProjectionMatrix = SMatrix::Identity;
-
-		// TODO.NR: Replace with transform translation
 		SVector4 ShadowPosition = SVector4::Zero;
 
 		U16 ShadowmapViewportIndex = 0;

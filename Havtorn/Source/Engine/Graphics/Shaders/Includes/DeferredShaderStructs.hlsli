@@ -44,7 +44,6 @@ struct SkeletalMeshInstancedVertexInput
     float2 UV           : UV;
     float4 BoneIDs      : BONEID;
     float4 BoneWeights  : BONEWEIGHT;
-    uint2 AnimationData : INSTANCEANIMATIONDATA;
     float4x4 Transform  : INSTANCETRANSFORM;
 };
 
@@ -58,7 +57,6 @@ struct SkeletalMeshInstancedEditorVertexInput
     float4 BoneIDs      : BONEID;
     float4 BoneWeights  : BONEWEIGHT;
     uint2 Entity        : ENTITY;
-    uint2 AnimationData : INSTANCEANIMATIONDATA;
     float4x4 Transform  : INSTANCETRANSFORM;
 };
 

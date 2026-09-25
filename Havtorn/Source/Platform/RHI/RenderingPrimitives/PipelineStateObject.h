@@ -41,7 +41,7 @@ namespace Havtorn
 	public:
 		PLATFORM_API CPipelineStateObject(CRHI* rhi, const SPSODescription& description);
 
-		// Returns internal hash if successfully set, 0 if not
+		// Returns the current hash, regardless of whether it changed or not
 		PLATFORM_API U64 TrySetPipelineState(const U64 currentHash);
 
 	private:

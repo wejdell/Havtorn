@@ -3,6 +3,8 @@
 #include "hvpch.h"
 #include "RenderResourceRegistry.h"
 #include "RenderStateManager.h"
+#include "RenderManager.h"
+#include "Engine.h"
 
 #include <GeneralUtilities.h>
 
@@ -26,7 +28,7 @@ namespace Havtorn
 				DataBuffer = reinterpret_cast<CDataBuffer*>(externalMemory);
 				break;
 			case ERenderResourceType::ShaderResourceView:
-				RenderTexture = reinterpret_cast<CRenderTexture*>(externalMemory);
+				StaticRenderTexture = reinterpret_cast<CStaticRenderTexture*>(externalMemory);
 				break;
 			case ERenderResourceType::UnorderedAccessView:
 				break;
@@ -152,12 +154,13 @@ namespace Havtorn
 
 	SRenderResourceHandle CRenderResourceRegistry::DeclareResource(const SRenderResourceDeclaration& declaration)
 	{
+		// TODO.NW: Add memoization with map to index?
 		if (auto iterator = std::ranges::find(Resources, declaration.Description.ID, &SRenderResource::ID); iterator != Resources.end())
 		{
 			return SRenderResourceHandle(declaration.Description.Name, STATIC_U32(std::distance(Resources.begin(), iterator)));
 		}
 
-		U32 index = STATIC_U32(Resources.size());
+		const U32 index = STATIC_U32(Resources.size());
 		Resources.emplace_back(declaration.Description, declaration.ExternalMemory);
 		ResourceLifetimes.emplace_back(STATIC_U8(0u));
 
@@ -222,5 +225,80 @@ namespace Havtorn
 
 		Resources.clear();
 		ResourceLifetimes.clear();
+	}
+
+	SRenderResource* CRenderResourceRegistry::GetResource(const SRenderResourceHandle& handle)
+	{
+		if (!UMath::IsWithin(handle.RegistryIndex, 0, STATIC_I32(Resources.size() - 1)))
+			return nullptr;
+		
+		return &Resources[handle.RegistryIndex];
+	}
+
+	SRenderResourceDeclaration DeclareIndexBuffer(const char* name, CDataBuffer* externalMemory)
+	{
+		return	{
+				.Description =
+				{
+					.Name = { name },
+					.Type = ERenderResourceType::IndexBufferView,
+					.BufferUsage = EDataBufferUsage::Immutable
+				},
+				.ExternalMemory = externalMemory
+				};
+	}
+
+	SRenderResourceDeclaration DeclareRenderTexture(const char* name, const ERenderResourceFormat format, const ERenderTextureSizeHint size)
+	{
+		SVector2<U16> fullResolution = GEngine::GetRenderManager()->GetCurrentWindowResolution(); // TODO.NW: Figure out where this should come from
+		return DeclareRenderTexture(name, format, SVector2<U16>(fullResolution.X / STATIC_U8(size), fullResolution.Y / STATIC_U8(size)));
+	}
+
+	SRenderResourceDeclaration DeclareRenderTexture(const char* name, const ERenderResourceFormat format, const SVector2<U16>& size)
+	{
+		return	{
+				.Description =
+				{
+					.Name = { name },
+					.Type = ERenderResourceType::RenderTargetView,
+					.Format = format,
+					.Size2D = size
+				}
+				};
+	}
+
+	SRenderResourceDeclaration DeclareRenderTexture(const char* name, CStaticRenderTexture* externalMemory)
+	{
+		HV_ASSERT(externalMemory != nullptr, "DeclareRenderTexture: Provided memory was nullptr! If you are declaring a texture owned by the render graph, use DeclareRenderTexture instead!");
+		
+		return	{ 
+				.Description = 
+				{
+					.Name = { name },
+					.Type = ERenderResourceType::ShaderResourceView,
+					.Format = ERenderResourceFormat::R32G32B32A32_Float, // TODO.NW: Might want to store the format in our RHI textures, just need to provide it in the factory (needs a rewrite anyway)
+					.Size2D = SVector2<U16>(512, 512) // TODO.NW: None of these fields are used anyway but it might be nice to store sizes for texture resources also. Could display that in the tooltip of the HVAs
+				},
+				.ExternalMemory = externalMemory
+				};
+	}
+
+	SRenderResourceDeclaration DeclareRenderDepth(const char* name, const ERenderResourceFormat format, const ERenderTextureSizeHint size)
+	{
+		SVector2<U16> fullResolution = GEngine::GetRenderManager()->GetCurrentWindowResolution(); // TODO.NW: Figure out where this should come from
+		return DeclareRenderDepth(name, format, SVector2<U16>(fullResolution.X / STATIC_U8(size), fullResolution.Y / STATIC_U8(size)));
+	}
+
+	SRenderResourceDeclaration DeclareRenderDepth(const char* name, const ERenderResourceFormat format, const SVector2<U16>& size)
+	{
+		return	{
+				.Description =
+				{
+					.Name = { name },
+					.Type = ERenderResourceType::DepthStencilView,
+					.Format = format,
+					.Size2D = size
+				}
+		};
 	}
 }

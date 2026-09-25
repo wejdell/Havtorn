@@ -58,5 +58,58 @@ namespace Havtorn
 
 			return UMath::Max(xDistance, UMath::Max(yDistance, zDistance));
 		};
+
+		static std::vector<U64> TopologicalSortKahn(const std::vector<SVector2<U64>>& edges, const U64 numNodes)
+		{
+			// adjacencyList tracks, per node, the indices of all nodes each node has edges into
+			std::vector<std::vector<U64>> adjacencyList(numNodes);
+			for (const SVector2<U64>& edge : edges) 
+			{
+				adjacencyList[edge.X].push_back(edge.Y);
+			}
+
+			// inDegree tracks, per node, the amount of edges leading into each node
+			std::vector<U64> inDegree(numNodes);
+			for (U64 nodeIndex = 0; nodeIndex < numNodes; nodeIndex++) 
+			{
+				for (const U64 adjacentNodeIndex : adjacencyList[nodeIndex]) 
+					inDegree[adjacentNodeIndex]++;
+			}
+
+			// Kahn topological sort
+			std::queue<U64> nodesWithoutIncomingEdge;
+			for (U64 i = 0; i < numNodes; i++) 
+			{
+				if (inDegree[i] == 0) 
+					nodesWithoutIncomingEdge.push(i);
+			}
+
+			std::vector<U64> result;
+
+			while (!nodesWithoutIncomingEdge.empty()) 
+			{
+				const U64 nodeIndex = nodesWithoutIncomingEdge.front();
+				nodesWithoutIncomingEdge.pop();
+
+				result.push_back(nodeIndex);
+
+				// Removing the edge's 'from' node from the set. Decrement incoming edge number of all its 'to' nodes.
+				for (const U64 adjacentNodeIndex : adjacencyList[nodeIndex]) 
+				{
+					inDegree[adjacentNodeIndex]--;
+
+					if (inDegree[adjacentNodeIndex] == 0)
+						nodesWithoutIncomingEdge.push(adjacentNodeIndex);
+				}
+			}
+
+			if (result.size() != numNodes) 
+			{
+				HV_ASSERT(false, "Graph contains cycle!");
+				return {};
+			}
+
+			return result;
+		}
 	}
 }

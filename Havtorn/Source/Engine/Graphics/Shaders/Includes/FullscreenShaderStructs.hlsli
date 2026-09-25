@@ -73,8 +73,8 @@ Texture2D fullscreenTexture4 : register(t3);
 Texture2D fullscreenTexture5 : register(t4);
 
 Texture2D fullscreenDepthTexture : register(t5);
-SamplerState defaultSampler : register(s0); // Clamp Sampler
-SamplerState wrapSampler : register(s1);
+SamplerState wrapSampler : register(s0);
+SamplerState defaultSampler : register(s1); // Clamp Sampler, set on 1 because the default sampler is wrap for basically all other passes currently
 
 static const float2 resolution = float2(1600.0f, 900.0f) / 8.0f;
 static const float2 brokenScreenData = float2(-0.82f, -0.29f);

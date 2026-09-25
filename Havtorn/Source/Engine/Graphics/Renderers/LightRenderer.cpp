@@ -1,38 +1,17 @@
-// Copyright 2022 Team Havtorn. All Rights Reserved.
+// Copyright 2026 Team Havtorn. All Rights Reserved.
 
 #include "hvpch.h"
 #include "LightRenderer.h"
-#include "Engine.h"
+
 #include "Graphics/RenderManager.h"
 #include "Graphics/RenderStateManager.h" 
-#include "Graphics/GraphicsUtilities.h"
-
-#include <RHI/RHI.h>
-
-#include <d3d11.h>
+#include "Graphics/RenderResourceRegistry.h"
 
 namespace Havtorn
 {
-	CLightRenderer::~CLightRenderer() 
-	{}
-
-	bool CLightRenderer::Init(CRHI* rhi, CRenderManager* renderManager, CRenderStateManager* stateManager)
+	CLightRenderer::CLightRenderer(CRenderStateManager* stateManager)
 	{
-		if (!rhi) 
-			return false;
-
-		Manager = renderManager;
-		if (!Manager)
-			return false;
-
 		RenderStateManager = stateManager;
-
-		DirectionalLightBuffer.CreateBuffer("Directional Light Buffer", rhi, sizeof(SDirectionalLightBufferData));
-		PointLightBuffer.CreateBuffer("Point Light Buffer", rhi, sizeof(SPointLightBufferData));
-		SpotLightBuffer.CreateBuffer("Spot Light Buffer", rhi, sizeof(SSpotLightBufferData));
-		
-		FrameBuffer.CreateBuffer("Frame Buffer", rhi, sizeof(SFrameBufferData));
-		InstancedTransformBuffer.CreateBuffer("Instanced Transform Buffer", rhi, sizeof(SMatrix) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
 
 		const SPSODescription staticMeshShadowPass =
 		{
@@ -62,7 +41,7 @@ namespace Havtorn
 			.DepthStencilState = RenderStateManager->DepthStencilStates[STATIC_U8(EDepthStencilStates::Default)],
 			.RootSignature = nullptr
 		};
-		DirectonalLightPSOIndex = RenderStateManager->AddPipelineStateObject(lightingDirectional);
+		DirectionalLightPSOIndex = RenderStateManager->AddPipelineStateObject(lightingDirectional);
 
 		const SPSODescription lightingPoint =
 		{
@@ -92,7 +71,7 @@ namespace Havtorn
 			.DepthStencilState = RenderStateManager->DepthStencilStates[STATIC_U8(EDepthStencilStates::Default)],
 			.RootSignature = nullptr
 		};
-		SpotLightPSOIndex = RenderStateManager->AddPipelineStateObject(lightingSpot);
+		SpotlightPSOIndex = RenderStateManager->AddPipelineStateObject(lightingSpot);
 
 		const SPSODescription volumetricLightDirectional =
 		{
@@ -137,42 +116,118 @@ namespace Havtorn
 			.DepthStencilState = RenderStateManager->DepthStencilStates[STATIC_U8(EDepthStencilStates::Default)],
 			.RootSignature = nullptr
 		};
-		VolumetricSpotLightPSOIndex = RenderStateManager->AddPipelineStateObject(volumetricLightSpot);
-
-		return true;
+		VolumetricSpotlightPSOIndex = RenderStateManager->AddPipelineStateObject(volumetricLightSpot);
 	}
 
-	U64 CLightRenderer::RenderStaticMeshDepthPrePass(const std::vector<SShadowmapViewData>& shadowmapData, const std::vector<SDrawCallData>& drawCallData, const std::vector<SMatrix>& instanceTransforms, const U64 currentPSOHash)
+	void CLightRenderer::RenderStaticMeshDepthPrePass(const SStaticMeshShadowRenderData& passData)
 	{
-		const U64 newPSOHash = RenderStateManager->TrySetPipelineStateObject(StaticMeshShadowPassPSOIndex, currentPSOHash);
+		RenderStateManager->TrySetPipelineStateObject(StaticMeshShadowPassPSOIndex);
 
-		InstancedTransformBuffer.BindBuffer(instanceTransforms);
+		RenderStateManager->IASetVertexBuffers(0, { passData.VertexBuffer, passData.TransformBuffer });
+		RenderStateManager->IASetIndexBuffer(*passData.IndexBuffer->DataBuffer);
 
-		for (const auto& shadowmapView : shadowmapData)
-		{
-			FrameBufferData.ToCameraFromWorld = shadowmapView.ShadowViewMatrix;
-			FrameBufferData.ToWorldFromCamera = shadowmapView.ShadowViewMatrix.FastInverse();
-			FrameBufferData.ToProjectionFromCamera = shadowmapView.ShadowProjectionMatrix;
-			FrameBufferData.ToCameraFromProjection = shadowmapView.ShadowProjectionMatrix.Inverse();
-			FrameBufferData.CameraPosition = shadowmapView.ShadowPosition;
+		RenderStateManager->VSSetConstantBuffer(0, *passData.FrameBuffer->DataBuffer);
 
-			FrameBuffer.BindBuffer(FrameBufferData);
-			RenderStateManager->VSSetConstantBuffer(0, FrameBuffer);
+		RenderStateManager->Viewports[passData.ShadowmapViewportIndex].SetViewport();
+		
+		RenderStateManager->DrawIndexedInstanced(passData.IndexCount, passData.InstanceCount, 0, 0, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;			
+	}
 
-			RenderStateManager->Viewports[shadowmapView.ShadowmapViewportIndex].SetViewport();
+	void CLightRenderer::RenderDirectionalLight(const SDirectionalLightRenderData& passData)
+	{
+		// add Alpha blend PS shader
+		RenderStateManager->TrySetPipelineStateObject(DirectionalLightPSOIndex);
 
-			for (const SDrawCallData& drawData : drawCallData)
-			{
-				const std::vector<CDataBuffer> buffers = { RenderStateManager->VertexBuffers[drawData.VertexBufferIndex], InstancedTransformBuffer };
-				const U32 strides[2] = { RenderStateManager->MeshVertexStrides[drawData.VertexStrideIndex], sizeof(SMatrix) };
-				const U32 offsets[2] = { RenderStateManager->MeshVertexOffsets[drawData.VertexOffsetIndex], 0 };
-				RenderStateManager->IASetVertexBuffers(0, 2, buffers, strides, offsets);
-				RenderStateManager->IASetIndexBuffer(RenderStateManager->IndexBuffers[drawData.IndexBufferIndex]);
-				RenderStateManager->DrawIndexedInstanced(drawData.IndexCount, STATIC_U32(instanceTransforms.size()), 0, 0, 0);
-				CRenderManager::NumberOfDrawCallsThisFrame++;
-			}
-		}
+		RenderStateManager->IASetVertexBuffer(0, CDataBuffer::Null, 0, 0);
+		RenderStateManager->IASetIndexBuffer(CDataBuffer::Null);
 
-		return newPSOHash;
+		RenderStateManager->PSSetConstantBuffer(2, *passData.LightBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(5, *passData.ShadowmapBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(7, *passData.EmissiveBuffer->DataBuffer);
+
+		// Imported resource from cubemap texture, declared in setup
+		passData.CubemapTexture->RenderTexture->SetAsPSResourceOnSlot(0);
+
+		RenderStateManager->Draw(3, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
+	}
+
+	void CLightRenderer::RenderPointLight(const SPointLightRenderData& passData)
+	{
+		RenderStateManager->TrySetPipelineStateObject(PointLightPSOIndex);
+		
+		RenderStateManager->IASetVertexBuffer(0, RenderStateManager->VertexBuffers[STATIC_U8(EVertexBufferPrimitives::PointLightCube)], RenderStateManager->MeshVertexStrides[1], RenderStateManager->MeshVertexOffsets[0]);
+		RenderStateManager->IASetIndexBuffer(RenderStateManager->IndexBuffers[STATIC_U8(EDefaultIndexBuffers::PointLightCube)]);
+
+		RenderStateManager->VSSetConstantBuffer(3, *passData.LightBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(3, *passData.LightBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(5, *passData.ShadowmapBuffer->DataBuffer);
+
+		RenderStateManager->DrawIndexed(36, 0, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
+	}
+
+	void CLightRenderer::RenderSpotlight(const SSpotlightRenderData& passData)
+	{
+		RenderStateManager->TrySetPipelineStateObject(SpotlightPSOIndex);
+
+		// TODO.NW: look at these hard coded indices, surely we have a representation for them?
+		RenderStateManager->IASetVertexBuffer(0, RenderStateManager->VertexBuffers[1], RenderStateManager->MeshVertexStrides[1], RenderStateManager->MeshVertexOffsets[0]);
+		RenderStateManager->IASetIndexBuffer(RenderStateManager->IndexBuffers[STATIC_U8(EDefaultIndexBuffers::PointLightCube)]);
+
+		RenderStateManager->VSSetConstantBuffer(3, *passData.PointLightBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(3, *passData.SpotlightBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(5, *passData.ShadowmapBuffer->DataBuffer);
+
+		RenderStateManager->DrawIndexed(36, 0, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
+	}
+
+	void CLightRenderer::RenderVolumetricDirectionalLight(const SVolumetricDirectionalLightRenderData& passData)
+	{
+		RenderStateManager->TrySetPipelineStateObject(VolumetricDirectionalLightPSOIndex);
+		
+		RenderStateManager->IASetVertexBuffer(0, CDataBuffer::Null, 0, 0);
+		RenderStateManager->IASetIndexBuffer(CDataBuffer::Null);
+
+		RenderStateManager->PSSetConstantBuffer(1, *passData.LightBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(4, *passData.VolumetricLightBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(5, *passData.ShadowmapBuffer->DataBuffer);
+		
+		RenderStateManager->Draw(3, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
+	}
+
+	void CLightRenderer::RenderVolumetricPointLight(const SVolumetricPointLightRenderData& passData)
+	{
+		RenderStateManager->TrySetPipelineStateObject(VolumetricPointLightPSOIndex);
+
+		RenderStateManager->IASetVertexBuffer(0, RenderStateManager->VertexBuffers[1], RenderStateManager->MeshVertexStrides[1], RenderStateManager->MeshVertexOffsets[0]);
+		RenderStateManager->IASetIndexBuffer(RenderStateManager->IndexBuffers[STATIC_U8(EDefaultIndexBuffers::PointLightCube)]);
+
+		RenderStateManager->VSSetConstantBuffer(3, *passData.LightBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(3, *passData.LightBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(4, *passData.VolumetricLightBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(5, *passData.ShadowmapBuffer->DataBuffer);
+
+		RenderStateManager->DrawIndexed(36, 0, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
+	}
+
+	void CLightRenderer::RenderVolumetricSpotlight(const SVolumetricSpotlightRenderData& passData)
+	{
+		RenderStateManager->TrySetPipelineStateObject(VolumetricSpotlightPSOIndex);
+
+		RenderStateManager->IASetVertexBuffer(0, RenderStateManager->VertexBuffers[1], RenderStateManager->MeshVertexStrides[1], RenderStateManager->MeshVertexOffsets[0]);
+		RenderStateManager->IASetIndexBuffer(RenderStateManager->IndexBuffers[STATIC_U8(EDefaultIndexBuffers::PointLightCube)]);
+
+		RenderStateManager->VSSetConstantBuffer(3, *passData.PointLightBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(3, *passData.SpotlightBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(4, *passData.VolumetricLightBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(5, *passData.ShadowmapBuffer->DataBuffer);
+
+		RenderStateManager->DrawIndexed(36, 0, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
 	}
 }

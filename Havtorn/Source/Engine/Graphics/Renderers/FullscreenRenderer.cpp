@@ -37,9 +37,26 @@ namespace Havtorn
 		if (!Manager)
 			return false;
 
+		RenderStateManager = &renderManager->RenderStateManager;
+
 		FullscreenDataBuffer.CreateBuffer("Fullscreen Data Buffer", rhi, sizeof(SFullscreenData));
 		FrameBuffer.CreateBuffer("Frame Buffer", rhi, sizeof(SFrameBufferData));
 		PostProcessingBuffer.CreateBuffer("Post Processing Buffer", rhi, sizeof(SPostProcessingBufferData));
+
+		const SPSODescription fullscreenPassPSO =
+		{
+			.VertexShader = RenderStateManager->VertexShaders[STATIC_U8(EVertexShaders::Fullscreen)],
+			.PixelShader = nullptr,
+			.GeometryShader = nullptr,
+			.ComputeShader = nullptr,
+			.InputLayout = nullptr,
+			.Topology = ETopologies::TriangleList,
+			.BlendState = RenderStateManager->BlendStates[STATIC_U8(EBlendStates::Disable)],
+			.RasterizerState = RenderStateManager->RasterizerStates[STATIC_U8(ERasterizerStates::BackfaceCulling)],
+			.DepthStencilState = RenderStateManager->DepthStencilStates[STATIC_U8(EDepthStencilStates::Default)],
+			.RootSignature = nullptr
+		};
+		FullscreenRenderPassPSOIndex = RenderStateManager->AddPipelineStateObject(fullscreenPassPSO);
 
 #pragma region SSAO Setup
 	// Hardcoded Kernel
@@ -110,8 +127,10 @@ namespace Havtorn
 		return true;
 	}
 
-	U64 CFullscreenRenderer::Render(const EPixelShaders effect, const EBlendStates blendState, const CRenderStateManager& stateManager, const U64 currentPSOHash)
+	void CFullscreenRenderer::Render(const EPixelShaders effect, const EBlendStates blendState)
 	{
+		RenderStateManager->TrySetPipelineStateObject(FullscreenRenderPassPSOIndex);
+
 		SVector2<U16> resolution = Manager->GetCurrentWindowResolution();
 		FullscreenData.Resolution = SVector2<F32>(resolution.X, resolution.Y);
 		FullscreenData.NoiseScale = { FullscreenData.Resolution.X / STATIC_F32(UMath::Sqrt(KernelSize)), FullscreenData.Resolution.Y / STATIC_F32(UMath::Sqrt(KernelSize)) };
@@ -120,26 +139,54 @@ namespace Havtorn
 		FullscreenDataBuffer.BindBuffer(FullscreenData);
 		PostProcessingBuffer.BindBuffer(PostProcessingBufferData);
 
-		constexpr U16 fullscreenPassPSOIndex = 0;
-		const U64 fullscreenPSOHash = stateManager.TrySetPipelineStateObject(fullscreenPassPSOIndex, currentPSOHash);
+		RenderStateManager->IASetVertexBuffer(0, CDataBuffer::Null, 0, 0);
+		RenderStateManager->IASetIndexBuffer(CDataBuffer::Null);
 
-		stateManager.IASetVertexBuffer(0, CDataBuffer::Null, 0, 0);
-		stateManager.IASetIndexBuffer(CDataBuffer::Null);
-
-		stateManager.OMSetBlendState(blendState);
-		stateManager.PSSetShader(effect);
-		stateManager.PSSetSampler(0, ESamplers::DefaultClamp);
-		stateManager.PSSetSampler(1, ESamplers::DefaultWrap);
-		stateManager.PSSetConstantBuffer(1, FullscreenDataBuffer);
-		stateManager.PSSetConstantBuffer(2, PostProcessingBuffer);
+		RenderStateManager->OMSetBlendState(blendState);
+		RenderStateManager->PSSetShader(effect);
+		RenderStateManager->PSSetSampler(0, ESamplers::DefaultWrap);
+		RenderStateManager->PSSetSampler(1, ESamplers::DefaultClamp);
+		RenderStateManager->PSSetConstantBuffer(1, FullscreenDataBuffer);
+		RenderStateManager->PSSetConstantBuffer(2, PostProcessingBuffer);
 		NoiseTexture.SetAsPSResourceOnSlot(23);
 
-		stateManager.Draw(3, 0);
+		RenderStateManager->Draw(3, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 
-		stateManager.ClearShaderResources();
+		RenderStateManager->ClearShaderResources();
+	}
 
-		return fullscreenPSOHash;
+	void CFullscreenRenderer::Render(const SFullscreenRenderPassData& passData)
+	{
+		RenderStateManager->TrySetPipelineStateObject(FullscreenRenderPassPSOIndex);
+		
+		// TODO.NW: do this once per frame? Buffers can be held by fullscreen renderer maybe
+		//SVector2<U16> resolution = Manager->GetCurrentWindowResolution();
+		//FullscreenData.Resolution = SVector2<F32>(resolution.X, resolution.Y);
+		//FullscreenData.NoiseScale = { FullscreenData.Resolution.X / STATIC_F32(UMath::Sqrt(KernelSize)), FullscreenData.Resolution.Y / STATIC_F32(UMath::Sqrt(KernelSize)) };
+		//memcpy(&FullscreenData.SampleKernel[0], &Kernel[0], sizeof(Kernel));
+
+		//FullscreenDataBuffer.BindBuffer(FullscreenData);
+		//PostProcessingBuffer.BindBuffer(PostProcessingBufferData);
+
+		RenderStateManager->IASetVertexBuffer(0, CDataBuffer::Null, 0, 0);
+		RenderStateManager->IASetIndexBuffer(CDataBuffer::Null);
+
+		RenderStateManager->PSSetShader(passData.PixelShader);
+
+		// TODO.NW: Need to figure out how to work with this as well as how to set render targets. It may be necessary to set render targets in all passes, at the very least they 
+		// must be declared. Maybe that's enough to then derive when they can be set? Separate object data (SRVs and object buffers) from render targets and frame buffers
+		
+		//RenderStateManager->PSSetSampler(0, ESamplers::DefaultClamp);
+		//RenderStateManager->PSSetSampler(1, ESamplers::DefaultWrap);
+		RenderStateManager->PSSetConstantBuffer(1, FullscreenDataBuffer);
+		RenderStateManager->PSSetConstantBuffer(2, PostProcessingBuffer);
+		NoiseTexture.SetAsPSResourceOnSlot(23);
+
+		RenderStateManager->OMSetBlendState(passData.BlendState);
+
+		RenderStateManager->Draw(3, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
 	}
 
 	SPostProcessingBufferData CFullscreenRenderer::GetPostProcessBuffer() const

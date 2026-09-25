@@ -36,6 +36,7 @@ namespace Havtorn
 		static ENGINE_API CAssetRegistry* GetAssetRegistry();
 		static ENGINE_API CWorld* GetWorld();
 		static ENGINE_API CInputMapper* GetInput();
+		static ENGINE_API CRenderManager* GetRenderManager();
 		
 		void OnWindowResolutionChanged(SVector2<U16> newResolution);
 

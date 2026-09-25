@@ -13,6 +13,7 @@
 #include <RHI/RHIEnums.h>
 #include <RHI/RenderingPrimitives/BlendState.h>
 #include <RHI/RenderingPrimitives/DataBuffer.h>
+#include <RHI/RenderingPrimitives/RenderTexture.h>
 #include <RHI/RenderingPrimitives/DepthStencilState.h>
 #include <RHI/RenderingPrimitives/RasterizerState.h>
 #include <RHI/RenderingPrimitives/RenderViewport.h>
@@ -23,14 +24,22 @@
 
 namespace Havtorn
 {
+	struct SRenderResource;
+
+	// TODO.NW: Should we move this to the RHI? Then the default buffers and stuff might not fit in here anymore?
+	// In that case we might want to store them in the renderers?
 	class CRenderStateManager
 	{
 	public:
 		friend class CRenderManager;
 		friend class CCustomRenderer;
+		friend class CDebugRenderer;
 		friend class CFullscreenRenderer;
 		friend class CGeometryRenderer;
 		friend class CLightRenderer;
+		friend class CSpriteRenderer;
+		friend class CThumbnailRenderer;
+		friend class CRenderSystem;
 		friend class CAssetRegistry;
 
 		CRenderStateManager() = default;
@@ -68,17 +77,23 @@ namespace Havtorn
 		void AddViewport(SVector2<F32> topLeftCoordinate, SVector2<F32> widthAndHeight, SVector2<F32> depth);
 
 	public:
+		void ResetPSOHash();
+
 		// IA
 		void IASetTopology(ETopologies topology) const;
 		void IASetInputLayout(EInputLayoutType layout) const;
+		void IASetVertexBuffer(U8 startSlot, const CDataBuffer& buffer) const;
 		void IASetVertexBuffer(U8 startSlot, const CDataBuffer& buffer, U32 stride, U32 offset) const;
-		void IASetVertexBuffers(U8 startSlot, U8 numberOfBuffers, const std::vector<CDataBuffer>& buffers, const U32* strides, const U32* offsets) const;
+		void IASetVertexBuffers(U8 startSlot, const std::vector<CDataBuffer>& buffers, const U32* strides, const U32* offsets) const;
+		void IASetVertexBuffers(U8 startSlot, const std::vector<CDataBuffer*>& buffers) const;
+		void IASetVertexBuffers(U8 startSlot, const std::vector<SRenderResource*>& resources) const;
 		void IASetIndexBuffer(const CDataBuffer& buffer) const;
 
 		// VS
 		void VSSetShader(EVertexShaders shader) const;
 		void VSSetConstantBuffer(U8 slot, const CDataBuffer& buffer);
 		void VSSetResources(U8 startSlot, U8 numberOfResources, ID3D11ShaderResourceView* const* resources);
+		void VSSetResources(U8 startSlot, const std::vector<CRenderTexture*>& resources);
 
 		// GS
 		void GSSetShader(EGeometryShaders shader) const;
@@ -89,6 +104,8 @@ namespace Havtorn
 		void PSSetShader(EPixelShaders shader) const;
 		void PSSetConstantBuffer(U8 slot, const CDataBuffer& buffer) const;
 		void PSSetResources(U8 startSlot, U8 numberOfResources, ID3D11ShaderResourceView* const* resources);
+		void PSSetResources(U8 startSlot, const std::vector<CRenderTexture*>& resources);
+		void PSSetResources(U8 startSlot, const std::vector<SRenderResource*>& resources);
 
 		// RS
 		void RSSetRasterizerState(ERasterizerStates rasterizerState) const;
@@ -103,7 +120,7 @@ namespace Havtorn
 		void DrawInstanced(U32 vertexCountPerInstance, U32 numberOfInstances, U32 startVertexLocation, U32 startInstanceLocation) const;
 		void DrawIndexedInstanced(U32 indexCountPerInstance, U32 instanceCount, U32 startIndexLocation, U32 baseVertexLocation, U32 startInstanceLocation) const;
 
-		U64 TrySetPipelineStateObject(const U16 psoIndex, const U64 currentPSOHash) const;
+		void TrySetPipelineStateObject(const U16 psoIndex);
 
 		// TODO.NR: Rename these to fit the naming of the above
 		void SetAllStates(EBlendStates blendState, EDepthStencilStates depthStencilState, ERasterizerStates rasterizerState) const;
@@ -116,6 +133,9 @@ namespace Havtorn
 		void Release();
 
 		void FlushShaderChanges();
+
+		std::vector<CDataBuffer> VertexBuffers;
+		std::vector<CDataBuffer> IndexBuffers;
 
 	private:
 		void OnShaderSourceChange(const std::string& filePath);
@@ -140,10 +160,9 @@ namespace Havtorn
 		std::vector<CVertexInputLayout*> InputLayouts;
 
 		std::vector<CPipelineStateObject*> PSOs;
+		U64 CurrentPSOHash = 0;
 
 		std::vector<CSamplerState*> Samplers;
-		std::vector<CDataBuffer> VertexBuffers;
-		std::vector<CDataBuffer> IndexBuffers;
 		std::vector<CRenderViewport> Viewports;
 		std::vector<U32> MeshVertexStrides;
 		std::vector<U32> MeshVertexOffsets;

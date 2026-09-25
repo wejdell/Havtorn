@@ -1,154 +1,262 @@
-// Copyright 2022 Team Havtorn. All Rights Reserved.
+// Copyright 2026 Team Havtorn. All Rights Reserved.
 
 #include "hvpch.h"
 #include "GeometryRenderer.h"
-#include "Engine.h"
+
 #include "Graphics/RenderManager.h"
 #include "Graphics/RenderStateManager.h" 
-#include "Graphics/GraphicsUtilities.h"
-
-#include <RHI/RHI.h>
-
-#include <d3d11.h>
+#include "Graphics/RenderResourceRegistry.h"
 
 namespace Havtorn
 {
-	template<class T>
-	void BindBuffer(ID3D11DeviceContext* context, ID3D11Buffer* buffer, T& bufferData, std::string bufferType)
+	CGeometryRenderer::CGeometryRenderer(CRenderStateManager* stateManager)
 	{
-		D3D11_MAPPED_SUBRESOURCE localBufferData;
-		ZeroMemory(&localBufferData, sizeof(D3D11_MAPPED_SUBRESOURCE));
-		std::string errorMessage = bufferType + " could not be bound.";
-		ENGINE_HR_MESSAGE(context->Map(buffer, 0, D3D11_MAP_WRITE_DISCARD, 0, &localBufferData), errorMessage.c_str());
+		RenderStateManager = stateManager;
 
-		memcpy(localBufferData.pData, &bufferData, sizeof(T));
-		context->Unmap(buffer, 0);
+		const SPSODescription staticMeshGame =
+		{
+			.VertexShader = RenderStateManager->VertexShaders[STATIC_U8(EVertexShaders::StaticMeshInstanced)],
+			.PixelShader = RenderStateManager->PixelShaders[STATIC_U8(EPixelShaders::GBuffer)],
+			.GeometryShader = nullptr,
+			.ComputeShader = nullptr,
+			.InputLayout = RenderStateManager->InputLayouts[STATIC_U8(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans)],
+			.Topology = ETopologies::TriangleList,
+			.BlendState = RenderStateManager->BlendStates[STATIC_U8(EBlendStates::Disable)],
+			.RasterizerState = RenderStateManager->RasterizerStates[STATIC_U8(ERasterizerStates::BackfaceCulling)],
+			.DepthStencilState = RenderStateManager->DepthStencilStates[STATIC_U8(EDepthStencilStates::Default)],
+			.RootSignature = nullptr
+		};
+		StaticMeshGBufferPassPSOIndex = RenderStateManager->AddPipelineStateObject(staticMeshGame);
+
+		const SPSODescription staticMeshEditor =
+		{
+			.VertexShader = RenderStateManager->VertexShaders[STATIC_U8(EVertexShaders::StaticMeshInstancedEditor)],
+			.PixelShader = RenderStateManager->PixelShaders[STATIC_U8(EPixelShaders::GBufferInstanceEditor)],
+			.GeometryShader = nullptr,
+			.ComputeShader = nullptr,
+			.InputLayout = RenderStateManager->InputLayouts[STATIC_U8(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Entity2Trans)],
+			.Topology = ETopologies::TriangleList,
+			.BlendState = RenderStateManager->BlendStates[STATIC_U8(EBlendStates::Disable)],
+			.RasterizerState = RenderStateManager->RasterizerStates[STATIC_U8(ERasterizerStates::BackfaceCulling)],
+			.DepthStencilState = RenderStateManager->DepthStencilStates[STATIC_U8(EDepthStencilStates::Default)],
+			.RootSignature = nullptr
+		};
+		StaticMeshEditorGBufferPassPSOIndex = RenderStateManager->AddPipelineStateObject(staticMeshEditor);
+
+		const SPSODescription skeletalMeshGame =
+		{
+			.VertexShader = RenderStateManager->VertexShaders[STATIC_U8(EVertexShaders::SkeletalMeshInstanced)],
+			.PixelShader = RenderStateManager->PixelShaders[STATIC_U8(EPixelShaders::GBuffer)],
+			.GeometryShader = nullptr,
+			.ComputeShader = nullptr,
+			.InputLayout = RenderStateManager->InputLayouts[STATIC_U8(EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Trans)],
+			.Topology = ETopologies::TriangleList,
+			.BlendState = RenderStateManager->BlendStates[STATIC_U8(EBlendStates::Disable)],
+			.RasterizerState = RenderStateManager->RasterizerStates[STATIC_U8(ERasterizerStates::BackfaceCulling)],
+			.DepthStencilState = RenderStateManager->DepthStencilStates[STATIC_U8(EDepthStencilStates::Default)],
+			.RootSignature = nullptr
+		};
+		SkeletalMeshGBufferPassPSOIndex = RenderStateManager->AddPipelineStateObject(skeletalMeshGame);
+
+		const SPSODescription skeletalMeshEditor =
+		{
+			.VertexShader = RenderStateManager->VertexShaders[STATIC_U8(EVertexShaders::SkeletalMeshInstancedEditor)],
+			.PixelShader = RenderStateManager->PixelShaders[STATIC_U8(EPixelShaders::GBufferInstanceEditor)],
+			.GeometryShader = nullptr,
+			.ComputeShader = nullptr,
+			.InputLayout = RenderStateManager->InputLayouts[STATIC_U8(EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2Trans)],
+			.Topology = ETopologies::TriangleList,
+			.BlendState = RenderStateManager->BlendStates[STATIC_U8(EBlendStates::Disable)],
+			.RasterizerState = RenderStateManager->RasterizerStates[STATIC_U8(ERasterizerStates::BackfaceCulling)],
+			.DepthStencilState = RenderStateManager->DepthStencilStates[STATIC_U8(EDepthStencilStates::Default)],
+			.RootSignature = nullptr
+		};
+		SkeletalMeshEditorGBufferPassPSOIndex = RenderStateManager->AddPipelineStateObject(skeletalMeshEditor);
+
+		const SPSODescription deferredDecal =
+		{
+			.VertexShader = RenderStateManager->VertexShaders[STATIC_U8(EVertexShaders::Decal)],
+			.PixelShader = nullptr, // Shaders for each set of albedo / material / normal is set in the render command for now
+			.GeometryShader = RenderStateManager->GeometryShaders[STATIC_U8(EGeometryShaders::SpriteWorldSpace)],
+			.ComputeShader = nullptr,
+			.InputLayout = RenderStateManager->InputLayouts[STATIC_U8(EInputLayoutType::Pos3Nor3Tan3Bit3UV2)],
+			.Topology = ETopologies::TriangleList,
+			.BlendState = RenderStateManager->BlendStates[STATIC_U8(EBlendStates::AlphaBlend)], // TODO.NW: See if this should be GBufferAlphaBlend?
+			.RasterizerState = RenderStateManager->RasterizerStates[STATIC_U8(ERasterizerStates::BackfaceCulling)], // TODO.NW: See if this should be front face culling?
+			.DepthStencilState = RenderStateManager->DepthStencilStates[STATIC_U8(EDepthStencilStates::OnlyRead)],
+			.RootSignature = nullptr
+		};
+		DecalGBufferPassPSOIndex = RenderStateManager->AddPipelineStateObject(deferredDecal);
+
+		const SPSODescription skybox =
+		{
+			.VertexShader = RenderStateManager->VertexShaders[STATIC_U8(EVertexShaders::Skybox)],
+			.PixelShader = RenderStateManager->PixelShaders[STATIC_U8(EPixelShaders::Skybox)],
+			.GeometryShader = nullptr,
+			.ComputeShader = nullptr,
+			.InputLayout = RenderStateManager->InputLayouts[STATIC_U8(EInputLayoutType::Position4)],
+			.Topology = ETopologies::TriangleList,
+			.BlendState = RenderStateManager->BlendStates[STATIC_U8(EBlendStates::Disable)],
+			.RasterizerState = RenderStateManager->RasterizerStates[STATIC_U8(ERasterizerStates::FrontfaceCulling)],
+			.DepthStencilState = RenderStateManager->DepthStencilStates[STATIC_U8(EDepthStencilStates::DepthFirst)],
+			.RootSignature = nullptr
+		};
+		SkyboxPassPSOIndex = RenderStateManager->AddPipelineStateObject(skybox);
 	}
 
-	CGeometryRenderer::~CGeometryRenderer() 
-	{}
-
-	bool CGeometryRenderer::Init(CRHI* rhi, CRenderManager* renderManager) 
+	void CGeometryRenderer::RenderStaticMesh(const SStaticMeshRenderData& passData)
 	{
-		if (!rhi) 
-			return false;
+		RenderStateManager->TrySetPipelineStateObject(StaticMeshGBufferPassPSOIndex);
 
-		Manager = renderManager;
-		if (!Manager)
-			return false;
+		RenderStateManager->IASetVertexBuffers(0, { passData.VertexBuffer, passData.TransformBuffer });
+		RenderStateManager->IASetIndexBuffer(*passData.IndexBuffer->DataBuffer);
 
-		FullscreenDataBuffer.CreateBuffer("Fullscreen Data Buffer", rhi, sizeof(SFullscreenData));
-		FrameBuffer.CreateBuffer("Frame Buffer", rhi, sizeof(SFrameBufferData));
-		PostProcessingBuffer.CreateBuffer("Post Processing Buffer", rhi, sizeof(SPostProcessingBufferData));
+		// TODO.NW: This assumes the frame buffer has been set earlier, with the active camera view
+		// Should we let pass data get control over what frame buffer to use? Probably. Need to set frame buffer here in that case
+		//RenderStateManager->VSSetConstantBuffer(0, *passData.FrameBuffer->DataBuffer);
 
-#pragma region SSAO Setup
-	// Hardcoded Kernel
-		Kernel[0] = { 0.528985322f, 0.163332120f, 0.620016515f, 1.0f };
-		Kernel[1] = { 0.573982120f, 0.378577918f, 0.470547318f, 1.0f };
-		Kernel[2] = { 0.065050237f, 0.139410198f, 0.347815633f, 1.0f };
-		Kernel[3] = { 0.041187014f, 0.130081877f, 0.164059237f, 1.0f };
-		Kernel[4] = { -0.026605275f, 0.090929292f, 0.077286638f, 1.0f };
-		Kernel[5] = { -0.113886870f, 0.154690191f, 0.197556734f, 1.0f };
-		Kernel[6] = { -0.666800976f, 0.662895739f, 0.277599692f, 1.0f };
-		Kernel[7] = { -0.399470448f, 0.096369371f, 0.417604893f, 1.0f };
-		Kernel[8] = { -0.411310822f, -0.082451604f, 0.179119825f, 1.0f };
-		Kernel[9] = { -0.117983297f, -0.095347963f, 0.374402136f, 1.0f };
-		Kernel[10] = { -0.457335383f, -0.529036164f, 0.490310162f, 1.0f };
-		Kernel[11] = { -0.119527563f, -0.291437626f, 0.206827655f, 1.0f };
-		Kernel[12] = { 0.201868936f, -0.513456404f, 0.432056010f, 1.0f };
-		Kernel[13] = { 0.096077450f, -0.107414119f, 0.527342558f, 1.0f };
-		Kernel[14] = { 0.223280489f, -0.180109233f, 0.203371927f, 1.0f };
-		Kernel[15] = { 0.163490131f, -0.039255358f, 0.532910645f, 1.0f };
+		// TODO.NW: Figure out if we can just assume a default sampler binding for every pass, not using that many yet
+		//RenderStateManager->PSSetSampler(0, ESamplers::DefaultWrap);
 
-		SVector4 noise[KernelSize];
-		for (U16 i = 0; i < KernelSize; ++i)
+		RenderStateManager->PSSetResources(5, passData.MaterialTextures);
+		RenderStateManager->PSSetConstantBuffer(8, *passData.MaterialBuffer->DataBuffer);
+
+		RenderStateManager->DrawIndexedInstanced(passData.IndexCount, passData.InstanceCount, 0, 0, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
+	}
+
+	void CGeometryRenderer::RenderEditorStaticMesh(const SStaticMeshRenderData& passData, const SEditorGeometryRenderData& editorPassData)
+	{
+		RenderStateManager->TrySetPipelineStateObject(StaticMeshEditorGBufferPassPSOIndex);
+		
+		// TODO.NW: Figure out a solution for this, can this be done at the render graph level?
+		//const bool renderingPreviewEntity = std::ranges::find(entities, WorldEditorRenderExemptEntity) != entities.end();
+		//if (renderingPreviewEntity)
+		//{
+		//	GBuffer.ReleaseRenderTargets();
+		//	GBuffer.SetAsActiveTarget(&IntermediateDepth, false);
+		//	GBufferDataInstanced(command);
+		//	GBuffer.SetAsActiveTarget(&IntermediateDepth, true);
+		//	return;
+		//}
+
+		RenderStateManager->IASetVertexBuffers(0, { passData.VertexBuffer, passData.TransformBuffer, editorPassData.EntityBuffer });
+		RenderStateManager->IASetIndexBuffer(*passData.IndexBuffer->DataBuffer);
+
+		// TODO.NW: This assumes the frame buffer has been set earlier, with the active camera view
+		// Should we let pass data get control over what frame buffer to use? Probably. Need to set frame buffer here in that case
+		//RenderStateManager->VSSetConstantBuffer(0, *passData.FrameBuffer->DataBuffer);
+
+		// TODO.NW: Figure out if we can just assume a default sampler binding for every pass, not using that many yet
+		//RenderStateManager->PSSetSampler(0, ESamplers::DefaultWrap);
+
+		RenderStateManager->PSSetResources(5, passData.MaterialTextures);
+		RenderStateManager->PSSetConstantBuffer(8, *passData.MaterialBuffer->DataBuffer);
+
+		RenderStateManager->DrawIndexedInstanced(passData.IndexCount, passData.InstanceCount, 0, 0, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
+	}
+
+	void CGeometryRenderer::RenderSkeletalMesh(const SSkeletalMeshRenderData& passData)
+	{
+		RenderStateManager->TrySetPipelineStateObject(SkeletalMeshGBufferPassPSOIndex);
+
+		RenderStateManager->IASetVertexBuffers(0, { passData.VertexBuffer, passData.TransformBuffer });
+		RenderStateManager->IASetIndexBuffer(*passData.IndexBuffer->DataBuffer);
+
+		// TODO.NW: This assumes the frame buffer has been set earlier, with the active camera view
+		// Should we let pass data get control over what frame buffer to use? Probably. Need to set frame buffer here in that case
+		//RenderStateManager->VSSetConstantBuffer(0, *passData.FrameBuffer->DataBuffer);
+		RenderStateManager->VSSetConstantBuffer(6, *passData.BoneBuffer->DataBuffer);
+
+		// TODO.NW: Figure out if we can just assume a default sampler binding for every pass, not using that many yet
+		//RenderStateManager->PSSetSampler(0, ESamplers::DefaultWrap);
+
+		RenderStateManager->PSSetResources(5, passData.MaterialTextures);
+		RenderStateManager->PSSetConstantBuffer(8, *passData.MaterialBuffer->DataBuffer);
+
+		RenderStateManager->DrawIndexedInstanced(passData.IndexCount, passData.InstanceCount, 0, 0, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
+	}
+
+	void CGeometryRenderer::RenderEditorSkeletalMesh(const SSkeletalMeshRenderData& passData, const SEditorGeometryRenderData& editorPassData)
+	{
+		RenderStateManager->TrySetPipelineStateObject(SkeletalMeshEditorGBufferPassPSOIndex);
+
+		RenderStateManager->IASetVertexBuffers(0, { passData.VertexBuffer, editorPassData.EntityBuffer, passData.TransformBuffer });
+		RenderStateManager->IASetIndexBuffer(*passData.IndexBuffer->DataBuffer);
+
+		// TODO.NW: This assumes the frame buffer has been set earlier, with the active camera view
+		// Should we let pass data get control over what frame buffer to use? Probably. Need to set frame buffer here in that case
+		//RenderStateManager->VSSetConstantBuffer(0, *passData.FrameBuffer->DataBuffer);
+		RenderStateManager->VSSetConstantBuffer(6, *passData.BoneBuffer->DataBuffer);
+
+		// TODO.NW: Figure out if we can just assume a default sampler binding for every pass, not using that many yet
+		//RenderStateManager->PSSetSampler(0, ESamplers::DefaultWrap);
+
+		RenderStateManager->PSSetResources(5, passData.MaterialTextures);
+		RenderStateManager->PSSetConstantBuffer(8, *passData.MaterialBuffer->DataBuffer);
+
+		RenderStateManager->DrawIndexedInstanced(passData.IndexCount, passData.InstanceCount, 0, 0, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
+	}
+
+	void CGeometryRenderer::RenderDecal(const SDecalRenderData& passData)
+	{
+		RenderStateManager->TrySetPipelineStateObject(DecalGBufferPassPSOIndex);
+
+		RenderStateManager->IASetVertexBuffer(0, RenderStateManager->VertexBuffers[STATIC_U8(EDefaultIndexBuffers::DecalProjector)]);
+		RenderStateManager->IASetIndexBuffer(RenderStateManager->IndexBuffers[STATIC_U8(EDefaultIndexBuffers::DecalProjector)]);
+	
+		// TODO.NW: This assumes the frame buffer has been set earlier, with the active camera view
+		// Should we let pass data get control over what frame buffer to use? Probably. Need to set frame buffer here in that case
+		//RenderStateManager->VSSetConstantBuffer(0, *passData.FrameBuffer->DataBuffer);
+		//RenderStateManager->PSSetConstantBuffer(0, *passData.FrameBuffer->DataBuffer);
+		RenderStateManager->VSSetConstantBuffer(1, *passData.DecalBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(1, *passData.DecalBuffer->DataBuffer);
+
+		// TODO.NW: Figure out if we can just assume a default sampler binding for every pass, not using that many yet
+		//RenderStateManager->PSSetSampler(0, ESamplers::DefaultWrap);
+
+		if (passData.OptionalAlbedoTexture != nullptr)
 		{
-			noise[i] = SVector4(
-				UMath::Random(-1.0f, 1.0f),
-				UMath::Random(-1.0f, 1.0f),
-				0.0f,
-				0.0f
-			);
-			noise[i].Normalize();
+			passData.OptionalAlbedoTexture->RenderTexture->SetAsPSResourceOnSlot(5);
+			RenderStateManager->PSSetShader(EPixelShaders::DecalAlbedo);
+			RenderStateManager->DrawIndexed(36, 0, 0);
+			CRenderManager::NumberOfDrawCallsThisFrame++;
 		}
 
-		U16 width = UMath::Sqrt(KernelSize);
-		NoiseTexture = Manager->CreateRenderTextureFromData(SVector2<U16>(width), DXGI_FORMAT_R32G32B32A32_FLOAT, noise, sizeof(SVector4));
-#pragma endregion
+		if (passData.OptionalMaterialTexture)
+		{
+			passData.OptionalAlbedoTexture->RenderTexture->SetAsPSResourceOnSlot(6);
+			RenderStateManager->PSSetShader(EPixelShaders::DecalMaterial);
+			RenderStateManager->DrawIndexed(36, 0, 0);
+			CRenderManager::NumberOfDrawCallsThisFrame++;
+		}
 
-		// TODO.NW: Move to component, or at least save settings in GameConfig
-
-		PostProcessingBufferData.WhitePointColor = { 255.0f / 255.0f, 255.0f / 255.0f, 255.0f / 255.0f, 1.0f };
-		PostProcessingBufferData.WhitePointIntensity = 1.0f;
-		PostProcessingBufferData.Exposure = 1.1f;
-		PostProcessingBufferData.IsReinhard = false;
-		PostProcessingBufferData.IsUncharted = false;
-		PostProcessingBufferData.IsACES = false;
-		PostProcessingBufferData.IsAgX = true;
-
-		PostProcessingBufferData.SSAORadius = 0.6f;
-		PostProcessingBufferData.SSAOSampleBias = 0.2420f;
-		PostProcessingBufferData.SSAOMagnitude = 1.4f;
-		PostProcessingBufferData.SSAOContrast = 0.6f;
-
-		PostProcessingBufferData.EmissiveStrength = 2.1f;
-		PostProcessingBufferData.VignetteStrength = 0.35f;
-
-		// AGX Settings
-		PostProcessingBufferData.AgXMiddleGray = 1.08f;
-		PostProcessingBufferData.AgXSlope = 4.82f;
-		PostProcessingBufferData.AgXToePower = 2.04f;
-		PostProcessingBufferData.AgXShoulderPower = 3.4f;
-		PostProcessingBufferData.AgXCompressionR = 0.14f;
-		PostProcessingBufferData.AgXCompressionG = 0.17f;
-		PostProcessingBufferData.AgXCompressionB = 0.07f;
-		PostProcessingBufferData.AgXSaturation = 1.0f;
-		PostProcessingBufferData.AgXLerp = 1.0f;
-
-		PostProcessingBufferData.VignetteColor = { 0.0f, 0.0f, 0.0f, 1.0f };
-
-		return true;
+		if (passData.OptionalNormalTexture)
+		{
+			passData.OptionalAlbedoTexture->RenderTexture->SetAsPSResourceOnSlot(7);
+			RenderStateManager->PSSetShader(EPixelShaders::DecalNormal);
+			RenderStateManager->DrawIndexed(36, 0, 0);
+			CRenderManager::NumberOfDrawCallsThisFrame++;
+		}
 	}
 
-	U64 CGeometryRenderer::Render(const EPixelShaders effect, const EBlendStates blendState, const CRenderStateManager& stateManager, const U64 currentPSOHash)
+	void CGeometryRenderer::RenderSkybox(const SSkyboxRenderData& passData)
 	{
-		SVector2<U16> resolution = Manager->GetCurrentWindowResolution();
-		FullscreenData.Resolution = SVector2<F32>(resolution.X, resolution.Y);
-		FullscreenData.NoiseScale = { FullscreenData.Resolution.X / STATIC_F32(UMath::Sqrt(KernelSize)), FullscreenData.Resolution.Y / STATIC_F32(UMath::Sqrt(KernelSize)) };
-		memcpy(&FullscreenData.SampleKernel[0], &Kernel[0], sizeof(Kernel));
-		
-		FullscreenDataBuffer.BindBuffer(FullscreenData);
-		PostProcessingBuffer.BindBuffer(PostProcessingBufferData);
+		RenderStateManager->TrySetPipelineStateObject(SkyboxPassPSOIndex);
 
-		constexpr U16 fullscreenPassPSOIndex = 0;
-		const U64 fullscreenPSOHash = stateManager.TrySetPipelineStateObject(fullscreenPassPSOIndex, currentPSOHash);
+		RenderStateManager->IASetVertexBuffer(0, RenderStateManager->VertexBuffers[STATIC_U8(EVertexBufferPrimitives::SkyboxCube)]);
+		RenderStateManager->IASetIndexBuffer(RenderStateManager->IndexBuffers[STATIC_U8(EDefaultIndexBuffers::SkyboxCube)]);
 
-		stateManager.IASetVertexBuffer(0, CDataBuffer::Null, 0, 0);
-		stateManager.IASetIndexBuffer(CDataBuffer::Null);
+		RenderStateManager->PSSetResources(21, 1, nullptr);
+		passData.CubemapTexture->RenderTexture->SetAsPSResourceOnSlot(0);
 
-		stateManager.OMSetBlendState(blendState);
-		stateManager.PSSetShader(effect);
-		stateManager.PSSetSampler(0, ESamplers::DefaultClamp);
-		stateManager.PSSetSampler(1, ESamplers::DefaultWrap);
-		stateManager.PSSetConstantBuffer(1, FullscreenDataBuffer);
-		stateManager.PSSetConstantBuffer(2, PostProcessingBuffer);
-		NoiseTexture.SetAsPSResourceOnSlot(23);
+		// TODO.NW: Might want to do this, but then the sync points between passes get a bit blurry. Probably would like to manage this outside of this function
+		passData.LitSceneTextureWithDepth->RenderTexture->SetAsActiveTarget(passData.LitSceneTextureWithDepth->DepthTexture);
 
-		stateManager.Draw(3, 0);
+		RenderStateManager->DrawIndexed(36, 0, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
-
-		stateManager.ClearShaderResources();
-
-		return fullscreenPSOHash;
-	}
-
-	SPostProcessingBufferData CGeometryRenderer::GetPostProcessBuffer() const
-	{
-		return PostProcessingBufferData;
-	}
-
-	void CGeometryRenderer::SetPostProcessBuffer(const SPostProcessingBufferData& data)
-	{
-		PostProcessingBufferData = data;
 	}
 }

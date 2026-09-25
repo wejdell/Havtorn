@@ -157,6 +157,11 @@ namespace Havtorn
 		return Instance->InputMapper;
 	}
 
+	CRenderManager* GEngine::GetRenderManager()
+	{
+		return Instance->RenderManager;
+	}
+
 	void GEngine::OnWindowResolutionChanged(SVector2<U16> newResolution)
 	{
 		WindowResizeTarget = newResolution;

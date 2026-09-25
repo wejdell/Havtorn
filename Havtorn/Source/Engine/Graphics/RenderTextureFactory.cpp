@@ -43,7 +43,7 @@ namespace Havtorn
 
 		DirectX::ScratchImage scratchImage;
 		DirectX::TexMetadata metaData = {};
-
+		
 		switch (format)
 		{
 		case ETextureFormat::DDS:

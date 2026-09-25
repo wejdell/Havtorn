@@ -69,4 +69,38 @@ namespace Havtorn
 
 		return textures;
 	}
+
+	std::map<U32, CStaticRenderTexture*> SEngineGraphicsMaterial::GetRenderTexturePointers(const U64 requesterID)
+	{
+		std::map<U32, CStaticRenderTexture*> textures;
+
+		auto extractRenderTexture = [&](const SRuntimeGraphicsMaterialProperty& property, std::map<U32, CStaticRenderTexture*>& outMap)
+			{
+				if (property.TextureUID == 0 || property.ConstantValue >= 0.0f)
+					return;
+
+				if (outMap.contains(property.TextureUID))
+					return;
+
+				STextureAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(property.TextureUID, requesterID);
+				if (asset == nullptr)
+					return;
+
+				outMap.emplace(property.TextureUID, &asset->RenderTexture);
+			};
+
+		extractRenderTexture(AlbedoR, textures);
+		extractRenderTexture(AlbedoG, textures);
+		extractRenderTexture(AlbedoB, textures);
+		extractRenderTexture(AlbedoA, textures);
+		extractRenderTexture(NormalX, textures);
+		extractRenderTexture(NormalY, textures);
+		extractRenderTexture(NormalZ, textures);
+		extractRenderTexture(AmbientOcclusion, textures);
+		extractRenderTexture(Metalness, textures);
+		extractRenderTexture(Roughness, textures);
+		extractRenderTexture(Emissive, textures);
+
+		return textures;		
+	}
 }
