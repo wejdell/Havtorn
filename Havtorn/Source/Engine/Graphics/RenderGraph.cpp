@@ -4,6 +4,7 @@
 #include "RenderGraph.h"
 #include "RenderManager.h"
 
+#include <CoreTypes.h>
 #include <MathTypes/MathUtilities.h>
 
 namespace Havtorn
@@ -12,59 +13,62 @@ namespace Havtorn
 		: RenderManager(manager)
 	{}
 
-	//void CRenderGraph::AddPass(CHavtornStaticString<RenderDebugNameMaxSize> name, const std::function<SRenderPassResourceDeclaration()> setup, std::function<void(CRenderManager*)>&& execution)
-	//{
-	//	std::vector<SRenderResourceHandle> inputs;
-	//	std::vector<SRenderResourceHandle> outputs;
+	void TraverseDependencies(const Ref<IRenderPass>& pass, const std::vector<Ref<IRenderPass>>& sortedPasses, const std::unordered_map<U64, U64>& sortedDependencies)
+	{
+		for (U64 dependencyHash : pass->Dependencies)
+		{
+			if (!sortedDependencies.contains(dependencyHash))
+				return; // If one of the dependencies hasn't been added to the list, this pass should be culled
 
-	//	SRenderPassResourceDeclaration passResourceDeclaration = setup();
-	//	for (SRenderResourceDeclaration& resourceDeclaration : passResourceDeclaration.Inputs)
-	//	{
-	//		resourceDeclaration.Description.ID = UGeneralUtils::HashString(resourceDeclaration.Description.Name.AsString());
-	//		inputs.emplace_back(ResourceRegistry.DeclareResource(resourceDeclaration));
-	//	}
-	//	for (SRenderResourceDeclaration& resourceDeclaration : passResourceDeclaration.Outputs)
-	//	{
-	//		resourceDeclaration.Description.ID = UGeneralUtils::HashString(resourceDeclaration.Description.Name.AsString());
-	//		outputs.emplace_back(ResourceRegistry.DeclareResource(resourceDeclaration));
-	//	}
-	//	
-	//	RenderPasses.emplace_back(name, inputs, outputs, std::move(execution));
-	//}
+			TraverseDependencies(sortedPasses[sortedDependencies.at(dependencyHash)], sortedPasses, sortedDependencies);
+		}
+		// TODO.NW: Double check that this works. The intent is to mark all dependencies of root passes as another root pass, to then cull the rest
+		pass->IsRootPass = true;
+	}
 
 	void CRenderGraph::Compile()
 	{
 		// Sort passes
 		const U64 numPasses = RenderPasses.size();
-		std::vector<SVector2<U64>> dependencyEdges(numPasses);
+		std::vector<SVector2<U64>> dependencyEdges;
 		
-		//for (U64 passIndex = 0; passIndex < numPasses; passIndex++)
-		//{
-		//	if (RenderPasses[passIndex]->Dependencies.empty())
-		//		continue;
-
-		//	for (const U64 dependencyHash : PassParamHashToDependencies.at(RenderPasses[passIndex]->PassParamHash))
-		//	{
-		//		for (U64 dependencyIndex = 0; dependencyIndex < PassParamHashToPassIndices.at(dependencyHash).size(); dependencyIndex++)
-		//			dependencyEdges[passIndex] = SVector2<U64>(dependencyIndex, passIndex);
-		//	}
-		//}
-
-		Make dependency edges from Dependecies vector
-
-		std::vector<U64> sortedIndices = UMathUtilities::TopologicalSortKahn(dependencyEdges, numPasses);
-		for (const U64 sortedIndex : sortedIndices)
-			SortedPasses.emplace_back(RenderPasses[sortedIndex]);
-
-		for (auto it = SortedPasses.rbegin(); it != SortedPasses.rend(); ++it)
+		for (U64 passIndex = 0; passIndex < numPasses; passIndex++)
 		{
+			for (const U64 dependencyHash : RenderPasses[passIndex]->Dependencies)
+			{
+				if (!PassParamHashToPassIndex.contains(dependencyHash))
+					continue; // NW: Dependency pass was not added this frame, this pass will be culled
 
+				dependencyEdges.emplace_back(PassParamHashToPassIndex.at(dependencyHash), passIndex);
+			}
 		}
 
-		for (const Ref<IRenderPass>& pass : RenderPasses)
+		std::vector<U64> sortedIndices = UMathUtilities::TopologicalSortKahn(dependencyEdges, numPasses);
+		if (sortedIndices.empty())
+			return;
+
+		std::vector<Ref<IRenderPass>> defaultRootPasses;
+		for (const U64 sortedIndex : sortedIndices)
 		{
-			ResourceRegistry.TouchResources(pass.Inputs);
-			ResourceRegistry.TouchResources(pass.Outputs);
+			Ref<IRenderPass> pass = RenderPasses[sortedIndex];
+			SortedPassParamHashToPassIndex.emplace(pass->PassParamHash, SortedPasses.size());
+			SortedPasses.emplace_back(pass);
+			
+			if (pass->IsRootPass)
+				defaultRootPasses.emplace_back(pass);
+		}
+
+		// TODO.NW: Should we have separate graphs for each render view? Would be nice for debugging
+		
+		for (Ref<IRenderPass> defaultRootPass : defaultRootPasses)
+			TraverseDependencies(defaultRootPass, SortedPasses, SortedPassParamHashToPassIndex);
+
+		std::ranges::remove_if(SortedPasses, [](const Ref<IRenderPass>& pass) { return !pass->IsRootPass; });
+
+		for (const Ref<IRenderPass>& pass : SortedPasses)
+		{
+			ResourceRegistry.TouchResources(pass->Inputs);
+			ResourceRegistry.TouchResources(pass->Outputs);
 		}
 	}
 
@@ -74,19 +78,8 @@ namespace Havtorn
 
 		ResourceRegistry.Allocate();
 
-		//for (const SRenderPass& pass : RenderPasses)
-		//{
-		//	ResourceRegistry.Bind(pass.Inputs, &renderManager->RenderStateManager);
-		//	ResourceRegistry.Bind(pass.Outputs, &renderManager->RenderStateManager);
-		//	pass.ExecutionFunction(renderManager);
-		//}
-
-		//RenderPasses.clear();
-
-		for (const Ref<IRenderPass>& pass : RenderPasses)
-		{
+		for (const Ref<IRenderPass>& pass : SortedPasses)
 			pass->Execute(ResourceRegistry, RenderManager);
-		}
 
 		ResourceRegistry.Deallocate();
 	}

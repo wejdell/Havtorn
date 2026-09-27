@@ -31,6 +31,11 @@ namespace Havtorn
 		std::vector<SRenderResourceHandle> Outputs;
 		std::vector<U64> Dependencies;
 		U64 PassParamHash = 0;
+		
+		// NW: Being a root pass means being non-cullable, it might write to a 
+		// swapchain target/external texture or do work intended to be consumed in the future.
+		// When compiling the graph, all root pass dependencies are markes as root pass as well.
+		bool IsRootPass = false;
 	};
 
 	struct SRenderPassParams
@@ -38,9 +43,14 @@ namespace Havtorn
 		// These are used for setting up automatic sync points in the graph.
 		// Whenever we can't assume what data should be bound, it should be bound in 
 		// the execute function instead.
+
+		template<RenderPassParamType TParamStruct>
+		void AddDependency();
+
 		std::vector<SRenderResourceHandle> Inputs;
 		std::vector<SRenderResourceHandle> Outputs;
 		std::vector<U64> Dependencies;
+		bool ShouldSetRootPass = false;
 	};
 
 	template<typename T>
@@ -71,15 +81,6 @@ namespace Havtorn
 	public:
 		CRenderGraph(CRenderManager* manager);
 		~CRenderGraph() = default;
-		
-		template<RenderPassParamType TParamStruct>
-		TParamStruct* AllocateParameters();
-
-		template<RenderPassParamType TParamStruct>
-		IRenderPass* GetPassFromPassParams() const;
-
-		template<RenderPassParamType TDependerPassData, RenderPassParamType TDependeePassData>
-		TDependeePassData* GetPassData() const;
 
 		template<RenderPassParamType TParamStruct>
 		void AddPass(const std::string_view debugName, const std::function<TParamStruct(CRenderResourceRegistry&)> setup, std::function<void(const TParamStruct&, CRenderResourceRegistry&, CRenderManager*)>&& execution);
@@ -88,13 +89,13 @@ namespace Havtorn
 		void Execute(CRenderManager* renderManager);
 
 	private:
-		//std::unordered_map<U64, std::vector<U64>> PassParamHashToPassIndices;
-		//std::unordered_map<U64, std::unordered_set<U64>> PassParamHashToDependencies;
 		std::unordered_map<U64, U64> PassParamHashToPassIndex;
+		std::unordered_map<U64, U64> SortedPassParamHashToPassIndex;
 
 		std::vector<Ref<IRenderPass>> RenderPasses;
 		std::vector<Ref<IRenderPass>> SortedPasses;
-		CRenderResourceRegistry ResourceRegistry;
+		
+		CRenderResourceRegistry ResourceRegistry; // TODO.NW: Should move this if we have one graph per render view
 		CRenderManager* RenderManager = nullptr;
 	};
 
@@ -107,6 +108,7 @@ namespace Havtorn
 		Inputs = Data.Inputs;
 		Outputs = Data.Outputs;
 		Dependencies = Data.Dependencies;
+		IsRootPass = Data.ShouldSetRootPass;
 		const U64 nameLength = UMath::Min(debugName.size(), RenderDebugNameMaxSize);
 		Name = debugName.substr(0, nameLength).data();
 	}
@@ -118,45 +120,19 @@ namespace Havtorn
 	}
 
 	template<RenderPassParamType TParamStruct>
-	inline TParamStruct* CRenderGraph::AllocateParameters()
-	{
-		Ref<CRenderPass<TParamStruct>> pass = std::make_shared(CRenderPass<TParamStruct>());
-		PassParamHashToPassIndex[typeid(TParamStruct).hash_code()] = RenderPasses.size();
-		RenderPasses.emplace_back(pass);
-		return &pass->Data;
-	}
-
-	template<RenderPassParamType TParamStruct>
-	inline IRenderPass* CRenderGraph::GetPassFromPassParams() const
-	{
-		return RenderPasses[PassParamHashToPassIndex.at(typeid(TParamStruct).hash_code())];
-	}
-
-	template<RenderPassParamType TDependerPassData, RenderPassParamType TDependeePassData>
-	inline TDependeePassData* CRenderGraph::GetPassData() const
-	{
-		std::vector<U64>& dependencies = GetPassFromPassParams<TDependerPassData>()->Dependencies;
-
-		if (std::ranges::find(dependencies, typeid(TDependeePassData).hash_code()) == dependencies.end())
-			dependencies.push_back(typeid(TDependeePassData).hash_code());
-		
-		return &GetPassFromPassParams<TDependeePassData>()->Data;
-	}
-
-	template<RenderPassParamType TParamStruct>
 	inline void CRenderGraph::AddPass(const std::string_view debugName, const std::function<TParamStruct(CRenderResourceRegistry&)> setup, std::function<void(const TParamStruct&, CRenderResourceRegistry&, CRenderManager*)>&& execution)
 	{
 		const U64 passParamHash = typeid(TParamStruct).hash_code();
-		if (!PassParamHashToPassIndices.contains(passParamHash))
-		{
-			PassParamHashToPassIndices.emplace(passParamHash);
-			PassParamHashToDependencies.emplace(passParamHash);
-		}
+		if (!PassParamHashToPassIndex.contains(passParamHash))
+			PassParamHashToPassIndex.emplace(passParamHash);
 
-		PassParamHashToPassIndices.at(passParamHash).push_back(RenderPasses.size());
+		PassParamHashToPassIndex.at(passParamHash).push_back(RenderPasses.size());
 		RenderPasses.emplace_back(std::make_shared(CRenderPass<TParamStruct>(debugName, setup(ResourceRegistry), std::move(execution))));
-		
-		for (const U64 dependency : RenderPasses.back()->Dependencies)
-			PassParamHashToDependencies.at(passParamHash).insert(dependency);
+	}
+
+	template<RenderPassParamType TParamStruct>
+	inline void SRenderPassParams::AddDependency()
+	{
+		Dependencies.push_back(typeid(TParamStruct).hash_code());
 	}
 }

@@ -87,7 +87,8 @@ namespace Havtorn
 	struct SRenderView
 	{
 		CRenderTexture RenderTarget;
-		CRenderCommandHeap RenderCommands;
+		CRenderGraph RenderGraph;
+		//CRenderCommandHeap RenderCommands;
 
 		std::unordered_map<U32, SStaticMeshInstanceData> StaticMeshInstanceData;
 		std::unordered_map<U32, SSkeletalMeshInstanceData> SkeletalMeshInstanceData;

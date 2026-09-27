@@ -1812,7 +1812,7 @@ namespace Havtorn
 				// NW: Bound as input here for dependency
 				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float)));
 
-				passData.Dependencies.push_back(typeid().hash_code());
+				// passData.AddDependency<STonemappingPassData>();
 
 				// TODO.NW: Need some control over what slots these outputs are bound to?
 				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float)));
@@ -1829,6 +1829,8 @@ namespace Havtorn
 			},
 			[=](const SEditorWidgetPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager)
 			{
+				instance data should come from owning render view, might want to receive it in the parameter list
+
 				// TODO.NW: Bind outputs, needs to include gbuffer targets
 				SSpriteRenderData renderData;
 				renderData.TransformBuffer = registry.GetResource(data.TransformBufferHandle);
