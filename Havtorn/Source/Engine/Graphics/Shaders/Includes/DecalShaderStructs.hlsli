@@ -2,11 +2,13 @@
 
 struct VertexInput
 {
-    float3 Position   : POSITION;
-    float3 Normal     : NORMAL;
-    float3 Tangent    : TANGENT;
-    float3 Bitangent  : BINORMAL;
-    float2 UV         : UV;
+    float3 Position     : POSITION;
+    float3 Normal       : NORMAL;
+    float3 Tangent      : TANGENT;
+    float3 Bitangent    : BINORMAL;
+    float2 UV           : UV;
+    float4x4 WorldTransform  : INSTANCETRANSFORM;
+    float4x4 ObjectTransform : INSTANCETRANSFORM_OBJECT;
 };
 
 struct VertexToPixel
@@ -17,6 +19,7 @@ struct VertexToPixel
     float4 Tangent            : TANGENT;
     float4 Bitangent          : BITANGENT;
     float2 UV                 : UV;
+    float4x4 ObjectTransform  : INSTANCETRANSFORM_OBJECT;
 };
 
 Texture2D gBufferAlbedoTexture          : register(t1);

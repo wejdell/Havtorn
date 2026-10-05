@@ -72,14 +72,14 @@ namespace Havtorn
 		}
 	}
 
-	void CRenderGraph::Execute(CRenderManager* renderManager)
+	void CRenderGraph::Execute(CRenderManager* renderManager, SRenderView& renderView)
 	{
 		Compile();
 
 		ResourceRegistry.Allocate();
 
 		for (const Ref<IRenderPass>& pass : SortedPasses)
-			pass->Execute(ResourceRegistry, RenderManager);
+			pass->Execute(ResourceRegistry, renderManager, renderView);
 
 		ResourceRegistry.Deallocate();
 	}

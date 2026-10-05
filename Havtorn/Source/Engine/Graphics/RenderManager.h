@@ -63,21 +63,50 @@ namespace Havtorn
 
 	using CRenderCommandHeap = std::priority_queue<SRenderCommand, std::vector<SRenderCommand>, SRenderCommandComparer>;
 
-	struct SStaticMeshInstanceData
+	// Replaces DrawCallData
+	struct SMeshDrawData
 	{
-		std::vector<SMatrix> Transforms{};
-		std::vector<SEntity> Entities{};
+		// Data that comes from external sources that should be declared (with external memory) in setup
+		std::vector<SRenderResourceHandle> MaterialTextureHandles;
+		// Vertex Buffers should be owned by Render Thread
+		SRenderResourceHandle VertexBufferHandle;
+		SRenderResourceHandle IndexBufferHandle;
+		U32 IndexCount = 0;
+
+		// Buffer data that should be bound at execution time - can we store this in a way that makes sense? Can we make all buffers immutable or dynamic?
+		// Many instances here, would like these holders to just point to one entry in the resource registry. But that means storing many buffers in the registry
+		SMaterialBufferData MaterialBufferData;
 	};
 
-	struct SSkeletalMeshInstanceData
+	struct SStaticMeshDrawData
 	{
-		std::vector<SMatrix> Transforms{};
-		std::vector<SMatrix> Bones{};
-		std::vector<SEntity> Entities{};
+		std::vector<SMeshDrawData> DrawData; // one draw data per submesh
+
+		// Instance Data
+		std::vector<SMatrix> Transforms;
+		std::vector<SEntity> Entities;
+	};
+
+	struct SSkeletalMeshDrawData
+	{
+		std::vector<SMeshDrawData> DrawData;
+
+		std::vector<SMatrix> Transforms;
+		std::vector<SEntity> Entities;
+		std::vector<SMatrix> Bones; // Still need a way to split these out so each animated mesh can use its own bone buffer (but preferrably be instanced still)
+	};
+
+	struct SDecalDrawData
+	{
+		std::vector<SRenderResourceHandle> MaterialTextureHandles;
+		SMaterialBufferData MaterialBufferData;
+
+		std::vector<SMatrix> Transforms;
 	};
 
 	struct SSpriteInstanceData
 	{
+		SRenderResourceHandle SpriteTextureHandle;
 		std::vector<SMatrix> Transforms{};
 		std::vector<SVector4> UVRects{};
 		std::vector<SVector4> Colors{};
@@ -86,14 +115,28 @@ namespace Havtorn
 
 	struct SRenderView
 	{
+		CRenderStateManager* StateManager = nullptr;
+		CAssetRegistry* AssetRegistry = nullptr;
+		CRenderResourceRegistry* RenderResourceRegistry = nullptr;
+
 		CRenderTexture RenderTarget;
 		CRenderGraph RenderGraph;
-		//CRenderCommandHeap RenderCommands;
 
-		std::unordered_map<U32, SStaticMeshInstanceData> StaticMeshInstanceData;
-		std::unordered_map<U32, SSkeletalMeshInstanceData> SkeletalMeshInstanceData;
+		// Render view may request assets and unrequest them when finished drawing
+
+		// Associates mesh+material asset combinations (drawID) to instanced draw data. Each view handles its own culling so 
+		// we expect different sets of instances of maybe the same meshes for different views.
+		std::unordered_map<U32, SStaticMeshDrawData> StaticMeshDrawData;
+		std::unordered_map<U32, SSkeletalMeshDrawData> SkeletalMeshDrawData;
 		std::unordered_map<U32, SSpriteInstanceData> WorldSpaceSpriteInstanceData;
 		std::unordered_map<U32, SSpriteInstanceData> ScreenSpaceSpriteInstanceData;
+		std::unordered_map<U32, SDecalDrawData> DecalDrawData;
+
+		// This signature is provided like this because the culling preprocessing leaves us with this most cache-friendly data
+		// This is expected to overwrite any previous instancing data for a particular drawID.
+		SMeshDrawData ConstructMeshDrawData(const SDrawCallData& assetDrawCallData, const char* renderResourceSuffix, std::vector<SGraphicsMaterialAsset*>& materialAssets, const U32 renderViewID);
+		void AddStaticMeshDrawData(const U32 renderViewID, const U32 meshAssetID, const std::vector<U32>& materialAssetIDs, const std::vector<SMatrix>& transforms, const std::vector<SEntity>& entities, const bool deferCommand = false);
+		void AddSkeletalMeshDrawData(const U32 renderViewID, const U32 meshAssetID, const std::vector<U32>& materialAssetIDs, const std::vector<SMatrix>& transforms, const std::vector<SEntity>& entities, const std::vector<SMatrix>& bones, const bool deferCommand = false);
 	};
 
 	struct SShadowCasterCategory

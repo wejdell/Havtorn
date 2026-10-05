@@ -734,611 +734,212 @@ namespace Havtorn
 		);
 	}
 
-	void CRenderSystem::AddStaticMeshPass(const std::vector<SDrawCallData>& staticMeshData, const std::vector<SGraphicsMaterialAsset*>& materials, const std::vector<SMatrix>& transforms, const std::vector<SEntity>& entities, const bool runEditorDataPasses)
+	void CRenderSystem::AddGBufferPasses(const bool runEditorDataPasses)
 	{
-		if (runEditorDataPasses)
+		struct SGeometryBasePassData : public SRenderPassParams
 		{
-			struct SGeometryEditorPassData : public SRenderPassParams
-			{
-				// Memory managed by RenderGraph
-				SRenderResourceHandle TransformBufferHandle;
-				SRenderResourceHandle MaterialBufferHandle;
-				SRenderResourceHandle EntityBufferHandle;
-
-				// External memory from Asset Registry
-				// Static, taken from Asset Registry and used as external source for render resources
-				std::vector<SRenderResourceHandle> MaterialTextureHandles;
-				std::map<U32, F32> MaterialUIDToRuntimeIndex;
-
-				struct SSubPassData
-				{
-					SRenderResourceHandle VertexBufferHandle;
-					SRenderResourceHandle IndexBufferHandle;
-					U32 IndexCount = 0;
-					U16 MaterialIndex = 0;
-				};
-				std::vector<SSubPassData> SubPassData;
-			};
-			RenderManager->GetRenderGraph().AddPass<SGeometryEditorPassData>("BasePassInstancedEditor",
-				[&](CRenderResourceRegistry& registry)
-				{
-					SGeometryEditorPassData passData;
-
-					// TODO.NW: It's a bit weird that the render function has no control over where the inputs are bound (to what slot). Can only do this where there's a strong 
-					// assumption of how it should work (as a sync point). 
-					passData.Inputs.emplace_back(registry.DeclareResource(DeclareConstantBuffer<SFrameBufferData>("Frame Buffer")));
-
-					// TODO.NW: These inputs and outputs must be able to be aggregately bound by the render graph somehow
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Vertex Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer World Position", ERenderResourceFormat::R32G32B32A32_Float)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Editor Data", ERenderResourceFormat::R32G32_UnsignedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)));
-
-					passData.TransformBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
-					passData.EntityBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SEntity>("Instanced Entity Buffer", InstancedDrawInstanceLimit));
-					
-					passData.MaterialBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SMaterialBufferData>("Material Buffer"));
-					
-					// Import resources from asset registry
-
-					for (SGraphicsMaterialAsset* materialAsset : materials)
-					{
-						// TODO.NW: Figure out how we can deal with this requesting? Materials are shared for each invocation here
-						constexpr U64 tempRequester = 10000;
-						std::map<U32, CStaticRenderTexture*> mappedTextures = materialAsset->Material.GetRenderTexturePointers(tempRequester);
-
-						for (auto& [uid, texture] : mappedTextures)
-						{
-							passData.MaterialUIDToRuntimeIndex.emplace(uid, STATIC_F32(passData.MaterialTextureHandles.size()));
-							passData.MaterialTextureHandles.emplace_back(registry.DeclareResource(DeclareRenderTexture(std::to_string(uid).c_str(), texture)));
-						}
-					}
-
-					CRenderStateManager& stateManager = RenderManager->GetRenderStateManager();
-
-					for (const SDrawCallData& drawCallData : staticMeshData)
-					{
-						SGeometryEditorPassData::SSubPassData& subPassData = passData.SubPassData.emplace_back();
-						subPassData.VertexBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SStaticMeshVertex>("Static Mesh Vertex Buffer", &stateManager.VertexBuffers[drawCallData.VertexBufferIndex]));
-						subPassData.IndexBufferHandle = registry.DeclareResource(DeclareIndexBuffer("Mesh Index Buffer", &stateManager.IndexBuffers[drawCallData.IndexBufferIndex]));
-						subPassData.IndexCount = drawCallData.IndexCount;
-						subPassData.MaterialIndex = drawCallData.MaterialIndex;
-					}
-
-					return passData;
-				},
-				[materials, transforms, entities](const SGeometryEditorPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager)
-				{
-					SStaticMeshRenderData rendererData;
-					SEditorGeometryRenderData editorData;
-
-					rendererData.TransformBuffer = registry.GetResource(data.TransformBufferHandle);
-					rendererData.MaterialBuffer = registry.GetResource(data.MaterialBufferHandle);
-					editorData.EntityBuffer = registry.GetResource(data.EntityBufferHandle);
-
-					for (const SRenderResourceHandle& handle : data.MaterialTextureHandles)
-						rendererData.MaterialTextures.emplace_back(registry.GetResource(handle));
-
-					rendererData.TransformBuffer->DataBuffer->BindBuffer(transforms);
-					rendererData.InstanceCount = STATIC_U32(transforms.size());
-					editorData.EntityBuffer->DataBuffer->BindBuffer(entities);
-
-					for (const SGeometryEditorPassData::SSubPassData& subPassData : data.SubPassData)
-					{
-						SMaterialBufferData materialBufferData = SMaterialBufferData(materials[subPassData.MaterialIndex]->Material);
-						for (SRuntimeGraphicsMaterialProperty& property : materialBufferData.Properties)
-						{
-							if (property.TextureChannelIndex > -1.0f)
-								property.TextureIndex = data.MaterialUIDToRuntimeIndex.at(property.TextureUID);
-						}
-						rendererData.MaterialBuffer->DataBuffer->BindBuffer(materialBufferData);
-
-						rendererData.VertexBuffer = registry.GetResource(subPassData.VertexBufferHandle);
-						rendererData.IndexBuffer = registry.GetResource(subPassData.IndexBufferHandle);
-						rendererData.IndexCount = subPassData.IndexCount;
-
-						renderManager->GeometryRenderer.RenderEditorStaticMesh(rendererData, editorData);
-					}
-				}
-			);
-		}
-		else
-		{
-			struct SGeometryPassData : public SRenderPassParams
-			{
-				// Memory managed by RenderGraph
-				SRenderResourceHandle TransformBufferHandle;
-				SRenderResourceHandle MaterialBufferHandle;
-
-				// External memory from Asset Registry
-				// Static, taken from Asset Registry and used as external source for render resources
-				std::vector<SRenderResourceHandle> MaterialTextureHandles;
-				std::map<U32, F32> MaterialUIDToRuntimeIndex;
-
-				struct SSubPassData
-				{
-					SRenderResourceHandle VertexBufferHandle;
-					SRenderResourceHandle IndexBufferHandle;
-					U32 IndexCount = 0;
-					U16 MaterialIndex = 0;
-				};
-				std::vector<SSubPassData> SubPassData;
-			};
-			RenderManager->GetRenderGraph().AddPass<SGeometryPassData>("BasePassInstanced",
-				[&](CRenderResourceRegistry& registry)
-				{
-					SGeometryPassData passData;
-
-					// TODO.NW: It's a bit weird that the render function has no control over where the inputs are bound (to what slot). Can only do this where there's a strong 
-					// assumption of how it should work (as a sync point). 
-					passData.Inputs.emplace_back(registry.DeclareResource(DeclareConstantBuffer<SFrameBufferData>("Frame Buffer")));
-
-					// TODO.NW: These inputs and outputs must be able to be aggregately bound by the render graph somehow
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Vertex Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)));
-
-					passData.TransformBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
-
-					passData.TransformBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
-					passData.MaterialBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SMaterialBufferData>("Material Buffer"));
-
-					// Import resources from asset registry
-
-					for (SGraphicsMaterialAsset* materialAsset : materials)
-					{
-						// TODO.NW: Figure out how we can deal with this requesting? Materials are shared for each invocation here
-						constexpr U64 tempRequester = 10000;
-						std::map<U32, CStaticRenderTexture*> mappedTextures = materialAsset->Material.GetRenderTexturePointers(tempRequester);
-
-						for (auto& [uid, texture] : mappedTextures)
-						{
-							passData.MaterialUIDToRuntimeIndex.emplace(uid, STATIC_F32(passData.MaterialTextureHandles.size()));
-							passData.MaterialTextureHandles.emplace_back(registry.DeclareResource(DeclareRenderTexture(std::to_string(uid).c_str(), texture)));
-						}
-					}
-
-					CRenderStateManager& stateManager = RenderManager->GetRenderStateManager();
-
-					for (const SDrawCallData& drawCallData : staticMeshData)
-					{
-						SGeometryPassData::SSubPassData& subPassData = passData.SubPassData.emplace_back();
-						subPassData.VertexBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SStaticMeshVertex>("Static Mesh Vertex Buffer", &stateManager.VertexBuffers[drawCallData.VertexBufferIndex]));
-						subPassData.IndexBufferHandle = registry.DeclareResource(DeclareIndexBuffer("Mesh Index Buffer", &stateManager.IndexBuffers[drawCallData.IndexBufferIndex]));
-						subPassData.IndexCount = drawCallData.IndexCount;
-						subPassData.MaterialIndex = drawCallData.MaterialIndex;
-					}
-
-					return passData;
-				},
-				[materials, transforms](const SGeometryPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager)
-				{
-					SStaticMeshRenderData rendererData;
-
-					rendererData.TransformBuffer = registry.GetResource(data.TransformBufferHandle);
-					rendererData.MaterialBuffer = registry.GetResource(data.MaterialBufferHandle);
-
-					for (const SRenderResourceHandle& handle : data.MaterialTextureHandles)
-						rendererData.MaterialTextures.emplace_back(registry.GetResource(handle));
-
-					rendererData.TransformBuffer->DataBuffer->BindBuffer(transforms);
-					rendererData.InstanceCount = STATIC_U32(transforms.size());
-
-					for (const SGeometryPassData::SSubPassData& subPassData : data.SubPassData)
-					{
-						SMaterialBufferData materialBufferData = SMaterialBufferData(materials[subPassData.MaterialIndex]->Material);
-						for (SRuntimeGraphicsMaterialProperty& property : materialBufferData.Properties)
-						{
-							if (property.TextureChannelIndex > -1.0f)
-								property.TextureIndex = data.MaterialUIDToRuntimeIndex.at(property.TextureUID);
-						}
-						rendererData.MaterialBuffer->DataBuffer->BindBuffer(materialBufferData);
-
-						rendererData.VertexBuffer = registry.GetResource(subPassData.VertexBufferHandle);
-						rendererData.IndexBuffer = registry.GetResource(subPassData.IndexBufferHandle);
-						rendererData.IndexCount = subPassData.IndexCount;
-
-						renderManager->GeometryRenderer.RenderStaticMesh(rendererData);
-					}
-				}
-			);
-		}
-	}
-
-	void CRenderSystem::AddSkeletalMeshPass(const std::vector<SDrawCallData>& skeletalMeshData, const std::vector<SGraphicsMaterialAsset*>& materials, const std::vector<SMatrix>& transforms, const std::vector<SMatrix>& posedBones, const std::vector<SEntity>& entities, const bool runEditorDataPasses)
-	{
-		if (runEditorDataPasses)
-		{
-			struct SSkeletalGeometryEditorPassData : public SRenderPassParams
-			{
-				// Memory managed by RenderGraph
-				SRenderResourceHandle TransformBufferHandle;
-				SRenderResourceHandle BoneBufferHandle;
-				SRenderResourceHandle EntityBufferHandle;
-				SRenderResourceHandle MaterialBufferHandle;
-
-				// External memory from Asset Registry
-				// Static, taken from Asset Registry and used as external source for render resources
-				std::vector<SRenderResourceHandle> MaterialTextureHandles;
-				std::map<U32, F32> MaterialUIDToRuntimeIndex;
-
-				struct SSubPassData
-				{
-					SRenderResourceHandle VertexBufferHandle;
-					SRenderResourceHandle IndexBufferHandle;
-					U32 IndexCount = 0;
-					U16 MaterialIndex = 0;
-				};
-				std::vector<SSubPassData> SubPassData;
-			};
-			RenderManager->GetRenderGraph().AddPass<SSkeletalGeometryEditorPassData>("SkelBasePassInstancedEditor",
-				[&](CRenderResourceRegistry& registry)
-				{
-					SSkeletalGeometryEditorPassData passData;
-
-					// TODO.NW: It's a bit weird that the render function has no control over where the inputs are bound (to what slot). Can only do this where there's a strong 
-					// assumption of how it should work (as a sync point). 
-					passData.Inputs.emplace_back(registry.DeclareResource(DeclareConstantBuffer<SFrameBufferData>("Frame Buffer")));
-
-					// TODO.NW: These inputs and outputs must be able to be aggregately bound by the render graph somehow
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Vertex Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer World Position", ERenderResourceFormat::R32G32B32A32_Float)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Editor Data", ERenderResourceFormat::R32G32_UnsignedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)));
-
-					passData.TransformBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
-					passData.EntityBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SEntity>("Instanced Entity Buffer", InstancedDrawInstanceLimit));
-
-					passData.BoneBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SBoneBufferData>("Bone Buffer"));
-					passData.MaterialBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SMaterialBufferData>("Material Buffer"));
-
-					// Import resources from asset registry
-
-					for (SGraphicsMaterialAsset* materialAsset : materials)
-					{
-						// TODO.NW: Figure out how we can deal with this requesting? Materials are shared for each invocation here
-						constexpr U64 tempRequester = 10000;
-						std::map<U32, CStaticRenderTexture*> mappedTextures = materialAsset->Material.GetRenderTexturePointers(tempRequester);
-
-						for (auto& [uid, texture] : mappedTextures)
-						{
-							passData.MaterialUIDToRuntimeIndex.emplace(uid, STATIC_F32(passData.MaterialTextureHandles.size()));
-							passData.MaterialTextureHandles.emplace_back(registry.DeclareResource(DeclareRenderTexture(std::to_string(uid).c_str(), texture)));
-						}
-					}
-
-					CRenderStateManager& stateManager = RenderManager->GetRenderStateManager();
-
-					for (const SDrawCallData& drawCallData : skeletalMeshData)
-					{
-						SSkeletalGeometryEditorPassData::SSubPassData& subPassData = passData.SubPassData.emplace_back();
-						subPassData.VertexBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SSkeletalMeshVertex>("Skeletal Mesh Vertex Buffer", &stateManager.VertexBuffers[drawCallData.VertexBufferIndex]));						
-						subPassData.IndexBufferHandle = registry.DeclareResource(DeclareIndexBuffer("Mesh Index Buffer", &stateManager.IndexBuffers[drawCallData.IndexBufferIndex]));
-						subPassData.IndexCount = drawCallData.IndexCount;
-						subPassData.MaterialIndex = drawCallData.MaterialIndex;
-					}
-
-					return passData;
-				},
-				[materials, transforms, posedBones, entities](const SSkeletalGeometryEditorPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager)
-				{
-					SSkeletalMeshRenderData rendererData;
-					SEditorGeometryRenderData editorData;
-
-					rendererData.TransformBuffer = registry.GetResource(data.TransformBufferHandle);
-					rendererData.BoneBuffer = registry.GetResource(data.BoneBufferHandle);
-					rendererData.MaterialBuffer = registry.GetResource(data.MaterialBufferHandle);
-					editorData.EntityBuffer = registry.GetResource(data.EntityBufferHandle);
-
-					for (const SRenderResourceHandle& handle : data.MaterialTextureHandles)
-						rendererData.MaterialTextures.emplace_back(registry.GetResource(handle));
-
-					rendererData.TransformBuffer->DataBuffer->BindBuffer(transforms);
-					rendererData.BoneBuffer->DataBuffer->BindBuffer(posedBones);
-					rendererData.InstanceCount = STATIC_U32(transforms.size());
-					editorData.EntityBuffer->DataBuffer->BindBuffer(entities);
-
-					for (const SSkeletalGeometryEditorPassData::SSubPassData& subPassData : data.SubPassData)
-					{
-						SMaterialBufferData materialBufferData = SMaterialBufferData(materials[subPassData.MaterialIndex]->Material);
-						for (SRuntimeGraphicsMaterialProperty& property : materialBufferData.Properties)
-						{
-							if (property.TextureChannelIndex > -1.0f)
-								property.TextureIndex = data.MaterialUIDToRuntimeIndex.at(property.TextureUID);
-						}
-						rendererData.MaterialBuffer->DataBuffer->BindBuffer(materialBufferData);
-
-						rendererData.VertexBuffer = registry.GetResource(subPassData.VertexBufferHandle);
-						rendererData.IndexBuffer = registry.GetResource(subPassData.IndexBufferHandle);
-						rendererData.IndexCount = subPassData.IndexCount;
-
-						renderManager->GeometryRenderer.RenderEditorSkeletalMesh(rendererData, editorData);
-					}
-				}
-			);
-		}
-		else
-		{
-			struct SSkeletalGeometryPassData : public SRenderPassParams
-			{
-				// Memory managed by RenderGraph
-				SRenderResourceHandle TransformBufferHandle;
-				SRenderResourceHandle MaterialBufferHandle;
-				SRenderResourceHandle BoneBufferHandle;
-
-				// External memory from Asset Registry
-				// Static, taken from Asset Registry and used as external source for render resources
-				std::vector<SRenderResourceHandle> MaterialTextureHandles;
-				std::map<U32, F32> MaterialUIDToRuntimeIndex;
-
-				struct SSubPassData
-				{
-					SRenderResourceHandle VertexBufferHandle;
-					SRenderResourceHandle IndexBufferHandle;
-					U32 IndexCount = 0;
-					U16 MaterialIndex = 0;
-				};
-				std::vector<SSubPassData> SubPassData;
-			};
-			RenderManager->GetRenderGraph().AddPass<SSkeletalGeometryPassData>("SkelBasePassInstanced",
-				[&](CRenderResourceRegistry& registry)
-				{
-					SSkeletalGeometryPassData passData;
-					
-					// TODO.NW: It's a bit weird that the render function has no control over where the inputs are bound (to what slot). Can only do this where there's a strong 
-					// assumption of how it should work (as a sync point). 
-					passData.Inputs.emplace_back(registry.DeclareResource(DeclareConstantBuffer<SFrameBufferData>("Frame Buffer")));
-
-					// TODO.NW: These inputs and outputs must be able to be aggregately bound by the render graph somehow
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Vertex Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)));
-
-					passData.TransformBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
-
-					passData.MaterialBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SMaterialBufferData>("Material Buffer"));
-					passData.BoneBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SBoneBufferData>("Bone Buffer"));
-
-					// Import resources from asset registry
-
-					for (SGraphicsMaterialAsset* materialAsset : materials)
-					{
-						// TODO.NW: Figure out how we can deal with this requesting? Materials are shared for each invocation here
-						constexpr U64 tempRequester = 10000;
-						std::map<U32, CStaticRenderTexture*> mappedTextures = materialAsset->Material.GetRenderTexturePointers(tempRequester);
-
-						for (auto& [uid, texture] : mappedTextures)
-						{
-							passData.MaterialUIDToRuntimeIndex.emplace(uid, STATIC_F32(passData.MaterialTextureHandles.size()));
-							passData.MaterialTextureHandles.emplace_back(registry.DeclareResource(DeclareRenderTexture(std::to_string(uid).c_str(), texture)));
-						}
-					}
-
-					CRenderStateManager& stateManager = RenderManager->GetRenderStateManager();
-
-					for (const SDrawCallData& drawCallData : skeletalMeshData)
-					{
-						SSkeletalGeometryPassData::SSubPassData& subPassData = passData.SubPassData.emplace_back();
-						subPassData.VertexBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SSkeletalMeshVertex>("Skeletal Mesh Vertex Buffer", &stateManager.VertexBuffers[drawCallData.VertexBufferIndex]));
-						subPassData.IndexBufferHandle = registry.DeclareResource(DeclareIndexBuffer("Mesh Index Buffer", &stateManager.IndexBuffers[drawCallData.IndexBufferIndex]));
-						subPassData.IndexCount = drawCallData.IndexCount;
-						subPassData.MaterialIndex = drawCallData.MaterialIndex;
-					}
-
-					return passData;
-				},
-				[materials, transforms, posedBones](const SSkeletalGeometryPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager)
-				{
-					SSkeletalMeshRenderData rendererData;
-
-					rendererData.TransformBuffer = registry.GetResource(data.TransformBufferHandle);
-					rendererData.MaterialBuffer = registry.GetResource(data.MaterialBufferHandle);
-					rendererData.BoneBuffer = registry.GetResource(data.BoneBufferHandle);
-
-					for (const SRenderResourceHandle& handle : data.MaterialTextureHandles)
-						rendererData.MaterialTextures.emplace_back(registry.GetResource(handle));
-
-					rendererData.TransformBuffer->DataBuffer->BindBuffer(transforms);
-					rendererData.BoneBuffer->DataBuffer->BindBuffer(posedBones),
-					rendererData.InstanceCount = STATIC_U32(transforms.size());
-
-					for (const SSkeletalGeometryPassData::SSubPassData& subPassData : data.SubPassData)
-					{
-						SMaterialBufferData materialBufferData = SMaterialBufferData(materials[subPassData.MaterialIndex]->Material);
-						for (SRuntimeGraphicsMaterialProperty& property : materialBufferData.Properties)
-						{
-							if (property.TextureChannelIndex > -1.0f)
-								property.TextureIndex = data.MaterialUIDToRuntimeIndex.at(property.TextureUID);
-						}
-						rendererData.MaterialBuffer->DataBuffer->BindBuffer(materialBufferData);
-
-						rendererData.VertexBuffer = registry.GetResource(subPassData.VertexBufferHandle);
-						rendererData.IndexBuffer = registry.GetResource(subPassData.IndexBufferHandle);
-						rendererData.IndexCount = subPassData.IndexCount;
-
-						renderManager->GeometryRenderer.RenderSkeletalMesh(rendererData);
-					}
-				}
-			);
-		}
-	}
-
-	void CRenderSystem::AddBillboardPass(STextureAsset* textureAsset, const std::vector<SMatrix>& transforms, const std::vector<SVector4>& uvRects, const std::vector<SVector4>& colors, const std::vector<SEntity>& entities, const bool runEditorDataPasses)
-	{
-		if (runEditorDataPasses)
-		{
-			struct SEditorBillboardPassData : public SRenderPassParams
-			{
-				SRenderResourceHandle TransformBufferHandle;
-				SRenderResourceHandle UVRectBufferHandle;
-				SRenderResourceHandle ColorBufferHandle;
-				SRenderResourceHandle EntityBufferHandle;
-				SRenderResourceHandle SpriteTextureHandle;
-			};
-			RenderManager->GetRenderGraph().AddPass<SEditorBillboardPassData>("EditorBillboardPass",
-				[&](CRenderResourceRegistry& registry)
-				{
-					SEditorBillboardPassData passData;
-
-					// TODO.NW: It's a bit weird that the render function has no control over where the inputs are bound (to what slot). Can only do this where there's a strong 
-					// assumption of how it should work (as a sync point). 
-					passData.Inputs.emplace_back(registry.DeclareResource(DeclareConstantBuffer<SFrameBufferData>("Frame Buffer")));
-
-					// TODO.NW: These inputs and outputs must be able to be aggregately bound by the render graph somehow
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Vertex Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer World Position", ERenderResourceFormat::R32G32B32A32_Float)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Editor Data", ERenderResourceFormat::R32G32_UnsignedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)));
-
-					passData.TransformBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
-					passData.UVRectBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SVector4>("Instanced UV Rect Buffer", InstancedDrawInstanceLimit));
-					passData.ColorBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SVector4>("Instanced Color Buffer", InstancedDrawInstanceLimit));
-					passData.EntityBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SEntity>("Instanced Entity Buffer", InstancedDrawInstanceLimit));
-					passData.SpriteTextureHandle = registry.DeclareResource(DeclareRenderTexture("Billboard Texture", &textureAsset->RenderTexture));
-					return passData;
-				},
-				[=](const SEditorBillboardPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager)
-				{
-					// TODO.NW: Bind outputs, needs to include gbuffer targets
-					SSpriteRenderData renderData;
-					renderData.TransformBuffer = registry.GetResource(data.TransformBufferHandle);
-					renderData.TransformBuffer->DataBuffer->BindBuffer(transforms);
-
-					renderData.UVRectBuffer = registry.GetResource(data.UVRectBufferHandle);
-					renderData.UVRectBuffer->DataBuffer->BindBuffer(uvRects);
-
-					renderData.ColorBuffer = registry.GetResource(data.ColorBufferHandle);
-					renderData.ColorBuffer->DataBuffer->BindBuffer(colors);
-
-					renderData.SpriteTexture = registry.GetResource(data.SpriteTextureHandle);
-
-					SEditorSpriteRenderData editorRenderData;
-					editorRenderData.EntityBuffer = registry.GetResource(data.EntityBufferHandle);
-					editorRenderData.EntityBuffer->DataBuffer->BindBuffer(entities);
-
-					renderManager->SpriteRenderer.RenderEditorWorldSpaceSprite(renderData, editorRenderData);
-				}
-			);
-		}
-		else
-		{
-			struct SBillboardPassData : public SRenderPassParams
-			{
-				SRenderResourceHandle TransformBufferHandle;
-				SRenderResourceHandle UVRectBufferHandle;
-				SRenderResourceHandle ColorBufferHandle;
-				SRenderResourceHandle SpriteTextureHandle;
-			};
-			RenderManager->GetRenderGraph().AddPass<SBillboardPassData>("BillboardPass",
-				[&](CRenderResourceRegistry& registry)
-				{
-					SBillboardPassData passData;
-
-					// TODO.NW: It's a bit weird that the render function has no control over where the inputs are bound (to what slot). Can only do this where there's a strong 
-					// assumption of how it should work (as a sync point). 
-					passData.Inputs.emplace_back(registry.DeclareResource(DeclareConstantBuffer<SFrameBufferData>("Frame Buffer")));
-
-					// TODO.NW: These inputs and outputs must be able to be aggregately bound by the render graph somehow
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Vertex Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)));
-
-					passData.TransformBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
-					passData.UVRectBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SVector4>("Instanced UV Rect Buffer", InstancedDrawInstanceLimit));
-					passData.ColorBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SVector4>("Instanced Color Buffer", InstancedDrawInstanceLimit));
-					passData.SpriteTextureHandle = registry.DeclareResource(DeclareRenderTexture("Billboard Texture", &textureAsset->RenderTexture));
-					return passData;
-				},
-				[=](const SBillboardPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager)
-				{
-					// TODO.NW: Bind outputs, needs to include gbuffer targets
-					SSpriteRenderData renderData;
-					renderData.TransformBuffer = registry.GetResource(data.TransformBufferHandle);
-					renderData.TransformBuffer->DataBuffer->BindBuffer(transforms);
-
-					renderData.UVRectBuffer = registry.GetResource(data.UVRectBufferHandle);
-					renderData.UVRectBuffer->DataBuffer->BindBuffer(uvRects);
-
-					renderData.ColorBuffer = registry.GetResource(data.ColorBufferHandle);
-					renderData.ColorBuffer->DataBuffer->BindBuffer(colors);
-
-					renderData.SpriteTexture = registry.GetResource(data.SpriteTextureHandle);
-
-					renderManager->SpriteRenderer.RenderWorldSpaceSprite(renderData);
-				}
-			);
-		}
-	}
-	
-	void CRenderSystem::AddDecalPass(const SMatrix& transformMatrix, const std::vector<STextureAsset*>& textureAssets)
-	{
-		struct SDecalGeometryPassData : public SRenderPassParams
-		{
-			SRenderResourceHandle DecalBufferHandle;
-
-			// Owned by Asset Registry
-			SRenderResourceHandle AlbedoTextureHandle;
-			SRenderResourceHandle MaterialTextureHandle;
-			SRenderResourceHandle NormalTextureHandle;
+			SRenderResourceHandle TransformBufferHandle;
+			SRenderResourceHandle MaterialBufferHandle;
+			SRenderResourceHandle BoneBufferHandle;
+			SRenderResourceHandle UVRectBufferHandle;
+			SRenderResourceHandle ColorBufferHandle;
+			SRenderResourceHandle EntityBufferHandle;
 		};
-		RenderManager->GetRenderGraph().AddPass<SDecalGeometryPassData>("DecalPass",
+		RenderManager->GetRenderGraph().AddPass<SGeometryBasePassData>("GBufferBasePass",
 			[&](CRenderResourceRegistry& registry)
 			{
-				SDecalGeometryPassData passData;
+				SGeometryBasePassData passData;
+
+				// TODO.NW: Maybe add AddInput/AddOutput functions on the passdata, that can make sure they are set to the correct render stage and slot somehow
+
 				// TODO.NW: It's a bit weird that the render function has no control over where the inputs are bound (to what slot). Can only do this where there's a strong 
 				// assumption of how it should work (as a sync point). 
 				passData.Inputs.emplace_back(registry.DeclareResource(DeclareConstantBuffer<SFrameBufferData>("Frame Buffer")));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("Depth Copy", ERenderResourceFormat::R32_Float)));
 
 				// TODO.NW: These inputs and outputs must be able to be aggregately bound by the render graph somehow
 				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
 				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
 				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Vertex Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
 				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
+				
+				if (runEditorDataPasses)
+				{
+					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer World Position", ERenderResourceFormat::R32G32B32A32_Float)));
+					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Editor Data", ERenderResourceFormat::R32G32_UnsignedInt)));
+				}
+				
 				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)));
 
-				passData.DecalBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SDecalBufferData>("Decal Buffer"));
+				passData.TransformBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
+				passData.UVRectBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SVector4>("Instanced UV Rect Buffer", InstancedDrawInstanceLimit));
+				passData.ColorBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SVector4>("Instanced Color Buffer", InstancedDrawInstanceLimit));
+				passData.EntityBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SEntity>("Instanced Entity Buffer", InstancedDrawInstanceLimit));
+				passData.MaterialBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SMaterialBufferData>("Material Buffer"));
+				passData.BoneBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SBoneBufferData>("Bone Buffer"));
 
-				if (textureAssets[0] != nullptr)
-					passData.AlbedoTextureHandle = registry.DeclareResource(DeclareRenderTexture("Decal Albedo", &textureAssets[0]->RenderTexture));
-
-				if (textureAssets[1] != nullptr)
-					passData.MaterialTextureHandle = registry.DeclareResource(DeclareRenderTexture("Decal Material", &textureAssets[1]->RenderTexture));
-
-				if (textureAssets[2] != nullptr)
-					passData.NormalTextureHandle = registry.DeclareResource(DeclareRenderTexture("Decal Normal", &textureAssets[2]->RenderTexture));
-				
 				return passData;
 			},
-			[transformMatrix](const SDecalGeometryPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager)
+			[=](const SGeometryBasePassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
 			{
-				SDecalRenderData rendererData;
+				CRenderStateManager& stateManager = renderManager->GetRenderStateManager();
 
-				const SDecalBufferData bufferData = { .ToWorld = transformMatrix, .ToObjectSpace = transformMatrix.Inverse() };
+				{
+					SStaticMeshRenderData rendererData;
+					rendererData.TransformBuffer = registry.GetResource(data.TransformBufferHandle);
+					rendererData.MaterialBuffer = registry.GetResource(data.MaterialBufferHandle);
+
+					SEditorGeometryRenderData editorData;
+					if (runEditorDataPasses)
+						editorData.EntityBuffer = registry.GetResource(data.EntityBufferHandle);
+
+					for (auto& [meshID, meshData] : renderView.StaticMeshDrawData) // Static Mesh Level
+					{	
+						rendererData.TransformBuffer->DataBuffer->BindBuffer(meshData.Transforms);
+						
+						if (runEditorDataPasses)
+							editorData.EntityBuffer->DataBuffer->BindBuffer(entities);
+
+						for (const SMeshDrawData& drawData : meshData.DrawData) // Sub Mesh Level
+						{
+							for (const SRenderResourceHandle& handle : drawData.MaterialTextureHandles) // Material Texture Level
+								rendererData.MaterialTextures.emplace_back(registry.GetResource(handle));
+
+							rendererData.MaterialBuffer->DataBuffer->BindBuffer(drawData.MaterialBufferData);
+						
+							rendererData.VertexBuffer = registry.GetResource(drawData.VertexBufferHandle);
+							rendererData.IndexBuffer = registry.GetResource(drawData.IndexBufferHandle);
+						
+							rendererData.IndexCount = drawData.IndexCount;
+							rendererData.InstanceCount = STATIC_U32(meshData.Transforms.size());
+
+							if (runEditorDataPasses)
+								renderManager->GeometryRenderer.RenderEditorStaticMesh(rendererData, editorData);
+							else
+								renderManager->GeometryRenderer.RenderStaticMesh(rendererData);						
+						}
+					}
+				}
+
+				{
+					SSkeletalMeshRenderData rendererData;
+					rendererData.TransformBuffer = registry.GetResource(data.TransformBufferHandle);
+					rendererData.MaterialBuffer = registry.GetResource(data.MaterialBufferHandle);
+					rendererData.BoneBuffer = registry.GetResource(data.BoneBufferHandle);
+
+					SEditorGeometryRenderData editorData;
+					if (runEditorDataPasses)
+						editorData.EntityBuffer = registry.GetResource(data.EntityBufferHandle);
+
+					for (auto& [meshID, meshData] : renderView.SkeletalMeshDrawData)
+					{
+						rendererData.TransformBuffer->DataBuffer->BindBuffer(meshData.Transforms);
+						rendererData.BoneBuffer->DataBuffer->BindBuffer(meshData.Bones);
+
+						if (runEditorDataPasses)
+							editorData.EntityBuffer->DataBuffer->BindBuffer(entities);
+
+						for (const SMeshDrawData& drawData : meshData.DrawData)
+						{
+							for (const SRenderResourceHandle& handle : drawData.MaterialTextureHandles)
+								rendererData.MaterialTextures.emplace_back(registry.GetResource(handle));
+
+							rendererData.MaterialBuffer->DataBuffer->BindBuffer(drawData.MaterialBufferData);
+
+							rendererData.VertexBuffer = registry.GetResource(drawData.VertexBufferHandle);
+							rendererData.IndexBuffer = registry.GetResource(drawData.IndexBufferHandle);
+
+							rendererData.IndexCount = drawData.IndexCount;
+							rendererData.InstanceCount = STATIC_U32(meshData.Transforms.size());
+
+							if (runEditorDataPasses)
+								renderManager->GeometryRenderer.RenderEditorSkeletalMesh(rendererData, editorData);
+							else
+								renderManager->GeometryRenderer.RenderSkeletalMesh(rendererData);
+						}
+					}
+				}
+
+				{
+					SSpriteRenderData rendererData;
+					rendererData.TransformBuffer = registry.GetResource(data.TransformBufferHandle);
+					rendererData.UVRectBuffer = registry.GetResource(data.UVRectBufferHandle);
+					rendererData.ColorBuffer = registry.GetResource(data.ColorBufferHandle);
+
+					SEditorSpriteRenderData editorData;
+					if (runEditorDataPasses)
+						editorData.EntityBuffer = registry.GetResource(data.EntityBufferHandle);
+
+					for (auto& [spriteID, drawData] : renderView.WorldSpaceSpriteInstanceData)
+					{
+						rendererData.TransformBuffer->DataBuffer->BindBuffer(drawData.Transforms);
+						rendererData.UVRectBuffer->DataBuffer->BindBuffer(drawData.UVRects);
+						rendererData.ColorBuffer->DataBuffer->BindBuffer(drawData.Colors);
+
+						if (runEditorDataPasses)
+							editorData.EntityBuffer->DataBuffer->BindBuffer(entities);
+
+						rendererData.SpriteTexture = registry.GetResource(drawData.SpriteTextureHandle);
+
+						if (runEditorDataPasses)
+							renderManager->SpriteRenderer.RenderEditorWorldSpaceSprite(rendererData, editorData);
+						else
+							renderManager->SpriteRenderer.RenderWorldSpaceSprite(rendererData);
+					}
+				}
+			}
+		);
+		
+		// TODO.NW: Add sync pass using fullscreen renderer
+		// 		DepthCopy.SetAsActiveTarget(); <- output
+		//		IntermediateDepth.SetAsPSResourceOnSlot(0); <- input depth from previous gbuffer rendering above
+		//		RenderFullscreenPass(EPixelShaders::FullscreenCopyDepth, EBlendStates::Disable);
+
+		struct SGeometryDecalPassData : public SRenderPassParams
+		{
+			SRenderResourceHandle TransformBufferHandle;
+			SRenderResourceHandle MaterialBufferHandle;
+		};
+		RenderManager->GetRenderGraph().AddPass<SGeometryDecalPassData>("GBufferDecalPass",
+			[&](CRenderResourceRegistry& registry)
+			{
+				SGeometryDecalPassData passData;
+
+				passData.AddDependency<SGeometryBasePassData>();
+
+				passData.Inputs.emplace_back(registry.DeclareResource(DeclareConstantBuffer<SFrameBufferData>("Frame Buffer")));
+				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("Depth Copy", ERenderResourceFormat::R32_Float)));
+
+				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
+				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
+				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Vertex Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
+				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
+				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)));
+
+				passData.TransformBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
+				passData.MaterialBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SMaterialBufferData>("Material Buffer"));
+
+				return passData;
+			},
+			[](const SGeometryDecalPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
+			{
+				CRenderStateManager& stateManager = renderManager->GetRenderStateManager();
 				
-				rendererData.DecalBuffer = registry.GetResource(data.DecalBufferHandle);
-				rendererData.DecalBuffer->DataBuffer->BindBuffer(bufferData);
+				SDecalRenderData rendererData;
+				rendererData.TransformBuffer = registry.GetResource(data.TransformBufferHandle);
+				rendererData.MaterialBuffer = registry.GetResource(data.MaterialBufferHandle);
 
-				rendererData.OptionalAlbedoTexture = registry.GetResource(data.AlbedoTextureHandle);
-				rendererData.OptionalMaterialTexture = registry.GetResource(data.MaterialTextureHandle);
-				rendererData.OptionalNormalTexture = registry.GetResource(data.NormalTextureHandle);
+				for (auto& [materialID, drawData] : renderView.DecalDrawData)
+				{
+					rendererData.TransformBuffer->DataBuffer->BindBuffer(drawData.Transforms);
+					rendererData.MaterialBuffer->DataBuffer->BindBuffer(drawData.MaterialBufferData);
 
-				renderManager->GeometryRenderer.RenderDecal(rendererData);
+					for (const SRenderResourceHandle& handle : drawData.MaterialTextureHandles)
+						rendererData.MaterialTextures.emplace_back(registry.GetResource(handle));
+
+					rendererData.InstanceCount = STATIC_U32(drawData.Transforms.size());
+
+					renderManager->GeometryRenderer.RenderDecal(rendererData);
+				}			
 			}
 		);
 	}
@@ -1829,7 +1430,7 @@ namespace Havtorn
 			},
 			[=](const SEditorWidgetPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager)
 			{
-				instance data should come from owning render view, might want to receive it in the parameter list
+				//instance data should come from owning render view, might want to receive it in the parameter list
 
 				// TODO.NW: Bind outputs, needs to include gbuffer targets
 				SSpriteRenderData renderData;

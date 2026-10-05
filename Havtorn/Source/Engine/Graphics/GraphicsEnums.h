@@ -53,6 +53,7 @@ namespace Havtorn
 		Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2Trans,
 		Pos3Nor3Tan3Bit3UV2Color4,
 		Pos3Nor3Tan3Bit3UV2Color4Entity2,
+		Pos3Nor3Tan3Bit3UV2TransObjectTrans,
 		Null
 	};
 
@@ -81,7 +82,7 @@ namespace Havtorn
 	enum class EPixelShaders
 	{
 		GBuffer = 0,
-		DecalAlbedo = 1,
+		DecalAlbedo = 1, // TODO.NW: Remove these decal shaders
 		DecalMaterial = 2,
 		DecalNormal = 3,
 		DeferredDirectional = 4,
@@ -121,6 +122,7 @@ namespace Havtorn
 		FullscreenWorldPosition = 38,
 		GBufferVertexPaint = 39,
 		GBufferVertexPaintEditor = 40,
+		Decal = 41,
 		Count,
 		Null = Count
 	};

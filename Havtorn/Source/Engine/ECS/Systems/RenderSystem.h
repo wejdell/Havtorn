@@ -29,7 +29,7 @@ namespace Havtorn
 		// Light Culling
 
 		void AddStaticMeshShadowmapPass(const std::vector<SDrawCallData>& staticMeshData, const std::vector<SMatrix>& transforms, const std::vector<SShadowmapViewData>& shadowmapData);
-		void AddStaticMeshPass(const std::vector<SDrawCallData>& staticMeshData, const std::vector<SGraphicsMaterialAsset*>& materials, const std::vector<SMatrix>& transforms, const std::vector<SEntity>& entities, const bool runEditorDataPasses);
+		void AddGBufferPasses(const bool runEditorDataPasses);
 		void AddSkeletalMeshPass(const std::vector<SDrawCallData>& skeletalMeshData, const std::vector<SGraphicsMaterialAsset*>& materials, const std::vector<SMatrix>& transforms, const std::vector<SMatrix>& posedBones, const std::vector<SEntity>& entities, const bool runEditorDataPasses);
 		void AddBillboardPass(STextureAsset* textureAsset, const std::vector<SMatrix>& transforms, const std::vector<SVector4>& uvRects, const std::vector<SVector4>& colors, const std::vector<SEntity>& entities, const bool runEditorDataPasses);
 		void AddDecalPass(const SMatrix& transformMatrix, const std::vector<STextureAsset*>& textureAssets);

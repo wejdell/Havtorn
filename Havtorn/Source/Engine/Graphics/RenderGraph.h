@@ -22,11 +22,12 @@ namespace Havtorn
 {
 	class CRHI;
 	class CRenderManager;
+	struct SRenderView;
 
 	class IRenderPass
 	{
 	public:
-		virtual void Execute(CRenderResourceRegistry& registry, CRenderManager* renderManager) = 0;
+		virtual void Execute(CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView) = 0;
 		std::vector<SRenderResourceHandle> Inputs;
 		std::vector<SRenderResourceHandle> Outputs;
 		std::vector<U64> Dependencies;
@@ -60,13 +61,13 @@ namespace Havtorn
 	class CRenderPass : public IRenderPass
 	{
 	public:
-		using TRenderPassExecuteSignature = std::function<void(const TParamStruct&, CRenderResourceRegistry&, CRenderManager*)>;
+		using TRenderPassExecuteSignature = std::function<void(const TParamStruct&, CRenderResourceRegistry&, CRenderManager*, SRenderView&)>;
 
 		CRenderPass() = default;
 		CRenderPass(const std::string_view debugName, const TParamStruct& data, TRenderPassExecuteSignature&& execution);
 		CRenderPass() = delete;
 
-		virtual void Execute(CRenderResourceRegistry& registry, CRenderManager* renderManager) override;
+		virtual void Execute(CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView) override;
 		
 		CHavtornStaticString<RenderDebugNameMaxSize> Name;
 		TParamStruct Data;
@@ -76,34 +77,11 @@ namespace Havtorn
 		HV_STATIC_ASSERT(sizeof(ExecutionFunction) < 1024, "Execution Function is binding too much data!");
 	};
 
-	class CRenderGraph
-	{
-	public:
-		CRenderGraph(CRenderManager* manager);
-		~CRenderGraph() = default;
-
-		template<RenderPassParamType TParamStruct>
-		void AddPass(const std::string_view debugName, const std::function<TParamStruct(CRenderResourceRegistry&)> setup, std::function<void(const TParamStruct&, CRenderResourceRegistry&, CRenderManager*)>&& execution);
-
-		void Compile();
-		void Execute(CRenderManager* renderManager);
-
-	private:
-		std::unordered_map<U64, U64> PassParamHashToPassIndex;
-		std::unordered_map<U64, U64> SortedPassParamHashToPassIndex;
-
-		std::vector<Ref<IRenderPass>> RenderPasses;
-		std::vector<Ref<IRenderPass>> SortedPasses;
-		
-		CRenderResourceRegistry ResourceRegistry; // TODO.NW: Should move this if we have one graph per render view
-		CRenderManager* RenderManager = nullptr;
-	};
-
 	template<RenderPassParamType TParamStruct>
 	inline CRenderPass<TParamStruct>::CRenderPass(const std::string_view debugName, const TParamStruct& data, TRenderPassExecuteSignature&& execution)
 		: ExecutionFunction(std::move(execution))
 		, Data(data)
-	{	
+	{
 		PassParamHash = typeid(TParamStruct).hash_code();
 		Inputs = Data.Inputs;
 		Outputs = Data.Outputs;
@@ -114,13 +92,13 @@ namespace Havtorn
 	}
 
 	template<RenderPassParamType TParamStruct>
-	inline void CRenderPass<TParamStruct>::Execute(CRenderResourceRegistry& registry, CRenderManager* renderManager)
+	inline void CRenderPass<TParamStruct>::Execute(CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
 	{
-		ExecutionFunction(Data, registry, renderManager);
+		ExecutionFunction(Data, registry, renderManager, renderView);
 	}
 
 	template<RenderPassParamType TParamStruct>
-	inline void CRenderGraph::AddPass(const std::string_view debugName, const std::function<TParamStruct(CRenderResourceRegistry&)> setup, std::function<void(const TParamStruct&, CRenderResourceRegistry&, CRenderManager*)>&& execution)
+	inline void CRenderGraph::AddPass(const std::string_view debugName, const std::function<TParamStruct(CRenderResourceRegistry&)> setup, std::function<void(const TParamStruct&, CRenderResourceRegistry&, CRenderManager*, SRenderView&)>&& execution)
 	{
 		const U64 passParamHash = typeid(TParamStruct).hash_code();
 		if (!PassParamHashToPassIndex.contains(passParamHash))
@@ -135,4 +113,29 @@ namespace Havtorn
 	{
 		Dependencies.push_back(typeid(TParamStruct).hash_code());
 	}
+
+	class CRenderGraph
+	{
+	public:
+		CRenderGraph(CRenderManager* manager);
+		~CRenderGraph() = default;
+
+		template<RenderPassParamType TParamStruct>
+		void AddPass(const std::string_view debugName, const std::function<TParamStruct(CRenderResourceRegistry&)> setup, std::function<void(const TParamStruct&, CRenderResourceRegistry&, CRenderManager*, SRenderView&)>&& execution);
+
+		void Compile();
+		void Execute(CRenderManager* renderManager, SRenderView& renderView);
+
+	private:
+		std::unordered_map<U64, U64> PassParamHashToPassIndex;
+		std::unordered_map<U64, U64> SortedPassParamHashToPassIndex;
+
+		std::vector<Ref<IRenderPass>> RenderPasses;
+		std::vector<Ref<IRenderPass>> SortedPasses;
+		
+		// TODO.NW: Probably want to centralize render resource registry instead of it being owned by each render graph, so 
+		// resources can be shared across views
+		CRenderResourceRegistry ResourceRegistry; // TODO.NW: Should move this if we have one graph per render view
+		//CRenderManager* RenderManager = nullptr;
+	};
 }

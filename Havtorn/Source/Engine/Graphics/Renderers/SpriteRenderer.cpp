@@ -13,6 +13,8 @@ namespace Havtorn
 	{
 		RenderStateManager = stateManager;
 
+		// TODO.NW: Remove geometry shaders because they are not performant! Set up a super simple default plane vertex buffer instead
+
 		const SPSODescription screenSpaceSprite =
 		{
 			.VertexShader = RenderStateManager->VertexShaders[STATIC_U8(EVertexShaders::SpriteInstanced)],

@@ -694,6 +694,7 @@ set(PIXEL_SHADERS
     ${SHADER_FOLDER}SpriteWorldSpace_PS.hlsl
     ${SHADER_FOLDER}SpriteWorldSpaceEditor_PS.hlsl
     ${SHADER_FOLDER}SpriteWorldSpaceEditorWidget_PS.hlsl
+    ${SHADER_FOLDER}Decal_PS.hlsl
 )
 set_source_files_properties(${VERTEX_SHADERS} PROPERTIES VS_SHADER_TYPE Vertex)
 set_source_files_properties(${GEOMETRY_SHADERS} PROPERTIES VS_SHADER_TYPE Geometry)

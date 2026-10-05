@@ -32,13 +32,6 @@ namespace Havtorn
 	};
 	HV_ASSERT_BUFFER(SBoneBufferData)
 
-	struct SDecalBufferData
-	{
-		SMatrix ToWorld;
-		SMatrix ToObjectSpace;
-	} DecalBufferData;
-	HV_ASSERT_BUFFER(SDecalBufferData)
-
 	struct SEditorGeometryRenderData
 	{
 		SRenderResource* EntityBuffer = nullptr;
@@ -46,10 +39,10 @@ namespace Havtorn
 
 	struct SStaticMeshRenderData
 	{
-		SRenderResource* MaterialBuffer = nullptr;
+		SRenderResource* TransformBuffer = nullptr;
 		SRenderResource* VertexBuffer = nullptr;
 		SRenderResource* IndexBuffer = nullptr;
-		SRenderResource* TransformBuffer = nullptr;
+		SRenderResource* MaterialBuffer = nullptr;
 		std::vector<SRenderResource*> MaterialTextures;
 		U32 IndexCount = 0;
 		U32 InstanceCount = 0;
@@ -57,11 +50,11 @@ namespace Havtorn
 
 	struct SSkeletalMeshRenderData
 	{
-		SRenderResource* MaterialBuffer = nullptr;
+		SRenderResource* TransformBuffer = nullptr;
 		SRenderResource* VertexBuffer = nullptr;
 		SRenderResource* IndexBuffer = nullptr;
 		SRenderResource* BoneBuffer = nullptr;
-		SRenderResource* TransformBuffer = nullptr;
+		SRenderResource* MaterialBuffer = nullptr;
 		std::vector<SRenderResource*> MaterialTextures;
 		U32 IndexCount = 0;
 		U32 InstanceCount = 0;
@@ -69,10 +62,10 @@ namespace Havtorn
 
 	struct SDecalRenderData
 	{
-		SRenderResource* DecalBuffer = nullptr;
-		SRenderResource* OptionalAlbedoTexture = nullptr; // TODO.NW: Change this to material
-		SRenderResource* OptionalMaterialTexture = nullptr;
-		SRenderResource* OptionalNormalTexture = nullptr;
+		SRenderResource* TransformBuffer = nullptr;
+		SRenderResource* MaterialBuffer = nullptr;
+		std::vector<SRenderResource*> MaterialTextures;
+		U32 InstanceCount = 0;
 	};
 
 	struct SSkyboxRenderData

@@ -76,12 +76,12 @@ namespace Havtorn
 		const SPSODescription deferredDecal =
 		{
 			.VertexShader = RenderStateManager->VertexShaders[STATIC_U8(EVertexShaders::Decal)],
-			.PixelShader = nullptr, // Shaders for each set of albedo / material / normal is set in the render command for now
-			.GeometryShader = RenderStateManager->GeometryShaders[STATIC_U8(EGeometryShaders::SpriteWorldSpace)],
+			.PixelShader = RenderStateManager->PixelShaders[STATIC_U8(EPixelShaders::Decal)],
+			.GeometryShader = nullptr,
 			.ComputeShader = nullptr,
-			.InputLayout = RenderStateManager->InputLayouts[STATIC_U8(EInputLayoutType::Pos3Nor3Tan3Bit3UV2)],
+			.InputLayout = RenderStateManager->InputLayouts[STATIC_U8(EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans)],
 			.Topology = ETopologies::TriangleList,
-			.BlendState = RenderStateManager->BlendStates[STATIC_U8(EBlendStates::AlphaBlend)], // TODO.NW: See if this should be GBufferAlphaBlend?
+			.BlendState = RenderStateManager->BlendStates[STATIC_U8(EBlendStates::GBufferAlphaBlend)], // TODO.NW: Make sure this is correct
 			.RasterizerState = RenderStateManager->RasterizerStates[STATIC_U8(ERasterizerStates::BackfaceCulling)], // TODO.NW: See if this should be front face culling?
 			.DepthStencilState = RenderStateManager->DepthStencilStates[STATIC_U8(EDepthStencilStates::OnlyRead)],
 			.RootSignature = nullptr
@@ -108,7 +108,7 @@ namespace Havtorn
 	{
 		RenderStateManager->TrySetPipelineStateObject(StaticMeshGBufferPassPSOIndex);
 
-		RenderStateManager->IASetVertexBuffers(0, { passData.VertexBuffer, passData.TransformBuffer });
+		RenderStateManager->IASetVertexBuffers(0, std::vector<SRenderResource*>{ passData.VertexBuffer, passData.TransformBuffer });
 		RenderStateManager->IASetIndexBuffer(*passData.IndexBuffer->DataBuffer);
 
 		// TODO.NW: This assumes the frame buffer has been set earlier, with the active camera view
@@ -161,7 +161,7 @@ namespace Havtorn
 	{
 		RenderStateManager->TrySetPipelineStateObject(SkeletalMeshGBufferPassPSOIndex);
 
-		RenderStateManager->IASetVertexBuffers(0, { passData.VertexBuffer, passData.TransformBuffer });
+		RenderStateManager->IASetVertexBuffers(0, std::vector<SRenderResource*>{ passData.VertexBuffer, passData.TransformBuffer });
 		RenderStateManager->IASetIndexBuffer(*passData.IndexBuffer->DataBuffer);
 
 		// TODO.NW: This assumes the frame buffer has been set earlier, with the active camera view
@@ -205,42 +205,47 @@ namespace Havtorn
 	{
 		RenderStateManager->TrySetPipelineStateObject(DecalGBufferPassPSOIndex);
 
-		RenderStateManager->IASetVertexBuffer(0, RenderStateManager->VertexBuffers[STATIC_U8(EDefaultIndexBuffers::DecalProjector)]);
+		RenderStateManager->IASetVertexBuffers(0, std::vector<CDataBuffer*>{ &RenderStateManager->VertexBuffers[STATIC_U8(EDefaultIndexBuffers::DecalProjector)], passData.TransformBuffer->DataBuffer });
 		RenderStateManager->IASetIndexBuffer(RenderStateManager->IndexBuffers[STATIC_U8(EDefaultIndexBuffers::DecalProjector)]);
 	
 		// TODO.NW: This assumes the frame buffer has been set earlier, with the active camera view
 		// Should we let pass data get control over what frame buffer to use? Probably. Need to set frame buffer here in that case
 		//RenderStateManager->VSSetConstantBuffer(0, *passData.FrameBuffer->DataBuffer);
 		//RenderStateManager->PSSetConstantBuffer(0, *passData.FrameBuffer->DataBuffer);
-		RenderStateManager->VSSetConstantBuffer(1, *passData.DecalBuffer->DataBuffer);
-		RenderStateManager->PSSetConstantBuffer(1, *passData.DecalBuffer->DataBuffer);
+		//RenderStateManager->VSSetConstantBuffer(1, *passData.DecalBuffer->DataBuffer);
+		//RenderStateManager->PSSetConstantBuffer(1, *passData.DecalBuffer->DataBuffer);
 
 		// TODO.NW: Figure out if we can just assume a default sampler binding for every pass, not using that many yet
 		//RenderStateManager->PSSetSampler(0, ESamplers::DefaultWrap);
+		RenderStateManager->PSSetResources(5, passData.MaterialTextures);
+		RenderStateManager->PSSetConstantBuffer(8, *passData.MaterialBuffer->DataBuffer);
 
-		if (passData.OptionalAlbedoTexture != nullptr)
-		{
-			passData.OptionalAlbedoTexture->RenderTexture->SetAsPSResourceOnSlot(5);
-			RenderStateManager->PSSetShader(EPixelShaders::DecalAlbedo);
-			RenderStateManager->DrawIndexed(36, 0, 0);
-			CRenderManager::NumberOfDrawCallsThisFrame++;
-		}
+		RenderStateManager->DrawIndexedInstanced(36, passData.InstanceCount, 0, 0, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++; // TODO.NW: Move this incrementation into a singular function so we don't have to add it everywhere
 
-		if (passData.OptionalMaterialTexture)
-		{
-			passData.OptionalAlbedoTexture->RenderTexture->SetAsPSResourceOnSlot(6);
-			RenderStateManager->PSSetShader(EPixelShaders::DecalMaterial);
-			RenderStateManager->DrawIndexed(36, 0, 0);
-			CRenderManager::NumberOfDrawCallsThisFrame++;
-		}
+		//if (passData.OptionalAlbedoTexture != nullptr)
+		//{
+		//	passData.OptionalAlbedoTexture->RenderTexture->SetAsPSResourceOnSlot(5);
+		//	RenderStateManager->PSSetShader(EPixelShaders::DecalAlbedo);
+		//	RenderStateManager->DrawIndexed(36, 0, 0);
+		//	CRenderManager::NumberOfDrawCallsThisFrame++;
+		//}
 
-		if (passData.OptionalNormalTexture)
-		{
-			passData.OptionalAlbedoTexture->RenderTexture->SetAsPSResourceOnSlot(7);
-			RenderStateManager->PSSetShader(EPixelShaders::DecalNormal);
-			RenderStateManager->DrawIndexed(36, 0, 0);
-			CRenderManager::NumberOfDrawCallsThisFrame++;
-		}
+		//if (passData.OptionalMaterialTexture)
+		//{
+		//	passData.OptionalAlbedoTexture->RenderTexture->SetAsPSResourceOnSlot(6);
+		//	RenderStateManager->PSSetShader(EPixelShaders::DecalMaterial);
+		//	RenderStateManager->DrawIndexed(36, 0, 0);
+		//	CRenderManager::NumberOfDrawCallsThisFrame++;
+		//}
+
+		//if (passData.OptionalNormalTexture)
+		//{
+		//	passData.OptionalAlbedoTexture->RenderTexture->SetAsPSResourceOnSlot(7);
+		//	RenderStateManager->PSSetShader(EPixelShaders::DecalNormal);
+		//	RenderStateManager->DrawIndexed(36, 0, 0);
+		//	CRenderManager::NumberOfDrawCallsThisFrame++;
+		//}
 	}
 
 	void CGeometryRenderer::RenderSkybox(const SSkyboxRenderData& passData)

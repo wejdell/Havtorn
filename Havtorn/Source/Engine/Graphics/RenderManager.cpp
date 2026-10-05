@@ -21,6 +21,7 @@
 
 #include <algorithm>
 #include <future>
+#include <ranges>
 
 #include <PlatformManager.h>
 #include <RHI/RHI.h>
@@ -243,9 +244,8 @@ namespace Havtorn
 				}
 				
 				CheckIsolatedRenderPass(renderViewID);
+				view.RenderGraph.Execute(this, view);
 			}
-
-			RenderGraph.Execute(this);
 
 			// RenderTarget should be complete as that is the texture we send to the viewport
 			Backbuffer.SetAsActiveTarget();
@@ -384,22 +384,22 @@ namespace Havtorn
 	{
 		// TODO.NW: Maybe move this to RenderView class
 		if (GameThreadRenderViews->contains(renderViewID))
-			return GameThreadRenderViews->at(renderViewID).StaticMeshInstanceData.contains(meshUID);
+			return GameThreadRenderViews->at(renderViewID).StaticMeshDrawData.contains(meshUID);
 
 		return false;
 	}
 
 	void CRenderManager::AddStaticMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* component, const U64 renderViewID)
 	{
-		std::unordered_map<U32, SStaticMeshInstanceData>* renderList = nullptr;
+		std::unordered_map<U32, SStaticMeshDrawData>* renderList = nullptr;
 
 		if (GameThreadRenderViews->contains(renderViewID))
-			renderList = &GameThreadRenderViews->at(renderViewID).StaticMeshInstanceData;
+			renderList = &GameThreadRenderViews->at(renderViewID).StaticMeshDrawData;
 		else
 			return;
 
 		if (!renderList->contains(meshUID))
-			renderList->emplace(meshUID, SStaticMeshInstanceData());
+			renderList->emplace(meshUID, SStaticMeshDrawData());
 
 		renderList->at(meshUID).Transforms.emplace_back(component->Transform.GetMatrix());
 		renderList->at(meshUID).Entities.emplace_back(component->Owner);
@@ -408,22 +408,22 @@ namespace Havtorn
 	bool CRenderManager::IsSkeletalMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewID)
 	{
 		if (GameThreadRenderViews->contains(renderViewID))
-			return GameThreadRenderViews->at(renderViewID).SkeletalMeshInstanceData.contains(meshUID);
+			return GameThreadRenderViews->at(renderViewID).SkeletalMeshDrawData.contains(meshUID);
 
 		return false;
 	}
 
 	void CRenderManager::AddSkeletalMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* transformComponent, const SSkeletalAnimationComponent* animationComponent, const U64 renderViewID)
 	{
-		std::unordered_map<U32, SSkeletalMeshInstanceData>* renderList = nullptr;
+		std::unordered_map<U32, SSkeletalMeshDrawData>* renderList = nullptr;
 
 		if (GameThreadRenderViews->contains(renderViewID))
-			renderList = &GameThreadRenderViews->at(renderViewID).SkeletalMeshInstanceData;
+			renderList = &GameThreadRenderViews->at(renderViewID).SkeletalMeshDrawData;
 		else
 			return;
 
 		if (!renderList->contains(meshUID))
-			renderList->emplace(meshUID, SSkeletalMeshInstanceData());
+			renderList->emplace(meshUID, SSkeletalMeshDrawData());
 
 		renderList->at(meshUID).Transforms.emplace_back(transformComponent->Transform.GetMatrix());
 		renderList->at(meshUID).Entities.emplace_back(transformComponent->Owner);
@@ -663,8 +663,8 @@ namespace Havtorn
 	{
 		for (auto& renderViewPair : (*GameThreadRenderViews))
 		{
-			renderViewPair.second.StaticMeshInstanceData.clear();
-			renderViewPair.second.SkeletalMeshInstanceData.clear();
+			renderViewPair.second.StaticMeshDrawData.clear();
+			renderViewPair.second.SkeletalMeshDrawData.clear();
 			renderViewPair.second.WorldSpaceSpriteInstanceData.clear();
 			renderViewPair.second.ScreenSpaceSpriteInstanceData.clear();
 		}
@@ -1174,5 +1174,114 @@ namespace Havtorn
 	{
 
 		return 	STATIC_U16(a.Type) > STATIC_U16(b.Type) || (STATIC_U16(a.Type) == STATIC_U16(b.Type) && a.InternalPriority > b.InternalPriority);
+	}
+
+	/*
+	// Replaces DrawCallData
+	struct SMeshDrawData
+	{
+		// Data that comes from external sources that should be declared (with external memory) in setup
+		std::vector<SRenderResourceHandle> MaterialTextureHandles;
+		SRenderResourceHandle VertexBufferHandle;
+		SRenderResourceHandle IndexBufferHandle;
+		U32 IndexCount = 0;
+
+		// Buffer data that should be bound at execution time - can we store this in a way that makes sense? Can we make all buffers immutable or dynamic?
+		// Many instances here, would like these holders to just point to one entry in the resource registry. But that means storing many buffers in the registry
+		SMaterialBufferData MaterialBufferData;
+	};
+
+	struct SStaticMeshDrawData
+	{
+		std::vector<SMeshDrawData> DrawData; // one draw data per submesh
+
+		// Instance Data
+		std::vector<SMatrix> Transforms;
+		std::vector<SEntity> Entities;
+	};
+	*/ 
+
+	SMeshDrawData SRenderView::ConstructMeshDrawData(const SDrawCallData& assetDrawCallData, const char* renderResourceSuffix, std::vector<SGraphicsMaterialAsset*>& materialAssets, const U32 renderViewID)
+	{
+		SMeshDrawData meshDrawData;
+		meshDrawData.VertexBufferHandle = RenderResourceRegistry->DeclareResource(DeclareVertexBuffer<SStaticMeshVertex>((std::string("VB ") + renderResourceSuffix).c_str(), &StateManager->VertexBuffers[assetDrawCallData.VertexBufferIndex]));
+		meshDrawData.IndexBufferHandle = RenderResourceRegistry->DeclareResource(DeclareIndexBuffer((std::string("IB ") + renderResourceSuffix).c_str(), &StateManager->IndexBuffers[assetDrawCallData.IndexBufferIndex]));
+		meshDrawData.IndexCount = assetDrawCallData.IndexCount;
+
+		SGraphicsMaterialAsset* materialAsset = materialAssets[assetDrawCallData.MaterialIndex];
+		std::map<U32, CStaticRenderTexture*> mappedTextures = materialAsset->Material.GetRenderTexturePointers(renderViewID); // TODO.NW: Keep a close eye on this requesting here
+		std::map<U32, F32> textureUIDToRuntimeIndex;
+		for (auto& [uid, texture] : mappedTextures)
+		{
+			textureUIDToRuntimeIndex.emplace(uid, STATIC_F32(meshDrawData.MaterialTextureHandles.size()));
+			meshDrawData.MaterialTextureHandles.emplace_back(RenderResourceRegistry->DeclareResource(DeclareRenderTexture(std::to_string(uid).c_str(), texture)));
+		}
+
+		meshDrawData.MaterialBufferData = SMaterialBufferData(materialAsset->Material);
+		for (SRuntimeGraphicsMaterialProperty& property : meshDrawData.MaterialBufferData.Properties)
+		{
+			if (property.TextureChannelIndex > -1.0f)
+				property.TextureIndex = textureUIDToRuntimeIndex.at(property.TextureUID);
+		}
+
+		return meshDrawData;
+	}
+
+	void SRenderView::AddStaticMeshDrawData(const U32 renderViewID, const U32 meshAssetID, const std::vector<U32>& materialAssetIDs, const std::vector<SMatrix>& transforms, const std::vector<SEntity>& entities, const bool deferCommand)
+	{
+		U32 drawID = meshAssetID + std::ranges::fold_left(materialAssetIDs, 0, std::plus<U32>());
+		 if (deferCommand)
+			 drawID += 1000;
+
+		if (!StaticMeshDrawData.contains(drawID))
+			StaticMeshDrawData.emplace(drawID);
+
+		SStaticMeshDrawData& meshData = StaticMeshDrawData.at(drawID);
+
+		meshData.Transforms = transforms;
+		meshData.Entities = entities;
+
+		// TODO.NW: Make sure render view unrequests asset data if we do it like this. Maybe in execute?
+
+		// This might be a mistake, took lengths to keep all asset requests on the game thread before. Have to see if this is reasonable
+		SStaticMeshAsset* asset = AssetRegistry->RequestAssetData<SStaticMeshAsset>(meshAssetID, renderViewID);
+		std::vector<SGraphicsMaterialAsset*> materialAssets = AssetRegistry->RequestAssetData<SGraphicsMaterialAsset>(materialAssetIDs, renderViewID);
+
+		meshData.DrawData.clear(); // Might clear this in Execute and unregister there
+		meshData.DrawData.resize(asset->DrawCallData.size());
+
+		for (I64 index = 0; index < asset->DrawCallData.size(); index++)
+		{
+			const char* renderResourceSuffix = (std::to_string(meshAssetID + STATIC_U32(index))).c_str();
+			meshData.DrawData[index] = ConstructMeshDrawData(asset->DrawCallData[index], renderResourceSuffix, materialAssets, renderViewID);
+		}
+	}
+
+	void SRenderView::AddSkeletalMeshDrawData(const U32 renderViewID, const U32 meshAssetID, const std::vector<U32>& materialAssetIDs, const std::vector<SMatrix>& transforms, const std::vector<SEntity>& entities, const std::vector<SMatrix>& bones, const bool deferCommand)
+	{
+		U32 drawID = meshAssetID + std::ranges::fold_left(materialAssetIDs, 0, std::plus<U32>());
+		if (deferCommand)
+			drawID += 1000;
+
+		if (!SkeletalMeshDrawData.contains(drawID))
+			SkeletalMeshDrawData.emplace(drawID);
+
+		SSkeletalMeshDrawData& meshData = SkeletalMeshDrawData.at(drawID);
+
+		meshData.Transforms = transforms;
+		meshData.Entities = entities;
+		meshData.Bones = bones;
+
+		SSkeletalMeshAsset* asset = AssetRegistry->RequestAssetData<SSkeletalMeshAsset>(meshAssetID, renderViewID);
+		std::vector<SGraphicsMaterialAsset*> materialAssets = AssetRegistry->RequestAssetData<SGraphicsMaterialAsset>(materialAssetIDs, renderViewID);
+
+		meshData.DrawData.clear(); // Might clear this in Execute and unregister there
+		meshData.DrawData.resize(asset->DrawCallData.size());
+
+		for (I64 index = 0; index < asset->DrawCallData.size(); index++)
+		{
+			const char* renderResourceSuffix = (std::to_string(meshAssetID + STATIC_U32(index))).c_str();
+			meshData.DrawData[index] = ConstructMeshDrawData(asset->DrawCallData[index], renderResourceSuffix, materialAssets, renderViewID);
+		}
 	}
 }

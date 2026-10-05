@@ -61,7 +61,7 @@ namespace Havtorn
             initData[STATIC_U64(EVertexShaders::Fullscreen)]                    = { ShaderRoot + "FullscreenVertexShader_VS.cso", false };
             initData[STATIC_U64(EVertexShaders::StaticMesh)]                    = { ShaderRoot + "DeferredStaticMesh_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2 };
             initData[STATIC_U64(EVertexShaders::StaticMeshInstanced)]           = { ShaderRoot + "DeferredInstancedMesh_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Trans };
-            initData[STATIC_U64(EVertexShaders::Decal)]                         = { ShaderRoot + "Decal_VS.cso", false };
+            initData[STATIC_U64(EVertexShaders::Decal)]                         = { ShaderRoot + "Decal_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2TransObjectTrans };
             initData[STATIC_U64(EVertexShaders::PointAndSpotLight)]             = { ShaderRoot + "PointLight_VS.cso", true, EInputLayoutType::Position4 };
             initData[STATIC_U64(EVertexShaders::EditorPreviewStaticMesh)]       = { ShaderRoot + "EditorPreview_VS.cso", false };
             initData[STATIC_U64(EVertexShaders::EditorPreviewSkeletalMesh)]     = { ShaderRoot + "EditorPreviewSkeletal_VS.cso", false };
@@ -69,8 +69,8 @@ namespace Havtorn
             initData[STATIC_U64(EVertexShaders::SpriteInstanced)]               = { ShaderRoot + "SpriteInstanced_VS.cso", true, EInputLayoutType::TransUVRectColor };
             initData[STATIC_U64(EVertexShaders::StaticMeshInstancedEditor)]     = { ShaderRoot + "DeferredInstancedMeshEditor_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Entity2Trans };
             initData[STATIC_U64(EVertexShaders::SpriteInstancedEditor)]         = { ShaderRoot + "SpriteInstancedEditor_VS.cso", true, EInputLayoutType::TransUVRectColorEntity2 };
-            initData[STATIC_U64(EVertexShaders::SkeletalMeshInstanced)]         = { ShaderRoot + "DeferredInstancedAnimation_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans };
-            initData[STATIC_U64(EVertexShaders::SkeletalMeshInstancedEditor)]   = { ShaderRoot + "DeferredInstancedAnimationEditor_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2AnimDataTrans };
+            initData[STATIC_U64(EVertexShaders::SkeletalMeshInstanced)]         = { ShaderRoot + "DeferredInstancedAnimation_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Trans };
+            initData[STATIC_U64(EVertexShaders::SkeletalMeshInstancedEditor)]   = { ShaderRoot + "DeferredInstancedAnimationEditor_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2Trans };
             initData[STATIC_U64(EVertexShaders::Skybox)]                        = { ShaderRoot + "Skybox_VS.cso", true, EInputLayoutType::Position4 };
             initData[STATIC_U64(EVertexShaders::StaticMeshVertexPaint)]         = { ShaderRoot + "DeferredVertexPaint_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Color4 };
             initData[STATIC_U64(EVertexShaders::StaticMeshVertexPaintEditor)]   = { ShaderRoot + "DeferredVertexPaintEditor_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Color4Entity2};
@@ -132,6 +132,7 @@ namespace Havtorn
             filepaths[STATIC_U64(EPixelShaders::FullscreenWorldPosition)]           = ShaderRoot + "FullscreenWorldPosition_PS.cso";
             filepaths[STATIC_U64(EPixelShaders::GBufferVertexPaint)]                = ShaderRoot + "DeferredVertexPaint_PS.cso";
             filepaths[STATIC_U64(EPixelShaders::GBufferVertexPaintEditor)]          = ShaderRoot + "DeferredVertexPaintEditor_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::DecalNormal)]                       = ShaderRoot + "Decal_PS.cso";
         }
 
         for (U64 i = 0; i < STATIC_U64(EPixelShaders::Count); i++)
@@ -432,6 +433,25 @@ namespace Havtorn
                 { .SemanticName = "UV",         .Format = ERenderResourceFormat::R32G32_Float },
                 { .SemanticName = "COLOR",      .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 0, .InputSlot = 1 },
                 { .SemanticName = "ENTITY",     .Format = ERenderResourceFormat::R32G32_UnsignedInt, .SemanticIndex = 0, .InputSlot = 2 }
+            };
+            break;
+
+        case EInputLayoutType::Pos3Nor3Tan3Bit3UV2TransObjectTrans:
+            layout =
+            {
+                {.SemanticName = "POSITION",   .Format = ERenderResourceFormat::R32G32B32_Float },
+                {.SemanticName = "NORMAL",     .Format = ERenderResourceFormat::R32G32B32_Float },
+                {.SemanticName = "TANGENT",    .Format = ERenderResourceFormat::R32G32B32_Float },
+                {.SemanticName = "BINORMAL",   .Format = ERenderResourceFormat::R32G32B32_Float },
+                {.SemanticName = "UV",         .Format = ERenderResourceFormat::R32G32_Float },
+                {.SemanticName = "INSTANCETRANSFORM", .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 0, .InputSlot = 1, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                {.SemanticName = "INSTANCETRANSFORM", .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 1, .InputSlot = 1, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                {.SemanticName = "INSTANCETRANSFORM", .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 2, .InputSlot = 1, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                {.SemanticName = "INSTANCETRANSFORM", .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 3, .InputSlot = 1, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                {.SemanticName = "INSTANCETRANSFORM_OBJECT", .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 0, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                {.SemanticName = "INSTANCETRANSFORM_OBJECT", .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 1, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                {.SemanticName = "INSTANCETRANSFORM_OBJECT", .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 2, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData },
+                {.SemanticName = "INSTANCETRANSFORM_OBJECT", .Format = ERenderResourceFormat::R32G32B32A32_Float, .SemanticIndex = 3, .InputSlot = 2, .InstanceDataStepRate = 1, .InputClassification = ERenderInputClassification::InputPerInstanceData }
             };
             break;
         }
