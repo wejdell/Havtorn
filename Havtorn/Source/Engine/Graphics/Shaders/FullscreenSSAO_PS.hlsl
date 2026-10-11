@@ -2,7 +2,6 @@
 
 #include "Includes/FullscreenshaderStructs.hlsli"
 
-Texture2D depthTexture : register(t21);
 Texture2D noiseTexture : register(t23);
 
 cbuffer FrameBuffer : register(b0)
@@ -42,7 +41,7 @@ PixelOutput main(VertexToPixel input)
     PixelOutput output;
     
     float2 uv = input.UV;
-    float z = depthTexture.Sample(defaultSampler, uv).r;
+    float z = fullscreenTexture1.Sample(defaultSampler, uv).r;
     
     if (z > 0.999999f)
     {
@@ -58,7 +57,7 @@ PixelOutput main(VertexToPixel input)
     
     float3 origin = viewSpacePos.xyz;
     
-    float3 normal = fullscreenTexture3.Sample(defaultSampler, uv).rgb;
+    float3 normal = fullscreenTexture2.Sample(defaultSampler, uv).rgb;
     
     normal = mul((float3x3)toCameraSpace, normal);
     normal = normalize(normal);
@@ -89,7 +88,7 @@ PixelOutput main(VertexToPixel input)
         offsetUV.y = (1 - offsetUV.y);
        
         // ...
-    	float depthZ = depthTexture.SampleLevel(defaultSampler, offsetUV.xy, 0).r;
+    	float depthZ = fullscreenTexture1.SampleLevel(defaultSampler, offsetUV.xy, 0).r;
         float depthX = uv.x * 2.0f - 1;
         float depthY = (1 - uv.y) * 2.0f - 1;
         const float4 fromDepthProjectedPos = float4(depthX, depthY, depthZ, 1.0f);
