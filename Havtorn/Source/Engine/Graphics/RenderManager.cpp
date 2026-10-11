@@ -437,24 +437,24 @@ namespace Havtorn
 	bool CRenderManager::IsSpriteInWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewID)
 	{
 		if (GameThreadRenderViews->contains(renderViewID))
-			return GameThreadRenderViews->at(renderViewID).WorldSpaceSpriteInstanceData.contains(assetReferenceUID);
+			return GameThreadRenderViews->at(renderViewID).WorldSpaceSpriteDrawData.contains(assetReferenceUID);
 
 		return false;
 	}
 
 	void CRenderManager::AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewID)
 	{
-		std::unordered_map<U32, SSpriteInstanceData>* renderList = nullptr;
+		std::unordered_map<U32, SSpriteDrawData>* renderList = nullptr;
 
 		if (GameThreadRenderViews->contains(renderViewID))
-			renderList = &GameThreadRenderViews->at(renderViewID).WorldSpaceSpriteInstanceData;
+			renderList = &GameThreadRenderViews->at(renderViewID).WorldSpaceSpriteDrawData;
 		else
 			return;
 
 		if (!renderList->contains(assetReferenceUID))
-			renderList->emplace(assetReferenceUID, SSpriteInstanceData());
+			renderList->emplace(assetReferenceUID, SSpriteDrawData());
 
-		SSpriteInstanceData& instanceData = renderList->at(assetReferenceUID);
+		SSpriteDrawData& instanceData = renderList->at(assetReferenceUID);
 		instanceData.Transforms.emplace_back(worldSpaceTransform->Transform.GetMatrix());
 		instanceData.UVRects.emplace_back(spriteComponent->UVRect);
 		instanceData.Colors.emplace_back(spriteComponent->Color.AsVector4());
@@ -463,15 +463,15 @@ namespace Havtorn
 
 	void CRenderManager::AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const U64& entityGUID, const SMatrix& entityMatrix, const SMatrix& cameraMatrix, const U64 renderViewID)
 	{
-		std::unordered_map<U32, SSpriteInstanceData>* renderList = nullptr;
+		std::unordered_map<U32, SSpriteDrawData>* renderList = nullptr;
 
 		if (GameThreadRenderViews->contains(renderViewID))
-			renderList = &GameThreadRenderViews->at(renderViewID).WorldSpaceSpriteInstanceData;
+			renderList = &GameThreadRenderViews->at(renderViewID).WorldSpaceSpriteDrawData;
 		else
 			return;
 
 		if (!renderList->contains(assetReferenceUID))
-			renderList->emplace(assetReferenceUID, SSpriteInstanceData());
+			renderList->emplace(assetReferenceUID, SSpriteDrawData());
 
 		SMatrix orientedMatrix = entityMatrix;
 
@@ -486,7 +486,7 @@ namespace Havtorn
 		const SVector scale = SVector(scaling, scaling, 1.0f);
 		SMatrix::Recompose(location, euler, scale, orientedMatrix);
 
-		SSpriteInstanceData& instanceData = renderList->at(assetReferenceUID);
+		SSpriteDrawData& instanceData = renderList->at(assetReferenceUID);
 		instanceData.Transforms.emplace_back(orientedMatrix);
 		instanceData.UVRects.emplace_back(SVector4(0.0f, 0.0f, 1.0f, 1.0f));
 		instanceData.Colors.emplace_back(SVector4(1.0f, 1.0f, 1.0f, 1.0f));
@@ -501,29 +501,29 @@ namespace Havtorn
 	bool CRenderManager::IsSpriteInScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewID)
 	{
 		if (GameThreadRenderViews->contains(renderViewID))
-			return GameThreadRenderViews->at(renderViewID).ScreenSpaceSpriteInstanceData.contains(assetReferenceUID);
+			return GameThreadRenderViews->at(renderViewID).ScreenSpaceSpriteDrawData.contains(assetReferenceUID);
 
 		return false;
 	}
 
 	void CRenderManager::AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewID)
 	{
-		std::unordered_map<U32, SSpriteInstanceData>* renderList = nullptr;
+		std::unordered_map<U32, SSpriteDrawData>* renderList = nullptr;
 
 		if (GameThreadRenderViews->contains(renderViewID))
-			renderList = &GameThreadRenderViews->at(renderViewID).ScreenSpaceSpriteInstanceData;
+			renderList = &GameThreadRenderViews->at(renderViewID).ScreenSpaceSpriteDrawData;
 		else
 			return;
 
 		if (!renderList->contains(assetReferenceUID))
-			renderList->emplace(assetReferenceUID, SSpriteInstanceData());
+			renderList->emplace(assetReferenceUID, SSpriteDrawData());
 
 		SMatrix screenSpaceMatrix;
 		screenSpaceMatrix.SetScale(screenSpaceTransform->Scale.X, screenSpaceTransform->Scale.Y, 1.0f);
 		screenSpaceMatrix *= SMatrix::CreateRotationAroundZ(UMath::DegToRad(screenSpaceTransform->DegreesRoll));
 		screenSpaceMatrix.SetTranslation({ screenSpaceTransform->Position.X, screenSpaceTransform->Position.Y, 0.0f });
 
-		SSpriteInstanceData& instanceData = renderList->at(assetReferenceUID);
+		SSpriteDrawData& instanceData = renderList->at(assetReferenceUID);
 		instanceData.Transforms.emplace_back(screenSpaceMatrix);
 		instanceData.UVRects.emplace_back(spriteComponent->UVRect);
 		instanceData.Colors.emplace_back(spriteComponent->Color.AsVector4());
@@ -535,22 +535,22 @@ namespace Havtorn
 		if (uiElement.UVRects.size() != STATIC_U64(EUIElementState::Count))
 			return;
 
-		std::unordered_map<U32, SSpriteInstanceData>* renderList = nullptr;
+		std::unordered_map<U32, SSpriteDrawData>* renderList = nullptr;
 
 		if (GameThreadRenderViews->contains(renderViewID))
-			renderList = &GameThreadRenderViews->at(renderViewID).ScreenSpaceSpriteInstanceData;
+			renderList = &GameThreadRenderViews->at(renderViewID).ScreenSpaceSpriteDrawData;
 		else
 			return;
 
 		if (!renderList->contains(assetReferenceUID))
-			renderList->emplace(assetReferenceUID, SSpriteInstanceData());
+			renderList->emplace(assetReferenceUID, SSpriteDrawData());
 
 		SMatrix screenSpaceMatrix;
 		screenSpaceMatrix.SetScale(screenSpaceTransform->Scale.X * uiElement.LocalScale.X, screenSpaceTransform->Scale.Y * uiElement.LocalScale.Y, 1.0f);
 		screenSpaceMatrix *= SMatrix::CreateRotationAroundZ(UMath::DegToRad(screenSpaceTransform->DegreesRoll + uiElement.LocalDegreesRoll));
 		screenSpaceMatrix.SetTranslation({ screenSpaceTransform->Position.X + uiElement.LocalPosition.X, screenSpaceTransform->Position.Y + uiElement.LocalPosition.Y, 0.0f });
 
-		SSpriteInstanceData& instanceData = renderList->at(assetReferenceUID);
+		SSpriteDrawData& instanceData = renderList->at(assetReferenceUID);
 		instanceData.Transforms.emplace_back(screenSpaceMatrix);
 		instanceData.UVRects.emplace_back(uiElement.UVRects[STATIC_U8(uiElement.State)]);
 		instanceData.Colors.emplace_back(uiElement.Color.AsVector4());
@@ -665,8 +665,8 @@ namespace Havtorn
 		{
 			renderViewPair.second.StaticMeshDrawData.clear();
 			renderViewPair.second.SkeletalMeshDrawData.clear();
-			renderViewPair.second.WorldSpaceSpriteInstanceData.clear();
-			renderViewPair.second.ScreenSpaceSpriteInstanceData.clear();
+			renderViewPair.second.WorldSpaceSpriteDrawData.clear();
+			renderViewPair.second.ScreenSpaceSpriteDrawData.clear();
 		}
 	}
 
@@ -753,7 +753,7 @@ namespace Havtorn
 
 	void CRenderManager::InitDataBuffers()
 	{
-		FrameBuffer.CreateBuffer("Frame Buffer", RHI, sizeof(SFrameBufferData));
+		ViewDataBuffer.CreateBuffer("Frame Buffer", RHI, sizeof(SFrameBufferData));
 		ObjectBuffer.CreateBuffer("Object Buffer", RHI, sizeof(SObjectBufferData));
 		MaterialBuffer.CreateBuffer("Material Buffer", RHI, sizeof(SMaterialBufferData));
 		DebugShapeObjectBuffer.CreateBuffer("Debug Shape Object Buffer", RHI, sizeof(SDebugShapeObjectBufferData));
@@ -785,11 +785,11 @@ namespace Havtorn
 		FrameBufferData.ToProjectionFromCamera = projectionMatrix;
 		FrameBufferData.ToCameraFromProjection = projectionMatrix.Inverse();
 		FrameBufferData.CameraPosition = objectMatrix.GetTranslation4();
-		FrameBuffer.BindBuffer(FrameBufferData);
+		ViewDataBuffer.BindBuffer(FrameBufferData);
 
-		RenderStateManager.VSSetConstantBuffer(0, FrameBuffer);
-		RenderStateManager.PSSetConstantBuffer(0, FrameBuffer);
-		RenderStateManager.GSSetConstantBuffer(0, FrameBuffer);
+		RenderStateManager.VSSetConstantBuffer(0, ViewDataBuffer);
+		RenderStateManager.PSSetConstantBuffer(0, ViewDataBuffer);
+		RenderStateManager.GSSetConstantBuffer(0, ViewDataBuffer);
 	}
 
 	void CRenderManager::DecalDepthCopy(const SRenderCommand& /*command*/)
@@ -892,6 +892,10 @@ namespace Havtorn
 	{
 		if (!RenderThreadRenderViews->contains(command.RenderViewID))
 			return;
+
+		VignetteTexture.SetAsActiveTarget();
+		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsPSResourceOnSlot(0);
+		RenderFullscreenPass(EPixelShaders::FullscreenLuminance, EBlendStates::Disable);
 
 		HalfSizeTexture.SetAsActiveTarget();
 		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsPSResourceOnSlot(0);

@@ -32,7 +32,25 @@ namespace Havtorn
 		DebugPass2DPSOIndex = RenderStateManager->AddPipelineStateObject(debugShapes);
 	}
 
-	void CDebugRenderer::RenderDebugShape3D(const SDebugPassData& passData)
+	void CDebugRenderer::SetupDepthRender(const SGeometryConstantRenderData& viewData, const SMainTargetRenderData& targetData)
+	{
+		RenderStateManager->VSSetConstantBuffer(0, *viewData.ViewDataBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(0, *viewData.ViewDataBuffer->DataBuffer);
+		RenderStateManager->GSSetConstantBuffer(0, *viewData.ViewDataBuffer->DataBuffer);
+
+		RenderStateManager->OMSetRenderTargets({ targetData.MainRenderTarget }, targetData.DepthTexture);
+	}
+
+	void CDebugRenderer::SetupNoDepthRender(const SGeometryConstantRenderData& viewData, const SMainTargetRenderData& targetData)
+	{
+		RenderStateManager->VSSetConstantBuffer(0, *viewData.ViewDataBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(0, *viewData.ViewDataBuffer->DataBuffer);
+		RenderStateManager->GSSetConstantBuffer(0, *viewData.ViewDataBuffer->DataBuffer);
+
+		RenderStateManager->OMSetRenderTargets({ targetData.MainRenderTarget }, nullptr);
+	}
+
+	void CDebugRenderer::RenderDebugShape3D(const SDebugRenderData& passData)
 	{
 		RenderStateManager->TrySetPipelineStateObject(DebugPass3DPSOIndex);
 
@@ -46,7 +64,7 @@ namespace Havtorn
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 	}
 
-	void CDebugRenderer::RenderDebugShape2D(const SDebugPassData& passData)
+	void CDebugRenderer::RenderDebugShape2D(const SDebugRenderData& passData)
 	{
 		RenderStateManager->TrySetPipelineStateObject(DebugPass2DPSOIndex);
 

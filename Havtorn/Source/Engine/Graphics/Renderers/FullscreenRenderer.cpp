@@ -25,7 +25,111 @@ namespace Havtorn
 		context->Unmap(buffer, 0);
 	}
 
-	CFullscreenRenderer::~CFullscreenRenderer() 
+	void CFullscreenRenderer::Render(const SFullscreenRenderData& renderData)
+	{
+		RenderStateManager->TrySetPipelineStateObject(FullscreenRenderPassPSOIndex);
+		BindBufferData();
+
+		renderData.RenderTarget->RenderTexture->SetAsActiveTarget();
+		renderData.TextureResource1->RenderTexture->SetAsPSResourceOnSlot(0);
+		if (renderData.TextureResource2 != nullptr)
+			renderData.TextureResource2->RenderTexture->SetAsPSResourceOnSlot(1);
+
+		PostDrawCall(renderData.PixelShader, renderData.BlendState);
+	}
+
+	void CFullscreenRenderer::RenderBilateralBlur(const SBilateralBlurRenderData& renderData)
+	{
+		RenderStateManager->TrySetPipelineStateObject(FullscreenRenderPassPSOIndex);
+		BindBufferData();
+
+		// Keep downsampled depth for final depth-aware upsample
+		renderData.DownsamplingDepthTexture->RenderTexture->SetAsActiveTarget();
+		renderData.DepthTexture->RenderTexture->SetAsPSResourceOnSlot(0);
+		PostDrawCall(EPixelShaders::FullscreenDownsampleDepth, EBlendStates::Disable);
+
+		// TODO.NW: Is it worth combining these (vert+horizontal) in a single shader and draw call?
+		// Blur
+		renderData.SecondaryBlurTexture->RenderTexture->SetAsActiveTarget();
+		renderData.PrimaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
+		PostDrawCall(EPixelShaders::FullscreenBilateralHorizontal, EBlendStates::Disable);
+
+		renderData.PrimaryBlurTexture->RenderTexture->SetAsActiveTarget();
+		renderData.SecondaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
+		PostDrawCall(EPixelShaders::FullscreenBilateralVertical, EBlendStates::Disable);
+
+		renderData.SecondaryBlurTexture->RenderTexture->SetAsActiveTarget();
+		renderData.PrimaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
+		PostDrawCall(EPixelShaders::FullscreenBilateralHorizontal, EBlendStates::Disable);
+
+		renderData.PrimaryBlurTexture->RenderTexture->SetAsActiveTarget();
+		renderData.SecondaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
+		PostDrawCall(EPixelShaders::FullscreenBilateralVertical, EBlendStates::Disable);
+
+		renderData.SecondaryBlurTexture->RenderTexture->SetAsActiveTarget();
+		renderData.PrimaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
+		PostDrawCall(EPixelShaders::FullscreenBilateralHorizontal, EBlendStates::Disable);
+
+		renderData.PrimaryBlurTexture->RenderTexture->SetAsActiveTarget();
+		renderData.SecondaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
+		PostDrawCall(EPixelShaders::FullscreenBilateralVertical, EBlendStates::Disable);
+
+		renderData.SecondaryBlurTexture->RenderTexture->SetAsActiveTarget();
+		renderData.PrimaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
+		PostDrawCall(EPixelShaders::FullscreenBilateralHorizontal, EBlendStates::Disable);
+
+		renderData.PrimaryBlurTexture->RenderTexture->SetAsActiveTarget();
+		renderData.SecondaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
+		PostDrawCall(EPixelShaders::FullscreenBilateralVertical, EBlendStates::Disable);
+
+		// Upsampling
+		renderData.RenderTarget->RenderTexture->SetAsActiveTarget();
+		renderData.PrimaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
+		renderData.DownsamplingDepthTexture->RenderTexture->SetAsPSResourceOnSlot(1);
+		renderData.DepthTexture->RenderTexture->SetAsPSResourceOnSlot(2);
+		PostDrawCall(EPixelShaders::FullscreenDepthAwareUpsampling, EBlendStates::AdditiveBlend);
+	}
+
+	void CFullscreenRenderer::RenderGaussianBlur(const SGaussianBlurRenderData& renderData)
+	{
+		RenderStateManager->TrySetPipelineStateObject(FullscreenRenderPassPSOIndex);
+		BindBufferData();
+
+		renderData.HalfResolutionTexture->RenderTexture->SetAsActiveTarget();
+		renderData.RenderTarget->RenderTexture->SetAsPSResourceOnSlot(0);
+		PostDrawCall(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
+
+		renderData.PrimaryBlurTexture->RenderTexture->SetAsActiveTarget();
+		renderData.HalfResolutionTexture->RenderTexture->SetAsPSResourceOnSlot(0);
+		PostDrawCall(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
+
+		// TODO.NW: Is it worth combining these (vert+horizontal) in a single shader and draw call?
+		renderData.SecondaryBlurTexture->RenderTexture->SetAsActiveTarget();
+		renderData.PrimaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
+		PostDrawCall(EPixelShaders::FullscreenGaussianHorizontal, EBlendStates::Disable);
+
+		renderData.PrimaryBlurTexture->RenderTexture->SetAsActiveTarget();
+		renderData.SecondaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
+		PostDrawCall(EPixelShaders::FullscreenGaussianVertical, EBlendStates::Disable);
+
+		renderData.SecondaryBlurTexture->RenderTexture->SetAsActiveTarget();
+		renderData.PrimaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
+		PostDrawCall(EPixelShaders::FullscreenGaussianHorizontal, EBlendStates::Disable);
+
+		renderData.PrimaryBlurTexture->RenderTexture->SetAsActiveTarget();
+		renderData.SecondaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
+		PostDrawCall(EPixelShaders::FullscreenGaussianVertical, EBlendStates::Disable);
+
+		renderData.HalfResolutionTexture->RenderTexture->SetAsActiveTarget();
+		renderData.PrimaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
+		PostDrawCall(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
+
+		renderData.RenderTarget->RenderTexture->SetAsActiveTarget();
+		renderData.HalfResolutionTexture->RenderTexture->SetAsPSResourceOnSlot(0);
+		PostDrawCall(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
+	}
+
+	CFullscreenRenderer::~CFullscreenRenderer()
 	{}
 
 	bool CFullscreenRenderer::Init(CRHI* rhi, CRenderManager* renderManager) 
@@ -40,7 +144,7 @@ namespace Havtorn
 		RenderStateManager = &renderManager->RenderStateManager;
 
 		FullscreenDataBuffer.CreateBuffer("Fullscreen Data Buffer", rhi, sizeof(SFullscreenData));
-		FrameBuffer.CreateBuffer("Frame Buffer", rhi, sizeof(SFrameBufferData));
+		ViewDataBuffer.CreateBuffer("Frame Buffer", rhi, sizeof(SFrameBufferData));
 		PostProcessingBuffer.CreateBuffer("Post Processing Buffer", rhi, sizeof(SPostProcessingBufferData));
 
 		const SPSODescription fullscreenPassPSO =
@@ -156,35 +260,29 @@ namespace Havtorn
 		RenderStateManager->ClearShaderResources();
 	}
 
-	void CFullscreenRenderer::Render(const SFullscreenRenderPassData& passData)
+	void CFullscreenRenderer::BindBufferData()
 	{
-		RenderStateManager->TrySetPipelineStateObject(FullscreenRenderPassPSOIndex);
-		
 		// TODO.NW: do this once per frame? Buffers can be held by fullscreen renderer maybe
-		//SVector2<U16> resolution = Manager->GetCurrentWindowResolution();
-		//FullscreenData.Resolution = SVector2<F32>(resolution.X, resolution.Y);
-		//FullscreenData.NoiseScale = { FullscreenData.Resolution.X / STATIC_F32(UMath::Sqrt(KernelSize)), FullscreenData.Resolution.Y / STATIC_F32(UMath::Sqrt(KernelSize)) };
-		//memcpy(&FullscreenData.SampleKernel[0], &Kernel[0], sizeof(Kernel));
+		SVector2<U16> resolution = Manager->GetCurrentWindowResolution();
+		FullscreenData.Resolution = SVector2<F32>(resolution.X, resolution.Y);
+		FullscreenData.NoiseScale = { FullscreenData.Resolution.X / STATIC_F32(UMath::Sqrt(KernelSize)), FullscreenData.Resolution.Y / STATIC_F32(UMath::Sqrt(KernelSize)) };
+		memcpy(&FullscreenData.SampleKernel[0], &Kernel[0], sizeof(Kernel));
 
-		//FullscreenDataBuffer.BindBuffer(FullscreenData);
-		//PostProcessingBuffer.BindBuffer(PostProcessingBufferData);
+		FullscreenDataBuffer.BindBuffer(FullscreenData);
+		PostProcessingBuffer.BindBuffer(PostProcessingBufferData);
 
 		RenderStateManager->IASetVertexBuffer(0, CDataBuffer::Null, 0, 0);
 		RenderStateManager->IASetIndexBuffer(CDataBuffer::Null);
 
-		RenderStateManager->PSSetShader(passData.PixelShader);
-
-		// TODO.NW: Need to figure out how to work with this as well as how to set render targets. It may be necessary to set render targets in all passes, at the very least they 
-		// must be declared. Maybe that's enough to then derive when they can be set? Separate object data (SRVs and object buffers) from render targets and frame buffers
-		
-		//RenderStateManager->PSSetSampler(0, ESamplers::DefaultClamp);
-		//RenderStateManager->PSSetSampler(1, ESamplers::DefaultWrap);
 		RenderStateManager->PSSetConstantBuffer(1, FullscreenDataBuffer);
 		RenderStateManager->PSSetConstantBuffer(2, PostProcessingBuffer);
 		NoiseTexture.SetAsPSResourceOnSlot(23);
+	}
 
-		RenderStateManager->OMSetBlendState(passData.BlendState);
-
+	void CFullscreenRenderer::PostDrawCall(const EPixelShaders shader, const EBlendStates blendState)
+	{
+		RenderStateManager->PSSetShader(shader);
+		RenderStateManager->OMSetBlendState(blendState);
 		RenderStateManager->Draw(3, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 	}

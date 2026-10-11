@@ -3,6 +3,7 @@
 #pragma once
 
 #include "Graphics/GraphicsStructs.h"
+#include "SharedRendererData.h"
 
 namespace Havtorn
 {
@@ -32,11 +33,6 @@ namespace Havtorn
 	};
 	HV_ASSERT_BUFFER(SBoneBufferData)
 
-	struct SEditorGeometryRenderData
-	{
-		SRenderResource* EntityBuffer = nullptr;
-	};
-
 	struct SStaticMeshRenderData
 	{
 		SRenderResource* TransformBuffer = nullptr;
@@ -63,15 +59,10 @@ namespace Havtorn
 	struct SDecalRenderData
 	{
 		SRenderResource* TransformBuffer = nullptr;
+		SRenderResource* DepthCopyTexture = nullptr;
 		SRenderResource* MaterialBuffer = nullptr;
 		std::vector<SRenderResource*> MaterialTextures;
 		U32 InstanceCount = 0;
-	};
-
-	struct SSkyboxRenderData
-	{
-		SRenderResource* LitSceneTextureWithDepth = nullptr;
-		SRenderResource* CubemapTexture = nullptr;
 	};
 
 	// TODO.NW: Rename to scene renderer?
@@ -81,12 +72,14 @@ namespace Havtorn
 		CGeometryRenderer(CRenderStateManager* stateManager);
 		~CGeometryRenderer() = default;
 
+		void SetupRender(const SGeometryConstantRenderData& constantData, const SGeometryTargetRenderData& targetData);
+		void SetupRender(const SGeometryConstantRenderData& constantData, const SGeometryTargetRenderData& targetData, const SEditorRenderData& editorRenderData);
+
 		void RenderStaticMesh(const SStaticMeshRenderData& passData);
-		void RenderEditorStaticMesh(const SStaticMeshRenderData& passData, const SEditorGeometryRenderData& editorPassData);
+		void RenderStaticMesh(const SStaticMeshRenderData& passData, const SEditorRenderData& editorPassData);
 		void RenderSkeletalMesh(const SSkeletalMeshRenderData& passData);
-		void RenderEditorSkeletalMesh(const SSkeletalMeshRenderData& passData, const SEditorGeometryRenderData& editorPassData);
+		void RenderSkeletalMesh(const SSkeletalMeshRenderData& passData, const SEditorRenderData& editorPassData);
 		void RenderDecal(const SDecalRenderData& passData);
-		void RenderSkybox(const SSkyboxRenderData& passData);
 
 	private:
 		U16 StaticMeshGBufferPassPSOIndex = 0;
@@ -94,7 +87,6 @@ namespace Havtorn
 		U16 SkeletalMeshGBufferPassPSOIndex = 0;
 		U16 SkeletalMeshEditorGBufferPassPSOIndex = 0;
 		U16 DecalGBufferPassPSOIndex = 0;
-		U16 SkyboxPassPSOIndex = 0;
 
 		CRenderStateManager* RenderStateManager = nullptr;
 	};

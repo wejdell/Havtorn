@@ -16,6 +16,11 @@ namespace Havtorn
 	{
 	}
 
+	bool SRenderResourceHandle::IsValid() const
+	{
+		return RegistryIndex != -1;
+	}
+
 	SRenderResource::SRenderResource(const SRenderResourceDescription& description, void* externalMemory)
 		: Description(description)
 		, ID(description.ID)
@@ -235,9 +240,9 @@ namespace Havtorn
 		return &Resources[handle.RegistryIndex];
 	}
 
-	SRenderResourceDeclaration DeclareIndexBuffer(const char* name, CDataBuffer* externalMemory)
+	SRenderResourceHandle CRenderResourceRegistry::DeclareIndexBuffer(const char* name, CDataBuffer* externalMemory)
 	{
-		return	{
+		return	DeclareResource({
 				.Description =
 				{
 					.Name = { name },
@@ -245,18 +250,18 @@ namespace Havtorn
 					.BufferUsage = EDataBufferUsage::Immutable
 				},
 				.ExternalMemory = externalMemory
-				};
+		});
 	}
 
-	SRenderResourceDeclaration DeclareRenderTexture(const char* name, const ERenderResourceFormat format, const ERenderTextureSizeHint size)
+	SRenderResourceHandle CRenderResourceRegistry::DeclareRenderTexture(const char* name, const ERenderResourceFormat format, const ERenderTextureSizeHint size)
 	{
 		SVector2<U16> fullResolution = GEngine::GetRenderManager()->GetCurrentWindowResolution(); // TODO.NW: Figure out where this should come from
 		return DeclareRenderTexture(name, format, SVector2<U16>(fullResolution.X / STATIC_U8(size), fullResolution.Y / STATIC_U8(size)));
 	}
 
-	SRenderResourceDeclaration DeclareRenderTexture(const char* name, const ERenderResourceFormat format, const SVector2<U16>& size)
+	SRenderResourceHandle CRenderResourceRegistry::DeclareRenderTexture(const char* name, const ERenderResourceFormat format, const SVector2<U16>& size)
 	{
-		return	{
+		return	DeclareResource({
 				.Description =
 				{
 					.Name = { name },
@@ -264,15 +269,31 @@ namespace Havtorn
 					.Format = format,
 					.Size2D = size
 				}
-				};
+		});
 	}
 
-	SRenderResourceDeclaration DeclareRenderTexture(const char* name, CStaticRenderTexture* externalMemory)
+	SRenderResourceHandle CRenderResourceRegistry::DeclareRenderTexture(const char* name, CRenderTexture* externalMemory)
+	{
+		HV_ASSERT(externalMemory != nullptr, "DeclareRenderTexture: Provided memory was nullptr! If you are declaring a texture owned by the render graph, use the overload taking format and size instead!");
+
+		return	DeclareResource({
+				.Description =
+				{
+					.Name = { name },
+					.Type = ERenderResourceType::RenderTargetView,
+					.Format = ERenderResourceFormat::R32G32B32A32_Float, // TODO.NW: Might want to store the format in our RHI textures, just need to provide it in the factory (needs a rewrite anyway)
+					.Size2D = SVector2<U16>(512, 512) // TODO.NW: None of these fields are used anyway but it might be nice to store sizes for texture resources also. Could display that in the tooltip of the HVAs
+				},
+				.ExternalMemory = externalMemory
+		});
+	}
+
+	SRenderResourceHandle CRenderResourceRegistry::DeclareRenderTexture(const char* name, CStaticRenderTexture* externalMemory)
 	{
 		HV_ASSERT(externalMemory != nullptr, "DeclareRenderTexture: Provided memory was nullptr! If you are declaring a texture owned by the render graph, use DeclareRenderTexture instead!");
-		
-		return	{ 
-				.Description = 
+
+		return	DeclareResource({
+				.Description =
 				{
 					.Name = { name },
 					.Type = ERenderResourceType::ShaderResourceView,
@@ -280,18 +301,18 @@ namespace Havtorn
 					.Size2D = SVector2<U16>(512, 512) // TODO.NW: None of these fields are used anyway but it might be nice to store sizes for texture resources also. Could display that in the tooltip of the HVAs
 				},
 				.ExternalMemory = externalMemory
-				};
+		});
 	}
 
-	SRenderResourceDeclaration DeclareRenderDepth(const char* name, const ERenderResourceFormat format, const ERenderTextureSizeHint size)
+	SRenderResourceHandle CRenderResourceRegistry::DeclareRenderDepth(const char* name, const ERenderResourceFormat format, const ERenderTextureSizeHint size)
 	{
 		SVector2<U16> fullResolution = GEngine::GetRenderManager()->GetCurrentWindowResolution(); // TODO.NW: Figure out where this should come from
 		return DeclareRenderDepth(name, format, SVector2<U16>(fullResolution.X / STATIC_U8(size), fullResolution.Y / STATIC_U8(size)));
 	}
 
-	SRenderResourceDeclaration DeclareRenderDepth(const char* name, const ERenderResourceFormat format, const SVector2<U16>& size)
+	SRenderResourceHandle CRenderResourceRegistry::DeclareRenderDepth(const char* name, const ERenderResourceFormat format, const SVector2<U16>& size)
 	{
-		return	{
+		return	DeclareResource({
 				.Description =
 				{
 					.Name = { name },
@@ -299,6 +320,6 @@ namespace Havtorn
 					.Format = format,
 					.Size2D = size
 				}
-		};
+		});
 	}
 }

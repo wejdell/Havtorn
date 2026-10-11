@@ -49,10 +49,30 @@ namespace Havtorn
 	};
 	HV_ASSERT_BUFFER(SPostProcessingBufferData);
 
-	struct SFullscreenRenderPassData
+	struct SFullscreenRenderData
 	{
 		EPixelShaders PixelShader = EPixelShaders::FullscreenCopy;
 		EBlendStates BlendState = EBlendStates::Disable;
+		SRenderResource* RenderTarget = nullptr;
+		SRenderResource* TextureResource1 = nullptr;
+		SRenderResource* TextureResource2 = nullptr;
+	};
+
+	struct SBilateralBlurRenderData
+	{
+		SRenderResource* RenderTarget = nullptr;
+		SRenderResource* DepthTexture = nullptr;
+		SRenderResource* DownsamplingDepthTexture = nullptr;
+		SRenderResource* PrimaryBlurTexture = nullptr;
+		SRenderResource* SecondaryBlurTexture = nullptr;
+	};
+
+	struct SGaussianBlurRenderData
+	{
+		SRenderResource* RenderTarget = nullptr;
+		SRenderResource* HalfResolutionTexture = nullptr;
+		SRenderResource* PrimaryBlurTexture = nullptr; // 1/4 resolution
+		SRenderResource* SecondaryBlurTexture = nullptr; // 1/4 resolution
 	};
 
 	class CFullscreenRenderer 
@@ -82,14 +102,20 @@ namespace Havtorn
 		} FrameBufferData;
 		HV_ASSERT_BUFFER(SFrameBufferData)
 
+	public:
+		void Render(const SFullscreenRenderData& renderData);
+		void RenderBilateralBlur(const SBilateralBlurRenderData& renderData);
+		void RenderGaussianBlur(const SGaussianBlurRenderData& renderData);
+
 	private:
 		CFullscreenRenderer() = default;
 		~CFullscreenRenderer();
 		bool Init(CRHI* rhi, CRenderManager* manager);
 		void Render(const EPixelShaders effect, const EBlendStates blendState);
-
-		void Render(const SFullscreenRenderPassData& passData);
-
+		
+		void BindBufferData();
+		void PostDrawCall(const EPixelShaders shader, const EBlendStates blendState);
+		
 		SPostProcessingBufferData GetPostProcessBuffer() const;
 		void SetPostProcessBuffer(const SPostProcessingBufferData& data);
 
@@ -98,7 +124,7 @@ namespace Havtorn
 		SPostProcessingBufferData PostProcessingBufferData;
 
 		CDataBuffer FullscreenDataBuffer;
-		CDataBuffer FrameBuffer;
+		CDataBuffer ViewDataBuffer;
 		CDataBuffer PostProcessingBuffer;
 
 		CRenderTexture NoiseTexture;

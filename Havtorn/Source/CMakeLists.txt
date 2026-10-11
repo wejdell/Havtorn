@@ -537,6 +537,7 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Graphics/Renderers/GeometryRenderer.h
     ${ENGINE_FOLDER}Graphics/Renderers/LightRenderer.cpp
     ${ENGINE_FOLDER}Graphics/Renderers/LightRenderer.h
+    ${ENGINE_FOLDER}Graphics/Renderers/SharedRendererData.h
     ${ENGINE_FOLDER}Graphics/Renderers/SpriteRenderer.cpp
     ${ENGINE_FOLDER}Graphics/Renderers/SpriteRenderer.h
     ${ENGINE_FOLDER}Graphics/Renderers/ThumbnailRenderer.cpp

@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "SharedRendererData.h"
+
 namespace Havtorn
 {
 	class CRenderStateManager;
@@ -16,21 +18,23 @@ namespace Havtorn
 		U32 InstanceCount = 0;
 	};
 
-	struct SEditorSpriteRenderData
-	{
-		SRenderResource* EntityBuffer = nullptr;
-	};
-
 	class CSpriteRenderer 
 	{
 	public:
 		CSpriteRenderer(CRenderStateManager* stateManager);
 		~CSpriteRenderer() = default;
 
-		void RenderScreenSpaceSprite(const SSpriteRenderData& passData);
+		void SetupWorldSpaceRender(const SGeometryConstantRenderData& constantData, const SGeometryTargetRenderData& targetData);
+		void SetupWorldSpaceRender(const SGeometryConstantRenderData& constantData, const SGeometryTargetRenderData& targetData, const SEditorRenderData& editorPassData);
+		void SetupWidgetRender(const SGeometryConstantRenderData& constantData, const SMainTargetRenderData& targetData, const SEditorRenderData& editorPassData);
+
+		// TODO.NW: Add Setup for editor screen space sprites if we ever need it (such as for a 2D game)
+		void SetupScreenSpaceRender(const SMainTargetRenderData& targetData);
+
 		void RenderWorldSpaceSprite(const SSpriteRenderData& passData);
-		void RenderEditorWorldSpaceSprite(const SSpriteRenderData& passData, const SEditorSpriteRenderData& editorPassData);
-		void RenderEditorWorldSpaceWidget(const SSpriteRenderData& passData, const SEditorSpriteRenderData& editorPassData);
+		void RenderEditorWorldSpaceSprite(const SSpriteRenderData& passData, const SEditorRenderData& editorPassData);
+		void RenderScreenSpaceSprite(const SSpriteRenderData& passData);
+		void RenderEditorWorldSpaceWidget(const SSpriteRenderData& passData, const SEditorRenderData& editorPassData);
 	
 	private:
 		U16 ScreenSpaceSpritePSOIndex = 0;

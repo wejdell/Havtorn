@@ -87,21 +87,26 @@ namespace Havtorn
 			.RootSignature = nullptr
 		};
 		DecalGBufferPassPSOIndex = RenderStateManager->AddPipelineStateObject(deferredDecal);
+	}
 
-		const SPSODescription skybox =
-		{
-			.VertexShader = RenderStateManager->VertexShaders[STATIC_U8(EVertexShaders::Skybox)],
-			.PixelShader = RenderStateManager->PixelShaders[STATIC_U8(EPixelShaders::Skybox)],
-			.GeometryShader = nullptr,
-			.ComputeShader = nullptr,
-			.InputLayout = RenderStateManager->InputLayouts[STATIC_U8(EInputLayoutType::Position4)],
-			.Topology = ETopologies::TriangleList,
-			.BlendState = RenderStateManager->BlendStates[STATIC_U8(EBlendStates::Disable)],
-			.RasterizerState = RenderStateManager->RasterizerStates[STATIC_U8(ERasterizerStates::FrontfaceCulling)],
-			.DepthStencilState = RenderStateManager->DepthStencilStates[STATIC_U8(EDepthStencilStates::DepthFirst)],
-			.RootSignature = nullptr
-		};
-		SkyboxPassPSOIndex = RenderStateManager->AddPipelineStateObject(skybox);
+	void CGeometryRenderer::SetupRender(const SGeometryConstantRenderData& constantData, const SGeometryTargetRenderData& targetData)
+	{
+		RenderStateManager->VSSetConstantBuffer(0, *constantData.ViewDataBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(0, *constantData.ViewDataBuffer->DataBuffer);
+		RenderStateManager->GSSetConstantBuffer(0, *constantData.ViewDataBuffer->DataBuffer); // TODO.NW: Remove this when we get rid of geometry shaders for sprites/widgets
+
+		RenderStateManager->OMSetRenderTargets(targetData.GetRenderTargets(), targetData.DepthTexture);
+	}
+
+	void CGeometryRenderer::SetupRender(const SGeometryConstantRenderData& constantData, const SGeometryTargetRenderData& targetData, const SEditorRenderData& editorRenderData)
+	{
+		RenderStateManager->VSSetConstantBuffer(0, *constantData.ViewDataBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(0, *constantData.ViewDataBuffer->DataBuffer);
+		RenderStateManager->GSSetConstantBuffer(0, *constantData.ViewDataBuffer->DataBuffer); // TODO.NW: Remove this when we get rid of geometry shaders for sprites/widgets
+
+		std::vector<SRenderResource*> renderTargets = targetData.GetRenderTargets();
+		renderTargets.append_range(editorRenderData.GetRenderTargets());
+		RenderStateManager->OMSetRenderTargets(renderTargets, targetData.DepthTexture);
 	}
 
 	void CGeometryRenderer::RenderStaticMesh(const SStaticMeshRenderData& passData)
@@ -111,13 +116,6 @@ namespace Havtorn
 		RenderStateManager->IASetVertexBuffers(0, std::vector<SRenderResource*>{ passData.VertexBuffer, passData.TransformBuffer });
 		RenderStateManager->IASetIndexBuffer(*passData.IndexBuffer->DataBuffer);
 
-		// TODO.NW: This assumes the frame buffer has been set earlier, with the active camera view
-		// Should we let pass data get control over what frame buffer to use? Probably. Need to set frame buffer here in that case
-		//RenderStateManager->VSSetConstantBuffer(0, *passData.FrameBuffer->DataBuffer);
-
-		// TODO.NW: Figure out if we can just assume a default sampler binding for every pass, not using that many yet
-		//RenderStateManager->PSSetSampler(0, ESamplers::DefaultWrap);
-
 		RenderStateManager->PSSetResources(5, passData.MaterialTextures);
 		RenderStateManager->PSSetConstantBuffer(8, *passData.MaterialBuffer->DataBuffer);
 
@@ -125,7 +123,7 @@ namespace Havtorn
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 	}
 
-	void CGeometryRenderer::RenderEditorStaticMesh(const SStaticMeshRenderData& passData, const SEditorGeometryRenderData& editorPassData)
+	void CGeometryRenderer::RenderStaticMesh(const SStaticMeshRenderData& passData, const SEditorRenderData& editorPassData)
 	{
 		RenderStateManager->TrySetPipelineStateObject(StaticMeshEditorGBufferPassPSOIndex);
 		
@@ -143,13 +141,6 @@ namespace Havtorn
 		RenderStateManager->IASetVertexBuffers(0, { passData.VertexBuffer, passData.TransformBuffer, editorPassData.EntityBuffer });
 		RenderStateManager->IASetIndexBuffer(*passData.IndexBuffer->DataBuffer);
 
-		// TODO.NW: This assumes the frame buffer has been set earlier, with the active camera view
-		// Should we let pass data get control over what frame buffer to use? Probably. Need to set frame buffer here in that case
-		//RenderStateManager->VSSetConstantBuffer(0, *passData.FrameBuffer->DataBuffer);
-
-		// TODO.NW: Figure out if we can just assume a default sampler binding for every pass, not using that many yet
-		//RenderStateManager->PSSetSampler(0, ESamplers::DefaultWrap);
-
 		RenderStateManager->PSSetResources(5, passData.MaterialTextures);
 		RenderStateManager->PSSetConstantBuffer(8, *passData.MaterialBuffer->DataBuffer);
 
@@ -164,14 +155,7 @@ namespace Havtorn
 		RenderStateManager->IASetVertexBuffers(0, std::vector<SRenderResource*>{ passData.VertexBuffer, passData.TransformBuffer });
 		RenderStateManager->IASetIndexBuffer(*passData.IndexBuffer->DataBuffer);
 
-		// TODO.NW: This assumes the frame buffer has been set earlier, with the active camera view
-		// Should we let pass data get control over what frame buffer to use? Probably. Need to set frame buffer here in that case
-		//RenderStateManager->VSSetConstantBuffer(0, *passData.FrameBuffer->DataBuffer);
 		RenderStateManager->VSSetConstantBuffer(6, *passData.BoneBuffer->DataBuffer);
-
-		// TODO.NW: Figure out if we can just assume a default sampler binding for every pass, not using that many yet
-		//RenderStateManager->PSSetSampler(0, ESamplers::DefaultWrap);
-
 		RenderStateManager->PSSetResources(5, passData.MaterialTextures);
 		RenderStateManager->PSSetConstantBuffer(8, *passData.MaterialBuffer->DataBuffer);
 
@@ -179,21 +163,14 @@ namespace Havtorn
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 	}
 
-	void CGeometryRenderer::RenderEditorSkeletalMesh(const SSkeletalMeshRenderData& passData, const SEditorGeometryRenderData& editorPassData)
+	void CGeometryRenderer::RenderSkeletalMesh(const SSkeletalMeshRenderData& passData, const SEditorRenderData& editorPassData)
 	{
 		RenderStateManager->TrySetPipelineStateObject(SkeletalMeshEditorGBufferPassPSOIndex);
 
 		RenderStateManager->IASetVertexBuffers(0, { passData.VertexBuffer, editorPassData.EntityBuffer, passData.TransformBuffer });
 		RenderStateManager->IASetIndexBuffer(*passData.IndexBuffer->DataBuffer);
 
-		// TODO.NW: This assumes the frame buffer has been set earlier, with the active camera view
-		// Should we let pass data get control over what frame buffer to use? Probably. Need to set frame buffer here in that case
-		//RenderStateManager->VSSetConstantBuffer(0, *passData.FrameBuffer->DataBuffer);
 		RenderStateManager->VSSetConstantBuffer(6, *passData.BoneBuffer->DataBuffer);
-
-		// TODO.NW: Figure out if we can just assume a default sampler binding for every pass, not using that many yet
-		//RenderStateManager->PSSetSampler(0, ESamplers::DefaultWrap);
-
 		RenderStateManager->PSSetResources(5, passData.MaterialTextures);
 		RenderStateManager->PSSetConstantBuffer(8, *passData.MaterialBuffer->DataBuffer);
 
@@ -207,61 +184,12 @@ namespace Havtorn
 
 		RenderStateManager->IASetVertexBuffers(0, std::vector<CDataBuffer*>{ &RenderStateManager->VertexBuffers[STATIC_U8(EDefaultIndexBuffers::DecalProjector)], passData.TransformBuffer->DataBuffer });
 		RenderStateManager->IASetIndexBuffer(RenderStateManager->IndexBuffers[STATIC_U8(EDefaultIndexBuffers::DecalProjector)]);
-	
-		// TODO.NW: This assumes the frame buffer has been set earlier, with the active camera view
-		// Should we let pass data get control over what frame buffer to use? Probably. Need to set frame buffer here in that case
-		//RenderStateManager->VSSetConstantBuffer(0, *passData.FrameBuffer->DataBuffer);
-		//RenderStateManager->PSSetConstantBuffer(0, *passData.FrameBuffer->DataBuffer);
-		//RenderStateManager->VSSetConstantBuffer(1, *passData.DecalBuffer->DataBuffer);
-		//RenderStateManager->PSSetConstantBuffer(1, *passData.DecalBuffer->DataBuffer);
-
-		// TODO.NW: Figure out if we can just assume a default sampler binding for every pass, not using that many yet
-		//RenderStateManager->PSSetSampler(0, ESamplers::DefaultWrap);
-		RenderStateManager->PSSetResources(5, passData.MaterialTextures);
+		
 		RenderStateManager->PSSetConstantBuffer(8, *passData.MaterialBuffer->DataBuffer);
+		RenderStateManager->PSSetResources(5, passData.MaterialTextures);
+		RenderStateManager->PSSetResources(21, { passData.DepthCopyTexture });
 
 		RenderStateManager->DrawIndexedInstanced(36, passData.InstanceCount, 0, 0, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++; // TODO.NW: Move this incrementation into a singular function so we don't have to add it everywhere
-
-		//if (passData.OptionalAlbedoTexture != nullptr)
-		//{
-		//	passData.OptionalAlbedoTexture->RenderTexture->SetAsPSResourceOnSlot(5);
-		//	RenderStateManager->PSSetShader(EPixelShaders::DecalAlbedo);
-		//	RenderStateManager->DrawIndexed(36, 0, 0);
-		//	CRenderManager::NumberOfDrawCallsThisFrame++;
-		//}
-
-		//if (passData.OptionalMaterialTexture)
-		//{
-		//	passData.OptionalAlbedoTexture->RenderTexture->SetAsPSResourceOnSlot(6);
-		//	RenderStateManager->PSSetShader(EPixelShaders::DecalMaterial);
-		//	RenderStateManager->DrawIndexed(36, 0, 0);
-		//	CRenderManager::NumberOfDrawCallsThisFrame++;
-		//}
-
-		//if (passData.OptionalNormalTexture)
-		//{
-		//	passData.OptionalAlbedoTexture->RenderTexture->SetAsPSResourceOnSlot(7);
-		//	RenderStateManager->PSSetShader(EPixelShaders::DecalNormal);
-		//	RenderStateManager->DrawIndexed(36, 0, 0);
-		//	CRenderManager::NumberOfDrawCallsThisFrame++;
-		//}
-	}
-
-	void CGeometryRenderer::RenderSkybox(const SSkyboxRenderData& passData)
-	{
-		RenderStateManager->TrySetPipelineStateObject(SkyboxPassPSOIndex);
-
-		RenderStateManager->IASetVertexBuffer(0, RenderStateManager->VertexBuffers[STATIC_U8(EVertexBufferPrimitives::SkyboxCube)]);
-		RenderStateManager->IASetIndexBuffer(RenderStateManager->IndexBuffers[STATIC_U8(EDefaultIndexBuffers::SkyboxCube)]);
-
-		RenderStateManager->PSSetResources(21, 1, nullptr);
-		passData.CubemapTexture->RenderTexture->SetAsPSResourceOnSlot(0);
-
-		// TODO.NW: Might want to do this, but then the sync points between passes get a bit blurry. Probably would like to manage this outside of this function
-		passData.LitSceneTextureWithDepth->RenderTexture->SetAsActiveTarget(passData.LitSceneTextureWithDepth->DepthTexture);
-
-		RenderStateManager->DrawIndexed(36, 0, 0);
-		CRenderManager::NumberOfDrawCallsThisFrame++;
 	}
 }

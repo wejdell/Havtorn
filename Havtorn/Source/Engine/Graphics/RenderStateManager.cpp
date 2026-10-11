@@ -600,6 +600,8 @@ namespace Havtorn
 
     void CRenderStateManager::VSSetConstantBuffer(U8 slot, const CDataBuffer& buffer)
     {
+        // TODO.NW: Should maybe have a base render resource class, and store an ID in them. At least 
+        // check in all of these state setters if the resource is already set? 
         Context->VSSetConstantBuffers(slot, 1, &buffer.Buffer);
     }
 
@@ -713,6 +715,17 @@ namespace Havtorn
     void CRenderStateManager::OMSetRenderTargets(U8 numberOfTargets, ID3D11RenderTargetView* const* targetViews, ID3D11DepthStencilView* depthStencilView) const
     {
         Context->OMSetRenderTargets(numberOfTargets, targetViews, depthStencilView);
+    }
+
+    void CRenderStateManager::OMSetRenderTargets(const std::vector<SRenderResource*>& targets, const SRenderResource* depth)
+    {
+        std::vector<ID3D11RenderTargetView*> rtvs;
+        for (SRenderResource* resource : targets)
+            rtvs.emplace_back(resource->RenderTexture->GetRenderTargetView());
+
+        ID3D11DepthStencilView* dsv = depth != nullptr ? depth->DepthTexture->GetDepthStencilView() : nullptr;
+        
+        Context->OMSetRenderTargets(STATIC_U32(rtvs.size()), rtvs.data(), dsv);
     }
 
     void CRenderStateManager::Draw(U32 vertexCount, U32 startVertexLocation) const

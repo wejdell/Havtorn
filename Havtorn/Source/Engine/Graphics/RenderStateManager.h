@@ -114,6 +114,7 @@ namespace Havtorn
 		void OMSetBlendState(EBlendStates blendstate) const;
 		void OMSetDepthStencilState(EDepthStencilStates depthStencilState, U32 stencilRef = 0) const;
 		void OMSetRenderTargets(U8 numberOfTargets, ID3D11RenderTargetView* const* targetViews, ID3D11DepthStencilView* depthStencilView) const;
+		void OMSetRenderTargets(const std::vector<SRenderResource*>& targets, const SRenderResource* depth);
 
 		void Draw(U32 vertexCount, U32 startVertexLocation) const;
 		void DrawIndexed(U32 indexCount, U32 startIndexLocation, U32 baseVertexLocation) const;

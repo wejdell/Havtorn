@@ -39,23 +39,25 @@ namespace Havtorn
 		bool IsRootPass = false;
 	};
 
+	template<typename T>
+	concept RenderPassParamType = std::derived_from<T, struct SRenderPassParams>;
+
 	struct SRenderPassParams
 	{
-		// These are used for setting up automatic sync points in the graph.
-		// Whenever we can't assume what data should be bound, it should be bound in 
-		// the execute function instead.
-
 		template<RenderPassParamType TParamStruct>
 		void AddDependency();
 
+		SRenderResourceHandle AddInput(const SRenderResourceHandle& handle);
+		SRenderResourceHandle AddOutput(const SRenderResourceHandle& handle);
+
+		void SetIsRootPass();
+
+	protected:
 		std::vector<SRenderResourceHandle> Inputs;
 		std::vector<SRenderResourceHandle> Outputs;
 		std::vector<U64> Dependencies;
 		bool ShouldSetRootPass = false;
 	};
-
-	template<typename T>
-	concept RenderPassParamType = std::derived_from<T, SRenderPassParams>;
 
 	template<RenderPassParamType TParamStruct>
 	class CRenderPass : public IRenderPass

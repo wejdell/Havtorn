@@ -2,6 +2,8 @@
 
 #pragma once
 
+#include "SharedRendererData.h"
+
 namespace Havtorn
 {
 	class CRenderStateManager;
@@ -25,7 +27,7 @@ namespace Havtorn
 	struct SSpotLightBufferData
 	{
 		SVector4 ColorAndIntensity;
-		SVector4 PositionAndRange;
+		SVector4 PositionAndRange; // TODO.NW: Either remove the common members of point light buffer data and this, or remove usage of the point light buffer (think the common vertex shader expects point light buffer data)
 		SVector4 Direction;
 		SVector4 DirectionNormal1;
 		SVector4 DirectionNormal2;
@@ -35,7 +37,7 @@ namespace Havtorn
 	};
 	HV_ASSERT_BUFFER(SSpotLightBufferData)
 
-	struct SShadowmapBufferData
+	struct SShadowmapBufferData // TODO.NW: For arrayed shadowmap buffers (point light uses 6 of them), we should only have separate entries for the two matrices (the rest is data common for all sides)
 	{
 		SMatrix ToShadowmapView;
 		SMatrix ToShadowmapProjection;
@@ -64,9 +66,26 @@ namespace Havtorn
 	};
 	HV_ASSERT_BUFFER(SEmissiveBufferData)
 
+	struct SLightConstantRenderData
+	{
+		SRenderResource* GBufferAlbedoTexture = nullptr;
+		SRenderResource* GBufferWNormalTexture = nullptr;
+		SRenderResource* GBufferVNormalTexture = nullptr;
+		SRenderResource* GBufferMaterialTexture = nullptr;
+		SRenderResource* IntermediateDepthTexture = nullptr;
+		SRenderResource* ShadowAtlasDepthTexture = nullptr;
+		SRenderResource* SSAOBlurTexture = nullptr;
+	};
+
+	struct SVolumetricConstantRenderData
+	{
+		SRenderResource* IntermediateDepthTexture = nullptr;
+		SRenderResource* ShadowAtlasDepthTexture = nullptr;
+	};
+
 	struct SStaticMeshShadowRenderData
 	{
-		SRenderResource* FrameBuffer = nullptr; 
+		SRenderResource* ViewDataBuffer = nullptr; 
 		SRenderResource* VertexBuffer = nullptr;
 		SRenderResource* IndexBuffer = nullptr;
 		SRenderResource* TransformBuffer = nullptr;
@@ -94,6 +113,11 @@ namespace Havtorn
 		SRenderResource* PointLightBuffer = nullptr;
 		SRenderResource* SpotlightBuffer = nullptr;
 		SRenderResource* ShadowmapBuffer = nullptr;
+	};
+
+	struct SSkyboxRenderData
+	{
+		SRenderResource* CubemapTexture = nullptr;
 	};
 
 	struct SVolumetricDirectionalLightRenderData
@@ -124,11 +148,17 @@ namespace Havtorn
 		CLightRenderer(CRenderStateManager* stateManager);
 		~CLightRenderer() = default;
 
+		void SetupShadowPrepassRender(const SMainTargetRenderData& targetData);
+		void SetupLightRender(const SGeometryConstantRenderData& viewData, const SLightConstantRenderData& constantData, const SMainTargetRenderData& targetData);
+		void SetupSkyboxRender(const SGeometryConstantRenderData& viewData, const SMainTargetRenderData& targetData);
+		void SetupVolumetricRender(const SGeometryConstantRenderData& viewData, const SVolumetricConstantRenderData& constantData, const SMainTargetRenderData& targetData);
+
 		void RenderStaticMeshDepthPrePass(const SStaticMeshShadowRenderData& passData);
 
 		void RenderDirectionalLight(const SDirectionalLightRenderData& passData);
 		void RenderPointLight(const SPointLightRenderData& passData);
 		void RenderSpotlight(const SSpotlightRenderData& passData);
+		void RenderSkybox(const SSkyboxRenderData& passData);
 
 		void RenderVolumetricDirectionalLight(const SVolumetricDirectionalLightRenderData& passData);
 		void RenderVolumetricPointLight(const SVolumetricPointLightRenderData& passData);
@@ -139,6 +169,7 @@ namespace Havtorn
 		U16 DirectionalLightPSOIndex = 0;
 		U16 PointLightPSOIndex = 0;
 		U16 SpotlightPSOIndex = 0;
+		U16 SkyboxPassPSOIndex = 0;
 		U16 VolumetricDirectionalLightPSOIndex = 0;
 		U16 VolumetricPointLightPSOIndex = 0;
 		U16 VolumetricSpotlightPSOIndex = 0;

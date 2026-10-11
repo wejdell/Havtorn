@@ -71,10 +71,10 @@ namespace Havtorn
 		RenderStateManager->IASetVertexBuffer(0, *passData.VertexBuffer->DataBuffer);
 		RenderStateManager->IASetIndexBuffer(*passData.IndexBuffer->DataBuffer);
 
-		RenderStateManager->VSSetConstantBuffer(0, *passData.FrameBuffer->DataBuffer);
+		RenderStateManager->VSSetConstantBuffer(0, *passData.ViewDataBuffer->DataBuffer);
 		RenderStateManager->VSSetConstantBuffer(1, *passData.ObjectBuffer->DataBuffer);
 
-		RenderStateManager->PSSetConstantBuffer(0, *passData.FrameBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(0, *passData.ViewDataBuffer->DataBuffer);
 	
 		RenderStateManager->DrawIndexed(passData.IndexCount, 0, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
@@ -92,11 +92,11 @@ namespace Havtorn
 		RenderStateManager->IASetVertexBuffers(0, { passData.VertexBuffer, passData.AnimDataBuffer, passData.TransformBuffer });
 		RenderStateManager->IASetIndexBuffer(*passData.IndexBuffer->DataBuffer);
 
-		RenderStateManager->VSSetConstantBuffer(0, *passData.FrameBuffer->DataBuffer);
+		RenderStateManager->VSSetConstantBuffer(0, *passData.ViewDataBuffer->DataBuffer);
 		RenderStateManager->VSSetConstantBuffer(1, *passData.ObjectBuffer->DataBuffer);
 		RenderStateManager->VSSetConstantBuffer(2, *passData.BoneBuffer->DataBuffer);
 
-		RenderStateManager->PSSetConstantBuffer(0, *passData.FrameBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(0, *passData.ViewDataBuffer->DataBuffer);
 
 		RenderStateManager->DrawIndexed(passData.IndexCount, 0, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;

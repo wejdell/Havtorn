@@ -73,6 +73,21 @@ namespace Havtorn
 		};
 		SpotlightPSOIndex = RenderStateManager->AddPipelineStateObject(lightingSpot);
 
+		const SPSODescription skybox =
+		{
+			.VertexShader = RenderStateManager->VertexShaders[STATIC_U8(EVertexShaders::Skybox)],
+			.PixelShader = RenderStateManager->PixelShaders[STATIC_U8(EPixelShaders::Skybox)],
+			.GeometryShader = nullptr,
+			.ComputeShader = nullptr,
+			.InputLayout = RenderStateManager->InputLayouts[STATIC_U8(EInputLayoutType::Position4)],
+			.Topology = ETopologies::TriangleList,
+			.BlendState = RenderStateManager->BlendStates[STATIC_U8(EBlendStates::Disable)],
+			.RasterizerState = RenderStateManager->RasterizerStates[STATIC_U8(ERasterizerStates::FrontfaceCulling)],
+			.DepthStencilState = RenderStateManager->DepthStencilStates[STATIC_U8(EDepthStencilStates::DepthFirst)],
+			.RootSignature = nullptr
+		};
+		SkyboxPassPSOIndex = RenderStateManager->AddPipelineStateObject(skybox);
+
 		const SPSODescription volumetricLightDirectional =
 		{
 			.VertexShader = RenderStateManager->VertexShaders[STATIC_U8(EVertexShaders::Fullscreen)],
@@ -119,14 +134,55 @@ namespace Havtorn
 		VolumetricSpotlightPSOIndex = RenderStateManager->AddPipelineStateObject(volumetricLightSpot);
 	}
 
+	void CLightRenderer::SetupShadowPrepassRender(const SMainTargetRenderData& targetData)
+	{
+		RenderStateManager->OMSetRenderTargets({ targetData.MainRenderTarget }, targetData.DepthTexture);
+	}
+
+	void CLightRenderer::SetupLightRender(const SGeometryConstantRenderData& viewData, const SLightConstantRenderData& constantData, const SMainTargetRenderData& targetData)
+	{
+		RenderStateManager->VSSetConstantBuffer(0, *viewData.ViewDataBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(0, *viewData.ViewDataBuffer->DataBuffer);
+		RenderStateManager->GSSetConstantBuffer(0, *viewData.ViewDataBuffer->DataBuffer); // TODO.NW: Remove this when we get rid of geometry shaders for sprites/widgets
+
+		std::vector<SRenderResource*> gBufferResources = { constantData.GBufferAlbedoTexture, constantData.GBufferWNormalTexture, constantData.GBufferVNormalTexture, constantData.GBufferMaterialTexture };
+		RenderStateManager->PSSetResources(1, gBufferResources);
+
+		std::vector<SRenderResource*> lightingResources = { constantData.IntermediateDepthTexture, constantData.ShadowAtlasDepthTexture, constantData.SSAOBlurTexture };
+		RenderStateManager->PSSetResources(21, lightingResources);
+		
+		RenderStateManager->OMSetRenderTargets({ targetData.MainRenderTarget }, nullptr);
+	}
+
+	void CLightRenderer::SetupSkyboxRender(const SGeometryConstantRenderData& viewData, const SMainTargetRenderData& targetData)
+	{
+		RenderStateManager->VSSetConstantBuffer(0, *viewData.ViewDataBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(0, *viewData.ViewDataBuffer->DataBuffer);
+		RenderStateManager->GSSetConstantBuffer(0, *viewData.ViewDataBuffer->DataBuffer); // TODO.NW: Remove this when we get rid of geometry shaders for sprites/widgets
+
+		RenderStateManager->OMSetRenderTargets({ targetData.MainRenderTarget }, targetData.DepthTexture);
+	}
+
+	void CLightRenderer::SetupVolumetricRender(const SGeometryConstantRenderData& viewData, const SVolumetricConstantRenderData& constantData, const SMainTargetRenderData& targetData)
+	{
+		RenderStateManager->VSSetConstantBuffer(0, *viewData.ViewDataBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(0, *viewData.ViewDataBuffer->DataBuffer);
+		RenderStateManager->GSSetConstantBuffer(0, *viewData.ViewDataBuffer->DataBuffer); // TODO.NW: Remove this when we get rid of geometry shaders for sprites/widgets
+
+		std::vector<SRenderResource*> lightingResources = { constantData.IntermediateDepthTexture, constantData.ShadowAtlasDepthTexture };
+		RenderStateManager->PSSetResources(21, lightingResources);
+
+		RenderStateManager->OMSetRenderTargets({ targetData.MainRenderTarget }, nullptr);
+	}
+
 	void CLightRenderer::RenderStaticMeshDepthPrePass(const SStaticMeshShadowRenderData& passData)
 	{
 		RenderStateManager->TrySetPipelineStateObject(StaticMeshShadowPassPSOIndex);
 
-		RenderStateManager->IASetVertexBuffers(0, { passData.VertexBuffer, passData.TransformBuffer });
+		RenderStateManager->IASetVertexBuffers(0, std::vector<SRenderResource*>{ passData.VertexBuffer, passData.TransformBuffer });
 		RenderStateManager->IASetIndexBuffer(*passData.IndexBuffer->DataBuffer);
 
-		RenderStateManager->VSSetConstantBuffer(0, *passData.FrameBuffer->DataBuffer);
+		RenderStateManager->VSSetConstantBuffer(0, *passData.ViewDataBuffer->DataBuffer);
 
 		RenderStateManager->Viewports[passData.ShadowmapViewportIndex].SetViewport();
 		
@@ -179,6 +235,20 @@ namespace Havtorn
 		RenderStateManager->VSSetConstantBuffer(3, *passData.PointLightBuffer->DataBuffer);
 		RenderStateManager->PSSetConstantBuffer(3, *passData.SpotlightBuffer->DataBuffer);
 		RenderStateManager->PSSetConstantBuffer(5, *passData.ShadowmapBuffer->DataBuffer);
+
+		RenderStateManager->DrawIndexed(36, 0, 0);
+		CRenderManager::NumberOfDrawCallsThisFrame++;
+	}
+
+	void CLightRenderer::RenderSkybox(const SSkyboxRenderData& passData)
+	{
+		RenderStateManager->TrySetPipelineStateObject(SkyboxPassPSOIndex);
+
+		RenderStateManager->IASetVertexBuffer(0, RenderStateManager->VertexBuffers[STATIC_U8(EVertexBufferPrimitives::SkyboxCube)]);
+		RenderStateManager->IASetIndexBuffer(RenderStateManager->IndexBuffers[STATIC_U8(EDefaultIndexBuffers::SkyboxCube)]);
+
+		RenderStateManager->PSSetResources(21, 1, nullptr);
+		RenderStateManager->PSSetResources(0, { passData.CubemapTexture });
 
 		RenderStateManager->DrawIndexed(36, 0, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;

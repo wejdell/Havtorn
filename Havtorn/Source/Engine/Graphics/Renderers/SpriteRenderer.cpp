@@ -65,6 +65,41 @@ namespace Havtorn
 		WorldSpaceEditorWidgetPSOIndex = RenderStateManager->AddPipelineStateObject(worldSpriteEditor);
 	}
 
+	void CSpriteRenderer::SetupWorldSpaceRender(const SGeometryConstantRenderData& constantData, const SGeometryTargetRenderData& targetData)
+	{
+		RenderStateManager->VSSetConstantBuffer(0, *constantData.ViewDataBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(0, *constantData.ViewDataBuffer->DataBuffer);
+		RenderStateManager->GSSetConstantBuffer(0, *constantData.ViewDataBuffer->DataBuffer);
+
+		RenderStateManager->OMSetRenderTargets(targetData.GetRenderTargets(), targetData.DepthTexture);
+	}
+
+	void CSpriteRenderer::SetupWorldSpaceRender(const SGeometryConstantRenderData& constantData, const SGeometryTargetRenderData& targetData, const SEditorRenderData& editorPassData)
+	{
+		RenderStateManager->VSSetConstantBuffer(0, *constantData.ViewDataBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(0, *constantData.ViewDataBuffer->DataBuffer);
+		RenderStateManager->GSSetConstantBuffer(0, *constantData.ViewDataBuffer->DataBuffer);
+
+		std::vector<SRenderResource*> renderTargets = targetData.GetRenderTargets();
+		renderTargets.append_range(editorPassData.GetRenderTargets());
+		RenderStateManager->OMSetRenderTargets(renderTargets, targetData.DepthTexture);
+	}
+
+	void CSpriteRenderer::SetupWidgetRender(const SGeometryConstantRenderData& constantData, const SMainTargetRenderData& targetData, const SEditorRenderData& editorPassData)
+	{
+		RenderStateManager->VSSetConstantBuffer(0, *constantData.ViewDataBuffer->DataBuffer);
+		RenderStateManager->PSSetConstantBuffer(0, *constantData.ViewDataBuffer->DataBuffer);
+		RenderStateManager->GSSetConstantBuffer(0, *constantData.ViewDataBuffer->DataBuffer);
+
+		std::vector<SRenderResource*> renderTargets = { targetData.MainRenderTarget, editorPassData.WorldPositionRenderTarget, editorPassData.EditorDataRenderTarget };
+		RenderStateManager->OMSetRenderTargets(renderTargets, targetData.DepthTexture);
+	}
+
+	void CSpriteRenderer::SetupScreenSpaceRender(const SMainTargetRenderData& targetData)
+	{
+		RenderStateManager->OMSetRenderTargets({ targetData.MainRenderTarget }, targetData.DepthTexture);
+	}
+
 	void CSpriteRenderer::RenderScreenSpaceSprite(const SSpriteRenderData& passData)
 	{
 		RenderStateManager->TrySetPipelineStateObject(ScreenSpaceSpritePSOIndex);
@@ -72,8 +107,6 @@ namespace Havtorn
 		RenderStateManager->IASetVertexBuffers(0, { passData.TransformBuffer, passData.UVRectBuffer, passData.ColorBuffer });
 		RenderStateManager->IASetIndexBuffer(CDataBuffer::Null);
 		
-		//RenderStateManager->PSSetSampler(0, ESamplers::DefaultWrap);
-
 		passData.SpriteTexture->RenderTexture->SetAsPSResourceOnSlot(0);
 
 		RenderStateManager->DrawInstanced(1, passData.InstanceCount, 0, 0);
@@ -87,41 +120,31 @@ namespace Havtorn
 		RenderStateManager->IASetVertexBuffers(0, { passData.TransformBuffer, passData.UVRectBuffer, passData.ColorBuffer });
 		RenderStateManager->IASetIndexBuffer(CDataBuffer::Null);
 
-		//RenderStateManager->PSSetSampler(0, ESamplers::DefaultWrap);
-
 		passData.SpriteTexture->RenderTexture->SetAsPSResourceOnSlot(0);
 
 		RenderStateManager->DrawInstanced(1, passData.InstanceCount, 0, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 	}
 
-	void CSpriteRenderer::RenderEditorWorldSpaceSprite(const SSpriteRenderData& passData, const SEditorSpriteRenderData& editorPassData)
+	void CSpriteRenderer::RenderEditorWorldSpaceSprite(const SSpriteRenderData& passData, const SEditorRenderData& editorPassData)
 	{
 		RenderStateManager->TrySetPipelineStateObject(WorldSpaceEditorSpritePSOIndex);
 
 		RenderStateManager->IASetVertexBuffers(0, { passData.TransformBuffer, passData.UVRectBuffer, passData.ColorBuffer, editorPassData.EntityBuffer });
 		RenderStateManager->IASetIndexBuffer(CDataBuffer::Null);
 
-		//RenderStateManager->PSSetSampler(0, ESamplers::DefaultWrap);
-
 		passData.SpriteTexture->RenderTexture->SetAsPSResourceOnSlot(0);
 
 		RenderStateManager->DrawInstanced(1, passData.InstanceCount, 0, 0);
 		CRenderManager::NumberOfDrawCallsThisFrame++;
 	}
 
-	void CSpriteRenderer::RenderEditorWorldSpaceWidget(const SSpriteRenderData& passData, const SEditorSpriteRenderData& editorPassData)
+	void CSpriteRenderer::RenderEditorWorldSpaceWidget(const SSpriteRenderData& passData, const SEditorRenderData& editorPassData)
 	{
 		RenderStateManager->TrySetPipelineStateObject(WorldSpaceEditorWidgetPSOIndex);
 
-		// TODO.NW: Figure out what to do about this render target assignment
-		//ID3D11RenderTargetView* renderTargets[3] = { TonemappedTexture.GetRenderTargetView(), GBuffer.GetEditorWorldPositionRenderTarget(), GBuffer.GetEditorDataRenderTarget() };
-		//RenderStateManager->OMSetRenderTargets(3, renderTargets, EditorWidgetDepth.GetDepthStencilView());
-
 		RenderStateManager->IASetVertexBuffers(0, { passData.TransformBuffer, passData.UVRectBuffer, passData.ColorBuffer, editorPassData.EntityBuffer });
 		RenderStateManager->IASetIndexBuffer(CDataBuffer::Null);
-
-		//RenderStateManager->PSSetSampler(0, ESamplers::DefaultWrap);
 
 		passData.SpriteTexture->RenderTexture->SetAsPSResourceOnSlot(0);
 

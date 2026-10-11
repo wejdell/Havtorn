@@ -58,8 +58,6 @@ namespace Havtorn
 				defaultRootPasses.emplace_back(pass);
 		}
 
-		// TODO.NW: Should we have separate graphs for each render view? Would be nice for debugging
-		
 		for (Ref<IRenderPass> defaultRootPass : defaultRootPasses)
 			TraverseDependencies(defaultRootPass, SortedPasses, SortedPassParamHashToPassIndex);
 
@@ -82,5 +80,20 @@ namespace Havtorn
 			pass->Execute(ResourceRegistry, renderManager, renderView);
 
 		ResourceRegistry.Deallocate();
+	}
+
+	SRenderResourceHandle SRenderPassParams::AddInput(const SRenderResourceHandle& handle)
+	{
+		return Inputs.emplace_back(handle);
+	}
+
+	SRenderResourceHandle SRenderPassParams::AddOutput(const SRenderResourceHandle& handle)
+	{
+		return Outputs.emplace_back(handle);
+	}
+
+	void SRenderPassParams::SetIsRootPass()
+	{
+		ShouldSetRootPass = true;
 	}
 }

@@ -661,143 +661,242 @@ namespace Havtorn
 		}
 	}
 
-	void CRenderSystem::AddStaticMeshShadowmapPass(const std::vector<SDrawCallData>& staticMeshData, const std::vector<SMatrix>& transforms, const std::vector<SShadowmapViewData>& shadowmapData)
+	void CRenderSystem::AddPasses(SRenderView* renderView, const bool runEditorDataPasses)
 	{
-		struct SStaticMeshShadowmapPassData : public SRenderPassParams
+		// TODO.NW: Put passes for thumbnail rendering in Editor project?
+
+		SVector2<F32> shadowAtlasResolution = RenderManager->GetShadowAtlasResolution();
+
+		struct SShadowmapPrePassData : public SRenderPassParams
 		{
+			SRenderResourceHandle ViewDataBufferHandle;
 			SRenderResourceHandle TransformBufferHandle;
-			SRenderResourceHandle FrameBufferHandle;
-			
-			struct SSubPassData
-			{
-				SRenderResourceHandle VertexBufferHandle;
-				SRenderResourceHandle IndexBufferHandle;
-				U32 IndexCount = 0;
-			};
-			std::vector<SSubPassData> SubPasses;
+
+			SRenderResourceHandle EmptyRenderTargetHandle;
+			SRenderResourceHandle ShadowmapRenderTargetHandle;
 		};
-		RenderManager->GetRenderGraph().AddPass<SStaticMeshShadowmapPassData>("StaticMeshShadowmapPass",
+		RenderManager->GetRenderGraph().AddPass<SShadowmapPrePassData>("ShadowmapPrePass",
 			[&](CRenderResourceRegistry& registry)
 			{
-				SStaticMeshShadowmapPassData passData;
+				SShadowmapPrePassData passData;
 
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Shadow Atlas Depth", ERenderResourceFormat::R32_Typeless, SVector2<U16>(8192, 8192))));
+				passData.TransformBufferHandle = passData.AddInput(registry.DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
+				passData.ViewDataBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SFrameBufferData>("Shadowmap Frame Buffer"));
 
-				passData.TransformBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
-				passData.FrameBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SFrameBufferData>("Shadowmap Frame Buffer"));
-
-				CRenderStateManager& stateManager = RenderManager->GetRenderStateManager();
-
-				for (const SDrawCallData& drawCallData : staticMeshData)
-				{
-					SStaticMeshShadowmapPassData::SSubPassData& subPassData = passData.SubPasses.emplace_back();
-					subPassData.VertexBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SStaticMeshVertex>("Static Mesh Vertex Buffer", &stateManager.VertexBuffers[drawCallData.VertexBufferIndex]));
-					subPassData.IndexBufferHandle = registry.DeclareResource(DeclareIndexBuffer("Mesh Index Buffer", &stateManager.IndexBuffers[drawCallData.IndexBufferIndex]));
-					subPassData.IndexCount = drawCallData.IndexCount;
-				}				
+				// TODO.NW: Figure out if it's reasonable to bind any other existing render target here, do they even need to be the same dimensions?
+				passData.EmptyRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Empty Render Target", ERenderResourceFormat::R8_Typeless, SVector2<U16>(STATIC_U16(shadowAtlasResolution.X), STATIC_U16(shadowAtlasResolution.Y))));
+				passData.ShadowmapRenderTargetHandle = passData.AddOutput(registry.DeclareRenderDepth("Shadow Atlas Depth", ERenderResourceFormat::R32_Typeless, SVector2<U16>(STATIC_U16(shadowAtlasResolution.X), STATIC_U16(shadowAtlasResolution.Y))));
 
 				return passData;
 			},
-			[shadowmapData, transforms](const SStaticMeshShadowmapPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager)
+			[](const SShadowmapPrePassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
 			{
-				SStaticMeshShadowRenderData rendererData;
+				SMainTargetRenderData targetData;
+				targetData.MainRenderTarget = registry.GetResource(data.EmptyRenderTargetHandle);
+				targetData.DepthTexture = registry.GetResource(data.ShadowmapRenderTargetHandle);
+				renderManager->LightRenderer.SetupShadowPrepassRender(targetData);
 
-				rendererData.TransformBuffer = registry.GetResource(data.TransformBufferHandle);
-				rendererData.TransformBuffer->DataBuffer->BindBuffer(transforms);
-				rendererData.InstanceCount = STATIC_U32(transforms.size());
-
-				rendererData.FrameBuffer = registry.GetResource(data.FrameBufferHandle);
-
-				for (const SShadowmapViewData& viewData : shadowmapData)
 				{
-					rendererData.ShadowmapViewportIndex = viewData.ShadowmapViewportIndex;
+					SStaticMeshShadowRenderData rendererData;
 
-					SFrameBufferData frameBufferData;
-					frameBufferData.ToCameraFromWorld = viewData.ShadowViewMatrix;
-					frameBufferData.ToWorldFromCamera = viewData.ShadowViewMatrix.FastInverse();
-					frameBufferData.ToProjectionFromCamera = viewData.ShadowProjectionMatrix;
-					frameBufferData.ToCameraFromProjection = viewData.ShadowProjectionMatrix.Inverse();
-					frameBufferData.CameraPosition = viewData.ShadowPosition;
+					rendererData.TransformBuffer = registry.GetResource(data.TransformBufferHandle);
+					rendererData.ViewDataBuffer = registry.GetResource(data.ViewDataBufferHandle);
 
-					rendererData.FrameBuffer->DataBuffer->BindBuffer(frameBufferData);
-
-					for (const SStaticMeshShadowmapPassData::SSubPassData& subPassData : data.SubPasses)
+					for (auto& [lightCollectionIndex, shadowCasterDataCollection] : renderView.DirectionalLightShadowCasterData)
 					{
-						rendererData.VertexBuffer = registry.GetResource(subPassData.VertexBufferHandle);
-						rendererData.IndexBuffer = registry.GetResource(subPassData.IndexBufferHandle);
-						rendererData.IndexCount = subPassData.IndexCount;
+						const SDirectionalLightDrawData& lightSourceData = renderView.DirectionalLightDrawData[lightCollectionIndex];
 
-						renderManager->LightRenderer.RenderStaticMeshDepthPrePass(rendererData);
+						rendererData.ShadowmapViewportIndex = lightSourceData.ShadowmapViewportIndex;
+						const SShadowmapBufferData& bufferData = lightSourceData.ShadowmapBufferData;
+						SFrameBufferData frameBufferData;
+						frameBufferData.ToCameraFromWorld = bufferData.ToShadowmapView;
+						frameBufferData.ToWorldFromCamera = bufferData.ToShadowmapView.FastInverse();
+						frameBufferData.ToProjectionFromCamera = bufferData.ToShadowmapProjection;
+						frameBufferData.ToCameraFromProjection = bufferData.ToShadowmapProjection.Inverse();
+						frameBufferData.CameraPosition = bufferData.ShadowmapPosition;
+						rendererData.ViewDataBuffer->DataBuffer->BindBuffer(frameBufferData);
+
+						for (const SStaticShadowCasterData& shadowCasterData : shadowCasterDataCollection)
+						{
+							rendererData.TransformBuffer->DataBuffer->BindBuffer(shadowCasterData.Transforms);
+							rendererData.InstanceCount = STATIC_U32(shadowCasterData.Transforms.size());
+
+							for (const SPrimitiveData& primitiveData : shadowCasterData.PrimitiveData)
+							{
+								rendererData.VertexBuffer = registry.GetResource(primitiveData.VertexBufferHandle);
+								rendererData.IndexBuffer = registry.GetResource(primitiveData.IndexBufferHandle);
+								rendererData.IndexCount = primitiveData.IndexCount;
+
+								renderManager->LightRenderer.RenderStaticMeshDepthPrePass(rendererData);
+							}
+						}
 					}
+
+					for (auto& [lightCollectionIndex, shadowCasterDataCollection] : renderView.PointLightShadowCasterData)
+					{
+						const SPointLightDrawData& lightSourceData = renderView.PointLightDrawData[lightCollectionIndex];
+
+						rendererData.ShadowmapViewportIndex = lightSourceData.ShadowmapViewportIndex;
+						for (const SShadowmapBufferData& bufferData : lightSourceData.ShadowmapBufferData)
+						{
+							SFrameBufferData frameBufferData;
+							frameBufferData.ToCameraFromWorld = bufferData.ToShadowmapView;
+							frameBufferData.ToWorldFromCamera = bufferData.ToShadowmapView.FastInverse();
+							frameBufferData.ToProjectionFromCamera = bufferData.ToShadowmapProjection;
+							frameBufferData.ToCameraFromProjection = bufferData.ToShadowmapProjection.Inverse();
+							frameBufferData.CameraPosition = bufferData.ShadowmapPosition;
+							rendererData.ViewDataBuffer->DataBuffer->BindBuffer(frameBufferData);
+
+							for (const SStaticShadowCasterData& shadowCasterData : shadowCasterDataCollection)
+							{
+								rendererData.TransformBuffer->DataBuffer->BindBuffer(shadowCasterData.Transforms);
+								rendererData.InstanceCount = STATIC_U32(shadowCasterData.Transforms.size());
+
+								for (const SPrimitiveData& primitiveData : shadowCasterData.PrimitiveData)
+								{
+									rendererData.VertexBuffer = registry.GetResource(primitiveData.VertexBufferHandle);
+									rendererData.IndexBuffer = registry.GetResource(primitiveData.IndexBufferHandle);
+									rendererData.IndexCount = primitiveData.IndexCount;
+
+									renderManager->LightRenderer.RenderStaticMeshDepthPrePass(rendererData);
+								}
+							}
+						}
+					}
+
+					for (auto& [lightCollectionIndex, shadowCasterDataCollection] : renderView.SpotlightShadowCasterData)
+					{
+						const SSpotlightDrawData& lightSourceData = renderView.SpotlightDrawData[lightCollectionIndex];
+
+						rendererData.ShadowmapViewportIndex = lightSourceData.ShadowmapViewportIndex;
+						const SShadowmapBufferData& bufferData = lightSourceData.ShadowmapBufferData;
+						SFrameBufferData frameBufferData;
+						frameBufferData.ToCameraFromWorld = bufferData.ToShadowmapView;
+						frameBufferData.ToWorldFromCamera = bufferData.ToShadowmapView.FastInverse();
+						frameBufferData.ToProjectionFromCamera = bufferData.ToShadowmapProjection;
+						frameBufferData.ToCameraFromProjection = bufferData.ToShadowmapProjection.Inverse();
+						frameBufferData.CameraPosition = bufferData.ShadowmapPosition;
+						rendererData.ViewDataBuffer->DataBuffer->BindBuffer(frameBufferData);
+
+						for (const SStaticShadowCasterData& shadowCasterData : shadowCasterDataCollection)
+						{
+							rendererData.TransformBuffer->DataBuffer->BindBuffer(shadowCasterData.Transforms);
+							rendererData.InstanceCount = STATIC_U32(shadowCasterData.Transforms.size());
+
+							for (const SPrimitiveData& primitiveData : shadowCasterData.PrimitiveData)
+							{
+								rendererData.VertexBuffer = registry.GetResource(primitiveData.VertexBufferHandle);
+								rendererData.IndexBuffer = registry.GetResource(primitiveData.IndexBufferHandle);
+								rendererData.IndexCount = primitiveData.IndexCount;
+
+								renderManager->LightRenderer.RenderStaticMeshDepthPrePass(rendererData);
+							}
+						}
+					}
+				}
+
+				{
+					// TODO.NW: Skeletal mesh shadows
 				}
 			}
 		);
-	}
 
-	void CRenderSystem::AddGBufferPasses(const bool runEditorDataPasses)
-	{
-		struct SGeometryBasePassData : public SRenderPassParams
+		struct SGBufferBasePassData : public SRenderPassParams
 		{
+			SRenderResourceHandle ViewDataBufferHandle;
 			SRenderResourceHandle TransformBufferHandle;
 			SRenderResourceHandle MaterialBufferHandle;
 			SRenderResourceHandle BoneBufferHandle;
 			SRenderResourceHandle UVRectBufferHandle;
 			SRenderResourceHandle ColorBufferHandle;
 			SRenderResourceHandle EntityBufferHandle;
+
+			SRenderResourceHandle GBufferAlbedoTargetHandle;
+			SRenderResourceHandle GBufferWNormalTargetHandle;
+			SRenderResourceHandle GBufferVNormalTargetHandle;
+			SRenderResourceHandle GBufferMaterialTargetHandle;
+			SRenderResourceHandle GBufferWorldPositionTargetHandle;
+			SRenderResourceHandle GBufferEditorDataTargetHandle;
+			SRenderResourceHandle IntermediateDepthTargetHandle;
 		};
-		RenderManager->GetRenderGraph().AddPass<SGeometryBasePassData>("GBufferBasePass",
+		RenderManager->GetRenderGraph().AddPass<SGBufferBasePassData>("GBufferBasePass",
 			[&](CRenderResourceRegistry& registry)
 			{
-				SGeometryBasePassData passData;
+				SGBufferBasePassData passData;
 
-				// TODO.NW: Maybe add AddInput/AddOutput functions on the passdata, that can make sure they are set to the correct render stage and slot somehow
+				passData.AddDependency<SShadowmapPrePassData>();
 
-				// TODO.NW: It's a bit weird that the render function has no control over where the inputs are bound (to what slot). Can only do this where there's a strong 
-				// assumption of how it should work (as a sync point). 
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareConstantBuffer<SFrameBufferData>("Frame Buffer")));
+				passData.ViewDataBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SFrameBufferData>("View Data Buffer"));
+				passData.TransformBufferHandle = passData.AddInput(registry.DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
+				passData.UVRectBufferHandle = passData.AddInput(registry.DeclareVertexBuffer<SVector4>("Instanced UV Rect Buffer", InstancedDrawInstanceLimit));
+				passData.ColorBufferHandle = passData.AddInput(registry.DeclareVertexBuffer<SVector4>("Instanced Color Buffer", InstancedDrawInstanceLimit));
+				passData.EntityBufferHandle = passData.AddInput(registry.DeclareVertexBuffer<SEntity>("Instanced Entity Buffer", InstancedDrawInstanceLimit));
+				passData.MaterialBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SMaterialBufferData>("Material Buffer"));
+				passData.BoneBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SBoneBufferData>("Bone Buffer"));
 
-				// TODO.NW: These inputs and outputs must be able to be aggregately bound by the render graph somehow
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Vertex Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
-				
+				// NOTE.NW: It's interesting to note here that whenever we're rendering geometry, it's assumed we'd like to do it to a full resolution target. 
+				// That may not be the case, and we might want to make use of the render view parameter in this case or have some option to decide for each pass 
+				// how it should be handled.
+
+				passData.GBufferAlbedoTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt));
+				passData.GBufferWNormalTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt));
+				passData.GBufferVNormalTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Vertex Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt));
+				passData.GBufferMaterialTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt));
+
 				if (runEditorDataPasses)
 				{
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer World Position", ERenderResourceFormat::R32G32B32A32_Float)));
-					passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Editor Data", ERenderResourceFormat::R32G32_UnsignedInt)));
+					passData.GBufferWorldPositionTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer World Position", ERenderResourceFormat::R32G32B32A32_Float));
+					passData.GBufferEditorDataTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Editor Data", ERenderResourceFormat::R32G32_UnsignedInt));
 				}
-				
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)));
 
-				passData.TransformBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
-				passData.UVRectBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SVector4>("Instanced UV Rect Buffer", InstancedDrawInstanceLimit));
-				passData.ColorBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SVector4>("Instanced Color Buffer", InstancedDrawInstanceLimit));
-				passData.EntityBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SEntity>("Instanced Entity Buffer", InstancedDrawInstanceLimit));
-				passData.MaterialBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SMaterialBufferData>("Material Buffer"));
-				passData.BoneBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SBoneBufferData>("Bone Buffer"));
+				passData.IntermediateDepthTargetHandle = passData.AddOutput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless));
 
 				return passData;
 			},
-			[=](const SGeometryBasePassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
+			[=](const SGBufferBasePassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
 			{
-				CRenderStateManager& stateManager = renderManager->GetRenderStateManager();
+				SFrameBufferData frameBufferData;
+				frameBufferData.ToWorldFromCamera = renderView.ViewMatrix;
+				frameBufferData.ToCameraFromWorld = renderView.ViewMatrix.FastInverse();
+				frameBufferData.ToProjectionFromCamera = renderView.ProjectionMatrix;
+				frameBufferData.ToCameraFromProjection = renderView.ProjectionMatrix.Inverse();
+				frameBufferData.CameraPosition = renderView.ViewMatrix.GetTranslation4();
+				SGeometryConstantRenderData constantRenderData;
+				constantRenderData.ViewDataBuffer = registry.GetResource(data.ViewDataBufferHandle);
+				constantRenderData.ViewDataBuffer->DataBuffer->BindBuffer(frameBufferData);
+
+				SGeometryTargetRenderData targetRenderData;
+				targetRenderData.AlbedoRenderTarget = registry.GetResource(data.GBufferAlbedoTargetHandle);
+				targetRenderData.WorldNormalRenderTarget = registry.GetResource(data.GBufferWNormalTargetHandle);
+				targetRenderData.VertexNormalRenderTarget = registry.GetResource(data.GBufferVNormalTargetHandle);
+				targetRenderData.MaterialRenderTarget = registry.GetResource(data.GBufferMaterialTargetHandle);
+				targetRenderData.DepthTexture = registry.GetResource(data.IntermediateDepthTargetHandle);
+
+				SEditorRenderData editorData;
+				if (runEditorDataPasses)
+				{
+					editorData.WorldPositionRenderTarget = registry.GetResource(data.GBufferWorldPositionTargetHandle);
+					editorData.EditorDataRenderTarget = registry.GetResource(data.GBufferEditorDataTargetHandle);
+					editorData.EntityBuffer = registry.GetResource(data.EntityBufferHandle);
+
+					renderManager->GeometryRenderer.SetupRender(constantRenderData, targetRenderData, editorData);
+				}
+				else
+				{
+					renderManager->GeometryRenderer.SetupRender(constantRenderData, targetRenderData);
+				}
 
 				{
 					SStaticMeshRenderData rendererData;
 					rendererData.TransformBuffer = registry.GetResource(data.TransformBufferHandle);
 					rendererData.MaterialBuffer = registry.GetResource(data.MaterialBufferHandle);
 
-					SEditorGeometryRenderData editorData;
-					if (runEditorDataPasses)
-						editorData.EntityBuffer = registry.GetResource(data.EntityBufferHandle);
-
 					for (auto& [meshID, meshData] : renderView.StaticMeshDrawData) // Static Mesh Level
-					{	
+					{
 						rendererData.TransformBuffer->DataBuffer->BindBuffer(meshData.Transforms);
-						
+
 						if (runEditorDataPasses)
-							editorData.EntityBuffer->DataBuffer->BindBuffer(entities);
+							editorData.EntityBuffer->DataBuffer->BindBuffer(meshData.Entities);
 
 						for (const SMeshDrawData& drawData : meshData.DrawData) // Sub Mesh Level
 						{
@@ -805,17 +904,17 @@ namespace Havtorn
 								rendererData.MaterialTextures.emplace_back(registry.GetResource(handle));
 
 							rendererData.MaterialBuffer->DataBuffer->BindBuffer(drawData.MaterialBufferData);
-						
-							rendererData.VertexBuffer = registry.GetResource(drawData.VertexBufferHandle);
-							rendererData.IndexBuffer = registry.GetResource(drawData.IndexBufferHandle);
-						
-							rendererData.IndexCount = drawData.IndexCount;
+
+							rendererData.VertexBuffer = registry.GetResource(drawData.PrimitiveData.VertexBufferHandle);
+							rendererData.IndexBuffer = registry.GetResource(drawData.PrimitiveData.IndexBufferHandle);
+
+							rendererData.IndexCount = drawData.PrimitiveData.IndexCount;
 							rendererData.InstanceCount = STATIC_U32(meshData.Transforms.size());
 
 							if (runEditorDataPasses)
-								renderManager->GeometryRenderer.RenderEditorStaticMesh(rendererData, editorData);
+								renderManager->GeometryRenderer.RenderStaticMesh(rendererData, editorData);
 							else
-								renderManager->GeometryRenderer.RenderStaticMesh(rendererData);						
+								renderManager->GeometryRenderer.RenderStaticMesh(rendererData);
 						}
 					}
 				}
@@ -826,17 +925,13 @@ namespace Havtorn
 					rendererData.MaterialBuffer = registry.GetResource(data.MaterialBufferHandle);
 					rendererData.BoneBuffer = registry.GetResource(data.BoneBufferHandle);
 
-					SEditorGeometryRenderData editorData;
-					if (runEditorDataPasses)
-						editorData.EntityBuffer = registry.GetResource(data.EntityBufferHandle);
-
 					for (auto& [meshID, meshData] : renderView.SkeletalMeshDrawData)
 					{
 						rendererData.TransformBuffer->DataBuffer->BindBuffer(meshData.Transforms);
 						rendererData.BoneBuffer->DataBuffer->BindBuffer(meshData.Bones);
 
 						if (runEditorDataPasses)
-							editorData.EntityBuffer->DataBuffer->BindBuffer(entities);
+							editorData.EntityBuffer->DataBuffer->BindBuffer(meshData.Entities);
 
 						for (const SMeshDrawData& drawData : meshData.DrawData)
 						{
@@ -845,14 +940,14 @@ namespace Havtorn
 
 							rendererData.MaterialBuffer->DataBuffer->BindBuffer(drawData.MaterialBufferData);
 
-							rendererData.VertexBuffer = registry.GetResource(drawData.VertexBufferHandle);
-							rendererData.IndexBuffer = registry.GetResource(drawData.IndexBufferHandle);
+							rendererData.VertexBuffer = registry.GetResource(drawData.PrimitiveData.VertexBufferHandle);
+							rendererData.IndexBuffer = registry.GetResource(drawData.PrimitiveData.IndexBufferHandle);
 
-							rendererData.IndexCount = drawData.IndexCount;
+							rendererData.IndexCount = drawData.PrimitiveData.IndexCount;
 							rendererData.InstanceCount = STATIC_U32(meshData.Transforms.size());
 
 							if (runEditorDataPasses)
-								renderManager->GeometryRenderer.RenderEditorSkeletalMesh(rendererData, editorData);
+								renderManager->GeometryRenderer.RenderSkeletalMesh(rendererData, editorData);
 							else
 								renderManager->GeometryRenderer.RenderSkeletalMesh(rendererData);
 						}
@@ -865,18 +960,14 @@ namespace Havtorn
 					rendererData.UVRectBuffer = registry.GetResource(data.UVRectBufferHandle);
 					rendererData.ColorBuffer = registry.GetResource(data.ColorBufferHandle);
 
-					SEditorSpriteRenderData editorData;
-					if (runEditorDataPasses)
-						editorData.EntityBuffer = registry.GetResource(data.EntityBufferHandle);
-
-					for (auto& [spriteID, drawData] : renderView.WorldSpaceSpriteInstanceData)
+					for (auto& [spriteID, drawData] : renderView.WorldSpaceSpriteDrawData)
 					{
 						rendererData.TransformBuffer->DataBuffer->BindBuffer(drawData.Transforms);
 						rendererData.UVRectBuffer->DataBuffer->BindBuffer(drawData.UVRects);
 						rendererData.ColorBuffer->DataBuffer->BindBuffer(drawData.Colors);
 
 						if (runEditorDataPasses)
-							editorData.EntityBuffer->DataBuffer->BindBuffer(entities);
+							editorData.EntityBuffer->DataBuffer->BindBuffer(drawData.Entities);
 
 						rendererData.SpriteTexture = registry.GetResource(drawData.SpriteTextureHandle);
 
@@ -888,45 +979,94 @@ namespace Havtorn
 				}
 			}
 		);
-		
-		// TODO.NW: Add sync pass using fullscreen renderer
-		// 		DepthCopy.SetAsActiveTarget(); <- output
-		//		IntermediateDepth.SetAsPSResourceOnSlot(0); <- input depth from previous gbuffer rendering above
-		//		RenderFullscreenPass(EPixelShaders::FullscreenCopyDepth, EBlendStates::Disable);
+
+		struct SGeometryDepthCopyPassData : public SRenderPassParams
+		{
+			SRenderResourceHandle DepthTextureHandle;
+			SRenderResourceHandle DepthRenderTargetHandle;
+		};
+		RenderManager->GetRenderGraph().AddPass<SGeometryDepthCopyPassData>("GeometryDepthCopy",
+			[](CRenderResourceRegistry& registry)
+			{
+				SGeometryDepthCopyPassData passData;
+
+				passData.AddDependency<SGBufferBasePassData>();
+
+				passData.DepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless));
+				passData.DepthRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Depth Copy Target", ERenderResourceFormat::R32_Float));
+
+				return passData;
+			},
+			[](const SGeometryDepthCopyPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
+			{
+				SFullscreenRenderData rendererData;
+				rendererData.TextureResource1 = registry.GetResource(data.DepthTextureHandle);
+				rendererData.RenderTarget = registry.GetResource(data.DepthRenderTargetHandle);
+				rendererData.PixelShader = EPixelShaders::FullscreenCopyDepth;
+				rendererData.BlendState = EBlendStates::Disable;
+				renderManager->FullscreenRenderer.Render(rendererData);
+			}
+		);
 
 		struct SGeometryDecalPassData : public SRenderPassParams
 		{
+			SRenderResourceHandle ViewDataBufferHandle;
 			SRenderResourceHandle TransformBufferHandle;
 			SRenderResourceHandle MaterialBufferHandle;
+			SRenderResourceHandle DepthCopyTextureHandle;
+
+			SRenderResourceHandle GBufferAlbedoTargetHandle;
+			SRenderResourceHandle GBufferWNormalTargetHandle;
+			SRenderResourceHandle GBufferVNormalTargetHandle;
+			SRenderResourceHandle GBufferMaterialTargetHandle;
+			SRenderResourceHandle IntermediateDepthTargetHandle;
 		};
 		RenderManager->GetRenderGraph().AddPass<SGeometryDecalPassData>("GBufferDecalPass",
-			[&](CRenderResourceRegistry& registry)
+			[](CRenderResourceRegistry& registry)
 			{
 				SGeometryDecalPassData passData;
 
-				passData.AddDependency<SGeometryBasePassData>();
+				passData.AddDependency<SGBufferBasePassData>();
+				passData.AddDependency<SGeometryDepthCopyPassData>();
 
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareConstantBuffer<SFrameBufferData>("Frame Buffer")));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("Depth Copy", ERenderResourceFormat::R32_Float)));
+				passData.ViewDataBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SFrameBufferData>("View Data Buffer"));
+				passData.DepthCopyTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Depth Copy", ERenderResourceFormat::R32_Float));
+				passData.TransformBufferHandle = passData.AddInput(registry.DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
+				passData.MaterialBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SMaterialBufferData>("Material Buffer"));
 
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Vertex Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)));
-
-				passData.TransformBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
-				passData.MaterialBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SMaterialBufferData>("Material Buffer"));
+				passData.GBufferAlbedoTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt));
+				passData.GBufferWNormalTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt));
+				passData.GBufferVNormalTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Vertex Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt));
+				passData.GBufferMaterialTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt));
+				passData.IntermediateDepthTargetHandle = passData.AddOutput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless));
 
 				return passData;
 			},
 			[](const SGeometryDecalPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
 			{
-				CRenderStateManager& stateManager = renderManager->GetRenderStateManager();
-				
+				SFrameBufferData frameBufferData;
+				frameBufferData.ToWorldFromCamera = renderView.ViewMatrix;
+				frameBufferData.ToCameraFromWorld = renderView.ViewMatrix.FastInverse();
+				frameBufferData.ToProjectionFromCamera = renderView.ProjectionMatrix;
+				frameBufferData.ToCameraFromProjection = renderView.ProjectionMatrix.Inverse();
+				frameBufferData.CameraPosition = renderView.ViewMatrix.GetTranslation4();
+				SGeometryConstantRenderData constantRenderData;
+				constantRenderData.ViewDataBuffer = registry.GetResource(data.ViewDataBufferHandle);
+				constantRenderData.ViewDataBuffer->DataBuffer->BindBuffer(frameBufferData);
+
+				SGeometryTargetRenderData targetRenderData;
+				targetRenderData.AlbedoRenderTarget = registry.GetResource(data.GBufferAlbedoTargetHandle);
+				targetRenderData.WorldNormalRenderTarget = registry.GetResource(data.GBufferWNormalTargetHandle);
+				targetRenderData.VertexNormalRenderTarget = registry.GetResource(data.GBufferVNormalTargetHandle);
+				targetRenderData.MaterialRenderTarget = registry.GetResource(data.GBufferMaterialTargetHandle);
+				targetRenderData.DepthTexture = registry.GetResource(data.IntermediateDepthTargetHandle);
+
+				renderManager->GeometryRenderer.SetupRender(constantRenderData, targetRenderData);
+
 				SDecalRenderData rendererData;
 				rendererData.TransformBuffer = registry.GetResource(data.TransformBufferHandle);
 				rendererData.MaterialBuffer = registry.GetResource(data.MaterialBufferHandle);
+				rendererData.DepthCopyTexture = registry.GetResource(data.DepthCopyTextureHandle);
 
 				for (auto& [materialID, drawData] : renderView.DecalDrawData)
 				{
@@ -939,564 +1079,740 @@ namespace Havtorn
 					rendererData.InstanceCount = STATIC_U32(drawData.Transforms.size());
 
 					renderManager->GeometryRenderer.RenderDecal(rendererData);
-				}			
+				}
 			}
 		);
-	}
-	
-	void CRenderSystem::AddDirectionalLightPass(SDirectionalLightComponent* component, SVolumetricLightComponent* volumetricLightComp, CStaticRenderTexture* cubemapTexture, const SShadowmapViewData& shadowmapViewData)
-	{
-		const SVector4& direction = component->Direction;
-		const SVector4& color = component->Color;
-		const SVector2<F32>& shadowAtlasResolution = RenderManager->GetShadowAtlasResolution();
 
-		struct SDirectionalLightPassData : public SRenderPassParams
+		struct SSSAOPassData : public SRenderPassParams
 		{
-			SRenderResourceHandle LightBufferHandle;
+			SRenderResourceHandle SSAOBufferTextureHandle;
+			SRenderResourceHandle DepthTextureHandle;
+			SRenderResourceHandle GBufferWNormalTextureHandle;
+			SRenderResourceHandle SSAOBlurTargetHandle;
+		};
+		RenderManager->GetRenderGraph().AddPass<SSSAOPassData>("SSAO",
+			[](CRenderResourceRegistry& registry)
+			{
+				SSSAOPassData passData;
+
+				passData.AddDependency<SGeometryDecalPassData>();
+
+				passData.SSAOBufferTextureHandle = passData.AddOutput(registry.DeclareRenderTexture("SSAO Blur Texture", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::HalfResolution));
+				passData.DepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless));
+				passData.GBufferWNormalTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt));
+				passData.SSAOBlurTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("SSAO Blur Texture", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::HalfResolution));
+
+				return passData;
+			},
+			[](const SSSAOPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
+			{
+				SFullscreenRenderData rendererData;
+				rendererData.TextureResource1 = registry.GetResource(data.DepthTextureHandle);
+				rendererData.TextureResource2 = registry.GetResource(data.GBufferWNormalTextureHandle);
+				rendererData.RenderTarget = registry.GetResource(data.SSAOBufferTextureHandle);
+				rendererData.PixelShader = EPixelShaders::FullscreenSSAO;
+				rendererData.BlendState = EBlendStates::Disable;
+				renderManager->FullscreenRenderer.Render(rendererData);
+
+				rendererData.TextureResource1 = registry.GetResource(data.SSAOBufferTextureHandle);
+				rendererData.RenderTarget = registry.GetResource(data.SSAOBlurTargetHandle);
+				rendererData.PixelShader = EPixelShaders::FullscreenSSAOBlur;
+				rendererData.BlendState = EBlendStates::Disable;
+				renderManager->FullscreenRenderer.Render(rendererData);
+			}
+		);
+
+		struct SLightPassData : public SRenderPassParams
+		{
+			SRenderResourceHandle ViewDataBufferHandle;
+			SRenderResourceHandle GBufferAlbedoTextureHandle;
+			SRenderResourceHandle GBufferWNormalTextureHandle;
+			SRenderResourceHandle GBufferVNormalTextureHandle;
+			SRenderResourceHandle GBufferMaterialTextureHandle;
+			SRenderResourceHandle IntermediateDepthTextureHandle;
+			SRenderResourceHandle ShadowAtlasDepthTextureHandle;
+			SRenderResourceHandle SSAOBlurTextureHandle;
+
+			SRenderResourceHandle DirectionalLightBufferHandle;
+			SRenderResourceHandle PointLightBufferHandle;
+			SRenderResourceHandle SpotlightBufferHandle;
 			SRenderResourceHandle ShadowmapBufferHandle;
 			SRenderResourceHandle EmissiveBufferHandle;
-			SRenderResourceHandle CubemapTextureHandle;
+
+			SRenderResourceHandle MainRenderTargetHandle;
 		};
-		RenderManager->GetRenderGraph().AddPass<SDirectionalLightPassData>("DirectionalLightPass",
+		RenderManager->GetRenderGraph().AddPass<SLightPassData>("LightingPass",
 			[&](CRenderResourceRegistry& registry)
 			{
-				SDirectionalLightPassData passData;
+				SLightPassData passData;
 
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Vertex Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Shadow Atlas Depth", ERenderResourceFormat::R32_Typeless, SVector2<U16>(STATIC_U16(shadowAtlasResolution.X), STATIC_U16(shadowAtlasResolution.Y)))));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("SSAO Blur Texture", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::HalfResolution)));
+				passData.AddDependency<SSSAOPassData>();
 
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("Lit Scene", ERenderResourceFormat::R16G16B16A16_Float)));
+				passData.ViewDataBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SFrameBufferData>("View Data Buffer"));
+				passData.GBufferAlbedoTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)); // slot 1
+				passData.GBufferWNormalTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)); // slot 2
+				passData.GBufferVNormalTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer Vertex Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)); // slot 3
+				passData.GBufferMaterialTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)); // slot 4
+				passData.IntermediateDepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)); // slot 21
+				passData.ShadowAtlasDepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Shadow Atlas Depth", ERenderResourceFormat::R32_Typeless, SVector2<U16>(STATIC_U16(shadowAtlasResolution.X), STATIC_U16(shadowAtlasResolution.Y)))); // slot 22
+				passData.SSAOBlurTextureHandle = passData.AddInput(registry.DeclareRenderTexture("SSAO Blur Texture", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::HalfResolution)); // slot 23
 
-				passData.LightBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SDirectionalLightBufferData>("Directional Light Buffer"));
-				passData.ShadowmapBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SShadowmapBufferData>("Shadowmap Buffer", 6));
-				passData.EmissiveBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SEmissiveBufferData>("Emissive Buffer"));
+				passData.DirectionalLightBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SDirectionalLightBufferData>("Directional Light Buffer"));
+				passData.PointLightBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SDirectionalLightBufferData>("Point Light Buffer"));
+				passData.SpotlightBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SDirectionalLightBufferData>("Spotlight Buffer"));
+				passData.ShadowmapBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SShadowmapBufferData>("Shadowmap Buffer", 6));
+				passData.EmissiveBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SEmissiveBufferData>("Emissive Buffer"));
 
-				passData.CubemapTextureHandle = registry.DeclareResource(DeclareRenderTexture("Directional Light Cubemap", cubemapTexture));
-				
+				passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", ERenderResourceFormat::R16G16B16A16_Float));
+
 				return passData;
 			},
-			[direction, color, shadowAtlasResolution, shadowmapViewData](const SDirectionalLightPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager)
+			[](const SLightPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
 			{
-				SDirectionalLightRenderData rendererData;
+				SFrameBufferData frameBufferData;
+				frameBufferData.ToWorldFromCamera = renderView.ViewMatrix;
+				frameBufferData.ToCameraFromWorld = renderView.ViewMatrix.FastInverse();
+				frameBufferData.ToProjectionFromCamera = renderView.ProjectionMatrix;
+				frameBufferData.ToCameraFromProjection = renderView.ProjectionMatrix.Inverse();
+				frameBufferData.CameraPosition = renderView.ViewMatrix.GetTranslation4();
+				SGeometryConstantRenderData viewData;
+				viewData.ViewDataBuffer = registry.GetResource(data.ViewDataBufferHandle);
+				viewData.ViewDataBuffer->DataBuffer->BindBuffer(frameBufferData);
 
-				SDirectionalLightBufferData lightBufferData;
-				lightBufferData.ToDirectionalLight = -direction;
-				lightBufferData.DirectionalLightColor = color;
-				rendererData.LightBuffer = registry.GetResource(data.LightBufferHandle);
-				rendererData.LightBuffer->DataBuffer->BindBuffer(lightBufferData);
+				SLightConstantRenderData constantData;
+				constantData.GBufferAlbedoTexture = registry.GetResource(data.GBufferAlbedoTextureHandle);
+				constantData.GBufferWNormalTexture = registry.GetResource(data.GBufferWNormalTextureHandle);
+				constantData.GBufferVNormalTexture = registry.GetResource(data.GBufferVNormalTextureHandle);
+				constantData.GBufferMaterialTexture = registry.GetResource(data.GBufferMaterialTextureHandle);
+				constantData.IntermediateDepthTexture = registry.GetResource(data.IntermediateDepthTextureHandle);
+				constantData.ShadowAtlasDepthTexture = registry.GetResource(data.ShadowAtlasDepthTextureHandle);
+				constantData.SSAOBlurTexture = registry.GetResource(data.SSAOBlurTextureHandle);
 
-				const CRenderViewport& viewport = renderManager->GetRenderStateManager().Viewports[shadowmapViewData.ShadowmapViewportIndex];
+				SMainTargetRenderData targetData;
+				targetData.MainRenderTarget = registry.GetResource(data.MainRenderTargetHandle);
 
-				SShadowmapBufferData shadowmapBufferData;
-				shadowmapBufferData.ToShadowmapView = shadowmapViewData.ShadowViewMatrix;
-				shadowmapBufferData.ToShadowmapProjection = shadowmapViewData.ShadowProjectionMatrix;
-				shadowmapBufferData.ShadowmapPosition = shadowmapViewData.ShadowPosition;
-				shadowmapBufferData.ShadowmapResolution = { viewport.Width, viewport.Height };
-				shadowmapBufferData.ShadowAtlasResolution = shadowAtlasResolution;
-				shadowmapBufferData.ShadowmapStartingUV = { viewport.TopLeftX / shadowAtlasResolution.X, viewport.TopLeftY / shadowAtlasResolution.Y };
-				shadowmapBufferData.ShadowTestTolerance = 0.001f;
-				rendererData.ShadowmapBuffer = registry.GetResource(data.ShadowmapBufferHandle);
-				rendererData.ShadowmapBuffer->DataBuffer->BindBuffer(shadowmapBufferData);
+				renderManager->LightRenderer.SetupLightRender(viewData, constantData, targetData);
 
-				rendererData.EmissiveBuffer = registry.GetResource(data.EmissiveBufferHandle);
-				rendererData.EmissiveBuffer->DataBuffer->BindBuffer(SEmissiveBufferData{ .EmissiveStrength = 2.1f }); // TODO.NW: Extract this from fullscreenrenderer post processing buffer data
+				{
+					SDirectionalLightRenderData rendererData;
 
-				rendererData.CubemapTexture = registry.GetResource(data.CubemapTextureHandle);
+					for (SDirectionalLightDrawData& drawData : renderView.DirectionalLightDrawData)
+					{
+						rendererData.LightBuffer = registry.GetResource(data.DirectionalLightBufferHandle);
+						rendererData.LightBuffer->DataBuffer->BindBuffer(drawData.LightBufferData);
 
-				renderManager->LightRenderer.RenderDirectionalLight(rendererData);
+						rendererData.ShadowmapBuffer = registry.GetResource(data.ShadowmapBufferHandle);
+						rendererData.ShadowmapBuffer->DataBuffer->BindBuffer(drawData.ShadowmapBufferData);
+
+						rendererData.EmissiveBuffer = registry.GetResource(data.EmissiveBufferHandle);
+						rendererData.EmissiveBuffer->DataBuffer->BindBuffer(SEmissiveBufferData{ .EmissiveStrength = 2.1f }); // TODO.NW: Extract this from fullscreenrenderer post processing buffer data
+
+						rendererData.CubemapTexture = registry.GetResource(drawData.CubemapTextureHandle);
+
+						renderManager->LightRenderer.RenderDirectionalLight(rendererData);
+					}
+				}
+
+				{
+					SPointLightRenderData rendererData;
+
+					for (SPointLightDrawData& drawData : renderView.PointLightDrawData)
+					{
+						rendererData.LightBuffer = registry.GetResource(data.PointLightBufferHandle);
+						rendererData.LightBuffer->DataBuffer->BindBuffer(drawData.LightBufferData);
+
+						rendererData.ShadowmapBuffer = registry.GetResource(data.ShadowmapBufferHandle);
+						rendererData.ShadowmapBuffer->DataBuffer->BindBuffer(drawData.ShadowmapBufferData.data());
+
+						renderManager->LightRenderer.RenderPointLight(rendererData);
+					}
+				}
+
+				{
+					SSpotlightRenderData rendererData;
+
+					for (SSpotlightDrawData& drawData : renderView.SpotlightDrawData)
+					{
+						rendererData.PointLightBuffer = registry.GetResource(data.PointLightBufferHandle);
+						rendererData.PointLightBuffer->DataBuffer->BindBuffer(drawData.PointLightBufferData);
+
+						rendererData.SpotlightBuffer = registry.GetResource(data.SpotlightBufferHandle);
+						rendererData.SpotlightBuffer->DataBuffer->BindBuffer(drawData.SpotlightBufferData);
+
+						rendererData.ShadowmapBuffer = registry.GetResource(data.ShadowmapBufferHandle);
+						rendererData.ShadowmapBuffer->DataBuffer->BindBuffer(drawData.ShadowmapBufferData);
+
+						renderManager->LightRenderer.RenderSpotlight(rendererData);
+					}
+				}
+
+				if (renderView.SkyboxCubemapTextureHandle.IsValid())
+				{
+					targetData.DepthTexture = constantData.IntermediateDepthTexture;
+					renderManager->LightRenderer.SetupSkyboxRender(viewData, targetData);
+
+					SSkyboxRenderData rendererData;
+					rendererData.CubemapTexture = registry.GetResource(renderView.SkyboxCubemapTextureHandle);
+					renderManager->LightRenderer.RenderSkybox(rendererData);
+				}
+
+				// TODO.NW: See if there's any issue with binding depth for skybox and rendering to 
+				// main target instead of keeping a LitScene copy
 			}
 		);
-
-		if (!SComponent::IsValid(volumetricLightComp) || !volumetricLightComp->IsActive)
-			return;
-
-		const F32 numberOfSamples = volumetricLightComp->NumberOfSamples;
-		const F32 lightPower = volumetricLightComp->LightPower;
-		const F32 scatteringProbability = volumetricLightComp->ScatteringProbability;
-		const F32 henyeyGreensteinGValue = volumetricLightComp->HenyeyGreensteinGValue;
 
 		struct SVolumetricLightPassData : public SRenderPassParams
 		{
-			SRenderResourceHandle LightBufferHandle;
-			SRenderResourceHandle VolumetricLightBufferHandle;
-			SRenderResourceHandle ShadowmapBufferHandle;
-		};
-		RenderManager->GetRenderGraph().AddPass<SVolumetricLightPassData>("VolumetricDirectionalPass",
-			[&](CRenderResourceRegistry& registry)
-			{
-				SVolumetricLightPassData passData;
-
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Shadow Atlas Depth", ERenderResourceFormat::R32_Typeless, SVector2<U16>(STATIC_U16(shadowAtlasResolution.X), STATIC_U16(shadowAtlasResolution.Y)))));
-				
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("Volumetric Accumulation", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::HalfResolution)));
-
-				passData.LightBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SDirectionalLightBufferData>("Directional Light Buffer"));
-				passData.VolumetricLightBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SVolumetricLightBufferData>("Volumetric Light Buffer"));
-				passData.ShadowmapBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SShadowmapBufferData>("Shadowmap Buffer", 6));
-
-				return passData;
-			},
-			[=](const SVolumetricLightPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager)
-			{
-				SVolumetricDirectionalLightRenderData rendererData;
-
-				SDirectionalLightBufferData lightBufferData;
-				lightBufferData.ToDirectionalLight = -direction;
-				lightBufferData.DirectionalLightColor = color;
-				rendererData.LightBuffer = registry.GetResource(data.LightBufferHandle);
-				rendererData.LightBuffer->DataBuffer->BindBuffer(lightBufferData);
-
-				SVolumetricLightBufferData volumetricBufferData;
-				volumetricBufferData.NumberOfSamplesReciprocal = 1.0f / numberOfSamples;
-				volumetricBufferData.LightPower = lightPower;
-				volumetricBufferData.ScatteringProbability = scatteringProbability;
-				volumetricBufferData.HenyeyGreensteinGValue = henyeyGreensteinGValue;
-				rendererData.VolumetricLightBuffer = registry.GetResource(data.VolumetricLightBufferHandle);
-				rendererData.VolumetricLightBuffer->DataBuffer->BindBuffer(volumetricBufferData);
-
-				const CRenderViewport& viewport = renderManager->GetRenderStateManager().Viewports[shadowmapViewData.ShadowmapViewportIndex];
-
-				SShadowmapBufferData shadowmapBufferData;
-				shadowmapBufferData.ToShadowmapView = shadowmapViewData.ShadowViewMatrix;
-				shadowmapBufferData.ToShadowmapProjection = shadowmapViewData.ShadowProjectionMatrix;
-				shadowmapBufferData.ShadowmapPosition = shadowmapViewData.ShadowPosition;
-				shadowmapBufferData.ShadowmapResolution = { viewport.Width, viewport.Height };
-				shadowmapBufferData.ShadowAtlasResolution = shadowAtlasResolution;
-				shadowmapBufferData.ShadowmapStartingUV = { viewport.TopLeftX / shadowAtlasResolution.X, viewport.TopLeftY / shadowAtlasResolution.Y };
-				shadowmapBufferData.ShadowTestTolerance = 0.001f;
-				rendererData.ShadowmapBuffer = registry.GetResource(data.ShadowmapBufferHandle);
-				rendererData.ShadowmapBuffer->DataBuffer->BindBuffer(shadowmapBufferData);
-
-				renderManager->LightRenderer.RenderVolumetricDirectionalLight(rendererData);
-			}
-		);
-	}
-
-	void CRenderSystem::AddPointLightPass(SPointLightComponent* component, SVolumetricLightComponent* volumetricLightComp, const SMatrix& transform, const std::vector<SShadowmapViewData>& shadowmapViewData)
-	{
-		const SVector4& colorAndIntensity = component->ColorAndIntensity;
-		const F32 range = component->Range;
-		const SVector2<F32>& shadowAtlasResolution = RenderManager->GetShadowAtlasResolution();
-
-		struct SPointLightPassData : SRenderPassParams
-		{
-			SRenderResourceHandle LightBufferHandle;
-			SRenderResourceHandle ShadowmapBufferHandle;
-		};
-		RenderManager->GetRenderGraph().AddPass<SPointLightPassData>("PointLightPass",
-			[&](CRenderResourceRegistry& registry)
-			{
-				SPointLightPassData passData;
-
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Vertex Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Shadow Atlas Depth", ERenderResourceFormat::R32_Typeless, SVector2<U16>(STATIC_U16(shadowAtlasResolution.X), STATIC_U16(shadowAtlasResolution.Y)))));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("SSAO Blur Texture", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::HalfResolution)));
-
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("Lit Scene", ERenderResourceFormat::R16G16B16A16_Float)));
-
-				passData.LightBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SPointLightBufferData>("Point Light Buffer"));
-				passData.ShadowmapBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SShadowmapBufferData>("Shadowmap Buffer", 6));
-
-				return passData;
-			},
-			[colorAndIntensity, range, shadowAtlasResolution, transform, shadowmapViewData](const SPointLightPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager)
-			{
-				SPointLightRenderData rendererData;
-
-				SPointLightBufferData lightBufferData;
-				lightBufferData.ToWorldFromObject = transform;
-				lightBufferData.ColorAndIntensity = colorAndIntensity;
-				lightBufferData.PositionAndRange = SVector4(transform.GetTranslation(), range);
-				rendererData.LightBuffer = registry.GetResource(data.LightBufferHandle);
-				rendererData.LightBuffer->DataBuffer->BindBuffer(lightBufferData);
-
-				SShadowmapBufferData shadowmapBufferData[6];
-				for (U8 shadowmapViewIndex = 0; shadowmapViewIndex < 6; shadowmapViewIndex++)
-				{
-					shadowmapBufferData[shadowmapViewIndex].ToShadowmapView = shadowmapViewData[shadowmapViewIndex].ShadowViewMatrix;
-					shadowmapBufferData[shadowmapViewIndex].ToShadowmapProjection = shadowmapViewData[shadowmapViewIndex].ShadowProjectionMatrix;
-					shadowmapBufferData[shadowmapViewIndex].ShadowmapPosition = shadowmapViewData[shadowmapViewIndex].ShadowPosition;
-
-					const auto& viewport = renderManager->GetRenderStateManager().Viewports[shadowmapViewData[shadowmapViewIndex].ShadowmapViewportIndex];
-					shadowmapBufferData[shadowmapViewIndex].ShadowmapResolution = { viewport.Width, viewport.Height };
-					shadowmapBufferData[shadowmapViewIndex].ShadowAtlasResolution = shadowAtlasResolution;
-					shadowmapBufferData[shadowmapViewIndex].ShadowmapStartingUV = { viewport.TopLeftX / shadowAtlasResolution.X, viewport.TopLeftY / shadowAtlasResolution.Y };
-					shadowmapBufferData[shadowmapViewIndex].ShadowTestTolerance = 0.00001f;	// TODO.NW: make a constant somewhere
-				}
-
-				rendererData.ShadowmapBuffer = registry.GetResource(data.ShadowmapBufferHandle);
-				rendererData.ShadowmapBuffer->DataBuffer->BindBuffer(shadowmapBufferData);
-
-				renderManager->LightRenderer.RenderPointLight(rendererData);
-			}
-		);
-
-		if (!SComponent::IsValid(volumetricLightComp) || !volumetricLightComp->IsActive)
-			return;
-
-		const F32 numberOfSamples = volumetricLightComp->NumberOfSamples;
-		const F32 lightPower = volumetricLightComp->LightPower;
-		const F32 scatteringProbability = volumetricLightComp->ScatteringProbability;
-		const F32 henyeyGreensteinGValue = volumetricLightComp->HenyeyGreensteinGValue;
-
-		struct SVolumetricLightPassData : public SRenderPassParams
-		{
-			SRenderResourceHandle LightBufferHandle;
-			SRenderResourceHandle VolumetricLightBufferHandle;
-			SRenderResourceHandle ShadowmapBufferHandle;
-		};
-		RenderManager->GetRenderGraph().AddPass<SVolumetricLightPassData>("VolumetricPointPass",
-			[&](CRenderResourceRegistry& registry)
-			{
-				SVolumetricLightPassData passData;
-
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Shadow Atlas Depth", ERenderResourceFormat::R32_Typeless, SVector2<U16>(STATIC_U16(shadowAtlasResolution.X), STATIC_U16(shadowAtlasResolution.Y)))));
-
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("Volumetric Accumulation", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::HalfResolution)));
-
-				passData.LightBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SPointLightBufferData>("Point Light Buffer"));
-				passData.VolumetricLightBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SVolumetricLightBufferData>("Volumetric Light Buffer"));
-				passData.ShadowmapBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SShadowmapBufferData>("Shadowmap Buffer", 6));
-
-				return passData;
-			},
-			[=](const SVolumetricLightPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager)
-			{
-				SVolumetricPointLightRenderData rendererData;
-
-				SPointLightBufferData lightBufferData;
-				lightBufferData.ToWorldFromObject = transform;
-				lightBufferData.ColorAndIntensity = colorAndIntensity;
-				lightBufferData.PositionAndRange = SVector4(transform.GetTranslation(), range);
-				rendererData.LightBuffer = registry.GetResource(data.LightBufferHandle);
-				rendererData.LightBuffer->DataBuffer->BindBuffer(lightBufferData);
-
-				SVolumetricLightBufferData volumetricBufferData;
-				volumetricBufferData.NumberOfSamplesReciprocal = 1.0f / numberOfSamples;
-				volumetricBufferData.LightPower = lightPower;
-				volumetricBufferData.ScatteringProbability = scatteringProbability;
-				volumetricBufferData.HenyeyGreensteinGValue = henyeyGreensteinGValue;
-				rendererData.VolumetricLightBuffer = registry.GetResource(data.VolumetricLightBufferHandle);
-				rendererData.VolumetricLightBuffer->DataBuffer->BindBuffer(volumetricBufferData);
-
-				SShadowmapBufferData shadowmapBufferData[6];
-				for (U8 shadowmapViewIndex = 0; shadowmapViewIndex < 6; shadowmapViewIndex++)
-				{
-					shadowmapBufferData[shadowmapViewIndex].ToShadowmapView = shadowmapViewData[shadowmapViewIndex].ShadowViewMatrix;
-					shadowmapBufferData[shadowmapViewIndex].ToShadowmapProjection = shadowmapViewData[shadowmapViewIndex].ShadowProjectionMatrix;
-					shadowmapBufferData[shadowmapViewIndex].ShadowmapPosition = shadowmapViewData[shadowmapViewIndex].ShadowPosition;
-
-					const auto& viewport = renderManager->GetRenderStateManager().Viewports[shadowmapViewData[shadowmapViewIndex].ShadowmapViewportIndex];
-					shadowmapBufferData[shadowmapViewIndex].ShadowmapResolution = { viewport.Width, viewport.Height };
-					shadowmapBufferData[shadowmapViewIndex].ShadowAtlasResolution = shadowAtlasResolution;
-					shadowmapBufferData[shadowmapViewIndex].ShadowmapStartingUV = { viewport.TopLeftX / shadowAtlasResolution.X, viewport.TopLeftY / shadowAtlasResolution.Y };
-					shadowmapBufferData[shadowmapViewIndex].ShadowTestTolerance = 0.00001f;	// TODO.NW: make a constant somewhere
-				}
-
-				rendererData.ShadowmapBuffer = registry.GetResource(data.ShadowmapBufferHandle);
-				rendererData.ShadowmapBuffer->DataBuffer->BindBuffer(shadowmapBufferData);
-
-				renderManager->LightRenderer.RenderVolumetricPointLight(rendererData);
-			}
-		);
-	}
-
-	void CRenderSystem::AddSpotlightPass(SSpotLightComponent* component, SVolumetricLightComponent* volumetricLightComp, const SMatrix& transform, const SShadowmapViewData& shadowmapViewData)
-	{
-		const SVector4& colorAndIntensity = component->ColorAndIntensity;
-		const F32 range = component->Range;
-		const F32 outerAngle = component->OuterAngle;
-		const F32 innerAngle = component->InnerAngle;
-		const SVector4& direction = component->Direction;
-		const SVector4& directionNormal1 = component->DirectionNormal1;
-		const SVector4& directionNormal2 = component->DirectionNormal2;
-		const SVector2<F32>& shadowAtlasResolution = RenderManager->GetShadowAtlasResolution();
-
-		struct SSpotLightPassData : public SRenderPassParams
-		{
-			SRenderResourceHandle LightBufferHandle;
+			SRenderResourceHandle ViewDataBufferHandle;
+			SRenderResourceHandle IntermediateDepthTextureHandle;
+			SRenderResourceHandle ShadowAtlasDepthTextureHandle;
+			SRenderResourceHandle DirectionalLightBufferHandle;
 			SRenderResourceHandle PointLightBufferHandle;
-			SRenderResourceHandle ShadowmapBufferHandle;
-		};
-		RenderManager->GetRenderGraph().AddPass<SSpotLightPassData>("SpotLightPass",
-			[&](CRenderResourceRegistry& registry)
-			{
-				SSpotLightPassData passData;
-
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Vertex Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Shadow Atlas Depth", ERenderResourceFormat::R32_Typeless, SVector2<U16>(STATIC_U16(shadowAtlasResolution.X), STATIC_U16(shadowAtlasResolution.Y)))));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("SSAO Blur Texture", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::HalfResolution)));
-
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("Lit Scene", ERenderResourceFormat::R16G16B16A16_Float)));
-
-				passData.LightBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SSpotLightBufferData>("Spotlight Buffer"));
-				passData.PointLightBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SPointLightBufferData>("Point Light Buffer"));
-				passData.ShadowmapBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SShadowmapBufferData>("Shadowmap Buffer", 6));
-
-				return passData;
-			},
-			[=](const SSpotLightPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager)
-			{
-				SSpotlightRenderData rendererData;
-
-				SPointLightBufferData pointLightBufferData;
-				pointLightBufferData.ToWorldFromObject = transform;
-				pointLightBufferData.ColorAndIntensity = colorAndIntensity;
-				pointLightBufferData.PositionAndRange = SVector4(transform.GetTranslation(), range);
-				rendererData.PointLightBuffer = registry.GetResource(data.PointLightBufferHandle);
-				rendererData.PointLightBuffer->DataBuffer->BindBuffer(pointLightBufferData);
-
-				SSpotLightBufferData spotlightBufferData;
-				spotlightBufferData.ColorAndIntensity = pointLightBufferData.ColorAndIntensity;
-				spotlightBufferData.PositionAndRange = pointLightBufferData.PositionAndRange;
-				spotlightBufferData.Direction = direction;
-				spotlightBufferData.DirectionNormal1 = directionNormal1;
-				spotlightBufferData.DirectionNormal2 = directionNormal2;
-				spotlightBufferData.OuterAngle = outerAngle;
-				spotlightBufferData.InnerAngle = innerAngle;
-				rendererData.SpotlightBuffer = registry.GetResource(data.LightBufferHandle);
-				rendererData.SpotlightBuffer->DataBuffer->BindBuffer(spotlightBufferData);
-
-				SShadowmapBufferData shadowmapBufferData;				
-				shadowmapBufferData.ToShadowmapView = shadowmapViewData.ShadowViewMatrix;
-				shadowmapBufferData.ToShadowmapProjection = shadowmapViewData.ShadowProjectionMatrix;
-				shadowmapBufferData.ShadowmapPosition = shadowmapViewData.ShadowPosition;
-
-				const auto& viewport = renderManager->GetRenderStateManager().Viewports[shadowmapViewData.ShadowmapViewportIndex];
-				shadowmapBufferData.ShadowmapResolution = { viewport.Width, viewport.Height };
-				shadowmapBufferData.ShadowAtlasResolution = shadowAtlasResolution;
-				shadowmapBufferData.ShadowmapStartingUV = { viewport.TopLeftX / shadowAtlasResolution.X, viewport.TopLeftY / shadowAtlasResolution.Y };
-				shadowmapBufferData.ShadowTestTolerance = 0.00001f;	// TODO.NW: make a constant somewhere
-				
-				rendererData.ShadowmapBuffer = registry.GetResource(data.ShadowmapBufferHandle);
-				rendererData.ShadowmapBuffer->DataBuffer->BindBuffer(shadowmapBufferData);
-
-				renderManager->LightRenderer.RenderSpotlight(rendererData);
-			}
-		);
-
-		if (!SComponent::IsValid(volumetricLightComp) || !volumetricLightComp->IsActive)
-			return;
-
-		const F32 numberOfSamples = volumetricLightComp->NumberOfSamples;
-		const F32 lightPower = volumetricLightComp->LightPower;
-		const F32 scatteringProbability = volumetricLightComp->ScatteringProbability;
-		const F32 henyeyGreensteinGValue = volumetricLightComp->HenyeyGreensteinGValue;
-
-		struct SVolumetricLightPassData : public SRenderPassParams
-		{
 			SRenderResourceHandle SpotlightBufferHandle;
-			SRenderResourceHandle PointLightBufferHandle;
 			SRenderResourceHandle VolumetricLightBufferHandle;
 			SRenderResourceHandle ShadowmapBufferHandle;
+			SRenderResourceHandle AccumulationRenderTargetHandle;
 		};
-		RenderManager->GetRenderGraph().AddPass<SVolumetricLightPassData>("VolumetricSpotPass",
+		RenderManager->GetRenderGraph().AddPass<SVolumetricLightPassData>("VolumetricAccumulationPass",
 			[&](CRenderResourceRegistry& registry)
 			{
 				SVolumetricLightPassData passData;
 
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)));
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Shadow Atlas Depth", ERenderResourceFormat::R32_Typeless, SVector2<U16>(STATIC_U16(shadowAtlasResolution.X), STATIC_U16(shadowAtlasResolution.Y)))));
+				passData.AddDependency<SLightPassData>();
+				passData.AddDependency<SShadowmapPrePassData>();
 
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("Volumetric Accumulation", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::HalfResolution)));
+				passData.ViewDataBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SFrameBufferData>("View Data Buffer"));
+				passData.IntermediateDepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)); // slot 21
+				passData.ShadowAtlasDepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Shadow Atlas Depth", ERenderResourceFormat::R32_Typeless, SVector2<U16>(STATIC_U16(shadowAtlasResolution.X), STATIC_U16(shadowAtlasResolution.Y)))); // slot 22	
+				passData.DirectionalLightBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SDirectionalLightBufferData>("Directional Light Buffer"));
+				passData.PointLightBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SDirectionalLightBufferData>("Point Light Buffer"));
+				passData.SpotlightBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SDirectionalLightBufferData>("Spotlight Buffer"));
+				passData.VolumetricLightBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SVolumetricLightBufferData>("Volumetric Light Buffer"));
+				passData.ShadowmapBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SShadowmapBufferData>("Shadowmap Buffer", 6));
 
-				passData.SpotlightBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SSpotLightBufferData>("Spotlight Buffer"));
-				passData.PointLightBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SPointLightBufferData>("Point Light Buffer"));
-				passData.VolumetricLightBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SVolumetricLightBufferData>("Volumetric Light Buffer"));
-				passData.ShadowmapBufferHandle = registry.DeclareResource(DeclareConstantBuffer<SShadowmapBufferData>("Shadowmap Buffer", 6));
+				passData.AccumulationRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Volumetric Accumulation", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::HalfResolution));
 
 				return passData;
 			},
-			[=](const SVolumetricLightPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager)
+			[](const SVolumetricLightPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
 			{
-				SVolumetricSpotlightRenderData rendererData;
+				SFrameBufferData frameBufferData;
+				frameBufferData.ToWorldFromCamera = renderView.ViewMatrix;
+				frameBufferData.ToCameraFromWorld = renderView.ViewMatrix.FastInverse();
+				frameBufferData.ToProjectionFromCamera = renderView.ProjectionMatrix;
+				frameBufferData.ToCameraFromProjection = renderView.ProjectionMatrix.Inverse();
+				frameBufferData.CameraPosition = renderView.ViewMatrix.GetTranslation4();
+				SGeometryConstantRenderData viewData;
+				viewData.ViewDataBuffer = registry.GetResource(data.ViewDataBufferHandle);
+				viewData.ViewDataBuffer->DataBuffer->BindBuffer(frameBufferData);
 
-				SPointLightBufferData pointLightBufferData;
-				pointLightBufferData.ToWorldFromObject = transform;
-				pointLightBufferData.ColorAndIntensity = colorAndIntensity;
-				pointLightBufferData.PositionAndRange = SVector4(transform.GetTranslation(), range);
-				rendererData.PointLightBuffer = registry.GetResource(data.PointLightBufferHandle);
-				rendererData.PointLightBuffer->DataBuffer->BindBuffer(pointLightBufferData);
+				SVolumetricConstantRenderData constantData;
+				constantData.IntermediateDepthTexture = registry.GetResource(data.IntermediateDepthTextureHandle);
+				constantData.ShadowAtlasDepthTexture = registry.GetResource(data.ShadowAtlasDepthTextureHandle);
 
-				SSpotLightBufferData spotlightBufferData;
-				spotlightBufferData.ColorAndIntensity = pointLightBufferData.ColorAndIntensity;
-				spotlightBufferData.PositionAndRange = pointLightBufferData.PositionAndRange;
-				spotlightBufferData.Direction = direction;
-				spotlightBufferData.DirectionNormal1 = directionNormal1;
-				spotlightBufferData.DirectionNormal2 = directionNormal2;
-				spotlightBufferData.OuterAngle = outerAngle;
-				spotlightBufferData.InnerAngle = innerAngle;
-				rendererData.SpotlightBuffer = registry.GetResource(data.SpotlightBufferHandle);
-				rendererData.SpotlightBuffer->DataBuffer->BindBuffer(spotlightBufferData);
+				SMainTargetRenderData targetData;
+				targetData.MainRenderTarget = registry.GetResource(data.AccumulationRenderTargetHandle);
 
-				SVolumetricLightBufferData volumetricBufferData;
-				volumetricBufferData.NumberOfSamplesReciprocal = 1.0f / numberOfSamples;
-				volumetricBufferData.LightPower = lightPower;
-				volumetricBufferData.ScatteringProbability = scatteringProbability;
-				volumetricBufferData.HenyeyGreensteinGValue = henyeyGreensteinGValue;
-				rendererData.VolumetricLightBuffer = registry.GetResource(data.VolumetricLightBufferHandle);
-				rendererData.VolumetricLightBuffer->DataBuffer->BindBuffer(volumetricBufferData);
+				renderManager->LightRenderer.SetupVolumetricRender(viewData, constantData, targetData);
 
-				const CRenderViewport& viewport = renderManager->GetRenderStateManager().Viewports[shadowmapViewData.ShadowmapViewportIndex];
+				// TODO.NW: Find neat way of skipping these calls if the volumetrics aren't enabled
+				{
+					SVolumetricDirectionalLightRenderData rendererData;
 
-				SShadowmapBufferData shadowmapBufferData;
-				shadowmapBufferData.ToShadowmapView = shadowmapViewData.ShadowViewMatrix;
-				shadowmapBufferData.ToShadowmapProjection = shadowmapViewData.ShadowProjectionMatrix;
-				shadowmapBufferData.ShadowmapPosition = shadowmapViewData.ShadowPosition;
-				shadowmapBufferData.ShadowmapResolution = { viewport.Width, viewport.Height };
-				shadowmapBufferData.ShadowAtlasResolution = shadowAtlasResolution;
-				shadowmapBufferData.ShadowmapStartingUV = { viewport.TopLeftX / shadowAtlasResolution.X, viewport.TopLeftY / shadowAtlasResolution.Y };
-				shadowmapBufferData.ShadowTestTolerance = 0.001f;
-				rendererData.ShadowmapBuffer = registry.GetResource(data.ShadowmapBufferHandle);
-				rendererData.ShadowmapBuffer->DataBuffer->BindBuffer(shadowmapBufferData);
+					for (SDirectionalLightDrawData& drawData : renderView.DirectionalLightDrawData)
+					{
+						if (!drawData.RenderVolumetrics)
+							continue;
 
-				renderManager->LightRenderer.RenderVolumetricSpotlight(rendererData);
+						rendererData.LightBuffer = registry.GetResource(data.DirectionalLightBufferHandle);
+						rendererData.LightBuffer->DataBuffer->BindBuffer(drawData.LightBufferData);
+
+						rendererData.VolumetricLightBuffer = registry.GetResource(data.VolumetricLightBufferHandle);
+						rendererData.VolumetricLightBuffer->DataBuffer->BindBuffer(drawData.VolumetricBufferData);
+
+						rendererData.ShadowmapBuffer = registry.GetResource(data.ShadowmapBufferHandle);
+						rendererData.ShadowmapBuffer->DataBuffer->BindBuffer(drawData.ShadowmapBufferData);
+
+						renderManager->LightRenderer.RenderVolumetricDirectionalLight(rendererData);
+					}
+				}
+
+				{
+					SVolumetricPointLightRenderData rendererData;
+
+					for (SPointLightDrawData& drawData : renderView.PointLightDrawData)
+					{
+						if (!drawData.RenderVolumetrics)
+							continue;
+
+						rendererData.LightBuffer = registry.GetResource(data.PointLightBufferHandle);
+						rendererData.LightBuffer->DataBuffer->BindBuffer(drawData.LightBufferData);
+
+						rendererData.VolumetricLightBuffer = registry.GetResource(data.VolumetricLightBufferHandle);
+						rendererData.VolumetricLightBuffer->DataBuffer->BindBuffer(drawData.VolumetricBufferData);
+
+						rendererData.ShadowmapBuffer = registry.GetResource(data.ShadowmapBufferHandle);
+						rendererData.ShadowmapBuffer->DataBuffer->BindBuffer(drawData.ShadowmapBufferData);
+
+						renderManager->LightRenderer.RenderVolumetricPointLight(rendererData);
+					}
+				}
+
+				{
+					SVolumetricSpotlightRenderData rendererData;
+
+					for (SSpotlightDrawData& drawData : renderView.SpotlightDrawData)
+					{
+						if (!drawData.RenderVolumetrics)
+							continue;
+
+						rendererData.PointLightBuffer = registry.GetResource(data.PointLightBufferHandle);
+						rendererData.PointLightBuffer->DataBuffer->BindBuffer(drawData.PointLightBufferData);
+
+						rendererData.SpotlightBuffer = registry.GetResource(data.SpotlightBufferHandle);
+						rendererData.SpotlightBuffer->DataBuffer->BindBuffer(drawData.SpotlightBufferData);
+
+						rendererData.VolumetricLightBuffer = registry.GetResource(data.VolumetricLightBufferHandle);
+						rendererData.VolumetricLightBuffer->DataBuffer->BindBuffer(drawData.VolumetricBufferData);
+
+						rendererData.ShadowmapBuffer = registry.GetResource(data.ShadowmapBufferHandle);
+						rendererData.ShadowmapBuffer->DataBuffer->BindBuffer(drawData.ShadowmapBufferData);
+
+						renderManager->LightRenderer.RenderVolumetricSpotlight(rendererData);
+					}
+				}
 			}
 		);
-	}
 
-	void CRenderSystem::AddSkyboxPass(STextureCubeAsset* cubemapTextureAsset)
-	{
-		struct SSkyboxPassData : public SRenderPassParams
+		struct SVolumetricBlurPassData : public SRenderPassParams
 		{
-			SRenderResourceHandle CubemapTextureHandle;
+			SRenderResourceHandle DepthTextureHandle;
+			SRenderResourceHandle DownsamplingDepthTextureHandle;
+			SRenderResourceHandle PrimaryBlurTextureHandle;
+			SRenderResourceHandle SecondaryBlurTextureHandle;
+			SRenderResourceHandle RenderTargetHandle;
 		};
-		RenderManager->GetRenderGraph().AddPass<SSkyboxPassData>("SkyboxPass",
-			[&](CRenderResourceRegistry& registry)
+		RenderManager->GetRenderGraph().AddPass<SVolumetricBlurPassData>("VolumetricBlurPass",
+			[](CRenderResourceRegistry& registry)
 			{
-				SSkyboxPassData passData;
+				SVolumetricBlurPassData passData;
 
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("Lit Scene", ERenderResourceFormat::R16G16B16A16_Float)));
+				passData.AddDependency<SVolumetricLightPassData>();
+				
+				passData.DepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless));
+				passData.DownsamplingDepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Downsampling Depth", ERenderResourceFormat::R32_Float, ERenderTextureSizeHint::HalfResolution));
+				passData.PrimaryBlurTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Volumetric Accumulation", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::HalfResolution));
+				passData.SecondaryBlurTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Volumetric Blur", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::HalfResolution));
 
-				passData.CubemapTextureHandle = registry.DeclareResource(DeclareRenderTexture("Skybox Cubemap Texture", &cubemapTextureAsset->RenderTexture));
+				passData.RenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", ERenderResourceFormat::R16G16B16A16_Float));
+
 				return passData;
 			},
-			[](const SSkyboxPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager)
+			[](const SVolumetricBlurPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
 			{
-				SSkyboxRenderData renderData;
-				renderData.CubemapTexture = registry.GetResource(data.CubemapTextureHandle);
-				renderManager->GeometryRenderer.RenderSkybox(renderData);
+				SBilateralBlurRenderData rendererData;
+				rendererData.RenderTarget = registry.GetResource(data.RenderTargetHandle);
+				rendererData.DepthTexture = registry.GetResource(data.DepthTextureHandle);
+				rendererData.DownsamplingDepthTexture = registry.GetResource(data.DownsamplingDepthTextureHandle);
+				rendererData.PrimaryBlurTexture = registry.GetResource(data.PrimaryBlurTextureHandle);
+				rendererData.SecondaryBlurTexture = registry.GetResource(data.SecondaryBlurTextureHandle);
+				renderManager->FullscreenRenderer.RenderBilateralBlur(rendererData);
 			}
 		);
-	}
 
-	void CRenderSystem::AddEditorWidgetPass(STextureAsset* textureAsset, const std::vector<SMatrix>& transforms, const std::vector<SVector4>& uvRects, const std::vector<SVector4>& colors, const std::vector<SEntity>& entities)
-	{
+		struct SBloomPassData : public SRenderPassParams
+		{
+			SRenderResourceHandle BloomBufferTextureHandle;
+			SRenderResourceHandle TargetCopyTextureHandle;
+			SRenderResourceHandle HalfResolutionTextureHandle;
+			SRenderResourceHandle PrimaryBlurTextureHandle;
+			SRenderResourceHandle SecondaryBlurTextureHandle;
+			SRenderResourceHandle MainRenderTargetHandle;
+		};
+		RenderManager->GetRenderGraph().AddPass<SBloomPassData>("Bloom",
+			[](CRenderResourceRegistry& registry)
+			{
+				SBloomPassData passData;
+
+				passData.AddDependency<SLightPassData>();
+				passData.AddDependency<SVolumetricBlurPassData>();
+
+				passData.BloomBufferTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Bloom Buffer", ERenderResourceFormat::R16G16B16A16_Float));
+				passData.TargetCopyTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Render Target Copy", ERenderResourceFormat::R16G16B16A16_Float));
+				passData.HalfResolutionTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Half Resolution Target", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::HalfResolution));
+				passData.PrimaryBlurTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Primary Blur Texture", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::QuarterResolution));
+				passData.SecondaryBlurTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Secondary Blur Texture", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::QuarterResolution));
+				
+				passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", ERenderResourceFormat::R16G16B16A16_Float));
+
+				return passData;
+			},
+			[](const SBloomPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
+			{
+				SFullscreenRenderData fullscreenRenderData;
+				fullscreenRenderData.PixelShader = EPixelShaders::FullscreenCopy;
+				fullscreenRenderData.BlendState = EBlendStates::Disable;
+				fullscreenRenderData.RenderTarget = registry.GetResource(data.TargetCopyTextureHandle);
+				fullscreenRenderData.TextureResource1 = registry.GetResource(data.MainRenderTargetHandle);
+				renderManager->FullscreenRenderer.Render(fullscreenRenderData);
+
+				fullscreenRenderData.PixelShader = EPixelShaders::FullscreenLuminance;
+				fullscreenRenderData.BlendState = EBlendStates::Disable;
+				fullscreenRenderData.RenderTarget = registry.GetResource(data.BloomBufferTextureHandle);
+				fullscreenRenderData.TextureResource1 = registry.GetResource(data.MainRenderTargetHandle);
+				renderManager->FullscreenRenderer.Render(fullscreenRenderData);
+				
+				SGaussianBlurRenderData blurRenderData;
+				blurRenderData.RenderTarget = registry.GetResource(data.BloomBufferTextureHandle);
+				blurRenderData.HalfResolutionTexture = registry.GetResource(data.HalfResolutionTextureHandle);
+				blurRenderData.PrimaryBlurTexture = registry.GetResource(data.PrimaryBlurTextureHandle);
+				blurRenderData.SecondaryBlurTexture = registry.GetResource(data.SecondaryBlurTextureHandle);
+				renderManager->FullscreenRenderer.RenderGaussianBlur(blurRenderData);
+
+				// TODO.NW: Could potentially be a thing to additively blend on the bloom buffer directly 
+				// to the render target, using only one resource (and additive blend state)
+				// Alternatively, use a UAV?
+				fullscreenRenderData.PixelShader = EPixelShaders::FullscreenBloom;
+				fullscreenRenderData.BlendState = EBlendStates::Disable;
+				fullscreenRenderData.RenderTarget = registry.GetResource(data.MainRenderTargetHandle);
+				fullscreenRenderData.TextureResource1 = registry.GetResource(data.TargetCopyTextureHandle);
+				fullscreenRenderData.TextureResource2 = registry.GetResource(data.BloomBufferTextureHandle);
+				renderManager->FullscreenRenderer.Render(fullscreenRenderData);
+			}
+		);
+
+		struct STonemappingPassData : public SRenderPassParams
+		{
+			SRenderResourceHandle RenderTargetTextureHandle;
+			SRenderResourceHandle TonemappingTargetHandle;
+		};
+		RenderManager->GetRenderGraph().AddPass<STonemappingPassData>("Tonemapping",
+			[](CRenderResourceRegistry& registry)
+			{
+				STonemappingPassData passData;
+
+				passData.AddDependency<SBloomPassData>();
+
+				passData.RenderTargetTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Main Render Target", ERenderResourceFormat::R16G16B16A16_Float));
+				passData.TonemappingTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Tonemapped Target", ERenderResourceFormat::R16G16B16A16_Float));
+				
+				return passData;
+			},
+			[](const STonemappingPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
+			{
+				SFullscreenRenderData rendererData;
+				rendererData.TextureResource1 = registry.GetResource(data.RenderTargetTextureHandle);
+				rendererData.RenderTarget = registry.GetResource(data.TonemappingTargetHandle);
+				rendererData.PixelShader = EPixelShaders::FullscreenTonemap;
+				rendererData.BlendState = EBlendStates::Disable;
+				renderManager->FullscreenRenderer.Render(rendererData);
+			}
+		);
+
 		struct SEditorWidgetPassData : public SRenderPassParams
 		{
+			SRenderResourceHandle ViewDataBufferHandle;
 			SRenderResourceHandle TransformBufferHandle;
 			SRenderResourceHandle UVRectBufferHandle;
 			SRenderResourceHandle ColorBufferHandle;
 			SRenderResourceHandle EntityBufferHandle;
-			SRenderResourceHandle SpriteTextureHandle;
+
+			SRenderResourceHandle RenderTargetHandle;
+			SRenderResourceHandle GBufferWorldPositionTargetHandle;
+			SRenderResourceHandle GBufferEditorDataTargetHandle;
+			SRenderResourceHandle DepthTargetHandle;
 		};
 		RenderManager->GetRenderGraph().AddPass<SEditorWidgetPassData>("EditorWidgetPass",
-			[&](CRenderResourceRegistry& registry)
+			[](CRenderResourceRegistry& registry)
 			{
 				SEditorWidgetPassData passData;
 
-				// NW: Bound as input here for dependency
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float)));
+				passData.AddDependency<STonemappingPassData>();
 
-				// passData.AddDependency<STonemappingPassData>();
+				passData.ViewDataBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SFrameBufferData>("View Data Buffer"));
+				passData.TransformBufferHandle = registry.DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit);
+				passData.UVRectBufferHandle = registry.DeclareVertexBuffer<SVector4>("Instanced UV Rect Buffer", InstancedDrawInstanceLimit);
+				passData.ColorBufferHandle = registry.DeclareVertexBuffer<SVector4>("Instanced Color Buffer", InstancedDrawInstanceLimit);
+				passData.EntityBufferHandle = registry.DeclareVertexBuffer<SEntity>("Instanced Entity Buffer", InstancedDrawInstanceLimit);
 
-				// TODO.NW: Need some control over what slots these outputs are bound to?
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float)));
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer World Position", ERenderResourceFormat::R32G32B32A32_Float)));
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("GBuffer Editor Data", ERenderResourceFormat::R32G32_UnsignedInt)));
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)));
+				passData.RenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float));
+				passData.GBufferWorldPositionTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer World Position", ERenderResourceFormat::R32G32B32A32_Float));
+				passData.GBufferEditorDataTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Editor Data", ERenderResourceFormat::R32G32_UnsignedInt));
 
-				passData.TransformBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
-				passData.UVRectBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SVector4>("Instanced UV Rect Buffer", InstancedDrawInstanceLimit));
-				passData.ColorBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SVector4>("Instanced Color Buffer", InstancedDrawInstanceLimit));
-				passData.EntityBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SEntity>("Instanced Entity Buffer", InstancedDrawInstanceLimit));
-				passData.SpriteTextureHandle = registry.DeclareResource(DeclareRenderTexture("Widget Texture", &textureAsset->RenderTexture));
+				// NW: This was a separate depth called EditorWidgetDepth before, does it need to be clear for some reason?
+				passData.DepthTargetHandle = passData.AddOutput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless));
+
 				return passData;
 			},
-			[=](const SEditorWidgetPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager)
+			[](const SEditorWidgetPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
 			{
-				//instance data should come from owning render view, might want to receive it in the parameter list
+				SFrameBufferData frameBufferData;
+				frameBufferData.ToWorldFromCamera = renderView.ViewMatrix;
+				frameBufferData.ToCameraFromWorld = renderView.ViewMatrix.FastInverse();
+				frameBufferData.ToProjectionFromCamera = renderView.ProjectionMatrix;
+				frameBufferData.ToCameraFromProjection = renderView.ProjectionMatrix.Inverse();
+				frameBufferData.CameraPosition = renderView.ViewMatrix.GetTranslation4();
+				SGeometryConstantRenderData constantRenderData;
+				constantRenderData.ViewDataBuffer = registry.GetResource(data.ViewDataBufferHandle);
+				constantRenderData.ViewDataBuffer->DataBuffer->BindBuffer(frameBufferData);
 
-				// TODO.NW: Bind outputs, needs to include gbuffer targets
-				SSpriteRenderData renderData;
-				renderData.TransformBuffer = registry.GetResource(data.TransformBufferHandle);
-				renderData.TransformBuffer->DataBuffer->BindBuffer(transforms);
+				SMainTargetRenderData targetData;
+				targetData.MainRenderTarget = registry.GetResource(data.RenderTargetHandle);
+				targetData.DepthTexture = registry.GetResource(data.DepthTargetHandle);
 
-				renderData.UVRectBuffer = registry.GetResource(data.UVRectBufferHandle);
-				renderData.UVRectBuffer->DataBuffer->BindBuffer(uvRects);
+				SEditorRenderData editorData;
+				editorData.WorldPositionRenderTarget = registry.GetResource(data.GBufferWorldPositionTargetHandle);
+				editorData.EditorDataRenderTarget = registry.GetResource(data.GBufferEditorDataTargetHandle);
+				editorData.EntityBuffer = registry.GetResource(data.EntityBufferHandle);
 
-				renderData.ColorBuffer = registry.GetResource(data.ColorBufferHandle);
-				renderData.ColorBuffer->DataBuffer->BindBuffer(colors);
+				renderManager->SpriteRenderer.SetupWidgetRender(constantRenderData, targetData, editorData);
 
-				renderData.SpriteTexture = registry.GetResource(data.SpriteTextureHandle);
+				{
+					SSpriteRenderData rendererData;
+					rendererData.TransformBuffer = registry.GetResource(data.TransformBufferHandle);
+					rendererData.UVRectBuffer = registry.GetResource(data.UVRectBufferHandle);
+					rendererData.ColorBuffer = registry.GetResource(data.ColorBufferHandle);
 
-				SEditorSpriteRenderData editorRenderData;
-				editorRenderData.EntityBuffer = registry.GetResource(data.EntityBufferHandle);
-				editorRenderData.EntityBuffer->DataBuffer->BindBuffer(entities);
+					for (auto& [spriteID, drawData] : renderView.WidgetSpriteDrawData)
+					{
+						rendererData.TransformBuffer->DataBuffer->BindBuffer(drawData.Transforms);
+						rendererData.UVRectBuffer->DataBuffer->BindBuffer(drawData.UVRects);
+						rendererData.ColorBuffer->DataBuffer->BindBuffer(drawData.Colors);
 
-				renderManager->SpriteRenderer.RenderEditorWorldSpaceWidget(renderData, editorRenderData);
+						rendererData.SpriteTexture = registry.GetResource(drawData.SpriteTextureHandle);
+
+						editorData.EntityBuffer->DataBuffer->BindBuffer(drawData.Entities);
+
+						renderManager->SpriteRenderer.RenderEditorWorldSpaceWidget(rendererData, editorData);
+					}
+				}
 			}
 		);
-	}
 
-	void CRenderSystem::AddUIPass(STextureAsset* textureAsset, const std::vector<SMatrix>& transforms, const std::vector<SVector4>& uvRects, const std::vector<SVector4>& colors)
-	{
 		struct SUIPassData : public SRenderPassParams
 		{
 			SRenderResourceHandle TransformBufferHandle;
 			SRenderResourceHandle UVRectBufferHandle;
 			SRenderResourceHandle ColorBufferHandle;
-			SRenderResourceHandle SpriteTextureHandle;
+
+			SRenderResourceHandle MainRenderTargetHandle;
+			SRenderResourceHandle DepthTargetHandle;
 		};
 		RenderManager->GetRenderGraph().AddPass<SUIPassData>("UIPass",
-			[&](CRenderResourceRegistry& registry)
+			[](CRenderResourceRegistry& registry)
 			{
 				SUIPassData passData;
 
-				// NW: Bound as input here for dependency
-				passData.Inputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float)));
+				passData.AddDependency<STonemappingPassData>();
 
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float)));
-				passData.Outputs.emplace_back(registry.DeclareResource(DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)));
+				passData.TransformBufferHandle = passData.AddInput(registry.DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
+				passData.UVRectBufferHandle = passData.AddInput(registry.DeclareVertexBuffer<SVector4>("Instanced UV Rect Buffer", InstancedDrawInstanceLimit));
+				passData.ColorBufferHandle = passData.AddInput(registry.DeclareVertexBuffer<SVector4>("Instanced Color Buffer", InstancedDrawInstanceLimit));
 
-				passData.TransformBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
-				passData.UVRectBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SVector4>("Instanced UV Rect Buffer", InstancedDrawInstanceLimit));
-				passData.ColorBufferHandle = registry.DeclareResource(DeclareVertexBuffer<SVector4>("Instanced Color Buffer", InstancedDrawInstanceLimit));
-				passData.SpriteTextureHandle = registry.DeclareResource(DeclareRenderTexture("UI Texture", &textureAsset->RenderTexture));
+				passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float));
+
+				// NW: Should this pass have depth?
+				passData.DepthTargetHandle = passData.AddOutput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless));
+
 				return passData;
 			},
-			[=](const SUIPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager)
+			[](const SUIPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
 			{
-				// TODO.NW: Make sure this is applied at the right time, after tonemapping and stuff
+				SMainTargetRenderData targetData;
+				targetData.MainRenderTarget;
+				targetData.DepthTexture;
+				renderManager->SpriteRenderer.SetupScreenSpaceRender(targetData);
 
-				SSpriteRenderData renderData;
-				renderData.TransformBuffer = registry.GetResource(data.TransformBufferHandle);
-				renderData.TransformBuffer->DataBuffer->BindBuffer(transforms);
+				{
+					SSpriteRenderData rendererData;
+					rendererData.TransformBuffer = registry.GetResource(data.TransformBufferHandle);
+					rendererData.UVRectBuffer = registry.GetResource(data.UVRectBufferHandle);
+					rendererData.ColorBuffer = registry.GetResource(data.ColorBufferHandle);
 
-				renderData.UVRectBuffer = registry.GetResource(data.UVRectBufferHandle);
-				renderData.UVRectBuffer->DataBuffer->BindBuffer(uvRects);
+					for (auto& [spriteID, drawData] : renderView.UISpriteDrawData)
+					{
+						rendererData.TransformBuffer->DataBuffer->BindBuffer(drawData.Transforms);
+						rendererData.UVRectBuffer->DataBuffer->BindBuffer(drawData.UVRects);
+						rendererData.ColorBuffer->DataBuffer->BindBuffer(drawData.Colors);
 
-				renderData.ColorBuffer = registry.GetResource(data.ColorBufferHandle);
-				renderData.ColorBuffer->DataBuffer->BindBuffer(colors);
+						rendererData.SpriteTexture = registry.GetResource(drawData.SpriteTextureHandle);
 
-				renderData.SpriteTexture = registry.GetResource(data.SpriteTextureHandle);
+						renderManager->SpriteRenderer.RenderScreenSpaceSprite(rendererData);
+					}
+				}
+			}
+		);
 
-				renderManager->SpriteRenderer.RenderScreenSpaceSprite(renderData);
+		struct SDebugDrawPass : public SRenderPassParams
+		{
+			SRenderResourceHandle ViewDataBufferHandle;
+			SRenderResourceHandle DebugObjectBufferHandle;
+			SRenderResourceHandle MainRenderTargetHandle;
+			SRenderResourceHandle DepthTargetHandle;
+		};
+		RenderManager->GetRenderGraph().AddPass<SDebugDrawPass>("DebugLines",
+			[](CRenderResourceRegistry& registry)
+			{
+				SDebugDrawPass passData;
+
+				passData.AddDependency<STonemappingPassData>();
+
+				passData.ViewDataBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SFrameBufferData>("View Data Buffer"));
+				passData.DebugObjectBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SDebugShapeObjectBufferData>("Debug Shape Buffer"));
+
+				passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float));
+				passData.DepthTargetHandle = passData.AddOutput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless));
+
+				return passData;
+			},
+			[](const SDebugDrawPass& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
+			{
+				SDebugRenderData rendererData;
+				rendererData.ObjectBuffer = registry.GetResource(data.DebugObjectBufferHandle);
+				SDebugShapeObjectBufferData bufferData;
+
+				SFrameBufferData frameBufferData;
+				frameBufferData.ToWorldFromCamera = renderView.ViewMatrix;
+				frameBufferData.ToCameraFromWorld = renderView.ViewMatrix.FastInverse();
+				frameBufferData.ToProjectionFromCamera = renderView.ProjectionMatrix;
+				frameBufferData.ToCameraFromProjection = renderView.ProjectionMatrix.Inverse();
+				frameBufferData.CameraPosition = renderView.ViewMatrix.GetTranslation4();
+				SGeometryConstantRenderData viewData;
+				viewData.ViewDataBuffer = registry.GetResource(data.ViewDataBufferHandle);
+				viewData.ViewDataBuffer->DataBuffer->BindBuffer(frameBufferData);
+
+				SMainTargetRenderData targetData;
+				targetData.MainRenderTarget = registry.GetResource(data.MainRenderTargetHandle);
+				targetData.DepthTexture = registry.GetResource(data.DepthTargetHandle);
+
+				auto fillRendererData = [&](const SDebugObjectDrawData& drawData)
+					{
+						bufferData.ToWorldFromObject = drawData.ToWorldFromObject;
+						bufferData.Color = drawData.Color;
+						bufferData.HalfThickness = drawData.HalfThickness;
+
+						rendererData.ObjectBuffer->DataBuffer->BindBuffer(bufferData);
+						rendererData.VertexBuffer = registry.GetResource(drawData.PrimitiveData.VertexBufferHandle);
+						rendererData.IndexBuffer = registry.GetResource(drawData.PrimitiveData.IndexBufferHandle);
+						rendererData.IndexCount = drawData.PrimitiveData.IndexCount;
+
+						return rendererData;
+					};
+
+				renderManager->DebugRenderer.SetupDepthRender(viewData, targetData);
+				{
+					for (const SDebugObjectDrawData& drawData : renderView.DebugObjectsDepth3D)
+						renderManager->DebugRenderer.RenderDebugShape3D(fillRendererData(drawData));
+
+					for (const SDebugObjectDrawData& drawData : renderView.DebugObjectsDepth2D)
+						renderManager->DebugRenderer.RenderDebugShape2D(fillRendererData(drawData));
+				}
+
+				renderManager->DebugRenderer.SetupNoDepthRender(viewData, targetData);
+				{
+					for (const SDebugObjectDrawData& drawData : renderView.DebugObjectsNoDepth3D)
+						renderManager->DebugRenderer.RenderDebugShape3D(fillRendererData(drawData));
+					
+					for (const SDebugObjectDrawData& drawData : renderView.DebugObjectsNoDepth2D)
+						renderManager->DebugRenderer.RenderDebugShape2D(fillRendererData(drawData));
+				}
+			}
+		);
+
+		struct SAntialiasingPassData : public SRenderPassParams
+		{
+			SRenderResourceHandle TonemappedTextureHandle;
+			SRenderResourceHandle AntialiasingTargetHandle;
+		};
+		RenderManager->GetRenderGraph().AddPass<SAntialiasingPassData>("Antialiasing",
+			[](CRenderResourceRegistry& registry)
+			{
+				SAntialiasingPassData passData;
+
+				passData.AddDependency<STonemappingPassData>();
+				passData.AddDependency<SEditorWidgetPassData>();
+				passData.AddDependency<SUIPassData>();
+				passData.AddDependency<SDebugDrawPass>();
+
+				passData.TonemappedTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Tonemapped Target", ERenderResourceFormat::R16G16B16A16_Float));
+				passData.AntialiasingTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Antialiased Target", ERenderResourceFormat::R16G16B16A16_Float));
+
+				return passData;
+			},
+			[](const SAntialiasingPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
+			{
+				SFullscreenRenderData rendererData;
+				rendererData.TextureResource1 = registry.GetResource(data.TonemappedTextureHandle);
+				rendererData.RenderTarget = registry.GetResource(data.AntialiasingTargetHandle);
+				rendererData.PixelShader = EPixelShaders::FullscreenFXAA;
+				rendererData.BlendState = EBlendStates::Disable;
+				renderManager->FullscreenRenderer.Render(rendererData);
+			}
+		);
+
+		struct SGammaCorrectionPassData : public SRenderPassParams
+		{
+			SRenderResourceHandle AntialiasedTextureHandle;
+			SRenderResourceHandle MainRenderTargetHandle;
+		};
+		RenderManager->GetRenderGraph().AddPass<SGammaCorrectionPassData>("GammaCorrection",
+			[](CRenderResourceRegistry& registry)
+			{
+				SGammaCorrectionPassData passData;
+
+				passData.AddDependency<SAntialiasingPassData>();
+				
+				passData.AntialiasedTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Antialiased Target", ERenderResourceFormat::R16G16B16A16_Float));
+				passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", ERenderResourceFormat::R16G16B16A16_Float));
+
+				return passData;
+			},
+			[](const SGammaCorrectionPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
+			{
+				SFullscreenRenderData rendererData;
+				rendererData.TextureResource1 = registry.GetResource(data.AntialiasedTextureHandle);
+				rendererData.RenderTarget = registry.GetResource(data.MainRenderTargetHandle);
+				rendererData.PixelShader = EPixelShaders::FullscreenGammaCorrection;
+				rendererData.BlendState = EBlendStates::Disable;
+				renderManager->FullscreenRenderer.Render(rendererData);
+			}
+		);
+
+		struct SFinalizePassData : public SRenderPassParams
+		{
+			SRenderResourceHandle PrimaryOptionalTextureHandle;
+			SRenderResourceHandle SecondaryOptionalTextureHandle;
+			SRenderResourceHandle MainRenderTargetHandle;
+		};
+		RenderManager->GetRenderGraph().AddPass<SFinalizePassData>("Finalize",
+			[&](CRenderResourceRegistry& registry)
+			{
+				SFinalizePassData passData;
+				passData.SetIsRootPass();
+
+				// TODO.NW: Figure out what we can do debug wise. By setting dependencies we should
+				// be able to automatically disable passes that aren't used. What can we do to override
+				// Rasterizer states globally (for geometry) for wireframe debugging?
+				// if (!RenderManager->ParseDebugBuffer)
+				passData.AddDependency<SGammaCorrectionPassData>();
+				//else
+				//{
+				//	passData.AddDependency<SGeometryBasePassData>();
+				//	passData.PrimaryOptionalTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer Albedo Texture", ERenderResourceFormat::R16G16B16A16_Float));
+				//	passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", ERenderResourceFormat::R16G16B16A16_Float));
+				//}
+
+				return passData;
+			},
+			[](const SFinalizePassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
+			{
+				//SFullscreenRenderData rendererData;
+				//rendererData.TextureResource1 = registry.GetResource(data.PrimaryOptionalTextureHandle);
+				////rendererData.TextureResource2 = registry.GetResource(data.SecondaryOptionalTextureHandle);
+				//rendererData.RenderTarget = registry.GetResource(data.MainRenderTargetHandle);
+				//rendererData.PixelShader = EPixelShaders::FullscreenCopy;
+				//rendererData.BlendState = EBlendStates::Disable;
+				//renderManager->FullscreenRenderer.Render(rendererData);
 			}
 		);
 	}

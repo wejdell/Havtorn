@@ -67,29 +67,11 @@ namespace Havtorn
 		QuarterResolution = 4
 	};
 
-	// NW: Maybe put in short namespace?
-	template<typename T>
-	static SRenderResourceDeclaration DeclareConstantBuffer(const char* name, const U64 sizeMultiplier = 1);
-	
-	template<typename T>
-	static SRenderResourceDeclaration DeclareVertexBuffer(const char* name, const U16 maxInstances);
-	
-	template<typename T>
-	static SRenderResourceDeclaration DeclareVertexBuffer(const char* name, CDataBuffer* externalMemory);
-
-	static SRenderResourceDeclaration DeclareIndexBuffer(const char* name, CDataBuffer* externalMemory);
-
-	static SRenderResourceDeclaration DeclareRenderTexture(const char* name, const ERenderResourceFormat format, const ERenderTextureSizeHint size = ERenderTextureSizeHint::FullResolution);
-	static SRenderResourceDeclaration DeclareRenderTexture(const char* name, const ERenderResourceFormat format, const SVector2<U16>& size);
-	static SRenderResourceDeclaration DeclareRenderTexture(const char* name, CStaticRenderTexture* externalMemory);
-
-	static SRenderResourceDeclaration DeclareRenderDepth(const char* name, const ERenderResourceFormat format, const ERenderTextureSizeHint size = ERenderTextureSizeHint::FullResolution);
-	static SRenderResourceDeclaration DeclareRenderDepth(const char* name, const ERenderResourceFormat format, const SVector2<U16>& size);
-
 	struct SRenderResourceHandle
 	{
 		SRenderResourceHandle(const CHavtornStaticString<RenderDebugNameMaxSize>& name, const U32 index);
 		SRenderResourceHandle() = default;
+		bool IsValid() const;
 
 		U32 ID = 0;
 		I32 RegistryIndex = -1;
@@ -127,6 +109,26 @@ namespace Havtorn
 		~CRenderResourceRegistry() = default;
 
 		SRenderResourceHandle DeclareResource(const SRenderResourceDeclaration& declaration);
+
+		template<typename T>
+		SRenderResourceHandle DeclareConstantBuffer(const char* name, const U64 sizeMultiplier = 1);
+
+		template<typename T>
+		SRenderResourceHandle DeclareVertexBuffer(const char* name, const U16 maxInstances);
+
+		template<typename T>
+		SRenderResourceHandle DeclareVertexBuffer(const char* name, CDataBuffer* externalMemory);
+
+		SRenderResourceHandle DeclareIndexBuffer(const char* name, CDataBuffer* externalMemory);
+
+		SRenderResourceHandle DeclareRenderTexture(const char* name, const ERenderResourceFormat format, const ERenderTextureSizeHint size = ERenderTextureSizeHint::FullResolution);
+		SRenderResourceHandle DeclareRenderTexture(const char* name, const ERenderResourceFormat format, const SVector2<U16>& size);
+		SRenderResourceHandle DeclareRenderTexture(const char* name, CRenderTexture* externalMemory);
+		SRenderResourceHandle DeclareRenderTexture(const char* name, CStaticRenderTexture* externalMemory);
+
+		SRenderResourceHandle DeclareRenderDepth(const char* name, const ERenderResourceFormat format, const ERenderTextureSizeHint size = ERenderTextureSizeHint::FullResolution);
+		SRenderResourceHandle DeclareRenderDepth(const char* name, const ERenderResourceFormat format, const SVector2<U16>& size);
+
 		void TouchResources(const std::vector<SRenderResourceHandle>& handles);
 		void Allocate();
 		void Bind(const std::vector<SRenderResourceHandle>& handles, CRenderStateManager* renderStateManager);
@@ -140,9 +142,9 @@ namespace Havtorn
 	};
 
 	template<typename T>
-	inline SRenderResourceDeclaration DeclareConstantBuffer(const char* name, const U64 sizeMultiplier)
+	inline SRenderResourceHandle CRenderResourceRegistry::DeclareConstantBuffer(const char* name, const U64 sizeMultiplier)
 	{
-		return	{
+		return	DeclareResource({
 				.Description =
 				{
 					.Name = { name },
@@ -150,14 +152,14 @@ namespace Havtorn
 					.CPUAccess = EResourceCPUAccess::CPUAccessWrite,
 					.Size = sizeof(T) * sizeMultiplier
 				},
-				.ExternalMemory = externalMemory 
-				};
+				.ExternalMemory = externalMemory
+		});
 	}
 
 	template<typename T>
-	SRenderResourceDeclaration DeclareVertexBuffer(const char* name, const U16 maxInstances)
+	SRenderResourceHandle CRenderResourceRegistry::DeclareVertexBuffer(const char* name, const U16 maxInstances)
 	{
-		return	{
+		return	DeclareResource({
 				.Description =
 				{
 					.Name = { name },
@@ -166,14 +168,14 @@ namespace Havtorn
 					.Size = sizeof(T) * maxInstances,
 					.Stride = sizeof(T)
 				},
-				.ExternalMemory = nullptr 
-				};
+				.ExternalMemory = nullptr
+		});
 	}
 
 	template<typename T>
-	SRenderResourceDeclaration DeclareVertexBuffer(const char* name, CDataBuffer* externalMemory)
+	SRenderResourceHandle CRenderResourceRegistry::DeclareVertexBuffer(const char* name, CDataBuffer* externalMemory)
 	{
-		return	{
+		return	DeclareResource({
 				.Description =
 				{
 					.Name = { name },
@@ -182,6 +184,6 @@ namespace Havtorn
 					.Stride = sizeof(T)
 				},
 				.ExternalMemory = externalMemory 
-				};
+		});
 	}
 }

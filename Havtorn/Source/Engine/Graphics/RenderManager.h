@@ -63,19 +63,30 @@ namespace Havtorn
 
 	using CRenderCommandHeap = std::priority_queue<SRenderCommand, std::vector<SRenderCommand>, SRenderCommandComparer>;
 
+	struct SPrimitiveData
+	{
+		SRenderResourceHandle VertexBufferHandle;
+		SRenderResourceHandle IndexBufferHandle;
+		U32 IndexCount = 0;
+	};
+
 	// Replaces DrawCallData
 	struct SMeshDrawData
 	{
 		// Data that comes from external sources that should be declared (with external memory) in setup
 		std::vector<SRenderResourceHandle> MaterialTextureHandles;
 		// Vertex Buffers should be owned by Render Thread
-		SRenderResourceHandle VertexBufferHandle;
-		SRenderResourceHandle IndexBufferHandle;
-		U32 IndexCount = 0;
+		SPrimitiveData PrimitiveData;
 
 		// Buffer data that should be bound at execution time - can we store this in a way that makes sense? Can we make all buffers immutable or dynamic?
 		// Many instances here, would like these holders to just point to one entry in the resource registry. But that means storing many buffers in the registry
 		SMaterialBufferData MaterialBufferData;
+	};
+
+	struct SStaticShadowCasterData
+	{
+		std::vector<SPrimitiveData> PrimitiveData;
+		std::vector<SMatrix> Transforms;
 	};
 
 	struct SStaticMeshDrawData
@@ -96,6 +107,15 @@ namespace Havtorn
 		std::vector<SMatrix> Bones; // Still need a way to split these out so each animated mesh can use its own bone buffer (but preferrably be instanced still)
 	};
 
+	struct SSpriteDrawData
+	{
+		SRenderResourceHandle SpriteTextureHandle;
+		std::vector<SMatrix> Transforms{};
+		std::vector<SVector4> UVRects{};
+		std::vector<SVector4> Colors{};
+		std::vector<SEntity> Entities{};
+	};
+
 	struct SDecalDrawData
 	{
 		std::vector<SRenderResourceHandle> MaterialTextureHandles;
@@ -104,13 +124,41 @@ namespace Havtorn
 		std::vector<SMatrix> Transforms;
 	};
 
-	struct SSpriteInstanceData
+	struct SDirectionalLightDrawData
 	{
-		SRenderResourceHandle SpriteTextureHandle;
-		std::vector<SMatrix> Transforms{};
-		std::vector<SVector4> UVRects{};
-		std::vector<SVector4> Colors{};
-		std::vector<SEntity> Entities{};
+		SDirectionalLightBufferData LightBufferData;
+		SShadowmapBufferData ShadowmapBufferData;
+		SVolumetricLightBufferData VolumetricBufferData;
+		SRenderResourceHandle CubemapTextureHandle;
+		U16 ShadowmapViewportIndex = 0;
+		bool RenderVolumetrics = false;
+	};
+
+	struct SPointLightDrawData
+	{
+		SPointLightBufferData LightBufferData;
+		std::array<SShadowmapBufferData, 6> ShadowmapBufferData;
+		SVolumetricLightBufferData VolumetricBufferData;
+		U16 ShadowmapViewportIndex = 0;
+		bool RenderVolumetrics = false;
+	};
+
+	struct SSpotlightDrawData
+	{
+		SPointLightBufferData PointLightBufferData;
+		SSpotLightBufferData SpotlightBufferData;
+		SShadowmapBufferData ShadowmapBufferData;
+		SVolumetricLightBufferData VolumetricBufferData;
+		U16 ShadowmapViewportIndex = 0;
+		bool RenderVolumetrics = false;
+	};
+
+	struct SDebugObjectDrawData
+	{
+		SMatrix ToWorldFromObject;
+		SVector4 Color;
+		F32 HalfThickness = 0.5f;
+		SPrimitiveData PrimitiveData;
 	};
 
 	struct SRenderView
@@ -128,9 +176,33 @@ namespace Havtorn
 		// we expect different sets of instances of maybe the same meshes for different views.
 		std::unordered_map<U32, SStaticMeshDrawData> StaticMeshDrawData;
 		std::unordered_map<U32, SSkeletalMeshDrawData> SkeletalMeshDrawData;
-		std::unordered_map<U32, SSpriteInstanceData> WorldSpaceSpriteInstanceData;
-		std::unordered_map<U32, SSpriteInstanceData> ScreenSpaceSpriteInstanceData;
+		std::unordered_map<U32, SSpriteDrawData> WorldSpaceSpriteDrawData;
+		std::unordered_map<U32, SSpriteDrawData> ScreenSpaceSpriteDrawData;
 		std::unordered_map<U32, SDecalDrawData> DecalDrawData;
+		std::unordered_map<U32, SSpriteDrawData> WidgetSpriteDrawData;
+		std::unordered_map<U32, SSpriteDrawData> UISpriteDrawData;
+		
+		std::vector<SDirectionalLightDrawData> DirectionalLightDrawData;
+		std::vector<SPointLightDrawData> PointLightDrawData;
+		std::vector<SSpotlightDrawData> SpotlightDrawData;
+
+		// Associates index into light draw data with its shadow casters
+		// TODO.NW: Right now these are associated by light instance, maybe it would be more beneficial
+		// to associate by shadowmap view? Potentially a higher cost to check meshes against all sides of the 
+		// point light cubes individually though.
+		std::unordered_map<U16, std::vector<SStaticShadowCasterData>> DirectionalLightShadowCasterData;
+		std::unordered_map<U16, std::vector<SStaticShadowCasterData>> PointLightShadowCasterData;
+		std::unordered_map<U16, std::vector<SStaticShadowCasterData>> SpotlightShadowCasterData;
+
+		std::vector<SDebugObjectDrawData> DebugObjectsDepth3D;
+		std::vector<SDebugObjectDrawData> DebugObjectsNoDepth3D;
+		std::vector<SDebugObjectDrawData> DebugObjectsDepth2D;
+		std::vector<SDebugObjectDrawData> DebugObjectsNoDepth2D;
+
+		SMatrix ViewMatrix = SMatrix::Identity;
+		SMatrix ProjectionMatrix = SMatrix::Identity;
+
+		SRenderResourceHandle SkyboxCubemapTextureHandle;
 
 		// This signature is provided like this because the culling preprocessing leaves us with this most cache-friendly data
 		// This is expected to overwrite any previous instancing data for a particular drawID.
@@ -312,7 +384,7 @@ namespace Havtorn
 		CRenderStateManager RenderStateManager;
 		CRenderTextureFactory RenderTextureFactory;
 		
-		CDataBuffer FrameBuffer;
+		CDataBuffer ViewDataBuffer;
 		CDataBuffer ObjectBuffer;
 		CDataBuffer MaterialBuffer;
 		CDataBuffer DebugShapeObjectBuffer;

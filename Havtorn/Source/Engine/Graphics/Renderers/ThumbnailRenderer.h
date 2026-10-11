@@ -10,7 +10,7 @@ namespace Havtorn
 	struct SStaticMeshThumbnailPassData
 	{
 		SRenderResource* ObjectBuffer = nullptr;
-		SRenderResource* FrameBuffer = nullptr;
+		SRenderResource* ViewDataBuffer = nullptr;
 		SRenderResource* VertexBuffer = nullptr;
 		SRenderResource* IndexBuffer = nullptr;
 		U32 IndexCount = 0;
@@ -19,7 +19,7 @@ namespace Havtorn
 	struct SSkeletalMeshThumbnailPassData
 	{
 		SRenderResource* ObjectBuffer = nullptr;
-		SRenderResource* FrameBuffer = nullptr;
+		SRenderResource* ViewDataBuffer = nullptr;
 		SRenderResource* VertexBuffer = nullptr;
 		SRenderResource* IndexBuffer = nullptr;
 		SRenderResource* BoneBuffer = nullptr;
