@@ -126,6 +126,8 @@ namespace Havtorn
 
 	struct SDirectionalLightDrawData
 	{
+		// Associated by mesh ID rather than drawID, for more effective instancing
+		std::unordered_map<U32, SStaticShadowCasterData> ShadowCasterData;
 		SDirectionalLightBufferData LightBufferData;
 		SShadowmapBufferData ShadowmapBufferData;
 		SVolumetricLightBufferData VolumetricBufferData;
@@ -136,6 +138,10 @@ namespace Havtorn
 
 	struct SPointLightDrawData
 	{
+		// TODO.NW: Right now these are associated by light instance, maybe it would be more beneficial
+		// to associate by shadowmap view? Potentially a higher cost to check meshes against all sides of the 
+		// point light cubes individually though.
+		std::unordered_map<U32, SStaticShadowCasterData> ShadowCasterData;
 		SPointLightBufferData LightBufferData;
 		std::array<SShadowmapBufferData, 6> ShadowmapBufferData;
 		SVolumetricLightBufferData VolumetricBufferData;
@@ -145,6 +151,7 @@ namespace Havtorn
 
 	struct SSpotlightDrawData
 	{
+		std::unordered_map<U32, SStaticShadowCasterData> ShadowCasterData;
 		SPointLightBufferData PointLightBufferData;
 		SSpotLightBufferData SpotlightBufferData;
 		SShadowmapBufferData ShadowmapBufferData;
@@ -185,14 +192,6 @@ namespace Havtorn
 		std::vector<SDirectionalLightDrawData> DirectionalLightDrawData;
 		std::vector<SPointLightDrawData> PointLightDrawData;
 		std::vector<SSpotlightDrawData> SpotlightDrawData;
-
-		// Associates index into light draw data with its shadow casters
-		// TODO.NW: Right now these are associated by light instance, maybe it would be more beneficial
-		// to associate by shadowmap view? Potentially a higher cost to check meshes against all sides of the 
-		// point light cubes individually though.
-		std::unordered_map<U16, std::vector<SStaticShadowCasterData>> DirectionalLightShadowCasterData;
-		std::unordered_map<U16, std::vector<SStaticShadowCasterData>> PointLightShadowCasterData;
-		std::unordered_map<U16, std::vector<SStaticShadowCasterData>> SpotlightShadowCasterData;
 
 		std::vector<SDebugObjectDrawData> DebugObjectsDepth3D;
 		std::vector<SDebugObjectDrawData> DebugObjectsNoDepth3D;
@@ -244,6 +243,8 @@ namespace Havtorn
 		bool IsMeshShadowCastingForType(const U32 meshID, const ERenderCommandType commandType, const U64 renderViewID) const;
 		void AddMeshShadowCastingForType(const U32 meshID, const ERenderCommandType commandType, const U64 renderViewID);
 
+		ENGINE_API SRenderView* GetRenderView(const U64 id);
+
 		// TODO.NW: Might want to generalize these render view resources somehow still
 		ENGINE_API bool IsStaticMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewID);
 		ENGINE_API void AddStaticMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* component, const U64 renderViewID);
@@ -273,6 +274,7 @@ namespace Havtorn
 
 		ENGINE_API void AddRenderGraphPass(CHavtornStaticString<RenderDebugNameMaxSize> name, const std::function<SRenderPassResourceDeclaration()> setup, std::function<void(CRenderManager*)>&& execution);
 		ENGINE_API CRenderGraph& GetRenderGraph();
+		ENGINE_API CRenderResourceRegistry& GetRenderResourceRegistry();
 
 		void SwapRenderViews();
 		void ClearRenderViewInstanceData();
@@ -283,6 +285,7 @@ namespace Havtorn
 
 		const SVector2<U16>& GetCurrentWindowResolution() const;
 		const SVector2<F32>& GetShadowAtlasResolution() const;
+		F32 GetShadowTestTolerance() const;
 		ENGINE_API U32 GetNumberOfRenderViews() const;
 
 		ENGINE_API void SetRenderPass(const ERenderPass renderPass);
@@ -434,6 +437,7 @@ namespace Havtorn
 		SVector4 ClearColor = SVector4(0.5f, 0.5f, 0.5f, 1.0f);
 
 		CRenderGraph RenderGraph;
+		CRenderResourceRegistry ResourceRegistry;
 
 		std::map<ERenderCommandType, std::function<void(const SRenderCommand& command)>> RenderFunctions;
 		ERenderPass CurrentRunningRenderPass = ERenderPass::All;
@@ -450,8 +454,10 @@ namespace Havtorn
 		CDataBuffer InstancedUVRectBuffer;
 		CDataBuffer InstancedColorBuffer;
 
-		SVector2<F32> ShadowAtlasResolution = SVector2<F32>::Zero;
 		SVector2<U16> CurrentWindowResolution = SVector2<U16>::Zero;
+		
+		SVector2<F32> ShadowAtlasResolution = SVector2<F32>::Zero;
+		F32 ShadowTestTolerance = 0.001f;
 
 		// NW: Keep our own properties here for use on render thread
 		SEntity WorldMainCameraEntity = SEntity::Null;

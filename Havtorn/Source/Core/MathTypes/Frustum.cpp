@@ -1,6 +1,7 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
 #include "Frustum.h"
+#include "MathUtilities.h"
 
 namespace Havtorn
 {
@@ -100,5 +101,103 @@ namespace Havtorn
 			return false;
 
 		return true;
+	}
+
+	bool SFrustum::Intersects(const SFrustum& frustum) const
+	{
+		// Using basic Separating Axes Theorem for frustum-frustum intersection, can
+		// be used for any convex polygons
+		// https://en.wikipedia.org/wiki/Hyperplane_separation_theorem#Use_in_collision_detection
+		// https://www.geometrictools.com/Documentation/IntersectionBox3Frustum3.pdf
+		
+		// TODO.NW: We'd probably want to calculate these on construction if they are used often.
+		// See if it's worth the increased memory footprint
+		const SFrustumConstituents constituents = GetConstituents();
+		const SFrustumConstituents otherConstituents = frustum.GetConstituents();
+
+		std::vector<SVector> axes = constituents.PlaneNormals;
+		axes.append_range(otherConstituents.PlaneNormals);
+
+		// If we don't check edges, we miss cases where all vertices of both 
+		// objects are outside of each other, but where edges intersect
+		for (const SVector& edgeA : constituents.Edges) 
+		{
+			for (const SVector& edgeB : otherConstituents.Edges) 
+			{
+				const SVector cross = edgeA.Cross(edgeB);
+				if (cross.LengthSquared() > PRETTY_SMALL_NUMBER) 
+					axes.push_back(cross.GetNormalized());
+			}
+		}
+
+		for (const SVector& axis : axes) 
+		{
+			const SVector2<F32> boundsA = UMathUtilities::FindProjectionBoundsOnAxis(constituents.Vertices, axis);
+			const SVector2<F32> boundsB = UMathUtilities::FindProjectionBoundsOnAxis(otherConstituents.Vertices, axis);
+
+			// Check for lack of projection overlap (separation)
+			if (boundsA.Y < (boundsB.X - SMALL_NUMBER) || boundsB.Y < (boundsA.X - SMALL_NUMBER)) 
+				return false;
+		}
+
+		// No separating axis found - meaning no disjointed projections found - objects intersect
+		return true;
+
+		// TODO.NW: Have a look at this somewhat different better performing version
+		//https://mugen87.github.io/yuka/docs/math_SAT.js.html
+		//// For each face normal: find the single support vertex of B in the
+		//// opposite direction, then test distance to A's face plane. O(1) per axis.
+		//bool checkFace(const Vector3& faceNormal, const Convex& A, const Convex& B,
+		//               const Plane& facePlane) {
+		//    // Find support vertex of B in direction -faceNormal
+		//    Vector3 opp = faceNormal * -1.0f;
+		//    float best = -FLT_MAX;
+		//    Vector3 support;
+		//    for (int i = 0; i < B.numVertices; i++) {
+		//        float d = B.vertices[i].dot(opp);
+		//        if (d > best) { best = d; support = B.vertices[i]; }
+		//    }
+		//    // Distance from support vertex to A's face plane
+		//    return facePlane.distanceToPoint(support) > 0; // separated
+		//}
+		//
+		//// For edge-edge axes: use the Minkowski face test to prune
+		//// non-relevant edge pairs before computing the cross product.
+		//bool minkowskiFace(const Edge& eA, const Edge& eB) {
+		//    // Get the two face normals adjacent to each edge
+		//    // Compute triple products to determine if the edge pair
+		//    // contributes a face on the Minkowski difference
+		//    float cba = eB.faceNormalA.dot(eA.dir);
+		//    float dba = eB.faceNormalB.dot(eA.dir);
+		//    float adc = eA.faceNormalA.dot(eB.dir);
+		//    float bdc = eA.faceNormalB.dot(eB.dir);
+		//    return (cba * dba < 0) && (adc * bdc < 0) && (cba * bdc > 0);
+		//}
+	}
+
+	SFrustumConstituents SFrustum::GetConstituents() const
+	{
+		const SVector v0 = UMathUtilities::IntersectPlanes(Near, Left, Bottom);
+		const SVector v1 = UMathUtilities::IntersectPlanes(Near, Left, Top);
+		const SVector v2 = UMathUtilities::IntersectPlanes(Near, Right, Top);
+		const SVector v3 = UMathUtilities::IntersectPlanes(Near, Right, Bottom);
+		const SVector v4 = UMathUtilities::IntersectPlanes(Far, Left, Bottom);
+		const SVector v5 = UMathUtilities::IntersectPlanes(Far, Left, Top);
+		const SVector v6 = UMathUtilities::IntersectPlanes(Far, Right, Top);
+		const SVector v7 = UMathUtilities::IntersectPlanes(Far, Right, Bottom);
+
+		const SVector nearBottomTop = v1 - v0;
+		const SVector nearLeftRight = v3 - v0;
+		const SVector nearLeftFar = v4 - v0;
+		const SVector farTopBottom = v7 - v6;
+		const SVector farRightLeft = v5 - v6;
+		const SVector farRightNear = v2 - v6;
+
+		return 
+		{ 
+			.PlaneNormals = { Near.Normal, Top.Normal, Bottom.Normal, Left.Normal, Right.Normal },
+			.Vertices = { v0, v1, v2, v3, v4, v5, v6, v7 },
+			.Edges = { nearBottomTop, nearLeftRight, nearLeftFar, farTopBottom, farRightLeft, farRightNear }
+		};
 	}
 }

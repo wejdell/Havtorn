@@ -2,6 +2,7 @@
 
 #pragma once
 #include "Ray.h"
+#include "Frustum.h"
 
 namespace Havtorn
 {
@@ -58,6 +59,29 @@ namespace Havtorn
 
 			return UMath::Max(xDistance, UMath::Max(yDistance, zDistance));
 		};
+
+		static SVector IntersectPlanes(const SFrustumPlane& p0, const SFrustumPlane& p1, const SFrustumPlane& p2) 
+		{
+			const SVector bxc = p1.Normal.Cross(p2.Normal);
+			const SVector cxa = p2.Normal.Cross(p0.Normal);
+			const SVector axb = p0.Normal.Cross(p1.Normal);
+			const SVector r = -p0.D * bxc - p1.D * cxa - p2.D * axb;
+			return r * (1.0f / p0.Normal.Dot(bxc));
+		}
+
+		static SVector2<F32> FindProjectionBoundsOnAxis(const std::vector<SVector>& vertices, const SVector& axis)
+		{
+			SVector2<F32> bounds = SVector2<F32>::Zero;
+			for (const SVector& vertex : vertices)
+			{
+				const F32 d = axis.Dot(vertices[0]);
+				if (d < bounds.X)
+					bounds.X = d;
+				else if (d > bounds.Y)
+					bounds.Y = d;
+			}
+			return bounds;
+		}
 
 		static std::vector<U64> TopologicalSortKahn(const std::vector<SVector2<U64>>& edges, const U64 numNodes)
 		{

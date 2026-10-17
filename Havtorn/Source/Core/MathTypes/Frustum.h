@@ -12,7 +12,7 @@ namespace Havtorn
 		SFrustumPlane(const SVector& pointOnPlane, const SVector& planeNormal);
 		SFrustumPlane(const SVector& point0, const SVector& point1, const SVector& point2);
 		SFrustumPlane(const SVector4& point0, const SVector4& point1, const SVector4& point2);
-
+		
 		// Calculates the perpendicular distance from the plane. 0 for points on the plane, positive for points outside the plane, negative for points inside the plane.
 		F32 GetDistanceFromPlane(const SVector& point) const;
 		
@@ -22,11 +22,22 @@ namespace Havtorn
 		F32 D = 0.0f;
 	};
 
+	struct SFrustumConstituents
+	{
+		// Note that only unique normals are added to this (Near and Far have parallell normals, only negated)
+		std::vector<SVector> PlaneNormals;
+		std::vector<SVector> Vertices;
+		// Note that the edges only contain unique directions, so 6 edges
+		std::vector<SVector> Edges;
+	};
+
 	struct CORE_API SFrustum
 	{
 		SFrustum() = delete;
 		SFrustum(const SMatrix& viewMatrix, const SMatrix& projectionMatrix);
 		bool Intersects(const SSphere& sphere) const;
+		bool Intersects(const SFrustum& frustum) const;
+		SFrustumConstituents GetConstituents() const;
 
 		SFrustumPlane Near;
 		SFrustumPlane Far;

@@ -13,7 +13,9 @@ namespace Havtorn
 		SEngineGraphicsMaterial() = default;
 		ENGINE_API SEngineGraphicsMaterial(const SOfflineGraphicsMaterial& offlineMaterial, const std::string& materialName);
 
+		// Returns map associating texture asset uid to texture, in the order it finds them (no index association), a unique set
 		ENGINE_API std::map<U32, CStaticRenderTexture> GetRenderTextures(const U64 requesterID) const;
+		// Returns map associating texture asset uid to texture, in the order it finds them (no index association), a unique set
 		ENGINE_API std::map<U32, CStaticRenderTexture*> GetRenderTexturePointers(const U64 requesterID);
 
 		SRuntimeGraphicsMaterialProperty AlbedoR = {};

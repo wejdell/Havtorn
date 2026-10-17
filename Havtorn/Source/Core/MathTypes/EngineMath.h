@@ -17,6 +17,7 @@ namespace Random
 namespace Havtorn
 {
 #define SMALL_NUMBER 1.e-8f
+#define PRETTY_SMALL_NUMBER 1.e-6f
 #define KINDA_SMALL_NUMBER 1.e-4f
 #define DEGREES_TO_RADIANS 0.01745329251f // Pi * (1 / 180)
 #define RADIANS_TO_DEGREES 57.2957795131f // 180 * (1 / Pi)

@@ -19,6 +19,7 @@ namespace Havtorn
         ~CRenderViewport() = default;
     
         PLATFORM_API void SetViewport() const;
+        PLATFORM_API SVector2<F32> GetResolution() const;
 
         F32 TopLeftX = 0.0f;
         F32 TopLeftY = 0.0f;

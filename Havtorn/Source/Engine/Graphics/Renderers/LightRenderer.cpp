@@ -247,6 +247,7 @@ namespace Havtorn
 		RenderStateManager->IASetVertexBuffer(0, RenderStateManager->VertexBuffers[STATIC_U8(EVertexBufferPrimitives::SkyboxCube)]);
 		RenderStateManager->IASetIndexBuffer(RenderStateManager->IndexBuffers[STATIC_U8(EDefaultIndexBuffers::SkyboxCube)]);
 
+		// TODO.NW: Can we remove this clear? The Skybox shaders shouldn't read from it anyway
 		RenderStateManager->PSSetResources(21, 1, nullptr);
 		RenderStateManager->PSSetResources(0, { passData.CubemapTexture });
 

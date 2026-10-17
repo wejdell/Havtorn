@@ -455,7 +455,7 @@ namespace Havtorn
 		//Add widgets from editor render system
 
 		const CRenderSystem* renderSystem = GEngine::GetWorld()->GetSystem<CRenderSystem>();
-		renderSystem->PushCommandsForScene(scene, PrefabToolRenderID, SEntity::Null, true, false);
+		renderSystem->ProcessRenderView(scene, PrefabToolRenderID, SEntity::Null, true, false);
 		
 		// NW: Custom directional light command
 		{
@@ -485,6 +485,6 @@ namespace Havtorn
 		renderSystem->PushUniqueCommands(PrefabToolRenderID);
 
 		CEditorRenderSystem* editorRenderSystem = GEngine::GetWorld()->GetSystem<CEditorRenderSystem>();
-		editorRenderSystem->PushCommandsForScene(scene, PrefabToolRenderID, PreviewCameraViewMatrix);
+		editorRenderSystem->ProcessRenderView(scene, PrefabToolRenderID, PreviewCameraViewMatrix);
 	}
 }

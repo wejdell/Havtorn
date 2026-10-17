@@ -28,4 +28,9 @@ namespace Havtorn
 		viewport.MaxDepth = MaxDepth;
 		Context->RSSetViewports(1, &viewport);
 	}
+
+	SVector2<F32> CRenderViewport::GetResolution() const
+	{
+		return SVector2<F32>(Width, Height);
+	}
 }

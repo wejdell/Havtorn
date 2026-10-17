@@ -380,6 +380,14 @@ namespace Havtorn
 			category->MeshIDs.push_back(meshID);
 	}
 
+	SRenderView* CRenderManager::GetRenderView(const U64 id)
+	{
+		if (GameThreadRenderViews->contains(id))
+			return &GameThreadRenderViews->at(id);
+
+		return nullptr;
+	}
+
 	bool Havtorn::CRenderManager::IsStaticMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewID)
 	{
 		// TODO.NW: Maybe move this to RenderView class
@@ -621,6 +629,11 @@ namespace Havtorn
 		return RenderGraph;
 	}
 
+	CRenderResourceRegistry& CRenderManager::GetRenderResourceRegistry()
+	{
+		return ResourceRegistry;
+	}
+
 	void CRenderManager::SwapRenderViews()
 	{
 		std::vector<U64> idsToErase = {};
@@ -713,6 +726,11 @@ namespace Havtorn
 	const SVector2<F32>& CRenderManager::GetShadowAtlasResolution() const
 	{
 		return ShadowAtlasResolution;
+	}
+
+	F32 CRenderManager::GetShadowTestTolerance() const
+	{
+		return ShadowTestTolerance;
 	}
 
 	U32 CRenderManager::GetNumberOfRenderViews() const

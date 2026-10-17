@@ -19,7 +19,7 @@ namespace Havtorn
 
 		void Update(std::vector<Ptr<CScene>>& scenes) override;
 
-		EDITOR_API void PushCommandsForScene(CScene* scene, const U64& renderViewID, const SMatrix& cameraMatrix);
+		EDITOR_API void ProcessRenderView(CScene* scene, const U64& renderViewID, const SMatrix& cameraMatrix);
 
 		void AddEditorWidgetPass(STextureAsset* textureAsset, const std::vector<SMatrix>& transforms, const std::vector<SVector4>& uvRects, const std::vector<SVector4>& colors, const std::vector<SEntity>& entities);
 

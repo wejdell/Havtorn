@@ -50,11 +50,11 @@ namespace Havtorn
 		const SMatrix cameraMatrix = mainCameraData.TransformComponent->Transform.GetMatrix();
 		for (Ptr<CScene>& scene : scenes)
 		{
-			PushCommandsForScene(scene.get(), mainCamera.GUID, cameraMatrix);
+			ProcessRenderView(scene.get(), mainCamera.GUID, cameraMatrix);
 		}
 	}
 
-	void CEditorRenderSystem::PushCommandsForScene(CScene* scene, const U64& renderViewID, const SMatrix& cameraMatrix)
+	void CEditorRenderSystem::ProcessRenderView(CScene* scene, const U64& renderViewID, const SMatrix& cameraMatrix)
 	{
 		if (!scene->OnEntityPreDestroy.IsBoundTo(Handle))
 		{

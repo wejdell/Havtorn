@@ -137,7 +137,7 @@ namespace Havtorn
 		
 		// TODO.NW: Probably want to centralize render resource registry instead of it being owned by each render graph, so 
 		// resources can be shared across views
-		CRenderResourceRegistry ResourceRegistry; // TODO.NW: Should move this if we have one graph per render view
+		CRenderResourceRegistry* ResourceRegistry = nullptr; // TODO.NW: Should move this if we have one graph per render view
 		//CRenderManager* RenderManager = nullptr;
 	};
 }

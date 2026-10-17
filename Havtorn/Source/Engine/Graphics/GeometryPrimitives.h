@@ -54,6 +54,24 @@ namespace Havtorn
 			21,23,22
 		};
 
+		// TODO.NW: Use these instead of generating the quads in geometry shaders, as those
+		// are very slow. 
+		// TODO.NW: Remove W from all vertex buffers, as they are safely assumed to be 1
+		static std::vector<SPositionVertex> SpriteQuad =
+		{
+			// X      Y      Z      W 
+			{ -0.5,  -0.5,	 0.0,   1.0 },// 0
+			{  0.5,  -0.5,	 0.0,   1.0 },// 1
+			{ -0.5,   0.5,	 0.0,   1.0 },// 2
+			{  0.5,   0.5,	 0.0,   1.0 },// 3
+		};
+
+		static std::vector<U32> SpriteQuadIndices =
+		{
+			0,2,1,
+			2,3,1
+		};
+
 		static std::vector<SPositionVertex> PointLightCube = 
 		{
 			// X      Y      Z      W 
