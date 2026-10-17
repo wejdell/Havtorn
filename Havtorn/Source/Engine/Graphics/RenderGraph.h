@@ -100,17 +100,6 @@ namespace Havtorn
 	}
 
 	template<RenderPassParamType TParamStruct>
-	inline void CRenderGraph::AddPass(const std::string_view debugName, const std::function<TParamStruct(CRenderResourceRegistry&)> setup, std::function<void(const TParamStruct&, CRenderResourceRegistry&, CRenderManager*, SRenderView&)>&& execution)
-	{
-		const U64 passParamHash = typeid(TParamStruct).hash_code();
-		if (!PassParamHashToPassIndex.contains(passParamHash))
-			PassParamHashToPassIndex.emplace(passParamHash);
-
-		PassParamHashToPassIndex.at(passParamHash).push_back(RenderPasses.size());
-		RenderPasses.emplace_back(std::make_shared(CRenderPass<TParamStruct>(debugName, setup(ResourceRegistry), std::move(execution))));
-	}
-
-	template<RenderPassParamType TParamStruct>
 	inline void SRenderPassParams::AddDependency()
 	{
 		Dependencies.push_back(typeid(TParamStruct).hash_code());
@@ -135,9 +124,17 @@ namespace Havtorn
 		std::vector<Ref<IRenderPass>> RenderPasses;
 		std::vector<Ref<IRenderPass>> SortedPasses;
 		
-		// TODO.NW: Probably want to centralize render resource registry instead of it being owned by each render graph, so 
-		// resources can be shared across views
-		CRenderResourceRegistry* ResourceRegistry = nullptr; // TODO.NW: Should move this if we have one graph per render view
-		//CRenderManager* RenderManager = nullptr;
+		CRenderResourceRegistry& ResourceRegistry;
 	};
+
+	template<RenderPassParamType TParamStruct>
+	inline void CRenderGraph::AddPass(const std::string_view debugName, const std::function<TParamStruct(CRenderResourceRegistry&)> setup, std::function<void(const TParamStruct&, CRenderResourceRegistry&, CRenderManager*, SRenderView&)>&& execution)
+	{
+		const U64 passParamHash = typeid(TParamStruct).hash_code();
+		if (!PassParamHashToPassIndex.contains(passParamHash))
+			PassParamHashToPassIndex.emplace(passParamHash);
+
+		PassParamHashToPassIndex.at(passParamHash).push_back(RenderPasses.size());
+		RenderPasses.emplace_back(std::make_shared(CRenderPass<TParamStruct>(debugName, setup(ResourceRegistry), std::move(execution))));
+	}
 }

@@ -21,6 +21,13 @@ namespace Havtorn
 	struct SFrustum;
 	struct SRenderView;
 
+	// TODO.NW: Find the right place for the pass data. Common shared file representing default game render passes or something?
+	struct STonemappingPassData : public SRenderPassParams
+	{
+		SRenderResourceHandle RenderTargetTextureHandle;
+		SRenderResourceHandle TonemappingTargetHandle;
+	};
+
 	struct SViewData
 	{
 		SMatrix ViewMatrix = SMatrix::Identity;

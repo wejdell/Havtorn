@@ -10,7 +10,7 @@
 namespace Havtorn
 {
 	CRenderGraph::CRenderGraph(CRenderManager* manager)
-		: RenderManager(manager)
+		: ResourceRegistry(manager->GetRenderResourceRegistry())
 	{}
 
 	void TraverseDependencies(const Ref<IRenderPass>& pass, const std::vector<Ref<IRenderPass>>& sortedPasses, const std::unordered_map<U64, U64>& sortedDependencies)
