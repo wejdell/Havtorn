@@ -59,26 +59,18 @@ namespace Havtorn
 			}
 		}
 
-		// TODO.NW: Would be cool to explore a render graph solution for this, now that it is more clear what need to happen for every rendered frame
 		for (const SCameraData& cameraData : activeCameras)
 		{
-			SEntity& cameraEntity = cameraData.CameraComponent->Owner;				
-
-			{
-				SRenderCommand command;
-				command.Type = ERenderCommandType::CameraDataStorage;
-				command.Matrices.push_back(cameraData.TransformComponent->Transform.GetMatrix());
-				command.Matrices.push_back(cameraData.CameraComponent->ProjectionMatrix);
-				RenderManager->PushRenderCommand(command, cameraEntity.GUID);
-			}
+			SEntity& cameraEntity = cameraData.CameraComponent->Owner;	
+			SRenderView* renderView = RenderManager->GetRenderView(cameraEntity.GUID);
 
 			for (Ptr<CScene>& scene : scenes)
 			{
-				// TODO.NW: Skip editor data if Game view mode is active as well
-				ProcessRenderView(scene.get(), cameraEntity.GUID, cameraEntity, !isInPlayingPlayState && cameraEntity == World->GetMainCamera(), true);
+				ProcessRenderView(renderView, scene.get(), { cameraData.TransformComponent->Transform.GetMatrix(), cameraData.CameraComponent->ProjectionMatrix }, true);
 			}
 
-			PushUniqueCommands(cameraEntity.GUID);
+			// TODO.NW: Skip editor data if Game view mode is active as well
+			AddDefaultPasses(renderView, !isInPlayingPlayState && cameraEntity == World->GetMainCamera());
 		}
 	}
 
@@ -198,26 +190,16 @@ namespace Havtorn
 		};
 	}
 
-	void CRenderSystem::ProcessRenderView(CScene* scene, const U64& renderViewID, const SEntity& cameraEntity, const bool runEditorDataPasses, const bool doCulling) const
+	void CRenderSystem::ProcessRenderView(SRenderView* renderView, CScene* scene, const SViewData& viewData, const bool doCulling) const
 	{
-		SRenderView* renderView = RenderManager->GetRenderView(renderViewID);
-		if (renderView == nullptr)
-			return;
-
-		// TODO.NW: Consider sending in CameraData instead of entity?
-		const STransformComponent* cameraTransform = scene->GetComponent<STransformComponent>(cameraEntity);
-		if (!SComponent::IsValid(cameraTransform))
-			return;
-
-		const SCameraComponent* cameraComponent = scene->GetComponent<SCameraComponent>(cameraEntity);
-		if (!SComponent::IsValid(cameraComponent))
+		if (renderView == nullptr || scene == nullptr)
 			return;
 
 		const CRenderStateManager& stateManager = RenderManager->GetRenderStateManager();
 		const SVector2<F32> shadowAtlasResolution = RenderManager->GetShadowAtlasResolution();
 		const F32 shadowTestTolerance = RenderManager->GetShadowTestTolerance();
 
-		const SFrustum cameraFrustum = doCulling ? SFrustum(cameraTransform->Transform.GetMatrix(), cameraComponent->ProjectionMatrix) : SFrustum(SMatrix::Identity, SMatrix::Identity);
+		const SFrustum cameraFrustum = doCulling ? SFrustum(viewData.ViewMatrix, viewData.ProjectionMatrix) : SFrustum(SMatrix::Identity, SMatrix::Identity);
 		const SSceneLightCollection lights = GatherActiveLights(scene, doCulling, cameraFrustum); 
 		const SEntity& editorRenderExemptEntity = GEngine::GetWorld()->GetEditorRenderExemptEntity();
 
@@ -263,7 +245,7 @@ namespace Havtorn
 
 		// TODO.NW: Do we need to find just one closest environmentlight from all of the scenes?
 		{
-			const SEntity& closestEnvironmentLightEntity = UComponentAlgo::GetClosestEntity3D(cameraEntity, scene->GetComponents<SEnvironmentLightComponent>(), scene);
+			const SEntity& closestEnvironmentLightEntity = UComponentAlgo::GetClosestEntity3D(viewData.ViewMatrix, scene->GetComponents<SEnvironmentLightComponent>(), scene);
 			if (closestEnvironmentLightEntity.IsValid())
 			{
 				const SEnvironmentLightComponent* environmentLightComp = scene->GetComponent<SEnvironmentLightComponent>(closestEnvironmentLightEntity);
@@ -795,7 +777,7 @@ namespace Havtorn
 		return std::tuple(textureHandles, bufferData);
 	}
 
-	void CRenderSystem::AddPasses(SRenderView* renderView, const bool runEditorDataPasses)
+	void CRenderSystem::AddDefaultPasses(SRenderView* renderView, const bool runEditorDataPasses)
 	{
 		// TODO.NW: Put passes for thumbnail rendering in Editor project?
 
@@ -1943,49 +1925,5 @@ namespace Havtorn
 				//renderManager->FullscreenRenderer.Render(rendererData);
 			}
 		);
-	}
-
-	bool CRenderSystem::IsCulled(CScene* scene, const SSphere& boundingSphere, const SFrustum& cameraFrustum, const SSceneLightCollection& sceneLights) const
-	{
-		if (cameraFrustum.Intersects(boundingSphere))
-			return false;
-
-		// TODO.NW: Lights themselves should be culled in a pass before this, based on camera location and their own bounding geometry,
-		// then the culled set should be used in this function
-
-		for (const SDirectionalLightComponent* directionalLightComp : scene->GetComponents<SDirectionalLightComponent>())
-		{
-			if (!SComponent::IsValid(directionalLightComp) || !directionalLightComp->IsActive)
-				continue;
-
-			const SFrustum lightFrustum = SFrustum(directionalLightComp->ShadowmapView.ShadowViewMatrix, directionalLightComp->ShadowmapView.ShadowProjectionMatrix);
-			if (lightFrustum.Intersects(boundingSphere))
-				return false;
-		}
-
-		for (const SPointLightComponent* pointLightComp : scene->GetComponents<SPointLightComponent>())
-		{
-			if (!SComponent::IsValid(pointLightComp) || !pointLightComp->IsActive)
-				continue;
-
-			const STransformComponent* pointLightTransform = scene->GetComponent<STransformComponent>(pointLightComp);
-			if (!SComponent::IsValid(pointLightTransform))
-				continue;
-
-			if (SSphere(pointLightTransform->Transform.GetMatrix().GetTranslation(), pointLightComp->Range).Intersects(boundingSphere))
-				return false;
-		}
-
-		for (const SSpotLightComponent* spotLightComp : scene->GetComponents<SSpotLightComponent>())
-		{
-			if (!SComponent::IsValid(spotLightComp) || !spotLightComp->IsActive)
-				continue;
-
-			const SFrustum lightFrustum = SFrustum(spotLightComp->ShadowmapView.ShadowViewMatrix, spotLightComp->ShadowmapView.ShadowProjectionMatrix);
-			if (lightFrustum.Intersects(boundingSphere))
-				return false;
-		}
-
-		return true;
 	}
 }

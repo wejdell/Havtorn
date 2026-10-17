@@ -19,6 +19,13 @@ namespace Havtorn
 	struct SEntity;
 	struct SComponent;
 	struct SFrustum;
+	struct SRenderView;
+
+	struct SViewData
+	{
+		SMatrix ViewMatrix = SMatrix::Identity;
+		SMatrix ProjectionMatrix = SMatrix::Identity;
+	};
 
 	// Remainder after culling
 	struct SSceneLightCollection
@@ -45,8 +52,7 @@ namespace Havtorn
 		void Update(std::vector<Ptr<CScene>>& scenes) override;
 		
 		SSceneLightCollection GatherActiveLights(CScene* scene, const bool doCulling, const SFrustum& viewFrustum) const;
-		// Camera Entity may be null
-		ENGINE_API void ProcessRenderView(CScene* scene, const U64& renderViewID, const SEntity& cameraEntity, const bool runEditorDataPasses, const bool doCulling) const;
+		ENGINE_API void ProcessRenderView(SRenderView* renderView, CScene* scene, const SViewData& viewData, const bool doCulling) const;
 
 		void ProcessDirectionalLight(SRenderView* renderView, CScene* scene, const SDirectionalLightComponent* lightComponent, const SVector2<F32>& shadowAtlasResolution, const F32 shadowTestTolerance) const;
 		void ProcessPointLight(SRenderView* renderView, CScene* scene, const SPointLightComponent* lightComponent, const SVector2<F32>& shadowAtlasResolution, const F32 shadowTestTolerance) const;
@@ -61,12 +67,9 @@ namespace Havtorn
 		SShadowmapProcessingResult ProcessShadowmapBufferData(const std::vector<SShadowmapViewData>& viewData, const SVector2<F32>& shadowAtlasResolution, const F32 shadowTestTolerance) const;
 		SMaterialProcessingResult ProcessMaterialData(SRenderView* renderView, const SEngineGraphicsMaterial& material, const U64 assetRequester) const;
 
-		// TODO.NW: Light Culling
 		// TODO.NW: Technically missing non-ui screen space sprite here, before tonemapping. Haven't really used that but supported it before the rework
-		void AddPasses(SRenderView* renderView, const bool runEditorDataPasses);
+		void AddDefaultPasses(SRenderView* renderView, const bool runEditorDataPasses);
 		
-		bool IsCulled(CScene* scene, const SSphere& boundingSphere, const SFrustum& cameraFrustum, const SSceneLightCollection& sceneLights) const;
-
 	private:
 		CRenderManager* RenderManager = nullptr;
 		CRenderStateManager* StateManager = nullptr;

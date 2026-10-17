@@ -21,6 +21,9 @@ namespace Havtorn
 		template<typename T>
 		static SEntity GetClosestEntity3D(const SEntity& toEntity, const std::vector<T*>& fromComponents, const CScene* inScene);
 
+		template<typename T>
+		static SEntity GetClosestEntity3D(const SMatrix& toViewMatrix, const std::vector<T*>& fromComponents, const CScene* inScene);
+
 		static SCameraData GetCameraData(const SEntity& cameraEntity, const std::vector<Ptr<CScene>>& scenes);
 
 		static CScene* GetContainingScene(const SEntity& entity, const std::vector<Ptr<CScene>>& scenes);
@@ -37,15 +40,22 @@ namespace Havtorn
 		if (!SComponent::IsValid(transformComponent))
 			return SEntity::Null;
 
+		return UComponentAlgo::GetClosestEntity3D(transformComponent->Transform.GetMatrix(), fromComponents, inScene);
+	}
+
+	template<typename T>
+	inline SEntity UComponentAlgo::GetClosestEntity3D(const SMatrix& toViewMatrix, const std::vector<T*>& fromComponents, const CScene* inScene)
+	{
 		F32 minDistanceSquared = UMath::MaxFloat;
 		SEntity closestEntity = SEntity::Null;
+		const SVector viewMatrixTranslation = toViewMatrix.GetTranslation();
 		for (const T* component : fromComponents)
 		{
 			const STransformComponent* otherTransformComponent = inScene->GetComponent<STransformComponent>(component);
 			if (!SComponent::IsValid(otherTransformComponent))
 				continue;
 
-			const F32 distanceSquared = transformComponent->Transform.GetMatrix().GetTranslation().DistanceSquared(otherTransformComponent->Transform.GetMatrix().GetTranslation());
+			const F32 distanceSquared = viewMatrixTranslation.DistanceSquared(otherTransformComponent->Transform.GetMatrix().GetTranslation());
 			if (distanceSquared < minDistanceSquared)
 			{
 				minDistanceSquared = distanceSquared;
