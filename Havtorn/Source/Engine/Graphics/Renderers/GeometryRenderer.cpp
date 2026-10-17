@@ -182,7 +182,7 @@ namespace Havtorn
 	{
 		RenderStateManager->TrySetPipelineStateObject(DecalGBufferPassPSOIndex);
 
-		RenderStateManager->IASetVertexBuffers(0, std::vector<CDataBuffer*>{ &RenderStateManager->VertexBuffers[STATIC_U8(EDefaultIndexBuffers::DecalProjector)], passData.TransformBuffer->DataBuffer });
+		RenderStateManager->IASetVertexBuffers(0, std::vector<CDataBuffer*>{ &RenderStateManager->VertexBuffers[STATIC_U8(EVertexBufferPrimitives::DecalProjector)], passData.TransformBuffer->DataBuffer });
 		RenderStateManager->IASetIndexBuffer(RenderStateManager->IndexBuffers[STATIC_U8(EDefaultIndexBuffers::DecalProjector)]);
 		
 		RenderStateManager->PSSetConstantBuffer(8, *passData.MaterialBuffer->DataBuffer);

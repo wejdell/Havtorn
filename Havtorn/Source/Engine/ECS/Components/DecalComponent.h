@@ -12,9 +12,9 @@ namespace Havtorn
 		SDecalComponent(const SEntity& entityOwner)
 			: SComponent(entityOwner)
 		{}
-		SDecalComponent(const SEntity& entityOwner, const std::vector<std::string>& assetPaths)
+		SDecalComponent(const SEntity& entityOwner, const std::string& assetPath)
 			: SComponent(entityOwner)
-			, AssetReferences(SAssetReference::MakeVectorFromPaths(assetPaths))
+			, AssetReference(assetPath)
 		{}
 
 		void Serialize(char* toData, U64& pointerPosition) const;
@@ -23,10 +23,6 @@ namespace Havtorn
 
 		ENGINE_API void IsDeleted(CScene* fromScene) override;
 
-		// TODO.NW: Figure out what to do about this. Unify with MaterialComp? have single material as property?
-		std::vector<SAssetReference> AssetReferences = { SAssetReference(), SAssetReference(), SAssetReference() };
-		bool ShouldRenderAlbedo = false;
-		bool ShouldRenderMaterial = false;
-		bool ShouldRenderNormal = false;
+		SAssetReference AssetReference;
 	};
 }
