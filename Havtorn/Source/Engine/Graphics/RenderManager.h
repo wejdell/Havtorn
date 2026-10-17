@@ -37,7 +37,7 @@ namespace Havtorn
 	struct SEnvironmentLightComponent;
 	struct SSpriteComponent;
 
-	enum class ERenderPass
+	enum class ERenderViewMode
 	{
 		All,
 		Game,
@@ -55,13 +55,6 @@ namespace Havtorn
 		WorldPosition,
 		Count
 	};
-
-	struct SRenderCommandComparer
-	{
-		bool operator()(const SRenderCommand& a, const SRenderCommand& b) const;
-	};
-
-	using CRenderCommandHeap = std::priority_queue<SRenderCommand, std::vector<SRenderCommand>, SRenderCommandComparer>;
 
 	struct SPrimitiveData
 	{
@@ -170,6 +163,9 @@ namespace Havtorn
 
 	struct SRenderView
 	{
+		SRenderView(CRenderManager* renderManager, CRenderStateManager* stateManager, CAssetRegistry* assetRegistry, CRenderResourceRegistry* renderResourceRegistry);
+
+		// TODO.NW: Do we wanna store these as references instead?
 		CRenderStateManager* StateManager = nullptr;
 		CAssetRegistry* AssetRegistry = nullptr;
 		CRenderResourceRegistry* RenderResourceRegistry = nullptr;
@@ -210,12 +206,6 @@ namespace Havtorn
 		void AddSkeletalMeshDrawData(const U32 renderViewID, const U32 meshAssetID, const std::vector<U32>& materialAssetIDs, const std::vector<SMatrix>& transforms, const std::vector<SEntity>& entities, const std::vector<SMatrix>& bones, const bool deferCommand = false);
 	};
 
-	struct SShadowCasterCategory
-	{
-		ERenderCommandType CommandType = ERenderCommandType::ShadowAtlasPrePassDirectional;
-		std::vector<U32> MeshIDs;
-	};
-
 	class CRenderManager
 	{
 		friend CAssetRegistry;
@@ -240,26 +230,7 @@ namespace Havtorn
 
 		U32 WriteToAnimationDataTexture(const std::string& animationName);
 
-		bool IsMeshShadowCastingForType(const U32 meshID, const ERenderCommandType commandType, const U64 renderViewID) const;
-		void AddMeshShadowCastingForType(const U32 meshID, const ERenderCommandType commandType, const U64 renderViewID);
-
 		ENGINE_API SRenderView* GetRenderView(const U64 id);
-
-		// TODO.NW: Might want to generalize these render view resources somehow still
-		ENGINE_API bool IsStaticMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewID);
-		ENGINE_API void AddStaticMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* component, const U64 renderViewID);
-
-		ENGINE_API bool IsSkeletalMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewID);
-		ENGINE_API void AddSkeletalMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* transformComponent, const SSkeletalAnimationComponent* animationComponent, const U64 renderViewID);
-
-		ENGINE_API bool IsSpriteInWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewID);
-		ENGINE_API void AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewID);
-		ENGINE_API void AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const U64& entityGUID, const SMatrix& entityMatrix, const SMatrix& cameraMatrix, const U64 renderViewID);
-		ENGINE_API void AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const STransformComponent* cameraTransform, const U64 renderViewID);
-
-		ENGINE_API bool IsSpriteInScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewID);
-		ENGINE_API void AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewID);
-		ENGINE_API void AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SUIElement& uiElement, const U64 renderViewID);
 
 		ENGINE_API SPostProcessingBufferData GetPostProcessingBufferData() const;
 		ENGINE_API void SetPostProcessingBufferData(const SPostProcessingBufferData& data);
@@ -270,10 +241,7 @@ namespace Havtorn
 		void SetWorldEditorRenderExemptEntity(const SEntity& entity);
 		void SetWorldPlayState(EWorldPlayState playState);
 		[[nodiscard]] ENGINE_API CRenderTexture* GetRenderTargetTexture(const U64 renderViewID) const;
-		ENGINE_API void PushRenderCommand(SRenderCommand command, const U64 renderViewID);
-
-		ENGINE_API void AddRenderGraphPass(CHavtornStaticString<RenderDebugNameMaxSize> name, const std::function<SRenderPassResourceDeclaration()> setup, std::function<void(CRenderManager*)>&& execution);
-		ENGINE_API CRenderGraph& GetRenderGraph();
+		
 		ENGINE_API CRenderResourceRegistry& GetRenderResourceRegistry();
 
 		void SwapRenderViews();
@@ -288,14 +256,8 @@ namespace Havtorn
 		F32 GetShadowTestTolerance() const;
 		ENGINE_API U32 GetNumberOfRenderViews() const;
 
-		ENGINE_API void SetRenderPass(const ERenderPass renderPass);
-		ENGINE_API ERenderPass GetRenderPass() const;
-
-		ENGINE_API void SetPSOFromRenderCommandType(const ERenderCommandType commandType);
-		ENGINE_API void SetPSOFromAssetType(const EAssetType assetType);
-		ENGINE_API void RenderFullscreenPass(const EPixelShaders pixelShader, const EBlendStates blendState);
-
-		void MapRuntimeMaterialProperty(SRuntimeGraphicsMaterialProperty& property, std::vector<ID3D11ShaderResourceView*>& runtimeArray, std::map<U32, F32>& runtimeMap, const std::map<U32, CStaticRenderTexture>& textureMap);
+		ENGINE_API void SetRenderViewMode(const ERenderViewMode renderPass);
+		ENGINE_API ERenderViewMode GetRenderViewMode() const;
 
 		CRenderStateManager& GetRenderStateManager();
 
@@ -319,68 +281,11 @@ namespace Havtorn
 
 		void InitDataBuffers();
 
-		void BindRenderFunctions();
-
 	private:
-		inline void CameraDataStorage(const SRenderCommand& command);
-		inline void DecalDepthCopy(const SRenderCommand& command);
-		inline void PreLightingPass(const SRenderCommand& command);
-		
-		inline void PostBaseLightingPass(const SRenderCommand& command);
-		inline void VolumetricBlur(const SRenderCommand& command);
-		inline void ForwardTransparency(const SRenderCommand& command);
-		
-		inline void RenderBloom(const SRenderCommand& command);
-		inline void Tonemapping(const SRenderCommand& command);
-		
-		inline void AntiAliasing(const SRenderCommand& command);
-		inline void GammaCorrection(const SRenderCommand& command);
-		inline void RendererDebug(const SRenderCommand& command);
-		inline void PreDebugShapes(const SRenderCommand& command);
-		inline void PostTonemappingUseDepth(const SRenderCommand& command);
-		inline void PostTonemappingIgnoreDepth(const SRenderCommand& command);
-		inline void TextureDraw(const SRenderCommand& command);
-
 		inline void DebugShadowAtlas();
 
-		void CheckIsolatedRenderPass(const U64 renderViewID);
-		void CycleRenderPass(const SInputActionPayload payload);
-
-	private:
-		SFrameBufferData FrameBufferData;
-		
-		struct SObjectBufferData
-		{
-			SMatrix ToWorldFromObject;
-		} ObjectBufferData;
-		HV_ASSERT_BUFFER(SObjectBufferData)
-
-		struct SDebugShapeObjectBufferData
-		{
-			SMatrix ToWorldFromObject;
-			SVector4 Color;
-			F32 HalfThickness = 0.5f;
-			F32 Padding[3] = {};
-		} DebugShapeObjectBufferData;
-		HV_ASSERT_BUFFER(SDebugShapeObjectBufferData)
-
-		struct SDecalBufferData
-		{
-			SMatrix ToWorld;
-			SMatrix ToObjectSpace;
-		} DecalBufferData;
-		HV_ASSERT_BUFFER(SDecalBufferData)
-
-		struct SSpriteBufferData
-		{
-			SVector4 Color;
-			SVector4 UVRect;
-			SVector2<F32> Position;
-			SVector2<F32> Size;
-			F32 Rotation;
-			SVector Padding;
-		} SpriteBufferData;
-		HV_ASSERT_BUFFER(SSpriteBufferData)
+		void CheckRenderViewMode(const U64 renderViewID);
+		void CycleRenderViewMode(const SInputActionPayload payload);
 
 	private:
 		CRHI* RHI = nullptr;
@@ -432,19 +337,12 @@ namespace Havtorn
 		std::map<U64, SRenderView>* RenderThreadRenderViews = &RenderViewsB;
 		std::map<U64, std::function<void(CRenderTexture&)>> RenderViewCallbacks;
 
-		std::map<U64, std::vector<SShadowCasterCategory>> GameThreadShadowCasters;
-
 		SVector4 ClearColor = SVector4(0.5f, 0.5f, 0.5f, 1.0f);
 
-		CRenderGraph RenderGraph;
 		CRenderResourceRegistry ResourceRegistry;
 
-		std::map<ERenderCommandType, std::function<void(const SRenderCommand& command)>> RenderFunctions;
-		ERenderPass CurrentRunningRenderPass = ERenderPass::All;
+		ERenderViewMode CurrentRenderViewMode = ERenderViewMode::All;
 		bool ShouldBlurVolumetricBuffer = false;
-		
-		std::map<ERenderCommandType, U16> RenderCommandToPSOIndex;
-		std::map<EAssetType, U16> AssetTypeToPSOIndex;
 
 		CDataBuffer InstancedTransformBuffer;
 		CDataBuffer InstancedEntityIDBuffer;

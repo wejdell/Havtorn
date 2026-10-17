@@ -156,7 +156,7 @@ namespace Havtorn
 
 	void CInspectorWindow::UpdateTransformGizmo(STransformComponent* viewedTransformComp)
 	{
-		if (Manager->GetIsFreeCamActive() || Manager->GetRenderManager()->GetRenderPass() == ERenderPass::Game)
+		if (Manager->GetIsFreeCamActive() || Manager->GetRenderManager()->GetRenderViewMode() == ERenderViewMode::Game)
 			return;
 
 		if (!SComponent::IsValid(viewedTransformComp))

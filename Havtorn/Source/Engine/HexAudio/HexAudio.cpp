@@ -696,7 +696,7 @@ namespace Havtorn
 		CAudioSystem::CAudioSystem(CAudioBackend* backend)
 			: Backend(backend)
 		{
-			GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderPassForward).AddMember(this, &CAudioSystem::DebugAudio);
+			GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderViewModeForward).AddMember(this, &CAudioSystem::DebugAudio);
 
 			// NW: AUDIO_ASSET_LOADING: By trying to load referenced assets on begin play (when the audio system is constructed), as well
 			// as when components are constructed, we should handle automatically loading all referenced assets. As long as we don't change
@@ -716,7 +716,7 @@ namespace Havtorn
 
 		CAudioSystem::~CAudioSystem()
 		{
-			GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderPassForward).RemoveObject(this);
+			GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderViewModeForward).RemoveObject(this);
 			Backend->UnloadAll();
 		}
 

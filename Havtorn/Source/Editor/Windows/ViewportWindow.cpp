@@ -72,12 +72,12 @@ namespace Havtorn
 			ETransformGizmo currentGizmo = Manager->GetCurrentGizmo();
 
 			CRenderManager* renderManager = Manager->GetRenderManager();
-			ERenderPass renderPass = renderManager->GetRenderPass();
+			ERenderViewMode renderPass = renderManager->GetRenderViewMode();
 			constexpr F32 renderPassDropdownWidth = 136.0f;
 			GUI::PushItemWidth(renderPassDropdownWidth);
-			if (GUI::ComboEnum("View Mode", renderPass, { ERenderPass::Count }))
+			if (GUI::ComboEnum("View Mode", renderPass, { ERenderViewMode::Count }))
 			{
-				renderManager->SetRenderPass(renderPass);
+				renderManager->SetRenderViewMode(renderPass);
 				IsHovered = false;
 			}
 			if (GUI::IsItemHovered())

@@ -50,14 +50,11 @@ namespace Havtorn
 		ENGINE_ERROR_BOOL_MESSAGE(RenderStateManager.Init(rhi), "Failed to Init Render State Manager.");
 
 		InitRenderTextures(rhi, platformManager->GetResolution());
-
 		InitDataBuffers();
 
-		BindRenderFunctions();
-
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderPassForward).AddMember(this, &CRenderManager::CycleRenderPass);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderPassBackward).AddMember(this, &CRenderManager::CycleRenderPass);
-		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderPassReset).AddMember(this, &CRenderManager::CycleRenderPass);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderViewModeForward).AddMember(this, &CRenderManager::CycleRenderViewMode);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderViewModeBackward).AddMember(this, &CRenderManager::CycleRenderViewMode);
+		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderViewModeReset).AddMember(this, &CRenderManager::CycleRenderViewMode);
 		// TODO.NW: Bind to on resolution changed?
 
 		return true;
@@ -154,25 +151,6 @@ namespace Havtorn
 		}
 	}
 
-	void CRenderManager::BindRenderFunctions()
-	{
-		RenderFunctions[ERenderCommandType::CameraDataStorage] =				std::bind(&CRenderManager::CameraDataStorage, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::DecalDepthCopy] =					std::bind(&CRenderManager::DecalDepthCopy, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::PreLightingPass] =					std::bind(&CRenderManager::PreLightingPass, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::PostBaseLightingPass] =				std::bind(&CRenderManager::PostBaseLightingPass, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::VolumetricBufferBlurPass] =			std::bind(&CRenderManager::VolumetricBlur, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::ForwardTransparency] =				std::bind(&CRenderManager::ForwardTransparency, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::Bloom] =							std::bind(&CRenderManager::RenderBloom, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::Tonemapping] =						std::bind(&CRenderManager::Tonemapping, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::PreDebugShape] =					std::bind(&CRenderManager::PreDebugShapes, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::PostToneMappingUseDepth] =			std::bind(&CRenderManager::PostTonemappingUseDepth, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::PostToneMappingIgnoreDepth] =		std::bind(&CRenderManager::PostTonemappingIgnoreDepth, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::AntiAliasing] =						std::bind(&CRenderManager::AntiAliasing, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::GammaCorrection] =					std::bind(&CRenderManager::GammaCorrection, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::TextureDraw] =						std::bind(&CRenderManager::TextureDraw, this, std::placeholders::_1);
-		RenderFunctions[ERenderCommandType::RendererDebug] =					std::bind(&CRenderManager::RendererDebug, this, std::placeholders::_1);
-	}
-
 	void CRenderManager::Render()
 	{
 		while (CThreadManager::RunRenderThread)
@@ -184,7 +162,6 @@ namespace Havtorn
 
 			GTime::BeginTracking(ETimerCategory::GPU);
 
-			ShouldBlurVolumetricBuffer = false;
 			CRenderManager::NumberOfDrawCallsThisFrame = 0;
 			RenderStateManager.ResetPSOHash();
 
@@ -221,9 +198,7 @@ namespace Havtorn
 
 			for (auto& [renderViewID, view] : (*RenderThreadRenderViews))
 			{
-				if (view.RenderCommands.empty())
-					continue;
-
+				// TODO.NW: Hopefully we can remove all of these textures and buffers
 				ShadowAtlasDepth.ClearDepth();
 				SSAOBuffer.ClearTexture();
 				view.RenderTarget.ClearTexture();
@@ -235,24 +210,16 @@ namespace Havtorn
 
 				GBuffer.ClearTextures(ClearColor, renderViewID == WorldMainCameraEntity.GUID);
 				ShadowAtlasDepth.SetAsDepthTarget(&IntermediateTexture);
-
-				while (!view.RenderCommands.empty())
-				{
-					SRenderCommand currentCommand = view.RenderCommands.top();
-					RenderFunctions[currentCommand.Type](currentCommand);
-					view.RenderCommands.pop();
-				}
 				
-				CheckIsolatedRenderPass(renderViewID);
+				CheckRenderViewMode(renderViewID);
 				view.RenderGraph.Execute(this, view);
 			}
 
+			// TODO.NW: See if this works
 			// RenderTarget should be complete as that is the texture we send to the viewport
-			Backbuffer.SetAsActiveTarget();
 			if (RenderThreadRenderViews->contains(WorldMainCameraEntity.GUID))
 			{
-				RenderThreadRenderViews->at(WorldMainCameraEntity.GUID).RenderTarget.SetAsPSResourceOnSlot(0);
-				RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
+				Backbuffer.CopyFromTexture(RenderThreadRenderViews->at(WorldMainCameraEntity.GUID).RenderTarget.GetTexture());
 			}
 
 			GTime::EndTracking(ETimerCategory::GPU);
@@ -355,214 +322,12 @@ namespace Havtorn
 		return 0;
 	}
 
-	bool CRenderManager::IsMeshShadowCastingForType(const U32 meshID, const ERenderCommandType commandType, const U64 renderViewID) const
-	{
-		if (!GameThreadShadowCasters.contains(renderViewID))
-			return false;
-
-		return std::ranges::find_if(GameThreadShadowCasters.at(renderViewID), 
-			[meshID, commandType](const SShadowCasterCategory& category) 
-			{ 
-				return category.CommandType == commandType && std::ranges::find(category.MeshIDs, meshID) != category.MeshIDs.end(); 
-			}) != GameThreadShadowCasters.at(renderViewID).end();
-	}
-
-	void CRenderManager::AddMeshShadowCastingForType(const U32 meshID, const ERenderCommandType commandType, const U64 renderViewID)
-	{
-		if (!GameThreadShadowCasters.contains(renderViewID))
-			GameThreadShadowCasters.emplace(renderViewID, std::vector<SShadowCasterCategory>());
-
-		std::vector<SShadowCasterCategory>& categoriesInView = GameThreadShadowCasters.at(renderViewID);
-		auto category = std::ranges::find_if(categoriesInView, [meshID, commandType](const SShadowCasterCategory& category) { return category.CommandType == commandType; });
-		if (category == categoriesInView.end())
-			GameThreadShadowCasters.at(renderViewID).push_back(SShadowCasterCategory{ .CommandType = commandType, .MeshIDs = { meshID } });
-		else
-			category->MeshIDs.push_back(meshID);
-	}
-
 	SRenderView* CRenderManager::GetRenderView(const U64 id)
 	{
 		if (GameThreadRenderViews->contains(id))
 			return &GameThreadRenderViews->at(id);
 
 		return nullptr;
-	}
-
-	bool Havtorn::CRenderManager::IsStaticMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewID)
-	{
-		// TODO.NW: Maybe move this to RenderView class
-		if (GameThreadRenderViews->contains(renderViewID))
-			return GameThreadRenderViews->at(renderViewID).StaticMeshDrawData.contains(meshUID);
-
-		return false;
-	}
-
-	void CRenderManager::AddStaticMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* component, const U64 renderViewID)
-	{
-		std::unordered_map<U32, SStaticMeshDrawData>* renderList = nullptr;
-
-		if (GameThreadRenderViews->contains(renderViewID))
-			renderList = &GameThreadRenderViews->at(renderViewID).StaticMeshDrawData;
-		else
-			return;
-
-		if (!renderList->contains(meshUID))
-			renderList->emplace(meshUID, SStaticMeshDrawData());
-
-		renderList->at(meshUID).Transforms.emplace_back(component->Transform.GetMatrix());
-		renderList->at(meshUID).Entities.emplace_back(component->Owner);
-	}
-
-	bool CRenderManager::IsSkeletalMeshInInstancedRenderList(const U32 meshUID, const U64 renderViewID)
-	{
-		if (GameThreadRenderViews->contains(renderViewID))
-			return GameThreadRenderViews->at(renderViewID).SkeletalMeshDrawData.contains(meshUID);
-
-		return false;
-	}
-
-	void CRenderManager::AddSkeletalMeshToInstancedRenderList(const U32 meshUID, const STransformComponent* transformComponent, const SSkeletalAnimationComponent* animationComponent, const U64 renderViewID)
-	{
-		std::unordered_map<U32, SSkeletalMeshDrawData>* renderList = nullptr;
-
-		if (GameThreadRenderViews->contains(renderViewID))
-			renderList = &GameThreadRenderViews->at(renderViewID).SkeletalMeshDrawData;
-		else
-			return;
-
-		if (!renderList->contains(meshUID))
-			renderList->emplace(meshUID, SSkeletalMeshDrawData());
-
-		renderList->at(meshUID).Transforms.emplace_back(transformComponent->Transform.GetMatrix());
-		renderList->at(meshUID).Entities.emplace_back(transformComponent->Owner);
-
-		if (SComponent::IsValid(animationComponent))
-			renderList->at(meshUID).Bones = animationComponent->Bones;
-		//else
-		//	SystemSkeletalMeshInstanceData[meshName].Bones.emplace_back({});
-	}
-
-	bool CRenderManager::IsSpriteInWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewID)
-	{
-		if (GameThreadRenderViews->contains(renderViewID))
-			return GameThreadRenderViews->at(renderViewID).WorldSpaceSpriteDrawData.contains(assetReferenceUID);
-
-		return false;
-	}
-
-	void CRenderManager::AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewID)
-	{
-		std::unordered_map<U32, SSpriteDrawData>* renderList = nullptr;
-
-		if (GameThreadRenderViews->contains(renderViewID))
-			renderList = &GameThreadRenderViews->at(renderViewID).WorldSpaceSpriteDrawData;
-		else
-			return;
-
-		if (!renderList->contains(assetReferenceUID))
-			renderList->emplace(assetReferenceUID, SSpriteDrawData());
-
-		SSpriteDrawData& instanceData = renderList->at(assetReferenceUID);
-		instanceData.Transforms.emplace_back(worldSpaceTransform->Transform.GetMatrix());
-		instanceData.UVRects.emplace_back(spriteComponent->UVRect);
-		instanceData.Colors.emplace_back(spriteComponent->Color.AsVector4());
-		instanceData.Entities.emplace_back(spriteComponent->Owner);
-	}
-
-	void CRenderManager::AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const U64& entityGUID, const SMatrix& entityMatrix, const SMatrix& cameraMatrix, const U64 renderViewID)
-	{
-		std::unordered_map<U32, SSpriteDrawData>* renderList = nullptr;
-
-		if (GameThreadRenderViews->contains(renderViewID))
-			renderList = &GameThreadRenderViews->at(renderViewID).WorldSpaceSpriteDrawData;
-		else
-			return;
-
-		if (!renderList->contains(assetReferenceUID))
-			renderList->emplace(assetReferenceUID, SSpriteDrawData());
-
-		SMatrix orientedMatrix = entityMatrix;
-
-		const SVector location = orientedMatrix.GetTranslation();
-		const SVector euler = cameraMatrix.GetEuler();
-		constexpr F32 distanceNormalization = 7.0f;
-		constexpr F32 scaleMin = 0.15f;
-		constexpr F32 scaleMax = 0.5f;
-		const F32 dist = cameraMatrix.GetTranslation().Distance(location);
-		const F32 eased = UMath::EaseInOutQuad(dist / distanceNormalization);
-		const F32 scaling = UMath::Remap(0.0f, 1.0f, scaleMin, scaleMax, eased);
-		const SVector scale = SVector(scaling, scaling, 1.0f);
-		SMatrix::Recompose(location, euler, scale, orientedMatrix);
-
-		SSpriteDrawData& instanceData = renderList->at(assetReferenceUID);
-		instanceData.Transforms.emplace_back(orientedMatrix);
-		instanceData.UVRects.emplace_back(SVector4(0.0f, 0.0f, 1.0f, 1.0f));
-		instanceData.Colors.emplace_back(SVector4(1.0f, 1.0f, 1.0f, 1.0f));
-		instanceData.Entities.emplace_back(entityGUID);
-	}
-
-	void CRenderManager::AddSpriteToWorldSpaceInstancedRenderList(const U32 assetReferenceUID, const STransformComponent* worldSpaceTransform, const STransformComponent* cameraTransform, const U64 renderViewID)
-	{
-		AddSpriteToWorldSpaceInstancedRenderList(assetReferenceUID, worldSpaceTransform->Owner.GUID, worldSpaceTransform->Transform.GetMatrix(), cameraTransform->Transform.GetMatrix(), renderViewID);
-	}
-
-	bool CRenderManager::IsSpriteInScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const U64 renderViewID)
-	{
-		if (GameThreadRenderViews->contains(renderViewID))
-			return GameThreadRenderViews->at(renderViewID).ScreenSpaceSpriteDrawData.contains(assetReferenceUID);
-
-		return false;
-	}
-
-	void CRenderManager::AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SSpriteComponent* spriteComponent, const U64 renderViewID)
-	{
-		std::unordered_map<U32, SSpriteDrawData>* renderList = nullptr;
-
-		if (GameThreadRenderViews->contains(renderViewID))
-			renderList = &GameThreadRenderViews->at(renderViewID).ScreenSpaceSpriteDrawData;
-		else
-			return;
-
-		if (!renderList->contains(assetReferenceUID))
-			renderList->emplace(assetReferenceUID, SSpriteDrawData());
-
-		SMatrix screenSpaceMatrix;
-		screenSpaceMatrix.SetScale(screenSpaceTransform->Scale.X, screenSpaceTransform->Scale.Y, 1.0f);
-		screenSpaceMatrix *= SMatrix::CreateRotationAroundZ(UMath::DegToRad(screenSpaceTransform->DegreesRoll));
-		screenSpaceMatrix.SetTranslation({ screenSpaceTransform->Position.X, screenSpaceTransform->Position.Y, 0.0f });
-
-		SSpriteDrawData& instanceData = renderList->at(assetReferenceUID);
-		instanceData.Transforms.emplace_back(screenSpaceMatrix);
-		instanceData.UVRects.emplace_back(spriteComponent->UVRect);
-		instanceData.Colors.emplace_back(spriteComponent->Color.AsVector4());
-		instanceData.Entities.emplace_back(spriteComponent->Owner);
-	}
-
-	void CRenderManager::AddSpriteToScreenSpaceInstancedRenderList(const U32 assetReferenceUID, const STransform2DComponent* screenSpaceTransform, const SUIElement& uiElement, const U64 renderViewID)
-	{
-		if (uiElement.UVRects.size() != STATIC_U64(EUIElementState::Count))
-			return;
-
-		std::unordered_map<U32, SSpriteDrawData>* renderList = nullptr;
-
-		if (GameThreadRenderViews->contains(renderViewID))
-			renderList = &GameThreadRenderViews->at(renderViewID).ScreenSpaceSpriteDrawData;
-		else
-			return;
-
-		if (!renderList->contains(assetReferenceUID))
-			renderList->emplace(assetReferenceUID, SSpriteDrawData());
-
-		SMatrix screenSpaceMatrix;
-		screenSpaceMatrix.SetScale(screenSpaceTransform->Scale.X * uiElement.LocalScale.X, screenSpaceTransform->Scale.Y * uiElement.LocalScale.Y, 1.0f);
-		screenSpaceMatrix *= SMatrix::CreateRotationAroundZ(UMath::DegToRad(screenSpaceTransform->DegreesRoll + uiElement.LocalDegreesRoll));
-		screenSpaceMatrix.SetTranslation({ screenSpaceTransform->Position.X + uiElement.LocalPosition.X, screenSpaceTransform->Position.Y + uiElement.LocalPosition.Y, 0.0f });
-
-		SSpriteDrawData& instanceData = renderList->at(assetReferenceUID);
-		instanceData.Transforms.emplace_back(screenSpaceMatrix);
-		instanceData.UVRects.emplace_back(uiElement.UVRects[STATIC_U8(uiElement.State)]);
-		instanceData.Colors.emplace_back(uiElement.Color.AsVector4());
-		instanceData.Entities.emplace_back(screenSpaceTransform->Owner);
 	}
 
 	SPostProcessingBufferData CRenderManager::GetPostProcessingBufferData() const
@@ -578,7 +343,6 @@ namespace Havtorn
 	void CRenderManager::SyncCrossThreadResources(const CWorld* world)
 	{
 		SwapRenderViews();
-		GameThreadShadowCasters.clear();
 		std::swap(SystemSkeletalAnimationBoneData, RendererSkeletalAnimationBoneData);
 		SetWorldMainCameraEntity(world->GetMainCamera());
 		SetWorldEditorRenderExemptEntity(world->GetEditorRenderExemptEntity());
@@ -607,26 +371,6 @@ namespace Havtorn
 			return &GameThreadRenderViews->at(renderViewID).RenderTarget;
 
 		return nullptr;
-	}
-
-	void CRenderManager::PushRenderCommand(SRenderCommand command, const U64 renderViewID)
-	{
-		command.RenderViewID = renderViewID;
-
-		if (!GameThreadRenderViews->contains(renderViewID))
-			return;
-
-		GameThreadRenderViews->at(renderViewID).RenderCommands.push(command);
-	}
-
-	void CRenderManager::AddRenderGraphPass(CHavtornStaticString<RenderDebugNameMaxSize> name, const std::function<SRenderPassResourceDeclaration()> setup, std::function<void(CRenderManager*)>&& execution)
-	{
-		RenderGraph.AddPass(name, setup, std::move(execution));
-	}
-
-	CRenderGraph& CRenderManager::GetRenderGraph()
-	{
-		return RenderGraph;
 	}
 
 	CRenderResourceRegistry& CRenderManager::GetRenderResourceRegistry()
@@ -695,7 +439,7 @@ namespace Havtorn
 		}
 
 		// TODO.NW: Add size/dimensions to requests
-		GameThreadRenderViews->emplace(renderViewID, SRenderView());
+		GameThreadRenderViews->emplace(renderViewID, SRenderView(this, &RenderStateManager, GEngine::GetAssetRegistry(), &ResourceRegistry));
 		GameThreadRenderViews->at(renderViewID).RenderTarget = RenderTextureFactory.CreateTexture(CurrentWindowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
 
 		if (callback.has_value())
@@ -738,29 +482,14 @@ namespace Havtorn
 		return STATIC_U32(GameThreadRenderViews->size());
 	}
 
-	void CRenderManager::SetRenderPass(const ERenderPass renderPass)
+	void CRenderManager::SetRenderViewMode(const ERenderViewMode renderPass)
 	{
-		CurrentRunningRenderPass = renderPass;
+		CurrentRenderViewMode = renderPass;
 	}
 
-	ERenderPass CRenderManager::GetRenderPass() const
+	ERenderViewMode CRenderManager::GetRenderViewMode() const
 	{
-		return CurrentRunningRenderPass;
-	}
-
-	void CRenderManager::SetPSOFromRenderCommandType(const ERenderCommandType commandType)
-	{
-		RenderStateManager.TrySetPipelineStateObject(RenderCommandToPSOIndex.at(commandType));
-	}
-
-	void CRenderManager::SetPSOFromAssetType(const EAssetType assetType)
-	{
-		RenderStateManager.TrySetPipelineStateObject(AssetTypeToPSOIndex.at(assetType));
-	}
-
-	void CRenderManager::RenderFullscreenPass(const EPixelShaders pixelShader, const EBlendStates blendState)
-	{
-		FullscreenRenderer.Render(pixelShader, blendState);
+		return CurrentRenderViewMode;
 	}
 
 	void CRenderManager::Clear(SVector4 /*clearColor*/)
@@ -772,11 +501,8 @@ namespace Havtorn
 	void CRenderManager::InitDataBuffers()
 	{
 		ViewDataBuffer.CreateBuffer("Frame Buffer", RHI, sizeof(SFrameBufferData));
-		ObjectBuffer.CreateBuffer("Object Buffer", RHI, sizeof(SObjectBufferData));
 		MaterialBuffer.CreateBuffer("Material Buffer", RHI, sizeof(SMaterialBufferData));
 		DebugShapeObjectBuffer.CreateBuffer("Debug Shape Object Buffer", RHI, sizeof(SDebugShapeObjectBufferData));
-		DecalBuffer.CreateBuffer("Decal Buffer", RHI, sizeof(SDecalBufferData));
-		SpriteBuffer.CreateBuffer("Sprite Buffer", RHI, sizeof(SSpriteBufferData));
 		ShadowmapBuffer.CreateBuffer("Shadowmap Buffer", RHI, sizeof(SShadowmapBufferData) * 6);
 		VolumetricLightBuffer.CreateBuffer("Volumetric Light Buffer", RHI, sizeof(SVolumetricLightBufferData));
 		EmissiveBuffer.CreateBuffer("Emissive Buffer", RHI, sizeof(SEmissiveBufferData));
@@ -789,377 +515,153 @@ namespace Havtorn
 		InstancedColorBuffer.CreateBuffer("Instanced Color Buffer", RHI, sizeof(SVector4) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
 	}
 
-	void CRenderManager::CameraDataStorage(const SRenderCommand& command)
-	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewID))
-			return;
-
-		GBuffer.SetAsActiveTarget(&IntermediateDepth, true);
-
-		const auto& objectMatrix = command.Matrices[0];
-		const auto& projectionMatrix = command.Matrices[1];
-		FrameBufferData.ToWorldFromCamera = objectMatrix;
-		FrameBufferData.ToCameraFromWorld = objectMatrix.FastInverse();
-		FrameBufferData.ToProjectionFromCamera = projectionMatrix;
-		FrameBufferData.ToCameraFromProjection = projectionMatrix.Inverse();
-		FrameBufferData.CameraPosition = objectMatrix.GetTranslation4();
-		ViewDataBuffer.BindBuffer(FrameBufferData);
-
-		RenderStateManager.VSSetConstantBuffer(0, ViewDataBuffer);
-		RenderStateManager.PSSetConstantBuffer(0, ViewDataBuffer);
-		RenderStateManager.GSSetConstantBuffer(0, ViewDataBuffer);
-	}
-
-	void CRenderManager::DecalDepthCopy(const SRenderCommand& /*command*/)
-	{
-		DepthCopy.SetAsActiveTarget();
-		IntermediateDepth.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenCopyDepth, EBlendStates::Disable);
-	}
-
-	void CRenderManager::PreLightingPass(const SRenderCommand& /*command*/)
-	{
-		// === SSAO ===
-		SSAOBuffer.SetAsActiveTarget();
-		GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Normal, 2);
-		IntermediateDepth.SetAsPSResourceOnSlot(21);
-		RenderFullscreenPass(EPixelShaders::FullscreenSSAO, EBlendStates::Disable);
-
-		SSAOBlurTexture.SetAsActiveTarget();
-		SSAOBuffer.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenSSAOBlur, EBlendStates::Disable);
-
-		// === !SSAO ===
-
-		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
-		RenderStateManager.PSSetSampler(1, ESamplers::DefaultBorder);
-
-		// SYNC
-		LitScene.SetAsActiveTarget();
-		GBuffer.SetAllAsResources(1);
-		IntermediateDepth.SetAsPSResourceOnSlot(21);
-	}
-
-	void CRenderManager::PostBaseLightingPass(const SRenderCommand& command)
-	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewID))
-			return;
-
-		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsActiveTarget();
-		LitScene.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::AdditiveBlend);
-	}
-
-	void CRenderManager::VolumetricBlur(const SRenderCommand& command)
-	{
-		if (!ShouldBlurVolumetricBuffer)
-			return;
-
-		// Downsampling and Blur
-		DownsampledDepth.SetAsActiveTarget();
-		IntermediateDepth.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenDownsampleDepth, EBlendStates::Disable);
-
-		// Blur
-		VolumetricBlurTexture.SetAsActiveTarget();
-		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenBilateralHorizontal, EBlendStates::Disable);
-
-		VolumetricAccumulationBuffer.SetAsActiveTarget();
-		VolumetricBlurTexture.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenBilateralVertical, EBlendStates::Disable);
-
-		VolumetricBlurTexture.SetAsActiveTarget();
-		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenBilateralHorizontal, EBlendStates::Disable);
-
-		VolumetricAccumulationBuffer.SetAsActiveTarget();
-		VolumetricBlurTexture.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenBilateralVertical, EBlendStates::Disable);
-
-		VolumetricBlurTexture.SetAsActiveTarget();
-		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenBilateralHorizontal, EBlendStates::Disable);
-
-		VolumetricAccumulationBuffer.SetAsActiveTarget();
-		VolumetricBlurTexture.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenBilateralVertical, EBlendStates::Disable);
-
-		VolumetricBlurTexture.SetAsActiveTarget();
-		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenBilateralHorizontal, EBlendStates::Disable);
-
-		VolumetricAccumulationBuffer.SetAsActiveTarget();
-		VolumetricBlurTexture.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenBilateralVertical, EBlendStates::Disable);
-
-		// Upsampling
-		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsActiveTarget();
-		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
-		DownsampledDepth.SetAsPSResourceOnSlot(1);
-		IntermediateDepth.SetAsPSResourceOnSlot(2);
-		RenderFullscreenPass(EPixelShaders::FullscreenDepthAwareUpsampling, EBlendStates::AdditiveBlend);
-	}
-
-	inline void CRenderManager::ForwardTransparency(const SRenderCommand& /*command*/)
-	{
-		//RenderStateManager.OMSetBlendState(EBlendStates::AlphaBlend);
-	}
-
-	void CRenderManager::RenderBloom(const SRenderCommand& command)
-	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewID))
-			return;
-
-		VignetteTexture.SetAsActiveTarget();
-		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenLuminance, EBlendStates::Disable);
-
-		HalfSizeTexture.SetAsActiveTarget();
-		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
-
-		QuarterSizeTexture.SetAsActiveTarget();
-		HalfSizeTexture.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
-
-		BlurTexture1.SetAsActiveTarget();
-		QuarterSizeTexture.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
-
-		BlurTexture2.SetAsActiveTarget();
-		BlurTexture1.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenGaussianHorizontal, EBlendStates::Disable);
-
-		BlurTexture1.SetAsActiveTarget();
-		BlurTexture2.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenGaussianVertical, EBlendStates::Disable);
-
-		BlurTexture2.SetAsActiveTarget();
-		BlurTexture1.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenGaussianHorizontal, EBlendStates::Disable);
-
-		BlurTexture1.SetAsActiveTarget();
-		BlurTexture2.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenGaussianVertical, EBlendStates::Disable);
-
-		QuarterSizeTexture.SetAsActiveTarget();
-		BlurTexture1.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
-
-		HalfSizeTexture.SetAsActiveTarget();
-		QuarterSizeTexture.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
-
-		VignetteTexture.SetAsActiveTarget();
-		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
-
-		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsActiveTarget();
-		VignetteTexture.SetAsPSResourceOnSlot(0);
-		HalfSizeTexture.SetAsPSResourceOnSlot(1);
-		RenderFullscreenPass(EPixelShaders::FullscreenBloom, EBlendStates::Disable);
-	}
-
-	inline void CRenderManager::Tonemapping(const SRenderCommand& command)
-	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewID))
-			return;
-
-		TonemappedTexture.SetAsActiveTarget();
-		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenTonemap, EBlendStates::Disable);
-	}
-
-	inline void CRenderManager::AntiAliasing(const SRenderCommand& /*command*/)
-	{
-		AntiAliasedTexture.SetAsActiveTarget();
-		TonemappedTexture.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenFXAA, EBlendStates::Disable);
-	}
-
-	inline void CRenderManager::GammaCorrection(const SRenderCommand& command)
-	{
-		if (!RenderThreadRenderViews->contains(command.RenderViewID))
-			return;
-
-		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsActiveTarget();
-		AntiAliasedTexture.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenGammaCorrection, EBlendStates::Disable);
-	}
-
-	inline void CRenderManager::RendererDebug(const SRenderCommand& /*command*/)
-	{
-		//DebugShadowAtlas();
-	}
-
-	inline void CRenderManager::PreDebugShapes(const SRenderCommand& /*command*/)
-	{
-		SetPSOFromRenderCommandType(ERenderCommandType::PreDebugShape);
-	}
-
-	inline void CRenderManager::PostTonemappingUseDepth(const SRenderCommand& /*command*/)
-	{
-		TonemappedTexture.SetAsActiveTarget(&IntermediateDepth);
-	}
-
-	inline void CRenderManager::PostTonemappingIgnoreDepth(const SRenderCommand& /*command*/)
-	{
-		TonemappedTexture.SetAsActiveTarget();
-	}
-
-	inline void CRenderManager::TextureDraw(const SRenderCommand& command)
-	{
-		command.RenderTextures[0].SetAsPSResourceOnSlot(0);
-		RenderThreadRenderViews->at(command.RenderViewID).RenderTarget.SetAsActiveTarget();
-		RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
-	}
-
 	void CRenderManager::DebugShadowAtlas()
 	{
+		// TODO.NW: Figure out how to do this, potentially in the Finalize pass
 		CRenderViewport viewport = CRenderViewport(RHI, 0.0f, 0.0f, 256.0f, 256.0f, 0.0f, 1.0f);
 		viewport.SetViewport();
 		ShadowAtlasDepth.SetAsPSResourceOnSlot(0);
-		RenderFullscreenPass(EPixelShaders::FullscreenCopyDepth, EBlendStates::Disable);
+		//RenderFullscreenPass(EPixelShaders::FullscreenCopyDepth, EBlendStates::Disable);
 	}
 
-	void CRenderManager::CheckIsolatedRenderPass(const U64 renderViewID)
-	{
-		if (!RenderThreadRenderViews->contains(renderViewID))
-			return;
+	// TODO.NW: Figure out how to implement this as a render debug data feature in the finalize pass of default render passes
+	//void CRenderManager::CheckRenderViewMode(const U64 renderViewID)
+	//{
+	//	if (!RenderThreadRenderViews->contains(renderViewID))
+	//		return;
 
-		switch (CurrentRunningRenderPass)
-		{
-		case Havtorn::ERenderPass::All:
-			break;
-		case Havtorn::ERenderPass::Depth:
-		{
-			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
-			DepthCopy.SetAsPSResourceOnSlot(0);
-			RenderFullscreenPass(EPixelShaders::FullscreenCopyDepth, EBlendStates::Disable);
-		}
-		break;
-		case Havtorn::ERenderPass::GBufferAlbedo:
-		{
-			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
-			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Albedo, 0);
-			RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
-		}
-		break;
-		case Havtorn::ERenderPass::GBufferNormals:
-		{
-			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
-			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Normal, 0);
-			RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
-		}
-		break;
-		case Havtorn::ERenderPass::GBufferMaterials:
-		{
-			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
-			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Material, 0);
-			RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
-		}
-		break;
-		case Havtorn::ERenderPass::SSAO:
-		{
-			//RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
-			//SSAOBlurTexture.SetAsPSResourceOnSlot(0);
-			//RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
+	//	switch (CurrentRenderViewMode)
+	//	{
+	//	case Havtorn::ERenderViewMode::All:
+	//		break;
+	//	case Havtorn::ERenderViewMode::Depth:
+	//	{
+	//		RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
+	//		DepthCopy.SetAsPSResourceOnSlot(0);
+	//		RenderFullscreenPass(EPixelShaders::FullscreenCopyDepth, EBlendStates::Disable);
+	//	}
+	//	break;
+	//	case Havtorn::ERenderViewMode::GBufferAlbedo:
+	//	{
+	//		RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
+	//		GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Albedo, 0);
+	//		RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
+	//	}
+	//	break;
+	//	case Havtorn::ERenderViewMode::GBufferNormals:
+	//	{
+	//		RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
+	//		GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Normal, 0);
+	//		RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
+	//	}
+	//	break;
+	//	case Havtorn::ERenderViewMode::GBufferMaterials:
+	//	{
+	//		RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
+	//		GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::Material, 0);
+	//		RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
+	//	}
+	//	break;
+	//	case Havtorn::ERenderViewMode::SSAO:
+	//	{
+	//		//RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
+	//		//SSAOBlurTexture.SetAsPSResourceOnSlot(0);
+	//		//RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
 
-			AddRenderGraphPass(CHavtornStaticString<RenderDebugNameMaxSize>("SSAO Isolated")
-			, [this, renderViewID]()
-			{
-				SRenderPassResourceDeclaration data;
-				data.Inputs.emplace_back(SRenderResourceDescription{ .Name = {"SSAO Blur Texture"}, .PipelineStage = EShaderType::Pixel, .Type = ERenderResourceType::ShaderResourceView, .BindSlot = 0 }, &SSAOBlurTexture);
-				data.Outputs.emplace_back(SRenderResourceDescription{ .Name = {"Main Render Target"}, .Type = ERenderResourceType::RenderTargetView }, &RenderThreadRenderViews->at(renderViewID).RenderTarget);
-				return data;
-			}
-			, [](CRenderManager* renderManager)
-			{
-				renderManager->RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
-			}
-			);
-		}
-		break;
-		case Havtorn::ERenderPass::DeferredLighting:
-		{
-			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
-			LitScene.SetAsPSResourceOnSlot(0);
-			RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
-		}
-		break;
-		case Havtorn::ERenderPass::VolumetricLighting:
-		{
-			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
-			VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
-			RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
-		}
-		break;
-		case Havtorn::ERenderPass::Bloom:
-		{
-			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
-			VignetteTexture.SetAsPSResourceOnSlot(0);
-			HalfSizeTexture.SetAsPSResourceOnSlot(1);
-			RenderFullscreenPass(EPixelShaders::FullscreenDifference, EBlendStates::Disable);
-		}
-		break;
-		case Havtorn::ERenderPass::Tonemapping:
-		{
-			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
-			TonemappedTexture.SetAsPSResourceOnSlot(0);
-			RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
-		}
-		break;
-		case Havtorn::ERenderPass::Antialiasing:
-		{
-			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
-			AntiAliasedTexture.SetAsPSResourceOnSlot(0);
-			TonemappedTexture.SetAsPSResourceOnSlot(1);
-			RenderFullscreenPass(EPixelShaders::FullscreenDifference, EBlendStates::Disable);
-		}
-		break;
-		case Havtorn::ERenderPass::EditorData:
-		{
-			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
-			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::EditorData, 0);
-			RenderFullscreenPass(EPixelShaders::FullscreenEditorData, EBlendStates::Disable);
-		}
-		break;
-		case Havtorn::ERenderPass::WorldPosition:
-		{
-			RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
-			GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::WorldPosition, 0);
-			RenderFullscreenPass(EPixelShaders::FullscreenWorldPosition, EBlendStates::Disable);
-		}
-		break;
-		case Havtorn::ERenderPass::Count:
-			break;
-		default:
-			break;
-		}
-	}
+	//		AddRenderGraphPass(CHavtornStaticString<RenderDebugNameMaxSize>("SSAO Isolated")
+	//		, [this, renderViewID]()
+	//		{
+	//			SRenderPassResourceDeclaration data;
+	//			data.Inputs.emplace_back(SRenderResourceDescription{ .Name = {"SSAO Blur Texture"}, .PipelineStage = EShaderType::Pixel, .Type = ERenderResourceType::ShaderResourceView, .BindSlot = 0 }, &SSAOBlurTexture);
+	//			data.Outputs.emplace_back(SRenderResourceDescription{ .Name = {"Main Render Target"}, .Type = ERenderResourceType::RenderTargetView }, &RenderThreadRenderViews->at(renderViewID).RenderTarget);
+	//			return data;
+	//		}
+	//		, [](CRenderManager* renderManager)
+	//		{
+	//			renderManager->RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
+	//		}
+	//		);
+	//	}
+	//	break;
+	//	case Havtorn::ERenderViewMode::DeferredLighting:
+	//	{
+	//		RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
+	//		LitScene.SetAsPSResourceOnSlot(0);
+	//		RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
+	//	}
+	//	break;
+	//	case Havtorn::ERenderViewMode::VolumetricLighting:
+	//	{
+	//		RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
+	//		VolumetricAccumulationBuffer.SetAsPSResourceOnSlot(0);
+	//		RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
+	//	}
+	//	break;
+	//	case Havtorn::ERenderViewMode::Bloom:
+	//	{
+	//		RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
+	//		VignetteTexture.SetAsPSResourceOnSlot(0);
+	//		HalfSizeTexture.SetAsPSResourceOnSlot(1);
+	//		RenderFullscreenPass(EPixelShaders::FullscreenDifference, EBlendStates::Disable);
+	//	}
+	//	break;
+	//	case Havtorn::ERenderViewMode::Tonemapping:
+	//	{
+	//		RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
+	//		TonemappedTexture.SetAsPSResourceOnSlot(0);
+	//		RenderFullscreenPass(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
+	//	}
+	//	break;
+	//	case Havtorn::ERenderViewMode::Antialiasing:
+	//	{
+	//		RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
+	//		AntiAliasedTexture.SetAsPSResourceOnSlot(0);
+	//		TonemappedTexture.SetAsPSResourceOnSlot(1);
+	//		RenderFullscreenPass(EPixelShaders::FullscreenDifference, EBlendStates::Disable);
+	//	}
+	//	break;
+	//	case Havtorn::ERenderViewMode::EditorData:
+	//	{
+	//		RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
+	//		GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::EditorData, 0);
+	//		RenderFullscreenPass(EPixelShaders::FullscreenEditorData, EBlendStates::Disable);
+	//	}
+	//	break;
+	//	case Havtorn::ERenderViewMode::WorldPosition:
+	//	{
+	//		RenderThreadRenderViews->at(renderViewID).RenderTarget.SetAsActiveTarget();
+	//		GBuffer.SetAsPSResourceOnSlot(CGBuffer::EGBufferTextures::WorldPosition, 0);
+	//		RenderFullscreenPass(EPixelShaders::FullscreenWorldPosition, EBlendStates::Disable);
+	//	}
+	//	break;
+	//	case Havtorn::ERenderViewMode::Count:
+	//		break;
+	//	default:
+	//		break;
+	//	}
+	//}
 
-	void CRenderManager::CycleRenderPass(const SInputActionPayload payload)
+	void CRenderManager::CycleRenderViewMode(const SInputActionPayload payload)
 	{
 		if (!payload.IsPressed)
 			return;
 
-		U8 currentRunningRenderPassIndex = STATIC_U8(CurrentRunningRenderPass);
+		U8 currentViewModeIndex = STATIC_U8(CurrentRenderViewMode);
 		switch (payload.Event)
 		{
-		case EInputActionEvent::CycleRenderPassForward:
-			currentRunningRenderPassIndex = (currentRunningRenderPassIndex + 1) % STATIC_U8(ERenderPass::Count);
+		case EInputActionEvent::CycleRenderViewModeForward:
+			currentViewModeIndex = (currentViewModeIndex + 1) % STATIC_U8(ERenderViewMode::Count);
 			break;
 
-		case EInputActionEvent::CycleRenderPassBackward:
+		case EInputActionEvent::CycleRenderViewModeBackward:
 		{
-			U8 maxIndex = STATIC_U8(ERenderPass::Count) - 1;
-			currentRunningRenderPassIndex = UMath::Min(--currentRunningRenderPassIndex, maxIndex);
+			U8 maxIndex = STATIC_U8(ERenderViewMode::Count) - 1;
+			currentViewModeIndex = UMath::Min(--currentViewModeIndex, maxIndex);
 		}
 			break;
 
-		case EInputActionEvent::CycleRenderPassReset:
-			currentRunningRenderPassIndex = STATIC_U8(ERenderPass::All);
+		case EInputActionEvent::CycleRenderViewModeReset:
+			currentViewModeIndex = STATIC_U8(ERenderViewMode::All);
 			break;
 
 		default:
@@ -1167,24 +669,7 @@ namespace Havtorn
 		}
 
 		// TODO.NR: Add debug print on screen indicating what render pass is shown
-		CurrentRunningRenderPass = static_cast<ERenderPass>(currentRunningRenderPassIndex);
-	}
-
-	void CRenderManager::MapRuntimeMaterialProperty(SRuntimeGraphicsMaterialProperty& property, std::vector<ID3D11ShaderResourceView*>& runtimeArray, std::map<U32, F32>& runtimeMap, const std::map<U32, CStaticRenderTexture>& textureMap)
-	{
-		if (property.TextureChannelIndex <= -1.0f)
-			return;
-
-		if (!runtimeMap.contains(property.TextureUID))
-		{
-			if (!textureMap.contains(property.TextureUID))
-				return;
-
-			runtimeArray.emplace_back(textureMap.at(property.TextureUID).GetShaderResource());
-			runtimeMap.emplace(property.TextureUID, STATIC_F32(runtimeArray.size() - 1));
-		}
-
-		property.TextureIndex = runtimeMap[property.TextureUID];
+		CurrentRenderViewMode = static_cast<ERenderViewMode>(currentViewModeIndex);
 	}
 
 	CRenderStateManager& CRenderManager::GetRenderStateManager()
@@ -1192,43 +677,20 @@ namespace Havtorn
 		return RenderStateManager;
 	}
 
-	bool SRenderCommandComparer::operator()(const SRenderCommand& a, const SRenderCommand& b) const
+	SRenderView::SRenderView(CRenderManager* renderManager, CRenderStateManager* stateManager, CAssetRegistry* assetRegistry, CRenderResourceRegistry* renderResourceRegistry)
+		: StateManager(stateManager)
+		, AssetRegistry(assetRegistry)
+		, RenderResourceRegistry(renderResourceRegistry)
+		, RenderGraph(renderManager)
 	{
-
-		return 	STATIC_U16(a.Type) > STATIC_U16(b.Type) || (STATIC_U16(a.Type) == STATIC_U16(b.Type) && a.InternalPriority > b.InternalPriority);
 	}
-
-	/*
-	// Replaces DrawCallData
-	struct SMeshDrawData
-	{
-		// Data that comes from external sources that should be declared (with external memory) in setup
-		std::vector<SRenderResourceHandle> MaterialTextureHandles;
-		SRenderResourceHandle VertexBufferHandle;
-		SRenderResourceHandle IndexBufferHandle;
-		U32 IndexCount = 0;
-
-		// Buffer data that should be bound at execution time - can we store this in a way that makes sense? Can we make all buffers immutable or dynamic?
-		// Many instances here, would like these holders to just point to one entry in the resource registry. But that means storing many buffers in the registry
-		SMaterialBufferData MaterialBufferData;
-	};
-
-	struct SStaticMeshDrawData
-	{
-		std::vector<SMeshDrawData> DrawData; // one draw data per submesh
-
-		// Instance Data
-		std::vector<SMatrix> Transforms;
-		std::vector<SEntity> Entities;
-	};
-	*/ 
 
 	SMeshDrawData SRenderView::ConstructMeshDrawData(const SDrawCallData& assetDrawCallData, const char* renderResourceSuffix, std::vector<SGraphicsMaterialAsset*>& materialAssets, const U32 renderViewID)
 	{
 		SMeshDrawData meshDrawData;
-		meshDrawData.VertexBufferHandle = RenderResourceRegistry->DeclareResource(DeclareVertexBuffer<SStaticMeshVertex>((std::string("VB ") + renderResourceSuffix).c_str(), &StateManager->VertexBuffers[assetDrawCallData.VertexBufferIndex]));
-		meshDrawData.IndexBufferHandle = RenderResourceRegistry->DeclareResource(DeclareIndexBuffer((std::string("IB ") + renderResourceSuffix).c_str(), &StateManager->IndexBuffers[assetDrawCallData.IndexBufferIndex]));
-		meshDrawData.IndexCount = assetDrawCallData.IndexCount;
+		meshDrawData.PrimitiveData.VertexBufferHandle = RenderResourceRegistry->DeclareVertexBuffer<SStaticMeshVertex>((std::string("VB ") + renderResourceSuffix).c_str(), &StateManager->VertexBuffers[assetDrawCallData.VertexBufferIndex]);
+		meshDrawData.PrimitiveData.IndexBufferHandle = RenderResourceRegistry->DeclareIndexBuffer((std::string("IB ") + renderResourceSuffix).c_str(), &StateManager->IndexBuffers[assetDrawCallData.IndexBufferIndex]);
+		meshDrawData.PrimitiveData.IndexCount = assetDrawCallData.IndexCount;
 
 		SGraphicsMaterialAsset* materialAsset = materialAssets[assetDrawCallData.MaterialIndex];
 		std::map<U32, CStaticRenderTexture*> mappedTextures = materialAsset->Material.GetRenderTexturePointers(renderViewID); // TODO.NW: Keep a close eye on this requesting here
@@ -1236,7 +698,7 @@ namespace Havtorn
 		for (auto& [uid, texture] : mappedTextures)
 		{
 			textureUIDToRuntimeIndex.emplace(uid, STATIC_F32(meshDrawData.MaterialTextureHandles.size()));
-			meshDrawData.MaterialTextureHandles.emplace_back(RenderResourceRegistry->DeclareResource(DeclareRenderTexture(std::to_string(uid).c_str(), texture)));
+			meshDrawData.MaterialTextureHandles.emplace_back(RenderResourceRegistry->DeclareRenderTexture(std::to_string(uid).c_str(), texture));
 		}
 
 		meshDrawData.MaterialBufferData = SMaterialBufferData(materialAsset->Material);

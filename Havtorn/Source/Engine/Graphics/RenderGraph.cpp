@@ -80,6 +80,9 @@ namespace Havtorn
 			pass->Execute(ResourceRegistry, renderManager, renderView);
 
 		ResourceRegistry.Deallocate();
+
+		RenderPasses.clear();
+		SortedPasses.clear();
 	}
 
 	SRenderResourceHandle SRenderPassParams::AddInput(const SRenderResourceHandle& handle)

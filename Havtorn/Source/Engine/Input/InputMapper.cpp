@@ -78,14 +78,14 @@ namespace Havtorn
 		const SInputAction toggleFreeCamGamepad = { EInputButton::GamepadWest, EInputContext::InGame };
 		MapEvent(EInputActionEvent::ToggleFreeCam, toggleFreeCamGamepad);
 
-		const SInputAction renderPassForward = { EInputButton::F8, EInputContext::Editor | EInputContext::InGame };
-		MapEvent(EInputActionEvent::CycleRenderPassForward, renderPassForward);
+		const SInputAction renderViewModeForward = { EInputButton::F8, EInputContext::Editor | EInputContext::InGame };
+		MapEvent(EInputActionEvent::CycleRenderViewModeForward, renderViewModeForward);
 
-		const SInputAction renderPassBackward = { EInputButton::F7, EInputContext::Editor | EInputContext::InGame };
-		MapEvent(EInputActionEvent::CycleRenderPassBackward, renderPassBackward);
+		const SInputAction renderViewModeBackward = { EInputButton::F7, EInputContext::Editor | EInputContext::InGame };
+		MapEvent(EInputActionEvent::CycleRenderViewModeBackward, renderViewModeBackward);
 
-		const SInputAction renderPassReset = { EInputButton::F9, EInputContext::Editor | EInputContext::InGame };
-		MapEvent(EInputActionEvent::CycleRenderPassReset, renderPassReset);
+		const SInputAction renderViewModeReset = { EInputButton::F9, EInputContext::Editor | EInputContext::InGame };
+		MapEvent(EInputActionEvent::CycleRenderViewModeReset, renderViewModeReset);
 
 		const SInputAction pickEntity = { EInputButton::MouseLeft, EInputContext::Editor };
 		MapEvent(EInputActionEvent::PickEditorEntity, pickEntity);
