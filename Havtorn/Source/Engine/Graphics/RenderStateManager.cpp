@@ -83,7 +83,12 @@ namespace Havtorn
                 AddInputLayout(vsData, initData[i].InputLayout);
         }
 
-        InputLayouts.emplace_back(nullptr);
+        const I8 layoutDiff = STATIC_I8(EInputLayoutType::Null) - (STATIC_I8(InputLayouts.size()) - STATIC_I8(1));
+        if (layoutDiff > 0)
+        {
+            for (U8 i = 0; i < layoutDiff; i++)
+                InputLayouts.emplace_back(nullptr);
+        }
     }
 
     void CRenderStateManager::InitPixelShaders()
@@ -132,7 +137,7 @@ namespace Havtorn
             filepaths[STATIC_U64(EPixelShaders::FullscreenWorldPosition)]           = ShaderRoot + "FullscreenWorldPosition_PS.cso";
             filepaths[STATIC_U64(EPixelShaders::GBufferVertexPaint)]                = ShaderRoot + "DeferredVertexPaint_PS.cso";
             filepaths[STATIC_U64(EPixelShaders::GBufferVertexPaintEditor)]          = ShaderRoot + "DeferredVertexPaintEditor_PS.cso";
-            filepaths[STATIC_U64(EPixelShaders::DecalNormal)]                       = ShaderRoot + "Decal_PS.cso";
+            filepaths[STATIC_U64(EPixelShaders::Decal)]                             = ShaderRoot + "Decal_PS.cso";
         }
 
         for (U64 i = 0; i < STATIC_U64(EPixelShaders::Count); i++)
