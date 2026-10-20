@@ -9,9 +9,9 @@
 
 namespace Havtorn
 {
-	CGeometryRenderer::CGeometryRenderer(CRenderStateManager* stateManager)
+	bool CGeometryRenderer::Init(CRHI* /*rhi*/, CRenderManager* manager)
 	{
-		RenderStateManager = stateManager;
+		RenderStateManager = &manager->GetRenderStateManager();
 
 		const SPSODescription staticMeshGame =
 		{
@@ -87,6 +87,8 @@ namespace Havtorn
 			.RootSignature = nullptr
 		};
 		DecalGBufferPassPSOIndex = RenderStateManager->AddPipelineStateObject(deferredDecal);
+
+		return true;
 	}
 
 	void CGeometryRenderer::SetupRender(const SGeometryConstantRenderData& constantData, const SGeometryTargetRenderData& targetData)

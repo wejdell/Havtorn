@@ -7,7 +7,7 @@
 
 namespace Havtorn
 {
-	const CDataBuffer CDataBuffer::Null = { 0u, 0u, std::string("Null"), nullptr, nullptr };
+	const CDataBuffer CDataBuffer::Null = CDataBuffer();
 
 	void CDataBuffer::Release()
 	{
@@ -39,12 +39,12 @@ namespace Havtorn
 
 	U32 CDataBuffer::GetStride() const
 	{
-		return U32();
+		return VertexBufferStride;
 	}
 
 	U32 CDataBuffer::GetOffset() const
 	{
-		return U32();
+		return VertexBufferOffset;
 	}
 
 	CDataBuffer::CDataBuffer(const std::string& name, ID3D11DeviceContext* context, ID3D11Buffer* buffer)

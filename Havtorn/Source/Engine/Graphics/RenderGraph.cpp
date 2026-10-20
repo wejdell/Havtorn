@@ -61,7 +61,7 @@ namespace Havtorn
 		for (Ref<IRenderPass> defaultRootPass : defaultRootPasses)
 			TraverseDependencies(defaultRootPass, SortedPasses, SortedPassParamHashToPassIndex);
 
-		std::ranges::remove_if(SortedPasses, [](const Ref<IRenderPass>& pass) { return !pass->IsRootPass; });
+		std::erase_if(SortedPasses, [](const Ref<IRenderPass>& pass) { return !pass->IsRootPass; });
 
 		for (const Ref<IRenderPass>& pass : SortedPasses)
 		{

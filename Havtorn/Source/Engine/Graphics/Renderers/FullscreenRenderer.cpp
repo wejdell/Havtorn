@@ -243,7 +243,7 @@ namespace Havtorn
 		FullscreenDataBuffer.BindBuffer(FullscreenData);
 		PostProcessingBuffer.BindBuffer(PostProcessingBufferData);
 
-		RenderStateManager->IASetVertexBuffer(0, CDataBuffer::Null, 0, 0);
+		RenderStateManager->IASetVertexBuffer(0, CDataBuffer::Null);
 		RenderStateManager->IASetIndexBuffer(CDataBuffer::Null);
 
 		RenderStateManager->OMSetBlendState(blendState);
@@ -271,7 +271,7 @@ namespace Havtorn
 		FullscreenDataBuffer.BindBuffer(FullscreenData);
 		PostProcessingBuffer.BindBuffer(PostProcessingBufferData);
 
-		RenderStateManager->IASetVertexBuffer(0, CDataBuffer::Null, 0, 0);
+		RenderStateManager->IASetVertexBuffer(0, CDataBuffer::Null);
 		RenderStateManager->IASetIndexBuffer(CDataBuffer::Null);
 
 		RenderStateManager->PSSetConstantBuffer(1, FullscreenDataBuffer);

@@ -46,9 +46,15 @@ namespace Havtorn
 
 		// Init renderer with texture factory, create noise texture as rendertexture
 		ENGINE_ERROR_BOOL_MESSAGE(RenderTextureFactory.Init(rhi), "Failed to Init Fullscreen Texture Factory.");
-		ENGINE_ERROR_BOOL_MESSAGE(FullscreenRenderer.Init(rhi, this), "Failed to Init Fullscreen Renderer.");
 		ENGINE_ERROR_BOOL_MESSAGE(RenderStateManager.Init(rhi), "Failed to Init Render State Manager.");
-
+		ENGINE_ERROR_BOOL_MESSAGE(CustomRenderer.Init(rhi, this), "Failed to Init Custom Renderer.");
+		ENGINE_ERROR_BOOL_MESSAGE(DebugRenderer.Init(rhi, this), "Failed to Init Debug Renderer.");
+		ENGINE_ERROR_BOOL_MESSAGE(FullscreenRenderer.Init(rhi, this), "Failed to Init Fullscreen Renderer.");
+		ENGINE_ERROR_BOOL_MESSAGE(GeometryRenderer.Init(rhi, this), "Failed to Init Geometry Renderer.");
+		ENGINE_ERROR_BOOL_MESSAGE(LightRenderer.Init(rhi, this), "Failed to Init Light Renderer.");
+		ENGINE_ERROR_BOOL_MESSAGE(SpriteRenderer.Init(rhi, this), "Failed to Init Sprite Renderer.");
+		ENGINE_ERROR_BOOL_MESSAGE(ThumbnailRenderer.Init(rhi, this), "Failed to Init Thumbnail Renderer.");
+		
 		InitRenderTextures(rhi, platformManager->GetResolution());
 		InitDataBuffers();
 
@@ -525,8 +531,8 @@ namespace Havtorn
 	}
 
 	// TODO.NW: Figure out how to implement this as a render debug data feature in the finalize pass of default render passes
-	//void CRenderManager::CheckRenderViewMode(const U64 renderViewID)
-	//{
+	void CRenderManager::CheckRenderViewMode(const U64 /*renderViewID*/)
+	{
 	//	if (!RenderThreadRenderViews->contains(renderViewID))
 	//		return;
 
@@ -639,7 +645,7 @@ namespace Havtorn
 	//	default:
 	//		break;
 	//	}
-	//}
+	}
 
 	void CRenderManager::CycleRenderViewMode(const SInputActionPayload payload)
 	{
@@ -718,7 +724,7 @@ namespace Havtorn
 			 drawID += 1000;
 
 		if (!StaticMeshDrawData.contains(drawID))
-			StaticMeshDrawData.emplace(drawID);
+			StaticMeshDrawData.emplace(drawID, SStaticMeshDrawData{});
 
 		SStaticMeshDrawData& meshData = StaticMeshDrawData.at(drawID);
 
@@ -734,7 +740,7 @@ namespace Havtorn
 		meshData.DrawData.clear(); // Might clear this in Execute and unregister there
 		meshData.DrawData.resize(asset->DrawCallData.size());
 
-		for (I64 index = 0; index < asset->DrawCallData.size(); index++)
+		for (U64 index = 0; index < asset->DrawCallData.size(); index++)
 		{
 			const char* renderResourceSuffix = (std::to_string(meshAssetID + STATIC_U32(index))).c_str();
 			meshData.DrawData[index] = ConstructMeshDrawData(asset->DrawCallData[index], renderResourceSuffix, materialAssets, renderViewID);
@@ -748,7 +754,7 @@ namespace Havtorn
 			drawID += 1000;
 
 		if (!SkeletalMeshDrawData.contains(drawID))
-			SkeletalMeshDrawData.emplace(drawID);
+			SkeletalMeshDrawData.emplace(drawID, SSkeletalMeshDrawData{});
 
 		SSkeletalMeshDrawData& meshData = SkeletalMeshDrawData.at(drawID);
 
@@ -762,7 +768,7 @@ namespace Havtorn
 		meshData.DrawData.clear(); // Might clear this in Execute and unregister there
 		meshData.DrawData.resize(asset->DrawCallData.size());
 
-		for (I64 index = 0; index < asset->DrawCallData.size(); index++)
+		for (U64 index = 0; index < asset->DrawCallData.size(); index++)
 		{
 			const char* renderResourceSuffix = (std::to_string(meshAssetID + STATIC_U32(index))).c_str();
 			meshData.DrawData[index] = ConstructMeshDrawData(asset->DrawCallData[index], renderResourceSuffix, materialAssets, renderViewID);

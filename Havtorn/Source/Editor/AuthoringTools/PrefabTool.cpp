@@ -12,6 +12,8 @@
 #include <Timer.h>
 #include <Assets/AssetRegistry.h>
 #include <ECS/Systems/CameraSystem.h>
+#include <ECS/Systems/RenderSystem.h>
+#include <ECS/Components/MetaDataComponent.h>
 #include <Assets/FileHeaders/PrefabAssetFileHeader.h>
 #include <Graphics/Debug/DebugDrawUtility.h>
 
@@ -439,25 +441,24 @@ namespace Havtorn
 
 		if (PrefabData == nullptr)
 			return;
-
-		{
-			// TODO.NW: Make preview cam projection settings?
-			UpdateViewMatrix();
-
-			SRenderCommand command = SRenderCommand(ERenderCommandType::CameraDataStorage);
-			command.Matrices.emplace_back(PreviewCameraViewMatrix);
-			command.Matrices.emplace_back(PreviewCameraProjectionMatrix);
-			renderManager->PushRenderCommand(command, PrefabToolRenderID);
-		}
+		
+		// TODO.NW: Make preview cam projection settings?
+		UpdateViewMatrix();
+		SViewData viewData = { PreviewCameraViewMatrix, PreviewCameraProjectionMatrix };
 
 		CScene* scene = PrefabData->Scene.get();
 
 		//Add widgets from editor render system
 
+		SRenderView* renderView = renderManager->GetRenderView(PrefabToolRenderID);
+		renderView->ViewMatrix = PreviewCameraViewMatrix;
+		renderView->ProjectionMatrix = PreviewCameraProjectionMatrix;
+		renderView->SkyboxCubemapTextureHandle = renderManager->GetRenderResourceRegistry().DeclareRenderTexture("CubemapTexture", &PreviewSkylight->RenderTexture);
+
 		const CRenderSystem* renderSystem = GEngine::GetWorld()->GetSystem<CRenderSystem>();
-		renderSystem->ProcessRenderView(scene, PrefabToolRenderID, SEntity::Null, true, false);
-		
-		// NW: Custom directional light command
+		renderSystem->ProcessRenderView(renderView, scene, viewData, true);
+		renderSystem->AddDefaultPasses(renderView, false);
+
 		{
 			const SVector4 directionalLightDirection = SVector4(PreviewLightDirection, 0.0f);
 			const SVector4 directionalLightColor = { PreviewLightColor.AsVector(), PreviewLightIntensity };
@@ -465,26 +466,25 @@ namespace Havtorn
 			SShadowmapViewData shadowmapView;
 			shadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(8.0f, 8.0f, -8.0f, 8.0f);
 
-			SRenderCommand command;
-			command.Type = ERenderCommandType::DeferredLightingDirectional;
-			command.Vectors.push_back(directionalLightDirection);
-			command.Colors.push_back(directionalLightColor);
-			command.ShadowmapViews.push_back(shadowmapView);
-			command.RenderTextures.push_back(PreviewSkylight->RenderTexture);
-			renderManager->PushRenderCommand(command, PrefabToolRenderID);
-		}
+			const SVector2<F32> shadowAtlasResolution = renderManager->GetShadowAtlasResolution();
+			const F32 shadowTestTolerance = renderManager->GetShadowTestTolerance();
+			const auto& [bufferData, viewportIndices] = renderSystem->ProcessShadowmapBufferData({ shadowmapView }, shadowAtlasResolution, shadowTestTolerance);
 
-		// NW: Custom skybox command
-		{
-			SRenderCommand command;
-			command.RenderTextures.push_back(PreviewSkylight->RenderTexture);
-			command.Type = ERenderCommandType::Skybox;
-			renderManager->PushRenderCommand(command, PrefabToolRenderID);
+			renderView->DirectionalLightDrawData.emplace_back(SDirectionalLightDrawData
+				{
+					// Filled by mesh processing
+					.ShadowCasterData = {},
+					// Negate the direction going into the shaders
+					.LightBufferData = {.ToDirectionalLight = -directionalLightDirection, .DirectionalLightColor = directionalLightColor },
+					.ShadowmapBufferData = bufferData[0],
+					.VolumetricBufferData = {},
+					.CubemapTextureHandle = renderManager->GetRenderResourceRegistry().DeclareRenderTexture("CubemapTexture", &PreviewSkylight->RenderTexture),
+					.ShadowmapViewportIndex = viewportIndices[0],
+					.RenderVolumetrics = false
+				});
 		}
-
-		renderSystem->PushUniqueCommands(PrefabToolRenderID);
 
 		CEditorRenderSystem* editorRenderSystem = GEngine::GetWorld()->GetSystem<CEditorRenderSystem>();
-		editorRenderSystem->ProcessRenderView(scene, PrefabToolRenderID, PreviewCameraViewMatrix);
+		editorRenderSystem->ProcessRenderView(renderView, scene, viewData, true);
 	}
 }

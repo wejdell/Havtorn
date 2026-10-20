@@ -23,296 +23,296 @@ namespace Havtorn
 		return Textures[index].GetResource();
 	}
 
-	void CEditorResourceManager::RequestThumbnailRender(SEditorAssetRepresentation* assetRep, const std::string& filePath) const
+	void CEditorResourceManager::RequestThumbnailRender(SEditorAssetRepresentation* /*assetRep*/, const std::string& /*filePath*/) const
 	{
-		U32 assetID = SAssetReference(assetRep->Name).UID;
-		// TODO.NW: Set up ownership using smart pointers, use weak ptr to capture 'this' here. 
-		auto replaceTexture = [this, filePath](CRenderTexture finishedCopy)
-		{
-			Manager->GetAssetRepFromDirEntry(std::filesystem::directory_entry(filePath))->TextureRef = std::move(finishedCopy);
-		};
-		RenderManager->RequestRenderView(assetID, replaceTexture);
+		//U32 assetID = SAssetReference(assetRep->Name).UID;
+		//// TODO.NW: Set up ownership using smart pointers, use weak ptr to capture 'this' here. 
+		//auto replaceTexture = [this, filePath](CRenderTexture finishedCopy)
+		//{
+		//	Manager->GetAssetRepFromDirEntry(std::filesystem::directory_entry(filePath))->TextureRef = std::move(finishedCopy);
+		//};
+		//RenderManager->RequestRenderView(assetID, replaceTexture);
 
-		switch (assetRep->AssetType)
-		{
-		case EAssetType::StaticMesh:
-		{
-			SStaticMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
-			F32 aspectRatio = 1.0f;
-			F32 marginPercentage = 1.5f;
-			SVector2<F32> fov = { aspectRatio * 70.0f, 70.0f };
+		//switch (assetRep->AssetType)
+		//{
+		//case EAssetType::StaticMesh:
+		//{
+		//	SStaticMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SStaticMeshAsset>(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
+		//	F32 aspectRatio = 1.0f;
+		//	F32 marginPercentage = 1.5f;
+		//	SVector2<F32> fov = { aspectRatio * 70.0f, 70.0f };
 
-			STransform cameraTransform;
-			cameraTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(30.0f, 30.0f, 0.0f));
-			cameraTransform.Translate(SVector(meshAsset->BoundsCenter.X, meshAsset->BoundsCenter.Y, -UMathUtilities::GetFocusDistanceForBounds(meshAsset->BoundsCenter, SVector::GetAbsMaxKeepValue(meshAsset->BoundsMax, meshAsset->BoundsMin), fov, marginPercentage)));
-			SMatrix camView = cameraTransform.GetMatrix();
-			SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(fov.Y), aspectRatio, 0.001f, 100.0f);
-				
-			SRenderCommand command;
-			command.Type = ERenderCommandType::StaticMeshAssetThumbnail;
-			command.DrawCallData = meshAsset->DrawCallData;
-			command.Matrices.emplace_back(camView);
-			command.Matrices.emplace_back(camProjection);
-			RenderManager->PushRenderCommand(command, assetID);
+		//	STransform cameraTransform;
+		//	cameraTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(30.0f, 30.0f, 0.0f));
+		//	cameraTransform.Translate(SVector(meshAsset->BoundsCenter.X, meshAsset->BoundsCenter.Y, -UMathUtilities::GetFocusDistanceForBounds(meshAsset->BoundsCenter, SVector::GetAbsMaxKeepValue(meshAsset->BoundsMax, meshAsset->BoundsMin), fov, marginPercentage)));
+		//	SMatrix camView = cameraTransform.GetMatrix();
+		//	SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(fov.Y), aspectRatio, 0.001f, 100.0f);
+		//		
+		//	SRenderCommand command;
+		//	command.Type = ERenderCommandType::StaticMeshAssetThumbnail;
+		//	command.DrawCallData = meshAsset->DrawCallData;
+		//	command.Matrices.emplace_back(camView);
+		//	command.Matrices.emplace_back(camProjection);
+		//	RenderManager->PushRenderCommand(command, assetID);
 
-			GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
-			
-		}
-			break;
-		case EAssetType::SkeletalMesh:
-		{
-			SSkeletalMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
-			F32 aspectRatio = 1.0f;
-			F32 marginPercentage = 1.5f;
-			SVector2<F32> fov = { aspectRatio * 70.0f, 70.0f };
+		//	GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
+		//	
+		//}
+		//	break;
+		//case EAssetType::SkeletalMesh:
+		//{
+		//	SSkeletalMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
+		//	F32 aspectRatio = 1.0f;
+		//	F32 marginPercentage = 1.5f;
+		//	SVector2<F32> fov = { aspectRatio * 70.0f, 70.0f };
 
-			STransform cameraTransform;
-			cameraTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(30.0f, 30.0f, 0.0f));
-			cameraTransform.Translate(SVector(meshAsset->BoundsCenter.X, meshAsset->BoundsCenter.Y, -UMathUtilities::GetFocusDistanceForBounds(meshAsset->BoundsCenter, SVector::GetAbsMaxKeepValue(meshAsset->BoundsMax, meshAsset->BoundsMin), fov, marginPercentage)));
-			SMatrix camView = cameraTransform.GetMatrix();
-			SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(fov.Y), aspectRatio, 0.001f, 100.0f);
+		//	STransform cameraTransform;
+		//	cameraTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(30.0f, 30.0f, 0.0f));
+		//	cameraTransform.Translate(SVector(meshAsset->BoundsCenter.X, meshAsset->BoundsCenter.Y, -UMathUtilities::GetFocusDistanceForBounds(meshAsset->BoundsCenter, SVector::GetAbsMaxKeepValue(meshAsset->BoundsMax, meshAsset->BoundsMin), fov, marginPercentage)));
+		//	SMatrix camView = cameraTransform.GetMatrix();
+		//	SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(fov.Y), aspectRatio, 0.001f, 100.0f);
 
-			SRenderCommand command;
-			command.Type = ERenderCommandType::SkeletalMeshAssetThumbnail;
-			command.DrawCallData = meshAsset->DrawCallData;
-			command.BoneMatrices = std::vector<SMatrix>();
-			command.Matrices.emplace_back(camView);
-			command.Matrices.emplace_back(camProjection);
-			RenderManager->PushRenderCommand(command, assetID);
+		//	SRenderCommand command;
+		//	command.Type = ERenderCommandType::SkeletalMeshAssetThumbnail;
+		//	command.DrawCallData = meshAsset->DrawCallData;
+		//	command.BoneMatrices = std::vector<SMatrix>();
+		//	command.Matrices.emplace_back(camView);
+		//	command.Matrices.emplace_back(camProjection);
+		//	RenderManager->PushRenderCommand(command, assetID);
 
-			GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
-		}
-			break;
-		case EAssetType::Material:
-		{
-			{
-				const F32 radius = 2.0f;
-				SVector location = SVector(0.0f, 0.0f, radius);
-				SMatrix camView = SMatrix::LookAtLH(location, SVector(), SVector::Up).FastInverse();
-				SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), 1.0f, 0.01f, 10.0f);
+		//	GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
+		//}
+		//	break;
+		//case EAssetType::Material:
+		//{
+		//	{
+		//		const F32 radius = 2.0f;
+		//		SVector location = SVector(0.0f, 0.0f, radius);
+		//		SMatrix camView = SMatrix::LookAtLH(location, SVector(), SVector::Up).FastInverse();
+		//		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), 1.0f, 0.01f, 10.0f);
 
-				SRenderCommand command = SRenderCommand(ERenderCommandType::CameraDataStorage);
-				command.Matrices.emplace_back(camView);
-				command.Matrices.emplace_back(camProjection);
-				RenderManager->PushRenderCommand(command, assetID);
-			}
+		//		SRenderCommand command = SRenderCommand(ERenderCommandType::CameraDataStorage);
+		//		command.Matrices.emplace_back(camView);
+		//		command.Matrices.emplace_back(camProjection);
+		//		RenderManager->PushRenderCommand(command, assetID);
+		//	}
 
-			{
-				STransformComponent component;
-				SMatrix objectMatrix = SMatrix::CreateRotationFromEuler(SVector(-25.0f, 30.0f, 0.0f)).FastInverse();
-				component.Transform.SetMatrix(objectMatrix);
-				component.Owner = SEntity(assetID);
+		//	{
+		//		STransformComponent component;
+		//		SMatrix objectMatrix = SMatrix::CreateRotationFromEuler(SVector(-25.0f, 30.0f, 0.0f)).FastInverse();
+		//		component.Transform.SetMatrix(objectMatrix);
+		//		component.Owner = SEntity(assetID);
 
-				SDrawCallData drawCallData;
-				drawCallData.IndexCount = STATIC_U32(GeometryPrimitives::Icosphere.Indices.size());
-				drawCallData.VertexBufferIndex = STATIC_U8(EVertexBufferPrimitives::Icosphere);
-				drawCallData.IndexBufferIndex = STATIC_U8(EIndexBufferPrimitives::Icosphere);
-				drawCallData.VertexStrideIndex = 0;
-				drawCallData.VertexOffsetIndex = 0;
-				drawCallData.MaterialIndex = 0;
+		//		SDrawCallData drawCallData;
+		//		drawCallData.IndexCount = STATIC_U32(GeometryPrimitives::Icosphere.Indices.size());
+		//		drawCallData.VertexBufferIndex = STATIC_U8(EVertexBufferPrimitives::Icosphere);
+		//		drawCallData.IndexBufferIndex = STATIC_U8(EIndexBufferPrimitives::Icosphere);
+		//		drawCallData.VertexStrideIndex = 0;
+		//		drawCallData.VertexOffsetIndex = 0;
+		//		drawCallData.MaterialIndex = 0;
 
-				SGraphicsMaterialAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<SGraphicsMaterialAsset>(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
+		//		SGraphicsMaterialAsset* asset = GEngine::GetAssetRegistry()->RequestAssetData<SGraphicsMaterialAsset>(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
 
-				SRenderCommand command;
-				command.Type = ERenderCommandType::GBufferDataInstanced;
-				command.U32s.push_back(assetID);
-				command.DrawCallData.emplace_back(drawCallData);
-				command.Materials.push_back(asset->Material);
-				command.MaterialRenderTextures.push_back(asset->Material.GetRenderTextures(assetID));
-				RenderManager->AddStaticMeshToInstancedRenderList(assetID, &component, assetID);
-				RenderManager->PushRenderCommand(command, assetID);
+		//		SRenderCommand command;
+		//		command.Type = ERenderCommandType::GBufferDataInstanced;
+		//		command.U32s.push_back(assetID);
+		//		command.DrawCallData.emplace_back(drawCallData);
+		//		command.Materials.push_back(asset->Material);
+		//		command.MaterialRenderTextures.push_back(asset->Material.GetRenderTextures(assetID));
+		//		RenderManager->AddStaticMeshToInstancedRenderList(assetID, &component, assetID);
+		//		RenderManager->PushRenderCommand(command, assetID);
 
-				GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
-			}
+		//		GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
+		//	}
 
-			STextureCubeAsset* skybox = GEngine::GetAssetRegistry()->RequestAssetData<STextureCubeAsset>(SAssetReference("Resources/DefaultSkybox.hva"), assetID);
-			CStaticRenderTexture skyboxTexture = CStaticRenderTexture();
+		//	STextureCubeAsset* skybox = GEngine::GetAssetRegistry()->RequestAssetData<STextureCubeAsset>(SAssetReference("Resources/DefaultSkybox.hva"), assetID);
+		//	CStaticRenderTexture skyboxTexture = CStaticRenderTexture();
 
-			if (!skybox)
-				HV_LOG_ERROR("No Default Skylight found for rendering material asset thumbnails");
-			else
-				skyboxTexture = skybox->RenderTexture;
+		//	if (!skybox)
+		//		HV_LOG_ERROR("No Default Skylight found for rendering material asset thumbnails");
+		//	else
+		//		skyboxTexture = skybox->RenderTexture;
 
-			{
-				const SVector4 directionalLightDirection = { 1.0f, 0.0f, 1.0f, 0.0f };
-				const SVector4 directionalLightColor = SVector4(1.0f);
+		//	{
+		//		const SVector4 directionalLightDirection = { 1.0f, 0.0f, 1.0f, 0.0f };
+		//		const SVector4 directionalLightColor = SVector4(1.0f);
 
-				SShadowmapViewData shadowmapView;
-				shadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(8.0f, 8.0f, -8.0f, 8.0f);
+		//		SShadowmapViewData shadowmapView;
+		//		shadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(8.0f, 8.0f, -8.0f, 8.0f);
 
-				SRenderCommand command;
-				command.Type = ERenderCommandType::DeferredLightingDirectional;
-				command.Vectors.push_back(directionalLightDirection);
-				command.Colors.push_back(directionalLightColor);
-				command.ShadowmapViews.push_back(shadowmapView);
-				command.RenderTextures.push_back(skyboxTexture);
-				RenderManager->PushRenderCommand(command, assetID);
-			}
+		//		SRenderCommand command;
+		//		command.Type = ERenderCommandType::DeferredLightingDirectional;
+		//		command.Vectors.push_back(directionalLightDirection);
+		//		command.Colors.push_back(directionalLightColor);
+		//		command.ShadowmapViews.push_back(shadowmapView);
+		//		command.RenderTextures.push_back(skyboxTexture);
+		//		RenderManager->PushRenderCommand(command, assetID);
+		//	}
 
-			{
-				SRenderCommand command;
-				command.RenderTextures.push_back(skyboxTexture);
-				command.Type = ERenderCommandType::Skybox;
-				RenderManager->PushRenderCommand(command, assetID);
-			}
-			GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference("Resources/DefaultSkybox.hva"), assetID);
+		//	{
+		//		SRenderCommand command;
+		//		command.RenderTextures.push_back(skyboxTexture);
+		//		command.Type = ERenderCommandType::Skybox;
+		//		RenderManager->PushRenderCommand(command, assetID);
+		//	}
+		//	GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference("Resources/DefaultSkybox.hva"), assetID);
 
-			{
-				SRenderCommand command;
-				command.Type = ERenderCommandType::PreLightingPass;
-				RenderManager->PushRenderCommand(command, assetID);
-			}
+		//	{
+		//		SRenderCommand command;
+		//		command.Type = ERenderCommandType::PreLightingPass;
+		//		RenderManager->PushRenderCommand(command, assetID);
+		//	}
 
-			{
-				SRenderCommand command;
-				command.Type = ERenderCommandType::PostBaseLightingPass;
-				RenderManager->PushRenderCommand(command, assetID);
-			}
+		//	{
+		//		SRenderCommand command;
+		//		command.Type = ERenderCommandType::PostBaseLightingPass;
+		//		RenderManager->PushRenderCommand(command, assetID);
+		//	}
 
-			{
-				SRenderCommand command;
-				command.Type = ERenderCommandType::Bloom;
-				RenderManager->PushRenderCommand(command, assetID);
-			}
+		//	{
+		//		SRenderCommand command;
+		//		command.Type = ERenderCommandType::Bloom;
+		//		RenderManager->PushRenderCommand(command, assetID);
+		//	}
 
-			{
-				SRenderCommand command;
-				command.Type = ERenderCommandType::Tonemapping;
-				RenderManager->PushRenderCommand(command, assetID);
-			}
+		//	{
+		//		SRenderCommand command;
+		//		command.Type = ERenderCommandType::Tonemapping;
+		//		RenderManager->PushRenderCommand(command, assetID);
+		//	}
 
-			{
-				SRenderCommand command;
-				command.Type = ERenderCommandType::AntiAliasing;
-				RenderManager->PushRenderCommand(command, assetID);
-			}
+		//	{
+		//		SRenderCommand command;
+		//		command.Type = ERenderCommandType::AntiAliasing;
+		//		RenderManager->PushRenderCommand(command, assetID);
+		//	}
 
-			{
-				SRenderCommand command;
-				command.Type = ERenderCommandType::GammaCorrection;
-				RenderManager->PushRenderCommand(command, assetID);
-			}
-		}
-			break;
-		case EAssetType::SkeletalAnimation:
-		{
-			SSkeletalAnimationAsset* animationAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalAnimationAsset>(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
-			SSkeletalMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(animationAsset->RigPath), CAssetRegistry::EditorManagerRequestID);
-			F32 aspectRatio = 1.0f;
-			F32 marginPercentage = 1.5f;
-			SVector2<F32> fov = { aspectRatio * 70.0f, 70.0f };
+		//	{
+		//		SRenderCommand command;
+		//		command.Type = ERenderCommandType::GammaCorrection;
+		//		RenderManager->PushRenderCommand(command, assetID);
+		//	}
+		//}
+		//	break;
+		//case EAssetType::SkeletalAnimation:
+		//{
+		//	SSkeletalAnimationAsset* animationAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalAnimationAsset>(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
+		//	SSkeletalMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(animationAsset->RigPath), CAssetRegistry::EditorManagerRequestID);
+		//	F32 aspectRatio = 1.0f;
+		//	F32 marginPercentage = 1.5f;
+		//	SVector2<F32> fov = { aspectRatio * 70.0f, 70.0f };
 
-			STransform cameraTransform;
-			cameraTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(30.0f, 30.0f, 0.0f));
-			cameraTransform.Translate(SVector(meshAsset->BoundsCenter.X, meshAsset->BoundsCenter.Y, -UMathUtilities::GetFocusDistanceForBounds(meshAsset->BoundsCenter, SVector::GetAbsMaxKeepValue(meshAsset->BoundsMax, meshAsset->BoundsMin), fov, marginPercentage)));
-			SMatrix camView = cameraTransform.GetMatrix();
-			SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(fov.Y), aspectRatio, 0.001f, 100.0f);
+		//	STransform cameraTransform;
+		//	cameraTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(30.0f, 30.0f, 0.0f));
+		//	cameraTransform.Translate(SVector(meshAsset->BoundsCenter.X, meshAsset->BoundsCenter.Y, -UMathUtilities::GetFocusDistanceForBounds(meshAsset->BoundsCenter, SVector::GetAbsMaxKeepValue(meshAsset->BoundsMax, meshAsset->BoundsMin), fov, marginPercentage)));
+		//	SMatrix camView = cameraTransform.GetMatrix();
+		//	SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(fov.Y), aspectRatio, 0.001f, 100.0f);
 
-			SRenderCommand command;
-			command.Type = ERenderCommandType::SkeletalMeshAssetThumbnail;
-			command.DrawCallData = meshAsset->DrawCallData;
-			
-			GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(animationAsset->RigPath), CAssetRegistry::EditorManagerRequestID);
-			GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
+		//	SRenderCommand command;
+		//	command.Type = ERenderCommandType::SkeletalMeshAssetThumbnail;
+		//	command.DrawCallData = meshAsset->DrawCallData;
+		//	
+		//	GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(animationAsset->RigPath), CAssetRegistry::EditorManagerRequestID);
+		//	GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
 
-			command.BoneMatrices = GEngine::GetWorld()->GetSystem<CAnimatorGraphSystem>()->ReadAssetAnimationPose(filePath, 0.0f);
-			command.Matrices.emplace_back(camView);
-			command.Matrices.emplace_back(camProjection);
-			RenderManager->PushRenderCommand(command, assetID);
-		}
-			break;
-		case EAssetType::Texture:
-		{
-			STextureAsset* textureAsset = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
+		//	command.BoneMatrices = GEngine::GetWorld()->GetSystem<CAnimatorGraphSystem>()->ReadAssetAnimationPose(filePath, 0.0f);
+		//	command.Matrices.emplace_back(camView);
+		//	command.Matrices.emplace_back(camProjection);
+		//	RenderManager->PushRenderCommand(command, assetID);
+		//}
+		//	break;
+		//case EAssetType::Texture:
+		//{
+		//	STextureAsset* textureAsset = GEngine::GetAssetRegistry()->RequestAssetData<STextureAsset>(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
 
-			SRenderCommand command;
-			command.Type = ERenderCommandType::TextureDraw;
-			command.RenderTextures.push_back(textureAsset->RenderTexture);
-			
-			GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
+		//	SRenderCommand command;
+		//	command.Type = ERenderCommandType::TextureDraw;
+		//	command.RenderTextures.push_back(textureAsset->RenderTexture);
+		//	
+		//	GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
 
-			RenderManager->PushRenderCommand(command, assetID);
-		}
-			break;
-		case EAssetType::TextureCube:
-		{
-			STextureCubeAsset* textureAsset = GEngine::GetAssetRegistry()->RequestAssetData<STextureCubeAsset>(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
+		//	RenderManager->PushRenderCommand(command, assetID);
+		//}
+		//	break;
+		//case EAssetType::TextureCube:
+		//{
+		//	STextureCubeAsset* textureAsset = GEngine::GetAssetRegistry()->RequestAssetData<STextureCubeAsset>(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
 
-			{
-				SVector location = SVector(0.0f, 0.0f, 1.0f);
-				SMatrix camView = SMatrix::LookAtLH(location, SVector(), SVector::Up).FastInverse();
-				SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), 1.0f, 0.01f, 10.0f);
+		//	{
+		//		SVector location = SVector(0.0f, 0.0f, 1.0f);
+		//		SMatrix camView = SMatrix::LookAtLH(location, SVector(), SVector::Up).FastInverse();
+		//		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), 1.0f, 0.01f, 10.0f);
 
-				SRenderCommand command = SRenderCommand(ERenderCommandType::CameraDataStorage);
-				command.Matrices.emplace_back(camView);
-				command.Matrices.emplace_back(camProjection);
-				RenderManager->PushRenderCommand(command, assetID);
-			}
+		//		SRenderCommand command = SRenderCommand(ERenderCommandType::CameraDataStorage);
+		//		command.Matrices.emplace_back(camView);
+		//		command.Matrices.emplace_back(camProjection);
+		//		RenderManager->PushRenderCommand(command, assetID);
+		//	}
 
-			{
-				SRenderCommand command;
-				command.Type = ERenderCommandType::TextureCubeDraw;
-				command.RenderTextures.push_back(textureAsset->RenderTexture);
+		//	{
+		//		SRenderCommand command;
+		//		command.Type = ERenderCommandType::TextureCubeDraw;
+		//		command.RenderTextures.push_back(textureAsset->RenderTexture);
 
-				GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
+		//		GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
 
-				RenderManager->PushRenderCommand(command, assetID);
-			}
-		}
-			break;
-		default:
-			break;
-		}
+		//		RenderManager->PushRenderCommand(command, assetID);
+		//	}
+		//}
+		//	break;
+		//default:
+		//	break;
+		//}
 	}
 
-	void CEditorResourceManager::AnimateAssetTexture(SEditorAssetRepresentation* assetRep, const std::string& filePath, const F32 animationTime) const
+	void CEditorResourceManager::AnimateAssetTexture(SEditorAssetRepresentation* /*assetRep*/, const std::string& /*filePath*/, const F32 /*animationTime*/) const
 	{
-		U32 assetID = SAssetReference(assetRep->Name).UID;
+		//U32 assetID = SAssetReference(assetRep->Name).UID;
 
-		switch (assetRep->AssetType)
-		{
-		case EAssetType::SkeletalAnimation:
-		{
-			SSkeletalAnimationAsset* animationAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalAnimationAsset>(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
-			SSkeletalMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(animationAsset->RigPath), CAssetRegistry::EditorManagerRequestID);
-			F32 aspectRatio = 1.0f;
-			F32 marginPercentage = 1.5f;
-			SVector2<F32> fov = { aspectRatio * 70.0f, 70.0f };
+		//switch (assetRep->AssetType)
+		//{
+		//case EAssetType::SkeletalAnimation:
+		//{
+		//	SSkeletalAnimationAsset* animationAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalAnimationAsset>(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
+		//	SSkeletalMeshAsset* meshAsset = GEngine::GetAssetRegistry()->RequestAssetData<SSkeletalMeshAsset>(SAssetReference(animationAsset->RigPath), CAssetRegistry::EditorManagerRequestID);
+		//	F32 aspectRatio = 1.0f;
+		//	F32 marginPercentage = 1.5f;
+		//	SVector2<F32> fov = { aspectRatio * 70.0f, 70.0f };
 
-			STransform cameraTransform;
-			cameraTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(30.0f, 30.0f, 0.0f));
-			cameraTransform.Translate(SVector(meshAsset->BoundsCenter.X, meshAsset->BoundsCenter.Y, -UMathUtilities::GetFocusDistanceForBounds(meshAsset->BoundsCenter, SVector::GetAbsMaxKeepValue(meshAsset->BoundsMax, meshAsset->BoundsMin), fov, marginPercentage)));
-			SMatrix camView = cameraTransform.GetMatrix();
-			SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(fov.Y), aspectRatio, 0.001f, 100.0f);
+		//	STransform cameraTransform;
+		//	cameraTransform.Orbit(SVector4(), SMatrix::CreateRotationFromEuler(30.0f, 30.0f, 0.0f));
+		//	cameraTransform.Translate(SVector(meshAsset->BoundsCenter.X, meshAsset->BoundsCenter.Y, -UMathUtilities::GetFocusDistanceForBounds(meshAsset->BoundsCenter, SVector::GetAbsMaxKeepValue(meshAsset->BoundsMax, meshAsset->BoundsMin), fov, marginPercentage)));
+		//	SMatrix camView = cameraTransform.GetMatrix();
+		//	SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(fov.Y), aspectRatio, 0.001f, 100.0f);
 
-			SRenderCommand command;
-			command.Type = ERenderCommandType::SkeletalMeshAssetThumbnail;
-			command.DrawCallData = meshAsset->DrawCallData;
+		//	SRenderCommand command;
+		//	command.Type = ERenderCommandType::SkeletalMeshAssetThumbnail;
+		//	command.DrawCallData = meshAsset->DrawCallData;
 
-			GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(animationAsset->RigPath), CAssetRegistry::EditorManagerRequestID);
-			GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
+		//	GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(animationAsset->RigPath), CAssetRegistry::EditorManagerRequestID);
+		//	GEngine::GetAssetRegistry()->UnrequestAsset(SAssetReference(filePath), CAssetRegistry::EditorManagerRequestID);
 
-			command.BoneMatrices = GEngine::GetWorld()->GetSystem<CAnimatorGraphSystem>()->ReadAssetAnimationPose(filePath, animationTime);
-			command.Matrices.emplace_back(camView);
-			command.Matrices.emplace_back(camProjection);
-			RenderManager->PushRenderCommand(command, assetID);
-			break;
-		}
-		case EAssetType::AudioClip: // TODO.NW: Play sound? Probably want to do that if selected and pressing play instead
-			break;
-		case EAssetType::SpriteAnimation:
-			break;
-		case EAssetType::StaticMesh:
-		case EAssetType::SkeletalMesh:
-		case EAssetType::Texture:
-		case EAssetType::TextureCube:
-		case EAssetType::Material:
-		case EAssetType::Scene:
-		case EAssetType::Sequencer:
-		case EAssetType::None:
-		default:
-			break;
-		}
+		//	command.BoneMatrices = GEngine::GetWorld()->GetSystem<CAnimatorGraphSystem>()->ReadAssetAnimationPose(filePath, animationTime);
+		//	command.Matrices.emplace_back(camView);
+		//	command.Matrices.emplace_back(camProjection);
+		//	RenderManager->PushRenderCommand(command, assetID);
+		//	break;
+		//}
+		//case EAssetType::AudioClip: // TODO.NW: Play sound? Probably want to do that if selected and pressing play instead
+		//	break;
+		//case EAssetType::SpriteAnimation:
+		//	break;
+		//case EAssetType::StaticMesh:
+		//case EAssetType::SkeletalMesh:
+		//case EAssetType::Texture:
+		//case EAssetType::TextureCube:
+		//case EAssetType::Material:
+		//case EAssetType::Scene:
+		//case EAssetType::Sequencer:
+		//case EAssetType::None:
+		//default:
+		//	break;
+		//}
 	}
 
 	std::string CEditorResourceManager::CreateAsset(const std::string& destinationPath, const SAssetFileHeader& fileHeader) const

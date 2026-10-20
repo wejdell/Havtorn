@@ -2,8 +2,12 @@
 
 #pragma once
 
+#include "SharedRendererData.h"
+
 namespace Havtorn
 {
+	class CRHI;
+	class CRenderManager;
 	class CRenderStateManager;
 	struct SRenderResource;
 
@@ -40,9 +44,11 @@ namespace Havtorn
 	class CThumbnailRenderer 
 	{
 	public:
-		CThumbnailRenderer(CRenderStateManager* stateManager);
+		CThumbnailRenderer() = default;
 		~CThumbnailRenderer() = default;
+		bool Init(CRHI* rhi, CRenderManager* manager);
 
+		void SetupRender(const SMainTargetRenderData& targetData);
 		void RenderStaticMeshThumbnail(const SStaticMeshThumbnailPassData& passData);
 		void RenderSkeletalMeshThumbnail(const SSkeletalMeshThumbnailPassData& passData);
 		void RenderCubemapTextureThumbnail(const SCubemapTexturePassData& passData);

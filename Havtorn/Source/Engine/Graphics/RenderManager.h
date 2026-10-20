@@ -13,7 +13,6 @@
 #include "RenderStateManager.h"
 #include "GraphicsEnums.h"
 #include "GraphicsMaterial.h"
-#include "RenderCommand.h"
 #include "RenderGraph.h"
 #include "Scene/World.h"
 
@@ -36,6 +35,7 @@ namespace Havtorn
 	struct SDecalComponent;
 	struct SEnvironmentLightComponent;
 	struct SSpriteComponent;
+	struct SGraphicsMaterialAsset;
 
 	enum class ERenderViewMode
 	{
@@ -251,9 +251,9 @@ namespace Havtorn
 		ENGINE_API void RequestRenderView(const U64& renderViewID, std::optional<std::function<void(CRenderTexture)>> callback = {});
 		ENGINE_API void UnrequestRenderView(const U64& renderViewID);
 
-		const SVector2<U16>& GetCurrentWindowResolution() const;
-		const SVector2<F32>& GetShadowAtlasResolution() const;
-		F32 GetShadowTestTolerance() const;
+		ENGINE_API const SVector2<U16>& GetCurrentWindowResolution() const;
+		ENGINE_API const SVector2<F32>& GetShadowAtlasResolution() const;
+		ENGINE_API F32 GetShadowTestTolerance() const;
 		ENGINE_API U32 GetNumberOfRenderViews() const;
 
 		ENGINE_API void SetRenderViewMode(const ERenderViewMode renderPass);

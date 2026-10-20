@@ -75,15 +75,16 @@ namespace Havtorn
 			Context->Unmap(Buffer, 0);
 		}
 
-		U32 VertexBufferStride = 0;
-		U32 VertexBufferOffset = 0;
+		U32 GetStride() const;
+		U32 GetOffset() const;
 
-		kom ihåg att de här måste sättas
 	private:
 		PLATFORM_API CDataBuffer(const std::string& name, ID3D11DeviceContext* context, ID3D11Buffer* buffer);
 
-		std::string Name;
+		std::string Name = "Null";
 		ID3D11DeviceContext* Context = nullptr;
 		ID3D11Buffer* Buffer = nullptr;
+		U32 VertexBufferStride = 0;
+		U32 VertexBufferOffset = 0;
 	};
 }

@@ -9,9 +9,9 @@
 
 namespace Havtorn
 {
-	CLightRenderer::CLightRenderer(CRenderStateManager* stateManager)
+	bool CLightRenderer::Init(CRHI* /*rhi*/, CRenderManager* manager)
 	{
-		RenderStateManager = stateManager;
+		RenderStateManager = &manager->GetRenderStateManager();
 
 		const SPSODescription staticMeshShadowPass =
 		{
@@ -132,6 +132,8 @@ namespace Havtorn
 			.RootSignature = nullptr
 		};
 		VolumetricSpotlightPSOIndex = RenderStateManager->AddPipelineStateObject(volumetricLightSpot);
+
+		return true;
 	}
 
 	void CLightRenderer::SetupShadowPrepassRender(const SMainTargetRenderData& targetData)
@@ -195,7 +197,7 @@ namespace Havtorn
 		// add Alpha blend PS shader
 		RenderStateManager->TrySetPipelineStateObject(DirectionalLightPSOIndex);
 
-		RenderStateManager->IASetVertexBuffer(0, CDataBuffer::Null, 0, 0);
+		RenderStateManager->IASetVertexBuffer(0, CDataBuffer::Null);
 		RenderStateManager->IASetIndexBuffer(CDataBuffer::Null);
 
 		RenderStateManager->PSSetConstantBuffer(2, *passData.LightBuffer->DataBuffer);
@@ -213,7 +215,7 @@ namespace Havtorn
 	{
 		RenderStateManager->TrySetPipelineStateObject(PointLightPSOIndex);
 		
-		RenderStateManager->IASetVertexBuffer(0, RenderStateManager->VertexBuffers[STATIC_U8(EVertexBufferPrimitives::PointLightCube)], RenderStateManager->MeshVertexStrides[1], RenderStateManager->MeshVertexOffsets[0]);
+		RenderStateManager->IASetVertexBuffer(0, RenderStateManager->VertexBuffers[STATIC_U8(EVertexBufferPrimitives::PointLightCube)]);
 		RenderStateManager->IASetIndexBuffer(RenderStateManager->IndexBuffers[STATIC_U8(EDefaultIndexBuffers::PointLightCube)]);
 
 		RenderStateManager->VSSetConstantBuffer(3, *passData.LightBuffer->DataBuffer);
@@ -228,8 +230,7 @@ namespace Havtorn
 	{
 		RenderStateManager->TrySetPipelineStateObject(SpotlightPSOIndex);
 
-		// TODO.NW: look at these hard coded indices, surely we have a representation for them?
-		RenderStateManager->IASetVertexBuffer(0, RenderStateManager->VertexBuffers[1], RenderStateManager->MeshVertexStrides[1], RenderStateManager->MeshVertexOffsets[0]);
+		RenderStateManager->IASetVertexBuffer(0, RenderStateManager->VertexBuffers[STATIC_U8(EVertexBufferPrimitives::PointLightCube)]);
 		RenderStateManager->IASetIndexBuffer(RenderStateManager->IndexBuffers[STATIC_U8(EDefaultIndexBuffers::PointLightCube)]);
 
 		RenderStateManager->VSSetConstantBuffer(3, *passData.PointLightBuffer->DataBuffer);
@@ -259,7 +260,7 @@ namespace Havtorn
 	{
 		RenderStateManager->TrySetPipelineStateObject(VolumetricDirectionalLightPSOIndex);
 		
-		RenderStateManager->IASetVertexBuffer(0, CDataBuffer::Null, 0, 0);
+		RenderStateManager->IASetVertexBuffer(0, CDataBuffer::Null);
 		RenderStateManager->IASetIndexBuffer(CDataBuffer::Null);
 
 		RenderStateManager->PSSetConstantBuffer(1, *passData.LightBuffer->DataBuffer);
@@ -274,7 +275,7 @@ namespace Havtorn
 	{
 		RenderStateManager->TrySetPipelineStateObject(VolumetricPointLightPSOIndex);
 
-		RenderStateManager->IASetVertexBuffer(0, RenderStateManager->VertexBuffers[1], RenderStateManager->MeshVertexStrides[1], RenderStateManager->MeshVertexOffsets[0]);
+		RenderStateManager->IASetVertexBuffer(0, RenderStateManager->VertexBuffers[STATIC_U8(EVertexBufferPrimitives::PointLightCube)]);
 		RenderStateManager->IASetIndexBuffer(RenderStateManager->IndexBuffers[STATIC_U8(EDefaultIndexBuffers::PointLightCube)]);
 
 		RenderStateManager->VSSetConstantBuffer(3, *passData.LightBuffer->DataBuffer);
@@ -290,7 +291,7 @@ namespace Havtorn
 	{
 		RenderStateManager->TrySetPipelineStateObject(VolumetricSpotlightPSOIndex);
 
-		RenderStateManager->IASetVertexBuffer(0, RenderStateManager->VertexBuffers[1], RenderStateManager->MeshVertexStrides[1], RenderStateManager->MeshVertexOffsets[0]);
+		RenderStateManager->IASetVertexBuffer(0, RenderStateManager->VertexBuffers[STATIC_U8(EVertexBufferPrimitives::PointLightCube)]);
 		RenderStateManager->IASetIndexBuffer(RenderStateManager->IndexBuffers[STATIC_U8(EDefaultIndexBuffers::PointLightCube)]);
 
 		RenderStateManager->VSSetConstantBuffer(3, *passData.PointLightBuffer->DataBuffer);

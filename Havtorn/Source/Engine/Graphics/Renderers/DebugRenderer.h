@@ -6,6 +6,8 @@
 
 namespace Havtorn
 {
+	class CRHI;
+	class CRenderManager;
 	class CRenderStateManager;
 	struct SRenderResource;
 
@@ -15,7 +17,7 @@ namespace Havtorn
 		SVector4 Color;
 		F32 HalfThickness = 0.5f;
 		F32 Padding[3] = {};
-	} DebugShapeObjectBufferData;
+	};
 	HV_ASSERT_BUFFER(SDebugShapeObjectBufferData)
 
 	struct SDebugRenderData
@@ -30,8 +32,9 @@ namespace Havtorn
 	class CDebugRenderer 
 	{
 	public:
-		CDebugRenderer(CRenderStateManager* stateManager);
+		CDebugRenderer() = default;
 		~CDebugRenderer() = default;
+		bool Init(CRHI* rhi, CRenderManager* manager);
 
 		void SetupDepthRender(const SGeometryConstantRenderData& viewData, const SMainTargetRenderData& targetData);
 		void SetupNoDepthRender(const SGeometryConstantRenderData& viewData, const SMainTargetRenderData& targetData);

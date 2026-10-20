@@ -101,62 +101,6 @@ namespace Havtorn
 		}
 	}
 
-	void SRenderResource::Bind(CRenderStateManager* renderStateManager)
-	{
-		switch (Description.Type)
-		{
-		case ERenderResourceType::ConstantBufferView:
-			switch (Description.PipelineStage)
-			{
-			case EShaderType::Vertex:
-				renderStateManager->VSSetConstantBuffer(Description.BindSlot, *DataBuffer);
-				break;
-			case EShaderType::Pixel:
-				renderStateManager->PSSetConstantBuffer(Description.BindSlot, *DataBuffer);
-				break;
-			case EShaderType::Geometry:
-				renderStateManager->GSSetConstantBuffer(Description.BindSlot, *DataBuffer);
-				break;
-			default:
-				break;
-			}
-			break;
-		case ERenderResourceType::ShaderResourceView:
-			switch (Description.PipelineStage)
-			{
-			case EShaderType::Vertex:
-				RenderTexture->SetAsVSResourceOnSlot(Description.BindSlot);
-				break;
-			case EShaderType::Pixel:
-				RenderTexture->SetAsPSResourceOnSlot(Description.BindSlot);
-				break;
-			default:
-				break;
-			}
-			break;
-		case ERenderResourceType::UnorderedAccessView:
-			break;
-		case ERenderResourceType::DepthStencilView:
-			break;
-		case ERenderResourceType::RenderTargetView:
-			RenderTexture->SetAsActiveTarget(DepthTexture);
-			break;
-		case ERenderResourceType::StreamOutputView:
-			break;
-		case ERenderResourceType::IndexBufferView:
-			renderStateManager->IASetIndexBuffer(*DataBuffer);
-			break;
-		case ERenderResourceType::VertexBufferView:
-			renderStateManager->IASetVertexBuffer(Description.BindSlot, *DataBuffer, Description.Stride, Description.Offset);
-			break;
-		case ERenderResourceType::SamplerState:
-			SamplerState->SetSamplerState(Description.BindSlot);	
-			break;
-		default:
-			break;
-		}
-	}
-
 	SRenderResourceHandle CRenderResourceRegistry::DeclareResource(const SRenderResourceDeclaration& declaration)
 	{
 		// TODO.NW: Add memoization with map to index?
@@ -189,14 +133,6 @@ namespace Havtorn
 				continue;
 				
 			Resources[index].Allocate();
-		}
-	}
-
-	void CRenderResourceRegistry::Bind(const std::vector<SRenderResourceHandle>& handles, CRenderStateManager* renderStateManager)
-	{
-		for (const SRenderResourceHandle& handle : handles)
-		{
-			Resources[handle.RegistryIndex].Bind(renderStateManager);
 		}
 	}
 

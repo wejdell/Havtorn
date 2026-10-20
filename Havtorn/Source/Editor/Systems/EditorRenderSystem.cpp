@@ -8,7 +8,6 @@
 #include "ECS/ComponentAlgo.h"
 #include "ECS/Systems/RenderSystem.h"
 #include "Graphics/RenderManager.h"
-#include "Graphics/RenderCommand.h"
 #include "Graphics/RenderGraph.h"
 #include "Graphics/RenderResourceRegistry.h"
 #include "Assets/AssetRegistry.h"

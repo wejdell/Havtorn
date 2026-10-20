@@ -7,7 +7,6 @@
 #include "Graphics/GeometryPrimitives.h"
 
 #include "Graphics/RenderManager.h"
-#include "Graphics/RenderCommand.h"
 
 #include "ECS/ComponentAlgo.h"
 
@@ -37,37 +36,37 @@ namespace Havtorn
 		if (LiveData.empty())
 			return;
 
-		std::vector<U64> pushedPrepasses = {};
+		CRenderResourceRegistry& resourceRegistry = RenderManager->GetRenderResourceRegistry();
+		CRenderStateManager& stateManager = RenderManager->GetRenderStateManager();
 
 		const F32 dt = GTime::Dt();
 		for (SDebugDrawData& data : LiveData)
 		{
-			if (auto it = std::ranges::find(pushedPrepasses, data.RenderViewID); it == pushedPrepasses.end())
-			{				
-				// Push prepass render commands
-				SRenderCommand command(ERenderCommandType::PreDebugShape);
-				RenderManager->PushRenderCommand(command, data.RenderViewID);
+			SRenderView* renderView = RenderManager->GetRenderView(data.RenderViewID);
 
-				command.Type = ERenderCommandType::PostToneMappingIgnoreDepth;
-				RenderManager->PushRenderCommand(command, data.RenderViewID);
+			SPrimitiveData primitiveData = SPrimitiveData
+			{
+				.VertexBufferHandle = resourceRegistry.DeclareVertexBuffer<SPositionVertex>("DebugGeo", &stateManager.VertexBuffers[data.VertexBufferIndex]),
+				.IndexBufferHandle = resourceRegistry.DeclareIndexBuffer("DebugIndex", &stateManager.IndexBuffers[data.IndexBufferIndex]),
+				.IndexCount = data.IndexCount
+			};
 
-				command.Type = ERenderCommandType::PostToneMappingUseDepth;
-				RenderManager->PushRenderCommand(command, data.RenderViewID);	
-			}
+			SDebugObjectDrawData drawData = SDebugObjectDrawData
+			{
+				.ToWorldFromObject = data.TransformMatrix,
+				.Color = data.Color.AsVector4(),
+				.HalfThickness = data.Thickness,
+				.PrimitiveData = primitiveData
+			};
 
-			// TODO.NW: Support 2D lines with their own passes? The vast majority will be 3D lines for a while, so the "IsScreenSpace" flag is probably ok for a bit.
-			ERenderCommandType commandType = (data.IgnoreDepth) ? ERenderCommandType::DebugShapeIgnoreDepth : ERenderCommandType::DebugShapeUseDepth;
-
-			SRenderCommand command;
-			command.Type = commandType;
-			command.Matrices.push_back(data.TransformMatrix);
-			command.Vectors.push_back(data.Color.AsVector4());
-			command.F32s.push_back(data.Thickness);
-			command.U16s.push_back(data.IndexCount);
-			command.U8s.push_back(data.VertexBufferIndex);
-			command.U8s.push_back(data.IndexBufferIndex);
-			command.Flags.push_back(data.IsScreenSpace);
-			RenderManager->PushRenderCommand(command, data.RenderViewID);
+			if (data.IgnoreDepth && !data.IsScreenSpace)
+				renderView->DebugObjectsNoDepth3D.push_back(drawData);
+			else if (!data.IgnoreDepth && !data.IsScreenSpace)
+				renderView->DebugObjectsDepth3D.push_back(drawData);
+			else if (data.IgnoreDepth && data.IsScreenSpace)
+				renderView->DebugObjectsNoDepth2D.push_back(drawData);
+			else if (!data.IgnoreDepth && data.IsScreenSpace)
+				renderView->DebugObjectsDepth2D.push_back(drawData);
 
 			data.LifeTime -= dt;
 		}

@@ -21,17 +21,12 @@ namespace Havtorn
 	void SDecalComponentView::View(const SEntity& entityOwner, CScene* scene) const
 	{
 		SDecalComponent* decalComp = scene->GetComponent<SDecalComponent>(entityOwner);
-
-		GUI::Checkbox("Render Albedo", decalComp->ShouldRenderAlbedo);
-		GUI::Checkbox("Render Material", decalComp->ShouldRenderMaterial);
-		GUI::Checkbox("Render Normal", decalComp->ShouldRenderNormal);
-
 		CInspectorWindow* inspector = Manager->GetEditorWindow<CInspectorWindow>();
 
 		STransformComponent* transform = scene->GetComponent<STransformComponent>(entityOwner);
 		if (!SComponent::IsValid(transform))
 		{
-			inspector->InspectAssetComponent(decalComp, EAssetType::Texture, SAssetReference::ConvertToPointers(decalComp->AssetReferences));
+			inspector->InspectAssetComponent(decalComp, EAssetType::Material, SAssetReference::ConvertToPointers(decalComp->AssetReference));
 			return;
 		}
 
@@ -76,6 +71,6 @@ namespace Havtorn
 		GDebugDraw::AddLine(g, h, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
 		GDebugDraw::AddLine(h, e, SColor::Magenta, -1.0f, false, GDebugDraw::ThicknessMinimum, false, renderViewID);
 
-		inspector->InspectAssetComponent(decalComp, EAssetType::Texture, SAssetReference::ConvertToPointers(decalComp->AssetReferences));
+		inspector->InspectAssetComponent(decalComp, EAssetType::Material, SAssetReference::ConvertToPointers(decalComp->AssetReference));
 	}
 }

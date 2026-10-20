@@ -4,9 +4,12 @@
 
 #include "Graphics/GraphicsStructs.h"
 #include "SharedRendererData.h"
+#include "Graphics/GraphicsMaterial.h"
 
 namespace Havtorn
 {
+	class CRHI;
+	class CRenderManager;
 	class CRenderStateManager;
 	struct SRenderResource;
 
@@ -69,8 +72,9 @@ namespace Havtorn
 	class CGeometryRenderer
 	{
 	public:
-		CGeometryRenderer(CRenderStateManager* stateManager);
+		CGeometryRenderer() = default;
 		~CGeometryRenderer() = default;
+		bool Init(CRHI* rhi, CRenderManager* manager);
 
 		void SetupRender(const SGeometryConstantRenderData& constantData, const SGeometryTargetRenderData& targetData);
 		void SetupRender(const SGeometryConstantRenderData& constantData, const SGeometryTargetRenderData& targetData, const SEditorRenderData& editorRenderData);

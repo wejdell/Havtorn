@@ -47,12 +47,11 @@ namespace Havtorn
 		template<RenderPassParamType TParamStruct>
 		void AddDependency();
 
-		SRenderResourceHandle AddInput(const SRenderResourceHandle& handle);
-		SRenderResourceHandle AddOutput(const SRenderResourceHandle& handle);
+		ENGINE_API SRenderResourceHandle AddInput(const SRenderResourceHandle& handle);
+		ENGINE_API SRenderResourceHandle AddOutput(const SRenderResourceHandle& handle);
 
-		void SetIsRootPass();
+		ENGINE_API void SetIsRootPass();
 
-	protected:
 		std::vector<SRenderResourceHandle> Inputs;
 		std::vector<SRenderResourceHandle> Outputs;
 		std::vector<U64> Dependencies;
@@ -65,22 +64,21 @@ namespace Havtorn
 	public:
 		using TRenderPassExecuteSignature = std::function<void(const TParamStruct&, CRenderResourceRegistry&, CRenderManager*, SRenderView&)>;
 
-		CRenderPass() = default;
-		CRenderPass(const std::string_view debugName, const TParamStruct& data, TRenderPassExecuteSignature&& execution);
+		CRenderPass(const std::string& debugName, const TParamStruct& data, TRenderPassExecuteSignature&& execution);
 		CRenderPass() = delete;
 
 		virtual void Execute(CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView) override;
 		
-		CHavtornStaticString<RenderDebugNameMaxSize> Name;
+		/*CHavtornStaticString<RenderDebugNameMaxSize>*/std::string Name;
 		TParamStruct Data;
 	
 	private:
 		TRenderPassExecuteSignature ExecutionFunction;
-		HV_STATIC_ASSERT(sizeof(ExecutionFunction) < 1024, "Execution Function is binding too much data!");
+		HV_STATIC_ASSERT(sizeof(TRenderPassExecuteSignature) < 1024, "Execution Function is binding too much data!");
 	};
 
 	template<RenderPassParamType TParamStruct>
-	inline CRenderPass<TParamStruct>::CRenderPass(const std::string_view debugName, const TParamStruct& data, TRenderPassExecuteSignature&& execution)
+	inline CRenderPass<TParamStruct>::CRenderPass(const std::string& debugName, const TParamStruct& data, TRenderPassExecuteSignature&& execution)
 		: ExecutionFunction(std::move(execution))
 		, Data(data)
 	{
@@ -89,7 +87,7 @@ namespace Havtorn
 		Outputs = Data.Outputs;
 		Dependencies = Data.Dependencies;
 		IsRootPass = Data.ShouldSetRootPass;
-		const U64 nameLength = UMath::Min(debugName.size(), RenderDebugNameMaxSize);
+		const U64 nameLength = UMath::Min(debugName.size(), STATIC_U64(RenderDebugNameMaxSize));
 		Name = debugName.substr(0, nameLength).data();
 	}
 
@@ -112,7 +110,7 @@ namespace Havtorn
 		~CRenderGraph() = default;
 
 		template<RenderPassParamType TParamStruct>
-		void AddPass(const std::string_view debugName, const std::function<TParamStruct(CRenderResourceRegistry&)> setup, std::function<void(const TParamStruct&, CRenderResourceRegistry&, CRenderManager*, SRenderView&)>&& execution);
+		void AddPass(const char* debugName, const std::function<TParamStruct(CRenderResourceRegistry&)> setup, std::function<void(const TParamStruct&, CRenderResourceRegistry&, CRenderManager*, SRenderView&)>&& execution);
 
 		void Compile();
 		void Execute(CRenderManager* renderManager, SRenderView& renderView);
@@ -128,13 +126,13 @@ namespace Havtorn
 	};
 
 	template<RenderPassParamType TParamStruct>
-	inline void CRenderGraph::AddPass(const std::string_view debugName, const std::function<TParamStruct(CRenderResourceRegistry&)> setup, std::function<void(const TParamStruct&, CRenderResourceRegistry&, CRenderManager*, SRenderView&)>&& execution)
+	inline void CRenderGraph::AddPass(const char* debugName, const std::function<TParamStruct(CRenderResourceRegistry&)> setup, std::function<void(const TParamStruct&, CRenderResourceRegistry&, CRenderManager*, SRenderView&)>&& execution)
 	{
 		const U64 passParamHash = typeid(TParamStruct).hash_code();
 		if (!PassParamHashToPassIndex.contains(passParamHash))
-			PassParamHashToPassIndex.emplace(passParamHash);
+			PassParamHashToPassIndex.emplace(passParamHash, 0u);
 
-		PassParamHashToPassIndex.at(passParamHash).push_back(RenderPasses.size());
-		RenderPasses.emplace_back(std::make_shared(CRenderPass<TParamStruct>(debugName, setup(ResourceRegistry), std::move(execution))));
+		PassParamHashToPassIndex.at(passParamHash) = RenderPasses.size();
+		RenderPasses.push_back(std::make_shared<CRenderPass<TParamStruct>>(debugName, setup(ResourceRegistry), std::move(execution)));
 	}
 }

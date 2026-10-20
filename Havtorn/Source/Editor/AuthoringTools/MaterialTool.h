@@ -3,8 +3,12 @@
 #pragma once
 #include "EditorWindow.h"
 
+#include <Graphics/GraphicsMaterial.h>
+
 namespace Havtorn
 {
+	struct SEditorAssetRepresentation;
+
 	namespace HexRune
 	{
 		struct SScript;

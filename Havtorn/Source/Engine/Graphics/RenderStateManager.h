@@ -83,8 +83,6 @@ namespace Havtorn
 		void IASetTopology(ETopologies topology) const;
 		void IASetInputLayout(EInputLayoutType layout) const;
 		void IASetVertexBuffer(U8 startSlot, const CDataBuffer& buffer) const;
-		void IASetVertexBuffer(U8 startSlot, const CDataBuffer& buffer, U32 stride, U32 offset) const;
-		void IASetVertexBuffers(U8 startSlot, const std::vector<CDataBuffer>& buffers, const U32* strides, const U32* offsets) const;
 		void IASetVertexBuffers(U8 startSlot, const std::vector<CDataBuffer*>& buffers) const;
 		void IASetVertexBuffers(U8 startSlot, const std::vector<SRenderResource*>& resources) const;
 		void IASetIndexBuffer(const CDataBuffer& buffer) const;
@@ -184,6 +182,8 @@ namespace Havtorn
 	{
 		VertexBuffers.emplace_back(CDataBuffer());
 		VertexBuffers.back().CreateBuffer("Vertex Buffer", RHI, sizeof(T) * STATIC_U32(vertices.size()), vertices.data(), EDataBufferType::Vertex, EDataBufferUsage::Immutable, EResourceCPUAccess::None);
+		VertexBuffers.back().VertexBufferStride = sizeof(T);
+		VertexBuffers.back().VertexBufferOffset = 0;
 
 		return STATIC_U16(VertexBuffers.size() - 1);
 	}

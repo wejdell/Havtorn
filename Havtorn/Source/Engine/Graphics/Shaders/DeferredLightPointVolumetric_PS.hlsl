@@ -48,7 +48,7 @@ void ExecuteRaymarching(inout float3 rayPositionLightVS, float3 invViewDirLightV
     int shadowmapViewIndex = GetShadowmapViewIndex(rayPositionWorld.xyz, pointLightPositionAndRange.xyz);
     SShadowmapViewData viewData = ShadowmapViewData[shadowmapViewIndex];
     
-    float3 visibilityTerm = 1.0f - ShadowFactor(rayPositionWorld, viewData.ShadowmapPosition.xyz, viewData.ToShadowMapView, viewData.ToShadowMapProjection, shadowDepthTexture, shadowSampler, viewData.ShadowmapResolution, viewData.ShadowAtlasResolution, viewData.ShadowmapStartingUV, viewData.ShadowTestTolerance).xxx;
+    float3 visibilityTerm = 1.0f - ShadowFactor(rayPositionWorld, viewData.ShadowmapPosition.xyz, viewData.ToShadowMapView, viewData.ToShadowMapProjection, shadowDepthTexture, defaultSampler, viewData.ShadowmapResolution, viewData.ShadowAtlasResolution, viewData.ShadowmapStartingUV, viewData.ShadowTestTolerance).xxx;
     
     // Distance to the current position on the ray in light view-space
     float d = length(rayPositionLightVS.xyz);

@@ -14,7 +14,7 @@
 namespace Havtorn
 {
 	class CRenderStateManager;
-	constexpr U8 RenderDebugNameMaxSize = 30;
+	constexpr U8 RenderDebugNameMaxSize = 64;
 
 	enum class ERenderResourceType : U8
 	{
@@ -50,7 +50,6 @@ namespace Havtorn
 		};
 		U32 ID = 0;
 		U16 Stride = 0;
-		//U8 BindSlot = 0;
 		U8 Offset = 0;
 	};
 
@@ -67,7 +66,7 @@ namespace Havtorn
 		QuarterResolution = 4
 	};
 
-	struct SRenderResourceHandle
+	struct ENGINE_API SRenderResourceHandle
 	{
 		SRenderResourceHandle(const CHavtornStaticString<RenderDebugNameMaxSize>& name, const U32 index);
 		SRenderResourceHandle() = default;
@@ -85,7 +84,6 @@ namespace Havtorn
 
 		void Allocate();
 		void Deallocate();
-		void Bind(CRenderStateManager* renderStateManager);
 
 		union
 		{
@@ -108,7 +106,7 @@ namespace Havtorn
 		CRenderResourceRegistry() = default;
 		~CRenderResourceRegistry() = default;
 
-		SRenderResourceHandle DeclareResource(const SRenderResourceDeclaration& declaration);
+		ENGINE_API SRenderResourceHandle DeclareResource(const SRenderResourceDeclaration& declaration);
 
 		template<typename T>
 		SRenderResourceHandle DeclareConstantBuffer(const char* name, const U64 sizeMultiplier = 1);
@@ -119,22 +117,21 @@ namespace Havtorn
 		template<typename T>
 		SRenderResourceHandle DeclareVertexBuffer(const char* name, CDataBuffer* externalMemory);
 
-		SRenderResourceHandle DeclareIndexBuffer(const char* name, CDataBuffer* externalMemory);
+		ENGINE_API SRenderResourceHandle DeclareIndexBuffer(const char* name, CDataBuffer* externalMemory);
 
-		SRenderResourceHandle DeclareRenderTexture(const char* name, const ERenderResourceFormat format, const ERenderTextureSizeHint size = ERenderTextureSizeHint::FullResolution);
-		SRenderResourceHandle DeclareRenderTexture(const char* name, const ERenderResourceFormat format, const SVector2<U16>& size);
-		SRenderResourceHandle DeclareRenderTexture(const char* name, CRenderTexture* externalMemory);
-		SRenderResourceHandle DeclareRenderTexture(const char* name, CStaticRenderTexture* externalMemory);
+		ENGINE_API SRenderResourceHandle DeclareRenderTexture(const char* name, const ERenderResourceFormat format, const ERenderTextureSizeHint size = ERenderTextureSizeHint::FullResolution);
+		ENGINE_API SRenderResourceHandle DeclareRenderTexture(const char* name, const ERenderResourceFormat format, const SVector2<U16>& size);
+		ENGINE_API SRenderResourceHandle DeclareRenderTexture(const char* name, CRenderTexture* externalMemory);
+		ENGINE_API SRenderResourceHandle DeclareRenderTexture(const char* name, CStaticRenderTexture* externalMemory);
 
-		SRenderResourceHandle DeclareRenderDepth(const char* name, const ERenderResourceFormat format, const ERenderTextureSizeHint size = ERenderTextureSizeHint::FullResolution);
-		SRenderResourceHandle DeclareRenderDepth(const char* name, const ERenderResourceFormat format, const SVector2<U16>& size);
+		ENGINE_API SRenderResourceHandle DeclareRenderDepth(const char* name, const ERenderResourceFormat format, const ERenderTextureSizeHint size = ERenderTextureSizeHint::FullResolution);
+		ENGINE_API SRenderResourceHandle DeclareRenderDepth(const char* name, const ERenderResourceFormat format, const SVector2<U16>& size);
 
 		void TouchResources(const std::vector<SRenderResourceHandle>& handles);
 		void Allocate();
-		void Bind(const std::vector<SRenderResourceHandle>& handles, CRenderStateManager* renderStateManager);
 		void Deallocate();
 
-		SRenderResource* GetResource(const SRenderResourceHandle& handle);
+		ENGINE_API SRenderResource* GetResource(const SRenderResourceHandle& handle);
 
 	private:
 		std::vector<SRenderResource> Resources;
@@ -150,9 +147,9 @@ namespace Havtorn
 					.Name = { name },
 					.Type = ERenderResourceType::ConstantBufferView,
 					.CPUAccess = EResourceCPUAccess::CPUAccessWrite,
-					.Size = sizeof(T) * sizeMultiplier
+					.Size = STATIC_U32(sizeof(T) * sizeMultiplier)
 				},
-				.ExternalMemory = externalMemory
+				.ExternalMemory = nullptr
 		});
 	}
 

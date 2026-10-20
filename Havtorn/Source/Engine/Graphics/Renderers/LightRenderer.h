@@ -6,6 +6,8 @@
 
 namespace Havtorn
 {
+	class CRHI;
+	class CRenderManager;
 	class CRenderStateManager;
 	struct SRenderResource;
 
@@ -145,8 +147,9 @@ namespace Havtorn
 	class CLightRenderer 
 	{
 	public:
-		CLightRenderer(CRenderStateManager* stateManager);
+		CLightRenderer() = default;
 		~CLightRenderer() = default;
+		bool Init(CRHI* rhi, CRenderManager* manager);
 
 		void SetupShadowPrepassRender(const SMainTargetRenderData& targetData);
 		void SetupLightRender(const SGeometryConstantRenderData& viewData, const SLightConstantRenderData& constantData, const SMainTargetRenderData& targetData);

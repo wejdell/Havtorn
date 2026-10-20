@@ -9,9 +9,9 @@
 
 namespace Havtorn
 {
-	CSpriteRenderer::CSpriteRenderer(CRenderStateManager* stateManager)
+	bool CSpriteRenderer::Init(CRHI* /*rhi*/, CRenderManager* manager)
 	{
-		RenderStateManager = stateManager;
+		RenderStateManager = &manager->GetRenderStateManager();
 
 		// TODO.NW: Remove geometry shaders because they are not performant! Set up a super simple default plane vertex buffer instead
 
@@ -63,6 +63,8 @@ namespace Havtorn
 		worldSpriteEditor.BlendState = RenderStateManager->BlendStates[STATIC_U8(EBlendStates::Disable)];
 		worldSpriteEditor.PixelShader = RenderStateManager->PixelShaders[STATIC_U8(EPixelShaders::SpriteWorldSpaceEditorWidget)];
 		WorldSpaceEditorWidgetPSOIndex = RenderStateManager->AddPipelineStateObject(worldSpriteEditor);
+
+		return true;
 	}
 
 	void CSpriteRenderer::SetupWorldSpaceRender(const SGeometryConstantRenderData& constantData, const SGeometryTargetRenderData& targetData)

@@ -530,20 +530,6 @@ namespace Havtorn
         Context->IASetVertexBuffers(startSlot, 1, &buffer.Buffer, &buffer.VertexBufferStride, &buffer.VertexBufferOffset);
     }
 
-    void CRenderStateManager::IASetVertexBuffer(U8 startSlot, const CDataBuffer& buffer, U32 stride, U32 offset) const
-    {
-        Context->IASetVertexBuffers(startSlot, 1, &buffer.Buffer, &stride, &offset);
-    }
-
-    void CRenderStateManager::IASetVertexBuffers(U8 startSlot, const std::vector<CDataBuffer>& buffers, const U32* strides, const U32* offsets) const
-    {
-        std::vector<ID3D11Buffer*> bufferPointers;
-        for (const CDataBuffer& buffer : buffers)
-            bufferPointers.emplace_back(buffer.Buffer);
-
-        Context->IASetVertexBuffers(startSlot, bufferPointers.size(), bufferPointers.data(), strides, offsets);
-    }
-
     void CRenderStateManager::IASetVertexBuffers(U8 startSlot, const std::vector<CDataBuffer*>& buffers) const
     {
         std::vector<ID3D11Buffer*> bufferPointers;
@@ -557,7 +543,7 @@ namespace Havtorn
             offsets.emplace_back(buffer->VertexBufferOffset);
         }
 
-        Context->IASetVertexBuffers(startSlot, bufferPointers.size(), bufferPointers.data(), strides.data(), offsets.data());
+        Context->IASetVertexBuffers(startSlot, STATIC_U32(bufferPointers.size()), bufferPointers.data(), strides.data(), offsets.data());
     }
 
     void CRenderStateManager::IASetVertexBuffers(U8 startSlot, const std::vector<SRenderResource*>& resources) const
@@ -573,7 +559,7 @@ namespace Havtorn
             offsets.emplace_back(resource->DataBuffer->VertexBufferOffset);
         }
 
-        Context->IASetVertexBuffers(startSlot, bufferPointers.size(), bufferPointers.data(), strides.data(), offsets.data());
+        Context->IASetVertexBuffers(startSlot, STATIC_U32(bufferPointers.size()), bufferPointers.data(), strides.data(), offsets.data());
     }
 
     void CRenderStateManager::IASetIndexBuffer(const CDataBuffer& buffer) const
@@ -616,7 +602,7 @@ namespace Havtorn
         for (CRenderTexture* texture : resources)
             srvs.emplace_back(texture->GetShaderResourceView());
 
-        Context->VSSetShaderResources(startSlot, srvs.size(), srvs.data());
+        Context->VSSetShaderResources(startSlot, STATIC_U32(srvs.size()), srvs.data());
     }
 
     void CRenderStateManager::GSSetShader(EGeometryShaders shader) const
@@ -667,7 +653,7 @@ namespace Havtorn
         for (CRenderTexture* texture : resources)
             srvs.emplace_back(texture->GetShaderResourceView());
 
-        Context->PSSetShaderResources(startSlot, srvs.size(), srvs.data());
+        Context->PSSetShaderResources(startSlot, STATIC_U32(srvs.size()), srvs.data());
     }
 
     void CRenderStateManager::PSSetResources(U8 startSlot, const std::vector<SRenderResource*>& resources)
@@ -676,7 +662,7 @@ namespace Havtorn
         for (SRenderResource* resource : resources)
             srvs.emplace_back(resource->RenderTexture->GetShaderResourceView());
 
-        Context->PSSetShaderResources(startSlot, srvs.size(), srvs.data());
+        Context->PSSetShaderResources(startSlot, STATIC_U32(srvs.size()), srvs.data());
     }
 
     void CRenderStateManager::RSSetRasterizerState(ERasterizerStates rasterizerState) const

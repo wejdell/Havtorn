@@ -4,6 +4,8 @@
 #include "Ray.h"
 #include "Frustum.h"
 
+#include <queue>
+
 namespace Havtorn
 {
 	namespace UMathUtilities
@@ -74,7 +76,7 @@ namespace Havtorn
 			SVector2<F32> bounds = SVector2<F32>::Zero;
 			for (const SVector& vertex : vertices)
 			{
-				const F32 d = axis.Dot(vertices[0]);
+				const F32 d = axis.Dot(vertex);
 				if (d < bounds.X)
 					bounds.X = d;
 				else if (d > bounds.Y)

@@ -60,6 +60,10 @@ GBufferOutput main(VertexPaintModelToPixel input)
     
     //// Using 4 textures
     GBufferOutput output;
+    output.Albedo.rgba = 1.0f;
+    output.Normal.rgba = 1.0f;
+    output.VertexNormal.rgba = 1.0f;
+    output.MetalRoughEmAO.rgba = 1.0f;
     
     ////float3 albedoBase = albedo;
     //const float3 albedoR = albedo2;

@@ -9,9 +9,9 @@
 
 namespace Havtorn
 {
-	CCustomRenderer::CCustomRenderer(CRenderStateManager* stateManager)
+	bool CCustomRenderer::Init(CRHI* /*rhi*/, CRenderManager* renderManager)
 	{
-		RenderStateManager = stateManager;
+		RenderStateManager = &renderManager->GetRenderStateManager();
 
 		//const SPSODescription customPSO =
 		//{
@@ -27,6 +27,8 @@ namespace Havtorn
 		//	.RootSignature = nullptr
 		//};
 		//CustomPassPSOIndex = RenderStateManager->AddPipelineStateObject(customPSO);
+
+		return true;
 	}
 
 	void CCustomRenderer::RenderCustomPass(const SCustomPassData& /*passData*/)

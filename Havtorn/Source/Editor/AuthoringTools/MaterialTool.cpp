@@ -12,6 +12,9 @@
 #include <Timer.h>
 #include <Assets/AssetRegistry.h>
 #include <ECS/Systems/CameraSystem.h>
+#include <ECS/Systems/RenderSystem.h>
+
+#include <MathTypes/Frustum.h>
 
 #include "MaterialTool.h"
 
@@ -349,40 +352,37 @@ namespace Havtorn
 		if (PreviewSkylight == nullptr)
 			return;
 
+		const F32 radius = 2.0f * CurrentZoom;
+		SVector location = SVector(0.0f, 0.0f, radius);
+		SMatrix camView = SMatrix::LookAtLH(location, SVector(), SVector::Up).FastInverse();
+		SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), 1.0f, 0.01f, 10.0f);
+
+		SRenderView* renderView = renderManager->GetRenderView(MaterialToolRenderID);
+		renderView->ViewMatrix = camView;
+		renderView->ProjectionMatrix = camProjection;
+		renderView->SkyboxCubemapTextureHandle = renderManager->GetRenderResourceRegistry().DeclareRenderTexture("CubemapTexture", &PreviewSkylight->RenderTexture);
+
+		CRenderSystem* renderSystem = GEngine::GetWorld()->GetSystem<CRenderSystem>();
+
 		{
-			const F32 radius = 2.0f * CurrentZoom;
-			SVector location = SVector(0.0f, 0.0f, radius);
-			SMatrix camView = SMatrix::LookAtLH(location, SVector(), SVector::Up).FastInverse();
-			SMatrix camProjection = SMatrix::PerspectiveFovLH(UMath::DegToRad(70.0f), 1.0f, 0.01f, 10.0f);
-
-			SRenderCommand command = SRenderCommand(ERenderCommandType::CameraDataStorage);
-			command.Matrices.emplace_back(camView);
-			command.Matrices.emplace_back(camProjection);
-			renderManager->PushRenderCommand(command, MaterialToolRenderID);
-		}
-
-		{
-			STransformComponent component;
-			SMatrix objectMatrix = SMatrix::CreateRotationFromEuler(SVector(RotationInput.X, RotationInput.Y, 0.0f)).FastInverse();
-			component.Transform.SetMatrix(objectMatrix);
-			component.Owner = SEntity(MaterialToolRenderID);
-
 			SDrawCallData data;
 			data.IndexCount = STATIC_U32(GeometryPrimitives::Icosphere.Indices.size());
 			data.VertexBufferIndex = STATIC_U8(EVertexBufferPrimitives::Icosphere);
 			data.IndexBufferIndex = STATIC_U8(EIndexBufferPrimitives::Icosphere);
-			data.VertexStrideIndex = 0;
-			data.VertexOffsetIndex = 0;
 			data.MaterialIndex = 0;
 
-			SRenderCommand command;
-			command.Type = ERenderCommandType::GBufferDataInstanced;
-			command.U32s.push_back(MaterialToolPreviewAssetID);
-			command.DrawCallData.emplace_back(data);
-			command.Materials.push_back(MaterialData);
-			command.MaterialRenderTextures.push_back(MaterialData.GetRenderTextures(MaterialToolRenderID));
-			renderManager->AddStaticMeshToInstancedRenderList(MaterialToolPreviewAssetID, &component, MaterialToolRenderID);
-			renderManager->PushRenderCommand(command, MaterialToolRenderID);
+			SGraphicsMaterialAsset wrappingAsset;
+			wrappingAsset.AssetType = EAssetType::Material; 
+			wrappingAsset.Material = MaterialData;
+		
+			const SMatrix objectMatrix = SMatrix::CreateRotationFromEuler(SVector(RotationInput.X, RotationInput.Y, 0.0f)).FastInverse();
+			
+			if (SStaticMeshDrawData* drawData = renderSystem->ProcessStaticGeometry(renderView, { data }, { &wrappingAsset },
+				SSceneLightCollection{}, false, SSphere(), SFrustum(SMatrix::Identity, SMatrix::Identity), objectMatrix, MaterialToolPreviewAssetID, MaterialToolPreviewAssetID, MaterialToolRenderID))
+			{
+				drawData->Transforms.push_back(objectMatrix);
+				drawData->Entities.push_back(SEntity::Null);
+			}
 		}
 
 		{
@@ -392,56 +392,24 @@ namespace Havtorn
 			SShadowmapViewData shadowmapView;
 			shadowmapView.ShadowProjectionMatrix = SMatrix::OrthographicLH(8.0f, 8.0f, -8.0f, 8.0f);
 
-			SRenderCommand command;
-			command.Type = ERenderCommandType::DeferredLightingDirectional;
-			command.Vectors.push_back(directionalLightDirection);
-			command.Colors.push_back(directionalLightColor);
-			command.ShadowmapViews.push_back(shadowmapView);
-			command.RenderTextures.push_back(PreviewSkylight->RenderTexture);
-			renderManager->PushRenderCommand(command, MaterialToolRenderID);			
+			const SVector2<F32> shadowAtlasResolution = renderManager->GetShadowAtlasResolution();
+			const F32 shadowTestTolerance = renderManager->GetShadowTestTolerance();
+			const auto& [bufferData, viewportIndices] = renderSystem->ProcessShadowmapBufferData({ shadowmapView }, shadowAtlasResolution, shadowTestTolerance);
+
+			renderView->DirectionalLightDrawData.emplace_back(SDirectionalLightDrawData
+				{
+					// Filled by mesh processing
+					.ShadowCasterData = {},
+					// Negate the direction going into the shaders
+					.LightBufferData = {.ToDirectionalLight = -directionalLightDirection, .DirectionalLightColor = directionalLightColor },
+					.ShadowmapBufferData = bufferData[0],
+					.VolumetricBufferData = {},
+					.CubemapTextureHandle = renderManager->GetRenderResourceRegistry().DeclareRenderTexture("CubemapTexture", &PreviewSkylight->RenderTexture),
+					.ShadowmapViewportIndex = viewportIndices[0],
+					.RenderVolumetrics = false
+				});
 		}
 
-		{
-			SRenderCommand command;
-			command.RenderTextures.push_back(PreviewSkylight->RenderTexture);
-			command.Type = ERenderCommandType::Skybox;
-			renderManager->PushRenderCommand(command, MaterialToolRenderID);
-		}
-
-		{
-			SRenderCommand command;
-			command.Type = ERenderCommandType::PreLightingPass;
-			renderManager->PushRenderCommand(command, MaterialToolRenderID);
-		}
-
-		{
-			SRenderCommand command;
-			command.Type = ERenderCommandType::PostBaseLightingPass;
-			renderManager->PushRenderCommand(command, MaterialToolRenderID);
-		}
-
-		{
-			SRenderCommand command;
-			command.Type = ERenderCommandType::Bloom;
-			renderManager->PushRenderCommand(command, MaterialToolRenderID);
-		}
-
-		{
-			SRenderCommand command;
-			command.Type = ERenderCommandType::Tonemapping;
-			renderManager->PushRenderCommand(command, MaterialToolRenderID);
-		}
-
-		{
-			SRenderCommand command;
-			command.Type = ERenderCommandType::AntiAliasing;
-			renderManager->PushRenderCommand(command, MaterialToolRenderID);
-		}
-
-		{
-			SRenderCommand command;
-			command.Type = ERenderCommandType::GammaCorrection;
-			renderManager->PushRenderCommand(command, MaterialToolRenderID);
-		}
+		renderSystem->AddDefaultPasses(renderView, false);
 	}
 }

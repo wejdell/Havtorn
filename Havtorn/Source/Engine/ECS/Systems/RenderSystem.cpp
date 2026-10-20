@@ -6,7 +6,6 @@
 #include "Scene/Scene.h"
 #include "ECS/ECSInclude.h"
 #include "Graphics/RenderManager.h"
-#include "Graphics/RenderCommand.h"
 #include "Graphics/RenderGraph.h"
 #include "Graphics/RenderResourceRegistry.h"
 #include "ECS/ComponentAlgo.h"
@@ -193,7 +192,9 @@ namespace Havtorn
 		if (renderView == nullptr || scene == nullptr)
 			return;
 
-		const CRenderStateManager& stateManager = RenderManager->GetRenderStateManager();
+		renderView->ViewMatrix = viewData.ViewMatrix;
+		renderView->ProjectionMatrix = viewData.ProjectionMatrix;
+
 		const SVector2<F32> shadowAtlasResolution = RenderManager->GetShadowAtlasResolution();
 		const F32 shadowTestTolerance = RenderManager->GetShadowTestTolerance();
 
@@ -372,78 +373,15 @@ namespace Havtorn
 
 		std::vector<SGraphicsMaterialAsset*> materialAssets = AssetRegistry->RequestAssetData<SGraphicsMaterialAsset>(materialComp->AssetReferences, materialComp->Owner.GUID);
 
-		// TODO.NW: It's probably a great idea to save this in the runtime asset for use here, like the draw call data is now,
-		// if we can handle the transition in the render resource registry nicely. Might be a thing to keep buffers loaded
-		// in the registry itself while the asset is loaded? Maybe.
-		// When do we fill the material data?
-		std::vector<SPrimitiveData> primitiveDataOnly;
-		std::vector<SMeshDrawData> fullDrawData;
-
-		for (const SDrawCallData& drawCallData : asset->DrawCallData)
+		if (SStaticMeshDrawData* drawData = ProcessStaticGeometry(renderView, asset->DrawCallData, materialAssets,
+			sceneLights, doCulling, meshBoundingSphere, viewFrustum, transformMatrix, drawID, meshComponent->AssetReference.UID, materialComp->Owner.GUID))
 		{
-			SPrimitiveData primitiveData;
-			// TODO.NW: Need unique names for all these resources, including materials
-			primitiveData.VertexBufferHandle = renderView->RenderResourceRegistry->DeclareVertexBuffer<SStaticMeshVertex>("VertexBuffer", &RenderManager->GetRenderStateManager().VertexBuffers[drawCallData.VertexBufferIndex]);
-			primitiveData.IndexBufferHandle = renderView->RenderResourceRegistry->DeclareIndexBuffer("IndexBuffer", &RenderManager->GetRenderStateManager().IndexBuffers[drawCallData.IndexBufferIndex]);
-			primitiveData.IndexCount = drawCallData.IndexCount;
-			primitiveDataOnly.push_back(primitiveData);
-
-			const SEngineGraphicsMaterial& material = materialAssets[drawCallData.MaterialIndex]->Material;
-			
-			SMeshDrawData meshDrawData;
-			meshDrawData.PrimitiveData = primitiveData;
-			std::tie(meshDrawData.MaterialTextureHandles, meshDrawData.MaterialBufferData) = ProcessMaterialData(renderView, material, materialComp->Owner.GUID);
-			fullDrawData.push_back(meshDrawData);
+			drawData->Transforms.push_back(transformMatrix);
+			drawData->Entities.push_back(meshComponent->Owner);
 		}
-
-		for (U64 i = 0; i < sceneLights.DirectionalLights.size(); i++)
-		{
-			if (!doCulling || sceneLights.DirectionalLightCullGeometry[i].Intersects(meshBoundingSphere))
-			{
-				std::unordered_map<U32, SStaticShadowCasterData>& shadowCasterData = renderView->DirectionalLightDrawData[i].ShadowCasterData;
-				if (!shadowCasterData.contains(meshComponent->AssetReference.UID))
-					shadowCasterData.emplace(meshComponent->AssetReference.UID, SStaticShadowCasterData{ .PrimitiveData = primitiveDataOnly, .Transforms = {} });
-
-				shadowCasterData.at(meshComponent->AssetReference.UID).Transforms.push_back(transformMatrix);
-			}
-		}
-
-		for (U64 i = 0; i < sceneLights.PointLights.size(); i++)
-		{
-			if (!doCulling || sceneLights.PointLightCullGeometry[i].Intersects(meshBoundingSphere))
-			{
-				std::unordered_map<U32, SStaticShadowCasterData>& shadowCasterData = renderView->PointLightDrawData[i].ShadowCasterData;
-				if (!shadowCasterData.contains(meshComponent->AssetReference.UID))
-					shadowCasterData.emplace(meshComponent->AssetReference.UID, SStaticShadowCasterData{ .PrimitiveData = primitiveDataOnly, .Transforms = {} });
-
-				shadowCasterData.at(meshComponent->AssetReference.UID).Transforms.push_back(transformMatrix);
-			}
-		}
-
-		for (U64 i = 0; i < sceneLights.Spotlights.size(); i++)
-		{
-			if (!doCulling || sceneLights.SpotlightCullGeometry[i].Intersects(meshBoundingSphere))
-			{
-				std::unordered_map<U32, SStaticShadowCasterData>& shadowCasterData = renderView->SpotlightDrawData[i].ShadowCasterData;
-				if (!shadowCasterData.contains(meshComponent->AssetReference.UID))
-					shadowCasterData.emplace(meshComponent->AssetReference.UID, SStaticShadowCasterData{ .PrimitiveData = primitiveDataOnly, .Transforms = {} });
-
-				shadowCasterData.at(meshComponent->AssetReference.UID).Transforms.push_back(transformMatrix);
-			}
-		}
-
-		if (doCulling && !viewFrustum.Intersects(meshBoundingSphere))
-			return;
-
-		if (!renderView->StaticMeshDrawData.contains(drawID))
-			renderView->StaticMeshDrawData.emplace(drawID, SStaticMeshDrawData{ .DrawData = fullDrawData, .Transforms = {}, .Entities = {} });
-
-		SStaticMeshDrawData& drawData = renderView->StaticMeshDrawData.at(drawID);
-		drawData.Transforms.push_back(transformMatrix);
-		drawData.Entities.push_back(meshComponent->Owner);
 	}
 
-	void CRenderSystem::ProcessSkeletalMesh(SRenderView* renderView, CScene* scene, const SSkeletalMeshComponent* meshComponent, const bool doCulling, const SFrustum& viewFrustum, const SSceneLightCollection& sceneLights, const SEntity& editorRenderExemptEntity) const
+	void CRenderSystem::ProcessSkeletalMesh(SRenderView* renderView, CScene* scene, const SSkeletalMeshComponent* meshComponent, const bool doCulling, const SFrustum& viewFrustum, const SSceneLightCollection& /*sceneLights*/, const SEntity& editorRenderExemptEntity) const
 	{
 		const STransformComponent* transformComp = scene->GetComponent<STransformComponent>(meshComponent);
 		SMaterialComponent* materialComp = scene->GetComponent<SMaterialComponent>(meshComponent);
@@ -749,6 +687,77 @@ namespace Havtorn
 		return { bufferData, viewportIndices };
 	}
 
+	SStaticMeshDrawData* CRenderSystem::ProcessStaticGeometry(SRenderView* renderView, const std::vector<SDrawCallData>& drawCallData, const std::vector<SGraphicsMaterialAsset*>& materialAssets, const SSceneLightCollection& sceneLights, const bool doCulling, const SSphere& boundingSphere, const SFrustum& viewFrustum, const SMatrix& meshTransformMatrix, const U32 drawID, const U32 meshAssetID, const U64 assetRequester) const
+	{
+		// TODO.NW: It's probably a great idea to save this in the runtime asset for use here, like the draw call data is now,
+		// if we can handle the transition in the render resource registry nicely. Might be a thing to keep buffers loaded
+		// in the registry itself while the asset is loaded? Maybe.
+		// When do we fill the material data?
+		std::vector<SPrimitiveData> primitiveDataOnly;
+		std::vector<SMeshDrawData> fullDrawData;
+
+		for (const SDrawCallData& data : drawCallData)
+		{
+			SPrimitiveData primitiveData;
+			// TODO.NW: Need unique names for all these resources, including materials
+			primitiveData.VertexBufferHandle = renderView->RenderResourceRegistry->DeclareVertexBuffer<SStaticMeshVertex>("VertexBuffer", &RenderManager->GetRenderStateManager().VertexBuffers[data.VertexBufferIndex]);
+			primitiveData.IndexBufferHandle = renderView->RenderResourceRegistry->DeclareIndexBuffer("IndexBuffer", &RenderManager->GetRenderStateManager().IndexBuffers[data.IndexBufferIndex]);
+			primitiveData.IndexCount = data.IndexCount;
+			primitiveDataOnly.push_back(primitiveData);
+
+			const SEngineGraphicsMaterial& material = materialAssets[data.MaterialIndex]->Material;
+
+			SMeshDrawData meshDrawData;
+			meshDrawData.PrimitiveData = primitiveData;
+			std::tie(meshDrawData.MaterialTextureHandles, meshDrawData.MaterialBufferData) = ProcessMaterialData(renderView, material, assetRequester);
+			fullDrawData.push_back(meshDrawData);
+		}
+
+		for (U64 i = 0; i < sceneLights.DirectionalLights.size(); i++)
+		{
+			if (!doCulling || sceneLights.DirectionalLightCullGeometry[i].Intersects(boundingSphere))
+			{
+				std::unordered_map<U32, SStaticShadowCasterData>& shadowCasterData = renderView->DirectionalLightDrawData[i].ShadowCasterData;
+				if (!shadowCasterData.contains(meshAssetID))
+					shadowCasterData.emplace(meshAssetID, SStaticShadowCasterData{ .PrimitiveData = primitiveDataOnly, .Transforms = {} });
+
+				shadowCasterData.at(meshAssetID).Transforms.push_back(meshTransformMatrix);
+			}
+		}
+
+		for (U64 i = 0; i < sceneLights.PointLights.size(); i++)
+		{
+			if (!doCulling || sceneLights.PointLightCullGeometry[i].Intersects(boundingSphere))
+			{
+				std::unordered_map<U32, SStaticShadowCasterData>& shadowCasterData = renderView->PointLightDrawData[i].ShadowCasterData;
+				if (!shadowCasterData.contains(meshAssetID))
+					shadowCasterData.emplace(meshAssetID, SStaticShadowCasterData{ .PrimitiveData = primitiveDataOnly, .Transforms = {} });
+
+				shadowCasterData.at(meshAssetID).Transforms.push_back(meshTransformMatrix);
+			}
+		}
+
+		for (U64 i = 0; i < sceneLights.Spotlights.size(); i++)
+		{
+			if (!doCulling || sceneLights.SpotlightCullGeometry[i].Intersects(boundingSphere))
+			{
+				std::unordered_map<U32, SStaticShadowCasterData>& shadowCasterData = renderView->SpotlightDrawData[i].ShadowCasterData;
+				if (!shadowCasterData.contains(meshAssetID))
+					shadowCasterData.emplace(meshAssetID, SStaticShadowCasterData{ .PrimitiveData = primitiveDataOnly, .Transforms = {} });
+
+				shadowCasterData.at(meshAssetID).Transforms.push_back(meshTransformMatrix);
+			}
+		}
+
+		if (doCulling && !viewFrustum.Intersects(boundingSphere))
+			return nullptr;
+
+		if (!renderView->StaticMeshDrawData.contains(drawID))
+			renderView->StaticMeshDrawData.emplace(drawID, SStaticMeshDrawData{ .DrawData = fullDrawData, .Transforms = {}, .Entities = {} });
+
+		return &renderView->StaticMeshDrawData.at(drawID);
+	}
+
 	SMaterialProcessingResult CRenderSystem::ProcessMaterialData(SRenderView* renderView, const SEngineGraphicsMaterial& material, const U64 assetRequester) const
 	{
 		// TODO.NW: Potentially finish building these (assigning material resources) after light binding and camera frustum culling?
@@ -769,13 +778,13 @@ namespace Havtorn
 			if (it == uniqueMaterialTextures.end())
 				continue;
 
-			property.TextureIndex = STATIC_U32(std::distance(uniqueMaterialTextures.begin(), it));
+			property.TextureIndex = STATIC_F32(std::distance(uniqueMaterialTextures.begin(), it));
 		}
 
 		return std::tuple(textureHandles, bufferData);
 	}
 
-	void CRenderSystem::AddDefaultPasses(SRenderView* renderView, const bool runEditorDataPasses)
+	void CRenderSystem::AddDefaultPasses(SRenderView* renderView, const bool runEditorDataPasses) const
 	{
 		// TODO.NW: Put passes for thumbnail rendering in Editor project?
 
@@ -1105,7 +1114,7 @@ namespace Havtorn
 
 				return passData;
 			},
-			[](const SGeometryDepthCopyPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
+			[](const SGeometryDepthCopyPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& /*renderView*/)
 			{
 				SFullscreenRenderData rendererData;
 				rendererData.TextureResource1 = registry.GetResource(data.DepthTextureHandle);
@@ -1212,7 +1221,7 @@ namespace Havtorn
 
 				return passData;
 			},
-			[](const SSSAOPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
+			[](const SSSAOPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& /*renderView*/)
 			{
 				SFullscreenRenderData rendererData;
 				rendererData.TextureResource1 = registry.GetResource(data.DepthTextureHandle);
@@ -1516,7 +1525,7 @@ namespace Havtorn
 
 				return passData;
 			},
-			[](const SVolumetricBlurPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
+			[](const SVolumetricBlurPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& /*renderView*/)
 			{
 				SBilateralBlurRenderData rendererData;
 				rendererData.RenderTarget = registry.GetResource(data.RenderTargetHandle);
@@ -1555,7 +1564,7 @@ namespace Havtorn
 
 				return passData;
 			},
-			[](const SBloomPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
+			[](const SBloomPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& /*renderView*/)
 			{
 				SFullscreenRenderData fullscreenRenderData;
 				fullscreenRenderData.PixelShader = EPixelShaders::FullscreenCopy;
@@ -1601,7 +1610,7 @@ namespace Havtorn
 				
 				return passData;
 			},
-			[](const STonemappingPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
+			[](const STonemappingPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& /*renderView*/)
 			{
 				SFullscreenRenderData rendererData;
 				rendererData.TextureResource1 = registry.GetResource(data.RenderTargetTextureHandle);
@@ -1762,7 +1771,7 @@ namespace Havtorn
 
 				return passData;
 			},
-			[](const SAntialiasingPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
+			[](const SAntialiasingPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& /*renderView*/)
 			{
 				SFullscreenRenderData rendererData;
 				rendererData.TextureResource1 = registry.GetResource(data.TonemappedTextureHandle);
@@ -1790,7 +1799,7 @@ namespace Havtorn
 
 				return passData;
 			},
-			[](const SGammaCorrectionPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
+			[](const SGammaCorrectionPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& /*renderView*/)
 			{
 				SFullscreenRenderData rendererData;
 				rendererData.TextureResource1 = registry.GetResource(data.AntialiasedTextureHandle);
@@ -1808,7 +1817,7 @@ namespace Havtorn
 			SRenderResourceHandle MainRenderTargetHandle;
 		};
 		renderView->RenderGraph.AddPass<SFinalizePassData>("Finalize",
-			[&](CRenderResourceRegistry& registry)
+			[&](CRenderResourceRegistry& /*registry*/)
 			{
 				SFinalizePassData passData;
 				passData.SetIsRootPass();
@@ -1827,7 +1836,7 @@ namespace Havtorn
 
 				return passData;
 			},
-			[](const SFinalizePassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
+			[](const SFinalizePassData& /*data*/, CRenderResourceRegistry& /*registry*/, CRenderManager* /*renderManager*/, SRenderView& /*renderView*/)
 			{
 				//SFullscreenRenderData rendererData;
 				//rendererData.TextureResource1 = registry.GetResource(data.PrimaryOptionalTextureHandle);

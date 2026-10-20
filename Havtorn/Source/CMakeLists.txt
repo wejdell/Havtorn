@@ -549,7 +549,6 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Graphics/GraphicsStructs.h
     ${ENGINE_FOLDER}Graphics/GraphicsUtilities.cpp
     ${ENGINE_FOLDER}Graphics/GraphicsUtilities.h
-    ${ENGINE_FOLDER}Graphics/RenderCommand.h
     ${ENGINE_FOLDER}Graphics/RenderManager.cpp
     ${ENGINE_FOLDER}Graphics/RenderManager.h
     ${ENGINE_FOLDER}Graphics/RenderGraph.cpp

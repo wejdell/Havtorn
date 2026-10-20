@@ -1,9 +1,22 @@
 // Copyright 2022 Team Havtorn. All Rights Reserved.
 
-#include "Includes/FullscreenShaderStructs.hlsli"
+//#include "Includes/FullscreenShaderStructs.hlsli"
 #include "Includes/VolumetricLightShaderStructs.hlsli"
 #include "Includes/MathHelpers.hlsli"
 #include "Includes/ShadowSampling.hlsli"
+
+sampler defaultSampler : register(s0);
+
+struct VertexToPixel
+{
+    float4 Position : SV_POSITION;
+    float2 UV : UV;
+};
+
+struct PixelOutput
+{
+    float4 Color : SV_TARGET;
+};
 
 cbuffer LightBuffer : register(b1)
 {

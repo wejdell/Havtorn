@@ -9,9 +9,9 @@
 
 namespace Havtorn
 {
-	CThumbnailRenderer::CThumbnailRenderer(CRenderStateManager* stateManager)
+	bool CThumbnailRenderer::Init(CRHI* /*rhi*/, CRenderManager* manager)
 	{
-		RenderStateManager = stateManager;
+		RenderStateManager = &manager->GetRenderStateManager();
 
 		const SPSODescription staticMeshThumbnail =
 		{
@@ -34,7 +34,7 @@ namespace Havtorn
 			.PixelShader = RenderStateManager->PixelShaders[STATIC_U8(EPixelShaders::EditorPreview)],
 			.GeometryShader = nullptr,
 			.ComputeShader = nullptr,
-			.InputLayout = RenderStateManager->InputLayouts[STATIC_U8(EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4AnimDataTrans)],
+			.InputLayout = RenderStateManager->InputLayouts[STATIC_U8(EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Trans)],
 			.Topology = ETopologies::TriangleList,
 			.BlendState = RenderStateManager->BlendStates[STATIC_U8(EBlendStates::Disable)],
 			.RasterizerState = RenderStateManager->RasterizerStates[STATIC_U8(ERasterizerStates::BackfaceCulling)],
@@ -57,6 +57,13 @@ namespace Havtorn
 			.RootSignature = nullptr
 		};
 		CubemapTextureThumbnailPSOIndex = RenderStateManager->AddPipelineStateObject(textureCubeThumbnail);
+
+		return true;
+	}
+
+	void CThumbnailRenderer::SetupRender(const SMainTargetRenderData& targetData)
+	{
+		RenderStateManager->OMSetRenderTargets({ targetData.MainRenderTarget }, targetData.DepthTexture);
 	}
 
 	void CThumbnailRenderer::RenderStaticMeshThumbnail(const SStaticMeshThumbnailPassData& passData)

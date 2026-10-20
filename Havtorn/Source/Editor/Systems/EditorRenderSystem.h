@@ -10,6 +10,8 @@ namespace Havtorn
 	class CWorld;
 	class CEditorManager;
 	struct SEntity;
+	struct SRenderView;
+	struct SViewData;
 
 	class CEditorRenderSystem : public ISystem
 	{

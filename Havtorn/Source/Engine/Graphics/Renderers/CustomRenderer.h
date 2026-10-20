@@ -8,6 +8,8 @@
 
 namespace Havtorn
 {
+	class CRHI;
+	class CRenderManager;
 	class CRenderStateManager;
 	struct SRenderResource;
 
@@ -19,8 +21,9 @@ namespace Havtorn
 	class CCustomRenderer
 	{
 	public:
-		CCustomRenderer(CRenderStateManager* stateManager);
+		CCustomRenderer() = default;
 		~CCustomRenderer() = default;
+		bool Init(CRHI* rhi, CRenderManager* manager);
 
 		void RenderCustomPass(const SCustomPassData& passData);
 

@@ -9,9 +9,9 @@
 
 namespace Havtorn
 {
-	CDebugRenderer::CDebugRenderer(CRenderStateManager* stateManager)
+	bool CDebugRenderer::Init(CRHI* /*rhi*/, CRenderManager* manager)
 	{
-		RenderStateManager = stateManager;
+		RenderStateManager = &manager->GetRenderStateManager();
 
 		SPSODescription debugShapes =
 		{
@@ -30,6 +30,8 @@ namespace Havtorn
 
 		debugShapes.GeometryShader = RenderStateManager->PixelShaders[STATIC_U8(EGeometryShaders::Line2D)];
 		DebugPass2DPSOIndex = RenderStateManager->AddPipelineStateObject(debugShapes);
+
+		return true;
 	}
 
 	void CDebugRenderer::SetupDepthRender(const SGeometryConstantRenderData& viewData, const SMainTargetRenderData& targetData)
