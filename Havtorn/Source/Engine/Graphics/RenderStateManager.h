@@ -104,6 +104,7 @@ namespace Havtorn
 		void PSSetResources(U8 startSlot, U8 numberOfResources, ID3D11ShaderResourceView* const* resources);
 		void PSSetResources(U8 startSlot, const std::vector<CRenderTexture*>& resources);
 		void PSSetResources(U8 startSlot, const std::vector<SRenderResource*>& resources);
+		void PSClearSlot(const U8 slot);
 
 		// RS
 		void RSSetRasterizerState(ERasterizerStates rasterizerState) const;
@@ -181,9 +182,7 @@ namespace Havtorn
 	U16 CRenderStateManager::AddVertexBuffer(const std::vector<T>& vertices)
 	{
 		VertexBuffers.emplace_back(CDataBuffer());
-		VertexBuffers.back().CreateBuffer("Vertex Buffer", RHI, sizeof(T) * STATIC_U32(vertices.size()), vertices.data(), EDataBufferType::Vertex, EDataBufferUsage::Immutable, EResourceCPUAccess::None);
-		VertexBuffers.back().VertexBufferStride = sizeof(T);
-		VertexBuffers.back().VertexBufferOffset = 0;
+		VertexBuffers.back().CreateBuffer("Vertex Buffer", RHI, sizeof(T), STATIC_U32(vertices.size()), vertices.data(), EDataBufferType::Vertex, EDataBufferUsage::Immutable, EResourceCPUAccess::None);
 
 		return STATIC_U16(VertexBuffers.size() - 1);
 	}

@@ -11,10 +11,12 @@
 #include <RHI/RenderingPrimitives/SamplerState.h>
 #include <RHI/RHIEnums.h>
 
+#include <mutex>
+
 namespace Havtorn
 {
 	class CRenderStateManager;
-	constexpr U8 RenderDebugNameMaxSize = 64;
+	constexpr U8 RenderDebugNameMaxSize = 30;
 
 	enum class ERenderResourceType : U8
 	{
@@ -32,12 +34,8 @@ namespace Havtorn
 
 	struct SRenderResourceDescription
 	{
-		// void CreateBuffer(const std::string& bufferName, const CRHI* rhi, U32 byteWidth, const void* subResourceData = nullptr, EDataBufferType bufferType = EDataBufferType::Constant, EDataBufferUsage usage = EDataBufferUsage::Dynamic, EResourceCPUAccess cpuAccess = EResourceCPUAccess::CPUAccessWrite);
-		// CRenderTexture CreateTexture(SVector2<U16> size, DXGI_FORMAT format, bool cpuAccess = false);
-
 		CHavtornStaticString<RenderDebugNameMaxSize> Name;
 		bool IsImported = false;
-		//EShaderType PipelineStage = EShaderType::Vertex;
 		ERenderResourceType Type = ERenderResourceType::Unknown;
 		ERenderResourceFormat Format = ERenderResourceFormat::Unknown;
 		ESamplerType SamplerType = ESamplerType::Border;
@@ -49,8 +47,9 @@ namespace Havtorn
 			U32 Size;
 		};
 		U32 ID = 0;
-		U16 Stride = 0;
-		U8 Offset = 0;
+		U16 VertexStride = 0;
+		bool IsAllocated = false;
+		bool WasProcessed = false;
 	};
 
 	struct SRenderResourceDeclaration
@@ -82,31 +81,31 @@ namespace Havtorn
 		SRenderResource(const SRenderResourceDescription& description, void* externalMemory);
 		SRenderResource() = default;
 
-		void Allocate();
-		void Deallocate();
+		void Allocate(CRenderManager* manager, CRHI* rhi);
+		void Deallocate(CRenderManager* manager, CRHI* rhi);
+		void Clear(CRenderManager* manager, CRHI* rhi);
 
+		SRenderResourceDescription Description;
+		U32 ID = 0;
+		
 		union
 		{
 			CDataBuffer* DataBuffer = nullptr;
 			CRenderTexture* RenderTexture;
-			CStaticRenderTexture* StaticRenderTexture;
 			CSamplerState* SamplerState;
 		};
-		CRenderTexture* DepthTexture = nullptr;
-
-		SRenderResourceDescription Description;
-		U32 ID = 0;
 	};
 
 	constexpr U8 ResourceMaxLifetime = 20;
 
 	class CRenderResourceRegistry
 	{
+		friend class CRenderManager;
 	public:
 		CRenderResourceRegistry() = default;
 		~CRenderResourceRegistry() = default;
 
-		ENGINE_API SRenderResourceHandle DeclareResource(const SRenderResourceDeclaration& declaration);
+		ENGINE_API SRenderResourceHandle DeclareResource(SRenderResourceDeclaration declaration);
 
 		template<typename T>
 		SRenderResourceHandle DeclareConstantBuffer(const char* name, const U64 sizeMultiplier = 1);
@@ -130,10 +129,13 @@ namespace Havtorn
 		void TouchResources(const std::vector<SRenderResourceHandle>& handles);
 		void Allocate();
 		void Deallocate();
+		void ClearResources();
 
 		ENGINE_API SRenderResource* GetResource(const SRenderResourceHandle& handle);
 
 	private:
+		CRenderManager* RenderManager = nullptr;
+		CRHI* RHI = nullptr;
 		std::vector<SRenderResource> Resources;
 		std::vector<U8> ResourceLifetimes;
 	};
@@ -163,7 +165,7 @@ namespace Havtorn
 					.Type = ERenderResourceType::VertexBufferView,
 					.CPUAccess = EResourceCPUAccess::CPUAccessWrite,
 					.Size = sizeof(T) * maxInstances,
-					.Stride = sizeof(T)
+					.VertexStride = sizeof(T)
 				},
 				.ExternalMemory = nullptr
 		});
@@ -178,7 +180,7 @@ namespace Havtorn
 					.Name = { name },
 					.Type = ERenderResourceType::VertexBufferView, // Not stricly needed for any external resources, should we just skip everything but the names? May want to show some info in debug
 					.BufferUsage = EDataBufferUsage::Immutable,
-					.Stride = sizeof(T)
+					.VertexStride = sizeof(T)
 				},
 				.ExternalMemory = externalMemory 
 		});

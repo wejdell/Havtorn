@@ -43,6 +43,10 @@ namespace Havtorn
 	bool CRenderManager::Init(CRHI* rhi, CPlatformManager* platformManager)
 	{
 		RHI = rhi;
+		ResourceRegistryA.RenderManager = this;
+		ResourceRegistryA.RHI = RHI;
+		ResourceRegistryB.RenderManager = this;
+		ResourceRegistryB.RHI = RHI;
 
 		// Init renderer with texture factory, create noise texture as rendertexture
 		ENGINE_ERROR_BOOL_MESSAGE(RenderTextureFactory.Init(rhi), "Failed to Init Fullscreen Texture Factory.");
@@ -62,6 +66,10 @@ namespace Havtorn
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderViewModeBackward).AddMember(this, &CRenderManager::CycleRenderViewMode);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderViewModeReset).AddMember(this, &CRenderManager::CycleRenderViewMode);
 		// TODO.NW: Bind to on resolution changed?
+
+		RenderStateManager.PSSetSampler(0, ESamplers::DefaultWrap);
+		RenderStateManager.PSSetSampler(1, ESamplers::DefaultClamp);
+		RenderStateManager.PSSetSampler(2, ESamplers::DefaultBorder);
 
 		return true;
 	}
@@ -200,22 +208,23 @@ namespace Havtorn
 			if (RendererSkeletalAnimationBoneData != nullptr)
 				SkeletalAnimationDataTextureCPU.WriteToCPUTexture(RendererSkeletalAnimationBoneData, SkeletalAnimationBoneDataSize);
 
-			EditorWidgetDepth.ClearDepth();
+			//EditorWidgetDepth.ClearDepth();
 
 			for (auto& [renderViewID, view] : (*RenderThreadRenderViews))
 			{
 				// TODO.NW: Hopefully we can remove all of these textures and buffers
-				ShadowAtlasDepth.ClearDepth();
-				SSAOBuffer.ClearTexture();
+				//ShadowAtlasDepth.ClearDepth();
+				//SSAOBuffer.ClearTexture();
+				view.RenderResourceRegistry->ClearResources();
 				view.RenderTarget.ClearTexture();
 
-				LitScene.ClearTexture();
-				IntermediateTexture.ClearTexture();
-				IntermediateDepth.ClearDepth();
-				VolumetricAccumulationBuffer.ClearTexture();
+				//LitScene.ClearTexture();
+				//IntermediateTexture.ClearTexture();
+				//IntermediateDepth.ClearDepth();
+				//VolumetricAccumulationBuffer.ClearTexture();
 
-				GBuffer.ClearTextures(ClearColor, renderViewID == WorldMainCameraEntity.GUID);
-				ShadowAtlasDepth.SetAsDepthTarget(&IntermediateTexture);
+				//GBuffer.ClearTextures(ClearColor, renderViewID == WorldMainCameraEntity.GUID);
+				//ShadowAtlasDepth.SetAsDepthTarget(&IntermediateTexture);
 				
 				CheckRenderViewMode(renderViewID);
 				view.RenderGraph.Execute(this, view);
@@ -223,9 +232,11 @@ namespace Havtorn
 
 			// TODO.NW: See if this works
 			// RenderTarget should be complete as that is the texture we send to the viewport
+			Backbuffer.SetAsActiveTarget();
 			if (RenderThreadRenderViews->contains(WorldMainCameraEntity.GUID))
 			{
-				Backbuffer.CopyFromTexture(RenderThreadRenderViews->at(WorldMainCameraEntity.GUID).RenderTarget.GetTexture());
+				RenderThreadRenderViews->at(WorldMainCameraEntity.GUID).RenderTarget.SetAsPSResourceOnSlot(0);
+				FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
 			}
 
 			GTime::EndTracking(ETimerCategory::GPU);
@@ -381,7 +392,12 @@ namespace Havtorn
 
 	CRenderResourceRegistry& CRenderManager::GetRenderResourceRegistry()
 	{
-		return ResourceRegistry;
+		return *GameThreadResourceRegistry;
+	}
+
+	CRenderTextureFactory& CRenderManager::GetRenderTextureFactory()
+	{
+		return RenderTextureFactory;
 	}
 
 	void CRenderManager::SwapRenderViews()
@@ -398,7 +414,10 @@ namespace Havtorn
 			}
 		}
 
+		RenderThreadResourceRegistry->Deallocate();
+
 		std::swap(GameThreadRenderViews, RenderThreadRenderViews);
+		std::swap(GameThreadResourceRegistry, RenderThreadResourceRegistry);
 		for (const U64& id : idsToErase)
 		{
 			GameThreadRenderViews->erase(id);
@@ -409,11 +428,17 @@ namespace Havtorn
 		ClearRenderViewInstanceData();
 
 		for (auto& [id, view] : *RenderThreadRenderViews)
+		{
+			view.RenderResourceRegistry = RenderThreadResourceRegistry;
+			view.RenderGraph.ResourceRegistry = RenderThreadResourceRegistry;
 			RequestRenderView(id);
+		}
 
 		idsToErase = {};
 		for (auto& [id, view] : *GameThreadRenderViews)
 		{
+			view.RenderResourceRegistry = GameThreadResourceRegistry;
+			view.RenderGraph.ResourceRegistry = GameThreadResourceRegistry;
 			if (!RenderThreadRenderViews->contains(id))
 				idsToErase.push_back(id);
 		}
@@ -426,10 +451,23 @@ namespace Havtorn
 	{
 		for (auto& renderViewPair : (*GameThreadRenderViews))
 		{
+			// TODO.NW: Clear this in a safer way, through subobject reconstruction or something
 			renderViewPair.second.StaticMeshDrawData.clear();
 			renderViewPair.second.SkeletalMeshDrawData.clear();
 			renderViewPair.second.WorldSpaceSpriteDrawData.clear();
 			renderViewPair.second.ScreenSpaceSpriteDrawData.clear();
+			renderViewPair.second.DecalDrawData.clear();
+			renderViewPair.second.WidgetSpriteDrawData.clear();
+			renderViewPair.second.UISpriteDrawData.clear();
+
+			renderViewPair.second.DirectionalLightDrawData.clear();
+			renderViewPair.second.PointLightDrawData.clear();
+			renderViewPair.second.SpotlightDrawData.clear();
+
+			renderViewPair.second.DebugObjectsDepth3D.clear();
+			renderViewPair.second.DebugObjectsNoDepth3D.clear();
+			renderViewPair.second.DebugObjectsDepth2D.clear();
+			renderViewPair.second.DebugObjectsNoDepth2D.clear();
 		}
 	}
 
@@ -445,7 +483,9 @@ namespace Havtorn
 		}
 
 		// TODO.NW: Add size/dimensions to requests
-		GameThreadRenderViews->emplace(renderViewID, SRenderView(this, &RenderStateManager, GEngine::GetAssetRegistry(), &ResourceRegistry));
+		// TODO.NW: Find a way to keep just one registry for a View and RenderGraph within it
+		GameThreadRenderViews->emplace(renderViewID, SRenderView(&RenderStateManager, GEngine::GetAssetRegistry(), GameThreadResourceRegistry));
+		GameThreadRenderViews->at(renderViewID).RenderGraph.ResourceRegistry = GameThreadResourceRegistry;
 		GameThreadRenderViews->at(renderViewID).RenderTarget = RenderTextureFactory.CreateTexture(CurrentWindowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
 
 		if (callback.has_value())
@@ -514,11 +554,11 @@ namespace Havtorn
 		EmissiveBuffer.CreateBuffer("Emissive Buffer", RHI, sizeof(SEmissiveBufferData));
 		BoneBuffer.CreateBuffer("Bone Buffer", RHI, sizeof(SBoneBufferData));
 
-		InstancedTransformBuffer.CreateBuffer("Instanced Transform Buffer", RHI, sizeof(SMatrix) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
-		InstancedAnimationDataBuffer.CreateBuffer("Instanced Animation Data Buffer", RHI, sizeof(SVector2<U32>) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
-		InstancedEntityIDBuffer.CreateBuffer("Instanced Entity ID Buffer", RHI, sizeof(U64) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
-		InstancedUVRectBuffer.CreateBuffer("Instanced UV Rect Buffer", RHI, sizeof(SVector4) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
-		InstancedColorBuffer.CreateBuffer("Instanced Color Buffer", RHI, sizeof(SVector4) * InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
+		InstancedTransformBuffer.CreateBuffer("Instanced Transform Buffer", RHI, sizeof(SMatrix), InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
+		InstancedAnimationDataBuffer.CreateBuffer("Instanced Animation Data Buffer", RHI, sizeof(SVector2<U32>), InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
+		InstancedEntityIDBuffer.CreateBuffer("Instanced Entity ID Buffer", RHI, sizeof(U64), InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
+		InstancedUVRectBuffer.CreateBuffer("Instanced UV Rect Buffer", RHI, sizeof(SVector4), InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
+		InstancedColorBuffer.CreateBuffer("Instanced Color Buffer", RHI, sizeof(SVector4), InstancedDrawInstanceLimit, nullptr, EDataBufferType::Vertex);
 	}
 
 	void CRenderManager::DebugShadowAtlas()
@@ -683,11 +723,10 @@ namespace Havtorn
 		return RenderStateManager;
 	}
 
-	SRenderView::SRenderView(CRenderManager* renderManager, CRenderStateManager* stateManager, CAssetRegistry* assetRegistry, CRenderResourceRegistry* renderResourceRegistry)
+	SRenderView::SRenderView(CRenderStateManager* stateManager, CAssetRegistry* assetRegistry, CRenderResourceRegistry* renderResourceRegistry)
 		: StateManager(stateManager)
 		, AssetRegistry(assetRegistry)
 		, RenderResourceRegistry(renderResourceRegistry)
-		, RenderGraph(renderManager)
 	{
 	}
 

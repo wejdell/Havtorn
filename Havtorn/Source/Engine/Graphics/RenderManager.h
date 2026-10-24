@@ -163,7 +163,7 @@ namespace Havtorn
 
 	struct SRenderView
 	{
-		SRenderView(CRenderManager* renderManager, CRenderStateManager* stateManager, CAssetRegistry* assetRegistry, CRenderResourceRegistry* renderResourceRegistry);
+		SRenderView(CRenderStateManager* stateManager, CAssetRegistry* assetRegistry, CRenderResourceRegistry* renderResourceRegistry);
 
 		// TODO.NW: Do we wanna store these as references instead?
 		CRenderStateManager* StateManager = nullptr;
@@ -210,6 +210,7 @@ namespace Havtorn
 	{
 		friend CAssetRegistry;
 		friend CRenderGraph;
+		friend CRenderResourceRegistry;
 		friend CFullscreenRenderer;
 
 	public:
@@ -243,6 +244,7 @@ namespace Havtorn
 		[[nodiscard]] ENGINE_API CRenderTexture* GetRenderTargetTexture(const U64 renderViewID) const;
 		
 		ENGINE_API CRenderResourceRegistry& GetRenderResourceRegistry();
+		ENGINE_API CRenderTextureFactory& GetRenderTextureFactory();
 
 		void SwapRenderViews();
 		void ClearRenderViewInstanceData();
@@ -332,14 +334,16 @@ namespace Havtorn
 
 		std::map<U64, SRenderView> RenderViewsA;
 		std::map<U64, SRenderView> RenderViewsB;
+		CRenderResourceRegistry ResourceRegistryA;
+		CRenderResourceRegistry ResourceRegistryB;
 
 		std::map<U64, SRenderView>* GameThreadRenderViews = &RenderViewsA;
 		std::map<U64, SRenderView>* RenderThreadRenderViews = &RenderViewsB;
+		CRenderResourceRegistry* GameThreadResourceRegistry = &ResourceRegistryA;
+		CRenderResourceRegistry* RenderThreadResourceRegistry = &ResourceRegistryB;
 		std::map<U64, std::function<void(CRenderTexture&)>> RenderViewCallbacks;
 
 		SVector4 ClearColor = SVector4(0.5f, 0.5f, 0.5f, 1.0f);
-
-		CRenderResourceRegistry ResourceRegistry;
 
 		ERenderViewMode CurrentRenderViewMode = ERenderViewMode::All;
 		bool ShouldBlurVolumetricBuffer = false;

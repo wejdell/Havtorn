@@ -45,6 +45,7 @@ namespace Havtorn
 	{
 		Pos3Nor3Tan3Bit3UV2,
 		Pos3Nor3Tan3Bit3UV2Trans,
+		Pos3Nor3Tan3Bit3UV2TransObjectTrans,
 		Position4,
 		TransUVRectColor,
 		Pos3Nor3Tan3Bit3UV2Entity2Trans,
@@ -53,7 +54,6 @@ namespace Havtorn
 		Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2Trans,
 		Pos3Nor3Tan3Bit3UV2Color4,
 		Pos3Nor3Tan3Bit3UV2Color4Entity2,
-		Pos3Nor3Tan3Bit3UV2TransObjectTrans,
 		Null
 	};
 

@@ -9,10 +9,6 @@
 
 namespace Havtorn
 {
-	CRenderGraph::CRenderGraph(CRenderManager* manager)
-		: ResourceRegistry(manager->GetRenderResourceRegistry())
-	{}
-
 	void TraverseDependencies(const Ref<IRenderPass>& pass, const std::vector<Ref<IRenderPass>>& sortedPasses, const std::unordered_map<U64, U64>& sortedDependencies)
 	{
 		for (U64 dependencyHash : pass->Dependencies)
@@ -65,8 +61,8 @@ namespace Havtorn
 
 		for (const Ref<IRenderPass>& pass : SortedPasses)
 		{
-			ResourceRegistry.TouchResources(pass->Inputs);
-			ResourceRegistry.TouchResources(pass->Outputs);
+			ResourceRegistry->TouchResources(pass->Inputs);
+			ResourceRegistry->TouchResources(pass->Outputs);
 		}
 	}
 
@@ -74,12 +70,10 @@ namespace Havtorn
 	{
 		Compile();
 
-		ResourceRegistry.Allocate();
+		ResourceRegistry->Allocate();
 
 		for (const Ref<IRenderPass>& pass : SortedPasses)
-			pass->Execute(ResourceRegistry, renderManager, renderView);
-
-		ResourceRegistry.Deallocate();
+			pass->Execute(*ResourceRegistry, renderManager, renderView);
 
 		RenderPasses.clear();
 		SortedPasses.clear();

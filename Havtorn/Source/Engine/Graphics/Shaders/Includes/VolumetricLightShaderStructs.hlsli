@@ -24,7 +24,7 @@ cbuffer VolumetricLightBuffer : register(b4)
     float henyeyGreensteinGValue;
 }
 
-sampler shadowSampler : register(s1);
+sampler shadowSampler : register(s2);
 Texture2D depthTexture : register(t21);
 Texture2D shadowDepthTexture : register(t22);
 

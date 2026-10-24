@@ -106,12 +106,12 @@ namespace Havtorn
 		void Render(const SFullscreenRenderData& renderData);
 		void RenderBilateralBlur(const SBilateralBlurRenderData& renderData);
 		void RenderGaussianBlur(const SGaussianBlurRenderData& renderData);
+		void Render(const EPixelShaders effect, const EBlendStates blendState);
 
 	private:
 		CFullscreenRenderer() = default;
 		~CFullscreenRenderer();
 		bool Init(CRHI* rhi, CRenderManager* manager);
-		void Render(const EPixelShaders effect, const EBlendStates blendState);
 		
 		void BindBufferData();
 		void PostDrawCall(const EPixelShaders shader, const EBlendStates blendState);

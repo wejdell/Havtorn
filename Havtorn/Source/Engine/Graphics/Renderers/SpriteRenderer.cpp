@@ -99,6 +99,10 @@ namespace Havtorn
 
 	void CSpriteRenderer::SetupScreenSpaceRender(const SMainTargetRenderData& targetData)
 	{
+		// TODO.NW: Fix intermediate depth still being bound here
+		RenderStateManager->PSClearSlot(2);
+		RenderStateManager->PSClearSlot(21);
+
 		RenderStateManager->OMSetRenderTargets({ targetData.MainRenderTarget }, targetData.DepthTexture);
 	}
 

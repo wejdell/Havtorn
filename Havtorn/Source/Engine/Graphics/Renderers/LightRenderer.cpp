@@ -162,6 +162,7 @@ namespace Havtorn
 		RenderStateManager->PSSetConstantBuffer(0, *viewData.ViewDataBuffer->DataBuffer);
 		RenderStateManager->GSSetConstantBuffer(0, *viewData.ViewDataBuffer->DataBuffer); // TODO.NW: Remove this when we get rid of geometry shaders for sprites/widgets
 
+		RenderStateManager->PSClearSlot(21);
 		RenderStateManager->OMSetRenderTargets({ targetData.MainRenderTarget }, targetData.DepthTexture);
 	}
 
@@ -171,10 +172,11 @@ namespace Havtorn
 		RenderStateManager->PSSetConstantBuffer(0, *viewData.ViewDataBuffer->DataBuffer);
 		RenderStateManager->GSSetConstantBuffer(0, *viewData.ViewDataBuffer->DataBuffer); // TODO.NW: Remove this when we get rid of geometry shaders for sprites/widgets
 
+		RenderStateManager->OMSetRenderTargets({ targetData.MainRenderTarget }, nullptr);
+		
+		// TODO.NW: Figure out automatic resource transitions through graph compilation so intermediate depth is unbound from output before being bound here
 		std::vector<SRenderResource*> lightingResources = { constantData.IntermediateDepthTexture, constantData.ShadowAtlasDepthTexture };
 		RenderStateManager->PSSetResources(21, lightingResources);
-
-		RenderStateManager->OMSetRenderTargets({ targetData.MainRenderTarget }, nullptr);
 	}
 
 	void CLightRenderer::RenderStaticMeshDepthPrePass(const SStaticMeshShadowRenderData& passData)
@@ -248,8 +250,6 @@ namespace Havtorn
 		RenderStateManager->IASetVertexBuffer(0, RenderStateManager->VertexBuffers[STATIC_U8(EVertexBufferPrimitives::SkyboxCube)]);
 		RenderStateManager->IASetIndexBuffer(RenderStateManager->IndexBuffers[STATIC_U8(EDefaultIndexBuffers::SkyboxCube)]);
 
-		// TODO.NW: Can we remove this clear? The Skybox shaders shouldn't read from it anyway
-		RenderStateManager->PSSetResources(21, 1, nullptr);
 		RenderStateManager->PSSetResources(0, { passData.CubemapTexture });
 
 		RenderStateManager->DrawIndexed(36, 0, 0);

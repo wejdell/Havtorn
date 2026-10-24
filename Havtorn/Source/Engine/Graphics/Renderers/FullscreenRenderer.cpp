@@ -36,6 +36,7 @@ namespace Havtorn
 			renderData.TextureResource2->RenderTexture->SetAsPSResourceOnSlot(1);
 
 		PostDrawCall(renderData.PixelShader, renderData.BlendState);
+		RenderStateManager->PSClearSlot(0);
 	}
 
 	void CFullscreenRenderer::RenderBilateralBlur(const SBilateralBlurRenderData& renderData)
@@ -54,30 +55,37 @@ namespace Havtorn
 		renderData.PrimaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
 		PostDrawCall(EPixelShaders::FullscreenBilateralHorizontal, EBlendStates::Disable);
 
+		RenderStateManager->PSClearSlot(0);
 		renderData.PrimaryBlurTexture->RenderTexture->SetAsActiveTarget();
 		renderData.SecondaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
 		PostDrawCall(EPixelShaders::FullscreenBilateralVertical, EBlendStates::Disable);
 
+		RenderStateManager->PSClearSlot(0);
 		renderData.SecondaryBlurTexture->RenderTexture->SetAsActiveTarget();
 		renderData.PrimaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
 		PostDrawCall(EPixelShaders::FullscreenBilateralHorizontal, EBlendStates::Disable);
 
+		RenderStateManager->PSClearSlot(0);
 		renderData.PrimaryBlurTexture->RenderTexture->SetAsActiveTarget();
 		renderData.SecondaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
 		PostDrawCall(EPixelShaders::FullscreenBilateralVertical, EBlendStates::Disable);
 
+		RenderStateManager->PSClearSlot(0);
 		renderData.SecondaryBlurTexture->RenderTexture->SetAsActiveTarget();
 		renderData.PrimaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
 		PostDrawCall(EPixelShaders::FullscreenBilateralHorizontal, EBlendStates::Disable);
 
+		RenderStateManager->PSClearSlot(0);
 		renderData.PrimaryBlurTexture->RenderTexture->SetAsActiveTarget();
 		renderData.SecondaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
 		PostDrawCall(EPixelShaders::FullscreenBilateralVertical, EBlendStates::Disable);
 
+		RenderStateManager->PSClearSlot(0);
 		renderData.SecondaryBlurTexture->RenderTexture->SetAsActiveTarget();
 		renderData.PrimaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
 		PostDrawCall(EPixelShaders::FullscreenBilateralHorizontal, EBlendStates::Disable);
 
+		RenderStateManager->PSClearSlot(0);
 		renderData.PrimaryBlurTexture->RenderTexture->SetAsActiveTarget();
 		renderData.SecondaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
 		PostDrawCall(EPixelShaders::FullscreenBilateralVertical, EBlendStates::Disable);
@@ -108,14 +116,17 @@ namespace Havtorn
 		renderData.PrimaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
 		PostDrawCall(EPixelShaders::FullscreenGaussianHorizontal, EBlendStates::Disable);
 
+		RenderStateManager->PSClearSlot(0);
 		renderData.PrimaryBlurTexture->RenderTexture->SetAsActiveTarget();
 		renderData.SecondaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
 		PostDrawCall(EPixelShaders::FullscreenGaussianVertical, EBlendStates::Disable);
 
+		RenderStateManager->PSClearSlot(0);
 		renderData.SecondaryBlurTexture->RenderTexture->SetAsActiveTarget();
 		renderData.PrimaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
 		PostDrawCall(EPixelShaders::FullscreenGaussianHorizontal, EBlendStates::Disable);
 
+		RenderStateManager->PSClearSlot(0);
 		renderData.PrimaryBlurTexture->RenderTexture->SetAsActiveTarget();
 		renderData.SecondaryBlurTexture->RenderTexture->SetAsPSResourceOnSlot(0);
 		PostDrawCall(EPixelShaders::FullscreenGaussianVertical, EBlendStates::Disable);

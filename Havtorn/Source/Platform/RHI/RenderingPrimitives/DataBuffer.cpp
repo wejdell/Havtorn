@@ -14,16 +14,17 @@ namespace Havtorn
 		Buffer->Release();
 	}
 
-	void CDataBuffer::CreateBuffer(const std::string& bufferName, const CRHI* rhi, U32 byteWidth, const void* subResourceData, EDataBufferType bufferType, EDataBufferUsage usage, EResourceCPUAccess cpuAccess)
+	void CDataBuffer::CreateBuffer(const std::string& bufferName, const CRHI* rhi, const U32 stride, const U32 instanceCount, const void* subResourceData, EDataBufferType bufferType, EDataBufferUsage usage, EResourceCPUAccess cpuAccess)
 	{
 		Name = bufferName;
 		Context = rhi->GetContext();
+		VertexBufferStride = stride;
 
 		D3D11_BUFFER_DESC bufferDescription = CD3D11_BUFFER_DESC{};
 		bufferDescription.Usage = static_cast<D3D11_USAGE>(usage);
 		bufferDescription.BindFlags = static_cast<D3D11_BIND_FLAG>(bufferType);
 		bufferDescription.CPUAccessFlags = static_cast<D3D11_CPU_ACCESS_FLAG>(cpuAccess);
-		bufferDescription.ByteWidth = byteWidth;
+		bufferDescription.ByteWidth = stride * instanceCount;
 
 		if (subResourceData != nullptr)
 		{

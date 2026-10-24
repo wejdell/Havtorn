@@ -71,7 +71,7 @@ namespace Havtorn
             initData[STATIC_U64(EVertexShaders::SpriteInstancedEditor)]         = { ShaderRoot + "SpriteInstancedEditor_VS.cso", true, EInputLayoutType::TransUVRectColorEntity2 };
             initData[STATIC_U64(EVertexShaders::SkeletalMeshInstanced)]         = { ShaderRoot + "DeferredInstancedAnimation_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Trans };
             initData[STATIC_U64(EVertexShaders::SkeletalMeshInstancedEditor)]   = { ShaderRoot + "DeferredInstancedAnimationEditor_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2BoneID4BoneWeight4Entity2Trans };
-            initData[STATIC_U64(EVertexShaders::Skybox)]                        = { ShaderRoot + "Skybox_VS.cso", true, EInputLayoutType::Position4 };
+            initData[STATIC_U64(EVertexShaders::Skybox)]                        = { ShaderRoot + "Skybox_VS.cso", false };
             initData[STATIC_U64(EVertexShaders::StaticMeshVertexPaint)]         = { ShaderRoot + "DeferredVertexPaint_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Color4 };
             initData[STATIC_U64(EVertexShaders::StaticMeshVertexPaintEditor)]   = { ShaderRoot + "DeferredVertexPaintEditor_VS.cso", true, EInputLayoutType::Pos3Nor3Tan3Bit3UV2Color4Entity2};
         }
@@ -217,7 +217,7 @@ namespace Havtorn
     U16 CRenderStateManager::AddIndexBuffer(const std::vector<U32>& indices)
     {
         IndexBuffers.emplace_back(CDataBuffer());
-        IndexBuffers.back().CreateBuffer("Index Buffer", RHI, sizeof(U32) * STATIC_U32(indices.size()), indices.data(), EDataBufferType::Index, EDataBufferUsage::Immutable, EResourceCPUAccess::None);
+        IndexBuffers.back().CreateBuffer("Index Buffer", RHI, sizeof(U32), STATIC_U32(indices.size()), indices.data(), EDataBufferType::Index, EDataBufferUsage::Immutable, EResourceCPUAccess::None);
 
         return STATIC_U16(IndexBuffers.size() - 1);
     }
@@ -670,6 +670,12 @@ namespace Havtorn
         Context->PSSetShaderResources(startSlot, STATIC_U32(srvs.size()), srvs.data());
     }
 
+    void CRenderStateManager::PSClearSlot(const U8 slot)
+    {
+        ID3D11ShaderResourceView* nullView = NULL;
+        Context->PSSetShaderResources(slot, 1, &nullView);
+    }
+
     void CRenderStateManager::RSSetRasterizerState(ERasterizerStates rasterizerState) const
     {
         if (rasterizerState == ERasterizerStates::Default)
@@ -714,7 +720,7 @@ namespace Havtorn
         for (SRenderResource* resource : targets)
             rtvs.emplace_back(resource->RenderTexture->GetRenderTargetView());
 
-        ID3D11DepthStencilView* dsv = depth != nullptr ? depth->DepthTexture->GetDepthStencilView() : nullptr;
+        ID3D11DepthStencilView* dsv = depth != nullptr ? depth->RenderTexture->GetDepthStencilView() : nullptr;
         
         Context->OMSetRenderTargets(STATIC_U32(rtvs.size()), rtvs.data(), dsv);
     }

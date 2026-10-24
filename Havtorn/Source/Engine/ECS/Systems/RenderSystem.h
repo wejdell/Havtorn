@@ -92,7 +92,6 @@ namespace Havtorn
 	private:
 		CRenderManager* RenderManager = nullptr;
 		CRenderStateManager* StateManager = nullptr;
-		CRenderResourceRegistry* RenderResourceRegistry = nullptr;
 		CAssetRegistry* AssetRegistry = nullptr;
 		CWorld* World = nullptr;
 		DelegateHandle Handle = {};

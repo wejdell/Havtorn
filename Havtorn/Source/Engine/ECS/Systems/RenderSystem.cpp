@@ -23,7 +23,7 @@ namespace Havtorn
 		, World(world)
 	{
 		StateManager = &RenderManager->GetRenderStateManager();
-		RenderResourceRegistry = &RenderManager->GetRenderResourceRegistry();
+		//RenderResourceRegistry = &RenderManager->GetRenderResourceRegistry();
 		AssetRegistry = GEngine::GetAssetRegistry();
 	}
 
@@ -253,7 +253,7 @@ namespace Havtorn
 					STextureCubeAsset* asset = AssetRegistry->RequestAssetData<STextureCubeAsset>(environmentLightComp->AssetReference, environmentLightComp->Owner.GUID);
 					if (asset != nullptr)
 					{
-						renderView->SkyboxCubemapTextureHandle = RenderResourceRegistry->DeclareRenderTexture("Skybox Cubemap", &asset->RenderTexture);
+						renderView->SkyboxCubemapTextureHandle = renderView->RenderResourceRegistry->DeclareRenderTexture("Skybox Cubemap", &asset->RenderTexture);
 					}
 				}
 			}
@@ -280,7 +280,7 @@ namespace Havtorn
 				.LightBufferData = { .ToDirectionalLight = -lightComponent->Direction, .DirectionalLightColor = lightComponent->Color },
 				.ShadowmapBufferData = bufferData[0],
 				.VolumetricBufferData = ProcessVolumetricLightData(volumetricLightComp),
-				.CubemapTextureHandle = RenderResourceRegistry->DeclareRenderTexture("CubemapTexture", &cubemapTextureAsset->RenderTexture),
+				.CubemapTextureHandle = renderView->RenderResourceRegistry->DeclareRenderTexture(cubemapTextureAsset->Name.c_str(), &cubemapTextureAsset->RenderTexture),
 				.ShadowmapViewportIndex = viewportIndices[0],
 				.RenderVolumetrics = hasActiveVolumetricLightComp
 			});
@@ -559,7 +559,7 @@ namespace Havtorn
 			{
 				// TODO.NW: Need unique names for all external assets that are declared, maybe if they are external they
 				// can just use the asset ref ID as resource ID?
-				SRenderResourceHandle spriteTextureHandle = RenderResourceRegistry->DeclareRenderTexture("Sprite", &asset->RenderTexture);
+				SRenderResourceHandle spriteTextureHandle = renderView->RenderResourceRegistry->DeclareRenderTexture(asset->Name.c_str(), &asset->RenderTexture);
 				renderView->WorldSpaceSpriteDrawData.emplace(drawID, SSpriteDrawData{ .SpriteTextureHandle = spriteTextureHandle });
 			}
 
@@ -581,7 +581,7 @@ namespace Havtorn
 			{
 				// TODO.NW: Need unique names for all external assets that are declared, maybe if they are external they
 				// can just use the asset ref ID as resource ID?
-				SRenderResourceHandle spriteTextureHandle = RenderResourceRegistry->DeclareRenderTexture("Sprite", &asset->RenderTexture);
+				SRenderResourceHandle spriteTextureHandle = renderView->RenderResourceRegistry->DeclareRenderTexture(asset->Name.c_str(), &asset->RenderTexture);
 				renderView->ScreenSpaceSpriteDrawData.emplace(drawID, SSpriteDrawData{ .SpriteTextureHandle = spriteTextureHandle });
 			}
 
@@ -629,7 +629,7 @@ namespace Havtorn
 			{
 				// TODO.NW: Need unique names for all external assets that are declared, maybe if they are external they
 				// can just use the asset ref ID as resource ID?
-				SRenderResourceHandle spriteTextureHandle = RenderResourceRegistry->DeclareRenderTexture("Sprite", &asset->RenderTexture);
+				SRenderResourceHandle spriteTextureHandle = renderView->RenderResourceRegistry->DeclareRenderTexture("Sprite", &asset->RenderTexture);
 				renderView->ScreenSpaceSpriteDrawData.emplace(drawID, SSpriteDrawData{ .SpriteTextureHandle = spriteTextureHandle });
 			}
 
@@ -807,7 +807,7 @@ namespace Havtorn
 				passData.ViewDataBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SFrameBufferData>("Shadowmap Frame Buffer"));
 
 				// TODO.NW: Figure out if it's reasonable to bind any other existing render target here, do they even need to be the same dimensions?
-				passData.EmptyRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Empty Render Target", ERenderResourceFormat::R8_Typeless, SVector2<U16>(STATIC_U16(shadowAtlasResolution.X), STATIC_U16(shadowAtlasResolution.Y))));
+				passData.EmptyRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Empty Render Target", ERenderResourceFormat::R8_UnsignedInt, SVector2<U16>(STATIC_U16(shadowAtlasResolution.X), STATIC_U16(shadowAtlasResolution.Y))));
 				passData.ShadowmapRenderTargetHandle = passData.AddOutput(registry.DeclareRenderDepth("Shadow Atlas Depth", ERenderResourceFormat::R32_Typeless, SVector2<U16>(STATIC_U16(shadowAtlasResolution.X), STATIC_U16(shadowAtlasResolution.Y))));
 
 				return passData;
@@ -1087,6 +1087,7 @@ namespace Havtorn
 							editorData.EntityBuffer->DataBuffer->BindBuffer(drawData.Entities);
 
 						rendererData.SpriteTexture = registry.GetResource(drawData.SpriteTextureHandle);
+						rendererData.InstanceCount = STATIC_U32(drawData.Transforms.size());
 
 						if (runEditorDataPasses)
 							renderManager->SpriteRenderer.RenderEditorWorldSpaceSprite(rendererData, editorData);
@@ -1214,10 +1215,10 @@ namespace Havtorn
 
 				passData.AddDependency<SGeometryDecalPassData>();
 
-				passData.SSAOBufferTextureHandle = passData.AddOutput(registry.DeclareRenderTexture("SSAO Blur Texture", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::HalfResolution));
+				passData.SSAOBufferTextureHandle = passData.AddOutput(registry.DeclareRenderTexture("SSAO Blur Texture", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::FullResolution));
 				passData.DepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless));
 				passData.GBufferWNormalTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt));
-				passData.SSAOBlurTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("SSAO Blur Texture", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::HalfResolution));
+				passData.SSAOBlurTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("SSAO Blur Target", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::FullResolution));
 
 				return passData;
 			},
@@ -1280,7 +1281,8 @@ namespace Havtorn
 				passData.ShadowmapBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SShadowmapBufferData>("Shadowmap Buffer", 6));
 				passData.EmissiveBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SEmissiveBufferData>("Emissive Buffer"));
 
-				passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", ERenderResourceFormat::R16G16B16A16_Float));
+				//passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", &renderView->RenderTarget));
+				passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Lit Scene", ERenderResourceFormat::R16G16B16A16_Float));
 
 				return passData;
 			},
@@ -1372,6 +1374,12 @@ namespace Havtorn
 					rendererData.CubemapTexture = registry.GetResource(renderView.SkyboxCubemapTextureHandle);
 					renderManager->LightRenderer.RenderSkybox(rendererData);
 				}
+				// ändrat ssao till fullres, ändrade den här lit scene -> main render target från additiv blend till disable, 
+				// renderade direkt till main render target innan. Behöver cleara alla texturerna vi använder innan vi använder dem nästa frame
+				// (alltså resurser som fortfarande lever och inte plockats bort av resource registryn, men som fortfarande ägs av grafen)
+				renderView.RenderTarget.SetAsActiveTarget();
+				targetData.MainRenderTarget->RenderTexture->SetAsPSResourceOnSlot(0);
+				renderManager->FullscreenRenderer.Render(EPixelShaders::FullscreenCopy, EBlendStates::Disable);
 
 				// TODO.NW: See if there's any issue with binding depth for skybox and rendering to 
 				// main target instead of keeping a LitScene copy
@@ -1510,18 +1518,18 @@ namespace Havtorn
 			SRenderResourceHandle RenderTargetHandle;
 		};
 		renderView->RenderGraph.AddPass<SVolumetricBlurPassData>("VolumetricBlurPass",
-			[](CRenderResourceRegistry& registry)
+			[&](CRenderResourceRegistry& registry)
 			{
 				SVolumetricBlurPassData passData;
 
 				passData.AddDependency<SVolumetricLightPassData>();
 				
 				passData.DepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless));
-				passData.DownsamplingDepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Downsampling Depth", ERenderResourceFormat::R32_Float, ERenderTextureSizeHint::HalfResolution));
+				passData.DownsamplingDepthTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Downsampling Depth", ERenderResourceFormat::R32_Float, ERenderTextureSizeHint::HalfResolution));
 				passData.PrimaryBlurTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Volumetric Accumulation", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::HalfResolution));
 				passData.SecondaryBlurTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Volumetric Blur", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::HalfResolution));
 
-				passData.RenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", ERenderResourceFormat::R16G16B16A16_Float));
+				passData.RenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", &renderView->RenderTarget));
 
 				return passData;
 			},
@@ -1599,14 +1607,14 @@ namespace Havtorn
 		);
 
 		renderView->RenderGraph.AddPass<STonemappingPassData>("Tonemapping",
-			[](CRenderResourceRegistry& registry)
+			[&](CRenderResourceRegistry& registry)
 			{
 				STonemappingPassData passData;
 
 				passData.AddDependency<SBloomPassData>();
 
-				passData.RenderTargetTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Main Render Target", ERenderResourceFormat::R16G16B16A16_Float));
-				passData.TonemappingTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Tonemapped Target", ERenderResourceFormat::R16G16B16A16_Float));
+				passData.RenderTargetTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Main Render Target", &renderView->RenderTarget));
+				passData.TonemappingTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float));
 				
 				return passData;
 			},
@@ -1651,8 +1659,8 @@ namespace Havtorn
 			[](const SUIPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
 			{
 				SMainTargetRenderData targetData;
-				targetData.MainRenderTarget;
-				targetData.DepthTexture;
+				targetData.MainRenderTarget = registry.GetResource(data.MainRenderTargetHandle);
+				targetData.DepthTexture = registry.GetResource(data.DepthTargetHandle);
 				renderManager->SpriteRenderer.SetupScreenSpaceRender(targetData);
 
 				{
@@ -1668,6 +1676,8 @@ namespace Havtorn
 						rendererData.ColorBuffer->DataBuffer->BindBuffer(drawData.Colors);
 
 						rendererData.SpriteTexture = registry.GetResource(drawData.SpriteTextureHandle);
+
+						rendererData.InstanceCount = STATIC_U32(drawData.Transforms.size());
 
 						renderManager->SpriteRenderer.RenderScreenSpaceSprite(rendererData);
 					}
@@ -1766,7 +1776,7 @@ namespace Havtorn
 				passData.AddDependency<SUIPassData>();
 				passData.AddDependency<SDebugDrawPass>();
 
-				passData.TonemappedTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Tonemapped Target", ERenderResourceFormat::R16G16B16A16_Float));
+				passData.TonemappedTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float));
 				passData.AntialiasingTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Antialiased Target", ERenderResourceFormat::R16G16B16A16_Float));
 
 				return passData;
@@ -1788,14 +1798,14 @@ namespace Havtorn
 			SRenderResourceHandle MainRenderTargetHandle;
 		};
 		renderView->RenderGraph.AddPass<SGammaCorrectionPassData>("GammaCorrection",
-			[](CRenderResourceRegistry& registry)
+			[&](CRenderResourceRegistry& registry)
 			{
 				SGammaCorrectionPassData passData;
 
 				passData.AddDependency<SAntialiasingPassData>();
 				
 				passData.AntialiasedTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Antialiased Target", ERenderResourceFormat::R16G16B16A16_Float));
-				passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", ERenderResourceFormat::R16G16B16A16_Float));
+				passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", &renderView->RenderTarget));
 
 				return passData;
 			},
@@ -1831,7 +1841,7 @@ namespace Havtorn
 				//{
 				//	passData.AddDependency<SGeometryBasePassData>();
 				//	passData.PrimaryOptionalTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer Albedo Texture", ERenderResourceFormat::R16G16B16A16_Float));
-				//	passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", ERenderResourceFormat::R16G16B16A16_Float));
+				//	passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", &renderView->RenderTarget));
 				//}
 
 				return passData;

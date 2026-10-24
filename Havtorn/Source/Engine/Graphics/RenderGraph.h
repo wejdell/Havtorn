@@ -106,7 +106,7 @@ namespace Havtorn
 	class CRenderGraph
 	{
 	public:
-		CRenderGraph(CRenderManager* manager);
+		CRenderGraph() = default;
 		~CRenderGraph() = default;
 
 		template<RenderPassParamType TParamStruct>
@@ -115,14 +115,14 @@ namespace Havtorn
 		void Compile();
 		void Execute(CRenderManager* renderManager, SRenderView& renderView);
 
+		CRenderResourceRegistry* ResourceRegistry = nullptr;
+
 	private:
 		std::unordered_map<U64, U64> PassParamHashToPassIndex;
 		std::unordered_map<U64, U64> SortedPassParamHashToPassIndex;
 
 		std::vector<Ref<IRenderPass>> RenderPasses;
 		std::vector<Ref<IRenderPass>> SortedPasses;
-		
-		CRenderResourceRegistry& ResourceRegistry;
 	};
 
 	template<RenderPassParamType TParamStruct>
@@ -133,6 +133,6 @@ namespace Havtorn
 			PassParamHashToPassIndex.emplace(passParamHash, 0u);
 
 		PassParamHashToPassIndex.at(passParamHash) = RenderPasses.size();
-		RenderPasses.push_back(std::make_shared<CRenderPass<TParamStruct>>(debugName, setup(ResourceRegistry), std::move(execution)));
+		RenderPasses.push_back(std::make_shared<CRenderPass<TParamStruct>>(debugName, setup(*ResourceRegistry), std::move(execution)));
 	}
 }

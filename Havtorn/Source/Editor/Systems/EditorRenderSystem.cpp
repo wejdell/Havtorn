@@ -76,14 +76,14 @@ namespace Havtorn
 			[](CRenderResourceRegistry& registry)
 			{
 				SEditorWidgetPassData passData;
-
+				passData.SetIsRootPass();
 				passData.AddDependency<STonemappingPassData>();
 
 				passData.ViewDataBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SFrameBufferData>("View Data Buffer"));
-				passData.TransformBufferHandle = registry.DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit);
-				passData.UVRectBufferHandle = registry.DeclareVertexBuffer<SVector4>("Instanced UV Rect Buffer", InstancedDrawInstanceLimit);
-				passData.ColorBufferHandle = registry.DeclareVertexBuffer<SVector4>("Instanced Color Buffer", InstancedDrawInstanceLimit);
-				passData.EntityBufferHandle = registry.DeclareVertexBuffer<SEntity>("Instanced Entity Buffer", InstancedDrawInstanceLimit);
+				passData.TransformBufferHandle = passData.AddInput(registry.DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
+				passData.UVRectBufferHandle = passData.AddInput(registry.DeclareVertexBuffer<SVector4>("Instanced UV Rect Buffer", InstancedDrawInstanceLimit));
+				passData.ColorBufferHandle = passData.AddInput(registry.DeclareVertexBuffer<SVector4>("Instanced Color Buffer", InstancedDrawInstanceLimit));
+				passData.EntityBufferHandle = passData.AddInput(registry.DeclareVertexBuffer<SEntity>("Instanced Entity Buffer", InstancedDrawInstanceLimit));
 
 				passData.RenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float));
 				passData.GBufferWorldPositionTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer World Position", ERenderResourceFormat::R32G32B32A32_Float));
@@ -128,6 +128,7 @@ namespace Havtorn
 						rendererData.TransformBuffer->DataBuffer->BindBuffer(drawData.Transforms);
 						rendererData.UVRectBuffer->DataBuffer->BindBuffer(drawData.UVRects);
 						rendererData.ColorBuffer->DataBuffer->BindBuffer(drawData.Colors);
+						rendererData.InstanceCount = STATIC_U32(drawData.Transforms.size());
 
 						rendererData.SpriteTexture = registry.GetResource(drawData.SpriteTextureHandle);
 
@@ -199,15 +200,15 @@ namespace Havtorn
 				}
 
 				const U32 drawID = assetReference.UID;
-				if (!renderView->WorldSpaceSpriteDrawData.contains(drawID))
+				if (!renderView->WidgetSpriteDrawData.contains(drawID))
 				{
 					// TODO.NW: Need unique names for all external assets that are declared, maybe if they are external they
 					// can just use the asset ref ID as resource ID?
-					SRenderResourceHandle spriteTextureHandle = RenderManager->GetRenderResourceRegistry().DeclareRenderTexture("Sprite", &asset->RenderTexture);
-					renderView->WorldSpaceSpriteDrawData.emplace(drawID, SSpriteDrawData{ .SpriteTextureHandle = spriteTextureHandle });
+					SRenderResourceHandle spriteTextureHandle = RenderManager->GetRenderResourceRegistry().DeclareRenderTexture(asset->Name.c_str(), &asset->RenderTexture);
+					renderView->WidgetSpriteDrawData.emplace(drawID, SSpriteDrawData{ .SpriteTextureHandle = spriteTextureHandle });
 				}
 
-				SSpriteDrawData& spriteDrawData = renderView->WorldSpaceSpriteDrawData.at(drawID);
+				SSpriteDrawData& spriteDrawData = renderView->WidgetSpriteDrawData.at(drawID);
 				spriteDrawData.Transforms.push_back(orientedMatrix);
 				spriteDrawData.UVRects.emplace_back(0.0f, 0.0f, 1.0f, 1.0f);
 				spriteDrawData.Colors.emplace_back(1.0f, 1.0f, 1.0f, 1.0f);

@@ -231,8 +231,8 @@ Texture2D SSAOTexture           : register(t23);
 
 Texture2D MeshAnimationsTexture : register(t24);
 
-sampler defaultSampler : register(s0);
-sampler shadowSampler  : register(s1);
+sampler defaultSampler : register(s0); // default wrap
+sampler shadowSampler  : register(s1); // default clamp
 
 #define RED_ALBEDO      0
 #define RED_MATERIAL    1
