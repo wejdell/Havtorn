@@ -73,7 +73,7 @@ namespace Havtorn
 			SRenderResourceHandle DepthTargetHandle;
 		};
 		renderView->RenderGraph.AddPass<SEditorWidgetPassData>("EditorWidgetPass",
-			[](CRenderResourceRegistry& registry)
+			[&](CRenderResourceRegistry& registry)
 			{
 				SEditorWidgetPassData passData;
 				passData.SetIsRootPass();
@@ -85,12 +85,12 @@ namespace Havtorn
 				passData.ColorBufferHandle = passData.AddInput(registry.DeclareVertexBuffer<SVector4>("Instanced Color Buffer", InstancedDrawInstanceLimit));
 				passData.EntityBufferHandle = passData.AddInput(registry.DeclareVertexBuffer<SEntity>("Instanced Entity Buffer", InstancedDrawInstanceLimit));
 
-				passData.RenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float));
-				passData.GBufferWorldPositionTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer World Position", ERenderResourceFormat::R32G32B32A32_Float));
-				passData.GBufferEditorDataTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Editor Data", ERenderResourceFormat::R32G32_UnsignedInt));
+				passData.RenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float, renderView));
+				passData.GBufferWorldPositionTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer World Position", ERenderResourceFormat::R32G32B32A32_Float, renderView));
+				passData.GBufferEditorDataTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Editor Data", ERenderResourceFormat::R32G32_UnsignedInt, renderView));
 
 				// NW: This was a separate depth called EditorWidgetDepth before, does it need to be clear for some reason?
-				passData.DepthTargetHandle = passData.AddOutput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless));
+				passData.DepthTargetHandle = passData.AddOutput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless, renderView));
 
 				return passData;
 			},
@@ -123,7 +123,7 @@ namespace Havtorn
 					rendererData.UVRectBuffer = registry.GetResource(data.UVRectBufferHandle);
 					rendererData.ColorBuffer = registry.GetResource(data.ColorBufferHandle);
 
-					for (auto& [spriteID, drawData] : renderView.WidgetSpriteDrawData)
+					for (auto& [spriteID, drawData] : renderView.DrawData.WidgetSpriteDrawData)
 					{
 						rendererData.TransformBuffer->DataBuffer->BindBuffer(drawData.Transforms);
 						rendererData.UVRectBuffer->DataBuffer->BindBuffer(drawData.UVRects);
@@ -200,15 +200,15 @@ namespace Havtorn
 				}
 
 				const U32 drawID = assetReference.UID;
-				if (!renderView->WidgetSpriteDrawData.contains(drawID))
+				if (!renderView->DrawData.WidgetSpriteDrawData.contains(drawID))
 				{
 					// TODO.NW: Need unique names for all external assets that are declared, maybe if they are external they
 					// can just use the asset ref ID as resource ID?
 					SRenderResourceHandle spriteTextureHandle = RenderManager->GetRenderResourceRegistry().DeclareRenderTexture(asset->Name.c_str(), &asset->RenderTexture);
-					renderView->WidgetSpriteDrawData.emplace(drawID, SSpriteDrawData{ .SpriteTextureHandle = spriteTextureHandle });
+					renderView->DrawData.WidgetSpriteDrawData.emplace(drawID, SSpriteDrawData{ .SpriteTextureHandle = spriteTextureHandle });
 				}
 
-				SSpriteDrawData& spriteDrawData = renderView->WidgetSpriteDrawData.at(drawID);
+				SSpriteDrawData& spriteDrawData = renderView->DrawData.WidgetSpriteDrawData.at(drawID);
 				spriteDrawData.Transforms.push_back(orientedMatrix);
 				spriteDrawData.UVRects.emplace_back(0.0f, 0.0f, 1.0f, 1.0f);
 				spriteDrawData.Colors.emplace_back(1.0f, 1.0f, 1.0f, 1.0f);

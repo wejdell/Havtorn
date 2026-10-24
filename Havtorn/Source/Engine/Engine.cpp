@@ -116,15 +116,11 @@ namespace Havtorn
 	{
 		World->EndFrame();
 		InputMapper->EndFrame();
-		RenderManager->SyncCrossThreadResources(World);
+		
+		RenderManager->SyncCrossThreadResources(World, WindowResizeTarget);
 		RHI->EndFrame();
 
-		if (WindowResizeTarget.LengthSquared() > 0)
-		{
-			RenderManager->Release(WindowResizeTarget);
-			RenderManager->ReInit(RHI, WindowResizeTarget);
-			WindowResizeTarget = {};
-		}
+		WindowResizeTarget = {};
 
 		std::unique_lock<std::mutex> uniqueLock(CThreadManager::RenderMutex);
 		CThreadManager::RenderThreadStatus = ERenderThreadStatus::ReadyToRender;

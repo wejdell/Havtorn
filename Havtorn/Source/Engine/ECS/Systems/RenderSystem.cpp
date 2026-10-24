@@ -272,7 +272,7 @@ namespace Havtorn
 
 		const auto& [bufferData, viewportIndices] = ProcessShadowmapBufferData({ lightComponent->ShadowmapView }, shadowAtlasResolution, shadowTestTolerance);
 
-		renderView->DirectionalLightDrawData.emplace_back(SDirectionalLightDrawData
+		renderView->DrawData.DirectionalLightDrawData.emplace_back(SDirectionalLightDrawData
 			{
 				// Filled by mesh processing
 				.ShadowCasterData = {},
@@ -299,7 +299,7 @@ namespace Havtorn
 		std::array<SShadowmapBufferData, 6> bufferDataArray;
 		std::copy(bufferData.begin(), bufferData.end(), bufferDataArray.begin());
 		
-		renderView->PointLightDrawData.emplace_back(SPointLightDrawData
+		renderView->DrawData.PointLightDrawData.emplace_back(SPointLightDrawData
 			{
 				// Filled by mesh processing
 				.ShadowCasterData = {},
@@ -322,7 +322,7 @@ namespace Havtorn
 
 		const auto& [bufferData, viewportIndices] = ProcessShadowmapBufferData({ lightComponent->ShadowmapView }, shadowAtlasResolution, shadowTestTolerance);
 
-		renderView->SpotlightDrawData.emplace_back(SSpotlightDrawData
+		renderView->DrawData.SpotlightDrawData.emplace_back(SSpotlightDrawData
 			{
 				// Filled by mesh processing
 				.ShadowCasterData = {},
@@ -474,10 +474,10 @@ namespace Havtorn
 		if (doCulling && !viewFrustum.Intersects(meshBoundingSphere))
 			return;
 
-		if (!renderView->SkeletalMeshDrawData.contains(drawID))
-			renderView->SkeletalMeshDrawData.emplace(drawID, SSkeletalMeshDrawData{ .DrawData = fullDrawData, .Transforms = {}, .Entities = {}, .Bones = std::vector<SMatrix>(asset->BindPoseBones.size(), SMatrix::Identity) });
+		if (!renderView->DrawData.SkeletalMeshDrawData.contains(drawID))
+			renderView->DrawData.SkeletalMeshDrawData.emplace(drawID, SSkeletalMeshDrawData{ .DrawData = fullDrawData, .Transforms = {}, .Entities = {}, .Bones = std::vector<SMatrix>(asset->BindPoseBones.size(), SMatrix::Identity) });
 
-		SSkeletalMeshDrawData& drawData = renderView->SkeletalMeshDrawData.at(drawID);
+		SSkeletalMeshDrawData& drawData = renderView->DrawData.SkeletalMeshDrawData.at(drawID);
 		drawData.Transforms.push_back(transformMatrix);
 		drawData.Entities.push_back(meshComponent->Owner);
 		
@@ -513,14 +513,14 @@ namespace Havtorn
 		if (doCulling && !viewFrustum.Intersects(meshBoundingSphere))
 			return;
 
-		if (!renderView->DecalDrawData.contains(drawID))
+		if (!renderView->DrawData.DecalDrawData.contains(drawID))
 		{
 			SDecalDrawData decalDrawData;
 			std::tie(decalDrawData.MaterialTextureHandles, decalDrawData.MaterialBufferData) = ProcessMaterialData(renderView, asset->Material, component->Owner.GUID);
-			renderView->DecalDrawData.emplace(drawID, decalDrawData);
+			renderView->DrawData.DecalDrawData.emplace(drawID, decalDrawData);
 		}
 
-		SDecalDrawData& drawData = renderView->DecalDrawData.at(drawID);
+		SDecalDrawData& drawData = renderView->DrawData.DecalDrawData.at(drawID);
 		drawData.Transforms.push_back(transformMatrix);
 	}
 
@@ -555,15 +555,15 @@ namespace Havtorn
 					return;
 			}
 
-			if (!renderView->WorldSpaceSpriteDrawData.contains(drawID))
+			if (!renderView->DrawData.WorldSpaceSpriteDrawData.contains(drawID))
 			{
 				// TODO.NW: Need unique names for all external assets that are declared, maybe if they are external they
 				// can just use the asset ref ID as resource ID?
 				SRenderResourceHandle spriteTextureHandle = renderView->RenderResourceRegistry->DeclareRenderTexture(asset->Name.c_str(), &asset->RenderTexture);
-				renderView->WorldSpaceSpriteDrawData.emplace(drawID, SSpriteDrawData{ .SpriteTextureHandle = spriteTextureHandle });
+				renderView->DrawData.WorldSpaceSpriteDrawData.emplace(drawID, SSpriteDrawData{ .SpriteTextureHandle = spriteTextureHandle });
 			}
 
-			SSpriteDrawData& spriteDrawData = renderView->WorldSpaceSpriteDrawData.at(drawID);
+			SSpriteDrawData& spriteDrawData = renderView->DrawData.WorldSpaceSpriteDrawData.at(drawID);
 			spriteDrawData.Transforms.push_back(transformComp->Transform.GetMatrix());
 			spriteDrawData.UVRects.push_back(component->UVRect);
 			spriteDrawData.Colors.emplace_back(component->Color.AsVector4());
@@ -577,12 +577,12 @@ namespace Havtorn
 				// (or just directly check transformed (including aspect ratio) vertices against -0.5 -> 0.5 space)
 			}
 
-			if (!renderView->ScreenSpaceSpriteDrawData.contains(drawID))
+			if (!renderView->DrawData.ScreenSpaceSpriteDrawData.contains(drawID))
 			{
 				// TODO.NW: Need unique names for all external assets that are declared, maybe if they are external they
 				// can just use the asset ref ID as resource ID?
 				SRenderResourceHandle spriteTextureHandle = renderView->RenderResourceRegistry->DeclareRenderTexture(asset->Name.c_str(), &asset->RenderTexture);
-				renderView->ScreenSpaceSpriteDrawData.emplace(drawID, SSpriteDrawData{ .SpriteTextureHandle = spriteTextureHandle });
+				renderView->DrawData.ScreenSpaceSpriteDrawData.emplace(drawID, SSpriteDrawData{ .SpriteTextureHandle = spriteTextureHandle });
 			}
 
 			SMatrix screenSpaceMatrix;
@@ -590,7 +590,7 @@ namespace Havtorn
 			screenSpaceMatrix *= SMatrix::CreateRotationAroundZ(UMath::DegToRad(transform2DComp->DegreesRoll));
 			screenSpaceMatrix.SetTranslation({ transform2DComp->Position.X, transform2DComp->Position.Y, 0.0f });
 
-			SSpriteDrawData& spriteDrawData = renderView->ScreenSpaceSpriteDrawData.at(drawID);
+			SSpriteDrawData& spriteDrawData = renderView->DrawData.ScreenSpaceSpriteDrawData.at(drawID);
 			spriteDrawData.Transforms.push_back(screenSpaceMatrix);
 			spriteDrawData.UVRects.push_back(component->UVRect);
 			spriteDrawData.Colors.emplace_back(component->Color.AsVector4());
@@ -625,12 +625,12 @@ namespace Havtorn
 
 			const U32 drawID = assetReference.UID;
 
-			if (!renderView->ScreenSpaceSpriteDrawData.contains(drawID))
+			if (!renderView->DrawData.ScreenSpaceSpriteDrawData.contains(drawID))
 			{
 				// TODO.NW: Need unique names for all external assets that are declared, maybe if they are external they
 				// can just use the asset ref ID as resource ID?
 				SRenderResourceHandle spriteTextureHandle = renderView->RenderResourceRegistry->DeclareRenderTexture("Sprite", &asset->RenderTexture);
-				renderView->ScreenSpaceSpriteDrawData.emplace(drawID, SSpriteDrawData{ .SpriteTextureHandle = spriteTextureHandle });
+				renderView->DrawData.ScreenSpaceSpriteDrawData.emplace(drawID, SSpriteDrawData{ .SpriteTextureHandle = spriteTextureHandle });
 			}
 
 			SMatrix screenSpaceMatrix;
@@ -638,7 +638,7 @@ namespace Havtorn
 			screenSpaceMatrix *= SMatrix::CreateRotationAroundZ(UMath::DegToRad(transform2DComp->DegreesRoll + element.LocalDegreesRoll));
 			screenSpaceMatrix.SetTranslation({ transform2DComp->Position.X + element.LocalPosition.X, transform2DComp->Position.Y + element.LocalPosition.Y, 0.0f });
 
-			SSpriteDrawData& spriteDrawData = renderView->ScreenSpaceSpriteDrawData.at(drawID);
+			SSpriteDrawData& spriteDrawData = renderView->DrawData.ScreenSpaceSpriteDrawData.at(drawID);
 			spriteDrawData.Transforms.push_back(screenSpaceMatrix);
 			spriteDrawData.UVRects.push_back(element.UVRects[STATIC_U8(element.State)]);
 			spriteDrawData.Colors.emplace_back(element.Color.AsVector4());
@@ -717,7 +717,7 @@ namespace Havtorn
 		{
 			if (!doCulling || sceneLights.DirectionalLightCullGeometry[i].Intersects(boundingSphere))
 			{
-				std::unordered_map<U32, SStaticShadowCasterData>& shadowCasterData = renderView->DirectionalLightDrawData[i].ShadowCasterData;
+				std::unordered_map<U32, SStaticShadowCasterData>& shadowCasterData = renderView->DrawData.DirectionalLightDrawData[i].ShadowCasterData;
 				if (!shadowCasterData.contains(meshAssetID))
 					shadowCasterData.emplace(meshAssetID, SStaticShadowCasterData{ .PrimitiveData = primitiveDataOnly, .Transforms = {} });
 
@@ -729,7 +729,7 @@ namespace Havtorn
 		{
 			if (!doCulling || sceneLights.PointLightCullGeometry[i].Intersects(boundingSphere))
 			{
-				std::unordered_map<U32, SStaticShadowCasterData>& shadowCasterData = renderView->PointLightDrawData[i].ShadowCasterData;
+				std::unordered_map<U32, SStaticShadowCasterData>& shadowCasterData = renderView->DrawData.PointLightDrawData[i].ShadowCasterData;
 				if (!shadowCasterData.contains(meshAssetID))
 					shadowCasterData.emplace(meshAssetID, SStaticShadowCasterData{ .PrimitiveData = primitiveDataOnly, .Transforms = {} });
 
@@ -741,7 +741,7 @@ namespace Havtorn
 		{
 			if (!doCulling || sceneLights.SpotlightCullGeometry[i].Intersects(boundingSphere))
 			{
-				std::unordered_map<U32, SStaticShadowCasterData>& shadowCasterData = renderView->SpotlightDrawData[i].ShadowCasterData;
+				std::unordered_map<U32, SStaticShadowCasterData>& shadowCasterData = renderView->DrawData.SpotlightDrawData[i].ShadowCasterData;
 				if (!shadowCasterData.contains(meshAssetID))
 					shadowCasterData.emplace(meshAssetID, SStaticShadowCasterData{ .PrimitiveData = primitiveDataOnly, .Transforms = {} });
 
@@ -752,10 +752,10 @@ namespace Havtorn
 		if (doCulling && !viewFrustum.Intersects(boundingSphere))
 			return nullptr;
 
-		if (!renderView->StaticMeshDrawData.contains(drawID))
-			renderView->StaticMeshDrawData.emplace(drawID, SStaticMeshDrawData{ .DrawData = fullDrawData, .Transforms = {}, .Entities = {} });
+		if (!renderView->DrawData.StaticMeshDrawData.contains(drawID))
+			renderView->DrawData.StaticMeshDrawData.emplace(drawID, SStaticMeshDrawData{ .DrawData = fullDrawData, .Transforms = {}, .Entities = {} });
 
-		return &renderView->StaticMeshDrawData.at(drawID);
+		return &renderView->DrawData.StaticMeshDrawData.at(drawID);
 	}
 
 	SMaterialProcessingResult CRenderSystem::ProcessMaterialData(SRenderView* renderView, const SEngineGraphicsMaterial& material, const U64 assetRequester) const
@@ -825,7 +825,7 @@ namespace Havtorn
 					rendererData.TransformBuffer = registry.GetResource(data.TransformBufferHandle);
 					rendererData.ViewDataBuffer = registry.GetResource(data.ViewDataBufferHandle);
 
-					for (const SDirectionalLightDrawData& directionalLightData : renderView.DirectionalLightDrawData)
+					for (const SDirectionalLightDrawData& directionalLightData : renderView.DrawData.DirectionalLightDrawData)
 					{
 						rendererData.ShadowmapViewportIndex = directionalLightData.ShadowmapViewportIndex;
 						const SShadowmapBufferData& bufferData = directionalLightData.ShadowmapBufferData;
@@ -853,7 +853,7 @@ namespace Havtorn
 						}
 					}
 
-					for (const SPointLightDrawData& pointLightData : renderView.PointLightDrawData)
+					for (const SPointLightDrawData& pointLightData : renderView.DrawData.PointLightDrawData)
 					{
 						rendererData.ShadowmapViewportIndex = pointLightData.ShadowmapViewportIndex;
 						for (const SShadowmapBufferData& bufferData : pointLightData.ShadowmapBufferData)
@@ -883,7 +883,7 @@ namespace Havtorn
 						}
 					}
 
-					for (const SSpotlightDrawData& spotlightData : renderView.SpotlightDrawData)
+					for (const SSpotlightDrawData& spotlightData : renderView.DrawData.SpotlightDrawData)
 					{
 						rendererData.ShadowmapViewportIndex = spotlightData.ShadowmapViewportIndex;
 						const SShadowmapBufferData& bufferData = spotlightData.ShadowmapBufferData;
@@ -955,18 +955,18 @@ namespace Havtorn
 				// That may not be the case, and we might want to make use of the render view parameter in this case or have some option to decide for each pass 
 				// how it should be handled.
 
-				passData.GBufferAlbedoTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt));
-				passData.GBufferWNormalTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt));
-				passData.GBufferVNormalTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Vertex Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt));
-				passData.GBufferMaterialTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt));
+				passData.GBufferAlbedoTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt, renderView));
+				passData.GBufferWNormalTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt, renderView));
+				passData.GBufferVNormalTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Vertex Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt, renderView));
+				passData.GBufferMaterialTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt, renderView));
 
 				if (runEditorDataPasses)
 				{
-					passData.GBufferWorldPositionTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer World Position", ERenderResourceFormat::R32G32B32A32_Float));
-					passData.GBufferEditorDataTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Editor Data", ERenderResourceFormat::R32G32_UnsignedInt));
+					passData.GBufferWorldPositionTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer World Position", ERenderResourceFormat::R32G32B32A32_Float, renderView));
+					passData.GBufferEditorDataTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Editor Data", ERenderResourceFormat::R32G32_UnsignedInt, renderView));
 				}
 
-				passData.IntermediateDepthTargetHandle = passData.AddOutput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless));
+				passData.IntermediateDepthTargetHandle = passData.AddOutput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless, renderView));
 
 				return passData;
 			},
@@ -1008,7 +1008,7 @@ namespace Havtorn
 					rendererData.TransformBuffer = registry.GetResource(data.TransformBufferHandle);
 					rendererData.MaterialBuffer = registry.GetResource(data.MaterialBufferHandle);
 
-					for (auto& [drawID, meshData] : renderView.StaticMeshDrawData) // Static Mesh Level
+					for (auto& [drawID, meshData] : renderView.DrawData.StaticMeshDrawData) // Static Mesh Level
 					{
 						rendererData.TransformBuffer->DataBuffer->BindBuffer(meshData.Transforms);
 
@@ -1042,7 +1042,7 @@ namespace Havtorn
 					rendererData.MaterialBuffer = registry.GetResource(data.MaterialBufferHandle);
 					rendererData.BoneBuffer = registry.GetResource(data.BoneBufferHandle);
 
-					for (auto& [drawID, meshData] : renderView.SkeletalMeshDrawData)
+					for (auto& [drawID, meshData] : renderView.DrawData.SkeletalMeshDrawData)
 					{
 						rendererData.TransformBuffer->DataBuffer->BindBuffer(meshData.Transforms);
 						rendererData.BoneBuffer->DataBuffer->BindBuffer(meshData.Bones);
@@ -1077,7 +1077,7 @@ namespace Havtorn
 					rendererData.UVRectBuffer = registry.GetResource(data.UVRectBufferHandle);
 					rendererData.ColorBuffer = registry.GetResource(data.ColorBufferHandle);
 
-					for (auto& [spriteID, drawData] : renderView.WorldSpaceSpriteDrawData)
+					for (auto& [spriteID, drawData] : renderView.DrawData.WorldSpaceSpriteDrawData)
 					{
 						rendererData.TransformBuffer->DataBuffer->BindBuffer(drawData.Transforms);
 						rendererData.UVRectBuffer->DataBuffer->BindBuffer(drawData.UVRects);
@@ -1104,14 +1104,14 @@ namespace Havtorn
 			SRenderResourceHandle DepthRenderTargetHandle;
 		};
 		renderView->RenderGraph.AddPass<SGeometryDepthCopyPassData>("GeometryDepthCopy",
-			[](CRenderResourceRegistry& registry)
+			[&](CRenderResourceRegistry& registry)
 			{
 				SGeometryDepthCopyPassData passData;
 
 				passData.AddDependency<SGBufferBasePassData>();
 
-				passData.DepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless));
-				passData.DepthRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Depth Copy Target", ERenderResourceFormat::R32_Float));
+				passData.DepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless, renderView));
+				passData.DepthRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Depth Copy Target", ERenderResourceFormat::R32_Float, renderView));
 
 				return passData;
 			},
@@ -1140,7 +1140,7 @@ namespace Havtorn
 			SRenderResourceHandle IntermediateDepthTargetHandle;
 		};
 		renderView->RenderGraph.AddPass<SGeometryDecalPassData>("GBufferDecalPass",
-			[](CRenderResourceRegistry& registry)
+			[&](CRenderResourceRegistry& registry)
 			{
 				SGeometryDecalPassData passData;
 
@@ -1148,15 +1148,15 @@ namespace Havtorn
 				passData.AddDependency<SGeometryDepthCopyPassData>();
 
 				passData.ViewDataBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SFrameBufferData>("View Data Buffer"));
-				passData.DepthCopyTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Depth Copy", ERenderResourceFormat::R32_Float));
+				passData.DepthCopyTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Depth Copy", ERenderResourceFormat::R32_Float, renderView));
 				passData.TransformBufferHandle = passData.AddInput(registry.DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
 				passData.MaterialBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SMaterialBufferData>("Material Buffer"));
 
-				passData.GBufferAlbedoTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt));
-				passData.GBufferWNormalTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt));
-				passData.GBufferVNormalTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Vertex Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt));
-				passData.GBufferMaterialTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt));
-				passData.IntermediateDepthTargetHandle = passData.AddOutput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless));
+				passData.GBufferAlbedoTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt, renderView));
+				passData.GBufferWNormalTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt, renderView));
+				passData.GBufferVNormalTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Vertex Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt, renderView));
+				passData.GBufferMaterialTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt, renderView));
+				passData.IntermediateDepthTargetHandle = passData.AddOutput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless, renderView));
 
 				return passData;
 			},
@@ -1186,7 +1186,7 @@ namespace Havtorn
 				rendererData.MaterialBuffer = registry.GetResource(data.MaterialBufferHandle);
 				rendererData.DepthCopyTexture = registry.GetResource(data.DepthCopyTextureHandle);
 
-				for (auto& [materialID, drawData] : renderView.DecalDrawData)
+				for (auto& [materialID, drawData] : renderView.DrawData.DecalDrawData)
 				{
 					rendererData.TransformBuffer->DataBuffer->BindBuffer(drawData.Transforms);
 					rendererData.MaterialBuffer->DataBuffer->BindBuffer(drawData.MaterialBufferData);
@@ -1209,7 +1209,7 @@ namespace Havtorn
 			SRenderResourceHandle SSAOBlurTargetHandle;
 		};
 		renderView->RenderGraph.AddPass<SSSAOPassData>("SSAO",
-			[](CRenderResourceRegistry& registry)
+			[&](CRenderResourceRegistry& registry)
 			{
 				SSSAOPassData passData;
 
@@ -1217,10 +1217,10 @@ namespace Havtorn
 
 				// TODO.NW: Figure out why we can't do a half resolution SSAO pass here, do we need to assign the viewports or something?
 				// Also match it with the light pass below
-				passData.SSAOBufferTextureHandle = passData.AddOutput(registry.DeclareRenderTexture("SSAO Blur Texture", ERenderResourceFormat::R16G16B16A16_Float));
-				passData.DepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless));
-				passData.GBufferWNormalTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt));
-				passData.SSAOBlurTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("SSAO Blur Target", ERenderResourceFormat::R16G16B16A16_Float));
+				passData.SSAOBufferTextureHandle = passData.AddOutput(registry.DeclareRenderTexture("SSAO Blur Texture", ERenderResourceFormat::R16G16B16A16_Float, renderView));
+				passData.DepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless, renderView));
+				passData.GBufferWNormalTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt, renderView));
+				passData.SSAOBlurTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("SSAO Blur Target", ERenderResourceFormat::R16G16B16A16_Float, renderView));
 
 				return passData;
 			},
@@ -1269,13 +1269,13 @@ namespace Havtorn
 				passData.AddDependency<SSSAOPassData>();
 
 				passData.ViewDataBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SFrameBufferData>("View Data Buffer"));
-				passData.GBufferAlbedoTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)); // slot 1
-				passData.GBufferWNormalTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)); // slot 2
-				passData.GBufferVNormalTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer Vertex Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt)); // slot 3
-				passData.GBufferMaterialTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)); // slot 4
-				passData.IntermediateDepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)); // slot 21
+				passData.GBufferAlbedoTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt, renderView)); // slot 1
+				passData.GBufferWNormalTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt, renderView)); // slot 2
+				passData.GBufferVNormalTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer Vertex Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt, renderView)); // slot 3
+				passData.GBufferMaterialTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt, renderView)); // slot 4
+				passData.IntermediateDepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless, renderView)); // slot 21
 				passData.ShadowAtlasDepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Shadow Atlas Depth", ERenderResourceFormat::R32_Typeless, SVector2<U16>(STATIC_U16(shadowAtlasResolution.X), STATIC_U16(shadowAtlasResolution.Y)))); // slot 22
-				passData.SSAOBlurTextureHandle = passData.AddInput(registry.DeclareRenderTexture("SSAO Blur Texture", ERenderResourceFormat::R16G16B16A16_Float)); // slot 23
+				passData.SSAOBlurTextureHandle = passData.AddInput(registry.DeclareRenderTexture("SSAO Blur Texture", ERenderResourceFormat::R16G16B16A16_Float, renderView)); // slot 23
 
 				passData.DirectionalLightBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SDirectionalLightBufferData>("Directional Light Buffer"));
 				passData.PointLightBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SDirectionalLightBufferData>("Point Light Buffer"));
@@ -1284,7 +1284,7 @@ namespace Havtorn
 				passData.EmissiveBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SEmissiveBufferData>("Emissive Buffer"));
 
 				//passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", &renderView->RenderTarget));
-				passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Lit Scene", ERenderResourceFormat::R16G16B16A16_Float));
+				passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Lit Scene", ERenderResourceFormat::R16G16B16A16_Float, renderView));
 
 				return passData;
 			},
@@ -1317,7 +1317,7 @@ namespace Havtorn
 				{
 					SDirectionalLightRenderData rendererData;
 
-					for (const SDirectionalLightDrawData& drawData : renderView.DirectionalLightDrawData)
+					for (const SDirectionalLightDrawData& drawData : renderView.DrawData.DirectionalLightDrawData)
 					{
 						rendererData.LightBuffer = registry.GetResource(data.DirectionalLightBufferHandle);
 						rendererData.LightBuffer->DataBuffer->BindBuffer(drawData.LightBufferData);
@@ -1337,7 +1337,7 @@ namespace Havtorn
 				{
 					SPointLightRenderData rendererData;
 
-					for (const SPointLightDrawData& drawData : renderView.PointLightDrawData)
+					for (const SPointLightDrawData& drawData : renderView.DrawData.PointLightDrawData)
 					{
 						rendererData.LightBuffer = registry.GetResource(data.PointLightBufferHandle);
 						rendererData.LightBuffer->DataBuffer->BindBuffer(drawData.LightBufferData);
@@ -1352,7 +1352,7 @@ namespace Havtorn
 				{
 					SSpotlightRenderData rendererData;
 
-					for (const SSpotlightDrawData& drawData : renderView.SpotlightDrawData)
+					for (const SSpotlightDrawData& drawData : renderView.DrawData.SpotlightDrawData)
 					{
 						rendererData.PointLightBuffer = registry.GetResource(data.PointLightBufferHandle);
 						rendererData.PointLightBuffer->DataBuffer->BindBuffer(drawData.PointLightBufferData);
@@ -1409,7 +1409,7 @@ namespace Havtorn
 				passData.AddDependency<SShadowmapPrePassData>();
 
 				passData.ViewDataBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SFrameBufferData>("View Data Buffer"));
-				passData.IntermediateDepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)); // slot 21
+				passData.IntermediateDepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless, renderView)); // slot 21
 				passData.ShadowAtlasDepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Shadow Atlas Depth", ERenderResourceFormat::R32_Typeless, SVector2<U16>(STATIC_U16(shadowAtlasResolution.X), STATIC_U16(shadowAtlasResolution.Y)))); // slot 22	
 				passData.DirectionalLightBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SDirectionalLightBufferData>("Directional Light Buffer"));
 				passData.PointLightBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SDirectionalLightBufferData>("Point Light Buffer"));
@@ -1417,7 +1417,7 @@ namespace Havtorn
 				passData.VolumetricLightBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SVolumetricLightBufferData>("Volumetric Light Buffer"));
 				passData.ShadowmapBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SShadowmapBufferData>("Shadowmap Buffer", 6));
 
-				passData.AccumulationRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Volumetric Accumulation", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::HalfResolution));
+				passData.AccumulationRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Volumetric Accumulation", ERenderResourceFormat::R16G16B16A16_Float, renderView, ERenderTextureSizeHint::HalfResolution));
 
 				return passData;
 			},
@@ -1446,7 +1446,7 @@ namespace Havtorn
 				{
 					SVolumetricDirectionalLightRenderData rendererData;
 
-					for (const SDirectionalLightDrawData& drawData : renderView.DirectionalLightDrawData)
+					for (const SDirectionalLightDrawData& drawData : renderView.DrawData.DirectionalLightDrawData)
 					{
 						if (!drawData.RenderVolumetrics)
 							continue;
@@ -1467,7 +1467,7 @@ namespace Havtorn
 				{
 					SVolumetricPointLightRenderData rendererData;
 
-					for (const SPointLightDrawData& drawData : renderView.PointLightDrawData)
+					for (const SPointLightDrawData& drawData : renderView.DrawData.PointLightDrawData)
 					{
 						if (!drawData.RenderVolumetrics)
 							continue;
@@ -1488,7 +1488,7 @@ namespace Havtorn
 				{
 					SVolumetricSpotlightRenderData rendererData;
 
-					for (const SSpotlightDrawData& drawData : renderView.SpotlightDrawData)
+					for (const SSpotlightDrawData& drawData : renderView.DrawData.SpotlightDrawData)
 					{
 						if (!drawData.RenderVolumetrics)
 							continue;
@@ -1526,10 +1526,10 @@ namespace Havtorn
 
 				passData.AddDependency<SVolumetricLightPassData>();
 				
-				passData.DepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless));
-				passData.DownsamplingDepthTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Downsampling Depth", ERenderResourceFormat::R32_Float, ERenderTextureSizeHint::HalfResolution));
-				passData.PrimaryBlurTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Volumetric Accumulation", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::HalfResolution));
-				passData.SecondaryBlurTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Volumetric Blur", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::HalfResolution));
+				passData.DepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless, renderView));
+				passData.DownsamplingDepthTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Downsampling Depth", ERenderResourceFormat::R32_Float, renderView, ERenderTextureSizeHint::HalfResolution));
+				passData.PrimaryBlurTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Volumetric Accumulation", ERenderResourceFormat::R16G16B16A16_Float, renderView, ERenderTextureSizeHint::HalfResolution));
+				passData.SecondaryBlurTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Volumetric Blur", ERenderResourceFormat::R16G16B16A16_Float, renderView, ERenderTextureSizeHint::HalfResolution));
 
 				passData.RenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", &renderView->RenderTarget));
 
@@ -1557,20 +1557,20 @@ namespace Havtorn
 			SRenderResourceHandle MainRenderTargetHandle;
 		};
 		renderView->RenderGraph.AddPass<SBloomPassData>("Bloom",
-			[](CRenderResourceRegistry& registry)
+			[&](CRenderResourceRegistry& registry)
 			{
 				SBloomPassData passData;
 
 				passData.AddDependency<SLightPassData>();
 				passData.AddDependency<SVolumetricBlurPassData>();
 
-				passData.BloomBufferTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Bloom Buffer", ERenderResourceFormat::R16G16B16A16_Float));
-				passData.TargetCopyTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Render Target Copy", ERenderResourceFormat::R16G16B16A16_Float));
-				passData.HalfResolutionTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Half Resolution Target", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::HalfResolution));
-				passData.PrimaryBlurTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Primary Blur Texture", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::QuarterResolution));
-				passData.SecondaryBlurTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Secondary Blur Texture", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::QuarterResolution));
+				passData.BloomBufferTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Bloom Buffer", ERenderResourceFormat::R16G16B16A16_Float, renderView));
+				passData.TargetCopyTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Render Target Copy", ERenderResourceFormat::R16G16B16A16_Float, renderView));
+				passData.HalfResolutionTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Half Resolution Target", ERenderResourceFormat::R16G16B16A16_Float, renderView, ERenderTextureSizeHint::HalfResolution));
+				passData.PrimaryBlurTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Primary Blur Texture", ERenderResourceFormat::R16G16B16A16_Float, renderView, ERenderTextureSizeHint::QuarterResolution));
+				passData.SecondaryBlurTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Secondary Blur Texture", ERenderResourceFormat::R16G16B16A16_Float, renderView, ERenderTextureSizeHint::QuarterResolution));
 				
-				passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", ERenderResourceFormat::R16G16B16A16_Float));
+				passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", ERenderResourceFormat::R16G16B16A16_Float, renderView));
 
 				return passData;
 			},
@@ -1616,7 +1616,7 @@ namespace Havtorn
 				passData.AddDependency<SBloomPassData>();
 
 				passData.RenderTargetTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Main Render Target", &renderView->RenderTarget));
-				passData.TonemappingTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float));
+				passData.TonemappingTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float, renderView));
 				
 				return passData;
 			},
@@ -1641,7 +1641,7 @@ namespace Havtorn
 			SRenderResourceHandle DepthTargetHandle;
 		};
 		renderView->RenderGraph.AddPass<SUIPassData>("UIPass",
-			[](CRenderResourceRegistry& registry)
+			[&](CRenderResourceRegistry& registry)
 			{
 				SUIPassData passData;
 
@@ -1651,10 +1651,10 @@ namespace Havtorn
 				passData.UVRectBufferHandle = passData.AddInput(registry.DeclareVertexBuffer<SVector4>("Instanced UV Rect Buffer", InstancedDrawInstanceLimit));
 				passData.ColorBufferHandle = passData.AddInput(registry.DeclareVertexBuffer<SVector4>("Instanced Color Buffer", InstancedDrawInstanceLimit));
 
-				passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float));
+				passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float, renderView));
 
 				// NW: Should this pass have depth?
-				passData.DepthTargetHandle = passData.AddOutput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless));
+				passData.DepthTargetHandle = passData.AddOutput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless, renderView));
 
 				return passData;
 			},
@@ -1671,7 +1671,7 @@ namespace Havtorn
 					rendererData.UVRectBuffer = registry.GetResource(data.UVRectBufferHandle);
 					rendererData.ColorBuffer = registry.GetResource(data.ColorBufferHandle);
 
-					for (auto& [spriteID, drawData] : renderView.UISpriteDrawData)
+					for (auto& [spriteID, drawData] : renderView.DrawData.UISpriteDrawData)
 					{
 						rendererData.TransformBuffer->DataBuffer->BindBuffer(drawData.Transforms);
 						rendererData.UVRectBuffer->DataBuffer->BindBuffer(drawData.UVRects);
@@ -1695,7 +1695,7 @@ namespace Havtorn
 			SRenderResourceHandle DepthTargetHandle;
 		};
 		renderView->RenderGraph.AddPass<SDebugDrawPass>("DebugLines",
-			[](CRenderResourceRegistry& registry)
+			[&](CRenderResourceRegistry& registry)
 			{
 				SDebugDrawPass passData;
 
@@ -1704,8 +1704,8 @@ namespace Havtorn
 				passData.ViewDataBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SFrameBufferData>("View Data Buffer"));
 				passData.DebugObjectBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SDebugShapeObjectBufferData>("Debug Shape Buffer"));
 
-				passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float));
-				passData.DepthTargetHandle = passData.AddOutput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless));
+				passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float, renderView));
+				passData.DepthTargetHandle = passData.AddOutput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless, renderView));
 
 				return passData;
 			},
@@ -1745,19 +1745,19 @@ namespace Havtorn
 
 				renderManager->DebugRenderer.SetupDepthRender(viewData, targetData);
 				{
-					for (const SDebugObjectDrawData& drawData : renderView.DebugObjectsDepth3D)
+					for (const SDebugObjectDrawData& drawData : renderView.DrawData.DebugObjectsDepth3D)
 						renderManager->DebugRenderer.RenderDebugShape3D(fillRendererData(drawData));
 
-					for (const SDebugObjectDrawData& drawData : renderView.DebugObjectsDepth2D)
+					for (const SDebugObjectDrawData& drawData : renderView.DrawData.DebugObjectsDepth2D)
 						renderManager->DebugRenderer.RenderDebugShape2D(fillRendererData(drawData));
 				}
 
 				renderManager->DebugRenderer.SetupNoDepthRender(viewData, targetData);
 				{
-					for (const SDebugObjectDrawData& drawData : renderView.DebugObjectsNoDepth3D)
+					for (const SDebugObjectDrawData& drawData : renderView.DrawData.DebugObjectsNoDepth3D)
 						renderManager->DebugRenderer.RenderDebugShape3D(fillRendererData(drawData));
 					
-					for (const SDebugObjectDrawData& drawData : renderView.DebugObjectsNoDepth2D)
+					for (const SDebugObjectDrawData& drawData : renderView.DrawData.DebugObjectsNoDepth2D)
 						renderManager->DebugRenderer.RenderDebugShape2D(fillRendererData(drawData));
 				}
 			}
@@ -1769,7 +1769,7 @@ namespace Havtorn
 			SRenderResourceHandle AntialiasingTargetHandle;
 		};
 		renderView->RenderGraph.AddPass<SAntialiasingPassData>("Antialiasing",
-			[](CRenderResourceRegistry& registry)
+			[&](CRenderResourceRegistry& registry)
 			{
 				SAntialiasingPassData passData;
 
@@ -1778,8 +1778,8 @@ namespace Havtorn
 				passData.AddDependency<SUIPassData>();
 				passData.AddDependency<SDebugDrawPass>();
 
-				passData.TonemappedTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float));
-				passData.AntialiasingTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Antialiased Target", ERenderResourceFormat::R16G16B16A16_Float));
+				passData.TonemappedTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float, renderView));
+				passData.AntialiasingTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Antialiased Target", ERenderResourceFormat::R16G16B16A16_Float, renderView));
 
 				return passData;
 			},
@@ -1806,7 +1806,7 @@ namespace Havtorn
 
 				passData.AddDependency<SAntialiasingPassData>();
 				
-				passData.AntialiasedTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Antialiased Target", ERenderResourceFormat::R16G16B16A16_Float));
+				passData.AntialiasedTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Antialiased Target", ERenderResourceFormat::R16G16B16A16_Float, renderView));
 				passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", &renderView->RenderTarget));
 
 				return passData;
@@ -1848,7 +1848,7 @@ namespace Havtorn
 				//else
 				//{
 				//	passData.AddDependency<SGeometryBasePassData>();
-				//	passData.PrimaryOptionalTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer Albedo Texture", ERenderResourceFormat::R16G16B16A16_Float));
+				//	passData.PrimaryOptionalTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer Albedo Texture", ERenderResourceFormat::R16G16B16A16_Float, renderView));
 				//	passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", &renderView->RenderTarget));
 				//}
 

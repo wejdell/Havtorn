@@ -60,13 +60,13 @@ namespace Havtorn
 			};
 
 			if (data.IgnoreDepth && !data.IsScreenSpace)
-				renderView->DebugObjectsNoDepth3D.push_back(drawData);
+				renderView->DrawData.DebugObjectsNoDepth3D.push_back(drawData);
 			else if (!data.IgnoreDepth && !data.IsScreenSpace)
-				renderView->DebugObjectsDepth3D.push_back(drawData);
+				renderView->DrawData.DebugObjectsDepth3D.push_back(drawData);
 			else if (data.IgnoreDepth && data.IsScreenSpace)
-				renderView->DebugObjectsNoDepth2D.push_back(drawData);
+				renderView->DrawData.DebugObjectsNoDepth2D.push_back(drawData);
 			else if (!data.IgnoreDepth && data.IsScreenSpace)
-				renderView->DebugObjectsDepth2D.push_back(drawData);
+				renderView->DrawData.DebugObjectsDepth2D.push_back(drawData);
 
 			data.LifeTime -= dt;
 		}

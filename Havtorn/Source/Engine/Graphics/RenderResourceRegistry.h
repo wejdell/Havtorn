@@ -16,6 +16,7 @@
 namespace Havtorn
 {
 	class CRenderStateManager;
+	struct SRenderView;
 	constexpr U8 RenderDebugNameMaxSize = 30;
 
 	enum class ERenderResourceType : U8
@@ -118,12 +119,12 @@ namespace Havtorn
 
 		ENGINE_API SRenderResourceHandle DeclareIndexBuffer(const char* name, CDataBuffer* externalMemory);
 
-		ENGINE_API SRenderResourceHandle DeclareRenderTexture(const char* name, const ERenderResourceFormat format, const ERenderTextureSizeHint size = ERenderTextureSizeHint::FullResolution);
+		ENGINE_API SRenderResourceHandle DeclareRenderTexture(const char* name, const ERenderResourceFormat format, const SRenderView* renderView, const ERenderTextureSizeHint size = ERenderTextureSizeHint::FullResolution);
 		ENGINE_API SRenderResourceHandle DeclareRenderTexture(const char* name, const ERenderResourceFormat format, const SVector2<U16>& size);
 		ENGINE_API SRenderResourceHandle DeclareRenderTexture(const char* name, CRenderTexture* externalMemory);
 		ENGINE_API SRenderResourceHandle DeclareRenderTexture(const char* name, CStaticRenderTexture* externalMemory);
 
-		ENGINE_API SRenderResourceHandle DeclareRenderDepth(const char* name, const ERenderResourceFormat format, const ERenderTextureSizeHint size = ERenderTextureSizeHint::FullResolution);
+		ENGINE_API SRenderResourceHandle DeclareRenderDepth(const char* name, const ERenderResourceFormat format, const SRenderView* renderView, const ERenderTextureSizeHint size = ERenderTextureSizeHint::FullResolution);
 		ENGINE_API SRenderResourceHandle DeclareRenderDepth(const char* name, const ERenderResourceFormat format, const SVector2<U16>& size);
 
 		void TouchResources(const std::vector<SRenderResourceHandle>& handles);

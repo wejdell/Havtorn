@@ -470,7 +470,7 @@ namespace Havtorn
 			const F32 shadowTestTolerance = renderManager->GetShadowTestTolerance();
 			const auto& [bufferData, viewportIndices] = renderSystem->ProcessShadowmapBufferData({ shadowmapView }, shadowAtlasResolution, shadowTestTolerance);
 
-			renderView->DirectionalLightDrawData.emplace_back(SDirectionalLightDrawData
+			renderView->DrawData.DirectionalLightDrawData.emplace_back(SDirectionalLightDrawData
 				{
 					// Filled by mesh processing
 					.ShadowCasterData = {},

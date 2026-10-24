@@ -161,9 +161,33 @@ namespace Havtorn
 		SPrimitiveData PrimitiveData;
 	};
 
+	struct SRenderViewDrawData
+	{
+		// Associates mesh+material asset combinations (drawID) to instanced draw data. Each view handles its own culling so 
+		// we expect different sets of instances of maybe the same meshes for different views.
+		std::unordered_map<U32, SStaticMeshDrawData> StaticMeshDrawData;
+		std::unordered_map<U32, SSkeletalMeshDrawData> SkeletalMeshDrawData;
+		std::unordered_map<U32, SSpriteDrawData> WorldSpaceSpriteDrawData;
+		std::unordered_map<U32, SSpriteDrawData> ScreenSpaceSpriteDrawData;
+		std::unordered_map<U32, SDecalDrawData> DecalDrawData;
+		std::unordered_map<U32, SSpriteDrawData> WidgetSpriteDrawData;
+		std::unordered_map<U32, SSpriteDrawData> UISpriteDrawData;
+
+		std::vector<SDirectionalLightDrawData> DirectionalLightDrawData;
+		std::vector<SPointLightDrawData> PointLightDrawData;
+		std::vector<SSpotlightDrawData> SpotlightDrawData;
+
+		std::vector<SDebugObjectDrawData> DebugObjectsDepth3D;
+		std::vector<SDebugObjectDrawData> DebugObjectsNoDepth3D;
+		std::vector<SDebugObjectDrawData> DebugObjectsDepth2D;
+		std::vector<SDebugObjectDrawData> DebugObjectsNoDepth2D;
+	};
+
 	struct SRenderView
 	{
 		SRenderView(CRenderStateManager* stateManager, CAssetRegistry* assetRegistry, CRenderResourceRegistry* renderResourceRegistry);
+		~SRenderView();
+		void ReleaseViewResources();
 
 		// TODO.NW: Do we wanna store these as references instead?
 		CRenderStateManager* StateManager = nullptr;
@@ -178,24 +202,7 @@ namespace Havtorn
 
 		// Render view may request assets and unrequest them when finished drawing
 
-		// Associates mesh+material asset combinations (drawID) to instanced draw data. Each view handles its own culling so 
-		// we expect different sets of instances of maybe the same meshes for different views.
-		std::unordered_map<U32, SStaticMeshDrawData> StaticMeshDrawData;
-		std::unordered_map<U32, SSkeletalMeshDrawData> SkeletalMeshDrawData;
-		std::unordered_map<U32, SSpriteDrawData> WorldSpaceSpriteDrawData;
-		std::unordered_map<U32, SSpriteDrawData> ScreenSpaceSpriteDrawData;
-		std::unordered_map<U32, SDecalDrawData> DecalDrawData;
-		std::unordered_map<U32, SSpriteDrawData> WidgetSpriteDrawData;
-		std::unordered_map<U32, SSpriteDrawData> UISpriteDrawData;
-		
-		std::vector<SDirectionalLightDrawData> DirectionalLightDrawData;
-		std::vector<SPointLightDrawData> PointLightDrawData;
-		std::vector<SSpotlightDrawData> SpotlightDrawData;
-
-		std::vector<SDebugObjectDrawData> DebugObjectsDepth3D;
-		std::vector<SDebugObjectDrawData> DebugObjectsNoDepth3D;
-		std::vector<SDebugObjectDrawData> DebugObjectsDepth2D;
-		std::vector<SDebugObjectDrawData> DebugObjectsNoDepth2D;
+		SRenderViewDrawData DrawData;
 
 		SMatrix ViewMatrix = SMatrix::Identity;
 		SMatrix ProjectionMatrix = SMatrix::Identity;
@@ -229,7 +236,7 @@ namespace Havtorn
 		bool Init(CRHI* rhi, CPlatformManager* windowHandler);
 		void Render();
 
-		void Release(SVector2<U16> newResolution);
+		void UpdateResolution(SVector2<U16> newResolution);
 
 		ENGINE_API CRenderTexture CreateRenderTextureFromSource(const std::string& filePath);
 		ENGINE_API CRenderTexture CreateRenderTextureFromAsset(const std::string& filePath, const EAssetType assetType);
@@ -246,7 +253,7 @@ namespace Havtorn
 		ENGINE_API void SetPostProcessingBufferData(const SPostProcessingBufferData& data);
 
 	public:
-		void SyncCrossThreadResources(const CWorld* world);
+		void SyncCrossThreadResources(const CWorld* world, const SVector2<U16>& windowResizeTarget);
 		void SetWorldMainCameraEntity(const SEntity& entity);
 		void SetWorldEditorRenderExemptEntity(const SEntity& entity);
 		void SetWorldPlayState(EWorldPlayState playState);
@@ -255,8 +262,7 @@ namespace Havtorn
 		ENGINE_API CRenderResourceRegistry& GetRenderResourceRegistry();
 		ENGINE_API CRenderTextureFactory& GetRenderTextureFactory();
 
-		void SwapRenderViews();
-		void ClearRenderViewInstanceData();
+		void SwapRenderViews(const SVector2<U16>& windowResizeTarget);
 
 		// If a callback is provided, the request will be unrequested after executing the callback
 		ENGINE_API void RequestRenderView(const U64& renderViewID, std::optional<std::function<void(CRenderTexture)>> callback = {});

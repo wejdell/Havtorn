@@ -37,7 +37,8 @@ namespace Havtorn
 
 	CRenderManager::~CRenderManager()
 	{
-		Release(SVector2<U16>::Zero);
+		Backbuffer.Release();
+		RHI->GetSwapChain()->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
 	}
 
 	bool CRenderManager::Init(CRHI* rhi, CPlatformManager* platformManager)
@@ -59,7 +60,9 @@ namespace Havtorn
 		ENGINE_ERROR_BOOL_MESSAGE(SpriteRenderer.Init(rhi, this), "Failed to Init Sprite Renderer.");
 		ENGINE_ERROR_BOOL_MESSAGE(ThumbnailRenderer.Init(rhi, this), "Failed to Init Thumbnail Renderer.");
 		
-		InitRenderTextures(rhi, platformManager->GetResolution());
+		CurrentWindowResolution = platformManager->GetResolution();
+		Backbuffer = RenderTextureFactory.CreateTexture(rhi->GetBackbufferTexture());
+		InitShadowmapAtlas(ShadowAtlasResolution);
 
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderViewModeForward).AddMember(this, &CRenderManager::CycleRenderViewMode);
 		GEngine::GetInput()->GetActionDelegate(EInputActionEvent::CycleRenderViewModeBackward).AddMember(this, &CRenderManager::CycleRenderViewMode);
@@ -71,31 +74,6 @@ namespace Havtorn
 		RenderStateManager.PSSetSampler(2, ESamplers::DefaultBorder);
 
 		return true;
-	}
-
-	void CRenderManager::InitRenderTextures(CRHI* rhi, SVector2<U16> windowResolution)
-	{
-		Backbuffer.ReleaseTexture();
-
-		ID3D11Texture2D* backbufferTexture = rhi->GetBackbufferTexture();
-		rhi->GetSwapChain()->ResizeBuffers(0, windowResolution.X, windowResolution.Y, DXGI_FORMAT_UNKNOWN, 0);
-		Backbuffer = RenderTextureFactory.CreateTexture(backbufferTexture);
-
-		CurrentWindowResolution = windowResolution;
-
-		// TODO.NW: Queue up resize so it happens at thread sync, should deallocate all non-imported textures from the registry as well
-
-		// TODO.NW: Release all of these as we reinit?
-		for (auto& renderView : (*GameThreadRenderViews))
-		{
-			renderView.second.RenderTarget = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
-		}
-		for (auto& renderView : (*RenderThreadRenderViews))
-		{
-			renderView.second.RenderTarget = RenderTextureFactory.CreateTexture(windowResolution, DXGI_FORMAT_R16G16B16A16_FLOAT);
-		}
-
-		InitShadowmapAtlas(ShadowAtlasResolution);
 	}
 
 	void CRenderManager::InitShadowmapAtlas(SVector2<F32> atlasResolution)
@@ -175,17 +153,35 @@ namespace Havtorn
 		}
 	}
 
-	void CRenderManager::Release(SVector2<U16> newResolution)
+	void CRenderManager::UpdateResolution(SVector2<U16> newResolution)
 	{
+		CurrentWindowResolution = newResolution;
+
 		RenderStateManager.ClearState();
-
-		// TODO.NR: Implement this properly for window resizing
-
 		Backbuffer.Release();
-		//TODO.AS: Is this ultra deep call really neccesary to do here? Context: We need to specifically Resize the SwapChain Buffers Right after we Release
-		//the Backbuffer texture. 
-		// TODO.NW: Sounds like this should be done in the Resize context, not in this function
-		RHI->GetSwapChain()->ResizeBuffers(0, newResolution.X, newResolution.Y, DXGI_FORMAT_UNKNOWN, 0);
+		RHI->GetSwapChain()->ResizeBuffers(0, newResolution.X, newResolution.Y, DXGI_FORMAT_R8G8B8A8_UNORM, 0);
+		Backbuffer = RenderTextureFactory.CreateTexture(RHI->GetBackbufferTexture());
+
+		for (auto& [id, renderView] : (*GameThreadRenderViews))
+		{
+			// TODO.NW: Put in constructor along with the rest of the initialization in RequestRenderView, if still possible to construct when emplacing into the map
+			renderView.ReleaseViewResources();
+			renderView.ViewSize = CurrentWindowResolution;
+			renderView.RenderGraph.ResourceRegistry = GameThreadResourceRegistry;
+			renderView.RenderTarget = RenderTextureFactory.CreateTexture(renderView.ViewSize, DXGI_FORMAT_R16G16B16A16_FLOAT);
+			renderView.EditorDataTexture = RenderTextureFactory.CreateTexture(renderView.ViewSize, DXGI_FORMAT_R32G32_UINT, true);
+			renderView.WorldPositionTexture = RenderTextureFactory.CreateTexture(renderView.ViewSize, DXGI_FORMAT_R32G32B32A32_FLOAT, true);
+		}
+
+		for (auto& [id, renderView] : (*RenderThreadRenderViews))
+		{
+			renderView.ReleaseViewResources();
+			renderView.ViewSize = CurrentWindowResolution;
+			renderView.RenderGraph.ResourceRegistry = GameThreadResourceRegistry;
+			renderView.RenderTarget = RenderTextureFactory.CreateTexture(renderView.ViewSize, DXGI_FORMAT_R16G16B16A16_FLOAT);
+			renderView.EditorDataTexture = RenderTextureFactory.CreateTexture(renderView.ViewSize, DXGI_FORMAT_R32G32_UINT, true);
+			renderView.WorldPositionTexture = RenderTextureFactory.CreateTexture(renderView.ViewSize, DXGI_FORMAT_R32G32B32A32_FLOAT, true);
+		}
 	}
 
 	CRenderTexture CRenderManager::CreateRenderTextureFromSource(const std::string& filePath)
@@ -266,9 +262,9 @@ namespace Havtorn
 		FullscreenRenderer.SetPostProcessBuffer(data);
 	}
 
-	void CRenderManager::SyncCrossThreadResources(const CWorld* world)
+	void CRenderManager::SyncCrossThreadResources(const CWorld* world, const SVector2<U16>& windowResizeTarget)
 	{
-		SwapRenderViews();
+		SwapRenderViews(windowResizeTarget);
 		std::swap(SystemSkeletalAnimationBoneData, RendererSkeletalAnimationBoneData);
 		SetWorldMainCameraEntity(world->GetMainCamera());
 		SetWorldEditorRenderExemptEntity(world->GetEditorRenderExemptEntity());
@@ -309,7 +305,7 @@ namespace Havtorn
 		return RenderTextureFactory;
 	}
 
-	void CRenderManager::SwapRenderViews()
+	void CRenderManager::SwapRenderViews(const SVector2<U16>& windowResizeTarget)
 	{
 		std::vector<U64> idsToErase = {};
 		for (auto& [id, view] : *RenderThreadRenderViews)
@@ -323,6 +319,9 @@ namespace Havtorn
 			}
 		}
 
+		if (windowResizeTarget.LengthSquared() > 0)
+			UpdateResolution(windowResizeTarget);
+		
 		RenderThreadResourceRegistry->Deallocate();
 
 		std::swap(GameThreadRenderViews, RenderThreadRenderViews);
@@ -330,11 +329,8 @@ namespace Havtorn
 		for (const U64& id : idsToErase)
 		{
 			GameThreadRenderViews->erase(id);
-			RenderThreadRenderViews->at(id).RenderTarget.Release();
 			RenderThreadRenderViews->erase(id);
 		}
-
-		ClearRenderViewInstanceData();
 
 		for (auto& [id, view] : *RenderThreadRenderViews)
 		{
@@ -346,6 +342,7 @@ namespace Havtorn
 		idsToErase = {};
 		for (auto& [id, view] : *GameThreadRenderViews)
 		{
+			view.DrawData = SRenderViewDrawData();
 			view.RenderResourceRegistry = GameThreadResourceRegistry;
 			view.RenderGraph.ResourceRegistry = GameThreadResourceRegistry;
 			if (!RenderThreadRenderViews->contains(id))
@@ -354,30 +351,6 @@ namespace Havtorn
 
 		for (const U64& id : idsToErase)
 			UnrequestRenderView(id);
-	}
-
-	void CRenderManager::ClearRenderViewInstanceData()
-	{
-		for (auto& renderViewPair : (*GameThreadRenderViews))
-		{
-			// TODO.NW: Clear this in a safer way, through subobject reconstruction or something
-			renderViewPair.second.StaticMeshDrawData.clear();
-			renderViewPair.second.SkeletalMeshDrawData.clear();
-			renderViewPair.second.WorldSpaceSpriteDrawData.clear();
-			renderViewPair.second.ScreenSpaceSpriteDrawData.clear();
-			renderViewPair.second.DecalDrawData.clear();
-			renderViewPair.second.WidgetSpriteDrawData.clear();
-			renderViewPair.second.UISpriteDrawData.clear();
-
-			renderViewPair.second.DirectionalLightDrawData.clear();
-			renderViewPair.second.PointLightDrawData.clear();
-			renderViewPair.second.SpotlightDrawData.clear();
-
-			renderViewPair.second.DebugObjectsDepth3D.clear();
-			renderViewPair.second.DebugObjectsNoDepth3D.clear();
-			renderViewPair.second.DebugObjectsDepth2D.clear();
-			renderViewPair.second.DebugObjectsNoDepth2D.clear();
-		}
 	}
 
 	void CRenderManager::RequestRenderView(const U64& renderViewID, std::optional<std::function<void(CRenderTexture)>> callback)
@@ -616,6 +589,18 @@ namespace Havtorn
 	{
 	}
 
+	SRenderView::~SRenderView()
+	{
+		ReleaseViewResources();
+	}
+
+	void SRenderView::ReleaseViewResources()
+	{
+		RenderTarget.Release();
+		EditorDataTexture.Release();
+		WorldPositionTexture.Release();
+	}
+
 	SMeshDrawData SRenderView::ConstructMeshDrawData(const SDrawCallData& assetDrawCallData, const char* renderResourceSuffix, std::vector<SGraphicsMaterialAsset*>& materialAssets, const U32 renderViewID)
 	{
 		SMeshDrawData meshDrawData;
@@ -648,10 +633,10 @@ namespace Havtorn
 		 if (deferCommand)
 			 drawID += 1000;
 
-		if (!StaticMeshDrawData.contains(drawID))
-			StaticMeshDrawData.emplace(drawID, SStaticMeshDrawData{});
+		if (!DrawData.StaticMeshDrawData.contains(drawID))
+			DrawData.StaticMeshDrawData.emplace(drawID, SStaticMeshDrawData{});
 
-		SStaticMeshDrawData& meshData = StaticMeshDrawData.at(drawID);
+		SStaticMeshDrawData& meshData = DrawData.StaticMeshDrawData.at(drawID);
 
 		meshData.Transforms = transforms;
 		meshData.Entities = entities;
@@ -678,10 +663,10 @@ namespace Havtorn
 		if (deferCommand)
 			drawID += 1000;
 
-		if (!SkeletalMeshDrawData.contains(drawID))
-			SkeletalMeshDrawData.emplace(drawID, SSkeletalMeshDrawData{});
+		if (!DrawData.SkeletalMeshDrawData.contains(drawID))
+			DrawData.SkeletalMeshDrawData.emplace(drawID, SSkeletalMeshDrawData{});
 
-		SSkeletalMeshDrawData& meshData = SkeletalMeshDrawData.at(drawID);
+		SSkeletalMeshDrawData& meshData = DrawData.SkeletalMeshDrawData.at(drawID);
 
 		meshData.Transforms = transforms;
 		meshData.Entities = entities;
@@ -704,7 +689,7 @@ namespace Havtorn
 	{
 		const U32 size = (ViewSize.X * ViewSize.Y);
 		
-		const SRenderResourceHandle editorDataTextureHandle = RenderResourceRegistry->DeclareRenderTexture("GBuffer Editor Data", ERenderResourceFormat::R32G32_UnsignedInt);
+		const SRenderResourceHandle editorDataTextureHandle = RenderResourceRegistry->DeclareRenderTexture("GBuffer Editor Data", ERenderResourceFormat::R32G32_UnsignedInt, this);
 		const SRenderResource* editorDataRenderResource = RenderResourceRegistry->GetResource(editorDataTextureHandle);
 		if (editorDataRenderResource == nullptr || !editorDataRenderResource->Description.IsAllocated)
 			return;
@@ -717,7 +702,7 @@ namespace Havtorn
 		}
 		EditorDataTexture.UnmapFromCPU();
 
-		const SRenderResourceHandle worldPositionTextureHandle = RenderResourceRegistry->DeclareRenderTexture("GBuffer World Position", ERenderResourceFormat::R32G32B32A32_Float);
+		const SRenderResourceHandle worldPositionTextureHandle = RenderResourceRegistry->DeclareRenderTexture("GBuffer World Position", ERenderResourceFormat::R32G32B32A32_Float, this);
 		const SRenderResource* worldPositionRenderResource = RenderResourceRegistry->GetResource(worldPositionTextureHandle);
 		if (worldPositionRenderResource == nullptr || !worldPositionRenderResource->Description.IsAllocated)
 			return;

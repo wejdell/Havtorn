@@ -285,9 +285,10 @@ namespace Havtorn
 		});
 	}
 
-	SRenderResourceHandle CRenderResourceRegistry::DeclareRenderTexture(const char* name, const ERenderResourceFormat format, const ERenderTextureSizeHint size)
+	SRenderResourceHandle CRenderResourceRegistry::DeclareRenderTexture(const char* name, const ERenderResourceFormat format, const SRenderView* renderView, const ERenderTextureSizeHint size)
 	{
-		SVector2<U16> fullResolution = GEngine::GetRenderManager()->GetCurrentWindowResolution(); // TODO.NW: Figure out where this should come from
+		// TODO.NW: Use size to add to name? otherwise differently size views get the same resources
+		const SVector2<U16> fullResolution = renderView != nullptr ? renderView->ViewSize : RenderManager->GetCurrentWindowResolution();
 		return DeclareRenderTexture(name, format, SVector2<U16>(fullResolution.X / STATIC_U8(size), fullResolution.Y / STATIC_U8(size)));
 	}
 
@@ -336,9 +337,9 @@ namespace Havtorn
 		});
 	}
 
-	SRenderResourceHandle CRenderResourceRegistry::DeclareRenderDepth(const char* name, const ERenderResourceFormat format, const ERenderTextureSizeHint size)
+	SRenderResourceHandle CRenderResourceRegistry::DeclareRenderDepth(const char* name, const ERenderResourceFormat format, const SRenderView* renderView, const ERenderTextureSizeHint size)
 	{
-		SVector2<U16> fullResolution = GEngine::GetRenderManager()->GetCurrentWindowResolution(); // TODO.NW: Figure out where this should come from
+		const SVector2<U16> fullResolution = renderView != nullptr ? renderView->ViewSize : RenderManager->GetCurrentWindowResolution();
 		return DeclareRenderDepth(name, format, SVector2<U16>(fullResolution.X / STATIC_U8(size), fullResolution.Y / STATIC_U8(size)));
 	}
 
