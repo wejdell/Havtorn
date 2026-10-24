@@ -46,8 +46,8 @@ namespace Havtorn
 
 			SPrimitiveData primitiveData = SPrimitiveData
 			{
-				.VertexBufferHandle = resourceRegistry.DeclareVertexBuffer<SPositionVertex>("DebugGeo", &stateManager.VertexBuffers[data.VertexBufferIndex]),
-				.IndexBufferHandle = resourceRegistry.DeclareIndexBuffer("DebugIndex", &stateManager.IndexBuffers[data.IndexBufferIndex]),
+				.VertexBufferHandle = resourceRegistry.DeclareVertexBuffer<SPositionVertex>((std::string("VB_") + std::string(magic_enum::enum_name(data.VertexBuffer).data())).c_str(), &stateManager.VertexBuffers[data.VertexBufferIndex]),
+				.IndexBufferHandle = resourceRegistry.DeclareIndexBuffer((std::string("IB_") + std::string(magic_enum::enum_name(data.IndexBuffer).data())).c_str(), &stateManager.IndexBuffers[data.IndexBufferIndex]),
 				.IndexCount = data.IndexCount
 			};
 

@@ -1215,10 +1215,12 @@ namespace Havtorn
 
 				passData.AddDependency<SGeometryDecalPassData>();
 
-				passData.SSAOBufferTextureHandle = passData.AddOutput(registry.DeclareRenderTexture("SSAO Blur Texture", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::FullResolution));
+				// TODO.NW: Figure out why we can't do a half resolution SSAO pass here, do we need to assign the viewports or something?
+				// Also match it with the light pass below
+				passData.SSAOBufferTextureHandle = passData.AddOutput(registry.DeclareRenderTexture("SSAO Blur Texture", ERenderResourceFormat::R16G16B16A16_Float));
 				passData.DepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless));
 				passData.GBufferWNormalTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer World Normal", ERenderResourceFormat::R16G16B16A16_SignedNormalizedInt));
-				passData.SSAOBlurTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("SSAO Blur Target", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::FullResolution));
+				passData.SSAOBlurTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("SSAO Blur Target", ERenderResourceFormat::R16G16B16A16_Float));
 
 				return passData;
 			},
@@ -1273,7 +1275,7 @@ namespace Havtorn
 				passData.GBufferMaterialTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer Material", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt)); // slot 4
 				passData.IntermediateDepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless)); // slot 21
 				passData.ShadowAtlasDepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Shadow Atlas Depth", ERenderResourceFormat::R32_Typeless, SVector2<U16>(STATIC_U16(shadowAtlasResolution.X), STATIC_U16(shadowAtlasResolution.Y)))); // slot 22
-				passData.SSAOBlurTextureHandle = passData.AddInput(registry.DeclareRenderTexture("SSAO Blur Texture", ERenderResourceFormat::R16G16B16A16_Float, ERenderTextureSizeHint::HalfResolution)); // slot 23
+				passData.SSAOBlurTextureHandle = passData.AddInput(registry.DeclareRenderTexture("SSAO Blur Texture", ERenderResourceFormat::R16G16B16A16_Float)); // slot 23
 
 				passData.DirectionalLightBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SDirectionalLightBufferData>("Directional Light Buffer"));
 				passData.PointLightBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SDirectionalLightBufferData>("Point Light Buffer"));
@@ -1831,6 +1833,12 @@ namespace Havtorn
 			{
 				SFinalizePassData passData;
 				passData.SetIsRootPass();
+
+				//// TODO.NW: Figure out how to do this, potentially in the Finalize pass
+				//CRenderViewport viewport = CRenderViewport(RHI, 0.0f, 0.0f, 256.0f, 256.0f, 0.0f, 1.0f);
+				//viewport.SetViewport();
+				//ShadowAtlasDepth.SetAsPSResourceOnSlot(0);
+				////RenderFullscreenPass(EPixelShaders::FullscreenCopyDepth, EBlendStates::Disable);
 
 				// TODO.NW: Figure out what we can do debug wise. By setting dependencies we should
 				// be able to automatically disable passes that aren't used. What can we do to override

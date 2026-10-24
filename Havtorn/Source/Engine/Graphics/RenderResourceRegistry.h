@@ -38,7 +38,7 @@ namespace Havtorn
 		bool IsImported = false;
 		ERenderResourceType Type = ERenderResourceType::Unknown;
 		ERenderResourceFormat Format = ERenderResourceFormat::Unknown;
-		ESamplerType SamplerType = ESamplerType::Border;
+		ESamplerType SamplerType = ESamplerType::Wrap;
 		EDataBufferUsage BufferUsage = EDataBufferUsage::Dynamic;
 		EResourceCPUAccess CPUAccess = EResourceCPUAccess::None;
 		union

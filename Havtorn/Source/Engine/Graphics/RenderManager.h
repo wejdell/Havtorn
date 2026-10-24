@@ -170,7 +170,10 @@ namespace Havtorn
 		CAssetRegistry* AssetRegistry = nullptr;
 		CRenderResourceRegistry* RenderResourceRegistry = nullptr;
 
+		SVector2<U16> ViewSize = SVector2<U16>::Zero;
 		CRenderTexture RenderTarget;
+		CRenderTexture EditorDataTexture;
+		CRenderTexture WorldPositionTexture;
 		CRenderGraph RenderGraph;
 
 		// Render view may request assets and unrequest them when finished drawing
@@ -199,11 +202,18 @@ namespace Havtorn
 
 		SRenderResourceHandle SkyboxCubemapTextureHandle;
 
+		void* EntityPerPixelData = nullptr;
+		U64 EntityPerPixelDataSize = 0;
+		
+		void* WorldPositionPerPixelData = nullptr;
+		U64 WorldPositionPerPixelDataSize = 0;
+
 		// This signature is provided like this because the culling preprocessing leaves us with this most cache-friendly data
 		// This is expected to overwrite any previous instancing data for a particular drawID.
 		SMeshDrawData ConstructMeshDrawData(const SDrawCallData& assetDrawCallData, const char* renderResourceSuffix, std::vector<SGraphicsMaterialAsset*>& materialAssets, const U32 renderViewID);
 		void AddStaticMeshDrawData(const U32 renderViewID, const U32 meshAssetID, const std::vector<U32>& materialAssetIDs, const std::vector<SMatrix>& transforms, const std::vector<SEntity>& entities, const bool deferCommand = false);
 		void AddSkeletalMeshDrawData(const U32 renderViewID, const U32 meshAssetID, const std::vector<U32>& materialAssetIDs, const std::vector<SMatrix>& transforms, const std::vector<SEntity>& entities, const std::vector<SMatrix>& bones, const bool deferCommand = false);
+		void ExtractEditorData();
 	};
 
 	class CRenderManager
@@ -217,7 +227,6 @@ namespace Havtorn
 		CRenderManager() = default;
 		~CRenderManager();
 		bool Init(CRHI* rhi, CPlatformManager* windowHandler);
-		bool ReInit(CRHI* rhi, SVector2<U16> newResolution);
 		void Render();
 
 		void Release(SVector2<U16> newResolution);
@@ -226,8 +235,8 @@ namespace Havtorn
 		ENGINE_API CRenderTexture CreateRenderTextureFromAsset(const std::string& filePath, const EAssetType assetType);
 		ENGINE_API CRenderTexture CreateRenderTextureFromData(const SVector2<U16> size, const DXGI_FORMAT format, void* data, const U64 elementSize);
 
-		ENGINE_API U64 GetEntityGUIDFromData(U64 dataIndex) const;
-		ENGINE_API SVector4 GetWorldPositionFromData(U64 dataIndex) const;
+		ENGINE_API U64 GetEntityGUIDFromData(const U64 renderViewID, const U64 dataIndex) const;
+		ENGINE_API SVector4 GetWorldPositionFromData(const U64 renderViewID, const U64 dataIndex) const;
 
 		U32 WriteToAnimationDataTexture(const std::string& animationName);
 
@@ -276,15 +285,9 @@ namespace Havtorn
 		CThumbnailRenderer ThumbnailRenderer;
 
 	private:
-		void Clear(SVector4 clearColor);
 		void InitRenderTextures(CRHI* rhi, SVector2<U16> windowResolution);
 		void InitShadowmapAtlas(SVector2<F32> atlasResolution);
 		void InitShadowmapLOD(SVector2<F32> topLeftCoordinate, const SVector2<F32>& widthAndHeight, const SVector2<F32>& depth, const SVector2<F32>& atlasResolution, U16 mapsInLod, U16 startIndex);
-
-		void InitDataBuffers();
-
-	private:
-		inline void DebugShadowAtlas();
 
 		void CheckRenderViewMode(const U64 renderViewID);
 		void CycleRenderViewMode(const SInputActionPayload payload);
@@ -293,44 +296,6 @@ namespace Havtorn
 		CRHI* RHI = nullptr;
 		CRenderStateManager RenderStateManager;
 		CRenderTextureFactory RenderTextureFactory;
-		
-		CDataBuffer ViewDataBuffer;
-		CDataBuffer ObjectBuffer;
-		CDataBuffer MaterialBuffer;
-		CDataBuffer DebugShapeObjectBuffer;
-		CDataBuffer DecalBuffer;
-		CDataBuffer SpriteBuffer;
-		CDataBuffer ShadowmapBuffer;
-		CDataBuffer VolumetricLightBuffer;
-		CDataBuffer EmissiveBuffer;
-		CDataBuffer BoneBuffer;
-
-		CRenderTexture Backbuffer;
-		CRenderTexture IntermediateTexture;
-		CRenderTexture IntermediateDepth;
-		CRenderTexture EditorWidgetDepth;
-		CRenderTexture ShadowAtlasDepth;
-		CRenderTexture DepthCopy;
-
-		CRenderTexture HalfSizeTexture;
-		CRenderTexture QuarterSizeTexture;
-		CRenderTexture BlurTexture1;
-		CRenderTexture BlurTexture2;
-		CRenderTexture VignetteTexture;
-
-		CRenderTexture LitScene;
-		CRenderTexture VolumetricAccumulationBuffer;
-		CRenderTexture VolumetricBlurTexture;
-		CRenderTexture SSAOBuffer;
-		CRenderTexture SSAOBlurTexture;
-		CRenderTexture DownsampledDepth;
-		CRenderTexture TonemappedTexture;
-		CRenderTexture AntiAliasedTexture;
-		CRenderTexture EditorDataTexture;
-		CRenderTexture WorldPositionTexture;
-		CRenderTexture SkeletalAnimationDataTextureCPU;
-		CRenderTexture SkeletalAnimationDataTextureGPU;
-		CGBuffer GBuffer;
 
 		std::map<U64, SRenderView> RenderViewsA;
 		std::map<U64, SRenderView> RenderViewsB;
@@ -343,34 +308,20 @@ namespace Havtorn
 		CRenderResourceRegistry* RenderThreadResourceRegistry = &ResourceRegistryB;
 		std::map<U64, std::function<void(CRenderTexture&)>> RenderViewCallbacks;
 
+		CRenderTexture Backbuffer;
 		SVector4 ClearColor = SVector4(0.5f, 0.5f, 0.5f, 1.0f);
 
 		ERenderViewMode CurrentRenderViewMode = ERenderViewMode::All;
-		bool ShouldBlurVolumetricBuffer = false;
-
-		CDataBuffer InstancedTransformBuffer;
-		CDataBuffer InstancedEntityIDBuffer;
-		CDataBuffer InstancedAnimationDataBuffer;
-
-		// NW: Used together with the InstancedTransformBuffer to batch World Space Sprites as well as Screen Space Sprites
-		CDataBuffer InstancedUVRectBuffer;
-		CDataBuffer InstancedColorBuffer;
 
 		SVector2<U16> CurrentWindowResolution = SVector2<U16>::Zero;
 		
-		SVector2<F32> ShadowAtlasResolution = SVector2<F32>::Zero;
+		SVector2<F32> ShadowAtlasResolution = SVector2<F32>{ 8192.0f, 8192.0f };
 		F32 ShadowTestTolerance = 0.001f;
 
 		// NW: Keep our own properties here for use on render thread
 		SEntity WorldMainCameraEntity = SEntity::Null;
 		SEntity WorldEditorRenderExemptEntity = SEntity::Null;
 		EWorldPlayState WorldPlayState = EWorldPlayState::Stopped;
-
-		void* EntityPerPixelData = nullptr;
-		U64 EntityPerPixelDataSize = 0;
-
-		void* WorldPositionPerPixelData = nullptr;
-		U64 WorldPositionPerPixelDataSize = 0;
 
 		void* SystemSkeletalAnimationBoneData = nullptr;
 		void* RendererSkeletalAnimationBoneData = nullptr;

@@ -17,6 +17,7 @@ namespace Havtorn
 		CRenderTextureFactory() = default;
 		~CRenderTextureFactory() = default;
 		bool Init(CRHI* rhi);
+		// TODO.NW: Use render resource format instead of dxgi
 		CRenderTexture CreateTexture(SVector2<U16> size, DXGI_FORMAT format, bool cpuAccess = false);
 		CRenderTexture CreateTexture(ID3D11Texture2D* texture, bool cpuAccess = false);
 		CRenderTexture CreateTexture(SVector2<U16> size, DXGI_FORMAT format, const std::string& filePath);

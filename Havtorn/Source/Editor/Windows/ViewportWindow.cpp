@@ -532,7 +532,8 @@ namespace Havtorn
 		if (dataIndex == UMath::MaxU64)
 			return SEntity::Null;
 
-		const U64 pickedEntityGUID = Manager->GetRenderManager()->GetEntityGUIDFromData(dataIndex);
+		// TODO.NW: Be able to provide any render view ID (for window under cursor)
+		const U64 pickedEntityGUID = Manager->GetRenderManager()->GetEntityGUIDFromData(GEngine::GetWorld()->GetMainCamera().GUID, dataIndex);
 
 		return SEntity(pickedEntityGUID);
 	}
@@ -543,7 +544,8 @@ namespace Havtorn
 		if (dataIndex == UMath::MaxU64)
 			return SVector4::Zero;
 
-		SVector4 worldPos = Manager->GetRenderManager()->GetWorldPositionFromData(dataIndex);
+		// TODO.NW: Be able to provide any render view ID (for window under cursor)
+		SVector4 worldPos = Manager->GetRenderManager()->GetWorldPositionFromData(GEngine::GetWorld()->GetMainCamera().GUID, dataIndex);
 
 		if (worldPos.W == 0.0f)
 		{
