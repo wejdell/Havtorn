@@ -29,6 +29,17 @@ namespace Havtorn
 			}
 		}
 
+		void DebugLiveObjects()
+		{
+			ID3D11Debug* debugDevice = nullptr;
+			HRESULT hr = Device->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&debugDevice));
+			if (SUCCEEDED(hr) && debugDevice) 
+			{
+				debugDevice->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+				debugDevice->Release();
+			}
+		}
+
 		void EndFrame()
 		{
 			SwapChain->Present(0, 0);
@@ -110,6 +121,12 @@ namespace Havtorn
 
 	CRHI::~CRHI()
 	{
+		
+	}
+
+	void CRHI::DebugLiveObjects()
+	{
+		Impl->DebugLiveObjects();
 	}
 
 	void CRHI::EndFrame()

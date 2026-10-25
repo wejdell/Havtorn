@@ -56,7 +56,7 @@ namespace Havtorn
     public:
         PLATFORM_API CDepthStencilState(const CRHI* rhi, const SDepthStencilDescription& description);
         CDepthStencilState() = delete;
-        ~CDepthStencilState() = default;
+        ~CDepthStencilState();
 
         PLATFORM_API void Release();
         PLATFORM_API void SetDepthStencilState(const U32 stencilRef) const;

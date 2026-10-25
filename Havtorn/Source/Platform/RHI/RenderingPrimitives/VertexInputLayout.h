@@ -34,7 +34,7 @@ namespace Havtorn
 	public:
 		PLATFORM_API CVertexInputLayout(CRHI* rhi, const SInputLayoutDescription& description, const std::string& shaderByteCode);
 		CVertexInputLayout() = delete;
-		~CVertexInputLayout() = default;
+		~CVertexInputLayout();
 
 		PLATFORM_API void Release();
 		PLATFORM_API void SetInputLayout() const;

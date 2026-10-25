@@ -74,7 +74,7 @@ namespace Havtorn
 	public:
 		PLATFORM_API CBlendState(const CRHI* rhi, const SBlendStateDescription& description);
 		CBlendState() = delete;
-		~CBlendState() = default;
+		~CBlendState();
 
 		PLATFORM_API void Release();
 		PLATFORM_API void SetBlendState() const;

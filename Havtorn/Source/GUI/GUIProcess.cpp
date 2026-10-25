@@ -13,7 +13,10 @@ namespace Havtorn
 
 	}
 
-	GUIProcess::~GUIProcess() = default;
+	GUIProcess::~GUIProcess()
+	{
+		SAFE_DELETE(EditorGUI);
+	}
 
 	bool GUIProcess::Init(CPlatformManager* platformManager)
 	{

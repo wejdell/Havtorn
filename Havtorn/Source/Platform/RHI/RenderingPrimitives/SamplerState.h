@@ -100,7 +100,7 @@ namespace Havtorn
     public:
         PLATFORM_API CSamplerState(const CRHI* rhi, const SSamplerDescription& description);
         CSamplerState() = delete;
-        ~CSamplerState() = default;
+        ~CSamplerState();
 
         PLATFORM_API void Release();
         PLATFORM_API void SetSamplerState(const U8 slot) const;

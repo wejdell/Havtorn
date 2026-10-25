@@ -26,6 +26,7 @@ namespace Havtorn
 		CRHI(CPlatformManager* platformManager);
 		~CRHI();
 
+		PLATFORM_API void DebugLiveObjects();
 		PLATFORM_API void EndFrame();
 
 		void ToggleFullscreenState(bool setFullscreen);

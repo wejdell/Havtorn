@@ -238,7 +238,7 @@ namespace Havtorn
 		}
 	}
 
-	void CRenderResourceRegistry::Deallocate(const bool forceRemoveTextures)
+	void CRenderResourceRegistry::Deallocate(const ERenderResourceDeallocationStrategy deallocationStrategy)
 	{
 		// TODO.NW: Figure out how to clear imported resources, might be nice to be able to clear draw data on a render target every frame, 
 		// but can we optimize the removal of the imported assets then? It actually doesn't matter much since they are not allocated but owned
@@ -248,14 +248,15 @@ namespace Havtorn
 		for (U64 index = 0; index < Resources.size(); index++)
 		{
 			SRenderResource& renderResource = Resources[index];
+			const bool forceClear = deallocationStrategy == ERenderResourceDeallocationStrategy::ForceClear || (deallocationStrategy == ERenderResourceDeallocationStrategy::ForceClearTexturesOnly && renderResource.IsTextureType());
 
 			if (renderResource.Description.IsImported)
 				continue;
 
-			if (!renderResource.Description.WasProcessed && !(forceRemoveTextures && renderResource.IsTextureType()))
+			if (!renderResource.Description.WasProcessed && !forceClear)
 				continue;
 
-			if (ResourceLifetimes[index] > 0 && !(forceRemoveTextures && renderResource.IsTextureType()))
+			if (ResourceLifetimes[index] > 0 && !forceClear)
 			{
 				ResourceLifetimes[index]--;
 				continue;

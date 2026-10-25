@@ -39,6 +39,9 @@ namespace Havtorn
 	{
 		Backbuffer.Release();
 		RHI->GetSwapChain()->ResizeBuffers(0, 0, 0, DXGI_FORMAT_UNKNOWN, 0);
+
+		GameThreadResourceRegistry->Deallocate(ERenderResourceDeallocationStrategy::ForceClear);
+		RenderThreadResourceRegistry->Deallocate(ERenderResourceDeallocationStrategy::ForceClear);
 	}
 
 	bool CRenderManager::Init(CRHI* rhi, CPlatformManager* platformManager)
@@ -164,7 +167,6 @@ namespace Havtorn
 
 		for (auto& [id, renderView] : (*GameThreadRenderViews))
 		{
-			// TODO.NW: Put in constructor along with the rest of the initialization in RequestRenderView, if still possible to construct when emplacing into the map
 			renderView.ReleaseViewResources();
 			renderView.ViewSize = CurrentWindowResolution;
 			renderView.RenderGraph = CRenderGraph();
@@ -185,8 +187,8 @@ namespace Havtorn
 			renderView.WorldPositionTexture = RenderTextureFactory.CreateTexture(renderView.ViewSize, DXGI_FORMAT_R32G32B32A32_FLOAT, true);
 		}
 
-		GameThreadResourceRegistry->Deallocate(true);
-		RenderThreadResourceRegistry->Deallocate(true);
+		GameThreadResourceRegistry->Deallocate(ERenderResourceDeallocationStrategy::ForceClearTexturesOnly);
+		RenderThreadResourceRegistry->Deallocate(ERenderResourceDeallocationStrategy::ForceClearTexturesOnly);
 	}
 
 	CRenderTexture CRenderManager::CreateRenderTextureFromSource(const std::string& filePath)
@@ -332,7 +334,7 @@ namespace Havtorn
 		if (windowResizeTarget.LengthSquared() > 0)
 			UpdateResolution(windowResizeTarget);
 		
-		RenderThreadResourceRegistry->Deallocate(false);
+		RenderThreadResourceRegistry->Deallocate(ERenderResourceDeallocationStrategy::CheckLifetime);
 
 		std::swap(GameThreadRenderViews, RenderThreadRenderViews);
 		std::swap(GameThreadResourceRegistry, RenderThreadResourceRegistry);
@@ -438,6 +440,11 @@ namespace Havtorn
 	ERenderViewMode CRenderManager::GetRenderViewMode() const
 	{
 		return CurrentRenderViewMode;
+	}
+
+	void CRenderManager::DebugLiveRenderObjects() const
+	{
+		RHI->DebugLiveObjects();
 	}
 
 	// TODO.NW: Figure out how to implement this as a render debug data feature in the finalize pass of default render passes

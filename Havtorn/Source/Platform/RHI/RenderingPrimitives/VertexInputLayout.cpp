@@ -28,6 +28,11 @@ namespace Havtorn
 		ENGINE_HR_MESSAGE(rhi->GetDevice()->CreateInputLayout(layout.data(), STATIC_U32(layout.size()), shaderByteCode.data(), shaderByteCode.size(), &InputLayout), "Input Layout could not be created.");
 	}
 
+	CVertexInputLayout::~CVertexInputLayout()
+	{
+		Release();
+	}
+
 	void CVertexInputLayout::Release()
 	{
 		InputLayout->Release();

@@ -30,6 +30,11 @@ namespace Havtorn
 		ENGINE_HR_MESSAGE(rhi->GetDevice()->CreateBlendState(&blendDesc, &BlendState), "Blend State could not be created.");
 	}
 
+	CBlendState::~CBlendState()
+	{
+		Release();
+	}
+
 	void CBlendState::Release()
 	{
 		BlendState->Release();

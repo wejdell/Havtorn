@@ -277,6 +277,7 @@ namespace Havtorn
 		ENGINE_API void SetRenderViewMode(const ERenderViewMode renderPass);
 		ENGINE_API ERenderViewMode GetRenderViewMode() const;
 
+		ENGINE_API void DebugLiveRenderObjects() const;
 
 	public:
 		ENGINE_API static U32 NumberOfDrawCallsThisFrame;

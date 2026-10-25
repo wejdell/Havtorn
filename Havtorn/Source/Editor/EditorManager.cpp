@@ -118,6 +118,7 @@ namespace Havtorn
 		MenuElements.emplace_back(std::make_unique<CFileMenu>("File", this));
 		MenuElements.emplace_back(std::make_unique<CEditMenu>("Edit", this));
 		MenuElements.emplace_back(std::make_unique<CViewMenu>("View", this));
+		MenuElements.emplace_back(std::make_unique<CDebugMenu>("Debug", this));
 		MenuElements.emplace_back(std::make_unique<CWindowMenu>("Window", this));
 		MenuElements.emplace_back(std::make_unique<CHelpMenu>("Help", this));
 

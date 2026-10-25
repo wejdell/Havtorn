@@ -58,7 +58,14 @@ namespace Havtorn
 
 	public:
 		ImGuiImpl() = default;
-		~ImGuiImpl() = default;
+		~ImGuiImpl()
+		{
+#ifdef HV_RENDER_BACKEND_DIRECTX11
+			ImGui_ImplDX11_Shutdown();
+#endif
+			ImGui_ImplSDL3_Shutdown();
+			ImGui::DestroyContext();
+		}
 
 		void Init(CPlatformManager* platformManager)
 		{
@@ -70,10 +77,10 @@ namespace Havtorn
 			ImGui::DebugCheckVersionAndDataLayout(Version, sizeof(ImGuiIO), sizeof(ImGuiStyle), sizeof(ImVec2), sizeof(ImVec4), sizeof(ImDrawVert), sizeof(ImDrawIdx));
 			PrimaryFont = ImGui::GetIO().Fonts->AddFontFromFileTTF(DefaultFont, DefaultFontSize);
 			ImGuizmo::SetImGuiContext(ImGui::GetCurrentContext());
-
-			ImGui_ImplSDL3_InitForD3D(platformManager->GetMainWindow());
 			
 #ifdef HV_RENDER_BACKEND_DIRECTX11
+			ImGui_ImplSDL3_InitForD3D(platformManager->GetMainWindow());
+
 			const CRHI* rhi = platformManager->GetRHI();
 			ImGui_ImplDX11_Init(rhi->GetDevice(), rhi->GetContext());
 
@@ -1547,6 +1554,7 @@ namespace Havtorn
 
 	GUI::~GUI()
 	{
+		delete Impl;
 		Impl = nullptr;
 		Instance = nullptr;
 	}

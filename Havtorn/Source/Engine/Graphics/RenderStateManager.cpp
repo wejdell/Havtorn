@@ -18,7 +18,7 @@ namespace Havtorn
 {
     CRenderStateManager::~CRenderStateManager()
     {
-        Context = nullptr;
+        Release();
     }
 
     bool CRenderStateManager::Init(CRHI* rhi)
@@ -787,20 +787,17 @@ namespace Havtorn
 
     void CRenderStateManager::Release()
     {
-        for (U8 i = 0; i < STATIC_U8(EBlendStates::Count); ++i)
+        // TODO.NW: The intent here is that the registries clean up all other buffers 
+        // and textures on their own. Can we make this more reliable?
+        constexpr U8 numberOfDebugShapeBuffers = 17;
+        for (U8 i = 0; i < numberOfDebugShapeBuffers; i++)
         {
-            BlendStates[i]->Release();
+            VertexBuffers[i].Release();
+            IndexBuffers[i].Release();
         }
 
-        for (U8 i = 0; i < STATIC_U8(EDepthStencilStates::Count); ++i)
-        {
-            DepthStencilStates[i]->Release();
-        }
-
-        for (U8 i = 0; i < STATIC_U8(ERasterizerStates::Count); ++i)
-        {
-            RasterizerStates[i]->Release();
-        }
+        OMSetRenderTargets(0, nullptr, nullptr);
+        Context->Flush();
     }
 
     void CRenderStateManager::OnShaderSourceChange(const std::string& filePath)

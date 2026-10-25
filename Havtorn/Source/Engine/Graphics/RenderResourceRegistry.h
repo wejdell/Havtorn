@@ -101,6 +101,13 @@ namespace Havtorn
 
 	constexpr U8 ResourceMaxLifetime = 20;
 
+	enum class ERenderResourceDeallocationStrategy
+	{
+		CheckLifetime,
+		ForceClearTexturesOnly,
+		ForceClear
+	};
+
 	class CRenderResourceRegistry
 	{
 		friend class CRenderManager;
@@ -131,7 +138,7 @@ namespace Havtorn
 
 		void TouchResources(const std::vector<SRenderResourceHandle>& handles);
 		void Allocate();
-		void Deallocate(const bool forceRemoveTextures);
+		void Deallocate(const ERenderResourceDeallocationStrategy deallocationStrategy);
 		void ClearResources();
 
 		ENGINE_API SRenderResource* GetResource(const SRenderResourceHandle& handle);

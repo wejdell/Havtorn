@@ -39,6 +39,11 @@ namespace Havtorn
 		fileData.close();
 	}
 
+	CShader::~CShader()
+	{
+		Release();
+	}
+
 	void CShader::Release()
 	{
 		switch (ShaderType)

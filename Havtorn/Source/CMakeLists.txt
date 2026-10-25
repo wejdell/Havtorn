@@ -918,6 +918,8 @@ set(EDITOR_FILES
     ${EDITOR_FOLDER}Systems/EditorRenderSystem.h
     ${EDITOR_FOLDER}Systems/PickingSystem.cpp
     ${EDITOR_FOLDER}Systems/PickingSystem.h
+    ${EDITOR_FOLDER}Toggleables/DebugMenu.cpp
+    ${EDITOR_FOLDER}Toggleables/DebugMenu.h
     ${EDITOR_FOLDER}Toggleables/EditMenu.cpp
     ${EDITOR_FOLDER}Toggleables/EditMenu.h
     ${EDITOR_FOLDER}Toggleables/FileMenu.cpp

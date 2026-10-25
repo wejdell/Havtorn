@@ -28,6 +28,11 @@ namespace Havtorn
         ENGINE_HR_MESSAGE(rhi->GetDevice()->CreateDepthStencilState(&depthStencilDesc, &DepthStencilState), "Depth Stencil State could not be created.");
 	}
 
+	CDepthStencilState::~CDepthStencilState()
+	{
+		Release();
+	}
+
 	void CDepthStencilState::Release()
 	{
 		DepthStencilState->Release();

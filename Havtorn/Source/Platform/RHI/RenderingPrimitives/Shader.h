@@ -18,7 +18,7 @@ namespace Havtorn
 	public:
 		PLATFORM_API CShader(const std::string& filepath, const CRHI* rhi, const EShaderType type);
 		CShader() = delete;
-		~CShader() = default;
+		PLATFORM_API ~CShader();
 
 		PLATFORM_API void Release();
 		PLATFORM_API std::string GetCompiledData() const;

@@ -43,7 +43,7 @@ namespace Havtorn
     public:
         PLATFORM_API CRasterizerState(const CRHI* rhi, const SRasterizerDescription& description);
         CRasterizerState() = delete;
-        ~CRasterizerState() = default;
+        ~CRasterizerState();
 
         PLATFORM_API void Release();
         PLATFORM_API void SetRasterizerState() const;

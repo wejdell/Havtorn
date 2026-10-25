@@ -24,6 +24,11 @@ namespace Havtorn
 		ENGINE_HR_MESSAGE(rhi->GetDevice()->CreateRasterizerState(&rasterizerDescription, &RasterizerState), "Rasterizer State could not be created.");
 	}
 
+	CRasterizerState::~CRasterizerState()
+	{
+		Release();
+	}
+
 	void CRasterizerState::Release()
 	{
 		RasterizerState->Release();

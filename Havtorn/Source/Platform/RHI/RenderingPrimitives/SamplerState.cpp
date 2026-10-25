@@ -27,6 +27,11 @@ namespace Havtorn
 		ENGINE_HR_MESSAGE(rhi->GetDevice()->CreateSamplerState(&samplerDescription, &SamplerState), "Sampler State could not be created.");
 	}
 
+	CSamplerState::~CSamplerState()
+	{
+		Release();
+	}
+
 	void CSamplerState::Release()
 	{
 		SamplerState->Release();
