@@ -167,6 +167,7 @@ namespace Havtorn
 			// TODO.NW: Put in constructor along with the rest of the initialization in RequestRenderView, if still possible to construct when emplacing into the map
 			renderView.ReleaseViewResources();
 			renderView.ViewSize = CurrentWindowResolution;
+			renderView.RenderGraph = CRenderGraph();
 			renderView.RenderGraph.ResourceRegistry = GameThreadResourceRegistry;
 			renderView.RenderTarget = RenderTextureFactory.CreateTexture(renderView.ViewSize, DXGI_FORMAT_R16G16B16A16_FLOAT);
 			renderView.EditorDataTexture = RenderTextureFactory.CreateTexture(renderView.ViewSize, DXGI_FORMAT_R32G32_UINT, true);
@@ -177,11 +178,15 @@ namespace Havtorn
 		{
 			renderView.ReleaseViewResources();
 			renderView.ViewSize = CurrentWindowResolution;
+			renderView.RenderGraph = CRenderGraph();
 			renderView.RenderGraph.ResourceRegistry = GameThreadResourceRegistry;
 			renderView.RenderTarget = RenderTextureFactory.CreateTexture(renderView.ViewSize, DXGI_FORMAT_R16G16B16A16_FLOAT);
 			renderView.EditorDataTexture = RenderTextureFactory.CreateTexture(renderView.ViewSize, DXGI_FORMAT_R32G32_UINT, true);
 			renderView.WorldPositionTexture = RenderTextureFactory.CreateTexture(renderView.ViewSize, DXGI_FORMAT_R32G32B32A32_FLOAT, true);
 		}
+
+		GameThreadResourceRegistry->Deallocate(true);
+		RenderThreadResourceRegistry->Deallocate(true);
 	}
 
 	CRenderTexture CRenderManager::CreateRenderTextureFromSource(const std::string& filePath)
@@ -305,6 +310,11 @@ namespace Havtorn
 		return RenderTextureFactory;
 	}
 
+	CRenderStateManager& CRenderManager::GetRenderStateManager()
+	{
+		return RenderStateManager;
+	}
+
 	void CRenderManager::SwapRenderViews(const SVector2<U16>& windowResizeTarget)
 	{
 		std::vector<U64> idsToErase = {};
@@ -322,7 +332,7 @@ namespace Havtorn
 		if (windowResizeTarget.LengthSquared() > 0)
 			UpdateResolution(windowResizeTarget);
 		
-		RenderThreadResourceRegistry->Deallocate();
+		RenderThreadResourceRegistry->Deallocate(false);
 
 		std::swap(GameThreadRenderViews, RenderThreadRenderViews);
 		std::swap(GameThreadResourceRegistry, RenderThreadResourceRegistry);
@@ -367,7 +377,8 @@ namespace Havtorn
 		// TODO.NW: Add size/dimensions to requests
 		// TODO.NW: Find a way to keep just one registry for a View and RenderGraph within it
 		GameThreadRenderViews->emplace(renderViewID, SRenderView(&RenderStateManager, GEngine::GetAssetRegistry(), GameThreadResourceRegistry));
-		
+		// NW: A move constructor was attempted here, but I gave up as it seemed too volatile to move render textures around (from being constructed inline in the emplace
+		// to then be moved into the map).
 		SRenderView& view = GameThreadRenderViews->at(renderViewID);
 		view.ViewSize = CurrentWindowResolution;
 		view.RenderGraph.ResourceRegistry = GameThreadResourceRegistry;
@@ -575,11 +586,6 @@ namespace Havtorn
 
 		// TODO.NR: Add debug print on screen indicating what render pass is shown
 		CurrentRenderViewMode = static_cast<ERenderViewMode>(currentViewModeIndex);
-	}
-
-	CRenderStateManager& CRenderManager::GetRenderStateManager()
-	{
-		return RenderStateManager;
 	}
 
 	SRenderView::SRenderView(CRenderStateManager* stateManager, CAssetRegistry* assetRegistry, CRenderResourceRegistry* renderResourceRegistry)

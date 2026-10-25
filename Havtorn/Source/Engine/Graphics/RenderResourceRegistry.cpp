@@ -61,6 +61,25 @@ namespace Havtorn
 		}
 	}
 
+	bool SRenderResource::IsTextureType() const
+	{
+		switch (Description.Type)
+		{
+		case ERenderResourceType::UnorderedAccessView: [[fallthrough]];
+		case ERenderResourceType::DepthStencilView: [[fallthrough]];
+		case ERenderResourceType::ShaderResourceView: [[fallthrough]];
+		case ERenderResourceType::RenderTargetView:
+			return true;
+		case ERenderResourceType::ConstantBufferView: [[fallthrough]];
+		case ERenderResourceType::IndexBufferView: [[fallthrough]];
+		case ERenderResourceType::StreamOutputView: [[fallthrough]];
+		case ERenderResourceType::VertexBufferView: [[fallthrough]];
+		case ERenderResourceType::SamplerState:
+		default:
+			return false;
+		}
+	}
+
 	void SRenderResource::Allocate(CRenderManager* manager, CRHI* rhi)
 	{
 		if (Description.IsImported || Description.IsAllocated)
@@ -219,7 +238,7 @@ namespace Havtorn
 		}
 	}
 
-	void CRenderResourceRegistry::Deallocate()
+	void CRenderResourceRegistry::Deallocate(const bool forceRemoveTextures)
 	{
 		// TODO.NW: Figure out how to clear imported resources, might be nice to be able to clear draw data on a render target every frame, 
 		// but can we optimize the removal of the imported assets then? It actually doesn't matter much since they are not allocated but owned
@@ -228,17 +247,22 @@ namespace Havtorn
 		std::vector<U64> deadResourceIndices;
 		for (U64 index = 0; index < Resources.size(); index++)
 		{
-			if (!Resources[index].Description.WasProcessed || Resources[index].Description.IsImported)
+			SRenderResource& renderResource = Resources[index];
+
+			if (renderResource.Description.IsImported)
 				continue;
 
-			if (ResourceLifetimes[index] > 0)
+			if (!renderResource.Description.WasProcessed && !(forceRemoveTextures && renderResource.IsTextureType()))
+				continue;
+
+			if (ResourceLifetimes[index] > 0 && !(forceRemoveTextures && renderResource.IsTextureType()))
 			{
 				ResourceLifetimes[index]--;
 				continue;
 			}
 
 			deadResourceIndices.emplace_back(index);			
-			Resources[index].Deallocate(RenderManager, RHI);
+			renderResource.Deallocate(RenderManager, RHI);
 		}
 
 		// Descending order

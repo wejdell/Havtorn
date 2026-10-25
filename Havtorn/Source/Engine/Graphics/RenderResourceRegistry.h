@@ -82,6 +82,8 @@ namespace Havtorn
 		SRenderResource(const SRenderResourceDescription& description, void* externalMemory);
 		SRenderResource() = default;
 
+		bool IsTextureType() const;
+
 		void Allocate(CRenderManager* manager, CRHI* rhi);
 		void Deallocate(CRenderManager* manager, CRHI* rhi);
 		void Clear(CRenderManager* manager, CRHI* rhi);
@@ -129,7 +131,7 @@ namespace Havtorn
 
 		void TouchResources(const std::vector<SRenderResourceHandle>& handles);
 		void Allocate();
-		void Deallocate();
+		void Deallocate(const bool forceRemoveTextures);
 		void ClearResources();
 
 		ENGINE_API SRenderResource* GetResource(const SRenderResourceHandle& handle);

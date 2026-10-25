@@ -261,6 +261,7 @@ namespace Havtorn
 		
 		ENGINE_API CRenderResourceRegistry& GetRenderResourceRegistry();
 		ENGINE_API CRenderTextureFactory& GetRenderTextureFactory();
+		ENGINE_API CRenderStateManager& GetRenderStateManager();
 
 		void SwapRenderViews(const SVector2<U16>& windowResizeTarget);
 
@@ -276,7 +277,6 @@ namespace Havtorn
 		ENGINE_API void SetRenderViewMode(const ERenderViewMode renderPass);
 		ENGINE_API ERenderViewMode GetRenderViewMode() const;
 
-		CRenderStateManager& GetRenderStateManager();
 
 	public:
 		ENGINE_API static U32 NumberOfDrawCallsThisFrame;
@@ -291,7 +291,6 @@ namespace Havtorn
 		CThumbnailRenderer ThumbnailRenderer;
 
 	private:
-		void InitRenderTextures(CRHI* rhi, SVector2<U16> windowResolution);
 		void InitShadowmapAtlas(SVector2<F32> atlasResolution);
 		void InitShadowmapLOD(SVector2<F32> topLeftCoordinate, const SVector2<F32>& widthAndHeight, const SVector2<F32>& depth, const SVector2<F32>& atlasResolution, U16 mapsInLod, U16 startIndex);
 
