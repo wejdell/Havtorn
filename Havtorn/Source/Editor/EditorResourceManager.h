@@ -59,7 +59,7 @@ namespace Havtorn
 	{
 	public:
 		CEditorResourceManager() = default;
-		~CEditorResourceManager() = default;
+		~CEditorResourceManager();
 
 		bool Init(CEditorManager* editorManager, CRenderManager* renderManager);
 		intptr_t GetStaticEditorTextureResource(const EEditorTexture texture) const;

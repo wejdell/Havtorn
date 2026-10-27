@@ -940,6 +940,8 @@ set(EDITOR_FILES
     ${EDITOR_FOLDER}Windows/InspectorWindow.h
     ${EDITOR_FOLDER}Windows/OutputLogWindow.cpp
     ${EDITOR_FOLDER}Windows/OutputLogWindow.h
+    ${EDITOR_FOLDER}Windows/RenderDebugWindow.cpp
+    ${EDITOR_FOLDER}Windows/RenderDebugWindow.h
     ${EDITOR_FOLDER}Windows/SequencerWindow.cpp
     ${EDITOR_FOLDER}Windows/SequencerWindow.h
     ${EDITOR_FOLDER}Windows/SpriteAnimatorGraphNodeWindow.cpp

@@ -10,6 +10,7 @@
 #include "Windows/SequencerWindow.h"
 #include "Windows/SpriteAnimatorGraphNodeWindow.h"
 #include "Windows/OutputLogWindow.h"
+#include "Windows/RenderDebugWindow.h"
 #include "AuthoringTools/MaterialTool.h"
 #include "AuthoringTools/ScriptTool.h"
 #include "AuthoringTools/InputTool.h"

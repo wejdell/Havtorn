@@ -82,7 +82,7 @@ namespace Havtorn
 		SRenderResource(const SRenderResourceDescription& description, void* externalMemory);
 		SRenderResource() = default;
 
-		bool IsTextureType() const;
+		ENGINE_API bool IsTextureType() const;
 
 		void Allocate(CRenderManager* manager, CRHI* rhi);
 		void Deallocate(CRenderManager* manager, CRHI* rhi);
@@ -144,6 +144,7 @@ namespace Havtorn
 		void ClearResources();
 
 		ENGINE_API SRenderResource* GetResource(const SRenderResourceHandle& handle);
+		ENGINE_API const std::vector<SRenderResource>& GetResources() const;
 
 	private:
 		CRenderManager* RenderManager = nullptr;

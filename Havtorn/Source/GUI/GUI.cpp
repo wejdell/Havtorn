@@ -843,6 +843,12 @@ namespace Havtorn
 			return { imWindowSize.x, imWindowSize.y };
 		}
 
+		SVector2<F32> GetScriptWindowSize()
+		{
+			ImVec2 imScriptRectSize = NE::GetScreenSize();
+			return { imScriptRectSize.x, imScriptRectSize.y };
+		}
+
 		SVector2<F32> GetMousePosition()
 		{
 			ImVec2 imPos = ImGui::GetMousePos();
@@ -1369,6 +1375,16 @@ namespace Havtorn
 			NE::EndNode();
 		}
 
+		void CenterNode(const U64 id)
+		{
+			NE::CenterNodeOnScreen(id);
+		}
+
+		void NavigateToScriptContent()
+		{
+			NE::NavigateToContent();
+		}
+		
 		void SetNodePosition(const U64 id, const SVector2<F32>& position)
 		{
 			NE::SetNodePosition(id, NE::ScreenToCanvas({ position.X, position.Y }));
@@ -2563,6 +2579,11 @@ namespace Havtorn
 		return Instance->Impl->GetCurrentWindowSize();
 	}
 
+	SVector2<F32> GUI::GetScriptWindowSize()
+	{
+		return Instance->Impl->GetScriptWindowSize();
+	}
+
 	SVector2<F32> GUI::GetMousePosition()
 	{
 		return Instance->Impl->GetMousePosition();
@@ -2656,6 +2677,16 @@ namespace Havtorn
 	void GUI::EndNode()
 	{
 		Instance->Impl->EndNode();
+	}
+
+	void GUI::CenterNode(const U64 id)
+	{
+		Instance->Impl->CenterNode(id);
+	}
+
+	void GUI::NavigateToScriptContent()
+	{
+		Instance->Impl->NavigateToScriptContent();
 	}
 
 	void GUI::SetNodePosition(const U64 id, const SVector2<F32>& position)

@@ -248,6 +248,8 @@ namespace Havtorn
 		U32 WriteToAnimationDataTexture(const std::string& animationName);
 
 		ENGINE_API SRenderView* GetRenderView(const U64 id);
+		ENGINE_API bool HasRenderView(const U64 id);
+		ENGINE_API std::map<U64, SRenderView>* GetRenderViews();
 
 		ENGINE_API SPostProcessingBufferData GetPostProcessingBufferData() const;
 		ENGINE_API void SetPostProcessingBufferData(const SPostProcessingBufferData& data);

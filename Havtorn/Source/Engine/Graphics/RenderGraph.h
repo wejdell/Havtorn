@@ -28,6 +28,9 @@ namespace Havtorn
 	{
 	public:
 		virtual void Execute(CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView) = 0;
+		virtual std::string GetName() const = 0;
+		bool HasDependency(const Ref<IRenderPass>& pass) const;
+
 		std::vector<SRenderResourceHandle> Inputs;
 		std::vector<SRenderResourceHandle> Outputs;
 		std::vector<U64> Dependencies;
@@ -68,8 +71,9 @@ namespace Havtorn
 		CRenderPass() = delete;
 
 		virtual void Execute(CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView) override;
-		
-		/*CHavtornStaticString<RenderDebugNameMaxSize>*/std::string Name;
+		virtual std::string GetName() const override;
+
+		std::string Name;
 		TParamStruct Data;
 	
 	private:
@@ -98,6 +102,20 @@ namespace Havtorn
 	}
 
 	template<RenderPassParamType TParamStruct>
+	inline std::string CRenderPass<TParamStruct>::GetName() const
+	{
+		return Name;
+	}
+
+	inline bool IRenderPass::HasDependency(const Ref<IRenderPass>& pass) const
+	{
+		if (pass.get() == nullptr)
+			return false;
+
+		return std::ranges::contains(Dependencies, pass->PassParamHash);
+	}
+
+	template<RenderPassParamType TParamStruct>
 	inline void SRenderPassParams::AddDependency()
 	{
 		Dependencies.push_back(typeid(TParamStruct).hash_code());
@@ -114,6 +132,9 @@ namespace Havtorn
 
 		void Compile();
 		void Execute(CRenderManager* renderManager, SRenderView& renderView);
+
+		ENGINE_API const std::vector<Ref<IRenderPass>>& GetAllPasses();
+		ENGINE_API const std::vector<Ref<IRenderPass>>& GetSortedPasses();
 
 		CRenderResourceRegistry* ResourceRegistry = nullptr;
 

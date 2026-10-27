@@ -321,6 +321,11 @@ namespace Havtorn
 		return &Resources[handle.RegistryIndex];
 	}
 
+	const std::vector<SRenderResource>& CRenderResourceRegistry::GetResources() const
+	{
+		return Resources;
+	}
+
 	SRenderResourceHandle CRenderResourceRegistry::DeclareIndexBuffer(const char* name, CDataBuffer* externalMemory)
 	{
 		return	DeclareResource({

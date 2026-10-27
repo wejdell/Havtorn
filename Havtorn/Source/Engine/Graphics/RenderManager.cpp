@@ -259,6 +259,16 @@ namespace Havtorn
 		return nullptr;
 	}
 
+	bool CRenderManager::HasRenderView(const U64 id)
+	{
+		return GameThreadRenderViews->contains(id);
+	}
+
+	std::map<U64, SRenderView>* CRenderManager::GetRenderViews()
+	{
+		return GameThreadRenderViews;
+	}
+
 	SPostProcessingBufferData CRenderManager::GetPostProcessingBufferData() const
 	{
 		return FullscreenRenderer.GetPostProcessBuffer();

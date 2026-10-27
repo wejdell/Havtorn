@@ -68,6 +68,8 @@ namespace Havtorn
 
 	void CRenderGraph::Execute(CRenderManager* renderManager, SRenderView& renderView)
 	{
+		SortedPasses.clear();
+
 		Compile();
 
 		ResourceRegistry->Allocate();
@@ -76,7 +78,16 @@ namespace Havtorn
 			pass->Execute(*ResourceRegistry, renderManager, renderView);
 
 		RenderPasses.clear();
-		SortedPasses.clear();
+	}
+
+	const std::vector<Ref<IRenderPass>>& CRenderGraph::GetAllPasses()
+	{
+		return RenderPasses;
+	}
+
+	const std::vector<Ref<IRenderPass>>& CRenderGraph::GetSortedPasses()
+	{
+		return SortedPasses;
 	}
 
 	SRenderResourceHandle SRenderPassParams::AddInput(const SRenderResourceHandle& handle)

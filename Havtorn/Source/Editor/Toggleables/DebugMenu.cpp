@@ -2,6 +2,7 @@
 
 #include "DebugMenu.h"
 #include "EditorManager.h"
+#include "Windows/RenderDebugWindow.h"
 
 #include <Graphics/RenderManager.h>
 
@@ -25,7 +26,12 @@ namespace Havtorn
 
 		if (GUI::BeginPopup(PopupName))
 		{
-			if (GUI::MenuItem("Debug Live Render Objects"))
+			if (GUI::MenuItem("Debug Rendering"))
+			{
+				Manager->GetEditorWindow<CRenderDebugWindow>()->SetEnabled(true);
+			}
+
+			if (GUI::MenuItem("Log Live Render Objects (Output)"))
 			{
 				Manager->GetRenderManager()->DebugLiveRenderObjects();
 			}

@@ -947,9 +947,10 @@ namespace Havtorn
 		static void SetGizmoDrawList();
 
 		static SVector2<F32> GetCurrentWindowSize();
+		static SVector2<F32> GetScriptWindowSize();
 		static SVector2<F32> GetMousePosition();
 
-		static void AddRectFilled(const SVector2<F32>& cursorPos, const SVector2<F32>& size, const SColor& color);
+		static void AddRectFilled(const SVector2<F32>& cursorScreenPos, const SVector2<F32>& size, const SColor& color);
 		static void PushClipRect(const SVector2<F32>& cursorPos, const SVector2<F32>& size);
 		static void PopClipRect();
 
@@ -973,6 +974,9 @@ namespace Havtorn
 
 		static void BeginNode(const U64 id);
 		static void EndNode();
+
+		static void CenterNode(const U64 id);
+		static void NavigateToScriptContent();
 
 		static void SetNodePosition(const U64 id, const SVector2<F32>& position);
 		static SVector2<F32> GetNodePosition(const U64 id);

@@ -112,6 +112,12 @@ namespace Havtorn
 		if (PlatformManager == nullptr)
 			return false;
 
+		ResourceManager = new CEditorResourceManager();
+		bool success = ResourceManager->Init(this, renderManager);
+		if (!success)
+			return false;
+		RenderManager = renderManager;
+
 		SetEditorTheme(EEditorColorTheme::HavtornDefault, EEditorStyleTheme::Havtorn);
 
 		// TODO.NR: Figure out why we can't use unique ptrs with these namespaced imgui classes
@@ -126,6 +132,7 @@ namespace Havtorn
 		Windows.emplace_back(std::make_unique<CDockSpaceWindow>("Dock Space", this));
 		Windows.emplace_back(std::make_unique<CAssetBrowserWindow>("Asset Browser", this));
 		Windows.emplace_back(std::make_unique<COutputLogWindow>("Output Log", this));
+		Windows.emplace_back(std::make_unique<CRenderDebugWindow>("Render Debug", this));
 		
 		// NW: The Viewport and conditionally inspector and prefab editors make use of render targets 
 		// from the scene. If these are submitted to ImGui and then the underlying memory is destroyed 
@@ -140,12 +147,6 @@ namespace Havtorn
 		Windows.emplace_back(std::make_unique<CScriptTool>("Script Editor", this));
 		Windows.emplace_back(std::make_unique<CInputTool>("Input Editor", this));
 		Windows.emplace_back(std::make_unique<CPrefabTool>("Prefab Editor", this));
-
-		ResourceManager = new CEditorResourceManager();
-		bool success = ResourceManager->Init(this, renderManager);
-		if (!success)
-			return false;
-		RenderManager = renderManager;
 
 		PlatformManager->OnResolutionChanged.AddMember(this, &CEditorManager::OnResolutionChanged);
 		World = GEngine::GetWorld();

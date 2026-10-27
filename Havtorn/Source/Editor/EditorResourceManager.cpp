@@ -373,6 +373,12 @@ namespace Havtorn
 //#define ROUGHNESS           9
 //#define EMISSIVE            10
 
+	CEditorResourceManager::~CEditorResourceManager()
+	{
+		for (CStaticRenderTexture& texture : Textures)
+			texture.ReleaseTexture();
+	}
+
 	bool CEditorResourceManager::Init(CEditorManager* editorManager, CRenderManager* renderManager)
 	{
 		Manager = editorManager;
