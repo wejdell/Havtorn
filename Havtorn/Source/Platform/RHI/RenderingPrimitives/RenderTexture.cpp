@@ -17,8 +17,6 @@ namespace Havtorn
 
 	void CStaticRenderTexture::ReleaseTexture()
 	{
-		Context->Release();
-
 		if (ShaderResource)
 		{
 			ShaderResource->Release();

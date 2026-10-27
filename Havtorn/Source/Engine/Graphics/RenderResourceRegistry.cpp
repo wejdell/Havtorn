@@ -216,6 +216,30 @@ namespace Havtorn
 		return SRenderResourceHandle(declaration.Description.Name, index);
 	}
 
+	void CRenderResourceRegistry::RemoveRenderViewRenderTarget(SRenderView* renderView)
+	{
+		// TODO.NW: Want to make sure render views can share resources, might make sense to introduce resolution to all texture names? 
+		// And make sure render view specific resources can be cleared out when they are unrequested
+
+		// We might want to keep all resources in the registry also if we can, at least all render view ones. The render target and editor textures
+		// may not need to be held by the view, as long as we can guarantee the lifetime of it in the registry.
+
+		// It might make sense to keep textures as shared_ptrs everywhere as well
+
+		I64 eraseIndex = -1;
+		for (I64 i = 0; i < STATIC_I64(Resources.size()); i++)
+		{
+			if (Resources[i].RenderTexture == &renderView->RenderTarget)
+			{
+				eraseIndex = i;
+				break;
+			}
+		}
+
+		if (eraseIndex != -1)
+			Resources.erase(Resources.begin() + eraseIndex);
+	}
+
 	void CRenderResourceRegistry::TouchResources(const std::vector<SRenderResourceHandle>& handles)
 	{
 		for (const SRenderResourceHandle& handle : handles)

@@ -117,6 +117,8 @@ namespace Havtorn
 
 		ENGINE_API SRenderResourceHandle DeclareResource(SRenderResourceDeclaration declaration);
 
+		void RemoveRenderViewRenderTarget(SRenderView* renderView);
+
 		template<typename T>
 		SRenderResourceHandle DeclareConstantBuffer(const char* name, const U64 sizeMultiplier = 1);
 

@@ -403,12 +403,8 @@ namespace Havtorn
 		if (!GameThreadRenderViews->contains(renderViewID))
 			return;
 
-		SRenderView& view = GameThreadRenderViews->at(renderViewID);
-		view.RenderTarget.Release();
-		view.EditorDataTexture.Release();
-		view.WorldPositionTexture.Release();
+		GameThreadResourceRegistry->RemoveRenderViewRenderTarget(&GameThreadRenderViews->at(renderViewID));
 		GameThreadRenderViews->erase(renderViewID);
-
 		RenderViewCallbacks.erase(renderViewID);
 	}
 

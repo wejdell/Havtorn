@@ -1570,7 +1570,7 @@ namespace Havtorn
 				passData.PrimaryBlurTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Primary Blur Texture", ERenderResourceFormat::R16G16B16A16_Float, renderView, ERenderTextureSizeHint::QuarterResolution));
 				passData.SecondaryBlurTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Secondary Blur Texture", ERenderResourceFormat::R16G16B16A16_Float, renderView, ERenderTextureSizeHint::QuarterResolution));
 				
-				passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", ERenderResourceFormat::R16G16B16A16_Float, renderView));
+				passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", &renderView->RenderTarget));
 
 				return passData;
 			},
