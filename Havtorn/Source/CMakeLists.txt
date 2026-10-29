@@ -542,6 +542,7 @@ set(ENGINE_FILES
     ${ENGINE_FOLDER}Graphics/Renderers/SpriteRenderer.h
     ${ENGINE_FOLDER}Graphics/Renderers/ThumbnailRenderer.cpp
     ${ENGINE_FOLDER}Graphics/Renderers/ThumbnailRenderer.h
+    ${ENGINE_FOLDER}Graphics/DefaultRenderPassData.h
     ${ENGINE_FOLDER}Graphics/GeometryPrimitives.h
     ${ENGINE_FOLDER}Graphics/GraphicsEnums.h
     ${ENGINE_FOLDER}Graphics/GraphicsMaterial.cpp

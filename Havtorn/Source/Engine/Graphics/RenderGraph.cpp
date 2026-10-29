@@ -7,6 +7,8 @@
 #include <CoreTypes.h>
 #include <MathTypes/MathUtilities.h>
 
+#include <algorithm>
+
 namespace Havtorn
 {
 	void TraverseDependencies(const Ref<IRenderPass>& pass, const std::vector<Ref<IRenderPass>>& sortedPasses, const std::unordered_map<U64, U64>& sortedDependencies)
@@ -22,24 +24,22 @@ namespace Havtorn
 		pass->IsRootPass = true;
 	}
 
+	bool CRenderGraph::HasDependency(const Ref<IRenderPass>& renderPassFrom, const Ref<IRenderPass>& renderPassTo)
+	{
+		const SVector2<U64> dependencyHashes = { renderPassFrom->PassParamHash, renderPassTo->PassParamHash };
+		return std::ranges::contains(DependencyHashes, dependencyHashes);
+	}
+
 	void CRenderGraph::Compile()
 	{
 		// Sort passes
 		const U64 numPasses = RenderPasses.size();
-		std::vector<SVector2<U64>> dependencyEdges;
+		std::vector<SVector2<U64>> dependencyIndices;
 		
-		for (U64 passIndex = 0; passIndex < numPasses; passIndex++)
-		{
-			for (const U64 dependencyHash : RenderPasses[passIndex]->Dependencies)
-			{
-				if (!PassParamHashToPassIndex.contains(dependencyHash))
-					continue; // NW: Dependency pass was not added this frame, this pass will be culled
+		for (const SVector2<U64>& dependency : DependencyHashes)
+			dependencyIndices.emplace_back(PassParamHashToPassIndex.at(dependency.X), PassParamHashToPassIndex.at(dependency.Y));
 
-				dependencyEdges.emplace_back(PassParamHashToPassIndex.at(dependencyHash), passIndex);
-			}
-		}
-
-		std::vector<U64> sortedIndices = UMathUtilities::TopologicalSortKahn(dependencyEdges, numPasses);
+		std::vector<U64> sortedIndices = UMathUtilities::TopologicalSortKahn(dependencyIndices, numPasses);
 		if (sortedIndices.empty())
 			return;
 
@@ -50,6 +50,12 @@ namespace Havtorn
 			SortedPassParamHashToPassIndex.emplace(pass->PassParamHash, SortedPasses.size());
 			SortedPasses.emplace_back(pass);
 			
+			for (const SVector2<U64>& dependencyHashes : DependencyHashes)
+			{
+				if (dependencyHashes.Y == pass->PassParamHash)
+					pass->Dependencies.push_back(dependencyHashes.X);
+			}
+
 			if (pass->IsRootPass)
 				defaultRootPasses.emplace_back(pass);
 		}
@@ -78,6 +84,7 @@ namespace Havtorn
 			pass->Execute(*ResourceRegistry, renderManager, renderView);
 
 		RenderPasses.clear();
+		DependencyHashes.clear();
 	}
 
 	const std::vector<Ref<IRenderPass>>& CRenderGraph::GetAllPasses()

@@ -5,6 +5,7 @@
 #include "Scene/World.h"
 #include "Scene/Scene.h"
 #include "ECS/ECSInclude.h"
+#include "Graphics/DefaultRenderPassData.h"
 #include "Graphics/RenderManager.h"
 #include "Graphics/RenderGraph.h"
 #include "Graphics/RenderResourceRegistry.h"
@@ -790,14 +791,6 @@ namespace Havtorn
 
 		SVector2<F32> shadowAtlasResolution = RenderManager->GetShadowAtlasResolution();
 
-		struct SShadowmapPrePassData : public SRenderPassParams
-		{
-			SRenderResourceHandle ViewDataBufferHandle;
-			SRenderResourceHandle TransformBufferHandle;
-
-			SRenderResourceHandle EmptyRenderTargetHandle;
-			SRenderResourceHandle ShadowmapRenderTargetHandle;
-		};
 		renderView->RenderGraph.AddPass<SShadowmapPrePassData>("ShadowmapPrePass",
 			[&](CRenderResourceRegistry& registry)
 			{
@@ -918,30 +911,12 @@ namespace Havtorn
 			}
 		);
 
-		struct SGBufferBasePassData : public SRenderPassParams
-		{
-			SRenderResourceHandle ViewDataBufferHandle;
-			SRenderResourceHandle TransformBufferHandle;
-			SRenderResourceHandle MaterialBufferHandle;
-			SRenderResourceHandle BoneBufferHandle;
-			SRenderResourceHandle UVRectBufferHandle;
-			SRenderResourceHandle ColorBufferHandle;
-			SRenderResourceHandle EntityBufferHandle;
-
-			SRenderResourceHandle GBufferAlbedoTargetHandle;
-			SRenderResourceHandle GBufferWNormalTargetHandle;
-			SRenderResourceHandle GBufferVNormalTargetHandle;
-			SRenderResourceHandle GBufferMaterialTargetHandle;
-			SRenderResourceHandle GBufferWorldPositionTargetHandle;
-			SRenderResourceHandle GBufferEditorDataTargetHandle;
-			SRenderResourceHandle IntermediateDepthTargetHandle;
-		};
 		renderView->RenderGraph.AddPass<SGBufferBasePassData>("GBufferBasePass",
 			[&](CRenderResourceRegistry& registry)
 			{
 				SGBufferBasePassData passData;
 
-				passData.AddDependency<SShadowmapPrePassData>();
+				renderView->RenderGraph.AddDependency<SShadowmapPrePassData, SGBufferBasePassData>();
 
 				passData.ViewDataBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SFrameBufferData>("View Data Buffer"));
 				passData.TransformBufferHandle = passData.AddInput(registry.DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
@@ -1098,17 +1073,12 @@ namespace Havtorn
 			}
 		);
 
-		struct SGeometryDepthCopyPassData : public SRenderPassParams
-		{
-			SRenderResourceHandle DepthTextureHandle;
-			SRenderResourceHandle DepthRenderTargetHandle;
-		};
 		renderView->RenderGraph.AddPass<SGeometryDepthCopyPassData>("GeometryDepthCopy",
 			[&](CRenderResourceRegistry& registry)
 			{
 				SGeometryDepthCopyPassData passData;
 
-				passData.AddDependency<SGBufferBasePassData>();
+				renderView->RenderGraph.AddDependency<SGBufferBasePassData, SGeometryDepthCopyPassData>();
 
 				passData.DepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless, renderView));
 				passData.DepthRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Depth Copy Target", ERenderResourceFormat::R32_Float, renderView));
@@ -1126,26 +1096,13 @@ namespace Havtorn
 			}
 		);
 
-		struct SGeometryDecalPassData : public SRenderPassParams
-		{
-			SRenderResourceHandle ViewDataBufferHandle;
-			SRenderResourceHandle TransformBufferHandle;
-			SRenderResourceHandle MaterialBufferHandle;
-			SRenderResourceHandle DepthCopyTextureHandle;
-
-			SRenderResourceHandle GBufferAlbedoTargetHandle;
-			SRenderResourceHandle GBufferWNormalTargetHandle;
-			SRenderResourceHandle GBufferVNormalTargetHandle;
-			SRenderResourceHandle GBufferMaterialTargetHandle;
-			SRenderResourceHandle IntermediateDepthTargetHandle;
-		};
 		renderView->RenderGraph.AddPass<SGeometryDecalPassData>("GBufferDecalPass",
 			[&](CRenderResourceRegistry& registry)
 			{
 				SGeometryDecalPassData passData;
 
-				passData.AddDependency<SGBufferBasePassData>();
-				passData.AddDependency<SGeometryDepthCopyPassData>();
+				renderView->RenderGraph.AddDependency<SGBufferBasePassData, SGeometryDecalPassData>();
+				renderView->RenderGraph.AddDependency<SGeometryDepthCopyPassData, SGeometryDecalPassData>();
 
 				passData.ViewDataBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SFrameBufferData>("View Data Buffer"));
 				passData.DepthCopyTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Depth Copy", ERenderResourceFormat::R32_Float, renderView));
@@ -1201,19 +1158,12 @@ namespace Havtorn
 			}
 		);
 
-		struct SSSAOPassData : public SRenderPassParams
-		{
-			SRenderResourceHandle SSAOBufferTextureHandle;
-			SRenderResourceHandle DepthTextureHandle;
-			SRenderResourceHandle GBufferWNormalTextureHandle;
-			SRenderResourceHandle SSAOBlurTargetHandle;
-		};
 		renderView->RenderGraph.AddPass<SSSAOPassData>("SSAO",
 			[&](CRenderResourceRegistry& registry)
 			{
 				SSSAOPassData passData;
 
-				passData.AddDependency<SGeometryDecalPassData>();
+				renderView->RenderGraph.AddDependency<SGeometryDecalPassData, SSSAOPassData>();
 
 				// TODO.NW: Figure out why we can't do a half resolution SSAO pass here, do we need to assign the viewports or something?
 				// Also match it with the light pass below
@@ -1242,31 +1192,12 @@ namespace Havtorn
 			}
 		);
 
-		struct SLightPassData : public SRenderPassParams
-		{
-			SRenderResourceHandle ViewDataBufferHandle;
-			SRenderResourceHandle GBufferAlbedoTextureHandle;
-			SRenderResourceHandle GBufferWNormalTextureHandle;
-			SRenderResourceHandle GBufferVNormalTextureHandle;
-			SRenderResourceHandle GBufferMaterialTextureHandle;
-			SRenderResourceHandle IntermediateDepthTextureHandle;
-			SRenderResourceHandle ShadowAtlasDepthTextureHandle;
-			SRenderResourceHandle SSAOBlurTextureHandle;
-
-			SRenderResourceHandle DirectionalLightBufferHandle;
-			SRenderResourceHandle PointLightBufferHandle;
-			SRenderResourceHandle SpotlightBufferHandle;
-			SRenderResourceHandle ShadowmapBufferHandle;
-			SRenderResourceHandle EmissiveBufferHandle;
-
-			SRenderResourceHandle MainRenderTargetHandle;
-		};
 		renderView->RenderGraph.AddPass<SLightPassData>("LightingPass",
 			[&](CRenderResourceRegistry& registry)
 			{
 				SLightPassData passData;
 
-				passData.AddDependency<SSSAOPassData>();
+				renderView->RenderGraph.AddDependency<SSSAOPassData, SLightPassData>();
 
 				passData.ViewDataBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SFrameBufferData>("View Data Buffer"));
 				passData.GBufferAlbedoTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer Albedo", ERenderResourceFormat::R8G8B8A8_UnsignedNormalizedInt, renderView)); // slot 1
@@ -1388,25 +1319,13 @@ namespace Havtorn
 			}
 		);
 
-		struct SVolumetricLightPassData : public SRenderPassParams
-		{
-			SRenderResourceHandle ViewDataBufferHandle;
-			SRenderResourceHandle IntermediateDepthTextureHandle;
-			SRenderResourceHandle ShadowAtlasDepthTextureHandle;
-			SRenderResourceHandle DirectionalLightBufferHandle;
-			SRenderResourceHandle PointLightBufferHandle;
-			SRenderResourceHandle SpotlightBufferHandle;
-			SRenderResourceHandle VolumetricLightBufferHandle;
-			SRenderResourceHandle ShadowmapBufferHandle;
-			SRenderResourceHandle AccumulationRenderTargetHandle;
-		};
 		renderView->RenderGraph.AddPass<SVolumetricLightPassData>("VolumetricAccumulationPass",
 			[&](CRenderResourceRegistry& registry)
 			{
 				SVolumetricLightPassData passData;
 
-				passData.AddDependency<SLightPassData>();
-				passData.AddDependency<SShadowmapPrePassData>();
+				renderView->RenderGraph.AddDependency<SLightPassData, SVolumetricLightPassData>();
+				renderView->RenderGraph.AddDependency<SShadowmapPrePassData, SVolumetricLightPassData>();
 
 				passData.ViewDataBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SFrameBufferData>("View Data Buffer"));
 				passData.IntermediateDepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless, renderView)); // slot 21
@@ -1511,20 +1430,13 @@ namespace Havtorn
 			}
 		);
 
-		struct SVolumetricBlurPassData : public SRenderPassParams
-		{
-			SRenderResourceHandle DepthTextureHandle;
-			SRenderResourceHandle DownsamplingDepthTextureHandle;
-			SRenderResourceHandle PrimaryBlurTextureHandle;
-			SRenderResourceHandle SecondaryBlurTextureHandle;
-			SRenderResourceHandle RenderTargetHandle;
-		};
 		renderView->RenderGraph.AddPass<SVolumetricBlurPassData>("VolumetricBlurPass",
 			[&](CRenderResourceRegistry& registry)
 			{
 				SVolumetricBlurPassData passData;
 
-				passData.AddDependency<SVolumetricLightPassData>();
+				renderView->RenderGraph.AddDependency<SVolumetricLightPassData, SVolumetricBlurPassData>();
+				renderView->RenderGraph.AddDependency<SVolumetricBlurPassData, SBloomPassData>();
 				
 				passData.DepthTextureHandle = passData.AddInput(registry.DeclareRenderDepth("Intermediate Depth", ERenderResourceFormat::R24G8_Typeless, renderView));
 				passData.DownsamplingDepthTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Downsampling Depth", ERenderResourceFormat::R32_Float, renderView, ERenderTextureSizeHint::HalfResolution));
@@ -1547,22 +1459,13 @@ namespace Havtorn
 			}
 		);
 
-		struct SBloomPassData : public SRenderPassParams
-		{
-			SRenderResourceHandle BloomBufferTextureHandle;
-			SRenderResourceHandle TargetCopyTextureHandle;
-			SRenderResourceHandle HalfResolutionTextureHandle;
-			SRenderResourceHandle PrimaryBlurTextureHandle;
-			SRenderResourceHandle SecondaryBlurTextureHandle;
-			SRenderResourceHandle MainRenderTargetHandle;
-		};
 		renderView->RenderGraph.AddPass<SBloomPassData>("Bloom",
 			[&](CRenderResourceRegistry& registry)
 			{
 				SBloomPassData passData;
 
-				passData.AddDependency<SLightPassData>();
-				passData.AddDependency<SVolumetricBlurPassData>();
+				renderView->RenderGraph.AddDependency<SLightPassData, SBloomPassData>();
+				renderView->RenderGraph.AddDependency<SBloomPassData, STonemappingPassData>();
 
 				passData.BloomBufferTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Bloom Buffer", ERenderResourceFormat::R16G16B16A16_Float, renderView));
 				passData.TargetCopyTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Render Target Copy", ERenderResourceFormat::R16G16B16A16_Float, renderView));
@@ -1613,8 +1516,6 @@ namespace Havtorn
 			{
 				STonemappingPassData passData;
 
-				passData.AddDependency<SBloomPassData>();
-
 				passData.RenderTargetTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Main Render Target", &renderView->RenderTarget));
 				passData.TonemappingTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float, renderView));
 				
@@ -1631,21 +1532,13 @@ namespace Havtorn
 			}
 		);
 
-		struct SUIPassData : public SRenderPassParams
-		{
-			SRenderResourceHandle TransformBufferHandle;
-			SRenderResourceHandle UVRectBufferHandle;
-			SRenderResourceHandle ColorBufferHandle;
-
-			SRenderResourceHandle MainRenderTargetHandle;
-			SRenderResourceHandle DepthTargetHandle;
-		};
 		renderView->RenderGraph.AddPass<SUIPassData>("UIPass",
 			[&](CRenderResourceRegistry& registry)
 			{
 				SUIPassData passData;
 
-				passData.AddDependency<STonemappingPassData>();
+				renderView->RenderGraph.AddDependency<STonemappingPassData, SUIPassData>();
+				renderView->RenderGraph.AddDependency<SUIPassData, SAntialiasingPassData>();
 
 				passData.TransformBufferHandle = passData.AddInput(registry.DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));
 				passData.UVRectBufferHandle = passData.AddInput(registry.DeclareVertexBuffer<SVector4>("Instanced UV Rect Buffer", InstancedDrawInstanceLimit));
@@ -1687,19 +1580,13 @@ namespace Havtorn
 			}
 		);
 
-		struct SDebugDrawPass : public SRenderPassParams
-		{
-			SRenderResourceHandle ViewDataBufferHandle;
-			SRenderResourceHandle DebugObjectBufferHandle;
-			SRenderResourceHandle MainRenderTargetHandle;
-			SRenderResourceHandle DepthTargetHandle;
-		};
-		renderView->RenderGraph.AddPass<SDebugDrawPass>("DebugLines",
+		renderView->RenderGraph.AddPass<SDebugDrawPassData>("DebugLines",
 			[&](CRenderResourceRegistry& registry)
 			{
-				SDebugDrawPass passData;
+				SDebugDrawPassData passData;
 
-				passData.AddDependency<STonemappingPassData>();
+				renderView->RenderGraph.AddDependency<STonemappingPassData, SDebugDrawPassData>();
+				renderView->RenderGraph.AddDependency<SDebugDrawPassData, SAntialiasingPassData>();
 
 				passData.ViewDataBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SFrameBufferData>("View Data Buffer"));
 				passData.DebugObjectBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SDebugShapeObjectBufferData>("Debug Shape Buffer"));
@@ -1709,7 +1596,7 @@ namespace Havtorn
 
 				return passData;
 			},
-			[](const SDebugDrawPass& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
+			[](const SDebugDrawPassData& data, CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView)
 			{
 				SDebugRenderData rendererData;
 				rendererData.ObjectBuffer = registry.GetResource(data.DebugObjectBufferHandle);
@@ -1763,21 +1650,13 @@ namespace Havtorn
 			}
 		);
 
-		struct SAntialiasingPassData : public SRenderPassParams
-		{
-			SRenderResourceHandle TonemappedTextureHandle;
-			SRenderResourceHandle AntialiasingTargetHandle;
-		};
 		renderView->RenderGraph.AddPass<SAntialiasingPassData>("Antialiasing",
 			[&](CRenderResourceRegistry& registry)
 			{
 				SAntialiasingPassData passData;
 
-				// TODO.NW: See if we need the widget pass as a dependency?
-				passData.AddDependency<STonemappingPassData>();
-				passData.AddDependency<SUIPassData>();
-				passData.AddDependency<SDebugDrawPass>();
-
+				renderView->RenderGraph.AddDependency<STonemappingPassData, SAntialiasingPassData>();
+				
 				passData.TonemappedTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Tonemapped Texture", ERenderResourceFormat::R16G16B16A16_Float, renderView));
 				passData.AntialiasingTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Antialiased Target", ERenderResourceFormat::R16G16B16A16_Float, renderView));
 
@@ -1794,17 +1673,12 @@ namespace Havtorn
 			}
 		);
 
-		struct SGammaCorrectionPassData : public SRenderPassParams
-		{
-			SRenderResourceHandle AntialiasedTextureHandle;
-			SRenderResourceHandle MainRenderTargetHandle;
-		};
 		renderView->RenderGraph.AddPass<SGammaCorrectionPassData>("GammaCorrection",
 			[&](CRenderResourceRegistry& registry)
 			{
 				SGammaCorrectionPassData passData;
 
-				passData.AddDependency<SAntialiasingPassData>();
+				renderView->RenderGraph.AddDependency<SAntialiasingPassData, SGammaCorrectionPassData>();
 				
 				passData.AntialiasedTextureHandle = passData.AddInput(registry.DeclareRenderTexture("Antialiased Target", ERenderResourceFormat::R16G16B16A16_Float, renderView));
 				passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", &renderView->RenderTarget));
@@ -1822,12 +1696,6 @@ namespace Havtorn
 			}
 		);
 
-		struct SFinalizePassData : public SRenderPassParams
-		{
-			SRenderResourceHandle PrimaryOptionalTextureHandle;
-			SRenderResourceHandle SecondaryOptionalTextureHandle;
-			SRenderResourceHandle MainRenderTargetHandle;
-		};
 		renderView->RenderGraph.AddPass<SFinalizePassData>("Finalize",
 			[&](CRenderResourceRegistry& /*registry*/)
 			{
@@ -1844,10 +1712,11 @@ namespace Havtorn
 				// be able to automatically disable passes that aren't used. What can we do to override
 				// Rasterizer states globally (for geometry) for wireframe debugging?
 				// if (!RenderManager->ParseDebugBuffer)
-				passData.AddDependency<SGammaCorrectionPassData>();
+				renderView->RenderGraph.AddDependency<SGammaCorrectionPassData, SFinalizePassData>();
+				// 
 				//else
 				//{
-				//	passData.AddDependency<SGeometryBasePassData>();
+				//	passData.AddProducer<SGeometryBasePassData>();
 				//	passData.PrimaryOptionalTextureHandle = passData.AddInput(registry.DeclareRenderTexture("GBuffer Albedo Texture", ERenderResourceFormat::R16G16B16A16_Float, renderView));
 				//	passData.MainRenderTargetHandle = passData.AddOutput(registry.DeclareRenderTexture("Main Render Target", &renderView->RenderTarget));
 				//}

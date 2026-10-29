@@ -7,6 +7,7 @@
 #include "ECS/ECSInclude.h"
 #include "ECS/ComponentAlgo.h"
 #include "ECS/Systems/RenderSystem.h"
+#include "Graphics/DefaultRenderPassData.h"
 #include "Graphics/RenderManager.h"
 #include "Graphics/RenderGraph.h"
 #include "Graphics/RenderResourceRegistry.h"
@@ -76,8 +77,9 @@ namespace Havtorn
 			[&](CRenderResourceRegistry& registry)
 			{
 				SEditorWidgetPassData passData;
-				passData.SetIsRootPass();
-				passData.AddDependency<STonemappingPassData>();
+				
+				renderView->RenderGraph.AddDependency<STonemappingPassData, SEditorWidgetPassData>();
+				renderView->RenderGraph.AddDependency<SEditorWidgetPassData, SAntialiasingPassData>();
 
 				passData.ViewDataBufferHandle = passData.AddInput(registry.DeclareConstantBuffer<SFrameBufferData>("View Data Buffer"));
 				passData.TransformBufferHandle = passData.AddInput(registry.DeclareVertexBuffer<SMatrix>("Instanced Transform Buffer", InstancedDrawInstanceLimit));

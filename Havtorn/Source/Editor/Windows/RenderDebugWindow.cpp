@@ -293,7 +293,7 @@ namespace Havtorn
 				//const SVector2<F32> aspectRatioDivider = { 1.0f / (scriptWindowSize.Y / scriptWindowSize.X), 1.0f / (scriptWindowSize.Y) };
 				const SVector2<F32> aspectRatioDivider = { 9.0f / 16.0f, 1.0f };
 				const SVector2<F32> previousNodeSize = GetNodeSize(previousPass, resourceRegistry) * aspectRatioDivider;
-				if (!pass->HasDependency(previousPass))
+				if (!renderView->RenderGraph.HasDependency(previousPass, pass))
 				{
 					newNodePosition = positionTracker - previousNodeSize;
 					newTrackedPosition = positionTracker;

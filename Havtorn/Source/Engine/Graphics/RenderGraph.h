@@ -29,7 +29,6 @@ namespace Havtorn
 	public:
 		virtual void Execute(CRenderResourceRegistry& registry, CRenderManager* renderManager, SRenderView& renderView) = 0;
 		virtual std::string GetName() const = 0;
-		bool HasDependency(const Ref<IRenderPass>& pass) const;
 
 		std::vector<SRenderResourceHandle> Inputs;
 		std::vector<SRenderResourceHandle> Outputs;
@@ -38,7 +37,7 @@ namespace Havtorn
 		
 		// NW: Being a root pass means being non-cullable, it might write to a 
 		// swapchain target/external texture or do work intended to be consumed in the future.
-		// When compiling the graph, all root pass dependencies are markes as root pass as well.
+		// When compiling the graph, all root pass dependencies are marked as root pass as well.
 		bool IsRootPass = false;
 	};
 
@@ -47,9 +46,6 @@ namespace Havtorn
 
 	struct SRenderPassParams
 	{
-		template<RenderPassParamType TParamStruct>
-		void AddDependency();
-
 		ENGINE_API SRenderResourceHandle AddInput(const SRenderResourceHandle& handle);
 		ENGINE_API SRenderResourceHandle AddOutput(const SRenderResourceHandle& handle);
 
@@ -57,7 +53,6 @@ namespace Havtorn
 
 		std::vector<SRenderResourceHandle> Inputs;
 		std::vector<SRenderResourceHandle> Outputs;
-		std::vector<U64> Dependencies;
 		bool ShouldSetRootPass = false;
 	};
 
@@ -89,7 +84,6 @@ namespace Havtorn
 		PassParamHash = typeid(TParamStruct).hash_code();
 		Inputs = Data.Inputs;
 		Outputs = Data.Outputs;
-		Dependencies = Data.Dependencies;
 		IsRootPass = Data.ShouldSetRootPass;
 		const U64 nameLength = UMath::Min(debugName.size(), STATIC_U64(RenderDebugNameMaxSize));
 		Name = debugName.substr(0, nameLength).data();
@@ -107,20 +101,6 @@ namespace Havtorn
 		return Name;
 	}
 
-	inline bool IRenderPass::HasDependency(const Ref<IRenderPass>& pass) const
-	{
-		if (pass.get() == nullptr)
-			return false;
-
-		return std::ranges::contains(Dependencies, pass->PassParamHash);
-	}
-
-	template<RenderPassParamType TParamStruct>
-	inline void SRenderPassParams::AddDependency()
-	{
-		Dependencies.push_back(typeid(TParamStruct).hash_code());
-	}
-
 	class CRenderGraph
 	{
 	public:
@@ -129,6 +109,11 @@ namespace Havtorn
 
 		template<RenderPassParamType TParamStruct>
 		void AddPass(const char* debugName, const std::function<TParamStruct(CRenderResourceRegistry&)> setup, std::function<void(const TParamStruct&, CRenderResourceRegistry&, CRenderManager*, SRenderView&)>&& execution);
+
+		template<RenderPassParamType TParamStructFrom, RenderPassParamType TParamStructTo>
+		void AddDependency();
+
+		ENGINE_API bool HasDependency(const Ref<IRenderPass>& renderPassFrom, const Ref<IRenderPass>& renderPassTo);
 
 		void Compile();
 		void Execute(CRenderManager* renderManager, SRenderView& renderView);
@@ -139,6 +124,8 @@ namespace Havtorn
 		CRenderResourceRegistry* ResourceRegistry = nullptr;
 
 	private:
+		std::vector<SVector2<U64>> DependencyHashes;
+
 		std::unordered_map<U64, U64> PassParamHashToPassIndex;
 		std::unordered_map<U64, U64> SortedPassParamHashToPassIndex;
 
@@ -155,5 +142,11 @@ namespace Havtorn
 
 		PassParamHashToPassIndex.at(passParamHash) = RenderPasses.size();
 		RenderPasses.push_back(std::make_shared<CRenderPass<TParamStruct>>(debugName, setup(*ResourceRegistry), std::move(execution)));
+	}
+
+	template<RenderPassParamType TParamStructFrom, RenderPassParamType TParamStructTo>
+	inline void CRenderGraph::AddDependency()
+	{
+		DependencyHashes.emplace_back(typeid(TParamStructFrom).hash_code(), typeid(TParamStructTo).hash_code());
 	}
 }
